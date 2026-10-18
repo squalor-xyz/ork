@@ -1,0 +1,46 @@
+{"when": "2026-10-18T20:15:17Z", "item": "C01", "action": "catalog", "from": "", "to": "One clear owner for each relay step; no step lives in two tools", "note": "add"}
+{"when": "2026-10-18T20:15:17Z", "item": "C02", "action": "catalog", "from": "", "to": "Keep the outer session's context small by moving deterministic work out of it", "note": "add"}
+{"when": "2026-10-18T20:15:17Z", "item": "C03", "action": "catalog", "from": "", "to": "Use slicer and adjudicate only through their CLIs and JSON output", "note": "add"}
+{"when": "2026-10-18T20:15:18Z", "item": "C04", "action": "catalog", "from": "", "to": "Follow slicer's relay contract by version, never by copying its text", "note": "add"}
+{"when": "2026-10-18T20:15:18Z", "item": "C05", "action": "catalog", "from": "", "to": "No unattended runs; the owner attends every relay (open: adj scope.attended)", "note": "add"}
+{"when": "2026-10-18T20:15:18Z", "item": "C06", "action": "catalog", "from": "", "to": "No tracking state of its own for items, slices, specs, readiness or decisions", "note": "add"}
+{"when": "2026-10-18T20:15:18Z", "item": "C07", "action": "catalog", "from": "", "to": "No reading or writing .slicer/ or decisions/ files directly", "note": "add"}
+{"when": "2026-10-18T20:15:18Z", "item": "C08", "action": "catalog", "from": "", "to": "No commits, pushes or merges unless the owner authorizes them for a run", "note": "add"}
+{"when": "2026-10-18T20:15:18Z", "item": "C09", "action": "catalog", "from": "", "to": "Not an LLM; model work stays in the role agents", "note": "add"}
+{"when": "2026-10-18T20:23:20Z", "item": "C10", "action": "catalog", "from": "", "to": "One dashboard across projects: roadmaps, decisions and live relays with every agent, stage and progress", "note": "add"}
+{"when": "2026-10-18T20:23:20Z", "item": "C11", "action": "catalog", "from": "", "to": "Edit and reorder the roadmap from the dashboard, every edit a slicer CLI call", "note": "add"}
+{"when": "2026-10-18T20:23:20Z", "item": "C12", "action": "catalog", "from": "", "to": "Manage the decision queue from the dashboard, every change an adj CLI call made as the owner", "note": "add"}
+{"when": "2026-10-18T20:23:20Z", "item": "C13", "action": "catalog", "from": "", "to": "Set up, launch and supervise parallel relays, owner-attended", "note": "add"}
+{"when": "2026-10-18T20:23:20Z", "item": "C14", "action": "catalog", "from": "", "to": "User experience first: colorful, keyboard-driven TUI with mouse support", "note": "add"}
+{"when": "2026-10-18T20:23:20Z", "item": "C15", "action": "catalog", "from": "", "to": "Small explicit state: ork owns only its registry, run records and UI preferences", "note": "add"}
+{"when": "2026-10-18T20:23:20Z", "item": "C16", "action": "catalog", "from": "", "to": "No scheduler: ork does not pick and run waves on its own", "note": "add"}
+{"when": "2026-10-18T20:23:20Z", "item": "C17", "action": "catalog", "from": "", "to": "One workflow kind for now: the slice relay; no general pipeline language", "note": "add"}
+{"when": "2026-10-18T21:19:35Z", "item": "C11", "action": "catalog", "from": "", "to": "title", "note": "edit"}
+{"when": "2026-10-18T21:19:35Z", "item": "C12", "action": "catalog", "from": "", "to": "title", "note": "edit"}
+{"when": "2026-10-18T21:19:35Z", "item": "C13", "action": "catalog", "from": "", "to": "title", "note": "edit"}
+{"when": "2026-10-18T21:19:35Z", "item": "C18", "action": "catalog", "from": "", "to": "Deterministic before model: tests, slicer check, fingerprint and report shape checked by ork before any model review", "note": "add"}
+{"when": "2026-10-18T21:19:35Z", "item": "S01", "action": "add", "from": "", "to": "open", "note": "Vendor capability spike: streaming, usage, resume, allowlists, rate-limit signals for claude, codex, grok"}
+{"when": "2026-10-18T21:19:35Z", "item": "S02", "action": "add", "from": "", "to": "open", "note": "Core: registry, slicer and adj adapters, read-only dashboard"}
+{"when": "2026-10-18T21:19:35Z", "item": "S03", "action": "add", "from": "", "to": "open", "note": "Daemon, socket and JSON CLI (ork status)"}
+{"when": "2026-10-18T21:19:36Z", "item": "S04", "action": "add", "from": "", "to": "open", "note": "Engine for one implementer: setup, implement, checks, review, gate, approve, commit, ledger"}
+{"when": "2026-10-18T21:19:36Z", "item": "S05", "action": "add", "from": "", "to": "open", "note": "Waves: suggestion, lineup, global and per-project caps, failure isolation"}
+{"when": "2026-10-18T21:19:36Z", "item": "S06", "action": "add", "from": "", "to": "open", "note": "Three vendors, automatic fallback, read-only fingerprint, budgets, owner questions"}
+{"when": "2026-10-18T21:19:36Z", "item": "S07", "action": "add", "from": "", "to": "open", "note": "Live role detail: output tail, tokens and cost, ASCII charts and animations, bell"}
+{"when": "2026-10-18T21:19:36Z", "item": "S08", "action": "add", "from": "", "to": "open", "note": "Architect on size L, split, slivers"}
+{"when": "2026-10-18T21:19:36Z", "item": "S09", "action": "add", "from": "", "to": "open", "note": "Landing help: ready-to-land list and merge detection"}
+{"when": "2026-10-18T21:19:36Z", "item": "S10", "action": "add", "from": "", "to": "open", "note": "Embedded role prompts seeded from slicer contract v7; ork roles print"}
+{"when": "2026-10-18T21:19:55Z", "item": "pass.v1", "action": "prose", "from": "", "to": "v1", "note": "add-pass"}
+{"when": "2026-10-18T22:37:07Z", "item": "S01", "action": "set", "from": "", "to": "", "note": "size -→S; importance 2→3; urgency 2→3; effort -→1"}
+{"when": "2026-10-18T22:37:08Z", "item": "S02", "action": "set", "from": "", "to": "", "note": "size -→L; importance 2→3; urgency 2→3; effort -→3"}
+{"when": "2026-10-18T22:37:08Z", "item": "S03", "action": "set", "from": "", "to": "", "note": "size -→M; importance 2→3; effort -→2"}
+{"when": "2026-10-18T22:37:08Z", "item": "S04", "action": "set", "from": "", "to": "", "note": "size -→L; importance 2→3; effort -→3"}
+{"when": "2026-10-18T22:37:08Z", "item": "S05", "action": "set", "from": "", "to": "", "note": "size -→M; importance 2→3; effort -→2"}
+{"when": "2026-10-18T22:37:08Z", "item": "S06", "action": "set", "from": "", "to": "", "note": "size -→M; effort -→2"}
+{"when": "2026-10-18T22:37:08Z", "item": "S07", "action": "set", "from": "", "to": "", "note": "size -→M; urgency 2→1; effort -→2"}
+{"when": "2026-10-18T22:37:08Z", "item": "S08", "action": "set", "from": "", "to": "", "note": "size -→L; importance 2→1; urgency 2→1; effort -→3"}
+{"when": "2026-10-18T22:37:08Z", "item": "S09", "action": "set", "from": "", "to": "", "note": "size -→S; urgency 2→1; effort -→1"}
+{"when": "2026-10-18T22:37:08Z", "item": "S10", "action": "set", "from": "", "to": "", "note": "size -→M; importance 2→3; effort -→2"}
+{"when": "2026-10-18T22:37:15Z", "item": "S08", "action": "set", "from": "", "to": "", "note": "importance 1→2"}
+{"when": "2026-10-18T22:37:50Z", "item": "S01", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-18T22:37:58Z", "item": "S01", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-18T22:37:58Z", "item": "S01", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}

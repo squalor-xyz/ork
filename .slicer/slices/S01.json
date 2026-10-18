@@ -1,0 +1,43 @@
+{
+  "id": "S01",
+  "title": "Vendor capability spike: streaming, usage, resume, allowlists, rate-limit signals for claude, codex, grok",
+  "lead": [
+    "Measure what the claude, codex and grok CLIs actually do when run headless,\nso the engine design rests on observed behavior. Every cell of the\ncapability table in docs/design.md is marked *unverified* today."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [
+    "needs-owner"
+  ],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** any Go code, the vendor adapters (S06), and forcing a real rate limit.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "ork launches every role headlessly on all three vendors with automatic\nfallback (`scope.vendors`, `vendor.fallback`). That rests on five\nbehaviors nobody has measured: streamed events for the output tail, usage\nand cost in the result, resume by session id, a per-tool allowlist, and a\nrate-limit signal. If a vendor lacks one, v1 narrows for that vendor\ninstead of the whole build waiting (PROJECT.md, Risks)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `spike/` (new): throwaway zsh scripts, one per vendor. No Go, no go.mod.\n- `testdata/vendors/<vendor>/` (new): redacted stdout, stderr, exit code\n  and JSON for each probe.\n- `docs/design.md`: the capability table and Vendors section."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "None: this slice writes no code. Each table cell must cite a fixture file\nor say *unverified* with the reason."
+    },
+    {
+      "heading": "Implement",
+      "body": "- [HUMAN CHECK] Before any vendor call, the owner approves the call budget:\n  about 6 calls per vendor, trivial prompts, cheapest model, run in a\n  throwaway git repo under the scratch directory.\n- Start from the invocations in `agents/setup/lib/workflow-vendor.sh:22-41`\n  (`claude -p --output-format json`, `codex exec --json`,\n  `grok --output-format json -p`, and the read-only flags).\n- Per vendor, probe: a plain success; streamed output; a resume of that\n  session by id; a run with a tool allowlist that denies a write; a\n  read-only run asked to edit a file; and a forced failure (bad model\n  name). Record exit code, stderr and the JSON fields for tokens and cost.\n- Rate limits cannot be forced cheaply. Record the documented signal from\n  each CLI's own help or docs, cite it, and mark the cell unverified.\n- Redact key-like strings from every saved output (docs/state.md, Rules).\n- Fill in the table. If a vendor lacks a needed capability, file an adj\n  question on narrowing v1 for it; do not decide."
+    },
+    {
+      "heading": "Check",
+      "body": "- Every table cell cites a fixture under `testdata/vendors/` or is marked\n  *unverified* with a reason.\n- `rg -i 'sk-|api[_-]?key|token\"\\s*:\\s*\"[A-Za-z0-9]{20,}' testdata/` finds\n  nothing.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"S01: vendor spike, capability table and\nfixtures\"."
+    }
+  ],
+  "notes": []
+}
