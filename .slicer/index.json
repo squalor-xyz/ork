@@ -258,6 +258,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "d8d75cc9-933d-4190-b979-dfbea34840bd",
+          "kind": "",
+          "text": "**2026-10-19** — Owner 2026-10-19 (vendor.codex-ratelimit): codex rate limits are classified by the reported strings \"You've hit your usage limit\" and HTTP 429 rate_limit_exceeded in turn.failed/error events, with automatic fallback. Capture a real sample when one occurs and add it as a fixture; no real codex limit has been recorded yet.",
+          "created_at": "2026-10-19T03:00:22Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,

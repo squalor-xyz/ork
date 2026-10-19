@@ -61,3 +61,4 @@
 {"when": "2026-10-19T01:03:56Z", "item": "S01", "action": "note", "from": "", "to": "", "note": "Review note: vendor.codex-allowlist (adj 54) Reasoning says ", "by": "Jon R"}
 {"when": "2026-10-19T02:41:26Z", "item": "S06", "action": "note", "from": "", "to": "", "note": "Owner 2026-10-19: grok decision deferred; grok credits reset", "by": "Jon R"}
 {"when": "2026-10-19T02:41:27Z", "item": "S06", "action": "note", "from": "", "to": "", "note": "Owner 2026-10-19 (vendor.codex-allowlist): codex runs only r", "by": "Jon R"}
+{"when": "2026-10-19T03:00:22Z", "item": "S06", "action": "note", "from": "", "to": "", "note": "Owner 2026-10-19 (vendor.codex-ratelimit): codex rate limits", "by": "Jon R"}
