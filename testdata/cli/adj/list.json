@@ -1,0 +1,2011 @@
+{
+  "records": [
+    {
+      "id": 1,
+      "title": "What does ork do first once implementation starts?",
+      "status": "decided",
+      "key": "scope.v1",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Owner chose docs/spec only on 2026-10-18, then set the main goal: a cross-project TUI dashboard that shows roadmaps, decisions and live agents, edits roadmaps and decisions, and launches and supervises relays (PROJECT.md Goals). Candidates are in docs/manual-steps.md and docs/dashboard.md. slicer s322-s329 already cover many outer-session steps.",
+      "options": [
+        {
+          "label": "spec-only",
+          "summary": "Stay docs and spec only until further notice (owner's 2026-10-18 answer)"
+        },
+        {
+          "label": "outer-session-driver",
+          "summary": "Sequence the outer session's deterministic steps (setup, worktree, relay-run begin/end, report checks, note filing, batched landing)"
+        },
+        {
+          "label": "landing-only",
+          "summary": "Start with batched landing and changelog conflict resolution only"
+        }
+      ],
+      "recommendation": {
+        "label": "spec-only",
+        "reasoning": "Recorded from the owner's answer in the setup session; revisit when a first capability is wanted."
+      },
+      "decision": "v1 = monitoring dashboard across projects + launching and supervising slice waves. Roadmap and decision editing wait for a later version.",
+      "rationale": "Owner interview 2026-10-18: v1 targets monitoring and launching; editing can wait.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "amend",
+          "note": "context",
+          "was": {
+            "context": "Owner chose docs/spec only on 2026-10-18. Candidates are in docs/manual-steps.md. slicer s322-s329 already cover many outer-session steps."
+          }
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Does ork stay attended only, or also run unattended inside agentbox?",
+      "status": "decided",
+      "key": "scope.attended",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "agents ROADMAP N6 proposes an unattended cross-vendor orchestrator in agentbox; owner decision 2026-10-15 (agents/multi-agent-workflows/info/2026-10-15-nested-relay.md) allows only an owner-attended relay.",
+      "options": [
+        {
+          "label": "attended",
+          "summary": "Owner attends every run"
+        },
+        {
+          "label": "unattended-agentbox",
+          "summary": "Also allow unattended runs, only inside agentbox"
+        }
+      ],
+      "recommendation": {
+        "label": "attended",
+        "reasoning": "Matches the current non-goal and the 2026-10-15 owner decision."
+      },
+      "decision": "attended",
+      "rationale": "Owner interview 2026-10-18: approve at checkpoints: owner approves wave launch (lineup + plan) and each slice's result after the gate; roles run on their own between checkpoints. Agents run on the host.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Which Go dependencies may ork use, and under what policy?",
+      "status": "decided",
+      "key": "stack.go-deps",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Owner answer 2026-10-18: Go, with some few chosen select dependencies. adjudicate is stdlib only (C24); global rules require approval per dependency.",
+      "options": [
+        {
+          "label": "per-dep-approval",
+          "summary": "Stdlib by default; each dependency approved one at a time with why-not-stdlib, license and carrying cost"
+        },
+        {
+          "label": "stdlib-only",
+          "summary": "Go standard library only, like adjudicate"
+        }
+      ],
+      "recommendation": {
+        "label": "per-dep-approval",
+        "reasoning": "Matches the owner's answer and the global dependency rules."
+      },
+      "decision": "per-dep-approval",
+      "rationale": "Owner interview 2026-10-18: approved Bubble Tea, Lip Gloss and Bubbles for the TUI, void if a license check fails. Anything else is asked separately.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Which license does ork use?",
+      "status": "decided",
+      "key": "license.choice",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Owner left this open on 2026-10-18. slicer is Apache-2.0; adjudicate is GPL-3.0-or-later with NOTICE.",
+      "options": [
+        {
+          "label": "apache-2.0",
+          "summary": "Apache-2.0, like slicer"
+        },
+        {
+          "label": "gpl-3.0-or-later",
+          "summary": "GPL-3.0-or-later with NOTICE, like adjudicate"
+        }
+      ],
+      "decision": "gpl-3.0-or-later",
+      "rationale": "Owner interview 2026-10-18: GPL-3.0-or-later with NOTICE, matching adjudicate; move to AGPL only if a hosted web UI appears.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Does ork absorb the agents repo relay scripts or call them?",
+      "status": "decided",
+      "key": "boundary.agents-scripts",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Owner decided on 2026-10-18 that ork launches and supervises the orchestrator, with the owner attending. Open: how. agents/multi-agent-workflows has relay-call.sh (headless vendor launch, mailbox, read-only fingerprint) and orchestrate.sh (scripted --once run).",
+      "options": [
+        {
+          "label": "call",
+          "summary": "ork calls relay-call.sh and leaves vendor launch in the agents repo"
+        },
+        {
+          "label": "absorb",
+          "summary": "ork reimplements vendor launch in Go and the scripts are retired"
+        },
+        {
+          "label": "neither",
+          "summary": "ork never launches agents; launch stays with the session"
+        }
+      ],
+      "decision": "absorb",
+      "rationale": "Owner interview 2026-10-18: ork is N6; it reimplements the vendor layer in Go (fallback, fingerprint, reports); agents repo scripts are retired once ork works.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "amend",
+          "note": "context",
+          "was": {
+            "context": "agents/multi-agent-workflows has relay-call.sh (headless vendor launch, mailbox, read-only fingerprint) and orchestrate.sh (scripted --once run). Two orchestration paths would coexist otherwise."
+          }
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "How does ork track slicer's relay contract without a drifting copy?",
+      "status": "decided",
+      "key": "boundary.contract",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "slicer prints Contract: relay v7 (RELAY_CONTRACT in slicer/src/slicer/ai.py). The agents-repo orchestrator role was a full v4 copy until slicer s373.",
+      "options": [
+        {
+          "label": "version-check",
+          "summary": "Read the version from slicer ai relay --json and refuse on mismatch; keep no contract text"
+        },
+        {
+          "label": "pinned-copy",
+          "summary": "Embed a pinned copy of the contract and update it per release"
+        }
+      ],
+      "recommendation": {
+        "label": "version-check",
+        "reasoning": "The agents repo doctor already uses the version-marker pattern; a copy drifted before."
+      },
+      "decision": "version-check",
+      "rationale": "Owner interview 2026-10-18: pin to a contract version and refuse on mismatch; also file a slicer item for the machine-readable contract parts in ai relay --json.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Which UI does ork use first?",
+      "status": "decided",
+      "key": "ui.framework",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Owner answer 2026-10-18: Go TUI first. Proposed: Charm's Bubble Tea, Lip Gloss and Bubbles. Each is a dependency needing approval under stack.go-deps; licenses to be verified from each repo.",
+      "options": [
+        {
+          "label": "bubbletea",
+          "summary": "Go TUI with Bubble Tea, Lip Gloss and Bubbles"
+        },
+        {
+          "label": "web",
+          "summary": "Local web GUI on Go net/http, stdlib only"
+        },
+        {
+          "label": "both",
+          "summary": "TUI and web over one core"
+        }
+      ],
+      "recommendation": {
+        "label": "bubbletea",
+        "reasoning": "Owner's 2026-10-18 answer."
+      },
+      "decision": "bubbletea",
+      "rationale": "Owner interview 2026-10-18: Go TUI first with Bubble Tea, Lip Gloss, Bubbles.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "How far does ork go in launching agent work?",
+      "status": "decided",
+      "key": "launch.mode",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Owner answer 2026-10-18. Supersedes the 2026-10-15 'no external loop script' stance for ork, within an owner-attended run.",
+      "options": [
+        {
+          "label": "launch-supervise",
+          "summary": "ork runs Setup, launches the orchestrator headless and supervises it; owner approves each launch, gate result and landing"
+        },
+        {
+          "label": "setup-handoff",
+          "summary": "ork prepares the worktree, relay-run and brief; a session the owner starts runs it"
+        },
+        {
+          "label": "scheduler",
+          "summary": "ork runs waves on its own, unattended only inside agentbox"
+        }
+      ],
+      "recommendation": {
+        "label": "launch-supervise",
+        "reasoning": "Owner's 2026-10-18 answer."
+      },
+      "decision": "ork is the state machine: it runs Setup, launches every role process itself (no orchestrator agent), and supervises; the owner approves at checkpoints.",
+      "rationale": "Owner interview 2026-10-18: ork launches every role and passes reports between them; the headless-orchestrator experiment is dropped.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "What do ork's own state files hold?",
+      "status": "decided",
+      "key": "state.files",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Owner answer 2026-10-18. Details in docs/state.md.",
+      "options": [
+        {
+          "label": "registry-runs",
+          "summary": "Project registry, ork run records and UI preferences in XDG dirs; everything else read live"
+        },
+        {
+          "label": "snapshot",
+          "summary": "Also a collated snapshot of every project's roadmap and decisions"
+        },
+        {
+          "label": "git-repo",
+          "summary": "Registry and runs in a git-tracked state repo"
+        }
+      ],
+      "recommendation": {
+        "label": "registry-runs",
+        "reasoning": "Owner's 2026-10-18 answer."
+      },
+      "decision": "registry-runs",
+      "rationale": "Owner interview 2026-10-18: registry, run records and UI preferences in XDG dirs; everything else read live.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "What is a workflow in ork?",
+      "status": "decided",
+      "key": "workflow.model",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Owner answer 2026-10-18. Stages come from slicer's relay contract and ledger; see PROJECT.md Workflow model.",
+      "options": [
+        {
+          "label": "slice-relay",
+          "summary": "One kind, the slice relay, with stages from slicer's contract"
+        },
+        {
+          "label": "pipelines",
+          "summary": "Configurable stage pipelines with the relay as a template"
+        }
+      ],
+      "recommendation": {
+        "label": "slice-relay",
+        "reasoning": "Owner's 2026-10-18 answer."
+      },
+      "decision": "slice-relay",
+      "rationale": "Owner interview 2026-10-18: one workflow kind, the slice relay, stages from slicer's contract.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Does ork reimplement slicer's roadmap editor or reuse slicer tui?",
+      "status": "open",
+      "key": "ui.slicer-tui",
+      "asked_by": "claude",
+      "created": "2026-10-18",
+      "context": "slicer has an editing TUI (slicer/docs/tui.md) that calls the same ops as the CLI. ork must edit roadmaps (PROJECT.md goal 2).",
+      "options": [
+        {
+          "label": "cli-editor",
+          "summary": "ork's own editor over slicer CLI calls, consistent with the rest of the dashboard"
+        },
+        {
+          "label": "open-slicer-tui",
+          "summary": "ork suspends and opens slicer tui --root P for deep edits; ork does only reorder, start and park itself"
+        },
+        {
+          "label": "both",
+          "summary": "Common edits in ork, slicer tui on a key for the rest"
+        }
+      ],
+      "recommendation": {
+        "label": "both",
+        "reasoning": "Keeps the common actions one keystroke away without rebuilding every slicer editor."
+      },
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Which vendor and harness does ork launch the orchestrator on, and how does it detect completion?",
+      "status": "decided",
+      "key": "launch.vendor",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Today the orchestrator is a Claude subagent that spawns role subagents (depth 0-2, slice-relay.md). Launched headless by ork it would be depth 0 itself. Headless invocations are in agents/setup/lib/workflow-vendor.sh.",
+      "options": [
+        {
+          "label": "claude-headless",
+          "summary": "claude -p with JSON output in the slice worktree; completion is process exit plus the run report"
+        },
+        {
+          "label": "any-vendor",
+          "summary": "Any vendor from the lineup via the agents repo launcher"
+        }
+      ],
+      "recommendation": {
+        "label": "claude-headless",
+        "reasoning": "Only Claude has the orchestrator agent type and nested subagents today."
+      },
+      "decision": "All three vendors (claude, codex, grok) in v1. ork launches each role headlessly; completion is process exit plus a report file.",
+      "rationale": "Owner interview 2026-10-18: all three vendors; ork launches every role; process exit + report file.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "What format do ork's state files use?",
+      "status": "decided",
+      "key": "state.format",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "docs/state.md proposes JSON, as slicer and adj use.",
+      "options": [
+        {
+          "label": "json",
+          "summary": "JSON, versioned, atomic writes"
+        },
+        {
+          "label": "toml",
+          "summary": "TOML for the hand-edited registry, JSON for run records"
+        }
+      ],
+      "recommendation": {
+        "label": "json",
+        "reasoning": "stdlib encoding/json; matches sibling tools."
+      },
+      "decision": "json",
+      "rationale": "Owner 2026-10-18: JSON, versioned, atomic writes; stdlib encoding/json, as slicer and adj.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "How long are finished run records and logs kept?",
+      "status": "decided",
+      "key": "state.runs-retention",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Run records and orchestrator logs accumulate under ~/.local/state/ork/runs (docs/state.md).",
+      "options": [
+        {
+          "label": "forever",
+          "summary": "Keep all; owner prunes"
+        },
+        {
+          "label": "days-30",
+          "summary": "Prune finished runs older than 30 days"
+        },
+        {
+          "label": "count-100",
+          "summary": "Keep the latest 100 finished runs"
+        }
+      ],
+      "decision": "count-100",
+      "rationale": "Owner 2026-10-18: keep the latest 100 finished runs; a run whose branch is not landed is never pruned.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Where do ork-launched agents run?",
+      "status": "decided",
+      "key": "launch.sandbox",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "agents repo allowed unattended runs only in agentbox; ork runs are attended at checkpoints.",
+      "options": [
+        {
+          "label": "host",
+          "summary": "On the host, in the slice worktree, with scoped permissions"
+        },
+        {
+          "label": "agentbox",
+          "summary": "Always inside agentbox"
+        },
+        {
+          "label": "per-project",
+          "summary": "Per-project setting"
+        }
+      ],
+      "decision": "host",
+      "rationale": "Owner interview 2026-10-18: host, scoped permissions; agentbox optional later.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "title": "How do headless role sessions get permissions?",
+      "status": "decided",
+      "key": "launch.permissions",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Headless sessions cannot answer prompts.",
+      "options": [
+        {
+          "label": "allowlist",
+          "summary": "Per-project, per-role tool allowlist; read-only roles read-only"
+        },
+        {
+          "label": "accept-edits",
+          "summary": "acceptEdits plus allowlisted Bash"
+        },
+        {
+          "label": "bypass",
+          "summary": "Skip permissions"
+        }
+      ],
+      "decision": "allowlist",
+      "rationale": "Owner interview 2026-10-18: per-project allowlist per role; a denial stops the slice (contract v7).",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "title": "How is a wave chosen?",
+      "status": "decided",
+      "key": "wave.selection",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "slicer plan-parallel and next --batch can suggest parallel sets.",
+      "options": [
+        {
+          "label": "suggested",
+          "summary": "Suggested by slicer, edited by the owner"
+        },
+        {
+          "label": "manual",
+          "summary": "Owner picks only"
+        },
+        {
+          "label": "as-is",
+          "summary": "Launch slicer's plan unchanged"
+        }
+      ],
+      "decision": "suggested",
+      "rationale": "Owner interview 2026-10-18: suggested by slicer, then edited by the owner; ork warns on Files overlap.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Can one wave span projects?",
+      "status": "decided",
+      "key": "wave.scope",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Several projects are registered.",
+      "options": [
+        {
+          "label": "global",
+          "summary": "One wave across projects"
+        },
+        {
+          "label": "per-project",
+          "summary": "One project per wave"
+        }
+      ],
+      "decision": "per-project",
+      "rationale": "Owner interview 2026-10-18: one project per wave; several waves may run at once.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "title": "Where does a slice run end in v1?",
+      "status": "decided",
+      "key": "wave.end",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Landing has merge-conflict work (changelog).",
+      "options": [
+        {
+          "label": "commit",
+          "summary": "Commit on the slice branch"
+        },
+        {
+          "label": "landed",
+          "summary": "Merge and land in v1"
+        },
+        {
+          "label": "gate",
+          "summary": "Stop at a passed gate, uncommitted"
+        }
+      ],
+      "decision": "commit",
+      "rationale": "Owner interview 2026-10-18: commit on the slice branch after PASS and owner approval; landing stays manual.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "title": "How is machine load capped?",
+      "status": "decided",
+      "key": "wave.limits",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "About 4 relays on 8 cores was the practical limit.",
+      "options": [
+        {
+          "label": "global-and-project",
+          "summary": "Global cap plus per-project cap"
+        },
+        {
+          "label": "per-project",
+          "summary": "Per-project cap only"
+        },
+        {
+          "label": "warn",
+          "summary": "No cap, warn only"
+        }
+      ],
+      "decision": "global-and-project",
+      "rationale": "Owner interview 2026-10-18: global cap (default 4) plus optional per-project cap; extra slices queue.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "title": "What happens to a wave when one slice fails or stops?",
+      "status": "decided",
+      "key": "wave.failure",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Stop rules: gate FAIL 3x, ambiguous spec, owner question.",
+      "options": [
+        {
+          "label": "continue",
+          "summary": "Others continue"
+        },
+        {
+          "label": "pause",
+          "summary": "Pause queued starts"
+        },
+        {
+          "label": "stop",
+          "summary": "Stop the whole wave"
+        }
+      ],
+      "decision": "continue",
+      "rationale": "Owner interview 2026-10-18: others continue; the failed slice waits in needs-you.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "title": "Does ork fall back to another vendor on a rate limit?",
+      "status": "decided",
+      "key": "vendor.fallback",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "No rate-limit fixture exists yet.",
+      "options": [
+        {
+          "label": "automatic",
+          "summary": "Automatic fallback along the chain"
+        },
+        {
+          "label": "fixed",
+          "summary": "Fixed vendor; owner retries"
+        }
+      ],
+      "decision": "automatic",
+      "rationale": "Owner interview 2026-10-18: automatic fallback in v1.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "title": "How does ork recognise rate limits?",
+      "status": "decided",
+      "key": "vendor.ratelimit-detection",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "No captured fixtures exist.",
+      "options": [
+        {
+          "label": "capture-conservative",
+          "summary": "Capture on failure, conservative rules"
+        },
+        {
+          "label": "trigger",
+          "summary": "Deliberately trigger limits before v1"
+        }
+      ],
+      "decision": "capture-conservative",
+      "rationale": "Owner interview 2026-10-18: capture raw output of every non-ok exit as a fixture candidate; classify only documented signals; anything unclassified stops the slice for the owner.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "title": "Where do the lineup and fallback chain come from?",
+      "status": "decided",
+      "key": "lineup.source",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "slicer has a role matrix; agents repo has relay.conf.",
+      "options": [
+        {
+          "label": "matrix-alternatives",
+          "summary": "slicer role matrix, chain from its alternatives"
+        },
+        {
+          "label": "ork-config",
+          "summary": "ork's own config"
+        },
+        {
+          "label": "mapping",
+          "summary": "Fixed cross-vendor mapping"
+        }
+      ],
+      "decision": "matrix-alternatives",
+      "rationale": "Owner interview 2026-10-18: slicer relay-roles recommend is the source; the chain is the primary row plus ordered alternatives, editable at launch; relay.conf retires.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "title": "May reviewers run on another vendor than the implementer?",
+      "status": "decided",
+      "key": "review.cross-vendor",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "slicer rule u2 defaults to no cross-vendor reviewer.",
+      "options": [
+        {
+          "label": "lineup",
+          "summary": "As the lineup says"
+        },
+        {
+          "label": "same",
+          "summary": "Same vendor only"
+        },
+        {
+          "label": "require",
+          "summary": "Require cross-vendor"
+        }
+      ],
+      "decision": "lineup",
+      "rationale": "Owner interview 2026-10-18: allowed if the accepted lineup names it; ork enforces only that a reviewer never wrote code in the slice.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "title": "How does a fix round or gate get earlier context?",
+      "status": "decided",
+      "key": "role.resume",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Vendors differ in resume support.",
+      "options": [
+        {
+          "label": "resume-else-fresh",
+          "summary": "Resume when possible, else fresh"
+        },
+        {
+          "label": "fresh",
+          "summary": "Always fresh"
+        }
+      ],
+      "decision": "resume-else-fresh",
+      "rationale": "Owner interview 2026-10-18: resume the same vendor session when possible, else a fresh session with earlier reports in the brief.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "title": "How does a role hand back its report?",
+      "status": "decided",
+      "key": "role.report-io",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Hand-backs were misrouted in Claude Code relays.",
+      "options": [
+        {
+          "label": "exit-and-file",
+          "summary": "Process exit plus report file"
+        },
+        {
+          "label": "json",
+          "summary": "Vendor JSON result only"
+        }
+      ],
+      "decision": "exit-and-file",
+      "rationale": "Owner interview 2026-10-18: role writes its report to a path in ork state and exits; fallback to the vendor JSON result.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "title": "Is the read-only fingerprint kept?",
+      "status": "decided",
+      "key": "role.readonly-fingerprint",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "relay-call.sh hashes the tree around read-only roles.",
+      "options": [
+        {
+          "label": "yes",
+          "summary": "Fingerprint read-only roles"
+        },
+        {
+          "label": "no",
+          "summary": "Permissions only"
+        }
+      ],
+      "decision": "yes",
+      "rationale": "Owner interview 2026-10-18: keep it; a read-only role that edits files fails.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 29,
+      "title": "Where do role prompts live?",
+      "status": "decided",
+      "key": "roles.prompts",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "agents relay-roles/ files are drifting.",
+      "options": [
+        {
+          "label": "embedded-canonical",
+          "summary": "Embedded in ork, canonical"
+        },
+        {
+          "label": "agents-files",
+          "summary": "Read from agents relay-roles/"
+        },
+        {
+          "label": "slicer",
+          "summary": "Printed by slicer"
+        }
+      ],
+      "decision": "embedded-canonical",
+      "rationale": "Owner interview 2026-10-18: embedded in ork and canonical; the agents repo generates its role files from ork's output (ork roles print).",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "title": "What are ork's prompts seeded from?",
+      "status": "decided",
+      "key": "roles.prompt-seed",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "slicer v7 contract is the freshest text.",
+      "options": [
+        {
+          "label": "slicer-fresh",
+          "summary": "slicer contract plus fresh text"
+        },
+        {
+          "label": "reconcile",
+          "summary": "slicer plus agents files reconciled"
+        }
+      ],
+      "decision": "slicer-fresh",
+      "rationale": "Owner interview 2026-10-18: slicer's contract, and anything else written fresh.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "title": "Does ork run deterministic checks between roles?",
+      "status": "decided",
+      "key": "checks.deterministic",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "N6: deterministic checks before any model review.",
+      "options": [
+        {
+          "label": "yes",
+          "summary": "Check command and slicer check before review"
+        },
+        {
+          "label": "no",
+          "summary": "Roles run tests"
+        }
+      ],
+      "decision": "yes",
+      "rationale": "Owner interview 2026-10-18: ork runs the project check command and slicer check after the implementer; red goes back without a review.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 32,
+      "title": "Where does a project's check command come from?",
+      "status": "decided",
+      "key": "project.check-command",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "slicer config has no check-command key (checked 2026-10-18 on four projects).",
+      "options": [
+        {
+          "label": "slicer-then-registry",
+          "summary": "slicer key, registry fallback"
+        },
+        {
+          "label": "wait",
+          "summary": "Require the slicer key"
+        }
+      ],
+      "decision": "slicer-then-registry",
+      "rationale": "Owner interview 2026-10-18: file a slicer item for a check_command key; until it ships ork uses its registry value, and prefers slicer's once it exists.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 33,
+      "title": "Which per-slice options are in v1?",
+      "status": "decided",
+      "key": "slice.options",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "slicer supports architect, split and slivers.",
+      "options": [
+        {
+          "label": "architect-split-slivers",
+          "summary": "Architect on L, split, slivers"
+        },
+        {
+          "label": "architect-only",
+          "summary": "Architect on L only"
+        }
+      ],
+      "decision": "architect-split-slivers",
+      "rationale": "Owner interview 2026-10-18: architect on size L (S/M lite), split, and slivers are all in v1.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 34,
+      "title": "Who commits a passed slice?",
+      "status": "decided",
+      "key": "git.commit",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Roles never commit.",
+      "options": [
+        {
+          "label": "ork",
+          "summary": "ork commits"
+        },
+        {
+          "label": "implementer",
+          "summary": "Implementer commits"
+        },
+        {
+          "label": "owner",
+          "summary": "Owner commits"
+        }
+      ],
+      "decision": "ork",
+      "rationale": "Owner interview 2026-10-18: ork commits with the title from the slice's Git section; no AI attribution.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "title": "Where do slice worktrees go?",
+      "status": "decided",
+      "key": "git.worktrees",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Projects use .worktrees/sNN on branch sNN.",
+      "options": [
+        {
+          "label": "per-project-pattern",
+          "summary": "Per-project pattern"
+        },
+        {
+          "label": "ork-location",
+          "summary": "ork-owned location"
+        }
+      ],
+      "decision": "per-project-pattern",
+      "rationale": "Owner interview 2026-10-18: registry worktree_pattern (default .worktrees/{id}) and branch_pattern (default {id}).",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "title": "When is a slice worktree removed?",
+      "status": "decided",
+      "key": "git.cleanup",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Logs and reports live in ork state.",
+      "options": [
+        {
+          "label": "keep-until-landed",
+          "summary": "Keep until landed"
+        },
+        {
+          "label": "after-commit",
+          "summary": "Remove after commit"
+        }
+      ],
+      "decision": "keep-until-landed",
+      "rationale": "Owner interview 2026-10-18: keep until landed; offer cleanup once merged.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "title": "Does ork write slicer's relay-run ledger?",
+      "status": "decided",
+      "key": "ledger.write",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "The ledger is advisory today.",
+      "options": [
+        {
+          "label": "yes",
+          "summary": "ork writes begin/step/end"
+        },
+        {
+          "label": "no",
+          "summary": "ork state only"
+        }
+      ],
+      "decision": "yes",
+      "rationale": "Owner interview 2026-10-18: one relay run per slice, one step per role round.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 38,
+      "title": "What survives quitting the TUI?",
+      "status": "decided",
+      "key": "daemon.lifetime",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Runs take 20-40 minutes or more.",
+      "options": [
+        {
+          "label": "daemon",
+          "summary": "Background daemon plus TUI client"
+        },
+        {
+          "label": "detached",
+          "summary": "Detached roles, TUI reconciles"
+        },
+        {
+          "label": "die",
+          "summary": "Runs die with the TUI"
+        }
+      ],
+      "decision": "daemon",
+      "rationale": "Owner interview 2026-10-18: background daemon owns waves and processes; the TUI is a client over a local socket.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 39,
+      "title": "How does the daemon start?",
+      "status": "decided",
+      "key": "daemon.start",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Global rules discourage system services.",
+      "options": [
+        {
+          "label": "on-demand",
+          "summary": "On demand"
+        },
+        {
+          "label": "launchd",
+          "summary": "launchd agent"
+        }
+      ],
+      "decision": "on-demand",
+      "rationale": "Owner interview 2026-10-18: started on demand by ork, Unix socket in ~/.local/state/ork, exits when idle.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 40,
+      "title": "Does ork have a scriptable CLI?",
+      "status": "decided",
+      "key": "cli.json",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Agents and tests benefit from one.",
+      "options": [
+        {
+          "label": "yes",
+          "summary": "Small JSON CLI"
+        },
+        {
+          "label": "no",
+          "summary": "TUI only"
+        }
+      ],
+      "decision": "yes",
+      "rationale": "Owner interview 2026-10-18: small JSON CLI: status, waves, approve, stop.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "title": "What does the dashboard show per active role?",
+      "status": "decided",
+      "key": "dash.role-detail",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "The ledger has per-step fields only.",
+      "options": [
+        {
+          "label": "all",
+          "summary": "Output tail, tokens/cost, elapsed/stale, diff stat/tests, ASCII charts"
+        },
+        {
+          "label": "minimal",
+          "summary": "Elapsed and stale only"
+        }
+      ],
+      "decision": "all",
+      "rationale": "Owner interview 2026-10-18: live output tail, tokens and cost, elapsed and stale flags, diff stat and tests, and ASCII animations and charts summarizing activity.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "title": "How are relays started outside ork shown?",
+      "status": "decided",
+      "key": "dash.external-runs",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Outer-session relays also write the ledger.",
+      "options": [
+        {
+          "label": "view-only",
+          "summary": "Show, view-only"
+        },
+        {
+          "label": "hide",
+          "summary": "Hide"
+        },
+        {
+          "label": "adopt",
+          "summary": "Allow adoption"
+        }
+      ],
+      "decision": "view-only",
+      "rationale": "Owner interview 2026-10-18: shown with a started-elsewhere marker; ork never acts on them.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "title": "Charts and animations: in-house or library?",
+      "status": "decided",
+      "key": "ui.charts",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Library would be another dependency.",
+      "options": [
+        {
+          "label": "in-house",
+          "summary": "In-house"
+        },
+        {
+          "label": "library",
+          "summary": "Chart library"
+        }
+      ],
+      "decision": "in-house",
+      "rationale": "Owner interview 2026-10-18: small in-house set on Lip Gloss: sparklines, stage bars, wave timeline, spinners.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 44,
+      "title": "How does ork get the owner's attention?",
+      "status": "decided",
+      "key": "ui.notify",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Owner is not always watching the TUI.",
+      "options": [
+        {
+          "label": "bell",
+          "summary": "Terminal bell"
+        },
+        {
+          "label": "macos",
+          "summary": "macOS notification"
+        },
+        {
+          "label": "push",
+          "summary": "Phone push"
+        },
+        {
+          "label": "none",
+          "summary": "None"
+        }
+      ],
+      "decision": "bell",
+      "rationale": "Owner interview 2026-10-18: terminal bell and tab badge.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 45,
+      "title": "How does the owner answer a mid-slice question in v1?",
+      "status": "decided",
+      "key": "owner.questions",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Decision editing is deferred.",
+      "options": [
+        {
+          "label": "answer-in-ork",
+          "summary": "Answer in ork, optional adj log"
+        },
+        {
+          "label": "outside",
+          "summary": "Answer outside ork, then resume"
+        }
+      ],
+      "decision": "answer-in-ork",
+      "rationale": "Owner interview 2026-10-18: slice stops in needs-you; owner answers in ork; ork resumes the role; optional toggle files it as an adj ask+decide.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 46,
+      "title": "Does ork limit time and tokens?",
+      "status": "decided",
+      "key": "run.budgets",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Headless runs cost money.",
+      "options": [
+        {
+          "label": "soft",
+          "summary": "Soft limits, pause and ask"
+        },
+        {
+          "label": "hard",
+          "summary": "Hard kill"
+        },
+        {
+          "label": "none",
+          "summary": "Display only"
+        }
+      ],
+      "decision": "soft",
+      "rationale": "Owner interview 2026-10-18: per-slice wall-time and token limits; pause at the next role boundary and ask.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "title": "How is ork tested?",
+      "status": "decided",
+      "key": "testing.strategy",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Real runs cost money.",
+      "options": [
+        {
+          "label": "fakes-fixtures",
+          "summary": "Fake CLIs and fixtures"
+        },
+        {
+          "label": "plus-live",
+          "summary": "Plus an opt-in live smoke test"
+        }
+      ],
+      "decision": "fakes-fixtures",
+      "rationale": "Owner interview 2026-10-18: fake vendor CLIs replaying captured JSON, recorded slicer/adj output, TUI as pure model updates; real runs on a manual checklist.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 48,
+      "title": "Which projects are registered first?",
+      "status": "decided",
+      "key": "registry.initial",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Sibling repos with slicer.",
+      "options": [
+        {
+          "label": "four",
+          "summary": "slicer, adjudicate, DataBall, agents"
+        },
+        {
+          "label": "two",
+          "summary": "slicer and adjudicate"
+        }
+      ],
+      "decision": "four",
+      "rationale": "Owner interview 2026-10-18: slicer, adjudicate, DataBall and agents.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "title": "What landing help is in v1?",
+      "status": "decided",
+      "key": "landing.v1",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "Landing is out of v1.",
+      "options": [
+        {
+          "label": "list-and-detect",
+          "summary": "Ready-to-land list and merge detection"
+        },
+        {
+          "label": "none",
+          "summary": "Nothing"
+        }
+      ],
+      "decision": "list-and-detect",
+      "rationale": "Owner interview 2026-10-18: a ready-to-land list with the slicer land command, and detection of merged branches with cleanup offer.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 50,
+      "title": "How is the size-L S02 cut?",
+      "status": "decided",
+      "key": "plan.s02-cut",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "S02 is L, effort 3; the role matrix allows no slivers at effort 3, and a slice too big for one implementer becomes separate slices.",
+      "options": [
+        {
+          "label": "three",
+          "summary": "core, shell and Overview, Roadmap and Decisions"
+        },
+        {
+          "label": "two",
+          "summary": "core plus shell and Overview, then the two screens"
+        },
+        {
+          "label": "one",
+          "summary": "one L slice with an architect"
+        }
+      ],
+      "decision": "three",
+      "rationale": "Owner 2026-10-19: Three slices: S02 core (registry, adapters, no UI), S11 TUI shell and Overview, S12 Roadmap and Decisions.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 51,
+      "title": "Does codex count as rate-limit-capable in v1?",
+      "status": "open",
+      "key": "vendor.codex-ratelimit",
+      "asked_by": "s01 implementer",
+      "created": "2026-10-18",
+      "context": "vendor.ratelimit-detection is decided: classify only documented signals; anything unclassified stops the slice for the owner (adj show 23). The codex CLI help (codex --help and codex exec --help) documents no rate-limit or quota signal, and the spike forced none. A bad model gave an error item and turn.failed in JSONL (testdata/vendors/codex/04-bad-model.stdout); that is not a rate limit. So a codex rate limit cannot be classified in v1, and automatic fallback from codex is not yet supported by any documented signal.",
+      "options": [
+        {
+          "label": "stop-for-owner",
+          "summary": "codex stays in fallback chains; a codex rate-limit exit stops the slice for the owner until a real capture is classified",
+          "tradeoffs": "matches the decided rule with no new classifier; a codex limit costs an owner stop"
+        },
+        {
+          "label": "no-fallback-from-codex",
+          "summary": "codex is never a fallback source; a codex limit stops the slice, and codex may still be a fallback target",
+          "tradeoffs": "narrower than stop-for-owner; still needs the same stop rule"
+        },
+        {
+          "label": "read-docs-first",
+          "summary": "look up codex's documented rate-limit signal in its online docs before v1, then decide",
+          "tradeoffs": "delays the decision; the spike read only the local CLI help"
+        }
+      ],
+      "recommendation": {
+        "label": "stop-for-owner",
+        "reasoning": "It follows the decided rule without a new classifier, and codex stays usable as a fallback target. The read-docs option may still add a documented signal later."
+      },
+      "refs": [
+        "S01"
+      ],
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        }
+      ]
+    },
+    {
+      "id": 52,
+      "title": "How does the read-only dashboard stay fresh?",
+      "status": "decided",
+      "key": "dash.refresh",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "fsnotify would be a new dependency, and stat-ing .slicer/ is close to slicer's tracking rule. slicer list takes about 0.1 s, adj inbox about 3 ms.",
+      "options": [
+        {
+          "label": "poll",
+          "summary": "poll the CLIs, 5 s visible, 30 s others, r to refresh"
+        },
+        {
+          "label": "manual",
+          "summary": "load on start, tab switch and r only"
+        }
+      ],
+      "decision": "poll",
+      "rationale": "Owner 2026-10-19: Poll the CLIs: the visible project every 5 s, the others every 30 s, r refreshes now; a slow call shows as pending.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 53,
+      "title": "Before the daemon (S03), who runs the slicer, adj and git calls?",
+      "status": "decided",
+      "key": "dash.pre-daemon",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "S02 builds the dashboard; S03 adds the daemon and socket.",
+      "options": [
+        {
+          "label": "direct",
+          "summary": "TUI calls adapters behind one interface"
+        },
+        {
+          "label": "daemon-first",
+          "summary": "build S03 before the dashboard"
+        }
+      ],
+      "decision": "direct",
+      "rationale": "Owner 2026-10-19: The TUI calls the adapters directly behind one Go interface, which S03 moves behind the socket unchanged.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 54,
+      "title": "Narrow v1 for codex, which has no per-tool allowlist?",
+      "status": "decided",
+      "key": "vendor.codex-allowlist",
+      "asked_by": "s01 implementer",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "launch.permissions is decided as a per-project, per-role tool allowlist (adj show 16). codex exec has no per-tool allowlist. Its help lists only sandbox modes: read-only, workspace-write, danger-full-access (codex exec --help). The S01 spike ran one codex probe with -s read-only (testdata/vendors/codex/03-readonly-sandbox-write.stdout and .repo-status). That run contains only agent_message items and no command item, so the sandbox was not exercised: the model said the filesystem was read-only and no file was created. The spike did not measure whether codex's sandbox blocks a write. grok's per-tool allowlist is also unmeasured. So codex cannot be shown to meet the allowlist rule for write-capable roles.",
+      "options": [
+        {
+          "label": "read-only-roles",
+          "summary": "codex runs only read-only roles (reviewer, gate, architect); implementers run on claude (grok's allowlist is not yet measured)",
+          "tradeoffs": "keeps the decided allowlist rule for every write-capable role; codex cannot implement or fall back into an implementer role in v1"
+        },
+        {
+          "label": "workspace-write",
+          "summary": "codex implementers run on workspace-write with no tool allowlist; checks and the read-only fingerprint are the only limit",
+          "tradeoffs": "codex can implement; the per-role allowlist decision (launch.permissions) must be amended for codex"
+        },
+        {
+          "label": "no-codex-v1",
+          "summary": "codex is out of v1 until it can enforce a per-tool allowlist",
+          "tradeoffs": "narrows v1 to claude and grok; the three-vendor goal waits"
+        }
+      ],
+      "recommendation": {
+        "label": "read-only-roles",
+        "reasoning": "It keeps the decided allowlist rule for every write-capable role and uses the one codex control the spike verified (the read-only sandbox)."
+      },
+      "decision": "read-only-roles",
+      "rationale": "Owner 2026-10-19: codex runs only read-only roles (reviewer, gate, architect) in v1; implementers stay on claude. The read-only sandbox's write block was not exercised in S01, so the read-only fingerprint is the backstop.",
+      "refs": [
+        "S01"
+      ],
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "amend",
+          "note": "context, summary read-only-roles",
+          "was": {
+            "context": "launch.permissions is decided as a per-project, per-role tool allowlist (adj show 16). codex exec has no per-tool allowlist. Its help lists only sandbox modes: read-only, workspace-write, danger-full-access (codex exec --help). The S01 spike ran codex with -s read-only: a shell write was refused and no file was created (testdata/vendors/codex/03-readonly-sandbox-write.stdout and .repo-status). So codex cannot meet the allowlist rule for write-capable roles.",
+            "options": [
+              {
+                "label": "read-only-roles",
+                "summary": "codex runs only read-only roles (reviewer, gate, architect); implementers run on claude or grok"
+              }
+            ]
+          }
+        },
+        {
+          "date": "2026-10-18",
+          "event": "renumber",
+          "note": "from 50"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        }
+      ]
+    },
+    {
+      "id": 55,
+      "title": "How does ork find projects before ork projects add exists (S03)?",
+      "status": "decided",
+      "key": "registry.seed",
+      "asked_by": "claude",
+      "decided_by": "jon",
+      "created": "2026-10-18",
+      "decided_at": "2026-10-18",
+      "context": "The registry is projects.json (docs/state.md); the CLI to edit it is in S03.",
+      "options": [
+        {
+          "label": "seed",
+          "summary": "seed the four decided projects on first run"
+        },
+        {
+          "label": "manual",
+          "summary": "refuse to start without projects.json and print an example"
+        },
+        {
+          "label": "cli-in-s02",
+          "summary": "move ork projects add into S02"
+        }
+      ],
+      "decision": "seed",
+      "rationale": "Owner 2026-10-19: If projects.json is missing, write it with the four decided projects whose paths exist, and say so; hand-edit after that.",
+      "history": [
+        {
+          "date": "2026-10-18",
+          "event": "ask"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "decide"
+        },
+        {
+          "date": "2026-10-18",
+          "event": "renumber",
+          "note": "from 51"
+        }
+      ]
+    }
+  ]
+}

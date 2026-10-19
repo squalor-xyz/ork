@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "no_such_item",
+    "message": "no such item: NOPE",
+    "command": "show"
+  }
+}

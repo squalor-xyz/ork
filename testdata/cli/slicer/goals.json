@@ -1,0 +1,172 @@
+{
+  "goals": "",
+  "non_goals": "",
+  "records": {
+    "goal": [
+      {
+        "id": "C01",
+        "kind": "goal",
+        "title": "One clear owner for each relay step; no step lives in two tools",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C02",
+        "kind": "goal",
+        "title": "Keep the outer session's context small by moving deterministic work out of it",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C03",
+        "kind": "goal",
+        "title": "Use slicer and adjudicate only through their CLIs and JSON output",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C04",
+        "kind": "goal",
+        "title": "Follow slicer's relay contract by version, never by copying its text",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C10",
+        "kind": "goal",
+        "title": "One dashboard across projects: roadmaps, decisions and live relays with every agent, stage and progress",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C11",
+        "kind": "goal",
+        "title": "After v1: edit and reorder the roadmap from the dashboard, every edit a slicer CLI call",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C12",
+        "kind": "goal",
+        "title": "After v1: manage the decision queue from the dashboard, every change an adj CLI call made as the owner",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C13",
+        "kind": "goal",
+        "title": "Set up, launch and supervise parallel slice waves across vendors, owner-attended at checkpoints",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C14",
+        "kind": "goal",
+        "title": "User experience first: colorful, keyboard-driven TUI with mouse support",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C15",
+        "kind": "goal",
+        "title": "Small explicit state: ork owns only its registry, run records and UI preferences",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C18",
+        "kind": "goal",
+        "title": "Deterministic before model: tests, slicer check, fingerprint and report shape checked by ork before any model review",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      }
+    ],
+    "non_goal": [
+      {
+        "id": "C05",
+        "kind": "non_goal",
+        "title": "No unattended runs; the owner attends every relay (open: adj scope.attended)",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C06",
+        "kind": "non_goal",
+        "title": "No tracking state of its own for items, slices, specs, readiness or decisions",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C07",
+        "kind": "non_goal",
+        "title": "No reading or writing .slicer/ or decisions/ files directly",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C08",
+        "kind": "non_goal",
+        "title": "No commits, pushes or merges unless the owner authorizes them for a run",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C09",
+        "kind": "non_goal",
+        "title": "Not an LLM; model work stays in the role agents",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C16",
+        "kind": "non_goal",
+        "title": "No scheduler: ork does not pick and run waves on its own",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      },
+      {
+        "id": "C17",
+        "kind": "non_goal",
+        "title": "One workflow kind for now: the slice relay; no general pipeline language",
+        "body": "",
+        "status": "active",
+        "reason": "",
+        "successor": ""
+      }
+    ]
+  }
+}

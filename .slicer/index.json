@@ -68,7 +68,7 @@
       "id": "S02",
       "title": "Core: registry and CLI adapters",
       "short_title": "Core and adapters",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -89,7 +89,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

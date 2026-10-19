@@ -1,0 +1,14 @@
+slicer 1.15.0
+adj v0.1.0
+
+# Fixtures: file, then the command as run (read-only) with the --root it was recorded from.
+# ORK = /Users/jon/code/squalor-xyz/ork/.worktrees/s02
+# ADJ = /Users/jon/code/squalor-xyz/adjudicate
+slicer/list.json: slicer list --json --lean --root ORK
+slicer/show-S02.json: slicer show S02 --json --lean --root ORK
+slicer/goals.json: slicer goals --json --root ORK
+slicer/relay-run-list.json: slicer relay-run list --json --lean --root ORK
+slicer/error-no-such-item.json: slicer show NOPE --json --lean --root ORK (stdout; exit 2)
+adj/inbox-nonempty.json: adj inbox --json --root ORK
+adj/inbox-empty.json: adj inbox --json --root ADJ
+adj/list.json: adj list --json --root ORK
