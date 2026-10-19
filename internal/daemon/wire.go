@@ -3,6 +3,8 @@
 package daemon
 
 import (
+	"time"
+
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
@@ -17,7 +19,14 @@ const (
 	MethodProjectsList = "projects.list" // no params, result ProjectsResult
 	MethodProjectsAdd  = "projects.add"  // params AddProjectParams, result registry.Project
 	MethodProjectsRm   = "projects.rm"   // params RemoveProjectParams, no result
+	MethodSubscribe    = "subscribe"     // params SubscribeParams, no result
+	MethodRefresh      = "refresh"       // params RefreshParams, no result
 )
+
+// MethodSnapshotChanged is the notice a subscribed connection gets when a part
+// of a project changes. The daemon sends it without an id; params are
+// SnapshotChanged.
+const MethodSnapshotChanged = "snapshot.changed"
 
 // Error codes the handlers add to the protocol's own (ipc.CodeBadRequest,
 // ipc.CodeInternal).
@@ -43,14 +52,23 @@ type StatusResult struct {
 
 // ProjectStatus is one project in a status. NeedsYou counts the project's
 // open adj questions; approvals, stops and pauses join it with the engine
-// (S04).
+// (S04). Parts holds each part's age and state.
 type ProjectStatus struct {
-	Name         string      `json:"name"`
-	Path         string      `json:"path"`
-	Adj          bool        `json:"adj"`
-	NeedsYou     int         `json:"needs_you"`
-	ActiveRelays []Relay     `json:"active_relays"`
-	Errors       []PartError `json:"errors,omitempty"`
+	Name         string               `json:"name"`
+	Path         string               `json:"path"`
+	Adj          bool                 `json:"adj"`
+	NeedsYou     int                  `json:"needs_you"`
+	ActiveRelays []Relay              `json:"active_relays"`
+	Parts        map[string]PartState `json:"parts,omitempty"`
+	Errors       []PartError          `json:"errors,omitempty"`
+}
+
+// PartState is one part's age and state as the cache holds it. AgeMs is the
+// value's age in ms; a part that was never read has AgeMs 0 and an Error.
+type PartState struct {
+	AgeMs int64      `json:"age_ms"`
+	Stale bool       `json:"stale,omitempty"`
+	Error *ipc.Error `json:"error,omitempty"`
 }
 
 // Relay is one active slicer relay run.
@@ -79,25 +97,40 @@ type SnapshotParams struct {
 	Project string `json:"project"`
 }
 
-// Part is one part of a snapshot over the wire: a value, or an error as
-// {code,message}. A slicer or adj tool error keeps its code.
+// Part is one part of a snapshot over the wire. Value is the last good value,
+// and ReadAt says when it was read. Error is the last call's error, if any; a
+// part with an Error and a ReadAt is stale, and AgeMs is then the value's age.
+// A slicer or adj tool error keeps its code.
 type Part[T any] struct {
-	Value T          `json:"value"`
-	Error *ipc.Error `json:"error,omitempty"`
+	Value  T          `json:"value"`
+	ReadAt *time.Time `json:"read_at,omitempty"`
+	AgeMs  int64      `json:"age_ms"`
+	Stale  bool       `json:"stale,omitempty"`
+	Error  *ipc.Error `json:"error,omitempty"`
 }
 
-func partOf[T any](r source.Result[T]) Part[T] {
-	if r.Err != nil {
-		return Part[T]{Error: ipc.ErrorOf(r.Err)}
+func partOf[T any](r source.Result[T], now time.Time) Part[T] {
+	p := Part[T]{Value: r.Value, Stale: r.Stale()}
+	if !r.ReadAt.IsZero() {
+		at := r.ReadAt
+		p.ReadAt = &at
+		p.AgeMs = now.Sub(at).Milliseconds()
 	}
-	return Part[T]{Value: r.Value}
+	if r.Err != nil {
+		p.Error = ipc.ErrorOf(r.Err)
+	}
+	return p
 }
 
 func (p Part[T]) result() source.Result[T] {
-	if p.Error != nil {
-		return source.Result[T]{Err: p.Error}
+	r := source.Result[T]{Value: p.Value}
+	if p.ReadAt != nil {
+		r.ReadAt = *p.ReadAt
 	}
-	return source.Result[T]{Value: p.Value}
+	if p.Error != nil {
+		r.Err = p.Error
+	}
+	return r
 }
 
 // SnapshotResult is source.Snapshot over the wire.
@@ -125,4 +158,23 @@ type RemoveProjectParams struct {
 // ProjectsResult is the registered projects, in registry order.
 type ProjectsResult struct {
 	Projects []registry.Project `json:"projects"`
+}
+
+// SubscribeParams names the projects this connection shows. Their items and
+// runs refresh every 5 s, the others every 30 s. Opening a project reads its
+// goals and decided records now. Focus replaces the connection's earlier list.
+type SubscribeParams struct {
+	Focus []string `json:"focus"`
+}
+
+// RefreshParams names the project to read again now, every part of it.
+type RefreshParams struct {
+	Project string `json:"project"`
+}
+
+// SnapshotChanged is the notice for the parts of a project whose value changed.
+type SnapshotChanged struct {
+	Project string    `json:"project"`
+	Parts   []string  `json:"parts"`
+	At      time.Time `json:"at"`
 }

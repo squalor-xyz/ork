@@ -537,3 +537,102 @@ func TestCancelEndsServeWhileAcceptKeepsFailing(t *testing.T) {
 		t.Fatalf("Serve took %v to notice the cancel; it waited out the back-off", took)
 	}
 }
+
+func TestNoticeReachesTheSubscribedConnection(t *testing.T) {
+	var (
+		mu   sync.Mutex
+		subs []*Conn
+	)
+	path := serve(t, &Server{Handler: func(ctx context.Context, method string, params json.RawMessage) (any, error) {
+		switch method {
+		case "subscribe":
+			conn := ConnFrom(ctx)
+			if conn == nil {
+				return nil, errors.New("no connection in the request context")
+			}
+			mu.Lock()
+			subs = append(subs, conn)
+			mu.Unlock()
+			return map[string]bool{"ok": true}, nil
+		case "poke":
+			mu.Lock()
+			defer mu.Unlock()
+			for _, c := range subs {
+				if err := c.Notify("changed", map[string]string{"k": "v"}); err != nil {
+					return nil, err
+				}
+			}
+			return nil, nil
+		}
+		return echo(ctx, method, params)
+	}})
+	sub, err := Dial(context.Background(), path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer sub.Close()
+	if err := sub.Call(context.Background(), "subscribe", nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	// The notice goes out while this connection is inside a Call. Call must
+	// keep it for Next and still return its own reply.
+	if err := sub.Call(context.Background(), "poke", nil, nil); err != nil {
+		t.Fatalf("call with a notice in flight: %v", err)
+	}
+	n, err := sub.Next(context.Background())
+	if err != nil || n.Method != "changed" || string(n.Params) != `{"k":"v"}` {
+		t.Fatalf("notice: %+v, %v", n, err)
+	}
+
+	other, err := Dial(context.Background(), path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer other.Close()
+	if err := other.Call(context.Background(), "poke", nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	n, err = sub.Next(ctx)
+	if err != nil || n.Method != "changed" {
+		t.Fatalf("notice from another connection's request: %+v, %v", n, err)
+	}
+}
+
+func TestConnDoneWhenTheClientLeaves(t *testing.T) {
+	conns := make(chan *Conn, 1)
+	path := serve(t, &Server{Handler: func(ctx context.Context, method string, params json.RawMessage) (any, error) {
+		if conn := ConnFrom(ctx); conn != nil {
+			select {
+			case conns <- conn:
+			default:
+			}
+		}
+		return echo(ctx, method, params)
+	}})
+	c, err := Dial(context.Background(), path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := c.Call(context.Background(), "echo", nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	var conn *Conn
+	select {
+	case conn = <-conns:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the handler got no connection")
+	}
+	select {
+	case <-conn.Done():
+		t.Fatal("Done is closed while the client is connected")
+	default:
+	}
+	c.Close()
+	select {
+	case <-conn.Done():
+	case <-time.After(5 * time.Second):
+		t.Fatal("Done is not closed after the client left")
+	}
+}

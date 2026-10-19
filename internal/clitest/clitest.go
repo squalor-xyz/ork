@@ -2,7 +2,7 @@
 
 // Package clitest fakes the slicer and adj CLIs for tests with the standard
 // library's helper-process pattern. Install makes a directory holding
-// symlinks named "slicer" and "adj" to the running test binary. When the test
+// symlinks named "slicer", "adj" and "git" to the running test binary. When the test
 // binary is started through one of them, Main (called first in TestMain)
 // replays the recorded file that matches the arguments, and logs the call.
 // Nothing here runs the real slicer or adj.
@@ -88,7 +88,7 @@ func Install(t *testing.T, routes ...Route) *Fake {
 		t.Fatal(err)
 	}
 	dir := t.TempDir()
-	for _, tool := range []string{"slicer", "adj"} {
+	for _, tool := range []string{"slicer", "adj", "git"} {
 		if err := os.Symlink(exe, filepath.Join(dir, tool)); err != nil {
 			t.Fatal(err)
 		}
@@ -112,7 +112,7 @@ func Install(t *testing.T, routes ...Route) *Fake {
 func Main() {
 	routesPath := os.Getenv(envRoutes)
 	tool := filepath.Base(os.Args[0])
-	if routesPath == "" || (tool != "slicer" && tool != "adj") {
+	if routesPath == "" || (tool != "slicer" && tool != "adj" && tool != "git") {
 		return
 	}
 	args := os.Args[1:]

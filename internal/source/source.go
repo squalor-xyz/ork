@@ -7,19 +7,50 @@ package source
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
+	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
-// Result is one call's value and its own error. A failed call leaves Value at
-// its zero value.
-type Result[T any] struct {
-	Value T
-	Err   error
+// Part names one part of a project's state. Every part is one CLI call,
+// except Head, which is one git call.
+type Part string
+
+// The parts of a project. Head is the commit HEAD points at, read with
+// `git -C PATH rev-parse HEAD` (boundary.git-head).
+const (
+	Items   Part = "items"
+	Goals   Part = "goals"
+	Runs    Part = "runs"
+	Open    Part = "open"
+	Decided Part = "decided"
+	Head    Part = "head"
+)
+
+// Fetcher makes the one call a part needs and returns the part's value, typed
+// as the matching Snapshot field (Head: a string). A failed call returns an
+// error and no value.
+type Fetcher interface {
+	Fetch(ctx context.Context, p registry.Project, part Part) (any, error)
 }
+
+// Result is one call's value and its own error. A failed call leaves Value at
+// its zero value. ReadAt is when Value was read: a failed call after a good
+// read keeps that value and its ReadAt, which makes the result stale.
+type Result[T any] struct {
+	Value  T
+	ReadAt time.Time // zero when no value was ever read
+	Err    error
+}
+
+// Stale reports a failed call that keeps an earlier good value.
+func (r Result[T]) Stale() bool { return r.Err != nil && !r.ReadAt.IsZero() }
 
 func result[T any](v T, err error) Result[T] {
 	if err != nil {
@@ -50,11 +81,45 @@ type Source interface {
 type Direct struct {
 	Slicer slicercli.Client
 	Adj    adjcli.Client
+	Git    string // git binary; empty means "git" found on PATH
 }
 
 // NewDirect returns a Source that calls the given clients.
 func NewDirect(s slicercli.Client, a adjcli.Client) *Direct {
 	return &Direct{Slicer: s, Adj: a}
+}
+
+// Fetch makes the one call part needs and returns its value.
+func (d *Direct) Fetch(ctx context.Context, p registry.Project, part Part) (any, error) {
+	switch part {
+	case Items:
+		return d.Slicer.List(ctx, p.Path)
+	case Goals:
+		return d.Slicer.Goals(ctx, p.Path)
+	case Runs:
+		return d.Slicer.RelayRuns(ctx, p.Path, true)
+	case Open:
+		return d.Adj.Inbox(ctx, p.Path)
+	case Decided:
+		return d.Adj.List(ctx, p.Path, "decided")
+	case Head:
+		return d.head(ctx, p.Path)
+	}
+	return nil, fmt.Errorf("unknown part %q", part)
+}
+
+// head returns the commit HEAD points at. It is the only git call a refresh
+// makes (boundary.git-head).
+func (d *Direct) head(ctx context.Context, path string) (string, error) {
+	bin := d.Git
+	if bin == "" {
+		bin = "git"
+	}
+	res, err := clirun.Run(ctx, clirun.Call{Bin: bin, Args: []string{"-C", path, "rev-parse", "HEAD"}})
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(res.Stdout)), nil
 }
 
 // Snapshot makes the calls at the same time, so a slow call does not delay

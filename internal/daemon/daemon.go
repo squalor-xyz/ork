@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
+	"github.com/squalor-xyz/ork/internal/cache"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/slicercli"
@@ -55,33 +56,35 @@ func DefaultPaths() (Paths, error) {
 	return PathsIn(filepath.Join(home, ".local", "state", "ork")), nil
 }
 
-// Timer is a pending call of a Clock.
-type Timer interface{ Stop() bool }
-
-// Clock is the daemon's source of time. Tests replace it.
-type Clock interface {
-	AfterFunc(d time.Duration, f func()) Timer
-}
+// Timer and Clock are the cache's; tests replace the clock.
+type Timer = cache.Timer
+type Clock = cache.Clock
 
 type realClock struct{}
+
+func (realClock) Now() time.Time { return time.Now() }
 
 func (realClock) AfterFunc(d time.Duration, f func()) Timer { return time.AfterFunc(d, f) }
 
 // Config configures a Daemon.
 type Config struct {
 	Paths        Paths
-	RegistryPath string        // projects.json; empty means registry.DefaultPath
-	SeedRoot     string        // where a missing registry is seeded from; empty means registry.DefaultSeedRoot
-	Source       source.Source // nil means source.Direct over the real CLIs
-	Clock        Clock         // nil means the real clock
-	WaveRunning  func() bool   // true while a wave runs; nil means never (the engine is S04)
+	RegistryPath string         // projects.json; empty means registry.DefaultPath
+	SeedRoot     string         // where a missing registry is seeded from; empty means registry.DefaultSeedRoot
+	Source       source.Fetcher // nil means source.Direct over the real CLIs
+	Clock        Clock          // nil means the real clock
+	WaveRunning  func() bool    // true while a wave runs; nil means never (the engine is S04)
 }
 
 // Daemon is one daemon process.
 type Daemon struct {
 	cfg   Config
 	ready chan struct{}
-	regMu sync.Mutex // serializes registry writes
+	regMu sync.Mutex   // serializes registry writes
+	cache *cache.Cache // the project snapshots, shared by every client
+
+	subsMu sync.Mutex
+	focus  map[*ipc.Conn][]string // the projects each subscribed connection shows
 }
 
 // New returns a daemon for the config.
@@ -95,7 +98,9 @@ func New(cfg Config) *Daemon {
 	if cfg.WaveRunning == nil {
 		cfg.WaveRunning = func() bool { return false }
 	}
-	return &Daemon{cfg: cfg, ready: make(chan struct{})}
+	d := &Daemon{cfg: cfg, ready: make(chan struct{}), focus: map[*ipc.Conn][]string{}}
+	d.cache = cache.New(cache.Options{Clock: cfg.Clock, Fetcher: cfg.Source, OnChange: d.changed})
+	return d
 }
 
 // Ready returns a channel that is closed once the daemon listens. Run closes
@@ -107,6 +112,7 @@ func (d *Daemon) Ready() <-chan struct{} { return d.ready }
 // running daemon's pid, when another daemon is live. A socket left by a dead
 // daemon is removed and replaced. Run may be called once.
 func (d *Daemon) Run(ctx context.Context) error {
+	defer d.cache.Close()
 	paths := d.cfg.Paths
 	if err := ipc.MkdirPrivate(paths.Dir); err != nil {
 		return err

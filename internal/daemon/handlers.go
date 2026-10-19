@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"slices"
 	"sync"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
@@ -76,6 +77,18 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return d.snapshot(ctx, p)
+	case MethodSubscribe:
+		var p SubscribeParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.subscribe(ctx, p)
+	case MethodRefresh:
+		var p RefreshParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.refresh(ctx, p)
 	case MethodProjectsList:
 		f, err := d.loadRegistry()
 		if err != nil {
@@ -127,14 +140,15 @@ func (d *Daemon) snapshot(ctx context.Context, p SnapshotParams) (*SnapshotResul
 	if !ok {
 		return nil, notFound(p.Project)
 	}
-	s := d.cfg.Source.Snapshot(ctx, proj)
+	s := d.snapshotOf(ctx, proj)
+	now := d.cfg.Clock.Now()
 	return &SnapshotResult{
 		Project: s.Project,
-		Items:   partOf(s.Items),
-		Goals:   partOf(s.Goals),
-		Runs:    partOf(s.Runs),
-		Open:    partOf(s.Open),
-		Decided: partOf(s.Decided),
+		Items:   partOf(s.Items, now),
+		Goals:   partOf(s.Goals, now),
+		Runs:    partOf(s.Runs, now),
+		Open:    partOf(s.Open, now),
+		Decided: partOf(s.Decided, now),
 	}, nil
 }
 
@@ -157,25 +171,35 @@ func (d *Daemon) status(ctx context.Context, p StatusParams) (*StatusResult, err
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			snaps[i] = d.cfg.Source.Snapshot(ctx, proj)
+			snaps[i] = d.snapshotOf(ctx, proj)
 		}()
 	}
 	wg.Wait()
 
+	now := d.cfg.Clock.Now()
 	out := &StatusResult{Projects: make([]ProjectStatus, 0, len(projects))}
 	for i, s := range snaps {
-		out.Projects = append(out.Projects, projectStatus(projects[i], s))
+		out.Projects = append(out.Projects, projectStatus(projects[i], s, now))
 	}
 	return out, nil
 }
 
-func projectStatus(p registry.Project, s source.Snapshot) ProjectStatus {
+func projectStatus(p registry.Project, s source.Snapshot, now time.Time) ProjectStatus {
 	ps := ProjectStatus{
 		Name:         p.Name,
 		Path:         p.Path,
 		Adj:          p.Adj,
 		NeedsYou:     len(s.Open.Value),
 		ActiveRelays: []Relay{},
+	}
+	ps.Parts = map[string]PartState{
+		"items": stateOf(s.Items, now),
+		"goals": stateOf(s.Goals, now),
+		"runs":  stateOf(s.Runs, now),
+	}
+	if p.Adj {
+		ps.Parts["open"] = stateOf(s.Open, now)
+		ps.Parts["decided"] = stateOf(s.Decided, now)
 	}
 	for _, r := range s.Runs.Value {
 		ps.ActiveRelays = append(ps.ActiveRelays, Relay{
@@ -254,5 +278,32 @@ func (d *Daemon) removeProject(name string) error {
 	if err := registry.Save(d.registryPath(), f); err != nil {
 		return &ipc.Error{Code: CodeRegistry, Message: err.Error()}
 	}
+	d.cache.Forget(name)
 	return nil
+}
+
+// stateOf is one part's age and state, for a status.
+func stateOf[T any](r source.Result[T], now time.Time) PartState {
+	var st PartState
+	if !r.ReadAt.IsZero() {
+		st.AgeMs = now.Sub(r.ReadAt).Milliseconds()
+	}
+	st.Stale = r.Stale()
+	if r.Err != nil {
+		st.Error = ipc.ErrorOf(r.Err)
+	}
+	return st
+}
+
+// refresh reads every part of a project now, and returns once they are read.
+func (d *Daemon) refresh(ctx context.Context, p RefreshParams) (any, error) {
+	f, err := d.loadRegistry()
+	if err != nil {
+		return nil, err
+	}
+	proj, ok := find(f, p.Project)
+	if !ok {
+		return nil, notFound(p.Project)
+	}
+	return nil, d.cache.Refresh(ctx, proj, allParts...)
 }

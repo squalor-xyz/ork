@@ -735,12 +735,24 @@
       "id": "S15",
       "title": "Daemon snapshot cache and per-part refresh",
       "short_title": "Snapshot cache",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S03"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "2aeb2642-ee32-4965-abe6-49e41dd1b1e8",
+          "kind": "",
+          "text": "**2026-10-19** — Review FAIL: M1 finish() after Forget and re-add corrupts the new entry (dedup broken, old path value served); fix round with L1, L3, L5 and a test for the pending path.",
+          "created_at": "2026-10-19T12:33:00Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -758,7 +770,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],
