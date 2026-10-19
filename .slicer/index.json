@@ -513,6 +513,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "6445e596-3b0b-486e-9909-e28aac1e0dfe",
+          "kind": "",
+          "text": "**2026-10-19** — Owner 2026-10-19: ran the TUI and approved landing. Review notes: NOTICE points to the module cache for license texts, so a binary release must bundle the full texts; at 100 columns the run row's elapsed time wraps (cosmetic); view.go:105-106 comment is overlong.",
+          "created_at": "2026-10-19T04:01:12Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -544,7 +555,19 @@
       "depends_on": [
         "S11"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "bb25e69b-0724-4e17-9015-f01938eb5449",
+          "kind": "",
+          "text": "**2026-10-19** — From S11: the tab badge hard-codes the needs-owner hold flag; hold flags are configurable, and slicer list --held can widen the count.",
+          "created_at": "2026-10-19T04:01:12Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
