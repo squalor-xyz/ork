@@ -132,7 +132,19 @@
         "S01",
         "S03"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "77ce4238-a301-457e-b148-8628279c9119",
+          "kind": "",
+          "text": "**2026-10-19** — From S10 (2026-10-19): all four role prompts say \"ork files the question from your report\"; design.md says ork shows it to the owner and files it to adj only when the toggle is on. Reword to \"ork shows the question to the owner (and may file it)\" when the engine wires owner questions.",
+          "created_at": "2026-10-19T03:09:56Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "L",
@@ -330,7 +342,19 @@
       "depends_on": [
         "S06"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d282b9bf-e5cb-4c95-b63a-8bb663a1bf6b",
+          "kind": "",
+          "text": "**2026-10-19** — From S10: split-part and sliver prompts need the same \"no handoff before review\" wording as the implementer prompt.",
+          "created_at": "2026-10-19T03:09:56Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "L",
@@ -390,7 +414,19 @@
       "depends_on": [
         "S01"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "045ec6c9-1986-4b83-a931-169b02bca49e",
+          "kind": "",
+          "text": "**2026-10-19** — Review notes: TestPromptUnknownName survives removing the slices.Contains guard (equivalent mutation, kept as a guard). Fix-round red evidence was reintroduction mutations. The report shape (Tests line, ## Owner needed section, first-line format, placeholder set) is proposed in design.md, not decided.",
+          "created_at": "2026-10-19T03:09:57Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
