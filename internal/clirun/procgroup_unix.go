@@ -23,3 +23,11 @@ func ownProcessGroup(cmd *exec.Cmd) {
 		return err
 	}
 }
+
+// killGroup kills what is left of the child's process group after the child
+// exited, for example a grandchild still holding the output pipes.
+func killGroup(cmd *exec.Cmd) {
+	if cmd.Process != nil {
+		syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+	}
+}

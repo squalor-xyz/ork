@@ -11,7 +11,7 @@ The files ork owns. Everything else is read live from slicer, adj and git
 |---|---|
 | Project registry and per-project settings | `~/.config/ork/projects.json` |
 | UI preferences, free-form until v1 | `~/.config/ork/ui.json` |
-| Daemon socket and pidfile | `~/.local/state/ork/ork.sock`, `ork.pid` |
+| Daemon socket and pidfile (the pidfile is locked while a daemon lives) | `~/.local/state/ork/ork.sock`, `ork.pid` |
 | One record per slice run | `~/.local/state/ork/runs/<run>/run.json` |
 | Role reports and output logs | `~/.local/state/ork/runs/<run>/<role>-<round>.{md,log}` |
 | Fixture candidates from non-ok vendor exits | `~/.local/state/ork/fixtures/<vendor>/` |
@@ -25,8 +25,9 @@ commands.
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "global_cap": 4,
+  "daemon_idle_minutes": 10,
   "projects": [
     {
       "name": "DataBall",
@@ -50,6 +51,8 @@ commands.
 ```
 
 Notes on the fields:
+- `daemon_idle_minutes` is how long an idle daemon waits before it exits
+  (`daemon.idle`). 0 or absent means 10. It is new in version 2.
 - `check_command` is a fallback. ork prefers slicer's config key once
   slicer has one (`project.check-command`). The `check_minutes` value sets
   the stale flag and goes into briefs.
@@ -106,7 +109,10 @@ started. They are not a copy of slicer state. The ledger link is
 - **Zero means unset:** `global_cap`, `cap` and `check_minutes` of 0 read
   as absent, and the default applies (`registry.zero-values`).
 - **Versioned files:** every file has a `version`, and ork refuses a
-  version it does not know.
+  version it does not know. `projects.json` is at version 2; ork still reads
+  version 1 files, which lack `daemon_idle_minutes` and are strict about it
+  (a version 1 file with that key is an error), and the next save writes
+  version 2.
 - **No secrets:** no tokens or credentials in any ork file. Raw vendor
   output saved as fixtures is scanned for key-like strings and redacted
   before it is saved (*proposed*).

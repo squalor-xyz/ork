@@ -21,11 +21,48 @@ ork (TUI)  ork status --json (CLI)
 
 - **The daemon** owns waves, slices and role processes. The TUI and the
   CLI are clients (`daemon.lifetime`).
-- **Start.** Running `ork` starts the daemon if no live socket exists. The
-  daemon exits when no wave is running and no client has been connected for
-  a while (`daemon.start`). The idle timeout is *proposed* at 10 minutes.
-- **Socket.** `~/.local/state/ork/ork.sock`, mode 0600, one JSON message
-  per line. A pidfile next to it detects stale sockets.
+- **Start.** Running `ork` starts the daemon if no live socket exists. A
+  CLI command that needs the daemon does the same: it calls its start
+  function once when nothing answers, then retries the socket for a few
+  seconds. The daemon exits when no wave is running and no client has been
+  connected for `daemon_idle_minutes` (10 by default; 0 means the default;
+  `daemon.idle`, `daemon.start`). The timer stops while any client is
+  connected and starts again, in full, when the last one leaves. The wave
+  condition is a stub until the engine (S04).
+- **Socket.** `$XDG_STATE_HOME/ork/ork.sock`, else
+  `~/.local/state/ork/ork.sock`. The directory is created with mode 0700 and
+  the socket is mode 0600.
+- **Single instance.** The daemon holds an exclusive lock on `ork.pid`, beside
+  the socket, and writes its pid there. A second daemon cannot take the lock
+  and exits with an error that names the running pid. A daemon that takes the
+  lock removes a socket left by a dead one (a stale socket) and replaces it,
+  but only after a short dial shows that nothing answers on it; a socket that
+  answers, for example under a deleted pidfile, also gives the refusal. It
+  refuses to remove a file at the socket path that is not a socket. The pid is
+  written before the file is shortened, so it is never read empty. The socket
+  path is limited to 103 bytes (macOS), and the directory is set to mode 0700
+  even if it existed. The pidfile stays after exit, because the lock, not the
+  pid in it, says whether a daemon lives.
+- **Protocol.** One JSON message per line (`internal/ipc`). A client sends
+  `{"id","method","params"}` and the daemon answers `{"id","result"}` or
+  `{"id","error":{"code","message"}}`, with the id as the client sent it.
+  Requests on one connection are answered in order. A slicer or adj tool error
+  keeps its `code` and `message`; any other failure has code `internal`.
+  Methods in S03 (`internal/daemon`):
+
+  | Method | Params | Result |
+  |---|---|---|
+  | `status` | `{"project"?}` | `{"projects":[{name, path, adj, needs_you, active_relays, errors?}]}` |
+  | `snapshot` | `{"project"}` | the project's `source.Snapshot`; each part is `{"value"}` or `{"error":{code,message}}` |
+  | `projects.list` | none | `{"projects":[...]}` |
+  | `projects.add` | `{"path","name"?}` | the added project |
+  | `projects.rm` | `{"name"}` | none |
+
+  Error codes the daemon adds: `unknown_method`, `bad_params`, `not_found`,
+  `duplicate_name`, `invalid_path`, `registry`. Registry writes happen in the
+  daemon, one at a time. `snapshot` is how the TUI will read through the
+  daemon (S13); the TUI calls the adapters directly until then
+  (`dash.pre-daemon`).
 - **Restart.** On start, the daemon reconciles every non-final run record
   against live process groups and the slicer ledger. A role whose process is
   gone and that left no report is marked `lost`, and its slice waits for the
@@ -275,7 +312,9 @@ next role starts, and asks the owner.
 
 ## CLI
 
-`cli.json`. Every command takes `--json`:
+`cli.json`. Every command takes `--json`. Exit codes: 0 ok, 1 failure, 2
+usage error (an unknown command, flag or role, a missing or extra argument, a
+relative project path).
 
 ```
 ork                         open the TUI (start the daemon if needed)
@@ -290,12 +329,50 @@ ork projects add|list|rm    manage the registry
 ork doctor                  check versions, CLIs, logins, contract
 ```
 
+S03 ships `status`, `projects`, `roles print` and `doctor`
+(`cli.s03-commands`) in `internal/cli`; the binary wires them in S13. The rest
+come with the engine.
+
 `ork doctor` checks:
-- the slicer and adj versions;
-- each vendor CLI is present and logged in (by running a trivial command,
-  without reading credentials);
-- the slicer contract version against ork's pin (`boundary.contract`);
-- each project's check command and patterns.
+- the slicer and adj versions (`--version`);
+- each vendor CLI is present, with its `--version` output; a vendor CLI that
+  is missing or broken is reported and does not fail the check, because ork
+  needs only the vendors a lineup uses (*proposed*). The login check (by
+  running a trivial command, without reading credentials) comes in S06, and
+  doctor makes no model call;
+- the slicer contract: the first line of `slicer ai relay` against ork's pin
+  (`boundary.contract`). A mismatch fails the check;
+- each project's check command and patterns (later).
+
+Doctor exits 1 when slicer, adj or the contract check fails. `roles print`
+and `doctor` run in the CLI process. `status` and `projects` go through the
+daemon, which the CLI starts on demand; with `--json` an error is
+`{"error":{"code","message"}}` on stdout, and the text form is `ork: MESSAGE`
+on stderr.
+
+### Output
+
+Text output is plain lines meant to be stable. `--json` output, indented:
+
+- `status`: `{"projects":[{"name","path","adj","needs_you","active_relays":[
+  {"id","items","state","worktree","begun_at","updated_at","steps",
+  "running"}],"errors":[{"part","code","message"}]}]}`. `needs_you` is the
+  project's count of open adj records until the engine adds approvals, stops
+  and pauses (*proposed*). `active_relays` are slicer's active relay runs.
+  `errors` lists failed parts (`items`, `goals`, `runs`, `open`, `decided`)
+  with the tool's own code. Text: one line `NAME: needs you N, active relays
+  M`, then one line per relay and per error.
+- `projects list`: `{"projects":[...]}`, each as in `projects.json`. Text: name,
+  path and `adj`, in columns.
+- `projects add PATH [--name N]`: `{"project":{...}}`. The name defaults to the
+  path's base name. `adj` is true when `PATH/.adjudicate.json` exists. A
+  duplicate name or a relative path is refused. Text: `added NAME PATH [(adj)]`.
+- `projects rm NAME`: `{"removed":"NAME"}`.
+- `roles print [ROLE]`: `{"roles":[{"name","prompt"}]}`. Text: the prompt of
+  ROLE as embedded, or all four with a `==== NAME ====` line before each.
+- `doctor`: `{"ok","tools":[{"name","required","present","path","version",
+  "ok","error"}],"contract":{"pin","found","ok","error"}}`. Text: one
+  `[ok]`, `[--]` or `[FAIL]` line per check.
 
 ## Testing
 

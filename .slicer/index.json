@@ -108,7 +108,7 @@
       "id": "S03",
       "title": "Daemon, socket and JSON CLI (ork status)",
       "short_title": "Daemon and CLI",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S02"
@@ -143,7 +143,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

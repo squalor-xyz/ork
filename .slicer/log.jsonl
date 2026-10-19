@@ -75,3 +75,5 @@
 {"when": "2026-10-19T03:12:02Z", "item": "S02", "action": "note", "from": "", "to": "", "note": "Review notes: Seed needs a filesystem with hard links (os.Li", "by": "Jon R"}
 {"when": "2026-10-19T03:19:22Z", "item": "S03", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-10-19T03:19:22Z", "item": "S13", "action": "add", "from": "", "to": "open", "note": "Wire the daemon, CLI and TUI into the ork binary"}
+{"when": "2026-10-19T03:20:27Z", "item": "S03", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-19T04:07:14Z", "item": "S03", "action": "status", "from": "started", "to": "done", "note": "Added internal/ipc, internal/daemon and internal/cli (status, projects add|list|rm, roles print, doctor); registry version 2 with daemon_idle_minutes, version 1 files still load; clirun kills the process group when a call ends so a grandchild holding stdout no longer stalls it; docs/design.md, docs/state.md and CHANGELOG.md updated. go test -race, go vet, gofmt, slicer check and adj lint green; reviewed and gated (VERDICT: PASS).", "by": "Jon R"}

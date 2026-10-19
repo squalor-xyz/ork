@@ -10,3 +10,9 @@
   monitoring dashboard plus launching slice waves; engine design
   (docs/design.md); 48 owner decisions recorded in adj; license
   GPL-3.0-or-later.
+- S03: the daemon (`internal/daemon`), its Unix socket protocol
+  (`internal/ipc`) and the first JSON CLI commands (`internal/cli`): status,
+  projects add|list|rm, roles print and doctor. Registry version 2 adds
+  `daemon_idle_minutes`; version 1 files still load. `clirun` kills a call's
+  process group when the call ends, so a grandchild holding stdout no longer
+  stalls it. The binary is wired in S13.

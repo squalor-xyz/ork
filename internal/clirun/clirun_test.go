@@ -52,8 +52,17 @@ func helperMain(args []string) {
 		}
 		fmt.Fprintf(os.Stdout, "%d\n", child.Process.Pid)
 		time.Sleep(time.Hour)
+	case "leave": // start a grandchild that holds stdout, print its pid, exit 0
+		child := exec.Command(os.Args[0], "block")
+		child.Env = os.Environ()
+		child.Stdout = os.Stdout
+		if err := child.Start(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(98)
+		}
+		fmt.Fprintf(os.Stdout, "%d\n", child.Process.Pid)
 	case "block":
-		time.Sleep(time.Hour)
+		time.Sleep(30 * time.Second) // bounded, so a failing test leaves no long-lived orphan
 	}
 }
 
@@ -92,6 +101,38 @@ func TestTimeoutKillsTheProcessGroup(t *testing.T) {
 	for alive(pid) {
 		if time.Now().After(deadline) {
 			t.Fatalf("grandchild %d is still running after the timeout", pid)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+}
+
+func TestGrandchildHoldingStdoutAfterExitIsKilled(t *testing.T) {
+	call := helper(t, 6*time.Second, "leave")
+	start := time.Now()
+	res, err := Run(context.Background(), call)
+	elapsed := time.Since(start)
+
+	// Register the kill first, so no check below can leave the grandchild behind.
+	pid, perr := strconv.Atoi(strings.TrimSpace(string(res.Stdout)))
+	if perr == nil {
+		t.Cleanup(func() { syscall.Kill(pid, syscall.SIGKILL) })
+	}
+	if err != nil {
+		t.Fatalf("a child that exited 0 must succeed, got %T: %v", err, err)
+	}
+	if elapsed > 5*time.Second {
+		t.Fatalf("call took %v, deadline was 6s", elapsed)
+	}
+	if res.ExitCode != 0 {
+		t.Fatalf("exit code %d", res.ExitCode)
+	}
+	if perr != nil {
+		t.Fatalf("output lost: stdout %q, stderr %q", res.Stdout, res.Stderr)
+	}
+	deadline := time.Now().Add(5 * time.Second)
+	for alive(pid) {
+		if time.Now().After(deadline) {
+			t.Fatalf("grandchild %d is still running after Run returned", pid)
 		}
 		time.Sleep(20 * time.Millisecond)
 	}

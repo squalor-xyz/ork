@@ -1,0 +1,248 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+package daemon
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"slices"
+	"sync"
+
+	"github.com/squalor-xyz/ork/internal/ipc"
+	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/source"
+)
+
+func (d *Daemon) registryPath() string {
+	if d.cfg.RegistryPath != "" {
+		return d.cfg.RegistryPath
+	}
+	p, _ := registry.DefaultPath()
+	return p
+}
+
+func (d *Daemon) seedRoot() string {
+	if d.cfg.SeedRoot != "" {
+		return d.cfg.SeedRoot
+	}
+	r, _ := registry.DefaultSeedRoot()
+	return r
+}
+
+// loadRegistry reads the registry, seeding it first when the file is missing.
+func (d *Daemon) loadRegistry() (*registry.File, error) {
+	f, _, err := registry.LoadOrSeed(d.registryPath(), d.seedRoot())
+	if err != nil {
+		return nil, &ipc.Error{Code: CodeRegistry, Message: err.Error()}
+	}
+	return f, nil
+}
+
+func badParams(err error) error {
+	return &ipc.Error{Code: CodeBadParams, Message: "bad params: " + err.Error()}
+}
+
+// decode reads params into v, refusing keys v does not name. Missing params
+// leave v as it is.
+func decode(params json.RawMessage, v any) error {
+	if len(params) == 0 || string(params) == "null" {
+		return nil
+	}
+	dec := json.NewDecoder(bytes.NewReader(params))
+	dec.DisallowUnknownFields()
+	if err := dec.Decode(v); err != nil {
+		return badParams(err)
+	}
+	return nil
+}
+
+func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessage) (any, error) {
+	switch method {
+	case MethodStatus:
+		var p StatusParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.status(ctx, p)
+	case MethodSnapshot:
+		var p SnapshotParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.snapshot(ctx, p)
+	case MethodProjectsList:
+		f, err := d.loadRegistry()
+		if err != nil {
+			return nil, err
+		}
+		return ProjectsResult{Projects: nonNil(f.Projects)}, nil
+	case MethodProjectsAdd:
+		var p AddProjectParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.addProject(p)
+	case MethodProjectsRm:
+		var p RemoveProjectParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return nil, d.removeProject(p.Name)
+	}
+	return nil, &ipc.Error{Code: CodeUnknownMethod, Message: "unknown method " + method}
+}
+
+func nonNil[T any](s []T) []T {
+	if s == nil {
+		return []T{}
+	}
+	return s
+}
+
+func notFound(name string) error {
+	return &ipc.Error{Code: CodeNotFound, Message: fmt.Sprintf("no project named %q", name)}
+}
+
+func find(f *registry.File, name string) (registry.Project, bool) {
+	for _, p := range f.Projects {
+		if p.Name == name {
+			return p, true
+		}
+	}
+	return registry.Project{}, false
+}
+
+func (d *Daemon) snapshot(ctx context.Context, p SnapshotParams) (*SnapshotResult, error) {
+	f, err := d.loadRegistry()
+	if err != nil {
+		return nil, err
+	}
+	proj, ok := find(f, p.Project)
+	if !ok {
+		return nil, notFound(p.Project)
+	}
+	s := d.cfg.Source.Snapshot(ctx, proj)
+	return &SnapshotResult{
+		Project: s.Project,
+		Items:   partOf(s.Items),
+		Goals:   partOf(s.Goals),
+		Runs:    partOf(s.Runs),
+		Open:    partOf(s.Open),
+		Decided: partOf(s.Decided),
+	}, nil
+}
+
+func (d *Daemon) status(ctx context.Context, p StatusParams) (*StatusResult, error) {
+	f, err := d.loadRegistry()
+	if err != nil {
+		return nil, err
+	}
+	projects := f.Projects
+	if p.Project != "" {
+		proj, ok := find(f, p.Project)
+		if !ok {
+			return nil, notFound(p.Project)
+		}
+		projects = []registry.Project{proj}
+	}
+	snaps := make([]source.Snapshot, len(projects))
+	var wg sync.WaitGroup
+	for i, proj := range projects {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			snaps[i] = d.cfg.Source.Snapshot(ctx, proj)
+		}()
+	}
+	wg.Wait()
+
+	out := &StatusResult{Projects: make([]ProjectStatus, 0, len(projects))}
+	for i, s := range snaps {
+		out.Projects = append(out.Projects, projectStatus(projects[i], s))
+	}
+	return out, nil
+}
+
+func projectStatus(p registry.Project, s source.Snapshot) ProjectStatus {
+	ps := ProjectStatus{
+		Name:         p.Name,
+		Path:         p.Path,
+		Adj:          p.Adj,
+		NeedsYou:     len(s.Open.Value),
+		ActiveRelays: []Relay{},
+	}
+	for _, r := range s.Runs.Value {
+		ps.ActiveRelays = append(ps.ActiveRelays, Relay{
+			ID: r.ID, Items: nonNil(r.Items), State: r.State, Worktree: r.Worktree,
+			BeganAt: r.BeganAt, UpdatedAt: r.UpdatedAt, Steps: r.Counts.Steps, Running: r.Counts.Running,
+		})
+	}
+	for _, part := range []struct {
+		name string
+		err  error
+	}{
+		{"items", s.Items.Err}, {"goals", s.Goals.Err}, {"runs", s.Runs.Err},
+		{"open", s.Open.Err}, {"decided", s.Decided.Err},
+	} {
+		if part.err != nil {
+			e := ipc.ErrorOf(part.err)
+			ps.Errors = append(ps.Errors, PartError{Part: part.name, Code: e.Code, Message: e.Message})
+		}
+	}
+	return ps
+}
+
+func (d *Daemon) addProject(p AddProjectParams) (registry.Project, error) {
+	if !filepath.IsAbs(p.Path) {
+		return registry.Project{}, &ipc.Error{Code: CodeInvalidPath, Message: fmt.Sprintf("path %q is not absolute", p.Path)}
+	}
+	path := filepath.Clean(p.Path)
+	name := p.Name
+	if name == "" {
+		name = filepath.Base(path)
+	}
+	if name == string(filepath.Separator) {
+		return registry.Project{}, &ipc.Error{Code: CodeInvalidPath, Message: fmt.Sprintf("path %q has no base name; pass a name", p.Path)}
+	}
+	proj := registry.Project{Name: name, Path: path}
+	if info, err := os.Stat(filepath.Join(path, ".adjudicate.json")); err == nil && info.Mode().IsRegular() {
+		proj.Adj = true
+	}
+
+	d.regMu.Lock()
+	defer d.regMu.Unlock()
+	f, err := d.loadRegistry()
+	if err != nil {
+		return registry.Project{}, err
+	}
+	if _, dup := find(f, name); dup {
+		return registry.Project{}, &ipc.Error{Code: CodeDuplicateName, Message: fmt.Sprintf("a project named %q is already registered", name)}
+	}
+	f.Projects = append(f.Projects, proj)
+	if err := registry.Save(d.registryPath(), f); err != nil {
+		return registry.Project{}, &ipc.Error{Code: CodeRegistry, Message: err.Error()}
+	}
+	return proj, nil
+}
+
+func (d *Daemon) removeProject(name string) error {
+	d.regMu.Lock()
+	defer d.regMu.Unlock()
+	f, err := d.loadRegistry()
+	if err != nil {
+		return err
+	}
+	i := slices.IndexFunc(f.Projects, func(p registry.Project) bool { return p.Name == name })
+	if i < 0 {
+		return notFound(name)
+	}
+	f.Projects = slices.Delete(f.Projects, i, i+1)
+	if err := registry.Save(d.registryPath(), f); err != nil {
+		return &ipc.Error{Code: CodeRegistry, Message: err.Error()}
+	}
+	return nil
+}

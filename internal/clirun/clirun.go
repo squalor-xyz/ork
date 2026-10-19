@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // Package clirun runs one CLI call with a deadline and returns its captured
-// stdout, stderr and exit code. Each call runs in its own process group, and
-// a call past its deadline has the whole group killed.
+// stdout, stderr and exit code. Each call runs in its own process group. The
+// whole group is killed when the call passes its deadline or is cancelled,
+// and again when the call ends, so a grandchild never outlives it.
 package clirun
 
 import (
@@ -138,6 +139,14 @@ func Run(ctx context.Context, c Call) (Result, error) {
 	ownProcessGroup(cmd)
 
 	err := cmd.Run()
+	// The call is over, so nothing it started may outlive it. A grandchild
+	// that kept the output pipes open made Wait give up after waitDelay.
+	if cmd.ProcessState != nil {
+		killGroup(cmd)
+		if errors.Is(err, exec.ErrWaitDelay) && cmd.ProcessState.Success() {
+			err = nil
+		}
+	}
 	res := Result{Stdout: stdout.Bytes(), Stderr: stderr.Bytes(), ExitCode: -1}
 	if cmd.ProcessState != nil {
 		res.ExitCode = cmd.ProcessState.ExitCode()

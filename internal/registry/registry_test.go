@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 // stateExample returns the projects.json example from docs/state.md, so the
@@ -80,7 +81,7 @@ func TestRoundTripKeepsEveryField(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if f.Version != 1 || f.GlobalCap != 4 || len(f.Projects) != 1 {
+	if f.Version != 2 || f.GlobalCap != 4 || f.DaemonIdleMinutes != 10 || len(f.Projects) != 1 {
 		t.Fatalf("loaded: %+v", f)
 	}
 	p := f.Projects[0]
@@ -117,7 +118,7 @@ func TestRoundTripKeepsEveryField(t *testing.T) {
 
 func TestSaveKeepsAdjFalse(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "projects.json")
-	f := &File{Version: 1, Projects: []Project{{Name: "a", Path: "/p/a", Adj: false}}}
+	f := &File{Version: Version, Projects: []Project{{Name: "a", Path: "/p/a", Adj: false}}}
 	if err := Save(path, f); err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +133,7 @@ func TestUnknownVersionRefused(t *testing.T) {
 		name, body, want string
 		got              int
 	}{
-		{"newer", `{"version": 2, "projects": [], "future_field": true}`, "version 2", 2},
+		{"newer", `{"version": 3, "projects": [], "future_field": true}`, "version 3", 3},
 		{"missing", `{"projects": []}`, "version 0", 0},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -150,6 +151,69 @@ func TestUnknownVersionRefused(t *testing.T) {
 				t.Fatalf("not a *VersionError with Got=%d: %v", tc.got, err)
 			}
 		})
+	}
+}
+
+func TestVersion1FileLoadsAndSavesAsVersion2(t *testing.T) {
+	dir := t.TempDir()
+	in := filepath.Join(dir, "projects.json")
+	writeFile(t, in, []byte(`{"version": 1, "global_cap": 3, "projects": [{"name": "a", "path": "/p/a", "adj": true, "cap": 2}]}`))
+	f, err := Load(in)
+	if err != nil {
+		t.Fatalf("a version 1 file must load: %v", err)
+	}
+	if f.Version != 2 || f.GlobalCap != 3 || f.DaemonIdleMinutes != 0 || len(f.Projects) != 1 || f.Projects[0].Cap != 2 {
+		t.Fatalf("loaded: %+v", f)
+	}
+	if err := Save(in, f); err != nil {
+		t.Fatal(err)
+	}
+	saved, _ := os.ReadFile(in)
+	var head struct {
+		Version int `json:"version"`
+	}
+	if err := json.Unmarshal(saved, &head); err != nil || head.Version != 2 {
+		t.Fatalf("saved version %d, %v:\n%s", head.Version, err, saved)
+	}
+	if strings.Contains(string(saved), "daemon_idle_minutes") {
+		t.Fatalf("an unset daemon_idle_minutes is written:\n%s", saved)
+	}
+}
+
+func TestVersion1FileRefusesVersion2Field(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "projects.json")
+	writeFile(t, path, []byte(`{"version": 1, "daemon_idle_minutes": 5, "projects": []}`))
+	_, err := Load(path)
+	if err == nil || !strings.Contains(err.Error(), "daemon_idle_minutes") {
+		t.Fatalf("a version 1 file with a version 2 key must fail naming it: %v", err)
+	}
+}
+
+func TestVersion2UnknownKeyRefused(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "projects.json")
+	writeFile(t, path, []byte(`{"version": 2, "daemon_idle_minute": 5, "projects": []}`))
+	_, err := Load(path)
+	if err == nil || !strings.Contains(err.Error(), "daemon_idle_minute") {
+		t.Fatalf("an unknown key must fail naming it: %v", err)
+	}
+}
+
+func TestDaemonIdle(t *testing.T) {
+	for _, tc := range []struct {
+		minutes int
+		want    time.Duration
+	}{
+		{0, 10 * time.Minute}, // 0 equals absent (registry.zero-values)
+		{1, time.Minute},
+		{25, 25 * time.Minute},
+	} {
+		if got := (&File{DaemonIdleMinutes: tc.minutes}).DaemonIdle(); got != tc.want {
+			t.Errorf("DaemonIdle for %d minutes = %v, want %v", tc.minutes, got, tc.want)
+		}
+	}
+	f := &File{Version: Version, DaemonIdleMinutes: -1, Projects: []Project{}}
+	if err := f.Validate(); err == nil || !strings.Contains(err.Error(), "daemon_idle_minutes") {
+		t.Fatalf("a negative daemon_idle_minutes must fail validation: %v", err)
 	}
 }
 
@@ -211,7 +275,7 @@ func TestSaveWritesTempInSameDirAndRenames(t *testing.T) {
 		}
 		return orig(f, data)
 	}
-	f := &File{Version: 1, Projects: []Project{{Name: "a", Path: "/p/a"}}}
+	f := &File{Version: Version, Projects: []Project{{Name: "a", Path: "/p/a"}}}
 	if err := Save(path, f); err != nil {
 		t.Fatal(err)
 	}
@@ -231,7 +295,7 @@ func TestSaveWritesTempInSameDirAndRenames(t *testing.T) {
 
 func TestSaveFailureKeepsOldFileAndLeavesNoTemp(t *testing.T) {
 	old := []byte(`{"version": 1, "projects": []}` + "\n")
-	f := &File{Version: 1, Projects: []Project{{Name: "a", Path: "/p/a"}}}
+	f := &File{Version: Version, Projects: []Project{{Name: "a", Path: "/p/a"}}}
 
 	t.Run("write fails", func(t *testing.T) {
 		path := filepath.Join(t.TempDir(), "projects.json")
@@ -335,7 +399,7 @@ func TestSeedWritesOnlyDecidedProjectsThatExist(t *testing.T) {
 		{Name: "adjudicate", Path: filepath.Join(root, "adjudicate"), Adj: true},
 		{Name: "DataBall", Path: filepath.Join(root, "DataBall"), Adj: false},
 	}
-	if f.Version != 1 || !reflect.DeepEqual(f.Projects, want) {
+	if f.Version != Version || !reflect.DeepEqual(f.Projects, want) {
 		t.Fatalf("seeded file: %+v", f)
 	}
 	if report.Path != path || !reflect.DeepEqual(report.Written, want) ||
@@ -424,7 +488,7 @@ func TestLoadOrSeedUsesAFileThatAppearsAfterTheCheck(t *testing.T) {
 func TestSaveStillReplaces(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "projects.json")
 	writeFile(t, path, []byte(`{"version": 1, "projects": []}`))
-	f := &File{Version: 1, Projects: []Project{{Name: "a", Path: "/p/a"}}}
+	f := &File{Version: Version, Projects: []Project{{Name: "a", Path: "/p/a"}}}
 	if err := Save(path, f); err != nil {
 		t.Fatal(err)
 	}

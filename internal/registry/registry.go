@@ -12,10 +12,18 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"time"
 )
 
-// Version is the only projects.json version this package reads and writes.
-const Version = 1
+// Version is the projects.json version this package writes. It also reads
+// version 1, which lacks daemon_idle_minutes; Load returns such a file as
+// version 2, so the next Save writes version 2.
+const Version = 2
+
+// DefaultDaemonIdleMinutes is how long an idle daemon waits before it exits
+// (daemon.idle). A daemon_idle_minutes of 0 means this default
+// (registry.zero-values).
+const DefaultDaemonIdleMinutes = 10
 
 // Budgets caps a run. A zero value means unset.
 type Budgets struct {
@@ -80,13 +88,24 @@ type File struct {
 	Version   int       `json:"version"`
 	GlobalCap int       `json:"global_cap,omitempty"`
 	Projects  []Project `json:"projects"`
+
+	// DaemonIdleMinutes is new in version 2. Zero means unset.
+	DaemonIdleMinutes int `json:"daemon_idle_minutes,omitempty"`
+}
+
+// fileV1 is the version 1 shape. Decoding a version 1 file into it keeps the
+// strict-key rule: a key added in version 2 is unknown there.
+type fileV1 struct {
+	Version   int       `json:"version"`
+	GlobalCap int       `json:"global_cap,omitempty"`
+	Projects  []Project `json:"projects"`
 }
 
 // VersionError reports a file version this package does not know.
 type VersionError struct{ Got int }
 
 func (e *VersionError) Error() string {
-	return fmt.Sprintf("unknown registry version %d (this ork reads version %d)", e.Got, Version)
+	return fmt.Sprintf("unknown registry version %d (this ork reads versions 1 and %d)", e.Got, Version)
 }
 
 // DefaultPath returns $XDG_CONFIG_HOME/ork/projects.json, else
@@ -115,13 +134,19 @@ func Load(path string) (*File, error) {
 	if err := json.Unmarshal(data, &head); err != nil {
 		return nil, fmt.Errorf("registry %s: %w", path, err)
 	}
-	if head.Version != Version {
+	if head.Version != 1 && head.Version != Version {
 		return nil, fmt.Errorf("registry %s: %w", path, &VersionError{Got: head.Version})
 	}
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.DisallowUnknownFields()
 	var f File
-	if err := dec.Decode(&f); err != nil {
+	if head.Version == 1 {
+		var v1 fileV1
+		if err := dec.Decode(&v1); err != nil {
+			return nil, fmt.Errorf("registry %s: %w", path, err)
+		}
+		f = File{Version: Version, GlobalCap: v1.GlobalCap, Projects: v1.Projects}
+	} else if err := dec.Decode(&f); err != nil {
 		return nil, fmt.Errorf("registry %s: %w", path, err)
 	}
 	if _, err := dec.Token(); err != io.EOF {
@@ -140,6 +165,9 @@ func (f *File) Validate() error {
 	}
 	if f.GlobalCap < 0 {
 		return errors.New("global_cap must not be negative")
+	}
+	if f.DaemonIdleMinutes < 0 {
+		return errors.New("daemon_idle_minutes must not be negative")
 	}
 	seen := map[string]bool{}
 	for i, p := range f.Projects {
@@ -234,4 +262,13 @@ func save(path string, f *File, noReplace bool) error {
 		return fmt.Errorf("registry %s: %w", path, err)
 	}
 	return nil
+}
+
+// DaemonIdle returns how long an idle daemon waits before it exits. An unset
+// daemon_idle_minutes gives DefaultDaemonIdleMinutes.
+func (f *File) DaemonIdle() time.Duration {
+	if f.DaemonIdleMinutes <= 0 {
+		return DefaultDaemonIdleMinutes * time.Minute
+	}
+	return time.Duration(f.DaemonIdleMinutes) * time.Minute
 }
