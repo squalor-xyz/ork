@@ -1,0 +1,9 @@
+gpt-6.1-sol	list	Latest workhorse model for coding and everyday work.
+gpt-6-astra	list	Frontier intelligence for the most demanding work.
+gpt-6-sol	list	Previous generation workhorse model.
+gpt-6-luna	list	Fast and affordable model for easier tasks.
+gpt-reserve	hide	Fast and affordable agentic coding model.
+gpt-5.6-sol	list	Older generation workhorse model.
+gpt-5.6-terra	list	Older balanced model for straightforward work.
+gpt-5.6-luna	list	Older fast and efficient model.
+codex-auto-review	hide	Automatic approval review model for Codex.

@@ -1,0 +1,4 @@
+# Output of grok usage --help (grok 1.0.62).
+1:Print persisted token and cost usage for a session
+2-
+3-Usage: grok usage [OPTIONS] <SESSION_ID> [TURN]

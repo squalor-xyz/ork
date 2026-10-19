@@ -166,15 +166,19 @@ The `claude -p --output-format json`, `codex exec --json` and
 (`--permission-mode plan`, `codex -s read-only`), come from
 `agents/setup/lib/workflow-vendor.sh:22-41`.
 
-The capabilities below are *unverified* and must be settled by the spike:
+The S01 spike measured these cells on 2026-10-18 with real headless runs in a
+throwaway repo. Each cell cites a fixture under `testdata/vendors/<vendor>/`
+or says *unverified* and why. CLI versions: claude 2.1.302, codex-cli 0.163.0,
+grok 1.0.62. Grok has no successful run, so most of its column is
+*unverified* (see Spike results).
 
 | Capability | claude | codex | grok |
 |---|---|---|---|
-| Streamed events for the output tail | `stream-json`? | `--json` events? | ? |
-| Usage (tokens, cost) in the result | ? | ? | ? |
-| Resume a session by id | `--resume`? | `exec resume`? | ? |
-| Per-tool allowlist | `--allowedTools`? | sandbox modes only? | ? |
-| Rate-limit signal | ? | ? | ? |
+| Streamed events for the output tail | `--output-format stream-json --verbose --include-partial-messages` emits `stream_event` text deltas, then `assistant`, `rate_limit_event` and `result` (`testdata/vendors/claude/02-stream-json.stdout`). `--verbose` was used; without it is untested. | `--json` emits JSONL: `thread.started`, `turn.started`, `item.completed` (agent message), `turn.completed` (`testdata/vendors/codex/01-plain-stream-jsonl.stdout`). The run had whole messages and no delta events. | *unverified*: the stream probe reached the API and got HTTP 403. Its output is an init event, then a `result` event with subtype `error_during_execution` (`testdata/vendors/grok/02-stream-messages-json.stdout`, line 2). No model output streamed. |
+| Usage (tokens, cost) in the result | `result.usage` (input, output, cache tokens), `result.total_cost_usd`, and `modelUsage.<model>.costUSD` (`modelUsage` is an object keyed by model name, with `costBasis` `list`; `testdata/vendors/claude/01-plain-json.stdout`). | `turn.completed.usage` has input, cached input, cache write, output and reasoning tokens (`testdata/vendors/codex/01-plain-stream-jsonl.stdout`). No cost field appears, so cost is *unverified*. | *unverified*: the `result` event of the stream probe carries `usage` and `total_cost_usd` fields, but only zero values were seen (`testdata/vendors/grok/02-stream-messages-json.stdout`). Real values are *unverified*. `grok usage SESSION_ID` is documented as "persisted token and cost usage for a session" (`testdata/vendors/grok/usage-excerpt.txt`) and was not run. |
+| Resume a session by id | `claude -p --resume <session_id>` answered "OK", the word asked for in the first run, with the same session id and cache reads (`testdata/vendors/claude/03-resume.stdout`). | `codex exec resume <thread_id> -m gpt-6-luna --json` returned the same thread id and cached input tokens (`testdata/vendors/codex/02-resume-by-id.stdout`). The `resume` help lists no `-s` or `-C` (`testdata/vendors/codex/resume-help.txt`). | *unverified*: the resume probe used a team id as the session id, which was a probe mistake. It got HTTP 404 (`testdata/vendors/grok/03-resume-by-id.stderr`). |
+| Per-tool allowlist | `--allowedTools Read` with `--permission-prompts none` refused a Write. The denial is listed in `permission_denials` and the exit code is 0 (`testdata/vendors/claude/04-allowlist-denies-write.stdout`; `.repo-status` is empty). A positive control, an allowlisted tool that runs, was not measured. | No per-tool allowlist. `-s` takes `read-only`, `workspace-write` or `danger-full-access` only (`testdata/vendors/codex/help-excerpt.txt`). The one read-only run (`testdata/vendors/codex/03-readonly-sandbox-write.stdout`) ran no command: it has only agent messages. The model said the filesystem was read-only, and `.repo-status` is empty. The sandbox was not exercised, so codex's write block is *unverified*. Open: adj 50. | *unverified*: the allowlist probe got HTTP 403 before any tool call. `--tools` takes a comma list (`testdata/vendors/grok/help-excerpt.txt`), and the init event names tools such as `read_file` and `write`, so `Read` may be the wrong name (`testdata/vendors/grok/02-stream-messages-json.stdout`). |
+| Rate-limit signal | Not forced. Stream output carried `rate_limit_event` with `rate_limit_info.status` `allowed`, `rateLimitType` `five_hour` and `resetsAt`. Utilization is at `rate_limit_info.unifiedWindows.{five_hour,seven_day}.utilization` (`testdata/vendors/claude/02-stream-json.stdout`). A `rejected` status and the exit code when limited are *unverified*. The help documents only `--fallback-model`, for "overloaded or not available" (`testdata/vendors/claude/rate-limit-help-grep.txt`). | *unverified*: no rate-limit or quota term appears in `codex --help` or `codex exec --help` (`testdata/vendors/codex/rate-limit-help-grep.txt`). Nothing was observed. Open: adj 51. | *unverified*: every run that reached the API (probes 01, 02, 04 and 05) got HTTP 403, "used all available credits or reached its monthly spending limit" (`testdata/vendors/grok/01-plain-json.stdout`). That is a quota limit, not a documented rate-limit signal, and ork has no class for it yet. No rate-limit term appears in `grok --help` (`testdata/vendors/grok/rate-limit-help-grep.txt`). |
 
 - **Fallback** (`vendor.fallback`): an exit classified as rate-limited
   moves the role to the next entry in its chain. The new vendor starts
@@ -185,12 +189,80 @@ The capabilities below are *unverified* and must be settled by the spike:
   documented signals. Every non-ok exit saves its raw stdout, stderr and
   JSON under `~/.local/state/ork/fixtures/<vendor>/` as a candidate. An
   unclassified exit stops the slice for the owner, who can mark it
-  "rate limit" in one keystroke. That sample becomes a test fixture.
+  "rate limit" in one keystroke. That sample becomes a test fixture. The
+  spike's grok 403 (`testdata/vendors/grok/01-plain-json.stdout`) would be
+  such a candidate: no documented rate-limit signal matches it, so it stops
+  the slice for the owner.
 - **Permissions** (`launch.permissions`): there is a per-project, per-role
   allowlist in the registry. Read-only roles run in their vendor's read-only
-  mode. A denial stops the slice.
+  mode. A denial stops the slice. The spike measured the claude allowlist
+  denial: it exits 0 and shows only in `permission_denials`, so ork must read
+  the JSON to see it. codex has no per-tool allowlist (open: adj 50), so its
+  roles can be held only by sandbox mode.
 - **Credentials:** ork uses each CLI's own login. It never reads, stores
   or passes credentials.
+
+### Spike results
+
+- **Calls.** claude 6 invocations (probes 01 to 06), codex 4, grok 6. Each
+  probe's command is in `testdata/vendors/<vendor>/NN-*.cmd`, with the probe
+  repo shown as `<probe-repo>`. The scripts are `spike/claude.sh`,
+  `spike/codex.sh`, `spike/grok.sh` and `spike/common.zsh`. The `.cmd` files
+  were regenerated with `S01_DRY_RUN=1`, which writes the command line without
+  running it, so that step made no vendor call. The grok probe 03 line used
+  the team id from the first run as `S01_DRY_SID`.
+- **Models.** claude probes 01 to 04 used `haiku`, whose `modelUsage` key is
+  `claude-haiku-5-5`. Probe 05 ran on `claude-sonnet-5-5`, although its command
+  line says `--model haiku` (`testdata/vendors/claude/05-plan-mode-edit.stdout`,
+  `modelUsage` key, cost 0.0818584). That was a call on a non-cheapest model.
+  The cause is not known. Probe 06 failed before any model ran, so its
+  `modelUsage` is empty. codex `gpt-6-luna`, described as "Fast and affordable
+  model for easier tasks" (`testdata/vendors/codex/models.txt`). grok
+  `grok-4.5`. The CLIs print no prices, so "cheapest" is not verified for codex
+  or grok. `grok models` also lists `ollama-local-*` entries
+  (`testdata/vendors/grok/models.txt`), which were not used.
+- **Exit codes.** claude exits 0 on success and on the denied write. It exits 1
+  on an unknown model, with JSON that has `is_error` true and
+  `api_error_status` 404 and `subtype` "success"
+  (`testdata/vendors/claude/06-bad-model.stdout`). codex exits 0 on success and
+  on the read-only run, and 1 on an unknown model, as a `turn.failed` event
+  (`testdata/vendors/codex/04-bad-model.stdout`). grok exits 1 on the 403 and on
+  an unknown model (`testdata/vendors/grok/06-bad-model.stderr`). A denial or a
+  blocked write is not an exit code, so the classifier must read the output.
+- **Plan mode (claude).** No edit was attempted: `permission_denials` is empty
+  and `notes.txt` is unchanged (`testdata/vendors/claude/05-plan-mode-edit.repo-status`
+  is empty). The result text says a plan was saved under `<home>/.claude/plans`.
+  That was not checked, and nothing under `~/.claude` was opened. A worktree
+  fingerprint would not see it. This probe is also the sonnet call above.
+- **Grok auth.** `grok models` printed "You are not authenticated."
+  (`testdata/vendors/grok/models.txt`). The `-p` call still reached the API with
+  the init event's auth source `oauth`
+  (`testdata/vendors/grok/02-stream-messages-json.stdout`, field name redacted),
+  and the team had no credits left (HTTP 403). No login was attempted.
+- **Grok is not measured.** Probes 01, 02, 04 and 05 reached the API and got
+  HTTP 403. Probe 03 got HTTP 404 and probe 06 failed on the model name. Probes
+  02 to 06 ran after the 403 because the first gate in `spike/grok.sh` only
+  stopped on an auth message. Probe 03 used a team id as the session id. Probe
+  04 used `--tools Read`, which may not be a grok tool name. Grok needs restored
+  credits and a new call-budget decision from the owner before any of its cells
+  can be measured.
+- **Redaction.** `spike/common.zsh` replaces the home directory with `<home>`,
+  the probe repo with `<probe-repo>`, other scratch paths with `<scratch>`, the
+  project directory name with `<project-dir>`, and `/tmp/cc-socks` sockets with
+  `<tmp>/cc-socks/<socket>`. It also redacts `sk-` keys, bearer tokens, key,
+  token, secret and password values, runs of 40 or more characters, the grok
+  team id, the id after `--resume` in `.cmd` files, and key-like field names.
+  Session ids in outputs are kept: they are local run ids, not credentials.
+  Fixtures rename `apiKeySource` to `REDACTED-KEY-NAME`, so parser tests must
+  not read that field from fixtures. The check
+  `rg -i 'sk-|api[_-]?key|token"\s*:\s*"[A-Za-z0-9]{20,}' testdata/` finds
+  nothing. The sweep for `/Users/jon`, `/private/tmp` and `/tmp/cc-socks` finds
+  nothing in `testdata/`. In `spike/` it finds only the rule lines in
+  `common.zsh`, which must name those strings.
+- **Help text.** Full help texts are not stored. The key pattern matches
+  words such as "disk-" in them, so the excerpts keep only the lines that
+  cells cite. Rate-limit terms were searched in full help text, and the
+  matches are in each `rate-limit-help-grep.txt`.
 
 ## Budgets
 

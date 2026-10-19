@@ -17,7 +17,7 @@
       "id": "S01",
       "title": "Vendor capability spike: streaming, usage, resume, allowlists, rate-limit signals for claude, codex, grok",
       "short_title": "Vendor spike",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -50,7 +50,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

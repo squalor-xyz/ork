@@ -1,0 +1,67 @@
+# Excerpts of claude --help (version 2.1.302), selected by the option names the S01 cells cite.
+# Made with: rg -n -A3 over the help text for the options named in this file's cells.
+23:  --allowedTools, --allowed-tools <tools...>
+24-      Comma or space-separated list of tool names to allow (e.g. "Bash(git *)
+25-      Edit")
+26-  --append-system-prompt <prompt>       Append a system prompt to the default
+--
+37:                                        --resume <session-id>, continues that
+38-                                        session in the background under the same
+39-                                        ID, or starts a copy and says so when
+40-                                        the session is already running
+--
+79:                                        --resume <id> to pick the session)
+80-  --disable-slash-commands              Disable all skills
+81-  --disallowedTools, --disallowed-tools <tools...>
+82-      Comma or space-separated list of tool names to deny (e.g. "Bash(git *)
+--
+94:  --fallback-model <model>              Enable automatic fallback to specified
+95-                                        model(s) when the default model is
+96-                                        overloaded or not available. Accepts a
+97-                                        comma-separated list to try each in
+--
+106:                                        with --resume or --continue)
+107-  --forward-subagent-text               Forward subagent text and thinking
+108-                                        blocks as assistant/user messages with
+109-                                        parent_tool_use_id set (only works with
+110:                                        --print and --output-format=stream-json)
+111-  --from-pr [value]                     Resume a session linked to a PR by PR
+112-                                        number/URL, or open interactive picker
+113-                                        with optional search term
+--
+119:                                        --output-format=stream-json)
+120:  --include-partial-messages            Include partial message chunks as they
+121-                                        arrive (only works with --print and
+122:                                        --output-format=stream-json)
+123-  --input-format <format>               Input format (only works with --print):
+124-                                        "text" (default), or "stream-json"
+125-                                        (realtime streaming input) (choices:
+--
+145:  --output-format <format>              Output format (only works with --print):
+146-                                        "text" (default), "json" (single
+147-                                        result), or "stream-json" (realtime
+148-                                        streaming) (choices: "text", "json",
+--
+150:  --permission-mode <mode>              Permission mode to use for the session
+151-                                        (choices: "acceptEdits", "auto",
+152-                                        "bypassPermissions", "manual",
+153-                                        "dontAsk", "plan")
+154:  --permission-prompts <target>         Who answers permission prompts with
+155-                                        --print: "host" (the SDK host or
+156-                                        --permission-prompt-tool) or "none"
+157-                                        (nobody: anything that would prompt is
+--
+193:                                        --output-format=stream-json)
+194-  --restricted                          Restricted mode: removes the built-in
+195-                                        tools that run commands or code (Bash,
+196-                                        PowerShell and the other code-running
+--
+209:  -r, --resume [value]                  Resume a conversation by session ID, or
+210-                                        open interactive picker with optional
+211-                                        search term
+212-  --safe-mode                           Start with all customizations
+--
+304:                                        <id>` opens it again, `claude --resume`
+305-                                        works once it is stopped
+306-  ultrareview [options] [target]        Run a cloud-hosted multi-agent code
+307-                                        review of the current branch (or a PR

@@ -1,0 +1,23 @@
+# codex exec resume --help (codex-cli 0.163.0): usage line and every option name. The -c example text is left out.
+3:Usage: codex exec resume [OPTIONS] [SESSION_ID] [PROMPT]
+-c, --config
+--last
+--all
+--enable
+--disable
+-i, --image
+--strict-config
+-m, --model
+--dangerously-bypass-approvals-and-sandbox
+--dangerously-bypass-hook-trust
+--worktree
+--thread-source
+--cyber-access-program
+--skip-git-repo-check
+--ephemeral
+--ignore-user-config
+--ignore-rules
+--output-schema
+--json
+-o, --output-last-message
+-h, --help

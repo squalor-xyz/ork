@@ -1,0 +1,3 @@
+# Rate-limit and quota terms in claude --help (2.1.302). Only match: --fallback-model, for overload.
+# Command: rg -n -i -e 'rate.?limit' -e quota -e 429 -e overload -e 'usage limit' -e credit -e spending over the help text.
+96:                                        overloaded or not available. Accepts a

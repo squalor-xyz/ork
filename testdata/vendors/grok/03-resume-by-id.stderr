@@ -1,0 +1,3 @@
+Session "REDACTED-ID" not found locally, restoring conversation from remote...
+  [0.000s] 🔎 Fetching session record — Loading restore metadata from the registry
+Error: Failed to restore session from remote: fetching session record: session get failed: 404 Not Found
