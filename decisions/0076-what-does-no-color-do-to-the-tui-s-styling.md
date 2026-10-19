@@ -1,6 +1,6 @@
 ---
 {
-  "id": 72,
+  "id": 76,
   "title": "What does NO_COLOR do to the TUI's styling?",
   "status": "decided",
   "key": "ui.no-color",
@@ -32,6 +32,11 @@
     {
       "date": "2026-10-19",
       "event": "decide"
+    },
+    {
+      "date": "2026-10-19",
+      "event": "renumber",
+      "note": "from 72"
     }
   ]
 }
