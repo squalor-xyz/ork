@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-18 items · — 7 · done 11
+20 items · — 9 · done 11
 
 ## v1
 
@@ -65,9 +65,11 @@
 | 15 | [S15](slices/S15.md) | Snapshot cache | S | 1 |  |  | done |
 | 16 | [S16](slices/S16.md) | Claude adapter | M | 2 |  |  | done |
 | 17 | [S17](slices/S17.md) | Single-slice CLI | M | 2 |  |  | — |
+| 18 | [S19](slices/S19.md) | Project sidebar | M | 2 |  |  | — |
+| 19 | [S20](slices/S20.md) | Overview rows | S | 1 |  |  | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 18 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 20 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
