@@ -81,3 +81,6 @@
 {"when": "2026-10-19T03:19:22Z", "item": "S13", "action": "add", "from": "", "to": "open", "note": "Wire the daemon, CLI and TUI into the ork binary"}
 {"when": "2026-10-19T04:01:12Z", "item": "S11", "action": "note", "from": "", "to": "", "note": "Owner 2026-10-19: ran the TUI and approved landing. Review n", "by": "Jon R"}
 {"when": "2026-10-19T04:01:12Z", "item": "S12", "action": "note", "from": "", "to": "", "note": "From S11: the tab badge hard-codes the needs-owner hold flag", "by": "Jon R"}
+{"when": "2026-10-19T04:01:36Z", "item": "S14", "action": "add", "from": "", "to": "open", "note": "Port the TUI to Charm v2"}
+{"when": "2026-10-19T04:01:44Z", "item": "S12", "action": "set", "from": "", "to": "", "note": "depends_on S11→S11,S14"}
+{"when": "2026-10-19T04:01:44Z", "item": "S13", "action": "set", "from": "", "to": "", "note": "depends_on S03,S11→S03,S11,S14"}

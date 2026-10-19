@@ -1,0 +1,41 @@
+{
+  "id": "S14",
+  "title": "Port the TUI to Charm v2",
+  "lead": [
+    "Move internal/tui and cmd/ork from the github.com/charmbracelet v1 modules\nto charm.land v2 (bubbletea, lipgloss, bubbles) before S12 adds screens\n(`stack.charm-major`)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** new screens, behavior changes, or any other dependency.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Porting now touches one screen; after S12 and the Waves screens it touches\nall of them."
+    },
+    {
+      "heading": "Files",
+      "body": "- `go.mod`, `go.sum`, `NOTICE`, `cmd/ork/`, `internal/tui/`, `testdata/golden/`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- The existing S11 tests and golden views pass unchanged on v2; any golden\n  difference is explained in the report and approved by the reviewer.\n- `go.mod` requires only the three v2 modules directly, and no v1 Charm module remains."
+    },
+    {
+      "heading": "Implement",
+      "body": "- Read each v2 module's LICENSE and every new transitive module's from the\n  module cache and update NOTICE; stop and report on anything not\n  GPL-3.0-compatible (`stack.go-deps`, `stack.localereader`).\n- Follow the upstream v2 upgrade guides; keep behavior identical."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race ./...`, `go vet ./...`, `gofmt -l .` clean; SPDX headers.\n- [HUMAN CHECK] The owner runs `ork` and sees the same screen.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"S15: port the TUI to Charm v2\"."
+    }
+  ],
+  "notes": []
+}

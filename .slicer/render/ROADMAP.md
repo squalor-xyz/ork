@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-13 items · — 9 · done 4
+14 items · — 10 · done 4
 
 ## v1
 
@@ -61,3 +61,4 @@
 | 11 | [S11](slices/S11.md) | TUI shell and Overview | M | 2 |  |  | done |
 | 12 | [S12](slices/S12.md) | Roadmap and Decisions screens | M | 2 |  |  | — |
 | 13 | [S13](slices/S13.md) | Wire binary and socket | S | 1 |  |  | — |
+| 14 | [S14](slices/S14.md) | Charm v2 port | S | 1 |  |  | — |
