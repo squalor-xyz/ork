@@ -374,7 +374,7 @@
       "id": "S10",
       "title": "Embedded role prompts seeded from slicer contract v7; ork roles print",
       "short_title": "Role prompts",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S01"
@@ -397,7 +397,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-12 items · — 11 · done 1
+12 items · — 10 · done 2
 
 ## v1
 
@@ -57,6 +57,6 @@
 | 7 | S07 | Live role detail | M | 2 |  |  | — |
 | 8 | S08 | Architect, split, slivers | L | 3 |  |  | — |
 | 9 | S09 | Landing help | S | 1 |  |  | — |
-| 10 | [S10](slices/S10.md) | Role prompts | M | 2 |  |  | — |
+| 10 | [S10](slices/S10.md) | Role prompts | M | 2 |  |  | done |
 | 11 | [S11](slices/S11.md) | TUI shell and Overview | M | 2 |  |  | — |
 | 12 | [S12](slices/S12.md) | Roadmap and Decisions screens | M | 2 |  |  | — |
