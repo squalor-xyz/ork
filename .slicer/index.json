@@ -211,6 +211,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "2d8eb492-4a5f-4850-b71c-3e8aa69761fc",
+          "kind": "",
+          "text": "**2026-10-19** — state.writes decided 2026-10-19: writes[] in run.json (shape in docs/state.md); the R7 part of the earlier note is no longer only proposed.",
+          "created_at": "2026-10-19T11:52:32Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,

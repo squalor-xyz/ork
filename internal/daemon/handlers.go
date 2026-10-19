@@ -6,7 +6,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
@@ -207,6 +209,14 @@ func (d *Daemon) addProject(p AddProjectParams) (registry.Project, error) {
 	}
 	if name == string(filepath.Separator) {
 		return registry.Project{}, &ipc.Error{Code: CodeInvalidPath, Message: fmt.Sprintf("path %q has no base name; pass a name", p.Path)}
+	}
+	if info, err := os.Stat(path); err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return registry.Project{}, &ipc.Error{Code: CodeInvalidPath, Message: fmt.Sprintf("path %q does not exist", path)}
+		}
+		return registry.Project{}, &ipc.Error{Code: CodeInvalidPath, Message: err.Error()}
+	} else if !info.IsDir() {
+		return registry.Project{}, &ipc.Error{Code: CodeInvalidPath, Message: fmt.Sprintf("path %q is not a directory", path)}
 	}
 	proj := registry.Project{Name: name, Path: path}
 	if info, err := os.Stat(filepath.Join(path, ".adjudicate.json")); err == nil && info.Mode().IsRegular() {

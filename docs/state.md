@@ -91,6 +91,14 @@ Notes on the fields:
   "budgets": {"minutes": 120, "tokens": 2000000},
   "approvals": [{"what": "wave", "at": "..."}],
   "questions": [],
+  "writes": [
+    {"at": "2026-10-19T16:12:05Z", "tool": "slicer", "root": "/.../adjudicate/.worktrees/S18",
+     "argv": ["relay-run", "begin", "S18", "--worktree", "/.../S18", "--json"],
+     "exit": 0, "code": null, "ms": 640},
+    {"at": "2026-10-19T16:40:11Z", "tool": "slicer", "root": "/.../S18",
+     "argv": ["note", "S18", "--text", "Review FAIL: ..."],
+     "exit": 3, "code": "locked", "retry": 1, "ms": 5100}
+  ],
   "commit": null
 }
 ```
@@ -98,6 +106,10 @@ Notes on the fields:
 `state` and the role fields are ork's own record of the processes it
 started. They are not a copy of slicer state. The ledger link is
 `relay_run`.
+
+`writes` lists every slicer, adj and git write ork makes for the run, with
+its argv, root, exit, error code and retry count, so a restart or the
+owner can see exactly what ork changed (`state.writes`, S04).
 
 ## Rules
 

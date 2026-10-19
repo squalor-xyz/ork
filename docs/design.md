@@ -337,7 +337,7 @@ come with the engine.
 - the slicer and adj versions (`--version`);
 - each vendor CLI is present, with its `--version` output; a vendor CLI that
   is missing or broken is reported and does not fail the check, because ork
-  needs only the vendors a lineup uses (*proposed*). The login check (by
+  needs only the vendors a lineup uses (`doctor.vendors-optional`). The login check (by
   running a trivial command, without reading credentials) comes in S06, and
   doctor makes no model call;
 - the slicer contract: the first line of `slicer ai relay` against ork's
@@ -359,7 +359,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   {"id","items","state","worktree","begun_at","updated_at","steps",
   "running"}],"errors":[{"part","code","message"}]}]}`. `needs_you` is the
   project's count of open adj records until the engine adds approvals, stops
-  and pauses (*proposed*). `active_relays` are slicer's active relay runs.
+  and pauses (`status.needs-you`). `active_relays` are slicer's active relay runs.
   `errors` lists failed parts (`items`, `goals`, `runs`, `open`, `decided`)
   with the tool's own code. Text: one line `NAME: needs you N, active relays
   M`, then one line per relay and per error.
@@ -367,7 +367,8 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   path and `adj`, in columns.
 - `projects add PATH [--name N]`: `{"project":{...}}`. The name defaults to the
   path's base name. `adj` is true when `PATH/.adjudicate.json` exists. A
-  duplicate name or a relative path is refused. Text: `added NAME PATH [(adj)]`.
+  duplicate name, a relative path, or a path that is not an existing
+  directory is refused (`projects.add-path`). Text: `added NAME PATH [(adj)]`.
 - `projects rm NAME`: `{"removed":"NAME"}`.
 - `roles print [ROLE]`: `{"roles":[{"name","prompt"}]}`. Text: the prompt of
   ROLE as embedded, or all four with a `==== NAME ====` line before each.

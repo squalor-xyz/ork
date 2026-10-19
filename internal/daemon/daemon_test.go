@@ -663,6 +663,14 @@ func TestProjectsAddListRemoveSaveTheRegistry(t *testing.T) {
 	if _, err := c.AddProject(ctx, "/", ""); !errors.As(err, &re) || re.Code != CodeInvalidPath {
 		t.Fatalf("path with no base name: %v", err)
 	}
+	missing := filepath.Join(e.dir, "missing")
+	if _, err := c.AddProject(ctx, missing, ""); !errors.As(err, &re) || re.Code != CodeInvalidPath || !strings.Contains(re.Message, missing) {
+		t.Fatalf("path that does not exist: %v", err)
+	}
+	file := filepath.Join(withAdj, ".adjudicate.json")
+	if _, err := c.AddProject(ctx, file, ""); !errors.As(err, &re) || re.Code != CodeInvalidPath {
+		t.Fatalf("path that is a file: %v", err)
+	}
 	if again, _ := registry.Load(e.regPath); len(again.Projects) != 3 {
 		t.Fatalf("a refused add changed the registry: %+v", again.Projects)
 	}
@@ -695,7 +703,12 @@ func TestConcurrentAddsAreAllKept(t *testing.T) {
 				return
 			}
 			defer c.Close()
-			if _, err := c.AddProject(context.Background(), fmt.Sprintf("/p/proj%d", i), ""); err != nil {
+			dir := filepath.Join(e.dir, fmt.Sprintf("proj%d", i))
+			if err := os.Mkdir(dir, 0o755); err != nil {
+				t.Error(err)
+				return
+			}
+			if _, err := c.AddProject(context.Background(), dir, ""); err != nil {
 				t.Error(err)
 			}
 		}()

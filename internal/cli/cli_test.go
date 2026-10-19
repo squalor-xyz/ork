@@ -355,19 +355,28 @@ func TestProjectsAddListRemove(t *testing.T) {
 
 func TestProjectsRefusals(t *testing.T) {
 	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
+	elsewhere := filepath.Join(w.dir, "elsewhere")
+	os.MkdirAll(elsewhere, 0o755)
 
 	// A duplicate name is a failure the daemon reports.
-	code, _, stderr := run(t, w.app, "projects", "add", "/elsewhere/dir", "--name", "keep")
+	code, _, stderr := run(t, w.app, "projects", "add", elsewhere, "--name", "keep")
 	if code != 1 || !strings.Contains(stderr, `"keep"`) || !strings.Contains(stderr, "already registered") {
 		t.Fatalf("duplicate: exit %d: %q", code, stderr)
 	}
-	code, stdout, _ := run(t, w.app, "projects", "add", "/elsewhere/dir", "--name", "keep", "--json")
+	code, stdout, _ := run(t, w.app, "projects", "add", elsewhere, "--name", "keep", "--json")
 	var e struct {
 		Error struct{ Code, Message string }
 	}
 	mustJSON(t, stdout, &e)
 	if code != 1 || e.Error.Code != daemon.CodeDuplicateName {
 		t.Fatalf("duplicate --json: exit %d: %s", code, stdout)
+	}
+
+	// A path that does not exist is a failure the daemon reports.
+	missing := filepath.Join(w.dir, "missing")
+	code, _, stderr = run(t, w.app, "projects", "add", missing)
+	if code != 1 || !strings.Contains(stderr, missing) || !strings.Contains(stderr, "does not exist") {
+		t.Fatalf("missing: exit %d: %q", code, stderr)
 	}
 
 	// A relative path is a usage error, caught before any daemon starts.
