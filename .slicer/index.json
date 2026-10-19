@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 13,
+  "next_id": 14,
   "preamble": "",
   "passes": [
     {
@@ -109,7 +109,7 @@
       "title": "Daemon, socket and JSON CLI (ork status)",
       "short_title": "Daemon and CLI",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [
         "S02"
       ],
@@ -562,6 +562,37 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S13",
+      "title": "Wire the daemon, CLI and TUI into the ork binary",
+      "short_title": "Wire binary and socket",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S03",
+        "S11"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 1,
         "attempts": 0
       }
     }
