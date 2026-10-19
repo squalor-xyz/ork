@@ -108,3 +108,5 @@
 {"when": "2026-10-19T12:22:18Z", "item": "S05", "action": "set", "from": "", "to": "", "note": "depends_on S04→S17"}
 {"when": "2026-10-19T13:16:15Z", "item": "S13", "action": "note", "from": "", "to": "", "note": "From S15 (2026-10-19): Cache.Forget does not cancel in-fligh", "by": "Jon R"}
 {"when": "2026-10-19T13:17:15Z", "item": "S14", "action": "note", "from": "", "to": "", "note": "Owner decision ui.no-color is adj record 76 (renumbered from", "by": "Jon R"}
+{"when": "2026-10-19T13:28:38Z", "item": "S18", "action": "add", "from": "", "to": "open", "note": "Create logo images for ork"}
+{"when": "2026-10-19T13:30:03Z", "item": "S18", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→3; effort -→1"}

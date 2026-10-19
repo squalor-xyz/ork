@@ -1,0 +1,41 @@
+{
+  "id": "S18",
+  "title": "Create logo images for ork",
+  "lead": [
+    "Logo images for ork in the shared branding repo, under\n`../branding/generated/logos/ork/`, beside the other projects' logos\n(slicer, adjudicate, databall and others)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** using the logo in the TUI, README or NOTICE.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner todo 2026-10-19."
+    },
+    {
+      "heading": "Files",
+      "body": "- `../branding/generated/logos/ork/` (sibling repo; needs the owner's grant\n  to write there)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
