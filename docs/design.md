@@ -28,7 +28,12 @@ ork (TUI)  ork status --json (CLI)
   connected for `daemon_idle_minutes` (10 by default; 0 means the default;
   `daemon.idle`, `daemon.start`). The timer stops while any client is
   connected and starts again, in full, when the last one leaves. The wave
-  condition is a stub until the engine (S04).
+  condition is a stub until the engine (S04). The start runs `ork daemon run`
+  from the same binary, detached in its own session with its stdio on
+  `/dev/null`, and does not wait: the command waits for the socket for
+  five seconds (S13). A daemon that finds the lock held while nothing
+  answers retries it for two seconds, because an idle exit unlinks its
+  socket before it releases the lock (S13).
 - **Socket.** `$XDG_STATE_HOME/ork/ork.sock`, else
   `~/.local/state/ork/ork.sock`. The directory is created with mode 0700 and
   the socket is mode 0600.
@@ -62,8 +67,8 @@ ork (TUI)  ork status --json (CLI)
 
   Error codes the daemon adds: `unknown_method`, `bad_params`, `not_found`,
   `duplicate_name`, `invalid_path`, `registry`. Registry writes happen in the
-  daemon, one at a time. `snapshot` is how the TUI will read through the
-  daemon (S13); the TUI calls the adapters directly until then
+  daemon, one at a time. The TUI reads through the daemon with `snapshot`
+  from S13. Before the daemon it called the adapters directly
   (`dash.pre-daemon`).
 
   **Snapshot cache (S15, `dash.cache`, `dash.refresh`, `boundary.git-head`).**
@@ -87,7 +92,10 @@ ork (TUI)  ork status --json (CLI)
   changes, and never when a read gives the same data again. Read notices with
   the client's `Next`, on a connection of their own: a request on the same
   connection is answered in line with the notices. A project removed from the
-  registry stops being read.
+  registry stops being read. The TUI keeps its notice connection in
+  `daemon.Feed`: a change of the project in view dials a new connection that
+  subscribes to that project, because a connection that waits in `Next`
+  cannot take a request (S13).
 - **Restart.** On start, the daemon reconciles every non-final run record
   against live process groups and the slicer ledger. A role whose process is
   gone and that left no report is marked `lost`, and its slice waits for the
@@ -475,7 +483,8 @@ ork doctor                  check versions, CLIs, logins, contract
 ```
 
 S03 ships `status`, `projects`, `roles print` and `doctor`
-(`cli.s03-commands`) in `internal/cli`; the binary wires them in S13. The rest
+(`cli.s03-commands`) in `internal/cli`; the binary wires them in S13
+(`cmd/ork`). The rest
 come with the engine.
 
 `ork doctor` checks:

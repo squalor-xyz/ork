@@ -5,9 +5,12 @@ A terminal dashboard and engine for parallel slice relays across projects.
 ## Status
 
 In development: the core registry and CLI adapters (S02), the role
-prompts (S10) and the TUI shell with project tabs and the Overview (S11) are
-in. `go run ./cmd/ork` opens the dashboard over the projects in your registry
-(read-only so far); `ork --version` prints the version. v1 is the monitoring
+prompts (S10), the TUI shell with project tabs and the Overview (S11), and the
+daemon's wiring into the binary (S13) are in. `go run ./cmd/ork` opens the
+dashboard over the projects in your registry, through a background daemon that
+starts when none runs (read-only so far). `ork status` and `ork projects` use
+the same daemon, and `ork roles print` and `ork doctor` run in the command
+itself; `ork --version` prints the version. v1 is the monitoring
 dashboard plus launching and supervising slice waves. See [PROJECT.md](PROJECT.md).
 
 ## What ork is

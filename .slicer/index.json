@@ -671,7 +671,7 @@
       "id": "S13",
       "title": "Wire the daemon, CLI and TUI into the ork binary",
       "short_title": "Wire binary and socket",
-      "status": "started",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S03",
@@ -701,12 +701,20 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "74ae64ed-57dc-46e3-87aa-43c3441156c0",
+          "kind": "",
+          "text": "**2026-10-19** — Review FAIL: ErrAlreadyRunning start not retried (S03 note); daemonLive untested; README duplicate ork projects",
+          "created_at": "2026-10-19T14:59:13Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
-      "claim": {
-        "owner": "Jon R",
-        "at": "2026-10-19T13:41:43Z"
-      },
+      "claim": null,
       "fields": {
         "size": "S",
         "flags": [],

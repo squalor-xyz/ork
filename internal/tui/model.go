@@ -37,6 +37,7 @@ type Config struct {
 	After     func(d time.Duration) tea.Cmd // a command that sends tickMsg after d; default tea.Tick
 	Bell      func()                        // rings the terminal bell; default writes BEL to stderr
 	Theme     Theme
+	Live      Live // the daemon's refresh, focus and notices; nil when there is no daemon
 }
 
 // tickMsg asks the Model to check which projects are due.
@@ -75,6 +76,7 @@ type Model struct {
 	width       int
 	height      int
 	lastRefresh time.Time
+	listening   bool // the daemon's notice feed is being listened to (S13)
 }
 
 // New returns a Model that has not fetched anything. Init starts the fetches.
@@ -121,9 +123,33 @@ func New(cfg Config) *Model {
 	return m
 }
 
-// Init fetches every project and starts the schedule.
+// Init fetches every project, starts the schedule and tells the daemon which
+// project is in view.
 func (m *Model) Init() tea.Cmd {
-	return m.tick(m.cfg.Now())
+	return tea.Batch(m.tick(m.cfg.Now()), m.focus())
+}
+
+// focus tells the daemon which project the owner sees, so it reads that one
+// every 5 s. It returns nil without a daemon.
+func (m *Model) focus() tea.Cmd {
+	live := m.cfg.Live
+	if live == nil || len(m.projects) == 0 {
+		return nil
+	}
+	name := m.projects[m.active].reg.Name
+	return func() tea.Msg {
+		return focusMsg{err: live.Focus(context.Background(), []string{name})}
+	}
+}
+
+// listen waits for the next change notice. It returns noticeMsg when a notice
+// comes or the feed fails.
+func (m *Model) listen() tea.Cmd {
+	live := m.cfg.Live
+	return func() tea.Msg {
+		name, err := live.Next(context.Background())
+		return noticeMsg{project: name, err: err}
+	}
 }
 
 // tick starts a fetch for every project that is due and schedules the next
@@ -131,7 +157,7 @@ func (m *Model) Init() tea.Cmd {
 func (m *Model) tick(now time.Time) tea.Cmd {
 	var cmds []tea.Cmd
 	for _, name := range m.poller.Due(now) {
-		if c := m.fetch(name); c != nil {
+		if c := m.fetch(name, false); c != nil {
 			cmds = append(cmds, c)
 		}
 	}
@@ -140,15 +166,21 @@ func (m *Model) tick(now time.Time) tea.Cmd {
 }
 
 // fetch returns the command that reads one project, or nil when a call for it
-// is already in flight (dash.refresh: never started twice).
-func (m *Model) fetch(name string) tea.Cmd {
+// is already in flight (dash.refresh: never started twice). With refresh the
+// daemon reads the project now before the snapshot is taken.
+func (m *Model) fetch(name string, refresh bool) tea.Cmd {
 	ps := m.byName[name]
 	if ps == nil || !m.poller.Start(name) {
 		return nil
 	}
-	src, reg := m.cfg.Source, ps.reg
+	src, reg, live := m.cfg.Source, ps.reg, m.cfg.Live
 	return func() tea.Msg {
-		return snapshotMsg{name: name, snap: src.Snapshot(context.Background(), reg)}
+		ctx := context.Background()
+		if refresh && live != nil {
+			// A failed refresh shows in the snapshot's parts, so its error is not kept.
+			_ = live.Refresh(ctx, reg.Name)
+		}
+		return snapshotMsg{name: name, snap: src.Snapshot(ctx, reg)}
 	}
 }
 
@@ -161,6 +193,19 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.tick(m.cfg.Now())
 	case snapshotMsg:
 		return m, m.apply(msg)
+	case focusMsg:
+		// The feed starts once the daemon has the first focus, and a notice
+		// that failed it stopped the feed: a focus that works starts it again.
+		if msg.err == nil && !m.listening && m.cfg.Live != nil {
+			m.listening = true
+			return m, m.listen()
+		}
+	case noticeMsg:
+		if msg.err != nil {
+			m.listening = false
+			return m, nil
+		}
+		return m, tea.Batch(m.fetch(msg.project, false), m.listen())
 	case tea.KeyPressMsg:
 		return m, m.key(msg)
 	}
@@ -176,29 +221,31 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	case key.Matches(msg, m.keys.Close):
 		m.showHelp = false
 	case key.Matches(msg, m.keys.Next):
-		m.switchTo(m.active + 1)
+		return m.switchTo(m.active + 1)
 	case key.Matches(msg, m.keys.Prev):
-		m.switchTo(m.active - 1)
+		return m.switchTo(m.active - 1)
 	case key.Matches(msg, m.keys.Jump):
 		if n := int(msg.String()[0] - '1'); n < len(m.projects) {
-			m.switchTo(n)
+			return m.switchTo(n)
 		}
 	case key.Matches(msg, m.keys.Refresh):
 		if len(m.projects) > 0 {
-			return m.fetch(m.projects[m.active].reg.Name)
+			return m.fetch(m.projects[m.active].reg.Name, true)
 		}
 	}
 	return nil
 }
 
-// switchTo shows project i (wrapping around) and makes it the fast-polled one.
-func (m *Model) switchTo(i int) {
+// switchTo shows project i (wrapping around), makes it the fast-polled one,
+// and returns the command that tells the daemon which project that is.
+func (m *Model) switchTo(i int) tea.Cmd {
 	n := len(m.projects)
 	if n == 0 {
-		return
+		return nil
 	}
 	m.active = (i%n + n) % n
 	m.poller.SetVisible(m.projects[m.active].reg.Name)
+	return m.focus()
 }
 
 // apply stores a returned snapshot. A part whose call failed keeps its last

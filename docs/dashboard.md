@@ -41,10 +41,10 @@ until then.
 - **Status line:** daemon uptime, global cap use, queued items, and a token
   sparkline (`ui.charts`).
 
-Built so far (S11): the Overview only; the view bar names the other views
-but cannot select them yet. Until the daemon (S03) and the token readings
-(S07) exist, the status line shows the project count, the time of the last
-refresh and the number of projects still refreshing (`pending N`). A project
+Built so far (S11, S13): the Overview only; the view bar names the other
+views but cannot select them yet. Until the token readings (S07) exist, the
+status line shows the project count, the time of the last refresh and the
+number of projects still refreshing (`pending N`). A project
 with data that is being read again is marked `~` on its tab and rows. The
 tab number is the open adj records plus the slicer items flagged
 `needs-owner`, and the terminal bell rings when a project's number rises
@@ -54,7 +54,10 @@ visible project now, `?` shows the keys, `q` quits. Items and runs refresh
 every 5 s for the visible project and every 30 s for the others; goals and
 decided records every 5 min, on a git HEAD change, on tab open and on `r`
 (`dash.refresh`). From S15 the daemon serves one shared in-memory snapshot
-and pushes changes (`dash.cache`). `NO_COLOR`
+and pushes changes (`dash.cache`). From S13 the TUI reads through the
+daemon's socket, and starts the daemon when none answers: `r` asks the daemon
+to read the project now, and the TUI tells the daemon which project it shows,
+so the daemon reads that one every 5 s. `NO_COLOR`
 selects the monochrome theme.
 
 ## Overview (all projects)

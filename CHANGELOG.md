@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- S13: the binary joins the parts. `ork` opens the TUI over the daemon's
+  socket and starts the daemon when none answers; `ork status`, `projects`,
+  `roles`, `doctor` and `help` go through `internal/cli`; `ork daemon run`
+  serves the socket. The start runs `ork daemon run` detached, in its own
+  session with its stdio on /dev/null. The TUI's `r` asks the daemon to read
+  the project now, and the TUI tells the daemon which project it shows
+  (`daemon.Feed` keeps the notice connection apart from the requests). A
+  daemon start that races an exiting daemon's lock retries it for two
+  seconds.
+
 - S04: the engine core for one slice (`internal/engine`): setup, implement,
   checks, review, gate, awaiting approval, commit and the finish step, run
   against a `Runner` interface (the Claude adapter is S16, the owner surface

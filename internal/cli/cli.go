@@ -195,6 +195,12 @@ func (a *App) connect(ctx context.Context) (*daemon.Client, error) {
 	}
 }
 
+// Connect returns a connection to the daemon, starting one when nothing
+// answers, as a command does. cmd/ork uses it for the TUI.
+func (a *App) Connect(ctx context.Context) (*daemon.Client, error) {
+	return a.connect(ctx)
+}
+
 // withDaemon connects and runs f. A connection failure is reported as such.
 func (a *App) withDaemon(ctx context.Context, o *output, f func(*daemon.Client) int) int {
 	c, err := a.connect(ctx)
