@@ -113,3 +113,8 @@ func (c *Client) Next(ctx context.Context) (SnapshotChanged, error) {
 	}
 	return out, nil
 }
+
+// Call sends an engine command over the daemon connection.
+func (c *Client) Call(ctx context.Context, method string, params, result any) error {
+	return c.c.Call(ctx, method, params, result)
+}

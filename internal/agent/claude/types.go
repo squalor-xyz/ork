@@ -118,5 +118,7 @@ type Spec struct {
 	ReportFile string // read first when non-empty
 	FixtureDir string // default DefaultFixtureDir()
 	TailBytes  int    // default 2048
-	OnEvent    func(Event)
+	// OnStart reports the process group after Start and before Wait (adj #85).
+	OnStart func(pgid int)
+	OnEvent func(Event)
 }

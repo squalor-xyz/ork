@@ -39,12 +39,18 @@ const (
 
 const usageText = `usage: ork COMMAND [ARGS] [--json]
 
+  ork run P ID [--yes --well-specified yes|no --split yes|no]
+                              show the plan and launch one slice
+  ork approve RUN             finish and commit a passed slice
+  ork stop RUN                stop a slice and kill its roles
+  ork answer RUN TEXT         answer and resume a paused role
   ork status [--project P]    projects, needs-you counts and active relays
   ork projects list           list the registered projects
   ork projects add PATH [--name N]
                               register a project
   ork projects rm NAME        unregister a project
   ork roles print [ROLE]      print the embedded role prompts
+  ork daemon run              serve the daemon in the foreground
   ork doctor                  check the slicer and adj versions, the vendor
                               CLIs and the slicer contract pin
 
@@ -59,6 +65,9 @@ type Tools struct {
 
 // App is the command line with its dependencies.
 type App struct {
+	Input io.Reader                                     // confirmation input; nil uses os.Stdin
+	Call  func(context.Context, string, any, any) error // nil uses the daemon socket
+
 	Socket    string                          // the daemon's socket
 	Start     func(ctx context.Context) error // starts the daemon; nil means it cannot be started
 	StartWait time.Duration                   // how long to wait for the daemon after Start; zero means 5s
@@ -147,6 +156,10 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 	case "-h", "--help", "help":
 		fmt.Fprint(stdout, usageText)
 		return ExitOK
+	case "run":
+		return a.runSlice(ctx, o, rest)
+	case "approve", "stop", "answer":
+		return a.ownerCommand(ctx, o, cmd, rest)
 	case "status":
 		return a.status(ctx, o, rest)
 	case "projects":

@@ -65,6 +65,8 @@ func decode(params json.RawMessage, v any) error {
 
 func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessage) (any, error) {
 	switch method {
+	case MethodRunPlan, MethodRunStart, MethodRunApprove, MethodRunStop, MethodRunAnswer:
+		return d.handleRun(ctx, method, params)
 	case MethodStatus:
 		var p StatusParams
 		if err := decode(params, &p); err != nil {
@@ -179,7 +181,11 @@ func (d *Daemon) status(ctx context.Context, p StatusParams) (*StatusResult, err
 	now := d.cfg.Clock.Now()
 	out := &StatusResult{Projects: make([]ProjectStatus, 0, len(projects))}
 	for i, s := range snaps {
-		out.Projects = append(out.Projects, projectStatus(projects[i], s, now))
+		ps := projectStatus(projects[i], s, now)
+		if err := d.addEngineStatus(&ps); err != nil {
+			return nil, err
+		}
+		out.Projects = append(out.Projects, ps)
 	}
 	return out, nil
 }

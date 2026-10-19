@@ -864,7 +864,7 @@
       "id": "S17",
       "title": "Run, approve and stop one slice from the CLI",
       "short_title": "Single-slice CLI",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S04",
@@ -915,6 +915,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "3be7a989-2f89-421a-8a65-84c799b394c3",
+          "kind": "",
+          "text": "**2026-10-19** — Review FAIL (round 1): M1 TestDaemonActiveRunHoldsOffIdle non-blocking select does not catch removed idle wiring; M2 recoverRuns fails daemon startup on one bad stored run.",
+          "created_at": "2026-10-19T20:21:22Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -934,7 +945,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

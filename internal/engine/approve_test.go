@@ -11,7 +11,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
-func TestApproveCommitsWithTheSlicesGitTitleThenRunsTheFinishStep(t *testing.T) {
+func TestApproveFinishesThenCommitsWithTheSlicesGitTitle(t *testing.T) {
 	h := newHarness(t)
 	e := h.start()
 	requireState(t, e, runrec.StateAwaitingApproval)
@@ -45,7 +45,7 @@ func TestApproveCommitsWithTheSlicesGitTitleThenRunsTheFinishStep(t *testing.T) 
 		}
 	}
 
-	// The finish step is a round of the implementer after the commit.
+	// The finish step is a round of the implementer before the commit.
 	reqs := h.runner.requests()
 	if len(reqs) != before+1 {
 		t.Fatalf("%d requests after approve, want %d", len(reqs), before+1)
@@ -74,7 +74,7 @@ func TestApproveCommitsWithTheSlicesGitTitleThenRunsTheFinishStep(t *testing.T) 
 	if len(end) != 1 || join(end[0]) != "relay-run end run-1 --outcome pass --close-steps done --json --root "+h.W {
 		t.Errorf("relay-run end: %v", end)
 	}
-	// Order: commit first, then the finish step, then the end of the run.
+	// Order: finish step and ledger close first, then one commit.
 	var order []string
 	for _, c := range h.fake.Calls() {
 		switch {
@@ -86,7 +86,7 @@ func TestApproveCommitsWithTheSlicesGitTitleThenRunsTheFinishStep(t *testing.T) 
 			order = append(order, "config")
 		}
 	}
-	if strings.Join(order, ",") != "commit,config,end" {
+	if strings.Join(order, ",") != "config,end,commit" {
 		t.Errorf("order %v", order)
 	}
 }
@@ -163,7 +163,7 @@ func TestRejectStopsWithoutCommitting(t *testing.T) {
 	}
 }
 
-func TestACommitFailurePausesAndRetryCommits(t *testing.T) {
+func TestACommitFailureStopsAfterFinishing(t *testing.T) {
 	h := newHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {
 			return []clitest.Route{{Tool: "git", Args: []string{"-C", W, "commit"}, Prefix: true,
@@ -174,19 +174,16 @@ func TestACommitFailurePausesAndRetryCommits(t *testing.T) {
 	if err := e.Approve(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	rec := requireState(t, e, runrec.StatePaused)
-	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingError || !strings.Contains(rec.Pending.Reason, "commit") {
-		t.Fatalf("pending: %+v", rec.Pending)
+	rec := requireState(t, e, runrec.StateStopped)
+	if !strings.Contains(rec.Reason, "commit") {
+		t.Fatal(rec.Reason)
 	}
-	if rec.Commit != nil || len(h.runner.requests()) != 3 {
+	if rec.Commit != nil || len(h.runner.requests()) != 4 {
 		t.Fatalf("nothing may run after a failed commit: %+v", rec.Commit)
 	}
-	if err := e.Retry(context.Background()); err != nil {
-		t.Fatal(err)
-	}
-	rec = requireState(t, e, runrec.StateCommitted)
-	if rec.Commit == nil || rec.Commit.SHA != "0123abc" {
-		t.Fatalf("commit: %+v", rec.Commit)
+	end := h.calls("slicer", "relay-run", "end")
+	if len(end) != 1 || !strings.Contains(join(end[0]), "--outcome pass --close-steps done") {
+		t.Errorf("finished relay ended again after commit failure: %v", end)
 	}
 }
 

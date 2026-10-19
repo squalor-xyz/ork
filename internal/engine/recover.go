@@ -48,7 +48,7 @@ func (e *Engine) Reconcile(ctx context.Context) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	rec := e.run.Snapshot()
-	if runrec.IsFinal(rec.State) {
+	if runrec.IsFinal(rec.State) || rec.State == runrec.StateAwaitingApproval {
 		return nil
 	}
 	var lost []runrec.RoleRecord
@@ -66,6 +66,9 @@ func (e *Engine) Reconcile(ctx context.Context) error {
 			}
 		}
 		lost = append(lost, r)
+	}
+	if killErr != nil {
+		return killErr
 	}
 	if len(lost) > 0 {
 		err := e.run.Update(func(rr *runrec.Record) {
@@ -89,13 +92,24 @@ func (e *Engine) Reconcile(ctx context.Context) error {
 		if killed[last.PGID] {
 			how = fmt.Sprintf("its process group %d was still running and was killed", last.PGID)
 		}
-		if err := e.pause(runrec.Pending{
-			Kind: runrec.PendingLost, State: rec.State, Role: last.Role, Round: last.Round,
-			Reason: fmt.Sprintf("%s round %d lost: %s", last.Role, last.Round, how),
-		}); err != nil {
+		p := runrec.Pending{}
+		if rec.Pending != nil {
+			p = *rec.Pending
+		}
+		p.Kind, p.Role, p.Round = runrec.PendingLost, last.Role, last.Round
+		if rec.State != runrec.StatePaused {
+			p.State = rec.State
+		}
+		p.Reason = fmt.Sprintf("%s round %d lost: %s", last.Role, last.Round, how)
+		if err := e.pause(p); err != nil {
 			return err
 		}
-		return killErr
+		return nil
+	}
+	if !resting(rec.State) && rec.Pending != nil && rec.Pending.Answer != "" {
+		p := *rec.Pending
+		p.Kind = runrec.PendingInterrupted
+		return e.pause(p)
 	}
 	if !resting(rec.State) {
 		if err := e.pause(runrec.Pending{

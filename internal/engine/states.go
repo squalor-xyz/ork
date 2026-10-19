@@ -27,7 +27,7 @@ func (e *Engine) setup(ctx context.Context) error {
 	if err := e.ensureExclude(ctx); err != nil {
 		return e.stop(ctx, "setup: "+err.Error())
 	}
-	if _, err := e.gitWrite(ctx, e.proj.Path, "worktree", "add", rec.Worktree, "-b", rec.Branch); err != nil {
+	if err := e.ensureWorktree(ctx, rec); err != nil {
 		return e.stop(ctx, "setup: git worktree add: "+err.Error())
 	}
 	// Recording is advisory: a failed relay-run call never stops the relay.
@@ -148,7 +148,6 @@ func (e *Engine) implement(ctx context.Context) error {
 }
 
 func (e *Engine) checks(ctx context.Context) error {
-	e.takePending()
 	rec := e.run.Snapshot()
 	start := e.d.now()
 	check := e.d.Check
@@ -187,6 +186,7 @@ func (e *Engine) checks(ctx context.Context) error {
 		command = "slicer check --json"
 	}
 	err = e.run.Update(func(r *runrec.Record) {
+		r.Pending = nil
 		r.Checks = append(r.Checks, runrec.CheckRecord{Round: rec.Round, Command: command, OK: ok, Seconds: int(e.d.now().Sub(start).Seconds()), Log: logName})
 	})
 	if err != nil {
@@ -281,7 +281,6 @@ func failSummary(report string) string {
 // commit commits the approved slice in its worktree with the title of the
 // slice's Git section and no attribution (git.commit).
 func (e *Engine) commit(ctx context.Context) error {
-	e.takePending()
 	rec := e.run.Snapshot()
 	pauseWith := func(reason string) error {
 		return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateCommit, Reason: reason})
@@ -311,15 +310,21 @@ func (e *Engine) commit(ctx context.Context) error {
 		return pauseWith("git add: " + err.Error())
 	}
 	if _, err := e.gitWrite(ctx, rec.Worktree, "commit", "-m", title); err != nil {
-		return pauseWith("git commit: " + err.Error())
+		// finish already closed the ledger with PASS.
+		return e.run.Update(func(r *runrec.Record) {
+			r.State = runrec.StateStopped
+			r.Reason = "git commit: " + err.Error()
+			r.Pending = nil
+		})
 	}
 	sha, err := e.gitRead(ctx, rec.Worktree, "rev-parse", "HEAD")
 	if err != nil {
 		return pauseWith("git rev-parse HEAD: " + err.Error())
 	}
 	return e.run.Update(func(r *runrec.Record) {
+		r.Pending = nil
 		r.Commit = &runrec.Commit{SHA: strings.TrimSpace(sha), Title: title, At: e.d.now()}
-		r.State = runrec.StateFinish
+		r.State = runrec.StateCommitted
 	})
 }
 
@@ -342,7 +347,7 @@ func (e *Engine) finish(ctx context.Context) error {
 	default:
 		return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateFinish, Reason: fmt.Sprintf("implement_finish is %q; ork knows done and handoff", mode)})
 	}
-	body := fmt.Sprintf("The gate returned `VERDICT: PASS`, the owner approved, and ork committed the slice on its branch. The slice is final. "+
+	body := fmt.Sprintf("The gate returned `VERDICT: PASS`, the owner approved, and the finish step must precede ork's commit (adj #81). The slice is final. "+
 		"Run the closing note, then the finish step, and nothing else:\n\n"+
 		"1. `slicer note %s --text \"Describe the verified outcome\" --render`\n"+
 		"2. %s\n\n"+
@@ -354,9 +359,51 @@ func (e *Engine) finish(ctx context.Context) error {
 	if err != nil || !out.ok {
 		return err
 	}
-	if err := e.run.Update(func(rr *runrec.Record) { rr.State = runrec.StateCommitted; rr.Reason = "" }); err != nil {
+	if err := e.run.Update(func(rr *runrec.Record) { rr.State = runrec.StateCommit; rr.Reason = "" }); err != nil {
 		return err
 	}
 	e.endRelay(ctx, "pass", "done")
+	return nil
+}
+
+// ensureWorktree tolerates a setup interrupted after worktree creation. It
+// verifies the checkout, branch and common repository before using it.
+func (e *Engine) ensureWorktree(ctx context.Context, rec runrec.Record) error {
+	if _, err := os.Stat(rec.Worktree); errors.Is(err, os.ErrNotExist) {
+		_, err = e.gitWrite(ctx, e.proj.Path, "worktree", "add", rec.Worktree, "-b", rec.Branch)
+		return err
+	} else if err != nil {
+		return err
+	}
+	top, err := e.gitRead(ctx, rec.Worktree, "rev-parse", "--show-toplevel")
+	if err != nil {
+		return err
+	}
+	branch, err := e.gitRead(ctx, rec.Worktree, "symbolic-ref", "--short", "HEAD")
+	if err != nil {
+		return err
+	}
+	common, err := e.gitRead(ctx, rec.Worktree, "rev-parse", "--git-common-dir")
+	if err != nil {
+		return err
+	}
+	mainCommon, err := e.gitRead(ctx, e.proj.Path, "rev-parse", "--git-common-dir")
+	if err != nil {
+		return err
+	}
+	canonical := func(base, value string) string {
+		value = strings.TrimSpace(value)
+		if !filepath.IsAbs(value) {
+			value = filepath.Join(base, value)
+		}
+		resolved, err := filepath.EvalSymlinks(value)
+		if err == nil {
+			return resolved
+		}
+		return filepath.Clean(value)
+	}
+	if canonical(rec.Worktree, top) != canonical(rec.Worktree, rec.Worktree) || strings.TrimSpace(branch) != rec.Branch || canonical(rec.Worktree, common) != canonical(e.proj.Path, mainCommon) {
+		return errors.New("existing worktree does not match this run")
+	}
 	return nil
 }

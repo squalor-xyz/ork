@@ -104,6 +104,9 @@ func pendingSection(p *runrec.Pending) []BriefSection {
 	if p == nil {
 		return nil
 	}
+	if p.Answer != "" {
+		return []BriefSection{{Title: "Owner answer", Body: fmt.Sprintf("Your report asked the owner:\n\n%s\n\nThe owner answered:\n\n%s", p.Question, p.Answer)}}
+	}
 	switch p.Kind {
 	case runrec.PendingQuestion:
 		return []BriefSection{{Title: "Owner answer", Body: fmt.Sprintf("Your report asked the owner:\n\n%s\n\nThe owner answered:\n\n%s", p.Question, p.Answer)}}
@@ -130,6 +133,15 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 
 	reportName := fmt.Sprintf("%s-%d.md", r.role, r.n)
+	attempt := 1
+	for _, old := range rec.Roles {
+		if old.Role == r.role && old.Round == r.n {
+			attempt++
+		}
+	}
+	if attempt > 1 {
+		reportName = fmt.Sprintf("%s-%d-attempt-%d.md", r.role, r.n, attempt)
+	}
 	reportPath := filepath.Join(e.run.Dir(), reportName)
 	tempDir := filepath.Join(e.run.Dir(), "tmp", fmt.Sprintf("%s-%d", r.role, r.n))
 	if err := os.MkdirAll(tempDir, 0o755); err != nil {
@@ -214,6 +226,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		text, file = e.readReport(reportPath, reportName, res.Report)
 	}
 	err = e.run.Update(func(rr *runrec.Record) {
+		rr.Pending = nil
 		role := &rr.Roles[idx]
 		role.EndedAt = e.d.now()
 		role.Exit = string(class)

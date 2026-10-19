@@ -64,6 +64,9 @@ func CheckReport(role string, finish bool, text string) (*Report, error) {
 		}
 	}
 
+	if role == RoleGate && rep.Verdict == "PASS" && rep.Failed > 0 {
+		problems = append(problems, "PASS reports failed tests")
+	}
 	if body, ok := section(text, ownerHeading); !ok {
 		problems = append(problems, fmt.Sprintf("no %q section", ownerHeading))
 	} else if !isNone(body) {

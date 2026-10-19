@@ -60,7 +60,13 @@ func Run(ctx context.Context, s Spec) (Round, error) {
 	cmd.WaitDelay = waitDelay
 	clirun.OwnProcessGroup(cmd)
 
-	runErr := cmd.Run()
+	runErr := cmd.Start()
+	if runErr == nil {
+		if s.OnStart != nil {
+			s.OnStart(cmd.Process.Pid)
+		}
+		runErr = cmd.Wait()
+	}
 	if cmd.ProcessState != nil {
 		clirun.KillGroup(cmd)
 		if errors.Is(runErr, exec.ErrWaitDelay) && cmd.ProcessState.Success() {

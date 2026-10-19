@@ -53,11 +53,15 @@ func mustMention(t *testing.T, problems []string, want string) {
 
 func TestCheckReportAcceptsAGoodGateReport(t *testing.T) {
 	for verdict, want := range map[string]string{"VERDICT: PASS": "PASS", "VERDICT: FAIL": "FAIL"} {
-		r, err := CheckReport(RoleGate, false, verdict+"\n\n- tests green\nTests: 87 passed, 2 failed\n"+ownerNone)
+		failed := "0"
+		if want == "FAIL" {
+			failed = "2"
+		}
+		r, err := CheckReport(RoleGate, false, verdict+"\n\n- tests\nTests: 87 passed, "+failed+" failed\n"+ownerNone)
 		if err != nil {
 			t.Fatalf("%s: %v", verdict, err)
 		}
-		if r.Verdict != want || !r.HasTests || r.Passed != 87 || r.Failed != 2 || r.Question != "" {
+		if r.Verdict != want || !r.HasTests || r.Passed != 87 || r.Failed != map[string]int{"PASS": 0, "FAIL": 2}[want] || r.Question != "" {
 			t.Errorf("%s: %+v", verdict, r)
 		}
 	}

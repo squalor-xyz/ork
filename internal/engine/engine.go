@@ -255,8 +255,7 @@ func (e *Engine) advance(ctx context.Context) error {
 	}
 }
 
-// Approve accepts a slice that awaits approval: it commits, then runs the
-// finish step.
+// Approve accepts a slice that awaits approval: finish, then one commit (adj #81).
 func (e *Engine) Approve(ctx context.Context) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
@@ -265,7 +264,7 @@ func (e *Engine) Approve(ctx context.Context) error {
 	}
 	err := e.run.Update(func(r *runrec.Record) {
 		r.Approvals = append(r.Approvals, runrec.Approval{What: "slice", At: e.d.now()})
-		r.State = runrec.StateCommit
+		r.State = runrec.StateFinish
 	})
 	if err != nil {
 		return err
@@ -323,6 +322,11 @@ func (e *Engine) Retry(ctx context.Context) error {
 	if rec.State != runrec.StatePaused || rec.Pending == nil {
 		return errors.New("the slice is not paused")
 	}
+	for _, role := range rec.Roles {
+		if role.Running() {
+			return errors.New("a role is still running; reconcile it before retrying")
+		}
+	}
 	if rec.Pending.Kind == runrec.PendingQuestion {
 		return errors.New("the slice waits for an answer; answer it or stop the slice")
 	}
@@ -369,15 +373,8 @@ func (e *Engine) pause(p runrec.Pending) error {
 	})
 }
 
-// takePending returns the pending record of a paused slice that was resumed,
-// and clears it.
-func (e *Engine) takePending() *runrec.Pending {
-	p := e.run.Snapshot().Pending
-	if p != nil {
-		e.run.Update(func(r *runrec.Record) { r.Pending = nil })
-	}
-	return p
-}
+// takePending keeps the resume context durable until the round ends.
+func (e *Engine) takePending() *runrec.Pending { return e.run.Snapshot().Pending }
 
 // endRelay ends the slicer ledger run. Recording is advisory: a failed call
 // is in writes[] and never stops the relay.

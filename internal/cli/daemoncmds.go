@@ -25,33 +25,38 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 	if len(pos) > 0 {
 		return o.usage("status takes no arguments, got %q", pos[0])
 	}
-	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
-		res, err := c.Status(ctx, *project)
-		if err != nil {
-			return o.failErr(err)
-		}
-		if o.json {
-			return o.printJSON(res)
-		}
-		if len(res.Projects) == 0 {
-			fmt.Fprintln(o.stdout, "no projects registered")
-			return ExitOK
-		}
-		for _, p := range res.Projects {
-			fmt.Fprintf(o.stdout, "%s: needs you %d, active relays %d\n", p.Name, p.NeedsYou, len(p.ActiveRelays))
-			for _, r := range p.ActiveRelays {
-				items := strings.Join(r.Items, ",")
-				if items == "" {
-					items = "-"
-				}
-				fmt.Fprintf(o.stdout, "  %s %s %s (%d steps, %d running)\n", r.ID, items, r.State, r.Steps, r.Running)
-			}
-			for _, e := range p.Errors {
-				fmt.Fprintf(o.stdout, "  error %s: %s (%s)\n", e.Part, e.Message, e.Code)
-			}
-		}
+	var res daemon.StatusResult
+	if code := a.call(ctx, o, daemon.MethodStatus, daemon.StatusParams{Project: *project}, &res); code != 0 {
+		return code
+	}
+	if o.json {
+		return o.printJSON(res)
+	}
+	if len(res.Projects) == 0 {
+		fmt.Fprintln(o.stdout, "no projects registered")
 		return ExitOK
-	})
+	}
+	for _, p := range res.Projects {
+		fmt.Fprintf(o.stdout, "%s: needs you %d, active relays %d\n", p.Name, p.NeedsYou, len(p.ActiveRelays))
+		for _, r := range p.ActiveRelays {
+			items := strings.Join(r.Items, ",")
+			if items == "" {
+				items = "-"
+			}
+			fmt.Fprintf(o.stdout, "  %s %s %s (%d steps, %d running)\n", r.ID, items, r.State, r.Steps, r.Running)
+		}
+		for _, r := range p.EngineRuns {
+			fmt.Fprintf(o.stdout, "  %s %s %s", r.ID, r.Item, r.State)
+			if r.Wait != "" {
+				fmt.Fprintf(o.stdout, " (wait: %s)", r.Wait)
+			}
+			fmt.Fprintln(o.stdout)
+		}
+		for _, e := range p.Errors {
+			fmt.Fprintf(o.stdout, "  error %s: %s (%s)\n", e.Part, e.Message, e.Code)
+		}
+	}
+	return ExitOK
 }
 
 // projects dispatches the projects subcommands.

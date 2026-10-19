@@ -907,3 +907,23 @@ func TestCancelKillsProcessGroup(t *testing.T) {
 		})
 	}
 }
+
+// Decision #85: a start hook must run before Wait, while the child is live.
+func TestS17OnStartBeforeWait(t *testing.T) {
+	gatePath := filepath.Join(t.TempDir(), "gate")
+	s := fakeSpec(t, plan{Mode: "gated", Stdout: fixture("02-stream-json", "stdout"), Gate: gatePath})
+	s.ReadOnly = true
+	s.OnStart = func(pgid int) {
+		if pgid <= 1 {
+			t.Errorf("invalid pgid %d", pgid)
+		}
+		if err := os.WriteFile(gatePath, []byte("go"), 0600); err != nil {
+			t.Error(err)
+		}
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	if _, err := Run(ctx, s); err != nil {
+		t.Fatal(err)
+	}
+}

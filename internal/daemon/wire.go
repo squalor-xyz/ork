@@ -54,6 +54,7 @@ type StatusResult struct {
 // open adj questions; approvals, stops and pauses join it with the engine
 // (S04). Parts holds each part's age and state.
 type ProjectStatus struct {
+	EngineRuns   []EngineRun          `json:"engine_runs"`
 	Name         string               `json:"name"`
 	Path         string               `json:"path"`
 	Adj          bool                 `json:"adj"`

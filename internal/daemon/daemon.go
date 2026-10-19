@@ -19,6 +19,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/cache"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/slicercli"
@@ -68,16 +69,19 @@ func (realClock) AfterFunc(d time.Duration, f func()) Timer { return time.AfterF
 
 // Config configures a Daemon.
 type Config struct {
+	Engine *engine.Deps // nil uses the Claude adapter and the state directory
+
 	Paths        Paths
 	RegistryPath string         // projects.json; empty means registry.DefaultPath
 	SeedRoot     string         // where a missing registry is seeded from; empty means registry.DefaultSeedRoot
 	Source       source.Fetcher // nil means source.Direct over the real CLIs
 	Clock        Clock          // nil means the real clock
-	WaveRunning  func() bool    // true while a wave runs; nil means never (the engine is S04)
+	WaveRunning  func() bool    // true while a wave runs; nil means never; engine runs are checked separately
 }
 
 // Daemon is one daemon process.
 type Daemon struct {
+	runs  runManager
 	cfg   Config
 	ready chan struct{}
 	regMu sync.Mutex   // serializes registry writes
@@ -99,6 +103,7 @@ func New(cfg Config) *Daemon {
 		cfg.WaveRunning = func() bool { return false }
 	}
 	d := &Daemon{cfg: cfg, ready: make(chan struct{}), focus: map[*ipc.Conn][]string{}}
+	d.initRunManager()
 	d.cache = cache.New(cache.Options{Clock: cfg.Clock, Fetcher: cfg.Source, OnChange: d.changed})
 	return d
 }
@@ -164,10 +169,15 @@ func (d *Daemon) Run(ctx context.Context) error {
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+	if err := d.recoverRuns(ctx); err != nil {
+		l.Close()
+		return err
+	}
+	defer d.closeRuns()
 	idle := &idleTimer{
 		clock:       d.cfg.Clock,
 		timeout:     d.idleTimeout,
-		waveRunning: d.cfg.WaveRunning,
+		waveRunning: func() bool { return d.cfg.WaveRunning() || d.activeRuns() },
 		onIdle:      cancel,
 	}
 	srv := &ipc.Server{Handler: d.handle, OnConnect: idle.connect, OnDisconnect: idle.disconnect}

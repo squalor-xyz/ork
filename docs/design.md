@@ -27,10 +27,12 @@ ork (TUI)  ork status --json (CLI)
   seconds. The daemon exits when no wave is running and no client has been
   connected for `daemon_idle_minutes` (10 by default; 0 means the default;
   `daemon.idle`, `daemon.start`). The timer stops while any client is
-  connected and starts again, in full, when the last one leaves. The wave
-  condition is a stub until the engine (S04). The start runs `ork daemon run`
-  from the same binary, detached in its own session with its stdio on
-  `/dev/null`, and does not wait: the command waits for the socket for
+  connected and starts again, in full, when the last one leaves. An active
+  engine run also holds off idle exit (S17). A run waiting
+  for approval or an answer may idle-exit; it is recovered on restart. The start runs `ork daemon run`
+  from the same binary, detached in its own session with stdin and stdout on
+  `/dev/null` and stderr appended to `daemon.log` beside its socket (mode
+  0600 on creation), and does not wait: the command waits for the socket for
   five seconds (S13). A daemon that finds the lock held while nothing
   answers retries it for two seconds, because an idle exit unlinks its
   socket before it releases the lock (S13).
@@ -99,7 +101,10 @@ ork (TUI)  ork status --json (CLI)
 - **Restart.** On start, the daemon reconciles every non-final run record
   against live process groups and the slicer ledger. A role whose process is
   gone and that left no report is marked `lost`, and its slice waits for the
-  owner.
+  owner. Runs with an unregistered project or a reconciliation error are
+  skipped and logged to stderr (daemon.log); other runs remain available.
+  Run-list errors are also logged, and readable runs remain available during
+  recovery and status requests.
 
 ## Wave lifecycle
 
@@ -118,8 +123,8 @@ ork (TUI)  ork status --json (CLI)
    and the per-project cap (`wave.limits`). Several waves, each in one
    project, may run at once (`wave.scope`).
 6. **Result.** Each item that reaches a passed gate waits for the owner's
-   approval. This is checkpoint 2. Once approved, ork commits. An item that
-   stops waits in "needs you", and the rest continue (`wave.failure`).
+   approval. This is checkpoint 2. Once approved, ork runs the finish step, then
+   commits (adj #81). An item that stops waits in "needs you", and the rest continue (`wave.failure`).
 
 ## Slice state machine
 
@@ -133,7 +138,7 @@ setup -> implement -> checks --red--> implement (fix)
                       gate --FAIL--> implement (fix round)      [3rd FAIL -> stopped]
                         | PASS
                         v
-                awaiting-approval --approve--> commit -> committed
+                awaiting-approval --approve--> finish -> commit -> committed
                         | reject
                         v
                       stopped
@@ -168,9 +173,9 @@ slice.
   ..."` (contract v6).
 - **commit:** ork commits in the worktree with the title from the slice's
   Git section. There is no AI attribution, and roles never commit
-  (`git.commit`).
+  (`git.commit`). The finish step precedes this commit (adj #81).
 - **Finish step:** run per the project's `implement_finish` setting (`done`
-  or `handoff`), as the contract orders it after PASS.
+  or `handoff`), after PASS and owner approval, before the commit.
 
 ### Engine (S04)
 
@@ -182,18 +187,23 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
 - **Runner.** One call runs one role round to its end. The request carries
   role, round, vendor, model, effort, brief, worktree, report path, the
   allowlist or the read-only flag, the session to resume, and an `OnStart`
-  callback that gives the process group id. The result carries the exit
+  callback that gives the process group id. The Claude adapter
+  calls `Spec.OnStart` after a successful `cmd.Start` and before `cmd.Wait`
+  (adj #85, `engine.adapter-start`); S17 glue forwards `Request.OnStart`.
+  The result carries the exit
   class (`ok`, `rate_limited`, `auth`, `error`), the session, the final
   text, tokens, cost and the permission denials. A runner error counts as an
   exit of class `error`.
 - **States.** `setup`, `implement`, `checks`, `review`, `gate`,
-  `awaiting-approval`, `commit`, `finish`, `committed`, plus the two rests
+  `awaiting-approval`, `finish`, `commit`, `committed`, plus the two rests
   `paused` and `stopped`. The owner moves a slice with `Approve`, `Reject`,
   `Answer`, `Retry` and `Stop`.
 - **Setup order.** Add `.worktrees/` to `info/exclude` if missing, then
   `git -C P worktree add <worktree> -b <branch>` with the registry's
   patterns (default `.worktrees/{id}` and `{id}`), then `slicer relay-run
-  begin`, then the orchestrator step. All slicer calls use the worktree as
+  begin`, then the orchestrator step. An interrupted setup can reuse an existing worktree
+  when its checkout root, branch and common Git repository match the run.
+  All slicer calls use the worktree as
   `--root`. The ledger is advisory: a failed `relay-run` call is in
   `writes[]` and the relay goes on.
 - **Ledger.** The orchestrator step is ork's own (agent `ork`, no vendor or
@@ -215,7 +225,9 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   and (D) of the reviewer's report when they are not "nothing"; (C) holds
   notes for later. A report without sections (A) and (B) is a shape error.
 - **Rounds.** `round` counts implementer rounds and names the report
-  files (`implementer-2.md`). *Proposed:* a slice stops after 8 implementer
+  files (`implementer-2.md`). A repeat of the same role and round uses a
+  new path (`implementer-2-attempt-2.md`), preserving the earlier report.
+  *Proposed:* a slice stops after 8 implementer
   rounds (`MaxRounds`), so a check that never goes green cannot loop;
   budgets (S05) replace it.
 - **Resume.** A fix round resumes the implementer's latest session and the
@@ -226,23 +238,30 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   not exactly `VERDICT: PASS` or `VERDICT: FAIL`, an implementer or gate
   report with no `Tests: N passed, M failed` line (the finish step needs
   none), and any report with no `## Owner needed` section. All problems are
-  listed. The slice pauses (kind `shape`) with them; `Retry` resumes the
+  listed. A gate PASS with a nonzero failed-test count is also refused.
+  The slice pauses (kind `shape`) with them; `Retry` resumes the
   role and tells it what was wrong.
 - **Owner questions.** A non-empty `## Owner needed` pauses the slice (kind
   `question`) and is recorded in `questions[]`. `Answer` resumes the same
-  role with the question and the answer. Filing to adj is S06; when it
+  role with the question and the answer. The pending answer stays in the
+  run record until the resumed role ends, so recovery can put it in the
+  next brief after a crash. Filing to adj is S06; when it
   files, `adj ask` runs in the project's main checkout (`Engine.AdjRoot`),
   never in a worktree.
 - **Stops.** An exit not classified `ok` (rate-limited too, until fallback
   in S06), a permission denial, and a read-only role that changed the tree
   (`git status --porcelain` before and after) stop the slice with the
-  reason. A failure of a tool call the engine cannot go on from (a commit,
-  a check run, `git status`) pauses it (kind `error`); `Retry` runs the
+  reason. A failed commit stops the slice (adj #81). Other tool failures the engine
+  cannot go on from (a check run, `git status`) pause it (kind `error`); `Retry` runs the
   state again.
 - **Restart.** `Recover` loads every unfinished run. A role with no end
-  whose process group is alive is killed; every such role is marked `lost`,
+  whose process group is alive is killed; only after a successful kill
+  (or when the group is gone) is that role marked `lost`,
   its ledger step is marked `fail`, and the slice pauses (kind `lost`). A
-  run between roles pauses (kind `interrupted`). `Retry` runs the role again
+  run between roles pauses (kind `interrupted`). Awaiting-approval runs
+  keep their state even if a stale role has no end. A failed kill leaves
+  the role running in the record and blocks Retry until reconciliation
+  succeeds. `Retry` runs the role again
   (resumed if it had a session) and `Stop` ends the slice. Only process
   groups named by the run records of unfinished runs are killed, never group
   0, 1 or ork's own. *Residual risk:* a recycled process group id is not told
@@ -254,8 +273,8 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   of the slice's Git section, and nothing else (no attribution), so one
   commit carries the code and the tracking change. A rejected slice runs no
   finish step. A failed commit stops the slice in needs-you with git's error
-  and does not undo the finish step (`engine.finish-order`, the contract's
-  order; S04 built the reverse order, and S17 changes it).
+  and does not undo the finish step or close its passed ledger run again
+  (adj #81, `engine.finish-order`).
 
 ## Stop rules
 
@@ -394,6 +413,12 @@ grok 1.0.62. Grok has no successful run, so most of its column is
     on save. Redaction happens when the owner promotes a candidate into
     `testdata/` (`vendor.fixture-candidates`).
 
+
+The S17 engine-to-Claude bridge forwards the worktree, brief, model,
+effort, permissions, resume id and per-attempt report path. It forwards
+`OnStart` (adj #85) to persist the process group before waiting, and maps
+the adapter's exit class, denials, report, session and usage to the engine.
+
 ### Spike results
 
 - **Calls.** claude 6 invocations (probes 01 to 06), codex 4, grok 6. Each
@@ -474,9 +499,11 @@ ork                         open the TUI (start the daemon if needed)
 ork status [--project P]    waves, slices, roles, needs-you
 ork wave suggest P          the proposed wave and its lineup
 ork wave start P ID...      launch (asks unless --yes)
-ork approve RUN             accept a passed slice and commit
+ork run P ID                show a plan and launch one slice (S17)
+ork approve RUN             finish a passed slice, then commit
 ork answer RUN TEXT         answer an owner question
 ork stop RUN|WAVE           stop and record why
+ork daemon run              serve the daemon in the foreground
 ork roles print [ROLE]      print the embedded role prompts
 ork projects add|list|rm    manage the registry
 ork doctor                  check versions, CLIs, logins, contract
@@ -485,7 +512,35 @@ ork doctor                  check versions, CLIs, logins, contract
 S03 ships `status`, `projects`, `roles print` and `doctor`
 (`cli.s03-commands`) in `internal/cli`; the binary wires them in S13
 (`cmd/ork`). The rest
-come with the engine.
+come with the engine. S17 adds `run`, `approve`, `stop` and `answer`
+(`engine.owner-surface`, adj #73).
+
+`ork run P ID` asks `Well specified?` and `Split?` as yes/no questions
+before showing the plan, then asks whether to start (adj #86,
+`run.lineup-inputs`). Either answer can be supplied with
+`--well-specified yes|no` and `--split yes|no`. With `--yes`, both flags
+are required; a missing or invalid input is a usage error (exit 2).
+The plan shows the worktree, branch, check command, first Claude row per
+role from `slicer relay-roles recommend --json`, and each role's resolved
+permissions. The gate uses the reviewer's lineup. The daemon refuses to
+start if the plan changed during confirmation. It starts one engine run
+in the background; CLI disconnection does not cancel it. The daemon owns
+the run store and reconciles stored runs before accepting clients.
+`approve` runs the finish step, then commits once (adj #81); `answer`
+resumes the paused role with its answer. Both commands wait for the engine
+to rest. `stop` cancels the running job, waits for the role to exit,
+reconciles any surviving process group, and stops the run. No TUI actions
+are added in S17.
+
+*Proposed wire fields (S17).* `run.plan` and `run.start` take
+`{project,item,well_specified,split}`; start also accepts `expected`, the
+plan the owner confirmed. `run.approve`, `run.stop` and `run.answer` take
+`{run,text?}`. Plan returns `{project,item,worktree,branch,check_command,
+lineup,permissions}`; the project contains only its name and path.
+Start and owner commands return the run record. With `--json`, run prints
+the plan on stderr and a single result JSON value on stdout; declining
+prints `{"started":false}` on stdout. Interactive questions go on stderr
+in JSON mode.
 
 `ork doctor` checks:
 - the slicer and adj versions (`--version`);
@@ -513,12 +568,15 @@ Text output is plain lines meant to be stable. `--json` output, indented:
 - `status`: `{"projects":[{"name","path","adj","needs_you","active_relays":[
   {"id","items","state","worktree","begun_at","updated_at","steps",
   "running"}],"parts":{"items":{"age_ms","stale"?,"error"?}},"errors":[{"part","code","message"}]}]}`. `needs_you` is the
-  project's count of open adj records until the engine adds approvals, stops
-  and pauses (`status.needs-you`). `active_relays` are slicer's active relay runs.
+  project's count of open adj records plus engine runs awaiting approval,
+  paused or stopped (`status.needs-you`, adj #69). S17 also adds the
+  *proposed* `engine_runs:[{id,item,state,wait?}]` field per project. `wait`
+  contains the approval prompt, owner question, pause or stop reason. `active_relays` are slicer's active relay runs.
   `errors` lists failed parts (`items`, `goals`, `runs`, `open`, `decided`)
   with the tool's own code. `parts` gives each part's age in ms (0 for a part never read) and `stale`
   when the part keeps an older value; the error is the one that failed. Text: one line `NAME: needs
-  you N, active relays M`, then one line per relay and per error (the text
+  you N, active relays M`, then one line per relay, engine run (with state and wait reason), and
+  error (the text
   does not show ages yet).
 - `projects list`: `{"projects":[...]}`, each as in `projects.json`. Text: name,
   path and `adj`, in columns.
