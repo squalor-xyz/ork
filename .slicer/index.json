@@ -475,7 +475,7 @@
       "id": "S11",
       "title": "TUI shell, project tabs and Overview",
       "short_title": "TUI shell and Overview",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S02"
@@ -487,6 +487,28 @@
           "text": "**2026-10-19** — From S02: Direct.Snapshot runs its 5 calls in sequence; worst case about 50 s per project at the 10 s default. Run them concurrently or shorten the timeout before polling every 5 s.",
           "created_at": "2026-10-19T03:12:01Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "f752ff6d-a076-4339-8bad-454da8cfbf85",
+          "kind": "",
+          "text": "**2026-10-19** — NOTICE points to the Go module cache for the full license texts; a binary release should bundle them.",
+          "created_at": "2026-10-19T03:49:02Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "01e35bb5-36c5-4f32-b8e1-71a683527acd",
+          "kind": "",
+          "text": "**2026-10-19** — Hold flags are configurable in slicer; the Overview badge hard-codes needs-owner. slicer list --held exists for S12 to widen it.",
+          "created_at": "2026-10-19T03:49:04Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -510,7 +532,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

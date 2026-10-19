@@ -9,15 +9,17 @@ type Claim struct {
 }
 
 // Fields are the scored fields of an item. A field the project does not use
-// is the zero value.
+// is the zero value. Flags holds the item's flags, among them any hold flag
+// such as "needs-owner".
 type Fields struct {
-	Size       string `json:"size"`
-	Key        string `json:"key"`
-	Pass       string `json:"pass"`
-	Importance int    `json:"importance"`
-	Urgency    int    `json:"urgency"`
-	Effort     int    `json:"effort"`
-	Attempts   int    `json:"attempts"`
+	Flags      []string `json:"flags"`
+	Size       string   `json:"size"`
+	Key        string   `json:"key"`
+	Pass       string   `json:"pass"`
+	Importance int      `json:"importance"`
+	Urgency    int      `json:"urgency"`
+	Effort     int      `json:"effort"`
+	Attempts   int      `json:"attempts"`
 }
 
 // Item is one row of `slicer list --json --lean`.

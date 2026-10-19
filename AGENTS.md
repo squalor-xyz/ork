@@ -76,7 +76,10 @@ owner decides, so never run `adj decide`, `adj reject` or `adj supersede`.
 
 ## Project Commands
 
-- Install dependencies: none (standard library only until S11).
+- Install dependencies: `go mod download` (Bubble Tea, Lip Gloss and Bubbles
+  only, since S11).
+- Rewrite TUI golden views after an intended layout change:
+  `go test ./internal/tui -update`, then review the diff in `testdata/golden/`.
 - Run tests: `go test ./...`, plus `go vet ./...` and `gofmt -l .`.
 - Check tracking: `slicer check`.
 - Check decisions: `adj lint`.

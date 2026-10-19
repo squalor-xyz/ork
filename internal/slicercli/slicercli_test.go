@@ -54,7 +54,7 @@ func TestList(t *testing.T) {
 		t.Fatalf("S02 claim: %+v", s02.Claim)
 	}
 	want := Fields{Size: "M", Key: "v1.core", Pass: "v1", Importance: 3, Urgency: 3, Effort: 2, Attempts: 1}
-	if s02.Fields != want {
+	if !reflect.DeepEqual(s02.Fields, want) {
 		t.Fatalf("S02 fields: %+v", s02.Fields)
 	}
 	if s10 := items[1]; s10.ID != "S10" || !reflect.DeepEqual(s10.DependsOn, []string{"S01"}) || s10.Claim != nil {
@@ -149,6 +149,19 @@ func TestRelayRunsActiveOnlyPassesFlag(t *testing.T) {
 	c, _ := client(t, route("relay-run-list.json", "relay-run", "list", "--json", "--lean", "--active", "--root", root))
 	if _, err := c.RelayRuns(context.Background(), root, true); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestListReadsFlags(t *testing.T) {
+	c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", root},
+		Stdout: `[{"id":"X1","title":"t","status":"open","has_slice":false,"fields":{"flags":["needs-owner","other"]}},` +
+			`{"id":"X2","title":"u","status":"open","has_slice":false,"fields":{"size":"S"}}]`})
+	items, err := c.List(context.Background(), root)
+	if err != nil || len(items) != 2 {
+		t.Fatalf("List: %+v, %v", items, err)
+	}
+	if !reflect.DeepEqual(items[0].Fields.Flags, []string{"needs-owner", "other"}) || len(items[1].Fields.Flags) != 0 {
+		t.Fatalf("flags: %+v, %+v", items[0].Fields.Flags, items[1].Fields.Flags)
 	}
 }
 
