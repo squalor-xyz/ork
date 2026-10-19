@@ -1,0 +1,41 @@
+{
+  "id": "S16",
+  "title": "Claude role adapter",
+  "lead": [
+    "Run one role round with `claude -p` and turn its output into the engine's\nresult: command, stream, usage, exit class, resume and report\n(`plan.s04-cut`)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** codex, grok, fallback, budgets, or the engine's state machine.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S01 measured what claude's headless mode reports; this makes it the one\nvendor S04's engine can run for real."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/vendor/claude/` (new), using `internal/clirun` process groups.\n- `testdata/vendors/claude/` fixtures (read; new ones only if redacted).\n- Not `internal/engine` (S04); S17 joins the two."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- The command carries model, effort, `--output-format stream-json\n  --verbose`, the allowlist for write roles and `--permission-mode plan`\n  for read-only ones, and `--resume SESSION` on a resumed round.\n- Stream events from the S01 fixtures give text deltas for an output tail,\n  and the `result` event gives session id, final text, usage tokens and\n  `total_cost_usd`.\n- Exit class: ok; `permission_denials` non-empty is a denial even with\n  exit 0; an auth error; any other failure is unclassified, and its raw\n  stdout, stderr and JSON are saved as a fixture candidate under\n  `~/.local/state/ork/fixtures/claude/` (`vendor.ratelimit-detection`).\n  A rate-limit class comes only from a documented signal.\n- The report comes from the report file, else the result text\n  (`role.report-io`).\n- Cancel kills the process group; no process is left running.\n- A fake `claude` executable replays the fixtures; no real call."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race ./...`, `go vet ./...`, `gofmt -l .` clean; SPDX headers;\n  no new dependency.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"S16: Claude role adapter\"."
+    }
+  ],
+  "notes": []
+}

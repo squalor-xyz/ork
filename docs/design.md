@@ -402,6 +402,12 @@ Each step is usable or testable on its own:
 3. **Daemon, socket and CLI.** `ork status`.
 4. **Engine for a single implementer.** setup → implement → checks →
    review → gate → approve → commit, on one vendor, with the ledger.
+   Cut into three slices (`plan.s04-cut`): S04 engine core on a fake role
+   runner, S16 the Claude adapter, and S17 the CLI to run, approve, answer
+   and stop one slice (`engine.owner-surface`). A role left running by a
+   crashed daemon is marked lost and its slice paused (`engine.restart`).
+   An implementer with no registry allowlist gets a narrow built-in one
+   (`launch.default-allowlist`).
 5. **Waves and caps.** Several items, queueing, failure isolation.
 6. **Three vendors, fallback, fingerprint, budgets, owner questions.**
 7. **Live role detail.** Output tail, tokens and cost, charts and

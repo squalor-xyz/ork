@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 16,
+  "next_id": 18,
   "preamble": "",
   "passes": [
     {
@@ -171,9 +171,9 @@
     {
       "id": "S04",
       "title": "Engine for one implementer: setup, implement, checks, review, gate, approve, commit, ledger",
-      "short_title": "Single-slice engine",
+      "short_title": "Engine core",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [
         "S01",
         "S03"
@@ -226,7 +226,7 @@
       ],
       "claim": null,
       "fields": {
-        "size": "L",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -251,7 +251,7 @@
       "status": "open",
       "has_slice": false,
       "depends_on": [
-        "S04"
+        "S17"
       ],
       "note_records": [],
       "claim": null,
@@ -758,6 +758,68 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S16",
+      "title": "Claude role adapter",
+      "short_title": "Claude adapter",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S01"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S17",
+      "title": "Run, approve and stop one slice from the CLI",
+      "short_title": "Single-slice CLI",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S04",
+        "S16",
+        "S13"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }

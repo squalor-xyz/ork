@@ -95,3 +95,8 @@
 {"when": "2026-10-19T04:08:55Z", "item": "S04", "action": "note", "from": "", "to": "", "note": "From S03: doctor compares slicer ai relay line 1 to the sing", "by": "Jon R"}
 {"when": "2026-10-19T04:08:55Z", "item": "S03", "action": "note", "from": "", "to": "", "note": "Review notes: docs/design.md says the pidfile is never read ", "by": "Jon R"}
 {"when": "2026-10-19T11:52:32Z", "item": "S04", "action": "note", "from": "", "to": "", "note": "state.writes decided 2026-10-19: writes[] in run.json (shape", "by": "Jon R"}
+{"when": "2026-10-19T12:21:47Z", "item": "S04", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-19T12:21:47Z", "item": "S04", "action": "set", "from": "", "to": "", "note": "short_title Single-slice engine→Engine core; size L→M"}
+{"when": "2026-10-19T12:22:17Z", "item": "S16", "action": "add", "from": "", "to": "open", "note": "Claude role adapter"}
+{"when": "2026-10-19T12:22:17Z", "item": "S17", "action": "add", "from": "", "to": "open", "note": "Run, approve and stop one slice from the CLI"}
+{"when": "2026-10-19T12:22:18Z", "item": "S05", "action": "set", "from": "", "to": "", "note": "depends_on S04→S17"}
