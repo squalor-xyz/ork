@@ -6,8 +6,8 @@ package clirun
 
 import "os/exec"
 
-// ownProcessGroup does nothing here: a cancel kills only the child.
-func ownProcessGroup(cmd *exec.Cmd) {}
+// OwnProcessGroup does nothing here: a cancel kills only the child.
+func OwnProcessGroup(cmd *exec.Cmd) {}
 
-// killGroup does nothing here: there is no process group to kill.
-func killGroup(cmd *exec.Cmd) {}
+// KillGroup does nothing here: there is no process group to kill.
+func KillGroup(cmd *exec.Cmd) {}

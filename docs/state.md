@@ -16,7 +16,7 @@ The files ork owns. Everything else is read live from slicer, adj and git
 | Role reports and output logs | `~/.local/state/ork/runs/<run>/<role>-<round>.{md,log}` |
 | Check output per round (S04) | `~/.local/state/ork/runs/<run>/checks-<round>.log` |
 | A role's own temp directory (S04) | `~/.local/state/ork/runs/<run>/tmp/<role>-<round>/` |
-| Fixture candidates from non-ok vendor exits | `~/.local/state/ork/fixtures/<vendor>/` |
+| Fixture candidates: raw output of every non-ok vendor round, mode 0600 | `~/.local/state/ork/fixtures/<vendor>/` |
 
 ork honors `XDG_CONFIG_HOME` and `XDG_STATE_HOME`. Nothing is written
 inside a project except what git and slicer write for a slice: the
@@ -160,9 +160,10 @@ further retry. The CLI may already have changed the project.
   version 1 files, which lack `daemon_idle_minutes` and are strict about it
   (a version 1 file with that key is an error), and the next save writes
   version 2.
-- **No secrets:** no tokens or credentials in any ork file. Raw vendor
-  output saved as fixtures is scanned for key-like strings and redacted
-  before it is saved (*proposed*).
+- **No secrets:** no tokens or credentials in any ork file. Fixture
+  candidates are the exception: they hold raw vendor output at mode 0600
+  under the state directory, never in a repo, and are redacted when the owner
+  promotes one into `testdata/` (`vendor.fixture-candidates`).
 - **Retention:** when more than 100 finished runs exist, the daemon removes
   the oldest run directories. It never removes a run whose branch is not
   landed, or a run that is still active. `runrec.Store.Prune` takes a
