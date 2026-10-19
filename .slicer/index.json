@@ -679,6 +679,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "c5856cf8-4d56-428f-b387-4c3ff692aaf3",
+          "kind": "",
+          "text": "**2026-10-19** — From S15 (2026-10-19): Cache.Forget does not cancel in-flight reads, and a snapshot or status that loaded the registry before projects rm can re-create the forgotten project's entries (handlers.go:281, cache.go:139). Notices go out one connection at a time from the cache's read goroutine (subscribe.go), so a stuck subscriber delays others up to the 10 s write timeout. With no subscriber every project is still read every 30 s until idle exit. ork status text shows no part ages (JSON does). Open records follow the 5 s / 30 s tick, as the integration review's R2 table has it.",
+          "created_at": "2026-10-19T13:16:15Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,

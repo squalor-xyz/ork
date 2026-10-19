@@ -103,3 +103,4 @@
 {"when": "2026-10-19T12:22:17Z", "item": "S16", "action": "add", "from": "", "to": "open", "note": "Claude role adapter"}
 {"when": "2026-10-19T12:22:17Z", "item": "S17", "action": "add", "from": "", "to": "open", "note": "Run, approve and stop one slice from the CLI"}
 {"when": "2026-10-19T12:22:18Z", "item": "S05", "action": "set", "from": "", "to": "", "note": "depends_on S04→S17"}
+{"when": "2026-10-19T13:16:15Z", "item": "S13", "action": "note", "from": "", "to": "", "note": "From S15 (2026-10-19): Cache.Forget does not cancel in-fligh", "by": "Jon R"}
