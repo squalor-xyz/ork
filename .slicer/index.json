@@ -871,6 +871,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "7b866a28-3976-4dfc-9500-45871cfa9dfd",
+          "kind": "",
+          "text": "**2026-10-19** — From S04 (2026-10-19), fix before dogfooding: a gate PASS whose Tests line reports failures still reaches approval; a failed Kill still marks a role lost, so Retry can start a second role; retry after a crash in setup fails on the existing worktree (internal/engine/states.go:30); an owner answer is lost if ork dies mid-answered-round (engine.go:372-380, recover.go:92); a stale role with no end is marked lost even in awaiting-approval (recover.go:70). Later: restart cannot tell a recycled pgid from ork's (no start time in the record); the read-only fingerprint (git status --porcelain) misses edits to already-dirty files; MaxRounds=8 and the review-findings rule are proposed. Commit-versus-finish order is marked Open in docs/design.md.",
+          "created_at": "2026-10-19T14:32:25Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
