@@ -660,7 +660,7 @@
       "id": "S13",
       "title": "Wire the daemon, CLI and TUI into the ork binary",
       "short_title": "Wire binary and socket",
-      "status": "open",
+      "status": "started",
       "has_slice": true,
       "depends_on": [
         "S03",
@@ -692,7 +692,10 @@
           "stale_after": ""
         }
       ],
-      "claim": null,
+      "claim": {
+        "owner": "Jon R",
+        "at": "2026-10-19T13:41:43Z"
+      },
       "fields": {
         "size": "S",
         "flags": [],
@@ -709,7 +712,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

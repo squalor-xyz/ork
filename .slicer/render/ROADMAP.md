@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-18 items · — 10 · done 8
+18 items · — 9 · done 8 · started 1
 
 ## v1
 
@@ -60,7 +60,7 @@
 | 10 | [S10](slices/S10.md) | Role prompts | M | 2 |  |  | done |
 | 11 | [S11](slices/S11.md) | TUI shell and Overview | M | 2 |  |  | done |
 | 12 | [S12](slices/S12.md) | Roadmap and Decisions screens | M | 2 |  |  | — |
-| 13 | [S13](slices/S13.md) | Wire binary and socket | S | 1 |  |  | — |
+| 13 | [S13](slices/S13.md) | Wire binary and socket | S | 1 |  |  | started |
 | 14 | [S14](slices/S14.md) | Charm v2 port | S | 1 |  |  | done |
 | 15 | [S15](slices/S15.md) | Snapshot cache | S | 1 |  |  | done |
 | 16 | [S16](slices/S16.md) | Claude adapter | M | 2 |  |  | — |
