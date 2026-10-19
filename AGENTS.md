@@ -6,9 +6,8 @@ These instructions apply to all work in this repository unless a nested
 `AGENTS.md` gives more specific guidance. Keep durable project conventions
 here. Update this file when the same mistake or review note repeats.
 
-ork is spec only: there is no code. Do not write implementation code or add
-a `go.mod` until the owner starts the first v1 slice. Approved dependencies
-are Bubble Tea, Lip Gloss and Bubbles only (`adj check "stack.go-deps"`);
+ork is in development; code lands one tracked v1 slice at a time.
+Approved dependencies are Bubble Tea, Lip Gloss and Bubbles only (`adj check "stack.go-deps"`);
 verify each one's license from its repository before adding it, and ask
 before any other dependency. Every new Go file starts with
 `// SPDX-License-Identifier: GPL-3.0-or-later`.
@@ -54,7 +53,7 @@ before any other dependency. Every new Go file starts with
 - Shell: zsh on darwin. `timeout` is not installed on macOS; do not use it.
 - Scratch files go in the session's scratch directory, never `/tmp` by
   default.
-- No Go toolchain commands until code exists.
+- Go 1.27.2. Use `go -C DIR` instead of changing directory.
 
 ## Tracking (slicer)
 
@@ -77,10 +76,8 @@ owner decides, so never run `adj decide`, `adj reject` or `adj supersede`.
 
 ## Project Commands
 
-There is no application build.
-
-- Install dependencies: none.
-- Run tests: none.
+- Install dependencies: none (standard library only until S11).
+- Run tests: `go test ./...`, plus `go vet ./...` and `gofmt -l .`.
 - Check tracking: `slicer check`.
 - Check decisions: `adj lint`.
 - Open questions: `adj inbox`.
