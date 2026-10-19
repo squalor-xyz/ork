@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- S16: the Claude role adapter (`internal/agent/claude`). Builds the
+  `claude -p` command, streams events, classifies the exit (ok, denied,
+  unclassified) and saves a raw 0600 fixture candidate for every round that
+  is not ok. Tested against a fake `claude` that replays the S01 fixtures.
+  Not yet joined to the engine (S17). `clirun` now exports `OwnProcessGroup`
+  and `KillGroup`.
+
 - S11: `ork` opens a read-only TUI with project tabs, a badge and bell for
   what needs the owner, and the Overview (Needs you, Running with relays
   started elsewhere, Ready to land). Polls the visible project every 5 s and

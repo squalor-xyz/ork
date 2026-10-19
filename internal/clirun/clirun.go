@@ -136,13 +136,13 @@ func Run(ctx context.Context, c Call) (Result, error) {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	cmd.WaitDelay = waitDelay
-	ownProcessGroup(cmd)
+	OwnProcessGroup(cmd)
 
 	err := cmd.Run()
 	// The call is over, so nothing it started may outlive it. A grandchild
 	// that kept the output pipes open made Wait give up after waitDelay.
 	if cmd.ProcessState != nil {
-		killGroup(cmd)
+		KillGroup(cmd)
 		if errors.Is(err, exec.ErrWaitDelay) && cmd.ProcessState.Success() {
 			err = nil
 		}

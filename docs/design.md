@@ -223,7 +223,9 @@ answer in the project's adj store (`adj ask` then `adj decide --by
 There is one Go adapter per vendor. Each implements: build a command
 (model, effort, permission mode, allowlist, output format), start it in its
 own process group, stream events, parse the final result and usage, and
-classify the exit as ok, rate-limited, auth or error.
+classify the exit as ok, denied, rate-limited or unclassified. A class
+needs a documented signal or a real sample (`vendor.ratelimit-detection`,
+`vendor.unsampled-classes`).
 
 The `claude -p --output-format json`, `codex exec --json` and
 `grok --output-format json -p` invocations, and the read-only flags
@@ -250,8 +252,10 @@ grok 1.0.62. Grok has no successful run, so most of its column is
   midway leaves its tree as it is, and the next vendor is told to continue
   from it.
 - **Detection** (`vendor.ratelimit-detection`): the classifier matches only
-  documented signals. Every non-ok exit saves its raw stdout, stderr and
-  JSON under `~/.local/state/ork/fixtures/<vendor>/` as a candidate. An
+  documented signals. Every non-ok round, a permission denial that
+  exits 0 included, saves its raw stdout, stderr and JSON at mode 0600 under
+  `~/.local/state/ork/fixtures/<vendor>/` as a candidate. Redaction happens
+  when the owner promotes one into `testdata/` (`vendor.fixture-candidates`). An
   unclassified exit stops the slice for the owner, who can mark it
   "rate limit" in one keystroke. That sample becomes a test fixture. The
   spike's grok 403 (`testdata/vendors/grok/01-plain-json.stdout`) would be
@@ -265,6 +269,32 @@ grok 1.0.62. Grok has no successful run, so most of its column is
   read-only roles in its read-only sandbox (`vendor.codex-allowlist`).
 - **Credentials:** ork uses each CLI's own login. It never reads, stores
   or passes credentials.
+
+- **Claude adapter** (`internal/agent/claude`, S16, `plan.s04-cut`). One
+  call runs one role round: `claude -p [--resume SESSION] --output-format
+  stream-json --verbose --include-partial-messages [--model M] [--effort E]`,
+  then `--allowedTools a,b --permission-prompts none` for a write role or
+  `--permission-mode plan` for a read-only one, then the prompt. `--effort
+  <level>` is listed by `claude --help` ("Effort level for the current
+  session", claude 2.1.x). The process runs in its own process group, using
+  `internal/clirun`'s helpers (`code.process-groups`). `stream_event` text
+  deltas reach the output tail as they arrive. Session id, final text,
+  tokens and `total_cost_usd` come from the `result` event. Cancelling the
+  context kills the whole group. The report is the report file, else the
+  result text (`role.report-io`). The exit class is:
+  - ok: exit 0, `subtype` `success`, `is_error` false.
+  - denied: `permission_denials` is non-empty, even at exit 0.
+  - unclassified: everything else. That includes the bad-model run (exit 1,
+    status 404; `testdata/vendors/claude/06-bad-model.stdout`), any 401, 429
+    or 503, and a `rejected` `rate_limit_event`. No auth failure, bad model
+    or rate limit has a real sample yet, so none has a class of its own
+    (`vendor.unsampled-classes`). The rate-limited class is never returned.
+  - Every round that is not ok, denials included, saves its command, exit
+    code, raw stdout, stderr and the result JSON under
+    `$XDG_STATE_HOME/ork/fixtures/claude/` (else
+    `~/.local/state/ork/fixtures/claude/`) at mode 0600. Nothing is redacted
+    on save. Redaction happens when the owner promotes a candidate into
+    `testdata/` (`vendor.fixture-candidates`).
 
 ### Spike results
 

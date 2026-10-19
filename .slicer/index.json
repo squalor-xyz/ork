@@ -788,12 +788,24 @@
       "id": "S16",
       "title": "Claude role adapter",
       "short_title": "Claude adapter",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S01"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b65b3504-2a1d-49d3-bee8-d73c0dc838f7",
+          "kind": "",
+          "text": "**2026-10-19** — Review FAIL: internal/vendor/claude is skipped by ./... and cannot be imported (Go treats vendor/ as vendored); slice Files path needs an owner decision. Also: --effort unverified, state.md vs design.md redaction conflict, copied procgroup code.",
+          "created_at": "2026-10-19T13:35:38Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -811,7 +823,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

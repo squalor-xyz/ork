@@ -104,3 +104,7 @@
 {"when": "2026-10-19T12:22:17Z", "item": "S17", "action": "add", "from": "", "to": "open", "note": "Run, approve and stop one slice from the CLI"}
 {"when": "2026-10-19T12:22:18Z", "item": "S05", "action": "set", "from": "", "to": "", "note": "depends_on S04→S17"}
 {"when": "2026-10-19T13:16:15Z", "item": "S13", "action": "note", "from": "", "to": "", "note": "From S15 (2026-10-19): Cache.Forget does not cancel in-fligh", "by": "Jon R"}
+{"when": "2026-10-19T13:18:30Z", "item": "S16", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-19T13:35:38Z", "item": "S16", "action": "note", "from": "", "to": "", "note": "Review FAIL: internal/vendor/claude is skipped by ./... and ", "by": "Jon R"}
+{"when": "2026-10-19T13:37:14Z", "item": "S16", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-19T13:49:33Z", "item": "S16", "action": "status", "from": "started", "to": "done", "note": "Claude adapter in internal/agent/claude: claude -p command (model, effort, allowlist or plan mode, resume), live stream-json events and output tail, usage and cost from the result event, exit classes ok/denied/unclassified, raw 0600 fixture candidates for every non-ok round, report file else result text, process-group cancel via shared clirun helpers, fake claude replaying S01 fixtures. go test -race ./..., go vet, gofmt, slicer check and adj lint clean.", "by": "Jon R"}

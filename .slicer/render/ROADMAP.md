@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-17 items · — 11 · done 6
+17 items · — 10 · done 7
 
 ## v1
 
@@ -63,5 +63,5 @@
 | 13 | [S13](slices/S13.md) | Wire binary and socket | S | 1 |  |  | — |
 | 14 | [S14](slices/S14.md) | Charm v2 port | S | 1 |  |  | — |
 | 15 | [S15](slices/S15.md) | Snapshot cache | S | 1 |  |  | done |
-| 16 | [S16](slices/S16.md) | Claude adapter | M | 2 |  |  | — |
+| 16 | [S16](slices/S16.md) | Claude adapter | M | 2 |  |  | done |
 | 17 | [S17](slices/S17.md) | Single-slice CLI | M | 2 |  |  | — |
