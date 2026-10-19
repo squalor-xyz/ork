@@ -4,6 +4,7 @@ package daemon
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clirun"
+	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/slicercli"
@@ -109,20 +111,46 @@ func (c *fakeClock) Advance(d time.Duration) {
 	}
 }
 
-// stubSource answers Snapshot from a map by project name.
+// stubSource answers Fetch from a map by project name, and records each call.
 type stubSource struct {
 	mu    sync.Mutex
 	snaps map[string]source.Snapshot
-	calls []string
+	calls []string // "part project", one per call
 }
 
-func (s *stubSource) Snapshot(ctx context.Context, p registry.Project) source.Snapshot {
+func (s *stubSource) Fetch(ctx context.Context, p registry.Project, part source.Part) (any, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.calls = append(s.calls, p.Name)
+	s.calls = append(s.calls, string(part)+" "+p.Name)
 	snap := s.snaps[p.Name]
-	snap.Project = p
-	return snap
+	switch part {
+	case source.Items:
+		return snap.Items.Value, snap.Items.Err
+	case source.Goals:
+		return snap.Goals.Value, snap.Goals.Err
+	case source.Runs:
+		return snap.Runs.Value, snap.Runs.Err
+	case source.Open:
+		return snap.Open.Value, snap.Open.Err
+	case source.Decided:
+		return snap.Decided.Value, snap.Decided.Err
+	case source.Head:
+		return "h1", nil
+	}
+	return nil, fmt.Errorf("unknown part %s", part)
+}
+
+// put replaces a project's snapshot as the calls after it see it.
+func (s *stubSource) put(name string, snap source.Snapshot) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.snaps[name] = snap
+}
+
+func (s *stubSource) callCount() int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return len(s.calls)
 }
 
 type env struct {
@@ -131,6 +159,7 @@ type env struct {
 	regPath string
 	clock   *fakeClock
 	src     *stubSource
+	fetch   source.Fetcher // when set, the daemon reads through it instead of src
 }
 
 func newEnv(t *testing.T) *env {
@@ -146,7 +175,11 @@ func newEnv(t *testing.T) *env {
 }
 
 func (e *env) config() Config {
-	return Config{Paths: e.paths, RegistryPath: e.regPath, SeedRoot: filepath.Join(e.dir, "seed"), Source: e.src, Clock: e.clock}
+	var f source.Fetcher = e.src
+	if e.fetch != nil {
+		f = e.fetch
+	}
+	return Config{Paths: e.paths, RegistryPath: e.regPath, SeedRoot: filepath.Join(e.dir, "seed"), Source: f, Clock: e.clock}
 }
 
 func (e *env) writeRegistry(t *testing.T, idleMinutes int, projects ...registry.Project) {
@@ -543,11 +576,15 @@ func TestStatusListsProjectsWithNeedsYouAndActiveRelays(t *testing.T) {
 	if err != nil || len(one.Projects) != 1 || one.Projects[0].Name != "beta" {
 		t.Fatalf("status --project beta: %+v, %v", one, err)
 	}
-	e.src.mu.Lock()
-	calls := len(e.src.calls)
-	e.src.mu.Unlock()
-	if calls != 3 { // two for the first status, one for the second
-		t.Fatalf("Source was called %d times, want 3", calls)
+	// The parts were read by the first status; the next status reads the cache.
+	settle()
+	before := e.src.callCount()
+	if _, err := c.Status(context.Background(), ""); err != nil {
+		t.Fatal(err)
+	}
+	settle()
+	if after := e.src.callCount(); after != before {
+		t.Fatalf("a status made %d CLI calls with the parts cached, want none", after-before)
 	}
 
 	var re *ipc.Error
@@ -763,5 +800,337 @@ func TestUnknownMethodAndBadParams(t *testing.T) {
 	}
 	if err := raw.Call(context.Background(), MethodProjectsAdd, map[string]any{"path": "/p/x", "nme": "typo"}, nil); !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "nme") {
 		t.Fatalf("unknown param key: %v", err)
+	}
+}
+
+// ---- the snapshot cache, subscriptions and notices (S15) ----
+
+func TestMain(m *testing.M) {
+	clitest.Main()
+	os.Exit(m.Run())
+}
+
+var epoch = time.Date(2026, 10, 19, 12, 0, 0, 0, time.UTC)
+
+// Now is the fake clock's time: epoch plus the time advanced so far.
+func (c *fakeClock) Now() time.Time {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return epoch.Add(c.now)
+}
+
+// settle gives calls that were started a moment to run.
+func settle() { time.Sleep(50 * time.Millisecond) }
+
+// notices reads a subscribed connection's notices into a channel until the
+// test ends.
+func notices(t *testing.T, c *Client) <-chan SnapshotChanged {
+	t.Helper()
+	ch := make(chan SnapshotChanged, 100)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	go func() {
+		for {
+			n, err := c.Next(ctx)
+			if err != nil {
+				return
+			}
+			ch <- n
+		}
+	}()
+	return ch
+}
+
+// advanceFiveSeconds moves the fake clock on by 5 s and lets the calls it
+// started run.
+func advanceFiveSeconds(e *env) {
+	e.clock.Advance(5 * time.Second)
+	settle()
+}
+
+var alphaItems = source.Snapshot{
+	Items:   source.Result[[]slicercli.Item]{Value: []slicercli.Item{{ID: "S1", Title: "one"}}},
+	Goals:   source.Result[*slicercli.Goals]{Value: &slicercli.Goals{}},
+	Runs:    source.Result[[]slicercli.RelayRun]{Value: []slicercli.RelayRun{}},
+	Open:    source.Result[[]adjcli.Record]{Value: []adjcli.Record{}},
+	Decided: source.Result[[]adjcli.Record]{Value: []adjcli.Record{}},
+}
+
+func TestTwoClientsReadingAtOnceMakeOneCallPerPart(t *testing.T) {
+	e := newEnv(t)
+	e.writeRegistry(t, 0, registry.Project{Name: "alpha", Path: "/p/alpha", Adj: true})
+	const root = "/p/alpha"
+	fake := clitest.Install(t,
+		clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", root}, Stdout: "[]"},
+		clitest.Route{Tool: "slicer", Args: []string{"goals", "--json", "--root", root}, Stdout: "{}"},
+		clitest.Route{Tool: "slicer", Args: []string{"relay-run", "list", "--json", "--lean", "--active", "--root", root}, Stdout: `{"runs":[]}`},
+		clitest.Route{Tool: "adj", Args: []string{"inbox", "--json", "--root", root}, Stdout: `{"records":[]}`},
+		clitest.Route{Tool: "adj", Args: []string{"list", "--json", "--status", "decided", "--root", root}, Stdout: `{"records":[]}`},
+		clitest.Route{Tool: "git", Args: []string{"-C", root, "rev-parse", "HEAD"}, Stdout: "h1\n"},
+	)
+	direct := source.NewDirect(slicercli.Client{Bin: fake.Bin("slicer")}, adjcli.Client{Bin: fake.Bin("adj")})
+	direct.Git = fake.Bin("git")
+	e.fetch = direct
+	e.start(t)
+
+	c1, c2 := e.dial(t), e.dial(t)
+	var wg sync.WaitGroup
+	for _, c := range []*Client{c1, c2} {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			c.Snapshot(context.Background(), registry.Project{Name: "alpha"})
+		}()
+	}
+	wg.Wait()
+	waitFor(t, "git HEAD read", func() bool { return len(fake.CallsTo("git")) == 1 })
+	settle()
+	for _, tc := range []struct {
+		tool  string
+		verbs int
+	}{{"slicer", 3}, {"adj", 2}, {"git", 1}} {
+		if n := len(fake.CallsTo(tc.tool)); n != tc.verbs {
+			t.Errorf("%s calls for two snapshots: %d, want %d (one per part)", tc.tool, n, tc.verbs)
+		}
+	}
+}
+
+func TestVisibleProjectRefreshesEvery5sAndOthersEvery30s(t *testing.T) {
+	e := newEnv(t)
+	twoProjects(t, e)
+	e.src.put("alpha", alphaItems)
+	e.src.put("beta", alphaItems)
+	r := e.start(t)
+	c := e.dial(t)
+	ctx := context.Background()
+	c.Snapshot(ctx, registry.Project{Name: "alpha"})
+	c.Snapshot(ctx, registry.Project{Name: "beta"})
+
+	sub := e.dial(t)
+	if err := sub.Subscribe(ctx, []string{"alpha"}); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, "alpha goals read on tab open", func() bool { return e.src.count("goals alpha") == 2 })
+
+	for step := 1; step <= 6; step++ { // 5 s to 30 s
+		e.clock.Advance(5 * time.Second)
+		want := step + 1 // one cold read, then one per 5 s step
+		waitFor(t, fmt.Sprintf("visible items read %d times", want), func() bool {
+			return e.src.count("items alpha") == want
+		})
+		// The read of this tick must end before the clock moves on: a read still
+		// running then makes the next due read pending, and that one is skipped.
+		at := epoch.Add(time.Duration(5*step) * time.Second)
+		waitFor(t, "items read at this tick ended", func() bool {
+			return c.Snapshot(ctx, registry.Project{Name: "alpha"}).Items.ReadAt.Equal(at)
+		})
+	}
+	waitFor(t, "other project's items read twice by 30 s", func() bool { return e.src.count("items beta") == 2 })
+
+	// The subscriber leaves: alpha is no longer visible, so it goes to 30 s.
+	sub.Close()
+	waitFor(t, "the subscriber's projects dropped", func() bool {
+		r.d.subsMu.Lock()
+		defer r.d.subsMu.Unlock()
+		return len(r.d.focus) == 0
+	})
+	for step := 0; step < 5; step++ { // 35 s to 55 s: nothing is read
+		advanceFiveSeconds(e)
+	}
+	if n := e.src.count("items alpha"); n != 7 {
+		t.Fatalf("items read 25 s after the subscriber left: %d reads, want 7", n)
+	}
+	e.clock.Advance(5 * time.Second) // 60 s
+	waitFor(t, "items read 30 s after the subscriber left", func() bool {
+		return e.src.count("items alpha") == 8
+	})
+}
+
+func TestSubscriberGetsANoticeOnlyWhenAPartChanges(t *testing.T) {
+	e := newEnv(t)
+	twoProjects(t, e)
+	e.src.put("alpha", alphaItems)
+	e.start(t)
+	e.dial(t).Snapshot(context.Background(), registry.Project{Name: "alpha"})
+
+	sub := e.dial(t)
+	if err := sub.Subscribe(context.Background(), []string{"alpha"}); err != nil {
+		t.Fatal(err)
+	}
+	ch := notices(t, sub)
+	settle()
+	select {
+	case n := <-ch:
+		t.Fatalf("a notice for a subscription with nothing changed: %+v", n)
+	default:
+	}
+
+	changed := alphaItems
+	changed.Items = source.Result[[]slicercli.Item]{Value: []slicercli.Item{{ID: "S1"}, {ID: "S2"}}}
+	e.src.put("alpha", changed)
+	advanceFiveSeconds(e)
+	select {
+	case n := <-ch:
+		if n.Project != "alpha" || len(n.Parts) != 1 || n.Parts[0] != "items" {
+			t.Fatalf("notice: %+v, want alpha's items", n)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("no notice when the items changed")
+	}
+
+	advanceFiveSeconds(e) // the same items again
+	select {
+	case n := <-ch:
+		t.Fatalf("a notice for unchanged items: %+v", n)
+	case <-time.After(100 * time.Millisecond):
+	}
+}
+
+func TestStaleValueKeepsTheLastGoodValueWithItsErrorAndAge(t *testing.T) {
+	e := newEnv(t)
+	twoProjects(t, e)
+	e.src.put("alpha", alphaItems)
+	e.start(t)
+	c := e.dial(t)
+	ctx := context.Background()
+	c.Snapshot(ctx, registry.Project{Name: "alpha"})
+	if err := e.dial(t).Subscribe(ctx, []string{"alpha"}); err != nil {
+		t.Fatal(err)
+	}
+
+	failing := alphaItems
+	failing.Items = source.Result[[]slicercli.Item]{Err: &clirun.ToolError{Code: "io", Message: "disk gone"}}
+	e.src.put("alpha", failing)
+	e.clock.Advance(5 * time.Second) // the items are read again at 5 s, and fail
+	waitFor(t, "items failed at 5 s", func() bool {
+		st, err := c.Status(ctx, "alpha")
+		return err == nil && st.Projects[0].Parts["items"].Stale
+	})
+
+	snap := c.Snapshot(ctx, registry.Project{Name: "alpha"})
+	if len(snap.Items.Value) != 1 || snap.Items.Value[0].ID != "S1" {
+		t.Fatalf("the last good items were lost: %+v", snap.Items)
+	}
+	var re *ipc.Error
+	if !errors.As(snap.Items.Err, &re) || re.Code != "io" {
+		t.Fatalf("items error: %v", snap.Items.Err)
+	}
+	if !snap.Items.Stale() || !snap.Items.ReadAt.Equal(epoch) {
+		t.Fatalf("items stale %v, read at %v; want stale, read at %v", snap.Items.Stale(), snap.Items.ReadAt, epoch)
+	}
+
+	st, err := c.Status(ctx, "alpha")
+	if err != nil {
+		t.Fatal(err)
+	}
+	items := st.Projects[0].Parts["items"]
+	if !items.Stale || items.AgeMs != 5000 || items.Error == nil || items.Error.Code != "io" {
+		t.Fatalf("status items: %+v, want stale, 5000 ms old, code io", items)
+	}
+}
+
+func TestRefreshReadsEveryPartNowAndUnknownProjectsAreRefused(t *testing.T) {
+	e := newEnv(t)
+	twoProjects(t, e)
+	e.src.put("alpha", alphaItems)
+	e.start(t)
+	c := e.dial(t)
+	ctx := context.Background()
+	c.Snapshot(ctx, registry.Project{Name: "alpha"})
+
+	e.src.put("alpha", source.Snapshot{Items: source.Result[[]slicercli.Item]{Value: []slicercli.Item{{ID: "S2"}}}})
+	if err := c.Refresh(ctx, "alpha"); err != nil {
+		t.Fatal(err)
+	}
+	if n := e.src.count("items alpha"); n != 2 {
+		t.Fatalf("items read %d times after an explicit refresh, want 2", n)
+	}
+	snap := c.Snapshot(ctx, registry.Project{Name: "alpha"})
+	if len(snap.Items.Value) != 1 || snap.Items.Value[0].ID != "S2" {
+		t.Fatalf("items after refresh: %+v", snap.Items.Value)
+	}
+
+	var re *ipc.Error
+	if err := c.Refresh(ctx, "gone"); !errors.As(err, &re) || re.Code != CodeNotFound {
+		t.Fatalf("refresh of an unknown project: %v", err)
+	}
+	if err := e.dial(t).Subscribe(ctx, []string{"gone"}); !errors.As(err, &re) || re.Code != CodeNotFound {
+		t.Fatalf("subscribe to an unknown project: %v", err)
+	}
+}
+
+func TestShutdownStopsRefreshesAndCalls(t *testing.T) {
+	e := newEnv(t)
+	twoProjects(t, e)
+	e.src.put("alpha", alphaItems)
+	r := e.start(t)
+	sub := e.dial(t)
+	if err := sub.Subscribe(context.Background(), []string{"alpha"}); err != nil {
+		t.Fatal(err)
+	}
+	settle()
+	r.stop()
+	r.waitExit(t)
+	if n := e.clock.Pending(); n != 0 {
+		t.Fatalf("%d timers still pending after the daemon exited", n)
+	}
+	before := e.src.callCount()
+	e.clock.Advance(time.Minute)
+	settle()
+	if after := e.src.callCount(); after != before {
+		t.Fatalf("%d calls after the daemon exited, want none", after-before)
+	}
+}
+
+// count returns how many calls had the text "part project".
+func (s *stubSource) count(call string) int {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	n := 0
+	for _, c := range s.calls {
+		if c == call {
+			n++
+		}
+	}
+	return n
+}
+
+func TestRemovedProjectIsNoLongerRead(t *testing.T) {
+	e := newEnv(t)
+	twoProjects(t, e)
+	e.src.put("beta", alphaItems)
+	e.start(t)
+	c := e.dial(t)
+	ctx := context.Background()
+	c.Snapshot(ctx, registry.Project{Name: "beta"})
+	if err := c.RemoveProject(ctx, "beta"); err != nil {
+		t.Fatal(err)
+	}
+	settle()
+	before := e.src.count("items beta")
+	e.clock.Advance(time.Minute)
+	settle()
+	if after := e.src.count("items beta"); after != before {
+		t.Fatalf("a removed project was read %d more times, want none", after-before)
+	}
+}
+
+func TestAgeOfAPartReadJustNowIsOnTheWire(t *testing.T) {
+	e := newEnv(t)
+	twoProjects(t, e)
+	e.src.put("alpha", alphaItems)
+	e.start(t)
+	c := e.dial(t)
+	ctx := context.Background()
+	c.Snapshot(ctx, registry.Project{Name: "alpha"})
+	st, err := c.Status(ctx, "alpha")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A value 0 ms old is still read: its age must be on the wire, not omitted
+	// the way a part that was never read is.
+	b, err := json.Marshal(st.Projects[0].Parts["items"])
+	if err != nil || !strings.Contains(string(b), `"age_ms":0`) {
+		t.Fatalf("a part read at this instant has no age_ms on the wire: %s, %v", b, err)
 	}
 }

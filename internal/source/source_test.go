@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clirun"
@@ -156,5 +158,79 @@ func TestSnapshotCallsRunConcurrently(t *testing.T) {
 		if err != nil {
 			t.Errorf("%s: %v (the calls did not overlap)", name, err)
 		}
+	}
+}
+
+func TestFetchMakesOneCallPerPart(t *testing.T) {
+	for _, tc := range []struct {
+		part Part
+		tool string
+		verb string
+	}{
+		{Items, "slicer", "list"},
+		{Goals, "slicer", "goals"},
+		{Runs, "slicer", "relay-run"},
+		{Open, "adj", "inbox"},
+		{Decided, "adj", "list"},
+	} {
+		t.Run(string(tc.part), func(t *testing.T) {
+			fake := clitest.Install(t, append(slicerRoutes(), adjRoutes()...)...)
+			p := registry.Project{Name: "ork", Path: root, Adj: true}
+			if _, err := direct(fake).Fetch(context.Background(), p, tc.part); err != nil {
+				t.Fatalf("fetch %s: %v", tc.part, err)
+			}
+			calls := fake.Calls()
+			if len(calls) != 1 || calls[0].Tool != tc.tool || calls[0].Args[0] != tc.verb {
+				t.Fatalf("calls for %s: %+v", tc.part, calls)
+			}
+		})
+	}
+}
+
+func TestFetchValueHasTheSnapshotFieldsType(t *testing.T) {
+	fake := clitest.Install(t, slicerRoutes()...)
+	v, err := direct(fake).Fetch(context.Background(), registry.Project{Name: "DataBall", Path: root}, Items)
+	items, ok := v.([]slicercli.Item)
+	if err != nil || !ok || len(items) != 11 {
+		t.Fatalf("items: %T %v, %v", v, len(items), err)
+	}
+}
+
+func TestFetchUnknownPartIsAnError(t *testing.T) {
+	fake := clitest.Install(t)
+	if _, err := direct(fake).Fetch(context.Background(), registry.Project{Name: "ork", Path: root}, Part("bogus")); err == nil {
+		t.Fatal("an unknown part fetched without an error")
+	}
+	if len(fake.Calls()) != 0 {
+		t.Fatalf("an unknown part made calls: %+v", fake.Calls())
+	}
+}
+
+func TestHeadIsOneGitCallForHEAD(t *testing.T) {
+	fake := clitest.Install(t, clitest.Route{Tool: "git", Args: []string{"-C", root, "rev-parse", "HEAD"}, Stdout: "9f2c41e0\n"})
+	d := direct(fake)
+	d.Git = fake.Bin("git")
+	v, err := d.Fetch(context.Background(), registry.Project{Name: "ork", Path: root}, Head)
+	if err != nil || v != "9f2c41e0" {
+		t.Fatalf("head: %v, %v", v, err)
+	}
+	calls := fake.Calls()
+	want := clitest.Call{Tool: "git", Args: []string{"-C", root, "rev-parse", "HEAD"}}
+	if len(calls) != 1 || calls[0].Tool != want.Tool || strings.Join(calls[0].Args, " ") != strings.Join(want.Args, " ") {
+		t.Fatalf("calls for head: %+v", calls)
+	}
+}
+
+func TestResultIsStaleOnlyAfterAGoodRead(t *testing.T) {
+	read := time.Date(2026, 10, 19, 12, 0, 0, 0, time.UTC)
+	failed := errors.New("slicer list: exit 3")
+	if (Result[int]{Err: failed}).Stale() {
+		t.Fatal("a failed call that never read a value is stale")
+	}
+	if !(Result[int]{Value: 7, ReadAt: read, Err: failed}).Stale() {
+		t.Fatal("a failed call after a good read is not stale")
+	}
+	if (Result[int]{Value: 7, ReadAt: read}).Stale() {
+		t.Fatal("a good read is stale")
 	}
 }

@@ -1,0 +1,41 @@
+{
+  "id": "S04",
+  "title": "Engine for one implementer: setup, implement, checks, review, gate, approve, commit, ledger",
+  "lead": [
+    "The slice state machine for one slice, run against a fake role runner:\nsetup, implement, checks, review, gate, awaiting approval, commit, with the\nledger, run records and restart reconcile (`plan.s04-cut`). Claude is the\nonly vendor; the real adapter is S16 and the owner surface is S17."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** budgets, fallback, codex or grok, waves, the TUI, socket methods or CLI commands (S05, S06, S16, S17).",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Every later engine slice (waves, vendors, live detail, landing) builds on\nthis state machine. Built against a fake runner, it can be tested without\nany vendor call and in parallel with S16."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/` (new): the state machine, briefs, report checks,\n  permission resolution, and a `Runner` interface for one role round\n  (input: role, round, vendor, model, effort, brief, worktree, report path,\n  allowlist or read-only, resume session; output: exit class, session,\n  report text, tokens, cost, permission denials).\n- `internal/runrec/` (new): `run.json` per run under\n  `~/.local/state/ork/runs/<run>/`, atomic writes, `writes[]`, retention\n  (docs/state.md).\n- `internal/slicercli/`: the write calls the engine needs (`relay-run\n  begin|step|end`, `note`, `check --json`, `relay-roles recommend --json`),\n  each recorded in `writes[]` and retried on `locked`.\n- `internal/roles/`: the accepted contract set, and the owner-question\n  wording from the S10 note.\n- `internal/cli/doctor.go`: check against the accepted set.\n- Not `internal/daemon`, `internal/ipc`, `internal/tui` or a vendor\n  adapter (S15, S16, S17)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A run goes setup, implement, checks, review, gate (lite, resumed\n  reviewer), awaiting approval; on approve it commits with the slice's Git\n  title and no attribution, then runs the finish step the contract orders.\n- Setup runs `git worktree add` with the registry's patterns, adds\n  `.worktrees/` to `info/exclude` when missing, and `slicer relay-run\n  begin`; every role round is a ledger step with `--parent` on the\n  orchestrator step ork owns, and its phase is set on exit.\n- Red checks send the implementer back with the failing output and spend\n  no review. Review findings start a fix round; a gate FAIL is noted with\n  `slicer note ID --text \"Review FAIL: ...\"`; a third FAIL stops the slice.\n- Report checks: the gate's first line must be exactly `VERDICT: PASS` or\n  `VERDICT: FAIL`; a missing `Tests:` line or `## Owner needed` section is\n  an error the owner sees (`role.report-shape`). A non-empty Owner needed\n  pauses the slice with the question; an answer resumes the role with it.\n- Stop rules: an exit not classified ok, a permission denial, a read-only\n  role that changed the tree (`git status --porcelain` before and after),\n  and a lost process each stop or pause the slice with the reason.\n- The implementer's allowlist is the registry's `permissions.implementer`,\n  else the built-in default: Read, Grep, Glob, Edit, Write, `Bash(slicer\n  *)`, `Bash(git status*)`, `Bash(git diff*)`, `Bash(git log*)` and\n  `Bash(<check command>*)` (`launch.default-allowlist`). Read-only roles\n  get read-only mode.\n- Restart: loading run records with a role whose process group is gone, or\n  alive but not attached, kills it if alive, marks it lost and pauses the\n  slice in needs-you; the owner can retry that role or stop\n  (`engine.restart`).\n- `writes[]` holds every slicer, adj and git write with argv, root, exit,\n  code, retry and ms; a `locked` exit is retried with backoff and each retry\n  is logged (`state.writes`).\n- The contract check accepts any version in the accepted set ({7}) and\n  refuses others, in the engine and in doctor (`boundary.contract`).\n- Fake runner, fake slicer, adj and git (internal/clitest), fake clock; no\n  real CLI or vendor."
+    },
+    {
+      "heading": "Implement",
+      "body": "- `adj ask` for owner questions, when filed, runs only in the project's\n  main checkout (integration review R6); filing itself is S06.\n- The orchestrator step is ork's own: agent `ork`, vendor and model empty.\n- Budgets, fallback, other vendors, waves and the TUI are later slices."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race ./...`, `go vet ./...`, `gofmt -l .` clean; SPDX headers;\n  no new dependency.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"S04: engine core for one slice\"."
+    }
+  ],
+  "notes": []
+}

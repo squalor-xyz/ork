@@ -45,13 +45,26 @@ func shortDir(t *testing.T) string {
 	return dir
 }
 
-// stubSource answers Snapshot from a map by project name.
+// stubSource answers Fetch from a map by project name.
 type stubSource map[string]source.Snapshot
 
-func (s stubSource) Snapshot(ctx context.Context, p registry.Project) source.Snapshot {
+func (s stubSource) Fetch(ctx context.Context, p registry.Project, part source.Part) (any, error) {
 	snap := s[p.Name]
-	snap.Project = p
-	return snap
+	switch part {
+	case source.Items:
+		return snap.Items.Value, snap.Items.Err
+	case source.Goals:
+		return snap.Goals.Value, snap.Goals.Err
+	case source.Runs:
+		return snap.Runs.Value, snap.Runs.Err
+	case source.Open:
+		return snap.Open.Value, snap.Open.Err
+	case source.Decided:
+		return snap.Decided.Value, snap.Decided.Err
+	case source.Head:
+		return "h1", nil
+	}
+	return nil, fmt.Errorf("unknown part %s", part)
 }
 
 // world is a temp state directory with a registry and an App whose Start
@@ -60,12 +73,12 @@ type world struct {
 	dir     string
 	paths   daemon.Paths
 	regPath string
-	src     source.Source
+	src     source.Fetcher
 	starts  atomic.Int32
 	app     *App
 }
 
-func newWorld(t *testing.T, src source.Source, projects ...registry.Project) *world {
+func newWorld(t *testing.T, src source.Fetcher, projects ...registry.Project) *world {
 	t.Helper()
 	dir := shortDir(t)
 	w := &world{dir: dir, paths: daemon.PathsIn(filepath.Join(dir, "state")), regPath: filepath.Join(dir, "projects.json"), src: src}
@@ -215,6 +228,7 @@ func TestStatusFromTheDaemonsSourceSnapshot(t *testing.T) {
 		clitest.Route{Tool: "adj", Args: []string{"list", "--json", "--status", "decided", "--root", root}, File: fixture("adj", "list.json")},
 	)
 	src := source.NewDirect(slicercli.Client{Bin: fake.Bin("slicer")}, adjcli.Client{Bin: fake.Bin("adj")})
+	src.Git = fake.Bin("git")
 	w := newWorld(t, src,
 		registry.Project{Name: "ork", Path: root, Adj: true},
 		registry.Project{Name: "plain", Path: "/projects/plain"}, // no routes: its calls fail

@@ -48,12 +48,14 @@ ork (TUI)  ork status --json (CLI)
   `{"id","error":{"code","message"}}`, with the id as the client sent it.
   Requests on one connection are answered in order. A slicer or adj tool error
   keeps its `code` and `message`; any other failure has code `internal`.
-  Methods in S03 (`internal/daemon`):
+  Methods (`internal/daemon`; S03, and `subscribe` and `refresh` from S15):
 
   | Method | Params | Result |
   |---|---|---|
   | `status` | `{"project"?}` | `{"projects":[{name, path, adj, needs_you, active_relays, errors?}]}` |
-  | `snapshot` | `{"project"}` | the project's `source.Snapshot`; each part is `{"value"}` or `{"error":{code,message}}` |
+  | `snapshot` | `{"project"}` | the project's `source.Snapshot` from the cache; each part is `{"value", "age_ms", "read_at"?, "stale"?, "error"?}`: the last good value, its age in ms (0 if never read), when it was read (absent if never), and the last read's error |
+  | `subscribe` | `{"focus":[names]}` | none; the connection gets notices (below) and the named projects become visible |
+  | `refresh` | `{"project"}` | none; reads every part of the project now and returns once they are read |
   | `projects.list` | none | `{"projects":[...]}` |
   | `projects.add` | `{"path","name"?}` | the added project |
   | `projects.rm` | `{"name"}` | none |
@@ -63,6 +65,29 @@ ork (TUI)  ork status --json (CLI)
   daemon, one at a time. `snapshot` is how the TUI will read through the
   daemon (S13); the TUI calls the adapters directly until then
   (`dash.pre-daemon`).
+
+  **Snapshot cache (S15, `dash.cache`, `dash.refresh`, `boundary.git-head`).**
+  The daemon holds one in-memory value per project and part, shared by all
+  clients, and reads each part on its schedule: items, runs and open records
+  every 5 s for a visible project and every 30 s for the others; goals and
+  decided records every 5 min, on a git HEAD change, when a project is opened
+  and on `refresh`. A git HEAD change is `git -C PATH rev-parse HEAD` and
+  nothing else, read on the same 5 s / 30 s tick as items, runs and open
+  records. Each read is one CLI call. A read that is already running is
+  shared, and at most 4 CLI processes run at once across all projects. A
+  read that comes due, or that a HEAD change asks for, while another runs for
+  its part starts when that one ends, so a part never has two reads at once. A
+  failed read keeps the last good value, with its error and the time it was
+  read; a `corrupt`, `locked` or timeout failure is tried once more at once.
+  The cache keeps no files and watches none.
+
+  **Notices (S15).** A connection that called `subscribe` gets one line per
+  change, without an id: `{"method":"snapshot.changed","params":{"project",
+  "parts":["items"],"at"}}`. It is sent when a part's value or error state
+  changes, and never when a read gives the same data again. Read notices with
+  the client's `Next`, on a connection of their own: a request on the same
+  connection is answered in line with the notices. A project removed from the
+  registry stops being read.
 - **Restart.** On start, the daemon reconciles every non-final run record
   against live process groups and the slicer ledger. A role whose process is
   gone and that left no report is marked `lost`, and its slice waits for the
@@ -357,12 +382,14 @@ Text output is plain lines meant to be stable. `--json` output, indented:
 
 - `status`: `{"projects":[{"name","path","adj","needs_you","active_relays":[
   {"id","items","state","worktree","begun_at","updated_at","steps",
-  "running"}],"errors":[{"part","code","message"}]}]}`. `needs_you` is the
+  "running"}],"parts":{"items":{"age_ms","stale"?,"error"?}},"errors":[{"part","code","message"}]}]}`. `needs_you` is the
   project's count of open adj records until the engine adds approvals, stops
   and pauses (`status.needs-you`). `active_relays` are slicer's active relay runs.
   `errors` lists failed parts (`items`, `goals`, `runs`, `open`, `decided`)
-  with the tool's own code. Text: one line `NAME: needs you N, active relays
-  M`, then one line per relay and per error.
+  with the tool's own code. `parts` gives each part's age in ms (0 for a part never read) and `stale`
+  when the part keeps an older value; the error is the one that failed. Text: one line `NAME: needs
+  you N, active relays M`, then one line per relay and per error (the text
+  does not show ages yet).
 - `projects list`: `{"projects":[...]}`, each as in `projects.json`. Text: name,
   path and `adj`, in columns.
 - `projects add PATH [--name N]`: `{"project":{...}}`. The name defaults to the
@@ -402,6 +429,12 @@ Each step is usable or testable on its own:
 3. **Daemon, socket and CLI.** `ork status`.
 4. **Engine for a single implementer.** setup → implement → checks →
    review → gate → approve → commit, on one vendor, with the ledger.
+   Cut into three slices (`plan.s04-cut`): S04 engine core on a fake role
+   runner, S16 the Claude adapter, and S17 the CLI to run, approve, answer
+   and stop one slice (`engine.owner-surface`). A role left running by a
+   crashed daemon is marked lost and its slice paused (`engine.restart`).
+   An implementer with no registry allowlist gets a narrow built-in one
+   (`launch.default-allowlist`).
 5. **Waves and caps.** Several items, queueing, failure isolation.
 6. **Three vendors, fallback, fingerprint, budgets, owner questions.**
 7. **Live role detail.** Output tail, tokens and cost, charts and

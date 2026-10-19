@@ -192,9 +192,11 @@ func (s *Server) Serve(ctx context.Context, l net.Listener) error {
 	}
 }
 
-func (s *Server) serveConn(ctx context.Context, conn net.Conn) {
-	dec := json.NewDecoder(conn)
-	enc := json.NewEncoder(conn) // one compact line per message
+func (s *Server) serveConn(ctx context.Context, nc net.Conn) {
+	c := &Conn{conn: nc, enc: json.NewEncoder(nc), done: make(chan struct{})} // one compact line per message
+	defer close(c.done)
+	ctx = context.WithValue(ctx, connKey{}, c)
+	dec := json.NewDecoder(nc)
 	for {
 		var req Request
 		if err := dec.Decode(&req); err != nil {
@@ -204,7 +206,7 @@ func (s *Server) serveConn(ctx context.Context, conn net.Conn) {
 			var syn *json.SyntaxError
 			var typ *json.UnmarshalTypeError
 			if errors.As(err, &syn) || errors.As(err, &typ) {
-				enc.Encode(Response{Error: &Error{Code: CodeBadRequest, Message: "not a JSON request: " + err.Error()}})
+				c.write(Response{Error: &Error{Code: CodeBadRequest, Message: "not a JSON request: " + err.Error()}})
 			}
 			return
 		}
@@ -214,7 +216,7 @@ func (s *Server) serveConn(ctx context.Context, conn net.Conn) {
 		} else {
 			resp.Result, resp.Error = s.handle(ctx, req)
 		}
-		if err := enc.Encode(resp); err != nil {
+		if err := c.write(resp); err != nil {
 			return
 		}
 	}
@@ -246,6 +248,7 @@ type Client struct {
 	enc    *json.Encoder
 	next   int64
 	broken error
+	notes  []Notification // notices that came in during a Call, for Next
 }
 
 // Dial connects to the socket at path.
@@ -295,8 +298,17 @@ func (c *Client) Call(ctx context.Context, method string, params, result any) er
 		return fail(err)
 	}
 	var resp Response
-	if err := c.dec.Decode(&resp); err != nil {
-		return fail(err)
+	for {
+		var msg inbound
+		if err := c.dec.Decode(&msg); err != nil {
+			return fail(err)
+		}
+		if len(msg.ID) == 0 && msg.Method != "" { // a notice: keep it for Next
+			c.notes = append(c.notes, Notification{Method: msg.Method, Params: msg.Params})
+			continue
+		}
+		resp = Response{ID: msg.ID, Result: msg.Result, Error: msg.Error}
+		break
 	}
 	if string(resp.ID) != id {
 		return fail(fmt.Errorf("reply id %s does not match request id %s", resp.ID, id))
@@ -314,3 +326,99 @@ func (c *Client) Call(ctx context.Context, method string, params, result any) er
 
 // Close closes the connection.
 func (c *Client) Close() error { return c.conn.Close() }
+
+// Notification is a message the server sends without a request. It has no id.
+type Notification struct {
+	Method string          `json:"method"`
+	Params json.RawMessage `json:"params,omitempty"`
+}
+
+// Conn is a server-side connection, as a handler sees it. A handler that
+// keeps a connection to send notifications on it takes it with ConnFrom.
+type Conn struct {
+	conn net.Conn
+	mu   sync.Mutex // serializes writes
+	enc  *json.Encoder
+	done chan struct{}
+}
+
+type connKey struct{}
+
+// ConnFrom returns the connection a request came on, or nil outside a request.
+func ConnFrom(ctx context.Context) *Conn {
+	c, _ := ctx.Value(connKey{}).(*Conn)
+	return c
+}
+
+// writeTimeout bounds one write to a client, so a client that stops reading
+// cannot hold up the daemon. The connection is closed when a write fails.
+const writeTimeout = 10 * time.Second
+
+// Notify sends a notification to the client. It fails when the connection has
+// ended or the client did not read the write within writeTimeout; a failed
+// write closes the connection.
+func (c *Conn) Notify(method string, params any) error {
+	raw, err := json.Marshal(params)
+	if err != nil {
+		return err
+	}
+	return c.write(Notification{Method: method, Params: raw})
+}
+
+// write sends one message as one line, under the connection's write lock.
+func (c *Conn) write(v any) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.conn.SetWriteDeadline(time.Now().Add(writeTimeout))
+	if err := c.enc.Encode(v); err != nil {
+		c.conn.Close()
+		return err
+	}
+	return nil
+}
+
+// Done is closed when the connection has ended.
+func (c *Conn) Done() <-chan struct{} { return c.done }
+
+// inbound is any message a server sends: a reply, or a notification.
+type inbound struct {
+	ID     json.RawMessage `json:"id"`
+	Method string          `json:"method"`
+	Params json.RawMessage `json:"params"`
+	Result json.RawMessage `json:"result"`
+	Error  *Error          `json:"error"`
+}
+
+// Next returns the next notification the server sent. It is for a connection
+// that subscribed: a notice that came in during a Call is returned first. A
+// context that ends first makes the client unusable, as a Call does.
+func (c *Client) Next(ctx context.Context) (Notification, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if len(c.notes) > 0 {
+		n := c.notes[0]
+		c.notes = c.notes[1:]
+		return n, nil
+	}
+	if c.broken != nil {
+		return Notification{}, c.broken
+	}
+	fail := func(err error) (Notification, error) {
+		if ctx.Err() != nil {
+			err = ctx.Err()
+		}
+		c.broken = err
+		return Notification{}, err
+	}
+	c.conn.SetDeadline(time.Time{})
+	stop := context.AfterFunc(ctx, func() { c.conn.SetDeadline(time.Now()) })
+	defer stop()
+	var msg inbound
+	if err := c.dec.Decode(&msg); err != nil {
+		return fail(err)
+	}
+	if len(msg.ID) != 0 || msg.Method == "" {
+		return fail(fmt.Errorf("expected a notice, got a reply with id %s", msg.ID))
+	}
+	return Notification{Method: msg.Method, Params: msg.Params}, nil
+}

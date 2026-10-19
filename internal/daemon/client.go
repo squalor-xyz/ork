@@ -4,6 +4,7 @@ package daemon
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/ipc"
@@ -83,4 +84,32 @@ func (c *Client) Snapshot(ctx context.Context, p registry.Project) source.Snapsh
 		Open:    out.Open.result(),
 		Decided: out.Decided.result(),
 	}
+}
+
+// Subscribe makes focus the projects this connection shows. The daemon then
+// sends this connection a notice for each change; read them with Next. Send
+// requests on another connection.
+func (c *Client) Subscribe(ctx context.Context, focus []string) error {
+	return c.c.Call(ctx, MethodSubscribe, SubscribeParams{Focus: focus}, nil)
+}
+
+// Refresh reads every part of a project now and returns once they are read.
+func (c *Client) Refresh(ctx context.Context, project string) error {
+	return c.c.Call(ctx, MethodRefresh, RefreshParams{Project: project}, nil)
+}
+
+// Next waits for the next change notice on a subscribed connection.
+func (c *Client) Next(ctx context.Context) (SnapshotChanged, error) {
+	n, err := c.c.Next(ctx)
+	if err != nil {
+		return SnapshotChanged{}, err
+	}
+	var out SnapshotChanged
+	if n.Method != MethodSnapshotChanged {
+		return out, &ipc.Error{Code: "unexpected_notice", Message: "notice " + n.Method}
+	}
+	if err := json.Unmarshal(n.Params, &out); err != nil {
+		return out, err
+	}
+	return out, nil
 }

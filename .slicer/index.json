@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 16,
+  "next_id": 18,
   "preamble": "",
   "passes": [
     {
@@ -171,9 +171,9 @@
     {
       "id": "S04",
       "title": "Engine for one implementer: setup, implement, checks, review, gate, approve, commit, ledger",
-      "short_title": "Single-slice engine",
+      "short_title": "Engine core",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [
         "S01",
         "S03"
@@ -226,7 +226,7 @@
       ],
       "claim": null,
       "fields": {
-        "size": "L",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -251,7 +251,7 @@
       "status": "open",
       "has_slice": false,
       "depends_on": [
-        "S04"
+        "S17"
       ],
       "note_records": [],
       "claim": null,
@@ -679,6 +679,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "c5856cf8-4d56-428f-b387-4c3ff692aaf3",
+          "kind": "",
+          "text": "**2026-10-19** — From S15 (2026-10-19): Cache.Forget does not cancel in-flight reads, and a snapshot or status that loaded the registry before projects rm can re-create the forgotten project's entries (handlers.go:281, cache.go:139). Notices go out one connection at a time from the cache's read goroutine (subscribe.go), so a stuck subscriber delays others up to the 10 s write timeout. With no subscriber every project is still read every 30 s until idle exit. ork status text shows no part ages (JSON does). Open records follow the 5 s / 30 s tick, as the integration review's R2 table has it.",
+          "created_at": "2026-10-19T13:16:15Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -735,12 +746,24 @@
       "id": "S15",
       "title": "Daemon snapshot cache and per-part refresh",
       "short_title": "Snapshot cache",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S03"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "2aeb2642-ee32-4965-abe6-49e41dd1b1e8",
+          "kind": "",
+          "text": "**2026-10-19** — Review FAIL: M1 finish() after Forget and re-add corrupts the new entry (dedup broken, old path value served); fix round with L1, L3, L5 and a test for the pending path.",
+          "created_at": "2026-10-19T12:33:00Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -758,6 +781,68 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
+        "attempts": 1
+      }
+    },
+    {
+      "id": "S16",
+      "title": "Claude role adapter",
+      "short_title": "Claude adapter",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S01"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S17",
+      "title": "Run, approve and stop one slice from the CLI",
+      "short_title": "Single-slice CLI",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S04",
+        "S16",
+        "S13"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }
