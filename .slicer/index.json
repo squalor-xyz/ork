@@ -705,7 +705,7 @@
       "id": "S14",
       "title": "Port the TUI to Charm v2",
       "short_title": "Charm v2 port",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S11"
@@ -728,7 +728,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

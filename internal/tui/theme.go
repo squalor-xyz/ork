@@ -2,7 +2,7 @@
 
 package tui
 
-import "github.com/charmbracelet/lipgloss"
+import "charm.land/lipgloss/v2"
 
 // Theme is every style the TUI draws with. The colour theme uses the 16 ANSI
 // colours, so the terminal's own palette decides the shades. The monochrome
@@ -26,9 +26,9 @@ type Theme struct {
 }
 
 // NewTheme returns the colour theme, or the monochrome theme when mono is
-// true, drawn through r.
-func NewTheme(r *lipgloss.Renderer, mono bool) Theme {
-	s := r.NewStyle
+// true.
+func NewTheme(mono bool) Theme {
+	s := lipgloss.NewStyle
 	if mono {
 		return Theme{
 			Title:      s().Bold(true),
@@ -69,6 +69,6 @@ func UseMono(getenv func(string) string) bool { return getenv("NO_COLOR") != "" 
 
 // ThemeFor returns the monochrome theme when UseMono says so, else the colour
 // theme.
-func ThemeFor(getenv func(string) string, r *lipgloss.Renderer) Theme {
-	return NewTheme(r, UseMono(getenv))
+func ThemeFor(getenv func(string) string) Theme {
+	return NewTheme(UseMono(getenv))
 }

@@ -5,15 +5,14 @@ package tui
 import (
 	"context"
 	"errors"
-	"io"
 	"reflect"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clirun"
@@ -95,7 +94,7 @@ type harness struct {
 	bells int
 }
 
-func plainTheme() Theme { return NewTheme(lipgloss.NewRenderer(io.Discard), true) }
+func plainTheme() Theme { return NewTheme(true) }
 
 func newHarness(t *testing.T, projects ...registry.Project) *harness {
 	t.Helper()
@@ -170,30 +169,37 @@ func (h *harness) start() {
 
 func (h *harness) advance(d time.Duration) { h.now = h.now.Add(d) }
 
-func press(s string) tea.KeyMsg {
+func press(s string) tea.KeyPressMsg {
 	switch s {
 	case "tab":
-		return tea.KeyMsg{Type: tea.KeyTab}
+		return tea.KeyPressMsg{Code: tea.KeyTab}
 	case "shift+tab":
-		return tea.KeyMsg{Type: tea.KeyShiftTab}
+		return tea.KeyPressMsg{Code: tea.KeyTab, Mod: tea.ModShift}
 	case "right":
-		return tea.KeyMsg{Type: tea.KeyRight}
+		return tea.KeyPressMsg{Code: tea.KeyRight}
 	case "left":
-		return tea.KeyMsg{Type: tea.KeyLeft}
+		return tea.KeyPressMsg{Code: tea.KeyLeft}
 	case "esc":
-		return tea.KeyMsg{Type: tea.KeyEsc}
+		return tea.KeyPressMsg{Code: tea.KeyEsc}
 	case "ctrl+c":
-		return tea.KeyMsg{Type: tea.KeyCtrlC}
+		return tea.KeyPressMsg{Code: 'c', Mod: tea.ModCtrl}
 	case "enter":
-		return tea.KeyMsg{Type: tea.KeyEnter}
+		return tea.KeyPressMsg{Code: tea.KeyEnter}
 	}
-	return tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(s)}
+	return tea.KeyPressMsg{Code: []rune(s)[0], Text: s}
+}
+
+// plainView is the view with its styles removed. The tests check words and
+// positions. The S11 test renderer wrote no escape codes, so these checks
+// read the same text they read before lipgloss v2, which always writes them.
+func plainView(m *Model) string {
+	return sgr.ReplaceAllString(m.View().Content, "")
 }
 
 func (h *harness) view() string {
 	h.t.Helper()
 	h.m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
-	return h.m.View()
+	return plainView(h.m)
 }
 
 // rowsWith counts the lines of view that hold every one of the words.
@@ -469,7 +475,7 @@ func TestALongErrorIsWrappedNotCut(t *testing.T) {
 	h.src.set(bad)
 	h.start()
 	h.send(tea.WindowSizeMsg{Width: 60, Height: 30})
-	lines := strings.Split(h.m.View(), "\n")
+	lines := strings.Split(plainView(h.m), "\n")
 	var rows []string
 	for _, l := range lines {
 		if strings.Contains(l, "too_long") || strings.Contains(l, "papa") || strings.Contains(l, "romeo") {
@@ -771,7 +777,7 @@ func TestRunIDIsNeverClipped(t *testing.T) {
 		h.src.set(snap(four[0], nil, nil, relay(id, "2026-10-19T15:42:00Z", "S01", "S02")))
 		h.start()
 		h.send(tea.WindowSizeMsg{Width: w, Height: 30})
-		if v := h.m.View(); !strings.Contains(v, id) {
+		if v := plainView(h.m); !strings.Contains(v, id) {
 			t.Errorf("width %d: the run ID is cut:\n%s", w, v)
 		}
 	}
@@ -782,7 +788,7 @@ func TestWrappedRowsHaveNoTrailingSpaces(t *testing.T) {
 	h.src.set(snap(four[0], nil, nil, relay("run-20261019-004308-40d4", "2026-10-19T15:42:00Z", "S11")))
 	h.start()
 	h.send(tea.WindowSizeMsg{Width: 100, Height: 30})
-	for i, l := range strings.Split(h.m.View(), "\n") {
+	for i, l := range strings.Split(plainView(h.m), "\n") {
 		if l != strings.TrimRight(l, " ") {
 			t.Errorf("line %d ends in a space: %q", i, l)
 		}
@@ -814,7 +820,7 @@ func TestLayoutHasTabsViewBarBodyAndStatusLine(t *testing.T) {
 	h := newHarness(t, four...)
 	h.start()
 	h.send(tea.WindowSizeMsg{Width: 100, Height: 30})
-	lines := strings.Split(h.m.View(), "\n")
+	lines := strings.Split(plainView(h.m), "\n")
 	if len(lines) != 30 {
 		t.Fatalf("%d lines, want 30", len(lines))
 	}
@@ -851,7 +857,7 @@ func TestViewFitsEverySize(t *testing.T) {
 		h.send(tea.WindowSizeMsg{Width: sz[0], Height: sz[1]})
 		for _, help := range []bool{false, true} {
 			h.m.showHelp = help
-			lines := strings.Split(h.m.View(), "\n")
+			lines := strings.Split(plainView(h.m), "\n")
 			if len(lines) != sz[1] {
 				t.Errorf("%dx%d help=%v: %d lines", sz[0], sz[1], help, len(lines))
 			}
@@ -868,7 +874,7 @@ func TestACutOverviewSaysHowMuchIsMissing(t *testing.T) {
 	h := newHarness(t, four...)
 	h.start()
 	h.send(tea.WindowSizeMsg{Width: 80, Height: 10}) // 5 lines for the view
-	v := h.m.View()
+	v := plainView(h.m)
 	if !strings.Contains(v, "more lines") {
 		t.Fatalf("no cut marker:\n%s", v)
 	}
@@ -883,7 +889,7 @@ func TestStatusLineShowsTheLastRefreshTime(t *testing.T) {
 	h.advance(5 * time.Second)
 	h.send(tickMsg{})
 	h.send(tea.WindowSizeMsg{Width: 100, Height: 30})
-	lines := strings.Split(h.m.View(), "\n")
+	lines := strings.Split(plainView(h.m), "\n")
 	if !strings.Contains(lines[29], "refreshed 16:42:05") {
 		t.Errorf("status line: %q", lines[29])
 	}
@@ -902,5 +908,27 @@ func TestUseMonoFollowsNOCOLOR(t *testing.T) {
 	}
 	if UseMono(env(map[string]string{"NO_COLOR": ""})) {
 		t.Error("an empty NO_COLOR selected monochrome")
+	}
+}
+
+// v1 set the alternate screen on the program (tea.WithAltScreen). v2 sets it
+// on the view that each render returns.
+func TestTheViewRunsOnTheAlternateScreen(t *testing.T) {
+	h := newHarness(t, four...)
+	h.start()
+	if !h.m.View().AltScreen {
+		t.Error("the view does not ask for the alternate screen")
+	}
+}
+
+// The help view keeps whole key columns that fit the width and marks the rest
+// with "...". The width comes from SetWidth, which v1 set as a field.
+func TestHelpMarksTheColumnsThatDoNotFit(t *testing.T) {
+	h := newHarness(t, four...)
+	h.start()
+	h.send(tea.WindowSizeMsg{Width: 40, Height: 30})
+	h.send(press("?"))
+	if v := plainView(h.m); !strings.Contains(v, "...") || !strings.Contains(v, "next project") {
+		t.Errorf("a 40-column help view should keep the first column and mark the rest:\n%s", v)
 	}
 }

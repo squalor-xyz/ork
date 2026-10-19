@@ -11,9 +11,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/charmbracelet/bubbles/help"
-	"github.com/charmbracelet/bubbles/key"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/help"
+	"charm.land/bubbles/v2/key"
+	tea "charm.land/bubbletea/v2"
 
 	"github.com/squalor-xyz/ork/internal/poll"
 	"github.com/squalor-xyz/ork/internal/registry"
@@ -161,13 +161,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.tick(m.cfg.Now())
 	case snapshotMsg:
 		return m, m.apply(msg)
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		return m, m.key(msg)
 	}
 	return m, nil
 }
 
-func (m *Model) key(msg tea.KeyMsg) tea.Cmd {
+func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	switch {
 	case key.Matches(msg, m.keys.Quit):
 		return tea.Quit
@@ -180,7 +180,7 @@ func (m *Model) key(msg tea.KeyMsg) tea.Cmd {
 	case key.Matches(msg, m.keys.Prev):
 		m.switchTo(m.active - 1)
 	case key.Matches(msg, m.keys.Jump):
-		if n := int(msg.Runes[0] - '1'); n < len(m.projects) {
+		if n := int(msg.String()[0] - '1'); n < len(m.projects) {
 			m.switchTo(n)
 		}
 	case key.Matches(msg, m.keys.Refresh):

@@ -5,7 +5,6 @@ package tui
 import (
 	"flag"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -13,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clirun"
@@ -26,23 +25,15 @@ import (
 // Run `go test ./internal/tui -update` to rewrite testdata/golden/.
 var update = flag.Bool("update", false, "rewrite the golden files")
 
-// trueColor is a renderer with a fixed colour profile, so the colour goldens
-// do not depend on the terminal or the environment the tests run in.
-//
-// The profile is termenv.TrueColor, which is the constant 0. The tests use that
-// untyped constant so that termenv, a module lipgloss pulls in, does not become
-// a direct dependency of ork (stack.go-deps approves three modules).
-// TestTrueColorRendererEmits24BitColour checks the constant.
-func trueColor() *lipgloss.Renderer {
-	r := lipgloss.NewRenderer(io.Discard)
-	r.SetColorProfile(0)
-	return r
-}
-
-func TestTrueColorRendererEmits24BitColour(t *testing.T) {
-	got := trueColor().NewStyle().Foreground(lipgloss.Color("#123456")).Render("x")
+// TestStylesEmit24BitColour checks that a style writes a hex colour as 24-bit
+// escape codes. lipgloss v2 has no renderer and no colour profile: a style
+// writes the colours it was given; the output writer downsamples them for
+// the terminal. So the colour goldens do not depend on the terminal or the
+// environment the tests run in.
+func TestStylesEmit24BitColour(t *testing.T) {
+	got := lipgloss.NewStyle().Foreground(lipgloss.Color("#123456")).Render("x")
 	if !strings.Contains(got, "38;2;18;52;86") {
-		t.Fatalf("the renderer is not 24-bit true colour: %q", got)
+		t.Fatalf("the style does not write 24-bit colour: %q", got)
 	}
 }
 
@@ -88,7 +79,7 @@ func TestGoldenViews(t *testing.T) {
 		for _, th := range themes {
 			name := fmt.Sprintf("overview-%dx%d-%s.txt", sz.w, sz.h, th.name)
 			t.Run(name, func(t *testing.T) {
-				got := goldenModel(NewTheme(trueColor(), th.mono), sz.w, sz.h).View()
+				got := goldenModel(NewTheme(th.mono), sz.w, sz.h).View().Content
 				path := filepath.Join("..", "..", "testdata", "golden", name)
 				if *update {
 					if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
@@ -132,8 +123,8 @@ func colourCodes(s string) []string {
 }
 
 func TestColourThemeUsesColourAndMonoThemeDoesNot(t *testing.T) {
-	colour := goldenModel(NewTheme(trueColor(), false), 100, 30).View()
-	mono := goldenModel(NewTheme(trueColor(), true), 100, 30).View()
+	colour := goldenModel(NewTheme(false), 100, 30).View().Content
+	mono := goldenModel(NewTheme(true), 100, 30).View().Content
 	if len(colourCodes(colour)) == 0 {
 		t.Error("the colour theme set no colour")
 	}
@@ -146,27 +137,26 @@ func TestColourThemeUsesColourAndMonoThemeDoesNot(t *testing.T) {
 }
 
 func TestNoColorSelectsTheMonochromeTheme(t *testing.T) {
-	r := trueColor()
 	withNoColor := goldenModel(ThemeFor(func(k string) string {
 		if k == "NO_COLOR" {
 			return "1"
 		}
 		return ""
-	}, r), 100, 30).View()
-	without := goldenModel(ThemeFor(func(string) string { return "" }, r), 100, 30).View()
+	}), 100, 30).View().Content
+	without := goldenModel(ThemeFor(func(string) string { return "" }), 100, 30).View().Content
 	if got := colourCodes(withNoColor); len(got) != 0 {
 		t.Errorf("NO_COLOR=1 still set colours: %q", got)
 	}
 	if len(colourCodes(without)) == 0 {
 		t.Error("no NO_COLOR but no colour either")
 	}
-	if withNoColor != goldenModel(NewTheme(r, true), 100, 30).View() {
+	if withNoColor != goldenModel(NewTheme(true), 100, 30).View().Content {
 		t.Error("NO_COLOR view is not the monochrome view")
 	}
 }
 
 func TestEveryColouredStateHasAWord(t *testing.T) {
-	v := sgr.ReplaceAllString(goldenModel(NewTheme(trueColor(), false), 100, 30).View(), "")
+	v := sgr.ReplaceAllString(goldenModel(NewTheme(false), 100, 30).View().Content, "")
 	for _, word := range []string{"decision", "held", "error", "pending", "started elsewhere"} {
 		if !strings.Contains(v, word) {
 			t.Errorf("no word %q for its state:\n%s", word, v)
