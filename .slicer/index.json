@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 11,
+  "next_id": 13,
   "preamble": "",
   "passes": [
     {
@@ -45,15 +45,15 @@
     },
     {
       "id": "S02",
-      "title": "Core: registry, slicer and adj adapters, read-only dashboard",
-      "short_title": "Core and read-only dashboard",
+      "title": "Core: registry and CLI adapters",
+      "short_title": "Core and adapters",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "L",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -67,7 +67,7 @@
         "reason": "",
         "importance": 3,
         "urgency": 3,
-        "effort": 3,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -307,6 +307,66 @@
         "group": "",
         "reason": "",
         "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S11",
+      "title": "TUI shell, project tabs and Overview",
+      "short_title": "TUI shell and Overview",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S02"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S12",
+      "title": "Roadmap and Decisions screens, read-only",
+      "short_title": "Roadmap and Decisions screens",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S11"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
         "urgency": 2,
         "effort": 2,
         "attempts": 0

@@ -42,14 +42,14 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-10 items · — 10
+12 items · — 12
 
 ## v1
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
 | 1 | [S01](slices/S01.md) | Vendor spike | S `[needs-owner]` | 1 |  |  | — |
-| 2 | S02 | Core and read-only dashboard | L | 3 |  |  | — |
+| 2 | [S02](slices/S02.md) | Core and adapters | M | 2 |  |  | — |
 | 3 | S03 | Daemon and CLI | M | 2 |  |  | — |
 | 4 | S04 | Single-slice engine | L | 3 |  |  | — |
 | 5 | S05 | Waves and caps | M | 2 |  |  | — |
@@ -58,3 +58,5 @@
 | 8 | S08 | Architect, split, slivers | L | 3 |  |  | — |
 | 9 | S09 | Landing help | S | 1 |  |  | — |
 | 10 | S10 | Role prompts | M | 2 |  |  | — |
+| 11 | [S11](slices/S11.md) | TUI shell and Overview | M | 2 |  |  | — |
+| 12 | [S12](slices/S12.md) | Roadmap and Decisions screens | M | 2 |  |  | — |

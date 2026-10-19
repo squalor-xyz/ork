@@ -1,0 +1,41 @@
+{
+  "id": "S11",
+  "title": "TUI shell, project tabs and Overview",
+  "lead": [
+    "The first screen: `ork` opens a Bubble Tea TUI with project tabs, the\nOverview and the status line, reading through S02's `Source`."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** the Roadmap and Decisions screens (S12), the Waves screen, the daemon, and any write.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The monitoring dashboard is half of v1 (`scope.v1`), and needs-you first\nis its first principle (docs/dashboard.md)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `go.mod`, `go.sum`: add Bubble Tea, Lip Gloss and Bubbles only\n  (`stack.go-deps`).\n- `cmd/ork/main.go`: start the TUI; `--version`.\n- `internal/tui/`: the app model, tabs, status line, Overview, help, theme.\n- `internal/poll/`: the refresh schedule.\n- `testdata/golden/`: rendered views at fixed sizes.\n- `NOTICE`: the three libraries and their licenses."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Update functions, with a fake `Source`: tab switch keys, `r` refresh,\n  `?` help, `q` quit.\n- Polling: the visible project refreshes every 5 s and the others every\n  30 s; `r` refreshes the visible one now; a call in flight is never\n  started twice (`dash.refresh`).\n- A call that has not returned shows as pending on its row; a failed call\n  shows its error code and message verbatim.\n- The tab badge counts what needs the owner: open adj records plus slicer\n  items held `needs-owner`. The bell rings once when the count rises, not\n  on every refresh (`ui.notify`).\n- Relays from `slicer relay-run list --active` show under Running with a\n  \"started elsewhere\" marker and no actions (`dash.external-runs`).\n- Golden views at 100x30 and 80x24, colour and monochrome, match\n  `testdata/golden/`; `NO_COLOR` selects monochrome."
+    },
+    {
+      "heading": "Implement",
+      "body": "- [HUMAN CHECK] Before adding each library, read its LICENSE in its\n  repository at the chosen version and record it in NOTICE. Stop and\n  report if any is not MIT or another GPL-compatible license.\n- Layout as in docs/dashboard.md: tabs, view bar, active view, status line.\n  The status line shows project count, last refresh time and pending\n  calls; the token sparkline waits for S07.\n- Overview sections: Needs you (open decisions and held items in v1 so\n  far), Running (external relays until the engine exists), Ready to land\n  (empty until S09, with a line saying so).\n- Every coloured state also has a word or symbol."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`, `go vet ./...`, `gofmt -l .` clean; SPDX header on every\n  `.go` file.\n- `go.mod` requires only the three approved modules and their\n  dependencies.\n- [HUMAN CHECK] Run `ork` against the registry; the owner looks at it.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"S11: TUI shell, project tabs and Overview\"."
+    }
+  ],
+  "notes": []
+}

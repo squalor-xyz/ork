@@ -241,7 +241,11 @@ Each step is usable or testable on its own:
 1. **Vendor spike.** Fill in the capability table with real runs on a
    throwaway repo. Capture fixtures.
 2. **Core.** Registry, slicer and adj adapters, read-only dashboard
-   (Overview, Roadmap, Decisions, external relays).
+   (Overview, Roadmap, Decisions, external relays). Cut into three
+   slices (`plan.s02-cut`): S02 core and adapters, S11 TUI shell and
+   Overview, S12 Roadmap and Decisions. Before the daemon, the TUI calls
+   the adapters directly behind one interface (`dash.pre-daemon`) and
+   polls them (`dash.refresh`).
 3. **Daemon, socket and CLI.** `ork status`.
 4. **Engine for a single implementer.** setup → implement → checks →
    review → gate → approve → commit, on one vendor, with the ledger.
