@@ -2,6 +2,8 @@
 
 package slicercli
 
+import "encoding/json"
+
 // Claim says who started an item.
 type Claim struct {
 	Owner string `json:"owner"`
@@ -115,4 +117,59 @@ type RelayRun struct {
 	Outcome   string   `json:"outcome"`
 	Counts    Counts   `json:"counts"`
 	Steps     []Step   `json:"steps"`
+}
+
+// StepSpec is one `slicer relay-run step` call. Step set updates that step
+// of the run; empty it adds a new one. A field left empty is not passed.
+type StepSpec struct {
+	Step      string
+	Role      string
+	Agent     string
+	Vendor    string
+	Model     string
+	Reasoning string
+	Phase     string // start, done or fail
+	Task      string
+	Parent    string
+}
+
+// CheckResult is `slicer check --json`. Problems and Warnings are kept as
+// printed. Output is the whole stdout.
+type CheckResult struct {
+	OK          bool              `json:"ok"`
+	StaleRender []string          `json:"stale_render"`
+	StaleSync   []string          `json:"stale_sync"`
+	Problems    []json.RawMessage `json:"problems"`
+	Warnings    []json.RawMessage `json:"warnings"`
+	Output      string            `json:"-"`
+}
+
+// Row is one row of the relay roles matrix.
+type Row struct {
+	ID        string `json:"id"`
+	Role      string `json:"role"`
+	Agent     string `json:"agent"`
+	Vendor    string `json:"vendor"`
+	Model     string `json:"model"`
+	Reasoning string `json:"reasoning"`
+	Note      string `json:"note"`
+}
+
+// RoleChoice is the matrix row `relay-roles recommend` resolved for a role.
+// Row is nil for a role no row matches (SelectedBy "unmatched").
+type RoleChoice struct {
+	Role         string `json:"role"`
+	Row          *Row   `json:"row"`
+	Alternatives []Row  `json:"alternatives"`
+	SelectedBy   string `json:"selected_by"`
+}
+
+// Recommendation is `slicer relay-roles recommend ID --json`.
+type Recommendation struct {
+	ID            string       `json:"id"`
+	WellSpecified bool         `json:"well_specified"`
+	Split         bool         `json:"split"`
+	Sliver        bool         `json:"sliver"`
+	Unmatched     []string     `json:"unmatched"`
+	Roles         []RoleChoice `json:"roles"`
 }

@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/vendor/claude/` (new), using `internal/clirun` process groups.\n- `testdata/vendors/claude/` fixtures (read; new ones only if redacted).\n- Not `internal/engine` (S04); S17 joins the two."
+      "body": "- `internal/agent/claude/` (new; `vendor.package-path`), using `internal/clirun` process groups, exported for it (`code.process-groups`).\n- `testdata/vendors/claude/` fixtures (read; new ones only if redacted).\n- Not `internal/engine` (S04); S17 joins the two."
     },
     {
       "heading": "Failing tests",

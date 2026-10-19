@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -22,13 +23,26 @@ const (
 	envLog    = "ORK_CLITEST_LOG"
 )
 
-// Route answers one call: the tool ("slicer" or "adj") run with exactly Args.
-// It prints File's bytes (or Stdout when File is empty) on stdout, Stderr on
-// stderr, and exits with Exit.
+// Route answers one call: the tool ("slicer", "adj" or "git") run with exactly
+// Args, or with Args as its first arguments when Prefix is set. It prints
+// File's bytes (or Stdout when File is empty) on stdout, Stderr on stderr, and
+// exits with Exit. When Seq is set it answers instead: the n-th call the route
+// matches (from 0) gets Seq[n], and every call past the end gets the last one.
+// The first route that matches wins, so a specific route goes before a
+// prefix route.
 type Route struct {
 	Tool   string
 	Args   []string
+	Prefix bool
 	File   string
+	Stdout string
+	Stderr string
+	Exit   int
+	Seq    []Reply
+}
+
+// Reply is one answer of a Route's Seq.
+type Reply struct {
 	Stdout string
 	Stderr string
 	Exit   int
@@ -104,6 +118,11 @@ func Install(t *testing.T, routes ...Route) *Fake {
 	logPath := filepath.Join(dir, "calls.log")
 	t.Setenv(envRoutes, routesPath)
 	t.Setenv(envLog, logPath)
+	// A fake started from a test binary built with -race would sleep one
+	// second at exit, which is 30 seconds for a test that makes 30 calls.
+	if os.Getenv("GORACE") == "" {
+		t.Setenv("GORACE", "atexit_sleep_ms=0")
+	}
 	return &Fake{Dir: dir, logPath: logPath}
 }
 
@@ -131,9 +150,16 @@ func Main() {
 	if err := json.Unmarshal(data, &routes); err != nil {
 		fail("cannot parse routes: %v", err)
 	}
-	for _, r := range routes {
-		if r.Tool != tool || !equal(r.Args, args) {
+	for i, r := range routes {
+		if r.Tool != tool || !matches(r, args) {
 			continue
+		}
+		if len(r.Seq) > 0 {
+			n := nextCount(filepath.Join(filepath.Dir(routesPath), fmt.Sprintf("seq-%d", i)))
+			rep := r.Seq[min(n, len(r.Seq)-1)]
+			os.Stdout.WriteString(rep.Stdout)
+			os.Stderr.WriteString(rep.Stderr)
+			os.Exit(rep.Exit)
 		}
 		out := []byte(r.Stdout)
 		if r.File != "" {
@@ -146,6 +172,24 @@ func Main() {
 		os.Exit(r.Exit)
 	}
 	fail("no route for %s %s", tool, strings.Join(args, " "))
+}
+
+func matches(r Route, args []string) bool {
+	if r.Prefix {
+		return len(args) >= len(r.Args) && equal(r.Args, args[:len(r.Args)])
+	}
+	return equal(r.Args, args)
+}
+
+// nextCount returns how many times it was called before, counting in a file.
+// Calls to a fake are sequential, so the file needs no lock.
+func nextCount(path string) int {
+	n := 0
+	if b, err := os.ReadFile(path); err == nil {
+		n, _ = strconv.Atoi(strings.TrimSpace(string(b)))
+	}
+	os.WriteFile(path, []byte(strconv.Itoa(n+1)), 0o644)
+	return n
 }
 
 func fail(format string, a ...any) {

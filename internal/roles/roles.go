@@ -18,16 +18,20 @@ package roles
 
 import (
 	"embed"
+	"errors"
 	"fmt"
+	"regexp"
 	"slices"
+	"strconv"
+	"strings"
 )
 
 //go:embed prompts/*.md
 var promptFS embed.FS
 
 // ContractVersion is the version of slicer's relay contract that the prompts
-// are written against. It matches the first line of `slicer ai relay`
-// ("Contract: relay v7") and each prompt's first line.
+// are written against. It matches each prompt's first line. ork accepts the
+// versions in AcceptedContracts, which include this one.
 const ContractVersion = 7
 
 var names = []string{"implementer", "reviewer", "gate", "architect"}
@@ -46,4 +50,45 @@ func Prompt(name string) (string, error) {
 		return "", fmt.Errorf("role %q: %w", name, err)
 	}
 	return string(b), nil
+}
+
+// acceptedContracts is the accepted set (boundary.contract, record 67): the
+// relay contract versions ork supports. Adding a version means checking what
+// the bump changed (slicer s382 moves v7 to v8).
+var acceptedContracts = []int{7}
+
+// AcceptedContracts returns the relay contract versions ork supports
+// (boundary.contract).
+func AcceptedContracts() []int { return slices.Clone(acceptedContracts) }
+
+// ContractAccepted reports whether v is in the accepted set.
+func ContractAccepted(v int) bool { return slices.Contains(acceptedContracts, v) }
+
+// contractLine matches the first line of `slicer ai relay`.
+var contractLine = regexp.MustCompile(`^Contract: relay v(\d+)\s*$`)
+
+// CheckContractLine parses the first line of `slicer ai relay` and checks the
+// version against the accepted set. It returns the version found, even when
+// that version is refused, and 0 when the line is not a contract line.
+func CheckContractLine(line string) (int, error) {
+	m := contractLine.FindStringSubmatch(line)
+	if m == nil {
+		return 0, errors.New("the first line of `slicer ai relay` is not a contract line")
+	}
+	v, err := strconv.Atoi(m[1])
+	if err != nil {
+		return 0, errors.New("the first line of `slicer ai relay` is not a contract line")
+	}
+	if !ContractAccepted(v) {
+		return v, fmt.Errorf("ork accepts relay %s and slicer prints v%d", versionList(), v)
+	}
+	return v, nil
+}
+
+func versionList() string {
+	parts := make([]string, len(acceptedContracts))
+	for i, v := range acceptedContracts {
+		parts[i] = "v" + strconv.Itoa(v)
+	}
+	return strings.Join(parts, ", ")
 }

@@ -164,6 +164,91 @@ slice.
 - **Finish step:** run per the project's `implement_finish` setting (`done`
   or `handoff`), as the contract orders it after PASS.
 
+### Engine (S04)
+
+`internal/engine` runs one slice through these states against a `Runner`
+(`plan.s04-cut`). The real Claude adapter is S16 and the owner surface is
+S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
+(`internal/clitest`) and a fake clock.
+
+- **Runner.** One call runs one role round to its end. The request carries
+  role, round, vendor, model, effort, brief, worktree, report path, the
+  allowlist or the read-only flag, the session to resume, and an `OnStart`
+  callback that gives the process group id. The result carries the exit
+  class (`ok`, `rate_limited`, `auth`, `error`), the session, the final
+  text, tokens, cost and the permission denials. A runner error counts as an
+  exit of class `error`.
+- **States.** `setup`, `implement`, `checks`, `review`, `gate`,
+  `awaiting-approval`, `commit`, `finish`, `committed`, plus the two rests
+  `paused` and `stopped`. The owner moves a slice with `Approve`, `Reject`,
+  `Answer`, `Retry` and `Stop`.
+- **Setup order.** Add `.worktrees/` to `info/exclude` if missing, then
+  `git -C P worktree add <worktree> -b <branch>` with the registry's
+  patterns (default `.worktrees/{id}` and `{id}`), then `slicer relay-run
+  begin`, then the orchestrator step. All slicer calls use the worktree as
+  `--root`. The ledger is advisory: a failed `relay-run` call is in
+  `writes[]` and the relay goes on.
+- **Ledger.** The orchestrator step is ork's own (agent `ork`, no vendor or
+  model). Each role round is a step with `--parent` on it, labelled `ID
+  role`, `ID implementer fix round N` or `ID implementer finish step`, and
+  its phase is set to `done` or `fail` when the round ends. A stop ends the
+  run with outcome `stopped` and `--close-steps fail`; the finish step ends
+  it with `pass` and `--close-steps done`.
+- **Checks.** The project's check command runs with `sh -c` in the
+  worktree, then `slicer check --json`. Either red sends the implementer
+  back, resumed, with the output (last 30 KB) in the brief, and spends no
+  review. The output is saved as `checks-<round>.log`.
+- **Review and gate.** The reviewer runs once, fresh and read-only. Findings
+  start a fix round; the next gate is the resumed reviewer (role `gate`),
+  which reviews and gates the fix in one pass. A clean review goes straight
+  to the gate. A gate FAIL is recorded with `slicer note ID --text "Review
+  FAIL: ..." --render`, sends the implementer back, and the third FAIL stops
+  the slice. *Proposed:* review findings are the text of sections (A), (B)
+  and (D) of the reviewer's report when they are not "nothing"; (C) holds
+  notes for later. A report without sections (A) and (B) is a shape error.
+- **Rounds.** `round` counts implementer rounds and names the report
+  files (`implementer-2.md`). *Proposed:* a slice stops after 8 implementer
+  rounds (`MaxRounds`), so a check that never goes green cannot loop;
+  budgets (S05) replace it.
+- **Resume.** A fix round resumes the implementer's latest session and the
+  gate resumes the latest gate or reviewer session. Without a session the
+  role starts fresh and its brief carries the earlier reports
+  (`role.resume`).
+- **Report checks.** `CheckReport` refuses a gate report whose first line is
+  not exactly `VERDICT: PASS` or `VERDICT: FAIL`, an implementer or gate
+  report with no `Tests: N passed, M failed` line (the finish step needs
+  none), and any report with no `## Owner needed` section. All problems are
+  listed. The slice pauses (kind `shape`) with them; `Retry` resumes the
+  role and tells it what was wrong.
+- **Owner questions.** A non-empty `## Owner needed` pauses the slice (kind
+  `question`) and is recorded in `questions[]`. `Answer` resumes the same
+  role with the question and the answer. Filing to adj is S06; when it
+  files, `adj ask` runs in the project's main checkout (`Engine.AdjRoot`),
+  never in a worktree.
+- **Stops.** An exit not classified `ok` (rate-limited too, until fallback
+  in S06), a permission denial, and a read-only role that changed the tree
+  (`git status --porcelain` before and after) stop the slice with the
+  reason. A failure of a tool call the engine cannot go on from (a commit,
+  a check run, `git status`) pauses it (kind `error`); `Retry` runs the
+  state again.
+- **Restart.** `Recover` loads every unfinished run. A role with no end
+  whose process group is alive is killed; every such role is marked `lost`,
+  its ledger step is marked `fail`, and the slice pauses (kind `lost`). A
+  run between roles pauses (kind `interrupted`). `Retry` runs the role again
+  (resumed if it had a session) and `Stop` ends the slice. Only process
+  groups named by the run records of unfinished runs are killed, never group
+  0, 1 or ork's own. *Residual risk:* a recycled process group id is not told
+  from ork's; the record has no start time to compare.
+- **Commit and finish.** On `Approve`, the implementer is resumed for the
+  finish step first: the closing note, then `slicer done` or `slicer handoff`
+  per `slicer config implement_finish`. Then ork commits in the worktree with
+  `git add -A` and `git commit -m "<title>"`, the title being the quoted text
+  of the slice's Git section, and nothing else (no attribution), so one
+  commit carries the code and the tracking change. A rejected slice runs no
+  finish step. A failed commit stops the slice in needs-you with git's error
+  and does not undo the finish step (`engine.finish-order`, the contract's
+  order; S04 built the reverse order, and S17 changes it).
+
 ## Stop rules
 
 From slicer's contract:
@@ -223,7 +308,9 @@ answer in the project's adj store (`adj ask` then `adj decide --by
 There is one Go adapter per vendor. Each implements: build a command
 (model, effort, permission mode, allowlist, output format), start it in its
 own process group, stream events, parse the final result and usage, and
-classify the exit as ok, rate-limited, auth or error.
+classify the exit as ok, denied, rate-limited or unclassified. A class
+needs a documented signal or a real sample (`vendor.ratelimit-detection`,
+`vendor.unsampled-classes`).
 
 The `claude -p --output-format json`, `codex exec --json` and
 `grok --output-format json -p` invocations, and the read-only flags
@@ -250,8 +337,10 @@ grok 1.0.62. Grok has no successful run, so most of its column is
   midway leaves its tree as it is, and the next vendor is told to continue
   from it.
 - **Detection** (`vendor.ratelimit-detection`): the classifier matches only
-  documented signals. Every non-ok exit saves its raw stdout, stderr and
-  JSON under `~/.local/state/ork/fixtures/<vendor>/` as a candidate. An
+  documented signals. Every non-ok round, a permission denial that
+  exits 0 included, saves its raw stdout, stderr and JSON at mode 0600 under
+  `~/.local/state/ork/fixtures/<vendor>/` as a candidate. Redaction happens
+  when the owner promotes one into `testdata/` (`vendor.fixture-candidates`). An
   unclassified exit stops the slice for the owner, who can mark it
   "rate limit" in one keystroke. That sample becomes a test fixture. The
   spike's grok 403 (`testdata/vendors/grok/01-plain-json.stdout`) would be
@@ -259,12 +348,43 @@ grok 1.0.62. Grok has no successful run, so most of its column is
   the slice for the owner.
 - **Permissions** (`launch.permissions`): there is a per-project, per-role
   allowlist in the registry. Read-only roles run in their vendor's read-only
-  mode. A denial stops the slice. The spike measured the claude allowlist
+  mode. An implementer with no entry (or an empty list) gets the built-in
+  default, which the registry replaces as a whole: `Read`, `Grep`, `Glob`,
+  `Edit`, `Write`, `Bash(slicer *)`, `Bash(git status*)`, `Bash(git
+  diff*)`, `Bash(git log*)` and `Bash(<check command>*)`
+  (`launch.default-allowlist`). A registry allowlist for a read-only role is
+  an error. A denial stops the slice. The spike measured the claude allowlist
   denial: it exits 0 and shows only in `permission_denials`, so ork must read
   the JSON to see it. codex has no per-tool allowlist, so in v1 it runs only
   read-only roles in its read-only sandbox (`vendor.codex-allowlist`).
 - **Credentials:** ork uses each CLI's own login. It never reads, stores
   or passes credentials.
+
+- **Claude adapter** (`internal/agent/claude`, S16, `plan.s04-cut`). One
+  call runs one role round: `claude -p [--resume SESSION] --output-format
+  stream-json --verbose --include-partial-messages [--model M] [--effort E]`,
+  then `--allowedTools a,b --permission-prompts none` for a write role or
+  `--permission-mode plan` for a read-only one, then the prompt. `--effort
+  <level>` is listed by `claude --help` ("Effort level for the current
+  session", claude 2.1.x). The process runs in its own process group, using
+  `internal/clirun`'s helpers (`code.process-groups`). `stream_event` text
+  deltas reach the output tail as they arrive. Session id, final text,
+  tokens and `total_cost_usd` come from the `result` event. Cancelling the
+  context kills the whole group. The report is the report file, else the
+  result text (`role.report-io`). The exit class is:
+  - ok: exit 0, `subtype` `success`, `is_error` false.
+  - denied: `permission_denials` is non-empty, even at exit 0.
+  - unclassified: everything else. That includes the bad-model run (exit 1,
+    status 404; `testdata/vendors/claude/06-bad-model.stdout`), any 401, 429
+    or 503, and a `rejected` `rate_limit_event`. No auth failure, bad model
+    or rate limit has a real sample yet, so none has a class of its own
+    (`vendor.unsampled-classes`). The rate-limited class is never returned.
+  - Every round that is not ok, denials included, saves its command, exit
+    code, raw stdout, stderr and the result JSON under
+    `$XDG_STATE_HOME/ork/fixtures/claude/` (else
+    `~/.local/state/ork/fixtures/claude/`) at mode 0600. Nothing is redacted
+    on save. Redaction happens when the owner promotes a candidate into
+    `testdata/` (`vendor.fixture-candidates`).
 
 ### Spike results
 
@@ -366,8 +486,9 @@ come with the engine.
   running a trivial command, without reading credentials) comes in S06, and
   doctor makes no model call;
 - the slicer contract: the first line of `slicer ai relay` against ork's
-  pin. S03 checks one pinned version; `boundary.contract` now asks for an
-  accepted set, which S04 adopts. A mismatch fails the check;
+  accepted set of versions (`roles.AcceptedContracts`, v7 today;
+  `boundary.contract`). Any other version, older or newer, fails the check.
+  The engine makes the same check before it creates a run;
 - each project's check command and patterns (later).
 
 Doctor exits 1 when slicer, adj or the contract check fails. `roles print`
@@ -400,7 +521,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
 - `roles print [ROLE]`: `{"roles":[{"name","prompt"}]}`. Text: the prompt of
   ROLE as embedded, or all four with a `==== NAME ====` line before each.
 - `doctor`: `{"ok","tools":[{"name","required","present","path","version",
-  "ok","error"}],"contract":{"pin","found","ok","error"}}`. Text: one
+  "ok","error"}],"contract":{"accepted":[7],"found","ok","error"}}`. Text: one
   `[ok]`, `[--]` or `[FAIL]` line per check.
 
 ## Testing

@@ -172,7 +172,7 @@
       "id": "S04",
       "title": "Engine for one implementer: setup, implement, checks, review, gate, approve, commit, ledger",
       "short_title": "Engine core",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S01",
@@ -241,7 +241,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 3,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -355,6 +355,17 @@
           "kind": "",
           "text": "**2026-10-19** — Owner 2026-10-19 (vendor.codex-ratelimit): codex rate limits are classified by the reported strings \"You've hit your usage limit\" and HTTP 429 rate_limit_exceeded in turn.failed/error events, with automatic fallback. Capture a real sample when one occurs and add it as a fixture; no real codex limit has been recorded yet.",
           "created_at": "2026-10-19T03:00:22Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "d4eed86f-c015-4dab-8dbf-46da1ae2046a",
+          "kind": "",
+          "text": "**2026-10-19** — From S16 (2026-10-19): codex and grok adapters go in internal/agent/<vendor> (vendor.package-path) and use clirun's exported process-group helpers (code.process-groups). Auth and bad-model exits stay unclassified until a real sample exists (vendor.unsampled-classes); candidates are saved raw at 0600, denials included (vendor.fixture-candidates).",
+          "created_at": "2026-10-19T14:09:21Z",
           "attempt": 0,
           "by": "Jon R",
           "verified_by": "",
@@ -803,12 +814,24 @@
       "id": "S16",
       "title": "Claude role adapter",
       "short_title": "Claude adapter",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S01"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b65b3504-2a1d-49d3-bee8-d73c0dc838f7",
+          "kind": "",
+          "text": "**2026-10-19** — Review FAIL: internal/vendor/claude is skipped by ./... and cannot be imported (Go treats vendor/ as vendored); slice Files path needs an owner decision. Also: --effort unverified, state.md vs design.md redaction conflict, copied procgroup code.",
+          "created_at": "2026-10-19T13:35:38Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -826,7 +849,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -840,7 +863,41 @@
         "S16",
         "S13"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "448b87f7-e0e0-4a52-980d-06d9ed2d0b44",
+          "kind": "",
+          "text": "**2026-10-19** — From S16 (2026-10-19): each role round needs its own report path; the adapter reads whatever file is there and never deletes one, so a stale report would be read as the new round's. Vendor adapters live under internal/agent/<vendor> (vendor.package-path, adj 80 after renumber), never a vendor/ directory.",
+          "created_at": "2026-10-19T14:09:21Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "7b866a28-3976-4dfc-9500-45871cfa9dfd",
+          "kind": "",
+          "text": "**2026-10-19** — From S04 (2026-10-19), fix before dogfooding: a gate PASS whose Tests line reports failures still reaches approval; a failed Kill still marks a role lost, so Retry can start a second role; retry after a crash in setup fails on the existing worktree (internal/engine/states.go:30); an owner answer is lost if ork dies mid-answered-round (engine.go:372-380, recover.go:92); a stale role with no end is marked lost even in awaiting-approval (recover.go:70). Later: restart cannot tell a recycled pgid from ork's (no start time in the record); the read-only fingerprint (git status --porcelain) misses edits to already-dirty files; MaxRounds=8 and the review-findings rule are proposed. Commit-versus-finish order is marked Open in docs/design.md.",
+          "created_at": "2026-10-19T14:32:25Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "fa945266-1f81-4777-b52f-aa2f6832b3a4",
+          "kind": "",
+          "text": "**2026-10-19** — engine.finish-order decided 2026-10-19: on approve run the finish step first, then one commit with code and tracking; a failed commit stops the slice in needs-you without undoing the finish step. Change S04's Approve (internal/engine) and its commit-first test.",
+          "created_at": "2026-10-19T14:34:57Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",

@@ -1,0 +1,53 @@
+{
+  "run": {
+    "id": "run-20261019-132641-3e3c",
+    "items": [
+      "S01"
+    ],
+    "worktree": "proj",
+    "begun_at": "2026-10-19T13:26:41Z",
+    "updated_at": "2026-10-19T13:26:41Z",
+    "state": "ended",
+    "outcome": "pass",
+    "counts": {
+      "steps": 2,
+      "running": 0,
+      "subagents": 1,
+      "roles": {
+        "orchestrator": 1
+      }
+    },
+    "steps": [
+      {
+        "id": "1",
+        "role": "orchestrator",
+        "agent": "ork",
+        "vendor": "",
+        "model": "",
+        "reasoning": "",
+        "phase": "done",
+        "task": "S01 orchestrator",
+        "parent": "",
+        "begun_at": "2026-10-19T13:26:41Z",
+        "updated_at": "2026-10-19T13:26:41Z"
+      },
+      {
+        "id": "2",
+        "role": "implementer",
+        "agent": "claude",
+        "vendor": "claude",
+        "model": "sonnet",
+        "reasoning": "high",
+        "phase": "done",
+        "task": "S01 implementer",
+        "parent": "1",
+        "begun_at": "2026-10-19T13:26:41Z",
+        "updated_at": "2026-10-19T13:26:41Z"
+      }
+    ]
+  },
+  "closed_steps": [
+    "1",
+    "2"
+  ]
+}

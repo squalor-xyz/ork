@@ -1,0 +1,20 @@
+{
+  "run": {
+    "id": "run-20261019-132634-4142",
+    "items": [
+      "S01"
+    ],
+    "worktree": "proj",
+    "begun_at": "2026-10-19T13:26:34Z",
+    "updated_at": "2026-10-19T13:26:34Z",
+    "state": "active",
+    "outcome": "",
+    "counts": {
+      "steps": 0,
+      "running": 0,
+      "subagents": 0,
+      "roles": {}
+    },
+    "steps": []
+  }
+}

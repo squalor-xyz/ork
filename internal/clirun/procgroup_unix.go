@@ -11,9 +11,9 @@ import (
 	"syscall"
 )
 
-// ownProcessGroup puts the child in its own process group and makes the
+// OwnProcessGroup puts the child in its own process group and makes the
 // context's cancel kill the whole group, grandchildren included.
-func ownProcessGroup(cmd *exec.Cmd) {
+func OwnProcessGroup(cmd *exec.Cmd) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	cmd.Cancel = func() error {
 		err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
@@ -24,9 +24,9 @@ func ownProcessGroup(cmd *exec.Cmd) {
 	}
 }
 
-// killGroup kills what is left of the child's process group after the child
+// KillGroup kills what is left of the child's process group after the child
 // exited, for example a grandchild still holding the output pipes.
-func killGroup(cmd *exec.Cmd) {
+func KillGroup(cmd *exec.Cmd) {
 	if cmd.Process != nil {
 		syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 	}

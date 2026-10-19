@@ -124,6 +124,67 @@ func TestContractVersion(t *testing.T) {
 	}
 }
 
+// The S10 note: ork shows the owner question to the owner and files it to adj
+// only when the toggle is on (owner.questions), so no prompt says ork files it.
+func TestOwnerQuestionWording(t *testing.T) {
+	for name, p := range prompts(t) {
+		if has(p, "ork files the question") {
+			t.Errorf("%s still says ork files the question", name)
+		}
+		if !has(p, "ork shows the question to the owner (and may file it)") {
+			t.Errorf("%s does not say ork shows the question to the owner (and may file it)", name)
+		}
+	}
+}
+
+func TestAcceptedContracts(t *testing.T) {
+	if got := AcceptedContracts(); !reflect.DeepEqual(got, []int{7}) {
+		t.Fatalf("AcceptedContracts() = %v, want [7]", got)
+	}
+	got := AcceptedContracts()
+	got[0] = 99
+	if again := AcceptedContracts(); again[0] != 7 {
+		t.Fatalf("AcceptedContracts hands out its own slice: %v", again)
+	}
+	if !ContractAccepted(ContractVersion) {
+		t.Errorf("the prompts' own version v%d is not accepted", ContractVersion)
+	}
+}
+
+func TestCheckContractLine(t *testing.T) {
+	if v, err := CheckContractLine("Contract: relay v7"); err != nil || v != 7 {
+		t.Fatalf("v7: %d, %v", v, err)
+	}
+	if v, err := CheckContractLine("Contract: relay v7  "); err != nil || v != 7 {
+		t.Fatalf("v7 with trailing spaces: %d, %v", v, err)
+	}
+	v, err := CheckContractLine("Contract: relay v8")
+	if err == nil || v != 8 || !strings.Contains(err.Error(), "v8") || !strings.Contains(err.Error(), "v7") {
+		t.Fatalf("v8: %d, %v", v, err)
+	}
+	if v, err := CheckContractLine("Contract: relay v6"); err == nil || v != 6 {
+		t.Fatalf("v6: %d, %v", v, err)
+	}
+	for _, bad := range []string{"", "something else entirely", "Contract: relay v", "Contract: relay v7 extra"} {
+		if v, err := CheckContractLine(bad); err == nil || v != 0 {
+			t.Errorf("%q: %d, %v", bad, v, err)
+		}
+	}
+}
+
+// The check is set membership, not an exact pin and not a minimum.
+func TestCheckContractLineAcceptsEveryVersionInTheSet(t *testing.T) {
+	saved := acceptedContracts
+	defer func() { acceptedContracts = saved }()
+	acceptedContracts = []int{7, 9}
+	for v, wantOK := range map[int]bool{6: false, 7: true, 8: false, 9: true, 10: false} {
+		got, err := CheckContractLine(fmt.Sprintf("Contract: relay v%d", v))
+		if (err == nil) != wantOK || got != v {
+			t.Errorf("v%d: %d, %v (accepted %v)", v, got, err, wantOK)
+		}
+	}
+}
+
 func TestFirstLineNamesRoleAndContract(t *testing.T) {
 	recorded := recordedVersion(t, "relay-first-line.txt")
 	for name, p := range prompts(t) {
@@ -265,7 +326,7 @@ func TestSharedRules(t *testing.T) {
 			"foreground",
 			"Never commit",
 			"Never read vendor credential or login files",
-			"Do not run `adj ask` yourself; ork files the question from your report.",
+			"Do not run `adj ask` yourself; ork shows the question to the owner (and may file it)",
 		} {
 			if !has(p, want) {
 				t.Errorf("%s does not say %q", name, want)
