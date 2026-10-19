@@ -1,0 +1,41 @@
+{
+  "id": "S12",
+  "title": "Roadmap and Decisions screens, read-only",
+  "lead": [
+    "The two read-only screens for one project, and Decisions across all."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** any edit to the roadmap or decisions (after v1, `ui.slicer-tui`).",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The owner sees each project's roadmap and its decisions made and pending\n(PROJECT.md goal 1); editing waits for after v1 (`scope.v1`)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/roadmap.go`, `internal/tui/decisions.go` and their tests.\n- `testdata/golden/`: the two screens."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Roadmap lists items in slicer's order with readiness, status, size,\n  effort and claim; selecting one loads `show ID --json --lean` into the\n  detail pane, pending until it returns.\n- Goals from `goals --json` head the screen; a goals error shows verbatim\n  without hiding the list (slicer s380).\n- Decisions lists open records first with options and recommendation; a\n  second tab lists decided records; an \"all projects\" toggle merges every\n  project with `adj: true`, each row naming its project.\n- A project with `adj: false` shows \"no adj in this project\".\n- No key on either screen writes anything.\n- Golden views at 100x30, colour and monochrome."
+    },
+    {
+      "heading": "Implement",
+      "body": "- Reuse S11's polling, pending and error rows.\n- Keys are proposed in the help screen; Enter opens detail, Esc returns."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`, `go vet ./...`, `gofmt -l .` clean.\n- [HUMAN CHECK] The owner opens both screens on slicer and adjudicate.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"S12: Roadmap and Decisions screens, read-only\"."
+    }
+  ],
+  "notes": []
+}

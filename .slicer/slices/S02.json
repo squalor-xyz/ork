@@ -1,0 +1,41 @@
+{
+  "id": "S02",
+  "title": "Core: registry and CLI adapters",
+  "lead": [
+    "The Go module, the project registry, and the slicer and adj adapters that\nevery later screen and the engine read through. No UI and no third-party\ndependency (`plan.s02-cut`)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** any UI, any third-party module, git calls, and the daemon.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Every screen and the engine read slicer and adj only through their CLIs\n(`boundaries.md`, TRACKING_RULE), and ork's own state starts with the\nregistry (`state.files`, `state.format`). Building this first, behind one\ninterface, lets S03 move it behind the daemon socket unchanged\n(`dash.pre-daemon`)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `go.mod`: module `github.com/squalor-xyz/ork`, `go 1.27.2`, matching\n  adjudicate. No `require` lines.\n- `internal/registry/`: load, validate, save and seed `projects.json`.\n- `internal/clirun/`: run one CLI call with arguments, a deadline, and the\n  captured stdout, stderr and exit code.\n- `internal/slicercli/`: typed calls over the slicer CLI.\n- `internal/adjcli/`: typed calls over the adj CLI.\n- `internal/source/`: the `Source` interface the TUI and later the daemon\n  use, and its direct implementation over the adapters.\n- `testdata/cli/slicer/`, `testdata/cli/adj/`: recorded real output, with\n  `testdata/cli/VERSIONS` naming the slicer and adj versions recorded.\n- Every `.go` file starts with `// SPDX-License-Identifier: GPL-3.0-or-later`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "Write these first and watch them fail:\n- registry: a round trip keeps every field in the docs/state.md example.\n- registry: a file with an unknown `version` is refused with an error\n  naming the version.\n- registry: a save writes a temp file in the same directory and renames\n  it; a failed write leaves the old file intact and no temp file behind.\n- registry: when the file is missing, seeding writes only the decided\n  projects (slicer, adjudicate, DataBall, agents) whose directories exist\n  under the seed root, sets `adj` from whether `.adjudicate.json` exists\n  there, and reports what it wrote (`registry.seed`).\n- clirun: a call past its deadline returns a timeout error, and the child\n  process group is killed.\n- clirun: a non-zero exit keeps stdout and stderr verbatim; a slicer\n  `{\"error\":{\"code\",\"message\",\"command\"}}` object on stdout or stderr is\n  parsed into a typed error with the code unchanged.\n- slicercli: `list --json --lean`, `show ID --json --lean`,\n  `goals --json` and `relay-run list --json --lean` parse from the\n  recorded files, and unknown fields are ignored, not errors.\n- adjcli: `inbox --json` (empty and non-empty) and `list --json` parse\n  from the recorded files.\n- source: a project with `adj: false` never calls adj.\n\nTests fake the CLIs with the standard library's helper-process pattern\n(re-exec the test binary), replaying the recorded files. No test calls the\nreal slicer or adj."
+    },
+    {
+      "heading": "Implement",
+      "body": "- Registry path: `$XDG_CONFIG_HOME/ork/projects.json`, else\n  `~/.config/ork/projects.json`. Fields and rules as in docs/state.md;\n  `version` is 1.\n- Seed root (*proposed*): `$ORK_SEED_ROOT`, default `~/code/squalor-xyz`.\n  Seeding never overwrites an existing file.\n- clirun: `exec.CommandContext` with its own process group; default\n  deadline 10 s; the binary is found on `PATH` or set per adapter.\n- Every slicer call passes `--root PATH`; every adj call passes\n  `--root PATH`. Never read `.slicer/` or `decisions/` files.\n- Record the testdata by running the real commands against this repo and\n  slicer's repo, read-only commands only.\n- `Source` returns one snapshot per project: items, goals, active relay\n  runs, open and decided adj records, each with its own error, so one\n  failed call does not blank the others."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...` and `go vet ./...` pass; `gofmt -l .` prints nothing.\n- `rg -L --files-without-match 'SPDX-License-Identifier: GPL-3.0-or-later' -g '*.go'`\n  lists nothing.\n- `go.mod` has no `require` lines.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"S02: core registry and CLI adapters\"."
+    }
+  ],
+  "notes": []
+}
