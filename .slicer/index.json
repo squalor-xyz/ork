@@ -882,6 +882,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "fa945266-1f81-4777-b52f-aa2f6832b3a4",
+          "kind": "",
+          "text": "**2026-10-19** — engine.finish-order decided 2026-10-19: on approve run the finish step first, then one commit with code and tracking; a failed commit stops the slice in needs-you without undoing the finish step. Change S04's Approve (internal/engine) and its commit-first test.",
+          "created_at": "2026-10-19T14:34:57Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,

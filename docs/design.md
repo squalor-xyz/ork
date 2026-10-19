@@ -239,14 +239,15 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   groups named by the run records of unfinished runs are killed, never group
   0, 1 or ork's own. *Residual risk:* a recycled process group id is not told
   from ork's; the record has no start time to compare.
-- **Commit and finish.** `Approve` commits in the worktree with `git add -A`
-  and `git commit -m "<title>"`, the title being the quoted text of the
-  slice's Git section, and nothing else (no attribution). The implementer is
-  then resumed for the finish step: the closing note, then `slicer done` or
-  `slicer handoff` per `slicer config implement_finish`. *Open:* S04's
-  failing tests order the commit before the finish step; the contract orders
-  the finish step before the commit (`slicer ai relay-orchestrator`, Order
-  steps 3 and 4), which would put the tracking change in the commit.
+- **Commit and finish.** On `Approve`, the implementer is resumed for the
+  finish step first: the closing note, then `slicer done` or `slicer handoff`
+  per `slicer config implement_finish`. Then ork commits in the worktree with
+  `git add -A` and `git commit -m "<title>"`, the title being the quoted text
+  of the slice's Git section, and nothing else (no attribution), so one
+  commit carries the code and the tracking change. A rejected slice runs no
+  finish step. A failed commit stops the slice in needs-you with git's error
+  and does not undo the finish step (`engine.finish-order`, the contract's
+  order; S04 built the reverse order, and S17 changes it).
 
 ## Stop rules
 
