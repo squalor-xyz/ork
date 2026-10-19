@@ -101,6 +101,10 @@ started. They are not a copy of slicer state. The ledger link is
 - **Atomic writes:** write a temporary file in the same directory, then
   rename it.
 - **One directory per run,** so parallel runs never write the same file.
+- **Strict keys:** an unknown key in `projects.json` is an error naming it;
+  new fields come with a version bump (`registry.unknown-keys`).
+- **Zero means unset:** `global_cap`, `cap` and `check_minutes` of 0 read
+  as absent, and the default applies (`registry.zero-values`).
 - **Versioned files:** every file has a `version`, and ork refuses a
   version it does not know.
 - **No secrets:** no tokens or credentials in any ork file. Raw vendor

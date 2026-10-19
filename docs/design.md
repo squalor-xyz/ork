@@ -137,8 +137,7 @@ ork adds:
   final result text. ork validates the shape: the gate's first line, the
   test counts. The prompts ask for one line `Tests: N passed, M failed`
   in the implementer's and the gate's report, and for a final `## Owner
-  needed` section in every report (*proposed* shape until an adj record
-  decides it).
+  needed` section in every report (`role.report-shape`).
 - **Resume.** For fix rounds and the lite gate, ork resumes the same vendor
   session where the vendor supports it. Otherwise it starts fresh with the
   earlier reports in the brief (`role.resume`).
