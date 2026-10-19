@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 14,
+  "next_id": 16,
   "preamble": "",
   "passes": [
     {
@@ -124,6 +124,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "fff04183-351c-40c4-991f-35f6bd62505f",
+          "kind": "",
+          "text": "**2026-10-19** — From the integration review: as built, every request re-runs all CLI calls; the snapshot cache (S15) serves from memory. No scope change for S03.",
+          "created_at": "2026-10-19T04:04:18Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -162,6 +173,17 @@
           "kind": "",
           "text": "**2026-10-19** — From S10 (2026-10-19): all four role prompts say \"ork files the question from your report\"; design.md says ork shows it to the owner and files it to adj only when the toggle is on. Reword to \"ork shows the question to the owner (and may file it)\" when the engine wires owner questions.",
           "created_at": "2026-10-19T03:09:56Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "e8cda3c0-8823-4352-a0aa-1b2054d4ab9a",
+          "kind": "",
+          "text": "**2026-10-19** — From the integration review 2026-10-19: check the contract against an accepted set of versions (boundary.contract, superseding the exact pin; slicer s382 moves v7 to v8). Proposed, not decided: record every write ork makes in run.json as writes[] (R7). Retry slicer writes on locked (exit 3). Run adj ask only in the main checkout so IDs do not collide across worktrees.",
+          "created_at": "2026-10-19T04:04:18Z",
           "attempt": 0,
           "by": "Jon R",
           "verified_by": "",
@@ -408,7 +430,19 @@
       "depends_on": [
         "S05"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b41f71e4-108c-4e06-ac06-6004c97ccada",
+          "kind": "",
+          "text": "**2026-10-19** — From the integration review: after a merge, render files can be stale (the slicer-generated driver keeps one side); the landing view should show the slicer render command until slicer fixes it upstream (R8).",
+          "created_at": "2026-10-19T04:04:18Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -475,7 +509,7 @@
       "id": "S11",
       "title": "TUI shell, project tabs and Overview",
       "short_title": "TUI shell and Overview",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S02"
@@ -487,6 +521,39 @@
           "text": "**2026-10-19** — From S02: Direct.Snapshot runs its 5 calls in sequence; worst case about 50 s per project at the 10 s default. Run them concurrently or shorten the timeout before polling every 5 s.",
           "created_at": "2026-10-19T03:12:01Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "f752ff6d-a076-4339-8bad-454da8cfbf85",
+          "kind": "",
+          "text": "**2026-10-19** — NOTICE points to the Go module cache for the full license texts; a binary release should bundle them.",
+          "created_at": "2026-10-19T03:49:02Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "01e35bb5-36c5-4f32-b8e1-71a683527acd",
+          "kind": "",
+          "text": "**2026-10-19** — Hold flags are configurable in slicer; the Overview badge hard-codes needs-owner. slicer list --held exists for S12 to widen it.",
+          "created_at": "2026-10-19T03:49:04Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "6445e596-3b0b-486e-9909-e28aac1e0dfe",
+          "kind": "",
+          "text": "**2026-10-19** — Owner 2026-10-19: ran the TUI and approved landing. Review notes: NOTICE points to the module cache for license texts, so a binary release must bundle the full texts; at 100 columns the run row's elapsed time wraps (cosmetic); view.go:105-106 comment is overlong.",
+          "created_at": "2026-10-19T04:01:12Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -510,7 +577,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -520,9 +587,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [
-        "S11"
+        "S11",
+        "S14"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "bb25e69b-0724-4e17-9015-f01938eb5449",
+          "kind": "",
+          "text": "**2026-10-19** — From S11: the tab badge hard-codes the needs-owner hold flag; hold flags are configurable, and slicer list --held can widen the count.",
+          "created_at": "2026-10-19T04:01:12Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -551,7 +631,9 @@
       "has_slice": true,
       "depends_on": [
         "S03",
-        "S11"
+        "S11",
+        "S14",
+        "S15"
       ],
       "note_records": [],
       "claim": null,
@@ -570,6 +652,66 @@
         "reason": "",
         "importance": 3,
         "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S14",
+      "title": "Port the TUI to Charm v2",
+      "short_title": "Charm v2 port",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S11"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S15",
+      "title": "Daemon snapshot cache and per-part refresh",
+      "short_title": "Snapshot cache",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S03"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
         "effort": 1,
         "attempts": 0
       }

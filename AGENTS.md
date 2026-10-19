@@ -76,7 +76,10 @@ owner decides, so never run `adj decide`, `adj reject` or `adj supersede`.
 
 ## Project Commands
 
-- Install dependencies: none (standard library only until S11).
+- Install dependencies: `go mod download` (Bubble Tea, Lip Gloss and Bubbles
+  only, since S11).
+- Rewrite TUI golden views after an intended layout change:
+  `go test ./internal/tui -update`, then review the diff in `testdata/golden/`.
 - Run tests: `go test ./...`, plus `go vet ./...` and `gofmt -l .`.
 - Check tracking: `slicer check`.
 - Check decisions: `adj lint`.
@@ -84,8 +87,8 @@ owner decides, so never run `adj decide`, `adj reject` or `adj supersede`.
 
 ## Project Rules
 
-- ork implements slicer's relay contract and pins its version (v7 on
-  2026-10-18). Do not paste the contract's text into docs; refer to it by
+- ork implements slicer's relay contract and accepts only the versions it
+  lists (v7 on 2026-10-19; `boundary.contract`). Do not paste the contract's text into docs; refer to it by
   command (`slicer ai relay`). Role prompts are ork's own text
   (`roles.prompts`).
 - Never read vendor credentials or login files; use each vendor CLI's own

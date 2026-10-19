@@ -7,6 +7,7 @@ package source
 
 import (
 	"context"
+	"sync"
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/registry"
@@ -56,15 +57,29 @@ func NewDirect(s slicercli.Client, a adjcli.Client) *Direct {
 	return &Direct{Slicer: s, Adj: a}
 }
 
-// Snapshot makes the calls one after another and never fails as a whole.
+// Snapshot makes the calls at the same time, so a slow call does not delay
+// the others, and never fails as a whole. Each call writes only its own field.
 func (d *Direct) Snapshot(ctx context.Context, p registry.Project) Snapshot {
 	s := Snapshot{Project: p}
-	s.Items = result(d.Slicer.List(ctx, p.Path))
-	s.Goals = result(d.Slicer.Goals(ctx, p.Path))
-	s.Runs = result(d.Slicer.RelayRuns(ctx, p.Path, true))
-	if p.Adj {
-		s.Open = result(d.Adj.Inbox(ctx, p.Path))
-		s.Decided = result(d.Adj.List(ctx, p.Path, "decided"))
+	calls := []func(){
+		func() { s.Items = result(d.Slicer.List(ctx, p.Path)) },
+		func() { s.Goals = result(d.Slicer.Goals(ctx, p.Path)) },
+		func() { s.Runs = result(d.Slicer.RelayRuns(ctx, p.Path, true)) },
 	}
+	if p.Adj {
+		calls = append(calls,
+			func() { s.Open = result(d.Adj.Inbox(ctx, p.Path)) },
+			func() { s.Decided = result(d.Adj.List(ctx, p.Path, "decided")) },
+		)
+	}
+	var wg sync.WaitGroup
+	for _, call := range calls {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			call()
+		}()
+	}
+	wg.Wait()
 	return s
 }

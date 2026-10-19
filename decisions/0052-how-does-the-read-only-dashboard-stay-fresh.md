@@ -2,7 +2,7 @@
 {
   "id": 52,
   "title": "How does the read-only dashboard stay fresh?",
-  "status": "decided",
+  "status": "superseded",
   "key": "dash.refresh",
   "asked_by": "claude",
   "decided_by": "jon",
@@ -21,6 +21,7 @@
   ],
   "decision": "poll",
   "rationale": "Owner 2026-10-19: Poll the CLIs: the visible project every 5 s, the others every 30 s, r refreshes now; a slow call shows as pending.",
+  "superseded_by": 65,
   "history": [
     {
       "date": "2026-10-18",
@@ -29,6 +30,11 @@
     {
       "date": "2026-10-18",
       "event": "decide"
+    },
+    {
+      "date": "2026-10-19",
+      "event": "supersede",
+      "note": "by 65"
     }
   ]
 }

@@ -1,0 +1,24 @@
+[1mork[0m [1;7m[slicer 3*][0m  adjudicate [1m1[0m   DataBall   agents            [1mneeds you: 4[0m  ?help
+ [1mOverview[0m[2m | Waves | Roadmap | Decisions[0m
+[2m--------------------------------------------------------------------------------[0m
+[1mNeeds you[0m
+  [1m? decision[0m  slicer      #11 ui.slicer-tui  Does ork reimplement slicer's ro...
+  [1m? decision[0m  slicer      #51 vendor.codex-ratelimit  Does codex count as rat...
+  [1m# held    [0m  slicer      S12  Roadmap and Decisions screens, read-only  (nee...
+  [1m? decision[0m  adjudicate  #3 output.shape  Which JSON shape does inbox print?
+  [1m! error   [0m  DataBall    items: no_such_item: No such item: S99.
+  [2m~ pending [0m  agents      waiting for the first reply
+
+[1mRunning[0m
+  [1m> started elsewhere[0m  slicer      S11  active, 2 of 6 steps running
+                                   run-20261019-004308-40d4  1h00m
+  [2m~ pending [0m  agents      waiting for the first reply
+
+[1mReady to land[0m
+  [2mnone yet: the list of branches to land comes with slice S09[0m
+
+
+
+
+[2m--------------------------------------------------------------------------------[0m
+ 4 projects | refreshed 16:42:07 | pending 1

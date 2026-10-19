@@ -1,0 +1,41 @@
+{
+  "id": "S15",
+  "title": "Daemon snapshot cache and per-part refresh",
+  "lead": [
+    "An in-memory snapshot cache in the daemon that every client reads, with a\nrefresh schedule per part and pushed change notices (`dash.cache`,\n`dash.refresh`, `boundary.git-head`)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** cache files on disk, file watching, reading `.slicer/` or `decisions/`, and adopting `slicer snapshot` (later).",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Measured under load, one slicer call costs 0.4-1.4 s and about 0.6 s CPU;\nS03 as built re-runs every call per request, about 7 s CPU per\n`ork status` over four projects (docs/review-2026-10-19-integration.md,\nR1-R3)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/cache/` (new), `internal/daemon/` (serve from the cache, push\n  notices), `internal/ipc/` (a subscribe method), `internal/source/` only if\n  needed."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Two clients asking at once cause one CLI call per part, not two.\n- At most 4 CLI processes run at once across projects.\n- Items and runs refresh every 5 s for the visible project and 30 s for\n  the others; goals and decided records every 5 min, on a git HEAD change\n  (`git rev-parse HEAD` only), on tab open and on an explicit refresh.\n- A failed refresh keeps the last good value, marks it stale with the\n  error code and age, and retries once on `corrupt`, `locked` or a timeout.\n- A subscribed client gets a notice when a part's value changes, and none\n  when it is unchanged.\n- With a fake clock and fake CLIs; no real slicer, adj or git."
+    },
+    {
+      "heading": "Implement",
+      "body": "- The visible project comes from the clients' subscriptions.\n- Values carry the time they were read and the error, if any."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race ./...`, `go vet ./...`, `gofmt -l .` clean; SPDX headers; no new dependency.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"S15: daemon snapshot cache and per-part refresh\"."
+    }
+  ],
+  "notes": []
+}

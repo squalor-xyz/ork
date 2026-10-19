@@ -340,8 +340,9 @@ come with the engine.
   needs only the vendors a lineup uses (*proposed*). The login check (by
   running a trivial command, without reading credentials) comes in S06, and
   doctor makes no model call;
-- the slicer contract: the first line of `slicer ai relay` against ork's pin
-  (`boundary.contract`). A mismatch fails the check;
+- the slicer contract: the first line of `slicer ai relay` against ork's
+  pin. S03 checks one pinned version; `boundary.contract` now asks for an
+  accepted set, which S04 adopts. A mismatch fails the check;
 - each project's check command and patterns (later).
 
 Doctor exits 1 when slicer, adj or the contract check fails. `roles print`

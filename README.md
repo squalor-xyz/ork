@@ -4,8 +4,10 @@ A terminal dashboard and engine for parallel slice relays across projects.
 
 ## Status
 
-In development: the core registry and CLI adapters (S02) and the role
-prompts (S10) are in; there is no runnable TUI yet. v1 is the monitoring
+In development: the core registry and CLI adapters (S02), the role
+prompts (S10) and the TUI shell with project tabs and the Overview (S11) are
+in. `go run ./cmd/ork` opens the dashboard over the projects in your registry
+(read-only so far); `ork --version` prints the version. v1 is the monitoring
 dashboard plus launching and supervising slice waves. See [PROJECT.md](PROJECT.md).
 
 ## What ork is
