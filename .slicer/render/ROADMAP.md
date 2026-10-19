@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-15 items · — 9 · done 6
+17 items · — 10 · done 7
 
 ## v1
 
@@ -51,7 +51,7 @@
 | 1 | [S01](slices/S01.md) | Vendor spike | S | 1 |  |  | done |
 | 2 | [S02](slices/S02.md) | Core and adapters | M | 2 |  |  | done |
 | 3 | [S03](slices/S03.md) | Daemon and CLI | M | 2 |  |  | done |
-| 4 | S04 | Single-slice engine | L | 3 |  |  | — |
+| 4 | [S04](slices/S04.md) | Engine core | M | 3 |  |  | — |
 | 5 | S05 | Waves and caps | M | 2 |  |  | — |
 | 6 | S06 | Vendors and fallback | M | 2 |  |  | — |
 | 7 | S07 | Live role detail | M | 2 |  |  | — |
@@ -62,4 +62,6 @@
 | 12 | [S12](slices/S12.md) | Roadmap and Decisions screens | M | 2 |  |  | — |
 | 13 | [S13](slices/S13.md) | Wire binary and socket | S | 1 |  |  | — |
 | 14 | [S14](slices/S14.md) | Charm v2 port | S | 1 |  |  | done |
-| 15 | [S15](slices/S15.md) | Snapshot cache | S | 1 |  |  | — |
+| 15 | [S15](slices/S15.md) | Snapshot cache | S | 1 |  |  | done |
+| 16 | [S16](slices/S16.md) | Claude adapter | M | 2 |  |  | — |
+| 17 | [S17](slices/S17.md) | Single-slice CLI | M | 2 |  |  | — |
