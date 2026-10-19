@@ -19,48 +19,57 @@ until then.
 - **Nothing blocks.** A slow call shows as pending on its row.
 - **Errors verbatim.** A failed CLI call shows its `error.code` and
   message. ork does not guess.
-- **Bell.** A terminal bell plus a badge on the project tab when something
+- **Bell.** A terminal bell plus a badge on the project sidebar row when something
   newly needs the owner (`ui.notify`).
 
 ## Layout
 
 ```
-+-- ork --------------------------------------------------------------------+
-| [slicer 2*] [adjudicate 1] [DataBall] [agents]         needs you: 3  ?help |
-+---------------------------------------------------------------------------+
-| Overview | Waves | Roadmap | Decisions                                     |
-+---------------------------------------------------------------------------+
-|                               active view                                  |
-+---------------------------------------------------------------------------+
-| daemon up 2h | running 4/4 | queued 2 | tokens today 1.2M ▁▂▅▇▅▃ | 16:42  |
-+---------------------------------------------------------------------------+
+ork  ?help           | Overview | Waves | Roadmap | Decisions
+> Needs you          | --------------------------------------
+  slicer 2*          | Needs you
+  adjudicate 1       |   active Overview rows
+  DataBall 0         |
+  agents 0           | --------------------------------------
+                     | 4 projects | refreshed 16:42:00 | pending 0
 ```
 
-- **Project tabs** come from the registry (`registry.initial`). From S19 they
-  become a left sidebar with a "Needs you" entry first (`ui.project-nav`), and
-  from S20 a project without slicer shows once as setup (`ui.setup-errors`). The number
-  counts what needs the owner, and `*` marks a running slice.
-- **Status line:** daemon uptime, global cap use, queued items, and a token
-  sparkline (`ui.charts`).
+The project sidebar comes from the registry (`registry.initial`,
+`ui.project-nav`). "Needs you" starts selected and shows the existing
+all-projects Overview. A project selection limits its rows to that project.
+The view bar stays at the top of the main pane. Only Overview is selectable.
 
-Built so far (S11, S13): the Overview only; the view bar names the other
-views but cannot select them yet. Until the token readings (S07) exist, the
-status line shows the project count, the time of the last refresh and the
-number of projects still refreshing (`pending N`). A project
-with data that is being read again is marked `~` on its tab and rows. The
-tab number is the open adj records plus the slicer items flagged
-`needs-owner`, and the terminal bell rings when a project's number rises
-past an earlier good reading (`ui.notify`). Keys: `tab`/`right` and
-`shift+tab`/`left` switch project, `1`-`9` jump to one, `r` refreshes the
-visible project now, `?` shows the keys, `q` quits. Items and runs refresh
-every 5 s for the visible project and every 30 s for the others; goals and
-decided records every 5 min, on a git HEAD change, on tab open and on `r`
-(`dash.refresh`). From S15 the daemon serves one shared in-memory snapshot
-and pushes changes (`dash.cache`). From S13 the TUI reads through the
-daemon's socket, and starts the daemon when none answers: `r` asks the daemon
-to read the project now, and the TUI tells the daemon which project it shows,
-so the daemon reads that one every 5 s. `NO_COLOR`
-selects the monochrome theme.
+Each project row shows its needs-you count (open adj records plus slicer
+items flagged `needs-owner`). `*` marks a running slice and `~` marks a
+loaded project being refreshed. Selection uses reverse and `>`, including
+under `NO_COLOR`. Projects with needs come first, then running projects,
+then the rest; registry order breaks ties. Selection follows the project.
+
+The list scrolls to keep selection visible and shows `+N more` for hidden
+rows. Below 100 columns the sidebar narrows; names that do not fit end in
+`...` and keep their badges. `s` hides or shows the sidebar at any width.
+Keys `up`/`down`, `k`/`j`, `tab`/`shift+tab`, and `left`/`right` move selection
+and wrap through "Needs you" and the sorted projects. `1`-`9` select projects
+in registry order. `/` filters project names without regard to case; `enter`
+keeps the filter and leaves text entry, and `esc` clears it. `r` refreshes
+the selected project, or all projects on "Needs you". `?` shows keys and
+`q` quits.
+
+The terminal bell rings when a project's count rises past an earlier good
+reading (`ui.notify`). The status line shows project count, last refresh,
+and pending count. Daemon uptime and token charts await their slices.
+
+The TUI reads the daemon's shared snapshot and listens for change notices
+(`dash.cache`). The daemon starts when none answers. Each snapshot and
+manual refresh uses its own request connection, so later reads can reconnect
+and a slow refresh does not hold another project's request. The notice
+connection stays open when focus changes. Failed notice feeds retry on the
+next timer tick, including when a focused project was removed. Notices that
+arrive during a fetch queue a further read. On "Needs you" the daemon focuses
+all registered projects; on a project row it focuses that one (`dash.refresh`).
+The local fallback schedule reads the selected project's items every 5 s and
+other projects every 30 s. On "Needs you", all projects poll every 30 s. Goals
+and decided records refresh every 5 min or on HEAD changes and manual refresh. `NO_COLOR` selects the monochrome theme.
 
 ## Overview (all projects)
 

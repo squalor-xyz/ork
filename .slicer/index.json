@@ -969,7 +969,7 @@
       "id": "S19",
       "title": "Project sidebar in place of tabs",
       "short_title": "Project sidebar",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S13"
@@ -1004,7 +1004,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -118,6 +118,7 @@ func TestSwitchingProjectsFocusesTheNewOneWithoutBlockingUpdate(t *testing.T) {
 	gate := make(chan struct{})
 	live := &fakeLive{focusGate: gate}
 	h.m.cfg.Live = live
+	h.m.switchTo(0)
 
 	cmdCh := make(chan tea.Cmd, 1)
 	go func() {
@@ -190,7 +191,7 @@ func TestInitFocusesTheFirstProject(t *testing.T) {
 
 	exec(h.m.Init())
 
-	if got := live.focusedCalls(); !reflect.DeepEqual(got, [][]string{{"alpha"}}) {
-		t.Fatalf("focus calls %v, want [[alpha]]", got)
+	if got := live.focusedCalls(); !reflect.DeepEqual(got, [][]string{{"alpha", "beta"}}) {
+		t.Fatalf("focus calls %v, want [[alpha beta]]", got)
 	}
 }

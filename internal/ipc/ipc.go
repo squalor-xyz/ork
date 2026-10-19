@@ -239,16 +239,66 @@ func (s *Server) handle(ctx context.Context, req Request) (result json.RawMessag
 	return b, nil
 }
 
-// Client is one connection to a server. Calls are serialized. After a call
-// fails for any reason but a remote *Error, the client is unusable.
+// Client is one connection to a server. Calls are serialized; Next can wait
+// alongside a Call. Transport failure makes the client unusable.
 type Client struct {
-	mu     sync.Mutex
-	conn   net.Conn
-	dec    *json.Decoder
-	enc    *json.Encoder
-	next   int64
-	broken error
-	notes  []Notification // notices that came in during a Call, for Next
+	mu       sync.Mutex // serializes calls
+	readOnce sync.Once
+	stateMu  sync.Mutex
+	conn     net.Conn
+	dec      *json.Decoder
+	enc      *json.Encoder
+	next     int64
+	broken   error
+	notes    []Notification
+	replies  chan inbound
+	wake     chan struct{}
+	done     chan struct{}
+}
+
+// startReader gives Call and Next independent waits on a single decoder.
+func (c *Client) startReader() {
+	c.readOnce.Do(func() {
+		c.replies = make(chan inbound, 1)
+		c.wake = make(chan struct{}, 1)
+		c.done = make(chan struct{})
+		go func() {
+			defer close(c.done)
+			for {
+				var msg inbound
+				if err := c.dec.Decode(&msg); err != nil {
+					c.stateMu.Lock()
+					c.broken = err
+					c.stateMu.Unlock()
+					return
+				}
+				if len(msg.ID) == 0 && msg.Method != "" {
+					c.stateMu.Lock()
+					c.notes = append(c.notes, Notification{Method: msg.Method, Params: msg.Params})
+					c.stateMu.Unlock()
+					select {
+					case c.wake <- struct{}{}:
+					default:
+					}
+				} else {
+					select {
+					case c.replies <- msg:
+					default:
+						c.stateMu.Lock()
+						c.broken = errors.New("ipc: unsolicited reply overflow")
+						c.stateMu.Unlock()
+						c.conn.Close()
+						return
+					}
+				}
+			}
+		}()
+	})
+}
+func (c *Client) readError() error {
+	c.stateMu.Lock()
+	defer c.stateMu.Unlock()
+	return c.broken
 }
 
 // Dial connects to the socket at path.
@@ -266,58 +316,47 @@ func Dial(ctx context.Context, path string) (*Client, error) {
 func (c *Client) Call(ctx context.Context, method string, params, result any) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	if c.broken != nil {
-		return c.broken
-	}
-	fail := func(err error) error {
-		if ctx.Err() != nil {
-			err = ctx.Err()
-		}
-		c.broken = err
+	c.startReader()
+	if err := c.readError(); err != nil {
 		return err
 	}
-
-	var raw json.RawMessage
-	if params != nil {
-		b, err := json.Marshal(params)
-		if err != nil {
-			return err
-		}
-		raw = b
+	raw, err := json.Marshal(params)
+	if err != nil {
+		return err
 	}
 	c.next++
 	id := strconv.FormatInt(c.next, 10)
-
-	// A cancelled or expired ctx interrupts the blocked read or write by
-	// moving the connection's deadline to now.
-	c.conn.SetDeadline(time.Time{})
-	stop := context.AfterFunc(ctx, func() { c.conn.SetDeadline(time.Now()) })
+	stop := context.AfterFunc(ctx, func() { c.conn.Close() })
 	defer stop()
-
 	if err := c.enc.Encode(Request{ID: json.RawMessage(id), Method: method, Params: raw}); err != nil {
-		return fail(err)
+		c.conn.Close()
+		return err
 	}
-	var resp Response
-	for {
-		var msg inbound
-		if err := c.dec.Decode(&msg); err != nil {
-			return fail(err)
+	var msg inbound
+	select {
+	case msg = <-c.replies:
+	case <-ctx.Done():
+		c.conn.Close()
+		return ctx.Err()
+	case <-c.done:
+		select {
+		case msg = <-c.replies:
+		default:
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+			return c.readError()
 		}
-		if len(msg.ID) == 0 && msg.Method != "" { // a notice: keep it for Next
-			c.notes = append(c.notes, Notification{Method: msg.Method, Params: msg.Params})
-			continue
-		}
-		resp = Response{ID: msg.ID, Result: msg.Result, Error: msg.Error}
-		break
 	}
-	if string(resp.ID) != id {
-		return fail(fmt.Errorf("reply id %s does not match request id %s", resp.ID, id))
+	if string(msg.ID) != id {
+		c.conn.Close()
+		return fmt.Errorf("reply id %s does not match request id %s", msg.ID, id)
 	}
-	if resp.Error != nil {
-		return resp.Error
+	if msg.Error != nil {
+		return msg.Error
 	}
-	if result != nil && len(resp.Result) > 0 {
-		if err := json.Unmarshal(resp.Result, result); err != nil {
+	if result != nil && len(msg.Result) > 0 {
+		if err := json.Unmarshal(msg.Result, result); err != nil {
 			return fmt.Errorf("decode %s result: %w", method, err)
 		}
 	}
@@ -393,32 +432,28 @@ type inbound struct {
 // that subscribed: a notice that came in during a Call is returned first. A
 // context that ends first makes the client unusable, as a Call does.
 func (c *Client) Next(ctx context.Context) (Notification, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	if len(c.notes) > 0 {
-		n := c.notes[0]
-		c.notes = c.notes[1:]
-		return n, nil
-	}
-	if c.broken != nil {
-		return Notification{}, c.broken
-	}
-	fail := func(err error) (Notification, error) {
-		if ctx.Err() != nil {
-			err = ctx.Err()
+	c.startReader()
+	for {
+		c.stateMu.Lock()
+		if len(c.notes) > 0 {
+			n := c.notes[0]
+			c.notes = c.notes[1:]
+			c.stateMu.Unlock()
+			return n, nil
 		}
-		c.broken = err
-		return Notification{}, err
+		err := c.broken
+		c.stateMu.Unlock()
+		if err != nil {
+			return Notification{}, err
+		}
+		select {
+		case <-c.wake:
+		case <-c.done:
+			// Drain notices received before the connection ended.
+			continue
+		case <-ctx.Done():
+			c.conn.Close()
+			return Notification{}, ctx.Err()
+		}
 	}
-	c.conn.SetDeadline(time.Time{})
-	stop := context.AfterFunc(ctx, func() { c.conn.SetDeadline(time.Now()) })
-	defer stop()
-	var msg inbound
-	if err := c.dec.Decode(&msg); err != nil {
-		return fail(err)
-	}
-	if len(msg.ID) != 0 || msg.Method == "" {
-		return fail(fmt.Errorf("expected a notice, got a reply with id %s", msg.ID))
-	}
-	return Notification{Method: msg.Method, Params: msg.Params}, nil
 }

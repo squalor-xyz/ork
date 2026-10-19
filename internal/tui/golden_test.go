@@ -18,6 +18,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/poll"
+	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -70,7 +71,7 @@ func goldenModel(theme Theme, w, h int) *Model {
 }
 
 func TestGoldenViews(t *testing.T) {
-	sizes := []struct{ w, h int }{{100, 30}, {80, 24}}
+	sizes := []struct{ w, h int }{{100, 30}, {80, 24}, {120, 40}}
 	themes := []struct {
 		name string
 		mono bool
@@ -161,5 +162,30 @@ func TestEveryColouredStateHasAWord(t *testing.T) {
 		if !strings.Contains(v, word) {
 			t.Errorf("no word %q for its state:\n%s", word, v)
 		}
+	}
+}
+
+func TestGoldenFifteenProjects(t *testing.T) {
+	var projects []registry.Project
+	for i := 1; i <= 15; i++ {
+		projects = append(projects, proj(fmt.Sprintf("project-%02d", i), false))
+	}
+	h := newHarness(t, projects...)
+	h.start()
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	got := h.m.View().Content
+	path := filepath.Join("..", "..", "testdata", "golden", "overview-15-projects.txt")
+	if *update {
+		if err := os.WriteFile(path, []byte(got), 0644); err != nil {
+			t.Fatal(err)
+		}
+		return
+	}
+	want, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != string(want) {
+		t.Fatal("15-project golden differs")
 	}
 }

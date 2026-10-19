@@ -193,3 +193,49 @@ func TestFeedNextBeforeFocusAndAfterCloseFails(t *testing.T) {
 		t.Fatal("Next did not return after Close")
 	}
 }
+
+func TestFocusReusesNoticeConnection(t *testing.T) {
+	e := newEnv(t)
+	twoProjects(t, e)
+	e.start(t)
+	f := NewFeed(e.paths.Socket)
+	defer f.Close()
+	if err := f.Focus(context.Background(), []string{"alpha"}); err != nil {
+		t.Fatal(err)
+	}
+	first := f.conn
+	if err := f.Focus(context.Background(), []string{"beta"}); err != nil {
+		t.Fatal(err)
+	}
+	if f.conn != first {
+		t.Fatal("focus change dialed another notice connection")
+	}
+}
+
+func TestRemovedProjectDoesNotDisableFeed(t *testing.T) {
+	e := newEnv(t)
+	twoProjects(t, e)
+	e.start(t)
+	f := NewFeed(e.paths.Socket)
+	defer f.Close()
+	ctx := context.Background()
+	req := e.dial(t)
+	if err := f.Focus(ctx, []string{"alpha"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := req.RemoveProject(ctx, "alpha"); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.Focus(ctx, []string{"alpha"}); err != nil {
+		t.Fatalf("removed project disabled feed: %v", err)
+	}
+	if err := f.Focus(context.Background(), []string{"beta"}); err != nil {
+		t.Fatal(err)
+	}
+	req.Snapshot(context.Background(), registry.Project{Name: "beta"})
+	e.src.put("beta", changedItems())
+	advanceFiveSeconds(e)
+	if n := waitNotice(t, nextNotice(f)); n.Project != "beta" {
+		t.Fatalf("notice %+v", n)
+	}
+}

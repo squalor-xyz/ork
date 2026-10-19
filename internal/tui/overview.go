@@ -66,7 +66,10 @@ func (m *Model) overview(w int) []string {
 	}
 
 	var needs, running []string
-	for _, p := range m.projects {
+	for i, p := range m.projects {
+		if m.active >= 0 && i != m.active {
+			continue
+		}
 		if !p.loaded {
 			needs = append(needs, row(th.Pending, kindPending, kindWidth, p.reg.Name, "waiting for the first reply", false)...)
 			running = append(running, row(th.Pending, kindPending, kindWidth, p.reg.Name, "waiting for the first reply", false)...)

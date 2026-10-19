@@ -122,14 +122,15 @@ func openTUI(ctx context.Context, stderr io.Writer, p program) int {
 		fmt.Fprintf(stderr, "ork: %v\n", err)
 		return 1
 	}
-	defer client.Close()
+	client.Close()
 	feed := daemon.NewFeed(paths.Socket)
 	defer feed.Close()
 
+	live := &tui.Daemon{Connect: app.Connect, Feed: feed}
 	cfg := tui.Config{
-		Source:   client,
+		Source:   live,
 		Projects: reg.Projects,
-		Live:     daemonLive{client: client, feed: feed},
+		Live:     live,
 	}
 	if err := p.tui(cfg); err != nil {
 		fmt.Fprintf(stderr, "ork: %v\n", err)
@@ -168,26 +169,6 @@ func loadRegistry(stderr io.Writer) (*registry.File, int) {
 		return nil, 1
 	}
 	return reg, 0
-}
-
-// daemonLive is the daemon's side of the TUI. Refreshes and snapshots go over
-// the request connection; focus and notices go over the feed.
-type daemonLive struct {
-	client *daemon.Client
-	feed   *daemon.Feed
-}
-
-func (l daemonLive) Refresh(ctx context.Context, project string) error {
-	return l.client.Refresh(ctx, project)
-}
-
-func (l daemonLive) Focus(ctx context.Context, projects []string) error {
-	return l.feed.Focus(ctx, projects)
-}
-
-func (l daemonLive) Next(ctx context.Context) (string, error) {
-	n, err := l.feed.Next(ctx)
-	return n.Project, err
 }
 
 // serveDaemon serves the socket until ctx ends or the daemon has been idle

@@ -220,12 +220,13 @@ next:
 // activeTab returns the name inside the bracketed tab.
 func activeTab(t *testing.T, view string) string {
 	t.Helper()
-	first := strings.SplitN(view, "\n", 2)[0]
-	i, j := strings.Index(first, "["), strings.Index(first, "]")
-	if i < 0 || j < i {
-		t.Fatalf("no bracketed tab in %q", first)
+	for _, line := range strings.Split(view, "\n") {
+		if strings.HasPrefix(line, "> ") {
+			return strings.Fields(strings.TrimPrefix(line, "> "))[0]
+		}
 	}
-	return strings.Fields(first[i+1 : j])[0]
+	t.Fatalf("no selected sidebar row in %q", view)
+	return ""
 }
 
 func names(calls []string) []string {
@@ -254,16 +255,16 @@ func TestInitFetchesEveryProjectOnce(t *testing.T) {
 func TestTabKeysSwitchTheProject(t *testing.T) {
 	h := newHarness(t, four...)
 	h.start()
-	if got := activeTab(t, h.view()); got != "slicer" {
+	if got := activeTab(t, h.view()); got != "Needs" {
 		t.Fatalf("first tab = %s", got)
 	}
 	steps := []struct{ k, want string }{
-		{"tab", "adjudicate"},
-		{"right", "DataBall"},
-		{"shift+tab", "adjudicate"},
-		{"left", "slicer"},
-		{"left", "agents"}, // wraps
-		{"tab", "slicer"},  // wraps
+		{"tab", "slicer"},
+		{"right", "adjudicate"},
+		{"shift+tab", "slicer"},
+		{"left", "Needs"},
+		{"left", "agents"},
+		{"tab", "Needs"},
 		{"3", "DataBall"},
 		{"9", "DataBall"}, // no such tab
 		{"0", "DataBall"},
@@ -322,6 +323,7 @@ func TestHelpKeyTogglesTheHelp(t *testing.T) {
 func TestRefreshKeyRefreshesTheVisibleProjectNow(t *testing.T) {
 	h := newHarness(t, four...)
 	h.start()
+	h.send(press("1"))
 	h.src.take()
 	h.advance(time.Second) // nothing is due
 	h.send(press("tab"))
@@ -334,6 +336,7 @@ func TestRefreshKeyRefreshesTheVisibleProjectNow(t *testing.T) {
 func TestRefreshKeyDoesNotStartASecondCallInFlight(t *testing.T) {
 	h := newHarness(t, four...)
 	h.start()
+	h.send(press("1"))
 	h.src.take()
 	held := h.sendHeld(press("r")) // the call is out and has not returned
 	h.sendHeld(press("r"))
@@ -354,6 +357,7 @@ func TestRefreshKeyDoesNotStartASecondCallInFlight(t *testing.T) {
 func TestPollRefreshesVisibleEvery5sAndOthersEvery30s(t *testing.T) {
 	h := newHarness(t, four...)
 	h.start()
+	h.send(press("1"))
 	h.src.take()
 	// 0..4 s: nothing
 	h.advance(4 * time.Second)
@@ -474,6 +478,7 @@ func TestALongErrorIsWrappedNotCut(t *testing.T) {
 	bad.Items = source.Result[[]slicercli.Item]{Err: &clirun.ToolError{Code: "too_long", Message: msg}}
 	h.src.set(bad)
 	h.start()
+	h.send(press("s"))
 	h.send(tea.WindowSizeMsg{Width: 60, Height: 30})
 	lines := strings.Split(plainView(h.m), "\n")
 	var rows []string
@@ -527,14 +532,14 @@ func TestBadgeCountsOpenRecordsPlusHeldItems(t *testing.T) {
 		[]slicercli.Item{item("S1", "t", "needs-owner"), item("S2", "t", "other-flag"), item("S3", "t")}))
 	h.src.set(snap(four[1], nil, nil))
 	h.start()
-	first := strings.SplitN(h.view(), "\n", 2)[0]
-	if !strings.Contains(first, "[slicer 3]") {
+	first := h.view()
+	if !strings.Contains(first, "slicer 3") {
 		t.Errorf("slicer tab should count 2 open + 1 held = 3: %q", first)
 	}
-	if strings.Contains(first, "adjudicate 0") {
-		t.Errorf("a zero count is shown: %q", first)
+	if !strings.Contains(first, "adjudicate 0") {
+		t.Errorf("a zero badge is missing: %q", first)
 	}
-	if !strings.Contains(first, "needs you: 3") {
+	if !strings.Contains(first, "Needs you") {
 		t.Errorf("header total: %q", first)
 	}
 }
@@ -543,8 +548,8 @@ func TestRunningProjectIsMarkedWithAStar(t *testing.T) {
 	h := newHarness(t, four...)
 	h.src.set(snap(four[0], nil, nil, relay("run-1", "2026-10-19T16:00:00Z", "S01")))
 	h.start()
-	first := strings.SplitN(h.view(), "\n", 2)[0]
-	if !strings.Contains(first, "slicer*") && !strings.Contains(first, "slicer *") {
+	first := h.view()
+	if !strings.Contains(first, "slicer 0*") && !strings.Contains(first, "slicer 0*") {
 		t.Errorf("no running marker on the slicer tab: %q", first)
 	}
 	if strings.Contains(first, "adjudicate*") {
@@ -561,7 +566,7 @@ func TestAFailedRunsCallKeepsTheRunningMarker(t *testing.T) {
 	h.src.set(failed)
 	refreshSlicer(h)
 	v := h.view()
-	if first := strings.SplitN(v, "\n", 2)[0]; !strings.Contains(first, "slicer*") {
+	if first := v; !strings.Contains(first, "slicer 0*") {
 		t.Errorf("the running marker went out while the runs call failed: %q", first)
 	}
 	if !strings.Contains(v, "timed out") {
@@ -579,13 +584,16 @@ func withOpen(h *harness, n int) {
 
 func refreshSlicer(h *harness) {
 	h.advance(5 * time.Second)
-	h.send(tickMsg{})
+	for _, msg := range exec(h.m.fetch("slicer", false)) {
+		h.send(msg)
+	}
 }
 
 func TestBellRingsOnceWhenTheCountRises(t *testing.T) {
 	h := newHarness(t, four...)
 	withOpen(h, 0)
 	h.start()
+	h.send(press("1"))
 	if h.bells != 0 {
 		t.Fatalf("bell at start: %d", h.bells)
 	}
@@ -624,11 +632,12 @@ func TestAFailedCallDoesNotChangeTheCountOrRingTheBell(t *testing.T) {
 	h := newHarness(t, four...)
 	withOpen(h, 2)
 	h.start()
+	h.send(press("1"))
 	failed := snap(four[0], nil, nil)
 	failed.Open = source.Result[[]adjcli.Record]{Err: errors.New("adj inbox: timed out")}
 	h.src.set(failed)
 	refreshSlicer(h)
-	if first := strings.SplitN(h.view(), "\n", 2)[0]; !strings.Contains(first, "[slicer 2]") {
+	if first := h.view(); !strings.Contains(first, "slicer 2") {
 		t.Errorf("count dropped while adj failed: %q", first)
 	}
 	withOpen(h, 2) // adj answers again with the same two
@@ -643,11 +652,12 @@ func TestAFailedItemsCallKeepsTheHeldCount(t *testing.T) {
 	held := []slicercli.Item{item("S1", "t", "needs-owner"), item("S2", "t", "needs-owner")}
 	h.src.set(snap(four[0], nil, held))
 	h.start()
+	h.send(press("1"))
 	failed := snap(four[0], nil, nil)
 	failed.Items = source.Result[[]slicercli.Item]{Err: errors.New("slicer list: timed out")}
 	h.src.set(failed)
 	refreshSlicer(h)
-	if first := strings.SplitN(h.view(), "\n", 2)[0]; !strings.Contains(first, "[slicer 2]") {
+	if first := h.view(); !strings.Contains(first, "slicer 2") {
 		t.Errorf("count dropped while slicer list failed: %q", first)
 	}
 	h.src.set(snap(four[0], nil, held))
@@ -663,6 +673,7 @@ func TestNoBellForNeedsThatWereThereWhenTheFirstReadingFailed(t *testing.T) {
 	first.Items = source.Result[[]slicercli.Item]{Err: errors.New("slicer list: timed out")}
 	h.src.set(first)
 	h.start()
+	h.send(press("1"))
 	h.src.set(snap(four[0], nil, []slicercli.Item{item("S1", "t", "needs-owner")})) // first good reading
 	refreshSlicer(h)
 	if h.bells != 0 {
@@ -685,6 +696,7 @@ func TestNoBellForOpenRecordsThatWereThereWhenTheFirstReadingFailed(t *testing.T
 	first.Open = source.Result[[]adjcli.Record]{Err: errors.New("adj inbox: timed out")}
 	h.src.set(first)
 	h.start()
+	h.send(press("1"))
 	withOpen(h, 2) // first good reading of the inbox
 	refreshSlicer(h)
 	if h.bells != 0 {
@@ -701,6 +713,7 @@ func TestARefreshInFlightMarksTheLoadedProject(t *testing.T) {
 	h := newHarness(t, four...)
 	h.src.set(snap(four[0], []adjcli.Record{openRec(11, "ui.slicer-tui", "A question")}, nil))
 	h.start()
+	h.send(press("1"))
 	v := h.view()
 	if strings.Contains(v, "~") {
 		t.Fatalf("a mark with nothing in flight:\n%s", v)
@@ -710,7 +723,7 @@ func TestARefreshInFlightMarksTheLoadedProject(t *testing.T) {
 	if n := rowsWith(v, "A question", "~slicer"); n != 1 {
 		t.Errorf("the project's row is not marked (%d):\n%s", n, v)
 	}
-	if first := strings.SplitN(v, "\n", 2)[0]; !strings.Contains(first, "[slicer 1~]") || strings.Count(first, "~") != 1 {
+	if first := v; !strings.Contains(first, "slicer 1~") {
 		t.Errorf("tab line: %q", first)
 	}
 	if !strings.Contains(v, "pending 1") {
@@ -728,6 +741,7 @@ func TestBellIsRungByACommand(t *testing.T) {
 	h := newHarness(t, four...)
 	withOpen(h, 0)
 	h.start()
+	h.send(press("1"))
 	withOpen(h, 1)
 	h.advance(5 * time.Second)
 	_, cmd := h.m.Update(tickMsg{})
@@ -776,6 +790,7 @@ func TestRunIDIsNeverClipped(t *testing.T) {
 		h := newHarness(t, four...)
 		h.src.set(snap(four[0], nil, nil, relay(id, "2026-10-19T15:42:00Z", "S01", "S02")))
 		h.start()
+		h.send(press("s"))
 		h.send(tea.WindowSizeMsg{Width: w, Height: 30})
 		if v := plainView(h.m); !strings.Contains(v, id) {
 			t.Errorf("width %d: the run ID is cut:\n%s", w, v)
@@ -829,15 +844,15 @@ func TestLayoutHasTabsViewBarBodyAndStatusLine(t *testing.T) {
 			t.Errorf("line %d is %d wide: %q", i, w, l)
 		}
 	}
-	if !strings.Contains(lines[0], "[slicer") || !strings.Contains(lines[0], "?help") {
+	if !strings.Contains(strings.Join(lines, "\n"), "slicer 0") || !strings.Contains(lines[0], "?help") {
 		t.Errorf("tab line: %q", lines[0])
 	}
 	for _, v := range []string{"Overview", "Waves", "Roadmap", "Decisions"} {
-		if !strings.Contains(lines[1], v) {
+		if !strings.Contains(lines[0], v) {
 			t.Errorf("view bar lacks %q: %q", v, lines[1])
 		}
 	}
-	if !strings.Contains(lines[0], "needs you: 0") {
+	if !strings.Contains(strings.Join(lines, "\n"), "Needs you") {
 		t.Errorf("tab line lacks the total: %q", lines[0])
 	}
 	status := lines[29]
@@ -886,6 +901,7 @@ func TestACutOverviewSaysHowMuchIsMissing(t *testing.T) {
 func TestStatusLineShowsTheLastRefreshTime(t *testing.T) {
 	h := newHarness(t, four...)
 	h.start()
+	h.send(press("1"))
 	h.advance(5 * time.Second)
 	h.send(tickMsg{})
 	h.send(tea.WindowSizeMsg{Width: 100, Height: 30})

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// Package tui is ork's terminal UI: project tabs, the Overview and the status
+// Package tui is ork's terminal UI: project sidebar, the Overview and the status
 // line. It reads state only through source.Source and never writes: no key
 // here runs a slicer, adj or git write command.
 package tui
@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"charm.land/bubbles/v2/help"
@@ -59,24 +60,29 @@ type projectState struct {
 	hasOpen bool // Open has had a good reading
 	hasHeld bool // Items has had a good reading
 	running bool
+	dirty   bool
 }
 
 func (p *projectState) needs() int { return p.open + p.held }
 
 // Model is the Bubble Tea model of the whole TUI.
 type Model struct {
-	cfg         Config
-	keys        keyMap
-	help        help.Model
-	projects    []*projectState
-	byName      map[string]*projectState
-	poller      *poll.Poller
-	active      int
-	showHelp    bool
-	width       int
-	height      int
-	lastRefresh time.Time
-	listening   bool // the daemon's notice feed is being listened to (S13)
+	cfg           Config
+	keys          keyMap
+	help          help.Model
+	projects      []*projectState
+	byName        map[string]*projectState
+	poller        *poll.Poller
+	active        int // -1 is Needs you; otherwise registry index
+	sidebarHidden bool
+	filtering     bool
+	filter        string
+	focusing      bool
+	showHelp      bool
+	width         int
+	height        int
+	lastRefresh   time.Time
+	listening     bool // the daemon's notice feed is being listened to (S13)
 }
 
 // New returns a Model that has not fetched anything. Init starts the fetches.
@@ -98,7 +104,7 @@ func New(cfg Config) *Model {
 	if cfg.Bell == nil {
 		cfg.Bell = func() { fmt.Fprint(os.Stderr, "\a") }
 	}
-	m := &Model{cfg: cfg, keys: newKeyMap(), byName: map[string]*projectState{}}
+	m := &Model{active: -1, cfg: cfg, keys: newKeyMap(), byName: map[string]*projectState{}}
 	m.help = help.Model{
 		ShortSeparator: "  ",
 		FullSeparator:  "    ",
@@ -117,16 +123,14 @@ func New(cfg Config) *Model {
 		names = append(names, p.Name)
 	}
 	m.poller = poll.New(cfg.Schedule, names...)
-	if len(names) > 0 {
-		m.poller.SetVisible(names[0])
-	}
+
 	return m
 }
 
 // Init fetches every project, starts the schedule and tells the daemon which
 // project is in view.
 func (m *Model) Init() tea.Cmd {
-	return tea.Batch(m.tick(m.cfg.Now()), m.focus())
+	return m.tick(m.cfg.Now())
 }
 
 // focus tells the daemon which project the owner sees, so it reads that one
@@ -136,9 +140,17 @@ func (m *Model) focus() tea.Cmd {
 	if live == nil || len(m.projects) == 0 {
 		return nil
 	}
-	name := m.projects[m.active].reg.Name
+	names := []string{}
+	if m.active >= 0 {
+		names = append(names, m.projects[m.active].reg.Name)
+	} else {
+		for _, p := range m.projects {
+			names = append(names, p.reg.Name)
+		}
+	}
+	m.focusing = true
 	return func() tea.Msg {
-		return focusMsg{err: live.Focus(context.Background(), []string{name})}
+		return focusMsg{err: live.Focus(context.Background(), names)}
 	}
 }
 
@@ -156,6 +168,9 @@ func (m *Model) listen() tea.Cmd {
 // check.
 func (m *Model) tick(now time.Time) tea.Cmd {
 	var cmds []tea.Cmd
+	if m.cfg.Live != nil && !m.listening && !m.focusing {
+		cmds = append(cmds, m.focus())
+	}
 	for _, name := range m.poller.Due(now) {
 		if c := m.fetch(name, false); c != nil {
 			cmds = append(cmds, c)
@@ -194,6 +209,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case snapshotMsg:
 		return m, m.apply(msg)
 	case focusMsg:
+		m.focusing = false
 		// The feed starts once the daemon has the first focus, and a notice
 		// that failed it stopped the feed: a focus that works starts it again.
 		if msg.err == nil && !m.listening && m.cfg.Live != nil {
@@ -205,6 +221,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.listening = false
 			return m, nil
 		}
+		if ps := m.byName[msg.project]; ps != nil && m.poller.InFlight(msg.project) {
+			ps.dirty = true
+		}
 		return m, tea.Batch(m.fetch(msg.project, false), m.listen())
 	case tea.KeyPressMsg:
 		return m, m.key(msg)
@@ -213,38 +232,73 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
+	if m.filtering {
+		switch msg.String() {
+		case "ctrl+c":
+			return tea.Quit
+		case "esc":
+			m.filtering = false
+			m.filter = ""
+		case "enter":
+			m.filtering = false
+		case "backspace":
+			r := []rune(m.filter)
+			if len(r) > 0 {
+				m.filter = string(r[:len(r)-1])
+			}
+		default:
+			if msg.Text != "" {
+				m.filter += msg.Text
+			}
+		}
+		return nil
+	}
 	switch {
+	case key.Matches(msg, m.keys.Filter):
+		m.filtering = true
+	case key.Matches(msg, m.keys.Sidebar):
+		m.sidebarHidden = !m.sidebarHidden
 	case key.Matches(msg, m.keys.Quit):
 		return tea.Quit
 	case key.Matches(msg, m.keys.Help):
 		m.showHelp = !m.showHelp
 	case key.Matches(msg, m.keys.Close):
 		m.showHelp = false
+		m.filter = ""
 	case key.Matches(msg, m.keys.Next):
-		return m.switchTo(m.active + 1)
+		return m.move(1)
 	case key.Matches(msg, m.keys.Prev):
-		return m.switchTo(m.active - 1)
+		return m.move(-1)
 	case key.Matches(msg, m.keys.Jump):
 		if n := int(msg.String()[0] - '1'); n < len(m.projects) {
 			return m.switchTo(n)
 		}
 	case key.Matches(msg, m.keys.Refresh):
-		if len(m.projects) > 0 {
+		if m.active >= 0 {
 			return m.fetch(m.projects[m.active].reg.Name, true)
 		}
+		var cmds []tea.Cmd
+		for _, p := range m.projects {
+			cmds = append(cmds, m.fetch(p.reg.Name, true))
+		}
+		return tea.Batch(cmds...)
 	}
 	return nil
 }
 
-// switchTo shows project i (wrapping around), makes it the fast-polled one,
-// and returns the command that tells the daemon which project that is.
+// switchTo selects registry project i, or Needs you at -1, and updates polling.
+// It returns the command that tells the daemon which projects are visible.
 func (m *Model) switchTo(i int) tea.Cmd {
 	n := len(m.projects)
 	if n == 0 {
 		return nil
 	}
-	m.active = (i%n + n) % n
-	m.poller.SetVisible(m.projects[m.active].reg.Name)
+	m.active = i
+	if i >= 0 {
+		m.poller.SetVisible(m.projects[i].reg.Name)
+	} else {
+		m.poller.SetVisible("")
+	}
 	return m.focus()
 }
 
@@ -278,11 +332,16 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 	if msg.snap.Runs.Err == nil {
 		ps.running = len(msg.snap.Runs.Value) > 0
 	}
+	var cmds []tea.Cmd
+	if ps.dirty {
+		ps.dirty = false
+		cmds = append(cmds, m.fetch(msg.name, false))
+	}
 	if rose {
 		bell := m.cfg.Bell
-		return func() tea.Msg { bell(); return nil }
+		cmds = append(cmds, func() tea.Msg { bell(); return nil })
 	}
-	return nil
+	return tea.Batch(cmds...)
 }
 
 func countHeld(items []slicercli.Item) int {
@@ -302,4 +361,34 @@ func isHeld(it slicercli.Item) bool {
 		}
 	}
 	return false
+}
+
+// navigation lists registry indices in stable priority order, with Needs you first.
+func (m *Model) navigation() []int {
+	out := []int{-1}
+	for group := 0; group < 3; group++ {
+		for i, p := range m.projects {
+			rank := 2
+			if p.needs() > 0 {
+				rank = 0
+			} else if p.running {
+				rank = 1
+			}
+			if rank == group && (i == m.active || strings.Contains(strings.ToLower(p.reg.Name), strings.ToLower(m.filter))) {
+				out = append(out, i)
+			}
+		}
+	}
+	return out
+}
+func (m *Model) move(delta int) tea.Cmd {
+	nav := m.navigation()
+	pos := 0
+	for i, n := range nav {
+		if n == m.active {
+			pos = i
+			break
+		}
+	}
+	return m.switchTo(nav[(pos+delta+len(nav))%len(nav)])
 }

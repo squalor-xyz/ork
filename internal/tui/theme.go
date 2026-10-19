@@ -48,7 +48,7 @@ func NewTheme(mono bool) Theme {
 	}
 	return Theme{
 		Title:      s().Bold(true),
-		TabActive:  s().Bold(true).Foreground(lipgloss.Color("15")).Background(lipgloss.Color("4")),
+		TabActive:  s().Bold(true).Reverse(true).Foreground(lipgloss.Color("15")).Background(lipgloss.Color("4")),
 		TabIdle:    s(),
 		Badge:      s().Bold(true).Foreground(lipgloss.Color("3")),
 		ViewActive: s().Bold(true).Foreground(lipgloss.Color("6")),
