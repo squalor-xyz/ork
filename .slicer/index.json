@@ -904,6 +904,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "95e7348e-b746-4abd-9ee6-05a4171f3849",
+          "kind": "",
+          "text": "**2026-10-19** — From S13 (2026-10-19): daemon start failures are invisible (the child's stdio goes to /dev/null), so log the child's stderr to ~/.local/state/ork/daemon.log or report it from the start wait; ork daemon run is missing from the usage text; the integration review's check that two open TUIs do not double CLI calls was never added.",
+          "created_at": "2026-10-19T15:06:03Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -963,7 +974,19 @@
       "depends_on": [
         "S13"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "5b4b364a-b634-424b-a77b-db55bdca2029",
+          "kind": "",
+          "text": "**2026-10-19** — From S13 (2026-10-19), TUI connection gaps to fix with the sidebar work: the TUI never re-dials the request connection, so a daemon that dies mid-session fails every snapshot until ork restarts; the notice feed stays off after a Next error until the next project switch; focusing a removed project returns not_found and leaves the feed off; each focus change dials a new notice connection; a notice is dropped if a fetch for that project is in flight; one request connection serializes snapshot and refresh, so a slow r delays other projects. The registry is still loaded in the TUI process.",
+          "created_at": "2026-10-19T15:06:03Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",

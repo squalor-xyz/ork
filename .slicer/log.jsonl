@@ -126,3 +126,5 @@
 {"when": "2026-10-19T15:04:03Z", "item": "S13", "action": "status", "from": "started", "to": "done", "note": "Wires ork dispatch, the detached daemon start with a 2 s ErrAlreadyRunning retry, and the TUI on the daemon socket via daemon.Feed; 460 tests green under -race; HUMAN CHECK pending.", "by": "Jon R"}
 {"when": "2026-10-19T15:02:52Z", "item": "S19", "action": "add", "from": "", "to": "open", "note": "Project sidebar in place of tabs"}
 {"when": "2026-10-19T15:02:52Z", "item": "S20", "action": "add", "from": "", "to": "open", "note": "Overview rows: collapse setup errors, one line per row"}
+{"when": "2026-10-19T15:06:03Z", "item": "S19", "action": "note", "from": "", "to": "", "note": "From S13 (2026-10-19), TUI connection gaps to fix with the s", "by": "Jon R"}
+{"when": "2026-10-19T15:06:03Z", "item": "S17", "action": "note", "from": "", "to": "", "note": "From S13 (2026-10-19): daemon start failures are invisible (", "by": "Jon R"}
