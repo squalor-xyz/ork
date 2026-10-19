@@ -48,7 +48,7 @@
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 1 | [S01](slices/S01.md) | Vendor spike | S `[needs-owner]` | 1 |  |  | — |
+| 1 | [S01](slices/S01.md) | Vendor spike | S | 1 |  |  | — |
 | 2 | S02 | Core and read-only dashboard | L | 3 |  |  | — |
 | 3 | S03 | Daemon and CLI | M | 2 |  |  | — |
 | 4 | S04 | Single-slice engine | L | 3 |  |  | — |

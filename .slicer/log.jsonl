@@ -44,3 +44,7 @@
 {"when": "2026-10-18T22:37:50Z", "item": "S01", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-10-18T22:37:58Z", "item": "S01", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-10-18T22:37:58Z", "item": "S01", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-10-19T00:42:41Z", "item": "relay-roles", "action": "relay-roles", "from": "", "to": "", "note": "init"}
+{"when": "2026-10-19T00:42:48Z", "item": "relay-roles.r10", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
+{"when": "2026-10-19T00:42:54Z", "item": "relay-roles.u9", "action": "relay-roles", "from": "", "to": "", "note": "rule-add"}
+{"when": "2026-10-19T00:42:55Z", "item": "S01", "action": "decide", "from": "", "to": "", "note": "Owner 2026-10-18: spike budget approved, about 6 calls per v", "by": "Jon R"}

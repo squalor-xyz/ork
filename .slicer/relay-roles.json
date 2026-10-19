@@ -1,0 +1,254 @@
+{
+  "version": 3,
+  "rows": [
+    {
+      "id": "r8",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": true
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "haiku",
+      "reasoning": "xhigh",
+      "note": "per sliver"
+    },
+    {
+      "id": "r1",
+      "role": "implementer",
+      "when": {
+        "size": [
+          "S",
+          "M"
+        ],
+        "effort": [
+          1
+        ],
+        "importance": [],
+        "urgency": [],
+        "well_specified": true,
+        "split": false,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "haiku",
+      "reasoning": "xhigh",
+      "note": ""
+    },
+    {
+      "id": "r2",
+      "role": "implementer",
+      "when": {
+        "size": [
+          "S"
+        ],
+        "effort": [
+          2
+        ],
+        "importance": [],
+        "urgency": [],
+        "well_specified": true,
+        "split": false,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "haiku",
+      "reasoning": "xhigh",
+      "note": ""
+    },
+    {
+      "id": "r3",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": false,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "sonnet",
+      "reasoning": "high",
+      "note": "anything the rows above do not match"
+    },
+    {
+      "id": "r4",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": true,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "haiku",
+      "reasoning": "xhigh",
+      "note": "per part of a split slice"
+    },
+    {
+      "id": "r9",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Codex",
+      "vendor": "OpenAI",
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "note": "alternate implementer for any slice, split part or sliver"
+    },
+    {
+      "id": "r5",
+      "role": "reviewer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "opus",
+      "reasoning": "medium",
+      "note": ""
+    },
+    {
+      "id": "r6",
+      "role": "gate",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "opus",
+      "reasoning": "medium",
+      "note": ""
+    },
+    {
+      "id": "r7",
+      "role": "architect",
+      "when": {
+        "size": [
+          "L"
+        ],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "opus",
+      "reasoning": "high",
+      "note": ""
+    },
+    {
+      "id": "r10",
+      "role": "orchestrator",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "sonnet",
+      "reasoning": "high",
+      "note": "default orchestrator"
+    },
+    {
+      "id": "r11",
+      "role": "orchestrator",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Codex",
+      "vendor": "OpenAI",
+      "model": "gpt-6.1-sol",
+      "reasoning": "high",
+      "note": "alternate orchestrator"
+    }
+  ],
+  "rules": [
+    {
+      "id": "u1",
+      "text": "A reviewer never wrote code in the slice it reviews."
+    },
+    {
+      "id": "u2",
+      "text": "No cross-vendor reviewer unless the owner asks."
+    },
+    {
+      "id": "u3",
+      "text": "Roles on the orchestrator's own agent run as subagents; a role on another agent runs headless in the slice worktree with the same brief."
+    },
+    {
+      "id": "u4",
+      "text": "\"well specified\" means the slice names its files, failing tests, implementation steps and checks, and needs no open owner decision."
+    },
+    {
+      "id": "u5",
+      "text": "Split a slice only into parts with disjoint files and their own tests; a slice too big for one implementer is two slices or a slivered slice."
+    },
+    {
+      "id": "u6",
+      "text": "Sliver a slice only at effort 1, or at effort 2 when every sliver is effort 1; never at effort 3."
+    },
+    {
+      "id": "u7",
+      "text": "Slivers with disjoint files and their own tests may run in parallel, at most 3 at once; the rest run in order."
+    },
+    {
+      "id": "u8",
+      "text": "A sliver that fails its gate twice, or whose diff falls short of the orchestrator's check, moves to the next model up (haiku to sonnet high)."
+    },
+    {
+      "id": "u9",
+      "text": "The orchestrator reads a Haiku implementer's diff itself before review, and switches that role to Sonnet early when quality falls short."
+    }
+  ],
+  "next_row": 12,
+  "next_rule": 10
+}

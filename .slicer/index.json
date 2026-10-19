@@ -20,13 +20,23 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "1f0bcb20-74d6-4a60-9880-74d3e148294b",
+          "kind": "decision",
+          "text": "**2026-10-19** — Owner 2026-10-18: spike budget approved, about 6 calls per vendor, trivial prompts, each vendor's cheapest model, in a throwaway repo under the scratch directory.",
+          "created_at": "2026-10-19T00:42:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "",
