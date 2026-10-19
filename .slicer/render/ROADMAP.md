@@ -70,4 +70,4 @@
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 18 | [S18](slices/S18.md) | ork logos | S | - |  |  | — |
+| 18 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | — |
