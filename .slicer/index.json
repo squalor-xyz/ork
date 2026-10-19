@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 18,
+  "next_id": 19,
   "preamble": "",
   "passes": [
     {
@@ -716,12 +716,24 @@
       "id": "S14",
       "title": "Port the TUI to Charm v2",
       "short_title": "Charm v2 port",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S11"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "0eda52fd-a791-4eef-b6cd-90bc1176e30e",
+          "kind": "",
+          "text": "**2026-10-19** — Owner decision ui.no-color is adj record 76 (renumbered from 72 after merging main, where plan.s04-cut holds 72): NO_COLOR removes colour, the mono theme's bold, faint and reverse stay. Later: add a test that tea.KeyReleaseMsg is ignored (reviewer and gate, low).",
+          "created_at": "2026-10-19T13:17:15Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -739,7 +751,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -855,6 +867,34 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S18",
+      "title": "Create logo images for ork",
+      "short_title": "ork logos",
+      "status": "done",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 3,
+        "effort": 1,
         "attempts": 0
       }
     }

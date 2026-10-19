@@ -2,7 +2,7 @@
 
 package tui
 
-import "github.com/charmbracelet/bubbles/key"
+import "charm.land/bubbles/v2/key"
 
 // keyMap is every key the TUI answers. It also feeds the help view. None of
 // them writes anything (slice S11 has no write action).

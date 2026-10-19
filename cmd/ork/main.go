@@ -11,8 +11,7 @@ import (
 	"os"
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/registry"
@@ -30,8 +29,8 @@ func main() {
 
 // runTUI shows the TUI on the alternate screen until the owner quits.
 func runTUI(cfg tui.Config) error {
-	cfg.Theme = tui.ThemeFor(os.Getenv, lipgloss.DefaultRenderer())
-	_, err := tea.NewProgram(tui.New(cfg), tea.WithAltScreen()).Run()
+	cfg.Theme = tui.ThemeFor(os.Getenv)
+	_, err := tea.NewProgram(tui.New(cfg)).Run()
 	return err
 }
 

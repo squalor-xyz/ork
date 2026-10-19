@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
 // Size used until the terminal reports its own.
@@ -19,10 +20,17 @@ const (
 // view bar, two rules and the status line.
 const chrome = 5
 
-// View implements tea.Model. It returns exactly height lines, none wider than
+// View implements tea.Model. The view runs on the alternate screen.
+func (m *Model) View() tea.View {
+	v := tea.NewView(m.screen())
+	v.AltScreen = true
+	return v
+}
+
+// screen is the text of the view. It has exactly height lines, none wider than
 // width, laid out as in docs/dashboard.md: tabs, view bar, active view, status
 // line.
-func (m *Model) View() string {
+func (m *Model) screen() string {
 	w, h := m.width, m.height
 	if w <= 0 {
 		w = defaultWidth
@@ -119,7 +127,7 @@ func (m *Model) statusLine() string {
 // helpLines is the key list shown in place of the Overview.
 func (m *Model) helpLines(w int) []string {
 	th := m.cfg.Theme
-	m.help.Width = w
+	m.help.SetWidth(w)
 	lines := []string{th.Heading.Render("Keys"), ""}
 	lines = append(lines, strings.Split(m.help.View(m.keys), "\n")...)
 	lines = append(lines, "", th.Dim.Render("Only the Overview exists so far. Waves, Roadmap and Decisions come in later slices."))
