@@ -1,0 +1,41 @@
+{
+  "id": "S03",
+  "title": "Daemon, socket and JSON CLI (ork status)",
+  "lead": [
+    "The ork daemon, its Unix socket protocol, and the first CLI commands, as\npackages tested without the binary (`plan.s03-wiring`)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** cmd/ork, the TUI, wave, approve, answer and stop, and any vendor call.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The daemon owns runs so the TUI can close and reopen (`daemon.lifetime`),\nstarts on demand (`daemon.start`), and every command takes `--json`\n(`cli.json`). S04's engine runs inside it."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/ipc/` (new): socket server and client, one JSON message per line.\n- `internal/daemon/` (new): lifecycle (pidfile, stale socket, single\n  instance, idle exit) and the request handlers.\n- `internal/cli/` (new): argument parsing and output for `status`,\n  `projects add|list|rm`, `roles print [ROLE]` and `doctor`\n  (`cli.s03-commands`), as `Run(ctx, args, stdout, stderr) int`.\n- `internal/registry/`: add `daemon_idle_minutes`, registry version 2;\n  version 1 files still load (`registry.unknown-keys`).\n- `internal/clirun/`: the S02 note on S03 (grandchild holding stdout).\n- `docs/design.md`: the CLI and Shape sections, if the protocol differs.\n- Not `cmd/ork`, `internal/tui` or `internal/source` (S11 and S13)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- ipc: a request `{\"id\",\"method\",\"params\"}` gets `{\"id\",\"result\"}` or\n  `{\"id\",\"error\":{\"code\",\"message\"}}`; a slicer or adj ToolError keeps its\n  code and message across the socket (S02 note).\n- ipc: the socket file is mode 0600; its directory is created 0700.\n- daemon: a live daemon refuses a second one; a stale socket with a dead\n  pid in the pidfile is removed and replaced.\n- daemon: with a fake clock it exits after `daemon_idle_minutes` (default\n  10, 0 means default) with no client connected; a connected client\n  resets the timer (`daemon.idle`). The wave condition is a stub until S04.\n- cli: when no daemon answers, `Run` calls an injected start function once\n  and retries; a start failure prints the error and exits 1.\n- cli: `status --json` lists each project with its needs-you count and\n  active relays, from the daemon's Source snapshot.\n- cli: `projects add PATH [--name N]` sets `adj` from `.adjudicate.json`,\n  refuses a duplicate name or a non-absolute path; `rm NAME`; `list`.\n  Writes go through the daemon, which saves the registry.\n- cli: `roles print` prints all four prompts; `roles print gate` one; an\n  unknown role exits 2 with its name.\n- cli: `doctor --json` reports slicer, adj, claude, codex and grok presence\n  and `--version` output, and the contract pin against the first line of\n  `slicer ai relay` (`boundary.contract`), with one fake CLI per check.\n  It makes no vendor model call.\n- registry: version 1 files load; saves write version 2.\n- clirun: a child that exits 0 while a grandchild holds stdout returns\n  within the deadline with its output, and the group is killed.\n- Exit codes: 0 ok, 1 failure, 2 usage."
+    },
+    {
+      "heading": "Implement",
+      "body": "- Socket `$XDG_STATE_HOME/ork/ork.sock`, else `~/.local/state/ork/ork.sock`;\n  pidfile `ork.pid` beside it. macOS limits socket paths to 104 bytes, so\n  tests use a short temp directory.\n- Handlers call S02's `source.Direct`; S13 points the TUI at the client.\n- Text output is plain and stable; `--json` output is documented in\n  `docs/design.md` CLI."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race ./...`, `go vet ./...`, `gofmt -l .` clean; SPDX headers.\n- `go.mod` gains no dependency.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"S03: daemon, socket protocol and CLI\"."
+    }
+  ],
+  "notes": []
+}

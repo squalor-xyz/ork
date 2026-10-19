@@ -1,0 +1,41 @@
+{
+  "id": "S13",
+  "title": "Wire the daemon, CLI and TUI into the ork binary",
+  "lead": [
+    "`cmd/ork` dispatches subcommands to `internal/cli`, starts the daemon on\ndemand by re-executing itself as `ork daemon run`, and the TUI reads\nthrough the socket client instead of `source.Direct` (`dash.pre-daemon`)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** new commands or screens.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S03 and S11 were built apart so they could run in parallel\n(`plan.s03-wiring`); this joins them."
+    },
+    {
+      "heading": "Files",
+      "body": "- `cmd/ork/main.go`, `internal/tui/` (the Source it is given), and an\n  `internal/ipc` Source client if S03 did not add one."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `ork` with no arguments opens the TUI; `ork status` etc. reach\n  `internal/cli`; `ork daemon run` serves the socket.\n- The TUI's Source over a real in-process socket returns the same snapshot\n  as `source.Direct` on the same fakes."
+    },
+    {
+      "heading": "Implement",
+      "body": "- The start function execs `os.Executable()` with `daemon run`, detached\n  in its own process group, and waits for the socket up to 5 s."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race ./...`, `go vet ./...`, `gofmt -l .` clean.\n- [HUMAN CHECK] The owner runs `ork`, closes it, runs `ork status`, and\n  sees the daemon exit 10 minutes after the last client.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"S13: wire daemon, CLI and TUI into the binary\"."
+    }
+  ],
+  "notes": []
+}
