@@ -2,7 +2,7 @@
 {
   "id": 6,
   "title": "How does ork track slicer's relay contract without a drifting copy?",
-  "status": "decided",
+  "status": "superseded",
   "key": "boundary.contract",
   "asked_by": "claude",
   "decided_by": "jon",
@@ -25,6 +25,7 @@
   },
   "decision": "version-check",
   "rationale": "Owner interview 2026-10-18: pin to a contract version and refuse on mismatch; also file a slicer item for the machine-readable contract parts in ai relay --json.",
+  "superseded_by": 67,
   "history": [
     {
       "date": "2026-10-18",
@@ -33,6 +34,11 @@
     {
       "date": "2026-10-18",
       "event": "decide"
+    },
+    {
+      "date": "2026-10-19",
+      "event": "supersede",
+      "note": "by 67"
     }
   ]
 }

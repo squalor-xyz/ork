@@ -294,7 +294,7 @@ ork doctor                  check versions, CLIs, logins, contract
 - the slicer and adj versions;
 - each vendor CLI is present and logged in (by running a trivial command,
   without reading credentials);
-- the slicer contract version against ork's pin (`boundary.contract`);
+- the slicer contract version against ork's accepted set (`boundary.contract`);
 - each project's check command and patterns.
 
 ## Testing

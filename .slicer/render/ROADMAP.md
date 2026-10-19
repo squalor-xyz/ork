@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-14 items · — 10 · done 4
+15 items · — 11 · done 4
 
 ## v1
 
@@ -62,3 +62,4 @@
 | 12 | [S12](slices/S12.md) | Roadmap and Decisions screens | M | 2 |  |  | — |
 | 13 | [S13](slices/S13.md) | Wire binary and socket | S | 1 |  |  | — |
 | 14 | [S14](slices/S14.md) | Charm v2 port | S | 1 |  |  | — |
+| 15 | [S15](slices/S15.md) | Snapshot cache | S | 1 |  |  | — |

@@ -33,9 +33,10 @@ Order, and the orchestrator's rules. Its role prompts are ork's own text,
 seeded from contract v7 (`roles.prompt-seed`). Two things keep them in line
 (`boundary.contract`):
 
-1. ork pins the contract version it implements. `ork doctor` and every wave
-   launch compare that pin with `slicer ai relay --json`, and refuse on a
-   mismatch.
+1. ork lists the contract versions it supports (an accepted set, v7 today).
+   `ork doctor` and every wave launch compare slicer's version with that
+   set and refuse any other. Adding a version means checking what the bump
+   changed (slicer s382 moves v7 to v8).
 2. A slicer item asks for the machine-readable parts of the contract in
    `ai relay --json`: the Order steps, the report fields, the outcomes and
    the stop rules. Once slicer has them, ork validates against slicer's own

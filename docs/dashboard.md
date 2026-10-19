@@ -50,8 +50,11 @@ tab number is the open adj records plus the slicer items flagged
 `needs-owner`, and the terminal bell rings when a project's number rises
 past an earlier good reading (`ui.notify`). Keys: `tab`/`right` and
 `shift+tab`/`left` switch project, `1`-`9` jump to one, `r` refreshes the
-visible project now, `?` shows the keys, `q` quits. The TUI polls the visible
-project every 5 s and the others every 30 s (`dash.refresh`). `NO_COLOR`
+visible project now, `?` shows the keys, `q` quits. Items and runs refresh
+every 5 s for the visible project and every 30 s for the others; goals and
+decided records every 5 min, on a git HEAD change, on tab open and on `r`
+(`dash.refresh`). From S15 the daemon serves one shared in-memory snapshot
+and pushes changes (`dash.cache`). `NO_COLOR`
 selects the monochrome theme.
 
 ## Overview (all projects)

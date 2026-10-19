@@ -5,7 +5,7 @@ better integrate slicer and adj tools?" This report answers that question,
 checks the roadmap against the answer, and lists what ork, slicer and adj
 would each change. Note added on landing: "S14" in this report means the
 proposed cache item; slicer gave S14 to the Charm v2 port filed after the
-report was written, so the cache item takes the next free ID when filed.
+report was written, so the cache item was filed as S15.
 Nothing here is decided. Everything ork, slicer or adj
 would add is *proposed* until an adj record decides it.
 

@@ -143,7 +143,7 @@ v1 is the monitoring dashboard plus launching and supervising slice waves
 | Risk | Mitigation |
 |---|---|
 | Three vendors and automatic fallback in v1 widen the surface a lot | A vendor capability spike first (design.md, Vendors); fallback only on classified rate limits, everything else stops for the owner (`vendor.ratelimit-detection`) |
-| ork's Go engine and slicer's prose contract drift | Pin the contract version and refuse on mismatch; slicer item for machine-readable contract parts (`boundary.contract`) |
+| ork's Go engine and slicer's prose contract drift | Accept only listed contract versions and refuse others; slicer item for machine-readable contract parts (`boundary.contract`) |
 | Embedded role prompts drift from the agents repo's copies | ork is canonical; the agents repo generates from `ork roles print` (`roles.prompts`) |
 | Host-run agents with scoped permissions can still do damage | Per-role allowlists, read-only fingerprint, worktree per slice, commit only on slice branches, owner checkpoints |
 | Split and slivers add parallelism inside a slice | Build them after single-implementer slices pass end to end (design.md, Build order) |

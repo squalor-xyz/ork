@@ -84,3 +84,8 @@
 {"when": "2026-10-19T04:01:36Z", "item": "S14", "action": "add", "from": "", "to": "open", "note": "Port the TUI to Charm v2"}
 {"when": "2026-10-19T04:01:44Z", "item": "S12", "action": "set", "from": "", "to": "", "note": "depends_on S11→S11,S14"}
 {"when": "2026-10-19T04:01:44Z", "item": "S13", "action": "set", "from": "", "to": "", "note": "depends_on S03,S11→S03,S11,S14"}
+{"when": "2026-10-19T04:04:18Z", "item": "S15", "action": "add", "from": "", "to": "open", "note": "Daemon snapshot cache and per-part refresh"}
+{"when": "2026-10-19T04:04:18Z", "item": "S13", "action": "set", "from": "", "to": "", "note": "depends_on S03,S11,S14→S03,S11,S14,S15"}
+{"when": "2026-10-19T04:04:18Z", "item": "S04", "action": "note", "from": "", "to": "", "note": "From the integration review 2026-10-19: check the contract a", "by": "Jon R"}
+{"when": "2026-10-19T04:04:18Z", "item": "S09", "action": "note", "from": "", "to": "", "note": "From the integration review: after a merge, render files can", "by": "Jon R"}
+{"when": "2026-10-19T04:04:18Z", "item": "S03", "action": "note", "from": "", "to": "", "note": "From the integration review: as built, every request re-runs", "by": "Jon R"}
