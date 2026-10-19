@@ -7,6 +7,7 @@ package tui
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"charm.land/bubbles/v2/key"
 	tea "charm.land/bubbletea/v2"
 
+	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/poll"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/slicercli"
@@ -65,6 +67,20 @@ type projectState struct {
 
 func (p *projectState) needs() int { return p.open + p.held }
 
+// setup reports whether the project is loaded and has no .slicer/ folder.
+func (p *projectState) setup() bool { return p.loaded && isSetup(p.snap) }
+
+// isSetup reports whether slicer says the project has no .slicer/ folder: its
+// items or runs call failed with that error.
+func isSetup(s source.Snapshot) bool { return noSlicerErr(s.Items.Err) || noSlicerErr(s.Runs.Err) }
+
+// noSlicerErr reports whether err is slicer's "no .slicer/ folder" error. slicer
+// has no code of its own for it: it is the state code with that message.
+func noSlicerErr(err error) bool {
+	var te *clirun.ToolError
+	return errors.As(err, &te) && te.Code == "state" && strings.HasPrefix(te.Message, "no .slicer/ found")
+}
+
 // Model is the Bubble Tea model of the whole TUI.
 type Model struct {
 	cfg           Config
@@ -74,6 +90,7 @@ type Model struct {
 	byName        map[string]*projectState
 	poller        *poll.Poller
 	active        int // -1 is Needs you; otherwise registry index
+	cursor        int // the Overview row under the cursor; drawn clamped to the rows there are
 	sidebarHidden bool
 	filtering     bool
 	filter        string
@@ -269,6 +286,14 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return m.move(1)
 	case key.Matches(msg, m.keys.Prev):
 		return m.move(-1)
+	case key.Matches(msg, m.keys.RowNext):
+		m.moveRow(1)
+	case key.Matches(msg, m.keys.RowPrev):
+		m.moveRow(-1)
+	case key.Matches(msg, m.keys.Select):
+		if r, ok := m.selectedRow(); ok {
+			return m.switchTo(r.project)
+		}
 	case key.Matches(msg, m.keys.Jump):
 		if n := int(msg.String()[0] - '1'); n < len(m.projects) {
 			return m.switchTo(n)
@@ -294,6 +319,7 @@ func (m *Model) switchTo(i int) tea.Cmd {
 		return nil
 	}
 	m.active = i
+	m.cursor = 0
 	if i >= 0 {
 		m.poller.SetVisible(m.projects[i].reg.Name)
 	} else {
@@ -317,21 +343,27 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 	m.lastRefresh = now
 
 	rose := false
-	if msg.snap.Open.Err == nil {
-		n := len(msg.snap.Open.Value)
-		rose = rose || (ps.hasOpen && n > ps.open)
-		ps.open, ps.hasOpen = n, true
-	}
-	if msg.snap.Items.Err == nil {
-		n := countHeld(msg.snap.Items.Value)
-		rose = rose || (ps.hasHeld && n > ps.held)
-		ps.held, ps.hasHeld = n, true
+	if isSetup(msg.snap) {
+		// No .slicer/ folder: the project counts for nothing and rings nothing.
+		// Its counts reset, so the first reading after a setup is a baseline.
+		ps.open, ps.hasOpen, ps.held, ps.hasHeld, ps.running = 0, false, 0, false, false
+	} else {
+		if msg.snap.Open.Err == nil {
+			n := len(msg.snap.Open.Value)
+			rose = rose || (ps.hasOpen && n > ps.open)
+			ps.open, ps.hasOpen = n, true
+		}
+		if msg.snap.Items.Err == nil {
+			n := countHeld(msg.snap.Items.Value)
+			rose = rose || (ps.hasHeld && n > ps.held)
+			ps.held, ps.hasHeld = n, true
+		}
+		if msg.snap.Runs.Err == nil {
+			ps.running = len(msg.snap.Runs.Value) > 0
+		}
 	}
 	ps.loaded = true
 	ps.snap = msg.snap
-	if msg.snap.Runs.Err == nil {
-		ps.running = len(msg.snap.Runs.Value) > 0
-	}
 	var cmds []tea.Cmd
 	if ps.dirty {
 		ps.dirty = false

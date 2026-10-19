@@ -1011,7 +1011,7 @@
       "id": "S20",
       "title": "Overview rows: collapse setup errors, one line per row",
       "short_title": "Overview rows",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S19"
@@ -1034,7 +1034,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],

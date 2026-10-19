@@ -5,7 +5,9 @@ package tui
 import (
 	"context"
 	"errors"
+	"fmt"
 	"reflect"
+	"regexp"
 	"strings"
 	"sync"
 	"testing"
@@ -451,6 +453,9 @@ func TestPendingCallShowsOnItsRow(t *testing.T) {
 	}
 }
 
+// Each error row is cut in the Overview, and its full tool text is on the
+// detail line once the row is selected: the cursor is on the items error, then
+// on the runs error.
 func TestFailedCallShowsItsCodeAndMessageVerbatim(t *testing.T) {
 	h := newHarness(t, four...)
 	bad := snap(four[2], nil, nil)
@@ -459,19 +464,51 @@ func TestFailedCallShowsItsCodeAndMessageVerbatim(t *testing.T) {
 	h.src.set(bad)
 	h.start()
 	v := h.view()
-	for _, want := range []string{"no_such_item", "No such item: NOPE.", "weird  spacing, 100% \"quoted\"", "DataBall"} {
-		if !strings.Contains(v, want) {
-			t.Errorf("view lacks %q:\n%s", want, v)
-		}
-	}
 	for _, line := range strings.Split(v, "\n") {
-		if strings.Contains(line, "no_such_item") && !strings.Contains(line, "DataBall") {
+		if strings.Contains(line, "! error") && !strings.Contains(line, "DataBall") {
 			t.Errorf("error is not on the project's row: %q", line)
 		}
 	}
+	if got := detailText(h.m, 72); got != "items: no_such_item: No such item: NOPE." {
+		t.Errorf("the items error is not on the detail line: %q", got)
+	}
+	h.send(press("n"))
+	if got := detailText(h.m, 72); got != "runs: slicer relay-run list: exit 3: weird  spacing, 100% \"quoted\"" {
+		t.Errorf("the runs error is not verbatim on the detail line: %q", got)
+	}
+	if v := h.view(); !strings.Contains(v, "runs: slicer relay-run list") {
+		t.Errorf("the runs error row is not in the view:\n%s", v)
+	}
 }
 
-func TestALongErrorIsWrappedNotCut(t *testing.T) {
+// reverseSGR matches an SGR sequence that sets reverse video, alone or with others.
+var reverseSGR = regexp.MustCompile(`\x1b\[(?:[0-9]+;)*7(?:;[0-9]+)*m`)
+
+// reversed reports whether the screen line with text is drawn reversed there.
+func reversed(m *Model, text string) bool {
+	for _, l := range strings.Split(m.screen(), "\n") {
+		if i := strings.Index(l, text); i >= 0 {
+			loc := reverseSGR.FindStringIndex(l)
+			return loc != nil && loc[0] < i
+		}
+	}
+	return false
+}
+
+// detailText is the selected row's full text, read back from the detail lines
+// at a pane of w columns. The lines are joined with one space, which is how a
+// line break was made (wrapText), so the text is the row's text verbatim.
+func detailText(m *Model, w int) string {
+	var parts []string
+	for _, l := range m.overview(w).detail {
+		parts = append(parts, strings.TrimPrefix(l, indent))
+	}
+	return strings.Join(parts, " ")
+}
+
+// A row longer than the pane is cut with "..." and stays one line (decision
+// ui.setup-errors). Its full text is on the detail line of the selected row.
+func TestLongRowsAreCutWithAnEllipsisNotWrapped(t *testing.T) {
 	h := newHarness(t, four...)
 	bad := snap(four[2], nil, nil)
 	msg := "alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima mike november oscar papa quebec romeo"
@@ -480,19 +517,358 @@ func TestALongErrorIsWrappedNotCut(t *testing.T) {
 	h.start()
 	h.send(press("s"))
 	h.send(tea.WindowSizeMsg{Width: 60, Height: 30})
-	lines := strings.Split(plainView(h.m), "\n")
+	v := plainView(h.m)
 	var rows []string
-	for _, l := range lines {
-		if strings.Contains(l, "too_long") || strings.Contains(l, "papa") || strings.Contains(l, "romeo") {
-			rows = append(rows, strings.TrimSpace(l))
+	for _, l := range strings.Split(v, "\n") {
+		if strings.Contains(l, "! error") {
+			rows = append(rows, strings.TrimRight(l, " "))
 		}
 	}
-	if len(rows) < 2 {
-		t.Fatalf("the error did not wrap:\n%s", strings.Join(lines, "\n"))
+	if len(rows) != 1 {
+		t.Fatalf("the error row is %d lines, want 1:\n%s", len(rows), v)
 	}
-	got := strings.Join(strings.Fields(strings.Join(lines, " ")), " ")
-	if !strings.Contains(got, "too_long: "+msg) {
-		t.Fatalf("the error text was cut:\n%s", strings.Join(lines, "\n"))
+	if !strings.HasSuffix(rows[0], "...") {
+		t.Errorf("the row is not cut with an ellipsis: %q", rows[0])
+	}
+	if w := lipgloss.Width(rows[0]); w > 60 {
+		t.Errorf("the row is %d wide in a 60-column pane: %q", w, rows[0])
+	}
+	if got := detailText(h.m, 60); got != "items: too_long: "+msg {
+		t.Errorf("the detail line is not the full text:\n got %q\nwant %q", got, "items: too_long: "+msg)
+	}
+}
+
+// The row cursor moves through the Overview's rows, Needs you then Running, and
+// stops at the first and last row. Its detail line is the row under it.
+func TestRowCursorMovesThroughTheRows(t *testing.T) {
+	h := newHarness(t, four...)
+	h.src.set(snap(four[0], []adjcli.Record{openRec(11, "a.one", "first question"), openRec(12, "a.two", "second question")}, nil,
+		relay("run-1", "2026-10-19T16:00:00Z", "S01")))
+	h.start()
+	h.send(press("s")) // no sidebar: its own reverse selection would share the line
+	h.view()
+	if got := detailText(h.m, 72); got != "#11 a.one  first question" {
+		t.Fatalf("the first row is not selected: %q", got)
+	}
+	if !reversed(h.m, "#11 a.one") || reversed(h.m, "#12 a.two") {
+		t.Errorf("the cursor row is not the reversed one")
+	}
+	h.send(press("n"))
+	if got := detailText(h.m, 72); got != "#12 a.two  second question" {
+		t.Fatalf("n did not move to the second row: %q", got)
+	}
+	if reversed(h.m, "#11 a.one") || !reversed(h.m, "#12 a.two") {
+		t.Errorf("the reverse does not follow the cursor")
+	}
+	h.send(press("n"))
+	if got := detailText(h.m, 72); !strings.HasPrefix(got, "run-1  S01") {
+		t.Fatalf("n did not move to the run row: %q", got)
+	}
+	h.send(press("n"))
+	if h.m.cursor != 2 {
+		t.Errorf("the cursor went past the last row: stored %d, want 2", h.m.cursor)
+	}
+	if got := detailText(h.m, 72); !strings.HasPrefix(got, "run-1  S01") {
+		t.Errorf("the cursor left the last row: %q", got)
+	}
+	h.send(press("p"))
+	if got := detailText(h.m, 72); !strings.HasPrefix(got, "#12 a.two") {
+		t.Errorf("p did not move back: %q", got)
+	}
+	if h.m.active != -1 {
+		t.Errorf("row keys moved the project selection to %d", h.m.active)
+	}
+}
+
+// Project keys leave the row cursor on the first row of the new project, and
+// row keys leave the project alone.
+func TestProjectKeysResetTheRowCursor(t *testing.T) {
+	h := newHarness(t, four...)
+	h.src.set(snap(four[0], []adjcli.Record{openRec(11, "a.one", "first question"), openRec(12, "a.two", "second question")}, nil))
+	h.start()
+	h.send(press("n"))
+	if h.m.cursor != 1 {
+		t.Fatalf("cursor = %d after n, want 1", h.m.cursor)
+	}
+	h.send(press("j")) // to slicer
+	if h.m.active != 0 || h.m.cursor != 0 {
+		t.Errorf("j: active %d, cursor %d; want slicer's first row", h.m.active, h.m.cursor)
+	}
+	h.send(press("k")) // back to Needs you
+	if h.m.active != -1 || h.m.cursor != 0 {
+		t.Errorf("k: active %d, cursor %d; want Needs you's first row", h.m.active, h.m.cursor)
+	}
+}
+
+// enter selects the project of the row under the cursor.
+func TestEnterSelectsTheRowsProject(t *testing.T) {
+	h := newHarness(t, four...)
+	h.src.set(snap(four[1], []adjcli.Record{openRec(3, "output.shape", "Which JSON shape?")}, nil))
+	h.start()
+	h.send(press("enter"))
+	if h.m.active != 1 {
+		t.Fatalf("enter selected project %d, want 1 (adjudicate)", h.m.active)
+	}
+	if got := detailText(h.m, 72); got != "#3 output.shape  Which JSON shape?" {
+		t.Errorf("the selected project's row is not under the cursor: %q", got)
+	}
+}
+
+// A selected row's full text is on the detail line, wrapped at the pane's
+// width without cutting a word, while the row itself is cut to one line.
+func TestSelectedRowShowsItsFullTextOnTheDetailLine(t *testing.T) {
+	h := newHarness(t, four...)
+	long := "Does ork reimplement slicer's roadmap editor or reuse slicer tui, and which screens come first?"
+	h.src.set(snap(four[0], []adjcli.Record{openRec(11, "ui.slicer-tui", long)}, nil))
+	h.start()
+	h.send(press("s"))
+	h.send(tea.WindowSizeMsg{Width: 60, Height: 30})
+	for _, d := range h.m.overview(60).detail {
+		if w := lipgloss.Width(d); w > 60 {
+			t.Errorf("detail line is %d wide in a 60-column pane: %q", w, d)
+		}
+	}
+	if got := detailText(h.m, 60); got != "#11 ui.slicer-tui  "+long {
+		t.Errorf("the detail line is not the full text:\n got %q", got)
+	}
+	v := plainView(h.m)
+	if rowsWith(v, "? decision", "#11") != 1 {
+		t.Errorf("the row is not one line with its kind:\n%s", v)
+	}
+}
+
+// A run's ID stays whole when its row is cut: the rest of the row goes first.
+func TestRunRowCutsItsRestBeforeItsID(t *testing.T) {
+	const id = "run-20261019-004308-40d4"
+	h := newHarness(t, four...)
+	h.src.set(snap(four[0], nil, nil, relay(id, "2026-10-19T15:42:00Z", "S01", "S02")))
+	h.start()
+	h.send(press("s"))
+	h.send(tea.WindowSizeMsg{Width: 100, Height: 30})
+	v := plainView(h.m)
+	row := ""
+	for _, l := range strings.Split(v, "\n") {
+		if strings.Contains(l, "started elsewhere") {
+			row = strings.TrimRight(l, " ")
+		}
+	}
+	if !strings.Contains(row, id) {
+		t.Errorf("the run ID is cut from its row: %q", row)
+	}
+	if !strings.HasSuffix(row, "...") {
+		t.Errorf("the rest of the run row is not cut with an ellipsis: %q", row)
+	}
+	if strings.Contains(row, "1h00m") {
+		t.Errorf("the elapsed time, cut last, is on the row: %q", row)
+	}
+	if got := detailText(h.m, 100); !strings.Contains(got, id+"  S01,S02  active, 2 of 6 steps running  1h00m") {
+		t.Errorf("the detail line lacks the full run text: %q", got)
+	}
+}
+
+// The body scrolls so that the selected row stays on screen, with a marker for
+// the lines hidden above.
+func TestCursorScrollsToTheSelectedRow(t *testing.T) {
+	h := newHarness(t, four...)
+	var recs []adjcli.Record
+	for i := 1; i <= 15; i++ {
+		recs = append(recs, openRec(i, "k.k", fmt.Sprintf("question %02d", i)))
+	}
+	h.src.set(snap(four[0], recs, nil))
+	h.start()
+	h.send(tea.WindowSizeMsg{Width: 100, Height: 12})
+	for i := 0; i < 14; i++ {
+		h.send(press("n"))
+	}
+	v := plainView(h.m)
+	if rowsWith(v, "? decision", "question 15") != 1 {
+		t.Fatalf("the selected row is not on screen:\n%s", v)
+	}
+	if !strings.Contains(v, "lines above") {
+		t.Errorf("no marker for the lines hidden above:\n%s", v)
+	}
+	if n := len(strings.Split(v, "\n")); n != 12 {
+		t.Errorf("%d lines, want 12", n)
+	}
+}
+
+// noSlicer is the snapshot of a project with no .slicer/ folder: both slicer
+// calls fail with the state error slicer prints there (review-2026-10-19-integration.md).
+func noSlicer(p registry.Project) source.Snapshot {
+	msg := "no .slicer/ found in " + p.Path
+	s := snap(p, nil, nil)
+	s.Items = source.Result[[]slicercli.Item]{Err: &clirun.ToolError{Code: "state", Message: msg, Command: "list"}}
+	s.Runs = source.Result[[]slicercli.RelayRun]{Err: &clirun.ToolError{Code: "state", Message: msg, Command: "relay-run list"}}
+	return s
+}
+
+// A project with no .slicer/ is shown once, dimmed in the sidebar as "no slicer".
+// sidebarRow is the sidebar line whose text starts with prefix, with its
+// styles, from the full screen.
+func sidebarRow(m *Model, prefix string) string {
+	for _, l := range strings.Split(m.screen(), "\n") {
+		if strings.HasPrefix(sgr.ReplaceAllString(l, ""), prefix) {
+			return l
+		}
+	}
+	return ""
+}
+
+// faintSGR matches an SGR sequence that sets faint (dim), alone or with others.
+var faintSGR = regexp.MustCompile(`\x1b\[(?:[0-9]+;)*2(?:;[0-9]+)*m`)
+
+// dimmed reports whether the faint style is set before the text at name.
+func dimmed(row, name string) bool {
+	loc := faintSGR.FindStringIndex(row)
+	return loc != nil && loc[0] < strings.Index(row, name)
+}
+
+func TestNoSlicerProjectIsDimmedInTheSidebar(t *testing.T) {
+	h := newHarness(t, four...)
+	h.src.set(noSlicer(four[2]))
+	h.start()
+	h.view()
+	row := sidebarRow(h.m, "  DataBall")
+	if plain := sgr.ReplaceAllString(row, ""); !strings.Contains(plain, "DataBall no slicer") {
+		t.Fatalf("sidebar row is not \"DataBall no slicer\": %q", plain)
+	}
+	if !dimmed(row, "DataBall") {
+		t.Fatalf("the sidebar row is not dimmed: %q", row)
+	}
+	// Either slicer call may show the state error; the items call may succeed.
+	runsOnly := snap(four[2], nil, nil)
+	runsOnly.Runs = noSlicer(four[2]).Runs
+	runs := newHarness(t, four...)
+	runs.src.set(runsOnly)
+	runs.start()
+	if v := runs.view(); !strings.Contains(v, "DataBall no slicer") {
+		t.Errorf("a runs error alone is not setup:\n%s", v)
+	}
+	// Only the state error with the "no .slicer/ found" message is setup. The
+	// same code with another message, or the message with another code, is an
+	// ordinary error row with a count-free badge.
+	for _, c := range []struct {
+		err  *clirun.ToolError
+		want string
+	}{
+		{&clirun.ToolError{Code: "locked", Message: "no .slicer/ found", Command: "list"}, "items: locked: no .slicer/ found"},
+		{&clirun.ToolError{Code: "state", Message: "no ledger", Command: "list"}, "items: state: no ledger"},
+	} {
+		other := newHarness(t, four...)
+		s := snap(four[2], nil, nil)
+		s.Items = source.Result[[]slicercli.Item]{Err: c.err}
+		other.src.set(s)
+		other.start()
+		if v := other.view(); !strings.Contains(v, c.want) || strings.Contains(v, "no slicer") {
+			t.Errorf("%q is not an error row:\n%s", c.want, v)
+		}
+	}
+}
+
+func TestNoSlicerProjectAppearsInNoOverviewSection(t *testing.T) {
+	h := newHarness(t, four...)
+	s := noSlicer(four[2])
+	s.Open = source.Result[[]adjcli.Record]{Value: []adjcli.Record{openRec(5, "x.y", "a question for setup")}}
+	h.src.set(s)
+	h.start()
+	h.view()
+	h.send(press("s")) // the Overview alone, without the sidebar
+	v := plainView(h.m)
+	for _, gone := range []string{"DataBall", "a question for setup", "no .slicer/ found", "state:"} {
+		if strings.Contains(v, gone) {
+			t.Errorf("the Overview shows %q for a project with no .slicer/:\n%s", gone, v)
+		}
+	}
+}
+
+// A project with no .slicer/ adds nothing to the bell: its adj inbox rises, but
+// it does not ring, and its badge stays "no slicer" (never a count).
+func TestNoSlicerProjectAddsNothingToCountsOrBell(t *testing.T) {
+	h := newHarness(t, four...)
+	s := noSlicer(four[2])
+	s.Open = source.Result[[]adjcli.Record]{Value: []adjcli.Record{openRec(5, "x.y", "q")}}
+	h.src.set(s)
+	h.start()
+	s.Open = source.Result[[]adjcli.Record]{Value: []adjcli.Record{openRec(5, "x.y", "q"), openRec(6, "x.z", "r")}}
+	h.src.set(s)
+	refreshProject(h, "DataBall")
+	s.Open = source.Result[[]adjcli.Record]{Value: []adjcli.Record{openRec(5, "x.y", "q"), openRec(6, "x.z", "r"), openRec(7, "x.w", "s")}}
+	h.src.set(s)
+	refreshProject(h, "DataBall")
+	if h.bells != 0 {
+		t.Fatalf("bells = %d: a project with no .slicer/ rang the bell", h.bells)
+	}
+	if v := h.view(); !strings.Contains(v, "DataBall no slicer") || strings.Contains(v, "DataBall 3") {
+		t.Errorf("the badge is not \"no slicer\":\n%s", v)
+	}
+}
+
+// Selecting the project shows its setup hint, the only place it is shown.
+func TestSelectedNoSlicerProjectGivesTheInitHint(t *testing.T) {
+	h := newHarness(t, four...)
+	h.src.set(noSlicer(four[2]))
+	h.start()
+	if v := h.view(); strings.Contains(v, "slicer init") { // Needs you is selected at start
+		t.Errorf("the init hint shows on Needs you:\n%s", v)
+	}
+	h.send(press("3")) // DataBall, in registry order
+	if v := h.view(); !strings.Contains(v, "no .slicer/") || !strings.Contains(v, "slicer init") {
+		t.Fatalf("the selected project gives no init hint:\n%s", v)
+	}
+	if row := sidebarRow(h.m, "> DataBall"); !dimmed(row, "DataBall") {
+		t.Errorf("the selected project's sidebar row is not dimmed: %q", row)
+	}
+}
+
+// Errors merge into one row per project and code. The parts that failed are
+// listed before the code, and the tool's message follows it. A merged row with
+// an items or inbox part sits under Needs you. Another code stays its own row.
+func TestErrorsMergePerCodeAndPart(t *testing.T) {
+	h := newHarness(t, four...)
+	s := snap(four[2], nil, nil)
+	s.Items = source.Result[[]slicercli.Item]{Err: &clirun.ToolError{Code: "locked", Message: "Ledger is busy."}}
+	s.Runs = source.Result[[]slicercli.RelayRun]{Err: &clirun.ToolError{Code: "locked", Message: "Ledger is busy."}}
+	h.src.set(s)
+	h.start()
+	v := h.view()
+	merged := strings.Index(v, "items, runs: locked: Ledger is busy.")
+	if merged < 0 {
+		t.Fatalf("the merged row is missing:\n%s", v)
+	}
+	if n := rowsWith(v, "! error", "locked"); n != 1 {
+		t.Errorf("%d rows for the code, want 1:\n%s", n, v)
+	}
+	if running := strings.Index(v, "Running"); merged < strings.Index(v, "Needs you") || merged > running {
+		t.Errorf("the merged row is not under Needs you:\n%s", v)
+	}
+	other := newHarness(t, four...)
+	s.Runs = source.Result[[]slicercli.RelayRun]{Err: &clirun.ToolError{Code: "timeout", Message: "Relay runs timed out."}}
+	other.src.set(s)
+	other.start()
+	if v := other.view(); !strings.Contains(v, "items: locked: Ledger is busy.") || !strings.Contains(v, "runs: timeout: Relay runs timed out.") {
+		t.Errorf("another code did not stay its own row:\n%s", v)
+	}
+}
+
+// Messages that differ under one code share its row, joined in part order.
+func TestMergedErrorsKeepEachMessage(t *testing.T) {
+	h := newHarness(t, four...)
+	s := snap(four[2], nil, nil)
+	s.Items = source.Result[[]slicercli.Item]{Err: &clirun.ToolError{Code: "locked", Message: "Ledger is busy."}}
+	s.Runs = source.Result[[]slicercli.RelayRun]{Err: &clirun.ToolError{Code: "locked", Message: "Runs are busy."}}
+	h.src.set(s)
+	h.start()
+	h.send(press("s")) // the full width, so the row is not cut
+	if v := h.view(); !strings.Contains(v, "items, runs: locked: Ledger is busy. / Runs are busy.") {
+		t.Errorf("the messages are not both shown:\n%s", v)
+	}
+}
+
+// refreshProject reads one project again, as the poller does when it is due.
+func refreshProject(h *harness, name string) {
+	h.advance(5 * time.Second)
+	for _, msg := range exec(h.m.fetch(name, false)) {
+		h.send(msg)
 	}
 }
 
@@ -792,8 +1168,17 @@ func TestRunIDIsNeverClipped(t *testing.T) {
 		h.start()
 		h.send(press("s"))
 		h.send(tea.WindowSizeMsg{Width: w, Height: 30})
-		if v := plainView(h.m); !strings.Contains(v, id) {
-			t.Errorf("width %d: the run ID is cut:\n%s", w, v)
+		// The row itself must hold the whole ID. The detail line holds it too,
+		// so the row is found by its kind, not by the ID.
+		v := plainView(h.m)
+		row := ""
+		for _, l := range strings.Split(v, "\n") {
+			if strings.Contains(l, "started elsewhere") {
+				row = l
+			}
+		}
+		if !strings.Contains(row, id) {
+			t.Errorf("width %d: the run ID is cut from its row: %q\n%s", w, row, v)
 		}
 	}
 }

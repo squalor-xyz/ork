@@ -44,6 +44,10 @@ items flagged `needs-owner`). `*` marks a running slice and `~` marks a
 loaded project being refreshed. Selection uses reverse and `>`, including
 under `NO_COLOR`. Projects with needs come first, then running projects,
 then the rest; registry order breaks ties. Selection follows the project.
+A project with no `.slicer/` folder shows `no slicer`, dimmed, in place of its
+count. It has no Overview rows and adds nothing to any count or to the bell.
+When it is selected, its detail line says to run `slicer init`
+(`ui.setup-errors`).
 
 The list scrolls to keep selection visible and shows `+N more` for hidden
 rows. Below 100 columns the sidebar narrows; names that do not fit end in
@@ -54,6 +58,16 @@ in registry order. `/` filters project names without regard to case; `enter`
 keeps the filter and leaves text entry, and `esc` clears it. `r` refreshes
 the selected project, or all projects on "Needs you". `?` shows keys and
 `q` quits.
+
+The Overview has a row cursor (`ui.overview-cursor`). `n` and `p` move it to
+the next and previous row, through "Needs you" and then Running, and it stops
+at the first and last row. The row under the cursor is drawn reversed. Its
+full text is on a detail line below the rows, wrapped at the pane's width so
+no word is cut. `enter` selects the cursor row's project. Project keys and
+`1`-`9` select a project and put the cursor on its first row. Rows are cut
+with `...` to one line. A run's ID is never cut: the rest of the run's text is
+cut first. The rows scroll to keep the cursor row on screen, with
+`+N lines above` and `+N more lines` where lines are hidden.
 
 The terminal bell rings when a project's count rises past an earlier good
 reading (`ui.notify`). The status line shows project count, last refresh,
@@ -84,6 +98,13 @@ and decided records refresh every 5 min or on HEAD changes and manual refresh. `
 3. **Ready to land:** committed slices whose branch is not merged, with the
    `slicer land ID --branch B` command to copy. Merged branches are
    detected and offered for cleanup (`landing.v1`, `git.cleanup`).
+
+A failed call is an error row. A project has one error row per error code.
+The parts that failed with that code come first, then the code, then the
+tool's message as printed, for example `items, runs: locked: Ledger is busy.`
+Different messages under one code are joined with ` / `. An items or inbox
+failure sits under Needs you. A runs failure alone sits under Running. Error
+rows never count toward the badge (`ui.setup-errors`).
 
 ## Waves (one project)
 

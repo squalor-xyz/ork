@@ -5,6 +5,7 @@ package tui
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/slicercli"
+	"github.com/squalor-xyz/ork/internal/source"
 )
 
 // Words and symbols for each state. A state never relies on colour alone.
@@ -32,102 +34,219 @@ func (m *Model) refreshing(name string) bool {
 	return ps != nil && ps.loaded && m.poller.InFlight(name)
 }
 
-// overview is the Overview screen for all projects: what needs the owner,
-// what is running, and what is ready to land.
-func (m *Model) overview(w int) []string {
+// ovRow is one row of the Overview. The row shows its text cut to the pane. The
+// selected row shows the whole text on the detail line (ui.overview-cursor).
+type ovRow struct {
+	kind    string
+	style   lipgloss.Style
+	kindW   int
+	project int    // registry index; enter selects it
+	name    string // the project's name
+	text    string // the row's text after the name, in full
+	id      string // a run's ID, kept whole in the row; "" for other rows
+	rest    string // a run's text after its ID, cut first
+}
+
+// rows lists the Overview's rows as Needs you and Running. The cursor moves
+// through them in that order. The lists do not depend on the width.
+func (m *Model) rows() (needs, running []ovRow) {
+	th := m.cfg.Theme
+	for i, p := range m.projects {
+		if m.active >= 0 && i != m.active {
+			continue
+		}
+		name := p.reg.Name
+		if !p.loaded {
+			pending := ovRow{kind: kindPending, style: th.Pending, kindW: kindWidth, project: i, name: name, text: "waiting for the first reply"}
+			needs = append(needs, pending)
+			running = append(running, pending)
+			continue
+		}
+		if p.setup() {
+			// Shown once: dimmed in the sidebar, and as a hint when selected. It has
+			// no rows, so it counts for nothing.
+			continue
+		}
+		s := p.snap
+		for _, e := range mergeErrors(s) {
+			r := ovRow{kind: kindError, style: th.Error, kindW: kindWidth, project: i, name: name, text: e.text()}
+			if e.needs {
+				needs = append(needs, r)
+			} else {
+				running = append(running, r)
+			}
+		}
+		for _, r := range s.Open.Value {
+			needs = append(needs, ovRow{kind: kindDecision, style: th.Decision, kindW: kindWidth, project: i, name: name,
+				text: fmt.Sprintf("#%d %s  %s", r.ID, r.Key, r.Title)})
+		}
+		for _, it := range s.Items.Value {
+			if isHeld(it) {
+				needs = append(needs, ovRow{kind: kindHeld, style: th.Held, kindW: kindWidth, project: i, name: name,
+					text: fmt.Sprintf("%s  %s  (%s)", it.ID, it.Title, holdFlag)})
+			}
+		}
+		for _, r := range s.Runs.Value {
+			id, rest := runParts(r, m.cfg.Now())
+			text := id
+			if rest != "" {
+				text = id + "  " + rest
+			}
+			running = append(running, ovRow{kind: kindExternal, style: th.External, kindW: len(kindExternal), project: i, name: name,
+				text: text, id: id, rest: rest})
+		}
+	}
+	return needs, running
+}
+
+// clampCursor keeps a cursor index on one of n rows. It returns -1 when there
+// are no rows.
+func clampCursor(i, n int) int {
+	if n == 0 {
+		return -1
+	}
+	return min(max(i, 0), n-1)
+}
+
+// moveRow moves the row cursor by delta rows, stopping at the first and last row.
+func (m *Model) moveRow(delta int) {
+	needs, running := m.rows()
+	n := len(needs) + len(running)
+	if i := clampCursor(m.cursor, n); i >= 0 {
+		m.cursor = clampCursor(i+delta, n)
+	}
+}
+
+// selectedRow is the row under the cursor, and false when there is none.
+func (m *Model) selectedRow() (ovRow, bool) {
+	needs, running := m.rows()
+	all := append(append([]ovRow(nil), needs...), running...)
+	i := clampCursor(m.cursor, len(all))
+	if i < 0 {
+		return ovRow{}, false
+	}
+	return all[i], true
+}
+
+// overviewView is the Overview at one width: its body lines, the body line of
+// the selected row (-1 when there is none), and the selected row's detail lines.
+type overviewView struct {
+	body   []string
+	sel    int
+	detail []string
+}
+
+// overview is the Overview screen for all projects, or for the selected one:
+// what needs the owner, what is running, and what is ready to land.
+func (m *Model) overview(w int) overviewView {
 	th := m.cfg.Theme
 	nameW := 0
 	for _, p := range m.projects {
 		nameW = max(nameW, len(p.reg.Name))
 	}
-	row := func(style lipgloss.Style, kind string, kindW int, name, detail string, wrap bool) []string {
-		// A loaded project with a refresh in flight is marked "~" before its
-		// name; the status line says "pending".
-		mark := " "
-		if m.refreshing(name) {
-			mark = th.Pending.Render("~")
-		}
-		prefix := indent + style.Render(fmt.Sprintf("%-*s", kindW, kind)) + " " + mark + fmt.Sprintf("%-*s", nameW, name) + "  "
-		room := w - lipgloss.Width(prefix)
-		if room < 10 {
-			room = 10
-		}
-		if !wrap {
-			return []string{prefix + clip(detail, room)}
-		}
-		// Errors are wrapped, never cut, so the code and message stay whole.
-		chunks := wrapWords(detail, room)
-		out := []string{prefix + chunks[0]}
-		pad := strings.Repeat(" ", lipgloss.Width(prefix))
-		for _, c := range chunks[1:] {
-			out = append(out, pad+c)
-		}
-		return out
-	}
-
-	var needs, running []string
-	for i, p := range m.projects {
-		if m.active >= 0 && i != m.active {
-			continue
-		}
-		if !p.loaded {
-			needs = append(needs, row(th.Pending, kindPending, kindWidth, p.reg.Name, "waiting for the first reply", false)...)
-			running = append(running, row(th.Pending, kindPending, kindWidth, p.reg.Name, "waiting for the first reply", false)...)
-			continue
-		}
-		s := p.snap
-		if s.Items.Err != nil {
-			needs = append(needs, row(th.Error, kindError, kindWidth, p.reg.Name, "items: "+errText(s.Items.Err), true)...)
-		}
-		if s.Open.Err != nil {
-			needs = append(needs, row(th.Error, kindError, kindWidth, p.reg.Name, "inbox: "+errText(s.Open.Err), true)...)
-		}
-		for _, r := range s.Open.Value {
-			needs = append(needs, row(th.Decision, kindDecision, kindWidth, p.reg.Name,
-				fmt.Sprintf("#%d %s  %s", r.ID, r.Key, r.Title), false)...)
-		}
-		for _, it := range s.Items.Value {
-			if isHeld(it) {
-				needs = append(needs, row(th.Held, kindHeld, kindWidth, p.reg.Name,
-					fmt.Sprintf("%s  %s  (%s)", it.ID, it.Title, holdFlag), false)...)
-			}
-		}
-		if s.Runs.Err != nil {
-			running = append(running, row(th.Error, kindError, kindWidth, p.reg.Name, "relay runs: "+errText(s.Runs.Err), true)...)
-		}
-		for _, r := range s.Runs.Value {
-			running = append(running, row(th.External, kindExternal, len(kindExternal), p.reg.Name, runDetail(r, m.cfg.Now()), true)...)
-		}
-	}
-	if len(needs) == 0 {
-		needs = []string{indent + th.Dim.Render("nothing needs you")}
-	}
-	if len(running) == 0 {
-		running = []string{indent + th.Dim.Render("nothing running")}
-	}
+	needs, running := m.rows()
+	all := append(append([]ovRow(nil), needs...), running...)
+	cursor := clampCursor(m.cursor, len(all))
 
 	var lines []string
+	sel := -1
+	section := func(rows []ovRow, first int, empty string) {
+		if len(rows) == 0 {
+			lines = append(lines, indent+th.Dim.Render(empty))
+			return
+		}
+		for i, r := range rows {
+			selected := first+i == cursor
+			if selected {
+				sel = len(lines)
+			}
+			lines = append(lines, m.rowLine(r, selected, nameW, w))
+		}
+	}
 	lines = append(lines, th.Heading.Render("Needs you"))
-	lines = append(lines, needs...)
+	section(needs, 0, "nothing needs you")
 	lines = append(lines, "", th.Heading.Render("Running"))
-	lines = append(lines, running...)
+	section(running, len(needs), "nothing running")
 	lines = append(lines, "", th.Heading.Render("Ready to land"))
 	lines = append(lines, indent+th.Dim.Render("none yet: the list of branches to land comes with slice S09"))
+
+	ov := overviewView{body: lines, sel: sel}
+	switch {
+	case m.active >= 0 && m.projects[m.active].setup():
+		// The hint is the detail line of a selected project with no rows.
+		ov.detail = []string{indent + th.Dim.Render(clip(setupHint, w-len(indent)))}
+	case cursor >= 0:
+		ov.detail = detailLines(all[cursor], w)
+	}
+	return ov
+}
+
+// rowLine is one row on one line. The kind, the project's name and the text are
+// cut to the pane. The selected row is drawn reversed, which works under
+// NO_COLOR too.
+func (m *Model) rowLine(r ovRow, selected bool, nameW, w int) string {
+	th := m.cfg.Theme
+	kind := fmt.Sprintf("%-*s", r.kindW, r.kind)
+	name := fmt.Sprintf("%-*s", nameW, r.name)
+	if selected {
+		mark := " "
+		if m.refreshing(r.name) {
+			mark = "~"
+		}
+		prefix := indent + kind + " " + mark + name + "  "
+		return th.TabActive.Render(prefix + rowText(r, max(w-lipgloss.Width(prefix), 10)))
+	}
+	// A loaded project with a refresh in flight is marked "~" before its name;
+	// the status line says "pending".
+	mark := " "
+	if m.refreshing(r.name) {
+		mark = th.Pending.Render("~")
+	}
+	prefix := indent + r.style.Render(kind) + " " + mark + name + "  "
+	return prefix + rowText(r, max(w-lipgloss.Width(prefix), 10))
+}
+
+// rowText is a row's text cut to room columns. A run's ID stays whole: the rest
+// of its text is cut first, and dropped when no room is left for it.
+func rowText(r ovRow, room int) string {
+	if r.id == "" {
+		return clip(r.text, room)
+	}
+	avail := room - lipgloss.Width(r.id) - 2
+	switch {
+	case r.rest == "":
+		return r.id
+	case lipgloss.Width(r.rest) <= avail:
+		return r.id + "  " + r.rest
+	case avail < 4:
+		return r.id
+	}
+	return r.id + "  " + clip(r.rest, avail)
+}
+
+// detailLines is a row's full text on the detail line, wrapped at the pane's
+// width so that no word is cut. The row already shows the project's name.
+func detailLines(r ovRow, w int) []string {
+	lines := wrapText(r.text, max(w-len(indent), 1))
+	for i := range lines {
+		lines[i] = indent + lines[i]
+	}
 	return lines
 }
 
-// runDetail describes a relay run started outside ork. ork only shows it. The
-// run ID comes before the elapsed time, and the row wraps, so the ID is whole.
-func runDetail(r slicercli.RelayRun, now time.Time) string {
+// runParts describes a relay run started outside ork. ork only shows it. The
+// run ID comes first and stays whole. The items, state and elapsed time follow,
+// and they are cut first when a row is narrow.
+func runParts(r slicercli.RelayRun, now time.Time) (id, rest string) {
 	state := r.State
 	if r.Counts.Steps > 0 {
 		state = fmt.Sprintf("%s, %d of %d steps running", r.State, r.Counts.Running, r.Counts.Steps)
 	}
-	parts := []string{strings.Join(r.Items, ","), state, r.ID}
+	parts := []string{strings.Join(r.Items, ","), state}
 	if t, err := time.Parse(time.RFC3339, r.BeganAt); err == nil {
 		parts = append(parts, elapsed(now.Sub(t)))
 	}
-	return strings.Join(parts, "  ")
+	return r.ID, strings.Join(parts, "  ")
 }
 
 func elapsed(d time.Duration) string {
@@ -143,18 +262,70 @@ func elapsed(d time.Duration) string {
 	return fmt.Sprintf("%dh%02dm", int(d.Hours()), int(d.Minutes())%60)
 }
 
-// errText is a failed call as the tool printed it: the error code and message
-// of a tool error, else the error text. Line breaks become spaces; nothing is
-// reworded.
-func errText(err error) string {
-	var s string
+// setupHint is the line a selected project with no .slicer/ folder shows.
+const setupHint = "no .slicer/: run `slicer init` to track items and runs."
+
+// errRow is the one row a project shows for one error code: the calls that
+// failed with that code, and the tool's message (or messages) as printed.
+type errRow struct {
+	code  string
+	parts []string // "items", "inbox" or "runs", in call order
+	msgs  []string // distinct messages, in call order
+	needs bool     // an items or inbox call failed: the row is under Needs you
+}
+
+func (r errRow) text() string {
+	code := ""
+	if r.code != "" {
+		code = r.code + ": "
+	}
+	return strings.Join(r.parts, ", ") + ": " + code + strings.Join(r.msgs, " / ")
+}
+
+// mergeErrors makes one row per error code from a snapshot's failed calls, in
+// call order: items, inbox, then runs.
+func mergeErrors(s source.Snapshot) []errRow {
+	calls := []struct {
+		part  string
+		needs bool
+		err   error
+	}{
+		{"items", true, s.Items.Err},
+		{"inbox", true, s.Open.Err},
+		{"runs", false, s.Runs.Err},
+	}
+	var rows []errRow
+	for _, c := range calls {
+		if c.err == nil {
+			continue
+		}
+		code, msg := errParts(c.err)
+		i := slices.IndexFunc(rows, func(r errRow) bool { return r.code == code })
+		if i < 0 {
+			rows = append(rows, errRow{code: code})
+			i = len(rows) - 1
+		}
+		r := &rows[i]
+		r.parts = append(r.parts, c.part)
+		r.needs = r.needs || c.needs
+		if !slices.Contains(r.msgs, msg) {
+			r.msgs = append(r.msgs, msg)
+		}
+	}
+	return rows
+}
+
+// errParts is a failed call as the tool printed it: the error code and message
+// of a tool error. A call that failed without one has no code, and its error
+// text is the message. Line breaks become spaces; nothing is reworded.
+func errParts(err error) (code, msg string) {
 	var te *clirun.ToolError
 	if errors.As(err, &te) {
-		s = te.Code + ": " + te.Message
+		code, msg = te.Code, te.Message
 	} else {
-		s = err.Error()
+		msg = err.Error()
 	}
-	return strings.NewReplacer("\r\n", " ", "\n", " ", "\r", " ", "\t", " ").Replace(s)
+	return code, strings.NewReplacer("\r\n", " ", "\n", " ", "\r", " ", "\t", " ").Replace(msg)
 }
 
 // clip cuts s to n columns, marking the cut with "...".
@@ -169,33 +340,36 @@ func clip(s string, n int) string {
 	return string(r) + "..."
 }
 
-// wrapWords breaks s into lines of at most n columns at spaces, keeping every
-// character but the spaces at a break. A word longer than n is cut.
-func wrapWords(s string, n int) []string {
+// wrapText breaks s into lines of at most n columns. A line breaks at a single
+// space, the only character a break drops, so joining the lines with one space
+// gives s back. A word longer than n is cut.
+func wrapText(s string, n int) []string {
 	var out []string
-	cur := ""
-	flush := func() { out = append(out, strings.TrimRight(cur, " ")) }
-	for i, word := range strings.Split(s, " ") {
-		for lipgloss.Width(word) > n {
-			if cur != "" {
-				flush()
-				cur = ""
-			}
-			head, rest := splitAt(word, n)
-			out, word = append(out, head), rest
+	for lipgloss.Width(s) > n {
+		if i := breakAt(s, n); i > 0 {
+			out, s = append(out, s[:i]), s[i+1:]
+			continue
 		}
-		switch {
-		case i == 0 || cur == "":
-			cur = word
-		case lipgloss.Width(cur)+1+lipgloss.Width(word) <= n:
-			cur += " " + word
-		default:
-			flush()
-			cur = word
-		}
+		head, rest := splitAt(s, n)
+		out, s = append(out, head), rest
 	}
-	flush()
-	return out
+	return append(out, s)
+}
+
+// breakAt is the index of the space to break s at: the last single space that
+// leaves at most n columns before it, or -1 when there is none.
+func breakAt(s string, n int) int {
+	best := -1
+	for i := 1; i < len(s)-1; i++ {
+		if s[i] != ' ' || s[i-1] == ' ' {
+			continue
+		}
+		if lipgloss.Width(s[:i]) > n {
+			break
+		}
+		best = i
+	}
+	return best
 }
 
 // splitAt cuts s after the longest prefix that is at most n columns wide.

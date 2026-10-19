@@ -38,9 +38,9 @@ func TestStylesEmit24BitColour(t *testing.T) {
 	}
 }
 
-// goldenModel is the Overview with every kind of row: decisions, a held item,
-// a failed call, a pending project, and a relay started elsewhere.
-func goldenModel(theme Theme, w, h int) *Model {
+// newGoldenModel is the Model the golden views start from: four projects, a
+// fixed clock, and every project in flight.
+func newGoldenModel(theme Theme) *Model {
 	now := time.Date(2026, 10, 19, 16, 42, 7, 0, time.UTC)
 	m := New(Config{
 		Source:    &fakeSource{snaps: map[string]source.Snapshot{}},
@@ -52,7 +52,14 @@ func goldenModel(theme Theme, w, h int) *Model {
 		Bell:      func() {},
 		Theme:     theme,
 	})
-	m.Init() // every project is now in flight; the three below return
+	m.Init()
+	return m
+}
+
+// goldenModel is the Overview with every kind of row: decisions, a held item,
+// a failed call, a pending project, and a relay started elsewhere.
+func goldenModel(theme Theme, w, h int) *Model {
+	m := newGoldenModel(theme) // every project is now in flight; the three below return
 	slicer := snap(four[0],
 		[]adjcli.Record{
 			openRec(11, "ui.slicer-tui", "Does ork reimplement slicer's roadmap editor or reuse slicer tui?"),
@@ -68,6 +75,89 @@ func goldenModel(theme Theme, w, h int) *Model {
 	}
 	m.Update(tea.WindowSizeMsg{Width: w, Height: h})
 	return m
+}
+
+// setupModel is the Overview with a project that has no .slicer/ folder and a
+// project whose two slicer calls failed with one code. Its rows are short, so
+// the golden does not depend on how long a row is cut.
+func setupModel(theme Theme, w, h int) *Model {
+	m := newGoldenModel(theme)
+	slicer := snap(four[0],
+		[]adjcli.Record{openRec(11, "ui.slicer-tui", "Reuse slicer tui?")},
+		[]slicercli.Item{item("S12", "Roadmap screen", "needs-owner")})
+	agents := snap(four[3], nil, nil)
+	agents.Items = source.Result[[]slicercli.Item]{Err: &clirun.ToolError{Code: "locked", Message: "Ledger is busy."}}
+	agents.Runs = source.Result[[]slicercli.RelayRun]{Err: &clirun.ToolError{Code: "locked", Message: "Ledger is busy."}}
+	for _, s := range []source.Snapshot{slicer, snap(four[1], nil, nil), noSlicer(four[2]), agents} {
+		m.Update(snapshotMsg{name: s.Project.Name, snap: s})
+	}
+	m.Update(tea.WindowSizeMsg{Width: w, Height: h})
+	return m
+}
+
+// TestGoldenSetupAndErrorRows covers both cases: a project with no .slicer/
+// (no rows, dimmed, and its hint when selected) and merged errors.
+func TestGoldenSetupAndErrorRows(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		w, h int
+		mono bool
+		pick string // the key that selects the project, or ""
+	}{
+		{"setup-100x30-mono.txt", 100, 30, true, ""},
+		{"setup-80x24-color.txt", 80, 24, false, "3"},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			m := setupModel(NewTheme(c.mono), c.w, c.h)
+			if c.pick != "" {
+				m.Update(press(c.pick))
+			}
+			checkGolden(t, c.name, m.View().Content)
+		})
+	}
+}
+
+// TestGoldenCutRowsAndSelectedDetail covers long rows cut to one line, and the
+// detail line of the selected row: a decision wrapped over two lines, and a run
+// whose ID stays whole. The down count moves the row cursor from the first row.
+func TestGoldenCutRowsAndSelectedDetail(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		w, h int
+		mono bool
+		down int
+	}{
+		{"cut-100x30-mono.txt", 100, 30, true, 1},
+		{"cut-80x24-color.txt", 80, 24, false, 6},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			m := goldenModel(NewTheme(c.mono), c.w, c.h)
+			for i := 0; i < c.down; i++ {
+				m.Update(press("n"))
+			}
+			checkGolden(t, c.name, m.View().Content)
+		})
+	}
+}
+
+// checkGolden compares got with testdata/golden/name, or rewrites the file
+// under -update.
+func checkGolden(t *testing.T, name, got string) {
+	t.Helper()
+	path := filepath.Join("..", "..", "testdata", "golden", name)
+	if *update {
+		if err := os.WriteFile(path, []byte(got), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		return
+	}
+	want, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("%v (run go test ./internal/tui -update)", err)
+	}
+	if got != string(want) {
+		t.Errorf("view differs from %s (run go test ./internal/tui -update and review the diff)\n--- got\n%s\n--- want\n%s", path, got, want)
+	}
 }
 
 func TestGoldenViews(t *testing.T) {

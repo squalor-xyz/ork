@@ -1,0 +1,30 @@
+[1mork[m  ?help                 | [1mOverview[m[2m | Waves | Roadmap | Decisions[m
+[1;7m> Needs you[m                |[2m------------------------------------------------------------------------[m
+  slicer 2                 |[1mNeeds you[m
+  adjudicate 0             |[1;7m  ? decision  slicer      #11 ui.slicer-tui  Reuse slicer tui?[m
+[2m  DataBall no slicer[m       |  [1m# held    [m  slicer      S12  Roadmap screen  (needs-owner)
+  agents 0                 |  [1m! error   [m  agents      items, runs: locked: Ledger is busy.
+                           |
+                           |[1mRunning[m
+                           |  [2mnothing running[m
+                           |
+                           |[1mReady to land[m
+                           |  [2mnone yet: the list of branches to land comes with slice S09[m
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |  #11 ui.slicer-tui  Reuse slicer tui?
+                           |[2m------------------------------------------------------------------------[m
+                           | 4 projects | refreshed 16:42:07 | pending 0

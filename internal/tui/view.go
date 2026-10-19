@@ -35,7 +35,6 @@ func (m *Model) screen() string {
 		h = defaultHeight
 	}
 
-	bodyH := max(h-4, 1)
 	sideW := 0
 	if !m.sidebarHidden {
 		sideW = 28
@@ -45,16 +44,28 @@ func (m *Model) screen() string {
 		sideW = min(sideW, max(w/3, 1))
 	}
 	mainW := max(w-sideW, 1)
-	var body []string
+	th := m.cfg.Theme
+	var body, detail []string
+	bodyH, start := max(h-4, 1), 0
 	if m.showHelp {
 		body = m.helpLines(mainW)
 	} else {
-		body = m.overview(mainW)
+		// The detail line holds the selected row's full text. It takes lines
+		// from the body, at most h-5, so the body keeps one line.
+		ov := m.overview(mainW)
+		body, detail = ov.body, ov.detail
+		if len(detail) == 0 {
+			detail = []string{""}
+		}
+		detail = detail[:min(len(detail), max(h-5, 1))]
+		bodyH = max(h-4-len(detail), 1)
+		start = windowStart(ov.sel, len(body), bodyH)
 	}
-	body = fitHeight(body, bodyH, m.cfg.Theme)
+	body = window(body, start, bodyH, th)
 	rule := m.cfg.Theme.Dim.Render(strings.Repeat("-", mainW))
 	main := []string{m.viewBar(), rule}
 	main = append(main, body...)
+	main = append(main, detail...)
 	main = append(main, rule, m.statusLine())
 	if len(main) > h {
 		main = main[:h]
@@ -89,12 +100,18 @@ func (m *Model) sidebar(w, h int) []string {
 	for _, idx := range nav[start:end] {
 		label := "Needs you"
 		badge := ""
+		setup := false
 		if idx >= 0 {
 			p := m.projects[idx]
 			label = p.reg.Name
-			badge = fmt.Sprintf(" %d", p.needs())
-			if p.running {
-				badge += "*"
+			setup = p.setup()
+			if setup {
+				badge = " no slicer"
+			} else {
+				badge = fmt.Sprintf(" %d", p.needs())
+				if p.running {
+					badge += "*"
+				}
 			}
 			if m.refreshing(p.reg.Name) {
 				badge += "~"
@@ -106,8 +123,13 @@ func (m *Model) sidebar(w, h int) []string {
 			prefix = "> "
 		}
 		label = prefix + label
-		if idx == m.active {
+		switch {
+		case idx == m.active && setup:
+			label = m.cfg.Theme.TabActive.Faint(true).Render(label)
+		case idx == m.active:
 			label = m.cfg.Theme.TabActive.Render(label)
+		case setup:
+			label = m.cfg.Theme.Dim.Render(label)
 		}
 		lines = append(lines, label)
 	}
@@ -164,14 +186,54 @@ func (m *Model) helpLines(w int) []string {
 	return lines
 }
 
-// fitHeight cuts lines to n, saying how many were cut, or pads them to n.
-func fitHeight(lines []string, n int, th Theme) []string {
-	if len(lines) > n {
-		cut := len(lines) - (n - 1)
-		lines = append(lines[:n-1:n-1], th.Dim.Render(fmt.Sprintf("  +%d more lines", cut)))
+// span is the part of a body of total lines that a window of n lines shows
+// from start: the lines start to hi, and whether a marker line is needed above
+// and below. A marker takes the place of a line of the window.
+func span(total, start, n int) (hi int, above, below bool) {
+	if n < 3 {
+		// Too short for markers: the window is just the lines.
+		return min(start+n, total), false, false
 	}
-	for len(lines) < n {
-		lines = append(lines, "")
+	avail := n
+	above = start > 0
+	if above {
+		avail--
 	}
-	return lines
+	below = start+avail < total
+	if below {
+		avail--
+	}
+	return min(start+avail, total), above, below
+}
+
+// windowStart is the first body line a window of n lines starts at so that
+// line sel is shown. It is the first line the window can start at with sel on
+// it. sel -1 means no line, and the window starts at the top.
+func windowStart(sel, total, n int) int {
+	for start := 0; start < sel; start++ {
+		if hi, _, _ := span(total, start, n); sel < hi {
+			return start
+		}
+	}
+	return max(sel, 0)
+}
+
+// window is n lines of body from start. Lines hidden above or below are said
+// so on a marker line, and the window is padded to n lines.
+func window(lines []string, start, n int, th Theme) []string {
+	n = max(n, 1)
+	start = min(max(start, 0), max(len(lines)-1, 0))
+	hi, above, below := span(len(lines), start, n)
+	var out []string
+	if above {
+		out = append(out, th.Dim.Render(fmt.Sprintf("%s+%d lines above", indent, start)))
+	}
+	out = append(out, lines[start:hi]...)
+	if below {
+		out = append(out, th.Dim.Render(fmt.Sprintf("%s+%d more lines", indent, len(lines)-hi)))
+	}
+	for len(out) < n {
+		out = append(out, "")
+	}
+	return out
 }

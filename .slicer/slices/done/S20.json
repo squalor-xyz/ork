@@ -22,7 +22,7 @@
     },
     {
       "heading": "Failing tests",
-      "body": "- A project whose slicer error has code `state` and a message starting\n  \"no .slicer/ found\" (slicer has no code of its own for it) is dimmed in the\n  sidebar as `no slicer`, appears in no Overview section, adds nothing to\n  any count or to the bell, and its detail line gives the `slicer init`\n  hint.\n- Other errors: one row per project and error code, with the parts merged\n  (`items, runs: locked`); the message is the tool's own text.\n- Rows longer than the pane are cut with an ellipsis instead of wrapping;\n  the selected row shows its full text on a detail line.\n- Golden views for both cases."
+      "body": "- A project whose slicer error has code `state` and a message starting\n  \"no .slicer/ found\" (slicer has no code of its own for it) is dimmed in the\n  sidebar as `no slicer`, appears in no Overview section, adds nothing to\n  any count or to the bell, and its detail line gives the `slicer init`\n  hint.\n- Other errors: one row per project and error code, with the parts merged\n  (`items, runs: locked`); the message is the tool's own text.\n- Rows longer than the pane are cut with an ellipsis instead of wrapping;\n  the selected row shows its full text on a detail line.\n- Golden views for both cases.\n\n- Decided in adj ui.overview-cursor (#84): the Overview has a row cursor (enter selects; project selection keeps its keys). Rows are cut with an ellipsis; run IDs are never clipped. The selected row shows its full text on a detail line, which keeps errors verbatim. Error rows never entered the badge; the no-slicer test stays as a regression guard. Keys documented in docs/dashboard.md."
     },
     {
       "heading": "Implement",
