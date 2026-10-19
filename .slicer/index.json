@@ -360,6 +360,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "d4eed86f-c015-4dab-8dbf-46da1ae2046a",
+          "kind": "",
+          "text": "**2026-10-19** — From S16 (2026-10-19): codex and grok adapters go in internal/agent/<vendor> (vendor.package-path) and use clirun's exported process-group helpers (code.process-groups). Auth and bad-model exits stay unclassified until a real sample exists (vendor.unsampled-classes); candidates are saved raw at 0600, denials included (vendor.fixture-candidates).",
+          "created_at": "2026-10-19T14:09:21Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -849,7 +860,19 @@
         "S16",
         "S13"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "448b87f7-e0e0-4a52-980d-06d9ed2d0b44",
+          "kind": "",
+          "text": "**2026-10-19** — From S16 (2026-10-19): each role round needs its own report path; the adapter reads whatever file is there and never deletes one, so a stale report would be read as the new round's. Vendor adapters live under internal/agent/<vendor> (vendor.package-path, adj 80 after renumber), never a vendor/ directory.",
+          "created_at": "2026-10-19T14:09:21Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",

@@ -1,6 +1,6 @@
 ---
 {
-  "id": 76,
+  "id": 80,
   "title": "Where do vendor adapters live?",
   "status": "decided",
   "key": "vendor.package-path",
@@ -36,6 +36,11 @@
     {
       "date": "2026-10-19",
       "event": "decide"
+    },
+    {
+      "date": "2026-10-19",
+      "event": "renumber",
+      "note": "from 76"
     }
   ]
 }
