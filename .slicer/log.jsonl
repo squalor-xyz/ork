@@ -91,3 +91,6 @@
 {"when": "2026-10-19T04:04:18Z", "item": "S04", "action": "note", "from": "", "to": "", "note": "From the integration review 2026-10-19: check the contract a", "by": "Jon R"}
 {"when": "2026-10-19T04:04:18Z", "item": "S09", "action": "note", "from": "", "to": "", "note": "From the integration review: after a merge, render files can", "by": "Jon R"}
 {"when": "2026-10-19T04:04:18Z", "item": "S03", "action": "note", "from": "", "to": "", "note": "From the integration review: as built, every request re-runs", "by": "Jon R"}
+{"when": "2026-10-19T04:08:54Z", "item": "S13", "action": "note", "from": "", "to": "", "note": "From S03 (2026-10-19): an idle daemon unlinks its socket bef", "by": "Jon R"}
+{"when": "2026-10-19T04:08:55Z", "item": "S04", "action": "note", "from": "", "to": "", "note": "From S03: doctor compares slicer ai relay line 1 to the sing", "by": "Jon R"}
+{"when": "2026-10-19T04:08:55Z", "item": "S03", "action": "note", "from": "", "to": "", "note": "Review notes: docs/design.md says the pidfile is never read ", "by": "Jon R"}

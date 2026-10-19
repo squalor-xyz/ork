@@ -135,6 +135,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "f2d6a158-3f35-41fc-a033-13bb54d70a41",
+          "kind": "",
+          "text": "**2026-10-19** — Review notes: docs/design.md says the pidfile is never read empty, not true for a brand-new pidfile before its first write (refusal message lacks the pid); ipc.go:103 says macOS limits on every platform; the cli suite takes about 40 s under -race. Proposed and awaiting owner: doctor does not fail on missing vendor CLIs; needs_you = open adj records; projects add accepts a path that does not exist.",
+          "created_at": "2026-10-19T04:08:55Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -184,6 +195,17 @@
           "kind": "",
           "text": "**2026-10-19** — From the integration review 2026-10-19: check the contract against an accepted set of versions (boundary.contract, superseding the exact pin; slicer s382 moves v7 to v8). Proposed, not decided: record every write ork makes in run.json as writes[] (R7). Retry slicer writes on locked (exit 3). Run adj ask only in the main checkout so IDs do not collide across worktrees.",
           "created_at": "2026-10-19T04:04:18Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "a0255d90-4a79-48bc-b576-fa277b8733ad",
+          "kind": "",
+          "text": "**2026-10-19** — From S03: doctor compares slicer ai relay line 1 to the single roles.ContractVersion; switch it to the accepted set (boundary.contract, record 67). needs_you counts only open adj records until the engine adds approvals, stops and pauses.",
+          "created_at": "2026-10-19T04:08:55Z",
           "attempt": 0,
           "by": "Jon R",
           "verified_by": "",
@@ -635,7 +657,19 @@
         "S14",
         "S15"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "bff5bced-9175-4204-9f03-34ee061100b2",
+          "kind": "",
+          "text": "**2026-10-19** — From S03 (2026-10-19): an idle daemon unlinks its socket before releasing the pidfile lock, so a start racing that exit gets ErrAlreadyRunning; treat it as transient and reuse App.connect's StartWait (internal/cli/cli.go:175-195) instead of a second 5 s wait. Package-level cli.Run has no Start function; S13 builds an App with Start.",
+          "created_at": "2026-10-19T04:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
