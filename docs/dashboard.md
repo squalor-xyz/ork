@@ -36,7 +36,9 @@ until then.
 +---------------------------------------------------------------------------+
 ```
 
-- **Project tabs** come from the registry (`registry.initial`). The number
+- **Project tabs** come from the registry (`registry.initial`). From S19 they
+  become a left sidebar with a "Needs you" entry first (`ui.project-nav`), and
+  from S20 a project without slicer shows once as setup (`ui.setup-errors`). The number
   counts what needs the owner, and `*` marks a running slice.
 - **Status line:** daemon uptime, global cap use, queued items, and a token
   sparkline (`ui.charts`).

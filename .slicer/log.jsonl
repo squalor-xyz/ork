@@ -121,3 +121,5 @@
 {"when": "2026-10-19T14:09:21Z", "item": "S06", "action": "note", "from": "", "to": "", "note": "From S16 (2026-10-19): codex and grok adapters go in interna", "by": "Jon R"}
 {"when": "2026-10-19T14:32:25Z", "item": "S17", "action": "note", "from": "", "to": "", "note": "From S04 (2026-10-19), fix before dogfooding: a gate PASS wh", "by": "Jon R"}
 {"when": "2026-10-19T14:34:57Z", "item": "S17", "action": "note", "from": "", "to": "", "note": "engine.finish-order decided 2026-10-19: on approve run the f", "by": "Jon R"}
+{"when": "2026-10-19T15:02:52Z", "item": "S19", "action": "add", "from": "", "to": "open", "note": "Project sidebar in place of tabs"}
+{"when": "2026-10-19T15:02:52Z", "item": "S20", "action": "add", "from": "", "to": "open", "note": "Overview rows: collapse setup errors, one line per row"}

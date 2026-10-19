@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 19,
+  "next_id": 21,
   "preamble": "",
   "passes": [
     {
@@ -939,6 +939,66 @@
         "reason": "",
         "importance": 1,
         "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S19",
+      "title": "Project sidebar in place of tabs",
+      "short_title": "Project sidebar",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S13"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S20",
+      "title": "Overview rows: collapse setup errors, one line per row",
+      "short_title": "Overview rows",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S19"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
         "effort": 1,
         "attempts": 0
       }

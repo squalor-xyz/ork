@@ -1,0 +1,41 @@
+{
+  "id": "S20",
+  "title": "Overview rows: collapse setup errors, one line per row",
+  "lead": [
+    "Show a project without slicer once, as setup, not as errors under Needs\nyou and Running, and keep every Overview row to one line\n(`ui.setup-errors`)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** changes to the registry, `ork doctor`, or which projects are registered.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Each project with no `.slicer/` printed two wrapping errors, one for items\nand one for relay runs, under both Needs you and Running, and counted\ntoward the badge (owner screenshot, 2026-10-19)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/`, `testdata/golden/`, `docs/dashboard.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A project whose slicer error has code `state` and a message starting\n  \"no .slicer/ found\" (slicer has no code of its own for it) is dimmed in the\n  sidebar as `no slicer`, appears in no Overview section, adds nothing to\n  any count or to the bell, and its detail line gives the `slicer init`\n  hint.\n- Other errors: one row per project and error code, with the parts merged\n  (`items, runs: locked`); the message is the tool's own text.\n- Rows longer than the pane are cut with an ellipsis instead of wrapping;\n  the selected row shows its full text on a detail line.\n- Golden views for both cases."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race ./...`, `go vet ./...`, `gofmt -l .` clean; SPDX headers;\n  no new dependency.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"S20: Overview rows: collapse setup errors, one line per row\"."
+    }
+  ],
+  "notes": []
+}

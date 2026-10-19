@@ -1,0 +1,41 @@
+{
+  "id": "S19",
+  "title": "Project sidebar in place of tabs",
+  "lead": [
+    "Replace the project tab row with a vertical sidebar on the left: a \"Needs\nyou\" entry at the top, then one row per project (`ui.project-nav`)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** new views, Overview row changes (the next slice), or mouse support beyond what S11 has.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "With 15 registered projects the tab row runs off the screen: the 12th tab\nis cut and the rest are hidden (owner screenshot, 2026-10-19)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/`, `testdata/golden/`, `docs/dashboard.md` (Layout, keys)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- The sidebar lists \"Needs you\" first, then every project; each project row\n  shows its needs-you count and the running marker `*`, and the selected\n  row is marked by more than colour (reverse plus a `>`), also under\n  NO_COLOR (`ui.no-color`).\n- \"Needs you\" shows today's all-projects Overview; a project row shows\n  that project's rows only. The view bar (Overview, Waves, Roadmap,\n  Decisions) stays at the top of the main pane.\n- Keys: `up`/`down` and `k`/`j` move the selection; `tab`/`shift+tab` and\n  `1`-`9` keep working; `r` refreshes the selected project, or every\n  project on \"Needs you\"; `/` filters projects by name, and `esc` clears it.\n- Order: projects with something for the owner first, then those running,\n  then the rest, registry order inside each group; the selection follows\n  its project when the order changes.\n- When there are more projects than rows, the list scrolls and keeps the\n  selection visible, with a `+N more` hint at the cut.\n- Below about 100 columns the sidebar shows short names (cut with an\n  ellipsis) and badges; a key (`s`) hides and shows it at any width.\n- Golden views at 80x24, 120x40 and with 15 projects."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race ./...`, `go vet ./...`, `gofmt -l .` clean; SPDX headers;\n  no new dependency.\n- [HUMAN CHECK] The owner opens `ork` with 15 projects and moves through\n  them with the sidebar.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"S19: project sidebar in place of tabs\"."
+    }
+  ],
+  "notes": []
+}
