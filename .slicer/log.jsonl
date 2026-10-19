@@ -63,3 +63,10 @@
 {"when": "2026-10-19T02:41:27Z", "item": "S06", "action": "note", "from": "", "to": "", "note": "Owner 2026-10-19 (vendor.codex-allowlist): codex runs only r", "by": "Jon R"}
 {"when": "2026-10-19T02:42:36Z", "item": "S02", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-19T03:11:23Z", "item": "S02", "action": "status", "from": "started", "to": "done", "note": "Registry, clirun, slicercli, adjcli and source packages built with recorded slicer and adj fixtures; 55 tests green, and vet, gofmt, SPDX, go.mod, slicer check and adj lint pass.", "by": "Jon R"}
+{"when": "2026-10-19T02:42:51Z", "item": "S10", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-19T02:44:05Z", "item": "S10", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-19T03:09:16Z", "item": "S10", "action": "status", "from": "started", "to": "done", "note": "Four embedded role prompts (implementer, reviewer, gate, architect) and internal/roles/roles.go with Names, Prompt and ContractVersion=7, pinned to the recorded slicer relay v7 first line. 16 tests green; go vet, gofmt, slicer check and adj lint clean.", "by": "Jon R"}
+{"when": "2026-10-19T03:00:22Z", "item": "S06", "action": "note", "from": "", "to": "", "note": "Owner 2026-10-19 (vendor.codex-ratelimit): codex rate limits", "by": "Jon R"}
+{"when": "2026-10-19T03:09:56Z", "item": "S04", "action": "note", "from": "", "to": "", "note": "From S10 (2026-10-19): all four role prompts say \"ork files ", "by": "Jon R"}
+{"when": "2026-10-19T03:09:56Z", "item": "S08", "action": "note", "from": "", "to": "", "note": "From S10: split-part and sliver prompts need the same \"no ha", "by": "Jon R"}
+{"when": "2026-10-19T03:09:57Z", "item": "S10", "action": "note", "from": "", "to": "", "note": "Review notes: TestPromptUnknownName survives removing the sl", "by": "Jon R"}

@@ -1,0 +1,41 @@
+{
+  "id": "S10",
+  "title": "Embedded role prompts seeded from slicer contract v7; ork roles print",
+  "lead": [
+    "ork's own role prompts, embedded in the binary and canonical\n(`roles.prompts`): implementer, reviewer, gate and architect, plus the\ncontract version pin they are written against."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** the brief builder and placeholder filling (S04), the `ork roles print` command (S03), split-part and sliver prompts (S08), and any change to the agents repo.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "ork launches every role headlessly with no orchestrator agent\n(`launch.mode`), so the prompts carry the rules a role needs that slicer's\ncontract gives the orchestrator today. They are seeded from slicer's v7\ncontract and written fresh where needed (`roles.prompt-seed`), and the\nagents repo will generate its role files from them (`ork roles print`, S03)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/roles/prompts/implementer.md`, `reviewer.md`, `gate.md`,\n  `architect.md` (new).\n- `internal/roles/roles.go`, `internal/roles/roles_test.go` (new): embed the\n  prompts with `embed`, `Names()`, `Prompt(name)`, `ContractVersion`.\n- `testdata/roles/`: recorded first lines of `slicer ai relay` and\n  `slicer ai relay-orchestrator` (read-only commands).\n- `go.mod`: only if absent, created with exactly\n  `module github.com/squalor-xyz/ork` and `go 1.27.2` and nothing else\n  (S02 creates the same file in parallel).\n- `docs/design.md`: the Roles section, only if a prompt changes what it says.\n- Every `.go` file starts with `// SPDX-License-Identifier: GPL-3.0-or-later`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `Names()` returns implementer, reviewer, gate, architect, in that order.\n- `Prompt` of an unknown name returns an error naming it.\n- `ContractVersion` is `7` and equals the version in the recorded\n  `slicer ai relay` first line (`Contract: relay v7`).\n- Every prompt starts with a line naming its role and the contract version.\n- No prompt mentions Claude Code-only mechanics: `rg -i` for `Agent tool`,\n  `SendMessage`, `subagent`, `TodoWrite` finds nothing in the prompts.\n- Every prompt names the report path placeholder `{{report_path}}` and the\n  temp directory placeholder `{{temp_dir}}`; the gate prompt says its report's\n  first line is exactly `VERDICT: PASS` or `VERDICT: FAIL`.\n- The reviewer, gate and architect prompts say the role is read-only and\n  must not change the tree."
+    },
+    {
+      "heading": "Implement",
+      "body": "- Seed from `slicer ai relay` and `slicer ai relay-orchestrator` (read with\n  `--root` on this repo) and, for wording only, the agents repo's\n  `multi-agent-workflows/relay-roles/*.md` (read-only). Do not paste the\n  contract; write what each role itself must do.\n- Each prompt covers: what the role owns, its slicer steps (implementer:\n  `slicer start ID --render --strict`, red tests, mutation-check, closing\n  note and finish step only after PASS), the tracking rule, the workspace\n  and temp-dir limits, run long commands in the foreground, never commit,\n  owner questions go in the report under \"Owner needed\" (`owner.questions`),\n  and the report shape ork validates (design.md, Roles).\n- Placeholders are `{{name}}` and are filled by the engine (S04); list them\n  in a comment at the top of `roles.go`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...` and `go vet ./...` pass; `gofmt -l .` prints nothing.\n- SPDX header on every `.go` file; `go.mod` has no `require` lines.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"S10: embedded role prompts and contract pin\"."
+    }
+  ],
+  "notes": []
+}

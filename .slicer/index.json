@@ -132,7 +132,19 @@
         "S01",
         "S03"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "77ce4238-a301-457e-b148-8628279c9119",
+          "kind": "",
+          "text": "**2026-10-19** — From S10 (2026-10-19): all four role prompts say \"ork files the question from your report\"; design.md says ork shows it to the owner and files it to adj only when the toggle is on. Reword to \"ork shows the question to the owner (and may file it)\" when the engine wires owner questions.",
+          "created_at": "2026-10-19T03:09:56Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "L",
@@ -258,6 +270,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "d8d75cc9-933d-4190-b979-dfbea34840bd",
+          "kind": "",
+          "text": "**2026-10-19** — Owner 2026-10-19 (vendor.codex-ratelimit): codex rate limits are classified by the reported strings \"You've hit your usage limit\" and HTTP 429 rate_limit_exceeded in turn.failed/error events, with automatic fallback. Capture a real sample when one occurs and add it as a fixture; no real codex limit has been recorded yet.",
+          "created_at": "2026-10-19T03:00:22Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -319,7 +342,19 @@
       "depends_on": [
         "S06"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d282b9bf-e5cb-4c95-b63a-8bb663a1bf6b",
+          "kind": "",
+          "text": "**2026-10-19** — From S10: split-part and sliver prompts need the same \"no handoff before review\" wording as the implementer prompt.",
+          "created_at": "2026-10-19T03:09:56Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "L",
@@ -374,12 +409,24 @@
       "id": "S10",
       "title": "Embedded role prompts seeded from slicer contract v7; ork roles print",
       "short_title": "Role prompts",
-      "status": "open",
-      "has_slice": false,
+      "status": "done",
+      "has_slice": true,
       "depends_on": [
         "S01"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "045ec6c9-1986-4b83-a931-169b02bca49e",
+          "kind": "",
+          "text": "**2026-10-19** — Review notes: TestPromptUnknownName survives removing the slices.Contains guard (equivalent mutation, kept as a guard). Fix-round red evidence was reintroduction mutations. The report shape (Tests line, ## Owner needed section, first-line format, placeholder set) is proposed in design.md, not decided.",
+          "created_at": "2026-10-19T03:09:57Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -397,7 +444,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
