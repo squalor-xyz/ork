@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 18,
+  "next_id": 19,
   "preamble": "",
   "passes": [
     {
@@ -843,6 +843,34 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S18",
+      "title": "Create logo images for ork",
+      "short_title": "ork logos",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }
