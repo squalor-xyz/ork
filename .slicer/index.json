@@ -236,6 +236,28 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "dd13b876-40e5-4c13-98d0-966e5092cbb0",
+          "kind": "",
+          "text": "**2026-10-19** — Owner 2026-10-19: grok decision deferred; grok credits reset 2026-11-01. Rerun the 6 grok probes after that (real session id, grok tool names, stop on first error) and decide grok's v1 role before S06.",
+          "created_at": "2026-10-19T02:41:26Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "dd71ed08-3c76-4766-b38f-4e7e086daf30",
+          "kind": "",
+          "text": "**2026-10-19** — Owner 2026-10-19 (vendor.codex-allowlist): codex runs only read-only roles in v1.",
+          "created_at": "2026-10-19T02:41:27Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,

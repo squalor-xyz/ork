@@ -2,10 +2,12 @@
 {
   "id": 54,
   "title": "Narrow v1 for codex, which has no per-tool allowlist?",
-  "status": "open",
+  "status": "decided",
   "key": "vendor.codex-allowlist",
   "asked_by": "s01 implementer",
+  "decided_by": "jon",
   "created": "2026-10-18",
+  "decided_at": "2026-10-18",
   "context": "launch.permissions is decided as a per-project, per-role tool allowlist (adj show 16). codex exec has no per-tool allowlist. Its help lists only sandbox modes: read-only, workspace-write, danger-full-access (codex exec --help). The S01 spike ran one codex probe with -s read-only (testdata/vendors/codex/03-readonly-sandbox-write.stdout and .repo-status). That run contains only agent_message items and no command item, so the sandbox was not exercised: the model said the filesystem was read-only and no file was created. The spike did not measure whether codex's sandbox blocks a write. grok's per-tool allowlist is also unmeasured. So codex cannot be shown to meet the allowlist rule for write-capable roles.",
   "options": [
     {
@@ -28,6 +30,8 @@
     "label": "read-only-roles",
     "reasoning": "It keeps the decided allowlist rule for every write-capable role and uses the one codex control the spike verified (the read-only sandbox)."
   },
+  "decision": "read-only-roles",
+  "rationale": "Owner 2026-10-19: codex runs only read-only roles (reviewer, gate, architect) in v1; implementers stay on claude. The read-only sandbox's write block was not exercised in S01, so the read-only fingerprint is the backstop.",
   "refs": [
     "S01"
   ],
@@ -54,6 +58,10 @@
       "date": "2026-10-18",
       "event": "renumber",
       "note": "from 50"
+    },
+    {
+      "date": "2026-10-18",
+      "event": "decide"
     }
   ]
 }
