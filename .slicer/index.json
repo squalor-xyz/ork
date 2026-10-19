@@ -31,6 +31,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "389920d0-101c-49b1-8be7-398717166d8b",
+          "kind": "",
+          "text": "**2026-10-19** — Review note: vendor.codex-allowlist (adj 54) Reasoning says the read-only sandbox was verified, but its amended Context says the sandbox was not exercised; the Context is correct. Claude init events in fixtures list the owner's skills, plugins and MCP server names (low).",
+          "created_at": "2026-10-19T01:03:56Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -181,7 +192,52 @@
       "depends_on": [
         "S05"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "a45f7a9e-30a2-4f71-bea3-f119ad8ad289",
+          "kind": "",
+          "text": "**2026-10-19** — From S01 (2026-10-19): fixtures rename the apiKeySource field to REDACTED-KEY-NAME; do not parse that field from fixtures.",
+          "created_at": "2026-10-19T01:03:53Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "db4f9b72-1c68-4da6-b835-8ba3ed3ef3b2",
+          "kind": "",
+          "text": "**2026-10-19** — From S01: claude bad-model returns subtype success with is_error true and exit 1; a claude allowlist denial exits 0 and shows only in permission_denials. The classifier must read the JSON, not the exit code.",
+          "created_at": "2026-10-19T01:03:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "235fbad0-3769-450e-a289-a8dba8b303e8",
+          "kind": "",
+          "text": "**2026-10-19** — From S01: claude allowlist has no positive control (an allowlisted tool that runs was not measured). grok tool names look like read_file and write, not Read; grok probes 03 and 04 must be redone when grok has credits.",
+          "created_at": "2026-10-19T01:03:55Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "b1268cab-de0b-4580-a3f1-7138e4a62ede",
+          "kind": "",
+          "text": "**2026-10-19** — From S01: grok returned HTTP 403 'used all available credits or reached its monthly spending limit' on every call. That is a quota stop, not a rate limit; the classifier needs a class for it.",
+          "created_at": "2026-10-19T01:03:56Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",

@@ -1,6 +1,6 @@
 ---
 {
-  "id": 50,
+  "id": 54,
   "title": "Narrow v1 for codex, which has no per-tool allowlist?",
   "status": "open",
   "key": "vendor.codex-allowlist",
@@ -49,6 +49,11 @@
           }
         ]
       }
+    },
+    {
+      "date": "2026-10-18",
+      "event": "renumber",
+      "note": "from 50"
     }
   ]
 }

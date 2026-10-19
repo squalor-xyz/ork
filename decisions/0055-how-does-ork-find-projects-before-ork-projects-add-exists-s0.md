@@ -1,6 +1,6 @@
 ---
 {
-  "id": 51,
+  "id": 55,
   "title": "How does ork find projects before ork projects add exists (S03)?",
   "status": "decided",
   "key": "registry.seed",
@@ -33,6 +33,11 @@
     {
       "date": "2026-10-18",
       "event": "decide"
+    },
+    {
+      "date": "2026-10-18",
+      "event": "renumber",
+      "note": "from 51"
     }
   ]
 }

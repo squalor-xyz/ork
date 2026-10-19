@@ -54,3 +54,8 @@
 {"when": "2026-10-19T00:48:49Z", "item": "S02", "action": "set", "from": "", "to": "", "note": "title Core: registry, slicer and adj adapters, read-only dashboard→Core: registry and CLI adapters; short_title Core and read-only dashboard→Core and adapters; size L→M; effort 3→2"}
 {"when": "2026-10-19T00:48:58Z", "item": "S11", "action": "add", "from": "", "to": "open", "note": "TUI shell, project tabs and Overview"}
 {"when": "2026-10-19T00:48:58Z", "item": "S12", "action": "add", "from": "", "to": "open", "note": "Roadmap and Decisions screens, read-only"}
+{"when": "2026-10-19T01:03:54Z", "item": "S06", "action": "note", "from": "", "to": "", "note": "From S01 (2026-10-19): fixtures rename the apiKeySource fiel", "by": "Jon R"}
+{"when": "2026-10-19T01:03:54Z", "item": "S06", "action": "note", "from": "", "to": "", "note": "From S01: claude bad-model returns subtype success with is_e", "by": "Jon R"}
+{"when": "2026-10-19T01:03:55Z", "item": "S06", "action": "note", "from": "", "to": "", "note": "From S01: claude allowlist has no positive control (an allow", "by": "Jon R"}
+{"when": "2026-10-19T01:03:56Z", "item": "S06", "action": "note", "from": "", "to": "", "note": "From S01: grok returned HTTP 403 'used all available credits", "by": "Jon R"}
+{"when": "2026-10-19T01:03:56Z", "item": "S01", "action": "note", "from": "", "to": "", "note": "Review note: vendor.codex-allowlist (adj 54) Reasoning says ", "by": "Jon R"}
