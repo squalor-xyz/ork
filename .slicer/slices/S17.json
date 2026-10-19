@@ -1,0 +1,41 @@
+{
+  "id": "S17",
+  "title": "Run, approve and stop one slice from the CLI",
+  "lead": [
+    "The daemon runs S04's engine with S16's adapter, and the CLI launches,\napproves, answers and stops one slice (`engine.owner-surface`)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** waves, caps, the Waves screen, or TUI actions.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "With it, the owner can run ork's own slices through ork (dogfood)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/`, `internal/ipc/`, `internal/cli/`, `docs/design.md`\n  (CLI and Output), and the glue from the engine's Runner to the claude\n  adapter."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `ork run P ID` prints the plan (worktree, branch, check command, lineup\n  from `relay-roles recommend --json` with the first Claude row per role,\n  allowlists) and starts only after confirmation; `--yes` skips the\n  prompt. That is checkpoint 1.\n- `ork approve RUN` commits a slice awaiting approval (checkpoint 2);\n  `ork stop RUN` stops it and kills its roles; `ork answer RUN TEXT`\n  resumes a paused role with the answer.\n- `ork status` lists engine runs with state and what they wait on;\n  `needs_you` adds awaiting approval, paused and stopped runs\n  (`status.needs-you`).\n- The daemon does not idle-exit while a run is active (`daemon.idle`).\n- Fakes only; the daemon runs in-process."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race ./...`, `go vet ./...`, `gofmt -l .` clean; SPDX headers;\n  no new dependency.\n- [HUMAN CHECK] The owner runs one small ork slice end to end with\n  `ork run ork ID` and approves it.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"S17: run, approve and stop one slice from the CLI\"."
+    }
+  ],
+  "notes": []
+}
