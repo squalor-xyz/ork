@@ -1,0 +1,24 @@
+{
+  "ok": false,
+  "stale_render": [
+    "ROADMAP.html",
+    "ROADMAP.md"
+  ],
+  "stale_render_details": [
+    {
+      "file": "ROADMAP.html",
+      "cause": "content",
+      "detail": "content differs from state at the same render format; run `slicer render`"
+    },
+    {
+      "file": "ROADMAP.md",
+      "cause": "content",
+      "detail": "content differs from state at the same render format; run `slicer render`"
+    }
+  ],
+  "stale_render_kind": "roadmap_only",
+  "orphan_render": [],
+  "stale_sync": [],
+  "problems": [],
+  "warnings": []
+}

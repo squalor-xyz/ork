@@ -1,0 +1,147 @@
+{
+  "id": "S01",
+  "well_specified": true,
+  "split": false,
+  "sliver": false,
+  "roles": [
+    {
+      "role": "implementer",
+      "row": {
+        "id": "r3",
+        "role": "implementer",
+        "when": {
+          "size": [],
+          "effort": [],
+          "importance": [],
+          "urgency": [],
+          "well_specified": null,
+          "split": false,
+          "sliver": null
+        },
+        "agent": "Claude Code",
+        "vendor": "Claude",
+        "model": "sonnet",
+        "reasoning": "high",
+        "note": "anything the rows above do not match"
+      },
+      "alternatives": [
+        {
+          "id": "r9",
+          "role": "implementer",
+          "when": {
+            "size": [],
+            "effort": [],
+            "importance": [],
+            "urgency": [],
+            "well_specified": null,
+            "split": null,
+            "sliver": null
+          },
+          "agent": "Codex",
+          "vendor": "OpenAI",
+          "model": "gpt-6.1-sol",
+          "reasoning": "medium",
+          "note": "alternate implementer for any slice, split part or sliver"
+        }
+      ],
+      "selected_by": "matrix_order"
+    },
+    {
+      "role": "reviewer",
+      "row": {
+        "id": "r5",
+        "role": "reviewer",
+        "when": {
+          "size": [],
+          "effort": [],
+          "importance": [],
+          "urgency": [],
+          "well_specified": null,
+          "split": null,
+          "sliver": null
+        },
+        "agent": "Claude Code",
+        "vendor": "Claude",
+        "model": "opus",
+        "reasoning": "medium",
+        "note": ""
+      },
+      "alternatives": [],
+      "selected_by": "matrix_order"
+    },
+    {
+      "role": "gate",
+      "row": {
+        "id": "r6",
+        "role": "gate",
+        "when": {
+          "size": [],
+          "effort": [],
+          "importance": [],
+          "urgency": [],
+          "well_specified": null,
+          "split": null,
+          "sliver": null
+        },
+        "agent": "Claude Code",
+        "vendor": "Claude",
+        "model": "opus",
+        "reasoning": "medium",
+        "note": ""
+      },
+      "alternatives": [],
+      "selected_by": "matrix_order"
+    },
+    {
+      "role": "architect",
+      "row": null,
+      "alternatives": [],
+      "selected_by": "unmatched"
+    },
+    {
+      "role": "orchestrator",
+      "row": {
+        "id": "r10",
+        "role": "orchestrator",
+        "when": {
+          "size": [],
+          "effort": [],
+          "importance": [],
+          "urgency": [],
+          "well_specified": null,
+          "split": null,
+          "sliver": null
+        },
+        "agent": "Claude Code",
+        "vendor": "Claude",
+        "model": "opus",
+        "reasoning": "high",
+        "note": "default orchestrator"
+      },
+      "alternatives": [
+        {
+          "id": "r11",
+          "role": "orchestrator",
+          "when": {
+            "size": [],
+            "effort": [],
+            "importance": [],
+            "urgency": [],
+            "well_specified": null,
+            "split": null,
+            "sliver": null
+          },
+          "agent": "Codex",
+          "vendor": "OpenAI",
+          "model": "gpt-6.1-sol",
+          "reasoning": "high",
+          "note": "alternate orchestrator"
+        }
+      ],
+      "selected_by": "matrix_order"
+    }
+  ],
+  "unmatched": [
+    "architect"
+  ]
+}

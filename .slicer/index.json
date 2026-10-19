@@ -172,7 +172,7 @@
       "id": "S04",
       "title": "Engine for one implementer: setup, implement, checks, review, gate, approve, commit, ledger",
       "short_title": "Engine core",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S01",
@@ -241,7 +241,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 3,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

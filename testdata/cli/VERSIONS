@@ -12,3 +12,12 @@ slicer/error-no-such-item.json: slicer show NOPE --json --lean --root ORK (stdou
 adj/inbox-nonempty.json: adj inbox --json --root ORK
 adj/inbox-empty.json: adj inbox --json --root ADJ
 adj/list.json: adj list --json --root ORK
+
+# S04 write fixtures: recorded with slicer 1.15.0 in a scratch project (one item, S01, a git repo, `slicer init --relay-roles`).
+slicer/relay-run-begin.json: slicer relay-run begin S01 --worktree PROJ --json --root PROJ
+slicer/relay-run-step.json: slicer relay-run step RUN --role implementer --agent claude --vendor claude --model sonnet --reasoning high --parent 1 --phase start --task "S01 implementer" --json --root PROJ
+slicer/relay-run-end.json: slicer relay-run end RUN --outcome pass --close-steps done --json --root PROJ
+slicer/note.json: slicer note S01 --text x --json --root PROJ
+slicer/check-ok.json: slicer check --json --root PROJ (after slicer render)
+slicer/check-stale.json: slicer check --json --root PROJ (exit 1, stale render)
+slicer/relay-roles-recommend.json: slicer relay-roles recommend S01 --well-specified yes --split no --json --root PROJ

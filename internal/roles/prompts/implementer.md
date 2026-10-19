@@ -77,8 +77,8 @@ affected tests and the full suite.
 Do not guess a spec detail, a design choice or a decision that is the owner's. Stop
 the work that depends on it and ask in your report, under `## Owner needed`: the
 question, the options you see, and your recommendation. Finish any independent work
-first. Do not run `adj ask` yourself; ork files the question from your report. ork
-shows the question to the owner and may resume you with the answer.
+first. Do not run `adj ask` yourself; ork shows the question to the owner (and may file
+it) and may resume you with the answer.
 
 ## Report
 

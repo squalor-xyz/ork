@@ -8,8 +8,6 @@ import (
 	"flag"
 	"fmt"
 	"os/exec"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -19,9 +17,6 @@ import (
 
 // versionTimeout bounds each doctor call.
 const versionTimeout = 10 * time.Second
-
-// contractLine matches the first line of `slicer ai relay` (boundary.contract).
-var contractLine = regexp.MustCompile(`^Contract: relay v(\d+)\s*$`)
 
 type toolCheck struct {
 	Name     string `json:"name"`
@@ -34,14 +29,14 @@ type toolCheck struct {
 }
 
 type contractCheck struct {
-	Pin   int    `json:"pin"`
-	Found string `json:"found,omitempty"`
-	OK    bool   `json:"ok"`
-	Error string `json:"error,omitempty"`
+	Accepted []int  `json:"accepted"`
+	Found    string `json:"found,omitempty"`
+	OK       bool   `json:"ok"`
+	Error    string `json:"error,omitempty"`
 }
 
 // DoctorReport is what `ork doctor --json` prints. OK is false when slicer,
-// adj or the contract pin fails; a vendor CLI that is missing or broken is
+// adj or the contract check fails; a vendor CLI that is missing or broken is
 // reported but does not fail the check.
 type DoctorReport struct {
 	OK       bool          `json:"ok"`
@@ -82,9 +77,10 @@ func checkTool(ctx context.Context, name, bin string, required bool) toolCheck {
 	return tc
 }
 
-// checkContract compares the first line of `slicer ai relay` with the pin.
+// checkContract compares the first line of `slicer ai relay` with the
+// accepted set of contract versions (boundary.contract).
 func checkContract(ctx context.Context, slicer toolCheck) contractCheck {
-	cc := contractCheck{Pin: roles.ContractVersion}
+	cc := contractCheck{Accepted: roles.AcceptedContracts()}
 	if !slicer.Present {
 		cc.Error = "slicer is not available"
 		return cc
@@ -95,14 +91,8 @@ func checkContract(ctx context.Context, slicer toolCheck) contractCheck {
 		cc.Error = err.Error()
 		return cc
 	}
-	m := contractLine.FindStringSubmatch(cc.Found)
-	if m == nil {
-		cc.Error = "the first line of `slicer ai relay` is not a contract line"
-		return cc
-	}
-	got, _ := strconv.Atoi(m[1])
-	if got != roles.ContractVersion {
-		cc.Error = fmt.Sprintf("ork pins relay v%d and slicer prints v%d", roles.ContractVersion, got)
+	if _, err := roles.CheckContractLine(cc.Found); err != nil {
+		cc.Error = err.Error()
 		return cc
 	}
 	cc.OK = true
@@ -165,14 +155,19 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 		}
 	}
 	c := rep.Contract
+	accepts := make([]string, len(c.Accepted))
+	for i, v := range c.Accepted {
+		accepts[i] = fmt.Sprintf("v%d", v)
+	}
+	accepted := strings.Join(accepts, ", ")
 	found := ""
 	if c.Found != "" {
 		found = fmt.Sprintf(", slicer prints %q", c.Found)
 	}
 	if c.OK {
-		fmt.Fprintf(o.stdout, "[ok] contract  pin v%d%s\n", c.Pin, found)
+		fmt.Fprintf(o.stdout, "[ok] contract  accepts %s%s\n", accepted, found)
 	} else {
-		fmt.Fprintf(o.stdout, "[FAIL] contract  pin v%d%s: %s\n", c.Pin, found, c.Error)
+		fmt.Fprintf(o.stdout, "[FAIL] contract  accepts %s%s: %s\n", accepted, found, c.Error)
 	}
 	return code
 }

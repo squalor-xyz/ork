@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-17 items · — 11 · done 6
+17 items · — 10 · done 7
 
 ## v1
 
@@ -51,7 +51,7 @@
 | 1 | [S01](slices/S01.md) | Vendor spike | S | 1 |  |  | done |
 | 2 | [S02](slices/S02.md) | Core and adapters | M | 2 |  |  | done |
 | 3 | [S03](slices/S03.md) | Daemon and CLI | M | 2 |  |  | done |
-| 4 | [S04](slices/S04.md) | Engine core | M | 3 |  |  | — |
+| 4 | [S04](slices/S04.md) | Engine core | M | 3 |  |  | done |
 | 5 | S05 | Waves and caps | M | 2 |  |  | — |
 | 6 | S06 | Vendors and fallback | M | 2 |  |  | — |
 | 7 | S07 | Live role detail | M | 2 |  |  | — |

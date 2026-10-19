@@ -47,7 +47,7 @@ this prompt disagree, the brief wins; say so in your report.
 
 Do not guess a design choice that is the owner's. Put it in your report under
 `## Owner needed`: the question, the options, and your recommendation. Do not run
-`adj ask` yourself; ork files the question from your report.
+`adj ask` yourself; ork shows the question to the owner (and may file it).
 
 ## Report
 

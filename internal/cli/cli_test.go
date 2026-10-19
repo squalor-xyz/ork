@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -550,10 +551,10 @@ type doctorOut struct {
 		Error    string `json:"error"`
 	} `json:"tools"`
 	Contract struct {
-		Pin   int    `json:"pin"`
-		Found string `json:"found"`
-		OK    bool   `json:"ok"`
-		Error string `json:"error"`
+		Accepted []int  `json:"accepted"`
+		Found    string `json:"found"`
+		OK       bool   `json:"ok"`
+		Error    string `json:"error"`
 	} `json:"contract"`
 }
 
@@ -575,7 +576,7 @@ func doctorApp(t *testing.T, relayFirstLine string) (app *App, fake *clitest.Fak
 	return app, fake, logs
 }
 
-func TestDoctorReportsEachToolAndTheContractPin(t *testing.T) {
+func TestDoctorReportsEachToolAndTheAcceptedContracts(t *testing.T) {
 	app, fake, logs := doctorApp(t, fmt.Sprintf("Contract: relay v%d", roles.ContractVersion))
 	code, stdout, stderr := run(t, app, "doctor", "--json")
 	if code != 0 {
@@ -596,7 +597,7 @@ func TestDoctorReportsEachToolAndTheContractPin(t *testing.T) {
 			t.Errorf("%s required = %v", name, tool.Required)
 		}
 	}
-	if d.Contract.Pin != roles.ContractVersion || d.Contract.Found != fmt.Sprintf("Contract: relay v%d", roles.ContractVersion) || !d.Contract.OK {
+	if !reflect.DeepEqual(d.Contract.Accepted, roles.AcceptedContracts()) || d.Contract.Found != fmt.Sprintf("Contract: relay v%d", roles.ContractVersion) || !d.Contract.OK {
 		t.Fatalf("contract: %+v", d.Contract)
 	}
 
@@ -631,7 +632,7 @@ func TestDoctorTextOutput(t *testing.T) {
 		"[ok] claude  2.1.303 (Claude Code)\n",
 		"[ok] codex  codex-cli 0.163.0\n",
 		"[--] grok  not found (optional)\n",
-		"[ok] contract  pin v7, slicer prints \"Contract: relay v7\"\n",
+		"[ok] contract  accepts v7, slicer prints \"Contract: relay v7\"\n",
 	} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("output lacks %q:\n%s", want, stdout)
@@ -655,6 +656,20 @@ func TestDoctorContractMismatchFails(t *testing.T) {
 	code, stdout, _ = run(t, app, "doctor")
 	if code != 1 || !strings.Contains(stdout, "[FAIL] contract") {
 		t.Fatalf("text: exit %d\n%s", code, stdout)
+	}
+}
+
+// The accepted set replaces the exact pin (boundary.contract): an older
+// version is refused as well as a newer one, and the error names both sides.
+func TestDoctorRefusesEveryVersionOutsideTheAcceptedSet(t *testing.T) {
+	for _, v := range []int{6, 8, 70} {
+		app, _, _ := doctorApp(t, fmt.Sprintf("Contract: relay v%d", v))
+		code, stdout, _ := run(t, app, "doctor", "--json")
+		var d doctorOut
+		mustJSON(t, stdout, &d)
+		if code != 1 || d.OK || d.Contract.OK || !strings.Contains(d.Contract.Error, fmt.Sprintf("v%d", v)) || !strings.Contains(d.Contract.Error, "v7") {
+			t.Errorf("v%d: exit %d\n%s", v, code, stdout)
+		}
 	}
 }
 
