@@ -71,7 +71,19 @@
       "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "79b4c4de-eca8-4d4f-a187-95a3b130f625",
+          "kind": "",
+          "text": "**2026-10-19** — Review notes: Seed needs a filesystem with hard links (os.Link no-replace). The relay-run list fixture contains this relay's own runs. testdata/cli/VERSIONS names absolute home paths in comments (S01 fixtures redact them as <home>). The implementer's 36-row mutation table was spot-checked, not fully rerun.",
+          "created_at": "2026-10-19T03:12:02Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -101,7 +113,19 @@
       "depends_on": [
         "S02"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "36d773df-359d-4732-8592-a47a3613a8da",
+          "kind": "",
+          "text": "**2026-10-19** — From S02 (2026-10-19): clirun kills the process group only on timeout or cancel; a grandchild still holding stdout after a normal exit makes Run wait 2 s and return a generic error. Also encode Snapshot part errors as {code,message} over the socket so ToolError codes survive.",
+          "created_at": "2026-10-19T03:12:01Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -456,7 +480,19 @@
       "depends_on": [
         "S02"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "f620da05-c486-42c2-8a6b-251904563247",
+          "kind": "",
+          "text": "**2026-10-19** — From S02: Direct.Snapshot runs its 5 calls in sequence; worst case about 50 s per project at the 10 s default. Run them concurrently or shorten the timeout before polling every 5 s.",
+          "created_at": "2026-10-19T03:12:01Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",

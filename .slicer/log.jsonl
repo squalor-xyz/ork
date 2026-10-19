@@ -70,3 +70,6 @@
 {"when": "2026-10-19T03:09:56Z", "item": "S04", "action": "note", "from": "", "to": "", "note": "From S10 (2026-10-19): all four role prompts say \"ork files ", "by": "Jon R"}
 {"when": "2026-10-19T03:09:56Z", "item": "S08", "action": "note", "from": "", "to": "", "note": "From S10: split-part and sliver prompts need the same \"no ha", "by": "Jon R"}
 {"when": "2026-10-19T03:09:57Z", "item": "S10", "action": "note", "from": "", "to": "", "note": "Review notes: TestPromptUnknownName survives removing the sl", "by": "Jon R"}
+{"when": "2026-10-19T03:12:01Z", "item": "S03", "action": "note", "from": "", "to": "", "note": "From S02 (2026-10-19): clirun kills the process group only o", "by": "Jon R"}
+{"when": "2026-10-19T03:12:01Z", "item": "S11", "action": "note", "from": "", "to": "", "note": "From S02: Direct.Snapshot runs its 5 calls in sequence; wors", "by": "Jon R"}
+{"when": "2026-10-19T03:12:02Z", "item": "S02", "action": "note", "from": "", "to": "", "note": "Review notes: Seed needs a filesystem with hard links (os.Li", "by": "Jon R"}
