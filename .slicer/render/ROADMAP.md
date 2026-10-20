@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-20 items · — 6 · done 14
+21 items · — 7 · done 14
 
 ## v1
 
@@ -67,9 +67,10 @@
 | 17 | [S17](slices/S17.md) | Single-slice CLI | M | 2 |  |  | done |
 | 18 | [S19](slices/S19.md) | Project sidebar | M | 2 |  |  | done |
 | 19 | [S20](slices/S20.md) | Overview rows | S | 1 |  |  | done |
+| 20 | [S21](slices/S21.md) | Y/N answers and defaults for ork run prompts | S | 1 |  | discovered from S17 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 20 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 21 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |

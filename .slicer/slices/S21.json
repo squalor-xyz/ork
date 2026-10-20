@@ -1,0 +1,41 @@
+{
+  "id": "S21",
+  "title": "Y/N answers and defaults for ork run prompts",
+  "lead": [
+    "The ork run prompts (well-specified, split, confirm) take y or n, any case, as well as yes or no, and Enter takes the default shown in the prompt. Flags and --yes are unchanged (adj 86)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Typing the whole word for each prompt is slow. Owner request 2026-10-19."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/cli/run.go` (prompts), its tests, `docs/design.md` (CLI), `--help` text if it mentions the prompt."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Each prompt accepts y, Y, yes, n, N, no (any case); anything else is an error as today.\n- The prompt text shows the default, as [Y/n] or [y/N]; Enter alone takes it.\n- Defaults are proposed, pending the owner: well-specified and split have no obvious default, so Enter on them is an error until the owner picks; the confirm prompt defaults to No because launch is a paid action.\n- --yes and --well-specified/--split flags behave as before."
+    },
+    {
+      "heading": "Implement",
+      "body": "Change the prompt reader in `internal/cli/run.go` and its tests; docs/design.md CLI section."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race ./...`, `go vet ./...`, `gofmt -l .` clean; no new dependency.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"S21: y/n answers and defaults for ork run prompts\"."
+    }
+  ],
+  "notes": []
+}

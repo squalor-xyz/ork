@@ -136,3 +136,12 @@
 {"when": "2026-10-19T19:04:35Z", "item": "S17", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-19T20:21:22Z", "item": "S17", "action": "note", "from": "", "to": "", "note": "Review FAIL (round 1): M1 TestDaemonActiveRunHoldsOffIdle no", "by": "Jon R"}
 {"when": "2026-10-19T20:29:27Z", "item": "S17", "action": "status", "from": "started", "to": "done", "note": "S17 verified: ork run/approve/stop/answer on the CLI through the daemon with the claude adapter (adj 85, 86); finish-then-commit order (adj 81); S04 fixes; per-round report paths; daemon.log and usage notes. Full go test -race -count=1 ./... green outside the sandbox, vet and gofmt clean, review and gate PASS. Human dogfood check pending with the owner. Later notes: skipped recovery runs stay non-final (hold idle, block worktree, cannot be stopped); failed background job invisible; second stop cancels the first; status logs repeat per call.", "by": "Jon R"}
+{"when": "2026-10-20T01:35:42Z", "item": "S21", "action": "add", "from": "", "to": "open", "note": "Y/N answers and defaults for ork run prompts"}
+{"when": "2026-10-20T01:35:44Z", "item": "S21", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T01:35:55Z", "item": "S21", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T01:35:55Z", "item": "S21", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T01:35:55Z", "item": "S21", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T01:35:55Z", "item": "S21", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T01:35:55Z", "item": "S21", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-20T01:35:55Z", "item": "S21", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-20T01:35:55Z", "item": "S21", "action": "edit", "from": "", "to": "", "note": "Git"}
