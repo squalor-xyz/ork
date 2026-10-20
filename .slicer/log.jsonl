@@ -735,3 +735,23 @@
 {"when": "2026-10-20T19:12:01Z", "item": "S51", "action": "status", "from": "started", "to": "done", "note": "run.json, check logs and the saved fallback report are written at 0600 (existing files tightened); recorded denied commands have CR/LF turned to spaces and all other control characters removed before the 200-character cap; docs/state.md updated; full suite with -race, vet, gofmt and slicer check clean.", "by": "Jon R"}
 {"when": "2026-10-20T19:03:25Z", "item": "S56", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-20T19:11:39Z", "item": "S56", "action": "status", "from": "started", "to": "done", "note": "Verified: ork daemon stop and restart against a daemon that predates daemon.stop print guidance with the pid and a kill -TERM hint, exit 1, start nothing and send no signal; they warn when a role is or may be running, using the older status fields. Full suite with -race, go vet, gofmt and slicer check are green.", "by": "Jon R"}
+{"when": "2026-10-20T19:19:16Z", "item": "S74", "action": "add", "from": "", "to": "open", "note": "Bound the status call in the predates-stop hint with a timeout"}
+{"when": "2026-10-20T19:19:16Z", "item": "S75", "action": "add", "from": "", "to": "open", "note": "Run directory and role temp directories at 0700; decide old run.json and vendor reports"}
+{"when": "2026-10-20T19:19:31Z", "item": "S75", "action": "set", "from": "", "to": "", "note": "title Run directory and role temp directories at 0700; decide old run.json and vendor reports→Run directory and role temp directory modes; old run.json and vendor reports"}
+{"when": "2026-10-20T19:19:32Z", "item": "S75", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-10-20T19:19:38Z", "item": "S74", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T19:19:38Z", "item": "S75", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T19:19:46Z", "item": "S75", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T19:19:46Z", "item": "S75", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T19:19:47Z", "item": "S75", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T19:19:47Z", "item": "S75", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-20T19:19:47Z", "item": "S74", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T19:19:47Z", "item": "S74", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T19:19:47Z", "item": "S74", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T19:19:47Z", "item": "S74", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T19:19:47Z", "item": "S74", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-20T19:19:47Z", "item": "S74", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-20T19:19:47Z", "item": "S74", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-10-20T19:28:56Z", "item": "S05", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T19:28:56Z", "item": "S05", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-20T19:28:56Z", "item": "S05", "action": "edit", "from": "", "to": "", "note": "Check"}

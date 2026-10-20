@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 74,
+  "next_id": 76,
   "preamble": "",
   "passes": [
     {
@@ -2784,6 +2784,66 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S74",
+      "title": "Bound the status call in the predates-stop hint with a timeout",
+      "short_title": "Timeout on the stop-hint status call",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S56",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S75",
+      "title": "Run directory and role temp directory modes; old run.json and vendor reports",
+      "short_title": "Run directory modes",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S51",
         "parent": "",
         "cites": [],
         "key": "",

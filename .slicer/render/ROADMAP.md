@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-73 items · — 41 · done 27 · retired 5
+75 items · — 43 · done 27 · retired 5
 
 ## v1
 
@@ -120,9 +120,11 @@
 | 70 | [S71](slices/S71.md) | Doctor checks each project's check command and patterns (docs/design.md:613-614) | S | 1 |  |  | — |
 | 71 | [S72](slices/S72.md) | Grok adapter and v1 role (after credits reset 2026-11-01) | M | 2 |  |  | — |
 | 72 | [S73](slices/S73.md) | Allowlist --root-first calls | S | 1 |  |  | — |
+| 73 | [S74](slices/S74.md) | Timeout on the stop-hint status call | S `[needs-owner]` | 1 |  | discovered from S56 | — |
+| 74 | [S75](slices/S75.md) | Run directory modes | S `[needs-owner]` | 1 |  | discovered from S51 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 73 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 75 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
