@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 55,
+  "next_id": 56,
   "preamble": "",
   "passes": [
     {
@@ -402,7 +402,19 @@
       "depends_on": [
         "S05"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "36ce3a2e-3aa1-4e61-a22f-ecb00276917d",
+          "kind": "",
+          "text": "**2026-10-20** — Tree of orchestrator, roles and steps split out into S55 (#110, ui.run-tree). S07 keeps the animated flow diagram, stage bars, charts and the bell, built on S55's tree.",
+          "created_at": "2026-10-20T15:50:06Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -2036,6 +2048,36 @@
         "group": "",
         "reason": "",
         "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S55",
+      "title": "Run tree: orchestrator, roles and steps with live status",
+      "short_title": "Run tree: orchestrator, roles and steps with live status",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S26"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
         "urgency": 2,
         "effort": 2,
         "attempts": 0

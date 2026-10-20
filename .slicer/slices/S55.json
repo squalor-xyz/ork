@@ -1,0 +1,41 @@
+{
+  "id": "S55",
+  "title": "Run tree: orchestrator, roles and steps with live status",
+  "lead": [
+    "Owner 2026-10-20 (#110, ui.run-tree): see what step is running, under the orchestrator, as a tree. The tree shows in the S26 detail pane: the orchestrator, then its roles and steps with a state glyph (running, done, failed, waiting) and a spinner on each running step, with role, vendor, model, phase and elapsed time. Data: for an engine run the roles in the run record; for a ledger run the steps with their parent (slicer relay-run list shows the nesting; relay-run step --parent). The animated flow diagram, stage bars and charts stay in S07, which builds on this tree. S30 shows the running role on a row; this slice shows the whole tree."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A row says a run is active with N steps running but not which. The owner wants to see the tree of who is doing what."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/source and internal/slicercli: the step fields the tree needs (id, parent, role, agent, vendor, model, reasoning, phase, task, times) from the ledger JSON; check the field names with slicer relay-run list --json before building.\n- internal/daemon: carry the steps and the engine run's roles in the snapshot; a wire field is proposed, ask the owner if a shape beyond that is needed.\n- internal/tui: the tree in the S26 pane, spinner on running steps (a tick; no goroutine in Update), tests, goldens.\n- docs/dashboard.md (dash.role-detail), docs/state.md or design.md where they list the wire."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A ledger run with steps and parents renders as a tree: the orchestrator at the root, its steps beneath, children indented under their parent step.\n- Each node shows a state glyph, role, model and phase; a running node shows a spinner frame that advances on a tick; a failed node is marked.\n- An engine run shows its roles (implementer, reviewer, gate) as a tree under the run with the same glyphs.\n- A step whose parent is unknown or missing is shown at the root, not dropped.\n- A long task text is cut to fit the width; 80-column and narrow layouts keep the tree readable.\n- Monochrome and colour golden views; the spinner has an ASCII fallback.\n- Runs started elsewhere show the tree read-only (no actions)."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
