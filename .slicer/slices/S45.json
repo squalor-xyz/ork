@@ -22,7 +22,7 @@
     },
     {
       "heading": "Failing tests",
-      "body": "- A denied Bash call records its command text (first N characters) on the role.\n- ork status and the TUI detail show it under the denial.\n- A denied Write shows the file path, not the file content.\n- Existing run records without commands still load."
+      "body": "- A denied Bash call records its command text on the role, cut to 200 characters with a trailing ellipsis when longer.\n- ork status and the TUI detail show it under the denial.\n- A denied Write shows the file path, not the file content.\n- Existing run records without commands still load.\n- docs/state.md says a recorded command can hold secrets: it is capped, not scrubbed."
     },
     {
       "heading": "Implement",
