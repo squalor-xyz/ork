@@ -2,7 +2,7 @@
   "id": "S44",
   "title": "A report-shape pause can be answered or retried",
   "lead": [
-    "Seen 2026-10-20 (run ork-20261020-120934-e8ac): the run paused with 'report shape: no Tests: N passed, M failed line; no ## Owner needed section'. ork answer failed with 'run needs a pending question and a non-empty answer' because the pause has no question (questions: []). The only commands left were stop and a new run. A pause needs a way to resume: a corrective answer or a retry of the round. Related to S26 (how the engine marks a stop as a question with options). Ask the owner before building."
+    "Seen 2026-10-20 (run ork-20261020-120934-e8ac): the run paused with 'report shape: no Tests: N passed, M failed line; no ## Owner needed section'. ork answer failed with 'run needs a pending question and a non-empty answer' because the pause has no question. The only commands left were stop and a new run. Engine.Retry (internal/engine/engine.go:318) already reruns the role or step of a shape, error, lost or interrupted pause, but no daemon method or CLI command calls it. Decided #101 (engine.pause-resume): add ork retry RUN; ork answer stays for real questions."
   ],
   "depends_note": null,
   "findings_note": "",
@@ -18,15 +18,15 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/daemon (answer, retry), internal/engine (pause reasons), internal/cli, tests, docs/design.md, docs/state.md."
+      "body": "- internal/daemon (a run.retry method beside run.answer), internal/cli (ork retry), internal/engine (only if Retry needs a change), internal/tui if it names the commands, tests, docs/design.md, docs/state.md."
     },
     {
       "heading": "Failing tests",
-      "body": "- Per the owner decision (not yet recorded, ask first with key engine.pause-resume): a report-shape pause accepts ork answer RUN TEXT, which resumes the role with the text.\n- A pause for any other reason without a question says what the owner can do.\n- ork status shows the pause reason and the next command."
+      "body": "- ork retry RUN on a paused run with a shape, error, lost or interrupted pause reruns the role or step; the run leaves paused.\n- ork retry on a run that is not paused, or that waits on a question, fails with a message that says what to do (answer, or stop).\n- ork answer on a pause that has no question fails with a message that names ork retry.\n- ork status shows the pause reason and the next command (ork retry RUN for a pause without a question, ork answer RUN TEXT for a question).\n- The daemon method is covered like run.answer (unknown run, wrong state)."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "- Add the daemon method and the ork retry command, wired to Engine.Retry. Reuse the run.answer plumbing in internal/daemon/runs.go.\n- Make the answer error and the status line name the right next command.\n- Update docs/design.md and docs/state.md to list the command."
     },
     {
       "heading": "Check",
