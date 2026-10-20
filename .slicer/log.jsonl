@@ -420,3 +420,9 @@
 {"when": "2026-10-20T15:50:06Z", "item": "S55", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-20T15:50:06Z", "item": "S55", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-10-20T15:50:06Z", "item": "S07", "action": "note", "from": "", "to": "", "note": "Tree of orchestrator, roles and steps split out into S55 (#1", "by": "Jon R"}
+{"when": "2026-10-20T15:52:42Z", "item": "S56", "action": "add", "from": "", "to": "open", "note": "daemon stop and restart cope with a daemon that predates daemon.stop"}
+{"when": "2026-10-20T15:52:42Z", "item": "S56", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T15:52:42Z", "item": "S56", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T15:52:42Z", "item": "S56", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T15:52:43Z", "item": "S56", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T15:52:43Z", "item": "S56", "action": "edit", "from": "", "to": "", "note": "Failing tests"}

@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 56,
+  "next_id": 57,
   "preamble": "",
   "passes": [
     {
@@ -2080,6 +2080,34 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S56",
+      "title": "daemon stop and restart cope with a daemon that predates daemon.stop",
+      "short_title": "daemon stop and restart cope with a daemon that predates daemon.stop",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S46",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
         "attempts": 0
       }
     }

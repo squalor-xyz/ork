@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-55 items · — 32 · done 23
+56 items · — 33 · done 23
 
 ## v1
 
@@ -102,9 +102,10 @@
 | 52 | [S53](slices/S53.md) | Create the ork logo | S | 1 |  |  | — |
 | 53 | [S54](slices/S54.md) | Show the ork version and logo in the terminal: TUI, --version, doctor | S | 2 |  |  | — |
 | 54 | [S55](slices/S55.md) | Run tree: orchestrator, roles and steps with live status | M | 2 |  |  | — |
+| 55 | [S56](slices/S56.md) | daemon stop and restart cope with a daemon that predates daemon.stop | S | 1 |  | discovered from S46 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 55 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 56 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
