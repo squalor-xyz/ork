@@ -2,7 +2,7 @@
 {
   "id": 103,
   "title": "What does the S25 TUI actions slice include?",
-  "status": "decided",
+  "status": "superseded",
   "key": "ui.launch-scope",
   "asked_by": "claude",
   "decided_by": "jon",
@@ -32,6 +32,7 @@
   },
   "decision": "launch-retry",
   "rationale": "Owner 2026-10-20: launch on a ready slice plus a retry key.",
+  "superseded_by": 107,
   "refs": [
     "S25",
     "S44"
@@ -44,6 +45,11 @@
     {
       "date": "2026-10-20",
       "event": "decide"
+    },
+    {
+      "date": "2026-10-20",
+      "event": "supersede",
+      "note": "by 107"
     }
   ]
 }
