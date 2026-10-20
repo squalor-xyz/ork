@@ -1724,11 +1724,14 @@
       "id": "S45",
       "title": "Record the denied command, not just the tool name",
       "short_title": "Record the denied command, not just the tool name",
-      "status": "open",
+      "status": "started",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
-      "claim": null,
+      "claim": {
+        "owner": "Jon R",
+        "at": "2026-10-20T13:14:11Z"
+      },
       "fields": {
         "size": "S",
         "flags": [],
@@ -1745,7 +1748,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
