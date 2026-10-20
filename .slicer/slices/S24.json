@@ -1,0 +1,39 @@
+{
+  "id": "S24",
+  "title": "ork pins a project's slicer and adj contracts and checks every pin",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S44 (adj-json contract version and pin).",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** any change to slicer or adj (their items add the pins), storing a pin in `projects.json`, adding relay v8 to the accepted set (that waits on slicer s382 and its own review), and serving or translating an older contract.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed* until adj 97 (`boundary.contract-pin`) is decided. It follows on from record 67 (`boundary.contract`, accepted-set) and does not supersede it.\n\nork accepts a fixed set of slicer relay versions (`internal/roles/roles.go:55`, `acceptedContracts = []int{7}`). It refuses others at engine start (`internal/engine/engine.go:170-177`) and in doctor (`internal/cli/doctor.go:80-99`). Two gaps remain:\n\n- **No project records the version its tools agreed on.** Doctor runs `slicer ai relay` once, with no `--root`, so a project whose slicer differs from the one on PATH is never checked. A slicer upgrade inside the accepted set changes what a project's relays get, with nothing to say so.\n- **ork does not check adj's contract.** Doctor only runs `adj --version` and compares it against nothing (`internal/cli/doctor.go:57-78`). adj JSON shapes may change in any 0.x minor release (`adjudicate/docs/json.md:14-19`). ork decodes them in `internal/adjcli/adjcli.go:62-88`.\n\nOwner decisions, 2026-10-20 (in the slicer session that filed s387):\n\n- **Per-contract pins.** A project pins slicer's `relay vN` and adj's `adj-json vM`, with independent numbers.\n- **Each tool keeps its pin in its own committed config.** slicer's goes in `.slicer/config.json` (`relay_contract`), adj's in `.adjudicate.json` (`contract`). Each tool refuses to serve a contract that differs from its pin.\n- **ork sets and checks the pins.** The accepted sets stay as what ork can speak. A pin must be in ork's set."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/roles/roles.go`: `acceptedAdjContracts = []int{1}` with `AcceptedAdjContracts` and `AdjContractAccepted`, beside the relay set. Its comment cites 97.\n- `internal/slicercli/write.go`: `Contract` reads `slicer ai relay --json --root ROOT` and returns `contract` and `pinned`. It maps slicer's `contract_mismatch` error code to an ork error naming both versions. The first-line parse stays as a fallback only if a recorded slicer older than s387 needs it; decide and record it.\n- `internal/adjcli/adjcli.go`: `Contract(ctx, root)` runs `adj contract --json --root ROOT` and returns `version` and `pinned`.\n- `internal/cli/daemoncmds.go`: `ork projects pin NAME --relay N [--adj M] [--json]`, plus `ork projects unpin NAME [--relay] [--adj]`, following the `list|add|rm` switch (lines 62-144).\n  - It refuses a version outside the accepted set with the usage code and runs nothing.\n  - It then runs `slicer --root P config relay_contract N` and `adj --root P contract pin M`.\n  - It reports what each tool's config now says.\n  - It writes those files only through the tools, never directly.\n- `internal/cli/doctor.go`: `contractCheck` gains a per-project list `{project, relay: {pinned, found, ok, error}, adj: {pinned, found, ok, error}}` over the registered projects (`internal/registry/registry.go:126`, read without starting the daemon if `Load` allows; record the choice). A project fails when a pin is outside the accepted set, or a tool's printed version differs from its pin. The existing global check stays.\n- `internal/engine/engine.go` (near lines 170-177): engine start refuses a project whose relay pin is outside the set or differs from what its slicer prints. The adj pin is checked the same way before the first adj read in the run, if the engine makes one. The run record keeps `Contract`.\n- `internal/cli/cli.go`: usage text (lines 40-58).\n- `docs/boundaries.md` (lines 29-48), `docs/design.md` (near lines 550-558, 599), `docs/state.md` if the run record changes, CHANGELOG.\n- `testdata/cli/`: recorded `slicer ai relay --json` with `pinned` (null, equal, differing) and `adj contract --json` outputs, per decision 0047."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "Fake CLIs replay recorded outputs (decision 0047).\n- `ork projects pin p --relay 7 --adj 1` runs exactly `slicer --root P config relay_contract 7` and `adj --root P contract pin 1`, in that order, and exits 0.\n- `--relay 9` (not accepted) exits 2, runs neither tool, and the message lists the accepted set. The same goes for `--adj 9`.\n- If the slicer call fails, the adj call is not run, and the error names slicer's message.\n- `ork doctor --json` with one project pinned at relay 7 and slicer printing 7 is ok. With slicer printing 8 it fails and names both versions. With no pin, it is checked only against the accepted set, as today.\n- The same three cases for adj, through `adj contract --json`.\n- Engine start on a project whose slicer reports `contract_mismatch` (exit 2) refuses with an error naming both versions and creates no run record.\n- Existing doctor and engine tests stay green with no pins set."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. File the adj question first (done at filing: 97). Keep this slice *proposed* until it is decided.\n2. Write the red tests against recorded outputs, then the code.\n3. Update the docs listed in Files. Do not paste slicer's or adj's contract text; refer to commands."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race ./...`, `go vet ./...` and `gofmt -l .` are clean. SPDX headers. No new dependency.\n- `slicer check` and `adj lint` pass.\n- [HUMAN CHECK] With slicer s387 and adj S44 landed: `ork projects pin` on a scratch project, then `ork doctor` is ok. Unpin slicer's pin, set it to a version not printed, and doctor fails naming both versions."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"<ID>: ork pins and checks tool contracts\"."
+    }
+  ],
+  "notes": []
+}
