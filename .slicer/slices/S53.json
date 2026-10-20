@@ -2,7 +2,7 @@
   "id": "S53",
   "title": "Create the ork logo",
   "lead": [
-    "Owner asked for a logo (2026-10-20). Interview answers: an agent drafts hand-written SVG candidates and the owner picks one; the logo is used in the README header, the TUI header or splash, the ork --version and ork doctor banner, and a favicon or repository social image. This slice draws and lands the logo and the README header; S54 uses it in the terminal."
+    "Owner asked for a logo (2026-10-20). Interview answers: an agent drafts hand-written SVG candidates and the owner picks one; the logo is used in the README header, the TUI header or splash, the ork --version and ork doctor banner, and a favicon or repository social image. This slice lands the chosen logo and the README header; S54 uses it in the terminal. The owner chose (2026-10-20): the 'New: ring root, teal letters, coloured slices' option, a ring (not a solid disc) for the o, lockup B (lanes off the o), slices centred under the letters. The finished SVGs already exist in .scratch/candidates/6-tree-ring/ (lockup-b.svg and mark.svg); this slice copies them, adds the test and the README header."
   ],
   "depends_note": null,
   "findings_note": "",
@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- assets/logo.svg (the chosen mark), assets/logo-square.svg (square export for a favicon or social image), assets/candidates/ (the drafts, removed or kept as the owner decides), README.md (header), docs/design.md or docs/dashboard.md only if they name the logo.\n- The SVG is hand-written plain text: no generator, no new dependency, no raster file, no font that needs installing (text converted to paths or left out)."
+      "body": "- assets/logo.svg: copy .scratch/candidates/6-tree-ring/lockup-b.svg unchanged (the word ork with the teal ring as the o and three lanes to three slices, viewBox 0 0 200 144). assets/logo-square.svg: copy .scratch/candidates/6-tree-ring/mark.svg unchanged (64 grid square mark for a favicon or social image). Read them from the main checkout by absolute path: /Users/jon/code/squalor-xyz/ork/.scratch/candidates/6-tree-ring/. Do not add the other drafts or any assets/candidates directory to the repo.\n- assets/logo_test.go: new test-only Go package (package assets, no non-test Go file, stdlib only, SPDX header). It reads the two SVGs and ../README.md.\n- README.md: the logo at the very top, above the '# ork' heading.\n- No change to docs unless one names the logo. No new dependency, no raster file, no font, no script, no generator."
     },
     {
       "heading": "Failing tests",
-      "body": "- Ask the owner before building: look and feel (name the idea, colours or monochrome, wordmark or glyph), and whether the candidates stay in the repo.\n- assets/logo.svg and assets/logo-square.svg are well-formed XML (parsed by a Go test with encoding/xml) with a viewBox, a title, and no script or external reference.\n- The logo reads on a light and a dark background (a test checks the SVG sets no background-dependent colour pair that disappears, or ships a dark variant).\n- README.md shows the logo at the top with alt text.\n- The files carry no copyright claim beyond the repository licence (GPL-3.0-or-later); the owner approves the final choice."
+      "body": "- assets/logo.svg and assets/logo-square.svg parse as XML with encoding/xml, the root is svg with an xmlns of http://www.w3.org/2000/svg and a viewBox (200x144 and 64x64), they have a non-empty title and desc, and they contain no script, foreignObject, image, use, style or href/xlink:href element or attribute and no http or https URL other than the xmlns.\n- Reads on light and dark: every fill and stroke colour is one of #6ee7d2 teal, #f4efe7 cream, #3b82f6, #8b5cf6, #ea580c (or none); no shape covers the whole viewBox (no background); every cream-filled shape lies inside a coloured-filled shape (the slice edge), so no cream shape stands alone on a light page.\n- Both files have the same three slice colours and the same teal.\n- README.md: the first non-blank line is an HTML img tag whose src is assets/logo.svg, with a non-empty alt that starts with ork, and a width attribute; the '# ork' heading follows it.\n- The files carry no copyright text beyond the repository licence (no 'copyright' or '(c)' in them). The owner chose the design on 2026-10-20."
     },
     {
       "heading": "Implement",
