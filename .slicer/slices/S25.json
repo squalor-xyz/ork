@@ -1,0 +1,41 @@
+{
+  "id": "S25",
+  "title": "TUI actions: launch, approve and stop",
+  "lead": [
+    "Owner wants ork to be the one app that runs relays (2026-10-20). Today the TUI is display only (S22); launch, approve and stop are CLI only (ork run, approve, stop). Decided: #98 ui.confirm (launch and stop confirm; approve runs on one key)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner wants ork to be the one app that runs relays (2026-10-20). Today the TUI is display only (S22); launch, approve and stop are CLI only (ork run, approve, stop). Decided: #98 ui.confirm (launch and stop confirm; approve runs on one key)."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/tui (keys, confirm bar, help), internal/daemon client calls, tests, goldens, docs/dashboard.md."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A key on a Needs-you row approves an awaiting-approval run with no confirmation (ui.confirm).\n- Stop and launch show the exact command and ask y/n (Enter is No) before running.\n- A failed call shows its error code and message verbatim.\n- Runs started elsewhere offer no actions (dash.external-runs).\n- Golden views, colour and monochrome."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

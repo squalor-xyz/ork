@@ -1,0 +1,41 @@
+{
+  "id": "S26",
+  "title": "TUI: answer a stopped run or question in a detail pane",
+  "lead": [
+    "Owner decision #45 owner.questions: a stopped slice lands in Needs you, the owner answers in ork, ork resumes the role. Today a stop shows only a status line and the answer is the CLI 'ork answer RUN TEXT'. Decided: #99 ui.answer-ui (a detail pane on the row, plus a Questions tab). Depends on S25."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner decision #45 owner.questions: a stopped slice lands in Needs you, the owner answers in ork, ork resumes the role. Today a stop shows only a status line and the answer is the CLI 'ork answer RUN TEXT'. Decided: #99 ui.answer-ui (a detail pane on the row, plus a Questions tab). Depends on S25."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/tui (detail pane, text input), internal/daemon (structured question: stop reason, options, role), internal/engine as needed, tests, goldens, docs."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Enter on a Needs-you engine row opens a pane with the full stop reason, any options and a text field.\n- Submitting runs the equivalent of ork answer RUN TEXT and the row updates; the command is shown first.\n- Open design points to ask the owner before building: how the engine marks a stop as a question with options."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

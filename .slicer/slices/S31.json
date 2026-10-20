@@ -1,0 +1,41 @@
+{
+  "id": "S31",
+  "title": "Run a small slice through ork run end to end",
+  "lead": [
+    "S17 human check is still open: ork approve has never run on a live run. After S23, run a small slice with ork run, then approve it, and record every gap as a tracked fix. Goal: stop driving relays by hand (owner, 2026-10-20)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S17 human check is still open: ork approve has never run on a live run. After S23, run a small slice with ork run, then approve it, and record every gap as a tracked fix. Goal: stop driving relays by hand (owner, 2026-10-20)."
+    },
+    {
+      "heading": "Files",
+      "body": "- Whatever the run exposes; tracked as follow-up slices."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A small slice runs through ork run, ork status shows its progress, ork approve lands it.\n- Each gap found is filed as a slice."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

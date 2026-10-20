@@ -178,3 +178,47 @@
 {"when": "2026-10-20T11:21:47Z", "item": "S24", "action": "add", "from": "", "to": "open", "note": "ork pins a project's slicer and adj contracts and checks every pin"}
 {"when": "2026-10-20T11:29:23Z", "item": "S24", "action": "set", "from": "", "to": "", "note": "findings owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S44 (adj-json contract version and pin).→owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S45 (adj-json contract version and pin)."}
 {"when": "2026-10-20T11:29:23Z", "item": "S24", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-20T11:34:47Z", "item": "S25", "action": "add", "from": "", "to": "open", "note": "TUI actions: launch, approve and stop"}
+{"when": "2026-10-20T11:34:47Z", "item": "S25", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:34:47Z", "item": "S25", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:34:47Z", "item": "S25", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:34:48Z", "item": "S25", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:34:48Z", "item": "S25", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T11:35:02Z", "item": "S25", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:35:03Z", "item": "S25", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:35:03Z", "item": "S26", "action": "add", "from": "", "to": "open", "note": "TUI: answer a stopped run or question in a detail pane"}
+{"when": "2026-10-20T11:35:03Z", "item": "S26", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:35:03Z", "item": "S26", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:35:03Z", "item": "S26", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:35:03Z", "item": "S26", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:35:03Z", "item": "S26", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T11:35:03Z", "item": "S27", "action": "add", "from": "", "to": "open", "note": "TUI: Questions tab across projects"}
+{"when": "2026-10-20T11:35:03Z", "item": "S27", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:35:03Z", "item": "S27", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:35:04Z", "item": "S27", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:35:04Z", "item": "S27", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:35:04Z", "item": "S27", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T11:35:04Z", "item": "S28", "action": "add", "from": "", "to": "open", "note": "TUI answers can file an adj ask and decide"}
+{"when": "2026-10-20T11:35:04Z", "item": "S28", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:35:04Z", "item": "S28", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:35:04Z", "item": "S28", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:35:04Z", "item": "S28", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:35:04Z", "item": "S28", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T11:35:05Z", "item": "S29", "action": "add", "from": "", "to": "open", "note": "Put the ork binary on PATH"}
+{"when": "2026-10-20T11:35:05Z", "item": "S29", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:35:05Z", "item": "S29", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:35:05Z", "item": "S29", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:35:05Z", "item": "S29", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:35:05Z", "item": "S29", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T11:35:05Z", "item": "S30", "action": "add", "from": "", "to": "open", "note": "Show the running role for relays started outside ork"}
+{"when": "2026-10-20T11:35:05Z", "item": "S30", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:35:05Z", "item": "S30", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:35:06Z", "item": "S30", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:35:06Z", "item": "S30", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:35:06Z", "item": "S30", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T11:35:06Z", "item": "S31", "action": "add", "from": "", "to": "open", "note": "Run a small slice through ork run end to end"}
+{"when": "2026-10-20T11:35:06Z", "item": "S31", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:35:06Z", "item": "S31", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:35:06Z", "item": "S31", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:35:06Z", "item": "S31", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:35:06Z", "item": "S31", "action": "edit", "from": "", "to": "", "note": "Failing tests"}

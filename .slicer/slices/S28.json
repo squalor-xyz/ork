@@ -1,0 +1,41 @@
+{
+  "id": "S28",
+  "title": "TUI answers can file an adj ask and decide",
+  "lead": [
+    "Owner decision #45: an optional toggle files the owner's answer as an adj ask plus decide. The recording must use decide --by jon, and only from the owner's answer in the TUI. Depends on the answer pane slice."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner decision #45: an optional toggle files the owner's answer as an adj ask plus decide. The recording must use decide --by jon, and only from the owner's answer in the TUI. Depends on the answer pane slice."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/tui (toggle), internal/daemon or cli (the adj calls), tests, docs."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- With the toggle on, an answer runs adj ask and adj decide --by jon with the shown key and text; the commands are displayed first.\n- With the toggle off, nothing is recorded in adj.\n- An adj error shows verbatim and does not lose the answer."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

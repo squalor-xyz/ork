@@ -1,0 +1,41 @@
+{
+  "id": "S27",
+  "title": "TUI: Questions tab across projects",
+  "lead": [
+    "Decided #99 ui.answer-ui: besides the row pane, a Questions tab lists every open question (engine stops and open adj questions) across projects. Depends on the pane slice."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Decided #99 ui.answer-ui: besides the row pane, a Questions tab lists every open question (engine stops and open adj questions) across projects. Depends on the pane slice."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/tui (new tab), tests, goldens, docs/dashboard.md."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- The tab lists open questions from all projects, each naming its project.\n- Enter opens the same answer pane.\n- No questions shows an empty-state line.\n- Golden views, colour and monochrome."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

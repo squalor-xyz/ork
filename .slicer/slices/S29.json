@@ -1,0 +1,41 @@
+{
+  "id": "S29",
+  "title": "Put the ork binary on PATH",
+  "lead": [
+    "Seen 2026-10-20: 'ork: command not found'. The built binary lives in a scratch path. The owner and the relay sessions need to call ork directly. Check what docs say today; install is the owner's call (no system dirs)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Seen 2026-10-20: 'ork: command not found'. The built binary lives in a scratch path. The owner and the relay sessions need to call ork directly. Check what docs say today; install is the owner's call (no system dirs)."
+    },
+    {
+      "heading": "Files",
+      "body": "- docs, a Makefile or script if the owner approves, README."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A documented install puts ork on the owner's PATH without sudo (for example go install to a user bin dir).\n- ork doctor reports where the binary is."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
