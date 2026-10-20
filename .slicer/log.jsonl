@@ -433,3 +433,5 @@
 {"when": "2026-10-20T15:58:41Z", "item": "S57", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-20T15:58:41Z", "item": "S57", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-10-20T16:10:44Z", "item": "S57", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T16:11:53Z", "item": "S57", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-20T16:25:43Z", "item": "S57", "action": "status", "from": "started", "to": "done", "note": "Up, down, j, k, n and p move Overview rows; tab, shift+tab, left, right and 1-9 move projects. Help text, the two action-help goldens and docs/dashboard.md are updated, tests are added, and the full suite with -race is green.", "by": "Jon R"}

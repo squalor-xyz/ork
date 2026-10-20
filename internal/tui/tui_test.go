@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"regexp"
 	"strings"
@@ -181,6 +182,10 @@ func press(s string) tea.KeyPressMsg {
 		return tea.KeyPressMsg{Code: tea.KeyRight}
 	case "left":
 		return tea.KeyPressMsg{Code: tea.KeyLeft}
+	case "down":
+		return tea.KeyPressMsg{Code: tea.KeyDown}
+	case "up":
+		return tea.KeyPressMsg{Code: tea.KeyUp}
 	case "esc":
 		return tea.KeyPressMsg{Code: tea.KeyEsc}
 	case "ctrl+c":
@@ -306,7 +311,7 @@ func TestHelpKeyTogglesTheHelp(t *testing.T) {
 	}
 	h.send(press("?"))
 	v := h.view()
-	for _, want := range []string{"next project", "jump to project", "refresh now", "quit"} {
+	for _, want := range []string{"tab/right next project", "shift+tab/left previous project", "jump to project", "down/j/n next row", "up/k/p previous row", "refresh now", "quit"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("help lacks %q:\n%s", want, v)
 		}
@@ -590,13 +595,122 @@ func TestProjectKeysResetTheRowCursor(t *testing.T) {
 	if h.m.cursor != 1 {
 		t.Fatalf("cursor = %d after n, want 1", h.m.cursor)
 	}
-	h.send(press("j")) // to slicer
+	h.send(press("tab")) // to slicer
 	if h.m.active != 0 || h.m.cursor != 0 {
-		t.Errorf("j: active %d, cursor %d; want slicer's first row", h.m.active, h.m.cursor)
+		t.Errorf("tab: active %d, cursor %d; want slicer's first row", h.m.active, h.m.cursor)
 	}
-	h.send(press("k")) // back to Needs you
+	h.send(press("shift+tab")) // back to Needs you
 	if h.m.active != -1 || h.m.cursor != 0 {
-		t.Errorf("k: active %d, cursor %d; want Needs you's first row", h.m.active, h.m.cursor)
+		t.Errorf("shift+tab: active %d, cursor %d; want Needs you's first row", h.m.active, h.m.cursor)
+	}
+}
+
+// Down and j, up and k move the row cursor through the Overview's rows and stop
+// at the first and last row. They leave the project alone (ui.row-keys).
+func TestRowKeysMoveTheCursorNotTheProject(t *testing.T) {
+	for _, tc := range []struct{ name, next, prev string }{{"arrows", "down", "up"}, {"letters", "j", "k"}} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := newHarness(t, four...)
+			h.src.set(snap(four[0], []adjcli.Record{openRec(11, "a.one", "first question"), openRec(12, "a.two", "second question")}, nil,
+				relay("run-1", "2026-10-19T16:00:00Z", "S01")))
+			h.start()
+			h.view()
+			for _, s := range []struct{ key, row string }{
+				{tc.next, "#12 a.two"}, {tc.next, "run-1  S01"}, {tc.next, "run-1  S01"},
+				{tc.prev, "#12 a.two"}, {tc.prev, "#11 a.one"}, {tc.prev, "#11 a.one"},
+			} {
+				h.send(press(s.key))
+				if got := detailText(h.m, 72); !strings.HasPrefix(got, s.row) {
+					t.Fatalf("after %s the cursor row is %q, want %q", s.key, got, s.row)
+				}
+				if v := h.view(); !strings.Contains(v, "> Needs you") {
+					t.Fatalf("after %s the project changed:\n%s", s.key, v)
+				}
+			}
+		})
+	}
+}
+
+// Each navigation key does what the help says. The cursor starts on the second
+// row of Needs you. Row keys move the cursor and keep the project. Project keys
+// move the project and put the cursor on its first row. 9 has no project to jump
+// to, so nothing moves (ui.row-keys).
+func TestNavigationKeysDoWhatTheHelpSays(t *testing.T) {
+	for _, tc := range []struct{ key, tab, row string }{
+		{"down", "Needs", "run-1  S01"},
+		{"j", "Needs", "run-1  S01"},
+		{"up", "Needs", "#11 a.one"},
+		{"k", "Needs", "#11 a.one"},
+		{"n", "Needs", "run-1  S01"},
+		{"p", "Needs", "#11 a.one"},
+		{"tab", "slicer", "#11 a.one"},
+		{"right", "slicer", "#11 a.one"},
+		{"2", "adjudicate", ""},
+		{"shift+tab", "agents", ""},
+		{"left", "agents", ""},
+		{"9", "Needs", "#12 a.two"},
+	} {
+		t.Run(tc.key, func(t *testing.T) {
+			h := newHarness(t, four...)
+			h.src.set(snap(four[0], []adjcli.Record{openRec(11, "a.one", "first question"), openRec(12, "a.two", "second question")}, nil,
+				relay("run-1", "2026-10-19T16:00:00Z", "S01")))
+			h.start()
+			h.m.cursor = 1 // setup without a row key, so each key is tested alone
+			if got := detailText(h.m, 72); !strings.HasPrefix(got, "#12 a.two") {
+				t.Fatalf("setup: the cursor row is %q, want #12 a.two", got)
+			}
+			h.send(press(tc.key))
+			if got := activeTab(t, h.view()); got != tc.tab {
+				t.Fatalf("%s selected %s, want %s", tc.key, got, tc.tab)
+			}
+			if tc.row != "" {
+				if got := detailText(h.m, 72); !strings.HasPrefix(got, tc.row) {
+					t.Fatalf("after %s the cursor row is %q, want %q", tc.key, got, tc.row)
+				}
+			}
+		})
+	}
+}
+
+// down reaches a stopped run below the decision on Needs you, and Enter opens its
+// pane. The stopped S21 and S29 rows are reached with the keys alone.
+func TestDownReachesAStoppedRunForEnter(t *testing.T) {
+	h := newHarness(t, four...)
+	s := snap(four[0], []adjcli.Record{openRec(3, "owner.choice", "Choose storage")}, nil)
+	s.EngineRuns = []source.EngineRun{{ID: "engine", Item: "S21", State: "stopped", Wait: "owner action"}}
+	h.src.set(s)
+	h.start()
+	h.view()
+	if got := detailText(h.m, 72); !strings.HasPrefix(got, "#3 owner.choice") {
+		t.Fatalf("the first row is %q, want the decision", got)
+	}
+	h.send(press("down"))
+	if got := detailText(h.m, 72); !strings.HasPrefix(got, "S21  stopped") {
+		t.Fatalf("down did not move the cursor to the stopped run: %q", got)
+	}
+	h.send(press("enter"))
+	if v := h.view(); !strings.Contains(v, "Run engine  S21  stopped") || !strings.Contains(v, "Stopped; relaunch to continue") {
+		t.Fatalf("enter did not open the stopped run's pane:\n%s", v)
+	}
+}
+
+// The dashboard doc lists the keys decided in ui.row-keys.
+func TestDashboardDocsListTheNavigationKeys(t *testing.T) {
+	b, err := os.ReadFile("../../docs/dashboard.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := strings.Join(strings.Fields(string(b)), " ")
+	for _, want := range []string{
+		"Keys `tab`/`shift+tab` and `left`/`right` move selection",
+		"`down`/`j` and `up`/`k` move it to the next and previous row, and so do `n` and `p`",
+	} {
+		if !strings.Contains(s, want) {
+			t.Errorf("dashboard.md lacks %q", want)
+		}
+	}
+	if strings.Contains(s, "`up`/`down`, `k`/`j`") {
+		t.Error("dashboard.md still lists up, down, k and j as project keys")
 	}
 }
 

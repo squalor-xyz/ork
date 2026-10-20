@@ -2115,7 +2115,7 @@
       "id": "S57",
       "title": "TUI keys: up/down move rows, tab and left/right move projects",
       "short_title": "TUI keys: up/down move rows, tab and left/right move projects",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -2136,7 +2136,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],

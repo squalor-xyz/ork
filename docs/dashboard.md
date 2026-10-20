@@ -55,23 +55,23 @@ When it is selected, its detail line says to run `slicer init`
 The list scrolls to keep selection visible and shows `+N more` for hidden
 rows. Below 100 columns the sidebar narrows; names that do not fit end in
 `...` and keep their badges. `s` hides or shows the sidebar at any width.
-Keys `up`/`down`, `k`/`j`, `tab`/`shift+tab`, and `left`/`right` move selection
-and wrap through "Needs you" and the sorted projects. `1`-`9` select projects
-in registry order. `/` filters project names without regard to case; `enter`
-keeps the filter and leaves text entry, and `esc` clears it. `r` refreshes
-the selected project, or all projects on "Needs you". `?` shows keys and
-`q` quits.
+Keys `tab`/`shift+tab` and `left`/`right` move selection and wrap through
+"Needs you" and the sorted projects. `1`-`9` select projects in registry
+order. `/` filters project names without regard to case; `enter` keeps the
+filter and leaves text entry, and `esc` clears it. `r` refreshes the selected
+project, or all projects on "Needs you". `?` shows keys and `q` quits.
 
-The Overview has a row cursor (`ui.overview-cursor`). `n` and `p` move it to
-the next and previous row, through "Needs you" and then Running, and it stops
-at the first and last row. The row under the cursor is drawn reversed. Its
-full text is on a detail line below the rows, wrapped at the pane's width so
-no word is cut. `enter` opens an engine run's detail pane; on decision,
-held-item and ledger rows it selects the row's project (`ui.answer-pane-keys`). Project keys and
-`1`-`9` select a project and put the cursor on its first row. Rows are cut
-with `...` to one line. A run's ID is never cut: the rest of the run's text is
-cut first. The rows scroll to keep the cursor row on screen, with
-`+N lines above` and `+N more lines` where lines are hidden.
+The Overview has a row cursor (`ui.overview-cursor`). `down`/`j` and `up`/`k`
+move it to the next and previous row, and so do `n` and `p`. It goes through
+"Needs you" and then Running, and it stops at the first and last row. The row
+under the cursor is drawn reversed. Its full text is on a detail line below the
+rows, wrapped at the pane's width so no word is cut. `enter` opens an engine
+run's detail pane; on decision, held-item and ledger rows it selects the row's
+project (`ui.answer-pane-keys`). Project keys and `1`-`9` select a project and
+put the cursor on its first row. Rows are cut with `...` to one line. A run's ID
+is never cut: the rest of the run's text is cut first. The rows scroll to keep
+the cursor row on screen, with `+N lines above` and `+N more lines` where lines
+are hidden.
 
 The terminal bell rings when a project's count rises past an earlier good
 reading (`ui.notify`). The status line shows project count, last refresh,

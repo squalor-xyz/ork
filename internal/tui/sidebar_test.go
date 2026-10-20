@@ -41,17 +41,17 @@ func TestSidebarRowsAndSelection(t *testing.T) {
 func TestSidebarNavigationFilterAndHide(t *testing.T) {
 	h := newHarness(t, proj("alpha", false), proj("beta", false))
 	h.start()
-	for _, k := range []string{"j", "j"} {
+	for _, k := range []string{"tab", "tab"} {
 		h.send(press(k))
 	}
 	if !strings.Contains(h.view(), "> beta") {
-		t.Fatal("j did not move selection to beta")
+		t.Fatal("tab did not move selection to beta")
 	}
-	h.send(press("k"))
+	h.send(press("shift+tab"))
 	if !strings.Contains(h.view(), "> alpha") {
-		t.Fatal("k did not move selection")
+		t.Fatal("shift+tab did not move selection")
 	}
-	h.send(press("k")) // Needs you: no active project to retain through the filter
+	h.send(press("shift+tab")) // Needs you: no active project to retain through the filter
 	h.send(press("/"))
 	h.send(press("b"))
 	v := h.view()
@@ -94,7 +94,7 @@ func TestSidebarScrollAndCompactNames(t *testing.T) {
 	h.start()
 	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 12})
 	for i := 0; i < 15; i++ {
-		h.send(press("j"))
+		h.send(press("tab"))
 	}
 	v := plainView(h.m)
 	if !strings.Contains(v, "> 15-long-proj...") || !strings.Contains(v, "+7 more") {
@@ -147,7 +147,7 @@ func TestSidebarArrowNavigation(t *testing.T) {
 		name string
 		code rune
 		want string
-	}{{"down", tea.KeyDown, "> alpha"}, {"up", tea.KeyUp, "> beta"}} {
+	}{{"right", tea.KeyRight, "> alpha"}, {"left", tea.KeyLeft, "> beta"}} {
 		t.Run(tc.name, func(t *testing.T) {
 			h := newHarness(t, proj("alpha", false), proj("beta", false))
 			h.start()
@@ -187,6 +187,28 @@ func TestFilterQuitKeys(t *testing.T) {
 	}
 }
 
+// While the filter box is open, j and k are typed into it and the arrows do
+// nothing. The cursor stays on its row and the project stays put (ui.row-keys).
+func TestFilterBoxTakesRowKeysAsText(t *testing.T) {
+	h := newHarness(t, four...)
+	h.src.set(snap(four[0], []adjcli.Record{openRec(11, "a.one", "first question"), openRec(12, "a.two", "second question")}, nil))
+	h.start()
+	h.m.cursor = 1 // the second row
+	h.send(press("/"))
+	for _, k := range []string{"down", "j", "up", "k"} {
+		h.send(press(k))
+	}
+	if h.m.filter != "jk" || h.m.active != -1 {
+		t.Fatalf("filter %q, project %d; want filter jk on Needs you", h.m.filter, h.m.active)
+	}
+	if got := detailText(h.m, 72); !strings.HasPrefix(got, "#12 a.two") {
+		t.Fatalf("the cursor moved to %q", got)
+	}
+	if v := h.view(); !strings.Contains(v, "/jk") {
+		t.Fatalf("j and k are not in the filter:\n%s", v)
+	}
+}
+
 func TestFilterKeepsActiveProject(t *testing.T) {
 	for _, action := range []string{"visible", "move"} {
 		t.Run(action, func(t *testing.T) {
@@ -201,7 +223,7 @@ func TestFilterKeepsActiveProject(t *testing.T) {
 					t.Fatalf("filtered active selection disappeared: %s", h.view())
 				}
 			} else {
-				h.send(press("k"))
+				h.send(press("shift+tab"))
 				if !strings.Contains(h.view(), "> Needs you") {
 					t.Fatalf("movement lost active project position: %s", h.view())
 				}

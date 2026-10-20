@@ -185,6 +185,22 @@ func TestPaneInputOwnsKeys(t *testing.T) {
 		t.Fatalf("field leaked a global key or changed submitted text:\n%s", v)
 	}
 }
+
+// The answer field takes j, k and the arrows as text. The cursor and the project
+// stay where they are (ui.row-keys).
+func TestAnswerFieldTakesRowKeysAsText(t *testing.T) {
+	h := paneHarness(t, "paused", "question")
+	for _, k := range []string{"down", "j", "up", "k"} {
+		h.deliver(press(k))
+	}
+	if v := h.view(); !strings.Contains(v, "Run engine") || !strings.Contains(v, "ork answer engine jk\n") {
+		t.Fatalf("j and k did not reach the answer field:\n%s", v)
+	}
+	if h.m.active != -1 || h.m.cursor != 0 {
+		t.Fatalf("the keys moved the project to %d or the cursor to %d", h.m.active, h.m.cursor)
+	}
+}
+
 func TestPaneAnswerFailure(t *testing.T) {
 	h := paneHarness(t, "paused", "question")
 	h.m.Update(tea.WindowSizeMsg{Width: 140, Height: 30})

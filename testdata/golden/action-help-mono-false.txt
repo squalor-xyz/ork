@@ -2,11 +2,11 @@
 [1;7;97;44m> Needs you[m                |[90m------------------------------------------------------------------------[m
   ork 0*                   |[1;36mKeys[m
                            |
-                           |tab/j next project
-                           |shift+tab/k previous project
+                           |tab/right next project
+                           |shift+tab/left previous project
                            |1-9 jump to project
-                           |n next row
-                           |p previous row
+                           |down/j/n next row
+                           |up/k/p previous row
                            |enter open engine pane; other rows select project
                            |/ filter projects; esc clears
                            |s hide/show sidebar

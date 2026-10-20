@@ -195,7 +195,7 @@ func TestActionCursorTarget(t *testing.T) {
 func TestActionHelp(t *testing.T) {
 	h := actionHarness(t, "implement", "")
 	h.deliver(press("?"))
-	for _, want := range []string{"a approve", "x stop", "t retry"} {
+	for _, want := range []string{"a approve", "x stop", "t retry", "tab/right next project", "shift+tab/left previous project", "down/j/n next row", "up/k/p previous row"} {
 		if v := h.view(); !strings.Contains(v, want) {
 			t.Errorf("missing help %q:\n%s", want, v)
 		}
