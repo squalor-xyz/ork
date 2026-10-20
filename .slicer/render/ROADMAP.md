@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-23 items · — 6 · done 17
+24 items · — 7 · done 17
 
 ## v1
 
@@ -70,9 +70,10 @@
 | 20 | [S21](slices/S21.md) | Y/N answers and defaults for ork run prompts | S | 1 |  | discovered from S17 | done |
 | 21 | [S22](slices/S22.md) | Overview shows ork's own engine runs | M | 2 |  | discovered from S17 | done |
 | 22 | [S23](slices/S23.md) | A denied tool call does not fail a finished role | S | 2 |  | discovered from S21 | done |
+| 23 | [S24](slices/S24.md) | Pin and check tool contracts | M | 2 |  | owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S45 (adj-json contract version and pin). | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 23 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 24 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
