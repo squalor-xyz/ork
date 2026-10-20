@@ -249,12 +249,15 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			delete(m.actionFlights, msg.action.run)
 		}
 		if r, ok := m.actionRow(); ok && r.engineID == msg.action.run && r.name == msg.action.project {
-   if msg.err != nil {
-    m.actionStatus = msg.action.command() + ": " + actionError(msg.err)
-   } else {
-    m.actionStatus = msg.action.command() + ": done"
-   }
-  }
+			if msg.err != nil {
+				m.actionStatus = msg.action.command() + ": " + actionError(msg.err)
+			} else {
+				m.actionStatus = msg.action.command() + ": done"
+				if msg.action.verb == "answer" && m.pane != nil {
+					m.pane.input = textField{}
+				}
+			}
+		}
 		if m.poller.InFlight(msg.action.project) {
 			m.byName[msg.action.project].dirty = true
 		}
@@ -278,13 +281,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, tea.Batch(m.fetch(msg.project, false), m.listen())
 	case tea.KeyPressMsg:
 		return m, m.key(msg)
+	case tea.PasteMsg:
+		if m.pane != nil && m.paneQuestion() {
+			m.pane.input.update(msg)
+			m.actionStatus = ""
+		}
 	}
- if m.pane != nil && m.paneQuestion() {
-  var cmd tea.Cmd
-  m.pane.input, cmd = m.pane.input.Update(msg)
-  return m, cmd
- }
- return m, nil
+	return m, nil
 }
 
 func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
@@ -303,7 +306,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 
- if m.pane != nil { return m.paneKey(msg) }
+	if m.pane != nil {
+		return m.paneKey(msg)
+	}
 
 	if m.filtering {
 		switch msg.String() {
@@ -355,7 +360,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		m.moveRow(-1)
 	case key.Matches(msg, m.keys.Select):
 		if r, ok := m.selectedRow(); ok {
-   if r.engineID != "" && !m.showHelp { return m.openPane(r) }
+			if r.engineID != "" && !m.showHelp {
+				return m.openPane(r)
+			}
 			return m.switchTo(r.project)
 		}
 	case key.Matches(msg, m.keys.Jump):
@@ -382,8 +389,8 @@ func (m *Model) switchTo(i int) tea.Cmd {
 	if n == 0 {
 		return nil
 	}
- m.actionStatus = ""
- m.pane = nil
+	m.actionStatus = ""
+	m.pane = nil
 	m.active = i
 	m.cursor = 0
 	if i >= 0 {
@@ -446,13 +453,8 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 		}
 
 	}
- before, hadBefore := m.actionRow()
 	ps.loaded = true
 	ps.snap = msg.snap
- after, hasAfter := m.actionRow()
- if hadBefore != hasAfter || before.engineID != after.engineID || before.name != after.name || before.text != after.text && before.engineID == "" {
-  m.actionStatus = ""
- }
 	var cmds []tea.Cmd
 	if ps.dirty {
 		ps.dirty = false
@@ -518,9 +520,11 @@ func (m *Model) move(delta int) tea.Cmd {
 type runAction struct{ verb, run, project, text string }
 
 func (a runAction) command() string {
- cmd := "ork " + a.verb + " " + a.run
- if a.verb == "answer" { cmd += " " + a.text }
- return cmd
+	cmd := "ork " + a.verb + " " + a.run
+	if a.verb == "answer" {
+		cmd += " " + a.text
+	}
+	return cmd
 }
 
 type actionMsg struct {
@@ -562,19 +566,23 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 			return nil
 		}
 	}
- if verb == "answer" {
-  if r.state != "paused" || r.pending != "question" { return nil }
-  if strings.TrimSpace(m.pane.input.Value()) == "" {
-   m.actionStatus = "Answer must not be empty"
-   return nil
-  }
- }
+	if verb == "answer" {
+		if r.state != "paused" || r.pending != "question" {
+			return nil
+		}
+		if strings.TrimSpace(m.pane.input.Value()) == "" {
+			m.actionStatus = "Answer must not be empty"
+			return nil
+		}
+	}
 	if m.cfg.Live == nil {
 		m.actionStatus = "No daemon connection; action unavailable"
 		return nil
 	}
 	a := runAction{verb: verb, run: r.engineID, project: r.name}
- if verb == "answer" { a.text = m.pane.input.Value() }
+	if verb == "answer" {
+		a.text = m.pane.input.Value()
+	}
 	if verb == "approve" || verb == "answer" {
 		return m.callAction(a)
 	}
@@ -599,8 +607,8 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 			err = live.Stop(context.Background(), a.run)
 		case "retry":
 			err = live.Retry(context.Background(), a.run)
-  case "answer":
-   err = live.Answer(context.Background(), a.run, a.text)
+		case "answer":
+			err = live.Answer(context.Background(), a.run, a.text)
 		}
 		return actionMsg{action: a, err: err}
 	}

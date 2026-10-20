@@ -7,20 +7,20 @@
                            |1-9 jump to project
                            |n next row
                            |p previous row
-                           |enter select the row's project
+                           |enter open engine pane; other rows select project
                            |/ filter projects; esc clears
                            |s hide/show sidebar
                            |a approve
                            |x stop
                            |t retry
+                           |enter (answer) submit; no confirmation
+                           |pgup/pgdown scroll pane reason
                            |r refresh now
                            |? show or hide this help
-                           |esc close help or message
+                           |esc close pane, help or message
                            |q quit
                            |
                            |Only the Overview exists so far. Waves, Roadmap and Decisions come in...
-                           |
-                           |
                            |
                            |
                            |

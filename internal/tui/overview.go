@@ -160,8 +160,10 @@ func (m *Model) moveRow(delta int) {
 	needs, running := m.rows()
 	n := len(needs) + len(running)
 	if i := clampCursor(m.cursor, n); i >= 0 {
-  next := clampCursor(i+delta, n)
-  if next != i { m.actionStatus = "" }
+		next := clampCursor(i+delta, n)
+		if next != i {
+			m.actionStatus = ""
+		}
 		m.cursor = next
 	}
 }
@@ -258,6 +260,9 @@ func (m *Model) rowLine(r ovRow, selected bool, nameW, w int) string {
 // rowText is a row's text cut to room columns. A run's ID stays whole: the rest
 // of its text is cut first, and dropped when no room is left for it.
 func rowText(r ovRow, room int) string {
+	// Overview rows stay on one line; the pane retains the full Wait text.
+	flatten := strings.NewReplacer("\r\n", " ", "\n", " ", "\r", " ")
+	r.text, r.rest = flatten.Replace(r.text), flatten.Replace(r.rest)
 	if r.id == "" {
 		return clip(r.text, room)
 	}
@@ -389,10 +394,17 @@ func clip(s string, n int) string {
 	return string(r) + "..."
 }
 
-// wrapText breaks s into lines of at most n columns. A line breaks at a single
-// space, the only character a break drops, so joining the lines with one space
-// gives s back. A word longer than n is cut.
+// wrapText preserves explicit line breaks and wraps each line to n columns.
+// An added break drops a single space, or splits a word longer than n.
 func wrapText(s string, n int) []string {
+	s = strings.NewReplacer("\r\n", "\n", "\r", "\n").Replace(s)
+	if strings.Contains(s, "\n") {
+		var out []string
+		for _, line := range strings.Split(s, "\n") {
+			out = append(out, wrapText(line, n)...)
+		}
+		return out
+	}
 	var out []string
 	for lipgloss.Width(s) > n {
 		if i := breakAt(s, n); i > 0 {

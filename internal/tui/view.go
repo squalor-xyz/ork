@@ -58,9 +58,9 @@ func (m *Model) screen() string {
 		if m.confirm != nil {
 			status = m.confirm.command() + "? [y/N] (Enter is No)"
 		}
-  if m.pane != nil {
-   detail = m.paneLines(mainW, max(h-5, 1), status)
-  } else if status != "" {
+		if m.pane != nil {
+			detail = m.paneLines(mainW, max(h-5, 1), status)
+		} else if status != "" {
 			detail = wrapText(status, max(mainW-len(indent), 1))
 			for i := range detail {
 				detail[i] = indent + detail[i]

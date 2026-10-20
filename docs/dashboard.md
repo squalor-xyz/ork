@@ -66,7 +66,8 @@ The Overview has a row cursor (`ui.overview-cursor`). `n` and `p` move it to
 the next and previous row, through "Needs you" and then Running, and it stops
 at the first and last row. The row under the cursor is drawn reversed. Its
 full text is on a detail line below the rows, wrapped at the pane's width so
-no word is cut. `enter` selects the cursor row's project. Project keys and
+no word is cut. `enter` opens an engine run's detail pane; on decision,
+held-item and ledger rows it selects the row's project (`ui.answer-pane-keys`). Project keys and
 `1`-`9` select a project and put the cursor on its first row. Rows are cut
 with `...` to one line. A run's ID is never cut: the rest of the run's text is
 cut first. The rows scroll to keep the cursor row on screen, with
@@ -131,7 +132,9 @@ its code and message verbatim in the detail area. Actions on other runs remain
 available while a call is pending. Stop can interrupt a pending approve or
 retry; another action on that run names the command that is pending. A stopped
 run refuses stop. Each result names its command; the latest completed call
-replaces the previous detail message. Ineligible actions explain why there,
+replaces the previous detail message. Moving to another row or project clears
+the message; a late result appears only if its run is still selected.
+Ineligible actions explain why there,
 and ledger rows started elsewhere have no actions. `esc` dismisses
 a pending message or action result and restores the selected row's detail.
 Hiding a pending message leaves its call running.
@@ -139,7 +142,36 @@ Hiding a pending message leaves its call running.
 Retry uses the optional engine `pending` kind (`ui.pending-kind`). When it is
 `question`, the detail area says to answer with `ork answer RUN TEXT` instead.
 Other pending kinds, including an absent kind from an older snapshot, offer
-retry. Answer and launch keys await their own slices (S26 and S52).
+retry. Launch keys await S52.
+
+### Engine detail pane
+
+`enter` opens the cursor's engine run below the Overview. The pane keeps that
+run's ID while snapshots reorder the rows. It shows the full `wait` reason;
+`pgup` and `pgdown` scroll the reason while the action area stays visible.
+`esc` closes the pane (`ui.answer-ui`, `ui.answer-pane-keys`). Ledger runs
+started elsewhere open no pane.
+
+The actions follow the state (`ui.answer-pane-scope`):
+
+- Paused with `pending: question`: show the question and an Answer field.
+  The exact `ork answer RUN TEXT` command follows the text live. Enter submits
+  without y/n; an empty or whitespace-only answer is refused. The field owns
+  typing keys, including the global action letters. Backspace deletes the
+  previous rune, ctrl-u clears the field, and left/right move the cursor.
+  Terminal paste inserts at the cursor and strips CR and LF, keeping one
+  answer line; paste never submits (`ui.text-field`).
+- Paused without a question: show the reason and `t` retries, with the same
+  `ork retry RUN` y/n confirmation as the Overview.
+- Stopped: show the full reason with no actions. Stop is final; relaunch to
+  continue.
+
+Awaiting-approval runs offer `a` approve and `x` stop; other active runs offer
+`x` stop. A successful answer clears the field and refreshes the pane and row.
+A failed call shows
+its error code and message verbatim and permits another attempt. Closing the
+pane leaves a pending call running. No structured answer options are offered;
+the separate Questions tab follows in S27.
 
 A failed call is an error row. A project has one error row per error code.
 The parts that failed with that code come first, then the code, then the
