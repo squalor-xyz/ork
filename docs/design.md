@@ -45,6 +45,13 @@ ork (TUI)  ork status --json (CLI)
   A socket that refuses connections also means absent; restart uses the normal
   start path, which clears the dead daemon's stale socket.
   *Proposed:* both commands use the normal exit codes and accept `--json`.
+  A daemon that predates `daemon.stop` answers `unknown_method`. Both
+  commands then exit 1 without starting anything. They print the pid from the
+  pid file and `kill -TERM PID`, and warn that a role is running (an active
+  relay with running roles, or an engine run not idle) or may be running
+  (the status call failed). ork sends no signal itself (decision 118). The
+  owner runs the kill, then `ork daemon restart`. An unreadable or invalid
+  pid file gives the pid file path instead of a pid. *Proposed:* the wording.
 - **Build identity** (`daemon.build-id`, adj #102). The executable reads
   `vcs.revision` and `vcs.modified` from `runtime/debug.ReadBuildInfo`.
   Without a revision it uses the build-time `version` variable. *Proposed:*
@@ -542,7 +549,8 @@ ork answer RUN TEXT         answer an owner question
 ork retry RUN               retry a paused role or step
 ork stop RUN|WAVE           stop and record why
 ork daemon run              serve the daemon in the foreground
-ork daemon stop [--force]   stop the daemon
+ork daemon stop [--force]   stop the daemon; on a daemon that predates
+                            daemon.stop, print the pid and a kill hint
 ork daemon restart [--force]
                             stop and start the current executable
 ork roles print [ROLE]      print the embedded role prompts

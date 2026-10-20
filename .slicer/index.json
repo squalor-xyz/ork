@@ -2240,7 +2240,7 @@
       "id": "S56",
       "title": "daemon stop and restart cope with a daemon that predates daemon.stop",
       "short_title": "daemon stop and restart cope with a daemon that predates daemon.stop",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -2261,7 +2261,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -112,7 +112,7 @@ func command(ctx context.Context, args []string, stdout, stderr io.Writer, p pro
 		fmt.Fprintf(stderr, "ork: %v\n", err)
 		return 1
 	}
-	app := &cli.App{Socket: paths.Socket, Start: p.start, BuildID: currentBuildID()}
+	app := &cli.App{Socket: paths.Socket, Pid: paths.Pid, Start: p.start, BuildID: currentBuildID()}
 	return app.Run(ctx, args, stdout, stderr)
 }
 
@@ -141,7 +141,7 @@ func openTUI(ctx context.Context, stderr io.Writer, p program) int {
 		fmt.Fprintf(stderr, "ork: %v\n", err)
 		return 1
 	}
-	app := &cli.App{Socket: paths.Socket, Start: p.start, BuildID: currentBuildID()}
+	app := &cli.App{Socket: paths.Socket, Pid: paths.Pid, Start: p.start, BuildID: currentBuildID()}
 	client, err := app.Connect(ctx)
 	if err != nil {
 		fmt.Fprintf(stderr, "ork: %v\n", err)

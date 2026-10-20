@@ -75,6 +75,7 @@ type App struct {
 	Call    func(context.Context, string, any, any) error // nil uses the daemon socket
 
 	Socket    string                          // the daemon's socket
+	Pid       string                          // the daemon's pid file; used only for the stop hint
 	Start     func(ctx context.Context) error // starts the daemon; nil means it cannot be started
 	StartWait time.Duration                   // how long to wait for the daemon after Start; zero means 5s
 	PollEvery time.Duration                   // how often to try the socket in that time; zero means 50ms
@@ -90,7 +91,7 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fmt.Fprintf(stderr, "ork: %v\n", err)
 		return ExitFailure
 	}
-	return (&App{Socket: paths.Socket}).Run(ctx, args, stdout, stderr)
+	return (&App{Socket: paths.Socket, Pid: paths.Pid}).Run(ctx, args, stdout, stderr)
 }
 
 // output is one command's writers and output format.
