@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/runrec (store, record), the code that builds the recorded text (internal/agent/claude/types.go), tests, docs/state.md."
+      "body": "- internal/runrec (store, record), the code that builds the recorded text (internal/agent/claude/types.go), internal/engine (states.go:181 and round.go:336, the checks log and the report fallback), tests, docs/state.md."
     },
     {
       "heading": "Failing tests",
