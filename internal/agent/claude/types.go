@@ -13,10 +13,9 @@ import "encoding/json"
 type Class string
 
 const (
-	// ClassOK: exit 0 and a successful result event with no denial.
+	// ClassOK: exit 0 and a successful result event, including permission denials.
 	ClassOK Class = "ok"
-	// ClassDenied: the result event lists permission denials. Claude exits 0
-	// in that case, so only the JSON shows it.
+	// ClassDenied: an unsuccessful round lists permission denials.
 	ClassDenied Class = "denied"
 	// ClassRateLimited is reserved for fallback (vendor.fallback). No real
 	// sample exists, so nothing returns it yet (vendor.ratelimit-detection,

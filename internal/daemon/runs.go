@@ -404,7 +404,11 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		case runrec.StateAwaitingApproval:
 			wait = "owner approval"
 		}
-		runs = append(runs, EngineRun{ID: rec.ID, Item: rec.Item, State: rec.State, Wait: wait, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt})
+		var denials []string
+		for _, role := range rec.Roles {
+			denials = append(denials, role.Denials...)
+		}
+		runs = append(runs, EngineRun{Denials: denials, ID: rec.ID, Item: rec.Item, State: rec.State, Wait: wait, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt})
 	}
 	return runs
 }

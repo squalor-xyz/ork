@@ -305,7 +305,7 @@ func TestChecksWithoutACheckCommandRunOnlySlicerCheck(t *testing.T) {
 	if len(h.checks.calls) != 0 || len(h.calls("slicer", "check")) != 1 {
 		t.Fatalf("check calls %v, slicer check %v", h.checks.calls, h.calls("slicer", "check"))
 	}
-	if req := h.runner.requests()[0]; len(req.Allowlist) != 9 {
+	if req := h.runner.requests()[0]; len(req.Allowlist) != 21 {
 		t.Errorf("allowlist without a check command: %v", req.Allowlist)
 	}
 }

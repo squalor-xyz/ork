@@ -231,10 +231,10 @@ func TestRunYesStartsAndOwnerCommands(t *testing.T) {
 func TestStatusPrintsEngineStateAndWait(t *testing.T) {
 	var out, errs bytes.Buffer
 	app := &App{Call: func(_ context.Context, method string, params, result any) error {
-		return json.Unmarshal([]byte(`{"projects":[{"name":"p","needs_you":1,"engine_runs":[{"id":"r1","item":"S1","state":"paused","wait":"Which library?"}]}]}`), result)
+		return json.Unmarshal([]byte(`{"projects":[{"name":"p","needs_you":1,"engine_runs":[{"id":"r1","item":"S1","state":"paused","wait":"Which library?","denials":["Write","Bash"]}]}]}`), result)
 	}}
 	code := app.Run(context.Background(), []string{"status"}, &out, &errs)
-	if code != 0 || !strings.Contains(out.String(), "r1 S1 paused (wait: Which library?)") {
+	if code != 0 || !strings.Contains(out.String(), "r1 S1 paused (wait: Which library?) (denied: Write, Bash)") {
 		t.Fatalf("status code %d: %s %s", code, &out, &errs)
 	}
 }

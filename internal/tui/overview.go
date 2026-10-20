@@ -99,6 +99,9 @@ func (m *Model) rows() (needs, running []ovRow) {
 			if r.Wait != "" {
 				parts = append(parts, r.Wait)
 			}
+			if len(r.Denials) > 0 {
+				parts = append(parts, "denied: "+strings.Join(r.Denials, ", "))
+			}
 			began := r.CreatedAt
 			for _, ledger := range s.Runs.Value {
 				if r.RelayRun == "" || ledger.ID != r.RelayRun {

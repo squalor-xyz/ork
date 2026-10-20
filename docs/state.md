@@ -13,10 +13,10 @@ The files ork owns. Everything else is read live from slicer, adj and git
 | UI preferences, free-form until v1 | `~/.config/ork/ui.json` |
 | Daemon socket and pidfile (the pidfile is locked while a daemon lives) | `~/.local/state/ork/ork.sock`, `ork.pid` |
 | One record per slice run | `~/.local/state/ork/runs/<run>/run.json` |
-| Role reports and output logs | `~/.local/state/ork/runs/<run>/<role>-<round>.{md,log}` |
+| Role reports | `~/.local/state/ork/runs/<run>/<role>-<round>.md` |
 | Check output per round (S04) | `~/.local/state/ork/runs/<run>/checks-<round>.log` |
 | A role's own temp directory (S04) | `~/.local/state/ork/runs/<run>/tmp/<role>-<round>/` |
-| Fixture candidates: raw output of every non-ok vendor round, mode 0600 | `~/.local/state/ork/fixtures/<vendor>/` |
+| Fixture candidates: raw output of every non-ok vendor round or round with denials, mode 0600 | `~/.local/state/ork/fixtures/<vendor>/` |
 
 ork honors `XDG_CONFIG_HOME` and `XDG_STATE_HOME`. Nothing is written
 inside a project except what git and slicer write for a slice: the
@@ -150,7 +150,10 @@ further retry. The CLI may already have changed the project.
 
 The daemon's snapshot has an `engine_runs` list, built by the same code as
 `ork status`. Each entry has `id`, `item`, `state`, optional `wait`, optional
-`relay_run`, and `created_at`. The last two fields link ledger progress and
+`relay_run`, `created_at`, and optional `denials` (an array of denied tool
+names collected from the role records, in role order). Denials are omitted
+when empty and rendered by status and the TUI (`ui.denials-display`).
+The `relay_run` and `created_at` fields link ledger progress and
 order replacement runs for the Overview (`ui.engine-runs-read`,
 `ui.run-join-key`, `ui.stopped-newer`). These are read-only display fields.
 

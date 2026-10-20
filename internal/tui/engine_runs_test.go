@@ -178,3 +178,19 @@ func TestEngineElapsedWithoutLedger(t *testing.T) {
 		t.Fatalf("engine elapsed from CreatedAt missing:\n%s", v)
 	}
 }
+
+func TestEngineRunDenials(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	s := engineSnapshot(t, "implement", "ledger")
+	if err := json.Unmarshal([]byte(`{"EngineRuns":[{"id":"engine","item":"S22","state":"implement","denials":["Write","Bash"]}]}`), &s); err != nil {
+		t.Fatal(err)
+	}
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	v := sgr.ReplaceAllString(strings.Join(h.m.overview(200).body, "\n"), "")
+	if !strings.Contains(v, "denied: Write, Bash") {
+		t.Fatalf("missing denials: %s", v)
+	}
+	h.m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
+	checkGolden(t, "engine-denials-100x30.txt", h.m.View().Content)
+}

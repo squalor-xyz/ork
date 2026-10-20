@@ -47,13 +47,13 @@ func TestAnExitNotClassifiedOkStopsTheSliceWithTheReason(t *testing.T) {
 	}
 }
 
-func TestAPermissionDenialStopsTheSlice(t *testing.T) {
+func TestAnUnsuccessfulPermissionDenialStopsTheSlice(t *testing.T) {
 	h := newHarness(t)
 	h.runner.script = func(req Request, n int) (Result, error) {
 		if req.Role != RoleImplementer {
 			return Result{}, nil
 		}
-		return Result{Exit: ExitOK, Session: "s", Report: implReport, Denials: []string{"Bash(rm -rf /)", "Write"}}, nil
+		return Result{Exit: ExitError, Session: "s", Report: implReport, Denials: []string{"Bash(rm -rf /)", "Write"}}, nil
 	}
 	e := h.start()
 	rec := requireState(t, e, runrec.StateStopped)
@@ -118,5 +118,25 @@ func TestAReadOnlyRoleOnADirtyButUnchangedTreeIsFine(t *testing.T) {
 	}
 	if status != 4 {
 		t.Errorf("%d git status calls, want 2 per read-only role and none for the implementer", status)
+	}
+}
+
+func TestASuccessfulPermissionDenialProceeds(t *testing.T) {
+	h := newHarness(t)
+	h.runner.script = func(req Request, n int) (Result, error) {
+		report := implReport
+		if req.Role != RoleImplementer {
+			report = cleanReview
+		}
+		if req.Role == RoleGate {
+			report = gatePass
+		}
+		return Result{Exit: ExitOK, Session: "s", Report: report, Denials: []string{"Write"}}, nil
+	}
+	rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
+	for _, role := range rec.Roles {
+		if len(role.Denials) != 1 || role.Denials[0] != "Write" {
+			t.Fatalf("role lost denials: %+v", role)
+		}
 	}
 }

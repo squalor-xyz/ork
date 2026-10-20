@@ -14,12 +14,15 @@ func TestDefaultImplementerAllowlistIsExactlyTheDecidedOne(t *testing.T) {
 	want := []string{
 		"Read", "Grep", "Glob", "Edit", "Write",
 		"Bash(slicer *)", "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)",
+		"Bash(go -C * test*)", "Bash(go -C * vet*)", "Bash(go test*)", "Bash(go vet*)", "Bash(gofmt *)",
+		"Bash(git -C * status*)", "Bash(git -C * diff*)", "Bash(git -C * log*)",
+		"Bash(adj check*)", "Bash(adj lint*)", "Bash(adj show*)", "Bash(adj inbox*)",
 		"Bash(go test ./...*)",
 	}
 	if got := DefaultImplementerAllowlist("go test ./..."); !reflect.DeepEqual(got, want) {
 		t.Fatalf("got  %q\nwant %q", got, want)
 	}
-	if got := DefaultImplementerAllowlist(""); !reflect.DeepEqual(got, want[:9]) {
+	if got := DefaultImplementerAllowlist(""); !reflect.DeepEqual(got, want[:len(want)-1]) {
 		t.Fatalf("without a check command: %q", got)
 	}
 	// Each call returns a slice of its own.

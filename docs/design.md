@@ -249,9 +249,13 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   files, `adj ask` runs in the project's main checkout (`Engine.AdjRoot`),
   never in a worktree.
 - **Stops.** An exit not classified `ok` (rate-limited too, until fallback
-  in S06), a permission denial, and a read-only role that changed the tree
+  in S06) and a read-only role that changed the tree
   (`git status --porcelain` before and after) stop the slice with the
-  reason. A failed commit stops the slice (adj #81). Other tool failures the engine
+  reason. A successful round with permission denials proceeds. The role record
+  keeps the denied tool names; status and the TUI show them as warnings
+  (`engine.denials`, `ui.denials-display`). An unsuccessful round with denials
+  stops with the denied tool names in its reason. A failed commit stops the
+  slice (adj #81). Other tool failures the engine
   cannot go on from (a check run, `git status`) pause it (kind `error`); `Retry` runs the
   state again.
 - **Restart.** `Recover` loads every unfinished run. A role with no end
@@ -364,8 +368,8 @@ grok 1.0.62. Grok has no successful run, so most of its column is
   midway leaves its tree as it is, and the next vendor is told to continue
   from it.
 - **Detection** (`vendor.ratelimit-detection`): the classifier matches only
-  documented signals. Every non-ok round, a permission denial that
-  exits 0 included, saves its raw stdout, stderr and JSON at mode 0600 under
+  documented signals. Every non-ok round and every round with permission
+  denials saves its raw stdout, stderr and JSON at mode 0600 under
   `~/.local/state/ork/fixtures/<vendor>/` as a candidate. Redaction happens
   when the owner promotes one into `testdata/` (`vendor.fixture-candidates`). An
   unclassified exit stops the slice for the owner, who can mark it
@@ -379,8 +383,14 @@ grok 1.0.62. Grok has no successful run, so most of its column is
   default, which the registry replaces as a whole: `Read`, `Grep`, `Glob`,
   `Edit`, `Write`, `Bash(slicer *)`, `Bash(git status*)`, `Bash(git
   diff*)`, `Bash(git log*)` and `Bash(<check command>*)`
-  (`launch.default-allowlist`). A registry allowlist for a read-only role is
-  an error. A denial stops the slice. The spike measured the claude allowlist
+  (`launch.default-allowlist`). The default also includes
+  `Bash(go -C * test*)`, `Bash(go -C * vet*)`, `Bash(go test*)`,
+  `Bash(go vet*)`, `Bash(gofmt *)`, `Bash(git -C * status*)`,
+  `Bash(git -C * diff*)`, `Bash(git -C * log*)`, `Bash(adj check*)`,
+  `Bash(adj lint*)`, `Bash(adj show*)` and `Bash(adj inbox*)`
+  (`engine.default-allowlist`). A registry allowlist for a read-only role is
+  an error. A denial stops an unsuccessful round; a success proceeds. The
+  spike measured the claude allowlist
   denial: it exits 0 and shows only in `permission_denials`, so ork must read
   the JSON to see it. codex has no per-tool allowlist, so in v1 it runs only
   read-only roles in its read-only sandbox (`vendor.codex-allowlist`).
@@ -399,14 +409,14 @@ grok 1.0.62. Grok has no successful run, so most of its column is
   tokens and `total_cost_usd` come from the `result` event. Cancelling the
   context kills the whole group. The report is the report file, else the
   result text (`role.report-io`). The exit class is:
-  - ok: exit 0, `subtype` `success`, `is_error` false.
-  - denied: `permission_denials` is non-empty, even at exit 0.
+  - ok: exit 0, `subtype` `success`, `is_error` false, including denials.
+  - denied: not ok and `permission_denials` is non-empty.
   - unclassified: everything else. That includes the bad-model run (exit 1,
     status 404; `testdata/vendors/claude/06-bad-model.stdout`), any 401, 429
     or 503, and a `rejected` `rate_limit_event`. No auth failure, bad model
     or rate limit has a real sample yet, so none has a class of its own
     (`vendor.unsampled-classes`). The rate-limited class is never returned.
-  - Every round that is not ok, denials included, saves its command, exit
+  - Every round that is not ok or has denials saves its command, exit
     code, raw stdout, stderr and the result JSON under
     `$XDG_STATE_HOME/ork/fixtures/claude/` (else
     `~/.local/state/ork/fixtures/claude/`) at mode 0600. Nothing is redacted
@@ -576,14 +586,16 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   and engine runs awaiting approval, paused or stopped (`status.needs-you`,
   adj #69). A stopped run stops counting once a newer engine run exists for
   the same slice, ordered by created time (adj #92). The *proposed*
-  `engine_runs:[{id,item,state,wait?,relay_run?,created_at}]` field per project
+  `engine_runs:[{id,item,state,wait?,denials?,relay_run?,created_at}]` field per project
   includes the linked slicer ledger run ID in `relay_run`, when present,
-  and the engine run's creation time in `created_at`. `wait`
+  and the engine run's creation time in `created_at`. `denials` is an optional
+  array of denied tool names collected from role records (`ui.denials-display`). `wait`
   contains the approval prompt, owner question, pause or stop reason. `active_relays` are slicer's active relay runs.
   `errors` lists failed parts (`items`, `goals`, `runs`, `open`, `decided`)
   with the tool's own code. `parts` gives each part's age in ms (0 for a part never read) and `stale`
   when the part keeps an older value; the error is the one that failed. Text: one line `NAME: needs
-  you N, active relays M`, then one line per relay, engine run (with state and wait reason), and
+  you N, active relays M`, then one line per relay, engine run (with state,
+  wait reason and denied tool names), and
   error (the text
   does not show ages yet).
 - `projects list`: `{"projects":[...]}`, each as in `projects.json`. Text: name,

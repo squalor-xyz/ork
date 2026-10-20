@@ -1108,7 +1108,7 @@
       "id": "S23",
       "title": "A denied tool call does not fail a finished role",
       "short_title": "A denied tool call does not fail a finished role",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -1129,7 +1129,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],

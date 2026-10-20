@@ -34,7 +34,7 @@ func TestClaudeRunnerForwardsRequestAndResult(t *testing.T) {
 	}
 }
 func TestClaudeRunnerMapsDenialsAndReadOnly(t *testing.T) {
-	for _, class := range []claude.Class{claude.ClassDenied, claude.ClassUnclassified, claude.ClassRateLimited} {
+	for _, class := range []claude.Class{claude.ClassOK, claude.ClassDenied, claude.ClassUnclassified, claude.ClassRateLimited} {
 		r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
 			if !s.ReadOnly {
 				t.Fatal("read-only lost")
@@ -43,6 +43,9 @@ func TestClaudeRunnerMapsDenialsAndReadOnly(t *testing.T) {
 		}}
 		got, err := r.Run(context.Background(), engine.Request{Vendor: "claude", ReadOnly: true})
 		want := engine.ExitError
+		if class == claude.ClassOK {
+			want = engine.ExitOK
+		}
 		if class == claude.ClassRateLimited {
 			want = engine.ExitRateLimited
 		}

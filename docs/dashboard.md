@@ -104,7 +104,9 @@ and decided records refresh every 5 min or on HEAD changes and manual refresh. `
 
 The Overview reads engine runs in the daemon snapshot, using the same builder
 as `ork status` (`ui.engine-runs-read`). An engine row leads with the slice,
-engine state and wait. Its linked ledger run supplies step progress and elapsed
+engine state and wait. Denied tool names appear as `denied: Write, Bash`
+from the snapshot's `denials` field (`ui.denials-display`). Its linked ledger
+run supplies step progress and elapsed
 time; without a ledger run, elapsed time starts at the engine record's creation.
 The join matches the engine's `relay_run` to the ledger run id, making one row
 per run (`ui.run-join-key`). Only unmatched ledger runs say "started elsewhere".

@@ -9,22 +9,22 @@ import "fmt"
 //
 // Only measured or documented signals count (vendor.ratelimit-detection,
 // vendor.unsampled-classes):
-//   - permission_denials non-empty: denied, even with exit 0
-//     (testdata/vendors/claude/04-allowlist-denies-write.stdout).
-//   - exit 0, subtype "success", is_error false: ok.
+//   - exit 0, subtype "success", is_error false: ok, including denials.
+//   - otherwise permission_denials non-empty: denied
+//     Denial signal: testdata/vendors/claude/04-allowlist-denies-write.stdout.
 //   - everything else is unclassified, including the bad-model run (exit 1,
 //     api_error_status 404), any 401, 429 or 503, and a rejected
 //     rate_limit_event. No auth failure, bad-model class or rate limit has a
 //     real sample; the owner marks one and it becomes a fixture.
 func Classify(exit int, r *Result) (Class, string) {
+	if r != nil && exit == 0 && r.Subtype == "success" && !r.IsError {
+		return ClassOK, "result event is a success"
+	}
 	if r != nil && len(r.Denials) > 0 {
 		return ClassDenied, fmt.Sprintf("permission denied for %d tool call(s), first %s", len(r.Denials), r.Denials[0].ToolName)
 	}
 	if r == nil {
 		return ClassUnclassified, fmt.Sprintf("exit %d and no result event", exit)
-	}
-	if exit == 0 && r.Subtype == "success" && !r.IsError {
-		return ClassOK, "result event is a success"
 	}
 	status := "none"
 	if r.APIErrorStatus != nil {

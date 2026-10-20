@@ -318,7 +318,7 @@ func TestClassifyFixtures(t *testing.T) {
 		{"01-plain-json", ClassOK},
 		{"02-stream-json", ClassOK},
 		{"03-resume", ClassOK},
-		{"04-allowlist-denies-write", ClassDenied},
+		{"04-allowlist-denies-write", ClassOK},
 		{"05-plan-mode-edit", ClassOK},
 		{"06-bad-model", ClassUnclassified},
 	}
@@ -335,15 +335,29 @@ func TestClassifyFixtures(t *testing.T) {
 	}
 }
 
-func TestClassifyDenialIsDeniedEvenWithExitZero(t *testing.T) {
-	if got, _ := Classify(0, resultOf(t, "04-allowlist-denies-write")); got != ClassDenied {
-		t.Errorf("class %q, want denied", got)
+func TestClassifySuccessfulDenialIsOK(t *testing.T) {
+	if got, _ := Classify(0, resultOf(t, "04-allowlist-denies-write")); got != ClassOK {
+		t.Fatalf("class %q, want ok", got)
 	}
-	// The same result with the denial removed is ok, so the denial alone decides.
-	r := resultOf(t, "04-allowlist-denies-write")
-	r.Denials = nil
-	if got, _ := Classify(0, r); got != ClassOK {
-		t.Errorf("without denials: class %q, want ok", got)
+}
+
+func TestClassifyUnsuccessfulDenialIsDenied(t *testing.T) {
+	for _, change := range []string{"exit", "subtype", "is_error"} {
+		t.Run(change, func(t *testing.T) {
+			r := resultOf(t, "04-allowlist-denies-write")
+			exit := 0
+			switch change {
+			case "exit":
+				exit = 1
+			case "subtype":
+				r.Subtype = "error"
+			case "is_error":
+				r.IsError = true
+			}
+			if got, _ := Classify(exit, r); got != ClassDenied {
+				t.Fatalf("class %q, want denied", got)
+			}
+		})
 	}
 }
 
@@ -466,7 +480,7 @@ func TestRunReplaysFixtures(t *testing.T) {
 		{"02-stream-json", ClassOK, "9833ecf5-8ffa-4737-8bcd-58479d5fb1a2", "1\n2\n3\n4\n5", 11, 0.0025724100000000007},
 		{"03-resume", ClassOK, "b17a3484-60da-4931-b01f-f685541bdf82", "OK", 4, 0.0033433400000000006},
 		{"05-plan-mode-edit", ClassOK, "59c83c18-a718-40ca-90ac-504f0a8175df", "", 957, 0.0818584},
-		{"04-allowlist-denies-write", ClassDenied, "da4b94a3-71db-416c-802f-f6ea4d5810b1", "", 505, 0.00314919},
+		{"04-allowlist-denies-write", ClassOK, "da4b94a3-71db-416c-802f-f6ea4d5810b1", "", 505, 0.00314919},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -492,10 +506,10 @@ func TestRunReplaysFixtures(t *testing.T) {
 				t.Errorf("usage %+v, want %d output tokens and cost %v", round.Usage, c.tokens, c.cost)
 			}
 			entries, _ := os.ReadDir(s.FixtureDir)
-			if c.class == ClassOK && (round.Candidate != "" || len(entries) != 0) {
+			if c.class == ClassOK && len(round.Denials) == 0 && (round.Candidate != "" || len(entries) != 0) {
 				t.Errorf("candidate saved for an ok round: %q %v", round.Candidate, entries)
 			}
-			if c.class != ClassOK && (round.Candidate == "" || len(entries) != 1) {
+			if (c.class != ClassOK || len(round.Denials) > 0) && (round.Candidate == "" || len(entries) != 1) {
 				t.Errorf("class %q: no candidate saved (%q, %v)", c.class, round.Candidate, entries)
 			}
 			if !bytes.Equal(round.Stdout, readFixture(t, c.name, "stdout")) {
@@ -616,7 +630,7 @@ func TestCandidateIsPrivate(t *testing.T) {
 }
 
 func TestRunDeniedRoundSavesRawCandidate(t *testing.T) {
-	// A denial exits 0 but is not ok, so its raw output is saved too
+	// A successful denial still saves its raw output
 	// (vendor.fixture-candidates).
 	s := fakeSpec(t, replayPlanExit(t, "04-allowlist-denies-write"))
 	s.ReadOnly = true
@@ -624,7 +638,7 @@ func TestRunDeniedRoundSavesRawCandidate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if round.Class != ClassDenied || round.ExitCode != 0 || round.Candidate == "" {
+	if round.Class != ClassOK || round.ExitCode != 0 || round.Candidate == "" {
 		t.Fatalf("class %q exit %d candidate %q", round.Class, round.ExitCode, round.Candidate)
 	}
 	got, err := os.ReadFile(filepath.Join(round.Candidate, "stdout"))

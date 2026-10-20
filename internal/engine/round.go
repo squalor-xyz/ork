@@ -244,11 +244,12 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	switch {
 	case class != ExitOK:
 		stopReason = fmt.Sprintf("%s round %d exited %s", r.role, r.n, class)
+		if len(res.Denials) > 0 {
+			stopReason += ": permission denied: " + strings.Join(res.Denials, ", ")
+		}
 		if runErr != nil {
 			stopReason += ": " + runErr.Error()
 		}
-	case len(res.Denials) > 0:
-		stopReason = fmt.Sprintf("%s round %d: permission denied: %s", r.role, r.n, strings.Join(res.Denials, ", "))
 	case changed:
 		stopReason = fmt.Sprintf("%s round %d changed the tree, and it is a read-only role", r.role, r.n)
 	}

@@ -25,6 +25,9 @@ func DefaultImplementerAllowlist(checkCommand string) []string {
 	list := []string{
 		"Read", "Grep", "Glob", "Edit", "Write",
 		"Bash(slicer *)", "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)",
+		"Bash(go -C * test*)", "Bash(go -C * vet*)", "Bash(go test*)", "Bash(go vet*)", "Bash(gofmt *)",
+		"Bash(git -C * status*)", "Bash(git -C * diff*)", "Bash(git -C * log*)",
+		"Bash(adj check*)", "Bash(adj lint*)", "Bash(adj show*)", "Bash(adj inbox*)",
 	}
 	if checkCommand != "" {
 		list = append(list, "Bash("+checkCommand+"*)")

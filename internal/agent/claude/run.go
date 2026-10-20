@@ -29,7 +29,7 @@ const (
 // A non-zero exit is not an error: it is classified. Run returns an error
 // when the spec is refused, the binary cannot be started, or ctx ends the
 // round; the Round then holds what was read before then. Every round that is
-// not ok, denials included, saves a raw fixture candidate (vendor.fixture-candidates).
+// not ok or has denials saves a raw fixture candidate (vendor.fixture-candidates).
 //
 // internal/clirun buffers a call's output and offers no hook while the call
 // runs, so Run starts the process itself and shares clirun's process-group
@@ -101,7 +101,7 @@ func Run(ctx context.Context, s Spec) (Round, error) {
 
 	round.Class, round.Reason = Classify(round.ExitCode, round.Result)
 	round.Report, round.ReportSource = ReadReport(s.ReportFile, round.Result)
-	if round.Class != ClassOK {
+	if round.Class != ClassOK || len(round.Denials) > 0 {
 		round.Candidate, round.CandidateErr = saveCandidate(s.FixtureDir, round)
 	}
 	return round, nil
