@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-52 items · — 30 · done 22
+54 items · — 32 · done 22
 
 ## v1
 
@@ -99,9 +99,11 @@
 | 49 | [S50](slices/S50.md) | Check the diff against the slice's Files list | S | 2 |  | discovered from S29 | — |
 | 50 | [S51](slices/S51.md) | run.json at 0600; strip control characters from recorded commands | S | 1 |  | discovered from S45 | — |
 | 51 | [S52](slices/S52.md) | TUI: launch a slice from a ready list | M | 2 |  | discovered from S25 | — |
+| 52 | [S53](slices/S53.md) | Create the ork logo | S | 1 |  |  | — |
+| 53 | [S54](slices/S54.md) | Show the ork version and logo in the terminal: TUI, --version, doctor | S | 2 |  |  | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 52 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 54 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |

@@ -1,0 +1,41 @@
+{
+  "id": "S53",
+  "title": "Create the ork logo",
+  "lead": [
+    "Owner asked for a logo (2026-10-20). Interview answers: an agent drafts hand-written SVG candidates and the owner picks one; the logo is used in the README header, the TUI header or splash, the ork --version and ork doctor banner, and a favicon or repository social image. This slice draws and lands the logo and the README header; S54 uses it in the terminal."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "ork has no mark. The README, the repository page and the terminal all want one, and the owner wants to choose it."
+    },
+    {
+      "heading": "Files",
+      "body": "- assets/logo.svg (the chosen mark), assets/logo-square.svg (square export for a favicon or social image), assets/candidates/ (the drafts, removed or kept as the owner decides), README.md (header), docs/design.md or docs/dashboard.md only if they name the logo.\n- The SVG is hand-written plain text: no generator, no new dependency, no raster file, no font that needs installing (text converted to paths or left out)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Ask the owner before building: look and feel (name the idea, colours or monochrome, wordmark or glyph), and whether the candidates stay in the repo.\n- assets/logo.svg and assets/logo-square.svg are well-formed XML (parsed by a Go test with encoding/xml) with a viewBox, a title, and no script or external reference.\n- The logo reads on a light and a dark background (a test checks the SVG sets no background-dependent colour pair that disappears, or ships a dark variant).\n- README.md shows the logo at the top with alt text.\n- The files carry no copyright claim beyond the repository licence (GPL-3.0-or-later); the owner approves the final choice."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 53,
+  "next_id": 55,
   "preamble": "",
   "passes": [
     {
@@ -1966,6 +1966,64 @@
         "group": "",
         "reason": "",
         "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S53",
+      "title": "Create the ork logo",
+      "short_title": "Create the ork logo",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S54",
+      "title": "Show the ork version and logo in the terminal: TUI, --version, doctor",
+      "short_title": "Show the ork version and logo in the terminal: TUI, --version, doctor",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S53"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
         "urgency": 2,
         "effort": 2,
         "attempts": 0
