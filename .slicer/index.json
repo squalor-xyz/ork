@@ -247,7 +247,7 @@
     {
       "id": "S05",
       "title": "Waves and caps: wave id, queued state, admission in launchRun",
-      "short_title": "Waves and caps",
+      "short_title": "Waves and caps: queue, admission",
       "status": "open",
       "has_slice": true,
       "depends_on": [
@@ -438,7 +438,7 @@
     {
       "id": "S08",
       "title": "Architect role in the engine",
-      "short_title": "Architect, split, slivers",
+      "short_title": "Architect role",
       "status": "open",
       "has_slice": true,
       "depends_on": [
@@ -480,7 +480,7 @@
     {
       "id": "S09",
       "title": "Landing help: ready-to-land list",
-      "short_title": "Landing help",
+      "short_title": "Landing help: ready list",
       "status": "open",
       "has_slice": true,
       "depends_on": [
@@ -639,7 +639,7 @@
     {
       "id": "S12",
       "title": "Roadmap screen: items, readiness, goals and detail",
-      "short_title": "Roadmap and Decisions screens",
+      "short_title": "Roadmap screen",
       "status": "open",
       "has_slice": true,
       "depends_on": [

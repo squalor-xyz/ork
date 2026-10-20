@@ -621,3 +621,7 @@
 {"when": "2026-10-20T17:54:41Z", "item": "S64", "action": "retire", "from": "open", "to": "retired", "note": "No effect today: slicer ai relay prints the same contract line for every project (checked 2026-10-20). Folded into S24, which passes --root when slicer s387 adds the pin."}
 {"when": "2026-10-20T17:54:41Z", "item": "S24", "action": "note", "from": "", "to": "", "note": "From the 2026-10-20 roadmap review: Contract in internal/sli", "by": "Jon R"}
 {"when": "2026-10-20T17:54:56Z", "item": "S68", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T17:55:10Z", "item": "S12", "action": "set", "from": "", "to": "", "note": "short_title Roadmap and Decisions screens→Roadmap screen"}
+{"when": "2026-10-20T17:55:10Z", "item": "S08", "action": "set", "from": "", "to": "", "note": "short_title Architect, split, slivers→Architect role"}
+{"when": "2026-10-20T17:55:10Z", "item": "S09", "action": "set", "from": "", "to": "", "note": "short_title Landing help→Landing help: ready list"}
+{"when": "2026-10-20T17:55:10Z", "item": "S05", "action": "set", "from": "", "to": "", "note": "short_title Waves and caps→Waves and caps: queue, admission"}
