@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 24,
+  "next_id": 25,
   "preamble": "",
   "passes": [
     {
@@ -1130,6 +1130,34 @@
         "urgency": 3,
         "effort": 2,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S24",
+      "title": "ork pins a project's slicer and adj contracts and checks every pin",
+      "short_title": "Pin and check tool contracts",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S45 (adj-json contract version and pin).",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "boundary.contract-pin",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 2,
+        "attempts": 0
       }
     }
   ],
