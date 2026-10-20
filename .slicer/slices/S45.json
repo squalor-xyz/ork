@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/agent/claude (types, classify), internal/engine/round.go, internal/runrec, internal/daemon/runs.go, internal/source, internal/tui, tests, docs/state.md."
+      "body": "- internal/agent/claude (types, classify), internal/daemon/runner.go and its test, internal/engine/runner.go, internal/engine/round.go and its tests, internal/runrec, internal/daemon/runs.go, internal/source, internal/tui, tests, docs/state.md."
     },
     {
       "heading": "Failing tests",
-      "body": "- A denied Bash call records its command text on the role, cut to 200 characters with a trailing ellipsis when longer.\n- ork status and the TUI detail show it under the denial.\n- A denied Write shows the file path, not the file content.\n- Existing run records without commands still load.\n- docs/state.md says a recorded command can hold secrets: it is capped, not scrubbed."
+      "body": "- Decided #105 (engine.denied-command): RoleRecord.Denials stays the tool names; a new optional omitempty field holds {tool, command} entries. Record Version stays 1.\n- A denied Bash call records its command; any other denied tool records tool_input.file_path when present, never file content.\n- CR and LF in the text become spaces. Text over 200 characters is cut to 197 plus '...' so the result is at most 200.\n- ork status and the TUI detail show it inline per denial, for example 'denied: Bash: git push origin main, Write: /x.txt'. A denial with no detail reads 'Write'.\n- The stop reason (engine round.go) names the same text.\n- Existing run records without commands still load.\n- docs/state.md says a recorded command can hold secrets: it is capped, not scrubbed. A pre-S45 ork refuses a run.json that holds a command."
     },
     {
       "heading": "Implement",
