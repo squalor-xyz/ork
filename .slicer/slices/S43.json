@@ -1,0 +1,41 @@
+{
+  "id": "S43",
+  "title": "Denied tools: dedupe the list, bound the line, fix stale slicer-rule docs",
+  "lead": [
+    "From the S23 relay. (1) The denials list is not deduplicated, so 'Write, Write' can appear, and the status line is unbounded. (2) A denied slicer step in a successful round no longer stops mechanically (#93); docs/design.md:289 and docs/glossary.md:113-114 still state slicer's rule, and ork relies on internal/roles/prompts/implementer.md:72-73. The vendor reports only 'Bash', so ork cannot see which command was denied."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "From the S23 relay. (1) The denials list is not deduplicated, so 'Write, Write' can appear, and the status line is unbounded. (2) A denied slicer step in a successful round no longer stops mechanically (#93); docs/design.md:289 and docs/glossary.md:113-114 still state slicer's rule, and ork relies on internal/roles/prompts/implementer.md:72-73. The vendor reports only 'Bash', so ork cannot see which command was denied."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/daemon/runs.go, internal/cli (status), internal/tui, docs/design.md, docs/glossary.md, tests."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Denied tool names appear once each, with a count, and the status line is bounded with a 'more' marker.\n- design.md and glossary.md describe the decided policy (#93)."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

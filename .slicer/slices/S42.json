@@ -1,0 +1,41 @@
+{
+  "id": "S42",
+  "title": "Tidy engine-run state constants and a weak assertion",
+  "lead": [
+    "From the S22 review. source.EngineRun compares state strings instead of the runrec constants, and TestEngineRunRows checks the substring 'ork 1', which also matches 'ork 1*'."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "From the S22 review. source.EngineRun compares state strings instead of the runrec constants, and TestEngineRunRows checks the substring 'ork 1', which also matches 'ork 1*'."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/source/source.go, internal/tui/engine_runs_test.go."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- State checks use the runrec constants.\n- The test asserts the exact row text so 'ork 1*' does not satisfy it."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

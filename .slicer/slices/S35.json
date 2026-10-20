@@ -1,0 +1,41 @@
+{
+  "id": "S35",
+  "title": "Runs skipped at recovery or failed in the background stay visible",
+  "lead": [
+    "From the S17 review, not fixed. A run skipped at daemon recovery stays non-final, and a failed background engine job is invisible to the owner (nothing records the failure on the run)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "From the S17 review, not fixed. A run skipped at daemon recovery stays non-final, and a failed background engine job is invisible to the owner (nothing records the failure on the run)."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/daemon (recovery, runs), internal/runrec, tests, docs/state.md."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A run skipped at recovery ends in a final state with a reason.\n- A background engine job that fails records the error on its run and shows it in status.\n- Healthy runs are unchanged."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

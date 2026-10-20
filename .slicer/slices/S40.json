@@ -1,0 +1,41 @@
+{
+  "id": "S40",
+  "title": "Implementer prompt limits searches to code and docs",
+  "lead": [
+    "From the S21 run. The Haiku implementer ran a worktree-wide rg that printed .slicer/ and decisions/ lines, which breaks the tracking rule (agents do not search tracking files). Role prompts are ork's own text (roles.prompts)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "From the S21 run. The Haiku implementer ran a worktree-wide rg that printed .slicer/ and decisions/ lines, which breaks the tracking rule (agents do not search tracking files). Role prompts are ork's own text (roles.prompts)."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/roles/prompts/implementer.md, tests."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- The implementer prompt tells the role to search only source and docs paths and never .slicer/ or decisions/.\n- A prompt test checks the rule is present."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -1,0 +1,41 @@
+{
+  "id": "S37",
+  "title": "Tidy status error logging and the stderr swap",
+  "lead": [
+    "From the S17 review, not fixed. addEngineStatus logs the run-list error on every call, and the captureRunErrors helper swaps os.Stderr globally, which is unsafe under concurrent calls."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "From the S17 review, not fixed. addEngineStatus logs the run-list error on every call, and the captureRunErrors helper swaps os.Stderr globally, which is unsafe under concurrent calls."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/daemon and internal/cli (where those helpers live), tests."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A run-list error is logged once per distinct failure, not per call.\n- Error capture does not replace os.Stderr process-wide.\n- Output text is unchanged."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-34 items · — 17 · done 17
+43 items · — 26 · done 17
 
 ## v1
 
@@ -81,9 +81,18 @@
 | 31 | [S32](slices/S32.md) | ork status lists stopped runs that the needs-you count leaves out | S | 1 |  | discovered from S31 | — |
 | 32 | [S33](slices/S33.md) | Show the engine run ID in the Overview row and detail | S | 1 |  | discovered from S31 | — |
 | 33 | [S34](slices/S34.md) | Clear an old stopped run from Needs you | S | 2 |  | discovered from S31 | — |
+| 34 | [S35](slices/S35.md) | Runs skipped at recovery or failed in the background stay visible | S | 2 |  | discovered from S17 | — |
+| 35 | [S36](slices/S36.md) | A second ork stop does not cancel the first | S | 1 |  | discovered from S17 | — |
+| 36 | [S37](slices/S37.md) | Tidy status error logging and the stderr swap | S | 1 |  | discovered from S17 | — |
+| 37 | [S38](slices/S38.md) | projects rm refuses while the project has unfinished runs | S | 1 |  | discovered from S17 | — |
+| 38 | [S39](slices/S39.md) | ork run prompt tests catch swapped answers; help text says y/n | S | 1 |  | discovered from S21 | — |
+| 39 | [S40](slices/S40.md) | Implementer prompt limits searches to code and docs | S | 1 |  | discovered from S21 | — |
+| 40 | [S41](slices/S41.md) | Overview engine-row edge cases: setup projects, padding, hidden ledger runs | S | 2 |  | discovered from S22 | — |
+| 41 | [S42](slices/S42.md) | Tidy engine-run state constants and a weak assertion | S | 1 |  | discovered from S22 | — |
+| 42 | [S43](slices/S43.md) | Denied tools: dedupe the list, bound the line, fix stale slicer-rule docs | S | 1 |  | discovered from S23 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 34 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 43 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |

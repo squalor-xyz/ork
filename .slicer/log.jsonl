@@ -240,3 +240,57 @@
 {"when": "2026-10-20T11:43:36Z", "item": "S34", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-10-20T11:43:36Z", "item": "S34", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-20T11:43:36Z", "item": "S34", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T11:44:28Z", "item": "S35", "action": "add", "from": "", "to": "open", "note": "Runs skipped at recovery or failed in the background stay visible"}
+{"when": "2026-10-20T11:44:28Z", "item": "S35", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:44:28Z", "item": "S35", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:44:28Z", "item": "S35", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:44:29Z", "item": "S35", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:44:29Z", "item": "S35", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T11:44:29Z", "item": "S36", "action": "add", "from": "", "to": "open", "note": "A second ork stop does not cancel the first"}
+{"when": "2026-10-20T11:44:29Z", "item": "S36", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:44:29Z", "item": "S36", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:44:29Z", "item": "S36", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:44:29Z", "item": "S36", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:44:29Z", "item": "S36", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T11:44:29Z", "item": "S37", "action": "add", "from": "", "to": "open", "note": "Tidy status error logging and the stderr swap"}
+{"when": "2026-10-20T11:44:29Z", "item": "S37", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:44:30Z", "item": "S37", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:44:30Z", "item": "S37", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:44:30Z", "item": "S37", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:44:30Z", "item": "S37", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T11:44:30Z", "item": "S38", "action": "add", "from": "", "to": "open", "note": "projects rm refuses while the project has unfinished runs"}
+{"when": "2026-10-20T11:44:30Z", "item": "S38", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:44:30Z", "item": "S38", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:44:30Z", "item": "S38", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:44:30Z", "item": "S38", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:44:31Z", "item": "S38", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T11:44:31Z", "item": "S39", "action": "add", "from": "", "to": "open", "note": "ork run prompt tests catch swapped answers; help text says y/n"}
+{"when": "2026-10-20T11:44:31Z", "item": "S39", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:44:31Z", "item": "S39", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:44:31Z", "item": "S39", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:44:31Z", "item": "S39", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:44:31Z", "item": "S39", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T11:44:31Z", "item": "S40", "action": "add", "from": "", "to": "open", "note": "Implementer prompt limits searches to code and docs"}
+{"when": "2026-10-20T11:44:31Z", "item": "S40", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:44:32Z", "item": "S40", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:44:32Z", "item": "S40", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:44:32Z", "item": "S40", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:44:32Z", "item": "S40", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T11:44:32Z", "item": "S41", "action": "add", "from": "", "to": "open", "note": "Overview engine-row edge cases: setup projects, padding, hidden ledger runs"}
+{"when": "2026-10-20T11:44:32Z", "item": "S41", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:44:32Z", "item": "S41", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:44:32Z", "item": "S41", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:44:32Z", "item": "S41", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:44:33Z", "item": "S41", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T11:44:33Z", "item": "S42", "action": "add", "from": "", "to": "open", "note": "Tidy engine-run state constants and a weak assertion"}
+{"when": "2026-10-20T11:44:33Z", "item": "S42", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:44:33Z", "item": "S42", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:44:33Z", "item": "S42", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:44:33Z", "item": "S42", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:44:33Z", "item": "S42", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T11:44:33Z", "item": "S43", "action": "add", "from": "", "to": "open", "note": "Denied tools: dedupe the list, bound the line, fix stale slicer-rule docs"}
+{"when": "2026-10-20T11:44:33Z", "item": "S43", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T11:44:34Z", "item": "S43", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T11:44:34Z", "item": "S43", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T11:44:34Z", "item": "S43", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T11:44:34Z", "item": "S43", "action": "edit", "from": "", "to": "", "note": "Failing tests"}

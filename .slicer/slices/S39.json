@@ -1,0 +1,41 @@
+{
+  "id": "S39",
+  "title": "ork run prompt tests catch swapped answers; help text says y/n",
+  "lead": [
+    "From the S21 review. The prompt test gives both prompts the same answer, so swapped well-specified and split answers pass. The usage line and flag help still say yes|no although y and n are accepted (#87)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "From the S21 review. The prompt test gives both prompts the same answer, so swapped well-specified and split answers pass. The usage line and flag help still say yes|no although y and n are accepted (#87)."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/cli/run_test.go, internal/cli/run.go (help text)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- The test answers the two prompts differently and fails if they are swapped.\n- Usage and flag help show y|n and yes|no."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

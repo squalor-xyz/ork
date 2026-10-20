@@ -1,0 +1,41 @@
+{
+  "id": "S38",
+  "title": "projects rm refuses while the project has unfinished runs",
+  "lead": [
+    "From the S17 review, not fixed. ork projects rm has no guard against unfinished runs, so removing a project can orphan a live run."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "From the S17 review, not fixed. ork projects rm has no guard against unfinished runs, so removing a project can orphan a live run."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/cli (projects), internal/registry, tests, docs."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- projects rm fails with the run ids when a run is not final.\n- A project with only final runs is removed as before."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

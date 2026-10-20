@@ -1,0 +1,41 @@
+{
+  "id": "S36",
+  "title": "A second ork stop does not cancel the first",
+  "lead": [
+    "From the S17 review, not fixed. Running ork stop twice on one run cancels the first stop instead of being a no-op."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "From the S17 review, not fixed. Running ork stop twice on one run cancels the first stop instead of being a no-op."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/daemon (runs), tests."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A second stop on a run already stopping returns without cancelling the first.\n- Stop on a finished run is an error naming the state."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
