@@ -1,0 +1,39 @@
+{
+  "id": "S73",
+  "title": "Allowlist and convention for --root and -C calls",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Agents call slicer and adj as `slicer --root DIR show S05`. The allowlist in `.claude/settings.json` holds prefix rules such as `Bash(slicer show *)`, which do not match when `--root` comes before the subcommand. In 50 recent transcripts, 593 slicer calls and 20 adj calls put `--root` first, 247 calls use `go -C DIR`, and 123 slicer and 64 adj calls put it after. Each miss is a permission prompt in a relay that runs unattended.\nTwo fixes, used together: a written convention that puts `--root` after the subcommand (`slicer show S05 --root DIR`, which works; checked 2026-10-20 with `slicer show --root DIR S51`), and allowlist rules with a `*` between the tool name and the subcommand for the calls that still put it first. That a `*` in the middle of a Bash rule matches is general Claude Code behaviour, not yet checked here; the Check section tests it before the rules are kept.\nRelated: slicer and the agents repo write the contract text and playbooks that tell agents how to call slicer. Those are sibling repos and are not edited from here."
+    },
+    {
+      "heading": "Files",
+      "body": "- AGENTS.md: a Project Rules bullet for the `--root` convention.\n- .claude/settings.json: new in the main checkout; the first rules from 2026-10-20 are read-only slicer, adj and go entries. Add the `--root`-first and `-C`-first forms.\n- internal/roles/prompts/implementer.md:19-72: the slicer commands in the role prompts; read them and confirm they carry no `--root` before the subcommand (they do not today)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "No Go test fails first: the change is a docs line and an allowlist. Instead:\n- `jq . .claude/settings.json` parses.\n- A probe in the Check section: with one new rule added, a `--root`-first call does not prompt, and a mutating call with the same prefix still does."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Add one bullet to AGENTS.md Project Rules: for `slicer` and `adj`, write `--root DIR` after the subcommand (`slicer show S05 --root DIR`), because the allowlist matches on the leading words. `go -C DIR` and `git -C DIR` stay as they are.\n2. In .claude/settings.json add, one rule per read-only subcommand and no broader: `Bash(slicer --root * show *)`, `check`, `list`, `next`, `deps`, `find`, `goals`, `status`, `relay-roles show`, `relay-roles recommend *`, `catalog list *`, `catalog show *`; `Bash(adj --root * check *)`, `lint`, `show *`, `inbox`, `list *`; `Bash(go -C * vet *)`.\n3. Do not add `slicer --root * ai relay` without the exact form: `--init-roles` writes. Add `Bash(slicer --root * ai relay)` exact only.\n4. Keep every mutating subcommand (`set`, `edit`, `note`, `render`, `promote`, `add`, `import`, `relay-run`, `decide`, `ask`) out.\n5. Decide with the owner whether .claude/settings.json is committed; until then leave it untracked.\nOpen: the `*` between tool name and subcommand is unverified (see Why); if the probe shows it does not match, drop step 2 and keep only the convention."
+    },
+    {
+      "heading": "Check",
+      "body": "- `jq . .claude/settings.json` exits 0.\n- Probe 1: add only `Bash(slicer --root * show *)`, then run `slicer --root /Users/jon/code/squalor-xyz/ork show S51`; it must run without a prompt.\n- Probe 2: a mutating call with the same prefix (`slicer --root ... note ...` against a scratch copy, or a dry reading of the rule list) must still prompt. Do not run a real write to test this.\n- `rg -n -- '--root' internal/roles/prompts` shows no `--root` before a subcommand.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

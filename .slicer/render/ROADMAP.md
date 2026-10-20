@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-72 items · — 42 · done 25 · retired 5
+73 items · — 43 · done 25 · retired 5
 
 ## v1
 
@@ -119,9 +119,10 @@
 | 69 | [S70](slices/S70.md) | Heartbeat every 10 minutes while a role runs (docs/design.md:353, proposed) | S | 1 |  |  | — |
 | 70 | [S71](slices/S71.md) | Doctor checks each project's check command and patterns (docs/design.md:613-614) | S | 1 |  |  | — |
 | 71 | [S72](slices/S72.md) | Grok adapter and v1 role (after credits reset 2026-11-01) | M | 2 |  |  | — |
+| 72 | [S73](slices/S73.md) | Allowlist --root-first calls | S | 1 |  |  | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 72 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 73 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
