@@ -2,7 +2,7 @@
 {
   "id": 54,
   "title": "Narrow v1 for codex, which has no per-tool allowlist?",
-  "status": "decided",
+  "status": "superseded",
   "key": "vendor.codex-allowlist",
   "asked_by": "s01 implementer",
   "decided_by": "jon",
@@ -32,6 +32,7 @@
   },
   "decision": "read-only-roles",
   "rationale": "Owner 2026-10-19: codex runs only read-only roles (reviewer, gate, architect) in v1; implementers stay on claude. The read-only sandbox's write block was not exercised in S01, so the read-only fingerprint is the backstop.",
+  "superseded_by": 100,
   "refs": [
     "S01"
   ],
@@ -62,6 +63,11 @@
     {
       "date": "2026-10-18",
       "event": "decide"
+    },
+    {
+      "date": "2026-10-20",
+      "event": "supersede",
+      "note": "by 100"
     }
   ]
 }
