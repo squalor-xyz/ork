@@ -1,0 +1,43 @@
+{
+  "id": "S76",
+  "title": "Queued runs keep advancing when the registry cannot be read at job end",
+  "lead": [
+    "S05 (landed 67521b0) starts queued runs when a job ends. launchRun's job goroutine reads the registry for the caps (internal/daemon/runs.go:409-413). If that read fails, it prints \"start queued runs: ...\" to stderr and starts nothing. The queued runs then wait until another job ends or the daemon restarts. The daemon stays up, because a queued run counts as active. Noted in the S05 run report as a low-severity choice for the owner."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [
+    "needs-owner"
+  ],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A transient registry error (a half-written projects.json, a read error) leaves queued runs stuck with free slots and no message beyond one stderr line."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/daemon/runs.go: launchRun (:389-417), startQueuedLocked (:352-387), hasRoomLocked (:326-350), runManager.\n- internal/daemon/runs_test.go: a test beside the S05 wave tests.\n- docs/design.md: Wave lifecycle step 5 (:155-157), only if the behavior it states changes."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- With a free slot and a queued run, a job ends while the registry read fails: the queued run still starts (proposed; the owner decides the behavior, see Implement).\n- With the registry unreadable and no earlier good read, the queued run stays queued and a later job end that can read the registry starts it.\n- The S05 tests still pass (TestQueuedRunStartsWhenASlotFrees)."
+    },
+    {
+      "heading": "Implement",
+      "body": "Not specified. Open point for the owner, to settle with `adj ask` before this slice runs: what happens when the registry cannot be read at job end. Candidates: (1) cache the last good registry in runManager and use it; (2) leave the runs queued and retry on the next job end or a timer; (3) leave as is and document it. The S05 report recommends (1) but the owner has not decided."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race -count=1 ./internal/daemon/...`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (prints nothing)\n- `slicer check`\n- `adj lint`"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -1,0 +1,43 @@
+{
+  "id": "S78",
+  "title": "recoverRuns writes the run map under the manager lock",
+  "lead": [
+    "recoverRuns (internal/daemon/runs.go:118-157) writes d.runs.runs in its loop (:143-152) without the manager lock, then takes the lock only for startQueuedLocked (:153-155). It is safe today only because it runs before the server starts (daemon.go:176). Noted in the S05 run report."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [
+    "needs-owner"
+  ],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Every other write to the run map happens under d.runs.mu. A later change that calls recoverRuns after the server starts would race."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/daemon/runs.go: recoverRuns (:118-157).\n- internal/daemon/runs_test.go: a test, if one can show the write is locked."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Not specified. Open: whether a test can fail before the change. The writes run before the server starts, so a race test may need a goroutine that reads the run map under the lock while recoverRuns runs. If none is practical, this slice may be a comment and a lock with no failing test; the owner decides."
+    },
+    {
+      "heading": "Implement",
+      "body": "Take d.runs.mu around each write to d.runs.runs in the loop, not around Reconcile (it can be slow). Open: whether to do this at all, or only document the \"before the server starts\" assumption at the function. The owner has not decided."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race -count=1 ./internal/daemon/...`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (prints nothing)\n- `slicer check`\n- `adj lint`"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

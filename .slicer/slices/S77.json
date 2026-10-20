@@ -1,0 +1,43 @@
+{
+  "id": "S77",
+  "title": "A queued run whose project was removed does not start",
+  "lead": [
+    "S05 (landed 67521b0) admits a queued run in startQueuedLocked (internal/daemon/runs.go:352-387) using hasRoomLocked (:326-350). When the run's project is no longer in the registry, hasRoomLocked finds no project (find, handlers.go:135) and applies no project cap, so the run starts. Noted in the S05 run report."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [
+    "needs-owner"
+  ],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A run of a project that is no longer registered starts with no per-project cap and with a runDeps and project that the registry no longer describes."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/daemon/runs.go: startQueuedLocked and hasRoomLocked.\n- internal/daemon/runs_test.go: a test beside the S05 wave tests.\n- Related: S38 (projects rm refuses while the project has unfinished runs) removes the usual way to reach this state. Check its state before running this slice."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A queued run whose project is removed from the registry while the daemon runs is not started and shows why (proposed; see Implement).\n- The S05 tests still pass."
+    },
+    {
+      "heading": "Implement",
+      "body": "Not specified. Open points for the owner, to settle with `adj ask` before this slice runs: (a) whether this slice is still needed once S38 lands, since S38 stops `ork projects rm` from removing a project with unfinished runs (a hand edit of projects.json still reaches it); (b) what the run does: stay queued, or stop with a reason."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race -count=1 ./internal/daemon/...`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (prints nothing)\n- `slicer check`\n- `adj lint`"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

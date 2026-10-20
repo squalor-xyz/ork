@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-75 items · — 42 · done 28 · retired 5
+78 items · — 45 · done 28 · retired 5
 
 ## v1
 
@@ -122,9 +122,12 @@
 | 72 | [S73](slices/S73.md) | Allowlist --root-first calls | S | 1 |  |  | — |
 | 73 | [S74](slices/S74.md) | Timeout on the stop-hint status call | S `[needs-owner]` | 1 |  | discovered from S56 | — |
 | 74 | [S75](slices/S75.md) | Run directory modes | S `[needs-owner]` | 1 |  | discovered from S51 | — |
+| 75 | [S76](slices/S76.md) | Queue advance survives a registry read error | S `[needs-owner]` | 1 |  | discovered from S05 | — |
+| 76 | [S77](slices/S77.md) | Queued run of a removed project | S `[needs-owner]` | 1 |  | discovered from S05 | — |
+| 77 | [S78](slices/S78.md) | recoverRuns map writes under lock | S `[needs-owner]` | 1 |  | discovered from S05 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 75 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 78 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
