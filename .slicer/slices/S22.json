@@ -1,0 +1,41 @@
+{
+  "id": "S22",
+  "title": "Overview shows ork's own engine runs",
+  "lead": [
+    "The TUI Overview lists the engine runs the daemon already reports (ork status engine_runs) in Running and Needs you, and no longer labels an ork-started run as started elsewhere."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Seen 2026-10-20 while S21 ran through ork run: the Overview showed the ledger run as '> started elsewhere' and omitted the engine run. internal/tui/overview.go:95 builds Running only from the slicer ledger and labels every row kindExternal. docs/dashboard.md reserves that label for relays started outside ork (dash.external-runs). Needs-you already counts paused, stopped and awaiting-approval engine runs in ork status; the TUI shows none of them."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/` (overview, model, keys as needed, goldens), `internal/daemon` and `internal/ipc` only if the TUI needs a new read, `docs/dashboard.md`.\n- Not in this slice: TUI actions (approve, stop, answer, launch). Open design questions for the owner: how a ledger run and its engine run join into one row, and which keys the later action slice uses."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- An engine run appears in Running with its state and what it waits on; awaiting-approval, paused and stopped runs appear in Needs you.\n- The ledger run that belongs to an engine run is shown once, not as started elsewhere; a ledger run with no engine run still shows as started elsewhere.\n- Counts and the sidebar badge match ork status.\n- New goldens at 80x24 and 100x30 for a run in each state."
+    },
+    {
+      "heading": "Implement",
+      "body": "Read engine runs in the TUI refresh and render them; join ledger and engine runs by item and worktree (the join rule is a design question, to be decided before building)."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race ./...`, `go vet ./...`, `gofmt -l .` clean; SPDX headers; no new dependency.\n- `slicer check` and `adj lint` pass.\n- [HUMAN CHECK] Run a slice with ork run and see it in the Overview."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"S22: Overview shows ork engine runs\"."
+    }
+  ],
+  "notes": []
+}
