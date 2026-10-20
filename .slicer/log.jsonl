@@ -675,3 +675,41 @@
 {"when": "2026-10-20T18:07:47Z", "item": "S36", "action": "note", "from": "", "to": "", "note": "Proposed, awaiting owner: a second stop joins the first even", "by": "Jon R"}
 {"when": "2026-10-20T18:07:47Z", "item": "S43", "action": "note", "from": "", "to": "", "note": "Proposed, awaiting owner: show 3 denials then 'and N more'; ", "by": "Jon R"}
 {"when": "2026-10-20T18:07:47Z", "item": "S24", "action": "note", "from": "", "to": "", "note": "Proposed, awaiting owner (2026-10-20 review): adj 97 choose ", "by": "Jon R"}
+{"when": "2026-10-20T18:16:03Z", "item": "S28", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-20T18:16:04Z", "item": "S28", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T18:16:04Z", "item": "S28", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-20T18:16:04Z", "item": "S36", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-20T18:16:04Z", "item": "S36", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T18:16:04Z", "item": "S36", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-20T18:16:04Z", "item": "S65", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-20T18:16:04Z", "item": "S65", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T18:16:04Z", "item": "S65", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T18:16:04Z", "item": "S65", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-20T18:16:04Z", "item": "S65", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T18:16:05Z", "item": "S63", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T18:16:05Z", "item": "S63", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T18:16:05Z", "item": "S63", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T18:16:05Z", "item": "S09", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-20T18:16:05Z", "item": "S09", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T18:16:05Z", "item": "S09", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T18:16:05Z", "item": "S09", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-20T18:16:05Z", "item": "S09", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T18:16:05Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T18:16:06Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T18:16:06Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T18:16:06Z", "item": "S33", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-20T18:16:06Z", "item": "S33", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T18:16:06Z", "item": "S33", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T18:16:06Z", "item": "S33", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-20T18:16:06Z", "item": "S33", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T18:16:06Z", "item": "S35", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-20T18:16:06Z", "item": "S35", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T18:16:06Z", "item": "S35", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-20T18:16:07Z", "item": "S43", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-20T18:16:07Z", "item": "S43", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T18:16:07Z", "item": "S43", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-20T18:16:07Z", "item": "S43", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T18:16:07Z", "item": "S48", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-20T18:16:07Z", "item": "S48", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-20T18:16:07Z", "item": "S48", "action": "note", "from": "", "to": "", "note": "On hold (owner 2026-10-20): Codex rate limit. No paid call u", "by": "Jon R"}
+{"when": "2026-10-20T18:16:07Z", "item": "S24", "action": "note", "from": "", "to": "", "note": "Decided 2026-10-20: adj 11 = both, adj 97 = ork-sets-checks.", "by": "Jon R"}

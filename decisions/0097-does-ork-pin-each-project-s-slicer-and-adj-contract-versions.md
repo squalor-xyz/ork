@@ -2,9 +2,11 @@
 {
   "id": 97,
   "title": "Does ork pin each project's slicer and adj contract versions and check every pin?",
-  "status": "open",
+  "status": "decided",
   "key": "boundary.contract-pin",
+  "decided_by": "jon",
   "created": "2026-10-20",
+  "decided_at": "2026-10-20",
   "context": "slicer s387 adds a relay_contract pin; adjudicate S44 adds an adj-json contract version and pin; ork S24 sets and checks both.",
   "options": [
     {
@@ -27,6 +29,8 @@
     "label": "ork-sets-checks",
     "reasoning": "Owner choice in the slicer session 2026-10-20: per-contract pins, each tool keeps its own pin, ork sets and checks them. Follows record 67 (accepted-set); does not supersede it."
   },
+  "decision": "ork-sets-checks",
+  "rationale": "Owner 2026-10-20: agrees with the recommendation. The ref to adjudicate S44 should read S45 (the item that adds the pin); that edit is the owner's.",
   "refs": [
     "S24",
     "../slicer:s387",
@@ -36,6 +40,10 @@
     {
       "date": "2026-10-20",
       "event": "ask"
+    },
+    {
+      "date": "2026-10-20",
+      "event": "decide"
     }
   ]
 }

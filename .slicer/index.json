@@ -1174,6 +1174,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "cb66081d-cd43-47a5-8ac4-1e600b9962c5",
+          "kind": "",
+          "text": "**2026-10-20** — Decided 2026-10-20: adj 11 = both, adj 97 = ork-sets-checks. The ref to adjudicate S44 should read S45 (owner edits the record).",
+          "created_at": "2026-10-20T18:16:07Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -1958,6 +1969,17 @@
           "kind": "",
           "text": "**2026-10-20** — Proposed, awaiting owner (2026-10-20 review): approve 3 more paid calls (7 total) once Codex credits return, and not before.",
           "created_at": "2026-10-20T18:07:46Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "fe7cf193-a3c3-4d4e-90f3-9c79ef32a694",
+          "kind": "",
+          "text": "**2026-10-20** — On hold (owner 2026-10-20): Codex rate limit. No paid call until the owner lifts the hold. S47 and S49 wait.",
+          "created_at": "2026-10-20T18:16:07Z",
           "attempt": 0,
           "by": "Jon R",
           "verified_by": "",

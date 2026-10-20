@@ -2,10 +2,12 @@
 {
   "id": 11,
   "title": "Does ork reimplement slicer's roadmap editor or reuse slicer tui?",
-  "status": "open",
+  "status": "decided",
   "key": "ui.slicer-tui",
   "asked_by": "claude",
+  "decided_by": "jon",
   "created": "2026-10-18",
+  "decided_at": "2026-10-20",
   "context": "slicer has an editing TUI (slicer/docs/tui.md) that calls the same ops as the CLI. ork must edit roadmaps (PROJECT.md goal 2).",
   "options": [
     {
@@ -25,10 +27,16 @@
     "label": "both",
     "reasoning": "Keeps the common actions one keystroke away without rebuilding every slicer editor."
   },
+  "decision": "both",
+  "rationale": "Owner 2026-10-20: agrees with the recommendation. Common edits (reorder, park, start) in ork; one key opens slicer tui for the rest.",
   "history": [
     {
       "date": "2026-10-18",
       "event": "ask"
+    },
+    {
+      "date": "2026-10-20",
+      "event": "decide"
     }
   ]
 }
