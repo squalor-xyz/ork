@@ -22,11 +22,11 @@
     },
     {
       "heading": "Failing tests",
-      "body": "- An engine run appears in Running with its state and what it waits on; awaiting-approval, paused and stopped runs appear in Needs you.\n- The ledger run that belongs to an engine run is shown once, not as started elsewhere; a ledger run with no engine run still shows as started elsewhere.\n- Counts and the sidebar badge match ork status.\n- New goldens at 80x24 and 100x30 for a run in each state."
+      "body": "- An engine run appears in Running with its state and what it waits on; awaiting-approval, paused and stopped runs appear in Needs you.\n- A ledger run and its engine run show as one row, joined by slice and worktree, led by the engine state and wait (adj 88). A ledger run with no engine run still shows as started elsewhere.\n- A stopped run stops counting as needs-you once the slice has a newer run (adj 89); this applies in ork status too.\n- Counts and the sidebar badge match ork status.\n- New goldens at 80x24 and 100x30 for a run in each state.\n- Display only: no approve, stop, answer or launch keys (owner 2026-10-20)."
     },
     {
       "heading": "Implement",
-      "body": "Read engine runs in the TUI refresh and render them; join ledger and engine runs by item and worktree (the join rule is a design question, to be decided before building)."
+      "body": "Read engine runs in the TUI refresh and render them; join ledger and engine runs by slice and worktree (adj 88)."
     },
     {
       "heading": "Check",
