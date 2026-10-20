@@ -4,6 +4,7 @@ package source
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -232,5 +233,38 @@ func TestResultIsStaleOnlyAfterAGoodRead(t *testing.T) {
 	}
 	if (Result[int]{Value: 7, ReadAt: read}).Stale() {
 		t.Fatal("a good read is stale")
+	}
+}
+
+func TestEngineRunPendingWire(t *testing.T) {
+	for _, kind := range []string{"question", "shape", "lost", "interrupted", "error"} {
+		t.Run(kind, func(t *testing.T) {
+			raw := `{"id":"r1","state":"paused","pending":"` + kind + `"}`
+			var r EngineRun
+			if err := json.Unmarshal([]byte(raw), &r); err != nil {
+				t.Fatal(err)
+			}
+			b, err := json.Marshal(r)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(string(b), `"pending":"`+kind+`"`) {
+				t.Fatalf("pending kind lost across wire: %s", b)
+			}
+		})
+	}
+}
+
+func TestEngineRunOldWire(t *testing.T) {
+	var r EngineRun
+	if err := json.Unmarshal([]byte(`{"id":"old","state":"paused"}`), &r); err != nil {
+		t.Fatal(err)
+	}
+	b, err := json.Marshal(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(b), `"pending"`) || r.ID != "old" {
+		t.Fatalf("old engine run changed: %s", b)
 	}
 }

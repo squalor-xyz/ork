@@ -169,11 +169,14 @@ further retry. The CLI may already have changed the project.
 
 The daemon's snapshot has an `engine_runs` list, built by the same code as
 `ork status`. Each entry has `id`, `item`, `state`, optional `wait`, optional
-`relay_run`, `created_at`, and optional `denials` (an array of one text per
-denial, `Tool` or `Tool: command`, collected from the role records in role
-order). A denial with no command is its tool name alone. A record from before
+`relay_run`, optional `pending`, `created_at`, and optional `denials` (an array
+of one text per denial, `Tool` or `Tool: command`, collected from the role
+records in role order). A denial with no command is its tool name alone. A record from before
 S45 has no `denied_commands`, so its `denials` are tool names. Denials are
 omitted when empty and rendered by status and the TUI (`ui.denials-display`).
+For a paused run, optional `pending` is the record's pending kind: `question`,
+`shape`, `lost`, `interrupted` or `error` (`ui.pending-kind`, adj #108). Other
+states omit it; older snapshots may omit it too.
 For a paused run, `wait` includes the pause reason or question and the next
 command: `ork retry RUN` without a question, or `ork answer RUN TEXT`.
 The `relay_run` and `created_at` fields link ledger progress and

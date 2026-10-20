@@ -430,6 +430,10 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		if rec.Project != project {
 			continue
 		}
+		pending := ""
+		if rec.State == runrec.StatePaused && rec.Pending != nil {
+			pending = rec.Pending.Kind
+		}
 		wait := rec.Reason
 		if rec.Pending != nil {
 			wait = rec.Pending.Reason
@@ -451,7 +455,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		for _, role := range rec.Roles {
 			denials = append(denials, roleDenials(role)...)
 		}
-		runs = append(runs, EngineRun{Denials: denials, ID: rec.ID, Item: rec.Item, State: rec.State, Wait: wait, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt})
+		runs = append(runs, EngineRun{Denials: denials, ID: rec.ID, Item: rec.Item, State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt})
 	}
 	return runs
 }

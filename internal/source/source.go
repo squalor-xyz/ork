@@ -156,6 +156,7 @@ type EngineRun struct {
 	Item      string    `json:"item"`
 	State     string    `json:"state"`
 	Wait      string    `json:"wait,omitempty"`
+	Pending   string    `json:"pending,omitempty"` // paused runrec pending kind (ui.pending-kind)
 	Denials   []string  `json:"denials,omitempty"` // one text per denial: "Tool" or "Tool: command"
 	RelayRun  string    `json:"relay_run,omitempty"`
 	CreatedAt time.Time `json:"created_at"`

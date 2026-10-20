@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // Package tui is ork's terminal UI: project sidebar, the Overview and the status
-// line. It reads state only through source.Source and never writes: no key
-// here runs a slicer, adj or git write command.
+// line. It reads state through source.Source and sends owner actions through Live.
 package tui
 
 import (
@@ -18,6 +17,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
+	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/poll"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/slicercli"
@@ -106,6 +106,9 @@ type Model struct {
 	showHelp      bool
 	width         int
 	height        int
+	confirm       *runAction
+	actionFlights map[string][]runAction
+	actionStatus  string
 	lastRefresh   time.Time
 	listening     bool // the daemon's notice feed is being listened to (S13)
 }
@@ -233,6 +236,26 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.tick(m.cfg.Now())
 	case snapshotMsg:
 		return m, m.apply(msg)
+	case actionMsg:
+		flights := m.actionFlights[msg.action.run]
+		for i, a := range flights {
+			if a.verb == msg.action.verb {
+				m.actionFlights[msg.action.run] = append(flights[:i], flights[i+1:]...)
+				break
+			}
+		}
+		if len(m.actionFlights[msg.action.run]) == 0 {
+			delete(m.actionFlights, msg.action.run)
+		}
+		if msg.err != nil {
+			m.actionStatus = msg.action.command() + ": " + actionError(msg.err)
+		} else {
+			m.actionStatus = msg.action.command() + ": done"
+		}
+		if m.poller.InFlight(msg.action.project) {
+			m.byName[msg.action.project].dirty = true
+		}
+		return m, m.fetch(msg.action.project, true)
 	case focusMsg:
 		m.focusing = false
 		// The feed starts once the daemon has the first focus, and a notice
@@ -257,6 +280,21 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
+	if m.confirm != nil {
+		switch msg.String() {
+		case "ctrl+c":
+			return tea.Quit
+		case "y", "Y":
+			a := *m.confirm
+			m.confirm = nil
+			return m.callAction(a)
+		case "n", "N", "enter", "esc":
+			m.confirm = nil
+			m.actionStatus = "Cancelled"
+		}
+		return nil
+	}
+
 	if m.filtering {
 		switch msg.String() {
 		case "ctrl+c":
@@ -279,6 +317,12 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 	switch {
+	case key.Matches(msg, m.keys.Approve):
+		return m.requestAction("approve")
+	case key.Matches(msg, m.keys.Stop):
+		return m.requestAction("stop")
+	case key.Matches(msg, m.keys.Retry):
+		return m.requestAction("retry")
 	case key.Matches(msg, m.keys.Filter):
 		m.filtering = true
 	case key.Matches(msg, m.keys.Sidebar):
@@ -288,6 +332,7 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	case key.Matches(msg, m.keys.Help):
 		m.showHelp = !m.showHelp
 	case key.Matches(msg, m.keys.Close):
+		m.actionStatus = ""
 		m.showHelp = false
 		m.filter = ""
 	case key.Matches(msg, m.keys.Next):
@@ -449,4 +494,90 @@ func (m *Model) move(delta int) tea.Cmd {
 		}
 	}
 	return m.switchTo(nav[(pos+delta+len(nav))%len(nav)])
+}
+
+// runAction retains the exact target while a confirmation is on screen.
+type runAction struct{ verb, run, project string }
+
+func (a runAction) command() string { return "ork " + a.verb + " " + a.run }
+
+type actionMsg struct {
+	action runAction
+	err    error
+}
+
+func (m *Model) requestAction(verb string) tea.Cmd {
+	if m.showHelp {
+		return nil
+	}
+	r, ok := m.selectedRow()
+	if !ok || r.engineID == "" {
+		m.actionStatus = "No engine run on this row; no actions"
+		return nil
+	}
+	for _, a := range m.actionFlights[r.engineID] {
+		// Stop can interrupt an approve or retry, but a second stop waits.
+		if verb != "stop" || a.verb == "stop" {
+			m.actionStatus = a.command() + " is pending"
+			return nil
+		}
+	}
+	if verb == "stop" && r.state == "stopped" {
+		m.actionStatus = "run is already stopped"
+		return nil
+	}
+	if verb == "approve" && r.state != "awaiting-approval" {
+		m.actionStatus = "approve needs awaiting-approval; run is " + r.state
+		return nil
+	}
+	if verb == "retry" {
+		if r.state != "paused" {
+			m.actionStatus = "retry needs paused; run is " + r.state
+			return nil
+		}
+		if r.pending == "question" {
+			m.actionStatus = "answer with: ork answer " + r.engineID + " TEXT"
+			return nil
+		}
+	}
+	if m.cfg.Live == nil {
+		m.actionStatus = "No daemon connection; action unavailable"
+		return nil
+	}
+	a := runAction{verb: verb, run: r.engineID, project: r.name}
+	if verb == "approve" {
+		return m.callAction(a)
+	}
+	m.actionStatus = ""
+	m.confirm = &a
+	return nil
+}
+
+func (m *Model) callAction(a runAction) tea.Cmd {
+	live := m.cfg.Live
+	if m.actionFlights == nil {
+		m.actionFlights = make(map[string][]runAction)
+	}
+	m.actionFlights[a.run] = append(m.actionFlights[a.run], a)
+	m.actionStatus = a.command() + ": pending"
+	return func() tea.Msg {
+		var err error
+		switch a.verb {
+		case "approve":
+			err = live.Approve(context.Background(), a.run)
+		case "stop":
+			err = live.Stop(context.Background(), a.run)
+		case "retry":
+			err = live.Retry(context.Background(), a.run)
+		}
+		return actionMsg{action: a, err: err}
+	}
+}
+
+func actionError(err error) string {
+	var wire *ipc.Error
+	if errors.As(err, &wire) {
+		return wire.Code + ": " + wire.Message
+	}
+	return err.Error()
 }

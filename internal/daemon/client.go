@@ -119,3 +119,18 @@ func (c *Client) Next(ctx context.Context) (SnapshotChanged, error) {
 func (c *Client) Call(ctx context.Context, method string, params, result any) error {
 	return c.c.Call(ctx, method, params, result)
 }
+
+// Approve approves the run's checked result without a confirmation round trip.
+func (c *Client) Approve(ctx context.Context, run string) error {
+	return c.Call(ctx, MethodRunApprove, RunAction{Run: run}, nil)
+}
+
+// Stop stops an engine run after the caller has confirmed it.
+func (c *Client) Stop(ctx context.Context, run string) error {
+	return c.Call(ctx, MethodRunStop, RunAction{Run: run}, nil)
+}
+
+// Retry retries a paused run after the caller has confirmed it.
+func (c *Client) Retry(ctx context.Context, run string) error {
+	return c.Call(ctx, MethodRunRetry, RunAction{Run: run}, nil)
+}

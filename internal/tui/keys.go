@@ -4,9 +4,11 @@ package tui
 
 import "charm.land/bubbles/v2/key"
 
-// keyMap is every key the TUI answers. It also feeds the help view. None of
-// them writes anything (slice S11 has no write action).
+// keyMap is every key the TUI answers. It also feeds the help view.
 type keyMap struct {
+	Approve key.Binding
+	Stop    key.Binding
+	Retry   key.Binding
 	Next    key.Binding
 	Prev    key.Binding
 	Jump    key.Binding
@@ -23,6 +25,9 @@ type keyMap struct {
 
 func newKeyMap() keyMap {
 	return keyMap{
+		Approve: key.NewBinding(key.WithKeys("a"), key.WithHelp("a", "approve")),
+		Stop:    key.NewBinding(key.WithKeys("x"), key.WithHelp("x", "stop")),
+		Retry:   key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "retry")),
 		Filter:  key.NewBinding(key.WithKeys("/"), key.WithHelp("/", "filter projects; esc clears")),
 		Sidebar: key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "hide/show sidebar")),
 		Next:    key.NewBinding(key.WithKeys("tab", "right", "down", "j"), key.WithHelp("tab/j", "next project")),
@@ -33,7 +38,7 @@ func newKeyMap() keyMap {
 		Select:  key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "select the row's project")),
 		Refresh: key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "refresh now")),
 		Help:    key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "show or hide this help")),
-		Close:   key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "close help")),
+		Close:   key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "close help or message")),
 		Quit:    key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
 	}
 }
@@ -43,5 +48,5 @@ func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Refresh, k.He
 
 // FullHelp implements help.KeyMap.
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.Next, k.Prev, k.Jump}, {k.RowNext, k.RowPrev, k.Select}, {k.Filter, k.Sidebar}, {k.Refresh, k.Help, k.Close, k.Quit}}
+	return [][]key.Binding{{k.Next, k.Prev, k.Jump}, {k.RowNext, k.RowPrev, k.Select}, {k.Filter, k.Sidebar}, {k.Approve, k.Stop, k.Retry}, {k.Refresh, k.Help, k.Close, k.Quit}}
 }

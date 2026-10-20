@@ -5,6 +5,8 @@ package tui
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -117,5 +119,57 @@ func TestSlowRefreshDoesNotDelayOtherProjectSnapshot(t *testing.T) {
 	close(release)
 	if err := <-refreshed; err != nil {
 		t.Fatalf("refresh: %v", err)
+	}
+}
+
+type runActions interface {
+	Approve(context.Context, string) error
+	Stop(context.Context, string) error
+	Retry(context.Context, string) error
+}
+
+func TestDaemonTypedActions(t *testing.T) {
+	if _, ok := any(&Daemon{}).(runActions); !ok {
+		t.Fatal("daemon adapter lacks typed run actions")
+	}
+	for _, verb := range []string{"approve", "stop", "retry"} {
+		for _, fail := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/error-%t", verb, fail), func(t *testing.T) {
+				d, _, _, _ := requestServer(t, func(_ context.Context, method string, params json.RawMessage) (any, error) {
+					if method != "run."+verb || string(params) != `{"run":"engine"}` {
+						return nil, fmt.Errorf("wrong request: %s %s", method, params)
+					}
+					if fail {
+						return nil, &ipc.Error{Code: "action_failed", Message: "Exact action failure."}
+					}
+					return map[string]string{"id": "engine"}, nil
+				})
+				a := any(d).(runActions)
+				call := map[string]func(context.Context, string) error{"approve": a.Approve, "stop": a.Stop, "retry": a.Retry}[verb]
+				err := call(context.Background(), "engine")
+				if fail {
+					var e *ipc.Error
+					if !errors.As(err, &e) || e.Code != "action_failed" || e.Message != "Exact action failure." {
+						t.Fatalf("wire error changed: %v", err)
+					}
+				} else if err != nil {
+					t.Fatalf("typed action: %v", err)
+				}
+			})
+		}
+	}
+}
+
+func TestDaemonActionConnectFailure(t *testing.T) {
+	a, ok := any(&Daemon{Connect: func(context.Context) (*daemon.Client, error) { return nil, errors.New("connect failed") }}).(runActions)
+	if !ok {
+		t.Fatal("daemon adapter lacks typed run actions")
+	}
+	for name, call := range map[string]func(context.Context, string) error{"approve": a.Approve, "stop": a.Stop, "retry": a.Retry} {
+		t.Run(name, func(t *testing.T) {
+			if err := call(context.Background(), "engine"); err == nil || err.Error() != "connect failed" {
+				t.Fatalf("connect error changed: %v", err)
+			}
+		})
 	}
 }

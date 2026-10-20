@@ -13,9 +13,9 @@ until then.
   the same things.
 - **Color is never the only signal.** Every colored state also has a word
   or symbol, and there is a monochrome theme.
-- **Show the command.** Every write shows the exact command it will run. A
-  paid or irreversible action (launch, approve and commit, stop) asks for
-  confirmation.
+- **Show the command.** Every write shows the exact command it will run.
+  Launch or stop asks for confirmation; approve runs on one key
+  (`ui.confirm`). Retry also confirms.
 - **Nothing blocks.** A slow call shows as pending on its row.
 - **Errors verbatim.** A failed CLI call shows its `error.code` and
   message. ork does not guess.
@@ -118,8 +118,28 @@ Other active engine states appear under Running. Committed runs do not appear
 in either section. A stopped run disappears once a newer engine record exists
 for the same slice, ordered by `created_at`; ledger runs do not clear it
 (`ui.stopped-newer`). Needs-you counts include open questions, held items and
-these engine waits in both the sidebar and `ork status`. This view is display
-only; approve, stop, answer and launch keys are not implemented in S22.
+these engine waits in both the sidebar and `ork status`.
+
+On the cursor's engine row, `a` approves an awaiting-approval run immediately,
+`x` stops a run, and `t` retries a paused run. Stop and retry show the exact
+command (`ork stop RUN` or `ork retry RUN`) in the detail area and ask
+`[y/N] (Enter is No)`. Only `y` confirms; `n`, `esc` and Enter cancel. The
+confirmation keeps its original run target while snapshots change. Approve
+shows `ork approve RUN` as pending, then its result. Calls run asynchronously;
+every completed call refreshes the project's snapshot, and a failed call shows
+its code and message verbatim in the detail area. Actions on other runs remain
+available while a call is pending. Stop can interrupt a pending approve or
+retry; another action on that run names the command that is pending. A stopped
+run refuses stop. Each result names its command; the latest completed call
+replaces the previous detail message. Ineligible actions explain why there,
+and ledger rows started elsewhere have no actions. `esc` dismisses
+a pending message or action result and restores the selected row's detail.
+Hiding a pending message leaves its call running.
+
+Retry uses the optional engine `pending` kind (`ui.pending-kind`). When it is
+`question`, the detail area says to answer with `ork answer RUN TEXT` instead.
+Other pending kinds, including an absent kind from an older snapshot, offer
+retry. Answer and launch keys await their own slices (S26 and S52).
 
 A failed call is an error row. A project has one error row per error code.
 The parts that failed with that code come first, then the code, then the

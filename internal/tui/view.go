@@ -54,6 +54,16 @@ func (m *Model) screen() string {
 		// from the body, at most h-5, so the body keeps one line.
 		ov := m.overview(mainW)
 		body, detail = ov.body, ov.detail
+		status := m.actionStatus
+		if m.confirm != nil {
+			status = m.confirm.command() + "? [y/N] (Enter is No)"
+		}
+		if status != "" {
+			detail = wrapText(status, max(mainW-len(indent), 1))
+			for i := range detail {
+				detail[i] = indent + detail[i]
+			}
+		}
 		if len(detail) == 0 {
 			detail = []string{""}
 		}

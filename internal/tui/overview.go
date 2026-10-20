@@ -37,14 +37,17 @@ func (m *Model) refreshing(name string) bool {
 // ovRow is one row of the Overview. The row shows its text cut to the pane. The
 // selected row shows the whole text on the detail line (ui.overview-cursor).
 type ovRow struct {
-	kind    string
-	style   lipgloss.Style
-	kindW   int
-	project int    // registry index; enter selects it
-	name    string // the project's name
-	text    string // the row's text after the name, in full
-	id      string // a run's ID, kept whole in the row; "" for other rows
-	rest    string // a run's text after its ID, cut first
+	kind     string
+	style    lipgloss.Style
+	kindW    int
+	project  int    // registry index; enter selects it
+	name     string // the project's name
+	text     string // the row's text after the name, in full
+	id       string // a run's ID, kept whole in the row; "" for other rows
+	rest     string // a run's text after its ID, cut first
+	engineID string // empty for ledger and non-engine rows
+	state    string
+	pending  string
 }
 
 // rows lists the Overview's rows as Needs you and Running. The cursor moves
@@ -119,7 +122,7 @@ func (m *Model) rows() (needs, running []ovRow) {
 				parts = append(parts, elapsed(m.cfg.Now().Sub(began)))
 			}
 			rest := strings.Join(parts, "  ")
-			row := ovRow{kind: "", style: th.Title, project: i, name: name, id: r.Item, rest: rest, text: r.Item + "  " + rest}
+			row := ovRow{engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.Item, rest: rest, text: r.Item + "  " + rest}
 			if r.NeedsYou(s.EngineRuns) {
 				row.kindW = kindWidth
 				needs = append(needs, row)

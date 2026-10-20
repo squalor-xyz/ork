@@ -630,12 +630,15 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   and engine runs awaiting approval, paused or stopped (`status.needs-you`,
   adj #69). A stopped run stops counting once a newer engine run exists for
   the same slice, ordered by created time (adj #92). The *proposed*
-  `engine_runs:[{id,item,state,wait?,denials?,relay_run?,created_at}]` field per project
+  `engine_runs:[{id,item,state,wait?,pending?,denials?,relay_run?,created_at}]` field per project
   includes the linked slicer ledger run ID in `relay_run`, when present,
   and the engine run's creation time in `created_at`. `denials` is an optional
   array of `Tool` or `Tool: command` strings collected from role records
   (`ui.denials-display`, `engine.denied-command`). `wait`
-  contains the approval prompt, owner question, pause or stop reason. `active_relays` are slicer's active relay runs.
+  contains the approval prompt, owner question, pause or stop reason. The optional
+  `pending` string holds the paused run record's pending kind (`question`,
+  `shape`, `lost`, `interrupted` or `error`); other states omit it
+  (`ui.pending-kind`). Older snapshots without it still load. `active_relays` are slicer's active relay runs.
   `errors` lists failed parts (`items`, `goals`, `runs`, `open`, `decided`)
   with the tool's own code. `parts` gives each part's age in ms (0 for a part never read) and `stale`
   when the part keeps an older value; the error is the one that failed. Text: one line `NAME: needs

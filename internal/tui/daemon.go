@@ -48,3 +48,28 @@ func (d *Daemon) Next(ctx context.Context) (string, error) {
 	n, err := d.Feed.Next(ctx)
 	return n.Project, err
 }
+
+func (d *Daemon) Approve(ctx context.Context, run string) error {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	return c.Approve(ctx, run)
+}
+func (d *Daemon) Stop(ctx context.Context, run string) error {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	return c.Stop(ctx, run)
+}
+func (d *Daemon) Retry(ctx context.Context, run string) error {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	return c.Retry(ctx, run)
+}

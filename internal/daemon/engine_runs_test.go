@@ -91,3 +91,23 @@ func TestStatusCountsHeldItems(t *testing.T) {
 		t.Fatalf("held item absent from needs_you: %s", b)
 	}
 }
+
+func TestEnginePendingKind(t *testing.T) {
+	for _, state := range []string{runrec.StatePaused, runrec.StateImplement} {
+		for _, kind := range []string{runrec.PendingQuestion, runrec.PendingShape, runrec.PendingLost, runrec.PendingInterrupted, runrec.PendingError} {
+			t.Run(state+"/"+kind, func(t *testing.T) {
+				d, store, p := runDaemon(t, nil)
+				if _, err := store.Create(runrec.Record{ID: "pending", Project: p.Name, Item: "S25", State: state, Pending: &runrec.Pending{Kind: kind, Reason: "reason", Question: "Question?"}}); err != nil {
+					t.Fatal(err)
+				}
+				for _, method := range []string{"snapshot", "status"} {
+					b := request(t, d, method, `{"project":"p"}`)
+					want := `"pending":"` + kind + `"`
+					if strings.Contains(string(b), want) != (state == runrec.StatePaused) {
+						t.Errorf("%s pending kind wrong: %s", method, b)
+					}
+				}
+			})
+		}
+	}
+}
