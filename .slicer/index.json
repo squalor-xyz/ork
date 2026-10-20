@@ -2173,11 +2173,22 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "b31ed7d1-293b-4c89-bca5-94daddd2ad97",
+          "kind": "",
+          "text": "**2026-10-20** — Decided 2026-10-20: record 130 (version in header, stale warning in status line) and record 131 (six-row text mark in --version, doctor and help; no splash; no image protocol). Size is now M; the open points have proposed defaults at the end of Implement.",
+          "created_at": "2026-10-20T18:33:08Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,

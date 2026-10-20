@@ -713,3 +713,10 @@
 {"when": "2026-10-20T18:16:07Z", "item": "S48", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-20T18:16:07Z", "item": "S48", "action": "note", "from": "", "to": "", "note": "On hold (owner 2026-10-20): Codex rate limit. No paid call u", "by": "Jon R"}
 {"when": "2026-10-20T18:16:07Z", "item": "S24", "action": "note", "from": "", "to": "", "note": "Decided 2026-10-20: adj 11 = both, adj 97 = ork-sets-checks.", "by": "Jon R"}
+{"when": "2026-10-20T18:33:02Z", "item": "S54", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-20T18:33:02Z", "item": "S54", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T18:33:02Z", "item": "S54", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T18:33:02Z", "item": "S54", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T18:33:02Z", "item": "S54", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-20T18:33:08Z", "item": "S54", "action": "note", "from": "", "to": "", "note": "Decided 2026-10-20: record 130 (version in header, stale war", "by": "Jon R"}
+{"when": "2026-10-20T18:33:08Z", "item": "S54", "action": "set", "from": "", "to": "", "note": "size S→M"}

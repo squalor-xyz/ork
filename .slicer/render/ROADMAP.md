@@ -100,7 +100,7 @@
 | 50 | [S51](slices/S51.md) | run.json at 0600; strip control characters from recorded commands | S | 1 |  | discovered from S45 | — |
 | 51 | [S52](slices/S52.md) | TUI: launch a slice from a ready list | M | 2 |  | discovered from S25 | — |
 | 52 | [S53](slices/S53.md) | Create the ork logo | S | 1 |  |  | done |
-| 53 | [S54](slices/S54.md) | Show the ork version and logo in the terminal: TUI, --version, doctor | S | 2 |  |  | — |
+| 53 | [S54](slices/S54.md) | Show the ork version and logo in the terminal: TUI, --version, doctor | M | 2 |  |  | — |
 | 54 | [S55](slices/S55.md) | Run tree: orchestrator, roles and steps with live status | M | 2 |  |  | — |
 | 55 | [S56](slices/S56.md) | daemon stop and restart cope with a daemon that predates daemon.stop | S | 1 |  | discovered from S46 | — |
 | 56 | [S57](slices/S57.md) | TUI keys: up/down move rows, tab and left/right move projects | S | 1 |  | discovered from S26 | done |
