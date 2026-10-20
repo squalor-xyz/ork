@@ -8,8 +8,11 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 
@@ -341,5 +344,169 @@ func TestDoctorStaleDaemonWarning(t *testing.T) {
 				})
 			}
 		})
+	}
+}
+
+// predatingDaemon serves a daemon that lacks daemon.stop. status answers
+// the status method: a nil result with a nil error fails the call.
+func predatingDaemon(t *testing.T, socket string, status func() (any, error)) {
+	t.Helper()
+	l, err := ipc.Listen(socket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	s := &ipc.Server{Handler: func(_ context.Context, method string, _ json.RawMessage) (any, error) {
+		if method == daemon.MethodStatus {
+			return status()
+		}
+		return nil, &ipc.Error{Code: daemon.CodeUnknownMethod, Message: "unknown method " + method}
+	}}
+	go func() { defer close(done); s.Serve(ctx, l) }()
+	t.Cleanup(func() { cancel(); l.Close(); <-done })
+}
+
+func startChild(t *testing.T) *exec.Cmd {
+	t.Helper()
+	cmd := exec.Command("sleep", "60")
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { cmd.Process.Kill(); cmd.Wait() })
+	return cmd
+}
+
+func TestDaemonStopPredatingDaemon(t *testing.T) {
+	running := daemon.StatusResult{Projects: []daemon.ProjectStatus{{Name: "p", ActiveRelays: []daemon.Relay{{ID: "r", Running: 1}}}}}
+	engine := daemon.StatusResult{Projects: []daemon.ProjectStatus{{Name: "p", EngineRuns: []daemon.EngineRun{{ID: "e", State: "running"}}}}}
+	idle := daemon.StatusResult{Projects: []daemon.ProjectStatus{{Name: "p",
+		ActiveRelays: []daemon.Relay{{ID: "r", Running: 0}},
+		EngineRuns:   []daemon.EngineRun{{State: "committed"}, {State: "stopped"}, {State: "paused"}, {State: "awaiting-approval"}}}}}
+	cases := []struct {
+		name    string
+		status  func() (any, error)
+		warning string // "" means no warning about a running role
+	}{
+		{"idle", func() (any, error) { return idle, nil }, ""},
+		{"relay", func() (any, error) { return running, nil }, "a role is running"},
+		{"engine", func() (any, error) { return engine, nil }, "a role is running"},
+		{"status fails", func() (any, error) {
+			return nil, &ipc.Error{Code: daemon.CodeUnknownMethod, Message: "unknown method status"}
+		}, "a role may be running"},
+	}
+	for _, sub := range []string{"stop", "restart"} {
+		for _, tc := range cases {
+			t.Run(sub+"-"+tc.name, func(t *testing.T) {
+				socket := filepath.Join(shortDir(t), "old.sock")
+				predatingDaemon(t, socket, tc.status)
+				child := startChild(t)
+				pid := strconv.Itoa(child.Process.Pid)
+				pidFile := filepath.Join(t.TempDir(), "ork.pid")
+				if err := os.WriteFile(pidFile, []byte(pid+"\n"), 0o600); err != nil {
+					t.Fatal(err)
+				}
+				started := false
+				app := &App{Socket: socket, Pid: pidFile, BuildID: "current", Start: func(context.Context) error { started = true; return nil }}
+				code, out, stderr := run(t, app, "daemon", sub)
+				if code != ExitFailure || out != "" {
+					t.Fatalf("exit %d, stdout %q, stderr %q", code, out, stderr)
+				}
+				for _, want := range []string{"predates daemon.stop", "pid " + pid, "kill -TERM " + pid} {
+					if !strings.Contains(stderr, want) {
+						t.Errorf("stderr lacks %q: %q", want, stderr)
+					}
+				}
+				if strings.Contains(stderr, "unknown method") {
+					t.Errorf("raw error printed: %q", stderr)
+				}
+				if tc.warning == "" && strings.Contains(stderr, "role") {
+					t.Errorf("unexpected role warning: %q", stderr)
+				}
+				if tc.warning != "" && !strings.Contains(stderr, tc.warning) {
+					t.Errorf("stderr lacks %q: %q", tc.warning, stderr)
+				}
+				if started {
+					t.Error("restart started a daemon")
+				}
+				if err := syscall.Kill(child.Process.Pid, 0); err != nil {
+					t.Errorf("child no longer alive: %v", err)
+				}
+			})
+		}
+	}
+}
+
+func TestDaemonStopPredatingUnreadablePid(t *testing.T) {
+	socket := filepath.Join(shortDir(t), "old.sock")
+	predatingDaemon(t, socket, func() (any, error) { return daemon.StatusResult{}, nil })
+	pidFile := filepath.Join(t.TempDir(), "missing.pid")
+	code, _, stderr := run(t, &App{Socket: socket, Pid: pidFile}, "daemon", "stop")
+	if code != ExitFailure || !strings.Contains(stderr, pidFile) || !strings.Contains(stderr, "cannot read") {
+		t.Fatalf("exit %d, stderr %q", code, stderr)
+	}
+}
+
+func TestDaemonRestartAfterPredatingDaemonExits(t *testing.T) {
+	socket := filepath.Join(shortDir(t), "old.sock")
+	l, err := ipc.Listen(socket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	l.Close() // the old daemon is gone; a closed unix listener unlinks its socket
+	os.Remove(socket)
+	started := false
+	app := &App{Socket: socket, Start: func(context.Context) error {
+		started = true
+		l2, err := ipc.Listen(socket)
+		if err != nil {
+			return err
+		}
+		ctx, cancel := context.WithCancel(context.Background())
+		done := make(chan struct{})
+		s := &ipc.Server{Handler: func(context.Context, string, json.RawMessage) (any, error) {
+			return map[string]string{"build_id": "x"}, nil
+		}}
+		go func() { defer close(done); s.Serve(ctx, l2) }()
+		t.Cleanup(func() { cancel(); l2.Close(); <-done })
+		return nil
+	}}
+	code, out, stderr := run(t, app, "daemon", "restart")
+	if code != 0 || !started || !strings.Contains(out, "restarted") {
+		t.Fatalf("exit %d, started %v, stdout %q, stderr %q", code, started, out, stderr)
+	}
+}
+
+func TestDaemonStopPredatingInvalidPid(t *testing.T) {
+	for name, content := range map[string]string{"whitespace": " \n", "garbage": "abc\n", "zero": "0\n", "negative": "-5\n"} {
+		t.Run(name, func(t *testing.T) {
+			socket := filepath.Join(shortDir(t), "old.sock")
+			predatingDaemon(t, socket, func() (any, error) { return daemon.StatusResult{}, nil })
+			pidFile := filepath.Join(t.TempDir(), "ork.pid")
+			if err := os.WriteFile(pidFile, []byte(content), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			code, _, stderr := run(t, &App{Socket: socket, Pid: pidFile}, "daemon", "stop")
+			if code != ExitFailure || !strings.Contains(stderr, "cannot read") || !strings.Contains(stderr, pidFile) || strings.Contains(stderr, "kill -TERM "+strings.TrimSpace(content)) {
+				t.Fatalf("exit %d, stderr %q", code, stderr)
+			}
+		})
+	}
+}
+
+func TestDaemonStopPredatingJSON(t *testing.T) {
+	socket := filepath.Join(shortDir(t), "old.sock")
+	predatingDaemon(t, socket, func() (any, error) { return daemon.StatusResult{}, nil })
+	pidFile := filepath.Join(t.TempDir(), "ork.pid")
+	if err := os.WriteFile(pidFile, []byte("4242\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	code, out, _ := run(t, &App{Socket: socket, Pid: pidFile}, "daemon", "stop", "--json")
+	var got struct {
+		Error ipc.Error `json:"error"`
+	}
+	mustJSON(t, out, &got)
+	if code != ExitFailure || got.Error.Code != daemon.CodeUnknownMethod || !strings.Contains(got.Error.Message, "kill -TERM 4242") {
+		t.Fatalf("exit %d, stdout %q", code, out)
 	}
 }

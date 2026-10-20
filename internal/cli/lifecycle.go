@@ -9,11 +9,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/ipc"
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
 func daemonBuild(ctx context.Context, call func(context.Context, string, any, any) error) (string, error) {
@@ -89,6 +92,11 @@ func (a *App) daemonCommand(ctx context.Context, o *output, args []string) int {
 		var result daemon.StopResult
 		err = c.Call(ctx, daemon.MethodDaemonStop, daemon.StopParams{Force: *force}, &result)
 		c.Close()
+		var reply *ipc.Error
+		if errors.As(err, &reply) && reply.Code == daemon.CodeUnknownMethod {
+			// ork sends no signal (decision 118): print the hint and stop.
+			return o.fail(ExitFailure, reply.Code, a.predatesStop(ctx))
+		}
 		if err != nil {
 			return o.failErr(err)
 		}
@@ -129,4 +137,55 @@ func (a *App) daemonCommand(ctx context.Context, o *output, args []string) int {
 	}
 	fmt.Fprintf(o.stdout, "daemon %s\n", state)
 	return ExitOK
+}
+
+// predatesStop is the guidance for a daemon that answers unknown_method to
+// daemon.stop. The wording is *proposed*. It reads the pid file and asks the
+// daemon's status whether a role runs; it uses the older status fields,
+// because a daemon without daemon.stop lacks roles_running.
+func (a *App) predatesStop(ctx context.Context) string {
+	msg := "daemon predates daemon.stop; "
+	b, err := os.ReadFile(a.Pid)
+	pid := strings.TrimSpace(string(b))
+	if n, aerr := strconv.Atoi(pid); err == nil && aerr == nil && n > 0 {
+		msg += fmt.Sprintf("pid %s; stop it with: kill -TERM %s", pid, pid)
+	} else {
+		msg += fmt.Sprintf("cannot read its pid from %q; stop it by its pid with kill -TERM", a.Pid)
+	}
+	switch running, err := a.roleMayRun(ctx); {
+	case err != nil:
+		msg += "\nwarning: a role may be running; stopping the daemon ends it"
+	case running:
+		msg += "\nwarning: a role is running; stopping the daemon ends it"
+	}
+	return msg
+}
+
+// roleMayRun reports an active relay with a running role, or an engine run
+// outside the states the daemon treats as idle.
+func (a *App) roleMayRun(ctx context.Context) (bool, error) {
+	c, err := daemon.Dial(ctx, a.Socket)
+	if err != nil {
+		return false, err
+	}
+	defer c.Close()
+	var st daemon.StatusResult
+	if err := c.Call(ctx, daemon.MethodStatus, daemon.StatusParams{}, &st); err != nil {
+		return false, err
+	}
+	for _, p := range st.Projects {
+		for _, r := range p.ActiveRelays {
+			if r.Running > 0 {
+				return true, nil
+			}
+		}
+		for _, r := range p.EngineRuns {
+			switch r.State {
+			case runrec.StateCommitted, runrec.StateStopped, runrec.StatePaused, runrec.StateAwaitingApproval:
+			default:
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }
