@@ -22,11 +22,11 @@
     },
     {
       "heading": "Failing tests",
-      "body": "- Per the owner decision (not yet recorded): a round with a successful result and denials follows the decided policy; the denied tool names reach the stop reason or the report.\n- A denial on a round with no success result still stops the slice.\n- The role output log named in docs/state.md exists, or the doc no longer promises it."
+      "body": "- A round with a success result and denied tool calls proceeds (#93); the denied tool names are recorded on the run and shown in status and the TUI.\n- A denial on a round with no success result still stops the slice.\n- The default implementer allowlist contains the read-only git -C, go -C and adj forms (#94).\n- docs/state.md no longer promises a <role>-<round>.log (#95)."
     },
     {
       "heading": "Implement",
-      "body": "Ask the owner the policy question first (adj ask, key engine.denials), then build."
+      "body": "Decided by the owner on 2026-10-20: #93 engine.denials (warn and continue), #94 engine.default-allowlist (add read-only forms), #95 state.role-log (drop the promise). Build them. If denials need a new wire or run-record field, stop and ask."
     },
     {
       "heading": "Check",
