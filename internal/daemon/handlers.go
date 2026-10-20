@@ -65,7 +65,7 @@ func decode(params json.RawMessage, v any) error {
 
 func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessage) (any, error) {
 	switch method {
-	case MethodRunPlan, MethodRunStart, MethodRunApprove, MethodRunStop, MethodRunAnswer:
+	case MethodRunPlan, MethodRunStart, MethodRunApprove, MethodRunStop, MethodRunAnswer, MethodRunRetry:
 		return d.handleRun(ctx, method, params)
 	case MethodStatus:
 		var p StatusParams

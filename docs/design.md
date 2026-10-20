@@ -512,6 +512,7 @@ ork wave start P ID...      launch (asks unless --yes)
 ork run P ID                show a plan and launch one slice (S17)
 ork approve RUN             finish a passed slice, then commit
 ork answer RUN TEXT         answer an owner question
+ork retry RUN               retry a paused role or step
 ork stop RUN|WAVE           stop and record why
 ork daemon run              serve the daemon in the foreground
 ork roles print [ROLE]      print the embedded role prompts
@@ -524,6 +525,7 @@ S03 ships `status`, `projects`, `roles print` and `doctor`
 (`cmd/ork`). The rest
 come with the engine. S17 adds `run`, `approve`, `stop` and `answer`
 (`engine.owner-surface`, adj #73).
+S44 adds `retry` for pauses without a question (`engine.pause-resume`, adj #101).
 
 `ork run P ID` asks `Well specified?` and `Split?` as y/n questions
 (`[y/n]`, no default) before showing the plan, then asks
@@ -541,7 +543,12 @@ start if the plan changed during confirmation. It starts one engine run
 in the background; CLI disconnection does not cancel it. The daemon owns
 the run store and reconciles stored runs before accepting clients.
 `approve` runs the finish step, then commits once (adj #81); `answer`
-resumes the paused role with its answer. Both commands wait for the engine
+resumes a paused role that asked a question. `retry` calls `Engine.Retry`
+to rerun the role or step of a `shape`, `error`, `lost` or `interrupted`
+pause (adj #101). A question needs `answer` or `stop`. An `answer` on a
+pause without a question names `ork retry RUN`. Status shows the pause
+reason or question and the next command: `ork retry RUN` or
+`ork answer RUN TEXT`. These owner commands wait for the engine
 to rest. `stop` cancels the running job, waits for the role to exit,
 reconciles any surviving process group, and stops the run. No TUI actions
 are added in S17.
@@ -555,6 +562,8 @@ Start and owner commands return the run record. With `--json`, run prints
 the plan on stderr and a single result JSON value on stdout; declining
 prints `{"started":false}` on stdout. Interactive questions go on stderr
 in JSON mode.
+
+`run.retry` takes `{run}` and returns the run record (adj #101).
 
 `ork doctor` checks:
 - the running ork binary: its path, resolved through symlinks

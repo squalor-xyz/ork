@@ -26,6 +26,7 @@ const (
 	MethodRunApprove = "run.approve"
 	MethodRunStop    = "run.stop"
 	MethodRunAnswer  = "run.answer"
+	MethodRunRetry   = "run.retry"
 )
 
 // RunParams are the owner's explicit lineup inputs (adj #86).
@@ -310,6 +311,9 @@ func (d *Daemon) ownerRun(ctx context.Context, method string, p RunAction) (runr
 	if r.busy {
 		if method != MethodRunStop {
 			d.runs.mu.Unlock()
+			if method == MethodRunRetry {
+				return runrec.Record{}, fmt.Errorf("run %s is busy; use ork stop %s to stop it", p.Run, p.Run)
+			}
 			return runrec.Record{}, fmt.Errorf("run %s is busy", p.Run)
 		}
 		r.stopping = true
@@ -328,11 +332,26 @@ func (d *Daemon) ownerRun(ctx context.Context, method string, p RunAction) (runr
 	switch method {
 	case MethodRunAnswer:
 		rec := r.engine.Snapshot()
+		if rec.State == runrec.StatePaused && (rec.Pending == nil || rec.Pending.Kind != runrec.PendingQuestion) {
+			d.runs.mu.Unlock()
+			return runrec.Record{}, fmt.Errorf("run %s has no pending question; use ork retry %s", p.Run, p.Run)
+		}
 		if strings.TrimSpace(p.Text) == "" || rec.State != runrec.StatePaused || rec.Pending == nil || rec.Pending.Kind != runrec.PendingQuestion {
 			d.runs.mu.Unlock()
 			return runrec.Record{}, errors.New("run needs a pending question and a non-empty answer")
 		}
 		fn = func(ctx context.Context) error { return r.engine.Answer(ctx, p.Text) }
+	case MethodRunRetry:
+		rec := r.engine.Snapshot()
+		if rec.State != runrec.StatePaused || rec.Pending == nil {
+			d.runs.mu.Unlock()
+			return runrec.Record{}, fmt.Errorf("run %s is not paused with a pending step; use ork stop %s to stop it", p.Run, p.Run)
+		}
+		if rec.Pending.Kind == runrec.PendingQuestion {
+			d.runs.mu.Unlock()
+			return runrec.Record{}, fmt.Errorf("run %s waits for an answer; use ork answer %s TEXT or ork stop %s", p.Run, p.Run, p.Run)
+		}
+		fn = r.engine.Retry
 	case MethodRunApprove:
 		fn = r.engine.Approve
 	case MethodRunStop:
@@ -396,11 +415,17 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		wait := rec.Reason
 		if rec.Pending != nil {
 			wait = rec.Pending.Reason
-			if rec.Pending.Question != "" {
+			if rec.Pending.Kind == runrec.PendingQuestion && rec.Pending.Question != "" {
 				wait = rec.Pending.Question
 			}
 		}
 		switch rec.State {
+		case runrec.StatePaused:
+			next := "ork retry " + rec.ID
+			if rec.Pending != nil && rec.Pending.Kind == runrec.PendingQuestion {
+				next = "ork answer " + rec.ID + " TEXT"
+			}
+			wait += "; next: " + next
 		case runrec.StateAwaitingApproval:
 			wait = "owner approval"
 		}

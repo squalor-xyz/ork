@@ -133,6 +133,13 @@ A role with no `ended_at` is running; a restart marks it `lost`. `commit` is
 role's `model`, `effort` and `denials`, a check's `log`, and a write's
 `error` are *proposed* (S04).
 
+For a paused `question`, `ork answer RUN TEXT` resumes the role with the
+answer. For a `shape`, `error`, `lost` or `interrupted` pause, `ork retry RUN`
+calls `Engine.Retry` to rerun the pending role or step (adj #101,
+`engine.pause-resume`). `ork stop RUN` stops the run. Retrying a question
+names `answer` and `stop`; answering a pause without a question names
+`retry`.
+
 `writes` lists every slicer, adj and git write ork makes for the run, with
 its argv, root, exit, error code and retry count, so a restart or the
 owner can see exactly what ork changed (`state.writes`, S04). `argv` leaves
@@ -153,6 +160,8 @@ The daemon's snapshot has an `engine_runs` list, built by the same code as
 `relay_run`, `created_at`, and optional `denials` (an array of denied tool
 names collected from the role records, in role order). Denials are omitted
 when empty and rendered by status and the TUI (`ui.denials-display`).
+For a paused run, `wait` includes the pause reason or question and the next
+command: `ork retry RUN` without a question, or `ork answer RUN TEXT`.
 The `relay_run` and `created_at` fields link ledger progress and
 order replacement runs for the Overview (`ui.engine-runs-read`,
 `ui.run-join-key`, `ui.stopped-newer`). These are read-only display fields.

@@ -44,6 +44,7 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
   ork approve RUN             finish and commit a passed slice
   ork stop RUN                stop a slice and kill its roles
   ork answer RUN TEXT         answer and resume a paused role
+  ork retry RUN               retry a paused role or step
   ork status [--project P]    projects, needs-you counts and active relays
   ork projects list           list the registered projects
   ork projects add PATH [--name N]
@@ -159,7 +160,7 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		return ExitOK
 	case "run":
 		return a.runSlice(ctx, o, rest)
-	case "approve", "stop", "answer":
+	case "approve", "stop", "answer", "retry":
 		return a.ownerCommand(ctx, o, cmd, rest)
 	case "status":
 		return a.status(ctx, o, rest)
