@@ -36,6 +36,26 @@ func TestEngineSnapshotMatchesStatus(t *testing.T) {
 	}
 }
 
+func TestEngineSnapshotAndStatusShowEachDenialsCommand(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	at := time.Date(2026, 10, 20, 9, 0, 0, 0, time.UTC)
+	store.Now = func() time.Time { return at }
+	roles := []runrec.RoleRecord{{
+		Role: "implementer", Round: 1, Vendor: "claude",
+		Denials:        []string{"Bash", "Write", "Glob"},
+		DeniedCommands: []runrec.DeniedCommand{{Tool: "Bash", Command: "git push origin main"}, {Tool: "Write", Command: "/x.txt"}, {Tool: "Glob"}},
+	}}
+	if _, err := store.Create(runrec.Record{ID: "denied", Project: p.Name, Item: "S45", State: runrec.StatePaused, CreatedAt: at, Roles: roles, Pending: &runrec.Pending{Kind: runrec.PendingError, State: "implement", Role: "implementer", Reason: "reason"}}); err != nil {
+		t.Fatal(err)
+	}
+	want := `"denials":["Bash: git push origin main","Write: /x.txt","Glob"]`
+	status := request(t, d, "status", `{"project":"p"}`)
+	snapshot := request(t, d, "snapshot", `{"project":"p"}`)
+	if !strings.Contains(string(snapshot), want) || !strings.Contains(string(status), want) {
+		t.Fatalf("denials lack the command text: want %s\nsnapshot=%s\nstatus=%s", want, snapshot, status)
+	}
+}
+
 func TestStoppedNeedsNewerEngineRun(t *testing.T) {
 	for _, tc := range []struct {
 		name, item, project string

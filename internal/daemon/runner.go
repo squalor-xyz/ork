@@ -8,6 +8,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/agent/claude"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
 // claudeRunner connects the engine's vendor-neutral request to S16.
@@ -37,7 +38,7 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	result := engine.Result{Exit: class, Session: round.SessionID, Report: round.Report, CostUSD: round.Usage.CostUSD,
 		Tokens: int(round.Usage.InputTokens + round.Usage.OutputTokens + round.Usage.CacheReadTokens + round.Usage.CacheCreationTokens)}
 	for _, d := range round.Denials {
-		result.Denials = append(result.Denials, d.ToolName)
+		result.Denials = append(result.Denials, runrec.DeniedCommand{Tool: d.ToolName, Command: d.Detail()})
 	}
 	return result, err
 }

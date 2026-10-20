@@ -252,9 +252,10 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   in S06) and a read-only role that changed the tree
   (`git status --porcelain` before and after) stop the slice with the
   reason. A successful round with permission denials proceeds. The role record
-  keeps the denied tool names; status and the TUI show them as warnings
-  (`engine.denials`, `ui.denials-display`). An unsuccessful round with denials
-  stops with the denied tool names in its reason. A failed commit stops the
+  keeps the denied tool names and each denied command or file path, capped at
+  200 characters (`engine.denied-command`); status and the TUI show them as
+  warnings (`engine.denials`, `ui.denials-display`). An unsuccessful round with
+  denials stops with the denied tools and commands in its reason. A failed commit stops the
   slice (adj #81). Other tool failures the engine
   cannot go on from (a check run, `git status`) pause it (kind `error`); `Retry` runs the
   state again.
@@ -600,7 +601,8 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `engine_runs:[{id,item,state,wait?,denials?,relay_run?,created_at}]` field per project
   includes the linked slicer ledger run ID in `relay_run`, when present,
   and the engine run's creation time in `created_at`. `denials` is an optional
-  array of denied tool names collected from role records (`ui.denials-display`). `wait`
+  array of `Tool` or `Tool: command` strings collected from role records
+  (`ui.denials-display`, `engine.denied-command`). `wait`
   contains the approval prompt, owner question, pause or stop reason. `active_relays` are slicer's active relay runs.
   `errors` lists failed parts (`items`, `goals`, `runs`, `open`, `decided`)
   with the tool's own code. `parts` gives each part's age in ms (0 for a part never read) and `stale`

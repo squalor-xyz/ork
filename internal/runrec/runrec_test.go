@@ -201,6 +201,88 @@ func TestOpenRefusesWhatItDoesNotKnow(t *testing.T) {
 	}
 }
 
+func TestDeniedCommandTextNamesTheCallAndItsDetail(t *testing.T) {
+	for _, tc := range []struct {
+		d    DeniedCommand
+		want string
+	}{
+		{DeniedCommand{Tool: "Bash", Command: "git push origin main"}, "Bash: git push origin main"},
+		{DeniedCommand{Tool: "Write", Command: "/x.txt"}, "Write: /x.txt"},
+		{DeniedCommand{Tool: "Write"}, "Write"},
+	} {
+		if got := tc.d.Text(); got != tc.want {
+			t.Errorf("Text() of %+v is %q, want %q", tc.d, got, tc.want)
+		}
+	}
+}
+
+func TestDeniedCommandsRoundTripThroughRunJSON(t *testing.T) {
+	s := newStore(t)
+	r := rec("denied")
+	r.Roles = []RoleRecord{{Role: "implementer", Round: 1, Vendor: "claude", StartedAt: t0,
+		Denials:        []string{"Bash", "Write"},
+		DeniedCommands: []DeniedCommand{{Tool: "Bash", Command: "git status"}, {Tool: "Write"}}}}
+	run, err := s.Create(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := s.Open("denied")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if roles := got.Snapshot().Roles; len(roles) != 1 || !reflect.DeepEqual(roles[0].DeniedCommands, r.Roles[0].DeniedCommands) {
+		t.Fatalf("denied commands did not round-trip: %+v", roles)
+	}
+	if strings.Contains(readFile(t, filepath.Join(run.Dir(), "run.json")), `"command": ""`) {
+		t.Errorf("an entry with no detail must omit command")
+	}
+}
+
+func TestRunRecordFromBeforeS45LoadsWithoutCommands(t *testing.T) {
+	// The run.json a pre-S45 ork wrote: a role with denials and no denied_commands.
+	const legacy = `{"version":1,"id":"legacy","project":"ork","item":"S04","worktree":"/p/.worktrees/S04","branch":"S04",
+"contract":7,"state":"stopped","round":1,
+"roles":[{"role":"implementer","round":1,"vendor":"claude","started_at":"2026-10-19T16:12:00Z","ended_at":"2026-10-19T16:20:00Z","exit":"error","denials":["Bash","Write"]}],
+"checks":[],"approvals":[],"questions":[],"writes":[],"created_at":"2026-10-19T16:12:00Z","updated_at":"2026-10-19T16:20:00Z"}`
+	s := newStore(t)
+	if err := os.MkdirAll(s.RunDir("legacy"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(s.RunDir("legacy"), "run.json"), []byte(legacy), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	got, err := s.Open("legacy")
+	if err != nil {
+		t.Fatalf("pre-S45 record refused: %v", err)
+	}
+	if role := got.Snapshot().Roles[0]; !reflect.DeepEqual(role.Denials, []string{"Bash", "Write"}) || role.DeniedCommands != nil {
+		t.Fatalf("pre-S45 role: %+v", role)
+	}
+	run, err := s.Open("legacy")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := run.Update(func(r *Record) { r.State = StateCommitted }); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(readFile(t, filepath.Join(s.RunDir("legacy"), "run.json")), "denied_commands") {
+		t.Errorf("a record without commands must not write denied_commands")
+	}
+}
+
+func TestStateDocSaysACommandIsCappedNotScrubbed(t *testing.T) {
+	b, err := os.ReadFile(filepath.Join("..", "..", "docs", "state.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	doc := strings.Join(strings.Fields(string(b)), " ")
+	for _, want := range []string{"denied_commands", "200 characters", "A recorded command can hold secrets", "capped, not scrubbed", "pre-S45 ork refuses"} {
+		if !strings.Contains(doc, want) {
+			t.Errorf("docs/state.md lacks %q", want)
+		}
+	}
+}
+
 func TestListIsOldestFirstAndKeepsGoodRunsBesideACorruptOne(t *testing.T) {
 	s := newStore(t)
 	for _, id := range []string{"c", "a", "b"} {

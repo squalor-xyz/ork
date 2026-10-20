@@ -133,6 +133,18 @@ A role with no `ended_at` is running; a restart marks it `lost`. `commit` is
 role's `model`, `effort` and `denials`, a check's `log`, and a write's
 `error` are *proposed* (S04).
 
+A role's `denials` lists the tool name of each permission denial the vendor
+reported. `denied_commands` (S45, adj #105) holds one `{tool, command}` entry
+per denial, in the same order. `command` is the Bash command of a Bash call,
+or the file path (`tool_input.file_path`) of a file tool. It never holds file
+content, and it is left out for a denial with neither. A recorded command can
+hold secrets, so it is capped, not scrubbed: at most 200 characters including
+the trailing `...` (a longer text is cut to 197 characters and `...`), and CR
+and LF become spaces. ork does not remove secrets from it. A record with no
+denied commands is written as before, and the version stays 1. A pre-S45 ork
+refuses a run.json that holds `denied_commands`, because it refuses unknown
+keys.
+
 For a paused `question`, `ork answer RUN TEXT` resumes the role with the
 answer. For a `shape`, `error`, `lost` or `interrupted` pause, `ork retry RUN`
 calls `Engine.Retry` to rerun the pending role or step (adj #101,
@@ -157,9 +169,11 @@ further retry. The CLI may already have changed the project.
 
 The daemon's snapshot has an `engine_runs` list, built by the same code as
 `ork status`. Each entry has `id`, `item`, `state`, optional `wait`, optional
-`relay_run`, `created_at`, and optional `denials` (an array of denied tool
-names collected from the role records, in role order). Denials are omitted
-when empty and rendered by status and the TUI (`ui.denials-display`).
+`relay_run`, `created_at`, and optional `denials` (an array of one text per
+denial, `Tool` or `Tool: command`, collected from the role records in role
+order). A denial with no command is its tool name alone. A record from before
+S45 has no `denied_commands`, so its `denials` are tool names. Denials are
+omitted when empty and rendered by status and the TUI (`ui.denials-display`).
 For a paused run, `wait` includes the pause reason or question and the next
 command: `ork retry RUN` without a question, or `ork answer RUN TEXT`.
 The `relay_run` and `created_at` fields link ledger progress and

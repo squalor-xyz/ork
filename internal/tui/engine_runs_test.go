@@ -179,6 +179,20 @@ func TestEngineElapsedWithoutLedger(t *testing.T) {
 	}
 }
 
+func TestEngineRunDenialShowsEachCommandInline(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	s := engineSnapshot(t, "implement", "ledger")
+	if err := json.Unmarshal([]byte(`{"EngineRuns":[{"id":"engine","item":"S45","state":"implement","denials":["Bash: git push origin main","Write: /x.txt","Glob"]}]}`), &s); err != nil {
+		t.Fatal(err)
+	}
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	v := sgr.ReplaceAllString(strings.Join(h.m.overview(200).body, "\n"), "")
+	if !strings.Contains(v, "denied: Bash: git push origin main, Write: /x.txt, Glob") {
+		t.Fatalf("denials lack their commands:\n%s", v)
+	}
+}
+
 func TestEngineRunDenials(t *testing.T) {
 	h := newHarness(t, proj("ork", false))
 	h.start()

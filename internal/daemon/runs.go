@@ -431,9 +431,22 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		}
 		var denials []string
 		for _, role := range rec.Roles {
-			denials = append(denials, role.Denials...)
+			denials = append(denials, roleDenials(role)...)
 		}
 		runs = append(runs, EngineRun{Denials: denials, ID: rec.ID, Item: rec.Item, State: rec.State, Wait: wait, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt})
 	}
 	return runs
+}
+
+// roleDenials returns the text of each denial a role had (DeniedCommand.Text).
+// A record from before S45 has no denied_commands, so its tool names stand.
+func roleDenials(role runrec.RoleRecord) []string {
+	if len(role.DeniedCommands) == 0 {
+		return role.Denials
+	}
+	texts := make([]string, 0, len(role.DeniedCommands))
+	for _, d := range role.DeniedCommands {
+		texts = append(texts, d.Text())
+	}
+	return texts
 }

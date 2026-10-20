@@ -7,7 +7,11 @@
 // CLIs, so it can be tested with no vendor and no real CLI.
 package engine
 
-import "context"
+import (
+	"context"
+
+	"github.com/squalor-xyz/ork/internal/runrec"
+)
 
 // Role names.
 const (
@@ -51,11 +55,11 @@ type Request struct {
 // Result is what a role round produced.
 type Result struct {
 	Exit    ExitClass
-	Session string   // the vendor session id, for a later resume
-	Report  string   // the final result text; the report file takes precedence
-	Tokens  int      // total tokens used
-	CostUSD float64  // cost, when the vendor reports one
-	Denials []string // permission denials the vendor reported
+	Session string                 // the vendor session id, for a later resume
+	Report  string                 // the final result text; the report file takes precedence
+	Tokens  int                    // total tokens used
+	CostUSD float64                // cost, when the vendor reports one
+	Denials []runrec.DeniedCommand // permission denials the vendor reported, one per denied call
 }
 
 // Runner runs one role round to its end. A non-nil error means the round did

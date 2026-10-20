@@ -3,6 +3,7 @@
 package engine
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
@@ -53,15 +54,19 @@ func TestAnUnsuccessfulPermissionDenialStopsTheSlice(t *testing.T) {
 		if req.Role != RoleImplementer {
 			return Result{}, nil
 		}
-		return Result{Exit: ExitError, Session: "s", Report: implReport, Denials: []string{"Bash(rm -rf /)", "Write"}}, nil
+		return Result{Exit: ExitError, Session: "s", Report: implReport, Denials: []runrec.DeniedCommand{{Tool: "Bash", Command: "rm -rf /"}, {Tool: "Write", Command: "/x.txt"}}}, nil
 	}
 	e := h.start()
 	rec := requireState(t, e, runrec.StateStopped)
-	if !strings.Contains(rec.Reason, "permission") || !strings.Contains(rec.Reason, "Bash(rm -rf /)") {
+	if !strings.Contains(rec.Reason, "permission") || !strings.Contains(rec.Reason, "Bash: rm -rf /, Write: /x.txt") {
 		t.Errorf("reason %q", rec.Reason)
 	}
-	if got := rec.Roles[0].Denials; len(got) != 2 || got[0] != "Bash(rm -rf /)" {
-		t.Errorf("denials in the record: %v", got)
+	if got := rec.Roles[0].Denials; !reflect.DeepEqual(got, []string{"Bash", "Write"}) {
+		t.Errorf("denial names in the record: %v", got)
+	}
+	want := []runrec.DeniedCommand{{Tool: "Bash", Command: "rm -rf /"}, {Tool: "Write", Command: "/x.txt"}}
+	if got := rec.Roles[0].DeniedCommands; !reflect.DeepEqual(got, want) {
+		t.Errorf("denied commands in the record: %+v, want %+v", got, want)
 	}
 	if len(h.checks.calls) != 0 {
 		t.Errorf("checks ran after a denial")
@@ -131,12 +136,15 @@ func TestASuccessfulPermissionDenialProceeds(t *testing.T) {
 		if req.Role == RoleGate {
 			report = gatePass
 		}
-		return Result{Exit: ExitOK, Session: "s", Report: report, Denials: []string{"Write"}}, nil
+		return Result{Exit: ExitOK, Session: "s", Report: report, Denials: []runrec.DeniedCommand{{Tool: "Write", Command: "/x.txt"}}}, nil
 	}
 	rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
 	for _, role := range rec.Roles {
 		if len(role.Denials) != 1 || role.Denials[0] != "Write" {
 			t.Fatalf("role lost denials: %+v", role)
+		}
+		if want := []runrec.DeniedCommand{{Tool: "Write", Command: "/x.txt"}}; !reflect.DeepEqual(role.DeniedCommands, want) {
+			t.Fatalf("role lost the denied command: %+v", role.DeniedCommands)
 		}
 	}
 }

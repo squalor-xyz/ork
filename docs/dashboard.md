@@ -104,8 +104,10 @@ and decided records refresh every 5 min or on HEAD changes and manual refresh. `
 
 The Overview reads engine runs in the daemon snapshot, using the same builder
 as `ork status` (`ui.engine-runs-read`). An engine row leads with the slice,
-engine state and wait. Denied tool names appear as `denied: Write, Bash`
-from the snapshot's `denials` field (`ui.denials-display`). Its linked ledger
+engine state and wait. Denied calls appear as `denied: Bash: git push origin main, Write: /x.txt`
+(the tool, then its command or file path, capped at 200 characters; a denial
+with no detail shows the tool name alone) from the snapshot's `denials` field
+(`ui.denials-display`, `engine.denied-command`). Its linked ledger
 run supplies step progress and elapsed
 time; without a ledger run, elapsed time starts at the engine record's creation.
 The join matches the engine's `relay_run` to the ledger run id, making one row

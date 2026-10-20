@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"testing"
 	"time"
+	"unicode/utf8"
 )
 
 const fixtures = "../../../testdata/vendors/claude"
@@ -257,6 +258,94 @@ func TestParseLineDenialDetail(t *testing.T) {
 	d := ev.Result.Denials[0]
 	if d.ToolName != "Write" || d.ToolUseID != "toolu_01SoBAKVJxM26E4RTox9r9U2" || !strings.Contains(string(d.ToolInput), "made-by-claude.txt") {
 		t.Errorf("denial %+v", d)
+	}
+}
+
+// denialWithInput returns a denial whose tool_input is the JSON of input.
+func denialWithInput(t *testing.T, tool string, input map[string]any) Denial {
+	t.Helper()
+	raw, err := json.Marshal(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return Denial{ToolName: tool, ToolInput: raw}
+}
+
+func TestDenialDetailOfABashCallIsItsCommand(t *testing.T) {
+	d := denialWithInput(t, "Bash", map[string]any{"command": "git push origin main", "description": "push"})
+	if got := d.Detail(); got != "git push origin main" {
+		t.Errorf("detail %q, want the command", got)
+	}
+}
+
+func TestDenialDetailOfAWriteIsItsPathNeverItsContent(t *testing.T) {
+	d := denialWithInput(t, "Write", map[string]any{"file_path": "/work/notes.txt", "content": "TOKEN=secret\n"})
+	if got := d.Detail(); got != "/work/notes.txt" {
+		t.Errorf("detail %q, want the file path only", got)
+	}
+}
+
+func TestDenialDetailOfTheFixtureWriteIsItsPath(t *testing.T) {
+	ev, err := ParseLine(bytes.TrimSpace(readFixture(t, "04-allowlist-denies-write", "stdout")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ev.Result == nil || len(ev.Result.Denials) != 1 {
+		t.Fatalf("want one denial in %+v", ev)
+	}
+	if got := ev.Result.Denials[0].Detail(); got != "<probe-repo>/made-by-claude.txt" {
+		t.Errorf("detail %q, want the fixture's file_path", got)
+	}
+}
+
+func TestDenialDetailPrefersCommandThenFilePathAndIsEmptyForNeither(t *testing.T) {
+	for name, tc := range map[string]struct {
+		tool  string
+		input map[string]any
+		want  string
+	}{
+		"edit keeps the path, not the new text": {"Edit", map[string]any{"file_path": "/w/a.go", "old_string": "x", "new_string": "SECRET"}, "/w/a.go"},
+		"empty command falls back to the path":  {"Bash", map[string]any{"command": "", "file_path": "/w/b"}, "/w/b"},
+		"a tool with no command or path":        {"Glob", map[string]any{"pattern": "*.go"}, ""},
+		"no tool input at all":                  {"Monitor", nil, ""},
+	} {
+		t.Run(name, func(t *testing.T) {
+			d := Denial{ToolName: tc.tool}
+			if tc.input != nil {
+				d = denialWithInput(t, tc.tool, tc.input)
+			}
+			if got := d.Detail(); got != tc.want {
+				t.Errorf("detail %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestDenialDetailCapsAt200CharactersIncludingTheEllipsis(t *testing.T) {
+	for name, tc := range map[string]struct {
+		command string
+		want    string
+	}{
+		"200 characters are kept whole": {strings.Repeat("a", 200), strings.Repeat("a", 200)},
+		"201 characters are cut":        {strings.Repeat("b", 201), strings.Repeat("b", 197) + "..."},
+		"characters, not bytes":         {strings.Repeat("é", 300), strings.Repeat("é", 197) + "..."},
+	} {
+		t.Run(name, func(t *testing.T) {
+			got := denialWithInput(t, "Bash", map[string]any{"command": tc.command}).Detail()
+			if got != tc.want {
+				t.Errorf("detail is %d characters, want %d: %q", utf8.RuneCountInString(got), utf8.RuneCountInString(tc.want), got)
+			}
+			if n := utf8.RuneCountInString(got); n > 200 {
+				t.Errorf("detail is %d characters, over the 200 cap", n)
+			}
+		})
+	}
+}
+
+func TestDenialDetailTurnsCRAndLFIntoSpacesBeforeTheCap(t *testing.T) {
+	d := denialWithInput(t, "Bash", map[string]any{"command": "git commit -m 'one\r\ntwo\nthree'"})
+	if got := d.Detail(); got != "git commit -m 'one  two three'" {
+		t.Errorf("detail %q, want line breaks as spaces", got)
 	}
 }
 

@@ -60,6 +60,24 @@ func contains(list []string, s string) bool {
 	return false
 }
 
+// denialNames returns the tool name of each denial, or nil when there are none.
+func denialNames(denials []runrec.DeniedCommand) []string {
+	var names []string
+	for _, d := range denials {
+		names = append(names, d.Tool)
+	}
+	return names
+}
+
+// denialTexts joins the text of each denial for a stop reason (DeniedCommand.Text).
+func denialTexts(denials []runrec.DeniedCommand) string {
+	texts := make([]string, 0, len(denials))
+	for _, d := range denials {
+		texts = append(texts, d.Text())
+	}
+	return strings.Join(texts, ", ")
+}
+
 // git runs `git -C dir ARGS...` as a read.
 func (e *Engine) gitRead(ctx context.Context, dir string, argv ...string) (string, error) {
 	res, err := clirun.Run(ctx, clirun.Call{Bin: e.d.gitBin(), Args: append([]string{"-C", dir}, argv...), Timeout: 30 * time.Second})
@@ -233,7 +251,8 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		role.Session = res.Session
 		role.Tokens = res.Tokens
 		role.CostUSD = res.CostUSD
-		role.Denials = res.Denials
+		role.Denials = denialNames(res.Denials)
+		role.DeniedCommands = res.Denials
 		role.Report = file
 	})
 	if err != nil {
@@ -245,7 +264,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	case class != ExitOK:
 		stopReason = fmt.Sprintf("%s round %d exited %s", r.role, r.n, class)
 		if len(res.Denials) > 0 {
-			stopReason += ": permission denied: " + strings.Join(res.Denials, ", ")
+			stopReason += ": permission denied: " + denialTexts(res.Denials)
 		}
 		if runErr != nil {
 			stopReason += ": " + runErr.Error()

@@ -7,7 +7,10 @@
 // machine and makes no call by itself; Run starts whatever Spec.Bin names.
 package claude
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
 // Class is how a round ended.
 type Class string
@@ -60,6 +63,41 @@ type Denial struct {
 	ToolName  string
 	ToolUseID string
 	ToolInput json.RawMessage
+}
+
+// denialDetailMax is the most characters a denial's detail holds, the
+// trailing "..." included (adj #105).
+const denialDetailMax = 200
+
+// Detail is the text ork records for a denied call (adj #105): the command of
+// a Bash call, else the file path of a file tool, else "". It never holds file
+// content. CR and LF become spaces. Text over 200 characters is cut to 197
+// characters and "...". The cap bounds the text only: a command can hold
+// secrets, and they are not removed (docs/state.md).
+func (d Denial) Detail() string {
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(d.ToolInput, &fields); err != nil {
+		return ""
+	}
+	text := jsonString(fields["command"])
+	if text == "" {
+		text = jsonString(fields["file_path"])
+	}
+	text = strings.NewReplacer("\r", " ", "\n", " ").Replace(text)
+	if r := []rune(text); len(r) > denialDetailMax {
+		text = string(r[:denialDetailMax-3]) + "..."
+	}
+	return text
+}
+
+// jsonString returns the string a raw JSON value holds, or "" when it holds
+// none or is absent.
+func jsonString(raw json.RawMessage) string {
+	var s string
+	if json.Unmarshal(raw, &s) != nil {
+		return ""
+	}
+	return s
 }
 
 // Result is the `result` event.

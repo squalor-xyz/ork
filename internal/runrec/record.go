@@ -60,10 +60,29 @@ type RoleRecord struct {
 	CostUSD   float64   `json:"cost_usd,omitempty"`
 	Report    string    `json:"report,omitempty"`
 	Denials   []string  `json:"denials,omitempty"`
+	// DeniedCommands holds one entry per denial, in the same order as Denials.
+	DeniedCommands []DeniedCommand `json:"denied_commands,omitempty"`
 }
 
 // Running reports whether the role was started and has no end recorded.
 func (r RoleRecord) Running() bool { return r.EndedAt.IsZero() }
+
+// DeniedCommand is one tool call the vendor refused. Command is the Bash
+// command, or the file path of a file tool, capped at 200 characters
+// (claude.Denial.Detail). It can hold secrets (docs/state.md).
+type DeniedCommand struct {
+	Tool    string `json:"tool"`
+	Command string `json:"command,omitempty"`
+}
+
+// Text is the line status and the TUI show for a denial: "Tool: command", or
+// the bare tool name when the call had no detail.
+func (d DeniedCommand) Text() string {
+	if d.Command == "" {
+		return d.Tool
+	}
+	return d.Tool + ": " + d.Command
+}
 
 // CheckRecord is one run of the project's checks.
 type CheckRecord struct {
