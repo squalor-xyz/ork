@@ -515,11 +515,15 @@ S03 ships `status`, `projects`, `roles print` and `doctor`
 come with the engine. S17 adds `run`, `approve`, `stop` and `answer`
 (`engine.owner-surface`, adj #73).
 
-`ork run P ID` asks `Well specified?` and `Split?` as yes/no questions
-before showing the plan, then asks whether to start (adj #86,
-`run.lineup-inputs`). Either answer can be supplied with
-`--well-specified yes|no` and `--split yes|no`. With `--yes`, both flags
-are required; a missing or invalid input is a usage error (exit 2).
+`ork run P ID` asks `Well specified?` and `Split?` as y/n questions
+(`[y/n]`, no default) before showing the plan, then asks
+`Start this slice?` (`[y/N]`, Enter takes No) (adj #86,
+`run.lineup-inputs`). The prompts take y, yes, n or no in any case, and
+Enter alone is an error where there is no default (adj #87,
+`run.prompt-answers`). Each answer can also be given with its flag,
+`--well-specified` or `--split`, which take the same spellings. With
+`--yes`, both flags are required; a missing or invalid input is a usage
+error (exit 2).
 The plan shows the worktree, branch, check command, first Claude row per
 role from `slicer relay-roles recommend --json`, and each role's resolved
 permissions. The gate uses the reviewer's lineup. The daemon refuses to

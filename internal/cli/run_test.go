@@ -6,11 +6,144 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+// promptRun is the result of one `ork run p S1` with scripted stdin.
+type promptRun struct {
+	code    int
+	out     string
+	errs    string
+	plan    string
+	started bool
+}
+
+// runPrompted runs `ork run p S1` with stdin input and records the run.plan
+// params and whether run.start was called.
+func runPrompted(t *testing.T, input string, args ...string) promptRun {
+	t.Helper()
+	var out, errs bytes.Buffer
+	var r promptRun
+	app := &App{Input: strings.NewReader(input), Call: func(_ context.Context, method string, params, result any) error {
+		switch method {
+		case "run.plan":
+			raw, _ := json.Marshal(params)
+			r.plan = string(raw)
+			return json.Unmarshal([]byte(`{"project":{"name":"p"},"item":"S1"}`), result)
+		case "run.start":
+			r.started = true
+			return json.Unmarshal([]byte(`{"id":"r1","state":"setup"}`), result)
+		}
+		t.Fatalf("method %s", method)
+		return nil
+	}}
+	r.code = app.Run(context.Background(), append([]string{"run", "p", "S1"}, args...), &out, &errs)
+	r.out, r.errs = out.String(), errs.String()
+	return r
+}
+
+func TestRunLineupPromptsTakeYAndN(t *testing.T) {
+	for _, tc := range []struct {
+		answer string
+		yes    bool
+	}{{"y", true}, {"Y", true}, {"yes", true}, {"YES", true}, {"n", false}, {"N", false}, {"no", false}, {"No", false}} {
+		t.Run(tc.answer, func(t *testing.T) {
+			r := runPrompted(t, tc.answer+"\n"+tc.answer+"\nyes\n")
+			want := fmt.Sprintf(`{"project":"p","item":"S1","well_specified":%t,"split":%t}`, tc.yes, tc.yes)
+			if r.code != ExitOK || r.plan != want || !r.started {
+				t.Fatalf("code %d plan %s started %t: %s %s", r.code, r.plan, r.started, r.out, r.errs)
+			}
+		})
+	}
+}
+
+func TestRunConfirmTakesYAndN(t *testing.T) {
+	for _, tc := range []struct {
+		answer string
+		start  bool
+	}{{"y", true}, {"Y", true}, {"yes", true}, {"YES", true}, {"n", false}, {"N", false}, {"no", false}, {"No", false}} {
+		t.Run(tc.answer, func(t *testing.T) {
+			r := runPrompted(t, "yes\nno\n"+tc.answer+"\n")
+			if r.code != ExitOK || r.started != tc.start {
+				t.Fatalf("code %d started %t: %s %s", r.code, r.started, r.out, r.errs)
+			}
+		})
+	}
+}
+
+func TestRunConfirmEnterTakesNo(t *testing.T) {
+	r := runPrompted(t, "yes\nno\n\n")
+	if r.code != ExitOK || r.started || !strings.Contains(r.out, "cancelled") {
+		t.Fatalf("code %d started %t: %s %s", r.code, r.started, r.out, r.errs)
+	}
+}
+
+func TestRunConfirmPromptShowsDefaultNo(t *testing.T) {
+	r := runPrompted(t, "yes\nno\nn\n")
+	if !strings.Contains(r.out, "Start this slice? [y/N]: ") {
+		t.Fatalf("confirm hint: %s", r.out)
+	}
+}
+
+func TestRunWellSpecifiedPromptShowsYN(t *testing.T) {
+	r := runPrompted(t, "\n")
+	if !strings.Contains(r.out, "Well specified? [y/n]: ") {
+		t.Fatalf("well-specified hint: %s", r.out)
+	}
+}
+
+func TestRunSplitPromptShowsYN(t *testing.T) {
+	r := runPrompted(t, "yes\n\n")
+	if !strings.Contains(r.out, "Split? [y/n]: ") {
+		t.Fatalf("split hint: %s", r.out)
+	}
+}
+
+func TestRunLineupPromptsHaveNoDefault(t *testing.T) {
+	for _, input := range []string{"\nyes\n", "yes\n\n"} {
+		r := runPrompted(t, input)
+		if r.code != ExitUsage || r.plan != "" || r.started {
+			t.Fatalf("input %q: code %d plan %s: %s", input, r.code, r.plan, r.errs)
+		}
+	}
+}
+
+func TestRunFlagsAcceptYAndN(t *testing.T) {
+	for _, tc := range []struct {
+		well, split         string
+		wantWell, wantSplit bool
+	}{{"Y", "N", true, false}, {"no", "YES", false, true}, {"yes", "n", true, false}, {"N", "y", false, true}} {
+		t.Run(tc.well+"/"+tc.split, func(t *testing.T) {
+			r := runPrompted(t, "", "--yes", "--well-specified", tc.well, "--split", tc.split)
+			want := fmt.Sprintf(`{"project":"p","item":"S1","well_specified":%t,"split":%t}`, tc.wantWell, tc.wantSplit)
+			if r.code != ExitOK || r.plan != want || !r.started {
+				t.Fatalf("code %d plan %s started %t: %s", r.code, r.plan, r.started, r.errs)
+			}
+		})
+	}
+}
+
+func TestRunRejectsOtherAnswers(t *testing.T) {
+	r := runPrompted(t, "maybe\nyes\n")
+	if r.code != ExitUsage || r.plan != "" {
+		t.Fatalf("lineup: code %d plan %s: %s", r.code, r.plan, r.errs)
+	}
+	r = runPrompted(t, "yes\nno\nsure\n")
+	if r.code != ExitUsage || r.started {
+		t.Fatalf("confirm: code %d started %t: %s", r.code, r.started, r.errs)
+	}
+}
+
+func TestRunConfirmClosedInputIsNotEnter(t *testing.T) {
+	r := runPrompted(t, "yes\nno\n")
+	if r.code != ExitUsage || r.started || strings.Contains(r.out, "cancelled") {
+		t.Fatalf("code %d started %t: %s %s", r.code, r.started, r.out, r.errs)
+	}
+}
 
 func TestRunYesRequiresExplicitLineupInputs(t *testing.T) {
 	for _, flags := range [][]string{nil, {"--well-specified", "yes"}, {"--split", "no"}, {"--well-specified", "maybe", "--split", "no"}} {

@@ -43,11 +43,13 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		return o.usage("run takes PROJECT ID")
 	}
 	// adj #86 run.lineup-inputs: prompt at confirmation, or require both
-	// explicit yes|no inputs when --yes skips the prompt.
-	valid := func(v string) bool { return v == "" || v == "yes" || v == "no" }
+	// explicit yes|no inputs when --yes skips the prompt. adj #87
+	// run.prompt-answers: y, yes, n and no are accepted in any case.
+	valid := func(v string) bool { return v == "" || yesNo(v) != "" }
 	if !valid(*well) || !valid(*split) || (*yes && (*well == "" || *split == "")) {
 		return o.usage("run: --well-specified yes|no and --split yes|no are required with --yes")
 	}
+	*well, *split = yesNo(*well), yesNo(*split)
 	input := a.Input
 	if input == nil {
 		input = os.Stdin
@@ -57,26 +59,32 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 	if o.json {
 		prompts = o.stderr
 	}
-	ask := func(label string) (string, error) {
-		fmt.Fprintf(prompts, "%s [yes/no]: ", label)
+	// Enter alone takes def; with no default it is an error. Input that ends
+	// without a newline is read as typed, but closed input is not Enter.
+	ask := func(label, hint, def string) (string, error) {
+		fmt.Fprintf(prompts, "%s [%s]: ", label, hint)
 		line, err := reader.ReadString('\n')
 		if err != nil && err != io.EOF {
 			return "", err
 		}
 		line = strings.TrimSpace(line)
-		if line != "yes" && line != "no" {
-			return "", fmt.Errorf("%s requires yes or no", label)
+		answer := yesNo(line)
+		if line == "" && err == nil {
+			answer = def
 		}
-		return line, nil
+		if answer == "" {
+			return "", fmt.Errorf("%s requires y or n", label)
+		}
+		return answer, nil
 	}
 	if *well == "" {
-		*well, err = ask("Well specified?")
+		*well, err = ask("Well specified?", "y/n", "")
 		if err != nil {
 			return o.usage("%v", err)
 		}
 	}
 	if *split == "" {
-		*split, err = ask("Split?")
+		*split, err = ask("Split?", "y/n", "")
 		if err != nil {
 			return o.usage("%v", err)
 		}
@@ -96,7 +104,7 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		printRunPlan(o.stdout, plan)
 	}
 	if !*yes {
-		confirm, err := ask("Start this slice?")
+		confirm, err := ask("Start this slice?", "y/N", "no")
 		if err != nil {
 			return o.usage("%v", err)
 		}
@@ -114,6 +122,18 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		return code
 	}
 	return printRun(o, rec)
+}
+
+// yesNo maps y, yes, n and no, in any case, to "yes" or "no". Anything else
+// gives "".
+func yesNo(v string) string {
+	switch strings.ToLower(v) {
+	case "y", "yes":
+		return "yes"
+	case "n", "no":
+		return "no"
+	}
+	return ""
 }
 func printRunPlan(w io.Writer, p daemon.RunPlan) {
 	fmt.Fprintf(w, "%s %s\nworktree: %s\nbranch: %s\ncheck: %s\n", p.Project.Name, p.Item, p.Worktree, p.Branch, p.CheckCommand)
