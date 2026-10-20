@@ -69,7 +69,8 @@ func (realClock) AfterFunc(d time.Duration, f func()) Timer { return time.AfterF
 
 // Config configures a Daemon.
 type Config struct {
-	Engine *engine.Deps // nil uses the Claude adapter and the state directory
+	BuildID string       // build identity supplied by the executable; empty means dev
+	Engine  *engine.Deps // nil uses the Claude adapter and the state directory
 
 	Paths        Paths
 	RegistryPath string         // projects.json; empty means registry.DefaultPath
@@ -93,6 +94,9 @@ type Daemon struct {
 
 // New returns a daemon for the config.
 func New(cfg Config) *Daemon {
+	if cfg.BuildID == "" {
+		cfg.BuildID = "dev"
+	}
 	if cfg.Source == nil {
 		cfg.Source = source.NewDirect(slicercli.Client{}, adjcli.Client{})
 	}
@@ -180,7 +184,13 @@ func (d *Daemon) Run(ctx context.Context) error {
 		waveRunning: func() bool { return d.cfg.WaveRunning() || d.activeRuns() },
 		onIdle:      cancel,
 	}
-	srv := &ipc.Server{Handler: d.handle, OnConnect: idle.connect, OnDisconnect: idle.disconnect}
+	srv := &ipc.Server{Handler: d.handle, OnConnect: idle.connect, OnDisconnect: idle.disconnect,
+		AfterReply: func(method string) {
+			if method == MethodDaemonStop {
+				cancel()
+			}
+		},
+	}
 	idle.start()
 	close(d.ready)
 	err = srv.Serve(ctx, l)

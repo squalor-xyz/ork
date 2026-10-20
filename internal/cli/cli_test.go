@@ -71,12 +71,14 @@ func (s stubSource) Fetch(ctx context.Context, p registry.Project, part source.P
 // world is a temp state directory with a registry and an App whose Start
 // launches an in-process daemon.
 type world struct {
-	dir     string
-	paths   daemon.Paths
-	regPath string
-	src     source.Fetcher
-	starts  atomic.Int32
-	app     *App
+	dir         string
+	paths       daemon.Paths
+	regPath     string
+	src         source.Fetcher
+	waveRunning func() bool
+	starts      atomic.Int32
+	daemonDone  <-chan struct{}
+	app         *App
 }
 
 func newWorld(t *testing.T, src source.Fetcher, projects ...registry.Project) *world {
@@ -97,9 +99,10 @@ func newWorld(t *testing.T, src source.Fetcher, projects ...registry.Project) *w
 func (w *world) startDaemon(t *testing.T) func(context.Context) error {
 	return func(ctx context.Context) error {
 		w.starts.Add(1)
-		d := daemon.New(daemon.Config{Paths: w.paths, RegistryPath: w.regPath, SeedRoot: filepath.Join(w.dir, "seed"), Source: w.src})
+		d := daemon.New(daemon.Config{Paths: w.paths, RegistryPath: w.regPath, SeedRoot: filepath.Join(w.dir, "seed"), Source: w.src, WaveRunning: w.waveRunning})
 		dctx, cancel := context.WithCancel(context.Background())
 		done := make(chan struct{})
+		w.daemonDone = done
 		go func() { d.Run(dctx); close(done) }()
 		t.Cleanup(func() {
 			cancel()
@@ -305,7 +308,7 @@ func TestStatusWithNoProjects(t *testing.T) {
 		t.Fatalf("exit %d: %q", code, stdout)
 	}
 	_, stdout, _ = run(t, w.app, "status", "--json")
-	if strings.TrimSpace(stdout) != "{\n  \"projects\": []\n}" {
+	if strings.TrimSpace(stdout) != "{\n  \"build_id\": \"dev\",\n  \"roles_running\": false,\n  \"projects\": []\n}" {
 		t.Fatalf("empty status JSON: %q", stdout)
 	}
 }

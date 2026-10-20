@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
+	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/roles"
 )
 
@@ -42,10 +43,12 @@ type contractCheck struct {
 // reported but does not fail the check. Binary is the resolved path of the
 // running ork binary, empty when that path cannot be read.
 type DoctorReport struct {
-	OK       bool          `json:"ok"`
-	Tools    []toolCheck   `json:"tools"`
-	Contract contractCheck `json:"contract"`
-	Binary   string        `json:"binary"`
+	OK            bool          `json:"ok"`
+	Tools         []toolCheck   `json:"tools"`
+	Contract      contractCheck `json:"contract"`
+	Binary        string        `json:"binary"`
+	DaemonBuildID string        `json:"daemon_build_id,omitempty"`
+	Warning       string        `json:"warning,omitempty"`
 }
 
 // ownBinary returns the path of the running ork binary with symlinks resolved.
@@ -127,6 +130,25 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 
 	t := a.Tools
 	rep := DoctorReport{OK: true}
+	// Probe only an existing daemon. Doctor must not start one.
+	probeCtx, cancel := context.WithTimeout(ctx, versionTimeout)
+	defer cancel()
+	var build string
+	var probeErr error
+	if a.Call != nil {
+		build, probeErr = daemonBuild(probeCtx, a.Call)
+	} else {
+		c, err := daemon.Dial(probeCtx, a.Socket)
+		probeErr = err
+		if err == nil {
+			build, probeErr = daemonBuild(probeCtx, c.Call)
+			c.Close()
+		}
+	}
+	if probeErr == nil {
+		rep.DaemonBuildID = build
+		rep.Warning = a.staleWarning(build)
+	}
 	self, selfErr := ownBinary()
 	rep.Binary = self
 	for _, c := range []struct {
@@ -159,6 +181,9 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 		fmt.Fprintf(o.stdout, "[--] ork  path unknown: %v\n", selfErr)
 	} else {
 		fmt.Fprintf(o.stdout, "[ok] ork  %s\n", self)
+	}
+	if rep.Warning != "" {
+		fmt.Fprintf(o.stdout, "[WARN] daemon  %s\n", rep.Warning)
 	}
 	for _, tc := range rep.Tools {
 		switch {

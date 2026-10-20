@@ -36,6 +36,30 @@ ork (TUI)  ork status --json (CLI)
   five seconds (S13). A daemon that finds the lock held while nothing
   answers retries it for two seconds, because an idle exit unlinks its
   socket before it releases the lock (S13).
+- **Stop and restart (S46).** `ork daemon stop` requests shutdown over the
+  socket. It refuses while a role or engine job is active, unless `--force`
+  is given. The daemon closes admission before cancelling and waiting for
+  jobs. It writes the reply before closing the socket. The CLI waits for
+  the socket to disappear. `ork daemon restart` then starts the current
+  executable and waits for it to answer. Stopping an absent daemon succeeds.
+  A socket that refuses connections also means absent; restart uses the normal
+  start path, which clears the dead daemon's stale socket.
+  *Proposed:* both commands use the normal exit codes and accept `--json`.
+- **Build identity** (`daemon.build-id`, adj #102). The executable reads
+  `vcs.revision` and `vcs.modified` from `runtime/debug.ReadBuildInfo`.
+  Without a revision it uses the build-time `version` variable. *Proposed:*
+  the wire spelling is `REVISION+modified=true|false`. Status includes
+  `build_id` and `roles_running`; the latter conservatively includes active
+  engine jobs and unreadable run state. *Proposed:* `daemon.info` returns only
+  `build_id`, without loading the registry or reading projects. Commands,
+  TUI startup, stop/restart and doctor use this cheap call for build checks.
+  `ork status` makes one full status read. Commands warn on stderr when the
+  daemon build differs, including an older daemon with no build ID. The
+  warning names `ork daemon restart`. An `unknown_method` reply from an older
+  daemon means build `unknown`, which is stale. Doctor probes an existing
+  daemon without starting one and reports a mismatch as a warning. A mismatch
+  does not change the command's exit code. Revision plus modified state
+  cannot distinguish two builds of different edits at the same revision.
 - **Socket.** `$XDG_STATE_HOME/ork/ork.sock`, else
   `~/.local/state/ork/ork.sock`. The directory is created with mode 0700 and
   the socket is mode 0600.
@@ -59,7 +83,9 @@ ork (TUI)  ork status --json (CLI)
 
   | Method | Params | Result |
   |---|---|---|
-  | `status` | `{"project"?}` | `{"projects":[{name, path, adj, needs_you, active_relays, errors?}]}` |
+  | `status` | `{"project"?}` | `{"build_id","roles_running","projects":[{name, path, adj, needs_you, active_relays, errors?}]}` |
+  | `daemon.info` (proposed wire) | none | `{"build_id"}`; no registry or project reads |
+  | `daemon.stop` (proposed wire) | `{"force"?}` | `{"stopped":true}`; `daemon_busy` refuses active work without force |
   | `snapshot` | `{"project"}` | the project's `source.Snapshot` from the cache, plus the daemon's `engine_runs` array (not a Part); each part is `{"value", "age_ms", "read_at"?, "stale"?, "error"?}`: the last good value, its age in ms (0 if never read), when it was read (absent if never), and the last read's error |
   | `subscribe` | `{"focus":[names]}` | none; the connection gets notices (below) and the named projects become visible |
   | `refresh` | `{"project"}` | none; reads every part of the project now and returns once they are read |
@@ -516,6 +542,9 @@ ork answer RUN TEXT         answer an owner question
 ork retry RUN               retry a paused role or step
 ork stop RUN|WAVE           stop and record why
 ork daemon run              serve the daemon in the foreground
+ork daemon stop [--force]   stop the daemon
+ork daemon restart [--force]
+                            stop and start the current executable
 ork roles print [ROLE]      print the embedded role prompts
 ork projects add|list|rm    manage the registry
 ork doctor                  check versions, CLIs, logins, contract, ork path
@@ -569,6 +598,9 @@ in JSON mode.
 `ork doctor` checks:
 - the running ork binary: its path, resolved through symlinks
   (`os.Executable`). It is printed first and is not a pass or fail check;
+- an existing daemon's build ID against this CLI's ID (S46). A mismatch
+  warns and names `ork daemon restart`; it does not fail doctor or start a
+  daemon. *Proposed JSON fields:* `daemon_build_id` and `warning`;
 - the slicer and adj versions (`--version`);
 - each vendor CLI is present, with its `--version` output; a vendor CLI that
   is missing or broken is reported and does not fail the check, because ork

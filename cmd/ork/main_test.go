@@ -163,12 +163,32 @@ func TestVersionPrintsAndStartsNoTUI(t *testing.T) {
 
 func TestUnknownFlagOrArgumentIsAUsageError(t *testing.T) {
 	sandbox(t)
-	for _, args := range [][]string{{"--nope"}, {"extra"}, {"daemon"}, {"daemon", "stop"}} {
+	for _, args := range [][]string{{"--nope"}, {"extra"}, {"daemon"}, {"daemon", "unknown"}} {
 		var out, errOut bytes.Buffer
 		code := run(context.Background(), args, &out, &errOut, refused(t))
 		if code != 2 || errOut.Len() == 0 {
 			t.Errorf("%v: code %d, stderr %q", args, code, errOut.String())
 		}
+	}
+}
+
+func TestDaemonStopReachesCLI(t *testing.T) {
+	sandbox(t)
+	var out, errOut bytes.Buffer
+	code := run(context.Background(), []string{"daemon", "stop", "--force", "--json"}, &out, &errOut, refused(t))
+	if code != 0 || !strings.Contains(out.String(), `"stopped": true`) {
+		t.Fatalf("stop: code %d, stdout %q, stderr %q", code, out.String(), errOut.String())
+	}
+}
+
+func TestDaemonRestartReachesStarter(t *testing.T) {
+	sandbox(t)
+	p := refused(t)
+	p.start = func(context.Context) error { return errors.New("test start failed") }
+	var out, errOut bytes.Buffer
+	code := run(context.Background(), []string{"daemon", "restart", "--json"}, &out, &errOut, p)
+	if code != 1 || !strings.Contains(out.String(), "test start failed") {
+		t.Fatalf("restart: code %d, stdout %q, stderr %q", code, out.String(), errOut.String())
 	}
 }
 
@@ -216,6 +236,27 @@ func TestNoArgumentsOpenTheTUIOnTheDaemon(t *testing.T) {
 	}
 	if snap := got.Source.Snapshot(context.Background(), got.Projects[0]); snap.Project.Name != "mine" {
 		t.Errorf("snapshot of %+v", snap.Project)
+	}
+}
+
+type forbiddenBuildFetch struct{ t *testing.T }
+
+func (s forbiddenBuildFetch) Fetch(context.Context, registry.Project, source.Part) (any, error) {
+	s.t.Error("opening the TUI fetched project data for a build check")
+	return nil, nil
+}
+
+func TestTUIBuildCheckDoesNotReadProjects(t *testing.T) {
+	dir := sandbox(t)
+	writeRegistry(t, dir, registry.Project{Name: "mine", Path: filepath.Join(dir, "mine"), Adj: true})
+	opened := false
+	var stderr bytes.Buffer
+	code := run(context.Background(), nil, io.Discard, &stderr, inTest(t, forbiddenBuildFetch{t}, func(tui.Config) error {
+		opened = true
+		return nil
+	}))
+	if code != 0 || !opened {
+		t.Fatalf("TUI build check: exit %d, opened %v, stderr %q", code, opened, stderr.String())
 	}
 }
 

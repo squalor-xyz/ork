@@ -14,6 +14,8 @@ import (
 
 // The methods a client can call.
 const (
+	MethodDaemonInfo   = "daemon.info"   // no params, result DaemonInfoResult
+	MethodDaemonStop   = "daemon.stop"   // params StopParams, result StopResult
 	MethodStatus       = "status"        // params StatusParams, result StatusResult
 	MethodSnapshot     = "snapshot"      // params SnapshotParams, result SnapshotResult
 	MethodProjectsList = "projects.list" // no params, result ProjectsResult
@@ -47,7 +49,23 @@ type StatusParams struct {
 
 // StatusResult is what `ork status --json` prints.
 type StatusResult struct {
-	Projects []ProjectStatus `json:"projects"`
+	BuildID      string          `json:"build_id"`
+	RolesRunning bool            `json:"roles_running"`
+	Projects     []ProjectStatus `json:"projects"`
+}
+
+// DaemonInfoResult identifies the daemon without reading registry or project data.
+type DaemonInfoResult struct {
+	BuildID string `json:"build_id"`
+}
+
+// StopParams requests daemon shutdown. Force permits cancelling active work.
+type StopParams struct {
+	Force bool `json:"force,omitempty"`
+}
+
+type StopResult struct {
+	Stopped bool `json:"stopped"`
 }
 
 // ProjectStatus is one project in a status. NeedsYou counts the project's

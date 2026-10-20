@@ -1,0 +1,345 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+package cli
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/ipc"
+	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/roles"
+	"github.com/squalor-xyz/ork/internal/source"
+)
+
+type forbiddenBuildFetch struct{ t *testing.T }
+
+func (s forbiddenBuildFetch) Fetch(context.Context, registry.Project, source.Part) (any, error) {
+	s.t.Error("stale check fetched project data")
+	return nil, nil
+}
+
+func TestStaleCheckDoesNotReadProjects(t *testing.T) {
+	for _, args := range [][]string{{"projects", "list"}, {"daemon", "stop"}} {
+		t.Run(strings.Join(args, "-"), func(t *testing.T) {
+			w := newWorld(t, forbiddenBuildFetch{t}, registry.Project{Name: "p", Path: "/p", Adj: true})
+			w.app.BuildID = "current"
+			c, err := w.app.Connect(context.Background())
+			if err != nil {
+				t.Fatal(err)
+			}
+			c.Close()
+			code, out, stderr := run(t, w.app, args...)
+			want := "/p"
+			if args[0] == "daemon" {
+				want = "daemon stopped"
+			}
+			if code != 0 || !strings.Contains(out, want) || !strings.Contains(stderr, "ork daemon restart") {
+				t.Fatalf("command: %d, stdout %q, stderr %q", code, out, stderr)
+			}
+		})
+	}
+}
+
+func TestOldDaemonUnknownBuildMethod(t *testing.T) {
+	socket := filepath.Join(shortDir(t), "old.sock")
+	l, err := ipc.Listen(socket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	s := &ipc.Server{Handler: func(_ context.Context, method string, _ json.RawMessage) (any, error) {
+		if method == "status" {
+			t.Error("stale check read status on an old daemon")
+		}
+		if method == "projects.list" {
+			return daemon.ProjectsResult{Projects: []registry.Project{{Name: "old-project", Path: "/old-project"}}}, nil
+		}
+		return nil, &ipc.Error{Code: daemon.CodeUnknownMethod, Message: "unknown method " + method}
+	}}
+	go func() { defer close(done); s.Serve(ctx, l) }()
+	t.Cleanup(func() { cancel(); l.Close(); <-done })
+	code, out, stderr := run(t, &App{Socket: socket, BuildID: "current"}, "projects", "list")
+	if code != 0 || !strings.Contains(out, "/old-project") || !strings.Contains(stderr, "stale daemon build unknown") || !strings.Contains(stderr, "ork daemon restart") {
+		t.Fatalf("old daemon: %d, stdout %q, stderr %q", code, out, stderr)
+	}
+}
+
+func TestStatusReadsProjectsOnce(t *testing.T) {
+	socket := filepath.Join(shortDir(t), "status.sock")
+	l, err := ipc.Listen(socket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	read := false
+	s := &ipc.Server{Handler: func(_ context.Context, method string, _ json.RawMessage) (any, error) {
+		if method == "daemon.info" {
+			return map[string]string{"build_id": "current"}, nil
+		}
+		if method != daemon.MethodStatus {
+			return nil, fmt.Errorf("unexpected method %s", method)
+		}
+		if read {
+			return nil, fmt.Errorf("projects read twice")
+		}
+		read = true
+		return daemon.StatusResult{BuildID: "current", Projects: []daemon.ProjectStatus{{Name: "read-once", Path: "/read-once"}}}, nil
+	}}
+	go func() { defer close(done); s.Serve(ctx, l) }()
+	t.Cleanup(func() { cancel(); l.Close(); <-done })
+	code, out, stderr := run(t, &App{Socket: socket, BuildID: "current"}, "status", "--json")
+	var status daemon.StatusResult
+	mustJSON(t, out, &status)
+	if code != 0 || len(status.Projects) != 1 || status.Projects[0].Name != "read-once" || stderr != "" {
+		t.Fatalf("single status read: %d, stdout %s, stderr %q", code, out, stderr)
+	}
+}
+
+func TestDaemonLeftoverSocket(t *testing.T) {
+	for _, sub := range []string{"stop", "restart"} {
+		t.Run(sub, func(t *testing.T) {
+			w := newWorld(t, stubSource{})
+			if err := os.MkdirAll(w.paths.Dir, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			l, err := net.ListenUnix("unix", &net.UnixAddr{Name: w.paths.Socket, Net: "unix"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			l.SetUnlinkOnClose(false)
+			if err := l.Close(); err != nil {
+				t.Fatal(err)
+			}
+			if sub == "stop" {
+				w.app.Start = func(context.Context) error { t.Error("stop started a daemon"); return nil }
+			}
+			code, out, stderr := run(t, w.app, "daemon", sub)
+			want := "daemon stopped\n"
+			if sub == "restart" {
+				want = "daemon restarted\n"
+			}
+			if code != 0 || out != want {
+				t.Fatalf("leftover socket %s: %d, stdout %q, stderr %q", sub, code, out, stderr)
+			}
+		})
+	}
+}
+
+func TestDoctorBuildProbe(t *testing.T) {
+	for _, old := range []bool{false, true} {
+		t.Run(fmt.Sprint(old), func(t *testing.T) {
+			a, _, _ := doctorApp(t, fmt.Sprintf("Contract: relay v%d", roles.ContractVersion))
+			a.BuildID = "current"
+			a.Call = func(_ context.Context, method string, _, result any) error {
+				if method != "daemon.info" {
+					t.Errorf("build probe called %s, want daemon.info", method)
+					return fmt.Errorf("project reads unavailable")
+				}
+				if old {
+					return &ipc.Error{Code: daemon.CodeUnknownMethod, Message: "unknown method daemon.info"}
+				}
+				return json.Unmarshal([]byte(`{"build_id":"old-build"}`), result)
+			}
+			code, out, stderr := run(t, a, "doctor", "--json")
+			want := "old-build"
+			if old {
+				want = "unknown"
+			}
+			var rep DoctorReport
+			mustJSON(t, out, &rep)
+			if code != 0 || rep.DaemonBuildID != want || !strings.Contains(rep.Warning, "stale daemon build "+want) || !strings.Contains(rep.Warning, "ork daemon restart") {
+				t.Fatalf("doctor build probe: exit %d, build %q, warning %q, stderr %q", code, rep.DaemonBuildID, rep.Warning, stderr)
+			}
+		})
+	}
+}
+
+func TestDaemonStopClosesSocket(t *testing.T) {
+	w := newWorld(t, stubSource{})
+	if code, _, err := run(t, w.app, "status"); code != 0 {
+		t.Fatal(err)
+	}
+	code, out, err := run(t, w.app, "daemon", "stop")
+	if code != 0 {
+		t.Fatalf("stop: code %d: %s", code, err)
+	}
+	if !strings.Contains(out, "stopped") {
+		t.Fatalf("stop output: %s", out)
+	}
+	if c, err := daemon.Dial(context.Background(), w.paths.Socket); err == nil {
+		c.Close()
+		t.Fatal("daemon still answers after stop")
+	}
+}
+
+func TestDaemonRestartServesAgain(t *testing.T) {
+	w := newWorld(t, stubSource{})
+	start := w.app.Start
+	w.app.Start = func(ctx context.Context) error {
+		if done := w.daemonDone; done != nil {
+			// Production's serveWithRetry handles the interval between socket
+			// removal and lock release. This in-process starter calls Run once,
+			// so wait for the old Run to finish while its client stays open.
+			select {
+			case <-done:
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(5 * time.Second):
+				return fmt.Errorf("old daemon did not finish with a client connected")
+			}
+		}
+		return start(ctx)
+	}
+	if code, _, err := run(t, w.app, "status"); code != 0 {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	old, err2 := daemon.Dial(ctx, w.paths.Socket)
+	if err2 != nil {
+		t.Fatal(err2)
+	}
+	defer old.Close()
+	if _, err := old.Status(ctx, ""); err != nil {
+		t.Fatalf("old daemon did not answer before restart: %v", err)
+	}
+	code, out, err := run(t, w.app, "daemon", "restart")
+	if code != 0 {
+		t.Fatalf("restart: code %d: %s", code, err)
+	}
+	if !strings.Contains(out, "restarted") {
+		t.Fatalf("restart output: %s", out)
+	}
+	if _, err := old.Status(ctx, ""); err == nil {
+		t.Fatal("old daemon connection survived restart")
+	}
+	c, err2 := daemon.Dial(ctx, w.paths.Socket)
+	if err2 != nil {
+		t.Fatal(err2)
+	}
+	defer c.Close()
+	if _, err := c.Status(ctx, ""); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestDaemonStopBusyAndForce(t *testing.T) {
+	for _, force := range []bool{false, true} {
+		t.Run(fmt.Sprint(force), func(t *testing.T) {
+			w := newWorld(t, stubSource{})
+			w.waveRunning = func() bool { return true }
+			if code, _, err := run(t, w.app, "status"); code != 0 {
+				t.Fatal(err)
+			}
+			args := []string{"daemon", "stop"}
+			if force {
+				args = append(args, "--force")
+			}
+			code, out, err := run(t, w.app, args...)
+			if !force {
+				if code != 1 || !strings.Contains(err, "--force") {
+					t.Fatalf("busy stop: %d: %s", code, err)
+				}
+				c, err := daemon.Dial(context.Background(), w.paths.Socket)
+				if err != nil {
+					t.Fatalf("refused stop closed daemon: %v", err)
+				}
+				c.Close()
+			} else {
+				if code != 0 || !strings.Contains(out, "stopped") {
+					t.Fatalf("forced stop: %d: %s %s", code, out, err)
+				}
+				if c, err := daemon.Dial(context.Background(), w.paths.Socket); err == nil {
+					c.Close()
+					t.Fatal("forced stop left daemon serving")
+				}
+			}
+		})
+	}
+}
+
+func TestStaleDaemonSocketCommandWarning(t *testing.T) {
+	for _, build := range []string{"dev", "current"} {
+		t.Run(build, func(t *testing.T) {
+			w := newWorld(t, stubSource{})
+			w.app.BuildID = build
+			code, _, err := run(t, w.app, "status", "--json")
+			if code != 0 {
+				t.Fatal(err)
+			}
+			if build == "current" && !strings.Contains(err, "ork daemon restart") {
+				t.Fatalf("missing socket stale warning: %q", err)
+			}
+			if build == "dev" && err != "" {
+				t.Fatalf("matching socket daemon warned: %q", err)
+			}
+		})
+	}
+}
+
+func TestStaleDaemonCommandWarning(t *testing.T) {
+	for _, build := range []string{"old", "current", ""} {
+		t.Run(build, func(t *testing.T) {
+			a := &App{BuildID: "current", Call: func(_ context.Context, method string, _, result any) error {
+				if method != daemon.MethodStatus {
+					return fmt.Errorf("unexpected method %s", method)
+				}
+				return json.Unmarshal([]byte(fmt.Sprintf(`{"build_id":%q,"projects":[]}`, build)), result)
+			}}
+			code, _, err := run(t, a, "status", "--json")
+			if code != 0 {
+				t.Fatalf("status: %d: %s", code, err)
+			}
+			if build != "current" && !strings.Contains(err, "ork daemon restart") {
+				t.Fatalf("missing stale daemon warning: %q", err)
+			}
+			if build == "current" && err != "" {
+				t.Fatalf("matching build warning: %q", err)
+			}
+		})
+	}
+}
+
+func TestDoctorStaleDaemonWarning(t *testing.T) {
+	for _, build := range []string{"old", "current", ""} {
+		t.Run(build, func(t *testing.T) {
+			for _, jsonOutput := range []bool{false, true} {
+				t.Run(fmt.Sprint(jsonOutput), func(t *testing.T) {
+					a, _, _ := doctorApp(t, fmt.Sprintf("Contract: relay v%d", roles.ContractVersion))
+					a.BuildID = "current"
+					a.Call = func(_ context.Context, method string, _, result any) error {
+						if method != daemon.MethodDaemonInfo {
+							return fmt.Errorf("unexpected method %s", method)
+						}
+						return json.Unmarshal([]byte(fmt.Sprintf(`{"build_id":%q,"projects":[]}`, build)), result)
+					}
+					args := []string{"doctor"}
+					if jsonOutput {
+						args = append(args, "--json")
+					}
+					code, out, err := run(t, a, args...)
+					if code != 0 {
+						t.Fatalf("doctor: %d: %s", code, err)
+					}
+					if build != "current" && !strings.Contains(out, "ork daemon restart") {
+						t.Fatalf("missing doctor stale warning: %s", out)
+					}
+					if build == "current" && strings.Contains(out, "ork daemon restart") {
+						t.Fatalf("matching build warned: %s", out)
+					}
+				})
+			}
+		})
+	}
+}

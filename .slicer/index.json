@@ -1752,10 +1752,22 @@
       "id": "S46",
       "title": "ork daemon stop and restart, and doctor flags a stale daemon",
       "short_title": "ork daemon stop and restart, and doctor flags a stale daemon",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "fa58be6f-3b27-4b68-890a-cb58a4863440",
+          "kind": "",
+          "text": "**2026-10-20** — Review FAIL: M1 every daemon command waits on a full project read to learn the build id; M2 daemon stop/restart fail on a leftover socket (connection refused).",
+          "created_at": "2026-10-20T14:04:32Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1773,7 +1785,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -20,6 +20,11 @@ func (a *App) call(ctx context.Context, o *output, method string, params, result
 		if err := a.Call(ctx, method, params, result); err != nil {
 			return o.failErr(err)
 		}
+		if method == daemon.MethodStatus {
+			if status, ok := result.(*daemon.StatusResult); ok {
+				a.warnStale(o, status.BuildID)
+			}
+		}
 		return ExitOK
 	}
 	return a.withDaemon(ctx, o, func(c *daemon.Client) int {

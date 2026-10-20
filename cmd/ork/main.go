@@ -13,6 +13,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"strings"
 	"syscall"
 	"time"
@@ -27,6 +28,30 @@ import (
 
 // version is set at build time with -ldflags "-X main.version=...".
 var version = "dev"
+
+func buildIdentity(info *debug.BuildInfo, ok bool, fallback string) string {
+	if !ok || info == nil {
+		return fallback
+	}
+	var revision, modified string
+	for _, setting := range info.Settings {
+		switch setting.Key {
+		case "vcs.revision":
+			revision = setting.Value
+		case "vcs.modified":
+			modified = setting.Value
+		}
+	}
+	if revision == "" {
+		return fallback
+	}
+	return revision + "+modified=" + modified
+}
+
+func currentBuildID() string {
+	info, ok := debug.ReadBuildInfo()
+	return buildIdentity(info, ok, version)
+}
 
 // program is what run does outside itself. main supplies the real functions;
 // tests supply fakes.
@@ -56,7 +81,7 @@ func runTUI(cfg tui.Config) error {
 
 // run is main with its inputs passed in. It returns the exit code.
 func run(ctx context.Context, args []string, stdout, stderr io.Writer, p program) int {
-	if len(args) > 0 && args[0] == "daemon" {
+	if len(args) > 1 && args[0] == "daemon" && args[1] == "run" {
 		return daemonCommand(ctx, args[1:], stderr, p)
 	}
 	if len(args) > 0 && (args[0] == "-h" || args[0] == "--help" || !strings.HasPrefix(args[0], "-")) {
@@ -87,7 +112,7 @@ func command(ctx context.Context, args []string, stdout, stderr io.Writer, p pro
 		fmt.Fprintf(stderr, "ork: %v\n", err)
 		return 1
 	}
-	app := &cli.App{Socket: paths.Socket, Start: p.start}
+	app := &cli.App{Socket: paths.Socket, Start: p.start, BuildID: currentBuildID()}
 	return app.Run(ctx, args, stdout, stderr)
 }
 
@@ -116,13 +141,18 @@ func openTUI(ctx context.Context, stderr io.Writer, p program) int {
 		fmt.Fprintf(stderr, "ork: %v\n", err)
 		return 1
 	}
-	app := &cli.App{Socket: paths.Socket, Start: p.start}
+	app := &cli.App{Socket: paths.Socket, Start: p.start, BuildID: currentBuildID()}
 	client, err := app.Connect(ctx)
 	if err != nil {
 		fmt.Fprintf(stderr, "ork: %v\n", err)
 		return 1
 	}
+	err = app.CheckDaemonBuild(ctx, client, stderr)
 	client.Close()
+	if err != nil {
+		fmt.Fprintf(stderr, "ork: %v\n", err)
+		return 1
+	}
 	feed := daemon.NewFeed(paths.Socket)
 	defer feed.Close()
 
@@ -179,7 +209,7 @@ func serveDaemon(ctx context.Context) error {
 		return err
 	}
 	return serveWithRetry(ctx, paths.Socket, func(ctx context.Context) error {
-		return daemon.New(daemon.Config{Paths: paths}).Run(ctx)
+		return daemon.New(daemon.Config{Paths: paths, BuildID: currentBuildID()}).Run(ctx)
 	})
 }
 

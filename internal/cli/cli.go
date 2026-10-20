@@ -52,6 +52,9 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
   ork projects rm NAME        unregister a project
   ork roles print [ROLE]      print the embedded role prompts
   ork daemon run              serve the daemon in the foreground
+  ork daemon stop [--force]   stop the daemon
+  ork daemon restart [--force]
+                              stop and start the daemon
   ork doctor                  check the slicer and adj versions, the vendor
                               CLIs and the slicer contract pin, and print the
                               path of this ork binary
@@ -67,8 +70,9 @@ type Tools struct {
 
 // App is the command line with its dependencies.
 type App struct {
-	Input io.Reader                                     // confirmation input; nil uses os.Stdin
-	Call  func(context.Context, string, any, any) error // nil uses the daemon socket
+	BuildID string                                        // CLI build identity; empty means dev
+	Input   io.Reader                                     // confirmation input; nil uses os.Stdin
+	Call    func(context.Context, string, any, any) error // nil uses the daemon socket
 
 	Socket    string                          // the daemon's socket
 	Start     func(ctx context.Context) error // starts the daemon; nil means it cannot be started
@@ -170,6 +174,8 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		return a.roles(o, rest)
 	case "doctor":
 		return a.doctor(ctx, o, rest)
+	case "daemon":
+		return a.daemonCommand(ctx, o, rest)
 	}
 	return o.usage("unknown command %q", cmd)
 }
@@ -223,5 +229,8 @@ func (a *App) withDaemon(ctx context.Context, o *output, f func(*daemon.Client) 
 		return o.fail(ExitFailure, codeDaemon, err.Error())
 	}
 	defer c.Close()
+	if err := a.CheckDaemonBuild(ctx, c, o.stderr); err != nil {
+		return o.failErr(err)
+	}
 	return f(c)
 }

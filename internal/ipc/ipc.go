@@ -77,8 +77,9 @@ type Handler func(ctx context.Context, method string, params json.RawMessage) (a
 // Server serves requests on a listener.
 type Server struct {
 	Handler      Handler
-	OnConnect    func() // a client connected; may be nil
-	OnDisconnect func() // a client's connection ended; may be nil
+	AfterReply   func(method string) // after a successful handler's reply write is attempted; may be nil
+	OnConnect    func()              // a client connected; may be nil
+	OnDisconnect func()              // a client's connection ended; may be nil
 }
 
 // MkdirPrivate creates dir, and its parents, and sets dir to mode 0700, also
@@ -216,7 +217,11 @@ func (s *Server) serveConn(ctx context.Context, nc net.Conn) {
 		} else {
 			resp.Result, resp.Error = s.handle(ctx, req)
 		}
-		if err := c.write(resp); err != nil {
+		err := c.write(resp)
+		if resp.Error == nil && s.AfterReply != nil {
+			s.AfterReply(req.Method)
+		}
+		if err != nil {
 			return
 		}
 	}

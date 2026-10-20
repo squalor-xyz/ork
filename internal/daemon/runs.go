@@ -154,6 +154,10 @@ func (d *Daemon) closeRuns() {
 func (d *Daemon) activeRuns() bool {
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
+	return d.activeRunsLocked()
+}
+
+func (d *Daemon) activeRunsLocked() bool {
 	for _, r := range d.runs.runs {
 		if r.busy {
 			return true
@@ -171,6 +175,20 @@ func (d *Daemon) activeRuns() bool {
 		}
 	}
 	return false
+}
+
+// stopDaemon closes admission under the same lock used to start work. It
+// waits for cancelled jobs before replying; the server then ends its context.
+func (d *Daemon) stopDaemon(p StopParams) (*StopResult, error) {
+	d.runs.mu.Lock()
+	if !p.Force && (d.cfg.WaveRunning() || d.activeRunsLocked()) {
+		d.runs.mu.Unlock()
+		return nil, &ipc.Error{Code: "daemon_busy", Message: "a role or engine job is running; use --force to stop the daemon"}
+	}
+	d.runs.closed = true
+	d.runs.mu.Unlock()
+	d.closeRuns()
+	return &StopResult{Stopped: true}, nil
 }
 func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	if p.Project == "" || p.Item == "" {
