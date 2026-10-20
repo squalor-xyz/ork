@@ -3,7 +3,7 @@
   "title": "ork pins a project's slicer and adj contracts and checks every pin",
   "lead": [],
   "depends_note": null,
-  "findings_note": "owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S44 (adj-json contract version and pin).",
+  "findings_note": "owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S45 (adj-json contract version and pin).",
   "size": "M",
   "flags": [],
   "trees_note": "",
@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race ./...`, `go vet ./...` and `gofmt -l .` are clean. SPDX headers. No new dependency.\n- `slicer check` and `adj lint` pass.\n- [HUMAN CHECK] With slicer s387 and adj S44 landed: `ork projects pin` on a scratch project, then `ork doctor` is ok. Unpin slicer's pin, set it to a version not printed, and doctor fails naming both versions."
+      "body": "- `go test -race ./...`, `go vet ./...` and `gofmt -l .` are clean. SPDX headers. No new dependency.\n- `slicer check` and `adj lint` pass.\n- [HUMAN CHECK] With slicer s387 and adj S45 landed: `ork projects pin` on a scratch project, then `ork doctor` is ok. Unpin slicer's pin, set it to a version not printed, and doctor fails naming both versions."
     },
     {
       "heading": "Git",

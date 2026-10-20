@@ -70,7 +70,7 @@
 | 20 | [S21](slices/S21.md) | Y/N answers and defaults for ork run prompts | S | 1 |  | discovered from S17 | done |
 | 21 | [S22](slices/S22.md) | Overview shows ork's own engine runs | M | 2 |  | discovered from S17 | done |
 | 22 | [S23](slices/S23.md) | A denied tool call does not fail a finished role | S | 2 |  | discovered from S21 | — |
-| 23 | [S24](slices/S24.md) | Pin and check tool contracts | M | 2 |  | owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S44 (adj-json contract version and pin). | — |
+| 23 | [S24](slices/S24.md) | Pin and check tool contracts | M | 2 |  | owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S45 (adj-json contract version and pin). | — |
 
 ---
 

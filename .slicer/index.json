@@ -1146,7 +1146,7 @@
         "flags": [],
         "trees": [],
         "trees_literal": false,
-        "findings": "owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S44 (adj-json contract version and pin).",
+        "findings": "owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S45 (adj-json contract version and pin).",
         "discovered_from": "",
         "parent": "",
         "cites": [],
