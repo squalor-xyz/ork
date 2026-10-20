@@ -1276,7 +1276,7 @@
       "id": "S29",
       "title": "Put the ork binary on PATH",
       "short_title": "Put the ork binary on PATH",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -1297,7 +1297,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

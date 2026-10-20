@@ -516,7 +516,7 @@ ork stop RUN|WAVE           stop and record why
 ork daemon run              serve the daemon in the foreground
 ork roles print [ROLE]      print the embedded role prompts
 ork projects add|list|rm    manage the registry
-ork doctor                  check versions, CLIs, logins, contract
+ork doctor                  check versions, CLIs, logins, contract, ork path
 ```
 
 S03 ships `status`, `projects`, `roles print` and `doctor`
@@ -557,6 +557,8 @@ prints `{"started":false}` on stdout. Interactive questions go on stderr
 in JSON mode.
 
 `ork doctor` checks:
+- the running ork binary: its path, resolved through symlinks
+  (`os.Executable`). It is printed first and is not a pass or fail check;
 - the slicer and adj versions (`--version`);
 - each vendor CLI is present, with its `--version` output; a vendor CLI that
   is missing or broken is reported and does not fail the check, because ork
@@ -608,8 +610,11 @@ Text output is plain lines meant to be stable. `--json` output, indented:
 - `roles print [ROLE]`: `{"roles":[{"name","prompt"}]}`. Text: the prompt of
   ROLE as embedded, or all four with a `==== NAME ====` line before each.
 - `doctor`: `{"ok","tools":[{"name","required","present","path","version",
-  "ok","error"}],"contract":{"accepted":[7],"found","ok","error"}}`. Text: one
-  `[ok]`, `[--]` or `[FAIL]` line per check.
+  "ok","error"}],"contract":{"accepted":[7],"found","ok","error"},"binary"}`,
+  where `binary` is the path of the running ork binary (empty when it cannot
+  be read). Text: one `[ok]`, `[--]` or `[FAIL]` line per check, and the first
+  line is `[ok] ork  PATH`, or `[--] ork  path unknown: ERROR` when the path
+  cannot be read.
 
 ## Testing
 

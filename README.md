@@ -13,6 +13,17 @@ the same daemon, and `ork roles print` and `ork doctor` run in the command
 itself; `ork --version` prints the version. v1 is the monitoring
 dashboard plus launching and supervising slice waves. See [PROJECT.md](PROJECT.md).
 
+## Install
+
+From the repository root, with Go installed:
+
+    go install ./cmd/ork
+
+Go writes `ork` to `$(go env GOBIN)`, or to `$(go env GOPATH)/bin` when
+`GOBIN` is unset. `GOPATH` defaults to `~/go`, so no sudo is needed unless you
+set `GOBIN` or `GOPATH` elsewhere. Put that directory on your `PATH`. `ork doctor` prints the path of the binary
+it runs, which shows which copy you are calling.
+
 ## What ork is
 
 One TUI over all your projects (slicer, adjudicate, DataBall, agents):

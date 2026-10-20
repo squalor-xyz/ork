@@ -7,7 +7,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -37,11 +39,22 @@ type contractCheck struct {
 
 // DoctorReport is what `ork doctor --json` prints. OK is false when slicer,
 // adj or the contract check fails; a vendor CLI that is missing or broken is
-// reported but does not fail the check.
+// reported but does not fail the check. Binary is the resolved path of the
+// running ork binary, empty when that path cannot be read.
 type DoctorReport struct {
 	OK       bool          `json:"ok"`
 	Tools    []toolCheck   `json:"tools"`
 	Contract contractCheck `json:"contract"`
+	Binary   string        `json:"binary"`
+}
+
+// ownBinary returns the path of the running ork binary with symlinks resolved.
+func ownBinary() (string, error) {
+	exe, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	return filepath.EvalSymlinks(exe)
 }
 
 func firstLine(b []byte) string {
@@ -114,6 +127,8 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 
 	t := a.Tools
 	rep := DoctorReport{OK: true}
+	self, selfErr := ownBinary()
+	rep.Binary = self
 	for _, c := range []struct {
 		name, bin string
 		required  bool
@@ -139,6 +154,11 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	if o.json {
 		o.printJSON(rep)
 		return code
+	}
+	if selfErr != nil {
+		fmt.Fprintf(o.stdout, "[--] ork  path unknown: %v\n", selfErr)
+	} else {
+		fmt.Fprintf(o.stdout, "[ok] ork  %s\n", self)
 	}
 	for _, tc := range rep.Tools {
 		switch {

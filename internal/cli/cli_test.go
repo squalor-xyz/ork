@@ -556,6 +556,7 @@ type doctorOut struct {
 		OK       bool   `json:"ok"`
 		Error    string `json:"error"`
 	} `json:"contract"`
+	Binary string `json:"binary"`
 }
 
 func doctorApp(t *testing.T, relayFirstLine string) (app *App, fake *clitest.Fake, logs map[string]string) {
@@ -637,6 +638,30 @@ func TestDoctorTextOutput(t *testing.T) {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("output lacks %q:\n%s", want, stdout)
 		}
+	}
+}
+
+// doctor reports the path of the ork binary that runs it: in the JSON report
+// and as the first text line. The expected path is the running test binary's.
+func TestDoctorReportsWhereTheBinaryIs(t *testing.T) {
+	exe, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want, err := filepath.EvalSymlinks(exe)
+	if err != nil {
+		t.Fatal(err)
+	}
+	app, _, _ := doctorApp(t, "Contract: relay v7")
+	code, stdout, stderr := run(t, app, "doctor", "--json")
+	var d doctorOut
+	mustJSON(t, stdout, &d)
+	if code != 0 || d.Binary != want {
+		t.Fatalf("exit %d, binary %q, want %q\nstdout: %s\nstderr: %s", code, d.Binary, want, stdout, stderr)
+	}
+	code, stdout, _ = run(t, app, "doctor")
+	if line := "[ok] ork  " + want + "\n"; code != 0 || !strings.Contains(stdout, line) {
+		t.Fatalf("text: exit %d, output lacks %q:\n%s", code, line, stdout)
 	}
 }
 

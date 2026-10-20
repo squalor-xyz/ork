@@ -52,7 +52,8 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
   ork roles print [ROLE]      print the embedded role prompts
   ork daemon run              serve the daemon in the foreground
   ork doctor                  check the slicer and adj versions, the vendor
-                              CLIs and the slicer contract pin
+                              CLIs and the slicer contract pin, and print the
+                              path of this ork binary
 
 Every command takes --json. Exit codes: 0 ok, 1 failure, 2 usage.
 `

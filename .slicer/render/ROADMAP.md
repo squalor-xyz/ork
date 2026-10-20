@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-43 items · — 26 · done 17
+43 items · — 25 · done 18
 
 ## v1
 
@@ -75,7 +75,7 @@
 | 25 | [S26](slices/S26.md) | TUI: answer a stopped run or question in a detail pane | M | 2 |  | discovered from S23 | — |
 | 26 | [S27](slices/S27.md) | TUI: Questions tab across projects | S | 1 |  | discovered from S23 | — |
 | 27 | [S28](slices/S28.md) | TUI answers can file an adj ask and decide | S | 2 |  | discovered from S23 | — |
-| 28 | [S29](slices/S29.md) | Put the ork binary on PATH | S | 1 |  | discovered from S23 | — |
+| 28 | [S29](slices/S29.md) | Put the ork binary on PATH | S | 1 |  | discovered from S23 | done |
 | 29 | [S30](slices/S30.md) | Show the running role for relays started outside ork | S | 2 |  | discovered from S23 | — |
 | 30 | [S31](slices/S31.md) | Run a small slice through ork run end to end | S | 1 |  | discovered from S23 | — |
 | 31 | [S32](slices/S32.md) | ork status lists stopped runs that the needs-you count leaves out | S | 1 |  | discovered from S31 | — |
