@@ -51,8 +51,12 @@ before any other dependency. Every new Go file starts with
 ## Environment
 
 - Shell: zsh on darwin. `timeout` is not installed on macOS; do not use it.
-- Scratch files go in the session's scratch directory, never `/tmp` by
-  default.
+- Worktrees live under this directory, in `.worktrees/<name>` (one per
+  slice, branch `<name>`). `.worktrees/` is git-excluded.
+- Scratch and temporary files (scripts, configs, previews, build output that
+  is not part of the repo) go in `.scratch/` in the main checkout. It is
+  git-excluded (`.git/info/exclude`). Do not use `/tmp` or the harness's
+  scratch directory, so every path stays inside the workspace.
 - Go 1.27.2. Use `go -C DIR` instead of changing directory.
 
 ## Tracking (slicer)
