@@ -26,11 +26,11 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write questions_test.go first: the tab lists open questions from every project, each row names its project, Enter opens the pane for an engine question, and an empty list shows an empty-state line. Run them and confirm they fail.\n2. Build the rows from the snapshots, with no new calls: engine runs paused on a question (source.EngineRun, source.go:154-163, State and Pending) and Snapshot.Open for projects with adj true (source.go:72).\n3. questions.go (new): a pure function that returns the rows, with the project's name on each.\n4. Add the Questions view to the view switch from S12: a view field (model.go:93-115), the Views binding (keys.go), and viewBar (view.go:168-171) gains \"Questions\".\n5. Enter on an engine question calls openPane (pane.go:17-21). paneQuestion (pane.go:43-45) and paneRow (pane.go:23-33) only read engine runs, so adj rows cannot open the pane.\n6. Enter on an adj question shows the record read-only (options, recommendation) until S28 adds the answer path. Open: owner to confirm this interim behaviour.\n7. Empty state: a line when no project has an open question.\n8. Run go test ./internal/tui -update and review testdata/golden/questions-*.txt.\n9. Update docs/dashboard.md:174 (it says the Questions tab follows in S27).\n\nOpen: (a) decision 120 lists Overview, Roadmap and Decisions as the views, and Questions is not in it; decision 99 (ui.answer-ui) says the Questions tab exists. Owner to confirm Questions is a view and where it sits in the bar. (b) The item says \"Depends on the pane slice\"; S26 is done, so the dependency is met."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review every changed file in testdata/golden/ (questions-100x30-color.txt and -mono.txt, plus the view bar in the other goldens).\n- Run TestQuestions* by name with go test -run, and TestPane* (pane_test.go) to confirm the pane still works.\n- slicer check\n- adj lint\n- [HUMAN CHECK] The owner checks the Questions view with one engine question and one open adjudicate question."
     },
     {
       "heading": "Git",

@@ -1,0 +1,39 @@
+{
+  "id": "S68",
+  "title": "Roadmap editing: reorder an item from the TUI (needs adj 11)",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Reordering a queue item from the TUI uses `slicer move ID` with a position flag: before, after or to (../slicer/docs/commands.md:32). The position is the manual priority. It waits on adj 11 as S67 does. It also needs the Roadmap screen (S12): internal/tui/roadmap.go does not exist, and the view bar shows Roadmap as not selectable (internal/tui/view.go:167-171)."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/tui/roadmap.go and roadmap_test.go (new; from S12).\n- internal/slicercli/write.go (new Move wrapper; `slicer move` keeps a move inside one kind, commands.md:512).\n- internal/daemon/handlers.go (new write method, beside S67's).\n- internal/tui/keys.go and model.go (confirm bar as in S67).\n- docs/dashboard.md:219-223 (Roadmap section).\n- testdata/golden/ (new roadmap goldens; go test ./internal/tui -update, then review)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestMoveShowsExactCommandOnConfirm: the bar shows `slicer move ID --before OTHER` (or --after).\n- TestMoveAcrossKindsShowsSlicerError: slicer refuses; the TUI shows the error and does not guess.\n- TestMoveReloadsQueueInSlicerOrder.\n- TestMoveInPlaceIsNoOp."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

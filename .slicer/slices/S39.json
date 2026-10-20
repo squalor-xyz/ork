@@ -26,11 +26,11 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Rewrite TestRunLineupPromptsTakeYAndN in internal/cli/run_test.go (:49-62). Today it sends the same answer to both prompts (:55), so swapped prompts pass. Use pairs of different answers for well-specified and split, for example {\"y\",\"n\"}, {\"n\",\"y\"}, {\"Yes\",\"NO\"}, and expect well_specified and split to match each pair.\n2. Run go test ./internal/cli -run TestRunLineupPromptsTakeYAndN. It passes before the change, so first check the test is strong: swap the two ask results in internal/cli/run.go (the well-specified ask near :86, the split ask near :92) and confirm the new test goes red. Restore.\n3. Add TestRunUsageSaysYAndN in internal/cli/run_test.go: the usage error from an invalid --well-specified (run.go:55) and the top-level usage text (usageText, internal/cli/cli.go:42) both say y/n, and neither says yes|no.\n4. Change the flag help at internal/cli/run.go:40-41 from \"yes or no\" to \"y/n\", and the usage error at run.go:55 from \"yes|no\" to \"y/n\".\n5. Change the top-level usage line internal/cli/cli.go:42 from --well-specified yes|no --split yes|no to y/n. The item's Files list missed this file.\n6. Do not change internal/slicercli/write.go:90-94. That call passes yes or no to slicer, which takes those words.\nOpen: none."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- go test -race -count=1 ./internal/cli\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- slicer check\n- adj lint\n- Run by name: TestRunLineupPromptsTakeYAndN, TestRunConfirmTakesYAndN, TestRunUsageSaysYAndN.\n- Mutation: swap the two ask results in run.go and confirm TestRunLineupPromptsTakeYAndN goes red for the right reason (a wrong well_specified or split value)."
     },
     {
       "heading": "Git",

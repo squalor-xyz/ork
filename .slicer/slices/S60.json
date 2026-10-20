@@ -1,0 +1,39 @@
+{
+  "id": "S60",
+  "title": "ork wave suggest and start; ork stop WAVE",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The owner wants ork to start a wave from its own list: ork wave suggest shows the slices that can run in parallel, and ork wave start runs them. ork stop WAVE stops a whole wave. Decision 17 (wave.selection, decided) chooses waves from suggestions. Decision 18 (wave.scope, decided) limits a wave to one project. Decision 21 (wave.failure, decided) lets the other slices continue when one fails or stops.\n\nSuggestions come from `slicer plan-parallel` (help text: waves of items from dependencies and files_section paths; --width default 4). ork does not call it today (grep finds no use). This project has no files_section set: `slicer config files_section` prints nothing. Per the roadmap notes, plan-parallel fails on ork until that is set. The failure itself was not run for this draft.\n\nS60 depends on S05 (queued waves and caps) and S52 (the launch path). The Waves screen in docs/dashboard.md:183-217 is a later view; this slice is CLI only."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/cli/cli.go: the command switch (:161-180) gains wave. Today stop is routed to ownerCommand (:167-168).\n- internal/cli/run.go: ownerCommand (:164-186) takes RUN only. ork stop WAVE needs a second path.\n- internal/cli/wave.go (new) and internal/cli/wave_test.go (new): wave suggest and wave start.\n- internal/slicercli/slicercli.go: a new PlanParallel method (proposed name) over `slicer plan-parallel --json --lean --root ROOT`.\n- testdata/cli/slicer/plan-parallel.json (new): a recorded fixture; add its line to testdata/cli/VERSIONS.\n- internal/daemon/wire.go: the new wave methods (proposed names, for example wave.start and wave.stop) in the method list (:17-25).\n- internal/daemon/handlers.go: handle (:66-120) gets the new cases.\n- internal/daemon/runs.go: the wave handlers. Each item goes through startRun (:255-291) so the S05 caps apply. Stop goes through ownerRun (:314) once per run.\n- internal/runrec/record.go:167 (Wave) and internal/engine/engine.go:99, :184: the wave id is set on each run.\n- docs/design.md (method table :84-94) and docs/dashboard.md:183-217 (Waves, marked as later)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestWaveSuggestPrintsPlanParallelWaves: with the recorded fixture, wave suggest prints the waves in order.\n- TestWaveSuggestShowsFilesSectionErrorVerbatim: when plan-parallel fails (files_section unset), the code and message show as printed.\n- TestWaveStartStampsOneWaveIDOnEachRun: every run started by wave start has the same wave id on its record.\n- TestWaveStartRefusesTwoProjects: items from two projects are refused (decision 18).\n- TestWaveStartContinuesAfterOneFails: one failed run does not stop the others (decision 21).\n- TestWaveStartUsesQueuedCaps: with more items than the cap, the extra runs are queued (S05).\n- TestStopWaveStopsEachRunOnce: stop WAVE calls the stop once per run in the wave; a queued run in it stops with no writes."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Blocked until S05 and S52 land (depends_on). Write the failing tests first (the Failing-tests above), with a fake slicer route for plan-parallel. Run them and confirm they fail.\n2. slicercli: add PlanParallel (proposed name) over `plan-parallel --json --lean --root ROOT`. Record the fixture and add its VERSIONS line. Confirm the JSON shape from the fixture before writing the types.\n3. daemon: add the wave methods (proposed: wave.start and wave.stop) to wire.go (:17-25) and handle (handlers.go:66-120).\n4. wave.start: assign one new wave id (the id form is Open) and pass it as engine.Config.Wave (engine.go:99, :184) for each item. Each item goes through startRun (runs.go:255-291), so the caps from S05 apply.\n5. Enforce one project per wave (decision 18) and keep going after a failed item (decision 21). Do not stop the others.\n6. wave.stop: find the runs with that wave id in the store (runrec/store.go List) and call ownerRun stop (runs.go:314) for each run that is not final.\n7. cli/wave.go (new): wave suggest prints the plan-parallel result; wave start takes the items the owner chose from it.\n8. cli.go:161-180: add the wave case. run.go:164-186 (ownerCommand): stop takes a wave id as well as a run id. The rule that tells them apart is Open.\n9. Update docs/design.md (:84-94) and docs/dashboard.md:183-217 with the new methods and commands, marked proposed where the adj record is not decided.\n\nOpen: (a) the wave id format; (b) how ork stop tells a wave id from a run id (prefix, or a separate command); (c) whether wave start takes the item list or the wave suggest output; (d) the plan-parallel JSON shape, from the recorded fixture (not read yet); (e) files_section must be set for the project before this works (owner or slicer config)."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- Run TestWave* and TestStopWave* by name with go test -run.\n- Check that the S05 queue tests and the S52 launch tests still pass.\n- slicer check\n- adj lint\n- [HUMAN CHECK] The owner runs wave suggest on a project with files_section set, then wave start on two slices, then stop WAVE."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

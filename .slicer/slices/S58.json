@@ -1,0 +1,39 @@
+{
+  "id": "S58",
+  "title": "Tab and shift+tab switch views; left/right and 1-9 switch projects",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Decided 2026-10-20 (decision 120, ui.views): Tab and shift+tab switch views (Overview, Roadmap, Decisions); left, right and 1-9 switch projects.\n\nToday tab and shift+tab move between projects. That is the S57 binding (internal/tui/keys.go:35-36), so the views cannot be reached by keys. The view bar is static text (internal/tui/view.go:168-171), and the help says only Overview exists (view.go:197)."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/tui/keys.go: keyMap struct (:8-26) gains NextView and PrevView; newKeyMap (:28-48): Next (:35) becomes right only, Prev (:36) left only; FullHelp (:54-56) gets a view group.\n- internal/tui/model.go: Model struct (:93-115) gains view int; key() dispatch (:353-356) gains the two view cases; a new moveView.\n- internal/tui/view.go: viewBar (:168-171) and helpLines (:187-199, text at :197). The bar text is in almost every golden; do not change it unless the Waves question is answered (see Open in Implement).\n- internal/tui/tui_test.go: TestTabKeysSwitchTheProject (:262-287), TestRefreshKeyRefreshesTheVisibleProjectNow (:336), TestProjectKeysResetTheRowCursor (:598-604), TestNavigationKeysDoWhatTheHelpSays (:638-673), help list in TestHelpKeyTogglesTheHelp (:314), TestDashboardDocsListTheNavigationKeys (:698-715).\n- internal/tui/sidebar_test.go: TestSidebarNavigationFilterAndHide (:44-54), TestSidebarScrollAndCompactNames (:97), TestFilterKeepsActiveProject (:226, shift+tab moves the project today).\n- internal/tui/live_test.go:125: the tab that switches project becomes right.\n- internal/tui/actions_test.go:198: help list.\n- testdata/golden/action-help-mono-true.txt and action-help-mono-false.txt (lines 5-6 list the keys).\n- docs/dashboard.md: lines 58-62 (project keys) and the view bar line 28 only if the Waves question changes it; line 40 says only Overview is selectable and stays true until S12."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- tab and shift+tab leave the project and the row cursor where they are, and the bar still shows Overview (new TestViewKeysDoNotMoveTheProject; it fails today because tab moves the project).\n- With one view, tab and shift+tab do nothing and set no message (the draft; see Open).\n- right and left move projects; 1-9 jump; n and p still move rows (TestTabKeysSwitchTheProject rewritten with right and left).\n- With the filter box open, tab and shift+tab type nothing and move nothing; the answer field takes them as text (extend TestFilterBoxTakesRowKeysAsText and TestAnswerFieldTakesRowKeysAsText).\n- The help lists \"right next project\", \"left previous project\", \"tab next view\" and \"shift+tab previous view\" (TestHelpKeyTogglesTheHelp, TestActionHelp, and the two action-help goldens).\n- docs/dashboard.md lists the new keys (TestDashboardDocsListTheNavigationKeys rewritten)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the tests first: a new TestViewKeysDoNotMoveTheProject in internal/tui/tui_test.go (four projects; tab and shift+tab leave active and cursor alone). Run go test ./internal/tui -run TestViewKeys and watch it fail: tab moves the project today (keys.go:35).\n2. Rewrite the stale tests in the Files list: project moves use right and left; the help and docs wording uses the new labels.\n3. keys.go: add NextView (key \"tab\", help \"tab\", \"next view\") and PrevView (key \"shift+tab\", help \"shift+tab\", \"previous view\") to keyMap (:8-26) and newKeyMap (:28-48). Change Next (:35) to key \"right\", help \"right\", \"next project\"; Prev (:36) to key \"left\", help \"left\", \"previous project\".\n4. keys.go FullHelp (:54-56): first group {k.NextView, k.PrevView}, then {k.Next, k.Prev, k.Jump}.\n5. view.go: add var views = []string{\"Overview\"} beside viewBar (:166-171). viewBar highlights views[m.view] in place of the fixed \"Overview\" style; the output for one view is unchanged.\n6. model.go Model (:93-115): add view int. key() (:353-356): add case key.Matches(msg, m.keys.NextView): m.moveView(1) and case key.Matches(msg, m.keys.PrevView): m.moveView(-1), both returning nil.\n7. model.go: func (m *Model) moveView(delta int) { m.view = (m.view + delta + len(views)) % len(views) }. With one view it does nothing, as the help says.\n8. Update docs/dashboard.md lines 58-62: project keys are right and left, 1-9; tab and shift+tab switch views.\n9. Mutation-check: map tab back to Next and confirm TestViewKeysDoNotMoveTheProject goes red.\n10. Regenerate the help goldens: go test ./internal/tui -update; review only testdata/golden/action-help-mono-true.txt and -false.txt.\nOpen: (a) Waves. Decision 120 names Overview, Roadmap and Decisions. The bar (view.go:170), the help (view.go:197), docs/dashboard.md:28 and :183, and TestLayoutHasTabsViewBarBodyAndStatusLine (tui_test.go:1349) all list Waves too. Owner: keep Waves as a view, or drop it? Dropping it changes almost every golden, because the bar is in them.\nOpen: (b) with one view, tab and shift+tab are a silent no-op (draft). Alternative: a status message \"only Overview exists\". Recommendation: silent, since the help already says so.\nOpen: (c) with the pane open, paneKey (internal/tui/pane.go:48-84) takes the keys, so tab does nothing there. Draft keeps that. Owner to confirm."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/tui\n- go test ./internal/tui -update, then review testdata/golden/action-help-mono-true.txt and action-help-mono-false.txt by eye; nothing else should change.\n- go test -race -count=1 ./internal/tui again, so the goldens pass.\n- go vet ./...\n- gofmt -l .\n- slicer check (docs/dashboard.md)\n- adj lint\n- Run by name: TestViewKeysDoNotMoveTheProject, TestTabKeysSwitchTheProject, TestNavigationKeysDoWhatTheHelpSays, TestFilterBoxTakesRowKeysAsText, TestDashboardDocsListTheNavigationKeys, TestLayoutHasTabsViewBarBodyAndStatusLine (must still pass unless the Waves answer changes the bar)."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

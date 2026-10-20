@@ -22,15 +22,15 @@
     },
     {
       "heading": "Failing tests",
-      "body": "- A run skipped at recovery ends in a final state with a reason.\n- A background engine job that fails records the error on its run and shows it in status.\n- Healthy runs are unchanged."
+      "body": "- Per decision 116 (no new final state), a run whose Reconcile fails at recovery stays in the run manager. A stop on it answers with the run, not \"no run\" (TestRecoverySkipsBadRuns, kill case, rewritten).\n- The skipped run's error shows on its wire row (EngineRun.Error) and in ork status and the Overview row. Its state is unchanged.\n- A background job that returns an error keeps the error on the wire row in daemon memory; the state stays as the engine left it (new TestBackgroundErrorStaysOnTheWireRow).\n- run.json has no error key after a failed background job (read the file back).\n- The next job (retry, stop or approve) clears the error. A stop that cancels a busy job does not record context.Canceled as a failure.\n- Healthy recovered runs and healthy background jobs are unchanged (existing TestRecoveredRunCanBeStoppedAndActiveRunIsPaused)."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write the tests first in internal/daemon/runs_test.go: change the kill case of TestRecoverySkipsBadRuns (:390-393, :416-423) so the run is kept and a stop answers; add TestBackgroundErrorStaysOnTheWireRow (runDaemon with a roundRunner that returns an error, run.start, waitState, then engineRuns shows Error and the run.json has no error key). Run go test ./internal/daemon -run 'TestRecoverySkipsBadRuns|TestBackgroundError' and watch each fail.\n2. internal/daemon/runs.go:67-74 managedRun: add failure error.\n3. runs.go:134-139 recoverRuns: on a Reconcile error keep the run: d.runs.runs[rec.ID] = &managedRun{engine: e, failure: err}. Keep the stderr line at :136.\n4. runs.go:294-313 launchRun: reset r.failure = nil with r.result at :299. In the goroutine, after result.err = err (:307), set r.failure = err unless errors.Is(err, context.Canceled), so an owner stop that cancels a job (runs.go:337-338) is not an error.\n5. internal/source/source.go:154-163 EngineRun: add Error string `json:\"error,omitempty\"` (proposed wire field).\n6. runs.go:417-461 engineRuns: fill Error from the managed run when it is not busy.\n7. internal/tui/overview.go:101-107: after the denials part, append \"error: \"+r.Error when set. Retry and stop keep working on the row.\n8. internal/cli/daemoncmds.go:48-57: print \"  error: ...\" under the run.\n9. Mutation-check: remove step 4's assignment and confirm TestBackgroundErrorStaysOnTheWireRow goes red; restore.\n10. Docs: docs/state.md:168-175 (engine display snapshot) gets the error field; say it is daemon memory only and is not in run.json. docs/dashboard.md:106-110 gets the error text.\nOpen: a kept non-final run still counts as active and blocks idle exit and daemon stop without --force (runs.go:166-176 and :184). Decision 116 does not say whether it should. This draft keeps today's behaviour."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- go test -race -count=1 ./internal/daemon ./internal/source ./internal/tui ./internal/cli\n- go test -race -count=1 ./... (the daemon and status changes reach the TUI and CLI tests)\n- go vet ./...\n- gofmt -l .\n- slicer check\n- adj lint\n- Run the specific tests by name: TestRecoverySkipsBadRuns, TestBackgroundErrorStaysOnTheWireRow, TestRecoveredRunCanBeStoppedAndActiveRunIsPaused, TestDaemonStopRefusesBusyUnlessForced (lifecycle_test.go:124).\n- Look at: any golden that lists engine rows (engine-*.txt) must still match: the error part only appears when Error is set."
     },
     {
       "heading": "Git",

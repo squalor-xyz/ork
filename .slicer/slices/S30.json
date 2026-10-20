@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/source, internal/slicercli, internal/daemon, internal/tui, tests, goldens, docs/dashboard.md."
+      "body": "- internal/tui/overview.go: runParts (:294-304) and the external row (:133-143). Tests: internal/tui/tui_test.go (relay helper :76), internal/tui/engine_runs_test.go (:35-67), internal/tui/actions_test.go, internal/tui/golden_test.go. Goldens testdata/golden/overview-*.txt only if they change.\n- internal/daemon/wire.go:94-103 (Relay) and internal/daemon/handlers.go:227-232 (ActiveRelays). Tests: internal/daemon/daemon_test.go (:542).\n- internal/cli/daemoncmds.go:39-47 (status relay lines). Tests: internal/cli/cli_test.go (:223).\n- docs/dashboard.md:100-118 (Running section).\n- Not changed: internal/slicercli/types.go (Step :86-98), internal/slicercli/slicercli.go:55-61, internal/source/source.go (:71, :101 already carry the steps)."
     },
     {
       "heading": "Failing tests",
@@ -26,11 +26,11 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write the failing tests first in internal/tui. Beside the external-row tests (internal/tui/engine_runs_test.go:35-67) and the relay helper (internal/tui/tui_test.go:76), add: a relay with an implementer step in phase \"start\" shows its role, vendor, model and task on the row; a step in phase \"fail\" shows as the last failed step. Use the step shape of testdata/cli/slicer/relay-run-list.json.\n2. Add a test in internal/cli/cli_test.go (near TestStatusFromTheDaemonsSourceSnapshot, :223) that `ork status` prints the running role under the relay.\n3. No slicer call changes. The data is already parsed: Step (internal/slicercli/types.go:86-98) and RelayRun.Steps (:119). RelayRuns passes --lean and --active (internal/slicercli/slicercli.go:55-61), and the fixture shows the steps in that output. Source keeps them (internal/source/source.go:71, :101).\n4. internal/tui/overview.go:294-304 (runParts): after items, state and elapsed time, add the running step (phase \"start\"): role, vendor, model and task. Add the last failed step (phase \"fail\") if there is one. Keep the existing order, since narrow rows cut the tail (comment at :291-293).\n5. The external row (overview.go:137-143) gets the text through runParts. It keeps no action keys (see internal/tui/actions_test.go).\n6. internal/daemon/wire.go:94-103 (Relay): add the running and failed steps as *proposed* fields, using a small RelayStep struct with Role, Vendor, Model, Task and Phase.\n7. internal/daemon/handlers.go:227-232 (projectStatus): fill those fields from r.Steps.\n8. internal/cli/daemoncmds.go:46: under each relay line, print a running line and a failed line when present.\n9. Run `go test ./internal/tui -update` only if overview goldens change, then review testdata/golden/overview-*.txt.\n10. Add one sentence on the role line to the Running section at docs/dashboard.md:100-118.\nOpen: (a) the wording of the lines (*proposed*). (b) Whether the task text shows, since it can be long. (c) Phase \"start\" as running comes from the fixture and from the StepSpec comment (internal/slicercli/types.go:131: \"start, done or fail\")."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- `go test -race -count=1 ./internal/tui ./internal/cli ./internal/daemon`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (prints nothing)\n- `slicer check`\n- `go test ./internal/tui -update` only if overview goldens change; then review testdata/golden/overview-*.txt.\n- Tests by name: the new tui tests for the running and failed step, the new status test, the external-row tests in internal/tui/engine_runs_test.go, and TestStatusFromTheDaemonsSourceSnapshot (internal/cli/cli_test.go:223)."
     },
     {
       "heading": "Git",

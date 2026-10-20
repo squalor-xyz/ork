@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 58,
+  "next_id": 73,
   "preamble": "",
   "passes": [
     {
@@ -246,10 +246,10 @@
     },
     {
       "id": "S05",
-      "title": "Waves: suggestion, lineup, global and per-project caps, failure isolation",
+      "title": "Waves and caps: wave id, queued state, admission in launchRun",
       "short_title": "Waves and caps",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [
         "S17"
       ],
@@ -278,7 +278,7 @@
       "id": "S06",
       "title": "Three vendors, automatic fallback, read-only fingerprint, budgets, owner questions",
       "short_title": "Vendors and fallback",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [
         "S05"
@@ -386,7 +386,7 @@
         "key": "v1.vendors",
         "pass": "v1",
         "group": "",
-        "reason": "",
+        "reason": "Umbrella over S47, S48 and S49. Notes move to the grok adapter (S72) and budgets (S65); owner 2026-10-20.",
         "importance": 2,
         "urgency": 2,
         "effort": 2,
@@ -437,12 +437,12 @@
     },
     {
       "id": "S08",
-      "title": "Architect on size L, split, slivers",
+      "title": "Architect role in the engine",
       "short_title": "Architect, split, slivers",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [
-        "S06"
+        "S10"
       ],
       "note_records": [
         {
@@ -479,10 +479,10 @@
     },
     {
       "id": "S09",
-      "title": "Landing help: ready-to-land list and merge detection",
+      "title": "Landing help: ready-to-land list",
       "short_title": "Landing help",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [
         "S05"
       ],
@@ -638,13 +638,14 @@
     },
     {
       "id": "S12",
-      "title": "Roadmap and Decisions screens, read-only",
+      "title": "Roadmap screen: items, readiness, goals and detail",
       "short_title": "Roadmap and Decisions screens",
       "status": "open",
       "has_slice": true,
       "depends_on": [
         "S11",
-        "S14"
+        "S14",
+        "S58"
       ],
       "note_records": [
         {
@@ -1151,7 +1152,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "68c310d8-076e-4f26-9b36-b30260374b44",
+          "kind": "",
+          "text": "**2026-10-20** — From the 2026-10-20 roadmap review: Contract in internal/slicercli/write.go:31-37 and doctor.go:104 run 'slicer ai relay' without --root, and the first line is the same for every project until slicer s387 adds a per-project pin. Pass --root (engine.go:170, doctor.go checkContract) when the pin lands; two-project test needed.",
+          "created_at": "2026-10-20T17:54:41Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -1258,7 +1271,9 @@
       "short_title": "TUI: Questions tab across projects",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S59"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -1286,7 +1301,9 @@
       "short_title": "TUI answers can file an adj ask and decide",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S27"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -1394,8 +1411,8 @@
     },
     {
       "id": "S32",
-      "title": "ork status lists stopped runs that the needs-you count leaves out",
-      "short_title": "ork status lists stopped runs that the needs-you count leaves out",
+      "title": "One needs, running and hidden builder for ork status and the TUI",
+      "short_title": "One needs, running and hidden builder for ork status and the TUI",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
@@ -1422,8 +1439,8 @@
     },
     {
       "id": "S33",
-      "title": "Show the engine run ID in the Overview row and detail",
-      "short_title": "Show the engine run ID in the Overview row and detail",
+      "title": "Show the engine run ID in the Overview row; engine-row edge cases",
+      "short_title": "Show the engine run ID in the Overview row; engine-row edge cases",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
@@ -1454,7 +1471,9 @@
       "short_title": "Clear an old stopped run from Needs you",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S35"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -1536,7 +1555,7 @@
       "id": "S37",
       "title": "Tidy status error logging and the stderr swap",
       "short_title": "Tidy status error logging and the stderr swap",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -1553,7 +1572,7 @@
         "key": "",
         "pass": "v1",
         "group": "",
-        "reason": "",
+        "reason": "Obsolete: the status error helpers exist only in tests; the live print is in daemon/runs.go. Owner review 2026-10-20.",
         "importance": 1,
         "urgency": 1,
         "effort": 1,
@@ -1648,7 +1667,7 @@
       "id": "S41",
       "title": "Overview engine-row edge cases: setup projects, padding, hidden ledger runs",
       "short_title": "Overview engine-row edge cases: setup projects, padding, hidden ledger runs",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -1665,7 +1684,7 @@
         "key": "",
         "pass": "v1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into S33: the same row code; claim 3 is already documented.",
         "importance": 1,
         "urgency": 1,
         "effort": 2,
@@ -1676,7 +1695,7 @@
       "id": "S42",
       "title": "Tidy engine-run state constants and a weak assertion",
       "short_title": "Tidy engine-run state constants and a weak assertion",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -1693,7 +1712,7 @@
         "key": "",
         "pass": "v1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into S32: state constants and the weak assertion are done there.",
         "importance": 1,
         "urgency": 1,
         "effort": 1,
@@ -1830,7 +1849,9 @@
       "short_title": "Codex adapter for write roles in the engine (#100)",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S48"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -1886,7 +1907,10 @@
       "short_title": "Fall back to the next matrix row on a rate limit or error",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S47",
+        "S05"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -2137,6 +2161,446 @@
         "urgency": 3,
         "effort": 1,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S58",
+      "title": "Tab and shift+tab switch views; left/right and 1-9 switch projects",
+      "short_title": "Tab and shift+tab switch views; left/right and 1-9 switch projects",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S59",
+      "title": "Decisions screen: open and decided records, one project or all",
+      "short_title": "Decisions screen: open and decided records, one project or all",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S12"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S60",
+      "title": "ork wave suggest and start; ork stop WAVE",
+      "short_title": "ork wave suggest and start; ork stop WAVE",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S05",
+        "S52"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S61",
+      "title": "Split parts: lead and parts in one worktree",
+      "short_title": "Split parts: lead and parts in one worktree",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S08"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S62",
+      "title": "Slivers as their own items under the cap",
+      "short_title": "Slivers as their own items under the cap",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S61"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "L",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 3,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S63",
+      "title": "Landing: merge detection, branch cleanup and run pruning",
+      "short_title": "Landing: merge detection, branch cleanup and run pruning",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S09"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S64",
+      "title": "Contract check passes --root so each project's slicer contract is checked",
+      "short_title": "Contract check passes --root so each project's slicer contract is checked",
+      "status": "retired",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "No effect today: slicer ai relay prints the same contract line for every project (checked 2026-10-20). Folded into S24, which passes --root when slicer s387 adds the pin.",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S65",
+      "title": "Enforce run.budgets: pause with a budget kind before a round",
+      "short_title": "Enforce run.budgets: pause with a budget kind before a round",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S66",
+      "title": "Mouse support: click tabs, rows and keys (needs ui.mouse)",
+      "short_title": "Mouse support: click tabs, rows and keys (needs ui.mouse)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S12"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S67",
+      "title": "Roadmap editing: park and unpark from the TUI (needs adj 11)",
+      "short_title": "Roadmap editing: park and unpark from the TUI (needs adj 11)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S12",
+        "S52"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S68",
+      "title": "Roadmap editing: reorder an item from the TUI (needs adj 11)",
+      "short_title": "Roadmap editing: reorder an item from the TUI (needs adj 11)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S12"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S69",
+      "title": "Roadmap editing: open slicer tui for the project (needs adj 11)",
+      "short_title": "Roadmap editing: open slicer tui for the project (needs adj 11)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S12"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S70",
+      "title": "Heartbeat every 10 minutes while a role runs (docs/design.md:353, proposed)",
+      "short_title": "Heartbeat every 10 minutes while a role runs (docs/design.md:353, proposed)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S71",
+      "title": "Doctor checks each project's check command and patterns (docs/design.md:613-614)",
+      "short_title": "Doctor checks each project's check command and patterns (docs/design.md:613-614)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S72",
+      "title": "Grok adapter and v1 role (after credits reset 2026-11-01)",
+      "short_title": "Grok adapter and v1 role (after credits reset 2026-11-01)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
       }
     }
   ],

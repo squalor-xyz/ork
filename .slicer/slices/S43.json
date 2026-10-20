@@ -14,11 +14,11 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "From the S23 relay. (1) The denials list is not deduplicated, so 'Write, Write' can appear, and the status line is unbounded. (2) A denied slicer step in a successful round no longer stops mechanically (#93); docs/design.md:289 and docs/glossary.md:113-114 still state slicer's rule, and ork relies on internal/roles/prompts/implementer.md:72-73. Correction from the S29 run (2026-10-20): the vendor does report the denied command (permission_denials[].tool_input, testdata/vendors/claude/04-allowlist-denies-write.stdout); ork keeps only the tool name, so recording the command is a separate slice."
+      "body": "From the S23 relay. (1) The denials list is not deduplicated, so 'Write, Write' can appear, and the status line is unbounded. (2) A denied slicer step in a successful round no longer stops mechanically (#93), but docs/design.md:316 and docs/glossary.md:113-114 still state slicer's rule, and ork relies on internal/roles/prompts/implementer.md:72-73.\n\nUpdate 2026-10-20: ork now records the denied command (S45: internal/agent/claude/types.go:73, internal/runrec/record.go:71), so the old \"record the command\" part of this item is done."
     },
     {
       "heading": "Files",
-      "body": "- internal/daemon/runs.go, internal/cli (status), internal/tui, docs/design.md, docs/glossary.md, tests."
+      "body": "- internal/daemon/runs.go: engineRuns denials (:454-457) and roleDenials (:463-474). Tests: internal/daemon/engine_runs_test.go (:39).\n- internal/source/source.go: new helper next to EngineRun (:153-163). Tests: internal/source/source_test.go.\n- internal/cli/daemoncmds.go:48-56: denial text at :53-54. Tests: internal/cli/cli_test.go.\n- internal/tui/overview.go:98-108: denial text at :105-106. Tests: internal/tui/golden_test.go; testdata/golden/engine-denials-100x30.txt only if it changes.\n- docs/design.md:316 (contract bullet; the old reference :289 is a different line now). docs/glossary.md:113-114.\n- internal/roles/prompts/implementer.md:72-73 (see Open in Implement)."
     },
     {
       "heading": "Failing tests",
@@ -26,11 +26,11 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write the failing tests first. In internal/daemon/engine_runs_test.go, extend TestEngineSnapshotAndStatusShowEachDenialsCommand (:39) with two roles and a repeated denial. Each text must appear once, with a count (*proposed* format: \"Write: /x.txt x2\"). Add a test in internal/source for the new bounding helper (*proposed* name source.DenialsText): five distinct denials show three and \"and 2 more\" (the 3 is Open).\n2. In internal/daemon/runs.go:454-457, engineRuns builds Denials per role through roleDenials (:463-474). Dedupe across all roles, keep first-seen order, and add the count when a text repeats.\n3. Add the helper in internal/source/source.go next to EngineRun (:153-163). Use it in internal/cli/daemoncmds.go:53-54 and internal/tui/overview.go:105-106 in place of strings.Join.\n4. Do not change how commands are recorded. DeniedCommand already holds the command (internal/runrec/record.go:73-76; internal/daemon/runner.go:41).\n5. docs/design.md:316 is the contract bullet \"a permission denial on a slicer step\". Rewrite the ork rule to decision 93 (engine.denials): a denial stops only an unsuccessful round, as design.md:283-284 already says. Make the same change at docs/glossary.md:113-114.\n6. internal/roles/prompts/implementer.md:72-73: see Open.\n7. If the overview golden changes, run `go test ./internal/tui -update` and review testdata/golden/engine-denials-100x30.txt (it shows \"denied: Write, Bash\" at lines 7 and 27).\nOpen: (a) the bound (proposed 3). (b) the count format \"x2\" is *proposed*. (c) design.md:316 paraphrases slicer's contract list; AGENTS.md says not to paste the contract text, so should ork keep the bullet with a note, or rewrite it? (d) implementer.md:72-73 tells the role to stop and report a denied slicer step. Does the owner want that prompt to match decision 93?"
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (prints nothing)\n- `slicer check`\n- `go test ./internal/tui -update` only if testdata/golden/engine-denials-100x30.txt changes; review the diff.\n- `rg -n \"permission denial on a slicer step|slicer step is denied\" docs internal/roles/prompts`: only text kept by the Open decisions should remain.\n- Tests by name: TestEngineSnapshotAndStatusShowEachDenialsCommand (internal/daemon/engine_runs_test.go:39), TestDeniedCommandTextNamesTheCallAndItsDetail (internal/runrec/runrec_test.go:204), TestClaudeRunnerRecordsTheCommandOfEachDenial (internal/daemon/runner_test.go:39)."
     },
     {
       "heading": "Git",

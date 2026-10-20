@@ -1,0 +1,39 @@
+{
+  "id": "S61",
+  "title": "Split parts: lead and parts in one worktree",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A split lets a large slice use a lead and parts with disjoint files, so parts can change different files at once. ork runs one implementer today and has no split run. The slicer contract puts the parts in the slice worktree (../slicer/src/slicer/ai.py:400), so this slice must not give each part its own worktree."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/roles/roles.go:37 (role names: add lead and part roles; today implementer, reviewer, gate, architect).\n- internal/roles/prompts/ (new lead.md and part.md; architect.md exists).\n- internal/engine/perm.go:39,45 (per-role permissions; parts change only their own files, ai.py:334-336).\n- internal/engine/states.go and internal/engine/round.go (implement and review rounds; parts run in one worktree).\n- internal/daemon/runs.go:37,205 (Split param and RecommendRoles call).\n- internal/slicercli/types.go:171 (Split) and write.go:94 (--split).\n- internal/engine/*_test.go (new split tests) and internal/roles tests.\n- docs/design.md:184-185 and 191-193 (the architect order is open; see Open); docs/glossary.md:31-35 and 151.\nOpen: slice.architect-order is \"not found\" in adj (`adj check`), so the owner has not been asked. Do not draft the order until it is decided."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestSplitPartsShareTheSliceWorktree: a lead and two parts run in one worktree.\n- TestPartsRunInParallelOnlyWhenFilesAreDisjoint: overlapping parts run one after another (ai.py:400).\n- TestPartRoundRunsNoSlicerWriteCommand: a part round records no slicer write (ai.py:334-336).\n- TestSplitReviewSeesTheCombinedDiffOnce: one review and one gate cover the whole slice.\n- TestSplitArchitectRunsOnlyOnSizeL: architect only on size L (design.md:191-193).\n- The architect position test is written after slice.architect-order is decided."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

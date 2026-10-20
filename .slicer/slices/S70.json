@@ -1,0 +1,39 @@
+{
+  "id": "S70",
+  "title": "Heartbeat every 10 minutes while a role runs (docs/design.md:353, proposed)",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "ork records a role's ledger step once, at start (internal/engine/round.go:351-363), and sends no heartbeat while the role runs. slicer treats a step as stale after 30 minutes (../slicer/src/slicer/ai.py:385-386). A heartbeat is `slicer relay-run step RUN --step N --phase start` with no --task (../slicer/docs/commands.md:71). design.md:353 marks the 10 minute interval *proposed*."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/engine/round.go:351-371 (stepStart and stepEnd: start a ticker after stepStart, stop it in stepEnd).\n- internal/slicercli/write.go:130-152 (RelayStep; the heartbeat passes no task).\n- internal/slicercli/types.go:122 (StepSpec).\n- internal/clitest/clitest.go (fake slicer records the calls).\n- internal/engine/*_test.go (new heartbeat tests; the interval is a field so tests can shorten it).\n- docs/design.md:353 (remove *proposed* once decided)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestHeartbeatSendsStepStartWithoutTask: a round longer than the interval sends `--step N --phase start`, no task.\n- TestHeartbeatStopsAtStepEnd: no call after stepEnd.\n- TestShortRoundSendsNoHeartbeat.\n- TestFailedHeartbeatDoesNotStopRole: recording is advisory (internal/engine/states.go:33).\n- TestHeartbeatIntervalIsTenMinutes: the value is under the 30-minute stale limit."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

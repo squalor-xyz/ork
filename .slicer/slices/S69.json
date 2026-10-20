@@ -1,0 +1,39 @@
+{
+  "id": "S69",
+  "title": "Roadmap editing: open slicer tui for the project (needs adj 11)",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "adj 11 option open-slicer-tui (open; recommendation \"both\"): ork suspends and opens `slicer tui --root P` for deep edits (adj 11 context). Bubble Tea's ExecProcess hands the terminal to another program and resumes after it exits. slicer's TUI is `tui` or `ui` (../slicer/docs/commands.md:91). The `--root` form is not yet checked against ../slicer/docs/tui.md."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/tui/keys.go (new key) and view.go (help line).\n- internal/tui/model.go (the key returns a tea.ExecProcess command; on return, refresh the snapshot).\n- internal/tui/tui_test.go and golden_test.go (help golden if the help changes).\n- docs/dashboard.md (key list; Roadmap section).\n- The ExecProcess signature: check with `go doc charm.land/bubbletea/v2 ExecProcess` in the worktree. Not verified here.\nOpen: adj 11 (ui.slicer-tui) decides whether this exists at all."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestOpenSlicerTuiReturnsExecProcessCommand: the key returns a command for `slicer tui --root P`.\n- TestDashboardRefreshesAfterSlicerTuiExits: the callback fires and the snapshot reloads.\n- TestMissingSlicerShowsErrorAndDoesNotPanic.\n- The help view and docs/dashboard.md list the key."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

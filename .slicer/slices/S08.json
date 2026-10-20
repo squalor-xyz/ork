@@ -1,0 +1,39 @@
+{
+  "id": "S08",
+  "title": "Architect role in the engine",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "L",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The architect role is named and prompted, but the engine never runs it. The role is in internal/roles/roles.go:37, its prompt is internal/roles/prompts/architect.md, and it is read-only (internal/engine/perm.go:39). The engine's role loops cover only implementer, reviewer and gate (internal/engine/engine.go:160-166; internal/daemon/runs.go:210). rg finds no architect round in internal/engine. A size L slice therefore gets no architect review today.\nThe order is not settled. docs/design.md:191-193 says the architect runs alongside the reviewer. The slicer contract (`slicer ai relay`, the orchestrator steps) says it runs after accepted findings and before the gate. The contract also says the architect is optional and the owner decides.\nOpen: slice.architect-order (adj check: not found). Ask with options before building; see Implement.md."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/engine/runner.go:15-19 (role names block): add RoleArchitect = \"architect\" (proposed name).\n- internal/engine/states.go:198-203 (checks choose review or gate): the architect step goes between the fix round and the gate, if the contract order is chosen.\n- internal/engine/states.go:219-231 (review): the reviewer, and the architect if the lineup has one (order is Open).\n- internal/engine/states.go:239-250 (gate): add the architect report to the gate brief (latestReport at states.go:208).\n- internal/engine/engine.go:160-166 (New): implementer and reviewer are required. The architect stays optional. No change expected.\n- internal/engine/engine.go:231-245 (advance switch): only if a new state is chosen (Open).\n- internal/engine/round.go:142 (runRound): reused. No change expected.\n- internal/engine/brief.go:38 (BuildBrief): fills the architect prompt, via roles.Prompt (internal/roles/roles.go:44). Check the placeholders (slice_id, worktree, temp_dir, report_path).\n- internal/engine/report.go:37-84 (CheckReport): add an architect branch (shape is Open).\n- internal/engine/perm.go:39,45: already read-only. Add a test only.\n- internal/daemon/runs.go:210-231: the plan loop adds RoleArchitect when the recommendation has an architect row (slicercli RoleChoice, internal/slicercli/types.go:160-163).\n- internal/slicercli/write.go:91-94: passes --split already. No change expected.\n- internal/roles/roles.go:37 and internal/roles/prompts/architect.md: no change expected.\n- Tests: internal/engine/architect_test.go (new); internal/daemon/runs_test.go (near :93).\n- Docs: docs/design.md:191-193 (review bullet, after the Open answer). docs/state.md only if a new state is added."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestArchitectRunsOnlyWhenTheLineupHasOne: with no architect entry there is no architect round, and the role list is the same as today (fakeRunner.roles(), internal/engine/harness_test.go:99).\n- TestArchitectRunsAfterTheFixRoundAndBeforeTheGate: role order is implementer, reviewer, implementer fix, architect, gate (the order is Open).\n- TestArchitectIsReadOnlyAndFingerprinted: its request has ReadOnly true, and a tree change stops the slice.\n- TestArchitectFindingsGoBackToTheImplementer: a finding from the architect starts a fix round (the report format is Open).\n- TestArchitectShapeErrorPausesAndRetryResumesIt: a bad report pauses with PendingShape, and retry runs the architect again (pattern: internal/engine/pause_test.go:130).\n- TestPlanAddsTheArchitectRowOnlyWhenRecommended: RunPlan.Lineup has \"architect\" only when the recommendation has that row (pattern: internal/daemon/runs_test.go:93).\n- TestArchitectRoundIsALedgerStepUnderTheOrchestrator: pattern of internal/engine/engine_test.go:172."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Blocked until the Open questions are answered. Ask the owner first, with options and a recommendation (adj check slice.architect-order: not found, so the question is not asked yet).\n2. Write the failing tests first in internal/engine/architect_test.go (new) and the plan test in internal/daemon/runs_test.go.\n3. Add RoleArchitect in internal/engine/runner.go:15-19.\n4. internal/daemon/runs.go:210: add RoleArchitect to the plan loop. Plan it only when rec.Roles has an architect choice.\n5. internal/engine/states.go:219-231: run the architect as round{role: RoleArchitect, ...} in the decided order.\n6. If the decided order is after findings, add an architect step on the fix-round path (states.go:198-203) before the gate.\n7. internal/engine/report.go:37-84: add an architect branch to CheckReport. Its sections come from internal/roles/prompts/architect.md (the Report section). The shape is Open.\n8. internal/engine/brief.go:38: BuildBrief fills the architect prompt. Check the placeholders.\n9. internal/engine/states.go:239-250: the gate brief includes the architect report (latestReport, states.go:208).\n10. internal/engine/perm.go:39 needs no change. Add a test that the architect request has ReadOnly true.\n11. Update docs/design.md:191-193 to the decided order. Update docs/state.md only if a state is added.\n12. Run the checks in Check.md.\nOpen:\n- slice.architect-order (adj: not found). The contract (`slicer ai relay`, orchestrator steps) runs the architect after accepted findings and before the gate. docs/design.md:191-193 says alongside the reviewer. Ask which order applies. The CONTEXT recommendation is to follow the contract.\n- Architect report shape: CheckReport has no architect branch (report.go:37-84).\n- Whether ork checks the size itself. The item says size L only, but the matrix row is the only size gate today, and the contract leaves the architect to the owner."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/engine ./internal/daemon\n- go test -race -count=1 -run Architect ./internal/engine\n- go test -race -count=1 -run RunPlan ./internal/daemon\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .   (expect no output)\n- slicer check\n- adj lint\n- A slice with no architect row runs exactly the old role list (the test in Failing-tests.md).\n- Tests use fakeRunner only. No live vendor call."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

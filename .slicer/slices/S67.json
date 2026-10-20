@@ -1,0 +1,39 @@
+{
+  "id": "S67",
+  "title": "Roadmap editing: park and unpark from the TUI (needs adj 11)",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Parking and unparking an item from the TUI saves a trip to the CLI. It waits on adj 11 (open, key ui.slicer-tui; its recommendation is \"both\", so ork parks itself). Use the confirm bar (ui.confirm, decided #98) and `slicer park ID` / `slicer unpark ID` (../slicer/docs/commands.md:78). The key cannot be p: S57 gives n and p to row moves (decided #112)."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/tui/keys.go (new park and unpark bindings; not p).\n- internal/tui/model.go:294-303 (confirm handling) and :519-590 (runAction, which holds the exact target).\n- internal/tui/view.go:58-59 (confirm bar text).\n- internal/slicercli/write.go (new Park and Unpark wrappers, same shape as RelayBegin at :112).\n- internal/daemon/handlers.go (new write method; name set in the slice).\n- docs/dashboard.md:5 and :219-223 (roadmap editing is after v1); the key list.\nOpen: the key, and whether park is refused on a running item."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestParkAsksOnTheConfirmBar: the bar shows the exact `slicer park ID` command.\n- TestEnterOnConfirmCancelsPark: Enter is No (view.go:59); no slicer call is made.\n- TestYesParksAndRefreshesRow: y runs the call and the row shows parked after refresh.\n- TestParkFailureShowsErrorCodeVerbatim (docs/dashboard.md:19-20).\n- TestUnparkRoundTrip."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

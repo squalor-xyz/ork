@@ -1,0 +1,39 @@
+{
+  "id": "S62",
+  "title": "Slivers as their own items under the cap",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "L",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A sliver is a small item carved from a slice, linked by parent, so a cheaper model can implement it (glossary.md:154). design.md:185 says slivers run as their own items under the cap. No cap is enforced today: the caps are only fields (registry.go:75,89) and launchRun has no check. Cap enforcement is S05."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/slicercli/types.go:95 (Item.Parent) and :172 (Recommendation.Sliver).\n- internal/daemon/runs.go:205 (RecommendRoles) and :270-300 (plan and launch; the worktree guard is at :276-281 and blocks a second run on the same worktree).\n- internal/registry/registry.go:75 (Cap) and :89 (GlobalCap); enforcement comes from S05.\n- internal/tui/overview.go (show the parent on a sliver row).\n- docs/design.md:185; docs/glossary.md:154.\nOpen: slicer landing.md:29-31 says slivers run in the parent's worktree and branch and land once. design.md:185 says they are their own items. These conflict, and the owner must decide. The worktree guard at runs.go:276-281 blocks the shared-worktree case."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestSliverPlansWithItsParentLink: a sliver with a parent plans and records the parent.\n- TestSecondSliverOnSharedWorktreeIsRefused: the worktree guard refuses a second run on one worktree, unless the owner decides shared worktrees.\n- TestProjectCapHoldsSliverRuns: with S05 done, cap 1 queues the second sliver.\n- TestGlobalCapCountsSliverRuns: slivers count against the global cap.\n- Each test is written after the sliver worktree decision in Open."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

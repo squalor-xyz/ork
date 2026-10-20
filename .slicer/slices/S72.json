@@ -1,0 +1,39 @@
+{
+  "id": "S72",
+  "title": "Grok adapter and v1 role (after credits reset 2026-11-01)",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Grok would be the third vendor. Its v1 role is undecided: the owner deferred it and asked for a decision before S06 (S06 notes, 2026-10-19). Grok credits reset on 2026-11-01, and every grok call so far got HTTP 403 \"used all available credits\" (design.md:381; testdata/vendors/grok/01-plain-json.stdout). Re-run the 6 grok probes first (spike/grok.sh). No grok adapter exists: internal/agent has only claude."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/agent/grok/ (new; vendor.package-path, S06 notes).\n- internal/agent/claude/ (pattern to follow); internal/clirun (process-group helpers).\n- internal/daemon/runner.go:15-21 (claudeRunner; the claude-only check is at :21).\n- internal/daemon/runs.go:219-225 (plan takes the first row whose vendor is \"claude\", hard-coded at :224).\n- spike/grok.sh and testdata/vendors/grok/ (re-run; the 01-06 fixtures hold the 403 results).\n- docs/design.md:374-404 (grok column); docs/glossary.md:68."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A real grok plain-JSON fixture parses to a result with non-zero usage.\n- A real session id resumes (replaces testdata/vendors/grok/03-resume-by-id.*).\n- The read-only tool name comes from a fixture (read_file or Read; design.md:389).\n- HTTP 403 \"used all available credits\" classifies as a quota stop, not a rate limit (S06 notes).\n- Bad-model and auth exits stay unclassified until sampled (vendor.unsampled-classes)."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
