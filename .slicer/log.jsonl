@@ -426,3 +426,9 @@
 {"when": "2026-10-20T15:52:42Z", "item": "S56", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-10-20T15:52:43Z", "item": "S56", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-20T15:52:43Z", "item": "S56", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T15:58:40Z", "item": "S57", "action": "add", "from": "", "to": "open", "note": "TUI keys: up/down move rows, tab and left/right move projects"}
+{"when": "2026-10-20T15:58:40Z", "item": "S57", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T15:58:40Z", "item": "S57", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T15:58:40Z", "item": "S57", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T15:58:41Z", "item": "S57", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T15:58:41Z", "item": "S57", "action": "edit", "from": "", "to": "", "note": "Failing tests"}

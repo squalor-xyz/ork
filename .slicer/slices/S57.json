@@ -1,0 +1,41 @@
+{
+  "id": "S57",
+  "title": "TUI keys: up/down move rows, tab and left/right move projects",
+  "lead": [
+    "Owner 2026-10-20: in the TUI the cursor only moves between projects; Enter does nothing and the stopped S21 and S29 rows cannot be reached, because rows are moved with n and p while up, down, j, k and tab move projects (internal/tui/keys.go:35-36). Decided #112 (ui.row-keys): up, down, j and k move rows; tab, shift+tab, left, right and 1-9 move projects; n and p keep moving rows."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Rows are what the owner acts on (open a pane, approve, stop, retry), so they need the natural list keys. The row keys were not discoverable."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/tui: keys.go (Next and Prev lose up, down, j and k; RowNext and RowPrev gain them), model.go (key handling), the help view, tests, the two action-help goldens (colour and monochrome) and any golden that lists keys.\n- Check the interplay: the filter box and the answer field take text and left/right themselves (internal/tui/field.go); the pane must keep working; the sidebar order and 1-9 jump are unchanged.\n- docs/dashboard.md: the key list."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Down, j, up and k move the Overview cursor between rows, clamped at both ends; they no longer change the project.\n- Tab, shift+tab, left and right move between projects; 1-9 jump; n and p still move rows.\n- With the filter box open, or with the answer field focused, those keys type or edit text and move nothing else.\n- Enter on an engine run row opens the pane after moving the cursor onto it with down (a test that reaches the stopped S21 and S29 style rows by keys alone).\n- The help view and the two action-help goldens list the new keys.\n- docs/dashboard.md lists the new keys."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

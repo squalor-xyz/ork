@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 57,
+  "next_id": 58,
   "preamble": "",
   "passes": [
     {
@@ -2099,6 +2099,34 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S46",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S57",
+      "title": "TUI keys: up/down move rows, tab and left/right move projects",
+      "short_title": "TUI keys: up/down move rows, tab and left/right move projects",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S26",
         "parent": "",
         "cites": [],
         "key": "",
