@@ -1164,11 +1164,14 @@
       "id": "S25",
       "title": "TUI actions: launch, approve and stop",
       "short_title": "TUI actions: launch, approve and stop",
-      "status": "open",
+      "status": "started",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
-      "claim": null,
+      "claim": {
+        "owner": "Jon R",
+        "at": "2026-10-20T14:20:07Z"
+      },
       "fields": {
         "size": "M",
         "flags": [],
@@ -1185,7 +1188,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
