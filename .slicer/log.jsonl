@@ -372,3 +372,19 @@
 {"when": "2026-10-20T13:36:19Z", "item": "S46", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-20T14:04:32Z", "item": "S46", "action": "note", "from": "", "to": "", "note": "Review FAIL: M1 every daemon command waits on a full project", "by": "Jon R"}
 {"when": "2026-10-20T14:16:19Z", "item": "S46", "action": "status", "from": "started", "to": "done", "note": "ork daemon stop [--force] and restart added (new daemon.stop method; stop refuses while a role or engine job runs unless --force); daemon.info and the status reply carry the build id (#102: vcs.revision plus vcs.modified, falling back to version); ork doctor and every daemon command warn on a stale daemon and name ork daemon restart; docs/design.md updated. Full suite green with -race, vet and gofmt clean.", "by": "Jon R"}
+{"when": "2026-10-20T14:18:30Z", "item": "S51", "action": "add", "from": "", "to": "open", "note": "run.json at 0600; strip control characters from recorded commands"}
+{"when": "2026-10-20T14:18:30Z", "item": "S52", "action": "add", "from": "", "to": "open", "note": "TUI: launch a slice from a ready list"}
+{"when": "2026-10-20T14:18:44Z", "item": "S51", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T14:18:45Z", "item": "S52", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T14:18:52Z", "item": "S51", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T14:18:52Z", "item": "S51", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T14:18:52Z", "item": "S51", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T14:18:52Z", "item": "S51", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T14:18:52Z", "item": "S52", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T14:18:52Z", "item": "S52", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T14:18:52Z", "item": "S52", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T14:18:52Z", "item": "S52", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T14:19:07Z", "item": "S25", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T14:19:07Z", "item": "S25", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T14:19:07Z", "item": "S25", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T14:19:07Z", "item": "S25", "action": "edit", "from": "", "to": "", "note": "Failing tests"}

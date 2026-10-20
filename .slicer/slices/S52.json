@@ -1,0 +1,41 @@
+{
+  "id": "S52",
+  "title": "TUI: launch a slice from a ready list",
+  "lead": [
+    "Split out of S25 by #107 (ui.launch-split). The TUI launches a slice: the project offers a list of ready slices (ready = open, has a spec, no claim, no unmet dependency; the ! marker in slicer list), the owner picks one, answers the two y/n inputs (well specified, split), and the TUI shows the plan summary (lineup, check command) and the exact ork run command before a y/n confirm (Enter is No; ui.confirm #98). It calls run.plan, then run.start with the plan as Expected, as ork run does (internal/cli/run.go:119). Depends on S25 (action plumbing and the confirm bar) and S12 (a screen with a list)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner wants ork to be the one app that runs relays. S25 left launch out because the TUI has no screen to pick a slice from."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/tui (launch list, inputs, confirm), internal/daemon/client.go (typed plan and start calls), tests, goldens, docs/dashboard.md."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A project offers only ready slices: open, has a spec, no claim, no unmet dependency.\n- Picking a slice asks the two y/n inputs, then shows the plan summary and the exact ork run command.\n- y runs run.plan, then run.start with Expected; Enter or n runs nothing.\n- A failed call shows its error code and message verbatim.\n- Runs started elsewhere offer no actions (dash.external-runs).\n- Golden views, colour and monochrome."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
