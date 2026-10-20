@@ -65,7 +65,15 @@ type projectState struct {
 	dirty   bool
 }
 
-func (p *projectState) needs() int { return p.open + p.held }
+func (p *projectState) needs() int {
+	n := p.open + p.held
+	for _, r := range p.snap.EngineRuns {
+		if r.NeedsYou(p.snap.EngineRuns) {
+			n++
+		}
+	}
+	return n
+}
 
 // setup reports whether the project is loaded and has no .slicer/ folder.
 func (p *projectState) setup() bool { return p.loaded && isSetup(p.snap) }
@@ -358,9 +366,27 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 			rose = rose || (ps.hasHeld && n > ps.held)
 			ps.held, ps.hasHeld = n, true
 		}
-		if msg.snap.Runs.Err == nil {
-			ps.running = len(msg.snap.Runs.Value) > 0
+		linked := map[string]bool{}
+		engineActive := false
+		for _, r := range msg.snap.EngineRuns {
+			if r.RelayRun != "" {
+				linked[r.RelayRun] = true
+			}
+			if r.State != "committed" && !r.Superseded(msg.snap.EngineRuns) && !r.NeedsYou(msg.snap.EngineRuns) {
+				engineActive = true
+			}
 		}
+		if msg.snap.Runs.Err == nil {
+			ps.running = engineActive
+			for _, r := range msg.snap.Runs.Value {
+				if !linked[r.ID] {
+					ps.running = true
+				}
+			}
+		} else if engineActive {
+			ps.running = true
+		}
+
 	}
 	ps.loaded = true
 	ps.snap = msg.snap

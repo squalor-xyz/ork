@@ -77,12 +77,13 @@ func (c *Client) Snapshot(ctx context.Context, p registry.Project) source.Snapsh
 		}
 	}
 	return source.Snapshot{
-		Project: out.Project,
-		Items:   out.Items.result(),
-		Goals:   out.Goals.result(),
-		Runs:    out.Runs.result(),
-		Open:    out.Open.result(),
-		Decided: out.Decided.result(),
+		Project:    out.Project,
+		EngineRuns: out.EngineRuns,
+		Items:      out.Items.result(),
+		Goals:      out.Goals.result(),
+		Runs:       out.Runs.result(),
+		Open:       out.Open.result(),
+		Decided:    out.Decided.result(),
 	}
 }
 

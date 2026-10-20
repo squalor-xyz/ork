@@ -37,6 +37,7 @@ func (d *Daemon) snapshotOf(ctx context.Context, p registry.Project) source.Snap
 		}()
 	}
 	wg.Wait()
+	s.EngineRuns = d.engineRuns(p.Name)
 	return s
 }
 

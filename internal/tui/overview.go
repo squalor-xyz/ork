@@ -86,7 +86,48 @@ func (m *Model) rows() (needs, running []ovRow) {
 					text: fmt.Sprintf("%s  %s  (%s)", it.ID, it.Title, holdFlag)})
 			}
 		}
+
+		joined := map[string]bool{}
+		for _, r := range s.EngineRuns {
+			if r.RelayRun != "" {
+				joined[r.RelayRun] = true
+			}
+			if r.State == "committed" || r.Superseded(s.EngineRuns) {
+				continue
+			}
+			parts := []string{r.State}
+			if r.Wait != "" {
+				parts = append(parts, r.Wait)
+			}
+			began := r.CreatedAt
+			for _, ledger := range s.Runs.Value {
+				if r.RelayRun == "" || ledger.ID != r.RelayRun {
+					continue
+				}
+				if ledger.Counts.Steps > 0 {
+					parts = append(parts, fmt.Sprintf("%d of %d steps running", ledger.Counts.Running, ledger.Counts.Steps))
+				}
+				if at, err := time.Parse(time.RFC3339, ledger.BeganAt); err == nil {
+					began = at
+				}
+				break
+			}
+			if !began.IsZero() {
+				parts = append(parts, elapsed(m.cfg.Now().Sub(began)))
+			}
+			rest := strings.Join(parts, "  ")
+			row := ovRow{kind: "", style: th.Title, project: i, name: name, id: r.Item, rest: rest, text: r.Item + "  " + rest}
+			if r.NeedsYou(s.EngineRuns) {
+				row.kindW = kindWidth
+				needs = append(needs, row)
+			} else {
+				running = append(running, row)
+			}
+		}
 		for _, r := range s.Runs.Value {
+			if joined[r.ID] {
+				continue
+			}
 			id, rest := runParts(r, m.cfg.Now())
 			text := id
 			if rest != "" {

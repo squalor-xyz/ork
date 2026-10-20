@@ -39,9 +39,12 @@ The project sidebar comes from the registry (`registry.initial`,
 all-projects Overview. A project selection limits its rows to that project.
 The view bar stays at the top of the main pane. Only Overview is selectable.
 
-Each project row shows its needs-you count (open adj records plus slicer
-items flagged `needs-owner`). `*` marks a running slice and `~` marks a
-loaded project being refreshed. Selection uses reverse and `>`, including
+Each project row shows its needs-you count (open adj records, slicer
+items flagged `needs-owner`, and engine runs awaiting approval, paused or
+stopped). A stopped run stops counting once a newer engine run exists for
+the same slice. `*` marks a running slice; engine runs in Needs you do not
+set it. `~` marks a loaded project being refreshed. Selection uses reverse
+and `>`, including
 under `NO_COLOR`. Projects with needs come first, then running projects,
 then the rest; registry order breaks ties. Selection follows the project.
 A project with no `.slicer/` folder shows `no slicer`, dimmed, in place of its
@@ -98,6 +101,21 @@ and decided records refresh every 5 min or on HEAD changes and manual refresh. `
 3. **Ready to land:** committed slices whose branch is not merged, with the
    `slicer land ID --branch B` command to copy. Merged branches are
    detected and offered for cleanup (`landing.v1`, `git.cleanup`).
+
+The Overview reads engine runs in the daemon snapshot, using the same builder
+as `ork status` (`ui.engine-runs-read`). An engine row leads with the slice,
+engine state and wait. Its linked ledger run supplies step progress and elapsed
+time; without a ledger run, elapsed time starts at the engine record's creation.
+The join matches the engine's `relay_run` to the ledger run id, making one row
+per run (`ui.run-join-key`). Only unmatched ledger runs say "started elsewhere".
+
+Awaiting-approval, paused and stopped engine runs appear under Needs you.
+Other active engine states appear under Running. Committed runs do not appear
+in either section. A stopped run disappears once a newer engine record exists
+for the same slice, ordered by `created_at`; ledger runs do not clear it
+(`ui.stopped-newer`). Needs-you counts include open questions, held items and
+these engine waits in both the sidebar and `ork status`. This view is display
+only; approve, stop, answer and launch keys are not implemented in S22.
 
 A failed call is an error row. A project has one error row per error code.
 The parts that failed with that code come first, then the code, then the

@@ -145,12 +145,13 @@ func (d *Daemon) snapshot(ctx context.Context, p SnapshotParams) (*SnapshotResul
 	s := d.snapshotOf(ctx, proj)
 	now := d.cfg.Clock.Now()
 	return &SnapshotResult{
-		Project: s.Project,
-		Items:   partOf(s.Items, now),
-		Goals:   partOf(s.Goals, now),
-		Runs:    partOf(s.Runs, now),
-		Open:    partOf(s.Open, now),
-		Decided: partOf(s.Decided, now),
+		Project:    s.Project,
+		EngineRuns: s.EngineRuns,
+		Items:      partOf(s.Items, now),
+		Goals:      partOf(s.Goals, now),
+		Runs:       partOf(s.Runs, now),
+		Open:       partOf(s.Open, now),
+		Decided:    partOf(s.Decided, now),
 	}, nil
 }
 
@@ -182,9 +183,6 @@ func (d *Daemon) status(ctx context.Context, p StatusParams) (*StatusResult, err
 	out := &StatusResult{Projects: make([]ProjectStatus, 0, len(projects))}
 	for i, s := range snaps {
 		ps := projectStatus(projects[i], s, now)
-		if err := d.addEngineStatus(&ps); err != nil {
-			return nil, err
-		}
 		out.Projects = append(out.Projects, ps)
 	}
 	return out, nil
@@ -197,6 +195,17 @@ func projectStatus(p registry.Project, s source.Snapshot, now time.Time) Project
 		Adj:          p.Adj,
 		NeedsYou:     len(s.Open.Value),
 		ActiveRelays: []Relay{},
+		EngineRuns:   s.EngineRuns,
+	}
+	for _, r := range ps.EngineRuns {
+		if r.NeedsYou(ps.EngineRuns) {
+			ps.NeedsYou++
+		}
+	}
+	for _, it := range s.Items.Value {
+		if slices.Contains(it.Fields.Flags, "needs-owner") {
+			ps.NeedsYou++
+		}
 	}
 	ps.Parts = map[string]PartState{
 		"items": stateOf(s.Items, now),

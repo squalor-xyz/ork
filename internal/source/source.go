@@ -64,12 +64,13 @@ func result[T any](v T, err error) Result[T] {
 // one failed call does not blank the others. Open and Decided stay empty, with
 // no error, for a project whose registry entry has adj false.
 type Snapshot struct {
-	Project registry.Project
-	Items   Result[[]slicercli.Item]
-	Goals   Result[*slicercli.Goals]
-	Runs    Result[[]slicercli.RelayRun] // active runs only
-	Open    Result[[]adjcli.Record]
-	Decided Result[[]adjcli.Record]
+	EngineRuns []EngineRun
+	Project    registry.Project
+	Items      Result[[]slicercli.Item]
+	Goals      Result[*slicercli.Goals]
+	Runs       Result[[]slicercli.RelayRun] // active runs only
+	Open       Result[[]adjcli.Record]
+	Decided    Result[[]adjcli.Record]
 }
 
 // Source reads the state of registered projects.
@@ -147,4 +148,33 @@ func (d *Direct) Snapshot(ctx context.Context, p registry.Project) Snapshot {
 	}
 	wg.Wait()
 	return s
+}
+
+// EngineRun is the daemon's display of one engine run. Wire fields are proposed.
+type EngineRun struct {
+	ID        string    `json:"id"`
+	Item      string    `json:"item"`
+	State     string    `json:"state"`
+	Wait      string    `json:"wait,omitempty"`
+	RelayRun  string    `json:"relay_run,omitempty"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// Superseded reports a stopped run replaced by a newer engine run of its slice.
+// The caller supplies runs for a single project. Ledger runs do not participate.
+func (r EngineRun) Superseded(runs []EngineRun) bool {
+	if r.State != "stopped" {
+		return false
+	}
+	for _, newer := range runs {
+		if newer.Item == r.Item && newer.CreatedAt.After(r.CreatedAt) {
+			return true
+		}
+	}
+	return false
+}
+
+// NeedsYou uses the same engine states for status and the Overview.
+func (r EngineRun) NeedsYou(runs []EngineRun) bool {
+	return r.State == "awaiting-approval" || r.State == "paused" || (r.State == "stopped" && !r.Superseded(runs))
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
+	"github.com/squalor-xyz/ork/internal/source"
 )
 
 const (
@@ -55,12 +56,7 @@ type RunPlan struct {
 }
 
 // EngineRun is the owner's status of one engine run. Wire fields are proposed.
-type EngineRun struct {
-	ID    string `json:"id"`
-	Item  string `json:"item"`
-	State string `json:"state"`
-	Wait  string `json:"wait,omitempty"`
-}
+type EngineRun = source.EngineRun
 
 type runResult struct {
 	err    error
@@ -381,20 +377,20 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 	}
 	return d.ownerRun(ctx, method, p)
 }
-func (d *Daemon) addEngineStatus(ps *ProjectStatus) error {
+func (d *Daemon) engineRuns(project string) []EngineRun {
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
 	stored, err := d.runs.deps.Store.List()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "run status: %v\n", err)
 	}
-	ps.EngineRuns = []EngineRun{}
+	runs := []EngineRun{}
 	for _, r := range stored {
 		rec := r.Snapshot()
 		if m := d.runs.runs[rec.ID]; m != nil {
 			rec = m.engine.Snapshot()
 		}
-		if rec.Project != ps.Name {
+		if rec.Project != project {
 			continue
 		}
 		wait := rec.Reason
@@ -406,12 +402,9 @@ func (d *Daemon) addEngineStatus(ps *ProjectStatus) error {
 		}
 		switch rec.State {
 		case runrec.StateAwaitingApproval:
-			ps.NeedsYou++
 			wait = "owner approval"
-		case runrec.StatePaused, runrec.StateStopped:
-			ps.NeedsYou++
 		}
-		ps.EngineRuns = append(ps.EngineRuns, EngineRun{ID: rec.ID, Item: rec.Item, State: rec.State, Wait: wait})
+		runs = append(runs, EngineRun{ID: rec.ID, Item: rec.Item, State: rec.State, Wait: wait, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt})
 	}
-	return nil
+	return runs
 }

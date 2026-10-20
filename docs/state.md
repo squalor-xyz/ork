@@ -146,6 +146,14 @@ of `info/exclude` is a git write with argv `["exclude", ".worktrees/"]`.
 If recording a CLI write fails, the writer returns that error and makes no
 further retry. The CLI may already have changed the project.
 
+## Engine display snapshot
+
+The daemon's snapshot has an `engine_runs` list, built by the same code as
+`ork status`. Each entry has `id`, `item`, `state`, optional `wait`, optional
+`relay_run`, and `created_at`. The last two fields link ledger progress and
+order replacement runs for the Overview (`ui.engine-runs-read`,
+`ui.run-join-key`, `ui.stopped-newer`). These are read-only display fields.
+
 ## Rules
 
 - **Atomic writes:** write a temporary file in the same directory, then

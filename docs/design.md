@@ -60,7 +60,7 @@ ork (TUI)  ork status --json (CLI)
   | Method | Params | Result |
   |---|---|---|
   | `status` | `{"project"?}` | `{"projects":[{name, path, adj, needs_you, active_relays, errors?}]}` |
-  | `snapshot` | `{"project"}` | the project's `source.Snapshot` from the cache; each part is `{"value", "age_ms", "read_at"?, "stale"?, "error"?}`: the last good value, its age in ms (0 if never read), when it was read (absent if never), and the last read's error |
+  | `snapshot` | `{"project"}` | the project's `source.Snapshot` from the cache, plus the daemon's `engine_runs` array (not a Part); each part is `{"value", "age_ms", "read_at"?, "stale"?, "error"?}`: the last good value, its age in ms (0 if never read), when it was read (absent if never), and the last read's error |
   | `subscribe` | `{"focus":[names]}` | none; the connection gets notices (below) and the named projects become visible |
   | `refresh` | `{"project"}` | none; reads every part of the project now and returns once they are read |
   | `projects.list` | none | `{"projects":[...]}` |
@@ -572,9 +572,13 @@ Text output is plain lines meant to be stable. `--json` output, indented:
 - `status`: `{"projects":[{"name","path","adj","needs_you","active_relays":[
   {"id","items","state","worktree","begun_at","updated_at","steps",
   "running"}],"parts":{"items":{"age_ms","stale"?,"error"?}},"errors":[{"part","code","message"}]}]}`. `needs_you` is the
-  project's count of open adj records plus engine runs awaiting approval,
-  paused or stopped (`status.needs-you`, adj #69). S17 also adds the
-  *proposed* `engine_runs:[{id,item,state,wait?}]` field per project. `wait`
+  project's count of open adj records, slicer items flagged `needs-owner`,
+  and engine runs awaiting approval, paused or stopped (`status.needs-you`,
+  adj #69). A stopped run stops counting once a newer engine run exists for
+  the same slice, ordered by created time (adj #92). The *proposed*
+  `engine_runs:[{id,item,state,wait?,relay_run?,created_at}]` field per project
+  includes the linked slicer ledger run ID in `relay_run`, when present,
+  and the engine run's creation time in `created_at`. `wait`
   contains the approval prompt, owner question, pause or stop reason. `active_relays` are slicer's active relay runs.
   `errors` lists failed parts (`items`, `goals`, `runs`, `open`, `decided`)
   with the tool's own code. `parts` gives each part's age in ms (0 for a part never read) and `stale`

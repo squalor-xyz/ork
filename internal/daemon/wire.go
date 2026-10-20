@@ -136,12 +136,13 @@ func (p Part[T]) result() source.Result[T] {
 
 // SnapshotResult is source.Snapshot over the wire.
 type SnapshotResult struct {
-	Project registry.Project           `json:"project"`
-	Items   Part[[]slicercli.Item]     `json:"items"`
-	Goals   Part[*slicercli.Goals]     `json:"goals"`
-	Runs    Part[[]slicercli.RelayRun] `json:"runs"`
-	Open    Part[[]adjcli.Record]      `json:"open"`
-	Decided Part[[]adjcli.Record]      `json:"decided"`
+	EngineRuns []EngineRun                `json:"engine_runs"`
+	Project    registry.Project           `json:"project"`
+	Items      Part[[]slicercli.Item]     `json:"items"`
+	Goals      Part[*slicercli.Goals]     `json:"goals"`
+	Runs       Part[[]slicercli.RelayRun] `json:"runs"`
+	Open       Part[[]adjcli.Record]      `json:"open"`
+	Decided    Part[[]adjcli.Record]      `json:"decided"`
 }
 
 // AddProjectParams is a projects.add call. An empty Name means the base name

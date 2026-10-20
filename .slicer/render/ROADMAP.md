@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-23 items · — 8 · done 15
+23 items · — 7 · done 16
 
 ## v1
 
@@ -68,7 +68,7 @@
 | 18 | [S19](slices/S19.md) | Project sidebar | M | 2 |  |  | done |
 | 19 | [S20](slices/S20.md) | Overview rows | S | 1 |  |  | done |
 | 20 | [S21](slices/S21.md) | Y/N answers and defaults for ork run prompts | S | 1 |  | discovered from S17 | done |
-| 21 | [S22](slices/S22.md) | Overview shows ork's own engine runs | M | 2 |  | discovered from S17 | — |
+| 21 | [S22](slices/S22.md) | Overview shows ork's own engine runs | M | 2 |  | discovered from S17 | done |
 | 22 | [S23](slices/S23.md) | A denied tool call does not fail a finished role | S | 2 |  | discovered from S21 | — |
 
 ---

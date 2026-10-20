@@ -170,7 +170,7 @@ func TestDaemonStopCancelsAnActiveRole(t *testing.T) {
 func TestStatusIncludesEngineWaitsAndNeedsYou(t *testing.T) {
 	d, store, p := runDaemon(t, nil)
 	for _, s := range []string{runrec.StateAwaitingApproval, runrec.StatePaused, runrec.StateStopped, runrec.StateCommitted} {
-		_, err := store.Create(runrec.Record{ID: s, Project: p.Name, State: s, Reason: "owner action"})
+		_, err := store.Create(runrec.Record{ID: s, Item: s, Project: p.Name, State: s, Reason: "owner action"})
 		if err != nil {
 			t.Fatal(err)
 		}
