@@ -1163,6 +1163,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "4519e976-481d-4ab2-b8e6-83a8b38918b8",
+          "kind": "",
+          "text": "**2026-10-20** — Proposed, awaiting owner (2026-10-20 review): adj 97 choose ork-sets-checks; its ref to adjudicate S44 should read S45 (owner edits the record). adj 11 choose both.",
+          "created_at": "2026-10-20T18:07:47Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -1272,6 +1283,7 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [
+        "S58",
         "S59"
       ],
       "note_records": [],
@@ -1304,7 +1316,19 @@
       "depends_on": [
         "S27"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "99af7dac-d009-42a6-845f-f1db590176a9",
+          "kind": "",
+          "text": "**2026-10-20** — Proposed, awaiting owner (2026-10-20 review): --by comes from the caller's own ADJ_DECIDED_BY, passed in the request; if unset the answer is refused with a message. Reason text: 'Answered in ork on DATE' plus the question. Record as owner.questions-filing once the owner confirms.",
+          "created_at": "2026-10-20T18:07:46Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1444,7 +1468,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "34b6316a-d919-414b-a2aa-7fe83c6aa0e2",
+          "kind": "",
+          "text": "**2026-10-20** — Proposed, awaiting owner: a setup project with an engine run gets a row under Needs you, so the badge and the rows agree.",
+          "created_at": "2026-10-20T18:07:47Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1502,7 +1538,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "e8646f57-7b5d-459e-8787-f20fbeb425d7",
+          "kind": "",
+          "text": "**2026-10-20** — Proposed, awaiting owner: a run that failed to reconcile does not count as active, so it does not block idle exit; it still shows and keeps stop and retry.",
+          "created_at": "2026-10-20T18:07:47Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1530,7 +1578,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b6c36895-5d5f-4840-a68b-263705e17d64",
+          "kind": "",
+          "text": "**2026-10-20** — Proposed, awaiting owner: a second stop joins the first even while the first still waits for an earlier job.",
+          "created_at": "2026-10-20T18:07:47Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1726,7 +1786,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "c3e8e504-0215-4e1a-b48a-4ee9d3fad5e0",
+          "kind": "",
+          "text": "**2026-10-20** — Proposed, awaiting owner: show 3 denials then 'and N more'; repeat count like 'x2'; keep the design.md:316 bullet with a note that ork follows record 93; update implementer.md:72-73 to match.",
+          "created_at": "2026-10-20T18:07:47Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1880,7 +1952,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "23b6d547-5f8f-477f-b198-29b073697305",
+          "kind": "",
+          "text": "**2026-10-20** — Proposed, awaiting owner (2026-10-20 review): approve 3 more paid calls (7 total) once Codex credits return, and not before.",
+          "created_at": "2026-10-20T18:07:46Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -2056,7 +2140,19 @@
       "depends_on": [
         "S53"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d3320f6a-0503-417a-89ab-feb3ab59d17d",
+          "kind": "",
+          "text": "**2026-10-20** — Proposed, awaiting owner (2026-10-20 review), ui.version-mark: version next to the name in the header line; stale-daemon warning in the status line; no splash; doctor prints a one-line text mark with an ASCII fallback.",
+          "created_at": "2026-10-20T18:07:46Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -2321,7 +2417,19 @@
       "depends_on": [
         "S09"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "ffcfaeea-3346-4739-a973-9fcde0ef93e4",
+          "kind": "",
+          "text": "**2026-10-20** — Proposed, awaiting owner (2026-10-20 review), landing.merge-detect: when a project's HEAD changes (record 66's signal), run one merged-branch check for that project's committed runs; no extra git reads while HEAD is unchanged.",
+          "created_at": "2026-10-20T18:07:46Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -2377,7 +2485,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "569e87fa-d02f-4045-beeb-c86de1f5bb50",
+          "kind": "",
+          "text": "**2026-10-20** — Proposed, awaiting owner (2026-10-20 review), run.budget-resume: a budget pause waits for the owner; retry grants exactly one more role round, then the check applies again; MaxRounds stays; the minutes clock counts role run time, not wall time since CreatedAt, so paused time does not count (verify role durations are recorded first).",
+          "created_at": "2026-10-20T18:07:46Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -2407,7 +2527,19 @@
       "depends_on": [
         "S12"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "91ea4036-f8ce-4a23-b498-78c261087fe2",
+          "kind": "",
+          "text": "**2026-10-20** — Proposed, awaiting owner (2026-10-20 review), ui.mouse: off in v1; if built, opt-in by flag, because mouse capture stops terminal text selection (copying the slicer land command).",
+          "created_at": "2026-10-20T18:07:46Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
