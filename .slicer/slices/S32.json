@@ -1,0 +1,41 @@
+{
+  "id": "S32",
+  "title": "ork status lists stopped runs that the needs-you count leaves out",
+  "lead": [
+    "Seen 2026-10-20: ork status --project ork says 'needs you 3' but lists three stopped S21 runs, two of which no longer count under #92 ui.stopped-newer, and the TUI shows only the newest. The list and the count disagree, so it is unclear what the owner must act on."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Seen 2026-10-20: ork status --project ork says 'needs you 3' but lists three stopped S21 runs, two of which no longer count under #92 ui.stopped-newer, and the TUI shows only the newest. The list and the count disagree, so it is unclear what the owner must act on."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/cli (status output), tests, docs/dashboard.md."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Stopped runs hidden by #92 are not listed as needing you (or are marked as superseded).\n- The listed rows match the counted rows.\n- A stopped run with no newer run is still listed."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

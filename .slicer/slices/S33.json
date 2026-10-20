@@ -1,0 +1,41 @@
+{
+  "id": "S33",
+  "title": "Show the engine run ID in the Overview row and detail",
+  "lead": [
+    "Seen 2026-10-20: ork approve and ork stop take the engine run id (ork-...), but the Overview row shows only the slice and stage, so the owner reads the id from ork status. Until S25 adds keys, show the id on the row or its detail."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Seen 2026-10-20: ork approve and ork stop take the engine run id (ork-...), but the Overview row shows only the slice and stage, so the owner reads the id from ork status. Until S25 adds keys, show the id on the row or its detail."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/tui (overview row and detail), goldens, docs/dashboard.md."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- An engine run row shows its ork-... id in the row or the detail pane.\n- A ledger-only run shows no engine id.\n- Golden views, colour and monochrome."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -1,0 +1,41 @@
+{
+  "id": "S34",
+  "title": "Clear an old stopped run from Needs you",
+  "lead": [
+    "Seen 2026-10-20: a stopped run stays in Needs you until a newer engine run exists for the slice (#92). The S21 run stopped 9h ago stays with no way to dismiss it. Open owner question before building: dismiss command or key, whether it is recorded, and whether it deletes the run record (retention keeps 100 finished runs, state.runs-retention)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Seen 2026-10-20: a stopped run stays in Needs you until a newer engine run exists for the slice (#92). The S21 run stopped 9h ago stays with no way to dismiss it. Open owner question before building: dismiss command or key, whether it is recorded, and whether it deletes the run record (retention keeps 100 finished runs, state.runs-retention)."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/runrec, internal/daemon, internal/cli, internal/tui, tests, docs/state.md, docs/design.md."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Per the owner decision (not yet recorded, ask first with key ui.dismiss-run): a dismissed stopped run leaves Needs you and the status count.\n- A dismissed run is still readable in its run record."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
