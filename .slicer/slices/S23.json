@@ -1,0 +1,41 @@
+{
+  "id": "S23",
+  "title": "A denied tool call does not fail a finished role",
+  "lead": [
+    "Decide and implement what ork does when a role finishes but some of its tool calls were denied. Today the slice stops."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Seen 2026-10-20 in ork run ork S21 (run ork-20261020-021238-ce5a): the Haiku implementer finished its work and wrote a full report, but three side calls (mkdir, echo, shasum) were denied, and the slice stopped with 'implementer round 1 exited error'. internal/agent/claude/classify.go:20 marks any denial as denied, even on exit 0, and internal/daemon/runner.go:35-41 maps every class except ok and rate-limited to engine.ExitError. The stop reason also hides the denials: only run.json lists them. docs/state.md promises a <role>-<round>.log that the run did not write. Open design questions for the owner, to be decided before building: whether a denial stops the slice, only warns, or depends on the tool; what the stop reason and the TUI show; and whether the default allowlist should cover more (it blocks git -C, go -C, adj)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/agent/claude/classify.go`, `internal/daemon/runner.go`, `internal/engine/round.go`, `internal/engine/perm.go`, tests, `docs/design.md`, `docs/state.md` (the log file)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Per the owner decision (not yet recorded): a round with a successful result and denials follows the decided policy; the denied tool names reach the stop reason or the report.\n- A denial on a round with no success result still stops the slice.\n- The role output log named in docs/state.md exists, or the doc no longer promises it."
+    },
+    {
+      "heading": "Implement",
+      "body": "Ask the owner the policy question first (adj ask, key engine.denials), then build."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race ./...`, `go vet ./...`, `gofmt -l .` clean; SPDX headers; no new dependency.\n- `slicer check` and `adj lint` pass."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"S23: a denied tool call does not fail a finished role\"."
+    }
+  ],
+  "notes": []
+}

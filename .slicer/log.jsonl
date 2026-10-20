@@ -159,3 +159,12 @@
 {"when": "2026-10-20T01:56:04Z", "item": "S22", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-20T02:13:43Z", "item": "S21", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-20T02:31:20Z", "item": "S21", "action": "status", "from": "started", "to": "done", "note": "ork run prompts take y/yes/n/no in any case; confirm shows [y/N] and Enter takes No; well-specified and split show [y/n] with no default; flags and --yes unchanged in behaviour. Verified: go test -race ./..., go vet, gofmt, slicer check, adj lint clean; reviewer VERDICT: PASS.", "by": "Jon R"}
+{"when": "2026-10-20T02:37:55Z", "item": "S23", "action": "add", "from": "", "to": "open", "note": "A denied tool call does not fail a finished role"}
+{"when": "2026-10-20T02:37:55Z", "item": "S23", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T02:37:55Z", "item": "S23", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T02:37:55Z", "item": "S23", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T02:37:56Z", "item": "S23", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T02:37:56Z", "item": "S23", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T02:37:56Z", "item": "S23", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-20T02:37:56Z", "item": "S23", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-20T02:37:56Z", "item": "S23", "action": "edit", "from": "", "to": "", "note": "Git"}
