@@ -30,6 +30,7 @@ const (
 	StateCommitted        = "committed"
 	StatePaused           = "paused"
 	StateStopped          = "stopped"
+	StateQueued           = "queued" // waits for a slot under the caps; not final
 )
 
 // IsFinal reports whether a run in this state is finished.

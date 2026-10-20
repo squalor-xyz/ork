@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"testing"
@@ -27,6 +28,8 @@ import (
 type roundRunner func(context.Context, engine.Request) (engine.Result, error)
 
 func (f roundRunner) Run(c context.Context, r engine.Request) (engine.Result, error) { return f(c, r) }
+
+var lastFake *clitest.Fake // the fakes of the latest runDaemon
 
 func runDaemon(t *testing.T, runner roundRunner) (*Daemon, *runrec.Store, registry.Project) {
 	t.Helper()
@@ -55,6 +58,7 @@ func runDaemon(t *testing.T, runner roundRunner) (*Daemon, *runrec.Store, regist
 		clitest.Route{Tool: "git", Args: []string{"-C", filepath.Join(p.Path, ".worktrees", "S1"), "rev-parse", "HEAD"}, Stdout: "abc123\n"},
 		clitest.Route{Tool: "git", Prefix: true},
 	)
+	lastFake = fake
 	deps := engine.Deps{Store: store, Slicer: slicercli.Client{Bin: fake.Bin("slicer")}, GitBin: fake.Bin("git"), Runner: runner,
 		Check: func(context.Context, string, string, time.Duration) (engine.CheckOutput, error) {
 			return engine.CheckOutput{OK: true}, nil
@@ -89,6 +93,24 @@ func waitState(t *testing.T, store *runrec.Store, id, state string) runrec.Recor
 	r, _ := store.Open(id)
 	t.Fatalf("run did not reach %s: %+v", state, r.Snapshot())
 	return runrec.Record{}
+}
+
+// waitIdle waits until the run's job has ended. The record shows a rest state
+// before the job goroutine clears busy.
+func waitIdle(t *testing.T, d *Daemon, id string) {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for time.Now().Before(deadline) {
+		d.runs.mu.Lock()
+		r := d.runs.runs[id]
+		busy := r != nil && r.busy
+		d.runs.mu.Unlock()
+		if !busy {
+			return
+		}
+		time.Sleep(time.Millisecond)
+	}
+	t.Fatalf("run %s is still busy", id)
 }
 func TestRunPlanUsesFirstClaudeAndResolvedPermissions(t *testing.T) {
 	d, store, p := runDaemon(t, nil)
@@ -127,8 +149,10 @@ func TestRunStartAnswerApproveThroughDaemon(t *testing.T) {
 		t.Fatal(err)
 	}
 	waitState(t, store, rec.ID, runrec.StatePaused)
+	waitIdle(t, d, rec.ID)
 	request(t, d, "run.answer", fmt.Sprintf(`{"run":%q,"text":"use stdlib"}`, rec.ID))
 	waitState(t, store, rec.ID, runrec.StateAwaitingApproval)
+	waitIdle(t, d, rec.ID)
 	b = request(t, d, "run.approve", fmt.Sprintf(`{"run":%q}`, rec.ID))
 	if !strings.Contains(string(b), `"state":"committed"`) || !strings.Contains(string(b), `"sha":"abc123"`) {
 		t.Fatalf("approval did not commit: %s", b)
@@ -541,4 +565,259 @@ func TestCloseRefusesAStopWaitingForItsRole(t *testing.T) {
 	case <-time.After(5 * time.Second):
 		t.Fatal("waiting stop did not return")
 	}
+}
+
+// waveRig holds roles open until the test frees them one at a time.
+type waveRig struct {
+	d       *Daemon
+	store   *runrec.Store
+	p       registry.Project
+	started chan string // the worktree of each role that began
+	free    chan struct{}
+	fake    *clitest.Fake
+}
+
+func newWaveRig(t *testing.T, global, projectCap int) *waveRig {
+	t.Helper()
+	rig := &waveRig{started: make(chan string, 32), free: make(chan struct{}, 32)}
+	d, store, p := runDaemon(t, func(ctx context.Context, r engine.Request) (engine.Result, error) {
+		rig.started <- filepath.Base(r.Worktree)
+		select {
+		case <-rig.free:
+			return engine.Result{Exit: engine.ExitError}, nil
+		case <-ctx.Done():
+			return engine.Result{}, ctx.Err()
+		}
+	})
+	p.Cap = projectCap
+	if err := registry.Save(d.cfg.RegistryPath, &registry.File{Version: registry.Version, GlobalCap: global, Projects: []registry.Project{p}}); err != nil {
+		t.Fatal(err)
+	}
+	rig.d, rig.store, rig.p, rig.fake = d, store, p, lastFake
+	return rig
+}
+
+func (w *waveRig) start(t *testing.T, item string) runrec.Record {
+	t.Helper()
+	b := request(t, w.d, "run.start", fmt.Sprintf(`{"project":"p","item":%q}`, item))
+	var rec runrec.Record
+	if err := json.Unmarshal(b, &rec); err != nil {
+		t.Fatal(err)
+	}
+	return rec
+}
+
+func (w *waveRig) expectStart(t *testing.T, item string) {
+	t.Helper()
+	select {
+	case got := <-w.started:
+		if got != item {
+			t.Fatalf("role started for %s, want %s", got, item)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatalf("no role started for %s", item)
+	}
+}
+
+// expectStarts waits for one role start per item, in any order.
+func (w *waveRig) expectStarts(t *testing.T, items ...string) {
+	t.Helper()
+	want := map[string]bool{}
+	for _, item := range items {
+		want[item] = true
+	}
+	for range items {
+		select {
+		case got := <-w.started:
+			if !want[got] {
+				t.Fatalf("role started for %s, want one of %v", got, items)
+			}
+			delete(want, got)
+		case <-time.After(5 * time.Second):
+			t.Fatalf("roles did not start for %v", want)
+		}
+	}
+}
+
+func (w *waveRig) expectNoStart(t *testing.T) {
+	t.Helper()
+	select {
+	case got := <-w.started:
+		t.Fatalf("role started for %s over the cap", got)
+	case <-time.After(150 * time.Millisecond):
+	}
+}
+
+func TestWaveGlobalCapQueuesTheFifthRun(t *testing.T) {
+	w := newWaveRig(t, 4, 0)
+	var recs []runrec.Record
+	for i := 1; i <= 5; i++ {
+		recs = append(recs, w.start(t, fmt.Sprintf("S%d", i)))
+	}
+	w.expectStarts(t, "S1", "S2", "S3", "S4")
+	w.expectNoStart(t)
+	for i, rec := range recs {
+		want := runrec.StateSetup
+		if i == 4 {
+			want = runrec.StateQueued
+		}
+		if i < 4 && rec.State == runrec.StateQueued {
+			t.Errorf("run %d queued under the cap", i+1)
+		}
+		if i == 4 && rec.State != want {
+			t.Errorf("fifth run state %q, want queued", rec.State)
+		}
+		if !regexp.MustCompile(`^wave-\d{8}-\d{6}-[0-9a-f]{4}$`).MatchString(rec.Wave) {
+			t.Errorf("run %d wave id %q", i+1, rec.Wave)
+		}
+	}
+	got := w.store.Dir
+	b, err := os.ReadFile(filepath.Join(got, recs[4].ID, "run.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var disk map[string]any
+	if err := json.Unmarshal(b, &disk); err != nil {
+		t.Fatal(err)
+	}
+	if disk["state"] != "queued" || disk["wave"] == "" || disk["wave"] == nil {
+		t.Errorf("queued run.json: state %v wave %v", disk["state"], disk["wave"])
+	}
+	if ws, _ := disk["writes"].([]any); len(ws) != 0 {
+		t.Errorf("queued run wrote: %v", ws)
+	}
+}
+
+func TestWaveProjectCapHoldsASecondRun(t *testing.T) {
+	w := newWaveRig(t, 0, 1)
+	first := w.start(t, "S1")
+	second := w.start(t, "S2")
+	w.expectStart(t, "S1")
+	w.expectNoStart(t)
+	if first.State == runrec.StateQueued || second.State != runrec.StateQueued {
+		t.Errorf("states %q %q", first.State, second.State)
+	}
+}
+
+func TestQueuedRunStartsWhenASlotFrees(t *testing.T) {
+	w := newWaveRig(t, 1, 0)
+	w.start(t, "S1")
+	w.start(t, "S2")
+	third := w.start(t, "S3")
+	w.expectStart(t, "S1")
+	w.free <- struct{}{}
+	w.expectStart(t, "S2") // oldest first
+	waitState(t, w.store, third.ID, runrec.StateQueued)
+	w.expectNoStart(t)
+	w.free <- struct{}{}
+	w.expectStart(t, "S3")
+}
+
+func TestQueuedRunsRestartOldestFirst(t *testing.T) {
+	w := newWaveRig(t, 1, 0)
+	// Created newest id first, so the order is the creation time, not the id.
+	base := time.Date(2026, 10, 20, 9, 0, 0, 0, time.UTC)
+	for i, item := range []string{"S3", "S1", "S2"} {
+		w.store.Now = func() time.Time { return base.Add(time.Duration(i) * time.Minute) }
+		_, err := w.store.Create(runrec.Record{ID: "q-" + item, Project: "p", Item: item, State: runrec.StateQueued, Wave: "wave-x",
+			Worktree: filepath.Join(w.p.Path, ".worktrees", item), Lineup: map[string][]runrec.LineupEntry{
+				engine.RoleImplementer: {{Vendor: "claude", Model: "sonnet"}}, engine.RoleReviewer: {{Vendor: "claude", Model: "opus"}}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	w.expectStart(t, "S3")
+	w.free <- struct{}{}
+	w.expectStart(t, "S1")
+	w.free <- struct{}{}
+	w.expectStart(t, "S2")
+}
+
+func TestQueuedRunCountsAsBusy(t *testing.T) {
+	w := newWaveRig(t, 1, 0)
+	// A busy run whose record rests fills the only slot, so S1 queues. It is
+	// then made idle, so only the queued record can keep the daemon.
+	held, err := w.store.Create(runrec.Record{ID: "held", Project: "p", Item: "H1", State: runrec.StatePaused})
+	if err != nil {
+		t.Fatal(err)
+	}
+	w.d.runs.runs["held"] = &managedRun{engine: engine.Load(w.d.runDeps(w.p), w.p, held), busy: true}
+	queued := w.start(t, "S1")
+	if queued.State != runrec.StateQueued {
+		t.Fatalf("run over the cap: %q", queued.State)
+	}
+	w.d.runs.mu.Lock()
+	w.d.runs.runs["held"].busy = false
+	w.d.runs.mu.Unlock()
+	if !w.d.activeRuns() {
+		t.Error("a queued run must count as active")
+	}
+	if _, err := w.d.stopDaemon(StopParams{}); err == nil || !strings.Contains(err.Error(), "running") {
+		t.Errorf("daemon stop without force accepted with a queued run: %v", err)
+	}
+	clock := &fakeClock{}
+	exited := false
+	idle := &idleTimer{clock: clock, timeout: func() time.Duration { return time.Minute }, waveRunning: w.d.activeRuns, onIdle: func() { exited = true }}
+	idle.start()
+	defer idle.stop()
+	clock.Advance(time.Minute)
+	if exited {
+		t.Error("idle timer fired with a queued run")
+	}
+}
+
+func TestStopQueuedRunMakesNoWrites(t *testing.T) {
+	w := newWaveRig(t, 1, 0)
+	w.start(t, "S1")
+	queued := w.start(t, "S2")
+	w.expectStart(t, "S1")
+	before := len(w.fake.Calls())
+	rec, err := w.d.ownerRun(context.Background(), MethodRunStop, RunAction{Run: queued.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rec.State != runrec.StateStopped || len(rec.Writes) != 0 {
+		t.Errorf("stopped queued run: state %q writes %+v", rec.State, rec.Writes)
+	}
+	if got := w.fake.Calls(); len(got) != before {
+		t.Errorf("queued stop called tools: %v", got[before:])
+	}
+}
+
+func TestOwnerActionsBypassTheCap(t *testing.T) {
+	w := newWaveRig(t, 1, 0)
+	// A paused run (retry), a paused question (answer), an awaiting-approval run.
+	mk := func(id, item, state string, pending *runrec.Pending) {
+		_, err := w.store.Create(runrec.Record{ID: id, Project: "p", Item: item, State: state, Pending: pending,
+			Worktree: filepath.Join(w.p.Path, ".worktrees", item), Lineup: map[string][]runrec.LineupEntry{
+				engine.RoleImplementer: {{Vendor: "claude", Model: "sonnet"}}, engine.RoleReviewer: {{Vendor: "claude", Model: "opus"}}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	mk("retry", "R1", runrec.StatePaused, &runrec.Pending{Kind: runrec.PendingError, State: runrec.StateImplement, Role: engine.RoleImplementer, Reason: "x"})
+	mk("answer", "A1", runrec.StatePaused, &runrec.Pending{Kind: runrec.PendingQuestion, State: runrec.StateImplement, Role: engine.RoleImplementer, Reason: "q", Question: "which?"})
+	mk("approve", "P1", runrec.StateAwaitingApproval, nil)
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	w.start(t, "S1") // fills the global cap of 1
+	w.expectStart(t, "S1")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	go w.d.ownerRun(ctx, MethodRunRetry, RunAction{Run: "retry"})
+	w.expectStart(t, "R1")
+	go w.d.ownerRun(ctx, MethodRunAnswer, RunAction{Run: "answer", Text: "stdlib"})
+	w.expectStart(t, "A1")
+	for _, id := range []string{"retry", "answer"} {
+		r, _ := w.store.Open(id)
+		if r.Snapshot().State == runrec.StateQueued {
+			t.Errorf("%s was queued", id)
+		}
+	}
+	go w.d.ownerRun(ctx, MethodRunApprove, RunAction{Run: "approve"})
+	w.expectStart(t, "P1") // the finish step runs a role at once
 }

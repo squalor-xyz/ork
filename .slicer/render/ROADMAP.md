@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-75 items · — 43 · done 27 · retired 5
+75 items · — 42 · done 28 · retired 5
 
 ## v1
 
@@ -52,7 +52,7 @@
 | 2 | [S02](slices/S02.md) | Core and adapters | M | 2 |  |  | done |
 | 3 | [S03](slices/S03.md) | Daemon and CLI | M | 2 |  |  | done |
 | 4 | [S04](slices/S04.md) | Engine core | M | 3 |  |  | done |
-| 5 | [S05](slices/S05.md) | Waves and caps: queue, admission | M | 2 |  |  | — |
+| 5 | [S05](slices/S05.md) | Waves and caps: queue, admission | M | 2 |  |  | done |
 | 6 | S06 | Vendors and fallback | M | 2 |  | Umbrella over S47, S48 and S49. Notes move to the grok adapter (S72) and budgets (S65); owner 2026-10-20. | retired |
 | 7 | S07 | Live role detail | M | 2 |  |  | — |
 | 8 | [S08](slices/S08.md) | Architect role | L | 3 |  |  | — |

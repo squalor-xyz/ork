@@ -154,7 +154,8 @@ ork (TUI)  ork status --json (CLI)
 4. **Approve.** The owner approves the wave. This is checkpoint 1.
 5. **Run.** Items start as slots free up under the global cap (default 4)
    and the per-project cap (`wave.limits`). Several waves, each in one
-   project, may run at once (`wave.scope`).
+   project, may run at once (`wave.scope`). An item over a cap
+   waits as a queued run and starts, oldest first, as a slot frees.
 6. **Result.** Each item that reaches a passed gate waits for the owner's
    approval. This is checkpoint 2. Once approved, ork runs the finish step, then
    commits (adj #81). An item that stops waits in "needs you", and the rest continue (`wave.failure`).
@@ -227,7 +228,7 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   class (`ok`, `rate_limited`, `auth`, `error`), the session, the final
   text, tokens, cost and the permission denials. A runner error counts as an
   exit of class `error`.
-- **States.** `setup`, `implement`, `checks`, `review`, `gate`,
+- **States.** `queued` (waits for a slot; `Dequeue` moves it to `setup`), `setup`, `implement`, `checks`, `review`, `gate`,
   `awaiting-approval`, `finish`, `commit`, `committed`, plus the two rests
   `paused` and `stopped`. The owner moves a slice with `Approve`, `Reject`,
   `Answer`, `Retry` and `Stop`.

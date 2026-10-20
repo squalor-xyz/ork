@@ -248,7 +248,7 @@
       "id": "S05",
       "title": "Waves and caps: wave id, queued state, admission in launchRun",
       "short_title": "Waves and caps: queue, admission",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S17"
@@ -271,7 +271,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

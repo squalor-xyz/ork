@@ -3,6 +3,7 @@
 package engine
 
 import (
+	"context"
 	"reflect"
 	"strings"
 	"testing"
@@ -146,5 +147,53 @@ func TestASuccessfulPermissionDenialProceeds(t *testing.T) {
 		if want := []runrec.DeniedCommand{{Tool: "Write", Command: "/x.txt"}}; !reflect.DeepEqual(role.DeniedCommands, want) {
 			t.Fatalf("role lost the denied command: %+v", role.DeniedCommands)
 		}
+	}
+}
+
+func TestStopQueuedRunMakesNoWrites(t *testing.T) {
+	h := newHarness(t)
+	h.cfg.Queued = true
+	h.cfg.Wave = "wave-20261020-100000-ab12"
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateQueued)
+	before := len(h.fake.Calls())
+	if err := e.Run(context.Background()); err != nil {
+		t.Fatalf("a queued run rests: %v", err)
+	}
+	if err := e.Reconcile(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateQueued)
+	if err := e.Stop(context.Background(), "CLI stop"); err != nil {
+		t.Fatal(err)
+	}
+	rec := requireState(t, e, runrec.StateStopped)
+	if len(rec.Writes) != 0 {
+		t.Errorf("writes: %+v", rec.Writes)
+	}
+	if rec.Wave != h.cfg.Wave {
+		t.Errorf("wave %q", rec.Wave)
+	}
+	if got := len(h.fake.Calls()); got != before {
+		t.Errorf("a queued stop called tools: %v", h.fake.Calls()[before:])
+	}
+}
+
+func TestDequeueMovesAQueuedRunToSetup(t *testing.T) {
+	h := newHarness(t)
+	h.cfg.Queued = true
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := e.Dequeue(); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateSetup)
+	if err := e.Dequeue(); err == nil {
+		t.Error("dequeue of a run that is not queued must fail")
 	}
 }

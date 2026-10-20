@@ -121,9 +121,10 @@ ork writes `run.json` at mode 0600 (adj #106).
 started. They are not a copy of slicer state. The ledger link is
 `relay_run`, and `orchestrator_step` is ork's own step in it.
 
-`state` is one of `setup`, `implement`, `checks`, `review`, `gate`,
+`state` is one of `queued`, `setup`, `implement`, `checks`, `review`, `gate`,
 `awaiting-approval`, `commit`, `finish`, `committed`, `paused` and `stopped`;
-`committed` and `stopped` are final. `round` counts implementer rounds and
+`committed` and `stopped` are final. `queued` is not final: the run waits for
+a slot under the caps and has no process and no writes. `round` counts implementer rounds and
 `fails` counts gate FAILs. `reason` says why a slice is stopped or paused.
 `pending` (kind `question`, `shape`, `lost`, `interrupted` or `error`, with
 the state and role to re-enter, the reason, and for a question the text and

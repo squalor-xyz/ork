@@ -97,6 +97,7 @@ type Config struct {
 	Item    string
 	Lineup  map[string][]runrec.LineupEntry // by role; the gate defaults to the reviewer's
 	Wave    string
+	Queued  bool // create the run in state queued; Dequeue moves it to setup
 }
 
 // Engine runs one slice. The methods that move it (Run, Approve, Reject,
@@ -149,7 +150,7 @@ func lineup(l map[string][]runrec.LineupEntry, role string) (runrec.LineupEntry,
 }
 
 // New checks the contract, resolves permissions and creates the run record in
-// the setup state. It changes nothing in the project.
+// the setup state (the queued state when cfg.Queued is set). It changes nothing in the project.
 func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 	if cfg.Item == "" {
 		return nil, errors.New("no slice id")
@@ -180,10 +181,14 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 		copied[role] = append([]runrec.LineupEntry(nil), entries...)
 	}
 	id := "ork-" + d.now().Format("20060102-150405") + "-" + d.randHex()
+	state := runrec.StateSetup
+	if cfg.Queued {
+		state = runrec.StateQueued
+	}
 	run, err := d.Store.Create(runrec.Record{
 		ID: id, Wave: cfg.Wave, Project: cfg.Project.Name, Item: cfg.Item,
 		Worktree: worktreePath(cfg.Project, cfg.Item), Branch: branchName(cfg.Project, cfg.Item),
-		Contract: version, State: runrec.StateSetup, Round: 1, Lineup: copied, Budgets: cfg.Project.Budgets,
+		Contract: version, State: state, Round: 1, Lineup: copied, Budgets: cfg.Project.Budgets,
 	})
 	if err != nil {
 		return nil, err
@@ -202,10 +207,11 @@ func (e *Engine) Snapshot() runrec.Record { return e.run.Snapshot() }
 // question is S06.
 func (e *Engine) AdjRoot() string { return e.proj.Path }
 
-// resting reports whether a state waits for the owner or is final.
+// resting reports whether a state waits for the owner or for a slot, or is
+// final.
 func resting(state string) bool {
 	switch state {
-	case runrec.StateAwaitingApproval, runrec.StatePaused, runrec.StateStopped, runrec.StateCommitted:
+	case runrec.StateAwaitingApproval, runrec.StatePaused, runrec.StateStopped, runrec.StateCommitted, runrec.StateQueued:
 		return true
 	}
 	return false
@@ -384,4 +390,15 @@ func (e *Engine) endRelay(ctx context.Context, outcome, closeSteps string) {
 		return
 	}
 	e.d.Slicer.RelayEnd(ctx, e.wr, rec.Worktree, rec.RelayRun, outcome, closeSteps)
+}
+
+// Dequeue moves a queued run to setup, so Run can start it. It writes only the
+// run record.
+func (e *Engine) Dequeue() error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if state := e.run.Snapshot().State; state != runrec.StateQueued {
+		return fmt.Errorf("the slice is %s, not queued", state)
+	}
+	return e.run.Update(func(r *runrec.Record) { r.State = runrec.StateSetup })
 }

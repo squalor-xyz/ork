@@ -43,7 +43,8 @@ func Recover(ctx context.Context, d Deps, lookup func(project string) (registry.
 // that have no end; a role whose group is alive is killed, and every such
 // role is marked lost. The slice then pauses for the owner, who retries the
 // role or stops (engine.restart). A run that was between roles is paused too.
-// Runs that rest, or are finished, are left alone.
+// Runs that rest, or are finished, are left alone. A queued run rests
+// (resting), so it writes nothing here.
 func (e *Engine) Reconcile(ctx context.Context) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()

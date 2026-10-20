@@ -4,13 +4,17 @@ package daemon
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
@@ -28,6 +32,9 @@ const (
 	MethodRunAnswer  = "run.answer"
 	MethodRunRetry   = "run.retry"
 )
+
+// defaultGlobalCap is the global cap when the registry sets none (adj 20).
+const defaultGlobalCap = 4
 
 // RunParams are the owner's explicit lineup inputs (adj #86).
 type RunParams struct {
@@ -132,12 +139,20 @@ func (d *Daemon) recoverRuns(ctx context.Context) error {
 			continue
 		}
 		e := engine.Load(d.runDeps(p), p, r)
+		if rec.State == runrec.StateQueued {
+			// A queued run has no process and wrote nothing; it keeps its place.
+			d.runs.runs[rec.ID] = &managedRun{engine: e}
+			continue
+		}
 		if err := e.Reconcile(ctx); err != nil {
 			fmt.Fprintf(os.Stderr, "reconcile %s: %v\n", rec.ID, err)
 			continue
 		}
 		d.runs.runs[rec.ID] = &managedRun{engine: e}
 	}
+	d.runs.mu.Lock()
+	defer d.runs.mu.Unlock()
+	d.startQueuedLocked(f)
 	return nil
 }
 func (d *Daemon) closeRuns() {
@@ -279,18 +294,101 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 			return runrec.Record{}, fmt.Errorf("run %s already owns %s", rec.ID, rec.Worktree)
 		}
 	}
-	e, err := engine.New(ctx, d.runDeps(plan.project), engine.Config{Project: plan.project, Item: p.Item, Lineup: plan.Lineup})
+	// Admission is here and only here: owner actions never reach startRun, so
+	// approve, answer, retry and stop bypass the caps (adj 122).
+	f, err := d.loadRegistry()
+	if err != nil {
+		return runrec.Record{}, err
+	}
+	queued := !d.hasRoomLocked(f, plan.project.Name)
+	cfg := engine.Config{Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Wave: newWaveID(time.Now()), Queued: queued}
+	e, err := engine.New(ctx, d.runDeps(plan.project), cfg)
 	if err != nil {
 		return runrec.Record{}, err
 	}
 	r := &managedRun{engine: e}
 	rec := e.Snapshot()
 	d.runs.runs[rec.ID] = r
-	d.launchRun(r, e.Run)
+	if !queued {
+		d.launchRun(r, e.Run)
+	}
 	return rec, nil
 }
 
-// launchRun starts a job with the manager lock held.
+// newWaveID returns a wave id in the form docs/state.md shows. A run started
+// alone is a wave of one. The generator is proposed.
+func newWaveID(now time.Time) string {
+	b := make([]byte, 2)
+	rand.Read(b)
+	return "wave-" + now.UTC().Format("20060102-150405") + "-" + hex.EncodeToString(b)
+}
+
+// hasRoomLocked reports whether one more busy run fits under the global cap
+// and the project's cap. Zero reads as unset: the global cap then defaults
+// and a project has no cap (adj 57, adj 20). Only busy runs hold a slot (adj
+// 122). The caller holds the manager lock.
+func (d *Daemon) hasRoomLocked(f *registry.File, project string) bool {
+	global := f.GlobalCap
+	if global == 0 {
+		global = defaultGlobalCap
+	}
+	projectCap := 0
+	if p, ok := find(f, project); ok {
+		projectCap = p.Cap
+	}
+	total, inProject := 0, 0
+	for _, r := range d.runs.runs {
+		if !r.busy || r.engine == nil {
+			continue
+		}
+		total++
+		if r.engine.Snapshot().Project == project {
+			inProject++
+		}
+	}
+	return total < global && (projectCap == 0 || inProject < projectCap)
+}
+
+// startQueuedLocked starts the oldest queued run whose caps have room, and
+// repeats until none fits. The caller holds the manager lock.
+func (d *Daemon) startQueuedLocked(f *registry.File) {
+	if d.runs.closed {
+		return
+	}
+	type waiting struct {
+		r   *managedRun
+		rec runrec.Record
+	}
+	var queue []waiting
+	for _, r := range d.runs.runs {
+		if r.busy || r.engine == nil {
+			continue
+		}
+		if rec := r.engine.Snapshot(); rec.State == runrec.StateQueued {
+			queue = append(queue, waiting{r, rec})
+		}
+	}
+	sort.Slice(queue, func(i, j int) bool {
+		a, b := queue[i].rec, queue[j].rec
+		if !a.CreatedAt.Equal(b.CreatedAt) {
+			return a.CreatedAt.Before(b.CreatedAt)
+		}
+		return a.ID < b.ID
+	})
+	for _, w := range queue {
+		if !d.hasRoomLocked(f, w.rec.Project) {
+			continue
+		}
+		if err := w.r.engine.Dequeue(); err != nil {
+			fmt.Fprintf(os.Stderr, "start queued run %s: %v\n", w.rec.ID, err)
+			continue
+		}
+		d.launchRun(w.r, w.r.engine.Run)
+	}
+}
+
+// launchRun starts a job with the manager lock held. When the job ends it
+// starts the queued runs that now fit.
 func (d *Daemon) launchRun(r *managedRun, fn func(context.Context) error) {
 	ctx, cancel := context.WithCancel(d.runs.ctx)
 	r.cancel = cancel
@@ -308,6 +406,11 @@ func (d *Daemon) launchRun(r *managedRun, fn func(context.Context) error) {
 		result.record = r.engine.Snapshot()
 		r.busy = false
 		close(r.done)
+		if f, err := d.loadRegistry(); err != nil {
+			fmt.Fprintf(os.Stderr, "start queued runs: %v\n", err)
+		} else {
+			d.startQueuedLocked(f)
+		}
 		d.runs.mu.Unlock()
 	}()
 }
