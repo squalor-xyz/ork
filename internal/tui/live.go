@@ -8,7 +8,7 @@ import "context"
 // a project now. Focus makes the named projects the ones the owner sees,
 // which the daemon reads every 5 s. Next waits for the next change notice
 // for the projects in focus and names its project. The TUI calls each one in
-// a command, never in Update. Approve, Stop and Retry act on engine run IDs.
+// a command, never in Update. Approve, Stop, Retry and Answer act on engine run IDs.
 type Live interface {
 	Refresh(ctx context.Context, project string) error
 	Focus(ctx context.Context, projects []string) error
@@ -16,6 +16,7 @@ type Live interface {
 	Approve(ctx context.Context, run string) error
 	Stop(ctx context.Context, run string) error
 	Retry(ctx context.Context, run string) error
+	Answer(ctx context.Context, run, text string) error
 }
 
 // focusMsg is the result of a Focus call.

@@ -40,7 +40,7 @@ type ovRow struct {
 	kind     string
 	style    lipgloss.Style
 	kindW    int
-	project  int    // registry index; enter selects it
+	project  int    // registry index; Enter selects non-engine rows
 	name     string // the project's name
 	text     string // the row's text after the name, in full
 	id       string // a run's ID, kept whole in the row; "" for other rows
@@ -160,7 +160,9 @@ func (m *Model) moveRow(delta int) {
 	needs, running := m.rows()
 	n := len(needs) + len(running)
 	if i := clampCursor(m.cursor, n); i >= 0 {
-		m.cursor = clampCursor(i+delta, n)
+  next := clampCursor(i+delta, n)
+  if next != i { m.actionStatus = "" }
+		m.cursor = next
 	}
 }
 

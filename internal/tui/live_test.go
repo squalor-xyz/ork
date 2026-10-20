@@ -199,3 +199,5 @@ func TestInitFocusesTheFirstProject(t *testing.T) {
 func (*fakeLive) Approve(context.Context, string) error { return errors.New("unexpected approve") }
 func (*fakeLive) Stop(context.Context, string) error    { return errors.New("unexpected stop") }
 func (*fakeLive) Retry(context.Context, string) error   { return errors.New("unexpected retry") }
+
+func (l *fakeLive) Answer(context.Context, string, string) error { return nil }

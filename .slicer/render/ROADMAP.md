@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-54 items · — 32 · done 22
+54 items · — 31 · done 22 · started 1
 
 ## v1
 
@@ -72,7 +72,7 @@
 | 22 | [S23](slices/S23.md) | A denied tool call does not fail a finished role | S | 2 |  | discovered from S21 | done |
 | 23 | [S24](slices/S24.md) | Pin and check tool contracts | M | 2 |  | owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S45 (adj-json contract version and pin). | — |
 | 24 | [S25](slices/S25.md) | TUI actions: launch, approve and stop | M | 2 |  | discovered from S23 | done |
-| 25 | [S26](slices/S26.md) | TUI: answer a stopped run or question in a detail pane | M | 2 |  | discovered from S23 | — |
+| 25 | [S26](slices/S26.md) | TUI: answer a stopped run or question in a detail pane | M | 2 |  | discovered from S23 | started |
 | 26 | [S27](slices/S27.md) | TUI: Questions tab across projects | S | 1 |  | discovered from S23 | — |
 | 27 | [S28](slices/S28.md) | TUI answers can file an adj ask and decide | S | 2 |  | discovered from S23 | — |
 | 28 | [S29](slices/S29.md) | Put the ork binary on PATH | S | 1 |  | discovered from S23 | done |

@@ -1204,11 +1204,14 @@
       "id": "S26",
       "title": "TUI: answer a stopped run or question in a detail pane",
       "short_title": "TUI: answer a stopped run or question in a detail pane",
-      "status": "open",
+      "status": "started",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
-      "claim": null,
+      "claim": {
+        "owner": "Jon R",
+        "at": "2026-10-20T15:02:15Z"
+      },
       "fields": {
         "size": "M",
         "flags": [],
@@ -1225,7 +1228,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

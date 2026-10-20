@@ -134,3 +134,8 @@ func (c *Client) Stop(ctx context.Context, run string) error {
 func (c *Client) Retry(ctx context.Context, run string) error {
 	return c.Call(ctx, MethodRunRetry, RunAction{Run: run}, nil)
 }
+
+// Answer resumes a paused question with the owner's text.
+func (c *Client) Answer(ctx context.Context, run, text string) error {
+ return c.Call(ctx, MethodRunAnswer, RunAction{Run: run, Text: text}, nil)
+}

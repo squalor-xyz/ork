@@ -73,3 +73,10 @@ func (d *Daemon) Retry(ctx context.Context, run string) error {
 	defer c.Close()
 	return c.Retry(ctx, run)
 }
+
+func (d *Daemon) Answer(ctx context.Context, run, text string) error {
+ c, err := d.Connect(ctx)
+ if err != nil { return err }
+ defer c.Close()
+ return c.Answer(ctx, run, text)
+}
