@@ -22,7 +22,7 @@
     },
     {
       "heading": "Failing tests",
-      "body": "- Enter on a Needs-you engine row opens a pane with the full reason and the actions that fit its state.\n- Paused with a question: the pane shows the question and a text field; submitting runs the equivalent of ork answer RUN TEXT, shows the command first, and the row updates.\n- Paused without a question: the pane shows the reason and offers retry (ork retry RUN).\n- Stopped: the pane shows the full stop reason and no action (a stop is final; relaunch).\n- No structured options in this slice (#104).\n- Golden views, colour and monochrome."
+      "body": "- Enter on a Needs-you engine row opens a pane with the full reason and the actions that fit its state. The pane reads the pause kind from EngineRun.pending (#108, added in S25).\n- Paused with a question: the pane shows the question and a text field; submitting runs the equivalent of ork answer RUN TEXT, shows the command first, and the row updates.\n- Paused without a question: the pane shows the reason and offers retry (ork retry RUN).\n- Stopped: the pane shows the full stop reason and no action (a stop is final; relaunch).\n- No structured options in this slice (#104).\n- Golden views, colour and monochrome."
     },
     {
       "heading": "Implement",
