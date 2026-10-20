@@ -1,0 +1,41 @@
+{
+  "id": "S46",
+  "title": "ork daemon stop and restart, and doctor flags a stale daemon",
+  "lead": [
+    "Seen 2026-10-20: the S29 run on a daemon started before S23 ran old code, with no sign of it. ork has no daemon stop or restart, and ork doctor does not compare the daemon's build with the CLI's. The owner had to kill the process by pid."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Seen 2026-10-20: the S29 run on a daemon started before S23 ran old code, with no sign of it. ork has no daemon stop or restart, and ork doctor does not compare the daemon's build with the CLI's. The owner had to kill the process by pid."
+    },
+    {
+      "heading": "Files",
+      "body": "- cmd/ork, internal/cli (daemon commands, doctor), internal/daemon (version in the status reply), tests, docs/design.md."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- ork daemon stop stops the daemon and refuses while a role is running unless forced.\n- The daemon reports its build version; ork doctor warns when it differs from the CLI's.\n- A command run against a stale daemon says so."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

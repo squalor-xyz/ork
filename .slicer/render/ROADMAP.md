@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-43 items · — 25 · done 18
+50 items · — 32 · done 18
 
 ## v1
 
@@ -90,9 +90,16 @@
 | 40 | [S41](slices/S41.md) | Overview engine-row edge cases: setup projects, padding, hidden ledger runs | S | 2 |  | discovered from S22 | — |
 | 41 | [S42](slices/S42.md) | Tidy engine-run state constants and a weak assertion | S | 1 |  | discovered from S22 | — |
 | 42 | [S43](slices/S43.md) | Denied tools: dedupe the list, bound the line, fix stale slicer-rule docs | S | 1 |  | discovered from S23 | — |
+| 43 | [S44](slices/S44.md) | A report-shape pause can be answered or retried | S | 2 |  | discovered from S29 | — |
+| 44 | [S45](slices/S45.md) | Record the denied command, not just the tool name | S | 1 |  | discovered from S29 | — |
+| 45 | [S46](slices/S46.md) | ork daemon stop and restart, and doctor flags a stale daemon | S | 2 |  | discovered from S29 | — |
+| 46 | [S47](slices/S47.md) | Codex adapter for write roles in the engine (#100) | M | 3 |  | discovered from S29 | — |
+| 47 | [S48](slices/S48.md) | Measure the codex workspace-write sandbox | S | 2 |  | discovered from S29 | — |
+| 48 | [S49](slices/S49.md) | Fall back to the next matrix row on a rate limit or error | M | 2 |  | discovered from S29 | — |
+| 49 | [S50](slices/S50.md) | Check the diff against the slice's Files list | S | 2 |  | discovered from S29 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 43 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 50 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |

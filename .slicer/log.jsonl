@@ -304,3 +304,50 @@
 {"when": "2026-10-20T11:53:02Z", "item": "relay-roles.r3", "action": "relay-roles", "from": "", "to": "reasoning,note", "note": "set"}
 {"when": "2026-10-20T12:38:55Z", "item": "S29", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-20T12:41:13Z", "item": "S29", "action": "status", "from": "started", "to": "done", "note": "", "by": "Jon R"}
+{"when": "2026-10-20T12:41:45Z", "item": "S43", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T12:41:45Z", "item": "S43", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T12:41:46Z", "item": "S40", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T12:41:46Z", "item": "S40", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T12:41:46Z", "item": "S40", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T12:41:46Z", "item": "S44", "action": "add", "from": "", "to": "open", "note": "A report-shape pause can be answered or retried"}
+{"when": "2026-10-20T12:41:46Z", "item": "S44", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T12:41:46Z", "item": "S44", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T12:41:46Z", "item": "S44", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T12:41:46Z", "item": "S44", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T12:41:46Z", "item": "S44", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T12:41:47Z", "item": "S45", "action": "add", "from": "", "to": "open", "note": "Record the denied command, not just the tool name"}
+{"when": "2026-10-20T12:41:47Z", "item": "S45", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T12:41:47Z", "item": "S45", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T12:41:47Z", "item": "S45", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T12:41:47Z", "item": "S45", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T12:41:47Z", "item": "S45", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T12:41:47Z", "item": "S46", "action": "add", "from": "", "to": "open", "note": "ork daemon stop and restart, and doctor flags a stale daemon"}
+{"when": "2026-10-20T12:41:47Z", "item": "S46", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T12:41:47Z", "item": "S46", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T12:41:48Z", "item": "S46", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T12:41:48Z", "item": "S46", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T12:41:48Z", "item": "S46", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T12:41:48Z", "item": "S47", "action": "add", "from": "", "to": "open", "note": "Codex adapter for write roles in the engine (#100)"}
+{"when": "2026-10-20T12:41:48Z", "item": "S47", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T12:41:48Z", "item": "S47", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T12:41:48Z", "item": "S47", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T12:41:48Z", "item": "S47", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T12:41:48Z", "item": "S47", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T12:41:48Z", "item": "S48", "action": "add", "from": "", "to": "open", "note": "Measure the codex workspace-write sandbox"}
+{"when": "2026-10-20T12:41:49Z", "item": "S48", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T12:41:49Z", "item": "S48", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T12:41:49Z", "item": "S48", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T12:41:49Z", "item": "S48", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T12:41:49Z", "item": "S48", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T12:41:49Z", "item": "S49", "action": "add", "from": "", "to": "open", "note": "Fall back to the next matrix row on a rate limit or error"}
+{"when": "2026-10-20T12:41:49Z", "item": "S49", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T12:41:49Z", "item": "S49", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T12:41:49Z", "item": "S49", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T12:41:50Z", "item": "S49", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T12:41:50Z", "item": "S49", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-20T12:41:50Z", "item": "S50", "action": "add", "from": "", "to": "open", "note": "Check the diff against the slice's Files list"}
+{"when": "2026-10-20T12:41:50Z", "item": "S50", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-20T12:41:50Z", "item": "S50", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-20T12:41:50Z", "item": "S50", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-20T12:41:50Z", "item": "S50", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-20T12:41:50Z", "item": "S50", "action": "edit", "from": "", "to": "", "note": "Failing tests"}

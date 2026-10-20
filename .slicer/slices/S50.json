@@ -1,0 +1,41 @@
+{
+  "id": "S50",
+  "title": "Check the diff against the slice's Files list",
+  "lead": [
+    "Seen 2026-10-20: the second S29 run edited CHANGELOG.md, which is not in the slice's Files list, and the report only noted it. The orchestrator catches this by hand. Open question for the owner before building: does ork flag, warn or stop on files outside the list (S22 and S23 needed such files, with an owner decision each time)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Seen 2026-10-20: the second S29 run edited CHANGELOG.md, which is not in the slice's Files list, and the report only noted it. The orchestrator catches this by hand. Open question for the owner before building: does ork flag, warn or stop on files outside the list (S22 and S23 needed such files, with an owner decision each time)."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/engine (checks), internal/slicercli, tests, docs/design.md."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Per the owner decision (not yet recorded, ask first with key engine.files-scope): files changed outside the slice's Files list are reported in the run.\n- The report shows the files and the policy applied."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

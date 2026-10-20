@@ -1,0 +1,41 @@
+{
+  "id": "S47",
+  "title": "Codex adapter for write roles in the engine (#100)",
+  "lead": [
+    "Owner decision #100 (supersedes #54): codex may run write roles. The engine has only the claude adapter (internal/agent/claude). Add internal/agent/codex: codex exec --json -s workspace-write with model and effort from the matrix row, JSONL parsing (thread, item and turn events), usage, the rate-limit strings in vendor.codex-ratelimit, and session resume. Update docs/design.md lines about codex read-only and the capability table. Depends on the sandbox spike slice."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner decision #100 (supersedes #54): codex may run write roles. The engine has only the claude adapter (internal/agent/claude). Add internal/agent/codex: codex exec --json -s workspace-write with model and effort from the matrix row, JSONL parsing (thread, item and turn events), usage, the rate-limit strings in vendor.codex-ratelimit, and session resume. Update docs/design.md lines about codex read-only and the capability table. Depends on the sandbox spike slice."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/agent/codex (new), internal/daemon/runner.go, internal/engine (vendor choice), tests with fake codex, docs/design.md, docs/state.md."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A fake codex run produces the same role result shape as the claude adapter.\n- A write role runs with -s workspace-write; a read-only role with -s read-only.\n- A rate-limit string classifies as rate-limited; an error classifies as error.\n- design.md states codex may write per #100."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -2,7 +2,7 @@
   "id": "S40",
   "title": "Implementer prompt limits searches to code and docs",
   "lead": [
-    "From the S21 run. The Haiku implementer ran a worktree-wide rg that printed .slicer/ and decisions/ lines, which breaks the tracking rule (agents do not search tracking files). Role prompts are ork's own text (roles.prompts)."
+    "From the S21 and S29 runs. (1) The Haiku implementer ran a worktree-wide rg that printed .slicer/ and decisions/ lines, which breaks the tracking rule. (2) In the second S29 run (ork-20261020-120934-e8ac) Haiku had one go command denied (go version) and wrote 'every go command was denied', then ran no tests and reported partial, although go test, go vet and gofmt were allowed. (3) The same run edited CHANGELOG.md, which is not in the slice's Files list. Role prompts are ork's own text (roles.prompts)."
   ],
   "depends_note": null,
   "findings_note": "",
@@ -14,7 +14,7 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "From the S21 run. The Haiku implementer ran a worktree-wide rg that printed .slicer/ and decisions/ lines, which breaks the tracking rule (agents do not search tracking files). Role prompts are ork's own text (roles.prompts)."
+      "body": "From the S21 and S29 runs. (1) The Haiku implementer ran a worktree-wide rg that printed .slicer/ and decisions/ lines, which breaks the tracking rule. (2) In the second S29 run (ork-20261020-120934-e8ac) Haiku had one go command denied (go version) and wrote 'every go command was denied', then ran no tests and reported partial, although go test, go vet and gofmt were allowed. (3) The same run edited CHANGELOG.md, which is not in the slice's Files list. Role prompts are ork's own text (roles.prompts)."
     },
     {
       "heading": "Files",
@@ -22,7 +22,7 @@
     },
     {
       "heading": "Failing tests",
-      "body": "- The implementer prompt tells the role to search only source and docs paths and never .slicer/ or decisions/.\n- A prompt test checks the rule is present."
+      "body": "- The implementer prompt tells the role to search only source and docs paths and never .slicer/ or decisions/.\n- It says one denied command does not mean other commands are denied: try the allowed forms (go test, go vet, gofmt) before reporting partial.\n- It says to touch only the files the slice names, or report why not.\n- A prompt test checks each rule is present."
     },
     {
       "heading": "Implement",

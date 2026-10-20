@@ -1,0 +1,41 @@
+{
+  "id": "S45",
+  "title": "Record the denied command, not just the tool name",
+  "lead": [
+    "Seen 2026-10-20: the run record keeps only 'Bash' for each denial, so the owner cannot tell which command was denied or fix the allowlist. Claude's result lists the denied command (permission_denials[].tool_input.command; fixture testdata/vendors/claude/04-allowlist-denies-write.stdout). Record it on the role, show it in ork status and the TUI detail, and bound its length. Take care: a command may contain secrets, so cap and note this."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Seen 2026-10-20: the run record keeps only 'Bash' for each denial, so the owner cannot tell which command was denied or fix the allowlist. Claude's result lists the denied command (permission_denials[].tool_input.command; fixture testdata/vendors/claude/04-allowlist-denies-write.stdout). Record it on the role, show it in ork status and the TUI detail, and bound its length. Take care: a command may contain secrets, so cap and note this."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/agent/claude (types, classify), internal/engine/round.go, internal/runrec, internal/daemon/runs.go, internal/source, internal/tui, tests, docs/state.md."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A denied Bash call records its command text (first N characters) on the role.\n- ork status and the TUI detail show it under the denial.\n- A denied Write shows the file path, not the file content.\n- Existing run records without commands still load."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

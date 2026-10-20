@@ -1,0 +1,41 @@
+{
+  "id": "S48",
+  "title": "Measure the codex workspace-write sandbox",
+  "lead": [
+    "S01 never exercised codex's write block (the old #54 context says so). Before ork trusts -s workspace-write, measure it with a small spike: are writes outside the worktree and into the main checkout blocked, is .git writable, does resume keep workspace-write (the resume help lists no -s flag), and can sockets bind (known: no). This is a paid call: ask the owner for the call budget before running."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S01 never exercised codex's write block (the old #54 context says so). Before ork trusts -s workspace-write, measure it with a small spike: are writes outside the worktree and into the main checkout blocked, is .git writable, does resume keep workspace-write (the resume help lists no -s flag), and can sockets bind (known: no). This is a paid call: ask the owner for the call budget before running."
+    },
+    {
+      "heading": "Files",
+      "body": "- spike scripts under spike/, fixtures under testdata/vendors/codex/, docs/design.md capability table."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Redacted fixtures record each probe and its result.\n- The capability table marks the sandbox cells verified or not.\n- Any gap is filed as a slice or an adj question."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

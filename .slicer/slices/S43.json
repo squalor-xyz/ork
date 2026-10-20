@@ -2,7 +2,7 @@
   "id": "S43",
   "title": "Denied tools: dedupe the list, bound the line, fix stale slicer-rule docs",
   "lead": [
-    "From the S23 relay. (1) The denials list is not deduplicated, so 'Write, Write' can appear, and the status line is unbounded. (2) A denied slicer step in a successful round no longer stops mechanically (#93); docs/design.md:289 and docs/glossary.md:113-114 still state slicer's rule, and ork relies on internal/roles/prompts/implementer.md:72-73. The vendor reports only 'Bash', so ork cannot see which command was denied."
+    "From the S23 relay. (1) The denials list is not deduplicated, so 'Write, Write' can appear, and the status line is unbounded. (2) A denied slicer step in a successful round no longer stops mechanically (#93); docs/design.md:289 and docs/glossary.md:113-114 still state slicer's rule, and ork relies on internal/roles/prompts/implementer.md:72-73. Correction from the S29 run (2026-10-20): the vendor does report the denied command (permission_denials[].tool_input, testdata/vendors/claude/04-allowlist-denies-write.stdout); ork keeps only the tool name, so recording the command is a separate slice."
   ],
   "depends_note": null,
   "findings_note": "",
@@ -14,7 +14,7 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "From the S23 relay. (1) The denials list is not deduplicated, so 'Write, Write' can appear, and the status line is unbounded. (2) A denied slicer step in a successful round no longer stops mechanically (#93); docs/design.md:289 and docs/glossary.md:113-114 still state slicer's rule, and ork relies on internal/roles/prompts/implementer.md:72-73. The vendor reports only 'Bash', so ork cannot see which command was denied."
+      "body": "From the S23 relay. (1) The denials list is not deduplicated, so 'Write, Write' can appear, and the status line is unbounded. (2) A denied slicer step in a successful round no longer stops mechanically (#93); docs/design.md:289 and docs/glossary.md:113-114 still state slicer's rule, and ork relies on internal/roles/prompts/implementer.md:72-73. Correction from the S29 run (2026-10-20): the vendor does report the denied command (permission_denials[].tool_input, testdata/vendors/claude/04-allowlist-denies-write.stdout); ork keeps only the tool name, so recording the command is a separate slice."
     },
     {
       "heading": "Files",

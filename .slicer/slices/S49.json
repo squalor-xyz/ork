@@ -1,0 +1,41 @@
+{
+  "id": "S49",
+  "title": "Fall back to the next matrix row on a rate limit or error",
+  "lead": [
+    "Owner 2026-10-20: when Codex is rate-limited or fails, the engine should fall back to the Claude row (matrix: Sol high then Sonnet medium). By hand, relay-call.sh falls back on a rate limit and the orchestrator picks the next row on an implementer error; the engine must do both. Depends on the Codex adapter."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner 2026-10-20: when Codex is rate-limited or fails, the engine should fall back to the Claude row (matrix: Sol high then Sonnet medium). By hand, relay-call.sh falls back on a rate limit and the orchestrator picks the next row on an implementer error; the engine must do both. Depends on the Codex adapter."
+    },
+    {
+      "heading": "Files",
+      "body": "- internal/engine (lineup, retry), internal/daemon, tests, docs/design.md."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A rate-limited role retries on the next lineup row and the run records both.\n- An implementer error picks the next row, not the same row.\n- When no row remains the run stops with the reasons."
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
