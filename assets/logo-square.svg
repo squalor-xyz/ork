@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ork">
+  <title>ork</title>
+  <desc>A teal ring, the o of ork, with three lanes running down to three slices in blue, violet and orange. The slices are cream with a coloured edge.</desc>
+  <path d="M32 24V46M32 38H20Q14 38 14 44V46M32 38H44Q50 38 50 44V46" fill="none" stroke="#6ee7d2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="32" cy="15" r="7" fill="none" stroke="#6ee7d2" stroke-width="4"/>
+  <g>
+    <rect x="8" y="46" width="12" height="12" rx="3" fill="#3b82f6"/>
+    <rect x="26" y="46" width="12" height="12" rx="3" fill="#8b5cf6"/>
+    <rect x="44" y="46" width="12" height="12" rx="3" fill="#ea580c"/>
+  </g>
+  <g fill="#f4efe7">
+    <rect x="9.2" y="47.2" width="9.6" height="9.6" rx="1.8"/>
+    <rect x="27.2" y="47.2" width="9.6" height="9.6" rx="1.8"/>
+    <rect x="45.2" y="47.2" width="9.6" height="9.6" rx="1.8"/>
+  </g>
+</svg>

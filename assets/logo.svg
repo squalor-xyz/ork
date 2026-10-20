@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 144" role="img" aria-label="ork">
+  <title>ork</title>
+  <desc>The word ork in square letters, all teal. Three lanes run from the o to three slices under the letters o, r and k, in blue, violet and orange.</desc>
+  <path d="M36 76V116M36 96H92Q104 96 104 108V116M36 96H153Q165 96 165 108V116" fill="none" stroke="#6ee7d2" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <g>
+    <rect x="26" y="116" width="20" height="20" rx="5" fill="#3b82f6"/>
+    <rect x="94" y="116" width="20" height="20" rx="5" fill="#8b5cf6"/>
+    <rect x="155" y="116" width="20" height="20" rx="5" fill="#ea580c"/>
+  </g>
+  <g fill="#f4efe7">
+    <rect x="28" y="118" width="16" height="16" rx="3"/>
+    <rect x="96" y="118" width="16" height="16" rx="3"/>
+    <rect x="157" y="118" width="16" height="16" rx="3"/>
+  </g>
+  <circle cx="36" cy="50" r="20" fill="none" stroke="#6ee7d2" stroke-width="12"/>
+  <path d="M92 70V30H116 M152 70V14 M152 50L178 30 M152 50L178 70" fill="none" stroke="#6ee7d2" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

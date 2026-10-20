@@ -1999,7 +1999,7 @@
       "id": "S53",
       "title": "Create the ork logo",
       "short_title": "Create the ork logo",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -2020,7 +2020,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

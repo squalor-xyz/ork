@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-57 items · — 33 · done 24
+57 items · — 32 · done 25
 
 ## v1
 
@@ -99,7 +99,7 @@
 | 49 | [S50](slices/S50.md) | Check the diff against the slice's Files list | S | 2 |  | discovered from S29 | — |
 | 50 | [S51](slices/S51.md) | run.json at 0600; strip control characters from recorded commands | S | 1 |  | discovered from S45 | — |
 | 51 | [S52](slices/S52.md) | TUI: launch a slice from a ready list | M | 2 |  | discovered from S25 | — |
-| 52 | [S53](slices/S53.md) | Create the ork logo | S | 1 |  |  | — |
+| 52 | [S53](slices/S53.md) | Create the ork logo | S | 1 |  |  | done |
 | 53 | [S54](slices/S54.md) | Show the ork version and logo in the terminal: TUI, --version, doctor | S | 2 |  |  | — |
 | 54 | [S55](slices/S55.md) | Run tree: orchestrator, roles and steps with live status | M | 2 |  |  | — |
 | 55 | [S56](slices/S56.md) | daemon stop and restart cope with a daemon that predates daemon.stop | S | 1 |  | discovered from S46 | — |

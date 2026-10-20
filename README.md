@@ -1,3 +1,5 @@
+<img src="assets/logo.svg" alt="ork: slice relays across projects" width="240">
+
 # ork
 
 A terminal dashboard and engine for parallel slice relays across projects.
