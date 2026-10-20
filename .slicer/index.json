@@ -2070,7 +2070,7 @@
       "id": "S51",
       "title": "run.json at 0600; strip control characters from recorded commands",
       "short_title": "run.json at 0600; strip control characters from recorded commands",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -2091,7 +2091,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

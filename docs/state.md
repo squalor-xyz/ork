@@ -66,6 +66,8 @@ Notes on the fields:
 
 ## run.json
 
+ork writes `run.json` at mode 0600 (adj #106).
+
 ```json
 {
   "version": 1,
@@ -138,9 +140,15 @@ reported. `denied_commands` (S45, adj #105) holds one `{tool, command}` entry
 per denial, in the same order. `command` is the Bash command of a Bash call,
 or the file path (`tool_input.file_path`) of a file tool. It never holds file
 content, and it is left out for a denial with neither. A recorded command can
-hold secrets, so it is capped, not scrubbed: at most 200 characters including
-the trailing `...` (a longer text is cut to 197 characters and `...`), and CR
-and LF become spaces. ork does not remove secrets from it. A record with no
+hold secrets, so it is capped, not scrubbed. CR and LF become spaces, then
+every other control character (ESC, NUL, TAB and the rest) is removed from
+commands recorded from S51 on (adj #106), so no escape sequence from them
+reaches `ork status` or the TUI. A pre-S51 record keeps the text it stored.
+Then at most 200 characters are kept including the trailing `...` (a longer
+text is cut to 197 characters and `...`). ork does not remove secrets from it.
+For that reason ork writes `run.json` and the other files it writes in a run
+directory (the check logs, and a report ork saves from the vendor result) at
+mode 0600, and writes an existing file back at 0600 (adj #106). A record with no
 denied commands is written as before, and the version stays 1. A pre-S45 ork
 refuses a run.json that holds `denied_commands`, because it refuses unknown
 keys.

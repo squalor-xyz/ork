@@ -610,3 +610,27 @@ func TestRunnerErrorIsAnExitOfClassError(t *testing.T) {
 		t.Fatalf("reason %q, role %+v", rec.Reason, rec.Roles[0])
 	}
 }
+
+func TestChecksLogIsWrittenAt0600EvenOverAnExistingFile(t *testing.T) {
+	h := newHarness(t)
+	h.checks.outputs = []CheckOutput{{OK: true, Output: "ok\n"}}
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(h.store.RunDir(e.Snapshot().ID), "checks-1.log")
+	if err := os.WriteFile(path, []byte("old"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.Run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateAwaitingApproval)
+	fi, err := os.Stat(path)
+	if err != nil || fi.Mode().Perm() != 0o600 {
+		t.Fatalf("checks log mode %v, %v; want 600", fi, err)
+	}
+	if b, _ := os.ReadFile(path); string(b) == "old" {
+		t.Fatalf("the checks log was not rewritten")
+	}
+}

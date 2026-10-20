@@ -10,6 +10,7 @@ package claude
 import (
 	"encoding/json"
 	"strings"
+	"unicode"
 )
 
 // Class is how a round ended.
@@ -71,7 +72,8 @@ const denialDetailMax = 200
 
 // Detail is the text ork records for a denied call (adj #105): the command of
 // a Bash call, else the file path of a file tool, else "". It never holds file
-// content. CR and LF become spaces. Text over 200 characters is cut to 197
+// content. CR and LF become spaces, then all other control characters are
+// removed (adj #106). Text over 200 characters (after removal) is cut to 197
 // characters and "...". The cap bounds the text only: a command can hold
 // secrets, and they are not removed (docs/state.md).
 func (d Denial) Detail() string {
@@ -83,7 +85,12 @@ func (d Denial) Detail() string {
 	if text == "" {
 		text = jsonString(fields["file_path"])
 	}
-	text = strings.NewReplacer("\r", " ", "\n", " ").Replace(text)
+	text = strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) {
+			return -1
+		}
+		return r
+	}, strings.NewReplacer("\r", " ", "\n", " ").Replace(text))
 	if r := []rune(text); len(r) > denialDetailMax {
 		text = string(r[:denialDetailMax-3]) + "..."
 	}

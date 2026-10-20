@@ -284,3 +284,15 @@ func TestFindingsErrorsOnAReportWithoutTheSections(t *testing.T) {
 		}
 	}
 }
+
+func TestReportFallbackIsWrittenAt0600EvenOverAnExistingFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "report.md")
+	if err := os.WriteFile(path, []byte("  \n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	(&Engine{}).readReport(path, "report.md", "vendor result")
+	fi, err := os.Stat(path)
+	if err != nil || fi.Mode().Perm() != 0o600 {
+		t.Fatalf("report mode %v, %v; want 600", fi, err)
+	}
+}

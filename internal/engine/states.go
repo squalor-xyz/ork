@@ -178,7 +178,12 @@ func (e *Engine) checks(ctx context.Context) error {
 	fmt.Fprintf(&log, "\n$ slicer check --json\n%s\n", tail(sres.Output, 30000))
 
 	logName := fmt.Sprintf("checks-%d.log", rec.Round)
-	if err := os.WriteFile(filepath.Join(e.run.Dir(), logName), []byte(log.String()), 0o644); err != nil {
+	logPath := filepath.Join(e.run.Dir(), logName)
+	err = os.WriteFile(logPath, []byte(log.String()), 0o600)
+	if err == nil {
+		err = os.Chmod(logPath, 0o600)
+	}
+	if err != nil {
 		return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateChecks, Reason: "check log: " + err.Error()})
 	}
 	command := e.proj.CheckCommand

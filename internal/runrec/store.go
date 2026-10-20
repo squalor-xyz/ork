@@ -278,7 +278,7 @@ func (r *Run) save() error {
 	if err := writeTemp(tmp, data); err != nil {
 		return fail(err)
 	}
-	if err := tmp.Chmod(0o644); err != nil {
+	if err := tmp.Chmod(0o600); err != nil {
 		return fail(err)
 	}
 	if err := tmp.Sync(); err != nil {

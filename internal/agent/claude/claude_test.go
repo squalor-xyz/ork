@@ -1030,3 +1030,23 @@ func TestS17OnStartBeforeWait(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestDenialDetailRemovesControlCharactersAndCapsTheStrippedText(t *testing.T) {
+	for name, tc := range map[string]struct {
+		command string
+		want    string
+	}{
+		"ESC NUL and TAB are removed":         {"echo \x1b[31mred\x1b[0m\x00a\tb", "echo [31mred[0ma" + "b"},
+		"CR and LF are spaces, not removed":   {"a\r\nb\nc", "a  b c"},
+		"printable text is unchanged":         {"git commit -m 'héllo wörld'", "git commit -m 'héllo wörld'"},
+		"the cap counts the stripped text":    {strings.Repeat("a\x1b", 200), strings.Repeat("a", 200)},
+		"over the cap after stripping is cut": {strings.Repeat("a\x1b", 201), strings.Repeat("a", 197) + "..."},
+	} {
+		t.Run(name, func(t *testing.T) {
+			got := denialWithInput(t, "Bash", map[string]any{"command": tc.command}).Detail()
+			if got != tc.want {
+				t.Errorf("detail %q, want %q", got, tc.want)
+			}
+		})
+	}
+}

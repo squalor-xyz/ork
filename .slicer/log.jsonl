@@ -731,3 +731,5 @@
 {"when": "2026-10-20T19:01:52Z", "item": "S51", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-20T19:02:06Z", "item": "S56", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-10-20T19:02:06Z", "item": "S56", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-20T19:03:24Z", "item": "S51", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-20T19:12:01Z", "item": "S51", "action": "status", "from": "started", "to": "done", "note": "run.json, check logs and the saved fallback report are written at 0600 (existing files tightened); recorded denied commands have CR/LF turned to spaces and all other control characters removed before the 200-character cap; docs/state.md updated; full suite with -race, vet, gofmt and slicer check clean.", "by": "Jon R"}

@@ -577,3 +577,32 @@ func TestWriterWithoutASinkStillRuns(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestRunJSONIsWrittenAt0600AndAnExisting0644FileIsTightened(t *testing.T) {
+	s := newStore(t)
+	run, err := s.Create(rec("mode"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(run.Dir(), "run.json")
+	mode := func() os.FileMode {
+		t.Helper()
+		fi, err := os.Stat(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return fi.Mode().Perm()
+	}
+	if got := mode(); got != 0o600 {
+		t.Errorf("new run.json mode %o, want 600", got)
+	}
+	if err := os.Chmod(path, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := run.Update(func(r *Record) { r.Round = 2 }); err != nil {
+		t.Fatal(err)
+	}
+	if got := mode(); got != 0o600 {
+		t.Errorf("rewritten run.json mode %o, want 600", got)
+	}
+}

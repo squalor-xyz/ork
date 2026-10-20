@@ -333,7 +333,11 @@ func (e *Engine) readReport(path, name, fallback string) (text, file string) {
 	if strings.TrimSpace(fallback) == "" {
 		return "", ""
 	}
-	if err := os.WriteFile(path, []byte(fallback), 0o644); err != nil {
+	err := os.WriteFile(path, []byte(fallback), 0o600)
+	if err == nil {
+		err = os.Chmod(path, 0o600)
+	}
+	if err != nil {
 		return fallback, ""
 	}
 	return fallback, name
