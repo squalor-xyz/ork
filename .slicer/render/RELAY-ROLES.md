@@ -7,11 +7,13 @@
 | ID | Role | When | Agent | Vendor | Model | Reasoning | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | r8 | Implementer | sliver | Claude Code | Claude | haiku | xhigh | per sliver |
+| r4 | Implementer | split part | Claude Code | Claude | haiku | xhigh | per part of a split slice |
 | r1 | Implementer | well specified, whole slice, effort 1, size S or M | Claude Code | Claude | haiku | xhigh | - |
 | r2 | Implementer | well specified, whole slice, effort 2, size S | Claude Code | Claude | haiku | xhigh | - |
-| r3 | Implementer | whole slice | Claude Code | Claude | sonnet | high | anything the rows above do not match |
-| r4 | Implementer | split part | Claude Code | Claude | haiku | xhigh | per part of a split slice |
-| r9 | Implementer | every slice | Codex | OpenAI | gpt-6.1-sol | medium | alternate implementer for any slice, split part or sliver |
+| r12 | Implementer | whole slice, effort 3 | Codex | OpenAI | gpt-6.1-sol | xhigh | effort 3 slice |
+| r13 | Implementer | whole slice, effort 3 | Claude Code | Claude | sonnet | high | Claude alternate for an effort 3 slice |
+| r9 | Implementer | whole slice | Codex | OpenAI | gpt-6.1-sol | high | default implementer for a whole slice; Codex sandbox cannot bind Unix sockets, so rerun socket-test packages outside it |
+| r3 | Implementer | whole slice | Claude Code | Claude | sonnet | medium | Claude fallback for anything the rows above do not match |
 | r5 | Reviewer | every slice | Claude Code | Claude | opus | medium | - |
 | r6 | Gate | every slice | Claude Code | Claude | opus | medium | - |
 | r7 | Architect | size L | Claude Code | Claude | opus | high | - |

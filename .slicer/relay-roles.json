@@ -20,6 +20,24 @@
       "note": "per sliver"
     },
     {
+      "id": "r4",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": true,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "haiku",
+      "reasoning": "xhigh",
+      "note": "per part of a split slice"
+    },
+    {
       "id": "r1",
       "role": "implementer",
       "when": {
@@ -65,6 +83,64 @@
       "note": ""
     },
     {
+      "id": "r12",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [
+          3
+        ],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": false,
+        "sliver": null
+      },
+      "agent": "Codex",
+      "vendor": "OpenAI",
+      "model": "gpt-6.1-sol",
+      "reasoning": "xhigh",
+      "note": "effort 3 slice"
+    },
+    {
+      "id": "r13",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [
+          3
+        ],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": false,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "sonnet",
+      "reasoning": "high",
+      "note": "Claude alternate for an effort 3 slice"
+    },
+    {
+      "id": "r9",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": false,
+        "sliver": null
+      },
+      "agent": "Codex",
+      "vendor": "OpenAI",
+      "model": "gpt-6.1-sol",
+      "reasoning": "high",
+      "note": "default implementer for a whole slice; Codex sandbox cannot bind Unix sockets, so rerun socket-test packages outside it"
+    },
+    {
       "id": "r3",
       "role": "implementer",
       "when": {
@@ -79,44 +155,8 @@
       "agent": "Claude Code",
       "vendor": "Claude",
       "model": "sonnet",
-      "reasoning": "high",
-      "note": "anything the rows above do not match"
-    },
-    {
-      "id": "r4",
-      "role": "implementer",
-      "when": {
-        "size": [],
-        "effort": [],
-        "importance": [],
-        "urgency": [],
-        "well_specified": null,
-        "split": true,
-        "sliver": null
-      },
-      "agent": "Claude Code",
-      "vendor": "Claude",
-      "model": "haiku",
-      "reasoning": "xhigh",
-      "note": "per part of a split slice"
-    },
-    {
-      "id": "r9",
-      "role": "implementer",
-      "when": {
-        "size": [],
-        "effort": [],
-        "importance": [],
-        "urgency": [],
-        "well_specified": null,
-        "split": null,
-        "sliver": null
-      },
-      "agent": "Codex",
-      "vendor": "OpenAI",
-      "model": "gpt-6.1-sol",
       "reasoning": "medium",
-      "note": "alternate implementer for any slice, split part or sliver"
+      "note": "Claude fallback for anything the rows above do not match"
     },
     {
       "id": "r5",
@@ -249,6 +289,6 @@
       "text": "The orchestrator reads a Haiku implementer's diff itself before review, and switches that role to Sonnet early when quality falls short."
     }
   ],
-  "next_row": 12,
+  "next_row": 14,
   "next_rule": 10
 }
