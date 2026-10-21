@@ -5,6 +5,8 @@ package tui
 import (
 	"context"
 
+	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
@@ -13,8 +15,11 @@ import (
 // which the daemon reads every 5 s. Next waits for the next change notice
 // for the projects in focus and names its project. The TUI calls each one in
 // a command, never in Update. ItemShow reads a project item.
-// Approve, Stop, Retry and Answer act on engine run IDs.
+// Approve, Stop, Retry and Answer act on engine run IDs. Plan and Start take
+// a project and an item, with the owner's two launch answers.
 type Live interface {
+	Plan(context.Context, daemon.RunParams) (*daemon.RunPlan, error)
+	Start(context.Context, daemon.RunParams) (runrec.Record, error)
 	ItemShow(ctx context.Context, project, id string) (*slicercli.Detail, error)
 	Refresh(ctx context.Context, project string) error
 	Focus(ctx context.Context, projects []string) error

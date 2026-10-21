@@ -50,7 +50,24 @@ func (m *Model) screen() string {
 	if m.showHelp {
 		body = m.helpLines(mainW)
 	} else if m.view == roadmapView {
-		rv := m.roadmap(mainW)
+		rv := overviewView{}
+		if m.launch != nil {
+			rv = m.launchView(mainW)
+		} else {
+			rv = m.roadmap(mainW)
+		}
+		status := m.actionStatus
+		if m.confirm != nil {
+			status = m.confirm.command() + "? [y/N] (Enter is No)"
+		}
+		if status != "" {
+			detail = wrapText(status, max(mainW-len(indent), 1))
+			for i := range detail {
+				detail[i] = indent + detail[i]
+			}
+			detail = detail[:min(len(detail), max(h-5, 1))]
+			bodyH = max(h-4-len(detail), 1)
+		}
 		body = rv.body
 		start = windowStart(rv.sel, len(body), bodyH)
 	} else {

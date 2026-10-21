@@ -1,0 +1,30 @@
+[1mork[m  ?help                 | Overview[90m | Questions | Waves | [m[1;36mRoadmap[m[90m | Decisions[m
+  Needs you                |[90m------------------------------------------------------------------------[m
+[1;7;97;44m> ork 0[m                    |[1;36mReady slices (esc cancels)[m
+  other 0                  |  ork S90
+                           |  worktree: /project/.worktrees/S90
+                           |  branch: S90
+                           |  check: go test ./...
+                           |  implementer: Codex gpt high
+                           |    allowlist: 
+                           |  reviewer: Claude opus medium
+                           |    permissions: read-only
+                           |  gate: Codex gpt low
+                           |    allowlist: 
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |  ork run ork S90? [y/N] (Enter is No)
+                           |[90m------------------------------------------------------------------------[m
+                           | 2 projects | refreshed 16:42:00 | pending 0

@@ -12,6 +12,7 @@
                            |enter open engine pane or Roadmap item; other rows select project
                            |/ filter projects; esc clears
                            |s hide/show sidebar
+                           |l launch a ready slice (Roadmap)
                            |a approve
                            |x stop
                            |t retry
@@ -23,7 +24,6 @@
                            |q quit
                            |
                            |Overview and Roadmap are available. Questions, Waves and Decisions co...
-                           |
                            |
                            |
                            |[2m------------------------------------------------------------------------[m

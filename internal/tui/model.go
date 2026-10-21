@@ -17,6 +17,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
+	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/poll"
 	"github.com/squalor-xyz/ork/internal/registry"
@@ -112,6 +113,9 @@ type Model struct {
 	height        int
 	pane          *runPane
 	confirm       *runAction
+	launch        *launchState
+	launchRequest uint64
+	launchFlights map[string]launchFlight
 	actionFlights map[string][]runAction
 	actionStatus  string
 	lastRefresh   time.Time
@@ -248,6 +252,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			pane.pending = false
 			pane.detail, pane.err = msg.detail, msg.err
 		}
+	case launchMsg:
+		return m, m.applyLaunch(msg)
 	case actionMsg:
 		flights := m.actionFlights[msg.action.run]
 		for i, a := range flights {
@@ -293,6 +299,11 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyPressMsg:
 		return m, m.key(msg)
 	case tea.PasteMsg:
+		if m.launchPrompt() {
+			m.launch.input.update(msg)
+			m.actionStatus = ""
+			return m, nil
+		}
 		if m.pane != nil && m.paneQuestion() {
 			m.pane.input.update(msg)
 			m.actionStatus = ""
@@ -311,10 +322,17 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			m.confirm = nil
 			return m.callAction(a)
 		case "n", "N", "enter", "esc":
+			if m.confirm.verb == "launch" {
+				m.dropLaunch()
+			}
 			m.confirm = nil
 			m.actionStatus = "Cancelled"
 		}
 		return nil
+	}
+
+	if m.launch != nil {
+		return m.launchKey(msg)
 	}
 
 	if m.pane != nil {
@@ -343,6 +361,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 	switch {
+	case key.Matches(msg, m.keys.Launch):
+		return m.openLaunch()
 	case key.Matches(msg, m.keys.Approve):
 		return m.requestAction("approve")
 	case key.Matches(msg, m.keys.Stop):
@@ -422,7 +442,10 @@ func (m *Model) switchTo(i int) tea.Cmd {
 	if n == 0 {
 		return nil
 	}
-	m.actionStatus = ""
+	if m.launch == nil || m.launch.stage != launchStarting {
+		m.actionStatus = ""
+	}
+	m.dropLaunch()
 	m.pane = nil
 	m.active = i
 	m.roadmapCursor = 0
@@ -558,6 +581,10 @@ func (m *Model) moveView(delta int) {
 	for step := 1; step < n; step++ {
 		i := ((m.view+delta*step)%n + n) % n
 		if views[i].built {
+			if m.launch != nil && m.launch.stage != launchStarting {
+				m.actionStatus = ""
+			}
+			m.dropLaunch()
 			m.view = i
 			m.roadmapCursor = 0
 			m.itemPane = nil
@@ -567,9 +594,16 @@ func (m *Model) moveView(delta int) {
 }
 
 // runAction retains the exact target while a confirmation is on screen.
-type runAction struct{ verb, run, project, text string }
+type runAction struct {
+	verb, run, project, text string
+	plan                     *daemon.RunPlan
+	wellSpecified, split     bool
+}
 
 func (a runAction) command() string {
+	if a.verb == "launch" {
+		return "ork run " + a.project + " " + a.run
+	}
 	cmd := "ork " + a.verb + " " + a.run
 	if a.verb == "answer" {
 		cmd += " " + a.text
@@ -642,6 +676,9 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 }
 
 func (m *Model) callAction(a runAction) tea.Cmd {
+	if a.verb == "launch" {
+		return m.startLaunch(a)
+	}
 	live := m.cfg.Live
 	if m.actionFlights == nil {
 		m.actionFlights = make(map[string][]runAction)

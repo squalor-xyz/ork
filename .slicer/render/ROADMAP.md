@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-83 items · — 44 · done 32 · parked 2 · retired 5
+83 items · — 43 · done 33 · parked 2 · retired 5
 
 ## v1
 
@@ -98,7 +98,7 @@
 | 48 | [S49](slices/S49.md) | Fall back to the next matrix row on a rate limit or error | M | 2 |  | discovered from S29 | — |
 | 49 | [S50](slices/S50.md) | Check the diff against the slice's Files list | S | 2 |  | discovered from S29 | — |
 | 50 | [S51](slices/S51.md) | run.json at 0600; strip control characters from recorded commands | S | 1 |  | discovered from S45 | done |
-| 51 | [S52](slices/S52.md) | TUI: launch a slice from a ready list | M | 2 |  | discovered from S25 | — |
+| 51 | [S52](slices/S52.md) | TUI: launch a slice from a ready list | M | 2 |  | discovered from S25 | done |
 | 52 | [S53](slices/S53.md) | Create the ork logo | S | 1 |  |  | done |
 | 53 | [S54](slices/S54.md) | Show the ork version and logo in the terminal: TUI, --version, doctor | M | 2 |  |  | — |
 | 54 | [S55](slices/S55.md) | Run tree: orchestrator, roles and steps with live status | M | 2 |  |  | — |

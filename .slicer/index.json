@@ -2098,13 +2098,25 @@
       "id": "S52",
       "title": "TUI: launch a slice from a ready list",
       "short_title": "TUI: launch a slice from a ready list",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S25",
         "S12"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d35dcec4-cbc8-4f9a-9534-e2cff936b981",
+          "kind": "",
+          "text": "**2026-10-21** — Review FAIL: Esc or a project/view change during an in-flight Start cancels its context, the TUI forgets the flight and allows a second launch; Start reply status and refresh lost when the launch is no longer on screen",
+          "created_at": "2026-10-21T13:37:43Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -2122,7 +2134,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
