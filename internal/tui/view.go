@@ -163,11 +163,51 @@ func (m *Model) sidebar(w, h int) []string {
 	return lines
 }
 
-// viewBar lists the views. Only the Overview exists in this slice; the others
-// are drawn dim and cannot be selected yet.
+// views is the view bar, in order (ui.view-list). A view that is not built yet is
+// drawn dim, and tab and shift+tab skip it. Each later slice sets built when its
+// view lands.
+var views = []struct {
+	name  string
+	built bool
+}{
+	{"Overview", true},
+	{"Questions", false},
+	{"Waves", false},
+	{"Roadmap", false},
+	{"Decisions", false},
+}
+
+// viewBar lists the views. The active view uses ViewActive. A view that is not
+// built yet is drawn dim with the separators before it; a built view that is not
+// active is plain.
 func (m *Model) viewBar() string {
 	th := m.cfg.Theme
-	return " " + th.ViewActive.Render("Overview") + th.ViewIdle.Render(" | Waves | Roadmap | Decisions")
+	var b strings.Builder
+	var idle string // separators and unbuilt names not yet drawn, drawn as one dim run
+	flush := func() {
+		if idle != "" {
+			b.WriteString(th.ViewIdle.Render(idle))
+			idle = ""
+		}
+	}
+	b.WriteString(" ")
+	for i, v := range views {
+		if i > 0 {
+			idle += " | "
+		}
+		switch {
+		case i == m.view:
+			flush()
+			b.WriteString(th.ViewActive.Render(v.name))
+		case v.built:
+			flush()
+			b.WriteString(v.name)
+		default:
+			idle += v.name
+		}
+	}
+	flush()
+	return b.String()
 }
 
 // statusLine shows the project count, the last refresh and the number of
@@ -194,7 +234,7 @@ func (m *Model) helpLines(w int) []string {
 			lines = append(lines, clip(h.Key+" "+h.Desc, w))
 		}
 	}
-	lines = append(lines, "", clip("Only the Overview exists so far. Waves, Roadmap and Decisions come in later slices.", w))
+	lines = append(lines, "", clip("Only the Overview exists so far. Questions, Waves, Roadmap and Decisions come in later slices.", w))
 	return lines
 }
 

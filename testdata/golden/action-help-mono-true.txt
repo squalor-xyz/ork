@@ -1,9 +1,11 @@
-[1mork[m  ?help                 | [1mOverview[m[2m | Waves | Roadmap | Decisions[m
+[1mork[m  ?help                 | [1mOverview[m[2m | Questions | Waves | Roadmap | Decisions[m
 [1;7m> Needs you[m                |[2m------------------------------------------------------------------------[m
   ork 0*                   |[1mKeys[m
                            |
-                           |tab/right next project
-                           |shift+tab/left previous project
+                           |tab next view
+                           |shift+tab previous view
+                           |right next project
+                           |left previous project
                            |1-9 jump to project
                            |down/j/n next row
                            |up/k/p previous row
@@ -20,9 +22,7 @@
                            |esc close pane, help or message
                            |q quit
                            |
-                           |Only the Overview exists so far. Waves, Roadmap and Decisions come in...
-                           |
-                           |
+                           |Only the Overview exists so far. Questions, Waves, Roadmap and Decisi...
                            |
                            |
                            |

@@ -186,11 +186,11 @@ func TestPaneInputOwnsKeys(t *testing.T) {
 	}
 }
 
-// The answer field takes j, k and the arrows as text. The cursor and the project
-// stay where they are (ui.row-keys).
+// The answer field takes j, k and the arrows as text, and tab and shift+tab type
+// nothing. The cursor and the project stay where they are (ui.row-keys, ui.views).
 func TestAnswerFieldTakesRowKeysAsText(t *testing.T) {
 	h := paneHarness(t, "paused", "question")
-	for _, k := range []string{"down", "j", "up", "k"} {
+	for _, k := range []string{"down", "j", "up", "k", "tab", "shift+tab"} {
 		h.deliver(press(k))
 	}
 	if v := h.view(); !strings.Contains(v, "Run engine") || !strings.Contains(v, "ork answer engine jk\n") {

@@ -122,7 +122,7 @@ func TestSwitchingProjectsFocusesTheNewOneWithoutBlockingUpdate(t *testing.T) {
 
 	cmdCh := make(chan tea.Cmd, 1)
 	go func() {
-		_, cmd := h.m.Update(press("tab"))
+		_, cmd := h.m.Update(press("right"))
 		cmdCh <- cmd
 	}()
 	var cmd tea.Cmd
