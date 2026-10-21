@@ -1420,7 +1420,7 @@
       "id": "S31",
       "title": "Run a small slice through ork run end to end",
       "short_title": "Run a small slice through ork run end to end",
-      "status": "open",
+      "status": "parked",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -1960,7 +1960,7 @@
       "id": "S48",
       "title": "Measure the codex workspace-write sandbox",
       "short_title": "Measure the codex workspace-write sandbox",
-      "status": "open",
+      "status": "parked",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
