@@ -98,6 +98,7 @@ type Model struct {
 	byName        map[string]*projectState
 	poller        *poll.Poller
 	active        int // -1 is Needs you; otherwise registry index
+	view          int // the view in the bar: an index into views; 0 is the Overview
 	cursor        int // the Overview row under the cursor; drawn clamped to the rows there are
 	sidebarHidden bool
 	filtering     bool
@@ -354,6 +355,10 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return m.move(1)
 	case key.Matches(msg, m.keys.Prev):
 		return m.move(-1)
+	case key.Matches(msg, m.keys.NextView):
+		m.moveView(1)
+	case key.Matches(msg, m.keys.PrevView):
+		m.moveView(-1)
 	case key.Matches(msg, m.keys.RowNext):
 		m.moveRow(1)
 	case key.Matches(msg, m.keys.RowPrev):
@@ -514,6 +519,19 @@ func (m *Model) move(delta int) tea.Cmd {
 		}
 	}
 	return m.switchTo(nav[(pos+delta+len(nav))%len(nav)])
+}
+
+// moveView steps to the next built view in direction delta and wraps around.
+// With no other view built it does nothing (ui.view-list).
+func (m *Model) moveView(delta int) {
+	n := len(views)
+	for step := 1; step < n; step++ {
+		i := ((m.view+delta*step)%n + n) % n
+		if views[i].built {
+			m.view = i
+			return
+		}
+	}
 }
 
 // runAction retains the exact target while a confirmation is on screen.

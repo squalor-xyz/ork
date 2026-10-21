@@ -2296,7 +2296,7 @@
       "id": "S58",
       "title": "Tab and shift+tab switch views; left/right and 1-9 switch projects",
       "short_title": "Tab and shift+tab switch views; left/right and 1-9 switch projects",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -2317,7 +2317,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

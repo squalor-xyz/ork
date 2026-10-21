@@ -11,6 +11,8 @@ type keyMap struct {
 	Retry      key.Binding
 	Next       key.Binding
 	Prev       key.Binding
+	NextView   key.Binding
+	PrevView   key.Binding
 	Jump       key.Binding
 	RowNext    key.Binding
 	RowPrev    key.Binding
@@ -32,8 +34,10 @@ func newKeyMap() keyMap {
 		Retry:      key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "retry")),
 		Filter:     key.NewBinding(key.WithKeys("/"), key.WithHelp("/", "filter projects; esc clears")),
 		Sidebar:    key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "hide/show sidebar")),
-		Next:       key.NewBinding(key.WithKeys("tab", "right"), key.WithHelp("tab/right", "next project")),
-		Prev:       key.NewBinding(key.WithKeys("shift+tab", "left"), key.WithHelp("shift+tab/left", "previous project")),
+		Next:       key.NewBinding(key.WithKeys("right"), key.WithHelp("right", "next project")),
+		Prev:       key.NewBinding(key.WithKeys("left"), key.WithHelp("left", "previous project")),
+		NextView:   key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "next view")),
+		PrevView:   key.NewBinding(key.WithKeys("shift+tab"), key.WithHelp("shift+tab", "previous view")),
 		Jump:       key.NewBinding(key.WithKeys("1", "2", "3", "4", "5", "6", "7", "8", "9"), key.WithHelp("1-9", "jump to project")),
 		RowNext:    key.NewBinding(key.WithKeys("down", "j", "n"), key.WithHelp("down/j/n", "next row")),
 		RowPrev:    key.NewBinding(key.WithKeys("up", "k", "p"), key.WithHelp("up/k/p", "previous row")),
@@ -52,5 +56,5 @@ func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Refresh, k.He
 
 // FullHelp implements help.KeyMap.
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.Next, k.Prev, k.Jump}, {k.RowNext, k.RowPrev, k.Select}, {k.Filter, k.Sidebar}, {k.Approve, k.Stop, k.Retry, k.Answer, k.PaneScroll}, {k.Refresh, k.Help, k.Close, k.Quit}}
+	return [][]key.Binding{{k.NextView, k.PrevView}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.RowPrev, k.Select}, {k.Filter, k.Sidebar}, {k.Approve, k.Stop, k.Retry, k.Answer, k.PaneScroll}, {k.Refresh, k.Help, k.Close, k.Quit}}
 }

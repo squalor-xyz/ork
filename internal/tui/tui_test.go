@@ -266,12 +266,12 @@ func TestTabKeysSwitchTheProject(t *testing.T) {
 		t.Fatalf("first tab = %s", got)
 	}
 	steps := []struct{ k, want string }{
-		{"tab", "slicer"},
+		{"right", "slicer"},
 		{"right", "adjudicate"},
-		{"shift+tab", "slicer"},
+		{"left", "slicer"},
 		{"left", "Needs"},
 		{"left", "agents"},
-		{"tab", "Needs"},
+		{"right", "Needs"},
 		{"3", "DataBall"},
 		{"9", "DataBall"}, // no such tab
 		{"0", "DataBall"},
@@ -283,6 +283,57 @@ func TestTabKeysSwitchTheProject(t *testing.T) {
 		if got := activeTab(t, h.view()); got != s.want {
 			t.Fatalf("after %q the tab is %s, want %s", s.k, got, s.want)
 		}
+	}
+}
+
+// Tab and shift+tab switch views, not projects. With only the Overview built
+// they leave the project, the row cursor and the bar where they are
+// (ui.views, ui.view-list).
+func TestViewKeysDoNotMoveTheProject(t *testing.T) {
+	for _, k := range []string{"tab", "shift+tab"} {
+		t.Run(k, func(t *testing.T) {
+			h := newHarness(t, four...)
+			h.src.set(snap(four[0], []adjcli.Record{openRec(11, "a.one", "first question"), openRec(12, "a.two", "second question")}, nil))
+			h.start()
+			h.send(press("n"))
+			if h.m.cursor != 1 {
+				t.Fatalf("cursor = %d after n, want 1", h.m.cursor)
+			}
+			h.send(press(k))
+			if h.m.active != -1 || h.m.cursor != 1 {
+				t.Errorf("after %s: active %d, cursor %d; want Needs you and cursor 1", k, h.m.active, h.m.cursor)
+			}
+			v := h.view()
+			if !strings.Contains(v, "> Needs you") {
+				t.Errorf("after %s the sidebar selection moved:\n%s", k, v)
+			}
+			if bar := strings.Split(v, "\n")[0]; !strings.Contains(bar, "Overview | Questions | Waves | Roadmap | Decisions") {
+				t.Errorf("after %s the view bar is %q", k, bar)
+			}
+			if !strings.Contains(h.m.View().Content, h.m.cfg.Theme.ViewActive.Render("Overview")) {
+				t.Errorf("after %s Overview is not the active view", k)
+			}
+		})
+	}
+}
+
+// With only the Overview built, tab and shift+tab set no message and keep the
+// one on screen (ui.view-list).
+func TestViewKeysSetNoMessage(t *testing.T) {
+	const msg = "No engine run on this row; no actions"
+	for _, k := range []string{"tab", "shift+tab"} {
+		t.Run(k, func(t *testing.T) {
+			h := newHarness(t, four...)
+			h.start()
+			h.send(press("a")) // no engine run under the cursor: a message
+			if v := h.view(); !strings.Contains(v, msg) {
+				t.Fatalf("setup: no message on screen:\n%s", v)
+			}
+			h.send(press(k))
+			if v := h.view(); !strings.Contains(v, msg) {
+				t.Errorf("after %s the message is gone:\n%s", k, v)
+			}
+		})
 	}
 }
 
@@ -311,7 +362,7 @@ func TestHelpKeyTogglesTheHelp(t *testing.T) {
 	}
 	h.send(press("?"))
 	v := h.view()
-	for _, want := range []string{"tab/right next project", "shift+tab/left previous project", "jump to project", "down/j/n next row", "up/k/p previous row", "refresh now", "quit"} {
+	for _, want := range []string{"tab next view", "shift+tab previous view", "right next project", "left previous project", "jump to project", "down/j/n next row", "up/k/p previous row", "refresh now", "quit"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("help lacks %q:\n%s", want, v)
 		}
@@ -333,7 +384,7 @@ func TestRefreshKeyRefreshesTheVisibleProjectNow(t *testing.T) {
 	h.send(press("1"))
 	h.src.take()
 	h.advance(time.Second) // nothing is due
-	h.send(press("tab"))
+	h.send(press("right"))
 	h.send(press("r"))
 	if got := h.src.take(); !reflect.DeepEqual(got, []string{"adjudicate"}) {
 		t.Fatalf("calls after r = %v", got)
@@ -595,13 +646,13 @@ func TestProjectKeysResetTheRowCursor(t *testing.T) {
 	if h.m.cursor != 1 {
 		t.Fatalf("cursor = %d after n, want 1", h.m.cursor)
 	}
-	h.send(press("tab")) // to slicer
+	h.send(press("right")) // to slicer
 	if h.m.active != 0 || h.m.cursor != 0 {
-		t.Errorf("tab: active %d, cursor %d; want slicer's first row", h.m.active, h.m.cursor)
+		t.Errorf("right: active %d, cursor %d; want slicer's first row", h.m.active, h.m.cursor)
 	}
-	h.send(press("shift+tab")) // back to Needs you
+	h.send(press("left")) // back to Needs you
 	if h.m.active != -1 || h.m.cursor != 0 {
-		t.Errorf("shift+tab: active %d, cursor %d; want Needs you's first row", h.m.active, h.m.cursor)
+		t.Errorf("left: active %d, cursor %d; want Needs you's first row", h.m.active, h.m.cursor)
 	}
 }
 
@@ -633,8 +684,9 @@ func TestRowKeysMoveTheCursorNotTheProject(t *testing.T) {
 
 // Each navigation key does what the help says. The cursor starts on the second
 // row of Needs you. Row keys move the cursor and keep the project. Project keys
-// move the project and put the cursor on its first row. 9 has no project to jump
-// to, so nothing moves (ui.row-keys).
+// move the project and put the cursor on its first row. Tab and shift+tab switch
+// views and move neither (ui.views). 9 has no project to jump to, so nothing
+// moves (ui.row-keys).
 func TestNavigationKeysDoWhatTheHelpSays(t *testing.T) {
 	for _, tc := range []struct{ key, tab, row string }{
 		{"down", "Needs", "run-1  S01"},
@@ -643,10 +695,10 @@ func TestNavigationKeysDoWhatTheHelpSays(t *testing.T) {
 		{"k", "Needs", "#11 a.one"},
 		{"n", "Needs", "run-1  S01"},
 		{"p", "Needs", "#11 a.one"},
-		{"tab", "slicer", "#11 a.one"},
+		{"tab", "Needs", "#12 a.two"},
+		{"shift+tab", "Needs", "#12 a.two"},
 		{"right", "slicer", "#11 a.one"},
 		{"2", "adjudicate", ""},
-		{"shift+tab", "agents", ""},
 		{"left", "agents", ""},
 		{"9", "Needs", "#12 a.two"},
 	} {
@@ -694,7 +746,7 @@ func TestDownReachesAStoppedRunForEnter(t *testing.T) {
 	}
 }
 
-// The dashboard doc lists the keys decided in ui.row-keys.
+// The dashboard doc lists the keys decided in ui.row-keys and ui.views.
 func TestDashboardDocsListTheNavigationKeys(t *testing.T) {
 	b, err := os.ReadFile("../../docs/dashboard.md")
 	if err != nil {
@@ -702,12 +754,17 @@ func TestDashboardDocsListTheNavigationKeys(t *testing.T) {
 	}
 	s := strings.Join(strings.Fields(string(b)), " ")
 	for _, want := range []string{
-		"Keys `tab`/`shift+tab` and `left`/`right` move selection",
+		"Keys `right`/`left` move selection and wrap through \"Needs you\" and the sorted projects.",
+		"`1`-`9` select projects in registry order.",
+		"`tab` and `shift+tab` switch views",
 		"`down`/`j` and `up`/`k` move it to the next and previous row, and so do `n` and `p`",
 	} {
 		if !strings.Contains(s, want) {
 			t.Errorf("dashboard.md lacks %q", want)
 		}
+	}
+	if strings.Contains(s, "Keys `tab`/`shift+tab` and `left`/`right` move selection") {
+		t.Error("dashboard.md still lists tab and shift+tab as project keys")
 	}
 	if strings.Contains(s, "`up`/`down`, `k`/`j`") {
 		t.Error("dashboard.md still lists up, down, k and j as project keys")
@@ -1346,7 +1403,7 @@ func TestLayoutHasTabsViewBarBodyAndStatusLine(t *testing.T) {
 	if !strings.Contains(strings.Join(lines, "\n"), "slicer 0") || !strings.Contains(lines[0], "?help") {
 		t.Errorf("tab line: %q", lines[0])
 	}
-	for _, v := range []string{"Overview", "Waves", "Roadmap", "Decisions"} {
+	for _, v := range []string{"Overview", "Questions", "Waves", "Roadmap", "Decisions"} {
 		if !strings.Contains(lines[0], v) {
 			t.Errorf("view bar lacks %q: %q", v, lines[1])
 		}

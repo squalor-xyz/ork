@@ -25,7 +25,7 @@ until then.
 ## Layout
 
 ```
-ork  ?help           | Overview | Waves | Roadmap | Decisions
+ork  ?help           | Overview | Questions | Waves | Roadmap | Decisions
 > Needs you          | --------------------------------------
   slicer 2*          | Needs you
   adjudicate 1       |   active Overview rows
@@ -55,11 +55,13 @@ When it is selected, its detail line says to run `slicer init`
 The list scrolls to keep selection visible and shows `+N more` for hidden
 rows. Below 100 columns the sidebar narrows; names that do not fit end in
 `...` and keep their badges. `s` hides or shows the sidebar at any width.
-Keys `tab`/`shift+tab` and `left`/`right` move selection and wrap through
-"Needs you" and the sorted projects. `1`-`9` select projects in registry
-order. `/` filters project names without regard to case; `enter` keeps the
-filter and leaves text entry, and `esc` clears it. `r` refreshes the selected
-project, or all projects on "Needs you". `?` shows keys and `q` quits.
+Keys `right`/`left` move selection and wrap through "Needs you" and the
+sorted projects. `1`-`9` select projects in registry order. `tab` and
+`shift+tab` switch views in the order of the view bar (`ui.views`,
+`ui.view-list`). They skip views not built yet, so only the Overview is
+reached for now. `/` filters project names without regard to case; `enter`
+keeps the filter and leaves text entry, and `esc` clears it. `r` refreshes the
+selected project, or all projects on "Needs you". `?` shows keys and `q` quits.
 
 The Overview has a row cursor (`ui.overview-cursor`). `down`/`j` and `up`/`k`
 move it to the next and previous row, and so do `n` and `p`. It goes through
