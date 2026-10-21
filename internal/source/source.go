@@ -26,6 +26,7 @@ type Part string
 // `git -C PATH rev-parse HEAD` (boundary.git-head).
 const (
 	Items   Part = "items"
+	Deps    Part = "deps"
 	Goals   Part = "goals"
 	Runs    Part = "runs"
 	Open    Part = "open"
@@ -67,6 +68,7 @@ type Snapshot struct {
 	EngineRuns []EngineRun
 	Project    registry.Project
 	Items      Result[[]slicercli.Item]
+	Deps       Result[[]slicercli.Item]
 	Goals      Result[*slicercli.Goals]
 	Runs       Result[[]slicercli.RelayRun] // active runs only
 	Open       Result[[]adjcli.Record]
@@ -95,6 +97,8 @@ func (d *Direct) Fetch(ctx context.Context, p registry.Project, part Part) (any,
 	switch part {
 	case Items:
 		return d.Slicer.List(ctx, p.Path)
+	case Deps:
+		return d.Slicer.Deps(ctx, p.Path)
 	case Goals:
 		return d.Slicer.Goals(ctx, p.Path)
 	case Runs:
@@ -129,6 +133,7 @@ func (d *Direct) Snapshot(ctx context.Context, p registry.Project) Snapshot {
 	s := Snapshot{Project: p}
 	calls := []func(){
 		func() { s.Items = result(d.Slicer.List(ctx, p.Path)) },
+		func() { s.Deps = result(d.Slicer.Deps(ctx, p.Path)) },
 		func() { s.Goals = result(d.Slicer.Goals(ctx, p.Path)) },
 		func() { s.Runs = result(d.Slicer.RelayRuns(ctx, p.Path, true)) },
 	}

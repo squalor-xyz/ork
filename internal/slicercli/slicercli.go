@@ -34,6 +34,15 @@ func (c Client) List(ctx context.Context, root string) ([]Item, error) {
 	return items, nil
 }
 
+// Deps runs `slicer deps --json --lean --root ROOT` for unblocked items.
+func (c Client) Deps(ctx context.Context, root string) ([]Item, error) {
+	var items []Item
+	if err := clirun.RunJSON(ctx, c.call("deps", "--json", "--lean", "--root", root), &items); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 // Show runs `slicer show ID --json --lean --root ROOT`.
 func (c Client) Show(ctx context.Context, root, id string) (*Detail, error) {
 	var d Detail

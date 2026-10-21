@@ -279,3 +279,19 @@ func TestGoldenFifteenProjects(t *testing.T) {
 		t.Fatal("15-project golden differs")
 	}
 }
+
+func TestGoldenRoadmap(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		mono bool
+	}{
+		{"roadmap-100x30-color.txt", false}, {"roadmap-100x30-mono.txt", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := roadmapHarness(t)
+			h.m.cfg.Theme = NewTheme(tc.mono)
+			h.m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
+			checkGolden(t, tc.name, h.m.View().Content)
+		})
+	}
+}

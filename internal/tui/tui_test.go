@@ -286,8 +286,7 @@ func TestTabKeysSwitchTheProject(t *testing.T) {
 	}
 }
 
-// Tab and shift+tab switch views, not projects. With only the Overview built
-// they leave the project, the row cursor and the bar where they are
+// Tab and shift+tab reach Roadmap without moving the project or Overview cursor
 // (ui.views, ui.view-list).
 func TestViewKeysDoNotMoveTheProject(t *testing.T) {
 	for _, k := range []string{"tab", "shift+tab"} {
@@ -310,15 +309,14 @@ func TestViewKeysDoNotMoveTheProject(t *testing.T) {
 			if bar := strings.Split(v, "\n")[0]; !strings.Contains(bar, "Overview | Questions | Waves | Roadmap | Decisions") {
 				t.Errorf("after %s the view bar is %q", k, bar)
 			}
-			if !strings.Contains(h.m.View().Content, h.m.cfg.Theme.ViewActive.Render("Overview")) {
-				t.Errorf("after %s Overview is not the active view", k)
+			if !strings.Contains(h.m.View().Content, h.m.cfg.Theme.ViewActive.Render("Roadmap")) {
+				t.Errorf("after %s Roadmap is not the active view", k)
 			}
 		})
 	}
 }
 
-// With only the Overview built, tab and shift+tab set no message and keep the
-// one on screen (ui.view-list).
+// View keys set no action message. Returning to Overview keeps its message.
 func TestViewKeysSetNoMessage(t *testing.T) {
 	const msg = "No engine run on this row; no actions"
 	for _, k := range []string{"tab", "shift+tab"} {
@@ -330,6 +328,7 @@ func TestViewKeysSetNoMessage(t *testing.T) {
 				t.Fatalf("setup: no message on screen:\n%s", v)
 			}
 			h.send(press(k))
+			h.send(press(k)) // return to Overview
 			if v := h.view(); !strings.Contains(v, msg) {
 				t.Errorf("after %s the message is gone:\n%s", k, v)
 			}

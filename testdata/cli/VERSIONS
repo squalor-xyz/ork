@@ -4,6 +4,8 @@ adj v0.1.0
 # Fixtures: file, then the command as run (read-only) with the --root it was recorded from.
 # ORK = /Users/jon/code/squalor-xyz/ork/.worktrees/s02
 # ADJ = /Users/jon/code/squalor-xyz/adjudicate
+# The deps fixture uses ORK = /Users/jon/code/squalor-xyz/ork/.worktrees/s12.
+slicer/deps.json: slicer deps --json --lean --root ORK
 slicer/list.json: slicer list --json --lean --root ORK
 slicer/show-S02.json: slicer show S02 --json --lean --root ORK
 slicer/goals.json: slicer goals --json --root ORK

@@ -70,6 +70,7 @@ func (c *Client) Snapshot(ctx context.Context, p registry.Project) source.Snapsh
 		return source.Snapshot{
 			Project: p,
 			Items:   source.Result[[]slicercli.Item]{Err: err},
+			Deps:    source.Result[[]slicercli.Item]{Err: err},
 			Goals:   source.Result[*slicercli.Goals]{Err: err},
 			Runs:    source.Result[[]slicercli.RelayRun]{Err: err},
 			Open:    source.Result[[]adjcli.Record]{Err: err},
@@ -80,6 +81,7 @@ func (c *Client) Snapshot(ctx context.Context, p registry.Project) source.Snapsh
 		Project:    out.Project,
 		EngineRuns: out.EngineRuns,
 		Items:      out.Items.result(),
+		Deps:       out.Deps.result(),
 		Goals:      out.Goals.result(),
 		Runs:       out.Runs.result(),
 		Open:       out.Open.result(),
@@ -138,4 +140,13 @@ func (c *Client) Retry(ctx context.Context, run string) error {
 // Answer resumes a paused question with the owner's text.
 func (c *Client) Answer(ctx context.Context, run, text string) error {
 	return c.Call(ctx, MethodRunAnswer, RunAction{Run: run, Text: text}, nil)
+}
+
+// ItemShow reads the registered project's item detail.
+func (c *Client) ItemShow(ctx context.Context, project, id string) (*slicercli.Detail, error) {
+	var out ItemShowResult
+	if err := c.Call(ctx, MethodItemShow, ItemShowParams{Project: project, ID: id}, &out); err != nil {
+		return nil, err
+	}
+	return out.Detail, nil
 }

@@ -17,6 +17,7 @@ const (
 	MethodDaemonInfo   = "daemon.info"   // no params, result DaemonInfoResult
 	MethodDaemonStop   = "daemon.stop"   // params StopParams, result StopResult
 	MethodStatus       = "status"        // params StatusParams, result StatusResult
+	MethodItemShow     = "item.show"     // proposed; params ItemShowParams, result ItemShowResult
 	MethodSnapshot     = "snapshot"      // params SnapshotParams, result SnapshotResult
 	MethodProjectsList = "projects.list" // no params, result ProjectsResult
 	MethodProjectsAdd  = "projects.add"  // params AddProjectParams, result registry.Project
@@ -102,7 +103,7 @@ type Relay struct {
 	Running   int      `json:"running"`
 }
 
-// PartError is a failed part of a project's snapshot: Part is one of "items",
+// PartError is a failed part of a project's status: Part is one of "items",
 // "goals", "runs", "open" and "decided". Code and Message are the tool
 // error's own when slicer or adj printed one.
 type PartError struct {
@@ -157,6 +158,7 @@ type SnapshotResult struct {
 	EngineRuns []EngineRun                `json:"engine_runs"`
 	Project    registry.Project           `json:"project"`
 	Items      Part[[]slicercli.Item]     `json:"items"`
+	Deps       Part[[]slicercli.Item]     `json:"deps"`
 	Goals      Part[*slicercli.Goals]     `json:"goals"`
 	Runs       Part[[]slicercli.RelayRun] `json:"runs"`
 	Open       Part[[]adjcli.Record]      `json:"open"`
@@ -180,8 +182,8 @@ type ProjectsResult struct {
 	Projects []registry.Project `json:"projects"`
 }
 
-// SubscribeParams names the projects this connection shows. Their items and
-// runs refresh every 5 s, the others every 30 s. Opening a project reads its
+// SubscribeParams names the projects this connection shows. Their items, deps,
+// runs and open records refresh every 5 s, the others every 30 s. Opening a project reads its
 // goals and decided records now. Focus replaces the connection's earlier list.
 type SubscribeParams struct {
 	Focus []string `json:"focus"`
@@ -197,4 +199,15 @@ type SnapshotChanged struct {
 	Project string    `json:"project"`
 	Parts   []string  `json:"parts"`
 	At      time.Time `json:"at"`
+}
+
+// ItemShowParams selects one item's detail. Proposed wire fields.
+type ItemShowParams struct {
+	Project string `json:"project"`
+	ID      string `json:"id"`
+}
+
+// ItemShowResult wraps slicer's detail. Proposed wire field.
+type ItemShowResult struct {
+	Detail *slicercli.Detail `json:"detail"`
 }

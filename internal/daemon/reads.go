@@ -13,7 +13,7 @@ import (
 )
 
 // allParts is every part of a project, as a refresh reads them.
-var allParts = []source.Part{source.Items, source.Goals, source.Runs, source.Open, source.Decided, source.Head}
+var allParts = []source.Part{source.Items, source.Deps, source.Goals, source.Runs, source.Open, source.Decided, source.Head}
 
 // snapshotOf reads a project's parts from the cache (dash.cache). A part with
 // no value yet is read now, one call for each part however many clients ask;
@@ -23,6 +23,7 @@ func (d *Daemon) snapshotOf(ctx context.Context, p registry.Project) source.Snap
 	s := source.Snapshot{Project: p}
 	calls := []func(){
 		func() { s.Items = readAs[[]slicercli.Item](ctx, d, p, source.Items) },
+		func() { s.Deps = readAs[[]slicercli.Item](ctx, d, p, source.Deps) },
 		func() { s.Goals = readAs[*slicercli.Goals](ctx, d, p, source.Goals) },
 		func() { s.Runs = readAs[[]slicercli.RelayRun](ctx, d, p, source.Runs) },
 		func() { s.Open = readAs[[]adjcli.Record](ctx, d, p, source.Open) },

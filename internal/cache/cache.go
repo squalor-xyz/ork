@@ -27,7 +27,7 @@ import (
 // Limit is the most CLI processes that run at once, across all projects.
 const Limit = 4
 
-// Refresh intervals (dash.refresh). Items, runs, open records and git HEAD
+// Refresh intervals (dash.refresh). Items, deps, runs, open records and git HEAD
 // follow FastInterval for a visible project and SlowInterval for the others.
 // Goals and decided records follow GoalInterval.
 const (
@@ -123,9 +123,9 @@ func New(opt Options) *Cache {
 // partsOf lists the parts a project has. Open and decided records need adj.
 func partsOf(p registry.Project) []source.Part {
 	if p.Adj {
-		return []source.Part{source.Items, source.Goals, source.Runs, source.Open, source.Decided, source.Head}
+		return []source.Part{source.Items, source.Deps, source.Goals, source.Runs, source.Open, source.Decided, source.Head}
 	}
-	return []source.Part{source.Items, source.Goals, source.Runs, source.Head}
+	return []source.Part{source.Items, source.Deps, source.Goals, source.Runs, source.Head}
 }
 
 // entryLocked returns the entry of a part the project has, or nil.
@@ -389,7 +389,7 @@ func (c *Cache) Refresh(ctx context.Context, p registry.Project, parts ...source
 	return nil
 }
 
-// SetVisible sets the projects the clients show. Their items, runs, open
+// SetVisible sets the projects the clients show. Their items, deps, runs, open
 // records and git HEAD move to FastInterval, and the others to SlowInterval.
 // A project that is newly shown has its goals and decided records read now:
 // the tab open.

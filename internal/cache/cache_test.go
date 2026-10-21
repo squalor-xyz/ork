@@ -22,7 +22,7 @@ var (
 	alpha = registry.Project{Name: "alpha", Path: "/p/alpha", Adj: true}
 	beta  = registry.Project{Name: "beta", Path: "/p/beta"}
 
-	allParts = []source.Part{source.Items, source.Goals, source.Runs, source.Open, source.Decided, source.Head}
+	allParts = []source.Part{source.Items, source.Deps, source.Goals, source.Runs, source.Open, source.Decided, source.Head}
 )
 
 var epoch = time.Date(2026, 10, 19, 12, 0, 0, 0, time.UTC)
@@ -122,7 +122,7 @@ func newFetcher() *fakeFetcher {
 
 func defaultAnswer(p registry.Project, part source.Part) (any, error) {
 	switch part {
-	case source.Items:
+	case source.Items, source.Deps:
 		return []slicercli.Item{{ID: "S1"}}, nil
 	case source.Goals:
 		return &slicercli.Goals{}, nil
@@ -295,10 +295,9 @@ func TestNoMoreThanFourCallsRunAtOnce(t *testing.T) {
 	for _, n := range f.counts {
 		total += n
 	}
-	// alpha: items, goals, runs, open, decided, head; beta (no adj): items, goals, runs, head.
-	// gamma has the same six as alpha.
-	if total != 16 {
-		t.Fatalf("calls made: %d, want 16 (one per part per project)", total)
+	// alpha and gamma have seven parts; beta (no adj) has five.
+	if total != 19 {
+		t.Fatalf("calls made: %d, want 19 (one per part per project)", total)
 	}
 }
 
@@ -411,7 +410,7 @@ func TestRefreshReadsEveryPartAndWaits(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Refresh returns only once every part is read, so the counts are final now.
-	for _, part := range []source.Part{source.Items, source.Goals, source.Runs, source.Open, source.Decided, source.Head} {
+	for _, part := range []source.Part{source.Items, source.Deps, source.Goals, source.Runs, source.Open, source.Decided, source.Head} {
 		if n := f.count("alpha", part); n != 2 {
 			t.Fatalf("%s read %d times after an explicit refresh, want 2", part, n)
 		}
@@ -525,10 +524,10 @@ func TestNoticeOnlyWhenTheDataChanges(t *testing.T) {
 			return len(notes) >= n
 		})
 	}
-	awaitNotes(5)
+	awaitNotes(6)
 	first := take()
-	if len(first) != 5 { // every data part of alpha, once; HEAD is not a data part
-		t.Fatalf("first reads gave notices %v, want the five data parts", first)
+	if len(first) != 6 { // every data part of alpha, once; HEAD is not a data part
+		t.Fatalf("first reads gave notices %v, want the six data parts", first)
 	}
 	c.SetVisible([]string{"alpha"})
 	if got := take(); len(got) != 0 {
@@ -871,4 +870,23 @@ func TestReadLongerThanItsIntervalStartsAgainWhenItEnds(t *testing.T) {
 	if maxInFlight != 1 {
 		t.Fatalf("items reads overlapped: %d ran at once, want 1", maxInFlight)
 	}
+}
+
+func TestDepsRefreshesAtTheItemsInterval(t *testing.T) {
+	f := newFetcher()
+	f.setAnswer(func(p registry.Project, part source.Part) (any, error) {
+		if part == source.Part("deps") {
+			return []slicercli.Item{{ID: "ready"}}, nil
+		}
+		return defaultAnswer(p, part)
+	})
+	clock := &fakeClock{}
+	c := newCache(t, f, clock, nil)
+	c.SetVisible([]string{"alpha"})
+	v := c.Get(context.Background(), alpha, source.Part("deps"))
+	if items, ok := v.Value.([]slicercli.Item); !ok || len(items) != 1 || items[0].ID != "ready" {
+		t.Fatalf("deps not cached: %+v", v)
+	}
+	clock.Advance(5 * time.Second)
+	waitRead(t, c, f, "alpha", source.Part("deps"), 2)
 }
