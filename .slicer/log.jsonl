@@ -788,3 +788,12 @@
 {"when": "2026-10-20T19:55:41Z", "item": "S35", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-21T01:12:02Z", "item": "S31", "action": "status", "from": "open", "to": "parked", "note": ""}
 {"when": "2026-10-21T01:12:02Z", "item": "S48", "action": "status", "from": "open", "to": "parked", "note": ""}
+{"when": "2026-10-21T01:21:11Z", "item": "S79", "action": "add", "from": "", "to": "open", "note": "Wave-ready Files sections: set files_section and backtick paths"}
+{"when": "2026-10-21T01:21:11Z", "item": "S80", "action": "add", "from": "", "to": "open", "note": "Per-launch lineup and budget overrides on run.plan and run.start"}
+{"when": "2026-10-21T01:21:11Z", "item": "S81", "action": "add", "from": "", "to": "open", "note": "Daemon reads for the Waves screen: wave.suggest and wave.overlap"}
+{"when": "2026-10-21T01:21:11Z", "item": "S82", "action": "add", "from": "", "to": "open", "note": "Waves screen: suggested list, tick items, overlap warnings, launch a wave"}
+{"when": "2026-10-21T01:21:11Z", "item": "S83", "action": "add", "from": "", "to": "open", "note": "Waves screen: edit a slice's lineup and budgets before launch"}
+{"when": "2026-10-21T01:21:14Z", "item": "S79", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-10-21T01:21:14Z", "item": "S80", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-10-21T01:23:23Z", "item": "config.files_section", "action": "config", "from": "", "to": "Files", "note": ""}
+{"when": "2026-10-21T01:23:31Z", "item": "S60", "action": "set", "from": "", "to": "", "note": "depends_on S05,S52→S05,S52,S79"}

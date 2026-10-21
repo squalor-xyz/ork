@@ -1,0 +1,43 @@
+{
+  "id": "S79",
+  "title": "Wave-ready Files sections: set files_section and backtick paths",
+  "lead": [
+    "`slicer plan-parallel` and `slicer deps --overlap` need files_section set, and they read only backticked paths in that section. ork has neither today, so S60 and the Waves screen get no waves."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [
+    "needs-owner"
+  ],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "`slicer plan-parallel --json --lean` on ork fails today with code usage: \"plan-parallel needs files_section: name the section that lists an item's files with `slicer config files_section NAME`\" (run 2026-10-20; slicer/src/slicer/ops.py:2077 and :2170-2176). `slicer config files_section` prints nothing.\n\nSetting the key is not enough. slicer reads an item's paths only from backticked spans in that section (slicer/src/slicer/paths.py:1-5 and :23-48): a span counts as a path when it has a slash and a file extension, ends in a slash, or starts with a top-level name of the project. A `:12-20` suffix is dropped. ork's Files sections list paths as plain text (for example S52, S58, S60). The only backticked spans in S52, S12 and S60 Files are commands with spaces, which are not paths. plan-parallel puts an item with no paths in `unplaced` with reason `no_files` (slicer/src/slicer/ops.py:2061-2062, :2090-2093). So every open ork item would be unplaced.\n\nSetting files_section is a tracking config write. It is an owner action (or an agent with the owner's OK); this slice cannot be done by code alone."
+    },
+    {
+      "heading": "Files",
+      "body": "- Owner action, no file: `slicer config files_section Files --render --check` (the section is named Files; `slicer sections` lists Why, Files, Failing tests, Implement, Check, Git).\n- `AGENTS.md`: the Editing section (:45-49) gains one rule: in a slice's Files section, put each path in backticks, for example `internal/tui/model.go` (:520-528), so slicer can read it.\n- Tracking only, through `slicer edit ID --section Files --text ... --render`: the Files section of each open slice with a spec (`slicer list --json --lean`; has_slice true, status open). Wrap each path in backticks. No other text changes.\n- Open: whether `overlap_ignore` should list shared docs such as `docs/design.md` and `docs/dashboard.md` (record 137, `tracking.files-section`, open)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Check, not a Go test: `slicer plan-parallel --json --lean` exits 0 and its result has no `unplaced` entry with reason `no_files` for an open item that has a spec.\n- `slicer deps --overlap S52 S60 --json --lean` lists the shared paths of the two items (both name `internal/daemon/client.go` or `internal/daemon/runs.go` once backticked; confirm from the output).\n- `slicer check` passes and prints no files_section warning (slicer/src/slicer/ops.py:2179-2190 warns when no item has the configured heading)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Run `slicer plan-parallel --json --lean` and record the usage error as the before state.\n2. Owner action: the owner runs, or authorizes, `slicer config files_section Files --render --check`. Stop here until it is set.\n3. Run plan-parallel again. Confirm that every open specced item is unplaced with no_files. This proves the backtick gap.\n4. For each open specced item, rewrite only its Files section with `slicer edit ID --section Files --text BODY --render`, putting each path in backticks. Keep line anchors outside the backticks or as a `:N-M` suffix inside. Do not open or edit tracking files.\n5. Add the backtick rule to `AGENTS.md` (:45-49).\n6. Run plan-parallel and `deps --overlap` again and check the Failing tests above.\n\nOpen: record 137 (`tracking.files-section`): set overlap_ignore for shared docs or not. Until decided, do not set overlap_ignore."
+    },
+    {
+      "heading": "Check",
+      "body": "- `slicer plan-parallel --json --lean` (exit 0; no no_files for specced open items)\n- `slicer deps --overlap S52 S60 --json --lean`\n- slicer check\n- adj lint\n- [HUMAN CHECK] The owner reads the plan-parallel waves and agrees they look right for ork."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"S79: files_section and backticked Files paths\" (the AGENTS.md rule and the rendered tracking changes)."
+    }
+  ],
+  "notes": []
+}

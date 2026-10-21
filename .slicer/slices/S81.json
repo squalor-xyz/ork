@@ -1,0 +1,41 @@
+{
+  "id": "S81",
+  "title": "Daemon reads for the Waves screen: wave.suggest and wave.overlap",
+  "lead": [
+    "The TUI talks only to the daemon. This slice adds two read methods: the plan-parallel waves for a project, and the paths a set of items share."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Decision 17 (wave.selection, decided): slicer suggests, the owner edits, and ork warns on Files overlap. docs/design.md:144-146 says the same. S60 adds `slicercli.PlanParallel` and the CLI `ork wave suggest`, but its Files list adds only wave.start and wave.stop to the daemon. The TUI reaches the daemon through Live (internal/tui/live.go:12-20), so it needs a daemon read.\n\nThe overlap check is slicer's: `slicer deps --overlap ID ID...` prints the paths each pair shares (slicer/src/slicer/cli.py:2104-2119; result `{\"overlap\":[{a,b,shared}]}`). ork does not compute overlap itself. docs/review-2026-10-19-integration.md:735 says plan-parallel is an on-demand call, not cached."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/slicercli/slicercli.go`: a new DepsOverlap method (proposed name) over `slicer deps --overlap ID... --json --lean --root ROOT`, beside Show (:38) and Goals (:47).\n- `internal/slicercli/types.go`: the Overlap result type, from the recorded fixture.\n- `internal/slicercli/slicercli_test.go`: the parse test.\n- `testdata/cli/slicer/deps-overlap.json` (new): a recorded fixture; add its line to `testdata/cli/VERSIONS`.\n- `internal/daemon/wire.go`: wave.suggest and wave.overlap (proposed names) in the method list (:17-25), with their params and result types.\n- `internal/daemon/handlers.go`: handle (:66-120) gets the two cases.\n- `internal/daemon/reads.go`: the two handlers; each calls slicer on demand with no cache.\n- `internal/daemon/client.go`: typed WaveSuggest and WaveOverlap calls beside Approve (:123-141).\n- `internal/daemon/daemon_test.go`: the handler tests.\n- `docs/design.md`: the method table (:91-100) gains both rows, marked proposed."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestDepsOverlapParsesFixture: the fixture parses into pairs with their shared paths.\n- TestWaveSuggestReturnsPlanParallel: wave.suggest for a project returns S60's PlanParallel result as is.\n- TestWaveSuggestKeepsSlicerErrorCode: the files_section usage error comes back with code usage and the message verbatim.\n- TestWaveOverlapReturnsSharedPaths: wave.overlap for two items returns the pairs from the fake slicer.\n- TestWaveOverlapNeedsTwoItems: fewer than two items is bad_params, and slicer is not called.\n- TestWaveReadsUnknownProject: an unknown project is not_found."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Blocked until S60 lands (PlanParallel) and S79 lands (so the fixture has paths). Write the tests first. Run them and confirm they fail.\n2. Record `testdata/cli/slicer/deps-overlap.json` from ork with two items that share a path; add the VERSIONS line. Write the Overlap type from the fixture, not from memory.\n3. slicercli: add DepsOverlap.\n4. wire.go and handlers.go: add the two methods (proposed names) and their cases.\n5. reads.go: wave.suggest calls PlanParallel for the project's path; wave.overlap calls DepsOverlap. Errors keep the tool's code and message (design.md:84-88).\n6. client.go: add WaveSuggest and WaveOverlap.\n7. Update the docs/design.md method table.\n\nOpen: if S60 lands with its own daemon read for suggest, reuse it and drop wave.suggest here."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- Run TestDepsOverlap* and TestWave* by name with go test -run.\n- slicer check\n- adj lint"
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"S81: wave.suggest and wave.overlap daemon reads\"."
+    }
+  ],
+  "notes": []
+}

@@ -38,7 +38,7 @@
   "hold_flags": [
     "needs-owner"
   ],
-  "files_section": "",
+  "files_section": "Files",
   "overlap_ignore": [],
   "pointers": {
     "next_format": "**{{id}}** {{title}}",

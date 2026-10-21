@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-78 items · — 43 · done 28 · parked 2 · retired 5
+83 items · — 48 · done 28 · parked 2 · retired 5
 
 ## v1
 
@@ -125,9 +125,14 @@
 | 75 | [S76](slices/S76.md) | Queue advance survives a registry read error | S `[needs-owner]` | 1 |  | discovered from S05 | — |
 | 76 | [S77](slices/S77.md) | Queued run of a removed project | S `[needs-owner]` | 1 |  | discovered from S05 | — |
 | 77 | [S78](slices/S78.md) | recoverRuns map writes under lock | S `[needs-owner]` | 1 |  | discovered from S05 | — |
+| 78 | [S79](slices/S79.md) | Wave-ready Files sections: set files_section and backtick paths | S `[needs-owner]` | 1 |  |  | — |
+| 79 | [S80](slices/S80.md) | Per-launch lineup and budget overrides on run.plan and run.start | M `[needs-owner]` | 2 |  |  | — |
+| 80 | [S81](slices/S81.md) | Daemon reads for the Waves screen: wave.suggest and wave.overlap | S | 1 |  |  | — |
+| 81 | [S82](slices/S82.md) | Waves screen: suggested list, tick items, overlap warnings, launch a wave | M | 2 |  |  | — |
+| 82 | [S83](slices/S83.md) | Waves screen: edit a slice's lineup and budgets before launch | M | 2 |  |  | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 78 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 83 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |

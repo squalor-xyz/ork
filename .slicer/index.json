@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 79,
+  "next_id": 84,
   "preamble": "",
   "passes": [
     {
@@ -2358,7 +2358,8 @@
       "has_slice": true,
       "depends_on": [
         "S05",
-        "S52"
+        "S52",
+        "S79"
       ],
       "note_records": [],
       "claim": null,
@@ -2943,6 +2944,161 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S79",
+      "title": "Wave-ready Files sections: set files_section and backtick paths",
+      "short_title": "Wave-ready Files sections: set files_section and backtick paths",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "mvp-waves-files-section",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S80",
+      "title": "Per-launch lineup and budget overrides on run.plan and run.start",
+      "short_title": "Per-launch lineup and budget overrides on run.plan and run.start",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "mvp-waves-launch-overrides",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S81",
+      "title": "Daemon reads for the Waves screen: wave.suggest and wave.overlap",
+      "short_title": "Daemon reads for the Waves screen: wave.suggest and wave.overlap",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S60",
+        "S79"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "mvp-waves-daemon-reads",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S82",
+      "title": "Waves screen: suggested list, tick items, overlap warnings, launch a wave",
+      "short_title": "Waves screen: suggested list, tick items, overlap warnings, launch a wave",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S58",
+        "S52",
+        "S60",
+        "S81"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "mvp-waves-screen",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S83",
+      "title": "Waves screen: edit a slice's lineup and budgets before launch",
+      "short_title": "Waves screen: edit a slice's lineup and budgets before launch",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S80",
+        "S82"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "mvp-waves-lineup-editor",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }
