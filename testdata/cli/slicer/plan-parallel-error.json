@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "usage",
+    "message": "plan-parallel needs files_section: name the section that lists an item's files with `slicer config files_section NAME`",
+    "command": "plan-parallel"
+  }
+}

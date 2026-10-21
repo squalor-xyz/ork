@@ -65,6 +65,18 @@ func decode(params json.RawMessage, v any) error {
 
 func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessage) (any, error) {
 	switch method {
+	case MethodWaveStart:
+		var p WaveStartParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.startWave(ctx, p)
+	case MethodWaveStop:
+		var p WaveAction
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.stopWave(ctx, p)
 	case MethodDaemonInfo:
 		return DaemonInfoResult{BuildID: d.cfg.BuildID}, nil
 	case MethodDaemonStop:

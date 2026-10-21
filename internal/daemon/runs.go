@@ -38,6 +38,7 @@ const defaultGlobalCap = 4
 
 // RunParams are the owner's launch inputs (run.lineup-inputs, run.launch-wire).
 type RunParams struct {
+	wave          string                          // daemon-assigned; never accepted from a run.start client
 	Project       string                          `json:"project"`
 	Item          string                          `json:"item"`
 	WellSpecified bool                            `json:"well_specified"`
@@ -86,12 +87,13 @@ type managedRun struct {
 // runManager serializes admission and owner actions; the engine serializes
 // each run's state transitions. Background jobs use the daemon's lifetime.
 type runManager struct {
-	closed bool
-	mu     sync.Mutex
-	ctx    context.Context
-	deps   engine.Deps
-	runs   map[string]*managedRun
-	wg     sync.WaitGroup
+	waveStops map[string]int // suppress queued members while a wave stop is in progress
+	closed    bool
+	mu        sync.Mutex
+	ctx       context.Context
+	deps      engine.Deps
+	runs      map[string]*managedRun
+	wg        sync.WaitGroup
 }
 
 func (d *Daemon) initRunManager() {
@@ -102,7 +104,7 @@ func (d *Daemon) initRunManager() {
 	if deps.Store == nil {
 		deps.Store = &runrec.Store{Dir: filepath.Join(d.cfg.Paths.Dir, "runs")}
 	}
-	d.runs = runManager{ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}}
+	d.runs = runManager{ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}, waveStops: map[string]int{}}
 }
 func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 	deps := d.runs.deps
@@ -334,7 +336,11 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 		return runrec.Record{}, err
 	}
 	queued := !d.hasRoomLocked(f, plan.project.Name)
-	cfg := engine.Config{Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: newWaveID(time.Now()), Queued: queued}
+	wave := p.wave
+	if wave == "" {
+		wave = newWaveID(time.Now())
+	}
+	cfg := engine.Config{Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: wave, Queued: queued}
 	e, err := engine.New(ctx, d.runDeps(plan.project), cfg)
 	if err != nil {
 		return runrec.Record{}, err
@@ -354,6 +360,122 @@ func newWaveID(now time.Time) string {
 	b := make([]byte, 2)
 	rand.Read(b)
 	return "wave-" + now.UTC().Format("20060102-150405") + "-" + hex.EncodeToString(b)
+}
+
+// WaveStartParams carries each chosen item's run.plan inputs, including any
+// launch overrides and optional confirmed plan (run.launch-wire).
+type WaveStartParams struct {
+	Items []RunParams `json:"items"`
+}
+
+// WaveAction identifies a wave using the wave- prefix (wave.stop-target).
+type WaveAction struct {
+	Wave string `json:"wave"`
+}
+
+// WaveItemResult reports an admission or stop error without hiding peers.
+type WaveItemResult struct {
+	Item  string         `json:"item"`
+	Run   *runrec.Record `json:"run,omitempty"`
+	Error *ipc.Error     `json:"error,omitempty"`
+}
+
+// WaveResult is the proposed result shape of wave.start and wave.stop.
+type WaveResult struct {
+	Wave  string           `json:"wave"`
+	Items []WaveItemResult `json:"items"`
+}
+
+func waveItem(item string, rec runrec.Record, err error) WaveItemResult {
+	if err != nil {
+		return WaveItemResult{Item: item, Error: ipc.ErrorOf(err)}
+	}
+	return WaveItemResult{Item: item, Run: &rec}
+}
+
+func (d *Daemon) startWave(ctx context.Context, p WaveStartParams) (*WaveResult, error) {
+	if len(p.Items) == 0 {
+		return nil, badParams(errors.New("wave needs items from one project"))
+	}
+	project := p.Items[0].Project
+	for _, item := range p.Items {
+		if project == "" || item.Project != project {
+			return nil, badParams(errors.New("wave needs items from one project"))
+		}
+		if item.Item == "" {
+			return nil, badParams(errors.New("wave item is empty"))
+		}
+	}
+	result := &WaveResult{Wave: newWaveID(time.Now()), Items: []WaveItemResult{}}
+	for _, item := range p.Items {
+		item.wave = result.Wave
+		rec, err := d.startRun(ctx, item)
+		result.Items = append(result.Items, waveItem(item.Item, rec, err))
+	}
+	return result, nil
+}
+
+func (d *Daemon) stopWave(ctx context.Context, p WaveAction) (*WaveResult, error) {
+	if !strings.HasPrefix(p.Wave, "wave-") {
+		return nil, badParams(errors.New("wave id needs wave- prefix"))
+	}
+	d.runs.mu.Lock()
+	stored, err := d.runs.deps.Store.List()
+	if err != nil {
+		d.runs.mu.Unlock()
+		return nil, err
+	}
+	var members []runrec.Record
+	found := false
+	for _, run := range stored {
+		rec := run.Snapshot()
+		if r := d.runs.runs[rec.ID]; r != nil {
+			rec = r.engine.Snapshot()
+		}
+		if rec.Wave != p.Wave {
+			continue
+		}
+		found = true
+		if !runrec.IsFinal(rec.State) {
+			members = append(members, rec)
+		}
+	}
+	if !found {
+		d.runs.mu.Unlock()
+		return nil, &ipc.Error{Code: CodeNotFound, Message: "no wave " + p.Wave}
+	}
+	// Stopping an active member frees a slot. Keep its queued peers from
+	// starting before their owner stop has been durably applied.
+	d.runs.waveStops[p.Wave]++
+	d.runs.mu.Unlock()
+	defer func() {
+		d.runs.mu.Lock()
+		d.runs.waveStops[p.Wave]--
+		if d.runs.waveStops[p.Wave] == 0 {
+			delete(d.runs.waveStops, p.Wave)
+		}
+		if f, err := d.loadRegistry(); err != nil {
+			fmt.Fprintf(os.Stderr, "start queued runs: %v\n", err)
+		} else {
+			d.startQueuedLocked(f)
+		}
+		d.runs.mu.Unlock()
+	}()
+	result := &WaveResult{Wave: p.Wave, Items: []WaveItemResult{}}
+	for _, rec := range members {
+		d.runs.mu.Lock()
+		final := false
+		if r := d.runs.runs[rec.ID]; r != nil {
+			final = runrec.IsFinal(r.engine.Snapshot().State)
+		}
+		d.runs.mu.Unlock()
+		if final {
+			continue
+		}
+		stopped, err := d.ownerRun(ctx, MethodRunStop, RunAction{Run: rec.ID})
+		result.Items = append(result.Items, waveItem(rec.Item, stopped, err))
+	}
+	return result, nil
 }
 
 // hasRoomLocked reports whether one more busy run fits under the global cap
@@ -397,7 +519,7 @@ func (d *Daemon) startQueuedLocked(f *registry.File) {
 		if r.busy || r.engine == nil {
 			continue
 		}
-		if rec := r.engine.Snapshot(); rec.State == runrec.StateQueued {
+		if rec := r.engine.Snapshot(); rec.State == runrec.StateQueued && d.runs.waveStops[rec.Wave] == 0 {
 			queue = append(queue, waiting{r, rec})
 		}
 	}

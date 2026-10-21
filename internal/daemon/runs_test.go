@@ -48,6 +48,7 @@ func runDaemon(t *testing.T, runner roundRunner) (*Daemon, *runrec.Store, regist
 		t.Fatal(err)
 	}
 	fake := clitest.Install(t,
+		clitest.Route{Tool: "slicer", Args: []string{"plan-parallel", "--json", "--lean", "--root", p.Path}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "plan-parallel.json")},
 		clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: `{"roles":[{"role":"implementer","row":{"vendor":"Codex","model":"wrong"},"alternatives":[{"vendor":"Claude","model":"sonnet","reasoning":"high"},{"vendor":"Claude","model":"wrong"}]},{"role":"reviewer","row":{"vendor":"Claude","model":"opus","reasoning":"medium"}}]}`},
 		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay"}, Stdout: "Contract: relay v7\n"},
 		clitest.Route{Tool: "slicer", Args: []string{"show"}, Prefix: true, Stdout: `{"slice":{"sections":[{"heading":"Git","body":"One commit: \"S1: test\"."}]}}`},

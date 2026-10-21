@@ -173,7 +173,17 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 		want = 2
 	}
 	if len(pos) != want {
+		if command == "stop" {
+			return o.usage("stop takes RUN or WAVE")
+		}
 		return o.usage("%s takes RUN%s", command, map[bool]string{true: " TEXT"}[command == "answer"])
+	}
+	if command == "stop" && strings.HasPrefix(pos[0], "wave-") {
+		var result daemon.WaveResult
+		if code := a.call(ctx, o, daemon.MethodWaveStop, daemon.WaveAction{Wave: pos[0]}, &result); code != ExitOK {
+			return code
+		}
+		return printWave(o, result)
 	}
 	p := daemon.RunAction{Run: pos[0]}
 	if command == "answer" {

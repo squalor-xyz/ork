@@ -4,6 +4,38 @@ package slicercli
 
 import "encoding/json"
 
+// ParallelItem is an item in a plan-parallel wave or its unplaced list.
+type ParallelItem struct {
+	ID     string `json:"id"`
+	Title  string `json:"title"`
+	Reason string `json:"reason,omitempty"`
+}
+
+// ParallelPlan follows the recorded plan-parallel output. InFlight elements
+// are left raw: the recorded fixture has no elements to establish their shape.
+type ParallelPlan struct {
+	Width int `json:"width"`
+	Waves []struct {
+		Wave  int            `json:"wave"`
+		Items []ParallelItem `json:"items"`
+	} `json:"waves"`
+	InFlight []json.RawMessage `json:"in_flight"`
+	Unplaced []ParallelItem    `json:"unplaced"`
+	Blocked  []struct {
+		ID        string   `json:"id"`
+		WaitingOn []string `json:"waiting_on"`
+	} `json:"blocked"`
+	Held []struct {
+		ID    string   `json:"id"`
+		Title string   `json:"title"`
+		Flags []string `json:"flags"`
+	} `json:"held"`
+	Unspecified []struct {
+		ID      string   `json:"id"`
+		Missing []string `json:"missing"`
+	} `json:"unspecified"`
+}
+
 // Claim says who started an item.
 type Claim struct {
 	Owner string `json:"owner"`
