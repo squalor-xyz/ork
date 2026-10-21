@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/roles/prompts/implementer.md, tests."
+      "body": "- `internal/roles/prompts/implementer.md`, tests."
     },
     {
       "heading": "Failing tests",

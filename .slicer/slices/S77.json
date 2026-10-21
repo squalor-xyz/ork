@@ -20,7 +20,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/daemon/runs.go: startQueuedLocked and hasRoomLocked.\n- internal/daemon/runs_test.go: a test beside the S05 wave tests.\n- Related: S38 (projects rm refuses while the project has unfinished runs) removes the usual way to reach this state. Check its state before running this slice."
+      "body": "- `internal/daemon/runs.go`: startQueuedLocked and hasRoomLocked.\n- `internal/daemon/runs_test.go`: a test beside the S05 wave tests.\n- Related: S38 (projects rm refuses while the project has unfinished runs) removes the usual way to reach this state. Check its state before running this slice."
     },
     {
       "heading": "Failing tests",

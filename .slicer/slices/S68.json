@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/tui/roadmap.go and roadmap_test.go (new; from S12).\n- internal/slicercli/write.go (new Move wrapper; `slicer move` keeps a move inside one kind, commands.md:512).\n- internal/daemon/handlers.go (new write method, beside S67's).\n- internal/tui/keys.go and model.go (confirm bar as in S67).\n- docs/dashboard.md:219-223 (Roadmap section).\n- testdata/golden/ (new roadmap goldens; go test ./internal/tui -update, then review)."
+      "body": "- `internal/tui/roadmap.go` and roadmap_test.go (new; from S12).\n- `internal/slicercli/write.go` (new Move wrapper; `slicer move` keeps a move inside one kind, commands.md:512).\n- `internal/daemon/handlers.go` (new write method, beside S67's).\n- `internal/tui/keys.go` and model.go (confirm bar as in S67).\n- `docs/dashboard.md:219-223` (Roadmap section).\n- `testdata/golden/` (new roadmap goldens; go test ./internal/tui -update, then review)."
     },
     {
       "heading": "Failing tests",

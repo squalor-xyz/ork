@@ -20,7 +20,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/runrec/store.go:73 and :76 (run directory and run subdirectory), internal/engine/round.go:165 (per-round temp directory), their tests, docs/state.md.\n- Reference only: internal/engine/states.go:76 creates the parent of the git exclude file (not a run file); leave it."
+      "body": "- `internal/runrec/store.go:73` and :76 (run directory and run subdirectory), `internal/engine/round.go:165` (per-round temp directory), their tests, `docs/state.md`.\n- Reference only: `internal/engine/states.go:76` creates the parent of the git exclude file (not a run file); leave it."
     },
     {
       "heading": "Failing tests",

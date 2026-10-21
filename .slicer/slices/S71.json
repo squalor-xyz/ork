@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/cli/doctor.go (DoctorReport at :30-38 gets a per-project list; checks load the registry).\n- internal/registry/registry.go:76-78 (fields read); :184 validates Cap, CheckMinutes and budgets, not patterns, so pattern checks are new.\n- internal/cli/cli_test.go:583-756 (doctor tests; add per-project tests beside them).\n- docs/design.md:613-614; docs/state.md:58-59 (check command source).\nOpen: whether a project finding changes doctor's exit code (design.md:618-619 says no today)."
+      "body": "- `internal/cli/doctor.go` (DoctorReport at :30-38 gets a per-project list; checks load the registry).\n- `internal/registry/registry.go:76-78` (fields read); :184 validates Cap, CheckMinutes and budgets, not patterns, so pattern checks are new.\n- `internal/cli/cli_test.go:583-756` (doctor tests; add per-project tests beside them).\n- `docs/design.md:613-614`; `docs/state.md:58-59` (check command source).\nOpen: whether a project finding changes doctor's exit code (design.md:618-619 says no today)."
     },
     {
       "heading": "Failing tests",

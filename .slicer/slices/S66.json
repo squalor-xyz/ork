@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- cmd/ork/main.go:78 (tea.NewProgram; no mouse option today).\n- internal/tui/view.go:22 (v.AltScreen is set here; set the mouse mode here if chosen), view.go:97 (sidebar, project clicks), view.go:167-171 (viewBar, view tabs).\n- internal/tui/model.go (new mouse message case beside the key dispatch).\n- internal/tui/overview.go (row hit test for the Overview cursor).\n- internal/tui/tui_test.go and internal/tui/golden_test.go; testdata/golden/ only if a view changes.\n- docs/dashboard.md:12 and :102-103; the help view.\nDecided: record 129 (ui.mouse): off by default, opt-in by flag. Capture stops terminal text selection."
+      "body": "- `cmd/ork/main.go:78` (tea.NewProgram; no mouse option today).\n- `internal/tui/view.go:22` (v.AltScreen is set here; set the mouse mode here if chosen), view.go:97 (sidebar, project clicks), view.go:167-171 (viewBar, view tabs).\n- `internal/tui/model.go` (new mouse message case beside the key dispatch).\n- `internal/tui/overview.go` (row hit test for the Overview cursor).\n- `internal/tui/tui_test.go` and `internal/tui/golden_test.go`; `testdata/golden/` only if a view changes.\n- `docs/dashboard.md:12` and :102-103; the help view.\nDecided: record 129 (ui.mouse): off by default, opt-in by flag. Capture stops terminal text selection."
     },
     {
       "heading": "Failing tests",

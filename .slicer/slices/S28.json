@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/tui (toggle), internal/daemon or cli (the adj calls), tests, docs."
+      "body": "- `internal/tui` (toggle), `internal/daemon` or cli (the adj calls), tests, docs."
     },
     {
       "heading": "Failing tests",

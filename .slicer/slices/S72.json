@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/agent/grok/ (new; vendor.package-path, S06 notes).\n- internal/agent/claude/ (pattern to follow); internal/clirun (process-group helpers).\n- internal/daemon/runner.go:15-21 (claudeRunner; the claude-only check is at :21).\n- internal/daemon/runs.go:219-225 (plan takes the first row whose vendor is \"claude\", hard-coded at :224).\n- spike/grok.sh and testdata/vendors/grok/ (re-run; the 01-06 fixtures hold the 403 results).\n- docs/design.md:374-404 (grok column); docs/glossary.md:68."
+      "body": "- `internal/agent/grok/` (new; vendor.package-path, S06 notes).\n- `internal/agent/claude/` (pattern to follow); `internal/clirun` (process-group helpers).\n- `internal/daemon/runner.go:15-21` (claudeRunner; the claude-only check is at :21).\n- `internal/daemon/runs.go:219-225` (plan takes the first row whose vendor is \"claude\", hard-coded at :224).\n- `spike/grok.sh` and `testdata/vendors/grok/` (re-run; the 01-06 fixtures hold the 403 results).\n- `docs/design.md:374-404` (grok column); `docs/glossary.md:68`."
     },
     {
       "heading": "Failing tests",

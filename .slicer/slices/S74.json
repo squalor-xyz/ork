@@ -20,7 +20,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/cli/lifecycle.go: roleMayRun (:164-190) and its caller predatesStop (:146-163).\n- internal/cli/lifecycle_test.go: a test beside TestDaemonStopPredatingDaemon, using a fake daemon that answers daemon.stop with unknown_method and never answers status.\n- docs/design.md: the stop and restart paragraph that describes the hint (find it with rg -n \"predates\" docs/design.md)."
+      "body": "- `internal/cli/lifecycle.go`: roleMayRun (:164-190) and its caller predatesStop (:146-163).\n- `internal/cli/lifecycle_test.go`: a test beside TestDaemonStopPredatingDaemon, using a fake daemon that answers daemon.stop with unknown_method and never answers status.\n- `docs/design.md`: the stop and restart paragraph that describes the hint (find it with rg -n \"predates\" `docs/design.md`)."
     },
     {
       "heading": "Failing tests",

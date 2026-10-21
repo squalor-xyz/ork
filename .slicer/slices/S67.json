@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/tui/keys.go (new park and unpark bindings; not p).\n- internal/tui/model.go:294-303 (confirm handling) and :519-590 (runAction, which holds the exact target).\n- internal/tui/view.go:58-59 (confirm bar text).\n- internal/slicercli/write.go (new Park and Unpark wrappers, same shape as RelayBegin at :112).\n- internal/daemon/handlers.go (new write method; name set in the slice).\n- docs/dashboard.md:5 and :219-223 (roadmap editing is after v1); the key list.\nOpen: the key, and whether park is refused on a running item."
+      "body": "- `internal/tui/keys.go` (new park and unpark bindings; not p).\n- `internal/tui/model.go:294-303` (confirm handling) and :519-590 (runAction, which holds the exact target).\n- `internal/tui/view.go:58-59` (confirm bar text).\n- `internal/slicercli/write.go` (new Park and Unpark wrappers, same shape as RelayBegin at :112).\n- `internal/daemon/handlers.go` (new write method; name set in the slice).\n- `docs/dashboard.md:5` and :219-223 (roadmap editing is after v1); the key list.\nOpen: the key, and whether park is refused on a running item."
     },
     {
       "heading": "Failing tests",

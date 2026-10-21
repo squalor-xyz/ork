@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/slicercli/types.go:95 (Item.Parent) and :172 (Recommendation.Sliver).\n- internal/daemon/runs.go:205 (RecommendRoles) and :270-300 (plan and launch; the worktree guard is at :276-281 and blocks a second run on the same worktree).\n- internal/registry/registry.go:75 (Cap) and :89 (GlobalCap); enforcement comes from S05.\n- internal/tui/overview.go (show the parent on a sliver row).\n- docs/design.md:185; docs/glossary.md:154.\nDecided: record 124 (slice.sliver-worktree): slivers share the parent's worktree and branch, land once and run one after another (slicer landing.md:29-31). The worktree guard at runs.go:276-281 already blocks a parallel run on one worktree, so slivers queue behind the parent's current run. design.md:185 (their own items) is to be corrected in this slice."
+      "body": "- `internal/slicercli/types.go:95` (Item.Parent) and :172 (Recommendation.Sliver).\n- `internal/daemon/runs.go:205` (RecommendRoles) and :270-300 (plan and launch; the worktree guard is at :276-281 and blocks a second run on the same worktree).\n- `internal/registry/registry.go:75` (Cap) and :89 (GlobalCap); enforcement comes from S05.\n- `internal/tui/overview.go` (show the parent on a sliver row).\n- `docs/design.md:185`; `docs/glossary.md:154`.\nDecided: record 124 (slice.sliver-worktree): slivers share the parent's worktree and branch, land once and run one after another (slicer landing.md:29-31). The worktree guard at runs.go:276-281 already blocks a parallel run on one worktree, so slivers queue behind the parent's current run. design.md:185 (their own items) is to be corrected in this slice."
     },
     {
       "heading": "Failing tests",

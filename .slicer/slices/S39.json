@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/cli/run_test.go, internal/cli/run.go (help text)."
+      "body": "- `internal/cli/run_test.go`, `internal/cli/run.go` (help text)."
     },
     {
       "heading": "Failing tests",

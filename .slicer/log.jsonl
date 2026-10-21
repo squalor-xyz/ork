@@ -807,3 +807,52 @@
 {"when": "2026-10-21T01:25:42Z", "item": "S83", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-21T01:25:42Z", "item": "S79", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}
 {"when": "2026-10-21T01:25:42Z", "item": "S80", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}
+{"when": "2026-10-21T01:33:56Z", "item": "S79", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-21T01:37:11Z", "item": "S52", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:16Z", "item": "S08", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:16Z", "item": "S09", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:16Z", "item": "S12", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:17Z", "item": "S27", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:17Z", "item": "S28", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:17Z", "item": "S30", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:17Z", "item": "S32", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:17Z", "item": "S33", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:17Z", "item": "S34", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:17Z", "item": "S35", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:17Z", "item": "S36", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:17Z", "item": "S38", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:18Z", "item": "S39", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:18Z", "item": "S40", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:18Z", "item": "S43", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:18Z", "item": "S47", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:18Z", "item": "S49", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:18Z", "item": "S50", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:18Z", "item": "S54", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:18Z", "item": "S55", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:19Z", "item": "S58", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:19Z", "item": "S59", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:19Z", "item": "S60", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:19Z", "item": "S61", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:19Z", "item": "S62", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:19Z", "item": "S63", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:19Z", "item": "S65", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:19Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:19Z", "item": "S67", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:20Z", "item": "S68", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:20Z", "item": "S69", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:20Z", "item": "S70", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:20Z", "item": "S71", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:20Z", "item": "S72", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:20Z", "item": "S73", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:20Z", "item": "S74", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:20Z", "item": "S75", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:20Z", "item": "S76", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:21Z", "item": "S77", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:21Z", "item": "S78", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:37:21Z", "item": "S80", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:42:46Z", "item": "S79", "action": "note", "from": "", "to": "", "note": "Review FAIL: comma line anchors (:39,45 / :20,29) inside bac", "by": "Jon R"}
+{"when": "2026-10-21T01:43:58Z", "item": "S08", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:43:58Z", "item": "S47", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:43:58Z", "item": "S61", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T01:43:59Z", "item": "S73", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-21T12:14:23Z", "item": "S79", "action": "status", "from": "started", "to": "done", "note": "Added files_section config and backticked Files paths across slices; AGENTS.md rule added. plan-parallel: 27 no_files before, only S07 unplaced after. Review round 1 FAIL fixed; gate VERDICT: PASS. HUMAN CHECK: owner reads plan-parallel waves.", "by": "Jon R"}

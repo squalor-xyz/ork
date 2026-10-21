@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/tui/keys.go (new key) and view.go (help line).\n- internal/tui/model.go (the key returns a tea.ExecProcess command; on return, refresh the snapshot).\n- internal/tui/tui_test.go and golden_test.go (help golden if the help changes).\n- docs/dashboard.md (key list; Roadmap section).\n- The ExecProcess signature: check with `go doc charm.land/bubbletea/v2 ExecProcess` in the worktree. Not verified here.\nOpen: adj 11 (ui.slicer-tui) decides whether this exists at all."
+      "body": "- `internal/tui/keys.go` (new key) and view.go (help line).\n- `internal/tui/model.go` (the key returns a tea.ExecProcess command; on return, refresh the snapshot).\n- `internal/tui/tui_test.go` and golden_test.go (help golden if the help changes).\n- `docs/dashboard.md` (key list; Roadmap section).\n- The ExecProcess signature: check with `go doc charm.land/bubbletea/v2 ExecProcess` in the worktree. Not verified here.\nOpen: adj 11 (ui.slicer-tui) decides whether this exists at all."
     },
     {
       "heading": "Failing tests",

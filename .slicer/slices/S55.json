@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/source and internal/slicercli: the step fields the tree needs (id, parent, role, agent, vendor, model, reasoning, phase, task, times) from the ledger JSON; check the field names with slicer relay-run list --json before building.\n- internal/daemon: carry the steps and the engine run's roles in the snapshot; a wire field is proposed, ask the owner if a shape beyond that is needed.\n- internal/tui: the tree in the S26 pane, spinner on running steps (a tick; no goroutine in Update), tests, goldens.\n- docs/dashboard.md (dash.role-detail), docs/state.md or design.md where they list the wire."
+      "body": "- `internal/source` and `internal/slicercli`: the step fields the tree needs (id, parent, role, agent, vendor, model, reasoning, phase, task, times) from the ledger JSON; check the field names with slicer relay-run list --json before building.\n- `internal/daemon`: carry the steps and the engine run's roles in the snapshot; a wire field is proposed, ask the owner if a shape beyond that is needed.\n- `internal/tui`: the tree in the S26 pane, spinner on running steps (a tick; no goroutine in Update), tests, goldens.\n- `docs/dashboard.md` (dash.role-detail), `docs/state.md` or design.md where they list the wire."
     },
     {
       "heading": "Failing tests",

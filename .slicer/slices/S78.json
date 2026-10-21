@@ -20,7 +20,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/daemon/runs.go: recoverRuns (:118-157).\n- internal/daemon/runs_test.go: a test, if one can show the write is locked."
+      "body": "- `internal/daemon/runs.go`: recoverRuns (:118-157).\n- `internal/daemon/runs_test.go`: a test, if one can show the write is locked."
     },
     {
       "heading": "Failing tests",
