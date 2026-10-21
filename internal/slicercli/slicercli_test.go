@@ -260,3 +260,32 @@ func TestPlanParallelToolError(t *testing.T) {
 		t.Fatalf("error: %v", err)
 	}
 }
+
+func TestDepsOverlapParsesFixture(t *testing.T) {
+	c, fake := client(t, route("deps-overlap.json", "deps", "--overlap", "S60", "S52", "--json", "--lean", "--root", root))
+	got, err := c.DepsOverlap(context.Background(), root, "S60", "S52")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []OverlapPair{{A: "S60", B: "S52", Shared: []string{"internal/cli/run.go", "docs/dashboard.md"}}}
+	if !reflect.DeepEqual(got.Overlap, want) {
+		t.Fatalf("overlap: %+v, want %+v", got.Overlap, want)
+	}
+	if calls := fake.CallsTo("slicer"); len(calls) != 1 {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
+// With --lean, slicer leaves "shared" out of a pair that shares nothing. The
+// JSON below is what `slicer deps --overlap S80 S79 --json --lean` printed.
+func TestDepsOverlapPairWithoutSharedPaths(t *testing.T) {
+	r := clitest.Route{Tool: "slicer", Args: []string{"deps", "--overlap", "S80", "S79", "--json", "--lean", "--root", root}, Stdout: `{"overlap":[{"a":"S80","b":"S79"}]}`}
+	c, _ := client(t, r)
+	got, err := c.DepsOverlap(context.Background(), root, "S80", "S79")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Overlap) != 1 || got.Overlap[0].A != "S80" || got.Overlap[0].B != "S79" || got.Overlap[0].Shared != nil {
+		t.Fatalf("overlap: %+v", got.Overlap)
+	}
+}

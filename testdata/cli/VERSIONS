@@ -25,3 +25,4 @@ slicer/check-stale.json: slicer check --json --root PROJ (exit 1, stale render)
 slicer/relay-roles-recommend.json: slicer relay-roles recommend S01 --well-specified yes --split no --json --root PROJ
 slicer/plan-parallel.json: slicer plan-parallel --json --lean --root ORK (S60; ORK = /Users/jon/code/squalor-xyz/ork/.worktrees/s60; files_section set by S79)
 slicer/plan-parallel-error.json: slicer plan-parallel --json --lean --root ADJ (stdout; exit 2; files_section unset, code usage)
+slicer/deps-overlap.json: slicer deps --overlap S60 S52 --json --lean --root ORK (S81; ORK = /Users/jon/code/squalor-xyz/ork/.worktrees/s81; run as slicer --root ORK deps --overlap S60 S52 --json --lean)

@@ -143,6 +143,24 @@ func (c *Client) Answer(ctx context.Context, run, text string) error {
 	return c.Call(ctx, MethodRunAnswer, RunAction{Run: run, Text: text}, nil)
 }
 
+// WaveSuggest reads slicer's plan-parallel waves for a registered project.
+func (c *Client) WaveSuggest(ctx context.Context, project string) (*slicercli.ParallelPlan, error) {
+	var out slicercli.ParallelPlan
+	if err := c.Call(ctx, MethodWaveSuggest, WaveSuggestParams{Project: project}, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// WaveOverlap reads the paths that the items share. Items needs at least two.
+func (c *Client) WaveOverlap(ctx context.Context, project string, items []string) (*slicercli.Overlap, error) {
+	var out slicercli.Overlap
+	if err := c.Call(ctx, MethodWaveOverlap, WaveOverlapParams{Project: project, Items: items}, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // ItemShow reads the registered project's item detail.
 func (c *Client) ItemShow(ctx context.Context, project, id string) (*slicercli.Detail, error) {
 	var out ItemShowResult

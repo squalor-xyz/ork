@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -20,6 +21,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/clitest"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/slicercli"
@@ -162,6 +164,7 @@ type env struct {
 	clock   *fakeClock
 	src     *stubSource
 	fetch   source.Fetcher // when set, the daemon reads through it instead of src
+	deps    *engine.Deps   // when set, the daemon's slicer calls go through it
 }
 
 func newEnv(t *testing.T) *env {
@@ -181,7 +184,7 @@ func (e *env) config() Config {
 	if e.fetch != nil {
 		f = e.fetch
 	}
-	return Config{Paths: e.paths, RegistryPath: e.regPath, SeedRoot: filepath.Join(e.dir, "seed"), Source: f, Clock: e.clock}
+	return Config{Paths: e.paths, RegistryPath: e.regPath, SeedRoot: filepath.Join(e.dir, "seed"), Source: f, Clock: e.clock, Engine: e.deps}
 }
 
 func (e *env) writeRegistry(t *testing.T, idleMinutes int, projects ...registry.Project) {
@@ -1139,5 +1142,170 @@ func TestAgeOfAPartReadJustNowIsOnTheWire(t *testing.T) {
 	b, err := json.Marshal(st.Projects[0].Parts["items"])
 	if err != nil || !strings.Contains(string(b), `"age_ms":0`) {
 		t.Fatalf("a part read at this instant has no age_ms on the wire: %s, %v", b, err)
+	}
+}
+
+// ---- wave reads for the Waves screen (S81) ----
+
+// waveRoot is the path the wave read tests register project "p" at.
+const waveRoot = "/p/waves"
+
+// readDaemon is runDaemon for the wave reads: project "p" at waveRoot, and a
+// fake slicer that answers the given routes. The fake is lastFake.
+func readDaemon(t *testing.T, routes ...clitest.Route) *Daemon {
+	t.Helper()
+	dir := t.TempDir()
+	reg := filepath.Join(dir, "projects.json")
+	if err := registry.Save(reg, &registry.File{Version: registry.Version, Projects: []registry.Project{{Name: "p", Path: waveRoot}}}); err != nil {
+		t.Fatal(err)
+	}
+	fake := clitest.Install(t, routes...)
+	lastFake = fake
+	deps := engine.Deps{Slicer: slicercli.Client{Bin: fake.Bin("slicer")}}
+	d := New(Config{Paths: PathsIn(filepath.Join(dir, "state")), RegistryPath: reg, Source: &stubSource{}, Engine: &deps})
+	t.Cleanup(d.cache.Close)
+	t.Cleanup(d.closeRuns)
+	return d
+}
+
+// recordedSlicer is the path of a recorded slicer answer.
+func recordedSlicer(name string) string {
+	return filepath.Join("..", "..", "testdata", "cli", "slicer", name)
+}
+
+func TestWaveSuggestReturnsPlanParallel(t *testing.T) {
+	d := readDaemon(t, clitest.Route{Tool: "slicer", Args: []string{"plan-parallel", "--json", "--lean", "--root", waveRoot}, File: recordedSlicer("plan-parallel.json")})
+	var got, want slicercli.ParallelPlan
+	if err := json.Unmarshal(request(t, d, "wave.suggest", `{"project":"p"}`), &got); err != nil {
+		t.Fatal(err)
+	}
+	raw, err := os.ReadFile(recordedSlicer("plan-parallel.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(raw, &want); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(got, want) || got.Width != 4 || len(got.Waves) != 14 {
+		t.Fatalf("suggest: %+v, want %+v", got, want)
+	}
+	if calls := lastFake.CallsTo("slicer"); len(calls) != 1 {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
+func TestWaveSuggestKeepsSlicerErrorCode(t *testing.T) {
+	d := readDaemon(t, clitest.Route{Tool: "slicer", Args: []string{"plan-parallel", "--json", "--lean", "--root", waveRoot}, Exit: 2, File: recordedSlicer("plan-parallel-error.json")})
+	_, err := d.handle(context.Background(), "wave.suggest", json.RawMessage(`{"project":"p"}`))
+	raw, rerr := os.ReadFile(recordedSlicer("plan-parallel-error.json"))
+	if rerr != nil {
+		t.Fatal(rerr)
+	}
+	var recorded struct {
+		Error struct {
+			Code    string `json:"code"`
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+	if err := json.Unmarshal(raw, &recorded); err != nil {
+		t.Fatal(err)
+	}
+	got := ipc.ErrorOf(err)
+	if got == nil || got.Code != "usage" || got.Code != recorded.Error.Code || got.Message != recorded.Error.Message {
+		t.Fatalf("error: %+v, want code %q and message %q", got, recorded.Error.Code, recorded.Error.Message)
+	}
+}
+
+func TestWaveOverlapReturnsSharedPaths(t *testing.T) {
+	d := readDaemon(t, clitest.Route{Tool: "slicer", Args: []string{"deps", "--overlap", "S60", "S52", "--json", "--lean", "--root", waveRoot}, File: recordedSlicer("deps-overlap.json")})
+	var got struct {
+		Overlap []struct {
+			A      string   `json:"a"`
+			B      string   `json:"b"`
+			Shared []string `json:"shared"`
+		} `json:"overlap"`
+	}
+	if err := json.Unmarshal(request(t, d, "wave.overlap", `{"project":"p","items":["S60","S52"]}`), &got); err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Overlap) != 1 || got.Overlap[0].A != "S60" || got.Overlap[0].B != "S52" || !reflect.DeepEqual(got.Overlap[0].Shared, []string{"internal/cli/run.go", "docs/dashboard.md"}) {
+		t.Fatalf("overlap: %+v", got)
+	}
+	if calls := lastFake.CallsTo("slicer"); len(calls) != 1 {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
+func TestWaveOverlapNeedsTwoItems(t *testing.T) {
+	d := readDaemon(t)
+	for _, raw := range []string{`{"project":"p"}`, `{"project":"p","items":[]}`, `{"project":"p","items":["S60"]}`} {
+		_, err := d.handle(context.Background(), "wave.overlap", json.RawMessage(raw))
+		var re *ipc.Error
+		if !errors.As(err, &re) || re.Code != CodeBadParams {
+			t.Fatalf("%s: error %v, want bad_params", raw, err)
+		}
+	}
+	if calls := lastFake.CallsTo("slicer"); len(calls) != 0 {
+		t.Fatalf("slicer was called: %+v", calls)
+	}
+}
+
+// The client methods over the socket: the codes and the tool's message come
+// back as the wire carries them, and each request runs slicer again.
+func TestWaveReadsOverTheSocket(t *testing.T) {
+	e := newEnv(t)
+	e.writeRegistry(t, 0, registry.Project{Name: "p", Path: waveRoot}, registry.Project{Name: "q", Path: "/p/q"})
+	fake := clitest.Install(t,
+		clitest.Route{Tool: "slicer", Args: []string{"plan-parallel", "--json", "--lean", "--root", waveRoot}, File: recordedSlicer("plan-parallel.json")},
+		clitest.Route{Tool: "slicer", Args: []string{"plan-parallel", "--json", "--lean", "--root", "/p/q"}, Exit: 2, File: recordedSlicer("plan-parallel-error.json")},
+		clitest.Route{Tool: "slicer", Args: []string{"deps", "--overlap", "S60", "S52", "--json", "--lean", "--root", waveRoot}, File: recordedSlicer("deps-overlap.json")},
+	)
+	e.deps = &engine.Deps{Slicer: slicercli.Client{Bin: fake.Bin("slicer")}}
+	e.start(t)
+	c := e.dial(t)
+	ctx := context.Background()
+
+	plan, err := c.WaveSuggest(ctx, "p")
+	if err != nil || plan.Width != 4 || len(plan.Waves) != 14 {
+		t.Fatalf("suggest: %+v, %v", plan, err)
+	}
+	if _, err := c.WaveSuggest(ctx, "p"); err != nil {
+		t.Fatal(err)
+	}
+	if calls := fake.CallsTo("slicer"); len(calls) != 2 {
+		t.Fatalf("two suggest requests made %d slicer calls, want 2: %+v", len(calls), calls)
+	}
+	ov, err := c.WaveOverlap(ctx, "p", []string{"S60", "S52"})
+	if err != nil || len(ov.Overlap) != 1 || !reflect.DeepEqual(ov.Overlap[0].Shared, []string{"internal/cli/run.go", "docs/dashboard.md"}) {
+		t.Fatalf("overlap: %+v, %v", ov, err)
+	}
+
+	var re *ipc.Error
+	if _, err := c.WaveSuggest(ctx, "q"); !errors.As(err, &re) || re.Code != "usage" ||
+		re.Message != "plan-parallel needs files_section: name the section that lists an item's files with `slicer config files_section NAME`" {
+		t.Fatalf("tool error over the socket: %v", err)
+	}
+	if _, err := c.WaveSuggest(ctx, "nope"); !errors.As(err, &re) || re.Code != CodeNotFound {
+		t.Fatalf("unknown project: %v", err)
+	}
+	if _, err := c.WaveOverlap(ctx, "p", []string{"S60"}); !errors.As(err, &re) || re.Code != CodeBadParams {
+		t.Fatalf("one item: %v", err)
+	}
+}
+
+func TestWaveReadsUnknownProject(t *testing.T) {
+	d := readDaemon(t)
+	for _, tc := range []struct{ method, raw string }{
+		{"wave.suggest", `{"project":"nope"}`},
+		{"wave.overlap", `{"project":"nope","items":["S60","S52"]}`},
+	} {
+		_, err := d.handle(context.Background(), tc.method, json.RawMessage(tc.raw))
+		var re *ipc.Error
+		if !errors.As(err, &re) || re.Code != CodeNotFound || !strings.Contains(re.Message, "nope") {
+			t.Fatalf("%s: error %v, want not_found", tc.method, err)
+		}
+	}
+	if calls := lastFake.CallsTo("slicer"); len(calls) != 0 {
+		t.Fatalf("slicer was called: %+v", calls)
 	}
 }

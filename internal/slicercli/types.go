@@ -36,6 +36,20 @@ type ParallelPlan struct {
 	} `json:"unspecified"`
 }
 
+// OverlapPair is one pair in `slicer deps --overlap`. Shared lists the paths
+// both items' files sections name. With --lean, slicer leaves "shared" out of
+// a pair that shares nothing, so Shared is nil for that pair.
+type OverlapPair struct {
+	A      string   `json:"a"`
+	B      string   `json:"b"`
+	Shared []string `json:"shared,omitempty"`
+}
+
+// Overlap is the output of `slicer deps --overlap ID ID... --json --lean`.
+type Overlap struct {
+	Overlap []OverlapPair `json:"overlap"`
+}
+
 // Claim says who started an item.
 type Claim struct {
 	Owner string `json:"owner"`

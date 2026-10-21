@@ -16,6 +16,8 @@ import (
 const (
 	MethodWaveStart    = "wave.start"    // params WaveStartParams (run.launch-wire), proposed result shape WaveResult
 	MethodWaveStop     = "wave.stop"     // proposed wire; params WaveAction, result WaveResult
+	MethodWaveSuggest  = "wave.suggest"  // proposed wire; params WaveSuggestParams, result slicercli.ParallelPlan
+	MethodWaveOverlap  = "wave.overlap"  // proposed wire; params WaveOverlapParams, result slicercli.Overlap
 	MethodDaemonInfo   = "daemon.info"   // no params, result DaemonInfoResult
 	MethodDaemonStop   = "daemon.stop"   // params StopParams, result StopResult
 	MethodStatus       = "status"        // params StatusParams, result StatusResult
@@ -212,4 +214,17 @@ type ItemShowParams struct {
 // ItemShowResult wraps slicer's detail. Proposed wire field.
 type ItemShowResult struct {
 	Detail *slicercli.Detail `json:"detail"`
+}
+
+// WaveSuggestParams names the project whose plan-parallel waves are read.
+// Proposed wire field.
+type WaveSuggestParams struct {
+	Project string `json:"project"`
+}
+
+// WaveOverlapParams names the project and the items whose shared paths are
+// read. Items needs at least two. Proposed wire fields.
+type WaveOverlapParams struct {
+	Project string   `json:"project"`
+	Items   []string `json:"items"`
 }

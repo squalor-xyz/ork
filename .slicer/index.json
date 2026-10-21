@@ -3031,7 +3031,7 @@
       "id": "S81",
       "title": "Daemon reads for the Waves screen: wave.suggest and wave.overlap",
       "short_title": "Daemon reads for the Waves screen: wave.suggest and wave.overlap",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S60",
@@ -3055,7 +3055,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
