@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/runrec, internal/daemon, internal/cli, internal/tui, tests, docs/state.md, docs/design.md."
+      "body": "- `internal/runrec`, `internal/daemon`, `internal/cli`, `internal/tui`, tests, `docs/state.md`, `docs/design.md`."
     },
     {
       "heading": "Failing tests",

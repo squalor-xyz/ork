@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/engine/round.go:351-371 (stepStart and stepEnd: start a ticker after stepStart, stop it in stepEnd).\n- internal/slicercli/write.go:130-152 (RelayStep; the heartbeat passes no task).\n- internal/slicercli/types.go:122 (StepSpec).\n- internal/clitest/clitest.go (fake slicer records the calls).\n- internal/engine/*_test.go (new heartbeat tests; the interval is a field so tests can shorten it).\n- docs/design.md:353 (remove *proposed* once decided)."
+      "body": "- `internal/engine/round.go:351-371` (stepStart and stepEnd: start a ticker after stepStart, stop it in stepEnd).\n- `internal/slicercli/write.go:130-152` (RelayStep; the heartbeat passes no task).\n- `internal/slicercli/types.go:122` (StepSpec).\n- `internal/clitest/clitest.go` (fake slicer records the calls).\n- `internal/engine/*_test.go` (new heartbeat tests; the interval is a field so tests can shorten it).\n- `docs/design.md:353` (remove *proposed* once decided)."
     },
     {
       "heading": "Failing tests",

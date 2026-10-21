@@ -20,7 +20,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/daemon/runs.go: launchRun (:389-417), startQueuedLocked (:352-387), hasRoomLocked (:326-350), runManager.\n- internal/daemon/runs_test.go: a test beside the S05 wave tests.\n- docs/design.md: Wave lifecycle step 5 (:155-157), only if the behavior it states changes."
+      "body": "- `internal/daemon/runs.go`: launchRun (:389-417), startQueuedLocked (:352-387), hasRoomLocked (:326-350), runManager.\n- `internal/daemon/runs_test.go`: a test beside the S05 wave tests.\n- `docs/design.md`: Wave lifecycle step 5 (:155-157), only if the behavior it states changes."
     },
     {
       "heading": "Failing tests",

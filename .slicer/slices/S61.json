@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/roles/roles.go:37 (role names: add lead and part roles; today implementer, reviewer, gate, architect).\n- internal/roles/prompts/ (new lead.md and part.md; architect.md exists).\n- internal/engine/perm.go:39,45 (per-role permissions; parts change only their own files, ai.py:334-336).\n- internal/engine/states.go and internal/engine/round.go (implement and review rounds; parts run in one worktree).\n- internal/daemon/runs.go:37,205 (Split param and RecommendRoles call).\n- internal/slicercli/types.go:171 (Split) and write.go:94 (--split).\n- internal/engine/*_test.go (new split tests) and internal/roles tests.\n- docs/design.md:184-185 and 191-193 (the architect order is record 123); docs/glossary.md:31-35 and 151."
+      "body": "- `internal/roles/roles.go:37` (role names: add lead and part roles; today implementer, reviewer, gate, architect).\n- `internal/roles/prompts/` (new lead.md and part.md; architect.md exists).\n- `internal/engine/perm.go`:39,45 (per-role permissions; parts change only their own files, ai.py:334-336).\n- `internal/engine/states.go` and `internal/engine/round.go` (implement and review rounds; parts run in one worktree).\n- `internal/daemon/runs.go`:37,205 (Split param and RecommendRoles call).\n- `internal/slicercli/types.go:171` (Split) and write.go:94 (--split).\n- `internal/engine/*_test.go` (new split tests) and `internal/roles` tests.\n- `docs/design.md:184-185` and 191-193 (the architect order is record 123); `docs/glossary.md:31-35` and 151."
     },
     {
       "heading": "Failing tests",

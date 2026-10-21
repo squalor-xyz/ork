@@ -2951,10 +2951,22 @@
       "id": "S79",
       "title": "Wave-ready Files sections: set files_section and backtick paths",
       "short_title": "Wave-ready Files sections: set files_section and backtick paths",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b7c03176-6593-487c-8b82-e34f8b7e08b5",
+          "kind": "",
+          "text": "**2026-10-21** — Review FAIL: comma line anchors (:39,45 / :20,29) inside backticks in S08, S47, S61 (x2) make slicer drop the path; AGENTS.md rule wording too loose; S73 .claude/settings.json left plain.",
+          "created_at": "2026-10-21T01:42:46Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -2972,7 +2984,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

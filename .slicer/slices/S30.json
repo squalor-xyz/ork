@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/tui/overview.go: runParts (:294-304) and the external row (:133-143). Tests: internal/tui/tui_test.go (relay helper :76), internal/tui/engine_runs_test.go (:35-67), internal/tui/actions_test.go, internal/tui/golden_test.go. Goldens testdata/golden/overview-*.txt only if they change.\n- internal/daemon/wire.go:94-103 (Relay) and internal/daemon/handlers.go:227-232 (ActiveRelays). Tests: internal/daemon/daemon_test.go (:542).\n- internal/cli/daemoncmds.go:39-47 (status relay lines). Tests: internal/cli/cli_test.go (:223).\n- docs/dashboard.md:100-118 (Running section).\n- Not changed: internal/slicercli/types.go (Step :86-98), internal/slicercli/slicercli.go:55-61, internal/source/source.go (:71, :101 already carry the steps)."
+      "body": "- `internal/tui/overview.go`: runParts (:294-304) and the external row (:133-143). Tests: `internal/tui/tui_test.go` (relay helper :76), `internal/tui/engine_runs_test.go` (:35-67), `internal/tui/actions_test.go`, `internal/tui/golden_test.go`. Goldens `testdata/golden/overview-*.txt` only if they change.\n- `internal/daemon/wire.go:94-103` (Relay) and `internal/daemon/handlers.go:227-232` (ActiveRelays). Tests: `internal/daemon/daemon_test.go` (:542).\n- `internal/cli/daemoncmds.go:39-47` (status relay lines). Tests: `internal/cli/cli_test.go` (:223).\n- `docs/dashboard.md:100-118` (Running section).\n- Not changed: `internal/slicercli/types.go` (Step :86-98), `internal/slicercli/slicercli.go:55-61`, `internal/source/source.go` (:71, :101 already carry the steps)."
     },
     {
       "heading": "Failing tests",

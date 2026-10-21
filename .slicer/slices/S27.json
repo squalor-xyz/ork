@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/tui (new tab), tests, goldens, docs/dashboard.md."
+      "body": "- `internal/tui` (new tab), tests, goldens, `docs/dashboard.md`."
     },
     {
       "heading": "Failing tests",

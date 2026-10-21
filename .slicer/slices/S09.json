@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- internal/tui/overview.go:221-222: replace the placeholder with the list. Reuse the section helper already used for Needs you and Running (overview.go, the section calls before :221).\n- internal/source/source.go:154-165 (EngineRun): add Branch (proposed; runrec.Record.Branch). EngineRun has no branch today.\n- internal/daemon/runs.go:458 (EngineRun builder): set Branch.\n- internal/tui/tui_test.go:1324-1330 (TestReadyToLandSaysItWaitsForS09): rewrite. It asserts the S09 placeholder.\n- internal/tui/landing_test.go (new): the list tests.\n- testdata/golden/: 44 files contain the placeholder (rg -l \"comes with slice S0\" testdata/golden). They are regenerated with -update.\n- docs/dashboard.md:102-104: add --note to the command and state the render hint."
+      "body": "- `internal/tui/overview.go:221-222`: replace the placeholder with the list. Reuse the section helper already used for Needs you and Running (overview.go, the section calls before :221).\n- `internal/source/source.go:154-165` (EngineRun): add Branch (proposed; runrec.Record.Branch). EngineRun has no branch today.\n- `internal/daemon/runs.go:458` (EngineRun builder): set Branch.\n- `internal/tui/tui_test.go:1324-1330` (TestReadyToLandSaysItWaitsForS09): rewrite. It asserts the S09 placeholder.\n- `internal/tui/landing_test.go` (new): the list tests.\n- `testdata/golden/`: 44 files contain the placeholder (rg -l \"comes with slice S0\" `testdata/golden`). They are regenerated with -update.\n- `docs/dashboard.md:102-104`: add --note to the command and state the render hint."
     },
     {
       "heading": "Failing tests",

@@ -47,6 +47,9 @@ before any other dependency. Every new Go file starts with
 - Short plain sentences, no emoji, ASCII by default.
 - Mark anything ork itself would add as *proposed* or *candidate* until an adj
   record decides it.
+- In a slice's Files section, put each path in backticks, for example
+  `internal/tui/model.go`, so slicer can read it. Inside the backticks, allow
+  only a `:N` or `:N-M` line anchor; put any other anchor after the backtick.
 
 ## Environment
 
