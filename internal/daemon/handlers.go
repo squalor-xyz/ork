@@ -81,6 +81,12 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return d.status(ctx, p)
+	case MethodItemShow:
+		var p ItemShowParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.itemShow(ctx, p)
 	case MethodSnapshot:
 		var p SnapshotParams
 		if err := decode(params, &p); err != nil {
@@ -156,6 +162,7 @@ func (d *Daemon) snapshot(ctx context.Context, p SnapshotParams) (*SnapshotResul
 		Project:    s.Project,
 		EngineRuns: s.EngineRuns,
 		Items:      partOf(s.Items, now),
+		Deps:       partOf(s.Deps, now),
 		Goals:      partOf(s.Goals, now),
 		Runs:       partOf(s.Runs, now),
 		Open:       partOf(s.Open, now),

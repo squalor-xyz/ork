@@ -173,3 +173,39 @@ func TestDaemonActionConnectFailure(t *testing.T) {
 		})
 	}
 }
+
+func TestDaemonTypedItemShow(t *testing.T) {
+	for _, fail := range []bool{false, true} {
+		t.Run(fmt.Sprint(fail), func(t *testing.T) {
+			d, _, _, _ := requestServer(t, func(_ context.Context, method string, params json.RawMessage) (any, error) {
+				if method != daemon.MethodItemShow || string(params) != `{"project":"ork","id":"S12"}` {
+					return nil, fmt.Errorf("wrong request: %s %s", method, params)
+				}
+				if fail {
+					return nil, &ipc.Error{Code: "tool_failed", Message: "exact detail error"}
+				}
+				return daemon.ItemShowResult{Detail: &slicercli.Detail{Item: slicercli.Item{ID: "S12", Title: "Roadmap"}}}, nil
+			})
+			got, err := d.ItemShow(context.Background(), "ork", "S12")
+			if fail {
+				var wire *ipc.Error
+				if !errors.As(err, &wire) || wire.Code != "tool_failed" || wire.Message != "exact detail error" {
+					t.Fatalf("wire error: %v", err)
+				}
+			} else if err != nil || got == nil || got.ID != "S12" || got.Title != "Roadmap" {
+				t.Fatalf("detail: %+v %v", got, err)
+			}
+		})
+	}
+}
+
+func TestDaemonItemShowAndDepsConnectFailure(t *testing.T) {
+	failed := errors.New("connect failed")
+	d := &Daemon{Connect: func(context.Context) (*daemon.Client, error) { return nil, failed }}
+	if _, err := d.ItemShow(context.Background(), "ork", "S12"); err != failed {
+		t.Fatalf("detail error: %v", err)
+	}
+	if s := d.Snapshot(context.Background(), proj("ork", false)); s.Deps.Err != failed {
+		t.Fatalf("deps error: %v", s.Deps.Err)
+	}
+}

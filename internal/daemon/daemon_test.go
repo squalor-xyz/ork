@@ -126,6 +126,8 @@ func (s *stubSource) Fetch(ctx context.Context, p registry.Project, part source.
 	switch part {
 	case source.Items:
 		return snap.Items.Value, snap.Items.Err
+	case source.Deps:
+		return snap.Deps.Value, snap.Deps.Err
 	case source.Goals:
 		return snap.Goals.Value, snap.Goals.Err
 	case source.Runs:
@@ -622,6 +624,7 @@ func TestSnapshotOverTheSocketKeepsValuesAndToolErrorCodes(t *testing.T) {
 	toolErr := &clirun.ExitError{Tool: &clirun.ToolError{Code: "no_such_item", Message: "no such item: NOPE", Command: "show"}}
 	e.src.snaps["alpha"] = source.Snapshot{
 		Items:   source.Result[[]slicercli.Item]{Value: []slicercli.Item{{ID: "S03", Title: "Daemon"}}},
+		Deps:    source.Result[[]slicercli.Item]{Value: []slicercli.Item{{ID: "S03"}}},
 		Goals:   source.Result[*slicercli.Goals]{Err: fmt.Errorf("goals: %w", toolErr)},
 		Runs:    source.Result[[]slicercli.RelayRun]{Value: []slicercli.RelayRun{{ID: "run-1"}}},
 		Decided: source.Result[[]adjcli.Record]{Err: toolErr},
@@ -635,6 +638,9 @@ func TestSnapshotOverTheSocketKeepsValuesAndToolErrorCodes(t *testing.T) {
 	}
 	if snap.Items.Err != nil || len(snap.Items.Value) != 1 || snap.Items.Value[0].ID != "S03" {
 		t.Fatalf("items: %+v", snap.Items)
+	}
+	if len(snap.Deps.Value) != 1 || snap.Deps.Value[0].ID != "S03" || snap.Deps.Err != nil {
+		t.Fatalf("deps: %+v", snap.Deps)
 	}
 	if len(snap.Runs.Value) != 1 || snap.Runs.Err != nil {
 		t.Fatalf("runs: %+v", snap.Runs)
@@ -862,6 +868,7 @@ func TestTwoClientsReadingAtOnceMakeOneCallPerPart(t *testing.T) {
 	const root = "/p/alpha"
 	fake := clitest.Install(t,
 		clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", root}, Stdout: "[]"},
+		clitest.Route{Tool: "slicer", Args: []string{"deps", "--json", "--lean", "--root", root}, Stdout: "[]"},
 		clitest.Route{Tool: "slicer", Args: []string{"goals", "--json", "--root", root}, Stdout: "{}"},
 		clitest.Route{Tool: "slicer", Args: []string{"relay-run", "list", "--json", "--lean", "--active", "--root", root}, Stdout: `{"runs":[]}`},
 		clitest.Route{Tool: "adj", Args: []string{"inbox", "--json", "--root", root}, Stdout: `{"records":[]}`},
@@ -888,7 +895,7 @@ func TestTwoClientsReadingAtOnceMakeOneCallPerPart(t *testing.T) {
 	for _, tc := range []struct {
 		tool  string
 		verbs int
-	}{{"slicer", 3}, {"adj", 2}, {"git", 1}} {
+	}{{"slicer", 4}, {"adj", 2}, {"git", 1}} {
 		if n := len(fake.CallsTo(tc.tool)); n != tc.verbs {
 			t.Errorf("%s calls for two snapshots: %d, want %d (one per part)", tc.tool, n, tc.verbs)
 		}

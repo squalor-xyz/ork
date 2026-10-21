@@ -4,6 +4,7 @@ package slicercli
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -210,5 +211,27 @@ func TestMalformedOutputIsAnError(t *testing.T) {
 	_, err := c.List(context.Background(), root)
 	if err == nil || !strings.Contains(err.Error(), "decode") {
 		t.Fatalf("error: %v", err)
+	}
+}
+
+func TestDeps(t *testing.T) {
+	c, fake := client(t, route("deps.json", "deps", "--json", "--lean", "--root", root))
+	got, err := c.Deps(context.Background(), root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var want []Item
+	raw, err := os.ReadFile(recorded("deps.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = json.Unmarshal(raw, &want); err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 26 || got[0].ID != "S55" || got[25].ID != "S39" || !reflect.DeepEqual(got, want) {
+		t.Fatalf("deps: %+v, want %+v", got, want)
+	}
+	if calls := fake.CallsTo("slicer"); len(calls) != 1 {
+		t.Fatalf("calls: %+v", calls)
 	}
 }

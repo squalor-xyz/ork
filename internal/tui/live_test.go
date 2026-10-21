@@ -5,6 +5,7 @@ package tui
 import (
 	"context"
 	"errors"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 	"reflect"
 	"sync"
 	"testing"
@@ -201,3 +202,7 @@ func (*fakeLive) Stop(context.Context, string) error    { return errors.New("une
 func (*fakeLive) Retry(context.Context, string) error   { return errors.New("unexpected retry") }
 
 func (l *fakeLive) Answer(context.Context, string, string) error { return nil }
+
+func (l *fakeLive) ItemShow(context.Context, string, string) (*slicercli.Detail, error) {
+	return nil, nil
+}

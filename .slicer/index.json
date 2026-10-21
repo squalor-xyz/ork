@@ -640,7 +640,7 @@
       "id": "S12",
       "title": "Roadmap screen: items, readiness, goals and detail",
       "short_title": "Roadmap screen",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S11",
@@ -677,7 +677,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

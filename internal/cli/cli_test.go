@@ -54,6 +54,8 @@ func (s stubSource) Fetch(ctx context.Context, p registry.Project, part source.P
 	switch part {
 	case source.Items:
 		return snap.Items.Value, snap.Items.Err
+	case source.Deps:
+		return snap.Deps.Value, snap.Deps.Err
 	case source.Goals:
 		return snap.Goals.Value, snap.Goals.Err
 	case source.Runs:

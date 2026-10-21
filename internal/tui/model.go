@@ -99,6 +99,9 @@ type Model struct {
 	poller        *poll.Poller
 	active        int // -1 is Needs you; otherwise registry index
 	view          int // the view in the bar: an index into views; 0 is the Overview
+	roadmapCursor int
+	itemPane      *itemPane
+	itemRequest   uint64
 	cursor        int // the Overview row under the cursor; drawn clamped to the rows there are
 	sidebarHidden bool
 	filtering     bool
@@ -238,6 +241,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.tick(m.cfg.Now())
 	case snapshotMsg:
 		return m, m.apply(msg)
+	case itemShowMsg:
+		if pane := m.itemPane; pane != nil && m.view == roadmapView && m.active >= 0 &&
+			pane.project == msg.project && pane.id == msg.id && pane.request == msg.request &&
+			m.projects[m.active].reg.Name == msg.project {
+			pane.pending = false
+			pane.detail, pane.err = msg.detail, msg.err
+		}
 	case actionMsg:
 		flights := m.actionFlights[msg.action.run]
 		for i, a := range flights {
@@ -349,6 +359,7 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		m.showHelp = !m.showHelp
 	case key.Matches(msg, m.keys.Close):
 		m.actionStatus = ""
+		m.itemPane = nil
 		m.showHelp = false
 		m.filter = ""
 	case key.Matches(msg, m.keys.Next):
@@ -360,10 +371,27 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	case key.Matches(msg, m.keys.PrevView):
 		m.moveView(-1)
 	case key.Matches(msg, m.keys.RowNext):
-		m.moveRow(1)
+		if m.view == roadmapView {
+			if m.itemPane == nil {
+				n := len(m.roadmapItems())
+				m.roadmapCursor = clampCursor(clampCursor(m.roadmapCursor, n)+1, n)
+			}
+		} else {
+			m.moveRow(1)
+		}
 	case key.Matches(msg, m.keys.RowPrev):
-		m.moveRow(-1)
+		if m.view == roadmapView {
+			if m.itemPane == nil {
+				n := len(m.roadmapItems())
+				m.roadmapCursor = clampCursor(clampCursor(m.roadmapCursor, n)-1, n)
+			}
+		} else {
+			m.moveRow(-1)
+		}
 	case key.Matches(msg, m.keys.Select):
+		if m.view == roadmapView {
+			return m.openItem()
+		}
 		if r, ok := m.selectedRow(); ok {
 			if r.engineID != "" && !m.showHelp {
 				return m.openPane(r)
@@ -397,6 +425,8 @@ func (m *Model) switchTo(i int) tea.Cmd {
 	m.actionStatus = ""
 	m.pane = nil
 	m.active = i
+	m.roadmapCursor = 0
+	m.itemPane = nil
 	m.cursor = 0
 	if i >= 0 {
 		m.poller.SetVisible(m.projects[i].reg.Name)
@@ -529,6 +559,8 @@ func (m *Model) moveView(delta int) {
 		i := ((m.view+delta*step)%n + n) % n
 		if views[i].built {
 			m.view = i
+			m.roadmapCursor = 0
+			m.itemPane = nil
 			return
 		}
 	}
@@ -551,7 +583,7 @@ type actionMsg struct {
 }
 
 func (m *Model) requestAction(verb string) tea.Cmd {
-	if m.showHelp {
+	if m.showHelp || m.view == roadmapView {
 		return nil
 	}
 	r, ok := m.actionRow()

@@ -49,6 +49,10 @@ func (m *Model) screen() string {
 	bodyH, start := max(h-4, 1), 0
 	if m.showHelp {
 		body = m.helpLines(mainW)
+	} else if m.view == roadmapView {
+		rv := m.roadmap(mainW)
+		body = rv.body
+		start = windowStart(rv.sel, len(body), bodyH)
 	} else {
 		// The detail line holds the selected row's full text. It takes lines
 		// from the body, at most h-5, so the body keeps one line.
@@ -173,7 +177,7 @@ var views = []struct {
 	{"Overview", true},
 	{"Questions", false},
 	{"Waves", false},
-	{"Roadmap", false},
+	{"Roadmap", true},
 	{"Decisions", false},
 }
 
@@ -234,7 +238,7 @@ func (m *Model) helpLines(w int) []string {
 			lines = append(lines, clip(h.Key+" "+h.Desc, w))
 		}
 	}
-	lines = append(lines, "", clip("Only the Overview exists so far. Questions, Waves, Roadmap and Decisions come in later slices.", w))
+	lines = append(lines, "", clip("Overview and Roadmap are available. Questions, Waves and Decisions come in later slices.", w))
 	return lines
 }
 

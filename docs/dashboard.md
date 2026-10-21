@@ -37,7 +37,7 @@ ork  ?help           | Overview | Questions | Waves | Roadmap | Decisions
 The project sidebar comes from the registry (`registry.initial`,
 `ui.project-nav`). "Needs you" starts selected and shows the existing
 all-projects Overview. A project selection limits its rows to that project.
-The view bar stays at the top of the main pane. Only Overview is selectable.
+The view bar stays at the top of the main pane. Overview and Roadmap are selectable.
 
 Each project row shows its needs-you count (open adj records, slicer
 items flagged `needs-owner`, and engine runs awaiting approval, paused or
@@ -58,7 +58,7 @@ rows. Below 100 columns the sidebar narrows; names that do not fit end in
 Keys `right`/`left` move selection and wrap through "Needs you" and the
 sorted projects. `1`-`9` select projects in registry order. `tab` and
 `shift+tab` switch views in the order of the view bar (`ui.views`,
-`ui.view-list`). They skip views not built yet, so only the Overview is
+`ui.view-list`). They skip views not built yet, so Overview and Roadmap are
 reached for now. `/` filters project names without regard to case; `enter`
 keeps the filter and leaves text entry, and `esc` clears it. `r` refreshes the
 selected project, or all projects on "Needs you". `?` shows keys and `q` quits.
@@ -226,12 +226,19 @@ elsewhere" marker and no actions (`dash.external-runs`).
 
 ## Roadmap (one project, read-only in v1)
 
-The queue in slicer's ranked order, with readiness, status, size and effort,
+Goals head the screen. The queue follows `slicer list` order and shows each
+item's id, short title (or title), readiness, status, size and effort,
 and the selected slice in a detail pane. Readiness comes from status and
-dependencies only; no claim is shown (record 140, `roadmap.readiness`,
+dependencies only. An item is ready when `slicer deps` includes it, its status
+is open and it has a slice. No claim is shown (record 140, `roadmap.readiness`,
 decided 2026-10-21). The data comes from
 `slicer list --json --lean`, `slicer show ID --json --lean` and
-`slicer goals --json`. From here an item can be added to the wave composer.
+`slicer goals --json`, plus `slicer deps --json --lean`.
+A Goals error keeps the list. A Deps error makes readiness unknown (`?`).
+`enter` loads the selected item's spec and shows pending until it arrives.
+The detail wraps and clips to the pane. `esc` returns to the list.
+On "Needs you", select a project to see its roadmap.
+Adding an item to the wave composer comes in a later slice.
 Editing comes after v1, and `ui.slicer-tui` is open.
 
 ## Decisions (one project or all, read-only in v1)

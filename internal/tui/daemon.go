@@ -25,6 +25,7 @@ func (d *Daemon) Snapshot(ctx context.Context, p registry.Project) source.Snapsh
 	if err != nil {
 		return source.Snapshot{Project: p,
 			Items:   source.Result[[]slicercli.Item]{Err: err},
+			Deps:    source.Result[[]slicercli.Item]{Err: err},
 			Goals:   source.Result[*slicercli.Goals]{Err: err},
 			Runs:    source.Result[[]slicercli.RelayRun]{Err: err},
 			Open:    source.Result[[]adjcli.Record]{Err: err},
@@ -81,4 +82,13 @@ func (d *Daemon) Answer(ctx context.Context, run, text string) error {
 	}
 	defer c.Close()
 	return c.Answer(ctx, run, text)
+}
+
+func (d *Daemon) ItemShow(ctx context.Context, project, id string) (*slicercli.Detail, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.ItemShow(ctx, project, id)
 }

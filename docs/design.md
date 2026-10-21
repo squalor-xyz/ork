@@ -93,7 +93,8 @@ ork (TUI)  ork status --json (CLI)
   | `status` | `{"project"?}` | `{"build_id","roles_running","projects":[{name, path, adj, needs_you, active_relays, errors?}]}` |
   | `daemon.info` (proposed wire) | none | `{"build_id"}`; no registry or project reads |
   | `daemon.stop` (proposed wire) | `{"force"?}` | `{"stopped":true}`; `daemon_busy` refuses active work without force |
-  | `snapshot` | `{"project"}` | the project's `source.Snapshot` from the cache, plus the daemon's `engine_runs` array (not a Part); each part is `{"value", "age_ms", "read_at"?, "stale"?, "error"?}`: the last good value, its age in ms (0 if never read), when it was read (absent if never), and the last read's error |
+  | `snapshot` | `{"project"}` | the project's `source.Snapshot` (`items`, `deps`, `goals`, `runs`, `open`, `decided`) from the cache, plus the daemon's `engine_runs` array (not a Part); each part is `{"value", "age_ms", "read_at"?, "stale"?, "error"?}`: the last good value, its age in ms (0 if never read), when it was read (absent if never), and the last read's error |
+  | `item.show` (proposed wire) | `{"project","id"}` | `{"detail"}`; slicer show for the registered project |
   | `subscribe` | `{"focus":[names]}` | none; the connection gets notices (below) and the named projects become visible |
   | `refresh` | `{"project"}` | none; reads every part of the project now and returns once they are read |
   | `projects.list` | none | `{"projects":[...]}` |
@@ -108,11 +109,11 @@ ork (TUI)  ork status --json (CLI)
 
   **Snapshot cache (S15, `dash.cache`, `dash.refresh`, `boundary.git-head`).**
   The daemon holds one in-memory value per project and part, shared by all
-  clients, and reads each part on its schedule: items, runs and open records
+  clients, and reads each part on its schedule: items, deps, runs and open records
   every 5 s for a visible project and every 30 s for the others; goals and
   decided records every 5 min, on a git HEAD change, when a project is opened
   and on `refresh`. A git HEAD change is `git -C PATH rev-parse HEAD` and
-  nothing else, read on the same 5 s / 30 s tick as items, runs and open
+  nothing else, read on the same 5 s / 30 s tick as items, deps, runs and open
   records. Each read is one CLI call. A read that is already running is
   shared, and at most 4 CLI processes run at once across all projects. A
   read that comes due, or that a HEAD change asks for, while another runs for

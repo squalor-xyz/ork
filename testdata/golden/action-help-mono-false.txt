@@ -1,4 +1,4 @@
-[1mork[m  ?help                 | [1;36mOverview[m[90m | Questions | Waves | Roadmap | Decisions[m
+[1mork[m  ?help                 | [1;36mOverview[m[90m | Questions | Waves | [mRoadmap[90m | Decisions[m
 [1;7;97;44m> Needs you[m                |[90m------------------------------------------------------------------------[m
   ork 0*                   |[1;36mKeys[m
                            |
@@ -9,7 +9,7 @@
                            |1-9 jump to project
                            |down/j/n next row
                            |up/k/p previous row
-                           |enter open engine pane; other rows select project
+                           |enter open engine pane or Roadmap item; other rows select project
                            |/ filter projects; esc clears
                            |s hide/show sidebar
                            |a approve
@@ -19,10 +19,10 @@
                            |pgup/pgdown scroll pane reason
                            |r refresh now
                            |? show or hide this help
-                           |esc close pane, help or message
+                           |esc close pane, Roadmap item, help or message
                            |q quit
                            |
-                           |Only the Overview exists so far. Questions, Waves, Roadmap and Decisi...
+                           |Overview and Roadmap are available. Questions, Waves and Decisions co...
                            |
                            |
                            |
