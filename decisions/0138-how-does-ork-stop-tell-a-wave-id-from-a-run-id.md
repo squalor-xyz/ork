@@ -2,10 +2,12 @@
 {
   "id": 138,
   "title": "How does ork stop tell a wave id from a run id?",
-  "status": "open",
+  "status": "decided",
   "key": "wave.stop-target",
   "asked_by": "claude",
+  "decided_by": "jon",
   "created": "2026-10-20",
+  "decided_at": "2026-10-21",
   "context": "S60 open (a) and (b). S05 already builds wave ids as wave-YYYYMMDD-HHMMSS-xxxx (internal/daemon/runs.go:320-324). S60 adds ork stop WAVE beside ork stop RUN.",
   "options": [
     {
@@ -23,6 +25,8 @@
     "label": "prefix",
     "reasoning": "The id format already exists and the design sketch has ork stop WAVE."
   },
+  "decision": "prefix",
+  "rationale": "Owner chose prefix: one ork stop, wave- prefix tells wave ids from run ids.",
   "refs": [
     "S60"
   ],
@@ -30,6 +34,10 @@
     {
       "date": "2026-10-20",
       "event": "ask"
+    },
+    {
+      "date": "2026-10-21",
+      "event": "decide"
     }
   ]
 }

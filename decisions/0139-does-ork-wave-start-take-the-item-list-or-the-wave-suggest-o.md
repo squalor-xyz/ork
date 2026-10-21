@@ -2,10 +2,12 @@
 {
   "id": 139,
   "title": "Does ork wave start take the item list or the wave suggest output?",
-  "status": "open",
+  "status": "decided",
   "key": "wave.start-input",
   "asked_by": "claude",
+  "decided_by": "jon",
   "created": "2026-10-20",
+  "decided_at": "2026-10-21",
   "context": "S60 open (c). The Waves screen (S82) launches the ticked items through the same wave.start method, so the daemon method takes items either way.",
   "options": [
     {
@@ -23,6 +25,8 @@
     "label": "items",
     "reasoning": "Stateless and the same shape the Waves screen needs."
   },
+  "decision": "items",
+  "rationale": "Owner chose items: ork wave start PROJECT ITEM... takes the chosen item ids.",
   "refs": [
     "S60",
     "S82"
@@ -31,6 +35,10 @@
     {
       "date": "2026-10-20",
       "event": "ask"
+    },
+    {
+      "date": "2026-10-21",
+      "event": "decide"
     }
   ]
 }

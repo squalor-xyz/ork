@@ -226,8 +226,10 @@ elsewhere" marker and no actions (`dash.external-runs`).
 
 ## Roadmap (one project, read-only in v1)
 
-The queue in slicer's ranked order, with readiness, status, size, effort
-and claim, and the selected slice in a detail pane. The data comes from
+The queue in slicer's ranked order, with readiness, status, size and effort,
+and the selected slice in a detail pane. Readiness comes from status and
+dependencies only; no claim is shown (record 140, `roadmap.readiness`,
+decided 2026-10-21). The data comes from
 `slicer list --json --lean`, `slicer show ID --json --lean` and
 `slicer goals --json`. From here an item can be added to the wave composer.
 Editing comes after v1, and `ui.slicer-tui` is open.
