@@ -578,6 +578,38 @@ func TestNewRecordsTheRunAndRefusesBadInput(t *testing.T) {
 	}
 }
 
+func TestNewBudgetsOverrideFallsBackPerField(t *testing.T) {
+	for name, tc := range map[string]struct {
+		override registry.Budgets
+		want     registry.Budgets
+	}{
+		"unset":   {registry.Budgets{}, registry.Budgets{Minutes: 60, Tokens: 10000}},
+		"minutes": {registry.Budgets{Minutes: 90}, registry.Budgets{Minutes: 90, Tokens: 10000}},
+		"tokens":  {registry.Budgets{Tokens: 20000}, registry.Budgets{Minutes: 60, Tokens: 20000}},
+		"both":    {registry.Budgets{Minutes: 90, Tokens: 20000}, registry.Budgets{Minutes: 90, Tokens: 20000}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h := newHarness(t)
+			h.cfg.Project.Budgets = registry.Budgets{Minutes: 60, Tokens: 10000}
+			h.cfg.Budgets = tc.override
+			e, err := New(context.Background(), h.deps, h.cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			run, err := h.store.Open(e.Snapshot().ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := run.Snapshot().Budgets; got != tc.want {
+				t.Fatalf("recorded budgets: got %+v, want %+v", got, tc.want)
+			}
+			if h.cfg.Project.Budgets != (registry.Budgets{Minutes: 60, Tokens: 10000}) {
+				t.Fatal("override changed the project budgets")
+			}
+		})
+	}
+}
+
 func TestAdjAskRunsInTheMainCheckoutNotTheWorktree(t *testing.T) {
 	h := newHarness(t)
 	e, err := New(context.Background(), h.deps, h.cfg)

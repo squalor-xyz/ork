@@ -67,6 +67,12 @@ Notes on the fields:
 ## run.json
 
 ork writes `run.json` at mode 0600 (adj #106).
+`lineup` and `budgets` are the launch values echoed by the plan
+(`run.launch-wire`). The lineup includes any full role chains supplied at
+launch (`lineup.launch-edit`); the gate uses the reviewer's chain. Budgets
+merge each nonzero launch field over the registry default. These values
+apply to this run only and do not change the matrix or registry
+(`lineup.override-scope`).
 
 ```json
 {
