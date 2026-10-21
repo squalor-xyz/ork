@@ -95,6 +95,8 @@ ork (TUI)  ork status --json (CLI)
   | `daemon.stop` (proposed wire) | `{"force"?}` | `{"stopped":true}`; `daemon_busy` refuses active work without force |
   | `snapshot` | `{"project"}` | the project's `source.Snapshot` (`items`, `deps`, `goals`, `runs`, `open`, `decided`) from the cache, plus the daemon's `engine_runs` array (not a Part); each part is `{"value", "age_ms", "read_at"?, "stale"?, "error"?}`: the last good value, its age in ms (0 if never read), when it was read (absent if never), and the last read's error |
   | `item.show` (proposed wire) | `{"project","id"}` | `{"detail"}`; slicer show for the registered project |
+  | `wave.start` (`run.launch-wire`; proposed shape) | `{"items":[RunParams...]}`; each item has `project`, `item`, `well_specified`, `split`, optional `lineup`, `budgets` and `expected` as in `run.start` | `{"wave","items":[{"item","run"?,"error"?}]}`; one wave id, one project, admission errors kept per item |
+  | `wave.stop` (proposed wire) | `{"wave"}` | the same wave result; stops each unfinished member through `run.stop`, skips final members |
   | `subscribe` | `{"focus":[names]}` | none; the connection gets notices (below) and the named projects become visible |
   | `refresh` | `{"project"}` | none; reads every part of the project now and returns once they are read |
   | `projects.list` | none | `{"projects":[...]}` |
@@ -557,8 +559,8 @@ relative project path).
 ```
 ork                         open the TUI (start the daemon if needed)
 ork status [--project P]    waves, slices, roles, needs-you
-ork wave suggest P          the proposed wave and its lineup
-ork wave start P ID...      launch (asks unless --yes)
+ork wave suggest P          slicer's suggested waves, in order, with reasons
+ork wave start P ITEM...    launch (asks unless --yes)
 ork run P ID                show a plan and launch one slice (S17)
 ork approve RUN             finish a passed slice, then commit
 ork answer RUN TEXT         answer an owner question
@@ -580,6 +582,26 @@ S03 ships `status`, `projects`, `roles print` and `doctor`
 come with the engine. S17 adds `run`, `approve`, `stop` and `answer`
 (`engine.owner-surface`, adj #73).
 S44 adds `retry` for pauses without a question (`engine.pause-resume`, adj #101).
+S60 adds `wave suggest P`, `wave start P ITEM...` and `stop WAVE`.
+Suggestions call `slicer plan-parallel --json --lean --root ROOT` for the
+registered project. Tool errors keep their code and message, including a
+missing `files_section`. The owner chooses the item ids (`wave.start-input`).
+The CLI asks the two y/n inputs for each item, shows each `run.plan`, then
+asks `Start this wave? [y/N]`. `--well-specified` and `--split` apply to
+every item; both are required with `--yes`. In JSON mode, prompts and plans
+go to stderr and stdout holds one result.
+
+Wave items carry optional lineup, budgets and a confirmed `expected` plan.
+Each item uses the existing `run.start` override validation and plan check
+(`run.launch-wire`). As with `run.start`, an absent `expected` permits a
+start from the current plan. The CLI supplies it for every item. A stale
+plan or admission error is returned for that item; later items still start.
+All admitted records share one `wave-YYYYMMDD-HHMMSS-xxxx` id and use the
+global and project caps. One failed or stopped item leaves its peers
+running (`wave.failure`). `ork stop` selects a wave by its `wave-` prefix
+(`wave.stop-target`). Queued members stay queued until stopped, with no
+tool writes, even as stopping active members frees slots. A wave result
+with any item error exits 1; successful peers remain visible in the result.
 
 `ork run P ID` asks `Well specified?` and `Split?` as y/n questions
 (`[y/n]`, no default) before showing the plan, then asks

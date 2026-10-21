@@ -235,3 +235,28 @@ func TestDeps(t *testing.T) {
 		t.Fatalf("calls: %+v", calls)
 	}
 }
+
+func TestPlanParallel(t *testing.T) {
+	c, fake := client(t, route("plan-parallel.json", "plan-parallel", "--json", "--lean", "--root", root))
+	plan, err := c.PlanParallel(context.Background(), root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if plan.Width != 4 || len(plan.Waves) != 14 || plan.Waves[0].Wave != 1 || plan.Waves[0].Items[0].ID != "S55" || plan.Waves[1].Items[0].Reason != "shares: S55 docs/dashboard.md" || len(plan.InFlight) != 0 || plan.Unplaced[0].Reason != "no_files" || plan.Blocked[0].WaitingOn[0] != "S48" || plan.Held[0].Flags[0] != "needs-owner" || plan.Unspecified[0].Missing[0] != "Implement" {
+		t.Fatalf("plan: %+v", plan)
+	}
+	if calls := fake.CallsTo("slicer"); len(calls) != 1 {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
+func TestPlanParallelToolError(t *testing.T) {
+	r := route("plan-parallel-error.json", "plan-parallel", "--json", "--lean", "--root", root)
+	r.Exit = 2
+	c, _ := client(t, r)
+	_, err := c.PlanParallel(context.Background(), root)
+	var te *clirun.ToolError
+	if !errors.As(err, &te) || te.Code != "usage" || te.Command != "plan-parallel" || !strings.Contains(te.Message, "files_section") {
+		t.Fatalf("error: %v", err)
+	}
+}

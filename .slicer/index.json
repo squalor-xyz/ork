@@ -2366,7 +2366,7 @@
       "id": "S60",
       "title": "ork wave suggest and start; ork stop WAVE",
       "short_title": "ork wave suggest and start; ork stop WAVE",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S05",
@@ -2391,7 +2391,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

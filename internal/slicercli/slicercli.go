@@ -25,6 +25,15 @@ func (c Client) call(args ...string) clirun.Call {
 	return clirun.Call{Bin: bin, Args: args, Timeout: c.Timeout}
 }
 
+// PlanParallel runs `slicer plan-parallel --json --lean --root ROOT`.
+func (c Client) PlanParallel(ctx context.Context, root string) (*ParallelPlan, error) {
+	var plan ParallelPlan
+	if err := clirun.RunJSON(ctx, c.call("plan-parallel", "--json", "--lean", "--root", root), &plan); err != nil {
+		return nil, err
+	}
+	return &plan, nil
+}
+
 // List runs `slicer list --json --lean --root ROOT`.
 func (c Client) List(ctx context.Context, root string) ([]Item, error) {
 	var items []Item

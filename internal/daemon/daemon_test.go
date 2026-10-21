@@ -798,7 +798,7 @@ func TestUnknownMethodAndBadParams(t *testing.T) {
 	}
 	defer raw.Close()
 	var re *ipc.Error
-	if err := raw.Call(context.Background(), "wave.start", nil, nil); !errors.As(err, &re) || re.Code != CodeUnknownMethod || !strings.Contains(re.Message, "wave.start") {
+	if err := raw.Call(context.Background(), "wave.nope", nil, nil); !errors.As(err, &re) || re.Code != CodeUnknownMethod || !strings.Contains(re.Message, "wave.nope") {
 		t.Fatalf("unknown method: %v", err)
 	}
 	if err := raw.Call(context.Background(), MethodProjectsAdd, []int{1}, nil); !errors.As(err, &re) || re.Code != CodeBadParams {

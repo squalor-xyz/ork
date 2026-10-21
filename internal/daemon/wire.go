@@ -14,6 +14,8 @@ import (
 
 // The methods a client can call.
 const (
+	MethodWaveStart    = "wave.start"    // params WaveStartParams (run.launch-wire), proposed result shape WaveResult
+	MethodWaveStop     = "wave.stop"     // proposed wire; params WaveAction, result WaveResult
 	MethodDaemonInfo   = "daemon.info"   // no params, result DaemonInfoResult
 	MethodDaemonStop   = "daemon.stop"   // params StopParams, result StopResult
 	MethodStatus       = "status"        // params StatusParams, result StatusResult

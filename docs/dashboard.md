@@ -184,7 +184,24 @@ rows never count toward the badge (`ui.setup-errors`).
 
 ## Waves (one project)
 
-The wave composer and the running waves.
+The Waves screen is later work (S82). Its built flag stays unset in S60.
+The composer layout below is proposed where no adj record decides it.
+
+S60 provides the CLI: `ork wave suggest PROJECT` prints the ordered waves
+from `slicer plan-parallel`, including reasons. `ork wave start PROJECT
+ITEM...` takes the chosen item ids (`wave.start-input`), plans each item,
+then asks for confirmation. `--yes` requires explicit `--well-specified
+yes|no` and `--split yes|no`; these flags apply to every item. One wave
+contains one project (`wave.scope`). Its runs share a wave id and respect
+the global and project caps. A failed or stopped item leaves the others
+running (`wave.failure`). `ork stop WAVE` uses the `wave-` prefix
+(`wave.stop-target`) and stops each unfinished member once, including
+queued members without tool writes.
+
+The composer will use `wave.start` (`run.launch-wire`; proposed request and
+result shape) with per-item launch inputs, optional lineup, budgets and
+confirmed plans. `wave.stop` is the proposed daemon method for stopping a
+wave. Suggestion and overlap daemon reads are later work (S81).
 
 ```
 Suggested (slicer plan-parallel)            Lineup

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-83 items · — 43 · done 33 · parked 2 · retired 5
+83 items · — 42 · done 34 · parked 2 · retired 5
 
 ## v1
 
@@ -106,7 +106,7 @@
 | 56 | [S57](slices/S57.md) | TUI keys: up/down move rows, tab and left/right move projects | S | 1 |  | discovered from S26 | done |
 | 57 | [S58](slices/S58.md) | Tab and shift+tab switch views; left/right and 1-9 switch projects | S | 1 |  |  | done |
 | 58 | [S59](slices/S59.md) | Decisions screen: open and decided records, one project or all | M | 2 |  |  | — |
-| 59 | [S60](slices/S60.md) | ork wave suggest and start; ork stop WAVE | M | 2 |  |  | — |
+| 59 | [S60](slices/S60.md) | ork wave suggest and start; ork stop WAVE | M | 2 |  |  | done |
 | 60 | [S61](slices/S61.md) | Split parts: lead and parts in one worktree | M | 2 |  |  | — |
 | 61 | [S62](slices/S62.md) | Slivers as their own items under the cap | L | 3 |  |  | — |
 | 62 | [S63](slices/S63.md) | Landing: merge detection, branch cleanup and run pruning | M | 2 |  |  | — |
