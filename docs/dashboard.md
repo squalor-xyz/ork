@@ -144,7 +144,7 @@ Hiding a pending message leaves its call running.
 Retry uses the optional engine `pending` kind (`ui.pending-kind`). When it is
 `question`, the detail area says to answer with `ork answer RUN TEXT` instead.
 Other pending kinds, including an absent kind from an older snapshot, offer
-retry. Launch keys await S52.
+retry. Launch is available from the Roadmap ready list described below.
 
 ### Engine detail pane
 
@@ -224,7 +224,7 @@ The actions are approve, stop, answer, retry on another vendor, and open
 the worktree path. Relays started outside ork appear with a "started
 elsewhere" marker and no actions (`dash.external-runs`).
 
-## Roadmap (one project, read-only in v1)
+## Roadmap (one project)
 
 Goals head the screen. The queue follows `slicer list` order and shows each
 item's id, short title (or title), readiness, status, size and effort,
@@ -238,6 +238,31 @@ A Goals error keeps the list. A Deps error makes readiness unknown (`?`).
 `enter` loads the selected item's spec and shows pending until it arrives.
 The detail wraps and clips to the pane. `esc` returns to the list.
 On "Needs you", select a project to see its roadmap.
+`l` opens a ready list when a project is selected and no item detail is open.
+It lists only open items with a slice included by `slicer deps`, in slicer
+list order. Each row shows id, short title (or title), size and effort.
+There is no claim check (record 140). A Deps error leaves nothing launchable.
+An empty list says "No ready slices". Without a daemon, launch says
+"No daemon connection; action unavailable". Up/down, j/k and n/p move through
+the list. `enter` picks a slice; `esc` cancels.
+
+Launch asks "Well specified? [y/n]:" and then "Split? [y/n]:". Neither has a
+default. Enter submits y, yes, n or no in any case; invalid input asks again.
+The TUI calls `run.plan` after both answers and shows "pending: run.plan".
+The plan summary shows project, item, worktree, branch, check command, and
+implementer, reviewer and gate lineup entries as vendor, model and effort,
+with each role's permissions. The confirmation bar shows
+`ork run PROJECT ITEM? [y/N] (Enter is No)`. The displayed command omits the
+two answers. `y` or `Y` calls `run.start` with those answers and the displayed
+plan as Expected. At confirmation, Enter, n, N and Esc cancel. Esc cancels
+an unfinished plan. Changing project or view drops it, and late plan replies
+do not restore it. Once Start is sent, Esc and navigation close the launch
+without cancelling Start. The status stays `ork run PROJECT ITEM: pending`.
+Pressing `l` for that project says `ork run PROJECT ITEM is pending` until
+the reply. Success shows `ork run PROJECT ITEM: done` and refreshes the
+project, even after leaving the Roadmap or project. Plan and Start errors
+show their code and message verbatim. A failed Start is not retried.
+
 Adding an item to the wave composer comes in a later slice.
 Editing comes after v1, and `ui.slicer-tui` is open.
 

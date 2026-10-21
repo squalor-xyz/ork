@@ -9,6 +9,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -149,4 +150,20 @@ func (c *Client) ItemShow(ctx context.Context, project, id string) (*slicercli.D
 		return nil, err
 	}
 	return out.Detail, nil
+}
+
+// Plan resolves the slice's launch plan without starting it.
+func (c *Client) Plan(ctx context.Context, params RunParams) (*RunPlan, error) {
+	var out RunPlan
+	if err := c.Call(ctx, MethodRunPlan, params, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// Start starts the slice with its confirmed plan.
+func (c *Client) Start(ctx context.Context, params RunParams) (runrec.Record, error) {
+	var out runrec.Record
+	err := c.Call(ctx, MethodRunStart, params, &out)
+	return out, err
 }

@@ -10,6 +10,7 @@ import (
 	"charm.land/lipgloss/v2"
 
 	"github.com/squalor-xyz/ork/internal/slicercli"
+	"github.com/squalor-xyz/ork/internal/source"
 )
 
 const roadmapView = 3
@@ -145,16 +146,12 @@ func (m *Model) roadmap(w int) overviewView {
 		showError("items", s.Items.Err)
 		return out
 	}
-	ready := map[string]bool{}
-	for _, it := range s.Deps.Value {
-		ready[it.ID] = true
-	}
 	cursor := clampCursor(m.roadmapCursor, len(s.Items.Value))
 	for i, it := range s.Items.Value {
 		readiness := "not ready"
 		if s.Deps.Err != nil {
 			readiness = "?"
-		} else if ready[it.ID] && it.Status == "open" && it.HasSlice {
+		} else if readySlice(s, it) {
 			readiness = "ready"
 		}
 		title := it.ShortTitle
@@ -182,4 +179,18 @@ func (m *Model) roadmap(w int) overviewView {
 		add("No items")
 	}
 	return out
+}
+
+// readySlice is shared by the Roadmap and launch list. Claims are not exposed
+// by slicer (roadmap.readiness, record 140).
+func readySlice(s source.Snapshot, it slicercli.Item) bool {
+	if s.Deps.Err != nil || it.Status != "open" || !it.HasSlice {
+		return false
+	}
+	for _, dep := range s.Deps.Value {
+		if dep.ID == it.ID {
+			return true
+		}
+	}
+	return false
 }

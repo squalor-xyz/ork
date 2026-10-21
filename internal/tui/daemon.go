@@ -8,6 +8,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -91,4 +92,21 @@ func (d *Daemon) ItemShow(ctx context.Context, project, id string) (*slicercli.D
 	}
 	defer c.Close()
 	return c.ItemShow(ctx, project, id)
+}
+
+func (d *Daemon) Plan(ctx context.Context, params daemon.RunParams) (*daemon.RunPlan, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.Plan(ctx, params)
+}
+func (d *Daemon) Start(ctx context.Context, params daemon.RunParams) (runrec.Record, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return runrec.Record{}, err
+	}
+	defer c.Close()
+	return c.Start(ctx, params)
 }

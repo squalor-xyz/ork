@@ -5,6 +5,8 @@ package tui
 import (
 	"context"
 	"errors"
+	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"reflect"
 	"sync"
@@ -205,4 +207,11 @@ func (l *fakeLive) Answer(context.Context, string, string) error { return nil }
 
 func (l *fakeLive) ItemShow(context.Context, string, string) (*slicercli.Detail, error) {
 	return nil, nil
+}
+
+func (*fakeLive) Plan(context.Context, daemon.RunParams) (*daemon.RunPlan, error) {
+	return nil, errors.New("unexpected plan")
+}
+func (*fakeLive) Start(context.Context, daemon.RunParams) (runrec.Record, error) {
+	return runrec.Record{}, errors.New("unexpected start")
 }
