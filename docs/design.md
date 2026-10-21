@@ -97,6 +97,8 @@ ork (TUI)  ork status --json (CLI)
   | `item.show` (proposed wire) | `{"project","id"}` | `{"detail"}`; slicer show for the registered project |
   | `wave.start` (`run.launch-wire`; proposed shape) | `{"items":[RunParams...]}`; each item has `project`, `item`, `well_specified`, `split`, optional `lineup`, `budgets` and `expected` as in `run.start` | `{"wave","items":[{"item","run"?,"error"?}]}`; one wave id, one project, admission errors kept per item |
   | `wave.stop` (proposed wire) | `{"wave"}` | the same wave result; stops each unfinished member through `run.stop`, skips final members |
+  | `wave.suggest` (proposed wire) | `{"project"}` | slicer's `plan-parallel` result for the registered project, limited to the fields `ParallelPlan` reads; slicer runs on each call, not from the cache |
+  | `wave.overlap` (proposed wire) | `{"project","items":[ID...]}` | `{"overlap":[{"a","b","shared"?}]}` from `slicer deps --overlap`; `shared` is absent when a pair shares no path; fewer than two items is `bad_params`; slicer runs on each call |
   | `subscribe` | `{"focus":[names]}` | none; the connection gets notices (below) and the named projects become visible |
   | `refresh` | `{"project"}` | none; reads every part of the project now and returns once they are read |
   | `projects.list` | none | `{"projects":[...]}` |

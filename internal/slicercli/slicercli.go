@@ -34,6 +34,18 @@ func (c Client) PlanParallel(ctx context.Context, root string) (*ParallelPlan, e
 	return &plan, nil
 }
 
+// DepsOverlap runs `slicer deps --overlap ID... --json --lean --root ROOT`,
+// which lists the paths each pair of the given items shares.
+func (c Client) DepsOverlap(ctx context.Context, root string, ids ...string) (*Overlap, error) {
+	args := append([]string{"deps", "--overlap"}, ids...)
+	args = append(args, "--json", "--lean", "--root", root)
+	var out Overlap
+	if err := clirun.RunJSON(ctx, c.call(args...), &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // List runs `slicer list --json --lean --root ROOT`.
 func (c Client) List(ctx context.Context, root string) ([]Item, error) {
 	var items []Item
