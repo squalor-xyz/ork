@@ -2991,7 +2991,7 @@
       "id": "S80",
       "title": "Per-launch lineup and budget overrides on run.plan and run.start",
       "short_title": "Per-launch lineup and budget overrides on run.plan and run.start",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -3012,7 +3012,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

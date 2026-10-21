@@ -96,6 +96,7 @@ type Config struct {
 	Project registry.Project
 	Item    string
 	Lineup  map[string][]runrec.LineupEntry // by role; the gate defaults to the reviewer's
+	Budgets registry.Budgets
 	Wave    string
 	Queued  bool // create the run in state queued; Dequeue moves it to setup
 }
@@ -185,10 +186,17 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 	if cfg.Queued {
 		state = runrec.StateQueued
 	}
+	budgets := cfg.Project.Budgets
+	if cfg.Budgets.Minutes != 0 {
+		budgets.Minutes = cfg.Budgets.Minutes
+	}
+	if cfg.Budgets.Tokens != 0 {
+		budgets.Tokens = cfg.Budgets.Tokens
+	}
 	run, err := d.Store.Create(runrec.Record{
 		ID: id, Wave: cfg.Wave, Project: cfg.Project.Name, Item: cfg.Item,
 		Worktree: worktreePath(cfg.Project, cfg.Item), Branch: branchName(cfg.Project, cfg.Item),
-		Contract: version, State: state, Round: 1, Lineup: copied, Budgets: cfg.Project.Budgets,
+		Contract: version, State: state, Round: 1, Lineup: copied, Budgets: budgets,
 	})
 	if err != nil {
 		return nil, err

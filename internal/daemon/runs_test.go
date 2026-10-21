@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 	"sync"
@@ -19,6 +20,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
@@ -126,6 +128,217 @@ func TestRunPlanUsesFirstClaudeAndResolvedPermissions(t *testing.T) {
 	runs, err := store.List()
 	if err != nil || len(runs) != 0 {
 		t.Fatalf("plan created run: %v %v", runs, err)
+	}
+}
+
+func launchPlan(t *testing.T, d *Daemon, raw string) RunPlan {
+	t.Helper()
+	var plan RunPlan
+	if err := json.Unmarshal(request(t, d, MethodRunPlan, raw), &plan); err != nil {
+		t.Fatal(err)
+	}
+	return plan
+}
+
+func TestRunPlanAppliesLineupOverride(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	baseline := launchPlan(t, d, `{"project":"p","item":"S1"}`)
+	plan := launchPlan(t, d, `{"project":"p","item":"S1","lineup":{"implementer":[{"vendor":"claude","model":"custom","effort":"max"},{"vendor":"claude","model":"backup","effort":"low"}]}}`)
+	want := []runrec.LineupEntry{{Vendor: "claude", Model: "custom", Effort: "max"}, {Vendor: "claude", Model: "backup", Effort: "low"}}
+	if !reflect.DeepEqual(plan.Lineup[engine.RoleImplementer], want) {
+		t.Fatalf("override chain: got %+v, want %+v", plan.Lineup[engine.RoleImplementer], want)
+	}
+	for _, role := range []string{engine.RoleReviewer, engine.RoleGate} {
+		if !reflect.DeepEqual(plan.Lineup[role], baseline.Lineup[role]) {
+			t.Errorf("%s changed: %+v", role, plan.Lineup[role])
+		}
+	}
+}
+
+func TestRunPlanGateFollowsReviewerOverride(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	plan := launchPlan(t, d, `{"project":"p","item":"S1","lineup":{"reviewer":[{"vendor":"claude","model":"custom-review","effort":"high"},{"vendor":"claude","model":"backup-review","effort":"low"}]}}`)
+	want := []runrec.LineupEntry{{Vendor: "claude", Model: "custom-review", Effort: "high"}, {Vendor: "claude", Model: "backup-review", Effort: "low"}}
+	for _, role := range []string{engine.RoleReviewer, engine.RoleGate} {
+		if !reflect.DeepEqual(plan.Lineup[role], want) {
+			t.Errorf("%s: got %+v, want %+v", role, plan.Lineup[role], want)
+		}
+	}
+}
+
+func TestRunPlanWithoutOverrideIsUnchanged(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	want := map[string][]runrec.LineupEntry{
+		engine.RoleImplementer: {{Vendor: "claude", Model: "sonnet", Effort: "high"}},
+		engine.RoleReviewer:    {{Vendor: "claude", Model: "opus", Effort: "medium"}},
+		engine.RoleGate:        {{Vendor: "claude", Model: "opus", Effort: "medium"}},
+	}
+	for _, extra := range []string{"", `,"lineup":null`, `,"lineup":{}`} {
+		plan := launchPlan(t, d, `{"project":"p","item":"S1"`+extra+`}`)
+		if !reflect.DeepEqual(plan.Lineup, want) || plan.Budgets != (registry.Budgets{}) {
+			t.Fatalf("defaults changed: lineup %+v, budgets %+v", plan.Lineup, plan.Budgets)
+		}
+	}
+}
+
+func TestRunPlanRefusesBadOverride(t *testing.T) {
+	for name, override := range map[string]string{
+		"unknown role":       `"lineup":{"architect":[{"vendor":"claude","model":"m","effort":"high"}]}`,
+		"gate":               `"lineup":{"gate":[{"vendor":"claude","model":"m","effort":"high"}]}`,
+		"empty chain":        `"lineup":{"implementer":[]}`,
+		"null chain":         `"lineup":{"reviewer":null}`,
+		"empty model":        `"lineup":{"implementer":[{"vendor":"claude","effort":"high"}]}`,
+		"empty effort":       `"lineup":{"reviewer":[{"vendor":"claude","model":"m"}]}`,
+		"unsupported vendor": `"lineup":{"implementer":[{"vendor":"codex","model":"m","effort":"high"}]}`,
+		"bad alternative":    `"lineup":{"implementer":[{"vendor":"claude","model":"m","effort":"high"},{"vendor":"codex","model":"m","effort":"high"}]}`,
+		"alternative model":  `"lineup":{"reviewer":[{"vendor":"claude","model":"m","effort":"high"},{"vendor":"claude","effort":"low"}]}`,
+		"alternative effort": `"lineup":{"reviewer":[{"vendor":"claude","model":"m","effort":"high"},{"vendor":"claude","model":"m"}]}`,
+		"negative minutes":   `"budgets":{"minutes":-1}`,
+		"negative tokens":    `"budgets":{"tokens":-1}`,
+	} {
+		for _, method := range []string{MethodRunPlan, MethodRunStart} {
+			t.Run(name+"/"+method, func(t *testing.T) {
+				d, store, _ := runDaemon(t, nil)
+				_, err := d.handle(context.Background(), method, json.RawMessage(`{"project":"p","item":"S1",`+override+`}`))
+				var wireErr *ipc.Error
+				if !errors.As(err, &wireErr) || wireErr.Code != "bad_params" {
+					t.Errorf("want bad_params, got %v", err)
+				}
+				if runs, err := store.List(); err != nil || len(runs) != 0 {
+					t.Errorf("invalid override created run: %v %v", runs, err)
+				}
+				for _, call := range lastFake.CallsTo("slicer") {
+					if len(call.Args) < 2 || call.Args[0] != "relay-roles" || call.Args[1] != "recommend" {
+						t.Errorf("invalid override caused slicer call: %v", call.Args)
+					}
+				}
+				if calls := lastFake.CallsTo("git"); len(calls) != 0 {
+					t.Errorf("invalid override caused git calls: %v", calls)
+				}
+			})
+		}
+	}
+}
+
+func setLaunchBudgets(t *testing.T, d *Daemon, budgets registry.Budgets) {
+	t.Helper()
+	f, err := d.loadRegistry()
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Projects[0].Budgets = budgets
+	if err := registry.Save(d.cfg.RegistryPath, f); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRunPlanBudgetsFallBackPerField(t *testing.T) {
+	for name, tc := range map[string]struct {
+		raw  string
+		want registry.Budgets
+	}{
+		"absent":  {``, registry.Budgets{Minutes: 60, Tokens: 10000}},
+		"null":    {`,"budgets":null`, registry.Budgets{Minutes: 60, Tokens: 10000}},
+		"zero":    {`,"budgets":{}`, registry.Budgets{Minutes: 60, Tokens: 10000}},
+		"minutes": {`,"budgets":{"minutes":90}`, registry.Budgets{Minutes: 90, Tokens: 10000}},
+		"tokens":  {`,"budgets":{"tokens":20000}`, registry.Budgets{Minutes: 60, Tokens: 20000}},
+		"both":    {`,"budgets":{"minutes":90,"tokens":20000}`, registry.Budgets{Minutes: 90, Tokens: 20000}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			d, _, _ := runDaemon(t, nil)
+			setLaunchBudgets(t, d, registry.Budgets{Minutes: 60, Tokens: 10000})
+			plan := launchPlan(t, d, `{"project":"p","item":"S1"`+tc.raw+`}`)
+			if plan.Budgets != tc.want {
+				t.Fatalf("budgets: got %+v, want %+v", plan.Budgets, tc.want)
+			}
+		})
+	}
+}
+
+func TestRunStartRecordsOverridesInRunJSON(t *testing.T) {
+	d, store, _ := runDaemon(t, func(ctx context.Context, _ engine.Request) (engine.Result, error) {
+		<-ctx.Done()
+		return engine.Result{}, ctx.Err()
+	})
+	setLaunchBudgets(t, d, registry.Budgets{Minutes: 60, Tokens: 10000})
+	raw := `{"project":"p","item":"S1","lineup":{"implementer":[{"vendor":"claude","model":"custom","effort":"max"},{"vendor":"claude","model":"backup","effort":"low"}],"reviewer":[{"vendor":"claude","model":"custom-review","effort":"high"}]},"budgets":{"minutes":90}}`
+	plan := launchPlan(t, d, raw)
+	var params map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(raw), &params); err != nil {
+		t.Fatal(err)
+	}
+	params["expected"], _ = json.Marshal(plan)
+	confirmed, err := json.Marshal(params)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rec runrec.Record
+	if err := json.Unmarshal(request(t, d, MethodRunStart, string(confirmed)), &rec); err != nil {
+		t.Fatal(err)
+	}
+	run, err := store.Open(rec.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, got := range []runrec.Record{rec, run.Snapshot()} {
+		if !reflect.DeepEqual(got.Lineup, plan.Lineup) || got.Lineup[engine.RoleImplementer][0].Model != "custom" || got.Lineup[engine.RoleReviewer][0].Model != "custom-review" || got.Budgets != (registry.Budgets{Minutes: 90, Tokens: 10000}) {
+			t.Fatalf("launch values not recorded: lineup %+v, budgets %+v", got.Lineup, got.Budgets)
+		}
+	}
+}
+
+func TestRunStartExpectedCoversOverrides(t *testing.T) {
+	for name, changed := range map[string]string{
+		"lineup":      `"lineup":{"implementer":[{"vendor":"claude","model":"changed","effort":"high"},{"vendor":"claude","model":"backup","effort":"low"}]}`,
+		"alternative": `"lineup":{"implementer":[{"vendor":"claude","model":"custom","effort":"high"},{"vendor":"claude","model":"changed","effort":"low"}]}`,
+		"budgets":     `"budgets":{"tokens":20000}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			d, store, _ := runDaemon(t, nil)
+			plan := launchPlan(t, d, `{"project":"p","item":"S1","lineup":{"implementer":[{"vendor":"claude","model":"custom","effort":"high"},{"vendor":"claude","model":"backup","effort":"low"}]}}`)
+			shown, err := json.Marshal(plan)
+			if err != nil {
+				t.Fatal(err)
+			}
+			// Keep the original chain when only the budgets change.
+			lineup := ""
+			if name == "budgets" {
+				lineup = `,"lineup":{"implementer":[{"vendor":"claude","model":"custom","effort":"high"},{"vendor":"claude","model":"backup","effort":"low"}]}`
+			}
+			_, err = d.handle(context.Background(), MethodRunStart, json.RawMessage(`{"project":"p","item":"S1","expected":`+string(shown)+`,`+changed+lineup+`}`))
+			if err == nil || !strings.Contains(err.Error(), "plan changed") {
+				t.Errorf("changed override accepted: %v", err)
+			}
+			if runs, err := store.List(); err != nil || len(runs) != 0 {
+				t.Errorf("changed plan created run: %v %v", runs, err)
+			}
+		})
+	}
+}
+
+func TestRunOverrideWritesNoMatrix(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	before, err := os.ReadFile(d.cfg.RegistryPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	baseline := launchPlan(t, d, `{"project":"p","item":"S1"}`)
+	request(t, d, MethodRunStart, `{"project":"p","item":"S1","lineup":{"implementer":[{"vendor":"claude","model":"custom","effort":"high"}]},"budgets":{"minutes":90}}`)
+	d.closeRuns()
+	for _, call := range lastFake.CallsTo("slicer") {
+		if call.Args[0] == "relay-roles" && (len(call.Args) < 2 || call.Args[1] != "recommend") {
+			t.Errorf("matrix write: %v", call.Args)
+		}
+	}
+	after, err := os.ReadFile(d.cfg.RegistryPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(after) != string(before) {
+		t.Fatal("launch changed the registry")
+	}
+	if next := launchPlan(t, d, `{"project":"p","item":"S1"}`); !reflect.DeepEqual(next, baseline) {
+		t.Fatalf("launch changed defaults: got %+v, want %+v", next, baseline)
 	}
 }
 func TestRunStartAnswerApproveThroughDaemon(t *testing.T) {

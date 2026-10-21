@@ -36,13 +36,15 @@ const (
 // defaultGlobalCap is the global cap when the registry sets none (adj 20).
 const defaultGlobalCap = 4
 
-// RunParams are the owner's explicit lineup inputs (adj #86).
+// RunParams are the owner's launch inputs (run.lineup-inputs, run.launch-wire).
 type RunParams struct {
-	Project       string   `json:"project"`
-	Item          string   `json:"item"`
-	WellSpecified bool     `json:"well_specified"`
-	Split         bool     `json:"split"`
-	Expected      *RunPlan `json:"expected,omitempty"`
+	Project       string                          `json:"project"`
+	Item          string                          `json:"item"`
+	WellSpecified bool                            `json:"well_specified"`
+	Split         bool                            `json:"split"`
+	Expected      *RunPlan                        `json:"expected,omitempty"`
+	Lineup        map[string][]runrec.LineupEntry `json:"lineup,omitempty"`
+	Budgets       *registry.Budgets               `json:"budgets,omitempty"`
 }
 
 // RunAction names a run, and an owner answer when answering.
@@ -51,7 +53,7 @@ type RunAction struct {
 	Text string `json:"text,omitempty"`
 }
 
-// RunPlan is checkpoint 1. These wire fields are proposed.
+// RunPlan is checkpoint 1 (run.launch-wire).
 type RunPlan struct {
 	project      registry.Project                // registry settings are private to the daemon
 	Project      registry.Project                `json:"project"`
@@ -60,6 +62,7 @@ type RunPlan struct {
 	Branch       string                          `json:"branch"`
 	CheckCommand string                          `json:"check_command"`
 	Lineup       map[string][]runrec.LineupEntry `json:"lineup"`
+	Budgets      registry.Budgets                `json:"budgets"`
 	Permissions  map[string]engine.Permission    `json:"permissions"`
 }
 
@@ -251,6 +254,36 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		}
 		plan.Permissions[role] = perm
 	}
+	for role, entries := range p.Lineup {
+		if role != engine.RoleImplementer && role != engine.RoleReviewer {
+			return nil, badParams(fmt.Errorf("cannot override lineup role %q", role))
+		}
+		if len(entries) == 0 {
+			return nil, badParams(fmt.Errorf("lineup for %s needs at least one entry", role))
+		}
+		for _, entry := range entries {
+			if entry.Vendor != "claude" {
+				return nil, badParams(fmt.Errorf("unsupported vendor %q for %s", entry.Vendor, role))
+			}
+			if strings.TrimSpace(entry.Model) == "" || strings.TrimSpace(entry.Effort) == "" {
+				return nil, badParams(fmt.Errorf("lineup for %s needs a model and effort", role))
+			}
+		}
+		plan.Lineup[role] = append([]runrec.LineupEntry(nil), entries...)
+	}
+	plan.Lineup[engine.RoleGate] = append([]runrec.LineupEntry(nil), plan.Lineup[engine.RoleReviewer]...)
+	plan.Budgets = proj.Budgets
+	if p.Budgets != nil {
+		if p.Budgets.Minutes < 0 || p.Budgets.Tokens < 0 {
+			return nil, badParams(errors.New("budgets must not be negative"))
+		}
+		if p.Budgets.Minutes != 0 {
+			plan.Budgets.Minutes = p.Budgets.Minutes
+		}
+		if p.Budgets.Tokens != 0 {
+			plan.Budgets.Tokens = p.Budgets.Tokens
+		}
+	}
 	pattern := proj.WorktreePattern
 	if pattern == "" {
 		pattern = ".worktrees/{id}"
@@ -301,7 +334,7 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 		return runrec.Record{}, err
 	}
 	queued := !d.hasRoomLocked(f, plan.project.Name)
-	cfg := engine.Config{Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Wave: newWaveID(time.Now()), Queued: queued}
+	cfg := engine.Config{Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: newWaveID(time.Now()), Queued: queued}
 	e, err := engine.New(ctx, d.runDeps(plan.project), cfg)
 	if err != nil {
 		return runrec.Record{}, err

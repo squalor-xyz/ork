@@ -153,6 +153,11 @@ ork (TUI)  ork status --json (CLI)
    it has no adapter for (`lineup.launch-edit`). The edits travel as the
    full lineup per role plus budgets, and the plan echoes them
    (`run.launch-wire`).
+   S80 accepts implementer and reviewer chains on `run.plan` and
+   `run.start`. Each entry needs a model, effort and a runnable vendor
+   (currently `claude`). The gate copies the reviewer's chain; a gate
+   override is refused. Without an override, the first Claude row per role
+   remains the default. Chain fallback waits for S49.
 3. **Plan.** For each item, ork shows the worktree path, the branch, the
    check command, the budgets, and whether it runs an architect, a split or
    slivers. Then it shows the wave's place in the global queue.
@@ -537,6 +542,10 @@ The limits are per slice: wall time and total tokens, with defaults in the
 registry and overrides at launch (`run.budgets`). When a slice reaches a
 limit, ork lets the running role finish, then pauses the slice before the
 next role starts, and asks the owner.
+Launch overrides merge per field: zero or omitted minutes or tokens keep
+the registry value. Negative limits are refused. The plan shows the merged
+budgets, and `run.json` records them (`run.launch-wire`). They apply to
+that run only (`lineup.override-scope`).
 
 ## CLI
 
@@ -580,10 +589,11 @@ Enter alone is an error where there is no default (adj #87,
 `--well-specified` or `--split`, which take the same spellings. With
 `--yes`, both flags are required; a missing or invalid input is a usage
 error (exit 2).
-The plan shows the worktree, branch, check command, first Claude row per
-role from `slicer relay-roles recommend --json`, and each role's resolved
-permissions. The gate uses the reviewer's lineup. The daemon refuses to
-start if the plan changed during confirmation. It starts one engine run
+The plan shows the worktree, branch, check command, launch budgets, lineup
+and each role's resolved permissions. The lineup defaults to the first
+Claude row per role from `slicer relay-roles recommend --json`. The gate
+uses the reviewer's lineup. The daemon refuses to start if the plan changed
+during confirmation. It starts one engine run
 in the background; CLI disconnection does not cancel it. The daemon owns
 the run store and reconciles stored runs before accepting clients.
 `approve` runs the finish step, then commits once (adj #81); `answer`
@@ -597,11 +607,14 @@ to rest. `stop` cancels the running job, waits for the role to exit,
 reconciles any surviving process group, and stops the run. No TUI actions
 are added in S17.
 
-*Proposed wire fields (S17).* `run.plan` and `run.start` take
-`{project,item,well_specified,split}`; start also accepts `expected`, the
-plan the owner confirmed. `run.approve`, `run.stop` and `run.answer` take
+*Wire fields (`run.launch-wire`).* `run.plan` and `run.start` take
+`{project,item,well_specified,split,lineup?,budgets?}`. `lineup` maps each
+overridden role to its full chain of `{vendor,model,effort}` entries
+(`lineup.launch-edit`). Start also accepts `expected`, the plan the owner
+confirmed, including lineup and merged budgets. `run.approve`, `run.stop`
+and `run.answer` take
 `{run,text?}`. Plan returns `{project,item,worktree,branch,check_command,
-lineup,permissions}`; the project contains only its name and path.
+lineup,budgets,permissions}`; the project contains only its name and path.
 Start and owner commands return the run record. With `--json`, run prints
 the plan on stderr and a single result JSON value on stdout; declining
 prints `{"started":false}` on stdout. Interactive questions go on stderr
