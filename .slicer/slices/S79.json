@@ -7,9 +7,7 @@
   "depends_note": null,
   "findings_note": "",
   "size": "S",
-  "flags": [
-    "needs-owner"
-  ],
+  "flags": [],
   "trees_note": "",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",
@@ -20,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- Owner action, no file: `slicer config files_section Files --render --check` (the section is named Files; `slicer sections` lists Why, Files, Failing tests, Implement, Check, Git).\n- `AGENTS.md`: the Editing section (:45-49) gains one rule: in a slice's Files section, put each path in backticks, for example `internal/tui/model.go` (:520-528), so slicer can read it.\n- Tracking only, through `slicer edit ID --section Files --text ... --render`: the Files section of each open slice with a spec (`slicer list --json --lean`; has_slice true, status open). Wrap each path in backticks. No other text changes.\n- Open: whether `overlap_ignore` should list shared docs such as `docs/design.md` and `docs/dashboard.md` (record 137, `tracking.files-section`, open)."
+      "body": "- Owner action, no file: `slicer config files_section Files --render --check` (the section is named Files; `slicer sections` lists Why, Files, Failing tests, Implement, Check, Git).\n- `AGENTS.md`: the Editing section (:45-49) gains one rule: in a slice's Files section, put each path in backticks, for example `internal/tui/model.go` (:520-528), so slicer can read it.\n- Tracking only, through `slicer edit ID --section Files --text ... --render`: the Files section of each open slice with a spec (`slicer list --json --lean`; has_slice true, status open). Wrap each path in backticks. No other text changes.\n- Decided: record 137 (`tracking.files-section`, decided 2026-10-20): `overlap_ignore` stays unset; the shared docs are not listed."
     },
     {
       "heading": "Failing tests",
@@ -28,7 +26,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. Run `slicer plan-parallel --json --lean` and record the usage error as the before state.\n2. Owner action: the owner runs, or authorizes, `slicer config files_section Files --render --check`. Stop here until it is set.\n3. Run plan-parallel again. Confirm that every open specced item is unplaced with no_files. This proves the backtick gap.\n4. For each open specced item, rewrite only its Files section with `slicer edit ID --section Files --text BODY --render`, putting each path in backticks. Keep line anchors outside the backticks or as a `:N-M` suffix inside. Do not open or edit tracking files.\n5. Add the backtick rule to `AGENTS.md` (:45-49).\n6. Run plan-parallel and `deps --overlap` again and check the Failing tests above.\n\nOpen: record 137 (`tracking.files-section`): set overlap_ignore for shared docs or not. Until decided, do not set overlap_ignore."
+      "body": "1. Run `slicer plan-parallel --json --lean` and record the usage error as the before state.\n2. Owner action: the owner runs, or authorizes, `slicer config files_section Files --render --check`. Stop here until it is set.\n3. Run plan-parallel again. Confirm that every open specced item is unplaced with no_files. This proves the backtick gap.\n4. For each open specced item, rewrite only its Files section with `slicer edit ID --section Files --text BODY --render`, putting each path in backticks. Keep line anchors outside the backticks or as a `:N-M` suffix inside. Do not open or edit tracking files.\n5. Add the backtick rule to `AGENTS.md` (:45-49).\n6. Run plan-parallel and `deps --overlap` again and check the Failing tests above.\n\nDecided: record 137 (`tracking.files-section`, decided 2026-10-20): set files_section Files and no overlap_ignore. Step 2 is done: files_section was set to Files on 2026-10-20."
     },
     {
       "heading": "Check",

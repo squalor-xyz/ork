@@ -148,6 +148,11 @@ ork (TUI)  ork status --json (CLI)
    --well-specified ... --split ...`. The primary row per role becomes the
    lineup, and the alternatives, in order, become that role's fallback
    chain (`lineup.source`). The owner can edit both.
+   An edit at launch applies to that run only (`lineup.override-scope`).
+   It may set any vendor, model and effort per role; ork refuses a vendor
+   it has no adapter for (`lineup.launch-edit`). The edits travel as the
+   full lineup per role plus budgets, and the plan echoes them
+   (`run.launch-wire`).
 3. **Plan.** For each item, ork shows the worktree path, the branch, the
    check command, the budgets, and whether it runs an architect, a split or
    slivers. Then it shows the wave's place in the global queue.

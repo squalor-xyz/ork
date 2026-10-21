@@ -193,6 +193,12 @@ Suggested (slicer plan-parallel)            Lineup
                                      [l] launch wave   [e] edit lineup
 ```
 
+Space ticks a row, asks the two y/n inputs at once and plans it, so the
+Lineup column fills (`ui.wave-composer`). `e` opens the lineup editor for
+the selected item: left and right cycle the matrix rows for a role, and a
+key opens the vendor, model and effort fields for a custom entry
+(`ui.lineup-editor`). Edits apply to that launch only.
+
 Each running slice expands to its roles:
 
 ```
