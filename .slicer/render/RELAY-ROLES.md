@@ -15,6 +15,7 @@
 | r9 | Implementer | whole slice | Codex | OpenAI | gpt-6.1-sol | high | default implementer for a whole slice; Codex sandbox cannot bind Unix sockets, so rerun socket-test packages outside it |
 | r3 | Implementer | whole slice | Claude Code | Claude | sonnet | medium | Claude fallback for anything the rows above do not match |
 | r5 | Reviewer | every slice | Claude Code | Claude | opus | medium | - |
+| r14 | Reviewer | every slice | Claude Code | Claude | opus | medium | UI pass, only for a slice that touches the UI (rule u10) |
 | r6 | Gate | every slice | Claude Code | Claude | opus | medium | - |
 | r7 | Architect | size L | Claude Code | Claude | opus | high | - |
 | r10 | Orchestrator | every slice | Claude Code | Claude | sonnet | high | default orchestrator |
@@ -31,3 +32,4 @@
 - u7: Slivers with disjoint files and their own tests may run in parallel, at most 3 at once; the rest run in order.
 - u8: A sliver that fails its gate twice, or whose diff falls short of the orchestrator's check, moves to the next model up (haiku to sonnet high).
 - u9: The orchestrator reads a Haiku implementer's diff itself before review, and switches that role to Sonnet early when quality falls short.
+- u10: A slice that touches the UI (internal/tui and its golden views, docs/dashboard.md, internal/cli output, or a ui.* adj key) also runs the UI pass row (r14) in parallel with the reviewer, not instead of it. The UI pass runs as a general-purpose subagent, loads the frontend-design:frontend-design skill, edits nothing, and sends suggested design edits to the orchestrator for the implementer; the gate still decides. This holds for each slice in a wave.
