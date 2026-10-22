@@ -185,3 +185,12 @@ func (c *Client) Start(ctx context.Context, params RunParams) (runrec.Record, er
 	err := c.Call(ctx, MethodRunStart, params, &out)
 	return out, err
 }
+
+// WaveStart starts the items with their confirmed plans.
+func (c *Client) WaveStart(ctx context.Context, params WaveStartParams) (*WaveResult, error) {
+	var out WaveResult
+	if err := c.Call(ctx, MethodWaveStart, params, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}

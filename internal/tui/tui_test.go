@@ -286,7 +286,7 @@ func TestTabKeysSwitchTheProject(t *testing.T) {
 	}
 }
 
-// Tab and shift+tab reach Roadmap without moving the project or Overview cursor
+// Tab and shift+tab reach built views without moving the project or Overview cursor
 // (ui.views, ui.view-list).
 func TestViewKeysDoNotMoveTheProject(t *testing.T) {
 	for _, k := range []string{"tab", "shift+tab"} {
@@ -309,8 +309,12 @@ func TestViewKeysDoNotMoveTheProject(t *testing.T) {
 			if bar := strings.Split(v, "\n")[0]; !strings.Contains(bar, "Overview | Questions | Waves | Roadmap | Decisions") {
 				t.Errorf("after %s the view bar is %q", k, bar)
 			}
-			if !strings.Contains(h.m.View().Content, h.m.cfg.Theme.ViewActive.Render("Roadmap")) {
-				t.Errorf("after %s Roadmap is not the active view", k)
+			want := "Waves"
+			if k == "shift+tab" {
+				want = "Roadmap"
+			}
+			if !strings.Contains(h.m.View().Content, h.m.cfg.Theme.ViewActive.Render(want)) {
+				t.Errorf("after %s %s is not the active view", k, want)
 			}
 		})
 	}
@@ -327,6 +331,7 @@ func TestViewKeysSetNoMessage(t *testing.T) {
 			if v := h.view(); !strings.Contains(v, msg) {
 				t.Fatalf("setup: no message on screen:\n%s", v)
 			}
+			h.send(press(k))
 			h.send(press(k))
 			h.send(press(k)) // return to Overview
 			if v := h.view(); !strings.Contains(v, msg) {
@@ -756,6 +761,8 @@ func TestDashboardDocsListTheNavigationKeys(t *testing.T) {
 		"Keys `right`/`left` move selection and wrap through \"Needs you\" and the sorted projects.",
 		"`1`-`9` select projects in registry order.",
 		"`tab` and `shift+tab` switch views",
+		"`space` ticks or unticks the selected item",
+		"`l` launches the ticked items with one y/n confirmation",
 		"`down`/`j` and `up`/`k` move it to the next and previous row, and so do `n` and `p`",
 	} {
 		if !strings.Contains(s, want) {

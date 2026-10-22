@@ -879,3 +879,6 @@
 {"when": "2026-10-22T12:43:40Z", "item": "relay-roles.r14", "action": "relay-roles", "from": "", "to": "reviewer", "note": "add"}
 {"when": "2026-10-22T12:43:44Z", "item": "relay-roles.r14", "action": "relay-roles", "from": "14", "to": "10", "note": "move"}
 {"when": "2026-10-22T12:43:45Z", "item": "relay-roles.u10", "action": "relay-roles", "from": "", "to": "", "note": "rule-add"}
+{"when": "2026-10-21T16:06:16Z", "item": "S82", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-21T16:21:48Z", "item": "S82", "action": "note", "from": "", "to": "", "note": "Review: no blockers; 3 low findings accepted for a fix round", "by": "Jon R"}
+{"when": "2026-10-22T13:15:22Z", "item": "S82", "action": "status", "from": "started", "to": "done", "note": "Waves screen built: suggested waves from wave.suggest, space ticks an item and asks well-specified and split then plans it, overlap warnings from wave.overlap do not block, l launches the ticked items with one y/n confirm and the exact ork wave start command, errors verbatim; Waves view built flag set; docs/dashboard.md updated; go test -race ./... green with the socket packages rerun outside the sandbox, vet, gofmt, slicer check, adj lint clean", "by": "Jon R"}

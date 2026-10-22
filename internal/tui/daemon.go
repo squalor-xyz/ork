@@ -110,3 +110,28 @@ func (d *Daemon) Start(ctx context.Context, params daemon.RunParams) (runrec.Rec
 	defer c.Close()
 	return c.Start(ctx, params)
 }
+
+func (d *Daemon) WaveSuggest(ctx context.Context, project string) (*slicercli.ParallelPlan, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.WaveSuggest(ctx, project)
+}
+func (d *Daemon) WaveOverlap(ctx context.Context, project string, items []string) (*slicercli.Overlap, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.WaveOverlap(ctx, project, items)
+}
+func (d *Daemon) WaveStart(ctx context.Context, params daemon.WaveStartParams) (*daemon.WaveResult, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.WaveStart(ctx, params)
+}

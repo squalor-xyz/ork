@@ -1,4 +1,4 @@
-[1mork[m  ?help                 | Overview[2m | Questions | Waves | [m[1mRoadmap[m[2m | Decisions[m
+[1mork[m  ?help                 | Overview[2m | Questions | [mWaves[2m | [m[1mRoadmap[m[2m | Decisions[m
   Needs you                |[2m------------------------------------------------------------------------[m
 [1;7m> ork 0[m                    |[1mGoals[m
   other 0                  |  Keep the owner informed

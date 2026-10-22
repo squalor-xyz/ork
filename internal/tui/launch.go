@@ -117,8 +117,8 @@ func (m *Model) launchKey(msg tea.KeyPressMsg) tea.Cmd {
 			m.actionStatus = ""
 			return nil
 		}
-		answer := strings.ToLower(strings.TrimSpace(l.input.Value()))
-		if answer != "y" && answer != "yes" && answer != "n" && answer != "no" {
+		yes, valid := launchAnswerValue(l.input.Value())
+		if !valid {
 			label := "Well specified?"
 			if l.stage == launchSplit {
 				label = "Split?"
@@ -126,7 +126,6 @@ func (m *Model) launchKey(msg tea.KeyPressMsg) tea.Cmd {
 			m.actionStatus = label + " requires y or n"
 			return nil
 		}
-		yes := answer == "y" || answer == "yes"
 		l.input = textField{}
 		m.actionStatus = ""
 		if l.stage == launchWell {
@@ -154,9 +153,9 @@ func (m *Model) launchKey(msg tea.KeyPressMsg) tea.Cmd {
 	case key.Matches(msg, m.keys.Prev):
 		return m.move(-1)
 	case key.Matches(msg, m.keys.NextView):
-		m.moveView(1)
+		return m.moveView(1)
 	case key.Matches(msg, m.keys.PrevView):
-		m.moveView(-1)
+		return m.moveView(-1)
 	case key.Matches(msg, m.keys.Jump):
 		if n := int(msg.String()[0] - '1'); n < len(m.projects) {
 			return m.switchTo(n)
@@ -315,4 +314,14 @@ func (m *Model) launchView(w int) overviewView {
 		}
 	}
 	return out
+}
+
+func launchAnswerValue(text string) (yes, valid bool) {
+	switch strings.ToLower(strings.TrimSpace(text)) {
+	case "y", "yes":
+		return true, true
+	case "n", "no":
+		return false, true
+	}
+	return false, false
 }
