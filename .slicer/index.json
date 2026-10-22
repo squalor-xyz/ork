@@ -1633,6 +1633,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "5c19a0a1-9222-4936-94e3-075a220ed7bd",
+          "kind": "",
+          "text": "**2026-10-22** — Later notes from the relay report: consider tests for a stop that joins during daemon shutdown, a busy owner action (retry, approve, answer) during a stop, and a queued launch during a stop. The join tests depend on a 100 ms scheduling window and may be timing-sensitive.",
+          "created_at": "2026-10-22T16:49:41Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
