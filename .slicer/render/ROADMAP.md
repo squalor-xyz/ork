@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-85 items · — 41 · done 37 · parked 2 · retired 5
+85 items · — 40 · done 38 · parked 2 · retired 5
 
 ## v1
 
@@ -82,7 +82,7 @@
 | 32 | [S33](slices/S33.md) | Show the engine run ID in the Overview row; engine-row edge cases | S | 1 |  | discovered from S31 | — |
 | 33 | [S34](slices/S34.md) | Clear an old stopped run from Needs you | S | 2 |  | discovered from S31 | — |
 | 34 | [S35](slices/S35.md) | Runs skipped at recovery or failed in the background stay visible | S | 2 |  | discovered from S17 | — |
-| 35 | [S36](slices/S36.md) | A second ork stop does not cancel the first | S | 1 |  | discovered from S17 | — |
+| 35 | [S36](slices/S36.md) | A second ork stop does not cancel the first | S | 1 |  | discovered from S17 | done |
 | 36 | [S37](slices/S37.md) | Tidy status error logging and the stderr swap | S | 1 |  | Obsolete: the status error helpers exist only in tests; the live print is in daemon/runs.go. Owner review 2026-10-20. · discovered from S17 | retired |
 | 37 | [S38](slices/S38.md) | projects rm refuses while the project has unfinished runs | S | 1 |  | discovered from S17 | — |
 | 38 | [S39](slices/S39.md) | ork run prompt tests catch swapped answers; help text says y/n | S | 1 |  | discovered from S21 | — |

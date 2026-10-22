@@ -405,6 +405,191 @@ func TestDaemonStopCancelsAnActiveRole(t *testing.T) {
 		}
 	}
 }
+
+// holdProc keeps a surviving process group alive until the test frees it, so
+// the stop job stays in flight.
+type holdProc struct {
+	killing chan struct{}
+	release chan struct{}
+}
+
+func (p holdProc) Alive(int) bool { return true }
+func (p holdProc) Kill(int) error {
+	close(p.killing)
+	<-p.release
+	return nil
+}
+
+// stopOutcome is what one owner stop returned.
+type stopOutcome struct {
+	rec runrec.Record
+	err error
+}
+
+// stopInBackground sends an owner stop without waiting for it.
+func stopInBackground(d *Daemon, id string) <-chan stopOutcome {
+	out := make(chan stopOutcome, 1)
+	go func() {
+		rec, err := d.ownerRun(context.Background(), MethodRunStop, RunAction{Run: id})
+		out <- stopOutcome{rec, err}
+	}()
+	return out
+}
+
+func awaitStop(t *testing.T, out <-chan stopOutcome) stopOutcome {
+	t.Helper()
+	select {
+	case o := <-out:
+		return o
+	case <-time.After(5 * time.Second):
+		t.Fatal("stop did not return")
+	}
+	return stopOutcome{}
+}
+
+func TestSecondStopJoinsTheInFlightStop(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	hold := holdProc{killing: make(chan struct{}), release: make(chan struct{})}
+	free := sync.OnceFunc(func() { close(hold.release) })
+	t.Cleanup(free)
+	d.runs.deps.Proc = hold
+	run, err := store.Create(runrec.Record{ID: "busy", Project: p.Name, State: runrec.StateImplement, RelayRun: "relay-1",
+		Roles: []runrec.RoleRecord{{Role: "implementer", PGID: 4242, StartedAt: time.Now()}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := &managedRun{engine: engine.Load(d.runDeps(p), p, run)}
+	d.runs.mu.Lock()
+	d.runs.runs["busy"] = r
+	// The role blocks until the first stop cancels it. Its process group
+	// survives, so the stop job has to kill it.
+	d.launchRun(r, func(ctx context.Context) error { <-ctx.Done(); return ctx.Err() })
+	d.runs.mu.Unlock()
+	first := stopInBackground(d, "busy")
+	select {
+	case <-hold.killing:
+	case <-time.After(5 * time.Second):
+		t.Fatal("stop job did not reach the kill")
+	}
+	second := stopInBackground(d, "busy")
+	time.Sleep(100 * time.Millisecond) // the second stop must arrive before the kill returns
+	free()
+	a, b := awaitStop(t, first), awaitStop(t, second)
+	if a.err != nil {
+		t.Fatalf("first stop: %v", a.err)
+	}
+	if b.err != nil {
+		t.Fatalf("second stop: %v, want the first stop's record", b.err)
+	}
+	if !reflect.DeepEqual(a.rec, b.rec) || a.rec.State != runrec.StateStopped {
+		t.Fatalf("second stop returned %+v, want the first stop's %+v", b.rec, a.rec)
+	}
+	// A cancelled job context fails the relay end write, and the record keeps the failure.
+	ended := false
+	for _, w := range a.rec.Writes {
+		if len(w.Argv) > 1 && w.Argv[0] == "relay-run" && w.Argv[1] == "end" {
+			ended = true
+			if w.Error != "" {
+				t.Fatalf("stop job context was cancelled: %s", w.Error)
+			}
+		}
+	}
+	if !ended {
+		t.Fatalf("stop job did not end the relay: %+v", a.rec.Writes)
+	}
+}
+func TestSecondStopJoinsAStopStillWaiting(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	run, err := store.Create(runrec.Record{ID: "waiting", Project: p.Name, State: runrec.StateImplement})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := &managedRun{engine: engine.Load(d.runDeps(p), p, run)}
+	release := make(chan struct{})
+	free := sync.OnceFunc(func() { close(release) })
+	t.Cleanup(free)
+	d.runs.mu.Lock()
+	d.runs.runs["waiting"] = r
+	// The role blocks past its cancel, so the first stop waits for it.
+	d.launchRun(r, func(ctx context.Context) error { <-ctx.Done(); <-release; return ctx.Err() })
+	d.runs.mu.Unlock()
+	first := stopInBackground(d, "waiting")
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		d.runs.mu.Lock()
+		waiting := r.stopping
+		d.runs.mu.Unlock()
+		if waiting {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("first stop did not wait for its role")
+		}
+		time.Sleep(time.Millisecond)
+	}
+	second := stopInBackground(d, "waiting")
+	time.Sleep(100 * time.Millisecond) // the second stop must arrive before the role is freed
+	free()
+	a, b := awaitStop(t, first), awaitStop(t, second)
+	if a.err != nil {
+		t.Fatalf("first stop: %v", a.err)
+	}
+	if b.err != nil {
+		t.Fatalf("second stop: %v, want the first stop's record", b.err)
+	}
+	if !reflect.DeepEqual(a.rec, b.rec) || a.rec.State != runrec.StateStopped {
+		t.Fatalf("second stop returned %+v, want the first stop's %+v", b.rec, a.rec)
+	}
+}
+func TestStopOfAFinishedRunNamesItsState(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	run, err := store.Create(runrec.Record{ID: "finished", Project: p.Name, State: runrec.StateImplement})
+	if err != nil {
+		t.Fatal(err)
+	}
+	d.runs.mu.Lock()
+	d.runs.runs["finished"] = &managedRun{engine: engine.Load(d.runDeps(p), p, run)}
+	d.runs.mu.Unlock()
+	first, err := d.ownerRun(context.Background(), MethodRunStop, RunAction{Run: "finished"})
+	if err != nil || first.State != runrec.StateStopped {
+		t.Fatalf("first stop: %+v, %v", first, err)
+	}
+	// The run has finished, so a later stop is an error and does not join the old stop.
+	_, err = d.ownerRun(context.Background(), MethodRunStop, RunAction{Run: "finished"})
+	if err == nil || !strings.Contains(err.Error(), "already") || !strings.Contains(err.Error(), runrec.StateStopped) {
+		t.Fatalf("stop after the run finished: %v, want an error naming %s", err, runrec.StateStopped)
+	}
+}
+func TestFailedStopHandleDoesNotJoinALaterJob(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	run, err := store.Create(runrec.Record{ID: "failed", Project: p.Name, State: runrec.StateImplement})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := &managedRun{engine: engine.Load(d.runDeps(p), p, run)}
+	cancelled := make(chan struct{})
+	d.runs.mu.Lock()
+	d.runs.runs["failed"] = r
+	// An earlier stop failed and left its handle behind. The run is not final.
+	failed := &stopCall{started: make(chan struct{})}
+	failed.abandon(errors.New("reconcile failed"))
+	r.stop = failed
+	// A later job starts as a queued run does. It blocks until a stop cancels it.
+	d.launchRun(r, func(ctx context.Context) error { <-ctx.Done(); close(cancelled); return ctx.Err() })
+	d.runs.mu.Unlock()
+	o := awaitStop(t, stopInBackground(d, "failed"))
+	if o.err != nil {
+		t.Fatalf("stop joined the failed stop: %v", o.err)
+	}
+	if o.rec.State != runrec.StateStopped {
+		t.Fatalf("stop returned %+v, want a fresh stopped record", o.rec)
+	}
+	select {
+	case <-cancelled:
+	default:
+		t.Fatal("stop returned without cancelling the later job")
+	}
+}
 func TestStatusIncludesEngineWaitsAndNeedsYou(t *testing.T) {
 	d, store, p := runDaemon(t, nil)
 	for _, s := range []string{runrec.StateAwaitingApproval, runrec.StatePaused, runrec.StateStopped, runrec.StateCommitted} {

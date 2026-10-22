@@ -82,6 +82,29 @@ type managedRun struct {
 	result   *runResult
 	busy     bool
 	stopping bool
+	stop     *stopCall // the owner stop in flight, which later stops join
+}
+
+// stopCall is an owner stop that has not returned. A stop that arrives while
+// it is in flight joins it: the joiner waits for the stop's job and returns
+// that job's record and error.
+type stopCall struct {
+	started chan struct{} // closed once done and result are set
+	done    chan struct{} // closed when the stop's job ends
+	result  *runResult    // the stop's job outcome, read once done is closed
+}
+
+// begin records the stop's job. The caller holds the manager lock.
+func (c *stopCall) begin(done chan struct{}, result *runResult) {
+	c.done, c.result = done, result
+	close(c.started)
+}
+
+// abandon ends a stop that gives up before its job starts.
+func (c *stopCall) abandon(err error) {
+	done := make(chan struct{})
+	close(done)
+	c.begin(done, &runResult{err: err})
 }
 
 // runManager serializes admission and owner actions; the engine serializes
@@ -550,6 +573,7 @@ func (d *Daemon) launchRun(r *managedRun, fn func(context.Context) error) {
 	r.busy = true
 	r.done = make(chan struct{})
 	r.result = &runResult{}
+	r.stop = nil // a handle left by an earlier stop must not join this job
 	result := r.result
 	d.runs.wg.Add(1)
 	go func() {
@@ -580,18 +604,28 @@ func (d *Daemon) ownerRun(ctx context.Context, method string, p RunAction) (runr
 		d.runs.mu.Unlock()
 		return runrec.Record{}, &ipc.Error{Code: CodeNotFound, Message: "no run " + p.Run}
 	}
+	// A stop that arrives while another stop is in flight joins it.
+	if method == MethodRunStop && r.stop != nil && (r.busy || r.stopping) {
+		return d.joinStop(ctx, r.stop)
+	}
 	if r.stopping {
 		d.runs.mu.Unlock()
 		return runrec.Record{}, fmt.Errorf("run %s is stopping", p.Run)
 	}
-	if r.busy {
-		if method != MethodRunStop {
-			d.runs.mu.Unlock()
-			if method == MethodRunRetry {
-				return runrec.Record{}, fmt.Errorf("run %s is busy; use ork stop %s to stop it", p.Run, p.Run)
-			}
-			return runrec.Record{}, fmt.Errorf("run %s is busy", p.Run)
+	if r.busy && method != MethodRunStop {
+		d.runs.mu.Unlock()
+		if method == MethodRunRetry {
+			return runrec.Record{}, fmt.Errorf("run %s is busy; use ork stop %s to stop it", p.Run, p.Run)
 		}
+		return runrec.Record{}, fmt.Errorf("run %s is busy", p.Run)
+	}
+	// Only a stop leaves a handle for later stops to join; any other job clears it.
+	var call *stopCall
+	if method == MethodRunStop {
+		call = &stopCall{started: make(chan struct{})}
+	}
+	r.stop = call
+	if r.busy {
 		r.stopping = true
 		r.cancel()
 		done := r.done
@@ -599,6 +633,7 @@ func (d *Daemon) ownerRun(ctx context.Context, method string, p RunAction) (runr
 		<-done
 		d.runs.mu.Lock()
 		if d.runs.closed {
+			call.abandon(errors.New("run manager is closed"))
 			d.runs.mu.Unlock()
 			return runrec.Record{}, errors.New("run manager is closed")
 		}
@@ -644,6 +679,10 @@ func (d *Daemon) ownerRun(ctx context.Context, method string, p RunAction) (runr
 		return runrec.Record{}, errors.New("unknown owner action")
 	}
 	d.launchRun(r, fn)
+	r.stop = call // launchRun cleared the handle; a stop sets it again for later stops to join
+	if call != nil {
+		call.begin(r.done, r.result)
+	}
 	result := r.result
 	done := r.done
 	d.runs.mu.Unlock()
@@ -654,6 +693,23 @@ func (d *Daemon) ownerRun(ctx context.Context, method string, p RunAction) (runr
 	case <-done:
 	}
 	return result.record, result.err
+}
+
+// joinStop waits for the stop in flight and returns its outcome. The caller
+// holds the manager lock and gives it up.
+func (d *Daemon) joinStop(ctx context.Context, c *stopCall) (runrec.Record, error) {
+	d.runs.mu.Unlock()
+	select {
+	case <-ctx.Done():
+		return runrec.Record{}, ctx.Err()
+	case <-c.started:
+	}
+	select {
+	case <-ctx.Done():
+		return runrec.Record{}, ctx.Err()
+	case <-c.done:
+	}
+	return c.result.record, c.result.err
 }
 func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMessage) (any, error) {
 	if method == MethodRunPlan || method == MethodRunStart {
