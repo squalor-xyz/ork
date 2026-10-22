@@ -879,3 +879,25 @@
 {"when": "2026-10-22T12:43:40Z", "item": "relay-roles.r14", "action": "relay-roles", "from": "", "to": "reviewer", "note": "add"}
 {"when": "2026-10-22T12:43:44Z", "item": "relay-roles.r14", "action": "relay-roles", "from": "14", "to": "10", "note": "move"}
 {"when": "2026-10-22T12:43:45Z", "item": "relay-roles.u10", "action": "relay-roles", "from": "", "to": "", "note": "rule-add"}
+{"when": "2026-10-22T13:11:56Z", "item": "S84", "action": "add", "from": "", "to": "open", "note": "Overview layout pass: grouped Needs you, aligned rows, quiet sidebar, richer detail"}
+{"when": "2026-10-22T13:11:57Z", "item": "S85", "action": "add", "from": "", "to": "open", "note": "Keys: context hint bar, enter opens decisions and held items, 1-9 follow the sidebar, list jumps"}
+{"when": "2026-10-22T13:12:02Z", "item": "S84", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-22T13:12:02Z", "item": "S84", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-22T13:12:02Z", "item": "S84", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-22T13:12:02Z", "item": "S84", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-22T13:12:02Z", "item": "S84", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-22T13:12:02Z", "item": "S84", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-22T13:12:02Z", "item": "S84", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-10-22T13:12:02Z", "item": "S84", "action": "note", "from": "", "to": "", "note": "Filed from the 2026-10-22 UI review pass (rule u10). Held un", "by": "Jon R"}
+{"when": "2026-10-22T13:12:02Z", "item": "S85", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-22T13:12:03Z", "item": "S85", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-22T13:12:03Z", "item": "S85", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-22T13:12:03Z", "item": "S85", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-22T13:12:03Z", "item": "S85", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-22T13:12:03Z", "item": "S85", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-22T13:12:03Z", "item": "S85", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-10-22T13:12:03Z", "item": "S85", "action": "note", "from": "", "to": "", "note": "Filed from the 2026-10-22 UI review pass (rule u10). Held un", "by": "Jon R"}
+{"when": "2026-10-22T13:12:11Z", "item": "S33", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-22T13:12:11Z", "item": "S33", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-22T13:12:11Z", "item": "S33", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-22T13:12:11Z", "item": "S33", "action": "note", "from": "", "to": "", "note": "Amended 2026-10-22 from the UI review pass (rule u10): state", "by": "Jon R"}
