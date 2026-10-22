@@ -103,6 +103,12 @@ owner decides, so never run `adj decide`, `adj reject` or `adj supersede`.
 - Before specifying an ork capability, check that slicer does not already
   provide it or have it on its roadmap
   (`slicer --root ../slicer find TEXT`).
+- In a slice relay or wave, a slice that touches the UI (`internal/tui`
+  and its golden views, `docs/dashboard.md`, `internal/cli` output, or a
+  `ui.*` adj key) also gets a UI pass: matrix row r14 (opus, medium), rule
+  u10. It runs as a general-purpose subagent in parallel with the reviewer,
+  invokes the `frontend-design:frontend-design` skill, edits nothing, and
+  returns suggested design edits to the orchestrator for the implementer.
 
 ## Handoff
 

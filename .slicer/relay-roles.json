@@ -177,6 +177,24 @@
       "note": ""
     },
     {
+      "id": "r14",
+      "role": "reviewer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "opus",
+      "reasoning": "medium",
+      "note": "UI pass, only for a slice that touches the UI (rule u10)"
+    },
+    {
       "id": "r6",
       "role": "gate",
       "when": {
@@ -287,8 +305,12 @@
     {
       "id": "u9",
       "text": "The orchestrator reads a Haiku implementer's diff itself before review, and switches that role to Sonnet early when quality falls short."
+    },
+    {
+      "id": "u10",
+      "text": "A slice that touches the UI (internal/tui and its golden views, docs/dashboard.md, internal/cli output, or a ui.* adj key) also runs the UI pass row (r14) in parallel with the reviewer, not instead of it. The UI pass runs as a general-purpose subagent, loads the frontend-design:frontend-design skill, edits nothing, and sends suggested design edits to the orchestrator for the implementer; the gate still decides. This holds for each slice in a wave."
     }
   ],
-  "next_row": 14,
-  "next_rule": 10
+  "next_row": 15,
+  "next_rule": 11
 }

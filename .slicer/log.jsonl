@@ -876,3 +876,6 @@
 {"when": "2026-10-21T15:11:24Z", "item": "S81", "action": "status", "from": "started", "to": "done", "note": "Added the wave.suggest and wave.overlap daemon reads, slicercli.DepsOverlap, the recorded deps-overlap fixture, client calls and design.md rows. Full suite, vet, gofmt, slicer check and adj lint are clean.", "by": "Jon R"}
 {"when": "2026-10-21T16:05:07Z", "item": "S82", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-21T16:05:07Z", "item": "S82", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-22T12:43:40Z", "item": "relay-roles.r14", "action": "relay-roles", "from": "", "to": "reviewer", "note": "add"}
+{"when": "2026-10-22T12:43:44Z", "item": "relay-roles.r14", "action": "relay-roles", "from": "14", "to": "10", "note": "move"}
+{"when": "2026-10-22T12:43:45Z", "item": "relay-roles.u10", "action": "relay-roles", "from": "", "to": "", "note": "rule-add"}
