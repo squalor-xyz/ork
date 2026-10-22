@@ -37,7 +37,7 @@ ork  ?help           | Overview | Questions | Waves | Roadmap | Decisions
 The project sidebar comes from the registry (`registry.initial`,
 `ui.project-nav`). "Needs you" starts selected and shows the existing
 all-projects Overview. A project selection limits its rows to that project.
-The view bar stays at the top of the main pane. Overview and Roadmap are selectable.
+The view bar stays at the top of the main pane. Overview, Waves and Roadmap are selectable.
 
 Each project row shows its needs-you count (open adj records, slicer
 items flagged `needs-owner`, and engine runs awaiting approval, paused or
@@ -58,7 +58,7 @@ rows. Below 100 columns the sidebar narrows; names that do not fit end in
 Keys `right`/`left` move selection and wrap through "Needs you" and the
 sorted projects. `1`-`9` select projects in registry order. `tab` and
 `shift+tab` switch views in the order of the view bar (`ui.views`,
-`ui.view-list`). They skip views not built yet, so Overview and Roadmap are
+`ui.view-list`). They skip views not built yet, so Overview, Waves and Roadmap are
 reached for now. `/` filters project names without regard to case; `enter`
 keeps the filter and leaves text entry, and `esc` clears it. `r` refreshes the
 selected project, or all projects on "Needs you". `?` shows keys and `q` quits.
@@ -184,8 +184,10 @@ rows never count toward the badge (`ui.setup-errors`).
 
 ## Waves (one project)
 
-The Waves screen is later work (S82). Its built flag stays unset in S60.
-The composer layout below is proposed where no adj record decides it.
+The Waves composer is available (S82). Select one project. `tab` and
+`shift+tab` reach it between Overview and Roadmap, skipping Questions until
+that view is built. It loads `wave.suggest` when opened or the project changes.
+Rows follow slicer's wave order. Unplaced items include their reasons.
 
 S60 provides the CLI: `ork wave suggest PROJECT` prints the ordered waves
 from `slicer plan-parallel`, including reasons. `ork wave start PROJECT
@@ -198,25 +200,49 @@ running (`wave.failure`). `ork stop WAVE` uses the `wave-` prefix
 (`wave.stop-target`) and stops each unfinished member once, including
 queued members without tool writes.
 
-The composer will use `wave.start` (`run.launch-wire`; proposed request and
-result shape) with per-item launch inputs, optional lineup, budgets and
-confirmed plans. `wave.stop` is the proposed daemon method for stopping a
-wave. Suggestion and overlap daemon reads are later work (S81).
+The composer uses `wave.suggest` and `wave.overlap` reads from S81 and
+`wave.start` with per-item launch inputs and confirmed plans (`run.launch-wire`).
+No launch writes happen before confirmation. Errors show their code and
+message verbatim, including per-item launch errors.
 
 ```
-Suggested (slicer plan-parallel)            Lineup
-[x] s374 Worktrees miss affected map  S     impl   claude sonnet high  -> codex gpt-6.1-sol medium
-[x] s375 Order names one-pass fix     S     review claude opus medium
-[ ] s377 ...                          M     gate   (reviewer, lite)
-! s374 and s377 both touch src/slicer/affected.py
-                                     [l] launch wave   [e] edit lineup
+Suggested (slicer plan-parallel)
+Items                   Lineup
+  Wave 2
+  [x] A  Alpha            implementer: claude sonnet high
+                          reviewer: claude opus medium
+                          gate: claude opus medium
+  [x] B  Beta             implementer: claude sonnet high
+                          reviewer: claude opus medium
+                          gate: claude opus medium
+  Wave 4
+  [ ] C  Gamma
+  Unplaced
+  [ ] D  Delta (no_files)
+  ! A and B both touch shared.go
+  ! A and B both touch second.go
+  [space] tick item   [l] launch wave
 ```
 
-Space ticks a row, asks the two y/n inputs at once and plans it, so the
-Lineup column fills (`ui.wave-composer`). `e` opens the lineup editor for
-the selected item: left and right cycle the matrix rows for a role, and a
-key opens the vendor, model and effort fields for a custom entry
-(`ui.lineup-editor`). Edits apply to that launch only.
+`space` ticks or unticks the selected item. Ticking shows both y/n inputs
+at once, with no defaults: well-specified and split. `tab` or `shift+tab`
+switches the active field; `enter` validates both and plans the item.
+`esc` cancels that tick. The Lineup column fills from the plan, including
+its fallback chains (`ui.wave-composer`). `down`/`j`/`n` and `up`/`k`/`p`
+move between items. Unplaced items can also be ticked.
+
+Two or more ticked items trigger an overlap read. Each shared path gets a
+warning; warnings permit launch (`wave.selection`). `l` launches the ticked
+items with one y/n confirmation showing `ork wave start PROJECT ID...`.
+Enter, n and esc cancel; y submits each item's answers and confirmed plan.
+Every ticked item must have a successful plan before launch. One failed
+plan prevents launching the chosen set; the owner can untick it. The
+wave.plan-failure decision remains open (adj 146).
+
+Lineup editing (`e`, S83) is later work. The editor will cycle matrix rows
+with left and right, and open vendor, model and effort fields for custom
+entries (`ui.lineup-editor`). Edits apply to that launch only.
+The running-wave tree (S55) is later work. Its proposed layout follows.
 
 Each running slice expands to its roles:
 

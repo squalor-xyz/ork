@@ -113,6 +113,9 @@ type Model struct {
 	height        int
 	pane          *runPane
 	confirm       *runAction
+	waves         *wavesState
+	wavesRequest  uint64
+	waveFlights   map[string]runAction
 	launch        *launchState
 	launchRequest uint64
 	launchFlights map[string]launchFlight
@@ -252,6 +255,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			pane.pending = false
 			pane.detail, pane.err = msg.detail, msg.err
 		}
+	case wavesMsg:
+		return m, m.applyWaves(msg)
 	case launchMsg:
 		return m, m.applyLaunch(msg)
 	case actionMsg:
@@ -299,6 +304,12 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyPressMsg:
 		return m, m.key(msg)
 	case tea.PasteMsg:
+		if m.waves != nil && m.waves.inputs != nil {
+			in := m.waves.inputs
+			in.fields[in.focus].update(msg)
+			m.actionStatus = ""
+			return m, nil
+		}
 		if m.launchPrompt() {
 			m.launch.input.update(msg)
 			m.actionStatus = ""
@@ -331,6 +342,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 
+	if m.waves != nil && m.waves.inputs != nil {
+		return m.waveInputKey(msg)
+	}
 	if m.launch != nil {
 		return m.launchKey(msg)
 	}
@@ -361,7 +375,12 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 	switch {
+	case key.Matches(msg, m.keys.Tick):
+		return m.tickWave()
 	case key.Matches(msg, m.keys.Launch):
+		if m.view == wavesView {
+			return m.confirmWave()
+		}
 		return m.openLaunch()
 	case key.Matches(msg, m.keys.Approve):
 		return m.requestAction("approve")
@@ -387,10 +406,16 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	case key.Matches(msg, m.keys.Prev):
 		return m.move(-1)
 	case key.Matches(msg, m.keys.NextView):
-		m.moveView(1)
+		return m.moveView(1)
 	case key.Matches(msg, m.keys.PrevView):
-		m.moveView(-1)
+		return m.moveView(-1)
 	case key.Matches(msg, m.keys.RowNext):
+		if m.view == wavesView {
+			if m.waves != nil {
+				m.waves.cursor = clampCursor(m.waves.cursor+1, len(m.waves.rows()))
+			}
+			return nil
+		}
 		if m.view == roadmapView {
 			if m.itemPane == nil {
 				n := len(m.roadmapItems())
@@ -400,6 +425,12 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			m.moveRow(1)
 		}
 	case key.Matches(msg, m.keys.RowPrev):
+		if m.view == wavesView {
+			if m.waves != nil {
+				m.waves.cursor = clampCursor(m.waves.cursor-1, len(m.waves.rows()))
+			}
+			return nil
+		}
 		if m.view == roadmapView {
 			if m.itemPane == nil {
 				n := len(m.roadmapItems())
@@ -409,6 +440,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			m.moveRow(-1)
 		}
 	case key.Matches(msg, m.keys.Select):
+		if m.view == wavesView {
+			return nil
+		}
 		if m.view == roadmapView {
 			return m.openItem()
 		}
@@ -456,7 +490,7 @@ func (m *Model) switchTo(i int) tea.Cmd {
 	} else {
 		m.poller.SetVisible("")
 	}
-	return m.focus()
+	return tea.Batch(m.focus(), m.openWaves())
 }
 
 // apply stores a returned snapshot. A part whose call failed keeps its last
@@ -576,7 +610,7 @@ func (m *Model) move(delta int) tea.Cmd {
 
 // moveView steps to the next built view in direction delta and wraps around.
 // With no other view built it does nothing (ui.view-list).
-func (m *Model) moveView(delta int) {
+func (m *Model) moveView(delta int) tea.Cmd {
 	n := len(views)
 	for step := 1; step < n; step++ {
 		i := ((m.view+delta*step)%n + n) % n
@@ -588,19 +622,28 @@ func (m *Model) moveView(delta int) {
 			m.view = i
 			m.roadmapCursor = 0
 			m.itemPane = nil
-			return
+			return m.openWaves()
 		}
 	}
+	return nil
 }
 
 // runAction retains the exact target while a confirmation is on screen.
 type runAction struct {
 	verb, run, project, text string
+	items                    []daemon.RunParams
 	plan                     *daemon.RunPlan
 	wellSpecified, split     bool
 }
 
 func (a runAction) command() string {
+	if a.verb == "wave" {
+		cmd := "ork wave start " + a.project
+		for _, p := range a.items {
+			cmd += " " + p.Item
+		}
+		return cmd
+	}
 	if a.verb == "launch" {
 		return "ork run " + a.project + " " + a.run
 	}
@@ -617,7 +660,7 @@ type actionMsg struct {
 }
 
 func (m *Model) requestAction(verb string) tea.Cmd {
-	if m.showHelp || m.view == roadmapView {
+	if m.showHelp || m.view == roadmapView || m.view == wavesView {
 		return nil
 	}
 	r, ok := m.actionRow()
@@ -676,6 +719,9 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 }
 
 func (m *Model) callAction(a runAction) tea.Cmd {
+	if a.verb == "wave" {
+		return m.startWave(a)
+	}
 	if a.verb == "launch" {
 		return m.startLaunch(a)
 	}

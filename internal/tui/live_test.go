@@ -215,3 +215,13 @@ func (*fakeLive) Plan(context.Context, daemon.RunParams) (*daemon.RunPlan, error
 func (*fakeLive) Start(context.Context, daemon.RunParams) (runrec.Record, error) {
 	return runrec.Record{}, errors.New("unexpected start")
 }
+
+func (*fakeLive) WaveSuggest(context.Context, string) (*slicercli.ParallelPlan, error) {
+	return &slicercli.ParallelPlan{}, nil
+}
+func (*fakeLive) WaveOverlap(context.Context, string, []string) (*slicercli.Overlap, error) {
+	return &slicercli.Overlap{}, nil
+}
+func (*fakeLive) WaveStart(context.Context, daemon.WaveStartParams) (*daemon.WaveResult, error) {
+	return nil, errors.New("unexpected wave start")
+}

@@ -49,9 +49,11 @@ func (m *Model) screen() string {
 	bodyH, start := max(h-4, 1), 0
 	if m.showHelp {
 		body = m.helpLines(mainW)
-	} else if m.view == roadmapView {
+	} else if m.view == roadmapView || m.view == wavesView {
 		rv := overviewView{}
-		if m.launch != nil {
+		if m.view == wavesView {
+			rv = m.wavesBody(mainW)
+		} else if m.launch != nil {
 			rv = m.launchView(mainW)
 		} else {
 			rv = m.roadmap(mainW)
@@ -193,7 +195,7 @@ var views = []struct {
 }{
 	{"Overview", true},
 	{"Questions", false},
-	{"Waves", false},
+	{"Waves", true},
 	{"Roadmap", true},
 	{"Decisions", false},
 }
@@ -255,7 +257,7 @@ func (m *Model) helpLines(w int) []string {
 			lines = append(lines, clip(h.Key+" "+h.Desc, w))
 		}
 	}
-	lines = append(lines, "", clip("Overview and Roadmap are available. Questions, Waves and Decisions come in later slices.", w))
+	lines = append(lines, "", clip("Overview, Waves and Roadmap are available. Questions and Decisions come in later slices.", w))
 	return lines
 }
 

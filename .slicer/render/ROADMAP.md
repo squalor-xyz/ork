@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-83 items · — 41 · done 35 · parked 2 · retired 5
+83 items · — 40 · done 36 · parked 2 · retired 5
 
 ## v1
 
@@ -128,7 +128,7 @@
 | 78 | [S79](slices/S79.md) | Wave-ready Files sections: set files_section and backtick paths | S | 1 |  |  | done |
 | 79 | [S80](slices/S80.md) | Per-launch lineup and budget overrides on run.plan and run.start | M | 2 |  |  | done |
 | 80 | [S81](slices/S81.md) | Daemon reads for the Waves screen: wave.suggest and wave.overlap | S | 1 |  |  | done |
-| 81 | [S82](slices/S82.md) | Waves screen: suggested list, tick items, overlap warnings, launch a wave | M | 2 |  |  | — |
+| 81 | [S82](slices/S82.md) | Waves screen: suggested list, tick items, overlap warnings, launch a wave | M | 2 |  |  | done |
 | 82 | [S83](slices/S83.md) | Waves screen: edit a slice's lineup and budgets before launch | M | 2 |  |  | — |
 
 ---

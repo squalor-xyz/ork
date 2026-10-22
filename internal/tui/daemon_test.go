@@ -209,3 +209,82 @@ func TestDaemonItemShowAndDepsConnectFailure(t *testing.T) {
 		t.Fatalf("deps error: %v", s.Deps.Err)
 	}
 }
+
+func TestDaemonTypedWaves(t *testing.T) {
+	for _, method := range []string{daemon.MethodWaveSuggest, daemon.MethodWaveOverlap, daemon.MethodWaveStart} {
+		for _, fail := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/%t", method, fail), func(t *testing.T) {
+				expected := &daemon.RunPlan{Item: "A", Branch: "a"}
+				start := daemon.WaveStartParams{Items: []daemon.RunParams{{Project: "ork", Item: "A", WellSpecified: true, Expected: expected}}}
+				d, _, _, _ := requestServer(t, func(_ context.Context, got string, raw json.RawMessage) (any, error) {
+					if got != method {
+						return nil, fmt.Errorf("method: %s", got)
+					}
+					var want any
+					switch method {
+					case daemon.MethodWaveSuggest:
+						want = daemon.WaveSuggestParams{Project: "ork"}
+					case daemon.MethodWaveOverlap:
+						want = daemon.WaveOverlapParams{Project: "ork", Items: []string{"A", "B"}}
+					default:
+						want = start
+					}
+					data, _ := json.Marshal(want)
+					if string(data) != string(raw) {
+						return nil, fmt.Errorf("params: %s want %s", raw, data)
+					}
+					if fail {
+						return nil, &ipc.Error{Code: "wave_failed", Message: "Exact WIRE failure."}
+					}
+					switch method {
+					case daemon.MethodWaveSuggest:
+						return slicercli.ParallelPlan{Width: 7}, nil
+					case daemon.MethodWaveOverlap:
+						return slicercli.Overlap{Overlap: []slicercli.OverlapPair{{A: "A", B: "B", Shared: []string{"x.go"}}}}, nil
+					}
+					return daemon.WaveResult{Wave: "wave-wire", Items: []daemon.WaveItemResult{{Item: "A", Error: &ipc.Error{Code: "item_failed", Message: "Exact ITEM failure."}}}}, nil
+				})
+				var err error
+				switch method {
+				case daemon.MethodWaveSuggest:
+					var out *slicercli.ParallelPlan
+					out, err = d.WaveSuggest(context.Background(), "ork")
+					if !fail && (err != nil || out == nil || out.Width != 7) {
+						t.Fatalf("suggest: %+v %v", out, err)
+					}
+				case daemon.MethodWaveOverlap:
+					var out *slicercli.Overlap
+					out, err = d.WaveOverlap(context.Background(), "ork", []string{"A", "B"})
+					if !fail && (err != nil || out == nil || len(out.Overlap) != 1 || out.Overlap[0].Shared[0] != "x.go") {
+						t.Fatalf("overlap: %+v %v", out, err)
+					}
+				case daemon.MethodWaveStart:
+					var out *daemon.WaveResult
+					out, err = d.WaveStart(context.Background(), start)
+					if !fail && (err != nil || out == nil || out.Wave != "wave-wire" || len(out.Items) != 1 || out.Items[0].Error.Message != "Exact ITEM failure.") {
+						t.Fatalf("start: %+v %v", out, err)
+					}
+				}
+				if fail {
+					var wire *ipc.Error
+					if !errors.As(err, &wire) || wire.Code != "wave_failed" || wire.Message != "Exact WIRE failure." {
+						t.Fatalf("error changed: %v", err)
+					}
+				}
+			})
+		}
+	}
+}
+func TestDaemonWavesConnectFailure(t *testing.T) {
+	failed := errors.New("connect failed")
+	d := &Daemon{Connect: func(context.Context) (*daemon.Client, error) { return nil, failed }}
+	if _, err := d.WaveSuggest(context.Background(), "ork"); err != failed {
+		t.Fatal(err)
+	}
+	if _, err := d.WaveOverlap(context.Background(), "ork", []string{"A", "B"}); err != failed {
+		t.Fatal(err)
+	}
+	if _, err := d.WaveStart(context.Background(), daemon.WaveStartParams{}); err != failed {
+		t.Fatal(err)
+	}
+}

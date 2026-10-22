@@ -3062,7 +3062,7 @@
       "id": "S82",
       "title": "Waves screen: suggested list, tick items, overlap warnings, launch a wave",
       "short_title": "Waves screen: suggested list, tick items, overlap warnings, launch a wave",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S58",
@@ -3070,7 +3070,19 @@
         "S60",
         "S81"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "90072d1d-4667-492e-9c6f-9304b383c664",
+          "kind": "",
+          "text": "**2026-10-21** — Review: no blockers; 3 low findings accepted for a fix round",
+          "created_at": "2026-10-21T16:21:48Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -3088,7 +3100,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
