@@ -2293,6 +2293,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "d8bd6b2b-5cbe-4f05-b0e1-0a0a33f5afd7",
+          "kind": "",
+          "text": "**2026-10-22** — Later notes from the relay report: (1) EngineRun roles also appear in ork status --json engine_runs[].roles, since status reuses source.EngineRun (internal/daemon/handlers.go:237); owner to confirm or clear Roles in projectStatus. (2) Cosmetic: the phase column aligns only within one depth level and elapsed is unpadded, so the vendor column is ragged; docs/dashboard.md:262-263 slightly overstates the alignment. (3) Overview rows can scroll out of view with a very long tree or reason (the pane takes up to h-5 lines).",
+          "created_at": "2026-10-22T14:01:48Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
