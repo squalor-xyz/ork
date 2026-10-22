@@ -3,19 +3,26 @@
 package tui
 
 import (
+	"strings"
+
 	"charm.land/bubbles/v2/key"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
 
 // runPane keeps its run target while snapshots reorder Overview rows.
 type runPane struct {
 	run, project string
+	ledger       bool
 	input        textField
 	offset       int
 }
 
 func (m *Model) openPane(r ovRow) tea.Cmd {
 	m.pane = &runPane{run: r.engineID, project: r.name}
+	if r.ledgerID != "" {
+		m.pane.run, m.pane.ledger = r.ledgerID, true
+	}
 	m.actionStatus = ""
 	return nil
 }
@@ -23,6 +30,14 @@ func (m *Model) openPane(r ovRow) tea.Cmd {
 func (m *Model) paneRow() (ovRow, string, bool) {
 	p := m.byName[m.pane.project]
 	if p != nil {
+		if m.pane.ledger {
+			for _, r := range p.snap.Runs.Value {
+				if r.ID == m.pane.run {
+					return ovRow{ledgerID: r.ID, name: p.reg.Name, id: strings.Join(r.Items, ", "), state: r.State}, "", true
+				}
+			}
+			return ovRow{}, "", false
+		}
 		for _, r := range p.snap.EngineRuns {
 			if r.ID == m.pane.run {
 				return ovRow{engineID: r.ID, name: p.reg.Name, id: r.Item, state: r.State, pending: r.Pending}, r.Wait, true
@@ -42,7 +57,7 @@ func (m *Model) actionRow() (ovRow, bool) {
 
 func (m *Model) paneQuestion() bool {
 	r, _, ok := m.paneRow()
-	return ok && r.state == "paused" && r.pending == "question"
+	return ok && !m.pane.ledger && r.state == "paused" && r.pending == "question"
 }
 
 func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
@@ -69,7 +84,7 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 	r, _, ok := m.paneRow()
-	if !ok || r.state == "stopped" || r.state == "committed" {
+	if !ok || m.pane.ledger || r.state == "stopped" || r.state == "committed" {
 		return nil
 	}
 	switch {
@@ -84,16 +99,29 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 }
 
 // paneLines expands the selected run below the Overview. The field, command
-// and status stay visible while Page Up/Down scroll the full Wait reason.
+// and status stay visible while Page Up/Down scroll the tree and Wait reason.
 func (m *Model) paneLines(w, h int, status string) []string {
 	r, reason, ok := m.paneRow()
 	if !ok {
 		return []string{indent + "Run " + m.pane.run + ": no longer in snapshot", indent + "esc close pane"}
 	}
 	width := max(w-len(indent), 1)
-	header := wrapText("Run "+r.engineID+"  "+r.id+"  "+r.state, width)
+	run := r.engineID
+	if m.pane.ledger {
+		run = r.ledgerID
+	}
+	title := "Run " + run + "  " + r.id + "  " + r.state
+	if m.pane.ledger {
+		title += "  started elsewhere"
+	}
+	header := wrapText(title, width)
+	for i := range header {
+		header[i] = m.cfg.Theme.Heading.Render(header[i])
+	}
 	footer := []string{}
 	switch {
+	case m.pane.ledger:
+		footer = append(footer, wrapText("started elsewhere, read-only; esc close pane", width)...)
 	case r.state == "paused" && r.pending == "question":
 		footer = append(footer, "Answer: "+m.pane.input.view(max(width-len("Answer: "), 1), m.cfg.Theme))
 		footer = append(footer, wrapText("ork answer "+r.engineID+" "+m.pane.input.Value(), width)...)
@@ -114,11 +142,18 @@ func (m *Model) paneLines(w, h int, status string) []string {
 	}
 	// The action area takes priority if the header no longer fits.
 	header = header[:min(len(header), max(h-len(footer), 0))]
-	lines := wrapText(reason, width)
+	var lines []string
+	if reason != "" {
+		lines = append(lines, wrapText(reason, width)...)
+	}
+	lines = append(lines, m.runTreeLines(m.paneSteps(), width, m.treeFrame)...)
+	if len(lines) == 0 {
+		lines = wrapText(reason, width)
+	}
 	room := max(h-len(header)-len(footer)-1, 0)
 	last := max(len(lines)-room, 0)
 	if len(lines) > room && room >= 3 {
-		last++ // the marker above uses one line at the bottom of the reason
+		last++ // the marker above uses one line at the bottom of the content
 	}
 	m.pane.offset = min(m.pane.offset, last)
 	// Indent content before window adds styled markers at the same column.
@@ -137,5 +172,8 @@ func (m *Model) paneLines(w, h int, status string) []string {
 		out = append(out, indent)
 	}
 	out = append(out, footer...)
+	for i := range out {
+		out[i] = lipgloss.NewStyle().MaxWidth(max(w, 1)).Render(out[i])
+	}
 	return out
 }

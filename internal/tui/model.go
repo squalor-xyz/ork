@@ -111,6 +111,7 @@ type Model struct {
 	showHelp      bool
 	width         int
 	height        int
+	treeFrame     int
 	pane          *runPane
 	confirm       *runAction
 	waves         *wavesState
@@ -245,6 +246,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
 	case tickMsg:
+		m.treeFrame = (m.treeFrame + 1) % 4
 		return m, m.tick(m.cfg.Now())
 	case snapshotMsg:
 		return m, m.apply(msg)
@@ -447,7 +449,7 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			return m.openItem()
 		}
 		if r, ok := m.selectedRow(); ok {
-			if r.engineID != "" && !m.showHelp {
+			if (r.engineID != "" || r.ledgerID != "") && !m.showHelp {
 				return m.openPane(r)
 			}
 			return m.switchTo(r.project)

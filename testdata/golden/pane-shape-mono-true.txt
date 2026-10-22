@@ -22,7 +22,7 @@
                            |
                            |
                            |
-                           |  Run engine  S22  paused
+                           |  [1mRun engine  S22  paused[m
                            |  owner action
                            |  
                            |  t retry; esc close pane

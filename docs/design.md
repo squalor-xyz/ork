@@ -682,9 +682,10 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   and engine runs awaiting approval, paused or stopped (`status.needs-you`,
   adj #69). A stopped run stops counting once a newer engine run exists for
   the same slice, ordered by created time (adj #92). The *proposed*
-  `engine_runs:[{id,item,state,wait?,pending?,denials?,relay_run?,created_at}]` field per project
+  `engine_runs:[{id,item,state,wait?,pending?,denials?,relay_run?,roles?,created_at}]` field per project
   includes the linked slicer ledger run ID in `relay_run`, when present,
-  and the engine run's creation time in `created_at`. `denials` is an optional
+  and the engine run's creation time in `created_at`. The optional `roles`
+  array is described in [state.md](state.md). `denials` is an optional
   array of `Tool` or `Tool: command` strings collected from role records
   (`ui.denials-display`, `engine.denied-command`). `wait`
   contains the approval prompt, owner question, pause or stop reason. The optional

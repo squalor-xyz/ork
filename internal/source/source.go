@@ -155,16 +155,30 @@ func (d *Direct) Snapshot(ctx context.Context, p registry.Project) Snapshot {
 	return s
 }
 
+// EngineRole is the display subset of a role record. Wire fields are proposed.
+type EngineRole struct {
+	Role      string    `json:"role"`
+	Round     int       `json:"round"`
+	Vendor    string    `json:"vendor"`
+	Model     string    `json:"model,omitempty"`
+	Effort    string    `json:"effort,omitempty"`
+	Step      string    `json:"step,omitempty"`
+	StartedAt time.Time `json:"started_at"`
+	EndedAt   time.Time `json:"ended_at,omitzero"`
+	Exit      string    `json:"exit,omitempty"`
+}
+
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
-	ID        string    `json:"id"`
-	Item      string    `json:"item"`
-	State     string    `json:"state"`
-	Wait      string    `json:"wait,omitempty"`
-	Pending   string    `json:"pending,omitempty"` // paused runrec pending kind (ui.pending-kind)
-	Denials   []string  `json:"denials,omitempty"` // one text per denial: "Tool" or "Tool: command"
-	RelayRun  string    `json:"relay_run,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
+	Roles     []EngineRole `json:"roles,omitempty"`
+	ID        string       `json:"id"`
+	Item      string       `json:"item"`
+	State     string       `json:"state"`
+	Wait      string       `json:"wait,omitempty"`
+	Pending   string       `json:"pending,omitempty"` // paused runrec pending kind (ui.pending-kind)
+	Denials   []string     `json:"denials,omitempty"` // one text per denial: "Tool" or "Tool: command"
+	RelayRun  string       `json:"relay_run,omitempty"`
+	CreatedAt time.Time    `json:"created_at"`
 }
 
 // Superseded reports a stopped run replaced by a newer engine run of its slice.

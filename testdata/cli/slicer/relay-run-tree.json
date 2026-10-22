@@ -1,0 +1,6 @@
+{"runs":[{"id":"tree","items":["S55"],"state":"active","begun_at":"2026-10-19T16:40:00Z","counts":{"steps":5,"running":2},"steps":[
+{"id":"root","role":"orchestrator","vendor":"codex","model":"sol","reasoning":"high","phase":"start","begun_at":"2026-10-19T16:40:00Z"},
+{"id":"impl","parent":"root","role":"implementer","vendor":"claude","model":"sonnet","phase":"done","task":"Build the tree","begun_at":"2026-10-19T16:40:00Z","updated_at":"2026-10-19T16:41:00Z"},
+{"id":"child","parent":"impl","role":"explorer","vendor":"codex","model":"sol","phase":"fail","begun_at":"2026-10-19T16:40:00Z","updated_at":"2026-10-19T16:40:30Z"},
+{"id":"review","parent":"root","role":"reviewer","vendor":"claude","model":"opus","phase":"start","begun_at":"2026-10-19T16:41:00Z"},
+{"id":"gate","parent":"missing","role":"gate","vendor":"claude","model":"opus","phase":"queued","task":"Keep the raw phase"}]}]}

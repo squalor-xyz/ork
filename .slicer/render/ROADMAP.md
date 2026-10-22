@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-85 items · — 42 · done 36 · parked 2 · retired 5
+85 items · — 41 · done 37 · parked 2 · retired 5
 
 ## v1
 
@@ -101,7 +101,7 @@
 | 51 | [S52](slices/S52.md) | TUI: launch a slice from a ready list | M | 2 |  | discovered from S25 | done |
 | 52 | [S53](slices/S53.md) | Create the ork logo | S | 1 |  |  | done |
 | 53 | [S54](slices/S54.md) | Show the ork version and logo in the terminal: TUI, --version, doctor | M | 2 |  |  | — |
-| 54 | [S55](slices/S55.md) | Run tree: orchestrator, roles and steps with live status | M | 2 |  |  | — |
+| 54 | [S55](slices/S55.md) | Run tree: orchestrator, roles and steps with live status | M | 2 |  |  | done |
 | 55 | [S56](slices/S56.md) | daemon stop and restart cope with a daemon that predates daemon.stop | S | 1 |  | discovered from S46 | done |
 | 56 | [S57](slices/S57.md) | TUI keys: up/down move rows, tab and left/right move projects | S | 1 |  | discovered from S26 | done |
 | 57 | [S58](slices/S58.md) | Tab and shift+tab switch views; left/right and 1-9 switch projects | S | 1 |  |  | done |

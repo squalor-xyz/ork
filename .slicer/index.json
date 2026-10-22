@@ -2233,12 +2233,68 @@
       "id": "S55",
       "title": "Run tree: orchestrator, roles and steps with live status",
       "short_title": "Run tree: orchestrator, roles and steps with live status",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S26"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "bde01fc1-6f68-442f-a37e-625102435b1d",
+          "kind": "",
+          "text": "**2026-10-22** — Progress: red first confirmed. TestRunTreeLedger and TestRunTreeReadOnly: Enter did not open run tree pane. TestRunTreeEngine: missing implementer/reviewer/gate tree nodes and round. TestRunTreeSpinnerAndClock: no ledger pane. TestRunTreeCycleAndWidth: missing nodes and narrow footer overflow. TestEngineRunRolesWire: missing roles in engine display JSON. Full red output in .scratch/s55-implementer/red.log. No implementation changes yet.",
+          "created_at": "2026-10-22T13:27:33Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "034f9c26-9993-4c98-93dc-60004cefa847",
+          "kind": "",
+          "text": "**2026-10-22** — Progress: tree and engine-role wire tests green; eight new tree goldens reviewed at 80x24 and 100x30 in colour and mono. Only two existing help goldens intentionally changed. Mutation table: frozen tick frame -> TestRunTreeSpinnerAndClock; unknown parent incorrectly nested -> TestRunTreeLedger (initial substring assertion survived; anchored to line start, now caught); ignored linked ledger -> TestRunTreeEngine; fail glyph changed to done -> TestRunTreeLedger; running elapsed frozen at updated_at -> TestRunTreeSpinnerAndClock. All mutations restored. Race suites and vet in progress. No done or handoff before reviewer PASS.",
+          "created_at": "2026-10-22T13:32:03Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "69bcf4c1-e2cf-422f-8a51-48f75c3822b1",
+          "kind": "",
+          "text": "**2026-10-22** — Progress: final feature race run passes 10 top-level tests / 21 results including subtests. Final narrow race run: 667 pass, 67 socket-dependent fail; full race: 1121 pass, 141 socket-dependent fail across tui, daemon, ipc, cli and cmd/ork; no race warnings. All five mutations caught and restored; parent-placement assertion baseline corrected and rerun. Vet, gofmt, slicer check and adj lint passed. Full tui -update wrote eight reviewed tree goldens but returned socket failures. Linked ledger absent -> engine-role fallback. Awaiting orchestrator review; no done/handoff/commit.",
+          "created_at": "2026-10-22T13:36:32Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "e8e7439a-23f3-4d11-81ea-3a256e207c1a",
+          "kind": "",
+          "text": "**2026-10-22** — Review round 1: 1 blocker (wait reason hidden by long tree in pane.go), plus non-blocking items; fix round 1 sent to implementer.",
+          "created_at": "2026-10-22T13:43:12Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "99316fd7-7bdf-4f66-a19b-c2b31f3af774",
+          "kind": "",
+          "text": "**2026-10-22** — Progress evidence for fix round 1. No finish or handoff step.\n\nRed before fixes: TestRunTreePausedQuestionBeforeLongTree: wait reason must precede tree (question absent). TestRunTreeEndedRunUnfinishedRole/{stopped,paused,committed}: unfinished phase=start. TestRunTreeTaskIndent: task and child both at column 4. TestRunTreeFieldsAndStyles: wrong fields/style and phase columns 24/18 instead of 9. TestRunTreeEngineRoundOnNode: 6 lines instead of 3. TestRunTreeReadOnlyLabel: missing started elsewhere/read-only labels. Logs: .scratch/s55-implementer/fix1-red.log and fix1-red-reason.log. The existing read-only guard and width behavior were already correct; tests now isolate them.\n\nMutation table (all caught and restored):\n| Mutation | Test |\n| --- | --- |\n| reason-last | TestRunTreePausedQuestionBeforeLongTree |\n| inactive-role-running | TestRunTreeEndedRunUnfinishedRole |\n| ledger-guard-removed | TestRunTreeReadOnlyGuard |\n| task-child-column | TestRunTreeTaskIndent |\n| model-before-phase | TestRunTreeFieldsAndStyles |\n| role-padding-removed | TestRunTreeFieldsAndStyles |\n| phase-padding-removed | TestRunTreeFieldsAndStyles |\n| running-title-style | TestRunTreeFieldsAndStyles |\n| done-title-style | TestRunTreeFieldsAndStyles |\n| unknown-dim-style | TestRunTreeFieldsAndStyles |\n| task-plain-style | TestRunTreeTaskIndent |\n| round-removed | TestRunTreeEngineRoundOnNode |\n| tree-width-unclipped | TestRunTreeCycleAndWidth |\n| spinner-frozen | TestRunTreeSpinnerAndClock |\n| unknown-parent-nested | TestRunTreeLedger |\n| linked-ledger-ignored | TestRunTreeEngine |\n| fail-as-done | TestRunTreeLedger |\n| running-elapsed-frozen | TestRunTreeSpinnerAndClock |\n| read-only-label-removed | TestRunTreeReadOnlyLabel |\n| header-style-removed | TestRunTreeGoldens |\n\nPost-restoration focused race run: 17 top-level tests, 36 passing results including subtests. Narrow race run: 682 pass/67 socket-related failures. Full race run: 1136 pass/141 socket-related failures, 13 passing packages and 5 failing packages. No race warnings. Unfinished engine roles use the run state word (stopped, paused, committed), with neutral glyph and no running elapsed.",
+          "created_at": "2026-10-22T13:51:56Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -2256,7 +2312,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

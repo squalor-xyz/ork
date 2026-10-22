@@ -710,10 +710,12 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 			wait = "owner approval"
 		}
 		var denials []string
+		var roles []source.EngineRole
 		for _, role := range rec.Roles {
+			roles = append(roles, source.EngineRole{Role: role.Role, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit})
 			denials = append(denials, roleDenials(role)...)
 		}
-		runs = append(runs, EngineRun{Denials: denials, ID: rec.ID, Item: rec.Item, State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt})
+		runs = append(runs, EngineRun{Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt})
 	}
 	return runs
 }

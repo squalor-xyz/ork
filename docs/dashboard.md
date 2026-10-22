@@ -67,9 +67,9 @@ The Overview has a row cursor (`ui.overview-cursor`). `down`/`j` and `up`/`k`
 move it to the next and previous row, and so do `n` and `p`. It goes through
 "Needs you" and then Running, and it stops at the first and last row. The row
 under the cursor is drawn reversed. Its full text is on a detail line below the
-rows, wrapped at the pane's width so no word is cut. `enter` opens an engine
-run's detail pane; on decision, held-item and ledger rows it selects the row's
-project (`ui.answer-pane-keys`). Project keys and `1`-`9` select a project and
+rows, wrapped at the pane's width so no word is cut. `enter` opens a run's
+detail pane; on decision and held-item rows it selects the row's project
+(`ui.answer-pane-keys`). Project keys and `1`-`9` select a project and
 put the cursor on its first row. Rows are cut with `...` to one line. A run's ID
 is never cut: the rest of the run's text is cut first. The rows scroll to keep
 the cursor row on screen, with `+N lines above` and `+N more lines` where lines
@@ -146,13 +146,16 @@ Retry uses the optional engine `pending` kind (`ui.pending-kind`). When it is
 Other pending kinds, including an absent kind from an older snapshot, offer
 retry. Launch is available from the Roadmap ready list described below.
 
-### Engine detail pane
+### Run detail pane
 
-`enter` opens the cursor's engine run below the Overview. The pane keeps that
-run's ID while snapshots reorder the rows. It shows the full `wait` reason;
-`pgup` and `pgdown` scroll the reason while the action area stays visible.
-`esc` closes the pane (`ui.answer-ui`, `ui.answer-pane-keys`). Ledger runs
-started elsewhere open no pane.
+`enter` opens the cursor's run below the Overview. The pane keeps that run's
+ID while snapshots reorder the rows. It shows the full `wait` reason before
+the run tree. `pgup` and `pgdown` scroll the reason and tree while the action
+area stays visible. `esc` closes the pane (`ui.answer-ui`,
+`ui.answer-pane-keys`, `ui.run-tree`). Ledger runs started elsewhere open a
+read-only tree pane with no action keys or answer input. Its header says
+"started elsewhere". Its footer says
+"started elsewhere, read-only; esc close pane".
 
 The actions follow the state (`ui.answer-pane-scope`):
 
@@ -242,7 +245,8 @@ wave.plan-failure decision remains open (adj 146).
 Lineup editing (`e`, S83) is later work. The editor will cycle matrix rows
 with left and right, and open vendor, model and effort fields for custom
 entries (`ui.lineup-editor`). Edits apply to that launch only.
-The running-wave tree (S55) is later work. Its proposed layout follows.
+The run tree (S55) appears in the Overview detail pane. The wave charts and
+animations below remain proposed work for S07.
 
 Each running slice expands to its roles:
 
@@ -254,14 +258,33 @@ s374  review  round 1  23m  41k tok  $0.62   [■■■■■□□□] ▁▃�
   └ tail: "Checking rollback path in affected.py:88 ..."
 ```
 
-Per-role detail (`dash.role-detail`):
+The detail pane shows ledger steps under their parent, with the orchestrator
+at the root (`ui.run-tree`). Unknown parents appear at the root. Cycles visit
+each step once. An engine run uses its linked ledger tree when available;
+otherwise its recorded role rounds appear flat under the run. The two sources
+are never combined.
+
+Each node shows `glyph role phase elapsed  vendor model effort` in that order.
+Role and phase columns use text widths to align the phase and elapsed time,
+with padding capped to fit deep nodes. Engine role nodes add `round N` on the
+same line. A `start` step has an ASCII spinner (`| / - \`) and uses the heading
+style (bold cyan in colour, bold in mono). A `done` step has `+` and is dim
+(grey in colour, faint in mono). A `fail` step has `!` and uses the error style
+(bold red in colour, bold in mono). Other phases use a neutral `.` and retain
+their raw text in plain style. An unfinished engine role in a stopped, paused
+or committed run uses that state word and the neutral glyph.
+Elapsed time advances from the injected clock for running steps and stops at
+`updated_at` for finished steps. Task text is dim, clipped to the pane width,
+and starts four columns past its node's glyph. The run header uses the
+heading style.
+
+Per-role detail still planned in S07 (`dash.role-detail`):
 - live output tail;
 - tokens and cost from the vendor's usage fields;
-- elapsed time, with a stale flag when there is no event for N minutes;
+- a stale flag when there is no event for N minutes;
 - worktree `git diff --stat` and the latest test counts;
 - small ASCII charts: stage bars, a token sparkline, and a wave timeline
-  with one lane per slice;
-- spinners on running roles.
+  with one lane per slice.
 
 The actions are approve, stop, answer, retry on another vendor, and open
 the worktree path. Relays started outside ork appear with a "started

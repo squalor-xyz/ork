@@ -20,7 +20,7 @@
                            |
                            |
                            |
-                           |  Run engine  S22  paused
+                           |  [1;36mRun engine  S22  paused[m
                            |  owner action
                            |  
                            |  Answer: [1muse local storage[m[1;7;97;44m [m[1m[m

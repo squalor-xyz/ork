@@ -1,0 +1,24 @@
+[1mork[m  ?help         | [1mOverview[m[2m | Questions | [mWaves[2m | [mRoadmap[2m | Decisions[m
+[1;7m> Needs you[m        |[2m------------------------------------------------------------[m
+  ork 0*           |[1mNeeds you[m
+                   |  [2mnothing needs you[m
+                   |
+                   |[1mRunning[m
+                   |[1;7m    ork  S55  implement[m
+                   |
+                   |[1mReady to land[m
+                   |  [2mnone yet: the list of branches to land comes with slice S0[m
+                   |
+                   |
+                   |
+                   |
+                   |
+                   |
+                   |  [1mRun engine  S55  implement[m
+                   |  [2m+ implementer done  1m  claude sonnet high round 1[m
+                   |  [1m| reviewer    start 1m  claude opus round 1[m
+                   |  [1m! gate        fail  30s  codex sol round 1[m
+                   |  
+                   |  x stop; esc close pane
+                   |[2m------------------------------------------------------------[m
+                   | 1 project | refreshed 16:42:00 | pending 0

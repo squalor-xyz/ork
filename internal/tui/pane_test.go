@@ -122,7 +122,7 @@ func TestPaneEscape(t *testing.T) {
 }
 
 func TestPaneNonEngineEnter(t *testing.T) {
-	for _, kind := range []string{"decision", "question", "ledger"} {
+	for _, kind := range []string{"decision", "question"} {
 		t.Run(kind, func(t *testing.T) {
 			h := paneHarness(t, "paused", "question")
 			h.deliver(press("esc"))
@@ -132,8 +132,6 @@ func TestPaneNonEngineEnter(t *testing.T) {
 				s.Open.Value = []adjcli.Record{openRec(1, "owner.choice", "Choose storage")}
 			case "question":
 				s.Items.Value = []slicercli.Item{item("S1", "Choose storage", "needs-owner")}
-			case "ledger":
-				s.Runs.Value = []slicercli.RelayRun{relay("external", "2026-10-19T16:40:00Z", "S1")}
 			}
 			h.m.apply(snapshotMsg{name: "ork", snap: s})
 			h.deliver(press("enter"))
@@ -334,7 +332,7 @@ func TestPaneHelp(t *testing.T) {
 	h := paneHarness(t, "paused", "shape")
 	h.deliver(press("esc"))
 	h.deliver(press("?"))
-	for _, want := range []string{"enter open engine pane or Roadmap item; other rows select project", "esc close pane, Roadmap item, help or message", "enter (answer) submit; no confirmation", "pgup/pgdown scroll pane reason"} {
+	for _, want := range []string{"enter open run pane or Roadmap item; other rows select project", "esc close pane, Roadmap item, help or message", "enter (answer) submit; no confirmation", "pgup/pgdown scroll run tree and reason"} {
 		if v := h.view(); !strings.Contains(v, want) {
 			t.Errorf("missing pane help %q:\n%s", want, v)
 		}

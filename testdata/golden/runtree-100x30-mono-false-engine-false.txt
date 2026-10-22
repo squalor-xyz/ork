@@ -1,0 +1,30 @@
+[1mork[m  ?help                 | [1;36mOverview[m[90m | Questions | [mWaves[90m | [mRoadmap[90m | Decisions[m
+[1;7;97;44m> Needs you[m                |[90m------------------------------------------------------------------------[m
+  ork 0*                   |[1;36mNeeds you[m
+                           |  [90mnothing needs you[m
+                           |
+                           |[1;36mRunning[m
+                           |[1;7;97;44m  > started elsewhere  ork  tree  S55  active, 2 of 5 steps running  2m[m
+                           |
+                           |[1;36mReady to land[m
+                           |  [90mnone yet: the list of branches to land comes with slice S09[m
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |  [1;36mRun tree  S55  active  started elsewhere[m
+                           |  [1;36m| orchestrator start  2m  codex sol high[m
+                           |    [90m+ implementer  done   1m  claude sonnet[m
+                           |    [90m    Build the tree[m
+                           |      [1;31m! explorer     fail   30s  codex sol[m
+                           |    [1;36m| reviewer     start  1m  claude opus[m
+                           |  . gate         queued  claude opus
+                           |  [90m    Keep the raw phase[m
+                           |  
+                           |  started elsewhere, read-only; esc close pane
+                           |[90m------------------------------------------------------------------------[m
+                           | 1 project | refreshed 16:42:00 | pending 0

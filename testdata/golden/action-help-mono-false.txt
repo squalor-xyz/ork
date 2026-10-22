@@ -9,7 +9,7 @@
                            |1-9 jump to project
                            |down/j/n next row
                            |up/k/p previous row
-                           |enter open engine pane or Roadmap item; other rows select project
+                           |enter open run pane or Roadmap item; other rows select project
                            |/ filter projects; esc clears
                            |s hide/show sidebar
                            |space tick item and ask inputs (Waves)
@@ -18,7 +18,7 @@
                            |x stop
                            |t retry
                            |enter (answer) submit; no confirmation
-                           |pgup/pgdown scroll pane reason
+                           |pgup/pgdown scroll run tree and reason
                            |r refresh now
                            |? show or hide this help
                            |esc close pane, Roadmap item, help or message

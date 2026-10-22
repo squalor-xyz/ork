@@ -1035,3 +1035,29 @@ func TestOwnerActionsBypassTheCap(t *testing.T) {
 	go w.d.ownerRun(ctx, MethodRunApprove, RunAction{Run: "approve"})
 	w.expectStart(t, "P1") // the finish step runs a role at once
 }
+
+func TestEngineRunRolesWire(t *testing.T) {
+	d, store, _ := runDaemon(t, nil)
+	at := time.Date(2026, 10, 19, 16, 40, 0, 0, time.UTC)
+	role := runrec.RoleRecord{Role: "implementer", Round: 2, Vendor: "claude", Model: "sonnet", Effort: "high", Step: "step-2", StartedAt: at, EndedAt: at.Add(time.Minute), Exit: "ok", Session: "private-session", PGID: 123, Report: "private-report"}
+	if _, err := store.Create(runrec.Record{ID: "tree", Project: "p", Item: "S55", State: "paused", Roles: []runrec.RoleRecord{role}}); err != nil {
+		t.Fatal(err)
+	}
+	b, err := json.Marshal(d.engineRuns("p"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []struct {
+		Roles []map[string]any `json:"roles"`
+	}
+	if err := json.Unmarshal(b, &got); err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || len(got[0].Roles) != 1 {
+		t.Fatalf("missing roles: %s", b)
+	}
+	want := map[string]any{"role": "implementer", "round": float64(2), "vendor": "claude", "model": "sonnet", "effort": "high", "step": "step-2", "started_at": at.Format(time.RFC3339), "ended_at": at.Add(time.Minute).Format(time.RFC3339), "exit": "ok"}
+	if !reflect.DeepEqual(got[0].Roles[0], want) {
+		t.Fatalf("roles wire: got %s, want %v", b, want)
+	}
+}

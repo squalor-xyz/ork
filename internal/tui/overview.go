@@ -40,11 +40,12 @@ type ovRow struct {
 	kind     string
 	style    lipgloss.Style
 	kindW    int
-	project  int    // registry index; Enter selects non-engine rows
+	project  int    // registry index; Enter selects non-run rows
 	name     string // the project's name
 	text     string // the row's text after the name, in full
 	id       string // a run's ID, kept whole in the row; "" for other rows
 	rest     string // a run's text after its ID, cut first
+	ledgerID string // set only for started-elsewhere rows
 	engineID string // empty for ledger and non-engine rows
 	state    string
 	pending  string
@@ -139,7 +140,7 @@ func (m *Model) rows() (needs, running []ovRow) {
 			if rest != "" {
 				text = id + "  " + rest
 			}
-			running = append(running, ovRow{kind: kindExternal, style: th.External, kindW: len(kindExternal), project: i, name: name,
+			running = append(running, ovRow{ledgerID: r.ID, kind: kindExternal, style: th.External, kindW: len(kindExternal), project: i, name: name,
 				text: text, id: id, rest: rest})
 		}
 	}

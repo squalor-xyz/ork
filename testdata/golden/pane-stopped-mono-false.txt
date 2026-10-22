@@ -21,7 +21,7 @@
                            |
                            |
                            |
-                           |  Run engine  S22  stopped
+                           |  [1;36mRun engine  S22  stopped[m
                            |  owner action
                            |  
                            |  Stopped; relaunch to continue

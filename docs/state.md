@@ -198,6 +198,15 @@ The `relay_run` and `created_at` fields link ledger progress and
 order replacement runs for the Overview (`ui.engine-runs-read`,
 `ui.run-join-key`, `ui.stopped-newer`). These are read-only display fields.
 
+The optional `roles` array is *proposed*. Each entry carries `role`, `round`,
+`vendor`, optional `model`, `effort` and `step`, `started_at`, optional
+`ended_at` and `exit`. It omits process, session, report and usage data.
+The daemon builds it from the run record for the run tree (`ui.run-tree`).
+The TUI uses the linked ledger steps when present, or these role rounds when
+the ledger run is absent from the active snapshot. In `ork status`,
+`active_relays` keeps ledger counts only. Its `engine_runs` carries the same
+*proposed* `roles`. The ledger `Relay` wire gains no tree field.
+
 ## Rules
 
 - **Atomic writes:** write a temporary file in the same directory, then

@@ -907,3 +907,10 @@
 {"when": "2026-10-22T13:21:38Z", "item": "S55", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-22T13:21:39Z", "item": "S55", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-10-22T13:21:39Z", "item": "S55", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-22T13:23:33Z", "item": "S55", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-22T13:27:33Z", "item": "S55", "action": "note", "from": "", "to": "", "note": "Progress: red first confirmed. TestRunTreeLedger and TestRun", "by": "Jon R"}
+{"when": "2026-10-22T13:32:03Z", "item": "S55", "action": "note", "from": "", "to": "", "note": "Progress: tree and engine-role wire tests green; eight new t", "by": "Jon R"}
+{"when": "2026-10-22T13:36:32Z", "item": "S55", "action": "note", "from": "", "to": "", "note": "Progress: final feature race run passes 10 top-level tests /", "by": "Jon R"}
+{"when": "2026-10-22T13:43:12Z", "item": "S55", "action": "note", "from": "", "to": "", "note": "Review round 1: 1 blocker (wait reason hidden by long tree i", "by": "Jon R"}
+{"when": "2026-10-22T13:51:56Z", "item": "S55", "action": "note", "from": "", "to": "", "note": "Progress evidence for fix round 1. No finish or handoff step", "by": "Jon R"}
+{"when": "2026-10-22T13:59:20Z", "item": "S55", "action": "status", "from": "started", "to": "done", "note": "Run tree in the run pane: ledger steps nested by parent, engine roles flat, ASCII spinner on running steps advanced by the existing tick, wait reason kept above the tree, read-only pane for runs started elsewhere, EngineRun.roles on the wire (proposed). Verified: go test -race ./... green outside the sandbox, vet, gofmt, slicer check, adj lint; reviewer and gate PASS.", "by": "Jon R"}
