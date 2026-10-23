@@ -1021,3 +1021,5 @@
 {"when": "2026-10-23T15:01:07Z", "item": "S87", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-10-23T15:02:01Z", "item": "S89", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-23T15:07:04Z", "item": "S89", "action": "status", "from": "started", "to": "done", "note": "3 paid codex calls used (10 spike calls total). Verified by command_execution events (testdata/vendors/codex/08-resume-sandbox-config.stdout): resume accepts -c sandbox_mode=\"workspace-write\" and a worktree write succeeds after resume. Unverified, no command event: that -c takes effect, the main-checkout write block, the main-checkout .git/slicer block, Unix socket bind, loopback TCP bind, and git add/commit in the linked worktree (probes 09 and 10 produced no command_execution events). adj 153 and 154 still open.", "by": "Jon R"}
+{"when": "2026-10-23T16:06:36Z", "item": "S47", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T16:06:36Z", "item": "S30", "action": "edit", "from": "", "to": "", "note": "Implement"}
