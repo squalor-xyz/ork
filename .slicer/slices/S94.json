@@ -1,0 +1,39 @@
+{
+  "id": "S94",
+  "title": "Plan views and lineup edit cover the architect",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S08 relay later notes. The architect is in the engine and the plan, but it is missing from the plan displays: internal/cli/run.go:145, internal/tui/launch.go:304 and internal/tui/waves.go:380; run.plan still refuses an architect lineup override (internal/daemon/runs.go ~302) although adj 151 (lineup-only) expects the owner can add or drop it with the S83 editor; docs/design.md:169-170 says the plan shows whether it runs an architect; docs/glossary.md:205-206 omits the architect state. Open for the owner: for a matched architect row with no ork adapter, planning refuses (fail closed, today) or drops the architect; the architect recommends keeping refuse. This touches UI, so it gets the UI pass (rule u10)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/cli/run.go:145`, `internal/tui/launch.go:304`, `internal/tui/waves.go:380`: show the architect in the plan, confirm and Waves lineup column.\n- `internal/tui/lineup.go`: let the S83 editor add or drop the architect row.\n- `internal/daemon/runs.go` (~302): accept an architect override in run.plan and wave.start.\n- Tests beside each, and `testdata/golden/` for changed views.\n- `docs/design.md:169-170`, `docs/glossary.md:205-206`, `docs/dashboard.md` (lineup editor)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestPlanTextShowsTheArchitectRow: ork run and the TUI confirm list the architect when the lineup has one, and nothing when it does not.\n- TestLineupEditorCanAddAndDropTheArchitect: the S83 editor adds or drops the architect and re-plans.\n- TestRunPlanAcceptsAnArchitectOverride: run.plan with an architect override returns it; an architect with no adapter is refused (fail closed, the recommended default, until the owner decides).\n- Golden views, colour and monochrome."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests first. 2. Show the architect row in the three plan displays. 3. Let the editor and the daemon accept an architect override. 4. Keep refusing a matched architect row with no adapter (fail closed). 5. Update the docs. 6. go test ./internal/tui -update, then review the golden diff. This is a UI slice: it gets the UI pass (r14, rule u10)."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/cli ./internal/tui ./internal/daemon\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review the golden diff\n- slicer check\n- adj lint"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

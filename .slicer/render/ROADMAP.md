@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-93 items · — 38 · done 49 · parked 1 · retired 5
+94 items · — 39 · done 49 · parked 1 · retired 5
 
 ## v1.1
 
@@ -147,9 +147,10 @@
 | 90 | [S91](slices/S91.md) | Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes | S | 1 |  | discovered from S49 | — |
 | 91 | [S92](slices/S92.md) | Fallback brief tells the next row about earlier rows and an already-started slice | S | 1 |  | discovered from S49 | — |
 | 92 | [S93](slices/S93.md) | The gate follows the reviewer's current row after a fallback | S | 1 |  | discovered from S49 | — |
+| 93 | [S94](slices/S94.md) | Plan views and lineup edit cover the architect | S | 2 |  | discovered from S08 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 93 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 94 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
