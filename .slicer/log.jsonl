@@ -922,3 +922,6 @@
 {"when": "2026-10-22T16:45:29Z", "item": "S36", "action": "note", "from": "", "to": "", "note": "Verified second stops join the first stop during both its pr", "by": "Jon R"}
 {"when": "2026-10-22T16:45:31Z", "item": "S36", "action": "status", "from": "started", "to": "done", "note": "Second stops join the in-flight stop across both timing windows without cancellation; finished runs still name their state, and stale stop handles cannot affect later jobs. Daemon race tests and Opus gate passed.", "by": "Jon R"}
 {"when": "2026-10-22T16:49:41Z", "item": "S36", "action": "note", "from": "", "to": "", "note": "Later notes from the relay report: consider tests for a stop", "by": "Jon R"}
+{"when": "2026-10-23T12:05:56Z", "item": "S83", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-23T12:05:56Z", "item": "S83", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-23T12:05:56Z", "item": "S83", "action": "edit", "from": "", "to": "", "note": "Implement"}
