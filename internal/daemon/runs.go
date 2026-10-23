@@ -110,13 +110,14 @@ func (c *stopCall) abandon(err error) {
 // runManager serializes admission and owner actions; the engine serializes
 // each run's state transitions. Background jobs use the daemon's lifetime.
 type runManager struct {
-	waveStops map[string]int // suppress queued members while a wave stop is in progress
-	closed    bool
-	mu        sync.Mutex
-	ctx       context.Context
-	deps      engine.Deps
-	runs      map[string]*managedRun
-	wg        sync.WaitGroup
+	lastRegistry *registry.File // last successful run-manager read; guarded by mu
+	waveStops    map[string]int // suppress queued members while a wave stop is in progress
+	closed       bool
+	mu           sync.Mutex
+	ctx          context.Context
+	deps         engine.Deps
+	runs         map[string]*managedRun
+	wg           sync.WaitGroup
 }
 
 func (d *Daemon) initRunManager() {
@@ -158,7 +159,9 @@ func (d *Daemon) recoverRuns(ctx context.Context) error {
 	if len(stored) == 0 {
 		return nil
 	}
-	f, err := d.loadRegistry()
+	d.runs.mu.Lock()
+	f, err := d.loadRunRegistryLocked()
+	d.runs.mu.Unlock()
 	if err != nil {
 		return err
 	}
@@ -247,7 +250,9 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	if p.Project == "" || p.Item == "" {
 		return nil, badParams(errors.New("run needs project and item"))
 	}
-	f, err := d.loadRegistry()
+	d.runs.mu.Lock()
+	f, err := d.loadRunRegistryLocked()
+	d.runs.mu.Unlock()
 	if err != nil {
 		return nil, err
 	}
@@ -363,7 +368,7 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 	}
 	// Admission is here and only here: owner actions never reach startRun, so
 	// approve, answer, retry and stop bypass the caps (adj 122).
-	f, err := d.loadRegistry()
+	f, err := d.loadRunRegistryLocked()
 	if err != nil {
 		return runrec.Record{}, err
 	}
@@ -486,11 +491,11 @@ func (d *Daemon) stopWave(ctx context.Context, p WaveAction) (*WaveResult, error
 		if d.runs.waveStops[p.Wave] == 0 {
 			delete(d.runs.waveStops, p.Wave)
 		}
-		if f, err := d.loadRegistry(); err != nil {
+		f, err := d.loadRunRegistryLocked()
+		if err != nil {
 			fmt.Fprintf(os.Stderr, "start queued runs: %v\n", err)
-		} else {
-			d.startQueuedLocked(f)
 		}
+		d.startQueuedLocked(f)
 		d.runs.mu.Unlock()
 	}()
 	result := &WaveResult{Wave: p.Wave, Items: []WaveItemResult{}}
@@ -508,6 +513,18 @@ func (d *Daemon) stopWave(ctx context.Context, p WaveAction) (*WaveResult, error
 		result.Items = append(result.Items, waveItem(rec.Item, stopped, err))
 	}
 	return result, nil
+}
+
+// loadRunRegistryLocked remembers successful reads for queue advancement.
+// On error it returns the last good registry and the error. Admission still
+// requires a fresh read. The caller holds the manager lock.
+func (d *Daemon) loadRunRegistryLocked() (*registry.File, error) {
+	f, err := d.loadRegistry()
+	if err != nil {
+		return d.runs.lastRegistry, err
+	}
+	d.runs.lastRegistry = f
+	return f, nil
 }
 
 // hasRoomLocked reports whether one more busy run fits under the global cap
@@ -539,7 +556,7 @@ func (d *Daemon) hasRoomLocked(f *registry.File, project string) bool {
 // startQueuedLocked starts the oldest queued run whose caps have room, and
 // repeats until none fits. The caller holds the manager lock.
 func (d *Daemon) startQueuedLocked(f *registry.File) {
-	if d.runs.closed {
+	if d.runs.closed || f == nil {
 		return
 	}
 	type waiting struct {
@@ -594,11 +611,11 @@ func (d *Daemon) launchRun(r *managedRun, fn func(context.Context) error) {
 		result.record = r.engine.Snapshot()
 		r.busy = false
 		close(r.done)
-		if f, err := d.loadRegistry(); err != nil {
+		f, err := d.loadRunRegistryLocked()
+		if err != nil {
 			fmt.Fprintf(os.Stderr, "start queued runs: %v\n", err)
-		} else {
-			d.startQueuedLocked(f)
 		}
+		d.startQueuedLocked(f)
 		d.runs.mu.Unlock()
 	}()
 }

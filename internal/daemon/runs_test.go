@@ -1112,6 +1112,101 @@ func TestQueuedRunStartsWhenASlotFrees(t *testing.T) {
 	w.expectStart(t, "S3")
 }
 
+func TestQueuedRunStartsWithCachedRegistry(t *testing.T) {
+	for _, caps := range []struct {
+		name            string
+		global, project int
+	}{{"global", 1, 0}, {"project", 0, 1}} {
+		t.Run(caps.name, func(t *testing.T) {
+			w := newWaveRig(t, caps.global, caps.project)
+			w.start(t, "S1")
+			second := w.start(t, "S2")
+			third := w.start(t, "S3")
+			w.expectStart(t, "S1")
+			if second.State != runrec.StateQueued || third.State != runrec.StateQueued {
+				t.Fatal("runs over the cap must queue")
+			}
+			if err := os.WriteFile(w.d.cfg.RegistryPath, []byte(`{"projects":`), 0600); err != nil {
+				t.Fatal(err)
+			}
+			w.free <- struct{}{}
+			w.expectStart(t, "S2")
+			w.expectNoStart(t) // cached caps still hold the third run
+			waitState(t, w.store, third.ID, runrec.StateQueued)
+			w.free <- struct{}{}
+			w.expectStart(t, "S3") // a failed read must not erase the cache
+		})
+	}
+}
+
+func TestQueuedRunUsesLatestJobEndRegistry(t *testing.T) {
+	w := newWaveRig(t, 1, 0)
+	w.start(t, "S1")
+	w.start(t, "S2")
+	w.start(t, "S3")
+	fourth := w.start(t, "S4")
+	w.expectStart(t, "S1")
+	if fourth.State != runrec.StateQueued {
+		t.Fatal("fourth run must queue")
+	}
+	// Only a job-end read sees the new cap before the registry breaks.
+	if err := registry.Save(w.d.cfg.RegistryPath, &registry.File{Version: registry.Version, GlobalCap: 2, Projects: []registry.Project{w.p}}); err != nil {
+		t.Fatal(err)
+	}
+	w.free <- struct{}{}
+	w.expectStarts(t, "S2", "S3")
+	w.expectNoStart(t)
+	if err := os.WriteFile(w.d.cfg.RegistryPath, []byte(`{"projects":`), 0600); err != nil {
+		t.Fatal(err)
+	}
+	w.free <- struct{}{}
+	w.expectStart(t, "S4")
+}
+
+func TestQueuedRunWaitsForFirstGoodRegistryRead(t *testing.T) {
+	w := newWaveRig(t, 1, 0)
+	// Install records without admission or recovery: neither has read a registry.
+	queued, err := w.store.Create(runrec.Record{ID: "queued", Project: "p", Item: "S1", State: runrec.StateQueued,
+		Worktree: filepath.Join(w.p.Path, ".worktrees", "S1"), Lineup: map[string][]runrec.LineupEntry{
+			engine.RoleImplementer: {{Vendor: "claude", Model: "sonnet"}}, engine.RoleReviewer: {{Vendor: "claude", Model: "opus"}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	held, err := w.store.Create(runrec.Record{ID: "held", Project: "p", Item: "H1", State: runrec.StatePaused})
+	if err != nil {
+		t.Fatal(err)
+	}
+	w.d.runs.runs["queued"] = &managedRun{engine: engine.Load(w.d.runDeps(w.p), w.p, queued)}
+	r := &managedRun{engine: engine.Load(w.d.runDeps(w.p), w.p, held)}
+	w.d.runs.runs["held"] = r
+	endJob := func() {
+		t.Helper()
+		w.d.runs.mu.Lock()
+		w.d.launchRun(r, func(context.Context) error { return nil })
+		done := r.done
+		w.d.runs.mu.Unlock()
+		select {
+		case <-done:
+		case <-time.After(5 * time.Second):
+			t.Fatal("job did not end")
+		}
+		// done closes before the queue check, which holds this lock.
+		w.d.runs.mu.Lock()
+		w.d.runs.mu.Unlock()
+	}
+	if err := os.WriteFile(w.d.cfg.RegistryPath, []byte(`{"projects":`), 0600); err != nil {
+		t.Fatal(err)
+	}
+	endJob()
+	w.expectNoStart(t)
+	waitState(t, w.store, "queued", runrec.StateQueued)
+	if err := registry.Save(w.d.cfg.RegistryPath, &registry.File{Version: registry.Version, GlobalCap: 1, Projects: []registry.Project{w.p}}); err != nil {
+		t.Fatal(err)
+	}
+	endJob()
+	w.expectStart(t, "S1")
+}
+
 func TestQueuedRunsRestartOldestFirst(t *testing.T) {
 	w := newWaveRig(t, 1, 0)
 	// Created newest id first, so the order is the creation time, not the id.

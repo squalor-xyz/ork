@@ -3009,7 +3009,7 @@
       "id": "S76",
       "title": "Queued runs keep advancing when the registry cannot be read at job end",
       "short_title": "Queue advance survives a registry read error",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -3030,7 +3030,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
