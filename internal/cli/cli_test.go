@@ -638,7 +638,7 @@ func TestDoctorTextOutput(t *testing.T) {
 		"[ok] claude  2.1.303 (Claude Code)\n",
 		"[ok] codex  codex-cli 0.163.0\n",
 		"[--] grok  not found (optional)\n",
-		"[ok] contract  accepts v7, slicer prints \"Contract: relay v7\"\n",
+		"[ok] contract  accepts v7, v8, slicer prints \"Contract: relay v7\"\n",
 	} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("output lacks %q:\n%s", want, stdout)
@@ -670,12 +670,22 @@ func TestDoctorReportsWhereTheBinaryIs(t *testing.T) {
 	}
 }
 
-func TestDoctorContractMismatchFails(t *testing.T) {
-	app, _, _ := doctorApp(t, fmt.Sprintf("Contract: relay v%d", roles.ContractVersion+1))
+func TestDoctorAcceptsAV8Slicer(t *testing.T) {
+	app, _, _ := doctorApp(t, "Contract: relay v8")
 	code, stdout, _ := run(t, app, "doctor", "--json")
 	var d doctorOut
 	mustJSON(t, stdout, &d)
-	if code != 1 || d.OK || d.Contract.OK || d.Contract.Found != fmt.Sprintf("Contract: relay v%d", roles.ContractVersion+1) || d.Contract.Error == "" {
+	if code != 0 || !d.OK || !d.Contract.OK || d.Contract.Found != "Contract: relay v8" || !reflect.DeepEqual(d.Contract.Accepted, []int{7, 8}) || d.Contract.Error != "" {
+		t.Fatalf("exit %d\n%s", code, stdout)
+	}
+}
+
+func TestDoctorContractMismatchFails(t *testing.T) {
+	app, _, _ := doctorApp(t, "Contract: relay v9")
+	code, stdout, _ := run(t, app, "doctor", "--json")
+	var d doctorOut
+	mustJSON(t, stdout, &d)
+	if code != 1 || d.OK || d.Contract.OK || d.Contract.Found != "Contract: relay v9" || d.Contract.Error == "" {
 		t.Fatalf("exit %d\n%s", code, stdout)
 	}
 	for _, tool := range d.Tools {
@@ -692,12 +702,12 @@ func TestDoctorContractMismatchFails(t *testing.T) {
 // The accepted set replaces the exact pin (boundary.contract): an older
 // version is refused as well as a newer one, and the error names both sides.
 func TestDoctorRefusesEveryVersionOutsideTheAcceptedSet(t *testing.T) {
-	for _, v := range []int{6, 8, 70} {
+	for _, v := range []int{6, 9, 70} {
 		app, _, _ := doctorApp(t, fmt.Sprintf("Contract: relay v%d", v))
 		code, stdout, _ := run(t, app, "doctor", "--json")
 		var d doctorOut
 		mustJSON(t, stdout, &d)
-		if code != 1 || d.OK || d.Contract.OK || !strings.Contains(d.Contract.Error, fmt.Sprintf("v%d", v)) || !strings.Contains(d.Contract.Error, "v7") {
+		if code != 1 || d.OK || d.Contract.OK || !strings.Contains(d.Contract.Error, fmt.Sprintf("v%d", v)) || !strings.Contains(d.Contract.Error, "ork accepts relay v7, v8") {
 			t.Errorf("v%d: exit %d\n%s", v, code, stdout)
 		}
 	}

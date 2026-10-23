@@ -95,7 +95,7 @@ owner decides, so never run `adj decide`, `adj reject` or `adj supersede`.
 ## Project Rules
 
 - ork implements slicer's relay contract and accepts only the versions it
-  lists (v7 on 2026-10-19; `boundary.contract`). Do not paste the contract's text into docs; refer to it by
+  lists (v7 and v8 on 2026-10-23; `boundary.contract`). Do not paste the contract's text into docs; refer to it by
   command (`slicer ai relay`). Role prompts are ork's own text
   (`roles.prompts`).
 - Never read vendor credentials or login files; use each vendor CLI's own

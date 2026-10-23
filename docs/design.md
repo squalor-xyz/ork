@@ -667,9 +667,12 @@ in JSON mode.
   running a trivial command, without reading credentials) comes in S06, and
   doctor makes no model call;
 - the slicer contract: the first line of `slicer ai relay` against ork's
-  accepted set of versions (`roles.AcceptedContracts`, v7 today;
+  accepted set of versions (`roles.AcceptedContracts`, v7 and v8;
   `boundary.contract`). Any other version, older or newer, fails the check.
-  The engine makes the same check before it creates a run;
+  The engine makes the same check before it creates a run. v8 changes only
+  the outer session's hand-back handling and the orchestrator's last line
+  (`waiting on: ROLE AGENT-ID`; `slicer/CHANGELOG.md:20`). ork's role prompts
+  remain written against v7;
 - each project's check command and patterns (later).
 
 Doctor exits 1 when slicer, adj or the contract check fails. `roles print`

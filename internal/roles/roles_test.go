@@ -138,8 +138,8 @@ func TestOwnerQuestionWording(t *testing.T) {
 }
 
 func TestAcceptedContracts(t *testing.T) {
-	if got := AcceptedContracts(); !reflect.DeepEqual(got, []int{7}) {
-		t.Fatalf("AcceptedContracts() = %v, want [7]", got)
+	if got := AcceptedContracts(); !reflect.DeepEqual(got, []int{7, 8}) {
+		t.Fatalf("AcceptedContracts() = %v, want [7 8]", got)
 	}
 	got := AcceptedContracts()
 	got[0] = 99
@@ -151,6 +151,27 @@ func TestAcceptedContracts(t *testing.T) {
 	}
 }
 
+func TestCheckContractLineAcceptsV8(t *testing.T) {
+	if v, err := CheckContractLine("Contract: relay v8"); err != nil || v != 8 {
+		t.Fatalf("v8: %d, %v", v, err)
+	}
+	if v, err := CheckContractLine("Contract: relay v7 x"); err == nil || v != 0 {
+		t.Fatalf("malformed v7: %d, %v", v, err)
+	}
+}
+
+func TestPromptsStayAtV7(t *testing.T) {
+	if ContractVersion != 7 {
+		t.Errorf("ContractVersion = %d, want 7", ContractVersion)
+	}
+	for name, p := range prompts(t) {
+		first, _, _ := strings.Cut(p, "\n")
+		if want := "Role: " + name + ". Contract: relay v7"; first != want {
+			t.Errorf("%s: first line %q, want %q", name, first, want)
+		}
+	}
+}
+
 func TestCheckContractLine(t *testing.T) {
 	if v, err := CheckContractLine("Contract: relay v7"); err != nil || v != 7 {
 		t.Fatalf("v7: %d, %v", v, err)
@@ -158,9 +179,9 @@ func TestCheckContractLine(t *testing.T) {
 	if v, err := CheckContractLine("Contract: relay v7  "); err != nil || v != 7 {
 		t.Fatalf("v7 with trailing spaces: %d, %v", v, err)
 	}
-	v, err := CheckContractLine("Contract: relay v8")
-	if err == nil || v != 8 || !strings.Contains(err.Error(), "v8") || !strings.Contains(err.Error(), "v7") {
-		t.Fatalf("v8: %d, %v", v, err)
+	v, err := CheckContractLine("Contract: relay v9")
+	if err == nil || v != 9 || err.Error() != "ork accepts relay v7, v8 and slicer prints v9" {
+		t.Fatalf("v9: %d, %v", v, err)
 	}
 	if v, err := CheckContractLine("Contract: relay v6"); err == nil || v != 6 {
 		t.Fatalf("v6: %d, %v", v, err)

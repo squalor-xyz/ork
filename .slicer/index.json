@@ -3421,7 +3421,7 @@
       "id": "S88",
       "title": "Accept relay contract v8 alongside v7",
       "short_title": "Accept relay contract v8 alongside v7",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -3442,7 +3442,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -514,7 +514,8 @@ func TestEveryWriteIsInWritesAndNoReadIs(t *testing.T) {
 func TestContractCheckAcceptsTheSetAndRefusesOthers(t *testing.T) {
 	for line, wantErr := range map[string]string{
 		"Contract: relay v7":   "",
-		"Contract: relay v8":   "v8",
+		"Contract: relay v8":   "",
+		"Contract: relay v9":   "v9",
 		"Contract: relay v6":   "v6",
 		"something else":       "contract line",
 		"Contract: relay v7 x": "contract line",
