@@ -24,11 +24,11 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write the failing tests first (Failing tests). Run them and watch each fail for its stated reason.\n2. Check `go doc charm.land/bubbletea/v2 ExecProcess` in the worktree, and `slicer tui --help` for the `--root` form (../slicer/docs/tui.md).\n3. `internal/tui/keys.go`: an OpenSlicerTui binding on `O` (shift+o; proposed, `o` is free but `O` pairs with `P`). Active on the Roadmap view for the selected project.\n4. `internal/tui/model.go`: the key returns `tea.ExecProcess` running `slicer tui --root PROJECT_PATH`; the callback returns a refresh message that reloads the snapshot. A missing slicer shows the error on the status line and does not panic.\n5. `internal/tui/view.go` help line, `docs/dashboard.md` key list and Roadmap section.\n6. Run go test ./internal/tui -update and review the golden diff.\nDecided 2026-10-20: record 11 (ui.slicer-tui) is both: common edits in ork, one key opens slicer tui for the rest. The key (O) is proposed until the owner confirms it."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- go test -race -count=1 ./internal/tui\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l . (prints nothing)\n- go test ./internal/tui -update, then review the golden diff\n- slicer check\n- adj lint\n- [HUMAN CHECK] The owner presses O on the Roadmap, edits in slicer tui, quits it, and finds ork back on the Roadmap with the change shown."
     },
     {
       "heading": "Git",

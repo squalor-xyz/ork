@@ -2788,7 +2788,7 @@
       "id": "S69",
       "title": "Roadmap editing: open slicer tui for the project (needs adj 11)",
       "short_title": "Roadmap editing: open slicer tui for the project (needs adj 11)",
-      "status": "retired",
+      "status": "open",
       "has_slice": true,
       "depends_on": [
         "S12"

@@ -970,3 +970,19 @@
 {"when": "2026-10-23T14:09:31Z", "item": "S74", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}
 {"when": "2026-10-23T14:10:22Z", "item": "S74", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-23T14:20:56Z", "item": "S74", "action": "status", "from": "started", "to": "done", "note": "S74: the predates-stop hint's status call is bounded by defaultStartWait (5s); on expiry the role-may-be-running warning prints. Test TestDaemonStopPredatingStatusTimeout covers stop and restart against a daemon that never answers status; docs/design.md updated. go test -race ./..., vet, gofmt, slicer check pass.", "by": "Jon R"}
+{"when": "2026-10-23T14:27:42Z", "item": "S69", "action": "set", "from": "retired", "to": "open", "note": "status retired→open"}
+{"when": "2026-10-23T14:28:02Z", "item": "S63", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T14:28:02Z", "item": "S63", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-23T14:28:02Z", "item": "S63", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-23T14:28:02Z", "item": "S63", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-23T14:28:03Z", "item": "S67", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T14:28:03Z", "item": "S67", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-23T14:28:03Z", "item": "S67", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-23T14:28:03Z", "item": "S68", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T14:28:03Z", "item": "S68", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-23T14:28:03Z", "item": "S69", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T14:28:03Z", "item": "S69", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-23T14:28:03Z", "item": "S70", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T14:28:03Z", "item": "S70", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-23T14:28:04Z", "item": "S69", "action": "set", "from": "", "to": "", "note": ""}
+{"when": "2026-10-23T14:28:10Z", "item": "S48", "action": "edit", "from": "", "to": "", "note": "Implement"}

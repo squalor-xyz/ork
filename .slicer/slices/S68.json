@@ -24,11 +24,11 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write the failing tests first (Failing tests). Run them and watch each fail for its stated reason.\n2. `internal/slicercli/write.go`: a Move wrapper over `slicer move ID --before OTHER` or `--after OTHER` (../slicer/docs/commands.md:32). Slicer keeps a move inside one kind (:512); its refusal is returned verbatim.\n3. `internal/daemon/handlers.go`: a write method `item.move` (proposed; params project, item, other, before or after), beside S67's.\n4. `internal/tui/keys.go`: MoveDown on `J` and MoveUp on `K` (shift+j, shift+k). `j` and `k` stay row movement. On the Roadmap view they move the selected item one place: the confirm names the neighbour it passes.\n5. `internal/tui/model.go` and `view.go`: the confirm bar shows `slicer move ID --before OTHER` (or --after); Enter is No (decision 98); y calls the daemon, reloads the queue in slicer's order and keeps the cursor on the moved item. At the first or last row the key does nothing.\n6. `docs/dashboard.md:219-223`: the key list and the Roadmap text.\n7. Run go test ./internal/tui -update and review the golden diff.\nDecided 2026-10-23 (owner interview): J and K move one place, with a confirm showing the exact command. Nothing is open."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- go test -race -count=1 ./internal/tui ./internal/daemon ./internal/slicercli\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l . (prints nothing)\n- go test ./internal/tui -update, then review the golden diff\n- slicer check\n- adj lint\n- [HUMAN CHECK] The owner presses J on a Roadmap item, sees the exact command, answers y, and the item sits one place lower in slicer next; K moves it back."
     },
     {
       "heading": "Git",
