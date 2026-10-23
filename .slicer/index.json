@@ -3218,13 +3218,25 @@
       "id": "S83",
       "title": "Waves screen: edit a slice's lineup and budgets before launch",
       "short_title": "Waves screen: edit a slice's lineup and budgets before launch",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S80",
         "S82"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "c5e896f4-1b55-4f22-8b78-491300e0728c",
+          "kind": "",
+          "text": "**2026-10-23** — Review round 1: no blockers. Accepted: move-to-front on cycling (no duplicate primary), docs say cycling has no effect until S49 keeps every row in the plan (runs.go:266-270), UI pass edits.",
+          "created_at": "2026-10-23T12:19:18Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -3242,7 +3254,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

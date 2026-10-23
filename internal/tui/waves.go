@@ -30,6 +30,7 @@ type wavesState struct {
 	err            error
 	cursor         int
 	picked         map[string]daemon.RunParams
+	lineup         *lineupEditor
 	inputs         *waveInputs
 	planning       string
 	planRequest    uint64
@@ -46,6 +47,7 @@ type wavesMsg struct {
 	item     string
 	suggest  *slicercli.ParallelPlan
 	plan     *daemon.RunPlan
+	params   *daemon.RunParams
 	overlap  *slicercli.Overlap
 	result   *daemon.WaveResult
 	action   runAction
@@ -216,6 +218,10 @@ func (m *Model) confirmWave() tea.Cmd {
 		m.actionStatus = a.command() + " is pending"
 		return nil
 	}
+	if w.planning != "" {
+		m.actionStatus = "A plan is pending; wait before launching"
+		return nil
+	}
 	items := w.items()
 	if w.starting || len(items) == 0 {
 		return nil
@@ -321,6 +327,9 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 		if !ok {
 			return nil
 		}
+		if msg.params != nil {
+			p = *msg.params
+		}
 		p.Expected = msg.plan
 		w.picked[msg.item] = p
 	}
@@ -353,7 +362,7 @@ func (m *Model) wavesBody(width int) overviewView {
 		add(actionError(w.err))
 		return out
 	}
-	out.body = append(out.body, th.Heading.Render("Items                   Lineup"))
+	out.body = append(out.body, th.Heading.Render("Items                   Lineup (* edited for this run)"))
 	row := 0
 	draw := func(it slicercli.ParallelItem) {
 		tick := "[ ]"
@@ -374,11 +383,18 @@ func (m *Model) wavesBody(width int) overviewView {
 					chain = append(chain, e.Vendor+" "+e.Model+" "+e.Effort)
 				}
 				if len(chain) > 0 {
-					lineup = append(lineup, role+": "+strings.Join(chain, " -> "))
+					label := role
+					if len(p.Lineup[role]) > 0 {
+						label += "*"
+					}
+					lineup = append(lineup, label+": "+strings.Join(chain, " -> "))
 				}
 			}
 		} else if w.planning == it.ID {
 			lineup = []string{"pending: run.plan"}
+		}
+		if p.Budgets != nil {
+			lineup = append(lineup, fmt.Sprintf("budgets*: %d min, %d tokens", p.Budgets.Minutes, p.Budgets.Tokens))
 		}
 		line := indent + label
 		if len(lineup) > 0 {
@@ -435,6 +451,6 @@ func (m *Model) wavesBody(width int) overviewView {
 		}
 		out.sel = len(out.body) - 1
 	}
-	add("[space] tick item   [l] launch wave")
+	add("[space] tick item   [e] edit lineup   [l] launch wave")
 	return out
 }

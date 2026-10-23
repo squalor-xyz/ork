@@ -13,6 +13,7 @@
                            |/ filter projects; esc clears
                            |s hide/show sidebar
                            |space tick item and ask inputs (Waves)
+                           |e edit ticked item lineup (Waves)
                            |l launch a ready slice (Roadmap) or wave (Waves)
                            |a approve
                            |x stop
@@ -25,6 +26,5 @@
                            |q quit
                            |
                            |Overview, Waves and Roadmap are available. Questions and Decisions co...
-                           |
                            |[90m------------------------------------------------------------------------[m
                            | 1 project | refreshed 16:42:00 | pending 0

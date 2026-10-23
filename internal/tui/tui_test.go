@@ -762,6 +762,7 @@ func TestDashboardDocsListTheNavigationKeys(t *testing.T) {
 		"`1`-`9` select projects in registry order.",
 		"`tab` and `shift+tab` switch views",
 		"`space` ticks or unticks the selected item",
+		"`e` edits the selected ticked item",
 		"`l` launches the ticked items with one y/n confirmation",
 		"`down`/`j` and `up`/`k` move it to the next and previous row, and so do `n` and `p`",
 	} {

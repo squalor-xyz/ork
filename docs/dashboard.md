@@ -210,9 +210,9 @@ message verbatim, including per-item launch errors.
 
 ```
 Suggested (slicer plan-parallel)
-Items                   Lineup
+Items                   Lineup (* edited for this run)
   Wave 2
-  [x] A  Alpha            implementer: claude sonnet high
+  [x] A  Alpha            implementer*: claude custom-model high
                           reviewer: claude opus medium
                           gate: claude opus medium
   [x] B  Beta             implementer: claude sonnet high
@@ -224,7 +224,7 @@ Items                   Lineup
   [ ] D  Delta (no_files)
   ! A and B both touch shared.go
   ! A and B both touch second.go
-  [space] tick item   [l] launch wave
+  [space] tick item   [e] edit lineup   [l] launch wave
 ```
 
 `space` ticks or unticks the selected item. Ticking shows both y/n inputs
@@ -242,9 +242,41 @@ Every ticked item must have a successful plan before launch. One failed
 plan prevents launching the chosen set; the owner can untick it. The
 wave.plan-failure decision remains open (adj 146).
 
-Lineup editing (`e`, S83) is later work. The editor will cycle matrix rows
-with left and right, and open vendor, model and effort fields for custom
-entries (`ui.lineup-editor`). Edits apply to that launch only.
+`e` edits the selected ticked item after its plan is ready (S83).
+The editor starts from that item's plan: implementer and reviewer, then
+budget minutes and tokens. The gate follows the reviewer and has no field.
+`up`/`down`, `tab` and `shift+tab` move between rows.
+`left` and `right` cycle the role's chain already in
+`RunPlan.Lineup[role]`: primary first, then alternatives. Until S49, the
+daemon plan has one row per role, so left and right have no effect; use
+`c` to change a role. The TUI adds no matrix read.
+`c` opens vendor, model and effort fields for a custom primary entry.
+`tab` and `shift+tab` switch fields; `enter` uses the custom entry.
+Cycling moves the chosen row to the front; the rest keep their order.
+Custom entry replaces the primary; fallback entries cannot be edited here.
+Budget fields accept whole numbers of zero or more; zero uses the project
+default, following the daemon's budget semantics.
+`enter` saves and replans; unchanged values do not call Plan.
+Launch waits for the replan. Errors show verbatim and keep the old plan
+and overrides. `esc` discards the editor's changes, including custom fields.
+The editor marks roles whose chains differ from its starting plan with `*`.
+The Waves Lineup column marks overridden roles with `*` and shows saved
+budget overrides as `budgets*: MIN min, TOKENS tokens`.
+Edits apply to that run only and travel with that item's confirmed plan;
+the matrix is unchanged (`ui.lineup-editor`, `lineup.override-scope`).
+
+```
+Edit lineup: A  Alpha
+  Run only; gate follows reviewer.
+  > implementer: claude sonnet high (no alternatives; c for custom)
+    reviewer: claude opus medium
+    Budget minutes: 45
+    Budget tokens: 9000
+  Zero budget uses the project default.
+  [up/down/tab] row   [left/right] cycle   [c] custom
+  [enter] save and replan   [esc] discard
+```
+
 The run tree (S55) appears in the Overview detail pane. The wave charts and
 animations below remain proposed work for S07.
 

@@ -1,7 +1,7 @@
 [1mork[m  ?help                 | Overview[90m | Questions | [m[1;36mWaves[m[90m | [mRoadmap[90m | Decisions[m
   Needs you                |[90m------------------------------------------------------------------------[m
 [1;7;97;44m> ork 0[m                    |[1;36mSuggested (slicer plan-parallel)[m
-  other 0                  |[1;36mItems                   Lineup[m
+  other 0                  |[1;36mItems                   Lineup (* edited for this run)[m
                            |  Wave 2
                            |  [x] A  Alpha            implementer: claude sonnet high
                            |                          reviewer: claude opus medium
@@ -15,7 +15,7 @@
                            |  [ ] D  Delta (no_files)
                            |  ! A and B both touch shared.go
                            |  ! A and B both touch second.go
-                           |  [space] tick item   [l] launch wave
+                           |  [space] tick item   [e] edit lineup   [l] launch wave
                            |
                            |
                            |

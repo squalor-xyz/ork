@@ -52,7 +52,11 @@ func (m *Model) screen() string {
 	} else if m.view == roadmapView || m.view == wavesView {
 		rv := overviewView{}
 		if m.view == wavesView {
-			rv = m.wavesBody(mainW)
+			if m.waves != nil && m.waves.lineup != nil {
+				rv = m.lineupBody(mainW)
+			} else {
+				rv = m.wavesBody(mainW)
+			}
 		} else if m.launch != nil {
 			rv = m.launchView(mainW)
 		} else {

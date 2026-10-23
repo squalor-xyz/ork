@@ -306,6 +306,16 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyPressMsg:
 		return m, m.key(msg)
 	case tea.PasteMsg:
+		if m.waves != nil && m.waves.lineup != nil {
+			e := m.waves.lineup
+			if e.custom {
+				e.fields[e.focus].update(msg)
+			} else if e.row >= 2 {
+				e.budgets[e.row-2].update(msg)
+			}
+			m.actionStatus = ""
+			return m, nil
+		}
 		if m.waves != nil && m.waves.inputs != nil {
 			in := m.waves.inputs
 			in.fields[in.focus].update(msg)
@@ -344,6 +354,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 
+	if m.waves != nil && m.waves.lineup != nil {
+		return m.lineupKey(msg)
+	}
 	if m.waves != nil && m.waves.inputs != nil {
 		return m.waveInputKey(msg)
 	}
@@ -377,6 +390,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 	switch {
+	case key.Matches(msg, m.keys.EditLineup):
+		return m.openLineup()
 	case key.Matches(msg, m.keys.Tick):
 		return m.tickWave()
 	case key.Matches(msg, m.keys.Launch):

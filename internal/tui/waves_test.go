@@ -39,11 +39,19 @@ func (l *wavesLive) WaveOverlap(_ context.Context, p string, ids []string) (*sli
 }
 func (l *wavesLive) Plan(_ context.Context, p daemon.RunParams) (*daemon.RunPlan, error) {
 	l.plans = append(l.plans, p)
-	return &daemon.RunPlan{Item: p.Item, Lineup: map[string][]runrec.LineupEntry{
+	plan := &daemon.RunPlan{Item: p.Item, Lineup: map[string][]runrec.LineupEntry{
 		"implementer": {{Vendor: "claude", Model: "sonnet", Effort: "high"}},
 		"reviewer":    {{Vendor: "claude", Model: "opus", Effort: "medium"}},
 		"gate":        {{Vendor: "claude", Model: "opus", Effort: "medium"}},
-	}}, l.planErr
+	}}
+	for role, chain := range p.Lineup {
+		plan.Lineup[role] = append([]runrec.LineupEntry(nil), chain...)
+	}
+	plan.Lineup["gate"] = append([]runrec.LineupEntry(nil), plan.Lineup["reviewer"]...)
+	if p.Budgets != nil {
+		plan.Budgets = *p.Budgets
+	}
+	return plan, l.planErr
 }
 func (l *wavesLive) WaveStart(_ context.Context, p daemon.WaveStartParams) (*daemon.WaveResult, error) {
 	l.writes++
