@@ -6,13 +6,13 @@
                    |[1mRunning[m
                    |  [2mnothing running[m
                    |
+                   |[1mRecent[m
+                   |  [2mnone[m
+                   |
                    |[1mReady to land[m
                    |[1;7m    ork    S63  s63  merged[m
                    |      slicer land 'S63' --branch 's63' --note 'Landed s63'
                    |           slicer render
-                   |
-                   |
-                   |
                    |
                    |
                    |

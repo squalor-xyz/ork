@@ -1,0 +1,40 @@
+ [1;36mOverview[m[90m | Questions | [mWaves[90m | [mRoadmap[90m | Decisions[m
+[90m------------------------------------------------------------------------------------------------------------------------[m
+[1;36mNeeds you[m
+  [90mnothing needs you[m
+
+[1;36mRunning[m
+  [36m> started elsewhere[m  ork  s97  S97  active  20m  running: reviewer  implementer>[reviewer]>gate  [33m! heard 16m[m
+  [90m> started elsewhere[m  ork  [90mstale  S97  stale  20m  running: reviewer  implementer>reviewer>gate  [m[1;31m!! heard 30m[m
+
+[1;36mRecent[m
+[1;7;97;44m    ork  ✗ fail  S94  10m  ended 5m ago  impl 1  review 1  gate 0[m
+    ork  [32m✓ pass[m[90m  S93  10m  ended 20m ago  impl 1  review 1  gate 0[m
+    ork  [90m~ stopped[m[90m  S95  10m  ended 35m ago  impl 1  review 1  gate 0[m
+
+[1;36mReady to land[m
+  [90mnone[m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  ✗ fail  S94  10m  ended 5m ago  impl 1  review 1  gate 0
+[90m------------------------------------------------------------------------------------------------------------------------[m
+ 1 project | refreshed 16:42:00 | pending 0

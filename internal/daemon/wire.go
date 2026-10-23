@@ -210,6 +210,7 @@ func (p Part[T]) result() source.Result[T] {
 
 // SnapshotResult is source.Snapshot over the wire.
 type SnapshotResult struct {
+	BoardRuns  Part[[]slicercli.RelayRun] `json:"board_runs"` // proposed: stale and recently ended runs
 	EngineRuns []EngineRun                `json:"engine_runs"`
 	Project    registry.Project           `json:"project"`
 	Items      Part[[]slicercli.Item]     `json:"items"`

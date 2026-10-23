@@ -61,7 +61,9 @@ func TestRunTreeLedger(t *testing.T) {
 		}
 	}
 	// The original CLI sample also retains the orchestrator and its roles.
-	h = treeHarness(t, treeFixture(t, "relay-run-list.json")[:1], "")
+	sample := treeFixture(t, "relay-run-list.json")[:1]
+	sample[0].State = "active"
+	h = treeHarness(t, sample, "")
 	v = treePaneView(h.m, 120, 40)
 	if !strings.Contains(v, "\n  + orchestrator") || !strings.Contains(v, "\n    + gate") {
 		t.Fatal(v)
@@ -107,7 +109,8 @@ func TestRunTreeEngine(t *testing.T) {
 			h := treeHarness(t, runs, raw)
 			v := treePaneView(h.m, 100, 40)
 			if linked == "tree" {
-				if !strings.Contains(v, "orchestrator") || strings.Contains(v, "round 1") || strings.Count(v, "implementer") != 1 {
+				tree := sgr.ReplaceAllString(strings.Join(h.m.runTreeLines(h.m.paneSteps(), 100, 0), "\n"), "")
+				if !strings.Contains(tree, "orchestrator") || strings.Contains(tree, "round 1") || strings.Count(tree, "implementer") != 1 {
 					t.Fatal(v)
 				}
 			} else {
@@ -287,7 +290,7 @@ func TestRunTreeEndedRunUnfinishedRole(t *testing.T) {
 			if steps[1].Phase != state {
 				t.Fatalf("unfinished role phase = %q, want neutral %q", steps[1].Phase, state)
 			}
-			v := treePaneView(h.m, 100, 40)
+			v := sgr.ReplaceAllString(strings.Join(h.m.runTreeLines(steps, 100, 0), "\n"), "")
 			for _, line := range strings.Split(v, "\n") {
 				if strings.Contains(line, "reviewer") && (!strings.HasPrefix(strings.TrimSpace(line), ". reviewer") || strings.Contains(line, " start") || strings.Contains(line, "1m")) {
 					t.Fatalf("inactive run shows running role: %s", line)
@@ -374,10 +377,10 @@ func TestRunTreeFieldsAndStyles(t *testing.T) {
 func TestRunTreeEngineRoundOnNode(t *testing.T) {
 	h := treeHarness(t, nil, treeEngine)
 	lines := h.m.runTreeLines(h.m.paneSteps(), 100, 0)
-	if len(lines) != 3 {
+	if len(lines) != 4 {
 		t.Fatalf("engine roles need one line each, got %d: %v", len(lines), lines)
 	}
-	for _, line := range lines {
+	for _, line := range lines[:3] {
 		if !strings.Contains(line, "round 1") {
 			t.Errorf("node missing round: %q", line)
 		}

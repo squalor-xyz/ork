@@ -31,7 +31,7 @@ func (m *Model) paneRow() (ovRow, string, bool) {
 	p := m.byName[m.pane.project]
 	if p != nil {
 		if m.pane.ledger {
-			for _, r := range p.snap.Runs.Value {
+			for _, r := range boardLedgers(p.snap) {
 				if r.ID == m.pane.run {
 					return ovRow{ledgerID: r.ID, name: p.reg.Name, id: strings.Join(r.Items, ", "), state: r.State}, "", true
 				}
@@ -110,13 +110,22 @@ func (m *Model) paneLines(w, h int, status string) []string {
 	if m.pane.ledger {
 		run = r.ledgerID
 	}
-	title := "Run " + run + "  " + r.id + "  " + r.state
+	displayState := r.state
+	stale := m.paneBoardRun().State == "stale"
+	if stale {
+		displayState = "stale"
+	}
+	title := "Run " + run + "  " + r.id + "  " + displayState
 	if m.pane.ledger {
 		title += "  started elsewhere"
 	}
 	header := wrapText(title, width)
 	for i := range header {
-		header[i] = m.cfg.Theme.Heading.Render(header[i])
+		if stale {
+			header[i] = m.cfg.Theme.Dim.Render(header[i])
+		} else {
+			header[i] = m.cfg.Theme.Heading.Render(header[i])
+		}
 	}
 	footer := []string{}
 	switch {
@@ -146,7 +155,16 @@ func (m *Model) paneLines(w, h int, status string) []string {
 	if reason != "" {
 		lines = append(lines, wrapText(reason, width)...)
 	}
-	lines = append(lines, m.runTreeLines(m.paneSteps(), width, m.treeFrame)...)
+	steps := m.paneSteps()
+	lines = append(lines, m.boardLines(steps, width)...)
+	roleWidth := treeRoleWidth(steps)
+	if boardLive(m.paneBoardRun().State) {
+		for _, role := range pipelineRoles(steps) {
+			roleWidth = max(roleWidth, len(role))
+		}
+	}
+	lines = append(lines, m.runTreeLinesWithRoleWidth(steps, width, m.treeFrame, roleWidth)...)
+	lines = append(lines, m.boardTail(steps, width, roleWidth)...)
 	if len(lines) == 0 {
 		lines = wrapText(reason, width)
 	}

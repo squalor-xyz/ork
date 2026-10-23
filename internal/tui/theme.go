@@ -21,6 +21,9 @@ type Theme struct {
 	Decision   lipgloss.Style
 	Held       lipgloss.Style
 	Error      lipgloss.Style
+	Warn       lipgloss.Style // proposed: last heard warning
+	Passed     lipgloss.Style // proposed: finished pipeline role
+	Running    lipgloss.Style // proposed: running pipeline role
 	Pending    lipgloss.Style
 	External   lipgloss.Style
 }
@@ -42,6 +45,9 @@ func NewTheme(mono bool) Theme {
 			Decision:   s().Bold(true),
 			Held:       s().Bold(true),
 			Error:      s().Bold(true),
+			Warn:       s(),
+			Passed:     s(),
+			Running:    s(),
 			Pending:    s().Faint(true),
 			External:   s().Bold(true),
 		}
@@ -58,6 +64,9 @@ func NewTheme(mono bool) Theme {
 		Decision:   s().Bold(true).Foreground(lipgloss.Color("3")),
 		Held:       s().Bold(true).Foreground(lipgloss.Color("5")),
 		Error:      s().Bold(true).Foreground(lipgloss.Color("1")),
+		Warn:       s().Foreground(lipgloss.Color("3")),
+		Passed:     s().Foreground(lipgloss.Color("2")),
+		Running:    s().Foreground(lipgloss.Color("6")),
 		Pending:    s().Foreground(lipgloss.Color("8")),
 		External:   s().Foreground(lipgloss.Color("6")),
 	}

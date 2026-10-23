@@ -185,6 +185,9 @@ func (d *Daemon) snapshot(ctx context.Context, p SnapshotParams) (*SnapshotResul
 		return nil, notFound(p.Project, f)
 	}
 	s := d.snapshotOf(ctx, proj)
+	if reader, ok := d.cfg.Source.(source.BoardReader); ok {
+		s.BoardRuns = reader.BoardRuns(ctx, proj)
+	}
 	now := d.cfg.Clock.Now()
 	return &SnapshotResult{
 		Project:    s.Project,
@@ -193,6 +196,7 @@ func (d *Daemon) snapshot(ctx context.Context, p SnapshotParams) (*SnapshotResul
 		Deps:       partOf(s.Deps, now),
 		Goals:      partOf(s.Goals, now),
 		Runs:       partOf(s.Runs, now),
+		BoardRuns:  partOf(s.BoardRuns, now),
 		Open:       partOf(s.Open, now),
 		Decided:    partOf(s.Decided, now),
 	}, nil

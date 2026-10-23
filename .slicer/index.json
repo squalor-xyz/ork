@@ -3687,12 +3687,24 @@
       "id": "S97",
       "title": "Running rows and the run pane show the relay board's information: pipeline, round, last heard, waiting steps, recent runs",
       "short_title": "Running rows and the run pane show the relay board's information: pipeline, round, last heard, waiting steps, recent runs",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S55"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "e2eb01b9-2a09-440b-870a-d1ef7e91c76f",
+          "kind": "",
+          "text": "**2026-10-23** — Review FAIL (gate 1): the run pane for an ended, stopped or committed run shows 'last heard 0s ago' (relayboard.go heard 0s constant); needs the true age, dim, no cue.",
+          "created_at": "2026-10-23T21:30:12Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -3710,7 +3722,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

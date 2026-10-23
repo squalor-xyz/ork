@@ -40,9 +40,9 @@ func (m *Model) paneSteps() []runTreeStep {
 				continue
 			}
 			if r.RelayRun != "" {
-				for _, run := range p.snap.Runs.Value {
+				for _, run := range boardLedgers(p.snap) {
 					if run.ID == r.RelayRun {
-						return ledgerTreeSteps(run.Steps)
+						return boardTreeSteps(run)
 					}
 				}
 			}
@@ -71,9 +71,9 @@ func (m *Model) paneSteps() []runTreeStep {
 		}
 		return nil
 	}
-	for _, run := range p.snap.Runs.Value {
+	for _, run := range boardLedgers(p.snap) {
 		if run.ID == ledger {
-			return ledgerTreeSteps(run.Steps)
+			return boardTreeSteps(run)
 		}
 	}
 	return nil
@@ -82,9 +82,25 @@ func (m *Model) paneSteps() []runTreeStep {
 // runTreeLines preserves sibling order and visits every step once, including
 // disconnected cycles. Only start is running; unknown phases stay neutral.
 func (m *Model) runTreeLines(steps []runTreeStep, width, frame int) []string {
-	roleWidth, phaseWidth := 0, 0
+	return m.runTreeLinesWithRoleWidth(steps, width, frame, treeRoleWidth(steps))
+}
+
+func treeRoleWidth(steps []runTreeStep) int {
+	width := 0
+	for _, s := range steps {
+		width = max(width, lipgloss.Width(treeText(s.Role)))
+	}
+	return width
+}
+
+func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, roleWidth int) []string {
+	counts := roleCounts(steps)
+	latest := map[string]int{}
+	for i, s := range steps {
+		latest[s.Role] = i
+	}
+	phaseWidth := 0
 	for _, step := range steps {
-		roleWidth = max(roleWidth, lipgloss.Width(treeText(step.Role)))
 		phaseWidth = max(phaseWidth, lipgloss.Width(treeText(step.Phase)))
 	}
 	byID := make(map[string]int, len(steps))
@@ -104,6 +120,7 @@ func (m *Model) runTreeLines(steps []runTreeStep, width, frame int) []string {
 		}
 	}
 	now := m.cfg.Now()
+	stale := m.pane != nil && m.paneBoardRun().State == "stale"
 	visited := make([]bool, len(steps))
 	var lines []string
 	var visit func(int, int)
@@ -123,9 +140,15 @@ func (m *Model) runTreeLines(steps []runTreeStep, width, frame int) []string {
 		case "done":
 			glyph = "+"
 			style = m.cfg.Theme.Dim
+		case "stale", "ended":
+			glyph = "~"
+			style = m.cfg.Theme.Dim
 		case "fail":
 			glyph = "!"
 			style = m.cfg.Theme.Error
+		}
+		if stale {
+			style = m.cfg.Theme.Dim
 		}
 		available := max(width-len(prefix), 1)
 		roleColumns := min(roleWidth, max(available-8, 1))
@@ -156,12 +179,28 @@ func (m *Model) runTreeLines(steps []runTreeStep, width, frame int) []string {
 		if s.round > 0 {
 			details = append(details, fmt.Sprintf("round %d", s.round))
 		}
+		if counts[s.Role] > 1 && latest[s.Role] == i {
+			details = append(details, fmt.Sprintf("x%d", counts[s.Role]))
+		}
 		if len(details) > 0 {
 			text += "  " + strings.Join(details, " ")
 		}
 		lines = append(lines, prefix+style.Render(treeClip(text, available)))
 		if s.Task != "" {
 			lines = append(lines, prefix+m.cfg.Theme.Dim.Render(treeClip("    "+treeText(s.Task), available)))
+		}
+		if s.Role == "gate" && s.Phase == "fail" {
+			round := 0
+			for _, before := range laneSteps(steps[:i+1]) {
+				if before.Role == "implementer" {
+					round++
+				}
+			}
+			failure := fmt.Sprintf("    ✗ gate FAIL -> implementer round %d", round+1)
+			if task := treeText(s.Task); task != "" {
+				failure += ": " + task
+			}
+			lines = append(lines, prefix+style.Render(treeClip(failure, available)))
 		}
 		for _, child := range children[i] {
 			visit(child, depth+1)
@@ -186,4 +225,17 @@ func treeClip(s string, width int) string {
 		return strings.Repeat(".", max(width, 0))
 	}
 	return clip(s, width)
+}
+
+func boardTreeSteps(run slicercli.RelayRun) []runTreeStep {
+	steps := ledgerTreeSteps(run.Steps)
+	if run.State == "stale" || run.State == "ended" {
+		for i := range steps {
+			if steps[i].Phase == "start" {
+				steps[i].Phase = run.State
+				steps[i].UpdatedAt = run.UpdatedAt
+			}
+		}
+	}
+	return steps
 }

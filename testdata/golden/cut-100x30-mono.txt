@@ -12,11 +12,11 @@
                            |  [1m> started elsewhere[m  slicer      run-20261019-004308-40d4  S11  act...
                            |  [2m~ pending [m  agents      waiting for the first reply
                            |
-                           |[1mReady to land[m
+                           |[1mRecent[m
                            |  [2mnone[m
                            |
-                           |
-                           |
+                           |[1mReady to land[m
+                           |  [2mnone[m
                            |
                            |
                            |

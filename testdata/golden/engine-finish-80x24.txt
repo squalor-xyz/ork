@@ -6,6 +6,9 @@
                    |[1mRunning[m
                    |[1;7m    ork  S22  finish  owner action  2 of 6 steps running  2m[m
                    |
+                   |[1mRecent[m
+                   |  [2mnone[m
+                   |
                    |[1mReady to land[m
                    |  [2mnone[m
                    |
@@ -15,10 +18,7 @@
                    |
                    |
                    |
-                   |
-                   |
-                   |
-                   |
                    |  S22  finish  owner action  2 of 6 steps running  2m
+                   |   implementer>reviewer>gate
                    |[2m------------------------------------------------------------[m
                    | 1 project | refreshed 16:42:00 | pending 0

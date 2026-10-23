@@ -6,11 +6,11 @@
                            |[1mRunning[m
                            |  [2mnothing running[m
                            |
-                           |[1mReady to land[m
+                           |[1mRecent[m
                            |  [2mnone[m
                            |
-                           |
-                           |
+                           |[1mReady to land[m
+                           |  [2mnone[m
                            |
                            |
                            |

@@ -38,6 +38,9 @@ func (m *Model) refreshing(name string) bool {
 // ovRow is one row of the Overview. The row shows its text cut to the pane. The
 // selected row shows the whole text on the detail line (ui.overview-cursor).
 type ovRow struct {
+	dim              bool
+	cells            []string // proposed: whole board summary cells
+	ended            time.Time
 	kind             string
 	style            lipgloss.Style
 	kindW            int
@@ -64,8 +67,8 @@ type relayRowPart struct {
 	text   string
 }
 
-// rows lists Needs you and Running. readyRows follows them in the Overview
-// cursor order. The lists do not depend on the width.
+// rows lists Needs you and Running. recentRows and then readyRows follow
+// them in the Overview cursor order. The lists do not depend on the width.
 func (m *Model) rows() (needs, running []ovRow) {
 	th := m.cfg.Theme
 	for i, p := range m.projects {
@@ -112,7 +115,17 @@ func (m *Model) rows() (needs, running []ovRow) {
 			if r.Section(s.EngineRuns) == source.SectionHidden {
 				continue
 			}
-			parts := []string{r.State}
+			displayState := r.State
+			var linkedStale *slicercli.RelayRun
+			for _, ledger := range boardLedgers(s) {
+				if r.RelayRun != "" && ledger.ID == r.RelayRun && ledger.State == "stale" {
+					staleLedger := ledger
+					linkedStale = &staleLedger
+					displayState = "stale"
+					break
+				}
+			}
+			parts := []string{displayState}
 			if r.Wait != "" {
 				parts = append(parts, r.Wait)
 			}
@@ -133,10 +146,31 @@ func (m *Model) rows() (needs, running []ovRow) {
 				break
 			}
 			if !began.IsZero() {
-				parts = append(parts, elapsed(m.cfg.Now().Sub(began)))
+				end := m.cfg.Now()
+				if linkedStale != nil {
+					end = runClock(*linkedStale, end)
+					if at, e := time.Parse(time.RFC3339Nano, linkedStale.BeganAt); e == nil {
+						began = at
+					}
+				}
+				parts = append(parts, elapsed(end.Sub(began)))
 			}
 			rest := strings.Join(parts, "  ")
-			row := ovRow{engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.Item, rest: rest, text: r.Item + "  " + rest}
+			row := ovRow{engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.Item, rest: rest, text: r.Item + "  " + rest, dim: linkedStale != nil}
+			if r.Section(s.EngineRuns) == source.SectionRunning {
+				ledger, steps := engineBoard(r)
+				for _, linked := range boardLedgers(s) {
+					if r.RelayRun != "" && linked.ID == r.RelayRun {
+						ledger = linked
+						steps = ledgerTreeSteps(linked.Steps)
+						break
+					}
+				}
+				row.stepParts = m.boardRowParts(ledger, steps)
+				for _, part := range row.stepParts {
+					row.text += "  " + part.text
+				}
+			}
 			if r.Section(s.EngineRuns) == source.SectionNeeds {
 				row.kindW = kindWidth
 				needs = append(needs, row)
@@ -144,7 +178,10 @@ func (m *Model) rows() (needs, running []ovRow) {
 				running = append(running, row)
 			}
 		}
-		for _, r := range s.Runs.Value {
+		for _, r := range boardLedgers(s) {
+			if r.State == "ended" {
+				continue
+			}
 			if joined[r.ID] {
 				continue
 			}
@@ -153,11 +190,16 @@ func (m *Model) rows() (needs, running []ovRow) {
 			if rest != "" {
 				text = id + "  " + rest
 			}
+			steps = append(steps, m.boardRowParts(r, ledgerTreeSteps(r.Steps))...)
 			for _, step := range steps {
 				text += "  " + step.text
 			}
-			running = append(running, ovRow{ledgerID: r.ID, kind: kindExternal, style: th.External, kindW: len(kindExternal), project: i, name: name,
-				text: text, id: id, rest: rest, stepParts: steps})
+			style := th.External
+			if r.State == "stale" {
+				style = th.Dim
+			}
+			running = append(running, ovRow{ledgerID: r.ID, kind: kindExternal, style: style, kindW: len(kindExternal), project: i, name: name,
+				text: text, id: id, rest: rest, stepParts: steps, dim: r.State == "stale"})
 		}
 	}
 	return needs, running
@@ -175,7 +217,7 @@ func clampCursor(i, n int) int {
 // moveRow moves the row cursor by delta rows, stopping at the first and last row.
 func (m *Model) moveRow(delta int) {
 	needs, running := m.rows()
-	n := len(needs) + len(running) + len(m.readyRows())
+	n := len(needs) + len(running) + len(m.recentRows()) + len(m.readyRows())
 	if i := clampCursor(m.cursor, n); i >= 0 {
 		next := clampCursor(i+delta, n)
 		if next != i {
@@ -188,7 +230,7 @@ func (m *Model) moveRow(delta int) {
 // selectedRow is the row under the cursor, and false when there is none.
 func (m *Model) selectedRow() (ovRow, bool) {
 	needs, running := m.rows()
-	all := append(append(append([]ovRow(nil), needs...), running...), m.readyRows()...)
+	all := append(append(append(append([]ovRow(nil), needs...), running...), m.recentRows()...), m.readyRows()...)
 	i := clampCursor(m.cursor, len(all))
 	if i < 0 {
 		return ovRow{}, false
@@ -213,7 +255,7 @@ func (m *Model) overview(w int) overviewView {
 		nameW = max(nameW, len(p.reg.Name))
 	}
 	needs, running := m.rows()
-	all := append(append(append([]ovRow(nil), needs...), running...), m.readyRows()...)
+	all := append(append(append(append([]ovRow(nil), needs...), running...), m.recentRows()...), m.readyRows()...)
 	cursor := clampCursor(m.cursor, len(all))
 	hang := strings.Repeat(" ", len(indent)+1+1+nameW+2)
 
@@ -243,9 +285,12 @@ func (m *Model) overview(w int) overviewView {
 	section(needs, 0, "nothing needs you")
 	lines = append(lines, "", th.Heading.Render("Running"))
 	section(running, len(needs), "nothing running")
+	lines = append(lines, "", th.Heading.Render("Recent"))
+	recent := m.recentRows()
+	section(recent, len(needs)+len(running), "none")
 	lines = append(lines, "", th.Heading.Render("Ready to land"))
 	ready := m.readyRows()
-	section(ready, len(needs)+len(running), "none")
+	section(ready, len(needs)+len(running)+len(recent), "none")
 
 	ov := overviewView{body: lines, sel: sel}
 	switch {
@@ -279,13 +324,54 @@ func (m *Model) rowLine(r ovRow, selected bool, nameW, w int) string {
 	if m.refreshing(r.name) {
 		mark = th.Pending.Render("~")
 	}
-	prefix := indent + r.style.Render(kind) + " " + mark + name + "  "
-	return prefix + rowText(r, max(w-lipgloss.Width(prefix), 10))
+	styledKind := kind
+	if kind != "" {
+		styledKind = r.style.Render(kind)
+	}
+	prefix := indent + styledKind + " " + mark + name + "  "
+	text := rowText(r, max(w-lipgloss.Width(prefix), 10))
+	heard := ""
+	heardStyle := th.Warn
+	if n := len(r.stepParts); n > 0 {
+		cell := r.stepParts[n-1].text
+		if strings.HasSuffix(text, cell) && (strings.HasPrefix(cell, "! heard ") || strings.HasPrefix(cell, "!! heard ")) {
+			heard = cell
+			text = strings.TrimSuffix(text, cell)
+			if strings.HasPrefix(cell, "!! heard ") {
+				heardStyle = th.Error
+			}
+		}
+	}
+	if r.dim {
+		text = th.Dim.Render(text)
+	}
+	if heard != "" {
+		text += heardStyle.Render(heard)
+	}
+	if len(r.cells) > 0 {
+		outcome := r.cells[0]
+		style := th.Dim
+		if strings.HasPrefix(outcome, "✓") {
+			style = th.Passed
+		}
+		if strings.HasPrefix(outcome, "✗") {
+			style = th.Error
+		}
+		text = style.Render(outcome) + th.Dim.Render(strings.TrimPrefix(text, outcome))
+	}
+	return prefix + text
 }
 
 // rowText is a row's text cut to room columns. A run's ID stays whole: the rest
 // of its base text is cut first. External step parts never displace base text.
 func rowText(r ovRow, room int) string {
+	if len(r.cells) > 0 {
+		cells := r.cells
+		for len(cells) > 1 && lipgloss.Width(strings.Join(cells, "  ")) > room {
+			cells = cells[:len(cells)-1]
+		}
+		return strings.Join(cells, "  ")
+	}
 	// Overview rows stay on one line; the pane retains the full Wait text.
 	flatten := strings.NewReplacer("\r\n", " ", "\n", " ", "\r", " ")
 	r.text, r.rest = flatten.Replace(r.text), flatten.Replace(r.rest)
@@ -342,7 +428,7 @@ func runParts(r slicercli.RelayRun, now time.Time) (id, rest string, steps []rel
 	}
 	parts := []string{strings.Join(r.Items, ","), state}
 	if t, err := time.Parse(time.RFC3339, r.BeganAt); err == nil {
-		parts = append(parts, elapsed(now.Sub(t)))
+		parts = append(parts, elapsed(runClock(r, now).Sub(t)))
 	}
 
 	// The last start wins so a subagent is shown ahead of its orchestrator.

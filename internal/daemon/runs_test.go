@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -718,10 +719,19 @@ func TestTwoOpenTUIsShareCLIReads(t *testing.T) {
 		t.Fatalf("TUI snapshots: %+v %+v", s1.Items, s2.Items)
 	}
 	settle()
+	board := 0
+	for _, call := range fake.CallsTo("slicer") {
+		if call.Args[0] == "relay-run" && !slices.Contains(call.Args, "--active") {
+			board++
+		}
+	}
+	if board != 2 {
+		t.Fatalf("board reads %d, want one per snapshot", board)
+	}
 	for _, verb := range []string{"list", "goals", "relay-run"} {
 		n := 0
 		for _, call := range fake.CallsTo("slicer") {
-			if call.Args[0] == verb {
+			if call.Args[0] == verb && (verb != "relay-run" || slices.Contains(call.Args, "--active")) {
 				n++
 			}
 		}

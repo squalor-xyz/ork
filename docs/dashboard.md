@@ -126,7 +126,15 @@ and decided records refresh every 5 min or on HEAD changes and manual refresh. `
    - budget pauses;
    - unclassified vendor exits.
 2. **Running:** every running slice across projects, with a stage bar,
-   elapsed time and tokens.
+   elapsed time and tokens (stage bar and tokens are S07).
+   The *proposed* relay row adds a compact pipeline such as
+   `[implementer]>reviewer>gate` and `heard 2m`. An architect leads when
+   present. `! heard` warns after 15 minutes; `!! heard` marks stale runs.
+   The unselected warning cell uses the warning color. The selected row
+   detail includes the full pipeline and heard cell even when the row drops
+   them. Stale runs stay under Running, dimmed and labelled stale; elapsed time
+   freezes at their last event. Narrow rows drop heard, pipeline, then role
+   details from the right, whole. The first item title is not added.
    For relays started elsewhere, the *proposed* row details (also indented
    under each relay in `ork status`) are `running: ROLE VENDOR/MODEL: TASK`
    for the last step in ledger order with phase `start` (a working subagent
@@ -134,10 +142,15 @@ and decided records refresh every 5 min or on HEAD changes and manual refresh. `
    with phase `fail`; details that do not fit the Overview row are dropped
    whole, a task that partly fits is cut with `...`, and the selected row's
    detail shows the full text.
-3. **Ready to land:** committed engine runs across projects, or for the
+3. **Recent (proposed):** ended ledger runs within the last hour, newest
+   first. Rows show `✓ pass` for pass, `✗ fail` for fail, and `~ stopped` for
+   any other outcome, then items, run time,
+   `ended N ago`, and counts such as `impl 1  review 1  gate 0`. Empty state: `none`.
+   Rows follow Running in cursor order. Enter opens a read-only ledger pane.
+4. **Ready to land:** committed engine runs across projects, or for the
    selected project. Each row shows the slice and branch, with
    `slicer land 'ID' --branch 'B' --note 'Landed B'` on its own indented line to
-   copy. Ready rows follow Needs you and Running in the cursor order and
+   copy. Ready rows follow Needs you, Running and Recent in the cursor order and
    scroll into view with their command lines. The selected row shows full
    commands wrapped in the detail area; other rows keep clipped commands.
    Enter does nothing on these rows. Run action keys explain that only
@@ -432,3 +445,22 @@ decided records are on a second tab. The data comes from
 `adj inbox --json` and `adj list --json`, called per registered project.
 That needs nothing unreleased in adj. Answering owner questions from a
 running slice happens on the Waves screen (`owner.questions`).
+
+The run pane's *proposed* board details keep the S55 tree. A pipeline above
+it colors finished roles green, running cyan, failed red, and waiting dim.
+The running role uses brackets only for live, non-stale runs. In monochrome
+failed is bold and waiting is dim; passed is not bold. Warning text is plain
+with the `!` cue and no underline. `round N` counts implementer steps, appears
+only when positive, and drops first when narrow. For live runs, `last heard
+N ago` is dim through 15 minutes, warning after 15 minutes, and error for a
+stale run. Ended, stopped, paused and committed runs have a dim pipeline,
+no waiting rows. Their last-heard age stays dim, with no warning. A
+live run adds waiting rows only for pipeline roles with no lane step;
+queued steps keep their existing tree row. Waiting rows share the tree's
+phase column. Repeated roles carry `xN` on the latest tree node. A failed
+gate has a `✗ gate FAIL -> implementer round N` line beneath it, followed by
+`: REASON` only when the task is non-empty. Started steps
+in stale or ended ledger runs use `~` and stop counting at the last event.
+Engine runs without a ledger derive pipeline and round from role records,
+and last heard from the latest role timestamp. No progress bar, ticker or
+sparkline is added by S97.

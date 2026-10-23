@@ -95,7 +95,7 @@ ork (TUI)  ork status --json (CLI)
   | `status` | `{"project"?}` | `{"build_id","roles_running","projects":[{name, path, adj, needs_you, open?, held?, active_relays, engine_runs, errors?}]}` |
   | `daemon.info` (proposed wire) | none | `{"build_id"}`; no registry or project reads |
   | `daemon.stop` (proposed wire) | `{"force"?}` | `{"stopped":true}`; `daemon_busy` refuses active work without force |
-  | `snapshot` | `{"project"}` | the project's `source.Snapshot` (`items`, `deps`, `goals`, `runs`, `open`, `decided`) from the cache, plus the daemon's `engine_runs` array (not a Part); each part is `{"value", "age_ms", "read_at"?, "stale"?, "error"?}`: the last good value, its age in ms (0 if never read), when it was read (absent if never), and the last read's error |
+  | `snapshot` | `{"project"}` | the project's `source.Snapshot` (`items`, `deps`, `goals`, `runs`, `open`, `decided`) from the cache, plus the daemon's `engine_runs` array and *proposed* `board_runs` (neither is a Part); each part is `{"value", "age_ms", "read_at"?, "stale"?, "error"?}`: the last good value, its age in ms (0 if never read), when it was read (absent if never), and the last read's error |
   | `item.show` (proposed wire) | `{"project","id"}` | `{"detail"}`; slicer show for the registered project |
   | `wave.start` (`run.launch-wire`; proposed shape) | `{"items":[RunParams...]}`; each item has `project`, `item`, `well_specified`, `split`, optional `lineup`, `budgets` and `expected` as in `run.start` | `{"wave","items":[{"item","run"?,"error"?}]}`; one wave id, one project, admission errors kept per item |
   | `wave.stop` (proposed wire) | `{"wave"}` | the same wave result; stops each unfinished member through `run.stop`, skips final members |
@@ -839,3 +839,25 @@ Each step is usable or testable on its own:
    animations.
 8. **Architect on size L, split, slivers.**
 9. **Landing help.** Ready-to-land list and merge detection.
+
+### Relay board information (S97, proposed)
+
+Running rows and the run pane show slicer's relay board information
+(`slicer/docs/tui.md:183-270`). The compact row pipeline marks the running
+role in brackets and adds last heard with `!` after 15 minutes and `!!`
+for stale runs. Stale runs stay visible and freeze elapsed time at their
+last event. The pane keeps the S55 tree and adds the colored role pipeline,
+implementer round count, last heard, waiting roles, repeated role counts,
+and failed-gate reasons. Engine-only panes derive these from role records.
+
+The proposed `source.Snapshot.BoardRuns` and snapshot wire `board_runs`
+carry stale and recently ended ledger runs. A second `RelayRuns` read uses
+`active=false`; the active read and `ork status` output stay unchanged.
+This read is not a new cached Part. Direct snapshots and daemon snapshot
+requests read it separately; status makes no board read. The adapter bounds the payload to stale runs
+and ended runs updated within an hour of read time. Recent applies the
+exact hour cutoff with the injected render clock, sorts newest first,
+and sits between Running and Ready to land in the cursor order. It shows
+outcome, items, elapsed run time, ended age, and role counts. Enter opens
+a read-only ended-run pane. Run duration and ended age use `begun_at` and
+`updated_at`; the ledger has no ended timestamp.

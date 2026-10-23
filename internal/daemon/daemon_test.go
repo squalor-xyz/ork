@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -142,6 +143,12 @@ func (s *stubSource) Fetch(ctx context.Context, p registry.Project, part source.
 		return "h1", nil
 	}
 	return nil, fmt.Errorf("unknown part %s", part)
+}
+
+func (s *stubSource) BoardRuns(ctx context.Context, p registry.Project) source.Result[[]slicercli.RelayRun] {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.snaps[p.Name].BoardRuns
 }
 
 // put replaces a project's snapshot as the calls after it see it.
@@ -626,11 +633,12 @@ func TestSnapshotOverTheSocketKeepsValuesAndToolErrorCodes(t *testing.T) {
 	twoProjects(t, e)
 	toolErr := &clirun.ExitError{Tool: &clirun.ToolError{Code: "no_such_item", Message: "no such item: NOPE", Command: "show"}}
 	e.src.snaps["alpha"] = source.Snapshot{
-		Items:   source.Result[[]slicercli.Item]{Value: []slicercli.Item{{ID: "S03", Title: "Daemon"}}},
-		Deps:    source.Result[[]slicercli.Item]{Value: []slicercli.Item{{ID: "S03"}}},
-		Goals:   source.Result[*slicercli.Goals]{Err: fmt.Errorf("goals: %w", toolErr)},
-		Runs:    source.Result[[]slicercli.RelayRun]{Value: []slicercli.RelayRun{{ID: "run-1"}}},
-		Decided: source.Result[[]adjcli.Record]{Err: toolErr},
+		Items:     source.Result[[]slicercli.Item]{Value: []slicercli.Item{{ID: "S03", Title: "Daemon"}}},
+		Deps:      source.Result[[]slicercli.Item]{Value: []slicercli.Item{{ID: "S03"}}},
+		Goals:     source.Result[*slicercli.Goals]{Err: fmt.Errorf("goals: %w", toolErr)},
+		Runs:      source.Result[[]slicercli.RelayRun]{Value: []slicercli.RelayRun{{ID: "run-1"}}},
+		BoardRuns: source.Result[[]slicercli.RelayRun]{Value: []slicercli.RelayRun{{ID: "ended", State: "ended", Outcome: "pass"}}},
+		Decided:   source.Result[[]adjcli.Record]{Err: toolErr},
 	}
 	e.start(t)
 	c := e.dial(t)
@@ -644,6 +652,9 @@ func TestSnapshotOverTheSocketKeepsValuesAndToolErrorCodes(t *testing.T) {
 	}
 	if len(snap.Deps.Value) != 1 || snap.Deps.Value[0].ID != "S03" || snap.Deps.Err != nil {
 		t.Fatalf("deps: %+v", snap.Deps)
+	}
+	if len(snap.BoardRuns.Value) != 1 || snap.BoardRuns.Value[0].ID != "ended" {
+		t.Fatalf("board lost: %+v", snap.BoardRuns)
 	}
 	if len(snap.Runs.Value) != 1 || snap.Runs.Err != nil {
 		t.Fatalf("runs: %+v", snap.Runs)
@@ -885,6 +896,7 @@ func TestTwoClientsReadingAtOnceMakeOneCallPerPart(t *testing.T) {
 		clitest.Route{Tool: "slicer", Args: []string{"deps", "--json", "--lean", "--root", root}, Stdout: "[]"},
 		clitest.Route{Tool: "slicer", Args: []string{"goals", "--json", "--root", root}, Stdout: "{}"},
 		clitest.Route{Tool: "slicer", Args: []string{"relay-run", "list", "--json", "--lean", "--active", "--root", root}, Stdout: `{"runs":[]}`},
+		clitest.Route{Tool: "slicer", Args: []string{"relay-run", "list", "--json", "--lean", "--root", root}, Stdout: `{"runs":[]}`},
 		clitest.Route{Tool: "adj", Args: []string{"inbox", "--json", "--root", root}, Stdout: `{"records":[]}`},
 		clitest.Route{Tool: "adj", Args: []string{"list", "--json", "--status", "decided", "--root", root}, Stdout: `{"records":[]}`},
 		clitest.Route{Tool: "git", Args: []string{"-C", root, "rev-parse", "HEAD"}, Stdout: "h1\n"},
@@ -906,10 +918,24 @@ func TestTwoClientsReadingAtOnceMakeOneCallPerPart(t *testing.T) {
 	wg.Wait()
 	waitFor(t, "git HEAD read", func() bool { return len(fake.CallsTo("git")) == 1 })
 	settle()
+	// Cached parts still share one call. Board runs are read per snapshot.
+	active, board := 0, 0
+	for _, call := range fake.CallsTo("slicer") {
+		if len(call.Args) > 0 && call.Args[0] == "relay-run" {
+			if slices.Contains(call.Args, "--active") {
+				active++
+			} else {
+				board++
+			}
+		}
+	}
+	if active != 1 || board != 2 {
+		t.Fatalf("active %d, board %d", active, board)
+	}
 	for _, tc := range []struct {
 		tool  string
 		verbs int
-	}{{"slicer", 4}, {"adj", 2}, {"git", 1}} {
+	}{{"slicer", 6}, {"adj", 2}, {"git", 1}} {
 		if n := len(fake.CallsTo(tc.tool)); n != tc.verbs {
 			t.Errorf("%s calls for two snapshots: %d, want %d (one per part)", tc.tool, n, tc.verbs)
 		}

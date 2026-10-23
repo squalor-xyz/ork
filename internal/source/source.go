@@ -72,6 +72,7 @@ type Snapshot struct {
 	Deps       Result[[]slicercli.Item]
 	Goals      Result[*slicercli.Goals]
 	Runs       Result[[]slicercli.RelayRun] // active runs only
+	BoardRuns  Result[[]slicercli.RelayRun] // proposed: stale and recently ended runs
 	Open       Result[[]adjcli.Record]
 	Decided    Result[[]adjcli.Record]
 }
@@ -137,6 +138,7 @@ func (d *Direct) Snapshot(ctx context.Context, p registry.Project) Snapshot {
 		func() { s.Deps = result(d.Slicer.Deps(ctx, p.Path)) },
 		func() { s.Goals = result(d.Slicer.Goals(ctx, p.Path)) },
 		func() { s.Runs = result(d.Slicer.RelayRuns(ctx, p.Path, true)) },
+		func() { s.BoardRuns = d.BoardRuns(ctx, p) },
 	}
 	if p.Adj {
 		calls = append(calls,
@@ -219,4 +221,27 @@ func (r EngineRun) Section(runs []EngineRun) Section {
 	default:
 		return SectionRunning
 	}
+}
+
+// BoardReader supplies proposed board data without adding a cached Part.
+type BoardReader interface {
+	BoardRuns(context.Context, registry.Project) Result[[]slicercli.RelayRun]
+}
+
+// BoardRuns keeps stale runs and a coarse hour of ended runs. The UI applies
+// the exact cutoff with its injected render clock.
+func (d *Direct) BoardRuns(ctx context.Context, p registry.Project) Result[[]slicercli.RelayRun] {
+	runs, err := d.Slicer.RelayRuns(ctx, p.Path, false)
+	if err != nil {
+		return result[[]slicercli.RelayRun](nil, err)
+	}
+	cutoff := time.Now().Add(-time.Hour)
+	var kept []slicercli.RelayRun
+	for _, r := range runs {
+		at, e := time.Parse(time.RFC3339Nano, r.UpdatedAt)
+		if r.State == "stale" || (r.State == "ended" && e == nil && !at.Before(cutoff)) {
+			kept = append(kept, r)
+		}
+	}
+	return result(kept, nil)
 }

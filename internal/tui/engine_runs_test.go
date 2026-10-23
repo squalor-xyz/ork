@@ -262,7 +262,7 @@ func TestExternalRelayTaskClipped(t *testing.T) {
 	if got != prefix+task[:17]+"..." {
 		t.Fatalf("task not clipped with ellipsis: %q", got)
 	}
-	if !strings.Contains(strings.Join(detailLines(rows[0], 500), "\n"), task) {
+	if !strings.Contains(strings.Join(detailLines(rows[0], 1000), "\n"), task) {
 		t.Fatal("detail lost full task")
 	}
 }
@@ -309,7 +309,7 @@ func TestExternalRelayOptionalFields(t *testing.T) {
 	)))
 	h.start()
 	_, rows := h.m.rows()
-	want := "ledger  S30  active, 2 of 6 steps running  2m  running: implementer  failed: reviewer"
+	want := "ledger  S30  active, 2 of 6 steps running  2m  running: implementer  failed: reviewer  [implementer]>reviewer>gate"
 	if got := rowText(rows[0], 300); got != want {
 		t.Fatalf("empty fields: got %q, want %q", got, want)
 	}

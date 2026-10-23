@@ -4,7 +4,10 @@
                            |  [2mnothing needs you[m
                            |
                            |[1mRunning[m
-                           |[1;7m    ork  S55  implement[m
+                           |[1;7m    ork  S55  implement  implementer>[reviewer]>gate  heard 1m[m
+                           |
+                           |[1mRecent[m
+                           |  [2mnone[m
                            |
                            |[1mReady to land[m
                            |  [2mnone[m
@@ -14,16 +17,13 @@
                            |
                            |
                            |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
                            |  [1mRun engine  S55  implement[m
+                           |  implementer > [reviewer] > [1mgate[m                                [2mround 1[m
+                           |  [2mlast heard 1m ago[m
                            |  [2m+ implementer done  1m  claude sonnet high round 1[m
                            |  [1m| reviewer    start 1m  claude opus round 1[m
                            |  [1m! gate        fail  30s  codex sol round 1[m
+                           |  [1m    ✗ gate FAIL -> implementer round 2[m
                            |  
                            |  x stop; esc close pane
                            |[2m------------------------------------------------------------------------[m

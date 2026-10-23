@@ -25,12 +25,13 @@ func (d *Daemon) Snapshot(ctx context.Context, p registry.Project) source.Snapsh
 	c, err := d.Connect(ctx)
 	if err != nil {
 		return source.Snapshot{Project: p,
-			Items:   source.Result[[]slicercli.Item]{Err: err},
-			Deps:    source.Result[[]slicercli.Item]{Err: err},
-			Goals:   source.Result[*slicercli.Goals]{Err: err},
-			Runs:    source.Result[[]slicercli.RelayRun]{Err: err},
-			Open:    source.Result[[]adjcli.Record]{Err: err},
-			Decided: source.Result[[]adjcli.Record]{Err: err}}
+			Items:     source.Result[[]slicercli.Item]{Err: err},
+			Deps:      source.Result[[]slicercli.Item]{Err: err},
+			Goals:     source.Result[*slicercli.Goals]{Err: err},
+			Runs:      source.Result[[]slicercli.RelayRun]{Err: err},
+			BoardRuns: source.Result[[]slicercli.RelayRun]{Err: err},
+			Open:      source.Result[[]adjcli.Record]{Err: err},
+			Decided:   source.Result[[]adjcli.Record]{Err: err}}
 	}
 	defer c.Close()
 	return c.Snapshot(ctx, p)

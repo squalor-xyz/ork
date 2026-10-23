@@ -6,6 +6,9 @@
                            |[1mRunning[m
                            |  [2mnothing running[m
                            |
+                           |[1mRecent[m
+                           |  [2mnone[m
+                           |
                            |[1mReady to land[m
                            |  [2mnone[m
                            |
@@ -13,15 +16,12 @@
                            |
                            |
                            |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
                            |  [1mRun engine  S22  paused[m
                            |  owner action
+                           |  [2mimplementer[m > [2mreviewer[m > [2mgate[m
+                           |  [2m. implementer waiting[m
+                           |  [2m. reviewer    waiting[m
+                           |  [2m. gate        waiting[m
                            |  
                            |  Answer: [1muse local storage[m[1;7m [m[1m[m
                            |  ork answer engine use local storage

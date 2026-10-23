@@ -69,13 +69,14 @@ func (c *Client) Snapshot(ctx context.Context, p registry.Project) source.Snapsh
 	var out SnapshotResult
 	if err := c.c.Call(ctx, MethodSnapshot, SnapshotParams{Project: p.Name}, &out); err != nil {
 		return source.Snapshot{
-			Project: p,
-			Items:   source.Result[[]slicercli.Item]{Err: err},
-			Deps:    source.Result[[]slicercli.Item]{Err: err},
-			Goals:   source.Result[*slicercli.Goals]{Err: err},
-			Runs:    source.Result[[]slicercli.RelayRun]{Err: err},
-			Open:    source.Result[[]adjcli.Record]{Err: err},
-			Decided: source.Result[[]adjcli.Record]{Err: err},
+			Project:   p,
+			Items:     source.Result[[]slicercli.Item]{Err: err},
+			Deps:      source.Result[[]slicercli.Item]{Err: err},
+			Goals:     source.Result[*slicercli.Goals]{Err: err},
+			Runs:      source.Result[[]slicercli.RelayRun]{Err: err},
+			BoardRuns: source.Result[[]slicercli.RelayRun]{Err: err},
+			Open:      source.Result[[]adjcli.Record]{Err: err},
+			Decided:   source.Result[[]adjcli.Record]{Err: err},
 		}
 	}
 	return source.Snapshot{
@@ -85,6 +86,7 @@ func (c *Client) Snapshot(ctx context.Context, p registry.Project) source.Snapsh
 		Deps:       out.Deps.result(),
 		Goals:      out.Goals.result(),
 		Runs:       out.Runs.result(),
+		BoardRuns:  out.BoardRuns.result(),
 		Open:       out.Open.result(),
 		Decided:    out.Decided.result(),
 	}
