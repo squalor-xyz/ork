@@ -28,7 +28,7 @@
     },
     {
       "heading": "Implement",
-      "body": "Not specified. Open points for the owner, to settle with `adj ask` before this slice runs: (a) whether this slice is still needed once S38 lands, since S38 stops `ork projects rm` from removing a project with unfinished runs (a hand edit of projects.json still reaches it); (b) what the run does: stay queued, or stop with a reason."
+      "body": "Not specified. Open points for the owner, to settle with `adj ask` before this slice runs: (a) whether this slice is still needed once S38 lands, since S38 stops `ork projects rm` from removing a project with unfinished runs (a hand edit of projects.json still reaches it); (b) what the run does: stay queued, or stop with a reason.\n\nDecided 2026-10-23 (owner interview): keep this slice: a queued run whose project is no longer registered stops with the reason 'project was removed'. Nothing is open."
     },
     {
       "heading": "Check",

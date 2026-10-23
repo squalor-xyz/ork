@@ -943,3 +943,26 @@
 {"when": "2026-10-23T12:28:44Z", "item": "S40", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-23T12:32:53Z", "item": "S40", "action": "status", "from": "started", "to": "done", "note": "Implementer prompt now limits searches to source and docs (never .slicer/ or decisions/), says one denied command does not mean all are denied, and asks the role to report why when the tree holds other files; TestImplementerSearchAndDenialRules covers the four texts. Verified with go test -race ./..., go vet, gofmt, slicer check, adj lint.", "by": "Jon R"}
 {"when": "2026-10-23T12:34:04Z", "item": "S87", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-23T13:19:17Z", "item": "S09", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:18Z", "item": "S30", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:18Z", "item": "S50", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:18Z", "item": "S54", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:18Z", "item": "S59", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:18Z", "item": "S67", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:18Z", "item": "S71", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:18Z", "item": "S28", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:18Z", "item": "S47", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:18Z", "item": "S49", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:18Z", "item": "S73", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:19Z", "item": "S74", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:19Z", "item": "S75", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:19Z", "item": "S76", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:19Z", "item": "S77", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:19Z", "item": "S78", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:19Z", "item": "S84", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:19Z", "item": "S85", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:19Z", "item": "S08", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T13:19:19Z", "item": "S48", "action": "status", "from": "parked", "to": "open", "note": "Owner: run S48 before S47"}
+{"when": "2026-10-23T13:19:19Z", "item": "S66", "action": "set", "from": "", "to": "", "note": "pass_key v1→v1.1"}
+{"when": "2026-10-23T13:19:20Z", "item": "S69", "action": "retire", "from": "open", "to": "retired", "note": "Owner 2026-10-23: the Roadmap replaces leaving for slicer tui; adj 11 stays the owner's to close"}
+{"when": "2026-10-23T13:19:23Z", "item": "pass.v1.1", "action": "prose", "from": "", "to": "v1.1", "note": "add-pass"}

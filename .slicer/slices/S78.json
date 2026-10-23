@@ -28,7 +28,7 @@
     },
     {
       "heading": "Implement",
-      "body": "Take d.runs.mu around each write to d.runs.runs in the loop, not around Reconcile (it can be slow). Open: whether to do this at all, or only document the \"before the server starts\" assumption at the function. The owner has not decided."
+      "body": "Take d.runs.mu around each write to d.runs.runs in the loop, not around Reconcile (it can be slow). Open: whether to do this at all, or only document the \"before the server starts\" assumption at the function. The owner has not decided.\n\nDecided 2026-10-23 (owner interview): take d.runs.mu around each write to d.runs.runs in recoverRuns, not around Reconcile. Nothing is open."
     },
     {
       "heading": "Check",

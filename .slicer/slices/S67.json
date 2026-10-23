@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "Decided 2026-10-23 (owner interview): p parks or unparks the selected item; park is refused with a message when the item has an unfinished run."
     },
     {
       "heading": "Check",

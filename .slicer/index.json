@@ -10,6 +10,12 @@
       "heading": "",
       "intro": "",
       "outro": ""
+    },
+    {
+      "key": "v1.1",
+      "heading": "",
+      "intro": "",
+      "outro": ""
     }
   ],
   "items": [
@@ -2004,7 +2010,7 @@
       "id": "S48",
       "title": "Measure the codex workspace-write sandbox",
       "short_title": "Measure the codex workspace-write sandbox",
-      "status": "parked",
+      "status": "open",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -2708,7 +2714,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1",
+        "pass": "v1.1",
         "group": "",
         "reason": "",
         "importance": 2,
@@ -2782,7 +2788,7 @@
       "id": "S69",
       "title": "Roadmap editing: open slicer tui for the project (needs adj 11)",
       "short_title": "Roadmap editing: open slicer tui for the project (needs adj 11)",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [
         "S12"
@@ -2801,7 +2807,7 @@
         "key": "",
         "pass": "v1",
         "group": "",
-        "reason": "",
+        "reason": "Owner 2026-10-23: the Roadmap replaces leaving for slicer tui; adj 11 stays the owner's to close",
         "importance": 2,
         "urgency": 2,
         "effort": 1,

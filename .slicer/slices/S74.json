@@ -28,7 +28,7 @@
     },
     {
       "heading": "Implement",
-      "body": "Wrap the context passed to roleMayRun in context.WithTimeout. Open: the timeout value. Candidates are the existing defaultStartWait (5s, internal/cli/cli.go:29) or a new constant; the owner has not decided. Settle it with `adj ask` before this slice runs. On expiry the status call fails and the existing \"a role may be running\" warning prints."
+      "body": "Wrap the context passed to roleMayRun in context.WithTimeout. Open: the timeout value. Candidates are the existing defaultStartWait (5s, internal/cli/cli.go:29) or a new constant; the owner has not decided. Settle it with `adj ask` before this slice runs. On expiry the status call fails and the existing \"a role may be running\" warning prints.\n\nDecided 2026-10-23 (owner interview): use the existing defaultStartWait (5s, internal/cli/cli.go:29) as the timeout. Nothing is open."
     },
     {
       "heading": "Check",

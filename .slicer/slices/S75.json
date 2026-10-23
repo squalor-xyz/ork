@@ -28,7 +28,7 @@
     },
     {
       "heading": "Implement",
-      "body": "Not specified. Open points for the owner, to settle with `adj ask` before this slice runs:\n(a) the directory mode, if any, for the run directory and the per-round temp directories (0700 is a candidate, not a decision);\n(b) whether ork tightens an existing run.json or run directory on load or only on the next save;\n(c) whether ork chmods a role report that a vendor CLI wrote, or leaves the vendor's mode."
+      "body": "Not specified. Open points for the owner, to settle with `adj ask` before this slice runs:\n(a) the directory mode, if any, for the run directory and the per-round temp directories (0700 is a candidate, not a decision);\n(b) whether ork tightens an existing run.json or run directory on load or only on the next save;\n(c) whether ork chmods a role report that a vendor CLI wrote, or leaves the vendor's mode.\n\nDecided 2026-10-23 (owner interview): (a) 0700 for the run directory and per-round temp directories; (b) tighten an existing run.json or directory on the next save, not on load; (c) leave a role report a vendor CLI wrote at the vendor's mode. Nothing is open."
     },
     {
       "heading": "Check",
