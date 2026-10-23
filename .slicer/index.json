@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 95,
+  "next_id": 96,
   "preamble": "",
   "passes": [
     {
@@ -3618,6 +3618,34 @@
         "parent": "",
         "cites": [],
         "key": "architect-plan-views",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S95",
+      "title": "Cleanup finishes cleanly: mark the run cleaned, retry after a half-done cleanup, steady merge state",
+      "short_title": "Cleanup finishes cleanly: mark the run cleaned, retry after a half-done cleanup, steady merge state",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S63",
+        "parent": "",
+        "cites": [],
+        "key": "cleanup-polish",
         "pass": "v1",
         "group": "",
         "reason": "",

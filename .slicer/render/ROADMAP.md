@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-94 items · — 37 · done 51 · parked 1 · retired 5
+95 items · — 38 · done 51 · parked 1 · retired 5
 
 ## v1.1
 
@@ -148,9 +148,10 @@
 | 91 | [S92](slices/S92.md) | Fallback brief tells the next row about earlier rows and an already-started slice | S | 1 |  | discovered from S49 | — |
 | 92 | [S93](slices/S93.md) | The gate follows the reviewer's current row after a fallback | S | 1 |  | discovered from S49 | — |
 | 93 | [S94](slices/S94.md) | Plan views and lineup edit cover the architect | S | 2 |  | discovered from S08 | — |
+| 94 | [S95](slices/S95.md) | Cleanup finishes cleanly: mark the run cleaned, retry after a half-done cleanup, steady merge state | S | 2 |  | discovered from S63 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 94 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 95 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
