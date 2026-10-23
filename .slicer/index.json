@@ -3449,7 +3449,7 @@
       "id": "S89",
       "title": "Close the codex sandbox gaps: resume sandbox, socket bind, worktree .git, main-checkout block",
       "short_title": "Close the codex sandbox gaps: resume sandbox, socket bind, worktree .git, main-checkout block",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S48"
@@ -3472,7 +3472,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

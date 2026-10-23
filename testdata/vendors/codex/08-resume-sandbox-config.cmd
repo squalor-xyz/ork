@@ -1,0 +1,1 @@
+in_wt codex exec resume 01a1692b-727b-7753-8087-85f10f8277cb -m gpt-6-luna -c sandbox_mode="workspace-write" --json Run two separate shell commands and report for each the exact command, its output and its exit code. A: printf hi > <worktree>/resume-inside.txt. B: printf hi > <probe-repo>/resume-outside.txt. Then reply DONE.

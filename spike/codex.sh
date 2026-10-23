@@ -1,5 +1,5 @@
 #!/bin/zsh
-# S01 vendor spike: codex. Seven calls: probes 01 to 04 (S01), 05 to 07 (S48). Cheapest catalog model (gpt-6-luna),
+# S01 vendor spike: codex. Ten calls: probes 01 to 04 (S01), 05 to 07 (S48), 08 to 10 (S89). Cheapest catalog model (gpt-6-luna),
 # trivial prompts. codex has no per-tool allowlist (codex exec --help lists
 # only -s read-only, workspace-write, danger-full-access), so the write
 # denial probe uses the read-only sandbox.
@@ -89,3 +89,26 @@ snap 06-resume-workspace-write
 probe 07-socket-bind "$RAW" "$FIX" \
   codex exec --json -m $MODEL -s workspace-write -C "$WT" "Run this one shell command and report its exact output and any error: python3 -c \"import socket; s=socket.socket(socket.AF_UNIX); s.bind('$WT/probe.sock'); print('unix bind ok'); t=socket.socket(); t.bind(('127.0.0.1',0)); print('tcp bind ok')\". Then reply DONE."
 snap 07-socket-bind
+
+# S89: probes 08 to 10 (owner-approved 2026-10-23, adj 153 and 154: exactly
+# three more calls, codex total ten, no retries). Each prompt asks for
+# separate shell commands with their exit codes so each has a command event.
+# A probe counts only if its JSONL has a command_execution item per asked
+# command (checked by hand); otherwise the cell stays unverified.
+# Probe 08 resumes probe 05's session (SID5, never resumed by a live call:
+# probe 06 failed on argument parsing). Resume has no -s; -c sets the mode.
+probe 08-resume-sandbox-config "$RAW" "$FIX" \
+  in_wt codex exec resume "$SID5" -m $MODEL -c 'sandbox_mode="workspace-write"' --json "Run two separate shell commands and report for each the exact command, its output and its exit code. A: printf hi > $WT/resume-inside.txt. B: printf hi > $REPO/resume-outside.txt. Then reply DONE."
+snap 08-resume-sandbox-config
+
+# 9. Unix socket bind, loopback TCP bind, and git add plus git commit inside
+# the linked worktree: separate shell commands, one command event each.
+probe 09-socket-and-git "$RAW" "$FIX" \
+  codex exec --json -m $MODEL -s workspace-write -C "$WT" "Run these four separate shell commands, one tool call each, and report for each the exact command, its output and its exit code. A: python3 -c \"import socket; s=socket.socket(socket.AF_UNIX); s.bind('$WT/probe9.sock'); print('unix bind ok')\". B: python3 -c \"import socket; t=socket.socket(); t.bind(('127.0.0.1',0)); print('tcp bind ok')\". C: git add inside.txt. D: git -c user.name=probe -c user.email=probe@example.invalid commit -m probe9. Then reply DONE."
+snap 09-socket-and-git
+
+# 10. The two writes outside the worktree, each as its own command with its
+# exit code (probe 05 left both without a command event).
+probe 10-main-checkout-blocks "$RAW" "$FIX" \
+  codex exec --json -m $MODEL -s workspace-write -C "$WT" "Run these two separate shell commands, one tool call each, and report for each the exact command, its output and its exit code. A: printf hi > $REPO/outside-main10.txt. B: printf hi > $REPO/.git/slicer/ledger-probe10.txt. Then reply DONE."
+snap 10-main-checkout-blocks
