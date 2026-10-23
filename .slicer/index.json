@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 89,
+  "next_id": 90,
   "preamble": "",
   "passes": [
     {
@@ -1983,7 +1983,7 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [
-        "S48"
+        "S89"
       ],
       "note_records": [],
       "claim": null,
@@ -3442,6 +3442,36 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S89",
+      "title": "Close the codex sandbox gaps: resume sandbox, socket bind, worktree .git, main-checkout block",
+      "short_title": "Close the codex sandbox gaps: resume sandbox, socket bind, worktree .git, main-checkout block",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S48"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S48",
+        "parent": "",
+        "cites": [],
+        "key": "codex-sandbox-gaps",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
         "attempts": 0
       }
     }

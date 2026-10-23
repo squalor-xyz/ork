@@ -1,0 +1,39 @@
+{
+  "id": "S89",
+  "title": "Close the codex sandbox gaps: resume sandbox, socket bind, worktree .git, main-checkout block",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S48 left four sandbox cells unverified because the model's words had no command event (docs/design.md:414, testdata/vendors/codex/05-07). adj 153 (vendor.codex-resume-sandbox) and adj 154 (vendor.codex-sandbox-gaps) were decided by the owner on 2026-10-23 (records to be filed): measure resume with -c sandbox_mode, and approve 2 more paid calls. That is 3 new paid calls in all, taking codex from 7 to 10 spike calls. Decision 100 lets codex run write roles, so the sandbox is the containment and S47 depends on these cells."
+    },
+    {
+      "heading": "Files",
+      "body": "- `spike/codex.sh` and `spike/common.zsh`: probes 08 to 10 after probe 07, with the existing helpers.\n- `testdata/vendors/codex/08-*` to `10-*`: redacted fixtures.\n- `docs/design.md:414` and `:448` (capability table and the codex read-only line): set the cells verified or unverified; remove the stale read-only-in-v1 sentence only if S47 has not (S47 owns that edit)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Probe 08 (resume): `codex exec resume SID -c sandbox_mode=\"workspace-write\" ...` has a command_execution event showing a worktree write succeeds; a write into the main checkout is blocked by an event with a nonzero exit or a \"not permitted\" output, not by the model saying so.\n- Probe 09 (socket and git): separate commands for a Unix socket bind, a loopback TCP bind, and `git add` plus `git commit` inside the linked worktree; each has its own command event and result.\n- Probe 10 (blocks): the main-checkout write and the main checkout `.git/slicer` write each have a command event.\n- A probe without a command event does not count and is recorded as unverified.\n- The capability table marks each cell verified, blocked or unverified from these events."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Spend no more than 3 paid codex calls (probes 08, 09, 10), the owner-approved budget; none may be retried. Make the probe repo under /Users/jon/code/squalor-xyz/ork/.scratch/ and run S01_DRY_RUN=1 first.\n2. Append the probes to spike/codex.sh with the S48 helpers (snap, in_wt). Each prompt asks for the exact shell commands and their exit codes, so a command event exists.\n3. Check each JSONL for a command_execution item (fields command, aggregated_output, exit_code, status) before recording a result.\n4. Update the docs/design.md capability cells.\n5. Anything still open: `adj check KEY`, then `adj ask`; never `adj decide`.\nThe implementer is a Claude role (the spike drives the codex CLI, so a Codex implementer would nest codex)."
+    },
+    {
+      "heading": "Check",
+      "body": "- zsh -n spike/codex.sh spike/common.zsh\n- S01_DRY_RUN=1 zsh spike/codex.sh PROBE_REPO RAW_DIR FIX_DIR: only .cmd files change, no vendor call.\n- rg -n \"REDACTED|sk-|Bearer|/Users/jon|/private/tmp\" testdata/vendors/codex (placeholders only)\n- rg -n command_execution on probes 08 to 10 stdout: each probe shows one.\n- slicer check\n- adj lint"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

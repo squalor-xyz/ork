@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-88 items · — 40 · done 42 · parked 1 · retired 5
+89 items · — 41 · done 42 · parked 1 · retired 5
 
 ## v1.1
 
@@ -142,9 +142,10 @@
 | 85 | [S86](slices/S86.md) | Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default | S | 1 |  | discovered from S83 | — |
 | 86 | [S87](slices/S87.md) | Relay friction: Codex brief sets GOCACHE under .scratch; no ui role in relay-run; spec names data source | S | 1 |  | discovered from S83 | — |
 | 87 | [S88](slices/S88.md) | Accept relay contract v8 alongside v7 | S | 1 |  |  | — |
+| 88 | [S89](slices/S89.md) | Close the codex sandbox gaps: resume sandbox, socket bind, worktree .git, main-checkout block | S | 2 |  | discovered from S48 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 88 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 89 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
