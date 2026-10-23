@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/roles/prompts/implementer.md`, tests."
+      "body": "- `internal/roles/prompts/implementer.md`: the new Rules bullets and the step 9 wording.\n- `internal/roles/roles_test.go`: TestImplementerSearchAndDenialRules (new)."
     },
     {
       "heading": "Failing tests",
