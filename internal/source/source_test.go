@@ -285,3 +285,32 @@ func TestSnapshotAndFetchCarryDeps(t *testing.T) {
 		t.Fatalf("fetch deps: %+v, %v", v, err)
 	}
 }
+
+func TestEngineRunLandingWire(t *testing.T) {
+	for _, merged := range []string{"", `,"merged":true`, `,"merged":false`} {
+		t.Run(merged, func(t *testing.T) {
+			var r EngineRun
+			if err := json.Unmarshal([]byte(`{"id":"r1","branch":"s09"`+merged+`}`), &r); err != nil {
+				t.Fatal(err)
+			}
+			b, err := json.Marshal(r)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(string(b), `"branch":"s09"`) || (merged != "" && !strings.Contains(string(b), merged[1:])) || (merged == "" && strings.Contains(string(b), `"merged"`)) {
+				t.Fatalf("landing wire lost state: %s", b)
+			}
+		})
+	}
+	var old EngineRun
+	if err := json.Unmarshal([]byte(`{"id":"old"}`), &old); err != nil {
+		t.Fatal(err)
+	}
+	b, err := json.Marshal(old)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(b), `"branch"`) || strings.Contains(string(b), `"merged"`) {
+		t.Fatalf("old wire gained landing state: %s", b)
+	}
+}

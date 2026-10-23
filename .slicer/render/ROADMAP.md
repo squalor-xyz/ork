@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-94 items · — 39 · done 49 · parked 1 · retired 5
+94 items · — 38 · done 50 · parked 1 · retired 5
 
 ## v1.1
 
@@ -67,7 +67,7 @@
 | 10 | S06 | Vendors and fallback | M | 2 |  | Umbrella over S47, S48 and S49. Notes move to the grok adapter (S72) and budgets (S65); owner 2026-10-20. | retired |
 | 11 | S07 | Live role detail | M | 2 |  |  | — |
 | 12 | [S08](slices/S08.md) | Architect role | L | 3 |  |  | done |
-| 13 | [S09](slices/S09.md) | Landing help: ready list | S | 1 |  |  | — |
+| 13 | [S09](slices/S09.md) | Landing help: ready list | S | 1 |  |  | done |
 | 14 | [S10](slices/S10.md) | Role prompts | M | 2 |  |  | done |
 | 15 | [S11](slices/S11.md) | TUI shell and Overview | M | 2 |  |  | done |
 | 16 | [S12](slices/S12.md) | Roadmap screen | M | 2 |  |  | done |

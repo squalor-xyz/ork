@@ -7,8 +7,8 @@
                    |  [2mnothing running[m
                    |
                    |[1mReady to land[m
-                   |  [2mnone yet: the list of branches to land comes with slice S0[m
-                   |
+                   |  [1m[m  ork  S22  s22  merge state unknown
+                   |         slicer land S22 --branch s22 --note "Landed s22"
                    |
                    |
                    |

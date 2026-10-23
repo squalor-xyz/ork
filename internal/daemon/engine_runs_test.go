@@ -18,7 +18,7 @@ func TestEngineSnapshotMatchesStatus(t *testing.T) {
 	d, store, p := runDaemon(t, nil)
 	at := time.Date(2026, 10, 19, 16, 40, 0, 0, time.UTC)
 	store.Now = func() time.Time { return at }
-	if _, err := store.Create(runrec.Record{ID: "engine", Project: p.Name, Item: "S22", State: runrec.StatePaused, RelayRun: "ledger", CreatedAt: at, Roles: []runrec.RoleRecord{{Denials: []string{"Write"}}, {Denials: []string{"Bash"}}}, Pending: &runrec.Pending{Kind: runrec.PendingQuestion, Reason: "reason", Question: "Which library?"}}); err != nil {
+	if _, err := store.Create(runrec.Record{ID: "engine", Project: p.Name, Item: "S22", Branch: "s22", State: runrec.StatePaused, RelayRun: "ledger", CreatedAt: at, Roles: []runrec.RoleRecord{{Denials: []string{"Write"}}, {Denials: []string{"Bash"}}}, Pending: &runrec.Pending{Kind: runrec.PendingQuestion, Reason: "reason", Question: "Which library?"}}); err != nil {
 		t.Fatal(err)
 	}
 	status := request(t, d, "status", `{"project":"p"}`)
@@ -27,7 +27,7 @@ func TestEngineSnapshotMatchesStatus(t *testing.T) {
 		EngineRuns json.RawMessage `json:"engine_runs"`
 	}
 	json.Unmarshal(snapshot, &out)
-	for _, want := range []string{`"denials":["Write","Bash"]`, `"relay_run":"ledger"`, `"created_at":"2026-10-19T16:40:00Z"`, `"wait":"Which library?; next: ork answer engine TEXT"`} {
+	for _, want := range []string{`"branch":"s22"`, `"denials":["Write","Bash"]`, `"relay_run":"ledger"`, `"created_at":"2026-10-19T16:40:00Z"`, `"wait":"Which library?; next: ork answer engine TEXT"`} {
 		t.Run(want, func(t *testing.T) {
 			if !strings.Contains(string(out.EngineRuns), want) || !strings.Contains(string(status), want) {
 				t.Fatalf("shared engine snapshot lacks %s: snapshot=%s status=%s", want, snapshot, status)

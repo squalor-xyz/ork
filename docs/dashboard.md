@@ -101,9 +101,18 @@ and decided records refresh every 5 min or on HEAD changes and manual refresh. `
    - unclassified vendor exits.
 2. **Running:** every running slice across projects, with a stage bar,
    elapsed time and tokens.
-3. **Ready to land:** committed slices whose branch is not merged, with the
-   `slicer land ID --branch B` command to copy. Merged branches are
-   detected and offered for cleanup (`landing.v1`, `git.cleanup`).
+3. **Ready to land:** committed engine runs across projects, or for the
+   selected project. Each row shows the slice and branch, with
+   `slicer land ID --branch B --note "Landed B"` on its own indented line to
+   copy. Rows are not selectable. An unknown merge state says "merge state
+   unknown" and still offers the land command; slicer checks that the branch
+   is merged. A known unmerged branch says "merge first" with no command.
+   A known merged branch also offers `slicer render`, since render files can
+   be stale after a merge (R8). S09 leaves the merge state unknown; S63 will
+   supply it (`landing.merge-detect`, adj #128). A missing branch says
+   "branch unknown" with no command. With no committed runs, the section
+   says "none" (`landing.v1`). Merged branches are detected and offered for
+   cleanup (S63; `git.cleanup`, `landing.v1`).
 
 The Overview reads engine runs in the daemon snapshot, using the same builder
 as `ork status` (`ui.engine-runs-read`). An engine row leads with the slice,

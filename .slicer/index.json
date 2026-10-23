@@ -487,7 +487,7 @@
       "id": "S09",
       "title": "Landing help: ready-to-land list",
       "short_title": "Landing help: ready list",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S05"
@@ -522,7 +522,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

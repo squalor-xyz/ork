@@ -32,7 +32,7 @@ func TestEngineRunRows(t *testing.T) {
 			sections := strings.Split(v, "Running")
 			wantNeeds := state == "awaiting-approval" || state == "paused" || state == "stopped"
 			if state == "committed" {
-				if strings.Contains(v, "S22") || strings.Contains(v, kindExternal) {
+				if strings.Contains(strings.Split(v, "Ready to land")[0], "S22") || strings.Contains(v, kindExternal) {
 					t.Fatalf("committed run still visible: %s", v)
 				}
 				return
@@ -77,7 +77,11 @@ func TestGoldenEngineRuns(t *testing.T) {
 			t.Run(fmt.Sprintf("%s-%dx%d", state, size.w, size.h), func(t *testing.T) {
 				h := newHarness(t, proj("ork", false))
 				h.start()
-				h.m.apply(snapshotMsg{name: "ork", snap: engineSnapshot(t, state, "ledger")})
+				s := engineSnapshot(t, state, "ledger")
+				if state == "committed" {
+					s.EngineRuns[0].Branch = "s22"
+				}
+				h.m.apply(snapshotMsg{name: "ork", snap: s})
 				h.m.Update(tea.WindowSizeMsg{Width: size.w, Height: size.h})
 				checkGolden(t, fmt.Sprintf("engine-%s-%dx%d.txt", state, size.w, size.h), h.m.View().Content)
 			})

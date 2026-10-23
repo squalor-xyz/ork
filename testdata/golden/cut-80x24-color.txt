@@ -13,7 +13,7 @@
                    |  [90m~ pending [m  agents      waiting for the first reply
                    |
                    |[1;36mReady to land[m
-                   |  [90mnone yet: the list of branches to land comes with slice S0[m
+                   |  [90mnone[m
                    |
                    |
                    |

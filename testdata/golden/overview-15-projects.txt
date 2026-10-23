@@ -7,7 +7,7 @@
   project-05 0     |  [2mnothing running[m
   project-06 0     |
   project-07 0     |[1mReady to land[m
-  project-08 0     |  [2mnone yet: the list of branches to land comes with slice S0[m
+  project-08 0     |  [2mnone[m
   project-09 0     |
   project-10 0     |
   project-11 0     |

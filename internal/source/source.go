@@ -170,6 +170,8 @@ type EngineRole struct {
 
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
+	Branch    string       `json:"branch,omitempty"`
+	Merged    *bool        `json:"merged,omitempty"` // nil: unknown; S63 supplies merge detection
 	Roles     []EngineRole `json:"roles,omitempty"`
 	ID        string       `json:"id"`
 	Item      string       `json:"item"`

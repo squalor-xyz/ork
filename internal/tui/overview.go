@@ -49,6 +49,7 @@ type ovRow struct {
 	engineID string // empty for ledger and non-engine rows
 	state    string
 	pending  string
+	commands []string // plain copyable lines beneath a nonselectable landing row
 }
 
 // rows lists the Overview's rows as Needs you and Running. The cursor moves
@@ -199,6 +200,7 @@ func (m *Model) overview(w int) overviewView {
 	needs, running := m.rows()
 	all := append(append([]ovRow(nil), needs...), running...)
 	cursor := clampCursor(m.cursor, len(all))
+	hang := strings.Repeat(" ", len(indent)+1+1+nameW+2)
 
 	var lines []string
 	sel := -1
@@ -213,6 +215,13 @@ func (m *Model) overview(w int) overviewView {
 				sel = len(lines)
 			}
 			lines = append(lines, m.rowLine(r, selected, nameW, w))
+			for _, command := range r.commands {
+				prefix := hang
+				if lipgloss.Width(hang+command) > w {
+					prefix = indent + indent + indent
+				}
+				lines = append(lines, prefix+clip(command, w-len(prefix)))
+			}
 		}
 	}
 	lines = append(lines, th.Heading.Render("Needs you"))
@@ -220,7 +229,36 @@ func (m *Model) overview(w int) overviewView {
 	lines = append(lines, "", th.Heading.Render("Running"))
 	section(running, len(needs), "nothing running")
 	lines = append(lines, "", th.Heading.Render("Ready to land"))
-	lines = append(lines, indent+th.Dim.Render("none yet: the list of branches to land comes with slice S09"))
+	var ready []ovRow
+	for i, p := range m.projects {
+		if (m.active >= 0 && i != m.active) || !p.loaded || p.setup() {
+			continue
+		}
+		for _, run := range p.snap.EngineRuns {
+			if run.State != "committed" {
+				continue
+			}
+			rest := run.Branch
+			var commands []string
+			switch {
+			case run.Branch == "":
+				rest = "branch unknown"
+			case run.Merged != nil && !*run.Merged:
+				rest += "  merge first"
+			default:
+				commands = append(commands, fmt.Sprintf(`slicer land %s --branch %s --note "Landed %s"`, run.Item, run.Branch, run.Branch))
+				if run.Merged == nil {
+					rest += "  merge state unknown"
+				} else {
+					rest += "  merged"
+					commands = append(commands, "slicer render")
+				}
+			}
+			ready = append(ready, ovRow{project: i, name: p.reg.Name, style: th.Title,
+				id: run.Item, rest: rest, text: run.Item + "  " + rest, commands: commands})
+		}
+	}
+	section(ready, len(all), "none")
 
 	ov := overviewView{body: lines, sel: sel}
 	switch {

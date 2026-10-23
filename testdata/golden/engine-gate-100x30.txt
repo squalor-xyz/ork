@@ -7,7 +7,7 @@
                            |[1;7m    ork  S22  gate  owner action  2 of 6 steps running  2m[m
                            |
                            |[1mReady to land[m
-                           |  [2mnone yet: the list of branches to land comes with slice S09[m
+                           |  [2mnone[m
                            |
                            |
                            |

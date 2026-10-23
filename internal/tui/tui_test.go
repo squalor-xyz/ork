@@ -1385,11 +1385,11 @@ func TestRunningSaysSoWhenNothingRuns(t *testing.T) {
 	}
 }
 
-func TestReadyToLandSaysItWaitsForS09(t *testing.T) {
+func TestReadyToLandPlaceholderIsGone(t *testing.T) {
 	h := newHarness(t, four...)
 	h.start()
 	v := h.view()
-	if !strings.Contains(v, "Ready to land") || !strings.Contains(v, "S09") {
+	if !strings.Contains(v, "Ready to land") || strings.Contains(v, "comes with slice ") {
 		t.Fatalf("Ready to land section:\n%s", v)
 	}
 }

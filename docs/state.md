@@ -201,6 +201,11 @@ The `relay_run` and `created_at` fields link ledger progress and
 order replacement runs for the Overview (`ui.engine-runs-read`,
 `ui.run-join-key`, `ui.stopped-newer`). These are read-only display fields.
 
+The optional `branch` and `merged` fields are *proposed*. `branch` comes from
+the run record. An omitted `merged` means the merge state is unknown; true
+means merged and false means unmerged. S09 leaves it unknown; S63 supplies
+it from the HEAD-change check (`landing.merge-detect`, adj #128).
+
 The optional `roles` array is *proposed*. Each entry carries `role`, `round`,
 `vendor`, optional `model`, `effort` and `step`, `started_at`, optional
 `ended_at` and `exit`. It omits process, session, report and usage data.

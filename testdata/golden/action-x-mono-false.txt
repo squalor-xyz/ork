@@ -7,7 +7,7 @@
                            |[1;7;97;44m    ork  S22  implement  owner action  2 of 6 steps running  2m[m
                            |
                            |[1;36mReady to land[m
-                           |  [90mnone yet: the list of branches to land comes with slice S09[m
+                           |  [90mnone[m
                            |
                            |
                            |
