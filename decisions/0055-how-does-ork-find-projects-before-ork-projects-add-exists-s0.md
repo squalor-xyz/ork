@@ -2,7 +2,7 @@
 {
   "id": 55,
   "title": "How does ork find projects before ork projects add exists (S03)?",
-  "status": "decided",
+  "status": "superseded",
   "key": "registry.seed",
   "asked_by": "claude",
   "decided_by": "jon",
@@ -25,6 +25,7 @@
   ],
   "decision": "seed",
   "rationale": "Owner 2026-10-19: If projects.json is missing, write it with the four decided projects whose paths exist, and say so; hand-edit after that.",
+  "superseded_by": 157,
   "history": [
     {
       "date": "2026-10-18",
@@ -38,6 +39,11 @@
       "date": "2026-10-18",
       "event": "renumber",
       "note": "from 51"
+    },
+    {
+      "date": "2026-10-23",
+      "event": "supersede",
+      "note": "by 157"
     }
   ]
 }
