@@ -144,3 +144,13 @@ func (d *Daemon) Cleanup(ctx context.Context, run string) error {
 	defer c.Close()
 	return c.Cleanup(ctx, run)
 }
+
+// ProjectsAdd registers a path through a fresh daemon connection.
+func (d *Daemon) ProjectsAdd(ctx context.Context, path string) (registry.Project, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return registry.Project{}, err
+	}
+	defer c.Close()
+	return c.AddProject(ctx, path, "")
+}

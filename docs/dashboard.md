@@ -22,6 +22,32 @@ until then.
 - **Bell.** A terminal bell plus a badge on the project sidebar row when something
   newly needs the owner (`ui.notify`).
 
+## Welcome
+
+With no registered projects, ork opens the Welcome view
+(`registry.no-seed`, adj 157). It says "No projects yet. Press a to add one".
+`a` opens a project path field. Enter with an empty field offers the current
+directory only when it holds a `.slicer` directory or `.adjudicate.json`
+file. Otherwise the status names the directory: "DIR holds neither .slicer
+nor .adjudicate.json; type a path". The hint asks for an absolute path. Esc
+cancels path entry and returns to "Press a to add one". Typed paths are
+trimmed and sent as typed.
+
+The proposed confirm bar shows `ork projects add 'PATH'? [y/N] (Enter is No)`,
+with PATH shell quoted (`ui.confirm`, adj 98).
+Enter, n, N and Esc cancel. y or Y adds once through the daemon. While the
+add is pending, another y does nothing. The path field shows no cursor
+during confirmation or the pending add. Errors show verbatim in the status
+area, with the wire error code when present. The field keeps its text.
+Without a daemon, the status says "No daemon connection; action unavailable".
+On success the Overview appears with "Needs you" selected and status
+`added NAME PATH`. The new project is fetched at once and polled.
+
+The proposed Welcome keys keep `?` for help and `q` or ctrl+c to quit
+outside text entry; ctrl+c also quits during text entry. View, project,
+filter, sidebar and run keys do nothing on Welcome. The add key works only
+on Welcome in this slice.
+
 ## Layout
 
 ```

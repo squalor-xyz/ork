@@ -101,7 +101,7 @@ func newWorld(t *testing.T, src source.Fetcher, projects ...registry.Project) *w
 func (w *world) startDaemon(t *testing.T) func(context.Context) error {
 	return func(ctx context.Context) error {
 		w.starts.Add(1)
-		d := daemon.New(daemon.Config{Paths: w.paths, RegistryPath: w.regPath, SeedRoot: filepath.Join(w.dir, "seed"), Source: w.src, WaveRunning: w.waveRunning})
+		d := daemon.New(daemon.Config{Paths: w.paths, RegistryPath: w.regPath, Source: w.src, WaveRunning: w.waveRunning})
 		dctx, cancel := context.WithCancel(context.Background())
 		done := make(chan struct{})
 		w.daemonDone = done
@@ -308,7 +308,7 @@ func TestStatusUnknownProject(t *testing.T) {
 func TestStatusWithNoProjects(t *testing.T) {
 	w := newWorld(t, stubSource{})
 	code, stdout, _ := run(t, w.app, "status")
-	if code != 0 || stdout != "no projects registered\n" {
+	if code != 0 || stdout != daemon.NoProjectsGuide+"\n" {
 		t.Fatalf("exit %d: %q", code, stdout)
 	}
 	_, stdout, _ = run(t, w.app, "status", "--json")
@@ -498,7 +498,6 @@ func TestUsageErrorsExitTwo(t *testing.T) {
 		{"status", "--project"},
 		{"projects"},
 		{"projects", "frobnicate"},
-		{"projects", "add"},
 		{"projects", "add", "/a", "/b"},
 		{"projects", "rm"},
 		{"projects", "list", "extra"},

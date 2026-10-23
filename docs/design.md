@@ -103,8 +103,8 @@ ork (TUI)  ork status --json (CLI)
   | `wave.overlap` (proposed wire) | `{"project","items":[ID...]}` | `{"overlap":[{"a","b","shared"?}]}` from `slicer deps --overlap`; `shared` is absent when a pair shares no path; fewer than two items is `bad_params`; slicer runs on each call |
   | `subscribe` | `{"focus":[names]}` | none; the connection gets notices (below) and the named projects become visible |
   | `refresh` | `{"project"}` | none; reads every part of the project now and returns once they are read |
-  | `projects.list` | none | `{"projects":[...]}` |
-  | `projects.add` | `{"path","name"?}` | the added project |
+  | `projects.list` | none | `{"projects":[...]}`; an empty registry is valid |
+  | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
   | `projects.rm` | `{"name"}` | none |
 
   Error codes the daemon adds: `unknown_method`, `bad_params`, `not_found`,
@@ -772,12 +772,25 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   wait reason and denied tool names), and
   error (the text
   does not show ages yet).
+  With no projects, text `status` prints
+  `no projects: run ork projects add PATH (or run ork to add them in the TUI)`
+  and exits 0. Project commands (`run`, `wave suggest`, `wave start`, and
+  `status --project`) report that guide as an error and exit 1. JSON status
+  keeps an empty projects array; JSON project errors use the usual error object.
 - `projects list`: `{"projects":[...]}`, each as in `projects.json`. Text: name,
   path and `adj`, in columns.
-- `projects add PATH [--name N]`: `{"project":{...}}`. The name defaults to the
+- `projects add [PATH] [--name N]`: `{"project":{...}}`. The name defaults to the
   path's base name. `adj` is true when `PATH/.adjudicate.json` exists. A
   duplicate name, a relative path, or a path that is not an existing
   directory is refused (`projects.add-path`). Text: `added NAME PATH [(adj)]`.
+  Without PATH, text mode offers the current directory with
+  `Add DIR as project NAME? [y/N]: `. Only y or yes accepts, without regard
+  to case. Enter, EOF and other answers cancel with exit 1. JSON mode
+  requires PATH and never prompts. No marker is required for the CLI offer.
+  An empty registry is valid; startup writes nothing and never seeds
+  (`registry.no-seed`, adj 157). The first add writes projects.json.
+  The TUI Welcome add guides registration through this same daemon method;
+  its proposed confirmation and error layout is in dashboard.md.
 - `projects rm NAME`: `{"removed":"NAME"}`.
 - `roles print [ROLE]`: `{"roles":[{"name","prompt"}]}`. Text: the prompt of
   ROLE as embedded, or all four with a `==== NAME ====` line before each.

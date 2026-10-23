@@ -184,7 +184,7 @@ func (e *env) config() Config {
 	if e.fetch != nil {
 		f = e.fetch
 	}
-	return Config{Paths: e.paths, RegistryPath: e.regPath, SeedRoot: filepath.Join(e.dir, "seed"), Source: f, Clock: e.clock, Engine: e.deps}
+	return Config{Paths: e.paths, RegistryPath: e.regPath, Source: f, Clock: e.clock, Engine: e.deps}
 }
 
 func (e *env) writeRegistry(t *testing.T, idleMinutes int, projects ...registry.Project) {
@@ -766,16 +766,26 @@ func TestConcurrentAddsAreAllKept(t *testing.T) {
 	}
 }
 
-func TestMissingRegistryIsSeeded(t *testing.T) {
-	e := newEnv(t) // no projects.json; the seed root holds a "slicer" directory
-	os.MkdirAll(filepath.Join(e.dir, "seed", "slicer"), 0o755)
+func TestMissingRegistryIsEmptyAndNeverWrittenByReads(t *testing.T) {
+	e := newEnv(t)
+	e.regPath = filepath.Join(e.dir, "missing", "projects.json")
 	e.start(t)
-	list, err := e.dial(t).Projects(context.Background())
-	if err != nil || len(list) != 1 || list[0].Name != "slicer" {
-		t.Fatalf("seeded list: %+v, %v", list, err)
+	c := e.dial(t)
+	list, err := c.Projects(context.Background())
+	if err != nil || list == nil || len(list) != 0 {
+		t.Fatalf("projects: %+v, %v", list, err)
 	}
-	if _, err := os.Stat(e.regPath); err != nil {
-		t.Fatalf("the seeded registry was not saved: %v", err)
+	status, err := c.Status(context.Background(), "")
+	if err != nil || len(status.Projects) != 0 {
+		t.Fatalf("status: %+v, %v", status, err)
+	}
+	var snapshot SnapshotResult
+	err = c.Call(context.Background(), MethodSnapshot, SnapshotParams{Project: "missing"}, &snapshot)
+	if ipc.ErrorOf(err).Code != CodeNotFound {
+		t.Fatalf("snapshot: %v", err)
+	}
+	if _, err := os.Stat(filepath.Dir(e.regPath)); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("registry directory created: %v", err)
 	}
 }
 

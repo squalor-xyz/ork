@@ -22,7 +22,7 @@ func (d *Daemon) subscribe(ctx context.Context, p SubscribeParams) (any, error) 
 	}
 	for _, name := range p.Focus {
 		if _, ok := find(f, name); !ok {
-			return nil, notFound(name)
+			return nil, notFound(name, f)
 		}
 	}
 	d.setFocus(conn, p.Focus)

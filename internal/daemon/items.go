@@ -18,7 +18,7 @@ func (d *Daemon) itemShow(ctx context.Context, p ItemShowParams) (*ItemShowResul
 	}
 	project, ok := find(f, p.Project)
 	if !ok {
-		return nil, notFound(p.Project)
+		return nil, notFound(p.Project, f)
 	}
 	detail, err := d.runs.deps.Slicer.Show(ctx, project.Path, p.ID)
 	if err != nil {

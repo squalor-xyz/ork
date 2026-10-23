@@ -81,7 +81,7 @@ func (d *Daemon) registered(name string) (registry.Project, error) {
 	}
 	project, ok := find(f, name)
 	if !ok {
-		return registry.Project{}, notFound(name)
+		return registry.Project{}, notFound(name, f)
 	}
 	return project, nil
 }

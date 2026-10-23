@@ -169,33 +169,16 @@ func openTUI(ctx context.Context, stderr io.Writer, p program) int {
 	return 0
 }
 
-// loadRegistry reads the registry, seeding it when it is missing, and says so
-// on stderr. It returns exit code 1 when there are no projects to show.
+// loadRegistry reads the registry. An empty registry opens the Welcome view.
 func loadRegistry(stderr io.Writer) (*registry.File, int) {
 	path, err := registry.DefaultPath()
 	if err != nil {
 		fmt.Fprintf(stderr, "ork: %v\n", err)
 		return nil, 1
 	}
-	seedRoot, err := registry.DefaultSeedRoot()
+	reg, err := registry.Load(path)
 	if err != nil {
 		fmt.Fprintf(stderr, "ork: %v\n", err)
-		return nil, 1
-	}
-	reg, report, err := registry.LoadOrSeed(path, seedRoot)
-	if err != nil {
-		fmt.Fprintf(stderr, "ork: %v\n", err)
-		return nil, 1
-	}
-	if report != nil { // registry.seed: say so
-		fmt.Fprintf(stderr, "ork: no registry found; wrote %s with %d project(s) from %s", report.Path, len(report.Written), seedRoot)
-		if len(report.Skipped) > 0 {
-			fmt.Fprintf(stderr, " (not found: %s)", strings.Join(report.Skipped, ", "))
-		}
-		fmt.Fprintln(stderr, ". Edit that file to change the projects.")
-	}
-	if len(reg.Projects) == 0 {
-		fmt.Fprintf(stderr, "ork: no projects in %s; add some and run ork again\n", path)
 		return nil, 1
 	}
 	return reg, 0

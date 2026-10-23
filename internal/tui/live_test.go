@@ -25,6 +25,7 @@ var errNoMoreNotices = errors.New("no more notices in the script")
 // into log when log is set, and answers Next from a script: each project name
 // in turn, then an error. It never touches a socket.
 type fakeLive struct {
+	addPaths  []string
 	mu        sync.Mutex
 	log       *[]string     // refresh calls, when set
 	focusGate chan struct{} // when set, Focus waits until it is closed
@@ -227,3 +228,10 @@ func (*fakeLive) WaveStart(context.Context, daemon.WaveStartParams) (*daemon.Wav
 }
 
 func (f *fakeLive) Cleanup(context.Context, string) error { return nil }
+
+func (l *fakeLive) ProjectsAdd(_ context.Context, path string) (registry.Project, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.addPaths = append(l.addPaths, path)
+	return registry.Project{}, nil
+}

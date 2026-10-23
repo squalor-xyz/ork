@@ -123,3 +123,21 @@ func contains(keys []string, k string) bool {
 	}
 	return false
 }
+
+func TestAddIsDueAtOnceAndDoesNotResetExistingKey(t *testing.T) {
+	p := New(DefaultSchedule, "a")
+	refresh(t, p, "a", 0)
+	p.Add("b")
+	p.Add("a")
+	p.Add("b")
+	if got := p.Due(at(1)); !reflect.DeepEqual(got, []string{"b"}) {
+		t.Fatalf("Due = %v", got)
+	}
+	if !p.Start("b") {
+		t.Fatal("new key not registered")
+	}
+	p.Add("b")
+	if !p.InFlight("b") {
+		t.Fatal("duplicate Add reset in-flight job")
+	}
+}

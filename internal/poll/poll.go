@@ -103,3 +103,12 @@ func (p *Poller) Pending() int {
 	}
 	return n
 }
+
+// Add registers a key due immediately. An existing key is left untouched.
+func (p *Poller) Add(key string) {
+	if _, ok := p.jobs[key]; ok {
+		return
+	}
+	p.keys = append(p.keys, key)
+	p.jobs[key] = &job{}
+}

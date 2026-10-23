@@ -262,7 +262,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	}
 	proj, ok := find(f, p.Project)
 	if !ok {
-		return nil, notFound(p.Project)
+		return nil, notFound(p.Project, f)
 	}
 	rec, err := d.runs.deps.Slicer.RecommendRoles(ctx, proj.Path, p.Item, p.WellSpecified, p.Split)
 	if err != nil {

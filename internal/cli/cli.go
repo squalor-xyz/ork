@@ -50,7 +50,7 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
   ork retry RUN               retry a paused role or step
   ork status [--project P]    projects, needs-you counts and active relays
   ork projects list           list the registered projects
-  ork projects add PATH [--name N]
+  ork projects add [PATH] [--name N]
                               register a project
   ork projects rm NAME        unregister a project
   ork roles print [ROLE]      print the embedded role prompts
@@ -73,6 +73,7 @@ type Tools struct {
 
 // App is the command line with its dependencies.
 type App struct {
+	Getwd   func() (string, error)                        // current directory offer; nil uses os.Getwd
 	BuildID string                                        // CLI build identity; empty means dev
 	Input   io.Reader                                     // confirmation input; nil uses os.Stdin
 	Call    func(context.Context, string, any, any) error // nil uses the daemon socket

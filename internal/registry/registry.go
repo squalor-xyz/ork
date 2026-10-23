@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// Package registry reads, validates, writes and seeds ork's project registry,
+// Package registry reads, validates and writes ork's project registry,
 // projects.json (docs/state.md).
 package registry
 
@@ -122,9 +122,12 @@ func DefaultPath() (string, error) {
 }
 
 // Load reads and validates the registry at path. A missing file returns an
-// error for which errors.Is(err, os.ErrNotExist) is true.
+// empty registry without creating a file or directory.
 func Load(path string) (*File, error) {
 	data, err := os.ReadFile(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return &File{Version: Version, Projects: []Project{}}, nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -199,17 +202,6 @@ var writeTemp = func(f *os.File, data []byte) error {
 // same directory, then a rename. On any failure the old file is untouched and
 // no temporary file is left behind.
 func Save(path string, f *File) error {
-	return save(path, f, false)
-}
-
-// beforeCommit runs after the temporary file is complete and before it is
-// moved into place. Tests use it to change the directory at that moment.
-var beforeCommit = func() {}
-
-// save is Save. With noReplace it never replaces an existing file: when the
-// target exists at commit time it returns an error for which
-// errors.Is(err, os.ErrExist) is true, and leaves the target untouched.
-func save(path string, f *File, noReplace bool) error {
 	if err := f.Validate(); err != nil {
 		return fmt.Errorf("registry %s: %w", path, err)
 	}
@@ -245,17 +237,6 @@ func save(path string, f *File, noReplace bool) error {
 	if err := tmp.Close(); err != nil {
 		os.Remove(tmpName)
 		return fmt.Errorf("registry %s: %w", path, err)
-	}
-	beforeCommit()
-	if noReplace {
-		// A hard link fails if path exists, so it never replaces a file that
-		// appeared after the caller's check.
-		err := os.Link(tmpName, path)
-		os.Remove(tmpName)
-		if err != nil {
-			return fmt.Errorf("registry %s: %w", path, err)
-		}
-		return nil
 	}
 	if err := os.Rename(tmpName, path); err != nil {
 		os.Remove(tmpName)

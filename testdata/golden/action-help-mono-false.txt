@@ -1,7 +1,6 @@
 [1mork[m  ?help                 | [1;36mOverview[m[90m | Questions | [mWaves[90m | [mRoadmap[90m | Decisions[m
 [1;7;97;44m> Needs you[m                |[90m------------------------------------------------------------------------[m
   ork 0*                   |[1;36mKeys[m
-                           |
                            |tab next view
                            |shift+tab previous view
                            |right next project
@@ -12,6 +11,7 @@
                            |enter open run pane or Roadmap item; other rows select project
                            |/ filter projects; esc clears
                            |s hide/show sidebar
+                           |a add project (Welcome)
                            |space tick item and ask inputs (Waves)
                            |e edit ticked item lineup (Waves)
                            |l launch a ready slice (Roadmap) or wave (Waves)

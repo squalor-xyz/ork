@@ -28,17 +28,9 @@ func (d *Daemon) registryPath() string {
 	return p
 }
 
-func (d *Daemon) seedRoot() string {
-	if d.cfg.SeedRoot != "" {
-		return d.cfg.SeedRoot
-	}
-	r, _ := registry.DefaultSeedRoot()
-	return r
-}
-
-// loadRegistry reads the registry, seeding it first when the file is missing.
+// loadRegistry reads the registry without creating it.
 func (d *Daemon) loadRegistry() (*registry.File, error) {
-	f, _, err := registry.LoadOrSeed(d.registryPath(), d.seedRoot())
+	f, err := registry.Load(d.registryPath())
 	if err != nil {
 		return nil, &ipc.Error{Code: CodeRegistry, Message: err.Error()}
 	}
@@ -164,7 +156,13 @@ func nonNil[T any](s []T) []T {
 	return s
 }
 
-func notFound(name string) error {
+// NoProjectsGuide tells an owner how to register the first project.
+const NoProjectsGuide = "no projects: run ork projects add PATH (or run ork to add them in the TUI)"
+
+func notFound(name string, f *registry.File) error {
+	if f != nil && len(f.Projects) == 0 {
+		return &ipc.Error{Code: CodeNotFound, Message: NoProjectsGuide}
+	}
 	return &ipc.Error{Code: CodeNotFound, Message: fmt.Sprintf("no project named %q", name)}
 }
 
@@ -184,7 +182,7 @@ func (d *Daemon) snapshot(ctx context.Context, p SnapshotParams) (*SnapshotResul
 	}
 	proj, ok := find(f, p.Project)
 	if !ok {
-		return nil, notFound(p.Project)
+		return nil, notFound(p.Project, f)
 	}
 	s := d.snapshotOf(ctx, proj)
 	now := d.cfg.Clock.Now()
@@ -209,7 +207,7 @@ func (d *Daemon) status(ctx context.Context, p StatusParams) (*StatusResult, err
 	if p.Project != "" {
 		proj, ok := find(f, p.Project)
 		if !ok {
-			return nil, notFound(p.Project)
+			return nil, notFound(p.Project, f)
 		}
 		projects = []registry.Project{proj}
 	}
@@ -347,7 +345,7 @@ func (d *Daemon) removeProject(name string) error {
 	}
 	i := slices.IndexFunc(f.Projects, func(p registry.Project) bool { return p.Name == name })
 	if i < 0 {
-		return notFound(name)
+		return notFound(name, f)
 	}
 	f.Projects = slices.Delete(f.Projects, i, i+1)
 	if err := registry.Save(d.registryPath(), f); err != nil {
@@ -378,7 +376,7 @@ func (d *Daemon) refresh(ctx context.Context, p RefreshParams) (any, error) {
 	}
 	proj, ok := find(f, p.Project)
 	if !ok {
-		return nil, notFound(p.Project)
+		return nil, notFound(p.Project, f)
 	}
 	return nil, d.cache.Refresh(ctx, proj, allParts...)
 }

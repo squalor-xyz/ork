@@ -78,6 +78,9 @@ func (a *App) waveSuggest(ctx context.Context, o *output, args []string) int {
 		}
 		return ExitOK
 	}
+	if len(projects.Projects) == 0 {
+		return o.fail(ExitFailure, daemon.CodeNotFound, daemon.NoProjectsGuide)
+	}
 	return o.fail(ExitFailure, daemon.CodeNotFound, fmt.Sprintf("no project named %q", pos[0]))
 }
 

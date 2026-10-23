@@ -33,6 +33,7 @@ const holdFlag = "needs-owner"
 // Projects has a default, and tests replace the clock, the timer and the bell
 // so no test sleeps.
 type Config struct {
+	Getwd     func() (string, error) // empty Welcome path offer; default os.Getwd
 	Source    source.Source
 	Projects  []registry.Project
 	Now       func() time.Time              // default time.Now
@@ -92,6 +93,7 @@ func noSlicerErr(err error) bool {
 
 // Model is the Bubble Tea model of the whole TUI.
 type Model struct {
+	welcome       welcomeState
 	cfg           Config
 	keys          keyMap
 	help          help.Model
@@ -128,6 +130,9 @@ type Model struct {
 
 // New returns a Model that has not fetched anything. Init starts the fetches.
 func New(cfg Config) *Model {
+	if cfg.Getwd == nil {
+		cfg.Getwd = os.Getwd
+	}
 	if cfg.Now == nil {
 		cfg.Now = time.Now
 	}
@@ -250,6 +255,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, m.tick(m.cfg.Now())
 	case snapshotMsg:
 		return m, m.apply(msg)
+	case projectAddedMsg:
+		return m, m.applyProjectAdded(msg)
 	case itemShowMsg:
 		if pane := m.itemPane; pane != nil && m.view == roadmapView && m.active >= 0 &&
 			pane.project == msg.project && pane.id == msg.id && pane.request == msg.request &&
@@ -306,6 +313,13 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyPressMsg:
 		return m, m.key(msg)
 	case tea.PasteMsg:
+		if len(m.projects) == 0 {
+			if m.welcome.editing && m.welcome.confirm == "" && !m.welcome.pending {
+				m.welcome.field.update(msg)
+				m.actionStatus = ""
+			}
+			return m, nil
+		}
 		if m.waves != nil && m.waves.lineup != nil {
 			e := m.waves.lineup
 			if e.custom {
@@ -336,6 +350,9 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
+	if len(m.projects) == 0 {
+		return m.welcomeKey(msg)
+	}
 	if m.confirm != nil {
 		switch msg.String() {
 		case "ctrl+c":

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- S96: first run opens a blank Welcome view. Projects are never seeded.
+  The TUI add confirms the exact command, then registers and fetches the
+  project. The registry is created on the first add. Empty CLI status shows
+  the registration guide; `projects add` without PATH offers the current
+  directory in text mode.
+
 - S13: the binary joins the parts. `ork` opens the TUI over the daemon's
   socket and starts the daemon when none answers; `ork status`, `projects`,
   `roles`, `doctor` and `help` go through `internal/cli`; `ork daemon run`

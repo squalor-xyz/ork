@@ -1115,3 +1115,5 @@
 {"when": "2026-10-23T20:24:00Z", "item": "S96", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-10-23T20:24:00Z", "item": "S96", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-23T20:24:00Z", "item": "S96", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-23T20:27:23Z", "item": "S96", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-23T20:45:22Z", "item": "S96", "action": "status", "from": "started", "to": "done", "note": "S96 verified: ork no longer seeds projects; Load of a missing registry returns an empty one and writes nothing, the first add creates projects.json; ork opens on a TUI Welcome view that adds a project through projects.add after a confirm bar (Enter is No); ork status, run and wave give the one-line guide when no project is registered; ork projects add with no PATH offers the current directory. Race suite for all packages, vet, gofmt, slicer check and adj lint pass. Owner human check pending.", "by": "Jon R"}

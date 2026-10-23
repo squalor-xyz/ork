@@ -3,9 +3,12 @@
 package cli
 
 import (
+	"bufio"
 	"context"
 	"flag"
 	"fmt"
+	"io"
+	"os"
 	"path/filepath"
 	"strings"
 	"text/tabwriter"
@@ -34,7 +37,7 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 		return o.printJSON(res)
 	}
 	if len(res.Projects) == 0 {
-		fmt.Fprintln(o.stdout, "no projects registered")
+		fmt.Fprintln(o.stdout, daemon.NoProjectsGuide)
 		return ExitOK
 	}
 	for _, p := range res.Projects {
@@ -122,8 +125,35 @@ func (a *App) projects(ctx context.Context, o *output, args []string) int {
 		if err != nil {
 			return o.usage("projects add: %v", err)
 		}
-		if len(pos) != 1 {
+		if len(pos) > 1 || (len(pos) == 0 && o.json) {
 			return o.usage("projects add takes one PATH, got %d arguments", len(pos))
+		}
+		if len(pos) == 0 {
+			getwd := a.Getwd
+			if getwd == nil {
+				getwd = os.Getwd
+			}
+			dir, err := getwd()
+			if err != nil {
+				return o.failErr(err)
+			}
+			projectName := *name
+			if projectName == "" {
+				projectName = filepath.Base(dir)
+			}
+			fmt.Fprintf(o.stdout, "Add %s as project %s? [y/N]: ", dir, projectName)
+			input := a.Input
+			if input == nil {
+				input = os.Stdin
+			}
+			answer, err := bufio.NewReader(input).ReadString('\n')
+			if err != nil && err != io.EOF {
+				return o.failErr(err)
+			}
+			if yesNo(strings.TrimSpace(answer)) != "yes" {
+				return o.fail(ExitFailure, "cancelled", "cancelled")
+			}
+			pos = []string{dir}
 		}
 		if !filepath.IsAbs(pos[0]) {
 			return o.usage("path %q is not absolute", pos[0])

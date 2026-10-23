@@ -74,7 +74,6 @@ type Config struct {
 
 	Paths        Paths
 	RegistryPath string         // projects.json; empty means registry.DefaultPath
-	SeedRoot     string         // where a missing registry is seeded from; empty means registry.DefaultSeedRoot
 	Source       source.Fetcher // nil means source.Direct over the real CLIs
 	Clock        Clock          // nil means the real clock
 	WaveRunning  func() bool    // true while a wave runs; nil means never; engine runs are checked separately

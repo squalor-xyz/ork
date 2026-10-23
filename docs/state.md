@@ -9,7 +9,7 @@ The files ork owns. Everything else is read live from slicer, adj and git
 
 | Data | File |
 |---|---|
-| Project registry and per-project settings | `~/.config/ork/projects.json` |
+| Project registry and per-project settings, created on the first add | `~/.config/ork/projects.json` |
 | UI preferences, free-form until v1 | `~/.config/ork/ui.json` |
 | Daemon socket and pidfile (the pidfile is locked while a daemon lives) | `~/.local/state/ork/ork.sock`, `ork.pid` |
 | One record per slice run | `~/.local/state/ork/runs/<run>/run.json` |
@@ -24,6 +24,11 @@ worktree, the branch, the commit, and the ledger and notes through slicer
 commands.
 
 ## projects.json
+
+A missing registry is empty and valid. ork never seeds projects or writes
+this file on startup (`registry.no-seed`, adj 157). The first successful
+`ork projects add` or TUI add creates the config directory and this file.
+
 
 ```json
 {

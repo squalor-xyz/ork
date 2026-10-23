@@ -3659,7 +3659,7 @@
       "id": "S96",
       "title": "First run opens blank: no seeded projects; a TUI welcome adds them",
       "short_title": "First run opens blank: no seeded projects; a TUI welcome adds them",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -3680,7 +3680,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],

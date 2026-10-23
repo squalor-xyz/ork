@@ -29,7 +29,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// sandbox points the state, config and seed directories at a temporary
+// sandbox points the state and config directories at a temporary
 // directory, so no test touches the real ones. The socket path must fit
 // macOS's limit, so the directory is a short one when it can be.
 func sandbox(t *testing.T) string {
@@ -47,10 +47,7 @@ func sandbox(t *testing.T) string {
 	}
 	t.Setenv("XDG_STATE_HOME", filepath.Join(dir, "state"))
 	t.Setenv("XDG_CONFIG_HOME", filepath.Join(dir, "config"))
-	t.Setenv("ORK_SEED_ROOT", filepath.Join(dir, "seed"))
-	if err := os.MkdirAll(filepath.Join(dir, "seed"), 0o755); err != nil {
-		t.Fatal(err)
-	}
+	t.Setenv("HOME", dir)
 	return dir
 }
 
@@ -64,16 +61,6 @@ func writeRegistry(t *testing.T, dir string, projects ...registry.Project) {
 	}
 	if err := registry.Save(registryPath(dir), &registry.File{Version: registry.Version, Projects: projects}); err != nil {
 		t.Fatal(err)
-	}
-}
-
-// makeSeeds creates the named project directories in the sandbox's seed root.
-func makeSeeds(t *testing.T, dir string, names ...string) {
-	t.Helper()
-	for _, n := range names {
-		if err := os.Mkdir(filepath.Join(dir, "seed", n), 0o755); err != nil {
-			t.Fatal(err)
-		}
 	}
 }
 
@@ -384,36 +371,26 @@ func sameErr(a, b error) bool {
 	return ea.Code == eb.Code && ea.Message == eb.Message
 }
 
-func TestStartSeedsAMissingRegistryAndSaysSo(t *testing.T) {
+func TestNoSeedingHappens(t *testing.T) {
 	dir := sandbox(t)
-	makeSeeds(t, dir, "slicer", "agents")
-	path := registryPath(dir)
-	var out, errOut bytes.Buffer
+	for _, name := range []string{"slicer", "adjudicate", "DataBall", "agents"} {
+		if err := os.MkdirAll(filepath.Join(dir, "code", "squalor-xyz", name), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
 	var got tui.Config
-	code := run(context.Background(), nil, &out, &errOut, inTest(t, emptySource{}, func(c tui.Config) error {
-		got = c
-		return nil
-	}))
-	if code != 0 {
-		t.Fatalf("code %d, stderr %q", code, errOut.String())
+	var out, errOut bytes.Buffer
+	code := run(context.Background(), nil, &out, &errOut, inTest(t, emptySource{}, func(c tui.Config) error { got = c; return nil }))
+	if code != 0 || got.Live == nil || got.Source == nil || len(got.Projects) != 0 || errOut.Len() != 0 {
+		t.Fatalf("code %d, config %+v, stderr %q", code, got, errOut.String())
 	}
-	if len(got.Projects) != 2 || got.Projects[0].Name != "slicer" || got.Projects[1].Name != "agents" {
-		t.Fatalf("projects: %+v", got.Projects)
-	}
-	if got.Source == nil {
-		t.Error("no Source")
-	}
-	if _, err := os.Stat(path); err != nil {
-		t.Errorf("registry not written: %v", err)
-	}
-	if msg := errOut.String(); !strings.Contains(msg, path) || !strings.Contains(msg, "2 project") {
-		t.Errorf("seeding not announced: %q", msg)
+	if _, err := os.Stat(registryPath(dir)); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("registry written: %v", err)
 	}
 }
 
 func TestStartReadsAnExistingRegistryWithoutSeeding(t *testing.T) {
 	dir := sandbox(t)
-	makeSeeds(t, dir, "slicer")
 	path := registryPath(dir)
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		t.Fatal(err)
@@ -436,13 +413,20 @@ func TestStartReadsAnExistingRegistryWithoutSeeding(t *testing.T) {
 	}
 }
 
-// With no projects the TUI does not open and no daemon starts.
-func TestStartWithNoProjectsFailsWithoutTheTUI(t *testing.T) {
-	sandbox(t) // no project directories exist, so the seed holds nothing
-	var out, errOut bytes.Buffer
-	code := run(context.Background(), nil, &out, &errOut, refused(t))
-	if code != 1 || !strings.Contains(errOut.String(), "no projects") {
-		t.Fatalf("code %d, stderr %q", code, errOut.String())
+func TestStartWithEmptyRegistryOpensTheTUI(t *testing.T) {
+	dir := sandbox(t)
+	writeRegistry(t, dir)
+	opened := false
+	var errOut bytes.Buffer
+	code := run(context.Background(), nil, io.Discard, &errOut, inTest(t, emptySource{}, func(c tui.Config) error {
+		opened = true
+		if len(c.Projects) != 0 {
+			t.Fatal(c.Projects)
+		}
+		return nil
+	}))
+	if code != 0 || !opened {
+		t.Fatalf("code %d, opened %v, stderr %q", code, opened, errOut.String())
 	}
 }
 
@@ -464,7 +448,7 @@ func TestABrokenRegistryFailsWithItsError(t *testing.T) {
 
 func TestATUIErrorExitsNonZero(t *testing.T) {
 	dir := sandbox(t)
-	makeSeeds(t, dir, "slicer")
+	writeRegistry(t, dir, registry.Project{Name: "slicer", Path: filepath.Join(dir, "slicer")})
 	var out, errOut bytes.Buffer
 	code := run(context.Background(), nil, &out, &errOut, inTest(t, emptySource{}, func(tui.Config) error {
 		return errors.New("no tty")
@@ -477,7 +461,7 @@ func TestATUIErrorExitsNonZero(t *testing.T) {
 // When no daemon can be started the TUI does not open, and the command says why.
 func TestNoDaemonMeansNoTUI(t *testing.T) {
 	dir := sandbox(t)
-	makeSeeds(t, dir, "slicer")
+	writeRegistry(t, dir, registry.Project{Name: "slicer", Path: filepath.Join(dir, "slicer")})
 	var out, errOut bytes.Buffer
 	p := noTUI(t, func(context.Context) error { return errors.New("exec refused") })
 	p.tui = func(tui.Config) error { t.Error("the TUI started without a daemon"); return nil }

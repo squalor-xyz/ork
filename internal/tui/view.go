@@ -49,6 +49,20 @@ func (m *Model) screen() string {
 	bodyH, start := max(h-4, 1), 0
 	if m.showHelp {
 		body = m.helpLines(mainW)
+	} else if len(m.projects) == 0 {
+		body = m.welcomeBody(mainW)
+		status := m.actionStatus
+		if m.welcome.confirm != "" {
+			status = "ork projects add " + shellQuote(m.welcome.confirm) + "? [y/N] (Enter is No)"
+		}
+		if status != "" {
+			detail = wrapText(status, max(mainW-len(indent), 1))
+			for i := range detail {
+				detail[i] = indent + detail[i]
+			}
+			detail = detail[:min(len(detail), max(h-5, 1))]
+			bodyH = max(h-4-len(detail), 1)
+		}
 	} else if m.view == roadmapView || m.view == wavesView {
 		rv := overviewView{}
 		if m.view == wavesView {
@@ -131,6 +145,9 @@ func (m *Model) screen() string {
 func (m *Model) sidebar(w, h int) []string {
 	lines := []string{m.cfg.Theme.Title.Render("ork") + "  ?help"}
 	nav := m.navigation()
+	if len(m.projects) == 0 {
+		nav = nil
+	}
 	slots := max(h-3, 1)
 	start := 0
 	selected := 0
@@ -230,6 +247,8 @@ func (m *Model) viewBar() string {
 			idle += " | "
 		}
 		switch {
+		case len(m.projects) == 0:
+			idle += v.name
 		case i == m.view:
 			flush()
 			b.WriteString(th.ViewActive.Render(v.name))
@@ -265,7 +284,7 @@ func (m *Model) statusLine() string {
 // helpLines is the key list shown in place of the Overview.
 func (m *Model) helpLines(w int) []string {
 	th := m.cfg.Theme
-	lines := []string{th.Heading.Render("Keys"), ""}
+	lines := []string{th.Heading.Render("Keys")}
 	for _, group := range m.keys.FullHelp() {
 		for _, binding := range group {
 			h := binding.Help()

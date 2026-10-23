@@ -228,10 +228,17 @@ func TestSaveRefusesUnknownVersion(t *testing.T) {
 	}
 }
 
-func TestLoadMissingFile(t *testing.T) {
-	_, err := Load(filepath.Join(t.TempDir(), "nope.json"))
-	if !errors.Is(err, os.ErrNotExist) {
-		t.Fatalf("missing file error: %v", err)
+func TestLoadMissingRegistryIsEmptyAndWritesNothing(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "missing")
+	f, err := Load(filepath.Join(dir, "projects.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if f.Version != Version || f.Projects == nil || len(f.Projects) != 0 {
+		t.Fatalf("registry: %+v", f)
+	}
+	if _, err := os.Stat(dir); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("directory created: %v", err)
 	}
 }
 
@@ -350,139 +357,6 @@ func TestDefaultPaths(t *testing.T) {
 			t.Fatalf("DefaultPath = %q, %v", got, err)
 		}
 	})
-	t.Run("seed root", func(t *testing.T) {
-		t.Setenv("ORK_SEED_ROOT", "/seed")
-		got, err := DefaultSeedRoot()
-		if err != nil || got != "/seed" {
-			t.Fatalf("DefaultSeedRoot = %q, %v", got, err)
-		}
-		t.Setenv("ORK_SEED_ROOT", "")
-		t.Setenv("HOME", "/home/x")
-		got, err = DefaultSeedRoot()
-		if err != nil || got != "/home/x/code/squalor-xyz" {
-			t.Fatalf("DefaultSeedRoot = %q, %v", got, err)
-		}
-	})
-}
-
-func seedFixture(t *testing.T) string {
-	t.Helper()
-	root := t.TempDir()
-	for name, adj := range map[string]bool{"slicer": true, "adjudicate": true, "DataBall": false, "other": true} {
-		dir := filepath.Join(root, name)
-		if err := os.MkdirAll(dir, 0o755); err != nil {
-			t.Fatal(err)
-		}
-		if adj {
-			writeFile(t, filepath.Join(dir, ".adjudicate.json"), []byte("{}"))
-		}
-	}
-	// agents is a plain file, not a directory, so it must be skipped too.
-	writeFile(t, filepath.Join(root, "agents"), []byte("x"))
-	return root
-}
-
-func TestSeedWritesOnlyDecidedProjectsThatExist(t *testing.T) {
-	root := seedFixture(t)
-	path := filepath.Join(t.TempDir(), "ork", "projects.json")
-
-	report, err := Seed(path, root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	f, err := Load(path)
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := []Project{
-		{Name: "slicer", Path: filepath.Join(root, "slicer"), Adj: true},
-		{Name: "adjudicate", Path: filepath.Join(root, "adjudicate"), Adj: true},
-		{Name: "DataBall", Path: filepath.Join(root, "DataBall"), Adj: false},
-	}
-	if f.Version != Version || !reflect.DeepEqual(f.Projects, want) {
-		t.Fatalf("seeded file: %+v", f)
-	}
-	if report.Path != path || !reflect.DeepEqual(report.Written, want) ||
-		!reflect.DeepEqual(report.Skipped, []string{"agents"}) {
-		t.Fatalf("report: %+v", report)
-	}
-}
-
-func TestSeedNeverOverwrites(t *testing.T) {
-	root := seedFixture(t)
-	path := filepath.Join(t.TempDir(), "projects.json")
-	mine := []byte(`{"version": 1, "projects": [{"name": "mine", "path": "/m", "adj": false}]}` + "\n")
-	writeFile(t, path, mine)
-
-	if _, err := Seed(path, root); !errors.Is(err, os.ErrExist) {
-		t.Fatalf("Seed over an existing file: %v", err)
-	}
-	f, report, err := LoadOrSeed(path, root)
-	if err != nil || report != nil || len(f.Projects) != 1 || f.Projects[0].Name != "mine" {
-		t.Fatalf("LoadOrSeed on an existing file: %+v, %+v, %v", f, report, err)
-	}
-	got, _ := os.ReadFile(path)
-	if !bytes.Equal(got, mine) {
-		t.Fatalf("existing file changed: %q", got)
-	}
-}
-
-func TestLoadOrSeedSeedsWhenMissing(t *testing.T) {
-	root := seedFixture(t)
-	path := filepath.Join(t.TempDir(), "projects.json")
-	f, report, err := LoadOrSeed(path, root)
-	if err != nil || report == nil || len(f.Projects) != 3 || len(report.Written) != 3 {
-		t.Fatalf("LoadOrSeed: %+v, %+v, %v", f, report, err)
-	}
-}
-
-// appearAtCommit makes a file appear at path after the temp file is written
-// and before it is moved into place, as a concurrent writer would.
-func appearAtCommit(t *testing.T, path string, content []byte) {
-	t.Helper()
-	orig := beforeCommit
-	t.Cleanup(func() { beforeCommit = orig })
-	beforeCommit = func() {
-		if err := os.WriteFile(path, content, 0o644); err != nil {
-			t.Error(err)
-		}
-	}
-}
-
-func TestSeedDoesNotReplaceAFileThatAppearsAfterTheCheck(t *testing.T) {
-	root := seedFixture(t)
-	dir := t.TempDir()
-	path := filepath.Join(dir, "projects.json")
-	mine := []byte(`{"version": 1, "projects": [{"name": "mine", "path": "/m", "adj": false}]}` + "\n")
-	appearAtCommit(t, path, mine)
-
-	report, err := Seed(path, root)
-	if !errors.Is(err, os.ErrExist) || report != nil {
-		t.Fatalf("Seed: %+v, %v", report, err)
-	}
-	got, _ := os.ReadFile(path)
-	if !bytes.Equal(got, mine) {
-		t.Fatalf("the file that appeared was replaced: %q", got)
-	}
-	if names := dirNames(t, dir); !reflect.DeepEqual(names, []string{"projects.json"}) {
-		t.Fatalf("directory holds %v", names)
-	}
-}
-
-func TestLoadOrSeedUsesAFileThatAppearsAfterTheCheck(t *testing.T) {
-	root := seedFixture(t)
-	path := filepath.Join(t.TempDir(), "projects.json")
-	mine := []byte(`{"version": 1, "projects": [{"name": "mine", "path": "/m", "adj": false}]}` + "\n")
-	appearAtCommit(t, path, mine)
-
-	f, report, err := LoadOrSeed(path, root)
-	if err != nil || report != nil || len(f.Projects) != 1 || f.Projects[0].Name != "mine" {
-		t.Fatalf("LoadOrSeed: %+v, %+v, %v", f, report, err)
-	}
-	got, _ := os.ReadFile(path)
-	if !bytes.Equal(got, mine) {
-		t.Fatalf("the file that appeared was replaced: %q", got)
-	}
 }
 
 func TestSaveStillReplaces(t *testing.T) {
