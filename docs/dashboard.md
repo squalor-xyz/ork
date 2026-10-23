@@ -101,6 +101,13 @@ and decided records refresh every 5 min or on HEAD changes and manual refresh. `
    - unclassified vendor exits.
 2. **Running:** every running slice across projects, with a stage bar,
    elapsed time and tokens.
+   For relays started elsewhere, the *proposed* row details (also indented
+   under each relay in `ork status`) are `running: ROLE VENDOR/MODEL: TASK`
+   for the last step in ledger order with phase `start` (a working subagent
+   wins over its orchestrator), then `failed: ROLE: TASK` for the last step
+   with phase `fail`; details that do not fit the Overview row are dropped
+   whole, a task that partly fits is cut with `...`, and the selected row's
+   detail shows the full text.
 3. **Ready to land:** committed engine runs across projects, or for the
    selected project. Each row shows the slice and branch, with
    `slicer land 'ID' --branch 'B' --note 'Landed B'` on its own indented line to

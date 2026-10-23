@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
@@ -211,4 +212,103 @@ func TestEngineRunDenials(t *testing.T) {
 	}
 	h.m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
 	checkGolden(t, "engine-denials-100x30.txt", h.m.View().Content)
+}
+
+func TestExternalRelayStepRows(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		steps []slicercli.Step
+		want  string
+	}{
+		{"orchestrator", []slicercli.Step{{Role: "orchestrator", Vendor: "claude", Model: "sonnet", Phase: "start", Task: "Run relay"}}, "running: orchestrator claude/sonnet: Run relay"},
+		{"last-running", []slicercli.Step{
+			{Role: "orchestrator", Vendor: "claude", Model: "sonnet", Phase: "start", Task: "Run relay"},
+			{Role: "implementer", Vendor: "codex", Model: "gpt-6.1", Phase: "start", Task: "Implement S30"},
+			{Role: "reviewer", Phase: "done", Task: "Finished review"},
+		}, "running: implementer codex/gpt-6.1: Implement S30"},
+		{"last-failed", []slicercli.Step{
+			{Role: "implementer", Phase: "fail", Task: "Earlier failure"},
+			{Role: "reviewer", Phase: "fail", Task: "Review S30"},
+			{Role: "gate", Phase: "done", Task: "Finished gate"},
+		}, "failed: reviewer: Review S30"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := newHarness(t, proj("ork", false))
+			h.src.set(snap(proj("ork", false), nil, nil, relayWithSteps(tc.steps...)))
+			h.start()
+			v := sgr.ReplaceAllString(strings.Join(h.m.overview(300).body, "\n"), "")
+			if !strings.Contains(v, "ledger  S30  active, 2 of 6 steps running  2m  "+tc.want) {
+				t.Fatalf("external step row missing %q:\n%s", tc.want, v)
+			}
+			if strings.Contains(v, "Earlier failure") || (tc.name == "last-running" && strings.Contains(v, "running: orchestrator")) {
+				t.Fatalf("earlier step selected:\n%s", v)
+			}
+		})
+	}
+}
+
+func TestExternalRelayTaskClipped(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	task := strings.Repeat("implement ", 40)
+	h.src.set(snap(proj("ork", false), nil, nil, relayWithSteps(slicercli.Step{
+		Role: "implementer", Vendor: "codex", Model: "gpt-6.1", Phase: "start", Task: task,
+	})))
+	h.start()
+	_, rows := h.m.rows()
+	prefix := "ledger  S30  active, 2 of 6 steps running  2m  running: implementer codex/gpt-6.1: "
+	got := rowText(rows[0], len(prefix)+20)
+	if got != prefix+task[:17]+"..." {
+		t.Fatalf("task not clipped with ellipsis: %q", got)
+	}
+	if !strings.Contains(strings.Join(detailLines(rows[0], 500), "\n"), task) {
+		t.Fatal("detail lost full task")
+	}
+}
+
+func TestExternalRelayWholePartClipping(t *testing.T) {
+	for _, phase := range []string{"start", "fail"} {
+		t.Run(phase, func(t *testing.T) {
+			h := newHarness(t, proj("ork", false))
+			r := relayWithSteps(slicercli.Step{Role: "implementer", Vendor: "codex", Model: "gpt-6.1", Phase: phase, Task: "Implement S30"})
+			h.src.set(snap(proj("ork", false), nil, nil, r))
+			h.start()
+			_, rows := h.m.rows()
+			base := "ledger  S30  active, 2 of 6 steps running  2m"
+			label := "running: implementer codex/gpt-6.1"
+			if phase == "fail" {
+				label = "failed: implementer"
+			}
+			for _, extra := range []int{0, 5, len(label) + 2, len(label) + 7} {
+				if got := rowText(rows[0], len(base)+extra); got != base {
+					t.Errorf("partial step must be dropped, room %d: got %q, want %q", len(base)+extra, got, base)
+				}
+			}
+			noSteps := r
+			noSteps.Steps = nil
+			h.m.apply(snapshotMsg{name: "ork", snap: snap(proj("ork", false), nil, nil, noSteps)})
+			_, oldRows := h.m.rows()
+			for room := 10; room <= len(base); room++ {
+				if got, want := rowText(rows[0], room), rowText(oldRows[0], room); got != want {
+					t.Fatalf("step changed base clipping at %d: got %q, want %q", room, got, want)
+				}
+			}
+			if !strings.Contains(strings.Join(detailLines(rows[0], 300), "\n"), label+": Implement S30") {
+				t.Fatal("detail lost dropped step")
+			}
+		})
+	}
+}
+
+func TestExternalRelayOptionalFields(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.src.set(snap(proj("ork", false), nil, nil, relayWithSteps(
+		slicercli.Step{Role: "implementer", Phase: "start"},
+		slicercli.Step{Role: "reviewer", Phase: "fail"},
+	)))
+	h.start()
+	_, rows := h.m.rows()
+	want := "ledger  S30  active, 2 of 6 steps running  2m  running: implementer  failed: reviewer"
+	if got := rowText(rows[0], 300); got != want {
+		t.Fatalf("empty fields: got %q, want %q", got, want)
+	}
 }

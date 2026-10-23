@@ -3,6 +3,7 @@
 package daemon
 
 import (
+	"strings"
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
@@ -105,6 +106,41 @@ type Relay struct {
 	UpdatedAt string   `json:"updated_at"`
 	Steps     int      `json:"steps"`
 	Running   int      `json:"running"`
+	// Proposed role details for the last start and fail steps in ledger order.
+	RunningStep *RelayStep `json:"running_step,omitempty"`
+	FailedStep  *RelayStep `json:"failed_step,omitempty"`
+}
+
+// RelayStep is a proposed summary of a relay's running or failed step.
+type RelayStep struct {
+	Role   string `json:"role"`
+	Vendor string `json:"vendor"`
+	Model  string `json:"model"`
+	Task   string `json:"task"`
+	Phase  string `json:"phase"`
+}
+
+// FormatRelayStep renders the proposed running or failed wording on one line.
+// Empty vendor, model and task fields leave no separators behind.
+func FormatRelayStep(label string, step RelayStep) string {
+	text := label + ": " + step.Role
+	if label == "running" {
+		model := step.Vendor
+		if step.Model != "" {
+			if model != "" {
+				model += "/"
+			}
+			model += step.Model
+		}
+		if model != "" {
+			text += " " + model
+		}
+	}
+	if step.Task != "" {
+		task := strings.NewReplacer("\r\n", " ", "\n", " ", "\r", " ").Replace(step.Task)
+		text += ": " + task
+	}
+	return text
 }
 
 // PartError is a failed part of a project's status: Part is one of "items",

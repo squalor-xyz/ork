@@ -44,6 +44,12 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 				items = "-"
 			}
 			fmt.Fprintf(o.stdout, "  %s %s %s (%d steps, %d running)\n", r.ID, items, r.State, r.Steps, r.Running)
+			if step := r.RunningStep; step != nil {
+				fmt.Fprintf(o.stdout, "    %s\n", daemon.FormatRelayStep("running", *step))
+			}
+			if step := r.FailedStep; step != nil {
+				fmt.Fprintf(o.stdout, "    %s\n", daemon.FormatRelayStep("failed", *step))
+			}
 		}
 		for _, r := range p.EngineRuns {
 			fmt.Fprintf(o.stdout, "  %s %s %s", r.ID, r.Item, r.State)

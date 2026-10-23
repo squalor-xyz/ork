@@ -1310,3 +1310,28 @@ func TestWaveReadsUnknownProject(t *testing.T) {
 		t.Fatalf("slicer was called: %+v", calls)
 	}
 }
+
+func TestProjectStatusRelaySteps(t *testing.T) {
+	steps := []slicercli.Step{
+		{Role: "orchestrator", Vendor: "claude", Model: "sonnet", Phase: "start", Task: "Run relay"},
+		{Role: "implementer", Vendor: "codex", Model: "gpt-6.1", Phase: "start", Task: "Implement S30"},
+		{Role: "implementer", Phase: "fail", Task: "Earlier failure"},
+		{Role: "reviewer", Vendor: "claude", Model: "opus", Phase: "fail", Task: "Review S30"},
+		{Role: "gate", Phase: "done", Task: "Finished gate"},
+	}
+	ps := projectStatus(registry.Project{Name: "ork"}, source.Snapshot{
+		Runs: source.Result[[]slicercli.RelayRun]{Value: []slicercli.RelayRun{{ID: "ledger", Steps: steps}}},
+	}, time.Now())
+	raw, err := json.Marshal(ps.ActiveRelays)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		`"running_step":{"role":"implementer","vendor":"codex","model":"gpt-6.1","task":"Implement S30","phase":"start"}`,
+		`"failed_step":{"role":"reviewer","vendor":"claude","model":"opus","task":"Review S30","phase":"fail"}`,
+	} {
+		if !strings.Contains(string(raw), want) {
+			t.Errorf("relay missing %s: %s", want, raw)
+		}
+	}
+}

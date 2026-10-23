@@ -14,6 +14,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/squalor-xyz/ork/internal/ipc"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
@@ -170,6 +171,7 @@ func TestActionExternalRows(t *testing.T) {
 			h := actionHarness(t, "implement", "")
 			s := h.src.Snapshot(context.Background(), proj("ork", false))
 			s.EngineRuns = nil
+			s.Runs.Value = []slicercli.RelayRun{relayWithSteps(slicercli.Step{Role: "implementer", Phase: "start", Task: "Implement S30"})}
 			h.m.apply(snapshotMsg{name: "ork", snap: s})
 			_, cmd := h.m.Update(press(k))
 			if v := h.view(); cmd != nil || !strings.Contains(v, "No engine run on this row; no actions") {

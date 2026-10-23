@@ -78,6 +78,12 @@ func relay(id, begun string, items ...string) slicercli.RelayRun {
 		Counts: slicercli.Counts{Steps: 6, Running: 2}}
 }
 
+func relayWithSteps(steps ...slicercli.Step) slicercli.RelayRun {
+	r := relay("ledger", "2026-10-19T16:40:00Z", "S30")
+	r.Steps = steps
+	return r
+}
+
 func snap(p registry.Project, open []adjcli.Record, items []slicercli.Item, runs ...slicercli.RelayRun) source.Snapshot {
 	return source.Snapshot{
 		Project: p,

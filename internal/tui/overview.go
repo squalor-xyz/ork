@@ -12,6 +12,7 @@ import (
 	"charm.land/lipgloss/v2"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
+	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -40,13 +41,14 @@ type ovRow struct {
 	kind             string
 	style            lipgloss.Style
 	kindW            int
-	project          int    // registry index; Enter selects non-run rows
-	name             string // the project's name
-	text             string // the row's text after the name, in full
-	id               string // a run's ID, kept whole in the row; "" for other rows
-	rest             string // a run's text after its ID, cut first
-	ledgerID         string // set only for started-elsewhere rows
-	engineID         string // empty for ledger and non-engine rows
+	project          int            // registry index; Enter selects non-run rows
+	name             string         // the project's name
+	text             string         // the row's text after the name, in full
+	id               string         // a run's ID, kept whole in the row; "" for other rows
+	rest             string         // a run's base text after its ID, cut first
+	stepParts        []relayRowPart // external role details, dropped before cutting base text
+	ledgerID         string         // set only for started-elsewhere rows
+	engineID         string         // empty for ledger and non-engine rows
 	state            string
 	pending          string
 	commands         []string // plain copyable lines beneath a landing row
@@ -54,6 +56,12 @@ type ovRow struct {
 	merged           bool
 	mergeKnown       bool
 	branch, worktree string
+}
+
+// relayRowPart keeps a role's label and identity whole when its task is cut.
+type relayRowPart struct {
+	header string
+	text   string
 }
 
 // rows lists Needs you and Running. readyRows follows them in the Overview
@@ -140,13 +148,16 @@ func (m *Model) rows() (needs, running []ovRow) {
 			if joined[r.ID] {
 				continue
 			}
-			id, rest := runParts(r, m.cfg.Now())
+			id, rest, steps := runParts(r, m.cfg.Now())
 			text := id
 			if rest != "" {
 				text = id + "  " + rest
 			}
+			for _, step := range steps {
+				text += "  " + step.text
+			}
 			running = append(running, ovRow{ledgerID: r.ID, kind: kindExternal, style: th.External, kindW: len(kindExternal), project: i, name: name,
-				text: text, id: id, rest: rest})
+				text: text, id: id, rest: rest, stepParts: steps})
 		}
 	}
 	return needs, running
@@ -273,7 +284,7 @@ func (m *Model) rowLine(r ovRow, selected bool, nameW, w int) string {
 }
 
 // rowText is a row's text cut to room columns. A run's ID stays whole: the rest
-// of its text is cut first, and dropped when no room is left for it.
+// of its base text is cut first. External step parts never displace base text.
 func rowText(r ovRow, room int) string {
 	// Overview rows stay on one line; the pane retains the full Wait text.
 	flatten := strings.NewReplacer("\r\n", " ", "\n", " ", "\r", " ")
@@ -286,7 +297,21 @@ func rowText(r ovRow, room int) string {
 	case r.rest == "":
 		return r.id
 	case lipgloss.Width(r.rest) <= avail:
-		return r.id + "  " + r.rest
+		text := r.id + "  " + r.rest
+		for _, part := range r.stepParts {
+			available := room - lipgloss.Width(text) - 2
+			required := lipgloss.Width(part.header)
+			if part.text != part.header {
+				// Keep at least three task columns plus the ellipsis, or a whole
+				// shorter task. The label, role and vendor/model are never cut.
+				required += 2 + min(6, lipgloss.Width(part.text)-lipgloss.Width(part.header)-2)
+			}
+			if available < required {
+				break
+			}
+			text += "  " + clip(part.text, available)
+		}
+		return text
 	case avail < 4:
 		return r.id
 	}
@@ -308,9 +333,9 @@ func detailLines(r ovRow, w int) []string {
 }
 
 // runParts describes a relay run started outside ork. ork only shows it. The
-// run ID comes first and stays whole. The items, state and elapsed time follow,
-// and they are cut first when a row is narrow.
-func runParts(r slicercli.RelayRun, now time.Time) (id, rest string) {
+// run ID stays whole. Items, state and elapsed retain their existing clipping;
+// running and failed parts are dropped first, or only their tasks are cut.
+func runParts(r slicercli.RelayRun, now time.Time) (id, rest string, steps []relayRowPart) {
 	state := r.State
 	if r.Counts.Steps > 0 {
 		state = fmt.Sprintf("%s, %d of %d steps running", r.State, r.Counts.Running, r.Counts.Steps)
@@ -319,7 +344,33 @@ func runParts(r slicercli.RelayRun, now time.Time) (id, rest string) {
 	if t, err := time.Parse(time.RFC3339, r.BeganAt); err == nil {
 		parts = append(parts, elapsed(now.Sub(t)))
 	}
-	return r.ID, strings.Join(parts, "  ")
+
+	// The last start wins so a subagent is shown ahead of its orchestrator.
+	var running, failed *slicercli.Step
+	for i := range r.Steps {
+		step := &r.Steps[i]
+		switch step.Phase {
+		case "start":
+			running = step
+		case "fail":
+			failed = step
+		}
+	}
+
+	for _, selected := range []struct {
+		label string
+		step  *slicercli.Step
+	}{{"running", running}, {"failed", failed}} {
+		if selected.step == nil {
+			continue
+		}
+		step := selected.step
+		summary := daemon.RelayStep{Role: step.Role, Vendor: step.Vendor, Model: step.Model, Task: step.Task, Phase: step.Phase}
+		text := daemon.FormatRelayStep(selected.label, summary)
+		summary.Task = ""
+		steps = append(steps, relayRowPart{header: daemon.FormatRelayStep(selected.label, summary), text: text})
+	}
+	return r.ID, strings.Join(parts, "  "), steps
 }
 
 func elapsed(d time.Duration) string {

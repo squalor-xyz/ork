@@ -262,10 +262,21 @@ func projectStatus(p registry.Project, s source.Snapshot, now time.Time) Project
 		ps.Parts["decided"] = stateOf(s.Decided, now)
 	}
 	for _, r := range s.Runs.Value {
-		ps.ActiveRelays = append(ps.ActiveRelays, Relay{
+		relay := Relay{
 			ID: r.ID, Items: nonNil(r.Items), State: r.State, Worktree: r.Worktree,
 			BeganAt: r.BeganAt, UpdatedAt: r.UpdatedAt, Steps: r.Counts.Steps, Running: r.Counts.Running,
-		})
+		}
+		// Ledger order makes the working subagent win over its orchestrator.
+		for _, step := range r.Steps {
+			summary := RelayStep{Role: step.Role, Vendor: step.Vendor, Model: step.Model, Task: step.Task, Phase: step.Phase}
+			switch step.Phase {
+			case "start":
+				relay.RunningStep = &summary
+			case "fail":
+				relay.FailedStep = &summary
+			}
+		}
+		ps.ActiveRelays = append(ps.ActiveRelays, relay)
 	}
 	for _, part := range []struct {
 		name string

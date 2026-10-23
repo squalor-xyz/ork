@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-95 items · — 38 · done 51 · parked 1 · retired 5
+95 items · — 37 · done 52 · parked 1 · retired 5
 
 ## v1.1
 
@@ -86,7 +86,7 @@
 | 29 | [S27](slices/S27.md) | TUI: Questions tab across projects | S | 1 |  | discovered from S23 | — |
 | 30 | [S28](slices/S28.md) | TUI answers can file an adj ask and decide | S | 2 |  | discovered from S23 | — |
 | 31 | [S29](slices/S29.md) | Put the ork binary on PATH | S | 1 |  | discovered from S23 | done |
-| 32 | [S30](slices/S30.md) | Show the running role for relays started outside ork | S | 2 |  | discovered from S23 | — |
+| 32 | [S30](slices/S30.md) | Show the running role for relays started outside ork | S | 2 |  | discovered from S23 | done |
 | 33 | [S31](slices/S31.md) | Run a small slice through ork run end to end | S | 1 |  | discovered from S23 | parked |
 | 34 | [S32](slices/S32.md) | One needs, running and hidden builder for ork status and the TUI | S | 1 |  | discovered from S31 | — |
 | 35 | [S33](slices/S33.md) | Show the engine run ID in the Overview row; engine-row edge cases | S | 1 |  | discovered from S31 | — |

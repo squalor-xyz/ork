@@ -781,3 +781,60 @@ func TestDoctorToolThatFailsItsVersionCall(t *testing.T) {
 		t.Fatalf("exit %d", code)
 	}
 }
+
+func TestStatusRelaySteps(t *testing.T) {
+	steps := []slicercli.Step{
+		{Role: "orchestrator", Vendor: "claude", Model: "sonnet", Phase: "start", Task: "Run relay"},
+		{Role: "implementer", Vendor: "codex", Model: "gpt-6.1", Phase: "start", Task: "Implement S30"},
+		{Role: "implementer", Phase: "fail", Task: "Earlier failure"},
+		{Role: "reviewer", Vendor: "claude", Model: "opus", Phase: "fail", Task: "Review S30"},
+		{Role: "gate", Phase: "done", Task: "Finished gate"},
+	}
+	w := newWorld(t, stubSource{"ork": {Runs: source.Result[[]slicercli.RelayRun]{Value: []slicercli.RelayRun{
+		{ID: "ledger", Items: []string{"S30"}, State: "active", Counts: slicercli.Counts{Steps: 5, Running: 2}, Steps: steps},
+	}}}}, registry.Project{Name: "ork", Path: "/projects/ork"})
+	code, stdout, stderr := run(t, w.app, "status")
+	want := "ork: needs you 0, active relays 1\n  ledger S30 active (5 steps, 2 running)\n    running: implementer codex/gpt-6.1: Implement S30\n    failed: reviewer: Review S30\n"
+	if code != 0 || stdout != want {
+		t.Fatalf("step status exit %d: %s\ngot:\n%swant:\n%s", code, stderr, stdout, want)
+	}
+	code, stdout, stderr = run(t, w.app, "status", "--json")
+	for _, field := range []string{
+		`"running_step":{"role":"implementer","vendor":"codex","model":"gpt-6.1","task":"Implement S30","phase":"start"}`,
+		`"failed_step":{"role":"reviewer","vendor":"claude","model":"opus","task":"Review S30","phase":"fail"}`,
+	} {
+		var compact bytes.Buffer
+		if err := json.Compact(&compact, []byte(stdout)); err != nil {
+			t.Fatal(err)
+		}
+		if code != 0 || !strings.Contains(compact.String(), field) {
+			t.Fatalf("step JSON exit %d: %s\n%s", code, stderr, stdout)
+		}
+	}
+}
+
+func TestStatusRelayOptionalFields(t *testing.T) {
+	for _, tc := range []struct {
+		name, vendor, model, task, running, failed string
+	}{
+		{"empty", "", "", "", "running: implementer", "failed: reviewer"},
+		{"vendor", "codex", "", "", "running: implementer codex", "failed: reviewer"},
+		{"model", "", "sol", "", "running: implementer sol", "failed: reviewer"},
+		{"task", "", "", "Work", "running: implementer: Work", "failed: reviewer: Work"},
+		{"multiline", "codex", "sol", "One\r\ntwo\nthree\rfour", "running: implementer codex/sol: One two three four", "failed: reviewer: One two three four"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			w := newWorld(t, stubSource{"ork": {Runs: source.Result[[]slicercli.RelayRun]{Value: []slicercli.RelayRun{
+				{ID: "ledger", Items: []string{"S30"}, State: "active", Steps: []slicercli.Step{
+					{Role: "implementer", Vendor: tc.vendor, Model: tc.model, Task: tc.task, Phase: "start"},
+					{Role: "reviewer", Vendor: tc.vendor, Model: tc.model, Task: tc.task, Phase: "fail"},
+				}},
+			}}}}, registry.Project{Name: "ork", Path: "/projects/ork"})
+			code, stdout, stderr := run(t, w.app, "status")
+			want := "ork: needs you 0, active relays 1\n  ledger S30 active (0 steps, 0 running)\n    " + tc.running + "\n    " + tc.failed + "\n"
+			if code != 0 || stdout != want {
+				t.Fatalf("optional fields exit %d: %s\ngot %q\nwant %q", code, stderr, stdout, want)
+			}
+		})
+	}
+}
