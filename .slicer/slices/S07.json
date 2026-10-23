@@ -1,0 +1,39 @@
+{
+  "id": "S07",
+  "title": "Live role detail: output tail, tokens and cost, ASCII charts and animations, bell",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner 2026-10-23: a progress bar and more animation for running relays, and the activity sparkline of the sketch at docs/dashboard.md:315-325. Decisions: (a) the bar measures pipeline stages done (implementer, reviewer, gate, plus architect when the run has one), with the running stage's cell pulsing and a fix round re-opening its stage; (b) a ticker at 4 frames a second runs only while the Overview shows a running run or its pane is open, otherwise ork blocks on input as today; (c) the sparkline plots vendor stream events per 30-second bucket over the last 5 minutes for the running role, kept in daemon memory, not in run.json. Builds on S55 (the run tree) and on S97 (pipeline, round, last heard). The bell in S07's note is not in this slice until the owner decides what rings it."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/runner.go` (Request, Result): an optional per-event hook so the engine can count stream events; `internal/agent/claude/run.go` (Spec.OnEvent) and `internal/agent/codex/codex.go` (:36, :187) already deliver events to the adapter: pass them through `internal/daemon/runner.go`.\n- `internal/engine/` (new `activity.go`) and its test: a ring of 10 buckets of 30 seconds per running role, in memory; `Engine.Snapshot` or a new accessor exposes it; no run.json field.\n- `internal/daemon/wire.go`, `handlers.go`, `internal/source/source.go`: carry the series on the engine run as a *proposed* `activity` field (omitempty).\n- `internal/tui/progress.go` (new) and `progress_test.go`: the stage bar and the sparkline drawing, with ASCII fallbacks.\n- `internal/tui/model.go`, `view.go`: the 4 fps ticker only while a run is visible (use the existing After seam, model.go:41, so tests inject time); `internal/tui/runtree.go` and `overview.go`: draw the bar, pulse and sparkline.\n- `testdata/golden/` (colour and monochrome); `docs/dashboard.md:315-345` and `docs/design.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestStageBarFillsFinishedRoles: implementer done, reviewer running, gate waiting draws [##~...] style cells as the sketch; an architect adds a cell; a fix round re-opens the implementer cell and keeps the round shown.\n- TestRunningCellPulsesWithTheTicker: two ticker frames give two different glyphs for the running cell; the finished cells do not change.\n- TestTickerRunsOnlyWhileARunIsVisible: with no running run on screen no timer command is returned; with one, a tick re-arms; closing the pane and leaving the Overview stops it.\n- TestEngineCountsStreamEventsPerThirtySeconds: a fake runner emits events at known times (injected clock); the ring holds the counts of the last 10 buckets and drops older ones.\n- TestSparklineDrawsTheBuckets: counts map to the eight block glyphs scaled to the window maximum; an all-zero window draws the lowest glyph; the ASCII fallback uses ._-=+# style cells.\n- TestSparklineIsNotWrittenToRunJSON: the run record is unchanged.\n- TestStalledRoleShowsAFlatLine: no events for 5 minutes gives a flat sparkline before the stale cutoff.\n- Golden views at 100x30 and 80x24, colour and monochrome."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests first and watch them fail (the injected clock and the After seam keep them deterministic). 2. Count events in the engine from a Request hook; keep the ring in memory. 3. Carry the series on the wire as a proposed field. 4. Draw the bar and sparkline with ASCII fallbacks (internal/brand locale check). 5. Add the ticker, armed only while a run is visible. 6. Update docs. 7. go test ./internal/tui -update and review the golden diff. This is a UI slice: it gets the UI pass (r14, rule u10).\nDecided 2026-10-23 (owner): stage bar, 4 fps ticker only while a run is visible, sparkline of stream events per 30s. Not in this slice: the bell; a budget bar (S65); any write."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/engine ./internal/daemon ./internal/source ./internal/tui\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review the golden diff\n- slicer check\n- adj lint\n- [HUMAN CHECK] While a relay runs, ork shows the stage bar, a pulsing running cell and the sparkline; idle ork uses no timer."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

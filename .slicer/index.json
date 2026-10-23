@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 97,
+  "next_id": 99,
   "preamble": "",
   "passes": [
     {
@@ -404,9 +404,9 @@
       "title": "Live role detail: output tail, tokens and cost, ASCII charts and animations, bell",
       "short_title": "Live role detail",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [
-        "S05"
+        "S97"
       ],
       "note_records": [
         {
@@ -3681,6 +3681,64 @@
         "urgency": 3,
         "effort": 2,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S97",
+      "title": "Running rows and the run pane show the relay board's information: pipeline, round, last heard, waiting steps, recent runs",
+      "short_title": "Running rows and the run pane show the relay board's information: pipeline, round, last heard, waiting steps, recent runs",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S55"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S55",
+        "parent": "",
+        "cites": [],
+        "key": "relay-board-info",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S98",
+      "title": "Welcome polish: notice projects added elsewhere, tilde paths, status line and wording",
+      "short_title": "Welcome polish: notice projects added elsewhere, tilde paths, status line and wording",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S96",
+        "parent": "",
+        "cites": [],
+        "key": "welcome-polish",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
       }
     }
   ],
