@@ -1,0 +1,1 @@
+codex exec --json -m gpt-6-luna -s workspace-write -C <worktree> Run this one shell command and report its exact output and any error: python3 -c "import socket; s=socket.socket(socket.AF_UNIX); s.bind('<worktree>/probe.sock'); print('unix bind ok'); t=socket.socket(); t.bind(('127.0.0.1',0)); print('tcp bind ok')". Then reply DONE.

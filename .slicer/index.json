@@ -2010,7 +2010,7 @@
       "id": "S48",
       "title": "Measure the codex workspace-write sandbox",
       "short_title": "Measure the codex workspace-write sandbox",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -2035,6 +2035,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "2cb90fce-104e-44b6-975a-98bbe07cb6fc",
+          "kind": "",
+          "text": "**2026-10-23** — Review FAIL (round 1): adj 154 overstates probe 05 (main checkout and .git/slicer block is model report only); low: design.md typo, stale codex.sh header, 03 repo-status overwrite on rerun, version source, redaction/exit-code bullets.",
+          "created_at": "2026-10-23T14:33:50Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -2054,7 +2065,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

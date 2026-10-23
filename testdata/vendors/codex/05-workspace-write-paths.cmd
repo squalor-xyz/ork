@@ -1,0 +1,1 @@
+codex exec --json -m gpt-6-luna -s workspace-write -C <worktree> Run three separate shell commands, one per file, and report for each the exact result or error. A: write the word hi to <worktree>/inside.txt. B: write the word hi to <probe-repo>/outside-main.txt. C: write the word hi to <probe-repo>/.git/slicer/ledger-probe.txt. Then reply DONE.

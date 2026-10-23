@@ -1,0 +1,1 @@
+in_wt codex exec resume 01a1692b-727b-7753-8087-85f10f8277cb -m gpt-6-luna -s workspace-write --json Run a shell command that writes the word hi to <worktree>/resumed.txt, then run one that writes the word hi to <probe-repo>/resumed-outside.txt. Report the exact result or error of each, then reply DONE.

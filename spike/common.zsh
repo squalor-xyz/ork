@@ -10,6 +10,8 @@
 # value rule above it.
 redact_file() {
   sed -E \
+    -e 's#/Users/jon/code/squalor-xyz/ork/\.scratch/s48/probe-repo-wt#<worktree>#g' \
+    -e 's#/Users/jon/code/squalor-xyz/ork/\.scratch/s48/probe-repo#<probe-repo>#g' \
     -e 's#/private/tmp/claude-501/-Users-jon-code-squalor-xyz-ork/[0-9a-f-]{36}/scratchpad/s01/implementer/probe-repo#<probe-repo>#g' \
     -e 's#/private/tmp/claude-501/[A-Za-z0-9_./-]*#<scratch>#g' \
     -e 's#-Users-jon-code-squalor-xyz-ork[A-Za-z0-9_.-]*#<project-dir>#g' \
@@ -38,6 +40,8 @@ probe() {
   local name=$1 raw=$2 fix=$3
   shift 3
   local shown=${(j: :)@}
+  # S48: WT (the linked worktree) is a path under REPO's parent; map it first.
+  [[ -n ${WT:-} ]] && shown=${shown//$WT/<worktree>}
   shown=${shown//$REPO/<probe-repo>}
   if [[ -n ${S01_DRY_RUN:-} ]]; then
     print -r -- "$shown" | redact_file > "$fix/$name.cmd"

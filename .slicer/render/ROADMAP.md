@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-87 items · — 40 · done 41 · parked 1 · retired 5
+87 items · — 39 · done 42 · parked 1 · retired 5
 
 ## v1.1
 
@@ -102,7 +102,7 @@
 | 45 | [S45](slices/S45.md) | Record the denied command, not just the tool name | S | 1 |  | discovered from S29 | done |
 | 46 | [S46](slices/S46.md) | ork daemon stop and restart, and doctor flags a stale daemon | S | 2 |  | discovered from S29 | done |
 | 47 | [S47](slices/S47.md) | Codex adapter for write roles in the engine (#100) | M | 3 |  | discovered from S29 | — |
-| 48 | [S48](slices/S48.md) | Measure the codex workspace-write sandbox | S | 2 |  | discovered from S29 | — |
+| 48 | [S48](slices/S48.md) | Measure the codex workspace-write sandbox | S | 2 |  | discovered from S29 | done |
 | 49 | [S49](slices/S49.md) | Fall back to the next matrix row on a rate limit or error | M | 2 |  | discovered from S29 | — |
 | 50 | [S50](slices/S50.md) | Check the diff against the slice's Files list | S | 2 |  | discovered from S29 | — |
 | 51 | [S51](slices/S51.md) | run.json at 0600; strip control characters from recorded commands | S | 1 |  | discovered from S45 | done |
