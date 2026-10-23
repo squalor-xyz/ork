@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 91,
+  "next_id": 92,
   "preamble": "",
   "passes": [
     {
@@ -3510,6 +3510,34 @@
         "group": "",
         "reason": "",
         "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S91",
+      "title": "Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes",
+      "short_title": "Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S49",
+        "parent": "",
+        "cites": [],
+        "key": "docs-fallback-156",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
         "urgency": 1,
         "effort": 1,
         "attempts": 0

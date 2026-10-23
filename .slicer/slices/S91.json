@@ -1,0 +1,39 @@
+{
+  "id": "S91",
+  "title": "Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S49 relay later note. PROJECT.md:145 still says fallback only on classified rate limits; adj 156 (vendor.fallback-trigger-v2) supersedes adj 114 and falls back on a rate-limited or error exit. Also grep the docs for the old wording."
+    },
+    {
+      "heading": "Files",
+      "body": "- `PROJECT.md:145`: say fallback is on a rate-limited or error exit; auth, denials and unclassified exits stop (adj 156).\n- Any other doc that rg finds with the old wording (rg -n \"classified rate limit|rate limit only\" PROJECT.md docs)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A docs-only slice: rg -n \"fallback only on classified\" PROJECT.md docs finds nothing after the change."
+    },
+    {
+      "heading": "Implement",
+      "body": "Edit PROJECT.md:145 and any other match to follow adj 156. No code change. PROJECT.md states owner decisions, so show the owner the diff."
+    },
+    {
+      "heading": "Check",
+      "body": "- slicer check\n- adj lint\n- rg -n \"fallback only on classified\" PROJECT.md docs (no matches)"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

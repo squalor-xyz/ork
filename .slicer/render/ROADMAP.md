@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-90 items · — 37 · done 47 · parked 1 · retired 5
+91 items · — 38 · done 47 · parked 1 · retired 5
 
 ## v1.1
 
@@ -144,9 +144,10 @@
 | 87 | [S88](slices/S88.md) | Accept relay contract v8 alongside v7 | S | 1 |  |  | done |
 | 88 | [S89](slices/S89.md) | Close the codex sandbox gaps: resume sandbox, socket bind, worktree .git, main-checkout block | S | 2 |  | discovered from S48 | done |
 | 89 | [S90](slices/S90.md) | Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on | S | 1 |  | discovered from S88 | — |
+| 90 | [S91](slices/S91.md) | Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes | S | 1 |  | discovered from S49 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 90 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 91 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
