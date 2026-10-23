@@ -7,9 +7,7 @@
   "depends_note": null,
   "findings_note": "",
   "size": "S",
-  "flags": [
-    "needs-owner"
-  ],
+  "flags": [],
   "trees_note": "",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",
@@ -24,11 +22,11 @@
     },
     {
       "heading": "Failing tests",
-      "body": "- Not specified. Open: whether a test can fail before the change. The writes run before the server starts, so a race test may need a goroutine that reads the run map under the lock while recoverRuns runs. If none is practical, this slice may be a comment and a lock with no failing test; the owner decides."
+      "body": "- TestRecoverRunsWritesTheRunMapUnderTheLock: under go test -race, a goroutine reads d.runs.runs under d.runs.mu while recoverRuns writes it; the race detector reports no race. Confirm the test fails (a race report) with the lock removed."
     },
     {
       "heading": "Implement",
-      "body": "Take d.runs.mu around each write to d.runs.runs in the loop, not around Reconcile (it can be slow). Open: whether to do this at all, or only document the \"before the server starts\" assumption at the function. The owner has not decided.\n\nDecided 2026-10-23 (owner interview): take d.runs.mu around each write to d.runs.runs in recoverRuns, not around Reconcile. Nothing is open."
+      "body": "Take d.runs.mu around each write to d.runs.runs in the recoverRuns loop (runs.go:118-157), not around Reconcile (it can be slow). Write the race test first, watch it fail under -race, then add the lock. Decided 2026-10-23 (owner interview): take the lock. Nothing is open."
     },
     {
       "heading": "Check",

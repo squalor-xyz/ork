@@ -7,9 +7,7 @@
   "depends_note": null,
   "findings_note": "",
   "size": "S",
-  "flags": [
-    "needs-owner"
-  ],
+  "flags": [],
   "trees_note": "",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",
@@ -24,15 +22,15 @@
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "- TestRunDirectoriesAre0700: after a run starts, the run directory (store.go:73), the run subdirectory (:76) and a per-round temp directory (round.go:165) have mode 0700 (check with os.Stat; skip the mode check on a platform without Unix modes).\n- TestSaveTightensAnOldRunDirectory: a run directory created 0755 with an old run.json is 0700 after the next save, and the file keeps 0600.\n- TestLoadDoesNotChangeModes: listing or loading runs changes no mode (tighten on save only, owner 2026-10-23).\n- TestVendorReportModeIsLeftAlone: a role report written by a fake vendor at 0644 keeps 0644."
     },
     {
       "heading": "Implement",
-      "body": "Not specified. Open points for the owner, to settle with `adj ask` before this slice runs:\n(a) the directory mode, if any, for the run directory and the per-round temp directories (0700 is a candidate, not a decision);\n(b) whether ork tightens an existing run.json or run directory on load or only on the next save;\n(c) whether ork chmods a role report that a vendor CLI wrote, or leaves the vendor's mode.\n\nDecided 2026-10-23 (owner interview): (a) 0700 for the run directory and per-round temp directories; (b) tighten an existing run.json or directory on the next save, not on load; (c) leave a role report a vendor CLI wrote at the vendor's mode. Nothing is open."
+      "body": "Create the run directory, the run subdirectory and each per-round temp directory with mode 0700 (store.go:73,76; round.go:165). On the next Save of a run, chmod an existing run directory to 0700. Do not chmod on load, and do not chmod a file a vendor CLI wrote. Update docs/state.md with the modes. Decided 2026-10-23 (owner interview): 0700; tighten on next save; leave vendor files. Nothing is open. Write the tests first and watch them fail."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- go test -race -count=1 ./internal/runrec ./internal/engine\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l . (prints nothing)\n- slicer check\n- adj lint"
     },
     {
       "heading": "Git",

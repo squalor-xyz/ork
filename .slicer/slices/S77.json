@@ -7,9 +7,7 @@
   "depends_note": null,
   "findings_note": "",
   "size": "S",
-  "flags": [
-    "needs-owner"
-  ],
+  "flags": [],
   "trees_note": "",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",
@@ -24,11 +22,11 @@
     },
     {
       "heading": "Failing tests",
-      "body": "- A queued run whose project is removed from the registry while the daemon runs is not started and shows why (proposed; see Implement).\n- The S05 tests still pass."
+      "body": "- TestQueuedRunOfARemovedProjectStopsWithAReason: a queued run whose project is no longer in the registry when its turn comes is stopped with the reason \"project was removed\" and never started.\n- The S05 tests still pass (TestQueuedRunStartsWhenASlotFrees)."
     },
     {
       "heading": "Implement",
-      "body": "Not specified. Open points for the owner, to settle with `adj ask` before this slice runs: (a) whether this slice is still needed once S38 lands, since S38 stops `ork projects rm` from removing a project with unfinished runs (a hand edit of projects.json still reaches it); (b) what the run does: stay queued, or stop with a reason.\n\nDecided 2026-10-23 (owner interview): keep this slice: a queued run whose project is no longer registered stops with the reason 'project was removed'. Nothing is open."
+      "body": "In startQueuedLocked, look the project up in the registry (or the cached registry from S76 if it has landed) when a queued run is next in line. If the project is gone, stop the run with the reason \"project was removed\" instead of starting it, and go on to the next queued run. Write the failing test first. Decided 2026-10-23 (owner interview): keep this slice; stop with the reason. Nothing is open."
     },
     {
       "heading": "Check",

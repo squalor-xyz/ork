@@ -1026,3 +1026,15 @@
 {"when": "2026-10-23T16:07:58Z", "item": "S47", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-23T16:17:16Z", "item": "S47", "action": "note", "from": "", "to": "", "note": "Review FAIL (round 1): codex rows never reach the adapter (m", "by": "Jon R"}
 {"when": "2026-10-23T16:24:03Z", "item": "S47", "action": "status", "from": "started", "to": "done", "note": "Codex adapter (internal/agent/codex) for read-only and write roles: argv with workspace-write/read-only, effort via -c model_reasoning_effort, resume via -c sandbox_mode, JSONL thread/item/turn and command_execution parsing, usage, rate-limit classification, fixture candidates for non-ok rounds; daemon dispatches by vendor and the run plan maps matrix vendors Claude and OpenAI to adapters; docs/design.md updated for decision 100 with unmeasured cells left unverified. Full race suite, vet, gofmt, slicer check and adj lint pass; fakes only, no paid call.", "by": "Jon R"}
+{"when": "2026-10-23T16:26:20Z", "item": "S75", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-23T16:26:20Z", "item": "S75", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T16:26:20Z", "item": "S75", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-23T16:26:20Z", "item": "S76", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T16:26:20Z", "item": "S77", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-23T16:26:20Z", "item": "S77", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T16:26:20Z", "item": "S78", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-23T16:26:20Z", "item": "S78", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T16:26:20Z", "item": "S75", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}
+{"when": "2026-10-23T16:26:20Z", "item": "S76", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}
+{"when": "2026-10-23T16:26:20Z", "item": "S77", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}
+{"when": "2026-10-23T16:26:20Z", "item": "S78", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}

@@ -2988,9 +2988,7 @@
       "claim": null,
       "fields": {
         "size": "S",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "",
@@ -3018,9 +3016,7 @@
       "claim": null,
       "fields": {
         "size": "S",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "",
@@ -3048,9 +3044,7 @@
       "claim": null,
       "fields": {
         "size": "S",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "",
@@ -3078,9 +3072,7 @@
       "claim": null,
       "fields": {
         "size": "S",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "",

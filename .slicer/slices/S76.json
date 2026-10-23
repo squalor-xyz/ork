@@ -7,9 +7,7 @@
   "depends_note": null,
   "findings_note": "",
   "size": "S",
-  "flags": [
-    "needs-owner"
-  ],
+  "flags": [],
   "trees_note": "",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",
@@ -28,7 +26,7 @@
     },
     {
       "heading": "Implement",
-      "body": "Not specified. Open point for the owner, to settle with `adj ask` before this slice runs: what happens when the registry cannot be read at job end. Candidates: (1) cache the last good registry in runManager and use it; (2) leave the runs queued and retry on the next job end or a timer; (3) leave as is and document it. The S05 report recommends (1) but the owner has not decided.\n\nDecided 2026-10-23 (owner interview): cache the last good registry in runManager and use it when the registry cannot be read at job end. Nothing is open."
+      "body": "Cache the last good registry in runManager: set it on each successful registry read and use it when the read fails at job end (startQueuedLocked, hasRoomLocked). With no earlier good read, leave the queued run queued so a later job end that can read the registry starts it. Write the failing tests first and watch them fail. Decided 2026-10-23 (owner interview): cache the last good registry. Nothing is open."
     },
     {
       "heading": "Check",
