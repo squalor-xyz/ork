@@ -1,0 +1,41 @@
+{
+  "id": "S49",
+  "title": "Fall back to the next matrix row on a rate limit or error",
+  "lead": [
+    "Owner 2026-10-20: when Codex is rate-limited or fails, the engine should fall back to the Claude row (matrix: Sol high then Sonnet medium). By hand, relay-call.sh falls back on a rate limit and the orchestrator picks the next row on an implementer error; the engine must do both. Depends on the Codex adapter."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner 2026-10-20: when Codex is rate-limited or fails, the engine should fall back to the Claude row (matrix: Sol high then Sonnet medium). By hand, relay-call.sh falls back on a rate limit and the orchestrator picks the next row on an implementer error; the engine must do both. Depends on the Codex adapter."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine` (lineup, retry), `internal/daemon`, tests, `docs/design.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestRateLimitFallsBackToTheNextRow: the first row's round exits rate_limited; a new role record starts on the second row in the same state; the run keeps both records.\n- TestErrorExitFallsBackToTheNextRow: a round that exits with class `error` (not auth) falls back the same way (adj 156, vendor.fallback-trigger-v2, which supersedes 114).\n- TestAuthAndUnclassifiedExitsStillStopTheSlice: an `auth` exit and an `unclassified` exit stop the slice with the reason even when a next row exists. A successful exit that carries permission denials still proceeds (design.md:307 and :456; the existing TestASuccessfulPermissionDenialProceeds stays unchanged; owner 2026-10-23). The existing TestAnExitNotClassifiedOkStopsTheSliceWithTheReason (internal/engine/stop_test.go:14) keeps its meaning with the new class.\n- TestClaudeAndCodexRunnersMapUnclassifiedToTheUnclassifiedClass: internal/daemon/runner.go maps the adapters' unclassified class to engine.ExitUnclassified, not ExitError; denied stays a stop.\n- TestFallbackIsSticky: after a fallback, the same role's next round starts on the fallback row, with no new run.json field (decision 115).\n- TestResumeOnlyWithTheSameVendorAndModel: latestSession (internal/engine/round.go:44) skips a session from another vendor or model.\n- TestFallbackOnTheLastRowStopsWithTheReasons: when the last row also exits rate_limited or error, the slice stops, and Reason names the exit of each row.\n- TestRunPlanKeepsEveryRowWithAnAdapter: the plan keeps the lineup list in order (internal/daemon/runs.go:224-231).\n- S83 follow-up: once the plan keeps every row, the Waves lineup editor's left/right cycling (internal/tui/lineup.go) reaches the matrix alternatives. Add a check for it here."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests first in internal/engine/fallback_test.go (new). Extend fakeRunner (internal/engine/harness_test.go:70-91) so a test can make a given row exit ExitRateLimited or ExitError.\n2. Add a helper in internal/engine/engine.go next to lineup (engine.go:141-148): currentEntry(rec, role) returns the index into rec.Lineup[role]. It matches the role's last RoleRecord (Vendor, Model, Effort). If that record's Exit is \"rate_limited\" or \"error\", it returns the next index. No new run.json field (decision 115).\n3. internal/engine/round.go:144: replace `entry, _ := lineup(rec.Lineup, r.role)` with currentEntry. If no row is left, stop with the reason (step 6).\n4. internal/engine/round.go:44-52 latestSession: take the entry's Vendor and Model, and skip any role record that differs (the resume rule in design.md:392-396). Call site: round.go:176.\n5. round.go:250 already saves role.Exit, so the next call sees the record.\n6. round.go:264-270: before the stop switch, if class is ExitRateLimited or ExitError, the round has no permission denials, and a next row exists, end the ledger step as fail and return with the state unchanged. advance (engine.go:225-257) then runs the state again on the next row. ExitAuth, ExitUnclassified and a changed tree in a read-only role still stop; a successful round with denials proceeds as today. If no row is left, fall through to the existing stop, with the reasons of all rows.\n7. The attempt counter in runRound counts the same role and round, so a fallback row writes a \"-attempt-2\" report name (existing behaviour; check it in a test).\n8. internal/daemon/runs.go:224-231: keep all rows with an adapter, in lineup order. S47 matches rows by the vendor field through matrixAdapters; adj 155 (engine.adapter-key) decided the agent field instead, so switch the table to the agent field here (Claude Code to claude, Codex to codex) and update the S47 fixtures.\n9. Add `ExitUnclassified` to engine/runner.go (beside ExitOK, ExitRateLimited, ExitAuth, ExitError). In internal/daemon/runner.go:34-38 map claude's ClassUnclassified (and the codex adapter's equivalent) to it, and keep ClassDenied a stop; today every class except ok and rate-limited maps to ExitError. Owner 2026-10-23: add the class.\n10. docs/design.md:303, 392-396 and 418: say fallback is on a rate-limited or error exit (adj 156), add the stickiness rule (decision 115) and the same-vendor resume rule. Make decision 100's wording (\"rate limit or error\") and the docs agree.\n11. No TUI or golden change expected. If the pane shows a row's vendor, check the goldens.\nDecided 2026-10-23: adj 156 (vendor.fallback-trigger-v2): fall back on a rate-limited or error exit; auth, denials and unclassified exits still stop for the owner; this supersedes adj 114. adj 155: the adapter is chosen by the agent field. Open: Claude has no rate-limit class (design.md:440-447, classify.go:16-18), so a claude row falls back only on an error exit until a rate-limit sample exists (vendor.unsampled-classes)."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/engine ./internal/daemon\n- go test -race -count=1 -run 'Fallback|Sticky|Resume|Plan' ./internal/engine ./internal/daemon   (quick loop)\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .   (expect no output)\n- slicer check\n- adj lint\n- rg -n \"ExitRateLimited|rate_limited\" internal   (only engine, daemon and their tests should match)\n- Tests use fakeRunner only. No live vendor call.\n- The existing stop tests (internal/engine/stop_test.go:14-129) must pass unchanged."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

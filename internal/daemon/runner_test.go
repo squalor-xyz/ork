@@ -81,6 +81,9 @@ func TestClaudeRunnerMapsDenialsAndReadOnly(t *testing.T) {
 		if class == claude.ClassOK {
 			want = engine.ExitOK
 		}
+		if class == claude.ClassUnclassified {
+			want = engine.ExitUnclassified
+		}
 		if class == claude.ClassRateLimited {
 			want = engine.ExitRateLimited
 		}
@@ -174,5 +177,26 @@ func TestRunDepsWiresBothVendorEnvironments(t *testing.T) {
 	x, ok := r.codex.(codexRunner)
 	if !ok || x.fixtureDir != filepath.Join(d.cfg.Paths.Dir, "fixtures", "codex") || !slices.Contains(x.env, "ORK_VENDOR=codex") || slices.Contains(x.env, "ORK_VENDOR=claude") {
 		t.Fatalf("codex %+v", r.codex)
+	}
+}
+
+func TestClaudeAndCodexRunnersMapUnclassifiedToTheUnclassifiedClass(t *testing.T) {
+	for _, vendor := range []string{"claude", "codex"} {
+		t.Run(vendor, func(t *testing.T) {
+			var runner engine.Runner
+			if vendor == "claude" {
+				runner = claudeRunner{round: func(context.Context, claude.Spec) (claude.Round, error) {
+					return claude.Round{Class: claude.ClassUnclassified}, nil
+				}}
+			} else {
+				runner = codexRunner{round: func(context.Context, codex.Spec) (codex.Round, error) {
+					return codex.Round{Exit: codex.ExitUnclassified}, nil
+				}}
+			}
+			got, err := runner.Run(context.Background(), engine.Request{Vendor: vendor})
+			if err != nil || got.Exit != engine.ExitUnclassified {
+				t.Fatalf("exit = %q, want unclassified; err = %v", got.Exit, err)
+			}
+		})
 	}
 }

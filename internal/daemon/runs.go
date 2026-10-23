@@ -243,8 +243,8 @@ func (d *Daemon) stopDaemon(p StopParams) (*StopResult, error) {
 	return &StopResult{Stopped: true}, nil
 }
 
-// matrixAdapters maps matrix vendors to the names used by the dispatcher.
-var matrixAdapters = map[string]string{"claude": "claude", "openai": "codex"}
+// matrixAdapters maps matrix agents to the names used by the dispatcher.
+var matrixAdapters = map[string]string{"claude code": "claude", "codex": "codex"}
 
 func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	if p.Project == "" || p.Item == "" {
@@ -279,7 +279,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 				rows = append([]slicercli.Row{*choice.Row}, rows...)
 			}
 			for _, row := range rows {
-				if vendor := matrixAdapters[strings.ToLower(row.Vendor)]; vendor != "" {
+				if vendor := matrixAdapters[strings.ToLower(row.Agent)]; vendor != "" {
 					plan.Lineup[role] = append(plan.Lineup[role], runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning})
 				}
 			}

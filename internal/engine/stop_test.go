@@ -13,7 +13,7 @@ import (
 )
 
 func TestAnExitNotClassifiedOkStopsTheSliceWithTheReason(t *testing.T) {
-	for _, class := range []ExitClass{ExitRateLimited, ExitAuth, ExitError, "weird"} {
+	for _, class := range []ExitClass{ExitAuth, ExitUnclassified} {
 		t.Run(string(class), func(t *testing.T) {
 			h := newHarness(t)
 			h.runner.script = func(req Request, n int) (Result, error) {

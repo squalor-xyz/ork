@@ -21,9 +21,10 @@ import (
 type Exit string
 
 const (
-	ExitOK          Exit = "ok"
-	ExitError       Exit = "error"
-	ExitRateLimited Exit = "rate_limited"
+	ExitOK           Exit = "ok"
+	ExitError        Exit = "error"
+	ExitUnclassified Exit = "unclassified"
+	ExitRateLimited  Exit = "rate_limited"
 )
 
 // Spec describes one CLI round. Env is the full environment; nil inherits.

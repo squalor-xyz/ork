@@ -164,8 +164,8 @@ ork (TUI)  ork status --json (CLI)
    `run.start`. Each entry needs a model, effort and a runnable vendor
    (`claude` or `codex`). The gate copies the reviewer's chain; a gate
    override is refused. Without an override, the plan keeps every row with
-   an adapter in matrix order: matrix vendor `Claude` maps to `claude`, and
-   `OpenAI` maps to `codex`. The engine runs only the first entry until S49.
+   an adapter in matrix order: matrix agent `Claude Code` maps to `claude`, and
+   `Codex` maps to `codex` (`engine.adapter-key`, decision 155).
 3. **Plan.** For each item, ork shows the worktree path, the branch, the
    check command, the budgets, and whether it runs an architect, a split or
    slivers. Then it shows the wave's place in the global queue.
@@ -243,9 +243,10 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   calls `Spec.OnStart` after a successful `cmd.Start` and before `cmd.Wait`
   (adj #85, `engine.adapter-start`); S17 glue forwards `Request.OnStart`.
   The result carries the exit
-  class (`ok`, `rate_limited`, `auth`, `error`), the session, the final
+  class (`ok`, `rate_limited`, `auth`, `error`, `unclassified`), the session, the final
   text, tokens, cost and the permission denials. A runner error counts as an
-  exit of class `error`.
+  exit of class `error`. Auth and unclassified exits stop the slice with
+  the reason even when a next lineup entry exists.
 - **States.** `queued` (waits for a slot; `Dequeue` moves it to `setup`), `setup`, `implement`, `checks`, `review`, `gate`,
   `awaiting-approval`, `finish`, `commit`, `committed`, plus the two rests
   `paused` and `stopped`. The owner moves a slice with `Approve`, `Reject`,
@@ -283,7 +284,8 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   rounds (`MaxRounds`), so a check that never goes green cannot loop;
   budgets (S05) replace it.
 - **Resume.** A fix round resumes the implementer's latest session and the
-  gate resumes the latest gate or reviewer session. Without a session the
+  gate resumes the latest gate or reviewer session from the same vendor and
+  model. Without a matching session the
   role starts fresh and its brief carries the earlier reports
   (`role.resume`).
 - **Report checks.** `CheckReport` refuses a gate report whose first line is
@@ -300,10 +302,12 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   next brief after a crash. Filing to adj is S06; when it
   files, `adj ask` runs in the project's main checkout (`Engine.AdjRoot`),
   never in a worktree.
-- **Stops.** An exit not classified `ok` (rate-limited too, until fallback
-  in S06) and a read-only role that changed the tree
-  (`git status --porcelain` before and after) stop the slice with the
-  reason. A successful round with permission denials proceeds. The role record
+- **Stops.** `rate_limited` and `error` exits fall back while a next row
+  remains (adj 156); otherwise they stop with the reason. Auth and
+  unclassified exits, unsuccessful rounds with permission denials, and a
+  read-only role that changed the tree (`git status --porcelain` before
+  and after) stop the slice with the reason. A successful round with
+  permission denials proceeds. The role record
   keeps the denied tool names and each denied command or file path, capped at
   200 characters (`engine.denied-command`); status and the TUI show them as
   warnings (`engine.denials`, `ui.denials-display`). An unsuccessful round with
@@ -342,7 +346,10 @@ From slicer's contract:
 - a permission denial on a slicer step.
 
 ork adds:
-- a role exit that is not classified as ok or rate-limited;
+- an auth or unclassified role exit;
+- an unsuccessful round with permission denials;
+- a `rate_limited` or `error` exit with no next row (otherwise it falls back,
+  adj 156);
 - a read-only role that changed the tree;
 - a lost process.
 
@@ -369,8 +376,8 @@ ork adds:
   test counts. The prompts ask for one line `Tests: N passed, M failed`
   in the implementer's and the gate's report, and for a final `## Owner
   needed` section in every report (`role.report-shape`).
-- **Resume.** For fix rounds and the lite gate, ork resumes the same vendor
-  session where the vendor supports it. Otherwise it starts fresh with the
+- **Resume.** For fix rounds and the lite gate, ork resumes a session from the same
+  vendor and model where the vendor supports it. Otherwise it starts fresh with the
   earlier reports in the brief (`role.resume`).
 - **Reviewer rule.** A reviewer never wrote code in the slice. A reviewer
   may run on another vendor if the lineup names it (`review.cross-vendor`).
@@ -392,7 +399,7 @@ answer in the project's adj store (`adj ask` then `adj decide --by
 There is one Go adapter per vendor. Each implements: build a command
 (model, effort, permission mode, allowlist, output format), start it in its
 own process group, stream events, parse the final result and usage, and
-classify the exit as ok, denied, rate-limited or unclassified. A class
+classify the exit as ok, denied, rate-limited, auth, error or unclassified. A class
 needs a documented signal or a real sample (`vendor.ratelimit-detection`,
 `vendor.unsampled-classes`).
 
@@ -415,11 +422,21 @@ probes 05 to 07 ran on 0.164.0), grok 1.0.62. Grok has no successful run, so mos
 | Per-tool allowlist | `--allowedTools Read` with `--permission-prompts none` refused a Write. The denial is listed in `permission_denials` and the exit code is 0 (`testdata/vendors/claude/04-allowlist-denies-write.stdout`; `.repo-status` is empty). A positive control, an allowlisted tool that runs, was not measured. | No per-tool allowlist. `-s` takes `read-only`, `workspace-write` or `danger-full-access` only (`testdata/vendors/codex/help-excerpt.txt`). The one read-only run (`testdata/vendors/codex/03-readonly-sandbox-write.stdout`) ran no command: it has only agent messages. The model said the filesystem was read-only, and `.repo-status` is empty. That run did not exercise the sandbox. S48 probe 05 did, with `-s workspace-write -C <worktree>` where the worktree is linked to a main checkout. Its JSONL has a `command_execution` item (`testdata/vendors/codex/05-workspace-write-paths.stdout`). The write inside the worktree ran with exit 0 (`.worktree-status` shows `inside.txt`). The model reported that the writes to the main checkout and to the main checkout's `.git/slicer` failed with "operation not permitted", and neither file exists (`.repo-status` and `.slicer-dir` are empty). But the JSONL has a command event only for the first write; the other two results are the model's words with no event, so the block is *unverified*: the files may be absent because the commands never ran. Probe 07 (a socket bind) has no command event, so the model's reported `PermissionError: [Errno 1]` at the Unix bind is *unverified*, and a loopback TCP bind was not reached. Whether `.git` of a linked worktree is writable was not measured. S89 probes 08 to 10 (codex-cli 0.164.0, one call each, no retries) aimed to close the gaps, and none produced a command event for the asked cell, so each stays *unverified*: the main checkout write (probe 08 resumed, probe 10 fresh: the model reported `operation not permitted` in 08 (words only) and refused to run the commands in 10, `testdata/vendors/codex/08-resume-sandbox-config.stdout`, `testdata/vendors/codex/10-main-checkout-blocks.stdout`), the main checkout `.git/slicer` write (probe 10, refused, no command), the Unix socket bind, the loopback TCP bind and `git add` plus `git commit` in the linked worktree (probe 09: agent messages only, the model reported `PermissionError: [Errno 1]` at the Unix bind, `testdata/vendors/codex/09-socket-and-git.stdout`). In all three, `.repo-status` and `.slicer-dir` are empty, and in 08 the only command event is the worktree write (exit 0, `.worktree-status` shows `resume-inside.txt`). Only the worktree write is *verified*, twice. The model sometimes declines or skips the command tool, so containment of the main checkout cannot yet be taken from the sandbox alone; the gaps are adj question `vendor.codex-sandbox-gaps` and stay open. Decided: codex may run write roles with `workspace-write` (`vendor.codex-write`, decision 100). The owner relies on the tree fingerprint, the project check, review and the gate as limits; the unmeasured sandbox cells remain *unverified*. | *unverified*: the allowlist probe got HTTP 403 before any tool call. `--tools` takes a comma list (`testdata/vendors/grok/help-excerpt.txt`), and the init event names tools such as `read_file` and `write`, so `Read` may be the wrong name (`testdata/vendors/grok/02-stream-messages-json.stdout`). |
 | Rate-limit signal | Not forced. Stream output carried `rate_limit_event` with `rate_limit_info.status` `allowed`, `rateLimitType` `five_hour` and `resetsAt`. Utilization is at `rate_limit_info.unifiedWindows.{five_hour,seven_day}.utilization` (`testdata/vendors/claude/02-stream-json.stdout`). A `rejected` status and the exit code when limited are *unverified*. The help documents only `--fallback-model`, for "overloaded or not available" (`testdata/vendors/claude/rate-limit-help-grep.txt`). | *unverified*: no rate-limit or quota term appears in `codex --help` or `codex exec --help` (`testdata/vendors/codex/rate-limit-help-grep.txt`). Nothing was observed. Decided: ork matches the reported strings, "You've hit your usage limit" and HTTP 429 `rate_limit_exceeded`, in `turn.failed` or `error` events and falls back automatically (`vendor.codex-ratelimit`); a real sample is still to be captured. | *unverified*: every run that reached the API (probes 01, 02, 04 and 05) got HTTP 403, "used all available credits or reached its monthly spending limit" (`testdata/vendors/grok/01-plain-json.stdout`). That is a quota limit, not a documented rate-limit signal, and ork has no class for it yet. No rate-limit term appears in `grok --help` (`testdata/vendors/grok/rate-limit-help-grep.txt`). |
 
-- **Fallback** (`vendor.fallback`): an exit classified as rate-limited
-  moves the role to the next entry in its chain. The new vendor starts
-  fresh, with the earlier reports in the brief. An implementer that failed
-  midway leaves its tree as it is, and the next vendor is told to continue
-  from it.
+- **Fallback** (`vendor.fallback-trigger-v2`, decision 156): an exit
+  classified as rate-limited or error moves the role to the next entry in
+  its chain, in the same state and round. Auth and unclassified exits, an
+  unsuccessful round with permission denials, and a changed tree in a
+  read-only role still stop.
+  If no row remains, the stop reason names each failed row and its exit.
+  The role stays on the fallback row for the rest of the run
+  (`vendor.fallback-sticky`, decision 115). The ordered role records determine
+  the row from vendor, model, effort and exit; no new run record field is needed.
+  Resume uses only a session from the same vendor and model. Otherwise the
+  next row starts fresh, with the earlier reports in the brief. Both role
+  records are kept; the fallback report uses the next attempt suffix.
+  Claude has no measured rate-limit class, so its rows can fall back only
+  on an error until a sample exists
+  (`vendor.unsampled-classes`).
 - **Detection** (`vendor.ratelimit-detection`): the classifier matches only
   documented signals. Every non-ok round and every round with permission
   denials saves its raw stdout, stderr and JSON at mode 0600 under

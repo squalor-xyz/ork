@@ -71,6 +71,7 @@ type fakeRunner struct {
 	mu     sync.Mutex
 	reqs   []Request
 	script func(req Request, n int) (Result, error)
+	exits  map[string]ExitClass // scripted exit by adapter row
 }
 
 func (f *fakeRunner) Run(ctx context.Context, req Request) (Result, error) {
@@ -86,6 +87,9 @@ func (f *fakeRunner) Run(ctx context.Context, req Request) (Result, error) {
 		if res, err := script(req, n); res.Exit != "" || err != nil {
 			return res, err
 		}
+	}
+	if class := f.exits[req.Vendor]; class != "" {
+		return Result{Exit: class, Session: "failed-" + req.Vendor}, nil
 	}
 	return defaultResult(req), nil
 }

@@ -41,10 +41,10 @@ type outcome struct {
 }
 
 // latestSession returns the newest session id among the roles.
-func latestSession(rec runrec.Record, from []string) string {
+func latestSession(rec runrec.Record, from []string, vendor, model string) string {
 	for i := len(rec.Roles) - 1; i >= 0; i-- {
 		r := rec.Roles[i]
-		if r.Session != "" && contains(from, r.Role) {
+		if r.Session != "" && contains(from, r.Role) && r.Vendor == vendor && r.Model == model {
 			return r.Session
 		}
 	}
@@ -141,7 +141,15 @@ func pendingSection(p *runrec.Pending) []BriefSection {
 // paused (or err says why not).
 func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (outcome, error) {
 	rec := e.run.Snapshot()
-	entry, _ := lineup(rec.Lineup, r.role)
+	entries := rec.Lineup[r.role]
+	if r.role == RoleGate && len(entries) == 0 {
+		entries = rec.Lineup[RoleReviewer]
+	}
+	entryIndex := currentEntry(rec, r.role)
+	if entryIndex >= len(entries) {
+		return outcome{}, e.stop(ctx, fallbackReasons(rec, r.role))
+	}
+	entry := entries[entryIndex]
 	perm, err := ResolvePermission(e.proj, r.role)
 	if err != nil {
 		return outcome{}, e.pauseError(r, "permissions: "+err.Error())
@@ -173,7 +181,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	if pend != nil && (pend.Kind == runrec.PendingQuestion || pend.Kind == runrec.PendingShape) {
 		allowed = append([]string{r.role}, allowed...)
 	}
-	session := latestSession(rec, allowed)
+	session := latestSession(rec, allowed, entry.Vendor, entry.Model)
 
 	sliceJSON, err := e.d.Slicer.ShowRaw(ctx, rec.Worktree, rec.Item)
 	if err != nil {
@@ -243,8 +251,12 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	if class == ExitOK {
 		text, file = e.readReport(reportPath, reportName, res.Report)
 	}
+	fallback := class == ExitRateLimited || class == ExitError
+	fallingBack := fallback && len(res.Denials) == 0 && !changed && statusErr == nil && entryIndex+1 < len(entries)
 	err = e.run.Update(func(rr *runrec.Record) {
-		rr.Pending = nil
+		if !fallingBack {
+			rr.Pending = nil
+		}
 		role := &rr.Roles[idx]
 		role.EndedAt = e.d.now()
 		role.Exit = string(class)
@@ -259,6 +271,11 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		return outcome{}, err
 	}
 
+	if fallingBack {
+		e.stepEnd(ctx, rec, stepID, "fail")
+		return outcome{}, nil
+	}
+
 	var stopReason string
 	switch {
 	case class != ExitOK:
@@ -268,6 +285,9 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		}
 		if runErr != nil {
 			stopReason += ": " + runErr.Error()
+		}
+		if fallback {
+			stopReason += "; " + fallbackReasons(e.run.Snapshot(), r.role)
 		}
 	case changed:
 		stopReason = fmt.Sprintf("%s round %d changed the tree, and it is a read-only role", r.role, r.n)
@@ -320,6 +340,17 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		})
 	}
 	return outcome{ok: true, text: text, report: rep, findings: findings, file: file}, nil
+}
+
+// fallbackReasons preserves the exit and row identity of each failed attempt.
+func fallbackReasons(rec runrec.Record, role string) string {
+	var reasons []string
+	for _, r := range rec.Roles {
+		if r.Role == role && (r.Exit == string(ExitRateLimited) || r.Exit == string(ExitError)) {
+			reasons = append(reasons, fmt.Sprintf("%s round %d (%s %s %s) exited %s", role, r.Round, r.Vendor, r.Model, r.Effort, r.Exit))
+		}
+	}
+	return strings.Join(reasons, "; ")
 }
 
 // readReport returns the role's report: the file at the report path, else the

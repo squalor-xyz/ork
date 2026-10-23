@@ -33,6 +33,8 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	switch round.Class {
 	case claude.ClassOK:
 		class = engine.ExitOK
+	case claude.ClassUnclassified:
+		class = engine.ExitUnclassified
 	case claude.ClassRateLimited:
 		class = engine.ExitRateLimited
 	}
@@ -75,6 +77,8 @@ func (r codexRunner) Run(ctx context.Context, req engine.Request) (engine.Result
 	switch round.Exit {
 	case codex.ExitOK:
 		class = engine.ExitOK
+	case codex.ExitUnclassified:
+		class = engine.ExitUnclassified
 	case codex.ExitRateLimited:
 		class = engine.ExitRateLimited
 	}

@@ -368,3 +368,24 @@ func TestLineupEditorAffordances(t *testing.T) {
 		t.Error("budget row hints are incorrect")
 	}
 }
+
+func TestLineupCyclesMatrixAlternativesBothDirections(t *testing.T) {
+	h, _ := lineupHarness(t)
+	h.deliver(press("esc"))
+	p := h.m.waves.picked["A"]
+	original := p.Expected.Lineup["implementer"][0]
+	alternative := runrec.LineupEntry{Vendor: "codex", Model: "sol", Effort: "high"}
+	p.Expected.Lineup["implementer"] = append(p.Expected.Lineup["implementer"], alternative)
+	h.m.waves.picked["A"] = p
+	h.deliver(press("e"))
+	for _, step := range []struct {
+		key  string
+		want runrec.LineupEntry
+	}{{"right", alternative}, {"left", original}, {"left", alternative}, {"right", original}} {
+		h.deliver(press(step.key))
+		e := h.m.waves.lineup
+		if got := e.chains[0][0]; got != step.want {
+			t.Fatalf("%s selected %+v, want %+v", step.key, got, step.want)
+		}
+	}
+}

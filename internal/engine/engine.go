@@ -150,6 +150,40 @@ func lineup(l map[string][]runrec.LineupEntry, role string) (runrec.LineupEntry,
 	return runrec.LineupEntry{}, false
 }
 
+// currentEntry derives the sticky row from the role history. A failed row
+// advances the chain; a successful row stays selected for later rounds.
+// Walking forward through records distinguishes identical lineup entries.
+func currentEntry(rec runrec.Record, role string) int {
+	entries := rec.Lineup[role]
+	if role == RoleGate && len(entries) == 0 {
+		entries = rec.Lineup[RoleReviewer]
+	}
+	cur := 0
+	for _, record := range rec.Roles {
+		if record.Role != role {
+			continue
+		}
+		matched := false
+		for j := cur; j < len(entries); j++ {
+			entry := entries[j]
+			if record.Vendor == entry.Vendor && record.Model == entry.Model && record.Effort == entry.Effort {
+				cur = j
+				if record.Exit == string(ExitRateLimited) || record.Exit == string(ExitError) {
+					cur++
+				}
+				matched = true
+				break
+			}
+		}
+		// Lost attempts may lack row identity; retry them at the current row.
+		if !matched && record.Exit != "lost" {
+			// Other incompatible history exhausts the chain instead of replaying it.
+			return len(entries)
+		}
+	}
+	return cur
+}
+
 // New checks the contract, resolves permissions and creates the run record in
 // the setup state (the queued state when cfg.Queued is set). It changes nothing in the project.
 func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {

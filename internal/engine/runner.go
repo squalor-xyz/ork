@@ -25,10 +25,11 @@ const (
 type ExitClass string
 
 const (
-	ExitOK          ExitClass = "ok"
-	ExitRateLimited ExitClass = "rate_limited"
-	ExitAuth        ExitClass = "auth"
-	ExitError       ExitClass = "error"
+	ExitOK           ExitClass = "ok"
+	ExitRateLimited  ExitClass = "rate_limited"
+	ExitAuth         ExitClass = "auth"
+	ExitError        ExitClass = "error"
+	ExitUnclassified ExitClass = "unclassified"
 )
 
 // Request is one role round for a Runner. It names no vendor mechanics: the

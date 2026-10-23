@@ -49,7 +49,7 @@ func runDaemon(t *testing.T, runner roundRunner) (*Daemon, *runrec.Store, regist
 	}
 	fake := clitest.Install(t,
 		clitest.Route{Tool: "slicer", Args: []string{"plan-parallel", "--json", "--lean", "--root", p.Path}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "plan-parallel.json")},
-		clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: `{"roles":[{"role":"implementer","row":{"vendor":"Acme","model":"wrong"},"alternatives":[{"agent":"Claude Code","vendor":"Claude","model":"sonnet","reasoning":"high"},{"agent":"Codex","vendor":"OpenAI","model":"gpt","reasoning":"high"}]},{"role":"reviewer","row":{"agent":"Claude Code","vendor":"Claude","model":"opus","reasoning":"medium"}}]}`},
+		clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: `{"roles":[{"role":"implementer","row":{"agent":"Unknown","vendor":"Claude","model":"wrong"},"alternatives":[{"agent":"Claude Code","vendor":"Acme","model":"sonnet","reasoning":"high"},{"agent":"Codex","vendor":"OpenAI","model":"gpt","reasoning":"high"}]},{"role":"reviewer","row":{"agent":"Claude Code","vendor":"Claude","model":"opus","reasoning":"medium"}}]}`},
 		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay"}, Stdout: "Contract: relay v7\n"},
 		clitest.Route{Tool: "slicer", Args: []string{"show"}, Prefix: true, Stdout: `{"slice":{"sections":[{"heading":"Git","body":"One commit: \"S1: test\"."}]}}`},
 		clitest.Route{Tool: "slicer", Args: []string{"config"}, Prefix: true, Stdout: `{"value":"done"}`},
@@ -115,7 +115,7 @@ func waitIdle(t *testing.T, d *Daemon, id string) {
 	}
 	t.Fatalf("run %s is still busy", id)
 }
-func TestRunPlanKeepsTheFirstRowWithAnAdapter(t *testing.T) {
+func TestRunPlanKeepsEveryRowWithAnAdapter(t *testing.T) {
 	d, store, p := runDaemon(t, nil)
 	b := request(t, d, "run.plan", `{"project":"p","item":"S1","well_specified":true,"split":false}`)
 	for _, want := range []string{filepath.Join(p.Path, ".worktrees", "S1"), `"branch":"S1"`, `"check_command":"go test ./..."`, `"model":"sonnet"`, `"model":"gpt"`, `"vendor":"codex"`, `"model":"opus"`, `Bash(go test ./...*)`} {
@@ -125,6 +125,14 @@ func TestRunPlanKeepsTheFirstRowWithAnAdapter(t *testing.T) {
 	}
 	if strings.Contains(string(b), "wrong") {
 		t.Fatalf("wrong lineup: %s", b)
+	}
+	var plan RunPlan
+	if err := json.Unmarshal(b, &plan); err != nil {
+		t.Fatal(err)
+	}
+	want := []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "high"}, {Vendor: "codex", Model: "gpt", Effort: "high"}}
+	if !reflect.DeepEqual(plan.Lineup[engine.RoleImplementer], want) {
+		t.Fatalf("ordered adapters: %+v", plan.Lineup)
 	}
 	runs, err := store.List()
 	if err != nil || len(runs) != 0 {
@@ -983,7 +991,8 @@ func newWaveRig(t *testing.T, global, projectCap int) *waveRig {
 		rig.started <- filepath.Base(r.Worktree)
 		select {
 		case <-rig.free:
-			return engine.Result{Exit: engine.ExitError}, nil
+			// Free the slot with a terminal exit, even with fallback rows.
+			return engine.Result{Exit: engine.ExitAuth}, nil
 		case <-ctx.Done():
 			return engine.Result{}, ctx.Err()
 		}
