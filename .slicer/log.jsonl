@@ -1040,3 +1040,9 @@
 {"when": "2026-10-23T16:26:20Z", "item": "S78", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}
 {"when": "2026-10-23T16:27:07Z", "item": "S76", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-23T16:35:13Z", "item": "S76", "action": "status", "from": "started", "to": "done", "note": "Queued runs keep advancing when the registry cannot be read at job end: runManager caches the last good registry (guarded by the manager lock); startQueuedLocked uses it when the job-end read fails, and with no earlier good read the queued run stays queued until a later job end reads the registry. Admission in startRun still needs a fresh read. Verified: new tests fail before the fix, full race suite, vet, gofmt, slicer check and adj lint pass.", "by": "Jon R"}
+{"when": "2026-10-23T16:36:43Z", "item": "S49", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-23T16:36:43Z", "item": "S49", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T16:36:44Z", "item": "S84", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}
+{"when": "2026-10-23T16:36:44Z", "item": "S85", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}
+{"when": "2026-10-23T16:36:44Z", "item": "S84", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T16:36:44Z", "item": "S85", "action": "edit", "from": "", "to": "", "note": "Implement"}

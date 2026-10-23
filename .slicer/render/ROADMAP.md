@@ -137,8 +137,8 @@
 | 80 | [S81](slices/S81.md) | Daemon reads for the Waves screen: wave.suggest and wave.overlap | S | 1 |  |  | done |
 | 81 | [S82](slices/S82.md) | Waves screen: suggested list, tick items, overlap warnings, launch a wave | M | 2 |  |  | done |
 | 82 | [S83](slices/S83.md) | Waves screen: edit a slice's lineup and budgets before launch | M | 2 |  |  | done |
-| 83 | [S84](slices/S84.md) | Overview layout pass | M `[needs-owner]` | 2 |  |  | — |
-| 84 | [S85](slices/S85.md) | Keys and hint bar | M `[needs-owner]` | 2 |  |  | — |
+| 83 | [S84](slices/S84.md) | Overview layout pass | M | 2 |  |  | — |
+| 84 | [S85](slices/S85.md) | Keys and hint bar | M | 2 |  |  | — |
 | 85 | [S86](slices/S86.md) | Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default | S | 1 |  | discovered from S83 | — |
 | 86 | [S87](slices/S87.md) | Relay friction: Codex brief sets GOCACHE under .scratch; no ui role in relay-run; spec names data source | S | 1 |  | discovered from S83 | — |
 | 87 | [S88](slices/S88.md) | Accept relay contract v8 alongside v7 | S | 1 |  |  | done |
