@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-91 items · — 37 · done 48 · parked 1 · retired 5
+93 items · — 39 · done 48 · parked 1 · retired 5
 
 ## v1.1
 
@@ -145,9 +145,11 @@
 | 88 | [S89](slices/S89.md) | Close the codex sandbox gaps: resume sandbox, socket bind, worktree .git, main-checkout block | S | 2 |  | discovered from S48 | done |
 | 89 | [S90](slices/S90.md) | Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on | S | 1 |  | discovered from S88 | — |
 | 90 | [S91](slices/S91.md) | Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes | S | 1 |  | discovered from S49 | — |
+| 91 | [S92](slices/S92.md) | Fallback brief tells the next row about earlier rows and an already-started slice | S | 1 |  | discovered from S49 | — |
+| 92 | [S93](slices/S93.md) | The gate follows the reviewer's current row after a fallback | S | 1 |  | discovered from S49 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 91 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 93 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |

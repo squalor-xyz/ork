@@ -1,0 +1,39 @@
+{
+  "id": "S93",
+  "title": "The gate follows the reviewer's current row after a fallback",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S49 relay later note. Stickiness is per role (decision 115), so after the reviewer falls back to its second row the gate, which uses the reviewer's lineup (docs/design.md:580) and resumes its session, starts again on the first row with only its own records (currentEntry, internal/engine/engine.go:156). Owner 2026-10-23: the gate follows the reviewer's current row."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/engine.go:156-185` (currentEntry): for the gate, start from the reviewer's current index when the gate has no record of its own, and advance on the gate's own failures from there.\n- `internal/engine/fallback_test.go`: tests.\n- `docs/design.md:392-396` and `:580`: say the gate follows the reviewer's row."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestGateStartsOnTheReviewersCurrentRow: the reviewer fell back to row 2; the gate's first round uses row 2.\n- TestGateFallsBackFromTheReviewersRow: a rate-limited gate round on row 2 moves to row 3, and never back to row 1.\n- TestGateWithItsOwnLineupIsUnchanged: a gate with its own lineup entries keeps the old behaviour."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests first. 2. In currentEntry, when role is the gate and rec.Lineup[gate] is empty, seed cur from currentEntry(rec, reviewer). 3. Keep records walking as now. 4. Update docs/design.md."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/engine\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- slicer check\n- adj lint"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

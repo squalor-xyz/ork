@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 92,
+  "next_id": 94,
   "preamble": "",
   "passes": [
     {
@@ -3539,6 +3539,62 @@
         "reason": "",
         "importance": 2,
         "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S92",
+      "title": "Fallback brief tells the next row about earlier rows and an already-started slice",
+      "short_title": "Fallback brief tells the next row about earlier rows and an already-started slice",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S49",
+        "parent": "",
+        "cites": [],
+        "key": "fallback-brief",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S93",
+      "title": "The gate follows the reviewer's current row after a fallback",
+      "short_title": "The gate follows the reviewer's current row after a fallback",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S49",
+        "parent": "",
+        "cites": [],
+        "key": "gate-follows-reviewer",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
         "effort": 1,
         "attempts": 0
       }

@@ -1061,3 +1061,18 @@
 {"when": "2026-10-23T17:09:02Z", "item": "S87", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-10-23T17:10:16Z", "item": "S77", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-23T17:17:48Z", "item": "S77", "action": "status", "from": "started", "to": "done", "note": "A queued run whose project is no longer in the registry is stopped with the reason 'project was removed' and never started; the queue then advances. Added Engine.StopQueued (bare reason). Race suite, vet, gofmt, slicer check and adj lint pass.", "by": "Jon R"}
+{"when": "2026-10-23T17:19:02Z", "item": "S92", "action": "add", "from": "", "to": "open", "note": "Fallback brief tells the next row about earlier rows and an already-started slice"}
+{"when": "2026-10-23T17:19:02Z", "item": "S92", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-23T17:19:03Z", "item": "S92", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-23T17:19:03Z", "item": "S92", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-23T17:19:03Z", "item": "S92", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-23T17:19:03Z", "item": "S92", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T17:19:03Z", "item": "S92", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-23T17:19:03Z", "item": "S93", "action": "add", "from": "", "to": "open", "note": "The gate follows the reviewer's current row after a fallback"}
+{"when": "2026-10-23T17:19:03Z", "item": "S93", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-23T17:19:03Z", "item": "S93", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-23T17:19:03Z", "item": "S93", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-23T17:19:03Z", "item": "S93", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-23T17:19:04Z", "item": "S93", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T17:19:04Z", "item": "S93", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-23T17:19:04Z", "item": "S87", "action": "edit", "from": "", "to": "", "note": "Why"}
