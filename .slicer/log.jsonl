@@ -966,3 +966,5 @@
 {"when": "2026-10-23T13:19:19Z", "item": "S66", "action": "set", "from": "", "to": "", "note": "pass_key v1→v1.1"}
 {"when": "2026-10-23T13:19:20Z", "item": "S69", "action": "retire", "from": "open", "to": "retired", "note": "Owner 2026-10-23: the Roadmap replaces leaving for slicer tui; adj 11 stays the owner's to close"}
 {"when": "2026-10-23T13:19:23Z", "item": "pass.v1.1", "action": "prose", "from": "", "to": "v1.1", "note": "add-pass"}
+{"when": "2026-10-23T14:09:31Z", "item": "S74", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T14:09:31Z", "item": "S74", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}

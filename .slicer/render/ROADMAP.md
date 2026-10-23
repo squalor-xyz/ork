@@ -127,7 +127,7 @@
 | 70 | [S71](slices/S71.md) | Doctor checks each project's check command and patterns (docs/design.md:613-614) | S | 1 |  |  | — |
 | 71 | [S72](slices/S72.md) | Grok adapter and v1 role (after credits reset 2026-11-01) | M | 2 |  |  | — |
 | 72 | [S73](slices/S73.md) | Allowlist --root-first calls | S | 1 |  |  | — |
-| 73 | [S74](slices/S74.md) | Timeout on the stop-hint status call | S `[needs-owner]` | 1 |  | discovered from S56 | — |
+| 73 | [S74](slices/S74.md) | Timeout on the stop-hint status call | S | 1 |  | discovered from S56 | — |
 | 74 | [S75](slices/S75.md) | Run directory modes | S `[needs-owner]` | 1 |  | discovered from S51 | — |
 | 75 | [S76](slices/S76.md) | Queue advance survives a registry read error | S `[needs-owner]` | 1 |  | discovered from S05 | — |
 | 76 | [S77](slices/S77.md) | Queued run of a removed project | S `[needs-owner]` | 1 |  | discovered from S05 | — |

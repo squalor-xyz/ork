@@ -7,9 +7,7 @@
   "depends_note": null,
   "findings_note": "",
   "size": "S",
-  "flags": [
-    "needs-owner"
-  ],
+  "flags": [],
   "trees_note": "",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",
@@ -28,7 +26,7 @@
     },
     {
       "heading": "Implement",
-      "body": "Wrap the context passed to roleMayRun in context.WithTimeout. Open: the timeout value. Candidates are the existing defaultStartWait (5s, internal/cli/cli.go:29) or a new constant; the owner has not decided. Settle it with `adj ask` before this slice runs. On expiry the status call fails and the existing \"a role may be running\" warning prints.\n\nDecided 2026-10-23 (owner interview): use the existing defaultStartWait (5s, internal/cli/cli.go:29) as the timeout. Nothing is open."
+      "body": "Wrap the context passed to roleMayRun in context.WithTimeout of defaultStartWait (5s, internal/cli/cli.go:29). On expiry the status call fails and the existing \"a role may be running\" warning prints. Decided 2026-10-23 (owner interview): the timeout is defaultStartWait. Nothing is open."
     },
     {
       "heading": "Check",
