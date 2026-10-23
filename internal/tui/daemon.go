@@ -135,3 +135,12 @@ func (d *Daemon) WaveStart(ctx context.Context, params daemon.WaveStartParams) (
 	defer c.Close()
 	return c.WaveStart(ctx, params)
 }
+
+func (d *Daemon) Cleanup(ctx context.Context, run string) error {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	return c.Cleanup(ctx, run)
+}

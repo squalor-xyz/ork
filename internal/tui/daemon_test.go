@@ -123,6 +123,7 @@ func TestSlowRefreshDoesNotDelayOtherProjectSnapshot(t *testing.T) {
 }
 
 type runActions interface {
+	Cleanup(context.Context, string) error
 	Approve(context.Context, string) error
 	Stop(context.Context, string) error
 	Retry(context.Context, string) error
@@ -132,7 +133,7 @@ func TestDaemonTypedActions(t *testing.T) {
 	if _, ok := any(&Daemon{}).(runActions); !ok {
 		t.Fatal("daemon adapter lacks typed run actions")
 	}
-	for _, verb := range []string{"approve", "stop", "retry"} {
+	for _, verb := range []string{"approve", "stop", "retry", "cleanup"} {
 		for _, fail := range []bool{false, true} {
 			t.Run(fmt.Sprintf("%s/error-%t", verb, fail), func(t *testing.T) {
 				d, _, _, _ := requestServer(t, func(_ context.Context, method string, params json.RawMessage) (any, error) {
@@ -145,7 +146,7 @@ func TestDaemonTypedActions(t *testing.T) {
 					return map[string]string{"id": "engine"}, nil
 				})
 				a := any(d).(runActions)
-				call := map[string]func(context.Context, string) error{"approve": a.Approve, "stop": a.Stop, "retry": a.Retry}[verb]
+				call := map[string]func(context.Context, string) error{"approve": a.Approve, "stop": a.Stop, "retry": a.Retry, "cleanup": a.Cleanup}[verb]
 				err := call(context.Background(), "engine")
 				if fail {
 					var e *ipc.Error
@@ -165,7 +166,7 @@ func TestDaemonActionConnectFailure(t *testing.T) {
 	if !ok {
 		t.Fatal("daemon adapter lacks typed run actions")
 	}
-	for name, call := range map[string]func(context.Context, string) error{"approve": a.Approve, "stop": a.Stop, "retry": a.Retry} {
+	for name, call := range map[string]func(context.Context, string) error{"approve": a.Approve, "stop": a.Stop, "retry": a.Retry, "cleanup": a.Cleanup} {
 		t.Run(name, func(t *testing.T) {
 			if err := call(context.Background(), "engine"); err == nil || err.Error() != "connect failed" {
 				t.Fatalf("connect error changed: %v", err)

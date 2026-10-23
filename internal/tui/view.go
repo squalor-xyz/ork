@@ -64,7 +64,7 @@ func (m *Model) screen() string {
 		}
 		status := m.actionStatus
 		if m.confirm != nil {
-			status = m.confirm.command() + "? [y/N] (Enter is No)"
+			status = m.confirm.prompt()
 		}
 		if status != "" {
 			detail = wrapText(status, max(mainW-len(indent), 1))
@@ -83,12 +83,15 @@ func (m *Model) screen() string {
 		body, detail = ov.body, ov.detail
 		status := m.actionStatus
 		if m.confirm != nil {
-			status = m.confirm.command() + "? [y/N] (Enter is No)"
+			status = m.confirm.prompt()
 		}
 		if m.pane != nil {
 			detail = m.paneLines(mainW, max(h-5, 1), status)
 		} else if status != "" {
 			detail = wrapText(status, max(mainW-len(indent), 1))
+			if m.confirm != nil && m.confirm.verb == "cleanup" {
+				detail = m.confirm.cleanupConfirmLines(max(mainW-len(indent), 1), max(h-7, 1))
+			}
 			for i := range detail {
 				detail[i] = indent + detail[i]
 			}
@@ -98,7 +101,11 @@ func (m *Model) screen() string {
 		}
 		detail = detail[:min(len(detail), max(h-5, 1))]
 		bodyH = max(h-4-len(detail), 1)
-		start = windowStart(ov.sel, len(body), bodyH)
+		selected := ov.sel
+		if r, ok := m.selectedRow(); ok && r.ready && bodyH >= len(r.commands)+2 {
+			selected += len(r.commands)
+		}
+		start = windowStart(selected, len(body), bodyH)
 	}
 	body = window(body, start, bodyH, th)
 	rule := m.cfg.Theme.Dim.Render(strings.Repeat("-", mainW))
@@ -248,7 +255,11 @@ func (m *Model) statusLine() string {
 	if !m.lastRefresh.IsZero() {
 		refreshed = m.lastRefresh.Format("15:04:05")
 	}
-	return fmt.Sprintf(" %d %s | refreshed %s | pending %d", len(m.projects), noun, refreshed, m.poller.Pending())
+	line := fmt.Sprintf(" %d %s | refreshed %s | pending %d", len(m.projects), noun, refreshed, m.poller.Pending())
+	if r, ok := m.selectedRow(); ok && r.ready && r.merged {
+		line += " | c clean up"
+	}
+	return line
 }
 
 // helpLines is the key list shown in place of the Overview.

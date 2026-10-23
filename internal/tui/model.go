@@ -399,6 +399,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			return m.confirmWave()
 		}
 		return m.openLaunch()
+	case key.Matches(msg, m.keys.Cleanup):
+		return m.requestAction("cleanup")
 	case key.Matches(msg, m.keys.Approve):
 		return m.requestAction("approve")
 	case key.Matches(msg, m.keys.Stop):
@@ -464,6 +466,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			return m.openItem()
 		}
 		if r, ok := m.selectedRow(); ok {
+			if r.ready {
+				return nil
+			}
 			if (r.engineID != "" || r.ledgerID != "") && !m.showHelp {
 				return m.openPane(r)
 			}
@@ -648,12 +653,16 @@ func (m *Model) moveView(delta int) tea.Cmd {
 // runAction retains the exact target while a confirmation is on screen.
 type runAction struct {
 	verb, run, project, text string
+	cleanupCommand           string
 	items                    []daemon.RunParams
 	plan                     *daemon.RunPlan
 	wellSpecified, split     bool
 }
 
 func (a runAction) command() string {
+	if a.verb == "cleanup" {
+		return a.cleanupCommand
+	}
 	if a.verb == "wave" {
 		cmd := "ork wave start " + a.project
 		for _, p := range a.items {
@@ -671,6 +680,35 @@ func (a runAction) command() string {
 	return cmd
 }
 
+// prompt keeps the cleanup question separate from the shell-quoted commands.
+func (a runAction) prompt() string {
+	if a.verb == "cleanup" {
+		return a.command() + "\nRemove worktree and branch? [y/N] (Enter is No)"
+	}
+	return a.command() + "? [y/N] (Enter is No)"
+}
+
+// cleanupConfirmLines caps long commands separately so both command starts
+// and the default-no question remain visible while the body keeps three lines.
+func (a runAction) cleanupConfirmLines(width, limit int) []string {
+	limit = max(limit, 3)
+	commands := strings.Split(a.command(), "\n")
+	var lines []string
+	for i, command := range commands {
+		wrapped := wrapText(command, width)
+		budget := (limit - 1) / 2
+		if i == 0 {
+			budget += (limit - 1) % 2
+		}
+		if len(wrapped) > budget {
+			wrapped = wrapped[:budget]
+			wrapped[budget-1] = clip(wrapped[budget-1]+"...", width)
+		}
+		lines = append(lines, wrapped...)
+	}
+	return append(lines, "Remove worktree and branch? [y/N] (Enter is No)")
+}
+
 type actionMsg struct {
 	action runAction
 	err    error
@@ -683,6 +721,29 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 	r, ok := m.actionRow()
 	if !ok || r.engineID == "" {
 		m.actionStatus = "No engine run on this row; no actions"
+		return nil
+	}
+	if r.ready && verb != "cleanup" {
+		m.actionStatus = "Ready rows have no run actions; c cleans up a merged row"
+		return nil
+	}
+	if r.ready && verb == "cleanup" {
+		switch {
+		case r.branch == "":
+			m.actionStatus = "cleanup needs a merged branch; branch unknown"
+			return nil
+		case !r.mergeKnown:
+			m.actionStatus = "cleanup needs a merged branch; merge state unknown"
+			return nil
+		case !r.merged:
+			m.actionStatus = "cleanup needs a merged branch; this one is unmerged"
+			return nil
+		case r.worktree == "":
+			m.actionStatus = "cleanup needs a worktree; worktree unknown"
+			return nil
+		}
+	}
+	if verb == "cleanup" && (!r.ready || !r.merged || r.branch == "" || r.worktree == "") {
 		return nil
 	}
 	for _, a := range m.actionFlights[r.engineID] {
@@ -724,6 +785,10 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 		return nil
 	}
 	a := runAction{verb: verb, run: r.engineID, project: r.name}
+	if verb == "cleanup" {
+		path := shellQuote(m.projects[r.project].reg.Path)
+		a.cleanupCommand = "git -C " + path + " worktree remove " + shellQuote(r.worktree) + "\ngit -C " + path + " branch -d " + shellQuote(r.branch)
+	}
 	if verb == "answer" {
 		a.text = m.pane.input.Value()
 	}
@@ -751,6 +816,8 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 	return func() tea.Msg {
 		var err error
 		switch a.verb {
+		case "cleanup":
+			err = live.Cleanup(context.Background(), a.run)
 		case "approve":
 			err = live.Approve(context.Background(), a.run)
 		case "stop":

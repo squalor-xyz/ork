@@ -18,6 +18,7 @@ import (
 // Approve, Stop, Retry and Answer act on engine run IDs. Plan and Start take
 // a project and an item, with the owner's two launch answers.
 type Live interface {
+	Cleanup(ctx context.Context, run string) error
 	WaveSuggest(context.Context, string) (*slicercli.ParallelPlan, error)
 	WaveOverlap(context.Context, string, []string) (*slicercli.Overlap, error)
 	WaveStart(context.Context, daemon.WaveStartParams) (*daemon.WaveResult, error)

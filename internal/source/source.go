@@ -113,8 +113,8 @@ func (d *Direct) Fetch(ctx context.Context, p registry.Project, part Part) (any,
 	return nil, fmt.Errorf("unknown part %q", part)
 }
 
-// head returns the commit HEAD points at. It is the only git call a refresh
-// makes (boundary.git-head).
+// head returns the commit HEAD points at (boundary.git-head). The daemon
+// checks committed branches only when this signal changes (landing.merge-detect).
 func (d *Direct) head(ctx context.Context, path string) (string, error) {
 	bin := d.Git
 	if bin == "" {
@@ -170,8 +170,9 @@ type EngineRole struct {
 
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
+	Worktree  string       `json:"worktree,omitempty"`
 	Branch    string       `json:"branch,omitempty"`
-	Merged    *bool        `json:"merged,omitempty"` // nil: unknown; S63 supplies merge detection
+	Merged    *bool        `json:"merged,omitempty"` // nil: unknown
 	Roles     []EngineRole `json:"roles,omitempty"`
 	ID        string       `json:"id"`
 	Item      string       `json:"item"`

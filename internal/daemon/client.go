@@ -194,3 +194,8 @@ func (c *Client) WaveStart(ctx context.Context, params WaveStartParams) (*WaveRe
 	}
 	return &out, nil
 }
+
+// Cleanup removes a merged run's worktree and branch after owner confirmation.
+func (c *Client) Cleanup(ctx context.Context, run string) error {
+	return c.Call(ctx, MethodRunCleanup, RunAction{Run: run}, nil)
+}

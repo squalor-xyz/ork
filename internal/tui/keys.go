@@ -6,6 +6,7 @@ import "charm.land/bubbles/v2/key"
 
 // keyMap is every key the TUI answers. It also feeds the help view.
 type keyMap struct {
+	Cleanup    key.Binding
 	EditLineup key.Binding
 	Tick       key.Binding
 	Launch     key.Binding
@@ -32,6 +33,7 @@ type keyMap struct {
 
 func newKeyMap() keyMap {
 	return keyMap{
+		Cleanup:    key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "remove merged worktree and branch (Ready)")),
 		EditLineup: key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit ticked item lineup (Waves)")),
 		Tick:       key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "tick item and ask inputs (Waves)")),
 		Launch:     key.NewBinding(key.WithKeys("l"), key.WithHelp("l", "launch a ready slice (Roadmap) or wave (Waves)")),
@@ -62,5 +64,5 @@ func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Refresh, k.He
 
 // FullHelp implements help.KeyMap.
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.NextView, k.PrevView}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.RowPrev, k.Select}, {k.Filter, k.Sidebar}, {k.Tick, k.EditLineup, k.Launch}, {k.Approve, k.Stop, k.Retry, k.Answer, k.PaneScroll}, {k.Refresh, k.Help, k.Close, k.Quit}}
+	return [][]key.Binding{{k.NextView, k.PrevView}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.RowPrev, k.Select}, {k.Filter, k.Sidebar}, {k.Tick, k.EditLineup, k.Launch}, {k.Approve, k.Stop, k.Retry, k.Answer, k.PaneScroll, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
 }

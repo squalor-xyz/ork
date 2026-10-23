@@ -225,3 +225,5 @@ func (*fakeLive) WaveOverlap(context.Context, string, []string) (*slicercli.Over
 func (*fakeLive) WaveStart(context.Context, daemon.WaveStartParams) (*daemon.WaveResult, error) {
 	return nil, errors.New("unexpected wave start")
 }
+
+func (f *fakeLive) Cleanup(context.Context, string) error { return nil }

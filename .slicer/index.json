@@ -2610,7 +2610,7 @@
       "id": "S63",
       "title": "Landing: merge detection, branch cleanup and run pruning",
       "short_title": "Landing: merge detection, branch cleanup and run pruning",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S09"
@@ -2645,7 +2645,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

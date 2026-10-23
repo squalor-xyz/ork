@@ -65,7 +65,7 @@ selected project, or all projects on "Needs you". `?` shows keys and `q` quits.
 
 The Overview has a row cursor (`ui.overview-cursor`). `down`/`j` and `up`/`k`
 move it to the next and previous row, and so do `n` and `p`. It goes through
-"Needs you" and then Running, and it stops at the first and last row. The row
+"Needs you", Running and Ready, and it stops at the first and last row. The row
 under the cursor is drawn reversed. Its full text is on a detail line below the
 rows, wrapped at the pane's width so no word is cut. `enter` opens a run's
 detail pane; on decision and held-item rows it selects the row's project
@@ -103,16 +103,27 @@ and decided records refresh every 5 min or on HEAD changes and manual refresh. `
    elapsed time and tokens.
 3. **Ready to land:** committed engine runs across projects, or for the
    selected project. Each row shows the slice and branch, with
-   `slicer land ID --branch B --note "Landed B"` on its own indented line to
-   copy. Rows are not selectable. An unknown merge state says "merge state
-   unknown" and still offers the land command; slicer checks that the branch
-   is merged. A known unmerged branch says "merge first" with no command.
+   `slicer land 'ID' --branch 'B' --note 'Landed B'` on its own indented line to
+   copy. Ready rows follow Needs you and Running in the cursor order and
+   scroll into view with their command lines. The selected row shows full
+   commands wrapped in the detail area; other rows keep clipped commands.
+   Enter does nothing on these rows. Run action keys explain that only
+   cleanup is available on a merged row.
+   An unknown merge state says "merge state unknown" and still offers the
+   land command; slicer checks that the branch is merged. A known unmerged
+   branch says "merge first" with no command.
    A known merged branch also offers `slicer render`, since render files can
-   be stale after a merge (R8). S09 leaves the merge state unknown; S63 will
-   supply it (`landing.merge-detect`, adj #128). A missing branch says
-   "branch unknown" with no command. With no committed runs, the section
-   says "none" (`landing.v1`). Merged branches are detected and offered for
-   cleanup (S63; `git.cleanup`, `landing.v1`).
+   be stale after a merge (R8). The daemon supplies merge state when a
+   project's HEAD changes (`landing.merge-detect`, adj #128). A missing
+   branch says "branch unknown" with no command. With no committed runs,
+   the section says "none" (`landing.v1`). Merged branches are detected and
+   offered for cleanup (`git.cleanup`, `landing.v1`). On a selected merged row, `c` shows
+   a y/n confirmation with each shell-quoted command on its own line:
+   `git -C PATH worktree remove WORKTREE` then
+   `git -C PATH branch -d BRANCH`. The question is on a separate line.
+   Enter is No; `n` cancels; `y` calls `run.cleanup` once (`git.cleanup-key`, adj #152).
+   Cleanup never forces removal, merges or lands a branch. Git errors are
+   shown verbatim.
 
 The Overview reads engine runs in the daemon snapshot, using the same builder
 as `ork status` (`ui.engine-runs-read`). An engine row leads with the slice,

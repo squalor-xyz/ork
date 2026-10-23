@@ -97,6 +97,12 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return d.stopDaemon(p)
+	case MethodRunCleanup:
+		var p RunAction
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return nil, d.cleanupRun(ctx, p)
 	case MethodRunPlan, MethodRunStart, MethodRunApprove, MethodRunStop, MethodRunAnswer, MethodRunRetry:
 		return d.handleRun(ctx, method, params)
 	case MethodStatus:

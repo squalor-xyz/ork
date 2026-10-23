@@ -201,10 +201,14 @@ The `relay_run` and `created_at` fields link ledger progress and
 order replacement runs for the Overview (`ui.engine-runs-read`,
 `ui.run-join-key`, `ui.stopped-newer`). These are read-only display fields.
 
-The optional `branch` and `merged` fields are *proposed*. `branch` comes from
-the run record. An omitted `merged` means the merge state is unknown; true
-means merged and false means unmerged. S09 leaves it unknown; S63 supplies
-it from the HEAD-change check (`landing.merge-detect`, adj #128).
+The optional `branch` and `worktree` display fields are *proposed* and come
+from the run record. An omitted `merged` means the merge state is unknown;
+true means merged and false means unmerged. The daemon supplies it from the
+HEAD-change check (`landing.merge-detect`, adj #128). It remembers the last HEAD per project. The first successful HEAD
+read and each changed HEAD check every committed branch with
+`git -C PATH merge-base --is-ancestor BRANCH HEAD`. Exit 0 means merged,
+exit 1 means unmerged, and another error leaves the state unknown. An
+unchanged HEAD adds no merge reads.
 
 The optional `roles` array is *proposed*. Each entry carries `role`, `round`,
 `vendor`, optional `model`, `effort` and `step`, `started_at`, optional
@@ -236,5 +240,8 @@ the ledger run is absent from the active snapshot. In `ork status`,
 - **Retention:** when more than 100 finished runs exist, the daemon removes
   the oldest run directories. It never removes a run whose branch is not
   landed, or a run that is still active. `runrec.Store.Prune` takes a
-  `landed` predicate and removes nothing without one; landing detection
-  comes with the landing slice.
+  `landed` predicate and removes nothing without one. The daemon calls it
+  once after recovery and once after each project merge-check pass, using
+  cached merge results. Unknown and unmerged branches stay. Pruning removes
+  run directories only; worktrees and branches require confirmed cleanup
+  (`git.cleanup-key`, adj #152). Failed cleanup keeps the run record.

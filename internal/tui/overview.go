@@ -37,23 +37,27 @@ func (m *Model) refreshing(name string) bool {
 // ovRow is one row of the Overview. The row shows its text cut to the pane. The
 // selected row shows the whole text on the detail line (ui.overview-cursor).
 type ovRow struct {
-	kind     string
-	style    lipgloss.Style
-	kindW    int
-	project  int    // registry index; Enter selects non-run rows
-	name     string // the project's name
-	text     string // the row's text after the name, in full
-	id       string // a run's ID, kept whole in the row; "" for other rows
-	rest     string // a run's text after its ID, cut first
-	ledgerID string // set only for started-elsewhere rows
-	engineID string // empty for ledger and non-engine rows
-	state    string
-	pending  string
-	commands []string // plain copyable lines beneath a nonselectable landing row
+	kind             string
+	style            lipgloss.Style
+	kindW            int
+	project          int    // registry index; Enter selects non-run rows
+	name             string // the project's name
+	text             string // the row's text after the name, in full
+	id               string // a run's ID, kept whole in the row; "" for other rows
+	rest             string // a run's text after its ID, cut first
+	ledgerID         string // set only for started-elsewhere rows
+	engineID         string // empty for ledger and non-engine rows
+	state            string
+	pending          string
+	commands         []string // plain copyable lines beneath a landing row
+	ready            bool
+	merged           bool
+	mergeKnown       bool
+	branch, worktree string
 }
 
-// rows lists the Overview's rows as Needs you and Running. The cursor moves
-// through them in that order. The lists do not depend on the width.
+// rows lists Needs you and Running. readyRows follows them in the Overview
+// cursor order. The lists do not depend on the width.
 func (m *Model) rows() (needs, running []ovRow) {
 	th := m.cfg.Theme
 	for i, p := range m.projects {
@@ -160,7 +164,7 @@ func clampCursor(i, n int) int {
 // moveRow moves the row cursor by delta rows, stopping at the first and last row.
 func (m *Model) moveRow(delta int) {
 	needs, running := m.rows()
-	n := len(needs) + len(running)
+	n := len(needs) + len(running) + len(m.readyRows())
 	if i := clampCursor(m.cursor, n); i >= 0 {
 		next := clampCursor(i+delta, n)
 		if next != i {
@@ -173,7 +177,7 @@ func (m *Model) moveRow(delta int) {
 // selectedRow is the row under the cursor, and false when there is none.
 func (m *Model) selectedRow() (ovRow, bool) {
 	needs, running := m.rows()
-	all := append(append([]ovRow(nil), needs...), running...)
+	all := append(append(append([]ovRow(nil), needs...), running...), m.readyRows()...)
 	i := clampCursor(m.cursor, len(all))
 	if i < 0 {
 		return ovRow{}, false
@@ -198,7 +202,7 @@ func (m *Model) overview(w int) overviewView {
 		nameW = max(nameW, len(p.reg.Name))
 	}
 	needs, running := m.rows()
-	all := append(append([]ovRow(nil), needs...), running...)
+	all := append(append(append([]ovRow(nil), needs...), running...), m.readyRows()...)
 	cursor := clampCursor(m.cursor, len(all))
 	hang := strings.Repeat(" ", len(indent)+1+1+nameW+2)
 
@@ -229,36 +233,8 @@ func (m *Model) overview(w int) overviewView {
 	lines = append(lines, "", th.Heading.Render("Running"))
 	section(running, len(needs), "nothing running")
 	lines = append(lines, "", th.Heading.Render("Ready to land"))
-	var ready []ovRow
-	for i, p := range m.projects {
-		if (m.active >= 0 && i != m.active) || !p.loaded || p.setup() {
-			continue
-		}
-		for _, run := range p.snap.EngineRuns {
-			if run.State != "committed" {
-				continue
-			}
-			rest := run.Branch
-			var commands []string
-			switch {
-			case run.Branch == "":
-				rest = "branch unknown"
-			case run.Merged != nil && !*run.Merged:
-				rest += "  merge first"
-			default:
-				commands = append(commands, fmt.Sprintf(`slicer land %s --branch %s --note "Landed %s"`, run.Item, run.Branch, run.Branch))
-				if run.Merged == nil {
-					rest += "  merge state unknown"
-				} else {
-					rest += "  merged"
-					commands = append(commands, "slicer render")
-				}
-			}
-			ready = append(ready, ovRow{project: i, name: p.reg.Name, style: th.Title,
-				id: run.Item, rest: rest, text: run.Item + "  " + rest, commands: commands})
-		}
-	}
-	section(ready, len(all), "none")
+	ready := m.readyRows()
+	section(ready, len(needs)+len(running), "none")
 
 	ov := overviewView{body: lines, sel: sel}
 	switch {
@@ -317,10 +293,14 @@ func rowText(r ovRow, room int) string {
 	return r.id + "  " + clip(r.rest, avail)
 }
 
-// detailLines is a row's full text on the detail line, wrapped at the pane's
-// width so that no word is cut. The row already shows the project's name.
+// detailLines wraps a Ready row's full commands, or another row's full text,
+// at the pane width. The row already shows the project's name.
 func detailLines(r ovRow, w int) []string {
-	lines := wrapText(r.text, max(w-len(indent), 1))
+	text := r.text
+	if r.ready && len(r.commands) > 0 {
+		text = strings.Join(r.commands, "\n")
+	}
+	lines := wrapText(text, max(w-len(indent), 1))
 	for i := range lines {
 		lines[i] = indent + lines[i]
 	}
@@ -481,3 +461,39 @@ func splitAt(s string, n int) (head, rest string) {
 	}
 	return string(r[:i]), string(r[i:])
 }
+
+// readyRows follows Running in the cursor order and retains the landing layout.
+func (m *Model) readyRows() []ovRow {
+	var ready []ovRow
+	for i, p := range m.projects {
+		if (m.active >= 0 && i != m.active) || !p.loaded || p.setup() {
+			continue
+		}
+		for _, run := range p.snap.EngineRuns {
+			if run.State != "committed" {
+				continue
+			}
+			rest := run.Branch
+			var commands []string
+			switch {
+			case run.Branch == "":
+				rest = "branch unknown"
+			case run.Merged != nil && !*run.Merged:
+				rest += "  merge first"
+			default:
+				commands = append(commands, fmt.Sprintf("slicer land %s --branch %s --note %s", shellQuote(run.Item), shellQuote(run.Branch), shellQuote("Landed "+run.Branch)))
+				if run.Merged == nil {
+					rest += "  merge state unknown"
+				} else {
+					rest += "  merged"
+					commands = append(commands, "slicer render")
+				}
+			}
+			ready = append(ready, ovRow{mergeKnown: run.Merged != nil, ready: true, engineID: run.ID, state: run.State, merged: run.Merged != nil && *run.Merged, branch: run.Branch, worktree: run.Worktree, project: i, name: p.reg.Name, style: m.cfg.Theme.Title,
+				id: run.Item, rest: rest, text: run.Item + "  " + rest, commands: commands})
+		}
+	}
+	return ready
+}
+
+func shellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", `'"'"'`) + "'" }

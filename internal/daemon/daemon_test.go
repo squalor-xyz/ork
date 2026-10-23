@@ -815,6 +815,7 @@ func TestUnknownMethodAndBadParams(t *testing.T) {
 // ---- the snapshot cache, subscriptions and notices (S15) ----
 
 func TestMain(m *testing.M) {
+	blockedGitMain()
 	clitest.Main()
 	os.Exit(m.Run())
 }

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-94 items · — 38 · done 50 · parked 1 · retired 5
+94 items · — 37 · done 51 · parked 1 · retired 5
 
 ## v1.1
 
@@ -117,7 +117,7 @@
 | 60 | [S58](slices/S58.md) | Tab and shift+tab switch views; left/right and 1-9 switch projects | S | 1 |  |  | done |
 | 61 | [S59](slices/S59.md) | Decisions screen: open and decided records, one project or all | M | 2 |  |  | — |
 | 62 | [S60](slices/S60.md) | ork wave suggest and start; ork stop WAVE | M | 2 |  |  | done |
-| 63 | [S63](slices/S63.md) | Landing: merge detection, branch cleanup and run pruning | M | 2 |  |  | — |
+| 63 | [S63](slices/S63.md) | Landing: merge detection, branch cleanup and run pruning | M | 2 |  |  | done |
 | 64 | S64 | Contract check passes --root so each project's slicer contract is checked | S | 1 |  | No effect today: slicer ai relay prints the same contract line for every project (checked 2026-10-20). Folded into S24, which passes --root when slicer s387 adds the pin. | retired |
 | 65 | [S65](slices/S65.md) | Enforce run.budgets: pause with a budget kind before a round | M | 2 |  |  | — |
 | 66 | [S67](slices/S67.md) | Roadmap editing: park and unpark from the TUI (needs adj 11) | S | 1 |  |  | — |

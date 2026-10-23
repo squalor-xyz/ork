@@ -20,11 +20,11 @@
                            |t retry
                            |enter (answer) submit; no confirmation
                            |pgup/pgdown scroll run tree and reason
+                           |c remove merged worktree and branch (Ready)
                            |r refresh now
                            |? show or hide this help
                            |esc close pane, Roadmap item, help or message
                            |q quit
-                           |
-                           |Overview, Waves and Roadmap are available. Questions and Decisions co...
+                           |[90m  +2 more lines[m
                            |[90m------------------------------------------------------------------------[m
                            | 1 project | refreshed 16:42:00 | pending 0

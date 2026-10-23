@@ -110,6 +110,9 @@ func (c *stopCall) abandon(err error) {
 // runManager serializes admission and owner actions; the engine serializes
 // each run's state transitions. Background jobs use the daemon's lifetime.
 type runManager struct {
+	cleaning     map[string]bool // cleanup calls in flight; guarded by mu
+	heads        map[string]string
+	merged       map[string]*bool
 	lastRegistry *registry.File // last successful run-manager read; guarded by mu
 	waveStops    map[string]int // suppress queued members while a wave stop is in progress
 	closed       bool
@@ -128,7 +131,7 @@ func (d *Daemon) initRunManager() {
 	if deps.Store == nil {
 		deps.Store = &runrec.Store{Dir: filepath.Join(d.cfg.Paths.Dir, "runs")}
 	}
-	d.runs = runManager{ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}, waveStops: map[string]int{}}
+	d.runs = runManager{cleaning: map[string]bool{}, heads: map[string]string{}, merged: map[string]*bool{}, ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}, waveStops: map[string]int{}}
 }
 func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 	deps := d.runs.deps
@@ -151,6 +154,7 @@ func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 	return deps
 }
 func (d *Daemon) recoverRuns(ctx context.Context) error {
+	defer func() { d.runs.mu.Lock(); defer d.runs.mu.Unlock(); d.pruneRunsLocked() }()
 	d.runs.ctx = ctx
 	stored, err := d.runs.deps.Store.List()
 	if err != nil {
@@ -811,7 +815,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 			roles = append(roles, source.EngineRole{Role: role.Role, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit})
 			denials = append(denials, roleDenials(role)...)
 		}
-		runs = append(runs, EngineRun{Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt})
+		runs = append(runs, EngineRun{Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt})
 	}
 	return runs
 }

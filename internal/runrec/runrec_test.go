@@ -606,3 +606,41 @@ func TestRunJSONIsWrittenAt0600AndAnExisting0644FileIsTightened(t *testing.T) {
 		t.Errorf("rewritten run.json mode %o, want 600", got)
 	}
 }
+
+func TestPruneKeepsTheLatestHundredFinishedRuns(t *testing.T) {
+	s := newStore(t)
+	for i := 0; i < 103; i++ {
+		r := rec(fmt.Sprintf("r%03d", i))
+		r.State = StateCommitted
+		if _, e := s.Create(r); e != nil {
+			t.Fatal(e)
+		}
+	}
+	removed, e := s.Prune(100, func(Record) bool { return true })
+	if e != nil || !reflect.DeepEqual(removed, []string{"r000", "r001", "r002"}) {
+		t.Fatalf("removed=%v err=%v", removed, e)
+	}
+	all, e := s.List()
+	if e != nil || len(all) != 100 {
+		t.Fatalf("retained=%d err=%v", len(all), e)
+	}
+}
+
+func TestPruneNilPredicateRetainsFinishedAndActiveRuns(t *testing.T) {
+	s := newStore(t)
+	for i, state := range []string{StateCommitted, StateStopped, StateImplement, StatePaused} {
+		r := rec(fmt.Sprint(i))
+		r.State = state
+		if _, err := s.Create(r); err != nil {
+			t.Fatal(err)
+		}
+	}
+	removed, err := s.Prune(0, nil)
+	if err != nil || len(removed) != 0 {
+		t.Fatalf("nil predicate removed=%v err=%v", removed, err)
+	}
+	all, err := s.List()
+	if err != nil || len(all) != 4 {
+		t.Fatalf("retained=%d err=%v", len(all), err)
+	}
+}

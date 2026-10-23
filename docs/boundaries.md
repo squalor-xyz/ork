@@ -14,7 +14,7 @@ defined in [glossary.md](glossary.md).
 | Role matrix and lineup recommendation | slicer | `slicer relay-roles` (`lineup.source`) |
 | Relay-run ledger | slicer (ork writes it through the CLI) | `slicer relay-run` (`ledger.write`) |
 | Wave suggestion | slicer | `slicer plan-parallel`, `next --batch` (`wave.selection`) |
-| Landing | slicer and the owner, outside ork in v1 | `slicer land` (`landing.v1`) |
+| Landing | ork lists ready runs, detects merged branches and runs confirmed cleanup; it never merges or lands | `slicer land` stays with slicer and the owner (`landing.v1`, `landing.merge-detect`, `git.cleanup-key`) |
 | Goals, non-goals, catalog | slicer | `slicer goals`, `slicer catalog` |
 | Owner decisions | adjudicate | `adj` |
 | Global agent guidance | agents repo | `agents/GLOBAL_AGENTS.md` |
@@ -71,6 +71,8 @@ change the contract by itself.
   example when the owner answers a question inside a slice
   (`owner.questions`). No role and no automatic step triggers it.
 - Commits only on slice branches, only after the owner approves the slice
-  (`git.commit`). No merge, push or tag in v1.
+  (`git.commit`). Confirmed cleanup may run `git worktree remove` then
+  `git branch -d` for a merged run (`git.cleanup-key`). No merge, push or
+  tag in v1.
 - Act only on runs that ork launched. Relays started elsewhere are
   view-only (`dash.external-runs`).
