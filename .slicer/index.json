@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 96,
+  "next_id": 97,
   "preamble": "",
   "passes": [
     {
@@ -3651,6 +3651,34 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S96",
+      "title": "First run opens blank: no seeded projects; a TUI welcome adds them",
+      "short_title": "First run opens blank: no seeded projects; a TUI welcome adds them",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S03",
+        "parent": "",
+        "cites": [],
+        "key": "first-run-blank",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
         "effort": 2,
         "attempts": 0
       }

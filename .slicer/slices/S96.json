@@ -1,0 +1,39 @@
+{
+  "id": "S96",
+  "title": "First run opens blank: no seeded projects; a TUI welcome adds them",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner 2026-10-23: on a second PC with another directory layout, ork seeded an empty registry (none of slicer, adjudicate, DataBall, agents under ~/code/squalor-xyz), wrote projects.json with 0 projects, and exited 'no projects ... add some and run ork again'. Seeding is record 55 (registry.seed), to be superseded by adj 157 (registry.no-seed). Owner decisions: do not seed; ork opens blank and guides registering projects (a TUI Welcome view with an add prompt); the registry file is written on the first add. The registry is per machine at ~/.config/ork/projects.json (docs/state.md:12), outside the repo."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/registry/seed.go` and `seed_test.go`: remove Seed, LoadOrSeed, DefaultSeedRoot and SeedReport; add Load that returns an empty registry when the file is missing, without writing it.\n- `internal/registry/registry.go`: Save creates the config directory and file on the first add (check the add path, internal/registry and handlers.go projects.add).\n- `cmd/ork/main.go:175-200`: no seed message, and no exit when the registry is empty; the TUI starts on the Welcome view; commands that need a project print the one-line guide.\n- `internal/daemon/handlers.go:41` and the daemon seedRoot/registryPath wiring: use Load.\n- `internal/tui/welcome.go` (new) and `welcome_test.go`: the Welcome view, shown when no project is registered: \"No projects yet. Press a to add one\", then a path field (internal/tui/field.go textField); a bare Enter offers the current directory when it holds .slicer or .adjudicate.json; the confirm bar shows the exact `ork projects add PATH` command it runs (Enter is No, decision 98); on success the view fills in. Errors show verbatim.\n- `internal/tui/model.go`, `keys.go`, `view.go`: the Welcome view and the add key; `internal/daemon/client.go` and `internal/tui/daemon.go`, `live.go`: a ProjectsAdd call over the existing projects.add method, with the fakes.\n- `internal/cli/*.go`: `ork status`, `ork run` and the other project commands print \"no projects: run ork projects add PATH (or run ork to add them in the TUI)\"; `ork projects add` with no PATH offers the current directory.\n- `testdata/golden/welcome-*.txt` (new), `docs/state.md:12` and `:26-`, `docs/dashboard.md`, `docs/design.md`, `AGENTS.md` Project Commands if it mentions seeding."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestLoadMissingRegistryIsEmptyAndWritesNothing: Load on a missing path returns zero projects and creates no file or directory.\n- TestFirstAddCreatesTheRegistry: projects add on a missing registry creates the config directory and projects.json with that one project.\n- TestNoSeedingHappens: with projects present under the old seed root and no registry, ork registers none of them (replaces the seed tests).\n- TestTUIOpensOnTheWelcomeViewWithNoProjects: the welcome text and key are shown; the tab and project keys do nothing.\n- TestWelcomeAddAsksTheExactCommandThenAdds: a typed path shows `ork projects add PATH` on the confirm bar; Enter, n and esc add nothing; y calls ProjectsAdd once and the view fills in.\n- TestWelcomeBareEnterOffersTheCurrentDirectory: only when it holds .slicer or .adjudicate.json.\n- TestWelcomeAddErrorShownVerbatim.\n- TestStatusWithNoProjectsGivesTheOneLineGuide and TestProjectsAddWithoutPathOffersTheCurrentDirectory.\n- Golden views, colour and monochrome."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Check `adj check registry.no-seed`; stop if it is not decided. 2. Write the failing tests first and watch them fail. 3. Replace seeding with a plain Load (no write). 4. Save creates the directory and file on the first add. 5. Welcome view and add flow in the TUI. 6. The CLI guides. 7. Update docs/state.md, design.md, dashboard.md. 8. go test ./internal/tui -update and review the golden diff. This is a UI slice: it gets the UI pass (r14, rule u10).\nDecided 2026-10-23 (owner): no seeding; open blank; TUI Welcome with an add prompt; write the registry on the first add. Not in this slice: a wizard mode, project discovery by scanning directories."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/registry ./internal/daemon ./internal/cli ./internal/tui ./cmd/ork\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review the golden diff\n- rg -n \"LoadOrSeed|DefaultSeedRoot|ORK_SEED_ROOT\" . (no matches in code or docs except history)\n- slicer check\n- adj lint\n- [HUMAN CHECK] On a machine with no ~/.config/ork, run ork: it opens on the Welcome view, you add a project by path, and it appears; no projects.json existed before the add."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
