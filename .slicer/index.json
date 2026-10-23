@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 90,
+  "next_id": 91,
   "preamble": "",
   "passes": [
     {
@@ -1204,7 +1204,7 @@
         "parent": "",
         "cites": [],
         "key": "boundary.contract-pin",
-        "pass": "v1",
+        "pass": "v1.1",
         "group": "",
         "reason": "",
         "importance": 2,
@@ -2543,7 +2543,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1",
+        "pass": "v1.1",
         "group": "",
         "reason": "",
         "importance": 2,
@@ -2573,7 +2573,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1",
+        "pass": "v1.1",
         "group": "",
         "reason": "",
         "importance": 2,
@@ -3472,6 +3472,34 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S90",
+      "title": "Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on",
+      "short_title": "Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S88",
+        "parent": "",
+        "cites": [],
+        "key": "docs-v8-stale",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }
