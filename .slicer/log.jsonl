@@ -928,3 +928,14 @@
 {"when": "2026-10-23T12:07:08Z", "item": "S83", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-23T12:19:18Z", "item": "S83", "action": "note", "from": "", "to": "", "note": "Review round 1: no blockers. Accepted: move-to-front on cycl", "by": "Jon R"}
 {"when": "2026-10-23T12:24:48Z", "item": "S83", "action": "status", "from": "started", "to": "done", "note": "Waves screen lineup and budget editor: e opens the editor for a ticked item (left/right cycle the plan chain, c opens vendor/model/effort fields, budgets validated as whole numbers), closing with a change re-plans with the override, y sends Lineup and Budgets only for edited items, run only. Race suite, vet, gofmt, slicer check and adj lint pass; owner HUMAN CHECK (launch and find the model in run.json) still pending. Cycling has no effect until S49 keeps every row in the plan.", "by": "Jon R"}
+{"when": "2026-10-23T12:26:50Z", "item": "S86", "action": "add", "from": "", "to": "open", "note": "Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default"}
+{"when": "2026-10-23T12:26:51Z", "item": "S87", "action": "add", "from": "", "to": "open", "note": "Relay friction: Codex brief sets GOCACHE under .scratch; no ui role in relay-run; spec names data source"}
+{"when": "2026-10-23T12:26:51Z", "item": "S49", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-23T12:26:59Z", "item": "S86", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-23T12:26:59Z", "item": "S87", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-23T12:26:59Z", "item": "S86", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-23T12:26:59Z", "item": "S86", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-23T12:26:59Z", "item": "S86", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-23T12:26:59Z", "item": "S86", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-23T12:26:59Z", "item": "S86", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-23T12:26:59Z", "item": "S87", "action": "edit", "from": "", "to": "", "note": "Why"}

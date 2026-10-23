@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-85 items · — 39 · done 39 · parked 2 · retired 5
+87 items · — 41 · done 39 · parked 2 · retired 5
 
 ## v1
 
@@ -132,9 +132,11 @@
 | 82 | [S83](slices/S83.md) | Waves screen: edit a slice's lineup and budgets before launch | M | 2 |  |  | done |
 | 83 | [S84](slices/S84.md) | Overview layout pass | M `[needs-owner]` | 2 |  |  | — |
 | 84 | [S85](slices/S85.md) | Keys and hint bar | M `[needs-owner]` | 2 |  |  | — |
+| 85 | [S86](slices/S86.md) | Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default | S | 1 |  | discovered from S83 | — |
+| 86 | [S87](slices/S87.md) | Relay friction: Codex brief sets GOCACHE under .scratch; no ui role in relay-run; spec names data source | S | 1 |  | discovered from S83 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 85 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 87 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |

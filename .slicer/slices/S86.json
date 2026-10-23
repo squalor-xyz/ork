@@ -1,0 +1,39 @@
+{
+  "id": "S86",
+  "title": "Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S83 relay later notes. openLineup is reached from the global key switch (internal/tui/model.go:393-394, lineup.go:33-35), so e on Overview, Questions, Roadmap or Decisions, or with help open, shows 'Wait for the plan before editing' or 'Tick the item before editing its lineup'. Also 'budgets*: 0 min' shows the raw override while the daemon applies the project default for 0."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/lineup.go` and `internal/tui/model.go`: return nil with no status unless the view is Waves; show the project default for a 0 budget.\n- `internal/tui/lineup_test.go`: tests for both."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestLineupKeyIgnoredOutsideWaves: e on Overview, Questions, Roadmap, Decisions or with help open sets no status and opens nothing.\n- TestLineupBudgetZeroShowsDefault: a 0 override draws the project default."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the tests first and watch them fail. 2. Guard openLineup on the Waves view. 3. Draw the default for a 0 budget. 4. Update golden views if they change."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- slicer check\n- adj lint"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
