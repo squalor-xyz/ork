@@ -49,8 +49,10 @@ ork (TUI)  ork status --json (CLI)
   commands then exit 1 without starting anything. They print the pid from the
   pid file and `kill -TERM PID`, and warn that a role is running (an active
   relay with running roles, or an engine run not idle) or may be running
-  (the status call failed). ork sends no signal itself (decision 118). The
-  owner runs the kill, then `ork daemon restart`. An unreadable or invalid
+  (the status call failed). The hint's status call has a five-second timeout;
+  on expiry it warns that a role may be running. ork sends no signal itself
+  (decision 118). The owner runs the kill, then `ork daemon restart`.
+  An unreadable or invalid
   pid file gives the pid file path instead of a pid. *Proposed:* the wording.
 - **Build identity** (`daemon.build-id`, adj #102). The executable reads
   `vcs.revision` and `vcs.modified` from `runtime/debug.ReadBuildInfo`.

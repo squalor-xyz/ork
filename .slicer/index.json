@@ -2930,7 +2930,7 @@
       "id": "S74",
       "title": "Bound the status call in the predates-stop hint with a timeout",
       "short_title": "Timeout on the stop-hint status call",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -2951,7 +2951,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

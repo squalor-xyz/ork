@@ -152,7 +152,9 @@ func (a *App) predatesStop(ctx context.Context) string {
 	} else {
 		msg += fmt.Sprintf("cannot read its pid from %q; stop it by its pid with kill -TERM", a.Pid)
 	}
-	switch running, err := a.roleMayRun(ctx); {
+	statusCtx, cancel := context.WithTimeout(ctx, defaultStartWait)
+	defer cancel()
+	switch running, err := a.roleMayRun(statusCtx); {
 	case err != nil:
 		msg += "\nwarning: a role may be running; stopping the daemon ends it"
 	case running:

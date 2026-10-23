@@ -3,6 +3,7 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -434,6 +435,51 @@ func TestDaemonStopPredatingDaemon(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestDaemonStopPredatingStatusTimeout(t *testing.T) {
+	for _, sub := range []string{"stop", "restart"} {
+		t.Run(sub, func(t *testing.T) {
+			t.Parallel()
+			socket := filepath.Join(shortDir(t), "old.sock")
+			release := make(chan struct{})
+			predatingDaemon(t, socket, func() (any, error) {
+				<-release // Accept status but never answer while the command runs.
+				return daemon.StatusResult{}, nil
+			})
+			t.Cleanup(func() { close(release) })
+			pidFile := filepath.Join(t.TempDir(), "ork.pid")
+			if err := os.WriteFile(pidFile, []byte("4242\n"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			started := false
+			app := &App{Socket: socket, Pid: pidFile, StartWait: time.Millisecond,
+				Start: func(context.Context) error { started = true; return nil }}
+			ctx, cancel := context.WithTimeout(context.Background(), defaultStartWait+2*time.Second)
+			defer cancel()
+			var stdout, stderr bytes.Buffer
+			begin := time.Now()
+			code := app.Run(ctx, []string{"daemon", sub}, &stdout, &stderr)
+			elapsed := time.Since(begin)
+			if ctx.Err() != nil {
+				t.Fatalf("command exceeded status timeout: %v (elapsed %s)", ctx.Err(), elapsed)
+			}
+			if elapsed < defaultStartWait {
+				t.Errorf("status wait %s is shorter than %s", elapsed, defaultStartWait)
+			}
+			if code != ExitFailure || stdout.Len() != 0 {
+				t.Errorf("exit %d, stdout %q, stderr %q", code, stdout.String(), stderr.String())
+			}
+			for _, want := range []string{"predates daemon.stop", "pid 4242", "kill -TERM 4242", "warning: a role may be running; stopping the daemon ends it"} {
+				if !strings.Contains(stderr.String(), want) {
+					t.Errorf("stderr lacks %q: %q", want, stderr.String())
+				}
+			}
+			if started {
+				t.Error("restart started a daemon")
+			}
+		})
 	}
 }
 
