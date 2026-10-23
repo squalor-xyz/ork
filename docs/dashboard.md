@@ -40,13 +40,13 @@ all-projects Overview. A project selection limits its rows to that project.
 The view bar stays at the top of the main pane. Overview, Waves and Roadmap are selectable.
 
 Each project row shows its needs-you count (open adj records, slicer
-items flagged `needs-owner`, and engine runs awaiting approval, paused or
-stopped). A stopped run stops counting once a newer engine run exists for
-the same slice. `*` marks a running slice; engine runs in Needs you do not
-set it. `~` marks a loaded project being refreshed. Selection uses reverse
-and `>`, including
-under `NO_COLOR`. Projects with needs come first, then running projects,
-then the rest; registry order breaks ties. Selection follows the project.
+items flagged `needs-owner`, and engine runs awaiting approval, paused, or
+stopped and not yet superseded). A stopped run stops counting once a newer
+engine run exists for the same slice. `*` marks a running slice; engine runs
+in Needs you do not set it. `~` marks a loaded project being refreshed.
+Selection uses reverse and `>`, including under `NO_COLOR`. Projects with
+needs come first, then running projects, then the rest; registry order breaks
+ties. Selection follows the project.
 A project with no `.slicer/` folder shows `no slicer`, dimmed, in place of its
 count. It has no Overview rows and adds nothing to any count or to the bell.
 When it is selected, its detail line says to run `slicer init`
@@ -143,12 +143,20 @@ time; without a ledger run, elapsed time starts at the engine record's creation.
 The join matches the engine's `relay_run` to the ledger run id, making one row
 per run (`ui.run-join-key`). Only unmatched ledger runs say "started elsewhere".
 
-Awaiting-approval, paused and stopped engine runs appear under Needs you.
+Engine runs that are awaiting approval, paused, or stopped and not superseded
+appear under Needs you.
 Other active engine states appear under Running. Committed runs do not appear
 in either section. A stopped run disappears once a newer engine record exists
 for the same slice, ordered by `created_at`; ledger runs do not clear it
 (`ui.stopped-newer`). Needs-you counts include open questions, held items and
-these engine waits in both the sidebar and `ork status`.
+these engine waits in both the sidebar and `ork status`. `ork status` text
+lists each open record as `  #ID KEY  TITLE` and each held item as
+`  SID  TITLE  (needs-owner)` before relay and engine rows. Its engine list
+uses the same Needs, Running and Hidden classification as the Overview, so
+the needs list matches the count (`ui.status-list`, adj #125).
+`ork status --json` includes every engine run, including hidden ones, and
+the *proposed* optional `open:[{id,key,title}]` and `held:[{id,title}]` fields.
+Those fields are omitted when empty.
 
 On the cursor's engine row, `a` approves an awaiting-approval run immediately,
 `x` stops a run, and `t` retries a paused run. Stop and retry show the exact

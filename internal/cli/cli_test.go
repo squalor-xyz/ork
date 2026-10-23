@@ -250,7 +250,7 @@ func TestStatusFromTheDaemonsSourceSnapshot(t *testing.T) {
 		t.Fatalf("projects: %s", stdout)
 	}
 	ork := st.Projects[0]
-	if ork.NeedsYou != 2 || len(ork.ActiveRelays) != 2 || len(ork.Errors) != 0 {
+	if ork.NeedsYou != 2 || len(ork.ActiveRelays) != 2 || len(ork.Errors) != 0 || len(ork.Open) != 2 || ork.Open[0].ID != 11 || ork.Open[1].Key != "vendor.codex-ratelimit" {
 		t.Fatalf("ork: %+v", ork)
 	}
 	if r := ork.ActiveRelays[0]; r.ID != "run-A" || r.State != "active" || r.Steps != 5 || r.Running != 2 || len(r.Items) != 1 || r.Items[0] != "S03" {
@@ -269,6 +269,8 @@ func TestStatusFromTheDaemonsSourceSnapshot(t *testing.T) {
 	// Text output: one line per project, then its relays and errors.
 	code, stdout, _ = run(t, w.app, "status", "--project", "ork")
 	want := "ork: needs you 2, active relays 2\n" +
+		"  #11 ui.slicer-tui  Does ork reimplement slicer's roadmap editor or reuse slicer tui?\n" +
+		"  #51 vendor.codex-ratelimit  Does codex count as rate-limit-capable in v1?\n" +
 		"  run-A S03 active (5 steps, 2 running)\n" +
 		"  run-B S04,S05 active (1 steps, 1 running)\n"
 	if code != 0 || stdout != want {

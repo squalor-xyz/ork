@@ -15,6 +15,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
@@ -187,7 +188,7 @@ type EngineRun struct {
 // Superseded reports a stopped run replaced by a newer engine run of its slice.
 // The caller supplies runs for a single project. Ledger runs do not participate.
 func (r EngineRun) Superseded(runs []EngineRun) bool {
-	if r.State != "stopped" {
+	if r.State != runrec.StateStopped {
 		return false
 	}
 	for _, newer := range runs {
@@ -198,7 +199,24 @@ func (r EngineRun) Superseded(runs []EngineRun) bool {
 	return false
 }
 
-// NeedsYou uses the same engine states for status and the Overview.
-func (r EngineRun) NeedsYou(runs []EngineRun) bool {
-	return r.State == "awaiting-approval" || r.State == "paused" || (r.State == "stopped" && !r.Superseded(runs))
+// Section is the proposed shared classification for status and the Overview.
+type Section int
+
+const (
+	SectionHidden Section = iota
+	SectionNeeds
+	SectionRunning
+)
+
+// Section classifies a run among runs for a single project.
+func (r EngineRun) Section(runs []EngineRun) Section {
+	if r.State == runrec.StateCommitted || r.Superseded(runs) {
+		return SectionHidden
+	}
+	switch r.State {
+	case runrec.StateAwaitingApproval, runrec.StatePaused, runrec.StateStopped:
+		return SectionNeeds
+	default:
+		return SectionRunning
+	}
 }

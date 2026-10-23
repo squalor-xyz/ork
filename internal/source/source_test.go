@@ -314,3 +314,33 @@ func TestEngineRunLandingWire(t *testing.T) {
 		t.Fatalf("old wire gained landing state: %s", b)
 	}
 }
+
+func TestEngineRunSection(t *testing.T) {
+	at := time.Date(2026, 10, 23, 12, 0, 0, 0, time.UTC)
+	for _, tc := range []struct {
+		state string
+		want  Section
+	}{
+		{"committed", SectionHidden}, {"stopped", SectionNeeds}, {"paused", SectionNeeds},
+		{"awaiting-approval", SectionNeeds}, {"setup", SectionRunning}, {"implement", SectionRunning},
+		{"checks", SectionRunning}, {"review", SectionRunning}, {"gate", SectionRunning},
+		{"commit", SectionRunning}, {"finish", SectionRunning}, {"future-state", SectionRunning},
+	} {
+		t.Run(tc.state, func(t *testing.T) {
+			r := EngineRun{Item: "S32", State: tc.state, CreatedAt: at}
+			for _, newer := range []bool{false, true} {
+				runs := []EngineRun{r}
+				if newer {
+					runs = append(runs, EngineRun{Item: "S32", State: "implement", CreatedAt: at.Add(time.Second)})
+				}
+				want := tc.want
+				if newer && tc.state == "stopped" {
+					want = SectionHidden
+				}
+				if got := r.Section(runs); got != want {
+					t.Errorf("newer=%v: section=%v want %v", newer, got, want)
+				}
+			}
+		})
+	}
+}

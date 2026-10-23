@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
@@ -67,7 +68,10 @@ func TestStoppedNeedsNewerEngineRun(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			d, store, p := runDaemon(t, nil)
 			at := time.Date(2026, 10, 19, 16, 40, 0, 0, time.UTC)
-			for _, rec := range []runrec.Record{{ID: "stopped", Project: p.Name, Item: "S22", State: runrec.StateStopped, CreatedAt: at}, {ID: "second", Project: tc.project, Item: tc.item, State: runrec.StateImplement, CreatedAt: at.Add(tc.delta)}} {
+			for _, rec := range []runrec.Record{{ID: "stopped", Project: p.Name, Item: "S22", State: runrec.StateStopped, CreatedAt: at}, {ID: "second", Project: tc.project, Item: tc.item, State: runrec.StateImplement, CreatedAt: at.Add(tc.delta)},
+				{ID: "paused", Project: p.Name, Item: "S90", State: runrec.StatePaused, CreatedAt: at},
+				{ID: "approval", Project: p.Name, Item: "S91", State: runrec.StateAwaitingApproval, CreatedAt: at},
+				{ID: "committed", Project: p.Name, Item: "S92", State: runrec.StateCommitted, CreatedAt: at}} {
 				store.Now = func() time.Time { return rec.CreatedAt }
 				if _, err := store.Create(rec); err != nil {
 					t.Fatal(err)
@@ -76,8 +80,15 @@ func TestStoppedNeedsNewerEngineRun(t *testing.T) {
 			b := request(t, d, "status", `{"project":"p"}`)
 			var out StatusResult
 			json.Unmarshal(b, &out)
-			if out.Projects[0].NeedsYou != tc.want {
-				t.Fatalf("needs_you=%d want %d: %s", out.Projects[0].NeedsYou, tc.want, b)
+			wantRuns := 5
+			if tc.project != p.Name {
+				wantRuns--
+			}
+			if len(out.Projects[0].EngineRuns) != wantRuns {
+				t.Fatalf("status lost engine runs: %s", b)
+			}
+			if out.Projects[0].NeedsYou != tc.want+2 {
+				t.Fatalf("needs_you=%d want %d: %s", out.Projects[0].NeedsYou, tc.want+2, b)
 			}
 		})
 	}
@@ -109,5 +120,33 @@ func TestEnginePendingKind(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestStatusNeedsWire(t *testing.T) {
+	s := source.Snapshot{
+		Open: source.Result[[]adjcli.Record]{Value: []adjcli.Record{{ID: 125, Key: "ui.status-list", Title: "Status list"}}},
+		Items: source.Result[[]slicercli.Item]{Value: []slicercli.Item{
+			{ID: "S32", Title: "Owner answer", Fields: slicercli.Fields{Flags: []string{"needs-owner"}}},
+			{ID: "S33", Title: "Ordinary item"},
+		}},
+		EngineRuns: []source.EngineRun{{ID: "paused", State: "paused"}, {ID: "committed", State: "committed"}, {ID: "running", State: "implement"}},
+	}
+	ps := projectStatus(registry.Project{Name: "p"}, s, time.Now())
+	b, err := json.Marshal(ps)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{`"open":[{"id":125,"key":"ui.status-list","title":"Status list"}]`, `"held":[{"id":"S32","title":"Owner answer"}]`, `"needs_you":3`} {
+		if !strings.Contains(string(b), want) {
+			t.Errorf("missing %s: %s", want, b)
+		}
+	}
+	if len(ps.EngineRuns) != 3 {
+		t.Fatalf("lost engine runs: %s", b)
+	}
+	empty, _ := json.Marshal(projectStatus(registry.Project{Name: "empty"}, source.Snapshot{}, time.Now()))
+	if strings.Contains(string(empty), `"open"`) || strings.Contains(string(empty), `"held"`) {
+		t.Fatalf("empty fields not omitted: %s", empty)
 	}
 }

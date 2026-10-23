@@ -109,7 +109,7 @@ func (m *Model) rows() (needs, running []ovRow) {
 			if r.RelayRun != "" {
 				joined[r.RelayRun] = true
 			}
-			if r.State == "committed" || r.Superseded(s.EngineRuns) {
+			if r.Section(s.EngineRuns) == source.SectionHidden {
 				continue
 			}
 			parts := []string{r.State}
@@ -137,7 +137,7 @@ func (m *Model) rows() (needs, running []ovRow) {
 			}
 			rest := strings.Join(parts, "  ")
 			row := ovRow{engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.Item, rest: rest, text: r.Item + "  " + rest}
-			if r.NeedsYou(s.EngineRuns) {
+			if r.Section(s.EngineRuns) == source.SectionNeeds {
 				row.kindW = kindWidth
 				needs = append(needs, row)
 			} else {

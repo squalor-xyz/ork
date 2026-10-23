@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -310,5 +312,35 @@ func TestExternalRelayOptionalFields(t *testing.T) {
 	want := "ledger  S30  active, 2 of 6 steps running  2m  running: implementer  failed: reviewer"
 	if got := rowText(rows[0], 300); got != want {
 		t.Fatalf("empty fields: got %q, want %q", got, want)
+	}
+}
+
+func TestOverviewSectionsAgreeWithNeedsCount(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	s := engineSnapshot(t, "paused", "")
+	s.Runs.Value = nil
+	s.Open.Value = []adjcli.Record{{ID: 125, Key: "ui.status-list", Title: "Status list"}}
+	s.Items.Value = append(s.Items.Value, item("S32", "Owner answer", holdFlag))
+	at := time.Date(2026, 10, 23, 12, 0, 0, 0, time.UTC)
+	s.EngineRuns = []source.EngineRun{
+		{ID: "old", Item: "S1", State: "stopped", CreatedAt: at},
+		{ID: "current", Item: "S1", State: "implement", CreatedAt: at.Add(time.Second)},
+		{ID: "done", Item: "S2", State: "committed"},
+		{ID: "approval", Item: "S3", State: "awaiting-approval"},
+		{ID: "paused", Item: "S4", State: "paused"},
+		{ID: "stopped", Item: "S5", State: "stopped"},
+	}
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	needs, running := h.m.rows()
+	if len(needs) != 5 || h.m.projects[0].needs() != len(needs) || len(running) != 1 || running[0].engineID != "current" {
+		t.Fatalf("needs=%+v count=%d running=%+v", needs, h.m.projects[0].needs(), running)
+	}
+	for _, rows := range [][]ovRow{needs, running} {
+		for _, r := range rows {
+			if r.engineID == "old" || r.engineID == "done" {
+				t.Fatalf("hidden run visible: %+v", r)
+			}
+		}
 	}
 }

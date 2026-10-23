@@ -11,6 +11,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/source"
 )
 
 // status prints each project's needs-you count and active relays.
@@ -38,6 +39,12 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 	}
 	for _, p := range res.Projects {
 		fmt.Fprintf(o.stdout, "%s: needs you %d, active relays %d\n", p.Name, p.NeedsYou, len(p.ActiveRelays))
+		for _, r := range p.Open {
+			fmt.Fprintf(o.stdout, "  #%d %s  %s\n", r.ID, r.Key, r.Title)
+		}
+		for _, it := range p.Held {
+			fmt.Fprintf(o.stdout, "  %s  %s  (needs-owner)\n", it.ID, it.Title)
+		}
 		for _, r := range p.ActiveRelays {
 			items := strings.Join(r.Items, ",")
 			if items == "" {
@@ -51,15 +58,20 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 				fmt.Fprintf(o.stdout, "    %s\n", daemon.FormatRelayStep("failed", *step))
 			}
 		}
-		for _, r := range p.EngineRuns {
-			fmt.Fprintf(o.stdout, "  %s %s %s", r.ID, r.Item, r.State)
-			if r.Wait != "" {
-				fmt.Fprintf(o.stdout, " (wait: %s)", r.Wait)
+		for _, section := range []source.Section{source.SectionNeeds, source.SectionRunning} {
+			for _, r := range p.EngineRuns {
+				if r.Section(p.EngineRuns) != section {
+					continue
+				}
+				fmt.Fprintf(o.stdout, "  %s %s %s", r.ID, r.Item, r.State)
+				if r.Wait != "" {
+					fmt.Fprintf(o.stdout, " (wait: %s)", r.Wait)
+				}
+				if len(r.Denials) > 0 {
+					fmt.Fprintf(o.stdout, " (denied: %s)", strings.Join(r.Denials, ", "))
+				}
+				fmt.Fprintln(o.stdout)
 			}
-			if len(r.Denials) > 0 {
-				fmt.Fprintf(o.stdout, " (denied: %s)", strings.Join(r.Denials, ", "))
-			}
-			fmt.Fprintln(o.stdout)
 		}
 		for _, e := range p.Errors {
 			fmt.Fprintf(o.stdout, "  error %s: %s (%s)\n", e.Part, e.Message, e.Code)

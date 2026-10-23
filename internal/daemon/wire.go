@@ -75,9 +75,11 @@ type StopResult struct {
 }
 
 // ProjectStatus is one project in a status. NeedsYou counts the project's
-// open adj questions; approvals, stops and pauses join it with the engine
-// (S04). Parts holds each part's age and state.
+// open adj questions, needs-owner items and Needs-section engine runs.
+// Parts holds each part's age and state.
 type ProjectStatus struct {
+	Open         []OpenRecord         `json:"open,omitempty"` // proposed
+	Held         []HeldItem           `json:"held,omitempty"` // proposed
 	EngineRuns   []EngineRun          `json:"engine_runs"`
 	Name         string               `json:"name"`
 	Path         string               `json:"path"`
@@ -86,6 +88,19 @@ type ProjectStatus struct {
 	ActiveRelays []Relay              `json:"active_relays"`
 	Parts        map[string]PartState `json:"parts,omitempty"`
 	Errors       []PartError          `json:"errors,omitempty"`
+}
+
+// OpenRecord is a proposed status wire summary of an open adj record.
+type OpenRecord struct {
+	ID    int    `json:"id"`
+	Key   string `json:"key"`
+	Title string `json:"title"`
+}
+
+// HeldItem is a proposed status wire summary of a needs-owner item.
+type HeldItem struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
 }
 
 // PartState is one part's age and state as the cache holds it. AgeMs is the

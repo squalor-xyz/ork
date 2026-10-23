@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/source"
 )
 
 // promptRun is the result of one `ork run p S1` with scripted stdin.
@@ -236,5 +237,34 @@ func TestStatusPrintsEngineStateAndWait(t *testing.T) {
 	code := app.Run(context.Background(), []string{"status"}, &out, &errs)
 	if code != 0 || !strings.Contains(out.String(), "r1 S1 paused (wait: Which library?) (denied: Write, Bash)") {
 		t.Fatalf("status code %d: %s %s", code, &out, &errs)
+	}
+}
+
+func TestStatusSectionsAndNeedsRows(t *testing.T) {
+	const reply = `{"projects":[{"name":"p","needs_you":5,"open":[{"id":125,"key":"ui.status-list","title":"Status list"}],"held":[{"id":"S32","title":"Owner answer"}],"active_relays":[{"id":"ledger","items":["S1"],"state":"active"}],"engine_runs":[{"id":"old","item":"S1","state":"stopped","created_at":"2026-10-23T12:00:00Z"},{"id":"current","item":"S1","state":"implement","created_at":"2026-10-23T12:01:00Z"},{"id":"done","item":"S2","state":"committed"},{"id":"approval","item":"S3","state":"awaiting-approval"},{"id":"paused","item":"S4","state":"paused","wait":"Question?","denials":["Write"]},{"id":"stopped","item":"S5","state":"stopped"}]}]}`
+	app := &App{Call: func(_ context.Context, _ string, _, result any) error { return json.Unmarshal([]byte(reply), result) }}
+	code, stdout, stderr := run(t, app, "status")
+	want := "p: needs you 5, active relays 1\n  #125 ui.status-list  Status list\n  S32  Owner answer  (needs-owner)\n  ledger S1 active (0 steps, 0 running)\n  approval S3 awaiting-approval\n  paused S4 paused (wait: Question?) (denied: Write)\n  stopped S5 stopped\n  current S1 implement\n"
+	if code != 0 || stdout != want {
+		t.Fatalf("status exit %d: %s\ngot:\n%swant:\n%s", code, stderr, stdout, want)
+	}
+	code, stdout, stderr = run(t, app, "status", "--json")
+	var got struct {
+		Projects []struct {
+			EngineRuns []source.EngineRun `json:"engine_runs"`
+			Open       []struct {
+				ID         int
+				Key, Title string
+			}
+			Held []struct{ ID, Title string }
+		}
+	}
+	mustJSON(t, stdout, &got)
+	if code != 0 || len(got.Projects) != 1 {
+		t.Fatalf("json exit %d: %s %s", code, stdout, stderr)
+	}
+	p := got.Projects[0]
+	if len(p.EngineRuns) != 6 || p.EngineRuns[0].ID != "old" || p.EngineRuns[2].ID != "done" || len(p.Open) != 1 || p.Open[0].Key != "ui.status-list" || len(p.Held) != 1 || p.Held[0].Title != "Owner answer" {
+		t.Fatalf("json lost status details: %s", stdout)
 	}
 }

@@ -69,7 +69,7 @@ type projectState struct {
 func (p *projectState) needs() int {
 	n := p.open + p.held
 	for _, r := range p.snap.EngineRuns {
-		if r.NeedsYou(p.snap.EngineRuns) {
+		if r.Section(p.snap.EngineRuns) == source.SectionNeeds {
 			n++
 		}
 	}
@@ -551,7 +551,7 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 			if r.RelayRun != "" {
 				linked[r.RelayRun] = true
 			}
-			if r.State != "committed" && !r.Superseded(msg.snap.EngineRuns) && !r.NeedsYou(msg.snap.EngineRuns) {
+			if r.Section(msg.snap.EngineRuns) == source.SectionRunning {
 				engineActive = true
 			}
 		}

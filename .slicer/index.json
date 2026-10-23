@@ -1454,7 +1454,7 @@
       "id": "S32",
       "title": "One needs, running and hidden builder for ork status and the TUI",
       "short_title": "One needs, running and hidden builder for ork status and the TUI",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -1475,7 +1475,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

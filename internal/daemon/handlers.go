@@ -242,13 +242,17 @@ func projectStatus(p registry.Project, s source.Snapshot, now time.Time) Project
 		ActiveRelays: []Relay{},
 		EngineRuns:   s.EngineRuns,
 	}
+	for _, r := range s.Open.Value {
+		ps.Open = append(ps.Open, OpenRecord{ID: r.ID, Key: r.Key, Title: r.Title})
+	}
 	for _, r := range ps.EngineRuns {
-		if r.NeedsYou(ps.EngineRuns) {
+		if r.Section(ps.EngineRuns) == source.SectionNeeds {
 			ps.NeedsYou++
 		}
 	}
 	for _, it := range s.Items.Value {
 		if slices.Contains(it.Fields.Flags, "needs-owner") {
+			ps.Held = append(ps.Held, HeldItem{ID: it.ID, Title: it.Title})
 			ps.NeedsYou++
 		}
 	}

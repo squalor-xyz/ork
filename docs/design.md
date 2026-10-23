@@ -92,7 +92,7 @@ ork (TUI)  ork status --json (CLI)
 
   | Method | Params | Result |
   |---|---|---|
-  | `status` | `{"project"?}` | `{"build_id","roles_running","projects":[{name, path, adj, needs_you, active_relays, errors?}]}` |
+  | `status` | `{"project"?}` | `{"build_id","roles_running","projects":[{name, path, adj, needs_you, open?, held?, active_relays, engine_runs, errors?}]}` |
   | `daemon.info` (proposed wire) | none | `{"build_id"}`; no registry or project reads |
   | `daemon.stop` (proposed wire) | `{"force"?}` | `{"stopped":true}`; `daemon_busy` refuses active work without force |
   | `snapshot` | `{"project"}` | the project's `source.Snapshot` (`items`, `deps`, `goals`, `runs`, `open`, `decided`) from the cache, plus the daemon's `engine_runs` array (not a Part); each part is `{"value", "age_ms", "read_at"?, "stale"?, "error"?}`: the last good value, its age in ms (0 if never read), when it was read (absent if never), and the last read's error |
@@ -737,16 +737,26 @@ on stderr.
 
 Text output is plain lines meant to be stable. `--json` output, indented:
 
-- `status`: `{"projects":[{"name","path","adj","needs_you","active_relays":[
+- `status`: `{"projects":[{"name","path","adj","needs_you","open"?,"held"?,
+  "engine_runs","active_relays":[
   {"id","items","state","worktree","begun_at","updated_at","steps",
-  "running"}],"parts":{"items":{"age_ms","stale"?,"error"?}},"errors":[{"part","code","message"}]}]}`. `needs_you` is the
-  project's count of open adj records, slicer items flagged `needs-owner`,
-  and engine runs awaiting approval, paused or stopped (`status.needs-you`,
+  "running"}],"parts":{"items":{"age_ms","stale"?,"error"?}},
+  "errors":[{"part","code","message"}]}]}`. `needs_you` is the project's count
+  of open adj records, slicer items flagged `needs-owner`, and engine runs
+  awaiting approval, paused, or stopped and not superseded (`status.needs-you`,
   adj #69). A stopped run stops counting once a newer engine run exists for
-  the same slice, ordered by created time (adj #92). The *proposed*
-  `engine_runs:[{id,item,branch?,merged?,state,wait?,pending?,denials?,relay_run?,roles?,created_at}]` field per project
-  includes the linked slicer ledger run ID in `relay_run`, when present,
-  and the engine run's creation time in `created_at`. The optional `roles`
+  the same slice, ordered by created time (adj #92). The *proposed* optional
+  `open:[{id,key,title}]` and `held:[{id,title}]` fields list each open adj
+  record and needs-owner item; empty lists are omitted. Text status prints
+  these entries under the project before relay and engine rows, using the
+  Overview wording. Its engine rows use the same Needs, Running and Hidden
+  classification as the Overview: committed and superseded runs are hidden
+  (`ui.status-list`, adj #125). JSON keeps every engine run, including hidden
+  ones. The *proposed*
+  `engine_runs:[{id,item,branch?,merged?,state,wait?,pending?,denials?,
+  relay_run?,roles?,created_at}]` field per project includes the linked slicer
+  ledger run ID in `relay_run`, when present, and the engine run's creation
+  time in `created_at`. The optional `roles`
   array and the proposed `branch` and tri-state `merged` fields are described
   in [state.md](state.md). `denials` is an optional
   array of `Tool` or `Tool: command` strings collected from role records
