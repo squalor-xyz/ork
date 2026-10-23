@@ -132,14 +132,20 @@ func (d *Daemon) initRunManager() {
 func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 	deps := d.runs.deps
 	if deps.Runner == nil {
-		var env []string
-		if len(p.VendorEnv["claude"]) > 0 {
-			env = os.Environ()
-			for k, v := range p.VendorEnv["claude"] {
+		envFor := func(vendor string) []string {
+			if len(p.VendorEnv[vendor]) == 0 {
+				return nil
+			}
+			env := os.Environ()
+			for k, v := range p.VendorEnv[vendor] {
 				env = append(env, k+"="+v)
 			}
+			return env
 		}
-		deps.Runner = claudeRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "claude"), env: env}
+		deps.Runner = vendorRunner{
+			claude: claudeRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "claude"), env: envFor("claude")},
+			codex:  codexRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "codex"), env: envFor("codex")},
+		}
 	}
 	return deps
 }
@@ -233,6 +239,10 @@ func (d *Daemon) stopDaemon(p StopParams) (*StopResult, error) {
 	d.closeRuns()
 	return &StopResult{Stopped: true}, nil
 }
+
+// matrixAdapters maps matrix vendors to the names used by the dispatcher.
+var matrixAdapters = map[string]string{"claude": "claude", "openai": "codex"}
+
 func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	if p.Project == "" || p.Item == "" {
 		return nil, badParams(errors.New("run needs project and item"))
@@ -264,14 +274,13 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 				rows = append([]slicercli.Row{*choice.Row}, rows...)
 			}
 			for _, row := range rows {
-				if strings.EqualFold(row.Vendor, "claude") {
-					plan.Lineup[role] = []runrec.LineupEntry{{Vendor: "claude", Model: row.Model, Effort: row.Reasoning}}
-					break
+				if vendor := matrixAdapters[strings.ToLower(row.Vendor)]; vendor != "" {
+					plan.Lineup[role] = append(plan.Lineup[role], runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning})
 				}
 			}
 		}
 		if len(plan.Lineup[role]) == 0 {
-			return nil, fmt.Errorf("lineup has no Claude row for %s", sourceRole)
+			return nil, fmt.Errorf("lineup has no row with an adapter for %s", sourceRole)
 		}
 		perm, err := engine.ResolvePermission(proj, role)
 		if err != nil {
@@ -287,7 +296,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 			return nil, badParams(fmt.Errorf("lineup for %s needs at least one entry", role))
 		}
 		for _, entry := range entries {
-			if entry.Vendor != "claude" {
+			if !supportsVendor(entry.Vendor) {
 				return nil, badParams(fmt.Errorf("unsupported vendor %q for %s", entry.Vendor, role))
 			}
 			if strings.TrimSpace(entry.Model) == "" || strings.TrimSpace(entry.Effort) == "" {

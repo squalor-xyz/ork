@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/squalor-xyz/ork/internal/agent/claude"
+	"github.com/squalor-xyz/ork/internal/agent/codex"
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
@@ -41,4 +42,41 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 		result.Denials = append(result.Denials, runrec.DeniedCommand{Tool: d.ToolName, Command: d.Detail()})
 	}
 	return result, err
+}
+
+// vendorRunner dispatches only to measured adapters.
+type vendorRunner struct{ claude, codex engine.Runner }
+
+func supportsVendor(v string) bool { return v == "claude" || v == "codex" }
+func (r vendorRunner) Run(ctx context.Context, req engine.Request) (engine.Result, error) {
+	switch req.Vendor {
+	case "claude":
+		return r.claude.Run(ctx, req)
+	case "codex":
+		return r.codex.Run(ctx, req)
+	default:
+		return engine.Result{}, fmt.Errorf("unsupported vendor %q", req.Vendor)
+	}
+}
+
+type codexRunner struct {
+	fixtureDir string
+	env        []string
+	round      func(context.Context, codex.Spec) (codex.Round, error)
+}
+
+func (r codexRunner) Run(ctx context.Context, req engine.Request) (engine.Result, error) {
+	call := r.round
+	if call == nil {
+		call = codex.Run
+	}
+	round, err := call(ctx, codex.Spec{Dir: req.Worktree, Env: r.env, Prompt: req.Brief, Model: req.Model, Effort: req.Effort, ReadOnly: req.ReadOnly, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, FixtureDir: r.fixtureDir})
+	class := engine.ExitError
+	switch round.Exit {
+	case codex.ExitOK:
+		class = engine.ExitOK
+	case codex.ExitRateLimited:
+		class = engine.ExitRateLimited
+	}
+	return engine.Result{Exit: class, Session: round.Session, Report: round.Report, Tokens: round.Tokens}, err
 }

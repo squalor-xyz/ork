@@ -49,7 +49,7 @@ func runDaemon(t *testing.T, runner roundRunner) (*Daemon, *runrec.Store, regist
 	}
 	fake := clitest.Install(t,
 		clitest.Route{Tool: "slicer", Args: []string{"plan-parallel", "--json", "--lean", "--root", p.Path}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "plan-parallel.json")},
-		clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: `{"roles":[{"role":"implementer","row":{"vendor":"Codex","model":"wrong"},"alternatives":[{"vendor":"Claude","model":"sonnet","reasoning":"high"},{"vendor":"Claude","model":"wrong"}]},{"role":"reviewer","row":{"vendor":"Claude","model":"opus","reasoning":"medium"}}]}`},
+		clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: `{"roles":[{"role":"implementer","row":{"vendor":"Acme","model":"wrong"},"alternatives":[{"agent":"Claude Code","vendor":"Claude","model":"sonnet","reasoning":"high"},{"agent":"Codex","vendor":"OpenAI","model":"gpt","reasoning":"high"}]},{"role":"reviewer","row":{"agent":"Claude Code","vendor":"Claude","model":"opus","reasoning":"medium"}}]}`},
 		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay"}, Stdout: "Contract: relay v7\n"},
 		clitest.Route{Tool: "slicer", Args: []string{"show"}, Prefix: true, Stdout: `{"slice":{"sections":[{"heading":"Git","body":"One commit: \"S1: test\"."}]}}`},
 		clitest.Route{Tool: "slicer", Args: []string{"config"}, Prefix: true, Stdout: `{"value":"done"}`},
@@ -115,10 +115,10 @@ func waitIdle(t *testing.T, d *Daemon, id string) {
 	}
 	t.Fatalf("run %s is still busy", id)
 }
-func TestRunPlanUsesFirstClaudeAndResolvedPermissions(t *testing.T) {
+func TestRunPlanKeepsTheFirstRowWithAnAdapter(t *testing.T) {
 	d, store, p := runDaemon(t, nil)
 	b := request(t, d, "run.plan", `{"project":"p","item":"S1","well_specified":true,"split":false}`)
-	for _, want := range []string{filepath.Join(p.Path, ".worktrees", "S1"), `"branch":"S1"`, `"check_command":"go test ./..."`, `"model":"sonnet"`, `"model":"opus"`, `Bash(go test ./...*)`} {
+	for _, want := range []string{filepath.Join(p.Path, ".worktrees", "S1"), `"branch":"S1"`, `"check_command":"go test ./..."`, `"model":"sonnet"`, `"model":"gpt"`, `"vendor":"codex"`, `"model":"opus"`, `Bash(go test ./...*)`} {
 		if !strings.Contains(string(b), want) {
 			t.Fatalf("plan missing %s: %s", want, b)
 		}
@@ -170,7 +170,7 @@ func TestRunPlanGateFollowsReviewerOverride(t *testing.T) {
 func TestRunPlanWithoutOverrideIsUnchanged(t *testing.T) {
 	d, _, _ := runDaemon(t, nil)
 	want := map[string][]runrec.LineupEntry{
-		engine.RoleImplementer: {{Vendor: "claude", Model: "sonnet", Effort: "high"}},
+		engine.RoleImplementer: {{Vendor: "claude", Model: "sonnet", Effort: "high"}, {Vendor: "codex", Model: "gpt", Effort: "high"}},
 		engine.RoleReviewer:    {{Vendor: "claude", Model: "opus", Effort: "medium"}},
 		engine.RoleGate:        {{Vendor: "claude", Model: "opus", Effort: "medium"}},
 	}
@@ -190,8 +190,8 @@ func TestRunPlanRefusesBadOverride(t *testing.T) {
 		"null chain":         `"lineup":{"reviewer":null}`,
 		"empty model":        `"lineup":{"implementer":[{"vendor":"claude","effort":"high"}]}`,
 		"empty effort":       `"lineup":{"reviewer":[{"vendor":"claude","model":"m"}]}`,
-		"unsupported vendor": `"lineup":{"implementer":[{"vendor":"codex","model":"m","effort":"high"}]}`,
-		"bad alternative":    `"lineup":{"implementer":[{"vendor":"claude","model":"m","effort":"high"},{"vendor":"codex","model":"m","effort":"high"}]}`,
+		"unsupported vendor": `"lineup":{"implementer":[{"vendor":"grok","model":"m","effort":"high"}]}`,
+		"bad alternative":    `"lineup":{"implementer":[{"vendor":"claude","model":"m","effort":"high"},{"vendor":"grok","model":"m","effort":"high"}]}`,
 		"alternative model":  `"lineup":{"reviewer":[{"vendor":"claude","model":"m","effort":"high"},{"vendor":"claude","effort":"low"}]}`,
 		"alternative effort": `"lineup":{"reviewer":[{"vendor":"claude","model":"m","effort":"high"},{"vendor":"claude","model":"m"}]}`,
 		"negative minutes":   `"budgets":{"minutes":-1}`,
