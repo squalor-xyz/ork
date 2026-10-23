@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 88,
+  "next_id": 89,
   "preamble": "",
   "passes": [
     {
@@ -3413,6 +3413,34 @@
         "reason": "",
         "importance": 2,
         "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S88",
+      "title": "Accept relay contract v8 alongside v7",
+      "short_title": "Accept relay contract v8 alongside v7",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "accept-relay-v8",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
         "effort": 1,
         "attempts": 0
       }

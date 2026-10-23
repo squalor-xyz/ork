@@ -1,0 +1,39 @@
+{
+  "id": "S88",
+  "title": "Accept relay contract v8 alongside v7",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Slicer 1.15.0 prints `Contract: relay v8` (../slicer/CHANGELOG.md:20). The bump changes only the outer session's hand-back handling and the orchestrator's last line (`waiting on: ROLE AGENT-ID`); the role prompts ork embeds are unchanged by it. ork's accepted set is {7} (`internal/roles/roles.go:58`, boundary.contract, record 67), so `ork doctor` and the engine's contract check refuse the current slicer. Record 67 says ork lists the versions it supports and refuses others; adding v8 means checking what the bump changed, which is done here. Owner 2026-10-23: file a slice to accept v7 and v8."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/roles/roles.go:31-58`: acceptedContracts becomes {7, 8}. ContractVersion stays 7 (the prompts are written against v7 and the first line of each prompt stays `Contract: relay v7`).\n- `internal/roles/roles_test.go:140` (TestAcceptedContracts) and the CheckContractLine tests: the set and the refusal message list 7 and 8; a v9 line is still refused.\n- `internal/cli/doctor.go:99` and its test: doctor accepts a v8 slicer.\n- `docs/design.md:665` and `docs/glossary.md:9,130`: say v7 and v8 are accepted, and what v8 changed.\n- `AGENTS.md` Project Rules (the line \"accepts only the versions it lists (v7 on 2026-10-19; `boundary.contract`)\"): update the list. This is a project instruction file; the owner reviews that edit."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestAcceptedContracts: the set is 7 and 8.\n- TestCheckContractLineAcceptsV8: `Contract: relay v8` passes; `Contract: relay v9` and `Contract: relay v7 x` are refused, with the message naming 7 and 8.\n- TestDoctorAcceptsAV8Slicer: doctor reports the contract check ok for a fake slicer that prints v8.\n- TestPromptsStayAtV7: each embedded prompt's first line still says `Contract: relay v7` (ContractVersion is unchanged)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests first and watch them fail.\n2. roles.go: acceptedContracts = []int{7, 8}; keep ContractVersion at 7 and update its comment to say the prompts are written against v7 and v8 changes only the outer hand-back (CHANGELOG.md:20).\n3. Update the refusal message tests in roles_test.go, the doctor test, and the engine test fixtures only if they hard-code the set.\n4. docs/design.md:665, docs/glossary.md:9,130 and the AGENTS.md line.\nNot in this slice: any change to role prompts; any orchestrator hand-back logic (ork's roles never spawn orchestrators)."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/roles ./internal/cli ./internal/engine ./internal/slicercli\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l . (prints nothing)\n- slicer check\n- adj lint\n- ork doctor against slicer 1.15.0 reports the contract line ok."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
