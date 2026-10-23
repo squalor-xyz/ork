@@ -2,13 +2,15 @@
 {
   "id": 149,
   "title": "How should the Overview lay out Needs you, and which keys drive it?",
-  "status": "open",
+  "status": "decided",
   "key": "ui.overview-layout",
   "tags": [
     "ui"
   ],
   "asked_by": "claude",
+  "decided_by": "Jon R",
   "created": "2026-10-22",
+  "decided_at": "2026-10-23",
   "context": "UI review pass 2026-10-22 (rule u10) from an owner screenshot of the Overview. Found: the project column repeats on every row and is sized to the longest registered name (internal/tui/overview.go:191-194); decision titles are ragged and every row repeats '? decision'; held rows repeat '(needs-owner)'; stopped runs show a ticking elapsed time; the detail line repeats the row; sidebar rows show 0; 'pending 0' and slice-number placeholder text show to the user; the cursor bar stops at the text end; 1-9 jump in registry order while the sidebar is sorted needs-first (record 82); enter on a decision or held row only selects its project. Owner chose the grouped option in session; this record holds it for decision. It also asks to revise record 82 (1-9 registry order) and add keys beside record 112.",
   "options": [
     {
@@ -31,6 +33,8 @@
     "label": "grouped",
     "reasoning": "Needs-you first is the dashboard's first principle; grouping and aligned columns make it scannable, and keys that follow the screen remove the 1-9 surprise."
   },
+  "decision": "grouped",
+  "rationale": "Needs-you first is the first principle; grouping and keys that follow the screen remove the 1-9 surprise. Revises record 82.",
   "refs": [
     "S84",
     "S85",
@@ -42,6 +46,10 @@
     {
       "date": "2026-10-22",
       "event": "ask"
+    },
+    {
+      "date": "2026-10-23",
+      "event": "decide"
     }
   ]
 }

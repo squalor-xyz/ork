@@ -2,7 +2,7 @@
 {
   "id": 114,
   "title": "When does a role fall back to the next matrix row?",
-  "status": "decided",
+  "status": "superseded",
   "key": "vendor.fallback-trigger",
   "asked_by": "claude",
   "decided_by": "jon",
@@ -21,6 +21,7 @@
   },
   "decision": "rate-limit-only",
   "rationale": "Owner 2026-10-20: matches docs/design.md:392-396 and keeps record 23 (unclassified exits stop for the owner).",
+  "superseded_by": 156,
   "refs": [
     "S49"
   ],
@@ -32,6 +33,11 @@
     {
       "date": "2026-10-20",
       "event": "decide"
+    },
+    {
+      "date": "2026-10-23",
+      "event": "supersede",
+      "note": "by 156"
     }
   ]
 }
