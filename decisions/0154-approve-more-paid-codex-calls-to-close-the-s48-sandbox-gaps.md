@@ -2,10 +2,12 @@
 {
   "id": 154,
   "title": "Approve more paid codex calls to close the S48 sandbox gaps?",
-  "status": "open",
+  "status": "decided",
   "key": "vendor.codex-sandbox-gaps",
   "asked_by": "implementer",
+  "decided_by": "Jon R",
   "created": "2026-10-23",
+  "decided_at": "2026-10-23",
   "context": "S48 used 3 approved invocations (2 reached the API). Probe 07 (socket bind) has no command event in its JSONL (testdata/vendors/codex/07-socket-bind.stdout), so under the S48 rule it does not count; the traceback is only the model's report. Also unmeasured: whether .git of a linked worktree is writable under workspace-write (probe 05 tried only the main checkout .git/slicer path), and loopback TCP bind (the python command died at the unix bind). Known so far: probe 05 shows a worktree write succeeds (the only command_execution event, 05-workspace-write-paths.stdout lines 4-5). Its reports that writes to the main checkout and its .git/slicer fail with 'operation not permitted' are the model's words in an agent_message with no command event, so they are unverified. Also unmeasured: that block.",
   "options": [
     {
@@ -23,6 +25,8 @@
     "label": "none",
     "reasoning": "vendor.codex-allowlist already limits codex to read-only roles in v1, so these cells do not block v1."
   },
+  "decision": "two",
+  "rationale": "Owner 2026-10-23: decision 100 allows Codex write roles, so the sandbox is the limit; two calls verify the blocks with command events.",
   "refs": [
     "S48",
     "S01"
@@ -31,6 +35,10 @@
     {
       "date": "2026-10-23",
       "event": "ask"
+    },
+    {
+      "date": "2026-10-23",
+      "event": "decide"
     }
   ]
 }

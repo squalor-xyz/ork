@@ -2,9 +2,11 @@
 {
   "id": 155,
   "title": "Which matrix field maps a lineup row to an engine adapter: vendor or agent?",
-  "status": "open",
+  "status": "decided",
   "key": "engine.adapter-key",
+  "decided_by": "Jon R",
   "created": "2026-10-23",
+  "decided_at": "2026-10-23",
   "context": "S47 maps the matrix row's vendor field (Claude, OpenAI) to an adapter (claude, codex) through an explicit table in internal/daemon/runs.go (matrixAdapters); an unknown vendor is skipped. The matrix also has an agent field (Claude Code, Codex). The S47 reviewer marked the key choice as the owner's.",
   "options": [
     {
@@ -22,6 +24,8 @@
     "label": "agent",
     "reasoning": "ork launches a harness (claude, codex CLI), so the agent field names what is run; vendor stays display data."
   },
+  "decision": "agent",
+  "rationale": "ork launches a harness; the agent field names what is run; vendor stays display data.",
   "refs": [
     "S47",
     "S49"
@@ -30,6 +34,10 @@
     {
       "date": "2026-10-23",
       "event": "ask"
+    },
+    {
+      "date": "2026-10-23",
+      "event": "decide"
     }
   ]
 }

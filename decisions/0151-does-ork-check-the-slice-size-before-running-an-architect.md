@@ -2,9 +2,11 @@
 {
   "id": 151,
   "title": "Does ork check the slice size before running an architect?",
-  "status": "open",
+  "status": "decided",
   "key": "slice.architect-size",
+  "decided_by": "Jon R",
   "created": "2026-10-23",
+  "decided_at": "2026-10-23",
   "context": "S08 runs the architect when the lineup has an architect entry. The matrix gives an architect row only for size L (slicer relay-roles recommend), and the slicer contract says the architect is optional and the owner decides.",
   "options": [
     {
@@ -22,6 +24,8 @@
     "label": "lineup-only",
     "reasoning": "boundaries: slicer owns the matrix; the contract leaves the architect to the owner."
   },
+  "decision": "lineup-only",
+  "rationale": "Slicer owns the matrix; the contract leaves the architect to the owner.",
   "refs": [
     "S08"
   ],
@@ -29,6 +33,10 @@
     {
       "date": "2026-10-23",
       "event": "ask"
+    },
+    {
+      "date": "2026-10-23",
+      "event": "decide"
     }
   ]
 }

@@ -2,13 +2,15 @@
 {
   "id": 148,
   "title": "Does a UI-touching slice get a UI pass in relays and waves?",
-  "status": "open",
+  "status": "decided",
   "key": "relay.ui-pass",
   "tags": [
     "relay",
     "ui"
   ],
+  "decided_by": "Jon R",
   "created": "2026-10-22",
+  "decided_at": "2026-10-23",
   "context": "Owner asked (2026-10-22) that any slice touching or addressing the UI get a UI-subagent pass in relays and waves, at opus/medium. slicer's role matrix accepts only implementer, reviewer, gate, architect and orchestrator, so a UI role must reuse one of them. Scope: internal/tui and golden views, docs/dashboard.md, internal/cli output, any ui.* adj key.",
   "options": [
     {
@@ -31,6 +33,8 @@
     "label": "reviewer-row",
     "reasoning": "Owner chose it in session; keeps the lineup visible in relay-roles show"
   },
+  "decision": "reviewer-row",
+  "rationale": "Fits slicer's five roles and keeps the lineup visible in relay-roles show.",
   "refs": [
     "AGENTS.md"
   ],
@@ -38,6 +42,10 @@
     {
       "date": "2026-10-22",
       "event": "ask"
+    },
+    {
+      "date": "2026-10-23",
+      "event": "decide"
     }
   ]
 }
