@@ -33,7 +33,7 @@ func (f roundRunner) Run(c context.Context, r engine.Request) (engine.Result, er
 
 var lastFake *clitest.Fake // the fakes of the latest runDaemon
 
-func runDaemon(t *testing.T, runner roundRunner) (*Daemon, *runrec.Store, registry.Project) {
+func runDaemon(t *testing.T, runner roundRunner, routes ...clitest.Route) (*Daemon, *runrec.Store, registry.Project) {
 	t.Helper()
 	if runner == nil {
 		runner = func(context.Context, engine.Request) (engine.Result, error) {
@@ -47,9 +47,9 @@ func runDaemon(t *testing.T, runner roundRunner) (*Daemon, *runrec.Store, regist
 	if err := registry.Save(reg, &registry.File{Version: registry.Version, Projects: []registry.Project{p}}); err != nil {
 		t.Fatal(err)
 	}
-	fake := clitest.Install(t,
+	fake := clitest.Install(t, append(routes, []clitest.Route{
 		clitest.Route{Tool: "slicer", Args: []string{"plan-parallel", "--json", "--lean", "--root", p.Path}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "plan-parallel.json")},
-		clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: `{"roles":[{"role":"implementer","row":{"agent":"Unknown","vendor":"Claude","model":"wrong"},"alternatives":[{"agent":"Claude Code","vendor":"Acme","model":"sonnet","reasoning":"high"},{"agent":"Codex","vendor":"OpenAI","model":"gpt","reasoning":"high"}]},{"role":"reviewer","row":{"agent":"Claude Code","vendor":"Claude","model":"opus","reasoning":"medium"}}]}`},
+		clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: `{"roles":[{"role":"implementer","row":{"agent":"Unknown","vendor":"Claude","model":"wrong"},"alternatives":[{"agent":"Claude Code","vendor":"Acme","model":"sonnet","reasoning":"high"},{"agent":"Codex","vendor":"OpenAI","model":"gpt","reasoning":"high"}]},{"role":"reviewer","row":{"agent":"Claude Code","vendor":"Claude","model":"opus","reasoning":"medium"}},{"role":"architect","row":null,"alternatives":[],"selected_by":"unmatched"}]}`},
 		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay"}, Stdout: "Contract: relay v7\n"},
 		clitest.Route{Tool: "slicer", Args: []string{"show"}, Prefix: true, Stdout: `{"slice":{"sections":[{"heading":"Git","body":"One commit: \"S1: test\"."}]}}`},
 		clitest.Route{Tool: "slicer", Args: []string{"config"}, Prefix: true, Stdout: `{"value":"done"}`},
@@ -60,7 +60,7 @@ func runDaemon(t *testing.T, runner roundRunner) (*Daemon, *runrec.Store, regist
 		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "rev-parse", "--git-path", "info/exclude"}, Stdout: filepath.Join(root, "exclude")},
 		clitest.Route{Tool: "git", Args: []string{"-C", filepath.Join(p.Path, ".worktrees", "S1"), "rev-parse", "HEAD"}, Stdout: "abc123\n"},
 		clitest.Route{Tool: "git", Prefix: true},
-	)
+	}...)...)
 	lastFake = fake
 	deps := engine.Deps{Store: store, Slicer: slicercli.Client{Bin: fake.Bin("slicer")}, GitBin: fake.Bin("git"), Runner: runner,
 		Check: func(context.Context, string, string, time.Duration) (engine.CheckOutput, error) {
@@ -137,6 +137,46 @@ func TestRunPlanKeepsEveryRowWithAnAdapter(t *testing.T) {
 	runs, err := store.List()
 	if err != nil || len(runs) != 0 {
 		t.Fatalf("plan created run: %v %v", runs, err)
+	}
+}
+
+func TestPlanAddsTheArchitectRowOnlyWhenRecommended(t *testing.T) {
+	for _, recommended := range []bool{false, true} {
+		t.Run(fmt.Sprint(recommended), func(t *testing.T) {
+			roles := `{"roles":[{"role":"implementer","row":{"agent":"Claude Code","model":"sonnet","reasoning":"high"}},{"role":"reviewer","row":{"agent":"Claude Code","model":"opus","reasoning":"medium"}}`
+			if recommended {
+				roles += `,{"role":"architect","row":{"agent":"Codex","vendor":"OpenAI","model":"sol","reasoning":"high"},"alternatives":[{"agent":"Unknown","vendor":"Claude","model":"wrong"},{"agent":"Claude Code","vendor":"Anthropic","model":"opus","reasoning":"medium"}]}`
+			} else {
+				roles += `,{"role":"architect","row":null,"alternatives":[],"selected_by":"unmatched"}`
+			}
+			roles += `]}`
+			d, store, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: roles})
+			plan := launchPlan(t, d, `{"project":"p","item":"S1"}`)
+			entries, present := plan.Lineup["architect"]
+			if present != recommended {
+				t.Fatalf("architect present %v, recommended %v: %+v", present, recommended, plan.Lineup)
+			}
+			if recommended {
+				want := []runrec.LineupEntry{{Vendor: "codex", Model: "sol", Effort: "high"}, {Vendor: "claude", Model: "opus", Effort: "medium"}}
+				if !reflect.DeepEqual(entries, want) || !plan.Permissions["architect"].ReadOnly || len(plan.Permissions["architect"].Allow) != 0 {
+					t.Fatalf("architect plan: entries %+v, permission %+v", entries, plan.Permissions["architect"])
+				}
+			} else if _, present := plan.Permissions["architect"]; present {
+				t.Fatal("absent architect has a permission entry")
+			}
+			if runs, err := store.List(); err != nil || len(runs) != 0 {
+				t.Fatalf("planning created runs: %v %v", runs, err)
+			}
+		})
+	}
+}
+
+func TestRunPlanRefusesAnArchitectRecommendationWithoutAnAdapter(t *testing.T) {
+	roles := `{"roles":[{"role":"implementer","row":{"agent":"Claude Code","model":"sonnet","reasoning":"high"}},{"role":"reviewer","row":{"agent":"Claude Code","model":"opus","reasoning":"medium"}},{"role":"architect","row":{"agent":"Unknown","vendor":"Claude","model":"wrong"}}]}`
+	d, _, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: roles})
+	_, err := d.handle(context.Background(), MethodRunPlan, json.RawMessage(`{"project":"p","item":"S1"}`))
+	if err == nil || !strings.Contains(err.Error(), "no row with an adapter for architect") {
+		t.Fatalf("unsupported architect row: %v", err)
 	}
 }
 

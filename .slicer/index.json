@@ -445,7 +445,7 @@
       "id": "S08",
       "title": "Architect role in the engine",
       "short_title": "Architect role",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S10"
@@ -480,7 +480,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 3,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

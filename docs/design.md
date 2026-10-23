@@ -184,8 +184,11 @@ ork (TUI)  ork status --json (CLI)
 setup -> implement -> checks --red--> implement (fix)
                         | green
                         v
-                     review --findings--> implement (fix round) -> checks -> review/gate
-                        | clean
+                     review --findings--> implement (fix round) -> checks
+                        | clean, or green checks after reviewer fixes
+                        v
+         [architect -> implement (fix round) -> checks]  (lineup only; once)
+                        | green, or no architect entry
                         v
                       gate --FAIL--> implement (fix round)      [3rd FAIL -> stopped]
                         | PASS
@@ -214,9 +217,16 @@ slice.
   implementer, with the failing output in the brief, without spending a
   review. The check command comes from `slicer config` once slicer has the
   key; until then it comes from the registry (`project.check-command`).
-- **review:** the reviewer, plus the architect on size L
-  (`slice.options`). Both run in parallel and are read-only, with the
-  fingerprint applied (`role.readonly-fingerprint`).
+- **review:** the reviewer runs read-only, with the fingerprint applied
+  (`role.readonly-fingerprint`). The architect runs after accepted findings
+  have been addressed and before the gate (`slice.architect-order`, adj #123),
+  exactly when the lineup has an architect entry. ork does not read the slice
+  size (`slice.architect-size`, adj #151).
+- **architect:** one read-only review with the fingerprint applied. The report
+  needs only the shared `## Owner needed` section. The whole report goes to an
+  implementer fix round, even when it has no findings; ork adds no parser
+  (`slice.architect-report`, adj #150). Green checks after that fix lead to the
+  gate. The architect is not repeated after a gate FAIL.
 - **fix round:** the implementer is resumed with the confirmed findings. A
   small fix round is reviewed and gated in one pass (contract v7).
 - **gate:** the first line of the report must be exactly `VERDICT: PASS` or
@@ -247,7 +257,7 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   text, tokens, cost and the permission denials. A runner error counts as an
   exit of class `error`. Auth and unclassified exits stop the slice with
   the reason even when a next lineup entry exists.
-- **States.** `queued` (waits for a slot; `Dequeue` moves it to `setup`), `setup`, `implement`, `checks`, `review`, `gate`,
+- **States.** `queued` (waits for a slot; `Dequeue` moves it to `setup`), `setup`, `implement`, `checks`, `review`, `architect`, `gate`,
   `awaiting-approval`, `finish`, `commit`, `committed`, plus the two rests
   `paused` and `stopped`. The owner moves a slice with `Approve`, `Reject`,
   `Answer`, `Retry` and `Stop`.
@@ -270,10 +280,14 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   back, resumed, with the output (last 30 KB) in the brief, and spends no
   review. The output is saved as `checks-<round>.log`.
 - **Review and gate.** The reviewer runs once, fresh and read-only. Findings
-  start a fix round; the next gate is the resumed reviewer (role `gate`),
-  which reviews and gates the fix in one pass. A clean review goes straight
-  to the gate. A gate FAIL is recorded with `slicer note ID --text "Review
-  FAIL: ..." --render`, sends the implementer back, and the third FAIL stops
+  start a fix round. After green checks, or a clean review, the optional
+  architect runs before the gate. Its whole report starts another fix round,
+  followed by checks. The gate is the resumed reviewer (role `gate`), which
+  reviews and gates the fix in one pass. Without an architect entry, a clean
+  review goes straight to the gate. The gate brief includes the latest
+  architect report even when the gate resumes a session. A gate FAIL is recorded
+  with `slicer note ID --text "Review FAIL: ..." --render`, sends the
+  implementer back, and the third FAIL stops
   the slice. *Proposed:* review findings are the text of sections (A), (B)
   and (D) of the reviewer's report when they are not "nothing"; (C) holds
   notes for later. A report without sections (A) and (B) is a shape error.

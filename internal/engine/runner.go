@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // Package engine runs one slice through ork's state machine: setup,
-// implement, checks, review, gate, awaiting approval, commit and the finish
-// step, with the slicer ledger and a run record (docs/design.md). It starts
+// implement, checks, review, architect, gate, awaiting approval, commit and
+// the finish step, with the slicer ledger and a run record (docs/design.md). It starts
 // roles through the Runner interface and calls slicer and git through their
 // CLIs, so it can be tested with no vendor and no real CLI.
 package engine
@@ -17,6 +17,7 @@ import (
 const (
 	RoleImplementer = "implementer"
 	RoleReviewer    = "reviewer"
+	RoleArchitect   = "architect"
 	RoleGate        = "gate"
 )
 

@@ -36,7 +36,7 @@ func DefaultImplementerAllowlist(checkCommand string) []string {
 }
 
 func readOnlyRole(role string) bool {
-	return role == RoleReviewer || role == RoleGate || role == "architect"
+	return role == RoleReviewer || role == RoleGate || role == RoleArchitect
 }
 
 // ResolvePermission returns the permission of a role in a project. The

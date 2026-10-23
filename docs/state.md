@@ -127,7 +127,7 @@ apply to this run only and do not change the matrix or registry
 started. They are not a copy of slicer state. The ledger link is
 `relay_run`, and `orchestrator_step` is ork's own step in it.
 
-`state` is one of `queued`, `setup`, `implement`, `checks`, `review`, `gate`,
+`state` is one of `queued`, `setup`, `implement`, `checks`, `review`, `architect`, `gate`,
 `awaiting-approval`, `commit`, `finish`, `committed`, `paused` and `stopped`;
 `committed` and `stopped` are final. `queued` is not final: the run waits for
 a slot under the caps and has no process and no writes. `round` counts implementer rounds and
@@ -135,7 +135,10 @@ a slot under the caps and has no process and no writes. `round` counts implement
 `pending` (kind `question`, `shape`, `lost`, `interrupted` or `error`, with
 the state and role to re-enter, the reason, and for a question the text and
 the answer) is set while a slice is paused. `feedback` names the file (kind
-`checks`, `findings` or `fail`) that the next implementer round must act on.
+`checks`, `findings`, `architect` or `fail`) that the next implementer round must act on.
+The `architect` state runs only when the lineup includes that role (adj #151),
+after accepted reviewer findings and before the gate (adj #123). Its whole
+report becomes `architect` feedback for a fix round (adj #150).
 A role with no `ended_at` is running; a restart marks it `lost`. `commit` is
 `{"sha","title","at"}` once ork has committed. The fields `orchestrator_step`,
 `fails`, `reason`, `pending`, `feedback`, `created_at`, `updated_at`, the

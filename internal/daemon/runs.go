@@ -265,15 +265,20 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		return nil, err
 	}
 	plan := &RunPlan{project: proj, Project: registry.Project{Name: proj.Name, Path: proj.Path}, Item: p.Item, CheckCommand: proj.CheckCommand, Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
-	for _, role := range []string{engine.RoleImplementer, engine.RoleReviewer, engine.RoleGate} {
+	for _, role := range []string{engine.RoleImplementer, engine.RoleReviewer, engine.RoleGate, engine.RoleArchitect} {
 		sourceRole := role
 		if role == engine.RoleGate {
 			sourceRole = engine.RoleReviewer
 		}
+		recommended := false
 		for _, choice := range rec.Roles {
 			if choice.Role != sourceRole {
 				continue
 			}
+			if role == engine.RoleArchitect && choice.Row == nil && len(choice.Alternatives) == 0 {
+				continue
+			}
+			recommended = true
 			rows := choice.Alternatives
 			if choice.Row != nil {
 				rows = append([]slicercli.Row{*choice.Row}, rows...)
@@ -283,6 +288,9 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 					plan.Lineup[role] = append(plan.Lineup[role], runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning})
 				}
 			}
+		}
+		if role == engine.RoleArchitect && !recommended {
+			continue
 		}
 		if len(plan.Lineup[role]) == 0 {
 			return nil, fmt.Errorf("lineup has no row with an adapter for %s", sourceRole)

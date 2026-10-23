@@ -33,7 +33,9 @@ const ownerHeading = "## Owner needed"
 // CheckReport checks a role's report against the shape the prompts ask for:
 // the gate's first line, a Tests line from the implementer and the gate, and
 // a final Owner needed section from every role. finish is the implementer's
-// finish step, which needs no Tests line. A shape error is a *ShapeError.
+// finish step, which needs no Tests line. The architect needs only the shared
+// Owner needed section; its whole report is findings context (adj 150).
+// A shape error is a *ShapeError.
 func CheckReport(role string, finish bool, text string) (*Report, error) {
 	var rep Report
 	var problems []string

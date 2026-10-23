@@ -108,6 +108,8 @@ func (e *Engine) feedbackSection(fb *runrec.Feedback) BriefSection {
 		return BriefSection{Title: "Checks failed", Body: "The project checks are red. Fix the failures below. No review was spent on this diff.\n\n```\n" + tail(body, 30000) + "\n```"}
 	case "findings":
 		return BriefSection{Title: "Review findings", Body: "The reviewer's report is below. Apply only the findings in it. If a finding is wrong, say so in your report with your evidence.\n\n" + body}
+	case "architect":
+		return BriefSection{Title: "Architect findings", Body: "The architect's whole report is below. Apply its change-now findings. If a finding is wrong, say so in your report with your evidence. Keep later work out of this slice.\n\n" + body}
 	default:
 		return BriefSection{Title: "Gate FAIL", Body: "The gate failed this diff. Its report is below. Fix what it lists.\n\n" + body}
 	}
@@ -203,7 +205,7 @@ func (e *Engine) checks(ctx context.Context) error {
 	next := runrec.StateReview
 	for _, r := range rec.Roles {
 		if r.Role == RoleReviewer {
-			next = runrec.StateGate // a fix round after the review is reviewed and gated in one pass
+			next = e.beforeGate(rec) // accepted reviewer findings are fixed before the architect
 		}
 	}
 	return e.run.Update(func(r *runrec.Record) { r.State = next })
@@ -233,7 +235,35 @@ func (e *Engine) review(ctx context.Context) error {
 	if out.findings != "" {
 		return e.bumpRound(ctx, runrec.Feedback{Kind: "findings", File: out.file})
 	}
-	return e.run.Update(func(rr *runrec.Record) { rr.State = runrec.StateGate })
+	return e.run.Update(func(rr *runrec.Record) { rr.State = e.beforeGate(rec) })
+}
+
+// beforeGate schedules the optional architect once, after accepted reviewer
+// findings and before the gate (adj 123). The lineup alone enables it (adj 151).
+func (e *Engine) beforeGate(rec runrec.Record) string {
+	if _, ok := lineup(rec.Lineup, RoleArchitect); ok {
+		for _, r := range rec.Roles {
+			if r.Role == RoleArchitect {
+				return runrec.StateGate
+			}
+		}
+		return runrec.StateArchitect
+	}
+	return runrec.StateGate
+}
+
+func (e *Engine) architect(ctx context.Context) error {
+	pend := e.takePending()
+	rec := e.run.Snapshot()
+	r := round{role: RoleArchitect, n: rec.Round, state: runrec.StateArchitect, task: rec.Item + " architect",
+		sections: []BriefSection{{Title: "Architect review", Body: "Review the slice's diff after accepted reviewer findings have been addressed and before the gate (adj 123). You are read-only. The implementer and reviewer reports are under Earlier reports. For each reviewer finding under Earlier reports, report whether it was fixed (CONFIRMED-FIXED, PARTIAL or NOT-FIXED) with evidence. Give change-now findings and later work separately."}}}
+	out, err := e.runRound(ctx, r, pend)
+	if err != nil || !out.ok {
+		return err
+	}
+	// The free-form report has no findings parser. Every report goes back to
+	// the implementer, including one with no blockers (adj 150).
+	return e.bumpRound(ctx, runrec.Feedback{Kind: "architect", File: out.file})
 }
 
 const gateCriteria = "You are the gate. A small fix round is reviewed and gated in one pass: check the new diff against the earlier findings and decide. " +
@@ -249,6 +279,9 @@ func (e *Engine) gate(ctx context.Context) error {
 		sections:   []BriefSection{{Title: "Gate", Body: gateCriteria}}}
 	if name, text := e.latestReport(rec, RoleImplementer); text != "" {
 		r.sections = append(r.sections, BriefSection{Title: "Implementer report (" + name + ")", Body: text})
+	}
+	if name, text := e.latestReport(rec, RoleArchitect); text != "" {
+		r.sections = append(r.sections, BriefSection{Title: "Architect report (" + name + ")", Body: text})
 	}
 	out, err := e.runRound(ctx, r, pend)
 	if err != nil || !out.ok {

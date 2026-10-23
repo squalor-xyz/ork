@@ -23,6 +23,7 @@ const (
 	StateImplement        = "implement"
 	StateChecks           = "checks"
 	StateReview           = "review"
+	StateArchitect        = "architect"
 	StateGate             = "gate"
 	StateAwaitingApproval = "awaiting-approval"
 	StateCommit           = "commit" // approved; ork commits next
@@ -139,10 +140,10 @@ type Pending struct {
 }
 
 // Feedback names the file that holds what the next implementer round must
-// fix: failing check output, review findings or a gate FAIL report. The file
-// is in the run directory.
+// fix: failing check output, reviewer or architect findings, or a gate FAIL
+// report. The file is in the run directory.
 type Feedback struct {
-	Kind string `json:"kind"` // "checks", "findings" or "fail"
+	Kind string `json:"kind"` // "checks", "findings", "architect" or "fail"
 	File string `json:"file"`
 }
 

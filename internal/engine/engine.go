@@ -285,6 +285,8 @@ func (e *Engine) advance(ctx context.Context) error {
 			err = e.checks(ctx)
 		case runrec.StateReview:
 			err = e.review(ctx)
+		case runrec.StateArchitect:
+			err = e.architect(ctx)
 		case runrec.StateGate:
 			err = e.gate(ctx)
 		case runrec.StateCommit:
