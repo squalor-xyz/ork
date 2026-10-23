@@ -580,6 +580,12 @@ func (d *Daemon) startQueuedLocked(f *registry.File) {
 		return a.ID < b.ID
 	})
 	for _, w := range queue {
+		if _, ok := find(f, w.rec.Project); !ok {
+			if err := w.r.engine.StopQueued(d.runs.ctx, "project was removed"); err != nil {
+				fmt.Fprintf(os.Stderr, "stop queued run %s: %v\n", w.rec.ID, err)
+			}
+			continue
+		}
 		if !d.hasRoomLocked(f, w.rec.Project) {
 			continue
 		}

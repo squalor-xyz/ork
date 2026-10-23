@@ -3049,7 +3049,7 @@
       "id": "S77",
       "title": "A queued run whose project was removed does not start",
       "short_title": "Queued run of a removed project",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -3070,7 +3070,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

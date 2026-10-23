@@ -197,3 +197,48 @@ func TestDequeueMovesAQueuedRunToSetup(t *testing.T) {
 		t.Error("dequeue of a run that is not queued must fail")
 	}
 }
+
+func TestStopQueuedRecordsTheReasonAndRefusesOtherStates(t *testing.T) {
+	for _, state := range []string{runrec.StateQueued, runrec.StateSetup, runrec.StateStopped} {
+		t.Run(state, func(t *testing.T) {
+			h := newHarness(t)
+			h.cfg.Queued = true
+			e, err := New(context.Background(), h.deps, h.cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := e.run.Update(func(r *runrec.Record) { r.State = state }); err != nil {
+				t.Fatal(err)
+			}
+			before := e.Snapshot()
+			calls := len(h.fake.Calls())
+			err = e.StopQueued(context.Background(), "project was removed")
+			if state != runrec.StateQueued {
+				if err == nil {
+					t.Fatal("stop of a run that is not queued must fail")
+				}
+				if !reflect.DeepEqual(e.Snapshot(), before) {
+					t.Fatal("refused stop changed the record")
+				}
+			} else {
+				if err != nil {
+					t.Fatal(err)
+				}
+				rec := requireState(t, e, runrec.StateStopped)
+				if rec.Reason != "project was removed" || len(rec.Writes) != 0 {
+					t.Fatalf("reason %q, writes %+v", rec.Reason, rec.Writes)
+				}
+				stored, err := h.store.Open(rec.ID)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if got := stored.Snapshot(); got.State != runrec.StateStopped || got.Reason != rec.Reason {
+					t.Fatalf("stored state %q, reason %q", got.State, got.Reason)
+				}
+			}
+			if got := len(h.fake.Calls()); got != calls {
+				t.Errorf("stop queued called tools: %v", h.fake.Calls()[calls:])
+			}
+		})
+	}
+}

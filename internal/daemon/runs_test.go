@@ -1121,6 +1121,33 @@ func TestQueuedRunStartsWhenASlotFrees(t *testing.T) {
 	w.expectStart(t, "S3")
 }
 
+func TestQueuedRunOfARemovedProjectStopsWithAReason(t *testing.T) {
+	w := newWaveRig(t, 1, 0)
+	w.start(t, "S1")
+	removed := w.start(t, "S2")
+	w.expectStart(t, "S1")
+	if removed.State != runrec.StateQueued {
+		t.Fatal("second run must queue")
+	}
+	// Share the fixture path so the next project's run uses the same fake tools.
+	q := w.p
+	q.Name = "q"
+	if err := registry.Save(w.d.cfg.RegistryPath, &registry.File{Version: registry.Version, GlobalCap: 1, Projects: []registry.Project{w.p, q}}); err != nil {
+		t.Fatal(err)
+	}
+	request(t, w.d, "run.start", `{"project":"q","item":"S3"}`)
+	if err := registry.Save(w.d.cfg.RegistryPath, &registry.File{Version: registry.Version, GlobalCap: 1, Projects: []registry.Project{q}}); err != nil {
+		t.Fatal(err)
+	}
+	w.free <- struct{}{}
+	rec := waitState(t, w.store, removed.ID, runrec.StateStopped)
+	if rec.Reason != "project was removed" {
+		t.Errorf("reason %q, want project was removed", rec.Reason)
+	}
+	w.expectStart(t, "S3") // skipping the removed project must advance the queue
+	w.expectNoStart(t)
+}
+
 func TestQueuedRunStartsWithCachedRegistry(t *testing.T) {
 	for _, caps := range []struct {
 		name            string

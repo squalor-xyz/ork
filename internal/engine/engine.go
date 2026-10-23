@@ -434,6 +434,16 @@ func (e *Engine) endRelay(ctx context.Context, outcome, closeSteps string) {
 	e.d.Slicer.RelayEnd(ctx, e.wr, rec.Worktree, rec.RelayRun, outcome, closeSteps)
 }
 
+// StopQueued stops a queued run and records the reason as given.
+func (e *Engine) StopQueued(ctx context.Context, reason string) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if state := e.run.Snapshot().State; state != runrec.StateQueued {
+		return fmt.Errorf("the slice is %s, not queued", state)
+	}
+	return e.stop(ctx, reason)
+}
+
 // Dequeue moves a queued run to setup, so Run can start it. It writes only the
 // run record.
 func (e *Engine) Dequeue() error {
