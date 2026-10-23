@@ -315,6 +315,20 @@ func TestImplementerSteps(t *testing.T) {
 	}
 }
 
+func TestImplementerSearchAndDenialRules(t *testing.T) {
+	p := prompts(t)["implementer"]
+	for _, want := range []string{
+		"Never search `.slicer/` or `decisions/`",
+		"One denied command does not mean every command is denied",
+		"or say in the report why not",
+		"re-grep each cited file:line in its own file",
+	} {
+		if !has(p, want) {
+			t.Errorf("implementer does not mention %q", want)
+		}
+	}
+}
+
 // Rules every role carries: stay in the worktree, tracking through slicer
 // only, long commands in the foreground, never commit and no credentials.
 func TestSharedRules(t *testing.T) {

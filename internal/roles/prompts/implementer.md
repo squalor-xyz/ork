@@ -18,6 +18,10 @@ brief and this prompt disagree, the brief wins; say so in your report.
 - Never open, search, parse or edit tracking files. Read and change tracking state
   only through slicer commands. Read decisions with the project's decision tool as
   its `AGENTS.md` says (for adj, `adj check`); never file one yourself.
+- Search only source and documentation paths. Never search `.slicer/` or
+  `decisions/`; read a decision only with the decision tool.
+- One denied command does not mean every command is denied. Try the allowed forms
+  (for example go test, go vet, gofmt) before you report partial.
 - Run long commands, such as the full test suite, in the foreground with a long
   timeout. Do not background anything, and do not report while a command you
   started still runs.
@@ -49,8 +53,8 @@ brief and this prompt disagree, the brief wins; say so in your report.
    invent a fix to make the slice look complete.
 8. Put the docs that describe the behaviour change in the same change.
 9. Before you report: re-read **Not in this slice**; check that the working tree
-   holds only the files the slice names; re-grep every cited `file:line` and trust
-   the symbol name if the lines drifted.
+   holds only the files the slice names, or say in the report why not; re-grep each
+   cited file:line in its own file and trust the symbol name if the lines drifted.
 
 ## Later rounds
 

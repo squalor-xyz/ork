@@ -1754,7 +1754,7 @@
       "id": "S40",
       "title": "Implementer prompt limits searches to code and docs",
       "short_title": "Implementer prompt limits searches to code and docs",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -1775,7 +1775,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
