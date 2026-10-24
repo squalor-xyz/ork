@@ -107,13 +107,13 @@ ork (TUI)  ork status --json (CLI)
   | `refresh` | `{"project"}` | none; reads every part of the project now and returns once they are read |
   | `projects.list` | none | `{"projects":[...]}`; an empty registry is valid |
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
-  | `projects.rm` | `{"name"}` | none |
+  | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
 
   Error codes the daemon adds: `unknown_method`, `bad_params`, `not_found`,
-  `duplicate_name`, `invalid_path`, `registry`. Registry writes happen in the
-  daemon, one at a time. The TUI reads through the daemon with `snapshot`
-  from S13. Before the daemon it called the adapters directly
-  (`dash.pre-daemon`).
+  `duplicate_name`, `invalid_path`, `registry`, *proposed* `project_busy`.
+  Registry writes happen in the daemon, one at a time. The TUI reads through
+  the daemon with `snapshot` from S13. Before the daemon it called the
+  adapters directly (`dash.pre-daemon`).
 
   **Snapshot cache (S15, `dash.cache`, `dash.refresh`, `boundary.git-head`).**
   The daemon holds one in-memory value per project and part, shared by all
@@ -811,7 +811,10 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   (`registry.no-seed`, adj 157). The first add writes projects.json.
   The TUI Welcome add guides registration through this same daemon method;
   its proposed confirmation and error layout is in dashboard.md.
-- `projects rm NAME`: `{"removed":"NAME"}`.
+- `projects rm NAME`: `{"removed":"NAME"}`. Removal is refused with
+  *proposed* `project_busy` while any run of the project is not committed or
+  stopped. This includes queued, paused, awaiting-approval and running states.
+  The message names the run ids. The project stays registered.
 - `roles print [ROLE]`: `{"roles":[{"name","prompt"}]}`. Text: the prompt of
   ROLE as embedded, or all four with a `==== NAME ====` line before each.
 - `doctor`: `{"ok","tools":[{"name","required","present","path","version",

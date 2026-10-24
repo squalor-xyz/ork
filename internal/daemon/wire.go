@@ -45,6 +45,7 @@ const (
 	CodeDuplicateName = "duplicate_name"
 	CodeInvalidPath   = "invalid_path"
 	CodeRegistry      = "registry"
+	CodeProjectBusy   = "project_busy" // proposed
 )
 
 // StatusParams selects the projects of a status call. An empty Project means

@@ -25,6 +25,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -741,6 +742,112 @@ func TestProjectsAddListRemoveSaveTheRegistry(t *testing.T) {
 	after, _ := registry.Load(e.regPath)
 	if len(after.Projects) != 2 || after.Projects[1].Name != "with-adj" {
 		t.Fatalf("after rm: %+v", after.Projects)
+	}
+}
+
+func TestProjectsRmRefusesAnUnfinishedRun(t *testing.T) {
+	states := []string{
+		runrec.StateSetup, runrec.StateImplement, runrec.StateChecks,
+		runrec.StateReview, runrec.StateArchitect, runrec.StateGate,
+		runrec.StateAwaitingApproval, runrec.StateCommit, runrec.StateFinish,
+		runrec.StatePaused, runrec.StateQueued,
+	}
+	for _, state := range states {
+		t.Run(state, func(t *testing.T) {
+			d, store, p := runDaemon(t, nil)
+			for _, id := range []string{"z-run", "a-run"} {
+				if _, err := store.Create(runrec.Record{ID: id, Project: p.Name, State: state}); err != nil {
+					t.Fatal(err)
+				}
+			}
+			// An unavailable managed run has no engine; use its stored record.
+			d.runs.runs["z-run"] = &managedRun{failure: errors.New("unavailable")}
+			_, err := d.handle(context.Background(), MethodProjectsRm, json.RawMessage(`{"name":"p"}`))
+			var re *ipc.Error
+			if !errors.As(err, &re) || re.Code != "project_busy" || re.Message != "project p has unfinished runs: a-run, z-run" {
+				t.Fatalf("unfinished runs: %v", err)
+			}
+			f, err := registry.Load(d.registryPath())
+			if err != nil || len(f.Projects) != 1 || f.Projects[0].Name != p.Name {
+				t.Fatalf("refusal changed registry: %+v, %v", f, err)
+			}
+		})
+	}
+}
+
+func TestProjectsRmAllowsOnlyFinalRuns(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	for _, state := range []string{runrec.StateCommitted, runrec.StateStopped} {
+		if _, err := store.Create(runrec.Record{ID: state, Project: p.Name, State: state}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := store.Create(runrec.Record{ID: "other", Project: "other", State: runrec.StateImplement}); err != nil {
+		t.Fatal(err)
+	}
+	if err := d.removeProject(p.Name); err != nil {
+		t.Fatal(err)
+	}
+	f, err := registry.Load(d.registryPath())
+	if err != nil || len(f.Projects) != 0 {
+		t.Fatalf("project not removed: %+v, %v", f, err)
+	}
+}
+
+func TestProjectsRmUsesEngineSnapshot(t *testing.T) {
+	for _, live := range []string{runrec.StatePaused, runrec.StateStopped} {
+		t.Run(live, func(t *testing.T) {
+			d, store, p := runDaemon(t, nil)
+			r, err := store.Create(runrec.Record{ID: "live", Project: p.Name, State: live})
+			if err != nil {
+				t.Fatal(err)
+			}
+			d.runs.runs["live"] = &managedRun{engine: engine.Load(d.runDeps(p), p, r)}
+			// A separate handle changes disk while the engine keeps its snapshot.
+			disk, err := store.Open("live")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := disk.Update(func(rec *runrec.Record) {
+				if live == runrec.StatePaused {
+					rec.State = runrec.StateStopped
+				} else {
+					rec.State = runrec.StatePaused
+				}
+			}); err != nil {
+				t.Fatal(err)
+			}
+			err = d.removeProject(p.Name)
+			if live == runrec.StateStopped {
+				if err != nil {
+					t.Fatalf("final engine snapshot: %v", err)
+				}
+			} else {
+				var re *ipc.Error
+				if !errors.As(err, &re) || re.Code != "project_busy" || re.Message != "project p has unfinished runs: live" {
+					t.Fatalf("unfinished engine snapshot: %v", err)
+				}
+			}
+		})
+	}
+}
+
+func TestProjectsRmFailsClosedOnStoreError(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	r, err := store.Create(runrec.Record{ID: "broken", Project: p.Name, State: runrec.StateStopped})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(store.RunDir(r.Snapshot().ID), "run.json"), []byte("invalid"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var re *ipc.Error
+	if err := d.removeProject(p.Name); !errors.As(err, &re) || re.Code != ipc.CodeInternal || !strings.Contains(re.Message, "broken") {
+		t.Fatalf("store failure: %v", err)
+	}
+	f, err := registry.Load(d.registryPath())
+	if err != nil || len(f.Projects) != 1 || f.Projects[0].Name != p.Name {
+		t.Fatalf("store failure changed registry: %+v, %v", f, err)
 	}
 }
 

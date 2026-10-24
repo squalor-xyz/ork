@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"slices"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -408,6 +409,17 @@ func (d *Daemon) removeProject(name string) error {
 	i := slices.IndexFunc(f.Projects, func(p registry.Project) bool { return p.Name == name })
 	if i < 0 {
 		return notFound(name, f)
+	}
+	// Hold runs.mu through Save; the check sees starts that took it first.
+	// Planned starts are not covered: startRun does not re-check registration.
+	d.runs.mu.Lock()
+	defer d.runs.mu.Unlock()
+	ids, err := d.unfinishedRunsLocked(name)
+	if err != nil {
+		return ipc.ErrorOf(err)
+	}
+	if len(ids) != 0 {
+		return &ipc.Error{Code: CodeProjectBusy, Message: fmt.Sprintf("project %s has unfinished runs: %s", name, strings.Join(ids, ", "))}
 	}
 	f.Projects = slices.Delete(f.Projects, i, i+1)
 	if err := registry.Save(d.registryPath(), f); err != nil {

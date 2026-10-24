@@ -846,6 +846,27 @@ func (d *Daemon) dismissRun(p RunAction) (runrec.Record, error) {
 	return r.Snapshot(), nil
 }
 
+// unfinishedRunsLocked returns sorted unfinished run IDs for the project.
+// The caller holds d.runs.mu.
+func (d *Daemon) unfinishedRunsLocked(project string) ([]string, error) {
+	stored, err := d.runs.deps.Store.List()
+	if err != nil {
+		return nil, err
+	}
+	var ids []string
+	for _, r := range stored {
+		rec := r.Snapshot()
+		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
+			rec = m.engine.Snapshot()
+		}
+		if rec.Project == project && !runrec.IsFinal(rec.State) {
+			ids = append(ids, rec.ID)
+		}
+	}
+	sort.Strings(ids)
+	return ids, nil
+}
+
 func (d *Daemon) engineRuns(project string) []EngineRun {
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()

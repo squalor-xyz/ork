@@ -1704,7 +1704,7 @@
       "id": "S38",
       "title": "projects rm refuses while the project has unfinished runs",
       "short_title": "projects rm refuses while the project has unfinished runs",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -1725,7 +1725,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

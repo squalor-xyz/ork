@@ -20,6 +20,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/roles"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -417,6 +418,28 @@ func TestProjectsRefusals(t *testing.T) {
 	}
 	if saved, _ := registry.Load(w.regPath); len(saved.Projects) != 1 {
 		t.Fatalf("a refusal changed the registry: %+v", saved.Projects)
+	}
+
+	// Start before seeding, so recovery cannot launch the unfinished run.
+	if code, _, stderr := run(t, w.app, "projects", "list"); code != 0 {
+		t.Fatalf("start daemon: exit %d: %s", code, stderr)
+	}
+	store := &runrec.Store{Dir: filepath.Join(w.paths.Dir, "runs")}
+	if _, err := store.Create(runrec.Record{ID: "busy-run", Project: "keep", State: runrec.StatePaused}); err != nil {
+		t.Fatal(err)
+	}
+	want := "project keep has unfinished runs: busy-run"
+	code, _, stderr = run(t, w.app, "projects", "rm", "keep")
+	if code != 1 || !strings.Contains(stderr, want) {
+		t.Errorf("rm busy: exit %d: %q", code, stderr)
+	}
+	code, stdout, _ = run(t, w.app, "projects", "rm", "keep", "--json")
+	mustJSON(t, stdout, &e)
+	if code != 1 || e.Error.Code != "project_busy" || e.Error.Message != want {
+		t.Errorf("rm busy --json: exit %d: %s", code, stdout)
+	}
+	if saved, err := registry.Load(w.regPath); err != nil || len(saved.Projects) != 1 || saved.Projects[0].Name != "keep" {
+		t.Fatalf("busy refusal changed registry: %+v, %v", saved, err)
 	}
 }
 
