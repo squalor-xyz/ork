@@ -1,0 +1,39 @@
+{
+  "id": "S102",
+  "title": "startRun re-checks that the project is still registered",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S38 reviewer note, accepted as a limit. A run planned before ork projects rm can still launch for the removed project, because startRun (internal/daemon/runs.go ~:403) does not re-check that the project is registered; the handlers.go comment on projects.rm says so. Together with S35 (removed-project runs stay visible) and S77 (queued runs of a removed project stop) this closes the gap."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/runs.go` (startRun ~:403): refuse with a clear error when the project is not in the registry (use the cached registry from S76 when the read fails).\n- `internal/daemon/runs_test.go`: the test.\n- `internal/daemon/handlers.go`: update the projects.rm comment."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestStartRunRefusesAProjectRemovedAfterPlanning: a run planned, then its project removed, is refused at start with an error naming the project, with no worktree and no run record.\n- TestStartRunStillWorksWithAUnreadableRegistryUsingTheCache (S76 behaviour is unchanged)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Tests first. 2. In startRun look the project up (cache fallback) before creating anything. 3. Update the comment and docs/design.md if it describes the gap."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/daemon\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- slicer check\n- adj lint"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
