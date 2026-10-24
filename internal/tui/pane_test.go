@@ -332,7 +332,7 @@ func TestPaneHelp(t *testing.T) {
 	h := paneHarness(t, "paused", "shape")
 	h.deliver(press("esc"))
 	h.deliver(press("?"))
-	for _, want := range []string{"enter open run pane or Roadmap item; other rows select project", "esc close pane, Roadmap item, help or message", "enter (answer) submit; no confirmation", "pgup/pgdown scroll run tree and reason"} {
+	for _, want := range []string{"enter open run, Roadmap item or decision; other rows select project", "esc close pane, item, decision, help or message", "enter (answer) submit; no confirmation", "pgup/pgdown scroll run tree and reason"} {
 		if v := h.view(); !strings.Contains(v, want) {
 			t.Errorf("missing pane help %q:\n%s", want, v)
 		}

@@ -1,0 +1,30 @@
+[1mork[m  ?help                 | Overview[90m | Questions | [mWaves[90m | [mRoadmap[90m | [m[1;36mDecisions[m
+  Needs you                |[90m------------------------------------------------------------------------[m
+[1;7;97;44m> zeta 2[m                   |[1;36mOpen[m[90m | [mDecided
+  alpha 2                  |[1;36mzeta[m
+  plain 2                  |[1;7;97;44m  #90 store.engine  Question 0[m
+                           |    A: Files
+                           |[90m       Simple[m
+                           |    B: Database
+                           |    Recommendation: A
+                           |[90m       Use files[m
+                           |[90m       Easy audit[m
+                           |  #2 ui.order  Second question
+                           |  [left/right] tabs   [a] all projects   [enter] open
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |[90m------------------------------------------------------------------------[m
+                           | 3 projects | refreshed 16:42:00 | pending 0

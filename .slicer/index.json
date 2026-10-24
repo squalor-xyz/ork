@@ -2488,7 +2488,7 @@
       "id": "S59",
       "title": "Decisions screen: open and decided records, one project or all",
       "short_title": "Decisions screen: open and decided records, one project or all",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S12"
@@ -2511,7 +2511,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

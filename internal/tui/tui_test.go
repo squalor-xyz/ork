@@ -318,7 +318,7 @@ func TestViewKeysDoNotMoveTheProject(t *testing.T) {
 			}
 			want := "Waves"
 			if k == "shift+tab" {
-				want = "Roadmap"
+				want = "Decisions"
 			}
 			if !strings.Contains(h.m.View().Content, h.m.cfg.Theme.ViewActive.Render(want)) {
 				t.Errorf("after %s %s is not the active view", k, want)
@@ -765,7 +765,7 @@ func TestDashboardDocsListTheNavigationKeys(t *testing.T) {
 	}
 	s := strings.Join(strings.Fields(string(b)), " ")
 	for _, want := range []string{
-		"Keys `right`/`left` move selection and wrap through \"Needs you\" and the sorted projects.",
+		"Outside Decisions, keys `right`/`left` move selection and wrap through \"Needs you\" and the sorted projects.",
 		"`1`-`9` select projects in registry order.",
 		"`tab` and `shift+tab` switch views",
 		"`space` ticks or unticks the selected item",

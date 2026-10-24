@@ -253,6 +253,9 @@ func (m *Model) moveRow(delta int) {
 
 // selectedRow is the row under the cursor, and false when there is none.
 func (m *Model) selectedRow() (ovRow, bool) {
+	if m.view == decisionsView {
+		return ovRow{}, false
+	}
 	needs, running := m.rows()
 	all := append(append(append(append([]ovRow(nil), needs...), running...), m.recentRows()...), m.readyRows()...)
 	i := clampCursor(m.cursor, len(all))

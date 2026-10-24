@@ -1,4 +1,4 @@
-[1mork[m [90mdev[m  ?help     | [1;36mOverview[m[90m | Questions | [mWaves[90m | [mRoadmap[90m | Decisions[m
+[1mork[m [90mdev[m  ?help     | [1;36mOverview[m[90m | Questions | [mWaves[90m | [mRoadmap[90m | [mDecisions
   Needs you        |[90m------------------------------------------------------------[m
   slicer 2         |[1;36mNeeds you[m
   adjudicate 0     |  [90mnothing needs you[m

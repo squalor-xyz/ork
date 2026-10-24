@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">103 items · — 35 · done 62 · parked 1 · retired 5</p>
+<p class="summary">103 items · — 34 · done 63 · parked 1 · retired 5</p>
 <h2>v1.1</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S24</td><td>Pin and check tool contracts</td><td>M</td><td>2</td><td></td><td>owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S45 (adj-json contract version and pin).</td><td class="status">—</td></tr>
@@ -117,7 +117,7 @@
 <tr class="done"><td>62</td><td>S56</td><td>daemon stop and restart cope with a daemon that predates daemon.stop</td><td>S</td><td>1</td><td></td><td>discovered from S46</td><td class="status">done</td></tr>
 <tr class="done"><td>63</td><td>S57</td><td>TUI keys: up/down move rows, tab and left/right move projects</td><td>S</td><td>1</td><td></td><td>discovered from S26</td><td class="status">done</td></tr>
 <tr class="done"><td>64</td><td>S58</td><td>Tab and shift+tab switch views; left/right and 1-9 switch projects</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="open"><td>65</td><td>S59</td><td>Decisions screen: open and decided records, one project or all</td><td>M</td><td>2</td><td></td><td></td><td class="status">—</td></tr>
+<tr class="done"><td>65</td><td>S59</td><td>Decisions screen: open and decided records, one project or all</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="done"><td>66</td><td>S60</td><td>ork wave suggest and start; ork stop WAVE</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="done"><td>67</td><td>S63</td><td>Landing: merge detection, branch cleanup and run pruning</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="retired"><td>68</td><td>S64</td><td>Contract check passes --root so each project&#x27;s slicer contract is checked</td><td>S</td><td>1</td><td></td><td>No effect today: slicer ai relay prints the same contract line for every project (checked 2026-10-20). Folded into S24, which passes --root when slicer s387 adds the pin.</td><td class="status">retired</td></tr>

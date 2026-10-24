@@ -1,4 +1,4 @@
- [1;36mOverview[m[90m | Questions | [mWaves[90m | [mRoadmap[90m | Decisions[m
+ [1;36mOverview[m[90m | Questions | [mWaves[90m | [mRoadmap[90m | [mDecisions
 [90m----------------------------------------------------------------------------------------------------[m
 [1;36mNeeds you[m
 [1;7;97;44m  ? decision  slicer      #11 ui.slicer-tui  Does ork reimplement slicer's roadmap editor or reus...[m

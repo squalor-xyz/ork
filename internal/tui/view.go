@@ -26,11 +26,9 @@ func (m *Model) View() tea.View {
 	return v
 }
 
-// screen is the text of the view. It has exactly height lines, none wider than
-// width, laid out as in docs/dashboard.md: sidebar, view bar, active view, status
-// line.
-func (m *Model) screen() string {
-	w, h := m.width, m.height
+// layoutSize shares the terminal and sidebar dimensions with detail scrolling.
+func (m *Model) layoutSize() (w, h, sideW int) {
+	w, h = m.width, m.height
 	if w <= 0 {
 		w = defaultWidth
 	}
@@ -38,7 +36,7 @@ func (m *Model) screen() string {
 		h = defaultHeight
 	}
 
-	sideW := 0
+	sideW = 0
 	if !m.sidebarHidden {
 		sideW = 28
 		if w < 100 {
@@ -46,6 +44,13 @@ func (m *Model) screen() string {
 		}
 		sideW = min(sideW, max(w/3, 1))
 	}
+	return w, h, sideW
+}
+
+// screen is exactly height lines, none wider than width: sidebar, view bar,
+// active view and status line, as in docs/dashboard.md.
+func (m *Model) screen() string {
+	w, h, sideW := m.layoutSize()
 	mainW := max(w-sideW, 1)
 	th := m.cfg.Theme
 	var body, detail []string
@@ -66,9 +71,11 @@ func (m *Model) screen() string {
 			detail = detail[:min(len(detail), max(h-5, 1))]
 			bodyH = max(h-4-len(detail), 1)
 		}
-	} else if m.view == roadmapView || m.view == wavesView {
+	} else if m.view == roadmapView || m.view == wavesView || m.view == decisionsView {
 		rv := overviewView{}
-		if m.view == wavesView {
+		if m.view == decisionsView {
+			rv = m.decisions(mainW)
+		} else if m.view == wavesView {
 			if m.waves != nil && m.waves.lineup != nil {
 				rv = m.lineupBody(mainW)
 			} else {
@@ -238,7 +245,7 @@ var views = []struct {
 	{"Questions", false},
 	{"Waves", true},
 	{"Roadmap", true},
-	{"Decisions", false},
+	{"Decisions", true},
 }
 
 // viewBar lists the views. The active view uses ViewActive. A view that is not
@@ -319,10 +326,19 @@ func (m *Model) helpLines(w, bodyH int) []string {
 	for _, group := range m.keys.FullHelp() {
 		for _, binding := range group {
 			h := binding.Help()
+			if h.Key == m.keys.AllProjects.Help().Key && m.view != decisionsView {
+				continue
+			}
+			if h.Key == m.keys.Add.Help().Key && (h.Desc == m.keys.Add.Help().Desc || h.Desc == m.keys.Approve.Help().Desc) && m.view == decisionsView {
+				continue
+			}
 			lines = append(lines, clip(h.Key+" "+h.Desc, w))
 		}
 	}
-	lines = append(lines, "", clip("Overview, Waves and Roadmap are available. Questions and Decisions come in later slices.", w))
+	if m.view == decisionsView {
+		lines = append(lines, wrapText("On Decisions, left/right switch tabs; tab to another view to reach Needs you.", max(w, 1))...)
+	}
+	lines = append(lines, "", clip("Overview, Waves, Roadmap and Decisions are available. Questions is coming in a later slice.", w))
 	mark := brand.Mark(!th.Mono, m.cfg.ASCII)
 	if w >= 12 && bodyH >= len(lines)+len(mark)+1 {
 		lines = append(append(mark, ""), lines...)

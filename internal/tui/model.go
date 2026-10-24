@@ -104,15 +104,22 @@ func noSlicerErr(err error) bool {
 
 // Model is the Bubble Tea model of the whole TUI.
 type Model struct {
-	welcome       welcomeState
-	cfg           Config
-	keys          keyMap
-	help          help.Model
-	projects      []*projectState
-	byName        map[string]*projectState
-	poller        *poll.Poller
-	active        int // -1 is Needs you; otherwise registry index
-	view          int // the view in the bar: an index into views; 0 is the Overview
+	welcome  welcomeState
+	cfg      Config
+	keys     keyMap
+	help     help.Model
+	projects []*projectState
+	byName   map[string]*projectState
+	poller   *poll.Poller
+	active   int // -1 is Needs you; otherwise registry index
+	view     int // the view in the bar: an index into views; 0 is the Overview
+
+	allProjects     bool
+	decisionsTab    int
+	decisionsCursor int
+	decisionPane    *decisionRow
+	decisionScroll  int
+
 	roadmapCursor int
 	itemPane      *itemPane
 	itemRequest   uint64
@@ -465,6 +472,27 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 	switch {
+	case m.view == decisionsView && key.Matches(msg, m.keys.AllProjects):
+		m.allProjects = !m.allProjects
+		m.decisionsCursor = 0
+		m.decisionPane = nil
+	case m.view == decisionsView && key.Matches(msg, m.keys.Next, m.keys.Prev):
+		m.decisionsTab = 1 - m.decisionsTab
+		m.decisionsCursor = 0
+		m.decisionPane = nil
+	case m.view == decisionsView && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.PaneScroll):
+		delta := 1
+		if key.Matches(msg, m.keys.RowPrev) || msg.String() == "pgup" {
+			delta = -1
+		}
+		if m.decisionPane != nil {
+			m.scrollDecision(delta, key.Matches(msg, m.keys.PaneScroll))
+		} else {
+			n := len(m.decisionRecords())
+			m.decisionsCursor = clampCursor(clampCursor(m.decisionsCursor, n)+delta, n)
+		}
+	case m.view == decisionsView && key.Matches(msg, m.keys.Select):
+		m.openDecision()
 	case key.Matches(msg, m.keys.EditLineup):
 		return m.openLineup()
 	case key.Matches(msg, m.keys.Tick):
@@ -493,6 +521,7 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	case key.Matches(msg, m.keys.Close):
 		m.actionStatus = ""
 		m.itemPane = nil
+		m.decisionPane = nil
 		m.showHelp = false
 		m.filter = ""
 	case key.Matches(msg, m.keys.Next):
@@ -580,6 +609,8 @@ func (m *Model) switchTo(i int) tea.Cmd {
 	m.pane = nil
 	m.active = i
 	m.roadmapCursor = 0
+	m.decisionsCursor = 0
+	m.decisionPane = nil
 	m.itemPane = nil
 	m.cursor = 0
 	if i >= 0 {
@@ -718,6 +749,8 @@ func (m *Model) moveView(delta int) tea.Cmd {
 			m.dropLaunch()
 			m.view = i
 			m.roadmapCursor = 0
+			m.decisionsCursor = 0
+			m.decisionPane = nil
 			m.itemPane = nil
 			return m.openWaves()
 		}
@@ -790,7 +823,7 @@ type actionMsg struct {
 }
 
 func (m *Model) requestAction(verb string) tea.Cmd {
-	if m.showHelp || m.view == roadmapView || m.view == wavesView {
+	if m.showHelp || m.view == roadmapView || m.view == wavesView || m.view == decisionsView {
 		return nil
 	}
 	r, ok := m.actionRow()

@@ -100,11 +100,15 @@ When it is selected, its detail line says to run `slicer init`
 The list scrolls to keep selection visible and shows `+N more` for hidden
 rows. Below 100 columns the sidebar narrows; names that do not fit end in
 `...` and keep their badges. `s` hides or shows the sidebar at any width.
-Keys `right`/`left` move selection and wrap through "Needs you" and the
-sorted projects. `1`-`9` select projects in registry order. `tab` and
+Outside Decisions, keys `right`/`left` move selection and wrap through
+"Needs you" and the sorted projects. On Decisions they switch the Open and
+Decided tabs; use `1`-`9` to select a project. To reach
+"Needs you" by key, leave Decisions with `tab` and use `right`/`left`.
+`1`-`9` select projects in registry order. `tab` and
 `shift+tab` switch views in the order of the view bar (`ui.views`,
-`ui.view-list`). They skip views not built yet, so Overview, Waves and Roadmap are
-reached for now. `/` filters project names without regard to case; `enter`
+`ui.view-list`). They skip views not built yet, so Overview, Waves, Roadmap and
+Decisions are reached for now. `/` filters project names without regard to
+case; `enter`
 keeps the filter and leaves text entry, and `esc` clears it. `r` refreshes the
 selected project, or all projects on "Needs you". `?` shows keys and `q` quits.
 
@@ -488,11 +492,37 @@ Editing comes after v1, and `ui.slicer-tui` is open.
 
 ## Decisions (one project or all, read-only in v1)
 
-The open questions first, each with its options and recommendation. The
-decided records are on a second tab. The data comes from
-`adj inbox --json` and `adj list --json`, called per registered project.
-That needs nothing unreleased in adj. Answering owner questions from a
-running slice happens on the Waves screen (`owner.questions`).
+Open questions are on the first tab, each with its options, tradeoffs and
+recommendation. The active tab uses the view heading style, distinct from the
+record cursor. The scope heading names the project or says
+`All projects using adj`. The final body line lists the tab, scope and
+open-record keys. On "Needs you", it omits the scope toggle hint. `left` and
+`right` switch the Open and Decided tabs. `a`
+toggles between the selected project and all projects that use adj. The toggle
+persists when switching projects. With "Needs you" selected, Decisions shows
+all projects that use adj. A project without adj shows `no adj in this project`.
+If no registered project uses adj, the all-projects view says `No project uses adj`.
+
+All-projects rows put the project name first, padded to the widest adj project
+name in scope, capped at 20 columns. Each record takes one line, with a clipped
+title. The cursor highlights the whole line. Tradeoffs and recommendation text
+are dimmed and indented under their labels. Rows follow registry order. Within
+each project, Open keeps `adj inbox` order (oldest first) and Decided keeps
+`adj list` order. `down`/`j`/`n` and `up`/`k`/`p` move the record cursor.
+`enter` opens the record from the snapshot, including options, recommendation,
+decision, rationale and history; `esc` returns. The detail has project and record
+headings, indented body text and a separate History heading. Row keys scroll
+one line; `pgup`/`pgdown` scroll one page. Scrolling stops at either end. Leaving
+the view or selecting a project closes the detail and resets the record cursor.
+There is no run cursor or write action on this screen. Decisions help hides
+Approve and Add, and explains how to reach "Needs you" through another view.
+
+The data comes from `adj inbox --json` and `adj list --json --status decided`,
+called per registered project. Failed inbox or list calls show their code and
+message with wrapped continuations aligned under the message, while other
+projects' rows remain visible. Non-visible projects poll every 30 seconds, so all-projects rows can be up to 30 seconds old. Opening a
+record makes no additional adj call. Answering owner questions from a running
+slice happens on the Waves screen (`owner.questions`).
 
 The run pane's *proposed* board details keep the S55 tree. A pipeline above
 it colors finished roles green, running cyan, failed red, and waiting dim.
