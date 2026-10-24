@@ -1,0 +1,39 @@
+{
+  "id": "S99",
+  "title": "Live role detail: output tail and tokens/cost in the run pane",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S07 (landed) delivered the stage bar, ticker and sparkline, but not the output tail or tokens and cost that its title promised. Owner 2026-10-24: tail and tokens/cost in v1; the bell moves to v1.1 (S100). Today tokens and cost are recorded per role round when it ends (runrec.RoleRecord, internal/runrec/record.go:61-62; engine.Result Tokens and CostUSD, internal/engine/runner.go:64-65), so a running role shows neither; the claude adapter keeps a 2 KB tail per round (internal/agent/claude/run.go:20-21, Round.Tail) but nothing streams it to the TUI. The tail can contain secrets (a recorded command can, see S51): it must stay in daemon memory, never in run.json."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/runner.go` (Request): extend the per-event hook (S07 added `OnEvent func()`) or add a sibling so the engine can keep the last N bytes of the role's visible output text and the running token total; `internal/agent/claude/run.go`, `internal/agent/codex/codex.go` and `internal/daemon/runner.go`: pass text deltas and usage events through.\n- `internal/engine/activity.go` (S07): keep the tail and the live token and cost counters beside the activity ring, in memory only, with the same mutex.\n- `internal/source/source.go` (EngineRun) and `internal/daemon/runs.go` (engineRuns): carry `tail` (last 2 KB, redacted of the run environment) and `tokens` and `cost_usd` for the running role as *proposed* fields.\n- `internal/tui/runtree.go`, `relayboard.go`, `overview.go`: the pane shows the tail under the running node (a few lines, dim, clipped to the width) and a tokens and cost line; the Running row shows the token total.\n- Tests beside each, `testdata/golden/`, `docs/dashboard.md`, `docs/design.md`, `docs/state.md` (state that the tail is never written to disk)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestTailKeepsTheLastBytesOfVisibleText: text deltas fill a ring capped at 2 KB; older text is dropped; the ring is reset at each new role round.\n- TestTailNeverReachesRunJSON: the run record and report files contain no tail text.\n- TestLiveTokensAndCostAccumulate: usage events update the running totals before the round ends; the final Result still sets the RoleRecord values.\n- TestPaneShowsTheTailAndTokens: the running node shows up to 3 dim tail lines clipped to the pane width and `tokens N  $C`; a finished role shows its recorded values; no tail for stopped or ended runs.\n- TestRunningRowShowsTheTokenTotal and the narrow-row drop order (bar and heard stay first to go).\n- TestAdaptersMapTextAndUsageEvents (claude and codex fixtures).\n- Golden views, colour and monochrome."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Do a spec preflight: check how each adapter exposes text deltas and usage mid-round (claude --include-partial-messages; codex per item) and list gaps. 2. Write the failing tests first. 3. Keep the tail and counters in memory beside the activity ring. 4. Carry them on the snapshot. 5. Draw them. 6. Update the docs. 7. go test ./internal/tui -update and review the golden diff. This is a UI slice: it gets the UI pass (r14, rule u10). Open for the preflight to settle with the owner: how many tail lines, whether the tail shows tool calls or only assistant text, and a redaction rule. Decided 2026-10-24 (owner): tail and tokens/cost in v1; bell to v1.1."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/engine ./internal/daemon ./internal/source ./internal/tui ./internal/agent/...\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review the golden diff\n- slicer check\n- adj lint\n- [HUMAN CHECK] While a relay runs, the pane shows a live tail and the token and cost totals, and a stopped run shows no tail."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -1,0 +1,39 @@
+{
+  "id": "S100",
+  "title": "Bell: ring the terminal when a role needs the owner or a run ends",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S07 originally promised a bell with the live role detail. Owner 2026-10-24: moved to v1.1. Open for the owner when it is picked up: what rings it (a role needing you, a run ending, both), whether it is off by default, and the setting name (a ui.* adj key)."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
