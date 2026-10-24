@@ -371,6 +371,12 @@ From slicer's contract:
 - an owner decision is needed;
 - a permission denial on a slicer step.
 
+Outside the finish step, ork follows decision 93 (`engine.denials`): a denial
+stops only an unsuccessful round. A successful round with denials proceeds and
+shows them as warnings. In the finish step, a denied `slicer note`, `done` or
+`handoff` pauses for the owner. The implementer reports it under `## Owner needed`.
+See `slicer ai relay` for the contract.
+
 ork adds:
 - an auth or unclassified role exit;
 - an unsuccessful round with permission denials;
@@ -774,7 +780,9 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   time in `created_at`. The optional `roles`
   array and the proposed `branch` and tri-state `merged` fields are described
   in [state.md](state.md). `denials` is an optional
-  array of `Tool` or `Tool: command` strings collected from role records
+  array of distinct `Tool` or `Tool: command` texts from role records.
+  Texts are deduplicated across roles in first-seen order. Repeats append
+  ` xN`, such as `Write: /x.txt x2`
   (`ui.denials-display`, `engine.denied-command`). `wait`
   contains the approval prompt, owner question, pause or stop reason. The optional
   `pending` string holds the paused run record's pending kind (`question`,
@@ -789,9 +797,9 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   with the tool's own code. `parts` gives each part's age in ms (0 for a part never read) and `stale`
   when the part keeps an older value; the error is the one that failed. Text: one line `NAME: needs
   you N, active relays M`, then one line per relay, engine run (with state,
-  wait reason and denied tool names), and
-  error (the text
-  does not show ages yet).
+  wait reason and the `denied:` line), and error. The denied line shows at
+  most three texts, then `and N more` for the remaining texts. The text
+  does not show ages yet.
   With no projects, text `status` prints
   `no projects: run ork projects add PATH (or run ork to add them in the TUI)`
   and exits 0. Project commands (`run`, `wave suggest`, `wave start`, and

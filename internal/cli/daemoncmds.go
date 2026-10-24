@@ -75,7 +75,7 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 					fmt.Fprintf(o.stdout, " (wait: %s)", r.Wait)
 				}
 				if len(r.Denials) > 0 {
-					fmt.Fprintf(o.stdout, " (denied: %s)", strings.Join(r.Denials, ", "))
+					fmt.Fprintf(o.stdout, " (denied: %s)", source.DenialsText(r.Denials))
 				}
 				fmt.Fprintln(o.stdout)
 				if r.Error != "" {

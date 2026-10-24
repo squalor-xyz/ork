@@ -186,10 +186,18 @@ type EngineRun struct {
 	State       string       `json:"state"`
 	Wait        string       `json:"wait,omitempty"`
 	Pending     string       `json:"pending,omitempty"` // paused runrec pending kind (ui.pending-kind)
-	Denials     []string     `json:"denials,omitempty"` // one text per denial: "Tool" or "Tool: command"
+	Denials     []string     `json:"denials,omitempty"` // distinct denial texts in first-seen order, with " xN" for repeats
 	RelayRun    string       `json:"relay_run,omitempty"`
 	CreatedAt   time.Time    `json:"created_at"`
 	UpdatedAt   time.Time    `json:"updated_at,omitzero"`
+}
+
+// DenialsText formats at most three denials and counts any remaining entries.
+func DenialsText(denials []string) string {
+	if len(denials) <= 3 {
+		return strings.Join(denials, ", ")
+	}
+	return fmt.Sprintf("%s and %d more", strings.Join(denials[:3], ", "), len(denials)-3)
 }
 
 // Superseded reports a stopped run replaced by a newer engine run of its slice.

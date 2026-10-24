@@ -132,7 +132,7 @@ func (m *Model) rows() (needs, running []ovRow) {
 				parts = append(parts, r.Wait)
 			}
 			if len(r.Denials) > 0 {
-				parts = append(parts, "denied: "+strings.Join(r.Denials, ", "))
+				parts = append(parts, "denied: "+source.DenialsText(r.Denials))
 			}
 			if r.Error != "" {
 				parts = append(parts, "error: "+r.Error)

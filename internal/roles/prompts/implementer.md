@@ -74,7 +74,12 @@ affected tests and the full suite.
   {{slice_id}} --render --check`; then `slicer done` runs on main at landing, not in
   the worktree.
 - If a slicer step is denied by a permission check, do not work around it and do not
-  run it another way. Stop, and put the denial's exact text under `## Owner needed`.
+  run it another way. For steps outside the finish step, follow this rule:
+  Skip that step, finish the rest of the work, and put the denial's exact text
+  under item 6 of the report (deviations). Under decision 93 (`engine.denials`),
+  ork records the denial and a successful round goes on. A denial stops only an
+  unsuccessful round. In the finish step, a denied `slicer note`, `done` or
+  `handoff` goes under `## Owner needed`.
 
 ## Owner questions
 

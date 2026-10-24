@@ -343,6 +343,10 @@ func TestImplementerSearchAndDenialRules(t *testing.T) {
 		"One denied command does not mean every command is denied",
 		"or say in the report why not",
 		"re-grep each cited file:line in its own file",
+		"Skip that step, finish the rest of the work",
+		"put the denial's exact text under item 6 of the report (deviations)",
+		"ork records the denial and a successful round goes on",
+		"In the finish step, a denied `slicer note`, `done` or `handoff` goes under `## Owner needed`.",
 	} {
 		if !has(p, want) {
 			t.Errorf("implementer does not mention %q", want)

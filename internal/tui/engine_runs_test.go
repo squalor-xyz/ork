@@ -649,3 +649,15 @@ func TestDismissedRunHasNoRow(t *testing.T) {
 		t.Fatal("dismissed run still has a row")
 	}
 }
+
+func TestEngineRunBoundsDenials(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	s := engineSnapshot(t, "implement", "ledger")
+	s.EngineRuns[0].Denials = []string{"A", "B", "C", "D", "E"}
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	v := sgr.ReplaceAllString(strings.Join(h.m.overview(200).body, "\n"), "")
+	if !strings.Contains(v, "denied: A, B, C and 2 more") || strings.Contains(v, "C, D") {
+		t.Fatalf("bounded denials missing:\n%s", v)
+	}
+}

@@ -179,7 +179,10 @@ id, then slice, engine state and wait. Denied calls appear as
 `denied: Bash: git push origin main, Write: /x.txt`
 (the tool, then its command or file path, capped at 200 characters; a denial
 with no detail shows the tool name alone) from the snapshot's `denials` field
-(`ui.denials-display`, `engine.denied-command`). When set, the *proposed*
+(`ui.denials-display`, `engine.denied-command`). Duplicate texts appear once,
+with a repeat count such as `Write: /x.txt x2`, in first-seen order across roles.
+At most three denials appear, then `and N more` counts the remaining texts.
+When set, the *proposed*
 `error` text follows the denials as `error: TEXT`. Its linked ledger
 run supplies step progress and elapsed
 time; without a ledger run, elapsed time starts at the engine record's creation.

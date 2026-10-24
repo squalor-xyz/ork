@@ -912,10 +912,21 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 			wait = "owner approval"
 		}
 		var denials []string
+		denialCounts := map[string]int{}
 		var roles []source.EngineRole
 		for _, role := range rec.Roles {
 			roles = append(roles, source.EngineRole{Role: role.Role, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit})
-			denials = append(denials, roleDenials(role)...)
+			for _, text := range roleDenials(role) {
+				if denialCounts[text] == 0 {
+					denials = append(denials, text)
+				}
+				denialCounts[text]++
+			}
+		}
+		for i, text := range denials {
+			if count := denialCounts[text]; count > 1 {
+				denials[i] = fmt.Sprintf("%s x%d", text, count)
+			}
 		}
 		var activity []int
 		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {

@@ -204,8 +204,9 @@ further retry. The CLI may already have changed the project.
 The daemon's snapshot has an `engine_runs` list, built by the same code as
 `ork status`. Each entry has `id`, `item`, `state`, optional `wait`, optional
 `relay_run`, optional `pending`, `created_at`, and optional `denials` (an array
-of one text per denial, `Tool` or `Tool: command`, collected from the role
-records in role order). A denial with no command is its tool name alone. A record from before
+of distinct denial texts, `Tool` or `Tool: command`, in first-seen role order).
+Texts are deduplicated across all roles. Repeats append a count, such as
+`Write: /x.txt x2`. A denial with no command is its tool name alone. A record from before
 S45 has no `denied_commands`, so its `denials` are tool names. Denials are
 omitted when empty and rendered by status and the TUI (`ui.denials-display`).
 The *proposed* optional `error` field holds a recovery or background job error.

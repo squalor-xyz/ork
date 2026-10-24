@@ -862,3 +862,13 @@ func TestStatusRelayOptionalFields(t *testing.T) {
 		})
 	}
 }
+
+func TestStatusBoundsDenials(t *testing.T) {
+	app := &App{Call: func(_ context.Context, _ string, _, result any) error {
+		return json.Unmarshal([]byte(`{"projects":[{"name":"p","engine_runs":[{"id":"r1","item":"S43","state":"implement","denials":["A","B","C","D","E"]}]}]}`), result)
+	}}
+	code, stdout, stderr := run(t, app, "status")
+	if code != 0 || !strings.Contains(stdout, "(denied: A, B, C and 2 more)\n") {
+		t.Fatalf("bounded denials missing: code %d stdout=%s stderr=%s", code, stdout, stderr)
+	}
+}

@@ -111,7 +111,11 @@ them on the affected items. Owner: slicer.
 
 **Stop.** A relay stops when the same slice fails its gate three times, the
 spec is ambiguous or wrong, or an owner decision is needed. A permission
-denial on a slicer step also stops the run (v7). Owner: slicer.
+denial on a slicer step also stops the run. Owner: slicer (`slicer ai relay`).
+Outside the finish step, ork follows decision 93 (`engine.denials`): a denial
+stops only an unsuccessful round. A successful round with denials proceeds and
+shows them as warnings. In the finish step, a denied `slicer note`, `done` or
+`handoff` pauses for the owner. The implementer reports it under `## Owner needed`.
 
 ## Run tracking
 

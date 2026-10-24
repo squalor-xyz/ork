@@ -50,11 +50,14 @@ func TestEngineSnapshotAndStatusShowEachDenialsCommand(t *testing.T) {
 		Role: "implementer", Round: 1, Vendor: "claude",
 		Denials:        []string{"Bash", "Write", "Glob"},
 		DeniedCommands: []runrec.DeniedCommand{{Tool: "Bash", Command: "git push origin main"}, {Tool: "Write", Command: "/x.txt"}, {Tool: "Glob"}},
+	}, {
+		Role: "reviewer", Round: 1, Vendor: "claude",
+		DeniedCommands: []runrec.DeniedCommand{{Tool: "Write", Command: "/x.txt"}, {Tool: "Write", Command: "/y.txt"}},
 	}}
 	if _, err := store.Create(runrec.Record{ID: "denied", Project: p.Name, Item: "S45", State: runrec.StatePaused, CreatedAt: at, Roles: roles, Pending: &runrec.Pending{Kind: runrec.PendingError, State: "implement", Role: "implementer", Reason: "reason"}}); err != nil {
 		t.Fatal(err)
 	}
-	want := `"denials":["Bash: git push origin main","Write: /x.txt","Glob"]`
+	want := `"denials":["Bash: git push origin main","Write: /x.txt x2","Glob","Write: /y.txt"]`
 	status := request(t, d, "status", `{"project":"p"}`)
 	snapshot := request(t, d, "snapshot", `{"project":"p"}`)
 	if !strings.Contains(string(snapshot), want) || !strings.Contains(string(status), want) {

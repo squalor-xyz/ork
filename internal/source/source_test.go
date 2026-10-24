@@ -344,3 +344,22 @@ func TestEngineRunSection(t *testing.T) {
 		})
 	}
 }
+
+func TestDenialsText(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		denials []string
+		want    string
+	}{
+		{"five", []string{"A", "B", "C", "D", "E"}, "A, B, C and 2 more"},
+		{"three", []string{"A", "B", "C"}, "A, B, C"},
+		{"two", []string{"Write", "Bash"}, "Write, Bash"},
+		{"empty", nil, ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := DenialsText(tc.denials); got != tc.want {
+				t.Fatalf("DenialsText = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
