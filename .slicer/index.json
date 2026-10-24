@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 103,
+  "next_id": 104,
   "preamble": "",
   "passes": [
     {
@@ -3863,6 +3863,34 @@
         "reason": "",
         "importance": 2,
         "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S103",
+      "title": "Version and logo polish: clear the stale marker after a daemon restart; keep --version script-friendly",
+      "short_title": "Version and logo polish: clear the stale marker after a daemon restart; keep --version script-friendly",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S54",
+        "parent": "",
+        "cites": [],
+        "key": "version-polish",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
         "effort": 1,
         "attempts": 0
       }
