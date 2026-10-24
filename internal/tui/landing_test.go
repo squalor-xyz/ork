@@ -58,7 +58,7 @@ func TestReadyToLandListsCommittedRuns(t *testing.T) {
 		h.send(press(step.key))
 		row, ok := h.m.selectedRow()
 		ov := h.m.overview(60)
-		if !ok || row.id != step.want || ov.sel < 0 || !strings.Contains(ov.body[ov.sel], step.want) {
+		if !ok || (row.ready && row.id != step.want) || (!row.ready && !strings.HasPrefix(row.rest, step.want+"  ")) || ov.sel < 0 || !strings.Contains(ov.body[ov.sel], step.want) {
 			t.Fatalf("cursor must select %s, got %+v", step.want, row)
 		}
 	}
@@ -167,7 +167,7 @@ func TestReadyRowsAreSelectable(t *testing.T) {
 	h := landingHarness(t, `[{"id":"need","item":"NEED","state":"stopped"},{"id":"running","item":"RUN","state":"implement"},{"id":"ready","item":"READY","state":"committed","branch":"s63","merged":true}]`)
 	for _, want := range []string{"NEED", "RUN", "READY"} {
 		r, ok := h.m.selectedRow()
-		if !ok || r.id != want {
+		if !ok || (r.ready && r.id != want) || (!r.ready && !strings.HasPrefix(r.rest, want+"  ")) {
 			t.Fatalf("selected=%+v want %s", r, want)
 		}
 		h.send(press("down"))

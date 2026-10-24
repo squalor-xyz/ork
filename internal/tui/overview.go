@@ -145,7 +145,11 @@ func (m *Model) rows() (needs, running []ovRow) {
 				}
 				break
 			}
-			if !began.IsZero() {
+			if r.State == "stopped" {
+				if !r.UpdatedAt.IsZero() {
+					parts = append(parts, age(m.cfg.Now().Sub(r.UpdatedAt)))
+				}
+			} else if !began.IsZero() {
 				end := m.cfg.Now()
 				if linkedStale != nil {
 					end = runClock(*linkedStale, end)
@@ -156,8 +160,9 @@ func (m *Model) rows() (needs, running []ovRow) {
 				parts = append(parts, elapsed(end.Sub(began)))
 			}
 			rest := strings.Join(parts, "  ")
-			row := ovRow{engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.Item, rest: rest, text: r.Item + "  " + rest, dim: linkedStale != nil}
+			row := ovRow{engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: r.Item + "  " + rest, text: r.ID + "  " + r.Item + "  " + rest, dim: linkedStale != nil}
 			if r.Section(s.EngineRuns) == source.SectionRunning {
+				row.kindW = len(kindExternal)
 				ledger, steps := engineBoard(r)
 				for _, linked := range boardLedgers(s) {
 					if r.RelayRun != "" && linked.ID == r.RelayRun {
@@ -173,6 +178,14 @@ func (m *Model) rows() (needs, running []ovRow) {
 			}
 			if r.Section(s.EngineRuns) == source.SectionNeeds {
 				row.kindW = kindWidth
+				switch r.State {
+				case "stopped":
+					row.kind, row.style = "x stopped", th.Error
+				case "paused":
+					row.kind, row.style = "= paused", th.Held
+				case "awaiting-approval":
+					row.kind, row.style = "+ approve", th.Decision
+				}
 				needs = append(needs, row)
 			} else {
 				running = append(running, row)
@@ -471,6 +484,21 @@ func elapsed(d time.Duration) string {
 		return fmt.Sprintf("%dm", int(d.Minutes()))
 	}
 	return fmt.Sprintf("%dh%02dm", int(d.Hours()), int(d.Minutes())%60)
+}
+
+// age shows the largest whole unit since a stopped run's last update.
+func age(d time.Duration) string {
+	d = max(d, 0)
+	switch {
+	case d >= 24*time.Hour:
+		return fmt.Sprintf("%dd ago", int(d/(24*time.Hour)))
+	case d >= time.Hour:
+		return fmt.Sprintf("%dh ago", int(d/time.Hour))
+	case d >= time.Minute:
+		return fmt.Sprintf("%dm ago", int(d/time.Minute))
+	default:
+		return fmt.Sprintf("%ds ago", int(d/time.Second))
+	}
 }
 
 // setupHint is the line a selected project with no .slicer/ folder shows.

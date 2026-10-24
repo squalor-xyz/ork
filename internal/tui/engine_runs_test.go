@@ -5,6 +5,7 @@ package tui
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -40,7 +41,10 @@ func TestEngineRunRows(t *testing.T) {
 				}
 				return
 			}
-			row := "S22  " + state + "  owner action  2 of 6 steps running  2m"
+			row := "engine  S22  " + state + "  owner action  2 of 6 steps running"
+			if state != "stopped" {
+				row += "  2m"
+			}
 			section := sections[1]
 			if wantNeeds {
 				section = sections[0]
@@ -81,6 +85,8 @@ func TestGoldenEngineRuns(t *testing.T) {
 				h := newHarness(t, proj("ork", false))
 				h.start()
 				s := engineSnapshot(t, state, "ledger")
+				s.EngineRuns[0].ID = "ork-20261019-164000-abcd"
+				s.EngineRuns[0].UpdatedAt = h.now.Add(-48 * time.Hour)
 				if state == "committed" {
 					s.EngineRuns[0].Branch = "s22"
 				}
@@ -346,5 +352,161 @@ func TestOverviewSectionsAgreeWithNeedsCount(t *testing.T) {
 				t.Fatalf("hidden run visible: %+v", r)
 			}
 		}
+	}
+}
+
+func TestEngineRowLeadsWithRunID(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	s := engineSnapshot(t, "implement", "ledger")
+	s.EngineRuns[0].ID = "ork-20261019-164000-abcd"
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	_, rows := h.m.rows()
+	r := rows[0]
+	if r.id != s.EngineRuns[0].ID || !strings.HasPrefix(rowText(r, 200), r.id+"  S22  implement") {
+		t.Fatalf("engine ID must lead row: id=%q text=%q", r.id, rowText(r, 200))
+	}
+	if got := rowText(r, len(r.id)+5); !strings.HasPrefix(got, r.id) {
+		t.Fatalf("clipping lost whole engine ID: %q", got)
+	}
+	if len(r.stepParts) == 0 {
+		t.Fatal("running row lost step parts")
+	}
+}
+
+func TestEngineRowDetailShowsRunID(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	h.m.apply(snapshotMsg{name: "ork", snap: engineSnapshot(t, "stopped", "ledger")})
+	if got := detailText(h.m, 200); !strings.HasPrefix(got, "engine  S22  stopped") {
+		t.Fatalf("detail lacks engine ID: %q", got)
+	}
+}
+
+func TestLedgerRowShowsNoEngineID(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	h.m.apply(snapshotMsg{name: "ork", snap: engineSnapshot(t, "implement", "different")})
+	_, rows := h.m.rows()
+	r := rows[len(rows)-1]
+	if r.id != "ledger" || r.engineID != "" || !strings.HasPrefix(rowText(r, 200), "ledger  S22") || strings.Contains(r.text, "engine") {
+		t.Fatalf("ledger row changed identity: %+v", r)
+	}
+}
+
+func TestRunningEngineRowsPadLikeExternalRows(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	h.m.apply(snapshotMsg{name: "ork", snap: engineSnapshot(t, "implement", "different")})
+	_, rows := h.m.rows()
+	a := sgr.ReplaceAllString(h.m.rowLine(rows[0], false, 3, 300), "")
+	b := sgr.ReplaceAllString(h.m.rowLine(rows[1], false, 3, 300), "")
+	if rows[0].kindW != len(kindExternal) || strings.Index(a, "ork") != strings.Index(b, "ork") {
+		t.Fatalf("running columns differ: %q vs %q", a, b)
+	}
+}
+
+func TestLinkedLedgerRunHiddenByDesign(t *testing.T) {
+	for _, superseded := range []bool{false, true} {
+		t.Run(fmt.Sprint(superseded), func(t *testing.T) {
+			h := newHarness(t, proj("ork", false))
+			h.start()
+			s := engineSnapshot(t, "committed", "ledger")
+			if superseded {
+				s.EngineRuns[0].State = "stopped"
+				newer := s.EngineRuns[0]
+				newer.ID = "new"
+				newer.State = "implement"
+				newer.CreatedAt = newer.CreatedAt.Add(time.Second)
+				s.EngineRuns = append(s.EngineRuns, newer)
+			}
+			h.m.apply(snapshotMsg{name: "ork", snap: s})
+			needs, running := h.m.rows()
+			for _, r := range append(needs, running...) {
+				if r.ledgerID == "ledger" || r.engineID == "engine" {
+					t.Fatalf("hidden run leaked: %+v", r)
+				}
+			}
+		})
+	}
+	b, err := os.ReadFile("../../docs/dashboard.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), "A ledger run linked to a committed or superseded engine run is not shown") {
+		t.Fatal("dashboard must document hidden linked ledger runs")
+	}
+}
+
+func TestEngineRowShowsStateSymbol(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		for _, tc := range []struct{ state, kind string }{{"stopped", "x stopped"}, {"paused", "= paused"}, {"awaiting-approval", "+ approve"}} {
+			t.Run(fmt.Sprintf("%s/mono=%v", tc.state, mono), func(t *testing.T) {
+				h := newHarness(t, proj("ork", false))
+				h.start()
+				h.m.cfg.Theme = NewTheme(mono)
+				s := engineSnapshot(t, tc.state, "ledger")
+				s.Open.Value = []adjcli.Record{openRec(3, "owner.choice", "Choose storage")}
+				h.m.apply(snapshotMsg{name: "ork", snap: s})
+				h.m.cursor = 0 // Select the decision so the engine kind keeps its own style.
+				rows, _ := h.m.rows()
+				r := rows[1]
+				th := h.m.cfg.Theme
+				want := th.Error
+				if tc.state == "paused" {
+					want = th.Held
+				}
+				if tc.state == "awaiting-approval" {
+					want = th.Decision
+				}
+				if r.kind != tc.kind || r.kindW != kindWidth || r.style.Render("probe") != want.Render("probe") {
+					t.Fatalf("state kind/style: got %q width %d, want %q", r.kind, r.kindW, tc.kind)
+				}
+				styledKind := want.Render(fmt.Sprintf("%-*s", kindWidth, tc.kind))
+				if view := strings.Join(h.m.overview(200).body, "\n"); !strings.Contains(view, styledKind) {
+					t.Fatalf("unselected kind lacks expected style %q in %q", styledKind, view)
+				}
+				if !strings.Contains(sgr.ReplaceAllString(h.m.rowLine(r, false, 3, 200), ""), tc.kind) {
+					t.Fatal("state word missing")
+				}
+			})
+		}
+	}
+}
+
+func TestStoppedRowShowsAge(t *testing.T) {
+	for _, tc := range []struct {
+		age  time.Duration
+		want string
+	}{{45 * time.Second, "45s ago"}, {12 * time.Minute, "12m ago"}, {3 * time.Hour, "3h ago"}, {48 * time.Hour, "2d ago"}, {0, ""}} {
+		t.Run(fmt.Sprint(tc.age), func(t *testing.T) {
+			h := newHarness(t, proj("ork", false))
+			h.start()
+			s := engineSnapshot(t, "stopped", "ledger")
+			if tc.age != 0 {
+				raw := fmt.Sprintf(`{"updated_at":%q}`, h.now.Add(-tc.age).Format(time.RFC3339))
+				if err := json.Unmarshal([]byte(raw), &s.EngineRuns[0]); err != nil {
+					t.Fatal(err)
+				}
+			}
+			h.m.apply(snapshotMsg{name: "ork", snap: s})
+			rows, _ := h.m.rows()
+			got := rows[0].text
+			want := "engine  S22  stopped  owner action  2 of 6 steps running"
+			if tc.want != "" {
+				want += "  " + tc.want
+			}
+			if got != want {
+				t.Fatalf("stopped age: got %q, want %q", got, want)
+			}
+		})
+	}
+}
+
+func TestSetupProjectNeedsCountsNothing(t *testing.T) {
+	p := projectState{loaded: true, snap: noSlicer(proj("ork", false)), open: 2, held: 3}
+	p.snap.EngineRuns = []source.EngineRun{{ID: "engine", State: "paused"}}
+	if got := p.needs(); got != 0 {
+		t.Fatalf("setup needs=%d, want 0", got)
 	}
 }

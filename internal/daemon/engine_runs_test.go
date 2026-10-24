@@ -19,7 +19,12 @@ func TestEngineSnapshotMatchesStatus(t *testing.T) {
 	d, store, p := runDaemon(t, nil)
 	at := time.Date(2026, 10, 19, 16, 40, 0, 0, time.UTC)
 	store.Now = func() time.Time { return at }
-	if _, err := store.Create(runrec.Record{ID: "engine", Project: p.Name, Item: "S22", Branch: "s22", State: runrec.StatePaused, RelayRun: "ledger", CreatedAt: at, Roles: []runrec.RoleRecord{{Denials: []string{"Write"}}, {Denials: []string{"Bash"}}}, Pending: &runrec.Pending{Kind: runrec.PendingQuestion, Reason: "reason", Question: "Which library?"}}); err != nil {
+	r, err := store.Create(runrec.Record{ID: "engine", Project: p.Name, Item: "S22", Branch: "s22", State: runrec.StatePaused, RelayRun: "ledger", CreatedAt: at, Roles: []runrec.RoleRecord{{Denials: []string{"Write"}}, {Denials: []string{"Bash"}}}, Pending: &runrec.Pending{Kind: runrec.PendingQuestion, Reason: "reason", Question: "Which library?"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	store.Now = func() time.Time { return at.Add(time.Hour) }
+	if err := r.Update(func(*runrec.Record) {}); err != nil {
 		t.Fatal(err)
 	}
 	status := request(t, d, "status", `{"project":"p"}`)
@@ -28,7 +33,7 @@ func TestEngineSnapshotMatchesStatus(t *testing.T) {
 		EngineRuns json.RawMessage `json:"engine_runs"`
 	}
 	json.Unmarshal(snapshot, &out)
-	for _, want := range []string{`"branch":"s22"`, `"denials":["Write","Bash"]`, `"relay_run":"ledger"`, `"created_at":"2026-10-19T16:40:00Z"`, `"wait":"Which library?; next: ork answer engine TEXT"`} {
+	for _, want := range []string{`"updated_at":"2026-10-19T17:40:00Z"`, `"branch":"s22"`, `"denials":["Write","Bash"]`, `"relay_run":"ledger"`, `"created_at":"2026-10-19T16:40:00Z"`, `"wait":"Which library?; next: ork answer engine TEXT"`} {
 		t.Run(want, func(t *testing.T) {
 			if !strings.Contains(string(out.EngineRuns), want) || !strings.Contains(string(status), want) {
 				t.Fatalf("shared engine snapshot lacks %s: snapshot=%s status=%s", want, snapshot, status)
@@ -148,5 +153,19 @@ func TestStatusNeedsWire(t *testing.T) {
 	empty, _ := json.Marshal(projectStatus(registry.Project{Name: "empty"}, source.Snapshot{}, time.Now()))
 	if strings.Contains(string(empty), `"open"`) || strings.Contains(string(empty), `"held"`) {
 		t.Fatalf("empty fields not omitted: %s", empty)
+	}
+}
+
+func TestEngineRunUpdatedAtZeroWire(t *testing.T) {
+	var r EngineRun
+	if err := json.Unmarshal([]byte(`{"id":"old","state":"stopped"}`), &r); err != nil {
+		t.Fatal(err)
+	}
+	b, err := json.Marshal(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(b), `"updated_at"`) {
+		t.Fatalf("zero update must be omitted: %s", b)
 	}
 }

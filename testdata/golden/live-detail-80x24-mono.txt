@@ -4,7 +4,7 @@
                    |  [2mnothing needs you[m
                    |
                    |[1mRunning[m
-                   |[1;7m    ork  S07  implement  [~~....] r2[m
+                   |[1;7m                       ork  engine  S07  implement[m
                    |
                    |[1mRecent[m
                    |[2m  +4 more lines[m

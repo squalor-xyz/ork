@@ -748,7 +748,7 @@ func TestDownReachesAStoppedRunForEnter(t *testing.T) {
 		t.Fatalf("the first row is %q, want the decision", got)
 	}
 	h.send(press("down"))
-	if got := detailText(h.m, 72); !strings.HasPrefix(got, "S21  stopped") {
+	if got := detailText(h.m, 72); !strings.HasPrefix(got, "engine  S21  stopped") {
 		t.Fatalf("down did not move the cursor to the stopped run: %q", got)
 	}
 	h.send(press("enter"))

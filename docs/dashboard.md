@@ -172,18 +172,25 @@ and decided records refresh every 5 min or on HEAD changes and manual refresh. `
    shown verbatim.
 
 The Overview reads engine runs in the daemon snapshot, using the same builder
-as `ork status` (`ui.engine-runs-read`). An engine row leads with the slice,
-engine state and wait. Denied calls appear as `denied: Bash: git push origin main, Write: /x.txt`
+as `ork status` (`ui.engine-runs-read`). An engine row leads with the ork run
+id, then slice, engine state and wait. Denied calls appear as
+`denied: Bash: git push origin main, Write: /x.txt`
 (the tool, then its command or file path, capped at 200 characters; a denial
 with no detail shows the tool name alone) from the snapshot's `denials` field
 (`ui.denials-display`, `engine.denied-command`). Its linked ledger
 run supplies step progress and elapsed
 time; without a ledger run, elapsed time starts at the engine record's creation.
+Stopped rows show their age from the *proposed* optional `updated_at` field.
+The age uses the largest unit: `45s ago`, `12m ago`, `3h ago`, or `2d ago`.
+A stopped row with no `updated_at` shows no age.
 The join matches the engine's `relay_run` to the ledger run id, making one row
 per run (`ui.run-join-key`). Only unmatched ledger runs say "started elsewhere".
+A ledger run linked to a committed or superseded engine run is not shown.
+This is by design. Ready-to-land rows do not show the run id.
 
 Engine runs that are awaiting approval, paused, or stopped and not superseded
-appear under Needs you.
+appear under Needs you. Their kinds are `+ approve`, `= paused`, and
+`x stopped`. Each kind is a symbol and a word, so monochrome still reads it.
 Other active engine states appear under Running. Committed runs do not appear
 in either section. A stopped run disappears once a newer engine record exists
 for the same slice, ordered by `created_at`; ledger runs do not clear it

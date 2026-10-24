@@ -1482,7 +1482,7 @@
       "id": "S33",
       "title": "Show the engine run ID in the Overview row; engine-row edge cases",
       "short_title": "Show the engine run ID in the Overview row; engine-row edge cases",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -1526,7 +1526,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

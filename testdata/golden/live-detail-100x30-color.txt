@@ -4,7 +4,7 @@
                            |  [90mnothing needs you[m
                            |
                            |[1;36mRunning[m
-                           |[1;7;97;44m    ork  S07  implement  [~~....] r2  [implementer]>reviewer>gate[m
+                           |[1;7;97;44m                       ork  engine  S07  implement  [~~....] r2[m
                            |
                            |[1;36mRecent[m
                            |  [90mnone[m

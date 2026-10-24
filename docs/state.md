@@ -205,6 +205,9 @@ command: `ork retry RUN` without a question, or `ork answer RUN TEXT`.
 The `relay_run` and `created_at` fields link ledger progress and
 order replacement runs for the Overview (`ui.engine-runs-read`,
 `ui.run-join-key`, `ui.stopped-newer`). These are read-only display fields.
+The *proposed* optional `updated_at` comes from the run record's last update.
+It is omitted when zero. Snapshot and `ork status --json` include it.
+Stopped Overview rows use it to show their age.
 
 The optional `branch` and `worktree` display fields are *proposed* and come
 from the run record. An omitted `merged` means the merge state is unknown;

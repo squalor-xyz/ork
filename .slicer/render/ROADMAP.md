@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-100 items · — 38 · done 56 · parked 1 · retired 5
+100 items · — 37 · done 57 · parked 1 · retired 5
 
 ## v1.1
 
@@ -90,7 +90,7 @@
 | 33 | [S30](slices/S30.md) | Show the running role for relays started outside ork | S | 2 |  | discovered from S23 | done |
 | 34 | [S31](slices/S31.md) | Run a small slice through ork run end to end | S | 1 |  | discovered from S23 | parked |
 | 35 | [S32](slices/S32.md) | One needs, running and hidden builder for ork status and the TUI | S | 1 |  | discovered from S31 | done |
-| 36 | [S33](slices/S33.md) | Show the engine run ID in the Overview row; engine-row edge cases | S | 1 |  | discovered from S31 | — |
+| 36 | [S33](slices/S33.md) | Show the engine run ID in the Overview row; engine-row edge cases | S | 1 |  | discovered from S31 | done |
 | 37 | [S34](slices/S34.md) | Clear an old stopped run from Needs you | S | 2 |  | discovered from S31 | — |
 | 38 | [S35](slices/S35.md) | Runs skipped at recovery or failed in the background stay visible | S | 2 |  | discovered from S17 | — |
 | 39 | [S36](slices/S36.md) | A second ork stop does not cancel the first | S | 1 |  | discovered from S17 | done |

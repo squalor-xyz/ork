@@ -73,6 +73,9 @@ type projectState struct {
 }
 
 func (p *projectState) needs() int {
+	if p.setup() {
+		return 0
+	}
 	n := p.open + p.held
 	for _, r := range p.snap.EngineRuns {
 		if r.Section(p.snap.EngineRuns) == source.SectionNeeds {

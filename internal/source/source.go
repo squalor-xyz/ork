@@ -186,6 +186,7 @@ type EngineRun struct {
 	Denials   []string     `json:"denials,omitempty"` // one text per denial: "Tool" or "Tool: command"
 	RelayRun  string       `json:"relay_run,omitempty"`
 	CreatedAt time.Time    `json:"created_at"`
+	UpdatedAt time.Time    `json:"updated_at,omitzero"`
 }
 
 // Superseded reports a stopped run replaced by a newer engine run of its slice.
