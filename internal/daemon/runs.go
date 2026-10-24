@@ -815,7 +815,11 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 			roles = append(roles, source.EngineRole{Role: role.Role, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit})
 			denials = append(denials, roleDenials(role)...)
 		}
-		runs = append(runs, EngineRun{Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt})
+		var activity []int
+		if m := d.runs.runs[rec.ID]; m != nil {
+			activity = m.engine.Activity(d.cfg.Clock.Now())
+		}
+		runs = append(runs, EngineRun{Activity: activity, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt})
 	}
 	return runs
 }

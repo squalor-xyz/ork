@@ -19,6 +19,6 @@
                    |  [90mnone[m
                    |
                    |  run-20261019-004308-40d4  S11  active, 2 of 6 steps
-                   |  running  1h00m  implementer>reviewer>gate
+                   |  running  1h00m  [......]  implementer>reviewer>gate
                    |[90m------------------------------------------------------------[m
                    | 4 projects | refreshed 16:42:07 | pending 1

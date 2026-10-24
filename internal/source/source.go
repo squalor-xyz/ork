@@ -173,6 +173,7 @@ type EngineRole struct {
 
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
+	Activity  []int        `json:"activity,omitempty"` // proposed: current role stream events, ten 30 s buckets
 	Worktree  string       `json:"worktree,omitempty"`
 	Branch    string       `json:"branch,omitempty"`
 	Merged    *bool        `json:"merged,omitempty"` // nil: unknown

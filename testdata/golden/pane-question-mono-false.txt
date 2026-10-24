@@ -16,12 +16,12 @@
                            |
                            |
                            |
+                           |
+                           |
                            |  [1;36mRun engine  S22  paused[m
                            |  owner action
+                           |  [90m[......][m
                            |  [90mimplementer[m > [90mreviewer[m > [90mgate[m
-                           |  [90m. implementer waiting[m
-                           |  [90m. reviewer    waiting[m
-                           |  [90m. gate        waiting[m
                            |  
                            |  Answer: [1muse local storage[m[1;7;97;44m [m[1m[m
                            |  ork answer engine use local storage

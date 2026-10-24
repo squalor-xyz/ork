@@ -105,11 +105,12 @@ type Config struct {
 // Answer, Retry, Stop, Reconcile) run one at a time; Snapshot may be called
 // at any moment.
 type Engine struct {
-	mu   sync.Mutex
-	d    Deps
-	proj registry.Project
-	run  *runrec.Run
-	wr   runrec.Writer
+	activity activityRing
+	mu       sync.Mutex
+	d        Deps
+	proj     registry.Project
+	run      *runrec.Run
+	wr       runrec.Writer
 }
 
 func newEngine(d Deps, proj registry.Project, run *runrec.Run) *Engine {

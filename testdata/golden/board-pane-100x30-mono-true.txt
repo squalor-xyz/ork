@@ -4,7 +4,7 @@
                            |  [2mnothing needs you[m
                            |
                            |[1mRunning[m
-                           |[1;7m  > started elsewhere  ork  s97  S97  active  20m  running: reviewer[m
+                           |[1;7m  > started elsewhere  ork  s97  S97  active  20m  [##~~..][m
                            |
                            |[1mRecent[m
                            |    ork  [1m✗ fail[m[2m  S94  10m  ended 5m ago  impl 1  review 1  gate 0[m
@@ -17,8 +17,8 @@
                            |
                            |
                            |
-                           |
                            |  [1mRun s97  S97  active  started elsewhere[m
+                           |  [##~~..]
                            |  implementer > [reviewer] > [2mgate[m                                [2mround 1[m
                            |  ! last heard 16m ago
                            |  [2m+ implementer done[m

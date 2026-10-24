@@ -403,7 +403,7 @@
       "id": "S07",
       "title": "Live role detail: output tail, tokens and cost, ASCII charts and animations, bell",
       "short_title": "Live role detail",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S97"
@@ -438,7 +438,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

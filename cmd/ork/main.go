@@ -75,6 +75,7 @@ func main() {
 // runTUI shows the TUI on the alternate screen until the owner quits.
 func runTUI(cfg tui.Config) error {
 	cfg.Theme = tui.ThemeFor(os.Getenv)
+	cfg.ASCII = asciiLocale(os.Getenv)
 	_, err := tea.NewProgram(tui.New(cfg)).Run()
 	return err
 }
@@ -229,4 +230,15 @@ func serveWithRetry(ctx context.Context, socket string, run func(context.Context
 		case <-time.After(lockRetryEvery):
 		}
 	}
+}
+
+// asciiLocale follows the locale precedence for character encoding.
+func asciiLocale(getenv func(string) string) bool {
+	for _, key := range []string{"LC_ALL", "LC_CTYPE", "LANG"} {
+		if value := getenv(key); value != "" {
+			value = strings.ToLower(value)
+			return !strings.Contains(value, "utf-8") && !strings.Contains(value, "utf8")
+		}
+	}
+	return true
 }

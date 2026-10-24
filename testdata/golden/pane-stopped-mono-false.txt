@@ -17,12 +17,12 @@
                            |
                            |
                            |
+                           |
+                           |
                            |  [1;36mRun engine  S22  stopped[m
                            |  owner action
+                           |  [90m[......][m
                            |  [90mimplementer[m > [90mreviewer[m > [90mgate[m
-                           |  [90m. implementer waiting[m
-                           |  [90m. reviewer    waiting[m
-                           |  [90m. gate        waiting[m
                            |  
                            |  Stopped; relaunch to continue
                            |  esc close pane

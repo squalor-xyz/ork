@@ -4,7 +4,7 @@
                    |  [90mnothing needs you[m
                    |
                    |[1;36mRunning[m
-                   |[1;7;97;44m  > started elsewhere  ork  s97  S97  active  20m[m
+                   |[1;7;97;44m  > started elsewhere  ork  s97  S97  active  20m  [##~~..][m
                    |
                    |[1;36mRecent[m
                    |    ork  [1;31m✗ fail[m[90m  S94  10m  ended 5m ago[m
@@ -18,7 +18,7 @@
                    |
                    |
                    |
-                   |  s97  S97  active  20m  running: reviewer
+                   |  s97  S97  active  20m  [##~~..]  running: reviewer
                    |   implementer>[reviewer]>gate  ! heard 16m
                    |[90m------------------------------------------------------------[m
                    | 1 project | refreshed 16:42:00 | pending 0

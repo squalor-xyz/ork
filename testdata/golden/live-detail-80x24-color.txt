@@ -1,0 +1,24 @@
+[1mork[m  ?help         | [1;36mOverview[m[90m | Questions | [mWaves[90m | [mRoadmap[90m | Decisions[m
+[1;7;97;44m> Needs you[m        |[90m------------------------------------------------------------[m
+  ork 0*           |[1;36mNeeds you[m
+                   |  [90mnothing needs you[m
+                   |
+                   |[1;36mRunning[m
+                   |[1;7;97;44m    ork  S07  implement  [~~....] r2[m
+                   |
+                   |[1;36mRecent[m
+                   |[90m  +4 more lines[m
+                   |  [1;36mRun engine  S07  implement[m
+                   |  [~~....] r2
+                   |  [36m[implementer][m > [90mreviewer[m > [90mgate[m                    [90mround 2[m
+                   |  [90mlast heard 2m ago[m
+                   |  [90mactivity ▁▂▂▃▄▅▆█▂▁  last 5m[m
+                   |  [90m+ implementer done  5m  claude sonnet high round 1[m
+                   |  [90m+ reviewer    done  3m  claude opus round 1[m
+                   |  [1;31m! gate        fail  1m  claude opus round 1[m
+                   |  [1;31m    ✗ gate FAIL -> implementer round 2[m
+                   |  [1;36m| implementer start 2m  claude sonnet high round 2 x2[m
+                   |  
+                   |  x stop; esc close pane
+                   |[90m------------------------------------------------------------[m
+                   | 1 project | refreshed 16:42:00 | pending 0

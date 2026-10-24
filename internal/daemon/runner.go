@@ -28,7 +28,11 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 		call = claude.Run
 	}
 	round, err := call(ctx, claude.Spec{Dir: req.Worktree, Env: r.env, Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
-		ReadOnly: req.ReadOnly, Allowlist: req.Allowlist, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, FixtureDir: r.fixtureDir})
+		ReadOnly: req.ReadOnly, Allowlist: req.Allowlist, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(_ claude.Event) {
+			if req.OnEvent != nil {
+				req.OnEvent()
+			}
+		}, FixtureDir: r.fixtureDir})
 	class := engine.ExitError
 	switch round.Class {
 	case claude.ClassOK:
@@ -72,7 +76,11 @@ func (r codexRunner) Run(ctx context.Context, req engine.Request) (engine.Result
 	if call == nil {
 		call = codex.Run
 	}
-	round, err := call(ctx, codex.Spec{Dir: req.Worktree, Env: r.env, Prompt: req.Brief, Model: req.Model, Effort: req.Effort, ReadOnly: req.ReadOnly, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, FixtureDir: r.fixtureDir})
+	round, err := call(ctx, codex.Spec{Dir: req.Worktree, Env: r.env, Prompt: req.Brief, Model: req.Model, Effort: req.Effort, ReadOnly: req.ReadOnly, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(_ codex.Event) {
+		if req.OnEvent != nil {
+			req.OnEvent()
+		}
+	}, FixtureDir: r.fixtureDir})
 	class := engine.ExitError
 	switch round.Exit {
 	case codex.ExitOK:

@@ -125,16 +125,16 @@ and decided records refresh every 5 min or on HEAD changes and manual refresh. `
    - stopped, paused or lost slices;
    - budget pauses;
    - unclassified vendor exits.
-2. **Running:** every running slice across projects, with a stage bar,
-   elapsed time and tokens (stage bar and tokens are S07).
+2. **Running:** every running slice across projects, with elapsed time and
+   an ASCII stage bar after it (S07).
    The *proposed* relay row adds a compact pipeline such as
    `[implementer]>reviewer>gate` and `heard 2m`. An architect leads when
    present. `! heard` warns after 15 minutes; `!! heard` marks stale runs.
    The unselected warning cell uses the warning color. The selected row
    detail includes the full pipeline and heard cell even when the row drops
    them. Stale runs stay under Running, dimmed and labelled stale; elapsed time
-   freezes at their last event. Narrow rows drop heard, pipeline, then role
-   details from the right, whole. The first item title is not added.
+   freezes at their last event. Narrow rows drop heard, pipeline, role details,
+   then the stage bar, whole. The first item title is not added.
    For relays started elsewhere, the *proposed* row details (also indented
    under each relay in `ork status`) are `running: ROLE VENDOR/MODEL: TASK`
    for the last step in ledger order with phase `start` (a working subagent
@@ -384,13 +384,10 @@ Elapsed time advances from the injected clock for running steps and stops at
 and starts four columns past its node's glyph. The run header uses the
 heading style.
 
-Per-role detail still planned in S07 (`dash.role-detail`):
-- live output tail;
-- tokens and cost from the vendor's usage fields;
-- a stale flag when there is no event for N minutes;
-- worktree `git diff --stat` and the latest test counts;
-- small ASCII charts: stage bars, a token sparkline, and a wave timeline
-  with one lane per slice.
+S07 adds a stage bar, a pulsing running cell and an activity sparkline.
+Live output tail, tokens and cost, worktree diff stats, test counts and a wave
+timeline remain future role detail. The activity series counts vendor stream
+events, not tokens. There is no bell or budget bar in S07.
 
 The actions are approve, stop, answer, retry on another vendor, and open
 the worktree path. Relays started outside ork appear with a "started
@@ -462,5 +459,28 @@ gate has a `✗ gate FAIL -> implementer round N` line beneath it, followed by
 `: REASON` only when the task is non-empty. Started steps
 in stale or ended ledger runs use `~` and stop counting at the last event.
 Engine runs without a ledger derive pipeline and round from role records,
-and last heard from the latest role timestamp. No progress bar, ticker or
-sparkline is added by S97.
+and last heard from the latest role timestamp.
+
+S07 adds an ASCII bar above the pane pipeline. Each role has a two-column
+cell: done `##`, waiting `..`, failed `!!`, and running `~~`, `~=`, `==`, `=~`.
+The normal order is implementer, reviewer, gate; an architect leads when
+present. A new implementer round reopens its cell and resets earlier reviewer,
+gate and architect steps to waiting. `rN` follows the bar from round 2 on
+(`r2`, `r3`).
+The pipeline also resets earlier-round results. Finished cells never pulse.
+Stopped, paused, stale and ended runs freeze the running cell at `~~` and
+show no sparkline.
+
+For the current engine role, a line below last heard reads
+`activity <10 glyphs>  last 5m`. Ten wall-clock 30-second buckets count vendor
+stream events, oldest first, scaled to the maximum in the window. No events
+for five minutes gives a flat line before the stale cutoff. A new role attempt
+starts empty. A source-less started-elsewhere run has no sparkline, but still
+gets a bar from its steps. UTF-8 locales use `▁▂▃▄▅▆▇█`; other locales use
+`._-=+#`. Locale precedence is LC_ALL, LC_CTYPE, LANG. This changes only
+sparkline glyphs; the bar is always ASCII and existing check/cross glyphs stay.
+
+A separate 250 ms frame timer advances the bar and tree animation while the
+Overview has a Running-section or live ledger row, or a live run pane is open.
+It arms once and disarms on the next frame when no run qualifies. Idle ork
+has no 4 fps timer. The existing one-second schedule tick stays unchanged.

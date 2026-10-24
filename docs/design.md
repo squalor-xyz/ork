@@ -252,11 +252,21 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   callback that gives the process group id. The Claude adapter
   calls `Spec.OnStart` after a successful `cmd.Start` and before `cmd.Wait`
   (adj #85, `engine.adapter-start`); S17 glue forwards `Request.OnStart`.
+  The optional vendor-neutral `OnEvent func()` callback counts each stream
+  event. Claude and Codex adapters forward their event callbacks to it.
   The result carries the exit
   class (`ok`, `rate_limited`, `auth`, `error`, `unclassified`), the session, the final
   text, tokens, cost and the permission denials. A runner error counts as an
   exit of class `error`. Auth and unclassified exits stop the slice with
   the reason even when a next lineup entry exists.
+- **Role activity (S07).** The engine keeps a ring of ten 30-second buckets
+  for the current role attempt, with its own mutex because `Run` holds the
+  engine mutex. Every role attempt starts empty. The daemon reads the series
+  against its own clock at snapshot time, oldest first, on wall-clock bucket
+  boundaries. The proposed optional `engine_runs[].activity` display field
+  carries ten counts while a role runs and is omitted otherwise. Restarts and
+  source-less ledger runs have no series. Activity stays in daemon memory;
+  it is not in `run.json` and adds no state-file field.
 - **States.** `queued` (waits for a slot; `Dequeue` moves it to `setup`), `setup`, `implement`, `checks`, `review`, `architect`, `gate`,
   `awaiting-approval`, `finish`, `commit`, `committed`, plus the two rests
   `paused` and `stopped`. The owner moves a slice with `Approve`, `Reject`,
@@ -754,7 +764,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   (`ui.status-list`, adj #125). JSON keeps every engine run, including hidden
   ones. The *proposed*
   `engine_runs:[{id,item,branch?,merged?,state,wait?,pending?,denials?,
-  relay_run?,roles?,created_at}]` field per project includes the linked slicer
+  relay_run?,roles?,activity?,created_at}]` field per project includes the linked slicer
   ledger run ID in `relay_run`, when present, and the engine run's creation
   time in `created_at`. The optional `roles`
   array and the proposed `branch` and tri-state `merged` fields are described
@@ -835,8 +845,9 @@ Each step is usable or testable on its own:
    (`launch.default-allowlist`).
 5. **Waves and caps.** Several items, queueing, failure isolation.
 6. **Three vendors, fallback, fingerprint, budgets, owner questions.**
-7. **Live role detail.** Output tail, tokens and cost, charts and
-   animations.
+7. **Live role detail.** S07 adds stage bars, a stream-event sparkline and
+   4 fps animation while a run is visible. Output tail and usage detail remain
+   future work.
 8. **Architect on size L, split, slivers.**
 9. **Landing help.** Ready-to-land list and merge detection.
 
@@ -861,3 +872,20 @@ and sits between Running and Ready to land in the cursor order. It shows
 outcome, items, elapsed run time, ended age, and role counts. Enter opens
 a read-only ended-run pane. Run duration and ended age use `begun_at` and
 `updated_at`; the ledger has no ended timestamp.
+
+### Live role activity (S07)
+
+The Overview puts the ASCII stage bar after elapsed time. Narrow rows drop
+heard, pipeline, role details, then the bar. The pane puts the bar above the
+pipeline and the ten-cell activity sparkline below last heard. The bar measures
+completed roles, with an architect cell when present; a fix round resets roles
+whose latest steps precede the new implementer step. A running cell pulses
+through `~~`, `~=`, `==`, `=~`; stopped, paused, stale and ended runs freeze at
+`~~` and omit activity. Sparkline levels scale to the window maximum, using
+blocks in UTF-8 locales and `._-=+#` otherwise. An all-zero window is flat.
+
+A separate `Config.FrameAfter` seam sends `frameMsg` every 250 ms while an
+Overview Running row, live ledger row or live run pane is visible. One timer
+is armed at a time and the next frame disarms it when nothing qualifies.
+`treeFrame` advances only on frames. The one-second schedule ticker is
+unchanged. There is no S07 bell, budget bar or write action.

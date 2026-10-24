@@ -43,14 +43,15 @@ func TestStylesEmit24BitColour(t *testing.T) {
 func newGoldenModel(theme Theme) *Model {
 	now := time.Date(2026, 10, 19, 16, 42, 7, 0, time.UTC)
 	m := New(Config{
-		Source:    &fakeSource{snaps: map[string]source.Snapshot{}},
-		Projects:  four,
-		Now:       func() time.Time { return now },
-		Schedule:  poll.DefaultSchedule,
-		TickEvery: time.Second,
-		After:     func(time.Duration) tea.Cmd { return nil },
-		Bell:      func() {},
-		Theme:     theme,
+		Source:     &fakeSource{snaps: map[string]source.Snapshot{}},
+		Projects:   four,
+		Now:        func() time.Time { return now },
+		Schedule:   poll.DefaultSchedule,
+		TickEvery:  time.Second,
+		FrameAfter: func(time.Duration) tea.Cmd { return nil },
+		After:      func(time.Duration) tea.Cmd { return nil },
+		Bell:       func() {},
+		Theme:      theme,
 	})
 	m.Init()
 	return m

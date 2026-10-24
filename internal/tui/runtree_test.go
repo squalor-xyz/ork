@@ -132,7 +132,7 @@ func TestRunTreeSpinnerAndClock(t *testing.T) {
 	for i, glyph := range []string{"|", "/", "-"} {
 		if i > 0 {
 			h.now = h.now.Add(time.Minute)
-			h.m.Update(tickMsg{})
+			h.m.Update(frameMsg{})
 		}
 		v := treePaneView(h.m, 100, 40)
 		duration := elapsed(h.now.Sub(time.Date(2026, 10, 19, 16, 40, 0, 0, time.UTC)))

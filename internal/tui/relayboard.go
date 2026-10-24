@@ -68,13 +68,9 @@ func roleCounts(steps []runTreeStep) map[string]int {
 func (m *Model) pipeline(steps []runTreeStep, stale, compact bool) string {
 	steps = laneSteps(steps)
 	var parts []string
+	phases := pipelinePhases(steps)
 	for _, role := range pipelineRoles(steps) {
-		phase := ""
-		for _, s := range steps {
-			if s.Role == role {
-				phase = s.Phase
-			}
-		}
+		phase := phases[role]
 		text := role
 		style := m.cfg.Theme.Dim
 		switch phase {
@@ -152,6 +148,9 @@ func (m *Model) paneBoardRun() slicercli.RelayRun {
 			if r.ID == id {
 				for _, ledger := range boardLedgers(p.snap) {
 					if r.RelayRun != "" && ledger.ID == r.RelayRun {
+						if !boardLive(r.State) {
+							ledger.State = r.State
+						}
 						return ledger
 					}
 				}
@@ -170,9 +169,19 @@ func (m *Model) paneBoardRun() slicercli.RelayRun {
 
 func (m *Model) boardLines(steps []runTreeStep, width int) []string {
 	r := m.paneBoardRun()
-	lines := []string{m.pipelineLine(steps, r.State == "stale" || !boardLive(r.State), width)}
+	live := r.State != "stale" && boardLive(r.State)
+	bar := treeClip(stageBar(steps, m.treeFrame, live), width)
+	if !live {
+		bar = m.cfg.Theme.Dim.Render(bar)
+	}
+	lines := []string{bar, m.pipelineLine(steps, !live, width)}
 	if heard, style := m.lastHeard(r); heard != "" {
 		lines = append(lines, style.Render(treeClip(strings.Replace(heard, "heard ", "last heard ", 1)+" ago", width)))
+	}
+	if live {
+		if activity := m.paneActivity(); len(activity) > 0 {
+			lines = append(lines, m.cfg.Theme.Dim.Render(treeClip("activity "+sparkline(activity, m.cfg.ASCII)+"  last 5m", width)))
+		}
 	}
 	return lines
 }
@@ -235,7 +244,8 @@ func runClock(r slicercli.RelayRun, now time.Time) time.Time {
 
 func (m *Model) boardRowParts(r slicercli.RelayRun, steps []runTreeStep) []relayRowPart {
 	pipeline := m.pipeline(steps, r.State == "stale", true)
-	parts := []relayRowPart{{header: pipeline, text: pipeline}}
+	bar := stageBar(steps, m.treeFrame, r.State != "stale" && boardLive(r.State))
+	parts := []relayRowPart{{header: bar, text: bar}, {header: pipeline, text: pipeline}}
 	if heard, _ := m.lastHeard(r); heard != "" {
 		parts = append(parts, relayRowPart{header: heard, text: heard})
 	}

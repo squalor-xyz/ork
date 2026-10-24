@@ -14,8 +14,8 @@
                            |
                            |
                            |
-                           |
                            |  [1;36mRun tree  S55  active  started elsewhere[m
+                           |  [##~~..]
                            |  [32mimplementer[m > [36m[reviewer][m > [90mgate[m                                [90mround 1[m
                            |  [1;36m| orchestrator start  2m  codex sol high[m
                            |    [90m+ implementer  done   1m  claude sonnet[m

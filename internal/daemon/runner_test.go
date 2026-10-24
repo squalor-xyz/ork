@@ -200,3 +200,38 @@ func TestClaudeAndCodexRunnersMapUnclassifiedToTheUnclassifiedClass(t *testing.T
 		})
 	}
 }
+
+func TestRunnersForwardStreamEvents(t *testing.T) {
+	for _, vendor := range []string{"claude", "codex"} {
+		t.Run(vendor, func(t *testing.T) {
+			events := 0
+			req := engine.Request{Vendor: vendor, OnEvent: func() { events++ }}
+			var r engine.Runner
+			if vendor == "claude" {
+				r = claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+					if s.OnEvent == nil {
+						t.Fatal("missing event hook")
+					}
+					s.OnEvent(claude.Event{})
+					s.OnEvent(claude.Event{})
+					return claude.Round{}, nil
+				}}
+			} else {
+				r = codexRunner{round: func(_ context.Context, s codex.Spec) (codex.Round, error) {
+					if s.OnEvent == nil {
+						t.Fatal("missing event hook")
+					}
+					s.OnEvent(codex.Event{})
+					s.OnEvent(codex.Event{})
+					return codex.Round{}, nil
+				}}
+			}
+			r.Run(context.Background(), req)
+			if events != 2 {
+				t.Fatalf("events %d", events)
+			}
+			req.OnEvent = nil
+			r.Run(context.Background(), req)
+		})
+	}
+}

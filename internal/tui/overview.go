@@ -190,7 +190,8 @@ func (m *Model) rows() (needs, running []ovRow) {
 			if rest != "" {
 				text = id + "  " + rest
 			}
-			steps = append(steps, m.boardRowParts(r, ledgerTreeSteps(r.Steps))...)
+			boardParts := m.boardRowParts(r, ledgerTreeSteps(r.Steps))
+			steps = append(append([]relayRowPart{boardParts[0]}, steps...), boardParts[1:]...)
 			for _, step := range steps {
 				text += "  " + step.text
 			}
@@ -198,7 +199,7 @@ func (m *Model) rows() (needs, running []ovRow) {
 			if r.State == "stale" {
 				style = th.Dim
 			}
-			running = append(running, ovRow{ledgerID: r.ID, kind: kindExternal, style: style, kindW: len(kindExternal), project: i, name: name,
+			running = append(running, ovRow{ledgerID: r.ID, state: r.State, kind: kindExternal, style: style, kindW: len(kindExternal), project: i, name: name,
 				text: text, id: id, rest: rest, stepParts: steps, dim: r.State == "stale"})
 		}
 	}

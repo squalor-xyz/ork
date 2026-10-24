@@ -25,6 +25,6 @@
                            |
                            |
                            |  S22  implement  owner action  denied: Write, Bash  2 of 6 steps
-                           |  running  2m  implementer>reviewer>gate
+                           |  running  2m  [......]  implementer>reviewer>gate
                            |[2m------------------------------------------------------------------------[m
                            | 1 project | refreshed 16:42:00 | pending 0

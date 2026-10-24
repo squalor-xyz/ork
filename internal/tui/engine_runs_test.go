@@ -239,7 +239,7 @@ func TestExternalRelayStepRows(t *testing.T) {
 			h.src.set(snap(proj("ork", false), nil, nil, relayWithSteps(tc.steps...)))
 			h.start()
 			v := sgr.ReplaceAllString(strings.Join(h.m.overview(300).body, "\n"), "")
-			if !strings.Contains(v, "ledger  S30  active, 2 of 6 steps running  2m  "+tc.want) {
+			if !strings.Contains(v, "ledger  S30  active, 2 of 6 steps running  2m  "+stageBar(ledgerTreeSteps(tc.steps), 0, true)+"  "+tc.want) {
 				t.Fatalf("external step row missing %q:\n%s", tc.want, v)
 			}
 			if strings.Contains(v, "Earlier failure") || (tc.name == "last-running" && strings.Contains(v, "running: orchestrator")) {
@@ -257,7 +257,7 @@ func TestExternalRelayTaskClipped(t *testing.T) {
 	})))
 	h.start()
 	_, rows := h.m.rows()
-	prefix := "ledger  S30  active, 2 of 6 steps running  2m  running: implementer codex/gpt-6.1: "
+	prefix := "ledger  S30  active, 2 of 6 steps running  2m  [~~....]  running: implementer codex/gpt-6.1: "
 	got := rowText(rows[0], len(prefix)+20)
 	if got != prefix+task[:17]+"..." {
 		t.Fatalf("task not clipped with ellipsis: %q", got)
@@ -276,13 +276,17 @@ func TestExternalRelayWholePartClipping(t *testing.T) {
 			h.start()
 			_, rows := h.m.rows()
 			base := "ledger  S30  active, 2 of 6 steps running  2m"
+			baseWithBar := base + "  [~~....]"
+			if phase == "fail" {
+				baseWithBar = base + "  [!!....]"
+			}
 			label := "running: implementer codex/gpt-6.1"
 			if phase == "fail" {
 				label = "failed: implementer"
 			}
 			for _, extra := range []int{0, 5, len(label) + 2, len(label) + 7} {
-				if got := rowText(rows[0], len(base)+extra); got != base {
-					t.Errorf("partial step must be dropped, room %d: got %q, want %q", len(base)+extra, got, base)
+				if got := rowText(rows[0], len(baseWithBar)+extra); got != baseWithBar {
+					t.Errorf("partial step must be dropped, room %d: got %q, want %q", len(baseWithBar)+extra, got, baseWithBar)
 				}
 			}
 			noSteps := r
@@ -309,7 +313,7 @@ func TestExternalRelayOptionalFields(t *testing.T) {
 	)))
 	h.start()
 	_, rows := h.m.rows()
-	want := "ledger  S30  active, 2 of 6 steps running  2m  running: implementer  failed: reviewer  [implementer]>reviewer>gate"
+	want := "ledger  S30  active, 2 of 6 steps running  2m  [~~!!..]  running: implementer  failed: reviewer  [implementer]>reviewer>gate"
 	if got := rowText(rows[0], 300); got != want {
 		t.Fatalf("empty fields: got %q, want %q", got, want)
 	}

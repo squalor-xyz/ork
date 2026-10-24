@@ -33,20 +33,25 @@ const holdFlag = "needs-owner"
 // Projects has a default, and tests replace the clock, the timer and the bell
 // so no test sleeps.
 type Config struct {
-	Getwd     func() (string, error) // empty Welcome path offer; default os.Getwd
-	Source    source.Source
-	Projects  []registry.Project
-	Now       func() time.Time              // default time.Now
-	Schedule  poll.Schedule                 // default poll.DefaultSchedule
-	TickEvery time.Duration                 // how often the schedule is checked; default 1 s
-	After     func(d time.Duration) tea.Cmd // a command that sends tickMsg after d; default tea.Tick
-	Bell      func()                        // rings the terminal bell; default writes BEL to stderr
-	Theme     Theme
-	Live      Live // the daemon's refresh, focus and notices; nil when there is no daemon
+	Getwd      func() (string, error) // empty Welcome path offer; default os.Getwd
+	Source     source.Source
+	Projects   []registry.Project
+	Now        func() time.Time              // default time.Now
+	Schedule   poll.Schedule                 // default poll.DefaultSchedule
+	TickEvery  time.Duration                 // how often the schedule is checked; default 1 s
+	After      func(d time.Duration) tea.Cmd // a command that sends tickMsg after d; default tea.Tick
+	FrameAfter func(d time.Duration) tea.Cmd // sends frameMsg; default 250 ms tea.Tick
+	ASCII      bool                          // use ASCII sparkline glyphs
+	Bell       func()                        // rings the terminal bell; default writes BEL to stderr
+	Theme      Theme
+	Live       Live // the daemon's refresh, focus and notices; nil when there is no daemon
 }
 
 // tickMsg asks the Model to check which projects are due.
 type tickMsg struct{}
+
+// frameMsg advances only visible live animation, independently of polling.
+type frameMsg struct{}
 
 // snapshotMsg is one project's refresh coming back.
 type snapshotMsg struct {
@@ -114,6 +119,7 @@ type Model struct {
 	width         int
 	height        int
 	treeFrame     int
+	frameArmed    bool
 	pane          *runPane
 	confirm       *runAction
 	waves         *wavesState
@@ -146,6 +152,9 @@ func New(cfg Config) *Model {
 		cfg.After = func(d time.Duration) tea.Cmd {
 			return tea.Tick(d, func(time.Time) tea.Msg { return tickMsg{} })
 		}
+	}
+	if cfg.FrameAfter == nil {
+		cfg.FrameAfter = func(d time.Duration) tea.Cmd { return tea.Tick(d, func(time.Time) tea.Msg { return frameMsg{} }) }
 	}
 	if cfg.Bell == nil {
 		cfg.Bell = func() { fmt.Fprint(os.Stderr, "\a") }
@@ -246,12 +255,20 @@ func (m *Model) fetch(name string, refresh bool) tea.Cmd {
 }
 
 // Update implements tea.Model.
-func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
+	defer func() {
+		if frame := m.armFrame(); frame != nil {
+			cmd = tea.Batch(cmd, frame)
+		}
+	}()
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
-	case tickMsg:
+	case frameMsg:
+		m.frameArmed = false
 		m.treeFrame = (m.treeFrame + 1) % 4
+		return m, nil
+	case tickMsg:
 		return m, m.tick(m.cfg.Now())
 	case snapshotMsg:
 		return m, m.apply(msg)

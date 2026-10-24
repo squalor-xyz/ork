@@ -64,7 +64,7 @@ func TestInactiveBoardDetails(t *testing.T) {
 				t.Errorf("inactive waiting rows:\n%s", v)
 			}
 			steps := h.m.paneSteps()
-			line := h.m.boardLines(steps, 120)[0]
+			line := h.m.boardLines(steps, 120)[1]
 			th := h.m.cfg.Theme
 			want := th.Dim.Render("implementer") + " > " + th.Dim.Render("reviewer") + " > " + th.Dim.Render("gate")
 			if !strings.HasPrefix(line, want) {
@@ -107,7 +107,7 @@ func TestRunningRowWarnCellAndFullDetail(t *testing.T) {
 	if !strings.Contains(v, h.m.cfg.Theme.Warn.Render("! heard 16m")) {
 		t.Errorf("warn cell lacks color: %q", v)
 	}
-	want := "s97  S97  active  20m  running: reviewer  implementer>[reviewer]>gate  ! heard 16m"
+	want := "s97  S97  active  20m  [..~~..]  running: reviewer  implementer>[reviewer]>gate  ! heard 16m"
 	if got := strings.TrimSpace(strings.Join(detailLines(row, 240), "\n")); got != want {
 		t.Errorf("incomplete detail: %q", got)
 	}
@@ -163,7 +163,8 @@ func TestNarrowRunningCellsDropInPriorityOrder(t *testing.T) {
 	role := "running: implementer"
 	pipeline := "[implementer]>reviewer>gate"
 	heard := "heard 0s"
-	texts := []string{base, base + "  " + role, base + "  " + role + "  " + pipeline, base + "  " + role + "  " + pipeline + "  " + heard}
+	baseWithBar := base + "  [~~....]"
+	texts := []string{base, baseWithBar, baseWithBar + "  " + role, baseWithBar + "  " + role + "  " + pipeline, baseWithBar + "  " + role + "  " + pipeline + "  " + heard}
 	for i, want := range texts {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			if got := rowText(row, len(want)); got != want {

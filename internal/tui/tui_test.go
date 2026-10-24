@@ -109,14 +109,15 @@ func newHarness(t *testing.T, projects ...registry.Project) *harness {
 	t.Helper()
 	h := &harness{t: t, src: &fakeSource{snaps: map[string]source.Snapshot{}}, now: t0}
 	h.m = New(Config{
-		Source:    h.src,
-		Projects:  projects,
-		Now:       func() time.Time { return h.now },
-		Schedule:  poll.DefaultSchedule,
-		TickEvery: time.Second,
-		After:     func(time.Duration) tea.Cmd { return func() tea.Msg { return tickMsg{} } },
-		Bell:      func() { h.bells++ },
-		Theme:     plainTheme(),
+		Source:     h.src,
+		Projects:   projects,
+		Now:        func() time.Time { return h.now },
+		Schedule:   poll.DefaultSchedule,
+		TickEvery:  time.Second,
+		FrameAfter: func(time.Duration) tea.Cmd { return nil },
+		After:      func(time.Duration) tea.Cmd { return func() tea.Msg { return tickMsg{} } },
+		Bell:       func() { h.bells++ },
+		Theme:      plainTheme(),
 	})
 	return h
 }

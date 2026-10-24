@@ -4,7 +4,7 @@
                            |  [90mnothing needs you[m
                            |
                            |[1;36mRunning[m
-                           |[1;7;97;44m    ork  S55  implement  implementer>[reviewer]>gate  heard 1m[m
+                           |[1;7;97;44m    ork  S55  implement  [##~~!!]  implementer>[reviewer]>gate  heard 1m[m
                            |
                            |[1;36mRecent[m
                            |  [90mnone[m
@@ -16,8 +16,8 @@
                            |
                            |
                            |
-                           |
                            |  [1;36mRun engine  S55  implement[m
+                           |  [##~~!!]
                            |  [32mimplementer[m > [36m[reviewer][m > [1;31mgate[m                                [90mround 1[m
                            |  [90mlast heard 1m ago[m
                            |  [90m+ implementer done  1m  claude sonnet high round 1[m

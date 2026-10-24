@@ -52,6 +52,8 @@ type Request struct {
 	// the process runs. The engine records it so a restart can find the
 	// process (engine.restart).
 	OnStart func(pgid int)
+	// OnEvent counts one vendor stream event without exposing vendor payloads.
+	OnEvent func()
 }
 
 // Result is what a role round produced.
