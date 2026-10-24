@@ -76,13 +76,15 @@ type runResult struct {
 }
 
 type managedRun struct {
-	engine   *engine.Engine
-	cancel   context.CancelFunc
-	done     chan struct{}
-	result   *runResult
-	busy     bool
-	stopping bool
-	stop     *stopCall // the owner stop in flight, which later stops join
+	failure        error
+	recoveryFailed bool // failed recovery does not hold off idle exit
+	engine         *engine.Engine
+	cancel         context.CancelFunc
+	done           chan struct{}
+	result         *runResult
+	busy           bool
+	stopping       bool
+	stop           *stopCall // the owner stop in flight, which later stops join
 }
 
 // stopCall is an owner stop that has not returned. A stop that arrives while
@@ -176,7 +178,21 @@ func (d *Daemon) recoverRuns(ctx context.Context) error {
 		}
 		p, ok := find(f, rec.Project)
 		if !ok {
-			fmt.Fprintf(os.Stderr, "run %s: project %q is not registered\n", rec.ID, rec.Project)
+			err := fmt.Errorf("project %q is not registered", rec.Project)
+			fmt.Fprintf(os.Stderr, "run %s: %v\n", rec.ID, err)
+			if rec.State == runrec.StateQueued {
+				// StopQueued only needs the stored record, not project settings.
+				p = registry.Project{Name: rec.Project}
+				e := engine.Load(d.runDeps(p), p, r)
+				d.runs.runs[rec.ID] = &managedRun{engine: e}
+				if err := e.StopQueued(ctx, "project was removed"); err != nil {
+					d.runs.runs[rec.ID].failure = err
+					d.runs.runs[rec.ID].recoveryFailed = true
+					fmt.Fprintf(os.Stderr, "stop queued run %s: %v\n", rec.ID, err)
+				}
+			} else {
+				d.runs.runs[rec.ID] = &managedRun{failure: err, recoveryFailed: true}
+			}
 			continue
 		}
 		e := engine.Load(d.runDeps(p), p, r)
@@ -187,6 +203,7 @@ func (d *Daemon) recoverRuns(ctx context.Context) error {
 		}
 		if err := e.Reconcile(ctx); err != nil {
 			fmt.Fprintf(os.Stderr, "reconcile %s: %v\n", rec.ID, err)
+			d.runs.runs[rec.ID] = &managedRun{engine: e, failure: err, recoveryFailed: true}
 			continue
 		}
 		d.runs.runs[rec.ID] = &managedRun{engine: e}
@@ -224,7 +241,11 @@ func (d *Daemon) activeRunsLocked() bool {
 		return true
 	} // preserve the daemon when the run state cannot be read
 	for _, r := range stored {
-		switch r.Snapshot().State {
+		rec := r.Snapshot()
+		if m := d.runs.runs[rec.ID]; m != nil && m.recoveryFailed {
+			continue
+		}
+		switch rec.State {
 		case runrec.StateCommitted, runrec.StateStopped, runrec.StatePaused, runrec.StateAwaitingApproval:
 		default:
 			return true
@@ -478,7 +499,7 @@ func (d *Daemon) stopWave(ctx context.Context, p WaveAction) (*WaveResult, error
 	found := false
 	for _, run := range stored {
 		rec := run.Snapshot()
-		if r := d.runs.runs[rec.ID]; r != nil {
+		if r := d.runs.runs[rec.ID]; r != nil && r.engine != nil {
 			rec = r.engine.Snapshot()
 		}
 		if rec.Wave != p.Wave {
@@ -514,7 +535,7 @@ func (d *Daemon) stopWave(ctx context.Context, p WaveAction) (*WaveResult, error
 	for _, rec := range members {
 		d.runs.mu.Lock()
 		final := false
-		if r := d.runs.runs[rec.ID]; r != nil {
+		if r := d.runs.runs[rec.ID]; r != nil && r.engine != nil {
 			final = runrec.IsFinal(r.engine.Snapshot().State)
 		}
 		d.runs.mu.Unlock()
@@ -617,6 +638,8 @@ func (d *Daemon) launchRun(r *managedRun, fn func(context.Context) error) {
 	r.busy = true
 	r.done = make(chan struct{})
 	r.result = &runResult{}
+	r.failure = nil
+	r.recoveryFailed = false
 	r.stop = nil // a handle left by an earlier stop must not join this job
 	result := r.result
 	d.runs.wg.Add(1)
@@ -626,6 +649,9 @@ func (d *Daemon) launchRun(r *managedRun, fn func(context.Context) error) {
 		err := fn(ctx)
 		d.runs.mu.Lock()
 		result.err = err
+		if !errors.Is(err, context.Canceled) {
+			r.failure = err
+		}
 		result.record = r.engine.Snapshot()
 		r.busy = false
 		close(r.done)
@@ -647,6 +673,15 @@ func (d *Daemon) ownerRun(ctx context.Context, method string, p RunAction) (runr
 	if r == nil {
 		d.runs.mu.Unlock()
 		return runrec.Record{}, &ipc.Error{Code: CodeNotFound, Message: "no run " + p.Run}
+	}
+	if r.engine == nil {
+		run, err := d.runs.deps.Store.Open(p.Run)
+		failure := r.failure
+		d.runs.mu.Unlock()
+		if err != nil {
+			return runrec.Record{}, err
+		}
+		return run.Snapshot(), failure
 	}
 	// A stop that arrives while another stop is in flight joins it.
 	if method == MethodRunStop && r.stop != nil && (r.busy || r.stopping) {
@@ -714,6 +749,9 @@ func (d *Daemon) ownerRun(ctx context.Context, method string, p RunAction) (runr
 			// A cancelled round leaves its role live in the record. Reconcile checks
 			// and kills any surviving group before recording the owner's stop.
 			if err := r.engine.Reconcile(ctx); err != nil {
+				d.runs.mu.Lock()
+				r.recoveryFailed = true
+				d.runs.mu.Unlock()
 				return err
 			}
 			return r.engine.Stop(ctx, "CLI stop")
@@ -782,7 +820,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 	runs := []EngineRun{}
 	for _, r := range stored {
 		rec := r.Snapshot()
-		if m := d.runs.runs[rec.ID]; m != nil {
+		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
 			rec = m.engine.Snapshot()
 		}
 		if rec.Project != project {
@@ -816,10 +854,21 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 			denials = append(denials, roleDenials(role)...)
 		}
 		var activity []int
-		if m := d.runs.runs[rec.ID]; m != nil {
+		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
 			activity = m.engine.Activity(d.cfg.Clock.Now())
 		}
-		runs = append(runs, EngineRun{Activity: activity, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
+		unavailable := false
+		if m := d.runs.runs[rec.ID]; m != nil {
+			unavailable = m.engine == nil
+		}
+		if unavailable {
+			wait = source.RemovedProjectHelp(rec.Project)
+		}
+		failure := ""
+		if m := d.runs.runs[rec.ID]; m != nil && !m.busy && m.failure != nil {
+			failure = m.failure.Error()
+		}
+		runs = append(runs, EngineRun{Unavailable: unavailable, Error: failure, Activity: activity, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
 	}
 	return runs
 }

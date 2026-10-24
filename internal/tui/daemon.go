@@ -155,3 +155,13 @@ func (d *Daemon) ProjectsAdd(ctx context.Context, path string) (registry.Project
 	defer c.Close()
 	return c.AddProject(ctx, path, "")
 }
+
+// UnavailableProjects discovers read-only groups alongside registered projects.
+func (d *Daemon) UnavailableProjects(ctx context.Context) ([]source.Snapshot, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.UnavailableProjects(ctx)
+}

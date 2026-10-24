@@ -49,7 +49,7 @@ func (m *Model) screen() string {
 	bodyH, start := max(h-4, 1), 0
 	if m.showHelp {
 		body = m.helpLines(mainW)
-	} else if len(m.projects) == 0 {
+	} else if m.registeredProjectCount() == 0 && m.pane == nil && (m.active < 0 || m.welcome.editing || m.welcome.pending || m.welcome.confirm != "") {
 		body = m.welcomeBody(mainW)
 		status := m.actionStatus
 		if m.welcome.confirm != "" {
@@ -167,8 +167,10 @@ func (m *Model) sidebar(w, h int) []string {
 		if idx >= 0 {
 			p := m.projects[idx]
 			label = p.reg.Name
-			setup = p.setup()
-			if setup {
+			setup = p.setup() || p.snap.Unavailable
+			if p.snap.Unavailable {
+				badge = " removed"
+			} else if setup {
 				badge = " no slicer"
 			} else {
 				badge = fmt.Sprintf(" %d", p.needs())
@@ -266,15 +268,16 @@ func (m *Model) viewBar() string {
 // statusLine shows the project count, the last refresh and the number of
 // projects still refreshing. The token sparkline waits for S07 and the daemon figures for S03.
 func (m *Model) statusLine() string {
+	count := m.registeredProjectCount()
 	noun := "projects"
-	if len(m.projects) == 1 {
+	if count == 1 {
 		noun = "project"
 	}
 	refreshed := "never"
 	if !m.lastRefresh.IsZero() {
 		refreshed = m.lastRefresh.Format("15:04:05")
 	}
-	line := fmt.Sprintf(" %d %s | refreshed %s | pending %d", len(m.projects), noun, refreshed, m.poller.Pending())
+	line := fmt.Sprintf(" %d %s | refreshed %s | pending %d", count, noun, refreshed, m.poller.Pending())
 	if r, ok := m.selectedRow(); ok && r.ready && r.merged {
 		line += " | c clean up"
 	}

@@ -72,7 +72,7 @@ func (d *Daemon) checkMerged(ctx context.Context, p registry.Project, head strin
 	var records []runrec.Record
 	for _, r := range stored {
 		rec := r.Snapshot()
-		if managed := d.runs.runs[rec.ID]; managed != nil {
+		if managed := d.runs.runs[rec.ID]; managed != nil && managed.engine != nil {
 			rec = managed.engine.Snapshot()
 		}
 		if rec.Project != p.Name || rec.State != runrec.StateCommitted {
@@ -125,7 +125,7 @@ func (d *Daemon) cleanupRun(ctx context.Context, a RunAction) error {
 		return badParams(err)
 	}
 	rec := r.Snapshot()
-	if managed := d.runs.runs[rec.ID]; managed != nil {
+	if managed := d.runs.runs[rec.ID]; managed != nil && managed.engine != nil {
 		rec = managed.engine.Snapshot()
 	}
 	merged := d.runs.merged[rec.ID]

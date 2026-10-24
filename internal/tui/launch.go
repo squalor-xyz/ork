@@ -65,7 +65,7 @@ func (m *Model) dropLaunch() {
 }
 
 func (m *Model) openLaunch() tea.Cmd {
-	if m.view != roadmapView || m.active < 0 || m.itemPane != nil || m.showHelp {
+	if m.view != roadmapView || m.active < 0 || m.itemPane != nil || m.showHelp || m.projects[m.active].snap.Unavailable {
 		return nil
 	}
 	if m.cfg.Live == nil {

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-101 items · — 38 · done 57 · parked 1 · retired 5
+101 items · — 37 · done 58 · parked 1 · retired 5
 
 ## v1.1
 
@@ -93,7 +93,7 @@
 | 36 | [S32](slices/S32.md) | One needs, running and hidden builder for ork status and the TUI | S | 1 |  | discovered from S31 | done |
 | 37 | [S33](slices/S33.md) | Show the engine run ID in the Overview row; engine-row edge cases | S | 1 |  | discovered from S31 | done |
 | 38 | [S34](slices/S34.md) | Clear an old stopped run from Needs you | S | 2 |  | discovered from S31 | — |
-| 39 | [S35](slices/S35.md) | Runs skipped at recovery or failed in the background stay visible | S | 2 |  | discovered from S17 | — |
+| 39 | [S35](slices/S35.md) | Runs skipped at recovery or failed in the background stay visible | S | 2 |  | discovered from S17 | done |
 | 40 | [S36](slices/S36.md) | A second ork stop does not cancel the first | S | 1 |  | discovered from S17 | done |
 | 41 | [S37](slices/S37.md) | Tidy status error logging and the stderr swap | S | 1 |  | Obsolete: the status error helpers exist only in tests; the live print is in daemon/runs.go. Owner review 2026-10-20. · discovered from S17 | retired |
 | 42 | [S38](slices/S38.md) | projects rm refuses while the project has unfinished runs | S | 1 |  | discovered from S17 | — |

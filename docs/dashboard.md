@@ -177,9 +177,26 @@ id, then slice, engine state and wait. Denied calls appear as
 `denied: Bash: git push origin main, Write: /x.txt`
 (the tool, then its command or file path, capped at 200 characters; a denial
 with no detail shows the tool name alone) from the snapshot's `denials` field
-(`ui.denials-display`, `engine.denied-command`). Its linked ledger
+(`ui.denials-display`, `engine.denied-command`). When set, the *proposed*
+`error` text follows the denials as `error: TEXT`. Its linked ledger
 run supplies step progress and elapsed
 time; without a ledger run, elapsed time starts at the engine record's creation.
+A removed project's non-queued runs appear in a removed group named from
+the stored project name. Needs you marks them `! removed`. The sidebar uses
+`removed` and dims the label. Running rows with an error use `! error` so the
+failure stays visible when the rest of the row is cut. The run id stays first.
+The *proposed* `unavailable` flag disables retry, stop, approve and answer on a row.
+The group is read once at TUI startup. It is not polled, refreshed, focused,
+counted as a registered project, or offered for launches. It is separate from
+the no-slicer setup case, whose rows and counts stay hidden (adj 83).
+`ork status` marks the group as `(removed)`. A run's error is indented by four
+spaces and stays on one line. The *proposed* wire flag is named `unavailable`.
+Action keys and the pane explain: `No actions: project "NAME" is not registered.`
+They direct the owner to re-add the project with
+`ork projects add PATH --name NAME`, then run `ork daemon restart`.
+The wire row's wait text gives the same steps. With no registered projects,
+Welcome still offers Add. Removed groups remain reachable from the sidebar.
+Re-adding the same name replaces its removed group.
 Stopped rows show their age from the *proposed* optional `updated_at` field.
 The age uses the largest unit: `45s ago`, `12m ago`, `3h ago`, or `2d ago`.
 A stopped row with no `updated_at` shows no age.

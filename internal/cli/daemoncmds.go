@@ -41,7 +41,11 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 		return ExitOK
 	}
 	for _, p := range res.Projects {
-		fmt.Fprintf(o.stdout, "%s: needs you %d, active relays %d\n", p.Name, p.NeedsYou, len(p.ActiveRelays))
+		name := p.Name
+		if p.Unavailable {
+			name += " (removed)"
+		}
+		fmt.Fprintf(o.stdout, "%s: needs you %d, active relays %d\n", name, p.NeedsYou, len(p.ActiveRelays))
 		for _, r := range p.Open {
 			fmt.Fprintf(o.stdout, "  #%d %s  %s\n", r.ID, r.Key, r.Title)
 		}
@@ -74,6 +78,9 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 					fmt.Fprintf(o.stdout, " (denied: %s)", strings.Join(r.Denials, ", "))
 				}
 				fmt.Fprintln(o.stdout)
+				if r.Error != "" {
+					fmt.Fprintf(o.stdout, "    error: %s\n", strings.NewReplacer("\r\n", " ", "\n", " ", "\r", " ").Replace(r.Error))
+				}
 			}
 		}
 		for _, e := range p.Errors {

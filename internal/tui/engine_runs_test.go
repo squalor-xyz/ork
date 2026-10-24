@@ -3,6 +3,7 @@
 package tui
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -508,5 +509,128 @@ func TestSetupProjectNeedsCountsNothing(t *testing.T) {
 	p.snap.EngineRuns = []source.EngineRun{{ID: "engine", State: "paused"}}
 	if got := p.needs(); got != 0 {
 		t.Fatalf("setup needs=%d, want 0", got)
+	}
+}
+
+func TestEngineRunError(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	s := engineSnapshot(t, "implement", "ledger")
+	s.EngineRuns[0].ID = "ork-20261019-164000-abcd"
+	s.EngineRuns[0].Error = "background broke"
+	s.EngineRuns[0].Denials = []string{"Write"}
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	_, rows := h.m.rows()
+	if len(rows) == 0 || !strings.Contains(rows[0].text, "denied: Write  error: background broke") {
+		t.Fatalf("missing error after denials: %+v", rows)
+	}
+	if rows[0].kind != kindError {
+		t.Error("background error row has no visible error marker")
+	}
+	if len(rows[0].stepParts) == 0 {
+		t.Error("error row lost step parts")
+	}
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	if !strings.Contains(sgr.ReplaceAllString(h.m.View().Content, ""), s.EngineRuns[0].ID) {
+		t.Error("error row clipped run ID")
+	}
+	checkGolden(t, "engine-error-80x24.txt", h.m.View().Content)
+}
+
+type unavailableTestSource struct {
+	*fakeSource
+	groups []source.Snapshot
+}
+
+func (s unavailableTestSource) UnavailableProjects(context.Context) ([]source.Snapshot, error) {
+	return s.groups, nil
+}
+
+func TestUnavailableProjectGroup(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	var group source.Snapshot
+	if err := json.Unmarshal([]byte(`{"Project":{"name":"removed"},"Unavailable":true,"EngineRuns":[{"id":"ork-20261019-164000-abcd","item":"S35","state":"implement","unavailable":true,"error":"project \"removed\" is not registered"}]}`), &group); err != nil {
+		t.Fatal(err)
+	}
+	group.EngineRuns[0].Wait = source.RemovedProjectHelp("removed")
+	h.m.cfg.Source = unavailableTestSource{h.src, []source.Snapshot{group}}
+	live := &fakeLive{}
+	h.m.cfg.Live = live
+	for _, msg := range exec(h.m.Init()) {
+		if _, tick := msg.(tickMsg); !tick {
+			h.deliver(msg)
+		}
+	}
+	ps := h.m.byName["removed"]
+	if ps == nil {
+		t.Fatal("unavailable group was not discovered")
+	}
+	if ps.setup() || ps.needs() != 1 {
+		t.Fatalf("unavailable group treated as setup or lost need: %+v", ps)
+	}
+	if !strings.Contains(h.m.statusLine(), "1 project |") {
+		t.Errorf("pseudo-project counted as registered: %s", h.m.statusLine())
+	}
+	h.m.active = -1
+	h.m.cursor = 0
+	for _, verb := range []string{"retry", "stop", "approve", "answer"} {
+		if cmd := h.m.requestAction(verb); cmd != nil || h.m.confirm != nil || !strings.Contains(h.m.actionStatus, `project "removed" is not registered`) {
+			t.Errorf("unavailable %s accepted or lost error: %s", verb, h.m.actionStatus)
+		}
+	}
+	if cmd := h.m.fetch("removed", true); cmd != nil {
+		t.Error("unavailable group can refresh")
+	}
+	for _, msg := range exec(h.m.focus()) {
+		h.deliver(msg)
+	}
+	for _, names := range live.focusedCalls() {
+		for _, name := range names {
+			if name == "removed" {
+				t.Error("unavailable group sent to focus")
+			}
+		}
+	}
+	h.m.active = 1
+	h.m.view = roadmapView
+	if cmd := h.m.openLaunch(); cmd != nil || h.m.launch != nil {
+		t.Error("unavailable group can launch")
+	}
+	h.m.view = wavesView
+	if cmd := h.m.openWaves(); cmd != nil || h.m.waves != nil {
+		t.Error("unavailable group can open wave launch")
+	}
+	h.m.view = 0
+	h.m.active = -1
+	h.m.actionStatus = ""
+	h.m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
+	view := sgr.ReplaceAllString(h.m.View().Content, "")
+	if !strings.Contains(view, "! removed") || !strings.Contains(strings.Join(h.m.overview(300).body, "\n"), `error: project "removed" is not registered`) {
+		t.Errorf("group or error missing: %s", view)
+	}
+	checkGolden(t, "engine-unavailable-100x30.txt", h.m.View().Content)
+}
+
+func TestUnavailableRunActions(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	s := engineSnapshot(t, "paused", "")
+	s.EngineRuns[0].Unavailable = true
+	s.EngineRuns[0].Error = `project "ork" is not registered`
+	s.EngineRuns[0].Pending = "question"
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	h.m.pane = &runPane{run: s.EngineRuns[0].ID, project: "ork"}
+	pane := strings.Join(h.m.paneLines(300, 30, ""), "\n")
+	if !strings.Contains(pane, "No actions:") || !strings.Contains(pane, "ork projects add PATH --name ork") || !strings.Contains(pane, "ork daemon restart") {
+		t.Error("removed pane lacks actionable recovery guidance")
+	}
+	if strings.Contains(pane, "x stop") || strings.Contains(pane, "t retry") || strings.Contains(pane, "a approve") || strings.Contains(pane, "Answer:") || h.m.paneQuestion() {
+		t.Errorf("unavailable pane offers actions: %s", pane)
+	}
+	for _, verb := range []string{"retry", "stop", "approve", "answer"} {
+		h.m.actionStatus = ""
+		if cmd := h.m.requestAction(verb); cmd != nil || h.m.confirm != nil || !strings.Contains(h.m.actionStatus, `No actions: project "ork" is not registered.`) || !strings.Contains(h.m.actionStatus, "ork daemon restart") {
+			t.Errorf("unavailable action %s: %s", verb, h.m.actionStatus)
+		}
 	}
 }

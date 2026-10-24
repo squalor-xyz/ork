@@ -51,7 +51,9 @@ type ovRow struct {
 	rest             string         // a run's base text after its ID, cut first
 	stepParts        []relayRowPart // external role details, dropped before cutting base text
 	ledgerID         string         // set only for started-elsewhere rows
-	engineID         string         // empty for ledger and non-engine rows
+	unavailable      bool
+	failure          string
+	engineID         string // empty for ledger and non-engine rows
 	state            string
 	pending          string
 	commands         []string // plain copyable lines beneath a landing row
@@ -132,6 +134,9 @@ func (m *Model) rows() (needs, running []ovRow) {
 			if len(r.Denials) > 0 {
 				parts = append(parts, "denied: "+strings.Join(r.Denials, ", "))
 			}
+			if r.Error != "" {
+				parts = append(parts, "error: "+r.Error)
+			}
 			began := r.CreatedAt
 			for _, ledger := range s.Runs.Value {
 				if r.RelayRun == "" || ledger.ID != r.RelayRun {
@@ -160,9 +165,12 @@ func (m *Model) rows() (needs, running []ovRow) {
 				parts = append(parts, elapsed(end.Sub(began)))
 			}
 			rest := strings.Join(parts, "  ")
-			row := ovRow{engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: r.Item + "  " + rest, text: r.ID + "  " + r.Item + "  " + rest, dim: linkedStale != nil}
+			row := ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: r.Item + "  " + rest, text: r.ID + "  " + r.Item + "  " + rest, dim: linkedStale != nil}
 			if r.Section(s.EngineRuns) == source.SectionRunning {
 				row.kindW = len(kindExternal)
+				if r.Error != "" {
+					row.kind, row.style = kindError, th.Error
+				}
 				ledger, steps := engineBoard(r)
 				for _, linked := range boardLedgers(s) {
 					if r.RelayRun != "" && linked.ID == r.RelayRun {
@@ -178,12 +186,14 @@ func (m *Model) rows() (needs, running []ovRow) {
 			}
 			if r.Section(s.EngineRuns) == source.SectionNeeds {
 				row.kindW = kindWidth
-				switch r.State {
-				case "stopped":
+				switch {
+				case r.Unavailable:
+					row.kind, row.style = "! removed", th.Error
+				case r.State == "stopped":
 					row.kind, row.style = "x stopped", th.Error
-				case "paused":
+				case r.State == "paused":
 					row.kind, row.style = "= paused", th.Held
-				case "awaiting-approval":
+				case r.State == "awaiting-approval":
 					row.kind, row.style = "+ approve", th.Decision
 				}
 				needs = append(needs, row)

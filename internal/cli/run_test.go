@@ -232,10 +232,10 @@ func TestRunYesStartsAndOwnerCommands(t *testing.T) {
 func TestStatusPrintsEngineStateAndWait(t *testing.T) {
 	var out, errs bytes.Buffer
 	app := &App{Call: func(_ context.Context, method string, params, result any) error {
-		return json.Unmarshal([]byte(`{"projects":[{"name":"p","needs_you":1,"engine_runs":[{"id":"r1","item":"S1","state":"paused","wait":"Which library?","denials":["Write","Bash"]}]}]}`), result)
+		return json.Unmarshal([]byte(`{"projects":[{"name":"p","needs_you":1,"engine_runs":[{"id":"r1","item":"S1","state":"paused","wait":"Which library?","denials":["Write","Bash"],"error":"background broke"}]}]}`), result)
 	}}
 	code := app.Run(context.Background(), []string{"status"}, &out, &errs)
-	if code != 0 || !strings.Contains(out.String(), "r1 S1 paused (wait: Which library?) (denied: Write, Bash)") {
+	if code != 0 || !strings.Contains(out.String(), "r1 S1 paused (wait: Which library?) (denied: Write, Bash)\n    error: background broke\n") {
 		t.Fatalf("status code %d: %s %s", code, &out, &errs)
 	}
 }
@@ -269,5 +269,26 @@ func TestStatusSectionsAndNeedsRows(t *testing.T) {
 	p := got.Projects[0]
 	if len(p.EngineRuns) != 6 || p.EngineRuns[0].ID != "old" || p.EngineRuns[2].ID != "done" || len(p.Open) != 1 || p.Open[0].Key != "ui.status-list" || len(p.Held) != 1 || p.Held[0].Title != "Owner answer" {
 		t.Fatalf("json lost status details: %s", stdout)
+	}
+}
+
+func TestStatusPrintsUnavailableGroup(t *testing.T) {
+	var out, errs bytes.Buffer
+	app := &App{Call: func(_ context.Context, method string, params, result any) error {
+		return json.Unmarshal([]byte(`{"projects":[{"name":"removed","unavailable":true,"needs_you":1,"engine_runs":[{"id":"missing","item":"S35","state":"implement","unavailable":true,"error":"project \"removed\" is not registered"}]}]}`), result)
+	}}
+	code := app.Run(context.Background(), []string{"status"}, &out, &errs)
+	if code != 0 || !strings.Contains(out.String(), "removed (removed): needs you 1") || !strings.Contains(out.String(), "missing S35 implement\n    error: project \"removed\" is not registered") {
+		t.Fatalf("status %d: %s %s", code, &out, &errs)
+	}
+}
+
+func TestStatusFlattensRunError(t *testing.T) {
+	var out, errs bytes.Buffer
+	app := &App{Call: func(_ context.Context, method string, params, result any) error {
+		return json.Unmarshal([]byte(`{"projects":[{"name":"p","engine_runs":[{"id":"r","item":"S35","state":"implement","error":"first\nsecond\r\nthird"}]}]}`), result)
+	}}
+	if code := app.Run(context.Background(), []string{"status"}, &out, &errs); code != 0 || !strings.Contains(out.String(), "\n    error: first second third\n") {
+		t.Errorf("run error not indented and flattened: %s", &out)
 	}
 }

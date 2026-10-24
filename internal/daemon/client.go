@@ -80,15 +80,16 @@ func (c *Client) Snapshot(ctx context.Context, p registry.Project) source.Snapsh
 		}
 	}
 	return source.Snapshot{
-		Project:    out.Project,
-		EngineRuns: out.EngineRuns,
-		Items:      out.Items.result(),
-		Deps:       out.Deps.result(),
-		Goals:      out.Goals.result(),
-		Runs:       out.Runs.result(),
-		BoardRuns:  out.BoardRuns.result(),
-		Open:       out.Open.result(),
-		Decided:    out.Decided.result(),
+		Unavailable: out.Unavailable,
+		Project:     out.Project,
+		EngineRuns:  out.EngineRuns,
+		Items:       out.Items.result(),
+		Deps:        out.Deps.result(),
+		Goals:       out.Goals.result(),
+		Runs:        out.Runs.result(),
+		BoardRuns:   out.BoardRuns.result(),
+		Open:        out.Open.result(),
+		Decided:     out.Decided.result(),
 	}
 }
 
@@ -200,4 +201,17 @@ func (c *Client) WaveStart(ctx context.Context, params WaveStartParams) (*WaveRe
 // Cleanup removes a merged run's worktree and branch after owner confirmation.
 func (c *Client) Cleanup(ctx context.Context, run string) error {
 	return c.Call(ctx, MethodRunCleanup, RunAction{Run: run}, nil)
+}
+
+// UnavailableProjects returns stored run groups without registering them.
+func (c *Client) UnavailableProjects(ctx context.Context) ([]source.Snapshot, error) {
+	var out ProjectsResult
+	if err := c.c.Call(ctx, MethodProjectsList, nil, &out); err != nil {
+		return nil, err
+	}
+	var groups []source.Snapshot
+	for _, p := range out.Unavailable {
+		groups = append(groups, source.Snapshot{Project: registry.Project{Name: p.Name}, Unavailable: true, EngineRuns: p.EngineRuns})
+	}
+	return groups, nil
 }

@@ -66,15 +66,16 @@ func result[T any](v T, err error) Result[T] {
 // one failed call does not blank the others. Open and Decided stay empty, with
 // no error, for a project whose registry entry has adj false.
 type Snapshot struct {
-	EngineRuns []EngineRun
-	Project    registry.Project
-	Items      Result[[]slicercli.Item]
-	Deps       Result[[]slicercli.Item]
-	Goals      Result[*slicercli.Goals]
-	Runs       Result[[]slicercli.RelayRun] // active runs only
-	BoardRuns  Result[[]slicercli.RelayRun] // proposed: stale and recently ended runs
-	Open       Result[[]adjcli.Record]
-	Decided    Result[[]adjcli.Record]
+	Unavailable bool // proposed: display group for runs without a registered project
+	EngineRuns  []EngineRun
+	Project     registry.Project
+	Items       Result[[]slicercli.Item]
+	Deps        Result[[]slicercli.Item]
+	Goals       Result[*slicercli.Goals]
+	Runs        Result[[]slicercli.RelayRun] // active runs only
+	BoardRuns   Result[[]slicercli.RelayRun] // proposed: stale and recently ended runs
+	Open        Result[[]adjcli.Record]
+	Decided     Result[[]adjcli.Record]
 }
 
 // Source reads the state of registered projects.
@@ -173,20 +174,22 @@ type EngineRole struct {
 
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
-	Activity  []int        `json:"activity,omitempty"` // proposed: current role stream events, ten 30 s buckets
-	Worktree  string       `json:"worktree,omitempty"`
-	Branch    string       `json:"branch,omitempty"`
-	Merged    *bool        `json:"merged,omitempty"` // nil: unknown
-	Roles     []EngineRole `json:"roles,omitempty"`
-	ID        string       `json:"id"`
-	Item      string       `json:"item"`
-	State     string       `json:"state"`
-	Wait      string       `json:"wait,omitempty"`
-	Pending   string       `json:"pending,omitempty"` // paused runrec pending kind (ui.pending-kind)
-	Denials   []string     `json:"denials,omitempty"` // one text per denial: "Tool" or "Tool: command"
-	RelayRun  string       `json:"relay_run,omitempty"`
-	CreatedAt time.Time    `json:"created_at"`
-	UpdatedAt time.Time    `json:"updated_at,omitzero"`
+	Unavailable bool         `json:"unavailable,omitempty"` // proposed: no engine or owner actions
+	Error       string       `json:"error,omitempty"`       // proposed: daemon memory only
+	Activity    []int        `json:"activity,omitempty"`    // proposed: current role stream events, ten 30 s buckets
+	Worktree    string       `json:"worktree,omitempty"`
+	Branch      string       `json:"branch,omitempty"`
+	Merged      *bool        `json:"merged,omitempty"` // nil: unknown
+	Roles       []EngineRole `json:"roles,omitempty"`
+	ID          string       `json:"id"`
+	Item        string       `json:"item"`
+	State       string       `json:"state"`
+	Wait        string       `json:"wait,omitempty"`
+	Pending     string       `json:"pending,omitempty"` // paused runrec pending kind (ui.pending-kind)
+	Denials     []string     `json:"denials,omitempty"` // one text per denial: "Tool" or "Tool: command"
+	RelayRun    string       `json:"relay_run,omitempty"`
+	CreatedAt   time.Time    `json:"created_at"`
+	UpdatedAt   time.Time    `json:"updated_at,omitzero"`
 }
 
 // Superseded reports a stopped run replaced by a newer engine run of its slice.
@@ -214,6 +217,9 @@ const (
 
 // Section classifies a run among runs for a single project.
 func (r EngineRun) Section(runs []EngineRun) Section {
+	if r.Unavailable {
+		return SectionNeeds
+	}
 	if r.State == runrec.StateCommitted || r.Superseded(runs) {
 		return SectionHidden
 	}
@@ -246,4 +252,15 @@ func (d *Direct) BoardRuns(ctx context.Context, p registry.Project) Result[[]sli
 		}
 	}
 	return result(kept, nil)
+}
+
+// UnavailableReader supplies display-only groups without registry entries.
+// These snapshots have no project data to poll or refresh.
+type UnavailableReader interface {
+	UnavailableProjects(context.Context) ([]Snapshot, error)
+}
+
+// RemovedProjectHelp gives the recovery steps for a display-only run group.
+func RemovedProjectHelp(name string) string {
+	return fmt.Sprintf("No actions: project %q is not registered. Re-add it with ork projects add PATH --name %s, then run ork daemon restart.", name, name)
 }

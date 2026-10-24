@@ -197,6 +197,19 @@ of one text per denial, `Tool` or `Tool: command`, collected from the role
 records in role order). A denial with no command is its tool name alone. A record from before
 S45 has no `denied_commands`, so its `denials` are tool names. Denials are
 omitted when empty and rendered by status and the TUI (`ui.denials-display`).
+The *proposed* optional `error` field holds a recovery or background job error.
+It lives in daemon memory only and is absent from `run.json`. It appears when
+the run is not busy. The next job clears it; cancellation is not a failure.
+The stored state stays unchanged (adj 116).
+The *proposed* optional `unavailable` boolean marks a run with no engine because
+its project is no longer registered. It has no owner actions and belongs in
+Needs you. The daemon still returns its record and error to Go callers.
+The socket reply returns the error alone; the next snapshot carries the row.
+The *proposed* `projects.list.unavailable` list holds display-only project
+statuses, separate from the registered `projects` list. Each has the recorded
+project name, `unavailable: true` and its engine rows. Status includes these
+groups with the same optional `unavailable` flag. Their snapshots contain
+only stored engine rows and the *proposed* `unavailable: true` flag.
 For a paused run, optional `pending` is the record's pending kind: `question`,
 `shape`, `lost`, `interrupted` or `error` (`ui.pending-kind`, adj #108). Other
 states omit it; older snapshots may omit it too.

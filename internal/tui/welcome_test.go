@@ -14,6 +14,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/source"
 )
 
 type welcomeLive struct {
@@ -268,5 +269,56 @@ func TestWelcomeHintNamesAbsolutePaths(t *testing.T) {
 	want := "Type an absolute path, or leave it empty and press Enter to use the current directory (needs .slicer or .adjudicate.json). Esc cancels."
 	if !strings.Contains(got, want) {
 		t.Fatalf("hint=%s", got)
+	}
+}
+
+func TestWelcomeWithOnlyRemovedProjects(t *testing.T) {
+	h, _ := welcomeHarness(t)
+	group := source.Snapshot{Project: registry.Project{Name: "removed"}, Unavailable: true, EngineRuns: []source.EngineRun{{ID: "missing", State: "implement", Unavailable: true, Error: `project "removed" is not registered`}}}
+	h.deliver(unavailableProjectsMsg{groups: []source.Snapshot{group}})
+	if !strings.Contains(h.view(), "No projects yet. Press a to add one") {
+		t.Error("removed-only groups hid Welcome")
+	}
+	h.deliver(press("1"))
+	if h.m.active != 0 || !strings.Contains(h.view(), "missing") {
+		t.Error("removed group unreachable from Welcome")
+	}
+	h.deliver(press("left"))
+	welcomePath(h, "/work/mine")
+	if h.m.welcome.confirm != "/work/mine" {
+		t.Errorf("removed-only Welcome cannot add project: %+v", h.m.welcome)
+	}
+	h.deliver(press("y"))
+	if len(h.m.projects) != 2 || h.m.byName["mine"] == nil {
+		t.Error("Welcome did not add registered project")
+	}
+}
+
+func TestProjectAddedReplacesRemovedGroup(t *testing.T) {
+	h := newHarness(t, proj("other", false))
+	h.start()
+	group := source.Snapshot{Project: registry.Project{Name: "mine"}, Unavailable: true, EngineRuns: []source.EngineRun{{ID: "missing", State: "implement", Unavailable: true}}}
+	h.deliver(unavailableProjectsMsg{groups: []source.Snapshot{group}})
+	h.deliver(projectAddedMsg{project: proj("mine", false)})
+	count := 0
+	for _, p := range h.m.projects {
+		if p.reg.Name == "mine" {
+			count++
+			if p.snap.Unavailable {
+				t.Error("registered project left removed group behind")
+			}
+		}
+	}
+	if count != 1 || len(h.m.projects) != 2 {
+		t.Errorf("duplicate project after re-add: count=%d total=%d", count, len(h.m.projects))
+	}
+	if h.m.byName["mine"].snap.Unavailable {
+		t.Error("byName still points to removed group")
+	}
+	needs, _ := h.m.rows()
+	for _, r := range needs {
+		if r.engineID == "missing" {
+			t.Error("stale removed run remains in Needs you after re-add")
+		}
 	}
 }

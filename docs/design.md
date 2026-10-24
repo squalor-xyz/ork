@@ -28,7 +28,9 @@ ork (TUI)  ork status --json (CLI)
   connected for `daemon_idle_minutes` (10 by default; 0 means the default;
   `daemon.idle`, `daemon.start`). The timer stops while any client is
   connected and starts again, in full, when the last one leaves. An active
-  engine run also holds off idle exit (S17). A run waiting
+  engine run also holds off idle exit (S17). A run that failed to reconcile
+  does not hold off idle exit or daemon stop. A background failure still
+  counts as active while its state is active. A run waiting
   for approval or an answer may idle-exit; it is recovered on restart. The start runs `ork daemon run`
   from the same binary, detached in its own session with stdin and stdout on
   `/dev/null` and stderr appended to `daemon.log` beside its socket (mode
@@ -763,7 +765,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   classification as the Overview: committed and superseded runs are hidden
   (`ui.status-list`, adj #125). JSON keeps every engine run, including hidden
   ones. The *proposed*
-  `engine_runs:[{id,item,branch?,merged?,state,wait?,pending?,denials?,
+  `engine_runs:[{id,item,branch?,merged?,state,wait?,pending?,denials?,error?,unavailable?,
   relay_run?,roles?,activity?,created_at}]` field per project includes the linked slicer
   ledger run ID in `relay_run`, when present, and the engine run's creation
   time in `created_at`. The optional `roles`
@@ -775,6 +777,11 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `pending` string holds the paused run record's pending kind (`question`,
   `shape`, `lost`, `interrupted` or `error`); other states omit it
   (`ui.pending-kind`). Older snapshots without it still load. `active_relays` are slicer's active relay runs.
+  The *proposed* optional `error` is a daemon-memory job or recovery error.
+  The *proposed* optional `unavailable` marks a row without an engine.
+  Removed-project groups are display-only and have `unavailable: true`.
+  They appear in status and the TUI without changing the registry. They do
+  not participate in project counts, launches, refresh or focus.
   `errors` lists failed parts (`items`, `goals`, `runs`, `open`, `decided`)
   with the tool's own code. `parts` gives each part's age in ms (0 for a part never read) and `stale`
   when the part keeps an older value; the error is the one that failed. Text: one line `NAME: needs

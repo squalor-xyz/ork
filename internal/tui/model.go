@@ -86,7 +86,7 @@ func (p *projectState) needs() int {
 }
 
 // setup reports whether the project is loaded and has no .slicer/ folder.
-func (p *projectState) setup() bool { return p.loaded && isSetup(p.snap) }
+func (p *projectState) setup() bool { return p.loaded && !p.snap.Unavailable && isSetup(p.snap) }
 
 // isSetup reports whether slicer says the project has no .slicer/ folder: its
 // items or runs call failed with that error.
@@ -188,7 +188,19 @@ func New(cfg Config) *Model {
 // Init fetches every project, starts the schedule and tells the daemon which
 // project is in view.
 func (m *Model) Init() tea.Cmd {
-	return m.tick(m.cfg.Now())
+	var discover tea.Cmd
+	if reader, ok := m.cfg.Source.(source.UnavailableReader); ok {
+		discover = func() tea.Msg {
+			groups, err := reader.UnavailableProjects(context.Background())
+			return unavailableProjectsMsg{groups: groups, err: err}
+		}
+	}
+	return tea.Batch(m.tick(m.cfg.Now()), discover)
+}
+
+type unavailableProjectsMsg struct {
+	groups []source.Snapshot
+	err    error
 }
 
 // focus tells the daemon which project the owner sees, so it reads that one
@@ -200,9 +212,14 @@ func (m *Model) focus() tea.Cmd {
 	}
 	names := []string{}
 	if m.active >= 0 {
-		names = append(names, m.projects[m.active].reg.Name)
+		if !m.projects[m.active].snap.Unavailable {
+			names = append(names, m.projects[m.active].reg.Name)
+		}
 	} else {
 		for _, p := range m.projects {
+			if p.snap.Unavailable {
+				continue
+			}
 			names = append(names, p.reg.Name)
 		}
 	}
@@ -243,7 +260,7 @@ func (m *Model) tick(now time.Time) tea.Cmd {
 // daemon reads the project now before the snapshot is taken.
 func (m *Model) fetch(name string, refresh bool) tea.Cmd {
 	ps := m.byName[name]
-	if ps == nil || !m.poller.Start(name) {
+	if ps == nil || ps.snap.Unavailable || !m.poller.Start(name) {
 		return nil
 	}
 	src, reg, live := m.cfg.Source, ps.reg, m.cfg.Live
@@ -265,6 +282,20 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		}
 	}()
 	switch msg := msg.(type) {
+	case unavailableProjectsMsg:
+		if msg.err != nil {
+			m.actionStatus = "Read unavailable runs: " + msg.err.Error()
+			return m, nil
+		}
+		for _, group := range msg.groups {
+			if !group.Unavailable || m.byName[group.Project.Name] != nil {
+				continue
+			}
+			ps := &projectState{reg: group.Project, loaded: true, snap: group}
+			m.projects = append(m.projects, ps)
+			m.byName[ps.reg.Name] = ps
+		}
+		return m, nil
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
 	case frameMsg:
@@ -333,7 +364,7 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 	case tea.KeyPressMsg:
 		return m, m.key(msg)
 	case tea.PasteMsg:
-		if len(m.projects) == 0 {
+		if m.registeredProjectCount() == 0 {
 			if m.welcome.editing && m.welcome.confirm == "" && !m.welcome.pending {
 				m.welcome.field.update(msg)
 				m.actionStatus = ""
@@ -370,8 +401,12 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 }
 
 func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
-	if len(m.projects) == 0 {
-		return m.welcomeKey(msg)
+	if m.registeredProjectCount() == 0 && m.pane == nil {
+		editing := m.welcome.editing || m.welcome.pending || m.welcome.confirm != ""
+		navigation := key.Matches(msg, m.keys.Next, m.keys.Prev, m.keys.Jump, m.keys.Sidebar)
+		if len(m.projects) == 0 || editing || (m.active < 0 && !navigation) {
+			return m.welcomeKey(msg)
+		}
 	}
 	if m.confirm != nil {
 		switch msg.String() {
@@ -760,6 +795,10 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 		m.actionStatus = "No engine run on this row; no actions"
 		return nil
 	}
+	if r.unavailable {
+		m.actionStatus = source.RemovedProjectHelp(r.name)
+		return nil
+	}
 	if r.ready && verb != "cleanup" {
 		m.actionStatus = "Ready rows have no run actions; c cleans up a merged row"
 		return nil
@@ -874,4 +913,15 @@ func actionError(err error) string {
 		return wire.Code + ": " + wire.Message
 	}
 	return err.Error()
+}
+
+// registeredProjectCount excludes display-only removed-project groups.
+func (m *Model) registeredProjectCount() int {
+	count := 0
+	for _, p := range m.projects {
+		if !p.snap.Unavailable {
+			count++
+		}
+	}
+	return count
 }

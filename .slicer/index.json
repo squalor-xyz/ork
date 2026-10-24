@@ -1563,7 +1563,7 @@
       "id": "S35",
       "title": "Runs skipped at recovery or failed in the background stay visible",
       "short_title": "Runs skipped at recovery or failed in the background stay visible",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -1596,7 +1596,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

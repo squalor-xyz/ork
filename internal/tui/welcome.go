@@ -129,7 +129,17 @@ func (m *Model) applyProjectAdded(msg projectAddedMsg) tea.Cmd {
 		return nil
 	}
 	p := &projectState{reg: msg.project}
-	m.projects = append(m.projects, p)
+	replaced := false
+	for i, old := range m.projects {
+		if old.reg.Name == p.reg.Name && old.snap.Unavailable {
+			m.projects[i] = p
+			replaced = true
+			break
+		}
+	}
+	if !replaced {
+		m.projects = append(m.projects, p)
+	}
 	m.byName[p.reg.Name] = p
 	m.poller.Add(p.reg.Name)
 	m.welcome = welcomeState{}

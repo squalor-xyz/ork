@@ -78,8 +78,9 @@ type StopResult struct {
 // open adj questions, needs-owner items and Needs-section engine runs.
 // Parts holds each part's age and state.
 type ProjectStatus struct {
-	Open         []OpenRecord         `json:"open,omitempty"` // proposed
-	Held         []HeldItem           `json:"held,omitempty"` // proposed
+	Unavailable  bool                 `json:"unavailable,omitempty"` // proposed: display only, not registered
+	Open         []OpenRecord         `json:"open,omitempty"`        // proposed
+	Held         []HeldItem           `json:"held,omitempty"`        // proposed
 	EngineRuns   []EngineRun          `json:"engine_runs"`
 	Name         string               `json:"name"`
 	Path         string               `json:"path"`
@@ -210,15 +211,16 @@ func (p Part[T]) result() source.Result[T] {
 
 // SnapshotResult is source.Snapshot over the wire.
 type SnapshotResult struct {
-	BoardRuns  Part[[]slicercli.RelayRun] `json:"board_runs"` // proposed: stale and recently ended runs
-	EngineRuns []EngineRun                `json:"engine_runs"`
-	Project    registry.Project           `json:"project"`
-	Items      Part[[]slicercli.Item]     `json:"items"`
-	Deps       Part[[]slicercli.Item]     `json:"deps"`
-	Goals      Part[*slicercli.Goals]     `json:"goals"`
-	Runs       Part[[]slicercli.RelayRun] `json:"runs"`
-	Open       Part[[]adjcli.Record]      `json:"open"`
-	Decided    Part[[]adjcli.Record]      `json:"decided"`
+	Unavailable bool                       `json:"unavailable,omitempty"` // proposed: stored runs only
+	BoardRuns   Part[[]slicercli.RelayRun] `json:"board_runs"`            // proposed: stale and recently ended runs
+	EngineRuns  []EngineRun                `json:"engine_runs"`
+	Project     registry.Project           `json:"project"`
+	Items       Part[[]slicercli.Item]     `json:"items"`
+	Deps        Part[[]slicercli.Item]     `json:"deps"`
+	Goals       Part[*slicercli.Goals]     `json:"goals"`
+	Runs        Part[[]slicercli.RelayRun] `json:"runs"`
+	Open        Part[[]adjcli.Record]      `json:"open"`
+	Decided     Part[[]adjcli.Record]      `json:"decided"`
 }
 
 // AddProjectParams is a projects.add call. An empty Name means the base name
@@ -235,7 +237,8 @@ type RemoveProjectParams struct {
 
 // ProjectsResult is the registered projects, in registry order.
 type ProjectsResult struct {
-	Projects []registry.Project `json:"projects"`
+	Unavailable []ProjectStatus    `json:"unavailable,omitempty"` // proposed: display-only groups
+	Projects    []registry.Project `json:"projects"`
 }
 
 // SubscribeParams names the projects this connection shows. Their items, deps,

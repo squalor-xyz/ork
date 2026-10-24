@@ -3,6 +3,7 @@
 package tui
 
 import (
+	"github.com/squalor-xyz/ork/internal/source"
 	"strings"
 
 	"charm.land/bubbles/v2/key"
@@ -40,7 +41,7 @@ func (m *Model) paneRow() (ovRow, string, bool) {
 		}
 		for _, r := range p.snap.EngineRuns {
 			if r.ID == m.pane.run {
-				return ovRow{engineID: r.ID, name: p.reg.Name, id: r.Item, state: r.State, pending: r.Pending}, r.Wait, true
+				return ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, name: p.reg.Name, id: r.Item, state: r.State, pending: r.Pending}, r.Wait, true
 			}
 		}
 	}
@@ -57,7 +58,7 @@ func (m *Model) actionRow() (ovRow, bool) {
 
 func (m *Model) paneQuestion() bool {
 	r, _, ok := m.paneRow()
-	return ok && !m.pane.ledger && r.state == "paused" && r.pending == "question"
+	return ok && !r.unavailable && !m.pane.ledger && r.state == "paused" && r.pending == "question"
 }
 
 func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
@@ -129,6 +130,9 @@ func (m *Model) paneLines(w, h int, status string) []string {
 	}
 	footer := []string{}
 	switch {
+	case r.unavailable:
+		footer = append(footer, wrapText(source.RemovedProjectHelp(r.name), width)...)
+		footer = append(footer, "Removed project; esc close pane")
 	case m.pane.ledger:
 		footer = append(footer, wrapText("started elsewhere, read-only; esc close pane", width)...)
 	case r.state == "paused" && r.pending == "question":

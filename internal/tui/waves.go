@@ -63,7 +63,7 @@ func (m *Model) dropWaves() {
 
 func (m *Model) openWaves() tea.Cmd {
 	m.dropWaves()
-	if m.view != wavesView || m.active < 0 {
+	if m.view != wavesView || m.active < 0 || m.projects[m.active].snap.Unavailable {
 		return nil
 	}
 	m.wavesRequest++

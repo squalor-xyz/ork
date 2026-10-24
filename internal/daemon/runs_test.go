@@ -894,6 +894,22 @@ func TestRecoverySkipsBadRuns(t *testing.T) {
 			if !strings.Contains(log, want) {
 				t.Errorf("recovery stderr %q lacks %q", log, want)
 			}
+			if kind != "list" {
+				rows := d.engineRuns(bad.Project)
+				var row EngineRun
+				for _, candidate := range rows {
+					if candidate.ID == bad.ID {
+						row = candidate
+					}
+				}
+				if got := wireRunError(t, row); !strings.Contains(got, want) {
+					t.Errorf("recovery row error = %q, want %q", got, want)
+				}
+				rec, err := d.ownerRun(context.Background(), MethodRunStop, RunAction{Run: bad.ID})
+				if err == nil || !strings.Contains(err.Error(), want) || rec.ID != bad.ID || rec.State != bad.State {
+					t.Errorf("failed recovery stop must return run and error: %+v, %v", rec, err)
+				}
+			}
 			// Exercise the recovered run through the owner surface.
 			b, err := d.handle(context.Background(), MethodRunStop, json.RawMessage(`{"run":"good"}`))
 			if err != nil {
@@ -1425,5 +1441,470 @@ func TestEngineRunRolesWire(t *testing.T) {
 	want := map[string]any{"role": "implementer", "round": float64(2), "vendor": "claude", "model": "sonnet", "effort": "high", "step": "step-2", "started_at": at.Format(time.RFC3339), "ended_at": at.Add(time.Minute).Format(time.RFC3339), "exit": "ok"}
 	if !reflect.DeepEqual(got[0].Roles[0], want) {
 		t.Fatalf("roles wire: got %s, want %v", b, want)
+	}
+}
+
+func wireRunError(t *testing.T, row EngineRun) string {
+	t.Helper()
+	b, err := json.Marshal(row)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var wire struct {
+		Error string `json:"error"`
+	}
+	if err := json.Unmarshal(b, &wire); err != nil {
+		t.Fatal(err)
+	}
+	return wire.Error
+}
+
+func TestBackgroundErrorStaysOnTheWireRow(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	run, err := store.Create(runrec.Record{ID: "failed", Project: p.Name, State: runrec.StateImplement})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := &managedRun{engine: engine.Load(d.runDeps(p), p, run)}
+	d.runs.mu.Lock()
+	d.runs.runs["failed"] = r
+	d.launchRun(r, func(context.Context) error { return errors.New("background broke") })
+	d.runs.mu.Unlock()
+	waitIdle(t, d, "failed")
+	row := d.engineRuns(p.Name)[0]
+	if got := wireRunError(t, row); got != "background broke" {
+		t.Errorf("background row error = %q, want background broke", got)
+	}
+	for _, method := range []string{MethodStatus, MethodSnapshot} {
+		wire := request(t, d, method, `{"project":"p"}`)
+		if !strings.Contains(string(wire), `"error":"background broke"`) {
+			t.Errorf("%s lost background error: %s", method, wire)
+		}
+	}
+	if row.State != runrec.StateImplement {
+		t.Errorf("failure changed state: %s", row.State)
+	}
+	b, err := os.ReadFile(filepath.Join(store.RunDir("failed"), "run.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var disk map[string]any
+	if err := json.Unmarshal(b, &disk); err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := disk["error"]; ok {
+		t.Error("run.json contains error")
+	}
+	if !d.activeRuns() {
+		t.Error("background failure must remain active")
+	}
+	if _, err := d.stopDaemon(StopParams{}); err == nil {
+		t.Error("background failure allowed daemon stop")
+	}
+	started := make(chan struct{})
+	release := make(chan struct{})
+	d.runs.mu.Lock()
+	d.launchRun(r, func(ctx context.Context) error {
+		close(started)
+		select {
+		case <-release:
+			return nil
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	})
+	cleared := r.failure == nil
+	d.runs.mu.Unlock()
+	<-started
+	if !cleared {
+		t.Error("launch did not clear previous error")
+	}
+	if got := wireRunError(t, d.engineRuns(p.Name)[0]); got != "" {
+		t.Errorf("busy row kept error: %q", got)
+	}
+	close(release)
+	waitIdle(t, d, "failed")
+	if _, err := d.ownerRun(context.Background(), MethodRunStop, RunAction{Run: "failed"}); err != nil {
+		t.Fatal(err)
+	}
+	if got := wireRunError(t, d.engineRuns(p.Name)[0]); got != "" {
+		t.Errorf("next job retained error: %q", got)
+	}
+}
+
+func TestBackgroundErrorCanceledIsNotFailure(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	run, err := store.Create(runrec.Record{ID: "cancelled", Project: p.Name, State: runrec.StateImplement})
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := &managedRun{engine: engine.Load(d.runDeps(p), p, run)}
+	d.runs.mu.Lock()
+	d.runs.runs["cancelled"] = r
+	d.launchRun(r, func(ctx context.Context) error { <-ctx.Done(); return fmt.Errorf("round: %w", ctx.Err()) })
+	r.cancel()
+	d.runs.mu.Unlock()
+	waitIdle(t, d, "cancelled")
+	if got := wireRunError(t, d.engineRuns(p.Name)[0]); got != "" {
+		t.Errorf("canceled job recorded failure: %q", got)
+	}
+}
+
+func TestFailedRecoveryAllowsIdleAndDaemonStop(t *testing.T) {
+	for _, removed := range []bool{false, true} {
+		t.Run(fmt.Sprint(removed), func(t *testing.T) {
+			d, store, p := runDaemon(t, nil)
+			d.runs.deps.Proc = failedRecoveryProc{}
+			project := p.Name
+			if removed {
+				project = "removed"
+			}
+			_, err := store.Create(runrec.Record{ID: "failed", Project: project, State: runrec.StateImplement, Roles: []runrec.RoleRecord{{Role: engine.RoleImplementer, PGID: 987654, StartedAt: time.Now()}}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := d.recoverRuns(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			clock := &fakeClock{}
+			exited := false
+			idle := &idleTimer{clock: clock, timeout: func() time.Duration { return time.Minute }, waveRunning: d.activeRuns, onIdle: func() { exited = true }}
+			idle.start()
+			defer idle.stop()
+			clock.Advance(time.Minute)
+			if !exited {
+				t.Error("failed recovery blocked idle exit")
+			}
+			if _, err := d.stopDaemon(StopParams{}); err != nil {
+				t.Errorf("failed recovery blocked daemon stop: %v", err)
+			}
+		})
+	}
+}
+
+func TestRecoveryRemovedQueuedProjectStops(t *testing.T) {
+	d, store, _ := runDaemon(t, nil)
+	_, err := store.Create(runrec.Record{ID: "queued", Project: "removed", State: runrec.StateQueued})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	run, err := store.Open("queued")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rec := run.Snapshot(); rec.State != runrec.StateStopped || rec.Reason != "project was removed" {
+		t.Fatalf("removed queued run: %+v", rec)
+	}
+	if d.activeRuns() {
+		t.Error("stopped queued run is active")
+	}
+}
+
+func TestRecoveryMissingProjectNilEngineSafety(t *testing.T) {
+	d, store, _ := runDaemon(t, nil)
+	_, err := store.Create(runrec.Record{ID: "missing", Project: "removed", Wave: "wave-missing", State: runrec.StateImplement})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if r := d.runs.runs["missing"]; r == nil || r.engine != nil {
+		t.Fatal("missing project run must be retained without engine")
+	}
+	rows := d.engineRuns("removed")
+	if len(rows) != 1 || rows[0].Section(rows) != source.SectionNeeds {
+		t.Errorf("missing project not in Needs you: %+v", rows)
+	}
+	for _, method := range []string{MethodRunStop, MethodRunRetry, MethodRunApprove, MethodRunAnswer} {
+		rec, err := d.ownerRun(context.Background(), method, RunAction{Run: "missing", Text: "answer"})
+		if rec.ID != "missing" || err == nil || !strings.Contains(err.Error(), `project "removed" is not registered`) {
+			t.Errorf("%s: %+v, %v", method, rec, err)
+		}
+	}
+	if _, err := d.stopWave(context.Background(), WaveAction{Wave: "wave-missing"}); err != nil {
+		t.Fatal(err)
+	}
+	d.runs.mu.Lock()
+	f, err := d.loadRunRegistryLocked()
+	if err == nil {
+		d.hasRoomLocked(f, "removed")
+		d.startQueuedLocked(f)
+	}
+	d.runs.mu.Unlock()
+	if err != nil {
+		t.Fatal(err)
+	}
+	d.checkMerged(context.Background(), registry.Project{Name: "removed"}, "head")
+	if err := d.cleanupRun(context.Background(), RunAction{Run: "missing"}); err == nil {
+		t.Error("cleanup accepted unfinished missing-project run")
+	}
+	d.closeRuns()
+}
+
+type recoveryProc struct {
+	failure error
+	kills   int
+}
+
+func (p *recoveryProc) Alive(int) bool { return true }
+func (p *recoveryProc) Kill(int) error { p.kills++; return p.failure }
+
+func TestFailedRecoveryStopReconcilesBeforeFinalizing(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	proc := &recoveryProc{failure: errors.New("first kill failure")}
+	d.runs.deps.Proc = proc
+	_, err := store.Create(runrec.Record{ID: "failed", Project: p.Name, State: runrec.StateImplement, Roles: []runrec.RoleRecord{{Role: engine.RoleImplementer, PGID: 987654, StartedAt: time.Now()}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	proc.failure = errors.New("second kill failure")
+	rec, err := d.ownerRun(context.Background(), MethodRunStop, RunAction{Run: "failed"})
+	if err == nil || !strings.Contains(err.Error(), "second kill failure") || rec.ID != "failed" || rec.State != runrec.StateImplement {
+		t.Fatalf("failed stop lost run or finalized it: %+v, %v", rec, err)
+	}
+	if got := wireRunError(t, d.engineRuns(p.Name)[0]); !strings.Contains(got, "second kill failure") {
+		t.Errorf("stop did not record new error: %q", got)
+	}
+	if d.activeRuns() {
+		t.Error("failed stop Reconcile did not restore idle exception")
+	}
+	proc.failure = nil
+	rec, err = d.ownerRun(context.Background(), MethodRunStop, RunAction{Run: "failed"})
+	if err != nil || rec.State != runrec.StateStopped {
+		t.Fatalf("reconciled stop: %+v, %v", rec, err)
+	}
+	if proc.kills != 3 {
+		t.Errorf("kills = %d, want 3", proc.kills)
+	}
+	if got := wireRunError(t, d.engineRuns(p.Name)[0]); got != "" {
+		t.Errorf("successful stop retained error: %q", got)
+	}
+	if d.runs.runs["failed"].recoveryFailed {
+		t.Error("successful reconcile retained idle exception")
+	}
+}
+
+func TestRemovedProjectDisplayGroup(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	for _, id := range []string{"missing-a", "missing-b"} {
+		if _, err := store.Create(runrec.Record{ID: id, Project: "removed", Item: "S35", State: runrec.StateImplement}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	b := request(t, d, MethodStatus, `{}`)
+	var status struct {
+		Projects []struct {
+			Name        string
+			Unavailable bool
+			NeedsYou    int         `json:"needs_you"`
+			Runs        []EngineRun `json:"engine_runs"`
+		}
+	}
+	if err := json.Unmarshal(b, &status); err != nil {
+		t.Fatal(err)
+	}
+	if len(status.Projects) != 2 {
+		t.Errorf("status lost missing-project group: %s", b)
+	} else {
+		group := status.Projects[1]
+		if group.Name != "removed" || !group.Unavailable || group.NeedsYou != 2 || len(group.Runs) != 2 {
+			t.Errorf("bad missing-project group: %s", b)
+		}
+	}
+	b = request(t, d, MethodProjectsList, `{}`)
+	var list struct {
+		Projects    []registry.Project
+		Unavailable []struct {
+			Name        string
+			Unavailable bool
+		}
+	}
+	if err := json.Unmarshal(b, &list); err != nil {
+		t.Fatal(err)
+	}
+	if len(list.Projects) != 1 || list.Projects[0].Name != p.Name || len(list.Unavailable) != 1 || list.Unavailable[0].Name != "removed" || !list.Unavailable[0].Unavailable {
+		t.Errorf("discovery mixed registered and unavailable projects: %s", b)
+	}
+	f, err := d.loadRegistry()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(f.Projects) != 1 {
+		t.Error("pseudo-project entered registry")
+	}
+	if _, err := d.planRun(context.Background(), RunParams{Project: "removed", Item: "S35"}); err == nil {
+		t.Error("pseudo-project accepted for launch")
+	}
+	b, err = json.Marshal(d.engineRuns("removed")[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(b), `"unavailable":true`) {
+		t.Errorf("missing unavailable flag: %s", b)
+	}
+}
+
+func TestUnavailableProjectClientDiscovery(t *testing.T) {
+	d, store, _ := runDaemon(t, nil)
+	if _, err := store.Create(runrec.Record{ID: "missing", Project: "removed", State: runrec.StateImplement}); err != nil {
+		t.Fatal(err)
+	}
+	e := newEnv(t)
+	d.cfg.Paths = e.paths
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- d.Run(ctx) }()
+	defer func() {
+		cancel()
+		select {
+		case err := <-done:
+			if err != nil {
+				t.Error(err)
+			}
+		case <-time.After(5 * time.Second):
+			t.Error("daemon did not stop")
+		}
+	}()
+	select {
+	case <-d.Ready():
+	case err := <-done:
+		done <- err
+		t.Fatalf("daemon failed: %v", err)
+	case <-time.After(5 * time.Second):
+		t.Fatal("daemon not ready")
+	}
+	c, err := Dial(context.Background(), d.cfg.Paths.Socket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+	groups, err := c.UnavailableProjects(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(groups) != 1 || !groups[0].Unavailable || groups[0].Project.Name != "removed" || len(groups[0].EngineRuns) != 1 || !groups[0].EngineRuns[0].Unavailable {
+		t.Fatalf("client lost display group: %+v", groups)
+	}
+	registered, err := c.Projects(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(registered) != 1 || registered[0].Name != "p" {
+		t.Errorf("display group entered registered list: %+v", registered)
+	}
+	snapshot := c.Snapshot(context.Background(), registry.Project{Name: "removed"})
+	if !snapshot.Unavailable || len(snapshot.EngineRuns) != 1 || snapshot.Items.Err != nil {
+		t.Errorf("unavailable snapshot: %+v", snapshot)
+	}
+	status, err := c.Status(context.Background(), "removed")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(status.Projects) != 1 || !status.Projects[0].Unavailable || status.Projects[0].NeedsYou != 1 {
+		t.Errorf("filtered missing-project status: %+v", status)
+	}
+	src := d.cfg.Source.(*stubSource)
+	src.mu.Lock()
+	defer src.mu.Unlock()
+	for _, call := range src.calls {
+		if strings.HasSuffix(call, " removed") {
+			t.Errorf("unavailable project fetched data: %s", call)
+		}
+	}
+}
+
+func TestRetryClearsFailedRecoveryIdleException(t *testing.T) {
+	d, store, p := runDaemon(t, func(context.Context, engine.Request) (engine.Result, error) {
+		return engine.Result{Exit: engine.ExitOK, Report: "bad report"}, nil
+	})
+	run, err := store.Create(runrec.Record{ID: "failed", Project: p.Name, Item: "S1", State: runrec.StatePaused, Pending: &runrec.Pending{Kind: runrec.PendingError, State: runrec.StateImplement, Role: engine.RoleImplementer, Round: 1}, Lineup: map[string][]runrec.LineupEntry{engine.RoleImplementer: {{Vendor: "claude", Model: "sonnet", Effort: "high"}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Model a Reconcile write failure on a paused record without live roles.
+	d.runs.runs["failed"] = &managedRun{engine: engine.Load(d.runDeps(p), p, run), failure: errors.New("reconcile write failed"), recoveryFailed: true}
+	if d.activeRuns() {
+		t.Error("unretried failed recovery is active")
+	}
+	if _, err := d.ownerRun(context.Background(), MethodRunRetry, RunAction{Run: "failed"}); err != nil {
+		t.Fatal(err)
+	}
+	d.runs.mu.Lock()
+	r := d.runs.runs["failed"]
+	stillFailed := r.recoveryFailed
+	d.runs.mu.Unlock()
+	if stillFailed {
+		t.Error("retry retained failed-recovery idle exception")
+	}
+	if err := run.Update(func(rec *runrec.Record) { rec.State = runrec.StateImplement }); err != nil {
+		t.Fatal(err)
+	}
+	d.runs.mu.Lock()
+	d.launchRun(r, func(context.Context) error { return errors.New("background broke after retry") })
+	d.runs.mu.Unlock()
+	waitIdle(t, d, "failed")
+	if !d.activeRuns() {
+		t.Error("background failure after retry did not count as active")
+	}
+}
+
+func TestRemovedProjectRecoveryGuidanceAndRestart(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	if _, err := store.Create(runrec.Record{ID: "missing", Project: "removed", State: runrec.StateImplement}); err != nil {
+		t.Fatal(err)
+	}
+	if err := d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	row := d.engineRuns("removed")[0]
+	if row.Error != `project "removed" is not registered` {
+		t.Errorf("wire error has run prefix: %q", row.Error)
+	}
+	if !strings.Contains(row.Wait, "ork projects add PATH --name removed") || !strings.Contains(row.Wait, "ork daemon restart") {
+		t.Errorf("missing recovery next step: %q", row.Wait)
+	}
+	p.Name = "removed"
+	if err := registry.Save(d.cfg.RegistryPath, &registry.File{Version: registry.Version, Projects: []registry.Project{p}}); err != nil {
+		t.Fatal(err)
+	}
+	d.initRunManager()
+	if err := d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if r := d.runs.runs["missing"]; r == nil || r.engine == nil {
+		t.Fatal("re-add and restart did not load engine")
+	}
+	row = d.engineRuns("removed")[0]
+	if row.Unavailable || row.Error != "" || row.State != runrec.StatePaused {
+		t.Errorf("re-added recovery did not reconcile: %+v", row)
+	}
+}
+
+func TestBackgroundRunnerErrorIsHandledByEngine(t *testing.T) {
+	d, store, _ := runDaemon(t, func(context.Context, engine.Request) (engine.Result, error) {
+		return engine.Result{}, errors.New("runner broke")
+	})
+	raw := request(t, d, MethodRunStart, `{"project":"p","item":"S1","lineup":{"implementer":[{"vendor":"claude","model":"sonnet","effort":"high"}]}}`)
+	var rec runrec.Record
+	if err := json.Unmarshal(raw, &rec); err != nil {
+		t.Fatal(err)
+	}
+	rec = waitState(t, store, rec.ID, runrec.StateStopped)
+	waitIdle(t, d, rec.ID)
+	if !strings.Contains(rec.Reason, "runner broke") {
+		t.Errorf("engine lost runner failure: %+v", rec)
+	}
+	if got := wireRunError(t, d.engineRuns("p")[0]); got != "" {
+		t.Errorf("handled runner failure became background error: %q", got)
 	}
 }

@@ -12,11 +12,13 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"sort"
 	"sync"
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
@@ -132,7 +134,7 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 		if err != nil {
 			return nil, err
 		}
-		return ProjectsResult{Projects: nonNil(f.Projects)}, nil
+		return ProjectsResult{Projects: nonNil(f.Projects), Unavailable: d.unavailableProjects(f)}, nil
 	case MethodProjectsAdd:
 		var p AddProjectParams
 		if err := decode(params, &p); err != nil {
@@ -182,6 +184,11 @@ func (d *Daemon) snapshot(ctx context.Context, p SnapshotParams) (*SnapshotResul
 	}
 	proj, ok := find(f, p.Project)
 	if !ok {
+		for _, group := range d.unavailableProjects(f) {
+			if group.Name == p.Project {
+				return &SnapshotResult{Unavailable: true, Project: registry.Project{Name: group.Name}, EngineRuns: group.EngineRuns}, nil
+			}
+		}
 		return nil, notFound(p.Project, f)
 	}
 	s := d.snapshotOf(ctx, proj)
@@ -208,12 +215,23 @@ func (d *Daemon) status(ctx context.Context, p StatusParams) (*StatusResult, err
 		return nil, err
 	}
 	projects := f.Projects
+	unavailable := d.unavailableProjects(f)
 	if p.Project != "" {
 		proj, ok := find(f, p.Project)
 		if !ok {
-			return nil, notFound(p.Project, f)
+			projects = nil
+			found := false
+			for _, group := range unavailable {
+				if group.Name == p.Project {
+					found = true
+				}
+			}
+			if !found {
+				return nil, notFound(p.Project, f)
+			}
+		} else {
+			projects = []registry.Project{proj}
 		}
-		projects = []registry.Project{proj}
 	}
 	snaps := make([]source.Snapshot, len(projects))
 	var wg sync.WaitGroup
@@ -232,7 +250,47 @@ func (d *Daemon) status(ctx context.Context, p StatusParams) (*StatusResult, err
 		ps := projectStatus(projects[i], s, now)
 		out.Projects = append(out.Projects, ps)
 	}
+	for _, group := range unavailable {
+		if p.Project == "" || group.Name == p.Project {
+			out.Projects = append(out.Projects, group)
+		}
+	}
 	return out, nil
+}
+
+// unavailableProjects keeps display-only groups apart from registered projects.
+func (d *Daemon) unavailableProjects(f *registry.File) []ProjectStatus {
+	d.runs.mu.Lock()
+	stored, err := d.runs.deps.Store.List()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "unavailable runs: %v\n", err)
+	}
+	names := map[string]bool{}
+	for _, run := range stored {
+		rec := run.Snapshot()
+		if m := d.runs.runs[rec.ID]; m != nil && m.engine == nil && !runrec.IsFinal(rec.State) {
+			if _, registered := find(f, rec.Project); !registered {
+				names[rec.Project] = true
+			}
+		}
+	}
+	d.runs.mu.Unlock()
+	keys := make([]string, 0, len(names))
+	for name := range names {
+		keys = append(keys, name)
+	}
+	sort.Strings(keys)
+	var groups []ProjectStatus
+	for _, name := range keys {
+		var rows []EngineRun
+		for _, row := range d.engineRuns(name) {
+			if row.Unavailable {
+				rows = append(rows, row)
+			}
+		}
+		groups = append(groups, ProjectStatus{Name: name, Unavailable: true, NeedsYou: len(rows), EngineRuns: rows, ActiveRelays: []Relay{}})
+	}
+	return groups
 }
 
 func projectStatus(p registry.Project, s source.Snapshot, now time.Time) ProjectStatus {
