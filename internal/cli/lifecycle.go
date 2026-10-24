@@ -31,13 +31,13 @@ func daemonBuild(ctx context.Context, call func(context.Context, string, any, an
 
 // CheckDaemonBuild warns about a stale daemon without reading any projects.
 // An older daemon that does not know daemon.info has an unknown build.
-func (a *App) CheckDaemonBuild(ctx context.Context, c *daemon.Client, stderr io.Writer) error {
+func (a *App) CheckDaemonBuild(ctx context.Context, c *daemon.Client, stderr io.Writer) (string, error) {
 	build, err := daemonBuild(ctx, c.Call)
 	if err != nil {
-		return err
+		return "", err
 	}
 	a.warnStale(&output{stderr: stderr}, build)
-	return nil
+	return build, nil
 }
 
 func (a *App) buildID() string {
@@ -48,7 +48,7 @@ func (a *App) buildID() string {
 }
 
 func (a *App) staleWarning(build string) string {
-	if build != "" && build != "unknown" && build == a.buildID() {
+	if !daemon.StaleBuild(a.BuildID, build) {
 		return ""
 	}
 	if build == "" {
@@ -88,7 +88,7 @@ func (a *App) daemonCommand(ctx context.Context, o *output, args []string) int {
 		}
 	} else {
 		// A failed build probe must not prevent an explicit shutdown request.
-		_ = a.CheckDaemonBuild(ctx, c, o.stderr)
+		_, _ = a.CheckDaemonBuild(ctx, c, o.stderr)
 		var result daemon.StopResult
 		err = c.Call(ctx, daemon.MethodDaemonStop, daemon.StopParams{Force: *force}, &result)
 		c.Close()

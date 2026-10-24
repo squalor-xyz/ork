@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/squalor-xyz/ork/internal/brand"
 )
 
 // The install command in the README puts ork in GOBIN, a user directory, with
@@ -32,7 +34,7 @@ func TestTheDocumentedInstallPutsOrkInGOBIN(t *testing.T) {
 		t.Fatalf("%s: %v\n%s", install, err, out)
 	}
 	out, err := exec.Command(filepath.Join(bin, "ork"), "--version").Output()
-	if err != nil || !strings.HasPrefix(string(out), "ork ") {
+	if err != nil || string(out) != strings.Join(brand.Mark(false, asciiLocale(os.Getenv)), "\n")+"\nork dev\n" {
 		t.Fatalf("installed ork --version: %v, stdout %q", err, out)
 	}
 }

@@ -211,6 +211,7 @@ func TestActionGoldens(t *testing.T) {
 			t.Run(name, func(t *testing.T) {
 				h := actionHarness(t, tc.state, tc.pending)
 				h.m.cfg.Theme = NewTheme(mono)
+				h.m.cfg.Version = "dev"
 				h.deliver(press(tc.key))
 				want := "ork stop engine?"
 				if tc.key == "t" {

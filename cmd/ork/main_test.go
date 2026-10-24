@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
+	"github.com/squalor-xyz/ork/internal/brand"
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/ipc"
@@ -142,7 +143,7 @@ func TestVersionPrintsAndStartsNoTUI(t *testing.T) {
 	for _, flag := range []string{"--version", "-version"} {
 		var out, errOut bytes.Buffer
 		code := run(context.Background(), []string{flag}, &out, &errOut, refused(t))
-		if code != 0 || !strings.HasPrefix(out.String(), "ork ") || strings.Count(out.String(), "\n") != 1 {
+		if code != 0 || out.String() != strings.Join(brand.Mark(false, asciiLocale(os.Getenv)), "\n")+"\nork "+version+"\n" {
 			t.Errorf("%s: code %d, stdout %q, stderr %q", flag, code, out.String(), errOut.String())
 		}
 	}

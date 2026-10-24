@@ -1,0 +1,38 @@
+[1mork[m [90mdev[m  ?help             | [1;36mOverview[m[90m | Questions | [mWaves[90m | [mRoadmap[90m | Decisions[m
+[1;7;97;44m> Needs you[m                |[90m------------------------------------------------------------------------[m
+  slicer 3*                |    [38;2;110;231;210m▄[m[38;2;110;231;210m▀[m[38;2;110;231;210m▀[m[38;2;110;231;210m▄[m    
+  adjudicate 1             |    [38;2;110;231;210m█[m[38;2;110;231;210m▄[m[38;2;110;231;210m▄[m[38;2;110;231;210m█[m    
+  DataBall 0               |     [38;2;110;231;210m█[m[38;2;110;231;210m█[m     
+  agents 0                 | [38;2;110;231;210m▄[m[38;2;110;231;210m▄[m[38;2;110;231;210m▄[m[38;2;110;231;210m▄[m[38;2;110;231;210m█[m[38;2;110;231;210m█[m[38;2;110;231;210m▄[m[38;2;110;231;210m▄[m[38;2;110;231;210m▄[m[38;2;110;231;210m▄[m 
+                           | [38;2;110;231;210;48;2;59;130;246m▀[m[38;2;59;130;246m▄[m  [38;2;110;231;210;48;2;139;92;246m▀[m[38;2;110;231;210;48;2;139;92;246m▀[m  [38;2;234;88;12m▄[m[38;2;110;231;210;48;2;234;88;12m▀[m 
+                           | [38;2;59;130;246m█[m[38;2;59;130;246m█[m  [38;2;139;92;246m█[m[38;2;139;92;246m█[m  [38;2;234;88;12m█[m[38;2;234;88;12m█[m 
+                           |
+                           |[1;36mKeys[m
+                           |tab next view
+                           |shift+tab previous view
+                           |right next project
+                           |left previous project
+                           |1-9 jump to project
+                           |down/j/n next row
+                           |up/k/p previous row
+                           |enter open run pane or Roadmap item; other rows select project
+                           |/ filter projects; esc clears
+                           |s hide/show sidebar
+                           |a add project (Welcome)
+                           |space tick item and ask inputs (Waves)
+                           |e edit ticked item lineup (Waves)
+                           |l launch a ready slice (Roadmap) or wave (Waves)
+                           |a approve
+                           |x stop
+                           |t retry
+                           |enter (answer) submit; no confirmation
+                           |pgup/pgdown scroll run tree and reason
+                           |c remove merged worktree and branch (Ready)
+                           |r refresh now
+                           |? show or hide this help
+                           |esc close pane, Roadmap item, help or message
+                           |q quit
+                           |
+                           |Overview, Waves and Roadmap are available. Questions and Decisions co...
+                           |[90m------------------------------------------------------------------------[m
+                           | 4 projects | refreshed 16:42:07 | pending 1

@@ -2254,7 +2254,7 @@
       "id": "S54",
       "title": "Show the ork version and logo in the terminal: TUI, --version, doctor",
       "short_title": "Show the ork version and logo in the terminal: TUI, --version, doctor",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S53"
@@ -2300,7 +2300,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

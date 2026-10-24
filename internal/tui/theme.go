@@ -10,6 +10,7 @@ import "charm.land/lipgloss/v2"
 // spelled out in a word or symbol (docs/dashboard.md, "Color is never the only
 // signal"), so the two themes differ in style, never in text.
 type Theme struct {
+	Mono       bool // draw the brand mark without colour
 	Title      lipgloss.Style
 	TabActive  lipgloss.Style
 	TabIdle    lipgloss.Style
@@ -34,6 +35,7 @@ func NewTheme(mono bool) Theme {
 	s := lipgloss.NewStyle
 	if mono {
 		return Theme{
+			Mono:       true,
 			Title:      s().Bold(true),
 			TabActive:  s().Bold(true).Reverse(true),
 			TabIdle:    s(),

@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/squalor-xyz/ork/internal/brand"
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/roles"
@@ -176,6 +177,13 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	if o.json {
 		o.printJSON(rep)
 		return code
+	}
+	getenv := a.Getenv
+	if getenv == nil {
+		getenv = os.Getenv
+	}
+	for _, row := range brand.Mark(brand.ColourWanted(o.stdout, getenv), brand.ASCIILocale(getenv)) {
+		fmt.Fprintln(o.stdout, row)
 	}
 	if selfErr != nil {
 		fmt.Fprintf(o.stdout, "[--] ork  path unknown: %v\n", selfErr)

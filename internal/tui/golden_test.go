@@ -43,6 +43,7 @@ func TestStylesEmit24BitColour(t *testing.T) {
 func newGoldenModel(theme Theme) *Model {
 	now := time.Date(2026, 10, 19, 16, 42, 7, 0, time.UTC)
 	m := New(Config{
+		Version:    "dev",
 		Source:     &fakeSource{snaps: map[string]source.Snapshot{}},
 		Projects:   four,
 		Now:        func() time.Time { return now },

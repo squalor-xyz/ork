@@ -74,6 +74,7 @@ type Tools struct {
 
 // App is the command line with its dependencies.
 type App struct {
+	Getenv  func(string) string                           // nil uses os.Getenv
 	Getwd   func() (string, error)                        // current directory offer; nil uses os.Getwd
 	BuildID string                                        // CLI build identity; empty means dev
 	Input   io.Reader                                     // confirmation input; nil uses os.Stdin
@@ -237,7 +238,7 @@ func (a *App) withDaemon(ctx context.Context, o *output, f func(*daemon.Client) 
 		return o.fail(ExitFailure, codeDaemon, err.Error())
 	}
 	defer c.Close()
-	if err := a.CheckDaemonBuild(ctx, c, o.stderr); err != nil {
+	if _, err := a.CheckDaemonBuild(ctx, c, o.stderr); err != nil {
 		return o.failErr(err)
 	}
 	return f(c)

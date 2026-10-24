@@ -8,6 +8,9 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+
+	"github.com/squalor-xyz/ork/internal/brand"
+	"github.com/squalor-xyz/ork/internal/daemon"
 )
 
 // Size used until the terminal reports its own.
@@ -48,7 +51,7 @@ func (m *Model) screen() string {
 	var body, detail []string
 	bodyH, start := max(h-4, 1), 0
 	if m.showHelp {
-		body = m.helpLines(mainW)
+		body = m.helpLines(mainW, bodyH)
 	} else if m.registeredProjectCount() == 0 && m.pane == nil && (m.active < 0 || m.welcome.editing || m.welcome.pending || m.welcome.confirm != "") {
 		body = m.welcomeBody(mainW)
 		status := m.actionStatus
@@ -126,7 +129,7 @@ func (m *Model) screen() string {
 	main := []string{m.viewBar(), rule}
 	main = append(main, body...)
 	main = append(main, detail...)
-	main = append(main, rule, m.statusLine())
+	main = append(main, rule, m.statusLine(mainW))
 	if len(main) > h {
 		main = main[:h]
 	}
@@ -143,7 +146,15 @@ func (m *Model) screen() string {
 }
 
 func (m *Model) sidebar(w, h int) []string {
-	lines := []string{m.cfg.Theme.Title.Render("ork") + "  ?help"}
+	header := m.cfg.Theme.Title.Render("ork")
+	version := ""
+	if w > 12 {
+		version = lipgloss.NewStyle().MaxWidth(w - 12).Render(m.cfg.Version)
+	}
+	if version != "" {
+		header += " " + m.cfg.Theme.Dim.Render(version)
+	}
+	lines := []string{header + "  ?help"}
 	nav := m.navigation()
 	if len(m.projects) == 0 {
 		nav = nil
@@ -267,7 +278,7 @@ func (m *Model) viewBar() string {
 
 // statusLine shows the project count, the last refresh and the number of
 // projects still refreshing. The token sparkline waits for S07 and the daemon figures for S03.
-func (m *Model) statusLine() string {
+func (m *Model) statusLine(w int) string {
 	count := m.registeredProjectCount()
 	noun := "projects"
 	if count == 1 {
@@ -277,15 +288,32 @@ func (m *Model) statusLine() string {
 	if !m.lastRefresh.IsZero() {
 		refreshed = m.lastRefresh.Format("15:04:05")
 	}
-	line := fmt.Sprintf(" %d %s | refreshed %s | pending %d", count, noun, refreshed, m.poller.Pending())
-	if r, ok := m.selectedRow(); ok && r.ready && r.merged {
-		line += " | c clean up"
+	fields := []string{
+		fmt.Sprintf("%d %s", count, noun),
+		"refreshed " + refreshed,
+		fmt.Sprintf("pending %d", m.poller.Pending()),
 	}
-	return line
+	if r, ok := m.selectedRow(); ok && r.ready && r.merged {
+		fields = append(fields, "c clean up")
+	}
+	// Empty builds are the seam for runs with no daemon info (tests).
+	// The stale rule itself is daemon.StaleBuild.
+	if (m.cfg.BuildID != "" || m.cfg.DaemonBuild != "") && daemon.StaleBuild(m.cfg.BuildID, m.cfg.DaemonBuild) {
+		fields = append([]string{m.cfg.Theme.Warn.Render("daemon build differs: ork daemon restart")}, fields...)
+	}
+	line := " " + strings.Join(fields, " | ")
+	for len(fields) > 1 && lipgloss.Width(line) > w {
+		fields = fields[:len(fields)-1]
+		line = " " + strings.Join(fields, " | ")
+	}
+	if m.sidebarHidden && m.cfg.Version != "" && lipgloss.Width(line)+1+lipgloss.Width(m.cfg.Version) <= w {
+		line += strings.Repeat(" ", w-lipgloss.Width(line)-lipgloss.Width(m.cfg.Version)) + m.cfg.Theme.Dim.Render(m.cfg.Version)
+	}
+	return lipgloss.NewStyle().MaxWidth(max(w, 1)).Render(line)
 }
 
 // helpLines is the key list shown in place of the Overview.
-func (m *Model) helpLines(w int) []string {
+func (m *Model) helpLines(w, bodyH int) []string {
 	th := m.cfg.Theme
 	lines := []string{th.Heading.Render("Keys")}
 	for _, group := range m.keys.FullHelp() {
@@ -295,6 +323,10 @@ func (m *Model) helpLines(w int) []string {
 		}
 	}
 	lines = append(lines, "", clip("Overview, Waves and Roadmap are available. Questions and Decisions come in later slices.", w))
+	mark := brand.Mark(!th.Mono, m.cfg.ASCII)
+	if w >= 12 && bodyH >= len(lines)+len(mark)+1 {
+		lines = append(append(mark, ""), lines...)
+	}
 	return lines
 }
 

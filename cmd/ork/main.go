@@ -20,6 +20,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
+	"github.com/squalor-xyz/ork/internal/brand"
 	"github.com/squalor-xyz/ork/internal/cli"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/registry"
@@ -99,6 +100,9 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer, p program
 		return 2
 	}
 	if *showVersion {
+		for _, row := range brand.Mark(brand.ColourWanted(stdout, os.Getenv), brand.ASCIILocale(os.Getenv)) {
+			fmt.Fprintln(stdout, row)
+		}
 		fmt.Fprintf(stdout, "ork %s\n", version)
 		return 0
 	}
@@ -148,7 +152,7 @@ func openTUI(ctx context.Context, stderr io.Writer, p program) int {
 		fmt.Fprintf(stderr, "ork: %v\n", err)
 		return 1
 	}
-	err = app.CheckDaemonBuild(ctx, client, stderr)
+	daemonBuild, err := app.CheckDaemonBuild(ctx, client, stderr)
 	client.Close()
 	if err != nil {
 		fmt.Fprintf(stderr, "ork: %v\n", err)
@@ -158,10 +162,14 @@ func openTUI(ctx context.Context, stderr io.Writer, p program) int {
 	defer feed.Close()
 
 	live := &tui.Daemon{Connect: app.Connect, Feed: feed}
+	info, ok := debug.ReadBuildInfo()
 	cfg := tui.Config{
-		Source:   live,
-		Projects: reg.Projects,
-		Live:     live,
+		Version:     headerVersion(info, ok, version),
+		BuildID:     currentBuildID(),
+		DaemonBuild: daemonBuild,
+		Source:      live,
+		Projects:    reg.Projects,
+		Live:        live,
 	}
 	if err := p.tui(cfg); err != nil {
 		fmt.Fprintf(stderr, "ork: %v\n", err)
@@ -233,12 +241,28 @@ func serveWithRetry(ctx context.Context, socket string, run func(context.Context
 }
 
 // asciiLocale follows the locale precedence for character encoding.
-func asciiLocale(getenv func(string) string) bool {
-	for _, key := range []string{"LC_ALL", "LC_CTYPE", "LANG"} {
-		if value := getenv(key); value != "" {
-			value = strings.ToLower(value)
-			return !strings.Contains(value, "utf-8") && !strings.Contains(value, "utf8")
+func asciiLocale(getenv func(string) string) bool { return brand.ASCIILocale(getenv) }
+
+// headerVersion keeps released versions and shortens development revisions.
+func headerVersion(info *debug.BuildInfo, ok bool, version string) string {
+	if version != "dev" || !ok || info == nil {
+		return version
+	}
+	var revision, modified string
+	for _, setting := range info.Settings {
+		switch setting.Key {
+		case "vcs.revision":
+			revision = setting.Value
+		case "vcs.modified":
+			modified = setting.Value
 		}
 	}
-	return true
+	if revision == "" {
+		return version
+	}
+	revision = revision[:min(len(revision), 7)]
+	if modified == "true" {
+		revision += "+"
+	}
+	return revision
 }

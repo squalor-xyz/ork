@@ -51,7 +51,7 @@ on Welcome in this slice.
 ## Layout
 
 ```
-ork  ?help           | Overview | Questions | Waves | Roadmap | Decisions
+ork dev  ?help       | Overview | Questions | Waves | Roadmap | Decisions
 > Needs you          | --------------------------------------
   slicer 2*          | Needs you
   adjudicate 1       |   active Overview rows
@@ -59,6 +59,23 @@ ork  ?help           | Overview | Questions | Waves | Roadmap | Decisions
   agents 0           | --------------------------------------
                      | 4 projects | refreshed 16:42:00 | pending 0
 ```
+
+The header shows the version next to ork (ui.version-mark, adj #130).
+Development builds show the first seven revision characters, with `+` for a
+modified build, or `dev` without a revision. A narrow header clips the version
+first and keeps `?help`. With the sidebar hidden, the version appears at the
+right of the status line when it fits after the existing text.
+
+A stale or unknown daemon build puts
+`daemon build differs: ork daemon restart` first in the status line, before
+the project and refresh fields. Trailing fields are dropped to fit the pane width.
+
+The six-row text mark appears above `?` help only when the pane can fit the
+mark, a blank line and every help line, and is at least twelve columns wide
+(ui.version-mark, adj #131). At 100x30 it is omitted so quit stays visible.
+`ork --version` and text `ork doctor` also print the mark. Non-UTF-8 locales
+use ASCII; `NO_COLOR` and redirected output use no colour. Doctor JSON stays
+unchanged.
 
 The project sidebar comes from the registry (`registry.initial`,
 `ui.project-nav`). "Needs you" starts selected and shows the existing

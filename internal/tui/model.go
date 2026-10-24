@@ -33,18 +33,21 @@ const holdFlag = "needs-owner"
 // Projects has a default, and tests replace the clock, the timer and the bell
 // so no test sleeps.
 type Config struct {
-	Getwd      func() (string, error) // empty Welcome path offer; default os.Getwd
-	Source     source.Source
-	Projects   []registry.Project
-	Now        func() time.Time              // default time.Now
-	Schedule   poll.Schedule                 // default poll.DefaultSchedule
-	TickEvery  time.Duration                 // how often the schedule is checked; default 1 s
-	After      func(d time.Duration) tea.Cmd // a command that sends tickMsg after d; default tea.Tick
-	FrameAfter func(d time.Duration) tea.Cmd // sends frameMsg; default 250 ms tea.Tick
-	ASCII      bool                          // use ASCII sparkline glyphs
-	Bell       func()                        // rings the terminal bell; default writes BEL to stderr
-	Theme      Theme
-	Live       Live // the daemon's refresh, focus and notices; nil when there is no daemon
+	Version     string                 // header version
+	BuildID     string                 // this TUI build
+	DaemonBuild string                 // daemon build reported by daemon.info
+	Getwd       func() (string, error) // empty Welcome path offer; default os.Getwd
+	Source      source.Source
+	Projects    []registry.Project
+	Now         func() time.Time              // default time.Now
+	Schedule    poll.Schedule                 // default poll.DefaultSchedule
+	TickEvery   time.Duration                 // how often the schedule is checked; default 1 s
+	After       func(d time.Duration) tea.Cmd // a command that sends tickMsg after d; default tea.Tick
+	FrameAfter  func(d time.Duration) tea.Cmd // sends frameMsg; default 250 ms tea.Tick
+	ASCII       bool                          // use ASCII sparkline glyphs
+	Bell        func()                        // rings the terminal bell; default writes BEL to stderr
+	Theme       Theme
+	Live        Live // the daemon's refresh, focus and notices; nil when there is no daemon
 }
 
 // tickMsg asks the Model to check which projects are due.

@@ -568,8 +568,8 @@ func TestUnavailableProjectGroup(t *testing.T) {
 	if ps.setup() || ps.needs() != 1 {
 		t.Fatalf("unavailable group treated as setup or lost need: %+v", ps)
 	}
-	if !strings.Contains(h.m.statusLine(), "1 project |") {
-		t.Errorf("pseudo-project counted as registered: %s", h.m.statusLine())
+	if !strings.Contains(h.m.statusLine(60), "1 project |") {
+		t.Errorf("pseudo-project counted as registered: %s", h.m.statusLine(60))
 	}
 	h.m.active = -1
 	h.m.cursor = 0

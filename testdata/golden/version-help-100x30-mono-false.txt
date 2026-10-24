@@ -1,0 +1,30 @@
+[1mork[m [90mdev[m  ?help             | [1;36mOverview[m[90m | Questions | [mWaves[90m | [mRoadmap[90m | Decisions[m
+[1;7;97;44m> Needs you[m                |[90m------------------------------------------------------------------------[m
+  slicer 3*                |[1;36mKeys[m
+  adjudicate 1             |tab next view
+  DataBall 0               |shift+tab previous view
+  agents 0                 |right next project
+                           |left previous project
+                           |1-9 jump to project
+                           |down/j/n next row
+                           |up/k/p previous row
+                           |enter open run pane or Roadmap item; other rows select project
+                           |/ filter projects; esc clears
+                           |s hide/show sidebar
+                           |a add project (Welcome)
+                           |space tick item and ask inputs (Waves)
+                           |e edit ticked item lineup (Waves)
+                           |l launch a ready slice (Roadmap) or wave (Waves)
+                           |a approve
+                           |x stop
+                           |t retry
+                           |enter (answer) submit; no confirmation
+                           |pgup/pgdown scroll run tree and reason
+                           |c remove merged worktree and branch (Ready)
+                           |r refresh now
+                           |? show or hide this help
+                           |esc close pane, Roadmap item, help or message
+                           |q quit
+                           |[90m  +2 more lines[m
+                           |[90m------------------------------------------------------------------------[m
+                           | 4 projects | refreshed 16:42:07 | pending 1
