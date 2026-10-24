@@ -245,6 +245,9 @@ func Load(d Deps, proj registry.Project, run *runrec.Run) *Engine { return newEn
 // Snapshot returns a copy of the run record.
 func (e *Engine) Snapshot() runrec.Record { return e.run.Snapshot() }
 
+// Dismiss records the owner's dismissal on the managed run handle.
+func (e *Engine) Dismiss() error { return e.run.Dismiss() }
+
 // AdjRoot is the directory where `adj ask` runs: the project's main checkout,
 // never a worktree, so record IDs do not collide across worktrees. Filing a
 // question is S06.

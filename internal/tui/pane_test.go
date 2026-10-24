@@ -80,7 +80,7 @@ func TestPaneStates(t *testing.T) {
 		{"paused", "interrupted", "t retry"},
 		{"paused", "error", "t retry"},
 		{"paused", "", "t retry"},
-		{"stopped", "question", "Stopped; relaunch to continue"},
+		{"stopped", "question", "Stopped; relaunch, or clear with: ork dismiss engine"},
 		{"awaiting-approval", "", "a approve"},
 		{"implement", "", "x stop"},
 	} {
@@ -263,7 +263,7 @@ func TestPaneStoppedReadOnly(t *testing.T) {
 	for _, k := range []string{"a", "x", "t", "enter"} {
 		h.deliver(press(k))
 	}
-	if v := h.view(); !strings.Contains(v, "Stopped; relaunch to continue") || strings.Contains(v, "ork stop") || strings.Contains(v, "ork retry") || strings.Contains(v, "ork answer") || strings.Contains(v, "ork approve") {
+	if v := h.view(); !strings.Contains(v, "Stopped; relaunch, or clear with: ork dismiss engine") || strings.Contains(v, "ork stop") || strings.Contains(v, "ork retry") || strings.Contains(v, "ork answer") || strings.Contains(v, "ork approve") {
 		t.Fatalf("stopped pane offered an action:\n%s", v)
 	}
 }

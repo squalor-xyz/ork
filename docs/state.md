@@ -123,6 +123,7 @@ apply to this run only and do not change the matrix or registry
      "exit": 0, "retry": 1, "ms": 420}
   ],
   "commit": null,
+  "dismissed_at": "2026-10-20T16:40:00Z",
   "created_at": "...",
   "updated_at": "..."
 }
@@ -149,6 +150,16 @@ A role with no `ended_at` is running; a restart marks it `lost`. `commit` is
 `fails`, `reason`, `pending`, `feedback`, `created_at`, `updated_at`, the
 role's `model`, `effort` and `denials`, a check's `log`, and a write's
 `error` are *proposed* (S04).
+
+A stopped run can be dismissed with `ork dismiss RUN` (S34, adj #117).
+This sets `dismissed_at` to the dismissal time. It is omitted until then.
+Dismissal removes the run from the snapshot, Needs you and `ork status`.
+It keeps the record and its files; finished-run retention is unchanged.
+A dismissed run still hides older stopped runs of the same slice.
+Repeating dismissal does not change the record. A run that is not stopped
+returns `run is not stopped` (`ErrNotStopped`). The version stays 1.
+An older ork refuses a `run.json` with `dismissed_at` because `Store.Open`
+uses strict keys (`DisallowUnknownFields`).
 
 A role's `denials` lists the tool name of each permission denial the vendor
 reported. `denied_commands` (S45, adj #105) holds one `{tool, command}` entry

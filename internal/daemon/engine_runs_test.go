@@ -169,3 +169,79 @@ func TestEngineRunUpdatedAtZeroWire(t *testing.T) {
 		t.Fatalf("zero update must be omitted: %s", b)
 	}
 }
+
+func TestDismissedStoppedRunLeavesNeedsYou(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	if _, err := store.Create(runrec.Record{ID: "dismiss", Project: p.Name, Item: "S34", State: runrec.StateStopped}); err != nil {
+		t.Fatal(err)
+	}
+	var before StatusResult
+	if err := json.Unmarshal(request(t, d, "status", `{"project":"p"}`), &before); err != nil {
+		t.Fatal(err)
+	}
+	request(t, d, "run.dismiss", `{"run":"dismiss"}`)
+	var after StatusResult
+	if err := json.Unmarshal(request(t, d, "status", `{"project":"p"}`), &after); err != nil {
+		t.Fatal(err)
+	}
+	if len(before.Projects[0].EngineRuns) != 1 || len(after.Projects[0].EngineRuns) != 0 || after.Projects[0].NeedsYou != before.Projects[0].NeedsYou-1 {
+		t.Fatalf("before=%+v after=%+v", before, after)
+	}
+	var snapshot struct {
+		EngineRuns []EngineRun `json:"engine_runs"`
+	}
+	if err := json.Unmarshal(request(t, d, "snapshot", `{"project":"p"}`), &snapshot); err != nil {
+		t.Fatal(err)
+	}
+	if len(snapshot.EngineRuns) != 0 {
+		t.Fatalf("snapshot retains dismissed run: %+v", snapshot)
+	}
+	r, err := store.Open("dismiss")
+	if err != nil || r.Snapshot().DismissedAt.IsZero() {
+		t.Fatalf("record not retained: %v", err)
+	}
+}
+
+func TestDismissedNewerRunStillSupersedesStoppedRun(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	at := time.Date(2026, 10, 24, 12, 0, 0, 0, time.UTC)
+	for i, row := range []struct{ id, item string }{{"older", "S22"}, {"other", "S23"}, {"newer", "S22"}} {
+		store.Now = func() time.Time { return at.Add(time.Duration(i) * time.Minute) }
+		if _, err := store.Create(runrec.Record{ID: row.id, Project: p.Name, Item: row.item, State: runrec.StateStopped}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var before StatusResult
+	if err := json.Unmarshal(request(t, d, "status", `{"project":"p"}`), &before); err != nil {
+		t.Fatal(err)
+	}
+	if before.Projects[0].NeedsYou != 2 {
+		t.Fatalf("before needs_you = %d, want 2", before.Projects[0].NeedsYou)
+	}
+	request(t, d, "run.dismiss", `{"run":"newer"}`)
+	var after StatusResult
+	if err := json.Unmarshal(request(t, d, "status", `{"project":"p"}`), &after); err != nil {
+		t.Fatal(err)
+	}
+	if after.Projects[0].NeedsYou != before.Projects[0].NeedsYou-1 {
+		t.Fatalf("after needs_you = %d, want 1", after.Projects[0].NeedsYou)
+	}
+	for _, method := range []string{"status", "snapshot"} {
+		raw := request(t, d, method, `{"project":"p"}`)
+		var runs []EngineRun
+		if method == "status" {
+			runs = after.Projects[0].EngineRuns
+		} else {
+			var snapshot struct {
+				EngineRuns []EngineRun `json:"engine_runs"`
+			}
+			if err := json.Unmarshal(raw, &snapshot); err != nil {
+				t.Fatal(err)
+			}
+			runs = snapshot.EngineRuns
+		}
+		if len(runs) != 1 || runs[0].ID != "other" {
+			t.Fatalf("%s runs = %+v, want only other slice", method, runs)
+		}
+	}
+}

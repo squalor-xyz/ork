@@ -636,6 +636,7 @@ ork wave start P ITEM...    launch (asks unless --yes)
 ork run P ID                show a plan and launch one slice (S17)
 ork approve RUN             finish a passed slice, then commit
 ork answer RUN TEXT         answer an owner question
+ork dismiss RUN             clear a stopped run from Needs you
 ork retry RUN               retry a paused role or step
 ork stop RUN|WAVE           stop and record why
 ork daemon run              serve the daemon in the foreground
@@ -717,6 +718,8 @@ prints `{"started":false}` on stdout. Interactive questions go on stderr
 in JSON mode.
 
 `run.retry` takes `{run}` and returns the run record (adj #101).
+`run.dismiss` takes `{run}` and returns the run record (adj #117). It refuses
+a run that is not stopped or is busy. An unknown run returns `not_found`.
 
 `ork doctor` checks:
 - the running ork binary: its path, resolved through symlinks

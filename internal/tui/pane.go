@@ -142,7 +142,8 @@ func (m *Model) paneLines(w, h int, status string) []string {
 	case r.state == "paused":
 		footer = append(footer, "t retry; esc close pane")
 	case r.state == "stopped":
-		footer = append(footer, "Stopped; relaunch to continue", "esc close pane")
+		footer = append(footer, wrapText("Stopped; relaunch, or clear with: ork dismiss "+r.engineID, width)...)
+		footer = append(footer, "esc close pane")
 	case r.state == "awaiting-approval":
 		footer = append(footer, "a approve; x stop; esc close pane")
 	case r.state == "committed":

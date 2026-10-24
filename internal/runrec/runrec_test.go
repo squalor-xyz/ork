@@ -644,3 +644,135 @@ func TestPruneNilPredicateRetainsFinishedAndActiveRuns(t *testing.T) {
 		t.Fatalf("retained=%d err=%v", len(all), err)
 	}
 }
+
+func TestDismissedAtRoundTrips(t *testing.T) {
+	s := newStore(t)
+	record := rec("dismiss")
+	record.State = StateStopped
+	r, err := s.Create(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(r.Dir(), "run.json")
+	if strings.Contains(readFile(t, path), "dismissed_at") {
+		t.Fatal("zero dismissal was written")
+	}
+	if err := r.Dismiss(); err != nil {
+		t.Fatal(err)
+	}
+	first := r.Snapshot()
+	if first.DismissedAt != t0.Add(time.Minute) || first.Version != 1 {
+		t.Fatalf("dismissal: %+v", first)
+	}
+	if err := r.Dismiss(); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(first, r.Snapshot()) {
+		t.Fatal("second dismissal changed record")
+	}
+	opened, err := s.Open("dismiss")
+	if err != nil || !reflect.DeepEqual(first, opened.Snapshot()) {
+		t.Fatalf("reopen: %v", err)
+	}
+}
+
+func TestDismissRefusesUnstoppedRuns(t *testing.T) {
+	for _, state := range []string{StatePaused, StateImplement, StateCommitted, StateAwaitingApproval, StateQueued} {
+		t.Run(state, func(t *testing.T) {
+			s := newStore(t)
+			record := rec("a")
+			record.State = state
+			r, err := s.Create(record)
+			if err != nil {
+				t.Fatal(err)
+			}
+			before := readFile(t, filepath.Join(r.Dir(), "run.json"))
+			if err := r.Dismiss(); !errors.Is(err, ErrNotStopped) {
+				t.Fatalf("Dismiss: %v", err)
+			}
+			if !r.Snapshot().DismissedAt.IsZero() || readFile(t, filepath.Join(r.Dir(), "run.json")) != before {
+				t.Fatal("refused dismissal changed record")
+			}
+		})
+	}
+}
+
+func TestRetentionKeepsDismissedRuns(t *testing.T) {
+	s := newStore(t)
+	record := rec("a")
+	record.State = StateStopped
+	r, err := s.Create(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := r.Dismiss(); err != nil {
+		t.Fatal(err)
+	}
+	for _, landed := range []func(Record) bool{nil, func(Record) bool { return false }} {
+		removed, err := s.Prune(0, landed)
+		if err != nil || len(removed) != 0 {
+			t.Fatalf("Prune: %v %v", removed, err)
+		}
+		if _, err := s.Open("a"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	removed, err := s.Prune(0, func(Record) bool { return true })
+	if err != nil || !reflect.DeepEqual(removed, []string{"a"}) {
+		t.Fatalf("Prune: %v %v", removed, err)
+	}
+}
+
+func TestDismissedAtStrictKeys(t *testing.T) {
+	s := newStore(t)
+	if err := os.MkdirAll(s.RunDir("a"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	const raw = `{"version":1,"id":"a","state":"stopped","dismissed_at":"2026-10-19T16:12:00Z"}`
+	if err := os.WriteFile(filepath.Join(s.RunDir("a"), "run.json"), []byte(raw), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	r, err := s.Open("a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.Snapshot().DismissedAt != t0 {
+		t.Fatal("missing dismissal")
+	}
+	// The pre-S34 fields present in this hand-written record.
+	var old struct {
+		Version int
+		ID      string
+		State   string
+	}
+	decoder := json.NewDecoder(strings.NewReader(raw))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&old); err == nil || !strings.Contains(err.Error(), "dismissed_at") {
+		t.Fatalf("old decoder: %v", err)
+	}
+}
+
+func TestDismissWriteFailureRollsBack(t *testing.T) {
+	s := newStore(t)
+	record := rec("a")
+	record.State = StateStopped
+	r, err := s.Create(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	before := r.Snapshot()
+	orig := writeTemp
+	defer func() { writeTemp = orig }()
+	boom := errors.New("disk full")
+	writeTemp = func(*os.File, []byte) error { return boom }
+	if err := r.Dismiss(); !errors.Is(err, boom) {
+		t.Fatalf("Dismiss: %v", err)
+	}
+	if !reflect.DeepEqual(before, r.Snapshot()) {
+		t.Fatal("failed write changed record")
+	}
+	opened, err := s.Open("a")
+	if err != nil || !reflect.DeepEqual(before, opened.Snapshot()) {
+		t.Fatalf("disk changed: %v", err)
+	}
+}

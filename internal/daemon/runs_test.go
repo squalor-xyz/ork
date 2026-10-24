@@ -1908,3 +1908,66 @@ func TestBackgroundRunnerErrorIsHandledByEngine(t *testing.T) {
 		t.Errorf("handled runner failure became background error: %q", got)
 	}
 }
+
+func TestRunDismissRules(t *testing.T) {
+	for _, mode := range []string{"stored", "managed", "unavailable", "busy", "stopping", "paused", "implement", "unknown"} {
+		t.Run(mode, func(t *testing.T) {
+			d, store, p := runDaemon(t, nil)
+			state := runrec.StateStopped
+			if mode == "paused" || mode == "implement" {
+				state = mode
+			}
+			var r *runrec.Run
+			if mode != "unknown" {
+				var err error
+				r, err = store.Create(runrec.Record{ID: "dismiss", Project: p.Name, State: state})
+				if err != nil {
+					t.Fatal(err)
+				}
+				if mode == "managed" || mode == "busy" || mode == "stopping" {
+					d.runs.runs["dismiss"] = &managedRun{engine: engine.Load(d.runDeps(p), p, r), busy: mode == "busy", stopping: mode == "stopping"}
+				} else if mode == "unavailable" {
+					d.runs.runs["dismiss"] = &managedRun{failure: errors.New("unavailable")}
+				}
+			}
+			result, err := d.handle(context.Background(), "run.dismiss", json.RawMessage("{\"run\":\"dismiss\"}"))
+			if mode == "unknown" {
+				var wire *ipc.Error
+				if !errors.As(err, &wire) || wire.Code != CodeNotFound {
+					t.Fatalf("unknown: %v", err)
+				}
+				return
+			}
+			if mode == "busy" || mode == "stopping" || mode == "paused" || mode == "implement" {
+				if mode == "paused" || mode == "implement" {
+					if !errors.Is(err, runrec.ErrNotStopped) {
+						t.Fatalf("unstopped dismissal: %v", err)
+					}
+				} else if err == nil || !strings.Contains(err.Error(), "busy") {
+					t.Fatalf("busy dismissal: %v", err)
+				}
+				opened, openErr := store.Open("dismiss")
+				if openErr != nil || !opened.Snapshot().DismissedAt.IsZero() {
+					t.Fatalf("changed record: %v", openErr)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			record := result.(runrec.Record)
+			if record.DismissedAt.IsZero() {
+				t.Fatal("missing dismissal")
+			}
+			if mode == "managed" {
+				if err := r.Update(func(rec *runrec.Record) { rec.Reason = "later save" }); err != nil {
+					t.Fatal(err)
+				}
+			}
+			opened, err := store.Open("dismiss")
+			if err != nil || opened.Snapshot().DismissedAt != record.DismissedAt {
+				t.Fatalf("dismissal lost: %v", err)
+			}
+		})
+	}
+}

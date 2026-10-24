@@ -67,9 +67,11 @@ The view bar stays at the top of the main pane. Overview, Waves and Roadmap are 
 
 Each project row shows its needs-you count (open adj records, slicer
 items flagged `needs-owner`, and engine runs awaiting approval, paused, or
-stopped and not yet superseded). A stopped run stops counting once a newer
-engine run exists for the same slice. `*` marks a running slice; engine runs
-in Needs you do not set it. `~` marks a loaded project being refreshed.
+stopped and neither superseded nor dismissed). A stopped run stops counting
+once a newer engine run exists for the same slice or the owner dismisses it
+with `ork dismiss RUN` (`ui.dismiss-run`, adj #117). `*` marks a running
+slice; engine runs in Needs you do not set it. `~` marks a loaded project
+being refreshed.
 Selection uses reverse and `>`, including under `NO_COLOR`. Projects with
 needs come first, then running projects, then the rest; registry order breaks
 ties. Selection follows the project.
@@ -205,19 +207,24 @@ per run (`ui.run-join-key`). Only unmatched ledger runs say "started elsewhere".
 A ledger run linked to a committed or superseded engine run is not shown.
 This is by design. Ready-to-land rows do not show the run id.
 
-Engine runs that are awaiting approval, paused, or stopped and not superseded
-appear under Needs you. Their kinds are `+ approve`, `= paused`, and
-`x stopped`. Each kind is a symbol and a word, so monochrome still reads it.
+Engine runs that are awaiting approval, paused, or stopped and neither
+superseded nor dismissed appear under Needs you. Their kinds are
+`+ approve`, `= paused`, and `x stopped`. Each kind is a symbol and a word,
+so monochrome still reads it.
 Other active engine states appear under Running. Committed runs do not appear
 in either section. A stopped run disappears once a newer engine record exists
 for the same slice, ordered by `created_at`; ledger runs do not clear it
-(`ui.stopped-newer`). Needs-you counts include open questions, held items and
-these engine waits in both the sidebar and `ork status`. `ork status` text
-lists each open record as `  #ID KEY  TITLE` and each held item as
+(`ui.stopped-newer`). The owner can also clear a stopped run with
+`ork dismiss RUN` (`ui.dismiss-run`, adj #117). Dismissal keeps its run
+record and removes it from the snapshot, Needs you and `ork status`.
+A dismissed run still hides older stopped runs of the same slice.
+Needs-you counts include open questions, held items and these engine waits
+in both the sidebar and `ork status`. `ork status` text lists each open
+record as `  #ID KEY  TITLE` and each held item as
 `  SID  TITLE  (needs-owner)` before relay and engine rows. Its engine list
 uses the same Needs, Running and Hidden classification as the Overview, so
 the needs list matches the count (`ui.status-list`, adj #125).
-`ork status --json` includes every engine run, including hidden ones, and
+`ork status --json` includes hidden engine runs still in the snapshot and
 the *proposed* optional `open:[{id,key,title}]` and `held:[{id,title}]` fields.
 Those fields are omitted when empty.
 
@@ -266,8 +273,8 @@ The actions follow the state (`ui.answer-pane-scope`):
   answer line; paste never submits (`ui.text-field`).
 - Paused without a question: show the reason and `t` retries, with the same
   `ork retry RUN` y/n confirmation as the Overview.
-- Stopped: show the full reason with no actions. Stop is final; relaunch to
-  continue.
+- Stopped: show the full reason with no key actions. Stop is final; relaunch,
+  or clear the row with `ork dismiss RUN`.
 
 Awaiting-approval runs offer `a` approve and `x` stop; other active runs offer
 `x` stop. A successful answer clears the field and refreshes the pane and row.

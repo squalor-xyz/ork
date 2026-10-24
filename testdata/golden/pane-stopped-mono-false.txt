@@ -24,7 +24,7 @@
                            |  [90m[......][m
                            |  [90mimplementer[m > [90mreviewer[m > [90mgate[m
                            |  
-                           |  Stopped; relaunch to continue
+                           |  Stopped; relaunch, or clear with: ork dismiss engine
                            |  esc close pane
                            |[90m------------------------------------------------------------------------[m
                            | 1 project | refreshed 16:42:00 | pending 0

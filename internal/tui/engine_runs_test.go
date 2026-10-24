@@ -634,3 +634,18 @@ func TestUnavailableRunActions(t *testing.T) {
 		}
 	}
 }
+
+func TestDismissedRunHasNoRow(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	s := engineSnapshot(t, "stopped", "")
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	if !strings.Contains(h.view(), "engine  S22") {
+		t.Fatal("stopped row missing")
+	}
+	s.EngineRuns = nil
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	if strings.Contains(h.view(), "engine  S22") {
+		t.Fatal("dismissed run still has a row")
+	}
+}

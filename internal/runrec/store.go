@@ -244,6 +244,29 @@ func (r *Run) Update(fn func(*Record)) error {
 	return nil
 }
 
+// ErrNotStopped means only a stopped run can be dismissed.
+var ErrNotStopped = errors.New("run is not stopped")
+
+// Dismiss records the owner's dismissal without deleting the stopped run.
+func (r *Run) Dismiss() error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if r.rec.State != StateStopped {
+		return ErrNotStopped
+	}
+	if !r.rec.DismissedAt.IsZero() {
+		return nil
+	}
+	before := clone(r.rec)
+	r.rec.DismissedAt = r.store.now()
+	r.rec.UpdatedAt = r.rec.DismissedAt
+	if err := r.save(); err != nil {
+		r.rec = before
+		return err
+	}
+	return nil
+}
+
 // AddWrite appends a write to writes[] and saves the record.
 func (r *Run) AddWrite(w Write) error {
 	return r.Update(func(rec *Record) { rec.Writes = append(rec.Writes, w) })

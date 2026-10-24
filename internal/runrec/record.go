@@ -188,6 +188,7 @@ type Record struct {
 	Questions        []Question               `json:"questions"`
 	Writes           []Write                  `json:"writes"`
 	Commit           *Commit                  `json:"commit"`
+	DismissedAt      time.Time                `json:"dismissed_at,omitzero"`
 	CreatedAt        time.Time                `json:"created_at"`
 	UpdatedAt        time.Time                `json:"updated_at"`
 }

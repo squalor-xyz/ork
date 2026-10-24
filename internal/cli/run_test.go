@@ -199,6 +199,7 @@ func TestRunYesStartsAndOwnerCommands(t *testing.T) {
 		{[]string{"run", "p", "S1", "--yes", "--well-specified", "no", "--split", "yes", "--json"}, "run.start"},
 		{[]string{"approve", "r1", "--json"}, "run.approve"},
 		{[]string{"stop", "r1", "--json"}, "run.stop"},
+		{[]string{"dismiss", "r1", "--json"}, "run.dismiss"},
 		{[]string{"answer", "r1", "use stdlib", "--json"}, "run.answer"},
 	} {
 		t.Run(tc.method, func(t *testing.T) {
@@ -209,6 +210,12 @@ func TestRunYesStartsAndOwnerCommands(t *testing.T) {
 				}
 				if method != tc.method {
 					t.Fatalf("method %s", method)
+				}
+				if method == "run.dismiss" {
+					b, _ := json.Marshal(params)
+					if string(b) != `{"run":"r1"}` {
+						t.Fatalf("dismiss params %s", b)
+					}
 				}
 				if method == "run.answer" {
 					b, _ := json.Marshal(params)

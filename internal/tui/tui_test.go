@@ -752,7 +752,7 @@ func TestDownReachesAStoppedRunForEnter(t *testing.T) {
 		t.Fatalf("down did not move the cursor to the stopped run: %q", got)
 	}
 	h.send(press("enter"))
-	if v := h.view(); !strings.Contains(v, "Run engine  S21  stopped") || !strings.Contains(v, "Stopped; relaunch to continue") {
+	if v := h.view(); !strings.Contains(v, "Run engine  S21  stopped") || !strings.Contains(v, "Stopped; relaunch, or clear with: ork dismiss engine") {
 		t.Fatalf("enter did not open the stopped run's pane:\n%s", v)
 	}
 }

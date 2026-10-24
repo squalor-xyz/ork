@@ -25,6 +25,7 @@ import (
 )
 
 const (
+	MethodRunDismiss = "run.dismiss"
 	MethodRunPlan    = "run.plan"
 	MethodRunStart   = "run.start"
 	MethodRunApprove = "run.approve"
@@ -808,8 +809,43 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 	if err := decode(params, &p); err != nil {
 		return nil, err
 	}
+	if method == MethodRunDismiss {
+		return d.dismissRun(p)
+	}
 	return d.ownerRun(ctx, method, p)
 }
+
+// dismissRun holds the manager lock so dismissal cannot race an owner action.
+func (d *Daemon) dismissRun(p RunAction) (runrec.Record, error) {
+	d.runs.mu.Lock()
+	defer d.runs.mu.Unlock()
+	if d.runs.closed {
+		return runrec.Record{}, errors.New("run manager is closed")
+	}
+	if r := d.runs.runs[p.Run]; r != nil {
+		if r.busy || r.stopping {
+			return runrec.Record{}, fmt.Errorf("run %s is busy", p.Run)
+		}
+		if r.engine != nil {
+			if err := r.engine.Dismiss(); err != nil {
+				return runrec.Record{}, err
+			}
+			return r.engine.Snapshot(), nil
+		}
+	}
+	r, err := d.runs.deps.Store.Open(p.Run)
+	if errors.Is(err, os.ErrNotExist) {
+		return runrec.Record{}, &ipc.Error{Code: CodeNotFound, Message: "no run " + p.Run}
+	}
+	if err != nil {
+		return runrec.Record{}, err
+	}
+	if err := r.Dismiss(); err != nil {
+		return runrec.Record{}, err
+	}
+	return r.Snapshot(), nil
+}
+
 func (d *Daemon) engineRuns(project string) []EngineRun {
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
@@ -818,12 +854,19 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		fmt.Fprintf(os.Stderr, "run status: %v\n", err)
 	}
 	runs := []EngineRun{}
+	dismissed := map[string]time.Time{}
 	for _, r := range stored {
 		rec := r.Snapshot()
 		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
 			rec = m.engine.Snapshot()
 		}
 		if rec.Project != project {
+			continue
+		}
+		if !rec.DismissedAt.IsZero() {
+			if newer, ok := dismissed[rec.Item]; !ok || rec.CreatedAt.After(newer) {
+				dismissed[rec.Item] = rec.CreatedAt
+			}
 			continue
 		}
 		pending := ""
@@ -870,7 +913,15 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		}
 		runs = append(runs, EngineRun{Unavailable: unavailable, Error: failure, Activity: activity, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
 	}
-	return runs
+	// Dismissed records still supersede older stopped runs of the same slice.
+	visible := runs[:0]
+	for _, r := range runs {
+		if newer, ok := dismissed[r.Item]; ok && r.State == runrec.StateStopped && newer.After(r.CreatedAt) {
+			continue
+		}
+		visible = append(visible, r)
+	}
+	return visible
 }
 
 // roleDenials returns the text of each denial a role had (DeniedCommand.Text).

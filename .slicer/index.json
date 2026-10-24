@@ -1533,7 +1533,7 @@
       "id": "S34",
       "title": "Clear an old stopped run from Needs you",
       "short_title": "Clear an old stopped run from Needs you",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S35"
@@ -1556,7 +1556,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -339,7 +339,7 @@ func TestActionOtherRunWhileRetryPending(t *testing.T) {
 func TestActionStopStopped(t *testing.T) {
 	h := actionHarness(t, "stopped", "")
 	_, cmd := h.m.Update(press("x"))
-	if v := h.view(); cmd != nil || !strings.Contains(v, "run is already stopped") || strings.Contains(v, "[y/N]") {
+	if v := h.view(); cmd != nil || !strings.Contains(v, "run is already stopped; clear with: ork dismiss engine") || strings.Contains(v, "[y/N]") {
 		t.Fatalf("stopped run must refuse stop with a reason:\n%s", v)
 	}
 }
@@ -364,7 +364,7 @@ func TestActionResultsKeepConcurrentStopPending(t *testing.T) {
 		t.Fatalf("stop result must refresh its row and name its command:\n%s", v)
 	}
 	h.deliver(press("x"))
-	if v := h.view(); !strings.Contains(v, "run is already stopped") {
+	if v := h.view(); !strings.Contains(v, "run is already stopped; clear with: ork dismiss engine") {
 		t.Fatalf("completed stop must clear only its pending call:\n%s", v)
 	}
 }

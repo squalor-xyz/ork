@@ -830,7 +830,7 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 		}
 	}
 	if verb == "stop" && r.state == "stopped" {
-		m.actionStatus = "run is already stopped"
+		m.actionStatus = "run is already stopped; clear with: ork dismiss " + r.engineID
 		return nil
 	}
 	if verb == "approve" && r.state != "awaiting-approval" {
