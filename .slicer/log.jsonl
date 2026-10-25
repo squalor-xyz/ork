@@ -1502,3 +1502,13 @@
 {"when": "2026-10-25T17:40:11Z", "item": "S124", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-10-25T17:40:11Z", "item": "S117", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-25T17:48:22Z", "item": "S31", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T17:56:22Z", "item": "S125", "action": "add", "from": "", "to": "open", "note": "Waves composer focus: next waves only, inputs inline under the ticked item"}
+{"when": "2026-10-25T17:56:22Z", "item": "S125", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-25T17:56:22Z", "item": "S125", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-25T17:56:22Z", "item": "S125", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-25T17:56:22Z", "item": "S125", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-25T17:56:22Z", "item": "S125", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T17:56:23Z", "item": "S125", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-25T17:56:23Z", "item": "S107", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1"}
+{"when": "2026-10-25T17:56:23Z", "item": "S125", "action": "move", "from": "125", "to": "8", "note": ""}
+{"when": "2026-10-25T17:56:23Z", "item": "S107", "action": "move", "from": "40", "to": "9", "note": ""}
