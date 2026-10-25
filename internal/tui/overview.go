@@ -253,7 +253,7 @@ func (m *Model) moveRow(delta int) {
 
 // selectedRow is the row under the cursor, and false when there is none.
 func (m *Model) selectedRow() (ovRow, bool) {
-	if m.view == decisionsView {
+	if m.view == decisionsView || m.view == questionsView {
 		return ovRow{}, false
 	}
 	needs, running := m.rows()

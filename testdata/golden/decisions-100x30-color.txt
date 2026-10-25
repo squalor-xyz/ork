@@ -1,4 +1,4 @@
-[1mork[m  ?help                 | Overview[90m | Questions | [mWaves[90m | [mRoadmap[90m | [m[1;36mDecisions[m
+[1mork[m  ?help                 | Overview[90m | [mQuestions[90m | [mWaves[90m | [mRoadmap[90m | [m[1;36mDecisions[m
   Needs you                |[90m------------------------------------------------------------------------[m
 [1;7;97;44m> zeta 2[m                   |[1;36mOpen[m[90m | [mDecided
   alpha 2                  |[1;36mzeta[m

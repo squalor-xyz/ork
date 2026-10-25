@@ -114,6 +114,7 @@ type Model struct {
 	active   int // -1 is Needs you; otherwise registry index
 	view     int // the view in the bar: an index into views; 0 is the Overview
 
+	questionsCursor int
 	allProjects     bool
 	decisionsTab    int
 	decisionsCursor int
@@ -472,6 +473,19 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 	switch {
+	case m.view == questionsView && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.PaneScroll):
+		delta := 1
+		if key.Matches(msg, m.keys.RowPrev) || msg.String() == "pgup" {
+			delta = -1
+		}
+		if m.decisionPane != nil {
+			m.scrollDecision(delta, key.Matches(msg, m.keys.PaneScroll))
+		} else {
+			n := len(m.selectableQuestions())
+			m.questionsCursor = clampCursor(clampCursor(m.questionsCursor, n)+delta, n)
+		}
+	case m.view == questionsView && key.Matches(msg, m.keys.Select):
+		return m.openQuestion()
 	case m.view == decisionsView && key.Matches(msg, m.keys.AllProjects):
 		m.allProjects = !m.allProjects
 		m.decisionsCursor = 0
@@ -610,6 +624,7 @@ func (m *Model) switchTo(i int) tea.Cmd {
 	m.active = i
 	m.roadmapCursor = 0
 	m.decisionsCursor = 0
+	m.questionsCursor = 0
 	m.decisionPane = nil
 	m.itemPane = nil
 	m.cursor = 0
@@ -750,6 +765,8 @@ func (m *Model) moveView(delta int) tea.Cmd {
 			m.view = i
 			m.roadmapCursor = 0
 			m.decisionsCursor = 0
+			m.questionsCursor = 0
+			m.pane = nil
 			m.decisionPane = nil
 			m.itemPane = nil
 			return m.openWaves()
@@ -823,7 +840,7 @@ type actionMsg struct {
 }
 
 func (m *Model) requestAction(verb string) tea.Cmd {
-	if m.showHelp || m.view == roadmapView || m.view == wavesView || m.view == decisionsView {
+	if m.showHelp || m.view == roadmapView || m.view == wavesView || m.view == decisionsView || (m.view == questionsView && m.pane == nil) {
 		return nil
 	}
 	r, ok := m.actionRow()

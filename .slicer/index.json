@@ -1297,7 +1297,7 @@
       "id": "S27",
       "title": "TUI: Questions tab across projects",
       "short_title": "TUI: Questions tab across projects",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S58",
@@ -1321,7 +1321,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

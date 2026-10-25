@@ -82,6 +82,7 @@ func wavesHarness(t *testing.T) (*harness, *wavesLive) {
 }
 func openWaves(t *testing.T, h *harness) {
 	t.Helper()
+	h.deliver(press("tab")) // Questions
 	h.deliver(press("tab"))
 	if h.m.view != 2 {
 		t.Fatalf("tab reached %d, want Waves", h.m.view)
@@ -371,6 +372,7 @@ func TestWavesOverlapErrorVerbatimDoesNotBlock(t *testing.T) {
 }
 func TestWavesStaleSuggestAfterProjectChange(t *testing.T) {
 	h, l := wavesHarness(t)
+	h.m.Update(press("tab")) // Questions
 	_, cmd := h.m.Update(press("tab"))
 	if cmd == nil {
 		t.Fatal("missing suggest command")

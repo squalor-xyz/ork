@@ -55,12 +55,12 @@ func newKeyMap() keyMap {
 		Jump:       key.NewBinding(key.WithKeys("1", "2", "3", "4", "5", "6", "7", "8", "9"), key.WithHelp("1-9", "jump to project")),
 		RowNext:    key.NewBinding(key.WithKeys("down", "j", "n"), key.WithHelp("down/j/n", "next row")),
 		RowPrev:    key.NewBinding(key.WithKeys("up", "k", "p"), key.WithHelp("up/k/p", "previous row")),
-		Select:     key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "open run, Roadmap item or decision; other rows select project")),
+		Select:     key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "open run, question, item or decision; other rows select project")),
 		Answer:     key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter (answer)", "submit; no confirmation")),
 		PaneScroll: key.NewBinding(key.WithKeys("pgup", "pgdown"), key.WithHelp("pgup/pgdown", "scroll run tree and reason or decision")),
 		Refresh:    key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "refresh now")),
 		Help:       key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "show or hide this help")),
-		Close:      key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "close pane, item, decision, help or message")),
+		Close:      key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "close run, question, item, decision, help or message")),
 		Quit:       key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
 	}
 }

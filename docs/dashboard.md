@@ -80,7 +80,8 @@ unchanged.
 The project sidebar comes from the registry (`registry.initial`,
 `ui.project-nav`). "Needs you" starts selected and shows the existing
 all-projects Overview. A project selection limits its rows to that project.
-The view bar stays at the top of the main pane. Overview, Waves and Roadmap are selectable.
+The view bar stays at the top of the main pane. Overview, Questions, Waves,
+Roadmap and Decisions are selectable.
 
 Each project row shows its needs-you count (open adj records, slicer
 items flagged `needs-owner`, and engine runs awaiting approval, paused, or
@@ -106,8 +107,8 @@ Decided tabs; use `1`-`9` to select a project. To reach
 "Needs you" by key, leave Decisions with `tab` and use `right`/`left`.
 `1`-`9` select projects in registry order. `tab` and
 `shift+tab` switch views in the order of the view bar (`ui.views`,
-`ui.view-list`). They skip views not built yet, so Overview, Waves, Roadmap and
-Decisions are reached for now. `/` filters project names without regard to
+`ui.view-list`). All five views are available: Overview, Questions, Waves,
+Roadmap and Decisions. `/` filters project names without regard to
 case; `enter`
 keeps the filter and leaves text entry, and `esc` clears it. `r` refreshes the
 selected project, or all projects on "Needs you". `?` shows keys and `q` quits.
@@ -304,8 +305,8 @@ Awaiting-approval runs offer `a` approve and `x` stop; other active runs offer
 `x` stop. A successful answer clears the field and refreshes the pane and row.
 A failed call shows
 its error code and message verbatim and permits another attempt. Closing the
-pane leaves a pending call running. No structured answer options are offered;
-the separate Questions tab follows in S27.
+pane leaves a pending call running. No structured answer options are offered.
+The Questions tab also opens this pane for engine questions.
 
 A failed call is an error row. A project has one error row per error code.
 The parts that failed with that code come first, then the code, then the
@@ -314,11 +315,40 @@ Different messages under one code are joined with ` / `. An items or inbox
 failure sits under Needs you. A runs failure alone sits under Running. Error
 rows never count toward the badge (`ui.setup-errors`).
 
+## Questions (all projects)
+
+Questions is the second view, after Overview (`ui.answer-ui`, `ui.view-list`).
+It lists engine runs paused with `pending: question` and open adj records
+from every project. Enter on an engine question opens the run detail pane
+and its Answer field. Enter on an adj question opens read-only record detail,
+including options and the recommendation. `esc` returns to the list.
+An adj answer path is outside this view's current scope.
+
+The proposed rows follow registry order. Within a project, engine questions
+come first, then adj records in inbox order. Every row names its project.
+Names are padded to the widest project name, capped at 20 columns.
+Removed projects and unavailable runs are skipped. An unloaded project shows
+"~ pending" with "waiting for the first reply". A failed adj inbox call shows its
+error code and message. Pending and error rows are display-only and never
+take the cursor. An empty list says "No open questions" in dim text.
+The "All projects" heading states the scope. A kind column marks engine
+rows "? question", adj rows "? decision", pending rows "~ pending", and
+errors "! error". Nonempty lists end with `[enter] open`.
+
+The proposed row keys (`down`/`j`/`n` and `up`/`k`/`p`) move the cursor.
+In record detail, they scroll; `pgup` and `pgdown` scroll a page.
+The list always shows all projects. Sidebar selection, project filtering and
+left/right project keys do not change it. There is no scope toggle.
+`a`, `x`, `t` and `c` have no action on the list or read-only record detail.
+The engine pane behaves as on Overview. It keeps its answer typing and
+submit keys. If the run changes state while the pane is open, its approve,
+stop and retry keys follow the run state and the footer hints.
+
 ## Waves (one project)
 
 The Waves composer is available (S82). Select one project. `tab` and
-`shift+tab` reach it between Overview and Roadmap, skipping Questions until
-that view is built. It loads `wave.suggest` when opened or the project changes.
+`shift+tab` reach it between Questions and Roadmap. It loads `wave.suggest`
+when opened or the project changes.
 Rows follow slicer's wave order. Unplaced items include their reasons.
 
 S60 provides the CLI: `ork wave suggest PROJECT` prints the ordered waves

@@ -1,0 +1,41 @@
+{
+  "id": "S27",
+  "title": "TUI: Questions tab across projects",
+  "lead": [
+    "Decided #99 ui.answer-ui: besides the row pane, a Questions tab lists every open question (engine stops and open adj questions) across projects. Depends on the pane slice."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Decided #99 ui.answer-ui: besides the row pane, a Questions tab lists every open question (engine stops and open adj questions) across projects. Depends on the pane slice."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui` (new tab), tests, goldens, `docs/dashboard.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- The tab lists open questions from all projects, each naming its project.\n- Enter opens the same answer pane.\n- No questions shows an empty-state line.\n- Golden views, colour and monochrome."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write questions_test.go first: the tab lists open questions from every project, each row names its project, Enter opens the pane for an engine question, and an empty list shows an empty-state line. Run them and confirm they fail.\n2. Build the rows from the snapshots, with no new calls: engine runs paused on a question (source.EngineRun, source.go:154-163, State and Pending) and Snapshot.Open for projects with adj true (source.go:72).\n3. questions.go (new): a pure function that returns the rows, with the project's name on each.\n4. Add the Questions view to the view switch from S58: set its built flag in the views list (view.go), so tab reaches it as the second view (record 121).\n5. Enter on an engine question calls openPane (pane.go:17-21). paneQuestion (pane.go:43-45) and paneRow (pane.go:23-33) only read engine runs, so adj rows cannot open the pane.\n6. Enter on an adj question shows the record read-only (options, recommendation) until S28 adds the answer path. Open: owner to confirm this interim behaviour.\n7. Empty state: a line when no project has an open question.\n8. Run go test ./internal/tui -update and review testdata/golden/questions-*.txt.\n9. Update docs/dashboard.md:174 (it says the Questions tab follows in S27).\n\nDecided: record 121 (ui.view-list) makes Questions the second view, after Overview. Note: the item says \"Depends on the pane slice\"; S26 is done, so the dependency is met.\n\nRe-anchor and owner decisions of 2026-10-25 (from the S27 preflight). Anchors: openPane pane.go:22-29, paneRow :31-49, paneQuestion :59-62; the \"Questions tab follows in S27\" text is at docs/dashboard.md:308 and :320; help text view.go:341 (\"Questions is coming in a later slice\") and Select/Close help in keys.go also change; tui_test.go:296-325 (tab skips Questions) and welcome_test.go:214-235 and the goldens' view bar change when Questions is built. Implementation points: add `const questionsView = 1` (Waves 2, Roadmap 3, Decisions 4); set views[1].built = true (view.go:245); add the Questions view to screen() (view.go:74); selectedRow (overview.go) needs the same guard as for decisionsView so a/x/t/c do not act on hidden Overview rows; requestAction (model.go:826) keeps the Questions guard but allows `answer` while m.pane is open; reset cursor, pane and decisionPane in moveView and switchTo; pane esc already returns to the list; engine question criteria: not Unavailable, State==\"paused\", Pending==\"question\", and Section(...)==SectionNeeds; `a` is not bound on Questions; left/right stay project keys; tab/shift+tab unchanged. Decisions: (1) Enter on an open adj record opens a READ-ONLY detail (reuse decisionPane and recordDetailLines, decisions.go:226) with esc to return and row keys and pgup/pgdown to scroll; the \"until S28 adds the answer path\" wording is dropped from S27 and the dashboard text; the owner wants an answer path built as its OWN follow-up slice right after S27 (not in this slice). (2) The list always shows all projects, no toggle or filter; the sidebar selection and left/right do not change it; the project name is on every row (padded, capped at 20 columns, as on Decisions). (3) Rows are grouped by project in registry order; within a project engine questions come first, then adj records in `adj inbox` order; an unloaded project shows \"pending: waiting for the first reply\"; a failed adj call shows an error row with code and message (display only, never takes the cursor); removed (Unavailable) projects are skipped; empty state: \"No open questions\". Nothing is open."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review every changed file in testdata/golden/ (questions-100x30-color.txt and -mono.txt, plus the view bar in the other goldens).\n- Run TestQuestions* by name with go test -run, and TestPane* (pane_test.go) to confirm the pane still works.\n- slicer check\n- adj lint\n- [HUMAN CHECK] The owner checks the Questions view with one engine question and one open adjudicate question."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

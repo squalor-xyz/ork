@@ -1,4 +1,4 @@
-[1mork[m [90mdev[m  ?help             | [1;36mOverview[m[90m | Questions | [mWaves[90m | [mRoadmap[90m | [mDecisions
+[1mork[m [90mdev[m  ?help             | [1;36mOverview[m[90m | [mQuestions[90m | [mWaves[90m | [mRoadmap[90m | [mDecisions
 [1;7;97;44m> Needs you[m                |[90m------------------------------------------------------------------------[m
   slicer 3*                |    [38;2;110;231;210m▄[m[38;2;110;231;210m▀[m[38;2;110;231;210m▀[m[38;2;110;231;210m▄[m    
   adjudicate 1             |    [38;2;110;231;210m█[m[38;2;110;231;210m▄[m[38;2;110;231;210m▄[m[38;2;110;231;210m█[m    
@@ -15,7 +15,7 @@
                            |1-9 jump to project
                            |down/j/n next row
                            |up/k/p previous row
-                           |enter open run, Roadmap item or decision; other rows select project
+                           |enter open run, question, item or decision; other rows select project
                            |/ filter projects; esc clears
                            |s hide/show sidebar
                            |a add project (Welcome)
@@ -30,9 +30,9 @@
                            |c remove merged worktree and branch (Ready)
                            |r refresh now
                            |? show or hide this help
-                           |esc close pane, item, decision, help or message
+                           |esc close run, question, item, decision, help or message
                            |q quit
                            |
-                           |Overview, Waves, Roadmap and Decisions are available. Questions is co...
+                           |Overview, Questions, Waves, Roadmap and Decisions are available.
                            |[90m------------------------------------------------------------------------[m
                            | 4 projects | refreshed 16:42:07 | pending 1

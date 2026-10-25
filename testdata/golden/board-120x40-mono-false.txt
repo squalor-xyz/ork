@@ -1,4 +1,4 @@
- [1;36mOverview[m[90m | Questions | [mWaves[90m | [mRoadmap[90m | [mDecisions
+ [1;36mOverview[m[90m | [mQuestions[90m | [mWaves[90m | [mRoadmap[90m | [mDecisions
 [90m------------------------------------------------------------------------------------------------------------------------[m
 [1;36mNeeds you[m
   [90mnothing needs you[m

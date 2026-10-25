@@ -1202,3 +1202,6 @@
 {"when": "2026-10-24T19:26:31Z", "item": "S59", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-24T19:45:03Z", "item": "S59", "action": "status", "from": "started", "to": "done", "note": "Decisions screen: Open and Decided tabs from the snapshot, one project or all adj projects (a toggles; left/right switch tabs on this view only), record detail with no adj call, read-only; goldens, docs and help updated; full suite, vet, gofmt, slicer check and adj lint green", "by": "Jon R"}
 {"when": "2026-10-24T19:46:20Z", "item": "S87", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-25T14:52:03Z", "item": "S27", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T14:52:52Z", "item": "S27", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-25T15:09:39Z", "item": "S27", "action": "status", "from": "started", "to": "done", "note": "Questions tab lists open engine questions and open adj records across projects; Enter opens the answer pane for engine questions and a read-only record detail for adj records; verified by TestQuestions*, the pane tests, goldens and the full race suite", "by": "Jon R"}

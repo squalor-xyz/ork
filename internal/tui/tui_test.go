@@ -316,7 +316,7 @@ func TestViewKeysDoNotMoveTheProject(t *testing.T) {
 			if bar := strings.Split(v, "\n")[0]; !strings.Contains(bar, "Overview | Questions | Waves | Roadmap | Decisions") {
 				t.Errorf("after %s the view bar is %q", k, bar)
 			}
-			want := "Waves"
+			want := "Questions"
 			if k == "shift+tab" {
 				want = "Decisions"
 			}

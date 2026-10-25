@@ -190,12 +190,14 @@ func TestRoadmapWritesNothing(t *testing.T) {
 func TestTabReachesTheRoadmapView(t *testing.T) {
 	h := roadmapHarness(t)
 	h.m.view = 0
+	h.m.Update(press("tab")) // Questions
 	h.m.Update(press("tab")) // Waves
 	h.m.Update(press("tab"))
 	if h.m.view != 3 {
 		t.Fatalf("tab reached %d, want Roadmap", h.m.view)
 	}
 	h.m.Update(press("shift+tab")) // Waves
+	h.m.Update(press("shift+tab")) // Questions
 	h.m.Update(press("shift+tab"))
 	if h.m.view != 0 {
 		t.Fatalf("shift+tab reached %d", h.m.view)

@@ -71,9 +71,11 @@ func (m *Model) screen() string {
 			detail = detail[:min(len(detail), max(h-5, 1))]
 			bodyH = max(h-4-len(detail), 1)
 		}
-	} else if m.view == roadmapView || m.view == wavesView || m.view == decisionsView {
+	} else if m.view == roadmapView || m.view == wavesView || m.view == decisionsView || m.view == questionsView {
 		rv := overviewView{}
-		if m.view == decisionsView {
+		if m.view == questionsView {
+			rv = m.questions(mainW)
+		} else if m.view == decisionsView {
 			rv = m.decisions(mainW)
 		} else if m.view == wavesView {
 			if m.waves != nil && m.waves.lineup != nil {
@@ -90,7 +92,10 @@ func (m *Model) screen() string {
 		if m.confirm != nil {
 			status = m.confirm.prompt()
 		}
-		if status != "" {
+		if m.view == questionsView && m.pane != nil {
+			detail = m.paneLines(mainW, max(h-5, 1), status)
+			bodyH = max(h-4-len(detail), 1)
+		} else if status != "" {
 			detail = wrapText(status, max(mainW-len(indent), 1))
 			for i := range detail {
 				detail[i] = indent + detail[i]
@@ -242,7 +247,7 @@ var views = []struct {
 	built bool
 }{
 	{"Overview", true},
-	{"Questions", false},
+	{"Questions", true},
 	{"Waves", true},
 	{"Roadmap", true},
 	{"Decisions", true},
@@ -329,7 +334,11 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			if h.Key == m.keys.AllProjects.Help().Key && m.view != decisionsView {
 				continue
 			}
-			if h.Key == m.keys.Add.Help().Key && (h.Desc == m.keys.Add.Help().Desc || h.Desc == m.keys.Approve.Help().Desc) && m.view == decisionsView {
+			if h.Key == m.keys.Add.Help().Key && (h.Desc == m.keys.Add.Help().Desc || h.Desc == m.keys.Approve.Help().Desc) && (m.view == decisionsView || m.view == questionsView) {
+				continue
+			}
+			if m.view == questionsView && m.pane == nil &&
+				(h == m.keys.Stop.Help() || h == m.keys.Retry.Help() || h == m.keys.Cleanup.Help()) {
 				continue
 			}
 			lines = append(lines, clip(h.Key+" "+h.Desc, w))
@@ -338,7 +347,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 	if m.view == decisionsView {
 		lines = append(lines, wrapText("On Decisions, left/right switch tabs; tab to another view to reach Needs you.", max(w, 1))...)
 	}
-	lines = append(lines, "", clip("Overview, Waves, Roadmap and Decisions are available. Questions is coming in a later slice.", w))
+	lines = append(lines, "", clip("Overview, Questions, Waves, Roadmap and Decisions are available.", w))
 	mark := brand.Mark(!th.Mono, m.cfg.ASCII)
 	if w >= 12 && bodyH >= len(lines)+len(mark)+1 {
 		lines = append(append(mark, ""), lines...)

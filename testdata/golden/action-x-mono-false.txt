@@ -1,4 +1,4 @@
-[1mork[m [90mdev[m  ?help             | [1;36mOverview[m[90m | Questions | [mWaves[90m | [mRoadmap[90m | [mDecisions
+[1mork[m [90mdev[m  ?help             | [1;36mOverview[m[90m | [mQuestions[90m | [mWaves[90m | [mRoadmap[90m | [mDecisions
 [1;7;97;44m> Needs you[m                |[90m------------------------------------------------------------------------[m
   ork 0*                   |[1;36mNeeds you[m
                            |  [90mnothing needs you[m

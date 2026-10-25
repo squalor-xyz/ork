@@ -1,4 +1,4 @@
-[1mork[m  ?help                 | Overview[90m | Questions | [m[1;36mWaves[m[90m | [mRoadmap[90m | [mDecisions
+[1mork[m  ?help                 | Overview[90m | [mQuestions[90m | [m[1;36mWaves[m[90m | [mRoadmap[90m | [mDecisions
   Needs you                |[90m------------------------------------------------------------------------[m
 [1;7;97;44m> ork 0[m                    |[1;36mSuggested (slicer plan-parallel)[m
   other 0                  |[1;36mItems                   Lineup (* edited for this run)[m

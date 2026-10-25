@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-103 items · — 34 · done 63 · parked 1 · retired 5
+103 items · — 33 · done 64 · parked 1 · retired 5
 
 ## v1.1
 
@@ -88,7 +88,7 @@
 | 31 | [S23](slices/S23.md) | A denied tool call does not fail a finished role | S | 2 |  | discovered from S21 | done |
 | 32 | [S25](slices/S25.md) | TUI actions: launch, approve and stop | M | 2 |  | discovered from S23 | done |
 | 33 | [S26](slices/S26.md) | TUI: answer a stopped run or question in a detail pane | M | 2 |  | discovered from S23 | done |
-| 34 | [S27](slices/S27.md) | TUI: Questions tab across projects | S | 1 |  | discovered from S23 | — |
+| 34 | [S27](slices/S27.md) | TUI: Questions tab across projects | S | 1 |  | discovered from S23 | done |
 | 35 | [S28](slices/S28.md) | TUI answers can file an adj ask and decide | S | 2 |  | discovered from S23 | — |
 | 36 | [S29](slices/S29.md) | Put the ork binary on PATH | S | 1 |  | discovered from S23 | done |
 | 37 | [S30](slices/S30.md) | Show the running role for relays started outside ork | S | 2 |  | discovered from S23 | done |
