@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 124,
+  "next_id": 125,
   "preamble": "",
   "passes": [
     {
@@ -4557,6 +4557,34 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S124",
+      "title": "Worktree and branch patterns can lowercase the item id",
+      "short_title": "Worktree and branch patterns can lowercase the item id",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S31",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
         "attempts": 0
       }
     }

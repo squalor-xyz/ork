@@ -4,8 +4,9 @@ The steps the outer session or the owner does by hand in a slice relay today,
 and the failures seen in relay trials. Each row names its source and the
 ork capability that addresses it. Since the 2026-10-18 interview, the ork
 engine replaces the outer session and the orchestrator agent outright
-(`launch.mode`), so every row in "Still manual" is in v1, except landing
-and changelog conflicts, which come after v1 (`landing.v1`). The harness
+(`launch.mode`), so every row in "Still manual" is in v1, except
+changelog conflicts, which come after v1. Landing after approval is in v1
+(`landing.in-ork`, #162, which supersedes `landing.v1`; S119). The harness
 failures at the end no longer apply to ork runs, because no role spawns or
 hands back to an agent. Paths are in the sibling repos under
 `squalor-xyz/`.

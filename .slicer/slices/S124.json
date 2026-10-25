@@ -1,0 +1,39 @@
+{
+  "id": "S124",
+  "title": "Worktree and branch patterns can lowercase the item id",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S31 preflight (2026-10-25): ork run ork S78 plans worktree .worktrees/S78 and branch S78, while this repo's convention (AGENTS.md, every hand-run relay) is lowercase, .worktrees/s78 on branch s78. The registry patterns support only {id} (docs/state.md:44-45), and the substitution is written twice."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/runs.go:364-375` (plan worktree and branch) and `internal/engine/engine.go:122-139` (worktreePath, branch): one shared helper that fills the pattern.\n- `internal/registry/registry.go:76-77` (WorktreePattern, BranchPattern) and `docs/state.md:44-45`: document an `{id_lower}` placeholder (proposed name)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "TestPatternIdLower: .worktrees/{id_lower} with item S78 gives .worktrees/s78; {id} is unchanged. TestPlanAndEngineAgreeOnPaths: the plan and the engine fill the same pattern the same way."
+    },
+    {
+      "heading": "Implement",
+      "body": "Add the placeholder in one helper used by both call sites, then set the ork project's registry patterns to .worktrees/{id_lower} and {id_lower} (the owner's registry, through ork's own config path, not by hand)."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./internal/daemon ./internal/engine ./internal/registry; go vet; gofmt -l; slicer check; adj lint."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

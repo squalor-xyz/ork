@@ -2,10 +2,12 @@
 {
   "id": 162,
   "title": "Should ork land a slice after the owner approves it?",
-  "status": "open",
+  "status": "decided",
   "key": "landing.in-ork",
   "asked_by": "claude",
+  "decided_by": "jon",
   "created": "2026-10-25",
+  "decided_at": "2026-10-25",
   "context": "Retrospective R5 (docs/review-2026-10-25-relay-retrospective.md). landing.v1 (#49) keeps landing out of ork: a ready-to-land list and merge detection only, and docs/boundaries.md:17 says ork never merges or lands. The owner wants to develop entirely through ork; in the v1 run, landing was a hand-run script (verify, commit, merge main in, end the relay run, ff-merge, push, remove worktree and branch) that worked on all 28 slices. The owner directed on 2026-10-25 to follow the retrospective's recommendations.",
   "options": [
     {
@@ -23,6 +25,11 @@
     "label": "land-after-approve",
     "reasoning": "Landing is deterministic, was reliable as a script, and is the main hand step left between approve and the next wave. slicer land stays the tracking step; ork only sequences it."
   },
+  "decision": "land-after-approve",
+  "rationale": "Owner approved the recommendation in the agent session on 2026-10-25 (AskUserQuestion: yes, decide all 162-170); recorded by the agent at the owner's direction. Supersedes #49 landing.v1; docs/boundaries.md:17 changes with S119.",
+  "supersedes": [
+    49
+  ],
   "refs": [
     "landing.v1",
     "docs/boundaries.md:17"
@@ -31,6 +38,15 @@
     {
       "date": "2026-10-25",
       "event": "ask"
+    },
+    {
+      "date": "2026-10-25",
+      "event": "decide"
+    },
+    {
+      "date": "2026-10-25",
+      "event": "supersede",
+      "note": "supersedes 49"
     }
   ]
 }
