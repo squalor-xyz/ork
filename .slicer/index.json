@@ -4173,7 +4173,7 @@
       "title": "Answer with adj on and no decision key must proceed",
       "short_title": "Answer with adj on and no decision key must proceed",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
