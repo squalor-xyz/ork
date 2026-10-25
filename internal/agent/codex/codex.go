@@ -30,6 +30,7 @@ const (
 // Spec describes one CLI round. Env is the full environment; nil inherits.
 type Spec struct {
 	Bin, Dir, Prompt, Model, Effort, Resume, ReportFile, FixtureDir string
+	AddDir                                                          string // the role's temp directory
 	Env                                                             []string
 	ReadOnly                                                        bool
 	OnStart                                                         func(int)
@@ -69,10 +70,20 @@ func (s Spec) Args() ([]string, error) {
 	}
 	if s.Resume != "" {
 		args = append(args, "-c", `sandbox_mode="`+mode+`"`)
+		if !s.ReadOnly && s.AddDir != "" {
+			roots := fmt.Sprintf("%q", s.AddDir)
+			if s.Dir != "" {
+				roots += fmt.Sprintf(",%q", s.Dir)
+			}
+			args = append(args, "-c", "sandbox_workspace_write.writable_roots=["+roots+"]")
+		}
 	} else {
 		args = append(args, "-s", mode)
 		if s.Dir != "" {
 			args = append(args, "-C", s.Dir)
+		}
+		if !s.ReadOnly && s.AddDir != "" {
+			args = append(args, "--add-dir", s.AddDir)
 		}
 	}
 	return append(args, s.Prompt), nil

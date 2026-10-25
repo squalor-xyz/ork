@@ -309,3 +309,25 @@ func TestCodexFixtureCandidates(t *testing.T) {
 		})
 	}
 }
+
+func TestCodexArgsAddTempDir(t *testing.T) {
+	for _, tc := range []struct {
+		name, dir, resume, temp string
+		readOnly                bool
+		want                    []string
+	}{
+		{"fresh", "/work", "", "/temp", false, []string{"exec", "--json", "-s", "workspace-write", "-C", "/work", "--add-dir", "/temp", "brief"}},
+		{"fresh read-only", "/work", "", "/temp", true, []string{"exec", "--json", "-s", "read-only", "-C", "/work", "brief"}},
+		{"resume", "/work", "thread", "/temp", false, []string{"exec", "resume", "thread", "--json", "-c", `sandbox_mode="workspace-write"`, "-c", `sandbox_workspace_write.writable_roots=["/temp","/work"]`, "brief"}},
+		{"resume read-only", "/work", "thread", "/temp", true, []string{"exec", "resume", "thread", "--json", "-c", `sandbox_mode="read-only"`, "brief"}},
+		{"resume without worktree", "", "thread", "/temp", false, []string{"exec", "resume", "thread", "--json", "-c", `sandbox_mode="workspace-write"`, "-c", `sandbox_workspace_write.writable_roots=["/temp"]`, "brief"}},
+		{"resume quoted paths", `/work "tree`, "thread", `/temp\cache`, false, []string{"exec", "resume", "thread", "--json", "-c", `sandbox_mode="workspace-write"`, "-c", `sandbox_workspace_write.writable_roots=["/temp\\cache","/work \"tree"]`, "brief"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := (Spec{Dir: tc.dir, Prompt: "brief", Resume: tc.resume, AddDir: tc.temp, ReadOnly: tc.readOnly}).Args()
+			if err != nil || !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("args %q %v, want %q", got, err, tc.want)
+			}
+		})
+	}
+}

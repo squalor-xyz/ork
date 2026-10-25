@@ -254,7 +254,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	onEvent, endActivity := e.startActivity()
 	res, runErr := e.d.Runner.Run(ctx, Request{
 		Role: r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
-		Brief: brief, Worktree: rec.Worktree, ReportPath: reportPath,
+		Brief: brief, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
 		Allowlist: perm.Allow, ReadOnly: perm.ReadOnly, Resume: session,
 		OnEvent: onEvent,
 		OnStart: func(pgid int) { e.run.Update(func(rr *runrec.Record) { rr.Roles[idx].PGID = pgid }) },

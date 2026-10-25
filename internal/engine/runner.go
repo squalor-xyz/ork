@@ -43,6 +43,7 @@ type Request struct {
 	Model      string
 	Effort     string
 	Brief      string   // the whole prompt for the role
+	TempDir    string   // the role's own temp directory
 	Worktree   string   // the role's working directory
 	ReportPath string   // where the role writes its final report
 	Allowlist  []string // tools the role may use; empty when ReadOnly

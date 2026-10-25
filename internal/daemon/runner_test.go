@@ -235,3 +235,58 @@ func TestRunnersForwardStreamEvents(t *testing.T) {
 		})
 	}
 }
+
+func TestCodexRoundEnvSetsGOCACHE(t *testing.T) {
+	t.Setenv("ORK_S87_ENV", "inherited")
+	for _, tc := range []struct {
+		name string
+		env  []string
+		temp string
+	}{
+		{"explicit", []string{"KEY=value"}, "/temp"},
+		{"replace", []string{"KEY=value", "GOCACHE=/old", "GOCACHE=/older"}, "/temp"},
+		{"inherit", nil, "/temp"},
+		{"empty temp explicit", []string{"KEY=value", "GOCACHE=/old"}, ""},
+		{"empty temp inherited", nil, ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			before := append([]string(nil), tc.env...)
+			base := tc.env
+			if base == nil {
+				base = os.Environ()
+			}
+			var want []string
+			if tc.temp == "" {
+				want = tc.env
+			} else {
+				for _, entry := range base {
+					if !strings.HasPrefix(entry, "GOCACHE=") {
+						want = append(want, entry)
+					}
+				}
+				want = append(want, "GOCACHE="+filepath.Join(tc.temp, "gocache"))
+			}
+			called := false
+			runner := codexRunner{env: tc.env, round: func(_ context.Context, s codex.Spec) (codex.Round, error) {
+				called = true
+				if s.AddDir != tc.temp {
+					t.Errorf("AddDir %q, want %q", s.AddDir, tc.temp)
+				}
+				if !reflect.DeepEqual(s.Env, want) {
+					t.Error("environment lost inherited entries or did not replace GOCACHE")
+				}
+				if len(s.Env) > 0 {
+					s.Env[0] = "MUTATED=value"
+				}
+				return codex.Round{Exit: codex.ExitOK}, nil
+			}}
+			_, err := runner.Run(context.Background(), engine.Request{Vendor: "codex", TempDir: tc.temp})
+			if err != nil || !called {
+				t.Fatalf("round called %v, err %v", called, err)
+			}
+			if tc.temp != "" && !reflect.DeepEqual(tc.env, before) {
+				t.Error("base environment mutated")
+			}
+		})
+	}
+}

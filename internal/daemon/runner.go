@@ -5,6 +5,9 @@ package daemon
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/squalor-xyz/ork/internal/agent/claude"
 	"github.com/squalor-xyz/ork/internal/agent/codex"
@@ -76,7 +79,7 @@ func (r codexRunner) Run(ctx context.Context, req engine.Request) (engine.Result
 	if call == nil {
 		call = codex.Run
 	}
-	round, err := call(ctx, codex.Spec{Dir: req.Worktree, Env: r.env, Prompt: req.Brief, Model: req.Model, Effort: req.Effort, ReadOnly: req.ReadOnly, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(_ codex.Event) {
+	round, err := call(ctx, codex.Spec{Dir: req.Worktree, AddDir: req.TempDir, Env: codexEnv(r.env, req.TempDir), Prompt: req.Brief, Model: req.Model, Effort: req.Effort, ReadOnly: req.ReadOnly, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(_ codex.Event) {
 		if req.OnEvent != nil {
 			req.OnEvent()
 		}
@@ -91,4 +94,21 @@ func (r codexRunner) Run(ctx context.Context, req engine.Request) (engine.Result
 		class = engine.ExitRateLimited
 	}
 	return engine.Result{Exit: class, Session: round.Session, Report: round.Report, Tokens: round.Tokens}, err
+}
+
+// codexEnv keeps the role's Go build cache inside its writable temp directory.
+func codexEnv(base []string, tempDir string) []string {
+	if tempDir == "" {
+		return base
+	}
+	if base == nil {
+		base = os.Environ()
+	}
+	env := make([]string, 0, len(base)+1)
+	for _, entry := range base {
+		if !strings.HasPrefix(entry, "GOCACHE=") {
+			env = append(env, entry)
+		}
+	}
+	return append(env, "GOCACHE="+filepath.Join(tempDir, "gocache"))
 }

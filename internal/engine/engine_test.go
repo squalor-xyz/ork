@@ -37,6 +37,13 @@ func TestHappyPathReachesAwaitingApproval(t *testing.T) {
 		t.Errorf("the gate must resume the reviewer's session, read-only: %+v", gate)
 	}
 	for _, r := range reqs {
+		wantTemp := filepath.Join(h.store.RunDir(rec.ID), "tmp", r.Role+"-1")
+		if r.TempDir != wantTemp {
+			t.Errorf("%s temp dir %q, want %q", r.Role, r.TempDir, wantTemp)
+		}
+		if info, err := os.Stat(r.TempDir); err != nil || !info.IsDir() {
+			t.Errorf("%s temp directory does not exist: %v", r.Role, err)
+		}
 		if r.Worktree != h.W || r.Round != 1 {
 			t.Errorf("%s: worktree %q round %d", r.Role, r.Worktree, r.Round)
 		}

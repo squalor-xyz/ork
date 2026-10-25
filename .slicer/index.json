@@ -23,7 +23,7 @@
       "id": "S87",
       "title": "Codex rounds in ork: GOCACHE and the role temp dir inside the sandbox",
       "short_title": "Codex rounds in ork: GOCACHE and the role temp dir inside the sandbox",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -44,7 +44,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
