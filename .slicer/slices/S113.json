@@ -24,11 +24,11 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "In the daemon MethodRunAnswer case (internal/daemon/runs.go:750), refuse an empty p.By only when rec.Pending.Key is non-empty. With no key FileAnswer files nothing, so the answer proceeds as a plain answer. Change TestAnswerWithoutAdjDecidedByIsRefusedWithoutKey (internal/daemon/answer_adj_test.go:302) to expect success and no filing; keep the keyed test. Check internal/engine/answer_adj.go:20 for the same guard. Found in the S28 human check."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "go test -race ./internal/daemon ./internal/engine ./internal/tui; a keyed answer without ADJ_DECIDED_BY is still refused."
     },
     {
       "heading": "Git",

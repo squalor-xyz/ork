@@ -66,7 +66,7 @@
 | 16 | [S110](slices/S110.md) | Running: a live summary of every running project above Needs you in the sidebar | M | 2 |  |  | — |
 | 17 | [S111](slices/S111.md) | Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork | M | 2 |  | discovered from S28 | — |
 | 18 | [S112](slices/S112.md) | Answer questions of externally run relays from ork (needs slicer relay-run ask and answer) | M | 2 |  | discovered from S28 | — |
-| 19 | S113 | Answer with adj on and no decision key must proceed | S | 1 |  | discovered from S28 | — |
+| 19 | [S113](slices/S113.md) | Answer with adj on and no decision key must proceed | S | 1 |  | discovered from S28 | — |
 
 ---
 
