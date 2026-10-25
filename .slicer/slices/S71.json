@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "go test -race ./internal/cli ./internal/doctor (re-anchor the package); go vet; gofmt -l; slicer check; adj lint."
     },
     {
       "heading": "Git",

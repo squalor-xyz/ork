@@ -1,0 +1,39 @@
+{
+  "id": "S117",
+  "title": "UI pass role in the engine, in parallel with the reviewer",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Retrospective R4 (docs/review-2026-10-25-relay-retrospective.md). The hand-run relay gives UI slices a UI pass (matrix r14, rule u10); it found problems the tests passed (S33 clipping at 80x24, S84 key width). The engine has no such role, and slicer relay-run has no ui role (S87). adj 165 (roles.ui-pass, open; recommended ui-pass-with-renders)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/states.go:229` (review round): start the UI pass beside the reviewer when the slice touches the UI.\n- `internal/roles/prompts/ui.md` (new) and `internal/roles/roles.go`.\n- `internal/tui/lineup.go`: the UI row in the lineup.\n- `docs/design.md:393-425` (Roles) and `docs/design.md:183-243` (state machine)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestUIPassRunsWithReviewerOnUISlice: Files under `internal/tui` start both roles; neither waits for the other.\n- TestUIPassSkippedOnEngineSlice: no UI path, no UI round.\n- TestUIPassFindingsReachFixRound: its findings join the reviewer's in the fix brief."
+    },
+    {
+      "heading": "Implement",
+      "body": "Wait for adj 165. The UI test (which paths count as UI) matches AGENTS.md: `internal/tui` and its goldens, `docs/dashboard.md`, `internal/cli` output, or a `ui.*` adj key. The ledger step uses role reviewer with task \"ID ui\" until slicer has a ui role."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./internal/engine ./internal/roles ./internal/tui; go vet; gofmt -l; slicer check; adj lint."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

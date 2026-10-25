@@ -1,0 +1,39 @@
+{
+  "id": "S118",
+  "title": "Approval card: everything needed to approve on one screen",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Retrospective R5 (docs/review-2026-10-25-relay-retrospective.md). Approval (checkpoint 2) should show what the owner needs to decide: the gate verdict, test counts, diff stat, owner findings, UI renders and human-check items. Today human checks pile up as adj records (141-145, 147)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/engine.go:315-340` (Approve, Reject): add a fix action that sends the owner's note to a fix round (proposed).\n- `internal/tui/pane.go` and `docs/dashboard.md:314` (Run detail pane): the card for an awaiting-approval run.\n- `internal/daemon/runs.go`: the card's data in the run status."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestApprovalCardShowsVerdictTestsDiffstat.\n- TestApprovalCardListsOwnerFindingsAndHumanChecks.\n- TestFixActionStartsFixRoundWithNote.\n- Goldens at 80x24 and 120x40."
+    },
+    {
+      "heading": "Implement",
+      "body": "Approve, reject and fix are the card's actions. Fix with a note is proposed; confirm at preflight. Renders appear when the UI-pass-renders slice lands."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./...; go test ./internal/tui -update then review goldens; go vet; gofmt -l; slicer check; adj lint. UI slice: UI pass (r14)."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

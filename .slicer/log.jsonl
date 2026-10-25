@@ -1293,3 +1293,161 @@
 {"when": "2026-10-25T16:20:14Z", "item": "S65", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-25T16:30:08Z", "item": "S65", "action": "note", "from": "", "to": "", "note": "Review FAIL: none (reviewer: no blockers); fix round 1 appli", "by": "Jon R"}
 {"when": "2026-10-25T16:35:00Z", "item": "S65", "action": "status", "from": "started", "to": "done", "note": "Budgets enforced: a run pauses with pending kind budget before a role round when role tokens or role run minutes reach the limit; retry grants one more role round (adj 127); docs and tests updated; full race suite green", "by": "Jon R"}
+{"when": "2026-10-25T16:52:17Z", "item": "S114", "action": "add", "from": "", "to": "open", "note": "Self-hosting: run ork on its own repo safely"}
+{"when": "2026-10-25T16:52:17Z", "item": "S114", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-25T16:52:17Z", "item": "S114", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-25T16:52:18Z", "item": "S114", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-25T16:52:18Z", "item": "S114", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-25T16:52:18Z", "item": "S114", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T16:52:18Z", "item": "S114", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-25T16:52:18Z", "item": "S115", "action": "add", "from": "", "to": "open", "note": "Implementer brief: re-anchor the spec first and self-check before reporting"}
+{"when": "2026-10-25T16:52:18Z", "item": "S115", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-25T16:52:18Z", "item": "S115", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-25T16:52:18Z", "item": "S115", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-25T16:52:18Z", "item": "S115", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-25T16:52:18Z", "item": "S115", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T16:52:19Z", "item": "S115", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-25T16:52:19Z", "item": "S116", "action": "add", "from": "", "to": "open", "note": "Spec check: a batch readiness check before a wave, answered in one sitting"}
+{"when": "2026-10-25T16:52:19Z", "item": "S116", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-25T16:52:19Z", "item": "S116", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-25T16:52:19Z", "item": "S116", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-25T16:52:19Z", "item": "S116", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-25T16:52:19Z", "item": "S116", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T16:52:19Z", "item": "S116", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-25T16:52:19Z", "item": "S117", "action": "add", "from": "", "to": "open", "note": "UI pass role in the engine, in parallel with the reviewer"}
+{"when": "2026-10-25T16:52:19Z", "item": "S117", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-25T16:52:20Z", "item": "S117", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-25T16:52:20Z", "item": "S117", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-25T16:52:20Z", "item": "S117", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-25T16:52:20Z", "item": "S117", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T16:52:20Z", "item": "S117", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-25T16:52:20Z", "item": "S118", "action": "add", "from": "", "to": "open", "note": "Approval card: everything needed to approve on one screen"}
+{"when": "2026-10-25T16:52:20Z", "item": "S118", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-25T16:52:20Z", "item": "S118", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-25T16:52:20Z", "item": "S118", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-25T16:52:20Z", "item": "S118", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-25T16:52:21Z", "item": "S118", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T16:52:21Z", "item": "S118", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-25T16:52:21Z", "item": "S119", "action": "add", "from": "", "to": "open", "note": "Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up"}
+{"when": "2026-10-25T16:52:21Z", "item": "S119", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-25T16:52:21Z", "item": "S119", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-25T16:52:21Z", "item": "S119", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-25T16:52:21Z", "item": "S119", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-25T16:52:21Z", "item": "S119", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T16:52:21Z", "item": "S119", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-25T16:52:22Z", "item": "S120", "action": "add", "from": "", "to": "open", "note": "Finding kinds: fix, owner or later in reviewer, UI pass and gate reports"}
+{"when": "2026-10-25T16:52:22Z", "item": "S120", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-25T16:52:22Z", "item": "S120", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-25T16:52:22Z", "item": "S120", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-25T16:52:22Z", "item": "S120", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-25T16:52:22Z", "item": "S120", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T16:52:22Z", "item": "S120", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-25T16:52:22Z", "item": "S121", "action": "add", "from": "", "to": "open", "note": "UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card"}
+{"when": "2026-10-25T16:52:22Z", "item": "S121", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-25T16:52:22Z", "item": "S121", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-25T16:52:23Z", "item": "S121", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-25T16:52:23Z", "item": "S121", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-25T16:52:23Z", "item": "S121", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T16:52:23Z", "item": "S121", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-25T16:52:23Z", "item": "S118", "action": "set", "from": "", "to": "", "note": "depends_on -→S111"}
+{"when": "2026-10-25T16:52:23Z", "item": "S119", "action": "set", "from": "", "to": "", "note": "depends_on -→S118"}
+{"when": "2026-10-25T16:52:23Z", "item": "S120", "action": "set", "from": "", "to": "", "note": "depends_on -→S111"}
+{"when": "2026-10-25T16:52:23Z", "item": "S116", "action": "set", "from": "", "to": "", "note": "depends_on -→S111"}
+{"when": "2026-10-25T16:52:23Z", "item": "S121", "action": "set", "from": "", "to": "", "note": "depends_on -→S117,S118"}
+{"when": "2026-10-25T16:52:44Z", "item": "S31", "action": "status", "from": "parked", "to": "open", "note": "Retrospective R1: dogfood ork next (owner 2026-10-25)"}
+{"when": "2026-10-25T16:52:44Z", "item": "S31", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T16:52:44Z", "item": "S31", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-25T16:52:45Z", "item": "S109", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1"}
+{"when": "2026-10-25T16:52:45Z", "item": "S110", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1"}
+{"when": "2026-10-25T16:52:45Z", "item": "S111", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1"}
+{"when": "2026-10-25T16:52:45Z", "item": "S102", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1"}
+{"when": "2026-10-25T16:52:45Z", "item": "S113", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1"}
+{"when": "2026-10-25T16:52:45Z", "item": "S31", "action": "move", "from": "31", "to": "1", "note": ""}
+{"when": "2026-10-25T16:52:53Z", "item": "S78", "action": "move", "from": "78", "to": "2", "note": ""}
+{"when": "2026-10-25T16:52:54Z", "item": "S114", "action": "move", "from": "114", "to": "3", "note": ""}
+{"when": "2026-10-25T16:52:54Z", "item": "S115", "action": "move", "from": "115", "to": "4", "note": ""}
+{"when": "2026-10-25T16:52:54Z", "item": "S87", "action": "move", "from": "89", "to": "5", "note": ""}
+{"when": "2026-10-25T16:52:54Z", "item": "S70", "action": "move", "from": "74", "to": "6", "note": ""}
+{"when": "2026-10-25T16:52:54Z", "item": "S99", "action": "move", "from": "101", "to": "7", "note": ""}
+{"when": "2026-10-25T16:52:54Z", "item": "S111", "action": "move", "from": "113", "to": "8", "note": ""}
+{"when": "2026-10-25T16:52:54Z", "item": "S109", "action": "move", "from": "112", "to": "9", "note": ""}
+{"when": "2026-10-25T16:52:54Z", "item": "S110", "action": "move", "from": "113", "to": "10", "note": ""}
+{"when": "2026-10-25T16:52:54Z", "item": "S118", "action": "move", "from": "118", "to": "11", "note": ""}
+{"when": "2026-10-25T16:52:54Z", "item": "S119", "action": "move", "from": "119", "to": "12", "note": ""}
+{"when": "2026-10-25T16:52:55Z", "item": "S120", "action": "move", "from": "120", "to": "13", "note": ""}
+{"when": "2026-10-25T16:52:55Z", "item": "S117", "action": "move", "from": "120", "to": "14", "note": ""}
+{"when": "2026-10-25T16:52:55Z", "item": "S121", "action": "move", "from": "121", "to": "15", "note": ""}
+{"when": "2026-10-25T16:52:55Z", "item": "S116", "action": "move", "from": "121", "to": "16", "note": ""}
+{"when": "2026-10-25T16:52:55Z", "item": "S92", "action": "move", "from": "104", "to": "17", "note": ""}
+{"when": "2026-10-25T16:52:55Z", "item": "S93", "action": "move", "from": "105", "to": "18", "note": ""}
+{"when": "2026-10-25T16:52:55Z", "item": "S102", "action": "move", "from": "113", "to": "19", "note": ""}
+{"when": "2026-10-25T16:52:55Z", "item": "S113", "action": "move", "from": "121", "to": "20", "note": ""}
+{"when": "2026-10-25T16:52:55Z", "item": "S73", "action": "move", "from": "91", "to": "21", "note": ""}
+{"when": "2026-10-25T16:52:56Z", "item": "S75", "action": "move", "from": "93", "to": "22", "note": ""}
+{"when": "2026-10-25T16:52:56Z", "item": "S71", "action": "move", "from": "91", "to": "23", "note": ""}
+{"when": "2026-10-25T16:52:56Z", "item": "S85", "action": "move", "from": "102", "to": "24", "note": ""}
+{"when": "2026-10-25T16:52:56Z", "item": "S86", "action": "move", "from": "103", "to": "25", "note": ""}
+{"when": "2026-10-25T16:52:56Z", "item": "S94", "action": "move", "from": "108", "to": "26", "note": ""}
+{"when": "2026-10-25T16:52:56Z", "item": "S98", "action": "move", "from": "112", "to": "27", "note": ""}
+{"when": "2026-10-25T16:52:56Z", "item": "S67", "action": "move", "from": "93", "to": "28", "note": ""}
+{"when": "2026-10-25T16:52:56Z", "item": "S68", "action": "move", "from": "94", "to": "29", "note": ""}
+{"when": "2026-10-25T16:52:56Z", "item": "S69", "action": "move", "from": "95", "to": "30", "note": ""}
+{"when": "2026-10-25T16:52:56Z", "item": "S72", "action": "move", "from": "96", "to": "31", "note": ""}
+{"when": "2026-10-25T16:52:57Z", "item": "S91", "action": "move", "from": "109", "to": "32", "note": ""}
+{"when": "2026-10-25T16:52:57Z", "item": "S90", "action": "move", "from": "109", "to": "33", "note": ""}
+{"when": "2026-10-25T16:52:57Z", "item": "S39", "action": "move", "from": "71", "to": "34", "note": ""}
+{"when": "2026-10-25T16:52:57Z", "item": "S101", "action": "move", "from": "114", "to": "35", "note": ""}
+{"when": "2026-10-25T16:52:57Z", "item": "S103", "action": "move", "from": "115", "to": "36", "note": ""}
+{"when": "2026-10-25T16:52:57Z", "item": "S105", "action": "move", "from": "117", "to": "37", "note": ""}
+{"when": "2026-10-25T16:52:57Z", "item": "S106", "action": "move", "from": "118", "to": "38", "note": ""}
+{"when": "2026-10-25T16:52:57Z", "item": "S107", "action": "move", "from": "119", "to": "39", "note": ""}
+{"when": "2026-10-25T16:52:57Z", "item": "S108", "action": "move", "from": "120", "to": "40", "note": ""}
+{"when": "2026-10-25T16:52:57Z", "item": "S104", "action": "move", "from": "120", "to": "41", "note": ""}
+{"when": "2026-10-25T16:52:58Z", "item": "S112", "action": "move", "from": "121", "to": "42", "note": ""}
+{"when": "2026-10-25T16:52:58Z", "item": "S50", "action": "move", "from": "90", "to": "43", "note": ""}
+{"when": "2026-10-25T16:52:58Z", "item": "S61", "action": "move", "from": "101", "to": "44", "note": ""}
+{"when": "2026-10-25T16:52:58Z", "item": "S66", "action": "move", "from": "106", "to": "45", "note": ""}
+{"when": "2026-10-25T16:52:58Z", "item": "S24", "action": "move", "from": "69", "to": "46", "note": ""}
+{"when": "2026-10-25T16:52:58Z", "item": "S62", "action": "move", "from": "103", "to": "47", "note": ""}
+{"when": "2026-10-25T16:52:58Z", "item": "S100", "action": "move", "from": "121", "to": "48", "note": ""}
+{"when": "2026-10-25T16:53:11Z", "item": "S31", "action": "set", "from": "", "to": "", "note": "importance,urgency"}
+{"when": "2026-10-25T16:53:11Z", "item": "S78", "action": "set", "from": "", "to": "", "note": "importance 2→3; urgency 2→3"}
+{"when": "2026-10-25T16:53:11Z", "item": "S114", "action": "set", "from": "", "to": "", "note": "importance,urgency"}
+{"when": "2026-10-25T16:53:11Z", "item": "S115", "action": "set", "from": "", "to": "", "note": "importance 2→3"}
+{"when": "2026-10-25T16:53:11Z", "item": "S87", "action": "set", "from": "", "to": "", "note": "importance 2→3; urgency 1→3"}
+{"when": "2026-10-25T16:53:11Z", "item": "S70", "action": "set", "from": "", "to": "", "note": "importance 2→3; urgency 2→3"}
+{"when": "2026-10-25T16:53:11Z", "item": "S99", "action": "set", "from": "", "to": "", "note": "importance 2→3; urgency 2→3"}
+{"when": "2026-10-25T16:53:11Z", "item": "S111", "action": "set", "from": "", "to": "", "note": "urgency 3→2"}
+{"when": "2026-10-25T16:53:11Z", "item": "S109", "action": "set", "from": "", "to": "", "note": "urgency 3→2"}
+{"when": "2026-10-25T16:53:11Z", "item": "S110", "action": "set", "from": "", "to": "", "note": "urgency 3→2"}
+{"when": "2026-10-25T16:53:11Z", "item": "S118", "action": "set", "from": "", "to": "", "note": "urgency 3→2"}
+{"when": "2026-10-25T16:53:11Z", "item": "S119", "action": "set", "from": "", "to": "", "note": "urgency 3→2"}
+{"when": "2026-10-25T16:53:11Z", "item": "S120", "action": "set", "from": "", "to": "", "note": "importance,urgency"}
+{"when": "2026-10-25T16:53:11Z", "item": "S117", "action": "set", "from": "", "to": "", "note": "importance,urgency"}
+{"when": "2026-10-25T16:53:11Z", "item": "S121", "action": "set", "from": "", "to": "", "note": "importance 2→3"}
+{"when": "2026-10-25T16:53:11Z", "item": "S116", "action": "set", "from": "", "to": "", "note": "importance,urgency"}
+{"when": "2026-10-25T16:53:11Z", "item": "S92", "action": "set", "from": "", "to": "", "note": "urgency 2→3"}
+{"when": "2026-10-25T16:53:11Z", "item": "S93", "action": "set", "from": "", "to": "", "note": "urgency 2→3"}
+{"when": "2026-10-25T16:53:11Z", "item": "S102", "action": "set", "from": "", "to": "", "note": "urgency 1→3"}
+{"when": "2026-10-25T16:53:11Z", "item": "S113", "action": "set", "from": "", "to": "", "note": "urgency 1→3"}
+{"when": "2026-10-25T16:53:11Z", "item": "S73", "action": "set", "from": "", "to": "", "note": "urgency 2→3"}
+{"when": "2026-10-25T16:53:11Z", "item": "S75", "action": "set", "from": "", "to": "", "note": "urgency 2→3"}
+{"when": "2026-10-25T16:53:11Z", "item": "S71", "action": "set", "from": "", "to": "", "note": "urgency 2→3"}
+{"when": "2026-10-25T16:53:11Z", "item": "S85", "action": "set", "from": "", "to": "", "note": "importance,urgency"}
+{"when": "2026-10-25T16:53:11Z", "item": "S86", "action": "set", "from": "", "to": "", "note": "urgency 1→2"}
+{"when": "2026-10-25T16:53:11Z", "item": "S94", "action": "set", "from": "", "to": "", "note": "importance,urgency"}
+{"when": "2026-10-25T16:53:11Z", "item": "S98", "action": "set", "from": "", "to": "", "note": "urgency 1→2"}
+{"when": "2026-10-25T16:53:11Z", "item": "S67", "action": "set", "from": "", "to": "", "note": "importance,urgency"}
+{"when": "2026-10-25T16:53:11Z", "item": "S68", "action": "set", "from": "", "to": "", "note": "importance,urgency"}
+{"when": "2026-10-25T16:53:11Z", "item": "S69", "action": "set", "from": "", "to": "", "note": "importance,urgency"}
+{"when": "2026-10-25T16:53:11Z", "item": "S72", "action": "set", "from": "", "to": "", "note": "urgency 2→1"}
+{"when": "2026-10-25T16:53:11Z", "item": "S91", "action": "set", "from": "", "to": "", "note": "importance,urgency"}
+{"when": "2026-10-25T16:53:52Z", "item": "S87", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-25T16:53:52Z", "item": "S87", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-25T16:53:52Z", "item": "S87", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T16:53:52Z", "item": "S87", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-25T16:53:52Z", "item": "S71", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-25T16:54:03Z", "item": "S87", "action": "move", "from": "5", "to": "1", "note": ""}
+{"when": "2026-10-25T16:54:03Z", "item": "S31", "action": "set", "from": "", "to": "", "note": "depends_on -→S87"}
+{"when": "2026-10-25T16:54:13Z", "item": "S87", "action": "set", "from": "", "to": "", "note": "title Relay friction: Codex brief sets GOCACHE under .scratch; no ui role in relay-run; spec names data source→Codex rounds in ork: GOCACHE and the role temp dir inside the sandbox; short_title Relay friction: Codex brief sets GOCACHE under .scratch; no ui role in relay-run; spec names data source→Codex rounds in ork: GOCACHE and the role temp dir inside the sandbox"}
+{"when": "2026-10-25T16:54:13Z", "item": "S78", "action": "note", "from": "", "to": "", "note": "2026-10-25 retrospective: S31 runs this slice through ork it", "by": "Jon R"}

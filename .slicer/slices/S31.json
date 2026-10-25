@@ -26,11 +26,11 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "Run S78 (recoverRuns map writes under lock: size S, engine-only, no goldens) through ork itself. Build the binary from main into `.scratch/bin/ork` and restart the daemon from it. Start the run with `ork run ork S78` from the ork TUI (Waves, one item), well specified yes, split no, lineup from the matrix: implementer Codex gpt-6.1-sol medium, reviewer and gate opus medium. The owner follows and answers the run in ork; the outer agent session only watches (ork status, the ledger) and changes nothing in the run. Approve with ork. Land as landing.v1 allows unless adj 162 is decided by then. File every gap as a slice with --discovered-from S31, and answer the open S17 human check (ork approve on a live run)."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "S78 reaches committed through ork with gate PASS; the relay-run ledger shows every role step; each gap is a filed slice; the S17 human check is answered. go test -race ./...; slicer check; adj lint."
     },
     {
       "heading": "Git",

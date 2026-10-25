@@ -1,0 +1,39 @@
+{
+  "id": "S119",
+  "title": "Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Retrospective R5 (docs/review-2026-10-25-relay-retrospective.md). The hand-run landing script ran on all 28 slices with no failure; it is the last hand step between approve and the next wave. adj 162 (landing.in-ork, open; recommended land-after-approve) would supersede landing.v1 (#49), and docs/boundaries.md:17 changes with it."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/states.go:321-372` (commit, finish): after commit, merge the base branch in if it moved, `slicer render`, re-run the check command and `slicer check`, `slicer land ID --branch B`, ff-merge, push when the project setting says so, then the confirmed cleanup (git.cleanup-key).\n- `internal/registry/registry.go`: a per-project push setting, off by default (proposed name).\n- `docs/boundaries.md:17`, `docs/design.md:183-243`, `docs/state.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestLandMergesBaseWhenMoved: a temp repo whose base moved gets the merge, render and a green re-check before the ff-merge.\n- TestLandStopsOnRedRecheck: a red check after the merge stops before the ff-merge.\n- TestLandPushesOnlyWhenSet.\n- TestLandCleansUpAfterConfirm."
+    },
+    {
+      "heading": "Implement",
+      "body": "Wait for adj 162 and the owner's supersede of #49. Use temp repos and fakes only; no real push in tests. No AI attribution."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./...; go vet; gofmt -l; slicer check; adj lint."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
