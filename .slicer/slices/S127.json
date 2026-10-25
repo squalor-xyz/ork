@@ -1,0 +1,39 @@
+{
+  "id": "S127",
+  "title": "After an answer: clear the question from the row and pane, and say the role resumed",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S31 (2026-10-25, S78 run ork-20261025-175709-e8c9): after the owner answered in the pane, the run resumed the implementer (round 2), but the Running row and the pane header still showed the question text ('Full-suite verification remains necessary...'), and the pane footer showed the CLI form 'ork answer RUN TEXT: pending' and stayed on pending after the role resumed. The Running row also starts with a wide blank gap (the empty label noted in S84's later notes)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/runs.go:934-935` (wait text): clear it when the pending question is answered.\n- `internal/tui/pane.go` (footer and header) and `internal/tui/model.go` (the answer result): show \"answered; implementer resumed (round N)\" in plain words, not the CLI command; drop it on the next state change.\n- `internal/tui/overview.go` (Running row): no question text while the run is not paused; no blank label gap.\n- Tests beside each; goldens `testdata/golden/pane-*.txt`, Overview goldens."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "TestAnsweredRunRowShowsNoQuestion; TestPaneFooterAfterAnswerSaysResumed; TestRunningRowHasNoBlankLabelGap."
+    },
+    {
+      "heading": "Implement",
+      "body": "Coordinate with S111 (structured questions rework the pane) and S109 (pane follow): run after S111 or fold into it at preflight. UI slice: UI pass (r14)."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./internal/daemon ./internal/tui; goldens; slicer check; adj lint."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
