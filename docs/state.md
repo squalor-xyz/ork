@@ -138,7 +138,7 @@ started. They are not a copy of slicer state. The ledger link is
 `committed` and `stopped` are final. `queued` is not final: the run waits for
 a slot under the caps and has no process and no writes. `round` counts implementer rounds and
 `fails` counts gate FAILs. `reason` says why a slice is stopped or paused.
-`pending` (kind `question`, `shape`, `lost`, `interrupted` or `error`, with
+`pending` (kind `question`, `shape`, `lost`, `interrupted`, `budget` or `error`, with
 the state and role to re-enter, the reason, and for a question the optional adj
 `key`, the text and the answer) is set while a slice is paused. `feedback`
 names the file (kind
@@ -231,7 +231,7 @@ project name, `unavailable: true` and its engine rows. Status includes these
 groups with the same optional `unavailable` flag. Their snapshots contain
 only stored engine rows and the *proposed* `unavailable: true` flag.
 For a paused run, optional `pending` is the record's pending kind: `question`,
-`shape`, `lost`, `interrupted` or `error` (`ui.pending-kind`, adj #108). Other
+`shape`, `lost`, `interrupted`, `budget` or `error` (`ui.pending-kind`, adj #108). Other
 states omit it; older snapshots may omit it too.
 For a paused run, `wait` includes the pause reason or question and the next
 command: `ork retry RUN` without a question, or `ork answer RUN TEXT`.

@@ -136,11 +136,42 @@ func pendingSection(p *runrec.Pending) []BriefSection {
 	return nil
 }
 
+// overBudget compares recorded role usage with the run's limits. Only role
+// run time counts; time between roles or spent paused does not.
+func (e *Engine) overBudget(rec runrec.Record) (string, bool) {
+	var tokens int
+	var elapsed time.Duration
+	for _, role := range rec.Roles {
+		tokens += role.Tokens
+		if rec.Budgets.Minutes > 0 {
+			end := role.EndedAt
+			if role.Running() {
+				end = e.d.now()
+			}
+			elapsed += end.Sub(role.StartedAt)
+		}
+	}
+	if rec.Budgets.Tokens > 0 && tokens >= rec.Budgets.Tokens {
+		return fmt.Sprintf("token budget %d reached (%d used)", rec.Budgets.Tokens, tokens), true
+	}
+	if rec.Budgets.Minutes > 0 && elapsed >= time.Duration(rec.Budgets.Minutes)*time.Minute {
+		return fmt.Sprintf("time budget %dm reached (%s role run time used)", rec.Budgets.Minutes, elapsed.Round(time.Second)), true
+	}
+	return "", false
+}
+
 // runRound runs one role round: brief, ledger step, process, stop rules,
 // report checks. When it returns ok false the slice is already stopped or
 // paused (or err says why not).
 func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (outcome, error) {
 	rec := e.run.Snapshot()
+	// A retry of a budget pause grants this round. Its pending context is
+	// cleared when the round ends, so the next round checks the limits again.
+	if pend == nil || pend.Kind != runrec.PendingBudget {
+		if why, over := e.overBudget(rec); over {
+			return outcome{}, e.pause(runrec.Pending{Kind: runrec.PendingBudget, State: r.state, Role: r.role, Round: r.n, Reason: why})
+		}
+	}
 	entries := rec.Lineup[r.role]
 	if r.role == RoleGate && len(entries) == 0 {
 		entries = rec.Lineup[RoleReviewer]

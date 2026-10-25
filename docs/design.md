@@ -307,8 +307,8 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   files (`implementer-2.md`). A repeat of the same role and round uses a
   new path (`implementer-2-attempt-2.md`), preserving the earlier report.
   *Proposed:* a slice stops after 8 implementer
-  rounds (`MaxRounds`), so a check that never goes green cannot loop;
-  budgets (S05) replace it.
+  rounds (`MaxRounds`), so a check that never goes green cannot loop.
+  `MaxRounds` stays: it limits red loops, not spend (`run.budget-resume`).
 - **Resume.** A fix round resumes the implementer's latest session and the
   gate resumes the latest gate or reviewer session from the same vendor and
   model. Without a matching session the
@@ -624,10 +624,16 @@ the adapter's exit class, denials, report, session and usage to the engine.
 
 ## Budgets
 
-The limits are per slice: wall time and total tokens, with defaults in the
-registry and overrides at launch (`run.budgets`). When a slice reaches a
+The limits are per slice: minutes of role run time and total tokens, with
+defaults in the registry and overrides at launch (`run.budgets`). When a slice reaches a
 limit, ork lets the running role finish, then pauses the slice before the
-next role starts, and asks the owner.
+next role starts with pending kind `budget`, and waits for the owner.
+Minutes sum each role's `StartedAt` to `EndedAt` (to now for a running role);
+time spent paused does not count. A limit is reached when usage is equal to
+or above it. Retry grants exactly one more role round, then the check applies
+again (`run.budget-resume`, adj #127). A question, shape or error pause spends
+that grant, including an error before the role starts. The next retry checks
+the budget again.
 Launch overrides merge per field: zero or omitted minutes or tokens keep
 the registry value. Negative limits are refused. The plan shows the merged
 budgets, and `run.json` records them (`run.launch-wire`). They apply to

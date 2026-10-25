@@ -1971,3 +1971,20 @@ func TestRunDismissRules(t *testing.T) {
 		})
 	}
 }
+
+func TestBudgetPausedStatusIncludesRetryHint(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	reason := "token budget 9000 reached (9100 used)"
+	_, err := store.Create(runrec.Record{ID: "budget", Item: "S65", Project: p.Name, State: runrec.StatePaused, Pending: &runrec.Pending{Kind: "budget", State: runrec.StateReview, Role: engine.RoleReviewer, Round: 1, Reason: reason}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	runs := d.engineRuns(p.Name)
+	if len(runs) != 1 || runs[0].Pending != "budget" || runs[0].Wait != reason+"; next: ork retry budget" {
+		t.Fatalf("runs: %+v", runs)
+	}
+	b := request(t, d, "status", `{"project":"p"}`)
+	if !strings.Contains(string(b), `"needs_you":1`) || !strings.Contains(string(b), `"pending":"budget"`) {
+		t.Fatalf("status: %s", b)
+	}
+}

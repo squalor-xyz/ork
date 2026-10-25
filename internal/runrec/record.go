@@ -121,6 +121,7 @@ type Commit struct {
 
 // Pending kinds: why a slice is paused.
 const (
+	PendingBudget      = "budget"      // a run limit reached before the next role round
 	PendingQuestion    = "question"    // a report's Owner needed section
 	PendingShape       = "shape"       // a report failed the shape checks
 	PendingLost        = "lost"        // the role's process is gone (engine.restart)

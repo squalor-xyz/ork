@@ -193,6 +193,8 @@ func (m *Model) paneLines(w, h int, status string) []string {
 		}
 		addFooter(toggleLines, priority)
 		addFooter([]string{"enter submit; esc close pane"}, 3)
+	case r.state == "paused" && r.pending == "budget":
+		addFooter(wrapText("t retry: one more role round; esc close pane", width), 3)
 	case r.state == "paused":
 		addFooter([]string{"t retry; esc close pane"}, 3)
 	case r.state == "stopped":

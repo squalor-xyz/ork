@@ -776,3 +776,20 @@ func TestDismissWriteFailureRollsBack(t *testing.T) {
 		t.Fatalf("disk changed: %v", err)
 	}
 }
+
+func TestBudgetPendingRoundTrip(t *testing.T) {
+	s := newStore(t)
+	r := rec("budget")
+	r.State = StatePaused
+	r.Pending = &Pending{Kind: PendingBudget, State: StateReview, Role: "reviewer", Round: 2, Reason: "token budget 9000 reached (9100 used)"}
+	if _, err := s.Create(r); err != nil {
+		t.Fatal(err)
+	}
+	opened, err := s.Open(r.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := opened.Snapshot(); !reflect.DeepEqual(got.Pending, r.Pending) {
+		t.Fatalf("pending: %+v", got.Pending)
+	}
+}

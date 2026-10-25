@@ -2680,7 +2680,7 @@
       "id": "S65",
       "title": "Enforce run.budgets: pause with a budget kind before a round",
       "short_title": "Enforce run.budgets: pause with a budget kind before a round",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -2690,6 +2690,17 @@
           "text": "**2026-10-20** — Proposed, awaiting owner (2026-10-20 review), run.budget-resume: a budget pause waits for the owner; retry grants exactly one more role round, then the check applies again; MaxRounds stays; the minutes clock counts role run time, not wall time since CreatedAt, so paused time does not count (verify role durations are recorded first).",
           "created_at": "2026-10-20T18:07:46Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "580379eb-2907-4240-9561-bde1c451dbb5",
+          "kind": "",
+          "text": "**2026-10-25** — Review FAIL: none (reviewer: no blockers); fix round 1 applies UI pass edits and a docs note on grant spending.",
+          "created_at": "2026-10-25T16:30:08Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -2713,7 +2724,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

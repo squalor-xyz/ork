@@ -346,7 +346,11 @@ The actions follow the state (`ui.answer-pane-scope`):
   status, enabled toggle, submit hint, off/disabled toggle and command preview
   in that priority order, dropping the lowest priority lines first.
   This toggle is available only in the TUI; `ork answer` does not file in adj.
-- Paused without a question: show the reason and `t` retries, with the same
+- Paused with `pending: budget`: show the reason; the footer says
+  `t retry: one more role round; esc close pane`. Retry grants exactly one
+  role round, then the budget check applies again (`run.budget-resume`).
+- Paused for another reason (not a question or budget): show the reason and
+  `t` retries, with the same
   `ork retry RUN` y/n confirmation as the Overview.
 - Stopped: show the full reason with no key actions. Stop is final; relaunch,
   or clear the row with `ork dismiss RUN`.

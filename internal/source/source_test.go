@@ -363,3 +363,13 @@ func TestDenialsText(t *testing.T) {
 		})
 	}
 }
+
+func TestBudgetPauseIsNeedsYou(t *testing.T) {
+	var r EngineRun
+	if err := json.Unmarshal([]byte(`{"id":"budget","state":"paused","pending":"budget","wait":"token budget 9000 reached (9100 used)"}`), &r); err != nil {
+		t.Fatal(err)
+	}
+	if r.Pending != "budget" || r.Section([]EngineRun{r}) != SectionNeeds || r.Wait != "token budget 9000 reached (9100 used)" {
+		t.Fatalf("budget pause: %+v", r)
+	}
+}

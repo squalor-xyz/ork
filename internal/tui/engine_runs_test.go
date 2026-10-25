@@ -661,3 +661,25 @@ func TestEngineRunBoundsDenials(t *testing.T) {
 		t.Fatalf("bounded denials missing:\n%s", v)
 	}
 }
+
+func TestBudgetPausedRowAndPane(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	s := engineSnapshot(t, "paused", "ledger")
+	s.EngineRuns[0].Pending = "budget"
+	s.EngineRuns[0].Wait = "token budget 9000 reached (9100 used); next: ork retry " + s.EngineRuns[0].ID
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	v := sgr.ReplaceAllString(strings.Join(h.m.overview(200).body, "\n"), "")
+	if !strings.Contains(strings.Split(v, "Running")[0], "S22  paused  "+s.EngineRuns[0].Wait) {
+		t.Fatalf("budget row missing from Needs you: %s", v)
+	}
+	h.m.pane = &runPane{run: s.EngineRuns[0].ID, project: "ork"}
+	pane := sgr.ReplaceAllString(strings.Join(h.m.paneLines(200, 40, ""), "\n"), "")
+	if !strings.Contains(pane, s.EngineRuns[0].Wait) || !strings.Contains(pane, "t retry: one more role round; esc close pane") {
+		t.Fatalf("budget pane missing reason or grant hint: %s", pane)
+	}
+	narrow := sgr.ReplaceAllString(strings.Join(h.m.paneLines(30, 40, ""), "\n"), "")
+	if !strings.Contains(narrow, "esc close pane") {
+		t.Fatalf("narrow budget pane missing close hint: %s", narrow)
+	}
+}
