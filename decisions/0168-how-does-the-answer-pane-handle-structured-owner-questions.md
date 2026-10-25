@@ -2,10 +2,12 @@
 {
   "id": 168,
   "title": "How does the answer pane handle structured owner questions?",
-  "status": "open",
+  "status": "decided",
   "key": "ui.structured-questions",
   "asked_by": "claude",
+  "decided_by": "jon",
   "created": "2026-10-25",
+  "decided_at": "2026-10-25",
   "context": "S111. Decided #104 (ui.answer-pane-scope: no structured options) and #109 (ui.answer-pane-keys: Enter submits, no confirm) conflict with structured questions. The owner chose option options-confirm in the 2026-10-25 batch spec check (AskUserQuestion); recording that needs the owner's decide and a supersede of #104 and #109 for structured questions only.",
   "options": [
     {
@@ -25,6 +27,8 @@
     "label": "options-confirm",
     "reasoning": "The exact command is shown before an option is sent, while typing a free answer stays fast."
   },
+  "decision": "options-confirm",
+  "rationale": "Owner approved the recommendation in the agent session on 2026-10-25 (AskUserQuestion: yes, decide all 162-170); recorded by the agent at the owner's direction. The owner picked this option in the 2026-10-25 batch spec check. Narrows #104 and #109 for structured questions only; both stay in force for free text. adjudicate S51 (partial supersede) would record the link.",
   "refs": [
     "S111",
     "ui.answer-pane-scope",
@@ -36,6 +40,10 @@
     {
       "date": "2026-10-25",
       "event": "ask"
+    },
+    {
+      "date": "2026-10-25",
+      "event": "decide"
     }
   ]
 }

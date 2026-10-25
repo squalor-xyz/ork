@@ -89,8 +89,15 @@ v1 is the monitoring dashboard plus launching and supervising slice waves
   - a read-only fingerprint on review roles (`role.readonly-fingerprint`).
 - Each run ends with a commit on the slice branch after the owner approves
   (`wave.end`, `git.commit`).
-- Landing help: a ready-to-land list, and detection of merged branches
-  (`landing.v1`).
+- Landing after approval: ork merges the base branch in if it moved,
+  re-checks, runs `slicer land`, fast-forwards the base branch, pushes
+  when the project's setting says so, and cleans up (`landing.in-ork`,
+  #162, supersedes `landing.v1`; S119 implements it). Until then, a
+  ready-to-land list and detection of merged branches.
+- v1 is releasable when the owner can run a wave, answer its questions,
+  approve it and land it, all from ork, with no outside agent session;
+  polish found after that goes to v1.1 by default (`release.v1-exit`,
+  #167).
 - Owner questions in the middle of a slice are answered in ork, with an
   optional adj record (`owner.questions`).
 - Soft time and token budgets (`run.budgets`).
@@ -133,8 +140,10 @@ v1 is the monitoring dashboard plus launching and supervising slice waves
 - **No second copy of project state.** Roadmaps, slices, readiness and
   decisions are always read live.
 - **No reading or writing `.slicer/` or `decisions/` files directly.**
-- **No merges or pushes in v1.** ork commits only on slice branches, after
-  approval.
+- **No merges or pushes without approval.** ork commits on slice
+  branches, and merges into the base branch or pushes only after the owner
+  approves the slice, and pushes only when the project's setting allows it
+  (`landing.in-ork`, #162).
 - **Not an LLM.** All model work happens in the launched role sessions.
 - **One workflow kind: the slice relay** (`workflow.model`).
 
