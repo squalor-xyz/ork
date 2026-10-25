@@ -32,7 +32,7 @@ func TestQuestionsRowsAndScope(t *testing.T) {
 	body := func() string {
 		lines := strings.Split(h.view(), "\n")[2:14]
 		for i, line := range lines {
-			_, lines[i], _ = strings.Cut(line, "|")
+			_, lines[i], _ = strings.Cut(line, "│")
 		}
 		return strings.Join(lines, "\n")
 	}

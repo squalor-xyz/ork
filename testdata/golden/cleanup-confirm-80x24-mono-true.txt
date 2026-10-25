@@ -1,24 +1,24 @@
-[1mork[m  ?help         | [1mOverview[m[2m | [mQuestions[2m | [mWaves[2m | [mRoadmap[2m | [mDecisions
-[1;7m> Needs you[m        |[2m------------------------------------------------------------[m
-  ork 0            |[1mNeeds you[m
-  other 0          |  [2mnothing needs you[m
-                   |
-                   |[1mRunning[m
-                   |  [2mnothing running[m
-                   |
-                   |[1mRecent[m
-                   |  [2mnone[m
-                   |
-                   |[1mReady to land[m
-                   |[1;7m    ork    S63  s63  merged[m
-                   |      slicer land 'S63' --branch 's63' --note 'Landed s63'
-                   |           slicer render
-                   |
-                   |
-                   |
-                   |
-                   |  git -C '/projects/ork' worktree remove '/p/wt'
-                   |  git -C '/projects/ork' branch -d 's63'
-                   |  Remove worktree and branch? [y/N] (Enter is No)
-                   |[2m------------------------------------------------------------[m
-                   | 2 projects | refreshed 16:42:00 | pending 0 | c clean up
+[1mork[m  ?help         │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1;7m> Needs you      0 [m│[2m────────────────────────────────────────────────────────────[m
+  ork              │[1mNeeds you 0[m
+  other            │  [2mnothing needs you[m
+                   │
+                   │[1mRunning 0[m
+                   │  [2mnothing running[m
+                   │
+                   │[1mRecent[m
+                   │  [2mnone[m
+                   │
+                   │[1mReady to land[m
+                   │[1;7m    ork  S63  s63  merged                                   [m
+                   │      slicer land 'S63' --branch 's63' --note 'Landed s63'
+                   │         slicer render
+                   │
+                   │
+                   │
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │  git -C '/projects/ork' worktree remove '/p/wt'
+                   │  git -C '/projects/ork' branch -d 's63'
+                   │  Remove worktree and branch? [y/N] (Enter is No)
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ 2 projects | refreshed 16:42:00 | c clean up

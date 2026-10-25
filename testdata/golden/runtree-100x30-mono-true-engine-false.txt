@@ -1,30 +1,30 @@
-[1mork[m  ?help                 | [1mOverview[m[2m | [mQuestions[2m | [mWaves[2m | [mRoadmap[2m | [mDecisions
-[1;7m> Needs you[m                |[2m------------------------------------------------------------------------[m
-  ork 0*                   |[1mNeeds you[m
-                           |  [2mnothing needs you[m
-                           |
-                           |[1mRunning[m
-                           |[1;7m  > started elsewhere  ork  tree  S55  active, 2 of 5 steps running  2m[m
-                           |
-                           |[1mRecent[m
-                           |  [2mnone[m
-                           |
-                           |[1mReady to land[m
-                           |  [2mnone[m
-                           |
-                           |
-                           |
-                           |  [1mRun tree  S55  active  started elsewhere[m
-                           |  [##~~..]
-                           |  implementer > [reviewer] > [2mgate[m                                [2mround 1[m
-                           |  [1m| orchestrator start  2m  codex sol high[m
-                           |    [2m+ implementer  done   1m  claude sonnet[m
-                           |    [2m    Build the tree[m
-                           |      [1m! explorer     fail   30s  codex sol[m
-                           |    [1m| reviewer     start  1m  claude opus[m
-                           |  . gate         queued  claude opus
-                           |  [2m    Keep the raw phase[m
-                           |  
-                           |  started elsewhere, read-only; esc close pane
-                           |[2m------------------------------------------------------------------------[m
-                           | 1 project | refreshed 16:42:00 | pending 0
+[1mork[m  ?help                 │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1;7m> Needs you              0 [m│[2m────────────────────────────────────────────────────────────────────────[m
+  ork                     *│[1mNeeds you 0[m
+                           │  [2mnothing needs you[m
+                           │
+                           │[1mRunning 1[m
+                           │[1;7m  > started elsewhere  ork  tree  S55  active, 2 of 5 steps running  2m [m
+                           │
+                           │[1mRecent[m
+                           │  [2mnone[m
+                           │
+                           │[1mReady to land[m
+                           │  [2mnone[m
+                           │
+                           │
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │  [1mRun tree  S55  active  started elsewhere[m
+                           │  [##~~..]
+                           │  implementer > [reviewer] > [2mgate[m                                [2mround 1[m
+                           │  [1m| orchestrator start  2m  codex sol high[m
+                           │    [2m+ implementer  done   1m  claude sonnet[m
+                           │    [2m    Build the tree[m
+                           │      [1m! explorer     fail   30s  codex sol[m
+                           │    [1m| reviewer     start  1m  claude opus[m
+                           │  . gate         queued  claude opus
+                           │  [2m    Keep the raw phase[m
+                           │  
+                           │  started elsewhere, read-only; esc close pane
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ 1 project | refreshed 16:42:00

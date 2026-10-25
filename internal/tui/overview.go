@@ -11,6 +11,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 
+	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/slicercli"
@@ -38,29 +39,32 @@ func (m *Model) refreshing(name string) bool {
 // ovRow is one row of the Overview. The row shows its text cut to the pane. The
 // selected row shows the whole text on the detail line (ui.overview-cursor).
 type ovRow struct {
-	dim              bool
-	cells            []string // proposed: whole board summary cells
-	ended            time.Time
-	kind             string
-	style            lipgloss.Style
-	kindW            int
-	project          int            // registry index; Enter selects non-run rows
-	name             string         // the project's name
-	text             string         // the row's text after the name, in full
-	id               string         // a run's ID, kept whole in the row; "" for other rows
-	rest             string         // a run's base text after its ID, cut first
-	stepParts        []relayRowPart // external role details, dropped before cutting base text
-	ledgerID         string         // set only for started-elsewhere rows
-	unavailable      bool
-	failure          string
-	engineID         string // empty for ledger and non-engine rows
-	state            string
-	pending          string
-	commands         []string // plain copyable lines beneath a landing row
-	ready            bool
-	merged           bool
-	mergeKnown       bool
-	branch, worktree string
+	group             string
+	decision          *adjcli.Record
+	keyW, decisionIDW int
+	dim               bool
+	cells             []string // proposed: whole board summary cells
+	ended             time.Time
+	kind              string
+	style             lipgloss.Style
+	kindW             int
+	project           int            // registry index; Enter selects non-run rows
+	name              string         // the project's name
+	text              string         // the row's text after the name, in full
+	id                string         // a run's ID, kept whole in the row; "" for other rows
+	rest              string         // a run's base text after its ID, cut first
+	stepParts         []relayRowPart // external role details, dropped before cutting base text
+	ledgerID          string         // set only for started-elsewhere rows
+	unavailable       bool
+	failure           string
+	engineID          string // empty for ledger and non-engine rows
+	state             string
+	pending           string
+	commands          []string // plain copyable lines beneath a landing row
+	ready             bool
+	merged            bool
+	mergeKnown        bool
+	branch, worktree  string
 }
 
 // relayRowPart keeps a role's label and identity whole when its task is cut.
@@ -100,12 +104,12 @@ func (m *Model) rows() (needs, running []ovRow) {
 		}
 		for _, r := range s.Open.Value {
 			needs = append(needs, ovRow{kind: kindDecision, style: th.Decision, kindW: kindWidth, project: i, name: name,
-				text: fmt.Sprintf("#%d %s  %s", r.ID, r.Key, r.Title)})
+				decision: &r, text: fmt.Sprintf("#%d %s  %s", r.ID, r.Key, r.Title)})
 		}
 		for _, it := range s.Items.Value {
 			if isHeld(it) {
 				needs = append(needs, ovRow{kind: kindHeld, style: th.Held, kindW: kindWidth, project: i, name: name,
-					text: fmt.Sprintf("%s  %s  (%s)", it.ID, it.Title, holdFlag)})
+					text: fmt.Sprintf("%s  %s", it.ID, it.Title)})
 			}
 		}
 
@@ -226,8 +230,27 @@ func (m *Model) rows() (needs, running []ovRow) {
 				text: text, id: id, rest: rest, stepParts: steps, dim: r.State == "stale"})
 		}
 	}
+	for i := range needs {
+		switch needs[i].kind {
+		case kindDecision:
+			needs[i].group = "Decisions"
+		case kindHeld:
+			needs[i].group = "Held"
+		case "x stopped":
+			needs[i].group = "Stopped"
+		case "= paused":
+			needs[i].group = "Paused"
+		case "+ approve":
+			needs[i].group = "Approve"
+		default:
+			needs[i].group = "Errors"
+		}
+	}
+	slices.SortStableFunc(needs, func(a, b ovRow) int { return slices.Index(needsGroups, a.group) - slices.Index(needsGroups, b.group) })
 	return needs, running
 }
+
+var needsGroups = []string{"Decisions", "Held", "Stopped", "Paused", "Approve", "Errors"}
 
 // clampCursor keeps a cursor index on one of n rows. It returns -1 when there
 // are no rows.
@@ -278,13 +301,26 @@ type overviewView struct {
 func (m *Model) overview(w int) overviewView {
 	th := m.cfg.Theme
 	nameW := 0
-	for _, p := range m.projects {
-		nameW = max(nameW, len(p.reg.Name))
-	}
 	needs, running := m.rows()
+	keyW, idW := 0, 0
+	for _, r := range needs {
+		if r.decision != nil {
+			keyW = max(keyW, lipgloss.Width(r.decision.Key))
+			idW = max(idW, len(fmt.Sprint(r.decision.ID))+1)
+		}
+	}
+	keyW = min(keyW, w/3)
+	for i := range needs {
+		needs[i].keyW = keyW
+		needs[i].decisionIDW = idW
+	}
 	all := append(append(append(append([]ovRow(nil), needs...), running...), m.recentRows()...), m.readyRows()...)
 	cursor := clampCursor(m.cursor, len(all))
-	hang := strings.Repeat(" ", len(indent)+1+1+nameW+2)
+	if m.active < 0 {
+		for _, r := range all {
+			nameW = max(nameW, lipgloss.Width(r.name))
+		}
+	}
 
 	var lines []string
 	sel := -1
@@ -299,6 +335,14 @@ func (m *Model) overview(w int) overviewView {
 				sel = len(lines)
 			}
 			lines = append(lines, m.rowLine(r, selected, nameW, w))
+			textColumn := len(indent) + r.kindW + 1
+			if r.group != "" {
+				textColumn = len(indent) + 2
+			}
+			if nameW > 0 {
+				textColumn += 1 + nameW + 2
+			}
+			hang := strings.Repeat(" ", textColumn)
 			for _, command := range r.commands {
 				prefix := hang
 				if lipgloss.Width(hang+command) > w {
@@ -308,9 +352,26 @@ func (m *Model) overview(w int) overviewView {
 			}
 		}
 	}
-	lines = append(lines, th.Heading.Render("Needs you"))
-	section(needs, 0, "nothing needs you")
-	lines = append(lines, "", th.Heading.Render("Running"))
+	lines = append(lines, th.Heading.Render(fmt.Sprintf("Needs you %d", len(needs))))
+	if len(needs) == 0 {
+		section(nil, 0, "nothing needs you")
+	}
+	first := 0
+	for _, group := range needsGroups {
+		var rows []ovRow
+		for _, r := range needs {
+			if r.group == group {
+				rows = append(rows, r)
+			}
+		}
+		if len(rows) == 0 {
+			continue
+		}
+		lines = append(lines, indent+th.Group.Render(fmt.Sprintf("%s %d", group, len(rows))))
+		section(rows, first, "")
+		first += len(rows)
+	}
+	lines = append(lines, "", th.Heading.Render(fmt.Sprintf("Running %d", len(running))))
 	section(running, len(needs), "nothing running")
 	lines = append(lines, "", th.Heading.Render("Recent"))
 	recent := m.recentRows()
@@ -325,7 +386,8 @@ func (m *Model) overview(w int) overviewView {
 		// The hint is the detail line of a selected project with no rows.
 		ov.detail = []string{indent + th.Dim.Render(clip(setupHint, w-len(indent)))}
 	case cursor >= 0:
-		ov.detail = detailLines(all[cursor], w)
+		vertical, _ := th.rules(m.cfg.ASCII)
+		ov.detail = detailLines(all[cursor], w, vertical)
 	}
 	return ov
 }
@@ -336,27 +398,46 @@ func (m *Model) overview(w int) overviewView {
 func (m *Model) rowLine(r ovRow, selected bool, nameW, w int) string {
 	th := m.cfg.Theme
 	kind := fmt.Sprintf("%-*s", r.kindW, r.kind)
-	name := fmt.Sprintf("%-*s", nameW, r.name)
+	if r.group != "" {
+		kind = r.kind[:1]
+	}
+	name := ""
+	if nameW > 0 {
+		name = fmt.Sprintf("%-*s", nameW, r.name) + "  "
+	}
+	if r.decision != nil {
+		d := r.decision
+		id := fmt.Sprintf("#%d", d.ID)
+		r.text = fmt.Sprintf("%-*s  %-*s  %s", r.decisionIDW, id, r.keyW, clip(d.Key, r.keyW), d.Title)
+	}
 	if selected {
 		mark := " "
-		if m.refreshing(r.name) {
+		if nameW > 0 && m.refreshing(r.name) {
 			mark = "~"
 		}
-		prefix := indent + kind + " " + mark + name + "  "
-		return th.TabActive.Render(prefix + rowText(r, max(w-lipgloss.Width(prefix), 10)))
+		prefix := indent + kind + " "
+		if nameW > 0 {
+			prefix += mark + name
+		}
+		line := prefix + rowText(r, max(w-lipgloss.Width(prefix), 1))
+		line += strings.Repeat(" ", max(w-lipgloss.Width(line), 0))
+		return th.TabActive.Render(line)
 	}
 	// A loaded project with a refresh in flight is marked "~" before its name;
 	// the status line says "pending".
 	mark := " "
-	if m.refreshing(r.name) {
+	if nameW > 0 && m.refreshing(r.name) {
 		mark = th.Pending.Render("~")
 	}
 	styledKind := kind
 	if kind != "" {
 		styledKind = r.style.Render(kind)
 	}
-	prefix := indent + styledKind + " " + mark + name + "  "
-	text := rowText(r, max(w-lipgloss.Width(prefix), 10))
+	prefix := indent + styledKind + " "
+	if nameW > 0 {
+		prefix += mark + name
+	}
+	text := rowText(r, max(w-lipgloss.Width(prefix), 1))
 	heard := ""
 	heardStyle := th.Warn
 	if n := len(r.stepParts); n > 0 {
@@ -433,8 +514,18 @@ func rowText(r ovRow, room int) string {
 
 // detailLines wraps a Ready row's full commands, or another row's full text,
 // at the pane width. The row already shows the project's name.
-func detailLines(r ovRow, w int) []string {
+func detailLines(r ovRow, w int, separator string) []string {
 	text := r.text
+	if d := r.decision; d != nil {
+		text = fmt.Sprintf("#%d %s", d.ID, d.Status)
+		if len(d.Options) > 0 {
+			text += fmt.Sprintf(" %s %d options", separator, len(d.Options))
+		}
+		if d.Recommendation != nil && d.Recommendation.Label != "" {
+			text += " " + separator + " recommends " + d.Recommendation.Label
+		}
+		text += "\n" + d.Title
+	}
 	if r.ready && len(r.commands) > 0 {
 		text = strings.Join(r.commands, "\n")
 	}

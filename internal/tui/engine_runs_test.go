@@ -53,11 +53,11 @@ func TestEngineRunRows(t *testing.T) {
 			if strings.Count(v, row) != 1 || !strings.Contains(section, row) || strings.Contains(v, kindExternal) {
 				t.Fatalf("engine-led row missing or misplaced: %s", v)
 			}
-			badge := "ork 0*"
+			badge := "ork *"
 			if wantNeeds {
 				badge = "ork 1"
 			}
-			if !strings.Contains(h.view(), badge) {
+			if !strings.Contains(compactSpaces(h.view()), badge) {
 				t.Fatalf("engine sidebar missing %q:\n%s", badge, h.view())
 			}
 		})
@@ -122,11 +122,11 @@ func TestStoppedEngineRows(t *testing.T) {
 			if strings.Contains(v, "S22  stopped") != tc.want {
 				t.Fatalf("stopped row visibility incorrect:\n%s", v)
 			}
-			badge := "ork 0*"
+			badge := "ork *"
 			if tc.want {
 				badge = "ork 1*"
 			}
-			if !strings.Contains(h.view(), badge) {
+			if !strings.Contains(compactSpaces(h.view()), badge) {
 				t.Fatalf("stopped badge missing %q:\n%s", badge, h.view())
 			}
 		})
@@ -137,7 +137,7 @@ func TestCommittedEngineHasNoRunningBadge(t *testing.T) {
 	h := newHarness(t, proj("ork", false))
 	h.start()
 	h.m.apply(snapshotMsg{name: "ork", snap: engineSnapshot(t, "committed", "ledger")})
-	if !strings.Contains(h.view(), "ork 0 ") {
+	if strings.Contains(sidebarRow(h.m, "  ork"), "*") {
 		t.Fatalf("committed engine retains running badge:\n%s", h.view())
 	}
 }
@@ -148,11 +148,11 @@ func TestEngineSidebarRunningBadge(t *testing.T) {
 			h := newHarness(t, proj("ork", false))
 			h.start()
 			h.m.apply(snapshotMsg{name: "ork", snap: engineSnapshot(t, state, "ledger")})
-			want := "ork 0*"
+			want := "ork *"
 			if state == "awaiting-approval" || state == "paused" || state == "stopped" {
-				want = "ork 1 "
+				want = "ork 1"
 			}
-			if v := h.view(); !strings.Contains(v, want) {
+			if v := h.view(); !strings.Contains(compactSpaces(v), want) {
 				t.Fatalf("sidebar missing %q:\n%s", want, v)
 			}
 		})
@@ -269,7 +269,7 @@ func TestExternalRelayTaskClipped(t *testing.T) {
 	if got != prefix+task[:17]+"..." {
 		t.Fatalf("task not clipped with ellipsis: %q", got)
 	}
-	if !strings.Contains(strings.Join(detailLines(rows[0], 1000), "\n"), task) {
+	if !strings.Contains(strings.Join(detailLines(rows[0], 1000, "|"), "\n"), task) {
 		t.Fatal("detail lost full task")
 	}
 }
@@ -305,7 +305,7 @@ func TestExternalRelayWholePartClipping(t *testing.T) {
 					t.Fatalf("step changed base clipping at %d: got %q, want %q", room, got, want)
 				}
 			}
-			if !strings.Contains(strings.Join(detailLines(rows[0], 300), "\n"), label+": Implement S30") {
+			if !strings.Contains(strings.Join(detailLines(rows[0], 300, "|"), "\n"), label+": Implement S30") {
 				t.Fatal("detail lost dropped step")
 			}
 		})
@@ -463,11 +463,11 @@ func TestEngineRowShowsStateSymbol(t *testing.T) {
 				if r.kind != tc.kind || r.kindW != kindWidth || r.style.Render("probe") != want.Render("probe") {
 					t.Fatalf("state kind/style: got %q width %d, want %q", r.kind, r.kindW, tc.kind)
 				}
-				styledKind := want.Render(fmt.Sprintf("%-*s", kindWidth, tc.kind))
+				styledKind := want.Render(tc.kind[:1])
 				if view := strings.Join(h.m.overview(200).body, "\n"); !strings.Contains(view, styledKind) {
 					t.Fatalf("unselected kind lacks expected style %q in %q", styledKind, view)
 				}
-				if !strings.Contains(sgr.ReplaceAllString(h.m.rowLine(r, false, 3, 200), ""), tc.kind) {
+				if !strings.Contains(sgr.ReplaceAllString(h.m.rowLine(r, false, 3, 200), ""), tc.kind[:1]) {
 					t.Fatal("state word missing")
 				}
 			})
@@ -605,7 +605,7 @@ func TestUnavailableProjectGroup(t *testing.T) {
 	h.m.actionStatus = ""
 	h.m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
 	view := sgr.ReplaceAllString(h.m.View().Content, "")
-	if !strings.Contains(view, "! removed") || !strings.Contains(strings.Join(h.m.overview(300).body, "\n"), `error: project "removed" is not registered`) {
+	if !strings.Contains(view, "Errors 1") || !strings.Contains(strings.Join(h.m.overview(300).body, "\n"), `error: project "removed" is not registered`) {
 		t.Errorf("group or error missing: %s", view)
 	}
 	checkGolden(t, "engine-unavailable-100x30.txt", h.m.View().Content)

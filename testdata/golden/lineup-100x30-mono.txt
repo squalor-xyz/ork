@@ -1,30 +1,30 @@
-[1mork[m  ?help                 | Overview[2m | [mQuestions[2m | [m[1mWaves[m[2m | [mRoadmap[2m | [mDecisions
-  Needs you                |[2m------------------------------------------------------------------------[m
-[1;7m> ork 0[m                    |[1mEdit lineup: A  Alpha[m
-  other 0                  |  Run only; gate follows reviewer.
-                           |[1;7m  > implementer: claude sonnet high (no alternatives; c for custom)[m
-                           |    reviewer: claude opus medium
-                           |    Budget minutes: 45
-                           |    Budget tokens: 9000
-                           |  Zero budget uses the project default.
-                           |  [up/down/tab] row   [left/right] cycle   [c] custom
-                           |  [enter] save and replan   [esc] discard
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |[2m------------------------------------------------------------------------[m
-                           | 2 projects | refreshed 16:42:00 | pending 0
+[1mork[m  ?help                 │ Overview[2m │ [mQuestions[2m │ [m[1mWaves[m[2m │ [mRoadmap[2m │ [mDecisions
+  Needs you              0 │[2m────────────────────────────────────────────────────────────────────────[m
+[1;7m> ork                      [m│[1mEdit lineup: A  Alpha[m
+  other                    │  Run only; gate follows reviewer.
+                           │[1;7m  > implementer: claude sonnet high (no alternatives; c for custom)[m
+                           │    reviewer: claude opus medium
+                           │    Budget minutes: 45
+                           │    Budget tokens: 9000
+                           │  Zero budget uses the project default.
+                           │  [up/down/tab] row   [left/right] cycle   [c] custom
+                           │  [enter] save and replan   [esc] discard
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ 2 projects | refreshed 16:42:00

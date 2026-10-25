@@ -1,30 +1,30 @@
-[1mork[m  ?help                 | [1;36mOverview[m[90m | [mQuestions[90m | [mWaves[90m | [mRoadmap[90m | [mDecisions
-[1;7;97;44m> Needs you[m                |[90m------------------------------------------------------------------------[m
-  ork 0*                   |[1;36mNeeds you[m
-                           |  [90mnothing needs you[m
-                           |
-                           |[1;36mRunning[m
-                           |[1;7;97;44m  > started elsewhere  ork  s97  S97  active  20m  [##~~..][m
-                           |
-                           |[1;36mRecent[m
-                           |    ork  [1;31m✗ fail[m[90m  S94  10m  ended 5m ago  impl 1  review 1  gate 0[m
-                           |    ork  [32m✓ pass[m[90m  S93  10m  ended 20m ago  impl 1  review 1  gate 0[m
-                           |    ork  [90m~ stopped[m[90m  S95  10m  ended 35m ago  impl 1  review 1  gate 0[m
-                           |
-                           |[1;36mReady to land[m
-                           |  [90mnone[m
-                           |
-                           |
-                           |
-                           |
-                           |  [1;36mRun s97  S97  active  started elsewhere[m
-                           |  [##~~..]
-                           |  [32mimplementer[m > [36m[reviewer][m > [90mgate[m                                [90mround 1[m
-                           |  [33m! last heard 16m ago[m
-                           |  [90m+ implementer done[m
-                           |  [1;36m| reviewer    start[m
-                           |  [90m. gate        waiting[m
-                           |  
-                           |  started elsewhere, read-only; esc close pane
-                           |[90m------------------------------------------------------------------------[m
-                           | 1 project | refreshed 16:42:00 | pending 0
+[1mork[m  ?help                 │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[1;7;97;44m> Needs you              0 [m│[90m────────────────────────────────────────────────────────────────────────[m
+  ork                     *│[1;36mNeeds you 0[m
+                           │  [90mnothing needs you[m
+                           │
+                           │[1;36mRunning 1[m
+                           │[1;7;97;44m  > started elsewhere  ork  s97  S97  active  20m  [##~~..]             [m
+                           │
+                           │[1;36mRecent[m
+                           │    ork  [1;31m✗ fail[m[90m  S94  10m  ended 5m ago  impl 1  review 1  gate 0[m
+                           │    ork  [32m✓ pass[m[90m  S93  10m  ended 20m ago  impl 1  review 1  gate 0[m
+                           │    ork  [90m~ stopped[m[90m  S95  10m  ended 35m ago  impl 1  review 1  gate 0[m
+                           │
+                           │[1;36mReady to land[m
+                           │  [90mnone[m
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │  [1;36mRun s97  S97  active  started elsewhere[m
+                           │  [##~~..]
+                           │  [32mimplementer[m > [36m[reviewer][m > [90mgate[m                                [90mround 1[m
+                           │  [33m! last heard 16m ago[m
+                           │  [90m+ implementer done[m
+                           │  [1;36m| reviewer    start[m
+                           │  [90m. gate        waiting[m
+                           │  
+                           │  started elsewhere, read-only; esc close pane
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ 1 project | refreshed 16:42:00

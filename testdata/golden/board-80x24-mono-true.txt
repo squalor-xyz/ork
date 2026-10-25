@@ -1,24 +1,24 @@
-[1mork[m  ?help         | [1mOverview[m[2m | [mQuestions[2m | [mWaves[2m | [mRoadmap[2m | [mDecisions
-[1;7m> Needs you[m        |[2m------------------------------------------------------------[m
-  ork 0*           |[1mNeeds you[m
-                   |  [2mnothing needs you[m
-                   |
-                   |[1mRunning[m
-                   |[1;7m  > started elsewhere  ork  s97  S97  active  20m  [##~~..][m
-                   |
-                   |[1mRecent[m
-                   |    ork  [1m✗ fail[m[2m  S94  10m  ended 5m ago[m
-                   |    ork  ✓ pass[2m  S93  10m  ended 20m ago[m
-                   |    ork  [2m~ stopped[m[2m  S95  10m  ended 35m ago[m
-                   |
-                   |[1mReady to land[m
-                   |  [2mnone[m
-                   |
-                   |
-                   |
-                   |
-                   |
-                   |  s97  S97  active  20m  [##~~..]  running: reviewer
-                   |   implementer>[reviewer]>gate  ! heard 16m
-                   |[2m------------------------------------------------------------[m
-                   | 1 project | refreshed 16:42:00 | pending 0
+[1mork[m  ?help         │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1;7m> Needs you      0 [m│[2m────────────────────────────────────────────────────────────[m
+  ork             *│[1mNeeds you 0[m
+                   │  [2mnothing needs you[m
+                   │
+                   │[1mRunning 1[m
+                   │[1;7m  > started elsewhere  ork  s97  S97  active  20m  [##~~..] [m
+                   │
+                   │[1mRecent[m
+                   │    ork  [1m✗ fail[m[2m  S94  10m  ended 5m ago[m
+                   │    ork  ✓ pass[2m  S93  10m  ended 20m ago[m
+                   │    ork  [2m~ stopped[m[2m  S95  10m  ended 35m ago[m
+                   │
+                   │[1mReady to land[m
+                   │  [2mnone[m
+                   │
+                   │
+                   │
+                   │
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │  s97  S97  active  20m  [##~~..]  running: reviewer
+                   │   implementer>[reviewer]>gate  ! heard 16m
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ 1 project | refreshed 16:42:00

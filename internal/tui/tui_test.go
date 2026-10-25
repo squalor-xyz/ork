@@ -313,7 +313,7 @@ func TestViewKeysDoNotMoveTheProject(t *testing.T) {
 			if !strings.Contains(v, "> Needs you") {
 				t.Errorf("after %s the sidebar selection moved:\n%s", k, v)
 			}
-			if bar := strings.Split(v, "\n")[0]; !strings.Contains(bar, "Overview | Questions | Waves | Roadmap | Decisions") {
+			if bar := strings.Split(v, "\n")[0]; !strings.Contains(bar, "Overview │ Questions │ Waves │ Roadmap │ Decisions") {
 				t.Errorf("after %s the view bar is %q", k, bar)
 			}
 			want := "Questions"
@@ -498,7 +498,7 @@ func TestPendingCallShowsOnItsRow(t *testing.T) {
 		}
 	}
 	v := h.view()
-	if n := rowsWith(v, "~ pending", "slicer"); n != 2 { // one in Needs you, one in Running
+	if n := rowsWith(sgr.ReplaceAllString(strings.Join(h.m.overview(72).body, "\n"), ""), "waiting for the first reply"); n != 2 { // one in Needs you, one in Running
 		t.Fatalf("%d pending rows for slicer, want 2:\n%s", n, v)
 	}
 	if strings.Contains(v, "~slicer") {
@@ -512,7 +512,7 @@ func TestPendingCallShowsOnItsRow(t *testing.T) {
 	}
 	h.send(held[0])
 	v = h.view()
-	if rowsWith(v, "~ pending", "slicer") != 0 || !strings.Contains(v, "A question") {
+	if rowsWith(v, "waiting for the first reply") != 0 || !strings.Contains(v, "A question") {
 		t.Fatalf("row still pending after the call returned:\n%s", v)
 	}
 	if strings.Contains(v, "pending 1") {
@@ -532,7 +532,7 @@ func TestFailedCallShowsItsCodeAndMessageVerbatim(t *testing.T) {
 	h.start()
 	v := h.view()
 	for _, line := range strings.Split(v, "\n") {
-		if strings.Contains(line, "! error") && !strings.Contains(line, "DataBall") {
+		if strings.Contains(line, "! ") && strings.Contains(line, "items:") && !strings.Contains(line, "DataBall") {
 			t.Errorf("error is not on the project's row: %q", line)
 		}
 	}
@@ -587,7 +587,7 @@ func TestLongRowsAreCutWithAnEllipsisNotWrapped(t *testing.T) {
 	v := plainView(h.m)
 	var rows []string
 	for _, l := range strings.Split(v, "\n") {
-		if strings.Contains(l, "! error") {
+		if strings.Contains(l, "! ") {
 			rows = append(rows, strings.TrimRight(l, " "))
 		}
 	}
@@ -614,17 +614,17 @@ func TestRowCursorMovesThroughTheRows(t *testing.T) {
 	h.start()
 	h.send(press("s")) // no sidebar: its own reverse selection would share the line
 	h.view()
-	if got := detailText(h.m, 72); got != "#11 a.one  first question" {
+	if got := detailText(h.m, 72); got != "#11 open first question" {
 		t.Fatalf("the first row is not selected: %q", got)
 	}
-	if !reversed(h.m, "#11 a.one") || reversed(h.m, "#12 a.two") {
+	if !reversed(h.m, "#11  a.one") || reversed(h.m, "#12  a.two") {
 		t.Errorf("the cursor row is not the reversed one")
 	}
 	h.send(press("n"))
-	if got := detailText(h.m, 72); got != "#12 a.two  second question" {
+	if got := detailText(h.m, 72); got != "#12 open second question" {
 		t.Fatalf("n did not move to the second row: %q", got)
 	}
-	if reversed(h.m, "#11 a.one") || !reversed(h.m, "#12 a.two") {
+	if reversed(h.m, "#11  a.one") || !reversed(h.m, "#12  a.two") {
 		t.Errorf("the reverse does not follow the cursor")
 	}
 	h.send(press("n"))
@@ -639,7 +639,7 @@ func TestRowCursorMovesThroughTheRows(t *testing.T) {
 		t.Errorf("the cursor left the last row: %q", got)
 	}
 	h.send(press("p"))
-	if got := detailText(h.m, 72); !strings.HasPrefix(got, "#12 a.two") {
+	if got := detailText(h.m, 72); !strings.HasPrefix(got, "#12 open") {
 		t.Errorf("p did not move back: %q", got)
 	}
 	if h.m.active != -1 {
@@ -678,8 +678,8 @@ func TestRowKeysMoveTheCursorNotTheProject(t *testing.T) {
 			h.start()
 			h.view()
 			for _, s := range []struct{ key, row string }{
-				{tc.next, "#12 a.two"}, {tc.next, "run-1  S01"}, {tc.next, "run-1  S01"},
-				{tc.prev, "#12 a.two"}, {tc.prev, "#11 a.one"}, {tc.prev, "#11 a.one"},
+				{tc.next, "#12 open"}, {tc.next, "run-1  S01"}, {tc.next, "run-1  S01"},
+				{tc.prev, "#12 open"}, {tc.prev, "#11 open"}, {tc.prev, "#11 open"},
 			} {
 				h.send(press(s.key))
 				if got := detailText(h.m, 72); !strings.HasPrefix(got, s.row) {
@@ -702,16 +702,16 @@ func TestNavigationKeysDoWhatTheHelpSays(t *testing.T) {
 	for _, tc := range []struct{ key, tab, row string }{
 		{"down", "Needs", "run-1  S01"},
 		{"j", "Needs", "run-1  S01"},
-		{"up", "Needs", "#11 a.one"},
-		{"k", "Needs", "#11 a.one"},
+		{"up", "Needs", "#11 open"},
+		{"k", "Needs", "#11 open"},
 		{"n", "Needs", "run-1  S01"},
-		{"p", "Needs", "#11 a.one"},
-		{"tab", "Needs", "#12 a.two"},
-		{"shift+tab", "Needs", "#12 a.two"},
-		{"right", "slicer", "#11 a.one"},
+		{"p", "Needs", "#11 open"},
+		{"tab", "Needs", "#12 open"},
+		{"shift+tab", "Needs", "#12 open"},
+		{"right", "slicer", "#11 open"},
 		{"2", "adjudicate", ""},
 		{"left", "agents", ""},
-		{"9", "Needs", "#12 a.two"},
+		{"9", "Needs", "#12 open"},
 	} {
 		t.Run(tc.key, func(t *testing.T) {
 			h := newHarness(t, four...)
@@ -719,8 +719,8 @@ func TestNavigationKeysDoWhatTheHelpSays(t *testing.T) {
 				relay("run-1", "2026-10-19T16:00:00Z", "S01")))
 			h.start()
 			h.m.cursor = 1 // setup without a row key, so each key is tested alone
-			if got := detailText(h.m, 72); !strings.HasPrefix(got, "#12 a.two") {
-				t.Fatalf("setup: the cursor row is %q, want #12 a.two", got)
+			if got := detailText(h.m, 72); !strings.HasPrefix(got, "#12 open") {
+				t.Fatalf("setup: the cursor row is %q, want #12 open", got)
 			}
 			h.send(press(tc.key))
 			if got := activeTab(t, h.view()); got != tc.tab {
@@ -744,7 +744,7 @@ func TestDownReachesAStoppedRunForEnter(t *testing.T) {
 	h.src.set(s)
 	h.start()
 	h.view()
-	if got := detailText(h.m, 72); !strings.HasPrefix(got, "#3 owner.choice") {
+	if got := detailText(h.m, 72); !strings.HasPrefix(got, "#3 open") {
 		t.Fatalf("the first row is %q, want the decision", got)
 	}
 	h.send(press("down"))
@@ -794,7 +794,7 @@ func TestEnterSelectsTheRowsProject(t *testing.T) {
 	if h.m.active != 1 {
 		t.Fatalf("enter selected project %d, want 1 (adjudicate)", h.m.active)
 	}
-	if got := detailText(h.m, 72); got != "#3 output.shape  Which JSON shape?" {
+	if got := detailText(h.m, 72); got != "#3 open Which JSON shape?" {
 		t.Errorf("the selected project's row is not under the cursor: %q", got)
 	}
 }
@@ -813,11 +813,11 @@ func TestSelectedRowShowsItsFullTextOnTheDetailLine(t *testing.T) {
 			t.Errorf("detail line is %d wide in a 60-column pane: %q", w, d)
 		}
 	}
-	if got := detailText(h.m, 60); got != "#11 ui.slicer-tui  "+long {
+	if got := detailText(h.m, 60); got != "#11 open "+long {
 		t.Errorf("the detail line is not the full text:\n got %q", got)
 	}
 	v := plainView(h.m)
-	if rowsWith(v, "? decision", "#11") != 1 {
+	if rowsWith(v, "?", "#11") != 1 {
 		t.Errorf("the row is not one line with its kind:\n%s", v)
 	}
 }
@@ -829,7 +829,7 @@ func TestRunRowCutsItsRestBeforeItsID(t *testing.T) {
 	h.src.set(snap(four[0], nil, nil, relay(id, "2026-10-19T15:42:00Z", "S01", "S02")))
 	h.start()
 	h.send(press("s"))
-	h.send(tea.WindowSizeMsg{Width: 100, Height: 30})
+	h.send(tea.WindowSizeMsg{Width: 80, Height: 30})
 	v := plainView(h.m)
 	row := ""
 	for _, l := range strings.Split(v, "\n") {
@@ -846,7 +846,7 @@ func TestRunRowCutsItsRestBeforeItsID(t *testing.T) {
 	if strings.Contains(row, "1h00m") {
 		t.Errorf("the elapsed time, cut last, is on the row: %q", row)
 	}
-	if got := detailText(h.m, 100); !strings.Contains(got, id+"  S01,S02  active, 2 of 6 steps running  1h00m") {
+	if got := detailText(h.m, 80); !strings.Contains(got, id+"  S01,S02  active, 2 of 6 steps running  1h00m") {
 		t.Errorf("the detail line lacks the full run text: %q", got)
 	}
 }
@@ -866,7 +866,7 @@ func TestCursorScrollsToTheSelectedRow(t *testing.T) {
 		h.send(press("n"))
 	}
 	v := plainView(h.m)
-	if rowsWith(v, "? decision", "question 15") != 1 {
+	if rowsWith(v, "?", "question 15") != 1 {
 		t.Fatalf("the selected row is not on screen:\n%s", v)
 	}
 	if !strings.Contains(v, "lines above") {
@@ -914,7 +914,7 @@ func TestNoSlicerProjectIsDimmedInTheSidebar(t *testing.T) {
 	h.start()
 	h.view()
 	row := sidebarRow(h.m, "  DataBall")
-	if plain := sgr.ReplaceAllString(row, ""); !strings.Contains(plain, "DataBall no slicer") {
+	if plain := sgr.ReplaceAllString(row, ""); !strings.Contains(compactSpaces(plain), "DataBall no slicer") {
 		t.Fatalf("sidebar row is not \"DataBall no slicer\": %q", plain)
 	}
 	if !dimmed(row, "DataBall") {
@@ -926,7 +926,7 @@ func TestNoSlicerProjectIsDimmedInTheSidebar(t *testing.T) {
 	runs := newHarness(t, four...)
 	runs.src.set(runsOnly)
 	runs.start()
-	if v := runs.view(); !strings.Contains(v, "DataBall no slicer") {
+	if v := runs.view(); !strings.Contains(compactSpaces(v), "DataBall no slicer") {
 		t.Errorf("a runs error alone is not setup:\n%s", v)
 	}
 	// Only the state error with the "no .slicer/ found" message is setup. The
@@ -983,7 +983,7 @@ func TestNoSlicerProjectAddsNothingToCountsOrBell(t *testing.T) {
 	if h.bells != 0 {
 		t.Fatalf("bells = %d: a project with no .slicer/ rang the bell", h.bells)
 	}
-	if v := h.view(); !strings.Contains(v, "DataBall no slicer") || strings.Contains(v, "DataBall 3") {
+	if v := h.view(); !strings.Contains(compactSpaces(v), "DataBall no slicer") || strings.Contains(compactSpaces(v), "DataBall 3") {
 		t.Errorf("the badge is not \"no slicer\":\n%s", v)
 	}
 }
@@ -1020,7 +1020,7 @@ func TestErrorsMergePerCodeAndPart(t *testing.T) {
 	if merged < 0 {
 		t.Fatalf("the merged row is missing:\n%s", v)
 	}
-	if n := rowsWith(v, "! error", "locked"); n != 1 {
+	if n := rowsWith(v, "!", "locked"); n != 1 {
 		t.Errorf("%d rows for the code, want 1:\n%s", n, v)
 	}
 	if running := strings.Index(v, "Running"); merged < strings.Index(v, "Needs you") || merged > running {
@@ -1076,7 +1076,7 @@ func TestNeedsYouListsDecisionsAndHeldItems(t *testing.T) {
 		[]slicercli.Item{item("S12", "Roadmap screen", "needs-owner"), item("S13", "Other", "later")}))
 	h.start()
 	v := h.view()
-	for _, want := range []string{"Needs you", "decision", "#11", "ui.slicer-tui", "Reuse slicer tui?", "held", "S12", "Roadmap screen", "needs-owner"} {
+	for _, want := range []string{"Needs you", "Decisions", "#11", "ui.slicer-tui", "Reuse slicer tui?", "Held", "S12", "Roadmap screen"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("view lacks %q:\n%s", want, v)
 		}
@@ -1094,11 +1094,11 @@ func TestBadgeCountsOpenRecordsPlusHeldItems(t *testing.T) {
 	h.src.set(snap(four[1], nil, nil))
 	h.start()
 	first := h.view()
-	if !strings.Contains(first, "slicer 3") {
+	if !strings.Contains(compactSpaces(first), "slicer 3") {
 		t.Errorf("slicer tab should count 2 open + 1 held = 3: %q", first)
 	}
-	if !strings.Contains(first, "adjudicate 0") {
-		t.Errorf("a zero badge is missing: %q", first)
+	if strings.Contains(compactSpaces(first), "adjudicate 0") {
+		t.Errorf("a zero badge is shown: %q", first)
 	}
 	if !strings.Contains(first, "Needs you") {
 		t.Errorf("header total: %q", first)
@@ -1110,10 +1110,10 @@ func TestRunningProjectIsMarkedWithAStar(t *testing.T) {
 	h.src.set(snap(four[0], nil, nil, relay("run-1", "2026-10-19T16:00:00Z", "S01")))
 	h.start()
 	first := h.view()
-	if !strings.Contains(first, "slicer 0*") && !strings.Contains(first, "slicer 0*") {
+	if !strings.Contains(compactSpaces(first), "slicer *") {
 		t.Errorf("no running marker on the slicer tab: %q", first)
 	}
-	if strings.Contains(first, "adjudicate*") {
+	if strings.Contains(compactSpaces(first), "adjudicate*") {
 		t.Errorf("marker on a project with no run: %q", first)
 	}
 }
@@ -1127,7 +1127,7 @@ func TestAFailedRunsCallKeepsTheRunningMarker(t *testing.T) {
 	h.src.set(failed)
 	refreshSlicer(h)
 	v := h.view()
-	if first := v; !strings.Contains(first, "slicer 0*") {
+	if first := v; !strings.Contains(compactSpaces(first), "slicer *") {
 		t.Errorf("the running marker went out while the runs call failed: %q", first)
 	}
 	if !strings.Contains(v, "timed out") {
@@ -1198,7 +1198,7 @@ func TestAFailedCallDoesNotChangeTheCountOrRingTheBell(t *testing.T) {
 	failed.Open = source.Result[[]adjcli.Record]{Err: errors.New("adj inbox: timed out")}
 	h.src.set(failed)
 	refreshSlicer(h)
-	if first := h.view(); !strings.Contains(first, "slicer 2") {
+	if first := h.view(); !strings.Contains(compactSpaces(first), "slicer 2") {
 		t.Errorf("count dropped while adj failed: %q", first)
 	}
 	withOpen(h, 2) // adj answers again with the same two
@@ -1218,7 +1218,7 @@ func TestAFailedItemsCallKeepsTheHeldCount(t *testing.T) {
 	failed.Items = source.Result[[]slicercli.Item]{Err: errors.New("slicer list: timed out")}
 	h.src.set(failed)
 	refreshSlicer(h)
-	if first := h.view(); !strings.Contains(first, "slicer 2") {
+	if first := h.view(); !strings.Contains(compactSpaces(first), "slicer 2") {
 		t.Errorf("count dropped while slicer list failed: %q", first)
 	}
 	h.src.set(snap(four[0], nil, held))
@@ -1281,10 +1281,10 @@ func TestARefreshInFlightMarksTheLoadedProject(t *testing.T) {
 	}
 	held := h.sendHeld(press("r")) // slicer's refresh is out and has not returned
 	v = h.view()
-	if n := rowsWith(v, "A question", "~slicer"); n != 1 {
+	if n := rowsWith(v, "A question"); n != 2 {
 		t.Errorf("the project's row is not marked (%d):\n%s", n, v)
 	}
-	if first := v; !strings.Contains(first, "slicer 1~") {
+	if first := v; !strings.Contains(compactSpaces(first), "slicer 1~") {
 		t.Errorf("tab line: %q", first)
 	}
 	if !strings.Contains(v, "pending 1") {
@@ -1414,7 +1414,7 @@ func TestLayoutHasTabsViewBarBodyAndStatusLine(t *testing.T) {
 			t.Errorf("line %d is %d wide: %q", i, w, l)
 		}
 	}
-	if !strings.Contains(strings.Join(lines, "\n"), "slicer 0") || !strings.Contains(lines[0], "?help") {
+	if !strings.Contains(strings.Join(lines, "\n"), "slicer") || !strings.Contains(lines[0], "?help") {
 		t.Errorf("tab line: %q", lines[0])
 	}
 	for _, v := range []string{"Overview", "Questions", "Waves", "Roadmap", "Decisions"} {
@@ -1426,7 +1426,7 @@ func TestLayoutHasTabsViewBarBodyAndStatusLine(t *testing.T) {
 		t.Errorf("tab line lacks the total: %q", lines[0])
 	}
 	status := lines[29]
-	for _, want := range []string{"4 projects", "refreshed 16:42:00", "pending 0"} {
+	for _, want := range []string{"4 projects", "refreshed 16:42:00"} {
 		if !strings.Contains(status, want) {
 			t.Errorf("status line lacks %q: %q", want, status)
 		}
@@ -1516,5 +1516,329 @@ func TestHelpMarksTheColumnsThatDoNotFit(t *testing.T) {
 	h.send(press("?"))
 	if v := plainView(h.m); !strings.Contains(v, "...") || !strings.Contains(v, "next project") {
 		t.Errorf("a 40-column help view should keep the first column and mark the rest:\n%s", v)
+	}
+}
+
+// S84 exercises layout independently of screen clipping and ANSI styles.
+func layoutModel(t *testing.T) *Model {
+	t.Helper()
+	h := newHarness(t, proj("alpha", true), proj("beta", true), proj("unused-long-project", false))
+	a := snap(h.m.projects[0].reg, []adjcli.Record{openRec(1, "short", "First title"), openRec(22, "longer.key", "Second title")}, []slicercli.Item{item("S9", "Held title", "needs-owner")})
+	a.EngineRuns = []source.EngineRun{{ID: "stop-id", State: "stopped"}, {ID: "pause-id", State: "paused"}, {ID: "approve-id", State: "awaiting-approval"}, {ID: "removed-id", State: "stopped", Unavailable: true}}
+	a.Items.Err = errors.New("items broke")
+	h.src.set(a)
+	h.src.set(snap(h.m.projects[1].reg, []adjcli.Record{openRec(3, "mid", "Third title")}, nil))
+	h.start()
+	// A first reply still pending belongs to Errors.
+	h.m.projects[2].loaded = false
+	return h.m
+}
+
+func TestNeedsYouGroupsByKind(t *testing.T) {
+	m := layoutModel(t)
+	body := sgr.ReplaceAllString(strings.Join(m.overview(100).body, "\n"), "")
+	last := -1
+	for _, heading := range []string{"Decisions 3", "Held 1", "Stopped 1", "Paused 1", "Approve 1", "Errors 3"} {
+		at := strings.Index(body, heading)
+		if at < 0 || at <= last {
+			t.Errorf("missing or unordered group %q", heading)
+		}
+		last = at
+	}
+	needs, _ := m.rows()
+	if len(needs) != 10 {
+		t.Fatalf("got %d needs rows, want 10", len(needs))
+	}
+	want := []string{"?", "?", "?", "#", "x", "=", "+", "!", "!", "~"}
+	for i, r := range needs {
+		if i < len(want) && !strings.HasPrefix(r.kind, want[i]) {
+			t.Errorf("cursor row %d kind %q, want %q", i, r.kind, want[i])
+		}
+	}
+	for _, fragment := range []string{"?", "#", "x", "=", "+", "!", "~", "removed-id", "items broke", "waiting for the first reply"} {
+		if !strings.Contains(body, fragment) {
+			t.Errorf("missing %q", fragment)
+		}
+	}
+	m.active = 1
+	body = strings.Join(m.overview(100).body, "\n")
+	if strings.Contains(body, "Held 0") || strings.Contains(body, "Errors") || strings.Contains(body, "Stopped") {
+		t.Error("empty groups rendered")
+	}
+}
+
+func TestSectionHeadingsCarryCounts(t *testing.T) {
+	m := layoutModel(t)
+	for i := 0; i < 5; i++ {
+		m.projects[1].snap.Open.Value = append(m.projects[1].snap.Open.Value, openRec(30+i, "extra", "extra"))
+	}
+	body := strings.Join(m.overview(100).body, "\n")
+	for _, want := range []string{"Needs you 15", "Running 1"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("missing %q", want)
+		}
+	}
+	m.projects[2].loaded = true
+	if !strings.Contains(strings.Join(m.overview(100).body, "\n"), "Running 0") {
+		t.Error("missing Running 0")
+	}
+}
+
+func TestProjectColumnOnlyOnAllProjects(t *testing.T) {
+	m := layoutModel(t)
+	m.projects[2].loaded = true
+	m.projects[2].snap.EngineRuns = []source.EngineRun{{ID: "running-id", State: "implement"}, {ID: "ready-id", Item: "SReady", State: "committed", Branch: "ready"}}
+	body := sgr.ReplaceAllString(strings.Join(m.overview(140).body, "\n"), "")
+	for _, id := range []string{"#1", "running-id", "SReady"} {
+		wantName := "alpha"
+		if id != "#1" {
+			wantName = "unused-long-project"
+		}
+		if rowsWith(body, wantName, id) != 1 {
+			t.Errorf("aggregate row %s lost project %s", id, wantName)
+		}
+	}
+	if !strings.Contains(body, "alpha                #1") {
+		t.Error("project width excludes projects with Running or Ready rows")
+	}
+	lines := strings.Split(body, "\n")
+	for i, line := range lines {
+		if strings.Contains(line, "SReady") && i+1 < len(lines) && strings.Index(lines[i+1], "slicer land") != strings.Index(line, "SReady") {
+			t.Error("Ready command does not hang under text column")
+		}
+	}
+	m.Update(press("r"))
+	body = sgr.ReplaceAllString(strings.Join(m.overview(140).body, "\n"), "")
+	if rowsWith(body, "~unused-long-project", "running-id") != 1 {
+		t.Error("Running refresh mark missing")
+	}
+	for _, active := range []int{0, 2} {
+		m.active = active
+		body = sgr.ReplaceAllString(strings.Join(m.overview(140).body, "\n"), "")
+		if strings.Contains(body, m.projects[active].reg.Name) {
+			t.Error("selected project repeats in rows")
+		}
+	}
+}
+
+func TestDecisionTitlesAlign(t *testing.T) {
+	m := layoutModel(t)
+	body := sgr.ReplaceAllString(strings.Join(m.overview(100).body, "\n"), "")
+	first, second := -1, -2
+	for _, line := range strings.Split(body, "\n") {
+		if strings.Contains(line, "First title") {
+			first = strings.Index(line, "First title")
+		}
+		if strings.Contains(line, "Second title") {
+			second = strings.Index(line, "Second title")
+		}
+	}
+	if first < 0 || first != second {
+		t.Fatalf("title columns %d and %d differ", first, second)
+	}
+	m.active = 0
+	m.projects[0].snap.Open.Value[0].Key = strings.Repeat("k", 80)
+	found := false
+	for _, line := range m.overview(60).body {
+		if strings.Contains(line, "First title") {
+			found = true
+		}
+		if strings.Contains(line, "First title") && (!strings.Contains(line, "...") || lipgloss.Width(line) > 60) {
+			t.Error("long key was not capped and cut")
+		}
+	}
+	if !found {
+		t.Error("long key displaced the title")
+	}
+}
+
+func TestHeldRowHasNoFlagSuffix(t *testing.T) {
+	m := layoutModel(t)
+	if strings.Contains(strings.Join(m.overview(100).body, "\n"), "(needs-owner)") {
+		t.Error("redundant held flag suffix")
+	}
+}
+func TestCursorBarFillsThePane(t *testing.T) {
+	m := layoutModel(t)
+	ov := m.overview(100)
+	if got := lipgloss.Width(ov.body[ov.sel]); got != 100 {
+		t.Fatalf("cursor width %d, want 100", got)
+	}
+}
+func TestDecisionDetailShowsOptions(t *testing.T) {
+	m := layoutModel(t)
+	m.cfg.ASCII = true
+	r := &m.projects[0].snap.Open.Value[0]
+	r.Options = []adjcli.Option{{Label: "one"}, {Label: "two"}}
+	r.Recommendation = &adjcli.Recommendation{Label: "two"}
+	needs, _ := m.rows()
+	for i, row := range needs {
+		if strings.Contains(row.text, "First title") {
+			m.cursor = i
+			break
+		}
+	}
+	detail := strings.Join(m.overview(70).detail, "\n")
+	if !strings.Contains(detail, "#1 open | 2 options | recommends two") || !strings.Contains(detail, "First title") || strings.Contains(detail, "short") {
+		t.Fatalf("decision detail lacks metadata: %s", detail)
+	}
+}
+func TestSidebarHidesZeroCounts(t *testing.T) {
+	m := layoutModel(t)
+	m.projects[2].loaded = true
+	lines := strings.Split(sgr.ReplaceAllString(strings.Join(m.sidebar(28, 24), "\n"), ""), "\n")
+	needs, _ := m.rows()
+	total := len(needs)
+	for _, line := range lines {
+		if strings.Contains(line, "unused-long-project") && strings.Contains(line, "0") {
+			t.Error("zero badge shown")
+		}
+		if strings.Contains(line, "Needs you") && !strings.Contains(line, fmt.Sprint(total)) {
+			t.Error("Needs you total missing")
+		}
+		if strings.Contains(line, "alpha") && strings.Index(line, fmt.Sprint(m.projects[0].needs())) != 25 {
+			t.Error("badge not right aligned in digit column")
+		}
+	}
+}
+func TestRulesFallBackToASCII(t *testing.T) {
+	m := layoutModel(t)
+	for _, ascii := range []bool{false, true} {
+		m.cfg.ASCII = ascii
+		v := plainView(m)
+		vertical, horizontal := "│", "─"
+		if ascii {
+			vertical, horizontal = "|", "-"
+		}
+		if !strings.Contains(v, vertical) || !strings.Contains(v, strings.Repeat(horizontal, 20)) {
+			t.Errorf("ASCII=%v missing rule glyphs", ascii)
+		}
+		ov := m.overview(60)
+		if len(ov.detail) > 0 {
+			lines := strings.Split(v, "\n")
+			if !strings.Contains(lines[len(lines)-len(ov.detail)-3], strings.Repeat(horizontal, 20)) {
+				t.Errorf("ASCII=%v missing rule above detail", ascii)
+			}
+		}
+	}
+}
+func TestStatusLineHidesPendingAtZero(t *testing.T) {
+	m := layoutModel(t)
+	if strings.Contains(m.statusLine(100), "pending") {
+		t.Error("pending shown at zero")
+	}
+	m.Update(press("r"))
+	if !strings.Contains(m.statusLine(100), "pending") {
+		t.Error("nonzero pending hidden")
+	}
+}
+
+func compactSpaces(s string) string { return strings.Join(strings.Fields(s), " ") }
+
+func TestLongDetailKeepsStatusLine(t *testing.T) {
+	for _, kind := range []string{"decision", "pane", "overview-status", "roadmap-status", "questions-pane", "welcome-status"} {
+		t.Run(kind, func(t *testing.T) {
+			m := layoutModel(t)
+			m.width, m.height = 80, 12
+			long := strings.Repeat("long detail ", 200)
+			switch kind {
+			case "decision":
+				m.projects[0].snap.Open.Value[0].Title = long
+			case "pane", "questions-pane":
+				h := paneHarness(t, "paused", "question")
+				m = h.m
+				m.width, m.height = 80, 12
+				m.actionStatus = long
+				if kind == "questions-pane" {
+					m.view = questionsView
+				}
+			case "overview-status":
+				m.actionStatus = long
+			case "roadmap-status":
+				m.active = 0
+				m.view = roadmapView
+				m.actionStatus = long
+			case "welcome-status":
+				m = newHarness(t).m
+				m.width, m.height = 80, 12
+				m.actionStatus = long
+			}
+			lines := strings.Split(plainView(m), "\n")
+			if len(lines) != 12 || !strings.HasSuffix(lines[len(lines)-1], sgr.ReplaceAllString(m.statusLine(60), "")) {
+				t.Errorf("last line is not status: %q", lines[len(lines)-1])
+			}
+		})
+	}
+}
+
+func TestSidebarAggregateCountIncludesErrorsAndPending(t *testing.T) {
+	m := layoutModel(t)
+	needs, _ := m.rows()
+	want := fmt.Sprint(len(needs))
+	for _, active := range []int{-1, 0} {
+		m.active = active
+		line := sgr.ReplaceAllString(m.sidebar(28, 24)[1], "")
+		if strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(strings.TrimPrefix(line[2:], "Needs you")), "│")) != want {
+			t.Errorf("sidebar aggregate count differs from heading: %q, want %s", line, want)
+		}
+	}
+}
+
+func TestSidebarBadgeMarkerColumns(t *testing.T) {
+	m := layoutModel(t)
+	m.projects[2].loaded = true
+	for _, refresh := range []bool{false, true} {
+		m.projects[0].running = true
+		if refresh {
+			m.Update(press("r"))
+		}
+		lines := m.sidebar(28, 24)
+		for _, line := range lines {
+			plain := sgr.ReplaceAllString(line, "")
+			if !strings.Contains(plain, "alpha") {
+				continue
+			}
+			r := []rune(plain)
+			mark := '*'
+			if refresh {
+				mark = '~'
+			}
+			if r[25] != []rune(fmt.Sprint(m.projects[0].needs()))[0] || r[26] != mark {
+				t.Errorf("digits and marker not in reserved columns: %q", plain)
+			}
+		}
+	}
+}
+
+func TestDecisionDetailOmitsEmptyOptionsAndUsesThemeSeparator(t *testing.T) {
+	m := layoutModel(t)
+	r := &m.projects[0].snap.Open.Value[0]
+	r.Recommendation = &adjcli.Recommendation{Label: "one"}
+	for _, ascii := range []bool{false, true} {
+		m.cfg.ASCII = ascii
+		detail := strings.Join(m.overview(100).detail, "\n")
+		separator := "│"
+		if ascii {
+			separator = "|"
+		}
+		if strings.Contains(detail, "options") || !strings.Contains(detail, "#1 open "+separator+" recommends one") {
+			t.Errorf("empty options or inconsistent separator: %q", detail)
+		}
+	}
+}
+
+func TestEmptyDetailHasNoBandBetweenRules(t *testing.T) {
+	h := newHarness(t, proj("empty", false))
+	h.start()
+	h.m.width, h.m.height = 80, 12
+	lines := strings.Split(plainView(h.m), "\n")
+	rules := 0
+	for _, line := range lines {
+		if strings.Contains(line, strings.Repeat("─", 20)) {
+			rules++
+		}
+	}
+	if rules != 2 {
+		t.Errorf("empty detail renders %d rules, want header and status only", rules)
 	}
 }

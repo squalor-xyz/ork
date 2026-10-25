@@ -1,30 +1,30 @@
-[1mork[m  ?help                 | [90mOverview | Questions | Waves | Roadmap | Decisions[m
-                           |[90m------------------------------------------------------------------------[m
-                           |  [1;36mWelcome[m
-                           |
-                           |  No projects yet. Press a to add one
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |[90m------------------------------------------------------------------------[m
-                           | 0 projects | refreshed never | pending 0
+[1mork[m  ?help                 │ [90mOverview │ Questions │ Waves │ Roadmap │ Decisions[m
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │  [1;36mWelcome[m
+                           │
+                           │  No projects yet. Press a to add one
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ 0 projects | refreshed never

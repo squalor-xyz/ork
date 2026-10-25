@@ -250,7 +250,7 @@ func TestNoColorSelectsTheMonochromeTheme(t *testing.T) {
 
 func TestEveryColouredStateHasAWord(t *testing.T) {
 	v := sgr.ReplaceAllString(goldenModel(NewTheme(false), 100, 30).View().Content, "")
-	for _, word := range []string{"decision", "held", "error", "pending", "started elsewhere"} {
+	for _, word := range []string{"Decisions", "Held", "Errors", "~", "started elsewhere"} {
 		if !strings.Contains(v, word) {
 			t.Errorf("no word %q for its state:\n%s", word, v)
 		}

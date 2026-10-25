@@ -218,7 +218,7 @@ func TestWelcomeShowsIdleViewsAndNoSidebarSelection(t *testing.T) {
 		t.Run(fmt.Sprint(mono), func(t *testing.T) {
 			h, _ := welcomeHarness(t)
 			h.m.cfg.Theme = NewTheme(mono)
-			want := " " + h.m.cfg.Theme.ViewIdle.Render("Overview | Questions | Waves | Roadmap | Decisions")
+			want := " " + h.m.cfg.Theme.ViewIdle.Render("Overview │ Questions │ Waves │ Roadmap │ Decisions")
 			if got := h.m.viewBar(); got != want {
 				t.Errorf("view bar should be idle: got %q want %q", got, want)
 			}

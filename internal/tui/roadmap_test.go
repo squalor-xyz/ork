@@ -43,8 +43,8 @@ func roadmapHarness(t *testing.T) *harness {
 func TestRoadmapListsItemsInSlicerOrder(t *testing.T) {
 	h := roadmapHarness(t)
 	v := h.view()
-	if rowsWith(v, "ready", "S90", "Ninety", "open", "M", "2") != 1 ||
-		rowsWith(v, "not ready", "S02", "Two", "open", "S", "1") != 1 ||
+	if rowsWith(v, "·", "S90", "Ninety", "M2") != 1 ||
+		rowsWith(v, "S02", "Two", "S1") != 1 ||
 		strings.Index(v, "S90") >= strings.Index(v, "S02") {
 		t.Fatalf("missing ordered roadmap rows and fields:\n%s", v)
 	}
@@ -57,11 +57,11 @@ func TestRoadmapReadinessFromDeps(t *testing.T) {
 	h := roadmapHarness(t)
 	v := h.view()
 	for _, id := range []string{"S02", "S03", "S04"} {
-		if rowsWith(v, id, "not ready") != 1 {
+		if rowsWith(v, id) != 1 || rowsWith(v, id, "·") != 0 {
 			t.Errorf("%s must not be ready:\n%s", id, v)
 		}
 	}
-	if rowsWith(v, "S90", "ready") != 1 || strings.Contains(v, "SECRET-CLAIM") || strings.Contains(v, "elsewhere") {
+	if rowsWith(v, "S90", "·") != 1 || strings.Contains(v, "SECRET-CLAIM") || strings.Contains(v, "elsewhere") {
 		t.Fatalf("readiness/claim:\n%s", v)
 	}
 	// A failed deps call must not use its retained value as readiness.
@@ -69,7 +69,7 @@ func TestRoadmapReadinessFromDeps(t *testing.T) {
 	s.Deps.Err = errors.New("deps broke")
 	h.m.projects[0].snap = s
 	v = h.view()
-	if rowsWith(v, "S90", "?") != 1 || !strings.Contains(v, "deps broke") || rowsWith(v, "S90", "ready") != 0 {
+	if rowsWith(v, "S90", "?") != 1 || !strings.Contains(v, "deps broke") || rowsWith(v, "S90", "·") != 0 {
 		t.Fatalf("unknown deps:\n%s", v)
 	}
 }
@@ -339,15 +339,73 @@ func TestRoadmapUnusedSizeAndEffortShowDashes(t *testing.T) {
 	h := roadmapHarness(t)
 	v := h.view()
 	for _, id := range []string{"S03", "S04"} {
-		if rowsWith(v, id, "  -  effort -") != 1 {
+		if rowsWith(v, id, "--") != 1 {
 			t.Errorf("%s must show unused size and effort as dashes:\n%s", id, v)
 		}
 	}
-	if rowsWith(v, "S90", "open  M  effort 2") != 1 || rowsWith(v, "S02", "open  S  effort 1") != 1 {
+	if rowsWith(v, "S90", "M2") != 1 || rowsWith(v, "S02", "S1") != 1 {
 		t.Fatalf("used size and effort changed:\n%s", v)
 	}
 }
 
 func (l *roadmapLive) AnswerAction(ctx context.Context, a daemon.RunAction) (string, error) {
 	return "", l.Answer(ctx, a.Run, a.Text)
+}
+
+func TestRoadmapHeaderCarriesCounts(t *testing.T) {
+	h := roadmapHarness(t)
+	body := strings.Join(h.m.roadmap(80).body, "\n")
+	if !strings.Contains(body, "Roadmap  1 ready of 4, 3 open, 1 other") {
+		t.Fatal("mixed status counts missing")
+	}
+	h.m.projects[0].snap.Items.Value[2].Status = "open"
+	if !strings.Contains(strings.Join(h.m.roadmap(80).body, "\n"), "Roadmap  2 ready of 4, all open") {
+		t.Fatal("all-open counts missing")
+	}
+}
+func TestRoadmapSizeEffortColumn(t *testing.T) {
+	h := roadmapHarness(t)
+	ov := h.m.roadmap(60)
+	for _, line := range ov.body {
+		plain := sgr.ReplaceAllString(line, "")
+		if strings.Contains(plain, "S90") || strings.Contains(plain, "S02") {
+			if lipgloss.Width(line) != 60 || !(strings.HasSuffix(plain, "M2") || strings.HasSuffix(plain, "S1")) {
+				t.Errorf("compact right column missing: %q", plain)
+			}
+			if strings.Contains(plain, "open") || strings.Contains(plain, "effort") || strings.Contains(plain, "ready") {
+				t.Errorf("repeated metadata: %q", plain)
+			}
+		}
+	}
+	h.m.roadmapCursor = 1
+	if !strings.Contains(strings.Join(h.m.roadmap(60).body, "\n"), h.m.cfg.Theme.Dim.Render("·")) {
+		t.Error("ready marker is not dim")
+	}
+	if !strings.Contains(sgr.ReplaceAllString(strings.Join(ov.body, "\n"), ""), "· S90") {
+		t.Error("ready marker missing")
+	}
+}
+
+func TestRoadmapASCIIAndUnbrokenCursor(t *testing.T) {
+	for _, ascii := range []bool{false, true} {
+		for _, mono := range []bool{false, true} {
+			h := roadmapHarness(t)
+			h.m.cfg.ASCII = ascii
+			h.m.cfg.Theme = NewTheme(mono)
+			ov := h.m.roadmap(60)
+			if ascii {
+				for _, r := range sgr.ReplaceAllString(strings.Join(ov.body, "\n"), "") {
+					if r > 127 {
+						t.Errorf("ASCII roadmap has non-ASCII glyph %q", r)
+						break
+					}
+				}
+			}
+			line := ov.body[ov.sel]
+			plain := sgr.ReplaceAllString(line, "")
+			if line != h.m.cfg.Theme.TabActive.Render(plain) {
+				t.Errorf("cursor bar interrupted by nested marker style: %q", line)
+			}
+		}
+	}
 }

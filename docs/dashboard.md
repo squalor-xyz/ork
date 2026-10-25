@@ -52,13 +52,25 @@ on Welcome in this slice.
 
 ```
 ork dev  ?help       | Overview | Questions | Waves | Roadmap | Decisions
-> Needs you          | --------------------------------------
-  slicer 2*          | Needs you
-  adjudicate 1       |   active Overview rows
-  DataBall 0         |
-  agents 0           | --------------------------------------
-                     | 4 projects | refreshed 16:42:00 | pending 0
+> Needs you       3  | --------------------------------------
+  slicer          2* | Needs you 3
+  adjudicate      1  |   Decisions 2
+  DataBall           |   ? slicer      #11  ui.layout  Group rows?
+  agents             |   ? adjudicate  #3   out.shape  JSON shape?
+                     |   Held 1
+                     |   # slicer      S12  Roadmap screen
+                     | Running 0
+                     |   nothing running
+                     | --------------------------------------
+                     |   #11 open | 2 options | recommends grouped
+                     |   Group rows?
+                     | --------------------------------------
+                     | 4 projects | refreshed 16:42:00
 ```
+
+The sketch uses ASCII rules. The view bar, sidebar edge and horizontal rules
+use box-drawing lines when `cfg.ASCII` is false, including the rule above the
+detail. The CLI already resolves that setting with `brand.ASCIILocale`.
 
 The header shows the version next to ork (ui.version-mark, adj #130).
 Development builds show the first seven revision characters, with `+` for a
@@ -83,7 +95,12 @@ all-projects Overview. A project selection limits its rows to that project.
 The view bar stays at the top of the main pane. Overview, Questions, Waves,
 Roadmap and Decisions are selectable.
 
-Each project row shows its needs-you count (open adj records, slicer
+"Needs you" shows the aggregate Needs you row count, including error and
+pending rows, matching the main heading (`ui.overview-layout`, adj 149).
+Per-project counts keep their existing meaning and hide zero counts.
+Badge numbers align in a digit column; the next column reserves `*` for a
+running project or `~` for a refresh. During refresh, `~` takes precedence.
+Each project row shows its nonzero needs-you count (open adj records, slicer
 items flagged `needs-owner`, and engine runs awaiting approval, paused, or
 stopped and neither superseded nor dismissed). A stopped run stops counting
 once a newer engine run exists for the same slice or the owner dismisses it
@@ -116,9 +133,13 @@ selected project, or all projects on "Needs you". `?` shows keys and `q` quits.
 The Overview has a row cursor (`ui.overview-cursor`). `down`/`j` and `up`/`k`
 move it to the next and previous row, and so do `n` and `p`. It goes through
 "Needs you", Running and Ready, and it stops at the first and last row. The row
-under the cursor is drawn reversed. Its full text is on a detail line below the
-rows, wrapped at the pane's width so no word is cut. `enter` opens a run's
-detail pane; on decision and held-item rows it selects the row's project
+under the cursor is drawn reversed across the pane width. A rule separates
+the rows from its detail. Decisions show status, a nonzero option count and
+the recommended label when present, then the wrapped title. Metadata uses
+the theme's vertical rule as its separator. An empty detail block adds no
+extra rule or band. Detail height reserves room for the status line. Other rows show
+their full text, wrapped at the pane's width so no word is cut. `enter` opens
+a run's detail pane; on decision and held-item rows it selects the row's project
 (`ui.answer-pane-keys`). Project keys and `1`-`9` select a project and
 put the cursor on its first row. Rows are cut with `...` to one line. A run's ID
 is never cut: the rest of the run's text is cut first. The rows scroll to keep
@@ -127,7 +148,8 @@ are hidden.
 
 The terminal bell rings when a project's count rises past an earlier good
 reading (`ui.notify`). The status line shows project count, last refresh,
-and pending count. Daemon uptime and token charts await their slices.
+and the pending count only when it is nonzero. Daemon uptime and token
+charts await their slices.
 
 The TUI reads the daemon's shared snapshot and listens for change notices
 (`dash.cache`). The daemon starts when none answers. Each snapshot and
@@ -142,6 +164,19 @@ other projects every 30 s. On "Needs you", all projects poll every 30 s. Goals
 and decided records refresh every 5 min or on HEAD changes and manual refresh. `NO_COLOR` selects the monochrome theme.
 
 ## Overview (all projects)
+
+Needs you and Running headings carry row counts. Needs you groups rows as
+Decisions, Held, Stopped, Paused, Approve and Errors, omitting empty groups
+(`ui.overview-layout`, adj 149). Errors includes failed calls, removed runs
+and projects awaiting their first reply. Cursor order follows these groups,
+keeping the existing order within each group. Each row retains its kind
+symbol (`?`, `#`, `x`, `=`, `+`, `!` or `~`). Decision IDs, keys and titles
+align in separate columns; keys use at most a third of the pane and longer
+keys end in `...`. Held rows omit the redundant flag suffix. On the all-projects view,
+Needs you, Running, Recent and Ready rows show a project column sized from
+projects with any row. Selecting one project hides that column. A loaded
+project refreshing shows `~` before its name. Ready commands hang beneath
+the text column, falling back to a shorter indent when needed to fit.
 
 1. **Needs you:**
    - slices awaiting approval after PASS;
@@ -499,9 +534,13 @@ elsewhere" marker and no actions (`dash.external-runs`).
 ## Roadmap (one project)
 
 Goals head the screen. The queue follows `slicer list` order and shows each
-item's id, short title (or title), readiness, status, size and effort,
-and the selected slice in a detail pane. Readiness comes from status and
-dependencies only. An item is ready when `slicer deps` includes it, its status
+item's id and short title (or title), with size and effort combined as `S1`
+in a right-aligned column. A dim `·` marks ready items (`*` in ASCII mode). On the cursor row the
+marker shares the row's uninterrupted reverse style. Missing size and
+effort show as `--`. The heading carries the counts, for example
+`Roadmap  33 ready of 41, all open`; mixed statuses replace `all open` with
+`N open, M other`. The selected slice opens in a detail pane. Readiness
+comes from status and dependencies only. An item is ready when `slicer deps` includes it, its status
 is open and it has a slice. No claim is shown (record 140, `roadmap.readiness`,
 decided 2026-10-21). The data comes from
 `slicer list --json --lean`, `slicer show ID --json --lean` and

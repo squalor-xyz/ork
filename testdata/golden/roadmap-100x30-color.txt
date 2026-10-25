@@ -1,30 +1,30 @@
-[1mork[m  ?help                 | Overview[90m | [mQuestions[90m | [mWaves[90m | [m[1;36mRoadmap[m[90m | [mDecisions
-  Needs you                |[90m------------------------------------------------------------------------[m
-[1;7;97;44m> ork 0[m                    |[1;36mGoals[m
-  other 0                  |  Keep the owner informed
-                           |  C01 Visible progress
-                           |  Across projects
-                           |
-                           |[1;36mRoadmap[m
-                           |[1;7;97;44m  ready     S90  Ninety  open  M  effort 2[m
-                           |  not ready S02  Two  open  S  effort 1
-                           |  not ready S03  Started  started  -  effort -
-                           |  not ready S04  Unspecified  open  -  effort -
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |[90m------------------------------------------------------------------------[m
-                           | 2 projects | refreshed 16:42:00 | pending 0
+[1mork[m  ?help                 │ Overview[90m │ [mQuestions[90m │ [mWaves[90m │ [m[1;36mRoadmap[m[90m │ [mDecisions
+  Needs you              0 │[90m────────────────────────────────────────────────────────────────────────[m
+[1;7;97;44m> ork                      [m│[1;36mGoals[m
+  other                    │  Keep the owner informed
+                           │  C01 Visible progress
+                           │  Across projects
+                           │
+                           │[1;36mRoadmap  1 ready of 4, 3 open, 1 other[m
+                           │[1;7;97;44m  · S90  Ninety                                                       M2[m
+                           │  [90m [m S02  Two                                                          S1
+                           │  [90m [m S03  Started                                                      --
+                           │  [90m [m S04  Unspecified                                                  --
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ 2 projects | refreshed 16:42:00

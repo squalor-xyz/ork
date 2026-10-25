@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-113 items · — 42 · done 65 · parked 1 · retired 5
+113 items · — 41 · done 66 · parked 1 · retired 5
 
 ## v1.1
 
@@ -151,7 +151,7 @@
 | 94 | [S81](slices/S81.md) | Daemon reads for the Waves screen: wave.suggest and wave.overlap | S | 1 |  |  | done |
 | 95 | [S82](slices/S82.md) | Waves screen: suggested list, tick items, overlap warnings, launch a wave | M | 2 |  |  | done |
 | 96 | [S83](slices/S83.md) | Waves screen: edit a slice's lineup and budgets before launch | M | 2 |  |  | done |
-| 97 | [S84](slices/S84.md) | Overview layout pass | M | 2 |  |  | — |
+| 97 | [S84](slices/S84.md) | Overview layout pass | M | 2 |  |  | done |
 | 98 | [S85](slices/S85.md) | Keys and hint bar | M | 2 |  |  | — |
 | 99 | [S86](slices/S86.md) | Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default | S | 1 |  | discovered from S83 | — |
 | 100 | [S87](slices/S87.md) | Relay friction: Codex brief sets GOCACHE under .scratch; no ui role in relay-run; spec names data source | S | 1 |  | discovered from S83 | — |

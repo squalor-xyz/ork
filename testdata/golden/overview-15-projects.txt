@@ -1,24 +1,24 @@
-[1mork[m  ?help         | [1mOverview[m[2m | [mQuestions[2m | [mWaves[2m | [mRoadmap[2m | [mDecisions
-[1;7m> Needs you[m        |[2m------------------------------------------------------------[m
-  project-01 0     |[1mNeeds you[m
-  project-02 0     |  [2mnothing needs you[m
-  project-03 0     |
-  project-04 0     |[1mRunning[m
-  project-05 0     |  [2mnothing running[m
-  project-06 0     |
-  project-07 0     |[1mRecent[m
-  project-08 0     |  [2mnone[m
-  project-09 0     |
-  project-10 0     |[1mReady to land[m
-  project-11 0     |  [2mnone[m
-  project-12 0     |
-  project-13 0     |
-  project-14 0     |
-  project-15 0     |
-                   |
-                   |
-                   |
-                   |
-                   |
-                   |[2m------------------------------------------------------------[m
-                   | 15 projects | refreshed 16:42:00 | pending 0
+[1mork[m  ?help         │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1;7m> Needs you      0 [m│[2m────────────────────────────────────────────────────────────[m
+  project-01       │[1mNeeds you 0[m
+  project-02       │  [2mnothing needs you[m
+  project-03       │
+  project-04       │[1mRunning 0[m
+  project-05       │  [2mnothing running[m
+  project-06       │
+  project-07       │[1mRecent[m
+  project-08       │  [2mnone[m
+  project-09       │
+  project-10       │[1mReady to land[m
+  project-11       │  [2mnone[m
+  project-12       │
+  project-13       │
+  project-14       │
+  project-15       │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ 15 projects | refreshed 16:42:00

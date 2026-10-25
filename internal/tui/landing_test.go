@@ -39,8 +39,8 @@ func TestReadyToLandListsCommittedRuns(t *testing.T) {
 	found := false
 	for i, line := range lines {
 		if strings.Contains(line, "S09") && strings.Contains(line, "s09") && !strings.Contains(line, "slicer land") && i+1 < len(lines) {
-			_, rowLine, _ := strings.Cut(line, "|")
-			_, commandLine, _ := strings.Cut(lines[i+1], "|") // remove the rendered sidebar
+			_, rowLine, _ := strings.Cut(line, "│")
+			_, commandLine, _ := strings.Cut(lines[i+1], "│") // remove the rendered sidebar
 			prefix := strings.Repeat(" ", strings.Index(rowLine, "S09"))
 			if len(prefix)+len(command) > 60 {
 				prefix = "      "
@@ -87,7 +87,7 @@ func TestReadyToLandEmptyReadsNone(t *testing.T) {
 func TestReadyToLandShowsSliceRenderAfterAMerge(t *testing.T) {
 	h := landingHarness(t, `[{"item":"S09","state":"committed","branch":"s09","merged":true}]`)
 	v := landingText(h)
-	for _, want := range []string{`slicer land 'S09' --branch 's09' --note 'Landed s09'`, "S09  s09  merged", "\n" + strings.Repeat(" ", 11) + "slicer render"} {
+	for _, want := range []string{`slicer land 'S09' --branch 's09' --note 'Landed s09'`, "S09  s09  merged", "\n" + strings.Repeat(" ", strings.Index(v, "S09")) + "slicer render"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("missing %q:\n%s", want, v)
 		}
@@ -147,9 +147,13 @@ func TestReadyToLandMarksClippedCommands(t *testing.T) {
 					continue
 				}
 				found = true
-				_, body, _ := strings.Cut(line, "|")
+				_, body, _ := strings.Cut(line, "│")
 				shown := strings.TrimSpace(body)
-				if !strings.HasPrefix(body, "      slicer land") || (shown != command && !strings.HasSuffix(shown, "...")) {
+				prefix := strings.Repeat(" ", strings.Index(landingText(h), "S09"))
+				if len(command)+len(prefix) > 60 {
+					prefix = "      "
+				}
+				if !strings.HasPrefix(body, prefix+"slicer land") || (shown != command && !strings.HasSuffix(shown, "...")) {
 					t.Fatalf("command is neither whole nor visibly clipped at fallback indent: %q", body)
 				}
 				if len(command)+6 <= 60 && shown != command {
@@ -251,7 +255,7 @@ func TestLandingCommandsQuoteShellMetacharacters(t *testing.T) {
 func TestReadyDetailShowsFullCommands(t *testing.T) {
 	h := landingHarness(t, `[{"id":"ready","item":"S63","state":"committed","branch":"a-very-long-branch-name-for-a-complete-command","merged":true}]`)
 	row, _ := h.m.selectedRow()
-	got := strings.Join(detailLines(row, 60), "\n")
+	got := strings.Join(detailLines(row, 60, "|"), "\n")
 	want := wrapText(strings.Join(row.commands, "\n"), 58)
 	for i := range want {
 		want[i] = indent + want[i]

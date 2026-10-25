@@ -18,6 +18,7 @@ type Theme struct {
 	ViewActive lipgloss.Style
 	ViewIdle   lipgloss.Style
 	Heading    lipgloss.Style
+	Group      lipgloss.Style
 	Dim        lipgloss.Style
 	Decision   lipgloss.Style
 	Held       lipgloss.Style
@@ -43,6 +44,7 @@ func NewTheme(mono bool) Theme {
 			ViewActive: s().Bold(true),
 			ViewIdle:   s().Faint(true),
 			Heading:    s().Bold(true),
+			Group:      s().Bold(true),
 			Dim:        s().Faint(true),
 			Decision:   s().Bold(true),
 			Held:       s().Bold(true),
@@ -62,6 +64,7 @@ func NewTheme(mono bool) Theme {
 		ViewActive: s().Bold(true).Foreground(lipgloss.Color("6")),
 		ViewIdle:   s().Foreground(lipgloss.Color("8")),
 		Heading:    s().Bold(true).Foreground(lipgloss.Color("6")),
+		Group:      s().Bold(true),
 		Dim:        s().Foreground(lipgloss.Color("8")),
 		Decision:   s().Bold(true).Foreground(lipgloss.Color("3")),
 		Held:       s().Bold(true).Foreground(lipgloss.Color("5")),
@@ -82,4 +85,12 @@ func UseMono(getenv func(string) string) bool { return getenv("NO_COLOR") != "" 
 // theme.
 func ThemeFor(getenv func(string) string) Theme {
 	return NewTheme(UseMono(getenv))
+}
+
+// rules uses the locale choice already resolved in Config.ASCII.
+func (th Theme) rules(ascii bool) (vertical, horizontal string) {
+	if ascii {
+		return "|", "-"
+	}
+	return "│", "─"
 }

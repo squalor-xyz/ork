@@ -1,24 +1,24 @@
-[1mork[m  ?help         | [1;36mOverview[m[90m | [mQuestions[90m | [mWaves[90m | [mRoadmap[90m | [mDecisions
-[1;7;97;44m> Needs you[m        |[90m------------------------------------------------------------[m
-  ork 0*           |[1;36mNeeds you[m
-                   |  [90mnothing needs you[m
-                   |
-                   |[1;36mRunning[m
-                   |[1;7;97;44m                       ork  engine  S55  implement  [##~~!!][m
-                   |
-                   |[1;36mRecent[m
-                   |  [90mnone[m
-                   |
-                   |[90m  +2 more lines[m
-                   |  [1;36mRun engine  S55  implement[m
-                   |  [##~~!!]
-                   |  [32mimplementer[m > [36m[reviewer][m > [1;31mgate[m                    [90mround 1[m
-                   |  [90mlast heard 1m ago[m
-                   |  [90m+ implementer done  1m  claude sonnet high round 1[m
-                   |  [1;36m| reviewer    start 1m  claude opus round 1[m
-                   |  [1;31m! gate        fail  30s  codex sol round 1[m
-                   |  [1;31m    ✗ gate FAIL -> implementer round 2[m
-                   |  
-                   |  x stop; esc close pane
-                   |[90m------------------------------------------------------------[m
-                   | 1 project | refreshed 16:42:00 | pending 0
+[1mork[m  ?help         │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[1;7;97;44m> Needs you      0 [m│[90m────────────────────────────────────────────────────────────[m
+  ork             *│[1;36mNeeds you 0[m
+                   │  [90mnothing needs you[m
+                   │
+                   │[1;36mRunning 1[m
+                   │[1;7;97;44m                       ork  engine  S55  implement  [##~~!!][m
+                   │
+                   │[1;36mRecent[m
+                   │  [90mnone[m
+                   │[90m  +3 more lines[m
+                   │[90m────────────────────────────────────────────────────────────[m
+                   │  [1;36mRun engine  S55  implement[m
+                   │  [##~~!!]
+                   │  [32mimplementer[m > [36m[reviewer][m > [1;31mgate[m                    [90mround 1[m
+                   │  [90mlast heard 1m ago[m
+                   │  [90m+ implementer done  1m  claude sonnet high round 1[m
+                   │  [1;36m| reviewer    start 1m  claude opus round 1[m
+                   │  [1;31m! gate        fail  30s  codex sol round 1[m
+                   │  [1;31m    ✗ gate FAIL -> implementer round 2[m
+                   │  
+                   │  x stop; esc close pane
+                   │[90m────────────────────────────────────────────────────────────[m
+                   │ 1 project | refreshed 16:42:00

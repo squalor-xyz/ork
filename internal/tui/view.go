@@ -55,6 +55,8 @@ func (m *Model) screen() string {
 	th := m.cfg.Theme
 	var body, detail []string
 	bodyH, start := max(h-4, 1), 0
+	selectedLine := -1
+	overviewBody := false
 	if m.showHelp {
 		body = m.helpLines(mainW, bodyH)
 	} else if m.registeredProjectCount() == 0 && m.pane == nil && (m.active < 0 || m.welcome.editing || m.welcome.pending || m.welcome.confirm != "") {
@@ -68,8 +70,6 @@ func (m *Model) screen() string {
 			for i := range detail {
 				detail[i] = indent + detail[i]
 			}
-			detail = detail[:min(len(detail), max(h-5, 1))]
-			bodyH = max(h-4-len(detail), 1)
 		}
 	} else if m.view == roadmapView || m.view == wavesView || m.view == decisionsView || m.view == questionsView {
 		rv := overviewView{}
@@ -93,21 +93,18 @@ func (m *Model) screen() string {
 			status = m.confirm.prompt()
 		}
 		if m.view == questionsView && m.pane != nil {
-			detail = m.paneLines(mainW, max(h-5, 1), status)
-			bodyH = max(h-4-len(detail), 1)
+			detail = m.paneLines(mainW, max(h-6, 1), status)
 		} else if status != "" {
 			detail = wrapText(status, max(mainW-len(indent), 1))
 			for i := range detail {
 				detail[i] = indent + detail[i]
 			}
-			detail = detail[:min(len(detail), max(h-5, 1))]
-			bodyH = max(h-4-len(detail), 1)
 		}
 		body = rv.body
-		start = windowStart(rv.sel, len(body), bodyH)
+		selectedLine = rv.sel
 	} else {
-		// The detail line holds the selected row's full text. It takes lines
-		// from the body, at most h-5, so the body keeps one line.
+		// Detail shares the height with its rule, the body and screen chrome.
+		overviewBody = true
 		ov := m.overview(mainW)
 		body, detail = ov.body, ov.detail
 		status := m.actionStatus
@@ -115,7 +112,7 @@ func (m *Model) screen() string {
 			status = m.confirm.prompt()
 		}
 		if m.pane != nil {
-			detail = m.paneLines(mainW, max(h-5, 1), status)
+			detail = m.paneLines(mainW, max(h-6, 1), status)
 		} else if status != "" {
 			detail = wrapText(status, max(mainW-len(indent), 1))
 			if m.confirm != nil && m.confirm.verb == "cleanup" {
@@ -125,21 +122,39 @@ func (m *Model) screen() string {
 				detail[i] = indent + detail[i]
 			}
 		}
-		if len(detail) == 0 {
-			detail = []string{""}
+		selectedLine = ov.sel
+	}
+	hasDetail := false
+	for _, line := range detail {
+		if strings.TrimSpace(line) != "" {
+			hasDetail = true
+			break
 		}
-		detail = detail[:min(len(detail), max(h-5, 1))]
-		bodyH = max(h-4-len(detail), 1)
-		selected := ov.sel
+	}
+	bodyH = max(h-4, 1)
+	if hasDetail {
+		detail = detail[:min(len(detail), max(h-6, 1))]
+		bodyH = max(h-5-len(detail), 1)
+	} else {
+		detail = nil
+	}
+	if overviewBody {
 		if r, ok := m.selectedRow(); ok && r.ready && bodyH >= len(r.commands)+2 {
-			selected += len(r.commands)
+			selectedLine += len(r.commands)
 		}
-		start = windowStart(selected, len(body), bodyH)
+	}
+
+	if selectedLine >= 0 {
+		start = windowStart(selectedLine, len(body), bodyH)
 	}
 	body = window(body, start, bodyH, th)
-	rule := m.cfg.Theme.Dim.Render(strings.Repeat("-", mainW))
+	_, horizontal := th.rules(m.cfg.ASCII)
+	rule := th.Dim.Render(strings.Repeat(horizontal, mainW))
 	main := []string{m.viewBar(), rule}
 	main = append(main, body...)
+	if len(detail) > 0 {
+		main = append(main, rule)
+	}
 	main = append(main, detail...)
 	main = append(main, rule, m.statusLine(mainW))
 	if len(main) > h {
@@ -186,6 +201,13 @@ func (m *Model) sidebar(w, h int) []string {
 	for _, idx := range nav[start:end] {
 		label := "Needs you"
 		badge := ""
+		marker := " "
+		if idx < 0 {
+			aggregate := *m
+			aggregate.active = -1
+			needs, _ := aggregate.rows()
+			badge = fmt.Sprintf(" %d", len(needs))
+		}
 		setup := false
 		if idx >= 0 {
 			p := m.projects[idx]
@@ -196,16 +218,19 @@ func (m *Model) sidebar(w, h int) []string {
 			} else if setup {
 				badge = " no slicer"
 			} else {
-				badge = fmt.Sprintf(" %d", p.needs())
+				if p.needs() > 0 {
+					badge = fmt.Sprintf(" %d", p.needs())
+				}
 				if p.running {
-					badge += "*"
+					marker = "*"
 				}
 			}
 			if m.refreshing(p.reg.Name) {
-				badge += "~"
+				marker = "~"
 			}
 		}
-		label = clip(label, max(w-3-len(badge), 1)) + badge
+		label = clip(label, max(w-4-lipgloss.Width(badge), 1))
+		label += strings.Repeat(" ", max(w-4-lipgloss.Width(label)-lipgloss.Width(badge), 0)) + badge + marker
 		prefix := "  "
 		if idx == m.active {
 			prefix = "> "
@@ -232,9 +257,10 @@ func (m *Model) sidebar(w, h int) []string {
 		lines = append(lines, "")
 	}
 	lines = lines[:h]
+	vertical, _ := m.cfg.Theme.rules(m.cfg.ASCII)
 	for i, l := range lines {
 		l = lipgloss.NewStyle().MaxWidth(max(w-1, 1)).Render(l)
-		lines[i] = l + strings.Repeat(" ", max(w-lipgloss.Width(l)-1, 0)) + "|"
+		lines[i] = l + strings.Repeat(" ", max(w-lipgloss.Width(l)-1, 0)) + vertical
 	}
 	return lines
 }
@@ -269,7 +295,8 @@ func (m *Model) viewBar() string {
 	b.WriteString(" ")
 	for i, v := range views {
 		if i > 0 {
-			idle += " | "
+			vertical, _ := th.rules(m.cfg.ASCII)
+			idle += " " + vertical + " "
 		}
 		switch {
 		case len(m.projects) == 0:
@@ -303,7 +330,9 @@ func (m *Model) statusLine(w int) string {
 	fields := []string{
 		fmt.Sprintf("%d %s", count, noun),
 		"refreshed " + refreshed,
-		fmt.Sprintf("pending %d", m.poller.Pending()),
+	}
+	if pending := m.poller.Pending(); pending > 0 {
+		fields = append(fields, fmt.Sprintf("pending %d", pending))
 	}
 	if r, ok := m.selectedRow(); ok && r.ready && r.merged {
 		fields = append(fields, "c clean up")

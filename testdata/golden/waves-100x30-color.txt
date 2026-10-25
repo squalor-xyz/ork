@@ -1,30 +1,30 @@
-[1mork[m  ?help                 | Overview[90m | [mQuestions[90m | [m[1;36mWaves[m[90m | [mRoadmap[90m | [mDecisions
-  Needs you                |[90m------------------------------------------------------------------------[m
-[1;7;97;44m> ork 0[m                    |[1;36mSuggested (slicer plan-parallel)[m
-  other 0                  |[1;36mItems                   Lineup (* edited for this run)[m
-                           |  Wave 2
-                           |  [x] A  Alpha            implementer: claude sonnet high
-                           |                          reviewer: claude opus medium
-                           |                          gate: claude opus medium
-                           |[1;7;97;44m  [x] B  Beta             implementer: claude sonnet high[m
-                           |                          reviewer: claude opus medium
-                           |                          gate: claude opus medium
-                           |  Wave 4
-                           |  [ ] C  Gamma
-                           |  Unplaced
-                           |  [ ] D  Delta (no_files)
-                           |  ! A and B both touch shared.go
-                           |  ! A and B both touch second.go
-                           |  [space] tick item   [e] edit lineup   [l] launch wave
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |[90m------------------------------------------------------------------------[m
-                           | 2 projects | refreshed 16:42:00 | pending 0
+[1mork[m  ?help                 │ Overview[90m │ [mQuestions[90m │ [m[1;36mWaves[m[90m │ [mRoadmap[90m │ [mDecisions
+  Needs you              0 │[90m────────────────────────────────────────────────────────────────────────[m
+[1;7;97;44m> ork                      [m│[1;36mSuggested (slicer plan-parallel)[m
+  other                    │[1;36mItems                   Lineup (* edited for this run)[m
+                           │  Wave 2
+                           │  [x] A  Alpha            implementer: claude sonnet high
+                           │                          reviewer: claude opus medium
+                           │                          gate: claude opus medium
+                           │[1;7;97;44m  [x] B  Beta             implementer: claude sonnet high[m
+                           │                          reviewer: claude opus medium
+                           │                          gate: claude opus medium
+                           │  Wave 4
+                           │  [ ] C  Gamma
+                           │  Unplaced
+                           │  [ ] D  Delta (no_files)
+                           │  ! A and B both touch shared.go
+                           │  ! A and B both touch second.go
+                           │  [space] tick item   [e] edit lineup   [l] launch wave
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ 2 projects | refreshed 16:42:00

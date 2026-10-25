@@ -1,30 +1,30 @@
-[1mork[m [2mdev[m  ?help             | [1mOverview[m[2m | [mQuestions[2m | [mWaves[2m | [mRoadmap[2m | [mDecisions
-[1;7m> Needs you[m                |[2m------------------------------------------------------------------------[m
-  slicer 3*                |[1mNeeds you[m
-  adjudicate 1             |[1;7m  ? decision  slicer      #11 ui.slicer-tui  Does ork reimplement sli...[m
-  DataBall 0               |  [1m? decision[m  slicer      #51 vendor.codex-ratelimit  Does codex coun...
-  agents 0                 |  [1m# held    [m  slicer      S12  Roadmap and Decisions screens, read-on...
-                           |  [1m? decision[m  adjudicate  #3 output.shape  Which JSON shape does inbo...
-                           |  [1m! error   [m  DataBall    items: no_such_item: No such item: S99.
-                           |  [2m~ pending [m  agents      waiting for the first reply
-                           |
-                           |[1mRunning[m
-                           |  [1m> started elsewhere[m  slicer      run-20261019-004308-40d4  S11  act...
-                           |  [2m~ pending [m  agents      waiting for the first reply
-                           |
-                           |[1mRecent[m
-                           |  [2mnone[m
-                           |
-                           |[1mReady to land[m
-                           |  [2mnone[m
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |  #11 ui.slicer-tui  Does ork reimplement slicer's roadmap editor or
-                           |  reuse slicer tui?
-                           |[2m------------------------------------------------------------------------[m
-                           | 4 projects | refreshed 16:42:07 | pending 1
+[1mork[m [2mdev[m  ?help             │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1;7m> Needs you              6 [m│[2m────────────────────────────────────────────────────────────────────────[m
+  slicer                 3*│[1mNeeds you 6[m
+  adjudicate             1 │  [1mDecisions 3[m
+  DataBall                 │[1;7m  ?  slicer      #11  ui.slicer-tui           Does ork reimplement sl...[m
+  agents                   │  [1m?[m  slicer      #51  vendor.codex-ratelimit  Does codex count as rat...
+                           │  [1m?[m  adjudicate  #3   output.shape            Which JSON shape does i...
+                           │  [1mHeld 1[m
+                           │  [1m#[m  slicer      S12  Roadmap and Decisions screens, read-only
+                           │  [1mErrors 2[m
+                           │  [1m![m  DataBall    items: no_such_item: No such item: S99.
+                           │  [2m~[m  agents      waiting for the first reply
+                           │
+                           │[1mRunning 2[m
+                           │  [1m> started elsewhere[m  slicer      run-20261019-004308-40d4  S11  act...
+                           │  [2m~ pending [m  agents      waiting for the first reply
+                           │
+                           │[1mRecent[m
+                           │  [2mnone[m
+                           │
+                           │[1mReady to land[m
+                           │  [2mnone[m
+                           │
+                           │
+                           │
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │  #11 open
+                           │  Does ork reimplement slicer's roadmap editor or reuse slicer tui?
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ 4 projects | refreshed 16:42:07 | pending 1

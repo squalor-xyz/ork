@@ -95,7 +95,7 @@ func stripANSI(s string) string { return sgr.ReplaceAllString(s, "") }
 func TestHeaderDropsVersionBeforeHelp(t *testing.T) {
 	m := goldenModel(NewTheme(true), 80, 24)
 	m.cfg.Version = "abcdefghijkl"
-	if got := stripANSI(m.sidebar(12, 24)[0]); got != "ork  ?help |" {
+	if got := stripANSI(m.sidebar(12, 24)[0]); got != "ork  ?help │" {
 		t.Fatalf("%q", got)
 	}
 }

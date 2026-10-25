@@ -21,7 +21,7 @@ func TestSidebarRowsAndSelection(t *testing.T) {
 	if !strings.Contains(v, "> Needs you") {
 		t.Fatalf("missing selected Needs you sidebar row:\n%s", v)
 	}
-	if !strings.Contains(v, "beta 1*") {
+	if !strings.Contains(compactSpaces(v), "beta 1*") {
 		t.Fatalf("missing project badge and running marker:\n%s", v)
 	}
 	if !strings.Contains(h.m.screen(), "\x1b[7") && !strings.Contains(h.m.screen(), ";7m") {
@@ -79,8 +79,8 @@ func TestSidebarOrderFollowsProject(t *testing.T) {
 	h.m.apply(snapshotMsg{name: "gamma", snap: snap(proj("gamma", false), nil, nil, relay("run", "", "S1"))})
 	h.m.apply(snapshotMsg{name: "beta", snap: snap(proj("beta", true), []adjcli.Record{openRec(1, "b.q", "question")}, nil)})
 	v := h.view()
-	b, g, a := strings.Index(v, "beta 1"), strings.Index(v, "gamma 0*"), strings.Index(v, "> alpha")
-	if b < 0 || g < b || a < g || strings.Index(v, "aardvark 0") < a {
+	b, g, a := strings.Index(compactSpaces(v), "beta 1"), strings.Index(compactSpaces(v), "gamma *"), strings.Index(compactSpaces(v), "> alpha")
+	if b < 0 || g < b || a < g || strings.Index(compactSpaces(v), "aardvark") < a {
 		t.Fatalf("wrong sidebar group order or selection:\n%s", v)
 	}
 }
@@ -97,7 +97,7 @@ func TestSidebarScrollAndCompactNames(t *testing.T) {
 		h.send(press("right"))
 	}
 	v := plainView(h.m)
-	if !strings.Contains(v, "> 15-long-proj...") || !strings.Contains(v, "+7 more") {
+	if !strings.Contains(v, "> 15-long-proje...") || !strings.Contains(v, "+7 more") {
 		t.Fatalf("selection/scroll hint/compact name missing:\n%s", v)
 	}
 }
@@ -202,7 +202,7 @@ func TestFilterBoxTakesRowKeysAsText(t *testing.T) {
 	if h.m.filter != "jk" || h.m.active != -1 {
 		t.Fatalf("filter %q, project %d; want filter jk on Needs you", h.m.filter, h.m.active)
 	}
-	if got := detailText(h.m, 72); !strings.HasPrefix(got, "#12 a.two") {
+	if got := detailText(h.m, 72); !strings.HasPrefix(got, "#12 open") {
 		t.Fatalf("the cursor moved to %q", got)
 	}
 	if v := h.view(); !strings.Contains(v, "/jk") {

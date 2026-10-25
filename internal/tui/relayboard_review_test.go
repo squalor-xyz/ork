@@ -108,7 +108,7 @@ func TestRunningRowWarnCellAndFullDetail(t *testing.T) {
 		t.Errorf("warn cell lacks color: %q", v)
 	}
 	want := "s97  S97  active  20m  [..~~..]  running: reviewer  implementer>[reviewer]>gate  ! heard 16m"
-	if got := strings.TrimSpace(strings.Join(detailLines(row, 240), "\n")); got != want {
+	if got := strings.TrimSpace(strings.Join(detailLines(row, 240, "|"), "\n")); got != want {
 		t.Errorf("incomplete detail: %q", got)
 	}
 	if strings.Contains(rowText(row, 40), "heard") {
@@ -201,7 +201,7 @@ func TestRecentEnterOpensReadOnlyEndedPane(t *testing.T) {
 func TestEngineRunningDetailIncludesBoardCells(t *testing.T) {
 	h := treeHarness(t, nil, treeEngine)
 	_, rows := h.m.rows()
-	if got := strings.Join(detailLines(rows[0], 240), "\n"); !strings.Contains(got, "implementer>[reviewer]>gate  heard 1m") {
+	if got := strings.Join(detailLines(rows[0], 240, "|"), "\n"); !strings.Contains(got, "implementer>[reviewer]>gate  heard 1m") {
 		t.Fatalf("engine detail missing board cells: %q", got)
 	}
 }

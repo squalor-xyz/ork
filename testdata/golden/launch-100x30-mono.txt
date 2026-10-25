@@ -1,30 +1,30 @@
-[1mork[m  ?help                 | Overview[2m | [mQuestions[2m | [mWaves[2m | [m[1mRoadmap[m[2m | [mDecisions
-  Needs you                |[2m------------------------------------------------------------------------[m
-[1;7m> ork 0[m                    |[1mReady slices (esc cancels)[m
-  other 0                  |  ork S90
-                           |  worktree: /project/.worktrees/S90
-                           |  branch: S90
-                           |  check: go test ./...
-                           |  implementer: Codex gpt high
-                           |    allowlist: 
-                           |  reviewer: Claude opus medium
-                           |    permissions: read-only
-                           |  gate: Codex gpt low
-                           |    allowlist: 
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |
-                           |  ork run ork S90? [y/N] (Enter is No)
-                           |[2m------------------------------------------------------------------------[m
-                           | 2 projects | refreshed 16:42:00 | pending 0
+[1mork[m  ?help                 │ Overview[2m │ [mQuestions[2m │ [mWaves[2m │ [m[1mRoadmap[m[2m │ [mDecisions
+  Needs you              0 │[2m────────────────────────────────────────────────────────────────────────[m
+[1;7m> ork                      [m│[1mReady slices (esc cancels)[m
+  other                    │  ork S90
+                           │  worktree: /project/.worktrees/S90
+                           │  branch: S90
+                           │  check: go test ./...
+                           │  implementer: Codex gpt high
+                           │    allowlist: 
+                           │  reviewer: Claude opus medium
+                           │    permissions: read-only
+                           │  gate: Codex gpt low
+                           │    allowlist: 
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │  ork run ork S90? [y/N] (Enter is No)
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ 2 projects | refreshed 16:42:00

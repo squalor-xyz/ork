@@ -329,8 +329,12 @@ func TestActionOtherRunWhileRetryPending(t *testing.T) {
 			s.EngineRuns = append([]source.EngineRun{{ID: "other", Item: "S23", State: tc.state}}, s.EngineRuns...)
 			h.src.set(s)
 			h.m.apply(snapshotMsg{name: "ork", snap: s})
-			if tc.state == "implement" {
-				h.deliver(press("n"))
+			needs, running := h.m.rows()
+			for i, r := range append(needs, running...) {
+				if r.engineID == "other" {
+					h.m.cursor = i
+					break
+				}
 			}
 			h.deliver(press(tc.key))
 			if v := h.view(); !strings.Contains(v, tc.want) {

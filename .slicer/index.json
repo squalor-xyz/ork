@@ -3292,7 +3292,7 @@
       "id": "S84",
       "title": "Overview layout pass: grouped Needs you, aligned rows, quiet sidebar, richer detail",
       "short_title": "Overview layout pass",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S82",
@@ -3305,6 +3305,17 @@
           "text": "**2026-10-22** — Filed from the 2026-10-22 UI review pass (rule u10). Held until adj 149 (ui.overview-layout) is decided.",
           "created_at": "2026-10-22T13:12:02Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "eb188072-7a52-436e-83cc-64b4e43dcb69",
+          "kind": "",
+          "text": "**2026-10-25** — Review FAIL: project name lost on Running/Recent/Ready rows (adj 149); status line cut when detail fills its cap; roadmap marker ignores ASCII; two Needs you totals.",
+          "created_at": "2026-10-25T16:08:14Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -3328,7 +3339,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

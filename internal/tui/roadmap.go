@@ -5,6 +5,7 @@ package tui
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
@@ -138,7 +139,26 @@ func (m *Model) roadmap(w int) overviewView {
 		}
 	}
 	out.body = append(out.body, "")
-	heading("Roadmap")
+	ready, open := 0, 0
+	for _, it := range s.Items.Value {
+		if it.Status == "open" {
+			open++
+		}
+		if readySlice(s, it) {
+			ready++
+		}
+	}
+	summary := "all open"
+	if open != len(s.Items.Value) {
+		summary = fmt.Sprintf("%d open, %d other", open, len(s.Items.Value)-open)
+	}
+	if s.Items.Err != nil {
+		heading("Roadmap")
+	} else if s.Deps.Err != nil {
+		heading(fmt.Sprintf("Roadmap  ? ready of %d, %s", len(s.Items.Value), summary))
+	} else {
+		heading(fmt.Sprintf("Roadmap  %d ready of %d, %s", ready, len(s.Items.Value), summary))
+	}
 	if s.Deps.Err != nil {
 		showError("deps", s.Deps.Err)
 	}
@@ -148,11 +168,14 @@ func (m *Model) roadmap(w int) overviewView {
 	}
 	cursor := clampCursor(m.roadmapCursor, len(s.Items.Value))
 	for i, it := range s.Items.Value {
-		readiness := "not ready"
+		readiness := " "
 		if s.Deps.Err != nil {
 			readiness = "?"
 		} else if readySlice(s, it) {
-			readiness = "ready"
+			readiness = "·"
+			if m.cfg.ASCII {
+				readiness = "*"
+			}
 		}
 		title := it.ShortTitle
 		if title == "" {
@@ -166,9 +189,15 @@ func (m *Model) roadmap(w int) overviewView {
 		if it.Fields.Effort != 0 {
 			effort = fmt.Sprint(it.Fields.Effort)
 		}
-		fields := fmt.Sprintf("  %s  %s  effort %s", it.Status, size, effort)
-		prefix := fmt.Sprintf("%-9s %s  ", readiness, it.ID)
-		line := indent + prefix + clip(title, max(w-2-lipgloss.Width(prefix)-lipgloss.Width(fields), 1)) + fields
+		fields := size + effort
+		marker := readiness
+		if i != cursor {
+			marker = th.Dim.Render(marker)
+		}
+		prefix := indent + marker + " " + it.ID + "  "
+		room := max(w-lipgloss.Width(prefix)-lipgloss.Width(fields)-2, 1)
+		title = clip(title, room)
+		line := prefix + title + strings.Repeat(" ", max(w-lipgloss.Width(prefix)-lipgloss.Width(title)-lipgloss.Width(fields), 2)) + fields
 		if i == cursor {
 			out.sel = len(out.body)
 			line = th.TabActive.Render(line)
