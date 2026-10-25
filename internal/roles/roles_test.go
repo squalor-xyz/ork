@@ -399,3 +399,42 @@ func TestReportShape(t *testing.T) {
 		}
 	}
 }
+
+func TestImplementerPromptReanchorsFirst(t *testing.T) {
+	p := prompts(t)["implementer"]
+	reanchor, testFirst := strings.Index(p, "Re-anchor"), strings.Index(p, "Test-first")
+	if reanchor < 0 || testFirst < 0 || reanchor >= testFirst {
+		t.Error("implementer must Re-anchor before Test-first")
+	}
+}
+
+func TestImplementerPromptSelfCheck(t *testing.T) {
+	p := prompts(t)["implementer"]
+	selfCheck, report := strings.Index(p, "\n## Self-check\n"), strings.Index(p, "\n## Report\n")
+	if selfCheck < 0 || report < 0 || selfCheck >= report {
+		t.Fatal("implementer must self-check before the Report section")
+	}
+	section := p[selfCheck:report]
+	for _, want := range []string{
+		"concurrency",
+		"handle lifetime",
+		"docs updated with code",
+		"test that fails when the wiring is removed",
+	} {
+		t.Run(want, func(t *testing.T) {
+			if !has(section, want) {
+				t.Errorf("self-check does not mention %q", want)
+			}
+		})
+	}
+}
+
+func TestImplementerPromptSpecEdits(t *testing.T) {
+	_, report, _ := strings.Cut(prompts(t)["implementer"], "\n## Report\n")
+	deviations := strings.Index(report, "6. Deviations")
+	specEdits := strings.Index(report, "Spec edits:")
+	owner := strings.Index(report, "\n7. ")
+	if deviations < 0 || specEdits < 0 || owner < 0 || specEdits <= deviations || specEdits >= owner {
+		t.Error("implementer Report must contain Spec edits: after 6. Deviations and before 7. ")
+	}
+}

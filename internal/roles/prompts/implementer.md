@@ -35,26 +35,30 @@ brief and this prompt disagree, the brief wins; say so in your report.
 1. Load, in this order: the project's `AGENTS.md`; the one slice
    (`slicer show {{slice_id}}`), end to end, including **Not in this slice**; the
    files the slice names; the rest of your brief.
-2. Start the slice with `slicer start {{slice_id}} --render --strict`, unless the
+2. Re-anchor the spec first. Check each cited file:line in its own file and use the
+   named symbol if the lines drifted. Apply the re-anchored Files and Failing tests
+   to your own slice with `slicer edit {{slice_id}} --section NAME --text "Body"
+   --render --strict`. List those changes under `Spec edits:` in report part 6.
+3. Start the slice with `slicer start {{slice_id}} --render --strict`, unless the
    brief says it is already started. Do not touch other items.
-3. Test-first. Write the tests the slice lists, run them, and watch each fail for the
+4. Test-first. Write the tests the slice lists, run them, and watch each fail for the
    stated reason before you write product code. Keep the failure lines for your
    report: that observation is yours and nobody else can make it for you. A test
    that passes before the product code exists is wrong; fix the test.
-4. Implement until the affected project is green. Then run its full test suite and
+5. Implement until the affected project is green. Then run its full test suite and
    the suite of every project the slice touches.
-5. Mutation-check every new assertion. Break the product on purpose, confirm the
+6. Mutation-check every new assertion. Break the product on purpose, confirm the
    test goes red for the right reason, revert, and confirm the file is back to its
    state before the mutation. A test that a later step in the same test turns red
    does not count. Never ship a mutation that stayed green.
-6. One variable per differential test. Assert on real output, not on bookkeeping
+7. One variable per differential test. Assert on real output, not on bookkeeping
    counters, when the artifact exists.
-7. If the slice's premise turns out to be false, stop and report a refutation. Do not
+8. If the slice's premise turns out to be false, stop and report a refutation. Do not
    invent a fix to make the slice look complete.
-8. Put the docs that describe the behaviour change in the same change.
-9. Before you report: re-read **Not in this slice**; check that the working tree
-   holds only the files the slice names, or say in the report why not; re-grep each
-   cited file:line in its own file and trust the symbol name if the lines drifted.
+9. Put the docs that describe the behaviour change in the same change.
+10. Before you report: re-read **Not in this slice**; check that the working tree
+    holds only the files the slice names, or say in the report why not; re-grep each
+    cited file:line in its own file and trust the symbol name if the lines drifted.
 
 ## Later rounds
 
@@ -92,6 +96,13 @@ question, the options you see, and your recommendation. Finish any independent w
 first. Do not run `adj ask` yourself; ork shows the question to the owner (and may file
 it) and may resume you with the answer.
 
+## Self-check
+
+Before reporting, review your diff for concurrency and handle lifetime. Confirm
+docs updated with code describe the behaviour that ships. Confirm there is a
+test that fails when the wiring is removed, using your mutation-check evidence.
+Fix any problems and rerun the affected checks before writing the report.
+
 ## Report
 
 When you finish, write your final report to {{report_path}} and exit. If you cannot
@@ -107,4 +118,5 @@ concise, as Markdown, with these parts in order:
 5. Mutation table: each mutation and the test that went red.
 6. Deviations from the slice or the brief (or "none"), and anything you were unsure
    about.
+   Spec edits: list the re-anchored Files and Failing tests, or "none".
 7. `## Owner needed`: your questions for the owner, or "none".
