@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 122,
+  "next_id": 124,
   "preamble": "",
   "passes": [
     {
@@ -1452,7 +1452,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "c9aec2d9-9adc-41fa-9b4a-1153ff4bc477",
+          "kind": "",
+          "text": "**2026-10-25** — 2026-10-25 spec check: the bell already exists in the TUI Model (internal/tui/model.go apply, m.cfg.Bell); check this slice's premise before running it.",
+          "created_at": "2026-10-25T17:20:41Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -4454,6 +4466,62 @@
         "urgency": 2,
         "effort": 2,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S122",
+      "title": "Probe Codex --add-dir and writable_roots; mark them unverified until then",
+      "short_title": "Probe Codex --add-dir and writable_roots; mark them unverified until then",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S87",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S123",
+      "title": "Relay stats: fix-round rate, role times and owner wait per run, from the ledger",
+      "short_title": "Relay stats: fix-round rate, role times and owner wait per run, from the ledger",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 2,
+        "attempts": 0
       }
     }
   ],

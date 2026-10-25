@@ -1,0 +1,39 @@
+{
+  "id": "S122",
+  "title": "Probe Codex --add-dir and writable_roots; mark them unverified until then",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S87 (landed aa7b1e5) passes --add-dir TEMP on fresh Codex write rounds and -c sandbox_workspace_write.writable_roots=[TEMP, WORKTREE] on resumed ones. docs/design.md:517-523 states both as fact, but no probe in testdata/vendors/codex covers them; the only evidence is the hand-run relay form (S74, S48). Gate later note, owner-recommended option (c): mark unverified now and add a probe."
+    },
+    {
+      "heading": "Files",
+      "body": "- `docs/design.md:517-523`: mark --add-dir and writable_roots *unverified* until the probe lands.\n- `testdata/vendors/codex/`: a new probe (like the S89 probes) that runs a write round with --add-dir and a resumed round with writable_roots, writing one file in each temp dir.\n- `internal/agent/codex/codex.go`: only if the probe shows a different flag form."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "The probe script records both writes succeeding, or the denial text; the design.md lines cite the probe file."
+    },
+    {
+      "heading": "Implement",
+      "body": "The probe runs the real codex CLI by hand (the owner runs it; tests never call a real vendor). Record the transcript under testdata/vendors/codex like the earlier probes. S31's live ork run also exercises the flags; record what it showed."
+    },
+    {
+      "heading": "Check",
+      "body": "slicer check; adj lint; go test ./internal/agent/codex if the adapter changes."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

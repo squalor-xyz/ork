@@ -1467,3 +1467,17 @@
 {"when": "2026-10-25T17:16:56Z", "item": "S110", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-25T17:16:56Z", "item": "S110", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-25T17:16:56Z", "item": "S110", "action": "set", "from": "", "to": "", "note": "depends_on S84→S109"}
+{"when": "2026-10-25T17:20:39Z", "item": "S122", "action": "add", "from": "", "to": "open", "note": "Probe Codex --add-dir and writable_roots; mark them unverified until then"}
+{"when": "2026-10-25T17:20:39Z", "item": "S122", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-25T17:20:39Z", "item": "S122", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-25T17:20:40Z", "item": "S122", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-25T17:20:40Z", "item": "S122", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-25T17:20:40Z", "item": "S122", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T17:20:40Z", "item": "S122", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-25T17:20:40Z", "item": "S123", "action": "add", "from": "", "to": "open", "note": "Relay stats: fix-round rate, role times and owner wait per run, from the ledger"}
+{"when": "2026-10-25T17:20:40Z", "item": "S123", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-25T17:20:40Z", "item": "S123", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-25T17:20:40Z", "item": "S123", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-25T17:20:40Z", "item": "S123", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T17:20:41Z", "item": "S123", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-25T17:20:41Z", "item": "S100", "action": "note", "from": "", "to": "", "note": "2026-10-25 spec check: the bell already exists in the TUI Mo", "by": "Jon R"}

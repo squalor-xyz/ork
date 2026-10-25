@@ -1,0 +1,39 @@
+{
+  "id": "S123",
+  "title": "Relay stats: fix-round rate, role times and owner wait per run, from the ledger",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Retrospective (docs/review-2026-10-25-relay-retrospective.md, Appendix A) computed run time, fix rounds, role times and idle gaps by hand from slicer relay-run list --json. R4 asks to measure whether the implementer self-check (S115) lowers the fix-round rate; R2 targets owner wait time. ork can show these from the ledger it already reads."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/source/source.go:108` (the Runs part, relay-run list): keep step begin and end times.\n- `internal/tui/` (a stats panel on the project page, proposed) and `docs/dashboard.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": "Per project: runs, pass rate, median run time, share of runs with a fix round, median time per role, and time spent paused for the owner, over the last N runs. Read-only; no new state file. Step times are only as good as the ledger phases. Mark the panel proposed."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./internal/source ./internal/tui; goldens; slicer check; adj lint. UI slice: UI pass (r14)."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

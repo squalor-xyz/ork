@@ -376,3 +376,18 @@ roadmap around the ork-driven workflow, and commit this report.
 - The serial-landing rule is dropped after the merge test (R6).
 - No slice needed for the false Review FAIL note: the engine already
   writes it only on a gate FAIL.
+
+**Follow-ups filed the same day:**
+- Batch spec check (R2, R8) of S115, S70, S99, S111, S109 and S110:
+  fact fixes applied; the owner answered every design question; adj 168
+  (`ui.structured-questions`) and 169 (`ui.sidebar-running`) carry the
+  answers that change decided records.
+- adj 170 (`process.owner-answers`): may the agent record, as decided, an
+  option the owner explicitly picked in an interactive question?
+- S122: probe Codex `--add-dir` and `writable_roots` (from S87's gate).
+- S123 (v1.1): relay stats from the ledger, to measure R2 and R4.
+- Drafts for the owner to file upstream (ork cannot write the sibling
+  repos): slicer `relay-run step` roles `ui` and `spec-check`; slicer note
+  retraction; a false "different worktree" warning from slicer during
+  merges; adjudicate partial supersede.
+- The merge path was used for real when S87 landed after main moved: clean.
