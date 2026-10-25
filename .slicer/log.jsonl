@@ -1514,3 +1514,11 @@
 {"when": "2026-10-25T17:56:23Z", "item": "S107", "action": "move", "from": "40", "to": "9", "note": ""}
 {"when": "2026-10-25T17:56:49Z", "item": "S125", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-25T17:57:39Z", "item": "S125", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T18:04:08Z", "item": "S126", "action": "add", "from": "", "to": "open", "note": "Implementer brief: ork runs the check command itself; a sandbox limit is not an owner question"}
+{"when": "2026-10-25T18:04:08Z", "item": "S126", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-25T18:04:08Z", "item": "S126", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-25T18:04:08Z", "item": "S126", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-25T18:04:08Z", "item": "S126", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-25T18:04:08Z", "item": "S126", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T18:04:09Z", "item": "S126", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-25T18:04:09Z", "item": "S126", "action": "move", "from": "126", "to": "4", "note": ""}
