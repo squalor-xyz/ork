@@ -223,7 +223,9 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	in := BriefInput{
 		Role: r.role, SliceID: rec.Item, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
 		SliceJSON: string(sliceJSON), EnvLines: e.proj.EnvironmentLines,
-		Sections: append(pendingSection(pend), r.sections...),
+		CheckCommand: e.proj.CheckCommand,
+		Finish:       r.finish,
+		Sections:     append(pendingSection(pend), r.sections...),
 	}
 	if session == "" {
 		in.Earlier = e.earlierReports(rec)

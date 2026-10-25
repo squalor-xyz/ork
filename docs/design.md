@@ -405,6 +405,9 @@ ork adds:
   - the environment lines from the project's AGENTS.md;
   - the role's own temp directory;
   - the report path;
+  - for the implementer, the project check command (when configured) and
+    `slicer check`, which ork runs after the round (not the finish step)
+    outside the role's sandbox;
   - earlier reports, when the role is not resumed.
 - **Report.** The role writes its final report to
   `~/.local/state/ork/runs/<run>/<role>-<round>.md` and exits
