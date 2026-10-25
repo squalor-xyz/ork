@@ -386,8 +386,11 @@ roadmap around the ork-driven workflow, and commit this report.
   option the owner explicitly picked in an interactive question?
 - S122: probe Codex `--add-dir` and `writable_roots` (from S87's gate).
 - S123 (v1.1): relay stats from the ledger, to measure R2 and R4.
-- Drafts for the owner to file upstream (ork cannot write the sibling
-  repos): slicer `relay-run step` roles `ui` and `spec-check`; slicer note
-  retraction; a false "different worktree" warning from slicer during
-  merges; adjudicate partial supersede.
+- Filed upstream in slicer on the owner's say-so (slicer `39a2fdf`): s392
+  `relay-run step` roles `ui` and `spec-check`; s393 note retraction; s394
+  a false foreign-worktree warning when `GIT_DIR` is set, as in a merge
+  driver (reproduced with `GIT_DIR=... slicer check`); s395 an item's Files
+  paths in JSON (for S50); s396 `relay-run ask` and `answer` (for S112).
+- Still a draft for the owner: adjudicate partial supersede
+  (`.scratch/upstream/adj-partial-supersede.md` in the main checkout).
 - The merge path was used for real when S87 landed after main moved: clean.

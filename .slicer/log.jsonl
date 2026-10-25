@@ -1481,3 +1481,6 @@
 {"when": "2026-10-25T17:20:40Z", "item": "S123", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-25T17:20:41Z", "item": "S123", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-10-25T17:20:41Z", "item": "S100", "action": "note", "from": "", "to": "", "note": "2026-10-25 spec check: the bell already exists in the TUI Mo", "by": "Jon R"}
+{"when": "2026-10-25T17:28:31Z", "item": "S112", "action": "note", "from": "", "to": "", "note": "2026-10-25: the slicer item is filed upstream as slicer s396", "by": "Jon R"}
+{"when": "2026-10-25T17:28:31Z", "item": "S50", "action": "note", "from": "", "to": "", "note": "2026-10-25: the item-paths request is filed upstream as slic", "by": "Jon R"}
+{"when": "2026-10-25T17:28:31Z", "item": "S117", "action": "note", "from": "", "to": "", "note": "2026-10-25: slicer s392 asks relay-run step to accept ui and", "by": "Jon R"}

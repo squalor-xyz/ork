@@ -416,7 +416,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "541f60bf-0882-4e99-8a2d-4709827e5ca0",
+          "kind": "",
+          "text": "**2026-10-25** — 2026-10-25: slicer s392 asks relay-run step to accept ui and spec-check roles; until then record the UI pass as reviewer with task 'ID ui'.",
+          "created_at": "2026-10-25T17:28:31Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -1232,7 +1244,19 @@
       "depends_on": [
         "S111"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "9f2aabd2-6ba3-4982-b7ca-217b544a603c",
+          "kind": "",
+          "text": "**2026-10-25** — 2026-10-25: the slicer item is filed upstream as slicer s396 (relay-run ask and answer); this slice waits for it and for the contract version that tells an orchestrator to ask and poll.",
+          "created_at": "2026-10-25T17:28:31Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -1260,7 +1284,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "98a4cb6a-ba93-4663-a0e9-f59dee395996",
+          "kind": "",
+          "text": "**2026-10-25** — 2026-10-25: the item-paths request is filed upstream as slicer s395 (an item's Files paths in show --json or a paths command).",
+          "created_at": "2026-10-25T17:28:31Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
