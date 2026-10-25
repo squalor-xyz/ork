@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/tui/view.go`, `model.go`, `keys.go` (the sidebar entry above Needs you; the number keys and the sidebar order follow it, decision 82 and S85), `internal/tui/summary.go` (new) and `summary_test.go`.\n- `internal/tui/overview.go`, `relayboard.go`: reuse the Running row builder and the board parts; each project page keeps its Running section first (see the run-card-first slice).\n- `internal/source/source.go`, `internal/daemon/*.go`: the all-projects live read (reuse the visible-project fast refresh from the run-pane-follow slice for every project with a live run).\n- `testdata/golden/summary-*.txt`; `docs/dashboard.md`, `docs/design.md`."
+      "body": "- `internal/tui/view.go:175-230` (sidebar) and `internal/tui/model.go:728-744` (`navigation()`: a new sentinel for Running above the Needs you sentinel -1).\n- `internal/tui/overview.go:374` (the aggregate Running section): reused full-screen as the Running view, with question and stop alerts added; `internal/tui/relayboard.go` for the board parts.\n- `internal/cache/cache.go:160-167`: the 1 s Runs interval (S109) for every project with a live run while the entry or a pane is visible; `cache.Limit` is 4 concurrent CLI processes (:28).\n- Tests beside each; goldens `testdata/golden/running-*.txt`; `docs/dashboard.md`, `docs/design.md`."
     },
     {
       "heading": "Failing tests",
@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. Tests first (injected clock). 2. The sidebar entry and the summary view. 3. The all-projects live refresh. 4. Alerts for questions and stops. 5. Docs and goldens. UI slice: UI pass (r14). Open for the preflight: the key for the entry (0 is Needs you in S85), the empty state, and the refresh cost with 14 projects."
+      "body": "1. Tests first (injected clock). 2. The sidebar entry and the summary view. 3. The all-projects live refresh. 4. Alerts for questions and stops. 5. Docs and goldens. UI slice: UI pass (r14). Open for the preflight: the key for the entry (0 is Needs you in S85), the empty state, and the refresh cost with 14 projects.\n\nOwner decisions (2026-10-25 batch spec check): adj 169 ui.sidebar-running, option reuse-overview (open until the owner decides it; revises #82's sidebar order). No new summary.go: the Running entry opens the aggregate Overview's Running section full-screen plus alerts. Reached with up/down and enter; no digit until S85 and S105 settle keys (keys.go Jump is 1-9 only). Always shown, dim \"nothing running\" when empty, so rows do not shift. Fact fixes: project pages show Needs you before Running today (overview.go:374, docs/dashboard.md:180-187); S106 (v1.1) moves Running up. \"The run-pane-follow slice\" is S109 and \"the run-card-first slice\" is S106. Depends on S109."
     },
     {
       "heading": "Check",
