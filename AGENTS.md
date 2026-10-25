@@ -70,7 +70,11 @@ Do not open, search, parse, or edit tracking files; use the slicer commands.
 ## Decisions (adj)
 
 This repo logs decisions with `adj`. Agents ask, check and read. Only the
-owner decides, so never run `adj decide`, `adj reject` or `adj supersede`.
+owner decides, so never run `adj reject` or `adj supersede`, and run
+`adj decide` only to record an option the owner explicitly picked in an
+interactive question that named it (`process.owner-answers`, #170): use
+`--by` with the owner's name and a `--why` that cites the session and the
+date. Anything the owner did not explicitly pick stays an open ask.
 
 - Before asking, check: `adj check "storage.engine"`. Line 1 of the output is
   `decided`, `open`, `closed` or `not found`, and the exit code is 0 for all

@@ -38,6 +38,44 @@
       "note": "per part of a split slice"
     },
     {
+      "id": "r15",
+      "role": "implementer",
+      "when": {
+        "size": [
+          "L"
+        ],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": false,
+        "sliver": false
+      },
+      "agent": "Codex",
+      "vendor": "OpenAI",
+      "model": "gpt-6.1-sol",
+      "reasoning": "high",
+      "note": "owner lineup 2026-10-23: Codex implementer at high on a size L slice"
+    },
+    {
+      "id": "r9",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": false,
+        "sliver": null
+      },
+      "agent": "Codex",
+      "vendor": "OpenAI",
+      "model": "gpt-6.1-sol",
+      "reasoning": "medium",
+      "note": "default implementer for a whole slice (owner lineup 2026-10-23: medium); Codex sandbox cannot bind Unix sockets, so rerun socket-test packages outside it"
+    },
+    {
       "id": "r1",
       "role": "implementer",
       "when": {
@@ -121,24 +159,6 @@
       "model": "sonnet",
       "reasoning": "high",
       "note": "Claude alternate for an effort 3 slice"
-    },
-    {
-      "id": "r9",
-      "role": "implementer",
-      "when": {
-        "size": [],
-        "effort": [],
-        "importance": [],
-        "urgency": [],
-        "well_specified": null,
-        "split": false,
-        "sliver": null
-      },
-      "agent": "Codex",
-      "vendor": "OpenAI",
-      "model": "gpt-6.1-sol",
-      "reasoning": "high",
-      "note": "default implementer for a whole slice; Codex sandbox cannot bind Unix sockets, so rerun socket-test packages outside it"
     },
     {
       "id": "r3",
@@ -311,6 +331,6 @@
       "text": "A slice that touches the UI (internal/tui and its golden views, docs/dashboard.md, internal/cli output, or a ui.* adj key) also runs the UI pass row (r14) in parallel with the reviewer, not instead of it. The UI pass runs as a general-purpose subagent, loads the frontend-design:frontend-design skill, edits nothing, and sends suggested design edits to the orchestrator for the implementer; the gate still decides. This holds for each slice in a wave."
     }
   ],
-  "next_row": 15,
+  "next_row": 16,
   "next_rule": 11
 }

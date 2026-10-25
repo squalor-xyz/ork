@@ -2,7 +2,7 @@
 {
   "id": 49,
   "title": "What landing help is in v1?",
-  "status": "decided",
+  "status": "superseded",
   "key": "landing.v1",
   "asked_by": "claude",
   "decided_by": "jon",
@@ -21,6 +21,7 @@
   ],
   "decision": "list-and-detect",
   "rationale": "Owner interview 2026-10-18: a ready-to-land list with the slicer land command, and detection of merged branches with cleanup offer.",
+  "superseded_by": 162,
   "history": [
     {
       "date": "2026-10-18",
@@ -29,6 +30,11 @@
     {
       "date": "2026-10-18",
       "event": "decide"
+    },
+    {
+      "date": "2026-10-25",
+      "event": "supersede",
+      "note": "by 162"
     }
   ]
 }
