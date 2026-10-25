@@ -420,7 +420,7 @@ ork adds:
   may run on another vendor if the lineup names it (`review.cross-vendor`).
 - **Ledger.** Each role round is recorded with `slicer relay-run step` with
   role, vendor, model, effort and `--task "ID role"`, and its phase is
-  updated on exit. A heartbeat goes out every 10 minutes (*proposed*) while
+  updated on exit. A heartbeat goes out every 10 minutes while
   it runs.
 
 ## Owner questions

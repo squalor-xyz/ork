@@ -42,18 +42,19 @@ type Proc interface {
 
 // Deps are what an Engine calls out to.
 type Deps struct {
-	Adj       adjcli.Client
-	Runner    Runner
-	Slicer    slicercli.Client
-	GitBin    string // empty means "git"
-	Store     *runrec.Store
-	Check     CheckFunc // nil means RunCheck
-	Proc      Proc      // nil means the operating system's
-	Now       func() time.Time
-	Sleep     func(ctx context.Context, d time.Duration) error // nil sleeps for real
-	Backoff   []time.Duration                                  // locked-retry delays; nil means runrec.DefaultBackoff
-	RandHex   func() string                                    // four hex digits for run ids; nil is random
-	MaxRounds int                                              // 0 means DefaultMaxRounds
+	Adj            adjcli.Client
+	Runner         Runner
+	Slicer         slicercli.Client
+	GitBin         string // empty means "git"
+	Store          *runrec.Store
+	Check          CheckFunc // nil means RunCheck
+	Proc           Proc      // nil means the operating system's
+	Now            func() time.Time
+	Sleep          func(ctx context.Context, d time.Duration) error // nil sleeps for real
+	Backoff        []time.Duration                                  // locked-retry delays; nil means runrec.DefaultBackoff
+	RandHex        func() string                                    // four hex digits for run ids; nil is random
+	HeartbeatEvery time.Duration                                    // 0 means heartbeatInterval
+	MaxRounds      int                                              // 0 means DefaultMaxRounds
 }
 
 func (d Deps) now() time.Time {
@@ -107,16 +108,17 @@ type Config struct {
 // Answer, Retry, Stop, Reconcile) run one at a time; Snapshot may be called
 // at any moment.
 type Engine struct {
-	activity activityRing
-	mu       sync.Mutex
-	d        Deps
-	proj     registry.Project
-	run      *runrec.Run
-	wr       runrec.Writer
+	activity       activityRing
+	heartbeatEvery time.Duration
+	mu             sync.Mutex
+	d              Deps
+	proj           registry.Project
+	run            *runrec.Run
+	wr             runrec.Writer
 }
 
 func newEngine(d Deps, proj registry.Project, run *runrec.Run) *Engine {
-	return &Engine{d: d, proj: proj, run: run, wr: runrec.Writer{Sink: run, Now: d.now, Sleep: d.Sleep, Backoff: d.Backoff}}
+	return &Engine{d: d, heartbeatEvery: d.HeartbeatEvery, proj: proj, run: run, wr: runrec.Writer{Sink: run, Now: d.now, Sleep: d.Sleep, Backoff: d.Backoff}}
 }
 
 // worktreePath is the project's worktree pattern with {id} filled, relative

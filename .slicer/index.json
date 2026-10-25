@@ -177,7 +177,7 @@
       "id": "S70",
       "title": "Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed)",
       "short_title": "Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed)",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -198,7 +198,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -16,6 +16,8 @@ import (
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
+const heartbeatInterval = 10 * time.Minute
+
 // round is one role round the state machine asks for.
 type round struct {
 	role     string
@@ -239,6 +241,8 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 
 	stepID := e.stepStart(ctx, rec, r, entry)
+	stop := e.heartbeat(ctx, rec, stepID)
+	defer stop()
 	idx := -1
 	err = e.run.Update(func(rr *runrec.Record) {
 		rr.Roles = append(rr.Roles, runrec.RoleRecord{
@@ -306,6 +310,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 
 	if fallingBack {
+		stop()
 		e.stepEnd(ctx, rec, stepID, "fail")
 		return outcome{}, nil
 	}
@@ -327,9 +332,11 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		stopReason = fmt.Sprintf("%s round %d changed the tree, and it is a read-only role", r.role, r.n)
 	}
 	if stopReason != "" {
+		stop()
 		e.stepEnd(ctx, rec, stepID, "fail")
 		return outcome{}, e.stop(ctx, stopReason)
 	}
+	stop()
 	e.stepEnd(ctx, rec, stepID, "done")
 	if statusErr != nil {
 		return fail("read-only fingerprint", statusErr)
@@ -437,4 +444,35 @@ func (e *Engine) stepEnd(ctx context.Context, rec runrec.Record, id, phase strin
 		return
 	}
 	e.d.Slicer.RelayStep(ctx, e.wr, rec.Worktree, rec.RelayRun, slicercli.StepSpec{Step: id, Phase: phase})
+}
+
+// heartbeat refreshes a running ledger step. Recording is advisory.
+// stop cancels in-flight writes and waits before the step may end.
+func (e *Engine) heartbeat(ctx context.Context, rec runrec.Record, id string) func() {
+	if id == "" {
+		return func() {}
+	}
+	every := e.heartbeatEvery
+	if every == 0 {
+		every = heartbeatInterval
+	}
+	ctx, cancel := context.WithCancel(ctx)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		ticker := time.NewTicker(every)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				if ctx.Err() != nil {
+					return
+				}
+				e.d.Slicer.RelayStep(ctx, e.wr, rec.Worktree, rec.RelayRun, slicercli.StepSpec{Step: id, Phase: "start"})
+			}
+		}
+	}()
+	return func() { cancel(); <-done }
 }

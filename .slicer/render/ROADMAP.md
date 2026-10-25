@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-123 items · — 50 · done 68 · retired 5
+123 items · — 49 · done 69 · retired 5
 
 ## v1.1
 
@@ -75,7 +75,7 @@
 | 18 | [S78](slices/S78.md) | recoverRuns map writes under lock | S | 1 |  | discovered from S05 | — |
 | 19 | [S114](slices/S114.md) | Self-hosting: run ork on its own repo safely | M | 2 |  |  | — |
 | 20 | [S115](slices/S115.md) | Implementer brief: re-anchor the spec first and self-check before reporting | S | 1 |  |  | — |
-| 21 | [S70](slices/S70.md) | Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed) | S | 1 |  |  | — |
+| 21 | [S70](slices/S70.md) | Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed) | S | 1 |  |  | done |
 | 22 | [S99](slices/S99.md) | Live role detail: output tail and tokens/cost in the run pane | M | 2 |  | discovered from S07 | — |
 | 23 | [S111](slices/S111.md) | Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork | M | 2 |  | discovered from S28 | — |
 | 24 | [S109](slices/S109.md) | Run pane follows the newest running run, with a 1 s ledger refresh while a run is visible | M | 2 |  |  | — |
