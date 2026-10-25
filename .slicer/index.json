@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 104,
+  "next_id": 105,
   "preamble": "",
   "passes": [
     {
@@ -3892,6 +3892,36 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S104",
+      "title": "Answer an open adj record from the Questions tab: pick an option, type the reason, confirm",
+      "short_title": "Answer an open adj record from the Questions tab: pick an option, type the reason, confirm",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S27"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S27",
+        "parent": "",
+        "cites": [],
+        "key": "answer-adj-tui",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }
