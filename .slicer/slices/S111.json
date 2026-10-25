@@ -1,0 +1,39 @@
+{
+  "id": "S111",
+  "title": "Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner 2026-10-25. A question raised by a role must reach ork with the provided options and recommendation, show an amber alert on the run (Overview, the Running summary and the project page), be picked by digit (or t for free text) and confirmed, and resume the paused role with the answer. Today '## Owner needed' is free text and S28 only adds an optional 'Decision key:' line. Defines one question shape for the engine and adj: a title, 2 to 4 options (label and summary) and a recommendation with reasoning."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/roles/prompts/*.md`: the four role prompts say how to write the block (below).\n- `internal/engine/report.go` (CheckReport): parse the block into Report.Question {Title, Options[], Recommend, Reason, Key}; a malformed block is a shape error (role.report-shape) so the role fixes it; a free-text Owner needed section still works (no options).\n- `internal/runrec/record.go` (Question): Options and Recommend; `internal/source/source.go`, `internal/daemon/runs.go`: carry them on EngineRun (proposed).\n- `internal/tui/pane.go`, `model.go`, `keys.go`, `view.go`: the question pane lists the options with digit keys 1-4 and `t` for free text; the recommended option is marked; a confirm bar shows the exact `ork answer RUN TEXT` (Enter is No); the answer text is the option label plus its summary; with the S28 adj toggle on, the decision is filed with that text.\n- Alerts: amber row marker and a count in the sidebar and the Running summary.\n- Tests beside each, `testdata/golden/pane-question-*.txt`, `docs/dashboard.md`, `docs/design.md`, `docs/state.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestCheckReportParsesAStructuredQuestion and rejects: fewer than 2 options, a recommendation naming no option, a duplicate label.\n- TestFreeTextOwnerNeededStillPausesTheRun.\n- TestQuestionPaneListsOptionsAndMarksTheRecommendation; digits pick, t switches to free text.\n- TestPickingAnOptionShowsTheExactCommandThenAnswers: Enter, n and esc answer nothing; y answers once with label and summary; the paused role resumes.\n- TestAdjToggleFilesTheOptionAsTheDecisionText (S28).\n- TestQuestionAlertShowsOnTheRowAndTheSummary.\n- Golden views."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Tests first. 2. Format, in `## Owner needed`:\n```\nQuestion: ONE LINE TITLE\nOptions:\n1. LABEL: summary\n2. LABEL: summary\nRecommend: 1 - one-line reasoning\nDecision key: area.topic   (optional, from S28)\n```\n3. Parse, store, carry on the wire. 4. The pane and keys (digits are free in the pane; `t` is Retry elsewhere, so it is only free text inside this pane). 5. Alerts. 6. Docs and goldens. UI slice: UI pass (r14).\nDecided 2026-10-25 (owner): structured options with a recommendation, answered by digit."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/tui ./internal/daemon ./internal/source ./internal/engine ./internal/roles\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review the golden diff\n- slicer check\n- adj lint\n- [HUMAN CHECK] See the Why section of this slice."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

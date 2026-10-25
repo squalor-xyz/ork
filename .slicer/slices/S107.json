@@ -1,0 +1,39 @@
+{
+  "id": "S107",
+  "title": "Waves as a table: shares as a dim column, wave header rules, Lineup column only after ticking",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Frontend design review of 2026-10-25 (opus, from four owner screenshots; it did not read docs/dashboard.md or adj 149, so check the spec first). In the Waves view the (shares: S65 internal/engine/r... tails clip off the right edge on most rows and the view reads as a wall of text; the Lineup heading sits over nothing until something is ticked. Make shares a dim column holding only the predecessor id (e.g. <S65) with the shared file shown in the item pane on Enter, draw wave headers as rules (-- wave 2 --- 4 items), and show the Lineup column only after something is ticked."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/waves.go`, `lineup.go` (column), `view.go`, `theme.go`; tests beside; `testdata/golden/waves-*.txt`; `docs/dashboard.md` (Waves)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestSharesIsADimColumnWithThePredecessorIdOnly.\n- TestEnterOnAWavesRowShowsTheSharedFiles.\n- TestWaveHeadersAreRulesWithCounts.\n- TestLineupColumnAppearsOnlyAfterTicking.\n- TestWavesRowsNeverClipTheKeyColumns at 100x30 and 80x24.\n- Golden views, colour and monochrome."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Tests first. 2. Build the table columns. 3. The item pane on Enter. 4. Wave rules. 5. Docs and goldens. UI slice: UI pass (r14). The Enter pane for a Waves row is new; keep it read-only."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/tui\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review the golden diff\n- slicer check\n- adj lint\n- [HUMAN CHECK] The owner looks at the changed view in a live terminal at 100x30 and 80x24."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

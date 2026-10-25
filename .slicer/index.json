@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 105,
+  "next_id": 114,
   "preamble": "",
   "passes": [
     {
@@ -3338,7 +3338,7 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [
-        "S84"
+        "S105"
       ],
       "note_records": [
         {
@@ -3922,6 +3922,266 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S105",
+      "title": "Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases",
+      "short_title": "Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "keymap-brackets",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S106",
+      "title": "Run card first: Running at the top, the pane inline under the row, round and last heard beside the bar",
+      "short_title": "Run card first: Running at the top, the pane inline under the row, round and last heard beside the bar",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S84"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "run-card-first",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S107",
+      "title": "Waves as a table: shares as a dim column, wave header rules, Lineup column only after ticking",
+      "short_title": "Waves as a table: shares as a dim column, wave header rules, Lineup column only after ticking",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "waves-table",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S108",
+      "title": "Fold finished steps in the run tree to one line each",
+      "short_title": "Fold finished steps in the run tree to one line each",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "fold-run-tree",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S109",
+      "title": "Run pane follows the newest running run, with a 1 s ledger refresh while a run is visible",
+      "short_title": "Run pane follows the newest running run, with a 1 s ledger refresh while a run is visible",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "run-pane-follow",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S110",
+      "title": "Running: a live summary of every running project above Needs you in the sidebar",
+      "short_title": "Running: a live summary of every running project above Needs you in the sidebar",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S84"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "running-summary",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S111",
+      "title": "Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork",
+      "short_title": "Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S28"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S28",
+        "parent": "",
+        "cites": [],
+        "key": "structured-questions",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S112",
+      "title": "Answer questions of externally run relays from ork (needs slicer relay-run ask and answer)",
+      "short_title": "Answer questions of externally run relays from ork (needs slicer relay-run ask and answer)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S111"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S28",
+        "parent": "",
+        "cites": [],
+        "key": "external-answer",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S113",
+      "title": "Answer with adj on and no decision key must proceed",
+      "short_title": "Answer with adj on and no decision key must proceed",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S28",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }

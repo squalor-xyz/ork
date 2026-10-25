@@ -1,0 +1,39 @@
+{
+  "id": "S110",
+  "title": "Running: a live summary of every running project above Needs you in the sidebar",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner 2026-10-25. Each project's own page shows what it runs at the top (status, stage bar, animation, sparkline), and a top-level entry above Needs you in the sidebar, Running, shows every project with a live run, always current: project, item, the pipeline with the running role, stage bar, round, last heard, sparkline and any question or stop that needs the owner. Enter drops into that run's pane (which follows the newest running run, see the run-pane-follow slice). 1 s refresh while visible. Builds on S97 (pipeline, last heard), S07 (stage bar, ticker, sparkline) and the run-pane-follow slice."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/view.go`, `model.go`, `keys.go` (the sidebar entry above Needs you; the number keys and the sidebar order follow it, decision 82 and S85), `internal/tui/summary.go` (new) and `summary_test.go`.\n- `internal/tui/overview.go`, `relayboard.go`: reuse the Running row builder and the board parts; each project page keeps its Running section first (see the run-card-first slice).\n- `internal/source/source.go`, `internal/daemon/*.go`: the all-projects live read (reuse the visible-project fast refresh from the run-pane-follow slice for every project with a live run).\n- `testdata/golden/summary-*.txt`; `docs/dashboard.md`, `docs/design.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestSidebarHasARunningEntryAboveNeedsYouAndHidesItWhenNothingRuns (or shows a dim \"nothing running\").\n- TestSummaryListsEveryProjectWithALiveRun with the pipeline, bar, round, last heard and sparkline per row.\n- TestSummaryRowsUpdateOnTheNextRefresh and a project whose run ends drops to Recent without a keypress.\n- TestQuestionOrStopShowsAnAlertOnTheSummaryRowAndEnterOpensItsPane.\n- TestSummaryAtEightyByTwentyFour keeps the stage bar and role.\n- Golden views, colour and monochrome."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Tests first (injected clock). 2. The sidebar entry and the summary view. 3. The all-projects live refresh. 4. Alerts for questions and stops. 5. Docs and goldens. UI slice: UI pass (r14). Open for the preflight: the key for the entry (0 is Needs you in S85), the empty state, and the refresh cost with 14 projects."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/tui ./internal/daemon ./internal/source ./internal/engine ./internal/roles\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review the golden diff\n- slicer check\n- adj lint\n- [HUMAN CHECK] See the Why section of this slice."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

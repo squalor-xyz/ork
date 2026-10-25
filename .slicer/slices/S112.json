@@ -1,0 +1,39 @@
+{
+  "id": "S112",
+  "title": "Answer questions of externally run relays from ork (needs slicer relay-run ask and answer)",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner 2026-10-25. Relays run by an outer Claude session (started elsewhere) have no channel from ork back to the orchestrator. The owner wants a mailbox. adj 161 (relay.answer-channel) recommends slicer relay-run ask and relay-run answer in the shared ledger (ork uses slicer only through its CLI, goal C03; ork cannot write ../slicer). Draft slicer item: .scratch/slicer-relay-ask.md (the owner files it). This slice waits for slicer to ship it and for a relay contract version that tells an orchestrator to ask and poll; then ork adds that version to its accepted set."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/slicercli/types.go`, `slicercli.go`, `write.go`: the question on a step (list JSON) and a RelayAnswer write wrapper.\n- `internal/daemon/*.go`, `internal/source/source.go`: carry the external question and the answer call.\n- `internal/tui/pane.go`, `questions.go`, `overview.go`: the same option picker as the structured-questions slice for an external run; Enter answers via `slicer relay-run answer`.\n- `internal/roles/roles.go` (accepted contracts) and docs."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Not specified until slicer ships ask and answer: (1) a ledger step with a question shows an alert and the option picker for a started-elsewhere run; (2) answering calls slicer relay-run answer with the exact command shown on the confirm; (3) a contract version without the feature leaves the run read-only."
+    },
+    {
+      "heading": "Implement",
+      "body": "Blocked on the slicer item (.scratch/slicer-relay-ask.md) and adj 161. Write the spec after slicer ships it, reusing the structured-questions slice for the picker."
+    },
+    {
+      "heading": "Check",
+      "body": "- slicer check\n- adj lint\n- Not runnable until slicer ships the feature."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

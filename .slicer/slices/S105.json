@@ -1,0 +1,39 @@
+{
+  "id": "S105",
+  "title": "Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Frontend design review of 2026-10-25 (opus, from four owner screenshots; it did not read docs/dashboard.md or adj 149, so check the spec first). The owner chose (adj 160, ui.project-keys, to be decided): [ and ] switch projects everywhere (wrapping through Needs you as left/right do today); left/right belong to in-view tabs and fields; a stays Approve, A toggles all projects on Decisions, + adds a project on Welcome; the n and p row aliases are dropped (n is No in confirms). Revises the key part of adj 112 and 120. Check adj check ui.project-keys is decided before running."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/keys.go`, `model.go`, `view.go` (hint and help text), `welcome.go`, `decisions.go`, `lineup.go` (left/right stay field keys there), `questions.go`.\n- `internal/tui/*_test.go`, `testdata/golden/` (view bar and help goldens), `docs/dashboard.md`, `docs/design.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestBracketsSwitchProjectsAndWrapThroughNeedsYou.\n- TestLeftRightDoNotSwitchProjects (they are inert on Overview, Roadmap, Waves, Questions).\n- TestDecisionsLeftRightSwitchTabs still holds; TestAllProjectsToggleIsCapitalA; TestWelcomeAddIsPlus.\n- TestNAndPNoLongerMoveRows: n answers No in a confirm and moves nothing elsewhere.\n- Help and hint text list the new keys; goldens."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Check `adj check ui.project-keys`; stop if it is not decided. 2. Tests first. 3. Rebind in keys.go and handlers. 4. Update the help text, docs and goldens. UI slice: UI pass (r14)."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/tui\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review the golden diff\n- slicer check\n- adj lint\n- [HUMAN CHECK] The owner looks at the changed view in a live terminal at 100x30 and 80x24."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
