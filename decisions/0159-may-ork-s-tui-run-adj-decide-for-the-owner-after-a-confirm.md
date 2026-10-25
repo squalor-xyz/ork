@@ -2,9 +2,11 @@
 {
   "id": 159,
   "title": "May ork's TUI run adj decide for the owner, after a confirm?",
-  "status": "open",
+  "status": "decided",
   "key": "ui.answer-adj",
+  "decided_by": "Jon R",
   "created": "2026-10-25",
+  "decided_at": "2026-10-25",
   "context": "AGENTS.md says agents never run adj decide, reject or supersede: only the owner decides. The owner uses ork's TUI. Owner 2026-10-25: the Questions tab gets an answer path in its own slice: pick an option, type the reason, confirm the exact adj decide command (Enter is No), then the daemon runs it with --by from the project's git user.name. The owner is the one pressing the keys; agents never drive the TUI.",
   "options": [
     {
@@ -22,6 +24,8 @@
     "label": "tui-decide",
     "reasoning": "Owner 2026-10-25."
   },
+  "decision": "tui-decide",
+  "rationale": "Owner 2026-10-25: the Questions tab answers adj records after a confirm; only the owner operates the TUI.",
   "refs": [
     "S27"
   ],
@@ -29,6 +33,10 @@
     {
       "date": "2026-10-25",
       "event": "ask"
+    },
+    {
+      "date": "2026-10-25",
+      "event": "decide"
     }
   ]
 }

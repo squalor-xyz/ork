@@ -2,9 +2,11 @@
 {
   "id": 161,
   "title": "How does an answer from ork reach a relay run by an outer session?",
-  "status": "open",
+  "status": "decided",
   "key": "relay.answer-channel",
+  "decided_by": "Jon R",
   "created": "2026-10-25",
+  "decided_at": "2026-10-25",
   "context": "Owner 2026-10-25: a question raised by a subagent or sub-orchestrator should bubble up to ork (on Overview, the project page and the Running summary), be answered there with the provided recommended options, and be sent back down so the run continues. ork's own engine runs already pause and take ork answer. A relay run by an outer Claude session (a 'started elsewhere' ledger run) has no channel from ork back to that session. ork may use slicer only through its CLI and JSON (goal C03) and cannot write ../slicer, so any channel must be a slicer feature. The agents repo's relay-call.sh mailbox (.relay/SLICE/ in the worktree) carries role briefs and replies between an orchestrator and its roles, not owner answers.",
   "options": [
     {
@@ -27,6 +29,8 @@
     "label": "ledger-ask",
     "reasoning": "Keeps ork on slicer's CLI (C03) and uses the one ledger all tools share; the owner asked for a mailbox in principle on 2026-10-25, and this is the mechanism that fits ork's boundaries."
   },
+  "decision": "ledger-ask",
+  "rationale": "Owner 2026-10-25: external relays get an answer channel; slicer relay-run ask/answer in the shared ledger.",
   "refs": [
     "S28"
   ],
@@ -34,6 +38,10 @@
     {
       "date": "2026-10-25",
       "event": "ask"
+    },
+    {
+      "date": "2026-10-25",
+      "event": "decide"
     }
   ]
 }
