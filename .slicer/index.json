@@ -175,8 +175,8 @@
     },
     {
       "id": "S70",
-      "title": "Heartbeat every 10 minutes while a role runs (docs/design.md:353, proposed)",
-      "short_title": "Heartbeat every 10 minutes while a role runs (docs/design.md:353, proposed)",
+      "title": "Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed)",
+      "short_title": "Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed)",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
@@ -296,7 +296,7 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [
-        "S84"
+        "S109"
       ],
       "note_records": [],
       "claim": null,

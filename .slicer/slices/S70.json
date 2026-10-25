@@ -1,6 +1,6 @@
 {
   "id": "S70",
-  "title": "Heartbeat every 10 minutes while a role runs (docs/design.md:353, proposed)",
+  "title": "Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed)",
   "lead": [],
   "depends_note": null,
   "findings_note": "",
@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/round.go:351-371` (stepStart and stepEnd: start a ticker after stepStart, stop it in stepEnd).\n- `internal/slicercli/write.go:130-152` (RelayStep; the heartbeat passes no task).\n- `internal/slicercli/types.go:122` (StepSpec).\n- `internal/clitest/clitest.go` (fake slicer records the calls).\n- `internal/engine/*_test.go` (new heartbeat tests; the interval is a field so tests can shorten it).\n- `docs/design.md:353` (remove *proposed* once decided)."
+      "body": "- `internal/engine/round.go:417-440` (stepStart :420, stepEnd :435); call sites :241 (stepStart), :309, :330 and :333 (stepEnd).\n- `internal/engine/engine.go:44-57` (Deps): add `HeartbeatEvery time.Duration`; zero means the 10 minute constant `heartbeatInterval`.\n- `internal/slicercli/write.go:130-152` (RelayStep; the heartbeat passes no task).\n- `internal/slicercli/types.go:170-180` (StepSpec).\n- `internal/engine/harness_test.go`: routes :238-240 answer any `relay-run step` call; `stepCall` :293 parses --step, --phase and --task (a heartbeat has Step set, Phase \"start\", Task \"\"). `internal/clitest/clitest.go` needs no change.\n- `docs/design.md:423` (remove *proposed* once decided)."
     },
     {
       "heading": "Failing tests",
@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. Write the failing tests first (Failing tests) with the fake slicer in `internal/clitest/clitest.go` and a shortened interval. Run them and watch each fail for its stated reason.\n2. `internal/engine/round.go`: add an Engine field `heartbeatEvery time.Duration` (zero means 10 minutes, a constant `heartbeatInterval`). Add `heartbeat(ctx, rec, id) (stop func())`: a goroutine with a ticker that calls `RelayStep` with `StepSpec{Step: id, Phase: \"start\"}` (no task) at each tick, and ignores any error (recording is advisory, internal/engine/states.go:33). `stop` ends the ticker and waits for the goroutine, so no call follows it.\n3. Call `heartbeat` after `stepStart` at round.go:202 and `stop` before the two `stepEnd` calls (:276 and :279), on every path that ends the round. Skip it when the step id is empty.\n4. Pin the interval: a test asserts `heartbeatInterval` is 10 minutes and below slicer's 30-minute stale limit.\n5. `docs/design.md:353,376`: remove *proposed* from the 10 minute heartbeat.\n6. Mutation check: drop the `stop` call and confirm TestHeartbeatStopsAtStepEnd fails; make the first tick fire at 0 and confirm TestShortRoundSendsNoHeartbeat fails; restore both.\nDecided 2026-10-23 (owner interview): the interval is 10 minutes. Nothing is open."
+      "body": "1. Write the failing tests first (Failing tests) with the fake slicer in `internal/clitest/clitest.go` and a shortened interval. Run them and watch each fail for its stated reason.\n2. `internal/engine/round.go`: add an Engine field `heartbeatEvery time.Duration` (zero means 10 minutes, a constant `heartbeatInterval`). Add `heartbeat(ctx, rec, id) (stop func())`: a goroutine with a ticker that calls `RelayStep` with `StepSpec{Step: id, Phase: \"start\"}` (no task) at each tick, and ignores any error (recording is advisory, internal/engine/states.go:33). `stop` ends the ticker and waits for the goroutine, so no call follows it.\n3. Call `heartbeat` after `stepStart` at round.go:202 and `stop` before the two `stepEnd` calls (:276 and :279), on every path that ends the round. Skip it when the step id is empty.\n4. Pin the interval: a test asserts `heartbeatInterval` is 10 minutes and below slicer's 30-minute stale limit.\n5. `docs/design.md:353,376`: remove *proposed* from the 10 minute heartbeat.\n6. Mutation check: drop the `stop` call and confirm TestHeartbeatStopsAtStepEnd fails; make the first tick fire at 0 and confirm TestShortRoundSendsNoHeartbeat fails; restore both.\nDecided 2026-10-23 (owner interview): the interval is 10 minutes. Nothing is open.\n\nSpec check 2026-10-25: anchors moved (design.md:353 is now :423; slicer's ai.py:385-386 is now ../slicer/src/slicer/ai.py:396-397; design.md:376 has no heartbeat text, drop it from step 5; the call sites are round.go :241, :309, :330, :333, not :202, :276, :279). The heartbeat goroutine uses a context derived from the round's ctx; stop() cancels it and waits, because RelayStep goes through runrec.Writer, which retries a locked call with backoff (internal/runrec/writer.go:33-60). Use defer stop() after the start plus an explicit stop before each stepEnd, since early returns between :241 and :309 skip stepEnd. Not in scope: a run paused for the owner over 30 minutes still goes stale."
     },
     {
       "heading": "Check",
