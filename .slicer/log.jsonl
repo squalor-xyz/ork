@@ -1213,3 +1213,6 @@
 {"when": "2026-10-25T15:11:12Z", "item": "S104", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-25T15:11:12Z", "item": "S104", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-10-25T15:11:12Z", "item": "S87", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-25T15:17:50Z", "item": "S28", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-25T15:18:39Z", "item": "S28", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-25T15:46:39Z", "item": "S28", "action": "status", "from": "started", "to": "done", "note": "S28: the Owner needed section may name a Decision key; the engine pane has a ctrl+a toggle that files the answer as adj ask and decide (check, ask if not open, decide, then resume), TUI only, --by from ADJ_DECIDED_BY, adj calls in writes[]. Race suite, vet, gofmt, slicer check and adj lint pass; the owner's human check is still due.", "by": "Jon R"}

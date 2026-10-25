@@ -165,3 +165,12 @@ func (d *Daemon) UnavailableProjects(ctx context.Context) ([]source.Snapshot, er
 	defer c.Close()
 	return c.UnavailableProjects(ctx)
 }
+
+func (d *Daemon) AnswerAction(ctx context.Context, action daemon.RunAction) (string, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer c.Close()
+	return c.AnswerAction(ctx, action)
+}

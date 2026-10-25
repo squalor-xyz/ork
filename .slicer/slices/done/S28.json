@@ -1,0 +1,41 @@
+{
+  "id": "S28",
+  "title": "TUI answers can file an adj ask and decide",
+  "lead": [
+    "Owner decision #45: an optional toggle files the owner's answer as an adj ask plus decide. The recording must use decide --by jon, and only from the owner's answer in the TUI. Depends on the answer pane slice."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner decision #45: an optional toggle files the owner's answer as an adj ask plus decide. The recording must use decide --by jon, and only from the owner's answer in the TUI. Depends on the answer pane slice."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui` (toggle), `internal/daemon` or cli (the adj calls), tests, docs."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestAnswerFilesAdjAskAndDecideWhenToggled: with the toggle on, the daemon runs adj check, then adj ask (if not open), then adj decide with the answer text and --why, then resumes the role.\n- TestAnswerSkipsAskWhenKeyIsOpenOrDecided: when adj check reports open or decided, adj ask does not run.\n- TestAnswerWithToggleOffRecordsNothingInAdj: with the toggle off, no adj call runs.\n- TestAnswerWithoutAdjDecidedByIsRefused: with ADJ_DECIDED_BY unset in the caller, the answer is refused with a message, nothing is filed and the role is not resumed (record 126).\n- TestAnswerAdjErrorKeepsTextAndDoesNotResume: an adj error shows its code and message verbatim, the typed text stays, and engine.Answer is not called.\n- TestAdjCallsLandInWrites: each adj call adds an entry to the run's writes[] with Tool \"adj\"."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests first (the Failing-tests above): in internal/adjcli/adjcli_test.go with fixtures, and in internal/daemon/runs_test.go with a fake adj runner. Run them and confirm they fail.\n2. internal/adjcli/adjcli.go: add three calls to Client (today it has only Inbox :82 and List :88): Check (adj check QUERY; the first output line is decided, open, closed or not found; exit 0 for all four), Ask (adj ask TITLE with --option, --recommend, --ref ITEM, --context, --by), and Decide (adj decide ID --text ANSWER --why WHY --by NAME).\n3. The writes go through runrec.Writer as slicer does: see slicercli/write.go:102-110 (runrec.Cmd with Tool \"slicer\"). The adj calls use Tool \"adj\" so they land in writes[] (runrec/record.go:151-161).\n4. Add a toggle field to RunAction (runs.go:42-46) and carry it through client.go Answer (:139-141), tui/daemon.go Answer (:77-84) and the answer verb (tui/model.go:569-586).\n5. daemon/runs.go answer path (:351-361): with the toggle on, before the engine call at :361, run adj check on the question (AdjRoot is proj.Path, engine.go:203). If the key is not open, run adj ask with --ref = the run's item. Then run adj decide with --text ANSWER and --why.\n6. Only after both adj calls succeed, call r.engine.Answer (engine.go:287-314). If an adj call fails, return its error from ownerRun (:314-399) and do not resume.\n7. The TUI keeps the typed text when the call fails (pane.go:48-80 and the answer field).\n8. Pass --by explicitly on ask and decide. adj decide defaults to $ADJ_DECIDED_BY, and a detached daemon may not have it (adj decide --help; the same default applies to adj ask, $ADJ_ASKED_BY).\n9. Update docs/dashboard.md:169-174 and docs/state.md (writes list).\n\nDecided: record 126 (owner.questions-filing). The TUI or CLI passes its own ADJ_DECIDED_BY in the request and the daemon passes it as --by on adj ask and adj decide; if it is unset the answer is refused with a message and nothing is filed. The --why text is 'Answered in ork on DATE' plus the question.\nOpen: which key the TUI shows for the adj question: no record field holds one today (runrec.Question, record.go:103-110, has no key).\n\nDecided 2026-10-23 (owner interview): the Owner needed section may name an optional decision key; the TUI shows it and passes it to adj ask; add the optional key to runrec.Question.\n\nRe-anchor and owner decisions of 2026-10-25 (from the S28 preflight). Files list additions: `internal/runrec/record.go` (Question.Key, optional, omitempty), `internal/engine/report.go` and `round.go` (parse the key, store it in Report.Key and copy it to Pending), the four role prompts in `internal/roles/prompts/` (implementer, reviewer, gate, architect: say to add a `Decision key: area.topic` line to `## Owner needed` when a decision should be filed in adj), `internal/source/source.go` and `internal/daemon/runs.go` (EngineRun.Key, *proposed*), `internal/daemon/client.go`, `internal/tui/keys.go`, `pane.go`, `model.go`, `live.go` and the TUI fakes. The answer path is ownerRun MethodRunAnswer in runs.go (~724-734); the TUI answer verb is in model.go (~903-925); pane.go has paneKey. Golden views live in the repo-level testdata/golden/ (the spec named internal/tui/testdata/golden/, which does not exist; the pane-question-mono-* files the spec names must be located or created). adj 159 (ui.answer-adj) is a separate record for S104 and does not gate S28; S28 rests on #45 and record 126. S104 uses digit keys and t in the adj record pane (decisionPane), a different pane; both touch keys.go and questions.go. Decisions: (1) TOGGLE KEY: `ctrl+a`, handled in paneKey before the text field; default off, reset each time the pane opens, not persisted; footer `[ ] file in adj (key area.topic)  ctrl+a toggles`, dim and inert when the project has no adj (reg.Adj false) or the question has no key; add a help-view binding. (2) KEY SYNTAX: one line `Decision key: area.topic` anywhere in `## Owner needed`; the engine parses it into Report.Key and stores it as the optional runrec.Question.Key; a malformed key (not lowercase dotted area.topic) is a shape error under role.report-shape. (3) NO KEY: the toggle is disabled and the answer proceeds as today with no adj calls. (4) ADJ OUTCOMES: `adj check` outcome not found or closed: run ask then decide; open: skip ask and decide that record (found by an exact key match in `adj check --json`, not substring); decided: file nothing, resume the role, and the TUI shows \"already decided as #N\"; if decide fails after ask the record stays open and a retry reuses it; this replaces failing test 2 for the decided case. (5) ADJ ASK CONTENT: TITLE is the first non-key line of the section clipped to about 100 characters; --context is the full section text; no --option or --recommend; --key is the key; --ref is the run's item; --by is $ADJ_DECIDED_BY for both ask and decide (the spec cited ADJ_ASKED_BY); `decide --text` is the typed answer; --why is \"Answered in ork on DATE: \" plus the TITLE. (6) SURFACE: TUI only: RunAction gets Adj and By fields; `ork answer` sends neither and gets no new flag. Nothing is open."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review the answer-pane goldens (pane-question-mono-*.txt) for the toggle line.\n- Run TestAnswer* and TestAdj* by name with go test -run.\n- The tests use fake adj runners and fixtures only. No test may run adj ask or adj decide against a real repo.\n- slicer check\n- adj lint\n- [HUMAN CHECK] The owner answers one question with the toggle on in a test project and checks the adjudicate record."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

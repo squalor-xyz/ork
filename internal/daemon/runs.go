@@ -51,6 +51,8 @@ type RunParams struct {
 
 // RunAction names a run, and an owner answer when answering.
 type RunAction struct {
+	Adj  bool   `json:"adj,omitempty"`
+	By   string `json:"by,omitempty"`
 	Run  string `json:"run"`
 	Text string `json:"text,omitempty"`
 }
@@ -664,40 +666,53 @@ func (d *Daemon) launchRun(r *managedRun, fn func(context.Context) error) {
 		d.runs.mu.Unlock()
 	}()
 }
+
+// RunReply adds a proposed transient notice to the usual run record reply.
+type RunReply struct {
+	runrec.Record
+	Message string `json:"message,omitempty"`
+}
+
 func (d *Daemon) ownerRun(ctx context.Context, method string, p RunAction) (runrec.Record, error) {
+	reply, err := d.ownerRunReply(ctx, method, p)
+	return reply.Record, err
+}
+
+func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) (RunReply, error) {
 	d.runs.mu.Lock()
 	if d.runs.closed {
 		d.runs.mu.Unlock()
-		return runrec.Record{}, errors.New("run manager is closed")
+		return RunReply{}, errors.New("run manager is closed")
 	}
 	r := d.runs.runs[p.Run]
 	if r == nil {
 		d.runs.mu.Unlock()
-		return runrec.Record{}, &ipc.Error{Code: CodeNotFound, Message: "no run " + p.Run}
+		return RunReply{}, &ipc.Error{Code: CodeNotFound, Message: "no run " + p.Run}
 	}
 	if r.engine == nil {
 		run, err := d.runs.deps.Store.Open(p.Run)
 		failure := r.failure
 		d.runs.mu.Unlock()
 		if err != nil {
-			return runrec.Record{}, err
+			return RunReply{}, err
 		}
-		return run.Snapshot(), failure
+		return RunReply{Record: run.Snapshot()}, failure
 	}
 	// A stop that arrives while another stop is in flight joins it.
 	if method == MethodRunStop && r.stop != nil && (r.busy || r.stopping) {
-		return d.joinStop(ctx, r.stop)
+		rec, err := d.joinStop(ctx, r.stop)
+		return RunReply{Record: rec}, err
 	}
 	if r.stopping {
 		d.runs.mu.Unlock()
-		return runrec.Record{}, fmt.Errorf("run %s is stopping", p.Run)
+		return RunReply{}, fmt.Errorf("run %s is stopping", p.Run)
 	}
 	if r.busy && method != MethodRunStop {
 		d.runs.mu.Unlock()
 		if method == MethodRunRetry {
-			return runrec.Record{}, fmt.Errorf("run %s is busy; use ork stop %s to stop it", p.Run, p.Run)
+			return RunReply{}, fmt.Errorf("run %s is busy; use ork stop %s to stop it", p.Run, p.Run)
 		}
-		return runrec.Record{}, fmt.Errorf("run %s is busy", p.Run)
+		return RunReply{}, fmt.Errorf("run %s is busy", p.Run)
 	}
 	// Only a stop leaves a handle for later stops to join; any other job clears it.
 	var call *stopCall
@@ -715,32 +730,46 @@ func (d *Daemon) ownerRun(ctx context.Context, method string, p RunAction) (runr
 		if d.runs.closed {
 			call.abandon(errors.New("run manager is closed"))
 			d.runs.mu.Unlock()
-			return runrec.Record{}, errors.New("run manager is closed")
+			return RunReply{}, errors.New("run manager is closed")
 		}
 	}
 	r.stopping = false
 	var fn func(context.Context) error
+	var message string
 	switch method {
 	case MethodRunAnswer:
 		rec := r.engine.Snapshot()
 		if rec.State == runrec.StatePaused && (rec.Pending == nil || rec.Pending.Kind != runrec.PendingQuestion) {
 			d.runs.mu.Unlock()
-			return runrec.Record{}, fmt.Errorf("run %s has no pending question; use ork retry %s", p.Run, p.Run)
+			return RunReply{}, fmt.Errorf("run %s has no pending question; use ork retry %s", p.Run, p.Run)
 		}
 		if strings.TrimSpace(p.Text) == "" || rec.State != runrec.StatePaused || rec.Pending == nil || rec.Pending.Kind != runrec.PendingQuestion {
 			d.runs.mu.Unlock()
-			return runrec.Record{}, errors.New("run needs a pending question and a non-empty answer")
+			return RunReply{}, errors.New("run needs a pending question and a non-empty answer")
 		}
-		fn = func(ctx context.Context) error { return r.engine.Answer(ctx, p.Text) }
+		if p.Adj && strings.TrimSpace(p.By) == "" {
+			d.runs.mu.Unlock()
+			return RunReply{}, errors.New("ADJ_DECIDED_BY is unset; set it in the caller before filing an answer in adj")
+		}
+		fn = func(ctx context.Context) error {
+			if p.Adj {
+				var err error
+				message, err = r.engine.FileAnswer(ctx, p.Text, p.By)
+				if err != nil {
+					return err
+				}
+			}
+			return r.engine.Answer(ctx, p.Text)
+		}
 	case MethodRunRetry:
 		rec := r.engine.Snapshot()
 		if rec.State != runrec.StatePaused || rec.Pending == nil {
 			d.runs.mu.Unlock()
-			return runrec.Record{}, fmt.Errorf("run %s is not paused with a pending step; use ork stop %s to stop it", p.Run, p.Run)
+			return RunReply{}, fmt.Errorf("run %s is not paused with a pending step; use ork stop %s to stop it", p.Run, p.Run)
 		}
 		if rec.Pending.Kind == runrec.PendingQuestion {
 			d.runs.mu.Unlock()
-			return runrec.Record{}, fmt.Errorf("run %s waits for an answer; use ork answer %s TEXT or ork stop %s", p.Run, p.Run, p.Run)
+			return RunReply{}, fmt.Errorf("run %s waits for an answer; use ork answer %s TEXT or ork stop %s", p.Run, p.Run, p.Run)
 		}
 		fn = r.engine.Retry
 	case MethodRunApprove:
@@ -759,7 +788,7 @@ func (d *Daemon) ownerRun(ctx context.Context, method string, p RunAction) (runr
 		}
 	default:
 		d.runs.mu.Unlock()
-		return runrec.Record{}, errors.New("unknown owner action")
+		return RunReply{}, errors.New("unknown owner action")
 	}
 	d.launchRun(r, fn)
 	r.stop = call // launchRun cleared the handle; a stop sets it again for later stops to join
@@ -772,10 +801,10 @@ func (d *Daemon) ownerRun(ctx context.Context, method string, p RunAction) (runr
 	// Owner commands return once the engine has durably applied the action.
 	select {
 	case <-ctx.Done():
-		return runrec.Record{}, ctx.Err()
+		return RunReply{}, ctx.Err()
 	case <-done:
 	}
-	return result.record, result.err
+	return RunReply{Record: result.record, Message: message}, result.err
 }
 
 // joinStop waits for the stop in flight and returns its outcome. The caller
@@ -811,6 +840,9 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 	}
 	if method == MethodRunDismiss {
 		return d.dismissRun(p)
+	}
+	if method == MethodRunAnswer {
+		return d.ownerRunReply(ctx, method, p)
 	}
 	return d.ownerRun(ctx, method, p)
 }
@@ -890,9 +922,11 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 			}
 			continue
 		}
+		questionKey := ""
 		pending := ""
 		if rec.State == runrec.StatePaused && rec.Pending != nil {
 			pending = rec.Pending.Kind
+			questionKey = rec.Pending.Key
 		}
 		wait := rec.Reason
 		if rec.Pending != nil {
@@ -943,7 +977,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		if m := d.runs.runs[rec.ID]; m != nil && !m.busy && m.failure != nil {
 			failure = m.failure.Error()
 		}
-		runs = append(runs, EngineRun{Unavailable: unavailable, Error: failure, Activity: activity, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
+		runs = append(runs, EngineRun{Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
 	}
 	// Dismissed records still supersede older stopped runs of the same slice.
 	visible := runs[:0]

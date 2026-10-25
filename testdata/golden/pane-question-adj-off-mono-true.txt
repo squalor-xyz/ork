@@ -1,0 +1,30 @@
+[1mork[m  ?help                 | [1mOverview[m[2m | [mQuestions[2m | [mWaves[2m | [mRoadmap[2m | [mDecisions
+[1;7m> Needs you[m                |[2m------------------------------------------------------------------------[m
+  ork 1                    |[1mNeeds you[m
+                           |[1;7m  = paused    ork  engine  S22  paused  owner action  2 of 6 steps ru...[m
+                           |
+                           |[1mRunning[m
+                           |  [2mnothing running[m
+                           |
+                           |[1mRecent[m
+                           |  [2mnone[m
+                           |
+                           |[1mReady to land[m
+                           |  [2mnone[m
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |
+                           |  [1mRun engine  S22  paused[m
+                           |  owner action
+                           |  [2m[......][m
+                           |  [2mimplementer[m > [2mreviewer[m > [2mgate[m
+                           |  
+                           |  Answer: [1muse local storage[m[1;7m [m[1m[m
+                           |  ork answer engine use local storage
+                           |  [ ] file answer in adj as storage.engine  ctrl+a toggles
+                           |  enter submit; esc close pane
+                           |[2m------------------------------------------------------------------------[m
+                           | 1 project | refreshed 16:42:00 | pending 0

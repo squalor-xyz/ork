@@ -143,7 +143,8 @@ func (c *Client) Retry(ctx context.Context, run string) error {
 
 // Answer resumes a paused question with the owner's text.
 func (c *Client) Answer(ctx context.Context, run, text string) error {
-	return c.Call(ctx, MethodRunAnswer, RunAction{Run: run, Text: text}, nil)
+	_, err := c.AnswerAction(ctx, RunAction{Run: run, Text: text})
+	return err
 }
 
 // WaveSuggest reads slicer's plan-parallel waves for a registered project.
@@ -214,4 +215,11 @@ func (c *Client) UnavailableProjects(ctx context.Context) ([]source.Snapshot, er
 		groups = append(groups, source.Snapshot{Project: registry.Project{Name: p.Name}, Unavailable: true, EngineRuns: p.EngineRuns})
 	}
 	return groups, nil
+}
+
+// AnswerAction passes the TUI's optional adj filing request and returns its notice.
+func (c *Client) AnswerAction(ctx context.Context, action RunAction) (string, error) {
+	var reply RunReply
+	err := c.Call(ctx, MethodRunAnswer, action, &reply)
+	return reply.Message, err
 }

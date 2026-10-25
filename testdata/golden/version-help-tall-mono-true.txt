@@ -26,12 +26,12 @@
                            |x stop
                            |t retry
                            |enter (answer) submit; no confirmation
+                           |ctrl+a (answer) toggle filing the answer in adj
                            |pgup/pgdown scroll run tree and reason or decision
                            |c remove merged worktree and branch (Ready)
                            |r refresh now
-                           |? show or hide this help
+                           |q quit; ? show or hide this help
                            |esc close run, question, item, decision, help or message
-                           |q quit
                            |
                            |Overview, Questions, Waves, Roadmap and Decisions are available.
                            |[2m------------------------------------------------------------------------[m

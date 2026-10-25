@@ -4,6 +4,7 @@ package tui
 
 import (
 	"github.com/squalor-xyz/ork/internal/source"
+	"os"
 	"strings"
 
 	"charm.land/bubbles/v2/key"
@@ -14,6 +15,7 @@ import (
 // runPane keeps its run target while snapshots reorder Overview rows.
 type runPane struct {
 	run, project string
+	adj          bool
 	ledger       bool
 	input        textField
 	offset       int
@@ -77,6 +79,12 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 	if m.paneQuestion() {
+		if msg.String() == "ctrl+a" {
+			if _, reason := m.paneAdjKey(); reason == "" {
+				m.pane.adj = !m.pane.adj
+			}
+			return nil
+		}
 		if msg.String() == "enter" {
 			return m.requestAction("answer")
 		}
@@ -129,30 +137,89 @@ func (m *Model) paneLines(w, h int, status string) []string {
 		}
 	}
 	footer := []string{}
+	var priorities []int
+	addFooter := func(lines []string, priority int) {
+		footer = append(footer, lines...)
+		for range lines {
+			priorities = append(priorities, priority)
+		}
+	}
 	switch {
 	case r.unavailable:
-		footer = append(footer, wrapText(source.RemovedProjectHelp(r.name), width)...)
-		footer = append(footer, "Removed project; esc close pane")
+		addFooter(wrapText(source.RemovedProjectHelp(r.name), width), 2)
+		addFooter([]string{"Removed project; esc close pane"}, 3)
 	case m.pane.ledger:
-		footer = append(footer, wrapText("started elsewhere, read-only; esc close pane", width)...)
+		addFooter(wrapText("started elsewhere, read-only; esc close pane", width), 2)
 	case r.state == "paused" && r.pending == "question":
-		footer = append(footer, "Answer: "+m.pane.input.view(max(width-len("Answer: "), 1), m.cfg.Theme))
-		footer = append(footer, wrapText("ork answer "+r.engineID+" "+m.pane.input.Value(), width)...)
-		footer = append(footer, "enter submit; esc close pane")
+		addFooter([]string{"Answer: " + m.pane.input.view(max(width-len("Answer: "), 1), m.cfg.Theme)}, 0)
+		addFooter(wrapText("ork answer "+r.engineID+" "+m.pane.input.Value(), width), 5)
+		decisionKey, disabledReason := m.paneAdjKey()
+		on := m.pane.adj && disabledReason == ""
+		toggle := "[ ] file answer in adj as " + decisionKey + "  ctrl+a toggles"
+		if on {
+			toggle = "[x] file answer in adj as " + decisionKey + "  ctrl+a toggles"
+		}
+		if disabledReason != "" {
+			toggle = "adj filing off: " + disabledReason
+		}
+		warningAt := len(toggle)
+		if on && strings.TrimSpace(os.Getenv("ADJ_DECIDED_BY")) == "" {
+			toggle += "  ADJ_DECIDED_BY unset"
+			warningAt += 2
+		}
+		// Wrap plain text first so each physical line has its own style.
+		toggleLines := wrapText(toggle, width)
+		offset := 0
+		for i, line := range toggleLines {
+			offset += strings.Index(toggle[offset:], line)
+			switch {
+			case disabledReason != "":
+				toggleLines[i] = m.cfg.Theme.Dim.Render(line)
+			case on:
+				split := min(max(warningAt-offset, 0), len(line))
+				toggleLines[i] = ""
+				if split > 0 {
+					toggleLines[i] = m.cfg.Theme.Heading.Render(line[:split])
+				}
+				if split < len(line) {
+					toggleLines[i] += m.cfg.Theme.Warn.Render(line[split:])
+				}
+			}
+			offset += len(line)
+		}
+		priority := 4
+		if on {
+			priority = 2
+		}
+		addFooter(toggleLines, priority)
+		addFooter([]string{"enter submit; esc close pane"}, 3)
 	case r.state == "paused":
-		footer = append(footer, "t retry; esc close pane")
+		addFooter([]string{"t retry; esc close pane"}, 3)
 	case r.state == "stopped":
-		footer = append(footer, wrapText("Stopped; relaunch, or clear with: ork dismiss "+r.engineID, width)...)
-		footer = append(footer, "esc close pane")
+		addFooter(wrapText("Stopped; relaunch, or clear with: ork dismiss "+r.engineID, width), 2)
+		addFooter([]string{"esc close pane"}, 3)
 	case r.state == "awaiting-approval":
-		footer = append(footer, "a approve; x stop; esc close pane")
+		addFooter([]string{"a approve; x stop; esc close pane"}, 3)
 	case r.state == "committed":
-		footer = append(footer, "esc close pane")
+		addFooter([]string{"esc close pane"}, 3)
 	default:
-		footer = append(footer, "x stop; esc close pane")
+		addFooter([]string{"x stop; esc close pane"}, 3)
 	}
 	if status != "" {
-		footer = append(footer, wrapText(status, width)...)
+		addFooter(wrapText(status, width), 1)
+	}
+	// Drop the lowest priority lines first: preview, off/disabled toggle,
+	// submit hint, on toggle, status, then input. Preserve earlier lines
+	// within a priority when the terminal cannot fit the whole group.
+	for len(footer) > h && len(footer) > 0 {
+		drop := 0
+		for i, priority := range priorities {
+			if priority >= priorities[drop] {
+				drop = i
+			}
+		}
+		footer = append(footer[:drop], footer[drop+1:]...)
+		priorities = append(priorities[:drop], priorities[drop+1:]...)
 	}
 	// The action area takes priority if the header no longer fits.
 	header = header[:min(len(header), max(h-len(footer), 0))]
@@ -199,4 +266,23 @@ func (m *Model) paneLines(w, h int, status string) []string {
 		out[i] = lipgloss.NewStyle().MaxWidth(max(w, 1)).Render(out[i])
 	}
 	return out
+}
+
+func (m *Model) paneAdjKey() (string, string) {
+	p := m.byName[m.pane.project]
+	if p == nil {
+		return "", "no adj in this project"
+	}
+	for _, r := range p.snap.EngineRuns {
+		if r.ID == m.pane.run {
+			if !p.reg.Adj {
+				return r.Key, "no adj in this project"
+			}
+			if r.Key == "" {
+				return "", "question has no decision key"
+			}
+			return r.Key, ""
+		}
+	}
+	return "", "question has no decision key"
 }

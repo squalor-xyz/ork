@@ -346,6 +346,9 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 				m.actionStatus = msg.action.command() + ": " + actionError(msg.err)
 			} else {
 				m.actionStatus = msg.action.command() + ": done"
+				if msg.message != "" {
+					m.actionStatus += "; " + msg.message
+				}
 				if msg.action.verb == "answer" && m.pane != nil {
 					m.pane.input = textField{}
 				}
@@ -778,6 +781,8 @@ func (m *Model) moveView(delta int) tea.Cmd {
 // runAction retains the exact target while a confirmation is on screen.
 type runAction struct {
 	verb, run, project, text string
+	adj                      bool
+	by                       string
 	cleanupCommand           string
 	items                    []daemon.RunParams
 	plan                     *daemon.RunPlan
@@ -835,8 +840,9 @@ func (a runAction) cleanupConfirmLines(width, limit int) []string {
 }
 
 type actionMsg struct {
-	action runAction
-	err    error
+	message string
+	action  runAction
+	err     error
 }
 
 func (m *Model) requestAction(verb string) tea.Cmd {
@@ -920,6 +926,11 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 	}
 	if verb == "answer" {
 		a.text = m.pane.input.Value()
+		_, reason := m.paneAdjKey()
+		a.adj = m.pane.adj && reason == ""
+		if a.adj {
+			a.by = os.Getenv("ADJ_DECIDED_BY")
+		}
 	}
 	if verb == "approve" || verb == "answer" {
 		return m.callAction(a)
@@ -944,6 +955,7 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 	m.actionStatus = a.command() + ": pending"
 	return func() tea.Msg {
 		var err error
+		var message string
 		switch a.verb {
 		case "cleanup":
 			err = live.Cleanup(context.Background(), a.run)
@@ -954,9 +966,9 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 		case "retry":
 			err = live.Retry(context.Background(), a.run)
 		case "answer":
-			err = live.Answer(context.Background(), a.run, a.text)
+			message, err = live.AnswerAction(context.Background(), daemon.RunAction{Run: a.run, Text: a.text, Adj: a.adj, By: a.by})
 		}
-		return actionMsg{action: a, err: err}
+		return actionMsg{action: a, err: err, message: message}
 	}
 }
 

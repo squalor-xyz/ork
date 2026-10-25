@@ -174,6 +174,7 @@ type EngineRole struct {
 
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
+	Key         string       `json:"key,omitempty"`         // proposed: pending question decision key
 	Unavailable bool         `json:"unavailable,omitempty"` // proposed: no engine or owner actions
 	Error       string       `json:"error,omitempty"`       // proposed: daemon memory only
 	Activity    []int        `json:"activity,omitempty"`    // proposed: current role stream events, ten 30 s buckets

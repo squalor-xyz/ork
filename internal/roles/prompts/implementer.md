@@ -83,6 +83,9 @@ affected tests and the full suite.
 
 ## Owner questions
 
+When a decision should be filed in adj, add one `Decision key: area.topic`
+line anywhere in `## Owner needed`. Use a lowercase dotted decision key.
+
 Do not guess a spec detail, a design choice or a decision that is the owner's. Stop
 the work that depends on it and ask in your report, under `## Owner needed`: the
 question, the options you see, and your recommendation. Finish any independent work

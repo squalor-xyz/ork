@@ -1328,7 +1328,7 @@
       "id": "S28",
       "title": "TUI answers can file an adj ask and decide",
       "short_title": "TUI answers can file an adj ask and decide",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S27"
@@ -1363,7 +1363,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

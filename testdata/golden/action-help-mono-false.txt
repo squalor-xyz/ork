@@ -19,12 +19,12 @@
                            |x stop
                            |t retry
                            |enter (answer) submit; no confirmation
+                           |ctrl+a (answer) toggle filing the answer in adj
                            |pgup/pgdown scroll run tree and reason or decision
                            |c remove merged worktree and branch (Ready)
                            |r refresh now
-                           |? show or hide this help
+                           |q quit; ? show or hide this help
                            |esc close run, question, item, decision, help or message
-                           |q quit
                            |[90m  +2 more lines[m
                            |[90m------------------------------------------------------------------------[m
                            | 1 project | refreshed 16:42:00 | pending 0

@@ -235,3 +235,7 @@ func (l *fakeLive) ProjectsAdd(_ context.Context, path string) (registry.Project
 	l.addPaths = append(l.addPaths, path)
 	return registry.Project{}, nil
 }
+
+func (l *fakeLive) AnswerAction(ctx context.Context, a daemon.RunAction) (string, error) {
+	return "", l.Answer(ctx, a.Run, a.Text)
+}

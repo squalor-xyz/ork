@@ -296,6 +296,21 @@ The actions follow the state (`ui.answer-pane-scope`):
   previous rune, ctrl-u clears the field, and left/right move the cursor.
   Terminal paste inserts at the cursor and strips CR and LF, keeping one
   answer line; paste never submits (`ui.text-field`).
+  Ctrl+a toggles optional filing in adj, off whenever the pane opens. The footer
+  shows `[ ] file answer in adj as KEY  ctrl+a toggles`; when on, `[x]` is
+  highlighted. A dim, inert line names why filing is disabled: `adj filing off:
+  no adj in this project` or `adj filing off: question has no decision key`.
+  Filing requires the caller's `ADJ_DECIDED_BY`. When on with that value unset,
+  the toggle also warns `ADJ_DECIDED_BY unset`. Submitting refuses the answer
+  before launching an action, making an adj call or setting a run error.
+  ork checks the exact key, asks if missing or closed, and decides the open
+  record with the typed answer. Success shows `decided in adj as #N`.
+  An existing decision resumes the role and shows `KEY already decided as #N;
+  not changed`. Errors keep the text and leave the role paused; retry reuses
+  an ask left open by a failed decide. Short panes keep the Answer field,
+  status, enabled toggle, submit hint, off/disabled toggle and command preview
+  in that priority order, dropping the lowest priority lines first.
+  This toggle is available only in the TUI; `ork answer` does not file in adj.
 - Paused without a question: show the reason and `t` retries, with the same
   `ork retry RUN` y/n confirmation as the Overview.
 - Stopped: show the full reason with no key actions. Stop is final; relaunch,
@@ -303,8 +318,10 @@ The actions follow the state (`ui.answer-pane-scope`):
 
 Awaiting-approval runs offer `a` approve and `x` stop; other active runs offer
 `x` stop. A successful answer clears the field and refreshes the pane and row.
-A failed call shows
-its error code and message verbatim and permits another attempt. Closing the
+A failed call permits another attempt. Tool-coded errors retain their code and
+message. Plain `adj ask` and `adj decide` errors show the tool, exit code and
+trimmed stderr, without the request argv or question context. The daemon wraps
+these plain errors with code `internal` in the TUI status. Closing the
 pane leaves a pending call running. No structured answer options are offered.
 The Questions tab also opens this pane for engine questions.
 
@@ -320,7 +337,8 @@ rows never count toward the badge (`ui.setup-errors`).
 Questions is the second view, after Overview (`ui.answer-ui`, `ui.view-list`).
 It lists engine runs paused with `pending: question` and open adj records
 from every project. Enter on an engine question opens the run detail pane
-and its Answer field. Enter on an adj question opens read-only record detail,
+and its Answer field and optional adj filing toggle. Enter on an adj question
+opens read-only record detail,
 including options and the recommendation. `esc` returns to the list.
 An adj answer path is outside this view's current scope.
 

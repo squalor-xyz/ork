@@ -512,3 +512,7 @@ func TestWavesInputsStayVisibleForLongLists(t *testing.T) {
 		t.Fatal("launch fields scrolled out of view")
 	}
 }
+
+func (l *wavesLive) AnswerAction(ctx context.Context, a daemon.RunAction) (string, error) {
+	return "", l.Answer(ctx, a.Run, a.Text)
+}

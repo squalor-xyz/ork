@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/ipc"
@@ -552,5 +553,257 @@ func TestPaneFieldViewFitsWidth(t *testing.T) {
 	v := sgr.ReplaceAllString(f.view(5, NewTheme(true)), "")
 	if v != "abcde" {
 		t.Fatalf("text after the cursor must be cut to the field width: %q", v)
+	}
+}
+
+func TestPaneAdjToggle(t *testing.T) {
+	for _, tc := range []struct {
+		key string
+		adj bool
+	}{{"storage.engine", true}, {"", true}, {"storage.engine", false}} {
+		t.Run(fmt.Sprint(tc), func(t *testing.T) {
+			h := paneHarness(t, "paused", "question")
+			h.m.byName["ork"].reg.Adj = tc.adj
+			h.m.byName["ork"].snap.EngineRuns[0].Key = tc.key
+			typeAnswer(h, "a")
+			ctrlA := tea.KeyPressMsg{Code: 'a', Mod: tea.ModCtrl}
+			h.deliver(ctrlA)
+			if h.m.pane.adj != (tc.adj && tc.key != "") || h.m.pane.input.Value() != "a" {
+				t.Fatalf("pane: %+v", h.m.pane)
+			}
+			h.deliver(ctrlA)
+			if h.m.pane.adj || h.m.pane.input.Value() != "a" {
+				t.Fatalf("pane: %+v", h.m.pane)
+			}
+			h.deliver(ctrlA)
+			h.deliver(press("esc"))
+			h.deliver(press("enter"))
+			if h.m.pane.adj {
+				t.Fatal("toggle persisted")
+			}
+		})
+	}
+}
+
+func (l *actionLive) AnswerAction(ctx context.Context, a daemon.RunAction) (string, error) {
+	l.answerRequest = a
+	return l.answerNotice, l.Answer(ctx, a.Run, a.Text)
+}
+
+func TestAnswerAdjErrorKeepsTextAndDoesNotResume(t *testing.T) {
+	h := paneHarness(t, "paused", "question")
+	h.m.byName["ork"].reg.Adj = true
+	h.m.byName["ork"].snap.EngineRuns[0].Key = "storage.engine"
+	t.Setenv("ADJ_DECIDED_BY", "caller")
+	typeAnswer(h, "use local storage")
+	h.deliver(tea.KeyPressMsg{Code: 'a', Mod: tea.ModCtrl})
+	live := h.m.cfg.Live.(*actionLive)
+	live.err = &ipc.Error{Code: "io", Message: "disk full verbatim"}
+	h.deliver(press("enter"))
+	if live.answerRequest != (daemon.RunAction{Run: "engine", Text: "use local storage", Adj: true, By: "caller"}) {
+		t.Fatalf("request: %+v", live.answerRequest)
+	}
+	if h.m.pane.input.Value() != "use local storage" || !strings.Contains(h.m.actionStatus, "io: disk full verbatim") {
+		t.Fatalf("text/status: %s %s", h.m.pane.input.Value(), h.m.actionStatus)
+	}
+	if h.m.byName["ork"].snap.EngineRuns[0].State != "paused" {
+		t.Fatal("resumed")
+	}
+	live.err = nil
+	live.answerNotice = "storage.engine already decided as #21; not changed"
+	h.deliver(press("enter"))
+	if !strings.Contains(h.m.actionStatus, "storage.engine already decided as #21; not changed") {
+		t.Fatalf("notice: %s", h.m.actionStatus)
+	}
+}
+
+func TestPaneAdjAnswerWire(t *testing.T) {
+	d, _, _, _ := requestServer(t, func(_ context.Context, method string, params json.RawMessage) (any, error) {
+		var a daemon.RunAction
+		if err := json.Unmarshal(params, &a); err != nil {
+			return nil, err
+		}
+		if method != "run.answer" || a != (daemon.RunAction{Run: "engine", Text: "yes", Adj: true, By: "caller"}) {
+			return nil, fmt.Errorf("wrong request: %s %s", method, params)
+		}
+		return daemon.RunReply{Message: "storage.engine already decided as #21; not changed"}, nil
+	})
+	message, err := d.AnswerAction(context.Background(), daemon.RunAction{Run: "engine", Text: "yes", Adj: true, By: "caller"})
+	if err != nil || message != "storage.engine already decided as #21; not changed" {
+		t.Fatalf("reply: %s %v", message, err)
+	}
+}
+
+func TestPaneAdjGoldens(t *testing.T) {
+	t.Setenv("ADJ_DECIDED_BY", "owner")
+	for _, mode := range []string{"off", "on", "no-key", "no-adj"} {
+		for _, mono := range []bool{true, false} {
+			t.Run(fmt.Sprint(mode, mono), func(t *testing.T) {
+				h := paneHarness(t, "paused", "question")
+				h.m.cfg.Theme = NewTheme(mono)
+				h.m.byName["ork"].reg.Adj = mode != "no-adj"
+				if mode != "no-key" {
+					h.m.byName["ork"].snap.EngineRuns[0].Key = "storage.engine"
+				}
+				if mode == "on" {
+					h.deliver(tea.KeyPressMsg{Code: 'a', Mod: tea.ModCtrl})
+				}
+				typeAnswer(h, "use local storage")
+				checkGolden(t, fmt.Sprintf("pane-question-adj-%s-mono-%t.txt", mode, mono), h.m.View().Content)
+			})
+		}
+	}
+}
+
+func TestQuestionsEngineAdjToggle(t *testing.T) {
+	h := actionHarness(t, "paused", "question")
+	h.m.view = questionsView
+	h.m.byName["ork"].reg.Adj = true
+	h.m.byName["ork"].snap.EngineRuns[0].Key = "storage.engine"
+	h.deliver(press("enter"))
+	h.deliver(tea.KeyPressMsg{Code: 'a', Mod: tea.ModCtrl})
+	if h.m.pane == nil || !h.m.pane.adj {
+		t.Fatal("Questions did not use the adj answer pane")
+	}
+}
+
+func TestPaneAdjFilingStates(t *testing.T) {
+	for _, tc := range []struct {
+		name, key, want string
+		adj, on         bool
+	}{
+		{"off", "a.b", "[ ] file answer in adj as a.b  ctrl+a toggles", true, false},
+		{"on", "a.b", "[x] file answer in adj as a.b  ctrl+a toggles", true, true},
+		{"no-adj", "a.b", "adj filing off: no adj in this project", false, false},
+		{"no-key", "", "adj filing off: question has no decision key", true, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := paneHarness(t, "paused", "question")
+			t.Setenv("ADJ_DECIDED_BY", "owner")
+			h.m.byName["ork"].reg.Adj = tc.adj
+			h.m.byName["ork"].snap.EngineRuns[0].Key = tc.key
+			h.m.pane.adj = tc.on
+			lines := h.m.paneLines(100, 20, "")
+			got := strings.Join(lines, "\n")
+			if !strings.Contains(got, tc.want) {
+				t.Fatalf("filing line missing %q: %s", tc.want, got)
+			}
+			if tc.on && !strings.Contains(got, h.m.cfg.Theme.Heading.Render(tc.want)) {
+				t.Fatalf("on toggle lacks heading style: %q", got)
+			}
+			if !tc.adj || tc.key == "" {
+				if strings.Contains(got, "ctrl+a") || strings.Contains(got, "[ ]") {
+					t.Fatalf("disabled toggle offers action: %s", got)
+				}
+			}
+		})
+	}
+}
+
+func TestPaneShortTerminalKeepsOnToggle(t *testing.T) {
+	h := paneHarness(t, "paused", "question")
+	t.Setenv("ADJ_DECIDED_BY", "owner")
+	h.m.byName["ork"].reg.Adj = true
+	h.m.byName["ork"].snap.EngineRuns[0].Key = "a.b"
+	h.m.pane.adj = true
+	got := strings.Join(h.m.paneLines(100, 3, "result"), "\n")
+	if !strings.Contains(got, "[x]") || !strings.Contains(got, "Answer:") || !strings.Contains(got, "result") || strings.Contains(got, "enter submit") {
+		t.Fatalf("priority lost on toggle: %s", got)
+	}
+	h.m.pane.adj = false
+	got = strings.Join(h.m.paneLines(100, 3, "result"), "\n")
+	if strings.Contains(got, "[ ]") || !strings.Contains(got, "enter submit") {
+		t.Fatalf("off toggle has wrong priority: %s", got)
+	}
+}
+
+func TestPaneAdjMissingAttributionWarning(t *testing.T) {
+	h := paneHarness(t, "paused", "question")
+	t.Setenv("ADJ_DECIDED_BY", "")
+	h.m.cfg.Theme = NewTheme(false)
+	h.m.byName["ork"].reg.Adj = true
+	h.m.byName["ork"].snap.EngineRuns[0].Key = "a.b"
+	h.m.pane.adj = true
+	got := strings.Join(h.m.paneLines(120, 20, ""), "\n")
+	if !strings.Contains(got, h.m.cfg.Theme.Warn.Render("ADJ_DECIDED_BY unset")) {
+		t.Fatalf("missing styled warning: %q", got)
+	}
+}
+
+func TestPaneAdjDimEveryWrappedLine(t *testing.T) {
+	h := paneHarness(t, "paused", "question")
+	h.m.cfg.Theme = NewTheme(false)
+	got := strings.Join(h.m.paneLines(26, 30, ""), "\n")
+	for _, line := range wrapText("adj filing off: no adj in this project", 24) {
+		if !strings.Contains(got, indent+h.m.cfg.Theme.Dim.Render(line)) {
+			t.Fatalf("wrapped line %q not dimmed: %q", line, got)
+		}
+	}
+}
+
+func TestPaneAdjNarrowGoldens(t *testing.T) {
+	for _, mode := range []string{"no-adj", "no-key", "on", "on-unset"} {
+		t.Run(mode, func(t *testing.T) {
+			t.Setenv("ADJ_DECIDED_BY", "owner")
+			if mode == "on-unset" {
+				t.Setenv("ADJ_DECIDED_BY", "")
+			}
+			h := paneHarness(t, "paused", "question")
+			h.m.cfg.Theme = NewTheme(false)
+			h.m.byName["ork"].reg.Adj = mode != "no-adj"
+			if mode != "no-key" {
+				h.m.byName["ork"].snap.EngineRuns[0].Key = "storage.engine"
+			}
+			h.m.pane.adj = strings.HasPrefix(mode, "on")
+			lines := h.m.paneLines(40, 20, "")
+			for _, line := range lines {
+				if lipgloss.Width(line) > 40 {
+					t.Fatalf("overwide line: %q", line)
+				}
+			}
+			checkGolden(t, "pane-question-adj-narrow-"+mode+".txt", strings.Join(lines, "\n"))
+		})
+	}
+}
+
+func TestPanePlainAdjErrorsKeepText(t *testing.T) {
+	for _, verb := range []string{"ask", "decide"} {
+		t.Run(verb, func(t *testing.T) {
+			h := paneHarness(t, "paused", "question")
+			typeAnswer(h, "use local storage")
+			want := "internal: adj: exit 1: adj " + verb + ": record 5 is not open"
+			h.m.cfg.Live.(*actionLive).err = &ipc.Error{Code: "internal", Message: "adj: exit 1: adj " + verb + ": record 5 is not open"}
+			h.deliver(press("enter"))
+			if h.m.actionStatus != "ork answer engine use local storage: "+want || h.m.pane.input.Value() != "use local storage" {
+				t.Fatalf("text/status: %q %q", h.m.pane.input.Value(), h.m.actionStatus)
+			}
+		})
+	}
+}
+
+func TestPaneAdjOutcomeStatus(t *testing.T) {
+	for _, notice := range []string{"decided in adj as #21", "a.b already decided as #21; not changed"} {
+		t.Run(notice, func(t *testing.T) {
+			h := paneHarness(t, "paused", "question")
+			typeAnswer(h, "use local storage")
+			h.m.cfg.Live.(*actionLive).answerNotice = notice
+			h.deliver(press("enter"))
+			if h.m.actionStatus != "ork answer engine use local storage: done; "+notice {
+				t.Fatalf("status: %q", h.m.actionStatus)
+			}
+		})
+	}
+}
+
+func TestPaneShortNonQuestionStatusPriority(t *testing.T) {
+	for _, state := range []string{"paused", "stopped", "awaiting-approval", "implement", "committed"} {
+		t.Run(state, func(t *testing.T) {
+			h := actionHarness(t, state, "shape")
+			h.m.pane = &runPane{run: "engine", project: "ork"}
+			lines := h.m.paneLines(100, 2, "first status\nlast status")
+			if len(lines) != 2 || !strings.Contains(lines[0], "first status") || !strings.Contains(lines[1], "last status") {
+				t.Fatalf("status priority: %q", lines)
+			}
+		})
 	}
 }

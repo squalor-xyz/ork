@@ -360,6 +360,8 @@ func TestSharedRules(t *testing.T) {
 	for name, p := range prompts(t) {
 		for _, want := range []string{
 			"{{worktree}}",
+			"Decision key: area.topic",
+			"lowercase dotted decision key",
 			"Never change directory",
 			"Never open, search, parse or edit tracking files",
 			"foreground",

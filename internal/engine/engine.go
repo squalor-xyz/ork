@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/roles"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -41,6 +42,7 @@ type Proc interface {
 
 // Deps are what an Engine calls out to.
 type Deps struct {
+	Adj       adjcli.Client
 	Runner    Runner
 	Slicer    slicercli.Client
 	GitBin    string // empty means "git"

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
@@ -21,6 +22,8 @@ import (
 // actionLive changes the fake source just as a successful daemon call would.
 // A wrong run ID fails instead of accidentally acting on the slice or ledger ID.
 type actionLive struct {
+	answerRequest daemon.RunAction
+	answerNotice  string
 	fakeLive
 	src *fakeSource
 	err error

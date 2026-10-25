@@ -103,6 +103,7 @@ type Approval struct {
 
 // Question is an owner question taken from a role report, and its answer.
 type Question struct {
+	Key        string    `json:"key,omitempty"`
 	Role       string    `json:"role"`
 	Round      int       `json:"round"`
 	Text       string    `json:"text"`
@@ -130,6 +131,7 @@ const (
 // Pending says why a slice is paused and what resumes it. State is the state
 // to re-enter; Role and Round name the role to run again.
 type Pending struct {
+	Key      string `json:"key,omitempty"`
 	Kind     string `json:"kind"`
 	State    string `json:"state"`
 	Role     string `json:"role,omitempty"`

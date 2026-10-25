@@ -25,6 +25,7 @@ type keyMap struct {
 	RowPrev    key.Binding
 	Select     key.Binding
 	Answer     key.Binding
+	FileAdj    key.Binding
 	PaneScroll key.Binding
 	Refresh    key.Binding
 	Help       key.Binding
@@ -56,6 +57,7 @@ func newKeyMap() keyMap {
 		RowNext:    key.NewBinding(key.WithKeys("down", "j", "n"), key.WithHelp("down/j/n", "next row")),
 		RowPrev:    key.NewBinding(key.WithKeys("up", "k", "p"), key.WithHelp("up/k/p", "previous row")),
 		Select:     key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "open run, question, item or decision; other rows select project")),
+		FileAdj:    key.NewBinding(key.WithKeys("ctrl+a"), key.WithHelp("ctrl+a (answer)", "toggle filing the answer in adj")),
 		Answer:     key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter (answer)", "submit; no confirmation")),
 		PaneScroll: key.NewBinding(key.WithKeys("pgup", "pgdown"), key.WithHelp("pgup/pgdown", "scroll run tree and reason or decision")),
 		Refresh:    key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "refresh now")),
@@ -70,5 +72,5 @@ func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Refresh, k.He
 
 // FullHelp implements help.KeyMap.
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.RowPrev, k.Select}, {k.Filter, k.Sidebar, k.Add}, {k.Tick, k.EditLineup, k.Launch}, {k.Approve, k.Stop, k.Retry, k.Answer, k.PaneScroll, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
+	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.RowPrev, k.Select}, {k.Filter, k.Sidebar, k.Add}, {k.Tick, k.EditLineup, k.Launch}, {k.Approve, k.Stop, k.Retry, k.Answer, k.FileAdj, k.PaneScroll, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
 }

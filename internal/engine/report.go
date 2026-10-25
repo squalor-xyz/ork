@@ -15,6 +15,7 @@ type Report struct {
 	Passed   int    // from the Tests lines
 	Failed   int
 	HasTests bool
+	Key      string // optional adj decision key
 	Question string // the Owner needed section; empty for none
 }
 
@@ -25,6 +26,8 @@ type ShapeError struct{ Problems []string }
 func (e *ShapeError) Error() string {
 	return "report shape: " + strings.Join(e.Problems, "; ")
 }
+
+var decisionKey = regexp.MustCompile(`^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$`)
 
 var testsLine = regexp.MustCompile(`(?m)^Tests: (\d+) passed, (\d+) failed\r?$`)
 
@@ -73,6 +76,16 @@ func CheckReport(role string, finish bool, text string) (*Report, error) {
 		problems = append(problems, fmt.Sprintf("no %q section", ownerHeading))
 	} else if !isNone(body) {
 		rep.Question = strings.TrimSpace(body)
+		for _, line := range strings.Split(body, "\n") {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "Decision key:") {
+				key := strings.TrimSpace(strings.TrimPrefix(line, "Decision key:"))
+				if rep.Key != "" || !decisionKey.MatchString(key) {
+					problems = append(problems, "Owner needed must have at most one Decision key: area.topic line with a lowercase dotted key")
+				}
+				rep.Key = key
+			}
+		}
 	}
 
 	if len(problems) > 0 {

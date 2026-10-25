@@ -331,6 +331,16 @@ func (m *Model) helpLines(w, bodyH int) []string {
 	for _, group := range m.keys.FullHelp() {
 		for _, binding := range group {
 			h := binding.Help()
+			// Share a line so the added answer toggle keeps help and quit
+			// visible at the standard terminal height.
+			if h == m.keys.Quit.Help() {
+				continue
+			}
+			if h == m.keys.Help.Help() {
+				q := m.keys.Quit.Help()
+				lines = append(lines, clip(q.Key+" "+q.Desc+"; "+h.Key+" "+h.Desc, w))
+				continue
+			}
 			if h.Key == m.keys.AllProjects.Help().Key && m.view != decisionsView {
 				continue
 			}

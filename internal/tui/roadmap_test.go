@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/squalor-xyz/ork/internal/daemon"
 	"strings"
 	"testing"
 
@@ -345,4 +346,8 @@ func TestRoadmapUnusedSizeAndEffortShowDashes(t *testing.T) {
 	if rowsWith(v, "S90", "open  M  effort 2") != 1 || rowsWith(v, "S02", "open  S  effort 1") != 1 {
 		t.Fatalf("used size and effort changed:\n%s", v)
 	}
+}
+
+func (l *roadmapLive) AnswerAction(ctx context.Context, a daemon.RunAction) (string, error) {
+	return "", l.Answer(ctx, a.Run, a.Text)
 }

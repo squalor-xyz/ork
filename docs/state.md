@@ -110,7 +110,7 @@ apply to this run only and do not change the matrix or registry
   "checks": [{"round": 1, "command": "go test ./...", "ok": true, "seconds": 58, "log": "checks-1.log"}],
   "budgets": {"minutes": 120, "tokens": 2000000},
   "approvals": [{"what": "slice", "at": "..."}],
-  "questions": [{"role": "implementer", "round": 1, "text": "...", "at": "...", "answer": "...", "answered_at": "..."}],
+  "questions": [{"role": "implementer", "round": 1, "key": "area.topic", "text": "...", "at": "...", "answer": "...", "answered_at": "..."}],
   "writes": [
     {"at": "2026-10-19T16:12:05Z", "tool": "slicer", "root": "/.../adjudicate/.worktrees/S18",
      "argv": ["relay-run", "begin", "S18", "--worktree", "/.../S18", "--json"],
@@ -139,8 +139,9 @@ started. They are not a copy of slicer state. The ledger link is
 a slot under the caps and has no process and no writes. `round` counts implementer rounds and
 `fails` counts gate FAILs. `reason` says why a slice is stopped or paused.
 `pending` (kind `question`, `shape`, `lost`, `interrupted` or `error`, with
-the state and role to re-enter, the reason, and for a question the text and
-the answer) is set while a slice is paused. `feedback` names the file (kind
+the state and role to re-enter, the reason, and for a question the optional adj
+`key`, the text and the answer) is set while a slice is paused. `feedback`
+names the file (kind
 `checks`, `findings`, `architect` or `fail`) that the next implementer round must act on.
 The `architect` state runs only when the lineup includes that role (adj #151),
 after accepted reviewer findings and before the gate (adj #123). Its whole
@@ -186,15 +187,22 @@ calls `Engine.Retry` to rerun the pending role or step (adj #101,
 names `answer` and `stop`; answering a pause without a question names
 `retry`.
 
+Question `key` is optional and omitted when absent. It comes from a role report
+line `Decision key: area.topic` under `## Owner needed` and is also copied to
+`pending.key`. The proposed display field `EngineRun.key` carries it to the TUI.
+
 `writes` lists every slicer, adj and git write ork makes for the run, with
 its argv, root, exit, error code and retry count, so a restart or the
 owner can see exactly what ork changed (`state.writes`, S04). `argv` leaves
 out the `--root` or `-C` that `root` records. A call that exits with the
-slicer error code `locked` (exit 3) is retried after 250 ms, 500 ms, 1 s,
+tool error code `locked` (exit 3) is retried after 250 ms, 500 ms, 1 s,
 2 s and 4 s, and every attempt is an entry: the first has no `retry`, the
 retries count from 1. A failure that is not an exit, such as a timeout or a
 missing binary, has `exit` -1 and an `error` text. Reads (`slicer show`,
-`check`, `config`, `git status`, `rev-parse`) are not writes. ork's own edit
+`check`, `config`, `git status`, `rev-parse`) are not writes. As an exception,
+all adj calls while filing an answer (`check`, `ask`, `decide`) are recorded
+with tool `adj` and the project main checkout as root. Both writes receive
+the caller's attribution through `--by`. ork's own edit
 of `info/exclude` is a git write with argv `["exclude", ".worktrees/"]`.
 If recording a CLI write fails, the writer returns that error and makes no
 further retry. The CLI may already have changed the project.

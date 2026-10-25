@@ -33,7 +33,7 @@ type Live interface {
 	Approve(ctx context.Context, run string) error
 	Stop(ctx context.Context, run string) error
 	Retry(ctx context.Context, run string) error
-	Answer(ctx context.Context, run, text string) error
+	AnswerAction(ctx context.Context, action daemon.RunAction) (string, error)
 }
 
 // focusMsg is the result of a Focus call.

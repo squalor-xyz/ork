@@ -321,11 +321,16 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   listed. A gate PASS with a nonzero failed-test count is also refused.
   The slice pauses (kind `shape`) with them; `Retry` resumes the
   role and tells it what was wrong.
+- **Decision keys.** An Owner needed section may include one line
+  `Decision key: area.topic` anywhere in the section. The key must be lowercase
+  and dotted; a malformed or repeated key is a `role.report-shape` error.
+  The full section and its optional key are stored with the question. A key
+  enables optional adj filing of the owner's answer in the TUI.
 - **Owner questions.** A non-empty `## Owner needed` pauses the slice (kind
   `question`) and is recorded in `questions[]`. `Answer` resumes the same
   role with the question and the answer. The pending answer stays in the
   run record until the resumed role ends, so recovery can put it in the
-  next brief after a crash. Filing to adj is S06; when it
+  next brief after a crash. Optional answer filing is S28; when it
   files, `adj ask` runs in the project's main checkout (`Engine.AdjRoot`),
   never in a worktree.
 - **Stops.** `rate_limited` and `error` exits fall back while a next row

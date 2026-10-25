@@ -63,6 +63,9 @@ FAIL, list only what must change (`file:line`, fix). Put non-blocking nits under
 
 ## Owner questions
 
+When a decision should be filed in adj, add one `Decision key: area.topic`
+line anywhere in `## Owner needed`. Use a lowercase dotted decision key.
+
 Do not guess a design choice that is the owner's. Put it in your report under
 `## Owner needed`: the question, the options, and your recommendation. Do not run
 `adj ask` yourself; ork shows the question to the owner (and may file it).

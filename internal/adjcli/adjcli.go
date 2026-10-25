@@ -6,9 +6,15 @@ package adjcli
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
 // Option is one answer a question offers.
@@ -92,4 +98,65 @@ func (c Client) List(ctx context.Context, root, status string) ([]Record, error)
 	}
 	args = append(args, "--root", root)
 	return c.records(ctx, args...)
+}
+
+// write records every adj call made while filing an owner answer, including check.
+func (c Client) write(ctx context.Context, w runrec.Writer, root string, argv ...string) (clirun.Result, error) {
+	call := c.call()
+	return w.Run(ctx, runrec.Cmd{Tool: "adj", Bin: call.Bin, Root: root, Argv: argv,
+		Args: append(append([]string{}, argv...), "--root", root), Timeout: call.Timeout})
+}
+
+// Check finds an exact decision key. Substring matches from adj are ignored.
+func (c Client) Check(ctx context.Context, w runrec.Writer, root, key string) (string, int, error) {
+	res, err := c.write(ctx, w, root, "check", key, "--json")
+	if err != nil {
+		return "", 0, err
+	}
+	var out struct{ Decided, Open, Closed []Record }
+	if err := json.Unmarshal(res.Stdout, &out); err != nil {
+		return "", 0, fmt.Errorf("adj check: decode output: %w", err)
+	}
+	for _, group := range []struct {
+		state   string
+		records []Record
+	}{{"decided", out.Decided}, {"open", out.Open}, {"closed", out.Closed}} {
+		for _, r := range group.records {
+			if r.Key == key {
+				if r.ID <= 0 {
+					return "", 0, fmt.Errorf("adj check: invalid record id")
+				}
+				return group.state, r.ID, nil
+			}
+		}
+	}
+	return "not found", 0, nil
+}
+
+// Ask files the full question and returns the ID printed by adj.
+func (c Client) Ask(ctx context.Context, w runrec.Writer, root, title, key, ref, question, by string) (int, error) {
+	res, err := c.write(ctx, w, root, "ask", title, "--key", key, "--ref", ref, "--context", question, "--by", by)
+	if err != nil {
+		return 0, answerError(err)
+	}
+	id, err := strconv.Atoi(strings.TrimSpace(string(res.Stdout)))
+	if err != nil || id <= 0 {
+		return 0, fmt.Errorf("adj ask: no record id in the output")
+	}
+	return id, nil
+}
+
+// Decide records only the owner's typed answer, with explicit attribution.
+func (c Client) Decide(ctx context.Context, w runrec.Writer, root string, id int, text, why, by string) error {
+	_, err := c.write(ctx, w, root, "decide", strconv.Itoa(id), "--text", text, "--why", why, "--by", by)
+	return answerError(err)
+}
+
+// answerError keeps plain adj diagnostics without exposing answer/context argv.
+func answerError(err error) error {
+	var exit *clirun.ExitError
+	if errors.As(err, &exit) && exit.Tool == nil {
+		return fmt.Errorf("adj: exit %d: %s", exit.Result.ExitCode, strings.TrimSpace(string(exit.Result.Stderr)))
+	}
+	return err
 }
