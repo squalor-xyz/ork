@@ -61,7 +61,7 @@ func TestLineupEditorChangesOneRole(t *testing.T) {
 	if !reflect.DeepEqual(p.Lineup["implementer"], []runrec.LineupEntry{want}) || len(p.Lineup["reviewer"]) != 0 || len(p.Lineup["gate"]) != 0 {
 		t.Fatalf("overrides: %+v", p.Lineup)
 	}
-	if !strings.Contains(h.view(), "implementer*") || strings.Contains(h.view(), "reviewer*") {
+	if !strings.Contains(h.view(), "impl*") || strings.Contains(h.view(), "rev*") {
 		t.Fatal(h.view())
 	}
 }
@@ -245,7 +245,7 @@ func TestLineupReviewerAndExistingOverrides(t *testing.T) {
 	if len(l.plans) != 3 || p.Lineup["implementer"][0].Model != "custom-model" || p.Lineup["reviewer"][0] != want || len(p.Lineup["gate"]) != 0 {
 		t.Fatalf("overrides: %+v", p.Lineup)
 	}
-	if p.Expected.Lineup["gate"][0] != want || !strings.Contains(h.view(), "reviewer*") {
+	if p.Expected.Lineup["gate"][0] != want || !strings.Contains(h.view(), "rev*") {
 		t.Fatal(h.view())
 	}
 	h.deliver(press("e"))
