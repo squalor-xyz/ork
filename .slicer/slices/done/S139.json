@@ -1,6 +1,6 @@
 {
   "id": "S139",
-  "title": "Commit title without a Git section: fall back to 'ID: title', and check it before the run starts",
+  "title": "Commit title without a Git section: fall back to 'ID: title'",
   "lead": [],
   "depends_note": null,
   "findings_note": "",

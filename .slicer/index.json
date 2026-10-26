@@ -5291,12 +5291,24 @@
     },
     {
       "id": "S139",
-      "title": "Commit title without a Git section: fall back to 'ID: title', and check it before the run starts",
-      "short_title": "Commit title without a Git section: fall back to 'ID: title', and check it before the run starts",
-      "status": "open",
+      "title": "Commit title without a Git section: fall back to 'ID: title'",
+      "short_title": "Commit title without a Git section: fall back to 'ID: title'",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "68fcde4e-7cbf-4a65-ae15-ffbb2ef79cfa",
+          "kind": "",
+          "text": "**2026-10-26** — Orchestration trial run 3 (run-20261026-184018-26e1, began 18:40Z): owner questions 1 at preflight (before start), 0 during the run; stalls 0; fix rounds 0; Codex implementer, no block; reviewer only (not a UI slice). Note: Go 1.27.3 is installed while AGENTS.md says 1.27.2.",
+          "created_at": "2026-10-26T18:49:09Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -5314,7 +5326,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

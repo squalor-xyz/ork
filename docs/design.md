@@ -317,7 +317,9 @@ slice.
   ("lite"). A FAIL is recorded with `slicer note ID --text "Review FAIL:
   ..."` (contract v6).
 - **commit:** ork commits in the worktree with the title from the slice's
-  Git section. There is no AI attribution, and roles never commit
+  Git section. An empty or missing Git section falls back to `ID: slice title`
+  from `slicer show`; it does not block launch (S139, owner decision 2026-10-26).
+  There is no AI attribution, and roles never commit
   (`git.commit`). The finish step precedes this commit (adj #81).
 - **Finish step:** run per the project's `implement_finish` setting (`done`
   or `handoff`), after PASS and owner approval, before the commit.
@@ -536,11 +538,14 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   finish step first: the closing note, then `slicer done` or `slicer handoff`
   per `slicer config implement_finish`. Then ork commits in the worktree with
   `git add -A` and `git commit -m "<title>"`, the title being the quoted text
-  of the slice's Git section, and nothing else (no attribution), so one
+  of the slice's Git section (or its first non-blank line without quotes).
+  An empty or missing Git section uses `ID: slice title` from `slicer show`
+  (S139). There is nothing else in the message (no attribution), so one
   commit carries the code and the tracking change. A rejected slice runs no
   finish step. A failed commit stops the slice in needs-you with git's error
   and does not undo the finish step or close its passed ledger run again
-  (adj #81, `engine.finish-order`).
+  (adj #81, `engine.finish-order`). Retrying a commit pause resumes at commit
+  without repeating the finish step.
 
 ## Stop rules
 

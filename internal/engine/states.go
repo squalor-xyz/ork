@@ -549,7 +549,8 @@ func failSummary(report string) string {
 }
 
 // commit commits the approved slice in its worktree with the title of the
-// slice's Git section and no attribution (git.commit). The landing follows.
+// slice's Git section, falling back to "ID: title", and no attribution
+// (git.commit). The landing follows.
 func (e *Engine) commit(ctx context.Context) error {
 	rec := e.run.Snapshot()
 	pauseWith := func(reason string) error {
@@ -563,18 +564,9 @@ func (e *Engine) commit(ctx context.Context) error {
 	if err := json.Unmarshal(raw, &detail); err != nil {
 		return pauseWith("slicer show: " + err.Error())
 	}
-	var title string
-	if detail.Slice != nil {
-		for _, s := range detail.Slice.Sections {
-			if strings.EqualFold(s.Heading, "Git") {
-				if title, err = ParseGitTitle(s.Body); err != nil {
-					return pauseWith("the slice's Git section: " + err.Error())
-				}
-			}
-		}
-	}
-	if title == "" {
-		return pauseWith("the slice has no Git section with a commit title")
+	title, err := sliceCommitTitle(detail)
+	if err != nil {
+		return pauseWith("the slice's Git section: " + err.Error())
 	}
 	// A landing that a fix round interrupted commits again after the next
 	// approval; when the tree is already clean there is nothing new to commit.

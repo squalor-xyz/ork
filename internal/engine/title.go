@@ -6,9 +6,24 @@ import (
 	"errors"
 	"regexp"
 	"strings"
+
+	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
 var quoted = regexp.MustCompile(`"([^"]*)"`)
+
+// sliceCommitTitle uses an explicit Git title when present, otherwise the
+// item's ID and full title from slicer show (S139).
+func sliceCommitTitle(detail slicercli.Detail) (string, error) {
+	if detail.Slice != nil {
+		for _, s := range detail.Slice.Sections {
+			if strings.EqualFold(s.Heading, "Git") && strings.TrimSpace(s.Body) != "" {
+				return ParseGitTitle(s.Body)
+			}
+		}
+	}
+	return detail.ID + ": " + detail.Title, nil
+}
 
 // ParseGitTitle returns the commit title from the Git section of a slice: the
 // first double-quoted text, else the first non-blank line.

@@ -207,10 +207,10 @@ func TestParseGitTitle(t *testing.T) {
 	}
 }
 
-func TestApprovePausesWhenTheSliceHasNoGitTitle(t *testing.T) {
+func TestApprovePausesWhenTheSliceHasAnExplicitEmptyGitTitle(t *testing.T) {
 	h := newHarness(t, func(o *harnessOpts) {
 		o.routes = []clitest.Route{{Tool: "slicer", Args: []string{"show", item}, Prefix: true,
-			Stdout: `{"id":"S04","slice":{"id":"S04","sections":[{"heading":"Why","body":"x"}]}}`}}
+			Stdout: `{"id":"S04","title":"Engine","slice":{"id":"S04","title":"Engine","sections":[{"heading":"Git","body":"One commit: \"\"."}]}}`}}
 	})
 	e := h.start()
 	requireState(t, e, runrec.StateAwaitingApproval)
@@ -220,5 +220,86 @@ func TestApprovePausesWhenTheSliceHasNoGitTitle(t *testing.T) {
 	rec := requireState(t, e, runrec.StatePaused)
 	if rec.Pending.Kind != runrec.PendingError || !strings.Contains(rec.Pending.Reason, "Git") || len(h.calls("git", "-C", h.W, "commit")) != 0 {
 		t.Fatalf("pending: %+v", rec.Pending)
+	}
+}
+
+func TestCommitTitleFallsBackToIDAndTitle(t *testing.T) {
+	for _, tc := range []struct {
+		name, sections, want string
+	}{
+		{"missing", `[{"heading":"Why","body":"x"}]`, "S04: Engine"},
+		{"empty", `[{"heading":"Git","body":""}]`, "S04: Engine"},
+		{"whitespace", `[{"heading":"Git","body":"  \n\t "}]`, "S04: Engine"},
+		{"quoted", `[{"heading":"Git","body":"One commit: \"custom title\"."}]`, "custom title"},
+		{"plain", `[{"heading":"git","body":"  custom title\nMore text"}]`, "custom title"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := newHarness(t, func(o *harnessOpts) {
+				o.routesFor = func(P, W string) []clitest.Route {
+					return []clitest.Route{
+						{Tool: "slicer", Args: []string{"show", item}, Prefix: true,
+							Stdout: `{"id":"S04","title":"Engine","short_title":"Short","slice":{"id":"S04","title":"Engine","sections":` + tc.sections + `}}`},
+						{Tool: "git", Args: []string{"-C", W, "commit", "-m", tc.want}},
+					}
+				}
+			})
+			e := h.start()
+			requireState(t, e, runrec.StateAwaitingApproval)
+			if err := e.Approve(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			rec := requireState(t, e, runrec.StateCommitted)
+			if rec.Commit == nil || rec.Commit.Title != tc.want {
+				t.Fatalf("commit: %+v, want title %q", rec.Commit, tc.want)
+			}
+			if calls := h.calls("git", "-C", h.W, "commit"); len(calls) != 1 || join(calls[0][2:]) != "commit -m "+tc.want {
+				t.Errorf("commits: %v", calls)
+			}
+		})
+	}
+}
+
+func TestCommitTitleRetryDoesNotRepeatFinish(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			return []clitest.Route{
+				{Tool: "slicer", Args: []string{"show", item}, Prefix: true,
+					Stdout: `{"id":"S04","title":"Engine","slice":{"id":"S04","title":"Engine","sections":[{"heading":"Git","body":""}]}}`},
+				{Tool: "git", Args: []string{"-C", W, "add", "-A"},
+					Seq: []clitest.Reply{{Stderr: "fatal: index locked\n", Exit: 1}, {}}},
+				{Tool: "git", Args: []string{"-C", W, "commit", "-m", "S04: Engine"}},
+			}
+		}
+	})
+	e := h.start()
+	before := len(h.runner.requests())
+	if err := e.Approve(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending == nil || rec.Pending.State != runrec.StateCommit || !strings.Contains(rec.Pending.Reason, "git add") {
+		t.Fatalf("pending: %+v", rec.Pending)
+	}
+	if n := len(h.runner.requests()); n != before+1 {
+		t.Fatalf("finish requests: got %d new, want 1", n-before)
+	}
+	if err := e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	rec = requireState(t, e, runrec.StateCommitted)
+	if rec.Commit == nil || rec.Commit.Title != "S04: Engine" {
+		t.Fatalf("commit: %+v", rec.Commit)
+	}
+	if n := len(h.runner.requests()); n != before+1 {
+		t.Errorf("retry repeated finish: got %d new requests, want 1", n-before)
+	}
+	if n := len(h.calls("slicer", "config", "implement_finish")); n != 1 {
+		t.Errorf("finish config read %d times, want 1", n)
+	}
+	if n := len(h.calls("slicer", "relay-run", "end")); n != 1 {
+		t.Errorf("ledger ended %d times, want 1", n)
+	}
+	if n := len(h.calls("git", "-C", h.W, "commit")); n != 1 {
+		t.Errorf("committed %d times, want 1", n)
 	}
 }

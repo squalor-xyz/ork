@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- S139: an empty or missing slice Git section falls back to `ID: slice title`
+  from `slicer show` for the commit message. Explicit Git titles keep their
+  precedence. There is no pre-launch refusal; retrying a commit pause resumes
+  at commit without repeating the finish step.
+
 - S121: renders on the approval card (adj #165, *proposed*). The UI pass
   writes the changed views as text files at 80x24, 120x40 and in ASCII mode in
   `tmp/ui-N/renders/` of the run directory, with the project's own tooling;
