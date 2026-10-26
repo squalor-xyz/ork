@@ -1098,6 +1098,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   *proposed* `project_busy` while any run of the project is not committed or
   stopped. This includes queued, paused, awaiting-approval and running states.
   The message names the run ids. The project stays registered.
+  A planned start that loses the race to removal is refused with `not_found`.
 - `roles print [ROLE]`: `{"roles":[{"name","prompt"}]}`. Text: the prompt of
   ROLE as embedded, or all four with a `==== NAME ====` line before each.
 - `doctor`: `{"ok","tools":[{"name","required","present","path","version",

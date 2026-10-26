@@ -890,7 +890,7 @@
       "id": "S102",
       "title": "startRun re-checks that the project is still registered",
       "short_title": "startRun re-checks that the project is still registered",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -900,6 +900,17 @@
           "text": "**2026-10-26** — Spec preflight 2026-10-26 (outer session): planRun already refuses an unregistered project (runs.go:331-334), so the remaining gap is projects rm between planRun's read and startRun taking runs.mu. Dropped the cache-fallback test: admission deliberately refuses on an unreadable registry (runs.go:486-489, loadRunRegistryLocked comment), so a cache test would change that behaviour.",
           "created_at": "2026-10-26T19:36:48Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "84a4380d-6b89-43ea-a681-247e436577ea",
+          "kind": "",
+          "text": "**2026-10-26** — Orchestration trial (run 6): owner questions 0; stalls 0; fix rounds 0; merge conflicts 0; context compactions 0; Codex gpt-6.1-sol medium, not blocked; reviewer PASS on the first pass. Spec preflight dropped the cache-fallback test (it contradicted admission's fresh-read rule).",
+          "created_at": "2026-10-26T19:44:21Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -923,7 +934,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

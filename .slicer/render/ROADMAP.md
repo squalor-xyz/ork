@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-155 items · — 53 · done 97 · retired 5
+155 items · — 52 · done 98 · retired 5
 
 ## v1.1
 
@@ -93,7 +93,7 @@
 | 36 | [S116](slices/S116.md) | Spec check: a batch readiness check before a wave, answered in one sitting | M | 2 |  |  | done |
 | 37 | [S92](slices/S92.md) | Fallback brief tells the next row about earlier rows and an already-started slice | S | 1 |  | discovered from S49 | done |
 | 38 | [S93](slices/S93.md) | The gate follows the reviewer's current row after a fallback | S | 1 |  | discovered from S49 | done |
-| 39 | [S102](slices/S102.md) | startRun re-checks that the project is still registered | S | 1 |  | discovered from S38 | — |
+| 39 | [S102](slices/S102.md) | startRun re-checks that the project is still registered | S | 1 |  | discovered from S38 | done |
 | 40 | [S113](slices/S113.md) | Answer with adj on and no decision key must proceed | S | 1 |  | discovered from S28 | — |
 | 41 | [S73](slices/S73.md) | Allowlist --root-first calls | S | 1 |  |  | — |
 | 42 | [S75](slices/S75.md) | Run directory modes | S | 1 |  | discovered from S51 | — |

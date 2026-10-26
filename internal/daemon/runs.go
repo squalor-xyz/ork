@@ -487,6 +487,9 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 	if err != nil {
 		return runrec.Record{}, err
 	}
+	if _, ok := find(f, plan.project.Name); !ok {
+		return runrec.Record{}, notFound(plan.project.Name, f)
+	}
 	queued := !d.hasRoomLocked(f, plan.project.Name)
 	wave := p.wave
 	if wave == "" {

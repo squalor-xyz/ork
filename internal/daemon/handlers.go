@@ -428,7 +428,6 @@ func (d *Daemon) removeProject(name string) error {
 		return notFound(name, f)
 	}
 	// Hold runs.mu through Save; the check sees starts that took it first.
-	// Planned starts are not covered: startRun does not re-check registration.
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
 	ids, err := d.unfinishedRunsLocked(name)

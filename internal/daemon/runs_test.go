@@ -145,6 +145,96 @@ func TestRunPlanKeepsEveryRowWithAnAdapter(t *testing.T) {
 	}
 }
 
+// startRunRegistrationDaemon changes the registry inside the fake
+// RecommendRoles call, after planRun's read and before startRun's admission.
+func startRunRegistrationDaemon(t *testing.T, remove bool) (*Daemon, *runrec.Store, registry.Project, <-chan struct{}) {
+	t.Helper()
+	started := make(chan struct{}, 1)
+	d, store, p := runDaemon(t, func(ctx context.Context, _ engine.Request) (engine.Result, error) {
+		started <- struct{}{}
+		<-ctx.Done()
+		return engine.Result{}, ctx.Err()
+	})
+	other := registry.Project{Name: "other", Path: filepath.Join(t.TempDir(), "other")}
+	f := &registry.File{Version: registry.Version, Projects: []registry.Project{p, other}}
+	if err := registry.Save(d.registryPath(), f); err != nil {
+		t.Fatal(err)
+	}
+	if remove {
+		f.Projects = []registry.Project{other}
+	}
+	data, err := json.Marshal(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("ORK_TEST_ADMISSION_REGISTRY", d.registryPath())
+	t.Setenv("ORK_TEST_ADMISSION_CONTENT", string(data))
+	t.Setenv("ORK_TEST_ADMISSION_SLICER", lastFake.Bin("slicer"))
+	bin := filepath.Join(t.TempDir(), "slicer")
+	script := `#!/bin/sh
+if [ "$1" = relay-roles ] && [ "$2" = recommend ]; then
+    printf '%s\n' "$ORK_TEST_ADMISSION_CONTENT" > "$ORK_TEST_ADMISSION_REGISTRY" || exit 1
+fi
+exec "$ORK_TEST_ADMISSION_SLICER" "$@"
+`
+	if err := os.WriteFile(bin, []byte(script), 0755); err != nil {
+		t.Fatal(err)
+	}
+	d.runs.deps.Slicer = slicercli.Client{Bin: bin}
+	return d, store, p, started
+}
+
+func TestStartRunRefusesAProjectRemovedAfterPlanning(t *testing.T) {
+	d, store, p, _ := startRunRegistrationDaemon(t, true)
+	_, err := d.startRun(context.Background(), RunParams{Project: p.Name, Item: "S1"})
+	var ipcErr *ipc.Error
+	if !errors.As(err, &ipcErr) || ipcErr.Code != CodeNotFound || !strings.Contains(ipcErr.Message, `"`+p.Name+`"`) {
+		t.Errorf("removed project must fail with not_found naming %q: %v", p.Name, err)
+	}
+	// Stop any incorrectly admitted job before inspecting its side effects.
+	d.closeRuns()
+	if runs, err := store.List(); err != nil || len(runs) != 0 {
+		t.Errorf("removed project created run records: %v, %v", runs, err)
+	}
+	if len(d.runs.runs) != 0 {
+		t.Errorf("removed project created managed engines: %d", len(d.runs.runs))
+	}
+	worktree := filepath.Join(p.Path, ".worktrees", "S1")
+	if _, err := os.Stat(worktree); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("removed project created worktree: %v", err)
+	}
+	if calls := lastFake.CallsTo("git"); len(calls) != 0 {
+		t.Errorf("removed project called git: %+v", calls)
+	}
+	for _, call := range lastFake.CallsTo("slicer") {
+		if slices.Equal(call.Args, []string{"ai", "relay"}) {
+			t.Error("removed project reached engine.New's contract read")
+		}
+	}
+}
+
+func TestStartRunStillAdmitsARegisteredProject(t *testing.T) {
+	d, store, p, started := startRunRegistrationDaemon(t, false)
+	rec, err := d.startRun(context.Background(), RunParams{Project: p.Name, Item: "S1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if runs, err := store.List(); err != nil || len(runs) != 1 {
+		t.Fatalf("registered project run records: %v, %v", runs, err)
+	}
+	d.runs.mu.Lock()
+	managed := d.runs.runs[rec.ID]
+	d.runs.mu.Unlock()
+	if rec.Project != p.Name || managed == nil || managed.engine == nil {
+		t.Fatalf("registered project not admitted: %+v, %v", rec, managed)
+	}
+	select {
+	case <-started:
+	case <-time.After(5 * time.Second):
+		t.Fatal("registered project's engine did not start its role")
+	}
+}
+
 func TestPlanAddsTheArchitectRowOnlyWhenRecommended(t *testing.T) {
 	for _, recommended := range []bool{false, true} {
 		t.Run(fmt.Sprint(recommended), func(t *testing.T) {
