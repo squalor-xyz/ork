@@ -203,9 +203,10 @@ setup -> implement -> checks --red--> implement (fix)
                         | PASS
                         v
                 awaiting-approval --approve--> finish -> commit -> committed
-                        | reject
-                        v
-                      stopped
+                        | fix (owner's note)      | reject
+                        v                         v
+                implement (fix round) -> checks -> gate      stopped
+                        (back to awaiting-approval on PASS)
 ```
 
 Any state can go to `stopped` on a stop rule (below), or to `paused` on a
@@ -322,7 +323,7 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
 - **States.** `queued` (waits for a slot; `Dequeue` moves it to `setup`), `setup`, `implement`, `checks`, `review`, `architect`, `gate`,
   `awaiting-approval`, `finish`, `commit`, `committed`, plus the two rests
   `paused` and `stopped`. The owner moves a slice with `Approve`, `Reject`,
-  `Answer`, `Retry` and `Stop`.
+  `Fix`, `Answer`, `Retry` and `Stop`.
 - **Setup order.** Add `.worktrees/` to `info/exclude` if missing, then
   `git -C P worktree add <worktree> -b <branch>` with the registry's
   patterns (default `.worktrees/{id}` and `{id}`), then `slicer relay-run
@@ -435,6 +436,21 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   groups named by the run records of unfinished runs are killed, never group
   0, 1 or ork's own. *Residual risk:* a recycled process group id is not told
   from ork's; the record has no start time to compare.
+- **Approval card (*proposed*, S118).** When the gate passes, the engine
+  builds the card in the run record (`state.md`): the verdict, the gate's test
+  counts, the diff stat against `HEAD`, and the slice's `[HUMAN CHECK]` items.
+  `MarkCheck(n, state)` ticks a check, marks it `later`, or reopens it.
+  `Approve` refuses while any check is open, then records the marks as one
+  `slicer note` on the slice (`Human checks at approval (ID):` and one
+  `- ticked: TEXT` or `- later: TEXT` line per check) and goes on to the finish
+  step. This note replaces the human-check adj records. A note that fails
+  refuses the approval, so no mark is lost; the owner approves again.
+  `Fix(note)` is the owner's third action beside `Approve` and `Reject`: it
+  starts an implementer fix round with the note as `owner` feedback, resumed
+  as any fix round is, then the checks and the gate, with no review in
+  between, and returns to `awaiting-approval` on PASS. A gate FAIL goes back to
+  the implementer as usual. It counts as an implementer round, so it is
+  refused (not stopped) at the round limit.
 - **Commit and finish.** On `Approve`, the implementer is resumed for the
   finish step first: the closing note, then `slicer done` or `slicer handoff`
   per `slicer config implement_finish`. Then ork commits in the worktree with
@@ -831,6 +847,14 @@ prints `{"started":false}` on stdout. Interactive questions go on stderr
 in JSON mode.
 
 `run.retry` takes `{run}` and returns the run record (adj #101).
+*Proposed (S118):* `run.fix` takes `{run,text}` and returns the run record
+once the fix round, the checks and the gate have ended and the run rests
+again; `run.check` takes `{run,check,state}` (the one-based human check;
+`state` `ticked`, `later` or empty to reopen) and returns the run record.
+`run.approve` fails with the open checks named while any is open. The engine
+run rows of a run that awaits approval carry `card` (`state.md`). There is no
+`ork` command for fix or check yet; `ork approve` on a run with human checks
+fails until they are marked in the TUI.
 *Proposed:* `run.file` takes `{run,finding}` (the one-based `findings[]` entry)
 and returns the run record with a `message` (`filed as ID`) once ork has run
 `slicer add` and `slicer promote` for that later finding (adj #163). It does

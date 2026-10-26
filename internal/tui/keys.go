@@ -17,6 +17,8 @@ type keyMap struct {
 	Stop       key.Binding
 	Retry      key.Binding
 	FileSlice  key.Binding
+	Fix        key.Binding
+	MarkCheck  key.Binding
 	Next       key.Binding
 	Prev       key.Binding
 	NextView   key.Binding
@@ -51,6 +53,8 @@ func newKeyMap() keyMap {
 		Stop:       key.NewBinding(key.WithKeys("x"), key.WithHelp("x", "stop")),
 		Retry:      key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "retry")),
 		FileSlice:  key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "file slice")),
+		Fix:        key.NewBinding(key.WithKeys("F", "shift+f"), key.WithHelp("F", "fix round")),
+		MarkCheck:  key.NewBinding(key.WithKeys("1", "2", "3", "4", "5", "6", "7", "8", "9"), key.WithHelp("1-9", "mark check")),
 		Filter:     key.NewBinding(key.WithKeys("/"), key.WithHelp("/", "filter projects; esc clears")),
 		Sidebar:    key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "hide/show sidebar")),
 		Next:       key.NewBinding(key.WithKeys("right"), key.WithHelp("right", "next project; next tab on Decisions")),
@@ -78,5 +82,5 @@ func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Refresh, k.He
 
 // FullHelp implements help.KeyMap.
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.RowPrev, k.Select}, {k.Filter, k.Sidebar, k.Add}, {k.Tick, k.EditLineup, k.Launch}, {k.Approve, k.Stop, k.Retry, k.FileSlice, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.PaneScroll, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
+	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.RowPrev, k.Select}, {k.Filter, k.Sidebar, k.Add}, {k.Tick, k.EditLineup, k.Launch}, {k.Approve, k.Fix, k.Stop, k.Retry, k.FileSlice, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.PaneScroll, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
 }

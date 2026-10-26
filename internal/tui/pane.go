@@ -27,6 +27,7 @@ type runPane struct {
 	answered, answerDone      bool
 	answerState, answerNotice string
 	freeText                  bool
+	fixing                    bool // the fix note field of the approval card is open
 	adj                       bool
 	ledger                    bool
 	input                     textField
@@ -189,6 +190,11 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 	case "ctrl+c":
 		return tea.Quit
 	case "esc":
+		if m.pane.fixing {
+			m.pane.fixing, m.pane.input = false, textField{}
+			m.actionStatus = ""
+			return nil
+		}
 		if m.paneAsk() != nil && m.pane.freeText {
 			m.pane.freeText = false
 			m.actionStatus = ""
@@ -232,6 +238,15 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 		m.pane.input.update(msg)
 		m.actionStatus = ""
 		return nil
+	}
+	if m.pane.fixing {
+		if m.paneCard() != nil {
+			return m.fixKey(msg)
+		}
+		m.pane.fixing = false // the run left the card; the field has nothing to send
+	}
+	if cmd, ok := m.cardKey(msg); ok {
+		return cmd
 	}
 	if key.Matches(msg, m.keys.FileSlice) {
 		m.requestFile() // a finished run keeps its later findings
@@ -293,6 +308,14 @@ func (m *Model) paneLines(w, h int, status string) []string {
 		for range lines {
 			priorities = append(priorities, priority)
 		}
+	}
+	card := m.paneCard()
+	if card != nil {
+		priority := 0
+		if m.pane.fixing {
+			priority = 2
+		}
+		addFooter(m.cardSummary(card, width), priority)
 	}
 	addFooter(m.findingLines(width), 2)
 	switch {
@@ -377,6 +400,12 @@ func (m *Model) paneLines(w, h int, status string) []string {
 	case r.state == "stopped":
 		addFooter(wrapText("Stopped; relaunch, or clear with: ork dismiss "+r.engineID, width), 2)
 		addFooter(wrapText(m.fileHint()+"esc close pane", width), 3)
+	case card != nil && m.pane.fixing:
+		addFooter([]string{"Fix note: " + m.pane.input.view(max(width-len("Fix note: "), 1), m.cfg.Theme)}, 0)
+		addFooter(wrapText("enter sends the note to a fix round; esc back to card", width), 0)
+	case card != nil:
+		addFooter(m.cardChecks(card, width), 0)
+		addFooter(wrapText(m.cardHint(card), width), 1)
 	case r.state == "awaiting-approval":
 		addFooter(wrapText("a approve; x stop; "+m.fileHint()+"esc close pane", width), 3)
 	case r.state == "committed":
@@ -395,7 +424,12 @@ func (m *Model) paneLines(w, h int, status string) []string {
 	// submit hint, on toggle, status, then input. An option confirmation
 	// takes priority over the question. Preserve earlier lines
 	// within a priority when the terminal cannot fit the whole group.
-	for len(footer) > h && len(footer) > 0 {
+	// A card leaves a line for the header that names the run.
+	limit := h
+	if card != nil {
+		limit = max(h-1, 0)
+	}
+	for len(footer) > limit && len(footer) > 0 {
 		drop := 0
 		for i, priority := range priorities {
 			if priority >= priorities[drop] {
@@ -420,6 +454,9 @@ func (m *Model) paneLines(w, h int, status string) []string {
 	}
 	if reason != "" {
 		lines = append(lines, wrapText(reason, width)...)
+	}
+	if card != nil {
+		lines = append(lines, m.cardBody(card, width)...)
 	}
 	steps := m.paneSteps()
 	lines = append(lines, m.boardLines(steps, width)...)

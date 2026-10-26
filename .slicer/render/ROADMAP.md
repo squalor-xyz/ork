@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-137 items · — 52 · done 80 · retired 5
+137 items · — 51 · done 81 · retired 5
 
 ## v1.1
 
@@ -88,7 +88,7 @@
 | 31 | [S127](slices/S127.md) | After an answer: clear the question from the row and pane, and say the role resumed | S | 1 |  | discovered from S31 | done |
 | 32 | [S109](slices/S109.md) | Run pane follows the newest running run, with a 1 s ledger refresh while a run is visible | M | 2 |  |  | done |
 | 33 | [S110](slices/S110.md) | Running: a live summary of every running project above Needs you in the sidebar | M | 2 |  |  | — |
-| 34 | [S118](slices/S118.md) | Approval card: everything needed to approve on one screen | M | 2 |  |  | — |
+| 34 | [S118](slices/S118.md) | Approval card: everything needed to approve on one screen | M | 2 |  |  | done |
 | 35 | [S119](slices/S119.md) | Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up | M | 2 |  |  | — |
 | 36 | [S120](slices/S120.md) | Finding kinds: fix, owner or later in reviewer, UI pass and gate reports | M | 2 |  |  | done |
 | 37 | [S117](slices/S117.md) | UI pass role in the engine, in parallel with the reviewer | M | 2 |  |  | done |

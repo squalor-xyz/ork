@@ -349,6 +349,11 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 				if msg.action.verb == "answer" && m.pane != nil {
 					m.pane.answered = false
 				}
+				if msg.action.verb == "fix" && m.pane != nil && m.pane.run == msg.action.run {
+					// A failed fix keeps the note for another attempt.
+					m.pane.fixing, m.pane.input = true, textField{}
+					m.pane.input.insert(msg.action.text)
+				}
 			case msg.action.verb == "answer":
 				m.actionStatus = msg.message
 				if m.pane == nil {
@@ -364,7 +369,7 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 				m.pane.answerDone, m.pane.answerNotice = true, msg.message
 				m.refreshAnswerStatus()
 			default:
-				m.actionStatus = msg.action.command() + ": done"
+				m.actionStatus = msg.action.doneText()
 				if msg.message != "" {
 					m.actionStatus += "; " + msg.message
 				}
@@ -826,6 +831,8 @@ type runAction struct {
 	verb, run, project, text string
 	item                     string // file: the slice the finding came from
 	finding                  int    // file: the one-based finding
+	check                    int    // check: the one-based human check
+	state                    string // check: ticked, later or "" for open
 	adj                      bool
 	by                       string
 	cleanupCommand           string
@@ -850,6 +857,14 @@ func (a runAction) command() string {
 	}
 	if a.verb == "file" {
 		return "slicer add " + shellQuote(a.text) + " --discovered-from " + a.item
+	}
+	// The approval card's actions have no ork command (S118): the status line
+	// names them in words (card.go).
+	if a.verb == "fix" {
+		return "fix note"
+	}
+	if a.verb == "check" {
+		return fmt.Sprintf("mark of check %d", a.check)
 	}
 	cmd := "ork " + a.verb + " " + a.run
 	if a.verb == "answer" {
@@ -944,6 +959,12 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 		m.actionStatus = "approve needs awaiting-approval; run is " + r.state
 		return nil
 	}
+	if verb == "approve" {
+		if why := m.approvalBlock(r.name, r.engineID, m.pane != nil); why != "" {
+			m.actionStatus = why
+			return nil
+		}
+	}
 	if verb == "retry" {
 		if r.state != "paused" {
 			m.actionStatus = "retry needs paused; run is " + r.state
@@ -1000,7 +1021,10 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 		m.actionFlights = make(map[string][]runAction)
 	}
 	m.actionFlights[a.run] = append(m.actionFlights[a.run], a)
-	m.actionStatus = a.command() + ": pending"
+	m.actionStatus = a.pendingText()
+	if a.verb == "fix" && m.pane != nil {
+		m.pane.fixing, m.pane.input = false, textField{}
+	}
 	if a.verb == "answer" && m.pane != nil {
 		// The call blocks until the run rests, so follow the snapshots meanwhile.
 		m.pane.answered, m.pane.answerDone = true, false
@@ -1019,6 +1043,16 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 			err = live.Stop(context.Background(), a.run)
 		case "retry":
 			err = live.Retry(context.Background(), a.run)
+		case "fix", "check":
+			actor, ok := live.(cardActor)
+			switch {
+			case !ok:
+				err = errors.New("this daemon connection cannot act on the approval card")
+			case a.verb == "fix":
+				err = actor.Fix(context.Background(), a.run, a.text)
+			default:
+				err = actor.MarkCheck(context.Background(), a.run, a.check, a.state)
+			}
 		case "file":
 			if filer, ok := live.(laterFiler); ok {
 				message, err = filer.FileLater(context.Background(), a.run, a.finding)

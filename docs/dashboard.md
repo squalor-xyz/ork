@@ -300,7 +300,8 @@ the needs list matches the count (`ui.status-list`, adj #125).
 the *proposed* optional `open:[{id,key,title}]` and `held:[{id,title}]` fields.
 Those fields are omitted when empty.
 
-On the cursor's engine row, `a` approves an awaiting-approval run immediately,
+On the cursor's engine row, `a` approves an awaiting-approval run immediately
+(once its human checks are marked; see the approval card),
 `x` stops a run, and `t` retries a paused run. Stop and retry show the exact
 command (`ork stop RUN` or `ork retry RUN`) in the detail area and ask
 `[y/N] (Enter is No)`. Only `y` confirms; `n`, `esc` and Enter cancel. The
@@ -408,14 +409,67 @@ The actions follow the state (`ui.answer-pane-scope`):
 - Stopped: show the full reason with no key actions. Stop is final; relaunch,
   or clear the row with `ork dismiss RUN`.
 
-Awaiting-approval runs offer `a` approve and `x` stop; other active runs offer
-`x` stop. A successful answer clears the field and refreshes the pane and row.
+Awaiting-approval runs offer `a` approve and `x` stop (and the approval card
+below, when the run has one); other active runs offer `x` stop. A successful answer clears the field and refreshes the pane and row.
 A failed call permits another attempt. Tool-coded errors retain their code and
 message. Plain `adj ask` and `adj decide` errors show the tool, exit code and
 trimmed stderr, without the request argv or question context. The daemon wraps
 these plain errors with code `internal` in the TUI status. Closing the
 pane leaves a pending call running. No structured answer options are offered.
 The Questions tab also opens this pane for engine questions.
+
+**Approval card** (*proposed*, S118; the retrospective's R5). The pane of a run
+that awaits approval and has a card lists what the owner needs to decide, in
+the action area under the run tree, in this order:
+
+- `Gate PASS (round N)  Tests: P passed, F failed` (the gate's test counts) and
+  `Diff: 2 files, +48 -4, 1 new file` (one short line, from the last line of
+  `git diff --stat`). The per-file diff stat, then the new files as `PATH  (new)`, scroll above the
+  tree.
+- The owner findings, as under Finding kinds below (and the later findings
+  count). S111's structured questions show here as `Owner question, not
+  blocking: TITLE Recommended: LABEL.`
+- `Human checks (K of N open)` and one line per `[HUMAN CHECK]` item of the
+  slice: `1 [ ] TEXT` open, `2 [x] TEXT` ticked, `3 [~] TEXT (later)` marked
+  for later. With no items the line reads `Human checks: none`; if the daemon
+  could not read them it reads `Human checks: not read (WHY)`.
+- The key line: `a approve; F fix round; x stop; 1-N tick/later; f file slice;
+  esc close pane`.
+
+A digit marks the human check of that number and moves it on: ticked, then
+later, then open again. The mark is saved in the run record at once (`run.check`).
+`a` approves only when every check is ticked or marked later. Otherwise the
+status line says `Approve needs every human check marked; open: 2, 3 (press the
+number)` in the pane, naming the open checks, and `Approve needs every human
+check marked; 2 open; enter opens the card` on the Overview row. The daemon
+applies one mark at a time, so a digit pressed while an earlier mark is still
+pending waits: the status line names the pending mark (`mark of check N is
+pending`) and the owner presses again. A mark says what it does in words, while
+it runs and when it is done: `marking check 2 done` then `check 2 marked done`,
+`marking check 2 for later` then `check 2 marked for later`, and `reopening
+check 2` then `check 2 reopened`. When ork approves, it records the marks as a slicer
+note on the slice, which replaces the human-check adj records. A card needs the
+owner to mark checks in the TUI; `ork approve` cannot.
+
+`F` (shift-f) opens the fix note. It is a capital because `f` files later
+findings on the same card, and `e` keeps its meaning in Waves. The footer shows `Fix note: TEXT` and `enter sends the
+note to a fix round; esc back to card`. The field owns every key, including digits and
+the action letters. Enter sends the note: an empty note is refused, and the
+status line follows the call, which returns when the run rests again. Meanwhile
+the run goes through its fix round, the checks and the gate, and its pane shows
+the card again on PASS, with the marks it had. A failed call (the round limit,
+a stopped run) keeps the note in the field. The status line tells the call in
+words, not as a command, because there is no `ork` command for it: `fix note
+sent; fix round running` while it runs, then `fix round finished`; a failure
+reads `fix note: ERROR`.
+`esc` goes back to the card, and a second `esc` closes the pane. The
+`Human checks` label is a heading in every case (open, none, not read), and a
+check that wraps hangs under its text, which starts at column 6. A run without a
+card (a record from before S118) keeps the old key line `a approve; x stop`.
+At 80x24 the card's footer keeps one line for the header that names the run
+(`Run ID  ITEM  STATE`), so the card gives up lower-priority lines first (the
+later and owner findings, then the key line) before that header goes; the
+tree scrolls out of sight and the Overview rows above stay.
 
 **Finding kinds** (adj #163, `review.finding-kinds`). A reviewer, UI pass or
 gate report tags each finding `fix`, `owner` or `later`. In every pane that is
@@ -432,8 +486,9 @@ again. An *owner* finding that does not block reads `Owner question, not
 blocking: TITLE Recommended: LABEL.`; it only informs, and the slice goes on.
 An owner finding marked a blocker pauses the slice as an ordinary structured
 question (the question pane above). A fix finding goes to the fix round and
-shows nowhere in the pane. `f` in the key help sits on the line with approve,
-stop and retry.
+shows nowhere in the pane. `f` and `F fix round` in the key help sit on the line with
+approve, stop and retry, in the pane's order. The help has no room for a line
+of its own for `F` or for the digits at the standard help height.
 
 A failed call is an error row. A project has one error row per error code.
 The parts that failed with that code come first, then the code, then the

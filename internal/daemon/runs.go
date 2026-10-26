@@ -32,7 +32,9 @@ const (
 	MethodRunStop    = "run.stop"
 	MethodRunAnswer  = "run.answer"
 	MethodRunRetry   = "run.retry"
-	MethodRunFile    = "run.file" // proposed: file a later finding as a slice (adj 163)
+	MethodRunFile    = "run.file"  // proposed: file a later finding as a slice (adj 163)
+	MethodRunFix     = "run.fix"   // proposed: send the owner's note to a fix round (S118)
+	MethodRunCheck   = "run.check" // proposed: tick a human check or mark it later (S118)
 )
 
 // defaultGlobalCap is the global cap when the registry sets none (adj 20).
@@ -52,6 +54,8 @@ type RunParams struct {
 
 // RunAction names a run, and an owner answer when answering.
 type RunAction struct {
+	Check   int    `json:"check,omitempty"`   // run.check: the one-based human check
+	State   string `json:"state,omitempty"`   // run.check: "ticked", "later" or "" to reopen
 	Finding int    `json:"finding,omitempty"` // run.file: the one-based finding to file
 	Adj     bool   `json:"adj,omitempty"`
 	By      string `json:"by,omitempty"`
@@ -839,6 +843,10 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		fn = r.engine.Retry
 	case MethodRunApprove:
 		fn = r.engine.Approve
+	case MethodRunFix:
+		fn = func(ctx context.Context) error { return r.engine.Fix(ctx, p.Text) }
+	case MethodRunCheck:
+		fn = func(context.Context) error { return r.engine.MarkCheck(p.Check, p.State) }
 	case MethodRunStop:
 		fn = func(ctx context.Context) error {
 			// A cancelled round leaves its role live in the record. Reconcile checks
@@ -1103,7 +1111,11 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		for i, f := range rec.Findings {
 			findings = append(findings, source.EngineFinding{N: i + 1, Kind: f.Kind, Title: f.Title, Ask: f.Ask, Filed: f.Filed})
 		}
-		runs = append(runs, EngineRun{Findings: findings, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
+		var card *runrec.ApprovalCard
+		if rec.State == runrec.StateAwaitingApproval {
+			card = rec.Card
+		}
+		runs = append(runs, EngineRun{Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
 	}
 	// Dismissed records still supersede older stopped runs of the same slice.
 	visible := runs[:0]

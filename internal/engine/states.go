@@ -113,6 +113,8 @@ func (e *Engine) feedbackSection(fb *runrec.Feedback) BriefSection {
 			return BriefSection{Title: "Review findings", Body: "The reports below hold findings: the reviewer's, the UI pass's, or both. Apply only the findings in them; owner and later findings go to the owner, not to you. The UI pass gives suggested design edits for the screens this slice changes. If a finding is wrong, say so in your report with your evidence.\n\n" + body}
 		}
 		return BriefSection{Title: "Review findings", Body: "The reviewer's report is below. Apply only the findings in it. If a finding is wrong, say so in your report with your evidence.\n\n" + body}
+	case "owner":
+		return BriefSection{Title: "Owner fix request", Body: "The owner read the approval card and asks for the change below. Make it and nothing else: the slice already passed the gate. Say in your report what you changed.\n\n" + body}
 	case "architect":
 		return BriefSection{Title: "Architect findings", Body: "The architect's whole report is below. Apply its change-now findings. If a finding is wrong, say so in your report with your evidence. Keep later work out of this slice.\n\n" + body}
 	default:
@@ -471,12 +473,18 @@ func (e *Engine) gate(ctx context.Context) error {
 	if name, text := e.latestReport(rec, RoleUI); text != "" {
 		r.sections = append(r.sections, BriefSection{Title: "UI pass report (" + name + ")", Body: text})
 	}
+	for _, fix := range rec.Fixes {
+		if fix.Round == rec.Round {
+			r.sections = append(r.sections, BriefSection{Title: "Owner fix request", Body: "The owner asked for this change after the last pass. Check that the new diff makes it, and nothing else.\n\n" + fix.Note})
+		}
+	}
 	out, err := e.runRound(ctx, r, pend)
 	if err != nil || !out.ok {
 		return err
 	}
 	if out.report.Verdict == "PASS" {
-		return e.run.Update(func(rr *runrec.Record) { rr.State = runrec.StateAwaitingApproval; rr.Reason = "" })
+		card := e.buildCard(ctx, e.run.Snapshot(), out.report)
+		return e.run.Update(func(rr *runrec.Record) { rr.Card = card; rr.State = runrec.StateAwaitingApproval; rr.Reason = "" })
 	}
 	// FAIL: record it on the item, then back to the implementer.
 	if err := e.run.Update(func(rr *runrec.Record) { rr.Fails++ }); err != nil {

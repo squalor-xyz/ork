@@ -459,12 +459,24 @@
       "id": "S118",
       "title": "Approval card: everything needed to approve on one screen",
       "short_title": "Approval card: everything needed to approve on one screen",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S111"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "ad65fb4d-1c08-44bc-8b85-8bdc22db0e27",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answers (2026-10-26, session a2bf7e0e, after gate round 1): (1) 80x24: one-line diff summary and one reserved run-header line. (2) Status text is plain (e.g. 'fix note saved'); ork fix/check CLI later. (3) Fix key is shift-F; f stays file-later (owner-accepted deviation from the recorded 'f'). (4) ork approve with human checks is TUI-only for now; ork check CLI later. (5) Unreadable human checks: approve with a slicer note saying they could not be read; filed as later.",
+          "created_at": "2026-10-26T12:51:27Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -482,7 +494,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
