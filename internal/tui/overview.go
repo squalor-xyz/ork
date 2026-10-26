@@ -200,6 +200,8 @@ func (m *Model) rows() (needs, running []ovRow) {
 					row.kind, row.style = "! removed", th.Error
 				case r.State == "stopped":
 					row.kind, row.style = "x stopped", th.Error
+				case r.State == "paused" && r.Pending == "question":
+					row.kind, row.style = "? question", th.Warn.Bold(th.Mono)
 				case r.State == "paused":
 					row.kind, row.style = "= paused", th.Held
 				case r.State == "awaiting-approval":
@@ -243,7 +245,7 @@ func (m *Model) rows() (needs, running []ovRow) {
 			needs[i].group = "Held"
 		case "x stopped":
 			needs[i].group = "Stopped"
-		case "= paused":
+		case "= paused", "? question":
 			needs[i].group = "Paused"
 		case "+ approve":
 			needs[i].group = "Approve"
@@ -376,7 +378,17 @@ func (m *Model) overview(w int) overviewView {
 		section(rows, first, "")
 		first += len(rows)
 	}
-	lines = append(lines, "", th.Heading.Render(fmt.Sprintf("Running %d", len(running))))
+	summary := th.Heading.Render(fmt.Sprintf("Running %d", len(running)))
+	questions := 0
+	for _, r := range needs {
+		if r.pending == "question" {
+			questions++
+		}
+	}
+	if questions > 0 {
+		summary += "  " + th.Warn.Bold(th.Mono).Render(fmt.Sprintf("! owner questions %d", questions))
+	}
+	lines = append(lines, "", summary)
 	section(running, len(needs), "nothing running")
 	lines = append(lines, "", th.Heading.Render("Recent"))
 	recent := m.recentRows()

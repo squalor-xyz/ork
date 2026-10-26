@@ -7,10 +7,17 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+// OwnerQuestion and Option share the persisted question shape.
+type OwnerQuestion = runrec.OwnerQuestion
+type Option = runrec.Option
 
 // Report is what the engine reads from a role's report.
 type Report struct {
+	Ask      *OwnerQuestion
 	Verdict  string // "PASS" or "FAIL" for a gate, else empty
 	Passed   int    // from the Tests lines
 	Failed   int
@@ -76,6 +83,13 @@ func CheckReport(role string, finish bool, text string) (*Report, error) {
 		problems = append(problems, fmt.Sprintf("no %q section", ownerHeading))
 	} else if !isNone(body) {
 		rep.Question = strings.TrimSpace(body)
+		ask, err := parseOwnerQuestion(body)
+		if err != nil {
+			problems = append(problems, err.Error())
+		} else {
+			rep.Ask = ask
+		}
+
 		for _, line := range strings.Split(body, "\n") {
 			line = strings.TrimSpace(line)
 			if strings.HasPrefix(line, "Decision key:") {
@@ -92,6 +106,66 @@ func CheckReport(role string, finish bool, text string) (*Report, error) {
 		return nil, &ShapeError{Problems: problems}
 	}
 	return &rep, nil
+}
+
+var optionLine = regexp.MustCompile(`^([1-4])\. ([^:]+): (.+)$`)
+var recommendLine = regexp.MustCompile(`^Recommend: ([1-4]) - (.+)$`)
+
+func parseOwnerQuestion(body string) (*OwnerQuestion, error) {
+	var lines []string
+	structured := false
+	for _, line := range strings.Split(body, "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "Question:") || line == "Options:" || strings.HasPrefix(line, "Recommend:") {
+			structured = true
+		}
+		if line != "" && !strings.HasPrefix(line, "Decision key:") {
+			lines = append(lines, line)
+		}
+	}
+	if !structured {
+		return nil, nil
+	}
+	// Context before Question stays in the raw section, outside the strict block.
+	for i, line := range lines {
+		if strings.HasPrefix(line, "Question:") {
+			lines = lines[i:]
+			break
+		}
+	}
+	bad := func() (*OwnerQuestion, error) {
+		return nil, fmt.Errorf("Owner needed requires Question: title, Options: with 2 to 4 numbered unique labels and summaries, and Recommend: N - reason")
+	}
+	if len(lines) < 5 || len(lines) > 7 || !strings.HasPrefix(lines[0], "Question:") || lines[1] != "Options:" {
+		return bad()
+	}
+	q := &OwnerQuestion{Title: strings.TrimSpace(strings.TrimPrefix(lines[0], "Question:"))}
+	if q.Title == "" {
+		return bad()
+	}
+	labels := map[string]bool{}
+	for i, line := range lines[2 : len(lines)-1] {
+		m := optionLine.FindStringSubmatch(line)
+		if m == nil || m[1] != strconv.Itoa(i+1) {
+			return bad()
+		}
+		label, summary := strings.TrimSpace(m[2]), strings.TrimSpace(m[3])
+		if label == "" || summary == "" || labels[label] {
+			return bad()
+		}
+		labels[label] = true
+		q.Options = append(q.Options, Option{Label: label, Summary: summary})
+	}
+	m := recommendLine.FindStringSubmatch(lines[len(lines)-1])
+	if m == nil {
+		return bad()
+	}
+	q.Recommend, _ = strconv.Atoi(m[1])
+	q.Reason = strings.TrimSpace(m[2])
+	if q.Recommend > len(q.Options) || q.Reason == "" {
+		return bad()
+	}
+	return q, nil
 }
 
 // section returns the lines under the heading, up to the next "## " heading

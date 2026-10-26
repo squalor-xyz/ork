@@ -101,15 +101,30 @@ type Approval struct {
 	At   time.Time `json:"at"`
 }
 
+// OwnerQuestion is the structured form of an Owner needed block.
+type OwnerQuestion struct {
+	Title     string   `json:"title"`
+	Options   []Option `json:"options"`
+	Recommend int      `json:"recommend"` // one-based option number
+	Reason    string   `json:"reason"`
+}
+
+// Option is one answer the owner can pick.
+type Option struct {
+	Label   string `json:"label"`
+	Summary string `json:"summary"`
+}
+
 // Question is an owner question taken from a role report, and its answer.
 type Question struct {
-	Key        string    `json:"key,omitempty"`
-	Role       string    `json:"role"`
-	Round      int       `json:"round"`
-	Text       string    `json:"text"`
-	At         time.Time `json:"at"`
-	Answer     string    `json:"answer,omitempty"`
-	AnsweredAt time.Time `json:"answered_at,omitzero"`
+	Ask        *OwnerQuestion `json:"ask,omitempty"`
+	Key        string         `json:"key,omitempty"`
+	Role       string         `json:"role"`
+	Round      int            `json:"round"`
+	Text       string         `json:"text"`
+	At         time.Time      `json:"at"`
+	Answer     string         `json:"answer,omitempty"`
+	AnsweredAt time.Time      `json:"answered_at,omitzero"`
 }
 
 // Commit is the commit ork made on the slice branch.
@@ -132,14 +147,15 @@ const (
 // Pending says why a slice is paused and what resumes it. State is the state
 // to re-enter; Role and Round name the role to run again.
 type Pending struct {
-	Key      string `json:"key,omitempty"`
-	Kind     string `json:"kind"`
-	State    string `json:"state"`
-	Role     string `json:"role,omitempty"`
-	Round    int    `json:"round,omitempty"`
-	Reason   string `json:"reason"`
-	Question string `json:"question,omitempty"`
-	Answer   string `json:"answer,omitempty"`
+	Ask      *OwnerQuestion `json:"ask,omitempty"`
+	Key      string         `json:"key,omitempty"`
+	Kind     string         `json:"kind"`
+	State    string         `json:"state"`
+	Role     string         `json:"role,omitempty"`
+	Round    int            `json:"round,omitempty"`
+	Reason   string         `json:"reason"`
+	Question string         `json:"question,omitempty"`
+	Answer   string         `json:"answer,omitempty"`
 }
 
 // Feedback names the file that holds what the next implementer round must

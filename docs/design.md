@@ -328,6 +328,30 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   and dotted; a malformed or repeated key is a `role.report-shape` error.
   The full section and its optional key are stored with the question. A key
   enables optional adj filing of the owner's answer in the TUI.
+- **Structured questions** (`ui.structured-questions`, adj #168). Roles write
+  this block under `## Owner needed`, with 2 to 4 options, distinct labels,
+  consecutive numbers starting at 1, and a recommendation naming an option:
+
+  ```text
+  Question: ONE LINE TITLE
+  Options:
+  1. LABEL: summary
+  2. LABEL: summary
+  Recommend: 1 - one-line reasoning
+  Decision key: area.topic
+  ```
+
+  Free context lines may precede `Question:`. They stay in the raw question
+  text and the pane shows them above the options. From `Question:` onward,
+  the block keeps its strict shape: extra context lines inside or after it
+  are a shape error. The optional decision key line remains allowed anywhere
+  in the section.
+
+  The decision key is optional. Title, labels, summaries and reasoning must
+  be non-empty and each fits on one line. A malformed structured block is a
+  report shape error. Legacy free text still pauses for an answer. The raw
+  section stays in `Question`; the parsed `Ask` accompanies it in pending
+  state and question history. Adj uses the structured title when filing.
 - **Owner questions.** A non-empty `## Owner needed` pauses the slice (kind
   `question`) and is recorded in `questions[]`. `Answer` resumes the same
   role with the question and the answer. The pending answer stays in the
@@ -797,7 +821,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   classification as the Overview: committed and superseded runs are hidden
   (`ui.status-list`, adj #125). JSON keeps every engine run, including hidden
   ones. The *proposed*
-  `engine_runs:[{id,item,branch?,merged?,state,wait?,pending?,denials?,error?,unavailable?,
+  `engine_runs:[{id,item,branch?,merged?,state,wait?,pending?,question?,denials?,error?,unavailable?,
   relay_run?,roles?,activity?,tail?,tokens?,cost_usd?,created_at}]` field per project includes the linked slicer
   ledger run ID in `relay_run`, when present, and the engine run's creation
   time in `created_at`. The optional `roles`
@@ -810,7 +834,9 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   contains the approval prompt, owner question, pause or stop reason. The optional
   `pending` string holds the paused run record's pending kind (`question`,
   `shape`, `lost`, `interrupted` or `error`); other states omit it
-  (`ui.pending-kind`). Older snapshots without it still load. `active_relays` are slicer's active relay runs.
+  (`ui.pending-kind`). The optional `question` object carries `title`,
+  `options:[{label,summary}]`, one-based `recommend` and `reason` for a paused
+  structured question. Older snapshots without it still load. `active_relays` are slicer's active relay runs.
   The *proposed* optional `error` is a daemon-memory job or recovery error.
   The *proposed* optional `unavailable` marks a row without an engine.
   Removed-project groups are display-only and have `unavailable: true`.

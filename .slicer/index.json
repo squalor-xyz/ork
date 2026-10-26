@@ -331,7 +331,7 @@
       "id": "S111",
       "title": "Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork",
       "short_title": "Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S28"
@@ -366,7 +366,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

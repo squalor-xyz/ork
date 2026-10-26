@@ -373,6 +373,7 @@ func (m *Model) statusLine(w int) string {
 func (m *Model) helpLines(w, bodyH int) []string {
 	th := m.cfg.Theme
 	lines := []string{th.Heading.Render("Keys")}
+	var actionHints []string
 	for _, group := range m.keys.FullHelp() {
 		for _, binding := range group {
 			h := binding.Help()
@@ -395,6 +396,14 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			if m.view == questionsView && m.pane == nil &&
 				(h == m.keys.Stop.Help() || h == m.keys.Retry.Help() || h == m.keys.Cleanup.Help()) {
 				continue
+			}
+			// Keep the added question keys and quit visible at standard height.
+			if h == m.keys.Approve.Help() || h == m.keys.Stop.Help() || h == m.keys.Retry.Help() {
+				actionHints = append(actionHints, h.Key+" "+h.Desc)
+				continue
+			}
+			if h == m.keys.Answer.Help() && len(actionHints) > 0 {
+				lines = append(lines, clip(strings.Join(actionHints, "; "), w))
 			}
 			lines = append(lines, clip(h.Key+" "+h.Desc, w))
 		}

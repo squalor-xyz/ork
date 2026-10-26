@@ -140,7 +140,12 @@ a slot under the caps and has no process and no writes. `round` counts implement
 `fails` counts gate FAILs. `reason` says why a slice is stopped or paused.
 `pending` (kind `question`, `shape`, `lost`, `interrupted`, `budget` or `error`, with
 the state and role to re-enter, the reason, and for a question the optional adj
-`key`, the text and the answer) is set while a slice is paused. `feedback`
+`key`, the text and the answer) is set while a slice is paused.
+Both `pending` and each entry in `questions[]` may carry `ask`, the structured
+question object: `title`, `options:[{label,summary}]`, one-based `recommend`
+and `reason` (adj #168). The raw question text is kept alongside it. Older
+records without `ask` continue to use free text. An older ork refuses a
+`run.json` with `ask` because `Store.Open` uses strict keys. `feedback`
 names the file (kind
 `checks`, `findings`, `architect` or `fail`) that the next implementer round must act on.
 The `architect` state runs only when the lineup includes that role (adj #151),

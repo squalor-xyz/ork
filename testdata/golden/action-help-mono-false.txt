@@ -15,10 +15,10 @@
                            │space tick item and ask inputs (Waves)
                            │e edit ticked item lineup (Waves)
                            │l launch a ready slice (Roadmap) or wave (Waves)
-                           │a approve
-                           │x stop
-                           │t retry
-                           │enter (answer) submit; no confirmation
+                           │a approve; x stop; t retry
+                           │enter (answer) submit free text
+                           │1-4 (question) pick an option; y sends
+                           │t (question) type a free answer
                            │ctrl+a (answer) toggle filing the answer in adj
                            │pgup/pgdown scroll run tree and reason or decision
                            │c remove merged worktree and branch (Ready)
