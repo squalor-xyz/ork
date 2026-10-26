@@ -60,7 +60,7 @@ before any other dependency. Every new Go file starts with
   is not part of the repo) go in `.scratch/` in the main checkout. It is
   git-excluded (`.git/info/exclude`). Do not use `/tmp` or the harness's
   scratch directory, so every path stays inside the workspace.
-- Go 1.27.2. Use `go -C DIR` instead of changing directory.
+- Go 1.27.x (`go.mod` sets the minimum, 1.27.2). Use `go -C DIR` instead of changing directory.
 
 ## Tracking (slicer)
 
