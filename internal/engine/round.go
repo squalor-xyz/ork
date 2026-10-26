@@ -207,6 +207,13 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	if err := os.MkdirAll(tempDir, 0o755); err != nil {
 		return fail("temp directory", err)
 	}
+	if r.role == RoleUI {
+		// A rerun starts with no renders: an earlier attempt's files are not
+		// this attempt's views (S121, *proposed*).
+		if err := os.RemoveAll(filepath.Join(tempDir, rendersDir)); err != nil {
+			return fail("old renders", err)
+		}
+	}
 	if err := os.Remove(reportPath); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return fail("old report", err)
 	}

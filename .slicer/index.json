@@ -648,13 +648,36 @@
       "id": "S121",
       "title": "UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card",
       "short_title": "UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S117",
         "S118"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "f566ba85-7348-4ada-b125-e503afb77d6d",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answers (2026-10-26, session a2bf7e0e, after gate round 1): (1) renders are fetched on demand: the card holds names and sizes; the TUI fetches the text through a new run.render IPC call; no render text in snapshots. (2) While a render shows, the Overview rows collapse so the render gets the pane. (3) Key label 'v view renders'.",
+          "created_at": "2026-10-26T14:11:51Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "3e897893-d060-46cc-bf08-6f4930cbdbee",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answer (session a2bf7e0e, 2026-10-26): set the render off with one dim rule line between the run header and the render.",
+          "created_at": "2026-10-26T14:34:29Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -672,7 +695,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -1,0 +1,39 @@
+{
+  "id": "S121",
+  "title": "UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Retrospective R4 (docs/review-2026-10-25-relay-retrospective.md). The UI pass read goldens and text only; the owner's human check then lagged as adj records. adj 165 recommends renders shown on the approval card."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/runrec/record.go`: the card lists renders by name and size (`ui_round`, `renders`, `renders_dropped`).\n- `internal/runrec/plain.go`: plain text of a render (escape sequences and control characters dropped).\n- `internal/engine/approval.go`: list the UI pass renders on the card (order, limits, no links) and `ReadRender`, which reads one on demand.\n- `internal/engine/round.go`: clear the UI pass renders directory when its round starts.\n- `internal/daemon/runs.go`: the `run.render` call (`runRender`, `RenderReply`).\n- `internal/daemon/handlers.go`: route `run.render`.\n- `internal/daemon/client.go`: `Client.Render`.\n- `internal/roles/prompts/ui.md`: the UI pass writes the renders to its temp directory.\n- `internal/tui/card.go`: the renders line, the render viewer, its fetch through `run.render`, and the key line.\n- `internal/tui/pane.go`: show a render in place of the run tree and the card footer.\n- `internal/tui/model.go`: keep the answer of a render call.\n- `internal/tui/view.go`: collapse the Overview rows while a render shows; `v view renders` in the help line.\n- `internal/tui/keys.go`: the `v` key.\n- `internal/engine/renders_test.go`, `internal/daemon/render_test.go`, `internal/tui/renders_test.go`, `internal/tui/card_test.go`: tests.\n- `testdata/golden/approval-render-80x24-mono-false.txt`, `testdata/golden/approval-render-80x24-mono-true.txt`: the viewer at 80x24.\n- `testdata/golden/action-help-mono-false.txt`, `testdata/golden/action-help-mono-true.txt`, `testdata/golden/version-help-100x30-mono-false.txt`, `testdata/golden/version-help-100x30-mono-true.txt`, `testdata/golden/version-help-tall-mono-false.txt`, `testdata/golden/version-help-tall-mono-true.txt`: help goldens.\n- `docs/state.md`, `docs/dashboard.md`, `docs/design.md`, `CHANGELOG.md`: the behaviour (storage path and card fields marked proposed)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestRendersProducedForChangedGoldens.\n- TestApprovalCardShowsRenders."
+    },
+    {
+      "heading": "Implement",
+      "body": "Depends on the UI pass role and the approval card slices. Mark the storage path proposed.\n\nOwner decision (2026-10-26 session, AskUserQuestion): the UI pass role writes the changed views at 80x24, 120x40 and ASCII as text files in its report directory, using the project's own tooling; ork stores them with the run and the approval card shows them. No project-specific render code in ork; golden_test.go is not a Files entry for ork's engine (it stays ork's own test). Re-anchor Files after S117 and S118 land."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./...; go vet; gofmt -l; slicer check; adj lint. UI slice: UI pass (r14)."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

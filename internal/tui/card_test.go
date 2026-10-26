@@ -5,12 +5,14 @@ package tui
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -24,6 +26,23 @@ type cardLive struct {
 	fixes    []string
 	markErr  error
 	fixErr   error
+
+	renders     map[string]string // run.render: the text of each render by name
+	renderErr   error
+	renderCalls []string
+}
+
+// Render answers run.render from the test's texts.
+func (l *cardLive) Render(_ context.Context, run, name string) (string, error) {
+	l.renderCalls = append(l.renderCalls, run+"#"+name)
+	if l.renderErr != nil {
+		return "", l.renderErr
+	}
+	text, ok := l.renders[name]
+	if !ok {
+		return "", fmt.Errorf("not_found: no render %s", name)
+	}
+	return text, nil
 }
 
 func (l *cardLive) Approve(ctx context.Context, run string) error {
@@ -410,6 +429,42 @@ func TestDaemonFixAndCheckWire(t *testing.T) {
 		seen[0] != (daemon.RunAction{Run: "engine", Text: "Rename it."}) ||
 		seen[1] != (daemon.RunAction{Run: "engine", Check: 2, State: "later"}) ||
 		seen[2] != (daemon.RunAction{Run: "engine", Check: 2}) {
+		t.Errorf("requests %v %+v", methods, seen)
+	}
+}
+
+// The live connection reads a render through run.render, and a refusal reaches
+// the pane's failed state with its code.
+func TestDaemonRenderWire(t *testing.T) {
+	var _ renderReader = (*Daemon)(nil)
+	var methods []string
+	var seen []daemon.RunAction
+	d, _, _, _ := requestServer(t, func(_ context.Context, method string, params json.RawMessage) (any, error) {
+		var a daemon.RunAction
+		if err := json.Unmarshal(params, &a); err != nil {
+			return nil, err
+		}
+		methods, seen = append(methods, method), append(seen, a)
+		if a.Name == "gone-80x24.txt" {
+			return nil, &ipc.Error{Code: daemon.CodeNotFound, Message: "no render gone-80x24.txt for run engine"}
+		}
+		return daemon.RenderReply{Name: a.Name, Text: "Run engine\nGate PASS"}, nil
+	})
+	text, err := d.Render(context.Background(), "engine", "x-80x24.txt")
+	if err != nil || text != "Run engine\nGate PASS" {
+		t.Fatalf("render: %q, %v", text, err)
+	}
+	_, err = d.Render(context.Background(), "engine", "gone-80x24.txt")
+	var wire *ipc.Error
+	if !errors.As(err, &wire) || wire.Code != daemon.CodeNotFound {
+		t.Fatalf("a refused render: %v", err)
+	}
+	if got := actionError(err); got != "not_found: no render gone-80x24.txt for run engine" {
+		t.Errorf("the pane would show %q", got)
+	}
+	if strings.Join(methods, " ") != "run.render run.render" ||
+		seen[0] != (daemon.RunAction{Run: "engine", Name: "x-80x24.txt"}) ||
+		seen[1] != (daemon.RunAction{Run: "engine", Name: "gone-80x24.txt"}) {
 		t.Errorf("requests %v %+v", methods, seen)
 	}
 }

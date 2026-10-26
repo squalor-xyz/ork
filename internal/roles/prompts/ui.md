@@ -16,8 +16,8 @@ verdict: the gate decides.
   no tracking writes (no `slicer note`, `set`, `start`, `handoff` or `done`). Use
   the shell for reading, `git diff`, `git show` and running tests. If a test run leaves
   files in the tree, name them in your report and do not delete them.
-- The only files you may write are your report and scratch files in {{temp_dir}}.
-  The directory is yours alone. Never use a shared system temp directory such as
+- The only files you may write are your report, your renders (see Renders) and
+  scratch files in {{temp_dir}}. The directory is yours alone. Never use a shared system temp directory such as
   `/tmp`.
 - Work only in {{worktree}}. Use absolute paths. Never change directory. Do not read
   outside the worktree, except {{temp_dir}} and the read-only references the brief
@@ -46,6 +46,27 @@ verdict: the gate decides.
 3. Cite `file:line` (or the golden file and its line) for every claim. Mark each
    finding CONFIRMED (you traced it or ran something) or PLAUSIBLE. Do not report a
    check you did not run. Do not suggest extra scope.
+
+## Renders
+
+ork shows the owner the views the diff changes on the approval card, so the owner
+sees them without opening a terminal. You produce them with the project's own
+tooling (its `AGENTS.md`, its TUI tests and golden views say how); ork has no render
+code of its own. Do not add a render path to the tree. For each view the diff adds
+or changes, write plain text files in `{{temp_dir}}/renders/`:
+
+- `VIEW-80x24.txt`: the view at 80 columns by 24 rows.
+- `VIEW-120x40.txt`: the view at 120 columns by 40 rows.
+- `VIEW-ascii.txt`: the view in the project's ASCII or mono mode, at 80x24 unless the
+  view needs more.
+
+`VIEW` is a short name for the view, with letters, digits and `-`. Write the text
+as the screen shows it, with no color codes. If the project's goldens hold color
+codes, write the plain view (the tests' plain or stripped helper), not the golden
+file. ork keeps up to 24 files, 24 KiB each,
+and only `.txt` files that are not links. If the tooling cannot render a view
+without changing the tree, write no file for it and say so in your report, under
+the view's name. Say in your report which files you wrote.
 
 Check each view the diff adds or changes against this list:
 

@@ -27,7 +27,10 @@ type runPane struct {
 	answered, answerDone      bool
 	answerState, answerNotice string
 	freeText                  bool
-	fixing                    bool // the fix note field of the approval card is open
+	fixing                    bool                   // the fix note field of the approval card is open
+	render                    int                    // the card's render on show, one-based; 0 shows the card (S121, proposed)
+	renderRound               int                    // the card round that render was opened on
+	fetched                   map[string]renderFetch // run.render answers, by card round and name
 	adj                       bool
 	ledger                    bool
 	input                     textField
@@ -190,6 +193,10 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 	case "ctrl+c":
 		return tea.Quit
 	case "esc":
+		if m.renderOn() > 0 {
+			m.pane.render, m.pane.offset = 0, 0
+			return nil
+		}
 		if m.pane.fixing {
 			m.pane.fixing, m.pane.input = false, textField{}
 			m.actionStatus = ""
@@ -209,6 +216,9 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 	case "pgdown":
 		m.pane.offset++
 		return nil
+	}
+	if m.renderOn() > 0 {
+		return m.renderKey(msg)
 	}
 	if m.paneQuestion() {
 		if msg.String() == "ctrl+a" {
@@ -310,15 +320,28 @@ func (m *Model) paneLines(w, h int, status string) []string {
 		}
 	}
 	card := m.paneCard()
-	if card != nil {
+	// A render on show takes the room of the card's summary and checks.
+	idx := m.renderOn()
+	viewing := idx > 0
+	if viewing {
+		// A dim rule sets the render apart from the run line above it.
+		_, horizontal := m.cfg.Theme.rules(m.cfg.ASCII)
+		header = append(header, m.cfg.Theme.Dim.Render(strings.Repeat(horizontal, width)))
+	}
+	if card != nil && !viewing {
 		priority := 0
 		if m.pane.fixing {
 			priority = 2
 		}
 		addFooter(m.cardSummary(card, width), priority)
 	}
-	addFooter(m.findingLines(width), 2)
+	if !viewing {
+		addFooter(m.findingLines(width), 2)
+	}
 	switch {
+	case viewing:
+		addFooter(wrapText(m.renderTitle(card), width), 0)
+		addFooter(wrapText(m.cardHint(card), width), 1)
 	case r.unavailable:
 		addFooter(wrapText(source.RemovedProjectHelp(r.name), width), 2)
 		addFooter([]string{"Removed project; esc close pane"}, 3)
@@ -452,22 +475,26 @@ func (m *Model) paneLines(w, h int, status string) []string {
 		}
 		reason = strings.TrimSpace(strings.Join(context, "\n"))
 	}
-	if reason != "" {
-		lines = append(lines, wrapText(reason, width)...)
-	}
-	if card != nil {
-		lines = append(lines, m.cardBody(card, width)...)
-	}
-	steps := m.paneSteps()
-	lines = append(lines, m.boardLines(steps, width)...)
-	roleWidth := treeRoleWidth(steps)
-	if boardLive(m.paneBoardRun().State) {
-		for _, role := range pipelineRoles(steps) {
-			roleWidth = max(roleWidth, len(role))
+	if viewing {
+		lines = m.renderLines(card, idx, width)
+	} else {
+		if reason != "" {
+			lines = append(lines, wrapText(reason, width)...)
 		}
+		if card != nil {
+			lines = append(lines, m.cardBody(card, width)...)
+		}
+		steps := m.paneSteps()
+		lines = append(lines, m.boardLines(steps, width)...)
+		roleWidth := treeRoleWidth(steps)
+		if boardLive(m.paneBoardRun().State) {
+			for _, role := range pipelineRoles(steps) {
+				roleWidth = max(roleWidth, len(role))
+			}
+		}
+		lines = append(lines, m.runTreeLinesWithRoleWidth(steps, width, m.treeFrame, roleWidth)...)
+		lines = append(lines, m.boardTail(steps, width, roleWidth)...)
 	}
-	lines = append(lines, m.runTreeLinesWithRoleWidth(steps, width, m.treeFrame, roleWidth)...)
-	lines = append(lines, m.boardTail(steps, width, roleWidth)...)
 	if len(lines) == 0 {
 		lines = wrapText(reason, width)
 	}
@@ -482,6 +509,9 @@ func (m *Model) paneLines(w, h int, status string) []string {
 		for i := range section {
 			section[i] = indent + section[i]
 		}
+	}
+	for viewing && len(lines) < room {
+		lines = append(lines, "") // the footer stays at the bottom of the pane
 	}
 	if room == 0 {
 		lines = nil

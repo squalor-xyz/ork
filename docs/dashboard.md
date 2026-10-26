@@ -470,8 +470,13 @@ the action area under the run tree, in this order:
   slice: `1 [ ] TEXT` open, `2 [x] TEXT` ticked, `3 [~] TEXT (later)` marked
   for later. With no items the line reads `Human checks: none`; if the daemon
   could not read them it reads `Human checks: not read (WHY)`.
-- The key line: `a approve; F fix round; x stop; 1-N tick/later; f file slice;
-  esc close pane`.
+- The key line: `a approve; F fix round; x stop; 1-N tick/later; v view renders;
+  f file slice; esc close pane`. `v view renders;` shows only when the card
+  has renders.
+- `Renders: N from the UI pass (round R)` (dim; `, K more not kept` when the
+  card dropped files), under the diff line. When the UI pass ran and wrote
+  none it reads `Renders: the UI pass (round R) wrote none`. Without a UI pass
+  the card has no such line.
 
 A digit marks the human check of that number and moves it on: ticked, then
 later, then open again. The mark is saved in the run record at once (`run.check`).
@@ -507,6 +512,39 @@ At 80x24 the card's footer keeps one line for the header that names the run
 (`Run ID  ITEM  STATE`), so the card gives up lower-priority lines first (the
 later and owner findings, then the key line) before that header goes; the
 tree scrolls out of sight and the Overview rows above stay.
+
+**Renders** (*proposed*, S121; adj #165). `v` on the card opens the viewer on
+the first render the UI pass wrote. The order is each view's `VIEW-80x24.txt`,
+`VIEW-120x40.txt` and `VIEW-ascii.txt`, the views by name, then any other file
+by name. The card holds only each render's name and size; the pane asks the
+daemon for the text (`run.render`) when the viewer opens and again for each
+render the owner moves to. Until the answer arrives the body reads `Loading
+NAME ...`; if the call fails it reads `Could not read NAME: WHY` (for example
+`not_found: no render NAME for run ID`), and `v` and `esc` still work.
+
+While a render shows, the Overview rows above the pane are gone: the pane has
+the whole body, from the rule under the view bar to the rule above the status
+line. The pane's first line still names the run (`Run ID  ITEM  STATE`); under
+it a dim rule (the theme's horizontal rule, `-` with the ASCII option) sets the
+render apart from that line and takes one row of the render's room; the render
+fills the rows below the rule, and the footer shows `Render K of N: NAME` and
+`v next; s sidebar; pgup/pgdown scroll; esc back to card`. The card's summary,
+checks and other keys give way. `v` moves to the next render; on the last one
+the key line reads `v/esc back to card; s sidebar; pgup/pgdown scroll` and `v`
+returns to the card, where the Overview rows return. If the card
+changes while a render shows (a fix round started from another TUI), the pane
+shows the card again.
+
+`s` hides or shows the sidebar: a render is not wrapped, so a row wider than
+the pane is cut with `...`, and the sidebar takes 20 columns below 100
+columns and 28 from 100 columns up. A render taller than the pane scrolls, one line
+for each press of `pgup` or `pgdown`, with `+N lines above` and `+N more
+lines` markers. A 40-row render does not fit at 80x24 or at 120x40, since the
+pane's name line and footer take rows too, so it scrolls at both. While a render shows, no card
+key acts except those: the owner cannot mark a check or approve what the footer
+does not show. `esc` returns to the card, and a second `esc` closes the pane.
+ork draws the text it was given, after dropping control characters again; it
+does not render the view itself.
 
 **Finding kinds** (adj #163, `review.finding-kinds`). A reviewer, UI pass or
 gate report tags each finding `fix`, `owner` or `later`. In every pane that is

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-143 items · — 53 · done 85 · retired 5
+143 items · — 52 · done 86 · retired 5
 
 ## v1.1
 
@@ -90,7 +90,7 @@
 | 33 | [S119](slices/S119.md) | Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up | M | 2 |  |  | — |
 | 34 | [S120](slices/S120.md) | Finding kinds: fix, owner or later in reviewer, UI pass and gate reports | M | 2 |  |  | done |
 | 35 | [S117](slices/S117.md) | UI pass role in the engine, in parallel with the reviewer | M | 2 |  |  | done |
-| 36 | [S121](slices/S121.md) | UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card | M | 2 |  |  | — |
+| 36 | [S121](slices/S121.md) | UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card | M | 2 |  |  | done |
 | 37 | [S116](slices/S116.md) | Spec check: a batch readiness check before a wave, answered in one sitting | M | 2 |  |  | done |
 | 38 | [S92](slices/S92.md) | Fallback brief tells the next row about earlier rows and an already-started slice | S | 1 |  | discovered from S49 | — |
 | 39 | [S93](slices/S93.md) | The gate follows the reviewer's current row after a fallback | S | 1 |  | discovered from S49 | — |

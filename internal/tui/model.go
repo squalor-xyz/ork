@@ -338,6 +338,9 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		return m, m.applyWaves(msg)
 	case launchMsg:
 		return m, m.applyLaunch(msg)
+	case renderMsg:
+		m.renderArrived(msg)
+		return m, nil
 	case actionMsg:
 		flights := m.actionFlights[msg.action.run]
 		for i, a := range flights {
