@@ -859,7 +859,7 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 			d.runs.mu.Unlock()
 			return RunReply{}, errors.New("run needs a pending question and a non-empty answer")
 		}
-		if p.Adj && strings.TrimSpace(p.By) == "" {
+		if p.Adj && rec.Pending.Key != "" && strings.TrimSpace(p.By) == "" {
 			d.runs.mu.Unlock()
 			return RunReply{}, errors.New("ADJ_DECIDED_BY is unset; set it in the caller before filing an answer in adj")
 		}

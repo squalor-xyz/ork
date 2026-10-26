@@ -302,15 +302,18 @@ func TestAnswerPlainAdjErrorsDoNotLeakOrResume(t *testing.T) {
 	}
 }
 
-func TestAnswerWithoutAdjDecidedByIsRefusedWithoutKey(t *testing.T) {
+func TestAnswerWithAdjAndNoKeyProceedsWithoutDecidedBy(t *testing.T) {
 	d, store, id := adjAnswerRun(t, `{}`, false, "")
-	if _, err := answerAdj(t, d, id, true, ""); err == nil || !strings.Contains(err.Error(), "ADJ_DECIDED_BY") {
-		t.Fatalf("error: %v", err)
+	if _, err := answerAdj(t, d, id, true, ""); err != nil {
+		t.Fatal(err)
 	}
+	rec := waitState(t, store, id, runrec.StateAwaitingApproval)
 	waitIdle(t, d, id)
-	rec := waitState(t, store, id, runrec.StatePaused)
-	if rec.Questions[0].Answer != "" || d.engineRuns("p")[0].Error != "" {
-		t.Fatal("refused answer changed run")
+	if rec.Questions[0].Answer != "use stdlib" {
+		t.Fatalf("answer: %q", rec.Questions[0].Answer)
+	}
+	if calls := lastFake.CallsTo("adj"); len(calls) != 0 {
+		t.Fatalf("calls: %+v", calls)
 	}
 }
 

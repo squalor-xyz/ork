@@ -941,10 +941,22 @@
       "id": "S113",
       "title": "Answer with adj on and no decision key must proceed",
       "short_title": "Answer with adj on and no decision key must proceed",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "1064b2d6-87f5-4a27-b9d3-7a2c268cf10e",
+          "kind": "",
+          "text": "**2026-10-26** — Orchestration trial (run 7): owner questions 0; stalls 0; fix rounds 0; merge conflicts 0; context compactions 0; Codex gpt-6.1-sol medium, not blocked; reviewer PASS on the first pass.",
+          "created_at": "2026-10-26T20:42:38Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -962,7 +974,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
