@@ -64,6 +64,8 @@ ork (TUI)  ork status --json (CLI)
   engine jobs and unreadable run state. *Proposed:* `daemon.info` returns only
   `build_id`, without loading the registry or reading projects. Commands,
   TUI startup, stop/restart and doctor use this cheap call for build checks.
+  Doctor also reads status for the idle self-host restart notice; a failed
+  status read omits that notice and does not fail doctor.
   `ork status` makes one full status read. Commands warn on stderr when the
   daemon build differs, including an older daemon with no build ID. The
   warning names `ork daemon restart`. An `unknown_method` reply from an older
@@ -928,3 +930,30 @@ Overview Running row, live ledger row or live run pane is visible. One timer
 is armed at a time and the next frame disarms it when nothing qualifies.
 `treeFrame` advances only on frames. The one-second schedule ticker is
 unchanged. There is no S07 bell, budget bar or write action.
+
+
+## Self-hosting (engine.self-host, adj 166)
+
+The daemon keeps running the binary it started from. Relay worktree builds
+never replace it. A project is self-hosted when the daemon's VCS build
+revision is a commit in that repository (`git cat-file -e REV^{commit}`).
+Development builds without a revision and unknown revisions do not match.
+There is no registry setting for self-hosting.
+
+A wave may contain at most one slice whose Files touch `internal/engine`,
+`internal/daemon` or `cmd`. The daemon refuses a conflicting wave before
+starting any member and names both slices. Waves marks the conflict before
+launch. One such slice may run with other slices.
+
+*Proposed wire fields:* each status project carries `self_host` and
+`behind_main`. A self-hosted daemon is behind when its build revision differs
+from local `main` and is an ancestor of that branch. A missing branch or a
+failed Git read does not establish that it is behind.
+
+*Proposed behavior and wording:* `daemon behind main: restart with ork daemon restart`.
+It fires on any landing on main, not only engine landings, while no run is
+active. In the status line it replaces the stale-build marker while shown;
+otherwise the stale marker still shows for a differing build. Text doctor
+prints `[WARN] daemon behind main: restart with ork daemon restart` on stdout.
+Status prints `ork: warning: daemon behind main: restart with ork daemon restart`
+on stderr. ork never restarts the daemon on its own.

@@ -146,6 +146,10 @@ func TestDoctorBuildProbe(t *testing.T) {
 			a, _, _ := doctorApp(t, fmt.Sprintf("Contract: relay v%d", roles.ContractVersion))
 			a.BuildID = "current"
 			a.Call = func(_ context.Context, method string, _, result any) error {
+				if method == daemon.MethodStatus {
+					// The separate self-host probe may fail without breaking doctor.
+					return fmt.Errorf("project reads unavailable")
+				}
 				if method != "daemon.info" {
 					t.Errorf("build probe called %s, want daemon.info", method)
 					return fmt.Errorf("project reads unavailable")

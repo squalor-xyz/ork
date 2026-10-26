@@ -21,6 +21,7 @@ type waveInputs struct {
 }
 
 type wavesState struct {
+	engineItems    map[string]bool
 	project        string
 	request        uint64
 	ctx            context.Context
@@ -41,17 +42,18 @@ type wavesState struct {
 }
 
 type wavesMsg struct {
-	request  uint64
-	kind     string
-	sequence uint64
-	item     string
-	suggest  *slicercli.ParallelPlan
-	plan     *daemon.RunPlan
-	params   *daemon.RunParams
-	overlap  *slicercli.Overlap
-	result   *daemon.WaveResult
-	action   runAction
-	err      error
+	engineItem *bool
+	request    uint64
+	kind       string
+	sequence   uint64
+	item       string
+	suggest    *slicercli.ParallelPlan
+	plan       *daemon.RunPlan
+	params     *daemon.RunParams
+	overlap    *slicercli.Overlap
+	result     *daemon.WaveResult
+	action     runAction
+	err        error
 }
 
 func (m *Model) dropWaves() {
@@ -200,7 +202,14 @@ func (m *Model) waveInputKey(msg tea.KeyPressMsg) tea.Cmd {
 				return nil
 			}
 			plan, err := live.Plan(ctx, p)
-			return wavesMsg{request: request, kind: "plan", sequence: seq, item: p.Item, plan: plan, err: err}
+			var engineItem *bool
+			if err == nil {
+				detail, detailErr := live.ItemShow(ctx, p.Project, p.Item)
+				err = detailErr
+				value := daemon.EngineSlice(detail)
+				engineItem = &value
+			}
+			return wavesMsg{engineItem: engineItem, request: request, kind: "plan", sequence: seq, item: p.Item, plan: plan, err: err}
 		}
 	default:
 		in.fields[in.focus].update(msg)
@@ -220,6 +229,10 @@ func (m *Model) confirmWave() tea.Cmd {
 	}
 	if w.planning != "" {
 		m.actionStatus = "A plan is pending; wait before launching"
+		return nil
+	}
+	if conflict := w.engineConflict(); conflict != "" {
+		m.actionStatus = conflict
 		return nil
 	}
 	items := w.items()
@@ -330,6 +343,12 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 		if msg.params != nil {
 			p = *msg.params
 		}
+		if w.engineItems == nil {
+			w.engineItems = map[string]bool{}
+		}
+		if msg.engineItem != nil {
+			w.engineItems[msg.item] = *msg.engineItem
+		}
 		p.Expected = msg.plan
 		w.picked[msg.item] = p
 	}
@@ -430,6 +449,9 @@ func (m *Model) wavesBody(width int) overviewView {
 	if row == 0 {
 		add("No suggested items")
 	}
+	if conflict := w.engineConflict(); conflict != "" {
+		add("! " + conflict)
+	}
 	if w.overlapErr != nil {
 		add(actionError(w.overlapErr))
 	}
@@ -453,4 +475,18 @@ func (m *Model) wavesBody(width int) overviewView {
 	}
 	add("[space] tick item   [e] edit lineup   [l] launch wave")
 	return out
+}
+
+func (w *wavesState) engineConflict() string {
+	first := ""
+	for _, item := range w.items() {
+		if !w.engineItems[item.Item] {
+			continue
+		}
+		if first != "" {
+			return daemon.EngineConflict(first, item.Item)
+		}
+		first = item.Item
+	}
+	return ""
 }

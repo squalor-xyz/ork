@@ -286,3 +286,22 @@ the ledger run is absent from the active snapshot. In `ork status`,
   cached merge results. Unknown and unmerged branches stay. Pruning removes
   run directories only; worktrees and branches require confirmed cleanup
   (`git.cleanup-key`, adj #152). Failed cleanup keeps the run record.
+
+
+## Self-hosting (engine.self-host, adj 166)
+
+*Proposed wire fields:* each status project carries `self_host` and
+`behind_main`. Snapshots carry both fields and the existing global
+`roles_running` state to the TUI for the idle notice. They are derived from the daemon's VCS revision and local
+`main`, with no registry field. A dev build without a revision or an unknown
+commit never matches. Behind means a different main head that descends from
+the build revision. Failed Git reads do not establish behind state.
+
+*Proposed behavior and wording:* `daemon behind main: restart with ork daemon restart`.
+It fires on any landing on main, not only engine landings, while no run is
+active. In the TUI it replaces the stale-build marker while shown. Text
+doctor prints `[WARN] daemon behind main: restart with ork daemon restart`
+on stdout. Status prints `ork: warning: daemon behind main: restart with ork daemon restart`
+on stderr. The daemon continues using its original binary, never a relay
+worktree build, and never restarts itself. See docs/design.md for wave
+admission rules.

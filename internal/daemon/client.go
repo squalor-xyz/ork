@@ -80,16 +80,19 @@ func (c *Client) Snapshot(ctx context.Context, p registry.Project) source.Snapsh
 		}
 	}
 	return source.Snapshot{
-		Unavailable: out.Unavailable,
-		Project:     out.Project,
-		EngineRuns:  out.EngineRuns,
-		Items:       out.Items.result(),
-		Deps:        out.Deps.result(),
-		Goals:       out.Goals.result(),
-		Runs:        out.Runs.result(),
-		BoardRuns:   out.BoardRuns.result(),
-		Open:        out.Open.result(),
-		Decided:     out.Decided.result(),
+		SelfHost:     out.SelfHost,
+		BehindMain:   out.BehindMain,
+		RolesRunning: out.RolesRunning,
+		Unavailable:  out.Unavailable,
+		Project:      out.Project,
+		EngineRuns:   out.EngineRuns,
+		Items:        out.Items.result(),
+		Deps:         out.Deps.result(),
+		Goals:        out.Goals.result(),
+		Runs:         out.Runs.result(),
+		BoardRuns:    out.BoardRuns.result(),
+		Open:         out.Open.result(),
+		Decided:      out.Decided.result(),
 	}
 }
 

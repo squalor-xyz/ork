@@ -479,6 +479,30 @@ func (d *Daemon) startWave(ctx context.Context, p WaveStartParams) (*WaveResult,
 			return nil, badParams(errors.New("wave item is empty"))
 		}
 	}
+	// Inspect every Files section before admitting any member.
+	if len(p.Items) > 1 {
+		f, err := d.loadRegistry()
+		if err != nil {
+			return nil, err
+		}
+		proj, ok := find(f, project)
+		if !ok {
+			return nil, notFound(project, f)
+		}
+		first := ""
+		for _, item := range p.Items {
+			detail, err := d.runs.deps.Slicer.Show(ctx, proj.Path, item.Item)
+			if err != nil {
+				return nil, err
+			}
+			if EngineSlice(detail) {
+				if first != "" {
+					return nil, badParams(errors.New(EngineConflict(first, item.Item)))
+				}
+				first = item.Item
+			}
+		}
+	}
 	result := &WaveResult{Wave: newWaveID(time.Now()), Items: []WaveItemResult{}}
 	for _, item := range p.Items {
 		item.wave = result.Wave

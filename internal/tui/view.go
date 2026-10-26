@@ -337,9 +337,19 @@ func (m *Model) statusLine(w int) string {
 	if r, ok := m.selectedRow(); ok && r.ready && r.merged {
 		fields = append(fields, "c clean up")
 	}
-	// Empty builds are the seam for runs with no daemon info (tests).
-	// The stale rule itself is daemon.StaleBuild.
-	if (m.cfg.BuildID != "" || m.cfg.DaemonBuild != "") && daemon.StaleBuild(m.cfg.BuildID, m.cfg.DaemonBuild) {
+	// Every daemon snapshot carries global activity, including other projects.
+	status := &daemon.StatusResult{}
+	for _, project := range m.projects {
+		status.RolesRunning = status.RolesRunning || project.snap.RolesRunning
+		status.Projects = append(status.Projects, daemon.ProjectStatus{
+			SelfHost: project.snap.SelfHost, BehindMain: project.snap.BehindMain,
+		})
+	}
+	if notice := daemon.BehindWarning(status); notice != "" {
+		fields = append([]string{m.cfg.Theme.Warn.Render(notice)}, fields...)
+	} else if (m.cfg.BuildID != "" || m.cfg.DaemonBuild != "") && daemon.StaleBuild(m.cfg.BuildID, m.cfg.DaemonBuild) {
+		// Empty builds are the seam for runs with no daemon info (tests).
+		// The behind notice replaces the stale marker while it is shown.
 		fields = append([]string{m.cfg.Theme.Warn.Render("daemon build differs: ork daemon restart")}, fields...)
 	}
 	line := " " + strings.Join(fields, " | ")

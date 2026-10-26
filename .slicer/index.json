@@ -149,7 +149,7 @@
       "id": "S114",
       "title": "Self-hosting: run ork on its own repo safely",
       "short_title": "Self-hosting: run ork on its own repo safely",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -170,7 +170,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

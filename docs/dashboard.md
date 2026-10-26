@@ -79,8 +79,10 @@ first and keeps `?help`. With the sidebar hidden, the version appears at the
 right of the status line when it fits after the existing text.
 
 A stale or unknown daemon build puts
-`daemon build differs: ork daemon restart` first in the status line, before
-the project and refresh fields. Trailing fields are dropped to fit the pane width.
+`daemon build differs: ork daemon restart` first in the status line before
+the project and refresh fields, unless the behind notice is shown (see
+Self-hosting). The behind notice replaces the stale-build marker. At narrow
+widths, trailing fields are dropped first so the behind notice keeps priority.
 
 The six-row text mark appears above `?` help only when the pane can fit the
 mark, a blank line and every help line, and is at least twelve columns wide
@@ -656,3 +658,28 @@ A separate 250 ms frame timer advances the bar and tree animation while the
 Overview has a Running-section or live ledger row, or a live run pane is open.
 It arms once and disarms on the next frame when no run qualifies. Idle ork
 has no 4 fps timer. The existing one-second schedule tick stays unchanged.
+
+
+## Self-hosting (engine.self-host, adj 166)
+
+*Proposed behavior and wording:* `daemon behind main: restart with ork daemon restart`.
+While no run is active, the status line shows it when a self-hosted daemon's
+revision is behind local `main`. It fires on any landing on main, not only
+engine landings. It replaces the stale-build marker while shown; otherwise
+the stale marker still shows for a differing build. At narrow widths the
+behind notice takes priority over other status fields. Text `ork doctor`
+prints `[WARN] daemon behind main: restart with ork daemon restart` on stdout.
+`ork status` prints `ork: warning: daemon behind main: restart with ork daemon restart`
+on stderr. ork never restarts on its own.
+
+Waves marks an engine conflict after planning two selected slices whose Files
+touch `internal/engine`, `internal/daemon` or `cmd`, naming both:
+
+```text
+! engine conflict: A and B touch internal/engine, internal/daemon or cmd; launch separately
+```
+
+Pressing `l` puts the same conflict text, without the leading `! ` marker, in
+the action status. Launch is blocked until the selection holds at most one
+such slice. The daemon checks Files again before starting any member. See
+docs/design.md for detection.

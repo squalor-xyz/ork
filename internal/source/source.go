@@ -66,16 +66,19 @@ func result[T any](v T, err error) Result[T] {
 // one failed call does not blank the others. Open and Decided stay empty, with
 // no error, for a project whose registry entry has adj false.
 type Snapshot struct {
-	Unavailable bool // proposed: display group for runs without a registered project
-	EngineRuns  []EngineRun
-	Project     registry.Project
-	Items       Result[[]slicercli.Item]
-	Deps        Result[[]slicercli.Item]
-	Goals       Result[*slicercli.Goals]
-	Runs        Result[[]slicercli.RelayRun] // active runs only
-	BoardRuns   Result[[]slicercli.RelayRun] // proposed: stale and recently ended runs
-	Open        Result[[]adjcli.Record]
-	Decided     Result[[]adjcli.Record]
+	SelfHost     bool // proposed: running build revision exists in the project
+	BehindMain   bool // proposed: local main descends from the running build
+	RolesRunning bool // global daemon activity, for the idle restart notice
+	Unavailable  bool // proposed: display group for runs without a registered project
+	EngineRuns   []EngineRun
+	Project      registry.Project
+	Items        Result[[]slicercli.Item]
+	Deps         Result[[]slicercli.Item]
+	Goals        Result[*slicercli.Goals]
+	Runs         Result[[]slicercli.RelayRun] // active runs only
+	BoardRuns    Result[[]slicercli.RelayRun] // proposed: stale and recently ended runs
+	Open         Result[[]adjcli.Record]
+	Decided      Result[[]adjcli.Record]
 }
 
 // Source reads the state of registered projects.

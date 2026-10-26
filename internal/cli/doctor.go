@@ -49,6 +49,7 @@ type DoctorReport struct {
 	Contract      contractCheck `json:"contract"`
 	Binary        string        `json:"binary"`
 	DaemonBuildID string        `json:"daemon_build_id,omitempty"`
+	BehindNotice  string        `json:"behind_notice,omitempty"`
 	Warning       string        `json:"warning,omitempty"`
 }
 
@@ -136,13 +137,25 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	defer cancel()
 	var build string
 	var probeErr error
+	probeStatus := func(call func(context.Context, string, any, any) error) {
+		var status daemon.StatusResult
+		if err := call(probeCtx, daemon.MethodStatus, daemon.StatusParams{}, &status); err == nil {
+			rep.BehindNotice = daemon.BehindWarning(&status)
+		}
+	}
 	if a.Call != nil {
 		build, probeErr = daemonBuild(probeCtx, a.Call)
+		if probeErr == nil {
+			probeStatus(a.Call)
+		}
 	} else {
 		c, err := daemon.Dial(probeCtx, a.Socket)
 		probeErr = err
 		if err == nil {
 			build, probeErr = daemonBuild(probeCtx, c.Call)
+			if probeErr == nil {
+				probeStatus(c.Call)
+			}
 			c.Close()
 		}
 	}
@@ -192,6 +205,9 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	}
 	if rep.Warning != "" {
 		fmt.Fprintf(o.stdout, "[WARN] daemon  %s\n", rep.Warning)
+	}
+	if rep.BehindNotice != "" {
+		fmt.Fprintf(o.stdout, "[WARN] %s\n", rep.BehindNotice)
 	}
 	for _, tc := range rep.Tools {
 		switch {

@@ -17,6 +17,7 @@ import (
 )
 
 type wavesLive struct {
+	details map[string]*slicercli.Detail
 	fakeLive
 	suggest                                   *slicercli.ParallelPlan
 	overlap                                   *slicercli.Overlap
@@ -515,4 +516,33 @@ func TestWavesInputsStayVisibleForLongLists(t *testing.T) {
 
 func (l *wavesLive) AnswerAction(ctx context.Context, a daemon.RunAction) (string, error) {
 	return "", l.Answer(ctx, a.Run, a.Text)
+}
+
+func (l *wavesLive) ItemShow(_ context.Context, project, id string) (*slicercli.Detail, error) {
+	return l.details[id], nil
+}
+
+func TestWavesMarksEngineConflict(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.details = map[string]*slicercli.Detail{
+		"A": {Slice: &slicercli.Spec{Sections: []slicercli.Section{{Heading: "Files", Body: "- `internal/engine/a.go:12`"}}}},
+		"B": {Slice: &slicercli.Spec{Sections: []slicercli.Section{{Heading: "Files", Body: "- `cmd/ork/main.go`"}}}},
+	}
+	twoWaveItems(t, h)
+	if !strings.Contains(h.view(), "engine conflict: A and B") {
+		t.Fatalf("conflict missing before launch:\n%s", h.view())
+	}
+	h.deliver(press("l"))
+	if h.m.confirm != nil || l.writes != 0 {
+		t.Fatal("conflicting selection could launch")
+	}
+	h.deliver(press(" "))
+	if strings.Contains(h.view(), "engine conflict") {
+		t.Fatal("conflict survived untick")
+	}
+	h.deliver(press("l"))
+	h.deliver(press("y"))
+	if len(l.starts) != 1 || len(l.starts[0].Items) != 1 {
+		t.Fatal("single engine slice did not start")
+	}
 }

@@ -197,16 +197,20 @@ func (d *Daemon) snapshot(ctx context.Context, p SnapshotParams) (*SnapshotResul
 		s.BoardRuns = reader.BoardRuns(ctx, proj)
 	}
 	now := d.cfg.Clock.Now()
+	selfHost, behindMain := d.projectBuild(ctx, proj)
 	return &SnapshotResult{
-		Project:    s.Project,
-		EngineRuns: s.EngineRuns,
-		Items:      partOf(s.Items, now),
-		Deps:       partOf(s.Deps, now),
-		Goals:      partOf(s.Goals, now),
-		Runs:       partOf(s.Runs, now),
-		BoardRuns:  partOf(s.BoardRuns, now),
-		Open:       partOf(s.Open, now),
-		Decided:    partOf(s.Decided, now),
+		SelfHost:     selfHost,
+		BehindMain:   behindMain,
+		RolesRunning: d.cfg.WaveRunning() || d.activeRuns(),
+		Project:      s.Project,
+		EngineRuns:   s.EngineRuns,
+		Items:        partOf(s.Items, now),
+		Deps:         partOf(s.Deps, now),
+		Goals:        partOf(s.Goals, now),
+		Runs:         partOf(s.Runs, now),
+		BoardRuns:    partOf(s.BoardRuns, now),
+		Open:         partOf(s.Open, now),
+		Decided:      partOf(s.Decided, now),
 	}, nil
 }
 
@@ -249,6 +253,7 @@ func (d *Daemon) status(ctx context.Context, p StatusParams) (*StatusResult, err
 	out := &StatusResult{BuildID: d.cfg.BuildID, RolesRunning: d.cfg.WaveRunning() || d.activeRuns(), Projects: make([]ProjectStatus, 0, len(projects))}
 	for i, s := range snaps {
 		ps := projectStatus(projects[i], s, now)
+		ps.SelfHost, ps.BehindMain = d.projectBuild(ctx, projects[i])
 		out.Projects = append(out.Projects, ps)
 	}
 	for _, group := range unavailable {

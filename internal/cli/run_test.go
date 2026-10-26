@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -297,5 +298,63 @@ func TestStatusFlattensRunError(t *testing.T) {
 	}}
 	if code := app.Run(context.Background(), []string{"status"}, &out, &errs); code != 0 || !strings.Contains(out.String(), "\n    error: first second third\n") {
 		t.Errorf("run error not indented and flattened: %s", &out)
+	}
+}
+
+func TestBehindNoticeOnlyWhenIdle(t *testing.T) {
+	for _, command := range []string{"status", "doctor"} {
+		for _, active := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/active=%v", command, active), func(t *testing.T) {
+				app, _, _ := doctorApp(t, "Contract: relay v7")
+				app.Call = func(_ context.Context, method string, params, result any) error {
+					if method == daemon.MethodStatus {
+						return json.Unmarshal([]byte(fmt.Sprintf(`{"build_id":"dev","roles_running":%v,"projects":[{"name":"ork","self_host":true,"behind_main":true}]}`, active)), result)
+					}
+					if method == daemon.MethodDaemonInfo {
+						return json.Unmarshal([]byte(`{"build_id":"dev"}`), result)
+					}
+					return fmt.Errorf("unexpected %s", method)
+				}
+				code, out, errout := run(t, app, command)
+				if code != 0 {
+					t.Fatalf("code %d: %s %s", code, out, errout)
+				}
+				notice := "daemon behind main: restart with ork daemon restart"
+				if strings.Contains(out+errout, notice) != !active {
+					t.Fatalf("active=%v: %s %s", active, out, errout)
+				}
+				if !active {
+					want, stream := "ork: warning: "+notice, errout
+					if command == "doctor" {
+						want, stream = "[WARN] "+notice, out
+					}
+					if !strings.Contains("\n"+stream, "\n"+want+"\n") {
+						t.Fatalf("missing exact prefixed notice %q: stdout=%q stderr=%q", want, out, errout)
+					}
+					other := out
+					if command == "doctor" {
+						other = errout
+					}
+					if strings.Contains(other, notice) {
+						t.Fatalf("notice on wrong stream: stdout=%q stderr=%q", out, errout)
+					}
+				}
+			})
+		}
+	}
+}
+
+func TestBehindNoticeOverDaemonConnection(t *testing.T) {
+	for _, command := range []string{"status", "doctor"} {
+		t.Run(command, func(t *testing.T) {
+			app, _, _ := doctorApp(t, "Contract: relay v7")
+			predatingDaemon(t, app.Socket, func() (any, error) {
+				return daemon.StatusResult{BuildID: "dev", Projects: []daemon.ProjectStatus{{Name: "ork", SelfHost: true, BehindMain: true}}}, nil
+			})
+			code, out, stderr := run(t, app, command)
+			if code != 0 || !strings.Contains(out+stderr, daemon.BehindNotice) {
+				t.Fatalf("exit %d: %s %s", code, out, stderr)
+			}
+		})
 	}
 }

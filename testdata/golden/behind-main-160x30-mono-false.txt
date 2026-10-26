@@ -1,0 +1,30 @@
+[1mork[m [90mdev[m  ?help             │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[1;7;97;44m> Needs you              3 [m│[90m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[m
+  slicer                 2 │[1;36mNeeds you 3[m
+  adjudicate               │  [1mDecisions 1[m
+[90m  DataBall       no slicer [m│[1;7;97;44m  ?  slicer  #11  ui.slicer-tui  Reuse slicer tui?                                                                                  [m
+  agents                   │  [1mHeld 1[m
+                           │  [1;35m#[m  slicer  S12  Roadmap screen
+                           │  [1mErrors 1[m
+                           │  [1;31m![m  agents  items, runs: locked: Ledger is busy.
+                           │
+                           │[1;36mRunning 0[m
+                           │  [90mnothing running[m
+                           │
+                           │[1;36mRecent[m
+                           │  [90mnone[m
+                           │
+                           │[1;36mReady to land[m
+                           │  [90mnone[m
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[m
+                           │  #11 open
+                           │  Reuse slicer tui?
+                           │[90m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[m
+                           │ [33mdaemon behind main: restart with ork daemon restart[m | 4 projects | refreshed 16:42:07
