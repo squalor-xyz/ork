@@ -1,0 +1,39 @@
+{
+  "id": "S133",
+  "title": "Codex out of credits is a classified limit, so the role falls back",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "2026-10-26: hand relays S125 and S127 stopped when Codex printed 'ERROR: Your workspace is out of credits. Add credits to continue.' (.scratch/s127/impl/out1.txt:4724, text mode). The codex adapter classifies only 'You've hit your usage limit' and 429 rate_limit_exceeded as limited (internal/agent/codex/codex.go:194), so in ork this would fail the run instead of falling back to the next lineup row (adj 156: fallback only on classified rate limits)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/agent/codex/codex.go:188-197`\n- `internal/agent/codex/codex_test.go`\n- `testdata/vendors/codex`\n- `docs/design.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "TestOutOfCreditsIsRateLimited: a turn.failed or error event whose message says the workspace is out of credits sets ExitRateLimited."
+    },
+    {
+      "heading": "Implement",
+      "body": "Preflight: the JSON event shape for this error is not recorded (the log above was text mode); build a fixture from the existing turn.failed shape and mark it unverified. Owner to confirm at preflight that out of credits counts as a classified limit under adj 156 (recommended: yes, the vendor is unavailable for the run, as with a usage limit)."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./internal/agent/codex ./internal/engine; go vet; gofmt -l; slicer check; adj lint."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

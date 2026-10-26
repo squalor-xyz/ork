@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 133,
+  "next_id": 134,
   "preamble": "",
   "passes": [
     {
@@ -4832,6 +4832,34 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S133",
+      "title": "Codex out of credits is a classified limit, so the role falls back",
+      "short_title": "Codex out of credits is a classified limit, so the role falls back",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S127",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 3,
         "effort": 1,
         "attempts": 0
       }
