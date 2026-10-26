@@ -51,7 +51,7 @@
       "id": "S31",
       "title": "Run a small slice through ork run end to end",
       "short_title": "Run a small slice through ork run end to end",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S87"
@@ -2573,6 +2573,17 @@
           "kind": "",
           "text": "**2026-10-19** — Review FAIL (round 1): M1 TestDaemonActiveRunHoldsOffIdle non-blocking select does not catch removed idle wiring; M2 recoverRuns fails daemon startup on one bad stored run.",
           "created_at": "2026-10-19T20:21:22Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "f6b80f26-65e7-4a62-90e2-3428b3e97e45",
+          "kind": "",
+          "text": "**2026-10-26** — Human check (2026-10-26, S31): the owner ran S78 end to end in ork: ork run, an owner answer in the pane, implementer, reviewer, fix round, gate PASS, ork approve in the TUI, the finish step, a commit pause (empty Git section, S139), t retry, committed. Landed ffaeb39 by the outer session (S119 not built yet). Gaps filed: S124 S125 S126 S127 S138 S139.",
+          "created_at": "2026-10-26T12:22:06Z",
           "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
