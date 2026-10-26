@@ -115,11 +115,11 @@ func (m *Model) decisions(w int) overviewView {
 	out.body = append(out.body, strings.Join(tabs, th.Dim.Render(" | ")))
 	all := m.allProjects || m.active < 0
 	scope := "All projects using adj"
-	toggle := "[a] all projects"
+	toggle := "[A] all projects"
 	if !all {
 		scope = m.projects[m.active].reg.Name
 	} else if m.active >= 0 {
-		toggle = "[a] " + m.projects[m.active].reg.Name + " only"
+		toggle = "[A] " + m.projects[m.active].reg.Name + " only"
 	} else {
 		toggle = ""
 	}

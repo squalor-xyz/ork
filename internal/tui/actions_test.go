@@ -190,7 +190,7 @@ func TestActionCursorTarget(t *testing.T) {
 	s.EngineRuns = append([]source.EngineRun{{ID: "first", Item: "S1", State: "awaiting-approval"}}, s.EngineRuns...)
 	h.src.set(s)
 	h.m.apply(snapshotMsg{name: "ork", snap: s})
-	h.deliver(press("n"))
+	h.deliver(press("down"))
 	h.deliver(press("a"))
 	if v := h.view(); !strings.Contains(v, "S1  awaiting-approval") || !strings.Contains(v, "S22  commit") {
 		t.Fatalf("action did not target cursor engine run:\n%s", v)
@@ -200,7 +200,7 @@ func TestActionCursorTarget(t *testing.T) {
 func TestActionHelp(t *testing.T) {
 	h := actionHarness(t, "implement", "")
 	h.deliver(press("?"))
-	for _, want := range []string{"a approve", "x stop", "t retry", "tab next view", "shift+tab previous view", "right next project", "left previous project", "down/j/n next row", "up/k/p previous row"} {
+	for _, want := range []string{"a approve", "x stop", "t retry", "tab next view", "shift+tab previous view", "] next project", "[ previous project", "down/j next row", "up/k previous row"} {
 		if v := h.view(); !strings.Contains(v, want) {
 			t.Errorf("missing help %q:\n%s", want, v)
 		}

@@ -25,12 +25,12 @@ until then.
 ## Welcome
 
 With no registered projects, ork opens the Welcome view
-(`registry.no-seed`, adj 157). It says "No projects yet. Press a to add one".
-`a` opens a project path field. Enter with an empty field offers the current
+(`registry.no-seed`, adj 157). It says "No projects yet. Press + to add one".
+`+` opens a project path field. Enter with an empty field offers the current
 directory only when it holds a `.slicer` directory or `.adjudicate.json`
 file. Otherwise the status names the directory: "DIR holds neither .slicer
 nor .adjudicate.json; type a path". The hint asks for an absolute path. Esc
-cancels path entry and returns to "Press a to add one". Typed paths are
+cancels path entry and returns to "Press + to add one". Typed paths are
 trimmed and sent as typed.
 
 The proposed confirm bar shows `ork projects add 'PATH'? [y/N] (Enter is No)`,
@@ -101,7 +101,7 @@ Roadmap and Decisions are selectable.
 entry, above "Needs you", opens a live summary of every project that has a live
 run. It is always shown, so no row moves when a run starts: it carries the
 count of live runs, and with none it is dim and its view says `nothing running`.
-It is reached with the sidebar keys `right`/`left` like any other entry, not
+It is reached with the sidebar keys `]`/`[` like any other entry, not
 with a digit key (`1`-`9` stay the projects, `Jump` is unchanged). "Needs you"
 still starts selected. While the entry is selected the first tab of the view bar
 reads `Overview (Running)`; the view is the Overview's Running section full
@@ -153,10 +153,12 @@ When it is selected, its detail line says to run `slicer init`
 The list scrolls to keep selection visible and shows `+N more` for hidden
 rows. Below 100 columns the sidebar narrows; names that do not fit end in
 `...` and keep their badges. `s` hides or shows the sidebar at any width.
-Outside Decisions, keys `right`/`left` move selection and wrap through
-"Running", "Needs you" and the sorted projects. On Decisions they switch the Open and
-Decided tabs; use `1`-`9` to select a project. To reach
-"Needs you" or "Running" by key, leave Decisions with `tab` and use `right`/`left`.
+In every view, keys `]` (next) and `[` (previous) move selection and wrap
+through "Running", "Needs you" and the sorted projects
+(`ui.project-keys`, adj 160). `left` and `right` never change the project:
+they belong to the view's own tabs and fields (the Open and Decided tabs on
+Decisions, the lineup, and text fields such as an answer). Outside those they
+do nothing.
 `1`-`9` select projects in registry order. `tab` and
 `shift+tab` switch views in the order of the view bar (`ui.views`,
 `ui.view-list`). All five views are available: Overview, Questions, Waves,
@@ -166,8 +168,9 @@ keeps the filter and leaves text entry, and `esc` clears it. `r` refreshes the
 selected project, or all projects on "Needs you". `?` shows keys and `q` quits.
 
 The Overview has a row cursor (`ui.overview-cursor`). `down`/`j` and `up`/`k`
-move it to the next and previous row, and so do `n` and `p`. It goes through
-"Needs you", Running and Ready, and it stops at the first and last row. The row
+move it to the next and previous row. It goes through
+"Needs you", Running and Ready, and it stops at the first and last row. `n` and
+`p` do not move rows; `n` is No in a confirmation. The row
 under the cursor is drawn reversed across the pane width. A rule separates
 the rows from its detail. Decisions show status, a nonzero option count and
 the recommended label when present, then the wrapped title. Metadata uses
@@ -555,10 +558,10 @@ The "All projects" heading states the scope. A kind column marks engine
 rows "? question", adj rows "? decision", pending rows "~ pending", and
 errors "! error". Nonempty lists end with `[enter] open`.
 
-The proposed row keys (`down`/`j`/`n` and `up`/`k`/`p`) move the cursor.
+The proposed row keys (`down`/`j` and `up`/`k`) move the cursor.
 In record detail, they scroll; `pgup` and `pgdown` scroll a page.
 The list always shows all projects. Sidebar selection, project filtering and
-left/right project keys do not change it. There is no scope toggle.
+`[`/`]` project keys do not change it. There is no scope toggle.
 `a`, `x`, `t` and `c` have no action on the list or read-only record detail.
 The engine pane behaves as on Overview. It keeps its answer typing and
 submit keys. If the run changes state while the pane is open, its approve,
@@ -647,7 +650,7 @@ column. Each role shows its primary entry and a dim `+N fallbacks` line
 under the values; `e` keeps the full chain available.
 The column fits its longest line, capped at half the pane width. Long
 primary entries wrap within the column.
-`down`/`j`/`n` and `up`/`k`/`p` move between items. Unplaced items can also
+`down`/`j` and `up`/`k` move between items. Unplaced items can also
 be ticked.
 
 Two or more ticked items trigger an overlap read. Each shared path gets a
@@ -796,7 +799,7 @@ It lists only open items with a slice included by `slicer deps`, in slicer
 list order. Each row shows id, short title (or title), size and effort.
 There is no claim check (record 140). A Deps error leaves nothing launchable.
 An empty list says "No ready slices". Without a daemon, launch says
-"No daemon connection; action unavailable". Up/down, j/k and n/p move through
+"No daemon connection; action unavailable". Up/down and j/k move through
 the list. `enter` picks a slice; `esc` cancels.
 
 Launch asks "Well specified? [y/n]:" and then "Split? [y/n]:". Neither has a
@@ -826,8 +829,8 @@ recommendation. The active tab uses the view heading style, distinct from the
 record cursor. The scope heading names the project or says
 `All projects using adj`. The final body line lists the tab, scope and
 open-record keys. On "Needs you", it omits the scope toggle hint. `left` and
-`right` switch the Open and Decided tabs. `a`
-toggles between the selected project and all projects that use adj. The toggle
+`right` switch the Open and Decided tabs; `[` and `]` switch projects. `A`
+(shift-a) toggles between the selected project and all projects that use adj. The toggle
 persists when switching projects. With "Needs you" selected, Decisions shows
 all projects that use adj. A project without adj shows `no adj in this project`.
 If no registered project uses adj, the all-projects view says `No project uses adj`.
@@ -837,7 +840,7 @@ name in scope, capped at 20 columns. Each record takes one line, with a clipped
 title. The cursor highlights the whole line. Tradeoffs and recommendation text
 are dimmed and indented under their labels. Rows follow registry order. Within
 each project, Open keeps `adj inbox` order (oldest first) and Decided keeps
-`adj list` order. `down`/`j`/`n` and `up`/`k`/`p` move the record cursor.
+`adj list` order. `down`/`j` and `up`/`k` move the record cursor.
 `enter` opens the record from the snapshot, including options, recommendation,
 decision, rationale and history; `esc` returns. The detail has project and record
 headings, indented body text and a separate History heading. Row keys scroll

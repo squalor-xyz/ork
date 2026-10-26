@@ -21,6 +21,8 @@ type keyMap struct {
 	MarkCheck  key.Binding
 	Next       key.Binding
 	Prev       key.Binding
+	TabNext    key.Binding
+	TabPrev    key.Binding
 	NextView   key.Binding
 	PrevView   key.Binding
 	Jump       key.Binding
@@ -42,9 +44,9 @@ type keyMap struct {
 
 func newKeyMap() keyMap {
 	return keyMap{
-		AllProjects: key.NewBinding(key.WithKeys("a"), key.WithHelp("a (Decisions)", "toggle all projects")),
+		AllProjects: key.NewBinding(key.WithKeys("A", "shift+a"), key.WithHelp("A (Decisions)", "toggle all projects")),
 
-		Add:        key.NewBinding(key.WithKeys("a"), key.WithHelp("a", "add project (Welcome)")),
+		Add:        key.NewBinding(key.WithKeys("+"), key.WithHelp("+", "add project (Welcome)")),
 		Cleanup:    key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "remove merged worktree and branch (Ready)")),
 		EditLineup: key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit ticked item lineup (Waves)")),
 		Tick:       key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "tick item and ask inputs (Waves)")),
@@ -57,13 +59,15 @@ func newKeyMap() keyMap {
 		MarkCheck:  key.NewBinding(key.WithKeys("1", "2", "3", "4", "5", "6", "7", "8", "9"), key.WithHelp("1-9", "mark check")),
 		Filter:     key.NewBinding(key.WithKeys("/"), key.WithHelp("/", "filter projects; esc clears")),
 		Sidebar:    key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "hide/show sidebar")),
-		Next:       key.NewBinding(key.WithKeys("right"), key.WithHelp("right", "next project; next tab on Decisions")),
-		Prev:       key.NewBinding(key.WithKeys("left"), key.WithHelp("left", "previous project; previous tab on Decisions")),
+		Next:       key.NewBinding(key.WithKeys("]"), key.WithHelp("]", "next project")),
+		Prev:       key.NewBinding(key.WithKeys("["), key.WithHelp("[", "previous project")),
+		TabNext:    key.NewBinding(key.WithKeys("right"), key.WithHelp("right", "next tab (Decisions)")),
+		TabPrev:    key.NewBinding(key.WithKeys("left"), key.WithHelp("left", "previous tab (Decisions)")),
 		NextView:   key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "next view")),
 		PrevView:   key.NewBinding(key.WithKeys("shift+tab"), key.WithHelp("shift+tab", "previous view")),
 		Jump:       key.NewBinding(key.WithKeys("1", "2", "3", "4", "5", "6", "7", "8", "9"), key.WithHelp("1-9", "jump to project")),
-		RowNext:    key.NewBinding(key.WithKeys("down", "j", "n"), key.WithHelp("down/j/n", "next row")),
-		RowPrev:    key.NewBinding(key.WithKeys("up", "k", "p"), key.WithHelp("up/k/p", "previous row")),
+		RowNext:    key.NewBinding(key.WithKeys("down", "j"), key.WithHelp("down/j", "next row")),
+		RowPrev:    key.NewBinding(key.WithKeys("up", "k"), key.WithHelp("up/k", "previous row")),
 		Select:     key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "open run, question, item or decision; other rows select project")),
 		FileAdj:    key.NewBinding(key.WithKeys("ctrl+a"), key.WithHelp("ctrl+a (answer)", "toggle filing the answer in adj")),
 		PickOption: key.NewBinding(key.WithKeys("1", "2", "3", "4"), key.WithHelp("1-4 (question)", "pick an option; y sends")),

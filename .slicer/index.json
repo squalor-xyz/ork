@@ -1302,7 +1302,7 @@
       "id": "S105",
       "title": "Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases",
       "short_title": "Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -1335,7 +1335,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

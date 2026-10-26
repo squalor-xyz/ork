@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-143 items · — 53 · done 85 · retired 5
+143 items · — 52 · done 86 · retired 5
 
 ## v1.1
 
@@ -110,7 +110,7 @@
 | 53 | [S91](slices/S91.md) | Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes | S | 1 |  | discovered from S49 | — |
 | 54 | [S90](slices/S90.md) | Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on | S | 1 |  | discovered from S88 | — |
 | 55 | [S39](slices/S39.md) | ork run prompt tests catch swapped answers; help text says y/n | S | 1 |  | discovered from S21 | — |
-| 56 | [S105](slices/S105.md) | Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases | S | 2 |  |  | — |
+| 56 | [S105](slices/S105.md) | Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases | S | 2 |  |  | done |
 | 57 | [S106](slices/S106.md) | Run card inline | M | 2 |  |  | — |
 | 58 | [S01](slices/S01.md) | Vendor spike | S | 1 |  |  | done |
 | 59 | [S02](slices/S02.md) | Core and adapters | M | 2 |  |  | done |

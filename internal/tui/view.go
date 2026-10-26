@@ -422,7 +422,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			if h.Key == m.keys.AllProjects.Help().Key && m.view != decisionsView {
 				continue
 			}
-			if h.Key == m.keys.Add.Help().Key && (h.Desc == m.keys.Add.Help().Desc || h.Desc == m.keys.Approve.Help().Desc) && (m.view == decisionsView || m.view == questionsView) {
+			if (h == m.keys.Add.Help() || h == m.keys.Approve.Help()) && (m.view == decisionsView || m.view == questionsView) {
 				continue
 			}
 			if m.view == questionsView && m.pane == nil &&
@@ -441,7 +441,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 		}
 	}
 	if m.view == decisionsView {
-		lines = append(lines, wrapText("On Decisions, left/right switch tabs; tab to another view to reach Needs you.", max(w, 1))...)
+		lines = append(lines, wrapText("On Decisions, left/right switch tabs; [ and ] switch projects.", max(w, 1))...)
 	}
 	lines = append(lines, "", clip("Overview, Questions, Waves, Roadmap and Decisions are available.", w))
 	mark := brand.Mark(!th.Mono, m.cfg.ASCII)
