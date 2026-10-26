@@ -1874,3 +1874,8 @@
 {"when": "2026-10-26T15:29:15Z", "item": "S148", "action": "add", "from": "", "to": "open", "note": "S119 later notes: landing status text, cleanup-failed rows, fix-round allowlist"}
 {"when": "2026-10-26T15:29:15Z", "item": "S95", "action": "note", "from": "", "to": "", "note": "From S119 (landed b7bc308): a landed run whose cleanup faile", "by": "Jon R"}
 {"when": "2026-10-26T15:29:23Z", "item": "S148", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T15:31:03Z", "item": "S85", "action": "set", "from": "", "to": "", "note": "title Keys: context hint bar, enter opens decisions and held items, 1-9 follow the sidebar, list jumps→Keys: 1-9 follow the sidebar with numbers shown, 0 selects Needs you, first/last, page and group jumps; short_title Keys and hint bar→Navigation keys"}
+{"when": "2026-10-26T15:31:03Z", "item": "S85", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T15:31:03Z", "item": "S85", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-26T15:31:03Z", "item": "S85", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T15:31:03Z", "item": "S149", "action": "add", "from": "", "to": "open", "note": "Context hint bar: keys for the selected row on a line above the status line, ctrl+d/u pane scroll, Questions tab count"}

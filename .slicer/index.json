@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 149,
+  "next_id": 150,
   "preamble": "",
   "passes": [
     {
@@ -971,8 +971,8 @@
     },
     {
       "id": "S85",
-      "title": "Keys: context hint bar, enter opens decisions and held items, 1-9 follow the sidebar, list jumps",
-      "short_title": "Keys and hint bar",
+      "title": "Keys: 1-9 follow the sidebar with numbers shown, 0 selects Needs you, first/last, page and group jumps",
+      "short_title": "Navigation keys",
       "status": "open",
       "has_slice": true,
       "depends_on": [
@@ -5490,6 +5490,36 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S149",
+      "title": "Context hint bar: keys for the selected row on a line above the status line, ctrl+d/u pane scroll, Questions tab count",
+      "short_title": "Context hint bar",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S85"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }
