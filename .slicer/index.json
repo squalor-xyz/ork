@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 143,
+  "next_id": 144,
   "preamble": "",
   "passes": [
     {
@@ -529,7 +529,19 @@
       "depends_on": [
         "S118"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7f7fc0e9-9560-4190-86d8-8ea33b435460",
+          "kind": "",
+          "text": "**2026-10-26** — Landing evidence 2026-10-26: after merging main, S118's and S116's new goldens failed because S110 had changed the sidebar; a rebaseline confined to the sidebar column fixed both. Landing in ork must treat a post-merge test failure like a conflict: send it to an implementer, then re-check.",
+          "created_at": "2026-10-26T13:13:09Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -5181,6 +5193,34 @@
         "group": "",
         "reason": "",
         "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S143",
+      "title": "Spec check follow-ups: answers survive a restart, main moving mid-check, sitting freeze, dropped Owner needed, shape retry, state dir cleanup",
+      "short_title": "Spec check follow-ups: answers survive a restart, main moving mid-check, sitting freeze, dropped Owner needed, shape retry, state dir cleanup",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S116",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
         "urgency": 2,
         "effort": 2,
         "attempts": 0

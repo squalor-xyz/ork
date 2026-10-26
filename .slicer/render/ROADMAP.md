@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-142 items · — 52 · done 85 · retired 5
+143 items · — 53 · done 85 · retired 5
 
 ## v1.1
 
@@ -196,9 +196,10 @@
 | 139 | [S140](slices/S140.md) | Running view follow-ups: error marker, stale runs not live, detail order, stopped role, empty golden, other tabs on Running | S | 1 |  | discovered from S110 | — |
 | 140 | [S141](slices/S141.md) | Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note | M | 2 |  | discovered from S118 | — |
 | 141 | [S142](slices/S142.md) | Accept relay contract v9 and follow it: finding kinds, spec check, UI pass, approval and landing, ledger wait phase, conformance JSON | M | 2 |  |  | — |
+| 142 | [S143](slices/S143.md) | Spec check follow-ups: answers survive a restart, main moving mid-check, sitting freeze, dropped Owner needed, shape retry, state dir cleanup | M | 2 |  | discovered from S116 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 142 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 143 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |

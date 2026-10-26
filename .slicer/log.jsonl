@@ -1828,3 +1828,8 @@
 {"when": "2026-10-26T13:06:53Z", "item": "S142", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-10-26T13:06:53Z", "item": "S142", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-10-26T13:06:53Z", "item": "S142", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T13:13:09Z", "item": "S143", "action": "add", "from": "", "to": "open", "note": "Spec check follow-ups: answers survive a restart, main moving mid-check, sitting freeze, dropped Owner needed, shape retry, state dir cleanup"}
+{"when": "2026-10-26T13:13:09Z", "item": "S143", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T13:13:09Z", "item": "S143", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T13:13:09Z", "item": "S143", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T13:13:09Z", "item": "S119", "action": "note", "from": "", "to": "", "note": "Landing evidence 2026-10-26: after merging main, S118's and ", "by": "Jon R"}
