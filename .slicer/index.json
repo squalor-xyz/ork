@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 145,
+  "next_id": 146,
   "preamble": "",
   "passes": [
     {
@@ -4638,7 +4638,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "1459f441-755f-48ce-a1a2-c773786bc2dd",
+          "kind": "",
+          "text": "**2026-10-26** — From S119's relay (2026-10-26): after an in-ork landing the branch is deleted, so daemon/landed.go errors, the run is never pruned, and it stays under Ready to land with stale copy commands. Treat a committed run whose branch is gone and whose Commit.SHA is in HEAD as landed. Keep a cleanup-failed row visible with its reason. Also: a landing fix round runs after the ledger run ended, so its relay-run steps are rejected (run_ended); decide whether it begins a new relay run.",
+          "created_at": "2026-10-26T14:13:06Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -5286,6 +5298,36 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S145",
+      "title": "Running rows at a glance: slice title, working role, fix round, last heard, latest output line",
+      "short_title": "Running rows at a glance",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S106"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }
