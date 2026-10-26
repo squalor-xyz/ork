@@ -12,23 +12,23 @@
   "sections": [
     {
       "heading": "Why",
-      "body": ""
+      "body": "Found in the S28 human check. run.answer with adj on refuses an empty By even when the pending question has no decision key, although FileAnswer files nothing then (internal/engine/answer_adj.go:18-20 returns before its own By check). The TUI never sends adj without a key (internal/tui/model.go:1226-1227) and `ork answer` never sends adj (internal/cli/run.go:196-201), so only a direct daemon caller hits it; the daemon should still match the engine."
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/daemon/runs.go` (ownerRun, the MethodRunAnswer case near :859-862): refuse an empty p.By only when rec.Pending.Key is non-empty.\n- `internal/daemon/answer_adj_test.go` (TestAnswerWithoutAdjDecidedByIsRefusedWithoutKey near :305): rename and invert."
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "- TestAnswerWithAdjAndNoKeyProceedsWithoutDecidedBy (replaces TestAnswerWithoutAdjDecidedByIsRefusedWithoutKey): adj on, By empty, no decision key; the answer succeeds, the role resumes (the run leaves paused, like TestStructuredOptionFilesAdjTitleAndDecisionText), the question records the answer and no adj command is called.\n- TestAnswerWithoutAdjDecidedByIsRefused (:147, keyed) stays unchanged and passing."
     },
     {
       "heading": "Implement",
-      "body": "In the daemon MethodRunAnswer case (internal/daemon/runs.go:750), refuse an empty p.By only when rec.Pending.Key is non-empty. With no key FileAnswer files nothing, so the answer proceeds as a plain answer. Change TestAnswerWithoutAdjDecidedByIsRefusedWithoutKey (internal/daemon/answer_adj_test.go:302) to expect success and no filing; keep the keyed test. Check internal/engine/answer_adj.go:20 for the same guard. Found in the S28 human check."
+      "body": "1. Tests first: rewrite the no-key test as above and watch it fail on the ADJ_DECIDED_BY refusal.\n2. In the MethodRunAnswer case, change the guard to `p.Adj && rec.Pending.Key != \"\" && strings.TrimSpace(p.By) == \"\"` (rec.Pending is non-nil there; the check above ensures it).\n3. internal/engine/answer_adj.go already returns before its By check when the key is empty; leave it.\n4. docs/dashboard.md:616-618 says filing requires ADJ_DECIDED_BY; no change needed, since a keyless question cannot file."
     },
     {
       "heading": "Check",
-      "body": "go test -race ./internal/daemon ./internal/engine ./internal/tui; a keyed answer without ADJ_DECIDED_BY is still refused."
+      "body": "- go test -race -count=1 ./internal/daemon ./internal/engine ./internal/tui\n- a keyed answer without ADJ_DECIDED_BY is still refused (TestAnswerWithoutAdjDecidedByIsRefused)\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- slicer check\n- adj lint"
     },
     {
       "heading": "Git",
