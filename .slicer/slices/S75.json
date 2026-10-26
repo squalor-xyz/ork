@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/runrec/store.go:73` and :76 (run directory and run subdirectory), `internal/engine/round.go:165` (per-round temp directory), their tests, `docs/state.md`.\n- Reference only: `internal/engine/states.go:76` creates the parent of the git exclude file (not a run file); leave it."
+      "body": "- `internal/runrec/store.go:78` (runs root, MkdirAll s.Dir) and `internal/runrec/store.go:81` (the run directory): create 0700; on save, chmod an existing run directory to 0700 (save near :315).\n- `internal/engine/round.go:208` (per-round temp directory) and `internal/engine/speccheck.go:123` (the spec check role temp directory, added by S116 after this spec was written): create 0700.\n- `internal/runrec/store_test.go`, `internal/engine/round_test.go` or a new test file: the tests.\n- `docs/state.md`: the modes.\n- Reference only: `internal/engine/states.go:78` creates the parent of the git exclude file (not a run file); leave it. `internal/engine/round.go:474` chmods only ork's own fallback report; a vendor-written report is left alone."
     },
     {
       "heading": "Failing tests",

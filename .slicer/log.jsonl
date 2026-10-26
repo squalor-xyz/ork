@@ -1951,3 +1951,5 @@
 {"when": "2026-10-26T21:47:39Z", "item": "S73", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 8): owner questions 3 (1 before sta", "by": "Jon R"}
 {"when": "2026-10-26T21:49:52Z", "item": "S157", "action": "add", "from": "", "to": "open", "note": "Allow rule slicer next * also approves next --start and --render"}
 {"when": "2026-10-26T21:49:52Z", "item": "S157", "action": "note", "from": "", "to": "", "note": "From the S73 review (run-20261026-212646-f5f2, landed 820ee1", "by": "Jon R"}
+{"when": "2026-10-26T21:50:17Z", "item": "S75", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T21:50:17Z", "item": "S75", "action": "note", "from": "", "to": "", "note": "Spec preflight 2026-10-26 (outer session): anchors re-taken ", "by": "Jon R"}
