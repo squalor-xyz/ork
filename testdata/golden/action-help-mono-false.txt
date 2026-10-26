@@ -1,7 +1,7 @@
 [1mork[m [90mdev[m  ?help             │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
-[1;7;97;44m> Needs you              0 [m│[90m────────────────────────────────────────────────────────────────────────[m
-  ork                     *│[1;36mKeys[m
-                           │tab next view
+  Running                1 │[90m────────────────────────────────────────────────────────────────────────[m
+[1;7;97;44m> Needs you              0 [m│[1;36mKeys[m
+  ork                     *│tab next view
                            │shift+tab previous view
                            │right next project; next tab on Decisions
                            │left previous project; previous tab on Decisions
@@ -15,7 +15,7 @@
                            │space tick item and ask inputs (Waves)
                            │e edit ticked item lineup (Waves)
                            │l launch a ready slice (Roadmap) or wave (Waves)
-                           │a approve; x stop; t retry; f file slice
+                           │a approve; F fix round; x stop; t retry; f file slice
                            │enter (answer) submit free text
                            │1-4 (question) pick an option; y sends
                            │t (question) type a free answer

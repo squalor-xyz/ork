@@ -1,0 +1,41 @@
+{
+  "id": "S78",
+  "title": "recoverRuns writes the run map under the manager lock",
+  "lead": [
+    "Before S78, recoverRuns (internal/daemon/runs.go:164-232) wrote d.runs.runs in its loop (:180-227) without the manager lock, then took the lock only for startQueuedLocked (:228-230). Startup calls recoverRuns before the server starts (internal/daemon/daemon.go:175). Noted in the S05 run report."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Every other write to the run map happens under d.runs.mu. A later change that calls recoverRuns after the server starts would race."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/runs.go:164-232`: `recoverRuns`, including all five run-map assignment paths.\n- `internal/daemon/runs_test.go:1553-1606`: `TestRecoverRunsWritesTheRunMapUnderTheLock`, alongside recovery tests."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestRecoverRunsWritesTheRunMapUnderTheLock`: under `go test -race`, read the run map under `d.runs.mu` while `recoverRuns` publishes registered queued, reconciled, failed-reconciliation, removed queued, and removed active runs. Each case must report a race before the fix and pass afterward. Remove each publication lock in turn and confirm its case reports a race."
+    },
+    {
+      "heading": "Implement",
+      "body": "Take d.runs.mu around each write to d.runs.runs in the recoverRuns loop (internal/daemon/runs.go:180-227), not around Reconcile (:217; it can be slow). Write the race test first, watch it fail under -race, then add the lock. Decided 2026-10-23 (owner interview): take the lock. Nothing is open."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race -count=1 ./internal/daemon/...`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (prints nothing)\n- `slicer check`\n- `adj lint`"
+    },
+    {
+      "heading": "Git",
+      "body": "\"S78: recoverRuns map writes under lock\""
+    }
+  ],
+  "notes": []
+}

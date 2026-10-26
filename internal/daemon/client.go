@@ -134,6 +134,18 @@ func (c *Client) Approve(ctx context.Context, run string) error {
 	return c.Call(ctx, MethodRunApprove, RunAction{Run: run}, nil)
 }
 
+// Fix sends the owner's note to a fix round of the run that awaits approval.
+// The call returns when the run rests again.
+func (c *Client) Fix(ctx context.Context, run, note string) error {
+	return c.Call(ctx, MethodRunFix, RunAction{Run: run, Text: note}, nil)
+}
+
+// MarkCheck ticks the run's n-th (one-based) human check, marks it "later", or
+// reopens it with an empty state.
+func (c *Client) MarkCheck(ctx context.Context, run string, n int, state string) error {
+	return c.Call(ctx, MethodRunCheck, RunAction{Run: run, Check: n, State: state}, nil)
+}
+
 // Stop stops an engine run after the caller has confirmed it.
 func (c *Client) Stop(ctx context.Context, run string) error {
 	return c.Call(ctx, MethodRunStop, RunAction{Run: run}, nil)

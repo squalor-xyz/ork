@@ -32,7 +32,9 @@ const (
 	MethodRunStop    = "run.stop"
 	MethodRunAnswer  = "run.answer"
 	MethodRunRetry   = "run.retry"
-	MethodRunFile    = "run.file" // proposed: file a later finding as a slice (adj 163)
+	MethodRunFile    = "run.file"  // proposed: file a later finding as a slice (adj 163)
+	MethodRunFix     = "run.fix"   // proposed: send the owner's note to a fix round (S118)
+	MethodRunCheck   = "run.check" // proposed: tick a human check or mark it later (S118)
 )
 
 // defaultGlobalCap is the global cap when the registry sets none (adj 20).
@@ -52,6 +54,8 @@ type RunParams struct {
 
 // RunAction names a run, and an owner answer when answering.
 type RunAction struct {
+	Check   int    `json:"check,omitempty"`   // run.check: the one-based human check
+	State   string `json:"state,omitempty"`   // run.check: "ticked", "later" or "" to reopen
 	Finding int    `json:"finding,omitempty"` // run.file: the one-based finding to file
 	Adj     bool   `json:"adj,omitempty"`
 	By      string `json:"by,omitempty"`
@@ -165,6 +169,9 @@ func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 	}
 	return deps
 }
+
+// recoverRuns reconciles outside the manager lock, then publishes each fully
+// initialized run under the lock used by run-manager readers.
 func (d *Daemon) recoverRuns(ctx context.Context) error {
 	defer func() { d.runs.mu.Lock(); defer d.runs.mu.Unlock(); d.pruneRunsLocked() }()
 	d.runs.ctx = ctx
@@ -194,29 +201,40 @@ func (d *Daemon) recoverRuns(ctx context.Context) error {
 				// StopQueued only needs the stored record, not project settings.
 				p = registry.Project{Name: rec.Project}
 				e := engine.Load(d.runDeps(p), p, r)
-				d.runs.runs[rec.ID] = &managedRun{engine: e}
+				m := &managedRun{engine: e}
 				if err := e.StopQueued(ctx, "project was removed"); err != nil {
-					d.runs.runs[rec.ID].failure = err
-					d.runs.runs[rec.ID].recoveryFailed = true
+					m.failure = err
+					m.recoveryFailed = true
 					fmt.Fprintf(os.Stderr, "stop queued run %s: %v\n", rec.ID, err)
 				}
+				d.runs.mu.Lock()
+				d.runs.runs[rec.ID] = m
+				d.runs.mu.Unlock()
 			} else {
+				d.runs.mu.Lock()
 				d.runs.runs[rec.ID] = &managedRun{failure: err, recoveryFailed: true}
+				d.runs.mu.Unlock()
 			}
 			continue
 		}
 		e := engine.Load(d.runDeps(p), p, r)
 		if rec.State == runrec.StateQueued {
 			// A queued run has no process and wrote nothing; it keeps its place.
+			d.runs.mu.Lock()
 			d.runs.runs[rec.ID] = &managedRun{engine: e}
+			d.runs.mu.Unlock()
 			continue
 		}
 		if err := e.Reconcile(ctx); err != nil {
 			fmt.Fprintf(os.Stderr, "reconcile %s: %v\n", rec.ID, err)
+			d.runs.mu.Lock()
 			d.runs.runs[rec.ID] = &managedRun{engine: e, failure: err, recoveryFailed: true}
+			d.runs.mu.Unlock()
 			continue
 		}
+		d.runs.mu.Lock()
 		d.runs.runs[rec.ID] = &managedRun{engine: e}
+		d.runs.mu.Unlock()
 	}
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
@@ -862,6 +880,10 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		fn = r.engine.Retry
 	case MethodRunApprove:
 		fn = r.engine.Approve
+	case MethodRunFix:
+		fn = func(ctx context.Context) error { return r.engine.Fix(ctx, p.Text) }
+	case MethodRunCheck:
+		fn = func(context.Context) error { return r.engine.MarkCheck(p.Check, p.State) }
 	case MethodRunStop:
 		fn = func(ctx context.Context) error {
 			// A cancelled round leaves its role live in the record. Reconcile checks
@@ -1126,7 +1148,11 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		for i, f := range rec.Findings {
 			findings = append(findings, source.EngineFinding{N: i + 1, Kind: f.Kind, Title: f.Title, Ask: f.Ask, Filed: f.Filed})
 		}
-		runs = append(runs, EngineRun{Findings: findings, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
+		var card *runrec.ApprovalCard
+		if rec.State == runrec.StateAwaitingApproval {
+			card = rec.Card
+		}
+		runs = append(runs, EngineRun{Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
 	}
 	// Dismissed records still supersede older stopped runs of the same slice.
 	visible := runs[:0]

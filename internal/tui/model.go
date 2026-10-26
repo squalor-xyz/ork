@@ -102,6 +102,13 @@ func noSlicerErr(err error) bool {
 	return errors.As(err, &te) && te.Code == "state" && strings.HasPrefix(te.Message, "no .slicer/ found")
 }
 
+// The two aggregate sidebar entries, above the registry indices. Every index
+// below zero shows all projects.
+const (
+	runningEntry = -2 // the live runs of every project (S110, adj 169)
+	needsEntry   = -1
+)
+
 // Model is the Bubble Tea model of the whole TUI.
 type Model struct {
 	welcome  welcomeState
@@ -111,7 +118,7 @@ type Model struct {
 	projects []*projectState
 	byName   map[string]*projectState
 	poller   *poll.Poller
-	active   int // -1 is Needs you; otherwise registry index
+	active   int // runningEntry, needsEntry, or a registry index
 	view     int // the view in the bar: an index into views; 0 is the Overview
 
 	questionsCursor int
@@ -174,7 +181,7 @@ func New(cfg Config) *Model {
 	if cfg.Bell == nil {
 		cfg.Bell = func() { fmt.Fprint(os.Stderr, "\a") }
 	}
-	m := &Model{active: -1, cfg: cfg, keys: newKeyMap(), byName: map[string]*projectState{}}
+	m := &Model{active: needsEntry, cfg: cfg, keys: newKeyMap(), byName: map[string]*projectState{}}
 	m.help = help.Model{
 		ShortSeparator: "  ",
 		FullSeparator:  "    ",
@@ -349,6 +356,11 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 				if msg.action.verb == "answer" && m.pane != nil {
 					m.pane.answered = false
 				}
+				if msg.action.verb == "fix" && m.pane != nil && m.pane.run == msg.action.run {
+					// A failed fix keeps the note for another attempt.
+					m.pane.fixing, m.pane.input = true, textField{}
+					m.pane.input.insert(msg.action.text)
+				}
 			case msg.action.verb == "answer":
 				m.actionStatus = msg.message
 				if m.pane == nil {
@@ -364,7 +376,7 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 				m.pane.answerDone, m.pane.answerNotice = true, msg.message
 				m.refreshAnswerStatus()
 			default:
-				m.actionStatus = msg.action.command() + ": done"
+				m.actionStatus = msg.action.doneText()
 				if msg.message != "" {
 					m.actionStatus += "; " + msg.message
 				}
@@ -659,7 +671,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	return nil
 }
 
-// switchTo selects registry project i, or Needs you at -1, and updates polling.
+// switchTo selects registry project i, or an aggregate entry below zero, and
+// updates polling.
 // It returns the command that tells the daemon which projects are visible.
 func (m *Model) switchTo(i int) tea.Cmd {
 	n := len(m.projects)
@@ -742,6 +755,7 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 	ps.snap = msg.snap
 	if m.pane != nil && m.pane.project == msg.name {
 		m.refreshAnswerStatus()
+		m.followNewestRun(msg.name)
 	}
 	m.selectJumpRun()
 	var cmds []tea.Cmd
@@ -775,9 +789,10 @@ func isHeld(it slicercli.Item) bool {
 	return false
 }
 
-// navigation lists registry indices in stable priority order, with Needs you first.
+// navigation lists registry indices in stable priority order, with the
+// Running entry and Needs you first.
 func (m *Model) navigation() []int {
-	out := []int{-1}
+	out := []int{runningEntry, needsEntry}
 	for group := 0; group < 3; group++ {
 		for i, p := range m.projects {
 			rank := 2
@@ -834,6 +849,8 @@ type runAction struct {
 	verb, run, project, text string
 	item                     string // file: the slice the finding came from
 	finding                  int    // file: the one-based finding
+	check                    int    // check: the one-based human check
+	state                    string // check: ticked, later or "" for open
 	adj                      bool
 	by                       string
 	cleanupCommand           string
@@ -859,6 +876,14 @@ func (a runAction) command() string {
 	}
 	if a.verb == "file" {
 		return "slicer add " + shellQuote(a.text) + " --discovered-from " + a.item
+	}
+	// The approval card's actions have no ork command (S118): the status line
+	// names them in words (card.go).
+	if a.verb == "fix" {
+		return "fix note"
+	}
+	if a.verb == "check" {
+		return fmt.Sprintf("mark of check %d", a.check)
 	}
 	cmd := "ork " + a.verb + " " + a.run
 	if a.verb == "answer" {
@@ -962,6 +987,12 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 		m.actionStatus = "approve needs awaiting-approval; run is " + r.state
 		return nil
 	}
+	if verb == "approve" {
+		if why := m.approvalBlock(r.name, r.engineID, m.pane != nil); why != "" {
+			m.actionStatus = why
+			return nil
+		}
+	}
 	if verb == "retry" {
 		if r.state != "paused" {
 			m.actionStatus = "retry needs paused; run is " + r.state
@@ -1018,7 +1049,10 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 		m.actionFlights = make(map[string][]runAction)
 	}
 	m.actionFlights[a.run] = append(m.actionFlights[a.run], a)
-	m.actionStatus = a.command() + ": pending"
+	m.actionStatus = a.pendingText()
+	if a.verb == "fix" && m.pane != nil {
+		m.pane.fixing, m.pane.input = false, textField{}
+	}
 	if a.verb == "answer" && m.pane != nil {
 		// The call blocks until the run rests, so follow the snapshots meanwhile.
 		m.pane.answered, m.pane.answerDone = true, false
@@ -1037,6 +1071,16 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 			err = live.Stop(context.Background(), a.run)
 		case "retry":
 			err = live.Retry(context.Background(), a.run)
+		case "fix", "check":
+			actor, ok := live.(cardActor)
+			switch {
+			case !ok:
+				err = errors.New("this daemon connection cannot act on the approval card")
+			case a.verb == "fix":
+				err = actor.Fix(context.Background(), a.run, a.text)
+			default:
+				err = actor.MarkCheck(context.Background(), a.run, a.check, a.state)
+			}
 		case "file":
 			if filer, ok := live.(laterFiler); ok {
 				message, err = filer.FileLater(context.Background(), a.run, a.finding)

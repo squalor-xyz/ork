@@ -1,0 +1,39 @@
+{
+  "id": "S142",
+  "title": "Accept relay contract v9 and follow it: finding kinds, spec check, UI pass, approval and landing, ledger wait phase, conformance JSON",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner asked on 2026-10-26 to unify slicer's relay contract with ork's improvements and the 2026-10-25 retrospective. Filed upstream: slicer s397 (v9 bundle) with s398 finding kinds, s399 spec check and owner answers path, s400 readiness record, s401 UI pass role, s402 foreground waits, s403 approval and landing, s404 ledger waiting phase, s405 limit fallback, s406 scripted orchestrator conformance and ai relay --json, s407 implementer self-check, s408 relay-run stats (slicer 585052a); adjudicate S52 decision provenance and S53 list/inbox --ref (adjudicate f835666). When slicer ships v9: add 9 to the accepted set (internal/roles/roles.go, boundary.contract), read the conformance JSON instead of restating the contract, record ui and spec-check roles and the waiting phase in the ledger, use the readiness record beside the S116 cache, and swap S123's own stats for relay-run stats. Waits on slicer s397."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/roles/roles.go`\n- `internal/engine/`\n- `internal/slicercli/`\n- `docs/boundaries.md`\n- `docs/design.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

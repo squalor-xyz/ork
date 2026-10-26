@@ -1,8 +1,8 @@
 [1mork[m  ?help                 │ Overview[90m │ [mQuestions[90m │ [mWaves[90m │ [m[1;36mRoadmap[m[90m │ [mDecisions
-  Needs you              0 │[90m────────────────────────────────────────────────────────────────────────[m
-[1;7;97;44m> ork                      [m│[1;36mReady slices (esc cancels)[m
-  other                    │  ork S90
-                           │  worktree: /project/.worktrees/S90
+[90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────[m
+  Needs you              0 │[1;36mReady slices (esc cancels)[m
+[1;7;97;44m> ork                      [m│  ork S90
+  other                    │  worktree: /project/.worktrees/S90
                            │  branch: S90
                            │  check: go test ./...
                            │  implementer: Codex gpt high

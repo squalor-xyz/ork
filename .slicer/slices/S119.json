@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": "Wait for adj 162 and the owner's supersede of #49. Use temp repos and fakes only; no real push in tests. No AI attribution."
+      "body": "adj 162 is decided (land-after-approve) and #49 is superseded. Owner decisions (2026-10-26 session, AskUserQuestion): (1) a merge conflict when merging the base branch in: ork aborts nothing by hand; it runs one implementer fix round with the conflict as the brief, then the check, the gate and back to awaiting approval; if that fails, it stops in Needs you with 'land blocked: merge conflict' and keeps the worktree. (2) The per-project push setting is off by default; the owner turns it on for the ork project after this lands (say how in docs/manual-steps.md; ork does not change the owner's registry itself). (3) Approval counts as the cleanup confirm of adj 152 for a successful landing: approve, land, then git worktree remove and git branch -d (never -D); the approval card says so before approval (S118). Use temp repos and fakes only; no real push in tests. No AI attribution in commits."
     },
     {
       "heading": "Check",

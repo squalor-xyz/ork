@@ -1,10 +1,10 @@
 [1mork[m [90mdev[m  ?help     │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
-  Needs you      3 │[90m────────────────────────────────────────────────────────────[m
-  slicer         2 │[1;36mNeeds you 0[m
-  adjudicate       │  [90mnothing needs you[m
-[1;7;2;97;44m> Dat... no slicer [m│
-  agents           │[1;36mRunning 0[m
-                   │  [90mnothing running[m
+[90m  Running        0 [m│[90m────────────────────────────────────────────────────────────[m
+  Needs you      3 │[1;36mNeeds you 0[m
+  slicer         2 │  [90mnothing needs you[m
+  adjudicate       │
+[1;7;2;97;44m> Dat... no slicer [m│[1;36mRunning 0[m
+  agents           │  [90mnothing running[m
                    │
                    │[1;36mRecent[m
                    │  [90mnone[m

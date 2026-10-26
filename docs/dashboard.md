@@ -52,12 +52,12 @@ on Welcome in this slice.
 
 ```
 ork dev  ?help       | Overview | Questions | Waves | Roadmap | Decisions
-> Needs you       3  | --------------------------------------
-  slicer          2* | Needs you 3
-  adjudicate      1  |   Decisions 2
-  DataBall           |   ? slicer      #11  ui.layout  Group rows?
-  agents             |   ? adjudicate  #3   out.shape  JSON shape?
-                     |   Held 1
+  Running         0  | --------------------------------------
+> Needs you       3  | Needs you 3
+  slicer          2* |   Decisions 2
+  adjudicate      1  |   ? slicer      #11  ui.layout  Group rows?
+  DataBall           |   ? adjudicate  #3   out.shape  JSON shape?
+  agents             |   Held 1
                      |   # slicer      S12  Roadmap screen
                      | Running 0
                      |   nothing running
@@ -97,6 +97,39 @@ all-projects Overview. A project selection limits its rows to that project.
 The view bar stays at the top of the main pane. Overview, Questions, Waves,
 Roadmap and Decisions are selectable.
 
+**Running (*proposed*, S110, adj 169 `ui.sidebar-running`).** The first sidebar
+entry, above "Needs you", opens a live summary of every project that has a live
+run. It is always shown, so no row moves when a run starts: it carries the
+count of live runs, and with none it is dim and its view says `nothing running`.
+It is reached with the sidebar keys `right`/`left` like any other entry, not
+with a digit key (`1`-`9` stay the projects, `Jump` is unchanged). "Needs you"
+still starts selected. While the entry is selected the first tab of the view bar
+reads `Overview (Running)`; the view is the Overview's Running section full
+screen, then Recent, with no Needs you or Ready section. Each live run is one
+row in project order: the project, then the item, the stage bar (with ` rN`
+from the second round, as everywhere), the pipeline with the running role in
+brackets, last heard (with the `!` and `!!` cues of the run pane) and the
+ten-bucket activity sparkline. A run that waits on the owner is marked by one
+glyph in the mark slot before its project name, as a kind symbol is on
+Needs you: `?` for a paused run that asks the owner, `x` for a stopped one. The
+glyph is the only change to its row, so no row moves or widens. The heading
+counts the runs and adds `! owner questions N` and `x stopped N`, and the
+detail line of the selected row keeps the words. A run that waits on the owner
+stays on this view until it is answered or dismissed; a paused run with no
+question, a run awaiting approval and a removed run stay on Needs you only.
+The columns line up: the item, the bar and the pipeline are padded to the widest
+row. The cells shown are chosen once for the whole view, from the widest row,
+so every row shows the same cells (the selected row alone may be clipped). As
+the pane narrows the cells go in this order: activity first, then the pipeline
+(down to the bracketed running role), then last heard. The item, the stage bar
+and the running role stay, so the view is complete at 80x24. The row cursor,
+`enter` (which opens that run's pane, as on the Overview), the action keys and
+the pane work as on the Overview; the pane follows the newest running run
+(S109). The selected row's whole text, with the run ID, state and elapsed time,
+is on the detail line, which wraps between cells and never inside one. A run
+that ends leaves Running and shows under Recent on the next snapshot, with no
+keypress.
+
 "Needs you" shows the aggregate Needs you row count, including error and
 pending rows, matching the main heading (`ui.overview-layout`, adj 149).
 Per-project counts keep their existing meaning and hide zero counts.
@@ -121,9 +154,9 @@ The list scrolls to keep selection visible and shows `+N more` for hidden
 rows. Below 100 columns the sidebar narrows; names that do not fit end in
 `...` and keep their badges. `s` hides or shows the sidebar at any width.
 Outside Decisions, keys `right`/`left` move selection and wrap through
-"Needs you" and the sorted projects. On Decisions they switch the Open and
+"Running", "Needs you" and the sorted projects. On Decisions they switch the Open and
 Decided tabs; use `1`-`9` to select a project. To reach
-"Needs you" by key, leave Decisions with `tab` and use `right`/`left`.
+"Needs you" or "Running" by key, leave Decisions with `tab` and use `right`/`left`.
 `1`-`9` select projects in registry order. `tab` and
 `shift+tab` switch views in the order of the view bar (`ui.views`,
 `ui.view-list`). All five views are available: Overview, Questions, Waves,
@@ -159,10 +192,16 @@ manual refresh uses its own request connection, so later reads can reconnect
 and a slow refresh does not hold another project's request. The notice
 connection stays open when focus changes. Failed notice feeds retry on the
 next timer tick, including when a focused project was removed. Notices that
-arrive during a fetch queue a further read. On "Needs you" the daemon focuses
-all registered projects; on a project row it focuses that one (`dash.refresh`).
+arrive during a fetch queue a further read. On "Needs you" and "Running" the
+daemon focuses all registered projects; on a project row it focuses that one
+(`dash.refresh`).
+While a visible project has a live run, the daemon reads its runs every 1 s
+(*proposed*, S109) and the TUI refetches on the notice; see `docs/design.md`.
+On "Running" that holds for every project with a live run at once (S110); a
+visible project without one stays at 5 s.
 The local fallback schedule reads the selected project's items every 5 s and
-other projects every 30 s. On "Needs you", all projects poll every 30 s. Goals
+other projects every 30 s. On "Needs you" and "Running", all projects poll
+every 30 s. Goals
 and decided records refresh every 5 min or on HEAD changes and manual refresh. `NO_COLOR` selects the monochrome theme.
 
 ## Overview (all projects)
@@ -298,7 +337,8 @@ the needs list matches the count (`ui.status-list`, adj #125).
 the *proposed* optional `open:[{id,key,title}]` and `held:[{id,title}]` fields.
 Those fields are omitted when empty.
 
-On the cursor's engine row, `a` approves an awaiting-approval run immediately,
+On the cursor's engine row, `a` approves an awaiting-approval run immediately
+(once its human checks are marked; see the approval card),
 `x` stops a run, and `t` retries a paused run. Stop and retry show the exact
 command (`ork stop RUN` or `ork retry RUN`) in the detail area and ask
 `[y/N] (Enter is No)`. Only `y` confirms; `n`, `esc` and Enter cancel. The
@@ -331,6 +371,21 @@ area stays visible. `esc` closes the pane (`ui.answer-ui`,
 read-only tree pane with no action keys or answer input. Its header says
 "started elsewhere". Its footer says
 "started elsewhere, read-only; esc close pane".
+
+The pane follows the newest running run (*proposed*, S109). When the pane's
+run is over (an engine run that is stopped, superseded or committed, or a
+ledger run that has ended), the next snapshot points the pane at the newest
+running run of the same project: an engine run in the Running section, or an
+active ledger run that no engine run links to and that is not stale. The new
+pane starts at the top, with no answer or filing state, and a line under the
+header says why, cause first, for example `S27 committed; now showing S28`.
+An ended ledger run reads `passed`, `failed` or `stopped`, as in Recent. The
+line is dim (faint under `NO_COLOR`) and fades on the first snapshot 5 s or
+more after the switch. Only a pane opened on the Overview follows; the
+Questions tab's pane stays on its run. Paused and awaiting-approval runs stay
+in the pane, because they wait for the owner. The pane also stays put while its answer field holds text or a confirmation is
+open, and when nothing else is running it stays on the ended run with its
+final state. A run of another project never takes the pane.
 
 The actions follow the state (`ui.answer-pane-scope`):
 
@@ -391,14 +446,67 @@ The actions follow the state (`ui.answer-pane-scope`):
 - Stopped: show the full reason with no key actions. Stop is final; relaunch,
   or clear the row with `ork dismiss RUN`.
 
-Awaiting-approval runs offer `a` approve and `x` stop; other active runs offer
-`x` stop. A successful answer clears the field and refreshes the pane and row.
+Awaiting-approval runs offer `a` approve and `x` stop (and the approval card
+below, when the run has one); other active runs offer `x` stop. A successful answer clears the field and refreshes the pane and row.
 A failed call permits another attempt. Tool-coded errors retain their code and
 message. Plain `adj ask` and `adj decide` errors show the tool, exit code and
 trimmed stderr, without the request argv or question context. The daemon wraps
 these plain errors with code `internal` in the TUI status. Closing the
 pane leaves a pending call running. No structured answer options are offered.
 The Questions tab also opens this pane for engine questions.
+
+**Approval card** (*proposed*, S118; the retrospective's R5). The pane of a run
+that awaits approval and has a card lists what the owner needs to decide, in
+the action area under the run tree, in this order:
+
+- `Gate PASS (round N)  Tests: P passed, F failed` (the gate's test counts) and
+  `Diff: 2 files, +48 -4, 1 new file` (one short line, from the last line of
+  `git diff --stat`). The per-file diff stat, then the new files as `PATH  (new)`, scroll above the
+  tree.
+- The owner findings, as under Finding kinds below (and the later findings
+  count). S111's structured questions show here as `Owner question, not
+  blocking: TITLE Recommended: LABEL.`
+- `Human checks (K of N open)` and one line per `[HUMAN CHECK]` item of the
+  slice: `1 [ ] TEXT` open, `2 [x] TEXT` ticked, `3 [~] TEXT (later)` marked
+  for later. With no items the line reads `Human checks: none`; if the daemon
+  could not read them it reads `Human checks: not read (WHY)`.
+- The key line: `a approve; F fix round; x stop; 1-N tick/later; f file slice;
+  esc close pane`.
+
+A digit marks the human check of that number and moves it on: ticked, then
+later, then open again. The mark is saved in the run record at once (`run.check`).
+`a` approves only when every check is ticked or marked later. Otherwise the
+status line says `Approve needs every human check marked; open: 2, 3 (press the
+number)` in the pane, naming the open checks, and `Approve needs every human
+check marked; 2 open; enter opens the card` on the Overview row. The daemon
+applies one mark at a time, so a digit pressed while an earlier mark is still
+pending waits: the status line names the pending mark (`mark of check N is
+pending`) and the owner presses again. A mark says what it does in words, while
+it runs and when it is done: `marking check 2 done` then `check 2 marked done`,
+`marking check 2 for later` then `check 2 marked for later`, and `reopening
+check 2` then `check 2 reopened`. When ork approves, it records the marks as a slicer
+note on the slice, which replaces the human-check adj records. A card needs the
+owner to mark checks in the TUI; `ork approve` cannot.
+
+`F` (shift-f) opens the fix note. It is a capital because `f` files later
+findings on the same card, and `e` keeps its meaning in Waves. The footer shows `Fix note: TEXT` and `enter sends the
+note to a fix round; esc back to card`. The field owns every key, including digits and
+the action letters. Enter sends the note: an empty note is refused, and the
+status line follows the call, which returns when the run rests again. Meanwhile
+the run goes through its fix round, the checks and the gate, and its pane shows
+the card again on PASS, with the marks it had. A failed call (the round limit,
+a stopped run) keeps the note in the field. The status line tells the call in
+words, not as a command, because there is no `ork` command for it: `fix note
+sent; fix round running` while it runs, then `fix round finished`; a failure
+reads `fix note: ERROR`.
+`esc` goes back to the card, and a second `esc` closes the pane. The
+`Human checks` label is a heading in every case (open, none, not read), and a
+check that wraps hangs under its text, which starts at column 6. A run without a
+card (a record from before S118) keeps the old key line `a approve; x stop`.
+At 80x24 the card's footer keeps one line for the header that names the run
+(`Run ID  ITEM  STATE`), so the card gives up lower-priority lines first (the
+later and owner findings, then the key line) before that header goes; the
+tree scrolls out of sight and the Overview rows above stay.
 
 **Finding kinds** (adj #163, `review.finding-kinds`). A reviewer, UI pass or
 gate report tags each finding `fix`, `owner` or `later`. In every pane that is
@@ -415,8 +523,9 @@ again. An *owner* finding that does not block reads `Owner question, not
 blocking: TITLE Recommended: LABEL.`; it only informs, and the slice goes on.
 An owner finding marked a blocker pauses the slice as an ordinary structured
 question (the question pane above). A fix finding goes to the fix round and
-shows nowhere in the pane. `f` in the key help sits on the line with approve,
-stop and retry.
+shows nowhere in the pane. `f` and `F fix round` in the key help sit on the line with
+approve, stop and retry, in the pane's order. The help has no room for a line
+of its own for `F` or for the digits at the standard help height.
 
 A failed call is an error row. A project has one error row per error code.
 The parts that failed with that code come first, then the code, then the

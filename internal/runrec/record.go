@@ -159,11 +159,50 @@ type Pending struct {
 }
 
 // Feedback names the file that holds what the next implementer round must
-// fix: failing check output, reviewer or architect findings, or a gate FAIL
-// report. The file is in the run directory.
+// fix: failing check output, reviewer or architect findings, a gate FAIL
+// report, or the owner's note from the approval card. The file is in the run
+// directory.
 type Feedback struct {
-	Kind string `json:"kind"` // "checks", "findings", "architect" or "fail"
+	Kind string `json:"kind"` // "checks", "findings", "architect", "fail" or "owner"
 	File string `json:"file"`
+}
+
+// Human check states on the approval card. A check starts open (empty).
+const (
+	CheckTicked = "ticked" // the owner did the check
+	CheckLater  = "later"  // the owner marked it to do later
+)
+
+// HumanCheck is one [HUMAN CHECK] item of the slice, with the owner's mark.
+type HumanCheck struct {
+	Text  string `json:"text"`
+	State string `json:"state,omitempty"` // "", CheckTicked or CheckLater
+}
+
+// Resolved reports whether the owner ticked the check or marked it later.
+func (c HumanCheck) Resolved() bool { return c.State == CheckTicked || c.State == CheckLater }
+
+// ApprovalCard is what the owner needs to approve a slice on one screen
+// (S118, *proposed*): the gate verdict, its test counts, the diff stat and the
+// slice's human checks. The engine builds it when the gate passes. Owner
+// findings are in Record.Findings.
+type ApprovalCard struct {
+	Round       int          `json:"round"`
+	Verdict     string       `json:"verdict"`
+	Passed      int          `json:"passed"`
+	Failed      int          `json:"failed"`
+	DiffStat    string       `json:"diff_stat,omitempty"` // git diff --stat against HEAD
+	Untracked   []string     `json:"untracked,omitempty"` // new files the diff stat does not count
+	HumanChecks []HumanCheck `json:"human_checks,omitempty"`
+	ChecksError string       `json:"checks_error,omitempty"` // why the slice's human checks could not be read
+}
+
+// OwnerFix is a fix the owner asked for from the approval card, with the note
+// that went to the fix round.
+type OwnerFix struct {
+	Round int       `json:"round"` // the implementer round that acts on the note
+	Note  string    `json:"note"`
+	At    time.Time `json:"at"`
 }
 
 // Write is one change ork made through a tool's CLI, or to git's info/exclude
@@ -207,6 +246,8 @@ type Record struct {
 	Approvals        []Approval               `json:"approvals"`
 	Questions        []Question               `json:"questions"`
 	Findings         []Finding                `json:"findings,omitempty"`
+	Card             *ApprovalCard            `json:"card,omitempty"`
+	Fixes            []OwnerFix               `json:"fixes,omitempty"`
 	Writes           []Write                  `json:"writes"`
 	Commit           *Commit                  `json:"commit"`
 	DismissedAt      time.Time                `json:"dismissed_at,omitzero"`

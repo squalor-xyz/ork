@@ -326,8 +326,23 @@ func (e *Engine) advance(ctx context.Context) error {
 func (e *Engine) Approve(ctx context.Context) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	if state := e.run.Snapshot().State; state != runrec.StateAwaitingApproval {
-		return fmt.Errorf("the slice is %s, not awaiting approval", state)
+	rec := e.run.Snapshot()
+	if rec.State != runrec.StateAwaitingApproval {
+		return fmt.Errorf("the slice is %s, not awaiting approval", rec.State)
+	}
+	if open := openChecks(rec.Card); len(open) > 0 {
+		noun := "checks"
+		if len(open) == 1 {
+			noun = "check"
+		}
+		return fmt.Errorf("%d human %s still open; tick each or mark it later: %s", len(open), noun, strings.Join(open, "; "))
+	}
+	// The owner's marks are recorded before the finish step closes the slice. A
+	// failed note refuses the approval: the owner approves again.
+	if rec.Card != nil && len(rec.Card.HumanChecks) > 0 {
+		if err := e.d.Slicer.Note(ctx, e.wr, rec.Worktree, rec.Item, checksNote(rec.Item, rec.Card)); err != nil {
+			return fmt.Errorf("record the human checks as a slicer note: %w", err)
+		}
 	}
 	err := e.run.Update(func(r *runrec.Record) {
 		r.Approvals = append(r.Approvals, runrec.Approval{What: "slice", At: e.d.now()})

@@ -1,0 +1,40 @@
+[1mork[m  ?help                 │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────────────────────────[m
+[1;7;97;44m> Needs you              1 [m│[1;36mNeeds you 1[m
+  ork                    1 │  [1mApprove 1[m
+                           │[1;7;97;44m  +  ork  engine  S22  awaiting-approval  owner action  2 of 6 steps running  2m            [m
+                           │
+                           │[1;36mRunning 0[m
+                           │  [90mnothing running[m
+                           │
+                           │[1;36mRecent[m
+                           │  [90mnone[m
+                           │
+                           │[1;36mReady to land[m
+                           │  [90mnone[m
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────────────────────────[m
+                           │  [1;36mRun engine  S22  awaiting-approval[m
+                           │  owner action
+                           │  internal/engine/engine.go | 12 ++++++++----
+                           │  internal/tui/pane.go       | 40 ++++++++++++++++++++++++++++++++++++++++
+                           │  internal/tui/card.go  (new)
+                           │  
+                           │  [......]
+                           │  [90mimplementer[m > [90mreviewer[m > [90mgate[m
+                           │  [90m. implementer waiting[m
+                           │  [90m. reviewer    waiting[m
+                           │  [90m. gate        waiting[m
+                           │  
+                           │  [1;36mGate PASS (round 1)  Tests: 12 passed, 0 failed[m
+                           │  Diff: 2 files, +48 -4, 1 new file
+                           │  1 later finding; next to file: "Add a --json flag to ork status"
+                           │  Owner question, not blocking: Should the cache be shared? Recommended: per-project.
+                           │  [1;36mHuman checks[m (1 of 3 open)
+                           │  [90m1 [x] Open the pane on a running relay and see it move on.[m
+                           │  2 [~] Resize to 80x24 and read the card. (later)
+                           │  3 [ ] Press F, type a note and send it.
+                           │  a approve; F fix round; x stop; 1-3 tick/later; f file slice; esc close pane
+                           │[90m────────────────────────────────────────────────────────────────────────────────────────────[m
+                           │ 1 project | refreshed 16:42:00

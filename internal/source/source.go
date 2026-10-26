@@ -193,6 +193,7 @@ type EngineFinding struct {
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
 	Findings       []EngineFinding       `json:"findings,omitempty"` // proposed: owner and later findings (adj 163)
+	Card           *runrec.ApprovalCard  `json:"card,omitempty"`     // proposed: the approval card of an awaiting-approval run (S118)
 	Question       *runrec.OwnerQuestion `json:"question,omitempty"`
 	LiveUsageKnown bool                  `json:"live_usage_known,omitempty"` // proposed: current attempt reported usage
 	UsageKnown     bool                  `json:"usage_known,omitempty"`      // proposed: includes reported zero usage

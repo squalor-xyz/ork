@@ -21,6 +21,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
@@ -34,6 +35,9 @@ const (
 	FastInterval = 5 * time.Second
 	SlowInterval = 30 * time.Second
 	GoalInterval = 5 * time.Minute
+	// LiveInterval is the Runs part's interval for a visible project while
+	// the last good read holds a live run (proposed).
+	LiveInterval = time.Second
 )
 
 // ErrClosed is returned once Close has been called.
@@ -162,9 +166,28 @@ func (c *Cache) intervalLocked(k key) time.Duration {
 		return GoalInterval
 	}
 	if c.visible[k.project] {
+		if k.part == source.Runs && c.liveRunLocked(k) {
+			return LiveInterval
+		}
 		return FastInterval
 	}
 	return SlowInterval
+}
+
+// liveRunLocked reports whether the last good read of the Runs part holds a
+// run that is not stale. A stale run does not change by the second.
+func (c *Cache) liveRunLocked(k key) bool {
+	e := c.entries[k]
+	if e == nil {
+		return false
+	}
+	runs, _ := e.value.([]slicercli.RelayRun)
+	for _, r := range runs {
+		if r.State != "stale" {
+			return true
+		}
+	}
+	return false
 }
 
 // startLocked starts a read of k unless one is in flight, and schedules the
@@ -300,6 +323,7 @@ func (c *Cache) finish(k key, f *flight, v any, err error) {
 		}
 	}
 	changed, headMoved := false, false
+	wasLive := k.part == source.Runs && c.liveRunLocked(k)
 	if err == nil {
 		changed = e.readAt.IsZero() || sum != e.sum || e.err != nil
 		headMoved = k.part == source.Head && !e.readAt.IsZero() && sum != e.sum
@@ -314,6 +338,9 @@ func (c *Cache) finish(k key, f *flight, v any, err error) {
 	}
 	if e.pending {
 		c.startLocked(k)
+	} else if k.part == source.Runs && wasLive != c.liveRunLocked(k) {
+		// A run began or ended: the next read is due by the new interval.
+		c.scheduleLocked(k)
 	}
 	close(f.done)
 	c.mu.Unlock()

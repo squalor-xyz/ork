@@ -1,0 +1,30 @@
+[1mork[m  ?help                 │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+  Running                1 │[90m────────────────────────────────────────────────────────────────────────[m
+[1;7;97;44m> Needs you              0 [m│[1;36mNeeds you 0[m
+  ork                     *│  [90mnothing needs you[m
+                           │
+                           │[1;36mRunning 1[m
+                           │[1;7;97;44m   ork  B  S28  review  2 of 6 steps running  1m  [......]              [m
+                           │
+                           │[1;36mRecent[m
+                           │  [90mnone[m
+                           │
+                           │[1;36mReady to land[m
+                           │    ork  S27  branch unknown
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │  [1;36mRun B  S28  review[m
+                           │  [90mS27 committed; now showing S28[m
+                           │  [......]
+                           │  [90mimplementer[m > [90mreviewer[m > [90mgate[m
+                           │  [90mlast heard 1m ago[m
+                           │  [90m. implementer waiting[m
+                           │  [90m. reviewer    waiting[m
+                           │  [90m. gate        waiting[m
+                           │  
+                           │  x stop; esc close pane
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ 1 project | refreshed 16:42:00

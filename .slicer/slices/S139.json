@@ -1,0 +1,39 @@
+{
+  "id": "S139",
+  "title": "Commit title without a Git section: fall back to 'ID: title', and check it before the run starts",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S31 (2026-10-26): after the owner approved S78, ork ran the finish step and then paused at commit with 'the slice's Git section: the Git section is empty' (internal/engine/states.go:535-547, title.go:27). Almost no slice in this roadmap fills its Git section, so every ork run would stop at the last step after a day of work. The outer session filled S78's Git section by hand in the worktree so the owner could retry."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/states.go:520-547`\n- `internal/engine/title.go`\n- `internal/engine/plan.go` (or wherever the run plan is checked before launch)\n- `docs/design.md:289`\n- `docs/design.md:442`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "TestCommitTitleFallsBackToIDAndTitle: an empty or missing Git section commits as 'ID: slice title'; TestPlanFlagsMissingCommitTitle (if the owner wants a pre-launch check instead)."
+    },
+    {
+      "heading": "Implement",
+      "body": "Owner to pick at preflight: (a) fall back to 'ID: title' from slicer show (recommended; matches the hand relays' commit messages), or (b) refuse at launch when the Git section is empty. Retry after a commit pause must resume at commit, not rerun finish."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./internal/engine; go vet; gofmt -l; slicer check; adj lint."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

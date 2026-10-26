@@ -120,6 +120,9 @@ that uncommitted edit, so every role's brief carries the paragraph in an
   "approvals": [{"what": "slice", "at": "..."}],
   "questions": [{"role": "implementer", "round": 1, "key": "area.topic", "text": "...", "at": "...", "answer": "...", "answered_at": "..."}],
   "findings": [{"kind": "later", "role": "reviewer", "round": 1, "title": "Add a --json flag", "text": "...", "at": "...", "filed": "S130", "filed_at": "..."}],
+  "card": {"round": 1, "verdict": "PASS", "passed": 12, "failed": 0, "diff_stat": " a.go | 2 +-\n 1 file changed, 1 insertion(+), 1 deletion(-)",
+           "untracked": ["b.go"], "human_checks": [{"text": "...", "state": "ticked"}]},
+  "fixes": [{"round": 2, "note": "Rename the flag.", "at": "..."}],
   "writes": [
     {"at": "2026-10-19T16:12:05Z", "tool": "slicer", "root": "/.../adjudicate/.worktrees/S18",
      "argv": ["relay-run", "begin", "S18", "--worktree", "/.../S18", "--json"],
@@ -156,7 +159,7 @@ and `reason` (adj #168). The raw question text is kept alongside it. Older
 records without `ask` continue to use free text. An older ork refuses a
 `run.json` with `ask` because `Store.Open` uses strict keys. `feedback`
 names the file (kind
-`checks`, `findings`, `architect` or `fail`) that the next implementer round must act on.
+`checks`, `findings`, `architect`, `fail` or `owner`) that the next implementer round must act on.
 The `architect` state runs only when the lineup includes that role (adj #151),
 after accepted reviewer findings and before the gate (adj #123). Its whole
 report becomes `architect` feedback for a fix round (adj #150).
@@ -168,6 +171,20 @@ file a slice). `title` is the finding's one-line title and `text` its body.
 `slicer add` and `slicer promote` for it; `filed` is the new slice id. A finding
 raised again under the same title is kept once. An older ork refuses a
 `run.json` with `findings` because `Store.Open` uses strict keys.
+`card` (omitted until the gate first passes; *proposed*, S118) is the approval
+card, built each time the gate passes: the gate's `verdict` and test counts
+(`passed`, `failed`, from its `Tests:` line), `diff_stat` (the output of `git
+diff --stat HEAD` in the worktree, which ork has not committed yet) and
+`untracked` (new files that stat does not count), and `human_checks`, the
+`[HUMAN CHECK]` bullets of the slice read with `slicer show`. Each check's
+`state` is empty (open), `ticked` or `later`; the owner sets it with
+`run.check`. A check with the same text keeps its mark when the card is built
+again after a fix round. `checks_error` says why the checks could not be read.
+`fixes` (omitted when empty; *proposed*, S118) keeps each note the owner sent
+to a fix round from the card: the `round` that acts on it, the `note` and the
+time. The note is also the file `owner-fix-N.md` in the run directory, which is
+the `owner` feedback of that round. An older ork refuses a `run.json` with
+`card` or `fixes` because `Store.Open` uses strict keys.
 A role with no `ended_at` is running; a restart marks it `lost`. `commit` is
 `{"sha","title","at"}` once ork has committed. The fields `orchestrator_step`,
 `fails`, `reason`, `pending`, `feedback`, `created_at`, `updated_at`, the
