@@ -1550,6 +1550,61 @@ func TestBackgroundErrorCanceledIsNotFailure(t *testing.T) {
 	}
 }
 
+// TestRecoverRunsWritesTheRunMapUnderTheLock exercises every publication path.
+// Run with -race: the reader uses the same lock as run-manager clients.
+func TestRecoverRunsWritesTheRunMapUnderTheLock(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		state   string
+		removed bool
+		failed  bool
+	}{
+		{name: "queued", state: runrec.StateQueued},
+		{name: "reconciled", state: runrec.StateImplement},
+		{name: "reconcile_failed", state: runrec.StateImplement, failed: true},
+		{name: "removed_queued", state: runrec.StateQueued, removed: true},
+		{name: "removed_active", state: runrec.StateImplement, removed: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			d, store, p := runDaemon(t, nil)
+			// Keep registered queued runs queued; admission is not under test.
+			d.runs.closed = true
+			project := p.Name
+			if tc.removed {
+				project = "removed"
+			}
+			rec := runrec.Record{ID: "recover", Project: project, State: tc.state}
+			if tc.failed {
+				d.runs.deps.Proc = failedRecoveryProc{}
+				rec.Roles = []runrec.RoleRecord{{Role: engine.RoleImplementer, PGID: 987654, StartedAt: time.Now()}}
+			}
+			if _, err := store.Create(rec); err != nil {
+				t.Fatal(err)
+			}
+			ready, stop, done := make(chan struct{}), make(chan struct{}), make(chan struct{})
+			go func() {
+				defer close(done)
+				close(ready)
+				for {
+					select {
+					case <-stop:
+						return
+					default:
+						d.runs.mu.Lock()
+						_ = d.runs.runs[rec.ID]
+						d.runs.mu.Unlock()
+					}
+				}
+			}()
+			<-ready
+			defer func() { close(stop); <-done }()
+			if err := d.recoverRuns(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
 func TestFailedRecoveryAllowsIdleAndDaemonStop(t *testing.T) {
 	for _, removed := range []bool{false, true} {
 		t.Run(fmt.Sprint(removed), func(t *testing.T) {

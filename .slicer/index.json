@@ -81,7 +81,7 @@
       "id": "S78",
       "title": "recoverRuns writes the run map under the manager lock",
       "short_title": "recoverRuns map writes under lock",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -91,6 +91,17 @@
           "text": "**2026-10-25** — 2026-10-25 retrospective: S31 runs this slice through ork itself; do not relay it by hand.",
           "created_at": "2026-10-25T16:54:13Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "ce29bf9f-8046-48fe-b05a-bfb2e0154ea1",
+          "kind": "",
+          "text": "**2026-10-26** — All five recoverRuns map publication paths now hold the manager lock while Reconcile stays outside it. Five race-test cases failed before the fix and passed afterward; removing each publication lock reproduced a race and all mutations were restored. Slice references are corrected. Reviewer reported all 20 packages passing outside the sandbox; gate PASS and owner approval authorize closure.",
+          "created_at": "2026-10-26T12:18:10Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -114,7 +125,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

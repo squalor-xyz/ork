@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-125 items · — 50 · done 70 · retired 5
+125 items · — 49 · done 71 · retired 5
 
 ## v1.1
 
@@ -71,7 +71,7 @@
 |---|---|---|---|---|---|---|---|
 | 15 | [S87](slices/S87.md) | Codex rounds in ork: GOCACHE and the role temp dir inside the sandbox | S | 1 |  | discovered from S83 | done |
 | 16 | [S31](slices/S31.md) | Run a small slice through ork run end to end | S | 1 |  | discovered from S23 | — |
-| 17 | [S78](slices/S78.md) | recoverRuns map writes under lock | S | 1 |  | discovered from S05 | — |
+| 17 | [S78](slices/S78.md) | recoverRuns map writes under lock | S | 1 |  | discovered from S05 | done |
 | 18 | [S114](slices/S114.md) | Self-hosting: run ork on its own repo safely | M | 2 |  |  | — |
 | 19 | [S115](slices/S115.md) | Implementer brief: re-anchor the spec first and self-check before reporting | S | 1 |  |  | done |
 | 20 | [S70](slices/S70.md) | Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed) | S | 1 |  |  | done |
