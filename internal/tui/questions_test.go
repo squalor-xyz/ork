@@ -84,7 +84,7 @@ func TestQuestionsEngineAnswer(t *testing.T) {
 	}
 	typeAnswer(h, "use local storage")
 	h.deliver(press("enter"))
-	if v := h.view(); !strings.Contains(v, "ork answer engine 'use local storage': done") || strings.Contains(v, "Answer:") {
+	if v := h.view(); !strings.Contains(v, "answered") || strings.Contains(v, "Answer:") {
 		t.Fatalf("answer failed:\n%s", v)
 	}
 	h.deliver(press("esc"))

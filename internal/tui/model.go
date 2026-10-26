@@ -342,15 +342,30 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			delete(m.actionFlights, msg.action.run)
 		}
 		if r, ok := m.actionRow(); ok && r.engineID == msg.action.run && r.name == msg.action.project {
-			if msg.err != nil {
+			switch {
+			case msg.err != nil:
 				m.actionStatus = msg.action.command() + ": " + actionError(msg.err)
-			} else {
+				if msg.action.verb == "answer" && m.pane != nil {
+					m.pane.answered = false
+				}
+			case msg.action.verb == "answer":
+				m.actionStatus = msg.message
+				if m.pane == nil {
+					// The owner closed the pane while the call ran.
+					m.actionStatus = "answered"
+					if msg.message != "" {
+						m.actionStatus += "; " + msg.message
+					}
+					break
+				}
+				m.pane.input = textField{}
+				// A tracking that the run's next state already dropped stays dropped.
+				m.pane.answerDone, m.pane.answerNotice = true, msg.message
+				m.refreshAnswerStatus()
+			default:
 				m.actionStatus = msg.action.command() + ": done"
 				if msg.message != "" {
 					m.actionStatus += "; " + msg.message
-				}
-				if msg.action.verb == "answer" && m.pane != nil {
-					m.pane.input = textField{}
 				}
 			}
 		}
@@ -696,6 +711,9 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 	}
 	ps.loaded = true
 	ps.snap = msg.snap
+	if m.pane != nil && m.pane.project == msg.name {
+		m.refreshAnswerStatus()
+	}
 	var cmds []tea.Cmd
 	if ps.dirty {
 		ps.dirty = false
@@ -956,6 +974,12 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 	}
 	m.actionFlights[a.run] = append(m.actionFlights[a.run], a)
 	m.actionStatus = a.command() + ": pending"
+	if a.verb == "answer" && m.pane != nil {
+		// The call blocks until the run rests, so follow the snapshots meanwhile.
+		m.pane.answered, m.pane.answerDone = true, false
+		m.pane.answerState, m.pane.answerNotice = "", ""
+		m.refreshAnswerStatus()
+	}
 	return func() tea.Msg {
 		var err error
 		var message string

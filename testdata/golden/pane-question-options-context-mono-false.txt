@@ -6,17 +6,17 @@
                            │
                            │[1;36mRunning 1[m  [33m! owner questions 1[m
                            │  [36m> started elsewhere[m  ork  ledger  S22  active, 2 of 6 steps running...
-                           │[90m  +6 more lines[m
+                           │
+                           │[1;36mRecent[m
+                           │  [90mnone[m
+                           │
+                           │[1;36mReady to land[m
+                           │  [90mnone[m
+                           │
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │  [1;36mRun engine  S22  paused[m
                            │  The storage migration is blocked.
                            │  Keep the existing data intact.
-                           │  
-                           │  Question: Which storage?
-                           │  Options:
-                           │  1. use: local storage
-                           │  2. remote: remote storage
-                           │  Recommend: 1 - keeps data nearby
                            │  [90m[......][m
                            │  [90mimplementer[m > [90mreviewer[m > [90mgate[m
                            │  

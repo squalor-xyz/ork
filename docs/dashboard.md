@@ -187,7 +187,11 @@ the text column, falling back to a shorter indent when needed to fit.
    - budget pauses;
    - unclassified vendor exits.
 2. **Running:** every running slice across projects, with elapsed time and
-   an ASCII stage bar after it (S07).
+   an ASCII stage bar after it (S07). Engine rows have no label of their own.
+   When every Running row is an engine row without an error, the rows start at
+   the run id with no blank label column. When any Running row has a label
+   (`> started elsewhere` or `! error`), engine rows keep the padded label
+   column so the run ids line up (S33).
    The *proposed* relay row adds a compact pipeline such as
    `[implementer]>reviewer>gate` and `heard 2m`. An architect leads when
    present. `! heard` warns after 15 minutes; `!! heard` marks stale runs.
@@ -332,7 +336,8 @@ The actions follow the state (`ui.answer-pane-scope`):
 
 - Paused with `pending: question`: free context lines before `Question:` stay
   in the raw question and appear above the options in the pane's scrollable
-  reason area. Structured questions show a bold title,
+  reason area; the raw `Question:` and `Options:` block is not repeated
+  there. Structured questions show a bold title,
   2 to 4 numbered options, the inline `(recommended)` marker and a
   `Why N: reason` line (`ui.structured-questions`, adj #168). A digit opens a confirmation with the
   exact, pasteable `ork answer RUN 'LABEL: summary'` command. Answer text is
@@ -345,8 +350,18 @@ The actions follow the state (`ui.answer-pane-scope`):
   `1-2 pick; t free text; esc close pane`. Free text shows
   `enter submit; esc back to options`. Questions from older records show the
   Answer field directly.
-  The exact `ork answer RUN 'TEXT'` command follows the text live. Pending
-  status and results use the same quoted command. Enter submits
+  The exact `ork answer RUN 'TEXT'` command follows the text live. A
+  submit shows `sending answer` in the footer while the call runs, not the
+  command form. The call returns only when the run rests, so the footer follows
+  the snapshots meanwhile: once the run leaves paused it reads
+  `answered; implementer resumed (round N)`, and after the call returns
+  without a resumed role it reads `answered`. If the owner closed the pane
+  first, the result shows `answered` with any adj notice, never the command
+  form. Any adj notice follows. The
+  status ends at the run's next state change and does not return when a late
+  result arrives; an error replaces it. Once the run is not
+  paused, its Running row and pane header drop the answered question and
+  their wait text (S127). Enter submits
   without y/n; an empty or whitespace-only answer is refused. The field owns
   typing keys, including the global action letters. Backspace deletes the
   previous rune, ctrl-u clears the field, and left/right move the cursor.

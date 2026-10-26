@@ -4,7 +4,7 @@
                    │  [90mnothing needs you[m
                    │
                    │[1;36mRunning 1[m
-                   │[1;7;97;44m                       ork  engine  S07  implement          [m
+                   │[1;7;97;44m   ork  engine  S07  implement  [~~....] r2                 [m
                    │[90m  +6 more lines[m
                    │[90m────────────────────────────────────────────────────────────[m
                    │  [1;36mRun engine  S07  implement[m

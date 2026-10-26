@@ -373,7 +373,7 @@
       "id": "S127",
       "title": "After an answer: clear the question from the row and pane, and say the role resumed",
       "short_title": "After an answer: clear the question from the row and pane, and say the role resumed",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -394,7 +394,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
