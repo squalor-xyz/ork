@@ -946,11 +946,15 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 			}
 			continue
 		}
+		var question *runrec.OwnerQuestion
 		questionKey := ""
 		pending := ""
 		if rec.State == runrec.StatePaused && rec.Pending != nil {
 			pending = rec.Pending.Kind
 			questionKey = rec.Pending.Key
+			if pending == runrec.PendingQuestion {
+				question = rec.Pending.Ask
+			}
 		}
 		wait := rec.Reason
 		if rec.Pending != nil {
@@ -1012,7 +1016,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		if m := d.runs.runs[rec.ID]; m != nil && !m.busy && m.failure != nil {
 			failure = m.failure.Error()
 		}
-		runs = append(runs, EngineRun{Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
+		runs = append(runs, EngineRun{Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
 	}
 	// Dismissed records still supersede older stopped runs of the same slice.
 	visible := runs[:0]

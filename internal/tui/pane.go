@@ -3,18 +3,22 @@
 package tui
 
 import (
-	"github.com/squalor-xyz/ork/internal/source"
+	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"charm.land/bubbles/v2/key"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/source"
 )
 
 // runPane keeps its run target while snapshots reorder Overview rows.
 type runPane struct {
 	run, project string
+	freeText     bool
 	adj          bool
 	ledger       bool
 	input        textField
@@ -68,6 +72,11 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 	case "ctrl+c":
 		return tea.Quit
 	case "esc":
+		if m.paneAsk() != nil && m.pane.freeText {
+			m.pane.freeText = false
+			m.actionStatus = ""
+			return nil
+		}
 		m.pane = nil
 		m.actionStatus = ""
 		return nil
@@ -82,6 +91,21 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 		if msg.String() == "ctrl+a" {
 			if _, reason := m.paneAdjKey(); reason == "" {
 				m.pane.adj = !m.pane.adj
+			}
+			return nil
+		}
+		if ask := m.paneAsk(); ask != nil && !m.pane.freeText {
+			if msg.String() == "t" {
+				m.pane.freeText = true
+				m.pane.input = textField{}
+				m.actionStatus = ""
+				return nil
+			}
+			if n, err := strconv.Atoi(msg.String()); err == nil && n >= 1 && n <= len(ask.Options) {
+				option := ask.Options[n-1]
+				m.pane.input = textField{}
+				m.pane.input.insert(option.Label + ": " + option.Summary)
+				return m.requestAction("answer")
 			}
 			return nil
 		}
@@ -151,8 +175,24 @@ func (m *Model) paneLines(w, h int, status string) []string {
 	case m.pane.ledger:
 		addFooter(wrapText("started elsewhere, read-only; esc close pane", width), 2)
 	case r.state == "paused" && r.pending == "question":
-		addFooter([]string{"Answer: " + m.pane.input.view(max(width-len("Answer: "), 1), m.cfg.Theme)}, 0)
-		addFooter(wrapText("ork answer "+r.engineID+" "+m.pane.input.Value(), width), 5)
+		if ask := m.paneAsk(); ask != nil && !m.pane.freeText {
+			title := wrapText(ask.Title, width)
+			for i := range title {
+				title[i] = m.cfg.Theme.Heading.Render(title[i])
+			}
+			addFooter(title, 0)
+			for i, option := range ask.Options {
+				text := fmt.Sprintf("%d. %s: %s", i+1, option.Label, option.Summary)
+				if i+1 == ask.Recommend {
+					text += " (recommended)"
+				}
+				addFooter(wrapText(text, width), 0)
+			}
+			addFooter(wrapText("Why "+strconv.Itoa(ask.Recommend)+": "+ask.Reason, width), 2)
+		} else {
+			addFooter([]string{"Answer: " + m.pane.input.view(max(width-len("Answer: "), 1), m.cfg.Theme)}, 0)
+			addFooter(wrapText("ork answer "+r.engineID+" "+shellQuote(m.pane.input.Value()), width), 5)
+		}
 		decisionKey, disabledReason := m.paneAdjKey()
 		on := m.pane.adj && disabledReason == ""
 		toggle := "[ ] file answer in adj as " + decisionKey + "  ctrl+a toggles"
@@ -192,7 +232,17 @@ func (m *Model) paneLines(w, h int, status string) []string {
 			priority = 2
 		}
 		addFooter(toggleLines, priority)
-		addFooter([]string{"enter submit; esc close pane"}, 3)
+		hint := "enter submit; esc close pane"
+		if ask := m.paneAsk(); ask != nil {
+			hint = fmt.Sprintf("1-%d pick; t free text; esc close pane", len(ask.Options))
+			if m.pane.freeText {
+				hint = "enter submit; esc back to options"
+			}
+		}
+		if m.confirm != nil && m.confirm.verb == "answer" {
+			hint = "y sends; enter, n or esc cancel"
+		}
+		addFooter(wrapText(hint, width), 3)
 	case r.state == "paused" && r.pending == "budget":
 		addFooter(wrapText("t retry: one more role round; esc close pane", width), 3)
 	case r.state == "paused":
@@ -208,10 +258,15 @@ func (m *Model) paneLines(w, h int, status string) []string {
 		addFooter([]string{"x stop; esc close pane"}, 3)
 	}
 	if status != "" {
-		addFooter(wrapText(status, width), 1)
+		priority := 1
+		if m.confirm != nil && m.confirm.verb == "answer" {
+			priority = -1
+		}
+		addFooter(wrapText(status, width), priority)
 	}
 	// Drop the lowest priority lines first: preview, off/disabled toggle,
-	// submit hint, on toggle, status, then input. Preserve earlier lines
+	// submit hint, on toggle, status, then input. An option confirmation
+	// takes priority over the question. Preserve earlier lines
 	// within a priority when the terminal cannot fit the whole group.
 	for len(footer) > h && len(footer) > 0 {
 		drop := 0
@@ -287,4 +342,17 @@ func (m *Model) paneAdjKey() (string, string) {
 		}
 	}
 	return "", "question has no decision key"
+}
+
+func (m *Model) paneAsk() *runrec.OwnerQuestion {
+	if m.pane == nil || !m.paneQuestion() {
+		return nil
+	}
+	p := m.byName[m.pane.project]
+	for _, r := range p.snap.EngineRuns {
+		if r.ID == m.pane.run {
+			return r.Question
+		}
+	}
+	return nil
 }

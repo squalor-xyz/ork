@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": "Coordinate with S111 (structured questions rework the pane) and S109 (pane follow): run after S111 or fold into it at preflight. UI slice: UI pass (r14).\n\nOwner decision (2026-10-25): run after S111 lands, not folded into it."
+      "body": "Coordinate with S111 (structured questions rework the pane) and S109 (pane follow): run after S111 or fold into it at preflight. UI slice: UI pass (r14).\n\nOwner decision (2026-10-25): run after S111 lands, not folded into it.\n\nFrom S111's later notes (2026-10-25): the pane's reason area repeats the whole raw Owner needed block above the parsed options; for a structured question show only the leading context lines. Re-anchor from the code: S111 reworked pane.go, questions.go and overview.go."
     },
     {
       "heading": "Check",

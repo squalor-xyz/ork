@@ -388,6 +388,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 	if m.view == wavesView {
 		lines = append(lines, wrapText("Waves: a shows all waves. <S65: shares files with S65, an earlier item.", max(w, 1))...)
 	}
+	var actionHints []string
 	for _, group := range m.keys.FullHelp() {
 		for _, binding := range group {
 			h := binding.Help()
@@ -410,6 +411,14 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			if m.view == questionsView && m.pane == nil &&
 				(h == m.keys.Stop.Help() || h == m.keys.Retry.Help() || h == m.keys.Cleanup.Help()) {
 				continue
+			}
+			// Keep the added question keys and quit visible at standard height.
+			if h == m.keys.Approve.Help() || h == m.keys.Stop.Help() || h == m.keys.Retry.Help() {
+				actionHints = append(actionHints, h.Key+" "+h.Desc)
+				continue
+			}
+			if h == m.keys.Answer.Help() && len(actionHints) > 0 {
+				lines = append(lines, clip(strings.Join(actionHints, "; "), w))
 			}
 			lines = append(lines, clip(h.Key+" "+h.Desc, w))
 		}

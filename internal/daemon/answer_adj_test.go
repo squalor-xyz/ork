@@ -32,6 +32,9 @@ func adjAnswerRun(t *testing.T, check string, decideError bool, keys ...string) 
 		if r.Role == engine.RoleImplementer && !strings.Contains(r.Brief, "use stdlib") {
 			report = "Tests: 1 passed, 0 failed\n## Owner needed\nDecision key: storage.engine\n- Which library?\nOptions here.\n"
 		}
+		if len(keys) > 0 && keys[0] == "structured" && strings.Contains(report, "Options here.") {
+			report = "Tests: 1 passed, 0 failed\n## Owner needed\nQuestion: Which library?\nOptions:\n1. local: use stdlib\n2. external: add a library\nRecommend: 1 - no dependency\nDecision key: storage.engine\n"
+		}
 		if len(keys) > 0 && keys[0] == "" {
 			report = strings.ReplaceAll(report, "Decision key: storage.engine\n", "")
 		}
@@ -308,5 +311,19 @@ func TestAnswerWithoutAdjDecidedByIsRefusedWithoutKey(t *testing.T) {
 	rec := waitState(t, store, id, runrec.StatePaused)
 	if rec.Questions[0].Answer != "" || d.engineRuns("p")[0].Error != "" {
 		t.Fatal("refused answer changed run")
+	}
+}
+
+func TestStructuredOptionFilesAdjTitleAndDecisionText(t *testing.T) {
+	d, store, id := adjAnswerRun(t, `{"result":"not found"}`, false, "structured")
+	b, _ := json.Marshal(RunAction{Run: id, Text: "local: use stdlib", Adj: true, By: "owner"})
+	if _, err := d.handle(context.Background(), MethodRunAnswer, b); err != nil {
+		t.Fatal(err)
+	}
+	waitState(t, store, id, runrec.StateAwaitingApproval)
+	waitIdle(t, d, id)
+	calls := lastFake.CallsTo("adj")
+	if len(calls) != 3 || calls[1].Args[1] != "Which library?" || calls[2].Args[3] != "local: use stdlib" {
+		t.Fatalf("calls: %+v", calls)
 	}
 }

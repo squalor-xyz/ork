@@ -371,7 +371,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 	if rep.Question != "" {
 		err := e.run.Update(func(rr *runrec.Record) {
-			rr.Questions = append(rr.Questions, runrec.Question{Role: r.role, Round: r.n, Text: rep.Question, Key: rep.Key, At: e.d.now()})
+			rr.Questions = append(rr.Questions, runrec.Question{Ask: rep.Ask, Role: r.role, Round: r.n, Text: rep.Question, Key: rep.Key, At: e.d.now()})
 		})
 		if err != nil {
 			return outcome{}, err
@@ -379,7 +379,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		return outcome{}, e.pause(runrec.Pending{
 			Kind: runrec.PendingQuestion, State: r.state, Role: r.role, Round: r.n,
 			Reason:   fmt.Sprintf("%s round %d needs the owner", r.role, r.n),
-			Question: rep.Question, Key: rep.Key,
+			Question: rep.Question, Ask: rep.Ask, Key: rep.Key,
 		})
 	}
 	return outcome{ok: true, text: text, report: rep, findings: findings, file: file}, nil

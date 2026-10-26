@@ -66,6 +66,23 @@ FAIL, list only what must change (`file:line`, fix). Put non-blocking nits under
 When a decision should be filed in adj, add one `Decision key: area.topic`
 line anywhere in `## Owner needed`. Use a lowercase dotted decision key.
 
+For a question, use this exact block in `## Owner needed`. Give 2 to 4 numbered
+options with distinct labels and one-line summaries. Recommend one option by
+number and give one-line reasoning. Omit the Decision key line when filing in adj
+is not appropriate. When no question is open, write "none". Free context lines
+may precede `Question:`; ork keeps them in the raw question and shows them above
+the options. From `Question:` onward, keep the block's strict shape: no extra
+context lines inside or after it (the optional Decision key line is allowed).
+
+```text
+Question: ONE LINE TITLE
+Options:
+1. LABEL: summary
+2. LABEL: summary
+Recommend: 1 - one-line reasoning
+Decision key: area.topic
+```
+
 Do not guess a design choice that is the owner's. Put it in your report under
 `## Owner needed`: the question, the options, and your recommendation. Do not run
 `adj ask` yourself; ork shows the question to the owner (and may file it).

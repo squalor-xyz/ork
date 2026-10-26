@@ -1579,9 +1579,27 @@
 {"when": "2026-10-26T00:02:28Z", "item": "S131", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-10-26T00:25:25Z", "item": "S125", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-26T00:25:25Z", "item": "S127", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T00:26:19Z", "item": "S111", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-26T00:46:35Z", "item": "S111", "action": "status", "from": "started", "to": "done", "note": "Structured owner questions: Owner needed blocks parse into Title, 2-4 Options and a Recommend with reason; carried through pending state, history and the daemon wire; ork pane lists options, digit opens a confirm bar with the quoted exact command (Enter is No, y sends), t switches to free text; amber alerts on Overview rows, Running summary and project page. Review and gate PASS, full race suite green (2073).", "by": "Jon R"}
 {"when": "2026-10-26T00:26:27Z", "item": "S107", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-26T00:44:58Z", "item": "S107", "action": "status", "from": "started", "to": "done", "note": "Verified the Waves table with a dim shares column, wave rules with counts, Lineup column only after ticking, a read-only Enter item pane, goldens at 100x30 and 80x24, and the full suite green.", "by": "Jon R"}
 {"when": "2026-10-26T01:23:18Z", "item": "S125", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-26T01:23:18Z", "item": "S116", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-26T01:24:12Z", "item": "S125", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-26T04:36:10Z", "item": "S125", "action": "status", "from": "started", "to": "done", "note": "Verified: first 3 waves with 'N more waves' line and [a] key; launch inputs inline under the ticked item with one cursor; short padded role labels, primary row and dim +N fallbacks; 'N ticked, not launched' status and launched notices, [>] dim running rows, enter jumps to the run; hints pinned below the body; S107 later notes folded in; tests, goldens and docs/dashboard.md updated", "by": "Jon R"}
+{"when": "2026-10-26T01:33:21Z", "item": "S127", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T01:33:21Z", "item": "S132", "action": "add", "from": "", "to": "open", "note": "Structured question polish: wrapped option indent, 4 options in a short pane, alert wording, dash in Recommend, digit edge tests"}
+{"when": "2026-10-26T01:33:21Z", "item": "S132", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T01:33:21Z", "item": "S132", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T01:33:21Z", "item": "S132", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T01:33:21Z", "item": "S132", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-26T01:33:21Z", "item": "S132", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T01:33:22Z", "item": "S132", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-26T04:18:21Z", "item": "S117", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T04:28:01Z", "item": "S133", "action": "add", "from": "", "to": "open", "note": "Codex out of credits is a classified limit, so the role falls back"}
+{"when": "2026-10-26T04:28:01Z", "item": "S133", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T04:28:01Z", "item": "S133", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T04:28:01Z", "item": "S133", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T04:28:01Z", "item": "S133", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-26T04:28:01Z", "item": "S133", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T04:28:01Z", "item": "S133", "action": "edit", "from": "", "to": "", "note": "Check"}

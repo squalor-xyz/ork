@@ -459,3 +459,13 @@ func TestImplementerPromptSaysEngineRunsChecks(t *testing.T) {
 		t.Error("report item 7 must exclude sandbox-limited checks")
 	}
 }
+
+func TestStructuredOwnerQuestionPrompt(t *testing.T) {
+	for name, p := range prompts(t) {
+		for _, want := range []string{"Question: ONE LINE TITLE", "Options:", "1. LABEL: summary", "2. LABEL: summary", "Recommend: 1 - one-line reasoning", "2 to 4"} {
+			if !strings.Contains(p, want) {
+				t.Errorf("%s missing %q", name, want)
+			}
+		}
+	}
+}

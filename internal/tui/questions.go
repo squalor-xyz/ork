@@ -104,7 +104,7 @@ func (m *Model) questions(w int) overviewView {
 		kind, style := kindPending, m.cfg.Theme.Pending
 		switch {
 		case row.engine != nil:
-			kind, style = "? question", m.cfg.Theme.Held
+			kind, style = "? question", m.cfg.Theme.Warn.Bold(m.cfg.Theme.Mono)
 		case row.record != nil:
 			kind, style = kindDecision, m.cfg.Theme.Decision
 		case row.failed:

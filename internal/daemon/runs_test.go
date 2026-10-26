@@ -1988,3 +1988,23 @@ func TestBudgetPausedStatusIncludesRetryHint(t *testing.T) {
 		t.Fatalf("status: %s", b)
 	}
 }
+
+func TestStructuredQuestionWire(t *testing.T) {
+	d, store, _ := runDaemon(t, nil)
+	ask := &runrec.OwnerQuestion{Title: "Which storage?", Options: []runrec.Option{{Label: "local", Summary: "local storage"}, {Label: "remote", Summary: "remote storage"}}, Recommend: 1, Reason: "nearby"}
+	_, err := store.Create(runrec.Record{ID: "structured", Project: "p", Item: "S111", State: runrec.StatePaused, Pending: &runrec.Pending{Kind: runrec.PendingQuestion, Question: "raw question", Ask: ask}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := json.Marshal(d.engineRuns("p"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rows []EngineRun
+	if err := json.Unmarshal(b, &rows); err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 1 || rows[0].Question == nil || rows[0].Question.Title != ask.Title || rows[0].Question.Options[1].Summary != "remote storage" || rows[0].Question.Recommend != 1 || rows[0].Question.Reason != "nearby" || !strings.Contains(rows[0].Wait, "raw question") {
+		t.Fatalf("wire: %s", b)
+	}
+}

@@ -296,3 +296,59 @@ func TestReportFallbackIsWrittenAt0600EvenOverAnExistingFile(t *testing.T) {
 		t.Fatalf("report mode %v, %v; want 600", fi, err)
 	}
 }
+
+const structuredQuestion = "Question: Which storage?\nOptions:\n1. local: use local storage\n2. remote: use remote storage\nRecommend: 1 - keeps data nearby\nDecision key: storage.engine"
+
+func TestCheckReportParsesAStructuredQuestion(t *testing.T) {
+	rep, err := CheckReport(RoleReviewer, false, "## Owner needed\n"+structuredQuestion)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.Ask == nil || rep.Ask.Title != "Which storage?" || len(rep.Ask.Options) != 2 || rep.Ask.Options[0].Label != "local" || rep.Ask.Options[0].Summary != "use local storage" || rep.Ask.Recommend != 1 || rep.Ask.Reason != "keeps data nearby" || rep.Question != structuredQuestion {
+		t.Fatalf("report: %+v", rep)
+	}
+	for name, body := range map[string]string{
+		"one option":             strings.Replace(structuredQuestion, "2. remote: use remote storage\n", "", 1),
+		"five options":           strings.Replace(structuredQuestion, "Recommend:", "3. three: third\n4. four: fourth\n5. five: fifth\nRecommend:", 1),
+		"unknown recommendation": strings.Replace(structuredQuestion, "Recommend: 1", "Recommend: 3", 1),
+		"duplicate label":        strings.Replace(structuredQuestion, "2. remote:", "2. local:", 1),
+		"empty title":            strings.Replace(structuredQuestion, "Which storage?", "", 1),
+		"empty reason":           strings.Replace(structuredQuestion, "keeps data nearby", "", 1),
+		"missing recommendation": strings.Replace(structuredQuestion, "Recommend: 1 - keeps data nearby\n", "", 1),
+		"missing question":       strings.Replace(structuredQuestion, "Question: Which storage?\n", "", 1),
+		"bad numbering":          strings.Replace(structuredQuestion, "2. remote", "4. remote", 1),
+		"empty summary":          strings.Replace(structuredQuestion, "use remote storage", "", 1),
+	} {
+		t.Run(name, func(t *testing.T) {
+			_, err := CheckReport(RoleReviewer, false, "## Owner needed\n"+body)
+			if err == nil {
+				t.Fatal("malformed structured question accepted")
+			}
+			shapeProblems(t, err)
+		})
+	}
+}
+
+func TestStructuredQuestionAcceptsLeadingContext(t *testing.T) {
+	body := "The storage migration is blocked.\nKeep the existing data intact.\n\n" + structuredQuestion
+	rep, err := CheckReport(RoleReviewer, false, "## Owner needed\n"+body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.Question != body || rep.Ask == nil || rep.Ask.Title != "Which storage?" || len(rep.Ask.Options) != 2 || rep.Ask.Recommend != 1 {
+		t.Fatalf("context or structured question lost: %+v", rep)
+	}
+}
+
+func TestStructuredQuestionRejectsContextInsideBlock(t *testing.T) {
+	for _, after := range []string{"Question: Which storage?", "1. local: use local storage", "Recommend: 1 - keeps data nearby"} {
+		t.Run(after, func(t *testing.T) {
+			body := "Leading context is allowed.\n" + strings.Replace(structuredQuestion, after, after+"\nExtra context inside the block.", 1)
+			_, err := CheckReport(RoleReviewer, false, "## Owner needed\n"+body)
+			if err == nil {
+				t.Fatal("extra context inside the block was accepted")
+			}
+			shapeProblems(t, err)
+		})
+	}
+}

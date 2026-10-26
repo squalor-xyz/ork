@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 132,
+  "next_id": 134,
   "preamble": "",
   "passes": [
     {
@@ -331,7 +331,7 @@
       "id": "S111",
       "title": "Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork",
       "short_title": "Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S28"
@@ -366,7 +366,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -4804,6 +4804,62 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S132",
+      "title": "Structured question polish: wrapped option indent, 4 options in a short pane, alert wording, dash in Recommend, digit edge tests",
+      "short_title": "Structured question polish: wrapped option indent, 4 options in a short pane, alert wording, dash in Recommend, digit edge tests",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S111",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S133",
+      "title": "Codex out of credits is a classified limit, so the role falls back",
+      "short_title": "Codex out of credits is a classified limit, so the role falls back",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S127",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 3,
         "effort": 1,
         "attempts": 0
       }

@@ -407,7 +407,7 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			m.actionStatus = ""
 			return m, nil
 		}
-		if m.pane != nil && m.paneQuestion() {
+		if m.confirm == nil && m.pane != nil && m.paneQuestion() && (m.paneAsk() == nil || m.pane.freeText) {
 			m.pane.input.update(msg)
 			m.actionStatus = ""
 		}
@@ -829,7 +829,7 @@ func (a runAction) command() string {
 	}
 	cmd := "ork " + a.verb + " " + a.run
 	if a.verb == "answer" {
-		cmd += " " + a.text
+		cmd += " " + shellQuote(a.text)
 	}
 	return cmd
 }
@@ -956,7 +956,7 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 			a.by = os.Getenv("ADJ_DECIDED_BY")
 		}
 	}
-	if verb == "approve" || verb == "answer" {
+	if verb == "approve" || (verb == "answer" && (m.paneAsk() == nil || m.pane.freeText)) {
 		return m.callAction(a)
 	}
 	m.actionStatus = ""

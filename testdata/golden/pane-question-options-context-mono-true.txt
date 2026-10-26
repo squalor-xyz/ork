@@ -1,0 +1,30 @@
+[1mork[m  ?help                 │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1;7m> Needs you              1 [m│[2m────────────────────────────────────────────────────────────────────────[m
+  ork                    1 │[1mNeeds you 1[m
+                           │  [1mPaused 1[m
+                           │[1;7m  ?  ork  engine  S22  paused  The storage migration is blocked. Keep...[m
+                           │
+                           │[1mRunning 1[m  [1m! owner questions 1[m
+                           │  [1m> started elsewhere[m  ork  ledger  S22  active, 2 of 6 steps running...
+                           │[2m  +6 more lines[m
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │  [1mRun engine  S22  paused[m
+                           │  The storage migration is blocked.
+                           │  Keep the existing data intact.
+                           │  
+                           │  Question: Which storage?
+                           │  Options:
+                           │  1. use: local storage
+                           │  2. remote: remote storage
+                           │  Recommend: 1 - keeps data nearby
+                           │  [2m[......][m
+                           │  [2mimplementer[m > [2mreviewer[m > [2mgate[m
+                           │  
+                           │  [1mWhich storage?[m
+                           │  1. use: local storage (recommended)
+                           │  2. remote: remote storage
+                           │  Why 1: keeps data nearby
+                           │  [2madj filing off: no adj in this project[m
+                           │  1-2 pick; t free text; esc close pane
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ 1 project | refreshed 16:42:00

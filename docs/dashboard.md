@@ -272,7 +272,10 @@ This is by design. Ready-to-land rows do not show the run id.
 
 Engine runs that are awaiting approval, paused, or stopped and neither
 superseded nor dismissed appear under Needs you. Their kinds are
-`+ approve`, `= paused`, and `x stopped`. Each kind is a symbol and a word,
+`+ approve`, `= paused`, and `x stopped`. A paused owner question uses
+`? question` in amber instead. Overview and the project page also show an
+amber `! owner questions N` alert beside the Running count while questions
+are waiting. In monochrome, question kinds and the alert are bold. Each kind is a symbol and a word,
 so monochrome still reads it.
 Other active engine states appear under Running. Committed runs do not appear
 in either section. A stopped run disappears once a newer engine record exists
@@ -327,8 +330,23 @@ read-only tree pane with no action keys or answer input. Its header says
 
 The actions follow the state (`ui.answer-pane-scope`):
 
-- Paused with `pending: question`: show the question and an Answer field.
-  The exact `ork answer RUN TEXT` command follows the text live. Enter submits
+- Paused with `pending: question`: free context lines before `Question:` stay
+  in the raw question and appear above the options in the pane's scrollable
+  reason area. Structured questions show a bold title,
+  2 to 4 numbered options, the inline `(recommended)` marker and a
+  `Why N: reason` line (`ui.structured-questions`, adj #168). A digit opens a confirmation with the
+  exact, pasteable `ork answer RUN 'LABEL: summary'` command. Answer text is
+  shell-quoted, including embedded apostrophes; the confirmation suffix stays
+  outside the quotes. The hint reads `y sends; enter, n or esc cancel`.
+  Only y sends it; Enter, n and esc cancel. The label and summary are the answer sent to the paused
+  role and, when enabled, adj. `t` opens the free-text field; esc returns to
+  the options, and a second esc closes the pane. Typing and paste are ignored
+  until `t`. The options hint shows the actual range, such as
+  `1-2 pick; t free text; esc close pane`. Free text shows
+  `enter submit; esc back to options`. Questions from older records show the
+  Answer field directly.
+  The exact `ork answer RUN 'TEXT'` command follows the text live. Pending
+  status and results use the same quoted command. Enter submits
   without y/n; an empty or whitespace-only answer is refused. The field owns
   typing keys, including the global action letters. Backspace deletes the
   previous rune, ctrl-u clears the field, and left/right move the cursor.
