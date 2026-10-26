@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 135,
+  "next_id": 138,
   "preamble": "",
   "passes": [
     {
@@ -519,12 +519,24 @@
       "id": "S120",
       "title": "Finding kinds: fix, owner or later in reviewer, UI pass and gate reports",
       "short_title": "Finding kinds: fix, owner or later in reviewer, UI pass and gate reports",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S111"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6ad38dc9-4dbf-45b5-986e-fee8e5d850ab",
+          "kind": "",
+          "text": "**2026-10-26** — Verified: finding kinds (fix, owner, later) in reviewer, UI pass and gate reports; only fix findings reach the fix round; owner findings block only when marked; f then y files a later finding with slicer add --discovered-from and promote. go test -race ./..., vet, gofmt, slicer check and adj lint clean.",
+          "created_at": "2026-10-26T05:32:55Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -542,14 +554,14 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S117",
       "title": "UI pass role in the engine, in parallel with the reviewer",
       "short_title": "UI pass role in the engine, in parallel with the reviewer",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -582,7 +594,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -4889,6 +4901,90 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S135",
+      "title": "Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions",
+      "short_title": "Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S117",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 3,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S136",
+      "title": "UI pass visible everywhere and project-neutral: lineup and rounds in run, waves, runtree; ui.md names the project's design doc",
+      "short_title": "UI pass visible everywhere and project-neutral: lineup and rounds in run, waves, runtree; ui.md names the project's design doc",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S117",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S137",
+      "title": "Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings",
+      "short_title": "Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S120",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 3,
+        "effort": 2,
         "attempts": 0
       }
     }

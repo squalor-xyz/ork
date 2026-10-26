@@ -417,6 +417,24 @@ these plain errors with code `internal` in the TUI status. Closing the
 pane leaves a pending call running. No structured answer options are offered.
 The Questions tab also opens this pane for engine questions.
 
+**Finding kinds** (adj #163, `review.finding-kinds`). A reviewer, UI pass or
+gate report tags each finding `fix`, `owner` or `later`. In every pane that is
+not a question, the footer lists what the report left for the owner. Later
+findings read `N later findings; next to file: "TITLE"`. When one can be
+filed, the key line shows `f file slice` just before `esc close pane`, on a
+stopped run too, and after a daemon restart for a stopped or committed run.
+`f` shows the command first:
+`slicer add 'TITLE' --discovered-from ITEM? [y/N] (Enter is No)`. `y` makes
+ork run it in the project, then give the new slice a Why section from the
+finding; the status line then says `filed as ID`, and the next press offers the
+next finding. Filed findings read `Filed as slices: ID` and are not offered
+again. An *owner* finding that does not block reads `Owner question, not
+blocking: TITLE Recommended: LABEL.`; it only informs, and the slice goes on.
+An owner finding marked a blocker pauses the slice as an ordinary structured
+question (the question pane above). A fix finding goes to the fix round and
+shows nowhere in the pane. `f` in the key help sits on the line with approve,
+stop and retry.
+
 A failed call is an error row. A project has one error row per error code.
 The parts that failed with that code come first, then the code, then the
 tool's message as printed, for example `items, runs: locked: Ledger is busy.`
@@ -558,6 +576,10 @@ wave.plan-failure decision remains open (adj 146).
 `e` edits the selected ticked item after its plan is ready (S83).
 The editor starts from that item's plan: implementer and reviewer, then
 budget minutes and tokens. The gate follows the reviewer and has no field.
+When the plan has a `ui` entry (the matrix's UI pass row), a line below the
+reviewer lists its chain for information: the UI pass runs beside the reviewer
+only on a slice that touches the UI (`roles.ui-pass`, adj #165), has no field,
+and the cursor skips it.
 `up`/`down`, `tab` and `shift+tab` move between rows.
 `left` and `right` cycle the role's chain already in
 `RunPlan.Lineup[role]`: primary first, then alternatives. Until S49, the
@@ -583,6 +605,7 @@ Edit lineup: A  Alpha
   Run only; gate follows reviewer.
   > implementer: claude sonnet high (no alternatives; c for custom)
     reviewer: claude opus medium
+    ui: claude opus medium (UI slices only; from the matrix)
     Budget minutes: 45
     Budget tokens: 9000
   Zero budget uses the project default.

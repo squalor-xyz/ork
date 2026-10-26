@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -386,6 +387,38 @@ func TestLineupCyclesMatrixAlternativesBothDirections(t *testing.T) {
 		e := h.m.waves.lineup
 		if got := e.chains[0][0]; got != step.want {
 			t.Fatalf("%s selected %+v, want %+v", step.key, got, step.want)
+		}
+	}
+}
+
+// The UI pass row shows in the editor, for information: it follows the
+// matrix, runs only on a slice that touches the UI, and has no row to move to.
+func TestLineupEditorShowsTheUIPassRow(t *testing.T) {
+	h, _ := lineupHarness(t)
+	body := func() string { return strings.Join(h.m.lineupBody(100).body, "\n") }
+	if strings.Contains(body(), "ui:") {
+		t.Fatalf("a plan without a ui role shows a ui row:\n%s", body())
+	}
+	h.m.waves.lineup.plan.Lineup["ui"] = []runrec.LineupEntry{{Vendor: "claude", Model: "opus", Effort: "medium"}, {Vendor: "codex", Model: "sol", Effort: "high"}}
+	want := "  ui: claude opus medium -> codex sol high (UI slices only; from the matrix)"
+	if !strings.Contains(body(), want) {
+		t.Fatalf("missing %q:\n%s", want, body())
+	}
+	// It lines up with the editable roles: four spaces, as the reviewer's.
+	if !strings.Contains(body(), "\n    reviewer:") || !strings.Contains(body(), "\n    ui: claude") {
+		t.Fatalf("ui row is not indented like the reviewer row:\n%s", body())
+	}
+	// The row is not one the cursor visits: four rows, as before.
+	for i := 0; i < 4; i++ {
+		h.deliver(press("down"))
+	}
+	if h.m.waves.lineup.row != 0 || strings.Contains(strings.Join(h.m.lineupBody(100).body, "\n"), "> ui") {
+		t.Fatalf("cursor row %d", h.m.waves.lineup.row)
+	}
+	// Narrow: the line wraps and stays within the pane width.
+	for _, line := range h.m.lineupBody(40).body {
+		if w := lipgloss.Width(line); w > 40 {
+			t.Errorf("line of %d cells at width 40: %q", w, line)
 		}
 	}
 }

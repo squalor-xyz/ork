@@ -205,9 +205,33 @@ type Record struct {
 	Budgets          registry.Budgets         `json:"budgets,omitzero"`
 	Approvals        []Approval               `json:"approvals"`
 	Questions        []Question               `json:"questions"`
+	Findings         []Finding                `json:"findings,omitempty"`
 	Writes           []Write                  `json:"writes"`
 	Commit           *Commit                  `json:"commit"`
 	DismissedAt      time.Time                `json:"dismissed_at,omitzero"`
 	CreatedAt        time.Time                `json:"created_at"`
 	UpdatedAt        time.Time                `json:"updated_at"`
+}
+
+// Finding kinds that ork keeps in the record (adj 163, review.finding-kinds).
+// A fix finding goes to the fix round and is not kept.
+const (
+	FindingOwner = "owner" // an owner question that does not block
+	FindingLater = "later" // later work offered to the owner as a new slice
+)
+
+// Finding is a review finding that is not a fix. An owner finding holds its
+// structured question in Ask; a later finding waits for the owner to file it
+// as a slice, and Filed holds the new slice's id once ork has.
+type Finding struct {
+	Kind    string         `json:"kind"`
+	Role    string         `json:"role"`
+	Round   int            `json:"round"`
+	Title   string         `json:"title"`
+	Text    string         `json:"text"`
+	Ask     *OwnerQuestion `json:"ask,omitempty"`
+	Key     string         `json:"key,omitempty"`
+	At      time.Time      `json:"at"`
+	Filed   string         `json:"filed,omitempty"`
+	FiledAt time.Time      `json:"filed_at,omitzero"`
 }

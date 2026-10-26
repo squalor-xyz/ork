@@ -166,6 +166,17 @@ func (d *Daemon) UnavailableProjects(ctx context.Context) ([]source.Snapshot, er
 	return c.UnavailableProjects(ctx)
 }
 
+// FileLater files the run's later finding n as a slice after the owner
+// confirmed it, and returns the daemon's notice.
+func (d *Daemon) FileLater(ctx context.Context, run string, n int) (string, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer c.Close()
+	return c.FileFinding(ctx, run, n)
+}
+
 func (d *Daemon) AnswerAction(ctx context.Context, action daemon.RunAction) (string, error) {
 	c, err := d.Connect(ctx)
 	if err != nil {

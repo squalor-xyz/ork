@@ -35,7 +35,7 @@ var promptFS embed.FS
 // accepts the versions in AcceptedContracts, which include this one.
 const ContractVersion = 7
 
-var names = []string{"implementer", "reviewer", "gate", "architect"}
+var names = []string{"implementer", "reviewer", "gate", "architect", "ui"}
 
 // Names returns the role names, in the order ork lists them.
 func Names() []string { return slices.Clone(names) }

@@ -193,6 +193,7 @@ setup -> implement -> checks --red--> implement (fix)
                         | green
                         v
                      review --findings--> implement (fix round) -> checks
+                     (reviewer; beside it the UI pass on a UI slice)
                         | clean, or green checks after reviewer fixes
                         v
          [architect -> implement (fix round) -> checks]  (lineup only; once)
@@ -230,6 +231,20 @@ slice.
   have been addressed and before the gate (`slice.architect-order`, adj #123),
   exactly when the lineup has an architect entry. ork does not read the slice
   size (`slice.architect-size`, adj #151).
+  - **UI pass** (`roles.ui-pass`, adj #165). When the lineup has a `ui` entry
+    and the slice's Files section names a UI path, the UI pass starts with
+    the reviewer, at the same time, and neither waits for the other. A UI
+    path is one in backticks under `internal/tui` (its golden views too) or
+    `internal/cli`, `docs/dashboard.md`, or a `ui.*` adj key (AGENTS.md; matrix
+    rule u10). On any other slice no UI round runs. The UI pass is read-only
+    with the fingerprint applied, gives no verdict, and reports sections
+    (A) to (D) like the reviewer. It runs once, with the first review. The
+    findings of the two reports go to one fix round. When both
+    ask to pause, the first pause is kept. A stop overrides a pause, because
+    `pause()` refuses when the slice is paused or stopped and `stop()` refuses
+    only when it is already stopped. After a pause, a retry runs again only the
+    role whose report does not stand. The renders of adj #165 are a later slice
+    (S121); this one is text only.
 - **architect:** one read-only review with the fingerprint applied. The report
   needs only the shared `## Owner needed` section. The whole report goes to an
   implementer fix round, even when it has no findings; ork adds no parser
@@ -237,6 +252,35 @@ slice.
   gate. The architect is not repeated after a gate FAIL.
 - **fix round:** the implementer is resumed with the confirmed findings. A
   small fix round is reviewed and gated in one pass (contract v7).
+- **finding kinds** (adj #163, `review.finding-kinds`): the reviewer, the UI
+  pass and the gate tag each finding `[fix]`, `[owner]`, `[owner blocker]` or
+  `[later]`. A finding is a list item or paragraph that opens with the tag;
+  lines indented under it belong to it. A finding without a tag is a fix, so a
+  report without tags behaves as before. `Triage` and `TriageGate`
+  (`internal/engine/kinds.go`) sort a report:
+  - *fix*: the only findings the fix round reads. A tagged report goes to the
+    fix round as its fix findings, without the others; an untagged one goes
+    whole.
+  - *owner*: the finding is an owner question in the shape of S111: a title,
+    `Options:` with 2 to 4 numbered labels, `Recommend: N - reason`, and an
+    optional `Decision key:`. ork keeps it in `findings[]` of the run record
+    and shows it in the pane. It does not block. `[owner blocker]` makes ork
+    pause the round with a `question` pending, as an `## Owner needed`
+    section does (`questions[]`, the answer reaches the same role, and
+    `reviewDone` runs that role again). A malformed owner or later finding is
+    a report shape error.
+  - *later*: ork keeps it in `findings[]` as an offer. Nothing is filed until
+    the owner confirms in the pane (`run.file`). Then ork itself runs
+    `slicer add TITLE --discovered-from ITEM --key RUN-later-N --render` in
+    the project's main checkout, and `slicer promote ID --file later-N.md`
+    with a Why section made from the finding, both as `writes[]` entries. The
+    key makes a retry return the slice the first call filed; when that slice
+    already has its spec, ork skips `promote`. slicer owns the
+    record (`docs/boundaries.md`); the new row is unscored and the owner
+    scores it with `slicer set`.
+  The same finding raised again in a later round under the same title is kept
+  once. A gate FAIL sends back the gate's report without its owner and later
+  findings.
 - **gate:** the first line of the report must be exactly `VERDICT: PASS` or
   `VERDICT: FAIL`. On S and M items the gate is the resumed reviewer
   ("lite"). A FAIL is recorded with `slicer note ID --text "Review FAIL:
@@ -303,12 +347,15 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   followed by checks. The gate is the resumed reviewer (role `gate`), which
   reviews and gates the fix in one pass. Without an architect entry, a clean
   review goes straight to the gate. The gate brief includes the latest
-  architect report even when the gate resumes a session. A gate FAIL is recorded
+  architect report and the latest UI pass report even when the gate resumes a
+  session. A gate FAIL is recorded
   with `slicer note ID --text "Review FAIL: ..." --render`, sends the
   implementer back, and the third FAIL stops
   the slice. *Proposed:* review findings are the text of sections (A), (B)
   and (D) of the reviewer's report when they are not "nothing"; (C) holds
-  notes for later. A report without sections (A) and (B) is a shape error.
+  notes for later, and starts a fix round only through a finding tagged
+  `[fix]`. Only fix findings count (finding kinds above). A report without
+  sections (A) and (B) is a shape error.
 - **Rounds.** `round` counts implementer rounds and names the report
   files (`implementer-2.md`). A repeat of the same role and round uses a
   new path (`implementer-2-attempt-2.md`), preserving the earlier report.
@@ -449,6 +496,15 @@ ork adds:
 - **Resume.** For fix rounds and the lite gate, ork resumes a session from the same
   vendor and model where the vendor supports it. Otherwise it starts fresh with the
   earlier reports in the brief (`role.resume`).
+- **UI pass.** A read-only role with its own prompt (`ui.md`: 80x24, ASCII and
+  monospace, clipping, key hints), the same for every vendor. It runs beside
+  the reviewer on a slice that touches the UI (see the review state). Its
+  lineup row is the matrix row that the rule naming "UI pass row (rNN)" gives
+  (u10 today). Until slicer has a `ui` role (slicer s392), that row's role is
+  `reviewer`: ork keeps it out of the reviewer's and the gate's fallback
+  chains and puts it in the `ui` lineup, and the ledger step has role
+  `reviewer` with the task `ID ui`. In any fallback chain, an entry identical
+  to the one before it is dropped.
 - **Reviewer rule.** A reviewer never wrote code in the slice. A reviewer
   may run on another vendor if the lineup names it (`review.cross-vendor`).
 - **Ledger.** Each role round is recorded with `slicer relay-run step` with
@@ -775,6 +831,14 @@ prints `{"started":false}` on stdout. Interactive questions go on stderr
 in JSON mode.
 
 `run.retry` takes `{run}` and returns the run record (adj #101).
+*Proposed:* `run.file` takes `{run,finding}` (the one-based `findings[]` entry)
+and returns the run record with a `message` (`filed as ID`) once ork has run
+`slicer add` and `slicer promote` for that later finding (adj #163). It does
+not wait for the run, so it works while a role runs and on a stopped or
+committed run that the daemon did not rebuild at its start (the record comes
+from the store), and it refuses a finding that is not a later finding or is
+already filed. The engine run rows carry
+`findings:[{n,kind,title,ask?,filed?}]` for the pane.
 `run.dismiss` takes `{run}` and returns the run record (adj #117). It refuses
 a run that is not stopped or is busy. An unknown run returns `not_found`.
 

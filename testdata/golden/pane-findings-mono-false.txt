@@ -1,0 +1,30 @@
+[1mork[m  ?help                 │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[1;7;97;44m> Needs you              1 [m│[90m────────────────────────────────────────────────────────────────────────[m
+  ork                    1 │[1;36mNeeds you 1[m
+                           │  [1mApprove 1[m
+                           │[1;7;97;44m  +  ork  engine  S22  awaiting-approval  owner action  2 of 6 steps ...[m
+                           │
+                           │[1;36mRunning 0[m
+                           │  [90mnothing running[m
+                           │
+                           │[1;36mRecent[m
+                           │  [90mnone[m
+                           │
+                           │[1;36mReady to land[m
+                           │  [90mnone[m
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │  [1;36mRun engine  S22  awaiting-approval[m
+                           │  owner action
+                           │  [......]
+                           │  [90mimplementer[m > [90mreviewer[m > [90mgate[m
+                           │  [90m. implementer waiting[m
+                           │  [90m. reviewer    waiting[m
+                           │  [90m. gate        waiting[m
+                           │  
+                           │  2 later findings; next to file: "Add a --json flag to ork status"
+                           │  Owner question, not blocking: Should the cache be shared? Recommended:
+                           │  per-project.
+                           │  a approve; x stop; f file slice; esc close pane
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ 1 project | refreshed 16:42:00

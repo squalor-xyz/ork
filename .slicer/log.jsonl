@@ -1605,6 +1605,8 @@
 {"when": "2026-10-26T04:28:01Z", "item": "S133", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-10-26T04:28:01Z", "item": "S133", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-26T04:28:01Z", "item": "S133", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-26T04:29:05Z", "item": "S117", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-26T04:54:18Z", "item": "S117", "action": "status", "from": "started", "to": "done", "note": "UI pass role in the engine: the reviewer and a read-only UI pass (own ui.md prompt) run in parallel on a slice whose Files section names a UI path; findings of both reach one fix round and the gate brief. The daemon finds the UI row through the matrix rule naming 'UI pass row (rNN)', keeps it out of reviewer and gate chains, and drops consecutive duplicate chain entries. Race suite, vet, gofmt, slicer check and adj lint green; 26 mutations red.", "by": "Jon R"}
 {"when": "2026-10-26T04:39:12Z", "item": "S130", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-10-26T04:45:07Z", "item": "S134", "action": "add", "from": "", "to": "open", "note": "Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap"}
 {"when": "2026-10-26T04:45:07Z", "item": "S134", "action": "promote", "from": "", "to": "", "note": ""}
@@ -1615,3 +1617,32 @@
 {"when": "2026-10-26T04:45:07Z", "item": "S134", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-10-26T04:51:09Z", "item": "S109", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-26T05:03:58Z", "item": "S109", "action": "status", "from": "started", "to": "done", "note": "Run pane re-points to the newest running run of its project when its own run is stopped, superseded, committed or ended, with a fading 'now showing' notice; the cache reads Runs every 1 s for a visible project with a live run. Full suite with -race, vet, gofmt, slicer check and adj lint pass; the human check of a real relay finishing is not run.", "by": "Jon R"}
+{"when": "2026-10-26T04:51:59Z", "item": "S118", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T04:51:59Z", "item": "S118", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-26T04:51:59Z", "item": "S120", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T04:53:44Z", "item": "S116", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T04:53:44Z", "item": "S121", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T04:57:37Z", "item": "S135", "action": "add", "from": "", "to": "open", "note": "Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions"}
+{"when": "2026-10-26T04:57:37Z", "item": "S135", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T04:57:37Z", "item": "S135", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T04:57:37Z", "item": "S135", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T04:57:37Z", "item": "S135", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-26T04:57:38Z", "item": "S135", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T04:57:38Z", "item": "S135", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-26T04:57:38Z", "item": "S136", "action": "add", "from": "", "to": "open", "note": "UI pass visible everywhere and project-neutral: lineup and rounds in run, waves, runtree; ui.md names the project's design doc"}
+{"when": "2026-10-26T04:57:38Z", "item": "S136", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T04:57:38Z", "item": "S136", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T04:57:38Z", "item": "S136", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T04:57:38Z", "item": "S136", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-26T04:57:38Z", "item": "S136", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T04:57:38Z", "item": "S136", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-26T04:58:25Z", "item": "S120", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-26T05:32:55Z", "item": "S120", "action": "note", "from": "", "to": "", "note": "Verified: finding kinds (fix, owner, later) in reviewer, UI ", "by": "Jon R"}
+{"when": "2026-10-26T05:32:55Z", "item": "S120", "action": "status", "from": "started", "to": "done", "note": "Finding kinds: tagged fix, owner and later findings sorted by the engine; owner blockers pause as structured questions; later findings filed on confirm via slicer add --discovered-from and promote. Full suite -race, vet, gofmt, slicer check, adj lint green.", "by": "Jon R"}
+{"when": "2026-10-26T12:09:34Z", "item": "S137", "action": "add", "from": "", "to": "open", "note": "Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings"}
+{"when": "2026-10-26T12:09:34Z", "item": "S137", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T12:09:34Z", "item": "S137", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T12:09:34Z", "item": "S137", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T12:09:34Z", "item": "S137", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-26T12:09:35Z", "item": "S137", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T12:09:35Z", "item": "S137", "action": "edit", "from": "", "to": "", "note": "Check"}
