@@ -436,8 +436,11 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   `MaxRounds` stays: it limits red loops, not spend (`run.budget-resume`).
 - **Resume.** A fix round resumes the implementer's latest session and the
   gate resumes the latest gate or reviewer session from the same vendor and
-  model. Without a matching session the
-  role starts fresh and its brief carries the earlier reports
+  model. Daemon runs copy the reviewer's lineup into the gate; a copy counts
+  as following the reviewer, as does an empty gate lineup. With no gate
+  records, the gate starts on the reviewer's current row. Its own records
+  take precedence for later attempts. Without a matching session the role
+  starts fresh and its brief carries the earlier reports
   (`role.resume`).
 - **Report checks.** `CheckReport` refuses a gate report whose first line is
   not exactly `VERDICT: PASS` or `VERDICT: FAIL`, an implementer or gate
@@ -673,6 +676,11 @@ probes 05 to 07 ran on 0.164.0), grok 1.0.62. Grok has no successful run, so mos
   The role stays on the fallback row for the rest of the run
   (`vendor.fallback-sticky`, decision 115). The ordered role records determine
   the row from vendor, model, effort and exit; no new run record field is needed.
+  Daemon runs copy the reviewer's lineup into the gate. An equal copy or an
+  empty gate lineup follows the reviewer: with no gate records, it starts on
+  the reviewer's current row. Existing gate records determine its own sticky
+  row and fallback progression. A different gate lineup starts on its own
+  first row.
   Resume uses only a session from the same vendor and model. Otherwise the
   next row starts fresh, with the earlier reports in the brief. Both role
   records are kept; the fallback report uses the next attempt suffix.
@@ -680,6 +688,9 @@ probes 05 to 07 ran on 0.164.0), grok 1.0.62. Grok has no successful run, so mos
   exits, and says the worktree may hold partial work: check `git status`
   before continuing. The note also accompanies later rounds on the sticky
   row, including resumed sessions. A first-row brief has no such note.
+  The note is also omitted when this role has no earlier failed attempts,
+  including the gate's first attempt on the reviewer's fallback row when its
+  lineup is empty or a copy of the reviewer's.
   Repeated `slicer start --render --strict` succeeded in the isolated S92
   probe, so the fallback note adds no skip-start instruction.
   Claude has no measured rate-limit class, so its rows can fall back only

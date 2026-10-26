@@ -384,3 +384,175 @@ func TestFallbackUnmatchedLostHistoryKeepsTheCurrentRow(t *testing.T) {
 		t.Fatalf("unmatched lost attempt selected row %d, want current row 1", got)
 	}
 }
+
+// gateFallbackHarness makes the reviewer fail row 1 and succeed on row 2.
+// Rows share vendor/model so effort and session assertions catch row drift.
+func gateFallbackHarness(t *testing.T) *harness {
+	t.Helper()
+	h := newHarness(t)
+	h.cfg.Lineup[RoleReviewer] = []runrec.LineupEntry{
+		{Vendor: "claude", Model: "opus", Effort: "high"},
+		{Vendor: "claude", Model: "opus", Effort: "medium"},
+		{Vendor: "codex", Model: "sol", Effort: "high"},
+	}
+	h.runner.script = func(req Request, _ int) (Result, error) {
+		if req.Role == RoleReviewer && req.Effort == "high" {
+			return Result{Exit: ExitRateLimited}, nil
+		}
+		return Result{}, nil
+	}
+	return h
+}
+
+func TestGateStartsOnTheReviewersCurrentRow(t *testing.T) {
+	h := gateFallbackHarness(t)
+	rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
+	for _, req := range h.runner.requests() {
+		if req.Role != RoleGate {
+			continue
+		}
+		if req.Vendor != "claude" || req.Model != "opus" || req.Effort != "medium" || req.Resume != "sess-reviewer" {
+			t.Fatalf("gate row/session = %s %s %s %q, want reviewer row 2 and session", req.Vendor, req.Model, req.Effort, req.Resume)
+		}
+		if strings.Contains(req.Brief, "## Earlier lineup rows") {
+			t.Fatal("first gate brief must omit the earlier lineup rows heading")
+		}
+		if strings.Contains(req.Brief, "\n## \n") {
+			t.Fatal("first gate brief must omit empty section headings")
+		}
+		stored, err := h.store.Open(rec.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := currentEntry(stored.Snapshot(), RoleGate); got != 1 {
+			t.Fatalf("persisted gate row %d, want 1", got)
+		}
+		return
+	}
+	t.Fatal("gate did not run")
+}
+
+func TestGateFallsBackFromTheReviewersRow(t *testing.T) {
+	h := gateFallbackHarness(t)
+	reviewerScript := h.runner.script
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if req.Role == RoleGate && req.Vendor == "claude" {
+			return Result{Exit: ExitRateLimited}, nil
+		}
+		return reviewerScript(req, n)
+	}
+	rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
+	var gates []Request
+	for _, req := range h.runner.requests() {
+		if req.Role == RoleGate {
+			gates = append(gates, req)
+		}
+	}
+	if len(gates) != 2 {
+		t.Fatalf("got %d gate attempts, want row 2 then row 3", len(gates))
+	}
+	if gates[0].Effort != "medium" || gates[0].Vendor != "claude" || gates[1].Vendor != "codex" || gates[1].Model != "sol" || gates[1].Resume != "" {
+		t.Fatalf("gate did not advance from reviewer row 2 to row 3")
+	}
+	if !strings.Contains(gates[1].Brief, "gate round 1 (claude opus medium) exited rate_limited") {
+		t.Fatal("gate fallback brief lacks its own failed row")
+	}
+	if got := currentEntry(rec, RoleGate); got != 2 {
+		t.Fatalf("sticky gate row %d, want 2", got)
+	}
+}
+
+func TestGateWithItsOwnLineupIsUnchanged(t *testing.T) {
+	h := gateFallbackHarness(t)
+	h.cfg.Lineup[RoleGate] = []runrec.LineupEntry{
+		{Vendor: "claude", Model: "opus", Effort: "high"},
+		{Vendor: "codex", Model: "sol", Effort: "medium"},
+	}
+	reviewerScript := h.runner.script
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if req.Role == RoleGate && req.Vendor == "claude" {
+			return Result{Exit: ExitRateLimited}, nil
+		}
+		return reviewerScript(req, n)
+	}
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	var gates []Request
+	for _, req := range h.runner.requests() {
+		if req.Role == RoleGate {
+			gates = append(gates, req)
+		}
+	}
+	if len(gates) != 2 || gates[0].Vendor != "claude" || gates[0].Effort != "high" || gates[1].Vendor != "codex" || gates[1].Effort != "medium" {
+		t.Fatal("explicit gate lineup must start at its own row 1 and advance")
+	}
+}
+
+func TestFallbackSectionSkipsEmptyHistory(t *testing.T) {
+	got := fallbackSection(runrec.Record{}, RoleGate, []runrec.LineupEntry{{Vendor: "claude", Model: "opus"}})
+	if got != (BriefSection{}) {
+		t.Fatalf("empty failure history produced section: %+v", got)
+	}
+}
+
+func TestGateCopiedLineupStartsOnReviewersCurrentRow(t *testing.T) {
+	h := gateFallbackHarness(t)
+	h.cfg.Lineup[RoleGate] = append([]runrec.LineupEntry(nil), h.cfg.Lineup[RoleReviewer]...)
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	var gates []Request
+	for _, req := range h.runner.requests() {
+		if req.Role == RoleGate {
+			gates = append(gates, req)
+		}
+	}
+	if len(gates) != 1 || gates[0].Vendor != "claude" || gates[0].Model != "opus" || gates[0].Effort != "medium" || gates[0].Resume != "sess-reviewer" {
+		t.Fatal("copied gate lineup must start on reviewer row 2 and resume its session")
+	}
+	if strings.Contains(gates[0].Brief, "## Earlier lineup rows") {
+		t.Fatal("first copied-lineup gate brief must omit the earlier lineup rows heading")
+	}
+}
+
+func TestGateOwnHistoryTakesPrecedenceOverReviewerSeed(t *testing.T) {
+	for _, copied := range []bool{false, true} {
+		name := "empty-lineup"
+		if copied {
+			name = "copied-lineup"
+		}
+		t.Run(name, func(t *testing.T) {
+			for _, exit := range []ExitClass{ExitOK, ExitRateLimited} {
+				t.Run(string(exit), func(t *testing.T) {
+					h := gateFallbackHarness(t)
+					if copied {
+						h.cfg.Lineup[RoleGate] = append([]runrec.LineupEntry(nil), h.cfg.Lineup[RoleReviewer]...)
+					}
+					e, err := New(context.Background(), h.deps, h.cfg)
+					if err != nil {
+						t.Fatal(err)
+					}
+					if err := e.run.Update(func(rec *runrec.Record) {
+						rec.State = runrec.StateGate
+						rec.Roles = []runrec.RoleRecord{
+							{Role: RoleReviewer, Round: 1, Vendor: "claude", Model: "opus", Effort: "high", Exit: string(ExitRateLimited), EndedAt: h.deps.now()},
+							{Role: RoleReviewer, Round: 1, Vendor: "claude", Model: "opus", Effort: "medium", Exit: string(ExitOK), EndedAt: h.deps.now()},
+							{Role: RoleGate, Round: 1, Vendor: "claude", Model: "opus", Effort: "high", Exit: string(exit), EndedAt: h.deps.now()},
+						}
+					}); err != nil {
+						t.Fatal(err)
+					}
+					out, err := e.runRound(context.Background(), round{role: RoleGate, n: 1, state: runrec.StateGate, task: "S04 gate"}, nil)
+					if err != nil || !out.ok {
+						t.Fatalf("gate with own history must continue: ok=%v err=%v state=%s reason=%q", out.ok, err, e.Snapshot().State, e.Snapshot().Reason)
+					}
+					want := "high"
+					if exit == ExitRateLimited {
+						want = "medium"
+					}
+					reqs := h.runner.requests()
+					if len(reqs) != 1 || reqs[0].Effort != want {
+						t.Fatalf("gate history must select effort %s", want)
+					}
+				})
+			}
+		})
+	}
+}

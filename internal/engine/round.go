@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -176,7 +177,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		}
 	}
 	entries := rec.Lineup[r.role]
-	if r.role == RoleGate && len(entries) == 0 {
+	if r.role == RoleGate && (len(entries) == 0 || slices.Equal(entries, rec.Lineup[RoleReviewer])) {
 		entries = rec.Lineup[RoleReviewer]
 	}
 	entryIndex := currentEntry(rec, r.role)
@@ -236,7 +237,9 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Sections:     append(pendingSection(pend), r.sections...),
 	}
 	if entryIndex > 0 {
-		in.Sections = append(in.Sections, fallbackSection(rec, r.role, entries[:entryIndex]))
+		if section := fallbackSection(rec, r.role, entries[:entryIndex]); section.Body != "" {
+			in.Sections = append(in.Sections, section)
+		}
 	}
 	if rec.Decisions != "" {
 		// The worktree's spec lacks the owner's spec check answers (S116).
@@ -434,9 +437,13 @@ func fallbackSection(rec runrec.Record, role string, earlier []runrec.LineupEntr
 			}
 		}
 	}
+	reasons := fallbackReasons(history, role)
+	if reasons == "" {
+		return BriefSection{}
+	}
 	return BriefSection{
 		Title: "Earlier lineup rows",
-		Body:  fallbackReasons(history, role) + ". The worktree may hold partial work. Check `git status` before continuing.",
+		Body:  reasons + ". The worktree may hold partial work. Check `git status` before continuing.",
 	}
 }
 

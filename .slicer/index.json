@@ -828,7 +828,7 @@
       "id": "S93",
       "title": "The gate follows the reviewer's current row after a fallback",
       "short_title": "The gate follows the reviewer's current row after a fallback",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -838,6 +838,17 @@
           "text": "**2026-10-26** — From S92's review (landed 8e049d1): fallbackSection (internal/engine/round.go:424) filters records by the gate role only. Once the gate is seeded from the reviewer's row, either feed it the reviewer's earlier rows or skip the note when the history is empty, and test that the gate's first fallback-row brief has no leading '. '.",
           "created_at": "2026-10-26T19:06:27Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "eea4fb4f-5633-43f1-bddd-3c4b2dbfdb2c",
+          "kind": "",
+          "text": "**2026-10-26** — Review FAIL: the gate seeds from the reviewer's row only when rec.Lineup[gate] is empty (engine.go:171-174), but the daemon always copies the reviewer's chain into the gate lineup (internal/daemon/runs.go:428), so in real runs the gate still starts on row 1. The new tests all leave the gate lineup empty.",
+          "created_at": "2026-10-26T19:19:31Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -861,7 +872,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
