@@ -409,13 +409,21 @@ stop and retry keys follow the run state and the footer hints.
 The Waves composer is available (S82). Select one project. `tab` and
 `shift+tab` reach it between Questions and Roadmap. It loads `wave.suggest`
 when opened or the project changes.
-Rows follow slicer's wave order. Wave headers are full-width box-drawing
-rules with item counts, or hyphens in ASCII mode. Tick, item id, title and
+The first three suggested waves appear in slicer's order. A dim `N more
+waves` line (`1 more wave` for one) offers `[a] show all`; hidden waves cannot be selected until
+expanded. Unplaced items remain available. Wave headers are full-width
+box-drawing rules with item counts, or hyphens in ASCII mode. Tick, item id, title and
 Shares form aligned columns. The dim Shares column contains only the
-predecessor id, for example `<S65`; shared paths stay out of the table.
-Other reasons, including unplaced reasons, stay beside the title.
+predecessor id, for example `<A` means shares files with predecessor A;
+shared paths stay out of the table. `?` explains the `<` marker.
+Unplaced reasons use plain words: `no_files` becomes `no files listed`.
+Reasons that do not fit beside the title appear on the following lines, dim
+and indented to the title column.
 Long titles shorten to keep the tick, id and Shares columns visible.
-The cursor bar spans the row's full width.
+The cursor bar spans the row's full width, including its Lineup continuation
+lines. The hint lines are pinned below the scrolling body, after a blank
+line, so they stay visible when rows are ticked; the status line sits under
+them. A dim cell stays dim across all its columns.
 
 S60 provides the CLI: `ork wave suggest PROJECT` prints the ordered waves
 from `slicer plan-parallel`, including reasons. `ork wave start PROJECT
@@ -437,36 +445,47 @@ message verbatim, including per-item launch errors.
 Suggested (slicer plan-parallel)
          Items                 Shares  Lineup (* edited)
 -- Wave 2 --------------------------------------------------- 2 items
-  [x] A  Alpha                         implementer*: claude custom-model
-                                       high
-                                       reviewer: claude opus medium
-                                       gate: claude opus medium
-  [x] B  Beta                          implementer: claude sonnet high
-                                       reviewer: claude opus medium
-                                       gate: claude opus medium
+  [x] A  Alpha                         impl*: claude custom-model high
+                                              +2 fallbacks
+                                       rev:   claude opus medium
+                                       gate:  claude opus medium
+  [x] B  Beta                          impl:  claude sonnet high
+                                       rev:   claude opus medium
+                                       gate:  claude opus medium
 -- Wave 4 ---------------------------------------------------- 1 item
   [ ] C  Gamma                 <A
 -- Unplaced -------------------------------------------------- 1 item
-  [ ] D  Delta (no_files)
+  [ ] D  Delta (no files listed)
   ! A and B both touch shared.go
   ! A and B both touch second.go
+
   [enter] item   [space] tick item   [e] edit lineup   [l] launch wave
+--------------------------------------------------------------------
+  2 ticked, not launched; [l] launches
 ```
 
 `enter` on a plain row opens a read-only item pane with its full title
 and item detail from `item.show`. A shares reason appears as `Shares files
 with ID`, followed by the single shared path on an indented line. Spaces
-are part of that path; long paths wrap. Other reasons appear verbatim.
+are part of that path; long paths wrap. Other reasons use the same plain words as the table and
+remain visible in full.
 `up`/`down` and `j`/`k` scroll one line. `pgup`/`pgdown` scroll one
 visible page. `esc` returns to the same row. The pane offers no launch or
 editing actions.
 
 `space` ticks or unticks the selected item. Ticking shows both y/n inputs
-at once, with no defaults: well-specified and split. `tab` or `shift+tab`
-switches the active field; `enter` validates both and plans the item.
+directly under that item, with no defaults: well-specified and split. A dim
+`launch inputs` line and both fields are indented to the title column. The
+item and both fields stay in view. Only the active field shows a cursor, and
+the hints change to `[tab] next field   [enter] plan   [esc] cancel`.
+`tab` or `shift+tab` switches the active field; `enter` validates both and plans the item.
 `esc` cancels that tick. The Lineup column appears only while at least
-one item is ticked and fills from the plan, including its fallback chains
-(`ui.wave-composer`). Role chains wrap within the column.
+one item is ticked and fills from the plan (`ui.wave-composer`). It uses
+short role labels: impl, rev, gate and arch, padded so the values share one
+column. Each role shows its primary entry and a dim `+N fallbacks` line
+under the values; `e` keeps the full chain available.
+The column fits its longest line, capped at half the pane width. Long
+primary entries wrap within the column.
 `down`/`j`/`n` and `up`/`k`/`p` move between items. Unplaced items can also
 be ticked.
 
@@ -474,6 +493,14 @@ Two or more ticked items trigger an overlap read. Each shared path gets a
 warning; warnings permit launch (`wave.selection`). `l` launches the ticked
 items with one y/n confirmation showing `ork wave start PROJECT ID...`.
 Enter, n and esc cancel; y submits each item's answers and confirmed plan.
+Until launch the composer says `N ticked, not launched; [l] launches`
+(not shown in the lineup editor). After admission it says `launched S78 as
+RUN; enter opens it` for one item, or `launched N items; enter on a running
+row opens its run`. A launched row stays dim, shows `[>]` instead of the tick
+box and `running RUN` after the title (on its own dim line when it does not
+fit), and cannot be ticked again. Its hint reads `[enter] open run`, and
+`enter` selects the run in Overview, including when the run first appears
+in the next refresh.
 Every ticked item must have a successful plan before launch. One failed
 plan prevents launching the chosen set; the owner can untick it. The
 wave.plan-failure decision remains open (adj 146).

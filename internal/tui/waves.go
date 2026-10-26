@@ -43,6 +43,8 @@ type wavesState struct {
 	overlap        *slicercli.Overlap
 	overlapErr     error
 	overlapRequest uint64
+	showAll        bool
+	launched       map[string]string
 	starting       bool
 }
 
@@ -98,10 +100,20 @@ func (w *wavesState) rows() []slicercli.ParallelItem {
 		return nil
 	}
 	var rows []slicercli.ParallelItem
-	for _, wave := range w.suggest.Waves {
+	for _, wave := range w.suggest.Waves[:w.visibleWaveCount()] {
 		rows = append(rows, wave.Items...)
 	}
 	return append(rows, w.suggest.Unplaced...)
+}
+
+func (w *wavesState) visibleWaveCount() int {
+	if w.suggest == nil {
+		return 0
+	}
+	if w.showAll {
+		return len(w.suggest.Waves)
+	}
+	return min(3, len(w.suggest.Waves))
 }
 
 func (w *wavesState) items() []daemon.RunParams {
@@ -150,6 +162,9 @@ func (m *Model) tickWave() tea.Cmd {
 	}
 	w.cursor = clampCursor(w.cursor, len(rows))
 	id := rows[w.cursor].ID
+	if w.launched[id] != "" {
+		return nil
+	}
 	if _, ok := w.picked[id]; ok {
 		delete(w.picked, id)
 		if w.planning == id {
@@ -285,16 +300,33 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 			return nil
 		}
 		delete(m.waveFlights, msg.action.project)
-		var itemErrors []string
+		var itemErrors, launchedItems, launchedRuns []string
 		if msg.result != nil {
 			for _, item := range msg.result.Items {
+				if item.Error == nil && item.Run != nil && item.Run.ID != "" {
+					launchedItems, launchedRuns = append(launchedItems, item.Item), append(launchedRuns, item.Run.ID)
+					if w != nil && w.request == msg.request {
+						if w.launched == nil {
+							w.launched = map[string]string{}
+						}
+						w.launched[item.Item] = item.Run.ID
+						delete(w.picked, item.Item)
+					}
+				}
 				if item.Error != nil {
 					itemErrors = append(itemErrors, item.Item+": "+actionError(item.Error))
 				}
 			}
 		}
 		status := msg.action.command() + ": done"
-		if len(itemErrors) > 0 {
+		switch len(launchedItems) {
+		case 0:
+		case 1:
+			status = "launched " + launchedItems[0] + " as " + launchedRuns[0] + "; enter opens it"
+		default:
+			status = fmt.Sprintf("launched %d items; enter on a running row opens its run", len(launchedItems))
+		}
+		if len(itemErrors) > 0 && len(launchedItems) == 0 {
 			status = msg.action.command() + ": errors"
 		}
 		if msg.err != nil {
@@ -366,12 +398,21 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 	return nil
 }
 
+// wavesBody is the Waves body with its hint lines appended.
 func (m *Model) wavesBody(width int) overviewView {
+	out, footer := m.wavesParts(width)
+	out.body = append(out.body, footer...)
+	return out
+}
+
+// wavesParts returns the scrolling body and the footer (a blank line and the
+// hint lines) that the screen pins below it.
+func (m *Model) wavesParts(width int) (overviewView, []string) {
 	out := overviewView{sel: -1}
 	th := m.cfg.Theme
 	w := m.waves
 	if w != nil && w.pane != nil {
-		return m.waveItemBody(width)
+		return m.waveItemBody(width), nil
 	}
 	add := func(text string) {
 		for _, line := range wrapText(text, max(width-2, 1)) {
@@ -381,19 +422,19 @@ func (m *Model) wavesBody(width int) overviewView {
 	out.body = append(out.body, th.Heading.Render("Suggested (slicer plan-parallel)"))
 	if m.active < 0 {
 		add("Select a project for Waves")
-		return out
+		return out, nil
 	}
 	if m.cfg.Live == nil {
 		add("No daemon connection; action unavailable")
-		return out
+		return out, nil
 	}
 	if w == nil || w.pending {
 		add("pending: wave.suggest")
-		return out
+		return out, nil
 	}
 	if w.err != nil {
 		add(actionError(w.err))
-		return out
+		return out, nil
 	}
 	// Reserve the key columns before giving the remaining width to titles.
 	rows := w.rows()
@@ -406,34 +447,59 @@ func (m *Model) wavesBody(width int) overviewView {
 	showLineup := len(w.picked) > 0
 	lineupWidth := 0
 	if showLineup {
-		lineupWidth = max((width-2)/2, 1)
+		lineupWidth = len("Lineup (* edited)")
+		for _, p := range w.picked {
+			for _, line := range waveLineup(p) {
+				lineupWidth = max(lineupWidth, lipgloss.Width(line))
+			}
+		}
+		if w.planning != "" {
+			lineupWidth = max(lineupWidth, len("pending: run.plan"))
+		}
+		lineupWidth = min(lineupWidth, max((width-2)/2, 1))
 	}
 	titleWidth := max(width-2-4-idWidth-2-2-sharesWidth, 1)
 	if showLineup {
 		titleWidth = max(titleWidth-lineupWidth-2, 1)
 	}
-	pad := func(text string, n int) string {
-		return text + strings.Repeat(" ", max(n-lipgloss.Width(text), 0))
-	}
-	columns := func(left, title, shares, lineup string, dim, selected bool) string {
-		before := indent + pad(left, 4+idWidth+2) + pad(clip(title, titleWidth), titleWidth) + "  "
-		shareCell := pad(shares, sharesWidth)
-		after := ""
-		if showLineup {
-			after = "  " + pad(clip(lineup, lineupWidth), lineupWidth)
-		}
-		if selected {
-			before = th.TabActive.Render(before)
-			if after != "" {
-				after = th.TabActive.Render(after)
+	titleCol := len(indent) + 4 + idWidth + 2
+	// cell pads text to n columns. A dim cell is dimmed on its text alone, so
+	// the style survives the resets that end every other cell.
+	cell := func(text string, n int, dim, selected bool) string {
+		gap := strings.Repeat(" ", max(n-lipgloss.Width(text), 0))
+		switch {
+		case text == "":
+			if selected {
+				return th.TabActive.Render(gap)
 			}
-			shareCell = th.TabActive.Render(shareCell)
-		} else if dim && shares != "" {
-			shareCell = th.Dim.Render(shares) + strings.Repeat(" ", max(sharesWidth-lipgloss.Width(shares), 0))
+			return gap
+		case selected && dim:
+			return th.TabActive.Render(th.Dim.Render(text)) + th.TabActive.Render(gap)
+		case selected:
+			return th.TabActive.Render(text + gap)
+		case dim:
+			return th.Dim.Render(text) + gap
 		}
-		return before + shareCell + after
+		return text + gap
 	}
-	header := columns("", "Items", "Shares", "Lineup (* edited)", false, false)
+	columns := func(left, title, shares, lineup string, dimShares, dimAll, selected bool) string {
+		line := cell(indent+left, titleCol, dimAll, selected) + cell(clip(title, titleWidth), titleWidth, dimAll, selected) + cell("", 2, false, selected)
+		line += cell(shares, sharesWidth, dimAll || (dimShares && !selected), selected)
+		if showLineup {
+			line += cell("", 2, false, selected) + cell(clip(lineup, lineupWidth), lineupWidth, dimAll, selected)
+		}
+		return line
+	}
+	// addAt puts a secondary line under the title column.
+	addAt := func(text string, dim bool) {
+		for _, line := range wrapText(text, max(width-titleCol, 1)) {
+			if dim {
+				line = th.Dim.Render(line)
+			}
+			out.body = append(out.body, strings.Repeat(" ", titleCol)+line)
+		}
+	}
+	header := columns("", "Items", "Shares", "Lineup (* edited)", false, false, false)
 	out.body = append(out.body, th.Heading.Render(header))
 	rule := func(label string, count int) {
 		_, h := th.rules(m.cfg.ASCII)
@@ -446,66 +512,88 @@ func (m *Model) wavesBody(width int) overviewView {
 		out.body = append(out.body, th.Group.Render(prefix+strings.Repeat(h, max(width-lipgloss.Width(prefix)-len(suffix), 1))+suffix))
 	}
 	row := 0
+	cursorLaunched := false
 	draw := func(it slicercli.ParallelItem) {
 		tick := "[ ]"
 		p, ok := w.picked[it.ID]
 		if ok {
 			tick = "[x]"
 		}
+		run := w.launched[it.ID]
+		if run != "" {
+			tick = "[>]"
+		}
 		shares, _ := waveShares(it.Reason)
 		title := it.Title
-		if it.Reason != "" && shares == "" {
-			title += " (" + it.Reason + ")"
+		reasonBelow := it.Reason != "" && shares == "" && lipgloss.Width(title+" ("+waveReason(it.Reason)+")") > titleWidth
+		if it.Reason != "" && shares == "" && !reasonBelow {
+			title += " (" + waveReason(it.Reason) + ")"
 		}
-		var lineup []string
-		if p.Expected != nil {
-			for _, role := range []string{"implementer", "reviewer", "gate"} {
-				var chain []string
-				for _, e := range p.Expected.Lineup[role] {
-					chain = append(chain, e.Vendor+" "+e.Model+" "+e.Effort)
-				}
-				if len(chain) > 0 {
-					label := role
-					if len(p.Lineup[role]) > 0 {
-						label += "*"
-					}
-					lineup = append(lineup, label+": "+strings.Join(chain, " -> "))
-				}
-			}
-		} else if w.planning == it.ID {
+		lineup := waveLineup(p)
+		if w.planning == it.ID {
 			lineup = []string{"pending: run.plan"}
-		}
-		if p.Budgets != nil {
-			lineup = append(lineup, fmt.Sprintf("budgets*: %d min, %d tokens", p.Budgets.Minutes, p.Budgets.Tokens))
 		}
 		first := ""
 		if len(lineup) > 0 {
 			first = wrapText(lineup[0], max(lineupWidth, 1))[0]
 		}
+		runBelow := false
+		if run != "" {
+			runBelow = lipgloss.Width(title+"  running "+run) > titleWidth
+			if !runBelow {
+				title += "  running " + run
+			}
+		}
 		selected := row == clampCursor(w.cursor, len(rows))
-		line := columns(tick+" "+it.ID, title, shares, first, true, selected)
 		if selected {
 			out.sel = len(out.body)
+			cursorLaunched = run != ""
 		}
-		out.body = append(out.body, line)
-		// Wrap each role chain within its column, preserving all fallbacks.
+		out.body = append(out.body, columns(tick+" "+it.ID, title, shares, first, true, run != "", selected))
+		if reasonBelow {
+			addAt(waveReason(it.Reason), true)
+		}
+		if runBelow {
+			addAt("running "+run, true)
+		}
+		// Wrap the compact role summaries within their column.
 		for i, text := range lineup {
 			parts := wrapText(text, max(lineupWidth, 1))
 			if i == 0 {
 				parts = parts[1:]
 			}
 			for _, part := range parts {
-				out.body = append(out.body, indent+strings.Repeat(" ", 4+idWidth+2+titleWidth+2+sharesWidth+2)+pad(part, lineupWidth))
+				fallback := strings.HasPrefix(strings.TrimSpace(part), "+")
+				out.body = append(out.body, columns("", "", "", part, false, fallback, selected))
 			}
+		}
+		if w.inputs != nil && w.inputs.item == it.ID {
+			addAt("launch inputs", true)
+			for i, label := range []string{"Well specified? [y/n]:", "Split? [y/n]:"} {
+				room := max(width-titleCol-len(label)-1, 1)
+				value := clip(w.inputs.fields[i].Value(), room)
+				if w.inputs.focus == i {
+					value = w.inputs.fields[i].view(room, th)
+				}
+				out.body = append(out.body, strings.Repeat(" ", titleCol)+label+" "+value)
+			}
+			out.sel = len(out.body) - 1
 		}
 		row++
 	}
 	if w.suggest != nil {
-		for _, wave := range w.suggest.Waves {
+		for _, wave := range w.suggest.Waves[:w.visibleWaveCount()] {
 			rule(fmt.Sprintf("Wave %d", wave.Wave), len(wave.Items))
 			for _, it := range wave.Items {
 				draw(it)
 			}
+		}
+		if n := len(w.suggest.Waves) - w.visibleWaveCount(); n > 0 {
+			noun := "waves"
+			if n == 1 {
+				noun = "wave"
+			}
+			add(th.Dim.Render(fmt.Sprintf("%d more %s; [a] show all", n, noun)))
 		}
 		if len(w.suggest.Unplaced) > 0 {
 			rule("Unplaced", len(w.suggest.Unplaced))
@@ -530,21 +618,24 @@ func (m *Model) wavesBody(width int) overviewView {
 			}
 		}
 	}
-	if w.inputs != nil {
-		add(w.inputs.item + " launch inputs (tab switches fields; enter plans; esc cancels)")
-		for i, label := range []string{"Well specified? [y/n]:", "Split? [y/n]:"} {
-			prefix := "  "
-			if w.inputs.focus == i {
-				prefix = "> "
-			}
-			out.body = append(out.body, prefix+label+" "+w.inputs.fields[i].view(max(width-len(label)-3, 1), th))
-		}
-		out.sel = len(out.body) - 1
+	enter := "[enter] item"
+	if cursorLaunched {
+		enter = "[enter] open run"
 	}
+	hintList := []string{enter, "[space] tick item", "[e] edit lineup", "[l] launch wave"}
+	if w.inputs != nil {
+		hintList = []string{"[tab] next field", "[enter] plan", "[esc] cancel"}
+	}
+	footer := []string{""}
 	hints := ""
-	for _, hint := range []string{"[enter] item", "[space] tick item", "[e] edit lineup", "[l] launch wave"} {
+	flush := func() {
+		for _, line := range wrapText(hints, max(width-len(indent), 1)) {
+			footer = append(footer, indent+line)
+		}
+	}
+	for _, hint := range hintList {
 		if hints != "" && lipgloss.Width(hints)+3+len(hint) > width-len(indent) {
-			add(hints)
+			flush()
 			hints = ""
 		}
 		if hints != "" {
@@ -552,8 +643,58 @@ func (m *Model) wavesBody(width int) overviewView {
 		}
 		hints += hint
 	}
-	add(hints)
-	return out
+	flush()
+	return out, footer
+}
+
+func waveReason(reason string) string {
+	if reason == "no_files" {
+		return "no files listed"
+	}
+	return reason
+}
+
+func waveLineup(p daemon.RunParams) []string {
+	var lines []string
+	if p.Expected == nil {
+		return nil
+	}
+	for _, role := range []struct{ key, label string }{{"implementer", "impl"}, {"reviewer", "rev"}, {"gate", "gate"}, {"architect", "arch"}} {
+		chain := p.Expected.Lineup[role.key]
+		if len(chain) == 0 {
+			continue
+		}
+		label := role.label
+		if len(p.Lineup[role.key]) > 0 {
+			label += "*"
+		}
+		e := chain[0]
+		lines = append(lines, fmt.Sprintf("%-6s %s %s %s", label+":", e.Vendor, e.Model, e.Effort))
+		if len(chain) > 1 {
+			// Fallbacks sit under the values, past the label column.
+			lines = append(lines, fmt.Sprintf("%6s +%d fallbacks", "", len(chain)-1))
+		}
+	}
+	if p.Budgets != nil {
+		lines = append(lines, fmt.Sprintf("budgets*: %d min, %d tokens", p.Budgets.Minutes, p.Budgets.Tokens))
+	}
+	return lines
+}
+
+// selectJumpRun also runs after refresh, when admission preceded the snapshot.
+func (m *Model) selectJumpRun() {
+	if m.jumpRun == "" || m.view != 0 {
+		return
+	}
+	needs, running := m.rows()
+	all := append(append(append(needs, running...), m.recentRows()...), m.readyRows()...)
+	for i, r := range all {
+		if r.engineID == m.jumpRun {
+			m.cursor = i
+			m.jumpRun = ""
+			return
+		}
+	}
 }
 
 func (w *wavesState) engineConflict() string {
@@ -594,6 +735,12 @@ func (m *Model) openWaveItem() tea.Cmd {
 		return nil
 	}
 	it := rows[clampCursor(w.cursor, len(rows))]
+	if run := w.launched[it.ID]; run != "" {
+		m.view = 0
+		m.jumpRun = run
+		m.selectJumpRun()
+		return m.fetch(w.project, true)
+	}
 	w.paneRequest++
 	w.paneItem, w.paneOffset = it, 0
 	w.pane = &itemPane{project: w.project, id: it.ID, pending: true}
@@ -665,7 +812,7 @@ func (m *Model) waveItemBody(width int) overviewView {
 			body = append(body, indent+indent+line)
 		}
 	} else if w.paneItem.Reason != "" {
-		add(w.paneItem.Reason)
+		add(waveReason(w.paneItem.Reason))
 	}
 	switch {
 	case w.pane.pending:

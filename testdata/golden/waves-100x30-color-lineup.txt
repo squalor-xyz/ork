@@ -1,30 +1,30 @@
 [1mork[m  ?help                 │ Overview[90m │ [mQuestions[90m │ [m[1;36mWaves[m[90m │ [mRoadmap[90m │ [mDecisions
   Needs you              0 │[90m────────────────────────────────────────────────────────────────────────[m
 [1;7;97;44m> ork                      [m│[1;36mSuggested (slicer plan-parallel)[m
-  other                    │[1;36m         Items               Shares  Lineup (* edited)                  [m
+  other                    │[1;36m         Items                         Shares  Lineup (* edited)        [m
                            │[1m── Wave 2 ────────────────────────────────────────────────────── 2 items[m
-                           │  [x] A  Alpha                       implementer: claude sonnet high    
-                           │                                     reviewer: claude opus medium       
-                           │                                     gate: claude opus medium           
-                           │[1;7;97;44m  [x] B  Beta                [m[1;7;97;44m      [m[1;7;97;44m  implementer: claude sonnet high    [m
-                           │                                     reviewer: claude opus medium       
-                           │                                     gate: claude opus medium           
+                           │  [x] A  Alpha                                 impl:  claude sonnet high
+                           │                                               rev:   claude opus medium
+                           │                                               gate:  claude opus medium
+                           │[1;7;97;44m  [x] B  [m[1;7;97;44mBeta                        [m[1;7;97;44m  [m[1;7;97;44m      [m[1;7;97;44m  [m[1;7;97;44mimpl:  claude sonnet high[m
+                           │[1;7;97;44m         [m[1;7;97;44m                            [m[1;7;97;44m  [m[1;7;97;44m      [m[1;7;97;44m  [m[1;7;97;44mrev:   claude opus medium[m
+                           │[1;7;97;44m         [m[1;7;97;44m                            [m[1;7;97;44m  [m[1;7;97;44m      [m[1;7;97;44m  [m[1;7;97;44mgate:  claude opus medium[m
                            │[1m── Wave 4 ─────────────────────────────────────────────────────── 1 item[m
-                           │  [ ] C  Gamma               [90m<S65[m                                       
+                           │  [ ] C  Gamma                         [90m<A[m                               
                            │[1m── Unplaced ───────────────────────────────────────────────────── 1 item[m
-                           │  [ ] D  Delta (no_files)                                               
+                           │  [ ] D  Delta (no files listed)                                        
                            │  ! A and B both touch shared.go
                            │  ! A and B both touch second.go
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
                            │  [enter] item   [space] tick item   [e] edit lineup   [l] launch wave
-                           │
-                           │
-                           │
-                           │
-                           │
-                           │
-                           │
-                           │
-                           │
-                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │  2 ticked, not launched; [l] launches
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │ 2 projects | refreshed 16:42:00

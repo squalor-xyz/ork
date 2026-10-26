@@ -275,7 +275,7 @@
       "id": "S125",
       "title": "Waves composer focus: next waves only, inputs inline under the ticked item",
       "short_title": "Waves composer focus: next waves only, inputs inline under the ticked item",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -296,7 +296,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

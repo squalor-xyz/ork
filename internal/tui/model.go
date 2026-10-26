@@ -136,6 +136,7 @@ type Model struct {
 	frameArmed    bool
 	pane          *runPane
 	confirm       *runAction
+	jumpRun       string
 	waves         *wavesState
 	wavesRequest  uint64
 	waveFlights   map[string]runAction
@@ -415,6 +416,9 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 }
 
 func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
+	if key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.Next, m.keys.Prev, m.keys.NextView, m.keys.PrevView, m.keys.Jump, m.keys.Filter, m.keys.Select, m.keys.Close) {
+		m.jumpRun = ""
+	}
 	if m.registeredProjectCount() == 0 && m.pane == nil {
 		editing := m.welcome.editing || m.welcome.pending || m.welcome.confirm != ""
 		navigation := key.Matches(msg, m.keys.Next, m.keys.Prev, m.keys.Jump, m.keys.Sidebar)
@@ -479,6 +483,22 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 	switch {
+	case m.view == wavesView && !m.showHelp && msg.String() == "a":
+		if w := m.waves; w != nil {
+			rows := w.rows()
+			id := ""
+			if i := clampCursor(w.cursor, len(rows)); i >= 0 {
+				id = rows[i].ID
+			}
+			w.showAll = true
+			for i, row := range w.rows() {
+				if row.ID == id {
+					w.cursor = i
+					break
+				}
+			}
+		}
+		return nil
 	case m.view == questionsView && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.PaneScroll):
 		delta := 1
 		if key.Matches(msg, m.keys.RowPrev) || msg.String() == "pgup" {
@@ -696,6 +716,7 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 	}
 	ps.loaded = true
 	ps.snap = msg.snap
+	m.selectJumpRun()
 	var cmds []tea.Cmd
 	if ps.dirty {
 		ps.dirty = false
