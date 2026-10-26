@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": "Wait for adj 163 and S111. A report without kinds is treated as all fix (back-compatible)."
+      "body": "Wait for adj 163 and S111. A report without kinds is treated as all fix (back-compatible).\n\nadj 163 is decided (fix-owner-later); S111 has landed. Owner decision (2026-10-26 session, AskUserQuestion): on confirm of a later finding, ork itself runs slicer add TITLE --discovered-from ID in the project, with a Why section from the finding; slicer stays the owner of the record. Say so in docs/boundaries.md."
     },
     {
       "heading": "Check",
