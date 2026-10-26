@@ -823,6 +823,8 @@ func (m *Model) moveView(delta int) tea.Cmd {
 // runAction retains the exact target while a confirmation is on screen.
 type runAction struct {
 	verb, run, project, text string
+	item                     string // file: the slice the finding came from
+	finding                  int    // file: the one-based finding
 	adj                      bool
 	by                       string
 	cleanupCommand           string
@@ -844,6 +846,9 @@ func (a runAction) command() string {
 	}
 	if a.verb == "launch" {
 		return "ork run " + a.project + " " + a.run
+	}
+	if a.verb == "file" {
+		return "slicer add " + shellQuote(a.text) + " --discovered-from " + a.item
 	}
 	cmd := "ork " + a.verb + " " + a.run
 	if a.verb == "answer" {
@@ -1013,6 +1018,12 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 			err = live.Stop(context.Background(), a.run)
 		case "retry":
 			err = live.Retry(context.Background(), a.run)
+		case "file":
+			if filer, ok := live.(laterFiler); ok {
+				message, err = filer.FileLater(context.Background(), a.run, a.finding)
+			} else {
+				err = errors.New("this daemon connection cannot file slices")
+			}
 		case "answer":
 			message, err = live.AnswerAction(context.Background(), daemon.RunAction{Run: a.run, Text: a.text, Adj: a.adj, By: a.by})
 		}

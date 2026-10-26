@@ -24,7 +24,8 @@ verdict: the gate decides.
   names.
 - Never open, search, parse or edit tracking files. Read tracking state only through
   slicer commands (`show`, `goals`, `list`, `deps`, `find`, with `--json --lean`). If
-  a finding belongs on a later item, name the item and the note text in your report.
+  a finding belongs on a later item, tag it `[later]` and give the note text (see
+  Finding kinds).
 - Run long commands, such as the full test suite, in the foreground with a long
   timeout. Do not background anything, and do not report while a command you
   started still runs.
@@ -77,6 +78,44 @@ Report these sections, and write "nothing" for an empty one:
   note text.
 - (D) Doc accuracy: whether `docs/dashboard.md` matches the screens, including its
   sizes and key lists.
+
+## Finding kinds
+
+Start every finding with a tag in square brackets, as a list item. ork sorts the
+report by the tag.
+
+- `[fix]`: a defect or gap the implementer must fix in this slice. Only these go to
+  the fix round.
+- `[owner]`: a design call that is the owner's, not the implementer's. Under the tag
+  line, indented, give `Options:` with 2 to 4 numbered options (a unique label, a
+  colon, a one-line summary) and `Recommend: N - one-line reasoning`. Add a
+  `Decision key: area.topic` line when it should be filed in adj. ork shows the
+  question to the owner and does not start a fix round for it. It does not hold the
+  gate back. Write `[owner blocker]` only when the gate cannot pass until the owner
+  answers; ork then pauses the slice and asks the owner.
+- `[later]`: work for a follow-up slice that this slice must not do. Give a one-line
+  title after the tag, and indent the reason under it. ork offers it to the owner, who
+  can file it as a slice.
+
+A finding without a tag counts as `[fix]`. Indent every line that belongs to a
+finding under its tag line, and put a blank line or the next tag between findings.
+Tag the findings in every section, section (C) too: there, tag a change-now item
+`[fix]` and a note for later `[later]`. Text without a tag in section (C) is read
+as commentary, not as a finding.
+
+```text
+- [fix] engine.go:42 drops the error. CONFIRMED. Fix: return it.
+- [owner] Should the cache be shared across projects?
+  Options:
+  1. shared: one cache for all projects
+  2. per-project: one cache for each project
+  Recommend: 2 - isolation is simpler
+- [later] Add a --json flag to ork status
+  Status prints text only, and scripts parse it.
+```
+
+When the brief carries an owner answer to a blocker you raised, apply it: the
+finding becomes a `[fix]` or is dropped. Do not raise it again.
 
 ## Owner questions
 

@@ -111,6 +111,7 @@ apply to this run only and do not change the matrix or registry
   "budgets": {"minutes": 120, "tokens": 2000000},
   "approvals": [{"what": "slice", "at": "..."}],
   "questions": [{"role": "implementer", "round": 1, "key": "area.topic", "text": "...", "at": "...", "answer": "...", "answered_at": "..."}],
+  "findings": [{"kind": "later", "role": "reviewer", "round": 1, "title": "Add a --json flag", "text": "...", "at": "...", "filed": "S130", "filed_at": "..."}],
   "writes": [
     {"at": "2026-10-19T16:12:05Z", "tool": "slicer", "root": "/.../adjudicate/.worktrees/S18",
      "argv": ["relay-run", "begin", "S18", "--worktree", "/.../S18", "--json"],
@@ -151,6 +152,14 @@ names the file (kind
 The `architect` state runs only when the lineup includes that role (adj #151),
 after accepted reviewer findings and before the gate (adj #123). Its whole
 report becomes `architect` feedback for a fix round (adj #150).
+`findings` (omitted when empty; *proposed*, S120, adj #163) holds the review
+findings that are not fixes: `kind` `owner` (an owner question that does not
+block, with the structured `ask` and an optional `key`) or `later` (an offer to
+file a slice). `title` is the finding's one-line title and `text` its body.
+`filed` and `filed_at` are set once the owner confirmed and ork ran
+`slicer add` and `slicer promote` for it; `filed` is the new slice id. A finding
+raised again under the same title is kept once. An older ork refuses a
+`run.json` with `findings` because `Store.Open` uses strict keys.
 A role with no `ended_at` is running; a restart marks it `lost`. `commit` is
 `{"sha","title","at"}` once ork has committed. The fields `orchestrator_step`,
 `fails`, `reason`, `pending`, `feedback`, `created_at`, `updated_at`, the

@@ -409,11 +409,11 @@ func (m *Model) helpLines(w, bodyH int) []string {
 				continue
 			}
 			if m.view == questionsView && m.pane == nil &&
-				(h == m.keys.Stop.Help() || h == m.keys.Retry.Help() || h == m.keys.Cleanup.Help()) {
+				(h == m.keys.Stop.Help() || h == m.keys.Retry.Help() || h == m.keys.FileSlice.Help() || h == m.keys.Cleanup.Help()) {
 				continue
 			}
 			// Keep the added question keys and quit visible at standard height.
-			if h == m.keys.Approve.Help() || h == m.keys.Stop.Help() || h == m.keys.Retry.Help() {
+			if h == m.keys.Approve.Help() || h == m.keys.Stop.Help() || h == m.keys.Retry.Help() || h == m.keys.FileSlice.Help() {
 				actionHints = append(actionHints, h.Key+" "+h.Desc)
 				continue
 			}

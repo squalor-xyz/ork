@@ -111,6 +111,7 @@ type Engine struct {
 	activity       activityRing
 	heartbeatEvery time.Duration
 	mu             sync.Mutex
+	fileMu         sync.Mutex // one filing of a later finding at a time
 	d              Deps
 	proj           registry.Project
 	run            *runrec.Run

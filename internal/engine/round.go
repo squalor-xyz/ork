@@ -38,7 +38,8 @@ type outcome struct {
 	ok       bool
 	text     string
 	report   *Report
-	findings string // the reviewer's findings
+	findings string // the reviewer's fix findings
+	triage   *Triaged
 	file     string // the report file name in the run directory
 }
 
@@ -356,13 +357,21 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		return outcome{}, err
 	}
 	var findings string
-	if r.role == RoleReviewer || r.role == RoleUI {
+	var tri *Triaged
+	if r.role == RoleReviewer || r.role == RoleUI || r.role == RoleGate {
 		var ferr error
-		if findings, ferr = Findings(text); ferr != nil {
+		if r.role == RoleGate {
+			tri, ferr = TriageGate(text)
+		} else {
+			tri, ferr = Triage(text)
+		}
+		if ferr != nil {
 			var fse *ShapeError
 			if errors.As(ferr, &fse) {
 				problems = append(problems, fse.Problems...)
 			}
+		} else if r.role != RoleGate {
+			findings = tri.Fix
 		}
 	}
 	if len(problems) > 0 {
@@ -384,7 +393,16 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			Question: rep.Question, Ask: rep.Ask, Key: rep.Key,
 		})
 	}
-	return outcome{ok: true, text: text, report: rep, findings: findings, file: file}, nil
+	if tri != nil {
+		if err := e.recordFindings(r, tri); err != nil {
+			return outcome{}, err
+		}
+		// An owner finding blocks the gate only when its report marks it.
+		if b := tri.Blocker(); b != nil {
+			return outcome{}, e.askBlocker(r, *b)
+		}
+	}
+	return outcome{ok: true, text: text, report: rep, findings: findings, triage: tri, file: file}, nil
 }
 
 // fallbackReasons preserves the exit and row identity of each failed attempt.

@@ -226,3 +226,11 @@ func (c *Client) AnswerAction(ctx context.Context, action RunAction) (string, er
 	err := c.Call(ctx, MethodRunAnswer, action, &reply)
 	return reply.Message, err
 }
+
+// FileFinding files the run's later finding n (one-based) as a slice after the
+// owner confirmed it, and returns the notice that names the new slice.
+func (c *Client) FileFinding(ctx context.Context, run string, n int) (string, error) {
+	var reply RunReply
+	err := c.Call(ctx, MethodRunFile, RunAction{Run: run, Finding: n}, &reply)
+	return reply.Message, err
+}

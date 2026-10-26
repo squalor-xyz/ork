@@ -122,6 +122,10 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 		m.actionStatus = ""
 		return nil
 	}
+	if key.Matches(msg, m.keys.FileSlice) {
+		m.requestFile() // a finished run keeps its later findings
+		return nil
+	}
 	r, _, ok := m.paneRow()
 	if !ok || m.pane.ledger || r.state == "stopped" || r.state == "committed" {
 		return nil
@@ -174,6 +178,7 @@ func (m *Model) paneLines(w, h int, status string) []string {
 			priorities = append(priorities, priority)
 		}
 	}
+	addFooter(m.findingLines(width), 2)
 	switch {
 	case r.unavailable:
 		addFooter(wrapText(source.RemovedProjectHelp(r.name), width), 2)
@@ -250,18 +255,18 @@ func (m *Model) paneLines(w, h int, status string) []string {
 		}
 		addFooter(wrapText(hint, width), 3)
 	case r.state == "paused" && r.pending == "budget":
-		addFooter(wrapText("t retry: one more role round; esc close pane", width), 3)
+		addFooter(wrapText("t retry: one more role round; "+m.fileHint()+"esc close pane", width), 3)
 	case r.state == "paused":
-		addFooter([]string{"t retry; esc close pane"}, 3)
+		addFooter(wrapText("t retry; "+m.fileHint()+"esc close pane", width), 3)
 	case r.state == "stopped":
 		addFooter(wrapText("Stopped; relaunch, or clear with: ork dismiss "+r.engineID, width), 2)
-		addFooter([]string{"esc close pane"}, 3)
+		addFooter(wrapText(m.fileHint()+"esc close pane", width), 3)
 	case r.state == "awaiting-approval":
-		addFooter([]string{"a approve; x stop; esc close pane"}, 3)
+		addFooter(wrapText("a approve; x stop; "+m.fileHint()+"esc close pane", width), 3)
 	case r.state == "committed":
-		addFooter([]string{"esc close pane"}, 3)
+		addFooter(wrapText(m.fileHint()+"esc close pane", width), 3)
 	default:
-		addFooter([]string{"x stop; esc close pane"}, 3)
+		addFooter(wrapText("x stop; "+m.fileHint()+"esc close pane", width), 3)
 	}
 	if status != "" {
 		priority := 1

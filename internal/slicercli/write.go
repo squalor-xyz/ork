@@ -202,3 +202,36 @@ func UIPassRowID(rules []Rule) string {
 	}
 	return ""
 }
+
+// Added is the item `slicer add` filed. Existing is true when the key matched
+// an item filed before, which the call then returns unchanged.
+type Added struct {
+	ID       string `json:"id"`
+	Existing bool   `json:"existing"`
+	HasSlice bool   `json:"has_slice"`
+}
+
+// Add runs `slicer add TITLE --discovered-from ID --key KEY --render --json
+// --lean --root ROOT`. The key is the filing identity: a retry returns the
+// item the first call filed. A leading dash is cut from the title so that
+// slicer does not read it as a flag.
+func (c Client) Add(ctx context.Context, w runrec.Writer, root, title, discoveredFrom, key string) (*Added, error) {
+	title = strings.TrimLeft(title, "- ")
+	res, err := c.write(ctx, w, root, "add", title, "--discovered-from", discoveredFrom, "--key", key, "--render", "--json", "--lean")
+	if err != nil {
+		return nil, err
+	}
+	var out Added
+	if err := json.Unmarshal(bytes.TrimSpace(res.Stdout), &out); err != nil || out.ID == "" {
+		return nil, fmt.Errorf("slicer add: no item id in the output")
+	}
+	return &out, nil
+}
+
+// Promote runs `slicer promote ID --file FILE --render --json --lean --root
+// ROOT`: it gives an item filed without a spec the sections of a one-item
+// outline.
+func (c Client) Promote(ctx context.Context, w runrec.Writer, root, id, file string) error {
+	_, err := c.write(ctx, w, root, "promote", id, "--file", file, "--render", "--json", "--lean")
+	return err
+}

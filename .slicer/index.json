@@ -519,12 +519,24 @@
       "id": "S120",
       "title": "Finding kinds: fix, owner or later in reviewer, UI pass and gate reports",
       "short_title": "Finding kinds: fix, owner or later in reviewer, UI pass and gate reports",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S111"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6ad38dc9-4dbf-45b5-986e-fee8e5d850ab",
+          "kind": "",
+          "text": "**2026-10-26** — Verified: finding kinds (fix, owner, later) in reviewer, UI pass and gate reports; only fix findings reach the fix round; owner findings block only when marked; f then y files a later finding with slicer add --discovered-from and promote. go test -race ./..., vet, gofmt, slicer check and adj lint clean.",
+          "created_at": "2026-10-26T05:32:55Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -542,7 +554,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

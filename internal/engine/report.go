@@ -5,6 +5,7 @@ package engine
 import (
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -204,12 +205,9 @@ type reviewSection struct {
 	body      []string
 }
 
-// Findings returns the reviewer's findings: the text of sections (A), (B) and
-// (D) of its report, empty when each says nothing (*proposed* rule: the
-// prompt asks for "nothing" in an empty section). Section (C) holds notes for
-// later and does not start a fix round. A report without sections (A) and
-// (B), or with a blank one, is a shape error.
-func Findings(text string) (string, error) {
+// parseSections splits a reviewer or UI pass report into its sections (A) to
+// (D).
+func parseSections(text string) map[string]*reviewSection {
 	sections := map[string]*reviewSection{}
 	var cur *reviewSection
 	for _, line := range strings.Split(text, "\n") {
@@ -229,29 +227,150 @@ func Findings(text string) (string, error) {
 			cur.body = append(cur.body, line)
 		}
 	}
+	return sections
+}
 
+// Findings returns the reviewer's fix findings: the text of sections (A), (B)
+// and (D) of its report, and the fix-tagged findings of (C), empty when each
+// says nothing (*proposed* rule: the prompt asks for "nothing" in an empty
+// section). Section (C) holds notes for later and does not start a fix round
+// unless a finding in it is tagged fix. A finding tagged owner or later is not
+// a fix finding (Triage). A report without sections (A) and (B), or with a
+// blank one, is a shape error.
+func Findings(text string) (string, error) {
+	t, err := Triage(text)
+	if err != nil {
+		return "", err
+	}
+	return t.Fix, nil
+}
+
+// Triage sorts a reviewer or UI pass report's findings by kind (adj 163,
+// review.finding-kinds). A finding is a list item or paragraph that starts
+// with a tag in square brackets: [fix], [owner], [owner blocker] or [later].
+// Lines indented under the tag line belong to the finding. A finding without
+// a tag is a fix finding, so a report without tags is all fix. In section (C)
+// only tagged findings count. A malformed owner or later finding is a shape
+// error, with every other problem of the report.
+func Triage(text string) (*Triaged, error) {
+	sections := parseSections(text)
+	t := &Triaged{}
 	var problems []string
 	var found []string
-	for _, letter := range []string{"A", "B", "D"} {
+	for _, letter := range []string{"A", "B", "C", "D"} {
 		s, ok := sections[letter]
 		if !ok {
-			if letter != "D" {
+			if letter == "A" || letter == "B" {
 				problems = append(problems, fmt.Sprintf("no section (%s)", letter))
 			}
 			continue
 		}
-		content, blank := s.content()
-		switch {
-		case blank:
-			problems = append(problems, fmt.Sprintf(`section (%s) is blank; the prompt asks for "nothing" in an empty section`, letter))
-		case content != "":
-			found = append(found, fmt.Sprintf("(%s)%s\n%s", letter, s.remainder, strings.TrimSpace(strings.Join(s.body, "\n"))))
+		segs := segments(s.body)
+		tagged := slices.ContainsFunc(segs, func(g segment) bool { return g.kind != "" })
+		if !tagged {
+			if letter == "C" {
+				continue
+			}
+			content, blank := s.content()
+			switch {
+			case blank:
+				problems = append(problems, fmt.Sprintf(`section (%s) is blank; the prompt asks for "nothing" in an empty section`, letter))
+			case content != "":
+				found = append(found, fmt.Sprintf("(%s)%s\n%s", letter, s.remainder, strings.TrimSpace(strings.Join(s.body, "\n"))))
+			}
+			continue
+		}
+		t.Tagged = true
+		var keep []string
+		for _, g := range segs {
+			text := strings.TrimSpace(strings.Join(g.lines, "\n"))
+			switch g.kind {
+			case "":
+				if letter != "C" && text != "" && !saysNothing(text) {
+					keep = append(keep, text)
+				}
+			case KindFix:
+				keep = append(keep, text)
+			default:
+				f, perr := g.finding()
+				if perr != "" {
+					problems = append(problems, perr)
+				} else if f.Kind == KindOwner {
+					t.Owner = append(t.Owner, f)
+				} else {
+					t.Later = append(t.Later, f)
+				}
+			}
+		}
+		if len(keep) > 0 {
+			found = append(found, fmt.Sprintf("(%s)%s\n%s", letter, s.remainder, strings.Join(keep, "\n")))
 		}
 	}
 	if len(problems) > 0 {
-		return "", &ShapeError{Problems: problems}
+		return nil, &ShapeError{Problems: problems}
 	}
-	return strings.TrimSpace(strings.Join(found, "\n\n")), nil
+	t.Fix = strings.TrimSpace(strings.Join(found, "\n\n"))
+	return t, nil
+}
+
+// TriageGate sorts the tagged findings of a gate report by kind. Only
+// tagged findings are findings: the verdict and the lines under it are the
+// gate's own. Fix is the report without its owner and later findings, so a
+// fix round after a FAIL reads only what must change. A report without tags
+// comes back unchanged. The Owner needed section is not scanned.
+func TriageGate(text string) (*Triaged, error) {
+	t := &Triaged{Fix: text}
+	var problems []string
+	var kept []string
+	var segs []segment
+	skip := false
+	var run []string
+	flush := func() {
+		segs = append(segs, segments(run)...)
+		run = nil
+	}
+	for _, line := range strings.Split(text, "\n") {
+		trimmed := strings.TrimSuffix(line, "\r")
+		if strings.HasPrefix(trimmed, "## ") {
+			flush()
+			skip = trimmed == ownerHeading
+			if skip {
+				segs = append(segs, segment{lines: []string{line}})
+				continue
+			}
+		}
+		if skip {
+			segs[len(segs)-1].lines = append(segs[len(segs)-1].lines, line)
+			continue
+		}
+		run = append(run, line)
+	}
+	flush()
+	for _, g := range segs {
+		switch g.kind {
+		case "", KindFix:
+			kept = append(kept, g.lines...)
+			t.Tagged = t.Tagged || g.kind != ""
+		default:
+			t.Tagged = true
+			f, perr := g.finding()
+			switch {
+			case perr != "":
+				problems = append(problems, perr)
+			case f.Kind == KindOwner:
+				t.Owner = append(t.Owner, f)
+			default:
+				t.Later = append(t.Later, f)
+			}
+		}
+	}
+	if len(problems) > 0 {
+		return nil, &ShapeError{Problems: problems}
+	}
+	if t.Tagged {
+		t.Fix = strings.Join(kept, "\n")
+	}
+	return t, nil
 }
 
 // content returns the section's findings text, empty when the section says

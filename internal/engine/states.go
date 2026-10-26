@@ -110,7 +110,7 @@ func (e *Engine) feedbackSection(fb *runrec.Feedback) BriefSection {
 		return BriefSection{Title: "Checks failed", Body: "The project checks are red. Fix the failures below. No review was spent on this diff.\n\n```\n" + tail(body, 30000) + "\n```"}
 	case "findings":
 		if strings.HasPrefix(fb.File, "findings-") {
-			return BriefSection{Title: "Review findings", Body: "The reports below hold findings: the reviewer's, the UI pass's, or both. Apply only the findings in them. The UI pass gives suggested design edits for the screens this slice changes. If a finding is wrong, say so in your report with your evidence.\n\n" + body}
+			return BriefSection{Title: "Review findings", Body: "The reports below hold findings: the reviewer's, the UI pass's, or both. Apply only the findings in them; owner and later findings go to the owner, not to you. The UI pass gives suggested design edits for the screens this slice changes. If a finding is wrong, say so in your report with your evidence.\n\n" + body}
 		}
 		return BriefSection{Title: "Review findings", Body: "The reviewer's report is below. Apply only the findings in it. If a finding is wrong, say so in your report with your evidence.\n\n" + body}
 	case "architect":
@@ -278,28 +278,50 @@ func (e *Engine) review(ctx context.Context) error {
 		}
 	}
 
+	// Only the fix findings go to the fix round (adj 163). Owner and later
+	// findings were kept, or asked, when each report was read.
 	rec = e.run.Snapshot()
 	revFile, revText := e.roundReport(rec, RoleReviewer)
-	revFindings, _ := Findings(revText)
+	rev := triaged(Triage(revText))
 	uiFile, uiText := e.roundReport(rec, RoleUI)
-	uiFindings, _ := Findings(uiText)
+	ui := triaged(Triage(uiText))
 	switch {
-	case revFindings == "" && uiFindings == "":
+	case rev.Fix == "" && ui.Fix == "":
 		return e.run.Update(func(rr *runrec.Record) { rr.State = e.beforeGate(rec) })
-	case uiFindings == "":
+	case ui.Fix == "" && !rev.Tagged:
 		return e.bumpRound(ctx, runrec.Feedback{Kind: "findings", File: revFile})
 	}
-	// The findings of both reports reach the implementer in one fix round.
+	// The findings of both reports reach the implementer in one fix round. A
+	// report without tags goes in whole; one with tags, as its fix findings.
 	var b strings.Builder
-	if revFindings != "" {
-		fmt.Fprintf(&b, "### Reviewer report (%s)\n\n%s\n\n", strings.TrimSuffix(revFile, ".md"), strings.TrimSpace(revText))
+	if rev.Fix != "" {
+		fmt.Fprintf(&b, "### Reviewer report (%s)\n\n%s\n\n", strings.TrimSuffix(revFile, ".md"), strings.TrimSpace(fixBody(rev, revText)))
 	}
-	fmt.Fprintf(&b, "### UI pass report (%s)\n\n%s\n", strings.TrimSuffix(uiFile, ".md"), strings.TrimSpace(uiText))
+	if ui.Fix != "" {
+		fmt.Fprintf(&b, "### UI pass report (%s)\n\n%s\n", strings.TrimSuffix(uiFile, ".md"), strings.TrimSpace(fixBody(ui, uiText)))
+	}
 	name := fmt.Sprintf("findings-%d.md", rec.Round)
 	if err := os.WriteFile(filepath.Join(e.run.Dir(), name), []byte(b.String()), 0o600); err != nil {
 		return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateReview, Reason: "findings file: " + err.Error()})
 	}
 	return e.bumpRound(ctx, runrec.Feedback{Kind: "findings", File: name})
+}
+
+// triaged is t, or no findings when the report did not parse.
+func triaged(t *Triaged, err error) *Triaged {
+	if err != nil || t == nil {
+		return &Triaged{}
+	}
+	return t
+}
+
+// fixBody is what a fix round reads of a report: the whole report when it
+// carries no kind tags, else only its fix findings.
+func fixBody(t *Triaged, text string) string {
+	if t.Tagged {
+		return t.Fix
+	}
+	return text
 }
 
 // pendFor is the pause context a round of the review state takes: its own, or
@@ -350,8 +372,9 @@ func (e *Engine) reviewDone(rec runrec.Record, pend *runrec.Pending, role string
 		if err != nil || rep.Question != "" {
 			return false
 		}
-		_, err = Findings(string(b))
-		return err == nil
+		// A blocker that no one asked yet means the round is not done.
+		tri, err := Triage(string(b))
+		return err == nil && tri.Blocker() == nil
 	}
 	return false
 }
@@ -460,11 +483,24 @@ func (e *Engine) gate(ctx context.Context) error {
 		return err
 	}
 	rec = e.run.Snapshot()
-	e.d.Slicer.Note(ctx, e.wr, rec.Worktree, rec.Item, "Review FAIL: "+failSummary(out.text))
+	summary := out.text
+	if out.triage != nil && out.triage.Tagged {
+		summary = out.triage.Fix
+	}
+	e.d.Slicer.Note(ctx, e.wr, rec.Worktree, rec.Item, "Review FAIL: "+failSummary(summary))
 	if rec.Fails >= 3 {
 		return e.stop(ctx, fmt.Sprintf("the slice failed its gate %d times", rec.Fails))
 	}
-	return e.bumpRound(ctx, runrec.Feedback{Kind: "fail", File: out.file})
+	// Only the gate's fix findings go back; its owner and later findings
+	// were kept, or asked, when the report was read.
+	file := out.file
+	if out.triage != nil && out.triage.Tagged {
+		file = fmt.Sprintf("gate-%d-fix.md", rec.Round)
+		if err := os.WriteFile(filepath.Join(e.run.Dir(), file), []byte(out.triage.Fix), 0o600); err != nil {
+			return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateGate, Reason: "gate fix file: " + err.Error()})
+		}
+	}
+	return e.bumpRound(ctx, runrec.Feedback{Kind: "fail", File: file})
 }
 
 // failSummary is a gate FAIL report as one line for a note: the text after the

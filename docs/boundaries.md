@@ -15,6 +15,7 @@ defined in [glossary.md](glossary.md).
 | Relay-run ledger | slicer (ork writes it through the CLI) | `slicer relay-run` (`ledger.write`) |
 | Wave suggestion | slicer | `slicer plan-parallel`, `next --batch` (`wave.selection`) |
 | Landing | after the owner approves, ork sequences the landing: merge the base branch in, re-check, `slicer land`, ff-merge, optional push, confirmed cleanup (S119); until then it lists ready runs and detects merged branches | `slicer land` stays the tracking step, run by ork through the CLI (`landing.in-ork` #162, which supersedes `landing.v1`; `landing.merge-detect`, `git.cleanup-key`) |
+| Slices filed from a review's `later` findings | slicer owns the record; on the owner's confirmation in the pane, ork runs `slicer add TITLE --discovered-from ITEM` and `slicer promote` (a Why section from the finding) in the project, as the writes it logs | `review.finding-kinds` (#163); `slicer add --help` |
 | Goals, non-goals, catalog | slicer | `slicer goals`, `slicer catalog` |
 | Owner decisions | adjudicate | `adj` |
 | Global agent guidance | agents repo | `agents/GLOBAL_AGENTS.md` |

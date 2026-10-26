@@ -177,8 +177,22 @@ type EngineRole struct {
 	Exit      string    `json:"exit,omitempty"`
 }
 
+// EngineFinding is a review finding that is not a fix, as the daemon shows
+// it: an owner question that does not block, or later work to offer as a
+// slice. N is its one-based place in the run's findings, which the file
+// action names. Filed is the id of the slice ork filed from it. Proposed wire
+// fields (adj 163).
+type EngineFinding struct {
+	N     int                   `json:"n"`
+	Kind  string                `json:"kind"`
+	Title string                `json:"title"`
+	Ask   *runrec.OwnerQuestion `json:"ask,omitempty"`
+	Filed string                `json:"filed,omitempty"`
+}
+
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
+	Findings       []EngineFinding       `json:"findings,omitempty"` // proposed: owner and later findings (adj 163)
 	Question       *runrec.OwnerQuestion `json:"question,omitempty"`
 	LiveUsageKnown bool                  `json:"live_usage_known,omitempty"` // proposed: current attempt reported usage
 	UsageKnown     bool                  `json:"usage_known,omitempty"`      // proposed: includes reported zero usage

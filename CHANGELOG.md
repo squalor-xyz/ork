@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- S120: finding kinds (adj #163). The reviewer, the UI pass and the gate tag
+  each finding `[fix]`, `[owner]` (`[owner blocker]` to block the gate) or
+  `[later]`; an untagged finding is a fix. Only fix findings go to the fix
+  round. An owner finding is a structured question: it blocks only when
+  marked, and otherwise shows in the run pane. A later finding is offered in
+  the pane, and `f` then `y` makes ork run `slicer add TITLE
+  --discovered-from ID` and `slicer promote` (a Why section from the finding)
+  in the project. `run.json` gains `findings[]`; the daemon gains `run.file`.
+
 - S96: first run opens a blank Welcome view. Projects are never seeded.
   The TUI add confirms the exact command, then registers and fetches the
   project. The registry is created on the first add. Empty CLI status shows
