@@ -1585,3 +1585,11 @@
 {"when": "2026-10-26T00:44:58Z", "item": "S107", "action": "status", "from": "started", "to": "done", "note": "Verified the Waves table with a dim shares column, wave rules with counts, Lineup column only after ticking, a read-only Enter item pane, goldens at 100x30 and 80x24, and the full suite green.", "by": "Jon R"}
 {"when": "2026-10-26T01:23:18Z", "item": "S125", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-26T01:23:18Z", "item": "S116", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T01:33:21Z", "item": "S127", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T01:33:21Z", "item": "S132", "action": "add", "from": "", "to": "open", "note": "Structured question polish: wrapped option indent, 4 options in a short pane, alert wording, dash in Recommend, digit edge tests"}
+{"when": "2026-10-26T01:33:21Z", "item": "S132", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T01:33:21Z", "item": "S132", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T01:33:21Z", "item": "S132", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T01:33:21Z", "item": "S132", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-26T01:33:21Z", "item": "S132", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T01:33:22Z", "item": "S132", "action": "edit", "from": "", "to": "", "note": "Check"}
