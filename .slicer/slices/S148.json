@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/daemon/landed.go`, `internal/engine/land.go`.\n- `internal/tui/card.go`, `internal/tui/relayboard.go`, `internal/tui/overview.go`.\n- `internal/roles/registry.go`.\n- `docs/dashboard.md`."
+      "body": "- `internal/daemon/landed.go`, `internal/engine/land.go`.\n- `internal/tui/card.go`, `internal/tui/relayboard.go`, `internal/tui/overview.go`.\n- `internal/registry/registry.go`, `internal/engine/perm.go` (the implementer allowlist).\n- `docs/dashboard.md`."
     },
     {
       "heading": "Failing tests",
