@@ -589,18 +589,22 @@ func glanceItems() []slicercli.Item {
 // glanceHarness is one project with three running runs: an engine run in
 // review whose reviewer has a tail, a relay started elsewhere whose running
 // step has a task line, and one whose step has none.
-func glanceHarness(t *testing.T) *harness {
+func glanceHarness(t *testing.T) *harness { return glanceHarnessIn(t, "ork") }
+
+// glanceHarnessIn is glanceHarness for a project of that name; a long name
+// leaves line 1 too little room for the titles.
+func glanceHarnessIn(t *testing.T, name string) *harness {
 	t.Helper()
-	p := proj("ork", false)
+	p := proj(name, false)
 	h := newHarness(t, p)
 	impl, review := roleRun("implementer", 9*time.Minute, 4*time.Minute), roleRun("reviewer", 3*time.Minute, 0)
 	impl.Model, review.Model = "sonnet", "opus"
 	engine := liveEngine("run-eng", "S30", "review", testActivity, impl, review)
 	engine.Tail = "reading the diff\nall four new tests fail for the stated reason\n"
 	ext41 := externalRun("ext-41", "S41")
-	ext41.Steps[1].Vendor, ext41.Steps[1].Model, ext41.Steps[1].Task = "claude", "haiku", "s41 reviewer"
+	ext41.Steps[1].Vendor, ext41.Steps[1].Model, ext41.Steps[1].Task = "claude", "haiku", "s41 reviewer round 2: rechecking the golden views"
 	ext52 := externalRun("ext-52", "S52")
-	ext52.Steps[1].Vendor, ext52.Steps[1].Model = "codex", "gpt-5"
+	ext52.Steps[1].Vendor, ext52.Steps[1].Model, ext52.Steps[1].Task = "codex", "gpt-5", "s52 reviewer"
 	s := engineSnap(p, engine)
 	s.Items.Value = glanceItems()
 	s.Runs.Value = []slicercli.RelayRun{ext41, ext52}
@@ -686,10 +690,11 @@ func TestRunningRowShowsLatestOutputLine(t *testing.T) {
 	}
 	// A relay started elsewhere has no output stream: the running step's task.
 	i = rowIndex(sec, "S41")
-	if i < 0 || i+1 >= len(sec) || !strings.Contains(sec[i+1], "s41 reviewer") {
+	if i < 0 || i+1 >= len(sec) || !strings.Contains(sec[i+1], "round 2: rechecking the golden views") || strings.Contains(sec[i+1], "s41 reviewer") {
 		t.Fatalf("line 2 of a ledger-only run must be the running step's task:\n%s", strings.Join(sec, "\n"))
 	}
-	// No task and no tail: no line 2.
+	// A task that is only "<id> <role>" says nothing line 1 does not: no line 2.
+	// No task and no tail: no line 2 either.
 	i = rowIndex(sec, "S52")
 	if i < 0 || (i+1 < len(sec) && strings.TrimSpace(sec[i+1]) != "") {
 		t.Fatalf("a run with nothing to say has no second line:\n%s", strings.Join(sec, "\n"))
@@ -745,8 +750,11 @@ func TestRunningRowDropsTitleThenModel(t *testing.T) {
 			return 1
 		case strings.Contains(text, "Forty") && !strings.Contains(text, "haiku"):
 			return 2
-		case !strings.Contains(text, "Forty"):
+		case !strings.Contains(text, "Forty") && strings.Contains(text, "haiku"):
+			// The title moved to line 2, so the model comes back if it fits.
 			return 3
+		case !strings.Contains(text, "Forty"):
+			return 4
 		}
 		return -1
 	}
@@ -761,11 +769,11 @@ func TestRunningRowDropsTitleThenModel(t *testing.T) {
 		if !strings.Contains(text, "S41") || lipgloss.Width(text) > room {
 			t.Fatalf("room %d: the id must stay and the row must fit: %q", room, text)
 		}
-		if p <= 2 && !strings.Contains(text, "reviewer") {
+		if p <= 4 && !strings.Contains(text, "reviewer") {
 			t.Fatalf("room %d: the role must outlast the model and the title: %q", room, text)
 		}
 	}
-	for p := 0; p <= 3; p++ {
+	for p := 0; p <= 4; p++ {
 		if !seen[p] {
 			t.Errorf("no width showed phase %d", p)
 		}
@@ -796,7 +804,7 @@ func glanceGoldenModel(theme Theme, w, h int) *Model {
 	one := relayWithSteps(
 		slicercli.Step{ID: "s1", Role: "implementer", Phase: "done"},
 		slicercli.Step{ID: "s2", Role: "reviewer", Phase: "done"},
-		slicercli.Step{ID: "s3", Role: "gate", Phase: "start", Vendor: "claude", Model: "opus", Task: "s41 gate"})
+		slicercli.Step{ID: "s3", Role: "gate", Phase: "start", Vendor: "claude", Model: "opus", Task: "s41 gate round 2: rerunning the checks"})
 	one.ID, one.Items = "ext-1", []string{"S41"}
 	one.BeganAt, one.UpdatedAt = ago(18*time.Minute).Format(time.RFC3339), ago(2*time.Minute).Format(time.RFC3339)
 	two := relayWithSteps(
@@ -823,6 +831,7 @@ func TestGoldenRunningRowsAtAGlance(t *testing.T) {
 		{"glance-100x30-mono.txt", 100, 30, true},
 		{"glance-80x24-color.txt", 80, 24, false},
 		{"glance-80x24-mono.txt", 80, 24, true},
+		{"glance-120x40-mono.txt", 120, 40, true},
 	} {
 		t.Run(c.name, func(t *testing.T) {
 			m := glanceGoldenModel(NewTheme(c.mono), c.w, c.h)
@@ -947,7 +956,7 @@ func TestGateRowNamesTheGateOnce(t *testing.T) {
 	h.src.set(snap(p, nil, nil, r, other))
 	h.send(press("r"))
 	sec = runningSection(h.at(100, 30))
-	if i := rowIndex(sec, "S42"); i < 0 || !strings.Contains(sec[i], "ui  [####~~] gate") {
+	if i := rowIndex(sec, "S42"); i < 0 || !strings.Contains(sec[i], "ui") || !strings.Contains(sec[i], "[####~~] gate") {
 		t.Fatalf("the gate word stays while another role works:\n%s", strings.Join(sec, "\n"))
 	}
 	h.send(press("enter"))
@@ -981,5 +990,317 @@ func TestStateWordIsDimNotTheRunningColour(t *testing.T) {
 	_, rows = h.m.rows()
 	if line := h.m.rowLine(rows[0], false, 3, 200); !strings.Contains(line, th.Running.Render("reviewer")) {
 		t.Fatalf("a working role must be in the running colour: %q", line)
+	}
+}
+
+// A relay started elsewhere sets its step task to a label, "<id> <role>". When
+// that is all the task says, line 2 would repeat line 1, so it is hidden; a task
+// that says more is shown (S145, owner decision).
+func TestLedgerTaskLabelIsHiddenWhenItOnlyRepeatsIdAndRole(t *testing.T) {
+	for _, tc := range []struct {
+		items []string
+		task  string
+		want  string // "" when line 2 is hidden
+	}{
+		{[]string{"S52"}, "s52 implementer", ""},
+		{[]string{"S52"}, "S52 Implementer", ""},
+		{[]string{"S52"}, "  s52   implementer  ", ""},
+		{[]string{"S52"}, "s52-implementer", ""},
+		{[]string{"S52"}, "s52_implementer", ""},
+		{[]string{"S52"}, "implementer", ""},
+		{[]string{"S52"}, "s52", ""},
+		{[]string{"S52", "S53"}, "s52,s53 implementer", ""},
+		{[]string{"S52", "S53"}, "s52 s53 implementer", ""},
+		{[]string{"S52"}, "s52 implementer:", ""},
+		// The leading label is cut: it is on line 1 already.
+		{[]string{"S52"}, "s52 implementer fix round 1", "fix round 1"},
+		{[]string{"S52"}, "s52 implementer finish", "finish"},
+		{[]string{"S52"}, "S52-Implementer: finish", "finish"},
+		{[]string{"S52"}, "s52 implementer - fix round 2: x", "fix round 2: x"},
+		{[]string{"S52", "S53"}, "s52,s53 implementer fix round 1", "fix round 1"},
+		// Anything else is shown whole.
+		{[]string{"S52"}, "s53 implementer", "s53 implementer"},
+		{[]string{"S52"}, "s52 implementerx", "s52 implementerx"},
+		{[]string{"S52"}, "s52 reviewer", "s52 reviewer"},
+		{[]string{"S52"}, "Implement S52 in the worktree", "Implement S52 in the worktree"},
+	} {
+		t.Run(fmt.Sprintf("%v/%s", tc.items, tc.task), func(t *testing.T) {
+			p := proj("ork", false)
+			h := newHarness(t, p)
+			r := relayWithSteps(slicercli.Step{ID: "s1", Role: "implementer", Phase: "start", Task: tc.task})
+			r.ID, r.Items = "ext", tc.items
+			h.src.set(snap(p, nil, nil, r))
+			h.start()
+			_, rows := h.m.rows()
+			if got := rows[0].run.second; got != tc.want {
+				t.Fatalf("line 2 = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+// One column fit for the whole Running section (S145): the tightest row decides
+// which cells every row keeps, and the cells line up, so the bars, round words
+// and last heard stand in one column.
+func TestRunningRowsShareOneColumnFit(t *testing.T) {
+	h := glanceHarness(t)
+	for w := 50; w <= 160; w++ {
+		sec := runningSection(h.at(w, 30))
+		var rows []string
+		for _, id := range []string{"S30", "S41", "S52"} {
+			if i := rowIndex(sec, id); i >= 0 {
+				rows = append(rows, sec[i])
+			}
+		}
+		if len(rows) != 3 {
+			t.Fatalf("width %d: %d rows", w, len(rows))
+		}
+		for _, cell := range []string{"[", "heard", "reviewer", "opus", "haiku", "gpt-5"} {
+			at := strings.Index(rows[0], cell)
+			for _, row := range rows[1:] {
+				// A model belongs to one row; every other cell is in all or none.
+				if cell == "opus" || cell == "haiku" || cell == "gpt-5" {
+					continue
+				}
+				if (strings.Index(row, cell) >= 0) != (at >= 0) {
+					t.Fatalf("width %d: only some rows show %q:\n%s", w, cell, strings.Join(rows, "\n"))
+				}
+			}
+		}
+		bar, role := strings.Index(rows[0], "[##"), strings.Index(rows[0], "reviewer")
+		for _, row := range rows[1:] {
+			if strings.Index(row, "[##") != bar || strings.Index(row, "reviewer") != role {
+				t.Fatalf("width %d: the columns do not line up:\n%s", w, strings.Join(rows, "\n"))
+			}
+		}
+		if heard := strings.Index(rows[0], "heard"); heard >= 0 {
+			for _, row := range rows[1:] {
+				if strings.Index(row, "heard") != heard && strings.Index(row, "! heard") != heard-2 {
+					t.Fatalf("width %d: last heard does not line up:\n%s", w, strings.Join(rows, "\n"))
+				}
+			}
+		}
+	}
+}
+
+// A shortened title keeps at least 12 columns; below that the title goes (S145).
+func TestRunningTitleIsDroppedBelowTwelveColumns(t *testing.T) {
+	h := glanceHarness(t)
+	dropped, clipped := false, false
+	for w := 50; w <= 160; w++ {
+		sec := runningSection(h.at(w, 30))
+		i := rowIndex(sec, "S52")
+		if i < 0 {
+			t.Fatalf("width %d: no row", w)
+		}
+		_, after, _ := strings.Cut(sec[i], "S52  ")
+		cell, _, _ := strings.Cut(after, "  ")
+		switch {
+		case strings.Contains(cell, "..."):
+			clipped = true
+			if lipgloss.Width(cell) < 12 {
+				t.Fatalf("width %d: a title shortened to %d columns: %q", w, lipgloss.Width(cell), cell)
+			}
+		case !strings.HasPrefix(cell, "Fifty"):
+			dropped = true
+		}
+	}
+	if !dropped || !clipped {
+		t.Fatalf("the sweep must show a shortened title (%v) and a dropped one (%v)", clipped, dropped)
+	}
+}
+
+// The selected run is drawn reversed on both lines, and line 2 is not dimmed
+// (S145). Mono keeps the reverse attribute, so it stays legible without colour.
+func TestSelectedRunDrawsBothLinesReversed(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		h := glanceHarness(t)
+		h.m.cfg.Theme = NewTheme(mono)
+		th := h.m.cfg.Theme
+		h.m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
+		body := h.m.overview(73).body
+		var i int
+		for i = range body {
+			if strings.Contains(sgr.ReplaceAllString(body[i], ""), "S30") {
+				break
+			}
+		}
+		line2 := sgr.ReplaceAllString(body[i+1], "")
+		if !strings.Contains(line2, "all four new tests fail") {
+			t.Fatalf("mono %v: no second line under the selected row: %q", mono, line2)
+		}
+		if want := th.TabActive.Render(line2); body[i+1] != want {
+			t.Errorf("mono %v: the selected run's second line must be reversed whole:\n got %q\nwant %q", mono, body[i+1], want)
+		}
+		if body[i+1] == th.Dim.Render(strings.TrimSpace(line2)) || strings.Contains(body[i+1], th.Dim.Render("all four")) {
+			t.Errorf("mono %v: the selected run's second line is dimmed: %q", mono, body[i+1])
+		}
+		if lipgloss.Width(body[i+1]) != lipgloss.Width(body[i]) {
+			t.Errorf("mono %v: the two lines differ in width", mono)
+		}
+		// An unselected run's second line stays dim.
+		j := i + 2
+		for ; j < len(body); j++ {
+			if strings.Contains(sgr.ReplaceAllString(body[j], ""), "S41") {
+				break
+			}
+		}
+		if !strings.Contains(body[j+1], th.Dim.Render("round 2: rechecking the golden views")) {
+			t.Errorf("an unselected second line must stay dim: %q", body[j+1])
+		}
+	}
+}
+
+// A row with no model still lines up with rows that have one: the role and model
+// share one padded column.
+func TestRunningRowsAlignWithAndWithoutAModel(t *testing.T) {
+	p := proj("ork", false)
+	h := newHarness(t, p)
+	a, b := externalRun("ext-a", "S41"), externalRun("ext-b", "S42")
+	a.Steps[1].Model = "sonnet"
+	h.src.set(snap(p, nil, nil, a, b))
+	h.start()
+	for w := 70; w <= 140; w += 10 {
+		sec := runningSection(h.at(w, 30))
+		i, j := rowIndex(sec, "S41"), rowIndex(sec, "S42")
+		if i < 0 || j < 0 || strings.Index(sec[i], "[##") != strings.Index(sec[j], "[##") || strings.Index(sec[i], "[##") < 0 {
+			t.Fatalf("width %d: the bars do not line up:\n%s", w, strings.Join(sec, "\n"))
+		}
+	}
+}
+
+// Where the title does not fit on line 1, the whole section moves it to line 2:
+// line 1 is status only (the model comes back if it fits), and line 2 is the
+// title, then a colon and the role's latest line. A run with no latest line gets
+// the title alone, so it has a line 2 even when its ledger label is bare
+// (S145, owner decision).
+func TestTitleMovesToLineTwoForTheWholeSection(t *testing.T) {
+	h := glanceHarness(t)
+	type sample struct {
+		below, model bool
+	}
+	seen := map[sample]bool{}
+	for w := 50; w <= 160; w++ {
+		sec := runningSection(h.at(w, 30))
+		var line1, line2 []string
+		for _, id := range []string{"S30", "S41", "S52"} {
+			i := rowIndex(sec, id)
+			if i < 0 || i+1 >= len(sec) {
+				t.Fatalf("width %d: no row for %s", w, id)
+			}
+			line1, line2 = append(line1, sec[i]), append(line2, sec[i+1])
+		}
+		titles := []string{"Thirty short", "Forty-one untitled", "Fifty-two short"}
+		on1 := 0
+		for i, t1 := range titles {
+			if strings.Contains(line1[i], t1) || strings.Contains(line1[i], t1[:8]) {
+				on1++
+			}
+		}
+		if on1 != 0 && on1 != 3 {
+			t.Fatalf("width %d: only some titles are on line 1:\n%s", w, strings.Join(line1, "\n"))
+		}
+		if on1 == 3 {
+			seen[sample{false, true}] = true
+			if strings.Contains(line2[2], "Fifty") {
+				t.Fatalf("width %d: a title on line 1 is also on line 2: %q", w, line2[2])
+			}
+			continue
+		}
+		// Moved: line 2 starts with the title, then the latest line.
+		for i, want := range []string{"Thirty short: all four new tests fail for the stated reason", "Forty-one untitled: round 2: rechecking the golden views", "Fifty-two short"} {
+			got := strings.TrimSpace(line2[i])
+			if !strings.HasPrefix(want, strings.TrimSuffix(got, "...")) || (!strings.HasSuffix(got, "...") && got != want) {
+				t.Fatalf("width %d: line 2 of row %d is %q, want %q (or a cut of it)", w, i, got, want)
+			}
+		}
+		model := strings.Contains(line1[0], "reviewer opus")
+		seen[sample{true, model}] = true
+		if model != strings.Contains(line1[1], "reviewer haiku") {
+			t.Fatalf("width %d: the model is on only some rows:\n%s", w, strings.Join(line1, "\n"))
+		}
+	}
+	if !seen[sample{false, true}] || !seen[sample{true, true}] || !seen[sample{true, false}] {
+		t.Fatalf("the sweep must show the title on line 1, on line 2 with the model back, and on line 2 without it: %v", seen)
+	}
+}
+
+// The selected run's title-only second line scrolls into view and is reversed.
+func TestSelectedTitleLineScrollsIntoView(t *testing.T) {
+	p := proj("ork", false)
+	h := newHarness(t, p)
+	var runs []slicercli.RelayRun
+	var items []slicercli.Item
+	for i := 0; i < 8; i++ {
+		id := fmt.Sprintf("S%d", 40+i)
+		r := externalRun(fmt.Sprintf("ext-%d", i), id)
+		r.Steps[1].Task = strings.ToLower(id) + " reviewer"
+		runs = append(runs, r)
+		items = append(items, slicercli.Item{ID: id, Title: fmt.Sprintf("Slice number %d has a long title", i), ShortTitle: fmt.Sprintf("Long short title %d", i)})
+	}
+	s := snap(p, nil, items, runs...)
+	h.src.set(s)
+	h.start()
+	for height := 12; height <= 20; height++ {
+		h.m.Update(tea.WindowSizeMsg{Width: 70, Height: height})
+		for i := 0; i < 7; i++ {
+			h.send(press("down"))
+		}
+		v := plainView(h.m)
+		lines := mainLines(v)
+		if i := lineWith(lines, 0, "S47", "reviewer"); i < 0 || i+1 >= len(lines) || strings.TrimSpace(lines[i+1]) != "Long short title 7" {
+			t.Fatalf("height %d: the title line must sit under the last row on screen:\n%s", height, v)
+		}
+		for i := 0; i < 7; i++ {
+			h.send(press("up"))
+		}
+	}
+}
+
+// The inline pane keeps the headings above its row when the row's second line
+// is only the title.
+func TestPaneUnderATitleOnlyRowKeepsTheHeadings(t *testing.T) {
+	h := glanceHarnessIn(t, "a-long-project-name")
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	h.send(press("down"))
+	h.send(press("down")) // S52: its second line is the title alone
+	h.send(press("enter"))
+	v := plainView(h.m)
+	for _, want := range []string{"Needs you 0", "Running 3", "Fifty-two short", "esc close pane"} {
+		if !strings.Contains(v, want) {
+			t.Fatalf("missing %q:\n%s", want, v)
+		}
+	}
+	lines := mainLines(v)
+	if i := lineWith(lines, 0, "S52"); i < 0 || !strings.Contains(lines[i+1], "Fifty-two short") || !strings.Contains(lines[i+2], "Run ext-52") {
+		t.Fatalf("the pane must sit directly under the title line:\n%s", v)
+	}
+}
+
+// A long pane under a run whose second line is only its title still leaves the
+// headings above it on screen: the pane gives that line back (S145).
+func TestLongPaneUnderATitleOnlyEngineRowKeepsTheHeadings(t *testing.T) {
+	p := proj("a-long-project-name", false)
+	h := newHarness(t, p)
+	var roles []source.EngineRole
+	for i := 0; i < 12; i++ {
+		role := "implementer"
+		if i%2 == 1 {
+			role = "reviewer"
+		}
+		roles = append(roles, roleRun(role, time.Duration(30-2*i)*time.Minute, time.Duration(29-2*i)*time.Minute))
+	}
+	roles = append(roles, roleRun("implementer", time.Minute, 0))
+	s := engineSnap(p, liveEngine("run-eng", "S30", "implement", nil, roles...))
+	s.Items.Value = glanceItems()
+	h.src.set(s)
+	h.start()
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	h.send(press("enter"))
+	v := plainView(h.m)
+	for _, want := range []string{"Needs you 0", "Running 1", "Thirty short", "esc close pane"} {
+		if !strings.Contains(v, want) {
+			t.Fatalf("missing %q:\n%s", want, v)
+		}
 	}
 }

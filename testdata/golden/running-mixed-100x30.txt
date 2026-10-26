@@ -5,7 +5,7 @@
                            │
                            │[1mRunning 2[m
                            │[1;7m   ork  S22  implement  [......]  heard 2m                              [m
-                           │   ork  [1mS22[m  [2mactive[m  [......]
+                           │   ork  [1mS22[m  [2mactive[m     [......]
                            │
                            │[1mRecent[m
                            │  [2mnone[m

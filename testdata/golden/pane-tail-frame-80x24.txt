@@ -5,7 +5,7 @@
                    │
                    │[1mRunning 1[m
                    │[1;7m   ork  S07  implementer sonnet  [~~....] fix 1  heard 2m   [m
-                   │          [2mthree[m
+                   │[1;7m          three                                             [m
                    │    [1mRun engine[m
                    │  [2m  +2 lines above[m
                    │    [2m+ implementer done  5m  claude sonnet high round 1[m

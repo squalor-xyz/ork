@@ -5,11 +5,11 @@
   adjudicate      *│
   DataBall         │[1mRunning 3[m
   agents           │[1;7m   slicer      S30  implementer  [~~....] fix 1  heard 3m   [m
-                   │                 [2mupdating the golden views for the two-li...[m
-                   │   adjudicate  [1mS41[m  Forty-...  gate [2mopus[m  [####~~]  [2mheard 2m[m
-                   │                 [2ms41 gate[m
-                   │   adjudicate  [1mS52[m  implementer  [~~....]  ! heard 14m
-                   │                 [2ms52 implementer[m
+                   │[1;7m                 Thirty short: updating the golden views ...[m
+                   │   adjudicate  [1mS41[m  gate         [####~~]        [2mheard 2m[m
+                   │                 [2mForty-one untitled: round 2: rerunning t...[m
+                   │   adjudicate  [1mS52[m  implementer  [~~....]        ! heard 14m
+                   │                 [2mFifty-two short[m
                    │
                    │[1mRecent[m
                    │  [2mnone[m

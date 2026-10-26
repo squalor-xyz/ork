@@ -236,7 +236,12 @@ the text column, falling back to a shorter indent when needed to fit.
    id, its short title (the title when it has no short one), the role working
    now with its model, the stage bar with its round word, and last heard. Line 2
    is that role's latest output line, dim and set in under the id; it is
-   omitted when the role has said nothing. The run id and `started elsewhere`
+   omitted when the role has said nothing. Where the title does not fit on line
+   1, every run in the section moves it down together: line 1 is then status
+   only (the model comes back if it fits) and line 2 reads `Short title: latest
+   line`, or the title alone when the role has said nothing, so the run has a
+   line 2 even when its ledger label is bare. The selected run is drawn reversed
+   on both lines (the second is not dimmed), which reads in monochrome too. The run id and `started elsewhere`
    are not on the row: the pane names them (`Run ID`, and the read-only footer
    of a relay started elsewhere), and the selected row's detail line keeps the
    run id, the engine state, the steps and the elapsed time in full. A project
@@ -264,21 +269,32 @@ the text column, falling back to a shorter indent when needed to fit.
      tail. A denied call shows as `denied: Bash: ...` on line 2 instead, in the
      warning colour. **For a relay started elsewhere** ork has no output stream;
      the ledger gives one line per step, its `--task` line (`slicer relay-run
-     step --task`), which the relay contract sets to a short label such as
-     `s145 implementer`. Line 2 is the task of the running step (the last step
-     with phase `start`, so a subagent shows ahead of its orchestrator).
+     step --task`). Line 2 is the task of the running step (the last step with
+     phase `start`, so a subagent shows ahead of its orchestrator). The relay
+     contract asks for a bare label there, `ID role` such as `s145 implementer`,
+     which line 1 already says. A leading `ID role` is cut from the task, with
+     the `:`, `-` and spaces after it (case, spacing and `-`, `_` or `,` between
+     the words do not matter; the ids of a run on several slices are joined), so
+     `s145 implementer fix round 2` shows `fix round 2`. A task that is only that
+     label (or the id or the role alone) says nothing, and gives no line 2 unless
+     the title has moved there.
    - **The role** is the engine's own running role for an engine run (its state
      word, such as `checks`, between roles, drawn dim) and the running step for
      a relay started elsewhere. A stale run shows `stale` before its role,
      dimmed.
-   - **Narrow rows** drop cells from the right of the id in this order: `tokens
-     N` (an engine run's, when usage is known), the title shortens (to eight
-     columns), the model, the title, then last heard unless it carries a `!` or
-     `!!` cue, the role, and the bar, so a cue outlasts the bar (S106). The id
+   - **One fit for the section.** The cells of line 1 are chosen once for all
+     Running rows, from the widest content of each column: the tightest row
+     decides which cells every row keeps, and the title and the role with its
+     model are padded to shared widths, so the stage bars, the round words and
+     last heard stand in one column. Narrow panes drop cells from the right of
+     the id in this order: `tokens N` (an engine run's, when usage is known), the
+     title shortens (to 12 columns), the model, then the title moves to line 2
+     (the model returns if it fits), then last heard unless a row's carries a `!`
+     or `!!` cue, the role, and the bar, so a cue outlasts the bar (S106). The id
      stays. Line 2 does not depend on the width: it is cut to the pane with
      `...`. The same order holds at 80x24, where the sidebar and the project
-     column leave little for the title, so the title is often the first cell to
-     go.
+     column leave little for the title, so the titles usually sit on line 2
+     there.
    `! heard` is amber after 10 minutes with no event; `!! heard` is red after
    30 minutes, the stale cutoff, and marks stale runs. The unselected cell uses
    the warning color (amber) or the error color (red); in monochrome the words

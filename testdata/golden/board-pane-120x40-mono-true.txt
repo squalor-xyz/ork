@@ -4,7 +4,7 @@
   [2mnothing needs you[m
 
 [1mRunning 2[m
-   ork  [1mS97[m  reviewer  [##~~..]  ! heard 16m
+   ork  [1mS97[m  reviewer        [##~~..]  ! heard 16m
     [1mRun s97[m
     [##~~..]  ! last heard 16m ago
     implementer > [reviewer] > [2mgate[m                                                                              [2mround 1[m

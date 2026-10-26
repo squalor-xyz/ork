@@ -5,6 +5,7 @@ package tui
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -67,10 +68,11 @@ type ovRow struct {
 	merged            bool
 	mergeKnown        bool
 	branch, worktree  string
-	compact           bool     // a run row on a narrow terminal drops its run ID and vendor/model
-	live              *liveRun // a live run's board cells, for the Running entry
-	detailCells       []string // a live run's detail line, wrapped between cells
-	run               *runRow  // a Running run's two-line form (S145)
+	compact           bool       // a run row on a narrow terminal drops its run ID and vendor/model
+	live              *liveRun   // a live run's board cells, for the Running entry
+	detailCells       []string   // a live run's detail line, wrapped between cells
+	run               *runRow    // a Running run's two-line form (S145)
+	layout            *runLayout // the Running section's shared line-1 layout (S145)
 }
 
 // runRow is a Running run drawn on two lines (S145). Line 1 holds the slice id,
@@ -89,6 +91,19 @@ type runRow struct {
 	secondWarn  bool   // line 2 is a denial, which the owner should not miss
 }
 
+// line2 is the text of a run's second line: its title when the layout moved
+// the titles there, then a colon and the role's latest line. It is "" when the
+// run has neither.
+func (rr *runRow) line2(l *runLayout) string {
+	if l == nil || !l.titleBelow || rr.title == "" {
+		return rr.second
+	}
+	if rr.second == "" {
+		return rr.title
+	}
+	return rr.title + ": " + rr.second
+}
+
 // Cells of line 1, left to right.
 const (
 	cellID = iota
@@ -103,84 +118,148 @@ const (
 type runCell struct {
 	text string
 	kind int
+	pad  int // columns of padding after the cell, when another cell follows
 }
 
-// titleMin is the fewest columns a shortened title keeps, "..." included.
-const titleMin = 8
+// titleMin is the fewest columns a shortened title keeps, "..." included. A
+// title that would get less goes (S145).
+const titleMin = 12
 
-// fitRun chooses the cells of line 1 for room columns. Tokens, which only an
-// engine run has, go first. Then the title shortens (to titleMin columns), the
-// model goes, and the title; last heard drops next unless it carries a cue, then
-// the role, then the stage bar, so a cue outlasts the bar as it does elsewhere
-// (S106). The id stays.
-func fitRun(rr *runRow, room int) []runCell {
-	cue := strings.HasPrefix(rr.heard, "!")
+// runLayout is the cells and column widths of line 1, chosen once for every
+// run in the Running section, so the tightest row decides which cells all rows
+// keep and the bars, round words and last heard stand in one column (S145).
+type runLayout struct {
+	title, model, heard, role, bar, tokens   bool
+	idW, titleW, roleW, barW, heardW, tokenW int
+	// titleBelow: the title does not fit on line 1, so line 1 is status only
+	// and every run's line 2 starts with its title.
+	titleBelow bool
+}
+
+// fitRunLayout chooses the layout for room columns from the widest content of
+// each column. Tokens, which only an engine run has, go first. Then the title
+// shortens (to titleMin columns) and the model goes. A title that would still
+// get less moves to line 2 for every run (titleBelow), and the model comes back
+// if it then fits. Last heard drops next unless a row has a cue, then the role,
+// then the stage bar, so a cue outlasts the bar as it does elsewhere (S106). The
+// id stays.
+func fitRunLayout(rows []*runRow, room int) runLayout {
+	var full, roleOnly, roleModel runLayout
+	cue := false
+	for _, rr := range rows {
+		full.idW = max(full.idW, lipgloss.Width(rr.id))
+		full.titleW = max(full.titleW, lipgloss.Width(rr.title))
+		roleOnly.roleW = max(roleOnly.roleW, lipgloss.Width(rr.role))
+		withModel := lipgloss.Width(rr.role)
+		if rr.model != "" {
+			withModel += 1 + lipgloss.Width(rr.model)
+		}
+		roleModel.roleW = max(roleModel.roleW, withModel)
+		full.barW = max(full.barW, lipgloss.Width(rr.bar))
+		full.heardW = max(full.heardW, lipgloss.Width(rr.heard))
+		full.tokenW = max(full.tokenW, lipgloss.Width(rr.tokens))
+		cue = cue || strings.HasPrefix(rr.heard, "!")
+	}
 	type stage struct{ title, model, heard, role, bar, tokens bool }
 	stages := []stage{
 		{true, true, true, true, true, true},
 		{true, true, true, true, true, false},
 		{true, false, true, true, true, false},
+		{false, true, true, true, true, false},
 		{false, false, true, true, true, false},
 		{false, false, cue, true, true, false},
 		{false, false, cue, false, true, false},
 		{false, false, cue, false, false, false},
 	}
-	cells := func(s stage, title string) []runCell {
-		out := []runCell{{rr.id, cellID}}
-		if s.title && title != "" {
-			out = append(out, runCell{title, cellTitle})
-		}
-		if s.role && rr.role != "" {
-			out = append(out, runCell{rr.role, cellRole})
-			if s.model && rr.model != "" {
-				out = append(out, runCell{rr.model, cellModel})
-			}
-		}
-		if s.bar && rr.bar != "" {
-			out = append(out, runCell{rr.bar, cellBar})
-		}
-		if s.heard && rr.heard != "" {
-			out = append(out, runCell{rr.heard, cellHeard})
-		}
-		if s.tokens && rr.tokens != "" {
-			out = append(out, runCell{rr.tokens, cellTokens})
-		}
-		return out
-	}
-	width := func(cs []runCell) int {
-		n := 0
-		for i, c := range cs {
-			n += lipgloss.Width(c.text)
-			if i > 0 {
-				n += runGap(c)
-			}
-		}
-		return n
-	}
 	for i, s := range stages {
-		bare := cells(s, "")
-		if i == 0 {
-			// Tokens stay only while everything else is whole.
-			if whole := cells(s, rr.title); width(whole) <= room {
-				return whole
-			}
-			continue
+		l := full
+		l.title, l.model, l.heard, l.role, l.bar, l.tokens = s.title && full.titleW > 0, s.model, s.heard && full.heardW > 0, s.role, s.bar && full.barW > 0, s.tokens && full.tokenW > 0
+		l.roleW = roleOnly.roleW
+		if s.model {
+			l.roleW = roleModel.roleW
 		}
-		if !s.title || rr.title == "" {
-			if width(bare) <= room {
-				return cells(s, rr.title)
-			}
-			continue
+		if !l.title {
+			l.titleW = 0
+			l.titleBelow = full.titleW > 0
 		}
-		avail := room - width(bare) - 2
+		total := func(l runLayout) int {
+			n := l.idW
+			for _, w := range []struct {
+				on bool
+				w  int
+			}{{l.title, l.titleW}, {l.role, l.roleW}, {l.bar, l.barW}, {l.heard, l.heardW}, {l.tokens, l.tokenW}} {
+				if w.on {
+					n += 2 + w.w
+				}
+			}
+			return n
+		}
+		if !l.role {
+			l.roleW = 0
+		}
+		if !l.bar {
+			l.barW = 0
+		}
+		if !l.heard {
+			l.heardW = 0
+		}
+		if !l.tokens {
+			l.tokenW = 0
+		}
 		switch {
-		case lipgloss.Width(rr.title) <= avail:
-			return cells(s, rr.title)
-		case avail >= titleMin:
-			return cells(s, clip(rr.title, avail))
+		case total(l) <= room:
+			return l
+		case i == 0 || !l.title:
+			continue
+		}
+		// The title shortens to what the other cells leave, if that is enough.
+		other := l
+		other.title, other.titleW = false, 0
+		if avail := room - total(other) - 2; avail >= titleMin {
+			l.titleW = avail
+			return l
 		}
 	}
-	return []runCell{{clip(rr.id, room), cellID}}
+	return runLayout{idW: min(full.idW, room), titleBelow: full.titleW > 0}
+}
+
+// cells are line 1 of rr in the layout. Each cell carries the padding that
+// brings its column to the shared width; a trailing empty cell is dropped.
+func (l runLayout) cells(rr *runRow) []runCell {
+	out := []runCell{{rr.id, cellID, l.idW - lipgloss.Width(rr.id)}}
+	if out[0].pad < 0 {
+		out[0] = runCell{clip(rr.id, l.idW), cellID, 0}
+	}
+	if l.title {
+		t := rr.title
+		if lipgloss.Width(t) > l.titleW {
+			t = clip(t, l.titleW)
+		}
+		out = append(out, runCell{t, cellTitle, l.titleW - lipgloss.Width(t)})
+	}
+	if l.role {
+		used := lipgloss.Width(rr.role)
+		if l.model && rr.model != "" {
+			out = append(out, runCell{rr.role, cellRole, 0})
+			used += 1 + lipgloss.Width(rr.model)
+			out = append(out, runCell{rr.model, cellModel, l.roleW - used})
+		} else {
+			out = append(out, runCell{rr.role, cellRole, l.roleW - used})
+		}
+	}
+	if l.bar {
+		out = append(out, runCell{rr.bar, cellBar, l.barW - lipgloss.Width(rr.bar)})
+	}
+	if l.heard {
+		out = append(out, runCell{rr.heard, cellHeard, l.heardW - lipgloss.Width(rr.heard)})
+	}
+	if l.tokens && rr.tokens != "" {
+		out = append(out, runCell{rr.tokens, cellTokens, 0})
+	}
+	for len(out) > 1 && out[len(out)-1].text == "" {
+		out = out[:len(out)-1]
+	}
+	return out
 }
 
 // runGap is the space before a cell: one between a role and its model, two
@@ -192,6 +271,7 @@ func runGap(c runCell) int {
 	return 2
 }
 
+// joinRun is the plain text of a row's cells.
 func joinRun(cells []runCell) string {
 	var b strings.Builder
 	for i, c := range cells {
@@ -199,8 +279,21 @@ func joinRun(cells []runCell) string {
 			b.WriteString(strings.Repeat(" ", runGap(c)))
 		}
 		b.WriteString(c.text)
+		if i < len(cells)-1 {
+			b.WriteString(strings.Repeat(" ", max(c.pad, 0)))
+		}
 	}
 	return b.String()
+}
+
+// runCells are the cells of a row in room columns: in its section's layout, or
+// in a layout of its own when it has none.
+func runCells(r ovRow, room int) []runCell {
+	if r.layout != nil {
+		return r.layout.cells(r.run)
+	}
+	l := fitRunLayout([]*runRow{r.run}, room)
+	return l.cells(r.run)
 }
 
 // liveRun is what the Running entry shows of one run beyond its Overview row:
@@ -515,6 +608,8 @@ type overviewView struct {
 	// paneExtra is the lines the pane's row takes beyond one: a Running run's
 	// second line (S145).
 	paneExtra int
+	// selExtra is 1 when the selected row has a second line (S145).
+	selExtra int
 }
 
 // isPaneRow reports whether r is the row of the open run pane.
@@ -557,8 +652,27 @@ func (m *Model) overview(w int) overviewView {
 		}
 	}
 
+	// One line-1 layout for every run in Running: the tightest row decides which
+	// cells all rows keep, and the cells line up (S145).
+	var runs []*runRow
+	room := w
+	for _, r := range running {
+		if r.run != nil {
+			runs = append(runs, r.run)
+			room = min(room, w-textColumn(r, nameW))
+		}
+	}
+	if len(runs) > 0 {
+		layout := fitRunLayout(runs, max(room, 1))
+		for i := range running {
+			if running[i].run != nil {
+				running[i].layout = &layout
+			}
+		}
+	}
+
 	var lines []string
-	sel, paneAt, paneExtra := -1, -1, 0
+	sel, paneAt, paneExtra, selExtra := -1, -1, 0, 0
 	section := func(rows []ovRow, first int, empty string) {
 		if len(rows) == 0 {
 			lines = append(lines, indent+th.Dim.Render(empty))
@@ -570,19 +684,16 @@ func (m *Model) overview(w int) overviewView {
 				sel = len(lines)
 			}
 			lines = append(lines, m.rowLine(r, selected, nameW, w))
-			textColumn := len(indent) + r.kindW + 1
-			if r.noLabel {
-				textColumn = len(indent)
+			hang := strings.Repeat(" ", textColumn(r, nameW))
+			second := ""
+			if r.run != nil {
+				second = r.run.line2(r.layout)
 			}
-			if r.group != "" {
-				textColumn = len(indent) + 2
-			}
-			if nameW > 0 {
-				textColumn += 1 + nameW + 2
-			}
-			hang := strings.Repeat(" ", textColumn)
-			if r.run != nil && r.run.second != "" {
-				lines = append(lines, m.runSecondLine(r, hang, w))
+			if second != "" {
+				lines = append(lines, m.runSecondLine(r, second, hang, w, selected))
+				if selected {
+					selExtra = 1
+				}
 			}
 			for _, command := range r.commands {
 				prefix := hang
@@ -596,7 +707,7 @@ func (m *Model) overview(w int) overviewView {
 			}
 			if m.isPaneRow(r) {
 				paneAt = len(lines) - 1
-				if r.run != nil && r.run.second != "" {
+				if second != "" {
 					paneExtra = 1
 				}
 			}
@@ -640,7 +751,7 @@ func (m *Model) overview(w int) overviewView {
 	ready := m.readyRows()
 	section(ready, len(needs)+len(running)+len(recent), "none")
 
-	ov := overviewView{body: lines, sel: sel, paneAt: paneAt, paneExtra: paneExtra}
+	ov := overviewView{body: lines, sel: sel, paneAt: paneAt, paneExtra: paneExtra, selExtra: selExtra}
 	switch {
 	case m.active >= 0 && m.projects[m.active].setup():
 		// The hint is the detail line of a selected project with no rows.
@@ -650,6 +761,22 @@ func (m *Model) overview(w int) overviewView {
 		ov.detail = detailLines(all[cursor], w, vertical)
 	}
 	return ov
+}
+
+// textColumn is the column a row's text starts at: after its indent, kind and
+// project name.
+func textColumn(r ovRow, nameW int) int {
+	col := len(indent) + r.kindW + 1
+	if r.noLabel {
+		col = len(indent)
+	}
+	if r.group != "" {
+		col = len(indent) + 2
+	}
+	if nameW > 0 {
+		col += 1 + nameW + 2
+	}
+	return col
 }
 
 // rowLine is one row on one line. The kind, the project's name and the text are
@@ -808,6 +935,7 @@ func (m *Model) ledgerRunRow(s source.Snapshot, r slicercli.RelayRun) *runRow {
 			rr.role, rr.model, rr.second, rr.stateOnly = step.Role, step.Model, treeText(step.Task), false
 		}
 	}
+	rr.second = stripTaskLabel(rr.second, r.Items, rr.role)
 	rr.finishRow(r)
 	return rr
 }
@@ -830,6 +958,60 @@ func (rr *runRow) markStale(ledger slicercli.RelayRun) {
 	}
 }
 
+// taskRepeatsLabel reports whether a step task is only the label the relay
+// contract asks for, "<id> <role>" (or the id or the role alone, the ids of a
+// run on several slices joined), which line 1 already says. Case, spacing and
+// -, _ and , between the words do not matter.
+func taskRepeatsLabel(task string, items []string, role string) bool {
+	norm := func(s string) string {
+		s = strings.NewReplacer("-", " ", "_", " ", ",", " ", "/", " ").Replace(strings.ToLower(s))
+		return strings.Join(strings.Fields(s), " ")
+	}
+	task, role = norm(task), norm(role)
+	if task == "" {
+		return false
+	}
+	ids := append([]string{norm(strings.Join(items, " "))}, items...)
+	if task == role {
+		return true
+	}
+	for _, id := range ids {
+		id = norm(id)
+		if id != "" && (task == id || task == id+" "+role) {
+			return true
+		}
+	}
+	return false
+}
+
+// stripTaskLabel cuts the leading "<id> <role>" label off a step task, with the
+// ":", "-" and spaces after it, as line 1 says it already; "round 2: x" is left
+// of "s41 gate round 2: x". A task that is only the label (or the id or the
+// role alone) is "". Anything else is returned as it is.
+func stripTaskLabel(task string, items []string, role string) string {
+	if taskRepeatsLabel(task, items, role) {
+		return ""
+	}
+	ids := append([]string{strings.Join(items, " ")}, items...)
+	sep := `[\s_,/-]+`
+	for _, id := range ids {
+		words := append(strings.Fields(strings.NewReplacer("-", " ", "_", " ", ",", " ", "/", " ").Replace(id)),
+			strings.Fields(strings.NewReplacer("-", " ", "_", " ", ",", " ", "/", " ").Replace(role))...)
+		if len(words) == 0 || id == "" {
+			continue
+		}
+		for i, w := range words {
+			words[i] = regexp.QuoteMeta(w)
+		}
+		re := regexp.MustCompile(`(?i)^\s*` + strings.Join(words, sep) + `(?:[\s:_,/-]+|$)`)
+		if loc := re.FindStringIndex(task); loc != nil {
+			rest := strings.TrimLeft(task[loc[1]:], " :-")
+			return rest
+		}
+	}
+	return task
+}
+
 // lastTailLine is the newest nonblank line of a role's output tail.
 func lastTailLine(tail string) string {
 	lines := strings.Split(tail, "\n")
@@ -847,7 +1029,8 @@ func lastTailLine(tail string) string {
 func (m *Model) runLine(r ovRow, room int) string {
 	th := m.cfg.Theme
 	var b strings.Builder
-	for i, c := range fitRun(r.run, room) {
+	cells := runCells(r, room)
+	for i, c := range cells {
 		if i > 0 {
 			b.WriteString(strings.Repeat(" ", runGap(c)))
 		}
@@ -868,17 +1051,28 @@ func (m *Model) runLine(r ovRow, room int) string {
 		if r.dim && !(c.kind == cellHeard && strings.HasPrefix(c.text, "!")) {
 			style = th.Dim
 		}
-		b.WriteString(style.Render(c.text))
+		if c.text != "" {
+			b.WriteString(style.Render(c.text))
+		}
+		if i < len(cells)-1 {
+			b.WriteString(strings.Repeat(" ", max(c.pad, 0)))
+		}
 	}
 	return b.String()
 }
 
 // runSecondLine is line 2 of a Running run: the role's latest output line under
 // the slice id, set in by one indent, dim (a denial is amber), cut to the pane.
-func (m *Model) runSecondLine(r ovRow, hang string, w int) string {
+// The selected run's line is reversed whole, as its first line is, and not
+// dimmed, so it reads in monochrome too.
+func (m *Model) runSecondLine(r ovRow, second, hang string, w int, selected bool) string {
 	th := m.cfg.Theme
 	prefix := hang + indent
-	text := clip(r.run.second, max(w-lipgloss.Width(prefix), 1))
+	text := clip(second, max(w-lipgloss.Width(prefix), 1))
+	if selected {
+		line := prefix + text
+		return th.TabActive.Render(line + strings.Repeat(" ", max(w-lipgloss.Width(line), 0)))
+	}
 	style := th.Dim
 	if r.run.secondWarn {
 		style = th.Warn
@@ -897,7 +1091,7 @@ func rowText(r ovRow, room int) string {
 		return strings.Join(cells, "  ")
 	}
 	if r.run != nil {
-		return joinRun(fitRun(r.run, room))
+		return joinRun(runCells(r, room))
 	}
 	// Overview rows stay on one line; the pane retains the full Wait text.
 	flatten := strings.NewReplacer("\r\n", " ", "\n", " ", "\r", " ")

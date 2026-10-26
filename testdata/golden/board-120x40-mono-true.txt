@@ -4,7 +4,7 @@
   [2mnothing needs you[m
 
 [1mRunning 2[m
-   ork  [1mS97[m  reviewer  [##~~..]  ! heard 16m
+   ork  [1mS97[m  reviewer        [##~~..]  ! heard 16m
    ork  [2mS97[m  [2mstale reviewer[m  [2m[##~~..][m  [1m!! heard 30m[m
 
 [1mRecent[m

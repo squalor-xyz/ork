@@ -225,11 +225,15 @@ func TestWarningColorTargetsOnlyTheHeardCell(t *testing.T) {
 	if !strings.Contains(v, h.m.cfg.Theme.Warn.Render("! heard 16m")) {
 		t.Fatalf("the heard cell lacks the warning style: %q", v)
 	}
-	// The task, which looks like a heard cell, is line 2 and stays dim.
+	// The task, which looks like a heard cell, is line 2. The row is selected,
+	// so the line is reversed whole and carries no warning style.
 	body := h.m.overview(240).body
 	i := rowIndex(body, "! heard 16m")
-	if i < 0 || i+1 >= len(body) || body[i+1] != "      "+"    "+h.m.cfg.Theme.Dim.Render(task) {
-		t.Fatalf("the task must be line 2, dim: %q", body)
+	if i < 0 || i+1 >= len(body) || !strings.Contains(sgr.ReplaceAllString(body[i+1], ""), task) {
+		t.Fatalf("the task must be line 2: %q", body)
+	}
+	if strings.Contains(body[i+1], h.m.cfg.Theme.Warn.Render("! heard 99m")) || strings.Contains(body[i+1], h.m.cfg.Theme.Warn.Render(task)) {
+		t.Fatalf("the warning style escaped to line 2: %q", body[i+1])
 	}
 }
 

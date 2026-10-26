@@ -55,7 +55,7 @@ func (m *Model) screen() string {
 	th := m.cfg.Theme
 	var body, detail, footer []string
 	bodyH, start := max(h-4, 1), 0
-	selectedLine := -1
+	selectedLine, selExtra := -1, 0
 	overviewBody := false
 	collapse := false // a render on show takes the whole body (S121, *proposed*)
 	if m.showHelp {
@@ -158,6 +158,7 @@ func (m *Model) screen() string {
 			}
 		}
 		selectedLine = ov.sel
+		selExtra = ov.selExtra
 	}
 	hasDetail := false
 	for _, line := range detail {
@@ -198,8 +199,8 @@ func (m *Model) screen() string {
 			}
 		}
 		// A Running run's second line scrolls into view with its row (S145).
-		if r, ok := m.selectedRow(); ok && r.run != nil && r.run.second != "" && m.pane == nil && m.active != runningEntry && bodyH >= 3 {
-			selectedLine++
+		if selExtra > 0 && m.pane == nil && bodyH >= 3 {
+			selectedLine += selExtra
 		}
 	}
 

@@ -5372,7 +5372,7 @@
       "id": "S145",
       "title": "Running rows at a glance: slice title, working role, fix round, last heard, latest output line",
       "short_title": "Running rows at a glance",
-      "status": "started",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S106"
@@ -5388,12 +5388,20 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "aa3d2a87-25df-4424-9861-4f91ffa43e84",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answer (session a2bf7e0e, 2026-10-26): when the title does not fit on line 1 (100x30 and 80x24), line 1 is status only and line 2 starts with the slice title, then the role's latest line ('Thirty short: updating the golden views'). At widths where it fits, the title stays on line 1.",
+          "created_at": "2026-10-26T15:48:17Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
-      "claim": {
-        "owner": "Jon R",
-        "at": "2026-10-26T14:37:47Z"
-      },
+      "claim": null,
       "fields": {
         "size": "M",
         "flags": [],
