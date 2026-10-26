@@ -1105,10 +1105,33 @@
       "id": "S71",
       "title": "Doctor checks each project's check command and patterns (docs/design.md:613-614)",
       "short_title": "Doctor checks each project's check command and patterns (docs/design.md:613-614)",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "5ac89e4f-9622-4fb9-b99b-f4a67ed0a8d2",
+          "kind": "",
+          "text": "**2026-10-26** — Review FAIL (2026-10-26, reviewer opus): multi-line sh syntax errors break the indented findings; a doctor-side registry rewrite is not detected by the tests; docs/design.md does not describe the registry read warning. Owner decisions 2026-10-26 (session a2bf7e0e, interactive questions): skip known shell words (no finding for a POSIX reserved word or special builtin from a fixed list, or a word containing $ or a backtick or starting with ~); add a registry_error JSON field (omitempty) and print the [WARN] registry line just before the project lines, no longer joined into warning; keep the label form 'project NAME  PATH'.",
+          "created_at": "2026-10-26T22:30:52Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "7c17129f-1c56-44c5-be36-b505850bf4b2",
+          "kind": "",
+          "text": "**2026-10-26** — Orchestration trial (run 10): owner questions 6 (2 before start: check command and pattern rules; 4 during: registry error placement, label form, shell words, plus the earlier-answered decisions carried in); stalls 0; fix rounds 1 (review FAIL plus UI pass fixes, gated in one pass); merge conflicts 0; context compactions 0; Codex gpt-6.1-sol medium, not blocked; reviewer and UI pass in parallel.",
+          "created_at": "2026-10-26T22:44:20Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1126,7 +1149,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

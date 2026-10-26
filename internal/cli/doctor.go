@@ -10,12 +10,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/brand"
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/roles"
 )
 
@@ -39,18 +41,142 @@ type contractCheck struct {
 	Error    string `json:"error,omitempty"`
 }
 
+type projectCheck struct {
+	Name     string   `json:"name"`
+	Path     string   `json:"path"`
+	Findings []string `json:"findings"`
+}
+
 // DoctorReport is what `ork doctor --json` prints. OK is false when slicer,
 // adj or the contract check fails; a vendor CLI that is missing or broken is
-// reported but does not fail the check. Binary is the resolved path of the
-// running ork binary, empty when that path cannot be read.
+// reported but does not fail the check. Project findings are also advisory.
+// Binary is the resolved path of the running ork binary, empty when that
+// path cannot be read.
 type DoctorReport struct {
-	OK            bool          `json:"ok"`
-	Tools         []toolCheck   `json:"tools"`
-	Contract      contractCheck `json:"contract"`
-	Binary        string        `json:"binary"`
-	DaemonBuildID string        `json:"daemon_build_id,omitempty"`
-	BehindNotice  string        `json:"behind_notice,omitempty"`
-	Warning       string        `json:"warning,omitempty"`
+	OK            bool           `json:"ok"`
+	Tools         []toolCheck    `json:"tools"`
+	Contract      contractCheck  `json:"contract"`
+	Binary        string         `json:"binary"`
+	Projects      []projectCheck `json:"projects"`
+	RegistryError string         `json:"registry_error,omitempty"`
+	DaemonBuildID string         `json:"daemon_build_id,omitempty"`
+	BehindNotice  string         `json:"behind_notice,omitempty"`
+	Warning       string         `json:"warning,omitempty"`
+}
+
+// assignmentPrefix recognizes only literal shell assignment names. Values are
+// skipped without expanding them or executing any part of the command.
+var assignmentPrefix = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*=`)
+
+// checkCommandWord reads the first literal shell word after assignments.
+// Quotes and escapes are removed, but no shell expansion is performed.
+func checkCommandWord(command string) string {
+	for command = strings.TrimLeft(command, " \t\r\n"); command != ""; command = strings.TrimLeft(command, " \t\r\n") {
+		if strings.ContainsRune("#;&|()<>", rune(command[0])) {
+			return ""
+		}
+		assignment := assignmentPrefix.MatchString(command)
+		var word strings.Builder
+		var quote byte
+		i := 0
+		for ; i < len(command); i++ {
+			c := command[i]
+			if quote == 0 && strings.ContainsRune(" \t\r\n;&|()<>", rune(c)) {
+				break
+			}
+			if c == '\\' && quote != '\'' && i+1 < len(command) {
+				next := command[i+1]
+				if quote == 0 || strings.ContainsRune("$`\\\"\n", rune(next)) {
+					if next != '\n' {
+						word.WriteByte(next)
+					}
+					i++
+					continue
+				}
+			}
+			if c == '\'' || c == '"' {
+				if quote == 0 {
+					quote = c
+					continue
+				}
+				if quote == c {
+					quote = 0
+					continue
+				}
+			}
+			word.WriteByte(c)
+		}
+		if !assignment {
+			value := word.String()
+			switch value {
+			case "!", "{", "}", "case", "do", "done", "elif", "else", "esac", "fi", "for", "if", "in", "then", "until", "while",
+				".", ":", "break", "continue", "eval", "exec", "exit", "export", "readonly", "return", "set", "shift", "times", "trap", "unset", "cd", "command":
+				return ""
+			}
+			if strings.ContainsAny(value, "$`") || strings.HasPrefix(value, "~") {
+				return ""
+			}
+			return value
+		}
+		command = command[i:]
+	}
+	return ""
+}
+
+// addFinding keeps every stored finding on a single text line.
+func (p *projectCheck) addFinding(format string, args ...any) {
+	p.Findings = append(p.Findings, strings.Join(strings.Fields(fmt.Sprintf(format, args...)), " "))
+}
+
+var shellErrorPrefix = regexp.MustCompile(`^.*sh: (?:-c: line [0-9]+: |[0-9]+: )`)
+
+func checkProject(ctx context.Context, p registry.Project) projectCheck {
+	check := projectCheck{Name: p.Name, Path: p.Path, Findings: []string{}}
+	info, err := os.Stat(p.Path)
+	if os.IsNotExist(err) {
+		check.addFinding("path: does not exist")
+	} else if err != nil {
+		check.addFinding("path: %v", err)
+	} else if !info.IsDir() {
+		check.addFinding("path: not a directory")
+	}
+	if p.CheckCommand != "" {
+		// -n parses only: even substitutions and redirects must never execute.
+		res, err := clirun.Run(ctx, clirun.Call{Bin: "sh", Args: []string{"-n", "-c", p.CheckCommand}, Timeout: versionTimeout})
+		if err != nil {
+			message := shellErrorPrefix.ReplaceAllString(firstLine(res.Stderr), "")
+			if message == "" {
+				message = "could not check shell syntax"
+			}
+			check.addFinding("check_command: %s", message)
+		} else if word := checkCommandWord(p.CheckCommand); word != "" {
+			bin := word
+			if strings.ContainsRune(bin, '/') && !filepath.IsAbs(bin) {
+				bin = filepath.Join(p.Path, bin)
+			}
+			if _, err := exec.LookPath(bin); err != nil {
+				detail := "not found on PATH"
+				if strings.ContainsRune(word, '/') {
+					detail = "not executable"
+					if _, statErr := os.Stat(bin); os.IsNotExist(statErr) {
+						detail = "not found"
+						if !filepath.IsAbs(word) {
+							detail = "not found in project directory"
+						}
+					}
+				}
+				check.addFinding("check_command: %q %s", word, detail)
+			}
+		}
+	}
+	for _, pattern := range []struct{ name, value string }{
+		{"worktree_pattern", p.WorktreePattern}, {"branch_pattern", p.BranchPattern},
+	} {
+		if pattern.value != "" && !strings.Contains(pattern.value, "{id}") {
+			check.addFinding("%s %q has no {id}", pattern.name, pattern.value)
+		}
+	}
+	return check
 }
 
 // ownBinary returns the path of the running ork binary with symlinks resolved.
@@ -131,7 +257,17 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	}
 
 	t := a.Tools
-	rep := DoctorReport{OK: true}
+	rep := DoctorReport{OK: true, Projects: []projectCheck{}}
+	registryPath, registryErr := registry.DefaultPath()
+	if registryErr == nil {
+		var file *registry.File
+		file, registryErr = registry.Load(registryPath)
+		if registryErr == nil {
+			for _, p := range file.Projects {
+				rep.Projects = append(rep.Projects, checkProject(ctx, p))
+			}
+		}
+	}
 	// Probe only an existing daemon. Doctor must not start one.
 	probeCtx, cancel := context.WithTimeout(ctx, versionTimeout)
 	defer cancel()
@@ -183,6 +319,9 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 		rep.OK = false
 	}
 
+	if registryErr != nil {
+		rep.RegistryError = registryErr.Error()
+	}
 	code := ExitOK
 	if !rep.OK {
 		code = ExitFailure
@@ -237,6 +376,19 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 		fmt.Fprintf(o.stdout, "[ok] contract  accepts %s%s\n", accepted, found)
 	} else {
 		fmt.Fprintf(o.stdout, "[FAIL] contract  accepts %s%s: %s\n", accepted, found, c.Error)
+	}
+	if rep.RegistryError != "" {
+		fmt.Fprintf(o.stdout, "[WARN] registry  %s\n", rep.RegistryError)
+	}
+	for _, p := range rep.Projects {
+		status := "ok"
+		if len(p.Findings) > 0 {
+			status = "WARN"
+		}
+		fmt.Fprintf(o.stdout, "[%s] project %s  %s\n", status, p.Name, p.Path)
+		for _, finding := range p.Findings {
+			fmt.Fprintf(o.stdout, "  %s\n", finding)
+		}
 	}
 	return code
 }

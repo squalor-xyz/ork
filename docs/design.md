@@ -892,7 +892,7 @@ ork daemon restart [--force]
                             stop and start the current executable
 ork roles print [ROLE]      print the embedded role prompts
 ork projects add|list|rm    manage the registry
-ork doctor                  check versions, CLIs, logins, contract, ork path
+ork doctor                  check versions, CLIs, logins, contract, ork path, projects
 ```
 
 S03 ships `status`, `projects`, `roles print` and `doctor`
@@ -1019,9 +1019,21 @@ a run that is not stopped or is busy. An unknown run returns `not_found`.
   the outer session's hand-back handling and the orchestrator's last line
   (`waiting on: ROLE AGENT-ID`; `slicer/CHANGELOG.md:20`). ork's role prompts
   remain written against v7;
-- each project's check command and patterns (later).
+- each project's path exists and is a directory; a configured check command
+  passes `sh -n -c` and its first word after leading `VAR=value` assignments
+  resolves on PATH, or against the project directory when it contains `/`.
+  Lookup is skipped for POSIX reserved words and special builtins, plus `cd`
+  and `command`, and words containing `$` or a backtick or starting with `~`.
+  Doctor never executes the check command. Nonempty worktree and branch
+  patterns must contain `{id}`; empty patterns use the defaults.
+  The registry is read only; a missing registry is empty and is not created.
+  A registry read error is advisory: JSON has `registry_error` (omitted when
+  there is no error), separate from the daemon's `warning`. Text prints
+  `[WARN] registry  ERR` just before the project lines. It does not change
+  `ok` or the exit code.
 
-Doctor exits 1 when slicer, adj or the contract check fails. `roles print`
+Doctor exits 1 when slicer, adj or the contract check fails. Project findings
+do not change `ok` or the exit code. `roles print`
 and `doctor` run in the CLI process. `status` and `projects` go through the
 daemon, which the CLI starts on demand; with `--json` an error is
 `{"error":{"code","message"}}` on stdout, and the text form is `ork: MESSAGE`
@@ -1102,11 +1114,13 @@ Text output is plain lines meant to be stable. `--json` output, indented:
 - `roles print [ROLE]`: `{"roles":[{"name","prompt"}]}`. Text: the prompt of
   ROLE as embedded, or all four with a `==== NAME ====` line before each.
 - `doctor`: `{"ok","tools":[{"name","required","present","path","version",
-  "ok","error"}],"contract":{"accepted":[7],"found","ok","error"},"binary"}`,
+  "ok","error"}],"contract":{"accepted":[7],"found","ok","error"},"binary",
+  "projects":[{"name","path","findings":[]}],"registry_error"?}`,
   where `binary` is the path of the running ork binary (empty when it cannot
   be read). Text: one `[ok]`, `[--]` or `[FAIL]` line per check, and the first
   line is `[ok] ork  PATH`, or `[--] ork  path unknown: ERROR` when the path
-  cannot be read.
+  cannot be read. Projects have one `project NAME  PATH` line each, with
+  findings indented below. Every finding is stored on one line.
 
 ## Testing
 

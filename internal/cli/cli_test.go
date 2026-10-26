@@ -585,11 +585,17 @@ type doctorOut struct {
 		OK       bool   `json:"ok"`
 		Error    string `json:"error"`
 	} `json:"contract"`
+	Projects []struct {
+		Name     string   `json:"name"`
+		Path     string   `json:"path"`
+		Findings []string `json:"findings"`
+	} `json:"projects"`
 	Binary string `json:"binary"`
 }
 
 func doctorApp(t *testing.T, relayFirstLine string) (app *App, fake *clitest.Fake, logs map[string]string) {
 	t.Helper()
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	fake = clitest.Install(t,
 		clitest.Route{Tool: "slicer", Args: []string{"--version"}, Stdout: "slicer 1.15.0\n"},
 		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay"}, Stdout: relayFirstLine + "\n\n# Slice relay\nmore text\n"},
@@ -604,6 +610,306 @@ func doctorApp(t *testing.T, relayFirstLine string) (app *App, fake *clitest.Fak
 	app = noDaemon(t)
 	app.Tools = Tools{Slicer: fake.Bin("slicer"), Adj: fake.Bin("adj"), Claude: bins["claude"], Codex: bins["codex"], Grok: bins["grok"]}
 	return app, fake, logs
+}
+
+// doctorProjects writes only a temporary registry and uses fake tool binaries.
+func doctorProjects(t *testing.T, projects ...registry.Project) (*App, string) {
+	t.Helper()
+	app, _, _ := doctorApp(t, "Contract: relay v7")
+	path, err := registry.DefaultPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if projects != nil {
+		if err := registry.Save(path, &registry.File{Version: registry.Version, Projects: projects}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return app, path
+}
+
+func projectReport(t *testing.T, app *App) doctorOut {
+	t.Helper()
+	code, out, stderr := run(t, app, "doctor", "--json")
+	var d doctorOut
+	mustJSON(t, out, &d)
+	if code != 0 || !d.OK {
+		t.Fatalf("exit %d: %s %s", code, out, stderr)
+	}
+	if len(d.Projects) != 1 {
+		t.Fatalf("want one project: %s", out)
+	}
+	return d
+}
+
+func TestDoctorChecksEachProjectCheckCommand(t *testing.T) {
+	for _, tc := range []struct{ name, command, finding string }{
+		{"path", "check-tool --never-run", ""},
+		{"assignments", "MODE=test OTHER='two words' check-tool", ""},
+		{"missing", "MODE=test missing-check-tool test", `check_command: "missing-check-tool" not found on PATH`},
+		{"dot-relative", "./local-check-tool", ""},
+		{"relative", "bin/check-tool", ""},
+		{"quoted", "'./check tool'", ""},
+		{"double-quoted", `"./check tool"`, ""},
+		{"escaped", `./check\ tool`, ""},
+		{"operator", "check-tool&& missing-second-command", ""},
+		{"absolute", "ABSOLUTE", ""},
+		{"missing-relative", "./missing-check-tool", `check_command: "./missing-check-tool" not found in project directory`},
+		{"not-executable", "./plain-file", `check_command: "./plain-file" not executable`},
+		{"directory", "./bin", `check_command: "./bin" not executable`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := t.TempDir()
+			pathDir := t.TempDir()
+			if err := os.Mkdir(filepath.Join(dir, "bin"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			// Executing this file would leave a marker. Doctor must only parse and resolve.
+			marker := filepath.Join(dir, "executed")
+			for _, name := range []string{"local-check-tool", "bin/check-tool", "check tool"} {
+				if err := os.WriteFile(filepath.Join(dir, name), []byte("#!/bin/sh\ntouch '"+marker+"'\n"), 0o755); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := os.WriteFile(filepath.Join(dir, "plain-file"), nil, 0o644); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(pathDir, "check-tool"), []byte("#!/bin/sh\ntouch '"+marker+"'\n"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			command := tc.command
+			if tc.name == "path" {
+				command += " $(touch '" + marker + "') > '" + marker + "'"
+			}
+			if command == "ABSOLUTE" {
+				command = filepath.Join(dir, "local-check-tool")
+			}
+			app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: dir, CheckCommand: command})
+			t.Setenv("PATH", pathDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+			d := projectReport(t, app)
+			findings := strings.Join(d.Projects[0].Findings, "\n")
+			if tc.finding == "" && findings != "" || tc.finding != "" && findings != tc.finding {
+				t.Fatalf("findings %q, want %q", findings, tc.finding)
+			}
+			if _, err := os.Stat(marker); !os.IsNotExist(err) {
+				t.Fatalf("check command was executed: %v", err)
+			}
+		})
+	}
+}
+
+func TestDoctorCheckCommandSyntaxError(t *testing.T) {
+	app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "go test ("})
+	d := projectReport(t, app)
+	if got := strings.Join(d.Projects[0].Findings, " "); !strings.Contains(got, "syntax") {
+		t.Fatalf("want syntax finding: %q", got)
+	}
+}
+
+func TestDoctorReportsProjectWithMissingPath(t *testing.T) {
+	for _, file := range []bool{false, true} {
+		t.Run(fmt.Sprint(file), func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "project")
+			if file {
+				if err := os.WriteFile(path, nil, 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
+			app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: path})
+			d := projectReport(t, app)
+			want := "path: does not exist"
+			if file {
+				want = "path: not a directory"
+			}
+			if got := strings.Join(d.Projects[0].Findings, " "); got != want {
+				t.Fatalf("want path finding: %q", got)
+			}
+		})
+	}
+}
+
+func TestDoctorPatternWithoutIdIsReported(t *testing.T) {
+	for _, tc := range []struct{ worktree, branch, finding string }{
+		{"", "", ""}, {".worktrees/{id}", "slice/{id}", ""},
+		{".worktrees/fixed", "", "worktree_pattern"}, {"", "fixed", "branch_pattern"},
+		{"{id_lower}", "", "worktree_pattern"},
+	} {
+		t.Run(tc.worktree+"/"+tc.branch, func(t *testing.T) {
+			app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir(), WorktreePattern: tc.worktree, BranchPattern: tc.branch})
+			d := projectReport(t, app)
+			got := strings.Join(d.Projects[0].Findings, " ")
+			if tc.finding == "" && got != "" || tc.finding != "" && (!strings.Contains(got, tc.finding) || !strings.Contains(got, "has no {id}") || !strings.Contains(got, fmt.Sprintf("%q", tc.worktree+tc.branch))) {
+				t.Fatalf("findings %q, want %q", got, tc.finding)
+			}
+		})
+	}
+}
+
+func TestDoctorProjectWithoutCheckCommandIsNotAnError(t *testing.T) {
+	app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir()})
+	d := projectReport(t, app)
+	if d.Projects[0].Findings == nil || len(d.Projects[0].Findings) != 0 {
+		t.Fatalf("findings: %+v", d.Projects[0])
+	}
+}
+
+func TestDoctorProjectFindingsKeepExitZero(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "missing")
+	app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: path, BranchPattern: "fixed"})
+	d := projectReport(t, app)
+	if len(d.Projects[0].Findings) != 2 {
+		t.Fatalf("findings: %+v", d.Projects[0])
+	}
+	code, out, _ := run(t, app, "doctor")
+	if code != 0 || !strings.Contains(out, "[WARN] project demo  "+path+"\n  ") || !strings.Contains(out, "\n  branch_pattern") {
+		t.Fatalf("text: exit %d: %s", code, out)
+	}
+}
+
+func TestDoctorJSONListsEachProject(t *testing.T) {
+	projects := []registry.Project{{Name: "one", Path: t.TempDir()}, {Name: "two", Path: t.TempDir(), BranchPattern: "fixed"}}
+	app, path := doctorProjects(t, projects...)
+	// Compact, deliberately reordered JSON detects a doctor-side Save.
+	before := []byte(fmt.Sprintf(`{"projects":[{"path":%q,"name":"one","adj":false},{"path":%q,"name":"two","adj":false,"branch_pattern":"fixed"}],"version":2}`, projects[0].Path, projects[1].Path))
+	if err := os.WriteFile(path, before, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	code, out, _ := run(t, app, "doctor", "--json")
+	var d doctorOut
+	mustJSON(t, out, &d)
+	if !strings.HasPrefix(out, "{\n  \"ok\":") || strings.Index(out, `"projects":`) < strings.Index(out, `"binary":`) {
+		t.Fatalf("field order: %s", out)
+	}
+	if strings.Contains(out, `"registry_error"`) {
+		t.Fatalf("unexpected registry_error: %s", out)
+	}
+	if code != 0 || len(d.Projects) != 2 {
+		t.Fatalf("exit %d: %s", code, out)
+	}
+	for i, p := range projects {
+		if d.Projects[i].Name != p.Name || d.Projects[i].Path != p.Path || d.Projects[i].Findings == nil {
+			t.Fatalf("project %d: %+v", i, d.Projects[i])
+		}
+	}
+	after, _ := os.ReadFile(path)
+	if !bytes.Equal(before, after) {
+		t.Fatal("doctor rewrote registry")
+	}
+	code, out, _ = run(t, app, "doctor")
+	if code != 0 || !strings.Contains(out, "[ok] project one  "+projects[0].Path+"\n") {
+		t.Fatalf("healthy project text: %s", out)
+	}
+}
+
+func TestDoctorWithoutRegistry(t *testing.T) {
+	app, path := doctorProjects(t)
+	code, out, _ := run(t, app, "doctor", "--json")
+	var d doctorOut
+	mustJSON(t, out, &d)
+	if code != 0 || !d.OK || d.Projects == nil || len(d.Projects) != 0 {
+		t.Fatalf("exit %d: %s", code, out)
+	}
+	if _, err := os.Stat(filepath.Dir(path)); !os.IsNotExist(err) {
+		t.Fatalf("registry directory created: %v", err)
+	}
+}
+
+func TestDoctorRegistryReadFailureIsAdvisory(t *testing.T) {
+	app, path := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir()})
+	if err := os.WriteFile(path, []byte("{"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	code, out, _ := run(t, app, "doctor")
+	if code != 0 || !strings.Contains(out, "[WARN] registry  ") || strings.Index(out, "[WARN] registry") < strings.Index(out, "[ok] contract") {
+		t.Fatalf("exit %d: %s", code, out)
+	}
+	code, out, _ = run(t, app, "doctor", "--json")
+	var d struct {
+		OK            bool   `json:"ok"`
+		Warning       string `json:"warning"`
+		RegistryError string `json:"registry_error"`
+	}
+	mustJSON(t, out, &d)
+	if code != 0 || !d.OK || d.Warning != "" || !strings.Contains(d.RegistryError, "unexpected end of JSON input") {
+		t.Fatalf("exit %d: %s", code, out)
+	}
+}
+
+func TestDoctorFindingsAreSingleLine(t *testing.T) {
+	for _, command := range []string{`go test "`, ""} {
+		t.Run(command, func(t *testing.T) {
+			path := t.TempDir()
+			if command == "" {
+				file := filepath.Join(path, "file\nline")
+				if err := os.WriteFile(file, nil, 0o644); err != nil {
+					t.Fatal(err)
+				}
+				path = filepath.Join(file, "child")
+			}
+			app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: path, CheckCommand: command})
+			d := projectReport(t, app)
+			if len(d.Projects[0].Findings) != 1 {
+				t.Fatalf("findings: %+v", d.Projects[0].Findings)
+			}
+			for _, finding := range d.Projects[0].Findings {
+				if strings.ContainsAny(finding, "\r\n") {
+					t.Fatalf("multiline finding: %q", finding)
+				}
+			}
+			_, out, _ := run(t, app, "doctor")
+			_, findings, ok := strings.Cut(out, "[WARN] project demo  "+path+"\n")
+			if !ok {
+				t.Fatalf("project line missing: %s", out)
+			}
+			for _, line := range strings.Split(strings.TrimSuffix(findings, "\n"), "\n") {
+				if !strings.HasPrefix(line, "  ") {
+					t.Fatalf("unindented finding: %q", line)
+				}
+			}
+		})
+	}
+}
+
+func TestDoctorSyntaxFindingOmitsShellCall(t *testing.T) {
+	app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "go test ("})
+	dir := t.TempDir()
+	script := `#!/bin/sh
+printf '%s\n' "sh: -c: line 1: syntax error near unexpected token '('" "sh: -c: line 1: go test (" >&2
+exit 2
+`
+	if err := os.WriteFile(filepath.Join(dir, "sh"), []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	d := projectReport(t, app)
+	want := "check_command: syntax error near unexpected token '('"
+	if got := strings.Join(d.Projects[0].Findings, " "); got != want {
+		t.Fatalf("finding %q, want %q", got, want)
+	}
+}
+
+func TestDoctorSkipsShellWords(t *testing.T) {
+	words := strings.Fields("! { } case do done elif else esac fi for if in then until while . : break continue eval exec exit export readonly return set shift times trap unset cd command")
+	words = append(words, "$TOOL", "${TOOL}", "$(printf tool)", "`printf tool`", "~/bin/check", "~someone/bin/check")
+	for _, word := range words {
+		t.Run(word, func(t *testing.T) {
+			if got := checkCommandWord("MODE=test " + word); got != "" {
+				t.Fatalf("shell word %q must skip lookup, got %q", word, got)
+			}
+		})
+	}
+}
+
+func TestDoctorShellCommandsHaveNoLookupFinding(t *testing.T) {
+	for _, command := range []string{"if :; then :; fi", "{ :; }", ". ./missing-script", "cd /missing-dir", "command missing-check-tool", `"$TOOL"`, "`printf tool`", "~/bin/check"} {
+		t.Run(command, func(t *testing.T) {
+			app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: command})
+			d := projectReport(t, app)
+			if len(d.Projects[0].Findings) != 0 {
+				t.Fatalf("findings: %+v", d.Projects[0].Findings)
+			}
+		})
+	}
 }
 
 func TestDoctorReportsEachToolAndTheAcceptedContracts(t *testing.T) {
