@@ -2,9 +2,9 @@
 [1;7m> Needs you              1 [m│[2m────────────────────────────────────────────────────────────────────────[m
   ork                    1 │[1mNeeds you 1[m
                            │  [1mPaused 1[m
-                           │[1;7m  =  ork  engine  S22  paused  owner action  2 of 6 steps running  2m   [m
+                           │[1;7m  ?  ork  engine  S22  paused  owner action  2 of 6 steps running  2m   [m
                            │
-                           │[1mRunning 0[m
+                           │[1mRunning 0[m  [1m! owner questions 1[m
                            │  [2mnothing running[m
                            │
                            │[1mRecent[m
@@ -23,7 +23,7 @@
                            │  [2mimplementer[m > [2mreviewer[m > [2mgate[m
                            │  
                            │  Answer: [1muse local storage[m[1;7m [m[1m[m
-                           │  ork answer engine use local storage
+                           │  ork answer engine 'use local storage'
                            │  [1m[x] file answer in adj as storage.engine  ctrl+a toggles[m
                            │  enter submit; esc close pane
                            │[2m────────────────────────────────────────────────────────────────────────[m

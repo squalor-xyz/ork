@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -166,5 +167,71 @@ func (c Client) RelayEnd(ctx context.Context, w runrec.Writer, root, run, outcom
 // Note runs `slicer note ID --text TEXT --render --json`.
 func (c Client) Note(ctx context.Context, w runrec.Writer, root, id, text string) error {
 	_, err := c.write(ctx, w, root, "note", id, "--text", text, "--render", "--json")
+	return err
+}
+
+// Rule is one rule of the relay roles matrix.
+type Rule struct {
+	ID   string `json:"id"`
+	Text string `json:"text"`
+}
+
+// RelayRules runs `slicer relay-roles show --json --root ROOT` and returns the
+// matrix's rules.
+func (c Client) RelayRules(ctx context.Context, root string) ([]Rule, error) {
+	var out struct {
+		Rules []Rule `json:"rules"`
+	}
+	if err := clirun.RunJSON(ctx, c.call("relay-roles", "show", "--json", "--root", root), &out); err != nil {
+		return nil, err
+	}
+	return out.Rules, nil
+}
+
+var uiPassRow = regexp.MustCompile(`UI pass row \((r\d+)\)`)
+
+// UIPassRowID finds the matrix row of the UI pass: the id that a rule names as
+// "UI pass row (rNN)" (rule u10 today). It is empty when no rule names one.
+// Until slicer has a ui role (s392), the row's role is reviewer and this rule
+// is the only way to tell it from the reviewer's own rows.
+func UIPassRowID(rules []Rule) string {
+	for _, r := range rules {
+		if m := uiPassRow.FindStringSubmatch(r.Text); m != nil {
+			return m[1]
+		}
+	}
+	return ""
+}
+
+// Added is the item `slicer add` filed. Existing is true when the key matched
+// an item filed before, which the call then returns unchanged.
+type Added struct {
+	ID       string `json:"id"`
+	Existing bool   `json:"existing"`
+	HasSlice bool   `json:"has_slice"`
+}
+
+// Add runs `slicer add TITLE --discovered-from ID --key KEY --render --json
+// --lean --root ROOT`. The key is the filing identity: a retry returns the
+// item the first call filed. A leading dash is cut from the title so that
+// slicer does not read it as a flag.
+func (c Client) Add(ctx context.Context, w runrec.Writer, root, title, discoveredFrom, key string) (*Added, error) {
+	title = strings.TrimLeft(title, "- ")
+	res, err := c.write(ctx, w, root, "add", title, "--discovered-from", discoveredFrom, "--key", key, "--render", "--json", "--lean")
+	if err != nil {
+		return nil, err
+	}
+	var out Added
+	if err := json.Unmarshal(bytes.TrimSpace(res.Stdout), &out); err != nil || out.ID == "" {
+		return nil, fmt.Errorf("slicer add: no item id in the output")
+	}
+	return &out, nil
+}
+
+// Promote runs `slicer promote ID --file FILE --render --json --lean --root
+// ROOT`: it gives an item filed without a spec the sections of a one-item
+// outline.
+func (c Client) Promote(ctx context.Context, w runrec.Writer, root, id, file string) error {
+	_, err := c.write(ctx, w, root, "promote", id, "--file", file, "--render", "--json", "--lean")
 	return err
 }

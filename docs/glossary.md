@@ -53,6 +53,12 @@ change after a review needs another gate. Owner: slicer, `RELAY_GATE`.
 A small fix round is reviewed and gated in one pass (contract v7). Owner:
 slicer.
 
+**Finding kind.** The tag on a finding in a reviewer, UI pass or gate report
+(adj #163): `fix` goes to the fix round, `owner` is a design call shown to the
+owner as a structured question (it blocks the gate only as `owner blocker`),
+`later` is offered to the owner as a new slice. A finding without a tag is a
+fix. Owner: ork (a *proposed* convention of its role prompts).
+
 ## Lineup and vendors
 
 **Role matrix.** Rows that pick agent, vendor, model and reasoning effort per

@@ -111,6 +111,7 @@ type Engine struct {
 	activity       activityRing
 	heartbeatEvery time.Duration
 	mu             sync.Mutex
+	fileMu         sync.Mutex // one filing of a later finding at a time
 	d              Deps
 	proj           registry.Project
 	run            *runrec.Run
@@ -203,7 +204,11 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 			return nil, fmt.Errorf("the lineup has no %s", role)
 		}
 	}
-	for _, role := range []string{RoleImplementer, RoleReviewer, RoleGate} {
+	roleList := []string{RoleImplementer, RoleReviewer, RoleGate}
+	if _, ok := lineup(cfg.Lineup, RoleUI); ok {
+		roleList = append(roleList, RoleUI)
+	}
+	for _, role := range roleList {
 		if _, err := ResolvePermission(cfg.Project, role); err != nil {
 			return nil, err
 		}
@@ -408,13 +413,20 @@ func (e *Engine) Stop(ctx context.Context, why string) error {
 
 // stop ends the slice: state stopped, the reason, and the ledger run ended
 // with outcome stopped. The caller holds e.mu.
+//
+// Two roles of one state run at the same time (the reviewer and the UI pass),
+// and both may ask to stop: the first stop is kept.
 func (e *Engine) stop(ctx context.Context, reason string) error {
+	already := false
 	err := e.run.Update(func(r *runrec.Record) {
+		if already = r.State == runrec.StateStopped; already {
+			return
+		}
 		r.State = runrec.StateStopped
 		r.Reason = reason
 		r.Pending = nil
 	})
-	if err != nil {
+	if err != nil || already {
 		return err
 	}
 	e.endRelay(ctx, "stopped", "fail")
@@ -422,9 +434,14 @@ func (e *Engine) stop(ctx context.Context, reason string) error {
 }
 
 // pause moves the slice to paused, waiting for the owner. The caller holds
-// e.mu.
+// e.mu. A slice that is already paused or stopped keeps its first pause or
+// stop: two roles of one state (the reviewer and the UI pass) may both ask.
+// stop() is the stronger of the two: it refuses only when already stopped.
 func (e *Engine) pause(p runrec.Pending) error {
 	return e.run.Update(func(r *runrec.Record) {
+		if r.State == runrec.StatePaused || r.State == runrec.StateStopped {
+			return
+		}
 		r.State = runrec.StatePaused
 		r.Reason = p.Reason
 		r.Pending = &p

@@ -5,18 +5,22 @@ package tui
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
+	"github.com/squalor-xyz/ork/internal/source"
 )
 
 type wavesLive struct {
+	details map[string]*slicercli.Detail
 	fakeLive
 	suggest                                   *slicercli.ParallelPlan
 	overlap                                   *slicercli.Overlap
@@ -110,7 +114,7 @@ func TestWavesListsSuggestedWaves(t *testing.T) {
 	h, l := wavesHarness(t)
 	openWaves(t, h)
 	v := h.view()
-	for _, s := range []string{"Wave 2", "A  Alpha", "B  Beta", "Wave 4", "C  Gamma", "Unplaced", "D  Delta", "no_files"} {
+	for _, s := range []string{"Wave 2", "A  Alpha", "B  Beta", "Wave 4", "C  Gamma", "Unplaced", "D  Delta", "no files listed"} {
 		if !strings.Contains(v, s) {
 			t.Errorf("missing %q:\n%s", s, v)
 		}
@@ -152,7 +156,7 @@ func TestWavesTickAsksInputsThenPlans(t *testing.T) {
 	if len(l.plans) != 1 || !l.plans[0].WellSpecified || l.plans[0].Split || l.plans[0].Item != "A" {
 		t.Fatalf("plans: %+v", l.plans)
 	}
-	for _, s := range []string{"Lineup", "implementer: claude sonnet high", "reviewer: claude opus medium", "gate: claude opus medium", "[x] A"} {
+	for _, s := range []string{"Lineup", "impl:  claude sonnet high", "rev:   claude opus medium", "gate:  claude opus medium", "[x] A"} {
 		if !strings.Contains(h.view(), s) {
 			t.Errorf("missing %s:\n%s", s, h.view())
 		}
@@ -322,16 +326,38 @@ func TestTabReachesTheWavesView(t *testing.T) {
 	}
 }
 func TestWavesGolden(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		mono bool
-	}{{"waves-100x30-color.txt", false}, {"waves-100x30-mono.txt", true}} {
-		t.Run(tc.name, func(t *testing.T) {
-			h, _ := wavesHarness(t)
-			h.m.cfg.Theme = NewTheme(tc.mono)
-			twoWaveItems(t, h)
-			checkGolden(t, tc.name, h.m.View().Content)
-		})
+	for _, size := range [][2]int{{100, 30}, {80, 24}, {120, 40}} {
+		for _, mono := range []bool{false, true} {
+			for _, picked := range []bool{false, true} {
+				for _, ascii := range []bool{false, true} {
+					theme, suffix := "color", ""
+					if mono {
+						theme = "mono"
+					}
+					if picked {
+						suffix += "-lineup"
+					}
+					if ascii {
+						suffix += "-ascii"
+					}
+					name := fmt.Sprintf("waves-%dx%d-%s%s.txt", size[0], size[1], theme, suffix)
+					t.Run(name, func(t *testing.T) {
+						h, l := wavesHarness(t)
+						h.m.cfg.Theme = NewTheme(mono)
+						h.m.cfg.ASCII = ascii
+						h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+						l.suggest.Waves[1].Items[0].Reason = "shares: A internal/engine/shared.go"
+						if picked {
+							twoWaveItems(t, h)
+						} else {
+							openWaves(t, h)
+						}
+						h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+						checkGolden(t, name, h.m.View().Content)
+					})
+				}
+			}
+		}
 	}
 }
 
@@ -515,4 +541,875 @@ func TestWavesInputsStayVisibleForLongLists(t *testing.T) {
 
 func (l *wavesLive) AnswerAction(ctx context.Context, a daemon.RunAction) (string, error) {
 	return "", l.Answer(ctx, a.Run, a.Text)
+}
+
+func (l *wavesLive) ItemShow(_ context.Context, project, id string) (*slicercli.Detail, error) {
+	return l.details[id], nil
+}
+
+func TestWavesMarksEngineConflict(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.details = map[string]*slicercli.Detail{
+		"A": {Slice: &slicercli.Spec{Sections: []slicercli.Section{{Heading: "Files", Body: "- `internal/engine/a.go:12`"}}}},
+		"B": {Slice: &slicercli.Spec{Sections: []slicercli.Section{{Heading: "Files", Body: "- `cmd/ork/main.go`"}}}},
+	}
+	twoWaveItems(t, h)
+	if !strings.Contains(h.view(), "engine conflict: A and B") {
+		t.Fatalf("conflict missing before launch:\n%s", h.view())
+	}
+	h.deliver(press("l"))
+	if h.m.confirm != nil || l.writes != 0 {
+		t.Fatal("conflicting selection could launch")
+	}
+	h.deliver(press(" "))
+	if strings.Contains(h.view(), "engine conflict") {
+		t.Fatal("conflict survived untick")
+	}
+	h.deliver(press("l"))
+	h.deliver(press("y"))
+	if len(l.starts) != 1 || len(l.starts[0].Items) != 1 {
+		t.Fatal("single engine slice did not start")
+	}
+}
+
+func TestSharesIsADimColumnWithThePredecessorIdOnly(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		h, l := wavesHarness(t)
+		h.m.cfg.Theme = NewTheme(mono)
+		l.suggest.Waves[0].Items[1].Reason = "shares: S65 internal/engine/shared.go"
+		openWaves(t, h)
+		raw := strings.Join(h.m.wavesBody(76).body, "\n")
+		plain := sgr.ReplaceAllString(raw, "")
+		if !strings.Contains(plain, "Shares") || !strings.Contains(raw, h.m.cfg.Theme.Dim.Render("<S65")) || strings.Contains(plain, "shared.go") || strings.Contains(plain, "shares:") {
+			t.Fatalf("shares column missing or contains path: %q", raw)
+		}
+	}
+}
+
+func TestEnterOnAWavesRowShowsTheSharedFiles(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.suggest.Waves[0].Items[0].Reason = "shares: S65 internal/engine/shared.go"
+	l.details = map[string]*slicercli.Detail{"A": {Title: "Alpha detail", Slice: &slicercli.Spec{Title: "Alpha detail", Sections: []slicercli.Section{{Heading: "Files", Body: "- `own.go`"}}}}}
+	openWaves(t, h)
+	h.deliver(press("enter"))
+	for _, want := range []string{"Item A", "Alpha detail", "internal/engine/shared.go", "own.go", "esc"} {
+		if !strings.Contains(h.view(), want) {
+			t.Errorf("item pane missing %q:\n%s", want, h.view())
+		}
+	}
+	for _, k := range []string{" ", "l", "e", "y", "a", "x", "t"} {
+		h.deliver(press(k))
+	}
+	if l.writes != 0 || len(l.plans) != 0 || len(h.m.waves.picked) != 0 {
+		t.Fatal("read-only pane wrote or ticked")
+	}
+	h.deliver(press("esc"))
+	if !strings.Contains(h.view(), "Suggested") {
+		t.Fatal("escape did not return to Waves")
+	}
+}
+
+func TestWaveHeadersAreRulesWithCounts(t *testing.T) {
+	for _, ascii := range []bool{false, true} {
+		h, _ := wavesHarness(t)
+		h.m.cfg.ASCII = ascii
+		openWaves(t, h)
+		_, rule := h.m.cfg.Theme.rules(ascii)
+		plain := sgr.ReplaceAllString(strings.Join(h.m.wavesBody(76).body, "\n"), "")
+		for _, want := range []string{rule + rule + " Wave 2 ", "2 items", rule + rule + " Wave 4 ", "1 item", "Unplaced"} {
+			if !strings.Contains(plain, want) {
+				t.Errorf("missing %q:\n%s", want, plain)
+			}
+		}
+	}
+}
+
+func TestLineupColumnAppearsOnlyAfterTicking(t *testing.T) {
+	h, _ := wavesHarness(t)
+	openWaves(t, h)
+	if strings.Contains(h.view(), "Lineup") {
+		t.Fatal("empty Lineup column visible")
+	}
+	h.deliver(press(" "))
+	if !strings.Contains(h.view(), "Lineup") {
+		t.Fatal("ticking did not show column")
+	}
+	h.deliver(press("esc"))
+	if strings.Contains(h.view(), "Lineup") {
+		t.Fatal("column remained after last tick cancelled")
+	}
+	tickWave(t, h, "y", "n")
+	if !strings.Contains(h.view(), "impl:") {
+		t.Fatal("planned lineup missing")
+	}
+	h.deliver(press(" "))
+	if strings.Contains(h.view(), "Lineup") {
+		t.Fatal("column remained after last untick")
+	}
+}
+
+func TestWavesRowsNeverClipTheKeyColumns(t *testing.T) {
+	for _, size := range [][2]int{{100, 30}, {80, 24}} {
+		for _, picked := range []bool{false, true} {
+			t.Run(fmt.Sprint(size, picked), func(t *testing.T) {
+				h, l := wavesHarness(t)
+				l.suggest.Waves[0].Items[0].Title = strings.Repeat("very long title ", 20)
+				l.suggest.Waves[0].Items[0].Reason = "shares: S65 internal/engine/shared.go"
+				h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+				openWaves(t, h)
+				if picked {
+					tickWave(t, h, "y", "n")
+				}
+				h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+				w, _, side := h.m.layoutSize()
+				for _, line := range h.m.wavesBody(w - side).body {
+					if lipgloss.Width(line) > w-side {
+						t.Errorf("overwide row %d: %q", lipgloss.Width(line), line)
+					}
+				}
+				v := plainView(h.m)
+				if len(strings.Split(v, "\n")) != size[1] {
+					t.Fatal("wrong height")
+				}
+				for _, line := range strings.Split(v, "\n") {
+					if lipgloss.Width(line) > size[0] {
+						t.Fatal("screen too wide")
+					}
+				}
+				if rowsWith(v, "[", "A", "<S65") != 1 {
+					t.Fatalf("key columns clipped:\n%s", v)
+				}
+			})
+		}
+	}
+}
+
+func TestWavesItemPaneIgnoresStaleRepliesAndScrolls(t *testing.T) {
+	h, _ := wavesHarness(t)
+	openWaves(t, h)
+	_, cmd := h.m.Update(press("enter"))
+	old := exec(cmd)[0].(wavesMsg)
+	if !strings.Contains(plainView(h.m), "pending: item.show") {
+		t.Fatal("missing pending read")
+	}
+	h.deliver(press("esc"))
+	h.deliver(press("down"))
+	h.deliver(press("enter"))
+	old.detail = &slicercli.Detail{Title: "STALE DETAIL"}
+	h.deliver(old)
+	if strings.Contains(plainView(h.m), "STALE DETAIL") {
+		t.Fatal("stale detail accepted")
+	}
+	w := h.m.waves
+	h.deliver(wavesMsg{kind: "detail", request: w.request, sequence: w.paneRequest, item: "B", err: &ipc.Error{Code: "read_failed", Message: "Exact item failure"}})
+	if !strings.Contains(plainView(h.m), "read_failed: Exact item failure") {
+		t.Fatal("detail error lost")
+	}
+	h.deliver(wavesMsg{kind: "detail", request: w.request, sequence: w.paneRequest, item: "B", detail: &slicercli.Detail{Slice: &slicercli.Spec{Title: "Beta", Sections: []slicercli.Section{{Heading: "Files", Body: strings.Repeat("more.go\n", 50) + "last-shared.go"}}}}})
+	for range 100 {
+		h.deliver(press("pgdown"))
+	}
+	if !strings.Contains(plainView(h.m), "last-shared.go") || !strings.Contains(plainView(h.m), "esc returns") {
+		t.Fatal("cannot reach last file with close hint visible")
+	}
+	for range 100 {
+		h.deliver(press("pgup"))
+	}
+	if w.paneOffset != 0 {
+		t.Fatal("cannot return to first line")
+	}
+}
+
+func TestWavesTableAlignsColumnsAndPreservesReasons(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.suggest.Waves[0].Items[0].ID = "S1234"
+	l.suggest.Waves[0].Items[0].Title = strings.Repeat("界", 60)
+	l.suggest.Waves[0].Items[0].Reason = "shares: S65 path with spaces.go"
+	l.suggest.Waves[0].Items[1].Reason = "after: S1234"
+	openWaves(t, h)
+	lines := h.m.wavesBody(60).body
+	col := -1
+	for _, raw := range lines {
+		line := sgr.ReplaceAllString(raw, "")
+		if !strings.Contains(line, "[ ]") {
+			continue
+		}
+		if lipgloss.Width(line) != 60 {
+			t.Errorf("row not full width: %q", raw)
+		}
+		if strings.Contains(line, "S1234") && strings.Contains(line, "<S65") {
+			col = lipgloss.Width(strings.Split(line, "<S65")[0])
+			if !reverseSGR.MatchString(raw) {
+				t.Fatal("cursor not reversed")
+			}
+		}
+	}
+	if col != 54 {
+		t.Fatalf("shares column at %d, want 54", col)
+	}
+	if !strings.Contains(sgr.ReplaceAllString(strings.Join(lines, "\n"), ""), "after: S1234") {
+		t.Fatal("non-shares reason lost")
+	}
+	h.deliver(press("enter"))
+	if !strings.Contains(plainView(h.m), "path with spaces.go") {
+		t.Fatal("shared path with spaces lost")
+	}
+}
+
+func TestWavesCursorBarCoversTheKeyColumns(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		for _, picked := range []bool{false, true} {
+			h, l := wavesHarness(t)
+			h.m.cfg.Theme = NewTheme(mono)
+			l.suggest.Waves[0].Items[0].Reason = "shares: S65 shared.go"
+			openWaves(t, h)
+			if picked {
+				tickWave(t, h, "y", "n")
+			}
+			body := h.m.wavesBody(60)
+			line := body.body[body.sel]
+			reversed, last := false, 0
+			for _, loc := range sgr.FindAllStringIndex(line, -1) {
+				if loc[0] > last && !reversed {
+					t.Fatalf("cursor bar gap: %q", line[last:loc[0]])
+				}
+				codes := strings.Split(strings.TrimSuffix(strings.TrimPrefix(line[loc[0]:loc[1]], "\x1b["), "m"), ";")
+				for _, code := range codes {
+					switch code {
+					case "", "0", "27":
+						reversed = false
+					case "7":
+						reversed = true
+					}
+				}
+				last = loc[1]
+			}
+			if last < len(line) && !reversed {
+				t.Fatalf("cursor bar ends early: %q", line)
+			}
+			if lipgloss.Width(line) != 60 {
+				t.Fatal("cursor bar not full width")
+			}
+		}
+	}
+}
+
+func TestWavesSelectedSharesUseUniformStyle(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		h, l := wavesHarness(t)
+		h.m.cfg.Theme = NewTheme(mono)
+		l.suggest.Waves[0].Items[0].Reason = "shares: S65 shared.go"
+		openWaves(t, h)
+		body := h.m.wavesBody(60)
+		line := body.body[body.sel]
+		if !strings.Contains(line, h.m.cfg.Theme.TabActive.Render("<S65  ")) {
+			t.Errorf("shares differ from cursor style: %q", line)
+		}
+		if strings.HasSuffix(line, h.m.cfg.Theme.TabActive.Render("")) && h.m.cfg.Theme.TabActive.Render("") != "" {
+			t.Errorf("empty trailing style: %q", line)
+		}
+	}
+}
+
+func TestWavesFooterWrapsBetweenHints(t *testing.T) {
+	h, _ := wavesHarness(t)
+	openWaves(t, h)
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	body := strings.Join(h.m.wavesBody(60).body, "\n")
+	for _, hint := range []string{"[enter] item", "[space] tick item", "[e] edit lineup", "[l] launch wave"} {
+		if !strings.Contains(body, hint) {
+			t.Errorf("split hint %q:\n%s", hint, body)
+		}
+	}
+}
+
+func TestWavesItemPaneUsesRoadmapHeadingsAndOneTitle(t *testing.T) {
+	h, l := wavesHarness(t)
+	title := strings.Repeat("Long item title ", 8)
+	l.suggest.Waves[0].Items[0].Title = title
+	l.details = map[string]*slicercli.Detail{"A": {Slice: &slicercli.Spec{Title: title, Sections: []slicercli.Section{{Heading: "Files", Body: "own.go"}}}}}
+	openWaves(t, h)
+	h.deliver(press("enter"))
+	body := h.m.waveItemBody(60).body
+	if body[0] != h.m.cfg.Theme.Heading.Render("Item A  (esc returns)") {
+		t.Errorf("wrong header: %q", body[0])
+	}
+	titleLines := wrapText(title, 60)
+	for i, want := range titleLines {
+		if body[i+1] != h.m.cfg.Theme.Heading.Render(want) {
+			t.Errorf("title heading mismatch at %d: %q", i, body[i+1])
+		}
+	}
+	raw := strings.Join(body, "\n")
+	if !strings.Contains(raw, h.m.cfg.Theme.Heading.Render("Files")) {
+		t.Error("section heading not styled like Roadmap")
+	}
+	if strings.Count(sgr.ReplaceAllString(raw, ""), "Long") != 8 {
+		t.Error("duplicate title")
+	}
+}
+
+func TestWavesItemPanePageKeysUseVisibleHeight(t *testing.T) {
+	for _, size := range [][2]int{{100, 30}, {80, 24}} {
+		h, l := wavesHarness(t)
+		l.details = map[string]*slicercli.Detail{"A": {Slice: &slicercli.Spec{Title: "Alpha", Sections: []slicercli.Section{{Heading: "Files", Body: strings.Repeat("file.go\n", 100)}}}}}
+		openWaves(t, h)
+		h.deliver(press("enter"))
+		h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+		_ = h.m.View()
+		h.deliver(press("pgdown"))
+		if h.m.waves.paneOffset != size[1]-5 {
+			t.Errorf("page offset %d, want %d", h.m.waves.paneOffset, size[1]-5)
+		}
+		h.deliver(press("down"))
+		h.deliver(press("pgup"))
+		if h.m.waves.paneOffset != 1 {
+			t.Errorf("page up offset %d, want 1", h.m.waves.paneOffset)
+		}
+	}
+}
+
+func TestWavesItemPanePreservesTheWholeSharedPath(t *testing.T) {
+	h, l := wavesHarness(t)
+	path := "internal/tui/path with spaces.go"
+	l.suggest.Waves[0].Items[0].Reason = "shares: S65 " + path
+	openWaves(t, h)
+	h.deliver(press("enter"))
+	body := sgr.ReplaceAllString(strings.Join(h.m.waveItemBody(72).body, "\n"), "")
+	if !strings.Contains(body, "  Shares files with S65\n    "+path+"\n") {
+		t.Fatalf("shared path not rendered as one indented path:\n%s", body)
+	}
+	if strings.Contains(body, "shares:") {
+		t.Fatal("raw shares reason still visible")
+	}
+}
+
+func TestWavesItemPaneGolden(t *testing.T) {
+	for _, size := range [][2]int{{100, 30}, {80, 24}} {
+		for _, mono := range []bool{false, true} {
+			theme := "color"
+			if mono {
+				theme = "mono"
+			}
+			name := fmt.Sprintf("waves-item-%dx%d-%s.txt", size[0], size[1], theme)
+			t.Run(name, func(t *testing.T) {
+				h, l := wavesHarness(t)
+				h.m.cfg.Theme = NewTheme(mono)
+				l.suggest.Waves[0].Items[0].Title = "Shared engine file"
+				l.suggest.Waves[0].Items[0].Reason = "shares: S65 internal/engine/fixtures/a long shared path with spaces/round-details.go"
+				l.details = map[string]*slicercli.Detail{"A": {Slice: &slicercli.Spec{Title: "Shared engine file", Size: "M", Lead: []string{"Keep the engine's shared file visible in the item detail."}, Sections: []slicercli.Section{{Heading: "Files", Body: "- `internal/engine/round.go`"}, {Heading: "Check", Body: "go test ./internal/engine"}}}}}
+				openWaves(t, h)
+				h.deliver(press("enter"))
+				h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+				checkGolden(t, name, h.m.View().Content)
+			})
+		}
+	}
+}
+
+func TestWavesShowsFirstWavesOnly(t *testing.T) {
+	h, l := wavesHarness(t)
+	for i := 0; i < 5; i++ {
+		l.suggest.Waves = append(l.suggest.Waves, l.suggest.Waves[0])
+		l.suggest.Waves[len(l.suggest.Waves)-1].Wave = 10 + i
+	}
+	openWaves(t, h)
+	body := sgr.ReplaceAllString(strings.Join(h.m.wavesBody(72).body, "\n"), "")
+	if strings.Contains(body, "Wave 11") || !strings.Contains(body, "4 more waves") {
+		t.Fatalf("wave limit missing:\n%s", body)
+	}
+	if len(h.m.waves.rows()) != 6 {
+		t.Fatalf("hidden waves selectable: %d rows", len(h.m.waves.rows()))
+	}
+	h.deliver(press("a"))
+	body = sgr.ReplaceAllString(strings.Join(h.m.wavesBody(72).body, "\n"), "")
+	if !strings.Contains(body, "Wave 14") || len(h.m.waves.rows()) != 14 {
+		t.Fatalf("show all failed:\n%s", body)
+	}
+}
+
+func TestTickedItemStaysInViewWithInputs(t *testing.T) {
+	for _, size := range [][2]int{{80, 24}, {120, 40}} {
+		h, l := wavesHarness(t)
+		for i := 0; i < 40; i++ {
+			l.suggest.Unplaced = append(l.suggest.Unplaced, slicercli.ParallelItem{ID: fmt.Sprintf("X%d", i), Title: "Extra"})
+		}
+		openWaves(t, h)
+		h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+		for range 30 {
+			h.deliver(press("down"))
+		}
+		id := h.m.waves.rows()[h.m.waves.cursor].ID
+		h.deliver(press(" "))
+		v := plainView(h.m)
+		if !strings.Contains(v, "1 ticked, not launched; [l] launches") {
+			t.Fatalf("tick status offscreen:\n%s", v)
+		}
+		if !strings.Contains(v, "[x] "+id) || !strings.Contains(v, "Well specified? [y/n]:") || !strings.Contains(v, "Split? [y/n]:") {
+			t.Fatalf("item and fields not visible:\n%s", v)
+		}
+		body := sgr.ReplaceAllString(strings.Join(h.m.wavesBody(72).body, "\n"), "")
+		lines := strings.Split(body, "\n")
+		for i, line := range lines {
+			if strings.Contains(line, "[x] "+id+" ") && (i+3 >= len(lines) || !strings.Contains(lines[i+1], "launch inputs") || !strings.Contains(lines[i+2], "Well specified?") || !strings.Contains(lines[i+3], "Split?")) {
+				t.Fatalf("inputs not directly below item:\n%s", body)
+			}
+		}
+	}
+}
+
+func TestOnlyActiveInputShowsCursor(t *testing.T) {
+	h, _ := wavesHarness(t)
+	openWaves(t, h)
+	h.deliver(press(" "))
+	for focus := 0; focus < 2; focus++ {
+		body := h.m.wavesBody(72).body
+		for _, line := range body {
+			if strings.Contains(line, "[y/n]:") {
+				active := strings.Contains(line, []string{"Well specified?", "Split?"}[focus])
+				if reverseSGR.MatchString(line) != active {
+					t.Fatalf("field cursor focus %d: %q", focus, line)
+				}
+			}
+		}
+		h.deliver(press("tab"))
+	}
+}
+
+func TestWavesCompactLineupAndContinuation(t *testing.T) {
+	h, _ := wavesHarness(t)
+	openWaves(t, h)
+	tickWave(t, h, "y", "n")
+	p := h.m.waves.picked["A"]
+	p.Expected.Lineup["implementer"] = append(p.Expected.Lineup["implementer"], runrec.LineupEntry{Vendor: "hidden", Model: "fallback"}, runrec.LineupEntry{Vendor: "hidden", Model: "fallback2"})
+	h.m.waves.picked["A"] = p
+	body := h.m.wavesBody(72)
+	raw := strings.Join(body.body, "\n")
+	plain := sgr.ReplaceAllString(raw, "")
+	for _, want := range []string{"impl:  claude sonnet high", "rev:   claude opus medium", "+2 fallbacks"} {
+		if !strings.Contains(plain, want) {
+			t.Errorf("missing %q:\n%s", want, plain)
+		}
+	}
+	if !strings.Contains(plainView(h.m), "1 ticked, not launched; [l] launches") {
+		t.Fatal("tick status missing")
+	}
+	if strings.Contains(plain, "hidden") || strings.Contains(plain, " -> ") {
+		t.Error("fallback chain in table")
+	}
+	for _, line := range body.body {
+		if strings.Contains(line, "rev:") || strings.Contains(line, "+2 fallbacks") {
+			if !reverseSGR.MatchString(line) {
+				t.Errorf("continuation lacks cursor: %q", line)
+			}
+		}
+	}
+}
+
+func TestWavesLaunchRunNoticeAndJump(t *testing.T) {
+	h, l := wavesHarness(t)
+	openWaves(t, h)
+	tickWave(t, h, "y", "n")
+	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new", Item: "A"}}}
+	snap := h.m.projects[0].snap
+	snap.EngineRuns = []source.EngineRun{{ID: "ork-new", Item: "A", State: "queued"}}
+	h.src.set(snap)
+	h.deliver(press("l"))
+	h.deliver(press("y"))
+	if h.m.actionStatus != "launched A as ork-new; enter opens it" {
+		t.Fatalf("launch notice: %s", h.m.actionStatus)
+	}
+	if !strings.Contains(plainView(h.m), "running ork-new") {
+		t.Fatal(plainView(h.m))
+	}
+	h.deliver(press(" "))
+	if h.m.waves.inputs != nil {
+		t.Fatal("launched item can be ticked again")
+	}
+	h.deliver(press("enter"))
+	if h.m.view != 0 {
+		t.Fatal("enter did not open Overview")
+	}
+	r, ok := h.m.selectedRow()
+	if !ok || r.engineID != "ork-new" {
+		t.Fatalf("jump selected %+v", r)
+	}
+}
+
+func TestWavesReasonAndHintSpacing(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.suggest.Unplaced[0].Title = strings.Repeat("Long title ", 10)
+	openWaves(t, h)
+	tickWave(t, h, "y", "n")
+	raw := h.m.wavesBody(60).body
+	plain := sgr.ReplaceAllString(strings.Join(raw, "\n"), "")
+	if !strings.Contains(plain, "no files listed") || strings.Contains(plain, "no_files") {
+		t.Fatalf("reason clipped or raw:\n%s", plain)
+	}
+	for i, line := range raw {
+		if strings.Contains(line, "[enter] item") && (i == 0 || raw[i-1] != "") {
+			t.Fatal("no blank before hints")
+		}
+	}
+	h.m.waves.cursor = 3
+	h.deliver(press("enter"))
+	if !strings.Contains(plainView(h.m), "no files listed") {
+		t.Fatal("pane reason missing")
+	}
+	h.deliver(press("esc"))
+	h.deliver(press("?"))
+	if !strings.Contains(plainView(h.m), "<S65") {
+		t.Fatal("shares marker not explained")
+	}
+}
+
+func TestWavesLineupWidthFitsLongestSummary(t *testing.T) {
+	h, _ := wavesHarness(t)
+	openWaves(t, h)
+	tickWave(t, h, "y", "n")
+	body := h.m.wavesBody(120).body
+	line := sgr.ReplaceAllString(body[bodyIndex(body, "[x] A")], "")
+	if got := strings.Index(line, "impl:"); got != 120-len("gate:  claude opus medium") {
+		t.Fatalf("lineup starts at %d: %q", got, line)
+	}
+}
+
+func bodyIndex(lines []string, text string) int {
+	for i, line := range lines {
+		if strings.Contains(line, text) {
+			return i
+		}
+	}
+	return 0
+}
+
+func TestWavesLineupEditorKeepsFullFallbackChain(t *testing.T) {
+	h, _ := wavesHarness(t)
+	openWaves(t, h)
+	tickWave(t, h, "y", "n")
+	p := h.m.waves.picked["A"]
+	p.Expected.Lineup["implementer"] = append(p.Expected.Lineup["implementer"], runrec.LineupEntry{Vendor: "codex", Model: "fallback", Effort: "high"})
+	h.m.waves.picked["A"] = p
+	h.deliver(press("e"))
+	if !strings.Contains(plainView(h.m), "codex fallback high") {
+		t.Fatal("full fallback chain missing on e")
+	}
+}
+
+func TestWavesJumpWaitsForSnapshot(t *testing.T) {
+	h, l := wavesHarness(t)
+	openWaves(t, h)
+	tickWave(t, h, "y", "n")
+	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new", Item: "A"}}}
+	h.deliver(press("l"))
+	h.deliver(press("y"))
+	h.deliver(press("enter"))
+	snap := h.m.projects[0].snap
+	snap.EngineRuns = []source.EngineRun{{ID: "other", Item: "B", State: "queued"}, {ID: "ork-new", Item: "A", State: "queued"}}
+	h.deliver(snapshotMsg{name: "ork", snap: snap})
+	r, ok := h.m.selectedRow()
+	if !ok || r.engineID != "ork-new" {
+		t.Fatalf("delayed jump selected %+v", r)
+	}
+}
+
+func TestWavesComposerGolden(t *testing.T) {
+	for _, size := range [][2]int{{80, 24}, {120, 40}} {
+		for _, state := range []string{"inputs", "limited", "fallbacks", "launched"} {
+			for _, mono := range []bool{false, true} {
+				theme := "color"
+				if mono {
+					theme = "mono"
+				}
+				name := fmt.Sprintf("waves-%s-%dx%d-%s.txt", state, size[0], size[1], theme)
+				t.Run(name, func(t *testing.T) {
+					h, l := wavesHarness(t)
+					h.m.cfg.Theme = NewTheme(mono)
+					h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+					l.suggest.Waves[1].Items[0].Reason = "shares: A internal/engine/shared.go"
+					if state == "limited" {
+						for i := 0; i < 5; i++ {
+							l.suggest.Waves = append(l.suggest.Waves, l.suggest.Waves[1])
+							l.suggest.Waves[len(l.suggest.Waves)-1].Wave = 5 + i
+						}
+					}
+					openWaves(t, h)
+					switch state {
+					case "inputs":
+						h.deliver(press(" "))
+					case "fallbacks":
+						tickWave(t, h, "y", "n")
+						p := h.m.waves.picked["A"]
+						p.Expected.Lineup["implementer"] = append(p.Expected.Lineup["implementer"], runrec.LineupEntry{Vendor: "claude", Model: "haiku", Effort: "high"}, runrec.LineupEntry{Vendor: "claude", Model: "sonnet", Effort: "medium"})
+						h.m.waves.picked["A"] = p
+					case "launched":
+						tickWave(t, h, "y", "n")
+						l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-20261025-123000-abcd", Item: "A"}}}
+						h.deliver(press("l"))
+						h.deliver(press("y"))
+					}
+					h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+					if got := len(strings.Split(h.m.View().Content, "\n")); got != size[1] {
+						t.Fatalf("golden height %d, want %d", got, size[1])
+					}
+					checkGolden(t, name, h.m.View().Content)
+				})
+			}
+		}
+	}
+}
+
+func TestWavesExpandPreservesUnplacedCursor(t *testing.T) {
+	h, l := wavesHarness(t)
+	for range 3 {
+		l.suggest.Waves = append(l.suggest.Waves, l.suggest.Waves[1])
+	}
+	openWaves(t, h)
+	h.m.waves.cursor = len(h.m.waves.rows()) - 1
+	h.deliver(press("a"))
+	if got := h.m.waves.rows()[h.m.waves.cursor].ID; got != "D" {
+		t.Fatalf("expansion moved cursor to %s", got)
+	}
+}
+
+func TestWavesDelayedJumpYieldsToNavigation(t *testing.T) {
+	h, l := wavesHarness(t)
+	openWaves(t, h)
+	tickWave(t, h, "y", "n")
+	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new", Item: "A"}}}
+	h.deliver(press("l"))
+	h.deliver(press("y"))
+	h.deliver(press("enter"))
+	h.deliver(press("down"))
+	snap := h.m.projects[0].snap
+	snap.EngineRuns = []source.EngineRun{{ID: "other", Item: "B", State: "queued"}, {ID: "ork-new", Item: "A", State: "queued"}}
+	h.deliver(snapshotMsg{name: "ork", snap: snap})
+	if h.m.jumpRun != "" || h.m.cursor != 0 {
+		t.Fatal("delayed jump stole cursor after navigation")
+	}
+}
+
+// dimAt checks the effective style at text, across all cell reset sequences.
+func dimAt(t *testing.T, line, text string, mono bool) {
+	t.Helper()
+	at := strings.Index(line, text)
+	if at < 0 {
+		t.Fatalf("missing %q in %q", text, line)
+	}
+	dim := false
+	for _, s := range sgr.FindAllString(line[:at], -1) {
+		for _, code := range strings.Split(strings.TrimSuffix(strings.TrimPrefix(s, "\x1b["), "m"), ";") {
+			if code == "" || code == "0" {
+				dim = false
+			}
+			if mono {
+				if code == "2" {
+					dim = true
+				}
+				if code == "22" {
+					dim = false
+				}
+			} else {
+				if code == "90" {
+					dim = true
+				}
+				if code == "39" || code == "97" {
+					dim = false
+				}
+			}
+		}
+	}
+	if !dim {
+		t.Errorf("%q is not dim: %q", text, line)
+	}
+}
+
+func TestWavesFix1DimCellsAndAlignment(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		h, l := wavesHarness(t)
+		h.m.cfg.Theme = NewTheme(mono)
+		openWaves(t, h)
+		tickWave(t, h, "y", "n")
+		p := h.m.waves.picked["A"]
+		p.Lineup = map[string][]runrec.LineupEntry{"implementer": p.Expected.Lineup["implementer"]}
+		p.Expected.Lineup["implementer"] = append(p.Expected.Lineup["implementer"], runrec.LineupEntry{Vendor: "extra"})
+		h.m.waves.picked["A"] = p
+		body := h.m.wavesBody(92).body
+		valueCol := -1
+		for _, raw := range body {
+			plain := sgr.ReplaceAllString(raw, "")
+			if strings.Contains(plain, "claude") {
+				col := strings.Index(plain, "claude")
+				if valueCol < 0 {
+					valueCol = col
+				}
+				if col != valueCol {
+					t.Errorf("values not aligned: %q", plain)
+				}
+			}
+			if strings.Contains(plain, "+1 fallbacks") {
+				if strings.Index(plain, "+1 fallbacks") != valueCol {
+					t.Errorf("fallback not aligned: %q", plain)
+				}
+				dimAt(t, raw, "+1 fallbacks", mono)
+			}
+		}
+		// A selected and an unselected launched row both retain dim text after cell resets.
+		l.suggest.Waves[0].Items[0].Reason = "shares: S65 shared.go"
+		h.m.waves.picked = map[string]daemon.RunParams{}
+		h.m.waves.launched = map[string]string{"A": "ork-new", "B": "ork-other"}
+		for _, raw := range h.m.wavesBody(92).body {
+			if strings.Contains(raw, "Alpha") {
+				dimAt(t, raw, "Alpha", mono)
+				dimAt(t, raw, "<S65", mono)
+			}
+			if strings.Contains(raw, "Beta") {
+				dimAt(t, raw, "Beta", mono)
+			}
+		}
+	}
+}
+
+func TestWavesFix1SecondaryLinesAndInputs(t *testing.T) {
+	h, l := wavesHarness(t)
+	h.m.cfg.Theme = NewTheme(false)
+	openWaves(t, h)
+	tickWave(t, h, "y", "n")
+	l.suggest.Unplaced[0].Title = strings.Repeat("long title ", 10)
+	h.m.waves.launched = map[string]string{"B": "ork-" + strings.Repeat("r", 36)}
+	for _, raw := range h.m.wavesBody(60).body {
+		plain := sgr.ReplaceAllString(raw, "")
+		for _, text := range []string{"no files listed", "running ork-"} {
+			if strings.Contains(plain, text) {
+				if !strings.HasPrefix(plain, strings.Repeat(" ", 9)+text) {
+					t.Errorf("secondary line not at title column: %q", plain)
+				}
+				dimAt(t, raw, text, false)
+			}
+		}
+	}
+	h.m.waves.launched = nil
+	h.deliver(press(" "))
+	h.deliver(press(" "))
+	body := h.m.wavesBody(60).body
+	plain := sgr.ReplaceAllString(strings.Join(body, "\n"), "")
+	for _, raw := range body {
+		line := sgr.ReplaceAllString(raw, "")
+		if strings.Contains(line, "launch inputs") {
+			if line != "         launch inputs" {
+				t.Errorf("input header: %q", line)
+			}
+			dimAt(t, raw, "launch inputs", false)
+		}
+		if strings.Contains(line, "[y/n]:") && (!strings.HasPrefix(line, "         ") || strings.Contains(line, ">")) {
+			t.Errorf("input indentation/marker: %q", line)
+		}
+	}
+	for _, hint := range []string{"[tab] next field", "[enter] plan", "[esc] cancel"} {
+		if !strings.Contains(plain, hint) {
+			t.Errorf("missing input hint %q", hint)
+		}
+	}
+	if strings.Contains(plain, "[space] tick") || strings.Contains(plain, "[l] launch") {
+		t.Error("composer hints still shown while entering inputs")
+	}
+}
+
+func TestWavesFix1StatusNotInLineupEditor(t *testing.T) {
+	h, _ := wavesHarness(t)
+	openWaves(t, h)
+	tickWave(t, h, "y", "n")
+	if !strings.Contains(plainView(h.m), "1 ticked, not launched; [l] launches") {
+		t.Fatal("tick status missing")
+	}
+	h.deliver(press("e"))
+	if strings.Contains(plainView(h.m), "ticked, not launched") {
+		t.Fatal("tick status in lineup editor")
+	}
+}
+
+func TestWavesFix1NoticesHintsAndHelp(t *testing.T) {
+	h, l := wavesHarness(t)
+	twoWaveItems(t, h)
+	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new"}}, {Item: "B", Run: &runrec.Record{ID: "ork-other"}}}
+	h.deliver(press("l"))
+	h.deliver(press("y"))
+	if h.m.actionStatus != "launched 2 items; enter on a running row opens its run" {
+		t.Fatal(h.m.actionStatus)
+	}
+	body := sgr.ReplaceAllString(strings.Join(h.m.wavesBody(60).body, "\n"), "")
+	if !strings.Contains(body, "[enter] open run") || strings.Contains(body, "[enter] item") {
+		t.Fatal("launched row hint missing")
+	}
+	h.m.waves.cursor = 2
+	body = sgr.ReplaceAllString(strings.Join(h.m.wavesBody(60).body, "\n"), "")
+	if !strings.Contains(body, "[enter] item") {
+		t.Fatal("plain row hint changed")
+	}
+	help := sgr.ReplaceAllString(strings.Join(h.m.helpLines(100, 40), "\n"), "")
+	if !strings.Contains(help, "Waves: a shows all waves. <S65: shares files with S65, an earlier item.") {
+		t.Fatal(help)
+	}
+}
+
+func TestWavesFix1OneMoreWave(t *testing.T) {
+	h, l := wavesHarness(t)
+	for range 2 {
+		l.suggest.Waves = append(l.suggest.Waves, l.suggest.Waves[1])
+	}
+	openWaves(t, h)
+	body := sgr.ReplaceAllString(strings.Join(h.m.wavesBody(72).body, "\n"), "")
+	if !strings.Contains(body, "1 more wave;") || strings.Contains(body, "1 more waves") {
+		t.Fatal(body)
+	}
+}
+
+func TestWavesHintsStayPinnedBelowBody(t *testing.T) {
+	h, l := wavesHarness(t)
+	for i := 0; i < 40; i++ {
+		l.suggest.Unplaced = append(l.suggest.Unplaced, slicercli.ParallelItem{ID: fmt.Sprintf("X%d", i), Title: "Extra"})
+	}
+	openWaves(t, h)
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	for range 30 {
+		h.deliver(press("down"))
+	}
+	h.deliver(press(" "))
+	lines := strings.Split(plainView(h.m), "\n")
+	at := func(text string) int {
+		for i, line := range lines {
+			if strings.Contains(line, text) {
+				return i
+			}
+		}
+		return -1
+	}
+	if at("[tab] next field") < 0 || at("[tab] next field") > at("1 ticked, not launched") || at("Split? [y/n]:") > at("[tab] next field") {
+		t.Fatalf("input hints not pinned under the body:\n%s", strings.Join(lines, "\n"))
+	}
+	h.deliver(press("esc"))
+	tickWave(t, h, "y", "n")
+	if got := plainView(h.m); !strings.Contains(got, "[enter] item") || !strings.Contains(got, "[l] launch wave") {
+		t.Fatalf("composer hints scrolled away:\n%s", got)
+	}
+}
+
+func TestWavesLaunchedRowMarker(t *testing.T) {
+	h, _ := wavesHarness(t)
+	h.m.cfg.Theme = NewTheme(false)
+	openWaves(t, h)
+	h.m.waves.launched = map[string]string{"A": "ork-new"}
+	h.m.waves.cursor = 1
+	for _, raw := range h.m.wavesBody(80).body {
+		plain := sgr.ReplaceAllString(raw, "")
+		if strings.Contains(plain, " A ") {
+			if !strings.Contains(plain, "[>] A") {
+				t.Errorf("launched marker missing: %q", plain)
+			}
+			dimAt(t, raw, "[>]", false)
+		}
+		if strings.Contains(plain, " B ") && !strings.Contains(plain, "[ ] B") {
+			t.Errorf("plain row changed: %q", plain)
+		}
+	}
 }

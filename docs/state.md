@@ -111,6 +111,7 @@ apply to this run only and do not change the matrix or registry
   "budgets": {"minutes": 120, "tokens": 2000000},
   "approvals": [{"what": "slice", "at": "..."}],
   "questions": [{"role": "implementer", "round": 1, "key": "area.topic", "text": "...", "at": "...", "answer": "...", "answered_at": "..."}],
+  "findings": [{"kind": "later", "role": "reviewer", "round": 1, "title": "Add a --json flag", "text": "...", "at": "...", "filed": "S130", "filed_at": "..."}],
   "writes": [
     {"at": "2026-10-19T16:12:05Z", "tool": "slicer", "root": "/.../adjudicate/.worktrees/S18",
      "argv": ["relay-run", "begin", "S18", "--worktree", "/.../S18", "--json"],
@@ -140,12 +141,25 @@ a slot under the caps and has no process and no writes. `round` counts implement
 `fails` counts gate FAILs. `reason` says why a slice is stopped or paused.
 `pending` (kind `question`, `shape`, `lost`, `interrupted`, `budget` or `error`, with
 the state and role to re-enter, the reason, and for a question the optional adj
-`key`, the text and the answer) is set while a slice is paused. `feedback`
+`key`, the text and the answer) is set while a slice is paused.
+Both `pending` and each entry in `questions[]` may carry `ask`, the structured
+question object: `title`, `options:[{label,summary}]`, one-based `recommend`
+and `reason` (adj #168). The raw question text is kept alongside it. Older
+records without `ask` continue to use free text. An older ork refuses a
+`run.json` with `ask` because `Store.Open` uses strict keys. `feedback`
 names the file (kind
 `checks`, `findings`, `architect` or `fail`) that the next implementer round must act on.
 The `architect` state runs only when the lineup includes that role (adj #151),
 after accepted reviewer findings and before the gate (adj #123). Its whole
 report becomes `architect` feedback for a fix round (adj #150).
+`findings` (omitted when empty; *proposed*, S120, adj #163) holds the review
+findings that are not fixes: `kind` `owner` (an owner question that does not
+block, with the structured `ask` and an optional `key`) or `later` (an offer to
+file a slice). `title` is the finding's one-line title and `text` its body.
+`filed` and `filed_at` are set once the owner confirmed and ork ran
+`slicer add` and `slicer promote` for it; `filed` is the new slice id. A finding
+raised again under the same title is kept once. An older ork refuses a
+`run.json` with `findings` because `Store.Open` uses strict keys.
 A role with no `ended_at` is running; a restart marks it `lost`. `commit` is
 `{"sha","title","at"}` once ork has committed. The fields `orchestrator_step`,
 `fails`, `reason`, `pending`, `feedback`, `created_at`, `updated_at`, the
@@ -286,3 +300,43 @@ the ledger run is absent from the active snapshot. In `ork status`,
   cached merge results. Unknown and unmerged branches stay. Pruning removes
   run directories only; worktrees and branches require confirmed cleanup
   (`git.cleanup-key`, adj #152). Failed cleanup keeps the run record.
+
+
+## Self-hosting (engine.self-host, adj 166)
+
+*Proposed wire fields:* each status project carries `self_host` and
+`behind_main`. Snapshots carry both fields and the existing global
+`roles_running` state to the TUI for the idle notice. They are derived from the daemon's VCS revision and local
+`main`, with no registry field. A dev build without a revision or an unknown
+commit never matches. Behind means a different main head that descends from
+the build revision. Failed Git reads do not establish behind state.
+
+*Proposed behavior and wording:* `daemon behind main: restart with ork daemon restart`.
+It fires on any landing on main, not only engine landings, while no run is
+active. In the TUI it replaces the stale-build marker while shown. Text
+doctor prints `[WARN] daemon behind main: restart with ork daemon restart`
+on stdout. Status prints `ork: warning: daemon behind main: restart with ork daemon restart`
+on stderr. The daemon continues using its original binary, never a relay
+worktree build, and never restarts itself. See docs/design.md for wave
+admission rules.
+
+### Transient role detail (S99)
+
+The output tail is daemon memory only. It is never a `run.json` field and is
+never copied to a report file. Each role attempt resets its 2 KB tail and
+live token count; ended attempts and daemon restarts expose no tail. Run
+environment values selected by the rule in dashboard.md are masked before
+text enters the buffer. The rule cannot mask secrets it does not know.
+
+The proposed snapshot fields `engine_runs[].tail`, `tokens` and `cost_usd`
+carry transient assistant text, recorded plus live tokens, and completed
+round costs. The proposed role display fields `tokens` and `cost_usd` copy
+the existing RoleRecord values. Final Result usage remains the authoritative
+persisted usage; live usage never writes the record. This adds no state file.
+Vendor raw output and final reports keep their existing handling; this tail
+rule does not redact those independent artifacts.
+
+Proposed snapshot flags `usage_known`, `live_usage_known` and
+`tail_truncated` carry usage presence (including reported zero) and whether
+the memory buffer dropped older text. These flags are not written to disk.
+A stored zero cost from a vendor without a cost field is displayed as `$-`.

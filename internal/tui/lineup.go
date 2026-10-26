@@ -7,6 +7,7 @@ import (
 	"maps"
 	"reflect"
 	"strconv"
+	"strings"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/squalor-xyz/ork/internal/daemon"
@@ -218,11 +219,21 @@ func (m *Model) lineupBody(width int) overviewView {
 		}
 		start := len(out.body)
 		add(prefix + label + ": " + value)
+		for _, fallback := range e.chains[i][min(1, len(e.chains[i])):] {
+			add(th.Dim.Render("    fallback: " + fallback.Vendor + " " + fallback.Model + " " + fallback.Effort))
+		}
 		if focused {
 			for j := start; j < len(out.body); j++ {
 				out.body[j] = th.TabActive.Render(out.body[j])
 			}
 		}
+	}
+	if chain := e.plan.Lineup["ui"]; len(chain) > 0 {
+		var rows []string
+		for _, entry := range chain {
+			rows = append(rows, entry.Vendor+" "+entry.Model+" "+entry.Effort)
+		}
+		add("  ui: " + strings.Join(rows, " -> ") + " (UI slices only; from the matrix)")
 	}
 	for i, label := range []string{"Budget minutes", "Budget tokens"} {
 		prefix := "  "

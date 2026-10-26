@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -246,5 +247,32 @@ func TestWaveBadParamsAndUnknownID(t *testing.T) {
 	}
 	if runs, err := store.List(); err != nil || len(runs) != 0 {
 		t.Fatalf("runs: %v %v", runs, err)
+	}
+}
+
+func TestWaveStartRefusesTwoEngineSlices(t *testing.T) {
+	for _, pair := range [][2]string{{"internal/engine/a.go:12", "internal/daemon/b.go"}, {"cmd/ork/main.go", "internal/engine/c.go"}} {
+		t.Run(pair[0], func(t *testing.T) {
+			routes := []clitest.Route{}
+			for i, id := range []string{"S1", "S2"} {
+				body, _ := json.Marshal(map[string]any{"slice": map[string]any{"sections": []map[string]string{{"heading": "Files", "body": "- `" + pair[i] + "`"}}}})
+				routes = append(routes, clitest.Route{Tool: "slicer", Args: []string{"show", id}, Prefix: true, Stdout: string(body)})
+			}
+			d, store, _ := runDaemon(t, nil, routes...)
+			_, err := d.startWave(context.Background(), WaveStartParams{Items: []RunParams{{Project: "p", Item: "S1"}, {Project: "p", Item: "S2"}}})
+			if err == nil || !strings.Contains(err.Error(), "S1") || !strings.Contains(err.Error(), "S2") {
+				t.Fatalf("expected conflict naming S1 and S2, got %v", err)
+			}
+			runs, listErr := store.List()
+			if listErr != nil || len(runs) != 0 {
+				t.Fatalf("refusal wrote runs: %v %v", runs, listErr)
+			}
+		})
+	}
+	// One engine slice must pass through normal admission, with a non-engine peer.
+	d, _, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"show", "S1"}, Prefix: true, Stdout: "{\"slice\":{\"sections\":[{\"heading\":\"Files\",\"body\":\"- `internal/engine/a.go`\"}]}}"})
+	_, runs := waveRecords(t, d, `{"items":[{"project":"p","item":"S1"},{"project":"p","item":"S2"}]}`)
+	if len(runs) != 2 {
+		t.Fatalf("one engine slice was refused: %v", runs)
 	}
 }

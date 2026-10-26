@@ -289,3 +289,24 @@ func TestDaemonWavesConnectFailure(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestDaemonSnapshotCarriesSelfHost(t *testing.T) {
+	d, _, _, _ := requestServer(t, func(_ context.Context, method string, _ json.RawMessage) (any, error) {
+		if method != daemon.MethodSnapshot {
+			return nil, fmt.Errorf("unexpected method %s", method)
+		}
+		return map[string]any{"project": map[string]string{"name": "ork"}, "self_host": true, "behind_main": true, "roles_running": true}, nil
+	})
+	snap := d.Snapshot(context.Background(), registry.Project{Name: "ork"})
+	raw, err := json.Marshal(snap)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var flags struct{ SelfHost, BehindMain, RolesRunning bool }
+	if err := json.Unmarshal(raw, &flags); err != nil {
+		t.Fatal(err)
+	}
+	if !flags.SelfHost || !flags.BehindMain || !flags.RolesRunning {
+		t.Fatalf("snapshot lost build or idle state: %+v", flags)
+	}
+}

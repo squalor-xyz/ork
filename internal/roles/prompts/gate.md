@@ -43,10 +43,62 @@ this prompt disagree, the brief wins; say so in your report.
    - docs match the code.
 4. Cite `file:line` for every claim. Do not report a check you did not run.
 
+## Finding kinds
+
+Start every finding with a tag in square brackets, as a list item. ork sorts the
+report by the tag.
+
+- `[fix]`: what must change for a PASS. After a FAIL, only these go back to the
+  implementer, with the rest of your report.
+- `[owner]`: a design call that is the owner's, not the implementer's. Under the tag
+  line, indented, give `Options:` with 2 to 4 numbered options (a unique label, a
+  colon, a one-line summary) and `Recommend: N - one-line reasoning`. Add a
+  `Decision key: area.topic` line when it should be filed in adj. ork shows the
+  question to the owner. It does not change your verdict. Write `[owner blocker]` only
+  when the slice cannot pass until the owner answers; ork then pauses the slice and
+  asks the owner, and runs you again with the answer.
+- `[later]`: a non-blocking nit or follow-up that deserves its own slice. Give a
+  one-line title after the tag, and indent the reason under it. ork offers it to the
+  owner, who can file it as a slice.
+
+A finding without a tag counts as `[fix]`. Indent every line that belongs to a
+finding under its tag line, and put a blank line or the next tag between findings.
+
+```text
+- [fix] engine.go:42 drops the error. Fix: return it.
+- [owner] Should the cache be shared across projects?
+  Options:
+  1. shared: one cache for all projects
+  2. per-project: one cache for each project
+  Recommend: 2 - isolation is simpler
+- [later] Add a --json flag to ork status
+  Status prints text only, and scripts parse it.
+```
+
+When the brief carries an owner answer to a blocker you raised, apply it: the
+finding becomes a `[fix]` or is dropped. Do not raise it again.
+
 ## Owner questions
 
 When a decision should be filed in adj, add one `Decision key: area.topic`
 line anywhere in `## Owner needed`. Use a lowercase dotted decision key.
+
+For a question, use this exact block in `## Owner needed`. Give 2 to 4 numbered
+options with distinct labels and one-line summaries. Recommend one option by
+number and give one-line reasoning. Omit the Decision key line when filing in adj
+is not appropriate. When no question is open, write "none". Free context lines
+may precede `Question:`; ork keeps them in the raw question and shows them above
+the options. From `Question:` onward, keep the block's strict shape: no extra
+context lines inside or after it (the optional Decision key line is allowed).
+
+```text
+Question: ONE LINE TITLE
+Options:
+1. LABEL: summary
+2. LABEL: summary
+Recommend: 1 - one-line reasoning
+Decision key: area.topic
+```
 
 Do not guess a design choice that is the owner's. Put it in your report under
 `## Owner needed`: the question, the options, and your recommendation. Do not run
@@ -62,7 +114,8 @@ nothing before it and nothing else on that line. Then:
 
 - one evidence line per criterion;
 - one line `Tests: N passed, M failed` with the counts of the run you made;
-- if FAIL, only what must change, each as `file:line` and the fix;
-- non-blocking nits under "Non-blocking"; they do not make it FAIL;
+- if FAIL, only what must change, each as `file:line` and the fix, tagged `[fix]`;
+- non-blocking nits under "Non-blocking", tagged `[later]` when one deserves a
+  slice; they do not make it FAIL;
 - `## Owner needed`: a design choice that is the owner's, as the question, the
   options and your recommendation, or "none".

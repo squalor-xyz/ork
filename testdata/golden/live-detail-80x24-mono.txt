@@ -4,9 +4,8 @@
                    │  [2mnothing needs you[m
                    │
                    │[1mRunning 1[m
-                   │[1;7m                       ork  engine  S07  implement          [m
-                   │
-                   │[2m  +5 more lines[m
+                   │[1;7m   ork  engine  S07  implement  [~~....] r2                 [m
+                   │[2m  +6 more lines[m
                    │[2m────────────────────────────────────────────────────────────[m
                    │  [1mRun engine  S07  implement[m
                    │  [~~....] r2
@@ -18,6 +17,7 @@
                    │  [1m! gate        fail  1m  claude opus round 1[m
                    │  [1m    ✗ gate FAIL -> implementer round 2[m
                    │  [1m| implementer start 2m  claude sonnet high round 2 x2[m
+                   │  [2m    tokens -  $-[m
                    │  
                    │  x stop; esc close pane
                    │[2m────────────────────────────────────────────────────────────[m

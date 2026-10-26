@@ -3,8 +3,11 @@
 package engine
 
 import (
+	"strings"
 	"sync"
 	"time"
+	"unicode"
+	"unicode/utf8"
 )
 
 // activityRing belongs only to the current role attempt. It never enters run.json.
@@ -13,6 +16,7 @@ type activityRing struct {
 	mu         sync.Mutex
 	generation uint64
 	active     bool
+	live       Live
 	buckets    [10]activityBucket
 }
 type activityBucket struct {
@@ -27,6 +31,7 @@ func (e *Engine) startActivity() (event func(), end func()) {
 	generation := a.generation
 	a.active = true
 	a.buckets = [10]activityBucket{}
+	a.live = Live{}
 	a.mu.Unlock()
 	return func() {
 			a.mu.Lock()
@@ -68,4 +73,47 @@ func (e *Engine) Activity(now time.Time) []int {
 		}
 	}
 	return out
+}
+
+// liveHook captures the current attempt so late callbacks cannot contaminate a retry.
+func (e *Engine) liveHook() func(Live) {
+	a := &e.activity
+	a.mu.Lock()
+	generation := a.generation
+	a.mu.Unlock()
+	return func(l Live) {
+		a.mu.Lock()
+		defer a.mu.Unlock()
+		if !a.active || a.generation != generation {
+			return
+		}
+		// Keep line breaks, but never terminal controls in the display buffer.
+		a.live.Text += strings.Map(func(r rune) rune {
+			if r != '\n' && unicode.IsControl(r) {
+				return -1
+			}
+			return r
+		}, l.Text)
+		if len(a.live.Text) > 2048 {
+			tail := a.live.Text[len(a.live.Text)-2048:]
+			for len(tail) > 0 && !utf8.RuneStart(tail[0]) {
+				tail = tail[1:]
+			}
+			a.live.Text = string(append([]byte(nil), tail...))
+			a.live.TailTruncated = true
+		}
+		a.live.Tokens += l.Tokens
+		a.live.UsageKnown = a.live.UsageKnown || l.UsageKnown || l.Tokens != 0
+	}
+}
+
+// Live returns a copy of the current attempt's transient output and token total.
+func (e *Engine) Live() Live {
+	a := &e.activity
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if !a.active {
+		return Live{}
+	}
+	return a.live
 }

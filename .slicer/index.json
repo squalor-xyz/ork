@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 126,
+  "next_id": 140,
   "preamble": "",
   "passes": [
     {
@@ -129,10 +129,38 @@
       }
     },
     {
+      "id": "S126",
+      "title": "Implementer brief: ork runs the check command itself; a sandbox limit is not an owner question",
+      "short_title": "Implementer brief: ork runs the check command itself; a sandbox limit is not an owner question",
+      "status": "done",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S31",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 1
+      }
+    },
+    {
       "id": "S114",
       "title": "Self-hosting: run ork on its own repo safely",
       "short_title": "Self-hosting: run ork on its own repo safely",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -153,7 +181,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -228,7 +256,7 @@
       "id": "S99",
       "title": "Live role detail: output tail and tokens/cost in the run pane",
       "short_title": "Live role detail: output tail and tokens/cost in the run pane",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S07"
@@ -251,14 +279,14 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S125",
       "title": "Waves composer focus: next waves only, inputs inline under the ticked item",
       "short_title": "Waves composer focus: next waves only, inputs inline under the ticked item",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -279,14 +307,14 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S107",
       "title": "Waves as a table: shares as a dim column, wave header rules, Lineup column only after ticking",
       "short_title": "Waves as a table: shares as a dim column, wave header rules, Lineup column only after ticking",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -307,19 +335,31 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S111",
       "title": "Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork",
       "short_title": "Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S28"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "576877ec-45c8-4564-9239-722051f19b2a",
+          "kind": "",
+          "text": "**2026-10-26** — From S126 (2026-10-25): the owner dropped a report.go guard against an Owner needed section that holds no question ('no decision is open'). Once S111 lands, check whether structured questions make such text detectable by shape; file a guard only if still needed.",
+          "created_at": "2026-10-26T00:01:59Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -337,14 +377,42 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
+      }
+    },
+    {
+      "id": "S127",
+      "title": "After an answer: clear the question from the row and pane, and say the role resumed",
+      "short_title": "After an answer: clear the question from the row and pane, and say the role resumed",
+      "status": "done",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S31",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 1
       }
     },
     {
       "id": "S109",
       "title": "Run pane follows the newest running run, with a 1 s ledger refresh while a run is visible",
       "short_title": "Run pane follows the newest running run, with a 1 s ledger refresh while a run is visible",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -365,7 +433,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -462,12 +530,24 @@
       "id": "S120",
       "title": "Finding kinds: fix, owner or later in reviewer, UI pass and gate reports",
       "short_title": "Finding kinds: fix, owner or later in reviewer, UI pass and gate reports",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S111"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6ad38dc9-4dbf-45b5-986e-fee8e5d850ab",
+          "kind": "",
+          "text": "**2026-10-26** — Verified: finding kinds (fix, owner, later) in reviewer, UI pass and gate reports; only fix findings reach the fix round; owner findings block only when marked; f then y files a later finding with slicer add --discovered-from and promote. go test -race ./..., vet, gofmt, slicer check and adj lint clean.",
+          "created_at": "2026-10-26T05:32:55Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -485,14 +565,14 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S117",
       "title": "UI pass role in the engine, in parallel with the reviewer",
       "short_title": "UI pass role in the engine, in parallel with the reviewer",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -525,7 +605,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -4635,6 +4715,342 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S128",
+      "title": "Brief: fence the check command so a backtick or newline renders",
+      "short_title": "Brief: fence the check command so a backtick or newline renders",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S126",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S129",
+      "title": "Live usage edge cases: no result event, non-claude cost, multi-message sum, total dip",
+      "short_title": "Live usage edge cases: no result event, non-claude cost, multi-message sum, total dip",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S99",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S130",
+      "title": "Run pane text polish: compact token counts, ASCII gate verdict glyph, tail markdown, h>=24 Overview rule in docs",
+      "short_title": "Run pane text polish: compact token counts, ASCII gate verdict glyph, tail markdown, h>=24 Overview rule in docs",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S99",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S131",
+      "title": "Self-host check cost and base branch: cache projectBuild git calls; read the base branch",
+      "short_title": "Self-host check cost and base branch: cache projectBuild git calls; read the base branch",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S114",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S132",
+      "title": "Structured question polish: wrapped option indent, 4 options in a short pane, alert wording, dash in Recommend, digit edge tests",
+      "short_title": "Structured question polish: wrapped option indent, 4 options in a short pane, alert wording, dash in Recommend, digit edge tests",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S111",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S133",
+      "title": "Codex out of credits is a classified limit, so the role falls back",
+      "short_title": "Codex out of credits is a classified limit, so the role falls back",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S127",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S134",
+      "title": "Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap",
+      "short_title": "Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S127",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S135",
+      "title": "Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions",
+      "short_title": "Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S117",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 3,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S136",
+      "title": "UI pass visible everywhere and project-neutral: lineup and rounds in run, waves, runtree; ui.md names the project's design doc",
+      "short_title": "UI pass visible everywhere and project-neutral: lineup and rounds in run, waves, runtree; ui.md names the project's design doc",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S117",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S137",
+      "title": "Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings",
+      "short_title": "Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S120",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 3,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S138",
+      "title": "An awaiting-approval engine run whose ledger went stale shows as stale, dimmed, with a frozen age",
+      "short_title": "An awaiting-approval engine run whose ledger went stale shows as stale, dimmed, with a frozen age",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S31",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S139",
+      "title": "Commit title without a Git section: fall back to 'ID: title', and check it before the run starts",
+      "short_title": "Commit title without a Git section: fall back to 'ID: title', and check it before the run starts",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S31",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
         "effort": 1,
         "attempts": 0
       }

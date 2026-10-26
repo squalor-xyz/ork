@@ -53,7 +53,7 @@ func (m *Model) screen() string {
 	w, h, sideW := m.layoutSize()
 	mainW := max(w-sideW, 1)
 	th := m.cfg.Theme
-	var body, detail []string
+	var body, detail, footer []string
 	bodyH, start := max(h-4, 1), 0
 	selectedLine := -1
 	overviewBody := false
@@ -81,7 +81,7 @@ func (m *Model) screen() string {
 			if m.waves != nil && m.waves.lineup != nil {
 				rv = m.lineupBody(mainW)
 			} else {
-				rv = m.wavesBody(mainW)
+				rv, footer = m.wavesParts(mainW)
 			}
 		} else if m.launch != nil {
 			rv = m.launchView(mainW)
@@ -89,6 +89,9 @@ func (m *Model) screen() string {
 			rv = m.roadmap(mainW)
 		}
 		status := m.actionStatus
+		if status == "" && m.view == wavesView && m.waves != nil && m.waves.lineup == nil && len(m.waves.picked) > 0 {
+			status = fmt.Sprintf("%d ticked, not launched; [l] launches", len(m.waves.picked))
+		}
 		if m.confirm != nil {
 			status = m.confirm.prompt()
 		}
@@ -112,7 +115,13 @@ func (m *Model) screen() string {
 			status = m.confirm.prompt()
 		}
 		if m.pane != nil {
-			detail = m.paneLines(mainW, max(h-6, 1), status)
+			// At standard terminal heights retain six Overview rows; tiny
+			// terminals still give the pane's input and errors their priority.
+			paneHeight := max(h-6, 1)
+			if h >= 24 {
+				paneHeight = max(h-11, 1)
+			}
+			detail = m.paneLines(mainW, paneHeight, status)
 		} else if status != "" {
 			detail = wrapText(status, max(mainW-len(indent), 1))
 			if m.confirm != nil && m.confirm.verb == "cleanup" {
@@ -138,6 +147,14 @@ func (m *Model) screen() string {
 	} else {
 		detail = nil
 	}
+	if len(footer) > 0 {
+		// The hints stay below the scrolling body; they never take more than half of it.
+		if len(footer) > bodyH/2 && footer[0] == "" {
+			footer = footer[1:]
+		}
+		footer = footer[:min(len(footer), max(bodyH/2, 1))]
+		bodyH = max(bodyH-len(footer), 1)
+	}
 	if overviewBody {
 		if r, ok := m.selectedRow(); ok && r.ready && bodyH >= len(r.commands)+2 {
 			selectedLine += len(r.commands)
@@ -152,6 +169,7 @@ func (m *Model) screen() string {
 	rule := th.Dim.Render(strings.Repeat(horizontal, mainW))
 	main := []string{m.viewBar(), rule}
 	main = append(main, body...)
+	main = append(main, footer...)
 	if len(detail) > 0 {
 		main = append(main, rule)
 	}
@@ -337,9 +355,19 @@ func (m *Model) statusLine(w int) string {
 	if r, ok := m.selectedRow(); ok && r.ready && r.merged {
 		fields = append(fields, "c clean up")
 	}
-	// Empty builds are the seam for runs with no daemon info (tests).
-	// The stale rule itself is daemon.StaleBuild.
-	if (m.cfg.BuildID != "" || m.cfg.DaemonBuild != "") && daemon.StaleBuild(m.cfg.BuildID, m.cfg.DaemonBuild) {
+	// Every daemon snapshot carries global activity, including other projects.
+	status := &daemon.StatusResult{}
+	for _, project := range m.projects {
+		status.RolesRunning = status.RolesRunning || project.snap.RolesRunning
+		status.Projects = append(status.Projects, daemon.ProjectStatus{
+			SelfHost: project.snap.SelfHost, BehindMain: project.snap.BehindMain,
+		})
+	}
+	if notice := daemon.BehindWarning(status); notice != "" {
+		fields = append([]string{m.cfg.Theme.Warn.Render(notice)}, fields...)
+	} else if (m.cfg.BuildID != "" || m.cfg.DaemonBuild != "") && daemon.StaleBuild(m.cfg.BuildID, m.cfg.DaemonBuild) {
+		// Empty builds are the seam for runs with no daemon info (tests).
+		// The behind notice replaces the stale marker while it is shown.
 		fields = append([]string{m.cfg.Theme.Warn.Render("daemon build differs: ork daemon restart")}, fields...)
 	}
 	line := " " + strings.Join(fields, " | ")
@@ -357,6 +385,10 @@ func (m *Model) statusLine(w int) string {
 func (m *Model) helpLines(w, bodyH int) []string {
 	th := m.cfg.Theme
 	lines := []string{th.Heading.Render("Keys")}
+	if m.view == wavesView {
+		lines = append(lines, wrapText("Waves: a shows all waves. <S65: shares files with S65, an earlier item.", max(w, 1))...)
+	}
+	var actionHints []string
 	for _, group := range m.keys.FullHelp() {
 		for _, binding := range group {
 			h := binding.Help()
@@ -377,8 +409,16 @@ func (m *Model) helpLines(w, bodyH int) []string {
 				continue
 			}
 			if m.view == questionsView && m.pane == nil &&
-				(h == m.keys.Stop.Help() || h == m.keys.Retry.Help() || h == m.keys.Cleanup.Help()) {
+				(h == m.keys.Stop.Help() || h == m.keys.Retry.Help() || h == m.keys.FileSlice.Help() || h == m.keys.Cleanup.Help()) {
 				continue
+			}
+			// Keep the added question keys and quit visible at standard height.
+			if h == m.keys.Approve.Help() || h == m.keys.Stop.Help() || h == m.keys.Retry.Help() || h == m.keys.FileSlice.Help() {
+				actionHints = append(actionHints, h.Key+" "+h.Desc)
+				continue
+			}
+			if h == m.keys.Answer.Help() && len(actionHints) > 0 {
+				lines = append(lines, clip(strings.Join(actionHints, "; "), w))
 			}
 			lines = append(lines, clip(h.Key+" "+h.Desc, w))
 		}

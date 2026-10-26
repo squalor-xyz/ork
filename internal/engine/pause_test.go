@@ -209,3 +209,35 @@ func TestAWorktreeStatusFailurePausesBeforeTheReadOnlyRole(t *testing.T) {
 		t.Fatalf("a read-only role must not run when the tree cannot be fingerprinted: %v", got)
 	}
 }
+
+func TestStructuredOwnerQuestionPersistsAndResumesTheRole(t *testing.T) {
+	h := newHarness(t)
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if n == 0 {
+			return Result{Exit: ExitOK, Session: "structured-session", Report: strings.Replace(implReport, "none", structuredQuestion, 1)}, nil
+		}
+		return Result{}, nil
+	}
+	e := h.start()
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending.Ask == nil || rec.Pending.Ask.Title != "Which storage?" || rec.Questions[0].Ask == nil || rec.Questions[0].Ask.Options[1].Label != "remote" {
+		t.Fatalf("structured question lost: %+v", rec)
+	}
+	if err := e.Answer(context.Background(), "local: use local storage"); err != nil {
+		t.Fatal(err)
+	}
+	rec = requireState(t, e, runrec.StateAwaitingApproval)
+	req := h.runner.requests()[1]
+	if req.Role != RoleImplementer || req.Resume != "structured-session" || !strings.Contains(req.Brief, "local: use local storage") || rec.Questions[0].Answer != "local: use local storage" {
+		t.Fatalf("resume: %+v", req)
+	}
+}
+
+func TestFreeTextOwnerNeededStillPausesTheRun(t *testing.T) {
+	h := newHarness(t)
+	h.runner.script = func(Request, int) (Result, error) { return Result{Exit: ExitOK, Report: withQuestion(implReport)}, nil }
+	rec := requireState(t, h.start(), runrec.StatePaused)
+	if rec.Pending.Kind != runrec.PendingQuestion || rec.Pending.Question != question || rec.Pending.Ask != nil {
+		t.Fatalf("free text: %+v", rec.Pending)
+	}
+}

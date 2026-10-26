@@ -116,7 +116,7 @@ func defaultResult(req Request) Result {
 		if strings.Contains(req.Brief, "## Finish step") {
 			res.Report = finishReport
 		}
-	case RoleReviewer:
+	case RoleReviewer, RoleUI:
 		res.Report = cleanReview
 	case RoleGate:
 		res.Report = gatePass

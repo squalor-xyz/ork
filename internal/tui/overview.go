@@ -48,6 +48,7 @@ type ovRow struct {
 	kind              string
 	style             lipgloss.Style
 	kindW             int
+	noLabel           bool           // a Running engine row has no label column
 	project           int            // registry index; Enter selects non-run rows
 	name              string         // the project's name
 	text              string         // the row's text after the name, in full
@@ -132,7 +133,7 @@ func (m *Model) rows() (needs, running []ovRow) {
 				}
 			}
 			parts := []string{displayState}
-			if r.Wait != "" {
+			if r.Wait != "" && showsWait(r) {
 				parts = append(parts, r.Wait)
 			}
 			if len(r.Denials) > 0 {
@@ -171,8 +172,9 @@ func (m *Model) rows() (needs, running []ovRow) {
 			rest := strings.Join(parts, "  ")
 			row := ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: r.Item + "  " + rest, text: r.ID + "  " + r.Item + "  " + rest, dim: linkedStale != nil}
 			if r.Section(s.EngineRuns) == source.SectionRunning {
-				row.kindW = len(kindExternal)
+				row.noLabel = r.Error == ""
 				if r.Error != "" {
+					row.kindW = len(kindExternal)
 					row.kind, row.style = kindError, th.Error
 				}
 				ledger, steps := engineBoard(r)
@@ -184,6 +186,11 @@ func (m *Model) rows() (needs, running []ovRow) {
 					}
 				}
 				row.stepParts = m.boardRowParts(ledger, steps)
+				if r.UsageKnown || r.Tokens != 0 {
+					tokenText := fmt.Sprintf("tokens %d", r.Tokens)
+					// Trailing cells drop first: tokens, heard, pipeline, then bar.
+					row.stepParts = append(row.stepParts, relayRowPart{header: tokenText, text: tokenText})
+				}
 				for _, part := range row.stepParts {
 					row.text += "  " + part.text
 				}
@@ -195,6 +202,8 @@ func (m *Model) rows() (needs, running []ovRow) {
 					row.kind, row.style = "! removed", th.Error
 				case r.State == "stopped":
 					row.kind, row.style = "x stopped", th.Error
+				case r.State == "paused" && r.Pending == "question":
+					row.kind, row.style = "? question", th.Warn.Bold(th.Mono)
 				case r.State == "paused":
 					row.kind, row.style = "= paused", th.Held
 				case r.State == "awaiting-approval":
@@ -230,6 +239,14 @@ func (m *Model) rows() (needs, running []ovRow) {
 				text: text, id: id, rest: rest, stepParts: steps, dim: r.State == "stale"})
 		}
 	}
+	// Engine rows drop the empty label only while no other Running row has one.
+	if slices.ContainsFunc(running, func(r ovRow) bool { return r.kind != "" }) {
+		for i := range running {
+			if running[i].noLabel {
+				running[i].noLabel, running[i].kindW = false, len(kindExternal)
+			}
+		}
+	}
 	for i := range needs {
 		switch needs[i].kind {
 		case kindDecision:
@@ -238,7 +255,7 @@ func (m *Model) rows() (needs, running []ovRow) {
 			needs[i].group = "Held"
 		case "x stopped":
 			needs[i].group = "Stopped"
-		case "= paused":
+		case "= paused", "? question":
 			needs[i].group = "Paused"
 		case "+ approve":
 			needs[i].group = "Approve"
@@ -336,6 +353,9 @@ func (m *Model) overview(w int) overviewView {
 			}
 			lines = append(lines, m.rowLine(r, selected, nameW, w))
 			textColumn := len(indent) + r.kindW + 1
+			if r.noLabel {
+				textColumn = len(indent)
+			}
 			if r.group != "" {
 				textColumn = len(indent) + 2
 			}
@@ -371,7 +391,17 @@ func (m *Model) overview(w int) overviewView {
 		section(rows, first, "")
 		first += len(rows)
 	}
-	lines = append(lines, "", th.Heading.Render(fmt.Sprintf("Running %d", len(running))))
+	summary := th.Heading.Render(fmt.Sprintf("Running %d", len(running)))
+	questions := 0
+	for _, r := range needs {
+		if r.pending == "question" {
+			questions++
+		}
+	}
+	if questions > 0 {
+		summary += "  " + th.Warn.Bold(th.Mono).Render(fmt.Sprintf("! owner questions %d", questions))
+	}
+	lines = append(lines, "", summary)
 	section(running, len(needs), "nothing running")
 	lines = append(lines, "", th.Heading.Render("Recent"))
 	recent := m.recentRows()
@@ -416,6 +446,9 @@ func (m *Model) rowLine(r ovRow, selected bool, nameW, w int) string {
 			mark = "~"
 		}
 		prefix := indent + kind + " "
+		if r.noLabel {
+			prefix = indent
+		}
 		if nameW > 0 {
 			prefix += mark + name
 		}
@@ -434,27 +467,36 @@ func (m *Model) rowLine(r ovRow, selected bool, nameW, w int) string {
 		styledKind = r.style.Render(kind)
 	}
 	prefix := indent + styledKind + " "
+	if r.noLabel {
+		prefix = indent
+	}
 	if nameW > 0 {
 		prefix += mark + name
 	}
 	text := rowText(r, max(w-lipgloss.Width(prefix), 1))
 	heard := ""
 	heardStyle := th.Warn
-	if n := len(r.stepParts); n > 0 {
-		cell := r.stepParts[n-1].text
-		if strings.HasSuffix(text, cell) && (strings.HasPrefix(cell, "! heard ") || strings.HasPrefix(cell, "!! heard ")) {
+	for _, part := range r.stepParts {
+		cell := part.text
+		if strings.Contains(text, cell) && (strings.HasPrefix(cell, "! heard ") || strings.HasPrefix(cell, "!! heard ")) {
 			heard = cell
-			text = strings.TrimSuffix(text, cell)
 			if strings.HasPrefix(cell, "!! heard ") {
 				heardStyle = th.Error
 			}
+			break
 		}
 	}
-	if r.dim {
-		text = th.Dim.Render(text)
-	}
 	if heard != "" {
-		text += heardStyle.Render(heard)
+		before, after, _ := strings.Cut(text, heard)
+		if r.dim {
+			before = th.Dim.Render(before)
+			if after != "" {
+				after = th.Dim.Render(after)
+			}
+		}
+		text = before + heardStyle.Render(heard) + after
+	} else if r.dim {
+		text = th.Dim.Render(text)
 	}
 	if len(r.cells) > 0 {
 		outcome := r.cells[0]
@@ -767,3 +809,10 @@ func (m *Model) readyRows() []ovRow {
 }
 
 func shellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", `'"'"'`) + "'" }
+
+// showsWait reports whether the run's wait text still applies. A run that
+// resumed after an answer keeps no question in its row or pane; the removed
+// project help always applies.
+func showsWait(r source.EngineRun) bool {
+	return r.Unavailable || r.State == "paused" || r.State == "stopped" || r.State == "awaiting-approval"
+}

@@ -10,12 +10,21 @@ import (
 	"charm.land/lipgloss/v2"
 
 	"github.com/squalor-xyz/ork/internal/slicercli"
+	"github.com/squalor-xyz/ork/internal/source"
 )
 
 // runTreeStep keeps engine-only display fields out of the ledger wire.
 type runTreeStep struct {
 	slicercli.Step
-	round int
+	round         int
+	hasUsage      bool
+	usageKnown    bool
+	costKnown     bool
+	tailTruncated bool
+	tokens        int
+	cost          float64
+	live          bool
+	tail          string
 }
 
 func ledgerTreeSteps(steps []slicercli.Step) []runTreeStep {
@@ -42,7 +51,7 @@ func (m *Model) paneSteps() []runTreeStep {
 			if r.RelayRun != "" {
 				for _, run := range boardLedgers(p.snap) {
 					if run.ID == r.RelayRun {
-						return boardTreeSteps(run)
+						return m.roleDetails(boardTreeSteps(run), r)
 					}
 				}
 			}
@@ -65,9 +74,13 @@ func (m *Model) paneSteps() []runTreeStep {
 				if !role.StartedAt.IsZero() {
 					begin = role.StartedAt.Format(time.RFC3339Nano)
 				}
-				steps = append(steps, runTreeStep{Step: slicercli.Step{ID: fmt.Sprintf("role-%d", i), Role: role.Role, Vendor: role.Vendor, Model: role.Model, Reasoning: role.Effort, Phase: phase, BeganAt: begin, UpdatedAt: end}, round: role.Round})
+				stepID := role.Step
+				if stepID == "" {
+					stepID = fmt.Sprintf("role-%d", i)
+				}
+				steps = append(steps, runTreeStep{Step: slicercli.Step{ID: stepID, Role: role.Role, Vendor: role.Vendor, Model: role.Model, Reasoning: role.Effort, Phase: phase, BeganAt: begin, UpdatedAt: end}, round: role.Round})
 			}
-			return steps
+			return m.roleDetails(steps, r)
 		}
 		return nil
 	}
@@ -185,10 +198,21 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 		if len(details) > 0 {
 			text += "  " + strings.Join(details, " ")
 		}
-		lines = append(lines, prefix+style.Render(treeClip(text, available)))
-		if s.Task != "" {
-			lines = append(lines, prefix+m.cfg.Theme.Dim.Render(treeClip("    "+treeText(s.Task), available)))
+		cost := "$-"
+		if s.costKnown {
+			cost = fmt.Sprintf("$%.2f", s.cost)
 		}
+		tokens := "-"
+		if s.usageKnown {
+			tokens = fmt.Sprintf("%d", s.tokens)
+		}
+		usage := fmt.Sprintf("tokens %s  %s", tokens, cost)
+		running := s.live && s.Phase == "start"
+		// Finished and interrupted usage is the first whole field to drop.
+		if s.hasUsage && !running && lipgloss.Width(text)+2+len(usage) <= available {
+			text += "  " + usage
+		}
+		lines = append(lines, prefix+style.Render(treeClip(text, available)))
 		if s.Role == "gate" && s.Phase == "fail" {
 			round := 0
 			for _, before := range laneSteps(steps[:i+1]) {
@@ -202,6 +226,18 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 			}
 			lines = append(lines, prefix+style.Render(treeClip(failure, available)))
 		}
+		if s.hasUsage && running {
+			lines = append(lines, prefix+m.cfg.Theme.Dim.Render(treeClip("    "+usage, available)))
+		}
+		if s.Task != "" {
+			lines = append(lines, prefix+m.cfg.Theme.Dim.Render(treeClip("    "+treeText(s.Task), available)))
+		}
+		if running && !stale && s.tail != "" {
+			for _, line := range tailRows(s.tail, max(available-6, 1), s.tailTruncated) {
+				lines = append(lines, prefix+m.cfg.Theme.Dim.Render("    > "+line))
+			}
+		}
+
 		for _, child := range children[i] {
 			visit(child, depth+1)
 		}
@@ -238,4 +274,77 @@ func boardTreeSteps(run slicercli.RelayRun) []runTreeStep {
 		}
 	}
 	return steps
+}
+
+// roleDetails joins transient engine data onto the ledger tree by step ID.
+// Source-less ledger steps have no usage or tail.
+func (m *Model) roleDetails(steps []runTreeStep, r source.EngineRun) []runTreeStep {
+	active := -1
+	recorded := 0
+	for i, role := range r.Roles {
+		recorded += role.Tokens
+		if role.EndedAt.IsZero() {
+			active = i
+		}
+	}
+	used := map[int]bool{}
+	for i := range steps {
+		for j, role := range r.Roles {
+			if used[j] {
+				continue
+			}
+			match := role.Step != "" && role.Step == steps[i].ID
+			if role.Step == "" {
+				match = role.Role == steps[i].Role && (steps[i].round == 0 || role.Round == steps[i].round)
+			}
+			if !match {
+				continue
+			}
+			used[j] = true
+			steps[i].hasUsage = true
+			steps[i].tokens = role.Tokens
+			steps[i].cost = role.CostUSD
+			steps[i].usageKnown = !role.EndedAt.IsZero() || role.Tokens != 0
+			steps[i].costKnown = !role.EndedAt.IsZero() && role.Vendor == "claude"
+			steps[i].live = role.EndedAt.IsZero() && boardLive(r.State) && m.paneBoardRun().State != "stale"
+			if j == active && boardLive(r.State) && r.Section([]source.EngineRun{r}) == source.SectionRunning && m.paneBoardRun().State != "stale" {
+				steps[i].tokens = max(r.Tokens-recorded, 0)
+				steps[i].tail = r.Tail
+				steps[i].tailTruncated = r.TailTruncated
+				steps[i].usageKnown = r.LiveUsageKnown || steps[i].tokens != 0
+			}
+			break
+		}
+	}
+	return steps
+}
+
+// tailRows wraps nonblank assistant text and keeps the newest three physical
+// rows. Only the first row marks text removed by the buffer or display window.
+func tailRows(text string, width int, truncated bool) []string {
+	var rows []string
+	for _, line := range strings.Split(text, "\n") {
+		if line = treeText(line); line != "" {
+			rows = append(rows, wrapText(line, width)...)
+		}
+	}
+	if len(rows) > 3 {
+		rows = rows[len(rows)-3:]
+		truncated = true
+	}
+	if len(rows) > 0 && truncated {
+		marker := "..."
+		if width < 3 {
+			marker = strings.Repeat(".", max(width, 0))
+		}
+		first := []rune(rows[0])
+		for len(first) > 0 && lipgloss.Width(string(first))+len(marker)+1 > width {
+			first = first[1:]
+		}
+		rows[0] = marker
+		if len(first) > 0 {
+			rows[0] += " " + string(first)
+		}
+	}
+	return rows
 }

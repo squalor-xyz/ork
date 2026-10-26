@@ -42,7 +42,11 @@ func TestEngineRunRows(t *testing.T) {
 				}
 				return
 			}
-			row := "engine  S22  " + state + "  owner action  2 of 6 steps running"
+			row := "engine  S22  " + state
+			if wantNeeds {
+				row += "  owner action"
+			}
+			row += "  2 of 6 steps running"
 			if state != "stopped" {
 				row += "  2m"
 			}
@@ -72,7 +76,7 @@ func TestEngineJoinUsesRelayLink(t *testing.T) {
 			h.m.apply(snapshotMsg{name: "ork", snap: engineSnapshot(t, "implement", link)})
 			v := strings.Join(h.m.overview(200).body, "\n")
 			wantExternal := link != "ledger"
-			if strings.Contains(v, kindExternal) != wantExternal || !strings.Contains(v, "S22  implement  owner action") {
+			if strings.Contains(v, kindExternal) != wantExternal || !strings.Contains(v, "S22  implement") {
 				t.Fatalf("relay-link join incorrect:\n%s", v)
 			}
 		})
@@ -188,7 +192,7 @@ func TestEngineElapsedWithoutLedger(t *testing.T) {
 	s.Runs.Value = nil
 	h.m.apply(snapshotMsg{name: "ork", snap: s})
 	v := sgr.ReplaceAllString(strings.Join(h.m.overview(200).body, "\n"), "")
-	if !strings.Contains(v, "S22  setup  owner action  2m") {
+	if !strings.Contains(v, "S22  setup  2m") {
 		t.Fatalf("engine elapsed from CreatedAt missing:\n%s", v)
 	}
 }
@@ -395,6 +399,17 @@ func TestLedgerRowShowsNoEngineID(t *testing.T) {
 	}
 }
 
+func TestRunningEngineRowsOmitEmptyLabel(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	h.m.apply(snapshotMsg{name: "ork", snap: engineSnapshot(t, "implement", "ledger")})
+	_, rows := h.m.rows()
+	a := sgr.ReplaceAllString(h.m.rowLine(rows[0], false, 3, 300), "")
+	if len(rows) != 1 || rows[0].kindW != 0 || !strings.HasPrefix(a, indent+" ork  engine") {
+		t.Fatalf("a Running list of engine rows only must omit the empty label: %d rows, %q", len(rows), a)
+	}
+}
+
 func TestRunningEngineRowsPadLikeExternalRows(t *testing.T) {
 	h := newHarness(t, proj("ork", false))
 	h.start()
@@ -402,9 +417,19 @@ func TestRunningEngineRowsPadLikeExternalRows(t *testing.T) {
 	_, rows := h.m.rows()
 	a := sgr.ReplaceAllString(h.m.rowLine(rows[0], false, 3, 300), "")
 	b := sgr.ReplaceAllString(h.m.rowLine(rows[1], false, 3, 300), "")
-	if rows[0].kindW != len(kindExternal) || strings.Index(a, "ork") != strings.Index(b, "ork") {
-		t.Fatalf("running columns differ: %q vs %q", a, b)
+	if rows[0].kindW != len(kindExternal) || strings.Index(a, "ork") != strings.Index(b, "ork") || !strings.Contains(b, kindExternal) {
+		t.Fatalf("mixed Running list must keep the label column: %q vs %q", a, b)
 	}
+}
+
+func TestGoldenRunningMixedLabels(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	s := engineSnapshot(t, "implement", "different")
+	s.EngineRuns[0].ID = "ork-20261019-164000-abcd"
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	h.m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
+	checkGolden(t, "running-mixed-100x30.txt", h.m.View().Content)
 }
 
 func TestLinkedLedgerRunHiddenByDesign(t *testing.T) {

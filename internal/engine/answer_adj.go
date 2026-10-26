@@ -29,6 +29,9 @@ func (e *Engine) FileAnswer(ctx context.Context, text, by string) (string, error
 		return fmt.Sprintf("%s already decided as #%d; not changed", rec.Pending.Key, id), nil
 	}
 	title := questionTitle(rec.Pending.Question)
+	if rec.Pending.Ask != nil {
+		title = rec.Pending.Ask.Title
+	}
 	if state != "open" {
 		id, err = c.Ask(ctx, e.wr, root, title, rec.Pending.Key, rec.Item, rec.Pending.Question, by)
 		if err != nil {

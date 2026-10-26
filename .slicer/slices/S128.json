@@ -1,0 +1,39 @@
+{
+  "id": "S128",
+  "title": "Brief: fence the check command so a backtick or newline renders",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S126 later note A2: BuildBrief embeds the project's CheckCommand in a single-backtick span (internal/engine/brief.go:81). A command with a backtick or a newline renders badly in the implementer brief."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/brief.go:81`\n- `internal/engine/brief_test.go`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "TestBriefFencesCheckCommandWithBackticks: a command containing backticks and a newline is fenced with a run longer than its longest backtick run."
+    },
+    {
+      "heading": "Implement",
+      "body": "Use a code fence one backtick longer than the longest backtick run in the command (CommonMark), or an indented block for multi-line commands."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./internal/engine; go vet; gofmt -l; slicer check; adj lint."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

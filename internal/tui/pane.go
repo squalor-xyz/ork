@@ -3,22 +3,36 @@
 package tui
 
 import (
-	"github.com/squalor-xyz/ork/internal/source"
+	"fmt"
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
 	"charm.land/bubbles/v2/key"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/source"
 )
+
+// noticeFor is how long a switch notice stays: it fades on the first snapshot
+// that arrives this long after the switch (proposed). The ledger refresh sends
+// a snapshot every second, so the next one would be too soon to read it.
+const noticeFor = 5 * time.Second
 
 // runPane keeps its run target while snapshots reorder Overview rows.
 type runPane struct {
-	run, project string
-	adj          bool
-	ledger       bool
-	input        textField
-	offset       int
+	run, project              string
+	answered, answerDone      bool
+	answerState, answerNotice string
+	freeText                  bool
+	adj                       bool
+	ledger                    bool
+	input                     textField
+	offset                    int
+	notice                    string    // proposed: why the pane moved to this run
+	noticeAt                  time.Time // when it moved
 }
 
 func (m *Model) openPane(r ovRow) tea.Cmd {
@@ -43,11 +57,118 @@ func (m *Model) paneRow() (ovRow, string, bool) {
 		}
 		for _, r := range p.snap.EngineRuns {
 			if r.ID == m.pane.run {
-				return ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, name: p.reg.Name, id: r.Item, state: r.State, pending: r.Pending}, r.Wait, true
+				reason := r.Wait
+				if !showsWait(r) {
+					reason = ""
+				}
+				return ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, name: p.reg.Name, id: r.Item, state: r.State, pending: r.Pending}, reason, true
 			}
 		}
 	}
 	return ovRow{}, "", false
+}
+
+// paneEnded describes the pane's run when it is terminal: an engine run that
+// is stopped (or superseded) or committed, or a ledger run that has ended.
+// An engine run missing from the snapshot, or a stale ledger run, is not.
+func (m *Model) paneEnded() (string, bool) {
+	p := m.byName[m.pane.project]
+	if p == nil {
+		return "", false
+	}
+	if m.pane.ledger {
+		for _, r := range boardLedgers(p.snap) {
+			if r.ID == m.pane.run && r.State == "ended" {
+				// The words of the Recent rows: pass, fail, and stopped for the rest.
+				word := "stopped"
+				switch r.Outcome {
+				case "pass":
+					word = "passed"
+				case "fail":
+					word = "failed"
+				}
+				return strings.Join(r.Items, ", ") + " " + word, true
+			}
+		}
+		return "", false
+	}
+	for _, r := range p.snap.EngineRuns {
+		if r.ID != m.pane.run || r.Unavailable {
+			continue
+		}
+		switch {
+		case r.Superseded(p.snap.EngineRuns):
+			return r.Item + " superseded", true
+		case r.State == runrec.StateStopped || r.State == runrec.StateCommitted:
+			return r.Item + " " + r.State, true
+		}
+	}
+	return "", false
+}
+
+// newestRunning is the newest run the project is running: an engine run in
+// the Running section, or an active ledger run that no engine run links to
+// (a relay started elsewhere; the logic of ps.running). A stale ledger run is
+// not running.
+func newestRunning(s source.Snapshot) (ovRow, string, bool) {
+	var best ovRow
+	var item string
+	var bestAt time.Time
+	found := false
+	consider := func(row ovRow, label string, at time.Time) {
+		if !found || at.After(bestAt) {
+			best, item, bestAt, found = row, label, at, true
+		}
+	}
+	linked := map[string]bool{}
+	for _, r := range s.EngineRuns {
+		if r.RelayRun != "" {
+			linked[r.RelayRun] = true
+		}
+	}
+	for _, r := range s.EngineRuns {
+		if r.Section(s.EngineRuns) == source.SectionRunning {
+			consider(ovRow{engineID: r.ID, name: s.Project.Name}, r.Item, r.CreatedAt)
+		}
+	}
+	if s.Runs.Err == nil {
+		for _, r := range s.Runs.Value {
+			if linked[r.ID] || r.State == "stale" {
+				continue
+			}
+			at, _ := time.Parse(time.RFC3339Nano, r.BeganAt)
+			consider(ovRow{ledgerID: r.ID, name: s.Project.Name}, strings.Join(r.Items, ", "), at)
+		}
+	}
+	return best, item, found
+}
+
+// followNewestRun points the pane at the newest running run of its project
+// once the pane's run is over (proposed). It acts only on the Overview. It
+// never moves a pane whose answer field has text or that has a confirmation
+// open, and it stays on the ended run when nothing else is running.
+func (m *Model) followNewestRun(project string) {
+	pane := m.pane
+	if pane == nil || pane.project != project || m.view != 0 {
+		return // only the Overview pane follows
+	}
+	now := m.cfg.Now()
+	if pane.notice != "" && !now.Before(pane.noticeAt.Add(noticeFor)) {
+		pane.notice = ""
+	}
+	if pane.input.Value() != "" || m.confirm != nil {
+		return
+	}
+	ended, ok := m.paneEnded()
+	if !ok {
+		return
+	}
+	next, item, ok := newestRunning(m.byName[project].snap)
+	if !ok {
+		return
+	}
+	m.openPane(next)
+	m.pane.notice, m.pane.noticeAt = ended+"; now showing "+item, now
 }
 
 func (m *Model) actionRow() (ovRow, bool) {
@@ -68,6 +189,11 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 	case "ctrl+c":
 		return tea.Quit
 	case "esc":
+		if m.paneAsk() != nil && m.pane.freeText {
+			m.pane.freeText = false
+			m.actionStatus = ""
+			return nil
+		}
 		m.pane = nil
 		m.actionStatus = ""
 		return nil
@@ -85,11 +211,30 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 			}
 			return nil
 		}
+		if ask := m.paneAsk(); ask != nil && !m.pane.freeText {
+			if msg.String() == "t" {
+				m.pane.freeText = true
+				m.pane.input = textField{}
+				m.actionStatus = ""
+				return nil
+			}
+			if n, err := strconv.Atoi(msg.String()); err == nil && n >= 1 && n <= len(ask.Options) {
+				option := ask.Options[n-1]
+				m.pane.input = textField{}
+				m.pane.input.insert(option.Label + ": " + option.Summary)
+				return m.requestAction("answer")
+			}
+			return nil
+		}
 		if msg.String() == "enter" {
 			return m.requestAction("answer")
 		}
 		m.pane.input.update(msg)
 		m.actionStatus = ""
+		return nil
+	}
+	if key.Matches(msg, m.keys.FileSlice) {
+		m.requestFile() // a finished run keeps its later findings
 		return nil
 	}
 	r, _, ok := m.paneRow()
@@ -136,6 +281,11 @@ func (m *Model) paneLines(w, h int, status string) []string {
 			header[i] = m.cfg.Theme.Heading.Render(header[i])
 		}
 	}
+	if m.pane.notice != "" {
+		for _, line := range wrapText(m.pane.notice, width) {
+			header = append(header, m.cfg.Theme.Dim.Render(line))
+		}
+	}
 	footer := []string{}
 	var priorities []int
 	addFooter := func(lines []string, priority int) {
@@ -144,6 +294,7 @@ func (m *Model) paneLines(w, h int, status string) []string {
 			priorities = append(priorities, priority)
 		}
 	}
+	addFooter(m.findingLines(width), 2)
 	switch {
 	case r.unavailable:
 		addFooter(wrapText(source.RemovedProjectHelp(r.name), width), 2)
@@ -151,8 +302,24 @@ func (m *Model) paneLines(w, h int, status string) []string {
 	case m.pane.ledger:
 		addFooter(wrapText("started elsewhere, read-only; esc close pane", width), 2)
 	case r.state == "paused" && r.pending == "question":
-		addFooter([]string{"Answer: " + m.pane.input.view(max(width-len("Answer: "), 1), m.cfg.Theme)}, 0)
-		addFooter(wrapText("ork answer "+r.engineID+" "+m.pane.input.Value(), width), 5)
+		if ask := m.paneAsk(); ask != nil && !m.pane.freeText {
+			title := wrapText(ask.Title, width)
+			for i := range title {
+				title[i] = m.cfg.Theme.Heading.Render(title[i])
+			}
+			addFooter(title, 0)
+			for i, option := range ask.Options {
+				text := fmt.Sprintf("%d. %s: %s", i+1, option.Label, option.Summary)
+				if i+1 == ask.Recommend {
+					text += " (recommended)"
+				}
+				addFooter(wrapText(text, width), 0)
+			}
+			addFooter(wrapText("Why "+strconv.Itoa(ask.Recommend)+": "+ask.Reason, width), 2)
+		} else {
+			addFooter([]string{"Answer: " + m.pane.input.view(max(width-len("Answer: "), 1), m.cfg.Theme)}, 0)
+			addFooter(wrapText("ork answer "+r.engineID+" "+shellQuote(m.pane.input.Value()), width), 5)
+		}
 		decisionKey, disabledReason := m.paneAdjKey()
 		on := m.pane.adj && disabledReason == ""
 		toggle := "[ ] file answer in adj as " + decisionKey + "  ctrl+a toggles"
@@ -192,26 +359,41 @@ func (m *Model) paneLines(w, h int, status string) []string {
 			priority = 2
 		}
 		addFooter(toggleLines, priority)
-		addFooter([]string{"enter submit; esc close pane"}, 3)
+		hint := "enter submit; esc close pane"
+		if ask := m.paneAsk(); ask != nil {
+			hint = fmt.Sprintf("1-%d pick; t free text; esc close pane", len(ask.Options))
+			if m.pane.freeText {
+				hint = "enter submit; esc back to options"
+			}
+		}
+		if m.confirm != nil && m.confirm.verb == "answer" {
+			hint = "y sends; enter, n or esc cancel"
+		}
+		addFooter(wrapText(hint, width), 3)
 	case r.state == "paused" && r.pending == "budget":
-		addFooter(wrapText("t retry: one more role round; esc close pane", width), 3)
+		addFooter(wrapText("t retry: one more role round; "+m.fileHint()+"esc close pane", width), 3)
 	case r.state == "paused":
-		addFooter([]string{"t retry; esc close pane"}, 3)
+		addFooter(wrapText("t retry; "+m.fileHint()+"esc close pane", width), 3)
 	case r.state == "stopped":
 		addFooter(wrapText("Stopped; relaunch, or clear with: ork dismiss "+r.engineID, width), 2)
-		addFooter([]string{"esc close pane"}, 3)
+		addFooter(wrapText(m.fileHint()+"esc close pane", width), 3)
 	case r.state == "awaiting-approval":
-		addFooter([]string{"a approve; x stop; esc close pane"}, 3)
+		addFooter(wrapText("a approve; x stop; "+m.fileHint()+"esc close pane", width), 3)
 	case r.state == "committed":
-		addFooter([]string{"esc close pane"}, 3)
+		addFooter(wrapText(m.fileHint()+"esc close pane", width), 3)
 	default:
-		addFooter([]string{"x stop; esc close pane"}, 3)
+		addFooter(wrapText("x stop; "+m.fileHint()+"esc close pane", width), 3)
 	}
 	if status != "" {
-		addFooter(wrapText(status, width), 1)
+		priority := 1
+		if m.confirm != nil && m.confirm.verb == "answer" {
+			priority = -1
+		}
+		addFooter(wrapText(status, width), priority)
 	}
 	// Drop the lowest priority lines first: preview, off/disabled toggle,
-	// submit hint, on toggle, status, then input. Preserve earlier lines
+	// submit hint, on toggle, status, then input. An option confirmation
+	// takes priority over the question. Preserve earlier lines
 	// within a priority when the terminal cannot fit the whole group.
 	for len(footer) > h && len(footer) > 0 {
 		drop := 0
@@ -226,6 +408,16 @@ func (m *Model) paneLines(w, h int, status string) []string {
 	// The action area takes priority if the header no longer fits.
 	header = header[:min(len(header), max(h-len(footer), 0))]
 	var lines []string
+	if m.paneAsk() != nil {
+		context := []string{}
+		for _, line := range strings.Split(strings.NewReplacer("\r\n", "\n", "\r", "\n").Replace(reason), "\n") {
+			if strings.HasPrefix(strings.TrimSpace(line), "Question:") {
+				break
+			}
+			context = append(context, line)
+		}
+		reason = strings.TrimSpace(strings.Join(context, "\n"))
+	}
 	if reason != "" {
 		lines = append(lines, wrapText(reason, width)...)
 	}
@@ -287,4 +479,57 @@ func (m *Model) paneAdjKey() (string, string) {
 		}
 	}
 	return "", "question has no decision key"
+}
+
+func (m *Model) paneAsk() *runrec.OwnerQuestion {
+	if m.pane == nil || !m.paneQuestion() {
+		return nil
+	}
+	p := m.byName[m.pane.project]
+	for _, r := range p.snap.EngineRuns {
+		if r.ID == m.pane.run {
+			return r.Question
+		}
+	}
+	return nil
+}
+
+// refreshAnswerStatus follows the resumed run until its next state change.
+func (m *Model) refreshAnswerStatus() {
+	p := m.pane
+	if p == nil || !p.answered {
+		return
+	}
+	project := m.byName[p.project]
+	for _, r := range project.snap.EngineRuns {
+		if r.ID != p.run {
+			continue
+		}
+		if p.answerState != "" && r.State != p.answerState {
+			p.answered = false
+			m.actionStatus = ""
+			return
+		}
+		m.actionStatus = "sending answer"
+		if p.answerDone {
+			m.actionStatus = "answered"
+		}
+		if r.State != "paused" {
+			p.answerState = r.State
+			m.actionStatus = "answered"
+			for i := len(r.Roles) - 1; i >= 0; i-- {
+				role := r.Roles[i]
+				if role.EndedAt.IsZero() && role.Round > 0 {
+					m.actionStatus += fmt.Sprintf("; %s resumed (round %d)", role.Role, role.Round)
+					break
+				}
+			}
+		}
+		if p.answerNotice != "" {
+			m.actionStatus += "; " + p.answerNotice
+		}
+		return
+	}
+	p.answered = false
+	m.actionStatus = ""
 }

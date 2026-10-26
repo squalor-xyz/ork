@@ -79,8 +79,10 @@ first and keeps `?help`. With the sidebar hidden, the version appears at the
 right of the status line when it fits after the existing text.
 
 A stale or unknown daemon build puts
-`daemon build differs: ork daemon restart` first in the status line, before
-the project and refresh fields. Trailing fields are dropped to fit the pane width.
+`daemon build differs: ork daemon restart` first in the status line before
+the project and refresh fields, unless the behind notice is shown (see
+Self-hosting). The behind notice replaces the stale-build marker. At narrow
+widths, trailing fields are dropped first so the behind notice keeps priority.
 
 The six-row text mark appears above `?` help only when the pane can fit the
 mark, a blank line and every help line, and is at least twelve columns wide
@@ -159,6 +161,8 @@ connection stays open when focus changes. Failed notice feeds retry on the
 next timer tick, including when a focused project was removed. Notices that
 arrive during a fetch queue a further read. On "Needs you" the daemon focuses
 all registered projects; on a project row it focuses that one (`dash.refresh`).
+While a visible project has a live run, the daemon reads its runs every 1 s
+(*proposed*, S109) and the TUI refetches on the notice; see `docs/design.md`.
 The local fallback schedule reads the selected project's items every 5 s and
 other projects every 30 s. On "Needs you", all projects poll every 30 s. Goals
 and decided records refresh every 5 min or on HEAD changes and manual refresh. `NO_COLOR` selects the monochrome theme.
@@ -185,15 +189,20 @@ the text column, falling back to a shorter indent when needed to fit.
    - budget pauses;
    - unclassified vendor exits.
 2. **Running:** every running slice across projects, with elapsed time and
-   an ASCII stage bar after it (S07).
+   an ASCII stage bar after it (S07). Engine rows have no label of their own.
+   When every Running row is an engine row without an error, the rows start at
+   the run id with no blank label column. When any Running row has a label
+   (`> started elsewhere` or `! error`), engine rows keep the padded label
+   column so the run ids line up (S33).
    The *proposed* relay row adds a compact pipeline such as
    `[implementer]>reviewer>gate` and `heard 2m`. An architect leads when
    present. `! heard` warns after 15 minutes; `!! heard` marks stale runs.
    The unselected warning cell uses the warning color. The selected row
    detail includes the full pipeline and heard cell even when the row drops
    them. Stale runs stay under Running, dimmed and labelled stale; elapsed time
-   freezes at their last event. Narrow rows drop heard, pipeline, role details,
-   then the stage bar, whole. The first item title is not added.
+   freezes at their last event. Engine rows show total `tokens N` only when
+   engine usage is available. Narrow rows drop tokens first, then heard,
+   pipeline, role details and the stage bar, whole. The first item title is not added.
    For relays started elsewhere, the *proposed* row details (also indented
    under each relay in `ork status`) are `running: ROLE VENDOR/MODEL: TASK`
    for the last step in ledger order with phase `start` (a working subagent
@@ -269,7 +278,10 @@ This is by design. Ready-to-land rows do not show the run id.
 
 Engine runs that are awaiting approval, paused, or stopped and neither
 superseded nor dismissed appear under Needs you. Their kinds are
-`+ approve`, `= paused`, and `x stopped`. Each kind is a symbol and a word,
+`+ approve`, `= paused`, and `x stopped`. A paused owner question uses
+`? question` in amber instead. Overview and the project page also show an
+amber `! owner questions N` alert beside the Running count while questions
+are waiting. In monochrome, question kinds and the alert are bold. Each kind is a symbol and a word,
 so monochrome still reads it.
 Other active engine states appear under Running. Committed runs do not appear
 in either section. A stopped run disappears once a newer engine record exists
@@ -322,10 +334,51 @@ read-only tree pane with no action keys or answer input. Its header says
 "started elsewhere". Its footer says
 "started elsewhere, read-only; esc close pane".
 
+The pane follows the newest running run (*proposed*, S109). When the pane's
+run is over (an engine run that is stopped, superseded or committed, or a
+ledger run that has ended), the next snapshot points the pane at the newest
+running run of the same project: an engine run in the Running section, or an
+active ledger run that no engine run links to and that is not stale. The new
+pane starts at the top, with no answer or filing state, and a line under the
+header says why, cause first, for example `S27 committed; now showing S28`.
+An ended ledger run reads `passed`, `failed` or `stopped`, as in Recent. The
+line is dim (faint under `NO_COLOR`) and fades on the first snapshot 5 s or
+more after the switch. Only a pane opened on the Overview follows; the
+Questions tab's pane stays on its run. Paused and awaiting-approval runs stay
+in the pane, because they wait for the owner. The pane also stays put while its answer field holds text or a confirmation is
+open, and when nothing else is running it stays on the ended run with its
+final state. A run of another project never takes the pane.
+
 The actions follow the state (`ui.answer-pane-scope`):
 
-- Paused with `pending: question`: show the question and an Answer field.
-  The exact `ork answer RUN TEXT` command follows the text live. Enter submits
+- Paused with `pending: question`: free context lines before `Question:` stay
+  in the raw question and appear above the options in the pane's scrollable
+  reason area; the raw `Question:` and `Options:` block is not repeated
+  there. Structured questions show a bold title,
+  2 to 4 numbered options, the inline `(recommended)` marker and a
+  `Why N: reason` line (`ui.structured-questions`, adj #168). A digit opens a confirmation with the
+  exact, pasteable `ork answer RUN 'LABEL: summary'` command. Answer text is
+  shell-quoted, including embedded apostrophes; the confirmation suffix stays
+  outside the quotes. The hint reads `y sends; enter, n or esc cancel`.
+  Only y sends it; Enter, n and esc cancel. The label and summary are the answer sent to the paused
+  role and, when enabled, adj. `t` opens the free-text field; esc returns to
+  the options, and a second esc closes the pane. Typing and paste are ignored
+  until `t`. The options hint shows the actual range, such as
+  `1-2 pick; t free text; esc close pane`. Free text shows
+  `enter submit; esc back to options`. Questions from older records show the
+  Answer field directly.
+  The exact `ork answer RUN 'TEXT'` command follows the text live. A
+  submit shows `sending answer` in the footer while the call runs, not the
+  command form. The call returns only when the run rests, so the footer follows
+  the snapshots meanwhile: once the run leaves paused it reads
+  `answered; implementer resumed (round N)`, and after the call returns
+  without a resumed role it reads `answered`. If the owner closed the pane
+  first, the result shows `answered` with any adj notice, never the command
+  form. Any adj notice follows. The
+  status ends at the run's next state change and does not return when a late
+  result arrives; an error replaces it. Once the run is not
+  paused, its Running row and pane header drop the answered question and
+  their wait text (S127). Enter submits
   without y/n; an empty or whitespace-only answer is refused. The field owns
   typing keys, including the global action letters. Backspace deletes the
   previous rune, ctrl-u clears the field, and left/right move the cursor.
@@ -363,6 +416,24 @@ trimmed stderr, without the request argv or question context. The daemon wraps
 these plain errors with code `internal` in the TUI status. Closing the
 pane leaves a pending call running. No structured answer options are offered.
 The Questions tab also opens this pane for engine questions.
+
+**Finding kinds** (adj #163, `review.finding-kinds`). A reviewer, UI pass or
+gate report tags each finding `fix`, `owner` or `later`. In every pane that is
+not a question, the footer lists what the report left for the owner. Later
+findings read `N later findings; next to file: "TITLE"`. When one can be
+filed, the key line shows `f file slice` just before `esc close pane`, on a
+stopped run too, and after a daemon restart for a stopped or committed run.
+`f` shows the command first:
+`slicer add 'TITLE' --discovered-from ITEM? [y/N] (Enter is No)`. `y` makes
+ork run it in the project, then give the new slice a Why section from the
+finding; the status line then says `filed as ID`, and the next press offers the
+next finding. Filed findings read `Filed as slices: ID` and are not offered
+again. An *owner* finding that does not block reads `Owner question, not
+blocking: TITLE Recommended: LABEL.`; it only informs, and the slice goes on.
+An owner finding marked a blocker pauses the slice as an ordinary structured
+question (the question pane above). A fix finding goes to the fix round and
+shows nowhere in the pane. `f` in the key help sits on the line with approve,
+stop and retry.
 
 A failed call is an error row. A project has one error row per error code.
 The parts that failed with that code come first, then the code, then the
@@ -406,7 +477,21 @@ stop and retry keys follow the run state and the footer hints.
 The Waves composer is available (S82). Select one project. `tab` and
 `shift+tab` reach it between Questions and Roadmap. It loads `wave.suggest`
 when opened or the project changes.
-Rows follow slicer's wave order. Unplaced items include their reasons.
+The first three suggested waves appear in slicer's order. A dim `N more
+waves` line (`1 more wave` for one) offers `[a] show all`; hidden waves cannot be selected until
+expanded. Unplaced items remain available. Wave headers are full-width
+box-drawing rules with item counts, or hyphens in ASCII mode. Tick, item id, title and
+Shares form aligned columns. The dim Shares column contains only the
+predecessor id, for example `<A` means shares files with predecessor A;
+shared paths stay out of the table. `?` explains the `<` marker.
+Unplaced reasons use plain words: `no_files` becomes `no files listed`.
+Reasons that do not fit beside the title appear on the following lines, dim
+and indented to the title column.
+Long titles shorten to keep the tick, id and Shares columns visible.
+The cursor bar spans the row's full width, including its Lineup continuation
+lines. The hint lines are pinned below the scrolling body, after a blank
+line, so they stay visible when rows are ticked; the status line sits under
+them. A dim cell stays dim across all its columns.
 
 S60 provides the CLI: `ork wave suggest PROJECT` prints the ordered waves
 from `slicer plan-parallel`, including reasons. `ork wave start PROJECT
@@ -426,34 +511,64 @@ message verbatim, including per-item launch errors.
 
 ```
 Suggested (slicer plan-parallel)
-Items                   Lineup (* edited for this run)
-  Wave 2
-  [x] A  Alpha            implementer*: claude custom-model high
-                          reviewer: claude opus medium
-                          gate: claude opus medium
-  [x] B  Beta             implementer: claude sonnet high
-                          reviewer: claude opus medium
-                          gate: claude opus medium
-  Wave 4
-  [ ] C  Gamma
-  Unplaced
-  [ ] D  Delta (no_files)
+         Items                 Shares  Lineup (* edited)
+-- Wave 2 --------------------------------------------------- 2 items
+  [x] A  Alpha                         impl*: claude custom-model high
+                                              +2 fallbacks
+                                       rev:   claude opus medium
+                                       gate:  claude opus medium
+  [x] B  Beta                          impl:  claude sonnet high
+                                       rev:   claude opus medium
+                                       gate:  claude opus medium
+-- Wave 4 ---------------------------------------------------- 1 item
+  [ ] C  Gamma                 <A
+-- Unplaced -------------------------------------------------- 1 item
+  [ ] D  Delta (no files listed)
   ! A and B both touch shared.go
   ! A and B both touch second.go
-  [space] tick item   [e] edit lineup   [l] launch wave
+
+  [enter] item   [space] tick item   [e] edit lineup   [l] launch wave
+--------------------------------------------------------------------
+  2 ticked, not launched; [l] launches
 ```
 
+`enter` on a plain row opens a read-only item pane with its full title
+and item detail from `item.show`. A shares reason appears as `Shares files
+with ID`, followed by the single shared path on an indented line. Spaces
+are part of that path; long paths wrap. Other reasons use the same plain words as the table and
+remain visible in full.
+`up`/`down` and `j`/`k` scroll one line. `pgup`/`pgdown` scroll one
+visible page. `esc` returns to the same row. The pane offers no launch or
+editing actions.
+
 `space` ticks or unticks the selected item. Ticking shows both y/n inputs
-at once, with no defaults: well-specified and split. `tab` or `shift+tab`
-switches the active field; `enter` validates both and plans the item.
-`esc` cancels that tick. The Lineup column fills from the plan, including
-its fallback chains (`ui.wave-composer`). `down`/`j`/`n` and `up`/`k`/`p`
-move between items. Unplaced items can also be ticked.
+directly under that item, with no defaults: well-specified and split. A dim
+`launch inputs` line and both fields are indented to the title column. The
+item and both fields stay in view. Only the active field shows a cursor, and
+the hints change to `[tab] next field   [enter] plan   [esc] cancel`.
+`tab` or `shift+tab` switches the active field; `enter` validates both and plans the item.
+`esc` cancels that tick. The Lineup column appears only while at least
+one item is ticked and fills from the plan (`ui.wave-composer`). It uses
+short role labels: impl, rev, gate and arch, padded so the values share one
+column. Each role shows its primary entry and a dim `+N fallbacks` line
+under the values; `e` keeps the full chain available.
+The column fits its longest line, capped at half the pane width. Long
+primary entries wrap within the column.
+`down`/`j`/`n` and `up`/`k`/`p` move between items. Unplaced items can also
+be ticked.
 
 Two or more ticked items trigger an overlap read. Each shared path gets a
 warning; warnings permit launch (`wave.selection`). `l` launches the ticked
 items with one y/n confirmation showing `ork wave start PROJECT ID...`.
 Enter, n and esc cancel; y submits each item's answers and confirmed plan.
+Until launch the composer says `N ticked, not launched; [l] launches`
+(not shown in the lineup editor). After admission it says `launched S78 as
+RUN; enter opens it` for one item, or `launched N items; enter on a running
+row opens its run`. A launched row stays dim, shows `[>]` instead of the tick
+box and `running RUN` after the title (on its own dim line when it does not
+fit), and cannot be ticked again. Its hint reads `[enter] open run`, and
+`enter` selects the run in Overview, including when the run first appears
+in the next refresh.
 Every ticked item must have a successful plan before launch. One failed
 plan prevents launching the chosen set; the owner can untick it. The
 wave.plan-failure decision remains open (adj 146).
@@ -461,6 +576,10 @@ wave.plan-failure decision remains open (adj 146).
 `e` edits the selected ticked item after its plan is ready (S83).
 The editor starts from that item's plan: implementer and reviewer, then
 budget minutes and tokens. The gate follows the reviewer and has no field.
+When the plan has a `ui` entry (the matrix's UI pass row), a line below the
+reviewer lists its chain for information: the UI pass runs beside the reviewer
+only on a slice that touches the UI (`roles.ui-pass`, adj #165), has no field,
+and the cursor skips it.
 `up`/`down`, `tab` and `shift+tab` move between rows.
 `left` and `right` cycle the role's chain already in
 `RunPlan.Lineup[role]`: primary first, then alternatives. Until S49, the
@@ -486,6 +605,7 @@ Edit lineup: A  Alpha
   Run only; gate follows reviewer.
   > implementer: claude sonnet high (no alternatives; c for custom)
     reviewer: claude opus medium
+    ui: claude opus medium (UI slices only; from the matrix)
     Budget minutes: 45
     Budget tokens: 9000
   Zero budget uses the project default.
@@ -527,8 +647,8 @@ and starts four columns past its node's glyph. The run header uses the
 heading style.
 
 S07 adds a stage bar, a pulsing running cell and an activity sparkline.
-Live output tail, tokens and cost, worktree diff stats, test counts and a wave
-timeline remain future role detail. The activity series counts vendor stream
+S99 adds live assistant output and usage (see below). Worktree diff stats,
+test counts and a wave timeline remain future role detail. The activity series counts vendor stream
 events, not tokens. There is no bell or budget bar in S07.
 
 The actions are approve, stop, answer, retry on another vendor, and open
@@ -656,3 +776,66 @@ A separate 250 ms frame timer advances the bar and tree animation while the
 Overview has a Running-section or live ledger row, or a live run pane is open.
 It arms once and disarms on the next frame when no run qualifies. Idle ork
 has no 4 fps timer. The existing one-second schedule tick stays unchanged.
+
+
+## Self-hosting (engine.self-host, adj 166)
+
+*Proposed behavior and wording:* `daemon behind main: restart with ork daemon restart`.
+While no run is active, the status line shows it when a self-hosted daemon's
+revision is behind local `main`. It fires on any landing on main, not only
+engine landings. It replaces the stale-build marker while shown; otherwise
+the stale marker still shows for a differing build. At narrow widths the
+behind notice takes priority over other status fields. Text `ork doctor`
+prints `[WARN] daemon behind main: restart with ork daemon restart` on stdout.
+`ork status` prints `ork: warning: daemon behind main: restart with ork daemon restart`
+on stderr. ork never restarts on its own.
+
+Waves marks an engine conflict after planning two selected slices whose Files
+touch `internal/engine`, `internal/daemon` or `cmd`, naming both:
+
+```text
+! engine conflict: A and B touch internal/engine, internal/daemon or cmd; launch separately
+```
+
+Pressing `l` puts the same conflict text, without the leading `! ` marker, in
+the action status. Launch is blocked until the selection holds at most one
+such slice. The daemon checks Files again before starting any member. See
+docs/design.md for detection.
+
+### Live output and usage (S99)
+
+The running engine role shows up to three dim rows of assistant text after
+its task. The tail has its own ASCII-safe `    > ` gutter. Text wraps to the
+remaining pane width, blank lines are removed, and the newest text is last.
+When older text is cut by the three-row window or memory cap, only the first
+row begins with `...`. The tail keeps at most 2 KB in daemon memory and
+resets at each role attempt. Stopped, paused, stale and ended runs show no
+tail. Relays started elsewhere have no tail or usage. Claude text streams as
+deltas. Codex shows whole assistant messages when an item completes; it does
+not expose text deltas in the measured fixtures. Tool calls and tool output
+do not enter the tail.
+
+Only the running node gets a separate `tokens N  $C` line. Until its first
+usage event, it shows `tokens -  $-`. A reported zero is shown as zero.
+Finished roles append recorded usage to their node line; that whole suffix
+drops first when narrow. An interrupted role in a stopped run also uses the
+node suffix: missing recorded usage and cost show `tokens -  $-`, with no
+live tail. A failed gate's verdict stays directly under its node, before any
+separate usage or task line. The pane scrolls while retaining space for the
+Overview headings at 80x24.
+
+Running roles show `$-` until their round ends. Vendors with no cost field,
+including Codex, show `$-` after completion too; zero stored cost does not
+mean a reported zero price. The Overview's `tokens N` is the run total:
+completed roles plus the current role's live tokens. The cell is omitted
+until engine usage is available, and drops before heard when a Running row
+narrows. Claude usage advances at message start and message delta; Codex
+usage arrives only at turn completion. These counters show reported usage
+and cannot estimate tokens between usage events.
+
+Before text enters the tail, ork replaces run-environment values of at
+least eight characters with `***` when their variable name contains KEY,
+TOKEN, SECRET, PASSWORD or CREDENTIAL (case insensitive). A possible secret
+prefix waits for the next text event so split values are masked too. Final
+flush masks any held prefix instead of exposing it. This rule does not
+recognize secrets absent from those environment variables.

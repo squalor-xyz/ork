@@ -9,6 +9,7 @@ import (
 	"charm.land/lipgloss/v2"
 
 	"github.com/squalor-xyz/ork/internal/brand"
+	"github.com/squalor-xyz/ork/internal/daemon"
 )
 
 func TestHeaderShowsVersion(t *testing.T) {
@@ -160,5 +161,49 @@ func TestStatusLineUsesSuppliedWidth(t *testing.T) {
 	m.cfg.Version = "v1"
 	if got := stripANSI(m.statusLine(60)); !strings.HasSuffix(got, "v1") || lipgloss.Width(got) != 60 {
 		t.Fatalf("aligned version: %q", got)
+	}
+}
+
+func TestBehindNoticeOnlyWhenIdle(t *testing.T) {
+	for _, active := range []bool{false, true} {
+		t.Run(fmt.Sprint(active), func(t *testing.T) {
+			m := goldenModel(NewTheme(true), 160, 30)
+			m.cfg.BuildID, m.cfg.DaemonBuild = "new", "old"
+			m.projects[0].snap.SelfHost = true
+			m.projects[0].snap.BehindMain = true
+			// A run in another project must hide the notice too.
+			m.projects[1].snap.RolesRunning = active
+			line := stripANSI(m.statusLine(150))
+			if strings.Contains(line, daemon.BehindNotice) != !active {
+				t.Fatalf("active=%v: %s", active, line)
+			}
+			if strings.Contains(line, "daemon build differs") != active {
+				t.Fatalf("stale marker must show alone, and hide behind the idle notice: %s", line)
+			}
+			if active {
+				return
+			}
+			if !strings.Contains(stripANSI(m.statusLine(72)), daemon.BehindNotice) {
+				t.Fatal("notice lost at normal pane width")
+			}
+			m.projects[0].snap.BehindMain = false
+			line = stripANSI(m.statusLine(150))
+			if strings.Contains(line, daemon.BehindNotice) {
+				t.Fatal("notice survived main catching up")
+			}
+			if !strings.Contains(line, "daemon build differs") {
+				t.Fatal("stale marker missing without behind notice", line)
+			}
+		})
+	}
+}
+
+func TestBehindNoticeGolden(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		m := setupModel(NewTheme(mono), 160, 30)
+		m.cfg.BuildID, m.cfg.DaemonBuild = "new", "old"
+		m.projects[0].snap.SelfHost = true
+		m.projects[0].snap.BehindMain = true
+		checkGolden(t, fmt.Sprintf("behind-main-160x30-mono-%v.txt", mono), m.View().Content)
 	}
 }

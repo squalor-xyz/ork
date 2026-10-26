@@ -1,0 +1,39 @@
+{
+  "id": "S135",
+  "title": "Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S117 later notes (2026-10-26): the reviewer and UI pass now run in parallel. (1) When one stops the slice, the sibling round is not cancelled. (2) The activity ring is shared; parallel rounds need one per role. (3) A lost pause names only one lost role. (4) When one role paused first, the sibling's owner question is dropped. (5) planRun now errors when relay-roles show fails; plan without a ui role instead."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/states.go`\n- `internal/engine/round.go`\n- `internal/engine/activity.go`\n- `internal/daemon/runs.go`\n- `internal/engine/uipass_test.go`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "TestStopCancelsSiblingReviewRound; TestParallelRoundsKeepSeparateActivity; TestLostPauseNamesEveryLostRole; TestSiblingOwnerQuestionKept; TestPlanWithoutUIRoleWhenMatrixUnreadable."
+    },
+    {
+      "heading": "Implement",
+      "body": "Re-anchor from the code after S117. Tests first with the engine harness fakes."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./internal/engine ./internal/daemon; go vet; gofmt -l; slicer check; adj lint."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

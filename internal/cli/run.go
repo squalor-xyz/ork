@@ -16,22 +16,30 @@ import (
 )
 
 func (a *App) call(ctx context.Context, o *output, method string, params, result any) int {
+	finish := func() int {
+		if method == daemon.MethodStatus {
+			if status, ok := result.(*daemon.StatusResult); ok {
+				if a.Call != nil {
+					a.warnStale(o, status.BuildID)
+				}
+				if notice := daemon.BehindWarning(status); notice != "" {
+					fmt.Fprintf(o.stderr, "ork: warning: %s\n", notice)
+				}
+			}
+		}
+		return ExitOK
+	}
 	if a.Call != nil {
 		if err := a.Call(ctx, method, params, result); err != nil {
 			return o.failErr(err)
 		}
-		if method == daemon.MethodStatus {
-			if status, ok := result.(*daemon.StatusResult); ok {
-				a.warnStale(o, status.BuildID)
-			}
-		}
-		return ExitOK
+		return finish()
 	}
 	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
 		if err := c.Call(ctx, method, params, result); err != nil {
 			return o.failErr(err)
 		}
-		return ExitOK
+		return finish()
 	})
 }
 func (a *App) runSlice(ctx context.Context, o *output, args []string) int {

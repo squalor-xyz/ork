@@ -18,15 +18,17 @@ type EarlierReport struct{ Name, Text string }
 
 // BriefInput is what a brief is built from (docs/design.md, Roles).
 type BriefInput struct {
-	Role       string
-	SliceID    string
-	Worktree   string
-	TempDir    string
-	ReportPath string
-	SliceJSON  string   // `slicer show ID --json --lean`
-	EnvLines   []string // the project's environment lines, verbatim
-	Sections   []BriefSection
-	Earlier    []EarlierReport
+	Finish       bool   // the finish step has no checks after its round
+	CheckCommand string // the project check command; empty means only slicer check
+	Role         string
+	SliceID      string
+	Worktree     string
+	TempDir      string
+	ReportPath   string
+	SliceJSON    string   // `slicer show ID --json --lean`
+	EnvLines     []string // the project's environment lines, verbatim
+	Sections     []BriefSection
+	Earlier      []EarlierReport
 }
 
 const trackingRule = "Do not open, search, parse, or edit tracking files; use the slicer commands."
@@ -34,7 +36,7 @@ const trackingRule = "Do not open, search, parse, or edit tracking files; use th
 // BuildBrief returns the brief for a role: the role prompt with its
 // placeholders filled, then the slice, the tracking rule, the workspace
 // limit, the environment lines, the role's temp directory and report path,
-// the round's own sections and any earlier reports.
+// the implementer's check instructions, the round's own sections and any earlier reports.
 func BuildBrief(in BriefInput) (string, error) {
 	for _, f := range []struct{ name, val string }{
 		{"SliceID", in.SliceID}, {"Worktree", in.Worktree}, {"TempDir", in.TempDir},
@@ -73,6 +75,13 @@ func BuildBrief(in BriefInput) (string, error) {
 		b.WriteString("\n")
 	}
 	fmt.Fprintf(&b, "## Your files\n\nYour temp directory: %s\nYour report path: %s\n\n", in.TempDir, in.ReportPath)
+	if in.Role == RoleImplementer && !in.Finish {
+		b.WriteString("## Checks ork runs\n\nork runs ")
+		if in.CheckCommand != "" {
+			fmt.Fprintf(&b, "`%s` and ", in.CheckCommand)
+		}
+		b.WriteString("`slicer check` after the round, outside your sandbox.\n\n")
+	}
 	for _, s := range in.Sections {
 		fmt.Fprintf(&b, "## %s\n\n%s\n\n", s.Title, strings.TrimSpace(s.Body))
 	}

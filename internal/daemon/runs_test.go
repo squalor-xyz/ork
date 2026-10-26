@@ -258,7 +258,7 @@ func TestRunPlanRefusesBadOverride(t *testing.T) {
 					t.Errorf("invalid override created run: %v %v", runs, err)
 				}
 				for _, call := range lastFake.CallsTo("slicer") {
-					if len(call.Args) < 2 || call.Args[0] != "relay-roles" || call.Args[1] != "recommend" {
+					if len(call.Args) < 2 || call.Args[0] != "relay-roles" || (call.Args[1] != "recommend" && call.Args[1] != "show") {
 						t.Errorf("invalid override caused slicer call: %v", call.Args)
 					}
 				}
@@ -376,7 +376,7 @@ func TestRunOverrideWritesNoMatrix(t *testing.T) {
 	request(t, d, MethodRunStart, `{"project":"p","item":"S1","lineup":{"implementer":[{"vendor":"claude","model":"custom","effort":"high"}]},"budgets":{"minutes":90}}`)
 	d.closeRuns()
 	for _, call := range lastFake.CallsTo("slicer") {
-		if call.Args[0] == "relay-roles" && (len(call.Args) < 2 || call.Args[1] != "recommend") {
+		if call.Args[0] == "relay-roles" && (len(call.Args) < 2 || (call.Args[1] != "recommend" && call.Args[1] != "show")) {
 			t.Errorf("matrix write: %v", call.Args)
 		}
 	}
@@ -2041,5 +2041,37 @@ func TestBudgetPausedStatusIncludesRetryHint(t *testing.T) {
 	b := request(t, d, "status", `{"project":"p"}`)
 	if !strings.Contains(string(b), `"needs_you":1`) || !strings.Contains(string(b), `"pending":"budget"`) {
 		t.Fatalf("status: %s", b)
+	}
+}
+
+func TestStructuredQuestionWire(t *testing.T) {
+	d, store, _ := runDaemon(t, nil)
+	ask := &runrec.OwnerQuestion{Title: "Which storage?", Options: []runrec.Option{{Label: "local", Summary: "local storage"}, {Label: "remote", Summary: "remote storage"}}, Recommend: 1, Reason: "nearby"}
+	_, err := store.Create(runrec.Record{ID: "structured", Project: "p", Item: "S111", State: runrec.StatePaused, Pending: &runrec.Pending{Kind: runrec.PendingQuestion, Question: "raw question", Ask: ask}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := json.Marshal(d.engineRuns("p"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rows []EngineRun
+	if err := json.Unmarshal(b, &rows); err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 1 || rows[0].Question == nil || rows[0].Question.Title != ask.Title || rows[0].Question.Options[1].Summary != "remote storage" || rows[0].Question.Recommend != 1 || rows[0].Question.Reason != "nearby" || !strings.Contains(rows[0].Wait, "raw question") {
+		t.Fatalf("wire: %s", b)
+	}
+}
+
+func TestAnsweredRunWaitClearsPendingQuestion(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	_, err := store.Create(runrec.Record{ID: "answered", Project: p.Name, Item: "S127", State: runrec.StateImplement, Pending: &runrec.Pending{Kind: runrec.PendingQuestion, Question: "Old owner question", Reason: "Old question reason"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	rows := d.engineRuns(p.Name)
+	if len(rows) != 1 || rows[0].Wait != "" || rows[0].Pending != "" || rows[0].Question != nil {
+		t.Fatalf("answered run exposes pending question: %+v", rows)
 	}
 }

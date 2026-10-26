@@ -80,16 +80,19 @@ func (c *Client) Snapshot(ctx context.Context, p registry.Project) source.Snapsh
 		}
 	}
 	return source.Snapshot{
-		Unavailable: out.Unavailable,
-		Project:     out.Project,
-		EngineRuns:  out.EngineRuns,
-		Items:       out.Items.result(),
-		Deps:        out.Deps.result(),
-		Goals:       out.Goals.result(),
-		Runs:        out.Runs.result(),
-		BoardRuns:   out.BoardRuns.result(),
-		Open:        out.Open.result(),
-		Decided:     out.Decided.result(),
+		SelfHost:     out.SelfHost,
+		BehindMain:   out.BehindMain,
+		RolesRunning: out.RolesRunning,
+		Unavailable:  out.Unavailable,
+		Project:      out.Project,
+		EngineRuns:   out.EngineRuns,
+		Items:        out.Items.result(),
+		Deps:         out.Deps.result(),
+		Goals:        out.Goals.result(),
+		Runs:         out.Runs.result(),
+		BoardRuns:    out.BoardRuns.result(),
+		Open:         out.Open.result(),
+		Decided:      out.Decided.result(),
 	}
 }
 
@@ -221,5 +224,13 @@ func (c *Client) UnavailableProjects(ctx context.Context) ([]source.Snapshot, er
 func (c *Client) AnswerAction(ctx context.Context, action RunAction) (string, error) {
 	var reply RunReply
 	err := c.Call(ctx, MethodRunAnswer, action, &reply)
+	return reply.Message, err
+}
+
+// FileFinding files the run's later finding n (one-based) as a slice after the
+// owner confirmed it, and returns the notice that names the new slice.
+func (c *Client) FileFinding(ctx context.Context, run string, n int) (string, error) {
+	var reply RunReply
+	err := c.Call(ctx, MethodRunFile, RunAction{Run: run, Finding: n}, &reply)
 	return reply.Message, err
 }

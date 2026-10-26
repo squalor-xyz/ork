@@ -64,6 +64,8 @@ ork (TUI)  ork status --json (CLI)
   engine jobs and unreadable run state. *Proposed:* `daemon.info` returns only
   `build_id`, without loading the registry or reading projects. Commands,
   TUI startup, stop/restart and doctor use this cheap call for build checks.
+  Doctor also reads status for the idle self-host restart notice; a failed
+  status read omits that notice and does not fail doctor.
   `ork status` makes one full status read. Commands warn on stderr when the
   daemon build differs, including an older daemon with no build ID. The
   warning names `ork daemon restart`. An `unknown_method` reply from an older
@@ -122,7 +124,11 @@ ork (TUI)  ork status --json (CLI)
   decided records every 5 min, on a git HEAD change, when a project is opened
   and on `refresh`. A git HEAD change is `git -C PATH rev-parse HEAD` and
   nothing else, read on the same 5 s / 30 s tick as items, deps, runs and open
-  records. Each read is one CLI call. A read that is already running is
+  records. The runs part is read every 1 s instead while the project is
+  visible and its last good read holds a run that is not stale (*proposed*,
+  S109); when that read shows no such run it returns to 5 s, and a project that
+  is not visible stays at 30 s. Only the runs part speeds up; a change in it
+  reaches the clients through the usual notice. Each read is one CLI call. A read that is already running is
   shared, and at most 4 CLI processes run at once across all projects. A
   read that comes due, or that a HEAD change asks for, while another runs for
   its part starts when that one ends, so a part never has two reads at once. A
@@ -187,6 +193,7 @@ setup -> implement -> checks --red--> implement (fix)
                         | green
                         v
                      review --findings--> implement (fix round) -> checks
+                     (reviewer; beside it the UI pass on a UI slice)
                         | clean, or green checks after reviewer fixes
                         v
          [architect -> implement (fix round) -> checks]  (lineup only; once)
@@ -224,6 +231,20 @@ slice.
   have been addressed and before the gate (`slice.architect-order`, adj #123),
   exactly when the lineup has an architect entry. ork does not read the slice
   size (`slice.architect-size`, adj #151).
+  - **UI pass** (`roles.ui-pass`, adj #165). When the lineup has a `ui` entry
+    and the slice's Files section names a UI path, the UI pass starts with
+    the reviewer, at the same time, and neither waits for the other. A UI
+    path is one in backticks under `internal/tui` (its golden views too) or
+    `internal/cli`, `docs/dashboard.md`, or a `ui.*` adj key (AGENTS.md; matrix
+    rule u10). On any other slice no UI round runs. The UI pass is read-only
+    with the fingerprint applied, gives no verdict, and reports sections
+    (A) to (D) like the reviewer. It runs once, with the first review. The
+    findings of the two reports go to one fix round. When both
+    ask to pause, the first pause is kept. A stop overrides a pause, because
+    `pause()` refuses when the slice is paused or stopped and `stop()` refuses
+    only when it is already stopped. After a pause, a retry runs again only the
+    role whose report does not stand. The renders of adj #165 are a later slice
+    (S121); this one is text only.
 - **architect:** one read-only review with the fingerprint applied. The report
   needs only the shared `## Owner needed` section. The whole report goes to an
   implementer fix round, even when it has no findings; ork adds no parser
@@ -231,6 +252,35 @@ slice.
   gate. The architect is not repeated after a gate FAIL.
 - **fix round:** the implementer is resumed with the confirmed findings. A
   small fix round is reviewed and gated in one pass (contract v7).
+- **finding kinds** (adj #163, `review.finding-kinds`): the reviewer, the UI
+  pass and the gate tag each finding `[fix]`, `[owner]`, `[owner blocker]` or
+  `[later]`. A finding is a list item or paragraph that opens with the tag;
+  lines indented under it belong to it. A finding without a tag is a fix, so a
+  report without tags behaves as before. `Triage` and `TriageGate`
+  (`internal/engine/kinds.go`) sort a report:
+  - *fix*: the only findings the fix round reads. A tagged report goes to the
+    fix round as its fix findings, without the others; an untagged one goes
+    whole.
+  - *owner*: the finding is an owner question in the shape of S111: a title,
+    `Options:` with 2 to 4 numbered labels, `Recommend: N - reason`, and an
+    optional `Decision key:`. ork keeps it in `findings[]` of the run record
+    and shows it in the pane. It does not block. `[owner blocker]` makes ork
+    pause the round with a `question` pending, as an `## Owner needed`
+    section does (`questions[]`, the answer reaches the same role, and
+    `reviewDone` runs that role again). A malformed owner or later finding is
+    a report shape error.
+  - *later*: ork keeps it in `findings[]` as an offer. Nothing is filed until
+    the owner confirms in the pane (`run.file`). Then ork itself runs
+    `slicer add TITLE --discovered-from ITEM --key RUN-later-N --render` in
+    the project's main checkout, and `slicer promote ID --file later-N.md`
+    with a Why section made from the finding, both as `writes[]` entries. The
+    key makes a retry return the slice the first call filed; when that slice
+    already has its spec, ork skips `promote`. slicer owns the
+    record (`docs/boundaries.md`); the new row is unscored and the owner
+    scores it with `slicer set`.
+  The same finding raised again in a later round under the same title is kept
+  once. A gate FAIL sends back the gate's report without its owner and later
+  findings.
 - **gate:** the first line of the report must be exactly `VERDICT: PASS` or
   `VERDICT: FAIL`. On S and M items the gate is the resumed reviewer
   ("lite"). A FAIL is recorded with `slicer note ID --text "Review FAIL:
@@ -297,12 +347,15 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   followed by checks. The gate is the resumed reviewer (role `gate`), which
   reviews and gates the fix in one pass. Without an architect entry, a clean
   review goes straight to the gate. The gate brief includes the latest
-  architect report even when the gate resumes a session. A gate FAIL is recorded
+  architect report and the latest UI pass report even when the gate resumes a
+  session. A gate FAIL is recorded
   with `slicer note ID --text "Review FAIL: ..." --render`, sends the
   implementer back, and the third FAIL stops
   the slice. *Proposed:* review findings are the text of sections (A), (B)
   and (D) of the reviewer's report when they are not "nothing"; (C) holds
-  notes for later. A report without sections (A) and (B) is a shape error.
+  notes for later, and starts a fix round only through a finding tagged
+  `[fix]`. Only fix findings count (finding kinds above). A report without
+  sections (A) and (B) is a shape error.
 - **Rounds.** `round` counts implementer rounds and names the report
   files (`implementer-2.md`). A repeat of the same role and round uses a
   new path (`implementer-2-attempt-2.md`), preserving the earlier report.
@@ -326,6 +379,30 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   and dotted; a malformed or repeated key is a `role.report-shape` error.
   The full section and its optional key are stored with the question. A key
   enables optional adj filing of the owner's answer in the TUI.
+- **Structured questions** (`ui.structured-questions`, adj #168). Roles write
+  this block under `## Owner needed`, with 2 to 4 options, distinct labels,
+  consecutive numbers starting at 1, and a recommendation naming an option:
+
+  ```text
+  Question: ONE LINE TITLE
+  Options:
+  1. LABEL: summary
+  2. LABEL: summary
+  Recommend: 1 - one-line reasoning
+  Decision key: area.topic
+  ```
+
+  Free context lines may precede `Question:`. They stay in the raw question
+  text and the pane shows them above the options. From `Question:` onward,
+  the block keeps its strict shape: extra context lines inside or after it
+  are a shape error. The optional decision key line remains allowed anywhere
+  in the section.
+
+  The decision key is optional. Title, labels, summaries and reasoning must
+  be non-empty and each fits on one line. A malformed structured block is a
+  report shape error. Legacy free text still pauses for an answer. The raw
+  section stays in `Question`; the parsed `Ask` accompanies it in pending
+  state and question history. Adj uses the structured title when filing.
 - **Owner questions.** A non-empty `## Owner needed` pauses the slice (kind
   `question`) and is recorded in `questions[]`. `Answer` resumes the same
   role with the question and the answer. The pending answer stays in the
@@ -405,6 +482,9 @@ ork adds:
   - the environment lines from the project's AGENTS.md;
   - the role's own temp directory;
   - the report path;
+  - for the implementer, the project check command (when configured) and
+    `slicer check`, which ork runs after the round (not the finish step)
+    outside the role's sandbox;
   - earlier reports, when the role is not resumed.
 - **Report.** The role writes its final report to
   `~/.local/state/ork/runs/<run>/<role>-<round>.md` and exits
@@ -416,6 +496,15 @@ ork adds:
 - **Resume.** For fix rounds and the lite gate, ork resumes a session from the same
   vendor and model where the vendor supports it. Otherwise it starts fresh with the
   earlier reports in the brief (`role.resume`).
+- **UI pass.** A read-only role with its own prompt (`ui.md`: 80x24, ASCII and
+  monospace, clipping, key hints), the same for every vendor. It runs beside
+  the reviewer on a slice that touches the UI (see the review state). Its
+  lineup row is the matrix row that the rule naming "UI pass row (rNN)" gives
+  (u10 today). Until slicer has a `ui` role (slicer s392), that row's role is
+  `reviewer`: ork keeps it out of the reviewer's and the gate's fallback
+  chains and puts it in the `ui` lineup, and the ledger step has role
+  `reviewer` with the task `ID ui`. In any fallback chain, an entry identical
+  to the one before it is dropped.
 - **Reviewer rule.** A reviewer never wrote code in the slice. A reviewer
   may run on another vendor if the lineup names it (`review.cross-vendor`).
 - **Ledger.** Each role round is recorded with `slicer relay-run step` with
@@ -742,6 +831,14 @@ prints `{"started":false}` on stdout. Interactive questions go on stderr
 in JSON mode.
 
 `run.retry` takes `{run}` and returns the run record (adj #101).
+*Proposed:* `run.file` takes `{run,finding}` (the one-based `findings[]` entry)
+and returns the run record with a `message` (`filed as ID`) once ork has run
+`slicer add` and `slicer promote` for that later finding (adj #163). It does
+not wait for the run, so it works while a role runs and on a stopped or
+committed run that the daemon did not rebuild at its start (the record comes
+from the store), and it refuses a finding that is not a later finding or is
+already filed. The engine run rows carry
+`findings:[{n,kind,title,ask?,filed?}]` for the pane.
 `run.dismiss` takes `{run}` and returns the run record (adj #117). It refuses
 a run that is not stopped or is busy. An unknown run returns `not_found`.
 
@@ -792,8 +889,8 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   classification as the Overview: committed and superseded runs are hidden
   (`ui.status-list`, adj #125). JSON keeps every engine run, including hidden
   ones. The *proposed*
-  `engine_runs:[{id,item,branch?,merged?,state,wait?,pending?,denials?,error?,unavailable?,
-  relay_run?,roles?,activity?,created_at}]` field per project includes the linked slicer
+  `engine_runs:[{id,item,branch?,merged?,state,wait?,pending?,question?,denials?,error?,unavailable?,
+  relay_run?,roles?,activity?,tail?,tokens?,cost_usd?,created_at}]` field per project includes the linked slicer
   ledger run ID in `relay_run`, when present, and the engine run's creation
   time in `created_at`. The optional `roles`
   array and the proposed `branch` and tri-state `merged` fields are described
@@ -805,7 +902,9 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   contains the approval prompt, owner question, pause or stop reason. The optional
   `pending` string holds the paused run record's pending kind (`question`,
   `shape`, `lost`, `interrupted` or `error`); other states omit it
-  (`ui.pending-kind`). Older snapshots without it still load. `active_relays` are slicer's active relay runs.
+  (`ui.pending-kind`). The optional `question` object carries `title`,
+  `options:[{label,summary}]`, one-based `recommend` and `reason` for a paused
+  structured question. Older snapshots without it still load. `active_relays` are slicer's active relay runs.
   The *proposed* optional `error` is a daemon-memory job or recovery error.
   The *proposed* optional `unavailable` marks a row without an engine.
   Removed-project groups are display-only and have `unavailable: true`.
@@ -885,8 +984,8 @@ Each step is usable or testable on its own:
 5. **Waves and caps.** Several items, queueing, failure isolation.
 6. **Three vendors, fallback, fingerprint, budgets, owner questions.**
 7. **Live role detail.** S07 adds stage bars, a stream-event sparkline and
-   4 fps animation while a run is visible. Output tail and usage detail remain
-   future work.
+   4 fps animation while a run is visible. S99 adds live assistant output and
+   usage detail.
 8. **Architect on size L, split, slivers.**
 9. **Landing help.** Ready-to-land list and merge detection.
 
@@ -915,7 +1014,7 @@ a read-only ended-run pane. Run duration and ended age use `begun_at` and
 ### Live role activity (S07)
 
 The Overview puts the ASCII stage bar after elapsed time. Narrow rows drop
-heard, pipeline, role details, then the bar. The pane puts the bar above the
+tokens, heard, pipeline, role details, then the bar. The pane puts the bar above the
 pipeline and the ten-cell activity sparkline below last heard. The bar measures
 completed roles, with an architect cell when present; a fix round resets roles
 whose latest steps precede the new implementer step. A running cell pulses
@@ -928,3 +1027,67 @@ Overview Running row, live ledger row or live run pane is visible. One timer
 is armed at a time and the next frame disarms it when nothing qualifies.
 `treeFrame` advances only on frames. The one-second schedule ticker is
 unchanged. There is no S07 bell, budget bar or write action.
+
+
+## Self-hosting (engine.self-host, adj 166)
+
+The daemon keeps running the binary it started from. Relay worktree builds
+never replace it. A project is self-hosted when the daemon's VCS build
+revision is a commit in that repository (`git cat-file -e REV^{commit}`).
+Development builds without a revision and unknown revisions do not match.
+There is no registry setting for self-hosting.
+
+A wave may contain at most one slice whose Files touch `internal/engine`,
+`internal/daemon` or `cmd`. The daemon refuses a conflicting wave before
+starting any member and names both slices. Waves marks the conflict before
+launch. One such slice may run with other slices.
+
+*Proposed wire fields:* each status project carries `self_host` and
+`behind_main`. A self-hosted daemon is behind when its build revision differs
+from local `main` and is an ancestor of that branch. A missing branch or a
+failed Git read does not establish that it is behind.
+
+*Proposed behavior and wording:* `daemon behind main: restart with ork daemon restart`.
+It fires on any landing on main, not only engine landings, while no run is
+active. In the status line it replaces the stale-build marker while shown;
+otherwise the stale marker still shows for a differing build. Text doctor
+prints `[WARN] daemon behind main: restart with ork daemon restart` on stdout.
+Status prints `ork: warning: daemon behind main: restart with ork daemon restart`
+on stderr. ork never restarts the daemon on its own.
+
+### Live role output and usage (S99)
+
+`Request.OnEvent func()` still counts stream events. Its sibling
+`OnLive func(Live)` carries assistant text and token increments. The engine
+keeps a UTF-8-safe 2048-byte tail and a token counter beside the activity
+ring under the same mutex. Hooks capture the attempt generation; old hooks
+cannot update a newer attempt. Each attempt resets the data; after it ends
+the live read is empty. Nothing in this buffer is written to the run record
+or report files.
+
+The daemon adapter masks qualifying run-environment values before invoking
+OnLive (the rule is in dashboard.md). It buffers possible secret prefixes
+across text events, masking an unfinished prefix at final flush. Claude
+message-start usage establishes the new message's
+input, output and cache counts. Message-delta usage replaces cumulative
+counts for that message, emitting only the difference. The measured stream
+fixture's final message total and result total both equal 23763 tokens;
+message-start usage is provisional and must not be added a second time.
+Codex assistant text comes from completed agent-message items. Its usage
+arrives at turn completion, with input plus output tokens. The measured
+Codex fixtures contain no per-item usage to compare with the turn total.
+
+Final Result tokens and cost still populate RoleRecord. The proposed
+`engine_runs[].tail` is transient text; `tokens` sums recorded roles and live
+usage, and `cost_usd` sums recorded costs only. Proposed role `tokens` and
+`cost_usd` display fields carry recorded values. The pane joins engine roles
+to linked ledger nodes by step ID, retaining the ledger's tree. Source-less
+ledger runs have no engine output or usage.
+
+The proposed snapshot flags `usage_known` and `live_usage_known` distinguish
+available run usage from current-attempt usage, including reported zero.
+The live hook marks a usage event with `Live.UsageKnown`; text alone does
+not mark usage. The proposed `tail_truncated` flag records memory-cap cuts
+so the pane can mark the first wrapped tail row. These flags stay in memory
+and add no persisted record fields. Vendor identity determines whether a
+recorded cost is available: Claude has a cost field; Codex does not.

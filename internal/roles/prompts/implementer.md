@@ -90,11 +90,32 @@ affected tests and the full suite.
 When a decision should be filed in adj, add one `Decision key: area.topic`
 line anywhere in `## Owner needed`. Use a lowercase dotted decision key.
 
+For a question, use this exact block in `## Owner needed`. Give 2 to 4 numbered
+options with distinct labels and one-line summaries. Recommend one option by
+number and give one-line reasoning. Omit the Decision key line when filing in adj
+is not appropriate. When no question is open, write "none". Free context lines
+may precede `Question:`; ork keeps them in the raw question and shows them above
+the options. From `Question:` onward, keep the block's strict shape: no extra
+context lines inside or after it (the optional Decision key line is allowed).
+
+```text
+Question: ONE LINE TITLE
+Options:
+1. LABEL: summary
+2. LABEL: summary
+Recommend: 1 - one-line reasoning
+Decision key: area.topic
+```
+
 Do not guess a spec detail, a design choice or a decision that is the owner's. Stop
 the work that depends on it and ask in your report, under `## Owner needed`: the
 question, the options you see, and your recommendation. Finish any independent work
 first. Do not run `adj ask` yourself; ork shows the question to the owner (and may file
 it) and may resume you with the answer.
+
+ork runs the project check command and `slicer check` after the round, outside your
+sandbox. A check you could not run because of your sandbox belongs under deviations
+(item 6), not `## Owner needed`.
 
 ## Self-check
 
@@ -117,6 +138,7 @@ concise, as Markdown, with these parts in order:
    the slice touches more than one project, one such line per project.
 5. Mutation table: each mutation and the test that went red.
 6. Deviations from the slice or the brief (or "none"), and anything you were unsure
-   about.
+   about. Include checks you could not run because of your sandbox.
    Spec edits: list the re-anchored Files and Failing tests, or "none".
-7. `## Owner needed`: your questions for the owner, or "none".
+7. `## Owner needed`: your questions for the owner, or "none". Do not put
+   sandbox-limited checks here.

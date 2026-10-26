@@ -38,7 +38,8 @@ type outcome struct {
 	ok       bool
 	text     string
 	report   *Report
-	findings string // the reviewer's findings
+	findings string // the reviewer's fix findings
+	triage   *Triaged
 	file     string // the report file name in the run directory
 }
 
@@ -223,7 +224,9 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	in := BriefInput{
 		Role: r.role, SliceID: rec.Item, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
 		SliceJSON: string(sliceJSON), EnvLines: e.proj.EnvironmentLines,
-		Sections: append(pendingSection(pend), r.sections...),
+		CheckCommand: e.proj.CheckCommand,
+		Finish:       r.finish,
+		Sections:     append(pendingSection(pend), r.sections...),
 	}
 	if session == "" {
 		in.Earlier = e.earlierReports(rec)
@@ -260,7 +263,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Role: r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
 		Brief: brief, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
 		Allowlist: perm.Allow, ReadOnly: perm.ReadOnly, Resume: session,
-		OnEvent: onEvent,
+		OnEvent: onEvent, OnLive: e.liveHook(),
 		OnStart: func(pgid int) { e.run.Update(func(rr *runrec.Record) { rr.Roles[idx].PGID = pgid }) },
 	})
 	endActivity()
@@ -292,7 +295,9 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	fallback := class == ExitRateLimited || class == ExitError
 	fallingBack := fallback && len(res.Denials) == 0 && !changed && statusErr == nil && entryIndex+1 < len(entries)
 	err = e.run.Update(func(rr *runrec.Record) {
-		if !fallingBack {
+		// A sibling round of the same state may have paused the slice already;
+		// its pause context is not this round's to clear.
+		if !fallingBack && rr.State == r.state {
 			rr.Pending = nil
 		}
 		role := &rr.Roles[idx]
@@ -352,13 +357,21 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		return outcome{}, err
 	}
 	var findings string
-	if r.role == RoleReviewer {
+	var tri *Triaged
+	if r.role == RoleReviewer || r.role == RoleUI || r.role == RoleGate {
 		var ferr error
-		if findings, ferr = Findings(text); ferr != nil {
+		if r.role == RoleGate {
+			tri, ferr = TriageGate(text)
+		} else {
+			tri, ferr = Triage(text)
+		}
+		if ferr != nil {
 			var fse *ShapeError
 			if errors.As(ferr, &fse) {
 				problems = append(problems, fse.Problems...)
 			}
+		} else if r.role != RoleGate {
+			findings = tri.Fix
 		}
 	}
 	if len(problems) > 0 {
@@ -369,7 +382,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 	if rep.Question != "" {
 		err := e.run.Update(func(rr *runrec.Record) {
-			rr.Questions = append(rr.Questions, runrec.Question{Role: r.role, Round: r.n, Text: rep.Question, Key: rep.Key, At: e.d.now()})
+			rr.Questions = append(rr.Questions, runrec.Question{Ask: rep.Ask, Role: r.role, Round: r.n, Text: rep.Question, Key: rep.Key, At: e.d.now()})
 		})
 		if err != nil {
 			return outcome{}, err
@@ -377,10 +390,19 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		return outcome{}, e.pause(runrec.Pending{
 			Kind: runrec.PendingQuestion, State: r.state, Role: r.role, Round: r.n,
 			Reason:   fmt.Sprintf("%s round %d needs the owner", r.role, r.n),
-			Question: rep.Question, Key: rep.Key,
+			Question: rep.Question, Ask: rep.Ask, Key: rep.Key,
 		})
 	}
-	return outcome{ok: true, text: text, report: rep, findings: findings, file: file}, nil
+	if tri != nil {
+		if err := e.recordFindings(r, tri); err != nil {
+			return outcome{}, err
+		}
+		// An owner finding blocks the gate only when its report marks it.
+		if b := tri.Blocker(); b != nil {
+			return outcome{}, e.askBlocker(r, *b)
+		}
+	}
+	return outcome{ok: true, text: text, report: rep, findings: findings, triage: tri, file: file}, nil
 }
 
 // fallbackReasons preserves the exit and row identity of each failed attempt.
@@ -428,8 +450,12 @@ func (e *Engine) stepStart(ctx context.Context, rec runrec.Record, r round, entr
 	if rec.RelayRun == "" {
 		return ""
 	}
+	role := r.role
+	if role == RoleUI {
+		role = RoleReviewer // slicer has no ui role yet (s392); the task says ui
+	}
 	step, err := e.d.Slicer.RelayStep(ctx, e.wr, rec.Worktree, rec.RelayRun, slicercli.StepSpec{
-		Role: r.role, Agent: entry.Vendor, Vendor: entry.Vendor, Model: entry.Model, Reasoning: entry.Effort,
+		Role: role, Agent: entry.Vendor, Vendor: entry.Vendor, Model: entry.Model, Reasoning: entry.Effort,
 		Parent: rec.OrchestratorStep, Phase: "start", Task: r.task,
 	})
 	if err != nil {

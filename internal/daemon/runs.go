@@ -32,6 +32,7 @@ const (
 	MethodRunStop    = "run.stop"
 	MethodRunAnswer  = "run.answer"
 	MethodRunRetry   = "run.retry"
+	MethodRunFile    = "run.file" // proposed: file a later finding as a slice (adj 163)
 )
 
 // defaultGlobalCap is the global cap when the registry sets none (adj 20).
@@ -51,10 +52,11 @@ type RunParams struct {
 
 // RunAction names a run, and an owner answer when answering.
 type RunAction struct {
-	Adj  bool   `json:"adj,omitempty"`
-	By   string `json:"by,omitempty"`
-	Run  string `json:"run"`
-	Text string `json:"text,omitempty"`
+	Finding int    `json:"finding,omitempty"` // run.file: the one-based finding to file
+	Adj     bool   `json:"adj,omitempty"`
+	By      string `json:"by,omitempty"`
+	Run     string `json:"run"`
+	Text    string `json:"text,omitempty"`
 }
 
 // RunPlan is checkpoint 1 (run.launch-wire).
@@ -288,6 +290,16 @@ func (d *Daemon) stopDaemon(p StopParams) (*StopResult, error) {
 // matrixAdapters maps matrix agents to the names used by the dispatcher.
 var matrixAdapters = map[string]string{"claude code": "claude", "codex": "codex"}
 
+// appendEntry adds an entry to a fallback chain, unless it is identical to the
+// entry before it: two matrix rows with the same vendor, model and effort give
+// one step of the chain, not two.
+func appendEntry(chain []runrec.LineupEntry, e runrec.LineupEntry) []runrec.LineupEntry {
+	if n := len(chain); n > 0 && chain[n-1] == e {
+		return chain
+	}
+	return append(chain, e)
+}
+
 func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	if p.Project == "" || p.Item == "" {
 		return nil, badParams(errors.New("run needs project and item"))
@@ -306,6 +318,15 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	if err != nil {
 		return nil, err
 	}
+	rules, err := d.runs.deps.Slicer.RelayRules(ctx, proj.Path)
+	if err != nil {
+		return nil, err
+	}
+	// The UI pass row is a reviewer row that only the rule naming it tells
+	// apart (rule u10; slicer s392 will give it a ui role). It runs as the UI
+	// pass on a UI slice and is never a fallback of the reviewer or the gate.
+	uiRow := slicercli.UIPassRowID(rules)
+	var uiRows []slicercli.Row
 	plan := &RunPlan{project: proj, Project: registry.Project{Name: proj.Name, Path: proj.Path}, Item: p.Item, CheckCommand: proj.CheckCommand, Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
 	for _, role := range []string{engine.RoleImplementer, engine.RoleReviewer, engine.RoleGate, engine.RoleArchitect} {
 		sourceRole := role
@@ -326,8 +347,14 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 				rows = append([]slicercli.Row{*choice.Row}, rows...)
 			}
 			for _, row := range rows {
+				if uiRow != "" && sourceRole == engine.RoleReviewer && row.ID == uiRow {
+					if role == engine.RoleReviewer {
+						uiRows = append(uiRows, row)
+					}
+					continue
+				}
 				if vendor := matrixAdapters[strings.ToLower(row.Agent)]; vendor != "" {
-					plan.Lineup[role] = append(plan.Lineup[role], runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning})
+					plan.Lineup[role] = appendEntry(plan.Lineup[role], runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning})
 				}
 			}
 		}
@@ -342,6 +369,20 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 			return nil, err
 		}
 		plan.Permissions[role] = perm
+	}
+	var uiChain []runrec.LineupEntry
+	for _, row := range uiRows {
+		if vendor := matrixAdapters[strings.ToLower(row.Agent)]; vendor != "" {
+			uiChain = appendEntry(uiChain, runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning})
+		}
+	}
+	if len(uiChain) > 0 {
+		perm, err := engine.ResolvePermission(proj, engine.RoleUI)
+		if err != nil {
+			return nil, err
+		}
+		plan.Lineup[engine.RoleUI] = uiChain
+		plan.Permissions[engine.RoleUI] = perm
 	}
 	for role, entries := range p.Lineup {
 		if role != engine.RoleImplementer && role != engine.RoleReviewer {
@@ -491,6 +532,30 @@ func (d *Daemon) startWave(ctx context.Context, p WaveStartParams) (*WaveResult,
 		}
 		if item.Item == "" {
 			return nil, badParams(errors.New("wave item is empty"))
+		}
+	}
+	// Inspect every Files section before admitting any member.
+	if len(p.Items) > 1 {
+		f, err := d.loadRegistry()
+		if err != nil {
+			return nil, err
+		}
+		proj, ok := find(f, project)
+		if !ok {
+			return nil, notFound(project, f)
+		}
+		first := ""
+		for _, item := range p.Items {
+			detail, err := d.runs.deps.Slicer.Show(ctx, proj.Path, item.Item)
+			if err != nil {
+				return nil, err
+			}
+			if EngineSlice(detail) {
+				if first != "" {
+					return nil, badParams(errors.New(EngineConflict(first, item.Item)))
+				}
+				first = item.Item
+			}
 		}
 	}
 	result := &WaveResult{Wave: newWaveID(time.Now()), Items: []WaveItemResult{}}
@@ -837,6 +902,45 @@ func (d *Daemon) joinStop(ctx context.Context, c *stopCall) (runrec.Record, erro
 	}
 	return c.result.record, c.result.err
 }
+
+// fileFinding files a later finding of a run as a slice. It does not take the
+// run's owner-action turn: the run may be busy, and a role keeps running.
+func (d *Daemon) fileFinding(ctx context.Context, p RunAction) (RunReply, error) {
+	d.runs.mu.Lock()
+	if d.runs.closed {
+		d.runs.mu.Unlock()
+		return RunReply{}, errors.New("run manager is closed")
+	}
+	var eng *engine.Engine
+	if r := d.runs.runs[p.Run]; r != nil {
+		eng = r.engine
+	}
+	d.runs.mu.Unlock()
+	if eng == nil {
+		// A stopped or committed run is not rebuilt at a daemon start, but its
+		// later findings stay fileable. It has no role running, so a second
+		// engine over its record is safe for this one call.
+		run, err := d.runs.deps.Store.Open(p.Run)
+		if err != nil {
+			return RunReply{}, &ipc.Error{Code: CodeNotFound, Message: "no run " + p.Run}
+		}
+		rec := run.Snapshot()
+		if !runrec.IsFinal(rec.State) {
+			return RunReply{}, &ipc.Error{Code: CodeNotFound, Message: "no run engine for " + p.Run}
+		}
+		proj, err := d.registered(rec.Project)
+		if err != nil {
+			return RunReply{}, err
+		}
+		eng = engine.Load(d.runDeps(proj), proj, run)
+	}
+	id, err := eng.FileLater(ctx, p.Finding)
+	if err != nil {
+		return RunReply{}, err
+	}
+	return RunReply{Record: eng.Snapshot(), Message: "filed as " + id}, nil
+}
+
 func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMessage) (any, error) {
 	if method == MethodRunPlan || method == MethodRunStart {
 		var p RunParams
@@ -857,6 +961,9 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 	}
 	if method == MethodRunAnswer {
 		return d.ownerRunReply(ctx, method, p)
+	}
+	if method == MethodRunFile {
+		return d.fileFinding(ctx, p)
 	}
 	return d.ownerRun(ctx, method, p)
 }
@@ -936,14 +1043,18 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 			}
 			continue
 		}
+		var question *runrec.OwnerQuestion
 		questionKey := ""
 		pending := ""
 		if rec.State == runrec.StatePaused && rec.Pending != nil {
 			pending = rec.Pending.Kind
 			questionKey = rec.Pending.Key
+			if pending == runrec.PendingQuestion {
+				question = rec.Pending.Ask
+			}
 		}
 		wait := rec.Reason
-		if rec.Pending != nil {
+		if rec.State == runrec.StatePaused && rec.Pending != nil {
 			wait = rec.Pending.Reason
 			if rec.Pending.Kind == runrec.PendingQuestion && rec.Pending.Question != "" {
 				wait = rec.Pending.Question
@@ -963,7 +1074,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		denialCounts := map[string]int{}
 		var roles []source.EngineRole
 		for _, role := range rec.Roles {
-			roles = append(roles, source.EngineRole{Role: role.Role, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit})
+			roles = append(roles, source.EngineRole{Role: role.Role, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit, Tokens: role.Tokens, CostUSD: role.CostUSD})
 			for _, text := range roleDenials(role) {
 				if denialCounts[text] == 0 {
 					denials = append(denials, text)
@@ -976,9 +1087,20 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 				denials[i] = fmt.Sprintf("%s x%d", text, count)
 			}
 		}
+		tokens := 0
+		usageKnown := false
+		cost := 0.0
+		for _, role := range rec.Roles {
+			tokens += role.Tokens
+			usageKnown = usageKnown || !role.EndedAt.IsZero() || role.Tokens != 0
+			cost += role.CostUSD
+		}
+		var live engine.Live
 		var activity []int
 		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
 			activity = m.engine.Activity(d.cfg.Clock.Now())
+			live = m.engine.Live()
+			tokens += live.Tokens
 		}
 		unavailable := false
 		if m := d.runs.runs[rec.ID]; m != nil {
@@ -991,7 +1113,11 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		if m := d.runs.runs[rec.ID]; m != nil && !m.busy && m.failure != nil {
 			failure = m.failure.Error()
 		}
-		runs = append(runs, EngineRun{Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
+		var findings []source.EngineFinding
+		for i, f := range rec.Findings {
+			findings = append(findings, source.EngineFinding{N: i + 1, Kind: f.Kind, Title: f.Title, Ask: f.Ask, Filed: f.Filed})
+		}
+		runs = append(runs, EngineRun{Findings: findings, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
 	}
 	// Dismissed records still supersede older stopped runs of the same slice.
 	visible := runs[:0]

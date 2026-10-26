@@ -19,6 +19,7 @@ const (
 	RoleReviewer    = "reviewer"
 	RoleArchitect   = "architect"
 	RoleGate        = "gate"
+	RoleUI          = "ui" // the UI pass, beside the reviewer on a slice that touches the UI
 )
 
 // ExitClass is how a vendor adapter classifies a role process's exit
@@ -55,6 +56,16 @@ type Request struct {
 	OnStart func(pgid int)
 	// OnEvent counts one vendor stream event without exposing vendor payloads.
 	OnEvent func()
+	// OnLive carries assistant text and token increments for this role attempt.
+	OnLive func(Live)
+}
+
+// Live is transient role output. Tokens is an increment, not a cumulative count.
+type Live struct {
+	UsageKnown    bool // a usage event arrived, including a reported zero
+	TailTruncated bool // older text exceeded the memory cap
+	Text          string
+	Tokens        int
 }
 
 // Result is what a role round produced.
