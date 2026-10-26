@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": "Owner to pick at preflight: (a) fall back to 'ID: title' from slicer show (recommended; matches the hand relays' commit messages), or (b) refuse at launch when the Git section is empty. Retry after a commit pause must resume at commit, not rerun finish."
+      "body": "Owner decision 2026-10-26 (session a2bf7e0e): (a) an empty or missing Git section commits as 'ID: slice title' from slicer show, matching the hand relays' commit messages. No pre-launch refusal.\n1. Tests first: TestCommitTitleFallsBackToIDAndTitle; a retry after a commit pause resumes at commit and does not rerun the finish step.\n2. title.go and states.go: the fallback.\n3. docs/design.md (:289, :442) and CHANGELOG."
     },
     {
       "heading": "Check",
