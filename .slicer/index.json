@@ -981,7 +981,7 @@
       "id": "S73",
       "title": "Allowlist and convention for --root and -C calls",
       "short_title": "Allowlist --root-first calls",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -1006,6 +1006,28 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "adc9f8fa-7a55-406a-b1f3-52a42064874d",
+          "kind": "",
+          "text": "**2026-10-26** — Review FAIL (2026-10-26, reviewer opus): a * before the subcommand matches text with spaces, so every --root-first and -C-first rule also matched write commands (e.g. slicer --root W note S73 --text \"Verified: slicer check passes\" against Bash(slicer --root * check *); go -C W run ./cmd/ork vet x against Bash(go -C * vet *)). The probe rule on main has the same flaw. Owner decision 2026-10-26 (session a2bf7e0e, interactive question): convention only; drop every --root-first and -C-first rule, including the probe rule, and keep the AGENTS.md bullet.",
+          "created_at": "2026-10-26T21:46:34Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "efd76408-9618-4d10-9730-84b9da7765df",
+          "kind": "",
+          "text": "**2026-10-26** — Orchestration trial (run 8): owner questions 3 (1 before start: convention + probe; 2 during: probe result, and the rule choice after the review FAIL); stalls 0; fix rounds 1; merge conflicts 0; context compactions 0; Codex gpt-6.1-sol medium, not blocked.",
+          "created_at": "2026-10-26T21:47:39Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -1025,7 +1047,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

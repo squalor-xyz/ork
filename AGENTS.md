@@ -98,6 +98,9 @@ date. Anything the owner did not explicitly pick stays an open ask.
 
 ## Project Rules
 
+- For `slicer` and `adj`, put `--root DIR` after the subcommand
+  (`slicer show S05 --root DIR`), because the allowlist matches on the leading
+  words. Keep `go -C DIR` and `git -C DIR` as they are.
 - ork implements slicer's relay contract and accepts only the versions it
   lists (v7 and v8 on 2026-10-23; `boundary.contract`). Do not paste the contract's text into docs; refer to it by
   command (`slicer ai relay`). Role prompts are ork's own text
