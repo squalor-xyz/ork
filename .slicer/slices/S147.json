@@ -1,0 +1,39 @@
+{
+  "id": "S147",
+  "title": "S121 later notes: render pane robustness and wording",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Later notes from the S121 relay (run-20261026-132255-77bf, landed b76abc0), not fixed in that slice:\n- Out-of-order run.render answers for the same render can show a stale one; use a per-pane sequence number.\n- A corrupt run.json is reported as \"no run\".\n- renderOn() resets pane state from the draw path.\n- Help's pgup/pgdown wording does not mention renders; \"?\" does nothing while the run pane is open (predates S121).\n- Side-scroll for renders wider than the pane.\n- A read error in uiRenders reads as \"wrote none\"; the card should say why renders could not be read.\n- The 24 KiB byte cut can leave an escape-sequence fragment (cosmetic).\n- The render size shown is informational; the file is re-read at fetch.\n- No socket-level test against a real daemon, and no real vendor UI pass writing the files has been tested.\n- Merge with S106 (outer session, 2026-10-26): the pane takes the whole body while a render shows and is inline under its row otherwise (internal/tui/view.go screen()); check that this reads right live."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/pane.go`, `internal/tui/card.go`, `internal/tui/view.go`, `internal/tui/keys.go`.\n- `internal/daemon/handlers.go`, `internal/engine/approval.go`, `internal/runrec/record.go`.\n- Tests: `internal/tui/renders_test.go`, `internal/daemon/render_test.go`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": "Triage first: split the robustness notes (sequence number, corrupt run.json, read errors, draw-path state) from the polish ones. Spec each kept note with a failing test before building."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- slicer check"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
