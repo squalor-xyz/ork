@@ -274,6 +274,16 @@ func (d *Daemon) stopDaemon(p StopParams) (*StopResult, error) {
 // matrixAdapters maps matrix agents to the names used by the dispatcher.
 var matrixAdapters = map[string]string{"claude code": "claude", "codex": "codex"}
 
+// appendEntry adds an entry to a fallback chain, unless it is identical to the
+// entry before it: two matrix rows with the same vendor, model and effort give
+// one step of the chain, not two.
+func appendEntry(chain []runrec.LineupEntry, e runrec.LineupEntry) []runrec.LineupEntry {
+	if n := len(chain); n > 0 && chain[n-1] == e {
+		return chain
+	}
+	return append(chain, e)
+}
+
 func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	if p.Project == "" || p.Item == "" {
 		return nil, badParams(errors.New("run needs project and item"))
@@ -292,6 +302,15 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	if err != nil {
 		return nil, err
 	}
+	rules, err := d.runs.deps.Slicer.RelayRules(ctx, proj.Path)
+	if err != nil {
+		return nil, err
+	}
+	// The UI pass row is a reviewer row that only the rule naming it tells
+	// apart (rule u10; slicer s392 will give it a ui role). It runs as the UI
+	// pass on a UI slice and is never a fallback of the reviewer or the gate.
+	uiRow := slicercli.UIPassRowID(rules)
+	var uiRows []slicercli.Row
 	plan := &RunPlan{project: proj, Project: registry.Project{Name: proj.Name, Path: proj.Path}, Item: p.Item, CheckCommand: proj.CheckCommand, Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
 	for _, role := range []string{engine.RoleImplementer, engine.RoleReviewer, engine.RoleGate, engine.RoleArchitect} {
 		sourceRole := role
@@ -312,8 +331,14 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 				rows = append([]slicercli.Row{*choice.Row}, rows...)
 			}
 			for _, row := range rows {
+				if uiRow != "" && sourceRole == engine.RoleReviewer && row.ID == uiRow {
+					if role == engine.RoleReviewer {
+						uiRows = append(uiRows, row)
+					}
+					continue
+				}
 				if vendor := matrixAdapters[strings.ToLower(row.Agent)]; vendor != "" {
-					plan.Lineup[role] = append(plan.Lineup[role], runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning})
+					plan.Lineup[role] = appendEntry(plan.Lineup[role], runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning})
 				}
 			}
 		}
@@ -328,6 +353,20 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 			return nil, err
 		}
 		plan.Permissions[role] = perm
+	}
+	var uiChain []runrec.LineupEntry
+	for _, row := range uiRows {
+		if vendor := matrixAdapters[strings.ToLower(row.Agent)]; vendor != "" {
+			uiChain = appendEntry(uiChain, runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning})
+		}
+	}
+	if len(uiChain) > 0 {
+		perm, err := engine.ResolvePermission(proj, engine.RoleUI)
+		if err != nil {
+			return nil, err
+		}
+		plan.Lineup[engine.RoleUI] = uiChain
+		plan.Permissions[engine.RoleUI] = perm
 	}
 	for role, entries := range p.Lineup {
 		if role != engine.RoleImplementer && role != engine.RoleReviewer {

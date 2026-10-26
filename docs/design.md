@@ -189,6 +189,7 @@ setup -> implement -> checks --red--> implement (fix)
                         | green
                         v
                      review --findings--> implement (fix round) -> checks
+                     (reviewer; beside it the UI pass on a UI slice)
                         | clean, or green checks after reviewer fixes
                         v
          [architect -> implement (fix round) -> checks]  (lineup only; once)
@@ -226,6 +227,20 @@ slice.
   have been addressed and before the gate (`slice.architect-order`, adj #123),
   exactly when the lineup has an architect entry. ork does not read the slice
   size (`slice.architect-size`, adj #151).
+  - **UI pass** (`roles.ui-pass`, adj #165). When the lineup has a `ui` entry
+    and the slice's Files section names a UI path, the UI pass starts with
+    the reviewer, at the same time, and neither waits for the other. A UI
+    path is one in backticks under `internal/tui` (its golden views too) or
+    `internal/cli`, `docs/dashboard.md`, or a `ui.*` adj key (AGENTS.md; matrix
+    rule u10). On any other slice no UI round runs. The UI pass is read-only
+    with the fingerprint applied, gives no verdict, and reports sections
+    (A) to (D) like the reviewer. It runs once, with the first review. The
+    findings of the two reports go to one fix round. When both
+    ask to pause, the first pause is kept. A stop overrides a pause, because
+    `pause()` refuses when the slice is paused or stopped and `stop()` refuses
+    only when it is already stopped. After a pause, a retry runs again only the
+    role whose report does not stand. The renders of adj #165 are a later slice
+    (S121); this one is text only.
 - **architect:** one read-only review with the fingerprint applied. The report
   needs only the shared `## Owner needed` section. The whole report goes to an
   implementer fix round, even when it has no findings; ork adds no parser
@@ -299,7 +314,8 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   followed by checks. The gate is the resumed reviewer (role `gate`), which
   reviews and gates the fix in one pass. Without an architect entry, a clean
   review goes straight to the gate. The gate brief includes the latest
-  architect report even when the gate resumes a session. A gate FAIL is recorded
+  architect report and the latest UI pass report even when the gate resumes a
+  session. A gate FAIL is recorded
   with `slicer note ID --text "Review FAIL: ..." --render`, sends the
   implementer back, and the third FAIL stops
   the slice. *Proposed:* review findings are the text of sections (A), (B)
@@ -445,6 +461,15 @@ ork adds:
 - **Resume.** For fix rounds and the lite gate, ork resumes a session from the same
   vendor and model where the vendor supports it. Otherwise it starts fresh with the
   earlier reports in the brief (`role.resume`).
+- **UI pass.** A read-only role with its own prompt (`ui.md`: 80x24, ASCII and
+  monospace, clipping, key hints), the same for every vendor. It runs beside
+  the reviewer on a slice that touches the UI (see the review state). Its
+  lineup row is the matrix row that the rule naming "UI pass row (rNN)" gives
+  (u10 today). Until slicer has a `ui` role (slicer s392), that row's role is
+  `reviewer`: ork keeps it out of the reviewer's and the gate's fallback
+  chains and puts it in the `ui` lineup, and the ledger step has role
+  `reviewer` with the task `ID ui`. In any fallback chain, an entry identical
+  to the one before it is dropped.
 - **Reviewer rule.** A reviewer never wrote code in the slice. A reviewer
   may run on another vendor if the lineup names it (`review.cross-vendor`).
 - **Ledger.** Each role round is recorded with `slicer relay-run step` with

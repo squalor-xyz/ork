@@ -549,7 +549,7 @@
       "id": "S117",
       "title": "UI pass role in the engine, in parallel with the reviewer",
       "short_title": "UI pass role in the engine, in parallel with the reviewer",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -582,7 +582,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -9,7 +9,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -107,6 +109,9 @@ func (e *Engine) feedbackSection(fb *runrec.Feedback) BriefSection {
 	case "checks":
 		return BriefSection{Title: "Checks failed", Body: "The project checks are red. Fix the failures below. No review was spent on this diff.\n\n```\n" + tail(body, 30000) + "\n```"}
 	case "findings":
+		if strings.HasPrefix(fb.File, "findings-") {
+			return BriefSection{Title: "Review findings", Body: "The reports below hold findings: the reviewer's, the UI pass's, or both. Apply only the findings in them. The UI pass gives suggested design edits for the screens this slice changes. If a finding is wrong, say so in your report with your evidence.\n\n" + body}
+		}
 		return BriefSection{Title: "Review findings", Body: "The reviewer's report is below. Apply only the findings in it. If a finding is wrong, say so in your report with your evidence.\n\n" + body}
 	case "architect":
 		return BriefSection{Title: "Architect findings", Body: "The architect's whole report is below. Apply its change-now findings. If a finding is wrong, say so in your report with your evidence. Keep later work out of this slice.\n\n" + body}
@@ -226,16 +231,173 @@ func (e *Engine) latestReport(rec runrec.Record, role string) (name, text string
 func (e *Engine) review(ctx context.Context) error {
 	pend := e.takePending()
 	rec := e.run.Snapshot()
-	r := round{role: RoleReviewer, n: rec.Round, state: runrec.StateReview, task: rec.Item + " reviewer",
-		sections: []BriefSection{{Title: "Review", Body: "Review the slice's diff in the worktree. Use `git status` and `git diff`; you may not change the tree. The implementer's report is under Earlier reports."}}}
-	out, err := e.runRound(ctx, r, pend)
-	if err != nil || !out.ok {
-		return err
+	rounds := []round{{role: RoleReviewer, n: rec.Round, state: runrec.StateReview, task: rec.Item + " reviewer",
+		sections: []BriefSection{{Title: "Review", Body: "Review the slice's diff in the worktree. Use `git status` and `git diff`; you may not change the tree. The implementer's report is under Earlier reports."}}}}
+	if _, ok := lineup(rec.Lineup, RoleUI); ok {
+		ui, err := e.touchesUI(ctx, rec)
+		if err != nil {
+			return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateReview, Reason: "slicer show: " + err.Error()})
+		}
+		if ui {
+			rounds = append(rounds, round{role: RoleUI, n: rec.Round, state: runrec.StateReview, task: rec.Item + " ui",
+				sections: []BriefSection{{Title: "UI pass", Body: "The slice touches the UI. Check the screens the diff adds or changes, beside the reviewer, who checks the rest of the diff (adj 165). Use `git status` and `git diff`; you may not change the tree. The implementer's report is under Earlier reports."}}})
+		}
 	}
-	if out.findings != "" {
-		return e.bumpRound(ctx, runrec.Feedback{Kind: "findings", File: out.file})
+
+	// A role whose report already stands in this round is not run again after
+	// a pause of the other role.
+	var todo []round
+	for _, r := range rounds {
+		if !e.reviewDone(rec, pend, r.role) {
+			todo = append(todo, r)
+		}
 	}
-	return e.run.Update(func(rr *runrec.Record) { rr.State = e.beforeGate(rec) })
+	// The reviewer and the UI pass run at the same time and neither waits for
+	// the other. Each round ends its own way. The first pause is kept; a stop
+	// overrides a pause (pause refuses when paused or stopped, stop refuses
+	// only when already stopped).
+	outs := make([]outcome, len(todo))
+	errs := make([]error, len(todo))
+	var wg sync.WaitGroup
+	for i, r := range todo {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			outs[i], errs[i] = e.runRound(ctx, r, pendFor(pend, r.role))
+		}()
+	}
+	wg.Wait()
+	for i := range todo {
+		if errs[i] != nil {
+			return errs[i]
+		}
+	}
+	for i := range todo {
+		if !outs[i].ok {
+			return nil
+		}
+	}
+
+	rec = e.run.Snapshot()
+	revFile, revText := e.roundReport(rec, RoleReviewer)
+	revFindings, _ := Findings(revText)
+	uiFile, uiText := e.roundReport(rec, RoleUI)
+	uiFindings, _ := Findings(uiText)
+	switch {
+	case revFindings == "" && uiFindings == "":
+		return e.run.Update(func(rr *runrec.Record) { rr.State = e.beforeGate(rec) })
+	case uiFindings == "":
+		return e.bumpRound(ctx, runrec.Feedback{Kind: "findings", File: revFile})
+	}
+	// The findings of both reports reach the implementer in one fix round.
+	var b strings.Builder
+	if revFindings != "" {
+		fmt.Fprintf(&b, "### Reviewer report (%s)\n\n%s\n\n", strings.TrimSuffix(revFile, ".md"), strings.TrimSpace(revText))
+	}
+	fmt.Fprintf(&b, "### UI pass report (%s)\n\n%s\n", strings.TrimSuffix(uiFile, ".md"), strings.TrimSpace(uiText))
+	name := fmt.Sprintf("findings-%d.md", rec.Round)
+	if err := os.WriteFile(filepath.Join(e.run.Dir(), name), []byte(b.String()), 0o600); err != nil {
+		return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateReview, Reason: "findings file: " + err.Error()})
+	}
+	return e.bumpRound(ctx, runrec.Feedback{Kind: "findings", File: name})
+}
+
+// pendFor is the pause context a round of the review state takes: its own, or
+// a budget grant, which is for the whole review.
+func pendFor(p *runrec.Pending, role string) *runrec.Pending {
+	if p != nil && (p.Role == "" || p.Role == role || p.Kind == runrec.PendingBudget) {
+		return p
+	}
+	return nil
+}
+
+// roundReport returns the file name and text of the role's newest report of
+// the current round, empty when it has none.
+func (e *Engine) roundReport(rec runrec.Record, role string) (name, text string) {
+	for i := len(rec.Roles) - 1; i >= 0; i-- {
+		r := rec.Roles[i]
+		if r.Role != role || r.Round != rec.Round {
+			continue
+		}
+		if b, err := os.ReadFile(filepath.Join(e.run.Dir(), r.Report)); err == nil && r.Report != "" {
+			return r.Report, string(b)
+		}
+		return "", ""
+	}
+	return "", ""
+}
+
+// reviewDone reports whether the role already gave a good report in this
+// round: it exited well, and its report has the shape and asks nothing. A
+// role that the pause names runs again.
+func (e *Engine) reviewDone(rec runrec.Record, pend *runrec.Pending, role string) bool {
+	if pend != nil && pend.Kind != runrec.PendingBudget && (pend.Role == "" || pend.Role == role) {
+		return false
+	}
+	for i := len(rec.Roles) - 1; i >= 0; i-- {
+		r := rec.Roles[i]
+		if r.Role != role || r.Round != rec.Round {
+			continue
+		}
+		if r.Exit != string(ExitOK) || r.Report == "" {
+			return false
+		}
+		b, err := os.ReadFile(filepath.Join(e.run.Dir(), r.Report))
+		if err != nil {
+			return false
+		}
+		rep, err := CheckReport(role, false, string(b))
+		if err != nil || rep.Question != "" {
+			return false
+		}
+		_, err = Findings(string(b))
+		return err == nil
+	}
+	return false
+}
+
+// touchesUI reports whether the slice's Files section names a UI path.
+func (e *Engine) touchesUI(ctx context.Context, rec runrec.Record) (bool, error) {
+	raw, err := e.d.Slicer.ShowRaw(ctx, rec.Worktree, rec.Item)
+	if err != nil {
+		return false, err
+	}
+	var detail slicercli.Detail
+	if err := json.Unmarshal(raw, &detail); err != nil {
+		return false, err
+	}
+	return detail.Slice != nil && sliceTouchesUI(detail.Slice.Sections), nil
+}
+
+var (
+	backticked = regexp.MustCompile("`([^`\n]+)`")
+	lineAnchor = regexp.MustCompile(`:\d+(-\d+)?$`)
+	adjUIKey   = regexp.MustCompile(`^ui\.[a-z][a-z0-9-]*$`)
+)
+
+// sliceTouchesUI applies the UI test of AGENTS.md and matrix rule u10 to the
+// slice's Files section: a path under internal/tui (its golden views are
+// there), docs/dashboard.md, a path under internal/cli (its output), or a
+// ui.* adj key. Only a path or key in backticks counts, as the Files section
+// asks (AGENTS.md, Editing).
+func sliceTouchesUI(sections []slicercli.Section) bool {
+	for _, s := range sections {
+		if !strings.EqualFold(s.Heading, "Files") {
+			continue
+		}
+		for _, m := range backticked.FindAllStringSubmatch(s.Body, -1) {
+			token := strings.TrimPrefix(lineAnchor.ReplaceAllString(strings.TrimSpace(m[1]), ""), "./")
+			if adjUIKey.MatchString(token) || token == "docs/dashboard.md" {
+				return true
+			}
+			for _, dir := range []string{"internal/tui", "internal/cli"} {
+				if token == dir || strings.HasPrefix(token, dir+"/") {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 // beforeGate schedules the optional architect once, after accepted reviewer
@@ -282,6 +444,9 @@ func (e *Engine) gate(ctx context.Context) error {
 	}
 	if name, text := e.latestReport(rec, RoleArchitect); text != "" {
 		r.sections = append(r.sections, BriefSection{Title: "Architect report (" + name + ")", Body: text})
+	}
+	if name, text := e.latestReport(rec, RoleUI); text != "" {
+		r.sections = append(r.sections, BriefSection{Title: "UI pass report (" + name + ")", Body: text})
 	}
 	out, err := e.runRound(ctx, r, pend)
 	if err != nil || !out.ok {

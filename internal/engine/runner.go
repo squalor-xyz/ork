@@ -19,6 +19,7 @@ const (
 	RoleReviewer    = "reviewer"
 	RoleArchitect   = "architect"
 	RoleGate        = "gate"
+	RoleUI          = "ui" // the UI pass, beside the reviewer on a slice that touches the UI
 )
 
 // ExitClass is how a vendor adapter classifies a role process's exit

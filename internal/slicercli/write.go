@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -167,4 +168,37 @@ func (c Client) RelayEnd(ctx context.Context, w runrec.Writer, root, run, outcom
 func (c Client) Note(ctx context.Context, w runrec.Writer, root, id, text string) error {
 	_, err := c.write(ctx, w, root, "note", id, "--text", text, "--render", "--json")
 	return err
+}
+
+// Rule is one rule of the relay roles matrix.
+type Rule struct {
+	ID   string `json:"id"`
+	Text string `json:"text"`
+}
+
+// RelayRules runs `slicer relay-roles show --json --root ROOT` and returns the
+// matrix's rules.
+func (c Client) RelayRules(ctx context.Context, root string) ([]Rule, error) {
+	var out struct {
+		Rules []Rule `json:"rules"`
+	}
+	if err := clirun.RunJSON(ctx, c.call("relay-roles", "show", "--json", "--root", root), &out); err != nil {
+		return nil, err
+	}
+	return out.Rules, nil
+}
+
+var uiPassRow = regexp.MustCompile(`UI pass row \((r\d+)\)`)
+
+// UIPassRowID finds the matrix row of the UI pass: the id that a rule names as
+// "UI pass row (rNN)" (rule u10 today). It is empty when no rule names one.
+// Until slicer has a ui role (s392), the row's role is reviewer and this rule
+// is the only way to tell it from the reviewer's own rows.
+func UIPassRowID(rules []Rule) string {
+	for _, r := range rules {
+		if m := uiPassRow.FindStringSubmatch(r.Text); m != nil {
+			return m[1]
+		}
+	}
+	return ""
 }

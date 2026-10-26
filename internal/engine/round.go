@@ -294,7 +294,9 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	fallback := class == ExitRateLimited || class == ExitError
 	fallingBack := fallback && len(res.Denials) == 0 && !changed && statusErr == nil && entryIndex+1 < len(entries)
 	err = e.run.Update(func(rr *runrec.Record) {
-		if !fallingBack {
+		// A sibling round of the same state may have paused the slice already;
+		// its pause context is not this round's to clear.
+		if !fallingBack && rr.State == r.state {
 			rr.Pending = nil
 		}
 		role := &rr.Roles[idx]
@@ -354,7 +356,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		return outcome{}, err
 	}
 	var findings string
-	if r.role == RoleReviewer {
+	if r.role == RoleReviewer || r.role == RoleUI {
 		var ferr error
 		if findings, ferr = Findings(text); ferr != nil {
 			var fse *ShapeError
@@ -430,8 +432,12 @@ func (e *Engine) stepStart(ctx context.Context, rec runrec.Record, r round, entr
 	if rec.RelayRun == "" {
 		return ""
 	}
+	role := r.role
+	if role == RoleUI {
+		role = RoleReviewer // slicer has no ui role yet (s392); the task says ui
+	}
 	step, err := e.d.Slicer.RelayStep(ctx, e.wr, rec.Worktree, rec.RelayRun, slicercli.StepSpec{
-		Role: r.role, Agent: entry.Vendor, Vendor: entry.Vendor, Model: entry.Model, Reasoning: entry.Effort,
+		Role: role, Agent: entry.Vendor, Vendor: entry.Vendor, Model: entry.Model, Reasoning: entry.Effort,
 		Parent: rec.OrchestratorStep, Phase: "start", Task: r.task,
 	})
 	if err != nil {

@@ -258,7 +258,7 @@ func TestRunPlanRefusesBadOverride(t *testing.T) {
 					t.Errorf("invalid override created run: %v %v", runs, err)
 				}
 				for _, call := range lastFake.CallsTo("slicer") {
-					if len(call.Args) < 2 || call.Args[0] != "relay-roles" || call.Args[1] != "recommend" {
+					if len(call.Args) < 2 || call.Args[0] != "relay-roles" || (call.Args[1] != "recommend" && call.Args[1] != "show") {
 						t.Errorf("invalid override caused slicer call: %v", call.Args)
 					}
 				}
@@ -376,7 +376,7 @@ func TestRunOverrideWritesNoMatrix(t *testing.T) {
 	request(t, d, MethodRunStart, `{"project":"p","item":"S1","lineup":{"implementer":[{"vendor":"claude","model":"custom","effort":"high"}]},"budgets":{"minutes":90}}`)
 	d.closeRuns()
 	for _, call := range lastFake.CallsTo("slicer") {
-		if call.Args[0] == "relay-roles" && (len(call.Args) < 2 || call.Args[1] != "recommend") {
+		if call.Args[0] == "relay-roles" && (len(call.Args) < 2 || (call.Args[1] != "recommend" && call.Args[1] != "show")) {
 			t.Errorf("matrix write: %v", call.Args)
 		}
 	}

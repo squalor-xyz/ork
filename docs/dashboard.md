@@ -499,6 +499,10 @@ wave.plan-failure decision remains open (adj 146).
 `e` edits the selected ticked item after its plan is ready (S83).
 The editor starts from that item's plan: implementer and reviewer, then
 budget minutes and tokens. The gate follows the reviewer and has no field.
+When the plan has a `ui` entry (the matrix's UI pass row), a line below the
+reviewer lists its chain for information: the UI pass runs beside the reviewer
+only on a slice that touches the UI (`roles.ui-pass`, adj #165), has no field,
+and the cursor skips it.
 `up`/`down`, `tab` and `shift+tab` move between rows.
 `left` and `right` cycle the role's chain already in
 `RunPlan.Lineup[role]`: primary first, then alternatives. Until S49, the
@@ -524,6 +528,7 @@ Edit lineup: A  Alpha
   Run only; gate follows reviewer.
   > implementer: claude sonnet high (no alternatives; c for custom)
     reviewer: claude opus medium
+    ui: claude opus medium (UI slices only; from the matrix)
     Budget minutes: 45
     Budget tokens: 9000
   Zero budget uses the project default.

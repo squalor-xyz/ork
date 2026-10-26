@@ -59,7 +59,7 @@ func recordedVersion(t *testing.T, file string) int {
 }
 
 func TestNames(t *testing.T) {
-	want := []string{"implementer", "reviewer", "gate", "architect"}
+	want := []string{"implementer", "reviewer", "gate", "architect", "ui"}
 	if got := Names(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("Names() = %v, want %v", got, want)
 	}
@@ -95,7 +95,7 @@ func TestPromptUnknownName(t *testing.T) {
 	}
 }
 
-// The embedded prompts are exactly the four named roles, one file each.
+// The embedded prompts are exactly the named roles, one file each.
 func TestEmbeddedFilesMatchNames(t *testing.T) {
 	entries, err := promptFS.ReadDir("prompts")
 	if err != nil {
@@ -294,7 +294,7 @@ func TestGateCriteria(t *testing.T) {
 
 func TestReadOnlyRoles(t *testing.T) {
 	ps := prompts(t)
-	for _, name := range []string{"reviewer", "gate", "architect"} {
+	for _, name := range []string{"reviewer", "gate", "architect", "ui"} {
 		p := strings.ToLower(ps[name])
 		for _, want := range []string{"you are read-only", "must not change the tree", "no git writes", "no tracking writes"} {
 			if !has(p, want) {
@@ -468,4 +468,46 @@ func TestStructuredOwnerQuestionPrompt(t *testing.T) {
 			}
 		}
 	}
+}
+
+// The UI pass is ork's own text (roles.prompts, adj 165): it names what it
+// checks, takes no plugin skill, and gives no verdict.
+func TestUIPrompt(t *testing.T) {
+	p := prompts(t)["ui"]
+	for _, want := range []string{
+		"80x24",
+		"ASCII and mono",
+		"Clipping",
+		"Key hints",
+		"You give no verdict: the gate decides.",
+		"(A) Defects the owner would see",
+		"(B) Key hints and interaction",
+		"(C) Notes for later",
+		"(D) Doc accuracy",
+		"`docs/dashboard.md`",
+		"CONFIRMED",
+		"PLAUSIBLE",
+	} {
+		if !has(p, want) {
+			t.Errorf("ui does not say %q", want)
+		}
+	}
+	// Vendor-neutral: no plugin skill and no harness's tool names.
+	for _, bad := range []string{"frontend-design", "skill", "Skill", "VERDICT"} {
+		if strings.Contains(p, bad) {
+			t.Errorf("ui prompt mentions %q", bad)
+		}
+	}
+	if !ascii(p) {
+		t.Error("ui prompt holds a non-ASCII character")
+	}
+}
+
+func ascii(s string) bool {
+	for _, r := range s {
+		if r > 127 {
+			return false
+		}
+	}
+	return true
 }
