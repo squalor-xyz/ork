@@ -61,6 +61,8 @@ type ovRow struct {
 	state             string
 	pending           string
 	commands          []string // plain copyable lines beneath a landing row
+	note              string   // a line beneath a landing row that is not a command (why a cleanup failed)
+	detail            string   // the selected landing row's detail, when it is not its commands
 	ready             bool
 	merged            bool
 	mergeKnown        bool
@@ -589,6 +591,9 @@ func (m *Model) overview(w int) overviewView {
 				}
 				lines = append(lines, prefix+clip(command, w-len(prefix)))
 			}
+			if r.note != "" {
+				lines = append(lines, hang+th.Dim.Render(clip(r.note, max(w-len(hang), 1))))
+			}
 			if m.isPaneRow(r) {
 				paneAt = len(lines) - 1
 				if r.run != nil && r.run.second != "" {
@@ -977,6 +982,9 @@ func detailLines(r ovRow, w int, separator string) []string {
 	if r.ready && len(r.commands) > 0 {
 		text = strings.Join(r.commands, "\n")
 	}
+	if r.ready && r.detail != "" {
+		text = r.detail
+	}
 	lines := wrapText(text, max(w-len(indent), 1))
 	for i := range lines {
 		lines[i] = indent + lines[i]
@@ -1195,12 +1203,20 @@ func (m *Model) readyRows() []ovRow {
 			continue
 		}
 		for _, run := range p.snap.EngineRuns {
-			if run.State != "committed" {
-				continue
+			if run.State != "committed" || (run.Landed && run.CleanupFailed == "") {
+				continue // ork landed it (S119): nothing is left to land
 			}
 			rest := run.Branch
 			var commands []string
+			var note, detail string
 			switch {
+			case run.Landed:
+				// Landed, but the cleanup failed: no landing command. The reason is a
+				// note under the row, not a copyable line; the detail names the
+				// cleanup key (c).
+				rest += "  landed  cleanup failed"
+				note = strings.TrimPrefix(strings.TrimPrefix(run.CleanupFailed, "landed; "), "cleanup failed at ")
+				detail = "c finishes the cleanup: " + strings.ReplaceAll(cleanupCommand(m.projects[i].reg.Path, run.Worktree, run.Branch), "\n", "; ")
 			case run.Branch == "":
 				rest = "branch unknown"
 			case run.Merged != nil && !*run.Merged:
@@ -1215,7 +1231,7 @@ func (m *Model) readyRows() []ovRow {
 				}
 			}
 			ready = append(ready, ovRow{mergeKnown: run.Merged != nil, ready: true, engineID: run.ID, state: run.State, merged: run.Merged != nil && *run.Merged, branch: run.Branch, worktree: run.Worktree, project: i, name: p.reg.Name, style: m.cfg.Theme.Title,
-				id: run.Item, rest: rest, text: run.Item + "  " + rest, commands: commands})
+				id: run.Item, rest: rest, text: run.Item + "  " + rest, commands: commands, note: note, detail: detail})
 		}
 	}
 	return ready

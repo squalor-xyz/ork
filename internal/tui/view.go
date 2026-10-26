@@ -57,6 +57,7 @@ func (m *Model) screen() string {
 	bodyH, start := max(h-4, 1), 0
 	selectedLine := -1
 	overviewBody := false
+	collapse := false // a render on show takes the whole body (S121, *proposed*)
 	if m.showHelp {
 		body = m.helpLines(mainW, bodyH)
 	} else if m.registeredProjectCount() == 0 && m.pane == nil && (m.active < 0 || m.welcome.editing || m.welcome.pending || m.welcome.confirm != "") {
@@ -112,7 +113,7 @@ func (m *Model) screen() string {
 		body, detail = ov.body, ov.detail
 		status := m.actionStatus
 		if m.confirm != nil {
-			status = m.confirm.prompt()
+			status = m.confirm.promptWidth(max(mainW-len(indent), 1))
 		}
 		if m.pane != nil {
 			// The pane opens inline under its row (S106), so it takes no
@@ -125,22 +126,28 @@ func (m *Model) screen() string {
 				// A Running run's second line is one more row line (S145).
 				paneHeight = max(paneHeight-ov.paneExtra, 1)
 			}
-			// Four columns in, the pane sits inside its row (S106).
-			pane := m.paneLinesAs(max(mainW-len(indent), 1), paneHeight, status, true)
-			for i := range pane {
-				if pane[i] != "" {
-					pane[i] = indent + pane[i]
+			// A render on show takes the whole body: the Overview rows above
+			// the pane give way, so the pane leaves its row for the detail.
+			if collapse = m.renderOn() > 0; collapse {
+				detail = m.paneLines(mainW, max(h-4, 1), status)
+			} else {
+				// Four columns in, the pane sits inside its row (S106).
+				pane := m.paneLinesAs(max(mainW-len(indent), 1), paneHeight, status, true)
+				for i := range pane {
+					if pane[i] != "" {
+						pane[i] = indent + pane[i]
+					}
 				}
+				at := ov.paneAt
+				if at < 0 {
+					at = ov.sel // the pane's run left the rows: keep it under the cursor
+				}
+				at = min(max(at, -1), len(body)-1)
+				body = append(append(append([]string(nil), body[:at+1]...), pane...), body[at+1:]...)
+				detail = nil
+				// Scroll to the pane's last line; its row is a few lines above.
+				ov.sel = at + len(pane)
 			}
-			at := ov.paneAt
-			if at < 0 {
-				at = ov.sel // the pane's run left the rows: keep it under the cursor
-			}
-			at = min(max(at, -1), len(body)-1)
-			body = append(append(append([]string(nil), body[:at+1]...), pane...), body[at+1:]...)
-			detail = nil
-			// Scroll to the pane's last line; its row is a few lines above.
-			ov.sel = at + len(pane)
 		} else if status != "" {
 			detail = wrapText(status, max(mainW-len(indent), 1))
 			if m.confirm != nil && m.confirm.verb == "cleanup" {
@@ -160,7 +167,11 @@ func (m *Model) screen() string {
 		}
 	}
 	bodyH = max(h-4, 1)
-	if hasDetail {
+	if collapse && hasDetail {
+		// No body: the bar, a rule, the pane, a rule and the status line.
+		detail = detail[:min(len(detail), max(h-4, 1))]
+		body, bodyH, footer = nil, 0, nil
+	} else if hasDetail {
 		detail = detail[:min(len(detail), max(h-6, 1))]
 		bodyH = max(h-5-len(detail), 1)
 	} else {
@@ -175,8 +186,16 @@ func (m *Model) screen() string {
 		bodyH = max(bodyH-len(footer), 1)
 	}
 	if overviewBody {
-		if r, ok := m.selectedRow(); ok && r.ready && m.pane == nil && bodyH >= len(r.commands)+2 {
-			selectedLine += len(r.commands)
+		if r, ok := m.selectedRow(); ok && r.ready && m.pane == nil {
+			// The row's own lines: its commands, and the note under a
+			// cleanup-failed row.
+			below := len(r.commands)
+			if r.note != "" {
+				below++
+			}
+			if bodyH >= below+2 {
+				selectedLine += below
+			}
 		}
 		// A Running run's second line scrolls into view with its row (S145).
 		if r, ok := m.selectedRow(); ok && r.run != nil && r.run.second != "" && m.pane == nil && m.active != runningEntry && bodyH >= 3 {
@@ -187,7 +206,9 @@ func (m *Model) screen() string {
 	if selectedLine >= 0 {
 		start = windowStart(selectedLine, len(body), bodyH)
 	}
-	body = window(body, start, bodyH, th)
+	if bodyH > 0 {
+		body = window(body, start, bodyH, th)
+	}
 	_, horizontal := th.rules(m.cfg.ASCII)
 	rule := th.Dim.Render(strings.Repeat(horizontal, mainW))
 	bar := m.viewBar()
@@ -197,7 +218,7 @@ func (m *Model) screen() string {
 	main := []string{bar, rule}
 	main = append(main, body...)
 	main = append(main, footer...)
-	if len(detail) > 0 {
+	if len(detail) > 0 && bodyH > 0 {
 		main = append(main, rule)
 	}
 	main = append(main, detail...)
@@ -421,6 +442,28 @@ func (m *Model) statusLine(w int) string {
 	return lipgloss.NewStyle().MaxWidth(max(w, 1)).Render(line)
 }
 
+// packHints joins keys with "; " into lines of at most w columns, as many to a
+// line as fit. A line breaks only between keys, so no key splits from its words.
+func packHints(hints []string, w int) []string {
+	var lines []string
+	line := ""
+	for _, h := range hints {
+		switch {
+		case line == "":
+			line = h
+		case lipgloss.Width(line)+2+lipgloss.Width(h) <= w:
+			line += "; " + h
+		default:
+			lines = append(lines, clip(line, w))
+			line = h
+		}
+	}
+	if line != "" {
+		lines = append(lines, clip(line, w))
+	}
+	return lines
+}
+
 // helpLines is the key list shown in place of the Overview.
 func (m *Model) helpLines(w, bodyH int) []string {
 	th := m.cfg.Theme
@@ -449,16 +492,20 @@ func (m *Model) helpLines(w, bodyH int) []string {
 				continue
 			}
 			if m.view == questionsView && m.pane == nil &&
-				(h == m.keys.Stop.Help() || h == m.keys.Retry.Help() || h == m.keys.FileSlice.Help() || h == m.keys.Fix.Help() || h == m.keys.Cleanup.Help()) {
+				(h == m.keys.Stop.Help() || h == m.keys.Retry.Help() || h == m.keys.FileSlice.Help() || h == m.keys.Fix.Help() || h == m.keys.Renders.Help() || h == m.keys.Cleanup.Help()) {
 				continue
 			}
 			// Keep the added question keys and quit visible at standard height.
-			if h == m.keys.Approve.Help() || h == m.keys.Stop.Help() || h == m.keys.Retry.Help() || h == m.keys.FileSlice.Help() || h == m.keys.Fix.Help() {
+			if h == m.keys.Approve.Help() || h == m.keys.Stop.Help() || h == m.keys.Retry.Help() || h == m.keys.FileSlice.Help() || h == m.keys.Fix.Help() || h == m.keys.Renders.Help() {
 				actionHints = append(actionHints, h.Key+" "+h.Desc)
 				continue
 			}
 			if h == m.keys.Answer.Help() && len(actionHints) > 0 {
-				lines = append(lines, clip(strings.Join(actionHints, "; "), w))
+				if w < 24 {
+					lines = append(lines, clip(strings.Join(actionHints, "; "), w)) // too narrow to pack
+				} else {
+					lines = append(lines, packHints(actionHints, w)...)
+				}
 			}
 			lines = append(lines, clip(h.Key+" "+h.Desc, w))
 		}

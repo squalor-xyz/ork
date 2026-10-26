@@ -4,15 +4,15 @@
   ork            1 │  [1mApprove 1[m
                    │[1;7m  +  ork  S22  awaiting-approval  owner action  2 of 6 st...[m
                    │    [1mRun engine[m
+                   │
                    │    [1mGate PASS (round 1)  Tests: 12 passed, 0 failed[m
                    │    Diff: 2 files, +48 -4, 1 new file
-                   │    Owner question, not blocking: Should the cache be
-                   │    shared? Recommended: per-project.
                    │    [1mHuman checks[m (2 of 3 open)
                    │    [2m1 [x] Open the pane on a running relay and see it move[m
                    │    [2m      on.[m
                    │    2 [ ] Resize to 80x24 and read the card.
                    │    3 [ ] Press F, type a note and send it.
+                   │    Approve lands it, then removes its worktree and branch.
                    │    a approve; F fix round; x stop; 1-3 tick/later; esc
                    │    close pane
                    │    Approve needs every human check marked; open: 2, 3

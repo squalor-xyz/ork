@@ -68,11 +68,73 @@ func actionHarness(t *testing.T, state, pending string) *harness {
 	return h
 }
 
-func TestActionApproveImmediateAndRefresh(t *testing.T) {
+// On an Overview row `a` asks first: approval lands the slice and removes its
+// worktree and branch (S119, adj 162). The card's own `a` stays one key.
+func TestActionApproveAsksBeforeLanding(t *testing.T) {
 	h := actionHarness(t, "awaiting-approval", "")
 	h.deliver(press("a"))
+	want := "ork approve engine\nLand S22, then remove its worktree and branch? [y/N] (Enter is No)"
+	if h.m.confirm == nil || h.m.confirm.prompt() != want {
+		t.Fatalf("approve must ask first, naming the landing and the cleanup: %+v", h.m.confirm)
+	}
+	if v := h.view(); !strings.Contains(v, "[y/N] (Enter is No)") || !strings.Contains(v, "Land S22") || strings.Contains(v, "S22  commit") {
+		t.Fatalf("the confirmation is not on screen:\n%s", v)
+	}
+	// Enter is No.
+	h.deliver(press("enter"))
+	if v := h.view(); strings.Contains(v, "[y/N]") || strings.Contains(v, "S22  commit") || !strings.Contains(v, "Cancelled") {
+		t.Fatalf("Enter must cancel the approval:\n%s", v)
+	}
+	h.deliver(press("a"))
+	h.deliver(press("y"))
 	if v := h.view(); !strings.Contains(v, "S22  commit") || !strings.Contains(v, "ork approve engine") || strings.Contains(v, "[y/N]") {
-		t.Fatalf("approve must run immediately and refresh the engine row:\n%s", v)
+		t.Fatalf("y must approve and refresh the engine row:\n%s", v)
+	}
+}
+
+// The approve confirmation reads like the cleanup one: the command, then the
+// question on its own line. Goldens at 80x24.
+func TestActionApproveConfirmGoldens(t *testing.T) {
+	for _, push := range []bool{false, true} {
+		for _, mono := range []bool{false, true} {
+			t.Run(fmt.Sprintf("push-%t-mono-%t", push, mono), func(t *testing.T) {
+				h := actionHarness(t, "awaiting-approval", "")
+				h.m.byName["ork"].reg.Push = push
+				h.m.cfg.Theme = NewTheme(mono)
+				h.send(tea.WindowSizeMsg{Width: 80, Height: 24})
+				h.send(press("a"))
+				checkGolden(t, fmt.Sprintf("approve-confirm-80x24-push-%t-mono-%t.txt", push, mono), h.m.View().Content)
+			})
+		}
+	}
+}
+
+// The keys stay whole: when the question and the keys do not fit one line the
+// keys go on their own line, under the question.
+func TestActionApproveConfirmKeepsTheKeysWhole(t *testing.T) {
+	h := actionHarness(t, "awaiting-approval", "")
+	h.deliver(press("a"))
+	a := *h.m.confirm
+	if got, want := a.promptWidth(200), "ork approve engine\nLand S22, then remove its worktree and branch? [y/N] (Enter is No)"; got != want {
+		t.Errorf("wide prompt %q, want %q", got, want)
+	}
+	want := "ork approve engine\nLand S22, then remove its worktree and branch?\n[y/N] (Enter is No)"
+	if got := a.promptWidth(60); got != want {
+		t.Errorf("narrow prompt %q, want %q", got, want)
+	}
+	a.push = true
+	if got := a.promptWidth(60); !strings.HasSuffix(got, "branch?\n[y/N] (Enter is No)") || !strings.Contains(got, "Land and push S22, then remove") {
+		t.Errorf("narrow push prompt %q", got)
+	}
+}
+
+func TestActionApproveConfirmNamesThePushWhenTheProjectPushes(t *testing.T) {
+	h := actionHarness(t, "awaiting-approval", "")
+	h.m.byName["ork"].reg.Push = true
+	h.deliver(press("a"))
+	want := "ork approve engine\nLand and push S22, then remove its worktree and branch? [y/N] (Enter is No)"
+	if h.m.confirm == nil || h.m.confirm.prompt() != want {
+		t.Fatalf("the confirmation is %+v, want %q", h.m.confirm, want)
 	}
 }
 
@@ -163,6 +225,7 @@ func TestActionErrorVerbatim(t *testing.T) {
 	h := actionHarness(t, "awaiting-approval", "")
 	h.m.cfg.Live.(*actionLive).err = &ipc.Error{Code: "run_busy", Message: "Wait: Owner's step failed."}
 	h.deliver(press("a"))
+	h.deliver(press("y"))
 	if v := h.view(); !strings.Contains(v, "run_busy: Wait: Owner's step failed.") || !strings.Contains(v, "S22  awaiting-approval") {
 		t.Fatalf("failed action must preserve its code, message and row:\n%s", v)
 	}
@@ -192,6 +255,7 @@ func TestActionCursorTarget(t *testing.T) {
 	h.m.apply(snapshotMsg{name: "ork", snap: s})
 	h.deliver(press("down"))
 	h.deliver(press("a"))
+	h.deliver(press("y"))
 	if v := h.view(); !strings.Contains(v, "S1  awaiting-approval") || !strings.Contains(v, "S22  commit") {
 		t.Fatalf("action did not target cursor engine run:\n%s", v)
 	}
@@ -319,7 +383,7 @@ func TestActionBlockedRetry(t *testing.T) {
 
 func TestActionOtherRunWhileRetryPending(t *testing.T) {
 	for _, tc := range []struct{ key, state, want string }{
-		{"a", "awaiting-approval", "S23  commit"},
+		{"a", "awaiting-approval", "ork approve other"},
 		{"t", "paused", "ork retry other? [y/N]"},
 		{"x", "implement", "ork stop other? [y/N]"},
 	} {
@@ -385,6 +449,7 @@ func TestActionErrorRefresh(t *testing.T) {
 	s.EngineRuns[0].State = "implement"
 	h.src.set(s) // The daemon advanced before refusing this stale action.
 	h.deliver(press("a"))
+	h.deliver(press("y"))
 	if v := h.view(); !strings.Contains(v, "S22  implement") {
 		t.Fatalf("failed action must refresh the row:\n%s", v)
 	}

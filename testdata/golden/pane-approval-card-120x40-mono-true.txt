@@ -23,6 +23,7 @@
                            │    [2m1 [x] Open the pane on a running relay and see it move on.[m
                            │    2 [~] Resize to 80x24 and read the card. (later)
                            │    3 [ ] Press F, type a note and send it.
+                           │    Approve lands it, then removes its worktree and branch.
                            │    a approve; F fix round; x stop; 1-3 tick/later; f file slice; esc close pane
                            │
                            │[1mRunning 0[m
@@ -33,7 +34,6 @@
                            │
                            │[1mReady to land[m
                            │  [2mnone[m
-                           │
                            │
                            │
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────[m

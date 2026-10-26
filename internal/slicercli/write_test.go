@@ -210,6 +210,24 @@ func TestNoteWritesTheReviewFailText(t *testing.T) {
 	}
 }
 
+func TestRenderAndLandAreLoggedWrites(t *testing.T) {
+	c, _ := client(t,
+		rawRoute([]string{"render", "--json", "--root", wt}, "note.json"),
+		rawRoute([]string{"land", "S04", "--branch", "S04", "--note", "Landed S04", "--json", "--root", wt}, "note.json"),
+	)
+	w, sink := writer()
+	if err := c.Render(context.Background(), w, wt); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.Land(context.Background(), w, wt, "S04", "S04", "Landed S04"); err != nil {
+		t.Fatal(err)
+	}
+	want := [][]string{{"render", "--json"}, {"land", "S04", "--branch", "S04", "--note", "Landed S04", "--json"}}
+	if len(sink.writes) != 2 || !reflect.DeepEqual(sink.writes[0].Argv, want[0]) || !reflect.DeepEqual(sink.writes[1].Argv, want[1]) {
+		t.Fatalf("writes %+v", sink.writes)
+	}
+}
+
 func TestWritesRetryOnLockedAndLogEachAttempt(t *testing.T) {
 	locked := clitest.Reply{Stdout: `{"error":{"code":"locked","message":"busy","command":"note"}}`, Exit: 3}
 	c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"note", "S04", "--text", "x", "--render", "--json", "--root", wt},

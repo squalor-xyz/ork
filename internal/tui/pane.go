@@ -27,7 +27,10 @@ type runPane struct {
 	answered, answerDone      bool
 	answerState, answerNotice string
 	freeText                  bool
-	fixing                    bool // the fix note field of the approval card is open
+	fixing                    bool                   // the fix note field of the approval card is open
+	render                    int                    // the card's render on show, one-based; 0 shows the card (S121, proposed)
+	renderRound               int                    // the card round that render was opened on
+	fetched                   map[string]renderFetch // run.render answers, by card round and name
 	adj                       bool
 	ledger                    bool
 	input                     textField
@@ -190,6 +193,10 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 	case "ctrl+c":
 		return tea.Quit
 	case "esc":
+		if m.renderOn() > 0 {
+			m.pane.render, m.pane.offset = 0, 0
+			return nil
+		}
 		if m.pane.fixing {
 			m.pane.fixing, m.pane.input = false, textField{}
 			m.actionStatus = ""
@@ -209,6 +216,9 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 	case "pgdown":
 		m.pane.offset++
 		return nil
+	}
+	if m.renderOn() > 0 {
+		return m.renderKey(msg)
 	}
 	if m.paneQuestion() {
 		if msg.String() == "ctrl+a" {
@@ -312,23 +322,52 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		}
 	}
 	footer := []string{}
-	var priorities []int
-	addFooter := func(lines []string, priority int) {
+	var priorities, groups []int
+	// A group is a set of lines that stay or drop together (0: a line alone).
+	nextGroup := 0
+	addGroup := func(lines []string, priority int, grouped bool) {
 		footer = append(footer, lines...)
+		if grouped {
+			nextGroup++
+		}
 		for range lines {
 			priorities = append(priorities, priority)
+			if grouped {
+				groups = append(groups, nextGroup)
+			} else {
+				groups = append(groups, 0)
+			}
 		}
 	}
+	addFooter := func(lines []string, priority int) { addGroup(lines, priority, false) }
 	card := m.paneCard()
-	if card != nil {
+	// A render on show takes the room of the card's summary and checks.
+	idx := m.renderOn()
+	viewing := idx > 0
+	if viewing {
+		// A dim rule sets the render apart from the run line above it.
+		_, horizontal := m.cfg.Theme.rules(m.cfg.ASCII)
+		header = append(header, m.cfg.Theme.Dim.Render(strings.Repeat(horizontal, width)))
+	}
+	if card != nil && !viewing {
 		priority := 0
 		if m.pane.fixing {
 			priority = 2
 		}
 		addFooter(m.cardSummary(card, width), priority)
 	}
-	addFooter(m.findingLines(width), 2)
+	if !viewing {
+		// On a short pane the later findings drop first, then the owner findings.
+		laterLines, ownerLines := m.findingLines(width)
+		addFooter(laterLines, 3)
+		for _, finding := range ownerLines {
+			addGroup(finding, 2, true) // an owner finding drops whole
+		}
+	}
 	switch {
+	case viewing:
+		addFooter(wrapText(m.renderTitle(card), width), 0)
+		addFooter(wrapText(m.cardHint(card), width), 1)
 	case r.unavailable:
 		addFooter(wrapText(source.RemovedProjectHelp(r.name), width), 2)
 		addFooter([]string{"Removed project; esc close pane"}, 3)
@@ -415,6 +454,7 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		addFooter(wrapText("enter sends the note to a fix round; esc back to card", width), 0)
 	case card != nil:
 		addFooter(m.cardChecks(card, width), 0)
+		addFooter(wrapText(m.cardLandNote(), width), 1)
 		addFooter(wrapText(m.cardHint(card), width), 1)
 	case r.state == "awaiting-approval":
 		addFooter(wrapText("a approve; x stop; "+m.fileHint()+"esc close pane", width), 3)
@@ -446,8 +486,14 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 				drop = i
 			}
 		}
-		footer = append(footer[:drop], footer[drop+1:]...)
-		priorities = append(priorities[:drop], priorities[drop+1:]...)
+		group := groups[drop]
+		for i := len(footer) - 1; i >= 0; i-- {
+			if i == drop || (group != 0 && groups[i] == group) {
+				footer = append(footer[:i], footer[i+1:]...)
+				priorities = append(priorities[:i], priorities[i+1:]...)
+				groups = append(groups[:i], groups[i+1:]...)
+			}
+		}
 	}
 	// The action area takes priority if the header no longer fits.
 	header = header[:min(len(header), max(h-len(footer), 0))]
@@ -462,22 +508,26 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		}
 		reason = strings.TrimSpace(strings.Join(context, "\n"))
 	}
-	if reason != "" {
-		lines = append(lines, wrapText(reason, width)...)
-	}
-	if card != nil {
-		lines = append(lines, m.cardBody(card, width)...)
-	}
-	steps := m.paneSteps()
-	lines = append(lines, m.boardLines(steps, width)...)
-	roleWidth := treeRoleWidth(steps)
-	if boardLive(m.paneBoardRun().State) {
-		for _, role := range pipelineRoles(steps) {
-			roleWidth = max(roleWidth, len(role))
+	if viewing {
+		lines = m.renderLines(card, idx, width)
+	} else {
+		if reason != "" {
+			lines = append(lines, wrapText(reason, width)...)
 		}
+		if card != nil {
+			lines = append(lines, m.cardBody(card, width)...)
+		}
+		steps := m.paneSteps()
+		lines = append(lines, m.boardLines(steps, width)...)
+		roleWidth := treeRoleWidth(steps)
+		if boardLive(m.paneBoardRun().State) {
+			for _, role := range pipelineRoles(steps) {
+				roleWidth = max(roleWidth, len(role))
+			}
+		}
+		lines = append(lines, m.runTreeLinesWithRoleWidth(steps, width, m.treeFrame, roleWidth)...)
+		lines = append(lines, m.boardTail(steps, width, roleWidth)...)
 	}
-	lines = append(lines, m.runTreeLinesWithRoleWidth(steps, width, m.treeFrame, roleWidth)...)
-	lines = append(lines, m.boardTail(steps, width, roleWidth)...)
 	if len(lines) == 0 {
 		lines = wrapText(reason, width)
 	}
@@ -492,6 +542,9 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		for i := range section {
 			section[i] = indent + section[i]
 		}
+	}
+	for viewing && len(lines) < room {
+		lines = append(lines, "") // the footer stays at the bottom of the pane
 	}
 	if room == 0 {
 		lines = nil

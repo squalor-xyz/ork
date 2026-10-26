@@ -48,6 +48,7 @@ Wave planning by hand became s376 (`slicer plan-parallel`), done on
 | Forward a role report that reached the outer session to its orchestrator | playbook, Claude Code specifics | Route reports by the `.relay/<id>/<role>-report.md` file |
 | Save mailbox stats before removing a worktree; the mailbox goes with it (the ledger moved to the git common dir in slicer s298) | `agents/multi-agent-workflows/README.md:114`; trial | Run `relay-stats.sh` before cleanup |
 | Land passed branches one at a time, which is the bottleneck | playbook Lessons | Batch the merges, then run one suite on main |
+| Turn on pushing after a landing for the ork project (S119): add `"push": true` to the `ork` entry of `~/.config/ork/projects.json` (or `$XDG_CONFIG_HOME/ork/projects.json`), then run `ork daemon restart`. It is off by default, and ork never writes it. The approval card then says it pushes ("Approve lands and pushes it, then removes its worktree and branch.") | adj 162 (`landing.in-ork`), owner decision 2026-10-26 | None; the owner's own edit of the registry |
 | Changelog conflict on every merge | playbook Lessons | Resolve per `###` heading from the branch's own additions |
 | Limit parallel relays to about four on 8 cores; suite takes 20-40 min under load | playbook Lessons | Throttle a wave and put realistic suite times in the brief |
 | Catalog ID collisions between parallel slices; decisions filed at landing | `adjudicate/.slicer` slice S38 Git section | Queue catalog filings and apply them at landing |

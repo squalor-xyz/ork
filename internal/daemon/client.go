@@ -146,6 +146,14 @@ func (c *Client) MarkCheck(ctx context.Context, run string, n int, state string)
 	return c.Call(ctx, MethodRunCheck, RunAction{Run: run, Check: n, State: state}, nil)
 }
 
+// Render reads the text of one render of the run, by the name its card lists
+// (run.render, S121, *proposed*).
+func (c *Client) Render(ctx context.Context, run, name string) (string, error) {
+	var reply RenderReply
+	err := c.Call(ctx, MethodRunRender, RunAction{Run: run, Name: name}, &reply)
+	return reply.Text, err
+}
+
 // Stop stops an engine run after the caller has confirmed it.
 func (c *Client) Stop(ctx context.Context, run string) error {
 	return c.Call(ctx, MethodRunStop, RunAction{Run: run}, nil)

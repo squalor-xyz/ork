@@ -16,6 +16,7 @@ The files ork owns. Everything else is read live from slicer, adj and git
 | Role reports | `~/.local/state/ork/runs/<run>/<role>-<round>.md` |
 | Check output per round (S04) | `~/.local/state/ork/runs/<run>/checks-<round>.log` |
 | A role's own temp directory (S04) | `~/.local/state/ork/runs/<run>/tmp/<role>-<round>/` |
+| The UI pass's renders (S121, *proposed*): `VIEW-80x24.txt`, `VIEW-120x40.txt`, `VIEW-ascii.txt` | `~/.local/state/ork/runs/<run>/tmp/ui-<round>/renders/` |
 | A spec check's report and temp directory (S116, *proposed*); the verdicts themselves live in the daemon's memory | `~/.local/state/ork/spec-checks/<check>/` |
 | Fixture candidates: raw output of every non-ok vendor round or round with denials, mode 0600 | `~/.local/state/ork/fixtures/<vendor>/` |
 
@@ -52,7 +53,8 @@ this file on startup (`registry.no-seed`, adj 157). The first successful
         "implementer": ["Edit", "Write", "Bash(dotnet test*)", "Bash(slicer *)"],
         "reviewer": "read-only"
       },
-      "vendor_env": {"codex": {"VENDOR_CODEX_NETWORK": "1"}}
+      "vendor_env": {"codex": {"VENDOR_CODEX_NETWORK": "1"}},
+      "push": true
     }
   ]
 }
@@ -66,6 +68,11 @@ Notes on the fields:
   the stale flag and goes into briefs.
 - `permissions` is the per-role allowlist (`launch.permissions`). Its exact
   syntax per vendor waits on the vendor spike (design.md).
+- `push` (*proposed*, S119, adj 162) says ork runs `git push` in the main
+  checkout after it lands a slice there. Absent or `false` means ork never
+  pushes (the example turns it on). ork does not write it; the owner sets it by editing the file
+  (docs/manual-steps.md). An older ork refuses a registry with `push` because
+  `Load` uses strict keys.
 - `vendor_env` is shown as an example. The DataBall entry reflects the
   agents repo's note that Codex needs network access for `dotnet test`
   (`agents/setup/lib/workflow-vendor.sh`).
@@ -121,7 +128,8 @@ that uncommitted edit, so every role's brief carries the paragraph in an
   "questions": [{"role": "implementer", "round": 1, "key": "area.topic", "text": "...", "at": "...", "answer": "...", "answered_at": "..."}],
   "findings": [{"kind": "later", "role": "reviewer", "round": 1, "title": "Add a --json flag", "text": "...", "at": "...", "filed": "S130", "filed_at": "..."}],
   "card": {"round": 1, "verdict": "PASS", "passed": 12, "failed": 0, "diff_stat": " a.go | 2 +-\n 1 file changed, 1 insertion(+), 1 deletion(-)",
-           "untracked": ["b.go"], "human_checks": [{"text": "...", "state": "ticked"}]},
+           "untracked": ["b.go"], "human_checks": [{"text": "...", "state": "ticked"}],
+           "ui_round": 1, "renders": [{"name": "launch-80x24.txt", "size": 1210}]},
   "fixes": [{"round": 2, "note": "Rename the flag.", "at": "..."}],
   "writes": [
     {"at": "2026-10-19T16:12:05Z", "tool": "slicer", "root": "/.../adjudicate/.worktrees/S18",
@@ -146,7 +154,7 @@ started. They are not a copy of slicer state. The ledger link is
 `relay_run`, and `orchestrator_step` is ork's own step in it.
 
 `state` is one of `queued`, `setup`, `implement`, `checks`, `review`, `architect`, `gate`,
-`awaiting-approval`, `commit`, `finish`, `committed`, `paused` and `stopped`;
+`awaiting-approval`, `finish`, `commit`, `land`, `committed`, `paused` and `stopped`;
 `committed` and `stopped` are final. `queued` is not final: the run waits for
 a slot under the caps and has no process and no writes. `round` counts implementer rounds and
 `fails` counts gate FAILs. `reason` says why a slice is stopped or paused.
@@ -159,7 +167,21 @@ and `reason` (adj #168). The raw question text is kept alongside it. Older
 records without `ask` continue to use free text. An older ork refuses a
 `run.json` with `ask` because `Store.Open` uses strict keys. `feedback`
 names the file (kind
-`checks`, `findings`, `architect`, `fail` or `owner`) that the next implementer round must act on.
+`checks`, `findings`, `architect`, `fail`, `owner` or `land`) that the next implementer round must act on.
+`land_recheck` (omitted when false; *proposed*, S119) is set before the base
+branch is merged into the slice branch and cleared by the first green re-check
+after that (or when the landing is handed to the fix round); while it is set, a
+retried landing merges the base if it is not in yet, then renders and
+re-checks before it fast-forwards. `landed_at` (omitted until then; *proposed*,
+S119) is when ork fast-forwarded the slice onto the base branch and ran
+`slicer land`; the daemon sends it as `landed: true` on the run's snapshot row,
+with `cleanup_failed` holding `reason` when the cleanup after the landing
+failed (the cleanup key clears that reason).
+`land_fixes` (omitted when 0; *proposed*, S119) counts the fix rounds a blocked
+landing has had; the `land` state allows one (a merge conflict, or a red
+re-check after the base branch was merged in), and a second block stops the run
+with `land blocked: ...`. A run that landed is `committed` with its worktree and
+branch removed; if the cleanup failed, `reason` says so.
 The `architect` state runs only when the lineup includes that role (adj #151),
 after accepted reviewer findings and before the gate (adj #123). Its whole
 report becomes `architect` feedback for a fix round (adj #150).
@@ -180,6 +202,20 @@ diff --stat HEAD` in the worktree, which ork has not committed yet) and
 `state` is empty (open), `ticked` or `later`; the owner sets it with
 `run.check`. A check with the same text keeps its mark when the card is built
 again after a fix round. `checks_error` says why the checks could not be read.
+`ui_round`, `renders` and `renders_dropped` (omitted when empty; *proposed*,
+S121, adj #165) list the views the UI pass wrote: `ui_round` is the round of
+the latest UI pass that ended well (omitted when none ran), `renders` the
+`.txt` files it left in `tmp/ui-<round>/renders/` as `name` and `size` (the
+bytes of the plain text that `run.render` returns), in this order: each view's
+`-80x24`, `-120x40` and `-ascii` files, the views by name, then other files by
+name; `renders_dropped` counts the files past the limit of 24. The card holds
+no render text, so neither `run.json` nor a snapshot does: the text stays in
+the file and is read on demand (`run.render` in `design.md`). A render is
+plain text of at most 24 KiB; ork drops terminal escape sequences and other
+control characters, and cuts a longer one at the last line end within 24 KiB
+(at the 24 KiB mark when there is none), with a last line `(cut: over 24
+KiB)`. A renders directory that is a link is not read. The files stay in the
+run directory.
 `fixes` (omitted when empty; *proposed*, S118) keeps each note the owner sent
 to a fix round from the card: the `round` that acts on it, the `note` and the
 time. The note is also the file `owner-fix-N.md` in the run directory, which is

@@ -14,8 +14,10 @@ until then.
 - **Color is never the only signal.** Every colored state also has a word
   or symbol, and there is a monochrome theme.
 - **Show the command.** Every write shows the exact command it will run.
-  Launch or stop asks for confirmation; approve runs on one key
-  (`ui.confirm`). Retry also confirms.
+  Launch or stop asks for confirmation. Retry also confirms. Approve on an
+  Overview row also asks (S119, owner decision 2026-10-26: it lands the slice
+  and cleans up), while the approval card's own `a` runs on one key
+  (`ui.confirm`).
 - **Nothing blocks.** A slow call shows as pending on its row.
 - **Errors verbatim.** A failed CLI call shows its `error.code` and
   message. ork does not guess.
@@ -300,7 +302,8 @@ the text column, falling back to a shorter indent when needed to fit.
    any other outcome, then items, run time,
    `ended N ago`, and counts such as `impl 1  review 1  gate 0`. Empty state: `none`.
    Rows follow Running in cursor order. Enter opens a read-only ledger pane.
-4. **Ready to land:** committed engine runs across projects, or for the
+4. **Ready to land:** committed engine runs that ork did not land, plus a landed run
+   whose cleanup failed (see below), across projects, or for the
    selected project. Each row shows the slice and branch, with
    `slicer land 'ID' --branch 'B' --note 'Landed B'` on its own indented line to
    copy. Ready rows follow Needs you, Running and Recent in the cursor order and
@@ -322,7 +325,13 @@ the text column, falling back to a shorter indent when needed to fit.
    `git -C PATH branch -d BRANCH`. The question is on a separate line.
    Enter is No; `n` cancels; `y` calls `run.cleanup` once (`git.cleanup-key`, adj #152).
    Cleanup never forces removal, merges or lands a branch. Git errors are
-   shown verbatim.
+   shown verbatim. After S119, a run that ork landed itself leaves this list, and
+   its ledger run reads `✓ landed` in Recent instead of `✓ pass`. A run that ork
+   landed but could not clean up stays here. Its row reads `S11  s11  landed
+   cleanup failed`; the line under it is the reason (the failed git command and
+   its error), which is not one of the copy lines, and there is no landing
+   command. Its detail reads `c finishes the cleanup: git -C P worktree remove W;
+   git -C P branch -d B`, and `c` runs it (and clears the reason).
 
 The Overview reads engine runs in the daemon snapshot, using the same builder
 as `ork status` (`ui.engine-runs-read`). An engine row leads with the ork run
@@ -386,11 +395,18 @@ the needs list matches the count (`ui.status-list`, adj #125).
 the *proposed* optional `open:[{id,key,title}]` and `held:[{id,title}]` fields.
 Those fields are omitted when empty.
 
-On the cursor's engine row, `a` approves an awaiting-approval run immediately
-(once its human checks are marked; see the approval card),
-`x` stops a run, and `t` retries a paused run. Stop and retry show the exact
-command (`ork stop RUN` or `ork retry RUN`) in the detail area and ask
-`[y/N] (Enter is No)`. Only `y` confirms; `n`, `esc` and Enter cancel. The
+On the cursor's engine row, `a` approves an awaiting-approval run (once its
+human checks are marked; see the approval card), `x` stops a run, and `t`
+retries a paused run. Stop and retry show the exact command (`ork stop RUN` or
+`ork retry RUN`) in the detail area and ask `[y/N] (Enter is No)`. Approve asks
+like the cleanup does: the command `ork approve RUN`, then the question on its
+own line, naming what the approval does: `Land ITEM, then remove its worktree and
+branch? [y/N] (Enter is No)`, or `Land and push ITEM, then remove its worktree
+and branch? [y/N] (Enter is No)` when the project's `push` setting is on. When
+the question and `[y/N] (Enter is No)` do not fit one line, the keys go on a line
+of their own, so they are never cut. In the
+pane, on the approval card, `a` still approves at once; the card's own line says
+the same (below). Only `y` confirms; `n`, `esc` and Enter cancel. The
 confirmation keeps its original run target while snapshots change. Approve
 shows `ork approve RUN` as pending, then its result. Calls run asynchronously;
 every completed call refreshes the project's snapshot, and a failed call shows
@@ -531,8 +547,27 @@ the action area under the run tree, in this order:
   slice: `1 [ ] TEXT` open, `2 [x] TEXT` ticked, `3 [~] TEXT (later)` marked
   for later. With no items the line reads `Human checks: none`; if the daemon
   could not read them it reads `Human checks: not read (WHY)`.
-- The key line: `a approve; F fix round; x stop; 1-N tick/later; f file slice;
-  esc close pane`.
+- `Approve lands it, then removes its worktree and branch.` (S119): the
+  approval is the owner's confirm of the landing and its cleanup (adj 162 and
+  adj 152). ork then merges the base branch in if it moved, re-checks, merges
+  into the base branch, pushes when the project's `push` setting is on, and
+  removes the worktree with `git worktree remove` and the branch with `git
+  branch -d`. A blocked landing returns to this card after one fix round, or
+  stops in Needs you with `land blocked: ...` and the worktree kept. When
+  the pane is short, lines drop in this order: the later findings, then each
+  owner finding whole (the last first), then the status line and the key line
+  (each its last wrapped line first), then this line, and the human checks last. When the project's `push` setting is on, it reads
+  `Approve lands and pushes it, then removes its worktree and branch.` (it wraps
+  to two lines at 80x24; the TUI reads the setting from the registry entry);
+  with push off it reads `Approve lands it, then removes its worktree and
+  branch.`
+- The key line: `a approve; F fix round; x stop; 1-N tick/later; v view renders;
+  f file slice; esc close pane`. `v view renders;` shows only when the card
+  has renders.
+- `Renders: N from the UI pass (round R)` (dim; `, K more not kept` when the
+  card dropped files), under the diff line. When the UI pass ran and wrote
+  none it reads `Renders: the UI pass (round R) wrote none`. Without a UI pass
+  the card has no such line.
 
 A digit marks the human check of that number and moves it on: ticked, then
 later, then open again. The mark is saved in the run record at once (`run.check`).
@@ -568,6 +603,39 @@ At 80x24 the card's footer keeps one line for the header that names the run
 (`Run ID  ITEM  STATE`), so the card gives up lower-priority lines first (the
 later and owner findings, then the key line) before that header goes; the
 tree scrolls out of sight and the Overview rows above stay.
+
+**Renders** (*proposed*, S121; adj #165). `v` on the card opens the viewer on
+the first render the UI pass wrote. The order is each view's `VIEW-80x24.txt`,
+`VIEW-120x40.txt` and `VIEW-ascii.txt`, the views by name, then any other file
+by name. The card holds only each render's name and size; the pane asks the
+daemon for the text (`run.render`) when the viewer opens and again for each
+render the owner moves to. Until the answer arrives the body reads `Loading
+NAME ...`; if the call fails it reads `Could not read NAME: WHY` (for example
+`not_found: no render NAME for run ID`), and `v` and `esc` still work.
+
+While a render shows, the Overview rows above the pane are gone: the pane has
+the whole body, from the rule under the view bar to the rule above the status
+line. The pane's first line still names the run (`Run ID  ITEM  STATE`); under
+it a dim rule (the theme's horizontal rule, `-` with the ASCII option) sets the
+render apart from that line and takes one row of the render's room; the render
+fills the rows below the rule, and the footer shows `Render K of N: NAME` and
+`v next; s sidebar; pgup/pgdown scroll; esc back to card`. The card's summary,
+checks and other keys give way. `v` moves to the next render; on the last one
+the key line reads `v/esc back to card; s sidebar; pgup/pgdown scroll` and `v`
+returns to the card, where the Overview rows return. If the card
+changes while a render shows (a fix round started from another TUI), the pane
+shows the card again.
+
+`s` hides or shows the sidebar: a render is not wrapped, so a row wider than
+the pane is cut with `...`, and the sidebar takes 20 columns below 100
+columns and 28 from 100 columns up. A render taller than the pane scrolls, one line
+for each press of `pgup` or `pgdown`, with `+N lines above` and `+N more
+lines` markers. A 40-row render does not fit at 80x24 or at 120x40, since the
+pane's name line and footer take rows too, so it scrolls at both. While a render shows, no card
+key acts except those: the owner cannot mark a check or approve what the footer
+does not show. `esc` returns to the card, and a second `esc` closes the pane.
+ork draws the text it was given, after dropping control characters again; it
+does not render the view itself.
 
 **Finding kinds** (adj #163, `review.finding-kinds`). A reviewer, UI pass or
 gate report tags each finding `fix`, `owner` or `later`. In every pane that is

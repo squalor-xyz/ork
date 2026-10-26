@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 
+	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
@@ -340,5 +342,113 @@ func TestCleanupConfirmGoldens(t *testing.T) {
 			h.send(press("c"))
 			checkGolden(t, fmt.Sprintf("cleanup-confirm-80x24-mono-%t.txt", mono), h.m.View().Content)
 		})
+	}
+}
+
+// A run that ork landed has nothing left to land: it leaves Ready to land. One
+// whose cleanup failed stays, with the reason, so the cleanup key can finish it
+// (S119, adj 162).
+func TestLandedRunsLeaveReadyToLand(t *testing.T) {
+	h := landingHarness(t, `[{"id":"r1","item":"S09","state":"committed","branch":"s09"},`+
+		`{"id":"r2","item":"S10","state":"committed","branch":"s10","landed":true},`+
+		`{"id":"r3","item":"S11","state":"committed","branch":"s11","merged":true,"worktree":"/p/.worktrees/s11","landed":true,"cleanup_failed":"landed; cleanup failed at git worktree remove /p/.worktrees/s11: locked"}]`)
+	h.send(tea.WindowSizeMsg{Width: 100, Height: 30})
+	text := landingText(h)
+	if !strings.Contains(text, "S09") {
+		t.Errorf("a committed run that ork did not land left the list:\n%s", text)
+	}
+	if strings.Contains(text, "S10") {
+		t.Errorf("a landed run is still listed:\n%s", text)
+	}
+	if strings.Contains(text, "slicer land 'S11'") {
+		t.Errorf("the landed run offers the landing command again:\n%s", text)
+	}
+	// The row says it once; the reason is the line under it, without the
+	// "landed; cleanup failed at" lead the row already said.
+	var rowLine, reasonLine string
+	lines := strings.Split(text, "\n")
+	for i, l := range lines {
+		if strings.Contains(l, "S11") {
+			rowLine = l
+			if i+1 < len(lines) {
+				reasonLine = lines[i+1]
+			}
+		}
+	}
+	if !strings.Contains(rowLine, "S11  s11  landed  cleanup failed") || strings.Contains(rowLine, "merged") {
+		t.Errorf("the cleanup-failed row: %q", rowLine)
+	}
+	if got := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(reasonLine), "│")); !strings.HasSuffix(got, "git worktree remove /p/.worktrees/s11: locked") || strings.Contains(reasonLine, "cleanup failed") {
+		t.Errorf("the reason line: %q", reasonLine)
+	}
+	for _, row := range h.m.readyRows() {
+		if row.engineID != "r3" {
+			continue
+		}
+		if !row.merged || row.worktree == "" || row.branch == "" {
+			t.Errorf("the cleanup-failed row cannot be cleaned up: %+v", row)
+		}
+		// What a copy of the row yanks holds no reason.
+		if copied := strings.Join(row.commands, "\n"); copied != "" || strings.Contains(row.text, "locked") {
+			t.Errorf("the reason is in the row's copy text: commands %q, text %q", copied, row.text)
+		}
+		if row.note != "git worktree remove /p/.worktrees/s11: locked" {
+			t.Errorf("note %q", row.note)
+		}
+		detail := strings.Join(detailLines(row, 200, "|"), "\n")
+		for _, want := range []string{"c finishes the cleanup: git -C ", "worktree remove '/p/.worktrees/s11'; git -C ", "branch -d 's11'"} {
+			if !strings.Contains(detail, want) {
+				t.Errorf("the detail lacks %q:\n%s", want, detail)
+			}
+		}
+		if strings.Contains(detail, "locked") {
+			t.Errorf("the detail repeats the reason:\n%s", detail)
+		}
+	}
+}
+
+// The window scrolls to the whole row of the selected cleanup-failed run, the
+// note under it included.
+func TestSelectedCleanupFailedRowKeepsItsReasonInView(t *testing.T) {
+	var runs []string
+	for i := 0; i < 30; i++ {
+		runs = append(runs, fmt.Sprintf(`{"id":"r%d","item":"S%02d","state":"committed","branch":"b%d"}`, i, i, i))
+	}
+	runs = append(runs, `{"id":"last","item":"S99","state":"committed","branch":"s99","merged":true,"worktree":"/p/.worktrees/s99","landed":true,"cleanup_failed":"landed; cleanup failed at git worktree remove /p/.worktrees/s99: locked"}`)
+	for i := 30; i < 40; i++ {
+		runs = append(runs, fmt.Sprintf(`{"id":"r%d","item":"S%02d","state":"committed","branch":"b%d"}`, i, i, i))
+	}
+	h := landingHarness(t, "["+strings.Join(runs, ",")+"]")
+	h.send(tea.WindowSizeMsg{Width: 80, Height: 24})
+	needs, running := h.m.rows()
+	h.m.cursor = len(needs) + len(running) + len(h.m.recentRows()) + 30
+	if v := plainView(h.m); !strings.Contains(v, "S99") || !strings.Contains(v, "git worktree remove /p/.worktrees/s99: locked") {
+		t.Fatalf("the selected cleanup-failed row lost its reason:\n%s", v)
+	}
+}
+
+// The ledger run of a landed slice shows in Recent as landed, not as a bare pass.
+func TestLandedRunShowsInRecent(t *testing.T) {
+	h := landingHarness(t, `[{"id":"r2","item":"S10","state":"committed","branch":"s10","landed":true,"relay_run":"led-1"}]`)
+	s := h.m.byName["ork"].snap
+	for _, id := range []string{"led-1", "led-2"} {
+		s.BoardRuns.Value = append(s.BoardRuns.Value, slicercli.RelayRun{ID: id, Items: []string{"S10"}, State: "ended", Outcome: "pass",
+			BeganAt: h.now.Add(-20 * time.Minute).Format(time.RFC3339), UpdatedAt: h.now.Add(-5 * time.Minute).Format(time.RFC3339),
+			Steps: []slicercli.Step{{Role: "implementer"}}})
+	}
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	rows := h.m.recentRows()
+	if len(rows) != 2 {
+		t.Fatalf("%d recent rows: %+v", len(rows), rows)
+	}
+	got := map[string]string{}
+	for _, r := range rows {
+		got[r.ledgerID] = r.text
+	}
+	if !strings.Contains(got["led-1"], "✓ landed") || strings.Contains(got["led-1"], "✓ pass") {
+		t.Errorf("the landed slice's ledger run: %q", got["led-1"])
+	}
+	if !strings.Contains(got["led-2"], "✓ pass") {
+		t.Errorf("an unrelated ledger run: %q", got["led-2"])
 	}
 }

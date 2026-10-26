@@ -176,6 +176,7 @@ func TestDecisionsAToggle(t *testing.T) {
 func TestDecisionsAStillApprovesElsewhere(t *testing.T) {
 	h := actionHarness(t, "awaiting-approval", "")
 	h.deliver(press("a"))
+	h.deliver(press("y"))
 	if !strings.Contains(h.view(), "S22  commit") {
 		t.Fatal(h.view())
 	}

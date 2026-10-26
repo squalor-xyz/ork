@@ -7,9 +7,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -50,6 +53,7 @@ func (e *Engine) buildCard(ctx context.Context, rec runrec.Record, rep *Report) 
 			}
 		}
 	}
+	card.UIRound, card.Renders, card.RendersDropped = e.uiRenders(rec)
 	marks := map[string]string{}
 	if rec.Card != nil {
 		for _, c := range rec.Card.HumanChecks {
@@ -152,4 +156,151 @@ func (e *Engine) Fix(ctx context.Context, note string) error {
 		return err
 	}
 	return e.advance(ctx)
+}
+
+// What the card keeps of the UI pass's renders (S121, *proposed*).
+const (
+	rendersDir     = "renders" // in the UI pass's temp directory
+	maxRenders     = 24        // files kept; the rest are counted
+	maxRenderBytes = 24 << 10  // bytes kept of one render
+)
+
+// rendersPath is where the UI pass of a round writes its renders, under the
+// run directory (the proposed storage path): tmp/ui-N/renders.
+func rendersPath(runDir string, round int) string {
+	return filepath.Join(runDir, "tmp", fmt.Sprintf("%s-%d", RoleUI, round), rendersDir)
+}
+
+// listRenders lists the renders directory as the card shows it: the regular
+// .txt files, in card order. The directory is the role's own, so a missing
+// directory, a link in its place and every entry that is not a regular .txt
+// file (a link, a directory) are left out.
+func listRenders(dir string) []fs.DirEntry {
+	if info, err := os.Lstat(dir); err != nil || !info.IsDir() {
+		return nil
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return nil
+	}
+	var kept []fs.DirEntry
+	for _, ent := range entries {
+		if ent.Type().IsRegular() && strings.HasSuffix(ent.Name(), ".txt") {
+			kept = append(kept, ent)
+		}
+	}
+	sortRenders(kept)
+	return kept
+}
+
+// uiRenders lists the renders of the latest UI pass that ended well: the round
+// it ran in (0 when none did), each render's name and size, and how many files
+// past the limit were left out. The text is not kept; ReadRender reads it.
+func (e *Engine) uiRenders(rec runrec.Record) (round int, renders []runrec.Render, dropped int) {
+	for _, r := range rec.Roles {
+		if r.Role == RoleUI && r.Exit == string(ExitOK) {
+			round = r.Round
+		}
+	}
+	if round == 0 {
+		return 0, nil, 0
+	}
+	dir := rendersPath(e.run.Dir(), round)
+	for _, ent := range listRenders(dir) {
+		if len(renders) == maxRenders {
+			dropped++
+			continue
+		}
+		text, ok := readRender(dir, ent)
+		if !ok {
+			continue
+		}
+		renders = append(renders, runrec.Render{Name: ent.Name(), Size: len(text)})
+	}
+	return round, renders, dropped
+}
+
+// ErrNoRender is the error of ReadRender for a render that is not there.
+var ErrNoRender = errors.New("no such render")
+
+// ReadRender reads the text of one render of a run, by its name, as the card
+// listed it (the daemon's run.render, S121, *proposed*). The name must be a
+// regular .txt file of the round's renders directory; a link, a directory, a
+// path, or a file that is not there is ErrNoRender. The text is plain text of
+// at most 24 KiB.
+func ReadRender(runDir string, round int, name string) (string, error) {
+	dir := rendersPath(runDir, round)
+	for _, ent := range listRenders(dir) {
+		if ent.Name() != name {
+			continue
+		}
+		if text, ok := readRender(dir, ent); ok {
+			return text, nil
+		}
+		break
+	}
+	return "", ErrNoRender
+}
+
+// readRender reads one render file as plain text of bounded size.
+func readRender(dir string, ent fs.DirEntry) (string, bool) {
+	f, err := os.Open(filepath.Join(dir, ent.Name()))
+	if err != nil {
+		return "", false
+	}
+	defer f.Close()
+	// The listing said a regular file; the open must reach that same file,
+	// not a link put in its place since.
+	info, err := ent.Info()
+	opened, err2 := f.Stat()
+	if err != nil || err2 != nil || !opened.Mode().IsRegular() || !os.SameFile(info, opened) {
+		return "", false
+	}
+	b, err := io.ReadAll(io.LimitReader(f, maxRenderBytes+1))
+	if err != nil {
+		return "", false
+	}
+	text := runrec.PlainText(string(b))
+	if len(b) > maxRenderBytes {
+		text = runrec.PlainText(string(b[:maxRenderBytes]))
+		if i := strings.LastIndex(text, "\n"); i >= 0 {
+			text = text[:i]
+		}
+		text += "\n(cut: over 24 KiB)"
+	}
+	return text, true
+}
+
+// viewSizes is the order of a view's renders on the card.
+var viewSizes = []string{"80x24", "120x40", "ascii"}
+
+// renderParts splits "VIEW-SIZE.txt" into the view and the rank of its size;
+// ok is false for any other name.
+func renderParts(name string) (view string, rank int, ok bool) {
+	base := strings.TrimSuffix(name, ".txt")
+	for i, size := range viewSizes {
+		if v, found := strings.CutSuffix(base, "-"+size); found && v != "" {
+			return v, i, true
+		}
+	}
+	return "", 0, false
+}
+
+// sortRenders orders the renders as the card lists them: each view's
+// 80x24, 120x40 and ascii files, the views by name, then every other file by
+// name (docs/dashboard.md).
+func sortRenders(ents []fs.DirEntry) {
+	sort.SliceStable(ents, func(i, j int) bool {
+		vi, ri, oki := renderParts(ents[i].Name())
+		vj, rj, okj := renderParts(ents[j].Name())
+		switch {
+		case oki != okj:
+			return oki
+		case !oki:
+			return ents[i].Name() < ents[j].Name()
+		case vi != vj:
+			return vi < vj
+		}
+		return ri < rj
+	})
 }

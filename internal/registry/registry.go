@@ -81,6 +81,9 @@ type Project struct {
 	Budgets          Budgets                      `json:"budgets,omitzero"`
 	Permissions      map[string]Permission        `json:"permissions,omitempty"`
 	VendorEnv        map[string]map[string]string `json:"vendor_env,omitempty"`
+	// Push says ork pushes the base branch after it lands a slice (S119,
+	// *proposed*; adj 162). Off by default; the owner turns it on per project.
+	Push bool `json:"push,omitempty"`
 }
 
 // File is the content of projects.json.

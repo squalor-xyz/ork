@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 147,
+  "next_id": 148,
   "preamble": "",
   "passes": [
     {
@@ -524,7 +524,7 @@
       "id": "S119",
       "title": "Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up",
       "short_title": "Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S118"
@@ -536,6 +536,39 @@
           "text": "**2026-10-26** — Landing evidence 2026-10-26: after merging main, S118's and S116's new goldens failed because S110 had changed the sidebar; a rebaseline confined to the sidebar column fixed both. Landing in ork must treat a post-merge test failure like a conflict: send it to an implementer, then re-check.",
           "created_at": "2026-10-26T13:13:09Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "67cf935a-d27f-4c88-bb32-e66eaa702098",
+          "kind": "",
+          "text": "**2026-10-26** — Review FAIL: a retry after a pause between the base merge and a green re-check skips render and re-check and fast-forwards (land.go mergeBaseIn). Fix round sent to the implementer.",
+          "created_at": "2026-10-26T13:45:00Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "b87f8ae3-ee20-4921-a566-6d8e70c66a2a",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answers (2026-10-26, session a2bf7e0e, after gate round 1): (1) a on an Overview row asks a y/n confirm naming landing, cleanup and push before it approves. (2) A per-project landing mutex in the daemon: one landing per project at a time, the next queues. (3) Runs that ork landed leave Ready to land; their outcome shows in Recent. (4) At 80x24 the 'N later finding' lines drop before an owner finding's Recommended line. (5) The owner turns on push for ork after landing (docs/manual-steps.md).",
+          "created_at": "2026-10-26T14:13:06Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "046e5bf9-b1ca-458d-8409-e6eefad40fe4",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answers (session a2bf7e0e, 2026-10-26): the approve confirm matches cleanup, with the question on its own line ('Land S22 and remove its worktree and branch? [y/N] (Enter is No)') and an 80x24 golden. adj 98: the owner will supersede it themselves (launch, stop and Overview approve confirm; the card's a stays one key).",
+          "created_at": "2026-10-26T14:51:09Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -559,7 +592,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -648,13 +681,36 @@
       "id": "S121",
       "title": "UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card",
       "short_title": "UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S117",
         "S118"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "f566ba85-7348-4ada-b125-e503afb77d6d",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answers (2026-10-26, session a2bf7e0e, after gate round 1): (1) renders are fetched on demand: the card holds names and sizes; the TUI fetches the text through a new run.render IPC call; no render text in snapshots. (2) While a render shows, the Overview rows collapse so the render gets the pane. (3) Key label 'v view renders'.",
+          "created_at": "2026-10-26T14:11:51Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "3e897893-d060-46cc-bf08-6f4930cbdbee",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answer (session a2bf7e0e, 2026-10-26): set the render off with one dim rule line between the run header and the render.",
+          "created_at": "2026-10-26T14:34:29Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -672,7 +728,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -1643,6 +1699,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "71deb9e9-c0f7-414b-a24d-784f9e0b5c46",
+          "kind": "",
+          "text": "**2026-10-26** — 2026-10-26 joint release: pairs with slicer s387 (relay pin) and adjudicate S45 (adj-json pin); gate for the compatible set.",
+          "created_at": "2026-10-26T15:09:20Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -1656,11 +1723,11 @@
         "parent": "",
         "cites": [],
         "key": "boundary.contract-pin",
-        "pass": "v1.1",
+        "pass": "v1.0",
         "group": "",
         "reason": "",
-        "importance": 2,
-        "urgency": 1,
+        "importance": 3,
+        "urgency": 3,
         "effort": 2,
         "attempts": 0
       }
@@ -5350,6 +5417,34 @@
       "id": "S146",
       "title": "S106 later notes: compact fit-test, pane and cue edge cases, tokens line",
       "short_title": "S106 later notes",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S147",
+      "title": "S121 later notes: render pane robustness and wording",
+      "short_title": "S121 later notes",
       "status": "open",
       "has_slice": true,
       "depends_on": [],

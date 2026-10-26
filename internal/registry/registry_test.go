@@ -100,6 +100,9 @@ func TestRoundTripKeepsEveryField(t *testing.T) {
 	if p.VendorEnv["codex"]["VENDOR_CODEX_NETWORK"] != "1" {
 		t.Fatalf("vendor_env: %+v", p.VendorEnv)
 	}
+	if !p.Push {
+		t.Fatalf("push: the docs example sets it, the project has %v", p.Push)
+	}
 
 	if err := Save(out, f); err != nil {
 		t.Fatal(err)
@@ -113,6 +116,27 @@ func TestRoundTripKeepsEveryField(t *testing.T) {
 	}
 	if !bytes.HasSuffix(saved, []byte("\n")) {
 		t.Fatal("saved file does not end in a newline")
+	}
+}
+
+// The push setting is off unless the file turns it on, and ork writes it
+// only for a project that has it on (S119, adj 162).
+func TestPushIsOffByDefaultAndOnlyWrittenWhenOn(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "projects.json")
+	f := &File{Version: Version, Projects: []Project{{Name: "a", Path: "/p/a"}, {Name: "b", Path: "/p/b", Push: true}}}
+	if err := Save(path, f); err != nil {
+		t.Fatal(err)
+	}
+	saved, _ := os.ReadFile(path)
+	if strings.Count(string(saved), `"push"`) != 1 || !strings.Contains(string(saved), `"push": true`) {
+		t.Fatalf("push is written for a project that has it off, or not for one that has it on:\n%s", saved)
+	}
+	back, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if back.Projects[0].Push || !back.Projects[1].Push {
+		t.Fatalf("loaded push: %v %v", back.Projects[0].Push, back.Projects[1].Push)
 	}
 }
 

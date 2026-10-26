@@ -207,7 +207,9 @@ type EngineRun struct {
 	Activity       []int                 `json:"activity,omitempty"`         // proposed: current role stream events, ten 30 s buckets
 	Worktree       string                `json:"worktree,omitempty"`
 	Branch         string                `json:"branch,omitempty"`
-	Merged         *bool                 `json:"merged,omitempty"` // nil: unknown
+	Merged         *bool                 `json:"merged,omitempty"`         // nil: unknown
+	Landed         bool                  `json:"landed,omitempty"`         // proposed: ork landed the slice on the base branch (S119)
+	CleanupFailed  string                `json:"cleanup_failed,omitempty"` // proposed: why the cleanup after a landing failed (S119)
 	Roles          []EngineRole          `json:"roles,omitempty"`
 	ID             string                `json:"id"`
 	Item           string                `json:"item"`

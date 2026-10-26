@@ -60,6 +60,10 @@ func runDaemon(t *testing.T, runner roundRunner, routes ...clitest.Route) (*Daem
 		clitest.Route{Tool: "slicer", Args: []string{"relay-run", "end"}, Prefix: true, Stdout: `{}`},
 		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "rev-parse", "--git-path", "info/exclude"}, Stdout: filepath.Join(root, "exclude")},
 		clitest.Route{Tool: "git", Args: []string{"-C", filepath.Join(p.Path, ".worktrees", "S1"), "rev-parse", "HEAD"}, Stdout: "abc123\n"},
+		// The landing after an approval (S119) on a base branch that did not move.
+		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "symbolic-ref", "--short", "HEAD"}, Stdout: "main\n"},
+		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "merge-base", "--is-ancestor", "S1", "main"}, Exit: 1},
+		clitest.Route{Tool: "slicer", Args: []string{"land"}, Prefix: true, Stdout: `{}`},
 		clitest.Route{Tool: "git", Prefix: true},
 	}...)...)
 	lastFake = fake

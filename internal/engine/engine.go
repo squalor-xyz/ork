@@ -55,6 +55,7 @@ type Deps struct {
 	RandHex        func() string                                    // four hex digits for run ids; nil is random
 	HeartbeatEvery time.Duration                                    // 0 means heartbeatInterval
 	MaxRounds      int                                              // 0 means DefaultMaxRounds
+	Landings       *Landings                                        // one landing per project at a time; nil means one shared by the process
 }
 
 func (d Deps) now() time.Time {
@@ -310,6 +311,8 @@ func (e *Engine) advance(ctx context.Context) error {
 			err = e.commit(ctx)
 		case runrec.StateFinish:
 			err = e.finish(ctx)
+		case runrec.StateLand:
+			err = e.land(ctx)
 		default:
 			if resting(state) {
 				return nil
@@ -436,11 +439,12 @@ func (e *Engine) Stop(ctx context.Context, why string) error {
 // Two roles of one state run at the same time (the reviewer and the UI pass),
 // and both may ask to stop: the first stop is kept.
 func (e *Engine) stop(ctx context.Context, reason string) error {
-	already := false
+	already, ended := false, false
 	err := e.run.Update(func(r *runrec.Record) {
 		if already = r.State == runrec.StateStopped; already {
 			return
 		}
+		ended = r.Commit != nil // the finish step closed the ledger run with PASS
 		r.State = runrec.StateStopped
 		r.Reason = reason
 		r.Pending = nil
@@ -448,7 +452,9 @@ func (e *Engine) stop(ctx context.Context, reason string) error {
 	if err != nil || already {
 		return err
 	}
-	e.endRelay(ctx, "stopped", "fail")
+	if !ended {
+		e.endRelay(ctx, "stopped", "fail")
+	}
 	return nil
 }
 

@@ -207,7 +207,10 @@ ork (TUI)  ork status --json (CLI)
    waits as a queued run and starts, oldest first, as a slot frees.
 7. **Result.** Each item that reaches a passed gate waits for the owner's
    approval. This is checkpoint 2. Once approved, ork runs the finish step, then
-   commits (adj #81). An item that stops waits in "needs you", and the rest continue (`wave.failure`).
+   commits (adj #81), then lands the slice (`landing.in-ork`, adj #162; the
+   **land** state below). The approval is also the confirm of the cleanup
+   (`git.cleanup-key`, adj #152), and the approval card says so. An item that
+   stops waits in "needs you", and the rest continue (`wave.failure`).
 
 ## Slice state machine
 
@@ -225,10 +228,10 @@ setup -> implement -> checks --red--> implement (fix)
                       gate --FAIL--> implement (fix round)      [3rd FAIL -> stopped]
                         | PASS
                         v
-                awaiting-approval --approve--> finish -> commit -> committed
-                        | fix (owner's note)      | reject
-                        v                         v
-                implement (fix round) -> checks -> gate      stopped
+                awaiting-approval --approve--> finish -> commit -> land -> committed
+                        | fix (owner's note)      | reject        | blocked: one fix round,
+                        v                         v               v then back to implement
+                implement (fix round) -> checks -> gate      stopped  (a second block: stopped)
                         (back to awaiting-approval on PASS)
 ```
 
@@ -267,8 +270,12 @@ slice.
     ask to pause, the first pause is kept. A stop overrides a pause, because
     `pause()` refuses when the slice is paused or stopped and `stop()` refuses
     only when it is already stopped. After a pause, a retry runs again only the
-    role whose report does not stand. The renders of adj #165 are a later slice
-    (S121); this one is text only.
+    role whose report does not stand. Renders (*proposed*, S121; adj #165): the
+    UI pass writes each changed view as plain text files at 80x24, 120x40 and in
+    ASCII mode, in `tmp/ui-N/renders/` of the run directory, using the
+    project's own tooling. ork has no render code. When the gate passes, the
+    approval card keeps the files of the latest UI pass that ended well (see
+    Approval card).
 - **architect:** one read-only review with the fingerprint applied. The report
   needs only the shared `## Owner needed` section. The whole report goes to an
   implementer fix round, even when it has no findings; ork adds no parser
@@ -314,6 +321,45 @@ slice.
   (`git.commit`). The finish step precedes this commit (adj #81).
 - **Finish step:** run per the project's `implement_finish` setting (`done`
   or `handoff`), after PASS and owner approval, before the commit.
+- **land** (S119, adj #162 `landing.in-ork`, which supersedes `landing.v1`):
+  the step after the commit, all through git and slicer, each step logged in
+  `writes[]`. One landing per project runs at a time: the engines of a project
+  share a lock (`engine.Landings`), and the next landing waits, then reads the
+  base branch the first one moved. The base branch is the branch the main checkout is on. Each step
+  reads git first, so a retry after a pause continues where the landing
+  stopped.
+  1. If the base branch moved (its tip is not in the slice branch), `git -C W
+     merge -m "Merge BASE into BRANCH" BASE` in the worktree, then `slicer
+     render`, a commit of what render rewrote, and a re-run of the project
+     check command and `slicer check`. With no move, none of this runs. The
+     run record's `land_recheck` is set before the merge and cleared by a
+     green re-check (or by the hand-off to the fix round). A retry with it set
+     merges the base if it is not in yet (a crash between marker and merge),
+     then renders and re-checks, and never fast-forwards a tree that was not
+     checked.
+  2. `git -C P merge --ff-only BRANCH` in the main checkout. A failure (for
+     example an untracked file in the way) pauses the slice with the git
+     message; `t` retries.
+  3. `slicer land ID --branch BRANCH --note "Landed BRANCH"` in the main
+     checkout (it needs the branch merged, so it follows the fast-forward). In
+     `handoff` mode it marks the item done there, and ork commits the `.slicer`
+     change as `ID done` (`git commit -- .slicer`, so files the owner staged
+     stay out of it); in `done` mode there is nothing to commit.
+  4. `git -C P push` when the project's `push` setting is on (off by default;
+     ork never sets it). A failed push pauses the slice; the branch is on the
+     base branch already, and a retry pushes again.
+  5. Cleanup, as the owner's approval confirmed it: `git -C P worktree remove
+     W`, then `git -C P branch -d BRANCH`. Never `--force` or `-D`. A cleanup
+     that fails leaves the run `committed` with the reason; the merged-branch
+     cleanup key (`git.cleanup-key`) then works as before.
+  A merge conflict, or a red re-check after the merge (for example goldens that
+  another slice changed on the base branch), is not fixed by ork and is not
+  aborted by ork. The slice goes to one implementer fix round
+  (`feedback.kind` `land`) with the conflict or the red output as the brief,
+  then the checks, the gate and a new approval. `land_fixes` counts it. If the
+  second landing is blocked the same way, the slice stops with `land blocked:
+  merge conflict` or `land blocked: checks red after merging BASE`, in Needs
+  you, with the worktree and the branch kept.
 
 ### Engine (S04)
 
@@ -474,6 +520,18 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   between, and returns to `awaiting-approval` on PASS. A gate FAIL goes back to
   the implementer as usual. It counts as an implementer round, so it is
   refused (not stopped) at the round limit.
+  The card also holds the UI pass's renders (*proposed*, S121): of the latest
+  UI pass that ended well, the `.txt` files of its `tmp/ui-N/renders/`
+  directory, each view's 80x24, 120x40 and ascii file in that order, the views
+  by name, then other files by name. ork keeps only regular files (neither a
+  linked file nor a linked directory is followed, and a file must be the one
+  the listing named), at most 24 of them and 24 KiB of each, as plain text
+  (escape sequences and other control characters dropped, so none can reach the
+  owner's terminal). The card lists each render by name and size and holds no
+  text; the text is read on demand (`run.render`, wire section). The
+  directory is cleared when the UI pass starts, so a rerun keeps no file of an
+  earlier attempt. After an owner fix round the card is built again with the
+  same renders; its `ui_round` says which round they come from.
 - **Commit and finish.** On `Approve`, the implementer is resumed for the
   finish step first: the closing note, then `slicer done` or `slicer handoff`
   per `slicer config implement_finish`. Then ork commits in the worktree with
@@ -536,7 +594,7 @@ ork adds:
   vendor and model where the vendor supports it. Otherwise it starts fresh with the
   earlier reports in the brief (`role.resume`).
 - **UI pass.** A read-only role with its own prompt (`ui.md`: 80x24, ASCII and
-  monospace, clipping, key hints), the same for every vendor. It runs beside
+  monospace, clipping, key hints, and the renders it writes), the same for every vendor. It runs beside
   the reviewer on a slice that touches the UI (see the review state). Its
   lineup row is the matrix row that the rule naming "UI pass row (rNN)" gives
   (u10 today). Until slicer has a `ui` role (slicer s392), that row's role is
@@ -800,7 +858,7 @@ ork status [--project P]    waves, slices, roles, needs-you
 ork wave suggest P          slicer's suggested waves, in order, with reasons
 ork wave start P ITEM...    check the specs, then launch (asks unless --yes)
 ork run P ID                show a plan and launch one slice (S17)
-ork approve RUN             finish a passed slice, then commit
+ork approve RUN             finish a passed slice, commit and land it
 ork answer RUN TEXT         answer an owner question
 ork dismiss RUN             clear a stopped run from Needs you
 ork retry RUN               retry a paused role or step
@@ -866,7 +924,7 @@ engine runs only the first entry until S49. The gate uses the reviewer's
 lineup. The daemon refuses to start if the plan changed during confirmation. It starts one engine run
 in the background; CLI disconnection does not cancel it. The daemon owns
 the run store and reconciles stored runs before accepting clients.
-`approve` runs the finish step, then commits once (adj #81); `answer`
+`approve` runs the finish step, then commits once (adj #81), then lands it (land state, adj #162); `answer`
 resumes a paused role that asked a question. `retry` calls `Engine.Retry`
 to rerun the role or step of a `shape`, `error`, `lost` or `interrupted`
 pause (adj #101). A question needs `answer` or `stop`. An `answer` on a
@@ -899,6 +957,16 @@ again; `run.check` takes `{run,check,state}` (the one-based human check;
 run rows of a run that awaits approval carry `card` (`state.md`). There is no
 `ork` command for fix or check yet; `ork approve` on a run with human checks
 fails until they are marked in the TUI.
+*Proposed (S121):* `run.render` takes `{run,name}` and returns `{name,text}`:
+the plain text of one render of the run's card, read from
+`tmp/ui-<ui_round>/renders/NAME` in the run directory. It reads the stored
+record and the file, so it works while a role runs and on a finished run. The
+name must be one the run's card lists; the file must be a regular `.txt` file of
+that directory (a link, a path or a directory is refused), and the text is
+plain text of at most 24 KiB. A run without a card, an unknown run, a name the
+card does not list and a file that is not there are all `not_found`. The TUI
+calls it when the owner opens the renders and again for each render it moves
+to; no snapshot carries render text.
 *Proposed:* `run.file` takes `{run,finding}` (the one-based `findings[]` entry)
 and returns the run record with a `message` (`filed as ID`) once ork has run
 `slicer add` and `slicer promote` for that later finding (adj #163). It does

@@ -170,6 +170,19 @@ func (c Client) Note(ctx context.Context, w runrec.Writer, root, id, text string
 	return err
 }
 
+// Render runs `slicer render --json --root ROOT`.
+func (c Client) Render(ctx context.Context, w runrec.Writer, root string) error {
+	_, err := c.write(ctx, w, root, "render", "--json")
+	return err
+}
+
+// Land runs `slicer land ID --branch BRANCH --note NOTE --json --root ROOT`.
+// ROOT is the checkout that has merged the branch (docs/landing.md of slicer).
+func (c Client) Land(ctx context.Context, w runrec.Writer, root, id, branch, note string) error {
+	_, err := c.write(ctx, w, root, "land", id, "--branch", branch, "--note", note, "--json")
+	return err
+}
+
 // Rule is one rule of the relay roles matrix.
 type Rule struct {
 	ID   string `json:"id"`

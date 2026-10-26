@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -32,9 +33,10 @@ const (
 	MethodRunStop    = "run.stop"
 	MethodRunAnswer  = "run.answer"
 	MethodRunRetry   = "run.retry"
-	MethodRunFile    = "run.file"  // proposed: file a later finding as a slice (adj 163)
-	MethodRunFix     = "run.fix"   // proposed: send the owner's note to a fix round (S118)
-	MethodRunCheck   = "run.check" // proposed: tick a human check or mark it later (S118)
+	MethodRunFile    = "run.file"   // proposed: file a later finding as a slice (adj 163)
+	MethodRunFix     = "run.fix"    // proposed: send the owner's note to a fix round (S118)
+	MethodRunCheck   = "run.check"  // proposed: tick a human check or mark it later (S118)
+	MethodRunRender  = "run.render" // proposed: the text of one UI pass render of a run (S121)
 )
 
 // defaultGlobalCap is the global cap when the registry sets none (adj 20).
@@ -57,6 +59,7 @@ type RunAction struct {
 	Check   int    `json:"check,omitempty"`   // run.check: the one-based human check
 	State   string `json:"state,omitempty"`   // run.check: "ticked", "later" or "" to reopen
 	Finding int    `json:"finding,omitempty"` // run.file: the one-based finding to file
+	Name    string `json:"name,omitempty"`    // run.render: the render's file name, as the card lists it
 	Adj     bool   `json:"adj,omitempty"`
 	By      string `json:"by,omitempty"`
 	Run     string `json:"run"`
@@ -996,6 +999,9 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 	if method == MethodRunFile {
 		return d.fileFinding(ctx, p)
 	}
+	if method == MethodRunRender {
+		return d.runRender(p)
+	}
 	return d.ownerRun(ctx, method, p)
 }
 
@@ -1152,7 +1158,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		if rec.State == runrec.StateAwaitingApproval {
 			card = rec.Card
 		}
-		runs = append(runs, EngineRun{Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
+		runs = append(runs, EngineRun{Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), CleanupFailed: cleanupFailed(rec), State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
 	}
 	// Dismissed records still supersede older stopped runs of the same slice.
 	visible := runs[:0]
@@ -1176,4 +1182,43 @@ func roleDenials(role runrec.RoleRecord) []string {
 		texts = append(texts, d.Text())
 	}
 	return texts
+}
+
+// cleanupFailed is the reason a landed run's cleanup failed: a run that
+// landed and is committed keeps the reason in its record (S119).
+func cleanupFailed(rec runrec.Record) string {
+	if rec.LandedAt.IsZero() || rec.State != runrec.StateCommitted {
+		return ""
+	}
+	return rec.Reason
+}
+
+// RenderReply is the answer of run.render: the render's name and its text,
+// plain text of at most 24 KiB.
+type RenderReply struct {
+	Name string `json:"name"`
+	Text string `json:"text"`
+}
+
+// runRender reads one render of a run (run.render, S121, *proposed*). The
+// render must be one the run's card lists, and the engine's ReadRender applies
+// its guards to the file: a regular .txt file of the UI pass's renders
+// directory, not a link, as plain text of at most 24 KiB. Any run, name or file
+// that fails is not_found. It does not wait for the run: it reads the stored
+// record and the file.
+func (d *Daemon) runRender(p RunAction) (RenderReply, error) {
+	run, err := d.runs.deps.Store.Open(p.Run)
+	if err != nil {
+		return RenderReply{}, &ipc.Error{Code: CodeNotFound, Message: "no run " + p.Run}
+	}
+	missing := &ipc.Error{Code: CodeNotFound, Message: "no render " + p.Name + " for run " + p.Run}
+	card := run.Snapshot().Card
+	if card == nil || card.UIRound == 0 || !slices.ContainsFunc(card.Renders, func(r runrec.Render) bool { return r.Name == p.Name }) {
+		return RenderReply{}, missing
+	}
+	text, err := engine.ReadRender(d.runs.deps.Store.RunDir(p.Run), card.UIRound, p.Name)
+	if err != nil {
+		return RenderReply{}, missing
+	}
+	return RenderReply{Name: p.Name, Text: text}, nil
 }
