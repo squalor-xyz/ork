@@ -1613,3 +1613,5 @@
 {"when": "2026-10-26T04:45:07Z", "item": "S134", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-10-26T04:45:07Z", "item": "S134", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-26T04:45:07Z", "item": "S134", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-26T04:51:09Z", "item": "S109", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-26T05:03:58Z", "item": "S109", "action": "status", "from": "started", "to": "done", "note": "Run pane re-points to the newest running run of its project when its own run is stopped, superseded, committed or ended, with a fading 'now showing' notice; the cache reads Runs every 1 s for a visible project with a live run. Full suite with -race, vet, gofmt, slicer check and adj lint pass; the human check of a real relay finishing is not run.", "by": "Jon R"}

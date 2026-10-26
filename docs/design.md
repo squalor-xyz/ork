@@ -124,7 +124,11 @@ ork (TUI)  ork status --json (CLI)
   decided records every 5 min, on a git HEAD change, when a project is opened
   and on `refresh`. A git HEAD change is `git -C PATH rev-parse HEAD` and
   nothing else, read on the same 5 s / 30 s tick as items, deps, runs and open
-  records. Each read is one CLI call. A read that is already running is
+  records. The runs part is read every 1 s instead while the project is
+  visible and its last good read holds a run that is not stale (*proposed*,
+  S109); when that read shows no such run it returns to 5 s, and a project that
+  is not visible stays at 30 s. Only the runs part speeds up; a change in it
+  reaches the clients through the usual notice. Each read is one CLI call. A read that is already running is
   shared, and at most 4 CLI processes run at once across all projects. A
   read that comes due, or that a HEAD change asks for, while another runs for
   its part starts when that one ends, so a part never has two reads at once. A

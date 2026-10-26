@@ -161,6 +161,8 @@ connection stays open when focus changes. Failed notice feeds retry on the
 next timer tick, including when a focused project was removed. Notices that
 arrive during a fetch queue a further read. On "Needs you" the daemon focuses
 all registered projects; on a project row it focuses that one (`dash.refresh`).
+While a visible project has a live run, the daemon reads its runs every 1 s
+(*proposed*, S109) and the TUI refetches on the notice; see `docs/design.md`.
 The local fallback schedule reads the selected project's items every 5 s and
 other projects every 30 s. On "Needs you", all projects poll every 30 s. Goals
 and decided records refresh every 5 min or on HEAD changes and manual refresh. `NO_COLOR` selects the monochrome theme.
@@ -331,6 +333,21 @@ area stays visible. `esc` closes the pane (`ui.answer-ui`,
 read-only tree pane with no action keys or answer input. Its header says
 "started elsewhere". Its footer says
 "started elsewhere, read-only; esc close pane".
+
+The pane follows the newest running run (*proposed*, S109). When the pane's
+run is over (an engine run that is stopped, superseded or committed, or a
+ledger run that has ended), the next snapshot points the pane at the newest
+running run of the same project: an engine run in the Running section, or an
+active ledger run that no engine run links to and that is not stale. The new
+pane starts at the top, with no answer or filing state, and a line under the
+header says why, cause first, for example `S27 committed; now showing S28`.
+An ended ledger run reads `passed`, `failed` or `stopped`, as in Recent. The
+line is dim (faint under `NO_COLOR`) and fades on the first snapshot 5 s or
+more after the switch. Only a pane opened on the Overview follows; the
+Questions tab's pane stays on its run. Paused and awaiting-approval runs stay
+in the pane, because they wait for the owner. The pane also stays put while its answer field holds text or a confirmation is
+open, and when nothing else is running it stays on the ended run with its
+final state. A run of another project never takes the pane.
 
 The actions follow the state (`ui.answer-pane-scope`):
 

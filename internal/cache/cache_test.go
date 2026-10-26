@@ -890,3 +890,88 @@ func TestDepsRefreshesAtTheItemsInterval(t *testing.T) {
 	clock.Advance(5 * time.Second)
 	waitRead(t, c, f, "alpha", source.Part("deps"), 2)
 }
+
+func TestLedgerRefreshIsOneSecondForTheVisibleProjectWhileARunIsLive(t *testing.T) {
+	f := newFetcher()
+	var mu sync.Mutex
+	live := true
+	f.setAnswer(func(p registry.Project, part source.Part) (any, error) {
+		mu.Lock()
+		defer mu.Unlock()
+		if part == source.Runs && live {
+			return []slicercli.RelayRun{{ID: "run-1", State: "running"}}, nil
+		}
+		return defaultAnswer(p, part)
+	})
+	setLive := func(v bool) {
+		mu.Lock()
+		defer mu.Unlock()
+		live = v
+	}
+	clock := &fakeClock{}
+	c := newCache(t, f, clock, nil)
+	readAll(t, c, alpha)
+	readAll(t, c, beta)
+	c.SetVisible([]string{"alpha"})
+	waitFor(t, "alpha goals read again on tab open", func() bool { return f.count("alpha", source.Goals) == 2 })
+
+	// A visible project with a live run: the Runs part is read every second.
+	clock.Advance(time.Second)
+	waitRead(t, c, f, "alpha", source.Runs, 2)
+	clock.Advance(time.Second)
+	waitRead(t, c, f, "alpha", source.Runs, 3)
+	if n := f.count("alpha", source.Items); n != 1 {
+		t.Fatalf("items read at 2 s: %d reads, want 1 (only the Runs part speeds up)", n)
+	}
+	if n := f.count("beta", source.Runs); n != 1 {
+		t.Fatalf("hidden project's runs read at 2 s: %d reads, want 1", n)
+	}
+
+	// The run ends: that read still came at 1 s, and the next waits 5 s.
+	setLive(false)
+	clock.Advance(time.Second)
+	waitRead(t, c, f, "alpha", source.Runs, 4)
+	clock.Advance(4 * time.Second)
+	settle()
+	if n := f.count("alpha", source.Runs); n != 4 {
+		t.Fatalf("runs read %d times 4 s after the last run ended, want 4 (back to 5 s)", n)
+	}
+	clock.Advance(time.Second)
+	waitRead(t, c, f, "alpha", source.Runs, 5)
+
+	// A run begins: the read that sees it moves the next one to 1 s.
+	setLive(true)
+	clock.Advance(5 * time.Second)
+	waitRead(t, c, f, "alpha", source.Runs, 6)
+	clock.Advance(time.Second)
+	waitRead(t, c, f, "alpha", source.Runs, 7)
+
+	// The owner leaves the project: back to 30 s.
+	c.SetVisible(nil)
+	clock.Advance(20 * time.Second)
+	settle()
+	if n := f.count("alpha", source.Runs); n != 7 {
+		t.Fatalf("hidden project's runs read %d times at 20 s, want 7 (30 s)", n)
+	}
+	clock.Advance(10 * time.Second)
+	waitRead(t, c, f, "alpha", source.Runs, 8)
+}
+
+func TestLedgerRefreshIgnoresStaleRuns(t *testing.T) {
+	f := newFetcher()
+	f.setAnswer(func(p registry.Project, part source.Part) (any, error) {
+		if part == source.Runs {
+			return []slicercli.RelayRun{{ID: "run-1", State: "stale"}}, nil
+		}
+		return defaultAnswer(p, part)
+	})
+	clock := &fakeClock{}
+	c := newCache(t, f, clock, nil)
+	readAll(t, c, alpha)
+	c.SetVisible([]string{"alpha"})
+	clock.Advance(time.Second)
+	settle()
+	if n := f.count("alpha", source.Runs); n != 1 {
+		t.Fatalf("runs read %d times at 1 s with only a stale run, want 1", n)
+	}
+}

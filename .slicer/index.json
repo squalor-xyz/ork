@@ -401,7 +401,7 @@
       "id": "S109",
       "title": "Run pane follows the newest running run, with a 1 s ledger refresh while a run is visible",
       "short_title": "Run pane follows the newest running run, with a 1 s ledger refresh while a run is visible",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -422,7 +422,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

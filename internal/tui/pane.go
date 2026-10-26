@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"charm.land/bubbles/v2/key"
 	tea "charm.land/bubbletea/v2"
@@ -14,6 +15,11 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
+
+// noticeFor is how long a switch notice stays: it fades on the first snapshot
+// that arrives this long after the switch (proposed). The ledger refresh sends
+// a snapshot every second, so the next one would be too soon to read it.
+const noticeFor = 5 * time.Second
 
 // runPane keeps its run target while snapshots reorder Overview rows.
 type runPane struct {
@@ -25,6 +31,8 @@ type runPane struct {
 	ledger                    bool
 	input                     textField
 	offset                    int
+	notice                    string    // proposed: why the pane moved to this run
+	noticeAt                  time.Time // when it moved
 }
 
 func (m *Model) openPane(r ovRow) tea.Cmd {
@@ -58,6 +66,109 @@ func (m *Model) paneRow() (ovRow, string, bool) {
 		}
 	}
 	return ovRow{}, "", false
+}
+
+// paneEnded describes the pane's run when it is terminal: an engine run that
+// is stopped (or superseded) or committed, or a ledger run that has ended.
+// An engine run missing from the snapshot, or a stale ledger run, is not.
+func (m *Model) paneEnded() (string, bool) {
+	p := m.byName[m.pane.project]
+	if p == nil {
+		return "", false
+	}
+	if m.pane.ledger {
+		for _, r := range boardLedgers(p.snap) {
+			if r.ID == m.pane.run && r.State == "ended" {
+				// The words of the Recent rows: pass, fail, and stopped for the rest.
+				word := "stopped"
+				switch r.Outcome {
+				case "pass":
+					word = "passed"
+				case "fail":
+					word = "failed"
+				}
+				return strings.Join(r.Items, ", ") + " " + word, true
+			}
+		}
+		return "", false
+	}
+	for _, r := range p.snap.EngineRuns {
+		if r.ID != m.pane.run || r.Unavailable {
+			continue
+		}
+		switch {
+		case r.Superseded(p.snap.EngineRuns):
+			return r.Item + " superseded", true
+		case r.State == runrec.StateStopped || r.State == runrec.StateCommitted:
+			return r.Item + " " + r.State, true
+		}
+	}
+	return "", false
+}
+
+// newestRunning is the newest run the project is running: an engine run in
+// the Running section, or an active ledger run that no engine run links to
+// (a relay started elsewhere; the logic of ps.running). A stale ledger run is
+// not running.
+func newestRunning(s source.Snapshot) (ovRow, string, bool) {
+	var best ovRow
+	var item string
+	var bestAt time.Time
+	found := false
+	consider := func(row ovRow, label string, at time.Time) {
+		if !found || at.After(bestAt) {
+			best, item, bestAt, found = row, label, at, true
+		}
+	}
+	linked := map[string]bool{}
+	for _, r := range s.EngineRuns {
+		if r.RelayRun != "" {
+			linked[r.RelayRun] = true
+		}
+	}
+	for _, r := range s.EngineRuns {
+		if r.Section(s.EngineRuns) == source.SectionRunning {
+			consider(ovRow{engineID: r.ID, name: s.Project.Name}, r.Item, r.CreatedAt)
+		}
+	}
+	if s.Runs.Err == nil {
+		for _, r := range s.Runs.Value {
+			if linked[r.ID] || r.State == "stale" {
+				continue
+			}
+			at, _ := time.Parse(time.RFC3339Nano, r.BeganAt)
+			consider(ovRow{ledgerID: r.ID, name: s.Project.Name}, strings.Join(r.Items, ", "), at)
+		}
+	}
+	return best, item, found
+}
+
+// followNewestRun points the pane at the newest running run of its project
+// once the pane's run is over (proposed). It acts only on the Overview. It
+// never moves a pane whose answer field has text or that has a confirmation
+// open, and it stays on the ended run when nothing else is running.
+func (m *Model) followNewestRun(project string) {
+	pane := m.pane
+	if pane == nil || pane.project != project || m.view != 0 {
+		return // only the Overview pane follows
+	}
+	now := m.cfg.Now()
+	if pane.notice != "" && !now.Before(pane.noticeAt.Add(noticeFor)) {
+		pane.notice = ""
+	}
+	if pane.input.Value() != "" || m.confirm != nil {
+		return
+	}
+	ended, ok := m.paneEnded()
+	if !ok {
+		return
+	}
+	next, item, ok := newestRunning(m.byName[project].snap)
+	if !ok {
+		return
+	}
+	m.openPane(next)
+	m.pane.notice, m.pane.noticeAt = ended+"; now showing "+item, now
 }
 
 func (m *Model) actionRow() (ovRow, bool) {
@@ -164,6 +275,11 @@ func (m *Model) paneLines(w, h int, status string) []string {
 			header[i] = m.cfg.Theme.Dim.Render(header[i])
 		} else {
 			header[i] = m.cfg.Theme.Heading.Render(header[i])
+		}
+	}
+	if m.pane.notice != "" {
+		for _, line := range wrapText(m.pane.notice, width) {
+			header = append(header, m.cfg.Theme.Dim.Render(line))
 		}
 	}
 	footer := []string{}

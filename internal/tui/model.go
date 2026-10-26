@@ -733,6 +733,7 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 	ps.snap = msg.snap
 	if m.pane != nil && m.pane.project == msg.name {
 		m.refreshAnswerStatus()
+		m.followNewestRun(msg.name)
 	}
 	m.selectJumpRun()
 	var cmds []tea.Cmd
