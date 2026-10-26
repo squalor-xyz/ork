@@ -148,6 +148,9 @@ being refreshed.
 Selection uses reverse and `>`, including under `NO_COLOR`. Projects with
 needs come first, then running projects, then the rest; registry order breaks
 ties. Selection follows the project.
+The first nine project rows show their number, dimmed, in the margin where the
+selection arrow stands; the selected row shows the arrow instead. "Needs you"
+shows a dimmed `0` there. The Running entry has no number.
 A project with no `.slicer/` folder shows `no slicer`, dimmed, in place of its
 count. It has no Overview rows and adds nothing to any count or to the bell.
 When it is selected, its detail line says to run `slicer init`
@@ -162,7 +165,9 @@ through "Running", "Needs you" and the sorted projects
 they belong to the view's own tabs and fields (the Open and Decided tabs on
 Decisions, the lineup, and text fields such as an answer). Outside those they
 do nothing.
-`1`-`9` select projects in registry order. `tab` and
+`1`-`9` select the first nine projects in the order the sidebar draws them,
+and the sidebar shows those numbers dimmed. `0` selects "Needs you"; the
+Running entry has no number. A number with no project does nothing. `tab` and
 `shift+tab` switch views in the order of the view bar (`ui.views`,
 `ui.view-list`). All five views are available: Overview, Questions, Waves,
 Roadmap and Decisions. `/` filters project names without regard to
@@ -172,7 +177,20 @@ selected project, or all projects on "Needs you". `?` shows keys and `q` quits.
 
 The Overview has a row cursor (`ui.overview-cursor`). `down`/`j` and `up`/`k`
 move it to the next and previous row. It goes through
-"Needs you", Running and Ready, and it stops at the first and last row. `n` and
+"Needs you", Running and Ready, and it stops at the first and last row.
+`g`/`home` and `G`/`end` move the cursor to the first and last row.
+`pgdown`/`pgup` move it by the number of rows the body draws on screen, so
+section headings, blank lines, multi-line rows and the detail are not counted
+as rows. `}` and `{` move it to
+the first row of the next group and of the current or previous group. The
+groups are the Needs you groups (Decisions, Held, Stopped, Paused, Approve and
+Errors), then Running, Recent and Ready to land. The Roadmap, Questions,
+Decisions and Waves cursors take the first, last and page keys; only the
+Overview has the group keys. With a pane open, no row key moves the cursor;
+`pgdown` and `pgup` scroll a run, decision or Waves item pane. Keys that type into a
+field keep their text: `g`, `G`, `0`, `{` and `}` typed into the filter or an
+answer go into it, and digits still pick options in an owner question and mark
+checks on the approval card. `n` and
 `p` do not move rows; `n` is No in a confirmation. The row
 under the cursor is drawn reversed across the pane width. A rule separates
 the rows from its detail. Decisions show status, a nonzero option count and

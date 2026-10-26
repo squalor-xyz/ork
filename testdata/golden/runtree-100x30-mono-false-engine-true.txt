@@ -1,7 +1,7 @@
 [1mork[m  ?help                 │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
   Running                1 │[90m────────────────────────────────────────────────────────────────────────[m
 [1;7;97;44m> Needs you              0 [m│[1;36mNeeds you 0[m
-  ork                     *│  [90mnothing needs you[m
+[90m1[m ork                     *│  [90mnothing needs you[m
                            │
                            │[1;36mRunning 1[m
                            │[1;7;97;44m   ork  engine  S55  implement  [##~~!!]  heard 1m                      [m

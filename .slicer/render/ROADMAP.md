@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-149 items · — 55 · done 89 · retired 5
+149 items · — 54 · done 90 · retired 5
 
 ## v1.1
 
@@ -98,7 +98,7 @@
 | 41 | [S73](slices/S73.md) | Allowlist --root-first calls | S | 1 |  |  | — |
 | 42 | [S75](slices/S75.md) | Run directory modes | S | 1 |  | discovered from S51 | — |
 | 43 | [S71](slices/S71.md) | Doctor checks each project's check command and patterns (docs/design.md:613-614) | S | 1 |  |  | — |
-| 44 | [S85](slices/S85.md) | Navigation keys | M | 2 |  |  | — |
+| 44 | [S85](slices/S85.md) | Navigation keys | M | 2 |  |  | done |
 | 45 | [S86](slices/S86.md) | Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default | S | 1 |  | discovered from S83 | — |
 | 46 | [S94](slices/S94.md) | Plan views and lineup edit cover the architect | S | 2 |  | discovered from S08 | — |
 | 47 | [S98](slices/S98.md) | Welcome polish: notice projects added elsewhere, tilde paths, status line and wording | S | 1 |  | discovered from S96 | — |

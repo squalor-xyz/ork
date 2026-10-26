@@ -29,12 +29,17 @@ type keyMap struct {
 	Jump       key.Binding
 	RowNext    key.Binding
 	RowPrev    key.Binding
+	First      key.Binding
+	Last       key.Binding
+	PageDown   key.Binding
+	PageUp     key.Binding
+	NextGroup  key.Binding
+	PrevGroup  key.Binding
 	Select     key.Binding
 	Answer     key.Binding
 	PickOption key.Binding
 	FreeAnswer key.Binding
 	FileAdj    key.Binding
-	PaneScroll key.Binding
 	Refresh    key.Binding
 	Help       key.Binding
 	Close      key.Binding
@@ -67,15 +72,20 @@ func newKeyMap() keyMap {
 		TabPrev:    key.NewBinding(key.WithKeys("left"), key.WithHelp("left", "previous tab (Decisions)")),
 		NextView:   key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "next view")),
 		PrevView:   key.NewBinding(key.WithKeys("shift+tab"), key.WithHelp("shift+tab", "previous view")),
-		Jump:       key.NewBinding(key.WithKeys("1", "2", "3", "4", "5", "6", "7", "8", "9"), key.WithHelp("1-9", "jump to project")),
-		RowNext:    key.NewBinding(key.WithKeys("down", "j"), key.WithHelp("down/j", "next row")),
+		Jump:       key.NewBinding(key.WithKeys("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), key.WithHelp("1-9", "jump to project; 0 Needs you")),
+		RowNext:    key.NewBinding(key.WithKeys("down", "j"), key.WithHelp("j/k", "down/up row; g/G home/end first/last")),
 		RowPrev:    key.NewBinding(key.WithKeys("up", "k"), key.WithHelp("up/k", "previous row")),
+		First:      key.NewBinding(key.WithKeys("g", "home"), key.WithHelp("g/home", "first row")),
+		Last:       key.NewBinding(key.WithKeys("G", "shift+g", "end"), key.WithHelp("G/end", "last row")),
+		PageDown:   key.NewBinding(key.WithKeys("pgdown"), key.WithHelp("pgdown/pgup", "page rows or scroll a pane")),
+		PageUp:     key.NewBinding(key.WithKeys("pgup"), key.WithHelp("pgup", "page up")),
+		NextGroup:  key.NewBinding(key.WithKeys("}"), key.WithHelp("}/{", "next/previous group (Overview)")),
+		PrevGroup:  key.NewBinding(key.WithKeys("{"), key.WithHelp("{", "previous group")),
 		Select:     key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "open run, question, item or decision; other rows select project")),
 		FileAdj:    key.NewBinding(key.WithKeys("ctrl+a"), key.WithHelp("ctrl+a (answer)", "toggle filing the answer in adj")),
 		PickOption: key.NewBinding(key.WithKeys("1", "2", "3", "4"), key.WithHelp("1-4 (question)", "pick an option; y sends")),
 		FreeAnswer: key.NewBinding(key.WithKeys("t"), key.WithHelp("t (question)", "type a free answer")),
 		Answer:     key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter (answer)", "submit free text")),
-		PaneScroll: key.NewBinding(key.WithKeys("pgup", "pgdown"), key.WithHelp("pgup/pgdown", "scroll run tree and reason or decision")),
 		Refresh:    key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "refresh now")),
 		Help:       key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "show or hide this help")),
 		Close:      key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "close run, question, item, decision, help or message")),
@@ -88,5 +98,5 @@ func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Refresh, k.He
 
 // FullHelp implements help.KeyMap.
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.RowPrev, k.Select}, {k.Filter, k.Sidebar, k.Add}, {k.Tick, k.EditLineup, k.Launch}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.FileSlice, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.PaneScroll, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
+	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add}, {k.Tick, k.EditLineup, k.Launch}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.FileSlice, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
 }

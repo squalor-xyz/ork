@@ -464,7 +464,7 @@ func TestDecisionsFixHelpIsReadOnlyAndContextual(t *testing.T) {
 		t.Error("Decisions help advertises approve or Add")
 	}
 	footer := "On Decisions, left/right switch tabs; [ and ] switch projects."
-	if !strings.Contains(help, footer) || !strings.Contains(help, "1-9 jump to project\n") {
+	if !strings.Contains(help, footer) || !strings.Contains(help, "1-9 jump to project; 0 Needs you\n") {
 		t.Error("missing Decisions footer or plain project hint")
 	}
 	h.m.view = 0

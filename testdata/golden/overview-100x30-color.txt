@@ -1,10 +1,10 @@
 [1mork[m [90mdev[m  ?help             │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
   Running                1 │[90m────────────────────────────────────────────────────────────────────────[m
 [1;7;97;44m> Needs you              6 [m│[1;36mNeeds you 6[m
-  slicer                 3*│  [1mDecisions 3[m
-  adjudicate             1 │[1;7;97;44m  ?  slicer      #11  ui.slicer-tui           Does ork reimplement sl...[m
-  DataBall                 │  [1;33m?[m  slicer      #51  vendor.codex-ratelimit  Does codex count as rat...
-  agents                   │  [1;33m?[m  adjudicate  #3   output.shape            Which JSON shape does i...
+[90m1[m slicer                 3*│  [1mDecisions 3[m
+[90m2[m adjudicate             1 │[1;7;97;44m  ?  slicer      #11  ui.slicer-tui           Does ork reimplement sl...[m
+[90m3[m DataBall                 │  [1;33m?[m  slicer      #51  vendor.codex-ratelimit  Does codex count as rat...
+[90m4[m agents                   │  [1;33m?[m  adjudicate  #3   output.shape            Which JSON shape does i...
                            │  [1mHeld 1[m
                            │  [1;35m#[m  slicer      S12  Roadmap and Decisions screens, read-only
                            │  [1mErrors 2[m

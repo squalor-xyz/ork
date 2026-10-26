@@ -973,7 +973,7 @@
       "id": "S85",
       "title": "Keys: 1-9 follow the sidebar with numbers shown, 0 selects Needs you, first/last, page and group jumps",
       "short_title": "Navigation keys",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S105"
@@ -985,6 +985,17 @@
           "text": "**2026-10-22** — Filed from the 2026-10-22 UI review pass (rule u10). Held until adj 149 (ui.overview-layout) is decided.",
           "created_at": "2026-10-22T13:12:03Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "609e2e45-6d0f-4e78-bf96-8f4de24e9022",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answers (session a2bf7e0e, 2026-10-26): (1) { and } stop at every section (Needs you groups, Running, Recent, Ready), as built; (2) the selected sidebar row keeps the > arrow; (3) Needs you shows a dimmed 0, and dashboard.md says so; (4) pgup and pgdown page by the rows actually drawn, not h-6.",
+          "created_at": "2026-10-26T16:00:21Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -1008,7 +1019,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

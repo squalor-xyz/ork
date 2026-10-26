@@ -1,8 +1,8 @@
 [1mork[m  ?help                 │ Overview[90m │ [mQuestions[90m │ [m[1;36mWaves[m[90m │ [mRoadmap[90m │ [mDecisions
 [90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────[m
-  Needs you              0 │[1;36mEdit lineup: A  Alpha[m
+[90m0[m Needs you              0 │[1;36mEdit lineup: A  Alpha[m
 [1;7;97;44m> ork                      [m│  Run only; gate follows reviewer.
-  other                    │[1;7;97;44m  > implementer: claude sonnet high (no alternatives; c for custom)[m
+[90m2[m other                    │[1;7;97;44m  > implementer: claude sonnet high (no alternatives; c for custom)[m
                            │    reviewer: claude opus medium
                            │    Budget minutes: 45
                            │    Budget tokens: 9000

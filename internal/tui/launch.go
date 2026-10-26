@@ -157,9 +157,7 @@ func (m *Model) launchKey(msg tea.KeyPressMsg) tea.Cmd {
 	case key.Matches(msg, m.keys.PrevView):
 		return m.moveView(-1)
 	case key.Matches(msg, m.keys.Jump):
-		if n := int(msg.String()[0] - '1'); n < len(m.projects) {
-			return m.switchTo(n)
-		}
+		return m.jump(int(msg.String()[0] - '0'))
 	case key.Matches(msg, m.keys.RowNext):
 		if l.stage == launchList {
 			l.cursor = clampCursor(l.cursor+1, len(items))

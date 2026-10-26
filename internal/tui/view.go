@@ -4,6 +4,7 @@ package tui
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -55,6 +56,7 @@ func (m *Model) screen() string {
 	th := m.cfg.Theme
 	var body, detail, footer []string
 	bodyH, start := max(h-4, 1), 0
+	m.drawn = drawnRows{sel: -1}
 	selectedLine := -1
 	overviewBody := false
 	collapse := false // a render on show takes the whole body (S121, *proposed*)
@@ -183,6 +185,7 @@ func (m *Model) screen() string {
 		footer = footer[:min(len(footer), max(bodyH/2, 1))]
 		bodyH = max(bodyH-len(footer), 1)
 	}
+	rowLine := selectedLine // the selected row's own line, before the ready row's commands
 	if overviewBody {
 		if r, ok := m.selectedRow(); ok && r.ready && m.pane == nil {
 			// The row's own lines: its commands, and the note under a
@@ -201,6 +204,8 @@ func (m *Model) screen() string {
 		start = windowStart(selectedLine, len(body), bodyH)
 	}
 	if bodyH > 0 {
+		hi, _, _ := span(len(body), start, bodyH)
+		m.drawn = drawnRows{lo: start, hi: hi, sel: rowLine}
 		body = window(body, start, bodyH, th)
 	}
 	_, horizontal := th.rules(m.cfg.ASCII)
@@ -232,6 +237,10 @@ func (m *Model) screen() string {
 	return strings.Join(main, "\n")
 }
 
+// drawnRows is the window of body lines the last screen drew, lines lo up to
+// hi, and the body line of the row under the cursor (-1 when none is drawn).
+type drawnRows struct{ lo, hi, sel int }
+
 func (m *Model) sidebar(w, h int) []string {
 	header := m.cfg.Theme.Title.Render("ork")
 	version := ""
@@ -258,6 +267,10 @@ func (m *Model) sidebar(w, h int) []string {
 		start = selected - slots + 1
 	}
 	end := min(start+slots, len(nav))
+	numbers := map[int]int{} // registry index to the number the number key takes
+	for i, idx := range m.numberedProjects() {
+		numbers[idx] = i + 1
+	}
 	for _, idx := range nav[start:end] {
 		label := "Needs you"
 		badge := ""
@@ -301,7 +314,22 @@ func (m *Model) sidebar(w, h int) []string {
 		}
 		label = clip(label, max(w-4-lipgloss.Width(badge), 1))
 		label += strings.Repeat(" ", max(w-4-lipgloss.Width(label)-lipgloss.Width(badge), 0)) + badge + marker
+		// A number takes the selection arrow's place on a project row, and 0
+		// on Needs you. A dim row is dimmed whole, so its number is not styled
+		// twice.
 		prefix := "  "
+		number := -1 // the Running entry has none
+		if idx >= 0 && numbers[idx] > 0 {
+			number = numbers[idx]
+		} else if idx == needsEntry {
+			number = 0
+		}
+		if number >= 0 {
+			prefix = strconv.Itoa(number) + " "
+			if !dim {
+				prefix = m.cfg.Theme.Dim.Render(strconv.Itoa(number)) + " "
+			}
+		}
 		if idx == m.active {
 			prefix = "> "
 		}

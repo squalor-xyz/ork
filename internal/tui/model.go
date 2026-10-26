@@ -154,7 +154,8 @@ type Model struct {
 	actionFlights map[string][]runAction
 	actionStatus  string
 	lastRefresh   time.Time
-	listening     bool // the daemon's notice feed is being listened to (S13)
+	drawn         drawnRows // the body window of the last screen, for the page keys
+	listening     bool      // the daemon's notice feed is being listened to (S13)
 }
 
 // New returns a Model that has not fetched anything. Init starts the fetches.
@@ -453,7 +454,7 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 }
 
 func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
-	if key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.Next, m.keys.Prev, m.keys.NextView, m.keys.PrevView, m.keys.Jump, m.keys.Filter, m.keys.Select, m.keys.Close) {
+	if key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.Next, m.keys.Prev, m.keys.NextView, m.keys.PrevView, m.keys.Jump, m.keys.First, m.keys.Last, m.keys.PageDown, m.keys.PageUp, m.keys.NextGroup, m.keys.PrevGroup, m.keys.Filter, m.keys.Select, m.keys.Close) {
 		m.jumpRun = ""
 	}
 	if m.registeredProjectCount() == 0 && m.pane == nil {
@@ -539,13 +540,15 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			}
 		}
 		return nil
-	case m.view == questionsView && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.PaneScroll):
+	case key.Matches(msg, m.keys.First, m.keys.Last, m.keys.PageDown, m.keys.PageUp, m.keys.NextGroup, m.keys.PrevGroup):
+		m.moveRows(msg)
+	case m.view == questionsView && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev):
 		delta := 1
-		if key.Matches(msg, m.keys.RowPrev) || msg.String() == "pgup" {
+		if key.Matches(msg, m.keys.RowPrev) {
 			delta = -1
 		}
 		if m.decisionPane != nil {
-			m.scrollDecision(delta, key.Matches(msg, m.keys.PaneScroll))
+			m.scrollDecision(delta, false)
 		} else {
 			n := len(m.selectableQuestions())
 			m.questionsCursor = clampCursor(clampCursor(m.questionsCursor, n)+delta, n)
@@ -560,13 +563,13 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		m.decisionsTab = 1 - m.decisionsTab
 		m.decisionsCursor = 0
 		m.decisionPane = nil
-	case m.view == decisionsView && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.PaneScroll):
+	case m.view == decisionsView && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev):
 		delta := 1
-		if key.Matches(msg, m.keys.RowPrev) || msg.String() == "pgup" {
+		if key.Matches(msg, m.keys.RowPrev) {
 			delta = -1
 		}
 		if m.decisionPane != nil {
-			m.scrollDecision(delta, key.Matches(msg, m.keys.PaneScroll))
+			m.scrollDecision(delta, false)
 		} else {
 			n := len(m.decisionRecords())
 			m.decisionsCursor = clampCursor(clampCursor(m.decisionsCursor, n)+delta, n)
@@ -659,9 +662,7 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			return m.switchTo(r.project)
 		}
 	case key.Matches(msg, m.keys.Jump):
-		if n := int(msg.String()[0] - '1'); n < len(m.projects) {
-			return m.switchTo(n)
-		}
+		return m.jump(int(msg.String()[0] - '0'))
 	case key.Matches(msg, m.keys.Refresh):
 		if m.active >= 0 {
 			return m.fetch(m.projects[m.active].reg.Name, true)
@@ -673,6 +674,146 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return tea.Batch(cmds...)
 	}
 	return nil
+}
+
+// pageRows is how far pgdown and pgup move the cursor: the number of rows the
+// body draws on screen now. It draws the screen at the cursor, then at each
+// neighbouring row to find which rows start inside the window, so the section
+// headings, blank lines and multi-line rows of every view are counted.
+func (m *Model) pageRows() int {
+	cur, n := m.rowCursor()
+	if cur == nil || n == 0 {
+		return 1
+	}
+	saved := *cur
+	defer func() { *cur = saved }()
+	at := clampCursor(saved, n)
+	line := func(row int) int {
+		*cur = row
+		m.screen()
+		return m.drawn.sel
+	}
+	line(at)
+	lo, hi := m.drawn.lo, m.drawn.hi
+	rows := 0
+	for row := at; row < n; row++ {
+		if l := line(row); l < lo || l >= hi {
+			break
+		}
+		rows++
+	}
+	for row := at - 1; row >= 0; row-- {
+		if l := line(row); l < lo || l >= hi {
+			break
+		}
+		rows++
+	}
+	return max(rows, 1)
+}
+
+// rowCursor is the cursor the row keys move in the current view and the number
+// of rows it walks. It is nil when an open pane holds the view.
+func (m *Model) rowCursor() (*int, int) {
+	switch m.view {
+	case questionsView:
+		return &m.questionsCursor, len(m.selectableQuestions())
+	case decisionsView:
+		return &m.decisionsCursor, len(m.decisionRecords())
+	case wavesView:
+		if m.waves == nil {
+			return nil, 0
+		}
+		return &m.waves.cursor, len(m.waves.rows())
+	case roadmapView:
+		if m.itemPane != nil {
+			return nil, 0
+		}
+		return &m.roadmapCursor, len(m.roadmapItems())
+	}
+	return &m.cursor, len(m.cursorRows())
+}
+
+// groupStarts lists the cursor rows that start a group on the Overview: each
+// Needs you group, then the Running, Recent and Ready sections.
+func (m *Model) groupStarts() []int {
+	if m.view != 0 {
+		return nil
+	}
+	var starts []int
+	next := 0
+	section := func(n int) {
+		if n > 0 {
+			starts = append(starts, next)
+		}
+		next += n
+	}
+	if m.active == runningEntry {
+		section(len(m.runningRows()))
+		section(len(m.recentRows()))
+		return starts
+	}
+	needs, running := m.rows()
+	for i, r := range needs {
+		if i == 0 || r.group != needs[i-1].group {
+			starts = append(starts, next)
+		}
+		next++
+	}
+	section(len(running))
+	section(len(m.recentRows()))
+	section(len(m.readyRows()))
+	return starts
+}
+
+// moveRows handles the first, last, page and group keys. They move the row
+// cursor of the view. With a decision open on Questions or Decisions the page
+// keys scroll it, and the others do nothing.
+func (m *Model) moveRows(msg tea.KeyPressMsg) {
+	if m.decisionPane != nil && (m.view == questionsView || m.view == decisionsView) {
+		switch {
+		case key.Matches(msg, m.keys.PageDown):
+			m.scrollDecision(1, true)
+		case key.Matches(msg, m.keys.PageUp):
+			m.scrollDecision(-1, true)
+		}
+		return
+	}
+	cur, n := m.rowCursor()
+	if cur == nil {
+		return
+	}
+	at := clampCursor(*cur, n)
+	if at < 0 {
+		return
+	}
+	next := at
+	switch {
+	case key.Matches(msg, m.keys.First):
+		next = 0
+	case key.Matches(msg, m.keys.Last):
+		next = n - 1
+	case key.Matches(msg, m.keys.PageDown):
+		next = min(at+m.pageRows(), n-1)
+	case key.Matches(msg, m.keys.PageUp):
+		next = max(at-m.pageRows(), 0)
+	case key.Matches(msg, m.keys.NextGroup):
+		for _, start := range m.groupStarts() {
+			if start > at {
+				next = start
+				break
+			}
+		}
+	case key.Matches(msg, m.keys.PrevGroup):
+		for _, start := range m.groupStarts() {
+			if start < at {
+				next = start
+			}
+		}
+	}
+	if cur == &m.cursor && next != at {
+		m.actionStatus = ""
+	}
+	*cur = next
 }
 
 // switchTo selects registry project i, or an aggregate entry below zero, and
@@ -812,6 +953,32 @@ func (m *Model) navigation() []int {
 	}
 	return out
 }
+
+// numberedProjects lists the registry indices of the first nine project rows in
+// the order the sidebar draws them. The sidebar numbers them 1 to 9 and the
+// number keys select them (S85).
+func (m *Model) numberedProjects() []int {
+	var out []int
+	for _, idx := range m.navigation() {
+		if idx >= 0 && len(out) < 9 {
+			out = append(out, idx)
+		}
+	}
+	return out
+}
+
+// jump handles a number key: 0 selects Needs you, 1-9 the project the sidebar
+// shows with that number. A number with no project does nothing.
+func (m *Model) jump(n int) tea.Cmd {
+	if n == 0 {
+		return m.switchTo(needsEntry)
+	}
+	if projects := m.numberedProjects(); n <= len(projects) {
+		return m.switchTo(projects[n-1])
+	}
+	return nil
+}
+
 func (m *Model) move(delta int) tea.Cmd {
 	nav := m.navigation()
 	pos := 0

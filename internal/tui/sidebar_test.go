@@ -27,7 +27,7 @@ func TestSidebarRowsAndSelection(t *testing.T) {
 	if !strings.Contains(h.m.screen(), "\x1b[7") && !strings.Contains(h.m.screen(), ";7m") {
 		t.Fatal("selection has no reverse style")
 	}
-	h.send(press("1"))
+	h.send(press("2")) // alpha: beta needs the owner, so the sidebar draws it first
 	if strings.Contains(h.view(), "beta question") {
 		t.Fatal("project selection shows another project's rows")
 	}
@@ -230,5 +230,51 @@ func TestFilterKeepsActiveProject(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// The sidebar numbers its first nine project rows in the gutter the selection
+// arrow uses, dimmed, and shows a dimmed 0 on Needs you. The tenth project and
+// the Running entry have none, and the selected row shows its arrow in place of
+// its number (S85).
+func TestSidebarNumbersTheFirstNineProjectsDimmed(t *testing.T) {
+	var projects []registry.Project
+	for i := 1; i <= 10; i++ {
+		projects = append(projects, proj(fmt.Sprintf("p%02d", i), false))
+	}
+	h := newHarness(t, projects...)
+	h.start()
+	h.send(press("2")) // p02 is selected
+	h.view()
+	dim := h.m.cfg.Theme.Dim
+	for i := 1; i <= 10; i++ {
+		name := fmt.Sprintf("p%02d", i)
+		switch {
+		case i == 2:
+			if row := sidebarRow(h.m, "> p02"); row == "" || strings.Contains(sgr.ReplaceAllString(row, ""), "2 p02") {
+				t.Errorf("the selected row must show the arrow, not its number: %q", row)
+			}
+		case i <= 9:
+			row := sidebarRow(h.m, fmt.Sprintf("%d %s", i, name))
+			if row == "" || !strings.Contains(row, dim.Render(fmt.Sprint(i))) {
+				t.Errorf("project %d has no dimmed number: %q", i, row)
+			}
+		default:
+			if row := sidebarRow(h.m, "  "+name); row == "" {
+				t.Errorf("the tenth project has no unnumbered row:\n%s", plainView(h.m))
+			}
+		}
+	}
+	v := plainView(h.m)
+	if sidebarLine(v, "  Running") < 0 {
+		t.Errorf("the Running entry must have no number:\n%s", v)
+	}
+	if row := sidebarRow(h.m, "0 Needs you"); row == "" || !strings.Contains(row, dim.Render("0")) {
+		t.Errorf("Needs you has no dimmed 0 while another row is selected: %q", row)
+	}
+	h.send(press("0"))
+	h.view()
+	if row := sidebarRow(h.m, "> Needs you"); row == "" || strings.Contains(sgr.ReplaceAllString(row, ""), "0 Needs") {
+		t.Errorf("the selected Needs you row must show the arrow, not 0: %q", row)
 	}
 }

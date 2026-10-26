@@ -141,7 +141,7 @@ func TestCommittedEngineHasNoRunningBadge(t *testing.T) {
 	h := newHarness(t, proj("ork", false))
 	h.start()
 	h.m.apply(snapshotMsg{name: "ork", snap: engineSnapshot(t, "committed", "ledger")})
-	if strings.Contains(sidebarRow(h.m, "  ork"), "*") {
+	if row := sidebarRow(h.m, "1 ork"); row == "" || strings.Contains(row, "*") {
 		t.Fatalf("committed engine retains running badge:\n%s", h.view())
 	}
 }

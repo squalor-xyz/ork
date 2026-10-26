@@ -1,8 +1,8 @@
 [1mork[m  ?help                 | Overview[90m | [mQuestions[90m | [m[1;36mWaves[m[90m | [mRoadmap[90m | [mDecisions
 [90m  Running                0 [m|[90m------------------------------------------------------------------------[m
-  Needs you              0 |[1;36mSuggested (slicer plan-parallel)[m
+[90m0[m Needs you              0 |[1;36mSuggested (slicer plan-parallel)[m
 [1;7;97;44m> ork                      [m|[1;36m         Items                         Shares  Lineup (* edited)        [m
-  other                    |[1m-- Wave 2 ------------------------------------------------------ 2 items[m
+[90m2[m other                    |[1m-- Wave 2 ------------------------------------------------------ 2 items[m
                            |  [x] A  Alpha                                 impl:  claude sonnet high
                            |                                               rev:   claude opus medium
                            |                                               gate:  claude opus medium

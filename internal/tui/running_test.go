@@ -134,7 +134,7 @@ func TestSidebarHasARunningEntryAboveNeedsYouAndShowsItDimWhenNothingRuns(t *tes
 	if plain := compactSpaces(sgr.ReplaceAllString(row, "")); !strings.Contains(plain, "> Running 1") {
 		t.Fatalf("one live run must show as Running 1: %q", plain)
 	}
-	if after := h.view(); sidebarLine(after, "  Needs you") != needs {
+	if after := h.view(); sidebarLine(after, "0 Needs you") != needs {
 		t.Fatalf("Needs you moved when a run began:\n%s", after)
 	}
 	h.send(press("]"))

@@ -1,13 +1,14 @@
 [1mork[m [2mdev[m  ?help             │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
   Running                1 │[2m────────────────────────────────────────────────────────────────────────[m
 [1;7m> Needs you              6 [m│[1mKeys[m
-  slicer                 3*│tab next view
-  adjudicate             1 │shift+tab previous view
-  DataBall                 │] next project
-  agents                   │[ previous project
-                           │1-9 jump to project
-                           │down/j next row
-                           │up/k previous row
+[2m1[m slicer                 3*│tab next view
+[2m2[m adjudicate             1 │shift+tab previous view
+[2m3[m DataBall                 │] next project
+[2m4[m agents                   │[ previous project
+                           │1-9 jump to project; 0 Needs you
+                           │j/k down/up row; g/G home/end first/last
+                           │pgdown/pgup page rows or scroll a pane
+                           │}/{ next/previous group (Overview)
                            │enter open run, question, item or decision; other rows select project
                            │/ filter projects; esc clears
                            │s hide/show sidebar
@@ -20,7 +21,6 @@
                            │1-4 (question) pick an option; y sends
                            │t (question) type a free answer
                            │ctrl+a (answer) toggle filing the answer in adj
-                           │pgup/pgdown scroll run tree and reason or decision
                            │c remove merged worktree and branch (Ready)
                            │r refresh now
                            │q quit; ? show or hide this help

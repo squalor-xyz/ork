@@ -1,8 +1,8 @@
 [1mork[m  ?help                 │ Overview[90m │ [mQuestions[90m │ [m[1;36mWaves[m[90m │ [mRoadmap[90m │ [mDecisions
 [90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────────────────────────[m
-  Needs you              0 │[1;36mSpec check: 2 questions for B[m
+[90m0[m Needs you              0 │[1;36mSpec check: 2 questions for B[m
 [1;7;97;44m> ork                      [m│
-  other                    │  [90mB  Beta[m
+[90m2[m other                    │  [90mB  Beta[m
                            │  [1;36m[B 1/2] Which store holds the index?[m
                            │    1. file: one JSON file
                            │    2. memory: rebuilt at each start (recommended)

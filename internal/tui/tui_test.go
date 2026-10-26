@@ -9,6 +9,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -283,7 +284,7 @@ func TestTabKeysSwitchTheProject(t *testing.T) {
 		{"]", "Needs"},
 		{"3", "DataBall"},
 		{"9", "DataBall"}, // no such tab
-		{"0", "DataBall"},
+		{"0", "Needs"},
 		{"1", "slicer"},
 		{"4", "agents"},
 	}
@@ -375,7 +376,7 @@ func TestHelpKeyTogglesTheHelp(t *testing.T) {
 	}
 	h.send(press("?"))
 	v := h.view()
-	for _, want := range []string{"tab next view", "shift+tab previous view", "] next project", "[ previous project", "jump to project", "down/j next row", "up/k previous row", "refresh now", "quit"} {
+	for _, want := range []string{"tab next view", "shift+tab previous view", "] next project", "[ previous project", "jump to project", "j/k down/up row", "refresh now", "quit"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("help lacks %q:\n%s", want, v)
 		}
@@ -768,7 +769,12 @@ func TestDashboardDocsListTheNavigationKeys(t *testing.T) {
 		"In every view, keys `]` (next) and `[` (previous) move selection and wrap through \"Running\", \"Needs you\" and the sorted projects",
 		"`left` and `right` never change the project",
 		"The first sidebar entry, above \"Needs you\", opens a live summary of every project that has a live run.",
-		"`1`-`9` select projects in registry order.",
+		"`1`-`9` select the first nine projects in the order the sidebar draws them, and the sidebar shows those numbers dimmed.",
+		"`0` selects \"Needs you\"; the Running entry has no number.",
+		"\"Needs you\" shows a dimmed `0` there.",
+		"`g`/`home` and `G`/`end` move the cursor to the first and last row.",
+		"`pgdown`/`pgup` move it by the number of rows the body draws on screen",
+		"`}` and `{` move it to the first row of the next group and of the current or previous group",
 		"`tab` and `shift+tab` switch views",
 		"`space` ticks or unticks the selected item",
 		"`e` edits the selected ticked item",
@@ -779,6 +785,9 @@ func TestDashboardDocsListTheNavigationKeys(t *testing.T) {
 		if !strings.Contains(s, want) {
 			t.Errorf("dashboard.md lacks %q", want)
 		}
+	}
+	if strings.Contains(s, "select projects in registry order") {
+		t.Error("dashboard.md still says the number keys follow registry order")
 	}
 	if strings.Contains(s, "Keys `tab`/`shift+tab` and `left`/`right` move selection") {
 		t.Error("dashboard.md still lists tab and shift+tab as project keys")
@@ -917,7 +926,7 @@ func TestNoSlicerProjectIsDimmedInTheSidebar(t *testing.T) {
 	h.src.set(noSlicer(four[2]))
 	h.start()
 	h.view()
-	row := sidebarRow(h.m, "  DataBall")
+	row := sidebarRow(h.m, "3 DataBall")
 	if plain := sgr.ReplaceAllString(row, ""); !strings.Contains(compactSpaces(plain), "DataBall no slicer") {
 		t.Fatalf("sidebar row is not \"DataBall no slicer\": %q", plain)
 	}
@@ -1000,7 +1009,7 @@ func TestSelectedNoSlicerProjectGivesTheInitHint(t *testing.T) {
 	if v := h.view(); strings.Contains(v, "slicer init") { // Needs you is selected at start
 		t.Errorf("the init hint shows on Needs you:\n%s", v)
 	}
-	h.send(press("3")) // DataBall, in registry order
+	h.send(press("3")) // DataBall, third in the sidebar
 	if v := h.view(); !strings.Contains(v, "no .slicer/") || !strings.Contains(v, "slicer init") {
 		t.Fatalf("the selected project gives no init hint:\n%s", v)
 	}
@@ -1852,5 +1861,433 @@ func TestEmptyDetailHasNoBandBetweenRules(t *testing.T) {
 	}
 	if rules != 2 {
 		t.Errorf("empty detail renders %d rules, want header and status only", rules)
+	}
+}
+
+// numberedHarness is four with agents needing the owner and DataBall running,
+// so the sidebar draws agents, DataBall, slicer, adjudicate: not registry order.
+func numberedHarness(t *testing.T) *harness {
+	t.Helper()
+	h := newHarness(t, four...)
+	h.src.set(snap(four[3], []adjcli.Record{openRec(7, "a.q", "agents question")}, nil))
+	h.src.set(snap(four[2], nil, nil, relay("run-1", "", "S1")))
+	h.start()
+	h.view()
+	return h
+}
+
+// 1-9 select the first nine project rows in the order the sidebar draws them,
+// 0 selects Needs you, and a number with no row does nothing (S85).
+func TestNumberKeysFollowTheSidebar(t *testing.T) {
+	h := numberedHarness(t)
+	drawn := []string{"agents", "DataBall", "slicer", "adjudicate"}
+	registry := map[string]int{"slicer": 0, "adjudicate": 1, "DataBall": 2, "agents": 3}
+	v := h.view()
+	top := strings.Join(strings.Split(v, "\n")[:8], "\n")
+	for i, name := range drawn {
+		line := fmt.Sprintf("%d %s", i+1, name)
+		if sidebarLine(v, line) < 0 {
+			t.Errorf("the sidebar has no row starting %q:\n%s", line, top)
+		}
+	}
+	if sidebarLine(v, "  Running") < 0 || sidebarLine(v, "> Needs you") < 0 {
+		t.Errorf("the Running entry must have no number, and Needs you is selected:\n%s", top)
+	}
+	for i, name := range drawn {
+		h.send(press(string(rune('1' + i))))
+		if got := h.m.active; got != registry[name] {
+			t.Errorf("key %d selected registry project %d, want %s (%d)", i+1, got, name, registry[name])
+		}
+	}
+	h.send(press("5"))
+	if h.m.active != registry["adjudicate"] {
+		t.Errorf("key 5 has no row and moved the selection to %d", h.m.active)
+	}
+	h.send(press("0"))
+	if h.m.active != needsEntry {
+		t.Errorf("key 0 selected %d, want Needs you", h.m.active)
+	}
+}
+
+// The filter narrows the sidebar, and the numbers follow the rows that remain.
+func TestNumberKeysFollowTheFilteredSidebar(t *testing.T) {
+	h := numberedHarness(t)
+	h.send(press("/"))
+	h.send(press("a")) // keeps agents, DataBall and adjudicate; slicer has no "a"
+	h.send(press("enter"))
+	h.send(press("2"))
+	if got := h.m.projects[h.m.active].reg.Name; got != "DataBall" {
+		t.Errorf("key 2 selected %s, want DataBall", got)
+	}
+	h.send(press("3"))
+	if got := h.m.projects[h.m.active].reg.Name; got != "adjudicate" {
+		t.Errorf("key 3 selected %s, want adjudicate (slicer is filtered out)", got)
+	}
+}
+
+// rowsHarness has two decisions and a ledger run on the first project: three
+// rows on Needs you.
+func rowsHarness(t *testing.T) *harness {
+	t.Helper()
+	h := newHarness(t, four...)
+	h.src.set(snap(four[0], []adjcli.Record{openRec(11, "a.one", "first question"), openRec(12, "a.two", "second question")}, nil,
+		relay("run-1", "2026-10-19T16:00:00Z", "S01")))
+	h.start()
+	h.view()
+	return h
+}
+
+// g and home go to the first row, G and end to the last, in each view that has
+// a row cursor (S85).
+func TestFirstAndLastRowKeys(t *testing.T) {
+	home, end := tea.KeyPressMsg{Code: tea.KeyHome}, tea.KeyPressMsg{Code: tea.KeyEnd}
+	t.Run("overview", func(t *testing.T) {
+		for _, tc := range []struct {
+			name        string
+			first, last tea.KeyPressMsg
+		}{{"letters", press("g"), press("G")}, {"home and end", home, end}} {
+			h := rowsHarness(t)
+			h.send(press("down"))
+			h.send(tc.last)
+			if got := detailText(h.m, 72); !strings.HasPrefix(got, "run-1  S01") || h.m.cursor != 2 {
+				t.Errorf("%s: last row is %q, cursor %d", tc.name, got, h.m.cursor)
+			}
+			h.send(tc.last)
+			if h.m.cursor != 2 {
+				t.Errorf("%s: last twice moved the cursor to %d", tc.name, h.m.cursor)
+			}
+			h.send(tc.first)
+			if got := detailText(h.m, 72); !strings.HasPrefix(got, "#11 open") || h.m.cursor != 0 {
+				t.Errorf("%s: first row is %q, cursor %d", tc.name, got, h.m.cursor)
+			}
+			if h.m.active != needsEntry {
+				t.Errorf("%s: the project changed to %d", tc.name, h.m.active)
+			}
+		}
+	})
+	t.Run("roadmap", func(t *testing.T) {
+		h := roadmapHarness(t)
+		h.send(press("G"))
+		if h.m.roadmapCursor != 3 {
+			t.Errorf("G put the roadmap cursor on %d, want 3", h.m.roadmapCursor)
+		}
+		h.send(press("g"))
+		if h.m.roadmapCursor != 0 {
+			t.Errorf("g put the roadmap cursor on %d, want 0", h.m.roadmapCursor)
+		}
+		h.send(end)
+		h.send(home)
+		if h.m.roadmapCursor != 0 {
+			t.Errorf("end then home left the roadmap cursor on %d", h.m.roadmapCursor)
+		}
+	})
+	t.Run("decisions", func(t *testing.T) {
+		h := decisionsHarness(t)
+		h.send(press("G"))
+		if h.m.decisionsCursor != 1 {
+			t.Errorf("G put the decisions cursor on %d, want 1", h.m.decisionsCursor)
+		}
+		h.send(press("g"))
+		if h.m.decisionsCursor != 0 {
+			t.Errorf("g put the decisions cursor on %d, want 0", h.m.decisionsCursor)
+		}
+	})
+	t.Run("questions", func(t *testing.T) {
+		h := questionsHarness(t)
+		h.send(end)
+		if want := len(h.m.selectableQuestions()) - 1; h.m.questionsCursor != want {
+			t.Errorf("end put the questions cursor on %d, want %d", h.m.questionsCursor, want)
+		}
+		h.send(home)
+		if h.m.questionsCursor != 0 {
+			t.Errorf("home put the questions cursor on %d, want 0", h.m.questionsCursor)
+		}
+	})
+	t.Run("waves", func(t *testing.T) {
+		h, _ := wavesHarness(t)
+		openWaves(t, h)
+		h.send(press("G"))
+		if want := len(h.m.waves.rows()) - 1; h.m.waves.cursor != want {
+			t.Errorf("G put the waves cursor on %d, want %d", h.m.waves.cursor, want)
+		}
+		h.send(press("g"))
+		if h.m.waves.cursor != 0 {
+			t.Errorf("g put the waves cursor on %d, want 0", h.m.waves.cursor)
+		}
+	})
+}
+
+// manyRows is an 80x24 Overview of 40 decisions followed by one stopped run.
+func manyRows(t *testing.T) *harness {
+	t.Helper()
+	h := newHarness(t, four...)
+	var open []adjcli.Record
+	for i := 1; i <= 40; i++ {
+		open = append(open, openRec(i, fmt.Sprintf("a.k%02d", i), fmt.Sprintf("question %02d", i)))
+	}
+	s := snap(four[0], open, nil)
+	s.EngineRuns = []source.EngineRun{{ID: "engine", Item: "S21", State: "stopped", Wait: "owner action"}}
+	h.src.set(s)
+	h.start()
+	h.send(tea.WindowSizeMsg{Width: 80, Height: 24})
+	return h
+}
+
+// With no pane open, pgdown and pgup move the cursor by the number of rows the
+// body draws on screen, headings and the detail included, and stop at the first
+// and last row. With a pane open they scroll the pane and leave the cursor.
+func TestPageKeysMoveRowsWithoutAPane(t *testing.T) {
+	pgdown, pgup := tea.KeyPressMsg{Code: tea.KeyPgDown}, tea.KeyPressMsg{Code: tea.KeyPgUp}
+	h := manyRows(t)
+	drawn := func() int { // the rows on screen: each names its project, the detail and headings do not
+		n := 0
+		for _, line := range strings.Split(plainView(h.m), "\n") {
+			if _, main, ok := strings.Cut(line, "│"); ok && strings.Contains(main, "  slicer  ") {
+				n++
+			}
+		}
+		return n
+	}
+	first := drawn()
+	if first <= 0 || first >= 24-6 {
+		t.Fatalf("setup: %d rows drawn at 80x24; want fewer than the 18 body lines, the headings take some", first)
+	}
+	at := 0
+	for len(h.m.cursorRows())-1 > at {
+		step := drawn()
+		h.send(pgdown)
+		at = min(at+step, 40) // 41 rows: the last is index 40
+		if h.m.cursor != at {
+			t.Fatalf("pgdown with %d rows drawn put the cursor on %d, want %d", step, h.m.cursor, at)
+		}
+	}
+	for at > 0 {
+		step := drawn()
+		h.send(pgup)
+		at = max(at-step, 0)
+		if h.m.cursor != at {
+			t.Fatalf("pgup with %d rows drawn put the cursor on %d, want %d", step, h.m.cursor, at)
+		}
+	}
+	h.send(pgup)
+	if h.m.cursor != 0 || h.m.active != needsEntry {
+		t.Errorf("pgup at the top: cursor %d, project %d; want row 0 and Needs you", h.m.cursor, h.m.active)
+	}
+
+	// On the last row (the stopped run) enter opens its pane, and the page keys scroll it.
+	h.send(press("G"))
+	h.send(press("enter"))
+	if h.m.pane == nil {
+		t.Fatal("enter did not open the stopped run's pane")
+	}
+	h.send(pgdown)
+	if h.m.cursor != 40 || h.m.pane.offset != 1 {
+		t.Errorf("pgdown with a pane: cursor %d, pane offset %d; want 40 and 1", h.m.cursor, h.m.pane.offset)
+	}
+	h.send(pgup)
+	if h.m.cursor != 40 || h.m.pane.offset != 0 {
+		t.Errorf("pgup with a pane: cursor %d, pane offset %d; want 40 and 0", h.m.cursor, h.m.pane.offset)
+	}
+	for _, k := range []string{"g", "G", "{", "}"} {
+		h.send(press(k))
+	}
+	if h.m.cursor != 40 {
+		t.Errorf("row keys moved the cursor to %d under an open pane", h.m.cursor)
+	}
+
+	// The Roadmap pages by the rows it draws: a short terminal draws fewer than
+	// the four items, and a tall one pages to the last.
+	road := roadmapHarness(t)
+	road.send(tea.WindowSizeMsg{Width: 80, Height: 12})
+	visible := rowsWith(plainView(road.m), "S0") + rowsWith(plainView(road.m), "S90")
+	if visible <= 0 || visible >= 4 {
+		t.Fatalf("setup: %d roadmap rows drawn at 80x12, want 1 to 3", visible)
+	}
+	road.send(pgdown)
+	if road.m.roadmapCursor != visible {
+		t.Errorf("pgdown put the roadmap cursor on %d with %d rows drawn", road.m.roadmapCursor, visible)
+	}
+	road.send(tea.WindowSizeMsg{Width: 80, Height: 40})
+	road.send(pgdown)
+	if road.m.roadmapCursor != 3 {
+		t.Errorf("pgdown on a tall terminal put the roadmap cursor on %d, want the last row 3", road.m.roadmapCursor)
+	}
+}
+
+// } moves to the first row of the next group and { to the first row of the
+// current group, or of the previous one when the cursor is on a first row. The
+// groups are the Needs you groups, then the Running, Recent and Ready sections.
+func TestGroupJumpKeys(t *testing.T) {
+	h := newHarness(t, four...)
+	s := snap(four[0], []adjcli.Record{openRec(11, "a.one", "first question"), openRec(12, "a.two", "second question")},
+		[]slicercli.Item{item("S05", "held thing", holdFlag)}, relay("run-1", "2026-10-19T16:00:00Z", "S01"))
+	s.EngineRuns = []source.EngineRun{{ID: "engine", Item: "S21", State: "stopped", Wait: "owner action"}}
+	h.src.set(s)
+	h.start()
+	h.view()
+	// Rows: 0 #11, 1 #12 (Decisions), 2 S05 (Held), 3 engine (Stopped), 4 run-1 (Running).
+	if n := len(h.m.cursorRows()); n != 5 {
+		t.Fatalf("setup: %d rows, want 5", n)
+	}
+	for _, step := range []struct {
+		key  string
+		want int
+	}{
+		{"}", 2}, {"}", 3}, {"}", 4}, {"}", 4}, // the last group has no next
+		{"{", 3}, {"{", 2}, {"{", 0}, {"{", 0}, // the first row has no previous group
+	} {
+		h.send(press(step.key))
+		if h.m.cursor != step.want {
+			t.Fatalf("%s put the cursor on %d, want %d", step.key, h.m.cursor, step.want)
+		}
+	}
+	// From inside a group, { goes to that group's first row, then to the previous group's.
+	h.send(press("down"))
+	if h.m.cursor != 1 {
+		t.Fatalf("down put the cursor on %d, want 1", h.m.cursor)
+	}
+	h.send(press("{"))
+	if h.m.cursor != 0 {
+		t.Errorf("{ inside Decisions put the cursor on %d, want its first row 0", h.m.cursor)
+	}
+	h.send(press("}"))
+	h.send(press("}"))
+	h.send(press("}"))
+	h.send(press("}"))
+	h.send(press("{")) // on Running's only row: its own first row, so the previous group
+	if h.m.cursor != 3 {
+		t.Errorf("{ on the first Running row put the cursor on %d, want 3", h.m.cursor)
+	}
+
+	// On the Running entry the groups are its live runs and Recent.
+	t.Run("running entry", func(t *testing.T) {
+		h := newHarness(t, four...)
+		s := snap(four[0], nil, nil, relay("run-1", "2026-10-19T16:00:00Z", "S01"))
+		s.BoardRuns.Value = []slicercli.RelayRun{{ID: "ended-1", Items: []string{"S97"}, State: "ended", Outcome: "pass",
+			BeganAt: h.now.Add(-20 * time.Minute).Format(time.RFC3339), UpdatedAt: h.now.Add(-10 * time.Minute).Format(time.RFC3339)}}
+		h.src.set(s)
+		h.start()
+		h.send(press("[")) // from Needs you to Running
+		if h.m.active != runningEntry {
+			t.Fatalf("[ selected %d, want the Running entry", h.m.active)
+		}
+		if n := len(h.m.cursorRows()); n != 2 {
+			t.Fatalf("setup: %d rows, want one live run and one Recent row", n)
+		}
+		h.send(press("}"))
+		if h.m.cursor != 1 {
+			t.Errorf("} on the live run put the cursor on %d, want the first Recent row 1", h.m.cursor)
+		}
+		h.send(press("{"))
+		if h.m.cursor != 0 {
+			t.Errorf("{ on the first Recent row put the cursor on %d, want the live run 0", h.m.cursor)
+		}
+	})
+}
+
+// Keys that type stay with the field: g, G, 0, { and } typed into the filter or
+// an owner's free answer go into the text and move nothing.
+func TestNavigationKeysTypeIntoFields(t *testing.T) {
+	typed := []string{"g", "G", "0", "{", "}", "1", "9"}
+	h := rowsHarness(t)
+	h.send(press("down"))
+	h.send(press("/"))
+	for _, k := range typed {
+		h.send(press(k))
+	}
+	if h.m.filter != "gG0{}19" || h.m.cursor != 1 || h.m.active != needsEntry {
+		t.Errorf("filter %q, cursor %d, active %d; want the text typed and nothing moved", h.m.filter, h.m.cursor, h.m.active)
+	}
+
+	p := paneHarness(t, "paused", "question")
+	for _, k := range typed {
+		p.deliver(press(k))
+	}
+	if got := p.m.pane.input.Value(); got != "gG0{}19" {
+		t.Errorf("the answer field holds %q, want gG0{}19", got)
+	}
+}
+
+// The help lists the number, first, last, page and group keys on four lines
+// that fit the 44 column main area of a 64 column terminal uncut, and the page
+// keys appear once: one entry covers paging rows and scrolling a pane.
+func TestHelpListsTheRowKeys(t *testing.T) {
+	h := newHarness(t, four...)
+	h.start()
+	help := strings.Split(strings.Join(h.m.helpLines(44, 40), "\n"), "\n")
+	for _, want := range []string{"1-9 jump to project; 0 Needs you", "j/k down/up row; g/G home/end first/last", "pgdown/pgup page rows or scroll a pane", "}/{ next/previous group (Overview)"} {
+		if !slices.Contains(help, want) {
+			t.Errorf("the help has no line %q:\n%s", want, strings.Join(help, "\n"))
+		}
+	}
+	for _, line := range help {
+		if strings.Contains(line, "pgup") && strings.Contains(line, "pgdown") && !strings.HasPrefix(line, "pgdown/pgup page rows") {
+			t.Errorf("a second page-key entry: %q", line)
+		}
+		if strings.Contains(line, "(rows)") {
+			t.Errorf("the help still says (rows): %q", line)
+		}
+	}
+}
+
+// The launch list answers the number keys like every other screen: sidebar
+// order, and 0 for Needs you (S85).
+func TestLaunchListNumberKeysFollowTheSidebar(t *testing.T) {
+	h, _ := launchHarness(t)
+	// other needs the owner, so the sidebar draws it above ork: 1 other, 2 ork.
+	h.m.apply(snapshotMsg{name: "other", snap: snap(proj("other", true), []adjcli.Record{openRec(1, "o.q", "other question")}, nil)})
+	h.m.Update(press("l"))
+	if h.m.launch == nil {
+		t.Fatal("l did not open the launch list")
+	}
+	h.m.Update(press("1"))
+	if h.m.active != 1 || h.m.launch != nil {
+		t.Fatalf("key 1 in the launch list: active %d, launch open %v; want other (1) and the launch dropped", h.m.active, h.m.launch != nil)
+	}
+	h.m.Update(press("2"))
+	h.m.Update(press("l"))
+	h.m.Update(press("0"))
+	if h.m.active != needsEntry {
+		t.Fatalf("key 0 in the launch list selected %d, want Needs you", h.m.active)
+	}
+}
+
+// A row key after a pending run jump (the snapshot of a launched run has not
+// arrived yet) cancels the jump, as the other row keys do: the next snapshot
+// leaves the cursor where the owner put it.
+func TestRowKeysCancelAPendingRunJump(t *testing.T) {
+	for _, k := range []string{"g", "G", "pgup", "pgdown", "}", "{"} {
+		t.Run(k, func(t *testing.T) {
+			h := newHarness(t, four...)
+			s := snap(four[0], []adjcli.Record{openRec(11, "a.one", "first question"), openRec(12, "a.two", "second question")}, nil)
+			s.EngineRuns = []source.EngineRun{
+				{ID: "e1", Item: "S21", State: "stopped", Wait: "owner action"},
+				{ID: "e2", Item: "S22", State: "paused", Wait: "owner action"},
+			}
+			h.src.set(s)
+			h.start()
+			h.view()
+			if len(h.m.cursorRows()) != 4 {
+				t.Fatalf("setup: %d rows, want 4", len(h.m.cursorRows()))
+			}
+			h.m.cursor = 2 // e1; every key below moves off it
+			h.m.jumpRun = "e1"
+			msg := press(k)
+			switch k {
+			case "pgup":
+				msg = tea.KeyPressMsg{Code: tea.KeyPgUp}
+			case "pgdown":
+				msg = tea.KeyPressMsg{Code: tea.KeyPgDown}
+			}
+			h.send(msg)
+			at := h.m.cursor
+			if at == 2 {
+				t.Fatalf("setup: %s did not move the cursor", k)
+			}
+			h.m.apply(snapshotMsg{name: "slicer", snap: s})
+			if h.m.jumpRun != "" || h.m.cursor != at {
+				t.Errorf("after %s the snapshot moved the cursor from %d to %d (jumpRun %q)", k, at, h.m.cursor, h.m.jumpRun)
+			}
+		})
 	}
 }

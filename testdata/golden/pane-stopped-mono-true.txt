@@ -1,7 +1,7 @@
 [1mork[m  ?help                 │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
   Running                1 │[2m────────────────────────────────────────────────────────────────────────[m
 [1;7m> Needs you              1 [m│[1mNeeds you 1[m
-  ork                    1 │  [1mStopped 1[m
+[2m1[m ork                    1 │  [1mStopped 1[m
                            │[1;7m  x  ork  engine  S22  stopped  owner action  2 of 6 steps running      [m
                            │    [1mRun engine[m
                            │    owner action
