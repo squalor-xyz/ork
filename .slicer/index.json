@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 158,
+  "next_id": 159,
   "preamble": "",
   "passes": [
     {
@@ -1125,6 +1125,17 @@
           "kind": "",
           "text": "**2026-10-26** — Orchestration trial (run 10): owner questions 6 (2 before start: check command and pattern rules; 4 during: registry error placement, label form, shell words, plus the earlier-answered decisions carried in); stalls 0; fix rounds 1 (review FAIL plus UI pass fixes, gated in one pass); merge conflicts 0; context compactions 0; Codex gpt-6.1-sol medium, not blocked; reviewer and UI pass in parallel.",
           "created_at": "2026-10-26T22:44:20Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "cdd61a5a-80d2-4064-8d51-a71d840b10a8",
+          "kind": "",
+          "text": "**2026-10-26** — Correction to the trial note: owner questions were 5 (2 before start, 3 during: registry error placement, label form, shell words).",
+          "created_at": "2026-10-26T22:46:33Z",
           "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
@@ -6136,6 +6147,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S73",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S158",
+      "title": "S71 later notes: doctor registry line, sh prefix strip, time, no-projects line",
+      "short_title": "S71 later notes",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "d9a6ed08-6c29-472d-8af0-45ae2bdb1dbe",
+          "kind": "",
+          "text": "**2026-10-26** — From the S71 relay (run-20261026-220333-446b, landed 3a0a54a).\n1. The registry error line doubles a word: '[WARN] registry  registry /path: unexpected end of JSON input', because registry.Load prefixes parse and validation errors with 'registry PATH:' (internal/registry/registry.go:141-162) but not read errors (:134-135). Trim the prefix in the text branch (doctor.go near :381) or make Load consistent.\n2. shellErrorPrefix (doctor.go near :126) is greedy (^.*sh: ); a message containing 'sh: ' is cut at the last one. Cosmetic.\n3. 'time' is not on the shell-word skip list; 'time go test' warns on a host without /usr/bin/time.\n4. With an empty or missing registry doctor prints no project line, so 'no projects registered' and 'projects not checked' look the same; consider '[--] projects  none registered' (UI pass).",
+          "created_at": "2026-10-26T22:46:34Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S71",
         "parent": "",
         "cites": [],
         "key": "",
