@@ -8,7 +8,27 @@ import (
 	"testing"
 
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+func TestFirstRowBriefIsUnchanged(t *testing.T) {
+	h := fallbackHarness(t, RoleImplementer)
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	req := h.runner.requests()[0]
+	want, err := BuildBrief(BriefInput{
+		Role: req.Role, SliceID: item, Worktree: req.Worktree,
+		TempDir: req.TempDir, ReportPath: req.ReportPath,
+		SliceJSON: sliceJSON(), EnvLines: h.proj.EnvironmentLines,
+		CheckCommand: h.proj.CheckCommand,
+		Sections:     []BriefSection{{Title: "Round", Body: "This is the first round. The slice is not started: run `slicer start " + item + " --render --strict` first."}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if req.Brief != want || strings.Contains(req.Brief, "## Earlier lineup rows") {
+		t.Fatal("first row brief changed")
+	}
+}
 
 func baseBrief() BriefInput {
 	return BriefInput{

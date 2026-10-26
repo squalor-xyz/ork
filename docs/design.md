@@ -676,6 +676,12 @@ probes 05 to 07 ran on 0.164.0), grok 1.0.62. Grok has no successful run, so mos
   Resume uses only a session from the same vendor and model. Otherwise the
   next row starts fresh, with the earlier reports in the brief. Both role
   records are kept; the fallback report uses the next attempt suffix.
+  A fallback brief names this role's earlier lineup rows and their failed
+  exits, and says the worktree may hold partial work: check `git status`
+  before continuing. The note also accompanies later rounds on the sticky
+  row, including resumed sessions. A first-row brief has no such note.
+  Repeated `slicer start --render --strict` succeeded in the isolated S92
+  probe, so the fallback note adds no skip-start instruction.
   Claude has no measured rate-limit class, so its rows can fall back only
   on an error until a sample exists
   (`vendor.unsampled-classes`).

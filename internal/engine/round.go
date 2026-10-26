@@ -235,6 +235,9 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Finish:       r.finish,
 		Sections:     append(pendingSection(pend), r.sections...),
 	}
+	if entryIndex > 0 {
+		in.Sections = append(in.Sections, fallbackSection(rec, r.role, entries[:entryIndex]))
+	}
 	if rec.Decisions != "" {
 		// The worktree's spec lacks the owner's spec check answers (S116).
 		in.Sections = append([]BriefSection{{Title: "Owner decisions", Body: rec.Decisions}}, in.Sections...)
@@ -414,6 +417,27 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		}
 	}
 	return outcome{ok: true, text: text, report: rep, findings: findings, triage: tri, file: file}, nil
+}
+
+// fallbackSection gives the next row the failed attempts of earlier rows of
+// this role, including attempts with identical lineup entries.
+func fallbackSection(rec runrec.Record, role string, earlier []runrec.LineupEntry) BriefSection {
+	var history runrec.Record
+	for _, record := range rec.Roles {
+		if record.Role != role {
+			continue
+		}
+		for _, entry := range earlier {
+			if record.Vendor == entry.Vendor && record.Model == entry.Model && record.Effort == entry.Effort {
+				history.Roles = append(history.Roles, record)
+				break
+			}
+		}
+	}
+	return BriefSection{
+		Title: "Earlier lineup rows",
+		Body:  fallbackReasons(history, role) + ". The worktree may hold partial work. Check `git status` before continuing.",
+	}
 }
 
 // fallbackReasons preserves the exit and row identity of each failed attempt.

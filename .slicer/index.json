@@ -777,10 +777,33 @@
       "id": "S92",
       "title": "Fallback brief tells the next row about earlier rows and an already-started slice",
       "short_title": "Fallback brief tells the next row about earlier rows and an already-started slice",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "393115fc-06ab-4515-9ea7-0bd65f64407a",
+          "kind": "implementation",
+          "text": "**2026-10-26** — Repeated-start probe in isolated scratch project: both slicer start S04 --render --strict --json calls exited 0, status started, attempts 1. Per the owner condition in Why, implement only the earlier-row exits and partial-work/git-status note; omit already-started and skip-start instructions and the corresponding skip-start test.",
+          "created_at": "2026-10-26T18:52:52Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "e7a754f6-8eb2-41b4-b4cd-5fcfa5a21f3d",
+          "kind": "",
+          "text": "**2026-10-26** — Orchestration trial run 4 (run-20261026-185146-de28, began 18:51Z): owner questions 0; stalls 0; fix rounds 0; Codex implementer, no block; reviewer only. Later (reviewer, low): TestRepeatedSlicerStartStrictSucceeds (fallback_test.go:16) only replays canned output, so it proves nothing about slicer; a fallback in implementer round 1 still says 'The slice is not started' (states.go:149) next to the partial-work note.",
+          "created_at": "2026-10-26T19:04:18Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -798,7 +821,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

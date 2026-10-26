@@ -8,8 +8,71 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/squalor-xyz/ork/internal/clirun"
+	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+// Replays the successful repeated-start output observed in an isolated scratch
+// project on 2026-10-26. The S92 owner condition therefore keeps only the
+// earlier-row and partial-work note, without a skip-start instruction.
+func TestRepeatedSlicerStartStrictSucceeds(t *testing.T) {
+	const recorded = `{"status":"started","fields":{"attempts":1}}`
+	args := []string{"start", "S04", "--render", "--strict", "--json"}
+	fake := clitest.Install(t, clitest.Route{Tool: "slicer", Args: args, Stdout: recorded})
+	for range 2 {
+		res, err := clirun.Run(context.Background(), clirun.Call{Bin: fake.Bin("slicer"), Args: args})
+		if err != nil || string(res.Stdout) != recorded {
+			t.Fatalf("repeated start: %s, %v", res.Stdout, err)
+		}
+	}
+}
+
+func TestFallbackBriefNamesTheEarlierRowAndPartialWork(t *testing.T) {
+	for _, role := range []string{RoleImplementer, RoleReviewer, RoleGate} {
+		t.Run(role, func(t *testing.T) {
+			h := fallbackHarness(t, role)
+			// Two rows with the same vendor and model must retain their efforts.
+			h.cfg.Lineup[role] = []runrec.LineupEntry{
+				{Vendor: "codex", Model: "sol", Effort: "high"},
+				{Vendor: "codex", Model: "sol", Effort: "medium"},
+				{Vendor: "claude", Model: "sonnet", Effort: "medium"},
+			}
+			h.runner.script = func(req Request, _ int) (Result, error) {
+				if req.Role == role && req.Vendor == "codex" {
+					if req.Effort == "high" {
+						return Result{Exit: ExitRateLimited}, nil
+					}
+					return Result{Exit: ExitError}, nil
+				}
+				return Result{}, nil
+			}
+			requireState(t, h.start(), runrec.StateAwaitingApproval)
+			var briefs []string
+			for _, req := range h.runner.requests() {
+				if req.Role == role {
+					briefs = append(briefs, req.Brief)
+				}
+			}
+			if len(briefs) != 3 {
+				t.Fatalf("got %d role briefs, want 3", len(briefs))
+			}
+			for i := 1; i < 3; i++ {
+				for _, want := range []string{"## Earlier lineup rows", role + " round 1 (codex sol high) exited rate_limited", "worktree may hold partial work", "git status"} {
+					if !strings.Contains(briefs[i], want) {
+						t.Errorf("row %d brief lacks %q", i+1, want)
+					}
+				}
+			}
+			if !strings.Contains(briefs[2], role+" round 1 (codex sol medium) exited error") {
+				t.Error("third row brief lacks the second row and its exit")
+			}
+			if strings.Contains(briefs[1], "(codex sol medium) exited") {
+				t.Error("second row brief includes a later row")
+			}
+		})
+	}
+}
 
 func fallbackHarness(t *testing.T, role string) *harness {
 	t.Helper()
@@ -82,6 +145,11 @@ func TestFallbackIsSticky(t *testing.T) {
 	}
 	if len(impl) != 3 || impl[2].Round != 2 || impl[2].Vendor != "claude" || impl[2].Resume != "sess-implementer" {
 		t.Fatalf("sticky requests: %+v (records %+v)", impl, rec.Roles)
+	}
+	_, note, _ := strings.Cut(impl[2].Brief, "## Earlier lineup rows\n\n")
+	note, _, _ = strings.Cut(note, "\n## ")
+	if !strings.Contains(note, "implementer round 1 (codex sol high) exited rate_limited") || strings.Contains(note, "claude") || strings.Contains(note, "reviewer") {
+		t.Fatalf("resumed fallback must name only earlier rows of this role: %q", note)
 	}
 }
 
@@ -249,6 +317,9 @@ func TestFallbackDuplicateRowsTerminate(t *testing.T) {
 			rec := requireState(t, h.start(), want)
 			if calls != 3 {
 				t.Fatalf("implementer calls %d, want 3", calls)
+			}
+			if !allFail && strings.Count(h.runner.requests()[2].Brief, "(codex sol high) exited error") != 2 {
+				t.Fatal("fallback brief must keep both identical earlier rows")
 			}
 			for i, vendor := range []string{"codex", "codex", "claude"} {
 				if rec.Roles[i].Vendor != vendor {
