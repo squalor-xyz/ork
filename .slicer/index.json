@@ -1305,7 +1305,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "db4d6b21-cece-452f-89ee-bac0408190b8",
+          "kind": "",
+          "text": "**2026-10-26** — Preflight 2026-10-26: S110 (landed) lets right/left reach the sidebar's Running entry (owner-accepted deviation from adj 169); [ and ] must also wrap through the Running entry. S118's approval card uses shift-F for fix and f for file-later; keep both.",
+          "created_at": "2026-10-26T13:22:48Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1328,8 +1340,8 @@
     },
     {
       "id": "S106",
-      "title": "Run card first: Running at the top, the pane inline under the row, round and last heard beside the bar",
-      "short_title": "Run card first: Running at the top, the pane inline under the row, round and last heard beside the bar",
+      "title": "Run card: the pane inline under the row, round and last heard beside the bar, stall colours, 80x24 drops",
+      "short_title": "Run card inline",
       "status": "open",
       "has_slice": true,
       "depends_on": [

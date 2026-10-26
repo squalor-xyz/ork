@@ -1833,3 +1833,7 @@
 {"when": "2026-10-26T13:13:09Z", "item": "S143", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-10-26T13:13:09Z", "item": "S143", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-26T13:13:09Z", "item": "S119", "action": "note", "from": "", "to": "", "note": "Landing evidence 2026-10-26: after merging main, S118's and ", "by": "Jon R"}
+{"when": "2026-10-26T13:22:48Z", "item": "S106", "action": "set", "from": "", "to": "", "note": "title Run card first: Running at the top, the pane inline under the row, round and last heard beside the bar→Run card: the pane inline under the row, round and last heard beside the bar, stall colours, 80x24 drops; short_title Run card first: Running at the top, the pane inline under the row, round and last heard beside the bar→Run card inline"}
+{"when": "2026-10-26T13:22:48Z", "item": "S106", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-26T13:22:48Z", "item": "S106", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T13:22:48Z", "item": "S105", "action": "note", "from": "", "to": "", "note": "Preflight 2026-10-26: S110 (landed) lets right/left reach th", "by": "Jon R"}

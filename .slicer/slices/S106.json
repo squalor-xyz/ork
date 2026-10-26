@@ -1,6 +1,6 @@
 {
   "id": "S106",
-  "title": "Run card first: Running at the top, the pane inline under the row, round and last heard beside the bar",
+  "title": "Run card: the pane inline under the row, round and last heard beside the bar, stall colours, 80x24 drops",
   "lead": [],
   "depends_note": null,
   "findings_note": "",
@@ -20,11 +20,11 @@
     },
     {
       "heading": "Failing tests",
-      "body": "- TestRunningSectionComesFirstWhenARunIsLive and returns to its place when none is.\n- TestPaneOpensInlineUnderTheSelectedRow with no blank run of lines before it.\n- TestRoundAndLastHeardSitNextToTheBar.\n- TestLastHeardIsAmberPast10MinutesAndRedPast30 (and a plain cue in mono).\n- TestRowDropsRunIdAndModelAt80x24.\n- Golden views at 100x30 and 80x24."
+      "body": "- TestPaneOpensInlineUnderTheSelectedRow with no blank run of lines before it.\n- TestRoundAndLastHeardSitNextToTheBar.\n- TestLastHeardIsAmberPast10MinutesAndRedPast30 (and a plain cue in mono).\n- TestRowDropsRunIdAndModelAt80x24.\n- TestOverviewSectionOrderUnchanged: Needs you stays first while a run is live (adj 149).\n- Golden views at 100x30 and 80x24."
     },
     {
       "heading": "Implement",
-      "body": "1. Tests first. 2. Reorder the sections and move the pane inline. 3. Move round and last heard. 4. Stall colours. 5. Docs and goldens. UI slice: UI pass (r14). Not in this slice: the grouped Needs you (S84)."
+      "body": "Owner decision 2026-10-26 (session a2bf7e0e): S110's sidebar Running entry covers 'Running first', so the Overview section order does not change (Needs you first, adj 149). Keep the rest.\n1. Tests first. 2. Open the pane inline under the selected row. 3. Move round and last heard next to the stage bar (S110 already shows the bar's rN on Running rows; reuse it). 4. Stall colours: last heard amber past 10 minutes, red past 30 (the stale cutoff), with a plain cue in mono. 5. At 80x24 drop the run id from the row (keep it in the pane title) and the vendor/model column. 6. Docs and goldens. UI slice: UI pass (r14)."
     },
     {
       "heading": "Check",

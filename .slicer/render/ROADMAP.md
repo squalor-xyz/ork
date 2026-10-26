@@ -111,7 +111,7 @@
 | 54 | [S90](slices/S90.md) | Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on | S | 1 |  | discovered from S88 | — |
 | 55 | [S39](slices/S39.md) | ork run prompt tests catch swapped answers; help text says y/n | S | 1 |  | discovered from S21 | — |
 | 56 | [S105](slices/S105.md) | Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases | S | 2 |  |  | — |
-| 57 | [S106](slices/S106.md) | Run card first: Running at the top, the pane inline under the row, round and last heard beside the bar | M | 2 |  |  | — |
+| 57 | [S106](slices/S106.md) | Run card inline | M | 2 |  |  | — |
 | 58 | [S01](slices/S01.md) | Vendor spike | S | 1 |  |  | done |
 | 59 | [S02](slices/S02.md) | Core and adapters | M | 2 |  |  | done |
 | 60 | [S03](slices/S03.md) | Daemon and CLI | M | 2 |  |  | done |
