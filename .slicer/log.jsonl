@@ -1908,3 +1908,5 @@
 {"when": "2026-10-26T18:28:52Z", "item": "S138", "action": "note", "from": "", "to": "", "note": "Owner answers (session a2bf7e0e, 2026-10-26): (1) every elap", "by": "Jon R"}
 {"when": "2026-10-26T18:37:53Z", "item": "S138", "action": "status", "from": "started", "to": "done", "note": "Engine state wins for engine-linked runs: an awaiting-approval or paused run with a stale ledger shows its state word undimmed, with the wait age from the new persisted wait_started_at right after the state; the pane has no stall alarm while waiting; ages of 24h and up show days and hours. Full race suite green; reviewer and gate PASS; UI pass fixes applied.", "by": "Jon R"}
 {"when": "2026-10-26T18:38:04Z", "item": "S138", "action": "note", "from": "", "to": "", "note": "Orchestration trial run 2 (run-20261026-175512-e95d, began 1", "by": "Jon R"}
+{"when": "2026-10-26T18:40:13Z", "item": "S154", "action": "add", "from": "", "to": "open", "note": "S138 later notes: owner-wait rows and pane wording"}
+{"when": "2026-10-26T18:40:13Z", "item": "S140", "action": "note", "from": "", "to": "", "note": "From S138 (34bb9f8): for engine-linked runs the engine state", "by": "Jon R"}
