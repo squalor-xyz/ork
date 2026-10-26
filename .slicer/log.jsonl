@@ -1815,3 +1815,7 @@
 {"when": "2026-10-26T12:51:38Z", "item": "S140", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-10-26T12:51:38Z", "item": "S140", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-10-26T12:51:39Z", "item": "S140", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T13:03:40Z", "item": "S141", "action": "add", "from": "", "to": "open", "note": "Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note"}
+{"when": "2026-10-26T13:03:40Z", "item": "S141", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T13:03:40Z", "item": "S141", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T13:03:40Z", "item": "S141", "action": "edit", "from": "", "to": "", "note": "Files"}
