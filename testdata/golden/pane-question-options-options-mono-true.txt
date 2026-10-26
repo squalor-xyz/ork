@@ -1,4 +1,4 @@
-[1mork[m  ?help                 │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1mork[m  ?help                 │ [1mOverview[m[2m │ [mQuestions 1[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
   Running                2 │[2m────────────────────────────────────────────────────────────────────────[m
 [1;7m> Needs you              1 [m│[1mNeeds you 1[m
 [2m1[m ork                    1 │  [1mPaused 1[m
@@ -12,7 +12,6 @@
                            │    2. remote: remote storage
                            │    Why 1: keeps data nearby
                            │    [2madj filing off: no adj in this project[m
-                           │    1-2 pick; t free text; esc close pane
                            │
                            │[1mRunning 1[m  [1m! owner questions 1[m
                            │   ork  [1mS22[m  [2mactive[m  [......]
@@ -27,4 +26,5 @@
                            │
                            │
                            │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ 1-2 [2mpick[m; t [2mfree text[m; pgup/pgdown [2mline[m; esc [2mclose pane[m
                            │ 1 project | refreshed 16:42:00

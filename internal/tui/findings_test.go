@@ -61,7 +61,7 @@ func findingsHarness(t *testing.T, state string, fs ...source.EngineFinding) *ha
 
 func TestPaneOffersLaterFindingsAsSlices(t *testing.T) {
 	h := findingsHarness(t, "awaiting-approval", laterOne, laterTwo, ownerNote)
-	v := h.view()
+	v := h.view() + "\n" + sgr.ReplaceAllString(h.m.hintLine(200), "")
 	for _, want := range []string{"Add a --json flag to ork status", "f file slice", "a approve", "Should the cache be shared?"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("pane lacks %q:\n%s", want, v)
@@ -79,7 +79,7 @@ func TestPaneFileKeyAsksThenFilesTheFirstLaterFinding(t *testing.T) {
 	h := findingsHarness(t, "awaiting-approval", laterOne, laterTwo)
 	live := h.m.cfg.Live.(*fileLive)
 	h.deliver(press("f"))
-	v := h.view()
+	v := h.view() + "\n" + sgr.ReplaceAllString(h.m.hintLine(200), "")
 	if !strings.Contains(v, "slicer add 'Add a --json flag to ork status' --discovered-from S22?") || !strings.Contains(v, "[y/N] (Enter is No)") {
 		t.Fatalf("f must show the exact command and ask:\n%s", v)
 	}
@@ -96,7 +96,7 @@ func TestPaneFileKeyAsksThenFilesTheFirstLaterFinding(t *testing.T) {
 	}
 	// The next press offers the second finding.
 	h.deliver(press("f"))
-	if v := h.view(); !strings.Contains(v, "'Retire the old cache'") {
+	if v := h.view() + "\n" + sgr.ReplaceAllString(h.m.hintLine(200), ""); !strings.Contains(v, "'Retire the old cache'") {
 		t.Errorf("the filed finding is not offered again:\n%s", v)
 	}
 	h.deliver(press("y"))
@@ -110,7 +110,7 @@ func TestPaneFileWhileOneIsPendingIsRefused(t *testing.T) {
 	h.m.Update(press("f"))
 	h.m.Update(press("y")) // hold the returned command: the call stays in flight
 	_, cmd := h.m.Update(press("f"))
-	if v := h.view(); cmd != nil || !strings.Contains(v, "--discovered-from S22") || !strings.Contains(v, "is pending") || h.m.confirm != nil {
+	if v := h.view() + "\n" + sgr.ReplaceAllString(h.m.hintLine(200), ""); cmd != nil || !strings.Contains(v, "--discovered-from S22") || !strings.Contains(v, "is pending") || h.m.confirm != nil {
 		t.Fatalf("a second filing was not refused while the first is in flight:\n%s", v)
 	}
 }
@@ -133,7 +133,7 @@ func TestPaneFileFailureIsShownAndKeepsTheOffer(t *testing.T) {
 	live.err = fmt.Errorf("slicer add: locked")
 	h.deliver(press("f"))
 	h.deliver(press("y"))
-	v := h.view()
+	v := h.view() + "\n" + sgr.ReplaceAllString(h.m.hintLine(200), "")
 	if !strings.Contains(v, "slicer add: locked") || !strings.Contains(v, "f file slice") {
 		t.Errorf("failure and offer:\n%s", v)
 	}
@@ -143,12 +143,12 @@ func TestPaneFileNeedsADaemonThatCanFile(t *testing.T) {
 	h := findingsHarness(t, "awaiting-approval", laterOne)
 	h.m.cfg.Live = &actionLive{src: h.src} // no FileLater
 	h.deliver(press("f"))
-	if v := h.view(); h.m.confirm != nil || !strings.Contains(v, "cannot file slices") {
+	if v := h.view() + "\n" + sgr.ReplaceAllString(h.m.hintLine(200), ""); h.m.confirm != nil || !strings.Contains(v, "cannot file slices") {
 		t.Errorf("a connection without FileLater:\n%s", v)
 	}
 	h.m.cfg.Live = nil
 	h.deliver(press("f"))
-	if v := h.view(); h.m.confirm != nil || !strings.Contains(v, "No daemon connection") {
+	if v := h.view() + "\n" + sgr.ReplaceAllString(h.m.hintLine(200), ""); h.m.confirm != nil || !strings.Contains(v, "No daemon connection") {
 		t.Errorf("no connection:\n%s", v)
 	}
 
@@ -157,7 +157,7 @@ func TestPaneFileNeedsADaemonThatCanFile(t *testing.T) {
 	h.deliver(press("f"))
 	h.m.cfg.Live = &actionLive{src: h.src}
 	h.deliver(press("y"))
-	if v := h.view(); !strings.Contains(v, "cannot file slices") {
+	if v := h.view() + "\n" + sgr.ReplaceAllString(h.m.hintLine(200), ""); !strings.Contains(v, "cannot file slices") {
 		t.Errorf("the confirmed filing reports the missing support:\n%s", v)
 	}
 }
@@ -172,7 +172,7 @@ func TestPaneWithoutLaterFindingsHasNoFileKey(t *testing.T) {
 			h := findingsHarness(t, "awaiting-approval", fs...)
 			live := h.m.cfg.Live.(*fileLive)
 			h.deliver(press("f"))
-			v := h.view()
+			v := h.view() + "\n" + sgr.ReplaceAllString(h.m.hintLine(200), "")
 			if strings.Contains(v, "f file slice") || strings.Contains(v, "slicer add") || len(live.calls) != 0 {
 				t.Errorf("offered with nothing to file:\n%s", v)
 			}
@@ -182,7 +182,7 @@ func TestPaneWithoutLaterFindingsHasNoFileKey(t *testing.T) {
 
 func TestPaneFileKeyWorksWhileTheRunIsWorking(t *testing.T) {
 	h := findingsHarness(t, "implement", laterOne)
-	if v := h.view(); !strings.Contains(v, "f file slice") || !strings.Contains(v, "x stop") {
+	if v := h.view() + "\n" + sgr.ReplaceAllString(h.m.hintLine(200), ""); !strings.Contains(v, "f file slice") || !strings.Contains(v, "x stop") {
 		t.Fatalf("running pane:\n%s", v)
 	}
 	h.deliver(press("f"))
@@ -196,7 +196,7 @@ func TestPaneFileKeyIsTextInAFreeAnswer(t *testing.T) {
 	h := findingsHarness(t, "paused", laterOne, ownerNote)
 	h.m.byName["ork"].snap.EngineRuns[0].Pending = "question"
 	h.deliver(press("f"))
-	v := h.view()
+	v := h.view() + "\n" + sgr.ReplaceAllString(h.m.hintLine(200), "")
 	if live := h.m.cfg.Live.(*fileLive); len(live.calls) != 0 || h.m.confirm != nil {
 		t.Errorf("f in a question pane asked to file: %v", live.calls)
 	}
@@ -212,12 +212,12 @@ func TestPaneFileKeyIsTextInAFreeAnswer(t *testing.T) {
 
 func TestPaneFiledFindingsAreListedNotOffered(t *testing.T) {
 	h := findingsHarness(t, "stopped", source.EngineFinding{N: 1, Kind: runrec.FindingLater, Title: "Done already", Filed: "S99"}, laterTwo)
-	v := h.view()
-	if !strings.Contains(v, "Filed as slices: S99") || !strings.Contains(v, `1 later finding; next to file: "Retire the old cache"`) || !strings.Contains(v, "f file slice; esc close pane") {
+	v := h.view() + "\n" + sgr.ReplaceAllString(h.m.hintLine(200), "")
+	if !strings.Contains(v, "Filed as slices: S99") || !strings.Contains(v, `1 later finding; next to file: "Retire the old cache"`) || !strings.Contains(v, "f file slice") {
 		t.Errorf("stopped pane:\n%s", v)
 	}
 	h.deliver(press("f"))
-	if v := h.view(); !strings.Contains(v, "'Retire the old cache'") || strings.Contains(v, "Done already") {
+	if v := h.view() + "\n" + sgr.ReplaceAllString(h.m.hintLine(200), ""); !strings.Contains(v, "'Retire the old cache'") || strings.Contains(v, "Done already") {
 		t.Errorf("the second finding is offered, not the filed one:\n%s", v)
 	}
 }
@@ -251,19 +251,16 @@ func TestDaemonFileLaterWire(t *testing.T) {
 	}
 }
 
-func TestPaneFileHintSitsRightBeforeEsc(t *testing.T) {
-	for _, tc := range []struct{ state, pending, want string }{
-		{"awaiting-approval", "", "a approve; x stop; f file slice; esc close pane"},
-		{"implement", "", "x stop; f file slice; esc close pane"},
-		{"paused", "shape", "t retry; f file slice; esc close pane"},
-		{"paused", "budget", "t retry: one more role round; f file slice; esc close pane"},
-		{"stopped", "", "f file slice; esc close pane"},
-	} {
-		t.Run(tc.state+"/"+tc.pending, func(t *testing.T) {
-			h := findingsHarness(t, tc.state, laterOne)
-			h.m.byName["ork"].snap.EngineRuns[0].Pending = tc.pending
-			if v := h.view(); !strings.Contains(v, tc.want) {
-				t.Errorf("key line lacks %q:\n%s", tc.want, v)
+func TestPaneFileHintUsesTheHintBar(t *testing.T) {
+	for _, state := range []string{"awaiting-approval", "implement", "paused", "stopped"} {
+		t.Run(state, func(t *testing.T) {
+			h := findingsHarness(t, state, laterOne)
+			hint := wideHint(h)
+			if !strings.Contains(hint, "f file slice") || !strings.HasSuffix(hint, "esc close pane") {
+				t.Errorf("hint: %q", hint)
+			}
+			if strings.Contains(strings.Join(h.m.paneLines(200, 40, ""), "\n"), "f file slice") {
+				t.Error("pane repeats file keys")
 			}
 		})
 	}

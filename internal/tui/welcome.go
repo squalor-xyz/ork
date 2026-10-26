@@ -108,14 +108,14 @@ func hasProjectMarker(path string) bool {
 
 func (m *Model) welcomeBody(width int) []string {
 	th := m.cfg.Theme
-	lines := []string{indent + th.Heading.Render("Welcome"), "", indent + "No projects yet. Press + to add one"}
+	lines := []string{indent + th.Heading.Render("Welcome"), "", indent + "No projects yet."}
 	if m.welcome.editing {
 		value := m.welcome.field.view(max(width-len(indent)-14, 1), th)
 		if m.welcome.confirm != "" || m.welcome.pending {
 			value = th.Title.Render(m.welcome.field.Value())
 		}
 		lines = append(lines, "", indent+"Project path: "+value)
-		for _, line := range wrapText("Type an absolute path, or leave it empty and press Enter to use the current directory (needs .slicer or .adjudicate.json). Esc cancels.", max(width-len(indent), 1)) {
+		for _, line := range wrapText("Type an absolute path, or leave it empty and press Enter to use the current directory (needs .slicer or .adjudicate.json).", max(width-len(indent), 1)) {
 			lines = append(lines, indent+th.Dim.Render(line))
 		}
 	}

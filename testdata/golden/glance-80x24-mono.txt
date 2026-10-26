@@ -16,9 +16,9 @@
                    │
                    │[1mReady to land[m
                    │  [2mnone[m
-                   │
                    │[2m────────────────────────────────────────────────────────────[m
                    │  run-1  S30  implement  20m  [~~....] fix 1  heard 3m
                    │   [implementer]>reviewer>gate
                    │[2m────────────────────────────────────────────────────────────[m
+                   │ enter [2mopen[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
                    │ 4 projects | refreshed 16:42:07

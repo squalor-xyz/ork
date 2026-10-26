@@ -33,8 +33,8 @@
                            │
                            │
                            │
-                           │  [enter] open run   [space] tick item   [e] edit lineup   [l] launch wave
                            │[90m────────────────────────────────────────────────────────────────────────────────────────────[m
                            │  launched A as ork-20261025-123000-abcd; enter opens it
                            │[90m────────────────────────────────────────────────────────────────────────────────────────────[m
+                           │ enter [2mopen run[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
                            │ 2 projects | refreshed 16:42:00

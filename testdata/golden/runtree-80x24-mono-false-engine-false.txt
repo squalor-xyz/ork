@@ -16,9 +16,9 @@
                    │    . gate         queued  claude opus
                    │    [90m    Keep the raw phase[m
                    │
-                   │    started elsewhere, read-only; esc close pane
                    │
                    │[1;36mRecent[m
                    │[90m  +4 more lines[m
                    │[90m────────────────────────────────────────────────────────────[m
+                   │ [2mstarted elsewhere, read-only[m; esc [2mclose pane[m
                    │ 1 project | refreshed 16:42:00

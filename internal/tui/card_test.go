@@ -139,7 +139,7 @@ func TestApprovalCardSaysApprovalLandsAndCleansUp(t *testing.T) {
 		t.Errorf("the card does not say what approval does:\n%s", v)
 	}
 	// It sits between the human checks and the key line.
-	if i, j, k := strings.Index(v, "Human checks"), strings.Index(v, "Approve lands"), strings.Index(v, "a approve;"); !(i < j && j < k) {
+	if i, j, k := strings.Index(v, "Human checks"), strings.Index(v, "Approve lands"), strings.Index(v, "esc close pane"); !(i < j && j < k) {
 		t.Errorf("order: checks %d, landing note %d, keys %d:\n%s", i, j, k, v)
 	}
 }
@@ -377,7 +377,7 @@ func TestFixKeyNeedsADaemonThatTakesFixes(t *testing.T) {
 func TestFixKeyDoesNotTakeOverFileSlice(t *testing.T) {
 	h := cardHarness(t, approvalCard(), laterOne)
 	v := h.view()
-	if !strings.Contains(v, "a approve; F fix round; x stop; f file slice; esc close pane") {
+	if hint := wideHint(h); !strings.Contains(hint, "F fix round") || !strings.Contains(hint, "f file slice") {
 		t.Errorf("the key line:\n%s", v)
 	}
 	h.deliver(press("f"))
@@ -430,7 +430,7 @@ func TestApprovalCardGoldens(t *testing.T) {
 						t.Errorf("%dx%d: a line ends in an unclosed quote: %q", size.w, size.h, line)
 					}
 				}
-				for _, want := range []string{"Run engine", "Gate PASS", "Owner question, not blocking", "Recommended: per-project.", "Human checks (1 of 3 open)", "[~] " + humanTwo, "a approve; F fix round", "esc close pane"} {
+				for _, want := range []string{"Run engine", "Gate PASS", "Owner question, not blocking", "Recommended: per-project.", "Human checks (1 of 3 open)", "[~] " + humanTwo, "F fix round", "esc close pane"} {
 					if !strings.Contains(plain, want) {
 						t.Errorf("%dx%d lacks %q:\n%s", size.w, size.h, want, plain)
 					}

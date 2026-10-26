@@ -338,21 +338,7 @@ func (m *Model) sittingParts(width int) (overviewView, []string) {
 	}
 	out.body = append(out.body, "")
 	add(dim, fmt.Sprintf("%d of %d answered", s.pos, len(s.asks)), "")
-	hints := fmt.Sprintf("[1-%d] pick   [t] free text   [s] skip the rest", 0)
-	if a := ask.q.Ask; a != nil {
-		hints = fmt.Sprintf("[1-%d] pick   [t] free text   [s] skip the rest", len(a.Options))
-	}
-	switch {
-	case s.free && !ask.freeOnly():
-		hints = "[enter] submit   [esc] back to options"
-	case s.free:
-		hints = "[enter] submit   [esc] skip the rest"
-	}
-	footer := []string{""}
-	for _, line := range wrapText(hints, max(width-len(indent), 1)) {
-		footer = append(footer, indent+line)
-	}
-	return out, footer
+	return out, nil
 }
 
 func askTitle(q engine.SpecQuestion) string {

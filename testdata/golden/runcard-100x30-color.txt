@@ -17,7 +17,6 @@
                            │    [90m    tokens -  $-[m
                            │    [90m. gate        waiting[m
                            │
-                           │    x stop; esc close pane
                            │
                            │[1;36mRecent[m
                            │  [90mnone[m
@@ -27,4 +26,5 @@
                            │
                            │
                            │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ pgup/pgdown [2mline[m; ctrl+d/u [2mhalf page[m; esc [2mclose pane[m
                            │ 1 project | refreshed 16:42:00

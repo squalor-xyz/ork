@@ -50,7 +50,7 @@ func TestWavesLaunchRunsTheSpecCheckBeforeTheConfirmation(t *testing.T) {
 	if l.writes != 0 || len(l.starts) != 0 {
 		t.Fatal("the check wrote or started something")
 	}
-	if !strings.Contains(h.view(), "[l] launch wave") || strings.Contains(h.view(), "answer spec questions") {
+	if !strings.Contains(hintLine(h.view()), "y start; n cancel") || strings.Contains(h.view(), "answer spec questions") {
 		t.Errorf("hint with nothing held:\n%s", h.view())
 	}
 	// Every ticked item goes to the check again: the daemon asks the role only
@@ -193,7 +193,7 @@ func TestWavesSkippingTheSittingLaunchesOnlyTheReadyItems(t *testing.T) {
 				t.Errorf("status %q:\n%s", h.m.actionStatus, v)
 			}
 			// The hint says what l does now: answer the held questions.
-			if !strings.Contains(v, "[l] answer spec questions") || strings.Contains(v, "[l] launch wave") {
+			if !strings.Contains(v, "l answer spec questions") || strings.Contains(v, "l launch wave") {
 				t.Errorf("hint with B held:\n%s", v)
 			}
 			// A launched, so only B is still ticked. The daemon remembers B's questions.

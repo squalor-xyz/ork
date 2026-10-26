@@ -4,6 +4,7 @@ package tui
 
 import (
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -27,8 +28,18 @@ func (m *Model) View() tea.View {
 	return v
 }
 
+// hintRows is the rows the hint line takes above the status line (S149).
+const hintRows = 1
+
 // layoutSize shares the terminal and sidebar dimensions with detail scrolling.
+// Its height is the rows the layout has: the terminal's, less the hint line.
 func (m *Model) layoutSize() (w, h, sideW int) {
+	w, h, sideW = m.termSize()
+	return w, max(h-hintRows, 1), sideW
+}
+
+// termSize is the terminal's width and height and the sidebar's width.
+func (m *Model) termSize() (w, h, sideW int) {
 	w, h = m.width, m.height
 	if w <= 0 {
 		w = defaultWidth
@@ -49,9 +60,11 @@ func (m *Model) layoutSize() (w, h, sideW int) {
 }
 
 // screen is exactly height lines, none wider than width: sidebar, view bar,
-// active view and status line, as in docs/dashboard.md.
+// active view, hint line and status line, as in docs/dashboard.md. The body
+// is laid out in h rows, the terminal's less the hint line.
 func (m *Model) screen() string {
 	w, h, sideW := m.layoutSize()
+	_, termH, _ := m.termSize()
 	mainW := max(w-sideW, 1)
 	th := m.cfg.Theme
 	var body, detail, footer []string
@@ -93,7 +106,7 @@ func (m *Model) screen() string {
 		}
 		status := m.actionStatus
 		if status == "" && m.view == wavesView && m.waves != nil && m.waves.lineup == nil && m.waves.sitting == nil && len(m.waves.picked) > 0 {
-			status = fmt.Sprintf("%d ticked, not launched; [l] launches", len(m.waves.picked))
+			status = fmt.Sprintf("%d ticked, not launched", len(m.waves.picked))
 		}
 		if m.confirm != nil {
 			status = m.confirm.prompt()
@@ -123,7 +136,7 @@ func (m *Model) screen() string {
 			// rows; tiny terminals still give the pane's input and errors their
 			// priority, and leave its row and the scroll markers a line each.
 			paneHeight := max(h-7, 1)
-			if h >= 24 {
+			if h+hintRows >= 24 { // a terminal of 24 rows or more
 				paneHeight = max(h-10, 1)
 				// A Running run's second line is one more row line (S145).
 				paneHeight = max(paneHeight-ov.paneExtra, 1)
@@ -221,6 +234,13 @@ func (m *Model) screen() string {
 	if lipgloss.Width(bar) > mainW && strings.HasPrefix(bar, " ") {
 		bar = bar[1:] // the longer first tab still fits an 80 column screen
 	}
+	if lipgloss.Width(bar) > mainW {
+		// The Questions count is the first thing to go: the tab names matter more.
+		bar = m.viewBarCount(false)
+		if lipgloss.Width(bar) > mainW && strings.HasPrefix(bar, " ") {
+			bar = bar[1:]
+		}
+	}
 	main := []string{bar, rule}
 	main = append(main, body...)
 	main = append(main, footer...)
@@ -228,11 +248,11 @@ func (m *Model) screen() string {
 		main = append(main, rule)
 	}
 	main = append(main, detail...)
-	main = append(main, rule, m.statusLine(mainW))
-	if len(main) > h {
-		main = main[:h]
+	main = append(main, rule, m.hintLine(mainW), m.statusLine(mainW))
+	if len(main) > termH {
+		main = main[:termH]
 	}
-	side := m.sidebar(sideW, h)
+	side := m.sidebar(sideW, termH)
 	clipStyle := lipgloss.NewStyle().MaxWidth(w)
 	for i := range main {
 		line := main[i]
@@ -387,7 +407,10 @@ var views = []struct {
 // viewBar lists the views. The active view uses ViewActive. A view that is not
 // built yet is drawn dim with the separators before it; a built view that is not
 // active is plain.
-func (m *Model) viewBar() string {
+func (m *Model) viewBar() string { return m.viewBarCount(true) }
+
+// viewBarCount is viewBar with or without the Questions count (S149).
+func (m *Model) viewBarCount(count bool) string {
 	th := m.cfg.Theme
 	var b strings.Builder
 	var idle string // separators and unbuilt names not yet drawn, drawn as one dim run
@@ -401,6 +424,12 @@ func (m *Model) viewBar() string {
 	for i, v := range views {
 		if i == 0 && m.active == runningEntry {
 			v.name = "Overview (Running)" // the Running entry is the Overview, narrowed
+		}
+		if i == questionsView {
+			// The Questions tab counts the rows Enter opens there (S149).
+			if n := len(m.selectableQuestions()); count && n > 0 {
+				v.name = fmt.Sprintf("%s %d", v.name, n)
+			}
 		}
 		if i > 0 {
 			vertical, _ := th.rules(m.cfg.ASCII)
@@ -471,6 +500,68 @@ func (m *Model) statusLine(w int) string {
 	return lipgloss.NewStyle().MaxWidth(max(w, 1)).Render(line)
 }
 
+// hintLine is the line above the status line: the keys that work now, from
+// contextHelp. Whole hints drop by priority, then return at their original
+// positions when spare columns fit them (S149).
+func (m *Model) hintLine(w int) string {
+	entries := m.contextHints()
+	visible := make([]bool, len(entries))
+	for i := range visible {
+		visible[i] = true
+	}
+	var dropped []int
+	join := func() string {
+		var hints []string
+		for i, e := range entries {
+			if !visible[i] {
+				continue
+			}
+			h := e.b.Help()
+			hints = append(hints, strings.TrimSpace(h.Key+" "+lipgloss.NewStyle().Faint(true).Render(h.Desc)))
+		}
+		return strings.Join(hints, "; ")
+	}
+	room := max(w-1, 1)
+	line := join()
+	for lipgloss.Width(line) > room {
+		// The hint that matters least goes first (the highest drop, the
+		// rightmost of a tie); the way out has drop 0 and stays.
+		at := -1
+		for i, e := range entries {
+			if visible[i] && e.drop > 0 && (at < 0 || e.drop >= entries[at].drop) {
+				at = i
+			}
+		}
+		if at < 0 {
+			break
+		}
+		visible[at] = false
+		dropped = append(dropped, at)
+		line = join()
+	}
+	// Refill spare columns in priority order, preserving the original positions.
+	sort.Slice(dropped, func(i, j int) bool {
+		a, b := dropped[i], dropped[j]
+		if entries[a].drop == entries[b].drop {
+			return a < b
+		}
+		return entries[a].drop < entries[b].drop
+	})
+	for _, at := range dropped {
+		visible[at] = true
+		candidate := join()
+		if lipgloss.Width(candidate) <= room {
+			line = candidate
+		} else {
+			visible[at] = false
+		}
+	}
+	if line == "" {
+		return ""
+	}
+	return clip(" "+line, w)
+}
+
 // packHints joins keys with "; " into lines of at most w columns, as many to a
 // line as fit. A line breaks only between keys, so no key splits from its words.
 func packHints(hints []string, w int) []string {
@@ -501,9 +592,25 @@ func (m *Model) helpLines(w, bodyH int) []string {
 		lines = append(lines, wrapText("Waves: a shows all waves. <S65: shares files with S65, an earlier item.", max(w, 1))...)
 	}
 	var actionHints []string
+	refresh, filter := "", ""
 	for _, group := range m.keys.FullHelp() {
 		for _, binding := range group {
 			h := binding.Help()
+			// Refresh shares the quit line, and the filter and sidebar keys one
+			// line, so the help keeps its last line with ctrl+d/u added (S149).
+			if h == m.keys.Refresh.Help() {
+				refresh = h.Key + " " + h.Desc + "; "
+				continue
+			}
+			if h == m.keys.Filter.Help() {
+				filter = h.Key + " " + h.Desc + "; "
+				continue
+			}
+			if h == m.keys.Sidebar.Help() {
+				lines = append(lines, clip(filter+h.Key+" "+h.Desc, w))
+				filter = ""
+				continue
+			}
 			// Share a line so the added answer toggle keeps help and quit
 			// visible at the standard terminal height.
 			if h == m.keys.Quit.Help() {
@@ -511,7 +618,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			}
 			if h == m.keys.Help.Help() {
 				q := m.keys.Quit.Help()
-				lines = append(lines, clip(q.Key+" "+q.Desc+"; "+h.Key+" "+h.Desc, w))
+				lines = append(lines, clip(refresh+q.Key+" "+q.Desc+"; "+h.Key+" "+h.Desc, w))
 				continue
 			}
 			if h.Key == m.keys.AllProjects.Help().Key && m.view != decisionsView {

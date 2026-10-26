@@ -343,10 +343,13 @@ func TestLineupSavedBudgetVisible(t *testing.T) {
 func TestLineupEditorAffordances(t *testing.T) {
 	h, _ := lineupHarness(t)
 	body := func() string { return strings.Join(h.m.lineupBody(100).body, "\n") }
-	for _, want := range []string{"Edit lineup: A  Alpha", "  > implementer: claude sonnet high (no alternatives; c for custom)", "[up/down/tab] row   [left/right] cycle   [c] custom"} {
+	for _, want := range []string{"Edit lineup: A  Alpha", "  > implementer: claude sonnet high (no alternatives)"} {
 		if !strings.Contains(body(), want) {
 			t.Errorf("missing %q", want)
 		}
+	}
+	if hint := wideHint(h); !strings.Contains(hint, "c custom") || !strings.Contains(hint, "enter save and replan") {
+		t.Errorf("lineup hint: %q", hint)
 	}
 	e := h.m.waves.lineup
 	e.plan.Lineup["implementer"] = append(e.plan.Lineup["implementer"], runrec.LineupEntry{Vendor: "other", Model: "model", Effort: "low"})
@@ -365,7 +368,7 @@ func TestLineupEditorAffordances(t *testing.T) {
 	h.deliver(press("enter"))
 	h.deliver(press("down"))
 	h.deliver(press("down"))
-	if !strings.Contains(body(), "[up/down/tab] row   type a whole number") || strings.Contains(body(), "[left/right]") {
+	if hint := wideHint(h); !strings.Contains(hint, "up/down/tab row") || strings.Contains(hint, "left/right cycle") {
 		t.Error("budget row hints are incorrect")
 	}
 }

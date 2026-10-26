@@ -671,6 +671,7 @@ func TestUnavailableRunActions(t *testing.T) {
 	s.EngineRuns[0].Pending = "question"
 	h.m.apply(snapshotMsg{name: "ork", snap: s})
 	h.m.pane = &runPane{run: s.EngineRuns[0].ID, project: "ork"}
+	h.m.cfg.Live = &actionLive{src: h.src}
 	pane := strings.Join(h.m.paneLines(300, 30, ""), "\n")
 	if !strings.Contains(pane, "No actions:") || !strings.Contains(pane, "ork projects add PATH --name ork") || !strings.Contains(pane, "ork daemon restart") {
 		t.Error("removed pane lacks actionable recovery guidance")
@@ -725,12 +726,13 @@ func TestBudgetPausedRowAndPane(t *testing.T) {
 		t.Fatalf("budget row missing from Needs you: %s", v)
 	}
 	h.m.pane = &runPane{run: s.EngineRuns[0].ID, project: "ork"}
+	h.m.cfg.Live = &actionLive{src: h.src}
 	pane := sgr.ReplaceAllString(strings.Join(h.m.paneLines(200, 40, ""), "\n"), "")
-	if !strings.Contains(pane, s.EngineRuns[0].Wait) || !strings.Contains(pane, "t retry: one more role round; esc close pane") {
+	if !strings.Contains(pane, s.EngineRuns[0].Wait) || !strings.Contains(wideHint(h), "t retry") {
 		t.Fatalf("budget pane missing reason or grant hint: %s", pane)
 	}
 	narrow := sgr.ReplaceAllString(strings.Join(h.m.paneLines(30, 40, ""), "\n"), "")
-	if !strings.Contains(narrow, "esc close pane") {
+	if !strings.Contains(sgr.ReplaceAllString(h.m.hintLine(30), ""), "esc close pane") {
 		t.Fatalf("narrow budget pane missing close hint: %s", narrow)
 	}
 }

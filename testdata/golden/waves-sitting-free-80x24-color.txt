@@ -19,6 +19,6 @@
                    │
                    │
                    │
-                   │  [enter] submit   [esc] back to options
                    │[90m────────────────────────────────────────────────────────────[m
+                   │ enter [2msubmit[m; esc [2mback to options[m
                    │ 2 projects | refreshed 16:42:00

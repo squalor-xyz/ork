@@ -1890,3 +1890,7 @@
 {"when": "2026-10-26T16:21:49Z", "item": "S151", "action": "add", "from": "", "to": "open", "note": "S85 later notes: pager-style page keys, help overlay, group keys on Roadmap and Waves"}
 {"when": "2026-10-26T16:22:00Z", "item": "S149", "action": "note", "from": "", "to": "", "note": "Preflight 2026-10-26: S85 landed (3672a6a). Page keys now mo", "by": "Jon R"}
 {"when": "2026-10-26T16:22:00Z", "item": "S95", "action": "note", "from": "", "to": "", "note": "Preflight 2026-10-26: S119 (b7bc308) added a LandedAt marker", "by": "Jon R"}
+{"when": "2026-10-26T16:22:51Z", "item": "S149", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-26T16:54:40Z", "item": "S149", "action": "status", "from": "started", "to": "done", "note": "Hint line above the status line built from shared refusal checks, ctrl+d/u run-pane scroll, Questions tab count, docs and goldens; 650 tui tests green; HUMAN CHECK (owner reads hint line live at 100x30 and 80x24) still open", "by": "Jon R"}
+{"when": "2026-10-26T17:03:56Z", "item": "S149", "action": "note", "from": "", "to": "", "note": "Owner answers (session a2bf7e0e, 2026-10-26): (1) drop the k", "by": "Jon R"}
+{"when": "2026-10-26T17:16:41Z", "item": "S149", "action": "note", "from": "", "to": "", "note": "Review FAIL (round 2): docs/dashboard.md still describes the", "by": "Jon R"}

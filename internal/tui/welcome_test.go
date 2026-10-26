@@ -47,7 +47,7 @@ func TestTUIOpensOnTheWelcomeViewWithNoProjects(t *testing.T) {
 			t.Fatalf("%s changed welcome state", k)
 		}
 	}
-	if !strings.Contains(h.view(), "No projects yet. Press + to add one") {
+	if !strings.Contains(h.view(), "No projects yet.") {
 		t.Fatal(h.view())
 	}
 	h.deliver(press("?"))
@@ -208,7 +208,7 @@ func TestWelcomeAddClosesHelpAndEscReturns(t *testing.T) {
 	}
 	h.deliver(tea.PasteMsg{Content: "/work/mine"})
 	h.deliver(press("esc"))
-	if strings.Contains(h.view(), "Project path:") || !strings.Contains(h.view(), "Press + to add one") {
+	if strings.Contains(h.view(), "Project path:") || !strings.Contains(h.view(), "+ add project") {
 		t.Fatal(h.view())
 	}
 }
@@ -266,7 +266,7 @@ func TestWelcomeHintNamesAbsolutePaths(t *testing.T) {
 	h, _ := welcomeHarness(t)
 	h.deliver(press("+"))
 	got := sgr.ReplaceAllString(strings.Join(h.m.welcomeBody(300), "\n"), "")
-	want := "Type an absolute path, or leave it empty and press Enter to use the current directory (needs .slicer or .adjudicate.json). Esc cancels."
+	want := "Type an absolute path, or leave it empty and press Enter to use the current directory (needs .slicer or .adjudicate.json)."
 	if !strings.Contains(got, want) {
 		t.Fatalf("hint=%s", got)
 	}
@@ -276,7 +276,7 @@ func TestWelcomeWithOnlyRemovedProjects(t *testing.T) {
 	h, _ := welcomeHarness(t)
 	group := source.Snapshot{Project: registry.Project{Name: "removed"}, Unavailable: true, EngineRuns: []source.EngineRun{{ID: "missing", State: "implement", Unavailable: true, Error: `project "removed" is not registered`}}}
 	h.deliver(unavailableProjectsMsg{groups: []source.Snapshot{group}})
-	if !strings.Contains(h.view(), "No projects yet. Press + to add one") {
+	if !strings.Contains(h.view(), "No projects yet.") {
 		t.Error("removed-only groups hid Welcome")
 	}
 	h.deliver(press("1"))

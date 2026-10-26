@@ -9,7 +9,6 @@
                            │    [90mimplementer[m > [90mreviewer[m > [90mgate[m
                            │
                            │    Stopped; relaunch, or clear with: ork dismiss engine
-                           │    esc close pane
                            │
                            │[1;36mRunning 0[m
                            │  [90mnothing running[m
@@ -27,4 +26,5 @@
                            │
                            │
                            │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ pgup/pgdown [2mline[m; ctrl+d/u [2mhalf page[m; esc [2mclose pane[m
                            │ 1 project | refreshed 16:42:00

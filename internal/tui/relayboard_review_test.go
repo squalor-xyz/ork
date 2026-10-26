@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	tea "charm.land/bubbletea/v2"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
@@ -200,8 +201,9 @@ func TestRecentEnterOpensReadOnlyEndedPane(t *testing.T) {
 			t.Fatalf("read-only key %s returned action", key)
 		}
 	}
-	if v := treePaneView(h.m, 120, 60); !strings.Contains(v, "read-only") {
-		t.Fatal(v)
+	h.m.Update(tea.WindowSizeMsg{Width: 120, Height: 60})
+	if hint := hintLine(plainView(h.m)); !strings.Contains(hint, "read-only") {
+		t.Fatal(hint)
 	}
 }
 

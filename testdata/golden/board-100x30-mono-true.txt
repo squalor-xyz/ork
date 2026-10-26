@@ -22,9 +22,9 @@
                            │
                            │
                            │
-                           │
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │  s97  S97  active  20m  [##~~..]  ! heard 16m  running: reviewer
                            │   implementer>[reviewer]>gate
                            │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ enter [2mopen[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
                            │ 1 project | refreshed 16:42:00

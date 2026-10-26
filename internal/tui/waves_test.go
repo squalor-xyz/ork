@@ -836,15 +836,15 @@ func TestWavesSelectedSharesUseUniformStyle(t *testing.T) {
 	}
 }
 
-func TestWavesFooterWrapsBetweenHints(t *testing.T) {
+func TestWavesHasOneHintBar(t *testing.T) {
 	h, _ := wavesHarness(t)
 	openWaves(t, h)
-	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
-	body := strings.Join(h.m.wavesBody(60).body, "\n")
-	for _, hint := range []string{"[enter] item", "[space] tick item", "[e] edit lineup", "[l] launch wave"} {
-		if !strings.Contains(body, hint) {
-			t.Errorf("split hint %q:\n%s", hint, body)
-		}
+	body, footer := h.m.wavesParts(60)
+	if len(footer) != 0 || strings.Contains(strings.Join(body.body, "\n"), "[enter]") {
+		t.Fatal("duplicate Waves footer")
+	}
+	if got := wideHint(h); !strings.Contains(got, "enter item") || !strings.Contains(got, "space tick item") {
+		t.Fatalf("hint: %q", got)
 	}
 }
 
@@ -883,8 +883,8 @@ func TestWavesItemPanePageKeysUseVisibleHeight(t *testing.T) {
 		h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
 		_ = h.m.View()
 		h.deliver(press("pgdown"))
-		if h.m.waves.paneOffset != size[1]-5 {
-			t.Errorf("page offset %d, want %d", h.m.waves.paneOffset, size[1]-5)
+		if h.m.waves.paneOffset != size[1]-6 { // the hint line takes a row (S149)
+			t.Errorf("page offset %d, want %d", h.m.waves.paneOffset, size[1]-6)
 		}
 		h.deliver(press("down"))
 		h.deliver(press("pgup"))
@@ -967,7 +967,7 @@ func TestTickedItemStaysInViewWithInputs(t *testing.T) {
 		id := h.m.waves.rows()[h.m.waves.cursor].ID
 		h.deliver(press(" "))
 		v := plainView(h.m)
-		if !strings.Contains(v, "1 ticked, not launched; [l] launches") {
+		if !strings.Contains(v, "1 ticked, not launched") {
 			t.Fatalf("tick status offscreen:\n%s", v)
 		}
 		if !strings.Contains(v, "[x] "+id) || !strings.Contains(v, "Well specified? [y/n]:") || !strings.Contains(v, "Split? [y/n]:") {
@@ -1016,7 +1016,7 @@ func TestWavesCompactLineupAndContinuation(t *testing.T) {
 			t.Errorf("missing %q:\n%s", want, plain)
 		}
 	}
-	if !strings.Contains(plainView(h.m), "1 ticked, not launched; [l] launches") {
+	if !strings.Contains(plainView(h.m), "1 ticked, not launched") {
 		t.Fatal("tick status missing")
 	}
 	if strings.Contains(plain, "hidden") || strings.Contains(plain, " -> ") {
@@ -1330,8 +1330,8 @@ func TestWavesFix1SecondaryLinesAndInputs(t *testing.T) {
 			t.Errorf("input indentation/marker: %q", line)
 		}
 	}
-	for _, hint := range []string{"[tab] next field", "[enter] plan", "[esc] cancel"} {
-		if !strings.Contains(plain, hint) {
+	for _, hint := range []string{"tab next field", "enter plan", "esc cancel"} {
+		if !strings.Contains(wideHint(h), hint) {
 			t.Errorf("missing input hint %q", hint)
 		}
 	}
@@ -1344,7 +1344,7 @@ func TestWavesFix1StatusNotInLineupEditor(t *testing.T) {
 	h, _ := wavesHarness(t)
 	openWaves(t, h)
 	tickWave(t, h, "y", "n")
-	if !strings.Contains(plainView(h.m), "1 ticked, not launched; [l] launches") {
+	if !strings.Contains(plainView(h.m), "1 ticked, not launched") {
 		t.Fatal("tick status missing")
 	}
 	h.deliver(press("e"))
@@ -1362,13 +1362,11 @@ func TestWavesFix1NoticesHintsAndHelp(t *testing.T) {
 	if h.m.actionStatus != "launched 2 items; enter on a running row opens its run" {
 		t.Fatal(h.m.actionStatus)
 	}
-	body := sgr.ReplaceAllString(strings.Join(h.m.wavesBody(60).body, "\n"), "")
-	if !strings.Contains(body, "[enter] open run") || strings.Contains(body, "[enter] item") {
+	if !strings.Contains(wideHint(h), "enter open run") || strings.Contains(wideHint(h), "enter item") {
 		t.Fatal("launched row hint missing")
 	}
 	h.m.waves.cursor = 2
-	body = sgr.ReplaceAllString(strings.Join(h.m.wavesBody(60).body, "\n"), "")
-	if !strings.Contains(body, "[enter] item") {
+	if !strings.Contains(wideHint(h), "enter item") {
 		t.Fatal("plain row hint changed")
 	}
 	help := sgr.ReplaceAllString(strings.Join(h.m.helpLines(100, 40), "\n"), "")
@@ -1409,12 +1407,12 @@ func TestWavesHintsStayPinnedBelowBody(t *testing.T) {
 		}
 		return -1
 	}
-	if at("[tab] next field") < 0 || at("[tab] next field") > at("1 ticked, not launched") || at("Split? [y/n]:") > at("[tab] next field") {
+	if at("tab next field") != len(lines)-2 || at("Split? [y/n]:") > at("tab next field") {
 		t.Fatalf("input hints not pinned under the body:\n%s", strings.Join(lines, "\n"))
 	}
 	h.deliver(press("esc"))
 	tickWave(t, h, "y", "n")
-	if got := plainView(h.m); !strings.Contains(got, "[enter] item") || !strings.Contains(got, "[l] launch wave") {
+	if got := plainView(h.m); !strings.Contains(hintLine(got), "enter item") || !strings.Contains(hintLine(got), "l launch wave") {
 		t.Fatalf("composer hints scrolled away:\n%s", got)
 	}
 }

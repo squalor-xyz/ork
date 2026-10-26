@@ -115,24 +115,12 @@ func (m *Model) decisions(w int) overviewView {
 	out.body = append(out.body, strings.Join(tabs, th.Dim.Render(" | ")))
 	all := m.allProjects || m.active < 0
 	scope := "All projects using adj"
-	toggle := "[A] all projects"
 	if !all {
 		scope = m.projects[m.active].reg.Name
-	} else if m.active >= 0 {
-		toggle = "[A] " + m.projects[m.active].reg.Name + " only"
-	} else {
-		toggle = ""
 	}
 	out.body = append(out.body, th.Heading.Render(scope))
-	hints := []string{"[left/right] tabs"}
-	if toggle != "" {
-		hints = append(hints, toggle)
-	}
-	hints = append(hints, "[enter] open")
-	finish := func() overviewView {
-		add(strings.Join(hints, "   "))
-		return out
-	}
+	finish := func() overviewView { return out }
+
 	if !all && !m.projects[m.active].reg.Adj {
 		add("no adj in this project")
 		return finish()

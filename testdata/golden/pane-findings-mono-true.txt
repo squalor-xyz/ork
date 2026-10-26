@@ -14,7 +14,6 @@
                            │    2 later findings; next to file: "Add a --json flag to ork status"
                            │    Owner question, not blocking: Should the cache be shared?
                            │    Recommended: per-project.
-                           │    a approve; x stop; f file slice; esc close pane
                            │
                            │[1mRunning 0[m
                            │  [2mnothing running[m
@@ -27,4 +26,5 @@
                            │
                            │
                            │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ a [2mapprove[m; x [2mstop[m; pgup/pgdown [2mline[m; ctrl+d/u [2mhalf page[m; esc [2mclose pane[m
                            │ 1 project | refreshed 16:42:00

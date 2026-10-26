@@ -33,8 +33,8 @@
                            │
                            │
                            │
-                           │  [tab] next field   [enter] plan   [esc] cancel
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────[m
-                           │  1 ticked, not launched; [l] launches
+                           │  1 ticked, not launched
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────[m
+                           │ tab [2mnext field[m; enter [2mplan[m; esc [2mcancel[m
                            │ 2 projects | refreshed 16:42:00

@@ -324,7 +324,7 @@ func TestDecisionsFixTabAndScopeHierarchy(t *testing.T) {
 	if body[1] != th.Heading.Render("zeta") {
 		t.Errorf("scope heading: %q", body[1])
 	}
-	if body[len(body)-1] != indent+"[left/right] tabs   [A] all projects   [enter] open" {
+	if !strings.Contains(wideHint(h), "A all projects") {
 		t.Errorf("one-project hint: %q", body[len(body)-1])
 	}
 	h.send(press("A"))
@@ -332,12 +332,12 @@ func TestDecisionsFixTabAndScopeHierarchy(t *testing.T) {
 	if body[1] != th.Heading.Render("All projects using adj") {
 		t.Errorf("all scope heading: %q", body[1])
 	}
-	if body[len(body)-1] != indent+"[left/right] tabs   [A] zeta only   [enter] open" {
+	if !strings.Contains(wideHint(h), "A zeta only") {
 		t.Errorf("all-project hint: %q", body[len(body)-1])
 	}
 	h.m.switchTo(-1)
 	body = h.m.decisions(72).body
-	if body[len(body)-1] != indent+"[left/right] tabs   [enter] open" {
+	if strings.Contains(wideHint(h), "A all projects") {
 		t.Errorf("Needs you hint: %q", body[len(body)-1])
 	}
 }
@@ -439,8 +439,8 @@ func TestDecisionsFixScrollIsTopLineAndClamped(t *testing.T) {
 		t.Error("one up did not restore the initial view")
 	}
 	h.send(tea.KeyPressMsg{Code: tea.KeyPgDown})
-	if h.m.decisionScroll != 26 {
-		t.Errorf("pgdown offset %d, want page 26", h.m.decisionScroll)
+	if h.m.decisionScroll != 25 { // the 26 rows of the body less the hint line (S149)
+		t.Errorf("pgdown offset %d, want page 25", h.m.decisionScroll)
 	}
 	h.send(tea.KeyPressMsg{Code: tea.KeyPgUp})
 	if h.m.decisionScroll != 0 {

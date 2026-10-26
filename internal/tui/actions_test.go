@@ -312,7 +312,7 @@ func TestActionDismissMessage(t *testing.T) {
 	h.deliver(press("esc"))
 	v := h.view()
 	lines := strings.Split(v, "\n")
-	if !strings.Contains(strings.Join(lines[len(lines)-4:len(lines)-2], "\n"), "S22  implement  2 of 6 steps running  2m") {
+	if !strings.Contains(strings.Join(lines[len(lines)-5:len(lines)-3], "\n"), "S22  implement  2 of 6 steps running  2m") {
 		t.Fatalf("Escape must restore the cursor row detail:\n%s", v)
 	}
 }

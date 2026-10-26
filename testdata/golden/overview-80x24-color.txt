@@ -1,4 +1,4 @@
-[1mork[m [90mdev[m  ?help     │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[1mork[m [90mdev[m  ?help     │ [1;36mOverview[m[90m │ [mQuestions 3[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
   Running        1 │[90m────────────────────────────────────────────────────────────[m
 [1;7;97;44m> Needs you      6 [m│[1;36mNeeds you 6[m
 [90m1[m slicer         3*│  [1mDecisions 3[m
@@ -14,11 +14,11 @@
                    │[1;36mRunning 2[m
                    │  [36m          [m  slicer      [1mS11[m  [90mactive[m  [......]
                    │  [90m~ pending [m  agents      waiting for the first reply
-                   │
-                   │[90m  +5 more lines[m
+                   │[90m  +6 more lines[m
                    │[90m────────────────────────────────────────────────────────────[m
                    │  #11 open
                    │  Does ork reimplement slicer's roadmap editor or reuse
                    │  slicer tui?
                    │[90m────────────────────────────────────────────────────────────[m
+                   │ enter [2mgo to project[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
                    │ 4 projects | refreshed 16:42:07 | pending 1

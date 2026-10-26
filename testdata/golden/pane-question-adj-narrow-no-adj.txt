@@ -6,4 +6,3 @@
   Answer: [1m[m[1;7;97;44m [m[1m[m
   ork answer engine ''
   [90madj filing off: no adj in this project[m
-  enter submit; esc close pane

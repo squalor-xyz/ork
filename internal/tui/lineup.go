@@ -29,26 +29,34 @@ type lineupEditor struct {
 	focus   int
 }
 
-func (m *Model) openLineup() tea.Cmd {
+func (m *Model) lineupRefusal() (string, bool) {
 	w := m.waves
 	if m.view != wavesView || m.showHelp || w == nil || w.pending || w.starting {
-		m.actionStatus = "Wait for the plan before editing"
-		return nil
+		return "Wait for the plan before editing", true
 	}
 	rows := w.rows()
 	if len(rows) == 0 {
-		m.actionStatus = "Tick the item before editing its lineup"
-		return nil
+		return "Tick the item before editing its lineup", true
 	}
 	p, ok := w.picked[rows[clampCursor(w.cursor, len(rows))].ID]
 	if !ok {
-		m.actionStatus = "Tick the item before editing its lineup"
-		return nil
+		return "Tick the item before editing its lineup", true
 	}
 	if w.planning != "" || p.Expected == nil {
-		m.actionStatus = "Wait for the plan before editing"
+		return "Wait for the plan before editing", true
+	}
+	return "", false
+}
+
+func (m *Model) openLineup() tea.Cmd {
+	if status, refused := m.lineupRefusal(); refused {
+		m.actionStatus = status
 		return nil
 	}
+	w := m.waves
+	rows := w.rows()
+	p := w.picked[rows[clampCursor(w.cursor, len(rows))].ID]
+
 	e := &lineupEditor{item: p.Item, plan: p.Expected}
 	for i, role := range lineupRoles {
 		e.chains[i] = append([]runrec.LineupEntry(nil), p.Expected.Lineup[role]...)
@@ -214,7 +222,7 @@ func (m *Model) lineupBody(width int) overviewView {
 			if n := len(e.plan.Lineup[role]); n > 1 {
 				value = fmt.Sprintf("< %s >  %d/%d", value, e.choice[i]+1, n)
 			} else {
-				value += " (no alternatives; c for custom)"
+				value += " (no alternatives)"
 			}
 		}
 		start := len(out.body)
@@ -259,14 +267,6 @@ func (m *Model) lineupBody(width int) overviewView {
 			}
 			add(fmt.Sprintf("%s%s: %s", prefix, label, value))
 		}
-		add("[tab/shift+tab] field   [enter] use entry   [esc] discard")
-	} else {
-		if e.row >= 2 {
-			add("[up/down/tab] row   type a whole number")
-		} else {
-			add("[up/down/tab] row   [left/right] cycle   [c] custom")
-		}
-		add("[enter] save and replan   [esc] discard")
 	}
 	return out
 }

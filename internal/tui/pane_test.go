@@ -449,7 +449,7 @@ func TestActionResultSurvivesRowRefresh(t *testing.T) {
 }
 
 func TestPaneShortTerminalKeepsError(t *testing.T) {
-	for _, height := range []int{9, 10} {
+	for _, height := range []int{10, 11} { // the hint line takes a row: these are the old 9 and 10 (S149)
 		t.Run(fmt.Sprint(height), func(t *testing.T) {
 			h := paneHarness(t, "paused", "question")
 			h.m.Update(tea.WindowSizeMsg{Width: 140, Height: height})
@@ -674,8 +674,8 @@ func TestPaneAdjFilingStates(t *testing.T) {
 		name, key, want string
 		adj, on         bool
 	}{
-		{"off", "a.b", "[ ] file answer in adj as a.b  ctrl+a toggles", true, false},
-		{"on", "a.b", "[x] file answer in adj as a.b  ctrl+a toggles", true, true},
+		{"off", "a.b", "[ ] file answer in adj as a.b", true, false},
+		{"on", "a.b", "[x] file answer in adj as a.b", true, true},
 		{"no-adj", "a.b", "adj filing off: no adj in this project", false, false},
 		{"no-key", "", "adj filing off: question has no decision key", true, false},
 	} {
@@ -714,7 +714,7 @@ func TestPaneShortTerminalKeepsOnToggle(t *testing.T) {
 	}
 	h.m.pane.adj = false
 	got = strings.Join(h.m.paneLines(100, 3, "result"), "\n")
-	if strings.Contains(got, "[ ]") || !strings.Contains(got, "enter submit") {
+	if !strings.Contains(got, "[ ]") || !strings.Contains(got, "Answer:") || !strings.Contains(got, "result") || strings.Contains(got, "enter submit") {
 		t.Fatalf("off toggle has wrong priority: %s", got)
 	}
 }
@@ -823,7 +823,7 @@ func optionsHarness(t *testing.T) *harness {
 func TestQuestionPaneListsOptionsAndMarksTheRecommendation(t *testing.T) {
 	h := optionsHarness(t)
 	v := strings.Join(h.m.paneLines(100, 25, ""), "\n")
-	for _, want := range []string{"Which storage?", "1. use: local storage", "recommended", "2. remote: remote storage", "keeps data nearby", "t free text"} {
+	for _, want := range []string{"Which storage?", "1. use: local storage", "recommended", "2. remote: remote storage", "keeps data nearby"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("missing %q: %s", want, v)
 		}
@@ -839,7 +839,7 @@ func TestQuestionPaneListsOptionsAndMarksTheRecommendation(t *testing.T) {
 		t.Fatal("free text did not accept input")
 	}
 	h.deliver(press("esc"))
-	if h.m.pane == nil || !strings.Contains(strings.Join(h.m.paneLines(100, 25, ""), "\n"), "t free text") {
+	if h.m.pane == nil || !strings.Contains(wideHint(h), "t free text") {
 		t.Fatal("escape did not return to options")
 	}
 	h.deliver(press("esc"))
@@ -981,19 +981,19 @@ func TestStructuredPaneHintsAndTitle(t *testing.T) {
 	h := optionsHarness(t)
 	h.m.cfg.Theme = NewTheme(true)
 	lines := strings.Join(h.m.paneLines(120, 25, ""), "\n")
-	for _, want := range []string{"1-2 pick; t free text; esc close pane", "Why 1: keeps data nearby", h.m.cfg.Theme.Heading.Render("Which storage?")} {
+	for _, want := range []string{"Why 1: keeps data nearby", h.m.cfg.Theme.Heading.Render("Which storage?")} {
 		if !strings.Contains(lines, want) {
 			t.Errorf("missing %q: %q", want, lines)
 		}
 	}
 	h.deliver(press("1"))
 	lines = strings.Join(h.m.paneLines(120, 25, h.m.confirm.prompt()), "\n")
-	if !strings.Contains(lines, "y sends; enter, n or esc cancel") || strings.Contains(lines, "t free text") {
+	if !strings.Contains(wideHint(h), "y send; n cancel") || strings.Contains(lines, "t free text") {
 		t.Errorf("confirm hint: %s", lines)
 	}
 	h.deliver(press("n"))
 	h.deliver(press("t"))
-	if lines = strings.Join(h.m.paneLines(120, 25, ""), "\n"); !strings.Contains(lines, "enter submit; esc back to options") {
+	if lines = strings.Join(h.m.paneLines(120, 25, ""), "\n"); !strings.Contains(wideHint(h), "enter submit") || !strings.HasSuffix(wideHint(h), "esc back to options") {
 		t.Errorf("free text hint: %s", lines)
 	}
 }

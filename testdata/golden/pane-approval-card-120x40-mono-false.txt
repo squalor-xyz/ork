@@ -24,7 +24,6 @@
                            │    2 [~] Resize to 80x24 and read the card. (later)
                            │    3 [ ] Press F, type a note and send it.
                            │    Approve lands it, then removes its worktree and branch.
-                           │    a approve; F fix round; x stop; 1-3 tick/later; f file slice; esc close pane
                            │
                            │[1;36mRunning 0[m
                            │  [90mnothing running[m
@@ -37,4 +36,5 @@
                            │
                            │
                            │[90m────────────────────────────────────────────────────────────────────────────────────────────[m
+                           │ x [2mstop[m; 1-3 [2mtick/later[m; F [2mfix round[m; pgup/pgdown [2mline[m; ctrl+d/u [2mhalf page[m; esc [2mclose pane[m
                            │ 1 project | refreshed 16:42:00

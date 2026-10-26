@@ -33,8 +33,8 @@
                            │
                            │
                            │
-                           │  [enter] item   [space] tick item   [e] edit lineup   [l] answer spec questions
                            │[90m────────────────────────────────────────────────────────────────────────────────────────────[m
                            │  Cancelled
                            │[90m────────────────────────────────────────────────────────────────────────────────────────────[m
+                           │ enter [2mitem[m; space [2mtick item[m; l [2manswer spec questions[m; e [2medit lineup[m; q [2mquit[m; ? [2mhelp[m
                            │ 2 projects | refreshed 16:42:00

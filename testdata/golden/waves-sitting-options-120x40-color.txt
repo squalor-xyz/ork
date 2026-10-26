@@ -35,6 +35,6 @@
                            │
                            │
                            │
-                           │  [1-2] pick   [t] free text   [s] skip the rest
                            │[90m────────────────────────────────────────────────────────────────────────────────────────────[m
+                           │ 1-2 [2mpick[m; t [2mfree text[m; s/esc [2mskip the rest[m
                            │ 2 projects | refreshed 16:42:00

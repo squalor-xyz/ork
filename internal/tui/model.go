@@ -1138,81 +1138,80 @@ type actionMsg struct {
 	err     error
 }
 
+// actionRefusal is why the row refuses verb: the status line text, or "" when
+// the refusal is silent. It reports refused false when the row takes the key. The
+// keys refuse by it and the hint line (hintBindings) lists a key only when it
+// does not, so the two cannot disagree.
+func (m *Model) actionRefusal(verb string, r ovRow, ok bool) (status string, refused bool) {
+	if !ok || r.engineID == "" {
+		return "No engine run on this row; no actions", true
+	}
+	if r.unavailable {
+		return source.RemovedProjectHelp(r.name), true
+	}
+	if r.ready && verb != "cleanup" {
+		return "Ready rows have no run actions; c cleans up a merged row", true
+	}
+	if r.ready && verb == "cleanup" {
+		switch {
+		case r.branch == "":
+			return "cleanup needs a merged branch; branch unknown", true
+		case !r.mergeKnown:
+			return "cleanup needs a merged branch; merge state unknown", true
+		case !r.merged:
+			return "cleanup needs a merged branch; this one is unmerged", true
+		case r.worktree == "":
+			return "cleanup needs a worktree; worktree unknown", true
+		}
+	}
+	if verb == "cleanup" && (!r.ready || !r.merged || r.branch == "" || r.worktree == "") {
+		return "", true
+	}
+	for _, a := range m.actionFlights[r.engineID] {
+		// Stop can interrupt an approve or retry, but a second stop waits.
+		if verb != "stop" || a.verb == "stop" {
+			return a.command() + " is pending", true
+		}
+	}
+	if verb == "stop" && r.state == "stopped" {
+		return "run is already stopped; clear with: ork dismiss " + r.engineID, true
+	}
+	if verb == "approve" && r.state != "awaiting-approval" {
+		return "approve needs awaiting-approval; run is " + r.state, true
+	}
+	if verb == "approve" {
+		if why := m.approvalBlock(r.name, r.engineID, m.pane != nil); why != "" {
+			return why, true
+		}
+	}
+	if verb == "retry" {
+		if r.state != "paused" {
+			return "retry needs paused; run is " + r.state, true
+		}
+		if r.pending == "question" {
+			return "answer with: ork answer " + r.engineID + " TEXT", true
+		}
+	}
+	if verb == "answer" && (r.state != "paused" || r.pending != "question") {
+		return "", true
+	}
+	return "", false
+}
+
 func (m *Model) requestAction(verb string) tea.Cmd {
 	if m.showHelp || m.view == roadmapView || m.view == wavesView || m.view == decisionsView || (m.view == questionsView && m.pane == nil) {
 		return nil
 	}
 	r, ok := m.actionRow()
-	if !ok || r.engineID == "" {
-		m.actionStatus = "No engine run on this row; no actions"
+	if status, refused := m.actionRefusal(verb, r, ok); refused {
+		if status != "" {
+			m.actionStatus = status
+		}
 		return nil
 	}
-	if r.unavailable {
-		m.actionStatus = source.RemovedProjectHelp(r.name)
+	if verb == "answer" && strings.TrimSpace(m.pane.input.Value()) == "" {
+		m.actionStatus = "Answer must not be empty"
 		return nil
-	}
-	if r.ready && verb != "cleanup" {
-		m.actionStatus = "Ready rows have no run actions; c cleans up a merged row"
-		return nil
-	}
-	if r.ready && verb == "cleanup" {
-		switch {
-		case r.branch == "":
-			m.actionStatus = "cleanup needs a merged branch; branch unknown"
-			return nil
-		case !r.mergeKnown:
-			m.actionStatus = "cleanup needs a merged branch; merge state unknown"
-			return nil
-		case !r.merged:
-			m.actionStatus = "cleanup needs a merged branch; this one is unmerged"
-			return nil
-		case r.worktree == "":
-			m.actionStatus = "cleanup needs a worktree; worktree unknown"
-			return nil
-		}
-	}
-	if verb == "cleanup" && (!r.ready || !r.merged || r.branch == "" || r.worktree == "") {
-		return nil
-	}
-	for _, a := range m.actionFlights[r.engineID] {
-		// Stop can interrupt an approve or retry, but a second stop waits.
-		if verb != "stop" || a.verb == "stop" {
-			m.actionStatus = a.command() + " is pending"
-			return nil
-		}
-	}
-	if verb == "stop" && r.state == "stopped" {
-		m.actionStatus = "run is already stopped; clear with: ork dismiss " + r.engineID
-		return nil
-	}
-	if verb == "approve" && r.state != "awaiting-approval" {
-		m.actionStatus = "approve needs awaiting-approval; run is " + r.state
-		return nil
-	}
-	if verb == "approve" {
-		if why := m.approvalBlock(r.name, r.engineID, m.pane != nil); why != "" {
-			m.actionStatus = why
-			return nil
-		}
-	}
-	if verb == "retry" {
-		if r.state != "paused" {
-			m.actionStatus = "retry needs paused; run is " + r.state
-			return nil
-		}
-		if r.pending == "question" {
-			m.actionStatus = "answer with: ork answer " + r.engineID + " TEXT"
-			return nil
-		}
-	}
-	if verb == "answer" {
-		if r.state != "paused" || r.pending != "question" {
-			return nil
-		}
-		if strings.TrimSpace(m.pane.input.Value()) == "" {
-			m.actionStatus = "Answer must not be empty"
-			return nil
-		}
 	}
 	if m.cfg.Live == nil {
 		m.actionStatus = "No daemon connection; action unavailable"

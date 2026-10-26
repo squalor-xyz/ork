@@ -126,14 +126,14 @@ func TestAllProjectsToggleIsCapitalA(t *testing.T) {
 	if !h.m.allProjects || !strings.Contains(h.view(), "#91") {
 		t.Fatalf("A did not show all projects:\n%s", h.view())
 	}
-	if !strings.Contains(h.view(), "[A] zeta only") {
+	if !strings.Contains(h.view(), "A zeta only") {
 		t.Errorf("the toggle hint does not name A:\n%s", h.view())
 	}
 	h.send(press("A"))
 	if h.m.allProjects || strings.Contains(h.view(), "#91") {
 		t.Fatalf("A did not return to one project:\n%s", h.view())
 	}
-	if !strings.Contains(h.view(), "[A] all projects") {
+	if !strings.Contains(h.view(), "A all projects") {
 		t.Errorf("the toggle hint does not name A:\n%s", h.view())
 	}
 }
@@ -157,7 +157,7 @@ func TestWelcomeAddIsPlus(t *testing.T) {
 	if h.m.welcome.editing {
 		t.Fatal("a opened the path field")
 	}
-	if !strings.Contains(h.view(), "No projects yet. Press + to add one") {
+	if !strings.Contains(h.view(), "No projects yet.") {
 		t.Fatalf("Welcome does not name +:\n%s", h.view())
 	}
 	h.deliver(press("+"))

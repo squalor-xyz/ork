@@ -7,4 +7,3 @@
   ork answer engine ''
   [90madj filing off: question has no[m
   [90mdecision key[m
-  enter submit; esc close pane

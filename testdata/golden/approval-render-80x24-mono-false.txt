@@ -19,6 +19,6 @@
                    │
                    │
                    │  [1;36mRender 1 of 3: launch-80x24.txt[m
-                   │  v next; s sidebar; pgup/pgdown scroll; esc back to card
                    │[90m────────────────────────────────────────────────────────────[m
+                   │ v [2mnext render[m; s [2msidebar[m; esc [2mback to card[m
                    │ 1 project | refreshed 16:42:00

@@ -8,7 +8,6 @@
                            │    [90m[......][m
                            │    [90mimplementer[m > [90mreviewer[m > [90mgate[m
                            │
-                           │    t retry; esc close pane
                            │
                            │[1;36mRunning 0[m
                            │  [90mnothing running[m
@@ -27,4 +26,5 @@
                            │
                            │
                            │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ x [2mstop[m; t [2mretry[m; pgup/pgdown [2mline[m; ctrl+d/u [2mhalf page[m; esc [2mclose pane[m
                            │ 1 project | refreshed 16:42:00

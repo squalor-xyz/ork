@@ -33,8 +33,8 @@
                            │
                            │
                            │
-                           │  [enter] item   [space] tick item   [e] edit lineup   [l] answer spec questions
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────[m
                            │  ork wave start ork A? [y/N] (Enter is No)  B waits on spec questions
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────[m
+                           │ y [2mstart[m; n [2mcancel[m
                            │ 2 projects | refreshed 16:42:00

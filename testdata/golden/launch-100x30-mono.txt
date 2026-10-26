@@ -1,6 +1,6 @@
 [1mork[m  ?help                 │ Overview[2m │ [mQuestions[2m │ [mWaves[2m │ [m[1mRoadmap[m[2m │ [mDecisions
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
-[2m0[m Needs you              0 │[1mReady slices (esc cancels)[m
+[2m0[m Needs you              0 │[1mReady slices[m
 [1;7m> ork                      [m│  ork S90
 [2m2[m other                    │  worktree: /project/.worktrees/S90
                            │  branch: S90
@@ -23,8 +23,8 @@
                            │
                            │
                            │
-                           │
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │  ork run ork S90? [y/N] (Enter is No)
                            │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ y [2mrun[m; n [2mcancel[m
                            │ 2 projects | refreshed 16:42:00

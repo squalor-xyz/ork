@@ -14,11 +14,11 @@
                    │[1m── Wave 4 ─────────────────────────────────────────── 1 item[m
                    │  [ ] C  Gamma                                              
                    │[1m── Unplaced ───────────────────────────────────────── 1 item[m
-                   │[2m  +4 more lines[m
-                   │
-                   │  [enter] item   [space] tick item   [e] edit lineup
-                   │  [l] answer spec questions
+                   │  [ ] D  Delta                                              
+                   │         [2mno files listed[m
+                   │[2m  +2 more lines[m
                    │[2m────────────────────────────────────────────────────────────[m
                    │  Cancelled
                    │[2m────────────────────────────────────────────────────────────[m
+                   │ enter [2mitem[m; space [2mtick item[m; e [2medit lineup[m; q [2mquit[m; ? [2mhelp[m
                    │ 2 projects | refreshed 16:42:00
