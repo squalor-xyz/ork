@@ -1938,3 +1938,5 @@
 {"when": "2026-10-26T19:42:36Z", "item": "S113", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-10-26T19:42:36Z", "item": "S113", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-26T19:42:37Z", "item": "S113", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-26T19:48:34Z", "item": "S156", "action": "add", "from": "", "to": "open", "note": "S102 later notes: registration re-check by name only; worktree assertions in the removal test"}
+{"when": "2026-10-26T19:48:34Z", "item": "S156", "action": "note", "from": "", "to": "", "note": "From the S102 relay (run-20261026-193654-b9ea, landed b4b34f", "by": "Jon R"}

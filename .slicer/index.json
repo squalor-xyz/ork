@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 156,
+  "next_id": 157,
   "preamble": "",
   "passes": [
     {
@@ -5941,6 +5941,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S93",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S156",
+      "title": "S102 later notes: registration re-check by name only; worktree assertions in the removal test",
+      "short_title": "S102 later notes",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "9bb4928b-c5fb-452b-9352-abe23fa834e3",
+          "kind": "",
+          "text": "**2026-10-26** — From the S102 relay (run-20261026-193654-b9ea, landed b4b34fb; review PASS, wall clock about 9 min).\n1. startRun's registration re-check (internal/daemon/runs.go:490-492) matches by name only: a project removed and re-added under the same name with a different path between planRun and startRun runs with the planned (stale) plan.project. Consider comparing find(f, name).Path to plan.project.Path. Reviewer: plausible, untested, narrow race.\n2. TestStartRunRefusesAProjectRemovedAfterPlanning's worktree and git assertions (runs_test.go:202-208) cannot fire, because the worktree is created later in Run; the other four assertions catch the regression. Tighten or drop them.",
+          "created_at": "2026-10-26T19:48:34Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S102",
         "parent": "",
         "cites": [],
         "key": "",
