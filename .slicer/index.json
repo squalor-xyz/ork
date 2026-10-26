@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 148,
+  "next_id": 150,
   "preamble": "",
   "passes": [
     {
@@ -971,8 +971,8 @@
     },
     {
       "id": "S85",
-      "title": "Keys: context hint bar, enter opens decisions and held items, 1-9 follow the sidebar, list jumps",
-      "short_title": "Keys and hint bar",
+      "title": "Keys: 1-9 follow the sidebar with numbers shown, 0 selects Needs you, first/last, page and group jumps",
+      "short_title": "Navigation keys",
       "status": "open",
       "has_slice": true,
       "depends_on": [
@@ -4716,6 +4716,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "de428ab3-0fcc-4f2d-91cb-0be4f46f32c2",
+          "kind": "",
+          "text": "**2026-10-26** — From S119 (landed b7bc308): a landed run whose cleanup failed at 'git branch -d' has no worktree left, so the c key's 'git worktree remove' fails again (internal/daemon/landed.go:148-155) and the row never clears. The cleanup key must skip a worktree that is already gone, and the row's 'c finishes the cleanup' detail should name both steps.",
+          "created_at": "2026-10-26T15:29:15Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -5474,6 +5485,64 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S148",
+      "title": "S119 later notes: landing status text, cleanup-failed rows, fix-round allowlist",
+      "short_title": "S119 later notes",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S149",
+      "title": "Context hint bar: keys for the selected row on a line above the status line, ctrl+d/u pane scroll, Questions tab count",
+      "short_title": "Context hint bar",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S85"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }
