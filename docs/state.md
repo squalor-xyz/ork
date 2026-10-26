@@ -286,3 +286,24 @@ the ledger run is absent from the active snapshot. In `ork status`,
   cached merge results. Unknown and unmerged branches stay. Pruning removes
   run directories only; worktrees and branches require confirmed cleanup
   (`git.cleanup-key`, adj #152). Failed cleanup keeps the run record.
+
+### Transient role detail (S99)
+
+The output tail is daemon memory only. It is never a `run.json` field and is
+never copied to a report file. Each role attempt resets its 2 KB tail and
+live token count; ended attempts and daemon restarts expose no tail. Run
+environment values selected by the rule in dashboard.md are masked before
+text enters the buffer. The rule cannot mask secrets it does not know.
+
+The proposed snapshot fields `engine_runs[].tail`, `tokens` and `cost_usd`
+carry transient assistant text, recorded plus live tokens, and completed
+round costs. The proposed role display fields `tokens` and `cost_usd` copy
+the existing RoleRecord values. Final Result usage remains the authoritative
+persisted usage; live usage never writes the record. This adds no state file.
+Vendor raw output and final reports keep their existing handling; this tail
+rule does not redact those independent artifacts.
+
+Proposed snapshot flags `usage_known`, `live_usage_known` and
+`tail_truncated` carry usage presence (including reported zero) and whether
+the memory buffer dropped older text. These flags are not written to disk.
+A stored zero cost from a vendor without a cost field is displayed as `$-`.

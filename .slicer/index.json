@@ -245,7 +245,7 @@
       "id": "S99",
       "title": "Live role detail: output tail and tokens/cost in the run pane",
       "short_title": "Live role detail: output tail and tokens/cost in the run pane",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S07"
@@ -268,7 +268,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

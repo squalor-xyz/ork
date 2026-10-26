@@ -793,7 +793,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   (`ui.status-list`, adj #125). JSON keeps every engine run, including hidden
   ones. The *proposed*
   `engine_runs:[{id,item,branch?,merged?,state,wait?,pending?,denials?,error?,unavailable?,
-  relay_run?,roles?,activity?,created_at}]` field per project includes the linked slicer
+  relay_run?,roles?,activity?,tail?,tokens?,cost_usd?,created_at}]` field per project includes the linked slicer
   ledger run ID in `relay_run`, when present, and the engine run's creation
   time in `created_at`. The optional `roles`
   array and the proposed `branch` and tri-state `merged` fields are described
@@ -885,8 +885,8 @@ Each step is usable or testable on its own:
 5. **Waves and caps.** Several items, queueing, failure isolation.
 6. **Three vendors, fallback, fingerprint, budgets, owner questions.**
 7. **Live role detail.** S07 adds stage bars, a stream-event sparkline and
-   4 fps animation while a run is visible. Output tail and usage detail remain
-   future work.
+   4 fps animation while a run is visible. S99 adds live assistant output and
+   usage detail.
 8. **Architect on size L, split, slivers.**
 9. **Landing help.** Ready-to-land list and merge detection.
 
@@ -915,7 +915,7 @@ a read-only ended-run pane. Run duration and ended age use `begun_at` and
 ### Live role activity (S07)
 
 The Overview puts the ASCII stage bar after elapsed time. Narrow rows drop
-heard, pipeline, role details, then the bar. The pane puts the bar above the
+tokens, heard, pipeline, role details, then the bar. The pane puts the bar above the
 pipeline and the ten-cell activity sparkline below last heard. The bar measures
 completed roles, with an architect cell when present; a fix round resets roles
 whose latest steps precede the new implementer step. A running cell pulses
@@ -928,3 +928,40 @@ Overview Running row, live ledger row or live run pane is visible. One timer
 is armed at a time and the next frame disarms it when nothing qualifies.
 `treeFrame` advances only on frames. The one-second schedule ticker is
 unchanged. There is no S07 bell, budget bar or write action.
+
+### Live role output and usage (S99)
+
+`Request.OnEvent func()` still counts stream events. Its sibling
+`OnLive func(Live)` carries assistant text and token increments. The engine
+keeps a UTF-8-safe 2048-byte tail and a token counter beside the activity
+ring under the same mutex. Hooks capture the attempt generation; old hooks
+cannot update a newer attempt. Each attempt resets the data; after it ends
+the live read is empty. Nothing in this buffer is written to the run record
+or report files.
+
+The daemon adapter masks qualifying run-environment values before invoking
+OnLive (the rule is in dashboard.md). It buffers possible secret prefixes
+across text events, masking an unfinished prefix at final flush. Claude
+message-start usage establishes the new message's
+input, output and cache counts. Message-delta usage replaces cumulative
+counts for that message, emitting only the difference. The measured stream
+fixture's final message total and result total both equal 23763 tokens;
+message-start usage is provisional and must not be added a second time.
+Codex assistant text comes from completed agent-message items. Its usage
+arrives at turn completion, with input plus output tokens. The measured
+Codex fixtures contain no per-item usage to compare with the turn total.
+
+Final Result tokens and cost still populate RoleRecord. The proposed
+`engine_runs[].tail` is transient text; `tokens` sums recorded roles and live
+usage, and `cost_usd` sums recorded costs only. Proposed role `tokens` and
+`cost_usd` display fields carry recorded values. The pane joins engine roles
+to linked ledger nodes by step ID, retaining the ledger's tree. Source-less
+ledger runs have no engine output or usage.
+
+The proposed snapshot flags `usage_known` and `live_usage_known` distinguish
+available run usage from current-attempt usage, including reported zero.
+The live hook marks a usage event with `Live.UsageKnown`; text alone does
+not mark usage. The proposed `tail_truncated` flag records memory-cap cuts
+so the pane can mark the first wrapped tail row. These flags stay in memory
+and add no persisted record fields. Vendor identity determines whether a
+recorded cost is available: Claude has a cost field; Codex does not.

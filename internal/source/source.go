@@ -161,6 +161,8 @@ func (d *Direct) Snapshot(ctx context.Context, p registry.Project) Snapshot {
 
 // EngineRole is the display subset of a role record. Wire fields are proposed.
 type EngineRole struct {
+	Tokens    int       `json:"tokens,omitempty"`   // proposed
+	CostUSD   float64   `json:"cost_usd,omitempty"` // proposed
 	Role      string    `json:"role"`
 	Round     int       `json:"round"`
 	Vendor    string    `json:"vendor"`
@@ -174,23 +176,29 @@ type EngineRole struct {
 
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
-	Key         string       `json:"key,omitempty"`         // proposed: pending question decision key
-	Unavailable bool         `json:"unavailable,omitempty"` // proposed: no engine or owner actions
-	Error       string       `json:"error,omitempty"`       // proposed: daemon memory only
-	Activity    []int        `json:"activity,omitempty"`    // proposed: current role stream events, ten 30 s buckets
-	Worktree    string       `json:"worktree,omitempty"`
-	Branch      string       `json:"branch,omitempty"`
-	Merged      *bool        `json:"merged,omitempty"` // nil: unknown
-	Roles       []EngineRole `json:"roles,omitempty"`
-	ID          string       `json:"id"`
-	Item        string       `json:"item"`
-	State       string       `json:"state"`
-	Wait        string       `json:"wait,omitempty"`
-	Pending     string       `json:"pending,omitempty"` // paused runrec pending kind (ui.pending-kind)
-	Denials     []string     `json:"denials,omitempty"` // distinct denial texts in first-seen order, with " xN" for repeats
-	RelayRun    string       `json:"relay_run,omitempty"`
-	CreatedAt   time.Time    `json:"created_at"`
-	UpdatedAt   time.Time    `json:"updated_at,omitzero"`
+	LiveUsageKnown bool         `json:"live_usage_known,omitempty"` // proposed: current attempt reported usage
+	UsageKnown     bool         `json:"usage_known,omitempty"`      // proposed: includes reported zero usage
+	TailTruncated  bool         `json:"tail_truncated,omitempty"`   // proposed: older memory-only text was dropped
+	Tail           string       `json:"tail,omitempty"`             // proposed: daemon memory only
+	Tokens         int          `json:"tokens,omitempty"`           // proposed: run total including live attempt
+	CostUSD        float64      `json:"cost_usd,omitempty"`         // proposed: completed rounds only
+	Key            string       `json:"key,omitempty"`              // proposed: pending question decision key
+	Unavailable    bool         `json:"unavailable,omitempty"`      // proposed: no engine or owner actions
+	Error          string       `json:"error,omitempty"`            // proposed: daemon memory only
+	Activity       []int        `json:"activity,omitempty"`         // proposed: current role stream events, ten 30 s buckets
+	Worktree       string       `json:"worktree,omitempty"`
+	Branch         string       `json:"branch,omitempty"`
+	Merged         *bool        `json:"merged,omitempty"` // nil: unknown
+	Roles          []EngineRole `json:"roles,omitempty"`
+	ID             string       `json:"id"`
+	Item           string       `json:"item"`
+	State          string       `json:"state"`
+	Wait           string       `json:"wait,omitempty"`
+	Pending        string       `json:"pending,omitempty"` // paused runrec pending kind (ui.pending-kind)
+	Denials        []string     `json:"denials,omitempty"` // distinct denial texts in first-seen order, with " xN" for repeats
+	RelayRun       string       `json:"relay_run,omitempty"`
+	CreatedAt      time.Time    `json:"created_at"`
+	UpdatedAt      time.Time    `json:"updated_at,omitzero"`
 }
 
 // DenialsText formats at most three denials and counts any remaining entries.

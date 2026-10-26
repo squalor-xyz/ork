@@ -184,6 +184,11 @@ func (m *Model) rows() (needs, running []ovRow) {
 					}
 				}
 				row.stepParts = m.boardRowParts(ledger, steps)
+				if r.UsageKnown || r.Tokens != 0 {
+					tokenText := fmt.Sprintf("tokens %d", r.Tokens)
+					// Trailing cells drop first: tokens, heard, pipeline, then bar.
+					row.stepParts = append(row.stepParts, relayRowPart{header: tokenText, text: tokenText})
+				}
 				for _, part := range row.stepParts {
 					row.text += "  " + part.text
 				}
@@ -440,21 +445,27 @@ func (m *Model) rowLine(r ovRow, selected bool, nameW, w int) string {
 	text := rowText(r, max(w-lipgloss.Width(prefix), 1))
 	heard := ""
 	heardStyle := th.Warn
-	if n := len(r.stepParts); n > 0 {
-		cell := r.stepParts[n-1].text
-		if strings.HasSuffix(text, cell) && (strings.HasPrefix(cell, "! heard ") || strings.HasPrefix(cell, "!! heard ")) {
+	for _, part := range r.stepParts {
+		cell := part.text
+		if strings.Contains(text, cell) && (strings.HasPrefix(cell, "! heard ") || strings.HasPrefix(cell, "!! heard ")) {
 			heard = cell
-			text = strings.TrimSuffix(text, cell)
 			if strings.HasPrefix(cell, "!! heard ") {
 				heardStyle = th.Error
 			}
+			break
 		}
 	}
-	if r.dim {
-		text = th.Dim.Render(text)
-	}
 	if heard != "" {
-		text += heardStyle.Render(heard)
+		before, after, _ := strings.Cut(text, heard)
+		if r.dim {
+			before = th.Dim.Render(before)
+			if after != "" {
+				after = th.Dim.Render(after)
+			}
+		}
+		text = before + heardStyle.Render(heard) + after
+	} else if r.dim {
+		text = th.Dim.Render(text)
 	}
 	if len(r.cells) > 0 {
 		outcome := r.cells[0]

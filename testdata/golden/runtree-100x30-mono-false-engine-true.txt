@@ -14,15 +14,15 @@
                            │
                            │
                            │
-                           │
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │  [1;36mRun engine  S55  implement[m
                            │  [##~~!!]
                            │  [32mimplementer[m > [36m[reviewer][m > [1;31mgate[m                                [90mround 1[m
                            │  [90mlast heard 1m ago[m
-                           │  [90m+ implementer done  1m  claude sonnet high round 1[m
+                           │  [90m+ implementer done  1m  claude sonnet high round 1  tokens 0  $0.00[m
                            │  [1;36m| reviewer    start 1m  claude opus round 1[m
-                           │  [1;31m! gate        fail  30s  codex sol round 1[m
+                           │  [90m    tokens -  $-[m
+                           │  [1;31m! gate        fail  30s  codex sol round 1  tokens 0  $-[m
                            │  [1;31m    ✗ gate FAIL -> implementer round 2[m
                            │  
                            │  x stop; esc close pane

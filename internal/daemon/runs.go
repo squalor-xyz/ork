@@ -949,7 +949,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		denialCounts := map[string]int{}
 		var roles []source.EngineRole
 		for _, role := range rec.Roles {
-			roles = append(roles, source.EngineRole{Role: role.Role, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit})
+			roles = append(roles, source.EngineRole{Role: role.Role, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit, Tokens: role.Tokens, CostUSD: role.CostUSD})
 			for _, text := range roleDenials(role) {
 				if denialCounts[text] == 0 {
 					denials = append(denials, text)
@@ -962,9 +962,20 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 				denials[i] = fmt.Sprintf("%s x%d", text, count)
 			}
 		}
+		tokens := 0
+		usageKnown := false
+		cost := 0.0
+		for _, role := range rec.Roles {
+			tokens += role.Tokens
+			usageKnown = usageKnown || !role.EndedAt.IsZero() || role.Tokens != 0
+			cost += role.CostUSD
+		}
+		var live engine.Live
 		var activity []int
 		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
 			activity = m.engine.Activity(d.cfg.Clock.Now())
+			live = m.engine.Live()
+			tokens += live.Tokens
 		}
 		unavailable := false
 		if m := d.runs.runs[rec.ID]; m != nil {
@@ -977,7 +988,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		if m := d.runs.runs[rec.ID]; m != nil && !m.busy && m.failure != nil {
 			failure = m.failure.Error()
 		}
-		runs = append(runs, EngineRun{Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
+		runs = append(runs, EngineRun{Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
 	}
 	// Dismissed records still supersede older stopped runs of the same slice.
 	visible := runs[:0]

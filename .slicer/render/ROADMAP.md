@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-127 items · — 52 · done 70 · retired 5
+127 items · — 51 · done 71 · retired 5
 
 ## v1.1
 
@@ -76,7 +76,7 @@
 | 19 | [S114](slices/S114.md) | Self-hosting: run ork on its own repo safely | M | 2 |  |  | — |
 | 20 | [S115](slices/S115.md) | Implementer brief: re-anchor the spec first and self-check before reporting | S | 1 |  |  | done |
 | 21 | [S70](slices/S70.md) | Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed) | S | 1 |  |  | done |
-| 22 | [S99](slices/S99.md) | Live role detail: output tail and tokens/cost in the run pane | M | 2 |  | discovered from S07 | — |
+| 22 | [S99](slices/S99.md) | Live role detail: output tail and tokens/cost in the run pane | M | 2 |  | discovered from S07 | done |
 | 23 | [S125](slices/S125.md) | Waves composer focus: next waves only, inputs inline under the ticked item | M | 2 |  | discovered from S31 | — |
 | 24 | [S107](slices/S107.md) | Waves as a table: shares as a dim column, wave header rules, Lineup column only after ticking | M | 2 |  |  | — |
 | 25 | [S111](slices/S111.md) | Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork | M | 2 |  | discovered from S28 | — |
