@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-143 items · — 52 · done 86 · retired 5
+146 items · — 53 · done 88 · retired 5
 
 ## v1.1
 
@@ -110,8 +110,8 @@
 | 53 | [S91](slices/S91.md) | Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes | S | 1 |  | discovered from S49 | — |
 | 54 | [S90](slices/S90.md) | Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on | S | 1 |  | discovered from S88 | — |
 | 55 | [S39](slices/S39.md) | ork run prompt tests catch swapped answers; help text says y/n | S | 1 |  | discovered from S21 | — |
-| 56 | [S105](slices/S105.md) | Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases | S | 2 |  |  | — |
-| 57 | [S106](slices/S106.md) | Run card inline | M | 2 |  |  | — |
+| 56 | [S105](slices/S105.md) | Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases | S | 2 |  |  | done |
+| 57 | [S106](slices/S106.md) | Run card inline | M | 2 |  |  | done |
 | 58 | [S01](slices/S01.md) | Vendor spike | S | 1 |  |  | done |
 | 59 | [S02](slices/S02.md) | Core and adapters | M | 2 |  |  | done |
 | 60 | [S03](slices/S03.md) | Daemon and CLI | M | 2 |  |  | done |
@@ -197,9 +197,12 @@
 | 140 | [S141](slices/S141.md) | Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note | M | 2 |  | discovered from S118 | — |
 | 141 | [S142](slices/S142.md) | Accept relay contract v9 and follow it: finding kinds, spec check, UI pass, approval and landing, ledger wait phase, conformance JSON | M | 2 |  |  | — |
 | 142 | [S143](slices/S143.md) | Spec check follow-ups: answers survive a restart, main moving mid-check, sitting freeze, dropped Owner needed, shape retry, state dir cleanup | M | 2 |  | discovered from S116 | — |
+| 143 | [S144](slices/S144.md) | Key follow-ups: status nudge for [ and ], Waves show-all on A, help wording and hidden tab help | S | 1 |  | discovered from S105 | — |
+| 144 | [S145](slices/S145.md) | Running rows at a glance | M | 2 |  |  | — |
+| 145 | [S146](slices/S146.md) | S106 later notes | S | 1 |  |  | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 143 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 146 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
