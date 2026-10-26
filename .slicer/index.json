@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 157,
+  "next_id": 158,
   "preamble": "",
   "passes": [
     {
@@ -6038,6 +6038,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S102",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S157",
+      "title": "Allow rule slicer next * also approves next --start and --render",
+      "short_title": "S73 later: next * writes",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "9d08c747-60d4-4515-9781-f6fb40c6cdab",
+          "kind": "",
+          "text": "**2026-10-26** — From the S73 review (run-20261026-212646-f5f2, landed 820ee1c). .claude/settings.json allows Bash(slicer next *), and slicer next --help lists --start and --render, which write. Replace it with exact read-only forms (for example slicer next --json, slicer next --json --lean) or drop it; check the other starred slicer and adj rules for write flags the same way.",
+          "created_at": "2026-10-26T21:49:52Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S73",
         "parent": "",
         "cites": [],
         "key": "",
