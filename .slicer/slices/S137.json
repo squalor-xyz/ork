@@ -1,0 +1,39 @@
+{
+  "id": "S137",
+  "title": "Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S120 later notes (2026-10-26): (1) only the first [owner blocker] in a report is asked (internal/engine/kinds.go:38-45, later.go:39-41); (9) a repeated answered blocker can loop, the engine has no guard; (4) run.file for finished runs is not serialized across calls (internal/daemon/runs.go:921); (8) Needs you and ork status counts ignore unfiled later and non-blocking owner findings; (10) the Ready-to-land committed-run pane path is not reachable from tests, so f is untested there; (2) the run-pane findings footer has no '+N more' cap; (3) the confirm prompt does not say ork adds a Why section. Owner choices for preflight: (5) non-blocking [owner] findings are display-only (recommend a pane key to record an answer); (6) a filed slice is unscored (recommend leave it, owner runs slicer set); (7) an 'ork file RUN N' CLI like ork answer. Also: the role prompts' first line still says 'Contract: relay v7' (internal/roles/prompts/*.md:1) while ork accepts v7 and v8."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/kinds.go`\n- `internal/engine/later.go`\n- `internal/daemon/runs.go`\n- `internal/tui/findings.go`\n- `internal/cli`\n- `internal/roles/prompts`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "TestEveryOwnerBlockerAsked; TestAnsweredBlockerDoesNotLoop; TestRunFileSerialized; TestNeedsYouCountsFindings; TestReadyToLandPaneFilesLater; TestFindingsFooterCapped."
+    },
+    {
+      "heading": "Implement",
+      "body": "Re-anchor from the code after S120. Ask the owner choices (5), (6), (7) and the v7/v8 prompt line at preflight."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./internal/engine ./internal/daemon ./internal/tui ./internal/cli; goldens; go vet; gofmt -l; slicer check; adj lint."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
