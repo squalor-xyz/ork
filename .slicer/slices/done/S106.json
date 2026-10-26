@@ -1,0 +1,39 @@
+{
+  "id": "S106",
+  "title": "Run card: the pane inline under the row, round and last heard beside the bar, stall colours, 80x24 drops",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Frontend design review of 2026-10-25 (opus, from four owner screenshots; it did not read docs/dashboard.md or adj 149, so check the spec first). The live run is the one thing the owner supervises, but Overview shows eight identical decision rows first, the run as one highlighted line, and the detail at the bottom after up to six blank lines. Make the live run the headline: Running first when something runs, the pane opened inline under the selected row, round and last heard next to the stage bar, last heard amber after 10 minutes and red after 30 (the stale cutoff). At 80x24 drop the run id from the row (keep it in the pane title) and the vendor/model column. Depends on S84 (grouped Needs you) landing first, because both rewrite overview.go."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/overview.go`, `internal/tui/relayboard.go`, `internal/tui/view.go`, `internal/tui/pane.go`.\n- Tests: `internal/tui/runcard_test.go`, `internal/tui/tui_test.go`, `internal/tui/relayboard_test.go`, `internal/tui/relayboard_review_test.go`, `internal/tui/running_test.go`, `internal/tui/card_test.go`, `internal/tui/findings_test.go`.\n- Goldens: `testdata/golden/runcard-*.txt` (new), `overview-*.txt`, `board-*.txt`, `live-detail-*.txt`, `pane-*.txt`, `engine-*.txt`, `running-*.txt`, `runtree-*.txt`, `version-stale-*.txt`, `cut-80x24-color.txt`.\n- Docs: `docs/dashboard.md`, `docs/design.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestPaneOpensInlineUnderTheSelectedRow with no blank run of lines before it.\n- TestRoundAndLastHeardSitNextToTheBar.\n- TestLastHeardIsAmberPast10MinutesAndRedPast30 (and a plain cue in mono).\n- TestRowDropsRunIdAndModelAt80x24.\n- TestOverviewSectionOrderUnchanged: Needs you stays first while a run is live (adj 149).\n- Golden views at 100x30 and 80x24."
+    },
+    {
+      "heading": "Implement",
+      "body": "Owner decision 2026-10-26 (session a2bf7e0e): S110's sidebar Running entry covers 'Running first', so the Overview section order does not change (Needs you first, adj 149). Keep the rest.\n1. Tests first. 2. Open the pane inline under the selected row. 3. Move round and last heard next to the stage bar (S110 already shows the bar's rN on Running rows; reuse it). 4. Stall colours: last heard amber past 10 minutes, red past 30 (the stale cutoff), with a plain cue in mono. 5. At 80x24 drop the run id from the row (keep it in the pane title) and the vendor/model column. 6. Docs and goldens. UI slice: UI pass (r14)."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/tui\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review the golden diff\n- slicer check\n- adj lint\n- [HUMAN CHECK] The owner looks at the changed view in a live terminal at 100x30 and 80x24."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

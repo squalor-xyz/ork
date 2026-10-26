@@ -109,10 +109,10 @@ date. Anything the owner did not explicitly pick stays an open ask.
   (`slicer --root ../slicer find TEXT`).
 - In a slice relay or wave, a slice that touches the UI (`internal/tui`
   and its golden views, `docs/dashboard.md`, `internal/cli` output, or a
-  `ui.*` adj key) also gets a UI pass: matrix row r14 (opus, medium), rule
-  u10. It runs as a general-purpose subagent in parallel with the reviewer,
-  invokes the `frontend-design:frontend-design` skill, edits nothing, and
-  returns suggested design edits to the orchestrator for the implementer.
+  `ui.*` adj key) also gets a UI pass, as rule u10 says
+  (`slicer relay-roles show`): which skills it loads, and when it runs as
+  its own row (r14) or folds into the reviewer. The skills come from the
+  plugins enabled in `.claude/settings.json`.
 
 ## Handoff
 

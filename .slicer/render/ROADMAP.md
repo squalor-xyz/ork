@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-143 items · — 52 · done 86 · retired 5
+146 items · — 52 · done 89 · retired 5
 
 ## v1.1
 
@@ -90,7 +90,7 @@
 | 33 | [S119](slices/S119.md) | Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up | M | 2 |  |  | done |
 | 34 | [S120](slices/S120.md) | Finding kinds: fix, owner or later in reviewer, UI pass and gate reports | M | 2 |  |  | done |
 | 35 | [S117](slices/S117.md) | UI pass role in the engine, in parallel with the reviewer | M | 2 |  |  | done |
-| 36 | [S121](slices/S121.md) | UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card | M | 2 |  |  | — |
+| 36 | [S121](slices/S121.md) | UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card | M | 2 |  |  | done |
 | 37 | [S116](slices/S116.md) | Spec check: a batch readiness check before a wave, answered in one sitting | M | 2 |  |  | done |
 | 38 | [S92](slices/S92.md) | Fallback brief tells the next row about earlier rows and an already-started slice | S | 1 |  | discovered from S49 | — |
 | 39 | [S93](slices/S93.md) | The gate follows the reviewer's current row after a fallback | S | 1 |  | discovered from S49 | — |
@@ -110,8 +110,8 @@
 | 53 | [S91](slices/S91.md) | Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes | S | 1 |  | discovered from S49 | — |
 | 54 | [S90](slices/S90.md) | Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on | S | 1 |  | discovered from S88 | — |
 | 55 | [S39](slices/S39.md) | ork run prompt tests catch swapped answers; help text says y/n | S | 1 |  | discovered from S21 | — |
-| 56 | [S105](slices/S105.md) | Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases | S | 2 |  |  | — |
-| 57 | [S106](slices/S106.md) | Run card first: Running at the top, the pane inline under the row, round and last heard beside the bar | M | 2 |  |  | — |
+| 56 | [S105](slices/S105.md) | Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases | S | 2 |  |  | done |
+| 57 | [S106](slices/S106.md) | Run card inline | M | 2 |  |  | done |
 | 58 | [S01](slices/S01.md) | Vendor spike | S | 1 |  |  | done |
 | 59 | [S02](slices/S02.md) | Core and adapters | M | 2 |  |  | done |
 | 60 | [S03](slices/S03.md) | Daemon and CLI | M | 2 |  |  | done |
@@ -197,9 +197,12 @@
 | 140 | [S141](slices/S141.md) | Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note | M | 2 |  | discovered from S118 | — |
 | 141 | [S142](slices/S142.md) | Accept relay contract v9 and follow it: finding kinds, spec check, UI pass, approval and landing, ledger wait phase, conformance JSON | M | 2 |  |  | — |
 | 142 | [S143](slices/S143.md) | Spec check follow-ups: answers survive a restart, main moving mid-check, sitting freeze, dropped Owner needed, shape retry, state dir cleanup | M | 2 |  | discovered from S116 | — |
+| 143 | [S144](slices/S144.md) | Key follow-ups: status nudge for [ and ], Waves show-all on A, help wording and hidden tab help | S | 1 |  | discovered from S105 | — |
+| 144 | [S145](slices/S145.md) | Running rows at a glance | M | 2 |  |  | — |
+| 145 | [S146](slices/S146.md) | S106 later notes | S | 1 |  |  | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 143 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 146 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |

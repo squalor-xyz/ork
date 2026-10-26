@@ -2,7 +2,7 @@
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │  [1;36mWelcome[m
                            │
-                           │  No projects yet. Press a to add one
+                           │  No projects yet. Press + to add one
                            │
                            │
                            │

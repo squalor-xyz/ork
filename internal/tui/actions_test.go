@@ -73,11 +73,11 @@ func actionHarness(t *testing.T, state, pending string) *harness {
 func TestActionApproveAsksBeforeLanding(t *testing.T) {
 	h := actionHarness(t, "awaiting-approval", "")
 	h.deliver(press("a"))
-	want := "ork approve engine? [y/N] (Enter is No)  y lands S22, then removes its worktree and branch"
+	want := "ork approve engine\nLand S22, then remove its worktree and branch? [y/N] (Enter is No)"
 	if h.m.confirm == nil || h.m.confirm.prompt() != want {
 		t.Fatalf("approve must ask first, naming the landing and the cleanup: %+v", h.m.confirm)
 	}
-	if v := h.view(); !strings.Contains(v, "[y/N] (Enter is No)") || !strings.Contains(v, "lands S22") || strings.Contains(v, "S22  commit") {
+	if v := h.view(); !strings.Contains(v, "[y/N] (Enter is No)") || !strings.Contains(v, "Land S22") || strings.Contains(v, "S22  commit") {
 		t.Fatalf("the confirmation is not on screen:\n%s", v)
 	}
 	// Enter is No.
@@ -92,11 +92,47 @@ func TestActionApproveAsksBeforeLanding(t *testing.T) {
 	}
 }
 
+// The approve confirmation reads like the cleanup one: the command, then the
+// question on its own line. Goldens at 80x24.
+func TestActionApproveConfirmGoldens(t *testing.T) {
+	for _, push := range []bool{false, true} {
+		for _, mono := range []bool{false, true} {
+			t.Run(fmt.Sprintf("push-%t-mono-%t", push, mono), func(t *testing.T) {
+				h := actionHarness(t, "awaiting-approval", "")
+				h.m.byName["ork"].reg.Push = push
+				h.m.cfg.Theme = NewTheme(mono)
+				h.send(tea.WindowSizeMsg{Width: 80, Height: 24})
+				h.send(press("a"))
+				checkGolden(t, fmt.Sprintf("approve-confirm-80x24-push-%t-mono-%t.txt", push, mono), h.m.View().Content)
+			})
+		}
+	}
+}
+
+// The keys stay whole: when the question and the keys do not fit one line the
+// keys go on their own line, under the question.
+func TestActionApproveConfirmKeepsTheKeysWhole(t *testing.T) {
+	h := actionHarness(t, "awaiting-approval", "")
+	h.deliver(press("a"))
+	a := *h.m.confirm
+	if got, want := a.promptWidth(200), "ork approve engine\nLand S22, then remove its worktree and branch? [y/N] (Enter is No)"; got != want {
+		t.Errorf("wide prompt %q, want %q", got, want)
+	}
+	want := "ork approve engine\nLand S22, then remove its worktree and branch?\n[y/N] (Enter is No)"
+	if got := a.promptWidth(60); got != want {
+		t.Errorf("narrow prompt %q, want %q", got, want)
+	}
+	a.push = true
+	if got := a.promptWidth(60); !strings.HasSuffix(got, "branch?\n[y/N] (Enter is No)") || !strings.Contains(got, "Land and push S22, then remove") {
+		t.Errorf("narrow push prompt %q", got)
+	}
+}
+
 func TestActionApproveConfirmNamesThePushWhenTheProjectPushes(t *testing.T) {
 	h := actionHarness(t, "awaiting-approval", "")
 	h.m.byName["ork"].reg.Push = true
 	h.deliver(press("a"))
-	want := "ork approve engine? [y/N] (Enter is No)  y lands and pushes S22, then removes its worktree and branch"
+	want := "ork approve engine\nLand and push S22, then remove its worktree and branch? [y/N] (Enter is No)"
 	if h.m.confirm == nil || h.m.confirm.prompt() != want {
 		t.Fatalf("the confirmation is %+v, want %q", h.m.confirm, want)
 	}
@@ -217,7 +253,7 @@ func TestActionCursorTarget(t *testing.T) {
 	s.EngineRuns = append([]source.EngineRun{{ID: "first", Item: "S1", State: "awaiting-approval"}}, s.EngineRuns...)
 	h.src.set(s)
 	h.m.apply(snapshotMsg{name: "ork", snap: s})
-	h.deliver(press("n"))
+	h.deliver(press("down"))
 	h.deliver(press("a"))
 	h.deliver(press("y"))
 	if v := h.view(); !strings.Contains(v, "S1  awaiting-approval") || !strings.Contains(v, "S22  commit") {
@@ -228,7 +264,7 @@ func TestActionCursorTarget(t *testing.T) {
 func TestActionHelp(t *testing.T) {
 	h := actionHarness(t, "implement", "")
 	h.deliver(press("?"))
-	for _, want := range []string{"a approve", "x stop", "t retry", "tab next view", "shift+tab previous view", "right next project", "left previous project", "down/j/n next row", "up/k/p previous row"} {
+	for _, want := range []string{"a approve", "x stop", "t retry", "tab next view", "shift+tab previous view", "] next project", "[ previous project", "down/j next row", "up/k previous row"} {
 		if v := h.view(); !strings.Contains(v, want) {
 			t.Errorf("missing help %q:\n%s", want, v)
 		}
@@ -347,7 +383,7 @@ func TestActionBlockedRetry(t *testing.T) {
 
 func TestActionOtherRunWhileRetryPending(t *testing.T) {
 	for _, tc := range []struct{ key, state, want string }{
-		{"a", "awaiting-approval", "ork approve other? [y/N]"},
+		{"a", "awaiting-approval", "ork approve other"},
 		{"t", "paused", "ork retry other? [y/N]"},
 		{"x", "implement", "ork stop other? [y/N]"},
 	} {

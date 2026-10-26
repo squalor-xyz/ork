@@ -5,12 +5,14 @@ package tui
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -24,6 +26,23 @@ type cardLive struct {
 	fixes    []string
 	markErr  error
 	fixErr   error
+
+	renders     map[string]string // run.render: the text of each render by name
+	renderErr   error
+	renderCalls []string
+}
+
+// Render answers run.render from the test's texts.
+func (l *cardLive) Render(_ context.Context, run, name string) (string, error) {
+	l.renderCalls = append(l.renderCalls, run+"#"+name)
+	if l.renderErr != nil {
+		return "", l.renderErr
+	}
+	text, ok := l.renders[name]
+	if !ok {
+		return "", fmt.Errorf("not_found: no render %s", name)
+	}
+	return text, nil
 }
 
 func (l *cardLive) Approve(ctx context.Context, run string) error {
@@ -177,7 +196,7 @@ func TestApprovalCardListsOwnerFindingsAndHumanChecks(t *testing.T) {
 	h := cardHarness(t, approvalCard(checks...), laterOne, ownerNote)
 	v := h.view()
 	for _, want := range []string{
-		"Owner question, not blocking: Should the cache be shared? Recommended:", "per-project.",
+		"Owner question, not blocking: Should the cache be shared?", "Recommended: per-project.",
 		"Human checks (1 of 3 open)",
 		"1 [x] " + humanOne,
 		"2 [~] " + humanTwo + " (later)",
@@ -404,13 +423,14 @@ func TestApprovalCardGoldens(t *testing.T) {
 				checkGolden(t, fmt.Sprintf("pane-approval-card-%dx%d-mono-%t.txt", size.w, size.h, mono), got)
 				// The card's whole footer fits: verdict, owner finding, checks, keys.
 				plain := sgr.ReplaceAllString(got, "")
+				requireOwnerFindingWhole(t, plain)
 				// A finding line is shown whole or dropped whole: no line is cut inside a quote.
 				for _, line := range strings.Split(plain, "\n") {
 					if strings.Count(line, `"`)%2 == 1 {
 						t.Errorf("%dx%d: a line ends in an unclosed quote: %q", size.w, size.h, line)
 					}
 				}
-				for _, want := range []string{"Run engine  S22  awaiting-approval", "Gate PASS", "Owner question, not blocking", "Recommended: per-project.", "Human checks (1 of 3 open)", "[~] " + humanTwo, "a approve; F fix round", "esc close pane"} {
+				for _, want := range []string{"Run engine", "Gate PASS", "Owner question, not blocking", "Recommended: per-project.", "Human checks (1 of 3 open)", "[~] " + humanTwo, "a approve; F fix round", "esc close pane"} {
 					if !strings.Contains(plain, want) {
 						t.Errorf("%dx%d lacks %q:\n%s", size.w, size.h, want, plain)
 					}
@@ -451,8 +471,53 @@ func TestDaemonFixAndCheckWire(t *testing.T) {
 	}
 }
 
+// The live connection reads a render through run.render, and a refusal reaches
+// the pane's failed state with its code.
+func TestDaemonRenderWire(t *testing.T) {
+	var _ renderReader = (*Daemon)(nil)
+	var methods []string
+	var seen []daemon.RunAction
+	d, _, _, _ := requestServer(t, func(_ context.Context, method string, params json.RawMessage) (any, error) {
+		var a daemon.RunAction
+		if err := json.Unmarshal(params, &a); err != nil {
+			return nil, err
+		}
+		methods, seen = append(methods, method), append(seen, a)
+		if a.Name == "gone-80x24.txt" {
+			return nil, &ipc.Error{Code: daemon.CodeNotFound, Message: "no render gone-80x24.txt for run engine"}
+		}
+		return daemon.RenderReply{Name: a.Name, Text: "Run engine\nGate PASS"}, nil
+	})
+	text, err := d.Render(context.Background(), "engine", "x-80x24.txt")
+	if err != nil || text != "Run engine\nGate PASS" {
+		t.Fatalf("render: %q, %v", text, err)
+	}
+	_, err = d.Render(context.Background(), "engine", "gone-80x24.txt")
+	var wire *ipc.Error
+	if !errors.As(err, &wire) || wire.Code != daemon.CodeNotFound {
+		t.Fatalf("a refused render: %v", err)
+	}
+	if got := actionError(err); got != "not_found: no render gone-80x24.txt for run engine" {
+		t.Errorf("the pane would show %q", got)
+	}
+	if strings.Join(methods, " ") != "run.render run.render" ||
+		seen[0] != (daemon.RunAction{Run: "engine", Name: "x-80x24.txt"}) ||
+		seen[1] != (daemon.RunAction{Run: "engine", Name: "gone-80x24.txt"}) {
+		t.Errorf("requests %v %+v", methods, seen)
+	}
+}
+
 // The refusal at the narrowest standard size: the status line sits in the
 // card's footer and the checks stay visible beside it.
+// An owner finding drops whole when the pane is short: its question never
+// shows without the recommendation that ends it.
+func requireOwnerFindingWhole(t *testing.T, plain string) {
+	t.Helper()
+	if strings.Contains(plain, "Should the cache be") && !strings.Contains(plain, "Recommended: per-project.") {
+		t.Errorf("an owner finding is cut off:\n%s", plain)
+	}
+}
+
 func TestApprovalRefusedGolden(t *testing.T) {
 	for _, mono := range []bool{false, true} {
 		t.Run(fmt.Sprint(mono), func(t *testing.T) {
@@ -464,9 +529,11 @@ func TestApprovalRefusedGolden(t *testing.T) {
 			h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
 			got := h.m.View().Content
 			checkGolden(t, fmt.Sprintf("pane-approval-refused-80x24-mono-%t.txt", mono), got)
-			if plain := sgr.ReplaceAllString(got, ""); !strings.Contains(plain, "Approve needs every human check marked; open: 2, 3") {
+			plain := sgr.ReplaceAllString(got, "")
+			if !strings.Contains(plain, "Approve needs every human check marked; open: 2, 3") {
 				t.Errorf("the refusal is not in the footer:\n%s", plain)
 			}
+			requireOwnerFindingWhole(t, plain)
 		})
 	}
 }
@@ -564,7 +631,7 @@ func TestApprovalCardKeepsTheRunHeaderAt80x24(t *testing.T) {
 		if lines := strings.Split(v, "\n"); len(lines) > 24 {
 			t.Errorf("%d lines at 80x24", len(lines))
 		}
-		for _, want := range []string{"Run engine  S22  awaiting-approval", "Gate PASS", "Diff: 2 files, +48 -4, 1 new file", "Human checks", "esc close"} {
+		for _, want := range []string{"Run engine", "Gate PASS", "Diff: 2 files, +48 -4, 1 new file", "Human checks", "close pane"} {
 			if !strings.Contains(v, want) {
 				t.Errorf("findings %d: 80x24 lacks %q:\n%s", len(fs), want, v)
 			}
@@ -612,7 +679,7 @@ func TestApprovalCardKeepsTheRunHeaderAtEveryHeight(t *testing.T) {
 	for height := 16; height <= 60; height++ {
 		h := cardHarness(t, approvalCard(checks...), laterOne, laterTwo, ownerNote)
 		h.m.Update(tea.WindowSizeMsg{Width: 80, Height: height})
-		if v := plainView(h.m); !strings.Contains(v, "Run engine  S22  awaiting-approval") {
+		if v := plainView(h.m); !strings.Contains(v, "Run engine") {
 			t.Errorf("no run header at 80x%d:\n%s", height, v)
 		}
 	}

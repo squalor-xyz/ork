@@ -407,6 +407,26 @@ func TestLandedRunsLeaveReadyToLand(t *testing.T) {
 	}
 }
 
+// The window scrolls to the whole row of the selected cleanup-failed run, the
+// note under it included.
+func TestSelectedCleanupFailedRowKeepsItsReasonInView(t *testing.T) {
+	var runs []string
+	for i := 0; i < 30; i++ {
+		runs = append(runs, fmt.Sprintf(`{"id":"r%d","item":"S%02d","state":"committed","branch":"b%d"}`, i, i, i))
+	}
+	runs = append(runs, `{"id":"last","item":"S99","state":"committed","branch":"s99","merged":true,"worktree":"/p/.worktrees/s99","landed":true,"cleanup_failed":"landed; cleanup failed at git worktree remove /p/.worktrees/s99: locked"}`)
+	for i := 30; i < 40; i++ {
+		runs = append(runs, fmt.Sprintf(`{"id":"r%d","item":"S%02d","state":"committed","branch":"b%d"}`, i, i, i))
+	}
+	h := landingHarness(t, "["+strings.Join(runs, ",")+"]")
+	h.send(tea.WindowSizeMsg{Width: 80, Height: 24})
+	needs, running := h.m.rows()
+	h.m.cursor = len(needs) + len(running) + len(h.m.recentRows()) + 30
+	if v := plainView(h.m); !strings.Contains(v, "S99") || !strings.Contains(v, "git worktree remove /p/.worktrees/s99: locked") {
+		t.Fatalf("the selected cleanup-failed row lost its reason:\n%s", v)
+	}
+}
+
 // The ledger run of a landed slice shows in Recent as landed, not as a bare pass.
 func TestLandedRunShowsInRecent(t *testing.T) {
 	h := landingHarness(t, `[{"id":"r2","item":"S10","state":"committed","branch":"s10","landed":true,"relay_run":"led-1"}]`)

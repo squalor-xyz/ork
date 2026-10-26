@@ -3,19 +3,19 @@
 [1;7;97;44m> Needs you              0 [m│[1;36mKeys[m
   ork                     *│tab next view
                            │shift+tab previous view
-                           │right next project; next tab on Decisions
-                           │left previous project; previous tab on Decisions
+                           │] next project
+                           │[ previous project
                            │1-9 jump to project
-                           │down/j/n next row
-                           │up/k/p previous row
+                           │down/j next row
+                           │up/k previous row
                            │enter open run, question, item or decision; other rows select project
                            │/ filter projects; esc clears
                            │s hide/show sidebar
-                           │a add project (Welcome)
+                           │+ add project (Welcome)
                            │space tick item and ask inputs (Waves)
                            │e edit ticked item lineup (Waves)
                            │l launch a ready slice (Roadmap) or wave (Waves)
-                           │a approve; F fix round; x stop; t retry; f file slice
+                           │a approve; F fix round; x stop; t retry; v view renders; f file slice
                            │enter (answer) submit free text
                            │1-4 (question) pick an option; y sends
                            │t (question) type a free answer

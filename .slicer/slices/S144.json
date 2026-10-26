@@ -1,0 +1,39 @@
+{
+  "id": "S144",
+  "title": "Key follow-ups: status nudge for [ and ], Waves show-all on A, help wording and hidden tab help",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Later notes from the S105 relay (2026-10-26). Owner decisions 2026-10-26 (session a2bf7e0e): (a) when left/right do nothing on Overview, Roadmap, Waves or Questions, the status line says '[ and ] switch projects' (no layout cost); (b) Waves moves show-all from a to A, matching Decisions (today model.go and waves.go bind a). Other notes: (1) the TabNext/TabPrev help strings in internal/tui/keys.go are never shown (not in FullHelp); (2) help says 'next/previous project' although [ and ] also land on Running and Needs you; (3) the full help golden ends '+2 more lines' (pre-existing); (4) adj records 112 and 120 still name left/right as project keys in their option text (the owner amends or supersedes; agents do not)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/keys.go`\n- `internal/tui/model.go`\n- `internal/tui/waves.go`\n- `internal/tui/keymap_test.go`\n- `testdata/golden/`\n- `docs/dashboard.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

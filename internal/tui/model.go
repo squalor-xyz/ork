@@ -15,6 +15,7 @@ import (
 	"charm.land/bubbles/v2/help"
 	"charm.land/bubbles/v2/key"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/daemon"
@@ -338,6 +339,9 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		return m, m.applyWaves(msg)
 	case launchMsg:
 		return m, m.applyLaunch(msg)
+	case renderMsg:
+		m.renderArrived(msg)
+		return m, nil
 	case actionMsg:
 		flights := m.actionFlights[msg.action.run]
 		for i, a := range flights {
@@ -552,7 +556,7 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		m.allProjects = !m.allProjects
 		m.decisionsCursor = 0
 		m.decisionPane = nil
-	case m.view == decisionsView && key.Matches(msg, m.keys.Next, m.keys.Prev):
+	case m.view == decisionsView && key.Matches(msg, m.keys.TabNext, m.keys.TabPrev):
 		m.decisionsTab = 1 - m.decisionsTab
 		m.decisionsCursor = 0
 		m.decisionPane = nil
@@ -900,19 +904,15 @@ func (a runAction) command() string {
 	return cmd
 }
 
-// prompt keeps the cleanup question separate from the shell-quoted commands.
+// prompt keeps the cleanup and approve questions separate from the command.
 func (a runAction) prompt() string {
 	if a.verb == "cleanup" {
 		return a.command() + "\nRemove worktree and branch? [y/N] (Enter is No)"
 	}
-	prompt := a.command() + "? [y/N] (Enter is No)"
 	if a.verb == "approve" {
-		what := "lands " + a.item
-		if a.push {
-			what = "lands and pushes " + a.item
-		}
-		return prompt + "  y " + what + ", then removes its worktree and branch"
+		return a.promptWidth(0)
 	}
+	prompt := a.command() + "? [y/N] (Enter is No)"
 	if len(a.held) > 0 {
 		verb := "waits"
 		if len(a.held) > 1 {
@@ -922,6 +922,26 @@ func (a runAction) prompt() string {
 		prompt += "  " + strings.Join(a.held, ", ") + " " + verb + " on spec questions"
 	}
 	return prompt
+}
+
+// promptWidth is the prompt for a pane w columns wide (0: no limit). The
+// approve prompt reads like the cleanup one: the command, then the question
+// naming the landing, the push when the project pushes, and the cleanup the
+// approval confirms (S119, adj 162, adj 152). The keys `[y/N] (Enter is No)`
+// stay whole: they go on their own line when question and keys do not fit one.
+func (a runAction) promptWidth(w int) string {
+	if a.verb != "approve" {
+		return a.prompt()
+	}
+	question := "Land " + a.item + ", then remove its worktree and branch?"
+	if a.push {
+		question = "Land and push " + a.item + ", then remove its worktree and branch?"
+	}
+	const keys = "[y/N] (Enter is No)"
+	if w > 0 && lipgloss.Width(question+" "+keys) > w {
+		return a.command() + "\n" + question + "\n" + keys
+	}
+	return a.command() + "\n" + question + " " + keys
 }
 
 // cleanupConfirmLines caps long commands separately so both command starts

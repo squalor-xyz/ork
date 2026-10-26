@@ -5,6 +5,18 @@
                            │
                            │[1;36mRunning 1[m
                            │[1;7;97;44m  > started elsewhere  ork  tree  S55  active, 2 of 5 steps running  2m [m
+                           │    [1mRun tree[m
+                           │    [##~~..]
+                           │    [32mimplementer[m > [36m[reviewer][m > [90mgate[m                              [90mround 1[m
+                           │    [1;36m| orchestrator start  2m  codex sol high[m
+                           │      [90m+ implementer  done   1m  claude sonnet[m
+                           │      [90m    Build the tree[m
+                           │        [1;31m! explorer     fail   30s  codex sol[m
+                           │      [1;36m| reviewer     start  1m  claude opus[m
+                           │    . gate         queued  claude opus
+                           │    [90m    Keep the raw phase[m
+                           │
+                           │    started elsewhere, read-only; esc close pane
                            │
                            │[1;36mRecent[m
                            │  [90mnone[m
@@ -13,18 +25,6 @@
                            │  [90mnone[m
                            │
                            │
-                           │[90m────────────────────────────────────────────────────────────────────────[m
-                           │  [1;36mRun tree  S55  active  started elsewhere[m
-                           │  [##~~..]
-                           │  [32mimplementer[m > [36m[reviewer][m > [90mgate[m                                [90mround 1[m
-                           │  [1;36m| orchestrator start  2m  codex sol high[m
-                           │    [90m+ implementer  done   1m  claude sonnet[m
-                           │    [90m    Build the tree[m
-                           │      [1;31m! explorer     fail   30s  codex sol[m
-                           │    [1;36m| reviewer     start  1m  claude opus[m
-                           │  . gate         queued  claude opus
-                           │  [90m    Keep the raw phase[m
-                           │  
-                           │  started elsewhere, read-only; esc close pane
+                           │
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │ 1 project | refreshed 16:42:00

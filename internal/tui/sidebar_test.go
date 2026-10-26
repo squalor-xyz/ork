@@ -31,8 +31,8 @@ func TestSidebarRowsAndSelection(t *testing.T) {
 	if strings.Contains(h.view(), "beta question") {
 		t.Fatal("project selection shows another project's rows")
 	}
-	h.send(press("left")) // beta is before alpha after priority sorting
-	h.send(press("left")) // Needs you
+	h.send(press("[")) // beta is before alpha after priority sorting
+	h.send(press("[")) // Needs you
 	if !strings.Contains(h.view(), "beta question") {
 		t.Fatal("Needs you lost all-project Overview")
 	}
@@ -41,17 +41,17 @@ func TestSidebarRowsAndSelection(t *testing.T) {
 func TestSidebarNavigationFilterAndHide(t *testing.T) {
 	h := newHarness(t, proj("alpha", false), proj("beta", false))
 	h.start()
-	for _, k := range []string{"right", "right"} {
+	for _, k := range []string{"]", "]"} {
 		h.send(press(k))
 	}
 	if !strings.Contains(h.view(), "> beta") {
 		t.Fatal("right did not move selection to beta")
 	}
-	h.send(press("left"))
+	h.send(press("["))
 	if !strings.Contains(h.view(), "> alpha") {
 		t.Fatal("left did not move selection")
 	}
-	h.send(press("left")) // Needs you: no active project to retain through the filter
+	h.send(press("[")) // Needs you: no active project to retain through the filter
 	h.send(press("/"))
 	h.send(press("b"))
 	v := h.view()
@@ -94,7 +94,7 @@ func TestSidebarScrollAndCompactNames(t *testing.T) {
 	h.start()
 	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 12})
 	for i := 0; i < 15; i++ {
-		h.send(press("right"))
+		h.send(press("]"))
 	}
 	v := plainView(h.m)
 	if !strings.Contains(v, "> 15-long-proje...") || !strings.Contains(v, "+8 more") {
@@ -142,16 +142,16 @@ func TestNoticeFailureRetriesOnTick(t *testing.T) {
 	}
 }
 
-func TestSidebarArrowNavigation(t *testing.T) {
+func TestSidebarBracketNavigation(t *testing.T) {
 	for _, tc := range []struct {
 		name string
-		code rune
+		key  string
 		want string
-	}{{"right", tea.KeyRight, "> alpha"}, {"left", tea.KeyLeft, "> Running"}} {
+	}{{"]", "]", "> alpha"}, {"[", "[", "> Running"}} {
 		t.Run(tc.name, func(t *testing.T) {
 			h := newHarness(t, proj("alpha", false), proj("beta", false))
 			h.start()
-			h.send(tea.KeyPressMsg{Code: tc.code})
+			h.send(press(tc.key))
 			if !strings.Contains(h.view(), tc.want) {
 				t.Fatalf("%s did not select %s", tc.name, tc.want)
 			}
@@ -224,7 +224,7 @@ func TestFilterKeepsActiveProject(t *testing.T) {
 					t.Fatalf("filtered active selection disappeared: %s", h.view())
 				}
 			} else {
-				h.send(press("left"))
+				h.send(press("["))
 				if !strings.Contains(h.view(), "> Needs you") {
 					t.Fatalf("movement lost active project position: %s", h.view())
 				}

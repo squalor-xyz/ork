@@ -150,7 +150,7 @@ func TestWavesListsSuggestedWaves(t *testing.T) {
 	if !reflect.DeepEqual(l.suggests, []string{"ork"}) {
 		t.Fatalf("suggests: %v", l.suggests)
 	}
-	h.deliver(press("right"))
+	h.deliver(press("]"))
 	if !reflect.DeepEqual(l.suggests, []string{"ork", "other"}) {
 		t.Fatalf("project change: %v", l.suggests)
 	}
@@ -429,7 +429,7 @@ func TestWavesStaleSuggestAfterProjectChange(t *testing.T) {
 		t.Fatal("missing suggest command")
 	}
 	reply := cmd()
-	h.deliver(press("right"))
+	h.deliver(press("]"))
 	l.suggest = &slicercli.ParallelPlan{} // the old result must not replace the new state
 	h.m.waves.suggest = l.suggest
 	h.deliver(reply)
@@ -457,7 +457,7 @@ func TestWavesStalePlanAfterUntickOrNavigation(t *testing.T) {
 			case "view":
 				h.deliver(press("tab"))
 			case "project":
-				h.deliver(press("right"))
+				h.deliver(press("]"))
 			}
 			h.deliver(reply)
 			if strings.Contains(h.view(), "sonnet") {
@@ -533,7 +533,7 @@ func TestWavesNeedsProjectAndDaemon(t *testing.T) {
 		t.Fatal(h.view())
 	}
 	h.m.cfg.Live = nil
-	h.deliver(press("right"))
+	h.deliver(press("]"))
 	h.deliver(press(" "))
 	h.deliver(press("l"))
 	if h.m.confirm != nil || !strings.Contains(h.view(), "No daemon connection") {

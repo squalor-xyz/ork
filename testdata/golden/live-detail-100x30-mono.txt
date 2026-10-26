@@ -4,7 +4,19 @@
   ork                     *│  [2mnothing needs you[m
                            │
                            │[1mRunning 1[m
-                           │[1;7m   ork  engine  S07  implement  [~~....] r2  [implementer]>reviewer>gate[m
+                           │[1;7m   ork  engine  S07  implement  [~~....] r2  heard 2m                   [m
+                           │    [1mRun engine[m
+                           │    [~~....] r2  [2mlast heard 2m ago[m
+                           │    [implementer] > [2mreviewer[m > [2mgate[m
+                           │    [2mactivity ▁▂▂▃▄▅▆█▂▁  last 5m[m
+                           │    [2m+ implementer done  5m  claude sonnet high round 1  tokens 0  $0.00[m
+                           │    [2m+ reviewer    done  3m  claude opus round 1  tokens 0  $0.00[m
+                           │    [1m! gate        fail  1m  claude opus round 1  tokens 0  $0.00[m
+                           │    [1m    ✗ gate FAIL -> implementer round 2[m
+                           │    [1m| implementer start 2m  claude sonnet high round 2 x2[m
+                           │    [2m    tokens -  $-[m
+                           │
+                           │    x stop; esc close pane
                            │
                            │[1mRecent[m
                            │  [2mnone[m
@@ -12,19 +24,7 @@
                            │[1mReady to land[m
                            │  [2mnone[m
                            │
-                           │[2m────────────────────────────────────────────────────────────────────────[m
-                           │  [1mRun engine  S07  implement[m
-                           │  [~~....] r2
-                           │  [implementer] > [2mreviewer[m > [2mgate[m                                [2mround 2[m
-                           │  [2mlast heard 2m ago[m
-                           │  [2mactivity ▁▂▂▃▄▅▆█▂▁  last 5m[m
-                           │  [2m+ implementer done  5m  claude sonnet high round 1  tokens 0  $0.00[m
-                           │  [2m+ reviewer    done  3m  claude opus round 1  tokens 0  $0.00[m
-                           │  [1m! gate        fail  1m  claude opus round 1  tokens 0  $0.00[m
-                           │  [1m    ✗ gate FAIL -> implementer round 2[m
-                           │  [1m| implementer start 2m  claude sonnet high round 2 x2[m
-                           │  [2m    tokens -  $-[m
-                           │  
-                           │  x stop; esc close pane
+                           │
+                           │
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │ 1 project | refreshed 16:42:00

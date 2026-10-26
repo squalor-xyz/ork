@@ -3,6 +3,18 @@
 [1;7;97;44m> Needs you              1 [m│[1;36mNeeds you 1[m
   ork                    1 │  [1mPaused 1[m
                            │[1;7;97;44m  ?  ork  engine  S22  paused  The storage migration is blocked. Keep...[m
+                           │    [1mRun engine[m
+                           │    The storage migration is blocked.
+                           │    Keep the existing data intact.
+                           │    [90m[......][m
+                           │    [90mimplementer[m > [90mreviewer[m > [90mgate[m
+                           │
+                           │    [1;36mWhich storage?[m
+                           │    1. use: local storage (recommended)
+                           │    2. remote: remote storage
+                           │    Why 1: keeps data nearby
+                           │    [90madj filing off: no adj in this project[m
+                           │    1-2 pick; t free text; esc close pane
                            │
                            │[1;36mRunning 1[m  [33m! owner questions 1[m
                            │  [36m> started elsewhere[m  ork  ledger  S22  active, 2 of 6 steps running...
@@ -13,18 +25,6 @@
                            │[1;36mReady to land[m
                            │  [90mnone[m
                            │
-                           │[90m────────────────────────────────────────────────────────────────────────[m
-                           │  [1;36mRun engine  S22  paused[m
-                           │  The storage migration is blocked.
-                           │  Keep the existing data intact.
-                           │  [90m[......][m
-                           │  [90mimplementer[m > [90mreviewer[m > [90mgate[m
-                           │  
-                           │  [1;36mWhich storage?[m
-                           │  1. use: local storage (recommended)
-                           │  2. remote: remote storage
-                           │  Why 1: keeps data nearby
-                           │  [90madj filing off: no adj in this project[m
-                           │  1-2 pick; t free text; esc close pane
+                           │
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │ 1 project | refreshed 16:42:00

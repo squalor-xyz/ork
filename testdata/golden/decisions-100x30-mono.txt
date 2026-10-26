@@ -10,7 +10,7 @@
                            │[2m       Use files[m
                            │[2m       Easy audit[m
                            │  #2 ui.order  Second question
-                           │  [left/right] tabs   [a] all projects   [enter] open
+                           │  [left/right] tabs   [A] all projects   [enter] open
                            │
                            │
                            │

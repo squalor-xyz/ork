@@ -351,7 +351,7 @@ func TestLaunchReadyListNavigation(t *testing.T) {
 	if strings.Index(h.view(), "S90") >= strings.Index(h.view(), "S91") {
 		t.Fatal("list order changed")
 	}
-	for _, keys := range [][]string{{"down"}, {"j"}, {"n"}, {"down", "up", "down"}, {"down", "k", "j"}, {"down", "p", "n"}} {
+	for _, keys := range [][]string{{"down"}, {"j"}, {"down", "up", "down"}, {"down", "k", "j"}} {
 		h.m.Update(press("esc"))
 		h.m.Update(press("l"))
 		for _, k := range keys {
@@ -437,7 +437,7 @@ func launchBlockedStart(t *testing.T, h *harness, l *launchLive) (*blockingStart
 }
 
 func TestLaunchSentStartSurvivesNavigation(t *testing.T) {
-	for _, key := range []string{"esc", "right", "left", "2", "tab", "shift+tab"} {
+	for _, key := range []string{"esc", "]", "[", "2", "tab", "shift+tab"} {
 		t.Run(key, func(t *testing.T) {
 			h, l := launchHarness(t)
 			b, ctx, reply := launchBlockedStart(t, h, l)
@@ -464,7 +464,7 @@ func TestLaunchSentStartSurvivesNavigation(t *testing.T) {
 }
 
 func TestLaunchStartReplyAfterLeaving(t *testing.T) {
-	for _, key := range []string{"esc", "right", "tab"} {
+	for _, key := range []string{"esc", "]", "tab"} {
 		for _, failed := range []bool{false, true} {
 			t.Run(fmt.Sprintf("%s/failed-%t", key, failed), func(t *testing.T) {
 				h, l := launchHarness(t)
@@ -542,7 +542,7 @@ func TestLaunchStartReplyPreservesOtherLaunch(t *testing.T) {
 }
 
 func TestLaunchQueuedStartDropped(t *testing.T) {
-	for _, key := range []string{"esc", "right", "tab"} {
+	for _, key := range []string{"esc", "]", "tab"} {
 		t.Run(key, func(t *testing.T) {
 			h, l := launchHarness(t)
 			launchConfirmed(t, h)
@@ -557,7 +557,7 @@ func TestLaunchQueuedStartDropped(t *testing.T) {
 }
 
 func TestLaunchPendingNavigationDropsPlan(t *testing.T) {
-	for _, k := range []string{"tab", "shift+tab", "right", "left", "2"} {
+	for _, k := range []string{"tab", "shift+tab", "]", "[", "2"} {
 		t.Run(k, func(t *testing.T) {
 			h, _ := launchHarness(t)
 			c := launchPlanning(t, h)

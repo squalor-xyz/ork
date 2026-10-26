@@ -16,6 +16,7 @@ The files ork owns. Everything else is read live from slicer, adj and git
 | Role reports | `~/.local/state/ork/runs/<run>/<role>-<round>.md` |
 | Check output per round (S04) | `~/.local/state/ork/runs/<run>/checks-<round>.log` |
 | A role's own temp directory (S04) | `~/.local/state/ork/runs/<run>/tmp/<role>-<round>/` |
+| The UI pass's renders (S121, *proposed*): `VIEW-80x24.txt`, `VIEW-120x40.txt`, `VIEW-ascii.txt` | `~/.local/state/ork/runs/<run>/tmp/ui-<round>/renders/` |
 | A spec check's report and temp directory (S116, *proposed*); the verdicts themselves live in the daemon's memory | `~/.local/state/ork/spec-checks/<check>/` |
 | Fixture candidates: raw output of every non-ok vendor round or round with denials, mode 0600 | `~/.local/state/ork/fixtures/<vendor>/` |
 
@@ -127,7 +128,8 @@ that uncommitted edit, so every role's brief carries the paragraph in an
   "questions": [{"role": "implementer", "round": 1, "key": "area.topic", "text": "...", "at": "...", "answer": "...", "answered_at": "..."}],
   "findings": [{"kind": "later", "role": "reviewer", "round": 1, "title": "Add a --json flag", "text": "...", "at": "...", "filed": "S130", "filed_at": "..."}],
   "card": {"round": 1, "verdict": "PASS", "passed": 12, "failed": 0, "diff_stat": " a.go | 2 +-\n 1 file changed, 1 insertion(+), 1 deletion(-)",
-           "untracked": ["b.go"], "human_checks": [{"text": "...", "state": "ticked"}]},
+           "untracked": ["b.go"], "human_checks": [{"text": "...", "state": "ticked"}],
+           "ui_round": 1, "renders": [{"name": "launch-80x24.txt", "size": 1210}]},
   "fixes": [{"round": 2, "note": "Rename the flag.", "at": "..."}],
   "writes": [
     {"at": "2026-10-19T16:12:05Z", "tool": "slicer", "root": "/.../adjudicate/.worktrees/S18",
@@ -200,6 +202,20 @@ diff --stat HEAD` in the worktree, which ork has not committed yet) and
 `state` is empty (open), `ticked` or `later`; the owner sets it with
 `run.check`. A check with the same text keeps its mark when the card is built
 again after a fix round. `checks_error` says why the checks could not be read.
+`ui_round`, `renders` and `renders_dropped` (omitted when empty; *proposed*,
+S121, adj #165) list the views the UI pass wrote: `ui_round` is the round of
+the latest UI pass that ended well (omitted when none ran), `renders` the
+`.txt` files it left in `tmp/ui-<round>/renders/` as `name` and `size` (the
+bytes of the plain text that `run.render` returns), in this order: each view's
+`-80x24`, `-120x40` and `-ascii` files, the views by name, then other files by
+name; `renders_dropped` counts the files past the limit of 24. The card holds
+no render text, so neither `run.json` nor a snapshot does: the text stays in
+the file and is read on demand (`run.render` in `design.md`). A render is
+plain text of at most 24 KiB; ork drops terminal escape sequences and other
+control characters, and cuts a longer one at the last line end within 24 KiB
+(at the 24 KiB mark when there is none), with a last line `(cut: over 24
+KiB)`. A renders directory that is a link is not read. The files stay in the
+run directory.
 `fixes` (omitted when empty; *proposed*, S118) keeps each note the owner sent
 to a fix round from the card: the `round` that acts on it, the `note` and the
 time. The note is also the file `owner-fix-N.md` in the run directory, which is

@@ -65,7 +65,7 @@ func (m *Model) fileHint() string {
 // findingLines tells the owner what the reviewer, UI pass or gate left for
 // them (adj 163): later work to file as a slice, and owner questions that did
 // not block the gate.
-func (m *Model) findingLines(width int) (later, owner []string) {
+func (m *Model) findingLines(width int) (later []string, owner [][]string) {
 	run := m.paneRun()
 	if run == nil || run.Unavailable || m.paneQuestion() {
 		return nil, nil
@@ -87,7 +87,7 @@ func (m *Model) findingLines(width int) (later, owner []string) {
 	if len(filed) > 0 {
 		lines = append(lines, clip("Filed as slices: "+strings.Join(filed, ", "), width))
 	}
-	later, lines = lines, nil
+	later = lines
 	for _, f := range run.Findings {
 		if f.Kind != runrec.FindingOwner {
 			continue
@@ -96,9 +96,9 @@ func (m *Model) findingLines(width int) (later, owner []string) {
 		if a := f.Ask; a != nil && a.Recommend >= 1 && a.Recommend <= len(a.Options) {
 			text += " Recommended: " + a.Options[a.Recommend-1].Label + "."
 		}
-		lines = append(lines, wrapText(text, width)...)
+		owner = append(owner, wrapText(text, width))
 	}
-	return later, lines
+	return later, owner
 }
 
 // laterLine is the one line that offers a later finding: the lead, then the

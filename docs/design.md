@@ -270,8 +270,12 @@ slice.
     ask to pause, the first pause is kept. A stop overrides a pause, because
     `pause()` refuses when the slice is paused or stopped and `stop()` refuses
     only when it is already stopped. After a pause, a retry runs again only the
-    role whose report does not stand. The renders of adj #165 are a later slice
-    (S121); this one is text only.
+    role whose report does not stand. Renders (*proposed*, S121; adj #165): the
+    UI pass writes each changed view as plain text files at 80x24, 120x40 and in
+    ASCII mode, in `tmp/ui-N/renders/` of the run directory, using the
+    project's own tooling. ork has no render code. When the gate passes, the
+    approval card keeps the files of the latest UI pass that ended well (see
+    Approval card).
 - **architect:** one read-only review with the fingerprint applied. The report
   needs only the shared `## Owner needed` section. The whole report goes to an
   implementer fix round, even when it has no findings; ork adds no parser
@@ -516,6 +520,18 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   between, and returns to `awaiting-approval` on PASS. A gate FAIL goes back to
   the implementer as usual. It counts as an implementer round, so it is
   refused (not stopped) at the round limit.
+  The card also holds the UI pass's renders (*proposed*, S121): of the latest
+  UI pass that ended well, the `.txt` files of its `tmp/ui-N/renders/`
+  directory, each view's 80x24, 120x40 and ascii file in that order, the views
+  by name, then other files by name. ork keeps only regular files (neither a
+  linked file nor a linked directory is followed, and a file must be the one
+  the listing named), at most 24 of them and 24 KiB of each, as plain text
+  (escape sequences and other control characters dropped, so none can reach the
+  owner's terminal). The card lists each render by name and size and holds no
+  text; the text is read on demand (`run.render`, wire section). The
+  directory is cleared when the UI pass starts, so a rerun keeps no file of an
+  earlier attempt. After an owner fix round the card is built again with the
+  same renders; its `ui_round` says which round they come from.
 - **Commit and finish.** On `Approve`, the implementer is resumed for the
   finish step first: the closing note, then `slicer done` or `slicer handoff`
   per `slicer config implement_finish`. Then ork commits in the worktree with
@@ -578,7 +594,7 @@ ork adds:
   vendor and model where the vendor supports it. Otherwise it starts fresh with the
   earlier reports in the brief (`role.resume`).
 - **UI pass.** A read-only role with its own prompt (`ui.md`: 80x24, ASCII and
-  monospace, clipping, key hints), the same for every vendor. It runs beside
+  monospace, clipping, key hints, and the renders it writes), the same for every vendor. It runs beside
   the reviewer on a slice that touches the UI (see the review state). Its
   lineup row is the matrix row that the rule naming "UI pass row (rNN)" gives
   (u10 today). Until slicer has a `ui` role (slicer s392), that row's role is
@@ -842,7 +858,7 @@ ork status [--project P]    waves, slices, roles, needs-you
 ork wave suggest P          slicer's suggested waves, in order, with reasons
 ork wave start P ITEM...    check the specs, then launch (asks unless --yes)
 ork run P ID                show a plan and launch one slice (S17)
-ork approve RUN             finish a passed slice, then commit
+ork approve RUN             finish a passed slice, commit and land it
 ork answer RUN TEXT         answer an owner question
 ork dismiss RUN             clear a stopped run from Needs you
 ork retry RUN               retry a paused role or step
@@ -908,7 +924,7 @@ engine runs only the first entry until S49. The gate uses the reviewer's
 lineup. The daemon refuses to start if the plan changed during confirmation. It starts one engine run
 in the background; CLI disconnection does not cancel it. The daemon owns
 the run store and reconciles stored runs before accepting clients.
-`approve` runs the finish step, then commits once (adj #81); `answer`
+`approve` runs the finish step, then commits once (adj #81), then lands it (land state, adj #162); `answer`
 resumes a paused role that asked a question. `retry` calls `Engine.Retry`
 to rerun the role or step of a `shape`, `error`, `lost` or `interrupted`
 pause (adj #101). A question needs `answer` or `stop`. An `answer` on a
@@ -941,6 +957,16 @@ again; `run.check` takes `{run,check,state}` (the one-based human check;
 run rows of a run that awaits approval carry `card` (`state.md`). There is no
 `ork` command for fix or check yet; `ork approve` on a run with human checks
 fails until they are marked in the TUI.
+*Proposed (S121):* `run.render` takes `{run,name}` and returns `{name,text}`:
+the plain text of one render of the run's card, read from
+`tmp/ui-<ui_round>/renders/NAME` in the run directory. It reads the stored
+record and the file, so it works while a role runs and on a finished run. The
+name must be one the run's card lists; the file must be a regular `.txt` file of
+that directory (a link, a path or a directory is refused), and the text is
+plain text of at most 24 KiB. A run without a card, an unknown run, a name the
+card does not list and a file that is not there are all `not_found`. The TUI
+calls it when the owner opens the renders and again for each render it moves
+to; no snapshot carries render text.
 *Proposed:* `run.file` takes `{run,finding}` (the one-based `findings[]` entry)
 and returns the run record with a `message` (`filed as ID`) once ork has run
 `slicer add` and `slicer promote` for that later finding (adj #163). It does
@@ -1103,8 +1129,8 @@ Each step is usable or testable on its own:
 
 Running rows and the run pane show slicer's relay board information
 (`slicer/docs/tui.md:183-270`). The compact row pipeline marks the running
-role in brackets and adds last heard with `!` after 15 minutes and `!!`
-for stale runs. Stale runs stay visible and freeze elapsed time at their
+role in brackets and adds last heard beside the bar with `!` after 10 minutes and `!!`
+after 30 minutes (the stale cutoff) or for stale runs. Stale runs stay visible and freeze elapsed time at their
 last event. The pane keeps the S55 tree and adds the colored role pipeline,
 implementer round count, last heard, waiting roles, repeated role counts,
 and failed-gate reasons. Engine-only panes derive these from role records.
@@ -1124,8 +1150,8 @@ a read-only ended-run pane. Run duration and ended age use `begun_at` and
 ### Live role activity (S07)
 
 The Overview puts the ASCII stage bar after elapsed time. Narrow rows drop
-tokens, heard, pipeline, role details, then the bar. The pane puts the bar above the
-pipeline and the ten-cell activity sparkline below last heard. The bar measures
+tokens, pipeline, role details, heard, then the bar. The pane puts the bar above the
+pipeline, with last heard on the bar's line, and the ten-cell activity sparkline below. The bar measures
 completed roles, with an architect cell when present; a fix round resets roles
 whose latest steps precede the new implementer step. A running cell pulses
 through `~~`, `~=`, `==`, `=~`; stopped, paused, stale and ended runs freeze at

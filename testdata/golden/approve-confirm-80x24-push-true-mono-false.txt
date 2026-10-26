@@ -1,0 +1,24 @@
+[1mork[m  ?help         │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[90m  Running        0 [m│[90m────────────────────────────────────────────────────────────[m
+[1;7;97;44m> Needs you      1 [m│[1;36mNeeds you 1[m
+  ork            1 │  [1mApprove 1[m
+                   │[1;7;97;44m  +  ork  S22  awaiting-approval  owner action  2 of 6 st...[m
+                   │
+                   │[1;36mRunning 0[m
+                   │  [90mnothing running[m
+                   │
+                   │[1;36mRecent[m
+                   │  [90mnone[m
+                   │
+                   │[1;36mReady to land[m
+                   │  [90mnone[m
+                   │
+                   │
+                   │
+                   │
+                   │[90m────────────────────────────────────────────────────────────[m
+                   │  ork approve engine
+                   │  Land and push S22, then remove its worktree and branch?
+                   │  [y/N] (Enter is No)
+                   │[90m────────────────────────────────────────────────────────────[m
+                   │ 1 project | refreshed 16:42:00

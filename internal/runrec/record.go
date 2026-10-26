@@ -196,6 +196,23 @@ type ApprovalCard struct {
 	Untracked   []string     `json:"untracked,omitempty"` // new files the diff stat does not count
 	HumanChecks []HumanCheck `json:"human_checks,omitempty"`
 	ChecksError string       `json:"checks_error,omitempty"` // why the slice's human checks could not be read
+
+	// The UI pass's renders (S121, *proposed*; adj 165): the changed views as
+	// plain text files, listed by name and size. UIRound is the round of the UI pass they come from, or 0
+	// when no UI pass ran for the slice. RendersDropped counts files the card
+	// did not keep.
+	UIRound        int      `json:"ui_round,omitempty"`
+	Renders        []Render `json:"renders,omitempty"`
+	RendersDropped int      `json:"renders_dropped,omitempty"`
+}
+
+// Render is one view the UI pass wrote as a text file, for example
+// "launch-80x24.txt": its name and the size in bytes of its plain text. The
+// text stays in the file and is read on demand (the daemon's run.render), so
+// no record or snapshot carries it. ork does not make renders.
+type Render struct {
+	Name string `json:"name"`
+	Size int    `json:"size"`
 }
 
 // OwnerFix is a fix the owner asked for from the approval card, with the note

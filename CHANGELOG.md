@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- S121: renders on the approval card (adj #165, *proposed*). The UI pass
+  writes the changed views as text files at 80x24, 120x40 and in ASCII mode in
+  `tmp/ui-N/renders/` of the run directory, with the project's own tooling;
+  ork has no render code. The card keeps them (plain text without escape
+  sequences, at most 24 files of 24 KiB, links not followed, each view's
+  80x24, 120x40 and ascii file in that order) and `v view renders` shows them
+  in the pane, which then takes the whole body (the Overview rows collapse).
+  The card and snapshots hold only each render's name and size; the pane reads
+  the text on demand through a new `run.render` call. `run.json` gains
+  `card.ui_round`, `card.renders` (name, size) and `card.renders_dropped`.
+
 - S120: finding kinds (adj #163). The reviewer, the UI pass and the gate tag
   each finding `[fix]`, `[owner]` (`[owner blocker]` to block the gate) or
   `[later]`; an untagged finding is a fix. Only fix findings go to the fix

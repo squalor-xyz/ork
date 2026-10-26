@@ -2,7 +2,7 @@
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │  [1;36mWelcome[m
                            │
-                           │  No projects yet. Press a to add one
+                           │  No projects yet. Press + to add one
                            │
                            │  Project path: [1m/work/mine[m
                            │  [90mType an absolute path, or leave it empty and press Enter to use the[m
