@@ -15,7 +15,11 @@ type envelope struct {
 	Subtype   string `json:"subtype"`
 	SessionID string `json:"session_id"`
 	Event     *struct {
-		Type  string `json:"type"`
+		Type    string `json:"type"`
+		Message *struct {
+			Usage wireUsage `json:"usage"`
+		} `json:"message"`
+		Usage wireUsage `json:"usage"`
 		Delta *struct {
 			Type string `json:"type"`
 			Text string `json:"text"`
@@ -23,20 +27,26 @@ type envelope struct {
 	} `json:"event"`
 }
 
+type wireUsage struct {
+	InputTokens         int64 `json:"input_tokens"`
+	OutputTokens        int64 `json:"output_tokens"`
+	CacheCreationTokens int64 `json:"cache_creation_input_tokens"`
+	CacheReadTokens     int64 `json:"cache_read_input_tokens"`
+}
+
+func (u wireUsage) usage() Usage {
+	return Usage{InputTokens: u.InputTokens, OutputTokens: u.OutputTokens, CacheCreationTokens: u.CacheCreationTokens, CacheReadTokens: u.CacheReadTokens}
+}
+
 type wireResult struct {
-	SessionID      string  `json:"session_id"`
-	Result         string  `json:"result"`
-	Subtype        string  `json:"subtype"`
-	IsError        bool    `json:"is_error"`
-	APIErrorStatus *int    `json:"api_error_status"`
-	TerminalReason string  `json:"terminal_reason"`
-	TotalCostUSD   float64 `json:"total_cost_usd"`
-	Usage          struct {
-		InputTokens         int64 `json:"input_tokens"`
-		OutputTokens        int64 `json:"output_tokens"`
-		CacheCreationTokens int64 `json:"cache_creation_input_tokens"`
-		CacheReadTokens     int64 `json:"cache_read_input_tokens"`
-	} `json:"usage"`
+	SessionID         string    `json:"session_id"`
+	Result            string    `json:"result"`
+	Subtype           string    `json:"subtype"`
+	IsError           bool      `json:"is_error"`
+	APIErrorStatus    *int      `json:"api_error_status"`
+	TerminalReason    string    `json:"terminal_reason"`
+	TotalCostUSD      float64   `json:"total_cost_usd"`
+	Usage             wireUsage `json:"usage"`
 	PermissionDenials []struct {
 		ToolName  string          `json:"tool_name"`
 		ToolUseID string          `json:"tool_use_id"`
@@ -63,6 +73,13 @@ func ParseLine(line []byte) (Event, error) {
 		env.Event.Delta != nil && env.Event.Delta.Type == "text_delta":
 		ev.Kind = EventTextDelta
 		ev.Text = env.Event.Delta.Text
+	case env.Type == "stream_event" && env.Event != nil && env.Event.Type == "message_start" && env.Event.Message != nil:
+		ev.Kind = EventUsage
+		ev.UsageStart = true
+		ev.Usage = env.Event.Message.Usage.usage()
+	case env.Type == "stream_event" && env.Event != nil && env.Event.Type == "message_delta":
+		ev.Kind = EventUsage
+		ev.Usage = env.Event.Usage.usage()
 	case env.Type == "result":
 		var w wireResult
 		if err := json.Unmarshal(line, &w); err != nil {

@@ -96,6 +96,10 @@ question, the options you see, and your recommendation. Finish any independent w
 first. Do not run `adj ask` yourself; ork shows the question to the owner (and may file
 it) and may resume you with the answer.
 
+ork runs the project check command and `slicer check` after the round, outside your
+sandbox. A check you could not run because of your sandbox belongs under deviations
+(item 6), not `## Owner needed`.
+
 ## Self-check
 
 Before reporting, review your diff for concurrency and handle lifetime. Confirm
@@ -117,6 +121,7 @@ concise, as Markdown, with these parts in order:
    the slice touches more than one project, one such line per project.
 5. Mutation table: each mutation and the test that went red.
 6. Deviations from the slice or the brief (or "none"), and anything you were unsure
-   about.
+   about. Include checks you could not run because of your sandbox.
    Spec edits: list the re-anchored Files and Failing tests, or "none".
-7. `## Owner needed`: your questions for the owner, or "none".
+7. `## Owner needed`: your questions for the owner, or "none". Do not put
+   sandbox-limited checks here.

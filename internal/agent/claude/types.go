@@ -34,6 +34,7 @@ const (
 type EventKind string
 
 const (
+	EventUsage     EventKind = "usage"
 	EventInit      EventKind = "init"
 	EventTextDelta EventKind = "text-delta"
 	EventRateLimit EventKind = "rate-limit"
@@ -43,11 +44,13 @@ const (
 
 // Event is one parsed stream line.
 type Event struct {
-	Kind      EventKind
-	SessionID string
-	Text      string  // EventTextDelta: the delta
-	Result    *Result // EventResult
-	Raw       json.RawMessage
+	Kind       EventKind
+	SessionID  string
+	Text       string  // EventTextDelta: the delta
+	Result     *Result // EventResult
+	Usage      Usage   // EventUsage: current message usage
+	UsageStart bool    // a new message begins
+	Raw        json.RawMessage
 }
 
 // Usage is the token and cost part of a result event.

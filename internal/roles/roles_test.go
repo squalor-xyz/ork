@@ -438,3 +438,24 @@ func TestImplementerPromptSpecEdits(t *testing.T) {
 		t.Error("implementer Report must contain Spec edits: after 6. Deviations and before 7. ")
 	}
 }
+
+func TestImplementerPromptSaysEngineRunsChecks(t *testing.T) {
+	p := prompts(t)["implementer"]
+	owner, rest, _ := strings.Cut(p, "\n## Self-check\n")
+	for _, want := range []string{
+		"ork runs the project check command and `slicer check` after the round, outside your sandbox.",
+		"A check you could not run because of your sandbox belongs under deviations (item 6), not `## Owner needed`.",
+	} {
+		if !has(owner, want) {
+			t.Errorf("Owner questions lacks %q", want)
+		}
+	}
+	_, report, _ := strings.Cut(rest, "\n## Report\n")
+	deviations, ownerNeeded, _ := strings.Cut(report, "\n7. ")
+	if !has(deviations, "Include checks you could not run because of your sandbox.") {
+		t.Error("report item 6 must include sandbox-limited checks")
+	}
+	if !has(ownerNeeded, "Do not put sandbox-limited checks here.") {
+		t.Error("report item 7 must exclude sandbox-limited checks")
+	}
+}

@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/roles/prompts/implementer.md:86-122` (Owner needed and report part 7): say that ork runs the project check command after the round outside the role's sandbox; a check the role could not run because of its sandbox goes under deviations, not Owner needed.\n- `internal/engine/brief.go:20-60` (BriefInput, BuildBrief): a CheckCommand field and the sentence that names it.\n- `internal/engine/states.go` and `internal/engine/brief_test.go`: pass e.proj.CheckCommand into the brief; test it. Re-anchor from the code.\n- `internal/roles/roles_test.go`: pin the new sentence."
+      "body": "- `internal/roles/prompts/implementer.md` (Owner questions and report parts 6-7): explain engine checks and sandbox-limited checks as deviations.\n- `internal/engine/brief.go` (BriefInput, BuildBrief): CheckCommand and implementer-only check instructions.\n- `internal/engine/round.go` (runRole BriefInput literal): pass e.proj.CheckCommand.\n- `internal/engine/brief_test.go`: pin command, empty command, registry wiring and role scope.\n- `internal/roles/roles_test.go`: pin the new prompt sentences and retain S115 pins.\n- `docs/design.md` (Roles, Brief): document implementer check instructions."
     },
     {
       "heading": "Failing tests",
-      "body": "TestImplementerPromptSaysEngineRunsChecks; TestBriefNamesCheckCommand (and the empty-CheckCommand case)."
+      "body": "- `internal/roles/roles_test.go`: TestImplementerPromptSaysEngineRunsChecks pins engine checks, sandbox deviations, and report items 6-7.\n- `internal/engine/brief_test.go`: TestBriefNamesCheckCommand covers configured and empty CheckCommand through runRound registry wiring, plus implementer-only scope (reviewer, gate and architect excluded)."
     },
     {
       "heading": "Implement",

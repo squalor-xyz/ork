@@ -194,8 +194,9 @@ the text column, falling back to a shorter indent when needed to fit.
    The unselected warning cell uses the warning color. The selected row
    detail includes the full pipeline and heard cell even when the row drops
    them. Stale runs stay under Running, dimmed and labelled stale; elapsed time
-   freezes at their last event. Narrow rows drop heard, pipeline, role details,
-   then the stage bar, whole. The first item title is not added.
+   freezes at their last event. Engine rows show total `tokens N` only when
+   engine usage is available. Narrow rows drop tokens first, then heard,
+   pipeline, role details and the stage bar, whole. The first item title is not added.
    For relays started elsewhere, the *proposed* row details (also indented
    under each relay in `ork status`) are `running: ROLE VENDOR/MODEL: TASK`
    for the last step in ledger order with phase `start` (a working subagent
@@ -529,8 +530,8 @@ and starts four columns past its node's glyph. The run header uses the
 heading style.
 
 S07 adds a stage bar, a pulsing running cell and an activity sparkline.
-Live output tail, tokens and cost, worktree diff stats, test counts and a wave
-timeline remain future role detail. The activity series counts vendor stream
+S99 adds live assistant output and usage (see below). Worktree diff stats,
+test counts and a wave timeline remain future role detail. The activity series counts vendor stream
 events, not tokens. There is no bell or budget bar in S07.
 
 The actions are approve, stop, answer, retry on another vendor, and open
@@ -683,3 +684,41 @@ Pressing `l` puts the same conflict text, without the leading `! ` marker, in
 the action status. Launch is blocked until the selection holds at most one
 such slice. The daemon checks Files again before starting any member. See
 docs/design.md for detection.
+
+### Live output and usage (S99)
+
+The running engine role shows up to three dim rows of assistant text after
+its task. The tail has its own ASCII-safe `    > ` gutter. Text wraps to the
+remaining pane width, blank lines are removed, and the newest text is last.
+When older text is cut by the three-row window or memory cap, only the first
+row begins with `...`. The tail keeps at most 2 KB in daemon memory and
+resets at each role attempt. Stopped, paused, stale and ended runs show no
+tail. Relays started elsewhere have no tail or usage. Claude text streams as
+deltas. Codex shows whole assistant messages when an item completes; it does
+not expose text deltas in the measured fixtures. Tool calls and tool output
+do not enter the tail.
+
+Only the running node gets a separate `tokens N  $C` line. Until its first
+usage event, it shows `tokens -  $-`. A reported zero is shown as zero.
+Finished roles append recorded usage to their node line; that whole suffix
+drops first when narrow. An interrupted role in a stopped run also uses the
+node suffix: missing recorded usage and cost show `tokens -  $-`, with no
+live tail. A failed gate's verdict stays directly under its node, before any
+separate usage or task line. The pane scrolls while retaining space for the
+Overview headings at 80x24.
+
+Running roles show `$-` until their round ends. Vendors with no cost field,
+including Codex, show `$-` after completion too; zero stored cost does not
+mean a reported zero price. The Overview's `tokens N` is the run total:
+completed roles plus the current role's live tokens. The cell is omitted
+until engine usage is available, and drops before heard when a Running row
+narrows. Claude usage advances at message start and message delta; Codex
+usage arrives only at turn completion. These counters show reported usage
+and cannot estimate tokens between usage events.
+
+Before text enters the tail, ork replaces run-environment values of at
+least eight characters with `***` when their variable name contains KEY,
+TOKEN, SECRET, PASSWORD or CREDENTIAL (case insensitive). A possible secret
+prefix waits for the next text event so split values are masked too. Final
+flush masks any held prefix instead of exposing it. This rule does not
+recognize secrets absent from those environment variables.

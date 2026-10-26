@@ -1,0 +1,39 @@
+{
+  "id": "S129",
+  "title": "Live usage edge cases: no result event, non-claude cost, multi-message sum, total dip",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S99 later notes: (1) a Claude role that ends without a result event shows tokens 0 $0.00 instead of unknown (untested); (2) cost is known only when the vendor is claude, so a future cost-reporting vendor shows $- until updated; (3) live usage summed over several Claude messages is checked against the result event only on a single-message fixture (23763 tokens); (4) the run token total dips briefly at round end."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/runner.go`\n- `internal/engine/activity.go`\n- `internal/agent/claude/stream.go`\n- `testdata/vendors/claude`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "TestRoleWithoutResultShowsUnknownUsage; TestMultiMessageUsageMatchesResult (a recorded multi-message stream fixture); TestRunTokenTotalDoesNotDipAtRoundEnd."
+    },
+    {
+      "heading": "Implement",
+      "body": "Re-anchor from the code. Build a multi-message claude stream fixture without real credentials (hand-built from the stream-json shape in testdata/vendors/claude/02-stream-json.stdout). Key cost-known on an adapter capability rather than the vendor name."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./internal/daemon ./internal/engine ./internal/agent/... ./internal/tui; go vet; gofmt -l; slicer check; adj lint."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

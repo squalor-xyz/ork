@@ -112,7 +112,13 @@ func (m *Model) screen() string {
 			status = m.confirm.prompt()
 		}
 		if m.pane != nil {
-			detail = m.paneLines(mainW, max(h-6, 1), status)
+			// At standard terminal heights retain six Overview rows; tiny
+			// terminals still give the pane's input and errors their priority.
+			paneHeight := max(h-6, 1)
+			if h >= 24 {
+				paneHeight = max(h-11, 1)
+			}
+			detail = m.paneLines(mainW, paneHeight, status)
 		} else if status != "" {
 			detail = wrapText(status, max(mainW-len(indent), 1))
 			if m.confirm != nil && m.confirm.verb == "cleanup" {
