@@ -1887,3 +1887,4 @@
 {"when": "2026-10-26T15:59:22Z", "item": "S85", "action": "status", "from": "started", "to": "done", "note": "Navigation keys: sidebar numbers 1-9 dimmed in the gutter and number keys follow the sidebar drawn order, 0 selects Needs you, g/G/home/end, pgdown/pgup page keys, }/{ group keys, help overlay and docs/dashboard.md; 612 tui tests and full suite green; hint bar is S149", "by": "Jon R"}
 {"when": "2026-10-26T16:00:21Z", "item": "S85", "action": "note", "from": "", "to": "", "note": "Owner answers (session a2bf7e0e, 2026-10-26): (1) { and } st", "by": "Jon R"}
 {"when": "2026-10-26T16:10:45Z", "item": "S150", "action": "add", "from": "", "to": "open", "note": "S145 later notes: line 2 styling, title clip, label parsing, one-line leftovers"}
+{"when": "2026-10-26T16:21:49Z", "item": "S151", "action": "add", "from": "", "to": "open", "note": "S85 later notes: pager-style page keys, help overlay, group keys on Roadmap and Waves"}

@@ -1,0 +1,39 @@
+{
+  "id": "S151",
+  "title": "S85 later notes: pager-style page keys, help overlay, group keys on Roadmap and Waves",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Later notes from the S85 relay (run-20261026-153110-0f43, landed 3672a6a), not fixed in that slice.\nOwner decision (2026-10-26, session a2bf7e0e, interactive question): page keys become pager style, like less ctrl-f. pgdown scrolls the window so the first unseen row is at the top and puts the cursor on it; pgup is the mirror. Today pgdown moves by the rows drawn and, from the window's bottom edge, skips up to a page of unseen rows.\nOther notes:\n- With the help overlay open, page keys and j/k still move the hidden cursor; return early in moveRows when help shows.\n- No page-key test for a Ready row with cut command lines (mutation P5 survives).\n- The trailing \"Ready to land / none\" lines on an overflowing Overview can never be scrolled into view; G stops on the last Recent row (probably predates S85).\n- Help says \"scroll a pane\", but the Roadmap item pane does not page-scroll (predates S85).\n- The selected project's number is hidden by the > arrow; show it somewhere (owner kept the arrow).\n- { and } do nothing on Roadmap and Waves; decide their section mapping.\n- The help overlay is cut at 80x24, with q and esc below the fold (may fold into S149).\n- The S111 and S118 digit keys are not newly tested against the new number keys (the pane takes them first).\n- pageRows renders the screen about 15 times per page key (about 12 ms); pager style may make this unnecessary."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/model.go` (moveRows, pageRows), `internal/tui/view.go` (drawn rows, window start).\n- `internal/tui/roadmap.go`, `internal/tui/waves.go`, `internal/tui/view.go` (help overlay).\n- Tests: `internal/tui/tui_test.go`.\n- `docs/dashboard.md`: the page key paragraph."
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Tests first: TestPgDownShowsTheFirstUnseenRowAtTheTop and its pgup mirror, at 80x24 and 100x30.\n2. Pager-style page keys on the Overview, Questions and Decisions; an open pane still takes them first.\n3. Triage the other notes; spec each kept one with a failing test.\nUI slice: UI pass per rule u10."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review the golden diff\n- slicer check"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

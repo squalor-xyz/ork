@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 151,
+  "next_id": 152,
   "preamble": "",
   "passes": [
     {
@@ -5561,6 +5561,34 @@
       "id": "S150",
       "title": "S145 later notes: line 2 styling, title clip, label parsing, one-line leftovers",
       "short_title": "S145 later notes",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S151",
+      "title": "S85 later notes: pager-style page keys, help overlay, group keys on Roadmap and Waves",
+      "short_title": "S85 later notes",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
