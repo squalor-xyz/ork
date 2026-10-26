@@ -1,0 +1,54 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(slicer check)",
+      "Bash(slicer check *)",
+      "Bash(slicer show *)",
+      "Bash(slicer list)",
+      "Bash(slicer list *)",
+      "Bash(slicer next)",
+      "Bash(slicer next *)",
+      "Bash(slicer deps)",
+      "Bash(slicer deps *)",
+      "Bash(slicer find *)",
+      "Bash(slicer sections)",
+      "Bash(slicer goals)",
+      "Bash(slicer goals *)",
+      "Bash(slicer status)",
+      "Bash(slicer status *)",
+      "Bash(slicer relay-roles show)",
+      "Bash(slicer relay-roles recommend *)",
+      "Bash(slicer catalog list *)",
+      "Bash(slicer catalog show *)",
+      "Bash(slicer ai instructions)",
+      "Bash(slicer ai relay)",
+      "Bash(slicer ai relay-orchestrator *)",
+      "Bash(adj check *)",
+      "Bash(adj lint)",
+      "Bash(adj show *)",
+      "Bash(adj inbox)",
+      "Bash(adj list *)",
+      "Bash(go vet *)",
+      "Bash(gofmt -l *)",
+      "Bash(go version)"
+    ]
+  },
+  "extraKnownMarketplaces": {
+    "claude-plugins-official": {
+      "source": {
+        "source": "github",
+        "repo": "anthropics/claude-plugins-official"
+      }
+    },
+    "tui-design-skill": {
+      "source": {
+        "source": "github",
+        "repo": "pageton/tui-design-skill"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "tui-design@tui-design-skill": true
+  }
+}

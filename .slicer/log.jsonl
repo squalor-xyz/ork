@@ -1850,3 +1850,4 @@
 {"when": "2026-10-26T14:21:27Z", "item": "S106", "action": "note", "from": "", "to": "", "note": "Owner answers (session a2bf7e0e, 2026-10-26): (1) drop the p", "by": "Jon R"}
 {"when": "2026-10-26T14:13:06Z", "item": "S95", "action": "note", "from": "", "to": "", "note": "From S119's relay (2026-10-26): after an in-ork landing the ", "by": "Jon R"}
 {"when": "2026-10-26T14:23:45Z", "item": "S145", "action": "add", "from": "", "to": "open", "note": "Running rows at a glance: slice title, working role, fix round, last heard, latest output line"}
+{"when": "2026-10-26T14:35:40Z", "item": "relay-roles.u10", "action": "relay-roles", "from": "", "to": "", "note": "rule-edit"}
