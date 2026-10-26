@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 147,
+  "next_id": 148,
   "preamble": "",
   "passes": [
     {
@@ -5391,6 +5391,34 @@
       "id": "S146",
       "title": "S106 later notes: compact fit-test, pane and cue edge cases, tokens line",
       "short_title": "S106 later notes",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S147",
+      "title": "S121 later notes: render pane robustness and wording",
+      "short_title": "S121 later notes",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
