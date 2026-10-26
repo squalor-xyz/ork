@@ -228,6 +228,10 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Finish:       r.finish,
 		Sections:     append(pendingSection(pend), r.sections...),
 	}
+	if rec.Decisions != "" {
+		// The worktree's spec lacks the owner's spec check answers (S116).
+		in.Sections = append([]BriefSection{{Title: "Owner decisions", Body: rec.Decisions}}, in.Sections...)
+	}
 	if session == "" {
 		in.Earlier = e.earlierReports(rec)
 	}

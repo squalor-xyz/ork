@@ -89,7 +89,7 @@ func (m *Model) screen() string {
 			rv = m.roadmap(mainW)
 		}
 		status := m.actionStatus
-		if status == "" && m.view == wavesView && m.waves != nil && m.waves.lineup == nil && len(m.waves.picked) > 0 {
+		if status == "" && m.view == wavesView && m.waves != nil && m.waves.lineup == nil && m.waves.sitting == nil && len(m.waves.picked) > 0 {
 			status = fmt.Sprintf("%d ticked, not launched; [l] launches", len(m.waves.picked))
 		}
 		if m.confirm != nil {

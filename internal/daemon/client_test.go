@@ -86,3 +86,52 @@ func TestClientPlanAndStart(t *testing.T) {
 		}
 	}
 }
+
+func TestClientSpecCheckAndAnswer(t *testing.T) {
+	socket := filepath.Join(shortDir(t), "s")
+	listener, err := ipc.Listen(socket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := &ipc.Server{Handler: func(_ context.Context, method string, raw json.RawMessage) (any, error) {
+		switch method {
+		case MethodSpecCheck:
+			var got SpecCheckParams
+			if err := json.Unmarshal(raw, &got); err != nil || !reflect.DeepEqual(got, SpecCheckParams{Project: "ork", Items: []string{"S1", "S2"}}) {
+				return nil, fmt.Errorf("wrong check request: %s", raw)
+			}
+			return SpecCheckResult{Items: []SpecItemResult{{Item: "S1", Ready: true}}}, nil
+		case MethodSpecAnswer:
+			var got SpecAnswerParams
+			if err := json.Unmarshal(raw, &got); err != nil || got.Item != "S2" || !got.Adj || got.By != "jon" || !reflect.DeepEqual(got.Answers, []string{"a"}) {
+				return nil, fmt.Errorf("wrong answer request: %s", raw)
+			}
+			return SpecAnswerResult{Item: "S2", Ready: true, Notices: []string{"n"}}, nil
+		}
+		return nil, fmt.Errorf("unexpected %s", method)
+	}}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- server.Serve(ctx, listener) }()
+	t.Cleanup(func() {
+		cancel()
+		select {
+		case <-done:
+		case <-time.After(2 * time.Second):
+			t.Error("server did not stop")
+		}
+	})
+	c, err := Dial(ctx, socket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+	res, err := c.SpecCheck(ctx, "ork", []string{"S1", "S2"})
+	if err != nil || len(res.Items) != 1 || !res.Items[0].Ready {
+		t.Fatalf("check: %+v %v", res, err)
+	}
+	ans, err := c.SpecAnswer(ctx, SpecAnswerParams{Project: "ork", Item: "S2", Answers: []string{"a"}, Adj: true, By: "jon"})
+	if err != nil || !ans.Ready || !reflect.DeepEqual(ans.Notices, []string{"n"}) {
+		t.Fatalf("answer: %+v %v", ans, err)
+	}
+}

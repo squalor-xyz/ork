@@ -137,6 +137,23 @@ func (d *Daemon) WaveStart(ctx context.Context, params daemon.WaveStartParams) (
 	return c.WaveStart(ctx, params)
 }
 
+func (d *Daemon) SpecCheck(ctx context.Context, project string, items []string) (*daemon.SpecCheckResult, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.SpecCheck(ctx, project, items)
+}
+func (d *Daemon) SpecAnswer(ctx context.Context, params daemon.SpecAnswerParams) (*daemon.SpecAnswerResult, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.SpecAnswer(ctx, params)
+}
+
 func (d *Daemon) Cleanup(ctx context.Context, run string) error {
 	c, err := d.Connect(ctx)
 	if err != nil {

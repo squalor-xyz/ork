@@ -227,6 +227,13 @@ func (*fakeLive) WaveStart(context.Context, daemon.WaveStartParams) (*daemon.Wav
 	return nil, errors.New("unexpected wave start")
 }
 
+func (*fakeLive) SpecCheck(context.Context, string, []string) (*daemon.SpecCheckResult, error) {
+	return nil, errors.New("unexpected spec check")
+}
+func (*fakeLive) SpecAnswer(context.Context, daemon.SpecAnswerParams) (*daemon.SpecAnswerResult, error) {
+	return nil, errors.New("unexpected spec answer")
+}
+
 func (f *fakeLive) Cleanup(context.Context, string) error { return nil }
 
 func (l *fakeLive) ProjectsAdd(_ context.Context, path string) (registry.Project, error) {

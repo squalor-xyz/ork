@@ -1,0 +1,40 @@
+[1mork[m  ?help                 │ Overview[90m │ [mQuestions[90m │ [m[1;36mWaves[m[90m │ [mRoadmap[90m │ [mDecisions
+  Needs you              0 │[90m────────────────────────────────────────────────────────────────────────────────────────────[m
+[1;7;97;44m> ork                      [m│[1;36mSuggested (slicer plan-parallel)[m
+  other                    │[1;36m         Items                                             Shares  Lineup (* edited)        [m
+                           │[1m── Wave 2 ────────────────────────────────────────────────────────────────────────── 2 items[m
+                           │  [x] A  Alpha  spec ready                                         impl:  claude sonnet high
+                           │                                                                   rev:   claude opus medium
+                           │                                                                   gate:  claude opus medium
+                           │[1;7;97;44m  [x] B  [m[1;7;97;44mBeta  waits on 2 spec questions                 [m[1;7;97;44m  [m[1;7;97;44m      [m[1;7;97;44m  [m[1;7;97;44mimpl:  claude sonnet high[m
+                           │[1;7;97;44m         [m[1;7;97;44m                                                [m[1;7;97;44m  [m[1;7;97;44m      [m[1;7;97;44m  [m[1;7;97;44mrev:   claude opus medium[m
+                           │[1;7;97;44m         [m[1;7;97;44m                                                [m[1;7;97;44m  [m[1;7;97;44m      [m[1;7;97;44m  [m[1;7;97;44mgate:  claude opus medium[m
+                           │[1m── Wave 4 ─────────────────────────────────────────────────────────────────────────── 1 item[m
+                           │  [ ] C  Gamma                                                                              
+                           │[1m── Unplaced ───────────────────────────────────────────────────────────────────────── 1 item[m
+                           │  [ ] D  Delta (no files listed)                                                            
+                           │  ! A and B both touch shared.go
+                           │  ! A and B both touch second.go
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │  [enter] item   [space] tick item   [e] edit lineup   [l] answer spec questions
+                           │[90m────────────────────────────────────────────────────────────────────────────────────────────[m
+                           │  Cancelled
+                           │[90m────────────────────────────────────────────────────────────────────────────────────────────[m
+                           │ 2 projects | refreshed 16:42:00

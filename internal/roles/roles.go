@@ -8,7 +8,8 @@
 // builds a role's brief (S04). This package returns the prompt text with the
 // tokens unfilled. The set is closed:
 //
-//	{{slice_id}}    the slice id, for example S10
+//	{{slice_id}}    the slice id, for example S10; the spec check gets the ids of
+//	                its batch, comma-separated
 //	{{worktree}}    the absolute path of the slice worktree
 //	{{temp_dir}}    the role's own temp directory
 //	{{report_path}} the file where the role writes its final report
@@ -35,7 +36,7 @@ var promptFS embed.FS
 // accepts the versions in AcceptedContracts, which include this one.
 const ContractVersion = 7
 
-var names = []string{"implementer", "reviewer", "gate", "architect", "ui"}
+var names = []string{"implementer", "reviewer", "gate", "architect", "ui", "spec-check"}
 
 // Names returns the role names, in the order ork lists them.
 func Names() []string { return slices.Clone(names) }

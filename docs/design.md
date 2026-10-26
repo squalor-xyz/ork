@@ -173,12 +173,32 @@ ork (TUI)  ork status --json (CLI)
 3. **Plan.** For each item, ork shows the worktree path, the branch, the
    check command, the budgets, and whether it runs an architect, a split or
    slivers. Then it shows the wave's place in the global queue.
-4. **Approve.** The owner approves the wave. This is checkpoint 1.
-5. **Run.** Items start as slots free up under the global cap (default 4)
+4. **Check.** At launch (`l` in Waves, `ork wave start`), before the owner
+   approves, ork runs one spec check over the wave's items (adj 164,
+   `roles.spec-check`; *proposed* until the Wave lifecycle is reviewed). It
+   comes after the lineup and the plan because the owner ticks and plans items
+   first. The check is one read-only pass of the spec-check role over the
+   whole batch: for each slice it answers ready, or asks the
+   owner structured questions (S111 shape, with an optional decision key). The
+   owner answers them in one sitting. ork appends an `Owner decisions (date)`
+   paragraph to the slice's Implement section with `slicer edit --append`, and
+   files a question that has a decision key in adj the way a run's answer is
+   filed (`owner.questions`, S28). The paragraph is also stored in the item's
+   run record and added to every role's brief, because the run's worktree does
+   not have the main checkout's edit. Only ready items, or items whose
+   questions are all answered, can be approved: the daemon refuses an item
+   whose check, against its current spec, left questions open
+   (`spec_questions`). The daemon keeps each verdict in memory, as an
+   ephemeral job cache with a fingerprint of the slice's spec (a restart asks
+   again; see boundaries.md), so a changed spec is checked again and an
+   unchanged one is not. The clients send every ticked item each time; the
+   daemon runs the role only for the stale ones.
+5. **Approve.** The owner approves the wave. This is checkpoint 1.
+6. **Run.** Items start as slots free up under the global cap (default 4)
    and the per-project cap (`wave.limits`). Several waves, each in one
    project, may run at once (`wave.scope`). An item over a cap
    waits as a queued run and starts, oldest first, as a slot frees.
-6. **Result.** Each item that reaches a passed gate waits for the owner's
+7. **Result.** Each item that reaches a passed gate waits for the owner's
    approval. This is checkpoint 2. Once approved, ork runs the finish step, then
    commits (adj #81). An item that stops waits in "needs you", and the rest continue (`wave.failure`).
 
@@ -501,6 +521,20 @@ ork adds:
   chains and puts it in the `ui` lineup, and the ledger step has role
   `reviewer` with the task `ID ui`. In any fallback chain, an entry identical
   to the one before it is dropped.
+- **Spec check.** A read-only role with its own prompt (`spec-check.md`) that
+  runs once over a batch of slices before a wave (see the Check step of the
+  Wave lifecycle). It works in the project checkout, not in a worktree, and
+  has no run record: the daemon runs it as a job, reads `git status
+  --porcelain` before and after, and fails the check, keeping no verdict, when
+  the tree changed (`role.readonly-fingerprint`). Its report has one `## Slice
+  ID` section per slice, holding `Ready` or one or more question blocks; the
+  multi-block parse (`ParseOwnerQuestions`) reads every `Question:` block of a
+  section with the strict shape of an owner question. Its lineup row is the
+  matrix row that the rule naming "Spec check row (rNN)" gives (u11 today:
+  sonnet, medium). Until slicer has a spec-check role (slicer s392), that
+  row's role is `reviewer`: ork keeps it out of every run's reviewer and gate
+  chains. Its report and temp directory are under
+  `~/.local/state/ork/spec-checks/`.
 - **Reviewer rule.** A reviewer never wrote code in the slice. A reviewer
   may run on another vendor if the lineup names it (`review.cross-vendor`).
 - **Ledger.** Each role round is recorded with `slicer relay-run step` with
@@ -741,7 +775,7 @@ relative project path).
 ork                         open the TUI (start the daemon if needed)
 ork status [--project P]    waves, slices, roles, needs-you
 ork wave suggest P          slicer's suggested waves, in order, with reasons
-ork wave start P ITEM...    launch (asks unless --yes)
+ork wave start P ITEM...    check the specs, then launch (asks unless --yes)
 ork run P ID                show a plan and launch one slice (S17)
 ork approve RUN             finish a passed slice, then commit
 ork answer RUN TEXT         answer an owner question
@@ -765,6 +799,13 @@ come with the engine. S17 adds `run`, `approve`, `stop` and `answer`
 (`engine.owner-surface`, adj #73).
 S44 adds `retry` for pauses without a question (`engine.pause-resume`, adj #101).
 S60 adds `wave suggest P`, `wave start P ITEM...` and `stop WAVE`.
+S116 makes `wave start` run the spec check after it shows the plans: each
+open question is printed with its options and read from standard input (a
+number picks an option and a number outside the options is asked again,
+other text is the answer, an empty line holds the item back). Each question
+is labeled with its item, as `[S1 1/2]`. An item whose questions stay open is
+left out of the wave and named as `held`; a wave with no item left does not start and exits 1. With
+`--json` the questions go to stderr.
 Suggestions call `slicer plan-parallel --json --lean --root ROOT` for the
 registered project. Tool errors keep their code and message, including a
 missing `files_section`. The owner chooses the item ids (`wave.start-input`).

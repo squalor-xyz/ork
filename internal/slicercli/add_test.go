@@ -59,3 +59,29 @@ func TestPromoteGivesTheItemTheOutline(t *testing.T) {
 		t.Errorf("writes %+v", sink.writes)
 	}
 }
+
+func TestEditAppendAddsAParagraphToASection(t *testing.T) {
+	args := []string{"edit", "S130", "--section", "Implement", "--append", "--text", "Owner decisions (2026-10-26): A: yes.", "--render", "--json", "--lean", "--root", root}
+	c, fake := client(t, clitest.Route{Tool: "slicer", Args: args, Stdout: `{"id":"S130"}`})
+	w, sink := writer()
+	if err := c.EditAppend(context.Background(), w, root, "S130", "Implement", "Owner decisions (2026-10-26): A: yes."); err != nil {
+		t.Fatal(err)
+	}
+	if calls := fake.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, args) {
+		t.Fatalf("calls %+v", calls)
+	}
+	if len(sink.writes) != 1 || sink.writes[0].Argv[0] != "edit" || sink.writes[0].Root != root {
+		t.Errorf("writes %+v", sink.writes)
+	}
+}
+
+func TestEditAppendRefusesEmptyText(t *testing.T) {
+	c, fake := client(t)
+	w, _ := writer()
+	if err := c.EditAppend(context.Background(), w, root, "S130", "Implement", "  \n"); err == nil {
+		t.Error("empty text would leave the section unchanged and say nothing")
+	}
+	if len(fake.Calls()) != 0 {
+		t.Errorf("calls: %+v", fake.Calls())
+	}
+}

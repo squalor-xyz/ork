@@ -5,6 +5,7 @@ package tui
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -46,6 +47,10 @@ type wavesState struct {
 	showAll        bool
 	launched       map[string]string
 	starting       bool
+	checking       bool                             // a spec check is in flight
+	checkRequest   uint64                           // the check whose reply counts
+	specs          map[string]daemon.SpecItemResult // the spec check's latest answer for each item
+	sitting        *specSitting                     // the spec questions on screen
 }
 
 type wavesMsg struct {
@@ -60,6 +65,8 @@ type wavesMsg struct {
 	params     *daemon.RunParams
 	overlap    *slicercli.Overlap
 	result     *daemon.WaveResult
+	check      *daemon.SpecCheckResult
+	answer     *daemon.SpecAnswerResult
 	action     runAction
 	err        error
 }
@@ -149,7 +156,7 @@ func (m *Model) waveOverlap() tea.Cmd {
 
 func (m *Model) tickWave() tea.Cmd {
 	w := m.waves
-	if m.view != wavesView || m.showHelp || w == nil || w.pending || w.err != nil || w.starting {
+	if m.view != wavesView || m.showHelp || w == nil || w.pending || w.err != nil || w.starting || w.checking {
 		return nil
 	}
 	if m.cfg.Live == nil {
@@ -252,6 +259,9 @@ func (m *Model) confirmWave() tea.Cmd {
 		m.actionStatus = "A plan is pending; wait before launching"
 		return nil
 	}
+	if w.checking {
+		return nil
+	}
 	if conflict := w.engineConflict(); conflict != "" {
 		m.actionStatus = conflict
 		return nil
@@ -267,8 +277,7 @@ func (m *Model) confirmWave() tea.Cmd {
 		}
 	}
 	m.actionStatus = ""
-	m.confirm = &runAction{verb: "wave", project: w.project, items: items}
-	return nil
+	return m.startSpecCheck(items)
 }
 
 func (m *Model) startWave(a runAction) tea.Cmd {
@@ -338,7 +347,25 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 		if w != nil && w.request == msg.request {
 			w.starting = false
 			if msg.err == nil {
-				w.picked = map[string]daemon.RunParams{}
+				// Ticked items that were not in the call wait on spec questions.
+				var waiting []string
+				for _, p := range w.items() {
+					if !slices.ContainsFunc(msg.action.items, func(a daemon.RunParams) bool { return a.Item == p.Item }) {
+						waiting = append(waiting, p.Item)
+					}
+				}
+				if len(waiting) > 0 {
+					verb := "waits"
+					if len(waiting) > 1 {
+						verb = "wait"
+					}
+					status += "; " + strings.Join(waiting, ", ") + " " + verb + " on spec questions"
+				}
+				kept := map[string]daemon.RunParams{}
+				for _, id := range waiting {
+					kept[id] = w.picked[id]
+				}
+				w.picked = kept
 				w.overlap = nil
 				w.overlapErr = nil
 				w.overlapRequest++
@@ -354,6 +381,10 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 		return nil
 	}
 	switch msg.kind {
+	case "check":
+		return m.applyCheck(msg)
+	case "answer":
+		return m.applyAnswer(msg)
 	case "detail":
 		if w.pane != nil && w.paneRequest == msg.sequence && w.pane.id == msg.item {
 			w.pane.pending = false
@@ -413,6 +444,9 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 	w := m.waves
 	if w != nil && w.pane != nil {
 		return m.waveItemBody(width), nil
+	}
+	if w != nil && w.sitting != nil {
+		return m.sittingParts(width)
 	}
 	add := func(text string) {
 		for _, line := range wrapText(text, max(width-2, 1)) {
@@ -523,6 +557,12 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 		if run != "" {
 			tick = "[>]"
 		}
+		note := ""
+		if run != "" {
+			note = "running " + run
+		} else if r, checked := w.specs[it.ID]; checked && ok {
+			note = specNote(r)
+		}
 		shares, _ := waveShares(it.Reason)
 		title := it.Title
 		reasonBelow := it.Reason != "" && shares == "" && lipgloss.Width(title+" ("+waveReason(it.Reason)+")") > titleWidth
@@ -538,10 +578,10 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 			first = wrapText(lineup[0], max(lineupWidth, 1))[0]
 		}
 		runBelow := false
-		if run != "" {
-			runBelow = lipgloss.Width(title+"  running "+run) > titleWidth
+		if note != "" {
+			runBelow = lipgloss.Width(title+"  "+note) > titleWidth
 			if !runBelow {
-				title += "  running " + run
+				title += "  " + note
 			}
 		}
 		selected := row == clampCursor(w.cursor, len(rows))
@@ -554,7 +594,7 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 			addAt(waveReason(it.Reason), true)
 		}
 		if runBelow {
-			addAt("running "+run, true)
+			addAt(note, true)
 		}
 		// Wrap the compact role summaries within their column.
 		for i, text := range lineup {
@@ -622,7 +662,11 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 	if cursorLaunched {
 		enter = "[enter] open run"
 	}
-	hintList := []string{enter, "[space] tick item", "[e] edit lineup", "[l] launch wave"}
+	launch := "[l] launch wave"
+	if w.heldWithQuestions() {
+		launch = "[l] answer spec questions"
+	}
+	hintList := []string{enter, "[space] tick item", "[e] edit lineup", launch}
 	if w.inputs != nil {
 		hintList = []string{"[tab] next field", "[enter] plan", "[esc] cancel"}
 	}

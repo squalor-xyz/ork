@@ -467,7 +467,7 @@ func TestRolesPrintAllFour(t *testing.T) {
 	if stdout != want.String() {
 		t.Fatalf("roles print differs from the embedded prompts:\n%s", stdout)
 	}
-	for _, name := range []string{"implementer", "reviewer", "gate", "architect", "ui"} {
+	for _, name := range []string{"implementer", "reviewer", "gate", "architect", "ui", "spec-check"} {
 		if !strings.Contains(stdout, "==== "+name+" ====\n") {
 			t.Errorf("no section for %s", name)
 		}
@@ -490,7 +490,7 @@ func TestRolesPrintOne(t *testing.T) {
 	}
 	_, stdout, _ = run(t, noDaemon(t), "roles", "print", "--json")
 	mustJSON(t, stdout, &out)
-	if len(out.Roles) != 5 || out.Roles[0].Name != "implementer" || out.Roles[4].Name != "ui" {
+	if len(out.Roles) != 6 || out.Roles[0].Name != "implementer" || out.Roles[5].Name != "spec-check" {
 		t.Fatalf("--json for all: %s", stdout)
 	}
 }

@@ -186,6 +186,7 @@ type Record struct {
 	Version          int                      `json:"version"`
 	ID               string                   `json:"id"`
 	Wave             string                   `json:"wave,omitempty"`
+	Decisions        string                   `json:"decisions,omitempty"` // the owner's spec check answers, for every brief (S116)
 	Project          string                   `json:"project"`
 	Item             string                   `json:"item"`
 	Worktree         string                   `json:"worktree"`

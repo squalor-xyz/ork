@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -108,7 +109,7 @@ func TestWaveStartPlansChosenItemsBeforeConfirmation(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			var out, errs bytes.Buffer
-			plans, started := 0, false
+			plans, started, checked := 0, false, false
 			app := &App{Input: strings.NewReader(tc.input)}
 			app.Call = func(_ context.Context, method string, params, result any) error {
 				switch method {
@@ -125,6 +126,13 @@ func TestWaveStartPlansChosenItemsBeforeConfirmation(t *testing.T) {
 					}
 					plans++
 					*(result.(*daemon.RunPlan)) = daemon.RunPlan{Item: p.Item, Worktree: "/p/" + p.Item}
+				case "spec.check":
+					p := params.(daemon.SpecCheckParams)
+					if plans != 2 || p.Project != "p" || !reflect.DeepEqual(p.Items, []string{"S2", "S1"}) {
+						t.Fatalf("check before both plans were shown: %+v", p)
+					}
+					checked = true
+					return json.Unmarshal([]byte(`{"items":[{"item":"S2","ready":true},{"item":"S1","ready":true}]}`), result)
 				case "wave.start":
 					p := params.(daemon.WaveStartParams)
 					if plans != 2 || len(p.Items) != 2 || !strings.Contains(errs.String(), "/p/S2") || !strings.Contains(errs.String(), "/p/S1") {
@@ -144,6 +152,9 @@ func TestWaveStartPlansChosenItemsBeforeConfirmation(t *testing.T) {
 			}
 			args := append([]string{"wave", "start", "p", "S2", "S1", "--json"}, tc.flags...)
 			code := app.Run(context.Background(), args, &out, &errs)
+			if checked != (tc.name != "missing inputs") {
+				t.Fatalf("spec check ran: %t", checked)
+			}
 			if code != tc.code || started != tc.start || !json.Valid(out.Bytes()) {
 				t.Fatalf("code %d started %t: %s %s", code, started, &out, &errs)
 			}
@@ -183,5 +194,141 @@ func TestWaveUsage(t *testing.T) {
 		if code := (&App{}).Run(context.Background(), args, &out, &errs); code != ExitUsage {
 			t.Fatalf("%v: %d %s %s", args, code, &out, &errs)
 		}
+	}
+}
+
+// specStub answers a wave start with a spec check: S2 is ready and S1 has two
+// questions. It records every call.
+type specStub struct {
+	t       *testing.T
+	calls   []string
+	answers []daemon.SpecAnswerParams
+	started []string
+	check   string
+}
+
+const specCheckTwoQuestions = `{"items":[{"item":"S2","ready":true},{"item":"S1","ready":false,"questions":[` +
+	`{"ask":{"title":"Which store?","options":[{"label":"file","summary":"one JSON file"},{"label":"memory","summary":"rebuilt at each start"}],"recommend":2,"reason":"nothing reads it"},"key":"cache.store","text":"Question: Which store?"},` +
+	`{"ask":{"title":"What flag?","options":[{"label":"short","summary":"-x"},{"label":"long","summary":"--extra"}],"recommend":1,"reason":"short"},"text":"Question: What flag?"}]}]}`
+
+func (s *specStub) call(_ context.Context, method string, params, result any) error {
+	s.calls = append(s.calls, method)
+	switch method {
+	case "run.plan":
+		p := params.(daemon.RunParams)
+		*(result.(*daemon.RunPlan)) = daemon.RunPlan{Item: p.Item, Worktree: "/p/" + p.Item}
+	case "spec.check":
+		return json.Unmarshal([]byte(s.check), result)
+	case "spec.answer":
+		p := params.(daemon.SpecAnswerParams)
+		s.answers = append(s.answers, p)
+		*(result.(*daemon.SpecAnswerResult)) = daemon.SpecAnswerResult{Item: p.Item, Ready: true}
+	case "wave.start":
+		for _, item := range params.(daemon.WaveStartParams).Items {
+			s.started = append(s.started, item.Item)
+		}
+		return json.Unmarshal([]byte(`{"wave":"wave-1","items":[]}`), result)
+	default:
+		s.t.Fatalf("method %s", method)
+	}
+	return nil
+}
+
+func runWaveStart(t *testing.T, stub *specStub, input string, extra ...string) (code int, out, errs string) {
+	t.Helper()
+	var o, e bytes.Buffer
+	app := &App{Input: strings.NewReader(input), Call: stub.call}
+	args := append([]string{"wave", "start", "p", "S2", "S1", "--well-specified", "yes", "--split", "no"}, extra...)
+	code = app.Run(context.Background(), args, &o, &e)
+	return code, o.String(), e.String()
+}
+
+func TestWaveStartAsksTheSpecQuestionsInOneSittingThenStartsEveryItem(t *testing.T) {
+	stub := &specStub{t: t, check: specCheckTwoQuestions}
+	t.Setenv("ADJ_DECIDED_BY", "jon")
+	// Option 2 for the first question, free text for the second, then the start.
+	code, out, errs := runWaveStart(t, stub, "2\nthe --flag-name\ny\n")
+	if code != ExitOK {
+		t.Fatalf("code %d: %s %s", code, out, errs)
+	}
+	for _, want := range []string{"S1 needs 2 answers", "[S1 1/2] Which store?", "2. memory: rebuilt at each start (recommended)", "Decision key: cache.store", "[S1 2/2] What flag?"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("sitting lacks %q:\n%s", want, out)
+		}
+	}
+	if !strings.Contains(out, "(empty holds S1 back)") {
+		t.Errorf("the prompt must say what an empty line does:\n%s", out)
+	}
+	if len(stub.answers) != 1 {
+		t.Fatalf("answers: %+v", stub.answers)
+	}
+	a := stub.answers[0]
+	if a.Project != "p" || a.Item != "S1" || !reflect.DeepEqual(a.Answers, []string{"memory: rebuilt at each start", "the --flag-name"}) || !a.Adj || a.By != "jon" {
+		t.Errorf("answer: %+v", a)
+	}
+	if !reflect.DeepEqual(stub.started, []string{"S2", "S1"}) {
+		t.Errorf("started %v", stub.started)
+	}
+	want := []string{"run.plan", "run.plan", "spec.check", "spec.answer", "wave.start"}
+	if !reflect.DeepEqual(stub.calls, want) {
+		t.Errorf("calls %v, want %v", stub.calls, want)
+	}
+}
+
+func TestWaveStartLeavesOutAnItemWhoseQuestionsStayOpen(t *testing.T) {
+	stub := &specStub{t: t, check: specCheckTwoQuestions}
+	// An empty line skips S1; the wave starts with the ready S2.
+	code, out, errs := runWaveStart(t, stub, "\ny\n")
+	if code != ExitOK || !reflect.DeepEqual(stub.started, []string{"S2"}) || len(stub.answers) != 0 {
+		t.Fatalf("code %d started %v answers %v: %s %s", code, stub.started, stub.answers, out, errs)
+	}
+	if !strings.Contains(out, "held: S1 has 2 open spec questions") {
+		t.Errorf("no held notice:\n%s", out)
+	}
+}
+
+func TestWaveStartWithNoReadyItemDoesNotStart(t *testing.T) {
+	stub := &specStub{t: t, check: strings.Replace(specCheckTwoQuestions, `{"item":"S2","ready":true},`, `{"item":"S2","ready":false,"questions":[{"ask":{"title":"T","options":[{"label":"a","summary":"A"},{"label":"b","summary":"B"}],"recommend":1,"reason":"r"},"text":"Question: T"}]},`, 1)}
+	code, out, errs := runWaveStart(t, stub, "", "--yes")
+	if code != ExitFailure || len(stub.started) != 0 || strings.Contains(strings.Join(stub.calls, " "), "wave.start") {
+		t.Fatalf("code %d calls %v: %s %s", code, stub.calls, out, errs)
+	}
+	if !strings.Contains(out+errs, "held: S2") || !strings.Contains(out+errs, "held: S1") {
+		t.Errorf("output:\n%s%s", out, errs)
+	}
+}
+
+func TestWaveStartJSONKeepsTheSittingOffStdout(t *testing.T) {
+	stub := &specStub{t: t, check: specCheckTwoQuestions}
+	code, out, errs := runWaveStart(t, stub, "1\n1\ny\n", "--json")
+	if code != ExitOK || !json.Valid([]byte(out)) {
+		t.Fatalf("code %d: %q %s", code, out, errs)
+	}
+	if !strings.Contains(errs, "[S1 1/2] Which store?") {
+		t.Errorf("the questions go to stderr: %s", errs)
+	}
+}
+
+func TestWaveStartAsksAgainForANumberOutOfRange(t *testing.T) {
+	for _, bad := range []string{"9", "0", "-1"} {
+		t.Run(bad, func(t *testing.T) {
+			stub := &specStub{t: t, check: specCheckTwoQuestions}
+			code, out, errs := runWaveStart(t, stub, bad+"\n1\n2\ny\n")
+			if code != ExitOK || len(stub.answers) != 1 {
+				t.Fatalf("code %d answers %+v: %s %s", code, stub.answers, out, errs)
+			}
+			if !strings.Contains(out, "Pick 1-2, or type text") {
+				t.Errorf("no reprompt:\n%s", out)
+			}
+			if got := stub.answers[0].Answers; !reflect.DeepEqual(got, []string{"file: one JSON file", "long: --extra"}) {
+				t.Errorf("the bad number %q became an answer: %v", bad, got)
+			}
+		})
+	}
+	// The end of the input while asking again gives up on the item.
+	stub := &specStub{t: t, check: specCheckTwoQuestions}
+	code, out, _ := runWaveStart(t, stub, "9\n")
+	if len(stub.answers) != 0 || !strings.Contains(out, "held: S1") {
+		t.Errorf("code %d answers %v:\n%s", code, stub.answers, out)
 	}
 }

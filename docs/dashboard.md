@@ -479,7 +479,8 @@ them. A dim cell stays dim across all its columns.
 S60 provides the CLI: `ork wave suggest PROJECT` prints the ordered waves
 from `slicer plan-parallel`, including reasons. `ork wave start PROJECT
 ITEM...` takes the chosen item ids (`wave.start-input`), plans each item,
-then asks for confirmation. `--yes` requires explicit `--well-specified
+runs the spec check and asks its open questions (S116; see design.md, Wave
+lifecycle), then asks for confirmation. `--yes` requires explicit `--well-specified
 yes|no` and `--split yes|no`; these flags apply to every item. One wave
 contains one project (`wave.scope`). Its runs share a wave id and respect
 the global and project caps. A failed or stopped item leaves the others
@@ -544,6 +545,31 @@ Two or more ticked items trigger an overlap read. Each shared path gets a
 warning; warnings permit launch (`wave.selection`). `l` launches the ticked
 items with one y/n confirmation showing `ork wave start PROJECT ID...`.
 Enter, n and esc cancel; y submits each item's answers and confirmed plan.
+`l` first runs the spec check (S116, adj 164) for every ticked item and shows
+`pending: spec.check`. The daemon asks the role only about specs with no check
+yet or changed since it, so a ready item is asked again at no cost, and one
+whose spec changed is not trusted. A ready item's row says `spec ready` after
+its title; an item with open questions says `waits on N spec questions`. Items
+with questions open one sitting that replaces the table: the heading `Spec
+check: N questions for ID, ID`, then each question in turn as `[ID n/of]
+Title` with its numbered options (`(recommended)` marks the recommended one),
+a dim `Why N: reason` and the decision key when it has one, a blank line, and
+a dim `K of N answered` line. `1`-`N` picks an option, `t` types a free answer
+(`enter` submits it, `esc` goes back to the options), and `s` or `esc` skips
+the rest of the sitting. When an item's last question is answered, ork
+appends the answers to its Implement section, keeps them for the item's run,
+and the item counts as ready; a question with a decision key is also filed in
+adj when the project has adj and `ADJ_DECIDED_BY` is set (the status line says
+why not otherwise). When the sitting ends, the confirmation below covers the
+ready items only, and says which items it leaves out after the command, for
+example `ork wave start P A? [y/N] (Enter is No)  B waits on spec questions`
+(the part after the command is not run). A held item stays ticked with `waits
+on N spec questions` on its row, the launch status says `ID waits on spec
+questions`, and while a ticked item is held the hint reads `[l] answer spec
+questions` instead of `[l] launch wave`. Pressing `l` again checks the ticked
+items again and reopens the sitting. A check error shows its code and message
+and leaves the ticks alone.
+
 Until launch the composer says `N ticked, not launched; [l] launches`
 (not shown in the lineup editor). After admission it says `launched S78 as
 RUN; enter opens it` for one item, or `launched N items; enter on a running

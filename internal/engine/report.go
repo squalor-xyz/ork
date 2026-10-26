@@ -3,6 +3,7 @@
 package engine
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -167,6 +168,51 @@ func parseOwnerQuestion(body string) (*OwnerQuestion, error) {
 		return bad()
 	}
 	return q, nil
+}
+
+// ParseOwnerQuestions reads every question block of a body: each block starts
+// at a line that begins with "Question:" and runs to the next such line. The
+// strict shape of parseOwnerQuestion holds for each block, which may carry one
+// Decision key line. Lines before the first block are context and are
+// dropped. A body without a block, or with a malformed one, is an error that
+// names the block.
+func ParseOwnerQuestions(body string) ([]SpecQuestion, error) {
+	var blocks [][]string
+	for _, raw := range strings.Split(body, "\n") {
+		line := strings.TrimSpace(raw)
+		if strings.HasPrefix(line, "Question:") {
+			blocks = append(blocks, nil)
+		}
+		if len(blocks) == 0 {
+			continue
+		}
+		blocks[len(blocks)-1] = append(blocks[len(blocks)-1], line)
+	}
+	if len(blocks) == 0 {
+		return nil, errors.New("no Question: block")
+	}
+	var out []SpecQuestion
+	for i, lines := range blocks {
+		var q SpecQuestion
+		for _, line := range lines {
+			if !strings.HasPrefix(line, "Decision key:") {
+				continue
+			}
+			key := strings.TrimSpace(strings.TrimPrefix(line, "Decision key:"))
+			if q.Key != "" || !decisionKey.MatchString(key) {
+				return nil, fmt.Errorf("question %d must have at most one Decision key: area.topic line with a lowercase dotted key", i+1)
+			}
+			q.Key = key
+		}
+		ask, err := parseOwnerQuestion(strings.Join(lines, "\n"))
+		if err != nil {
+			return nil, fmt.Errorf("question %d: %w", i+1, err)
+		}
+		q.Ask = ask
+		q.Text = strings.TrimSpace(strings.Join(lines, "\n"))
+		out = append(out, q)
+	}
+	return out, nil
 }
 
 // section returns the lines under the heading, up to the next "## " heading

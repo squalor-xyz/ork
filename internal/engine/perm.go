@@ -36,13 +36,13 @@ func DefaultImplementerAllowlist(checkCommand string) []string {
 }
 
 func readOnlyRole(role string) bool {
-	return role == RoleReviewer || role == RoleGate || role == RoleArchitect || role == RoleUI
+	return role == RoleReviewer || role == RoleGate || role == RoleArchitect || role == RoleUI || role == RoleSpecCheck
 }
 
 // ResolvePermission returns the permission of a role in a project. The
 // implementer gets the registry's permissions.implementer, else the built-in
 // default (an empty list counts as no entry). The reviewer, the gate, the
-// architect and the UI pass are read-only; a registry entry that gives one of them an
+// architect, the UI pass and the spec check are read-only; a registry entry that gives one of them an
 // allowlist is an error.
 func ResolvePermission(p registry.Project, role string) (Permission, error) {
 	entry, has := p.Permissions[role]

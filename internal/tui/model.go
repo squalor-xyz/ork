@@ -401,6 +401,12 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			}
 			return m, nil
 		}
+		if m.waves != nil && m.waves.sitting != nil {
+			if s := m.waves.sitting; s.free {
+				s.input.update(msg)
+			}
+			return m, nil
+		}
 		if m.waves != nil && m.waves.lineup != nil {
 			e := m.waves.lineup
 			if e.custom {
@@ -459,6 +465,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 
+	if m.waves != nil && m.waves.sitting != nil {
+		return m.sittingKey(msg)
+	}
 	if m.waves != nil && m.waves.lineup != nil {
 		return m.lineupKey(msg)
 	}
@@ -829,6 +838,7 @@ type runAction struct {
 	by                       string
 	cleanupCommand           string
 	items                    []daemon.RunParams
+	held                     []string // wave: ticked items left out because they wait on spec questions
 	plan                     *daemon.RunPlan
 	wellSpecified, split     bool
 }
@@ -862,7 +872,16 @@ func (a runAction) prompt() string {
 	if a.verb == "cleanup" {
 		return a.command() + "\nRemove worktree and branch? [y/N] (Enter is No)"
 	}
-	return a.command() + "? [y/N] (Enter is No)"
+	prompt := a.command() + "? [y/N] (Enter is No)"
+	if len(a.held) > 0 {
+		verb := "waits"
+		if len(a.held) > 1 {
+			verb = "wait"
+		}
+		// Outside the command: ork does not run it with these items.
+		prompt += "  " + strings.Join(a.held, ", ") + " " + verb + " on spec questions"
+	}
+	return prompt
 }
 
 // cleanupConfirmLines caps long commands separately so both command starts

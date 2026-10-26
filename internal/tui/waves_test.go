@@ -31,6 +31,31 @@ type wavesLive struct {
 	writes                                    int
 	suggestErr, overlapErr, planErr, startErr error
 	result                                    *daemon.WaveResult
+	checks                                    [][]string // the items of each spec check
+	check                                     func(items []string) (*daemon.SpecCheckResult, error)
+	answers                                   []daemon.SpecAnswerParams
+	answerErr                                 error
+}
+
+// SpecCheck answers that every item is ready unless the test sets check.
+func (l *wavesLive) SpecCheck(_ context.Context, project string, items []string) (*daemon.SpecCheckResult, error) {
+	l.checks = append(l.checks, append([]string{project}, items...))
+	if l.check != nil {
+		return l.check(items)
+	}
+	out := &daemon.SpecCheckResult{}
+	for _, id := range items {
+		out.Items = append(out.Items, daemon.SpecItemResult{Item: id, Ready: true})
+	}
+	return out, nil
+}
+func (l *wavesLive) SpecAnswer(_ context.Context, p daemon.SpecAnswerParams) (*daemon.SpecAnswerResult, error) {
+	l.writes++
+	l.answers = append(l.answers, p)
+	if l.answerErr != nil {
+		return nil, l.answerErr
+	}
+	return &daemon.SpecAnswerResult{Item: p.Item, Ready: true}, nil
 }
 
 func (l *wavesLive) WaveSuggest(_ context.Context, p string) (*slicercli.ParallelPlan, error) {

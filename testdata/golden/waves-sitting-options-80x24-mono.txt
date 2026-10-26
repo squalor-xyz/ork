@@ -1,0 +1,24 @@
+[1mork[m  ?help         │ Overview[2m │ [mQuestions[2m │ [m[1mWaves[m[2m │ [mRoadmap[2m │ [mDecisions
+  Needs you      0 │[2m────────────────────────────────────────────────────────────[m
+[1;7m> ork              [m│[1mSpec check: 2 questions for B[m
+  other            │
+                   │  [2mB  Beta[m
+                   │  [1m[B 1/2] Which store holds the index?[m
+                   │    1. file: one JSON file
+                   │    2. memory: rebuilt at each start (recommended)
+                   │    [2mWhy 2: nothing reads it across restarts[m
+                   │    [2mDecision key: cache.index-store[m
+                   │
+                   │  [2m0 of 2 answered[m
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │  [1-2] pick   [t] free text   [s] skip the rest
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ 2 projects | refreshed 16:42:00

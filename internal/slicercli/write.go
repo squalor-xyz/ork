@@ -203,6 +203,33 @@ func UIPassRowID(rules []Rule) string {
 	return ""
 }
 
+var specCheckRow = regexp.MustCompile(`Spec check row \((r\d+)\)`)
+
+// SpecCheckRowID finds the matrix row of the spec check: the id that a rule
+// names as "Spec check row (rNN)" (rule u11 today). It is empty when no rule
+// names one. Until slicer has a spec-check role (s392), the row's role is
+// reviewer and this rule is the only way to tell it from the reviewer's own
+// rows.
+func SpecCheckRowID(rules []Rule) string {
+	for _, r := range rules {
+		if m := specCheckRow.FindStringSubmatch(r.Text); m != nil {
+			return m[1]
+		}
+	}
+	return ""
+}
+
+// EditAppend runs `slicer edit ID --section SECTION --append --text TEXT
+// --render --json --lean --root ROOT`: it adds TEXT to the section as a new
+// paragraph.
+func (c Client) EditAppend(ctx context.Context, w runrec.Writer, root, id, section, text string) error {
+	if strings.TrimSpace(text) == "" {
+		return fmt.Errorf("slicer edit %s: nothing to append", id)
+	}
+	_, err := c.write(ctx, w, root, "edit", id, "--section", section, "--append", "--text", text, "--render", "--json", "--lean")
+	return err
+}
+
 // Added is the item `slicer add` filed. Existing is true when the key matched
 // an item filed before, which the call then returns unchanged.
 type Added struct {

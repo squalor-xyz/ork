@@ -16,6 +16,7 @@ The files ork owns. Everything else is read live from slicer, adj and git
 | Role reports | `~/.local/state/ork/runs/<run>/<role>-<round>.md` |
 | Check output per round (S04) | `~/.local/state/ork/runs/<run>/checks-<round>.log` |
 | A role's own temp directory (S04) | `~/.local/state/ork/runs/<run>/tmp/<role>-<round>/` |
+| A spec check's report and temp directory (S116, *proposed*); the verdicts themselves live in the daemon's memory | `~/.local/state/ork/spec-checks/<check>/` |
 | Fixture candidates: raw output of every non-ok vendor round or round with denials, mode 0600 | `~/.local/state/ork/fixtures/<vendor>/` |
 
 ork honors `XDG_CONFIG_HOME` and `XDG_STATE_HOME`. Nothing is written
@@ -79,11 +80,18 @@ merge each nonzero launch field over the registry default. These values
 apply to this run only and do not change the matrix or registry
 (`lineup.override-scope`).
 
+`decisions` is optional (S116, *proposed*). When the owner answered the item's
+spec check questions, it holds the `Owner decisions (date)` paragraph that was
+appended to the item's spec in the main checkout. The run's worktree lacks
+that uncommitted edit, so every role's brief carries the paragraph in an
+`Owner decisions` section.
+
 ```json
 {
   "version": 1,
   "id": "ork-20261018-161200-a1b2",
   "wave": "wave-20261018-161150-77aa",
+  "decisions": "Owner decisions (2026-10-18): ...",
   "project": "adjudicate",
   "item": "S18",
   "worktree": "/Users/jon/code/squalor-xyz/adjudicate/.worktrees/S18",

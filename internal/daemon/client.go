@@ -202,6 +202,25 @@ func (c *Client) WaveStart(ctx context.Context, params WaveStartParams) (*WaveRe
 	return &out, nil
 }
 
+// SpecCheck runs the spec check for the items, or returns the answers the
+// daemon remembers for their current specs.
+func (c *Client) SpecCheck(ctx context.Context, project string, items []string) (*SpecCheckResult, error) {
+	var out SpecCheckResult
+	if err := c.Call(ctx, MethodSpecCheck, SpecCheckParams{Project: project, Items: items}, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// SpecAnswer records the owner's answers to an item's open spec questions.
+func (c *Client) SpecAnswer(ctx context.Context, params SpecAnswerParams) (*SpecAnswerResult, error) {
+	var out SpecAnswerResult
+	if err := c.Call(ctx, MethodSpecAnswer, params, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // Cleanup removes a merged run's worktree and branch after owner confirmation.
 func (c *Client) Cleanup(ctx context.Context, run string) error {
 	return c.Call(ctx, MethodRunCleanup, RunAction{Run: run}, nil)

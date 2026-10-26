@@ -59,6 +59,11 @@ owner as a structured question (it blocks the gate only as `owner blocker`),
 `later` is offered to the owner as a new slice. A finding without a tag is a
 fix. Owner: ork (a *proposed* convention of its role prompts).
 
+**Spec check.** A read-only pass of the spec-check role over the slices of a
+proposed wave, before the lineup (adj #164). Each slice comes back ready, or
+with structured owner questions that the owner answers in one sitting. Owner:
+ork (a *proposed* role; slicer has no spec-check role until its s392).
+
 ## Lineup and vendors
 
 **Role matrix.** Rows that pick agent, vendor, model and reasoning effort per

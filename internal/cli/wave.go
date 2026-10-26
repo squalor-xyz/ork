@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
@@ -156,6 +157,17 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 		p.Expected = &plan
 		params.Items = append(params.Items, p)
 	}
+	held, code := a.specCheck(ctx, o, reader, prompts, &params)
+	if code != ExitOK {
+		return code
+	}
+	if len(params.Items) == 0 {
+		if o.json {
+			o.printJSON(map[string]any{"started": false, "held": held})
+		}
+		fmt.Fprintln(prompts, "no item is ready to start")
+		return ExitFailure
+	}
 	if !*yes {
 		confirm, err := ask("Start this wave?", "y/N", "no")
 		if err != nil {
@@ -198,4 +210,117 @@ func printWave(o *output, result daemon.WaveResult) int {
 		}
 	}
 	return code
+}
+
+// specCheck runs the spec check on the planned items (adj 164). A ready item
+// stays in the wave. For an item with open questions it asks them all in one
+// sitting, records the answers, and keeps the item once they are in. An item
+// whose questions stay open (an empty answer, or no more input) is dropped
+// from the wave and named in held. The sitting goes to the prompts writer.
+func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.Writer, params *daemon.WaveStartParams) (held []string, code int) {
+	var ids []string
+	for _, item := range params.Items {
+		ids = append(ids, item.Item)
+	}
+	var check daemon.SpecCheckResult
+	if code := a.call(ctx, o, daemon.MethodSpecCheck, daemon.SpecCheckParams{Project: params.Items[0].Project, Items: ids}, &check); code != ExitOK {
+		return nil, code
+	}
+	open := map[string]daemon.SpecItemResult{}
+	for _, r := range check.Items {
+		if !r.Ready {
+			open[r.Item] = r
+		}
+	}
+	by := os.Getenv("ADJ_DECIDED_BY")
+	var kept []daemon.RunParams
+	for _, item := range params.Items {
+		r, ok := open[item.Item]
+		if !ok {
+			kept = append(kept, item)
+			continue
+		}
+		answers := askSpecQuestions(in, w, r)
+		if answers == nil {
+			fmt.Fprintf(w, "held: %s has %d open spec %s\n", r.Item, len(r.Questions), plural(len(r.Questions), "question"))
+			held = append(held, r.Item)
+			continue
+		}
+		var out daemon.SpecAnswerResult
+		p := daemon.SpecAnswerParams{Project: item.Project, Item: r.Item, Answers: answers, Adj: true, By: by}
+		if code := a.call(ctx, o, daemon.MethodSpecAnswer, p, &out); code != ExitOK {
+			return held, code
+		}
+		for _, n := range out.Notices {
+			fmt.Fprintln(w, n)
+		}
+		kept = append(kept, item)
+	}
+	params.Items = kept
+	return held, ExitOK
+}
+
+func plural(n int, noun string) string {
+	if n == 1 {
+		return noun
+	}
+	return noun + "s"
+}
+
+// askSpecQuestions shows every question of an item and reads one answer for
+// each: a number picks an option, other text is the answer. A number outside
+// the options is asked again. An empty line, or the end of the input, holds
+// the item back and returns nil.
+func askSpecQuestions(in *bufio.Reader, w io.Writer, r daemon.SpecItemResult) []string {
+	fmt.Fprintf(w, "%s needs %d %s before it can start.\n", r.Item, len(r.Questions), plural(len(r.Questions), "answer"))
+	var answers []string
+	for i, q := range r.Questions {
+		fmt.Fprintf(w, "[%s %d/%d] ", r.Item, i+1, len(r.Questions))
+		if q.Ask == nil {
+			fmt.Fprintf(w, "%s\n", q.Text)
+			fmt.Fprintf(w, "Answer in text (empty holds %s back): ", r.Item)
+		} else {
+			fmt.Fprintf(w, "%s\n", q.Ask.Title)
+			for n, o := range q.Ask.Options {
+				mark := ""
+				if n+1 == q.Ask.Recommend {
+					mark = " (recommended)"
+				}
+				fmt.Fprintf(w, "  %d. %s: %s%s\n", n+1, o.Label, o.Summary, mark)
+			}
+			fmt.Fprintf(w, "  Why %d: %s\n", q.Ask.Recommend, q.Ask.Reason)
+			if q.Key != "" {
+				fmt.Fprintf(w, "  Decision key: %s\n", q.Key)
+			}
+			fmt.Fprintf(w, "Answer 1-%d, or type text (empty holds %s back): ", len(q.Ask.Options), r.Item)
+		}
+		answer := ""
+		for answer == "" {
+			line, err := in.ReadString('\n')
+			line = strings.TrimSpace(line)
+			if line == "" {
+				if err == nil {
+					fmt.Fprintln(w)
+				}
+				return nil
+			}
+			if err != nil && err != io.EOF {
+				return nil
+			}
+			answer = line
+			if q.Ask != nil {
+				if n, err := strconv.Atoi(line); err == nil {
+					if n < 1 || n > len(q.Ask.Options) {
+						fmt.Fprintf(w, "Pick 1-%d, or type text: ", len(q.Ask.Options))
+						answer = ""
+						continue
+					}
+					o := q.Ask.Options[n-1]
+					answer = o.Label + ": " + o.Summary
+				}
+			}
+		}
+		answers = append(answers, answer)
+	}
+	return answers
 }

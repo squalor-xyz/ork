@@ -120,8 +120,13 @@ type runManager struct {
 	cleaning     map[string]bool // cleanup calls in flight; guarded by mu
 	heads        map[string]string
 	merged       map[string]*bool
-	lastRegistry *registry.File // last successful run-manager read; guarded by mu
-	waveStops    map[string]int // suppress queued members while a wave stop is in progress
+	lastRegistry *registry.File             // last successful run-manager read; guarded by mu
+	waveStops    map[string]int             // suppress queued members while a wave stop is in progress
+	specs        map[string]specEntry       // the spec checks the daemon remembers, by project and item; guarded by mu
+	specJobs     int                        // spec checks in flight; guarded by mu
+	specSeq      int                        // numbers the spec check jobs; guarded by mu
+	specCancels  map[int]context.CancelFunc // cancels each spec check job; guarded by mu
+	specMu       sync.Mutex                 // one spec check or answer at a time
 	closed       bool
 	mu           sync.Mutex
 	ctx          context.Context
@@ -138,7 +143,7 @@ func (d *Daemon) initRunManager() {
 	if deps.Store == nil {
 		deps.Store = &runrec.Store{Dir: filepath.Join(d.cfg.Paths.Dir, "runs")}
 	}
-	d.runs = runManager{cleaning: map[string]bool{}, heads: map[string]string{}, merged: map[string]*bool{}, ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}, waveStops: map[string]int{}}
+	d.runs = runManager{cleaning: map[string]bool{}, heads: map[string]string{}, merged: map[string]*bool{}, ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}, waveStops: map[string]int{}, specs: map[string]specEntry{}, specCancels: map[int]context.CancelFunc{}}
 }
 func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 	deps := d.runs.deps
@@ -226,6 +231,9 @@ func (d *Daemon) closeRuns() {
 			r.cancel()
 		}
 	}
+	for _, cancel := range d.runs.specCancels {
+		cancel()
+	}
 	d.runs.mu.Unlock()
 	d.runs.wg.Wait()
 }
@@ -236,6 +244,9 @@ func (d *Daemon) activeRuns() bool {
 }
 
 func (d *Daemon) activeRunsLocked() bool {
+	if d.runs.specJobs > 0 {
+		return true
+	}
 	for _, r := range d.runs.runs {
 		if r.busy {
 			return true
@@ -312,6 +323,9 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	// apart (rule u10; slicer s392 will give it a ui role). It runs as the UI
 	// pass on a UI slice and is never a fallback of the reviewer or the gate.
 	uiRow := slicercli.UIPassRowID(rules)
+	// The spec check row is a reviewer row too (rule u11). It runs only the
+	// spec check, so a run's chains never hold it.
+	specRow := slicercli.SpecCheckRowID(rules)
 	var uiRows []slicercli.Row
 	plan := &RunPlan{project: proj, Project: registry.Project{Name: proj.Name, Path: proj.Path}, Item: p.Item, CheckCommand: proj.CheckCommand, Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
 	for _, role := range []string{engine.RoleImplementer, engine.RoleReviewer, engine.RoleGate, engine.RoleArchitect} {
@@ -333,6 +347,9 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 				rows = append([]slicercli.Row{*choice.Row}, rows...)
 			}
 			for _, row := range rows {
+				if specRow != "" && sourceRole == engine.RoleReviewer && row.ID == specRow {
+					continue
+				}
 				if uiRow != "" && sourceRole == engine.RoleReviewer && row.ID == uiRow {
 					if role == engine.RoleReviewer {
 						uiRows = append(uiRows, row)
@@ -454,7 +471,9 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 	if wave == "" {
 		wave = newWaveID(time.Now())
 	}
-	cfg := engine.Config{Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: wave, Queued: queued}
+	// A spec check that the owner answered gave the item decisions that its
+	// worktree's spec lacks; the run carries them into every brief (S116).
+	cfg := engine.Config{Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: wave, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions}
 	e, err := engine.New(ctx, d.runDeps(plan.project), cfg)
 	if err != nil {
 		return runrec.Record{}, err
@@ -547,6 +566,10 @@ func (d *Daemon) startWave(ctx context.Context, p WaveStartParams) (*WaveResult,
 	result := &WaveResult{Wave: newWaveID(time.Now()), Items: []WaveItemResult{}}
 	for _, item := range p.Items {
 		item.wave = result.Wave
+		if err := d.specGate(ctx, item.Project, item.Item); err != nil {
+			result.Items = append(result.Items, waveItem(item.Item, runrec.Record{}, err))
+			continue
+		}
 		rec, err := d.startRun(ctx, item)
 		result.Items = append(result.Items, waveItem(item.Item, rec, err))
 	}

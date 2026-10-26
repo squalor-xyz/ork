@@ -45,3 +45,23 @@ func TestUIPassRowID(t *testing.T) {
 		})
 	}
 }
+
+func TestSpecCheckRowID(t *testing.T) {
+	for name, tc := range map[string]struct {
+		rules []Rule
+		want  string
+	}{
+		"u11 today":     {[]Rule{{ID: "u10", Text: "The UI pass row (r14) runs beside the reviewer."}, {ID: "u11", Text: "The spec check before a wave runs the Spec check row (r16): one read-only pass."}}, "r16"},
+		"another row":   {[]Rule{{ID: "u12", Text: "Spec check row (r203) runs first."}}, "r203"},
+		"no rule":       {[]Rule{{ID: "u1", Text: "A reviewer never wrote code."}}, ""},
+		"row not named": {[]Rule{{ID: "u11", Text: "The Spec check row runs before a wave."}}, ""},
+		"ui rule only":  {[]Rule{{ID: "u10", Text: "The UI pass row (r14) runs beside the reviewer."}}, ""},
+		"none":          {nil, ""},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if got := SpecCheckRowID(tc.rules); got != tc.want {
+				t.Fatalf("SpecCheckRowID = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}

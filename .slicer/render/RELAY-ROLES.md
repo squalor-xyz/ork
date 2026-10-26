@@ -21,6 +21,7 @@
 | r7 | Architect | size L | Claude Code | Claude | opus | high | - |
 | r10 | Orchestrator | every slice | Claude Code | Claude | sonnet | high | default orchestrator |
 | r11 | Orchestrator | every slice | Codex | OpenAI | gpt-6.1-sol | high | alternate orchestrator |
+| r16 | Reviewer | every slice | Claude Code | Claude | sonnet | medium | Spec check row |
 
 ## Rules
 
@@ -34,3 +35,4 @@
 - u8: A sliver that fails its gate twice, or whose diff falls short of the orchestrator's check, moves to the next model up (haiku to sonnet high).
 - u9: The orchestrator reads a Haiku implementer's diff itself before review, and switches that role to Sonnet early when quality falls short.
 - u10: A slice that touches the UI (internal/tui and its golden views, docs/dashboard.md, internal/cli output, or a ui.* adj key) also runs the UI pass row (r14) in parallel with the reviewer, not instead of it. The UI pass runs as a general-purpose subagent, loads the frontend-design:frontend-design skill, edits nothing, and sends suggested design edits to the orchestrator for the implementer; the gate still decides. This holds for each slice in a wave.
+- u11: The spec check before a wave runs the Spec check row (r16): one read-only pass over every ticked slice, answered in one sitting. It is a reviewer row only until slicer has a spec-check role (s392); it is never a fallback of the reviewer or the gate, and the reviewer's rule u1 does not apply to it because it reads specs and writes no code.

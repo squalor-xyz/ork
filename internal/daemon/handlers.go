@@ -84,6 +84,18 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return d.waveOverlap(ctx, p)
+	case MethodSpecCheck:
+		var p SpecCheckParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.specCheck(ctx, p)
+	case MethodSpecAnswer:
+		var p SpecAnswerParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.specAnswer(ctx, p)
 	case MethodDaemonInfo:
 		return DaemonInfoResult{BuildID: d.cfg.BuildID}, nil
 	case MethodDaemonStop:

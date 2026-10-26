@@ -59,7 +59,7 @@ func recordedVersion(t *testing.T, file string) int {
 }
 
 func TestNames(t *testing.T) {
-	want := []string{"implementer", "reviewer", "gate", "architect", "ui"}
+	want := []string{"implementer", "reviewer", "gate", "architect", "ui", "spec-check"}
 	if got := Names(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("Names() = %v, want %v", got, want)
 	}
@@ -294,7 +294,7 @@ func TestGateCriteria(t *testing.T) {
 
 func TestReadOnlyRoles(t *testing.T) {
 	ps := prompts(t)
-	for _, name := range []string{"reviewer", "gate", "architect", "ui"} {
+	for _, name := range []string{"reviewer", "gate", "architect", "ui", "spec-check"} {
 		p := strings.ToLower(ps[name])
 		for _, want := range []string{"you are read-only", "must not change the tree", "no git writes", "no tracking writes"} {
 			if !has(p, want) {
@@ -510,4 +510,33 @@ func ascii(s string) bool {
 		}
 	}
 	return true
+}
+
+// The spec check is ork's own role (roles.spec-check, adj 164): one read-only
+// pass over a batch of slices, with a ready or structured questions answer
+// for each.
+func TestSpecCheckPrompt(t *testing.T) {
+	p := prompts(t)["spec-check"]
+	for _, want := range []string{
+		"## Slice S10",
+		"`Ready`",
+		"Question: Which store holds the cache index?",
+		"one section for each slice in your brief",
+		"the whole batch in one pass",
+		"Put a blank line between the blocks of one slice",
+		"A decision the owner recorded is settled",
+		"A gap you can close by reading the code is not a question",
+	} {
+		if !has(p, want) {
+			t.Errorf("spec-check does not say %q", want)
+		}
+	}
+	for _, bad := range []string{"VERDICT", "[owner]", "[fix]"} {
+		if strings.Contains(p, bad) {
+			t.Errorf("spec-check prompt mentions %q", bad)
+		}
+	}
+	if !ascii(p) {
+		t.Error("spec-check prompt holds a non-ASCII character")
+	}
 }

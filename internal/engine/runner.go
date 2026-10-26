@@ -19,7 +19,8 @@ const (
 	RoleReviewer    = "reviewer"
 	RoleArchitect   = "architect"
 	RoleGate        = "gate"
-	RoleUI          = "ui" // the UI pass, beside the reviewer on a slice that touches the UI
+	RoleUI          = "ui"         // the UI pass, beside the reviewer on a slice that touches the UI
+	RoleSpecCheck   = "spec-check" // the batch readiness check before a wave (adj 164)
 )
 
 // ExitClass is how a vendor adapter classifies a role process's exit

@@ -287,6 +287,24 @@
       "model": "gpt-6.1-sol",
       "reasoning": "high",
       "note": "alternate orchestrator"
+    },
+    {
+      "id": "r16",
+      "role": "reviewer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "sonnet",
+      "reasoning": "medium",
+      "note": "Spec check row"
     }
   ],
   "rules": [
@@ -329,8 +347,12 @@
     {
       "id": "u10",
       "text": "A slice that touches the UI (internal/tui and its golden views, docs/dashboard.md, internal/cli output, or a ui.* adj key) also runs the UI pass row (r14) in parallel with the reviewer, not instead of it. The UI pass runs as a general-purpose subagent, loads the frontend-design:frontend-design skill, edits nothing, and sends suggested design edits to the orchestrator for the implementer; the gate still decides. This holds for each slice in a wave."
+    },
+    {
+      "id": "u11",
+      "text": "The spec check before a wave runs the Spec check row (r16): one read-only pass over every ticked slice, answered in one sitting. It is a reviewer row only until slicer has a spec-check role (s392); it is never a fallback of the reviewer or the gate, and the reviewer's rule u1 does not apply to it because it reads specs and writes no code."
     }
   ],
-  "next_row": 16,
-  "next_rule": 11
+  "next_row": 17,
+  "next_rule": 12
 }
