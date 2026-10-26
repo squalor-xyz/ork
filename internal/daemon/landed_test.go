@@ -597,6 +597,30 @@ func TestCleanupRetryAfterHalfDone(t *testing.T) {
 	}
 }
 
+func TestCleanupRetryOfLandedRunAfterHalfDone(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 0, "error: the branch is checked out\n")
+	landedRun(t, s, p, "run", "landed; cleanup failed at git branch -d s63: checked out")
+	refreshHead(t, d, p)
+	if err := os.RemoveAll(p.Path + "/.worktrees/s63"); err != nil {
+		t.Fatal(err)
+	}
+	retry := clitest.Install(t, clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "branch", "-d", "s63"}})
+	setGitBin(d, retry.Bin("git"))
+	if err := cleanupRequest(d); err != nil {
+		t.Fatalf("retry of landed cleanup: %v", err)
+	}
+	want := []clitest.Call{{Tool: "git", Args: []string{"-C", p.Path, "branch", "-d", "s63"}}}
+	if got := retry.CallsTo("git"); !reflect.DeepEqual(got, want) {
+		t.Errorf("retry calls=%v, want %v", got, want)
+	}
+	if rec := runRecord(t, s, "run"); !rec.Cleaned() || rec.Reason != "" || rec.LandedAt.IsZero() {
+		t.Errorf("landed cleanup did not finish: %+v", rec)
+	}
+	if row := d.engineRuns(p.Name)[0]; !row.Cleaned || row.CleanupFailed != "" {
+		t.Errorf("landed cleanup is still offered: %+v", row)
+	}
+}
+
 // While a merge check runs, the previous merged value stays on the wire and
 // the cleanup key still works for a run whose value is known.
 func TestMergedValueSurvivesAPass(t *testing.T) {

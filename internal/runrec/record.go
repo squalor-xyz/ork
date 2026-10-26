@@ -282,7 +282,7 @@ type Record struct {
 // `slicer land`, which leaves LandedAt zero. A run that ork landed is cleaned
 // when its own cleanup left no reason behind.
 func (r Record) Cleaned() bool {
-	return !r.LandedAt.IsZero() && r.State == StateCommitted && r.Reason == ""
+	return !r.CleanedAt.IsZero() || (!r.LandedAt.IsZero() && r.State == StateCommitted && r.Reason == "")
 }
 
 // MarkCleaned sets the cleanup time and drops the reason a landed run kept for

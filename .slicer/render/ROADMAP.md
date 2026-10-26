@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-151 items · — 54 · done 91 · retired 5 · started 1
+152 items · — 54 · done 93 · retired 5
 
 ## v1.1
 
@@ -181,7 +181,7 @@
 | 124 | [S84](slices/S84.md) | Overview layout pass | M | 2 |  |  | done |
 | 125 | [S88](slices/S88.md) | Accept relay contract v8 alongside v7 | S | 1 |  |  | done |
 | 126 | [S89](slices/S89.md) | Close the codex sandbox gaps: resume sandbox, socket bind, worktree .git, main-checkout block | S | 2 |  | discovered from S48 | done |
-| 127 | [S95](slices/S95.md) | Cleanup finishes cleanly: mark the run cleaned, retry after a half-done cleanup, steady merge state | S | 2 |  | discovered from S63 | started |
+| 127 | [S95](slices/S95.md) | Cleanup finishes cleanly: mark the run cleaned, retry after a half-done cleanup, steady merge state | S | 2 |  | discovered from S63 | done |
 | 128 | [S96](slices/S96.md) | First run opens blank: no seeded projects; a TUI welcome adds them | M | 2 |  | discovered from S03 | done |
 | 129 | [S97](slices/S97.md) | Running rows and the run pane show the relay board's information: pipeline, round, last heard, waiting steps, recent runs | M | 2 |  | discovered from S55 | done |
 | 130 | [S122](slices/S122.md) | Probe Codex --add-dir and writable_roots; mark them unverified until then | S | 1 |  | discovered from S87 | — |
@@ -202,12 +202,13 @@
 | 145 | [S146](slices/S146.md) | S106 later notes | S | 1 |  |  | — |
 | 146 | [S147](slices/S147.md) | S121 later notes | S | 1 |  |  | — |
 | 147 | [S148](slices/S148.md) | S119 later notes | S | 1 |  |  | — |
-| 148 | [S149](slices/S149.md) | Context hint bar | M | 2 |  |  | — |
+| 148 | [S149](slices/S149.md) | Context hint bar | M | 2 |  |  | done |
 | 149 | [S150](slices/S150.md) | S145 later notes | S | 1 |  |  | — |
 | 150 | [S151](slices/S151.md) | S85 later notes | S | 1 |  |  | — |
+| 151 | [S152](slices/S152.md) | S149 later notes | S | 1 |  |  | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 151 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 152 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
