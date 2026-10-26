@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-132 items · — 51 · done 76 · retired 5
+134 items · — 52 · done 77 · retired 5
 
 ## v1.1
 
@@ -82,7 +82,7 @@
 | 25 | [S115](slices/S115.md) | Implementer brief: re-anchor the spec first and self-check before reporting | S | 1 |  |  | done |
 | 26 | [S70](slices/S70.md) | Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed) | S | 1 |  |  | done |
 | 27 | [S99](slices/S99.md) | Live role detail: output tail and tokens/cost in the run pane | M | 2 |  | discovered from S07 | done |
-| 28 | [S125](slices/S125.md) | Waves composer focus: next waves only, inputs inline under the ticked item | M | 2 |  | discovered from S31 | — |
+| 28 | [S125](slices/S125.md) | Waves composer focus: next waves only, inputs inline under the ticked item | M | 2 |  | discovered from S31 | done |
 | 29 | [S107](slices/S107.md) | Waves as a table: shares as a dim column, wave header rules, Lineup column only after ticking | M | 2 |  |  | done |
 | 30 | [S111](slices/S111.md) | Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork | M | 2 |  | discovered from S28 | done |
 | 31 | [S127](slices/S127.md) | After an answer: clear the question from the row and pane, and say the role resumed | S | 1 |  | discovered from S31 | done |
@@ -186,9 +186,11 @@
 | 129 | [S97](slices/S97.md) | Running rows and the run pane show the relay board's information: pipeline, round, last heard, waiting steps, recent runs | M | 2 |  | discovered from S55 | done |
 | 130 | [S122](slices/S122.md) | Probe Codex --add-dir and writable_roots; mark them unverified until then | S | 1 |  | discovered from S87 | — |
 | 131 | [S124](slices/S124.md) | Worktree and branch patterns can lowercase the item id | S | 1 |  | discovered from S31 | — |
+| 132 | [S133](slices/S133.md) | Codex out of credits is a classified limit, so the role falls back | S | 1 |  | discovered from S127 | — |
+| 133 | [S134](slices/S134.md) | Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap | S | 1 |  | discovered from S127 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 132 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 134 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
