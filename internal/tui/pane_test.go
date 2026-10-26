@@ -245,6 +245,7 @@ func TestPaneAnswerOtherRun(t *testing.T) {
 	h.m.apply(snapshotMsg{name: "ork", snap: s})
 	h.deliver(press("n"))
 	h.deliver(press("a"))
+	h.deliver(press("y"))
 	if v := h.view(); !strings.Contains(v, "S23  commit") {
 		t.Fatalf("pending answer blocked a different run:\n%s", v)
 	}
@@ -311,7 +312,7 @@ func TestPaneLateResult(t *testing.T) {
 			// hide an incorrectly displayed result by moving the selected row.
 			h.m.cfg.Live.(*actionLive).err = &ipc.Error{Code: "action_failed", Message: "Exact failure."}
 			_, cmd := h.m.Update(press(tc.key))
-			if tc.verb == "retry" {
+			if tc.verb == "retry" || tc.verb == "approve" {
 				_, cmd = h.m.Update(press("y"))
 			}
 			if tc.verb == "answer" {
@@ -437,7 +438,7 @@ func TestActionResultSurvivesRowRefresh(t *testing.T) {
 			h.src.set(s)
 			h.m.apply(snapshotMsg{name: "ork", snap: s})
 			h.deliver(press(tc.key))
-			if tc.verb == "retry" {
+			if tc.verb == "retry" || tc.verb == "approve" {
 				h.deliver(press("y"))
 			}
 			if v := h.view(); !strings.Contains(v, "ork "+tc.verb+" engine: done") {

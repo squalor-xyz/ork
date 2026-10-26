@@ -115,6 +115,11 @@ func (e *Engine) feedbackSection(fb *runrec.Feedback) BriefSection {
 		return BriefSection{Title: "Review findings", Body: "The reviewer's report is below. Apply only the findings in it. If a finding is wrong, say so in your report with your evidence.\n\n" + body}
 	case "owner":
 		return BriefSection{Title: "Owner fix request", Body: "The owner read the approval card and asks for the change below. Make it and nothing else: the slice already passed the gate. Say in your report what you changed.\n\n" + body}
+	case "land":
+		return BriefSection{Title: "Landing blocked", Body: "The owner approved the slice and ork began to land it: it merged the base branch into the slice branch in your worktree. That stopped, and the details are below. " +
+			"ork aborted nothing and reset nothing. If a merge is in progress, resolve every conflict so that both sides' changes stay, `git add` the files and finish the merge with `git commit --no-edit`. " +
+			"If the checks are red after the merge, fix them; the base branch moved, for example a golden view that another slice changed. After a merge, run `slicer render` and commit what it rewrote. " +
+			"Do not rebase, force, reset or abort, and do not change anything else. The gate runs again after this round, and the owner approves again. Say in your report what you resolved.\n\n" + body}
 	case "architect":
 		return BriefSection{Title: "Architect findings", Body: "The architect's whole report is below. Apply its change-now findings. If a finding is wrong, say so in your report with your evidence. Keep later work out of this slice.\n\n" + body}
 	default:
@@ -158,6 +163,33 @@ func (e *Engine) implement(ctx context.Context) error {
 
 func (e *Engine) checks(ctx context.Context) error {
 	rec := e.run.Snapshot()
+	run, paused, err := e.runChecks(ctx, rec, runrec.StateChecks, "checks")
+	if paused || err != nil {
+		return err
+	}
+	if !run.ok {
+		return e.bumpRound(ctx, runrec.Feedback{Kind: "checks", File: run.log})
+	}
+	next := runrec.StateReview
+	for _, r := range rec.Roles {
+		if r.Role == RoleReviewer {
+			next = e.beforeGate(rec) // accepted reviewer findings are fixed before the architect
+		}
+	}
+	return e.run.Update(func(r *runrec.Record) { r.State = next })
+}
+
+// checkRun is the outcome of one run of the project's checks.
+type checkRun struct {
+	ok  bool
+	log string // the log's file name in the run directory
+}
+
+// runChecks runs the project check command and `slicer check` in the worktree,
+// writes their output to PREFIX-ROUND.log in the run directory and records the
+// result in checks[]. A tool that cannot run pauses the slice at state, and
+// paused is true; the caller returns err then.
+func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix string) (run checkRun, paused bool, err error) {
 	start := e.d.now()
 	check := e.d.Check
 	if check == nil {
@@ -167,33 +199,36 @@ func (e *Engine) checks(ctx context.Context) error {
 	if timeout <= 0 {
 		timeout = 10 * time.Minute
 	}
+	pauseWith := func(reason string) (checkRun, bool, error) {
+		return checkRun{}, true, e.pause(runrec.Pending{Kind: runrec.PendingError, State: state, Reason: reason})
+	}
 	ok := true
 	var log strings.Builder
 	if cmd := e.proj.CheckCommand; cmd != "" {
 		res, err := check(ctx, rec.Worktree, cmd, timeout)
 		if err != nil {
-			return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateChecks, Reason: "check command: " + err.Error()})
+			return pauseWith("check command: " + err.Error())
 		}
 		ok = res.OK
 		fmt.Fprintf(&log, "$ %s\n%s\n", cmd, tail(res.Output, 30000))
 	}
 	sres, err := e.d.Slicer.Check(ctx, rec.Worktree)
 	if err != nil {
-		return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateChecks, Reason: "slicer check: " + err.Error()})
+		return pauseWith("slicer check: " + err.Error())
 	}
 	if !sres.OK {
 		ok = false
 	}
 	fmt.Fprintf(&log, "\n$ slicer check --json\n%s\n", tail(sres.Output, 30000))
 
-	logName := fmt.Sprintf("checks-%d.log", rec.Round)
+	logName := fmt.Sprintf("%s-%d.log", prefix, rec.Round)
 	logPath := filepath.Join(e.run.Dir(), logName)
 	err = os.WriteFile(logPath, []byte(log.String()), 0o600)
 	if err == nil {
 		err = os.Chmod(logPath, 0o600)
 	}
 	if err != nil {
-		return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateChecks, Reason: "check log: " + err.Error()})
+		return pauseWith("check log: " + err.Error())
 	}
 	command := e.proj.CheckCommand
 	if command == "" {
@@ -203,19 +238,7 @@ func (e *Engine) checks(ctx context.Context) error {
 		r.Pending = nil
 		r.Checks = append(r.Checks, runrec.CheckRecord{Round: rec.Round, Command: command, OK: ok, Seconds: int(e.d.now().Sub(start).Seconds()), Log: logName})
 	})
-	if err != nil {
-		return err
-	}
-	if !ok {
-		return e.bumpRound(ctx, runrec.Feedback{Kind: "checks", File: logName})
-	}
-	next := runrec.StateReview
-	for _, r := range rec.Roles {
-		if r.Role == RoleReviewer {
-			next = e.beforeGate(rec) // accepted reviewer findings are fixed before the architect
-		}
-	}
-	return e.run.Update(func(r *runrec.Record) { r.State = next })
+	return checkRun{ok: ok, log: logName}, false, err
 }
 
 // latestReport returns the newest report of a role, with its name.
@@ -526,7 +549,7 @@ func failSummary(report string) string {
 }
 
 // commit commits the approved slice in its worktree with the title of the
-// slice's Git section and no attribution (git.commit).
+// slice's Git section and no attribution (git.commit). The landing follows.
 func (e *Engine) commit(ctx context.Context) error {
 	rec := e.run.Snapshot()
 	pauseWith := func(reason string) error {
@@ -553,16 +576,28 @@ func (e *Engine) commit(ctx context.Context) error {
 	if title == "" {
 		return pauseWith("the slice has no Git section with a commit title")
 	}
-	if _, err := e.gitWrite(ctx, rec.Worktree, "add", "-A"); err != nil {
-		return pauseWith("git add: " + err.Error())
+	// A landing that a fix round interrupted commits again after the next
+	// approval; when the tree is already clean there is nothing new to commit.
+	dirty := true
+	if rec.Commit != nil {
+		status, err := e.treeStatus(ctx, rec.Worktree)
+		if err != nil {
+			return pauseWith(err.Error())
+		}
+		dirty = strings.TrimSpace(status) != ""
 	}
-	if _, err := e.gitWrite(ctx, rec.Worktree, "commit", "-m", title); err != nil {
-		// finish already closed the ledger with PASS.
-		return e.run.Update(func(r *runrec.Record) {
-			r.State = runrec.StateStopped
-			r.Reason = "git commit: " + err.Error()
-			r.Pending = nil
-		})
+	if dirty {
+		if _, err := e.gitWrite(ctx, rec.Worktree, "add", "-A"); err != nil {
+			return pauseWith("git add: " + err.Error())
+		}
+		if _, err := e.gitWrite(ctx, rec.Worktree, "commit", "-m", title); err != nil {
+			// finish already closed the ledger with PASS.
+			return e.run.Update(func(r *runrec.Record) {
+				r.State = runrec.StateStopped
+				r.Reason = "git commit: " + err.Error()
+				r.Pending = nil
+			})
+		}
 	}
 	sha, err := e.gitRead(ctx, rec.Worktree, "rev-parse", "HEAD")
 	if err != nil {
@@ -571,7 +606,7 @@ func (e *Engine) commit(ctx context.Context) error {
 	return e.run.Update(func(r *runrec.Record) {
 		r.Pending = nil
 		r.Commit = &runrec.Commit{SHA: strings.TrimSpace(sha), Title: title, At: e.d.now()}
-		r.State = runrec.StateCommitted
+		r.State = runrec.StateLand
 	})
 }
 
@@ -606,10 +641,14 @@ func (e *Engine) finish(ctx context.Context) error {
 	if err != nil || !out.ok {
 		return err
 	}
+	// A finish step that follows a blocked landing finds the ledger run ended.
+	first := e.run.Snapshot().Commit == nil
 	if err := e.run.Update(func(rr *runrec.Record) { rr.State = runrec.StateCommit; rr.Reason = "" }); err != nil {
 		return err
 	}
-	e.endRelay(ctx, "pass", "done")
+	if first {
+		e.endRelay(ctx, "pass", "done")
+	}
 	return nil
 }
 

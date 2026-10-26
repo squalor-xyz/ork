@@ -205,6 +205,16 @@ func (m *Model) cardChecks(card *runrec.ApprovalCard, width int) []string {
 	return lines
 }
 
+// cardLandNote says what approval does. The approval is the owner's confirm of
+// the whole landing, and of the cleanup (S119, adj 162, adj 152). The line says
+// it pushes when the project's registry setting is on.
+func (m *Model) cardLandNote() string {
+	if p := m.byName[m.pane.project]; p != nil && p.reg.Push {
+		return "Approve lands and pushes it, then removes its worktree and branch."
+	}
+	return "Approve lands it, then removes its worktree and branch."
+}
+
 // cardHint is the key line of the card, right before "esc close pane".
 func (m *Model) cardHint(card *runrec.ApprovalCard) string {
 	hint := "a approve; F fix round; x stop; "

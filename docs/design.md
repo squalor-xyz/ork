@@ -207,7 +207,10 @@ ork (TUI)  ork status --json (CLI)
    waits as a queued run and starts, oldest first, as a slot frees.
 7. **Result.** Each item that reaches a passed gate waits for the owner's
    approval. This is checkpoint 2. Once approved, ork runs the finish step, then
-   commits (adj #81). An item that stops waits in "needs you", and the rest continue (`wave.failure`).
+   commits (adj #81), then lands the slice (`landing.in-ork`, adj #162; the
+   **land** state below). The approval is also the confirm of the cleanup
+   (`git.cleanup-key`, adj #152), and the approval card says so. An item that
+   stops waits in "needs you", and the rest continue (`wave.failure`).
 
 ## Slice state machine
 
@@ -225,10 +228,10 @@ setup -> implement -> checks --red--> implement (fix)
                       gate --FAIL--> implement (fix round)      [3rd FAIL -> stopped]
                         | PASS
                         v
-                awaiting-approval --approve--> finish -> commit -> committed
-                        | fix (owner's note)      | reject
-                        v                         v
-                implement (fix round) -> checks -> gate      stopped
+                awaiting-approval --approve--> finish -> commit -> land -> committed
+                        | fix (owner's note)      | reject        | blocked: one fix round,
+                        v                         v               v then back to implement
+                implement (fix round) -> checks -> gate      stopped  (a second block: stopped)
                         (back to awaiting-approval on PASS)
 ```
 
@@ -314,6 +317,45 @@ slice.
   (`git.commit`). The finish step precedes this commit (adj #81).
 - **Finish step:** run per the project's `implement_finish` setting (`done`
   or `handoff`), after PASS and owner approval, before the commit.
+- **land** (S119, adj #162 `landing.in-ork`, which supersedes `landing.v1`):
+  the step after the commit, all through git and slicer, each step logged in
+  `writes[]`. One landing per project runs at a time: the engines of a project
+  share a lock (`engine.Landings`), and the next landing waits, then reads the
+  base branch the first one moved. The base branch is the branch the main checkout is on. Each step
+  reads git first, so a retry after a pause continues where the landing
+  stopped.
+  1. If the base branch moved (its tip is not in the slice branch), `git -C W
+     merge -m "Merge BASE into BRANCH" BASE` in the worktree, then `slicer
+     render`, a commit of what render rewrote, and a re-run of the project
+     check command and `slicer check`. With no move, none of this runs. The
+     run record's `land_recheck` is set before the merge and cleared by a
+     green re-check (or by the hand-off to the fix round). A retry with it set
+     merges the base if it is not in yet (a crash between marker and merge),
+     then renders and re-checks, and never fast-forwards a tree that was not
+     checked.
+  2. `git -C P merge --ff-only BRANCH` in the main checkout. A failure (for
+     example an untracked file in the way) pauses the slice with the git
+     message; `t` retries.
+  3. `slicer land ID --branch BRANCH --note "Landed BRANCH"` in the main
+     checkout (it needs the branch merged, so it follows the fast-forward). In
+     `handoff` mode it marks the item done there, and ork commits the `.slicer`
+     change as `ID done` (`git commit -- .slicer`, so files the owner staged
+     stay out of it); in `done` mode there is nothing to commit.
+  4. `git -C P push` when the project's `push` setting is on (off by default;
+     ork never sets it). A failed push pauses the slice; the branch is on the
+     base branch already, and a retry pushes again.
+  5. Cleanup, as the owner's approval confirmed it: `git -C P worktree remove
+     W`, then `git -C P branch -d BRANCH`. Never `--force` or `-D`. A cleanup
+     that fails leaves the run `committed` with the reason; the merged-branch
+     cleanup key (`git.cleanup-key`) then works as before.
+  A merge conflict, or a red re-check after the merge (for example goldens that
+  another slice changed on the base branch), is not fixed by ork and is not
+  aborted by ork. The slice goes to one implementer fix round
+  (`feedback.kind` `land`) with the conflict or the red output as the brief,
+  then the checks, the gate and a new approval. `land_fixes` counts it. If the
+  second landing is blocked the same way, the slice stops with `land blocked:
+  merge conflict` or `land blocked: checks red after merging BASE`, in Needs
+  you, with the worktree and the branch kept.
 
 ### Engine (S04)
 

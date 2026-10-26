@@ -245,6 +245,16 @@ func newHarness(t *testing.T, opts ...func(*harnessOpts)) *harness {
 		g("-C", W, "add", "-A"),
 		g("-C", W, "commit", "-m", gitTitle),
 		with(g("-C", W, "rev-parse", "HEAD"), "0123abc\n"),
+		// The landing (S119) on a base branch that did not move.
+		with(g("-C", P, "symbolic-ref", "--short", "HEAD"), "main\n"),
+		clitest.Route{Tool: "git", Args: []string{"-C", P, "merge-base", "--is-ancestor", branch, "main"}, Exit: 1},
+		g("-C", W, "merge-base", "--is-ancestor", "main", "HEAD"),
+		g("-C", P, "merge", "--ff-only", branch),
+		with(clitest.Route{Tool: "slicer", Args: []string{"land", item}, Prefix: true}, `{"item":{"id":"S04"}}`),
+		g("-C", P, "status", "--porcelain", "--", ".slicer"),
+		g("-C", P, "push"),
+		g("-C", P, "worktree", "remove", W),
+		g("-C", P, "branch", "-d", branch),
 	)
 	fake := clitest.Install(t, routes...)
 	h := &harness{t: t, fake: fake, proj: proj, P: P, W: W,

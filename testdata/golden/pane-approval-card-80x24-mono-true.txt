@@ -10,14 +10,14 @@
                    │  [1mRun engine  S22  awaiting-approval[m
                    │  [1mGate PASS (round 1)  Tests: 12 passed, 0 failed[m
                    │  Diff: 2 files, +48 -4, 1 new file
-                   │  1 later finding; next to file: "Add a --json flag to ork
-                   │  status"
+                   │  1 later finding; next to file: "Add a --json flag to o..."
                    │  Owner question, not blocking: Should the cache be shared?
                    │  Recommended: per-project.
                    │  [1mHuman checks[m (1 of 3 open)
                    │  [2m1 [x] Open the pane on a running relay and see it move on.[m
                    │  2 [~] Resize to 80x24 and read the card. (later)
                    │  3 [ ] Press F, type a note and send it.
+                   │  Approve lands it, then removes its worktree and branch.
                    │  a approve; F fix round; x stop; 1-3 tick/later; f file
                    │  slice; esc close pane
                    │[2m────────────────────────────────────────────────────────────[m

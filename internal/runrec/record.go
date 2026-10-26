@@ -26,8 +26,9 @@ const (
 	StateArchitect        = "architect"
 	StateGate             = "gate"
 	StateAwaitingApproval = "awaiting-approval"
-	StateCommit           = "commit" // approved; ork commits next
-	StateFinish           = "finish" // committed; the implementer runs the finish step
+	StateCommit           = "commit" // the finish step is done; ork commits next
+	StateFinish           = "finish" // approved; the implementer runs the finish step
+	StateLand             = "land"   // committed; ork merges the base branch in, re-checks, merges, pushes if set and cleans up (S119)
 	StateCommitted        = "committed"
 	StatePaused           = "paused"
 	StateStopped          = "stopped"
@@ -163,7 +164,7 @@ type Pending struct {
 // report, or the owner's note from the approval card. The file is in the run
 // directory.
 type Feedback struct {
-	Kind string `json:"kind"` // "checks", "findings", "architect", "fail" or "owner"
+	Kind string `json:"kind"` // "checks", "findings", "architect", "fail", "owner" or "land"
 	File string `json:"file"`
 }
 
@@ -236,6 +237,9 @@ type Record struct {
 	State            string                   `json:"state"`
 	Round            int                      `json:"round"`
 	Fails            int                      `json:"fails,omitempty"`
+	LandFixes        int                      `json:"land_fixes,omitempty"`   // fix rounds that a blocked landing has had (S119)
+	LandedAt         time.Time                `json:"landed_at,omitzero"`     // when ork landed the slice on the base branch (S119)
+	LandRecheck      bool                     `json:"land_recheck,omitempty"` // the base branch is merged into the slice branch and no green re-check has followed (S119)
 	Reason           string                   `json:"reason,omitempty"`
 	Pending          *Pending                 `json:"pending,omitempty"`
 	Feedback         *Feedback                `json:"feedback,omitempty"`

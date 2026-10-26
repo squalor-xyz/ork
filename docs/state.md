@@ -52,7 +52,8 @@ this file on startup (`registry.no-seed`, adj 157). The first successful
         "implementer": ["Edit", "Write", "Bash(dotnet test*)", "Bash(slicer *)"],
         "reviewer": "read-only"
       },
-      "vendor_env": {"codex": {"VENDOR_CODEX_NETWORK": "1"}}
+      "vendor_env": {"codex": {"VENDOR_CODEX_NETWORK": "1"}},
+      "push": true
     }
   ]
 }
@@ -66,6 +67,11 @@ Notes on the fields:
   the stale flag and goes into briefs.
 - `permissions` is the per-role allowlist (`launch.permissions`). Its exact
   syntax per vendor waits on the vendor spike (design.md).
+- `push` (*proposed*, S119, adj 162) says ork runs `git push` in the main
+  checkout after it lands a slice there. Absent or `false` means ork never
+  pushes (the example turns it on). ork does not write it; the owner sets it by editing the file
+  (docs/manual-steps.md). An older ork refuses a registry with `push` because
+  `Load` uses strict keys.
 - `vendor_env` is shown as an example. The DataBall entry reflects the
   agents repo's note that Codex needs network access for `dotnet test`
   (`agents/setup/lib/workflow-vendor.sh`).
@@ -146,7 +152,7 @@ started. They are not a copy of slicer state. The ledger link is
 `relay_run`, and `orchestrator_step` is ork's own step in it.
 
 `state` is one of `queued`, `setup`, `implement`, `checks`, `review`, `architect`, `gate`,
-`awaiting-approval`, `commit`, `finish`, `committed`, `paused` and `stopped`;
+`awaiting-approval`, `finish`, `commit`, `land`, `committed`, `paused` and `stopped`;
 `committed` and `stopped` are final. `queued` is not final: the run waits for
 a slot under the caps and has no process and no writes. `round` counts implementer rounds and
 `fails` counts gate FAILs. `reason` says why a slice is stopped or paused.
@@ -159,7 +165,21 @@ and `reason` (adj #168). The raw question text is kept alongside it. Older
 records without `ask` continue to use free text. An older ork refuses a
 `run.json` with `ask` because `Store.Open` uses strict keys. `feedback`
 names the file (kind
-`checks`, `findings`, `architect`, `fail` or `owner`) that the next implementer round must act on.
+`checks`, `findings`, `architect`, `fail`, `owner` or `land`) that the next implementer round must act on.
+`land_recheck` (omitted when false; *proposed*, S119) is set before the base
+branch is merged into the slice branch and cleared by the first green re-check
+after that (or when the landing is handed to the fix round); while it is set, a
+retried landing merges the base if it is not in yet, then renders and
+re-checks before it fast-forwards. `landed_at` (omitted until then; *proposed*,
+S119) is when ork fast-forwarded the slice onto the base branch and ran
+`slicer land`; the daemon sends it as `landed: true` on the run's snapshot row,
+with `cleanup_failed` holding `reason` when the cleanup after the landing
+failed (the cleanup key clears that reason).
+`land_fixes` (omitted when 0; *proposed*, S119) counts the fix rounds a blocked
+landing has had; the `land` state allows one (a merge conflict, or a red
+re-check after the base branch was merged in), and a second block stops the run
+with `land blocked: ...`. A run that landed is `committed` with its worktree and
+branch removed; if the cleanup failed, `reason` says so.
 The `architect` state runs only when the lineup includes that role (adj #151),
 after accepted reviewer findings and before the gate (adj #123). Its whole
 report becomes `architect` feedback for a fix round (adj #150).

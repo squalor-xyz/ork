@@ -153,5 +153,25 @@ func (d *Daemon) cleanupRun(ctx context.Context, a RunAction) error {
 			return err
 		}
 	}
-	return nil
+	return d.clearLandReason(rec.ID)
+}
+
+// clearLandReason drops the "cleanup failed" reason of a landed run once the
+// cleanup key removed what the landing left (S119).
+func (d *Daemon) clearLandReason(id string) error {
+	d.runs.mu.Lock()
+	managed := d.runs.runs[id]
+	d.runs.mu.Unlock()
+	if managed != nil && managed.engine != nil {
+		return managed.engine.ClearLandReason()
+	}
+	r, err := d.runs.deps.Store.Open(id)
+	if err != nil {
+		return err
+	}
+	return r.Update(func(rec *runrec.Record) {
+		if !rec.LandedAt.IsZero() && rec.State == runrec.StateCommitted {
+			rec.Reason = ""
+		}
+	})
 }

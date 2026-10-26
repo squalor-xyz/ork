@@ -5,8 +5,10 @@ package tui
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
+	"charm.land/lipgloss/v2"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -63,18 +65,18 @@ func (m *Model) fileHint() string {
 // findingLines tells the owner what the reviewer, UI pass or gate left for
 // them (adj 163): later work to file as a slice, and owner questions that did
 // not block the gate.
-func (m *Model) findingLines(width int) []string {
+func (m *Model) findingLines(width int) (later, owner []string) {
 	run := m.paneRun()
 	if run == nil || run.Unavailable || m.paneQuestion() {
-		return nil
+		return nil, nil
 	}
 	var lines []string
-	if later := m.paneLater(); len(later) > 0 {
+	if offers := m.paneLater(); len(offers) > 0 {
 		noun := "findings"
-		if len(later) == 1 {
+		if len(offers) == 1 {
 			noun = "finding"
 		}
-		lines = append(lines, wrapText(fmt.Sprintf("%d later %s; next to file: %q", len(later), noun, later[0].Title), width)...)
+		lines = append(lines, laterLine(fmt.Sprintf("%d later %s; next to file: ", len(offers), noun), offers[0].Title, width))
 	}
 	var filed []string
 	for _, f := range run.Findings {
@@ -83,8 +85,9 @@ func (m *Model) findingLines(width int) []string {
 		}
 	}
 	if len(filed) > 0 {
-		lines = append(lines, wrapText("Filed as slices: "+strings.Join(filed, ", "), width)...)
+		lines = append(lines, clip("Filed as slices: "+strings.Join(filed, ", "), width))
 	}
+	later, lines = lines, nil
 	for _, f := range run.Findings {
 		if f.Kind != runrec.FindingOwner {
 			continue
@@ -95,7 +98,23 @@ func (m *Model) findingLines(width int) []string {
 		}
 		lines = append(lines, wrapText(text, width)...)
 	}
-	return lines
+	return later, lines
+}
+
+// laterLine is the one line that offers a later finding: the lead, then the
+// title in quotes. A long title is cut inside the quotes, so the line shows
+// whole or, when the pane is short, drops whole (never ends in an open quote).
+func laterLine(lead, title string, width int) string {
+	for n := len([]rune(title)); n > 0; n-- {
+		t := title
+		if n < len([]rune(title)) {
+			t = clip(title, n)
+		}
+		if line := lead + strconv.Quote(t); lipgloss.Width(line) <= width {
+			return line
+		}
+	}
+	return clip(lead, width)
 }
 
 // requestFile asks the owner to confirm filing the first later finding of the

@@ -317,7 +317,10 @@ func (m *Model) paneLines(w, h int, status string) []string {
 		}
 		addFooter(m.cardSummary(card, width), priority)
 	}
-	addFooter(m.findingLines(width), 2)
+	// On a short pane the later findings drop first, then the owner findings.
+	laterLines, ownerLines := m.findingLines(width)
+	addFooter(laterLines, 3)
+	addFooter(ownerLines, 2)
 	switch {
 	case r.unavailable:
 		addFooter(wrapText(source.RemovedProjectHelp(r.name), width), 2)
@@ -405,6 +408,7 @@ func (m *Model) paneLines(w, h int, status string) []string {
 		addFooter(wrapText("enter sends the note to a fix round; esc back to card", width), 0)
 	case card != nil:
 		addFooter(m.cardChecks(card, width), 0)
+		addFooter(wrapText(m.cardLandNote(), width), 1)
 		addFooter(wrapText(m.cardHint(card), width), 1)
 	case r.state == "awaiting-approval":
 		addFooter(wrapText("a approve; x stop; "+m.fileHint()+"esc close pane", width), 3)

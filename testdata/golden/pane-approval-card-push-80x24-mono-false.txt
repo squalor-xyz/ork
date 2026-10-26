@@ -1,0 +1,24 @@
+[1mork[m  ?help         │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[2m  Running        0 [m│[2m────────────────────────────────────────────────────────────[m
+[1;7m> Needs you      1 [m│[1mNeeds you 1[m
+  ork            1 │  [1mApprove 1[m
+                   │[1;7m  +  ork  engine  S22  awaiting-approval  owner action  2...[m
+                   │
+                   │[1mRunning 0[m
+                   │[2m  +7 more lines[m
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │  [1mRun engine  S22  awaiting-approval[m
+                   │  owner action
+                   │  
+                   │  [1mGate PASS (round 1)  Tests: 12 passed, 0 failed[m
+                   │  Diff: 2 files, +48 -4, 1 new file
+                   │  [1mHuman checks[m (3 of 3 open)
+                   │  1 [ ] Open the pane on a running relay and see it move on.
+                   │  2 [ ] Resize to 80x24 and read the card.
+                   │  3 [ ] Press F, type a note and send it.
+                   │  Approve lands and pushes it, then removes its worktree and
+                   │  branch.
+                   │  a approve; F fix round; x stop; 1-3 tick/later; esc close
+                   │  pane
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ 1 project | refreshed 16:42:00

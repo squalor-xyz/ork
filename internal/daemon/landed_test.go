@@ -422,3 +422,61 @@ func TestPruneMergedRunsKeepsActiveRun(t *testing.T) {
 		t.Fatalf("retained=%d err=%v, want active plus 100", len(all), err)
 	}
 }
+
+func landedRun(t *testing.T, store *runrec.Store, p registry.Project, id, reason string) {
+	t.Helper()
+	_, e := store.Create(runrec.Record{ID: id, Project: p.Name, Item: "S63", State: runrec.StateCommitted, Branch: "s63", Worktree: p.Path + "/.worktrees/s63",
+		LandedAt: time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC), Reason: reason})
+	if e != nil {
+		t.Fatal(e)
+	}
+}
+
+// A run that ork landed says so on the wire; one whose cleanup failed carries
+// the reason, and a committed run that ork did not land says neither (S119).
+func TestLandedRunsAreMarkedOnTheWire(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 0, "")
+	committedRun(t, s, p, "plain", "committed")
+	landedRun(t, s, p, "clean", "")
+	landedRun(t, s, p, "dirty", "landed; cleanup failed at git worktree remove X: locked")
+	got := map[string]source.EngineRun{}
+	for _, r := range d.engineRuns(p.Name) {
+		got[r.ID] = r
+	}
+	if r := got["plain"]; r.Landed || r.CleanupFailed != "" {
+		t.Errorf("plain committed run: %+v", r)
+	}
+	if r := got["clean"]; !r.Landed || r.CleanupFailed != "" {
+		t.Errorf("landed run: %+v", r)
+	}
+	if r := got["dirty"]; !r.Landed || r.CleanupFailed != "landed; cleanup failed at git worktree remove X: locked" {
+		t.Errorf("landed run with a failed cleanup: %+v", r)
+	}
+	wire, _ := json.Marshal(got["dirty"])
+	if !strings.Contains(string(wire), `"landed":true`) || !strings.Contains(string(wire), `"cleanup_failed":`) {
+		t.Errorf("wire: %s", wire)
+	}
+}
+
+// The cleanup key that removes what a failed landing cleanup left behind
+// also clears the reason, so the row leaves Ready to land.
+func TestCleanupClearsTheReasonOfALandedRun(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 0, "")
+	landedRun(t, s, p, "run", "landed; cleanup failed at git worktree remove X: locked")
+	refreshHead(t, d, p)
+	if e := cleanupRequest(d); e != nil {
+		t.Fatal(e)
+	}
+	r, e := s.Open("run")
+	if e != nil {
+		t.Fatal(e)
+	}
+	if rec := r.Snapshot(); rec.Reason != "" || rec.LandedAt.IsZero() {
+		t.Errorf("reason %q, landed at %v", rec.Reason, rec.LandedAt)
+	}
+	for _, row := range d.engineRuns(p.Name) {
+		if row.CleanupFailed != "" {
+			t.Errorf("the wire still says the cleanup failed: %+v", row)
+		}
+	}
+}

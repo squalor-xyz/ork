@@ -473,10 +473,14 @@ func TestEveryWriteIsInWritesAndNoReadIs(t *testing.T) {
 	isWrite := func(tool string, args []string) bool {
 		if tool == "git" {
 			a := args[2:] // after -C DIR
-			return a[0] == "worktree" || a[0] == "add" || a[0] == "commit"
+			switch a[0] {
+			case "worktree", "add", "commit", "merge", "branch", "push":
+				return true
+			}
+			return false
 		}
 		switch args[0] {
-		case "note":
+		case "note", "land", "render":
 			return true
 		case "relay-run":
 			return args[1] != "list"
@@ -513,7 +517,7 @@ func TestEveryWriteIsInWritesAndNoReadIs(t *testing.T) {
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("writes[] differs from the calls that change something\n got: %q\nwant: %q", got, want)
 	}
-	if len(got) < 12 {
+	if len(got) < 14 {
 		t.Fatalf("only %d writes: %q", len(got), got)
 	}
 }

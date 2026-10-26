@@ -211,6 +211,13 @@ func (m *Model) recentRows() []ovRow {
 		if !p.loaded || p.setup() || (m.active >= 0 && i != m.active) {
 			continue
 		}
+		// The ledger run of a slice that ork landed reads "landed" (S119).
+		landed := map[string]bool{}
+		for _, run := range p.snap.EngineRuns {
+			if run.Landed && run.RelayRun != "" {
+				landed[run.RelayRun] = true
+			}
+		}
 		for _, r := range p.snap.BoardRuns.Value {
 			at, err := time.Parse(time.RFC3339Nano, r.UpdatedAt)
 			if r.State != "ended" || err != nil || m.cfg.Now().Sub(at) > time.Hour {
@@ -222,6 +229,9 @@ func (m *Model) recentRows() []ovRow {
 			}
 			if r.Outcome == "fail" {
 				glyph = "✗ fail"
+			}
+			if landed[r.ID] && r.Outcome == "pass" {
+				glyph = "✓ landed"
 			}
 			began, _ := time.Parse(time.RFC3339Nano, r.BeganAt)
 			counts := roleCounts(ledgerTreeSteps(r.Steps))

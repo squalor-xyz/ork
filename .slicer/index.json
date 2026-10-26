@@ -524,7 +524,7 @@
       "id": "S119",
       "title": "Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up",
       "short_title": "Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S118"
@@ -536,6 +536,39 @@
           "text": "**2026-10-26** — Landing evidence 2026-10-26: after merging main, S118's and S116's new goldens failed because S110 had changed the sidebar; a rebaseline confined to the sidebar column fixed both. Landing in ork must treat a post-merge test failure like a conflict: send it to an implementer, then re-check.",
           "created_at": "2026-10-26T13:13:09Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "67cf935a-d27f-4c88-bb32-e66eaa702098",
+          "kind": "",
+          "text": "**2026-10-26** — Review FAIL: a retry after a pause between the base merge and a green re-check skips render and re-check and fast-forwards (land.go mergeBaseIn). Fix round sent to the implementer.",
+          "created_at": "2026-10-26T13:45:00Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "b87f8ae3-ee20-4921-a566-6d8e70c66a2a",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answers (2026-10-26, session a2bf7e0e, after gate round 1): (1) a on an Overview row asks a y/n confirm naming landing, cleanup and push before it approves. (2) A per-project landing mutex in the daemon: one landing per project at a time, the next queues. (3) Runs that ork landed leave Ready to land; their outcome shows in Recent. (4) At 80x24 the 'N later finding' lines drop before an owner finding's Recommended line. (5) The owner turns on push for ork after landing (docs/manual-steps.md).",
+          "created_at": "2026-10-26T14:13:06Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "046e5bf9-b1ca-458d-8409-e6eefad40fe4",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answers (session a2bf7e0e, 2026-10-26): the approve confirm matches cleanup, with the question on its own line ('Land S22 and remove its worktree and branch? [y/N] (Enter is No)') and an 80x24 golden. adj 98: the owner will supersede it themselves (launch, stop and Overview approve confirm; the card's a stays one key).",
+          "created_at": "2026-10-26T14:51:09Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -559,7 +592,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

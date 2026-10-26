@@ -111,6 +111,37 @@ func TestApprovalCardShowsVerdictTestsDiffstat(t *testing.T) {
 	}
 }
 
+// Approval is the owner's confirm of the whole landing, so the card says what
+// it does before the owner presses a (S119, adj 162, adj 152).
+func TestApprovalCardSaysApprovalLandsAndCleansUp(t *testing.T) {
+	h := cardHarness(t, approvalCard(openChecksThree()...))
+	v := h.view()
+	if !strings.Contains(v, "Approve lands it, then removes its worktree and branch.") {
+		t.Errorf("the card does not say what approval does:\n%s", v)
+	}
+	// It sits between the human checks and the key line.
+	if i, j, k := strings.Index(v, "Human checks"), strings.Index(v, "Approve lands"), strings.Index(v, "a approve;"); !(i < j && j < k) {
+		t.Errorf("order: checks %d, landing note %d, keys %d:\n%s", i, j, k, v)
+	}
+}
+
+// With the project's push setting on, the line says the landing pushes too.
+func TestApprovalCardSaysApprovalPushesWhenTheProjectPushes(t *testing.T) {
+	h := cardHarness(t, approvalCard(openChecksThree()...))
+	h.m.byName["ork"].reg.Push = true
+	v := h.view()
+	if !strings.Contains(v, "Approve lands and pushes it, then removes its worktree and branch.") {
+		t.Errorf("the card does not say it pushes:\n%s", v)
+	}
+	if strings.Contains(v, "Approve lands it, then") {
+		t.Errorf("the card keeps the no-push line:\n%s", v)
+	}
+	for _, size := range []struct{ w, h int }{{80, 24}, {120, 40}} {
+		h.m.Update(tea.WindowSizeMsg{Width: size.w, Height: size.h})
+		checkGolden(t, fmt.Sprintf("pane-approval-card-push-%dx%d-mono-false.txt", size.w, size.h), h.m.View().Content)
+	}
+}
+
 func TestApprovalCardIsOnlyForARunAwaitingApprovalWithACard(t *testing.T) {
 	for name, tc := range map[string]struct {
 		state string
@@ -373,7 +404,13 @@ func TestApprovalCardGoldens(t *testing.T) {
 				checkGolden(t, fmt.Sprintf("pane-approval-card-%dx%d-mono-%t.txt", size.w, size.h, mono), got)
 				// The card's whole footer fits: verdict, owner finding, checks, keys.
 				plain := sgr.ReplaceAllString(got, "")
-				for _, want := range []string{"Run engine  S22  awaiting-approval", "Gate PASS", "Owner question, not blocking", "Human checks (1 of 3 open)", "[~] " + humanTwo, "a approve; F fix round", "esc close pane"} {
+				// A finding line is shown whole or dropped whole: no line is cut inside a quote.
+				for _, line := range strings.Split(plain, "\n") {
+					if strings.Count(line, `"`)%2 == 1 {
+						t.Errorf("%dx%d: a line ends in an unclosed quote: %q", size.w, size.h, line)
+					}
+				}
+				for _, want := range []string{"Run engine  S22  awaiting-approval", "Gate PASS", "Owner question, not blocking", "Recommended: per-project.", "Human checks (1 of 3 open)", "[~] " + humanTwo, "a approve; F fix round", "esc close pane"} {
 					if !strings.Contains(plain, want) {
 						t.Errorf("%dx%d lacks %q:\n%s", size.w, size.h, want, plain)
 					}

@@ -14,8 +14,10 @@ until then.
 - **Color is never the only signal.** Every colored state also has a word
   or symbol, and there is a monochrome theme.
 - **Show the command.** Every write shows the exact command it will run.
-  Launch or stop asks for confirmation; approve runs on one key
-  (`ui.confirm`). Retry also confirms.
+  Launch or stop asks for confirmation. Retry also confirms. Approve on an
+  Overview row also asks (S119, owner decision 2026-10-26: it lands the slice
+  and cleans up), while the approval card's own `a` runs on one key
+  (`ui.confirm`).
 - **Nothing blocks.** A slow call shows as pending on its row.
 - **Errors verbatim.** A failed CLI call shows its `error.code` and
   message. ork does not guess.
@@ -252,7 +254,8 @@ the text column, falling back to a shorter indent when needed to fit.
    any other outcome, then items, run time,
    `ended N ago`, and counts such as `impl 1  review 1  gate 0`. Empty state: `none`.
    Rows follow Running in cursor order. Enter opens a read-only ledger pane.
-4. **Ready to land:** committed engine runs across projects, or for the
+4. **Ready to land:** committed engine runs that ork did not land, plus a landed run
+   whose cleanup failed (see below), across projects, or for the
    selected project. Each row shows the slice and branch, with
    `slicer land 'ID' --branch 'B' --note 'Landed B'` on its own indented line to
    copy. Ready rows follow Needs you, Running and Recent in the cursor order and
@@ -274,7 +277,13 @@ the text column, falling back to a shorter indent when needed to fit.
    `git -C PATH branch -d BRANCH`. The question is on a separate line.
    Enter is No; `n` cancels; `y` calls `run.cleanup` once (`git.cleanup-key`, adj #152).
    Cleanup never forces removal, merges or lands a branch. Git errors are
-   shown verbatim.
+   shown verbatim. After S119, a run that ork landed itself leaves this list, and
+   its ledger run reads `✓ landed` in Recent instead of `✓ pass`. A run that ork
+   landed but could not clean up stays here. Its row reads `S11  s11  landed
+   cleanup failed`; the line under it is the reason (the failed git command and
+   its error), which is not one of the copy lines, and there is no landing
+   command. Its detail reads `c finishes the cleanup: git -C P worktree remove W;
+   git -C P branch -d B`, and `c` runs it (and clears the reason).
 
 The Overview reads engine runs in the daemon snapshot, using the same builder
 as `ork status` (`ui.engine-runs-read`). An engine row leads with the ork run
@@ -337,11 +346,15 @@ the needs list matches the count (`ui.status-list`, adj #125).
 the *proposed* optional `open:[{id,key,title}]` and `held:[{id,title}]` fields.
 Those fields are omitted when empty.
 
-On the cursor's engine row, `a` approves an awaiting-approval run immediately
-(once its human checks are marked; see the approval card),
-`x` stops a run, and `t` retries a paused run. Stop and retry show the exact
-command (`ork stop RUN` or `ork retry RUN`) in the detail area and ask
-`[y/N] (Enter is No)`. Only `y` confirms; `n`, `esc` and Enter cancel. The
+On the cursor's engine row, `a` approves an awaiting-approval run (once its
+human checks are marked; see the approval card), `x` stops a run, and `t`
+retries a paused run. Stop and retry show the exact command (`ork stop RUN` or
+`ork retry RUN`) in the detail area and ask `[y/N] (Enter is No)`. Approve asks
+the same way and names what the approval does, after the command:
+`ork approve RUN? [y/N] (Enter is No)  y lands ITEM, then removes its worktree
+and branch`, or `y lands and pushes ITEM, then removes its worktree and branch`
+when the project's `push` setting is on. In the pane, on the approval card, `a` still
+approves at once; the card's own line says the same (below). Only `y` confirms; `n`, `esc` and Enter cancel. The
 confirmation keeps its original run target while snapshots change. Approve
 shows `ork approve RUN` as pending, then its result. Calls run asynchronously;
 every completed call refreshes the project's snapshot, and a failed call shows
@@ -470,6 +483,19 @@ the action area under the run tree, in this order:
   slice: `1 [ ] TEXT` open, `2 [x] TEXT` ticked, `3 [~] TEXT (later)` marked
   for later. With no items the line reads `Human checks: none`; if the daemon
   could not read them it reads `Human checks: not read (WHY)`.
+- `Approve lands it, then removes its worktree and branch.` (S119): the
+  approval is the owner's confirm of the landing and its cleanup (adj 162 and
+  adj 152). ork then merges the base branch in if it moved, re-checks, merges
+  into the base branch, pushes when the project's `push` setting is on, and
+  removes the worktree with `git worktree remove` and the branch with `git
+  branch -d`. A blocked landing returns to this card after one fix round, or
+  stops in Needs you with `land blocked: ...` and the worktree kept. When
+  the pane is short, lines drop in this order: the later findings, the owner
+  findings, then the key line (its last wrapped line first), then this line, and
+  the human checks last. When the project's `push` setting is on, it reads
+  `Approve lands and pushes it, then removes its worktree and branch.` (it wraps
+  to two lines at 80x24; the TUI reads the setting from the registry entry); with push off it reads `Approve lands it, then removes its worktree and
+  branch.`
 - The key line: `a approve; F fix round; x stop; 1-N tick/later; f file slice;
   esc close pane`.
 
