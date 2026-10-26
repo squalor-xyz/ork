@@ -53,7 +53,7 @@ func TestDecisionsSecondTabListsDecided(t *testing.T) {
 
 func TestDecisionsAllProjectsMergesAdjProjectsOnly(t *testing.T) {
 	h := decisionsHarness(t)
-	h.send(press("a"))
+	h.send(press("A"))
 	v := h.view()
 	if rowsWith(v, "zeta", "#90") != 1 || rowsWith(v, "alpha", "#91") != 1 || strings.Contains(v, "#92") || strings.Index(v, "#90") >= strings.Index(v, "#91") {
 		t.Fatal(v)
@@ -126,7 +126,7 @@ func TestDecisionsErrorsKeepGoodRows(t *testing.T) {
 	for _, part := range []string{"inbox", "list"} {
 		t.Run(part, func(t *testing.T) {
 			h := decisionsHarness(t)
-			h.send(press("a"))
+			h.send(press("A"))
 			err := &clirun.ToolError{Code: "locked", Message: "Exact failure."}
 			if part == "inbox" {
 				h.m.projects[0].snap.Open.Err = err
@@ -161,28 +161,13 @@ func TestDecisionsLeftRightTabs(t *testing.T) {
 	}
 }
 
-func TestDecisionsLeftRightStillProjectKeysElsewhere(t *testing.T) {
-	for _, view := range []int{0, 2, 3} {
-		h := decisionsHarness(t)
-		h.m.view = view
-		h.send(press("right"))
-		if h.m.active != 1 {
-			t.Fatalf("view %d right did not select project", view)
-		}
-		h.send(press("left"))
-		if h.m.active != 0 {
-			t.Fatalf("view %d left did not select project", view)
-		}
-	}
-}
-
 func TestDecisionsAToggle(t *testing.T) {
 	h := decisionsHarness(t)
-	h.send(press("a"))
+	h.send(press("A"))
 	if !strings.Contains(h.view(), "#91") {
 		t.Fatal(h.view())
 	}
-	h.send(press("a"))
+	h.send(press("A"))
 	if strings.Contains(h.view(), "#91") {
 		t.Fatal(h.view())
 	}
@@ -206,12 +191,12 @@ func TestDecisionsNeedsYouShowsAll(t *testing.T) {
 
 func TestDecisionsFlagPersists(t *testing.T) {
 	h := decisionsHarness(t)
-	h.send(press("a"))
+	h.send(press("A"))
 	h.send(press("2"))
 	if !strings.Contains(h.view(), "#90") {
 		t.Fatal(h.view())
 	}
-	h.send(press("a"))
+	h.send(press("A"))
 	if strings.Contains(h.view(), "#90") || !strings.Contains(h.view(), "#91") {
 		t.Fatal(h.view())
 	}
@@ -311,13 +296,13 @@ func TestDecisionsDetailScrollAndNarrowViews(t *testing.T) {
 func TestDecisionsHelpAndViewCycle(t *testing.T) {
 	h := decisionsHarness(t)
 	h.send(press("?"))
-	for _, want := range []string{"a (Decisions) toggle all projects", "next tab on Decisions", "previous tab on Decisions", "quit"} {
+	for _, want := range []string{"A (Decisions) toggle all projects", "[ previous project", "quit"} {
 		if !strings.Contains(h.view(), want) {
 			t.Fatalf("missing help %q:\n%s", want, h.view())
 		}
 	}
 	h.send(press("esc"))
-	h.send(press("a"))
+	h.send(press("A"))
 	h.send(press("tab"))
 	if h.m.view != 0 {
 		t.Fatal("Decisions did not wrap to Overview")
@@ -338,15 +323,15 @@ func TestDecisionsFixTabAndScopeHierarchy(t *testing.T) {
 	if body[1] != th.Heading.Render("zeta") {
 		t.Errorf("scope heading: %q", body[1])
 	}
-	if body[len(body)-1] != indent+"[left/right] tabs   [a] all projects   [enter] open" {
+	if body[len(body)-1] != indent+"[left/right] tabs   [A] all projects   [enter] open" {
 		t.Errorf("one-project hint: %q", body[len(body)-1])
 	}
-	h.send(press("a"))
+	h.send(press("A"))
 	body = h.m.decisions(72).body
 	if body[1] != th.Heading.Render("All projects using adj") {
 		t.Errorf("all scope heading: %q", body[1])
 	}
-	if body[len(body)-1] != indent+"[left/right] tabs   [a] zeta only   [enter] open" {
+	if body[len(body)-1] != indent+"[left/right] tabs   [A] zeta only   [enter] open" {
 		t.Errorf("all-project hint: %q", body[len(body)-1])
 	}
 	h.m.switchTo(-1)
@@ -358,7 +343,7 @@ func TestDecisionsFixTabAndScopeHierarchy(t *testing.T) {
 
 func TestDecisionsFixRowsClipAndAlign(t *testing.T) {
 	h := decisionsHarness(t)
-	h.send(press("a"))
+	h.send(press("A"))
 	h.m.projects[0].snap.Open.Value[0].Title = strings.Repeat("verylong ", 20) + "HIDDEN TITLE TAIL"
 	body := h.m.decisions(55).body
 	plain := sgr.ReplaceAllString(strings.Join(body, "\n"), "")
@@ -393,7 +378,7 @@ func TestDecisionsFixRowsClipAndAlign(t *testing.T) {
 
 func TestDecisionsFixErrorContinuationHangs(t *testing.T) {
 	h := decisionsHarness(t)
-	h.send(press("a"))
+	h.send(press("A"))
 	h.m.projects[0].snap.Open.Err = &clirun.ToolError{Code: "locked", Message: "Exact failure with several words that must wrap verbatim across lines."}
 	body := h.m.decisions(42).body
 	start := -1
@@ -477,7 +462,7 @@ func TestDecisionsFixHelpIsReadOnlyAndContextual(t *testing.T) {
 	if strings.Contains(help, "a approve") || strings.Contains(help, "add project (Welcome)") {
 		t.Error("Decisions help advertises approve or Add")
 	}
-	footer := "On Decisions, left/right switch tabs; tab to another view to reach Needs you."
+	footer := "On Decisions, left/right switch tabs; [ and ] switch projects."
 	if !strings.Contains(help, footer) || !strings.Contains(help, "1-9 jump to project\n") {
 		t.Error("missing Decisions footer or plain project hint")
 	}

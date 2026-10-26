@@ -25,12 +25,12 @@ until then.
 ## Welcome
 
 With no registered projects, ork opens the Welcome view
-(`registry.no-seed`, adj 157). It says "No projects yet. Press a to add one".
-`a` opens a project path field. Enter with an empty field offers the current
+(`registry.no-seed`, adj 157). It says "No projects yet. Press + to add one".
+`+` opens a project path field. Enter with an empty field offers the current
 directory only when it holds a `.slicer` directory or `.adjudicate.json`
 file. Otherwise the status names the directory: "DIR holds neither .slicer
 nor .adjudicate.json; type a path". The hint asks for an absolute path. Esc
-cancels path entry and returns to "Press a to add one". Typed paths are
+cancels path entry and returns to "Press + to add one". Typed paths are
 trimmed and sent as typed.
 
 The proposed confirm bar shows `ork projects add 'PATH'? [y/N] (Enter is No)`,
@@ -101,15 +101,16 @@ Roadmap and Decisions are selectable.
 entry, above "Needs you", opens a live summary of every project that has a live
 run. It is always shown, so no row moves when a run starts: it carries the
 count of live runs, and with none it is dim and its view says `nothing running`.
-It is reached with the sidebar keys `right`/`left` like any other entry, not
+It is reached with the sidebar keys `]`/`[` like any other entry, not
 with a digit key (`1`-`9` stay the projects, `Jump` is unchanged). "Needs you"
 still starts selected. While the entry is selected the first tab of the view bar
 reads `Overview (Running)`; the view is the Overview's Running section full
 screen, then Recent, with no Needs you or Ready section. Each live run is one
 row in project order: the project, then the item, the stage bar (with ` rN`
-from the second round, as everywhere), the pipeline with the running role in
-brackets, last heard (with the `!` and `!!` cues of the run pane) and the
-ten-bucket activity sparkline. A run that waits on the owner is marked by one
+from the second round, as everywhere), last heard beside the bar (with the `!`
+and `!!` cues of the run pane; S106 moved it ahead of the pipeline), the
+pipeline with the running role in brackets and the ten-bucket activity
+sparkline. A run that waits on the owner is marked by one
 glyph in the mark slot before its project name, as a kind symbol is on
 Needs you: `?` for a paused run that asks the owner, `x` for a stopped one. The
 glyph is the only change to its row, so no row moves or widens. The heading
@@ -153,10 +154,12 @@ When it is selected, its detail line says to run `slicer init`
 The list scrolls to keep selection visible and shows `+N more` for hidden
 rows. Below 100 columns the sidebar narrows; names that do not fit end in
 `...` and keep their badges. `s` hides or shows the sidebar at any width.
-Outside Decisions, keys `right`/`left` move selection and wrap through
-"Running", "Needs you" and the sorted projects. On Decisions they switch the Open and
-Decided tabs; use `1`-`9` to select a project. To reach
-"Needs you" or "Running" by key, leave Decisions with `tab` and use `right`/`left`.
+In every view, keys `]` (next) and `[` (previous) move selection and wrap
+through "Running", "Needs you" and the sorted projects
+(`ui.project-keys`, adj 160). `left` and `right` never change the project:
+they belong to the view's own tabs and fields (the Open and Decided tabs on
+Decisions, the lineup, and text fields such as an answer). Outside those they
+do nothing.
 `1`-`9` select projects in registry order. `tab` and
 `shift+tab` switch views in the order of the view bar (`ui.views`,
 `ui.view-list`). All five views are available: Overview, Questions, Waves,
@@ -166,8 +169,9 @@ keeps the filter and leaves text entry, and `esc` clears it. `r` refreshes the
 selected project, or all projects on "Needs you". `?` shows keys and `q` quits.
 
 The Overview has a row cursor (`ui.overview-cursor`). `down`/`j` and `up`/`k`
-move it to the next and previous row, and so do `n` and `p`. It goes through
-"Needs you", Running and Ready, and it stops at the first and last row. The row
+move it to the next and previous row. It goes through
+"Needs you", Running and Ready, and it stops at the first and last row. `n` and
+`p` do not move rows; `n` is No in a confirmation. The row
 under the cursor is drawn reversed across the pane width. A rule separates
 the rows from its detail. Decisions show status, a nonzero option count and
 the recommended label when present, then the wrapped title. Metadata uses
@@ -231,15 +235,28 @@ the text column, falling back to a shorter indent when needed to fit.
    the run id with no blank label column. When any Running row has a label
    (`> started elsewhere` or `! error`), engine rows keep the padded label
    column so the run ids line up (S33).
-   The *proposed* relay row adds a compact pipeline such as
-   `[implementer]>reviewer>gate` and `heard 2m`. An architect leads when
-   present. `! heard` warns after 15 minutes; `!! heard` marks stale runs.
-   The unselected warning cell uses the warning color. The selected row
-   detail includes the full pipeline and heard cell even when the row drops
-   them. Stale runs stay under Running, dimmed and labelled stale; elapsed time
+   The *proposed* relay row adds `heard 2m` beside the stage bar (and its
+   `rN` from the second round) and then a compact pipeline such as
+   `[implementer]>reviewer>gate` (S106 put heard ahead of the pipeline). An
+   architect leads when present. `! heard` is amber after 10 minutes with no
+   event; `!! heard` is red after 30 minutes, the stale cutoff, and marks stale
+   runs. The unselected cell uses the warning color (amber) or the error color
+   (red); in monochrome the words `!` and `!!` carry the cue, and red is bold.
+   The selected row detail includes the full pipeline and heard cell even when
+   the row drops them. Stale runs stay under Running, dimmed and labelled stale; elapsed time
    freezes at their last event. Engine rows show total `tokens N` only when
-   engine usage is available. Narrow rows drop tokens first, then heard,
-   pipeline, role details and the stage bar, whole. The first item title is not added.
+   engine usage is available. Narrow rows drop tokens first, then pipeline,
+   role details (the `running:` and `failed:` steps), then heard and the stage
+   bar, whole. A heard cell that carries a `!` or `!!` cue outlasts the bar:
+   when the two do not fit, the bar goes and the cue stays (S106). The Running
+   entry is unchanged: it always keeps the bar and drops heard before it. The first
+   item title is not added.
+   *Proposed* (S106): on a terminal narrower than 100 columns, such as 80x24, a
+   run row drops its run ID and the vendor and model of its running step (`running:
+   reviewer codex/gpt-5: task` reads `running: reviewer: task`). The ID
+   stays in the pane title and on the selected row's detail line, and both stay
+   on rows at 100 columns and wider. Until the terminal reports a size the rows
+   are whole.
    For relays started elsewhere, the *proposed* row details (also indented
    under each relay in `ork status`) are `running: ROLE VENDOR/MODEL: TASK`
    for the last step in ledger order with phase `start` (a working subagent
@@ -363,14 +380,26 @@ retry. Launch is available from the Roadmap ready list described below.
 
 ### Run detail pane
 
-`enter` opens the cursor's run below the Overview. The pane keeps that run's
-ID while snapshots reorder the rows. It shows the full `wait` reason before
+`enter` opens the cursor's run inline under its row (*proposed*, S106): the
+rows after it move down, so no blank lines come before the pane and the
+sections keep their order, "Needs you" first (`ui.overview-layout`, adj 149).
+It sits under the row's landing commands on a Ready row and under the Running
+entry's row on that entry. The pane keeps that run's
+ID while snapshots reorder the rows, and stays under that run's row even when
+the cursor is on another. If the run has left the snapshot the pane stays under
+the cursor. Every pane line is indented four columns, so the pane sits inside
+its row, and its title is "Run" and the run ID alone, in the row title style
+(bold), not the section heading's colour: the row above names the item and the
+stage. The Questions tab, with no row above its pane, keeps the full header.
+The body scrolls to the pane's last line, and the pane takes at
+most `height - 10` lines (`height - 7` under 24 lines), so its row and the
+rows around it stay on screen. It shows the full `wait` reason before
 the run tree. `pgup` and `pgdown` scroll the reason and tree while the action
 area stays visible. `esc` closes the pane (`ui.answer-ui`,
 `ui.answer-pane-keys`, `ui.run-tree`). Ledger runs started elsewhere open a
-read-only tree pane with no action keys or answer input. Its header says
-"started elsewhere". Its footer says
-"started elsewhere, read-only; esc close pane".
+read-only tree pane with no action keys or answer input. Its footer says
+"started elsewhere, read-only; esc close pane" (the inline header is the run ID
+alone).
 
 The pane follows the newest running run (*proposed*, S109). When the pane's
 run is over (an engine run that is stopped, superseded or committed, or a
@@ -593,10 +622,10 @@ The "All projects" heading states the scope. A kind column marks engine
 rows "? question", adj rows "? decision", pending rows "~ pending", and
 errors "! error". Nonempty lists end with `[enter] open`.
 
-The proposed row keys (`down`/`j`/`n` and `up`/`k`/`p`) move the cursor.
+The proposed row keys (`down`/`j` and `up`/`k`) move the cursor.
 In record detail, they scroll; `pgup` and `pgdown` scroll a page.
 The list always shows all projects. Sidebar selection, project filtering and
-left/right project keys do not change it. There is no scope toggle.
+`[`/`]` project keys do not change it. There is no scope toggle.
 `a`, `x`, `t` and `c` have no action on the list or read-only record detail.
 The engine pane behaves as on Overview. It keeps its answer typing and
 submit keys. If the run changes state while the pane is open, its approve,
@@ -685,7 +714,7 @@ column. Each role shows its primary entry and a dim `+N fallbacks` line
 under the values; `e` keeps the full chain available.
 The column fits its longest line, capped at half the pane width. Long
 primary entries wrap within the column.
-`down`/`j`/`n` and `up`/`k`/`p` move between items. Unplaced items can also
+`down`/`j` and `up`/`k` move between items. Unplaced items can also
 be ticked.
 
 Two or more ticked items trigger an overlap read. Each shared path gets a
@@ -800,7 +829,7 @@ or committed run uses that state word and the neutral glyph.
 Elapsed time advances from the injected clock for running steps and stops at
 `updated_at` for finished steps. Task text is dim, clipped to the pane width,
 and starts four columns past its node's glyph. The run header uses the
-heading style.
+row title style (bold), not the section heading's colour (S106).
 
 S07 adds a stage bar, a pulsing running cell and an activity sparkline.
 S99 adds live assistant output and usage (see below). Worktree diff stats,
@@ -834,7 +863,7 @@ It lists only open items with a slice included by `slicer deps`, in slicer
 list order. Each row shows id, short title (or title), size and effort.
 There is no claim check (record 140). A Deps error leaves nothing launchable.
 An empty list says "No ready slices". Without a daemon, launch says
-"No daemon connection; action unavailable". Up/down, j/k and n/p move through
+"No daemon connection; action unavailable". Up/down and j/k move through
 the list. `enter` picks a slice; `esc` cancels.
 
 Launch asks "Well specified? [y/n]:" and then "Split? [y/n]:". Neither has a
@@ -864,8 +893,8 @@ recommendation. The active tab uses the view heading style, distinct from the
 record cursor. The scope heading names the project or says
 `All projects using adj`. The final body line lists the tab, scope and
 open-record keys. On "Needs you", it omits the scope toggle hint. `left` and
-`right` switch the Open and Decided tabs. `a`
-toggles between the selected project and all projects that use adj. The toggle
+`right` switch the Open and Decided tabs; `[` and `]` switch projects. `A`
+(shift-a) toggles between the selected project and all projects that use adj. The toggle
 persists when switching projects. With "Needs you" selected, Decisions shows
 all projects that use adj. A project without adj shows `no adj in this project`.
 If no registered project uses adj, the all-projects view says `No project uses adj`.
@@ -875,7 +904,7 @@ name in scope, capped at 20 columns. Each record takes one line, with a clipped
 title. The cursor highlights the whole line. Tradeoffs and recommendation text
 are dimmed and indented under their labels. Rows follow registry order. Within
 each project, Open keeps `adj inbox` order (oldest first) and Decided keeps
-`adj list` order. `down`/`j`/`n` and `up`/`k`/`p` move the record cursor.
+`adj list` order. `down`/`j` and `up`/`k` move the record cursor.
 `enter` opens the record from the snapshot, including options, recommendation,
 decision, rationale and history; `esc` returns. The detail has project and record
 headings, indented body text and a separate History heading. Row keys scroll
@@ -896,9 +925,13 @@ it colors finished roles green, running cyan, failed red, and waiting dim.
 The running role uses brackets only for live, non-stale runs. In monochrome
 failed is bold and waiting is dim; passed is not bold. Warning text is plain
 with the `!` cue and no underline. `round N` counts implementer steps, appears
-only when positive, and drops first when narrow. For live runs, `last heard
-N ago` is dim through 15 minutes, warning after 15 minutes, and error for a
-stale run. Ended, stopped, paused and committed runs have a dim pipeline,
+only when positive, and drops first when narrow. It is right-aligned on the
+pipeline line only for round 1: from round 2 the bar's own `rN` says it and the
+pane's pipeline line carries no round (S106). For live runs, `last heard
+N ago` is dim through 10 minutes, amber (the warning color) past 10 minutes,
+and red (the error color) past 30 minutes or for a stale run; the cue is `!` for
+amber and `!!` for red, so monochrome keeps it. It sits on the bar's line, after
+the bar and its round (S106). Ended, stopped, paused and committed runs have a dim pipeline,
 no waiting rows. Their last-heard age stays dim, with no warning. A
 live run adds waiting rows only for pipeline roles with no lane step;
 queued steps keep their existing tree row. Waiting rows share the tree's
@@ -914,7 +947,8 @@ cell: done `##`, waiting `..`, failed `!!`, and running `~~`, `~=`, `==`, `=~`.
 The normal order is implementer, reviewer, gate; an architect leads when
 present. A new implementer round reopens its cell and resets earlier reviewer,
 gate and architect steps to waiting. `rN` follows the bar from round 2 on
-(`r2`, `r3`).
+(`r2`, `r3`), and last heard follows the round on the same line (S106); a pane
+too narrow for both keeps last heard on a line of its own.
 The pipeline also resets earlier-round results. Finished cells never pulse.
 Stopped, paused, stale and ended runs freeze the running cell at `~~` and
 show no sparkline.
@@ -977,8 +1011,8 @@ Finished roles append recorded usage to their node line; that whole suffix
 drops first when narrow. An interrupted role in a stopped run also uses the
 node suffix: missing recorded usage and cost show `tokens -  $-`, with no
 live tail. A failed gate's verdict stays directly under its node, before any
-separate usage or task line. The pane scrolls while retaining space for the
-Overview headings at 80x24.
+separate usage or task line. The pane scrolls inside its own lines, which sit under their row with the
+Overview rows around them (S106).
 
 Running roles show `$-` until their round ends. Vendors with no cost field,
 including Codex, show `$-` after completion too; zero stored cost does not

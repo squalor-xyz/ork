@@ -4,8 +4,8 @@
   [2mnothing needs you[m
 
 [1mRunning 2[m
-  [1m> started elsewhere[m  ork  s97  S97  active  20m  [##~~..]  running: reviewer  implementer>[reviewer]>gate  ! heard 16m
-  [2m> started elsewhere[m  ork  [2mstale  S97  stale  20m  [##~~..]  running: reviewer  implementer>reviewer>gate  [m[1m!! heard 30m[m
+  [1m> started elsewhere[m  ork  s97  S97  active  20m  [##~~..]  ! heard 16m  running: reviewer  implementer>[reviewer]>gate
+  [2m> started elsewhere[m  ork  [2mstale  S97  stale  20m  [##~~..]  [m[1m!! heard 30m[m[2m  running: reviewer  implementer>reviewer>gate[m
 
 [1mRecent[m
 [1;7m    ork  ✗ fail  S94  10m  ended 5m ago  impl 1  review 1  gate 0                                                       [m

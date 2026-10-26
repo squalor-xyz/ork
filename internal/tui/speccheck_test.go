@@ -270,9 +270,9 @@ func TestWavesStaleSpecCheckAfterNavigation(t *testing.T) {
 	questionsForB(l)
 	twoWaveItems(t, h)
 	_, cmd := h.m.Update(press("l"))
-	stale := cmd()            // the daemon has answered, and the reply is on its way
-	h.deliver(press("right")) // another project: the waves state is dropped
-	h.deliver(press("left"))  // and a fresh one for the first project
+	stale := cmd()        // the daemon has answered, and the reply is on its way
+	h.deliver(press("]")) // another project: the waves state is dropped
+	h.deliver(press("[")) // and a fresh one for the first project
 	tickWave(t, h, "y", "n")
 	h.deliver(press("down"))
 	tickWave(t, h, "y", "n")

@@ -1,0 +1,39 @@
+{
+  "id": "S146",
+  "title": "S106 later notes: compact fit-test, pane and cue edge cases, tokens line",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Later notes from the S106 relay (run-20261026-134141-a7c2, landed f5a2769), not fixed in that slice:\n- Fit-test for the compact layout: switch by whether the row fits instead of the fixed 100-column threshold (owner kept 100 for S106, fit-test later).\n- The A2 fallback pane lands between a Ready row and its commands when the run has left the snapshot.\n- The sidebar Running entry can still hide a stall cue at 80x24; when room fits the bar but not the cue, neither shows.\n- No golden with three or more Needs you rows and the pane open at 80x24.\n- S66 hit-testing must allow for the inline pane.\n- An empty \"tokens - $-\" line shows for a running step.\n- The detail footer wraps mid-phrase (predates S106).\n- The Questions-tab title test calls paneLines directly instead of rendering the view.\n- `internal/tui/follow_test.go` changed in S106 round 3 but was not in its Files list.\nCross-references: S101 (run id already dropped below 100 columns), S130 (pane height now documented in docs/dashboard.md), S145 (Running rows at a glance; touches the same rows)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/overview.go`, `internal/tui/relayboard.go`, `internal/tui/pane.go`, `internal/tui/view.go`.\n- Tests: `internal/tui/runcard_test.go`, `internal/tui/pane_test.go`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": "Triage first: some notes may be folded into S145 or S101. Spec each kept note with a failing test before building."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- slicer check"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -83,7 +83,7 @@ func (m *Model) welcomeKey(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 	switch msg.String() {
-	case "a":
+	case "+":
 		m.showHelp = false
 		w.editing = true
 		m.actionStatus = ""
@@ -108,7 +108,7 @@ func hasProjectMarker(path string) bool {
 
 func (m *Model) welcomeBody(width int) []string {
 	th := m.cfg.Theme
-	lines := []string{indent + th.Heading.Render("Welcome"), "", indent + "No projects yet. Press a to add one"}
+	lines := []string{indent + th.Heading.Render("Welcome"), "", indent + "No projects yet. Press + to add one"}
 	if m.welcome.editing {
 		value := m.welcome.field.view(max(width-len(indent)-14, 1), th)
 		if m.welcome.confirm != "" || m.welcome.pending {

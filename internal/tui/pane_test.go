@@ -243,7 +243,7 @@ func TestPaneAnswerOtherRun(t *testing.T) {
 	s.EngineRuns = append(s.EngineRuns, source.EngineRun{ID: "other", Item: "S23", State: "awaiting-approval"})
 	h.src.set(s)
 	h.m.apply(snapshotMsg{name: "ork", snap: s})
-	h.deliver(press("n"))
+	h.deliver(press("down"))
 	h.deliver(press("a"))
 	if v := h.view(); !strings.Contains(v, "S23  commit") {
 		t.Fatalf("pending answer blocked a different run:\n%s", v)
@@ -289,7 +289,7 @@ func TestPaneMessageCursorMove(t *testing.T) {
 	h.src.set(s)
 	h.m.apply(snapshotMsg{name: "ork", snap: s})
 	h.deliver(press("a"))
-	h.deliver(press("n"))
+	h.deliver(press("down"))
 	if v := h.view(); strings.Contains(v, "approve needs") {
 		t.Fatalf("previous row message lingered after cursor move:\n%s", v)
 	}
@@ -321,7 +321,7 @@ func TestPaneLateResult(t *testing.T) {
 			s.EngineRuns = append(s.EngineRuns, source.EngineRun{ID: "other", Item: "S23", State: tc.state})
 			h.src.set(s)
 			h.m.apply(snapshotMsg{name: "ork", snap: s})
-			h.deliver(press("n"))
+			h.deliver(press("down"))
 			h.deliver(cmd())
 			if v := h.view(); strings.Contains(v, "ork "+tc.verb+" engine") {
 				t.Fatalf("late result appeared on another row:\n%s", v)

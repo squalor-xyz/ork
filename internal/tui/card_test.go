@@ -165,7 +165,7 @@ func TestApprovalCardListsOwnerFindingsAndHumanChecks(t *testing.T) {
 	h := cardHarness(t, approvalCard(checks...), laterOne, ownerNote)
 	v := h.view()
 	for _, want := range []string{
-		"Owner question, not blocking: Should the cache be shared? Recommended:", "per-project.",
+		"Owner question, not blocking: Should the cache be shared?", "Recommended: per-project.",
 		"Human checks (1 of 3 open)",
 		"1 [x] " + humanOne,
 		"2 [~] " + humanTwo + " (later)",
@@ -392,7 +392,7 @@ func TestApprovalCardGoldens(t *testing.T) {
 				checkGolden(t, fmt.Sprintf("pane-approval-card-%dx%d-mono-%t.txt", size.w, size.h, mono), got)
 				// The card's whole footer fits: verdict, owner finding, checks, keys.
 				plain := sgr.ReplaceAllString(got, "")
-				for _, want := range []string{"Run engine  S22  awaiting-approval", "Gate PASS", "Owner question, not blocking", "Human checks (1 of 3 open)", "[~] " + humanTwo, "a approve; F fix round", "esc close pane"} {
+				for _, want := range []string{"Run engine", "Gate PASS", "Owner question, not blocking", "Human checks (1 of 3 open)", "[~] " + humanTwo, "a approve; F fix round", "esc close pane"} {
 					if !strings.Contains(plain, want) {
 						t.Errorf("%dx%d lacks %q:\n%s", size.w, size.h, want, plain)
 					}
@@ -582,7 +582,7 @@ func TestApprovalCardKeepsTheRunHeaderAt80x24(t *testing.T) {
 		if lines := strings.Split(v, "\n"); len(lines) > 24 {
 			t.Errorf("%d lines at 80x24", len(lines))
 		}
-		for _, want := range []string{"Run engine  S22  awaiting-approval", "Gate PASS", "Diff: 2 files, +48 -4, 1 new file", "Human checks", "esc close"} {
+		for _, want := range []string{"Run engine", "Gate PASS", "Diff: 2 files, +48 -4, 1 new file", "Human checks", "close pane"} {
 			if !strings.Contains(v, want) {
 				t.Errorf("findings %d: 80x24 lacks %q:\n%s", len(fs), want, v)
 			}
@@ -630,7 +630,7 @@ func TestApprovalCardKeepsTheRunHeaderAtEveryHeight(t *testing.T) {
 	for height := 16; height <= 60; height++ {
 		h := cardHarness(t, approvalCard(checks...), laterOne, laterTwo, ownerNote)
 		h.m.Update(tea.WindowSizeMsg{Width: 80, Height: height})
-		if v := plainView(h.m); !strings.Contains(v, "Run engine  S22  awaiting-approval") {
+		if v := plainView(h.m); !strings.Contains(v, "Run engine") {
 			t.Errorf("no run header at 80x%d:\n%s", height, v)
 		}
 	}

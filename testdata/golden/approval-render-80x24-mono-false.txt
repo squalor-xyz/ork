@@ -1,6 +1,6 @@
 [1mork[m  ?help         │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
 [90m  Running        0 [m│[90m────────────────────────────────────────────────────────────[m
-[1;7;97;44m> Needs you      1 [m│  [1;36mRun engine  S22  awaiting-approval[m
+[1;7;97;44m> Needs you      1 [m│  [1mRun engine  S22  awaiting-approval[m
   ork            1 │  [90m──────────────────────────────────────────────────────────[m
                    │  LAUNCH-80 first line
                    │  second line
@@ -17,7 +17,7 @@
                    │
                    │
                    │
-                   │  
+                   │
                    │  [1;36mRender 1 of 3: launch-80x24.txt[m
                    │  v next; s sidebar; pgup/pgdown scroll; esc back to card
                    │[90m────────────────────────────────────────────────────────────[m

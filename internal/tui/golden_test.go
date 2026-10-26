@@ -135,7 +135,7 @@ func TestGoldenCutRowsAndSelectedDetail(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			m := goldenModel(NewTheme(c.mono), c.w, c.h)
 			for i := 0; i < c.down; i++ {
-				m.Update(press("n"))
+				m.Update(press("down"))
 			}
 			checkGolden(t, c.name, m.View().Content)
 		})

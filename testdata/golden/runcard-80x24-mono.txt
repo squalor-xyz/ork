@@ -1,0 +1,24 @@
+[1mork[m  ?help         │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+  Running        1 │[2m────────────────────────────────────────────────────────────[m
+[1;7m> Needs you      2 [m│[1mNeeds you 2[m
+  ork            2*│  [1mDecisions 2[m
+                   │  [1m?[m  ork  #11  ui.first   First?
+                   │  [1m?[m  ork  #12  ui.second  Second?
+                   │
+                   │[1mRunning 1[m
+                   │[1;7m   ork  S30  review  10m  [~~....] r2  heard 2m             [m
+                   │    [1mRun ork-20261019-164000-abcd[m
+                   │    [~~....] r2  [2mlast heard 2m ago[m
+                   │    [implementer] > [2mreviewer[m > [2mgate[m
+                   │    [2mactivity ▁▂▂▄█▃▁▂▅▂  last 5m[m
+                   │    [2m+ implementer done  3m  claude round 1  tokens 0  $0.00[m
+                   │    [2m+ reviewer    done  2m  claude round 1  tokens 0  $0.00[m
+                   │    [1m| implementer start 2m  claude round 2 x2[m
+                   │    [2m    tokens -  $-[m
+                   │    [2m. gate        waiting[m
+                   │
+                   │    x stop; esc close pane
+                   │
+                   │[2m  +5 more lines[m
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ 1 project | refreshed 16:42:00

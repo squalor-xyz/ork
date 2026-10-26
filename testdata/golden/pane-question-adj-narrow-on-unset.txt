@@ -1,8 +1,8 @@
-  [1;36mRun engine  S22  paused[m
+  [1mRun engine  S22  paused[m
   owner action
   [90m[......][m
   [90mimplementer[m > [90mreviewer[m > [90mgate[m
-  
+
   Answer: [1m[m[1;7;97;44m [m[1m[m
   ork answer engine ''
   [1;36m[x] file answer in adj as[m

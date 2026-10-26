@@ -273,14 +273,14 @@ func TestTabKeysSwitchTheProject(t *testing.T) {
 		t.Fatalf("first tab = %s", got)
 	}
 	steps := []struct{ k, want string }{
-		{"right", "slicer"},
-		{"right", "adjudicate"},
-		{"left", "slicer"},
-		{"left", "Needs"},
-		{"left", "Running"},
-		{"left", "agents"},
-		{"right", "Running"},
-		{"right", "Needs"},
+		{"]", "slicer"},
+		{"]", "adjudicate"},
+		{"[", "slicer"},
+		{"[", "Needs"},
+		{"[", "Running"},
+		{"[", "agents"},
+		{"]", "Running"},
+		{"]", "Needs"},
 		{"3", "DataBall"},
 		{"9", "DataBall"}, // no such tab
 		{"0", "DataBall"},
@@ -303,7 +303,7 @@ func TestViewKeysDoNotMoveTheProject(t *testing.T) {
 			h := newHarness(t, four...)
 			h.src.set(snap(four[0], []adjcli.Record{openRec(11, "a.one", "first question"), openRec(12, "a.two", "second question")}, nil))
 			h.start()
-			h.send(press("n"))
+			h.send(press("down"))
 			if h.m.cursor != 1 {
 				t.Fatalf("cursor = %d after n, want 1", h.m.cursor)
 			}
@@ -375,7 +375,7 @@ func TestHelpKeyTogglesTheHelp(t *testing.T) {
 	}
 	h.send(press("?"))
 	v := h.view()
-	for _, want := range []string{"tab next view", "shift+tab previous view", "right next project", "left previous project", "jump to project", "down/j/n next row", "up/k/p previous row", "refresh now", "quit"} {
+	for _, want := range []string{"tab next view", "shift+tab previous view", "] next project", "[ previous project", "jump to project", "down/j next row", "up/k previous row", "refresh now", "quit"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("help lacks %q:\n%s", want, v)
 		}
@@ -397,7 +397,7 @@ func TestRefreshKeyRefreshesTheVisibleProjectNow(t *testing.T) {
 	h.send(press("1"))
 	h.src.take()
 	h.advance(time.Second) // nothing is due
-	h.send(press("right"))
+	h.send(press("]"))
 	h.send(press("r"))
 	if got := h.src.take(); !reflect.DeepEqual(got, []string{"adjudicate"}) {
 		t.Fatalf("calls after r = %v", got)
@@ -541,7 +541,7 @@ func TestFailedCallShowsItsCodeAndMessageVerbatim(t *testing.T) {
 	if got := detailText(h.m, 72); got != "items: no_such_item: No such item: NOPE." {
 		t.Errorf("the items error is not on the detail line: %q", got)
 	}
-	h.send(press("n"))
+	h.send(press("down"))
 	if got := detailText(h.m, 72); got != "runs: slicer relay-run list: exit 3: weird  spacing, 100% \"quoted\"" {
 		t.Errorf("the runs error is not verbatim on the detail line: %q", got)
 	}
@@ -622,25 +622,25 @@ func TestRowCursorMovesThroughTheRows(t *testing.T) {
 	if !reversed(h.m, "#11  a.one") || reversed(h.m, "#12  a.two") {
 		t.Errorf("the cursor row is not the reversed one")
 	}
-	h.send(press("n"))
+	h.send(press("down"))
 	if got := detailText(h.m, 72); got != "#12 open second question" {
 		t.Fatalf("n did not move to the second row: %q", got)
 	}
 	if reversed(h.m, "#11  a.one") || !reversed(h.m, "#12  a.two") {
 		t.Errorf("the reverse does not follow the cursor")
 	}
-	h.send(press("n"))
+	h.send(press("down"))
 	if got := detailText(h.m, 72); !strings.HasPrefix(got, "run-1  S01") {
 		t.Fatalf("n did not move to the run row: %q", got)
 	}
-	h.send(press("n"))
+	h.send(press("down"))
 	if h.m.cursor != 2 {
 		t.Errorf("the cursor went past the last row: stored %d, want 2", h.m.cursor)
 	}
 	if got := detailText(h.m, 72); !strings.HasPrefix(got, "run-1  S01") {
 		t.Errorf("the cursor left the last row: %q", got)
 	}
-	h.send(press("p"))
+	h.send(press("up"))
 	if got := detailText(h.m, 72); !strings.HasPrefix(got, "#12 open") {
 		t.Errorf("p did not move back: %q", got)
 	}
@@ -655,15 +655,15 @@ func TestProjectKeysResetTheRowCursor(t *testing.T) {
 	h := newHarness(t, four...)
 	h.src.set(snap(four[0], []adjcli.Record{openRec(11, "a.one", "first question"), openRec(12, "a.two", "second question")}, nil))
 	h.start()
-	h.send(press("n"))
+	h.send(press("down"))
 	if h.m.cursor != 1 {
 		t.Fatalf("cursor = %d after n, want 1", h.m.cursor)
 	}
-	h.send(press("right")) // to slicer
+	h.send(press("]")) // to slicer
 	if h.m.active != 0 || h.m.cursor != 0 {
 		t.Errorf("right: active %d, cursor %d; want slicer's first row", h.m.active, h.m.cursor)
 	}
-	h.send(press("left")) // back to Needs you
+	h.send(press("[")) // back to Needs you
 	if h.m.active != -1 || h.m.cursor != 0 {
 		t.Errorf("left: active %d, cursor %d; want Needs you's first row", h.m.active, h.m.cursor)
 	}
@@ -706,13 +706,11 @@ func TestNavigationKeysDoWhatTheHelpSays(t *testing.T) {
 		{"j", "Needs", "run-1  S01"},
 		{"up", "Needs", "#11 open"},
 		{"k", "Needs", "#11 open"},
-		{"n", "Needs", "run-1  S01"},
-		{"p", "Needs", "#11 open"},
 		{"tab", "Needs", "#12 open"},
 		{"shift+tab", "Needs", "#12 open"},
-		{"right", "slicer", "#11 open"},
+		{"]", "slicer", "#11 open"},
 		{"2", "adjudicate", ""},
-		{"left", "Running", ""},
+		{"[", "Running", ""},
 		{"9", "Needs", "#12 open"},
 	} {
 		t.Run(tc.key, func(t *testing.T) {
@@ -754,7 +752,7 @@ func TestDownReachesAStoppedRunForEnter(t *testing.T) {
 		t.Fatalf("down did not move the cursor to the stopped run: %q", got)
 	}
 	h.send(press("enter"))
-	if v := h.view(); !strings.Contains(v, "Run engine  S21  stopped") || !strings.Contains(v, "Stopped; relaunch, or clear with: ork dismiss engine") {
+	if v := h.view(); !strings.Contains(v, "Run engine") || !strings.Contains(v, "Stopped; relaunch, or clear with: ork dismiss engine") {
 		t.Fatalf("enter did not open the stopped run's pane:\n%s", v)
 	}
 }
@@ -767,14 +765,16 @@ func TestDashboardDocsListTheNavigationKeys(t *testing.T) {
 	}
 	s := strings.Join(strings.Fields(string(b)), " ")
 	for _, want := range []string{
-		"Outside Decisions, keys `right`/`left` move selection and wrap through \"Running\", \"Needs you\" and the sorted projects.",
+		"In every view, keys `]` (next) and `[` (previous) move selection and wrap through \"Running\", \"Needs you\" and the sorted projects",
+		"`left` and `right` never change the project",
 		"The first sidebar entry, above \"Needs you\", opens a live summary of every project that has a live run.",
 		"`1`-`9` select projects in registry order.",
 		"`tab` and `shift+tab` switch views",
 		"`space` ticks or unticks the selected item",
 		"`e` edits the selected ticked item",
 		"`l` launches the ticked items with one y/n confirmation",
-		"`down`/`j` and `up`/`k` move it to the next and previous row, and so do `n` and `p`",
+		"`down`/`j` and `up`/`k` move it to the next and previous row.",
+		"`n` and `p` do not move rows; `n` is No in a confirmation.",
 	} {
 		if !strings.Contains(s, want) {
 			t.Errorf("dashboard.md lacks %q", want)
@@ -826,13 +826,14 @@ func TestSelectedRowShowsItsFullTextOnTheDetailLine(t *testing.T) {
 }
 
 // A run's ID stays whole when its row is cut: the rest of the row goes first.
+// A terminal narrower than 100 columns drops the ID from the row instead (S106).
 func TestRunRowCutsItsRestBeforeItsID(t *testing.T) {
 	const id = "run-20261019-004308-40d4"
 	h := newHarness(t, four...)
 	h.src.set(snap(four[0], nil, nil, relay(id, "2026-10-19T15:42:00Z", "S01", "S02")))
 	h.start()
 	h.send(press("s"))
-	h.send(tea.WindowSizeMsg{Width: 80, Height: 30})
+	h.send(tea.WindowSizeMsg{Width: 100, Height: 30})
 	v := plainView(h.m)
 	row := ""
 	for _, l := range strings.Split(v, "\n") {
@@ -849,7 +850,7 @@ func TestRunRowCutsItsRestBeforeItsID(t *testing.T) {
 	if strings.Contains(row, "1h00m") {
 		t.Errorf("the elapsed time, cut last, is on the row: %q", row)
 	}
-	if got := detailText(h.m, 80); !strings.Contains(got, id+"  S01,S02  active, 2 of 6 steps running  1h00m") {
+	if got := detailText(h.m, 100); !strings.Contains(got, id+"  S01,S02  active, 2 of 6 steps running  1h00m") {
 		t.Errorf("the detail line lacks the full run text: %q", got)
 	}
 }
@@ -866,7 +867,7 @@ func TestCursorScrollsToTheSelectedRow(t *testing.T) {
 	h.start()
 	h.send(tea.WindowSizeMsg{Width: 100, Height: 12})
 	for i := 0; i < 14; i++ {
-		h.send(press("n"))
+		h.send(press("down"))
 	}
 	v := plainView(h.m)
 	if rowsWith(v, "?", "question 15") != 1 {
@@ -1348,6 +1349,8 @@ func TestExternalRunsShowStartedElsewhereAndOfferNoActions(t *testing.T) {
 	}
 }
 
+// The row holds the whole run ID or none of it: at 100 columns and wider all of
+// it, below that (S106) none, with the whole ID on the detail line.
 func TestRunIDIsNeverClipped(t *testing.T) {
 	const id = "run-20261019-004308-40d4"
 	for _, w := range []int{100, 80, 60} {
@@ -1365,8 +1368,14 @@ func TestRunIDIsNeverClipped(t *testing.T) {
 				row = l
 			}
 		}
-		if !strings.Contains(row, id) {
-			t.Errorf("width %d: the run ID is cut from its row: %q\n%s", w, row, v)
+		if strings.Contains(row, id) != (w >= 100) {
+			t.Errorf("width %d: the run ID is in the row only from 100 columns: %q\n%s", w, row, v)
+		}
+		if strings.Contains(row, "run-") && !strings.Contains(row, id) {
+			t.Errorf("width %d: the run ID is cut in the row: %q", w, row)
+		}
+		if got := detailText(h.m, w); !strings.Contains(got, id) {
+			t.Errorf("width %d: the detail line lacks the whole run ID: %q", w, got)
 		}
 	}
 }

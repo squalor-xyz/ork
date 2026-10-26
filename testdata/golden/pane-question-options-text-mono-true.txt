@@ -3,6 +3,14 @@
 [1;7m> Needs you              1 [m│[1mNeeds you 1[m
   ork                    1 │  [1mPaused 1[m
                            │[1;7m  ?  ork  engine  S22  paused                                           [m
+                           │    [1mRun engine[m
+                           │    [2m[......][m
+                           │    [2mimplementer[m > [2mreviewer[m > [2mgate[m
+                           │
+                           │    Answer: [1mcustom[m[1;7m [m[1m[m
+                           │    ork answer engine 'custom'
+                           │    [2madj filing off: no adj in this project[m
+                           │    enter submit; esc back to options
                            │
                            │[1mRunning 1[m  [1m! owner questions 1[m
                            │  [1m> started elsewhere[m  ork  ledger  S22  active, 2 of 6 steps running...
@@ -17,14 +25,6 @@
                            │
                            │
                            │
-                           │[2m────────────────────────────────────────────────────────────────────────[m
-                           │  [1mRun engine  S22  paused[m
-                           │  [2m[......][m
-                           │  [2mimplementer[m > [2mreviewer[m > [2mgate[m
-                           │  
-                           │  Answer: [1mcustom[m[1;7m [m[1m[m
-                           │  ork answer engine 'custom'
-                           │  [2madj filing off: no adj in this project[m
-                           │  enter submit; esc back to options
+                           │
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │ 1 project | refreshed 16:42:00

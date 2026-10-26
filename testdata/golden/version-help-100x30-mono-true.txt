@@ -3,15 +3,15 @@
 [1;7m> Needs you              6 [m│[1mKeys[m
   slicer                 3*│tab next view
   adjudicate             1 │shift+tab previous view
-  DataBall                 │right next project; next tab on Decisions
-  agents                   │left previous project; previous tab on Decisions
+  DataBall                 │] next project
+  agents                   │[ previous project
                            │1-9 jump to project
-                           │down/j/n next row
-                           │up/k/p previous row
+                           │down/j next row
+                           │up/k previous row
                            │enter open run, question, item or decision; other rows select project
                            │/ filter projects; esc clears
                            │s hide/show sidebar
-                           │a add project (Welcome)
+                           │+ add project (Welcome)
                            │space tick item and ask inputs (Waves)
                            │e edit ticked item lineup (Waves)
                            │l launch a ready slice (Roadmap) or wave (Waves)

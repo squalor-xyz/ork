@@ -1087,8 +1087,8 @@ Each step is usable or testable on its own:
 
 Running rows and the run pane show slicer's relay board information
 (`slicer/docs/tui.md:183-270`). The compact row pipeline marks the running
-role in brackets and adds last heard with `!` after 15 minutes and `!!`
-for stale runs. Stale runs stay visible and freeze elapsed time at their
+role in brackets and adds last heard beside the bar with `!` after 10 minutes and `!!`
+after 30 minutes (the stale cutoff) or for stale runs. Stale runs stay visible and freeze elapsed time at their
 last event. The pane keeps the S55 tree and adds the colored role pipeline,
 implementer round count, last heard, waiting roles, repeated role counts,
 and failed-gate reasons. Engine-only panes derive these from role records.
@@ -1108,8 +1108,8 @@ a read-only ended-run pane. Run duration and ended age use `begun_at` and
 ### Live role activity (S07)
 
 The Overview puts the ASCII stage bar after elapsed time. Narrow rows drop
-tokens, heard, pipeline, role details, then the bar. The pane puts the bar above the
-pipeline and the ten-cell activity sparkline below last heard. The bar measures
+tokens, pipeline, role details, heard, then the bar. The pane puts the bar above the
+pipeline, with last heard on the bar's line, and the ten-cell activity sparkline below. The bar measures
 completed roles, with an architect cell when present; a fix round resets roles
 whose latest steps precede the new implementer step. A running cell pulses
 through `~~`, `~=`, `==`, `=~`; stopped, paused, stale and ended runs freeze at

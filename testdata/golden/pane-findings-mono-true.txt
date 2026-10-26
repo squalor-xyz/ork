@@ -3,6 +3,18 @@
 [1;7m> Needs you              1 [m│[1mNeeds you 1[m
   ork                    1 │  [1mApprove 1[m
                            │[1;7m  +  ork  engine  S22  awaiting-approval  owner action  2 of 6 steps ...[m
+                           │    [1mRun engine[m
+                           │    owner action
+                           │    [......]
+                           │    [2mimplementer[m > [2mreviewer[m > [2mgate[m
+                           │    [2m. implementer waiting[m
+                           │    [2m. reviewer    waiting[m
+                           │    [2m. gate        waiting[m
+                           │
+                           │    2 later findings; next to file: "Add a --json flag to ork status"
+                           │    Owner question, not blocking: Should the cache be shared?
+                           │    Recommended: per-project.
+                           │    a approve; x stop; f file slice; esc close pane
                            │
                            │[1mRunning 0[m
                            │  [2mnothing running[m
@@ -13,18 +25,6 @@
                            │[1mReady to land[m
                            │  [2mnone[m
                            │
-                           │[2m────────────────────────────────────────────────────────────────────────[m
-                           │  [1mRun engine  S22  awaiting-approval[m
-                           │  owner action
-                           │  [......]
-                           │  [2mimplementer[m > [2mreviewer[m > [2mgate[m
-                           │  [2m. implementer waiting[m
-                           │  [2m. reviewer    waiting[m
-                           │  [2m. gate        waiting[m
-                           │  
-                           │  2 later findings; next to file: "Add a --json flag to ork status"
-                           │  Owner question, not blocking: Should the cache be shared? Recommended:
-                           │  per-project.
-                           │  a approve; x stop; f file slice; esc close pane
+                           │
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │ 1 project | refreshed 16:42:00

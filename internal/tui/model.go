@@ -555,7 +555,7 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		m.allProjects = !m.allProjects
 		m.decisionsCursor = 0
 		m.decisionPane = nil
-	case m.view == decisionsView && key.Matches(msg, m.keys.Next, m.keys.Prev):
+	case m.view == decisionsView && key.Matches(msg, m.keys.TabNext, m.keys.TabPrev):
 		m.decisionsTab = 1 - m.decisionsTab
 		m.decisionsCursor = 0
 		m.decisionPane = nil

@@ -116,18 +116,36 @@ func (m *Model) screen() string {
 			status = m.confirm.prompt()
 		}
 		if m.pane != nil {
-			// At standard terminal heights retain six Overview rows; tiny
-			// terminals still give the pane's input and errors their priority.
-			paneHeight := max(h-6, 1)
+			// The pane opens inline under its row (S106), so it takes no
+			// detail lines. At standard terminal heights retain six Overview
+			// rows; tiny terminals still give the pane's input and errors their
+			// priority, and leave its row and the scroll markers a line each.
+			paneHeight := max(h-7, 1)
 			if h >= 24 {
-				paneHeight = max(h-11, 1)
+				paneHeight = max(h-10, 1)
 			}
 			// A render on show takes the whole body: the Overview rows above
-			// the pane give way.
+			// the pane give way, so the pane leaves its row for the detail.
 			if collapse = m.renderOn() > 0; collapse {
-				paneHeight = max(h-4, 1)
+				detail = m.paneLines(mainW, max(h-4, 1), status)
+			} else {
+				// Four columns in, the pane sits inside its row (S106).
+				pane := m.paneLinesAs(max(mainW-len(indent), 1), paneHeight, status, true)
+				for i := range pane {
+					if pane[i] != "" {
+						pane[i] = indent + pane[i]
+					}
+				}
+				at := ov.paneAt
+				if at < 0 {
+					at = ov.sel // the pane's run left the rows: keep it under the cursor
+				}
+				at = min(max(at, -1), len(body)-1)
+				body = append(append(append([]string(nil), body[:at+1]...), pane...), body[at+1:]...)
+				detail = nil
+				// Scroll to the pane's last line; its row is a few lines above.
+				ov.sel = at + len(pane)
 			}
-			detail = m.paneLines(mainW, paneHeight, status)
 		} else if status != "" {
 			detail = wrapText(status, max(mainW-len(indent), 1))
 			if m.confirm != nil && m.confirm.verb == "cleanup" {
@@ -166,7 +184,7 @@ func (m *Model) screen() string {
 		bodyH = max(bodyH-len(footer), 1)
 	}
 	if overviewBody {
-		if r, ok := m.selectedRow(); ok && r.ready && bodyH >= len(r.commands)+2 {
+		if r, ok := m.selectedRow(); ok && r.ready && m.pane == nil && bodyH >= len(r.commands)+2 {
 			selectedLine += len(r.commands)
 		}
 	}
@@ -456,7 +474,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			if h.Key == m.keys.AllProjects.Help().Key && m.view != decisionsView {
 				continue
 			}
-			if h.Key == m.keys.Add.Help().Key && (h.Desc == m.keys.Add.Help().Desc || h.Desc == m.keys.Approve.Help().Desc) && (m.view == decisionsView || m.view == questionsView) {
+			if (h == m.keys.Add.Help() || h == m.keys.Approve.Help()) && (m.view == decisionsView || m.view == questionsView) {
 				continue
 			}
 			if m.view == questionsView && m.pane == nil &&
@@ -479,7 +497,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 		}
 	}
 	if m.view == decisionsView {
-		lines = append(lines, wrapText("On Decisions, left/right switch tabs; tab to another view to reach Needs you.", max(w, 1))...)
+		lines = append(lines, wrapText("On Decisions, left/right switch tabs; [ and ] switch projects.", max(w, 1))...)
 	}
 	lines = append(lines, "", clip("Overview, Questions, Waves, Roadmap and Decisions are available.", w))
 	mark := brand.Mark(!th.Mono, m.cfg.ASCII)

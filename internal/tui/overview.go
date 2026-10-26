@@ -66,6 +66,7 @@ type ovRow struct {
 	merged            bool
 	mergeKnown        bool
 	branch, worktree  string
+	compact           bool     // a run row on a narrow terminal drops its run ID and vendor/model
 	live              *liveRun // a live run's board cells, for the Running entry
 	detailCells       []string // a live run's detail line, wrapped between cells
 }
@@ -84,12 +85,35 @@ type liveRun struct {
 type relayRowPart struct {
 	header string
 	text   string
+	// The part without its vendor/model column, which a compact row shows
+	// instead; empty when the part has none.
+	shortHeader, shortText string
+}
+
+// in is the part's header and text in a row that is compact or not.
+func (p relayRowPart) in(compact bool) (header, text string) {
+	if compact && p.shortText != "" {
+		return p.shortHeader, p.shortText
+	}
+	return p.header, p.text
+}
+
+// compactWidth is the terminal width below which a run row drops its run ID and
+// the vendor/model column (S106). It is the width that already narrows the
+// sidebar. The pane title and the selected row's detail keep both.
+const compactWidth = 100
+
+// compact reports whether the terminal is narrower than compactWidth. Before the
+// terminal reports its size the rows stay whole.
+func (m *Model) compact() bool {
+	return m.width > 0 && m.width < compactWidth
 }
 
 // rows lists Needs you and Running. recentRows and then readyRows follow
 // them in the Overview cursor order. The lists do not depend on the width.
 func (m *Model) rows() (needs, running []ovRow) {
 	th := m.cfg.Theme
+	compact := m.compact()
 	for i, p := range m.projects {
 		if m.active >= 0 && i != m.active {
 			continue
@@ -182,7 +206,7 @@ func (m *Model) rows() (needs, running []ovRow) {
 				parts = append(parts, elapsed(end.Sub(began)))
 			}
 			rest := strings.Join(parts, "  ")
-			row := ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: r.Item + "  " + rest, text: r.ID + "  " + r.Item + "  " + rest, dim: linkedStale != nil}
+			row := ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: r.Item + "  " + rest, text: r.ID + "  " + r.Item + "  " + rest, dim: linkedStale != nil, compact: compact}
 			ledger, steps := engineBoard(r)
 			for _, linked := range boardLedgers(s) {
 				if r.RelayRun != "" && linked.ID == r.RelayRun {
@@ -203,7 +227,8 @@ func (m *Model) rows() (needs, running []ovRow) {
 				row.stepParts = m.boardRowParts(ledger, steps)
 				if r.UsageKnown || r.Tokens != 0 {
 					tokenText := fmt.Sprintf("tokens %d", r.Tokens)
-					// Trailing cells drop first: tokens, heard, pipeline, then bar.
+					// Trailing cells drop first: tokens, pipeline, heard, then bar. A heard
+					// cue (! or !!) outlasts the bar (rowText).
 					row.stepParts = append(row.stepParts, relayRowPart{header: tokenText, text: tokenText})
 				}
 				for _, part := range row.stepParts {
@@ -244,8 +269,10 @@ func (m *Model) rows() (needs, running []ovRow) {
 			if rest != "" {
 				text = id + "  " + rest
 			}
+			// The bar and last heard lead; the pipeline follows the running step.
 			boardParts := m.boardRowParts(r, ledgerTreeSteps(r.Steps))
-			steps = append(append([]relayRowPart{boardParts[0]}, steps...), boardParts[1:]...)
+			last := len(boardParts) - 1
+			steps = append(append(append([]relayRowPart(nil), boardParts[:last]...), steps...), boardParts[last:]...)
 			for _, step := range steps {
 				text += "  " + step.text
 			}
@@ -254,7 +281,7 @@ func (m *Model) rows() (needs, running []ovRow) {
 				style = th.Dim
 			}
 			running = append(running, ovRow{ledgerID: r.ID, state: r.State, kind: kindExternal, style: style, kindW: len(kindExternal), project: i, name: name,
-				text: text, id: id, rest: rest, stepParts: steps, dim: r.State == "stale",
+				text: text, id: id, rest: rest, stepParts: steps, dim: r.State == "stale", compact: compact,
 				live: &liveRun{item: strings.Join(r.Items, ","), ledger: r, steps: ledgerTreeSteps(r.Steps)}})
 		}
 	}
@@ -338,6 +365,18 @@ type overviewView struct {
 	body   []string
 	sel    int
 	detail []string
+	paneAt int // the body line the open run pane goes under (S106); -1 when none
+}
+
+// isPaneRow reports whether r is the row of the open run pane.
+func (m *Model) isPaneRow(r ovRow) bool {
+	if m.pane == nil || r.name != m.pane.project {
+		return false
+	}
+	if m.pane.ledger {
+		return r.ledgerID == m.pane.run
+	}
+	return r.engineID == m.pane.run
 }
 
 // overview is the Overview screen for all projects, or for the selected one:
@@ -370,7 +409,7 @@ func (m *Model) overview(w int) overviewView {
 	}
 
 	var lines []string
-	sel := -1
+	sel, paneAt := -1, -1
 	section := func(rows []ovRow, first int, empty string) {
 		if len(rows) == 0 {
 			lines = append(lines, indent+th.Dim.Render(empty))
@@ -399,6 +438,9 @@ func (m *Model) overview(w int) overviewView {
 					prefix = indent + indent + indent
 				}
 				lines = append(lines, prefix+clip(command, w-len(prefix)))
+			}
+			if m.isPaneRow(r) {
+				paneAt = len(lines) - 1
 			}
 		}
 	}
@@ -440,7 +482,7 @@ func (m *Model) overview(w int) overviewView {
 	ready := m.readyRows()
 	section(ready, len(needs)+len(running)+len(recent), "none")
 
-	ov := overviewView{body: lines, sel: sel}
+	ov := overviewView{body: lines, sel: sel, paneAt: paneAt}
 	switch {
 	case m.active >= 0 && m.projects[m.active].setup():
 		// The hint is the detail line of a selected project with no rows.
@@ -558,30 +600,57 @@ func rowText(r ovRow, room int) string {
 	if r.id == "" {
 		return clip(r.text, room)
 	}
-	avail := room - lipgloss.Width(r.id) - 2
+	// A compact row starts at its text: the run ID is in the pane title and in
+	// the detail line of the selected row.
+	head, gap := r.id, "  "
+	if r.compact && r.rest != "" {
+		head, gap = "", ""
+	}
+	avail := room - lipgloss.Width(head) - len(gap)
 	switch {
 	case r.rest == "":
 		return r.id
 	case lipgloss.Width(r.rest) <= avail:
-		text := r.id + "  " + r.rest
-		for _, part := range r.stepParts {
+		text := head + gap + r.rest
+		for _, part := range outlastBar(r.stepParts, room-lipgloss.Width(text)) {
+			header, partText := part.in(r.compact)
 			available := room - lipgloss.Width(text) - 2
-			required := lipgloss.Width(part.header)
-			if part.text != part.header {
+			required := lipgloss.Width(header)
+			if partText != header {
 				// Keep at least three task columns plus the ellipsis, or a whole
 				// shorter task. The label, role and vendor/model are never cut.
-				required += 2 + min(6, lipgloss.Width(part.text)-lipgloss.Width(part.header)-2)
+				required += 2 + min(6, lipgloss.Width(partText)-lipgloss.Width(header)-2)
 			}
 			if available < required {
 				break
 			}
-			text += "  " + clip(part.text, available)
+			text += "  " + clip(partText, available)
 		}
 		return text
 	case avail < 4:
+		if head == "" {
+			return clip(r.rest, room)
+		}
 		return r.id
 	}
-	return r.id + "  " + clip(r.rest, avail)
+	return head + gap + clip(r.rest, avail)
+}
+
+// outlastBar keeps a heard cue (! or !!) on a row that has room for it but not
+// for the bar and the cue together: the bar, the first part, goes instead. A
+// heard cell without a cue drops with the trailing cells, before the bar.
+func outlastBar(parts []relayRowPart, room int) []relayRowPart {
+	if len(parts) < 2 {
+		return parts
+	}
+	heard := parts[1].text
+	if !strings.HasPrefix(heard, "! heard ") && !strings.HasPrefix(heard, "!! heard ") {
+		return parts
+	}
+	if lipgloss.Width(parts[0].text)+2+lipgloss.Width(heard)+2 <= room {
+		return parts
+	}
+	return parts[1:]
 }
 
 // detailLines wraps a Ready row's full commands, or another row's full text,
@@ -650,8 +719,15 @@ func runParts(r slicercli.RelayRun, now time.Time) (id, rest string, steps []rel
 		step := selected.step
 		summary := daemon.RelayStep{Role: step.Role, Vendor: step.Vendor, Model: step.Model, Task: step.Task, Phase: step.Phase}
 		text := daemon.FormatRelayStep(selected.label, summary)
+		part := relayRowPart{text: text}
 		summary.Task = ""
-		steps = append(steps, relayRowPart{header: daemon.FormatRelayStep(selected.label, summary), text: text})
+		part.header = daemon.FormatRelayStep(selected.label, summary)
+		// The compact variant drops only the vendor and model.
+		summary.Vendor, summary.Model = "", ""
+		part.shortHeader = daemon.FormatRelayStep(selected.label, summary)
+		summary.Task = step.Task
+		part.shortText = daemon.FormatRelayStep(selected.label, summary)
+		steps = append(steps, part)
 	}
 	return r.ID, strings.Join(parts, "  "), steps
 }
@@ -979,7 +1055,7 @@ func (m *Model) runningOverview(w int) overviewView {
 		heading += "  " + th.Error.Render(fmt.Sprintf("x stopped %d", stops))
 	}
 	lines := []string{heading}
-	sel := -1
+	sel, paneAt := -1, -1
 	if live == 0 {
 		lines = append(lines, indent+th.Dim.Render("nothing running"))
 	}
@@ -992,6 +1068,9 @@ func (m *Model) runningOverview(w int) overviewView {
 		} else {
 			lines = append(lines, m.rowLine(r, i == cursor, nameW, w))
 		}
+		if m.isPaneRow(r) {
+			paneAt = len(lines) - 1
+		}
 	}
 	lines = append(lines, "", th.Heading.Render("Recent"))
 	if len(recent) == 0 {
@@ -1002,8 +1081,11 @@ func (m *Model) runningOverview(w int) overviewView {
 			sel = len(lines)
 		}
 		lines = append(lines, m.rowLine(r, len(running)+i == cursor, nameW, w))
+		if m.isPaneRow(r) {
+			paneAt = len(lines) - 1
+		}
 	}
-	ov := overviewView{body: lines, sel: sel}
+	ov := overviewView{body: lines, sel: sel, paneAt: paneAt}
 	if cursor >= 0 {
 		vertical, _ := th.rules(m.cfg.ASCII)
 		ov.detail = detailLines(all[cursor], w, vertical)
@@ -1105,14 +1187,15 @@ func (m *Model) runningLine(r ovRow, selected bool, nameW, w int, l liveLayout) 
 	}
 	plain := lipgloss.NewStyle()
 	cols := []col{{t.item, l.itemW, th.Title}, {t.bar, l.barW, plain}}
+	// Last heard follows the bar, which carries the round from its second.
+	if l.heard {
+		cols = append(cols, col{t.heard, l.heardW, t.heardStyle})
+	}
 	switch {
 	case l.pipeline:
 		cols = append(cols, col{t.pipeline, l.pipelineW, plain})
 	case l.roleW > 0:
 		cols = append(cols, col{t.role, l.roleW, plain})
-	}
-	if l.heard {
-		cols = append(cols, col{t.heard, l.heardW, t.heardStyle})
 	}
 	if l.spark {
 		cols = append(cols, col{t.spark, l.sparkW, th.Dim})

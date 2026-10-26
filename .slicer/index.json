@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 144,
+  "next_id": 147,
   "preamble": "",
   "passes": [
     {
@@ -1325,7 +1325,7 @@
       "id": "S105",
       "title": "Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases",
       "short_title": "Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -1358,19 +1358,42 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S106",
       "title": "Run card: the pane inline under the row, round and last heard beside the bar, stall colours, 80x24 drops",
       "short_title": "Run card inline",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S84"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "129e4cd0-d94d-48c6-b7e7-5ce12bcb490f",
+          "kind": "",
+          "text": "**2026-10-26** — Review FAIL: docs/dashboard.md:791-792 still says the run header uses the heading style; code uses Theme.Title.",
+          "created_at": "2026-10-26T14:17:27Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "0326d16b-583d-441f-8dc5-19d81881e3c1",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answers (session a2bf7e0e, 2026-10-26): (1) drop the pipeline-line 'round N' whenever the bar shows rN; (2) inline pane title becomes 'Run <id>' only; (3) keep the fixed 100-column compact threshold; fit-test is a later note.",
+          "created_at": "2026-10-26T14:21:27Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -1388,7 +1411,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -4638,7 +4661,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "1459f441-755f-48ce-a1a2-c773786bc2dd",
+          "kind": "",
+          "text": "**2026-10-26** — From S119's relay (2026-10-26): after an in-ork landing the branch is deleted, so daemon/landed.go errors, the run is never pruned, and it stays under Ready to land with stale copy commands. Treat a committed run whose branch is gone and whose Commit.SHA is in HEAD as landed. Keep a cleanup-failed row visible with its reason. Also: a landing fix round runs after the ledger run ended, so its relay-run steps are rejected (run_ended); decide whether it begins a new relay run.",
+          "created_at": "2026-10-26T14:13:06Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -5258,6 +5293,92 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S144",
+      "title": "Key follow-ups: status nudge for [ and ], Waves show-all on A, help wording and hidden tab help",
+      "short_title": "Key follow-ups: status nudge for [ and ], Waves show-all on A, help wording and hidden tab help",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S105",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S145",
+      "title": "Running rows at a glance: slice title, working role, fix round, last heard, latest output line",
+      "short_title": "Running rows at a glance",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S106"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S146",
+      "title": "S106 later notes: compact fit-test, pane and cue edge cases, tokens line",
+      "short_title": "S106 later notes",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }

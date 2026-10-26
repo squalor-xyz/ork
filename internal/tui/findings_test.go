@@ -70,7 +70,7 @@ func TestPaneOffersLaterFindingsAsSlices(t *testing.T) {
 	if !strings.Contains(v, `2 later findings; next to file: "Add a --json flag to ork status"`) || strings.Contains(v, "f files") {
 		t.Errorf("pane does not count the later findings, or names the key twice:\n%s", v)
 	}
-	if !strings.Contains(v, "Owner question, not blocking: Should the cache be shared? Recommended:") || !strings.Contains(v, "per-project.") {
+	if !strings.Contains(v, "Owner question, not blocking: Should the cache be shared?") || !strings.Contains(v, "Recommended: per-project.") {
 		t.Errorf("pane lacks the owner question line:\n%s", v)
 	}
 }
@@ -110,7 +110,7 @@ func TestPaneFileWhileOneIsPendingIsRefused(t *testing.T) {
 	h.m.Update(press("f"))
 	h.m.Update(press("y")) // hold the returned command: the call stays in flight
 	_, cmd := h.m.Update(press("f"))
-	if v := h.view(); cmd != nil || !strings.Contains(v, "--discovered-from S22 is") || h.m.confirm != nil {
+	if v := h.view(); cmd != nil || !strings.Contains(v, "--discovered-from S22") || !strings.Contains(v, "is pending") || h.m.confirm != nil {
 		t.Fatalf("a second filing was not refused while the first is in flight:\n%s", v)
 	}
 }

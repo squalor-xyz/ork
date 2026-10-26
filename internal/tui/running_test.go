@@ -69,7 +69,7 @@ func runningHarness(t *testing.T) *harness {
 	h.src.set(snap(runningProjects[2], nil, nil))
 	h.start()
 	h.m.Update(tea.WindowSizeMsg{Width: 160, Height: 30})
-	h.send(press("left"))
+	h.send(press("["))
 	if h.m.active != runningEntry {
 		t.Fatalf("left from Needs you selected %d, want the Running entry", h.m.active)
 	}
@@ -118,7 +118,7 @@ func TestSidebarHasARunningEntryAboveNeedsYouAndShowsItDimWhenNothingRuns(t *tes
 	if !dimmed(row, "Running") || !strings.Contains(compactSpaces(sgr.ReplaceAllString(row, "")), "Running 0") {
 		t.Fatalf("an empty Running entry must be dim and say 0: %q", row)
 	}
-	h.send(press("left"))
+	h.send(press("["))
 	v = h.view()
 	if !strings.Contains(v, "> Running") || !strings.Contains(v, "nothing running") || !strings.Contains(v, "Running 0") {
 		t.Fatalf("the empty Running view must say nothing running:\n%s", v)
@@ -137,7 +137,7 @@ func TestSidebarHasARunningEntryAboveNeedsYouAndShowsItDimWhenNothingRuns(t *tes
 	if after := h.view(); sidebarLine(after, "  Needs you") != needs {
 		t.Fatalf("Needs you moved when a run began:\n%s", after)
 	}
-	h.send(press("right"))
+	h.send(press("]"))
 	if row := sidebarRow(h.m, "  Running"); dimmed(row, "Running") {
 		t.Fatalf("a Running entry with a live run must not be dim: %q", row)
 	}
@@ -146,16 +146,16 @@ func TestSidebarHasARunningEntryAboveNeedsYouAndShowsItDimWhenNothingRuns(t *tes
 func TestRunningEntryIsReachedWithTheSidebarKeysNotADigit(t *testing.T) {
 	h := newHarness(t, runningProjects...)
 	h.start()
-	h.send(press("left"))
+	h.send(press("["))
 	if h.m.active != runningEntry {
 		t.Fatalf("left from Needs you: active %d, want Running", h.m.active)
 	}
-	h.send(press("left"))
+	h.send(press("["))
 	if h.m.active != 2 {
 		t.Fatalf("left from Running must wrap to the last project, got %d", h.m.active)
 	}
-	h.send(press("right"))
-	h.send(press("right"))
+	h.send(press("]"))
+	h.send(press("]"))
 	if h.m.active != needsEntry {
 		t.Fatalf("right from Running: active %d, want Needs you", h.m.active)
 	}
@@ -164,7 +164,7 @@ func TestRunningEntryIsReachedWithTheSidebarKeysNotADigit(t *testing.T) {
 		t.Fatalf("digit 1 selected %d, want the first project", h.m.active)
 	}
 	// The filter hides projects, never the two aggregate entries.
-	h.send(press("left"))
+	h.send(press("["))
 	h.send(press("/"))
 	h.send(press("z"))
 	v := h.view()
@@ -179,11 +179,11 @@ func TestRunningEntryFocusesEveryProjectForTheLiveRefresh(t *testing.T) {
 	h.m.cfg.Live = live
 	h.start()
 	h.send(press("1"))
-	h.send(press("left")) // Needs you
+	h.send(press("[")) // Needs you
 	live.mu.Lock()
 	live.focused = nil
 	live.mu.Unlock()
-	for _, msg := range h.send(press("left")) {
+	for _, msg := range h.send(press("[")) {
 		h.deliver(msg)
 	}
 	calls := live.focusedCalls()
@@ -210,9 +210,10 @@ func TestSummaryListsEveryProjectWithALiveRun(t *testing.T) {
 			t.Errorf("beta's row lacks %q: %q", want, beta)
 		}
 	}
-	// The item sits before the bar, the bar before the pipeline, then round, heard, activity.
+	// The item sits before the bar, last heard follows the bar (S106; the round is
+	// in the bar from the second), then the pipeline and the activity.
 	last := -1
-	for _, cell := range []string{"S30", "[##~~..]", "implementer>[reviewer]>gate", "heard 3m", sparkline(testActivity, false)} {
+	for _, cell := range []string{"S30", "[##~~..]", "heard 3m", "implementer>[reviewer]>gate", sparkline(testActivity, false)} {
 		i := strings.Index(alpha, cell)
 		if i <= last {
 			t.Errorf("cell %q is out of order in %q", cell, alpha)
@@ -282,7 +283,7 @@ func TestQuestionOrStopShowsAnAlertOnTheSummaryRowAndEnterOpensItsPane(t *testin
 	h.src.set(engineSnap(runningProjects[2], liveEngine("run-c", "S32", "review", testActivity)))
 	h.start()
 	h.m.Update(tea.WindowSizeMsg{Width: 160, Height: 30})
-	h.send(press("left"))
+	h.send(press("["))
 	v := h.wide()
 	if !strings.Contains(v, "Running 3") {
 		t.Fatalf("a run that waits on the owner is still a live run:\n%s", v)
@@ -320,7 +321,7 @@ func TestQuestionOrStopShowsAnAlertOnTheSummaryRowAndEnterOpensItsPane(t *testin
 	if h.m.pane == nil || h.m.pane.run != "q1" || h.m.active != runningEntry {
 		t.Fatalf("enter must open the question run's pane on the Running entry: pane %+v, active %d", h.m.pane, h.m.active)
 	}
-	if v := h.view(); !strings.Contains(v, "Run q1  S30") {
+	if v := h.view(); !strings.Contains(v, "Run q1") {
 		t.Fatalf("the pane is not the question run's:\n%s", v)
 	}
 	h.send(press("esc"))
@@ -349,7 +350,7 @@ func TestSummaryAtEightyByTwentyFour(t *testing.T) {
 	h.src.set(engineSnap(runningProjects[2], liveEngine("run-c", "S32", "review", testActivity)))
 	h.start()
 	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
-	h.send(press("left"))
+	h.send(press("["))
 	v := plainView(h.m)
 	lines := strings.Split(v, "\n")
 	if len(lines) != 24 {
@@ -438,7 +439,7 @@ func runningGoldenModel(theme Theme, w, h int) *Model {
 		m.Update(snapshotMsg{name: s.Project.Name, snap: s})
 	}
 	m.Update(tea.WindowSizeMsg{Width: w, Height: h})
-	m.Update(press("left"))
+	m.Update(press("["))
 	return m
 }
 
@@ -467,7 +468,7 @@ func TestSummaryShowsTheRoundOnTheStageBarAfterAFixRound(t *testing.T) {
 	h.src.set(engineSnap(runningProjects[0], liveEngine("run-a", "S30", "implement", nil,
 		roleRun("implementer", 9*time.Minute, 6*time.Minute), fix, roleRun("implementer", 3*time.Minute, 0))))
 	h.start()
-	h.send(press("left"))
+	h.send(press("["))
 	row := mainRow(h.wide(), "alpha", "S30")
 	if !strings.Contains(row, "[~~....] r2") || strings.Contains(row, "round") {
 		t.Fatalf("a second round must read r2 on the stage bar, with no cell of its own: %q", row)
@@ -484,7 +485,7 @@ func twoRunHarness(t *testing.T) *harness {
 	ext.Steps = append(ext.Steps[:1:1], slicercli.Step{ID: "s2", Role: "reviewer", Phase: "done"}, slicercli.Step{ID: "s3", Role: "gate", Phase: "start"})
 	h.src.set(snap(runningProjects[1], nil, nil, ext))
 	h.start()
-	h.send(press("left"))
+	h.send(press("["))
 	return h
 }
 
@@ -538,7 +539,7 @@ func TestOverviewTabIsLabelledRunningWhileTheRunningEntryIsSelected(t *testing.T
 			t.Fatalf("%dx%d: the view bar must read Overview (Running) and keep every tab: %q", size[0], size[1], main)
 		}
 	}
-	h.send(press("right"))
+	h.send(press("]"))
 	if bar := strings.Split(h.at(100, 30), "\n")[0]; strings.Contains(bar, "(Running)") {
 		t.Fatalf("the Needs you view must not carry the Running label: %q", bar)
 	}

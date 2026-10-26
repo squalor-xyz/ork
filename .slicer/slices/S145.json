@@ -1,0 +1,39 @@
+{
+  "id": "S145",
+  "title": "Running rows at a glance: slice title, working role, fix round, last heard, latest output line",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner, 2026-10-26 (session a2bf7e0e, screenshot of Overview with three relays running): \"should be easier to see the running stuff at a glance, instead of having to click into each one\". Each Running row shows \"started elsewhere\", the run id, the slice id, \"active, 2 of 8 steps running\", the age, the bar and rN. It does not say which slice by name, which role is working, or what that role is doing. The rN label read r4 on all three runs, but none had four fix rounds: rN counts implementer steps (`internal/tui/progress.go:56`), so the finish step and resumed steps inflate it.\n\nOwner decisions (2026-10-26, session a2bf7e0e, picked in an interactive question):\n- Two lines per run. Line 1: slice id, slice short title, the role working now with its model, the round, the stage bar, and last heard. Line 2: that role's latest output line. The run id and \"started elsewhere\" move to the pane.\n- The round counts review rounds, shown as words (\"fix 2\", \"gate\") instead of rN. Fix the count in this slice."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/overview.go`, `internal/tui/relayboard.go`, `internal/tui/progress.go`, `internal/tui/pane.go`.\n- Tests: `internal/tui/relayboard_test.go`, `internal/tui/running_test.go`, `internal/tui/runcard_test.go`.\n- Goldens: `testdata/golden/overview-*.txt`, `board-*.txt`, `running-*.txt`, `runcard-*.txt`, `cut-80x24-color.txt`.\n- Docs: `docs/dashboard.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestRunningRowNamesSliceRoleAndModel: line 1 shows the slice short title and the running role with its model, not \"started elsewhere\" or the run id.\n- TestRunningRowShowsLatestOutputLine: line 2 shows the working role's last output line; it is omitted when there is none.\n- TestRoundCountsReviewRounds: a run with one review, two fix rounds and a finish step reads \"fix 2\", not r4; a gate step reads \"gate\".\n- TestRunIdStaysInPane: the pane title still names the run id.\n- Golden views at 100x30 and 80x24 with three running runs."
+    },
+    {
+      "heading": "Implement",
+      "body": "Re-anchor after S106 lands (it rewrites the same rows and the bar's round).\n1. Tests first.\n2. Line 1: slice id, short title (truncated first when the row is tight), working role and model, round word, bar, last heard with S106's stall colours.\n3. Line 2: the working role's latest output line. For engine runs use the S99 output tail. For runs started elsewhere (ledger only), ork has no output stream; check what the ledger gives (the latest step note) and report what line 2 shows for them before building a substitute.\n4. Round: count fix rounds after the first review; the finish step and resumed steps do not count. Show \"fix N\" while a fix round runs and \"gate\" during the gate.\n5. Drop \"started elsewhere\" and the run id from the row; keep both in the pane.\n6. At 80x24: decide the drop order with the UI pass (title shortens first, then model); line 2 stays.\n7. Docs and goldens. UI slice: UI pass (r14)."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./internal/tui\n- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review the golden diff\n- slicer check\n- adj lint\n- [HUMAN CHECK] The owner reads three running runs at a glance in a live terminal at 100x30 and 80x24."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

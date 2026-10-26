@@ -48,7 +48,7 @@ func TestQuestionsRowsAndScope(t *testing.T) {
 	if strings.Contains(v, "plain  #") {
 		t.Fatal("non-adj project supplied adj rows")
 	}
-	for _, k := range []string{"right", "right", "left", "3", "/", "z", "enter", "esc"} {
+	for _, k := range []string{"]", "]", "[", "3", "/", "z", "enter", "esc"} {
 		h.deliver(press(k))
 		if got := body(); got != v {
 			t.Fatalf("%s changed all-project questions:\n%s", k, got)
@@ -108,14 +108,14 @@ func TestQuestionsAdjReadOnlyDetail(t *testing.T) {
 	if calls := h.src.take(); len(calls) != 0 {
 		t.Fatalf("opening detail fetched snapshots: %v", calls)
 	}
-	for _, k := range []string{"down", "j", "n", "pgdown"} {
+	for _, k := range []string{"down", "j", "pgdown"} {
 		old := h.m.decisionScroll
 		h.deliver(press(k))
 		if h.m.decisionScroll <= old {
 			t.Fatalf("%s did not scroll detail", k)
 		}
 	}
-	for _, k := range []string{"up", "k", "p", "pgup"} {
+	for _, k := range []string{"up", "k", "pgup"} {
 		old := h.m.decisionScroll
 		h.deliver(press(k))
 		if h.m.decisionScroll >= old {
@@ -209,7 +209,7 @@ func TestQuestionsViewOrderAndReset(t *testing.T) {
 	}
 	h.m.view = 1
 	h.deliver(press("down"))
-	h.deliver(press("right"))
+	h.deliver(press("]"))
 	h.deliver(press("enter"))
 	if h.m.pane == nil || h.m.pane.run != "engine-zeta" {
 		t.Fatal("project switch did not reset Questions cursor")
@@ -256,7 +256,7 @@ func TestQuestionsNameWidthAndHelp(t *testing.T) {
 		t.Fatal("Questions advertises an a binding")
 	}
 	h.deliver(press("enter"))
-	h.deliver(press("right"))
+	h.deliver(press("]"))
 	if h.m.decisionPane != nil || h.m.pane != nil || h.m.questionsCursor != 0 {
 		t.Fatal("project switch retained question detail")
 	}
