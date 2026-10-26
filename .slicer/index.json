@@ -4738,6 +4738,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "ed005dbe-59d8-4f3f-97e5-7bc40cc82f61",
+          "kind": "",
+          "text": "**2026-10-26** — Preflight 2026-10-26: S119 (b7bc308) added a LandedAt marker on the run record, hides clean landings from Ready, and keeps a cleanup-failed row with its reason. Re-anchor: reuse LandedAt and the cleanup-failed state where they already cover 'cleaned'; add a new field only if they do not, and report that choice in the run report.",
+          "created_at": "2026-10-26T16:22:00Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -5536,7 +5547,19 @@
       "depends_on": [
         "S85"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "e8ebf4c5-4bb1-4a0c-8ca8-cf5e3c8ea5ca",
+          "kind": "",
+          "text": "**2026-10-26** — Preflight 2026-10-26: S85 landed (3672a6a). Page keys now move by drawn rows (view.go screen() records m.drawn); the hint line must keep that window accounting right. S151 will make paging pager-style.",
+          "created_at": "2026-10-26T16:22:00Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
