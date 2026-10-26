@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-134 items · — 51 · done 78 · retired 5
+137 items · — 52 · done 80 · retired 5
 
 ## v1.1
 
@@ -90,8 +90,8 @@
 | 33 | [S110](slices/S110.md) | Running: a live summary of every running project above Needs you in the sidebar | M | 2 |  |  | — |
 | 34 | [S118](slices/S118.md) | Approval card: everything needed to approve on one screen | M | 2 |  |  | — |
 | 35 | [S119](slices/S119.md) | Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up | M | 2 |  |  | — |
-| 36 | [S120](slices/S120.md) | Finding kinds: fix, owner or later in reviewer, UI pass and gate reports | M | 2 |  |  | — |
-| 37 | [S117](slices/S117.md) | UI pass role in the engine, in parallel with the reviewer | M | 2 |  |  | — |
+| 36 | [S120](slices/S120.md) | Finding kinds: fix, owner or later in reviewer, UI pass and gate reports | M | 2 |  |  | done |
+| 37 | [S117](slices/S117.md) | UI pass role in the engine, in parallel with the reviewer | M | 2 |  |  | done |
 | 38 | [S121](slices/S121.md) | UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card | M | 2 |  |  | — |
 | 39 | [S116](slices/S116.md) | Spec check: a batch readiness check before a wave, answered in one sitting | M | 2 |  |  | — |
 | 40 | [S92](slices/S92.md) | Fallback brief tells the next row about earlier rows and an already-started slice | S | 1 |  | discovered from S49 | — |
@@ -188,9 +188,12 @@
 | 131 | [S124](slices/S124.md) | Worktree and branch patterns can lowercase the item id | S | 1 |  | discovered from S31 | — |
 | 132 | [S133](slices/S133.md) | Codex out of credits is a classified limit, so the role falls back | S | 1 |  | discovered from S127 | — |
 | 133 | [S134](slices/S134.md) | Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap | S | 1 |  | discovered from S127 | — |
+| 134 | [S135](slices/S135.md) | Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions | S | 2 |  | discovered from S117 | — |
+| 135 | [S136](slices/S136.md) | UI pass visible everywhere and project-neutral: lineup and rounds in run, waves, runtree; ui.md names the project's design doc | S | 1 |  | discovered from S117 | — |
+| 136 | [S137](slices/S137.md) | Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings | S | 2 |  | discovered from S120 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 134 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 137 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
