@@ -4,6 +4,7 @@
       "Bash(slicer check)",
       "Bash(slicer check *)",
       "Bash(slicer show *)",
+      "Bash(slicer --root * show *)",
       "Bash(slicer list)",
       "Bash(slicer list *)",
       "Bash(slicer next)",
