@@ -1,10 +1,10 @@
 [1mork[m [90mdev[m  ?help             │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
-[1;7;97;44m> Needs you              3 [m│[90m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[m
-  slicer                 2 │[1;36mNeeds you 3[m
-  adjudicate               │  [1mDecisions 1[m
-[90m  DataBall       no slicer [m│[1;7;97;44m  ?  slicer  #11  ui.slicer-tui  Reuse slicer tui?                                                                                  [m
-  agents                   │  [1mHeld 1[m
-                           │  [1;35m#[m  slicer  S12  Roadmap screen
+[90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[m
+[1;7;97;44m> Needs you              3 [m│[1;36mNeeds you 3[m
+  slicer                 2 │  [1mDecisions 1[m
+  adjudicate               │[1;7;97;44m  ?  slicer  #11  ui.slicer-tui  Reuse slicer tui?                                                                                  [m
+[90m  DataBall       no slicer [m│  [1mHeld 1[m
+  agents                   │  [1;35m#[m  slicer  S12  Roadmap screen
                            │  [1mErrors 1[m
                            │  [1;31m![m  agents  items, runs: locked: Ledger is busy.
                            │

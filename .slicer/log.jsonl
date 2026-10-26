@@ -1648,3 +1648,6 @@
 {"when": "2026-10-26T12:09:35Z", "item": "S137", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-10-26T12:13:20Z", "item": "S134", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-10-26T12:13:20Z", "item": "S131", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T12:14:18Z", "item": "S110", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-26T12:34:49Z", "item": "S110", "action": "note", "from": "", "to": "", "note": "Owner answers (2026-10-26, session a2bf7e0e, S110 round 1): ", "by": "Jon R"}
+{"when": "2026-10-26T12:41:30Z", "item": "S110", "action": "status", "from": "started", "to": "done", "note": "Running entry above Needs you reuses the Overview Running section full-screen; alerts are a glyph in the mark slot; view tab reads Overview (Running); cells chosen once per view; 1 s Runs interval already per project via focus(); right/left reach the entry (owner-accepted deviation from adj 169); full suite, vet, gofmt, slicer check and adj lint green", "by": "Jon R"}

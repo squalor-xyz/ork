@@ -277,7 +277,9 @@ func TestTabKeysSwitchTheProject(t *testing.T) {
 		{"right", "adjudicate"},
 		{"left", "slicer"},
 		{"left", "Needs"},
+		{"left", "Running"},
 		{"left", "agents"},
+		{"right", "Running"},
 		{"right", "Needs"},
 		{"3", "DataBall"},
 		{"9", "DataBall"}, // no such tab
@@ -710,7 +712,7 @@ func TestNavigationKeysDoWhatTheHelpSays(t *testing.T) {
 		{"shift+tab", "Needs", "#12 open"},
 		{"right", "slicer", "#11 open"},
 		{"2", "adjudicate", ""},
-		{"left", "agents", ""},
+		{"left", "Running", ""},
 		{"9", "Needs", "#12 open"},
 	} {
 		t.Run(tc.key, func(t *testing.T) {
@@ -765,7 +767,8 @@ func TestDashboardDocsListTheNavigationKeys(t *testing.T) {
 	}
 	s := strings.Join(strings.Fields(string(b)), " ")
 	for _, want := range []string{
-		"Outside Decisions, keys `right`/`left` move selection and wrap through \"Needs you\" and the sorted projects.",
+		"Outside Decisions, keys `right`/`left` move selection and wrap through \"Running\", \"Needs you\" and the sorted projects.",
+		"The first sidebar entry, above \"Needs you\", opens a live summary of every project that has a live run.",
 		"`1`-`9` select projects in registry order.",
 		"`tab` and `shift+tab` switch views",
 		"`space` ticks or unticks the selected item",
@@ -1023,7 +1026,7 @@ func TestErrorsMergePerCodeAndPart(t *testing.T) {
 	if n := rowsWith(v, "!", "locked"); n != 1 {
 		t.Errorf("%d rows for the code, want 1:\n%s", n, v)
 	}
-	if running := strings.Index(v, "Running"); merged < strings.Index(v, "Needs you") || merged > running {
+	if running := strings.Index(v, "│Running"); merged < strings.Index(v, "│Needs you") || merged > running {
 		t.Errorf("the merged row is not under Needs you:\n%s", v)
 	}
 	other := newHarness(t, four...)
@@ -1777,7 +1780,7 @@ func TestSidebarAggregateCountIncludesErrorsAndPending(t *testing.T) {
 	want := fmt.Sprint(len(needs))
 	for _, active := range []int{-1, 0} {
 		m.active = active
-		line := sgr.ReplaceAllString(m.sidebar(28, 24)[1], "")
+		line := sgr.ReplaceAllString(m.sidebar(28, 24)[2], "")
 		if strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(strings.TrimPrefix(line[2:], "Needs you")), "│")) != want {
 			t.Errorf("sidebar aggregate count differs from heading: %q, want %s", line, want)
 		}
