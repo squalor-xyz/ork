@@ -1895,3 +1895,4 @@
 {"when": "2026-10-26T17:03:56Z", "item": "S149", "action": "note", "from": "", "to": "", "note": "Owner answers (session a2bf7e0e, 2026-10-26): (1) drop the k", "by": "Jon R"}
 {"when": "2026-10-26T17:16:41Z", "item": "S149", "action": "note", "from": "", "to": "", "note": "Review FAIL (round 2): docs/dashboard.md still describes the", "by": "Jon R"}
 {"when": "2026-10-26T17:27:33Z", "item": "S152", "action": "add", "from": "", "to": "open", "note": "S149 later notes: Questions footer, hint polish, pane scroll keys"}
+{"when": "2026-10-26T17:38:14Z", "item": "relay-roles.u10", "action": "relay-roles", "from": "", "to": "", "note": "rule-edit"}
