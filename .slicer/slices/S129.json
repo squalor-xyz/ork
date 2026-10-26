@@ -12,7 +12,7 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "S99 later notes: (1) a Claude role that ends without a result event shows tokens 0 $0.00 instead of unknown (untested); (2) cost is known only when the vendor is claude, so a future cost-reporting vendor shows $- until updated; (3) live usage summed over several Claude messages is checked against the result event only on a single-message fixture (23763 tokens); (4) the run token total dips briefly at round end."
+      "body": "S99 later notes: (1) a Claude role that ends without a result event shows tokens 0 $0.00 instead of unknown (untested); (2) cost is known only when the vendor is claude, so a future cost-reporting vendor shows $- until updated; (3) live usage summed over several Claude messages is checked against the result event only on a single-message fixture (23763 tokens); (4) the run token total dips briefly at round end.\n\nS31 screenshot (2026-10-26): a run recorded by an older daemon build has no tokens or cost fields on its roles, and the pane shows 'tokens 0  $-' / 'tokens 0  $0.00' on every finished role; a missing field should read 'tokens -'."
     },
     {
       "heading": "Files",
