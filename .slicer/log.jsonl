@@ -1620,3 +1620,17 @@
 {"when": "2026-10-26T04:51:59Z", "item": "S120", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-26T04:53:44Z", "item": "S116", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-26T04:53:44Z", "item": "S121", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T04:57:37Z", "item": "S135", "action": "add", "from": "", "to": "open", "note": "Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions"}
+{"when": "2026-10-26T04:57:37Z", "item": "S135", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T04:57:37Z", "item": "S135", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T04:57:37Z", "item": "S135", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T04:57:37Z", "item": "S135", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-26T04:57:38Z", "item": "S135", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T04:57:38Z", "item": "S135", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-26T04:57:38Z", "item": "S136", "action": "add", "from": "", "to": "open", "note": "UI pass visible everywhere and project-neutral: lineup and rounds in run, waves, runtree; ui.md names the project's design doc"}
+{"when": "2026-10-26T04:57:38Z", "item": "S136", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T04:57:38Z", "item": "S136", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T04:57:38Z", "item": "S136", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T04:57:38Z", "item": "S136", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-26T04:57:38Z", "item": "S136", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T04:57:38Z", "item": "S136", "action": "edit", "from": "", "to": "", "note": "Check"}

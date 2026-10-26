@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-134 items · — 51 · done 78 · retired 5
+136 items · — 53 · done 78 · retired 5
 
 ## v1.1
 
@@ -188,9 +188,11 @@
 | 131 | [S124](slices/S124.md) | Worktree and branch patterns can lowercase the item id | S | 1 |  | discovered from S31 | — |
 | 132 | [S133](slices/S133.md) | Codex out of credits is a classified limit, so the role falls back | S | 1 |  | discovered from S127 | — |
 | 133 | [S134](slices/S134.md) | Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap | S | 1 |  | discovered from S127 | — |
+| 134 | [S135](slices/S135.md) | Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions | S | 2 |  | discovered from S117 | — |
+| 135 | [S136](slices/S136.md) | UI pass visible everywhere and project-neutral: lineup and rounds in run, waves, runtree; ui.md names the project's design doc | S | 1 |  | discovered from S117 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 134 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 136 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
