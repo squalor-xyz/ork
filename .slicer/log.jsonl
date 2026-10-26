@@ -1808,3 +1808,7 @@
 {"when": "2026-10-26T12:35:57Z", "item": "S41", "action": "set", "from": "", "to": "", "note": "pass_key v1→v1.0"}
 {"when": "2026-10-26T12:35:57Z", "item": "S42", "action": "set", "from": "", "to": "", "note": "pass_key v1→v1.0"}
 {"when": "2026-10-26T12:35:57Z", "item": "pass.v1", "action": "prose", "from": "v1", "to": "", "note": "drop-pass"}
+{"when": "2026-10-26T12:51:38Z", "item": "S140", "action": "add", "from": "", "to": "open", "note": "Running view follow-ups: error marker, stale runs not live, detail order, stopped role, empty golden, other tabs on Running"}
+{"when": "2026-10-26T12:51:38Z", "item": "S140", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T12:51:38Z", "item": "S140", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T12:51:39Z", "item": "S140", "action": "edit", "from": "", "to": "", "note": "Files"}

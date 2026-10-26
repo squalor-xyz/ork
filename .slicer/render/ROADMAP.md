@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-139 items · — 51 · done 83 · retired 5
+140 items · — 52 · done 83 · retired 5
 
 ## v1.1
 
@@ -193,9 +193,10 @@
 | 136 | [S137](slices/S137.md) | Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings | S | 2 |  | discovered from S120 | — |
 | 137 | [S138](slices/S138.md) | An awaiting-approval engine run whose ledger went stale shows as stale, dimmed, with a frozen age | S | 1 |  | discovered from S31 | — |
 | 138 | [S139](slices/S139.md) | Commit title without a Git section: fall back to 'ID: title', and check it before the run starts | S | 1 |  | discovered from S31 | — |
+| 139 | [S140](slices/S140.md) | Running view follow-ups: error marker, stale runs not live, detail order, stopped role, empty golden, other tabs on Running | S | 1 |  | discovered from S110 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 139 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 140 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |

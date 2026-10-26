@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 140,
+  "next_id": 141,
   "preamble": "",
   "passes": [
     {
@@ -5074,6 +5074,34 @@
         "reason": "",
         "importance": 3,
         "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S140",
+      "title": "Running view follow-ups: error marker, stale runs not live, detail order, stopped role, empty golden, other tabs on Running",
+      "short_title": "Running view follow-ups: error marker, stale runs not live, detail order, stopped role, empty golden, other tabs on Running",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S110",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
         "effort": 1,
         "attempts": 0
       }
