@@ -5,6 +5,7 @@ package daemon
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -36,6 +37,10 @@ func (s *landingSource) Fetch(ctx context.Context, p registry.Project, part sour
 func landingDaemon(t *testing.T, exit int, branchError string) (*Daemon, *runrec.Store, registry.Project, *clitest.Fake) {
 	t.Helper()
 	old, store, p := runDaemon(t, nil)
+	// The run's worktree exists, as it does until a cleanup removes it.
+	if err := os.MkdirAll(p.Path+"/.worktrees/s63", 0o755); err != nil {
+		t.Fatal(err)
+	}
 	fake := clitest.Install(t,
 		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "rev-parse", "HEAD"}, Seq: []clitest.Reply{{Stdout: "h1"}, {Stdout: "h1"}, {Stdout: "h2"}, {Stdout: "h2"}}},
 		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "merge-base", "--is-ancestor", "s63", "HEAD"}, Exit: exit},
@@ -50,6 +55,19 @@ func landingDaemon(t *testing.T, exit int, branchError string) (*Daemon, *runrec
 	t.Cleanup(d.cache.Close)
 	t.Cleanup(d.closeRuns)
 	return d, store, p, fake
+}
+
+// setGitBin and setMerged write the manager's state under its lock: the cache
+// of a live daemon reads both from its own goroutines.
+func setGitBin(d *Daemon, bin string) {
+	d.runs.mu.Lock()
+	defer d.runs.mu.Unlock()
+	d.runs.deps.GitBin = bin
+}
+func setMerged(d *Daemon, id string, merged *bool) {
+	d.runs.mu.Lock()
+	defer d.runs.mu.Unlock()
+	d.runs.merged[id] = merged
 }
 func committedRun(t *testing.T, store *runrec.Store, p registry.Project, id, state string) {
 	t.Helper()
@@ -245,7 +263,7 @@ func TestCleanupStopsAfterWorktreeError(t *testing.T) {
 	refreshHead(t, d, p)
 	const message = "fatal: worktree contains modified files\n"
 	fake := clitest.Install(t, clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "worktree", "remove", p.Path + "/.worktrees/s63"}, Exit: 128, Stderr: message})
-	d.runs.deps.GitBin = fake.Bin("git")
+	setGitBin(d, fake.Bin("git"))
 	if err := cleanupRequest(d); err == nil || err.Error() != message {
 		t.Fatalf("error=%q, want %q", err, message)
 	}
@@ -287,7 +305,7 @@ func blockedGit(t *testing.T, d *Daemon) (string, func()) {
 		t.Fatal(err)
 	}
 	t.Setenv("ORK_BLOCKED_GIT", dir)
-	d.runs.deps.GitBin = bin
+	setGitBin(d, bin)
 	release := func() {
 		if err := os.WriteFile(filepath.Join(dir, "release"), nil, 0600); err != nil {
 			t.Error(err)
@@ -383,7 +401,7 @@ func TestLandingRefusesOptionLikeArguments(t *testing.T) {
 				t.Errorf("unsafe detection: merged=%v err=%v calls=%v", merged, err, f.CallsTo("git"))
 			}
 			yes := true
-			d.runs.merged["run"] = &yes
+			setMerged(d, "run", &yes)
 			before := len(f.CallsTo("git"))
 			err = cleanupRequest(d)
 			wire, ok := err.(*ipc.Error)
@@ -409,7 +427,7 @@ func TestPruneMergedRunsKeepsActiveRun(t *testing.T) {
 	d, s, p, _ := landingDaemon(t, 0, "")
 	committedRun(t, s, p, "active", "implement")
 	yes := true
-	d.runs.merged["active"] = &yes
+	setMerged(d, "active", &yes)
 	for i := 0; i < 102; i++ {
 		committedRun(t, s, p, fmt.Sprintf("run%03d", i), "committed")
 	}
@@ -478,5 +496,179 @@ func TestCleanupClearsTheReasonOfALandedRun(t *testing.T) {
 		if row.CleanupFailed != "" {
 			t.Errorf("the wire still says the cleanup failed: %+v", row)
 		}
+	}
+}
+
+func runRecord(t *testing.T, s *runrec.Store, id string) runrec.Record {
+	t.Helper()
+	r, err := s.Open(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return r.Snapshot()
+}
+
+// A successful cleanup marks the record cleaned: the wire says so, so Ready
+// hides the row, and a second cleanup is refused with a reason and no git
+// (S95). The run was not landed by ork (the S31 case: slicer land, then c), so
+// LandedAt cannot be what marks it.
+func TestCleanupMarksTheRunCleaned(t *testing.T) {
+	d, s, p, f := landingDaemon(t, 0, "")
+	committedRun(t, s, p, "run", "committed")
+	refreshHead(t, d, p)
+	if r := d.engineRuns(p.Name)[0]; r.Cleaned {
+		t.Fatalf("cleaned before the cleanup: %+v", r)
+	}
+	if err := cleanupRequest(d); err != nil {
+		t.Fatal(err)
+	}
+	if rec := runRecord(t, s, "run"); rec.CleanedAt.IsZero() || !rec.LandedAt.IsZero() || rec.State != runrec.StateCommitted {
+		t.Errorf("cleaned at %v, landed at %v, state %s", rec.CleanedAt, rec.LandedAt, rec.State)
+	}
+	row := d.engineRuns(p.Name)[0]
+	if !row.Cleaned {
+		t.Errorf("the wire does not say cleaned: %+v", row)
+	}
+	if wire, _ := json.Marshal(row); !strings.Contains(string(wire), `"cleaned":true`) {
+		t.Errorf("wire: %s", wire)
+	}
+	before := len(f.CallsTo("git"))
+	err := cleanupRequest(d)
+	wire, ok := err.(*ipc.Error)
+	if !ok || wire.Code != CodeBadParams || !strings.Contains(wire.Message, "already cleaned") {
+		t.Errorf("second cleanup: %v, want bad_params that says already cleaned", err)
+	}
+	if len(f.CallsTo("git")) != before {
+		t.Errorf("the refused cleanup ran git: %v", f.CallsTo("git")[before:])
+	}
+}
+
+// A run that ork landed with a clean cleanup is cleaned too: its branch is gone
+// and there is nothing for the cleanup key to do.
+func TestALandedRunWithACleanCleanupIsCleaned(t *testing.T) {
+	d, s, p, f := landingDaemon(t, 0, "")
+	landedRun(t, s, p, "run", "")
+	if r := d.engineRuns(p.Name)[0]; !r.Cleaned || !r.Landed {
+		t.Errorf("landed run: %+v", r)
+	}
+	if err := cleanupRequest(d); err == nil || len(f.CallsTo("git")) != 0 {
+		t.Errorf("cleanup of a cleaned run: %v, git %v", err, f.CallsTo("git"))
+	}
+	// Its branch is gone, so the merge check must not read it again.
+	refreshHead(t, d, p)
+	if mergeCalls(f) != 0 {
+		t.Errorf("merge checks=%d for a cleaned run", mergeCalls(f))
+	}
+	if r := d.engineRuns(p.Name)[0]; r.Merged != nil {
+		t.Errorf("merged %v for a cleaned run", *r.Merged)
+	}
+}
+
+// A cleanup that removed the worktree and then failed at branch -d leaves the
+// worktree path gone. The retry must not run worktree remove again, which fails
+// with "is not a working tree"; it runs branch -d.
+func TestCleanupRetryAfterHalfDone(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 0, "error: the branch is checked out\n")
+	committedRun(t, s, p, "run", "committed")
+	refreshHead(t, d, p)
+	err := cleanupRequest(d)
+	if err == nil || !strings.Contains(err.Error(), "checked out") {
+		t.Fatalf("first cleanup: %v", err)
+	}
+	if rec := runRecord(t, s, "run"); !rec.CleanedAt.IsZero() {
+		t.Fatal("a half-done cleanup marked the run cleaned")
+	}
+	// The fake git cannot remove a directory; do what git worktree remove did.
+	if err := os.RemoveAll(p.Path + "/.worktrees/s63"); err != nil {
+		t.Fatal(err)
+	}
+	// The retry fakes no worktree remove: a call to it exits 97 and fails.
+	retry := clitest.Install(t, clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "branch", "-d", "s63"}})
+	setGitBin(d, retry.Bin("git"))
+	if err := cleanupRequest(d); err != nil {
+		t.Fatalf("retry: %v", err)
+	}
+	want := []clitest.Call{{Tool: "git", Args: []string{"-C", p.Path, "branch", "-d", "s63"}}}
+	if got := retry.CallsTo("git"); !reflect.DeepEqual(got, want) {
+		t.Errorf("retry calls=%v, want %v", got, want)
+	}
+	if rec := runRecord(t, s, "run"); rec.CleanedAt.IsZero() {
+		t.Error("the retry did not mark the run cleaned")
+	}
+}
+
+// While a merge check runs, the previous merged value stays on the wire and
+// the cleanup key still works for a run whose value is known.
+func TestMergedValueSurvivesAPass(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 0, "")
+	committedRun(t, s, p, "run", "committed")
+	refreshHead(t, d, p)
+	if r := d.engineRuns(p.Name)[0]; r.Merged == nil || !*r.Merged {
+		t.Fatalf("merged before the pass: %+v", r.Merged)
+	}
+	dir, release := blockedGit(t, d)
+	pass := make(chan struct{})
+	go func() { d.checkMerged(context.Background(), p, "changed"); close(pass) }()
+	waitFor(t, "the merge check started", func() bool { _, err := os.Stat(filepath.Join(dir, "started")); return err == nil })
+	if r := d.engineRuns(p.Name)[0]; r.Merged == nil || !*r.Merged {
+		t.Errorf("the pass cleared the merged value: %v", r.Merged)
+	}
+	cleanup := make(chan error, 1)
+	go func() { cleanup <- cleanupRequest(d) }()
+	var early error
+	select {
+	case early = <-cleanup:
+		if early == nil {
+			early = errors.New("cleanup finished before git was released")
+		}
+		t.Errorf("cleanup during a pass returned at once: %v (a known value must not be refused)", early)
+	case <-time.After(300 * time.Millisecond):
+		// It is waiting on git, as an accepted cleanup does.
+	}
+	release()
+	if early == nil {
+		if err := <-cleanup; err != nil {
+			t.Errorf("cleanup: %v", err)
+		}
+	}
+	<-pass
+}
+
+// Retention counts a cleaned run as done with: it is pruned beyond the keep
+// limit although its branch is gone and its merge state is not known.
+func TestPruneRemovesACleanedFinishedRunBeyondTheKeepLimit(t *testing.T) {
+	d, s, p, f := landingDaemon(t, 1, "")
+	for i := 0; i < 102; i++ {
+		id := fmt.Sprintf("run%03d", i)
+		committedRun(t, s, p, id, "committed")
+		r, err := s.Open(id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		at := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+		switch i {
+		case 0, 50: // marked by the cleanup key
+			err = r.Update(func(rec *runrec.Record) { rec.CleanedAt = at })
+		case 1: // landed by ork with a clean cleanup
+			err = r.Update(func(rec *runrec.Record) { rec.LandedAt = at })
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	refreshHead(t, d, p)
+	all, err := s.List()
+	if err != nil || len(all) != 100 {
+		t.Fatalf("finished runs=%d err=%v, want 100", len(all), err)
+	}
+	if all[0].Snapshot().ID != "run002" {
+		t.Errorf("oldest kept run %s, want run002", all[0].Snapshot().ID)
+	}
+	// Only the two cleaned runs went: the 100 unmerged runs stay.
+	if _, err := s.Open("run050"); err != nil {
+		t.Errorf("a cleaned run inside the keep limit was removed: %v", err)
+	}
+	if n := mergeCalls(f); n != 99 {
+		t.Errorf("merge checks=%d, want 99 (cleaned runs are not checked)", n)
 	}
 }

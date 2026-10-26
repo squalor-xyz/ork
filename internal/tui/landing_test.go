@@ -452,3 +452,27 @@ func TestLandedRunShowsInRecent(t *testing.T) {
 		t.Errorf("an unrelated ledger run: %q", got["led-2"])
 	}
 }
+
+// A cleaned run (S95) has nothing left to land or clean: it leaves Ready to
+// land, with or without the landed flag, and its commands do not show.
+func TestCleanedRunsLeaveReadyToLand(t *testing.T) {
+	h := landingHarness(t, `[{"id":"r1","item":"S09","state":"committed","branch":"s09","merged":true},`+
+		`{"id":"r2","item":"S10","state":"committed","branch":"s10","merged":true,"cleaned":true},`+
+		`{"id":"r3","item":"S11","state":"committed","branch":"s11","cleaned":true,"landed":true}]`)
+	h.send(tea.WindowSizeMsg{Width: 100, Height: 30})
+	text := landingText(h)
+	if !strings.Contains(text, "slicer land 'S09'") {
+		t.Errorf("a merged run that is not cleaned left the list:\n%s", text)
+	}
+	for _, gone := range []string{"S10", "S11"} {
+		if strings.Contains(text, gone) {
+			t.Errorf("a cleaned run is still listed (%q):\n%s", gone, text)
+		}
+	}
+	if n := strings.Count(text, "slicer render"); n != 1 {
+		t.Errorf("slicer render shown %d times, want once (for S09 only):\n%s", n, text)
+	}
+	if rows := h.m.readyRows(); len(rows) != 1 || rows[0].engineID != "r1" {
+		t.Errorf("ready rows: %+v", rows)
+	}
+}

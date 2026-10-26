@@ -257,6 +257,7 @@ type Record struct {
 	LandFixes        int                      `json:"land_fixes,omitempty"`   // fix rounds that a blocked landing has had (S119)
 	LandedAt         time.Time                `json:"landed_at,omitzero"`     // when ork landed the slice on the base branch (S119)
 	LandRecheck      bool                     `json:"land_recheck,omitempty"` // the base branch is merged into the slice branch and no green re-check has followed (S119)
+	CleanedAt        time.Time                `json:"cleaned_at,omitzero"`    // when the worktree and branch were removed (S95)
 	Reason           string                   `json:"reason,omitempty"`
 	Pending          *Pending                 `json:"pending,omitempty"`
 	Feedback         *Feedback                `json:"feedback,omitempty"`
@@ -274,6 +275,23 @@ type Record struct {
 	DismissedAt      time.Time                `json:"dismissed_at,omitzero"`
 	CreatedAt        time.Time                `json:"created_at"`
 	UpdatedAt        time.Time                `json:"updated_at"`
+}
+
+// Cleaned reports whether the run has no worktree or branch left to clean up
+// (S95). The cleanup key sets CleanedAt, also for a run that was landed with
+// `slicer land`, which leaves LandedAt zero. A run that ork landed is cleaned
+// when its own cleanup left no reason behind.
+func (r Record) Cleaned() bool {
+	return !r.LandedAt.IsZero() && r.State == StateCommitted && r.Reason == ""
+}
+
+// MarkCleaned sets the cleanup time and drops the reason a landed run kept for
+// a failed cleanup.
+func MarkCleaned(r *Record, at time.Time) {
+	r.CleanedAt = at
+	if !r.LandedAt.IsZero() && r.State == StateCommitted {
+		r.Reason = ""
+	}
 }
 
 // Finding kinds that ork keeps in the record (adj 163, review.finding-kinds).

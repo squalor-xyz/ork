@@ -793,3 +793,55 @@ func TestBudgetPendingRoundTrip(t *testing.T) {
 		t.Fatalf("pending: %+v", got.Pending)
 	}
 }
+
+// A cleaned run is one whose worktree and branch are gone (S95): the cleanup
+// key marks it, and a run that ork landed with a clean cleanup is cleaned too.
+// The field is additive, so the version stays 1.
+func TestCleanedAtRoundTripsAndKeepsVersion(t *testing.T) {
+	s := newStore(t)
+	r, err := s.Create(rec("a"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if raw := readFile(t, filepath.Join(r.Dir(), "run.json")); strings.Contains(raw, "cleaned_at") {
+		t.Fatalf("cleaned_at written before a cleanup:\n%s", raw)
+	}
+	if r.Snapshot().Cleaned() {
+		t.Fatal("a new run reads as cleaned")
+	}
+	if err := r.Update(func(rec *Record) { rec.State = StateCommitted; rec.CleanedAt = t0 }); err != nil {
+		t.Fatal(err)
+	}
+	again, err := s.Open("a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := again.Snapshot()
+	if !got.CleanedAt.Equal(t0) || !got.Cleaned() || got.Version != 1 {
+		t.Fatalf("cleaned at %v, cleaned %v, version %d", got.CleanedAt, got.Cleaned(), got.Version)
+	}
+	if raw := readFile(t, filepath.Join(r.Dir(), "run.json")); !strings.Contains(raw, `"cleaned_at": "2026-10-19T16:12:00Z"`) {
+		t.Fatalf("cleaned_at missing:\n%s", raw)
+	}
+}
+
+func TestCleanedReadsLandedRunsWithoutAFailedCleanup(t *testing.T) {
+	landed := Record{State: StateCommitted, LandedAt: t0}
+	failed := Record{State: StateCommitted, LandedAt: t0, Reason: "landed; cleanup failed at git branch -d s63: X"}
+	cases := []struct {
+		name string
+		rec  Record
+		want bool
+	}{
+		{"committed, not landed, not cleaned", Record{State: StateCommitted}, false},
+		{"landed with a clean cleanup", landed, true},
+		{"landed, cleanup failed", failed, false},
+		{"landed, cleanup failed, then the cleanup key", Record{State: StateCommitted, LandedAt: t0, Reason: failed.Reason, CleanedAt: t0}, true},
+		{"cleaned by the key, not landed by ork", Record{State: StateCommitted, CleanedAt: t0}, true},
+	}
+	for _, c := range cases {
+		if got := c.rec.Cleaned(); got != c.want {
+			t.Errorf("%s: Cleaned() = %v, want %v", c.name, got, c.want)
+		}
+	}
+}

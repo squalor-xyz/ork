@@ -4713,7 +4713,7 @@
       "id": "S95",
       "title": "Cleanup finishes cleanly: mark the run cleaned, retry after a half-done cleanup, steady merge state",
       "short_title": "Cleanup finishes cleanly: mark the run cleaned, retry after a half-done cleanup, steady merge state",
-      "status": "open",
+      "status": "started",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -4751,7 +4751,10 @@
           "stale_after": ""
         }
       ],
-      "claim": null,
+      "claim": {
+        "owner": "Jon R",
+        "at": "2026-10-26T16:23:06Z"
+      },
       "fields": {
         "size": "S",
         "flags": [],
@@ -4768,7 +4771,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -177,6 +177,14 @@ S119) is when ork fast-forwarded the slice onto the base branch and ran
 `slicer land`; the daemon sends it as `landed: true` on the run's snapshot row,
 with `cleanup_failed` holding `reason` when the cleanup after the landing
 failed (the cleanup key clears that reason).
+`cleaned_at` (omitted until then; *proposed*, S95) is when the cleanup key
+removed the run's worktree and branch. It is set for any committed run the key
+cleaned, including one landed with `slicer land` (which leaves `landed_at`
+empty), and the same update clears the landing's `reason`. A run is *cleaned*
+when `cleaned_at` is set, or when ork landed it and left no `reason`; the
+daemon sends that as `cleaned: true` on the run's snapshot row (*proposed*).
+The version stays 1, as for `dismissed_at`: an older ork refuses a `run.json`
+with `cleaned_at` because `Store.Open` uses strict keys.
 `land_fixes` (omitted when 0; *proposed*, S119) counts the fix rounds a blocked
 landing has had; the `land` state allows one (a merge conflict, or a red
 re-check after the base branch was merged in), and a second block stops the run
@@ -324,7 +332,10 @@ HEAD-change check (`landing.merge-detect`, adj #128). It remembers the last HEAD
 read and each changed HEAD check every committed branch with
 `git -C PATH merge-base --is-ancestor BRANCH HEAD`. Exit 0 means merged,
 exit 1 means unmerged, and another error leaves the state unknown. An
-unchanged HEAD adds no merge reads.
+unchanged HEAD adds no merge reads. While a pass runs, each run keeps the
+value of the last pass, so a snapshot and the cleanup key never see "unknown"
+because of a pass in flight; the pass writes its results back when it ends.
+A cleaned run is not checked: its branch is gone, and it shows no merge state.
 
 The optional `roles` array is *proposed*. Each entry carries `role`, `round`,
 `vendor`, optional `model`, `effort` and `step`, `started_at`, optional
@@ -358,7 +369,8 @@ the ledger run is absent from the active snapshot. In `ork status`,
   landed, or a run that is still active. `runrec.Store.Prune` takes a
   `landed` predicate and removes nothing without one. The daemon calls it
   once after recovery and once after each project merge-check pass, using
-  cached merge results. Unknown and unmerged branches stay. Pruning removes
+  cached merge results. Unknown and unmerged branches stay. A cleaned run
+  (S95) counts as landed for this, whatever its merge state. Pruning removes
   run directories only; worktrees and branches require confirmed cleanup
   (`git.cleanup-key`, adj #152). Failed cleanup keeps the run record.
 

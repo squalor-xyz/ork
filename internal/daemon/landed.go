@@ -6,8 +6,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/registry"
@@ -35,7 +37,9 @@ func (f landingFetcher) Fetch(ctx context.Context, p registry.Project, part sour
 }
 
 func (d *Daemon) git(ctx context.Context, p registry.Project, args ...string) (clirun.Result, error) {
+	d.runs.mu.Lock()
 	bin := d.runs.deps.GitBin
+	d.runs.mu.Unlock()
 	if bin == "" {
 		bin = "git"
 	}
@@ -78,8 +82,14 @@ func (d *Daemon) checkMerged(ctx context.Context, p registry.Project, head strin
 		if rec.Project != p.Name || rec.State != runrec.StateCommitted {
 			continue
 		}
+		if rec.Cleaned() {
+			// Its branch is gone: there is nothing to read, and no merge state to show.
+			delete(d.runs.merged, rec.ID)
+			continue
+		}
+		// The previous value stays until the write-back, so a snapshot and the
+		// cleanup key do not see "unknown" while git runs.
 		records = append(records, rec)
-		d.runs.merged[rec.ID] = nil
 	}
 	d.runs.mu.Unlock()
 	results := make(map[string]*bool, len(records))
@@ -103,11 +113,12 @@ func (d *Daemon) checkMerged(ctx context.Context, p registry.Project, head strin
 }
 
 // pruneRunsLocked uses only previously checked results; pruning never adds git
-// reads and unknown branches are retained. The caller holds the manager lock.
+// reads and unknown branches are retained. A cleaned run (S95) has no branch
+// left and is pruned like a merged one. The caller holds the manager lock.
 func (d *Daemon) pruneRunsLocked() {
 	removed, err := d.runs.deps.Store.Prune(100, func(rec runrec.Record) bool {
 		merged := d.runs.merged[rec.ID]
-		return rec.State == runrec.StateCommitted && merged != nil && *merged && !d.runs.cleaning[rec.ID]
+		return rec.State == runrec.StateCommitted && (rec.Cleaned() || merged != nil && *merged) && !d.runs.cleaning[rec.ID]
 	})
 	for _, id := range removed {
 		delete(d.runs.merged, id)
@@ -129,6 +140,10 @@ func (d *Daemon) cleanupRun(ctx context.Context, a RunAction) error {
 		rec = managed.engine.Snapshot()
 	}
 	merged := d.runs.merged[rec.ID]
+	if rec.Cleaned() {
+		d.runs.mu.Unlock()
+		return badParams(errors.New("this run is already cleaned up: its worktree and branch are gone"))
+	}
 	if rec.State != runrec.StateCommitted || merged == nil || !*merged || rec.Branch == "" || rec.Worktree == "" || strings.HasPrefix(rec.Branch, "-") || strings.HasPrefix(rec.Worktree, "-") {
 		d.runs.mu.Unlock()
 		return badParams(errors.New("cleanup needs a committed, merged run with a branch and worktree"))
@@ -144,7 +159,13 @@ func (d *Daemon) cleanupRun(ctx context.Context, a RunAction) error {
 	if err != nil {
 		return err
 	}
-	for _, args := range [][]string{{"worktree", "remove", rec.Worktree}, {"branch", "-d", rec.Branch}} {
+	// A cleanup that stopped at branch -d already removed the worktree, and
+	// git worktree remove would fail on the path that is gone: skip it.
+	steps := [][]string{{"branch", "-d", rec.Branch}}
+	if _, err := os.Stat(rec.Worktree); !errors.Is(err, fs.ErrNotExist) {
+		steps = append([][]string{{"worktree", "remove", rec.Worktree}}, steps...)
+	}
+	for _, args := range steps {
 		result, err := d.git(ctx, p, args...)
 		if err != nil {
 			if len(result.Stderr) > 0 {
@@ -153,25 +174,22 @@ func (d *Daemon) cleanupRun(ctx context.Context, a RunAction) error {
 			return err
 		}
 	}
-	return d.clearLandReason(rec.ID)
+	return d.markCleaned(rec.ID)
 }
 
-// clearLandReason drops the "cleanup failed" reason of a landed run once the
-// cleanup key removed what the landing left (S119).
-func (d *Daemon) clearLandReason(id string) error {
+// markCleaned records a finished cleanup, and drops the "cleanup failed" reason
+// of a landed run, so the row leaves Ready to land (S119, S95).
+func (d *Daemon) markCleaned(id string) error {
+	at := time.Now().UTC()
 	d.runs.mu.Lock()
 	managed := d.runs.runs[id]
 	d.runs.mu.Unlock()
 	if managed != nil && managed.engine != nil {
-		return managed.engine.ClearLandReason()
+		return managed.engine.MarkCleaned(at)
 	}
 	r, err := d.runs.deps.Store.Open(id)
 	if err != nil {
 		return err
 	}
-	return r.Update(func(rec *runrec.Record) {
-		if !rec.LandedAt.IsZero() && rec.State == runrec.StateCommitted {
-			rec.Reason = ""
-		}
-	})
+	return r.Update(func(rec *runrec.Record) { runrec.MarkCleaned(rec, at) })
 }

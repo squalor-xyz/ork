@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-151 items · — 55 · done 91 · retired 5
+151 items · — 54 · done 91 · retired 5 · started 1
 
 ## v1.1
 
@@ -181,7 +181,7 @@
 | 124 | [S84](slices/S84.md) | Overview layout pass | M | 2 |  |  | done |
 | 125 | [S88](slices/S88.md) | Accept relay contract v8 alongside v7 | S | 1 |  |  | done |
 | 126 | [S89](slices/S89.md) | Close the codex sandbox gaps: resume sandbox, socket bind, worktree .git, main-checkout block | S | 2 |  | discovered from S48 | done |
-| 127 | [S95](slices/S95.md) | Cleanup finishes cleanly: mark the run cleaned, retry after a half-done cleanup, steady merge state | S | 2 |  | discovered from S63 | — |
+| 127 | [S95](slices/S95.md) | Cleanup finishes cleanly: mark the run cleaned, retry after a half-done cleanup, steady merge state | S | 2 |  | discovered from S63 | started |
 | 128 | [S96](slices/S96.md) | First run opens blank: no seeded projects; a TUI welcome adds them | M | 2 |  | discovered from S03 | done |
 | 129 | [S97](slices/S97.md) | Running rows and the run pane show the relay board's information: pipeline, round, last heard, waiting steps, recent runs | M | 2 |  | discovered from S55 | done |
 | 130 | [S122](slices/S122.md) | Probe Codex --add-dir and writable_roots; mark them unverified until then | S | 1 |  | discovered from S87 | — |

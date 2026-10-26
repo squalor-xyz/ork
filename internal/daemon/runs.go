@@ -1158,7 +1158,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		if rec.State == runrec.StateAwaitingApproval {
 			card = rec.Card
 		}
-		runs = append(runs, EngineRun{Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), CleanupFailed: cleanupFailed(rec), State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
+		runs = append(runs, EngineRun{Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt})
 	}
 	// Dismissed records still supersede older stopped runs of the same slice.
 	visible := runs[:0]

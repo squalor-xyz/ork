@@ -366,6 +366,12 @@ the text column, falling back to a shorter indent when needed to fit.
    its error), which is not one of the copy lines, and there is no landing
    command. Its detail reads `c finishes the cleanup: git -C P worktree remove W;
    git -C P branch -d B`, and `c` runs it (and clears the reason).
+   After S95 a successful cleanup marks the run cleaned, and a cleaned run
+   leaves this list, with its landing and render lines, whether ork landed it or
+   `slicer land` did. A second `c` on it is refused ("already cleaned up").
+   If `git worktree remove` succeeded and `git branch -d` failed, the row stays;
+   the next `c` skips the worktree step when the worktree path is gone and
+   runs `git branch -d`.
 
 The Overview reads engine runs in the daemon snapshot, using the same builder
 as `ork status` (`ui.engine-runs-read`). An engine row leads with the ork run

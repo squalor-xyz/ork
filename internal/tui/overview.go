@@ -1397,8 +1397,8 @@ func (m *Model) readyRows() []ovRow {
 			continue
 		}
 		for _, run := range p.snap.EngineRuns {
-			if run.State != "committed" || (run.Landed && run.CleanupFailed == "") {
-				continue // ork landed it (S119): nothing is left to land
+			if run.State != "committed" || run.Cleaned || (run.Landed && run.CleanupFailed == "") {
+				continue // ork landed it (S119) or the cleanup removed it (S95): nothing is left to do
 			}
 			rest := run.Branch
 			var commands []string

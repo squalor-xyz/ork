@@ -1890,3 +1890,4 @@
 {"when": "2026-10-26T16:21:49Z", "item": "S151", "action": "add", "from": "", "to": "open", "note": "S85 later notes: pager-style page keys, help overlay, group keys on Roadmap and Waves"}
 {"when": "2026-10-26T16:22:00Z", "item": "S149", "action": "note", "from": "", "to": "", "note": "Preflight 2026-10-26: S85 landed (3672a6a). Page keys now mo", "by": "Jon R"}
 {"when": "2026-10-26T16:22:00Z", "item": "S95", "action": "note", "from": "", "to": "", "note": "Preflight 2026-10-26: S119 (b7bc308) added a LandedAt marker", "by": "Jon R"}
+{"when": "2026-10-26T16:23:06Z", "item": "S95", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}

@@ -222,12 +222,9 @@ func outputText(res clirun.Result) string {
 	return "\n" + s
 }
 
-// ClearLandReason drops the reason a landed run kept for a failed cleanup, once
-// the owner's cleanup removed the worktree and the branch (S119).
-func (e *Engine) ClearLandReason() error {
-	return e.run.Update(func(r *runrec.Record) {
-		if !r.LandedAt.IsZero() && r.State == runrec.StateCommitted {
-			r.Reason = ""
-		}
-	})
+// MarkCleaned records that the owner's cleanup removed the worktree and the
+// branch (S95), and drops the reason a landed run kept for a failed cleanup
+// (S119).
+func (e *Engine) MarkCleaned(at time.Time) error {
+	return e.run.Update(func(r *runrec.Record) { runrec.MarkCleaned(r, at) })
 }
