@@ -3,6 +3,15 @@
 [1;7;97;44m> Needs you              1 [m│[1;36mNeeds you 1[m
   ork                    1 │  [1mPaused 1[m
                            │[1;7;97;44m  ?  ork  engine  S22  paused  owner action  2 of 6 steps running  2m   [m
+                           │    [1mRun engine[m
+                           │    owner action
+                           │    [90m[......][m
+                           │    [90mimplementer[m > [90mreviewer[m > [90mgate[m
+                           │
+                           │    Answer: [1muse local storage[m[1;7;97;44m [m[1m[m
+                           │    ork answer engine 'use local storage'
+                           │    [90madj filing off: question has no decision key[m
+                           │    enter submit; esc close pane
                            │
                            │[1;36mRunning 0[m  [33m! owner questions 1[m
                            │  [90mnothing running[m
@@ -16,15 +25,6 @@
                            │
                            │
                            │
-                           │[90m────────────────────────────────────────────────────────────────────────[m
-                           │  [1;36mRun engine  S22  paused[m
-                           │  owner action
-                           │  [90m[......][m
-                           │  [90mimplementer[m > [90mreviewer[m > [90mgate[m
-                           │  
-                           │  Answer: [1muse local storage[m[1;7;97;44m [m[1m[m
-                           │  ork answer engine 'use local storage'
-                           │  [90madj filing off: question has no decision key[m
-                           │  enter submit; esc close pane
+                           │
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │ 1 project | refreshed 16:42:00

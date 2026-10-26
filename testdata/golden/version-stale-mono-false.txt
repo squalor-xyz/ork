@@ -12,7 +12,7 @@
                    │  [90m~[m  agents      waiting for the first reply
                    │
                    │[1;36mRunning 2[m
-                   │  [36m> started elsewhere[m  slicer      run-20261019-004308-40d4
+                   │  [36m> started elsewhere[m  slicer      S11  active, 2 of 6 st...
                    │  [90m~ pending [m  agents      waiting for the first reply
                    │
                    │[90m  +5 more lines[m

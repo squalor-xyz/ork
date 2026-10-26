@@ -752,7 +752,7 @@ func TestDownReachesAStoppedRunForEnter(t *testing.T) {
 		t.Fatalf("down did not move the cursor to the stopped run: %q", got)
 	}
 	h.send(press("enter"))
-	if v := h.view(); !strings.Contains(v, "Run engine  S21  stopped") || !strings.Contains(v, "Stopped; relaunch, or clear with: ork dismiss engine") {
+	if v := h.view(); !strings.Contains(v, "Run engine") || !strings.Contains(v, "Stopped; relaunch, or clear with: ork dismiss engine") {
 		t.Fatalf("enter did not open the stopped run's pane:\n%s", v)
 	}
 }
@@ -826,13 +826,14 @@ func TestSelectedRowShowsItsFullTextOnTheDetailLine(t *testing.T) {
 }
 
 // A run's ID stays whole when its row is cut: the rest of the row goes first.
+// A terminal narrower than 100 columns drops the ID from the row instead (S106).
 func TestRunRowCutsItsRestBeforeItsID(t *testing.T) {
 	const id = "run-20261019-004308-40d4"
 	h := newHarness(t, four...)
 	h.src.set(snap(four[0], nil, nil, relay(id, "2026-10-19T15:42:00Z", "S01", "S02")))
 	h.start()
 	h.send(press("s"))
-	h.send(tea.WindowSizeMsg{Width: 80, Height: 30})
+	h.send(tea.WindowSizeMsg{Width: 100, Height: 30})
 	v := plainView(h.m)
 	row := ""
 	for _, l := range strings.Split(v, "\n") {
@@ -849,7 +850,7 @@ func TestRunRowCutsItsRestBeforeItsID(t *testing.T) {
 	if strings.Contains(row, "1h00m") {
 		t.Errorf("the elapsed time, cut last, is on the row: %q", row)
 	}
-	if got := detailText(h.m, 80); !strings.Contains(got, id+"  S01,S02  active, 2 of 6 steps running  1h00m") {
+	if got := detailText(h.m, 100); !strings.Contains(got, id+"  S01,S02  active, 2 of 6 steps running  1h00m") {
 		t.Errorf("the detail line lacks the full run text: %q", got)
 	}
 }
@@ -1348,6 +1349,8 @@ func TestExternalRunsShowStartedElsewhereAndOfferNoActions(t *testing.T) {
 	}
 }
 
+// The row holds the whole run ID or none of it: at 100 columns and wider all of
+// it, below that (S106) none, with the whole ID on the detail line.
 func TestRunIDIsNeverClipped(t *testing.T) {
 	const id = "run-20261019-004308-40d4"
 	for _, w := range []int{100, 80, 60} {
@@ -1365,8 +1368,14 @@ func TestRunIDIsNeverClipped(t *testing.T) {
 				row = l
 			}
 		}
-		if !strings.Contains(row, id) {
-			t.Errorf("width %d: the run ID is cut from its row: %q\n%s", w, row, v)
+		if strings.Contains(row, id) != (w >= 100) {
+			t.Errorf("width %d: the run ID is in the row only from 100 columns: %q\n%s", w, row, v)
+		}
+		if strings.Contains(row, "run-") && !strings.Contains(row, id) {
+			t.Errorf("width %d: the run ID is cut in the row: %q", w, row)
+		}
+		if got := detailText(h.m, w); !strings.Contains(got, id) {
+			t.Errorf("width %d: the detail line lacks the whole run ID: %q", w, got)
 		}
 	}
 }

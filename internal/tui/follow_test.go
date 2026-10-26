@@ -60,7 +60,7 @@ func TestPaneSwitchesToTheNewestRunningRunWhenItsRunEnds(t *testing.T) {
 	} {
 		t.Run(tc.state, func(t *testing.T) {
 			h := followHarness(t)
-			if v := h.view(); !strings.Contains(v, "Run A  S27") || strings.Contains(v, "now showing") {
+			if v := h.view(); !strings.Contains(v, "Run A") || strings.Contains(v, "now showing") {
 				t.Fatalf("pane must open on A without a notice:\n%s", v)
 			}
 			h.applyRuns([]source.EngineRun{followRun("A", "S27", tc.state, 10*time.Minute), followRun("B", "S28", "review", time.Minute)})
@@ -68,7 +68,7 @@ func TestPaneSwitchesToTheNewestRunningRunWhenItsRunEnds(t *testing.T) {
 			if h.m.pane == nil || h.m.pane.run != "B" || h.m.pane.ledger {
 				t.Fatalf("pane must follow engine run B: %+v", h.m.pane)
 			}
-			if !strings.Contains(v, "Run B  S28  review") || !strings.Contains(v, tc.notice) || strings.Contains(v, "Run A") {
+			if !strings.Contains(v, "Run B") || !strings.Contains(v, tc.notice) || strings.Contains(v, "Run A") {
 				t.Fatalf("pane must show B and the switch notice %q:\n%s", tc.notice, v)
 			}
 		})
@@ -163,7 +163,7 @@ func TestPaneStaysOnTheEndedRunWhenNothingElseRuns(t *testing.T) {
 			if h.m.pane.run != "A" || strings.Contains(v, "now showing") {
 				t.Fatalf("nothing is running; the pane must stay on A without a notice:\n%s", v)
 			}
-			if !strings.Contains(v, "Run A  S27  committed") {
+			if !strings.Contains(v, "Run A") {
 				t.Fatalf("pane must show the final state of A:\n%s", v)
 			}
 		})

@@ -115,13 +115,30 @@ func (m *Model) screen() string {
 			status = m.confirm.prompt()
 		}
 		if m.pane != nil {
-			// At standard terminal heights retain six Overview rows; tiny
-			// terminals still give the pane's input and errors their priority.
-			paneHeight := max(h-6, 1)
+			// The pane opens inline under its row (S106), so it takes no
+			// detail lines. At standard terminal heights retain six Overview
+			// rows; tiny terminals still give the pane's input and errors their
+			// priority, and leave its row and the scroll markers a line each.
+			paneHeight := max(h-7, 1)
 			if h >= 24 {
-				paneHeight = max(h-11, 1)
+				paneHeight = max(h-10, 1)
 			}
-			detail = m.paneLines(mainW, paneHeight, status)
+			// Four columns in, the pane sits inside its row (S106).
+			pane := m.paneLinesAs(max(mainW-len(indent), 1), paneHeight, status, true)
+			for i := range pane {
+				if pane[i] != "" {
+					pane[i] = indent + pane[i]
+				}
+			}
+			at := ov.paneAt
+			if at < 0 {
+				at = ov.sel // the pane's run left the rows: keep it under the cursor
+			}
+			at = min(max(at, -1), len(body)-1)
+			body = append(append(append([]string(nil), body[:at+1]...), pane...), body[at+1:]...)
+			detail = nil
+			// Scroll to the pane's last line; its row is a few lines above.
+			ov.sel = at + len(pane)
 		} else if status != "" {
 			detail = wrapText(status, max(mainW-len(indent), 1))
 			if m.confirm != nil && m.confirm.verb == "cleanup" {
@@ -156,7 +173,7 @@ func (m *Model) screen() string {
 		bodyH = max(bodyH-len(footer), 1)
 	}
 	if overviewBody {
-		if r, ok := m.selectedRow(); ok && r.ready && bodyH >= len(r.commands)+2 {
+		if r, ok := m.selectedRow(); ok && r.ready && m.pane == nil && bodyH >= len(r.commands)+2 {
 			selectedLine += len(r.commands)
 		}
 	}

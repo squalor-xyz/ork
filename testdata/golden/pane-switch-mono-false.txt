@@ -4,7 +4,16 @@
   ork                     *│  [90mnothing needs you[m
                            │
                            │[1;36mRunning 1[m
-                           │[1;7;97;44m   ork  B  S28  review  2 of 6 steps running  1m  [......]              [m
+                           │[1;7;97;44m   ork  B  S28  review  2 of 6 steps running  1m  [......]  heard 1m    [m
+                           │    [1mRun B[m
+                           │    [90mS27 committed; now showing S28[m
+                           │    [......]  [90mlast heard 1m ago[m
+                           │    [90mimplementer[m > [90mreviewer[m > [90mgate[m
+                           │    [90m. implementer waiting[m
+                           │    [90m. reviewer    waiting[m
+                           │    [90m. gate        waiting[m
+                           │
+                           │    x stop; esc close pane
                            │
                            │[1;36mRecent[m
                            │  [90mnone[m
@@ -15,16 +24,7 @@
                            │
                            │
                            │
-                           │[90m────────────────────────────────────────────────────────────────────────[m
-                           │  [1;36mRun B  S28  review[m
-                           │  [90mS27 committed; now showing S28[m
-                           │  [......]
-                           │  [90mimplementer[m > [90mreviewer[m > [90mgate[m
-                           │  [90mlast heard 1m ago[m
-                           │  [90m. implementer waiting[m
-                           │  [90m. reviewer    waiting[m
-                           │  [90m. gate        waiting[m
-                           │  
-                           │  x stop; esc close pane
+                           │
+                           │
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │ 1 project | refreshed 16:42:00

@@ -4,7 +4,16 @@
   ork                     *│  [2mnothing needs you[m
                            │
                            │[1mRunning 1[m
-                           │[1;7m   ork  B  S28  review  2 of 6 steps running  1m  [......]              [m
+                           │[1;7m   ork  B  S28  review  2 of 6 steps running  1m  [......]  heard 1m    [m
+                           │    [1mRun B[m
+                           │    [2mS27 committed; now showing S28[m
+                           │    [......]  [2mlast heard 1m ago[m
+                           │    [2mimplementer[m > [2mreviewer[m > [2mgate[m
+                           │    [2m. implementer waiting[m
+                           │    [2m. reviewer    waiting[m
+                           │    [2m. gate        waiting[m
+                           │
+                           │    x stop; esc close pane
                            │
                            │[1mRecent[m
                            │  [2mnone[m
@@ -15,16 +24,7 @@
                            │
                            │
                            │
-                           │[2m────────────────────────────────────────────────────────────────────────[m
-                           │  [1mRun B  S28  review[m
-                           │  [2mS27 committed; now showing S28[m
-                           │  [......]
-                           │  [2mimplementer[m > [2mreviewer[m > [2mgate[m
-                           │  [2mlast heard 1m ago[m
-                           │  [2m. implementer waiting[m
-                           │  [2m. reviewer    waiting[m
-                           │  [2m. gate        waiting[m
-                           │  
-                           │  x stop; esc close pane
+                           │
+                           │
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │ 1 project | refreshed 16:42:00

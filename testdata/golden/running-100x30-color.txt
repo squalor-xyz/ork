@@ -1,10 +1,10 @@
 [1mork[m [90mdev[m  ?help             │ [1;36mOverview (Running)[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
 [1;7;97;44m> Running                4 [m│[90m────────────────────────────────────────────────────────────────────────[m
   Needs you              2 │[1;36mRunning 4[m  [33m! owner questions 1[m  [1;31mx stopped 1[m
-  DataBall               1 │[1;7;97;44m   slicer      S110  [##~~..]  implementer>[reviewer]>gate  heard 4m    [m
-  agents                 1 │   adjudicate  [1mS97[m   [####~~]  implementer>reviewer>[gate]  [90mheard 2m[m
-  slicer                  *│  [33m?[mDataBall    [1mS42[m   [~~....]  [implementer]>reviewer>gate  [90mheard 19m[m
-  adjudicate              *│  [1;31mx[magents      [1mS07[m   [####..]  implementer>reviewer>gate    [90mheard 15m[m
+  DataBall               1 │[1;7;97;44m   slicer      S110  [##~~..]  heard 4m   implementer>[reviewer]>gate   [m
+  agents                 1 │   adjudicate  [1mS97[m   [####~~]  [90mheard 2m[m   implementer>reviewer>[gate]
+  slicer                  *│  [33m?[mDataBall    [1mS42[m   [~~....]  [90mheard 19m[m  [implementer]>reviewer>gate
+  adjudicate              *│  [1;31mx[magents      [1mS07[m   [####..]  [90mheard 15m[m  implementer>reviewer>gate
                            │
                            │[1;36mRecent[m
                            │  [90mnone[m
@@ -24,7 +24,7 @@
                            │
                            │
                            │[90m────────────────────────────────────────────────────────────────────────[m
-                           │  run-1  S110  review  12m  [##~~..]  implementer>[reviewer]>gate
-                           │  heard 4m  activity ▁▂▂▄█▃▁▂▅▂
+                           │  run-1  S110  review  12m  [##~~..]  heard 4m
+                           │  implementer>[reviewer]>gate  activity ▁▂▂▄█▃▁▂▅▂
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │ 4 projects | refreshed 16:42:07

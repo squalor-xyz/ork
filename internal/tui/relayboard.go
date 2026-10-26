@@ -101,10 +101,16 @@ func (m *Model) pipeline(steps []runTreeStep, stale, compact bool) string {
 }
 
 func (m *Model) pipelineLine(steps []runTreeStep, stale bool, width int) string {
+	return m.pipelineLineRound(steps, stale, width, true)
+}
+
+// pipelineLineRound is pipelineLine; showRound is false when the bar's own rN
+// (from round 2) already says it.
+func (m *Model) pipelineLineRound(steps []runTreeStep, stale bool, width int, showRound bool) string {
 	line := m.pipeline(steps, stale, false)
 	n := roleCounts(steps)["implementer"]
 	round := fmt.Sprintf("round %d", n)
-	if n > 0 && lipgloss.Width(line)+2+len(round) <= width {
+	if showRound && n > 0 && lipgloss.Width(line)+2+len(round) <= width {
 		return line + strings.Repeat(" ", width-lipgloss.Width(line)-len(round)) + m.cfg.Theme.Dim.Render(round)
 	}
 	// Drop the round, then whole roles from the right at very narrow widths.
@@ -114,6 +120,14 @@ func (m *Model) pipelineLine(steps []runTreeStep, stale bool, width int) string 
 	}
 	return strings.Join(parts, " > ")
 }
+
+// A live run is quiet past heardAmber (amber, the cue "!") and stalled past
+// heardRed (red, the cue "!!"): heardRed is slicer's stale cutoff, the glossary's
+// "30 minutes with no event". The cue is a word so mono keeps it.
+const (
+	heardAmber = 10 * time.Minute
+	heardRed   = 30 * time.Minute
+)
 
 func (m *Model) lastHeard(r slicercli.RelayRun) (string, lipgloss.Style) {
 	at, err := time.Parse(time.RFC3339Nano, r.UpdatedAt)
@@ -126,11 +140,11 @@ func (m *Model) lastHeard(r slicercli.RelayRun) (string, lipgloss.Style) {
 	}
 	cue := ""
 	style := m.cfg.Theme.Dim
-	if age > 15*time.Minute {
+	if age > heardAmber {
 		cue = "! "
 		style = m.cfg.Theme.Warn
 	}
-	if r.State == "stale" {
+	if age > heardRed || r.State == "stale" {
 		cue = "!! "
 		style = m.cfg.Theme.Error
 	}
@@ -174,9 +188,17 @@ func (m *Model) boardLines(steps []runTreeStep, width int) []string {
 	if !live {
 		bar = m.cfg.Theme.Dim.Render(bar)
 	}
-	lines := []string{bar, m.pipelineLine(steps, !live, width)}
+	// The bar says rN from round 2, so only round 1 keeps a round on this line.
+	lines := []string{bar, m.pipelineLineRound(steps, !live, width, roleCounts(steps)["implementer"] < 2)}
+	// Last heard sits on the bar's line, after its round (rN from round 2). A
+	// pane too narrow for both keeps it on a line of its own.
 	if heard, style := m.lastHeard(r); heard != "" {
-		lines = append(lines, style.Render(treeClip(strings.Replace(heard, "heard ", "last heard ", 1)+" ago", width)))
+		heard = strings.Replace(heard, "heard ", "last heard ", 1) + " ago"
+		if lipgloss.Width(bar)+2+lipgloss.Width(heard) <= width {
+			lines[0] += "  " + style.Render(heard)
+		} else {
+			lines = append(lines, style.Render(treeClip(heard, width)))
+		}
 	}
 	if live {
 		if activity := m.paneActivity(); len(activity) > 0 {
@@ -245,11 +267,12 @@ func runClock(r slicercli.RelayRun, now time.Time) time.Time {
 func (m *Model) boardRowParts(r slicercli.RelayRun, steps []runTreeStep) []relayRowPart {
 	pipeline := m.pipeline(steps, r.State == "stale", true)
 	bar := stageBar(steps, m.treeFrame, r.State != "stale" && boardLive(r.State))
-	parts := []relayRowPart{{header: bar, text: bar}, {header: pipeline, text: pipeline}}
+	// Last heard follows the bar (and its round) and goes before the pipeline.
+	parts := []relayRowPart{{header: bar, text: bar}}
 	if heard, _ := m.lastHeard(r); heard != "" {
 		parts = append(parts, relayRowPart{header: heard, text: heard})
 	}
-	return parts
+	return append(parts, relayRowPart{header: pipeline, text: pipeline})
 }
 
 func engineBoard(r source.EngineRun) (slicercli.RelayRun, []runTreeStep) {

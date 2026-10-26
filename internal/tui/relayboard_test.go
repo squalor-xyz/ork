@@ -36,32 +36,6 @@ func TestRoundIsTheNumberOfImplementerSteps(t *testing.T) {
 	}
 }
 
-func TestLastHeardWarnsPastHalfTheStaleCutoffAndErrorsWhenStale(t *testing.T) {
-	h := treeHarness(t, treeFixture(t, "relay-run-tree.json"), "")
-	for _, tc := range []struct {
-		age        time.Duration
-		state, cue string
-	}{{14 * time.Minute, "active", ""}, {15 * time.Minute, "active", ""}, {16 * time.Minute, "active", "! "}, {30 * time.Minute, "stale", "!! "}} {
-		r := h.m.byName["ork"].snap.Runs.Value[0]
-		r.State = tc.state
-		r.UpdatedAt = h.now.Add(-tc.age).Format(time.RFC3339)
-		text, style := h.m.lastHeard(r)
-		if !strings.HasPrefix(text, tc.cue+"heard ") {
-			t.Fatal(text)
-		}
-		want := h.m.cfg.Theme.Dim
-		if tc.cue == "! " {
-			want = h.m.cfg.Theme.Warn
-		}
-		if tc.cue == "!! " {
-			want = h.m.cfg.Theme.Error
-		}
-		if style.Render("x") != want.Render("x") {
-			t.Fatal("wrong last heard style")
-		}
-	}
-}
-
 func TestWaitingRolesShowAsWaiting(t *testing.T) {
 	h := treeHarness(t, []slicercli.RelayRun{{ID: "one", State: "active", Steps: []slicercli.Step{{Role: "implementer", Phase: "start"}}}}, "")
 	v := treePaneView(h.m, 120, 60)

@@ -210,9 +210,10 @@ func TestSummaryListsEveryProjectWithALiveRun(t *testing.T) {
 			t.Errorf("beta's row lacks %q: %q", want, beta)
 		}
 	}
-	// The item sits before the bar, the bar before the pipeline, then round, heard, activity.
+	// The item sits before the bar, last heard follows the bar (S106; the round is
+	// in the bar from the second), then the pipeline and the activity.
 	last := -1
-	for _, cell := range []string{"S30", "[##~~..]", "implementer>[reviewer]>gate", "heard 3m", sparkline(testActivity, false)} {
+	for _, cell := range []string{"S30", "[##~~..]", "heard 3m", "implementer>[reviewer]>gate", sparkline(testActivity, false)} {
 		i := strings.Index(alpha, cell)
 		if i <= last {
 			t.Errorf("cell %q is out of order in %q", cell, alpha)
@@ -320,7 +321,7 @@ func TestQuestionOrStopShowsAnAlertOnTheSummaryRowAndEnterOpensItsPane(t *testin
 	if h.m.pane == nil || h.m.pane.run != "q1" || h.m.active != runningEntry {
 		t.Fatalf("enter must open the question run's pane on the Running entry: pane %+v, active %d", h.m.pane, h.m.active)
 	}
-	if v := h.view(); !strings.Contains(v, "Run q1  S30") {
+	if v := h.view(); !strings.Contains(v, "Run q1") {
 		t.Fatalf("the pane is not the question run's:\n%s", v)
 	}
 	h.send(press("esc"))

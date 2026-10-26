@@ -270,6 +270,13 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 // paneLines expands the selected run below the Overview. The field, command
 // and status stay visible while Page Up/Down scroll the tree and Wait reason.
 func (m *Model) paneLines(w, h int, status string) []string {
+	return m.paneLinesAs(w, h, status, false)
+}
+
+// paneLinesAs is paneLines; inline is the pane under its Overview row (S106),
+// whose title is the run ID alone because the row above names the item and the
+// stage.
+func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 	r, reason, ok := m.paneRow()
 	if !ok {
 		return []string{indent + "Run " + m.pane.run + ": no longer in snapshot", indent + "esc close pane"}
@@ -288,12 +295,15 @@ func (m *Model) paneLines(w, h int, status string) []string {
 	if m.pane.ledger {
 		title += "  started elsewhere"
 	}
+	if inline {
+		title = "Run " + run
+	}
 	header := wrapText(title, width)
 	for i := range header {
 		if stale {
 			header[i] = m.cfg.Theme.Dim.Render(header[i])
 		} else {
-			header[i] = m.cfg.Theme.Heading.Render(header[i])
+			header[i] = m.cfg.Theme.Title.Render(header[i])
 		}
 	}
 	if m.pane.notice != "" {
@@ -490,7 +500,7 @@ func (m *Model) paneLines(w, h int, status string) []string {
 	}
 	out := append(header, lines...)
 	if len(out)+len(footer) < h {
-		out = append(out, indent)
+		out = append(out, "")
 	}
 	out = append(out, footer...)
 	for i := range out {

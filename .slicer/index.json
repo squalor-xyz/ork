@@ -1342,12 +1342,35 @@
       "id": "S106",
       "title": "Run card: the pane inline under the row, round and last heard beside the bar, stall colours, 80x24 drops",
       "short_title": "Run card inline",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S84"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "129e4cd0-d94d-48c6-b7e7-5ce12bcb490f",
+          "kind": "",
+          "text": "**2026-10-26** — Review FAIL: docs/dashboard.md:791-792 still says the run header uses the heading style; code uses Theme.Title.",
+          "created_at": "2026-10-26T14:17:27Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "0326d16b-583d-441f-8dc5-19d81881e3c1",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answers (session a2bf7e0e, 2026-10-26): (1) drop the pipeline-line 'round N' whenever the bar shows rN; (2) inline pane title becomes 'Run <id>' only; (3) keep the fixed 100-column compact threshold; fit-test is a later note.",
+          "created_at": "2026-10-26T14:21:27Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -1365,7 +1388,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

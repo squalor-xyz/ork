@@ -107,12 +107,16 @@ func TestRunningRowWarnCellAndFullDetail(t *testing.T) {
 	if !strings.Contains(v, h.m.cfg.Theme.Warn.Render("! heard 16m")) {
 		t.Errorf("warn cell lacks color: %q", v)
 	}
-	want := "s97  S97  active  20m  [..~~..]  running: reviewer  implementer>[reviewer]>gate  ! heard 16m"
+	want := "s97  S97  active  20m  [..~~..]  ! heard 16m  running: reviewer  implementer>[reviewer]>gate"
 	if got := strings.TrimSpace(strings.Join(detailLines(row, 240, "|"), "\n")); got != want {
 		t.Errorf("incomplete detail: %q", got)
 	}
-	if strings.Contains(rowText(row, 40), "heard") {
-		t.Fatal("fixture does not hide heard at narrow width")
+	// The ! cue outlasts the bar at a width that holds only one of them (S106).
+	if narrow := rowText(row, 40); !strings.Contains(narrow, "! heard 16m") || strings.Contains(narrow, "[..~~..]") {
+		t.Fatalf("the cue must stay and the bar go at a narrow width: %q", narrow)
+	}
+	if strings.Contains(rowText(row, 22), "heard") {
+		t.Fatal("fixture does not hide heard at a very narrow width")
 	}
 }
 
@@ -164,7 +168,9 @@ func TestNarrowRunningCellsDropInPriorityOrder(t *testing.T) {
 	pipeline := "[implementer]>reviewer>gate"
 	heard := "heard 0s"
 	baseWithBar := base + "  [~~....]"
-	texts := []string{base, baseWithBar, baseWithBar + "  " + role, baseWithBar + "  " + role + "  " + pipeline, baseWithBar + "  " + role + "  " + pipeline + "  " + heard}
+	// Last heard follows the bar, so the pipeline and the running step go before it.
+	withHeard := baseWithBar + "  " + heard
+	texts := []string{base, baseWithBar, withHeard, withHeard + "  " + role, withHeard + "  " + role + "  " + pipeline}
 	for i, want := range texts {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			if got := rowText(row, len(want)); got != want {
@@ -201,7 +207,7 @@ func TestRecentEnterOpensReadOnlyEndedPane(t *testing.T) {
 func TestEngineRunningDetailIncludesBoardCells(t *testing.T) {
 	h := treeHarness(t, nil, treeEngine)
 	_, rows := h.m.rows()
-	if got := strings.Join(detailLines(rows[0], 240, "|"), "\n"); !strings.Contains(got, "implementer>[reviewer]>gate  heard 1m") {
+	if got := strings.Join(detailLines(rows[0], 240, "|"), "\n"); !strings.Contains(got, "heard 1m  implementer>[reviewer]>gate") {
 		t.Fatalf("engine detail missing board cells: %q", got)
 	}
 }
@@ -215,7 +221,7 @@ func TestWarningColorTargetsOnlyTheHeardCell(t *testing.T) {
 	h.start()
 	_, rows := h.m.rows()
 	v := h.m.rowLine(rows[0], false, 3, 240)
-	if !strings.Contains(v, "running: implementer: "+task+"  [implementer]>reviewer>gate  "+h.m.cfg.Theme.Warn.Render("! heard 16m")) {
+	if !strings.Contains(v, h.m.cfg.Theme.Warn.Render("! heard 16m")+"  running: implementer: "+task+"  [implementer]>reviewer>gate") {
 		t.Fatalf("warning style escaped cell: %q", v)
 	}
 }
@@ -231,14 +237,15 @@ func TestRecentEndedPaneShowsActualLastHeardAge(t *testing.T) {
 	if h.m.pane == nil || !h.m.pane.ledger || h.m.pane.run != "ended" {
 		t.Fatalf("Recent Enter did not open ended pane: %+v", h.m.pane)
 	}
-	want := "last heard 50m ago"
+	// Last heard sits on the bar's line, dim for an ended run.
+	want := indent + h.m.cfg.Theme.Dim.Render("[......]") + "  " + h.m.cfg.Theme.Dim.Render("last heard 50m ago")
 	lines := h.m.paneLines(120, 60, "")
 	found := false
 	for _, line := range lines {
 		if strings.Contains(sgr.ReplaceAllString(line, ""), "last heard") {
 			found = true
-			if line != indent+h.m.cfg.Theme.Dim.Render(want) {
-				t.Fatalf("ended pane last heard: got %q, want %q dim", sgr.ReplaceAllString(line, ""), indent+want)
+			if line != want {
+				t.Fatalf("ended pane last heard: got %q, want %q dim", sgr.ReplaceAllString(line, ""), sgr.ReplaceAllString(want, ""))
 			}
 		}
 	}

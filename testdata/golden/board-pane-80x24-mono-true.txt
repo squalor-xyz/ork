@@ -4,21 +4,21 @@
   ork             *│  [2mnothing needs you[m
                    │
                    │[1mRunning 1[m
-                   │[1;7m  > started elsewhere  ork  s97  S97  active  20m  [##~~..] [m
+                   │[1;7m  > started elsewhere  ork  S97  active  20m  ! heard 16m   [m
+                   │    [1mRun s97[m
+                   │    [##~~..]  ! last heard 16m ago
+                   │    implementer > [reviewer] > [2mgate[m                  [2mround 1[m
+                   │    [2m+ implementer done[m
+                   │    [1m| reviewer    start[m
+                   │    [2m. gate        waiting[m
+                   │
+                   │    started elsewhere, read-only; esc close pane
                    │
                    │[1mRecent[m
                    │    ork  [1m✗ fail[m[2m  S94  10m  ended 5m ago[m
                    │    ork  ✓ pass[2m  S93  10m  ended 20m ago[m
-                   │[2m  +4 more lines[m
-                   │[2m────────────────────────────────────────────────────────────[m
-                   │  [1mRun s97  S97  active  started elsewhere[m
-                   │  [##~~..]
-                   │  implementer > [reviewer] > [2mgate[m                    [2mround 1[m
-                   │  ! last heard 16m ago
-                   │  [2m+ implementer done[m
-                   │  [1m| reviewer    start[m
-                   │  [2m. gate        waiting[m
-                   │  
-                   │  started elsewhere, read-only; esc close pane
+                   │    ork  [2m~ stopped[m[2m  S95  10m  ended 35m ago[m
+                   │
+                   │[2m  +2 more lines[m
                    │[2m────────────────────────────────────────────────────────────[m
                    │ 1 project | refreshed 16:42:00
