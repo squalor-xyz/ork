@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-157 items · — 52 · done 100 · retired 5
+157 items · — 51 · done 101 · retired 5
 
 ## v1.1
 
@@ -96,7 +96,7 @@
 | 39 | [S102](slices/S102.md) | startRun re-checks that the project is still registered | S | 1 |  | discovered from S38 | done |
 | 40 | [S113](slices/S113.md) | Answer with adj on and no decision key must proceed | S | 1 |  | discovered from S28 | done |
 | 41 | [S73](slices/S73.md) | Allowlist --root-first calls | S | 1 |  |  | done |
-| 42 | [S75](slices/S75.md) | Run directory modes | S | 1 |  | discovered from S51 | — |
+| 42 | [S75](slices/S75.md) | Run directory modes | S | 1 |  | discovered from S51 | done |
 | 43 | [S71](slices/S71.md) | Doctor checks each project's check command and patterns (docs/design.md:613-614) | S | 1 |  |  | — |
 | 44 | [S85](slices/S85.md) | Navigation keys | M | 2 |  |  | done |
 | 45 | [S86](slices/S86.md) | Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default | S | 1 |  | discovered from S83 | — |

@@ -75,10 +75,10 @@ func (s *Store) Create(rec Record) (*Run, error) {
 	}
 	rec = normalize(rec)
 	dir := s.RunDir(rec.ID)
-	if err := os.MkdirAll(s.Dir, 0o755); err != nil {
+	if err := os.MkdirAll(s.Dir, 0o700); err != nil {
 		return nil, err
 	}
-	if err := os.Mkdir(dir, 0o755); err != nil {
+	if err := os.Mkdir(dir, 0o700); err != nil {
 		return nil, fmt.Errorf("run %s: %w", rec.ID, err)
 	}
 	r := &Run{store: s, dir: dir, rec: rec}
@@ -299,6 +299,9 @@ func (r *Run) save() error {
 	}
 	data = append(data, '\n')
 	path := filepath.Join(r.dir, "run.json")
+	if err := os.Chmod(r.dir, 0o700); err != nil {
+		return fmt.Errorf("run directory %s: %w", r.dir, err)
+	}
 	tmp, err := os.CreateTemp(r.dir, ".run-*.tmp")
 	if err != nil {
 		return err

@@ -205,7 +205,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 	reportPath := filepath.Join(e.run.Dir(), reportName)
 	tempDir := filepath.Join(e.run.Dir(), "tmp", fmt.Sprintf("%s-%d", r.role, r.n))
-	if err := os.MkdirAll(tempDir, 0o755); err != nil {
+	if err := os.MkdirAll(tempDir, 0o700); err != nil {
 		return fail("temp directory", err)
 	}
 	if r.role == RoleUI {

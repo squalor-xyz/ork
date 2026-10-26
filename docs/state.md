@@ -79,7 +79,13 @@ Notes on the fields:
 
 ## run.json
 
-ork writes `run.json` at mode 0600 (adj #106).
+ork writes `run.json` at mode 0600 (adj #106). It creates the runs root,
+each run directory, and role temp directories (including spec check temp
+directories) at mode 0700. Saving a run tightens its existing run directory
+to 0700 and replaces an old `run.json` at 0600. Opening or listing runs
+changes no modes. Existing runs roots and temp directories keep their modes.
+A vendor-written role report keeps the vendor's mode; ork writes its own
+fallback report at 0600 (S75, owner decision 2026-10-23).
 `lineup` and `budgets` are the launch values echoed by the plan
 (`run.launch-wire`). The lineup includes any full role chains supplied at
 launch (`lineup.launch-edit`); the gate uses the reviewer's chain. Budgets

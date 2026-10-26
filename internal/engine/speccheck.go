@@ -120,7 +120,7 @@ func RunSpecCheck(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCheckR
 		raws = append(raws, strings.TrimSpace(string(raw)))
 	}
 	tempDir := filepath.Join(cfg.Dir, "tmp")
-	if err := os.MkdirAll(tempDir, 0o755); err != nil {
+	if err := os.MkdirAll(tempDir, 0o700); err != nil {
 		return nil, fmt.Errorf("temp directory: %w", err)
 	}
 	reportPath := filepath.Join(cfg.Dir, "spec-check.md")

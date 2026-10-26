@@ -1054,7 +1054,7 @@
       "id": "S75",
       "title": "Run directory and role temp directory modes; old run.json and vendor reports",
       "short_title": "Run directory modes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -1064,6 +1064,17 @@
           "text": "**2026-10-26** — Spec preflight 2026-10-26 (outer session): anchors re-taken (store.go:78/:81, round.go:208, states.go:78). Added speccheck.go:123, the spec check role temp directory that S116 added at 0755; it is a role temp directory, so the owner's 0700 decision covers it.",
           "created_at": "2026-10-26T21:50:17Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "5e1f5ea5-9599-4c1d-b48f-2274b4bf089a",
+          "kind": "",
+          "text": "**2026-10-26** — Orchestration trial (run 9): owner questions 0; stalls 0; fix rounds 0; merge conflicts 0; context compactions 0; Codex gpt-6.1-sol medium, not blocked; reviewer PASS on the first pass (one surviving mutant noted, store.go:81, masked by the save chmod; no filing).",
+          "created_at": "2026-10-26T21:59:20Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -1087,7 +1098,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
