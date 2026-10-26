@@ -4,7 +4,7 @@
                            │  [2mnothing needs you[m
                            │
                            │[1mRunning 1[m
-                           │[1;7m                       ork  engine  S22  implement  owner action  den...[m
+                           │[1;7m   ork  engine  S22  implement  denied: Write, Bash  2 of 6 steps run...[m
                            │
                            │[1mRecent[m
                            │  [2mnone[m
@@ -24,7 +24,7 @@
                            │
                            │
                            │[2m────────────────────────────────────────────────────────────────────────[m
-                           │  engine  S22  implement  owner action  denied: Write, Bash  2 of 6
-                           │  steps running  2m  [......]  implementer>reviewer>gate
+                           │  engine  S22  implement  denied: Write, Bash  2 of 6 steps running  2m
+                           │   [......]  implementer>reviewer>gate
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │ 1 project | refreshed 16:42:00

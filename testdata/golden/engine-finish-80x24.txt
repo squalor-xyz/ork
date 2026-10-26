@@ -4,7 +4,7 @@
                    │  [2mnothing needs you[m
                    │
                    │[1mRunning 1[m
-                   │[1;7m                       ork  ork-20261019-164000-abcd  S22...[m
+                   │[1;7m   ork  ork-20261019-164000-abcd  S22  finish  2 of 6 ste...[m
                    │
                    │[1mRecent[m
                    │  [2mnone[m
@@ -18,7 +18,7 @@
                    │
                    │
                    │[2m────────────────────────────────────────────────────────────[m
-                   │  ork-20261019-164000-abcd  S22  finish  owner action  2 of
-                   │  6 steps running  2m  [......]  implementer>reviewer>gate
+                   │  ork-20261019-164000-abcd  S22  finish  2 of 6 steps
+                   │  running  2m  [......]  implementer>reviewer>gate
                    │[2m────────────────────────────────────────────────────────────[m
                    │ 1 project | refreshed 16:42:00

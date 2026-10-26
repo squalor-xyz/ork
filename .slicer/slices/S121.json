@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": "Depends on the UI pass role and the approval card slices. Mark the storage path proposed."
+      "body": "Depends on the UI pass role and the approval card slices. Mark the storage path proposed.\n\nOwner decision (2026-10-26 session, AskUserQuestion): the UI pass role writes the changed views at 80x24, 120x40 and ASCII as text files in its report directory, using the project's own tooling; ork stores them with the run and the approval card shows them. No project-specific render code in ork; golden_test.go is not a Files entry for ork's engine (it stays ork's own test). Re-anchor Files after S117 and S118 land."
     },
     {
       "heading": "Check",

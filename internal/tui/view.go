@@ -53,7 +53,7 @@ func (m *Model) screen() string {
 	w, h, sideW := m.layoutSize()
 	mainW := max(w-sideW, 1)
 	th := m.cfg.Theme
-	var body, detail []string
+	var body, detail, footer []string
 	bodyH, start := max(h-4, 1), 0
 	selectedLine := -1
 	overviewBody := false
@@ -81,7 +81,7 @@ func (m *Model) screen() string {
 			if m.waves != nil && m.waves.lineup != nil {
 				rv = m.lineupBody(mainW)
 			} else {
-				rv = m.wavesBody(mainW)
+				rv, footer = m.wavesParts(mainW)
 			}
 		} else if m.launch != nil {
 			rv = m.launchView(mainW)
@@ -89,6 +89,9 @@ func (m *Model) screen() string {
 			rv = m.roadmap(mainW)
 		}
 		status := m.actionStatus
+		if status == "" && m.view == wavesView && m.waves != nil && m.waves.lineup == nil && len(m.waves.picked) > 0 {
+			status = fmt.Sprintf("%d ticked, not launched; [l] launches", len(m.waves.picked))
+		}
 		if m.confirm != nil {
 			status = m.confirm.prompt()
 		}
@@ -144,6 +147,14 @@ func (m *Model) screen() string {
 	} else {
 		detail = nil
 	}
+	if len(footer) > 0 {
+		// The hints stay below the scrolling body; they never take more than half of it.
+		if len(footer) > bodyH/2 && footer[0] == "" {
+			footer = footer[1:]
+		}
+		footer = footer[:min(len(footer), max(bodyH/2, 1))]
+		bodyH = max(bodyH-len(footer), 1)
+	}
 	if overviewBody {
 		if r, ok := m.selectedRow(); ok && r.ready && bodyH >= len(r.commands)+2 {
 			selectedLine += len(r.commands)
@@ -158,6 +169,7 @@ func (m *Model) screen() string {
 	rule := th.Dim.Render(strings.Repeat(horizontal, mainW))
 	main := []string{m.viewBar(), rule}
 	main = append(main, body...)
+	main = append(main, footer...)
 	if len(detail) > 0 {
 		main = append(main, rule)
 	}
@@ -373,6 +385,9 @@ func (m *Model) statusLine(w int) string {
 func (m *Model) helpLines(w, bodyH int) []string {
 	th := m.cfg.Theme
 	lines := []string{th.Heading.Render("Keys")}
+	if m.view == wavesView {
+		lines = append(lines, wrapText("Waves: a shows all waves. <S65: shares files with S65, an earlier item.", max(w, 1))...)
+	}
 	var actionHints []string
 	for _, group := range m.keys.FullHelp() {
 		for _, binding := range group {

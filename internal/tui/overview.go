@@ -48,6 +48,7 @@ type ovRow struct {
 	kind              string
 	style             lipgloss.Style
 	kindW             int
+	noLabel           bool           // a Running engine row has no label column
 	project           int            // registry index; Enter selects non-run rows
 	name              string         // the project's name
 	text              string         // the row's text after the name, in full
@@ -132,7 +133,7 @@ func (m *Model) rows() (needs, running []ovRow) {
 				}
 			}
 			parts := []string{displayState}
-			if r.Wait != "" {
+			if r.Wait != "" && showsWait(r) {
 				parts = append(parts, r.Wait)
 			}
 			if len(r.Denials) > 0 {
@@ -171,8 +172,9 @@ func (m *Model) rows() (needs, running []ovRow) {
 			rest := strings.Join(parts, "  ")
 			row := ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: r.Item + "  " + rest, text: r.ID + "  " + r.Item + "  " + rest, dim: linkedStale != nil}
 			if r.Section(s.EngineRuns) == source.SectionRunning {
-				row.kindW = len(kindExternal)
+				row.noLabel = r.Error == ""
 				if r.Error != "" {
+					row.kindW = len(kindExternal)
 					row.kind, row.style = kindError, th.Error
 				}
 				ledger, steps := engineBoard(r)
@@ -235,6 +237,14 @@ func (m *Model) rows() (needs, running []ovRow) {
 			}
 			running = append(running, ovRow{ledgerID: r.ID, state: r.State, kind: kindExternal, style: style, kindW: len(kindExternal), project: i, name: name,
 				text: text, id: id, rest: rest, stepParts: steps, dim: r.State == "stale"})
+		}
+	}
+	// Engine rows drop the empty label only while no other Running row has one.
+	if slices.ContainsFunc(running, func(r ovRow) bool { return r.kind != "" }) {
+		for i := range running {
+			if running[i].noLabel {
+				running[i].noLabel, running[i].kindW = false, len(kindExternal)
+			}
 		}
 	}
 	for i := range needs {
@@ -343,6 +353,9 @@ func (m *Model) overview(w int) overviewView {
 			}
 			lines = append(lines, m.rowLine(r, selected, nameW, w))
 			textColumn := len(indent) + r.kindW + 1
+			if r.noLabel {
+				textColumn = len(indent)
+			}
 			if r.group != "" {
 				textColumn = len(indent) + 2
 			}
@@ -433,6 +446,9 @@ func (m *Model) rowLine(r ovRow, selected bool, nameW, w int) string {
 			mark = "~"
 		}
 		prefix := indent + kind + " "
+		if r.noLabel {
+			prefix = indent
+		}
 		if nameW > 0 {
 			prefix += mark + name
 		}
@@ -451,6 +467,9 @@ func (m *Model) rowLine(r ovRow, selected bool, nameW, w int) string {
 		styledKind = r.style.Render(kind)
 	}
 	prefix := indent + styledKind + " "
+	if r.noLabel {
+		prefix = indent
+	}
 	if nameW > 0 {
 		prefix += mark + name
 	}
@@ -790,3 +809,10 @@ func (m *Model) readyRows() []ovRow {
 }
 
 func shellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", `'"'"'`) + "'" }
+
+// showsWait reports whether the run's wait text still applies. A run that
+// resumed after an answer keeps no question in its row or pane; the removed
+// project help always applies.
+func showsWait(r source.EngineRun) bool {
+	return r.Unavailable || r.State == "paused" || r.State == "stopped" || r.State == "awaiting-approval"
+}

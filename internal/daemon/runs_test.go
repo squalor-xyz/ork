@@ -2008,3 +2008,15 @@ func TestStructuredQuestionWire(t *testing.T) {
 		t.Fatalf("wire: %s", b)
 	}
 }
+
+func TestAnsweredRunWaitClearsPendingQuestion(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	_, err := store.Create(runrec.Record{ID: "answered", Project: p.Name, Item: "S127", State: runrec.StateImplement, Pending: &runrec.Pending{Kind: runrec.PendingQuestion, Question: "Old owner question", Reason: "Old question reason"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	rows := d.engineRuns(p.Name)
+	if len(rows) != 1 || rows[0].Wait != "" || rows[0].Pending != "" || rows[0].Question != nil {
+		t.Fatalf("answered run exposes pending question: %+v", rows)
+	}
+}

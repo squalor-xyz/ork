@@ -996,7 +996,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 			}
 		}
 		wait := rec.Reason
-		if rec.Pending != nil {
+		if rec.State == runrec.StatePaused && rec.Pending != nil {
 			wait = rec.Pending.Reason
 			if rec.Pending.Kind == runrec.PendingQuestion && rec.Pending.Question != "" {
 				wait = rec.Pending.Question

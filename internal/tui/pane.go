@@ -17,12 +17,14 @@ import (
 
 // runPane keeps its run target while snapshots reorder Overview rows.
 type runPane struct {
-	run, project string
-	freeText     bool
-	adj          bool
-	ledger       bool
-	input        textField
-	offset       int
+	run, project              string
+	answered, answerDone      bool
+	answerState, answerNotice string
+	freeText                  bool
+	adj                       bool
+	ledger                    bool
+	input                     textField
+	offset                    int
 }
 
 func (m *Model) openPane(r ovRow) tea.Cmd {
@@ -47,7 +49,11 @@ func (m *Model) paneRow() (ovRow, string, bool) {
 		}
 		for _, r := range p.snap.EngineRuns {
 			if r.ID == m.pane.run {
-				return ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, name: p.reg.Name, id: r.Item, state: r.State, pending: r.Pending}, r.Wait, true
+				reason := r.Wait
+				if !showsWait(r) {
+					reason = ""
+				}
+				return ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, name: p.reg.Name, id: r.Item, state: r.State, pending: r.Pending}, reason, true
 			}
 		}
 	}
@@ -281,6 +287,16 @@ func (m *Model) paneLines(w, h int, status string) []string {
 	// The action area takes priority if the header no longer fits.
 	header = header[:min(len(header), max(h-len(footer), 0))]
 	var lines []string
+	if m.paneAsk() != nil {
+		context := []string{}
+		for _, line := range strings.Split(strings.NewReplacer("\r\n", "\n", "\r", "\n").Replace(reason), "\n") {
+			if strings.HasPrefix(strings.TrimSpace(line), "Question:") {
+				break
+			}
+			context = append(context, line)
+		}
+		reason = strings.TrimSpace(strings.Join(context, "\n"))
+	}
 	if reason != "" {
 		lines = append(lines, wrapText(reason, width)...)
 	}
@@ -355,4 +371,44 @@ func (m *Model) paneAsk() *runrec.OwnerQuestion {
 		}
 	}
 	return nil
+}
+
+// refreshAnswerStatus follows the resumed run until its next state change.
+func (m *Model) refreshAnswerStatus() {
+	p := m.pane
+	if p == nil || !p.answered {
+		return
+	}
+	project := m.byName[p.project]
+	for _, r := range project.snap.EngineRuns {
+		if r.ID != p.run {
+			continue
+		}
+		if p.answerState != "" && r.State != p.answerState {
+			p.answered = false
+			m.actionStatus = ""
+			return
+		}
+		m.actionStatus = "sending answer"
+		if p.answerDone {
+			m.actionStatus = "answered"
+		}
+		if r.State != "paused" {
+			p.answerState = r.State
+			m.actionStatus = "answered"
+			for i := len(r.Roles) - 1; i >= 0; i-- {
+				role := r.Roles[i]
+				if role.EndedAt.IsZero() && role.Round > 0 {
+					m.actionStatus += fmt.Sprintf("; %s resumed (round %d)", role.Role, role.Round)
+					break
+				}
+			}
+		}
+		if p.answerNotice != "" {
+			m.actionStatus += "; " + p.answerNotice
+		}
+		return
+	}
+	p.answered = false
+	m.actionStatus = ""
 }

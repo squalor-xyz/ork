@@ -1,0 +1,39 @@
+{
+  "id": "S134",
+  "title": "Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S127 later notes (2026-10-26): while answer tracking is on, every snapshot overwrites actionStatus, so another status message is lost on the next poll (internal/tui/pane.go:389-411); the footer can say 'answered' against a new question if the run resumes and re-pauses between snapshots (clear on a pending-text change); the Answer field preview still shows the 'ork answer ...' command while the call is in flight; the Overview detail strip wraps with a stray leading space on continuation lines (overview.go wrapText or breakAt, predates S127, visible in about 10 goldens); no blank line between the pane reason and the progress line."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/pane.go`\n- `internal/tui/model.go`\n- `internal/tui/overview.go`\n- `testdata/golden`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "TestOtherStatusSurvivesAnswerTracking; TestAnsweredClearsWhenPendingTextChanges; TestInFlightPreviewShowsNoCLICommand; TestDetailStripContinuationHasNoLeadingSpace; goldens."
+    },
+    {
+      "heading": "Implement",
+      "body": "Re-anchor from the code after S127 and S109 land. UI slice: UI pass (r14)."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./internal/tui; go test ./internal/tui -update and review; go vet; gofmt -l; slicer check; adj lint."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -219,6 +219,9 @@ func (m *Model) lineupBody(width int) overviewView {
 		}
 		start := len(out.body)
 		add(prefix + label + ": " + value)
+		for _, fallback := range e.chains[i][min(1, len(e.chains[i])):] {
+			add(th.Dim.Render("    fallback: " + fallback.Vendor + " " + fallback.Model + " " + fallback.Effort))
+		}
 		if focused {
 			for j := start; j < len(out.body); j++ {
 				out.body[j] = th.TabActive.Render(out.body[j])

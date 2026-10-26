@@ -3,22 +3,22 @@
 [1;7m> ork              [m|[1mSuggested (slicer plan-parallel)[m
   other            |[1m         Items                                        Shares[m
                    |[1m-- Wave 2 ------------------------------------------ 2 items[m
-                   |[1;7m  [ ] A  Alpha                                        [m[1;7m      [m
+                   |[1;7m  [ ] A  [m[1;7mAlpha                                      [m[1;7m  [m[1;7m      [m
                    |  [ ] B  Beta                                               
                    |[1m-- Wave 4 ------------------------------------------- 1 item[m
-                   |  [ ] C  Gamma                                        [2m<S65[m  
+                   |  [ ] C  Gamma                                        [2m<A[m    
                    |[1m-- Unplaced ----------------------------------------- 1 item[m
-                   |  [ ] D  Delta (no_files)                                   
+                   |  [ ] D  Delta (no files listed)                            
+                   |
+                   |
+                   |
+                   |
+                   |
+                   |
+                   |
+                   |
+                   |
                    |  [enter] item   [space] tick item   [e] edit lineup
                    |  [l] launch wave
-                   |
-                   |
-                   |
-                   |
-                   |
-                   |
-                   |
-                   |
-                   |
                    |[2m------------------------------------------------------------[m
                    | 2 projects | refreshed 16:42:00

@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 134,
+  "next_id": 135,
   "preamble": "",
   "passes": [
     {
@@ -275,7 +275,7 @@
       "id": "S125",
       "title": "Waves composer focus: next waves only, inputs inline under the ticked item",
       "short_title": "Waves composer focus: next waves only, inputs inline under the ticked item",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -296,7 +296,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -373,7 +373,7 @@
       "id": "S127",
       "title": "After an answer: clear the question from the row and pane, and say the role resumed",
       "short_title": "After an answer: clear the question from the row and pane, and say the role resumed",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -394,7 +394,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -4860,6 +4860,34 @@
         "reason": "",
         "importance": 2,
         "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S134",
+      "title": "Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap",
+      "short_title": "Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S127",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
         "effort": 1,
         "attempts": 0
       }

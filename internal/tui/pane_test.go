@@ -155,7 +155,7 @@ func TestPaneAnswerSubmitRefresh(t *testing.T) {
 	h := paneHarness(t, "paused", "question")
 	typeAnswer(h, "use local storage")
 	h.deliver(press("enter"))
-	if v := h.view(); !strings.Contains(v, "S22  implement") || !strings.Contains(v, "ork answer engine 'use local storage': done") || strings.Contains(v, "Answer:") {
+	if v := h.view(); !strings.Contains(v, "S22  implement") || !strings.Contains(v, "answered") || strings.Contains(v, "Answer:") {
 		t.Fatalf("answer must submit immediately and refresh pane and row:\n%s", v)
 	}
 }
@@ -181,7 +181,7 @@ func TestPaneInputOwnsKeys(t *testing.T) {
 		}
 	}
 	h.deliver(press("enter"))
-	if v := h.view(); !strings.Contains(v, "ork answer engine 'qa xtrsnpy?1/': done") || !strings.Contains(v, "S22  implement") {
+	if v := h.view(); !strings.Contains(v, "answered") || !strings.Contains(v, "S22  implement") {
 		t.Fatalf("field leaked a global key or changed submitted text:\n%s", v)
 	}
 }
@@ -789,7 +789,7 @@ func TestPaneAdjOutcomeStatus(t *testing.T) {
 			typeAnswer(h, "use local storage")
 			h.m.cfg.Live.(*actionLive).answerNotice = notice
 			h.deliver(press("enter"))
-			if h.m.actionStatus != "ork answer engine 'use local storage': done; "+notice {
+			if h.m.actionStatus != "answered; "+notice {
 				t.Fatalf("status: %q", h.m.actionStatus)
 			}
 		})
@@ -971,7 +971,7 @@ func TestAnswerCommandQuotesShellText(t *testing.T) {
 		t.Fatalf("unquoted preview: %s", got)
 	}
 	cmd := h.m.requestAction("answer")
-	if cmd == nil || h.m.actionStatus != want+": pending" {
+	if cmd == nil || h.m.actionStatus != "sending answer" {
 		t.Fatalf("pending status: %s", h.m.actionStatus)
 	}
 }
@@ -1045,5 +1045,135 @@ func TestQuestionPaneShowsLeadingContextAboveOptions(t *testing.T) {
 			}
 			checkGolden(t, fmt.Sprintf("pane-question-options-context-mono-%t.txt", mono), h.m.View().Content)
 		})
+	}
+}
+
+func TestAnsweredRunRowShowsNoQuestion(t *testing.T) {
+	for _, state := range []string{"implement", "review", "gate"} {
+		t.Run(state, func(t *testing.T) {
+			h := paneHarness(t, state, "question")
+			r := &h.m.byName["ork"].snap.EngineRuns[0]
+			r.Wait = "Old owner question"
+			row := sgr.ReplaceAllString(strings.Join(h.m.overview(180).body, "\n"), "")
+			pane := sgr.ReplaceAllString(strings.Join(h.m.paneLines(180, 40, ""), "\n"), "")
+			if strings.Contains(row, r.Wait) || strings.Contains(pane, r.Wait) {
+				t.Fatalf("active row or pane retained answered question: row=%s; pane=%s", row, pane)
+			}
+		})
+	}
+}
+
+func TestPaneFooterAfterAnswerSaysResumed(t *testing.T) {
+	h := paneHarness(t, "paused", "question")
+	r := &h.m.byName["ork"].snap.EngineRuns[0]
+	r.Roles = []source.EngineRole{{Role: "implementer", Round: 2}}
+	h.src.set(h.m.byName["ork"].snap)
+	typeAnswer(h, "use local storage")
+	h.deliver(press("enter"))
+	want := "answered; implementer resumed (round 2)"
+	if v := h.view(); !strings.Contains(v, want) || strings.Contains(v, "ork answer engine") || strings.Contains(v, ": pending") {
+		t.Fatalf("answer footer must report resumed role and round: %s", v)
+	}
+	s := h.m.byName["ork"].snap
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	if !strings.Contains(h.view(), want) {
+		t.Fatal("unchanged snapshot dropped resumed status")
+	}
+	s.EngineRuns = append([]source.EngineRun(nil), s.EngineRuns...)
+	s.EngineRuns[0].State = "review"
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	if strings.Contains(h.view(), want) {
+		t.Fatal("next state retained resumed status")
+	}
+}
+
+func TestRunningRowHasNoBlankLabelGap(t *testing.T) {
+	h := actionHarness(t, "implement", "")
+	_, rows := h.m.rows()
+	for _, selected := range []bool{false, true} {
+		line := sgr.ReplaceAllString(h.m.rowLine(rows[0], selected, 0, 180), "")
+		if !strings.HasPrefix(line, indent+"engine  S22") {
+			t.Fatalf("blank label gap before run: %q", line)
+		}
+	}
+}
+
+func TestStructuredQuestionReasonOnlyShowsLeadingContext(t *testing.T) {
+	h := optionsHarness(t)
+	r := &h.m.byName["ork"].snap.EngineRuns[0]
+	r.Wait = "Leading context.\nKeep data intact.\n\nQuestion: Which storage?\nOptions:\n1. use: local storage\n2. remote: remote storage\nRecommend: 1 - keeps data nearby"
+	for _, freeText := range []bool{false, true} {
+		h.m.pane.freeText = freeText
+		lines := sgr.ReplaceAllString(strings.Join(h.m.paneLines(120, 60, ""), "\n"), "")
+		if !strings.Contains(lines, "Leading context.\n  Keep data intact.") || strings.Contains(lines, "Question:") || strings.Contains(lines, "Options:") || strings.Contains(lines, "Recommend:") || strings.Count(lines, "1. use:") > 1 {
+			t.Fatalf("reason must contain leading context only: %s", lines)
+		}
+	}
+}
+
+type blockingAnswerLive struct {
+	*actionLive
+	release chan struct{}
+}
+
+func (l *blockingAnswerLive) AnswerAction(ctx context.Context, a daemon.RunAction) (string, error) {
+	<-l.release
+	return l.actionLive.AnswerAction(ctx, a)
+}
+
+func TestPaneAnswerInFlightShowsResumed(t *testing.T) {
+	h := paneHarness(t, "paused", "question")
+	live := &blockingAnswerLive{actionLive: h.m.cfg.Live.(*actionLive), release: make(chan struct{})}
+	h.m.cfg.Live = live
+	typeAnswer(h, "use local storage")
+	_, cmd := h.m.Update(press("enter"))
+	done := make(chan tea.Msg, 1)
+	go func() { done <- cmd() }()
+	if v := h.view(); !strings.Contains(v, "sending answer") || strings.Contains(v, ": pending") {
+		t.Fatalf("in-flight answer must say sending answer in plain words:\n%s", v)
+	}
+	s := h.m.byName["ork"].snap
+	s.EngineRuns = append([]source.EngineRun(nil), s.EngineRuns...)
+	s.EngineRuns[0].State = "implement"
+	s.EngineRuns[0].Roles = []source.EngineRole{{Role: "implementer", Round: 2}}
+	h.src.set(s)
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	want := "answered; implementer resumed (round 2)"
+	if v := h.view(); !strings.Contains(v, want) || strings.Contains(v, ": pending") {
+		t.Fatalf("blocked answer must show the resumed role from the snapshot:\n%s", v)
+	}
+	close(live.release)
+	h.deliver(<-done)
+	if v := h.view(); !strings.Contains(v, want) || strings.Contains(v, ": pending") || strings.Contains(v, ": done") {
+		t.Fatalf("result must keep the resumed status:\n%s", v)
+	}
+	s.EngineRuns = append([]source.EngineRun(nil), s.EngineRuns...)
+	s.EngineRuns[0].State = "review"
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	if v := h.view(); strings.Contains(v, want) || strings.Contains(v, "answered") {
+		t.Fatalf("next state retained the answer status:\n%s", v)
+	}
+	// A result that arrives after the status was dropped must not bring it back.
+	h.m.Update(actionMsg{action: runAction{verb: "answer", run: "engine", project: "ork"}, message: "decided in adj as #4"})
+	if v := h.view(); strings.Contains(v, "answered") || strings.Contains(v, ": done") || !strings.Contains(v, "decided in adj as #4") {
+		t.Fatalf("late result must show only the adj notice:\n%s", v)
+	}
+}
+
+func TestAnswerResultAfterPaneClosedUsesPlainWords(t *testing.T) {
+	h := paneHarness(t, "paused", "question")
+	live := &blockingAnswerLive{actionLive: h.m.cfg.Live.(*actionLive), release: make(chan struct{})}
+	live.answerNotice = "decided in adj as #4"
+	h.m.cfg.Live = live
+	typeAnswer(h, "use local storage")
+	_, cmd := h.m.Update(press("enter"))
+	done := make(chan tea.Msg, 1)
+	go func() { done <- cmd() }()
+	h.m.pane = nil
+	h.m.actionStatus = ""
+	close(live.release)
+	h.deliver(<-done)
+	if got := h.m.actionStatus; got != "answered; decided in adj as #4" {
+		t.Fatalf("status after the pane closed: %q", got)
 	}
 }
