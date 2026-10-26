@@ -831,7 +831,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "9b8a0199-2af7-4ea8-8167-f042867b6b5b",
+          "kind": "",
+          "text": "**2026-10-26** — From S92's review (landed 8e049d1): fallbackSection (internal/engine/round.go:424) filters records by the gate role only. Once the gate is seeded from the reviewer's row, either feed it the reviewer's earlier rows or skip the note when the history is empty, and test that the gate's first fallback-row brief has no leading '. '.",
+          "created_at": "2026-10-26T19:06:27Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",

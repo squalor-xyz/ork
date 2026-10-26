@@ -1919,3 +1919,4 @@
 {"when": "2026-10-26T18:52:52Z", "item": "S92", "action": "note", "from": "", "to": "", "note": "Repeated-start probe in isolated scratch project: both slice", "by": "Jon R"}
 {"when": "2026-10-26T19:04:13Z", "item": "S92", "action": "status", "from": "started", "to": "done", "note": "A fallback round's brief names this role's earlier matrix rows with their failed exits and says the worktree may hold partial work (check git status); first-row briefs are unchanged. A repeated slicer start --strict succeeds, so per the spec no already-started text. Full race suite green; reviewer PASS.", "by": "Jon R"}
 {"when": "2026-10-26T19:04:18Z", "item": "S92", "action": "note", "from": "", "to": "", "note": "Orchestration trial run 4 (run-20261026-185146-de28, began 1", "by": "Jon R"}
+{"when": "2026-10-26T19:06:27Z", "item": "S93", "action": "note", "from": "", "to": "", "note": "From S92's review (landed 8e049d1): fallbackSection (interna", "by": "Jon R"}
