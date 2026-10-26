@@ -346,7 +346,7 @@
     },
     {
       "id": "u10",
-      "text": "A slice that touches the UI (internal/tui and its golden views, docs/dashboard.md, internal/cli output, or a ui.* adj key) also gets a UI pass that loads the tui-design:tui-design and frontend-design:frontend-design skills (plugins enabled in .claude/settings.json), edits nothing, and sends suggested design edits to the orchestrator for the implementer; the gate still decides. On a size-M or size-L slice the UI pass runs as its own row (r14), a general-purpose subagent in parallel with the reviewer, not instead of it. On a size-S slice the reviewer (r5) loads both skills and does the UI pass itself in the same review (owner, 2026-10-26). A vendor that cannot load these skills gets ork's vendor-neutral UI prompt instead. This holds for each slice in a wave."
+      "text": "A slice that touches the UI (internal/tui and its golden views, docs/dashboard.md, internal/cli output, or a ui.* adj key) also runs the UI pass row (r14) as its own role, in parallel with the reviewer, not instead of it, on every size. The UI pass runs as a general-purpose subagent (it needs the Skill tool), loads the tui-design:tui-design and frontend-design:frontend-design skills (plugins enabled in .claude/settings.json), edits nothing, and sends suggested design edits to the orchestrator for the implementer; the gate still decides. Folding it into the relay-reviewer on size S was tried and dropped on 2026-10-26 (owner): relay-reviewer has no Skill tool. A vendor that cannot load these skills gets ork's vendor-neutral UI prompt instead. This holds for each slice in a wave."
     },
     {
       "id": "u11",

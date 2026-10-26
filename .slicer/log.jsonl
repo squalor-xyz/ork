@@ -1898,3 +1898,4 @@
 {"when": "2026-10-26T17:27:33Z", "item": "S152", "action": "add", "from": "", "to": "open", "note": "S149 later notes: Questions footer, hint polish, pane scroll keys"}
 {"when": "2026-10-26T17:41:28Z", "item": "S95", "action": "status", "from": "started", "to": "done", "note": "Cleanup is idempotent and marks the run cleaned: S119's LandedAt with an empty cleanup reason, or a new CleanedAt after an external slicer land, hides it from Ready; a retry skips a missing worktree; the merged value survives a pass; retention prunes cleaned finished runs. Full race suite green; reviewer PASS; UI pass no fix.", "by": "Jon R"}
 {"when": "2026-10-26T17:41:47Z", "item": "S95", "action": "note", "from": "", "to": "", "note": "Orchestration trial run 1 (outer session as the only orchest", "by": "Jon R"}
+{"when": "2026-10-26T17:38:14Z", "item": "relay-roles.u10", "action": "relay-roles", "from": "", "to": "", "note": "rule-edit"}
