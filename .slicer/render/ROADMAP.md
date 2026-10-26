@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-154 items · — 52 · done 97 · retired 5
+155 items · — 53 · done 97 · retired 5
 
 ## v1.1
 
@@ -208,9 +208,10 @@
 | 151 | [S152](slices/S152.md) | S149 later notes | S | 1 |  |  | — |
 | 152 | [S153](slices/S153.md) | S95 later notes | S | 1 |  |  | — |
 | 153 | [S154](slices/S154.md) | S138 later notes | S | 1 |  |  | — |
+| 154 | S155 | S93 later notes | S | 1 |  | discovered from S93 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 154 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 155 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |

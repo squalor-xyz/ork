@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 155,
+  "next_id": 156,
   "preamble": "",
   "passes": [
     {
@@ -848,6 +848,17 @@
           "kind": "",
           "text": "**2026-10-26** — Review FAIL: the gate seeds from the reviewer's row only when rec.Lineup[gate] is empty (engine.go:171-174), but the daemon always copies the reviewer's chain into the gate lineup (internal/daemon/runs.go:428), so in real runs the gate still starts on row 1. The new tests all leave the gate lineup empty.",
           "created_at": "2026-10-26T19:19:31Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "0b08bdfe-b80a-4dd2-a8da-b44f5d5e8a4f",
+          "kind": "",
+          "text": "**2026-10-26** — Orchestration trial (run 5): owner questions 0; stalls 0; fix rounds 1 (review FAIL: the daemon copies the reviewer lineup into the gate, so the seed never ran); merge conflicts 0; wall clock about 25 min (15:06-15:31 local); context compactions 1 (outer session, during fix round 1). Implementer Codex gpt-6.1-sol medium, not blocked.",
+          "created_at": "2026-10-26T19:33:26Z",
           "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
@@ -5867,6 +5878,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S155",
+      "title": "S93 later notes: gate walk with repeated reviewer rows; environment-dependent daemon adapter test",
+      "short_title": "S93 later notes",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "dc645e30-5ffc-4101-a020-58e263fd6124",
+          "kind": "",
+          "text": "**2026-10-26** — From the S93 relay (run-20261026-190634-c1cc, landed 2cb95b9).\n1. currentEntry (internal/engine/engine.go:181-193): with gate records, the walk starts at row 0, so a gate that started on a repeated non-adjacent reviewer row (chain A, B, A; appendEntry in internal/daemon/runs.go:314-318 drops only adjacent duplicates) can re-try row B, which the reviewer already failed. Proposed: start the walk at the reviewer's seed row when the gate's first record matches it. Gate finding, low, traced not run.\n2. TestAdaptersMapTextAndUsageEvents/claude (internal/daemon/live_test.go:43, assertion :99-100) depends on the environment: the runner is built with no environment, so the redactor reads os.Environ() (runner.go:35, :165-166) and masks trailing text that starts a secret-named variable's value (runner.go:192-196). Reproduced with a dummy REVIEW_FAKE_TOKEN=5abcdefghij on unchanged code. Proposed: give the test runner an explicit empty environment.",
+          "created_at": "2026-10-26T19:33:33Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S93",
         "parent": "",
         "cites": [],
         "key": "",
