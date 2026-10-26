@@ -106,8 +106,8 @@ with a digit key (`1`-`9` stay the projects, `Jump` is unchanged). "Needs you"
 still starts selected. While the entry is selected the first tab of the view bar
 reads `Overview (Running)`; the view is the Overview's Running section full
 screen, then Recent, with no Needs you or Ready section. Each live run is one
-row in project order: the project, then the item, the stage bar (with ` rN`
-from the second round, as everywhere), last heard beside the bar (with the `!`
+row in project order: the project, then the item, the stage bar (with its round
+word, as everywhere), last heard beside the bar (with the `!`
 and `!!` cues of the run pane; S106 moved it ahead of the pipeline), the
 pipeline with the running role in brackets and the ten-bucket activity
 sparkline. A run that waits on the owner is marked by one
@@ -229,41 +229,72 @@ the text column, falling back to a shorter indent when needed to fit.
    - stopped, paused or lost slices;
    - budget pauses;
    - unclassified vendor exits.
-2. **Running:** every running slice across projects, with elapsed time and
-   an ASCII stage bar after it (S07). Engine rows have no label of their own.
-   When every Running row is an engine row without an error, the rows start at
-   the run id with no blank label column. When any Running row has a label
-   (`> started elsewhere` or `! error`), engine rows keep the padded label
-   column so the run ids line up (S33).
-   The *proposed* relay row adds `heard 2m` beside the stage bar (and its
-   `rN` from the second round) and then a compact pipeline such as
-   `[implementer]>reviewer>gate` (S106 put heard ahead of the pipeline). An
-   architect leads when present. `! heard` is amber after 10 minutes with no
-   event; `!! heard` is red after 30 minutes, the stale cutoff, and marks stale
-   runs. The unselected cell uses the warning color (amber) or the error color
-   (red); in monochrome the words `!` and `!!` carry the cue, and red is bold.
-   The selected row detail includes the full pipeline and heard cell even when
-   the row drops them. Stale runs stay under Running, dimmed and labelled stale; elapsed time
-   freezes at their last event. Engine rows show total `tokens N` only when
-   engine usage is available. Narrow rows drop tokens first, then pipeline,
-   role details (the `running:` and `failed:` steps), then heard and the stage
-   bar, whole. A heard cell that carries a `!` or `!!` cue outlasts the bar:
-   when the two do not fit, the bar goes and the cue stays (S106). The Running
-   entry is unchanged: it always keeps the bar and drops heard before it. The first
-   item title is not added.
-   *Proposed* (S106): on a terminal narrower than 100 columns, such as 80x24, a
-   run row drops its run ID and the vendor and model of its running step (`running:
-   reviewer codex/gpt-5: task` reads `running: reviewer: task`). The ID
-   stays in the pane title and on the selected row's detail line, and both stay
-   on rows at 100 columns and wider. Until the terminal reports a size the rows
-   are whole.
-   For relays started elsewhere, the *proposed* row details (also indented
-   under each relay in `ork status`) are `running: ROLE VENDOR/MODEL: TASK`
-   for the last step in ledger order with phase `start` (a working subagent
-   wins over its orchestrator), then `failed: ROLE: TASK` for the last step
-   with phase `fail`; details that do not fit the Overview row are dropped
-   whole, a task that partly fits is cut with `...`, and the selected row's
-   detail shows the full text.
+2. **Running:** every running slice across projects, two lines each
+   (*proposed*, S145; the owner's decision of 2026-10-26). Line 1 is the slice
+   id, its short title (the title when it has no short one), the role working
+   now with its model, the stage bar with its round word, and last heard. Line 2
+   is that role's latest output line, dim and set in under the id; it is
+   omitted when the role has said nothing. The run id and `started elsewhere`
+   are not on the row: the pane names them (`Run ID`, and the read-only footer
+   of a relay started elsewhere), and the selected row's detail line keeps the
+   run id, the engine state, the steps and the elapsed time in full. A project
+   column leads on the all-projects view.
+   - **Round word.** The bar's round counts review rounds, not implementer
+     steps: `fix N` once N fix rounds have begun, and `gate` while the gate
+     runs. The first round has no word. A fix round is an implementer round
+     after the first review; a run of implementer steps in a row is one round
+     (a resumed step does not count again), and the finish step does not count.
+     The finish step is the implementer step after a passed gate. The last
+     round has no review after it yet, so what came before it decides: after a
+     review it is a fix round; after a gate it is a fix round when the gate
+     step failed or its task says fix and not finish. For an engine run the
+     engine's state decides after a gate, because the engine ends a failing
+     gate step `done` and its task need not say fix: `implement`, `checks` or
+     `review` is a fix round, and `finish`, `commit` or later is the finish
+     step. Limit: a relay started elsewhere that records a failing gate as
+     `done` with a task that does not say fix reads one fix round low until the
+     next review begins. A UI pass and the orchestrator are not part of the
+     count. The pane's pipeline line keeps `round N` (the fix rounds plus one)
+     only for a run whose bar has no round word. The Running row leaves the word
+     `gate` off the bar when the gate is the working role (the role cell says
+     it); the pane bar and the Running entry keep it.
+   - **Line 2 for an engine run** is the newest nonblank line of the S99 output
+     tail. A denied call shows as `denied: Bash: ...` on line 2 instead, in the
+     warning colour. **For a relay started elsewhere** ork has no output stream;
+     the ledger gives one line per step, its `--task` line (`slicer relay-run
+     step --task`), which the relay contract sets to a short label such as
+     `s145 implementer`. Line 2 is the task of the running step (the last step
+     with phase `start`, so a subagent shows ahead of its orchestrator).
+   - **The role** is the engine's own running role for an engine run (its state
+     word, such as `checks`, between roles, drawn dim) and the running step for
+     a relay started elsewhere. A stale run shows `stale` before its role,
+     dimmed.
+   - **Narrow rows** drop cells from the right of the id in this order: `tokens
+     N` (an engine run's, when usage is known), the title shortens (to eight
+     columns), the model, the title, then last heard unless it carries a `!` or
+     `!!` cue, the role, and the bar, so a cue outlasts the bar (S106). The id
+     stays. Line 2 does not depend on the width: it is cut to the pane with
+     `...`. The same order holds at 80x24, where the sidebar and the project
+     column leave little for the title, so the title is often the first cell to
+     go.
+   `! heard` is amber after 10 minutes with no event; `!! heard` is red after
+   30 minutes, the stale cutoff, and marks stale runs. The unselected cell uses
+   the warning color (amber) or the error color (red); in monochrome the words
+   `!` and `!!` carry the cue, and red is bold. Stale runs stay under Running,
+   dimmed; elapsed time freezes at their last event in the detail line. A row
+   with an `error` keeps the older one-line form with its `! error` label (the
+   run id, state, wait, denials and error), cut to the pane with the run id
+   whole; on a terminal narrower than 100 columns that form drops its run id
+   (S106). Rows have a label column only while some Running row has a label
+   (`! error` or `~ pending`); the other rows then pad to it so they line up
+   (S33). The Running entry is unchanged but for the round word: it always
+   keeps the bar and drops heard before it.
+   For relays started elsewhere, the *proposed* step details (also indented
+   under each relay in `ork status`) are `running: ROLE VENDOR/MODEL: TASK` for
+   the last step in ledger order with phase `start` (a working subagent wins
+   over its orchestrator), then `failed: ROLE: TASK` for the last step with
+   phase `fail`. They are on the selected row's detail line in full and no
+   longer on the row, which shows the role, the model and the task line instead.
 3. **Recent (proposed):** ended ledger runs within the last hour, newest
    first. Rows show `✓ pass` for pass, `✗ fail` for fail, and `~ stopped` for
    any other outcome, then items, run time,
@@ -326,7 +357,8 @@ Stopped rows show their age from the *proposed* optional `updated_at` field.
 The age uses the largest unit: `45s ago`, `12m ago`, `3h ago`, or `2d ago`.
 A stopped row with no `updated_at` shows no age.
 The join matches the engine's `relay_run` to the ledger run id, making one row
-per run (`ui.run-join-key`). Only unmatched ledger runs say "started elsewhere".
+per run (`ui.run-join-key`). Only unmatched ledger runs are started elsewhere;
+the pane says so (S145 removed the label from the row).
 A ledger run linked to a committed or superseded engine run is not shown.
 This is by design. Ready-to-land rows do not show the run id.
 
@@ -886,10 +918,11 @@ The run pane's *proposed* board details keep the S55 tree. A pipeline above
 it colors finished roles green, running cyan, failed red, and waiting dim.
 The running role uses brackets only for live, non-stale runs. In monochrome
 failed is bold and waiting is dim; passed is not bold. Warning text is plain
-with the `!` cue and no underline. `round N` counts implementer steps, appears
-only when positive, and drops first when narrow. It is right-aligned on the
-pipeline line only for round 1: from round 2 the bar's own `rN` says it and the
-pane's pipeline line carries no round (S106). For live runs, `last heard
+with the `!` cue and no underline. `round N` counts review rounds (the fix
+rounds plus one, S145), appears only when positive, and drops first when
+narrow. It is right-aligned on the pipeline line only for a run whose bar has no
+round word: once the bar says `fix N` or `gate`, the pane's pipeline line
+carries no round (S106). For live runs, `last heard
 N ago` is dim through 10 minutes, amber (the warning color) past 10 minutes,
 and red (the error color) past 30 minutes or for a stale run; the cue is `!` for
 amber and `!!` for red, so monochrome keeps it. It sits on the bar's line, after
@@ -908,8 +941,10 @@ S07 adds an ASCII bar above the pane pipeline. Each role has a two-column
 cell: done `##`, waiting `..`, failed `!!`, and running `~~`, `~=`, `==`, `=~`.
 The normal order is implementer, reviewer, gate; an architect leads when
 present. A new implementer round reopens its cell and resets earlier reviewer,
-gate and architect steps to waiting. `rN` follows the bar from round 2 on
-(`r2`, `r3`), and last heard follows the round on the same line (S106); a pane
+gate and architect steps to waiting. The round word follows the bar once there
+is one (`fix 1`, `fix 2`, `gate`; it replaced `rN`, which counted implementer
+steps and so counted the finish step and resumed steps, S145), and last heard
+follows it on the same line (S106); a pane
 too narrow for both keeps last heard on a line of its own.
 The pipeline also resets earlier-round results. Finished cells never pulse.
 Stopped, paused, stale and ended runs freeze the running cell at `~~` and

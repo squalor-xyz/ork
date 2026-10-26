@@ -28,11 +28,103 @@ func TestPipelineLineMarksTheRunningRole(t *testing.T) {
 	}
 }
 
-func TestRoundIsTheNumberOfImplementerSteps(t *testing.T) {
-	h := treeHarness(t, nil, treeEngine)
-	steps := append(h.m.paneSteps(), runTreeStep{Step: slicercli.Step{Role: "implementer", Phase: "start"}, round: 9})
-	if line := sgr.ReplaceAllString(h.m.pipelineLine(steps, false, 120), ""); !strings.Contains(line, "round 2") {
-		t.Fatal(line)
+// roundSteps builds ledger steps from role:phase pairs, in order. A role with
+// a third part, role:phase:task, carries that task line.
+func roundSteps(spec ...string) []runTreeStep {
+	var steps []slicercli.Step
+	for _, s := range spec {
+		parts := strings.SplitN(s, ":", 3)
+		step := slicercli.Step{Role: parts[0], Phase: parts[1]}
+		if len(parts) == 3 {
+			step.Task = parts[2]
+		}
+		steps = append(steps, step)
+	}
+	return ledgerTreeSteps(steps)
+}
+
+// The round counts review rounds, not implementer steps: the finish step and
+// a resumed step do not count (S145).
+func TestRoundCountsReviewRounds(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		steps []string
+		want  string
+	}{
+		{"first implementer", []string{"implementer:start"}, ""},
+		{"first review", []string{"implementer:done", "reviewer:start"}, ""},
+		{"one review, two fix rounds and a finish step",
+			[]string{"orchestrator:start", "implementer:done", "reviewer:done", "implementer:done", "gate:fail", "implementer:done", "gate:done", "implementer:start"}, "fix 2"},
+		{"the finish step alone", []string{"implementer:done", "reviewer:done", "gate:done", "implementer:start"}, ""},
+		{"a gate step", []string{"implementer:done", "reviewer:done", "implementer:done", "gate:start"}, "gate"},
+		{"the first gate", []string{"implementer:done", "reviewer:done", "gate:start"}, "gate"},
+		{"a fix round running", []string{"implementer:done", "reviewer:done", "implementer:start"}, "fix 1"},
+		{"a fix round after a failed gate", []string{"implementer:done", "reviewer:done", "implementer:done", "gate:fail", "implementer:start"}, "fix 2"},
+		{"a resumed step is the same round", []string{"implementer:done", "reviewer:done", "implementer:done", "implementer:start"}, "fix 1"},
+		{"a UI pass between review and fix", []string{"implementer:done", "reviewer:done", "ui:done", "implementer:start"}, "fix 1"},
+		{"a fix round after a finish step", []string{"implementer:done", "reviewer:done", "implementer:done", "gate:done", "implementer:done:s1 implementer finish", "implementer:done:s1 implementer fix round 2", "reviewer:start"}, "fix 2"},
+		// The engine ends a failing gate step done, and its fix implementer
+		// task need not say fix. Without the engine's state this reads one low.
+		{"a fix round after a gate FAIL recorded as done, ledger only", []string{"implementer:done", "reviewer:done", "implementer:done", "gate:done", "implementer:start:s1 implementer"}, "fix 1"},
+		{"a fix round named by its task after a passed gate", []string{"implementer:done", "reviewer:done", "implementer:done", "gate:done", "implementer:start:s1 implementer fix round 2"}, "fix 2"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			steps := roundSteps(tc.steps...)
+			if got := roundWord(steps); got != tc.want {
+				t.Fatalf("round word %q, want %q", got, tc.want)
+			}
+			bar := stageBar(steps, 0, true)
+			if tc.want == "" && strings.Contains(bar, "] ") || tc.want != "" && !strings.HasSuffix(bar, "] "+tc.want) {
+				t.Fatalf("the stage bar %q must end in %q", bar, tc.want)
+			}
+			if strings.Contains(bar, " r1") || strings.Contains(bar, " r2") || strings.Contains(bar, " r3") {
+				t.Fatalf("the stage bar keeps an rN: %q", bar)
+			}
+		})
+	}
+}
+
+// An engine run's steps carry its state, which tells a fix round from the
+// finish step after a gate the engine recorded as done (S145).
+func TestEngineStateTellsAFixRoundFromTheFinishStep(t *testing.T) {
+	afterGate := []string{"orchestrator:start", "implementer:done:s1 implementer", "reviewer:done:s1 reviewer", "implementer:done:s1 implementer fix round 1", "gate:done:s1 gate"}
+	for _, tc := range []struct {
+		state, task string
+		want        string
+	}{
+		{"implement", "s1 implementer", "fix 2"},
+		{"checks", "s1 implementer", "fix 2"},
+		{"review", "s1 implementer", "fix 2"},
+		{"finish", "s1 implementer finish step", "fix 1"},
+		{"commit", "s1 implementer finish step", "fix 1"},
+		{"awaiting-approval", "s1 implementer finish step", "fix 1"},
+		{"committed", "s1 implementer finish step", "fix 1"},
+		// The state outranks the task.
+		{"commit", "s1 implementer fix round 9", "fix 1"},
+		{"awaiting-approval", "s1 implementer fix round 9", "fix 1"},
+		{"finish", "s1 implementer fix round 9", "fix 1"},
+	} {
+		t.Run(tc.state, func(t *testing.T) {
+			steps := withEngineState(roundSteps(append(append([]string(nil), afterGate...), "implementer:start:"+tc.task)...), tc.state)
+			if got := roundWord(steps); got != tc.want {
+				t.Fatalf("state %s: round word %q, want %q", tc.state, got, tc.want)
+			}
+		})
+	}
+}
+
+// The pipeline line keeps "round N" for a run whose bar says no round; N is
+// the fix rounds plus one.
+func TestPipelineLineRoundFollowsTheFixRounds(t *testing.T) {
+	h := newHarness(t)
+	line := func(spec ...string) string {
+		return sgr.ReplaceAllString(h.m.pipelineLine(roundSteps(spec...), false, 120), "")
+	}
+	if got := line("implementer:done", "reviewer:done", "gate:done", "implementer:start"); !strings.Contains(got, "round 1") {
+		t.Fatalf("a finish step is not a second round: %q", got)
+	}
+	if got := line("implementer:done", "reviewer:done", "implementer:start"); !strings.Contains(got, "round 2") {
+		t.Fatalf("a fix round is the second round: %q", got)
 	}
 }
 

@@ -1852,3 +1852,5 @@
 {"when": "2026-10-26T14:23:45Z", "item": "S145", "action": "add", "from": "", "to": "open", "note": "Running rows at a glance: slice title, working role, fix round, last heard, latest output line"}
 {"when": "2026-10-26T14:35:40Z", "item": "relay-roles.u10", "action": "relay-roles", "from": "", "to": "", "note": "rule-edit"}
 {"when": "2026-10-26T14:36:52Z", "item": "S146", "action": "add", "from": "", "to": "open", "note": "S106 later notes: compact fit-test, pane and cue edge cases, tokens line"}
+{"when": "2026-10-26T14:37:47Z", "item": "S145", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-26T15:27:26Z", "item": "S145", "action": "note", "from": "", "to": "", "note": "Owner answers (session a2bf7e0e, 2026-10-26): (1) line 2 for", "by": "Jon R"}

@@ -5305,13 +5305,28 @@
       "id": "S145",
       "title": "Running rows at a glance: slice title, working role, fix round, last heard, latest output line",
       "short_title": "Running rows at a glance",
-      "status": "open",
+      "status": "started",
       "has_slice": true,
       "depends_on": [
         "S106"
       ],
-      "note_records": [],
-      "claim": null,
+      "note_records": [
+        {
+          "id": "3cb3f378-a8ec-49a9-bc87-2c95047825b1",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answers (session a2bf7e0e, 2026-10-26): (1) line 2 for runs started elsewhere: hide it when the task label is just '<id> <role>', show it when it says more; (2) round rule for runs started elsewhere: keep the current rule; a slicer note asks the contract to label the finish step, after which any later implementer step counts as a fix unless it says finish; (3) one shared column fit for the Running section so bars line up; (4) the selected run highlights both lines in reverse video, and line 2 is not dimmed.",
+          "created_at": "2026-10-26T15:27:26Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": {
+        "owner": "Jon R",
+        "at": "2026-10-26T14:37:47Z"
+      },
       "fields": {
         "size": "M",
         "flags": [],
@@ -5328,7 +5343,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

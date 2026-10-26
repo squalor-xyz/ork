@@ -15,7 +15,7 @@
                            │    1-2 pick; t free text; esc close pane
                            │
                            │[1mRunning 1[m  [1m! owner questions 1[m
-                           │  [1m> started elsewhere[m  ork  ledger  S22  active, 2 of 6 steps running...
+                           │   ork  [1mS22[m  [2mactive[m  [......]
                            │
                            │[1mRecent[m
                            │  [2mnone[m

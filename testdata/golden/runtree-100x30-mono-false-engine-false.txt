@@ -4,7 +4,7 @@
   ork                     *│  [90mnothing needs you[m
                            │
                            │[1;36mRunning 1[m
-                           │[1;7;97;44m  > started elsewhere  ork  tree  S55  active, 2 of 5 steps running  2m [m
+                           │[1;7;97;44m   ork  S55  reviewer opus  [##~~..]                                    [m
                            │    [1mRun tree[m
                            │    [##~~..]
                            │    [32mimplementer[m > [36m[reviewer][m > [90mgate[m                              [90mround 1[m

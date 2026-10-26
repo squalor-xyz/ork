@@ -24,7 +24,6 @@ const (
 	kindHeld     = "# held"
 	kindError    = "! error"
 	kindPending  = "~ pending"
-	kindExternal = "> started elsewhere"
 
 	kindWidth = len(kindDecision)
 	indent    = "  "
@@ -69,6 +68,137 @@ type ovRow struct {
 	compact           bool     // a run row on a narrow terminal drops its run ID and vendor/model
 	live              *liveRun // a live run's board cells, for the Running entry
 	detailCells       []string // a live run's detail line, wrapped between cells
+	run               *runRow  // a Running run's two-line form (S145)
+}
+
+// runRow is a Running run drawn on two lines (S145). Line 1 holds the slice id,
+// its short title, the role working now with its model, the stage bar with its
+// round word and last heard. Line 2 is that role's latest output line. The run
+// id and "started elsewhere" are not in the row; the pane names them.
+type runRow struct {
+	id, title   string
+	role, model string // the working role, or the state word when none works
+	stateOnly   bool   // role is a state word, not a role: drawn dim
+	bar         string
+	heard       string
+	heardStyle  lipgloss.Style
+	tokens      string // an engine run's "tokens N", the first cell to drop
+	second      string // line 2; "" when the role has said nothing
+	secondWarn  bool   // line 2 is a denial, which the owner should not miss
+}
+
+// Cells of line 1, left to right.
+const (
+	cellID = iota
+	cellTitle
+	cellRole
+	cellModel
+	cellBar
+	cellHeard
+	cellTokens
+)
+
+type runCell struct {
+	text string
+	kind int
+}
+
+// titleMin is the fewest columns a shortened title keeps, "..." included.
+const titleMin = 8
+
+// fitRun chooses the cells of line 1 for room columns. Tokens, which only an
+// engine run has, go first. Then the title shortens (to titleMin columns), the
+// model goes, and the title; last heard drops next unless it carries a cue, then
+// the role, then the stage bar, so a cue outlasts the bar as it does elsewhere
+// (S106). The id stays.
+func fitRun(rr *runRow, room int) []runCell {
+	cue := strings.HasPrefix(rr.heard, "!")
+	type stage struct{ title, model, heard, role, bar, tokens bool }
+	stages := []stage{
+		{true, true, true, true, true, true},
+		{true, true, true, true, true, false},
+		{true, false, true, true, true, false},
+		{false, false, true, true, true, false},
+		{false, false, cue, true, true, false},
+		{false, false, cue, false, true, false},
+		{false, false, cue, false, false, false},
+	}
+	cells := func(s stage, title string) []runCell {
+		out := []runCell{{rr.id, cellID}}
+		if s.title && title != "" {
+			out = append(out, runCell{title, cellTitle})
+		}
+		if s.role && rr.role != "" {
+			out = append(out, runCell{rr.role, cellRole})
+			if s.model && rr.model != "" {
+				out = append(out, runCell{rr.model, cellModel})
+			}
+		}
+		if s.bar && rr.bar != "" {
+			out = append(out, runCell{rr.bar, cellBar})
+		}
+		if s.heard && rr.heard != "" {
+			out = append(out, runCell{rr.heard, cellHeard})
+		}
+		if s.tokens && rr.tokens != "" {
+			out = append(out, runCell{rr.tokens, cellTokens})
+		}
+		return out
+	}
+	width := func(cs []runCell) int {
+		n := 0
+		for i, c := range cs {
+			n += lipgloss.Width(c.text)
+			if i > 0 {
+				n += runGap(c)
+			}
+		}
+		return n
+	}
+	for i, s := range stages {
+		bare := cells(s, "")
+		if i == 0 {
+			// Tokens stay only while everything else is whole.
+			if whole := cells(s, rr.title); width(whole) <= room {
+				return whole
+			}
+			continue
+		}
+		if !s.title || rr.title == "" {
+			if width(bare) <= room {
+				return cells(s, rr.title)
+			}
+			continue
+		}
+		avail := room - width(bare) - 2
+		switch {
+		case lipgloss.Width(rr.title) <= avail:
+			return cells(s, rr.title)
+		case avail >= titleMin:
+			return cells(s, clip(rr.title, avail))
+		}
+	}
+	return []runCell{{clip(rr.id, room), cellID}}
+}
+
+// runGap is the space before a cell: one between a role and its model, two
+// between the others.
+func runGap(c runCell) int {
+	if c.kind == cellModel {
+		return 1
+	}
+	return 2
+}
+
+func joinRun(cells []runCell) string {
+	var b strings.Builder
+	for i, c := range cells {
+		if i > 0 {
+			b.WriteString(strings.Repeat(" ", runGap(c)))
+		}
+		b.WriteString(c.text)
+	}
+	return b.String()
 }
 
 // liveRun is what the Running entry shows of one run beyond its Overview row:
@@ -215,16 +345,21 @@ func (m *Model) rows() (needs, running []ovRow) {
 					break
 				}
 			}
+			// The engine's state tells a fix round from the finish step (S145).
+			steps = withEngineState(steps, r.State)
 			if !r.Unavailable {
 				row.live = &liveRun{item: r.Item, ledger: ledger, steps: steps, activity: r.Activity}
 			}
 			if r.Section(s.EngineRuns) == source.SectionRunning {
 				row.noLabel = r.Error == ""
 				if r.Error != "" {
-					row.kindW = len(kindExternal)
+					row.kindW = kindWidth
 					row.kind, row.style = kindError, th.Error
 				}
 				row.stepParts = m.boardRowParts(ledger, steps)
+				if r.Error == "" {
+					row.run = m.engineRunRow(s, r, ledger, steps)
+				}
 				if r.UsageKnown || r.Tokens != 0 {
 					tokenText := fmt.Sprintf("tokens %d", r.Tokens)
 					// Trailing cells drop first: tokens, pipeline, heard, then bar. A heard
@@ -280,16 +415,25 @@ func (m *Model) rows() (needs, running []ovRow) {
 			if r.State == "stale" {
 				style = th.Dim
 			}
-			running = append(running, ovRow{ledgerID: r.ID, state: r.State, kind: kindExternal, style: style, kindW: len(kindExternal), project: i, name: name,
+			// A relay started elsewhere has no label: the pane says so (S145).
+			running = append(running, ovRow{ledgerID: r.ID, state: r.State, style: style, noLabel: true, project: i, name: name,
 				text: text, id: id, rest: rest, stepParts: steps, dim: r.State == "stale", compact: compact,
+				run:  m.ledgerRunRow(s, r),
 				live: &liveRun{item: strings.Join(r.Items, ","), ledger: r, steps: ledgerTreeSteps(r.Steps)}})
 		}
 	}
-	// Engine rows drop the empty label only while no other Running row has one.
+	// Run rows drop the empty label only while no other Running row has one;
+	// then they pad to the widest label so the rows line up (S33).
 	if slices.ContainsFunc(running, func(r ovRow) bool { return r.kind != "" }) {
+		labelW := 0
+		for _, r := range running {
+			if r.kind != "" {
+				labelW = max(labelW, r.kindW)
+			}
+		}
 		for i := range running {
 			if running[i].noLabel {
-				running[i].noLabel, running[i].kindW = false, len(kindExternal)
+				running[i].noLabel, running[i].kindW = false, labelW
 			}
 		}
 	}
@@ -366,6 +510,9 @@ type overviewView struct {
 	sel    int
 	detail []string
 	paneAt int // the body line the open run pane goes under (S106); -1 when none
+	// paneExtra is the lines the pane's row takes beyond one: a Running run's
+	// second line (S145).
+	paneExtra int
 }
 
 // isPaneRow reports whether r is the row of the open run pane.
@@ -409,7 +556,7 @@ func (m *Model) overview(w int) overviewView {
 	}
 
 	var lines []string
-	sel, paneAt := -1, -1
+	sel, paneAt, paneExtra := -1, -1, 0
 	section := func(rows []ovRow, first int, empty string) {
 		if len(rows) == 0 {
 			lines = append(lines, indent+th.Dim.Render(empty))
@@ -432,6 +579,9 @@ func (m *Model) overview(w int) overviewView {
 				textColumn += 1 + nameW + 2
 			}
 			hang := strings.Repeat(" ", textColumn)
+			if r.run != nil && r.run.second != "" {
+				lines = append(lines, m.runSecondLine(r, hang, w))
+			}
 			for _, command := range r.commands {
 				prefix := hang
 				if lipgloss.Width(hang+command) > w {
@@ -441,6 +591,9 @@ func (m *Model) overview(w int) overviewView {
 			}
 			if m.isPaneRow(r) {
 				paneAt = len(lines) - 1
+				if r.run != nil && r.run.second != "" {
+					paneExtra = 1
+				}
 			}
 		}
 	}
@@ -482,7 +635,7 @@ func (m *Model) overview(w int) overviewView {
 	ready := m.readyRows()
 	section(ready, len(needs)+len(running)+len(recent), "none")
 
-	ov := overviewView{body: lines, sel: sel, paneAt: paneAt}
+	ov := overviewView{body: lines, sel: sel, paneAt: paneAt, paneExtra: paneExtra}
 	switch {
 	case m.active >= 0 && m.projects[m.active].setup():
 		// The hint is the detail line of a selected project with no rows.
@@ -545,6 +698,9 @@ func (m *Model) rowLine(r ovRow, selected bool, nameW, w int) string {
 	if nameW > 0 {
 		prefix += mark + name
 	}
+	if r.run != nil {
+		return prefix + m.runLine(r, max(w-lipgloss.Width(prefix), 1))
+	}
 	text := rowText(r, max(w-lipgloss.Width(prefix), 1))
 	heard := ""
 	heardStyle := th.Warn
@@ -584,6 +740,147 @@ func (m *Model) rowLine(r ovRow, selected bool, nameW, w int) string {
 	return prefix + text
 }
 
+// sliceTitle is the short title of an item, or its title when it has no short
+// one, on one line. It is "" for an unknown item.
+func sliceTitle(items []slicercli.Item, id string) string {
+	for _, it := range items {
+		if it.ID == id {
+			if it.ShortTitle != "" {
+				return treeText(it.ShortTitle)
+			}
+			return treeText(it.Title)
+		}
+	}
+	return ""
+}
+
+// newRunRow is the part of a run's two lines that both kinds of run share.
+func (m *Model) newRunRow(id, title string, ledger slicercli.RelayRun, steps []runTreeStep) *runRow {
+	live := ledger.State != "stale" && boardLive(ledger.State)
+	rr := &runRow{id: id, title: title, bar: stageBar(steps, m.treeFrame, live)}
+	rr.heard, rr.heardStyle = m.lastHeard(ledger)
+	return rr
+}
+
+// engineRunRow is the two-line form of an engine run. The role working now is
+// the engine's own, with its model; between roles the engine's state stands in.
+// Line 2 is a denial when there is one, otherwise the newest line of the S99
+// output tail.
+func (m *Model) engineRunRow(s source.Snapshot, r source.EngineRun, ledger slicercli.RelayRun, steps []runTreeStep) *runRow {
+	rr := m.newRunRow(r.Item, sliceTitle(s.Items.Value, r.Item), ledger, steps)
+	if r.UsageKnown || r.Tokens != 0 {
+		rr.tokens = fmt.Sprintf("tokens %d", r.Tokens)
+	}
+	rr.role, rr.stateOnly = r.State, true
+	for _, role := range r.Roles {
+		if role.EndedAt.IsZero() {
+			rr.role, rr.model, rr.stateOnly = role.Role, role.Model, false
+		}
+	}
+	rr.finishRow(ledger)
+	switch {
+	case len(r.Denials) > 0:
+		rr.second, rr.secondWarn = "denied: "+source.DenialsText(r.Denials), true
+	default:
+		rr.second = lastTailLine(r.Tail)
+	}
+	return rr
+}
+
+// ledgerRunRow is the two-line form of a relay started elsewhere. The ledger
+// has no output stream, so line 2 is the task line of the step that is running
+// (relay-run step --task), which the relay contract sets to a short label for
+// the step. The last start wins, so a subagent shows ahead of its orchestrator.
+func (m *Model) ledgerRunRow(s source.Snapshot, r slicercli.RelayRun) *runRow {
+	title := ""
+	if len(r.Items) == 1 {
+		title = sliceTitle(s.Items.Value, r.Items[0])
+	}
+	rr := m.newRunRow(strings.Join(r.Items, ","), title, r, ledgerTreeSteps(r.Steps))
+	rr.role, rr.stateOnly = r.State, true
+	for _, step := range r.Steps {
+		if step.Phase == "start" {
+			rr.role, rr.model, rr.second, rr.stateOnly = step.Role, step.Model, treeText(step.Task), false
+		}
+	}
+	rr.finishRow(r)
+	return rr
+}
+
+// finishRow settles line 1 once the role is known. The gate is named once: when
+// the gate is the working role, the round word "gate" leaves the bar (the pane
+// bar and the Running entry keep it). A stale run says stale before its role.
+func (rr *runRow) finishRow(ledger slicercli.RelayRun) {
+	if rr.role == "gate" && !rr.stateOnly {
+		rr.bar = strings.TrimSuffix(rr.bar, " gate")
+	}
+	rr.markStale(ledger)
+}
+
+// markStale puts the word stale before the role of a stale run: it stays under
+// Running, dimmed and labelled stale (docs/dashboard.md).
+func (rr *runRow) markStale(ledger slicercli.RelayRun) {
+	if ledger.State == "stale" && !strings.HasPrefix(rr.role, "stale") {
+		rr.role = "stale " + rr.role
+	}
+}
+
+// lastTailLine is the newest nonblank line of a role's output tail.
+func lastTailLine(tail string) string {
+	lines := strings.Split(tail, "\n")
+	for i := len(lines) - 1; i >= 0; i-- {
+		if line := treeText(lines[i]); line != "" {
+			return line
+		}
+	}
+	return ""
+}
+
+// runLine is line 1 of a Running run in room columns, styled: the id in bold, the
+// working role in the running colour with its model dim, last heard in its stall
+// colour. A stale run is dim except for a heard cue.
+func (m *Model) runLine(r ovRow, room int) string {
+	th := m.cfg.Theme
+	var b strings.Builder
+	for i, c := range fitRun(r.run, room) {
+		if i > 0 {
+			b.WriteString(strings.Repeat(" ", runGap(c)))
+		}
+		style := lipgloss.NewStyle()
+		switch c.kind {
+		case cellID:
+			style = th.Title
+		case cellRole:
+			style = th.Running
+			if r.run.stateOnly {
+				style = th.Dim
+			}
+		case cellModel:
+			style = th.Dim
+		case cellHeard:
+			style = r.run.heardStyle
+		}
+		if r.dim && !(c.kind == cellHeard && strings.HasPrefix(c.text, "!")) {
+			style = th.Dim
+		}
+		b.WriteString(style.Render(c.text))
+	}
+	return b.String()
+}
+
+// runSecondLine is line 2 of a Running run: the role's latest output line under
+// the slice id, set in by one indent, dim (a denial is amber), cut to the pane.
+func (m *Model) runSecondLine(r ovRow, hang string, w int) string {
+	th := m.cfg.Theme
+	prefix := hang + indent
+	text := clip(r.run.second, max(w-lipgloss.Width(prefix), 1))
+	style := th.Dim
+	if r.run.secondWarn {
+		style = th.Warn
+	}
+	return prefix + style.Render(text)
+}
+
 // rowText is a row's text cut to room columns. A run's ID stays whole: the rest
 // of its base text is cut first. External step parts never displace base text.
 func rowText(r ovRow, room int) string {
@@ -593,6 +890,9 @@ func rowText(r ovRow, room int) string {
 			cells = cells[:len(cells)-1]
 		}
 		return strings.Join(cells, "  ")
+	}
+	if r.run != nil {
+		return joinRun(fitRun(r.run, room))
 	}
 	// Overview rows stay on one line; the pane retains the full Wait text.
 	flatten := strings.NewReplacer("\r\n", " ", "\n", " ", "\r", " ")

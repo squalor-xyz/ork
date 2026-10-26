@@ -122,6 +122,8 @@ func (m *Model) screen() string {
 			paneHeight := max(h-7, 1)
 			if h >= 24 {
 				paneHeight = max(h-10, 1)
+				// A Running run's second line is one more row line (S145).
+				paneHeight = max(paneHeight-ov.paneExtra, 1)
 			}
 			// Four columns in, the pane sits inside its row (S106).
 			pane := m.paneLinesAs(max(mainW-len(indent), 1), paneHeight, status, true)
@@ -175,6 +177,10 @@ func (m *Model) screen() string {
 	if overviewBody {
 		if r, ok := m.selectedRow(); ok && r.ready && m.pane == nil && bodyH >= len(r.commands)+2 {
 			selectedLine += len(r.commands)
+		}
+		// A Running run's second line scrolls into view with its row (S145).
+		if r, ok := m.selectedRow(); ok && r.run != nil && r.run.second != "" && m.pane == nil && m.active != runningEntry && bodyH >= 3 {
+			selectedLine++
 		}
 	}
 

@@ -3,6 +3,7 @@
 package tui
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -461,7 +462,7 @@ func mainRowOnly(view string) string {
 	return b.String()
 }
 
-func TestSummaryShowsTheRoundOnTheStageBarAfterAFixRound(t *testing.T) {
+func TestSummaryShowsTheFixRoundOnTheStageBar(t *testing.T) {
 	h := newHarness(t, runningProjects...)
 	fix := roleRun("reviewer", 6*time.Minute, 3*time.Minute)
 	fix.Exit = "fail"
@@ -470,8 +471,8 @@ func TestSummaryShowsTheRoundOnTheStageBarAfterAFixRound(t *testing.T) {
 	h.start()
 	h.send(press("["))
 	row := mainRow(h.wide(), "alpha", "S30")
-	if !strings.Contains(row, "[~~....] r2") || strings.Contains(row, "round") {
-		t.Fatalf("a second round must read r2 on the stage bar, with no cell of its own: %q", row)
+	if !strings.Contains(row, "[~~....] fix 1") || strings.Contains(row, "round") || strings.Contains(row, " r2") {
+		t.Fatalf("a fix round must read fix 1 on the stage bar, with no cell of its own: %q", row)
 	}
 }
 
@@ -567,5 +568,418 @@ func TestSummaryDetailWrapsBetweenCellsOnly(t *testing.T) {
 				t.Errorf("width %d: line %d starts with a stray space: %q", w, i, line)
 			}
 		}
+	}
+}
+
+// Running rows at a glance (S145): two lines per run on the Overview. Line 1
+// names the slice, the role working now with its model, the stage bar with its
+// round and last heard; line 2 is that role's latest output line. The run id
+// and "started elsewhere" are in the pane.
+
+// glanceItems are the slices the three running runs work on. S41 has no short
+// title, so its row falls back to the title.
+func glanceItems() []slicercli.Item {
+	return []slicercli.Item{
+		{ID: "S30", Title: "Thirty is the full title of the slice", ShortTitle: "Thirty short", Status: "started"},
+		{ID: "S41", Title: "Forty-one untitled", Status: "started"},
+		{ID: "S52", Title: "Fifty-two is long", ShortTitle: "Fifty-two short", Status: "started"},
+	}
+}
+
+// glanceHarness is one project with three running runs: an engine run in
+// review whose reviewer has a tail, a relay started elsewhere whose running
+// step has a task line, and one whose step has none.
+func glanceHarness(t *testing.T) *harness {
+	t.Helper()
+	p := proj("ork", false)
+	h := newHarness(t, p)
+	impl, review := roleRun("implementer", 9*time.Minute, 4*time.Minute), roleRun("reviewer", 3*time.Minute, 0)
+	impl.Model, review.Model = "sonnet", "opus"
+	engine := liveEngine("run-eng", "S30", "review", testActivity, impl, review)
+	engine.Tail = "reading the diff\nall four new tests fail for the stated reason\n"
+	ext41 := externalRun("ext-41", "S41")
+	ext41.Steps[1].Vendor, ext41.Steps[1].Model, ext41.Steps[1].Task = "claude", "haiku", "s41 reviewer"
+	ext52 := externalRun("ext-52", "S52")
+	ext52.Steps[1].Vendor, ext52.Steps[1].Model = "codex", "gpt-5"
+	s := engineSnap(p, engine)
+	s.Items.Value = glanceItems()
+	s.Runs.Value = []slicercli.RelayRun{ext41, ext52}
+	h.src.set(s)
+	h.start()
+	return h
+}
+
+// runningSection is the main column's lines under the Running heading, up to
+// the next heading.
+func runningSection(view string) []string {
+	var out []string
+	in := false
+	for _, line := range strings.Split(view, "\n") {
+		main := line
+		if _, after, ok := strings.Cut(line, "│"); ok {
+			main = after
+		}
+		switch {
+		case strings.HasPrefix(main, "Running"):
+			in = true
+		case in && strings.HasPrefix(main, "Recent"):
+			return out
+		case in:
+			out = append(out, main)
+		}
+	}
+	return out
+}
+
+func rowIndex(lines []string, words ...string) int {
+next:
+	for i, line := range lines {
+		for _, w := range words {
+			if !strings.Contains(line, w) {
+				continue next
+			}
+		}
+		return i
+	}
+	return -1
+}
+
+func TestRunningRowNamesSliceRoleAndModel(t *testing.T) {
+	h := glanceHarness(t)
+	sec := runningSection(h.at(100, 30))
+	for _, tc := range []struct{ id, title, role string }{
+		{"S30", "Thirty short", "reviewer opus"},
+		{"S41", "Forty-one untitled", "reviewer haiku"},
+		{"S52", "Fifty-two short", "reviewer gpt-5"},
+	} {
+		i := rowIndex(sec, tc.id)
+		if i < 0 {
+			t.Fatalf("no row for %s:\n%s", tc.id, strings.Join(sec, "\n"))
+		}
+		row := sec[i]
+		for _, want := range []string{tc.title, tc.role, "[##~~..]", "heard "} {
+			if !strings.Contains(row, want) {
+				t.Errorf("%s: line 1 lacks %q: %q", tc.id, want, row)
+			}
+		}
+		for _, gone := range []string{"started elsewhere", "run-eng", "ext-41", "ext-52", "steps running", "active"} {
+			if strings.Contains(row, gone) {
+				t.Errorf("%s: line 1 still shows %q: %q", tc.id, gone, row)
+			}
+		}
+	}
+	if row := sec[rowIndex(sec, "S30")]; strings.Contains(row, "Thirty is the full title") {
+		t.Errorf("line 1 must show the short title, not the title: %q", row)
+	}
+}
+
+func TestRunningRowShowsLatestOutputLine(t *testing.T) {
+	h := glanceHarness(t)
+	sec := runningSection(h.at(100, 30))
+	// An engine run: the newest line of the S99 output tail, not the older one.
+	i := rowIndex(sec, "S30")
+	if i < 0 || i+1 >= len(sec) || !strings.Contains(sec[i+1], "all four new tests fail for the stated reason") {
+		t.Fatalf("line 2 of the engine run must be the latest output line:\n%s", strings.Join(sec, "\n"))
+	}
+	if strings.Contains(strings.Join(sec, "\n"), "reading the diff") {
+		t.Fatalf("only the latest output line is shown:\n%s", strings.Join(sec, "\n"))
+	}
+	// A relay started elsewhere has no output stream: the running step's task.
+	i = rowIndex(sec, "S41")
+	if i < 0 || i+1 >= len(sec) || !strings.Contains(sec[i+1], "s41 reviewer") {
+		t.Fatalf("line 2 of a ledger-only run must be the running step's task:\n%s", strings.Join(sec, "\n"))
+	}
+	// No task and no tail: no line 2.
+	i = rowIndex(sec, "S52")
+	if i < 0 || (i+1 < len(sec) && strings.TrimSpace(sec[i+1]) != "") {
+		t.Fatalf("a run with nothing to say has no second line:\n%s", strings.Join(sec, "\n"))
+	}
+	// An engine run with no tail yet has none either.
+	h.m.byName["ork"].snap.EngineRuns[0].Tail = ""
+	sec = runningSection(h.at(100, 30))
+	if i = rowIndex(sec, "S30"); i < 0 || strings.Contains(sec[i+1], "all four") || !strings.Contains(sec[i+1], "S41") {
+		t.Fatalf("an engine run without a tail has no second line:\n%s", strings.Join(sec, "\n"))
+	}
+}
+
+func TestRunIdStaysInPane(t *testing.T) {
+	h := glanceHarness(t)
+	sec := strings.Join(runningSection(h.at(100, 30)), "\n")
+	if strings.Contains(sec, "run-eng") || strings.Contains(sec, "ext-41") || strings.Contains(sec, "started elsewhere") {
+		t.Fatalf("the rows must not carry the run id or started elsewhere:\n%s", sec)
+	}
+	h.send(press("enter"))
+	if v := plainView(h.m); !strings.Contains(v, "Run run-eng") {
+		t.Fatalf("the engine run's pane must name the run id:\n%s", v)
+	}
+	h.send(press("esc"))
+	h.send(press("down"))
+	h.send(press("enter"))
+	v := plainView(h.m)
+	if !strings.Contains(v, "Run ext-41") || !strings.Contains(v, "started elsewhere") {
+		t.Fatalf("the relay's pane must name the run id and say started elsewhere:\n%s", v)
+	}
+}
+
+// The title shortens first, then the model goes; the id, the role, the bar and
+// last heard stay while there is room, and line 2 does not depend on the
+// width (S145).
+func TestRunningRowDropsTitleThenModel(t *testing.T) {
+	h := glanceHarness(t)
+	h.at(100, 30)
+	_, running := h.m.rows()
+	var row ovRow
+	for _, r := range running {
+		if r.ledgerID == "ext-41" {
+			row = r
+		}
+	}
+	if row.run == nil {
+		t.Fatal("no run row for ext-41")
+	}
+	phase := func(text string) int {
+		switch {
+		case strings.Contains(text, "Forty-one untitled") && strings.Contains(text, "haiku"):
+			return 0
+		case strings.Contains(text, "...") && strings.Contains(text, "haiku"):
+			return 1
+		case strings.Contains(text, "Forty") && !strings.Contains(text, "haiku"):
+			return 2
+		case !strings.Contains(text, "Forty"):
+			return 3
+		}
+		return -1
+	}
+	seen, last := map[int]bool{}, 0
+	for room := 120; room >= 24; room-- {
+		text := rowText(row, room)
+		p := phase(text)
+		if p < 0 || p < last {
+			t.Fatalf("room %d: the cells went out of order (phase %d after %d): %q", room, p, last, text)
+		}
+		seen[p], last = true, p
+		if !strings.Contains(text, "S41") || lipgloss.Width(text) > room {
+			t.Fatalf("room %d: the id must stay and the row must fit: %q", room, text)
+		}
+		if p <= 2 && !strings.Contains(text, "reviewer") {
+			t.Fatalf("room %d: the role must outlast the model and the title: %q", room, text)
+		}
+	}
+	for p := 0; p <= 3; p++ {
+		if !seen[p] {
+			t.Errorf("no width showed phase %d", p)
+		}
+	}
+	// At 80x24 line 2 stays.
+	sec := runningSection(h.at(80, 24))
+	if i := rowIndex(sec, "S30"); i < 0 || !strings.Contains(sec[i+1], "all four new tests fail") {
+		t.Fatalf("line 2 must stay at 80x24:\n%s", strings.Join(sec, "\n"))
+	}
+}
+
+func glanceGoldenModel(theme Theme, w, h int) *Model {
+	m := newGoldenModel(theme)
+	now := time.Date(2026, 10, 19, 16, 42, 7, 0, time.UTC)
+	ago := func(d time.Duration) time.Time { return now.Add(-d) }
+	role := func(name, model string, began, ended time.Duration) source.EngineRole {
+		r := source.EngineRole{Role: name, Round: 1, Vendor: "claude", Model: model, StartedAt: ago(began), Exit: "ok"}
+		if ended > 0 {
+			r.EndedAt = ago(ended)
+		}
+		return r
+	}
+	fix := role("implementer", "sonnet", 3*time.Minute, 0)
+	fix.Round = 2
+	engine := source.EngineRun{ID: "run-1", Item: "S30", State: "implement", CreatedAt: ago(20 * time.Minute), Activity: testActivity,
+		Tail:  "reading the diff\nupdating the golden views for the two-line rows\n",
+		Roles: []source.EngineRole{role("implementer", "sonnet", 15*time.Minute, 8*time.Minute), role("reviewer", "opus", 8*time.Minute, 4*time.Minute), fix}}
+	one := relayWithSteps(
+		slicercli.Step{ID: "s1", Role: "implementer", Phase: "done"},
+		slicercli.Step{ID: "s2", Role: "reviewer", Phase: "done"},
+		slicercli.Step{ID: "s3", Role: "gate", Phase: "start", Vendor: "claude", Model: "opus", Task: "s41 gate"})
+	one.ID, one.Items = "ext-1", []string{"S41"}
+	one.BeganAt, one.UpdatedAt = ago(18*time.Minute).Format(time.RFC3339), ago(2*time.Minute).Format(time.RFC3339)
+	two := relayWithSteps(
+		slicercli.Step{ID: "s1", Role: "implementer", Phase: "start", Vendor: "codex", Model: "gpt-5", Task: "s52 implementer"})
+	two.ID, two.Items = "ext-2", []string{"S52"}
+	two.BeganAt, two.UpdatedAt = ago(40*time.Minute).Format(time.RFC3339), ago(14*time.Minute).Format(time.RFC3339)
+	ork := engineSnap(four[0], engine)
+	ork.Items.Value = glanceItems()
+	other := snap(four[1], nil, glanceItems(), one, two)
+	for _, s := range []source.Snapshot{ork, other, snap(four[2], nil, nil), snap(four[3], nil, nil)} {
+		m.Update(snapshotMsg{name: s.Project.Name, snap: s})
+	}
+	m.Update(tea.WindowSizeMsg{Width: w, Height: h})
+	return m
+}
+
+func TestGoldenRunningRowsAtAGlance(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		w, h int
+		mono bool
+	}{
+		{"glance-100x30-color.txt", 100, 30, false},
+		{"glance-100x30-mono.txt", 100, 30, true},
+		{"glance-80x24-color.txt", 80, 24, false},
+		{"glance-80x24-mono.txt", 80, 24, true},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			m := glanceGoldenModel(NewTheme(c.mono), c.w, c.h)
+			checkGolden(t, c.name, m.View().Content)
+		})
+	}
+}
+
+// A stale run stays under Running, dimmed and labelled stale (S145: the label
+// is a word before the role, since the state text left the row).
+func TestStaleRunningRowSaysStale(t *testing.T) {
+	p := proj("ork", false)
+	h := newHarness(t, p)
+	r := externalRun("ext-old", "S41")
+	r.State = "stale"
+	r.UpdatedAt = t0.Add(-35 * time.Minute).Format(time.RFC3339)
+	h.src.set(snap(p, nil, nil, r))
+	h.start()
+	sec := runningSection(h.at(100, 30))
+	i := rowIndex(sec, "S41")
+	if i < 0 || !strings.Contains(sec[i], "stale reviewer") || !strings.Contains(sec[i], "!! heard 35m") {
+		t.Fatalf("a stale run must say stale before its role and keep the red cue:\n%s", strings.Join(sec, "\n"))
+	}
+}
+
+// The cursor on the last of many runs keeps that run's second line on screen.
+func TestSelectedRunSecondLineScrollsIntoView(t *testing.T) {
+	p := proj("ork", false)
+	h := newHarness(t, p)
+	var runs []slicercli.RelayRun
+	for i := 0; i < 8; i++ {
+		r := externalRun(fmt.Sprintf("ext-%d", i), fmt.Sprintf("S%d", 40+i))
+		r.Steps[1].Task = fmt.Sprintf("task line %d", i)
+		runs = append(runs, r)
+	}
+	h.src.set(snap(p, nil, nil, runs...))
+	h.start()
+	for height := 12; height <= 20; height++ {
+		h.m.Update(tea.WindowSizeMsg{Width: 100, Height: height})
+		for i := 0; i < 7; i++ {
+			h.send(press("down"))
+		}
+		// The detail line repeats the task, so look at the line under the row.
+		v := plainView(h.m)
+		lines := mainLines(v)
+		if i := lineWith(lines, 0, "S47", "reviewer"); i < 0 || i+1 >= len(lines) || !strings.Contains(lines[i+1], "task line 7") {
+			t.Fatalf("height %d: the last run's second line must sit under its row on screen:\n%s", height, v)
+		}
+		for i := 0; i < 7; i++ {
+			h.send(press("up"))
+		}
+	}
+}
+
+// An engine run's fix round after a gate FAIL: the engine ends the gate step
+// done, so the row, the pane and the Running entry read the round from the
+// engine's state, implement, and not from the gate's phase (S145).
+func TestEngineRowCountsTheFixRoundAfterAGateFail(t *testing.T) {
+	roles := func() []source.EngineRole {
+		fix := roleRun("implementer", 6*time.Minute, 4*time.Minute)
+		fix.Round = 2
+		third := roleRun("implementer", 2*time.Minute, 0)
+		third.Round = 3
+		return []source.EngineRole{
+			roleRun("implementer", 12*time.Minute, 9*time.Minute),
+			roleRun("reviewer", 9*time.Minute, 7*time.Minute),
+			fix,
+			roleRun("gate", 4*time.Minute, 2*time.Minute),
+			third,
+		}
+	}
+	for _, tc := range []struct{ state, want, not string }{
+		{"implement", "fix 2", ""},
+		{"finish", "fix 1", "fix 2"},
+	} {
+		t.Run(tc.state, func(t *testing.T) {
+			p := proj("ork", false)
+			h := newHarness(t, p)
+			run := liveEngine("run-eng", "S30", tc.state, nil, roles()...)
+			h.src.set(engineSnap(p, run))
+			h.start()
+			row := mainRow(h.at(100, 30), "S30", "implementer")
+			if !strings.Contains(row, "] "+tc.want) || (tc.not != "" && strings.Contains(row, tc.not)) {
+				t.Fatalf("the row must read %q in state %s: %q", tc.want, tc.state, row)
+			}
+			h.send(press("enter"))
+			if v := plainView(h.m); !strings.Contains(v, "] "+tc.want+"  last heard") {
+				t.Fatalf("the pane bar must read %q in state %s:\n%s", tc.want, tc.state, v)
+			}
+			h.send(press("esc"))
+			h.send(press("["))
+			if row := mainRow(h.at(160, 30), "ork", "S30"); !strings.Contains(row, "] "+tc.want) {
+				t.Fatalf("the Running entry must read %q in state %s: %q", tc.want, tc.state, row)
+			}
+		})
+	}
+}
+
+// The gate is named once on line 1: by the role cell, not by the round word
+// too. The pane bar and the Running entry keep the word.
+func TestGateRowNamesTheGateOnce(t *testing.T) {
+	p := proj("ork", false)
+	h := newHarness(t, p)
+	r := relayWithSteps(
+		slicercli.Step{ID: "s1", Role: "implementer", Phase: "done"},
+		slicercli.Step{ID: "s2", Role: "reviewer", Phase: "done"},
+		slicercli.Step{ID: "s3", Role: "gate", Phase: "start", Model: "opus"})
+	r.ID, r.Items = "ext-g", []string{"S41"}
+	r.UpdatedAt = t0.Add(-time.Minute).Format(time.RFC3339)
+	h.src.set(snap(p, nil, nil, r))
+	h.start()
+	sec := runningSection(h.at(100, 30))
+	i := rowIndex(sec, "S41")
+	if i < 0 || !strings.Contains(sec[i], "gate opus  [####~~]") || strings.Count(sec[i], "gate") != 1 {
+		t.Fatalf("line 1 must name the gate once:\n%s", strings.Join(sec, "\n"))
+	}
+	// The word stays when the gate is not the working role: a UI pass started after it.
+	other := r
+	other.ID = "ext-u"
+	other.Items = []string{"S42"}
+	other.Steps = append(append([]slicercli.Step(nil), r.Steps...), slicercli.Step{ID: "s4", Role: "ui", Phase: "start"})
+	h.src.set(snap(p, nil, nil, r, other))
+	h.send(press("r"))
+	sec = runningSection(h.at(100, 30))
+	if i := rowIndex(sec, "S42"); i < 0 || !strings.Contains(sec[i], "ui  [####~~] gate") {
+		t.Fatalf("the gate word stays while another role works:\n%s", strings.Join(sec, "\n"))
+	}
+	h.send(press("enter"))
+	if v := plainView(h.m); !strings.Contains(v, "[####~~] gate  last heard") {
+		t.Fatalf("the pane bar keeps the gate word:\n%s", v)
+	}
+	h.send(press("esc"))
+	h.send(press("["))
+	if row := mainRow(h.at(160, 30), "ork", "S41"); !strings.Contains(row, "[####~~] gate") {
+		t.Fatalf("the Running entry keeps the gate word: %q", row)
+	}
+}
+
+// With no role working, the state word in the role cell is not drawn as a role.
+func TestStateWordIsDimNotTheRunningColour(t *testing.T) {
+	p := proj("ork", false)
+	h := newHarness(t, p)
+	h.m.cfg.Theme = NewTheme(false)
+	th := h.m.cfg.Theme
+	done := roleRun("implementer", 9*time.Minute, 4*time.Minute)
+	h.src.set(engineSnap(p, liveEngine("run-eng", "S30", "checks", nil, done)))
+	h.start()
+	_, rows := h.m.rows()
+	line := h.m.rowLine(rows[0], false, 3, 200)
+	if !strings.Contains(line, th.Dim.Render("checks")) || strings.Contains(line, th.Running.Render("checks")) {
+		t.Fatalf("the state word must be dim: %q", line)
+	}
+	// A working role keeps the running colour.
+	h.src.set(engineSnap(p, liveEngine("run-eng", "S30", "review", nil)))
+	h.send(press("r"))
+	_, rows = h.m.rows()
+	if line := h.m.rowLine(rows[0], false, 3, 200); !strings.Contains(line, th.Running.Render("reviewer")) {
+		t.Fatalf("a working role must be in the running colour: %q", line)
 	}
 }

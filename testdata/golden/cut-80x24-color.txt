@@ -12,7 +12,7 @@
                    │  [90m~[m  agents      waiting for the first reply
                    │
                    │[1;36mRunning 2[m
-                   │[1;7;97;44m  > started elsewhere  slicer      S11  active, 2 of 6 st...[m
+                   │[1;7;97;44m              slicer      S11  active  [......]             [m
                    │  [90m~ pending [m  agents      waiting for the first reply
                    │
                    │[1;36mRecent[m

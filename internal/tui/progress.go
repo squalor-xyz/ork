@@ -9,6 +9,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
@@ -53,8 +54,8 @@ func stageBar(steps []runTreeStep, frame int, live bool) string {
 		b.WriteString(cell)
 	}
 	b.WriteByte(']')
-	if n := roleCounts(steps)["implementer"]; n > 1 {
-		fmt.Fprintf(&b, " r%d", n)
+	if word := roundWord(steps); word != "" {
+		b.WriteString(" " + word)
 	}
 	return b.String()
 }
@@ -133,4 +134,100 @@ func (m *Model) paneActivity() []int {
 		}
 	}
 	return nil
+}
+
+// reviewSteps are the lane steps that make up a review round, in order: the
+// implementer, the reviewers and the gate. An orchestrator or a UI pass takes
+// no part in the count.
+func reviewSteps(steps []runTreeStep) []runTreeStep {
+	var out []runTreeStep
+	for _, s := range laneSteps(steps) {
+		switch s.Role {
+		case "implementer", "reviewer", "architect", "gate":
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+// fixRounds counts the fix rounds of a run (S145): the implementer rounds that
+// follow a review. A run of implementer steps in a row is one round, so a
+// resumed step does not count again. The first round is not a fix round, and
+// neither is a finish step, the implementer step after a passed gate.
+//
+// Every round but the last has a review or a gate after it. The last has none
+// yet, so what came before it decides:
+//   - after a review or an architect step it is a fix round;
+//   - after a gate it is a fix round when the gate step failed or its own task
+//     says fix (and not finish);
+//   - for an engine run the engine's state decides after a gate (engineFix): the
+//     engine ends a failing gate step done and need not say fix in the task, but
+//     its state is implement, checks or review in a fix round and finish, commit
+//     or later in the finish step.
+//
+// A ledger-only run whose gate FAIL was recorded as done, with a task that does
+// not say fix, reads one fix round low until the next review begins.
+func fixRounds(steps []runTreeStep) int {
+	seq := reviewSteps(steps)
+	rounds, fixes := 0, 0
+	for i := 0; i < len(seq); {
+		if seq[i].Role != "implementer" {
+			i++
+			continue
+		}
+		j := i
+		for j < len(seq) && seq[j].Role == "implementer" {
+			j++
+		}
+		rounds++
+		switch {
+		case rounds == 1:
+		case j < len(seq):
+			fixes++
+		default:
+			prev, last := seq[i-1], seq[j-1]
+			task := strings.ToLower(last.Task)
+			fix, known := engineFix(last.engineState)
+			switch {
+			case prev.Role != "gate" || prev.Phase == "fail":
+				fixes++
+			case known:
+				if fix {
+					fixes++
+				}
+			case strings.Contains(task, "fix") && !strings.Contains(task, "finish"):
+				fixes++
+			}
+		}
+		i = j
+	}
+	return fixes
+}
+
+// engineFix reads an engine run's state: fix is true in the states of an
+// implementer fix round (implement, checks and review, the engine's own steps
+// after it), false from the finish step on. known is false for a run with no
+// engine state and for paused and stopped runs, which say nothing.
+func engineFix(state string) (fix, known bool) {
+	switch state {
+	case runrec.StateImplement, runrec.StateChecks, runrec.StateReview, runrec.StateArchitect, runrec.StateGate:
+		return true, true
+	case runrec.StateFinish, runrec.StateCommit, runrec.StateAwaitingApproval, runrec.StateCommitted:
+		return false, true
+	}
+	return false, false
+}
+
+// roundWord is the round as the owner reads it (S145): "gate" while the gate is
+// running, otherwise "fix N" once a fix round has begun. The first round has no
+// word. A gate that has ended says nothing: the finish step or a fix round
+// follows it.
+func roundWord(steps []runTreeStep) string {
+	if seq := reviewSteps(steps); len(seq) > 0 && seq[len(seq)-1].Role == "gate" && seq[len(seq)-1].Phase == "start" {
+		return "gate"
+	}
+	if n := fixRounds(steps); n > 0 {
+		return fmt.Sprintf("fix %d", n)
+	}
+	return ""
 }

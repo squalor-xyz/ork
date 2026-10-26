@@ -4,7 +4,7 @@
   ork             *│  [2mnothing needs you[m
                    │
                    │[1mRunning 1[m
-                   │[1;7m  > started elsewhere  ork  S97  active  20m  ! heard 16m   [m
+                   │[1;7m   ork  S97  reviewer  [##~~..]  ! heard 16m                [m
                    │
                    │[1mRecent[m
                    │    ork  [1m✗ fail[m[2m  S94  10m  ended 5m ago[m

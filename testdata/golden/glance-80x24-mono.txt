@@ -1,0 +1,24 @@
+[1mork[m [2mdev[m  ?help     │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+  Running        3 │[2m────────────────────────────────────────────────────────────[m
+[1;7m> Needs you      0 [m│[1mNeeds you 0[m
+  slicer          *│  [2mnothing needs you[m
+  adjudicate      *│
+  DataBall         │[1mRunning 3[m
+  agents           │[1;7m   slicer      S30  implementer  [~~....] fix 1  heard 3m   [m
+                   │                 [2mupdating the golden views for the two-li...[m
+                   │   adjudicate  [1mS41[m  Forty-...  gate [2mopus[m  [####~~]  [2mheard 2m[m
+                   │                 [2ms41 gate[m
+                   │   adjudicate  [1mS52[m  implementer  [~~....]  ! heard 14m
+                   │                 [2ms52 implementer[m
+                   │
+                   │[1mRecent[m
+                   │  [2mnone[m
+                   │
+                   │[1mReady to land[m
+                   │  [2mnone[m
+                   │
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │  run-1  S30  implement  20m  [~~....] fix 1  heard 3m
+                   │   [implementer]>reviewer>gate
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ 4 projects | refreshed 16:42:07

@@ -1092,7 +1092,7 @@ func TestRunningRowHasNoBlankLabelGap(t *testing.T) {
 	_, rows := h.m.rows()
 	for _, selected := range []bool{false, true} {
 		line := sgr.ReplaceAllString(h.m.rowLine(rows[0], selected, 0, 180), "")
-		if !strings.HasPrefix(line, indent+"engine  S22") {
+		if !strings.HasPrefix(line, indent+"S22") {
 			t.Fatalf("blank label gap before run: %q", line)
 		}
 	}

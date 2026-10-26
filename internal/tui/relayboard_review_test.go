@@ -112,10 +112,10 @@ func TestRunningRowWarnCellAndFullDetail(t *testing.T) {
 		t.Errorf("incomplete detail: %q", got)
 	}
 	// The ! cue outlasts the bar at a width that holds only one of them (S106).
-	if narrow := rowText(row, 40); !strings.Contains(narrow, "! heard 16m") || strings.Contains(narrow, "[..~~..]") {
+	if narrow := rowText(row, 20); !strings.Contains(narrow, "! heard 16m") || strings.Contains(narrow, "[..~~..]") {
 		t.Fatalf("the cue must stay and the bar go at a narrow width: %q", narrow)
 	}
-	if strings.Contains(rowText(row, 22), "heard") {
+	if strings.Contains(rowText(row, 12), "heard") {
 		t.Fatal("fixture does not hide heard at a very narrow width")
 	}
 }
@@ -163,14 +163,15 @@ func TestNarrowRunningCellsDropInPriorityOrder(t *testing.T) {
 	h.start()
 	_, rows := h.m.rows()
 	row := rows[0]
-	base := "r  S97  active"
-	role := "running: implementer"
-	pipeline := "[implementer]>reviewer>gate"
+	// Line 1 drops, from the right: tokens (an engine run's), then the title and
+	// the model (this run has neither), then last heard (no cue here), the role
+	// and the bar. The slice id stays.
+	base := "S97"
+	role := "implementer"
 	heard := "heard 0s"
-	baseWithBar := base + "  [~~....]"
-	// Last heard follows the bar, so the pipeline and the running step go before it.
-	withHeard := baseWithBar + "  " + heard
-	texts := []string{base, baseWithBar, withHeard, withHeard + "  " + role, withHeard + "  " + role + "  " + pipeline}
+	withBar := base + "  [~~....]"
+	withRole := base + "  " + role + "  [~~....]"
+	texts := []string{base, withBar, withRole, withRole + "  " + heard}
 	for i, want := range texts {
 		t.Run(fmt.Sprint(i), func(t *testing.T) {
 			if got := rowText(row, len(want)); got != want {
@@ -221,8 +222,14 @@ func TestWarningColorTargetsOnlyTheHeardCell(t *testing.T) {
 	h.start()
 	_, rows := h.m.rows()
 	v := h.m.rowLine(rows[0], false, 3, 240)
-	if !strings.Contains(v, h.m.cfg.Theme.Warn.Render("! heard 16m")+"  running: implementer: "+task+"  [implementer]>reviewer>gate") {
-		t.Fatalf("warning style escaped cell: %q", v)
+	if !strings.Contains(v, h.m.cfg.Theme.Warn.Render("! heard 16m")) {
+		t.Fatalf("the heard cell lacks the warning style: %q", v)
+	}
+	// The task, which looks like a heard cell, is line 2 and stays dim.
+	body := h.m.overview(240).body
+	i := rowIndex(body, "! heard 16m")
+	if i < 0 || i+1 >= len(body) || body[i+1] != "      "+"    "+h.m.cfg.Theme.Dim.Render(task) {
+		t.Fatalf("the task must be line 2, dim: %q", body)
 	}
 }
 

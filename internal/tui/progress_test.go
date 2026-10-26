@@ -31,7 +31,7 @@ func TestStageBarFillsFinishedRoles(t *testing.T) {
 		t.Fatal(got)
 	}
 	steps = append(steps, runTreeStep{Step: slicercli.Step{Role: "implementer", Phase: "start"}, round: 2})
-	if got := stageBar(steps, 0, true); got != "[..~~....] r2" {
+	if got := stageBar(steps, 0, true); got != "[..~~....] fix 1" {
 		t.Fatal(got)
 	}
 	stopped := ledgerTreeSteps([]slicercli.Step{{Role: "implementer", Phase: "done"}, {Role: "reviewer", Phase: "done"}, {Role: "gate", Phase: "fail"}})
@@ -227,7 +227,7 @@ func TestLiveDetailGoldens(t *testing.T) {
 				h.m.cfg.ASCII = mode == "ascii"
 				h.m.byName["ork"].snap.EngineRuns[0].Activity = []int{0, 3, 10, 15, 20, 25, 30, 40, 3, 0}
 				bar := stageBar(h.m.paneSteps(), 0, true)
-				if bar != "[~~....] r2" {
+				if bar != "[~~....] fix 1" {
 					t.Errorf("fix-round fixture bar: %s", bar)
 				}
 				if got := h.m.pipeline(h.m.paneSteps(), false, true); got != "[implementer]>reviewer>gate" {
