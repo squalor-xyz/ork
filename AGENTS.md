@@ -110,9 +110,9 @@ date. Anything the owner did not explicitly pick stays an open ask.
 - In a slice relay or wave, a slice that touches the UI (`internal/tui`
   and its golden views, `docs/dashboard.md`, `internal/cli` output, or a
   `ui.*` adj key) also gets a UI pass, as rule u10 says
-  (`slicer relay-roles show`): which skills it loads, and when it runs as
-  its own row (r14) or folds into the reviewer. The skills come from the
-  plugins enabled in `.claude/settings.json`.
+  (`slicer relay-roles show`): its own row (r14) on every size, a
+  general-purpose subagent that loads the skills enabled as plugins in
+  `.claude/settings.json`.
 
 ## Handoff
 
