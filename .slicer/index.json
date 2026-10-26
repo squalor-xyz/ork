@@ -121,7 +121,7 @@
       "id": "S126",
       "title": "Implementer brief: ork runs the check command itself; a sandbox limit is not an owner question",
       "short_title": "Implementer brief: ork runs the check command itself; a sandbox limit is not an owner question",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -142,7 +142,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

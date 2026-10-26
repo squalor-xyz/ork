@@ -3,8 +3,11 @@
 package engine
 
 import (
+	"context"
 	"strings"
 	"testing"
+
+	"github.com/squalor-xyz/ork/internal/registry"
 )
 
 func baseBrief() BriefInput {
@@ -110,5 +113,56 @@ func TestBuildBriefEveryRoleAndItsErrors(t *testing.T) {
 		if _, err := BuildBrief(in); err == nil || !strings.Contains(err.Error(), field) {
 			t.Errorf("empty %s: %v", field, err)
 		}
+	}
+}
+
+func TestBriefNamesCheckCommand(t *testing.T) {
+	checkBriefInstructionsOnlyForImplementer(t)
+	for _, tc := range []struct{ name, command, want string }{
+		{"configured", "go test -race ./...", "ork runs `go test -race ./...` and `slicer check` after the round, outside your sandbox."},
+		{"empty", "", "ork runs `slicer check` after the round, outside your sandbox."},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := newHarness(t, func(o *harnessOpts) { o.project = func(p *registry.Project) { p.CheckCommand = tc.command } })
+			e := h.start()
+			for _, req := range h.runner.requests() {
+				_, brief, _ := strings.Cut(req.Brief, "\n# Brief\n")
+				if req.Role == RoleImplementer {
+					if !strings.Contains(brief, "## Checks ork runs") || !strings.Contains(brief, tc.want) {
+						t.Errorf("implementer brief lacks %q", tc.want)
+					}
+				} else if strings.Contains(brief, "## Checks ork runs") {
+					t.Errorf("%s brief includes implementer check instructions", req.Role)
+				}
+			}
+			if err := e.Approve(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			reqs := h.runner.requests()
+			finish := reqs[len(reqs)-1]
+			if finish.Role != RoleImplementer || !strings.Contains(finish.Brief, "## Finish step") {
+				t.Fatal("last request must be the implementer finish step")
+			}
+			if strings.Contains(finish.Brief, "## Checks ork runs") {
+				t.Error("finish brief includes checks that do not run after the finish step")
+			}
+		})
+	}
+}
+
+func checkBriefInstructionsOnlyForImplementer(t *testing.T) {
+	for _, role := range []string{RoleReviewer, RoleGate, "architect"} {
+		t.Run(role, func(t *testing.T) {
+			in := baseBrief()
+			in.Role = role
+			in.CheckCommand = "go test -race ./..."
+			got, err := BuildBrief(in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.Contains(got, "## Checks ork runs") {
+				t.Error("non-implementer brief includes check instructions")
+			}
+		})
 	}
 }
