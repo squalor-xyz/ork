@@ -63,6 +63,7 @@ func (m *Model) paneSteps() []runTreeStep {
 			if r.RelayRun != "" {
 				for _, run := range boardLedgers(p.snap) {
 					if run.ID == r.RelayRun {
+						run.State = r.State
 						return m.roleDetails(boardTreeSteps(run), r)
 					}
 				}

@@ -307,7 +307,7 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 	if m.pane.ledger {
 		run = r.ledgerID
 	}
-	displayState := r.state
+	displayState := stateWord(r.state)
 	stale := m.paneBoardRun().State == "stale"
 	if stale {
 		displayState = "stale"

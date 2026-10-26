@@ -135,7 +135,7 @@ func (m *Model) lastHeard(r slicercli.RelayRun) (string, lipgloss.Style) {
 		return "", m.cfg.Theme.Dim
 	}
 	age := m.cfg.Now().Sub(at)
-	if !boardLive(r.State) {
+	if r.State == "awaiting-approval" || !boardLive(r.State) {
 		return "heard " + elapsed(age), m.cfg.Theme.Dim
 	}
 	cue := ""
@@ -162,9 +162,7 @@ func (m *Model) paneBoardRun() slicercli.RelayRun {
 			if r.ID == id {
 				for _, ledger := range boardLedgers(p.snap) {
 					if r.RelayRun != "" && ledger.ID == r.RelayRun {
-						if !boardLive(r.State) {
-							ledger.State = r.State
-						}
+						ledger.State = r.State
 						return ledger
 					}
 				}

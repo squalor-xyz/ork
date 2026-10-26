@@ -1177,7 +1177,7 @@ func (m *Model) actionRefusal(verb string, r ovRow, ok bool) (status string, ref
 		return "run is already stopped; clear with: ork dismiss " + r.engineID, true
 	}
 	if verb == "approve" && r.state != "awaiting-approval" {
-		return "approve needs awaiting-approval; run is " + r.state, true
+		return "approve needs " + stateWord("awaiting-approval") + "; run is " + stateWord(r.state), true
 	}
 	if verb == "approve" {
 		if why := m.approvalBlock(r.name, r.engineID, m.pane != nil); why != "" {

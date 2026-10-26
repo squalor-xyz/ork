@@ -475,6 +475,19 @@ superseded nor dismissed appear under Needs you. Their kinds are
 amber `! owner questions N` alert beside the Running count while questions
 are waiting. In monochrome, question kinds and the alert are bold. Each kind is a symbol and a word,
 so monochrome still reads it.
+An engine-linked row and its pane use the engine state even when the ledger
+run is stale. Awaiting approval reads `awaiting approval`; the row stays
+undimmed and Enter opens its engine pane with the linked ledger steps.
+On Approve and Paused rows, the wait age goes immediately after the state
+word, before the reason and other details: `awaiting approval  19h00m  owner
+approval`. Narrow rows clip the tail after the age.
+Awaiting-approval and paused ages count from the persisted `wait_started_at`
+using the current clock, including while the ledger is stale. Human-check
+marks do not reset the age. Older records fall back to `updated_at`, then the
+run's start when both timestamps are absent (see `docs/state.md`).
+Every elapsed duration, including Running ages, uses days and hours from
+24 hours up: `1d00h`, `3d02h`. Below 24 hours it keeps seconds, minutes, or
+hours and minutes, such as `23h59m`.
 Other active engine states appear under Running. Committed runs do not appear
 in either section. A stopped run disappears once a newer engine record exists
 for the same slice, ordered by `created_at`; ledger runs do not clear it
@@ -1094,7 +1107,8 @@ N ago` is dim through 10 minutes, amber (the warning color) past 10 minutes,
 and red (the error color) past 30 minutes or for a stale run; the cue is `!` for
 amber and `!!` for red, so monochrome keeps it. It sits on the bar's line, after
 the bar and its round (S106). Ended, stopped, paused and committed runs have a dim pipeline,
-no waiting rows. Their last-heard age stays dim, with no warning. A
+no waiting rows. Their last-heard age stays dim, with no warning. Awaiting-approval runs also
+keep last heard dim, without a `!` or `!!` alarm. A
 live run adds waiting rows only for pipeline roles with no lane step;
 queued steps keep their existing tree row. Waiting rows share the tree's
 phase column. Repeated roles carry `xN` on the latest tree node. A failed

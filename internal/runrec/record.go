@@ -274,6 +274,7 @@ type Record struct {
 	Commit           *Commit                  `json:"commit"`
 	DismissedAt      time.Time                `json:"dismissed_at,omitzero"`
 	CreatedAt        time.Time                `json:"created_at"`
+	WaitStartedAt    time.Time                `json:"wait_started_at,omitzero"` // entry into awaiting-approval or paused (S138)
 	UpdatedAt        time.Time                `json:"updated_at"`
 }
 

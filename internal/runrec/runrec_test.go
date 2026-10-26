@@ -845,3 +845,122 @@ func TestCleanedReadsLandedRunsWithoutAFailedCleanup(t *testing.T) {
 		}
 	}
 }
+
+func waitStamp(t *testing.T, rec Record) time.Time {
+	t.Helper()
+	data, err := json.Marshal(rec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var wire struct {
+		WaitStartedAt time.Time `json:"wait_started_at"`
+	}
+	if err := json.Unmarshal(data, &wire); err != nil {
+		t.Fatal(err)
+	}
+	return wire.WaitStartedAt
+}
+
+func TestWaitStartedAtRoundTripAndTransitions(t *testing.T) {
+	s := newStore(t)
+	r, err := s.Create(rec("wait-age"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	check := func(want time.Time) {
+		t.Helper()
+		loaded, err := s.Open(r.Snapshot().ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, record := range []Record{r.Snapshot(), loaded.Snapshot()} {
+			if got := waitStamp(t, record); !got.Equal(want) {
+				t.Fatalf("wait_started_at %s, want %s", got, want)
+			}
+			if record.Version != Version {
+				t.Fatalf("version changed: %d", record.Version)
+			}
+		}
+	}
+	check(time.Time{})
+	var previous time.Time
+	for _, state := range []string{StateAwaitingApproval, StateImplement, StatePaused, StateAwaitingApproval, StateStopped} {
+		if err := r.Update(func(rec *Record) { rec.State = state }); err != nil {
+			t.Fatal(err)
+		}
+		want := time.Time{}
+		if state == StateAwaitingApproval || state == StatePaused {
+			want = r.Snapshot().UpdatedAt
+			if !want.After(previous) {
+				t.Fatal("wait entry did not reset")
+			}
+			previous = want
+		}
+		check(want)
+		if err := r.Update(func(rec *Record) { rec.Reason = "human check or other metadata update" }); err != nil {
+			t.Fatal(err)
+		}
+		check(want)
+	}
+}
+
+func TestWaitStartedAtOnCreate(t *testing.T) {
+	for _, state := range []string{StateAwaitingApproval, StatePaused} {
+		t.Run(state, func(t *testing.T) {
+			s := newStore(t)
+			initial := rec("waiting")
+			initial.State = state
+			r, err := s.Create(initial)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := waitStamp(t, r.Snapshot()); !got.Equal(r.Snapshot().CreatedAt) {
+				t.Fatalf("initial wait %s, want creation %s", got, r.Snapshot().CreatedAt)
+			}
+		})
+	}
+}
+
+func TestPausedToAwaitingApprovalResetsWaitStartedAt(t *testing.T) {
+	s := newStore(t)
+	initial := rec("paused-to-approval")
+	initial.State = StatePaused
+	r, err := s.Create(initial)
+	if err != nil {
+		t.Fatal(err)
+	}
+	before := r.Snapshot().WaitStartedAt
+	if err := r.Update(func(r *Record) { r.State = StateAwaitingApproval }); err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := s.Open(initial.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := loaded.Snapshot()
+	if !got.WaitStartedAt.After(before) || !got.WaitStartedAt.Equal(got.UpdatedAt) {
+		t.Fatalf("wait did not reset: before %s, after %+v", before, got)
+	}
+}
+
+func TestCreateClearsWaitStartedAtOutsideWait(t *testing.T) {
+	for _, state := range []string{StateSetup, StateImplement, StateStopped, StateCommitted} {
+		t.Run(state, func(t *testing.T) {
+			s := newStore(t)
+			initial := rec("not-waiting")
+			initial.State = state
+			initial.WaitStartedAt = t0.Add(-time.Hour)
+			r, err := s.Create(initial)
+			if err != nil {
+				t.Fatal(err)
+			}
+			loaded, err := s.Open(initial.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !r.Snapshot().WaitStartedAt.IsZero() || !loaded.Snapshot().WaitStartedAt.IsZero() {
+				t.Fatal("non-wait creation retained caller wait timestamp")
+			}
+		})
+	}
+}

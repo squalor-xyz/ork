@@ -5231,10 +5231,44 @@
       "id": "S138",
       "title": "An awaiting-approval engine run whose ledger went stale shows as stale, dimmed, with a frozen age",
       "short_title": "An awaiting-approval engine run whose ledger went stale shows as stale, dimmed, with a frozen age",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "139baafe-406d-436e-9f53-414ab7908b56",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answer (session a2bf7e0e, 2026-10-26): add a persisted wait_started_at (WaitStartedAt) to run.json, an additive field under the same version policy as landed_at, set when the run enters awaiting-approval or paused; the Approve row's age counts from it. Document it in docs/state.md.",
+          "created_at": "2026-10-26T18:15:42Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "b927c744-d607-4e73-b139-3b2129f7373a",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answers (session a2bf7e0e, 2026-10-26): (1) every elapsed age shows days and hours from 24h up (3d02h), running ages included; (2) on Approve and Paused rows the wait age goes right after the state word ('awaiting approval 19h  owner approval ...'); (3) the pane's last heard line is dim with no ! or !! alarm for awaiting-approval and paused; 'waiting since HH:MM' is a later note.",
+          "created_at": "2026-10-26T18:28:52Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "2793926a-9cdc-47c0-b5a3-40d38c21a303",
+          "kind": "",
+          "text": "**2026-10-26** — Orchestration trial run 2 (run-20261026-175512-e95d, began 17:55Z): owner questions 6 (2 at preflight before start, 1 data-model question from Codex mid-implementation, 3 from the UI pass), all asked directly; stalls 0; fix rounds 1 (UI pass fixes plus owner answers, gated in one pass); Codex implementer with 3 resumes (answer, fix round, finish), no block; reviewer and UI pass in parallel. Friction: Codex stopped for a data-model question instead of guessing (good), and the shared ledger is still not writable from its sandbox.",
+          "created_at": "2026-10-26T18:38:04Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -5252,7 +5286,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

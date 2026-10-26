@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-153 items · — 55 · done 93 · retired 5
+153 items · — 54 · done 94 · retired 5
 
 ## v1.1
 
@@ -191,7 +191,7 @@
 | 134 | [S135](slices/S135.md) | Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions | S | 2 |  | discovered from S117 | — |
 | 135 | [S136](slices/S136.md) | UI pass visible everywhere and project-neutral: lineup and rounds in run, waves, runtree; ui.md names the project's design doc | S | 1 |  | discovered from S117 | — |
 | 136 | [S137](slices/S137.md) | Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings | S | 2 |  | discovered from S120 | — |
-| 137 | [S138](slices/S138.md) | An awaiting-approval engine run whose ledger went stale shows as stale, dimmed, with a frozen age | S | 1 |  | discovered from S31 | — |
+| 137 | [S138](slices/S138.md) | An awaiting-approval engine run whose ledger went stale shows as stale, dimmed, with a frozen age | S | 1 |  | discovered from S31 | done |
 | 138 | [S139](slices/S139.md) | Commit title without a Git section: fall back to 'ID: title', and check it before the run starts | S | 1 |  | discovered from S31 | — |
 | 139 | [S140](slices/S140.md) | Running view follow-ups: error marker, stale runs not live, detail order, stopped role, empty golden, other tabs on Running | S | 1 |  | discovered from S110 | — |
 | 140 | [S141](slices/S141.md) | Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note | M | 2 |  | discovered from S118 | — |

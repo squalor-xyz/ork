@@ -477,7 +477,7 @@ func TestApprovalCardRenderHasARuleUnderTheRunLine(t *testing.T) {
 			rows := strings.Split(h.at(80, 24), "\n")
 			head := -1
 			for i, row := range rows {
-				if strings.Contains(row, "Run engine  S22  awaiting-approval") {
+				if strings.Contains(row, "Run engine  S22  awaiting approval") {
 					head = i
 				}
 			}

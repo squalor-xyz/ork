@@ -143,7 +143,7 @@ func TestActionApproveWrongState(t *testing.T) {
 		t.Run(state, func(t *testing.T) {
 			h := actionHarness(t, state, "")
 			_, cmd := h.m.Update(press("a"))
-			if v := h.view(); cmd != nil || !strings.Contains(v, "approve needs awaiting-approval; run is "+state) {
+			if v := h.view(); cmd != nil || !strings.Contains(v, "approve needs awaiting approval; run is "+state) {
 				t.Fatalf("invalid approve must explain its state without a call:\n%s", v)
 			}
 		})
@@ -226,7 +226,7 @@ func TestActionErrorVerbatim(t *testing.T) {
 	h.m.cfg.Live.(*actionLive).err = &ipc.Error{Code: "run_busy", Message: "Wait: Owner's step failed."}
 	h.deliver(press("a"))
 	h.deliver(press("y"))
-	if v := h.view(); !strings.Contains(v, "run_busy: Wait: Owner's step failed.") || !strings.Contains(v, "S22  awaiting-approval") {
+	if v := h.view(); !strings.Contains(v, "run_busy: Wait: Owner's step failed.") || !strings.Contains(v, "S22  awaiting approval") {
 		t.Fatalf("failed action must preserve its code, message and row:\n%s", v)
 	}
 }
@@ -256,7 +256,7 @@ func TestActionCursorTarget(t *testing.T) {
 	h.deliver(press("down"))
 	h.deliver(press("a"))
 	h.deliver(press("y"))
-	if v := h.view(); !strings.Contains(v, "S1  awaiting-approval") || !strings.Contains(v, "S22  commit") {
+	if v := h.view(); !strings.Contains(v, "S1  awaiting approval") || !strings.Contains(v, "S22  commit") {
 		t.Fatalf("action did not target cursor engine run:\n%s", v)
 	}
 }

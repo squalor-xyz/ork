@@ -2,7 +2,7 @@
 [90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────[m
 [1;7;97;44m> Needs you              1 [m│[1;36mNeeds you 1[m
 [90m1[m ork                    1 │  [1mApprove 1[m
-                           │[1;7;97;44m  +  ork  engine  S22  awaiting-approval  owner action  2 of 6 steps ...[m
+                           │[1;7;97;44m  +  ork  engine  S22  awaiting approval  2m  owner action  2 of 6 st...[m
                            │    [1mRun engine[m
                            │    owner action
                            │    [......]

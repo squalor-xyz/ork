@@ -33,7 +33,7 @@ func TestEngineSnapshotMatchesStatus(t *testing.T) {
 		EngineRuns json.RawMessage `json:"engine_runs"`
 	}
 	json.Unmarshal(snapshot, &out)
-	for _, want := range []string{`"updated_at":"2026-10-19T17:40:00Z"`, `"branch":"s22"`, `"denials":["Write","Bash"]`, `"relay_run":"ledger"`, `"created_at":"2026-10-19T16:40:00Z"`, `"wait":"Which library?; next: ork answer engine TEXT"`} {
+	for _, want := range []string{`"wait_started_at":"2026-10-19T16:40:00Z"`, `"updated_at":"2026-10-19T17:40:00Z"`, `"branch":"s22"`, `"denials":["Write","Bash"]`, `"relay_run":"ledger"`, `"created_at":"2026-10-19T16:40:00Z"`, `"wait":"Which library?; next: ork answer engine TEXT"`} {
 		t.Run(want, func(t *testing.T) {
 			if !strings.Contains(string(out.EngineRuns), want) || !strings.Contains(string(status), want) {
 				t.Fatalf("shared engine snapshot lacks %s: snapshot=%s status=%s", want, snapshot, status)

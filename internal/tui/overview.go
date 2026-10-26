@@ -383,16 +383,7 @@ func (m *Model) rows() (needs, running []ovRow) {
 			if r.Section(s.EngineRuns) == source.SectionHidden {
 				continue
 			}
-			displayState := r.State
-			var linkedStale *slicercli.RelayRun
-			for _, ledger := range boardLedgers(s) {
-				if r.RelayRun != "" && ledger.ID == r.RelayRun && ledger.State == "stale" {
-					staleLedger := ledger
-					linkedStale = &staleLedger
-					displayState = "stale"
-					break
-				}
-			}
+			displayState := stateWord(r.State)
 			parts := []string{displayState}
 			if r.Wait != "" && showsWait(r) {
 				parts = append(parts, r.Wait)
@@ -416,22 +407,29 @@ func (m *Model) rows() (needs, running []ovRow) {
 				}
 				break
 			}
+			if r.State == "awaiting-approval" || r.State == "paused" {
+				if !r.WaitStartedAt.IsZero() {
+					began = r.WaitStartedAt
+				} else if !r.UpdatedAt.IsZero() {
+					// Older records have no durable wait-start timestamp.
+					began = r.UpdatedAt
+				}
+			}
 			if r.State == "stopped" {
 				if !r.UpdatedAt.IsZero() {
 					parts = append(parts, age(m.cfg.Now().Sub(r.UpdatedAt)))
 				}
 			} else if !began.IsZero() {
 				end := m.cfg.Now()
-				if linkedStale != nil {
-					end = runClock(*linkedStale, end)
-					if at, e := time.Parse(time.RFC3339Nano, linkedStale.BeganAt); e == nil {
-						began = at
-					}
+				duration := elapsed(end.Sub(began))
+				if r.State == "awaiting-approval" || r.State == "paused" {
+					parts = append([]string{parts[0], duration}, parts[1:]...)
+				} else {
+					parts = append(parts, duration)
 				}
-				parts = append(parts, elapsed(end.Sub(began)))
 			}
 			rest := strings.Join(parts, "  ")
-			row := ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: r.Item + "  " + rest, text: r.ID + "  " + r.Item + "  " + rest, dim: linkedStale != nil, compact: compact}
+			row := ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: r.Item + "  " + rest, text: r.ID + "  " + r.Item + "  " + rest, compact: compact}
 			ledger, steps := engineBoard(r)
 			for _, linked := range boardLedgers(s) {
 				if r.RelayRun != "" && linked.ID == r.RelayRun {
@@ -440,6 +438,8 @@ func (m *Model) rows() (needs, running []ovRow) {
 					break
 				}
 			}
+			// The engine owns the state; a linked ledger supplies only its steps.
+			ledger.State = r.State
 			// The engine's state tells a fix round from the finish step (S145).
 			steps = withEngineState(steps, r.State)
 			if !r.Unavailable {
@@ -1243,6 +1243,8 @@ func elapsed(d time.Duration) string {
 		return fmt.Sprintf("%ds", int(d.Seconds()))
 	case d < time.Hour:
 		return fmt.Sprintf("%dm", int(d.Minutes()))
+	case d >= 24*time.Hour:
+		return fmt.Sprintf("%dd%02dh", int(d/(24*time.Hour)), int(d/time.Hour)%24)
 	}
 	return fmt.Sprintf("%dh%02dm", int(d.Hours()), int(d.Minutes())%60)
 }
@@ -1737,4 +1739,12 @@ func (m *Model) runningLine(r ovRow, selected bool, nameW, w int, l liveLayout) 
 		mark = markStyle.Render(mark)
 	}
 	return strings.TrimRight(indent+mark+padded+"  "+strings.Join(out, "  "), " ")
+}
+
+// stateWord is the state spelling shown to the owner.
+func stateWord(state string) string {
+	if state == "awaiting-approval" {
+		return "awaiting approval"
+	}
+	return state
 }

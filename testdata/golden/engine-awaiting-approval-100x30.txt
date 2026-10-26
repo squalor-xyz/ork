@@ -2,7 +2,7 @@
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
 [1;7m> Needs you              1 [m│[1mNeeds you 1[m
 [2m1[m ork                    1 │  [1mApprove 1[m
-                           │[1;7m  +  ork  ork-20261019-164000-abcd  S22  awaiting-approval  owner act...[m
+                           │[1;7m  +  ork  ork-20261019-164000-abcd  S22  awaiting approval  2d00h  ow...[m
                            │
                            │[1mRunning 0[m
                            │  [2mnothing running[m
@@ -23,8 +23,8 @@
                            │
                            │
                            │[2m────────────────────────────────────────────────────────────────────────[m
-                           │  ork-20261019-164000-abcd  S22  awaiting-approval  owner action  2 of 6
-                           │  steps running  2m
+                           │  ork-20261019-164000-abcd  S22  awaiting approval  2d00h  owner action
+                           │   2 of 6 steps running
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │ enter [2mopen[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
                            │ 1 project | refreshed 16:42:00

@@ -111,7 +111,7 @@ func TestLinkedPaneJoinsLiveUsageByStepID(t *testing.T) {
 		t.Fatal(v)
 	}
 	p.snap.Runs.Value[0].State = "stale"
-	if v = treePaneView(h.m, 100, 60); strings.Contains(v, "linked-live-tail") {
+	if v = treePaneView(h.m, 100, 60); !strings.Contains(v, "linked-live-tail") {
 		t.Fatal(v)
 	}
 }

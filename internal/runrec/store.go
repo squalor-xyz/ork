@@ -68,6 +68,11 @@ func (s *Store) Create(rec Record) (*Run, error) {
 	rec.Version = Version
 	rec.CreatedAt = s.now()
 	rec.UpdatedAt = rec.CreatedAt
+	if rec.State != StateAwaitingApproval && rec.State != StatePaused {
+		rec.WaitStartedAt = time.Time{}
+	} else if rec.WaitStartedAt.IsZero() {
+		rec.WaitStartedAt = rec.CreatedAt
+	}
 	rec = normalize(rec)
 	dir := s.RunDir(rec.ID)
 	if err := os.MkdirAll(s.Dir, 0o755); err != nil {
@@ -236,6 +241,12 @@ func (r *Run) Update(fn func(*Record)) error {
 	before := clone(r.rec)
 	fn(&r.rec)
 	r.rec.UpdatedAt = r.store.now()
+	// Only a state transition starts a new wait. Metadata writes keep its age.
+	if r.rec.State != StateAwaitingApproval && r.rec.State != StatePaused {
+		r.rec.WaitStartedAt = time.Time{}
+	} else if r.rec.State != before.State {
+		r.rec.WaitStartedAt = r.rec.UpdatedAt
+	}
 	r.rec = normalize(r.rec)
 	if err := r.save(); err != nil {
 		r.rec = before

@@ -43,12 +43,19 @@ func TestEngineRunRows(t *testing.T) {
 				}
 				return
 			}
-			row := "engine  S22  " + state
+			displayState := state
+			if state == "awaiting-approval" {
+				displayState = "awaiting approval"
+			}
+			row := "engine  S22  " + displayState
+			if state == "awaiting-approval" || state == "paused" {
+				row += "  2m"
+			}
 			if wantNeeds {
 				row += "  owner action"
 			}
 			row += "  2 of 6 steps running"
-			if state != "stopped" {
+			if !wantNeeds {
 				row += "  2m"
 			}
 			if !wantNeeds {
@@ -722,7 +729,7 @@ func TestBudgetPausedRowAndPane(t *testing.T) {
 	s.EngineRuns[0].Wait = "token budget 9000 reached (9100 used); next: ork retry " + s.EngineRuns[0].ID
 	h.m.apply(snapshotMsg{name: "ork", snap: s})
 	v := sgr.ReplaceAllString(strings.Join(h.m.overview(200).body, "\n"), "")
-	if !strings.Contains(strings.Split(v, "Running")[0], "S22  paused  "+s.EngineRuns[0].Wait) {
+	if !strings.Contains(strings.Split(v, "Running")[0], "S22  paused  2m  "+s.EngineRuns[0].Wait) {
 		t.Fatalf("budget row missing from Needs you: %s", v)
 	}
 	h.m.pane = &runPane{run: s.EngineRuns[0].ID, project: "ork"}

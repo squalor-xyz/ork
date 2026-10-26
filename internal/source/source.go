@@ -220,6 +220,7 @@ type EngineRun struct {
 	Denials        []string              `json:"denials,omitempty"` // distinct denial texts in first-seen order, with " xN" for repeats
 	RelayRun       string                `json:"relay_run,omitempty"`
 	CreatedAt      time.Time             `json:"created_at"`
+	WaitStartedAt  time.Time             `json:"wait_started_at,omitzero"` // entry into awaiting-approval or paused (S138)
 	UpdatedAt      time.Time             `json:"updated_at,omitzero"`
 }
 

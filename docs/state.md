@@ -185,6 +185,13 @@ when `cleaned_at` is set, or when ork landed it and left no `reason`; the
 daemon sends that as `cleaned: true` on the run's snapshot row (*proposed*).
 The version stays 1, as for `dismissed_at`: an older ork refuses a `run.json`
 with `cleaned_at` because `Store.Open` uses strict keys.
+`wait_started_at` (omitted when zero; S138) records entry into
+`awaiting-approval` or `paused`. Metadata updates, including human-check marks,
+keep it. Leaving either state clears it; entering another wait resets it to
+that transition's timestamp. A run created in either wait starts at creation.
+The version stays 1 under the same additive-field policy as `landed_at` and
+`cleaned_at`. Older records without the field still load; older ork versions
+that do not know the field refuse records containing it through strict keys.
 `land_fixes` (omitted when 0; *proposed*, S119) counts the fix rounds a blocked
 landing has had; the `land` state allows one (a merge conflict, or a red
 re-check after the base branch was merged in), and a second block stops the run
@@ -324,6 +331,11 @@ order replacement runs for the Overview (`ui.engine-runs-read`,
 The *proposed* optional `updated_at` comes from the run record's last update.
 It is omitted when zero. Snapshot and `ork status --json` include it.
 Stopped Overview rows use it to show their age.
+The optional `wait_started_at` comes from the persisted wait-entry timestamp
+and is omitted when zero. Awaiting-approval and paused Overview rows count
+from it using the current clock. For older records without it, they use
+`updated_at`, then the run's start when neither timestamp is present. Those
+older records cannot distinguish a metadata update from the start of a wait.
 
 The optional `branch` and `worktree` display fields are *proposed* and come
 from the run record. An omitted `merged` means the merge state is unknown;
