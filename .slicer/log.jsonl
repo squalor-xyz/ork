@@ -1819,3 +1819,7 @@
 {"when": "2026-10-26T13:03:40Z", "item": "S141", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-10-26T13:03:40Z", "item": "S141", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-10-26T13:03:40Z", "item": "S141", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T13:06:53Z", "item": "S142", "action": "add", "from": "", "to": "open", "note": "Accept relay contract v9 and follow it: finding kinds, spec check, UI pass, approval and landing, ledger wait phase, conformance JSON"}
+{"when": "2026-10-26T13:06:53Z", "item": "S142", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T13:06:53Z", "item": "S142", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T13:06:53Z", "item": "S142", "action": "edit", "from": "", "to": "", "note": "Files"}
