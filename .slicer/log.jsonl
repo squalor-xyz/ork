@@ -1542,3 +1542,36 @@
 {"when": "2026-10-25T23:08:54Z", "item": "S114", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-25T23:08:54Z", "item": "S114", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-10-25T23:08:54Z", "item": "S114", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T00:01:57Z", "item": "S128", "action": "add", "from": "", "to": "open", "note": "Brief: fence the check command so a backtick or newline renders"}
+{"when": "2026-10-26T00:01:57Z", "item": "S129", "action": "add", "from": "", "to": "open", "note": "Live usage edge cases: no result event, non-claude cost, multi-message sum, total dip"}
+{"when": "2026-10-26T00:01:58Z", "item": "S130", "action": "add", "from": "", "to": "open", "note": "Run pane text polish: compact token counts, ASCII gate verdict glyph, tail markdown, h>=24 Overview rule in docs"}
+{"when": "2026-10-26T00:01:59Z", "item": "S111", "action": "note", "from": "", "to": "", "note": "From S126 (2026-10-25): the owner dropped a report.go guard ", "by": "Jon R"}
+{"when": "2026-10-26T00:02:04Z", "item": "S128", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T00:02:04Z", "item": "S128", "action": "set", "from": "", "to": "", "note": "effort -→1"}
+{"when": "2026-10-26T00:02:04Z", "item": "S129", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T00:02:04Z", "item": "S129", "action": "set", "from": "", "to": "", "note": "effort -→1"}
+{"when": "2026-10-26T00:02:04Z", "item": "S130", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T00:02:04Z", "item": "S130", "action": "set", "from": "", "to": "", "note": "effort -→1"}
+{"when": "2026-10-26T00:02:16Z", "item": "S128", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T00:02:16Z", "item": "S128", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T00:02:16Z", "item": "S128", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-26T00:02:16Z", "item": "S128", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T00:02:17Z", "item": "S128", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-26T00:02:17Z", "item": "S129", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T00:02:17Z", "item": "S129", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T00:02:17Z", "item": "S129", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-26T00:02:17Z", "item": "S129", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T00:02:17Z", "item": "S129", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-26T00:02:17Z", "item": "S130", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T00:02:17Z", "item": "S130", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T00:02:17Z", "item": "S130", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-26T00:02:17Z", "item": "S130", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T00:02:18Z", "item": "S130", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-26T00:02:18Z", "item": "S130", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-26T00:02:27Z", "item": "S131", "action": "add", "from": "", "to": "open", "note": "Self-host check cost and base branch: cache projectBuild git calls; read the base branch"}
+{"when": "2026-10-26T00:02:27Z", "item": "S131", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-26T00:02:27Z", "item": "S131", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T00:02:27Z", "item": "S131", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-26T00:02:27Z", "item": "S131", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-26T00:02:27Z", "item": "S131", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-26T00:02:28Z", "item": "S131", "action": "edit", "from": "", "to": "", "note": "Check"}
