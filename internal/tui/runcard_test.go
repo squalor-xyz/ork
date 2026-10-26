@@ -25,7 +25,7 @@ import (
 const runCardID = "ork-20261019-164000-abcd"
 
 // runCardRoles are an implementer and a reviewer that finished and an implementer
-// in its second round, running: the bar reads [~~....] r2, last heard 2m.
+// in a fix round, running: the bar reads [~~....] fix 1, last heard 2m.
 func runCardRoles() []source.EngineRole {
 	second := roleRun("implementer", 2*time.Minute, 0)
 	second.Round = 2
@@ -107,7 +107,7 @@ func TestPaneOpensInlineUnderTheSelectedRow(t *testing.T) {
 				t.Fatalf("the pane is drawn twice:\n%s", v)
 			}
 			// The line above the pane is the selected row itself: no blank run.
-			row := lineWith(lines, 0, "S30", "review")
+			row := lineWith(lines, 0, "S30", "implementer")
 			if row < 0 || row != title-1 {
 				t.Fatalf("the pane is not directly under the row (row %d, title %d):\n%s", row, title, v)
 			}
@@ -150,13 +150,13 @@ func TestRoundAndLastHeardSitNextToTheBar(t *testing.T) {
 	h := runCardHarness(t, 100, 30, true)
 	// In the Overview row the cell after the bar (and its round) is last heard.
 	h.m.Update(tea.WindowSizeMsg{Width: 120, Height: 30})
-	row := mainRow(plainView(h.m), "S30", "review")
-	if !strings.Contains(row, "[~~....] r2  heard 2m") {
+	row := mainRow(plainView(h.m), "S30", "implementer")
+	if !strings.Contains(row, "[~~....] fix 1  heard 2m") {
 		t.Fatalf("the row must hold round and last heard beside the bar: %q", row)
 	}
 	// So it is in the Running entry.
 	h.send(press("["))
-	if row := mainRow(h.wide(), "ork", "S30"); !strings.Contains(row, "[~~....] r2  heard 2m") {
+	if row := mainRow(h.wide(), "ork", "S30"); !strings.Contains(row, "[~~....] fix 1  heard 2m") {
 		t.Fatalf("the Running entry must hold round and last heard beside the bar: %q", row)
 	}
 	h.send(press("]"))
@@ -167,11 +167,11 @@ func TestRoundAndLastHeardSitNextToTheBar(t *testing.T) {
 	v := plainView(h.m)
 	lines := mainLines(v)
 	title := lineWith(lines, 0, "Run "+runCardID)
-	bar := lineWith(lines, title+1, "[~~....] r2")
+	bar := lineWith(lines, title+1, "[~~....] fix 1")
 	if title < 0 || bar != title+1 {
 		t.Fatalf("the bar must be the line under the pane title (title %d, bar %d):\n%s", title, bar, v)
 	}
-	if !strings.Contains(lines[bar], "[~~....] r2  last heard 2m ago") {
+	if !strings.Contains(lines[bar], "[~~....] fix 1  last heard 2m ago") {
 		t.Fatalf("the bar line lacks round and last heard: %q", lines[bar])
 	}
 	if n := strings.Count(strings.Join(lines[title:], "\n"), "last heard"); n != 1 {
@@ -269,33 +269,35 @@ func TestStallColoursReachTheRows(t *testing.T) {
 	}
 }
 
-func TestRowDropsRunIdAndModelAt80x24(t *testing.T) {
-	// An engine run: the run id leaves the row and stays in the pane title.
-	h := runCardHarness(t, 80, 24, true)
-	row := mainRow(h.view80(), "S30", "review")
-	if row == "" || strings.Contains(row, runCardID) {
-		t.Fatalf("the row must drop the run id at 80x24: %q", row)
-	}
-	h.selectRun()
-	if detail := plainView(h.m); !strings.Contains(detail, runCardID) {
-		t.Fatalf("the selected row's detail must keep the run id:\n%s", detail)
-	}
-	h.send(press("enter"))
-	if v := plainView(h.m); lineWith(mainLines(v), 0, "Run "+runCardID) < 0 {
-		t.Fatalf("the pane title must keep the run id:\n%s", v)
-	}
-	// At 100x30 the row keeps it.
-	wide := runCardHarness(t, 100, 30, true)
-	if row := mainRow(wide.view(), "S30", "review"); !strings.Contains(row, runCardID) {
-		t.Fatalf("the row must keep the run id at 100x30: %q", row)
+// S145 moved the run id out of the Running row at every width: the row names
+// the slice. The id stays in the pane title and on the selected row's detail line.
+func TestRowNeverCarriesTheRunId(t *testing.T) {
+	// An engine run.
+	for _, size := range [][2]int{{80, 24}, {100, 30}} {
+		h := runCardHarness(t, size[0], size[1], true)
+		v := h.view80()
+		if size[0] == 100 {
+			v = h.view()
+		}
+		row := mainRow(v, "S30", "implementer")
+		if row == "" || strings.Contains(row, runCardID) {
+			t.Fatalf("%dx%d: the row must not carry the run id: %q", size[0], size[1], row)
+		}
+		h.selectRun()
+		if detail := plainView(h.m); !strings.Contains(detail, runCardID) {
+			t.Fatalf("%dx%d: the selected row's detail must keep the run id:\n%s", size[0], size[1], detail)
+		}
+		h.send(press("enter"))
+		if v := plainView(h.m); lineWith(mainLines(v), 0, "Run "+runCardID) < 0 {
+			t.Fatalf("%dx%d: the pane title must keep the run id:\n%s", size[0], size[1], v)
+		}
 	}
 
-	// A relay started elsewhere: the run id and the vendor/model column leave
-	// the row. Given room to spare, the text shows what the terminal width kept.
+	// A relay started elsewhere.
 	p := proj("ork", false)
 	ext := externalRun("run-20261019-004308-40d4", "S41")
 	ext.Steps[1].Vendor, ext.Steps[1].Model, ext.Steps[1].Task = "codex", "gpt-5", "check"
-	rowAt := func(w int) string {
+	for _, w := range []int{80, 100} {
 		e := newHarness(t, p)
 		e.src.set(snap(p, nil, nil, ext))
 		e.start()
@@ -304,21 +306,16 @@ func TestRowDropsRunIdAndModelAt80x24(t *testing.T) {
 		if len(running) != 1 {
 			t.Fatalf("%d running rows", len(running))
 		}
-		return rowText(running[0], 400)
-	}
-	if text := rowAt(80); strings.Contains(text, "run-2026") || strings.Contains(text, "codex/gpt-5") || !strings.Contains(text, "S41") {
-		t.Fatalf("the 80x24 row keeps the run id or the vendor/model: %q", text)
-	}
-	if text := rowAt(100); !strings.Contains(text, "run-2026") || !strings.Contains(text, "codex/gpt-5") {
-		t.Fatalf("the 100x30 row must keep the run id and the vendor/model: %q", text)
-	}
-	// The selected row's detail line keeps the run id at 80x24.
-	e := newHarness(t, p)
-	e.src.set(snap(p, nil, nil, ext))
-	e.start()
-	e.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
-	if detail := plainView(e.m); !strings.Contains(detail, "run-20261019-004308-40d4") {
-		t.Fatalf("the detail line lost the run id:\n%s", detail)
+		if text := rowText(running[0], 400); strings.Contains(text, "run-2026") || !strings.Contains(text, "S41") || !strings.Contains(text, "reviewer gpt-5") {
+			t.Fatalf("width %d: the row must name the slice, the role and the model, not the run id: %q", w, text)
+		}
+		// The selected row's detail line keeps the run id and the step in full.
+		if detail := plainView(e.m); !strings.Contains(detail, "run-20261019-004308-40d4") {
+			t.Fatalf("width %d: the detail line lost the run id:\n%s", w, detail)
+		}
+		if detail := strings.Join(detailLines(running[0], 300, "|"), "\n"); !strings.Contains(detail, "running: reviewer codex/gpt-5: check") {
+			t.Fatalf("width %d: the detail line lost the running step: %q", w, detail)
+		}
 	}
 }
 
@@ -384,7 +381,7 @@ func TestPaneOpensUnderItsRowOnTheRunningEntryRecentAndReadyRows(t *testing.T) {
 	e.start()
 	e.m.Update(tea.WindowSizeMsg{Width: 120, Height: 30})
 	e.send(press("enter"))
-	titleUnder(t, e, "Run ext-1", "started elsewhere", "S41")
+	titleUnder(t, e, "Run ext-1", "S41")
 	e.send(press("esc"))
 	e.send(press("down"))
 	e.send(press("enter"))
@@ -460,7 +457,7 @@ func TestInlinePaneKeepsItsRowAndEndOnShortTerminals(t *testing.T) {
 		h.send(press("enter"))
 		v := plainView(h.m)
 		lines := mainLines(v)
-		if lineWith(lines, 0, "S30", "review") < 0 || lineWith(lines, 0, "Run "+runCardID) < 0 {
+		if lineWith(lines, 0, "S30", "implementer") < 0 || lineWith(lines, 0, "Run "+runCardID) < 0 {
 			t.Errorf("height %d: the row or the pane title is off screen:\n%s", height, v)
 		}
 		if !strings.Contains(v, "esc close pane") {
@@ -537,34 +534,6 @@ func TestPaneTooNarrowForBarAndLastHeardKeepsLastHeardOnItsOwnLine(t *testing.T)
 	plain := sgr.ReplaceAllString(strings.Join(lines, "\n"), "")
 	if strings.Contains(plain, "] last heard") || !strings.Contains(plain, "last heard 2m ago") {
 		t.Fatalf("narrow pane:\n%s", plain)
-	}
-}
-
-// Fix round: compact rows drop only the vendor/model, not the running step.
-func TestCompactRowKeepsTheStepAndDropsOnlyVendorAndModel(t *testing.T) {
-	p := proj("ork", false)
-	ext := externalRun("run-20261019-004308-40d4", "S41")
-	ext.Steps[1].Vendor, ext.Steps[1].Model, ext.Steps[1].Task = "codex", "gpt-5", "check"
-	ext.Steps = append(ext.Steps, slicercli.Step{ID: "s3", Role: "gate", Phase: "fail", Vendor: "claude", Model: "opus", Task: "bad"})
-	rowAt := func(w int) string {
-		e := newHarness(t, p)
-		e.src.set(snap(p, nil, nil, ext))
-		e.start()
-		e.m.Update(tea.WindowSizeMsg{Width: w, Height: 30})
-		_, running := e.m.rows()
-		return rowText(running[0], 400)
-	}
-	narrow := rowAt(80)
-	for _, want := range []string{"running: reviewer: check", "failed: gate: bad"} {
-		if !strings.Contains(narrow, want) {
-			t.Errorf("the compact row lost %q: %q", want, narrow)
-		}
-	}
-	if strings.Contains(narrow, "codex") || strings.Contains(narrow, "gpt-5") {
-		t.Errorf("the compact row keeps the vendor/model: %q", narrow)
-	}
-	if wide := rowAt(100); !strings.Contains(wide, "running: reviewer codex/gpt-5: check") || !strings.Contains(wide, "failed: gate: bad") {
-		t.Errorf("the wide row lost the vendor/model: %q", wide)
 	}
 }
 
@@ -664,16 +633,16 @@ func TestInlinePaneTitleIsTheRunIDAlone(t *testing.T) {
 }
 
 func TestPipelineLineDropsRoundWhenTheBarShowsIt(t *testing.T) {
-	// Round 2: the bar says r2, so the pipeline line has no round.
+	// A fix round: the bar says fix 1, so the pipeline line has no round.
 	h := runCardHarness(t, 100, 30, true)
 	h.selectRun()
 	h.send(press("enter"))
 	lines := mainLines(plainView(h.m))
-	bar := lineWith(lines, 0, "[~~....] r2  last heard")
+	bar := lineWith(lines, 0, "[~~....] fix 1  last heard")
 	if bar < 0 || strings.Contains(lines[bar+1], "round") || !strings.Contains(lines[bar+1], "implementer") {
-		t.Fatalf("the pipeline line must carry no round when the bar shows r2:\n%s", strings.Join(lines, "\n"))
+		t.Fatalf("the pipeline line must carry no round when the bar shows fix 1:\n%s", strings.Join(lines, "\n"))
 	}
-	// Round 1: the bar has no rN, so the pipeline line keeps "round 1".
+	// Round 1: the bar has no round word, so the pipeline line keeps "round 1".
 	one := treeHarness(t, []slicercli.RelayRun{{ID: "one", State: "active", Steps: []slicercli.Step{{Role: "implementer", Phase: "start"}}}}, "")
 	pane := sgr.ReplaceAllString(strings.Join(one.m.paneLines(100, 40, ""), "\n"), "")
 	if !strings.Contains(pane, "round 1") {

@@ -4,14 +4,14 @@
 [2m1[m ork                     *│  [2mnothing needs you[m
                            │
                            │[1mRunning 1[m
-                           │[1;7m   ork  engine  S22  implement  denied: Write, Bash  2 of 6 steps run...[m
+                           │[1;7m   ork  S22  implement  [......]                                        [m
+                           │[1;7m          denied: Write, Bash                                           [m
                            │
                            │[1mRecent[m
                            │  [2mnone[m
                            │
                            │[1mReady to land[m
                            │  [2mnone[m
-                           │
                            │
                            │
                            │

@@ -834,30 +834,23 @@ func TestSelectedRowShowsItsFullTextOnTheDetailLine(t *testing.T) {
 	}
 }
 
-// A run's ID stays whole when its row is cut: the rest of the row goes first.
-// A terminal narrower than 100 columns drops the ID from the row instead (S106).
-func TestRunRowCutsItsRestBeforeItsID(t *testing.T) {
+// A relay started elsewhere is named by its slices, not by its run ID (S145):
+// the row is cut to the pane, and the run ID is on the detail line.
+func TestRunRowNamesItsSlicesNotItsID(t *testing.T) {
 	const id = "run-20261019-004308-40d4"
 	h := newHarness(t, four...)
 	h.src.set(snap(four[0], nil, nil, relay(id, "2026-10-19T15:42:00Z", "S01", "S02")))
 	h.start()
 	h.send(press("s"))
 	h.send(tea.WindowSizeMsg{Width: 100, Height: 30})
-	v := plainView(h.m)
-	row := ""
-	for _, l := range strings.Split(v, "\n") {
-		if strings.Contains(l, "started elsewhere") {
-			row = strings.TrimRight(l, " ")
-		}
+	sec := runningSection(plainView(h.m))
+	i := rowIndex(sec, "S01,S02")
+	if i < 0 {
+		t.Fatalf("no row for the relay:\n%s", strings.Join(sec, "\n"))
 	}
-	if !strings.Contains(row, id) {
-		t.Errorf("the run ID is cut from its row: %q", row)
-	}
-	if !strings.HasSuffix(row, "...") {
-		t.Errorf("the rest of the run row is not cut with an ellipsis: %q", row)
-	}
-	if strings.Contains(row, "1h00m") {
-		t.Errorf("the elapsed time, cut last, is on the row: %q", row)
+	row := strings.TrimRight(sec[i], " ")
+	if strings.Contains(row, id) || strings.Contains(row, "1h00m") || strings.Contains(row, "started elsewhere") {
+		t.Errorf("the row carries the run ID, the elapsed time or the label: %q", row)
 	}
 	if got := detailText(h.m, 100); !strings.Contains(got, id+"  S01,S02  active, 2 of 6 steps running  1h00m") {
 		t.Errorf("the detail line lacks the full run text: %q", got)
@@ -1333,12 +1326,12 @@ func TestBellIsRungByACommand(t *testing.T) {
 	}
 }
 
-func TestExternalRunsShowStartedElsewhereAndOfferNoActions(t *testing.T) {
+func TestExternalRunsOfferNoActions(t *testing.T) {
 	h := newHarness(t, four...)
 	h.src.set(snap(four[0], nil, nil, relay("run-20261019-004308-40d4", "2026-10-19T15:42:00Z", "S01", "S02")))
 	h.start()
 	v := h.view()
-	for _, want := range []string{"Running", "run-20261019-004308-40d4", "S01", "S02", "started elsewhere", "active, 2 of 6 steps running", "slicer"} {
+	for _, want := range []string{"Running", "run-20261019-004308-40d4", "S01", "S02", "active, 2 of 6 steps running", "slicer"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("view lacks %q:\n%s", want, v)
 		}
@@ -1358,9 +1351,9 @@ func TestExternalRunsShowStartedElsewhereAndOfferNoActions(t *testing.T) {
 	}
 }
 
-// The row holds the whole run ID or none of it: at 100 columns and wider all of
-// it, below that (S106) none, with the whole ID on the detail line.
-func TestRunIDIsNeverClipped(t *testing.T) {
+// The row never holds the run ID, at any width (S145); the detail line holds
+// the whole of it.
+func TestRunIDIsInTheDetailNotTheRow(t *testing.T) {
 	const id = "run-20261019-004308-40d4"
 	for _, w := range []int{100, 80, 60} {
 		h := newHarness(t, four...)
@@ -1368,20 +1361,9 @@ func TestRunIDIsNeverClipped(t *testing.T) {
 		h.start()
 		h.send(press("s"))
 		h.send(tea.WindowSizeMsg{Width: w, Height: 30})
-		// The row itself must hold the whole ID. The detail line holds it too,
-		// so the row is found by its kind, not by the ID.
-		v := plainView(h.m)
-		row := ""
-		for _, l := range strings.Split(v, "\n") {
-			if strings.Contains(l, "started elsewhere") {
-				row = l
-			}
-		}
-		if strings.Contains(row, id) != (w >= 100) {
-			t.Errorf("width %d: the run ID is in the row only from 100 columns: %q\n%s", w, row, v)
-		}
-		if strings.Contains(row, "run-") && !strings.Contains(row, id) {
-			t.Errorf("width %d: the run ID is cut in the row: %q", w, row)
+		sec := runningSection(plainView(h.m))
+		if i := rowIndex(sec, "S01"); i < 0 || strings.Contains(sec[i], "run-") {
+			t.Errorf("width %d: the run ID is in the row: %v", w, sec)
 		}
 		if got := detailText(h.m, w); !strings.Contains(got, id) {
 			t.Errorf("width %d: the detail line lacks the whole run ID: %q", w, got)
@@ -1391,7 +1373,12 @@ func TestRunIDIsNeverClipped(t *testing.T) {
 
 func TestWrappedRowsHaveNoTrailingSpaces(t *testing.T) {
 	h := newHarness(t, four...)
-	h.src.set(snap(four[0], nil, nil, relay("run-20261019-004308-40d4", "2026-10-19T15:42:00Z", "S11")))
+	// Many slices, so the row fills the pane and the detail line wraps.
+	var items []string
+	for i := 11; i < 41; i++ {
+		items = append(items, fmt.Sprintf("S%d", i))
+	}
+	h.src.set(snap(four[0], nil, nil, relay("run-20261019-004308-40d4", "2026-10-19T15:42:00Z", items...)))
 	h.start()
 	h.send(tea.WindowSizeMsg{Width: 100, Height: 30})
 	for i, l := range strings.Split(plainView(h.m), "\n") {
@@ -1608,9 +1595,9 @@ func TestSectionHeadingsCarryCounts(t *testing.T) {
 func TestProjectColumnOnlyOnAllProjects(t *testing.T) {
 	m := layoutModel(t)
 	m.projects[2].loaded = true
-	m.projects[2].snap.EngineRuns = []source.EngineRun{{ID: "running-id", State: "implement"}, {ID: "ready-id", Item: "SReady", State: "committed", Branch: "ready"}}
+	m.projects[2].snap.EngineRuns = []source.EngineRun{{ID: "running-id", Item: "SRun", State: "implement"}, {ID: "ready-id", Item: "SReady", State: "committed", Branch: "ready"}}
 	body := sgr.ReplaceAllString(strings.Join(m.overview(140).body, "\n"), "")
-	for _, id := range []string{"#1", "running-id", "SReady"} {
+	for _, id := range []string{"#1", "SRun", "SReady"} {
 		wantName := "alpha"
 		if id != "#1" {
 			wantName = "unused-long-project"
@@ -1630,7 +1617,7 @@ func TestProjectColumnOnlyOnAllProjects(t *testing.T) {
 	}
 	m.Update(press("r"))
 	body = sgr.ReplaceAllString(strings.Join(m.overview(140).body, "\n"), "")
-	if rowsWith(body, "~unused-long-project", "running-id") != 1 {
+	if rowsWith(body, "~unused-long-project", "SRun") != 1 {
 		t.Error("Running refresh mark missing")
 	}
 	for _, active := range []int{0, 2} {

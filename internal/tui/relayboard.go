@@ -104,12 +104,12 @@ func (m *Model) pipelineLine(steps []runTreeStep, stale bool, width int) string 
 	return m.pipelineLineRound(steps, stale, width, true)
 }
 
-// pipelineLineRound is pipelineLine; showRound is false when the bar's own rN
-// (from round 2) already says it.
+// pipelineLineRound is pipelineLine; showRound is false when the bar's own
+// round word already says it. The round is the fix rounds plus one.
 func (m *Model) pipelineLineRound(steps []runTreeStep, stale bool, width int, showRound bool) string {
 	line := m.pipeline(steps, stale, false)
 	n := roleCounts(steps)["implementer"]
-	round := fmt.Sprintf("round %d", n)
+	round := fmt.Sprintf("round %d", fixRounds(steps)+1)
 	if showRound && n > 0 && lipgloss.Width(line)+2+len(round) <= width {
 		return line + strings.Repeat(" ", width-lipgloss.Width(line)-len(round)) + m.cfg.Theme.Dim.Render(round)
 	}
@@ -188,9 +188,10 @@ func (m *Model) boardLines(steps []runTreeStep, width int) []string {
 	if !live {
 		bar = m.cfg.Theme.Dim.Render(bar)
 	}
-	// The bar says rN from round 2, so only round 1 keeps a round on this line.
-	lines := []string{bar, m.pipelineLineRound(steps, !live, width, roleCounts(steps)["implementer"] < 2)}
-	// Last heard sits on the bar's line, after its round (rN from round 2). A
+	// The bar says "fix N" or "gate" once there is one to say, so only a run
+	// without a round word keeps a round on this line.
+	lines := []string{bar, m.pipelineLineRound(steps, !live, width, roundWord(steps) == "")}
+	// Last heard sits on the bar's line, after its round word. A
 	// pane too narrow for both keeps it on a line of its own.
 	if heard, style := m.lastHeard(r); heard != "" {
 		heard = strings.Replace(heard, "heard ", "last heard ", 1) + " ago"

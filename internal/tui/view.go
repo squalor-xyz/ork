@@ -57,7 +57,7 @@ func (m *Model) screen() string {
 	var body, detail, footer []string
 	bodyH, start := max(h-4, 1), 0
 	m.drawn = drawnRows{sel: -1}
-	selectedLine := -1
+	selectedLine, selExtra := -1, 0
 	overviewBody := false
 	collapse := false // a render on show takes the whole body (S121, *proposed*)
 	if m.showHelp {
@@ -125,6 +125,8 @@ func (m *Model) screen() string {
 			paneHeight := max(h-7, 1)
 			if h >= 24 {
 				paneHeight = max(h-10, 1)
+				// A Running run's second line is one more row line (S145).
+				paneHeight = max(paneHeight-ov.paneExtra, 1)
 			}
 			// A render on show takes the whole body: the Overview rows above
 			// the pane give way, so the pane leaves its row for the detail.
@@ -158,6 +160,7 @@ func (m *Model) screen() string {
 			}
 		}
 		selectedLine = ov.sel
+		selExtra = ov.selExtra
 	}
 	hasDetail := false
 	for _, line := range detail {
@@ -197,6 +200,10 @@ func (m *Model) screen() string {
 			if bodyH >= below+2 {
 				selectedLine += below
 			}
+		}
+		// A Running run's second line scrolls into view with its row (S145).
+		if selExtra > 0 && m.pane == nil && bodyH >= 3 {
+			selectedLine += selExtra
 		}
 	}
 

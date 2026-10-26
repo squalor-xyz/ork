@@ -25,6 +25,18 @@ type runTreeStep struct {
 	cost          float64
 	live          bool
 	tail          string
+	// engineState is the state of the engine run these steps belong to, set on
+	// every step of an engine run's steps (S145); "" for a ledger-only run.
+	engineState string
+}
+
+// withEngineState marks the steps as an engine run's, in the engine's state.
+func withEngineState(steps []runTreeStep, state string) []runTreeStep {
+	out := append([]runTreeStep(nil), steps...)
+	for i := range out {
+		out[i].engineState = state
+	}
+	return out
 }
 
 func ledgerTreeSteps(steps []slicercli.Step) []runTreeStep {
@@ -279,6 +291,7 @@ func boardTreeSteps(run slicercli.RelayRun) []runTreeStep {
 // roleDetails joins transient engine data onto the ledger tree by step ID.
 // Source-less ledger steps have no usage or tail.
 func (m *Model) roleDetails(steps []runTreeStep, r source.EngineRun) []runTreeStep {
+	steps = withEngineState(steps, r.State)
 	active := -1
 	recorded := 0
 	for i, role := range r.Roles {

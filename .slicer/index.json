@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 150,
+  "next_id": 151,
   "preamble": "",
   "passes": [
     {
@@ -5394,12 +5394,35 @@
       "id": "S145",
       "title": "Running rows at a glance: slice title, working role, fix round, last heard, latest output line",
       "short_title": "Running rows at a glance",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S106"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "3cb3f378-a8ec-49a9-bc87-2c95047825b1",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answers (session a2bf7e0e, 2026-10-26): (1) line 2 for runs started elsewhere: hide it when the task label is just '<id> <role>', show it when it says more; (2) round rule for runs started elsewhere: keep the current rule; a slicer note asks the contract to label the finish step, after which any later implementer step counts as a fix unless it says finish; (3) one shared column fit for the Running section so bars line up; (4) the selected run highlights both lines in reverse video, and line 2 is not dimmed.",
+          "created_at": "2026-10-26T15:27:26Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "aa3d2a87-25df-4424-9861-4f91ffa43e84",
+          "kind": "",
+          "text": "**2026-10-26** — Owner answer (session a2bf7e0e, 2026-10-26): when the title does not fit on line 1 (100x30 and 80x24), line 1 is status only and line 2 starts with the slice title, then the role's latest line ('Thirty short: updating the golden views'). At widths where it fits, the title stays on line 1.",
+          "created_at": "2026-10-26T15:48:17Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -5417,7 +5440,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -5531,6 +5554,34 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S150",
+      "title": "S145 later notes: line 2 styling, title clip, label parsing, one-line leftovers",
+      "short_title": "S145 later notes",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }

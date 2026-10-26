@@ -1,0 +1,39 @@
+{
+  "id": "S150",
+  "title": "S145 later notes: line 2 styling, title clip, label parsing, one-line leftovers",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Later notes from the S145 relay (run-20261026-143702-868c, landed 8641c82), not fixed in that slice:\n- Line 2 styling (UI pass, round 3): the title is dim like the output and the \": \" separator doubles up (\"Forty-one untitled: round 2: rerunning the checks\"). Suggested: title in the default foreground, two spaces between title and output, only the output dim or amber, so a denial no longer colours the title.\n- At 80x24 a long title eats line 2; clip the title to about 24 columns when the output would get under about 20.\n- The regex in stripTaskLabel is compiled on every render.\n- docs/dashboard.md lists the task-label separators but omits \"/\".\n- On the selected row a denial loses its amber cue, and line 2 is bold as well as reversed.\n- Error rows keep the old one-line form.\n- An engine run and a ledger run of the same slice look alike.\n- With parallel roles only the last open role shows, and an engine run's tail may belong to another role.\n- The scroll bump may hide line 1 at the smallest body heights (internal/tui/view.go).\n- `ork status` still prints the old running:/failed: text.\n- The sidebar Running entry (S110) stays one line and only gets the round word.\n- Ledger-only round counts wait on slicer labelling the finish step (note on slicer s392)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/overview.go`, `internal/tui/view.go`, `internal/tui/progress.go`.\n- `internal/cli/lifecycle.go` (ork status output).\n- Tests: `internal/tui/running_test.go`, `internal/tui/relayboard_test.go`.\n- `docs/dashboard.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": "Triage first; the line-2 styling and title clip are UI decisions for the owner with the UI pass's suggestion as the recommendation. Spec each kept note with a failing test before building."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- slicer check"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

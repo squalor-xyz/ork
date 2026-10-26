@@ -12,6 +12,7 @@ import (
 	"time"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
@@ -37,7 +38,7 @@ func TestEngineRunRows(t *testing.T) {
 			sections := strings.Split(v, "Running")
 			wantNeeds := state == "awaiting-approval" || state == "paused" || state == "stopped"
 			if state == "committed" {
-				if strings.Contains(strings.Split(v, "Ready to land")[0], "S22") || strings.Contains(v, kindExternal) {
+				if strings.Contains(strings.Split(v, "Ready to land")[0], "S22") || strings.Contains(v, "started elsewhere") {
 					t.Fatalf("committed run still visible: %s", v)
 				}
 				return
@@ -50,11 +51,16 @@ func TestEngineRunRows(t *testing.T) {
 			if state != "stopped" {
 				row += "  2m"
 			}
+			if !wantNeeds {
+				// A Running run names its slice, the state while no role works, and
+				// the bar; the run id and the steps are in the pane (S145).
+				row = "S22  " + state + "  [......]"
+			}
 			section := sections[1]
 			if wantNeeds {
 				section = sections[0]
 			}
-			if strings.Count(v, row) != 1 || !strings.Contains(section, row) || strings.Contains(v, kindExternal) {
+			if strings.Count(v, row) != 1 || !strings.Contains(section, row) || strings.Contains(v, "started elsewhere") {
 				t.Fatalf("engine-led row missing or misplaced: %s", v)
 			}
 			badge := "ork *"
@@ -75,8 +81,19 @@ func TestEngineJoinUsesRelayLink(t *testing.T) {
 			h.start()
 			h.m.apply(snapshotMsg{name: "ork", snap: engineSnapshot(t, "implement", link)})
 			v := strings.Join(h.m.overview(200).body, "\n")
-			wantExternal := link != "ledger"
-			if strings.Contains(v, kindExternal) != wantExternal || !strings.Contains(v, "S22  implement") {
+			// The link joins the engine run and its ledger run into one row; a
+			// ledger run under another id is a second row (S145 dropped its label).
+			wantRows := 1
+			if link != "ledger" {
+				wantRows = 2
+			}
+			rows := 0
+			for _, line := range strings.Split(sgr.ReplaceAllString(v, ""), "\n") {
+				if strings.Contains(line, "S22  ") {
+					rows++
+				}
+			}
+			if rows != wantRows || !strings.Contains(v, "S22  implement") {
 				t.Fatalf("relay-link join incorrect:\n%s", v)
 			}
 		})
@@ -191,9 +208,9 @@ func TestEngineElapsedWithoutLedger(t *testing.T) {
 	s := engineSnapshot(t, "setup", "")
 	s.Runs.Value = nil
 	h.m.apply(snapshotMsg{name: "ork", snap: s})
-	v := sgr.ReplaceAllString(strings.Join(h.m.overview(200).body, "\n"), "")
-	if !strings.Contains(v, "S22  setup  2m") {
-		t.Fatalf("engine elapsed from CreatedAt missing:\n%s", v)
+	_, rows := h.m.rows()
+	if v := strings.Join(detailLines(rows[0], 200, "|"), "\n"); !strings.Contains(v, "S22  setup  2m") {
+		t.Fatalf("engine elapsed from CreatedAt missing from the detail line:\n%s", v)
 	}
 }
 
@@ -249,9 +266,10 @@ func TestExternalRelayStepRows(t *testing.T) {
 			h := newHarness(t, proj("ork", false))
 			h.src.set(snap(proj("ork", false), nil, nil, relayWithSteps(tc.steps...)))
 			h.start()
-			v := sgr.ReplaceAllString(strings.Join(h.m.overview(300).body, "\n"), "")
+			_, rows := h.m.rows()
+			v := strings.Join(detailLines(rows[0], 1000, "|"), "\n")
 			if !strings.Contains(v, "ledger  S30  active, 2 of 6 steps running  2m  "+stageBar(ledgerTreeSteps(tc.steps), 0, true)+"  "+tc.want) {
-				t.Fatalf("external step row missing %q:\n%s", tc.want, v)
+				t.Fatalf("external step detail missing %q:\n%s", tc.want, v)
 			}
 			if strings.Contains(v, "Earlier failure") || (tc.name == "last-running" && strings.Contains(v, "running: orchestrator")) {
 				t.Fatalf("earlier step selected:\n%s", v)
@@ -268,17 +286,21 @@ func TestExternalRelayTaskClipped(t *testing.T) {
 	})))
 	h.start()
 	_, rows := h.m.rows()
-	prefix := "ledger  S30  active, 2 of 6 steps running  2m  [~~....]  running: implementer codex/gpt-6.1: "
-	got := rowText(rows[0], len(prefix)+20)
-	if got != prefix+task[:17]+"..." {
-		t.Fatalf("task not clipped with ellipsis: %q", got)
+	// Line 2 is the task, cut to the pane with an ellipsis.
+	body := h.m.overview(60).body
+	i := rowIndex(body, "S30")
+	if i < 0 || i+1 >= len(body) {
+		t.Fatalf("no row:\n%s", strings.Join(body, "\n"))
+	}
+	if second := sgr.ReplaceAllString(body[i+1], ""); lipgloss.Width(second) > 60 || !strings.HasSuffix(second, "...") || !strings.Contains(second, "implement implement") {
+		t.Fatalf("task not clipped with ellipsis: %q", second)
 	}
 	if !strings.Contains(strings.Join(detailLines(rows[0], 1000, "|"), "\n"), task) {
 		t.Fatal("detail lost full task")
 	}
 }
 
-func TestExternalRelayWholePartClipping(t *testing.T) {
+func TestExternalRelayKeepsItsStepsInTheDetail(t *testing.T) {
 	for _, phase := range []string{"start", "fail"} {
 		t.Run(phase, func(t *testing.T) {
 			h := newHarness(t, proj("ork", false))
@@ -286,31 +308,21 @@ func TestExternalRelayWholePartClipping(t *testing.T) {
 			h.src.set(snap(proj("ork", false), nil, nil, r))
 			h.start()
 			_, rows := h.m.rows()
-			base := "ledger  S30  active, 2 of 6 steps running  2m"
-			baseWithBar := base + "  [~~....]"
-			if phase == "fail" {
-				baseWithBar = base + "  [!!....]"
-			}
 			label := "running: implementer codex/gpt-6.1"
 			if phase == "fail" {
 				label = "failed: implementer"
 			}
-			for _, extra := range []int{0, 5, len(label) + 2, len(label) + 7} {
-				if got := rowText(rows[0], len(baseWithBar)+extra); got != baseWithBar {
-					t.Errorf("partial step must be dropped, room %d: got %q, want %q", len(baseWithBar)+extra, got, baseWithBar)
-				}
+			// The row shows the role and its model, and the task on line 2; the
+			// running and failed step texts are in the detail line only.
+			line1 := rowText(rows[0], 300)
+			if strings.Contains(line1, "running:") || strings.Contains(line1, "failed:") {
+				t.Fatalf("line 1 still carries a step text: %q", line1)
 			}
-			noSteps := r
-			noSteps.Steps = nil
-			h.m.apply(snapshotMsg{name: "ork", snap: snap(proj("ork", false), nil, nil, noSteps)})
-			_, oldRows := h.m.rows()
-			for room := 10; room <= len(base); room++ {
-				if got, want := rowText(rows[0], room), rowText(oldRows[0], room); got != want {
-					t.Fatalf("step changed base clipping at %d: got %q, want %q", room, got, want)
-				}
+			if phase == "start" && !strings.Contains(line1, "implementer gpt-6.1") {
+				t.Fatalf("line 1 lacks the role and model: %q", line1)
 			}
 			if !strings.Contains(strings.Join(detailLines(rows[0], 300, "|"), "\n"), label+": Implement S30") {
-				t.Fatal("detail lost dropped step")
+				t.Fatal("detail lost the step")
 			}
 		})
 	}
@@ -325,8 +337,12 @@ func TestExternalRelayOptionalFields(t *testing.T) {
 	h.start()
 	_, rows := h.m.rows()
 	want := "ledger  S30  active, 2 of 6 steps running  2m  [~~!!..]  running: implementer  failed: reviewer  [implementer]>reviewer>gate"
-	if got := rowText(rows[0], 300); got != want {
+	if got := strings.Join(detailLines(rows[0], 300, "|"), "\n"); !strings.Contains(got, want) {
 		t.Fatalf("empty fields: got %q, want %q", got, want)
+	}
+	// With no model and no task the row shows the bare role and no second line.
+	if got := rowText(rows[0], 300); !strings.Contains(got, "implementer  [~~!!..]") || rows[0].run.second != "" {
+		t.Fatalf("empty fields on the row: %q", got)
 	}
 }
 
@@ -368,11 +384,12 @@ func TestEngineRowLeadsWithRunID(t *testing.T) {
 	h.m.apply(snapshotMsg{name: "ork", snap: s})
 	_, rows := h.m.rows()
 	r := rows[0]
-	if r.id != s.EngineRuns[0].ID || !strings.HasPrefix(rowText(r, 200), r.id+"  S22  implement") {
-		t.Fatalf("engine ID must lead row: id=%q text=%q", r.id, rowText(r, 200))
+	if r.id != s.EngineRuns[0].ID || !strings.HasPrefix(r.text, r.id+"  S22  implement") {
+		t.Fatalf("engine ID must lead the row's full text: id=%q text=%q", r.id, r.text)
 	}
-	if got := rowText(r, len(r.id)+5); !strings.HasPrefix(got, r.id) {
-		t.Fatalf("clipping lost whole engine ID: %q", got)
+	// The row names the slice; the run id is in the pane and the detail line.
+	if got := rowText(r, 200); !strings.HasPrefix(got, "S22  implement") || strings.Contains(got, r.id) {
+		t.Fatalf("the row must lead with the slice and not carry the run id: %q", got)
 	}
 	if len(r.stepParts) == 0 {
 		t.Fatal("running row lost step parts")
@@ -394,7 +411,7 @@ func TestLedgerRowShowsNoEngineID(t *testing.T) {
 	h.m.apply(snapshotMsg{name: "ork", snap: engineSnapshot(t, "implement", "different")})
 	_, rows := h.m.rows()
 	r := rows[len(rows)-1]
-	if r.id != "ledger" || r.engineID != "" || !strings.HasPrefix(rowText(r, 200), "ledger  S22") || strings.Contains(r.text, "engine") {
+	if r.id != "ledger" || r.engineID != "" || !strings.HasPrefix(r.text, "ledger  S22") || !strings.HasPrefix(rowText(r, 200), "S22") || strings.Contains(r.text, "engine") {
 		t.Fatalf("ledger row changed identity: %+v", r)
 	}
 }
@@ -405,20 +422,29 @@ func TestRunningEngineRowsOmitEmptyLabel(t *testing.T) {
 	h.m.apply(snapshotMsg{name: "ork", snap: engineSnapshot(t, "implement", "ledger")})
 	_, rows := h.m.rows()
 	a := sgr.ReplaceAllString(h.m.rowLine(rows[0], false, 3, 300), "")
-	if len(rows) != 1 || rows[0].kindW != 0 || !strings.HasPrefix(a, indent+" ork  engine") {
+	if len(rows) != 1 || rows[0].kindW != 0 || !strings.HasPrefix(a, indent+" ork  S22  implement") {
 		t.Fatalf("a Running list of engine rows only must omit the empty label: %d rows, %q", len(rows), a)
 	}
 }
 
-func TestRunningEngineRowsPadLikeExternalRows(t *testing.T) {
+func TestRunningRowsPadToTheLabelOfAnErrorRow(t *testing.T) {
 	h := newHarness(t, proj("ork", false))
 	h.start()
-	h.m.apply(snapshotMsg{name: "ork", snap: engineSnapshot(t, "implement", "different")})
+	s := engineSnapshot(t, "implement", "different")
+	s.EngineRuns = append(s.EngineRuns, source.EngineRun{ID: "bad", Item: "S23", State: "implement", Error: "boom", CreatedAt: s.EngineRuns[0].CreatedAt})
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
 	_, rows := h.m.rows()
-	a := sgr.ReplaceAllString(h.m.rowLine(rows[0], false, 3, 300), "")
-	b := sgr.ReplaceAllString(h.m.rowLine(rows[1], false, 3, 300), "")
-	if rows[0].kindW != len(kindExternal) || strings.Index(a, "ork") != strings.Index(b, "ork") || !strings.Contains(b, kindExternal) {
-		t.Fatalf("mixed Running list must keep the label column: %q vs %q", a, b)
+	if len(rows) != 3 {
+		t.Fatalf("%d running rows", len(rows))
+	}
+	var lines []string
+	for _, r := range rows {
+		lines = append(lines, sgr.ReplaceAllString(h.m.rowLine(r, false, 3, 300), ""))
+	}
+	for i, r := range rows {
+		if r.kindW != kindWidth || strings.Index(lines[i], "ork") != strings.Index(lines[0], "ork") {
+			t.Fatalf("mixed Running list must keep the label column: %q", lines)
+		}
 	}
 }
 

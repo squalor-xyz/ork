@@ -4,7 +4,7 @@
   [90mnothing needs you[m
 
 [1;36mRunning 2[m
-  [36m> started elsewhere[m  ork  s97  S97  active  20m  [##~~..]  [33m! heard 16m[m  running: reviewer  implementer>[reviewer]>gate
+   ork  [1mS97[m  [36mreviewer[m        [##~~..]  [33m! heard 16m[m
     [1mRun s97[m
     [##~~..]  [33m! last heard 16m ago[m
     [32mimplementer[m > [36m[reviewer][m > [90mgate[m                                                                              [90mround 1[m
@@ -13,7 +13,7 @@
     [90m. gate        waiting[m
 
     started elsewhere, read-only; esc close pane
-  [90m> started elsewhere[m  ork  [90mstale  S97  stale  20m  [##~~..]  [m[1;31m!! heard 30m[m[90m  running: reviewer  implementer>reviewer>gate[m
+   ork  [90mS97[m  [90mstale reviewer[m  [90m[##~~..][m  [1;31m!! heard 30m[m
 
 [1;36mRecent[m
 [1;7;97;44m    ork  ✗ fail  S94  10m  ended 5m ago  impl 1  review 1  gate 0                                                       [m
