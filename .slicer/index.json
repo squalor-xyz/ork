@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 148,
+  "next_id": 149,
   "preamble": "",
   "passes": [
     {
@@ -4716,6 +4716,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "de428ab3-0fcc-4f2d-91cb-0be4f46f32c2",
+          "kind": "",
+          "text": "**2026-10-26** — From S119 (landed b7bc308): a landed run whose cleanup failed at 'git branch -d' has no worktree left, so the c key's 'git worktree remove' fails again (internal/daemon/landed.go:148-155) and the row never clears. The cleanup key must skip a worktree that is already gone, and the row's 'c finishes the cleanup' detail should name both steps.",
+          "created_at": "2026-10-26T15:29:15Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -5449,6 +5460,34 @@
         "group": "",
         "reason": "",
         "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S148",
+      "title": "S119 later notes: landing status text, cleanup-failed rows, fix-round allowlist",
+      "short_title": "S119 later notes",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
         "urgency": 1,
         "effort": 1,
         "attempts": 0

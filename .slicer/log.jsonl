@@ -1871,3 +1871,5 @@
 {"when": "2026-10-26T14:51:33Z", "item": "S147", "action": "add", "from": "", "to": "open", "note": "S121 later notes: render pane robustness and wording"}
 {"when": "2026-10-26T15:09:20Z", "item": "S24", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1.0; importance 2→3; urgency 1→3"}
 {"when": "2026-10-26T15:09:20Z", "item": "S24", "action": "note", "from": "", "to": "", "note": "2026-10-26 joint release: pairs with slicer s387 (relay pin)", "by": "Jon R"}
+{"when": "2026-10-26T15:29:15Z", "item": "S148", "action": "add", "from": "", "to": "open", "note": "S119 later notes: landing status text, cleanup-failed rows, fix-round allowlist"}
+{"when": "2026-10-26T15:29:15Z", "item": "S95", "action": "note", "from": "", "to": "", "note": "From S119 (landed b7bc308): a landed run whose cleanup faile", "by": "Jon R"}

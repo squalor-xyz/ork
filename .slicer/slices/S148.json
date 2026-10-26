@@ -1,0 +1,39 @@
+{
+  "id": "S148",
+  "title": "S119 later notes: landing status text, cleanup-failed rows, fix-round allowlist",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Later notes from the S119 relay (run-20261026-131324-6dbc, landed b7bc308), not fixed in that slice:\n- Approve status text should say what is happening, for example \"landing S22: pending\".\n- docs/dashboard.md:482 wording (flagged in round 1).\n- A second approval after a landing fix round writes the human-checks note twice.\n- Not verified: whether the registry's implementer allowlist permits git add, git commit and slicer render in the worktree for a landing fix round.\n- The \"c finishes the cleanup\" detail shows even when the merge state is unknown, and `c` then refuses (`internal/daemon/landed.go:132`; low).\n- The cleanup-failed reason is clipped to one dim line; no view shows it in full.\n- Recent could read \"landed, cleanup failed\" for a cleanup-failed run.\n- Approve is one key on the card and asks first on Overview; adj 98 (ui.confirm) still says one key until the owner supersedes it (owner said they will, 2026-10-26).\nThe cleanup key failing on a worktree that is already gone is filed on S95."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/landed.go`, `internal/engine/land.go`.\n- `internal/tui/card.go`, `internal/tui/relayboard.go`, `internal/tui/overview.go`.\n- `internal/roles/registry.go`.\n- `docs/dashboard.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": "Triage first. Spec each kept note with a failing test before building; check the allowlist question by reading the registry and reporting before any change."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- slicer check"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
