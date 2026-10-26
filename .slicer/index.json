@@ -4570,8 +4570,8 @@
         "pass": "v1",
         "group": "",
         "reason": "",
-        "importance": 2,
-        "urgency": 2,
+        "importance": 3,
+        "urgency": 3,
         "effort": 2,
         "attempts": 0
       }

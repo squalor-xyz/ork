@@ -1678,3 +1678,5 @@
 {"when": "2026-10-26T12:19:33Z", "item": "S134", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-10-26T12:22:06Z", "item": "S17", "action": "note", "from": "", "to": "", "note": "Human check (2026-10-26, S31): the owner ran S78 end to end ", "by": "Jon R"}
 {"when": "2026-10-26T12:22:06Z", "item": "S31", "action": "status", "from": "open", "to": "done", "note": "S78 ran through ork end to end with gate PASS and committed (engine run ork-20261025-175709-e8c9, ledger run-20261025-175710-49a6 ended pass, every role step recorded). Landed ffaeb39. S17 human check answered by the owner's run (note on S17). Gaps filed with --discovered-from S31: S124 S125 S126 S127 S138 S139; S125 S126 S127 have landed.", "by": "Jon R"}
+{"when": "2026-10-26T12:25:26Z", "item": "S95", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-26T12:25:26Z", "item": "S95", "action": "set", "from": "", "to": "", "note": "importance 2→3; urgency 2→3"}
