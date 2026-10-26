@@ -1241,7 +1241,7 @@ func TestSelectedTitleLineScrollsIntoView(t *testing.T) {
 	s := snap(p, nil, items, runs...)
 	h.src.set(s)
 	h.start()
-	for height := 12; height <= 20; height++ {
+	for height := 13; height <= 20; height++ { // the hint line takes a row, so 13 is the old 12 (S149)
 		h.m.Update(tea.WindowSizeMsg{Width: 70, Height: height})
 		for i := 0; i < 7; i++ {
 			h.send(press("down"))

@@ -1,4 +1,4 @@
-[1mork[m  ?help                 │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1mork[m  ?help                 │ [1mOverview[m[2m │ [mQuestions 1[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
   Running                1 │[2m────────────────────────────────────────────────────────────────────────[m
 [1;7m> Needs you              1 [m│[1mNeeds you 1[m
 [2m1[m ork                    1 │  [1mPaused 1[m
@@ -11,7 +11,6 @@
                            │    Answer: [1muse local storage[m[1;7m [m[1m[m
                            │    ork answer engine 'use local storage'
                            │    [2madj filing off: no adj in this project[m
-                           │    enter submit; esc close pane
                            │
                            │[1mRunning 0[m  [1m! owner questions 1[m
                            │  [2mnothing running[m
@@ -27,4 +26,5 @@
                            │
                            │
                            │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ enter [2msubmit[m; pgup/pgdown [2mline[m; ctrl+d [2mhalf page[m; esc [2mclose pane[m
                            │ 1 project | refreshed 16:42:00

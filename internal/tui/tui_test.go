@@ -316,10 +316,10 @@ func TestViewKeysDoNotMoveTheProject(t *testing.T) {
 			if !strings.Contains(v, "> Needs you") {
 				t.Errorf("after %s the sidebar selection moved:\n%s", k, v)
 			}
-			if bar := strings.Split(v, "\n")[0]; !strings.Contains(bar, "Overview │ Questions │ Waves │ Roadmap │ Decisions") {
+			if bar := strings.Split(v, "\n")[0]; !strings.Contains(bar, "Overview │ Questions 2 │ Waves │ Roadmap │ Decisions") {
 				t.Errorf("after %s the view bar is %q", k, bar)
 			}
-			want := "Questions"
+			want := "Questions 2"
 			if k == "shift+tab" {
 				want = "Decisions"
 			}
@@ -1724,7 +1724,7 @@ func TestRulesFallBackToASCII(t *testing.T) {
 		ov := m.overview(60)
 		if len(ov.detail) > 0 {
 			lines := strings.Split(v, "\n")
-			if !strings.Contains(lines[len(lines)-len(ov.detail)-3], strings.Repeat(horizontal, 20)) {
+			if !strings.Contains(lines[len(lines)-len(ov.detail)-4], strings.Repeat(horizontal, 20)) {
 				t.Errorf("ASCII=%v missing rule above detail", ascii)
 			}
 		}

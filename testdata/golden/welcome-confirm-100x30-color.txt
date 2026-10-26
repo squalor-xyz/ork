@@ -2,12 +2,11 @@
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │  [1;36mWelcome[m
                            │
-                           │  No projects yet. Press + to add one
+                           │  No projects yet.
                            │
                            │  Project path: [1m/work/mine[m
                            │  [90mType an absolute path, or leave it empty and press Enter to use the[m
-                           │  [90mcurrent directory (needs .slicer or .adjudicate.json). Esc cancels.[m
-                           │
+                           │  [90mcurrent directory (needs .slicer or .adjudicate.json).[m
                            │
                            │
                            │
@@ -27,4 +26,5 @@
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │  ork projects add '/work/mine'? [y/N] (Enter is No)
                            │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ y [2madd project[m; n [2mcancel[m
                            │ 0 projects | refreshed never

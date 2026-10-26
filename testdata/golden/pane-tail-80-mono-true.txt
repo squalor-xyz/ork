@@ -10,5 +10,3 @@
   [2m    > ... g output long output long output long output long output long output[m
   [2m    > long output long output long output long output long output long output[m
   [2m    > Running focused tests[m
-
-  x stop; esc close pane

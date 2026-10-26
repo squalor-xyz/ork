@@ -23,8 +23,8 @@
                            |
                            |
                            |
-                           |  [enter] item   [space] tick item   [e] edit lineup   [l] launch wave
                            |[90m------------------------------------------------------------------------[m
-                           |  2 ticked, not launched; [l] launches
+                           |  2 ticked, not launched
                            |[90m------------------------------------------------------------------------[m
+                           | enter [2mitem[m; space [2mtick item[m; l [2mlaunch wave[m; e [2medit lineup[m; ? [2mhelp[m
                            | 2 projects | refreshed 16:42:00

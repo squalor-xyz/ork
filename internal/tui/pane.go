@@ -35,6 +35,7 @@ type runPane struct {
 	ledger                    bool
 	input                     textField
 	offset                    int
+	room                      int       // the lines of the scrolling part the last draw had
 	notice                    string    // proposed: why the pane moved to this run
 	noticeAt                  time.Time // when it moved
 }
@@ -216,6 +217,16 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 	case "pgdown":
 		m.pane.offset++
 		return nil
+	case "ctrl+d":
+		// Half a page of the scrolling part (S149). Nothing in a field uses ctrl+d.
+		m.pane.offset += max(m.pane.room/2, 1)
+		return nil
+	case "ctrl+u":
+		// ctrl+u in an answer field or the fix note still clears the field.
+		if !m.paneField() {
+			m.pane.offset = max(m.pane.offset-max(m.pane.room/2, 1), 0)
+			return nil
+		}
 	}
 	if m.renderOn() > 0 {
 		return m.renderKey(msg)
@@ -289,7 +300,7 @@ func (m *Model) paneLines(w, h int, status string) []string {
 func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 	r, reason, ok := m.paneRow()
 	if !ok {
-		return []string{indent + "Run " + m.pane.run + ": no longer in snapshot", indent + "esc close pane"}
+		return []string{indent + "Run " + m.pane.run + ": no longer in snapshot"}
 	}
 	width := max(w-len(indent), 1)
 	run := r.engineID
@@ -367,12 +378,11 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 	switch {
 	case viewing:
 		addFooter(wrapText(m.renderTitle(card), width), 0)
-		addFooter(wrapText(m.cardHint(card), width), 1)
 	case r.unavailable:
 		addFooter(wrapText(source.RemovedProjectHelp(r.name), width), 2)
-		addFooter([]string{"Removed project; esc close pane"}, 3)
 	case m.pane.ledger:
-		addFooter(wrapText("started elsewhere, read-only; esc close pane", width), 2)
+		// The note "started elsewhere, read-only; esc close pane" is on the hint
+		// line (S149).
 	case r.state == "paused" && r.pending == "question":
 		if ask := m.paneAsk(); ask != nil && !m.pane.freeText {
 			title := wrapText(ask.Title, width)
@@ -394,9 +404,9 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		}
 		decisionKey, disabledReason := m.paneAdjKey()
 		on := m.pane.adj && disabledReason == ""
-		toggle := "[ ] file answer in adj as " + decisionKey + "  ctrl+a toggles"
+		toggle := "[ ] file answer in adj as " + decisionKey
 		if on {
-			toggle = "[x] file answer in adj as " + decisionKey + "  ctrl+a toggles"
+			toggle = "[x] file answer in adj as " + decisionKey
 		}
 		if disabledReason != "" {
 			toggle = "adj filing off: " + disabledReason
@@ -431,37 +441,14 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 			priority = 2
 		}
 		addFooter(toggleLines, priority)
-		hint := "enter submit; esc close pane"
-		if ask := m.paneAsk(); ask != nil {
-			hint = fmt.Sprintf("1-%d pick; t free text; esc close pane", len(ask.Options))
-			if m.pane.freeText {
-				hint = "enter submit; esc back to options"
-			}
-		}
-		if m.confirm != nil && m.confirm.verb == "answer" {
-			hint = "y sends; enter, n or esc cancel"
-		}
-		addFooter(wrapText(hint, width), 3)
-	case r.state == "paused" && r.pending == "budget":
-		addFooter(wrapText("t retry: one more role round; "+m.fileHint()+"esc close pane", width), 3)
-	case r.state == "paused":
-		addFooter(wrapText("t retry; "+m.fileHint()+"esc close pane", width), 3)
 	case r.state == "stopped":
 		addFooter(wrapText("Stopped; relaunch, or clear with: ork dismiss "+r.engineID, width), 2)
-		addFooter(wrapText(m.fileHint()+"esc close pane", width), 3)
 	case card != nil && m.pane.fixing:
 		addFooter([]string{"Fix note: " + m.pane.input.view(max(width-len("Fix note: "), 1), m.cfg.Theme)}, 0)
 		addFooter(wrapText("enter sends the note to a fix round; esc back to card", width), 0)
 	case card != nil:
 		addFooter(m.cardChecks(card, width), 0)
 		addFooter(wrapText(m.cardLandNote(), width), 1)
-		addFooter(wrapText(m.cardHint(card), width), 1)
-	case r.state == "awaiting-approval":
-		addFooter(wrapText("a approve; x stop; "+m.fileHint()+"esc close pane", width), 3)
-	case r.state == "committed":
-		addFooter(wrapText(m.fileHint()+"esc close pane", width), 3)
-	default:
-		addFooter(wrapText("x stop; "+m.fileHint()+"esc close pane", width), 3)
 	}
 	if status != "" {
 		priority := 1
@@ -471,7 +458,7 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		addFooter(wrapText(status, width), priority)
 	}
 	// Drop the lowest priority lines first: preview, off/disabled toggle,
-	// submit hint, on toggle, status, then input. An option confirmation
+	// on toggle, status, then input. An option confirmation
 	// takes priority over the question. Preserve earlier lines
 	// within a priority when the terminal cannot fit the whole group.
 	// A card leaves a line for the header that names the run.
@@ -537,6 +524,7 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		last++ // the marker above uses one line at the bottom of the content
 	}
 	m.pane.offset = min(m.pane.offset, last)
+	m.pane.room = room
 	// Indent content before window adds styled markers at the same column.
 	for _, section := range [][]string{header, lines, footer} {
 		for i := range section {

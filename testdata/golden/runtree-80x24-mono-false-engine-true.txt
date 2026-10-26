@@ -14,11 +14,11 @@
                    │    [1;31m! gate        fail  30s  codex sol round 1  tokens 0  $-[m
                    │    [1;31m    ✗ gate FAIL -> implementer round 2[m
                    │
-                   │    x stop; esc close pane
                    │
                    │[1;36mRecent[m
                    │  [90mnone[m
                    │
                    │[90m  +2 more lines[m
                    │[90m────────────────────────────────────────────────────────────[m
+                   │ pgup/pgdown [2mline[m; ctrl+d/u [2mhalf page[m; esc [2mclose pane[m
                    │ 1 project | refreshed 16:42:00

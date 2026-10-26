@@ -10,5 +10,3 @@
   [2m    > ... wrapped output wrapped output wrapped output wrapped output wrapped[m
   [2m    > output wrapped output[m
   [2m    > newest[m
-
-  x stop; esc close pane

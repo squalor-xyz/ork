@@ -12,7 +12,6 @@
     [1;36m| reviewer    start[m
     [90m. gate        waiting[m
 
-    started elsewhere, read-only; esc close pane
    ork  [90mS97[m  [90mstale reviewer[m  [90m[##~~..][m  [1;31m!! heard 30m[m
 
 [1;36mRecent[m
@@ -37,4 +36,5 @@
 
 
 [90m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[m
+ pgup/pgdown [2mline[m; ctrl+d/u [2mhalf page[m; [2mstarted elsewhere, read-only[m; esc [2mclose pane[m
  1 project | refreshed 16:42:00

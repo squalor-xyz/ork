@@ -15,10 +15,10 @@
                    │
                    │
                    │
-                   │
                    │[90m────────────────────────────────────────────────────────────[m
                    │  ork approve engine
                    │  Land and push S22, then remove its worktree and branch?
                    │  [y/N] (Enter is No)
                    │[90m────────────────────────────────────────────────────────────[m
+                   │ y [2mapprove[m; n [2mcancel[m
                    │ 1 project | refreshed 16:42:00

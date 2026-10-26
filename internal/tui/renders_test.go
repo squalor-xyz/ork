@@ -57,7 +57,7 @@ func rendersHarness(t *testing.T) *harness {
 func TestApprovalCardShowsRenders(t *testing.T) {
 	h := rendersHarness(t)
 	v := h.at(80, 24)
-	for _, want := range []string{"Renders: 3 from the UI pass (round 1)", "v view", "renders; esc close pane"} { // the key line wraps
+	for _, want := range []string{"Renders: 3 from the UI pass (round 1)", "esc close pane"} { // the key line wraps
 		if !strings.Contains(v, want) {
 			t.Errorf("the card lacks %q at 80x24:\n%s", want, v)
 		}
@@ -69,7 +69,7 @@ func TestApprovalCardShowsRenders(t *testing.T) {
 	// v opens the first render and takes the room of the card.
 	h.deliver(press("v"))
 	v = h.at(80, 24)
-	for _, want := range []string{"Render 1 of 3: launch-80x24.txt", "LAUNCH-80 first line", "second line", "v next; s sidebar", "esc back to card"} {
+	for _, want := range []string{"Render 1 of 3: launch-80x24.txt", "LAUNCH-80 first line", "second line", "v next render; s sidebar", "esc back to card"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("render 1 lacks %q:\n%s", want, v)
 		}
@@ -127,7 +127,7 @@ func TestApprovalCardShowsRenders(t *testing.T) {
 		t.Errorf("the text around the sequences is lost:\n%s", v)
 	}
 	// On the last render the key line says where v goes.
-	if !strings.Contains(v, "v/esc back to card; s sidebar; pgup/pgdown scroll") || strings.Contains(v, "v next;") {
+	if !strings.Contains(hintLine(v), "v back to card; s sidebar") || strings.Contains(hintLine(v), "v next render") {
 		t.Errorf("the last render's key line:\n%s", v)
 	}
 
@@ -349,7 +349,7 @@ func TestApprovalCardRenderCollapsesTheOverview(t *testing.T) {
 	if len(strings.Split(long, "\n")) != 24 {
 		t.Errorf("the screen is %d rows with the long render, want 24:\n%s", len(strings.Split(long, "\n")), long)
 	}
-	if rows := strings.Count(long, "row "); rows != 13 { // the rule under the run line takes one of the 14 rows
+	if rows := strings.Count(long, "row "); rows != 13 { // the rule under the run line takes one of the 13 rows (the hint line takes one, S149)
 		t.Errorf("the render shows %d rows at 80x24:\n%s", rows, long)
 	}
 	// Back on the card the rows return.

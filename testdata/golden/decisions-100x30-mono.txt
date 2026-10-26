@@ -1,4 +1,4 @@
-[1mork[m  ?help                 │ Overview[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [m[1mDecisions[m
+[1mork[m  ?help                 │ Overview[2m │ [mQuestions 4[2m │ [mWaves[2m │ [mRoadmap[2m │ [m[1mDecisions[m
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
 [2m0[m Needs you              6 │[1mOpen[m[2m | [mDecided
 [1;7m> zeta                   2 [m│[1mzeta[m
@@ -10,7 +10,6 @@
                            │[2m       Use files[m
                            │[2m       Easy audit[m
                            │  #2 ui.order  Second question
-                           │  [left/right] tabs   [A] all projects   [enter] open
                            │
                            │
                            │
@@ -27,4 +26,5 @@
                            │
                            │
                            │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ enter [2mopen[m; left/right [2mswitch tab[m; A [2mall projects[m; q [2mquit[m; ? [2mhelp[m
                            │ 3 projects | refreshed 16:42:00

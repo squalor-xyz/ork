@@ -8,10 +8,10 @@
                            │1-9 jump to project; 0 Needs you
                            │j/k down/up row; g/G home/end first/last
                            │pgdown/pgup page rows or scroll a pane
+                           │ctrl+d/u scroll a run pane half a page
                            │}/{ next/previous group (Overview)
                            │enter open run, question, item or decision; other rows select project
-                           │/ filter projects; esc clears
-                           │s hide/show sidebar
+                           │/ filter projects; esc clears; s hide/show sidebar
                            │+ add project (Welcome)
                            │space tick item and ask inputs (Waves)
                            │e edit ticked item lineup (Waves)
@@ -22,9 +22,9 @@
                            │t (question) type a free answer
                            │ctrl+a (answer) toggle filing the answer in adj
                            │c remove merged worktree and branch (Ready)
-                           │r refresh now
-                           │q quit; ? show or hide this help
+                           │r refresh now; q quit; ? show or hide this help
                            │esc close run, question, item, decision, help or message
                            │[2m  +2 more lines[m
                            │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ ? or esc [2mclose help[m; q [2mquit[m
                            │ 1 project | refreshed 16:42:00

@@ -1,4 +1,4 @@
-[1mork[m [2mdev[m  ?help             │ [1mOverview (Running)[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1mork[m [2mdev[m  ?help             │ [1mOverview (Running)[m[2m │ [mQuestions 1[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
 [1;7m> Running                4 [m│[2m────────────────────────────────────────────────────────────────────────[m
 [2m0[m Needs you              2 │[1mRunning 4[m  [1m! owner questions 1[m  [1mx stopped 1[m
 [2m1[m DataBall               1 │[1;7m   slicer      S110  [##~~..]       heard 4m   [reviewer]     ▁▂▂▄█▃▁▂▅▂[m
@@ -22,9 +22,9 @@
                            │
                            │
                            │
-                           │
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │  run-1  S110  review  12m  [##~~..]  heard 4m
                            │  implementer>[reviewer]>gate  activity ▁▂▂▄█▃▁▂▅▂
                            │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ enter [2mopen[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
                            │ 4 projects | refreshed 16:42:07

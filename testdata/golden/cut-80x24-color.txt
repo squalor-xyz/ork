@@ -1,4 +1,4 @@
-[1mork[m [90mdev[m  ?help     │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[1mork[m [90mdev[m  ?help     │ [1;36mOverview[m[90m │ [mQuestions 3[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
   Running        1 │[90m────────────────────────────────────────────────────────────[m
 [1;7;97;44m> Needs you      6 [m│[1;36mNeeds you 6[m
 [90m1[m slicer         3*│  [1mDecisions 3[m
@@ -15,10 +15,10 @@
                    │[1;7;97;44m              slicer      S11  active  [......]             [m
                    │  [90m~ pending [m  agents      waiting for the first reply
                    │
-                   │[1;36mRecent[m
-                   │[90m  +4 more lines[m
+                   │[90m  +5 more lines[m
                    │[90m────────────────────────────────────────────────────────────[m
                    │  run-20261019-004308-40d4  S11  active, 2 of 6 steps
                    │  running  1h00m  [......]  implementer>reviewer>gate
                    │[90m────────────────────────────────────────────────────────────[m
+                   │ enter [2mopen[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
                    │ 4 projects | refreshed 16:42:07 | pending 1

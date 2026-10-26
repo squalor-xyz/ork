@@ -1,4 +1,4 @@
-[1mork[m  ?help                 │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[1mork[m  ?help                 │ [1;36mOverview[m[90m │ [mQuestions 1[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
   Running                2 │[90m────────────────────────────────────────────────────────────────────────[m
 [1;7;97;44m> Needs you              1 [m│[1;36mNeeds you 1[m
 [90m1[m ork                    1 │  [1mPaused 1[m
@@ -10,7 +10,6 @@
                            │    Answer: [1mcustom[m[1;7;97;44m [m[1m[m
                            │    ork answer engine 'custom'
                            │    [90madj filing off: no adj in this project[m
-                           │    enter submit; esc back to options
                            │
                            │[1;36mRunning 1[m  [33m! owner questions 1[m
                            │   ork  [1mS22[m  [90mactive[m  [......]
@@ -27,4 +26,5 @@
                            │
                            │
                            │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ enter [2msubmit[m; pgup/pgdown [2mline[m; ctrl+d [2mhalf page[m; esc [2mback to options[m
                            │ 1 project | refreshed 16:42:00

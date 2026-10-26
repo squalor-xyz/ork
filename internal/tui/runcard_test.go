@@ -574,7 +574,7 @@ func TestInlinePaneIsIndentedInsideItsRow(t *testing.T) {
 	th := h.m.cfg.Theme
 	lines := mainLines(plainView(h.m))
 	title := lineWith(lines, 0, "Run "+runCardID)
-	hint := lineWith(lines, title, "esc close pane")
+	hint := lineWith(lines, title, "Recent") - 1
 	if title < 0 || hint < 0 {
 		t.Fatalf("no pane:\n%s", strings.Join(lines, "\n"))
 	}
@@ -583,9 +583,8 @@ func TestInlinePaneIsIndentedInsideItsRow(t *testing.T) {
 			t.Errorf("pane line %d is not indented by 4: %q", i, lines[i])
 		}
 	}
-	// The blank line before the hint is empty, not two spaces.
-	if lines[hint-1] != "" {
-		t.Errorf("the blank line before the hint is %q", lines[hint-1])
+	if !strings.HasSuffix(hintLine(plainView(h.m)), "esc close pane") {
+		t.Error("missing pane hint")
 	}
 	// The title is in the row style, not the section heading's colour.
 	titleText := "Run " + runCardID

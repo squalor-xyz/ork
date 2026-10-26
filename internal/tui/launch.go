@@ -64,19 +64,31 @@ func (m *Model) dropLaunch() {
 	}
 }
 
-func (m *Model) openLaunch() tea.Cmd {
+// launchRefusal is why l does not open the launch flow on the Roadmap: the
+// status line text, or "" for a silent refusal. It reports refused false when l
+// opens the flow. The key refuses by it and the hint line lists l only when it
+// does not.
+func (m *Model) launchRefusal() (status string, refused bool) {
 	if m.view != roadmapView || m.active < 0 || m.itemPane != nil || m.showHelp || m.projects[m.active].snap.Unavailable {
-		return nil
+		return "", true
 	}
 	if m.cfg.Live == nil {
-		m.actionStatus = "No daemon connection; action unavailable"
+		return "No daemon connection; action unavailable", true
+	}
+	if flight, ok := m.launchFlights[m.projects[m.active].reg.Name]; ok {
+		return flight.action.command() + " is pending", true
+	}
+	return "", false
+}
+
+func (m *Model) openLaunch() tea.Cmd {
+	if status, refused := m.launchRefusal(); refused {
+		if status != "" {
+			m.actionStatus = status
+		}
 		return nil
 	}
 	project := m.projects[m.active].reg.Name
-	if flight, ok := m.launchFlights[project]; ok {
-		m.actionStatus = flight.action.command() + " is pending"
-		return nil
-	}
 	m.launchRequest++
 	ctx, cancel := context.WithCancel(context.Background())
 	l := &launchState{params: daemon.RunParams{Project: project}, request: m.launchRequest, ctx: ctx, cancel: cancel}
@@ -251,11 +263,7 @@ func (m *Model) launchView(w int) overviewView {
 			out.body = append(out.body, indent+line)
 		}
 	}
-	heading := "Ready slices (esc cancels)"
-	if l.stage == launchStarting {
-		heading = "Ready slices (esc closes)"
-	}
-	out.body = append(out.body, th.Heading.Render(heading))
+	out.body = append(out.body, th.Heading.Render("Ready slices"))
 	switch l.stage {
 	case launchList:
 		items := m.readyLaunchItems()

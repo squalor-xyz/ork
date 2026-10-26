@@ -1,4 +1,4 @@
- [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+ [1mOverview[m[2m │ [mQuestions 3[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
 [2m────────────────────────────────────────────────────────────────────────────────────────────────────[m
 [1mNeeds you 6[m
   [1mDecisions 3[m
@@ -22,9 +22,9 @@
   [2mnone[m
 
 
-
 [2m────────────────────────────────────────────────────────────────────────────────────────────────────[m
   #11 open
   Does ork reimplement slicer's roadmap editor or reuse slicer tui?
 [2m────────────────────────────────────────────────────────────────────────────────────────────────────[m
+ enter [2mgo to project[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
  4 projects | refreshed 16:42:07 | pending 1                                                     [2mdev[m

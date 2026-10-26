@@ -384,26 +384,6 @@ func (m *Model) cardLandNote() string {
 	return "Approve lands it, then removes its worktree and branch."
 }
 
-// cardHint is the key line of the card, right before "esc close pane".
-func (m *Model) cardHint(card *runrec.ApprovalCard) string {
-	if idx := m.renderOn(); idx > 0 {
-		if idx == len(card.Renders) {
-			return "v/esc back to card; s sidebar; pgup/pgdown scroll"
-		}
-		return "v next; s sidebar; pgup/pgdown scroll; esc back to card"
-	}
-	hint := "a approve; F fix round; x stop; "
-	if n := len(card.HumanChecks); n == 1 {
-		hint += "1 tick/later; "
-	} else if n > 1 {
-		hint += fmt.Sprintf("1-%d tick/later; ", min(n, 9))
-	}
-	if len(card.Renders) > 0 {
-		hint += "v view renders; "
-	}
-	return hint + m.fileHint() + "esc close pane"
-}
-
 // nextMark is the state a digit moves a check to: ticked, later, open.
 func nextMark(state string) string {
 	switch state {

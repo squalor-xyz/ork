@@ -1,4 +1,4 @@
-[1mork[m [90mdev[m  ?help             │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[1mork[m [90mdev[m  ?help             │ [1;36mOverview[m[90m │ [mQuestions 1[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
 [90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[m
 [1;7;97;44m> Needs you              3 [m│[1;36mNeeds you 3[m
 [90m1[m slicer                 2 │  [1mDecisions 1[m
@@ -22,9 +22,9 @@
                            │
                            │
                            │
-                           │
                            │[90m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[m
                            │  #11 open
                            │  Reuse slicer tui?
                            │[90m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[m
+                           │ enter [2mgo to project[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
                            │ [33mdaemon behind main: restart with ork daemon restart[m | 4 projects | refreshed 16:42:07

@@ -12,7 +12,6 @@
                    │    [1m| reviewer    start[m
                    │    [2m. gate        waiting[m
                    │
-                   │    started elsewhere, read-only; esc close pane
                    │
                    │[1mRecent[m
                    │    ork  [1m✗ fail[m[2m  S94  10m  ended 5m ago[m
@@ -21,4 +20,5 @@
                    │
                    │[2m  +2 more lines[m
                    │[2m────────────────────────────────────────────────────────────[m
+                   │ [2mstarted elsewhere, read-only[m; esc [2mclose pane[m
                    │ 1 project | refreshed 16:42:00

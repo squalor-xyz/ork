@@ -19,6 +19,6 @@
                    │
                    │
                    │
-                   │
                    │[90m────────────────────────────────────────────────────────────[m
+                   │ pgup/pgdown [2mpage[m; j/k [2mline[m; esc [2mclose pane[m
                    │ 2 projects | refreshed 16:42:00

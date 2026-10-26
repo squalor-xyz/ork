@@ -16,7 +16,6 @@
                            │    [1;36m| implementer start 2m  claude sonnet high round 2 x2[m
                            │    [90m    tokens -  $-[m
                            │
-                           │    x stop; esc close pane
                            │
                            │[1;36mRecent[m
                            │  [90mnone[m
@@ -27,4 +26,5 @@
                            │
                            │
                            │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ pgup/pgdown [2mline[m; ctrl+d/u [2mhalf page[m; esc [2mclose pane[m
                            │ 1 project | refreshed 16:42:00

@@ -15,10 +15,10 @@
                    │         slicer render
                    │
                    │
-                   │
                    │[90m────────────────────────────────────────────────────────────[m
                    │  git -C '/projects/ork' worktree remove '/p/wt'
                    │  git -C '/projects/ork' branch -d 's63'
                    │  Remove worktree and branch? [y/N] (Enter is No)
                    │[90m────────────────────────────────────────────────────────────[m
+                   │ y [2mclean up[m; n [2mcancel[m
                    │ 2 projects | refreshed 16:42:00 | c clean up

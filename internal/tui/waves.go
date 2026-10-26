@@ -154,24 +154,43 @@ func (m *Model) waveOverlap() tea.Cmd {
 	}
 }
 
-func (m *Model) tickWave() tea.Cmd {
+// tickRefusal is why space does not tick or untick the row under the cursor:
+// the status line text, or "" for a silent refusal. It reports refused false
+// when space acts. The key refuses by it and the hint line lists space only
+// when it does not.
+func (m *Model) tickRefusal() (status string, refused bool) {
 	w := m.waves
-	if m.view != wavesView || m.showHelp || w == nil || w.pending || w.err != nil || w.starting || w.checking {
-		return nil
+	if !m.wavesTickable() {
+		return "", true
 	}
 	if m.cfg.Live == nil {
-		m.actionStatus = "No daemon connection; action unavailable"
-		return nil
+		return "No daemon connection; action unavailable", true
 	}
 	rows := w.rows()
 	if len(rows) == 0 {
+		return "", true
+	}
+	id := rows[clampCursor(w.cursor, len(rows))].ID
+	if w.launched[id] != "" {
+		return "", true
+	}
+	if _, ok := w.picked[id]; !ok && w.planning != "" {
+		return "A plan is pending; wait before ticking another item", true
+	}
+	return "", false
+}
+
+func (m *Model) tickWave() tea.Cmd {
+	w := m.waves
+	if status, refused := m.tickRefusal(); refused {
+		if status != "" {
+			m.actionStatus = status
+		}
 		return nil
 	}
+	rows := w.rows()
 	w.cursor = clampCursor(w.cursor, len(rows))
 	id := rows[w.cursor].ID
-	if w.launched[id] != "" {
-		return nil
-	}
 	if _, ok := w.picked[id]; ok {
 		delete(w.picked, id)
 		if w.planning == id {
@@ -179,10 +198,6 @@ func (m *Model) tickWave() tea.Cmd {
 			w.planning = ""
 		}
 	} else {
-		if w.planning != "" {
-			m.actionStatus = "A plan is pending; wait before ticking another item"
-			return nil
-		}
 		w.picked[id] = daemon.RunParams{Project: w.project, Item: id}
 		w.inputs = &waveInputs{item: id}
 	}
@@ -246,38 +261,54 @@ func (m *Model) waveInputKey(msg tea.KeyPressMsg) tea.Cmd {
 	return nil
 }
 
-func (m *Model) confirmWave() tea.Cmd {
+// waveLaunchRefusal is why l does not launch the ticked items: the status line
+// text, or "" for a silent refusal. It reports refused false when l asks to
+// launch. The key refuses by it and the hint line lists l only when it does not.
+func (m *Model) waveLaunchRefusal() (status string, refused bool) {
 	w := m.waves
 	if m.view != wavesView || m.showHelp || w == nil {
-		return nil
+		return "", true
 	}
 	if a, ok := m.waveFlights[w.project]; ok {
-		m.actionStatus = a.command() + " is pending"
-		return nil
+		return a.command() + " is pending", true
 	}
 	if w.planning != "" {
-		m.actionStatus = "A plan is pending; wait before launching"
-		return nil
+		return "A plan is pending; wait before launching", true
 	}
 	if w.checking {
-		return nil
+		return "", true
 	}
 	if conflict := w.engineConflict(); conflict != "" {
-		m.actionStatus = conflict
-		return nil
+		return conflict, true
 	}
 	items := w.items()
 	if w.starting || len(items) == 0 {
-		return nil
+		return "", true
 	}
 	for _, p := range items {
 		if p.Expected == nil {
-			m.actionStatus = "Every ticked item needs a plan"
-			return nil
+			return "Every ticked item needs a plan", true
 		}
 	}
+	return "", false
+}
+
+func (m *Model) confirmWave() tea.Cmd {
+	if status, refused := m.waveLaunchRefusal(); refused {
+		if status != "" {
+			m.actionStatus = status
+		}
+		return nil
+	}
 	m.actionStatus = ""
-	return m.startSpecCheck(items)
+	return m.startSpecCheck(m.waves.items())
+}
+
+// wavesTickable reports whether space may tick the row under the cursor now:
+// the plan has loaded and nothing is starting or being checked.
+func (m *Model) wavesTickable() bool {
+	w := m.waves
+	return m.view == wavesView && !m.showHelp && w != nil && !w.pending && w.err == nil && !w.starting && !w.checking
 }
 
 func (m *Model) startWave(a runAction) tea.Cmd {
@@ -429,15 +460,14 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 	return nil
 }
 
-// wavesBody is the Waves body with its hint lines appended.
+// wavesBody is the Waves body.
 func (m *Model) wavesBody(width int) overviewView {
 	out, footer := m.wavesParts(width)
 	out.body = append(out.body, footer...)
 	return out
 }
 
-// wavesParts returns the scrolling body and the footer (a blank line and the
-// hint lines) that the screen pins below it.
+// wavesParts returns the scrolling body. Keys live in the common hint line.
 func (m *Model) wavesParts(width int) (overviewView, []string) {
 	out := overviewView{sel: -1}
 	th := m.cfg.Theme
@@ -546,7 +576,6 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 		out.body = append(out.body, th.Group.Render(prefix+strings.Repeat(h, max(width-lipgloss.Width(prefix)-len(suffix), 1))+suffix))
 	}
 	row := 0
-	cursorLaunched := false
 	draw := func(it slicercli.ParallelItem) {
 		tick := "[ ]"
 		p, ok := w.picked[it.ID]
@@ -587,7 +616,6 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 		selected := row == clampCursor(w.cursor, len(rows))
 		if selected {
 			out.sel = len(out.body)
-			cursorLaunched = run != ""
 		}
 		out.body = append(out.body, columns(tick+" "+it.ID, title, shares, first, true, run != "", selected))
 		if reasonBelow {
@@ -658,37 +686,7 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 			}
 		}
 	}
-	enter := "[enter] item"
-	if cursorLaunched {
-		enter = "[enter] open run"
-	}
-	launch := "[l] launch wave"
-	if w.heldWithQuestions() {
-		launch = "[l] answer spec questions"
-	}
-	hintList := []string{enter, "[space] tick item", "[e] edit lineup", launch}
-	if w.inputs != nil {
-		hintList = []string{"[tab] next field", "[enter] plan", "[esc] cancel"}
-	}
-	footer := []string{""}
-	hints := ""
-	flush := func() {
-		for _, line := range wrapText(hints, max(width-len(indent), 1)) {
-			footer = append(footer, indent+line)
-		}
-	}
-	for _, hint := range hintList {
-		if hints != "" && lipgloss.Width(hints)+3+len(hint) > width-len(indent) {
-			flush()
-			hints = ""
-		}
-		if hints != "" {
-			hints += "   "
-		}
-		hints += hint
-	}
-	flush()
-	return out, footer
+	return out, nil
 }
 
 func waveReason(reason string) string {

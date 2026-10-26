@@ -16,9 +16,9 @@
                    │
                    │
                    │
-                   │
                    │[2m────────────────────────────────────────────────────────────[m
                    │  ork-20261019-164000-abcd  S22  awaiting-approval  owner
                    │  action  2 of 6 steps running  2m
                    │[2m────────────────────────────────────────────────────────────[m
+                   │ enter [2mopen[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
                    │ 1 project | refreshed 16:42:00

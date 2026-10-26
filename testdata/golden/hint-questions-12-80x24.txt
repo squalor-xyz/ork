@@ -1,0 +1,24 @@
+[1mork[m  ?help         │ [1mOverview[m[2m │ [mQuestions 12[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[2m  Running        0 [m│[2m────────────────────────────────────────────────────────────[m
+[1;7m> Needs you     12 [m│[1mNeeds you 12[m
+[2m1[m zeta          12 │  [1mDecisions 12[m
+                   │[1;7m  ?  zeta  #1   k.q  question 1                             [m
+                   │  [1m?[m  zeta  #2   k.q  question 2
+                   │  [1m?[m  zeta  #3   k.q  question 3
+                   │  [1m?[m  zeta  #4   k.q  question 4
+                   │  [1m?[m  zeta  #5   k.q  question 5
+                   │  [1m?[m  zeta  #6   k.q  question 6
+                   │  [1m?[m  zeta  #7   k.q  question 7
+                   │  [1m?[m  zeta  #8   k.q  question 8
+                   │  [1m?[m  zeta  #9   k.q  question 9
+                   │  [1m?[m  zeta  #10  k.q  question 10
+                   │  [1m?[m  zeta  #11  k.q  question 11
+                   │  [1m?[m  zeta  #12  k.q  question 12
+                   │
+                   │[2m  +8 more lines[m
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │  #1 open
+                   │  question 1
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ enter [2mgo to project[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
+                   │ 1 project | refreshed 16:42:00

@@ -2,13 +2,12 @@
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
 [2m0[m Needs you              0 │[1mEdit lineup: A  Alpha[m
 [1;7m> ork                      [m│  Run only; gate follows reviewer.
-[2m2[m other                    │[1;7m  > implementer: claude sonnet high (no alternatives; c for custom)[m
+[2m2[m other                    │[1;7m  > implementer: claude sonnet high (no alternatives)[m
                            │    reviewer: claude opus medium
                            │    Budget minutes: 45
                            │    Budget tokens: 9000
                            │  Zero budget uses the project default.
-                           │  [up/down/tab] row   [left/right] cycle   [c] custom
-                           │  [enter] save and replan   [esc] discard
+                           │
                            │
                            │
                            │
@@ -27,4 +26,5 @@
                            │
                            │
                            │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ up/down/tab [2mrow[m; c [2mcustom[m; enter [2msave and replan[m; esc [2mdiscard[m
                            │ 2 projects | refreshed 16:42:00

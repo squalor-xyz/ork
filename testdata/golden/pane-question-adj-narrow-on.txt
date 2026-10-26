@@ -6,5 +6,4 @@
   Answer: [1m[m[1;7;97;44m [m[1m[m
   ork answer engine ''
   [1;36m[x] file answer in adj as[m
-  [1;36mstorage.engine  ctrl+a toggles[m
-  enter submit; esc close pane
+  [1;36mstorage.engine[m

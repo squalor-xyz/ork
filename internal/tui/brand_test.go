@@ -109,7 +109,7 @@ func TestGoldenVersionAndHelp(t *testing.T) {
 				switch mode {
 				case "help-tall":
 					m.showHelp = true
-					m.height = len(m.helpLines(72, 0)) + 7 + 4
+					m.height = len(m.helpLines(72, 0)) + 7 + 4 + hintRows
 				case "help-100x30":
 					m.showHelp = true
 				case "stale":

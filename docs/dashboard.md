@@ -27,16 +27,18 @@ until then.
 ## Welcome
 
 With no registered projects, ork opens the Welcome view
-(`registry.no-seed`, adj 157). It says "No projects yet. Press + to add one".
-`+` opens a project path field. Enter with an empty field offers the current
+(`registry.no-seed`, adj 157). The body says "No projects yet." and the hint
+line shows `+ add project; q quit`. `+` opens a project path field. Enter with
+an empty field offers the current
 directory only when it holds a `.slicer` directory or `.adjudicate.json`
 file. Otherwise the status names the directory: "DIR holds neither .slicer
-nor .adjudicate.json; type a path". The hint asks for an absolute path. Esc
-cancels path entry and returns to "Press + to add one". Typed paths are
-trimmed and sent as typed.
+nor .adjudicate.json; type a path". The path guidance asks for an absolute path.
+Esc cancels path entry and returns to "No projects yet." with
+`+ add project; q quit` on the hint line. Typed paths are trimmed and sent as typed.
 
 The proposed confirm bar shows `ork projects add 'PATH'? [y/N] (Enter is No)`,
-with PATH shell quoted (`ui.confirm`, adj 98).
+with PATH shell quoted (`ui.confirm`, adj 98). Its hint is
+`y add project; n cancel`, or just `n cancel` without a daemon.
 Enter, n, N and Esc cancel. y or Y adds once through the daemon. While the
 add is pending, another y does nothing. The path field shows no cursor
 during confirmation or the pending add. Errors show verbatim in the status
@@ -53,7 +55,7 @@ on Welcome in this slice.
 ## Layout
 
 ```
-ork dev  ?help       | Overview | Questions | Waves | Roadmap | Decisions
+ork dev  ?help       | Overview | Questions 2 | Waves | Roadmap | Decisions
   Running         0  | --------------------------------------
 > Needs you       3  | Needs you 3
   slicer          2* |   Decisions 2
@@ -67,12 +69,64 @@ ork dev  ?help       | Overview | Questions | Waves | Roadmap | Decisions
                      |   #11 open | 2 options | recommends grouped
                      |   Group rows?
                      | --------------------------------------
+                     |  enter go to project; tab views; q quit; ? help
                      | 4 projects | refreshed 16:42:00
 ```
 
 The sketch uses ASCII rules. The view bar, sidebar edge and horizontal rules
 use box-drawing lines when `cfg.ASCII` is false, including the rule above the
 detail. The CLI already resolves that setting with `brand.ASCIILocale`.
+
+**Hint line (*proposed*, S149).** One line sits above the status line and
+shows the keys that work now, for the row under the cursor, the open pane and
+the view. The status line keeps its place and its fields (refreshed, pending).
+The line costs the body one row at every size: the body is `height - 5` rows
+with no detail, where it was `height - 4`. The row's own keys come first, then
+`tab views; q quit; ? help`; in a pane the pane's keys come first, then its
+scroll keys, then `esc close pane` (or `esc back to card`) at the right end.
+The way out, `esc` in a pane and `? help` elsewhere, never drops. When the line
+is too narrow, whole hints drop, lowest priority first: `f file slice`,
+`v renders`, `F fix round`, the check digits, `t retry`, `x stop`, then
+`ctrl+d/u`, `tab views`, `q quit`, `pgup/pgdown`, `a approve` and `c clean up`,
+and last the row's main key. When open human checks refuse approval, the check
+digits and `F fix round` rank above stop and all scroll keys; the way out stays
+pinned. After dropping, the line retries each omitted hint in priority order
+(lowest drop value first), at its original position, and keeps it if it fits.
+A shorter hint can return even when a higher-priority hint is too wide.
+A hint is never cut in the middle. Width and drop decisions use visible
+columns. Keys use the default colour; descriptions use dim (SGR 2 only), in both
+colour and mono. The hint line is the one source of key lists: pane and Waves
+body footers do not repeat them. Input fields, confirm prompts and errors stay.
+At 80x24 the Overview row may scroll out of sight.
+
+The list is built from the key bindings and from the checks that refuse a key,
+not written by hand: a key shows only when pressing it would act. So `a
+approve` shows on an awaiting-approval run whose human checks are all marked and
+not before, `x stop` not on a stopped run, `t retry` only on a paused run that
+does not wait for an answer, `c clean up` only on a merged Ready row, and the
+run keys not at all while there is no daemon connection. `f file slice` shows
+only with a later finding to file, a daemon that can file, and no filing in
+flight. The option digits and `enter submit` of a question pane show only while
+the answer would go out (a daemon, and no call in flight for the run). The check
+digits and `F fix round` show only for a daemon that can mark checks and send
+fixes; `space tick item` not while a plan is pending for another item, and `l`
+on the Roadmap and Waves only when it would act. Examples: a decision row shows
+`enter go to project`; a run row shows `enter open`; an open run pane shows its
+own keys, then `pgup/pgdown line; ctrl+d/u half page`;
+Waves item and decision panes use `pgup/pgdown page; j/k line` for their
+page and line movements. The Waves item hint ends with `esc close pane`.
+A pane of a relay started elsewhere shows `started elsewhere, read-only; esc close pane`. Waves also lists
+`e edit lineup` only when the selected ticked item has a plan and editing acts.
+Welcome shows `+ add project; q quit`; its path field shows
+`enter review path; esc cancel`. The lineup hint offers `left/right cycle`
+only when the focused role has more than one entry. Wave inputs show
+`tab next field; enter plan; esc cancel`. Launch lists `enter select slice`
+when a ready slice exists, then `enter next field` for well-specified and
+`enter plan` for split; `esc cancel` stays visible. The lineup editor and spec
+question sitting also show their current keys in this line. A confirmation names what `y` does and nothing else,
+since the prompt above it carries the rest: `y run; n cancel`, `y start; n
+cancel`, `y approve; n cancel`. The help screen shows `? or esc close help; q
+quit`.
 
 The header shows the version next to ork (ui.version-mark, adj #130).
 Development builds show the first seven revision characters, with `+` for a
@@ -187,7 +241,10 @@ groups are the Needs you groups (Decisions, Held, Stopped, Paused, Approve and
 Errors), then Running, Recent and Ready to land. The Roadmap, Questions,
 Decisions and Waves cursors take the first, last and page keys; only the
 Overview has the group keys. With a pane open, no row key moves the cursor;
-`pgdown` and `pgup` scroll a run, decision or Waves item pane. Keys that type into a
+`pgdown` and `pgup` scroll a run, decision or Waves item pane, and in a run pane
+`ctrl+d` and `ctrl+u` scroll it by half the pane's scrolling part (S149,
+*proposed*). `ctrl+u` in an answer or fix-note field still clears the field, so
+there the hint shows only `ctrl+d`. Keys that type into a
 field keep their text: `g`, `G`, `0`, `{` and `}` typed into the filter or an
 answer go into it, and digits still pick options in an owner question and mark
 checks on the approval card. `n` and
@@ -196,7 +253,7 @@ under the cursor is drawn reversed across the pane width. A rule separates
 the rows from its detail. Decisions show status, a nonzero option count and
 the recommended label when present, then the wrapped title. Metadata uses
 the theme's vertical rule as its separator. An empty detail block adds no
-extra rule or band. Detail height reserves room for the status line. Other rows show
+extra rule or band. Detail height reserves room for the hint and status lines. Other rows show
 their full text, wrapped at the pane's width so no word is cut. `enter` opens
 a run's detail pane; on decision and held-item rows it selects the row's project
 (`ui.answer-pane-keys`). Project keys and `1`-`9` select a project and
@@ -260,9 +317,9 @@ the text column, falling back to a shorter indent when needed to fit.
    line`, or the title alone when the role has said nothing, so the run has a
    line 2 even when its ledger label is bare. The selected run is drawn reversed
    on both lines (the second is not dimmed), which reads in monochrome too. The run id and `started elsewhere`
-   are not on the row: the pane names them (`Run ID`, and the read-only footer
-   of a relay started elsewhere), and the selected row's detail line keeps the
-   run id, the engine state, the steps and the elapsed time in full. A project
+   are not on the row: the pane names the run (`Run ID`), and the hint line
+   says a relay started elsewhere is read-only. The selected row's detail line
+   keeps the run id, the engine state, the steps and the elapsed time in full. A project
    column leads on the all-projects view.
    - **Round word.** The bar's round counts review rounds, not implementer
      steps: `fix N` once N fix rounds have begun, and `gate` while the gate
@@ -480,14 +537,14 @@ its row, and its title is "Run" and the run ID alone, in the row title style
 (bold), not the section heading's colour: the row above names the item and the
 stage. The Questions tab, with no row above its pane, keeps the full header.
 The body scrolls to the pane's last line, and the pane takes at
-most `height - 10` lines (`height - 7` under 24 lines), so its row and the
-rows around it stay on screen. It shows the full `wait` reason before
+most `height - 11` lines (`height - 8` under 24 lines), so its row and the
+rows around it stay on screen. The hint line takes the row the pane gave up (S149). It shows the full `wait` reason before
 the run tree. `pgup` and `pgdown` scroll the reason and tree while the action
 area stays visible. `esc` closes the pane (`ui.answer-ui`,
 `ui.answer-pane-keys`, `ui.run-tree`). Ledger runs started elsewhere open a
-read-only tree pane with no action keys or answer input. Its footer says
+read-only tree pane with no action keys or answer input. The hint line says
 "started elsewhere, read-only; esc close pane" (the inline header is the run ID
-alone).
+alone); the pane's footer no longer carries it (S149).
 
 The pane follows the newest running run (*proposed*, S109). When the pane's
 run is over (an engine run that is stopped, superseded or committed, or a
@@ -514,7 +571,7 @@ The actions follow the state (`ui.answer-pane-scope`):
   `Why N: reason` line (`ui.structured-questions`, adj #168). A digit opens a confirmation with the
   exact, pasteable `ork answer RUN 'LABEL: summary'` command. Answer text is
   shell-quoted, including embedded apostrophes; the confirmation suffix stays
-  outside the quotes. The hint reads `y sends; enter, n or esc cancel`.
+  outside the quotes. The hint reads `y send; n cancel`; Enter or Esc also cancels.
   Only y sends it; Enter, n and esc cancel. The label and summary are the answer sent to the paused
   role and, when enabled, adj. `t` opens the free-text field; esc returns to
   the options, and a second esc closes the pane. Typing and paste are ignored
@@ -540,7 +597,7 @@ The actions follow the state (`ui.answer-pane-scope`):
   Terminal paste inserts at the cursor and strips CR and LF, keeping one
   answer line; paste never submits (`ui.text-field`).
   Ctrl+a toggles optional filing in adj, off whenever the pane opens. The footer
-  shows `[ ] file answer in adj as KEY  ctrl+a toggles`; when on, `[x]` is
+  shows `[ ] file answer in adj as KEY`; when on, `[x]` is
   highlighted. A dim, inert line names why filing is disabled: `adj filing off:
   no adj in this project` or `adj filing off: question has no decision key`.
   Filing requires the caller's `ADJ_DECIDED_BY`. When on with that value unset,
@@ -551,11 +608,11 @@ The actions follow the state (`ui.answer-pane-scope`):
   An existing decision resumes the role and shows `KEY already decided as #N;
   not changed`. Errors keep the text and leave the role paused; retry reuses
   an ask left open by a failed decide. Short panes keep the Answer field,
-  status, enabled toggle, submit hint, off/disabled toggle and command preview
+  status, enabled toggle, off/disabled toggle and command preview
   in that priority order, dropping the lowest priority lines first.
   This toggle is available only in the TUI; `ork answer` does not file in adj.
-- Paused with `pending: budget`: show the reason; the footer says
-  `t retry: one more role round; esc close pane`. Retry grants exactly one
+- Paused with `pending: budget`: show the reason; the hint lists `t retry`
+  when available. Retry grants exactly one
   role round, then the budget check applies again (`run.budget-resume`).
 - Paused for another reason (not a question or budget): show the reason and
   `t` retries, with the same
@@ -595,15 +652,16 @@ the action area under the run tree, in this order:
   branch -d`. A blocked landing returns to this card after one fix round, or
   stops in Needs you with `land blocked: ...` and the worktree kept. When
   the pane is short, lines drop in this order: the later findings, then each
-  owner finding whole (the last first), then the status line and the key line
-  (each its last wrapped line first), then this line, and the human checks last. When the project's `push` setting is on, it reads
+  owner finding whole (the last first), then the status line
+  (its last wrapped line first), then this line, and the human checks last. When the project's `push` setting is on, it reads
   `Approve lands and pushes it, then removes its worktree and branch.` (it wraps
   to two lines at 80x24; the TUI reads the setting from the registry entry);
   with push off it reads `Approve lands it, then removes its worktree and
   branch.`
-- The key line: `a approve; F fix round; x stop; 1-N tick/later; v view renders;
-  f file slice; esc close pane`. `v view renders;` shows only when the card
-  has renders.
+- The shared hint line lists available card actions: `a approve`, `F fix round`,
+  `x stop`, `1-N tick/later`, `v renders`, `f file slice`, then scroll keys
+  and `esc close pane`. Actions drop by the priorities above; the card body
+  has no key footer.
 - `Renders: N from the UI pass (round R)` (dim; `, K more not kept` when the
   card dropped files), under the diff line. When the UI pass ran and wrote
   none it reads `Renders: the UI pass (round R) wrote none`. Without a UI pass
@@ -638,11 +696,12 @@ reads `fix note: ERROR`.
 `esc` goes back to the card, and a second `esc` closes the pane. The
 `Human checks` label is a heading in every case (open, none, not read), and a
 check that wraps hangs under its text, which starts at column 6. A run without a
-card (a record from before S118) keeps the old key line `a approve; x stop`.
+card (a record from before S118) lists `a approve; x stop` in the hint when
+those actions are available.
 At 80x24 the card's footer keeps one line for the header that names the run
 (`Run ID  ITEM  STATE`), so the card gives up lower-priority lines first (the
-later and owner findings, then the key line) before that header goes; the
-tree scrolls out of sight and the Overview rows above stay.
+later and owner findings) before that header goes; the
+tree and Overview rows may scroll out of sight.
 
 **Renders** (*proposed*, S121; adj #165). `v` on the card opens the viewer on
 the first render the UI pass wrote. The order is each view's `VIEW-80x24.txt`,
@@ -658,10 +717,10 @@ the whole body, from the rule under the view bar to the rule above the status
 line. The pane's first line still names the run (`Run ID  ITEM  STATE`); under
 it a dim rule (the theme's horizontal rule, `-` with the ASCII option) sets the
 render apart from that line and takes one row of the render's room; the render
-fills the rows below the rule, and the footer shows `Render K of N: NAME` and
-`v next; s sidebar; pgup/pgdown scroll; esc back to card`. The card's summary,
+fills the rows below the rule, and the footer shows `Render K of N: NAME`.
+The hint shows `v next render; s sidebar` and the scroll and close keys. The card's summary,
 checks and other keys give way. `v` moves to the next render; on the last one
-the key line reads `v/esc back to card; s sidebar; pgup/pgdown scroll` and `v`
+the hint lists `v back to card` and `esc back to card`, and `v`
 returns to the card, where the Overview rows return. If the card
 changes while a render shows (a fix round started from another TUI), the pane
 shows the card again.
@@ -672,8 +731,8 @@ columns and 28 from 100 columns up. A render taller than the pane scrolls, one l
 for each press of `pgup` or `pgdown`, with `+N lines above` and `+N more
 lines` markers. A 40-row render does not fit at 80x24 or at 120x40, since the
 pane's name line and footer take rows too, so it scrolls at both. While a render shows, no card
-key acts except those: the owner cannot mark a check or approve what the footer
-does not show. `esc` returns to the card, and a second `esc` closes the pane.
+key acts except those: the owner cannot mark a check or approve while the
+card is hidden. `esc` returns to the card, and a second `esc` closes the pane.
 ork draws the text it was given, after dropping control characters again; it
 does not render the view itself.
 
@@ -681,7 +740,7 @@ does not render the view itself.
 gate report tags each finding `fix`, `owner` or `later`. In every pane that is
 not a question, the footer lists what the report left for the owner. Later
 findings read `N later findings; next to file: "TITLE"`. When one can be
-filed, the key line shows `f file slice` just before `esc close pane`, on a
+filed, the shared hint line offers `f file slice` when it fits, on a
 stopped run too, and after a daemon restart for a stopped or committed run.
 `f` shows the command first:
 `slicer add 'TITLE' --discovered-from ITEM? [y/N] (Enter is No)`. `y` makes
@@ -706,6 +765,10 @@ rows never count toward the badge (`ui.setup-errors`).
 ## Questions (all projects)
 
 Questions is the second view, after Overview (`ui.answer-ui`, `ui.view-list`).
+Its tab in the view bar shows the number of questions the list holds ("Questions
+3"; just "Questions" when there are none) on every view (S149, *proposed*). When
+the bar would not fit the main pane, as with `Overview (Running)` at 80 columns,
+the count goes so that every tab name stays whole.
 It lists engine runs paused with `pending: question` and open adj records
 from every project. Enter on an engine question opens the run detail pane
 and its Answer field and optional adj filing toggle. Enter on an adj question
@@ -731,7 +794,7 @@ The list always shows all projects. Sidebar selection, project filtering and
 `a`, `x`, `t` and `c` have no action on the list or read-only record detail.
 The engine pane behaves as on Overview. It keeps its answer typing and
 submit keys. If the run changes state while the pane is open, its approve,
-stop and retry keys follow the run state and the footer hints.
+stop and retry keys follow the run state and the shared hint line.
 
 ## Waves (one project)
 
@@ -750,9 +813,8 @@ Reasons that do not fit beside the title appear on the following lines, dim
 and indented to the title column.
 Long titles shorten to keep the tick, id and Shares columns visible.
 The cursor bar spans the row's full width, including its Lineup continuation
-lines. The hint lines are pinned below the scrolling body, after a blank
-line, so they stay visible when rows are ticked; the status line sits under
-them. A dim cell stays dim across all its columns.
+lines. The single hint line stays above the status line while the body
+scrolls; no body footer repeats the keys. A dim cell stays dim across all its columns.
 
 S60 provides the CLI: `ork wave suggest PROJECT` prints the ordered waves
 from `slicer plan-parallel`, including reasons. `ork wave start PROJECT
@@ -789,9 +851,8 @@ Suggested (slicer plan-parallel)
   ! A and B both touch shared.go
   ! A and B both touch second.go
 
-  [enter] item   [space] tick item   [e] edit lineup   [l] launch wave
 --------------------------------------------------------------------
-  2 ticked, not launched; [l] launches
+  2 ticked, not launched
 ```
 
 `enter` on a plain row opens a read-only item pane with its full title
@@ -807,7 +868,7 @@ editing actions.
 directly under that item, with no defaults: well-specified and split. A dim
 `launch inputs` line and both fields are indented to the title column. The
 item and both fields stay in view. Only the active field shows a cursor, and
-the hints change to `[tab] next field   [enter] plan   [esc] cancel`.
+the hint changes to `tab next field; enter plan; esc cancel`.
 `tab` or `shift+tab` switches the active field; `enter` validates both and plans the item.
 `esc` cancels that tick. The Lineup column appears only while at least
 one item is ticked and fills from the plan (`ui.wave-composer`). It uses
@@ -843,17 +904,17 @@ ready items only, and says which items it leaves out after the command, for
 example `ork wave start P A? [y/N] (Enter is No)  B waits on spec questions`
 (the part after the command is not run). A held item stays ticked with `waits
 on N spec questions` on its row, the launch status says `ID waits on spec
-questions`, and while a ticked item is held the hint reads `[l] answer spec
-questions` instead of `[l] launch wave`. Pressing `l` again checks the ticked
+questions`, and while a ticked item is held the hint reads `l answer spec
+questions` instead of `l launch wave`. Pressing `l` again checks the ticked
 items again and reopens the sitting. A check error shows its code and message
 and leaves the ticks alone.
 
-Until launch the composer says `N ticked, not launched; [l] launches`
+Until launch the composer says `N ticked, not launched`
 (not shown in the lineup editor). After admission it says `launched S78 as
 RUN; enter opens it` for one item, or `launched N items; enter on a running
 row opens its run`. A launched row stays dim, shows `[>]` instead of the tick
 box and `running RUN` after the title (on its own dim line when it does not
-fit), and cannot be ticked again. Its hint reads `[enter] open run`, and
+fit), and cannot be ticked again. Its hint reads `enter open run`, and
 `enter` selects the run in Overview, including when the run first appears
 in the next refresh.
 Every ticked item must have a successful plan before launch. One failed
@@ -890,14 +951,12 @@ the matrix is unchanged (`ui.lineup-editor`, `lineup.override-scope`).
 ```
 Edit lineup: A  Alpha
   Run only; gate follows reviewer.
-  > implementer: claude sonnet high (no alternatives; c for custom)
+  > implementer: claude sonnet high (no alternatives)
     reviewer: claude opus medium
     ui: claude opus medium (UI slices only; from the matrix)
     Budget minutes: 45
     Budget tokens: 9000
   Zero budget uses the project default.
-  [up/down/tab] row   [left/right] cycle   [c] custom
-  [enter] save and replan   [esc] discard
 ```
 
 The run tree (S55) appears in the Overview detail pane. The wave charts and
@@ -993,7 +1052,7 @@ Editing comes after v1, and `ui.slicer-tui` is open.
 Open questions are on the first tab, each with its options, tradeoffs and
 recommendation. The active tab uses the view heading style, distinct from the
 record cursor. The scope heading names the project or says
-`All projects using adj`. The final body line lists the tab, scope and
+`All projects using adj`. The hint line lists the tab, scope and
 open-record keys. On "Needs you", it omits the scope toggle hint. `left` and
 `right` switch the Open and Decided tabs; `[` and `]` switch projects. `A`
 (shift-a) toggles between the selected project and all projects that use adj. The toggle

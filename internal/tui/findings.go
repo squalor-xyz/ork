@@ -53,15 +53,6 @@ func (m *Model) paneLater() []source.EngineFinding {
 	return out
 }
 
-// fileHint is the key hint that goes right before "esc close pane" in the key
-// line, when there is a later finding to file.
-func (m *Model) fileHint() string {
-	if len(m.paneLater()) == 0 {
-		return ""
-	}
-	return "f file slice; "
-}
-
 // findingLines tells the owner what the reviewer, UI pass or gate left for
 // them (adj 163): later work to file as a slice, and owner questions that did
 // not block the gate.
@@ -117,28 +108,40 @@ func laterLine(lead, title string, width int) string {
 	return clip(lead, width)
 }
 
-// requestFile asks the owner to confirm filing the first later finding of the
-// pane's run. The confirmation shows the command ork will run in the project.
-func (m *Model) requestFile() {
-	later := m.paneLater()
+// fileRefusal is why f does not ask to file the pane's first later finding: the
+// status line text, or "" for a silent refusal (nothing to file). It reports
+// refused false when f asks. The key refuses by it and the hint line lists f
+// only when it does not.
+func (m *Model) fileRefusal() (status string, refused bool) {
 	r, ok := m.actionRow()
-	if len(later) == 0 || !ok {
-		return
+	if len(m.paneLater()) == 0 || !ok {
+		return "", true
 	}
 	for _, a := range m.actionFlights[r.engineID] {
 		if a.verb == "file" {
-			m.actionStatus = a.command() + " is pending"
-			return
+			return a.command() + " is pending", true
 		}
 	}
 	if m.cfg.Live == nil {
-		m.actionStatus = "No daemon connection; action unavailable"
-		return
+		return "No daemon connection; action unavailable", true
 	}
 	if _, ok := m.cfg.Live.(laterFiler); !ok {
-		m.actionStatus = "This daemon connection cannot file slices"
+		return "This daemon connection cannot file slices", true
+	}
+	return "", false
+}
+
+// requestFile asks the owner to confirm filing the first later finding of the
+// pane's run. The confirmation shows the command ork will run in the project.
+func (m *Model) requestFile() {
+	if status, refused := m.fileRefusal(); refused {
+		if status != "" {
+			m.actionStatus = status
+		}
 		return
 	}
+	later := m.paneLater()
+	r, _ := m.actionRow()
 	m.actionStatus = ""
 	m.confirm = &runAction{verb: "file", run: r.engineID, project: r.name, item: r.id, finding: later[0].N, text: later[0].Title}
 }

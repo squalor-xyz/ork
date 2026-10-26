@@ -391,7 +391,11 @@ func TestRunTreeEngineRoundOnNode(t *testing.T) {
 func TestRunTreeReadOnlyLabel(t *testing.T) {
 	h := treeHarness(t, treeFixture(t, "relay-run-tree.json"), "")
 	v := treePaneView(h.m, 100, 40)
-	if !strings.Contains(v, "Run tree  S55  active  started elsewhere") || !strings.Contains(v, "started elsewhere, read-only; esc close pane") {
-		t.Fatalf("pane must explain read-only state:\n%s", v)
+	if !strings.Contains(v, "Run tree  S55  active  started elsewhere") || strings.Contains(v, "read-only") {
+		t.Fatalf("the pane names the run and leaves the read-only note to the hint line:\n%s", v)
+	}
+	h.m.Update(tea.WindowSizeMsg{Width: 100, Height: 40})
+	if hint := hintLine(plainView(h.m)); !strings.Contains(hint, "started elsewhere, read-only; esc close pane") {
+		t.Fatalf("the hint line must explain the read-only state: %q", hint)
 	}
 }
