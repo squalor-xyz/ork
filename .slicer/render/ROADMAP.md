@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-146 items · — 52 · done 89 · retired 5
+147 items · — 53 · done 89 · retired 5
 
 ## v1.1
 
@@ -200,9 +200,10 @@
 | 143 | [S144](slices/S144.md) | Key follow-ups: status nudge for [ and ], Waves show-all on A, help wording and hidden tab help | S | 1 |  | discovered from S105 | — |
 | 144 | [S145](slices/S145.md) | Running rows at a glance | M | 2 |  |  | — |
 | 145 | [S146](slices/S146.md) | S106 later notes | S | 1 |  |  | — |
+| 146 | [S147](slices/S147.md) | S121 later notes | S | 1 |  |  | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 146 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 147 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
