@@ -1,0 +1,39 @@
+{
+  "id": "S153",
+  "title": "S95 later notes: stale Ready rows, cleanup confirm shows only steps that run, cleanup status text",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Later notes from the S95 relay (run-20261026-172757-ae20, landed 269c391). Owner decisions 2026-10-26 (session a2bf7e0e, interactive questions):\n- Stale rows from before S95 (worktree and branch gone, never marked cleaned; the owner's S78 row is one): treat a committed run whose branch is gone and whose Commit.SHA is in HEAD as cleaned, so it leaves Ready and is pruned. Today `c` refuses it with \"cleanup needs a committed, merged run\".\n- The Ready detail line (`internal/tui/overview.go:1413`) and the c confirm (`internal/tui/model.go:1037-1040`, :1076-1077) always name `git worktree remove`, which the daemon skips when the worktree is gone (`internal/daemon/landed.go:162-167`). The daemon sends a *proposed* worktree-gone flag on the snapshot row, and the detail and confirm show only the steps that will run (adj 152 git.cleanup-key: the confirm shows the commands).\nOther notes:\n- The cleanup status line echoes commands that never ran and a doubled error code (\"...: bad_params: bad params: this run is already cleaned up\"; model.go:360, handlers.go:44). It predates S95 and affects every daemon refusal.\n- After a successful cleanup, say \"cleaned up s119\" instead of \"<command>: done\" under the next row.\n- build_test.go:56 sets GitBin without the runs lock.\n- A cleanup can finish while a merge pass is in flight; the pass then writes a stale merged value for a cleaned run (hidden in the TUI).\n- After an external `slicer land` and before `c`, the row still offers the `slicer land` and `slicer render` copy lines; drop them once slicer reports the item landed.\n- A landing fix round after the ledger run ended: begin a new relay run or skip relay-run steps (run_ended)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/landed.go`, `internal/daemon/handlers.go`, `internal/daemon/build_test.go`.\n- `internal/source/source.go` (the snapshot row flag).\n- `internal/tui/overview.go`, `internal/tui/model.go`.\n- `internal/engine/land.go`.\n- `docs/dashboard.md`, `docs/state.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": "Tests first for the SHA fallback (fake git, temp repo) and the worktree-gone flag; triage the rest. UI slice: UI pass per rule u10."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review the golden diff\n- slicer check\n- [HUMAN CHECK] The owner presses c on the old S78 row, or sees it leave Ready by itself."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
