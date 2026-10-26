@@ -1,9 +1,9 @@
 [1mork[m  ?help                 │ Overview[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [m[1mDecisions[m
-  Needs you              6 │[2m────────────────────────────────────────────────────────────────────────[m
-[1;7m> zeta                   2 [m│[1mOpen[m[2m | [mDecided
-  alpha                  2 │[1mzeta[m
-  plain                  2 │[1;7m  #90 store.engine  Question 0[m
-                           │    A: Files
+[2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
+  Needs you              6 │[1mOpen[m[2m | [mDecided
+[1;7m> zeta                   2 [m│[1mzeta[m
+  alpha                  2 │[1;7m  #90 store.engine  Question 0[m
+  plain                  2 │    A: Files
                            │[2m       Simple[m
                            │    B: Database
                            │    Recommendation: A

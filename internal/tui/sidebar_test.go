@@ -97,7 +97,7 @@ func TestSidebarScrollAndCompactNames(t *testing.T) {
 		h.send(press("right"))
 	}
 	v := plainView(h.m)
-	if !strings.Contains(v, "> 15-long-proje...") || !strings.Contains(v, "+7 more") {
+	if !strings.Contains(v, "> 15-long-proje...") || !strings.Contains(v, "+8 more") {
 		t.Fatalf("selection/scroll hint/compact name missing:\n%s", v)
 	}
 }
@@ -147,7 +147,7 @@ func TestSidebarArrowNavigation(t *testing.T) {
 		name string
 		code rune
 		want string
-	}{{"right", tea.KeyRight, "> alpha"}, {"left", tea.KeyLeft, "> beta"}} {
+	}{{"right", tea.KeyRight, "> alpha"}, {"left", tea.KeyLeft, "> Running"}} {
 		t.Run(tc.name, func(t *testing.T) {
 			h := newHarness(t, proj("alpha", false), proj("beta", false))
 			h.start()

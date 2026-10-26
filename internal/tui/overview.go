@@ -66,6 +66,18 @@ type ovRow struct {
 	merged            bool
 	mergeKnown        bool
 	branch, worktree  string
+	live              *liveRun // a live run's board cells, for the Running entry
+	detailCells       []string // a live run's detail line, wrapped between cells
+}
+
+// liveRun is what the Running entry shows of one run beyond its Overview row:
+// the stage bar, pipeline, round, last heard and activity (S110).
+type liveRun struct {
+	item     string
+	ledger   slicercli.RelayRun
+	steps    []runTreeStep
+	activity []int
+	alert    string // "? question" or "x stopped" when the run waits on the owner
 }
 
 // relayRowPart keeps a role's label and identity whole when its task is cut.
@@ -171,19 +183,22 @@ func (m *Model) rows() (needs, running []ovRow) {
 			}
 			rest := strings.Join(parts, "  ")
 			row := ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: r.Item + "  " + rest, text: r.ID + "  " + r.Item + "  " + rest, dim: linkedStale != nil}
+			ledger, steps := engineBoard(r)
+			for _, linked := range boardLedgers(s) {
+				if r.RelayRun != "" && linked.ID == r.RelayRun {
+					ledger = linked
+					steps = ledgerTreeSteps(linked.Steps)
+					break
+				}
+			}
+			if !r.Unavailable {
+				row.live = &liveRun{item: r.Item, ledger: ledger, steps: steps, activity: r.Activity}
+			}
 			if r.Section(s.EngineRuns) == source.SectionRunning {
 				row.noLabel = r.Error == ""
 				if r.Error != "" {
 					row.kindW = len(kindExternal)
 					row.kind, row.style = kindError, th.Error
-				}
-				ledger, steps := engineBoard(r)
-				for _, linked := range boardLedgers(s) {
-					if r.RelayRun != "" && linked.ID == r.RelayRun {
-						ledger = linked
-						steps = ledgerTreeSteps(linked.Steps)
-						break
-					}
 				}
 				row.stepParts = m.boardRowParts(ledger, steps)
 				if r.UsageKnown || r.Tokens != 0 {
@@ -208,6 +223,9 @@ func (m *Model) rows() (needs, running []ovRow) {
 					row.kind, row.style = "= paused", th.Held
 				case r.State == "awaiting-approval":
 					row.kind, row.style = "+ approve", th.Decision
+				}
+				if row.live != nil && (row.kind == "? question" || row.kind == "x stopped") {
+					row.live.alert = row.kind
 				}
 				needs = append(needs, row)
 			} else {
@@ -236,7 +254,8 @@ func (m *Model) rows() (needs, running []ovRow) {
 				style = th.Dim
 			}
 			running = append(running, ovRow{ledgerID: r.ID, state: r.State, kind: kindExternal, style: style, kindW: len(kindExternal), project: i, name: name,
-				text: text, id: id, rest: rest, stepParts: steps, dim: r.State == "stale"})
+				text: text, id: id, rest: rest, stepParts: steps, dim: r.State == "stale",
+				live: &liveRun{item: strings.Join(r.Items, ","), ledger: r, steps: ledgerTreeSteps(r.Steps)}})
 		}
 	}
 	// Engine rows drop the empty label only while no other Running row has one.
@@ -280,8 +299,7 @@ func clampCursor(i, n int) int {
 
 // moveRow moves the row cursor by delta rows, stopping at the first and last row.
 func (m *Model) moveRow(delta int) {
-	needs, running := m.rows()
-	n := len(needs) + len(running) + len(m.recentRows()) + len(m.readyRows())
+	n := len(m.cursorRows())
 	if i := clampCursor(m.cursor, n); i >= 0 {
 		next := clampCursor(i+delta, n)
 		if next != i {
@@ -296,13 +314,22 @@ func (m *Model) selectedRow() (ovRow, bool) {
 	if m.view == decisionsView || m.view == questionsView {
 		return ovRow{}, false
 	}
-	needs, running := m.rows()
-	all := append(append(append(append([]ovRow(nil), needs...), running...), m.recentRows()...), m.readyRows()...)
+	all := m.cursorRows()
 	i := clampCursor(m.cursor, len(all))
 	if i < 0 {
 		return ovRow{}, false
 	}
 	return all[i], true
+}
+
+// cursorRows lists the rows the row cursor walks, in order: Needs you,
+// Running, Recent and Ready, or on the Running entry its own rows and Recent.
+func (m *Model) cursorRows() []ovRow {
+	if m.active == runningEntry {
+		return append(m.runningRows(), m.recentRows()...)
+	}
+	needs, running := m.rows()
+	return append(append(append(append([]ovRow(nil), needs...), running...), m.recentRows()...), m.readyRows()...)
 }
 
 // overviewView is the Overview at one width: its body lines, the body line of
@@ -316,6 +343,9 @@ type overviewView struct {
 // overview is the Overview screen for all projects, or for the selected one:
 // what needs the owner, what is running, and what is ready to land.
 func (m *Model) overview(w int) overviewView {
+	if m.active == runningEntry {
+		return m.runningOverview(w)
+	}
 	th := m.cfg.Theme
 	nameW := 0
 	needs, running := m.rows()
@@ -557,6 +587,13 @@ func rowText(r ovRow, room int) string {
 // detailLines wraps a Ready row's full commands, or another row's full text,
 // at the pane width. The row already shows the project's name.
 func detailLines(r ovRow, w int, separator string) []string {
+	if len(r.detailCells) > 0 {
+		lines := packCells(r.detailCells, max(w-len(indent), 1))
+		for i := range lines {
+			lines[i] = indent + lines[i]
+		}
+		return lines
+	}
 	text := r.text
 	if d := r.decision; d != nil {
 		text = fmt.Sprintf("#%d %s", d.ID, d.Status)
@@ -815,4 +852,296 @@ func shellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", `'"'"
 // project help always applies.
 func showsWait(r source.EngineRun) bool {
 	return r.Unavailable || r.State == "paused" || r.State == "stopped" || r.State == "awaiting-approval"
+}
+
+// runningRows lists the Running entry's rows (S110, adj 169): the Running
+// section of the aggregate Overview, plus every run that waits on the owner
+// with a question or a stop, which Needs you holds. They stay in project
+// order, so a run that starts waiting does not change the order of the rows.
+func (m *Model) runningRows() []ovRow {
+	needs, running := m.rows()
+	rows := append([]ovRow(nil), running...)
+	for _, r := range needs {
+		if r.live != nil && r.live.alert != "" {
+			rows = append(rows, r)
+		}
+	}
+	slices.SortStableFunc(rows, func(a, b ovRow) int { return a.project - b.project })
+	for i := range rows {
+		if rows[i].live != nil {
+			rows[i].detailCells = m.liveDetail(rows[i])
+			rows[i].text = strings.Join(rows[i].detailCells, "  ")
+		}
+	}
+	return rows
+}
+
+// liveRunCount is the number of runs the Running entry lists. An error or a
+// pending project is a row there too, but it is not a run.
+func (m *Model) liveRunCount() int {
+	n := 0
+	for _, r := range m.runningRows() {
+		if r.live != nil {
+			n++
+		}
+	}
+	return n
+}
+
+// liveDetail is the whole text of a Running row, for the detail line, as the
+// cells it is wrapped between: the Overview text, the board cells the row
+// lacks and the activity.
+func (m *Model) liveDetail(r ovRow) []string {
+	cells := strings.Split(r.text, "  ")
+	if r.live.alert != "" {
+		// The Needs you row carries no board cells.
+		for _, part := range m.boardRowParts(r.live.ledger, r.live.steps) {
+			cells = append(cells, part.text)
+		}
+	}
+	if len(r.live.activity) > 0 {
+		cells = append(cells, "activity "+sparkline(r.live.activity, m.cfg.ASCII))
+	}
+	return cells
+}
+
+// packCells wraps cells into lines of at most n columns, two spaces apart. A
+// line breaks between cells only; a cell wider than n is wrapped alone.
+func packCells(cells []string, n int) []string {
+	var lines []string
+	line := ""
+	for _, c := range cells {
+		if c == "" {
+			continue
+		}
+		switch {
+		case line == "":
+			line = c
+		case lipgloss.Width(line)+2+lipgloss.Width(c) <= n:
+			line += "  " + c
+		default:
+			lines = append(lines, wrapText(line, n)...)
+			line = c
+		}
+	}
+	if line != "" {
+		lines = append(lines, wrapText(line, n)...)
+	}
+	return lines
+}
+
+// runningRole is the role that is running, in brackets as the pipeline draws
+// it, or "" when none is.
+func runningRole(steps []runTreeStep) string {
+	phases := pipelinePhases(steps)
+	for _, role := range pipelineRoles(laneSteps(steps)) {
+		if phases[role] == "start" {
+			return "[" + role + "]"
+		}
+	}
+	return ""
+}
+
+// runningOverview is the Running entry's screen: the live runs of every
+// project, each on one line, and the runs that ended in the last hour. It
+// reuses the Overview's rows and its cursor; nothing else is drawn.
+func (m *Model) runningOverview(w int) overviewView {
+	th := m.cfg.Theme
+	running, recent := m.runningRows(), m.recentRows()
+	all := append(append([]ovRow(nil), running...), recent...)
+	cursor := clampCursor(m.cursor, len(all))
+	nameW := 0
+	for _, r := range all {
+		nameW = max(nameW, lipgloss.Width(r.name))
+	}
+	live, questions, stops := 0, 0, 0
+	var liveRows []ovRow
+	for _, r := range running {
+		if r.live == nil {
+			continue
+		}
+		live++
+		liveRows = append(liveRows, r)
+		switch r.live.alert {
+		case "? question":
+			questions++
+		case "x stopped":
+			stops++
+		}
+	}
+	// One set of cells for every row, chosen from the widest.
+	layout := m.liveLayout(liveRows, nameW, w)
+	heading := th.Heading.Render(fmt.Sprintf("Running %d", live))
+	if questions > 0 {
+		heading += "  " + th.Warn.Bold(th.Mono).Render(fmt.Sprintf("! owner questions %d", questions))
+	}
+	if stops > 0 {
+		heading += "  " + th.Error.Render(fmt.Sprintf("x stopped %d", stops))
+	}
+	lines := []string{heading}
+	sel := -1
+	if live == 0 {
+		lines = append(lines, indent+th.Dim.Render("nothing running"))
+	}
+	for i, r := range running {
+		if i == cursor {
+			sel = len(lines)
+		}
+		if r.live != nil {
+			lines = append(lines, m.runningLine(r, i == cursor, nameW, w, layout))
+		} else {
+			lines = append(lines, m.rowLine(r, i == cursor, nameW, w))
+		}
+	}
+	lines = append(lines, "", th.Heading.Render("Recent"))
+	if len(recent) == 0 {
+		lines = append(lines, indent+th.Dim.Render("none"))
+	}
+	for i, r := range recent {
+		if len(running)+i == cursor {
+			sel = len(lines)
+		}
+		lines = append(lines, m.rowLine(r, len(running)+i == cursor, nameW, w))
+	}
+	ov := overviewView{body: lines, sel: sel}
+	if cursor >= 0 {
+		vertical, _ := th.rules(m.cfg.ASCII)
+		ov.detail = detailLines(all[cursor], w, vertical)
+	}
+	return ov
+}
+
+// liveText is the text of the cells of one Running row.
+type liveText struct {
+	item, bar, role, pipeline, heard, spark string
+	heardStyle                              lipgloss.Style
+}
+
+func (m *Model) liveText(r ovRow) liveText {
+	lv := r.live
+	stale := lv.ledger.State == "stale"
+	t := liveText{item: lv.item, pipeline: m.pipeline(lv.steps, stale, true)}
+	t.bar = stageBar(lv.steps, m.treeFrame, !stale && boardLive(lv.ledger.State))
+	if !stale {
+		t.role = runningRole(lv.steps)
+	}
+	t.heard, t.heardStyle = m.lastHeard(lv.ledger)
+	if len(lv.activity) > 0 {
+		t.spark = sparkline(lv.activity, m.cfg.ASCII)
+	}
+	return t
+}
+
+// liveLayout is the cells every Running row shows and the width of each
+// column, chosen once from the widest row so the columns line up and no row
+// shows a cell another lacks.
+type liveLayout struct {
+	itemW, barW, roleW, pipelineW, heardW, sparkW int
+	pipeline, heard, spark                        bool
+}
+
+// liveLayout keeps the item, the stage bar and the running role. As the pane
+// narrows the cells go in this order: activity, the pipeline (down to the
+// running role), last heard.
+func (m *Model) liveLayout(rows []ovRow, nameW, w int) liveLayout {
+	var l liveLayout
+	for _, r := range rows {
+		t := m.liveText(r)
+		l.itemW = max(l.itemW, lipgloss.Width(t.item))
+		l.barW = max(l.barW, lipgloss.Width(t.bar))
+		l.roleW = max(l.roleW, lipgloss.Width(t.role))
+		l.pipelineW = max(l.pipelineW, lipgloss.Width(t.pipeline))
+		l.heardW = max(l.heardW, lipgloss.Width(t.heard))
+		l.sparkW = max(l.sparkW, lipgloss.Width(t.spark))
+	}
+	room := w - len(indent) - 1 - nameW - 2
+	width := func() int {
+		n := l.itemW + 2 + l.barW
+		if l.pipeline {
+			n += 2 + l.pipelineW
+		} else if l.roleW > 0 {
+			n += 2 + l.roleW
+		}
+		if l.heard {
+			n += 2 + l.heardW
+		}
+		if l.spark {
+			n += 2 + l.sparkW
+		}
+		return n
+	}
+	if l.heard = l.heardW > 0; l.heard && width() > room {
+		l.heard = false
+	}
+	if l.pipeline = true; width() > room {
+		l.pipeline = false
+	}
+	if l.spark = l.sparkW > 0; l.spark && width() > room {
+		l.spark = false
+	}
+	return l
+}
+
+// runningLine is one live run on one line: the alert glyph and the project,
+// then the item, the stage bar (with its round), the pipeline or the running
+// role, last heard and activity, in the columns and cells of layout.
+func (m *Model) runningLine(r ovRow, selected bool, nameW, w int, l liveLayout) string {
+	th := m.cfg.Theme
+	t := m.liveText(r)
+	// The mark slot holds the alert glyph, as the kind symbol does on Needs you.
+	mark, markStyle := " ", lipgloss.NewStyle()
+	switch {
+	case r.live.alert != "":
+		mark, markStyle = r.live.alert[:1], r.style
+	case m.refreshing(r.name):
+		mark, markStyle = "~", th.Pending
+	}
+	padded := fmt.Sprintf("%-*s", nameW, r.name)
+
+	type col struct {
+		text  string
+		width int
+		style lipgloss.Style
+	}
+	plain := lipgloss.NewStyle()
+	cols := []col{{t.item, l.itemW, th.Title}, {t.bar, l.barW, plain}}
+	switch {
+	case l.pipeline:
+		cols = append(cols, col{t.pipeline, l.pipelineW, plain})
+	case l.roleW > 0:
+		cols = append(cols, col{t.role, l.roleW, plain})
+	}
+	if l.heard {
+		cols = append(cols, col{t.heard, l.heardW, t.heardStyle})
+	}
+	if l.spark {
+		cols = append(cols, col{t.spark, l.sparkW, th.Dim})
+	}
+	var out []string
+	var raw []string
+	for _, c := range cols {
+		pad := strings.Repeat(" ", max(c.width-lipgloss.Width(c.text), 0))
+		style := c.style
+		if r.dim && !strings.HasPrefix(c.text, "!") {
+			style = th.Dim
+		}
+		raw = append(raw, c.text+pad)
+		if c.text == "" {
+			out = append(out, pad)
+			continue
+		}
+		out = append(out, style.Render(c.text)+pad)
+	}
+	if selected {
+		line := indent + mark + padded + "  " + strings.Join(raw, "  ")
+		line = strings.TrimRight(line, " ")
+		if lipgloss.Width(line) > w {
+			line = clip(line, w)
+		}
+		return th.TabActive.Render(line + strings.Repeat(" ", max(w-lipgloss.Width(line), 0)))
+	}
+	if mark != " " {
+		mark = markStyle.Render(mark)
+	}
+	return strings.TrimRight(indent+mark+padded+"  "+strings.Join(out, "  "), " ")
 }

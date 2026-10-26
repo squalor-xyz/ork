@@ -52,12 +52,12 @@ on Welcome in this slice.
 
 ```
 ork dev  ?help       | Overview | Questions | Waves | Roadmap | Decisions
-> Needs you       3  | --------------------------------------
-  slicer          2* | Needs you 3
-  adjudicate      1  |   Decisions 2
-  DataBall           |   ? slicer      #11  ui.layout  Group rows?
-  agents             |   ? adjudicate  #3   out.shape  JSON shape?
-                     |   Held 1
+  Running         0  | --------------------------------------
+> Needs you       3  | Needs you 3
+  slicer          2* |   Decisions 2
+  adjudicate      1  |   ? slicer      #11  ui.layout  Group rows?
+  DataBall           |   ? adjudicate  #3   out.shape  JSON shape?
+  agents             |   Held 1
                      |   # slicer      S12  Roadmap screen
                      | Running 0
                      |   nothing running
@@ -97,6 +97,39 @@ all-projects Overview. A project selection limits its rows to that project.
 The view bar stays at the top of the main pane. Overview, Questions, Waves,
 Roadmap and Decisions are selectable.
 
+**Running (*proposed*, S110, adj 169 `ui.sidebar-running`).** The first sidebar
+entry, above "Needs you", opens a live summary of every project that has a live
+run. It is always shown, so no row moves when a run starts: it carries the
+count of live runs, and with none it is dim and its view says `nothing running`.
+It is reached with the sidebar keys `right`/`left` like any other entry, not
+with a digit key (`1`-`9` stay the projects, `Jump` is unchanged). "Needs you"
+still starts selected. While the entry is selected the first tab of the view bar
+reads `Overview (Running)`; the view is the Overview's Running section full
+screen, then Recent, with no Needs you or Ready section. Each live run is one
+row in project order: the project, then the item, the stage bar (with ` rN`
+from the second round, as everywhere), the pipeline with the running role in
+brackets, last heard (with the `!` and `!!` cues of the run pane) and the
+ten-bucket activity sparkline. A run that waits on the owner is marked by one
+glyph in the mark slot before its project name, as a kind symbol is on
+Needs you: `?` for a paused run that asks the owner, `x` for a stopped one. The
+glyph is the only change to its row, so no row moves or widens. The heading
+counts the runs and adds `! owner questions N` and `x stopped N`, and the
+detail line of the selected row keeps the words. A run that waits on the owner
+stays on this view until it is answered or dismissed; a paused run with no
+question, a run awaiting approval and a removed run stay on Needs you only.
+The columns line up: the item, the bar and the pipeline are padded to the widest
+row. The cells shown are chosen once for the whole view, from the widest row,
+so every row shows the same cells (the selected row alone may be clipped). As
+the pane narrows the cells go in this order: activity first, then the pipeline
+(down to the bracketed running role), then last heard. The item, the stage bar
+and the running role stay, so the view is complete at 80x24. The row cursor,
+`enter` (which opens that run's pane, as on the Overview), the action keys and
+the pane work as on the Overview; the pane follows the newest running run
+(S109). The selected row's whole text, with the run ID, state and elapsed time,
+is on the detail line, which wraps between cells and never inside one. A run
+that ends leaves Running and shows under Recent on the next snapshot, with no
+keypress.
+
 "Needs you" shows the aggregate Needs you row count, including error and
 pending rows, matching the main heading (`ui.overview-layout`, adj 149).
 Per-project counts keep their existing meaning and hide zero counts.
@@ -121,9 +154,9 @@ The list scrolls to keep selection visible and shows `+N more` for hidden
 rows. Below 100 columns the sidebar narrows; names that do not fit end in
 `...` and keep their badges. `s` hides or shows the sidebar at any width.
 Outside Decisions, keys `right`/`left` move selection and wrap through
-"Needs you" and the sorted projects. On Decisions they switch the Open and
+"Running", "Needs you" and the sorted projects. On Decisions they switch the Open and
 Decided tabs; use `1`-`9` to select a project. To reach
-"Needs you" by key, leave Decisions with `tab` and use `right`/`left`.
+"Needs you" or "Running" by key, leave Decisions with `tab` and use `right`/`left`.
 `1`-`9` select projects in registry order. `tab` and
 `shift+tab` switch views in the order of the view bar (`ui.views`,
 `ui.view-list`). All five views are available: Overview, Questions, Waves,
@@ -159,12 +192,16 @@ manual refresh uses its own request connection, so later reads can reconnect
 and a slow refresh does not hold another project's request. The notice
 connection stays open when focus changes. Failed notice feeds retry on the
 next timer tick, including when a focused project was removed. Notices that
-arrive during a fetch queue a further read. On "Needs you" the daemon focuses
-all registered projects; on a project row it focuses that one (`dash.refresh`).
+arrive during a fetch queue a further read. On "Needs you" and "Running" the
+daemon focuses all registered projects; on a project row it focuses that one
+(`dash.refresh`).
 While a visible project has a live run, the daemon reads its runs every 1 s
 (*proposed*, S109) and the TUI refetches on the notice; see `docs/design.md`.
+On "Running" that holds for every project with a live run at once (S110); a
+visible project without one stays at 5 s.
 The local fallback schedule reads the selected project's items every 5 s and
-other projects every 30 s. On "Needs you", all projects poll every 30 s. Goals
+other projects every 30 s. On "Needs you" and "Running", all projects poll
+every 30 s. Goals
 and decided records refresh every 5 min or on HEAD changes and manual refresh. `NO_COLOR` selects the monochrome theme.
 
 ## Overview (all projects)

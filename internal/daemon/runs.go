@@ -164,6 +164,9 @@ func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 	}
 	return deps
 }
+
+// recoverRuns reconciles outside the manager lock, then publishes each fully
+// initialized run under the lock used by run-manager readers.
 func (d *Daemon) recoverRuns(ctx context.Context) error {
 	defer func() { d.runs.mu.Lock(); defer d.runs.mu.Unlock(); d.pruneRunsLocked() }()
 	d.runs.ctx = ctx
@@ -193,29 +196,40 @@ func (d *Daemon) recoverRuns(ctx context.Context) error {
 				// StopQueued only needs the stored record, not project settings.
 				p = registry.Project{Name: rec.Project}
 				e := engine.Load(d.runDeps(p), p, r)
-				d.runs.runs[rec.ID] = &managedRun{engine: e}
+				m := &managedRun{engine: e}
 				if err := e.StopQueued(ctx, "project was removed"); err != nil {
-					d.runs.runs[rec.ID].failure = err
-					d.runs.runs[rec.ID].recoveryFailed = true
+					m.failure = err
+					m.recoveryFailed = true
 					fmt.Fprintf(os.Stderr, "stop queued run %s: %v\n", rec.ID, err)
 				}
+				d.runs.mu.Lock()
+				d.runs.runs[rec.ID] = m
+				d.runs.mu.Unlock()
 			} else {
+				d.runs.mu.Lock()
 				d.runs.runs[rec.ID] = &managedRun{failure: err, recoveryFailed: true}
+				d.runs.mu.Unlock()
 			}
 			continue
 		}
 		e := engine.Load(d.runDeps(p), p, r)
 		if rec.State == runrec.StateQueued {
 			// A queued run has no process and wrote nothing; it keeps its place.
+			d.runs.mu.Lock()
 			d.runs.runs[rec.ID] = &managedRun{engine: e}
+			d.runs.mu.Unlock()
 			continue
 		}
 		if err := e.Reconcile(ctx); err != nil {
 			fmt.Fprintf(os.Stderr, "reconcile %s: %v\n", rec.ID, err)
+			d.runs.mu.Lock()
 			d.runs.runs[rec.ID] = &managedRun{engine: e, failure: err, recoveryFailed: true}
+			d.runs.mu.Unlock()
 			continue
 		}
+		d.runs.mu.Lock()
 		d.runs.runs[rec.ID] = &managedRun{engine: e}
+		d.runs.mu.Unlock()
 	}
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()

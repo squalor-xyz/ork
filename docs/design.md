@@ -127,7 +127,10 @@ ork (TUI)  ork status --json (CLI)
   records. The runs part is read every 1 s instead while the project is
   visible and its last good read holds a run that is not stale (*proposed*,
   S109); when that read shows no such run it returns to 5 s, and a project that
-  is not visible stays at 30 s. Only the runs part speeds up; a change in it
+  is not visible stays at 30 s. The interval belongs to each project, so the
+  Running entry, which makes every project visible, reads the runs of each
+  project with a live run every 1 s and no other part faster (*proposed*,
+  S110); the 4-process limit holds however many projects that is. Only the runs part speeds up; a change in it
   reaches the clients through the usual notice. Each read is one CLI call. A read that is already running is
   shared, and at most 4 CLI processes run at once across all projects. A
   read that comes due, or that a HEAD change asks for, while another runs for

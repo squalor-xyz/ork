@@ -1,7 +1,7 @@
 [1mork[m [90mdev[m  ?help             │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
-[1;7;97;44m> Needs you              0 [m│[90m────────────────────────────────────────────────────────────────────────[m
-  ork                     *│[1;36mKeys[m
-                           │tab next view
+  Running                1 │[90m────────────────────────────────────────────────────────────────────────[m
+[1;7;97;44m> Needs you              0 [m│[1;36mKeys[m
+  ork                     *│tab next view
                            │shift+tab previous view
                            │right next project; next tab on Decisions
                            │left previous project; previous tab on Decisions

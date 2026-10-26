@@ -1,10 +1,10 @@
 [1mork[m [90mdev[m  ?help             │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
-[1;7;97;44m> Needs you              6 [m│[90m────────────────────────────────────────────────────────────────────────[m
-  slicer                 3*│[1;36mKeys[m
-  adjudicate             1 │tab next view
-  DataBall                 │shift+tab previous view
-  agents                   │right next project; next tab on Decisions
-                           │left previous project; previous tab on Decisions
+  Running                1 │[90m────────────────────────────────────────────────────────────────────────[m
+[1;7;97;44m> Needs you              6 [m│[1;36mKeys[m
+  slicer                 3*│tab next view
+  adjudicate             1 │shift+tab previous view
+  DataBall                 │right next project; next tab on Decisions
+  agents                   │left previous project; previous tab on Decisions
                            │1-9 jump to project
                            │down/j/n next row
                            │up/k/p previous row

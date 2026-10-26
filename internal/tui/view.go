@@ -167,7 +167,11 @@ func (m *Model) screen() string {
 	body = window(body, start, bodyH, th)
 	_, horizontal := th.rules(m.cfg.ASCII)
 	rule := th.Dim.Render(strings.Repeat(horizontal, mainW))
-	main := []string{m.viewBar(), rule}
+	bar := m.viewBar()
+	if lipgloss.Width(bar) > mainW && strings.HasPrefix(bar, " ") {
+		bar = bar[1:] // the longer first tab still fits an 80 column screen
+	}
+	main := []string{bar, rule}
 	main = append(main, body...)
 	main = append(main, footer...)
 	if len(detail) > 0 {
@@ -220,17 +224,27 @@ func (m *Model) sidebar(w, h int) []string {
 		label := "Needs you"
 		badge := ""
 		marker := " "
-		if idx < 0 {
+		dim := false
+		switch idx {
+		case runningEntry:
+			label = "Running"
 			aggregate := *m
-			aggregate.active = -1
+			aggregate.active = runningEntry
+			n := aggregate.liveRunCount()
+			badge = fmt.Sprintf(" %d", n)
+			// With nothing running the entry stays, dim, so no row moves.
+			dim = n == 0
+		case needsEntry:
+			aggregate := *m
+			aggregate.active = needsEntry
 			needs, _ := aggregate.rows()
 			badge = fmt.Sprintf(" %d", len(needs))
 		}
-		setup := false
 		if idx >= 0 {
 			p := m.projects[idx]
 			label = p.reg.Name
-			setup = p.setup() || p.snap.Unavailable
+			setup := p.setup() || p.snap.Unavailable
+			dim = setup
 			if p.snap.Unavailable {
 				badge = " removed"
 			} else if setup {
@@ -255,11 +269,11 @@ func (m *Model) sidebar(w, h int) []string {
 		}
 		label = prefix + label
 		switch {
-		case idx == m.active && setup:
+		case idx == m.active && dim:
 			label = m.cfg.Theme.TabActive.Faint(true).Render(label)
 		case idx == m.active:
 			label = m.cfg.Theme.TabActive.Render(label)
-		case setup:
+		case dim:
 			label = m.cfg.Theme.Dim.Render(label)
 		}
 		lines = append(lines, label)
@@ -312,6 +326,9 @@ func (m *Model) viewBar() string {
 	}
 	b.WriteString(" ")
 	for i, v := range views {
+		if i == 0 && m.active == runningEntry {
+			v.name = "Overview (Running)" // the Running entry is the Overview, narrowed
+		}
 		if i > 0 {
 			vertical, _ := th.rules(m.cfg.ASCII)
 			idle += " " + vertical + " "

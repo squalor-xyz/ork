@@ -975,3 +975,50 @@ func TestLedgerRefreshIgnoresStaleRuns(t *testing.T) {
 		t.Fatalf("runs read %d times at 1 s with only a stale run, want 1", n)
 	}
 }
+
+// The Running entry shows every project at once (S110). Each visible project
+// with a live run is read every second, a visible project without one stays at
+// 5 s, and the Limit still caps the processes however many are visible.
+func TestLedgerRefreshIsOneSecondForEveryVisibleProjectWithALiveRun(t *testing.T) {
+	f := newFetcher()
+	live := func(p registry.Project) bool { return p.Name[len(p.Name)-1]%2 == 0 }
+	f.setAnswer(func(p registry.Project, part source.Part) (any, error) {
+		if part == source.Runs && live(p) {
+			return []slicercli.RelayRun{{ID: "run-" + p.Name, State: "running"}}, nil
+		}
+		return defaultAnswer(p, part)
+	})
+	clock := &fakeClock{}
+	c := newCache(t, f, clock, nil)
+	var projects []registry.Project
+	var names []string
+	for i := 10; i < 24; i++ { // 14 projects
+		p := registry.Project{Name: fmt.Sprintf("p%d", i), Path: fmt.Sprintf("/p/p%d", i)}
+		projects = append(projects, p)
+		names = append(names, p.Name)
+		readAll(t, c, p)
+	}
+	c.SetVisible(names)
+	for _, p := range projects {
+		waitFor(t, p.Name+" goals read on open", func() bool { return f.count(p.Name, source.Goals) == 2 })
+	}
+	clock.Advance(time.Second)
+	for _, p := range projects {
+		if live(p) {
+			waitRead(t, c, f, p.Name, source.Runs, 2)
+		}
+	}
+	settle()
+	for _, p := range projects {
+		want := 1
+		if live(p) {
+			want = 2
+		}
+		if n := f.count(p.Name, source.Runs); n != want {
+			t.Errorf("%s: runs read %d times after 1 s, want %d (live %v)", p.Name, n, want, live(p))
+		}
+	}
+	if _, max := f.now(); max > Limit {
+		t.Fatalf("%d calls ran at once with %d projects visible, limit %d", max, len(projects), Limit)
+	}
+}

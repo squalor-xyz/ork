@@ -1,7 +1,7 @@
 [1mork[m  ?help                 │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
-[1;7;97;44m> Needs you              1 [m│[90m────────────────────────────────────────────────────────────────────────[m
-  ork                    1 │[1;36mNeeds you 1[m
-                           │  [1mPaused 1[m
+  Running                2 │[90m────────────────────────────────────────────────────────────────────────[m
+[1;7;97;44m> Needs you              1 [m│[1;36mNeeds you 1[m
+  ork                    1 │  [1mPaused 1[m
                            │[1;7;97;44m  ?  ork  engine  S22  paused                                           [m
                            │
                            │[1;36mRunning 1[m  [33m! owner questions 1[m
