@@ -446,6 +446,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	if m.waves != nil && m.waves.inputs != nil {
 		return m.waveInputKey(msg)
 	}
+	if m.view == wavesView && m.waves != nil && m.waves.pane != nil {
+		return m.waveItemKey(msg)
+	}
 	if m.launch != nil {
 		return m.launchKey(msg)
 	}
@@ -581,7 +584,7 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		}
 	case key.Matches(msg, m.keys.Select):
 		if m.view == wavesView {
-			return nil
+			return m.openWaveItem()
 		}
 		if m.view == roadmapView {
 			return m.openItem()

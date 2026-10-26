@@ -303,7 +303,7 @@
       "id": "S107",
       "title": "Waves as a table: shares as a dim column, wave header rules, Lineup column only after ticking",
       "short_title": "Waves as a table: shares as a dim column, wave header rules, Lineup column only after ticking",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -324,7 +324,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

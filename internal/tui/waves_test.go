@@ -5,11 +5,13 @@ package tui
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -323,16 +325,38 @@ func TestTabReachesTheWavesView(t *testing.T) {
 	}
 }
 func TestWavesGolden(t *testing.T) {
-	for _, tc := range []struct {
-		name string
-		mono bool
-	}{{"waves-100x30-color.txt", false}, {"waves-100x30-mono.txt", true}} {
-		t.Run(tc.name, func(t *testing.T) {
-			h, _ := wavesHarness(t)
-			h.m.cfg.Theme = NewTheme(tc.mono)
-			twoWaveItems(t, h)
-			checkGolden(t, tc.name, h.m.View().Content)
-		})
+	for _, size := range [][2]int{{100, 30}, {80, 24}} {
+		for _, mono := range []bool{false, true} {
+			for _, picked := range []bool{false, true} {
+				for _, ascii := range []bool{false, true} {
+					theme, suffix := "color", ""
+					if mono {
+						theme = "mono"
+					}
+					if picked {
+						suffix += "-lineup"
+					}
+					if ascii {
+						suffix += "-ascii"
+					}
+					name := fmt.Sprintf("waves-%dx%d-%s%s.txt", size[0], size[1], theme, suffix)
+					t.Run(name, func(t *testing.T) {
+						h, l := wavesHarness(t)
+						h.m.cfg.Theme = NewTheme(mono)
+						h.m.cfg.ASCII = ascii
+						h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+						l.suggest.Waves[1].Items[0].Reason = "shares: S65 internal/engine/shared.go"
+						if picked {
+							twoWaveItems(t, h)
+						} else {
+							openWaves(t, h)
+						}
+						h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+						checkGolden(t, name, h.m.View().Content)
+					})
+				}
+			}
+		}
 	}
 }
 
@@ -544,5 +568,340 @@ func TestWavesMarksEngineConflict(t *testing.T) {
 	h.deliver(press("y"))
 	if len(l.starts) != 1 || len(l.starts[0].Items) != 1 {
 		t.Fatal("single engine slice did not start")
+	}
+}
+
+func TestSharesIsADimColumnWithThePredecessorIdOnly(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		h, l := wavesHarness(t)
+		h.m.cfg.Theme = NewTheme(mono)
+		l.suggest.Waves[0].Items[1].Reason = "shares: S65 internal/engine/shared.go"
+		openWaves(t, h)
+		raw := strings.Join(h.m.wavesBody(76).body, "\n")
+		plain := sgr.ReplaceAllString(raw, "")
+		if !strings.Contains(plain, "Shares") || !strings.Contains(raw, h.m.cfg.Theme.Dim.Render("<S65")) || strings.Contains(plain, "shared.go") || strings.Contains(plain, "shares:") {
+			t.Fatalf("shares column missing or contains path: %q", raw)
+		}
+	}
+}
+
+func TestEnterOnAWavesRowShowsTheSharedFiles(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.suggest.Waves[0].Items[0].Reason = "shares: S65 internal/engine/shared.go"
+	l.details = map[string]*slicercli.Detail{"A": {Title: "Alpha detail", Slice: &slicercli.Spec{Title: "Alpha detail", Sections: []slicercli.Section{{Heading: "Files", Body: "- `own.go`"}}}}}
+	openWaves(t, h)
+	h.deliver(press("enter"))
+	for _, want := range []string{"Item A", "Alpha detail", "internal/engine/shared.go", "own.go", "esc"} {
+		if !strings.Contains(h.view(), want) {
+			t.Errorf("item pane missing %q:\n%s", want, h.view())
+		}
+	}
+	for _, k := range []string{" ", "l", "e", "y", "a", "x", "t"} {
+		h.deliver(press(k))
+	}
+	if l.writes != 0 || len(l.plans) != 0 || len(h.m.waves.picked) != 0 {
+		t.Fatal("read-only pane wrote or ticked")
+	}
+	h.deliver(press("esc"))
+	if !strings.Contains(h.view(), "Suggested") {
+		t.Fatal("escape did not return to Waves")
+	}
+}
+
+func TestWaveHeadersAreRulesWithCounts(t *testing.T) {
+	for _, ascii := range []bool{false, true} {
+		h, _ := wavesHarness(t)
+		h.m.cfg.ASCII = ascii
+		openWaves(t, h)
+		_, rule := h.m.cfg.Theme.rules(ascii)
+		plain := sgr.ReplaceAllString(strings.Join(h.m.wavesBody(76).body, "\n"), "")
+		for _, want := range []string{rule + rule + " Wave 2 ", "2 items", rule + rule + " Wave 4 ", "1 item", "Unplaced"} {
+			if !strings.Contains(plain, want) {
+				t.Errorf("missing %q:\n%s", want, plain)
+			}
+		}
+	}
+}
+
+func TestLineupColumnAppearsOnlyAfterTicking(t *testing.T) {
+	h, _ := wavesHarness(t)
+	openWaves(t, h)
+	if strings.Contains(h.view(), "Lineup") {
+		t.Fatal("empty Lineup column visible")
+	}
+	h.deliver(press(" "))
+	if !strings.Contains(h.view(), "Lineup") {
+		t.Fatal("ticking did not show column")
+	}
+	h.deliver(press("esc"))
+	if strings.Contains(h.view(), "Lineup") {
+		t.Fatal("column remained after last tick cancelled")
+	}
+	tickWave(t, h, "y", "n")
+	if !strings.Contains(h.view(), "implementer:") {
+		t.Fatal("planned lineup missing")
+	}
+	h.deliver(press(" "))
+	if strings.Contains(h.view(), "Lineup") {
+		t.Fatal("column remained after last untick")
+	}
+}
+
+func TestWavesRowsNeverClipTheKeyColumns(t *testing.T) {
+	for _, size := range [][2]int{{100, 30}, {80, 24}} {
+		for _, picked := range []bool{false, true} {
+			t.Run(fmt.Sprint(size, picked), func(t *testing.T) {
+				h, l := wavesHarness(t)
+				l.suggest.Waves[0].Items[0].Title = strings.Repeat("very long title ", 20)
+				l.suggest.Waves[0].Items[0].Reason = "shares: S65 internal/engine/shared.go"
+				h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+				openWaves(t, h)
+				if picked {
+					tickWave(t, h, "y", "n")
+				}
+				h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+				w, _, side := h.m.layoutSize()
+				for _, line := range h.m.wavesBody(w - side).body {
+					if lipgloss.Width(line) > w-side {
+						t.Errorf("overwide row %d: %q", lipgloss.Width(line), line)
+					}
+				}
+				v := plainView(h.m)
+				if len(strings.Split(v, "\n")) != size[1] {
+					t.Fatal("wrong height")
+				}
+				for _, line := range strings.Split(v, "\n") {
+					if lipgloss.Width(line) > size[0] {
+						t.Fatal("screen too wide")
+					}
+				}
+				if rowsWith(v, "[", "A", "<S65") != 1 {
+					t.Fatalf("key columns clipped:\n%s", v)
+				}
+			})
+		}
+	}
+}
+
+func TestWavesItemPaneIgnoresStaleRepliesAndScrolls(t *testing.T) {
+	h, _ := wavesHarness(t)
+	openWaves(t, h)
+	_, cmd := h.m.Update(press("enter"))
+	old := exec(cmd)[0].(wavesMsg)
+	if !strings.Contains(plainView(h.m), "pending: item.show") {
+		t.Fatal("missing pending read")
+	}
+	h.deliver(press("esc"))
+	h.deliver(press("down"))
+	h.deliver(press("enter"))
+	old.detail = &slicercli.Detail{Title: "STALE DETAIL"}
+	h.deliver(old)
+	if strings.Contains(plainView(h.m), "STALE DETAIL") {
+		t.Fatal("stale detail accepted")
+	}
+	w := h.m.waves
+	h.deliver(wavesMsg{kind: "detail", request: w.request, sequence: w.paneRequest, item: "B", err: &ipc.Error{Code: "read_failed", Message: "Exact item failure"}})
+	if !strings.Contains(plainView(h.m), "read_failed: Exact item failure") {
+		t.Fatal("detail error lost")
+	}
+	h.deliver(wavesMsg{kind: "detail", request: w.request, sequence: w.paneRequest, item: "B", detail: &slicercli.Detail{Slice: &slicercli.Spec{Title: "Beta", Sections: []slicercli.Section{{Heading: "Files", Body: strings.Repeat("more.go\n", 50) + "last-shared.go"}}}}})
+	for range 100 {
+		h.deliver(press("pgdown"))
+	}
+	if !strings.Contains(plainView(h.m), "last-shared.go") || !strings.Contains(plainView(h.m), "esc returns") {
+		t.Fatal("cannot reach last file with close hint visible")
+	}
+	for range 100 {
+		h.deliver(press("pgup"))
+	}
+	if w.paneOffset != 0 {
+		t.Fatal("cannot return to first line")
+	}
+}
+
+func TestWavesTableAlignsColumnsAndPreservesReasons(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.suggest.Waves[0].Items[0].ID = "S1234"
+	l.suggest.Waves[0].Items[0].Title = strings.Repeat("界", 60)
+	l.suggest.Waves[0].Items[0].Reason = "shares: S65 path with spaces.go"
+	l.suggest.Waves[0].Items[1].Reason = "after: S1234"
+	openWaves(t, h)
+	lines := h.m.wavesBody(60).body
+	col := -1
+	for _, raw := range lines {
+		line := sgr.ReplaceAllString(raw, "")
+		if !strings.Contains(line, "[ ]") {
+			continue
+		}
+		if lipgloss.Width(line) != 60 {
+			t.Errorf("row not full width: %q", raw)
+		}
+		if strings.Contains(line, "S1234") && strings.Contains(line, "<S65") {
+			col = lipgloss.Width(strings.Split(line, "<S65")[0])
+			if !reverseSGR.MatchString(raw) {
+				t.Fatal("cursor not reversed")
+			}
+		}
+	}
+	if col != 54 {
+		t.Fatalf("shares column at %d, want 54", col)
+	}
+	if !strings.Contains(sgr.ReplaceAllString(strings.Join(lines, "\n"), ""), "after: S1234") {
+		t.Fatal("non-shares reason lost")
+	}
+	h.deliver(press("enter"))
+	if !strings.Contains(plainView(h.m), "path with spaces.go") {
+		t.Fatal("shared path with spaces lost")
+	}
+}
+
+func TestWavesCursorBarCoversTheKeyColumns(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		for _, picked := range []bool{false, true} {
+			h, l := wavesHarness(t)
+			h.m.cfg.Theme = NewTheme(mono)
+			l.suggest.Waves[0].Items[0].Reason = "shares: S65 shared.go"
+			openWaves(t, h)
+			if picked {
+				tickWave(t, h, "y", "n")
+			}
+			body := h.m.wavesBody(60)
+			line := body.body[body.sel]
+			reversed, last := false, 0
+			for _, loc := range sgr.FindAllStringIndex(line, -1) {
+				if loc[0] > last && !reversed {
+					t.Fatalf("cursor bar gap: %q", line[last:loc[0]])
+				}
+				codes := strings.Split(strings.TrimSuffix(strings.TrimPrefix(line[loc[0]:loc[1]], "\x1b["), "m"), ";")
+				for _, code := range codes {
+					switch code {
+					case "", "0", "27":
+						reversed = false
+					case "7":
+						reversed = true
+					}
+				}
+				last = loc[1]
+			}
+			if last < len(line) && !reversed {
+				t.Fatalf("cursor bar ends early: %q", line)
+			}
+			if lipgloss.Width(line) != 60 {
+				t.Fatal("cursor bar not full width")
+			}
+		}
+	}
+}
+
+func TestWavesSelectedSharesUseUniformStyle(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		h, l := wavesHarness(t)
+		h.m.cfg.Theme = NewTheme(mono)
+		l.suggest.Waves[0].Items[0].Reason = "shares: S65 shared.go"
+		openWaves(t, h)
+		body := h.m.wavesBody(60)
+		line := body.body[body.sel]
+		if !strings.Contains(line, h.m.cfg.Theme.TabActive.Render("<S65  ")) {
+			t.Errorf("shares differ from cursor style: %q", line)
+		}
+		if strings.HasSuffix(line, h.m.cfg.Theme.TabActive.Render("")) && h.m.cfg.Theme.TabActive.Render("") != "" {
+			t.Errorf("empty trailing style: %q", line)
+		}
+	}
+}
+
+func TestWavesFooterWrapsBetweenHints(t *testing.T) {
+	h, _ := wavesHarness(t)
+	openWaves(t, h)
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	body := strings.Join(h.m.wavesBody(60).body, "\n")
+	for _, hint := range []string{"[enter] item", "[space] tick item", "[e] edit lineup", "[l] launch wave"} {
+		if !strings.Contains(body, hint) {
+			t.Errorf("split hint %q:\n%s", hint, body)
+		}
+	}
+}
+
+func TestWavesItemPaneUsesRoadmapHeadingsAndOneTitle(t *testing.T) {
+	h, l := wavesHarness(t)
+	title := strings.Repeat("Long item title ", 8)
+	l.suggest.Waves[0].Items[0].Title = title
+	l.details = map[string]*slicercli.Detail{"A": {Slice: &slicercli.Spec{Title: title, Sections: []slicercli.Section{{Heading: "Files", Body: "own.go"}}}}}
+	openWaves(t, h)
+	h.deliver(press("enter"))
+	body := h.m.waveItemBody(60).body
+	if body[0] != h.m.cfg.Theme.Heading.Render("Item A  (esc returns)") {
+		t.Errorf("wrong header: %q", body[0])
+	}
+	titleLines := wrapText(title, 60)
+	for i, want := range titleLines {
+		if body[i+1] != h.m.cfg.Theme.Heading.Render(want) {
+			t.Errorf("title heading mismatch at %d: %q", i, body[i+1])
+		}
+	}
+	raw := strings.Join(body, "\n")
+	if !strings.Contains(raw, h.m.cfg.Theme.Heading.Render("Files")) {
+		t.Error("section heading not styled like Roadmap")
+	}
+	if strings.Count(sgr.ReplaceAllString(raw, ""), "Long") != 8 {
+		t.Error("duplicate title")
+	}
+}
+
+func TestWavesItemPanePageKeysUseVisibleHeight(t *testing.T) {
+	for _, size := range [][2]int{{100, 30}, {80, 24}} {
+		h, l := wavesHarness(t)
+		l.details = map[string]*slicercli.Detail{"A": {Slice: &slicercli.Spec{Title: "Alpha", Sections: []slicercli.Section{{Heading: "Files", Body: strings.Repeat("file.go\n", 100)}}}}}
+		openWaves(t, h)
+		h.deliver(press("enter"))
+		h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+		_ = h.m.View()
+		h.deliver(press("pgdown"))
+		if h.m.waves.paneOffset != size[1]-5 {
+			t.Errorf("page offset %d, want %d", h.m.waves.paneOffset, size[1]-5)
+		}
+		h.deliver(press("down"))
+		h.deliver(press("pgup"))
+		if h.m.waves.paneOffset != 1 {
+			t.Errorf("page up offset %d, want 1", h.m.waves.paneOffset)
+		}
+	}
+}
+
+func TestWavesItemPanePreservesTheWholeSharedPath(t *testing.T) {
+	h, l := wavesHarness(t)
+	path := "internal/tui/path with spaces.go"
+	l.suggest.Waves[0].Items[0].Reason = "shares: S65 " + path
+	openWaves(t, h)
+	h.deliver(press("enter"))
+	body := sgr.ReplaceAllString(strings.Join(h.m.waveItemBody(72).body, "\n"), "")
+	if !strings.Contains(body, "  Shares files with S65\n    "+path+"\n") {
+		t.Fatalf("shared path not rendered as one indented path:\n%s", body)
+	}
+	if strings.Contains(body, "shares:") {
+		t.Fatal("raw shares reason still visible")
+	}
+}
+
+func TestWavesItemPaneGolden(t *testing.T) {
+	for _, size := range [][2]int{{100, 30}, {80, 24}} {
+		for _, mono := range []bool{false, true} {
+			theme := "color"
+			if mono {
+				theme = "mono"
+			}
+			name := fmt.Sprintf("waves-item-%dx%d-%s.txt", size[0], size[1], theme)
+			t.Run(name, func(t *testing.T) {
+				h, l := wavesHarness(t)
+				h.m.cfg.Theme = NewTheme(mono)
+				l.suggest.Waves[0].Items[0].Title = "Shared engine file"
+				l.suggest.Waves[0].Items[0].Reason = "shares: S65 internal/engine/fixtures/a long shared path with spaces/round-details.go"
+				l.details = map[string]*slicercli.Detail{"A": {Slice: &slicercli.Spec{Title: "Shared engine file", Size: "M", Lead: []string{"Keep the engine's shared file visible in the item detail."}, Sections: []slicercli.Section{{Heading: "Files", Body: "- `internal/engine/round.go`"}, {Heading: "Check", Body: "go test ./internal/engine"}}}}}
+				openWaves(t, h)
+				h.deliver(press("enter"))
+				h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+				checkGolden(t, name, h.m.View().Content)
+			})
+		}
 	}
 }

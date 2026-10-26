@@ -1,0 +1,24 @@
+[1mork[m  ?help         | Overview[90m | [mQuestions[90m | [m[1;36mWaves[m[90m | [mRoadmap[90m | [mDecisions
+  Needs you      0 |[90m------------------------------------------------------------[m
+[1;7;97;44m> ork              [m|[1;36mSuggested (slicer plan-parallel)[m
+  other            |[1;36m         Items                                        Shares[m
+                   |[1m-- Wave 2 ------------------------------------------ 2 items[m
+                   |[1;7;97;44m  [ ] A  Alpha                                        [m[1;7;97;44m      [m
+                   |  [ ] B  Beta                                               
+                   |[1m-- Wave 4 ------------------------------------------- 1 item[m
+                   |  [ ] C  Gamma                                        [90m<S65[m  
+                   |[1m-- Unplaced ----------------------------------------- 1 item[m
+                   |  [ ] D  Delta (no_files)                                   
+                   |  [enter] item   [space] tick item   [e] edit lineup
+                   |  [l] launch wave
+                   |
+                   |
+                   |
+                   |
+                   |
+                   |
+                   |
+                   |
+                   |
+                   |[90m------------------------------------------------------------[m
+                   | 2 projects | refreshed 16:42:00

@@ -409,7 +409,13 @@ stop and retry keys follow the run state and the footer hints.
 The Waves composer is available (S82). Select one project. `tab` and
 `shift+tab` reach it between Questions and Roadmap. It loads `wave.suggest`
 when opened or the project changes.
-Rows follow slicer's wave order. Unplaced items include their reasons.
+Rows follow slicer's wave order. Wave headers are full-width box-drawing
+rules with item counts, or hyphens in ASCII mode. Tick, item id, title and
+Shares form aligned columns. The dim Shares column contains only the
+predecessor id, for example `<S65`; shared paths stay out of the table.
+Other reasons, including unplaced reasons, stay beside the title.
+Long titles shorten to keep the tick, id and Shares columns visible.
+The cursor bar spans the row's full width.
 
 S60 provides the CLI: `ork wave suggest PROJECT` prints the ordered waves
 from `slicer plan-parallel`, including reasons. `ork wave start PROJECT
@@ -429,29 +435,40 @@ message verbatim, including per-item launch errors.
 
 ```
 Suggested (slicer plan-parallel)
-Items                   Lineup (* edited for this run)
-  Wave 2
-  [x] A  Alpha            implementer*: claude custom-model high
-                          reviewer: claude opus medium
-                          gate: claude opus medium
-  [x] B  Beta             implementer: claude sonnet high
-                          reviewer: claude opus medium
-                          gate: claude opus medium
-  Wave 4
-  [ ] C  Gamma
-  Unplaced
+         Items                 Shares  Lineup (* edited)
+-- Wave 2 --------------------------------------------------- 2 items
+  [x] A  Alpha                         implementer*: claude custom-model
+                                       high
+                                       reviewer: claude opus medium
+                                       gate: claude opus medium
+  [x] B  Beta                          implementer: claude sonnet high
+                                       reviewer: claude opus medium
+                                       gate: claude opus medium
+-- Wave 4 ---------------------------------------------------- 1 item
+  [ ] C  Gamma                 <A
+-- Unplaced -------------------------------------------------- 1 item
   [ ] D  Delta (no_files)
   ! A and B both touch shared.go
   ! A and B both touch second.go
-  [space] tick item   [e] edit lineup   [l] launch wave
+  [enter] item   [space] tick item   [e] edit lineup   [l] launch wave
 ```
+
+`enter` on a plain row opens a read-only item pane with its full title
+and item detail from `item.show`. A shares reason appears as `Shares files
+with ID`, followed by the single shared path on an indented line. Spaces
+are part of that path; long paths wrap. Other reasons appear verbatim.
+`up`/`down` and `j`/`k` scroll one line. `pgup`/`pgdown` scroll one
+visible page. `esc` returns to the same row. The pane offers no launch or
+editing actions.
 
 `space` ticks or unticks the selected item. Ticking shows both y/n inputs
 at once, with no defaults: well-specified and split. `tab` or `shift+tab`
 switches the active field; `enter` validates both and plans the item.
-`esc` cancels that tick. The Lineup column fills from the plan, including
-its fallback chains (`ui.wave-composer`). `down`/`j`/`n` and `up`/`k`/`p`
-move between items. Unplaced items can also be ticked.
+`esc` cancels that tick. The Lineup column appears only while at least
+one item is ticked and fills from the plan, including its fallback chains
+(`ui.wave-composer`). Role chains wrap within the column.
+`down`/`j`/`n` and `up`/`k`/`p` move between items. Unplaced items can also
+be ticked.
 
 Two or more ticked items trigger an overlap read. Each shared path gets a
 warning; warnings permit launch (`wave.selection`). `l` launches the ticked
