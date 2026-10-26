@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 145,
+  "next_id": 146,
   "preamble": "",
   "passes": [
     {
@@ -5275,6 +5275,36 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S145",
+      "title": "Running rows at a glance: slice title, working role, fix round, last heard, latest output line",
+      "short_title": "Running rows at a glance",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S106"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }
