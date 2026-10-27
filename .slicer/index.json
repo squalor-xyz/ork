@@ -5498,7 +5498,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b42f0c5d-8cb3-4d67-a24d-f046ed36c8c8",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): mark the followed run's Overview row with a leading '>' glyph in the marker column for the 5 s of the switch notice; nothing else changes.",
+          "created_at": "2026-10-27T16:44:33Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -5577,7 +5589,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "eac1c0d4-029e-4075-ab38-e54bf096670f",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): the project's design doc path comes from a new optional registry field ui_doc (settable with ork projects; document in docs/state.md); the UI-pass brief names it. With no field the brief tells the UI pass to find the project's own UI docs. ork's own paths leave internal/roles/prompts/ui.md. Check the lineup/plan displays: S94 already added the architect row; add the ui row where missing.",
+          "created_at": "2026-10-27T16:44:33Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",

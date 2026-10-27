@@ -2035,3 +2035,5 @@
 {"when": "2026-10-27T14:31:46Z", "item": "S124", "action": "note", "from": "", "to": "", "note": "Out of scope, not implemented: doctor does not flag unknown ", "by": "Jon R"}
 {"when": "2026-10-27T14:38:32Z", "item": "S124", "action": "status", "from": "started", "to": "done", "note": "Worktree and branch patterns accept {id_lower} through one shared helper (registry.FillPattern) used by the plan and the engine; ork doctor accepts either placeholder. The ork project's own registry patterns are the owner's to switch. Review PASS (2 rounds), gate PASS (run-20261027-141804-ebff).", "by": "Jon R"}
 {"when": "2026-10-27T14:38:32Z", "item": "S124", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 19, S124): 0 owner questions, no st", "by": "Jon R"}
+{"when": "2026-10-27T16:44:33Z", "item": "S134", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-27 (interactive): mark the followed r", "by": "Jon R"}
+{"when": "2026-10-27T16:44:33Z", "item": "S136", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-27 (interactive): the project's desig", "by": "Jon R"}
