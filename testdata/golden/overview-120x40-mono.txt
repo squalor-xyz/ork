@@ -36,5 +36,5 @@
                            │  #11 open
                            │  Does ork reimplement slicer's roadmap editor or reuse slicer tui?
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────[m
-                           │ enter [2mgo to project[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
+                           │ enter [2mgo to project[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
                            │ 4 projects | refreshed 16:42:07 | pending 1

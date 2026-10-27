@@ -115,6 +115,7 @@ const (
 
 // Model is the Bubble Tea model of the whole TUI.
 type Model struct {
+	removing projectRemoval
 	welcome  welcomeState
 	cfg      Config
 	keys     keyMap
@@ -160,7 +161,8 @@ type Model struct {
 	drawn         drawnRows // the body window of the last screen, for the page keys
 	listening     bool      // the daemon's notice feed is being listened to (S13)
 
-	projectsReading bool
+	projectsReading  bool
+	projectsRevision uint64
 }
 
 // New returns a Model that has not fetched anything. Init starts the fetches.
@@ -335,6 +337,8 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		return m, m.apply(msg)
 	case projectsDiscoveredMsg:
 		return m, m.applyProjectsDiscovered(msg)
+	case projectRemovedMsg:
+		return m, m.applyProjectRemoved(msg)
 	case projectAddedMsg:
 		return m, m.applyProjectAdded(msg)
 	case itemShowMsg:
@@ -427,7 +431,10 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 	case tea.KeyPressMsg:
 		return m, m.key(msg)
 	case tea.PasteMsg:
-		if m.registeredProjectCount() == 0 {
+		if m.removing.name != "" {
+			return m, nil
+		}
+		if m.welcome.editing || m.registeredProjectCount() == 0 {
 			if m.welcome.editing && m.welcome.confirm == "" && !m.welcome.pending {
 				m.welcome.field.update(msg)
 				m.actionStatus = ""
@@ -470,6 +477,20 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 }
 
 func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
+	if m.welcome.editing || m.welcome.pending || m.welcome.confirm != "" {
+		return m.welcomeKey(msg)
+	}
+	if m.removing.name != "" {
+		return m.removeProjectKey(msg)
+	}
+	if !m.projectTextEntry() && m.confirm == nil {
+		switch msg.String() {
+		case "+":
+			return m.welcomeKey(msg)
+		case "-":
+			return m.requestProjectRemoval()
+		}
+	}
 	if key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.Next, m.keys.Prev, m.keys.NextView, m.keys.PrevView, m.keys.Jump, m.keys.First, m.keys.Last, m.keys.PageDown, m.keys.PageUp, m.keys.NextGroup, m.keys.PrevGroup, m.keys.Filter, m.keys.Select, m.keys.Close) {
 		m.jumpRun = ""
 	}
@@ -864,7 +885,7 @@ func (m *Model) switchTo(i int) tea.Cmd {
 // needs that were already there before ork could read them do not ring.
 func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 	ps := m.byName[msg.name]
-	if ps == nil {
+	if ps == nil || ps.snap.Unavailable {
 		return nil
 	}
 	now := m.cfg.Now()

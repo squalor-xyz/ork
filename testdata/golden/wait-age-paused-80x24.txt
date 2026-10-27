@@ -20,5 +20,5 @@
                    │  engine  S22  paused  19h00m  owner approval; a very long
                    │  explanation that should be clipped at narrow widths
                    │[2m────────────────────────────────────────────────────────────[m
-                   │ enter [2mopen[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
+                   │ enter [2mopen[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
                    │ 1 project | refreshed 16:42:00

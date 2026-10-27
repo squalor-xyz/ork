@@ -18,7 +18,7 @@
                            │}/{ next/previous group (Overview)
                            │enter open run, question, item or decision; other rows select project
                            │/ filter projects; esc clears; s hide/show sidebar
-                           │+ add project (Welcome)
+                           │+ add project; - remove active project
                            │space tick item and ask inputs (Waves)
                            │e edit ticked item lineup (Waves)
                            │l launch a ready slice (Roadmap) or wave (Waves)

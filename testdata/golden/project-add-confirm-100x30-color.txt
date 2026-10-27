@@ -1,0 +1,30 @@
+[1mork[m  ?help                 │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────[m
+[90m0[m Needs you              1 │  [1;36mAdd project[m
+[1;7;97;44m> alpha                    [m│
+                           │  Project path: [1m/work/mine[m
+                           │  ork projects add '/work/mine'? [y/N] (Enter is No)
+                           │  [90mType an absolute path, or leave it empty and press Enter to use the[m
+                           │  [90mcurrent directory (needs .slicer or .adjudicate.json).[m
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ y [2madd project[m; n [2mcancel[m
+                           │ 1 project | refreshed never

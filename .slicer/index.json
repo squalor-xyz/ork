@@ -6446,9 +6446,9 @@
     },
     {
       "id": "S160",
-      "title": "Add project from the TUI when projects are registered: + works outside Welcome",
-      "short_title": "Add key beyond Welcome",
-      "status": "open",
+      "title": "Add and remove projects from every TUI view",
+      "short_title": "Add/remove projects",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -6458,6 +6458,72 @@
           "text": "**2026-10-27** — Owner decisions 2026-10-27 (interactive): scope is add AND remove projects from the TUI at any time, not only on Welcome. Add: + from any view. Remove: - (minus) removes the active project after a y/N confirm naming it, and refuses with a message while the project has a running or paused run (check what ork rm does today, internal/cli/daemoncmds.go:183, and match it). Removing the last project returns to Welcome. Hint, help and docs/dashboard.md updated; golden views. Tests: TestAddKeyWorksWithProjectsRegistered, TestRemoveKeyConfirmsAndRemoves, TestRemoveRefusedWhileRunActive.",
           "created_at": "2026-10-27T13:39:05Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "3e9cab3f-47b4-4dde-911e-f252e8146ea6",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive, this session): add a dim second line to the removal prompt explaining that files on disk are untouched and past runs stay in a read-only removed group.",
+          "created_at": "2026-10-27T14:25:21Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "a8ab754e-e7b3-4241-af61-0e4cb26deea7",
+          "kind": "",
+          "text": "**2026-10-27** — Follow-up only, not implemented in S160: removing a project with no stored runs leaves an empty read-only group until restart.",
+          "created_at": "2026-10-27T14:25:21Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "ae0d5c42-bb36-486d-901f-05ec00550756",
+          "kind": "",
+          "text": "**2026-10-27** — Follow-up only, not implemented in S160: quick re-add after removal with a fetch in flight starts a second fetch.",
+          "created_at": "2026-10-27T14:25:21Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "0f5a6e2a-f71e-4cb2-a1ca-d84c2cd198ad",
+          "kind": "",
+          "text": "**2026-10-27** — Follow-up only, not implemented in S160: long project names wrap mid-word in the confirmation prompt.",
+          "created_at": "2026-10-27T14:25:21Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "b76646b1-2df2-4d23-a204-516805da74cb",
+          "kind": "",
+          "text": "**2026-10-27** — Follow-up only, not implemented in S160: the refusal line has no error colour.",
+          "created_at": "2026-10-27T14:25:21Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "c1a315b3-0f6b-4a93-826c-2ca80968e29a",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial (run 18, S160): 1 owner question before the start (remove key, active runs) and 1 during (remove note), no stalls, 1 fix round (Codex ran out of credits at the end of the fix round; the Claude sonnet-high fallback only verified), no merge conflicts so far, ran in parallel with S94 and S124.",
+          "created_at": "2026-10-27T14:31:27Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -6481,7 +6547,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],

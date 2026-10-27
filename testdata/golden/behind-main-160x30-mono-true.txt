@@ -26,5 +26,5 @@
                            │  #11 open
                            │  Reuse slicer tui?
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[m
-                           │ enter [2mgo to project[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
+                           │ enter [2mgo to project[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
                            │ daemon behind main: restart with ork daemon restart | 4 projects | refreshed 16:42:07

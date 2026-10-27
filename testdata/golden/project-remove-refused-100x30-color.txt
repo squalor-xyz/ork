@@ -1,0 +1,30 @@
+[1mork[m  ?help                 │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────[m
+[90m0[m Needs you              1 │[1;36mNeeds you 1[m
+[1;7;97;44m> alpha                    [m│  [1mErrors 1[m
+                           │[1;7;97;44m  ~ waiting for the first reply                                         [m
+                           │
+                           │[1;36mRunning 1[m
+                           │  [90m~ pending [m waiting for the first reply
+                           │
+                           │[1;36mRecent[m
+                           │  [90mnone[m
+                           │
+                           │[1;36mReady to land[m
+                           │  [90mnone[m
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │  project_busy: project alpha has unfinished runs: run-1
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ enter [2mgo to project[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
+                           │ 1 project | refreshed never

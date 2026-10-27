@@ -75,7 +75,9 @@ func (m *Model) screen() string {
 	collapse := false // a render on show takes the whole body (S121, *proposed*)
 	if m.showHelp {
 		body = m.helpLines(mainW, bodyH)
-	} else if m.registeredProjectCount() == 0 && m.pane == nil && (m.active < 0 || m.welcome.editing || m.welcome.pending || m.welcome.confirm != "") {
+	} else if m.removing.name != "" {
+		body = m.projectRemovalBody(mainW)
+	} else if m.welcome.editing || m.welcome.pending || m.welcome.confirm != "" || (m.registeredProjectCount() == 0 && m.pane == nil && m.active < 0) {
 		body = m.welcomeBody(mainW)
 	} else if m.view == roadmapView || m.view == wavesView || m.view == decisionsView || m.view == questionsView {
 		rv := overviewView{}
@@ -600,6 +602,14 @@ func (m *Model) helpLines(w, bodyH int) []string {
 				refresh = h.Key + " " + h.Desc + "; "
 				continue
 			}
+			if h == m.keys.Add.Help() {
+				r := m.keys.Remove.Help()
+				lines = append(lines, clip(h.Key+" "+h.Desc+"; "+r.Key+" "+r.Desc, w))
+				continue
+			}
+			if h == m.keys.Remove.Help() {
+				continue
+			}
 			if h == m.keys.Filter.Help() {
 				filter = h.Key + " " + h.Desc + "; "
 				continue
@@ -622,7 +632,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			if h.Key == m.keys.AllProjects.Help().Key && m.view != decisionsView {
 				continue
 			}
-			if (h == m.keys.Add.Help() || h == m.keys.Approve.Help()) && (m.view == decisionsView || m.view == questionsView) {
+			if h == m.keys.Approve.Help() && (m.view == decisionsView || m.view == questionsView) {
 				continue
 			}
 			if m.view == questionsView && m.pane == nil &&

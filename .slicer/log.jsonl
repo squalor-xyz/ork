@@ -2016,3 +2016,14 @@
 {"when": "2026-10-27T13:37:39Z", "item": "S160", "action": "set", "from": "", "to": "", "note": "effort,importance,urgency"}
 {"when": "2026-10-27T13:39:05Z", "item": "S160", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-27 (interactive): scope is add AND r", "by": "Jon R"}
 {"when": "2026-10-27T13:39:10Z", "item": "S160", "action": "set", "from": "", "to": "", "note": "effort 1→2"}
+{"when": "2026-10-27T14:04:03Z", "item": "S160", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-27T14:25:21Z", "item": "S160", "action": "set", "from": "", "to": "", "note": "title Add project from the TUI when projects are registered: + works outside Welcome→Add and remove projects from every TUI view; short_title Add key beyond Welcome→Add/remove projects"}
+{"when": "2026-10-27T14:25:21Z", "item": "S160", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-27T14:25:21Z", "item": "S160", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-27T14:25:21Z", "item": "S160", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-27 (interactive, this session): add a", "by": "Jon R"}
+{"when": "2026-10-27T14:25:21Z", "item": "S160", "action": "note", "from": "", "to": "", "note": "Follow-up only, not implemented in S160: removing a project ", "by": "Jon R"}
+{"when": "2026-10-27T14:25:21Z", "item": "S160", "action": "note", "from": "", "to": "", "note": "Follow-up only, not implemented in S160: quick re-add after ", "by": "Jon R"}
+{"when": "2026-10-27T14:25:21Z", "item": "S160", "action": "note", "from": "", "to": "", "note": "Follow-up only, not implemented in S160: long project names ", "by": "Jon R"}
+{"when": "2026-10-27T14:25:21Z", "item": "S160", "action": "note", "from": "", "to": "", "note": "Follow-up only, not implemented in S160: the refusal line ha", "by": "Jon R"}
+{"when": "2026-10-27T14:31:27Z", "item": "S160", "action": "status", "from": "started", "to": "done", "note": "+ adds a project from any view and - removes the active project after a y/N confirm that names it and says files stay untouched; removal is refused with the daemon's message while the project has unfinished runs; removing the last project returns to Welcome. Review PASS, UI pass PASS, gate PASS (run-20261027-140355-3756).", "by": "Jon R"}
+{"when": "2026-10-27T14:31:27Z", "item": "S160", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 18, S160): 1 owner question before ", "by": "Jon R"}

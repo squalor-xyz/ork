@@ -20,5 +20,5 @@
                    │
                    │
                    │[2m────────────────────────────────────────────────────────────[m
-                   │ tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
+                   │ tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
                    │ 15 projects | refreshed 16:42:00

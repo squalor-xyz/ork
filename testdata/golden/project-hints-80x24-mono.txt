@@ -1,0 +1,24 @@
+[1mork[m  ?help         │ Overview[2m │ [mQuestions[2m │ [mWaves[2m │ [m[1mRoadmap[m[2m │ [mDecisions
+[2m  Running        0 [m│[2m────────────────────────────────────────────────────────────[m
+[2m0[m Needs you      0 │[1mGoals[m
+[1;7m> alpha            [m│
+                   │[1mRoadmap  0 ready of 0, all open[m
+                   │  No items
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ l [2mlaunch[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
+                   │ 1 project | refreshed never

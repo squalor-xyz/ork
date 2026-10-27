@@ -116,7 +116,10 @@ func hasProjectMarker(path string) bool {
 
 func (m *Model) welcomeBody(width int) []string {
 	th := m.cfg.Theme
-	lines := []string{indent + th.Heading.Render("Welcome"), "", indent + "No projects yet."}
+	lines := []string{indent + th.Heading.Render("Add project")}
+	if m.registeredProjectCount() == 0 {
+		lines = []string{indent + th.Heading.Render("Welcome"), "", indent + "No projects yet."}
+	}
 	if m.welcome.editing {
 		value := m.welcome.field.view(max(width-len(indent)-14, 1), th)
 		if m.welcome.confirm != "" || m.welcome.pending {
@@ -164,6 +167,7 @@ type projectReader interface {
 }
 
 type projectsDiscoveredMsg struct {
+	revision uint64
 	projects []registry.Project
 	err      error
 }
@@ -174,9 +178,10 @@ func (m *Model) discoverProjects() tea.Cmd {
 		return nil
 	}
 	m.projectsReading = true
+	revision := m.projectsRevision
 	return func() tea.Msg {
 		projects, err := reader.Projects(context.Background())
-		return projectsDiscoveredMsg{projects: projects, err: err}
+		return projectsDiscoveredMsg{projects: projects, err: err, revision: revision}
 	}
 }
 
@@ -203,6 +208,9 @@ func (m *Model) registerProject(project registry.Project) bool {
 
 func (m *Model) applyProjectsDiscovered(msg projectsDiscoveredMsg) tea.Cmd {
 	m.projectsReading = false
+	if msg.revision != m.projectsRevision {
+		return nil
+	}
 	if msg.err != nil {
 		return nil
 	}

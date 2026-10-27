@@ -216,7 +216,7 @@ func TestHelpNamesTheNewKeys(t *testing.T) {
 	h.start()
 	h.send(press("?"))
 	v := h.view()
-	for _, want := range []string{"] next project", "[ previous project", "j/k down/up row", "+ add project (Welcome)"} {
+	for _, want := range []string{"] next project", "[ previous project", "j/k down/up row", "+ add project", "- remove active project"} {
 		if !strings.Contains(v, want) {
 			t.Errorf("help misses %q:\n%s", want, v)
 		}
