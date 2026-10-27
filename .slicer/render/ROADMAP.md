@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-160 items · — 47 · done 108 · retired 5
+160 items · — 46 · done 109 · retired 5
 
 ## v1.1
 
@@ -101,7 +101,7 @@
 | 44 | [S85](slices/S85.md) | Navigation keys | M | 2 |  |  | done |
 | 45 | [S86](slices/S86.md) | Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default | S | 1 |  | discovered from S83 | done |
 | 46 | [S94](slices/S94.md) | Plan views and lineup edit cover the architect | S | 2 |  | discovered from S08 | done |
-| 47 | [S98](slices/S98.md) | Welcome polish: notice projects added elsewhere, tilde paths, status line and wording | S | 1 |  | discovered from S96 | — |
+| 47 | [S98](slices/S98.md) | Welcome polish: notice projects added elsewhere, tilde paths, status line and wording | S | 1 |  | discovered from S96 | done |
 | 48 | [S67](slices/S67.md) | Roadmap editing: park and unpark from the TUI (needs adj 11) | S | 1 |  |  | — |
 | 49 | [S68](slices/S68.md) | Roadmap editing: reorder an item from the TUI (needs adj 11) | S | 2 |  |  | — |
 | 50 | [S69](slices/S69.md) | Roadmap editing: open slicer tui for the project (needs adj 11) | S | 1 |  | Owner 2026-10-23: the Roadmap replaces leaving for slicer tui; adj 11 stays the owner's to close | — |
