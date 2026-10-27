@@ -1066,7 +1066,8 @@ type runAction struct {
 	held                     []string // wave: ticked items left out because they wait on spec questions
 	plan                     *daemon.RunPlan
 	wellSpecified, split     bool
-	push                     bool // approve: the project's push setting is on
+	push                     bool   // approve: the project's push setting is on
+	outcome                  string // approve: what the reply's run record shows, "landed" or "fix round"; "" if neither
 }
 
 // cleanupCommand is the two git commands of the cleanup key, one per line
@@ -1285,15 +1286,18 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 			a.by = os.Getenv("ADJ_DECIDED_BY")
 		}
 	}
-	if verb == "approve" && m.pane == nil {
-		// On an Overview row approval asks first: it lands the slice and
-		// cleans up (S119, adj 162). The approval card's own key stays one key.
+	if verb == "approve" {
+		// The prompt and the status line name the slice the approval lands.
 		a.item, a.push = r.engineID, m.projects[r.project].reg.Push
 		for _, run := range m.projects[r.project].snap.EngineRuns {
 			if run.ID == r.engineID {
 				a.item = run.Item
 			}
 		}
+	}
+	if verb == "approve" && m.pane == nil {
+		// On an Overview row approval asks first: it lands the slice and
+		// cleans up (S119, adj 162). The approval card's own key stays one key.
 		m.actionStatus = ""
 		m.confirm = &a
 		return nil
@@ -1337,7 +1341,13 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 		case "cleanup":
 			err = live.Cleanup(context.Background(), a.run)
 		case "approve":
-			err = live.Approve(context.Background(), a.run)
+			if ap, ok := live.(approver); ok {
+				var rec runrec.Record
+				rec, err = ap.ApproveRecord(context.Background(), a.run)
+				a.outcome = approveOutcome(rec)
+			} else {
+				err = live.Approve(context.Background(), a.run)
+			}
 		case "stop":
 			err = live.Stop(context.Background(), a.run)
 		case "retry":

@@ -131,7 +131,17 @@ func (c *Client) Call(ctx context.Context, method string, params, result any) er
 
 // Approve approves the run's checked result without a confirmation round trip.
 func (c *Client) Approve(ctx context.Context, run string) error {
-	return c.Call(ctx, MethodRunApprove, RunAction{Run: run}, nil)
+	_, err := c.ApproveRecord(ctx, run)
+	return err
+}
+
+// ApproveRecord approves the run and returns the run record the reply carries
+// once the run rests again. It shows whether the slice landed or the landing
+// went to a fix round (S148).
+func (c *Client) ApproveRecord(ctx context.Context, run string) (runrec.Record, error) {
+	var reply RunReply
+	err := c.Call(ctx, MethodRunApprove, RunAction{Run: run}, &reply)
+	return reply.Record, err
 }
 
 // Fix sends the owner's note to a fix round of the run that awaits approval.

@@ -60,6 +60,16 @@ func (d *Daemon) Approve(ctx context.Context, run string) error {
 	defer c.Close()
 	return c.Approve(ctx, run)
 }
+
+// ApproveRecord approves the run and returns the run record the reply carries.
+func (d *Daemon) ApproveRecord(ctx context.Context, run string) (runrec.Record, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return runrec.Record{}, err
+	}
+	defer c.Close()
+	return c.ApproveRecord(ctx, run)
+}
 func (d *Daemon) Stop(ctx context.Context, run string) error {
 	c, err := d.Connect(ctx)
 	if err != nil {

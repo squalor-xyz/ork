@@ -938,3 +938,40 @@ func TestLandingWaitingForTheLockGivesUpOnCancel(t *testing.T) {
 		t.Errorf("the second slice did not land: %v", err)
 	}
 }
+
+// A landing fix round returns the slice to awaiting approval, and the second
+// approval must not write the human-checks note again (S148).
+func TestSecondApprovalAfterALandingFixRoundRecordsTheChecksOnce(t *testing.T) {
+	env := newLandEnv(t)
+	writeFile(t, filepath.Join(env.fakes, "show.json"), humanSlice(checkOne))
+	if err := env.run.Update(func(r *runrec.Record) {
+		r.Card.HumanChecks = []runrec.HumanCheck{{Text: checkOne, State: runrec.CheckTicked}}
+	}); err != nil {
+		t.Fatal(err)
+	}
+	env.moveBase("base.txt", "from main\n")
+	// call 0: the re-check after the merge is red; call 1: the checks after the
+	// fix round are green.
+	env.setCheckOutputs(CheckOutput{Output: "FAIL TestGolden sidebar\n"}, CheckOutput{OK: true, Output: "ok\n"})
+
+	env.approve()
+	rec := requireState(t, env.e, runrec.StateAwaitingApproval)
+	if rec.LandFixes != 1 {
+		t.Fatalf("land fixes %d, want 1", rec.LandFixes)
+	}
+	if rec.Card == nil || len(rec.Card.HumanChecks) != 1 || rec.Card.HumanChecks[0].State != runrec.CheckTicked {
+		t.Fatalf("the mark did not carry over the fix round: %+v", rec.Card)
+	}
+	env.approve()
+	requireState(t, env.e, runrec.StateCommitted)
+
+	notes := 0
+	for _, l := range env.log("slicer.log") {
+		if strings.HasPrefix(l, "note ") {
+			notes++
+		}
+	}
+	if notes != 1 {
+		t.Errorf("%d human-checks notes after two approvals, want 1:\n%s", notes, strings.Join(env.log("slicer.log"), "\n"))
+	}
+}

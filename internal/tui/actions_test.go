@@ -15,6 +15,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/ipc"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -27,6 +28,8 @@ type actionLive struct {
 	fakeLive
 	src *fakeSource
 	err error
+	// approved is the run record the approve reply carries.
+	approved runrec.Record
 }
 
 func (l *actionLive) action(run, state string) error {
@@ -47,8 +50,11 @@ func (l *actionLive) action(run, state string) error {
 	return fmt.Errorf("wrong engine run: %s", run)
 }
 func (l *actionLive) Approve(_ context.Context, run string) error { return l.action(run, "commit") }
-func (l *actionLive) Stop(_ context.Context, run string) error    { return l.action(run, "stopped") }
-func (l *actionLive) Retry(_ context.Context, run string) error   { return l.action(run, "implement") }
+func (l *actionLive) ApproveRecord(_ context.Context, run string) (runrec.Record, error) {
+	return l.approved, l.action(run, "commit")
+}
+func (l *actionLive) Stop(_ context.Context, run string) error  { return l.action(run, "stopped") }
+func (l *actionLive) Retry(_ context.Context, run string) error { return l.action(run, "implement") }
 
 func actionHarness(t *testing.T, state, pending string) *harness {
 	t.Helper()
@@ -465,5 +471,134 @@ func TestActionConfirmKeepsOriginalRun(t *testing.T) {
 	h.deliver(press("y"))
 	if v := h.view(); !strings.Contains(v, "S22  stopped") || !strings.Contains(v, "S23  implement") {
 		t.Fatalf("confirmation must stop its original run after rows change:\n%s", v)
+	}
+}
+
+// Approve lands the slice, so the pending status says that and names the
+// slice instead of the ork command (S148). The Overview row and the approval
+// card both say it.
+func TestActionApprovePendingStatusSaysLanding(t *testing.T) {
+	t.Run("overview", func(t *testing.T) {
+		h := actionHarness(t, "awaiting-approval", "")
+		h.deliver(press("a"))
+		_, cmd := h.m.Update(press("y"))
+		if cmd == nil {
+			t.Fatal("confirmed approve returned no command")
+		}
+		if got, want := h.m.actionStatus, "landing S22: pending"; got != want {
+			t.Fatalf("status %q, want %q", got, want)
+		}
+	})
+	t.Run("card", func(t *testing.T) {
+		h := actionHarness(t, "awaiting-approval", "")
+		h.deliver(press("enter"))
+		if h.m.pane == nil {
+			t.Fatal("enter did not open the pane")
+		}
+		_, cmd := h.m.Update(press("a"))
+		if cmd == nil {
+			t.Fatal("the card's approve returned no command")
+		}
+		if got, want := h.m.actionStatus, "landing S22: pending"; got != want {
+			t.Fatalf("status %q, want %q", got, want)
+		}
+	})
+}
+
+// The done text says what the approval did: the slice landed, or the landing
+// was blocked and went to a fix round (S148). The reply's run record tells
+// which; any other outcome keeps the command's text.
+func TestActionApproveDoneTextSaysWhatHappened(t *testing.T) {
+	landedAt := time.Date(2026, 10, 27, 12, 0, 0, 0, time.UTC)
+	for _, oc := range []struct {
+		name string
+		rec  runrec.Record
+		want string
+	}{
+		{"landed", runrec.Record{State: runrec.StateCommitted, LandedAt: landedAt}, "landed S22"},
+		{"landed, cleanup failed", runrec.Record{State: runrec.StateCommitted, LandedAt: landedAt, Reason: "landed; cleanup failed at git branch -d s22: x"}, "landed S22"},
+		{"fix round", runrec.Record{State: runrec.StateAwaitingApproval, LandFixes: 1}, "landing S22 blocked; fix round done, awaiting approval"},
+		{"neither", runrec.Record{State: runrec.StatePaused}, "ork approve engine: done"},
+		{"committed, not landed", runrec.Record{State: runrec.StateCommitted}, "ork approve engine: done"},
+		{"awaiting approval, no fix round", runrec.Record{State: runrec.StateAwaitingApproval}, "ork approve engine: done"},
+	} {
+		for _, where := range []string{"overview", "card"} {
+			t.Run(oc.name+"/"+where, func(t *testing.T) {
+				h := actionHarness(t, "awaiting-approval", "")
+				h.m.cfg.Live.(*actionLive).approved = oc.rec
+				var cmd tea.Cmd
+				if where == "overview" {
+					h.deliver(press("a"))
+					_, cmd = h.m.Update(press("y"))
+				} else {
+					h.deliver(press("enter"))
+					_, cmd = h.m.Update(press("a"))
+				}
+				if cmd == nil {
+					t.Fatal("approve returned no command")
+				}
+				h.deliver(cmd())
+				if v := h.view(); !strings.Contains(v, oc.want) {
+					t.Fatalf("done text lacks %q:\n%s", oc.want, v)
+				}
+				if oc.want != "ork approve engine: done" && strings.Contains(h.m.actionStatus, "ork approve") {
+					t.Fatalf("status %q", h.m.actionStatus)
+				}
+			})
+		}
+	}
+}
+
+// A failed approval keeps the error text with the command.
+func TestActionApproveErrorKeepsTheCommand(t *testing.T) {
+	h := actionHarness(t, "awaiting-approval", "")
+	h.m.cfg.Live.(*actionLive).err = fmt.Errorf("boom")
+	h.deliver(press("a"))
+	_, cmd := h.m.Update(press("y"))
+	h.deliver(cmd())
+	if v := h.view(); !strings.Contains(v, "ork approve engine: boom") {
+		t.Fatalf("error text:\n%s", v)
+	}
+}
+
+// approveOnlyLive is a connection without ApproveRecord: it approves, and the
+// reply's run record is not available.
+type approveOnlyLive struct {
+	*fakeLive
+	inner *actionLive
+}
+
+func (l approveOnlyLive) Approve(ctx context.Context, run string) error {
+	return l.inner.action(run, "commit")
+}
+
+// A connection that cannot return the run record keeps the command's done
+// text, whatever the outcome was (S148).
+func TestActionApproveWithoutRecordKeepsTheCommandDoneText(t *testing.T) {
+	for _, where := range []string{"overview", "card"} {
+		t.Run(where, func(t *testing.T) {
+			h := actionHarness(t, "awaiting-approval", "")
+			inner := h.m.cfg.Live.(*actionLive)
+			inner.approved = runrec.Record{State: runrec.StateCommitted, LandedAt: time.Date(2026, 10, 27, 12, 0, 0, 0, time.UTC)}
+			h.m.cfg.Live = approveOnlyLive{fakeLive: &inner.fakeLive, inner: inner}
+			if _, ok := h.m.cfg.Live.(approver); ok {
+				t.Fatal("the double must not have ApproveRecord")
+			}
+			var cmd tea.Cmd
+			if where == "overview" {
+				h.deliver(press("a"))
+				_, cmd = h.m.Update(press("y"))
+			} else {
+				h.deliver(press("enter"))
+				_, cmd = h.m.Update(press("a"))
+			}
+			if cmd == nil {
+				t.Fatal("approve returned no command")
+			}
+			h.deliver(cmd())
+			if v := h.view(); !strings.Contains(v, "ork approve engine: done") || strings.Contains(v, "landed S22") {
+				t.Fatalf("done text:\n%s", v)
+			}
+		})
 	}
 }

@@ -357,8 +357,9 @@ func (e *Engine) Approve(ctx context.Context) error {
 		return fmt.Errorf("%d human %s still open; tick each or mark it later: %s", len(open), noun, strings.Join(open, "; "))
 	}
 	// The owner's marks are recorded before the finish step closes the slice. A
-	// failed note refuses the approval: the owner approves again.
-	if rec.Card != nil && len(rec.Card.HumanChecks) > 0 {
+	// failed note refuses the approval: the owner approves again. A second
+	// approval, after a landing fix round, finds the note already written.
+	if rec.Card != nil && len(rec.Card.HumanChecks) > 0 && len(rec.Approvals) == 0 {
 		if err := e.d.Slicer.Note(ctx, e.wr, rec.Worktree, rec.Item, checksNote(rec.Item, rec.Card)); err != nil {
 			return fmt.Errorf("record the human checks as a slicer note: %w", err)
 		}

@@ -512,11 +512,43 @@ func (a runAction) pendingText() string {
 		}
 		return fmt.Sprintf("marking check %d %s", a.check, markWord(a.state))
 	}
+	if a.verb == "approve" && a.item != "" {
+		return "landing " + a.item + ": pending"
+	}
 	return a.command() + ": pending"
+}
+
+// approver is the part of the daemon connection that approves and returns the
+// run record the reply carries. A test double may not have it.
+type approver interface {
+	ApproveRecord(ctx context.Context, run string) (runrec.Record, error)
+}
+
+var _ approver = (*Daemon)(nil)
+
+// approveOutcome reads what an approval did from the run record the reply
+// carries: the slice landed, or a blocked landing went to its fix round and
+// the run awaits approval again. Any other state (a pause, a stop) is "".
+func approveOutcome(rec runrec.Record) string {
+	switch {
+	case rec.State == runrec.StateCommitted && !rec.LandedAt.IsZero():
+		return "landed"
+	case rec.State == runrec.StateAwaitingApproval && rec.LandFixes > 0:
+		return "fix round"
+	}
+	return ""
 }
 
 // doneText is the status line when the call has returned.
 func (a runAction) doneText() string {
+	if a.verb == "approve" && a.item != "" {
+		switch a.outcome {
+		case "landed":
+			return "landed " + a.item
+		case "fix round":
+			return "landing " + a.item + " blocked; fix round done, awaiting approval"
+		}
+	}
 	switch a.verb {
 	case "fix":
 		return "fix round finished"

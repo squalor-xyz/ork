@@ -233,10 +233,12 @@ func (m *Model) recentRows() []ovRow {
 			continue
 		}
 		// The ledger run of a slice that ork landed reads "landed" (S119).
-		landed := map[string]bool{}
+		// A landing whose cleanup failed says so (S148).
+		landed, cleanupFailed := map[string]bool{}, map[string]bool{}
 		for _, run := range p.snap.EngineRuns {
 			if run.Landed && run.RelayRun != "" {
 				landed[run.RelayRun] = true
+				cleanupFailed[run.RelayRun] = run.CleanupFailed != ""
 			}
 		}
 		for _, r := range p.snap.BoardRuns.Value {
@@ -253,6 +255,9 @@ func (m *Model) recentRows() []ovRow {
 			}
 			if landed[r.ID] && r.Outcome == "pass" {
 				glyph = "✓ landed"
+				if cleanupFailed[r.ID] {
+					glyph += ", cleanup failed"
+				}
 			}
 			began, _ := time.Parse(time.RFC3339Nano, r.BeganAt)
 			counts := roleCounts(ledgerTreeSteps(r.Steps))
