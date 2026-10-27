@@ -1,0 +1,30 @@
+[1mork[m  ?help                 │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────[m
+[1;7;97;44m> Needs you              0 [m│[1;36mNeeds you 0[m
+[90m1[m elsewhere                │  [90mnothing needs you[m
+                           │
+                           │[1;36mRunning 0[m
+                           │  [90mnothing running[m
+                           │
+                           │[1;36mRecent[m
+                           │  [90mnone[m
+                           │
+                           │[1;36mReady to land[m
+                           │  [90mnone[m
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │  Found elsewhere /projects/elsewhere
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
+                           │ 1 project | refreshed 16:42:00

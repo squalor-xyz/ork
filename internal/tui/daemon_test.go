@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -308,5 +309,20 @@ func TestDaemonSnapshotCarriesSelfHost(t *testing.T) {
 	}
 	if !flags.SelfHost || !flags.BehindMain || !flags.RolesRunning {
 		t.Fatalf("snapshot lost build or idle state: %+v", flags)
+	}
+}
+
+func TestDaemonProjectsUsesTheRegistryEndpoint(t *testing.T) {
+	var calls atomic.Int32
+	d, _, _, _ := requestServer(t, func(_ context.Context, method string, _ json.RawMessage) (any, error) {
+		calls.Add(1)
+		if method != daemon.MethodProjectsList {
+			t.Errorf("method=%s", method)
+		}
+		return daemon.ProjectsResult{Projects: []registry.Project{{Name: "elsewhere", Path: "/work/elsewhere"}}}, nil
+	})
+	projects, err := d.Projects(context.Background())
+	if err != nil || len(projects) != 1 || projects[0].Name != "elsewhere" || projects[0].Path != "/work/elsewhere" || calls.Load() != 1 {
+		t.Fatalf("projects=%v err=%v calls=%d", projects, err, calls.Load())
 	}
 }

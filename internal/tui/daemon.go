@@ -202,3 +202,13 @@ func (d *Daemon) AnswerAction(ctx context.Context, action daemon.RunAction) (str
 	defer c.Close()
 	return c.AnswerAction(ctx, action)
 }
+
+// Projects reads registered projects through a fresh daemon connection.
+func (d *Daemon) Projects(ctx context.Context) ([]registry.Project, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.Projects(ctx)
+}

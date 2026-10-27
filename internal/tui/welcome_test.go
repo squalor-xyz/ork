@@ -19,14 +19,22 @@ import (
 
 type welcomeLive struct {
 	*fakeLive
-	paths []string
-	err   error
+	paths    []string
+	err      error
+	projects []registry.Project
+	listErr  error
+	lists    int
 }
 
 func (l *welcomeLive) ProjectsAdd(_ context.Context, path string) (registry.Project, error) {
 	l.paths = append(l.paths, path)
 	return registry.Project{Name: "mine", Path: path}, l.err
 }
+func (l *welcomeLive) Projects(context.Context) ([]registry.Project, error) {
+	l.lists++
+	return l.projects, l.listErr
+}
+
 func welcomeHarness(t *testing.T) (*harness, *welcomeLive) {
 	h := newHarness(t)
 	l := &welcomeLive{fakeLive: &fakeLive{}}
@@ -101,7 +109,7 @@ func TestWelcomeAddAsksTheExactCommandThenAdds(t *testing.T) {
 	if len(l.paths) != 1 || l.paths[0] != "/work/mine" || len(h.m.projects) != 1 || h.m.byName["mine"] == nil {
 		t.Fatalf("calls %v projects %+v", l.paths, h.m.projects)
 	}
-	if h.m.active != -1 || h.m.view != 0 || strings.Contains(h.view(), "No projects yet") || h.m.actionStatus != "added mine /work/mine" {
+	if h.m.active != -1 || h.m.view != 0 || strings.Contains(h.view(), "No projects yet") || h.m.actionStatus != "Added mine /work/mine" {
 		t.Fatal(h.view())
 	}
 	if len(h.src.calls) != 1 {
@@ -186,13 +194,22 @@ func TestGoldenWelcome(t *testing.T) {
 		if mono {
 			theme = "mono"
 		}
-		for _, adding := range []bool{false, true} {
-			h, _ := welcomeHarness(t)
+		for _, state := range []string{"empty", "confirm", "error", "cancel", "found"} {
+			h, l := welcomeHarness(t)
 			h.m.cfg.Theme = NewTheme(mono)
-			state := "empty"
-			if adding {
-				state = "confirm"
+			if state != "empty" && state != "found" {
 				welcomePath(h, "/work/mine")
+			}
+			if state == "error" {
+				l.err = errors.New("path refused verbatim")
+				h.deliver(press("y"))
+			}
+			if state == "cancel" {
+				h.deliver(press("n"))
+			}
+			if state == "found" {
+				l.projects = []registry.Project{proj("elsewhere", false)}
+				h.deliver(tickMsg{})
 			}
 			checkGolden(t, fmt.Sprintf("welcome-%s-100x30-%s.txt", state, theme), h.m.View().Content)
 		}
@@ -320,5 +337,214 @@ func TestProjectAddedReplacesRemovedGroup(t *testing.T) {
 		if r.engineID == "missing" {
 			t.Error("stale removed run remains in Needs you after re-add")
 		}
+	}
+}
+
+func TestWelcomeLeavesWhenAProjectAppearsElsewhere(t *testing.T) {
+	for _, state := range []string{"idle", "confirm", "help"} {
+		t.Run(state, func(t *testing.T) {
+			h, l := welcomeHarness(t)
+			h.deliver(tickMsg{})
+			if l.lists != 1 {
+				t.Fatalf("project list calls=%d, want 1", l.lists)
+			}
+			if state == "confirm" {
+				welcomePath(h, "/work/mine")
+			}
+			if state == "help" {
+				h.deliver(press("?"))
+			}
+			l.projects = []registry.Project{proj("elsewhere", false)}
+			h.deliver(tickMsg{})
+			if h.m.byName["elsewhere"] == nil || strings.Contains(h.view(), "No projects yet.") || h.m.welcome.editing || h.m.welcome.confirm != "" {
+				t.Fatalf("Welcome did not leave after external add: %s", h.view())
+			}
+			if h.m.showHelp {
+				t.Error("leaving Welcome kept help open")
+			}
+			if h.m.actionStatus != "Found elsewhere /projects/elsewhere" || !strings.Contains(h.view(), "Found elsewhere /projects/elsewhere") {
+				t.Errorf("discovery status=%q", h.m.actionStatus)
+			}
+			if len(h.src.calls) != 1 || !h.m.projects[0].loaded {
+				t.Fatalf("new project not fetched: %v", h.src.calls)
+			}
+			h.deliver(tickMsg{})
+			if len(h.m.projects) != 1 || len(h.src.calls) != 1 {
+				t.Fatal("discovery duplicated project or re-fetched unchanged registration")
+			}
+		})
+	}
+}
+
+func TestWelcomePathExpandsTilde(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	for _, path := range []string{"~", "~/mine", "~someone/mine", "relative", "/work/mine"} {
+		t.Run(path, func(t *testing.T) {
+			h, l := welcomeHarness(t)
+			welcomePath(h, path)
+			want := path
+			if path == "~" {
+				want = home
+			}
+			if path == "~/mine" {
+				want = filepath.Join(home, "mine")
+			}
+			if h.m.welcome.confirm != want {
+				t.Errorf("confirm=%q, want %q", h.m.welcome.confirm, want)
+			}
+			h.deliver(press("y"))
+			if len(l.paths) != 1 || l.paths[0] != want {
+				t.Fatalf("daemon paths=%v, want %q", l.paths, want)
+			}
+		})
+	}
+}
+
+func TestStatusLineWithNoProjectsHasNoRefreshedNever(t *testing.T) {
+	h, _ := welcomeHarness(t)
+	got := sgr.ReplaceAllString(h.m.statusLine(100), "")
+	if strings.TrimSpace(got) != "0 projects" {
+		t.Fatalf("empty status=%q", got)
+	}
+}
+
+func TestWelcomeMessagesSitNextToTheField(t *testing.T) {
+	for _, kind := range []string{"error", "cancel", "confirm"} {
+		t.Run(kind, func(t *testing.T) {
+			h, l := welcomeHarness(t)
+			welcomePath(h, "/work/mine")
+			want := "ork projects add"
+			switch kind {
+			case "error":
+				l.err = errors.New("path refused verbatim")
+				h.deliver(press("y"))
+				want = l.err.Error()
+			case "cancel":
+				h.deliver(press("n"))
+				want = "Cancelled"
+			}
+			lines := strings.Split(h.view(), "\n")
+			field, message := -1, -1
+			for i, line := range lines {
+				if strings.Contains(line, "Project path:") {
+					field = i
+				}
+				if strings.Contains(line, want) {
+					message = i
+				}
+			}
+			if field < 0 || message != field+1 {
+				t.Fatalf("field=%d message=%d: %s", field, message, h.view())
+			}
+		})
+	}
+}
+
+func TestWelcomeSuccessStatusIsCapitalised(t *testing.T) {
+	h, _ := welcomeHarness(t)
+	welcomePath(h, "/work/mine")
+	h.deliver(press("y"))
+	if h.m.actionStatus != "Added mine /work/mine" {
+		t.Fatal(h.m.actionStatus)
+	}
+}
+
+func TestProjectDiscoveryRetriesAndPreservesRegisteredProjects(t *testing.T) {
+	h, l := welcomeHarness(t)
+	h.deliver(projectAddedMsg{project: proj("mine", false)})
+	l.listErr = errors.New("daemon unavailable")
+	h.deliver(tickMsg{})
+	if l.lists != 1 {
+		t.Fatalf("project list calls=%d, want 1", l.lists)
+	}
+	if h.m.byName["mine"] == nil {
+		t.Fatal("failed discovery removed registered project")
+	}
+	l.listErr = nil
+	l.projects = []registry.Project{proj("mine", false), proj("other", false)}
+	h.deliver(tickMsg{})
+	if len(h.m.projects) != 2 || h.m.byName["other"] == nil {
+		t.Fatal("discovery failed to retry or duplicated mine")
+	}
+}
+
+func TestProjectDiscoveryHasOnlyOneRequestInFlight(t *testing.T) {
+	h, l := welcomeHarness(t)
+	_, first := h.m.Update(tickMsg{})
+	_, second := h.m.Update(tickMsg{})
+	results := append(exec(first), exec(second)...)
+	if l.lists != 1 {
+		t.Fatalf("project list calls=%d, want 1", l.lists)
+	}
+	for _, result := range results {
+		if _, tick := result.(tickMsg); !tick {
+			h.deliver(result)
+		}
+	}
+	h.deliver(tickMsg{})
+	if l.lists != 2 {
+		t.Fatalf("completed discovery was not rearmed: %d", l.lists)
+	}
+}
+
+func TestProjectDiscoveryWhileWelcomeAddIsPending(t *testing.T) {
+	for _, sameProject := range []bool{false, true} {
+		t.Run(fmt.Sprint(sameProject), func(t *testing.T) {
+			h, l := welcomeHarness(t)
+			welcomePath(h, "/work/mine")
+			_, add := h.m.Update(press("y"))
+			if add == nil || !h.m.welcome.pending {
+				t.Fatal("add not pending")
+			}
+			result := add()
+			project := proj("elsewhere", false)
+			wantCount := 2
+			if sameProject {
+				project = registry.Project{Name: "mine", Path: "/work/mine"}
+				wantCount = 1
+			}
+			l.projects = []registry.Project{project}
+			h.deliver(tickMsg{})
+			wantStatus := "Found " + project.Name + " " + project.Path
+			if h.m.welcome.pending || h.m.welcome.editing || h.m.welcome.confirm != "" || strings.Contains(h.view(), "No projects yet.") {
+				t.Fatal("discovery did not close pending Welcome")
+			}
+			if h.m.actionStatus != wantStatus {
+				t.Errorf("status=%q, want %q", h.m.actionStatus, wantStatus)
+			}
+			h.deliver(result)
+			if len(h.m.projects) != wantCount || h.m.byName["mine"] == nil || len(l.paths) != 1 {
+				t.Fatalf("pending add result lost or duplicated: projects=%d paths=%v", len(h.m.projects), l.paths)
+			}
+			if !h.m.byName[project.Name].loaded || !h.m.byName["mine"].loaded {
+				t.Fatal("project not fetched")
+			}
+		})
+	}
+}
+
+func TestProjectDiscoveryReplacesUnavailableGroup(t *testing.T) {
+	h, l := welcomeHarness(t)
+	group := source.Snapshot{Project: registry.Project{Name: "mine"}, Unavailable: true, EngineRuns: []source.EngineRun{{ID: "missing", State: "implement", Unavailable: true}}}
+	h.deliver(unavailableProjectsMsg{groups: []source.Snapshot{group}})
+	l.projects = []registry.Project{proj("mine", false)}
+	h.deliver(tickMsg{})
+	p := h.m.byName["mine"]
+	if len(h.m.projects) != 1 || p == nil || h.m.projects[0] != p || p.snap.Unavailable || !p.loaded || p.reg.Path != "/projects/mine" {
+		t.Fatalf("unavailable group was not replaced: %+v", p)
+	}
+	if strings.Contains(h.view(), "No projects yet.") || h.m.actionStatus != "Found mine /projects/mine" {
+		t.Fatalf("status=%q view=%s", h.m.actionStatus, h.view())
+	}
+	needs, _ := h.m.rows()
+	for _, row := range needs {
+		if row.engineID == "missing" {
+			t.Error("removed run survived discovery")
+		}
+	}
+	h.deliver(tickMsg{})
+	if len(h.src.calls) != 1 {
+		t.Fatalf("replacement re-fetched: %v", h.src.calls)
 	}
 }

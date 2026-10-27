@@ -12,7 +12,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/registry"
 )
 
-const emptyGuide = "no projects: run ork projects add PATH (or run ork to add them in the TUI)"
+const emptyGuide = "no projects: run ork projects add PATH (or run ork to add one in the TUI)"
 
 func TestStatusWithNoProjectsGivesTheOneLineGuide(t *testing.T) {
 	w := newWorld(t, stubSource{})
@@ -93,5 +93,13 @@ func TestFirstAddCreatesTheRegistry(t *testing.T) {
 	}
 	if _, err := os.Stat(w.regPath); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestGuideSaysAddOne(t *testing.T) {
+	w := newWorld(t, stubSource{})
+	code, out, errOut := run(t, w.app, "status")
+	if code != 0 || out != "no projects: run ork projects add PATH (or run ork to add one in the TUI)\n" || errOut != "" {
+		t.Fatalf("%d %q %q", code, out, errOut)
 	}
 }

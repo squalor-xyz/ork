@@ -172,7 +172,7 @@ func nonNil[T any](s []T) []T {
 }
 
 // NoProjectsGuide tells an owner how to register the first project.
-const NoProjectsGuide = "no projects: run ork projects add PATH (or run ork to add them in the TUI)"
+const NoProjectsGuide = "no projects: run ork projects add PATH (or run ork to add one in the TUI)"
 
 func notFound(name string, f *registry.File) error {
 	if f != nil && len(f.Projects) == 0 {
