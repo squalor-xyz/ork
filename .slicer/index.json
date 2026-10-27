@@ -1333,7 +1333,7 @@
       "id": "S98",
       "title": "Welcome polish: notice projects added elsewhere, tilde paths, status line and wording",
       "short_title": "Welcome polish: notice projects added elsewhere, tilde paths, status line and wording",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -1343,6 +1343,39 @@
           "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): the guide says 'add one'.",
           "created_at": "2026-10-27T13:35:39Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "e7e41f8d-39ec-4cdf-a58d-dcf65b9ddbad",
+          "kind": "",
+          "text": "**2026-10-27** — Review follow-ups (2026-10-27), deferred by owner; do not implement in S98: (a) Discovery dials the daemon every tick (1 s) and auto-starts it when down; consider slower cadence or a dial that does not start the daemon. (b) applyProjectsDiscovered resets Welcome only when a fetch command was returned. (c) Welcome messages share one style; long paths wrap badly at 80 columns.",
+          "created_at": "2026-10-27T13:54:40Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "1686a05e-0964-4fac-b583-edf2eda474f4",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decisions 2026-10-27 (interactive): the Welcome guide says 'add one'; when a project is added elsewhere and Welcome closes, the status reads 'Found NAME PATH'.",
+          "created_at": "2026-10-27T13:59:12Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "781a92be-e0ed-4012-9632-4fb2f8b1b829",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial (run 16, S98): 1 owner question before the start and 1 during, no stalls, 1 fix round, no merge conflicts, ran in parallel with S137 and S94; Codex sol/medium implementer, opus reviewer, UI pass and gate.",
+          "created_at": "2026-10-27T13:59:12Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -1366,7 +1399,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

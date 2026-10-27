@@ -1125,7 +1125,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   most three texts, then `and N more` for the remaining texts. The text
   does not show ages yet.
   With no projects, text `status` prints
-  `no projects: run ork projects add PATH (or run ork to add them in the TUI)`
+  `no projects: run ork projects add PATH (or run ork to add one in the TUI)`
   and exits 0. Project commands (`run`, `wave suggest`, `wave start`, and
   `status --project`) report that guide as an error and exit 1. JSON status
   keeps an empty projects array; JSON project errors use the usual error object.

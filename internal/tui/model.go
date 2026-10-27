@@ -159,6 +159,8 @@ type Model struct {
 	lastRefresh   time.Time
 	drawn         drawnRows // the body window of the last screen, for the page keys
 	listening     bool      // the daemon's notice feed is being listened to (S13)
+
+	projectsReading bool
 }
 
 // New returns a Model that has not fetched anything. Init starts the fetches.
@@ -267,6 +269,7 @@ func (m *Model) listen() tea.Cmd {
 // check.
 func (m *Model) tick(now time.Time) tea.Cmd {
 	var cmds []tea.Cmd
+	cmds = append(cmds, m.discoverProjects())
 	if m.cfg.Live != nil && !m.listening && !m.focusing {
 		cmds = append(cmds, m.focus())
 	}
@@ -330,6 +333,8 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		return m, m.tick(m.cfg.Now())
 	case snapshotMsg:
 		return m, m.apply(msg)
+	case projectsDiscoveredMsg:
+		return m, m.applyProjectsDiscovered(msg)
 	case projectAddedMsg:
 		return m, m.applyProjectAdded(msg)
 	case itemShowMsg:

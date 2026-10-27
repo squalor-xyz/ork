@@ -27,4 +27,4 @@
                            │
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │ + [2madd project[m; q [2mquit[m
-                           │ 0 projects | refreshed never
+                           │ 0 projects

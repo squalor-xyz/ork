@@ -34,18 +34,29 @@ directory only when it holds a `.slicer` directory or `.adjudicate.json`
 file. Otherwise the status names the directory: "DIR holds neither .slicer
 nor .adjudicate.json; type a path". The path guidance asks for an absolute path.
 Esc cancels path entry and returns to "No projects yet." with
-`+ add project; q quit` on the hint line. Typed paths are trimmed and sent as typed.
+`+ add project; q quit` on the hint line. Typed paths are trimmed. A leading
+`~` or `~/` expands to the home directory before confirmation and submission.
+Other paths are sent as typed.
 
-The proposed confirm bar shows `ork projects add 'PATH'? [y/N] (Enter is No)`,
-with PATH shell quoted (`ui.confirm`, adj 98). Its hint is
+The proposed confirmation next to the field shows
+`ork projects add 'PATH'? [y/N] (Enter is No)`, with PATH shell quoted (`ui.confirm`, adj 98). Its hint is
 `y add project; n cancel`, or just `n cancel` without a daemon.
 Enter, n, N and Esc cancel. y or Y adds once through the daemon. While the
 add is pending, another y does nothing. The path field shows no cursor
-during confirmation or the pending add. Errors show verbatim in the status
-area, with the wire error code when present. The field keeps its text.
+during confirmation or the pending add. Errors show verbatim next to the
+field, with the wire error code when present. Cancel and pending messages
+also appear next to the field. The field keeps its text.
 Without a daemon, the status says "No daemon connection; action unavailable".
 On success the Overview appears with "Needs you" selected and status
-`added NAME PATH`. The new project is fetched at once and polled.
+`Added NAME PATH`. The new project is fetched at once and polled.
+
+The proposed TUI checks the daemon project list on each schedule tick, with
+one list request in flight at a time. Projects added elsewhere are fetched
+and polled too. The first registered project closes Welcome and its path
+prompt, and shows status `Found NAME PATH`. Leaving Welcome also closes
+help. A failed list request keeps the current projects and retries on the
+next tick. With no projects, the status line shows `0 projects` without the
+refresh field; pending can still show.
 
 The proposed Welcome keys keep `?` for help and `q` or ctrl+c to quit
 outside text entry; ctrl+c also quits during text entry. View, project,

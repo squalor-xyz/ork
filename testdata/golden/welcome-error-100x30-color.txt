@@ -1,0 +1,30 @@
+[1mork[m  ?help                 │ [90mOverview │ Questions │ Waves │ Roadmap │ Decisions[m
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │  [1;36mWelcome[m
+                           │
+                           │  No projects yet.
+                           │
+                           │  Project path: [1m/work/mine[m[1;7;97;44m [m[1m[m
+                           │  path refused verbatim
+                           │  [90mType an absolute path, or leave it empty and press Enter to use the[m
+                           │  [90mcurrent directory (needs .slicer or .adjudicate.json).[m
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ enter [2mreview path[m; esc [2mcancel[m
+                           │ 0 projects

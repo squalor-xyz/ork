@@ -2005,6 +2005,11 @@
 {"when": "2026-10-27T12:29:21Z", "item": "S86", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 14, S86): 0 owner questions, no sta", "by": "Jon R"}
 {"when": "2026-10-27T13:35:39Z", "item": "S98", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-27 (interactive): the guide says 'add", "by": "Jon R"}
 {"when": "2026-10-27T13:35:39Z", "item": "S94", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-27 (interactive): a matched architect", "by": "Jon R"}
+{"when": "2026-10-27T13:35:53Z", "item": "S98", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-27T13:54:40Z", "item": "S98", "action": "note", "from": "", "to": "", "note": "Review follow-ups (2026-10-27), deferred by owner; do not im", "by": "Jon R"}
+{"when": "2026-10-27T13:59:12Z", "item": "S98", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-27 (interactive): the Welcome guide ", "by": "Jon R"}
+{"when": "2026-10-27T13:59:12Z", "item": "S98", "action": "status", "from": "started", "to": "done", "note": "Welcome leaves when a project is added elsewhere (status 'Found NAME PATH', discovery with one request in flight), ~ expands in the path field, no 'refreshed never' with zero projects, messages sit next to the field and are capitalised, the guide says 'add one'. Review PASS (2 rounds), UI pass PASS, gate PASS (run-20261027-133541-c884).", "by": "Jon R"}
+{"when": "2026-10-27T13:59:12Z", "item": "S98", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 16, S98): 1 owner question before t", "by": "Jon R"}
 {"when": "2026-10-27T13:37:24Z", "item": "S160", "action": "add", "from": "", "to": "open", "note": "Add project from the TUI when projects are registered: + works outside Welcome"}
 {"when": "2026-10-27T13:37:24Z", "item": "S160", "action": "set", "from": "", "to": "", "note": "importance 2→3; urgency 2→3; effort -→1"}
 {"when": "2026-10-27T13:37:31Z", "item": "S160", "action": "promote", "from": "", "to": "", "note": ""}

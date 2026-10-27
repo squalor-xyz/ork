@@ -77,16 +77,6 @@ func (m *Model) screen() string {
 		body = m.helpLines(mainW, bodyH)
 	} else if m.registeredProjectCount() == 0 && m.pane == nil && (m.active < 0 || m.welcome.editing || m.welcome.pending || m.welcome.confirm != "") {
 		body = m.welcomeBody(mainW)
-		status := m.actionStatus
-		if m.welcome.confirm != "" {
-			status = "ork projects add " + shellQuote(m.welcome.confirm) + "? [y/N] (Enter is No)"
-		}
-		if status != "" {
-			detail = wrapText(status, max(mainW-len(indent), 1))
-			for i := range detail {
-				detail[i] = indent + detail[i]
-			}
-		}
 	} else if m.view == roadmapView || m.view == wavesView || m.view == decisionsView || m.view == questionsView {
 		rv := overviewView{}
 		if m.view == questionsView {
@@ -464,9 +454,9 @@ func (m *Model) statusLine(w int) string {
 	if !m.lastRefresh.IsZero() {
 		refreshed = m.lastRefresh.Format("15:04:05")
 	}
-	fields := []string{
-		fmt.Sprintf("%d %s", count, noun),
-		"refreshed " + refreshed,
+	fields := []string{fmt.Sprintf("%d %s", count, noun)}
+	if count > 0 {
+		fields = append(fields, "refreshed "+refreshed)
 	}
 	if pending := m.poller.Pending(); pending > 0 {
 		fields = append(fields, fmt.Sprintf("pending %d", pending))
