@@ -5320,7 +5320,7 @@
       "id": "S133",
       "title": "Codex out of credits is a classified limit, so the role falls back",
       "short_title": "Codex out of credits is a classified limit, so the role falls back",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -5330,6 +5330,17 @@
           "text": "**2026-10-27** — Spec preflight 2026-10-27: owner chose yes (out of credits is a classified limit). Anchors re-checked against codex.go:194.",
           "created_at": "2026-10-27T10:59:03Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "647fee4c-abd1-48c0-930b-1895919e90a1",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial run 12: owner questions 1 before / 0 during; stalls 0; fix rounds 1 (doc citation); merge conflicts 0; about 9 min; compactions 0.",
+          "created_at": "2026-10-27T11:07:09Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -5353,7 +5364,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

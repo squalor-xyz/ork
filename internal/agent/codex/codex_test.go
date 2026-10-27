@@ -119,9 +119,10 @@ func TestCodexParsesJSONLToARoleResult(t *testing.T) {
 	}
 }
 func TestCodexRateLimitStringsClassifyAsRateLimited(t *testing.T) {
-	// Synthetic messages from decision 51, not captured vendor fixtures.
+	// Synthetic JSON, not captured vendor fixtures. The out-of-credits message
+	// was observed in text mode; its JSON event shape is unverified.
 	for _, kind := range []string{"error", "turn.failed"} {
-		for _, message := range []string{"You've hit your usage limit", `HTTP 429 rate_limit_exceeded`} {
+		for _, message := range []string{"You've hit your usage limit", `HTTP 429 rate_limit_exceeded`, "Your workspace is out of credits. Add credits to continue."} {
 			event := map[string]any{"type": kind, "message": message}
 			if kind == "turn.failed" {
 				event = map[string]any{"type": kind, "error": map[string]string{"message": message}}
@@ -133,6 +134,27 @@ func TestCodexRateLimitStringsClassifyAsRateLimited(t *testing.T) {
 				t.Fatalf("%s %s: %+v %v", kind, message, got, err)
 			}
 		}
+	}
+}
+func TestOutOfCreditsIsRateLimited(t *testing.T) {
+	// Synthetic fixture based on the existing turn.failed shape. The message was
+	// observed in text mode; its JSON event shape is unverified.
+	output := fixture(t, "out-of-credits-unverified")
+	for _, tc := range []struct {
+		name, output string
+		want         Exit
+	}{
+		{"turn.failed", output, ExitRateLimited},
+		{"error", `{"type":"error","message":"Your workspace is out of credits. Add credits to continue."}`, ExitRateLimited},
+		{"case-sensitive", strings.ReplaceAll(output, "out of credits", "Out of credits"), ExitError},
+		{"agent-message", `{"type":"item.completed","item":{"type":"agent_message","text":"Your workspace is out of credits. Add credits to continue."}}`, ExitError},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := Run(context.Background(), fake(t, tc.output, true))
+			if err != nil || got.Exit != tc.want {
+				t.Fatalf("exit %s, want %s: %v", got.Exit, tc.want, err)
+			}
+		})
 	}
 }
 func TestCodexBadModelClassifiesAsError(t *testing.T) {
@@ -256,6 +278,7 @@ func TestCodexFixtureCandidates(t *testing.T) {
 	}{
 		{"error", "raw invalid JSON\n", true, ExitError, false},
 		{"rate-limited", `{"type":"error","message":"You've hit your usage limit"}` + "\n", true, ExitRateLimited, false},
+		{"out-of-credits", fixture(t, "out-of-credits-unverified"), true, ExitRateLimited, false},
 		{"ok", `{"type":"turn.completed","usage":{}}` + "\n", false, ExitOK, false},
 		{"configured-dir", "raw invalid JSON\n", true, ExitError, true},
 	} {

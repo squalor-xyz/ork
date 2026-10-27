@@ -191,7 +191,7 @@ func (r *stream) line(line []byte) {
 		if e.Error != nil {
 			message = e.Error.Message
 		}
-		if strings.Contains(message, "You've hit your usage limit") || (strings.Contains(message, "429") && strings.Contains(message, "rate_limit_exceeded")) {
+		if strings.Contains(message, "You've hit your usage limit") || strings.Contains(message, "out of credits") || (strings.Contains(message, "429") && strings.Contains(message, "rate_limit_exceeded")) {
 			r.limited = true
 		}
 	}
