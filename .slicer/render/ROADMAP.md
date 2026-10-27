@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-162 items · — 40 · done 117 · retired 5
+162 items · — 39 · done 118 · retired 5
 
 ## v1.1
 
@@ -197,7 +197,7 @@
 | 140 | [S141](slices/S141.md) | Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note | M | 2 |  | discovered from S118 | — |
 | 141 | [S142](slices/S142.md) | Accept relay contract v9 and follow it: finding kinds, spec check, UI pass, approval and landing, ledger wait phase, conformance JSON | M | 2 |  |  | — |
 | 142 | [S143](slices/S143.md) | Spec check follow-ups: answers survive a restart, main moving mid-check, sitting freeze, dropped Owner needed, shape retry, state dir cleanup | M | 2 |  | discovered from S116 | — |
-| 143 | [S144](slices/S144.md) | Key follow-ups: status nudge for [ and ], Waves show-all on A, help wording and hidden tab help | S | 1 |  | discovered from S105 | — |
+| 143 | [S144](slices/S144.md) | Key follow-ups: status nudge for [ and ], Waves show-all on A, help wording and hidden tab help | S | 1 |  | discovered from S105 | done |
 | 144 | [S145](slices/S145.md) | Running rows at a glance | M | 2 |  |  | done |
 | 145 | [S146](slices/S146.md) | S106 later notes | S | 1 |  |  | — |
 | 146 | [S147](slices/S147.md) | S121 later notes | S | 1 |  |  | — |

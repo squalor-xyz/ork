@@ -2,10 +2,9 @@
   Running                1 │[2m────────────────────────────────────────────────────────────────────────[m
 [1;7m0>Needs you              6 [m│[1mKeys[m
 [2m1[m slicer                 3*│tab next view; shift+tab previous view
-[2m2[m adjudicate             1 │] next project
-[2m3[m DataBall                 │[ previous project
-[2m4[m agents                   │1-9 jump to project; 0 Needs you
-                           │j/k down/up row; g/G home/end first/last
+[2m2[m adjudicate             1 │] next project or entry; [ previous project or entry
+[2m3[m DataBall                 │1-9 jump to project; 0 Needs you
+[2m4[m agents                   │j/k down/up row; g/G home/end first/last
                            │pgdown/pgup page rows or scroll a pane
                            │ctrl+d/u scroll a run pane half a page
                            │}/{ next/previous group, pass or wave
@@ -24,7 +23,8 @@
                            │c remove merged worktree and branch (Ready)
                            │r refresh now; q quit; ? show or hide this help
                            │esc close run, question, item, decision, help or message
-                           │[2m  +2 more lines[m
+                           │
+                           │Overview, Questions, Waves, Roadmap and Decisions are available.
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │ ? or esc [2mclose help[m; q [2mquit[m
                            │ 4 projects | refreshed 16:42:07 | pending 1

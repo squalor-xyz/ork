@@ -563,7 +563,7 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 	switch {
-	case m.view == wavesView && !m.showHelp && msg.String() == "a":
+	case m.view == wavesView && !m.showHelp && key.Matches(msg, m.keys.AllProjects):
 		if w := m.waves; w != nil {
 			rows := w.rows()
 			id := ""
@@ -578,6 +578,11 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 				}
 			}
 		}
+		return nil
+	case m.view != decisionsView && !m.showHelp && key.Matches(msg, m.keys.TabNext, m.keys.TabPrev):
+		// Left and right do nothing here: they belong to the Decisions tabs,
+		// the lineup and the text fields. The status says what switches projects.
+		m.actionStatus = "[ and ] switch projects"
 		return nil
 	case m.showHelp && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev):
 		// The cursor is hidden under the help: the line keys leave it where it is.

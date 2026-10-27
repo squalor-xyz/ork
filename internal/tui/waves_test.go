@@ -946,7 +946,7 @@ func TestWavesShowsFirstWavesOnly(t *testing.T) {
 	if len(h.m.waves.rows()) != 6 {
 		t.Fatalf("hidden waves selectable: %d rows", len(h.m.waves.rows()))
 	}
-	h.deliver(press("a"))
+	h.deliver(press("A"))
 	body = sgr.ReplaceAllString(strings.Join(h.m.wavesBody(72).body, "\n"), "")
 	if !strings.Contains(body, "Wave 14") || len(h.m.waves.rows()) != 14 {
 		t.Fatalf("show all failed:\n%s", body)
@@ -1191,7 +1191,7 @@ func TestWavesExpandPreservesUnplacedCursor(t *testing.T) {
 	}
 	openWaves(t, h)
 	h.m.waves.cursor = len(h.m.waves.rows()) - 1
-	h.deliver(press("a"))
+	h.deliver(press("A"))
 	if got := h.m.waves.rows()[h.m.waves.cursor].ID; got != "D" {
 		t.Fatalf("expansion moved cursor to %s", got)
 	}
@@ -1370,7 +1370,7 @@ func TestWavesFix1NoticesHintsAndHelp(t *testing.T) {
 		t.Fatal("plain row hint changed")
 	}
 	help := sgr.ReplaceAllString(strings.Join(h.m.helpLines(100, 40), "\n"), "")
-	if !strings.Contains(help, "Waves: a shows all waves. <S65: shares files with S65, an earlier item.") {
+	if !strings.Contains(help, "Waves: A shows all waves. <S65: shares files with S65, an earlier item.") {
 		t.Fatal(help)
 	}
 }
