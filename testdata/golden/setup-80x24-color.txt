@@ -20,5 +20,5 @@
                    │[90m────────────────────────────────────────────────────────────[m
                    │  [90mno .slicer/: run `slicer init` to track items and runs.[m
                    │[90m────────────────────────────────────────────────────────────[m
-                   │ tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
+                   │ tab [2mviews[m; + [2madd project[m; - [2mremove project[m; q [2mquit[m; ? [2mhelp[m
                    │ 4 projects | refreshed 16:42:07

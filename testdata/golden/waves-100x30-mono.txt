@@ -26,5 +26,5 @@
                            │
                            │
                            │[2m────────────────────────────────────────────────────────────────────────[m
-                           │ enter [2mitem[m; space [2mtick item[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
+                           │ enter [2mitem[m; space [2mtick item[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
                            │ 2 projects | refreshed 16:42:00

@@ -19,11 +19,13 @@ import (
 
 type welcomeLive struct {
 	*fakeLive
-	paths    []string
-	err      error
-	projects []registry.Project
-	listErr  error
-	lists    int
+	paths     []string
+	err       error
+	projects  []registry.Project
+	listErr   error
+	lists     int
+	removed   []string
+	removeErr error
 }
 
 func (l *welcomeLive) ProjectsAdd(_ context.Context, path string) (registry.Project, error) {
@@ -547,4 +549,275 @@ func TestProjectDiscoveryReplacesUnavailableGroup(t *testing.T) {
 	if len(h.src.calls) != 1 {
 		t.Fatalf("replacement re-fetched: %v", h.src.calls)
 	}
+}
+
+func TestAddKeyWorksWithProjectsRegistered(t *testing.T) {
+	for view := range views {
+		t.Run(fmt.Sprint(view), func(t *testing.T) {
+			h := newHarness(t, proj("alpha", false))
+			l := &welcomeLive{fakeLive: &fakeLive{}}
+			h.m.cfg.Live = l
+			h.m.active, h.m.view = 0, view
+			h.m.Update(tea.WindowSizeMsg{Width: 160, Height: 30})
+			if !strings.Contains(wideHint(h), "+ add project") || !strings.Contains(wideHint(h), "- remove project") {
+				t.Errorf("project hints missing: %s", wideHint(h))
+			}
+			h.deliver(press("+"))
+			if !h.m.welcome.editing || !strings.Contains(h.view(), "Project path:") || strings.Contains(h.view(), "No projects yet.") {
+				t.Fatalf("add field did not open over registered view: %s", h.view())
+			}
+			h.deliver(press("esc"))
+			if h.m.welcome.editing || h.m.active != 0 || h.m.view != view {
+				t.Fatal("escape did not restore view")
+			}
+			welcomePath(h, "/work/mine")
+			if !strings.Contains(h.view(), "ork projects add '/work/mine'? [y/N]") || len(l.paths) != 0 {
+				t.Fatal("missing add confirmation")
+			}
+			h.deliver(press("y"))
+			if len(l.paths) != 1 || l.paths[0] != "/work/mine" || h.m.byName["mine"] == nil {
+				t.Fatalf("add calls %v", l.paths)
+			}
+			if h.m.active != 0 || h.m.view != view {
+				t.Fatal("add changed original view")
+			}
+		})
+	}
+}
+
+func (l *welcomeLive) ProjectsRemove(_ context.Context, name string) error {
+	l.removed = append(l.removed, name)
+	return l.removeErr
+}
+
+func TestRemoveKeyConfirmsAndRemoves(t *testing.T) {
+	for _, answer := range []string{"enter", "n", "N", "esc", "y", "Y"} {
+		for _, count := range []int{1, 2} {
+			t.Run(fmt.Sprintf("%s/%d", answer, count), func(t *testing.T) {
+				h, l := welcomeHarness(t)
+				h.m.registerProject(proj("alpha", false))
+				if count == 2 {
+					h.m.registerProject(proj("beta", false))
+				}
+				h.m.active = 0
+				h.deliver(press("-"))
+				if !strings.Contains(h.view(), "ork projects rm 'alpha'? [y/N] (Enter is No)") || len(l.removed) != 0 {
+					t.Fatalf("missing safe named confirmation: %s", h.view())
+				}
+				_, cmd := h.m.Update(press(answer))
+				if len(l.removed) != 0 {
+					t.Fatal("removal outside command")
+				}
+				if answer != "y" && answer != "Y" {
+					if cmd != nil || h.m.registeredProjectCount() != count || h.m.removing.name != "" || h.m.actionStatus != "Cancelled" {
+						t.Fatal("cancel removed project")
+					}
+					return
+				}
+				if cmd == nil {
+					t.Fatal("no removal command")
+				}
+				for _, k := range []string{"y", "-", "+", "enter"} {
+					_, again := h.m.Update(press(k))
+					if again != nil {
+						t.Fatal("pending removal repeated")
+					}
+				}
+				for _, msg := range exec(cmd) {
+					h.deliver(msg)
+				}
+				if len(l.removed) != 1 || l.removed[0] != "alpha" || h.m.registeredProjectCount() != count-1 {
+					t.Fatalf("removed %v, count %d", l.removed, h.m.registeredProjectCount())
+				}
+				if count == 1 && !strings.Contains(h.view(), "No projects yet.") {
+					t.Fatal("last removal did not return to Welcome")
+				}
+				if count == 2 && (h.m.active < 0 || h.m.projects[h.m.active].reg.Name != "beta") {
+					t.Fatal("remaining project not selected")
+				}
+			})
+		}
+	}
+}
+
+func TestRemoveRefusedWhileRunActive(t *testing.T) {
+	for _, state := range []string{"running", "paused"} {
+		t.Run(state, func(t *testing.T) {
+			h, l := welcomeHarness(t)
+			h.m.registerProject(proj("alpha", false))
+			h.m.active = 0
+			l.removeErr = &ipc.Error{Code: "project_busy", Message: "project alpha has unfinished runs: " + state}
+			h.deliver(press("-"))
+			h.deliver(press("y"))
+			if len(l.removed) != 1 || h.m.registeredProjectCount() != 1 || !strings.Contains(h.view(), actionError(l.removeErr)) {
+				t.Fatalf("daemon refusal lost: calls %v, view %s", l.removed, h.view())
+			}
+		})
+	}
+}
+
+func TestProjectKeysHelpAndOverlays(t *testing.T) {
+	for view := range views {
+		t.Run(fmt.Sprint(view), func(t *testing.T) {
+			h, _ := welcomeHarness(t)
+			h.m.registerProject(proj("alpha", false))
+			h.m.active, h.m.view = 0, view
+			h.m.Update(tea.WindowSizeMsg{Width: 160, Height: 60})
+			h.deliver(press("?"))
+			if !strings.Contains(h.view(), "+ add project") || !strings.Contains(h.view(), "- remove active project") {
+				t.Fatal("help omits project keys")
+			}
+			h.deliver(press("+"))
+			if h.m.showHelp || !strings.Contains(h.view(), "Project path:") {
+				t.Fatal("help hid add field")
+			}
+			h.deliver(press("esc"))
+			h.deliver(press("-"))
+			if !strings.Contains(h.view(), "ork projects rm 'alpha'") {
+				t.Fatal("remove not available in view")
+			}
+			h.deliver(press("esc"))
+			if h.m.view != view || h.m.active != 0 {
+				t.Fatal("cancel changed view")
+			}
+		})
+	}
+}
+
+func TestRemovalIgnoresStaleReadsAndKeepsHistoryReadOnly(t *testing.T) {
+	h, l := welcomeHarness(t)
+	h.m.registerProject(proj("alpha", false))
+	h.m.active = 0
+	p := h.m.byName["alpha"]
+	p.snap.EngineRuns = []source.EngineRun{{ID: "old", State: "stopped"}}
+	p.open, p.held = 2, 3
+	list := h.m.discoverProjects()
+	h.deliver(press("-"))
+	h.deliver(press("y"))
+	l.projects = []registry.Project{proj("alpha", false)}
+	h.deliver(list())
+	h.deliver(snapshotMsg{name: "alpha", snap: source.Snapshot{}})
+	if !p.snap.Unavailable || h.m.registeredProjectCount() != 0 {
+		t.Fatal("stale reads restored registration")
+	}
+	if len(p.snap.EngineRuns) != 1 || !p.snap.EngineRuns[0].Unavailable || p.open != 0 || p.held != 0 {
+		t.Fatal("removed history still offers live actions or counts")
+	}
+}
+
+func TestGoldenProjectManagement(t *testing.T) {
+	for _, mono := range []bool{true, false} {
+		for _, state := range []string{"add", "add-confirm", "remove", "remove-refused", "removed"} {
+			h, l := welcomeHarness(t)
+			h.m.cfg.Theme = NewTheme(mono)
+			h.m.registerProject(proj("alpha", false))
+			h.m.active = 0
+			switch state {
+			case "add":
+				h.deliver(press("+"))
+			case "add-confirm":
+				welcomePath(h, "/work/mine")
+			default:
+				h.deliver(press("-"))
+				if state == "remove-refused" {
+					l.removeErr = &ipc.Error{Code: "project_busy", Message: "project alpha has unfinished runs: run-1"}
+				}
+				if state != "remove" {
+					h.deliver(press("y"))
+				}
+			}
+			theme := "color"
+			if mono {
+				theme = "mono"
+			}
+			checkGolden(t, fmt.Sprintf("project-%s-100x30-%s.txt", state, theme), h.m.View().Content)
+		}
+	}
+}
+
+func TestProjectKeysPreserveDetailAndTextInput(t *testing.T) {
+	h := paneHarness(t, "stopped", "")
+	pane, active, view := h.m.pane, h.m.active, h.m.view
+	h.deliver(press("+"))
+	if !strings.Contains(h.view(), "Project path:") {
+		t.Fatal("detail pane swallowed add key")
+	}
+	h.deliver(press("esc"))
+	if h.m.pane != pane || h.m.active != active || h.m.view != view {
+		t.Fatal("add cancel lost detail pane")
+	}
+	h.m.pane = nil
+	h.m.filtering = true
+	h.deliver(press("+"))
+	h.deliver(press("-"))
+	if h.m.filter != "+-" || h.m.welcome.editing {
+		t.Fatal("project keys swallowed filter text")
+	}
+}
+
+func TestRemoveProjectNeedsSelectionAndDaemon(t *testing.T) {
+	h, l := welcomeHarness(t)
+	h.m.registerProject(proj("alpha", false))
+	h.deliver(press("-"))
+	h.deliver(press("y"))
+	if len(l.removed) != 0 || !strings.Contains(h.view(), "Select a registered project to remove") {
+		t.Fatal("aggregate removed a project")
+	}
+	h.m.active = 0
+	h.m.cfg.Live = nil
+	h.deliver(press("-"))
+	h.deliver(press("y"))
+	if h.m.registeredProjectCount() != 1 || !strings.Contains(h.view(), "No daemon connection; action unavailable") {
+		t.Fatal("missing no-daemon refusal")
+	}
+	h.deliver(press("esc"))
+	if h.m.removing.name != "" {
+		t.Fatal("cannot cancel without daemon")
+	}
+}
+
+func TestRemovePromptExplainsFilesAndPastRuns(t *testing.T) {
+	h, _ := welcomeHarness(t)
+	h.m.registerProject(proj("alpha", false))
+	h.m.active = 0
+	h.deliver(press("-"))
+	lines := h.m.projectRemovalBody(200)
+	want := "Files on disk are untouched; past runs stay in a read-only removed group."
+	if len(lines) < 4 || lines[3] != indent+h.m.cfg.Theme.Dim.Render(want) {
+		t.Fatalf("missing dim explanation below confirmation: %q", lines)
+	}
+	var body []string
+	for _, line := range strings.Split(h.view(), "\n") {
+		if _, main, ok := strings.Cut(line, "│"); ok {
+			body = append(body, main)
+		}
+	}
+	if !strings.Contains(strings.Join(strings.Fields(strings.Join(body, " ")), " "), want) {
+		t.Fatal("explanation absent from screen")
+	}
+}
+
+func TestAddHintSurvivesRemoveHintAt80Columns(t *testing.T) {
+	h, _ := welcomeHarness(t)
+	h.m.registerProject(proj("alpha", false))
+	h.m.byName["alpha"].loaded = true
+	h.m.active, h.m.view = 0, roadmapView
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	addDrop, removeDrop := -1, -1
+	for _, entry := range h.m.contextHints() {
+		switch entry.b.Help().Key {
+		case "+":
+			addDrop = entry.drop
+		case "-":
+			removeDrop = entry.drop
+		}
+	}
+	if addDrop < 0 || removeDrop <= addDrop {
+		t.Fatalf("remove needs its own lower priority: add=%d remove=%d", addDrop, removeDrop)
+	}
+	hint := hintLine(plainView(h.m))
+	if !strings.Contains(hint, "+ add project") || strings.Contains(hint, "- remove project") {
+		t.Fatalf("add must survive remove in narrow hints: %s", hint)
+	}
+	checkGolden(t, "project-hints-80x24-mono.txt", h.m.View().Content)
 }

@@ -19,6 +19,7 @@ import (
 // Approve, Stop, Retry and Answer act on engine run IDs. Plan and Start take
 // a project and an item, with the owner's two launch answers.
 type Live interface {
+	ProjectsRemove(ctx context.Context, name string) error
 	ProjectsAdd(ctx context.Context, path string) (registry.Project, error)
 	Cleanup(ctx context.Context, run string) error
 	WaveSuggest(context.Context, string) (*slicercli.ParallelPlan, error)

@@ -212,3 +212,13 @@ func (d *Daemon) Projects(ctx context.Context) ([]registry.Project, error) {
 	defer c.Close()
 	return c.Projects(ctx)
 }
+
+// ProjectsRemove unregisters a project through a fresh daemon connection.
+func (d *Daemon) ProjectsRemove(ctx context.Context, name string) error {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	return c.RemoveProject(ctx, name)
+}

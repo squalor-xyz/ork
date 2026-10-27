@@ -13,6 +13,7 @@ import (
 type keyMap struct {
 	AllProjects key.Binding
 
+	Remove     key.Binding
 	Add        key.Binding
 	Cleanup    key.Binding
 	EditLineup key.Binding
@@ -62,7 +63,8 @@ func newKeyMap() keyMap {
 	return keyMap{
 		AllProjects: key.NewBinding(key.WithKeys("A", "shift+a"), key.WithHelp("A (Decisions)", "toggle all projects")),
 
-		Add:        key.NewBinding(key.WithKeys("+"), key.WithHelp("+", "add project (Welcome)")),
+		Remove:     key.NewBinding(key.WithKeys("-"), key.WithHelp("-", "remove active project")),
+		Add:        key.NewBinding(key.WithKeys("+"), key.WithHelp("+", "add project")),
 		Cleanup:    key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "remove merged worktree and branch (Ready)")),
 		EditLineup: key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit ticked item lineup (Waves)")),
 		Tick:       key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "tick item and ask inputs (Waves)")),
@@ -113,7 +115,7 @@ func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Refresh, k.He
 
 // FullHelp implements help.KeyMap.
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add}, {k.Tick, k.EditLineup, k.Launch}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
+	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add, k.Remove}, {k.Tick, k.EditLineup, k.Launch}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
 }
 
 // short is b with a short label and words for the hint line. It answers to the
@@ -132,10 +134,12 @@ type hintEntry struct {
 	drop int
 }
 
-// The drop order of the hint line, first to go first: the row's rarer keys
-// (renders, fix, the check digits, retry, stop), then the pane scroll keys'
+// The drop order of the hint line, first to go first: remove project, then
+// the row's rarer keys (renders, fix, the check digits, retry, stop), then
+// the pane scroll keys'
 // second form and the global tab and quit. Finding actions stay with row keys.
 const (
+	dropRemove = 20
 	dropRender = 19
 	dropFix    = 18
 	dropMark   = 17
@@ -209,11 +213,20 @@ func (m *Model) contextHints() []hintEntry {
 	// Elsewhere than in a pane the way out is ? help, at the right end.
 	global := func() {
 		l.add(dropTab, short(k.NextView, "tab", "views"))
+		l.add(dropTab, short(k.Add, "+", "add project"))
+		l.add(dropRemove, offer(m.active >= 0 && !m.projects[m.active].snap.Unavailable, k.Remove, "-", "remove project"))
 		l.add(dropQuit, short(k.Quit, "q", "quit"))
 		l.add(dropPinned, short(k.Help, "?", "help"))
 	}
 	switch {
-	case m.registeredProjectCount() == 0 && m.pane == nil:
+	case m.removing.name != "":
+		if m.removing.pending {
+			l.add(dropPinned, short(k.Quit, "ctrl+c", "quit"))
+		} else {
+			l.add(dropRow, offer(m.cfg.Live != nil, k.Yes, "y", "remove project"))
+			l.add(dropPinned, short(k.No, "n", "cancel"))
+		}
+	case m.welcome.editing || m.welcome.pending || m.welcome.confirm != "" || (m.registeredProjectCount() == 0 && m.pane == nil):
 		switch {
 		case m.welcome.pending:
 			l.add(dropPinned, short(k.Quit, "ctrl+c", "quit"))

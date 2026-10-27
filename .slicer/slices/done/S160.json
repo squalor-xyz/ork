@@ -1,6 +1,6 @@
 {
   "id": "S160",
-  "title": "Add project from the TUI when projects are registered: + works outside Welcome",
+  "title": "Add and remove projects from every TUI view",
   "lead": [],
   "depends_note": null,
   "findings_note": "",
@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/tui/model.go`, `internal/tui/welcome.go`, `internal/tui/keys.go`: + opens the add-path field from any view, reusing the Welcome field, confirm and daemon add.\n- `docs/dashboard.md`, `testdata/golden/`: hint, help and the add flow."
+      "body": "- `internal/tui/model.go`, `internal/tui/welcome.go`, `internal/tui/keys.go`: global add/remove keys, reused add field, discovery replies, hint priorities and help bindings.\n- `internal/tui/projects.go`: named removal confirmation, dim explanation, daemon removal result and read-only history.\n- `internal/tui/view.go`: add/remove bodies and help text.\n- `internal/tui/daemon.go`, `internal/tui/live.go`: Live gains ProjectsRemove and the daemon adapter calls Client.RemoveProject.\n- `internal/tui/welcome_test.go`, `internal/tui/keymap_test.go`, `internal/tui/live_test.go`: add/remove behavior, confirmations, refusals, help, hints and fakes.\n- `docs/dashboard.md`, `testdata/golden/`: project management flow, hint/help changes and golden views."
     },
     {
       "heading": "Failing tests",
-      "body": "TestAddKeyWorksWithProjectsRegistered."
+      "body": "- TestAddKeyWorksWithProjectsRegistered.\n- TestRemoveKeyConfirmsAndRemoves.\n- TestRemoveRefusedWhileRunActive.\n- TestProjectKeysHelpAndOverlays.\n- TestRemovePromptExplainsFilesAndPastRuns.\n- TestAddHintSurvivesRemoveHintAt80Columns."
     },
     {
       "heading": "Implement",

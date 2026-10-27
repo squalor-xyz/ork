@@ -60,8 +60,27 @@ refresh field; pending can still show.
 
 The proposed Welcome keys keep `?` for help and `q` or ctrl+c to quit
 outside text entry; ctrl+c also quits during text entry. View, project,
-filter, sidebar and run keys do nothing on Welcome. The add key works only
-on Welcome in this slice.
+filter, sidebar and run keys do nothing on Welcome.
+
+The proposed `+` key opens the same path field from every view, including
+help and detail panes. Esc returns to the previous view and project. Adding
+with projects registered keeps that view and selection. Existing text fields
+keep `+` and `-` as text. The hint and help list `+ add project`.
+
+The proposed `-` key removes the active registered project from every view.
+Select a project in the sidebar first; aggregate entries and removed groups
+cannot be removed. It asks `ork projects rm 'NAME'? [y/N] (Enter is No)`.
+A dim second line says: "Files on disk are untouched; past runs stay in a
+read-only removed group."
+Enter, n, N and Esc cancel. y or Y calls the daemon once; further keys do
+nothing while removal is pending. Without a daemon the action is unavailable.
+The daemon refuses projects with unfinished runs, including running and paused
+runs, and its error code and message appear verbatim. A refusal keeps the
+project registered. Success selects the first remaining registered project;
+removing the last project returns to Welcome. Historical runs remain in a
+read-only removed group. The hint lists `- remove project` for an active
+registered project, and help lists `- remove active project`. On narrow
+screens, the remove hint drops before the add hint.
 
 ## Layout
 
