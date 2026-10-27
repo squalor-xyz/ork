@@ -1,11 +1,10 @@
 [1mork[m [90mdev[m  ?help             │ [1;36mOverview[m[90m │ [mQuestions 3[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
   Running                1 │[90m────────────────────────────────────────────────────────────────────────[m
 [1;7;97;44m> Needs you              6 [m│[1;36mKeys[m
-[90m1[m slicer                 3*│tab next view
-[90m2[m adjudicate             1 │shift+tab previous view
-[90m3[m DataBall                 │] next project
-[90m4[m agents                   │[ previous project
-                           │1-9 jump to project; 0 Needs you
+[90m1[m slicer                 3*│tab next view; shift+tab previous view
+[90m2[m adjudicate             1 │] next project
+[90m3[m DataBall                 │[ previous project
+[90m4[m agents                   │1-9 jump to project; 0 Needs you
                            │j/k down/up row; g/G home/end first/last
                            │pgdown/pgup page rows or scroll a pane
                            │ctrl+d/u scroll a run pane half a page
@@ -17,6 +16,7 @@
                            │e edit ticked item lineup (Waves)
                            │l launch a ready slice (Roadmap) or wave (Waves)
                            │a approve; F fix round; x stop; t retry; v view renders; f file slice
+                           │o answer owner finding (run pane)
                            │enter (answer) submit free text
                            │1-4 (question) pick an option; y sends
                            │t (question) type a free answer

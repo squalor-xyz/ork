@@ -187,7 +187,7 @@ func TestDismissedStoppedRunLeavesNeedsYou(t *testing.T) {
 	if err := json.Unmarshal(request(t, d, "status", `{"project":"p"}`), &after); err != nil {
 		t.Fatal(err)
 	}
-	if len(before.Projects[0].EngineRuns) != 1 || len(after.Projects[0].EngineRuns) != 0 || after.Projects[0].NeedsYou != before.Projects[0].NeedsYou-1 {
+	if len(before.Projects[0].EngineRuns) != 1 || len(after.Projects[0].EngineRuns) != 1 || !after.Projects[0].EngineRuns[0].Dismissed || after.Projects[0].NeedsYou != before.Projects[0].NeedsYou-1 {
 		t.Fatalf("before=%+v after=%+v", before, after)
 	}
 	var snapshot struct {
@@ -196,8 +196,8 @@ func TestDismissedStoppedRunLeavesNeedsYou(t *testing.T) {
 	if err := json.Unmarshal(request(t, d, "snapshot", `{"project":"p"}`), &snapshot); err != nil {
 		t.Fatal(err)
 	}
-	if len(snapshot.EngineRuns) != 0 {
-		t.Fatalf("snapshot retains dismissed run: %+v", snapshot)
+	if len(snapshot.EngineRuns) != 1 || !snapshot.EngineRuns[0].Dismissed || snapshot.EngineRuns[0].Section(snapshot.EngineRuns) != source.SectionHidden {
+		t.Fatalf("snapshot must retain dismissed run for its pane, hidden from lists: %+v", snapshot)
 	}
 	r, err := store.Open("dismiss")
 	if err != nil || r.Snapshot().DismissedAt.IsZero() {
@@ -243,8 +243,14 @@ func TestDismissedNewerRunStillSupersedesStoppedRun(t *testing.T) {
 			}
 			runs = snapshot.EngineRuns
 		}
-		if len(runs) != 1 || runs[0].ID != "other" {
-			t.Fatalf("%s runs = %+v, want only other slice", method, runs)
+		var visible []EngineRun
+		for _, r := range runs {
+			if r.Section(runs) != source.SectionHidden {
+				visible = append(visible, r)
+			}
+		}
+		if len(visible) != 1 || visible[0].ID != "other" {
+			t.Fatalf("%s visible runs = %+v, want only other slice", method, visible)
 		}
 	}
 }

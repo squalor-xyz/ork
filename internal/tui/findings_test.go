@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -52,6 +53,9 @@ func findingsHarness(t *testing.T, state string, fs ...source.EngineFinding) *ha
 	h.src.set(s)
 	h.m.byName["ork"].snap.EngineRuns[0].Findings = fs
 	h.m.cfg.Live = &fileLive{actionLive: actionLive{src: h.src}}
+	if state == "committed" {
+		h.deliver(press("G"))
+	}
 	h.deliver(press("enter"))
 	if v := h.view(); !strings.Contains(v, "Run engine") {
 		t.Fatalf("Enter must open the pane:\n%s", v)
@@ -80,7 +84,7 @@ func TestPaneFileKeyAsksThenFilesTheFirstLaterFinding(t *testing.T) {
 	live := h.m.cfg.Live.(*fileLive)
 	h.deliver(press("f"))
 	v := h.view() + "\n" + sgr.ReplaceAllString(h.m.hintLine(200), "")
-	if !strings.Contains(v, "slicer add 'Add a --json flag to ork status' --discovered-from S22?") || !strings.Contains(v, "[y/N] (Enter is No)") {
+	if !strings.Contains(v, "slicer add 'Add a --json flag to ork status' --discovered-from S22") || !strings.Contains(v, "[y/N] (Enter is No)") {
 		t.Fatalf("f must show the exact command and ask:\n%s", v)
 	}
 	if len(live.calls) != 0 {
@@ -263,5 +267,265 @@ func TestPaneFileHintUsesTheHintBar(t *testing.T) {
 				t.Error("pane repeats file keys")
 			}
 		})
+	}
+}
+
+func TestReadyToLandPaneFilesLater(t *testing.T) {
+	h := findingsHarness(t, "committed", laterOne)
+	h.deliver(press("f"))
+	if h.m.confirm == nil {
+		t.Fatal("Ready-to-land pane cannot file")
+	}
+	if v := h.view() + "\n" + wideHint(h); !strings.Contains(v, "Why section") {
+		t.Fatalf("confirmation lacks Why section: %s", v)
+	}
+	h.deliver(press("y"))
+	if len(h.m.cfg.Live.(*fileLive).calls) != 1 {
+		t.Fatal("committed finding was not filed")
+	}
+}
+
+func TestFindingsFooterCapped(t *testing.T) {
+	fs := []source.EngineFinding{laterOne}
+	for n := 0; n < 10; n++ {
+		f := ownerNote
+		f.N = n + 2
+		f.Title = fmt.Sprintf("Question %d?", n)
+		fs = append(fs, f)
+	}
+	h := findingsHarness(t, "awaiting-approval", fs...)
+	later, owner := h.m.findingLines(100)
+	text := strings.Join(later, "\n")
+	for _, lines := range owner {
+		text += "\n" + strings.Join(lines, "\n")
+	}
+	if !strings.Contains(text, "+7 more") || len(owner) > 4 {
+		t.Fatalf("uncapped footer: %s", text)
+	}
+}
+
+func TestNeedsYouIncludesFindings(t *testing.T) {
+	h := findingsHarness(t, "awaiting-approval", laterOne, ownerNote)
+	if got := h.m.byName["ork"].needs(); got != 3 {
+		t.Fatalf("project needs %d", got)
+	}
+	h.deliver(press("esc"))
+	if v := h.view(); !strings.Contains(v, "Needs you 3") {
+		t.Fatalf("aggregate ignores findings: %s", v)
+	}
+}
+
+func TestPaneAnswersNonBlockingFinding(t *testing.T) {
+	h := findingsHarness(t, "implement", ownerNote)
+	h.deliver(press("o"))
+	if !h.m.paneQuestion() || h.m.paneAsk() == nil {
+		t.Fatal("o did not open structured finding question")
+	}
+	if h.m.byName["ork"].snap.EngineRuns[0].State != "implement" {
+		t.Fatal("opening question paused run")
+	}
+	h.deliver(press("2"))
+	if h.m.confirm == nil || h.m.confirm.finding != 3 {
+		t.Fatalf("finding answer not targeted: %+v", h.m.confirm)
+	}
+}
+
+// AnswerAction models the daemon's finding response without changing run state.
+func (l *fileLive) AnswerAction(_ context.Context, a daemon.RunAction) (string, error) {
+	if a.Finding == 0 {
+		return "", fmt.Errorf("missing finding number")
+	}
+	l.calls = append(l.calls, fmt.Sprintf("answer %s#%d %s", a.Run, a.Finding, a.Text))
+	if l.err != nil {
+		return "", l.err
+	}
+	s := l.src.Snapshot(context.Background(), proj("ork", false))
+	s.EngineRuns = append([]source.EngineRun(nil), s.EngineRuns...)
+	s.EngineRuns[0].Findings = append([]source.EngineFinding(nil), s.EngineRuns[0].Findings...)
+	for i := range s.EngineRuns[0].Findings {
+		if s.EngineRuns[0].Findings[i].N == a.Finding {
+			s.EngineRuns[0].Findings[i].Answer = a.Text
+		}
+	}
+	l.src.set(s)
+	return "answer recorded", nil
+}
+
+func TestPaneFindingAnswerSendsAndClearsOffer(t *testing.T) {
+	h := findingsHarness(t, "implement", ownerNote)
+	h.deliver(press("o"))
+	h.deliver(press("2"))
+	h.deliver(press("y"))
+	live := h.m.cfg.Live.(*fileLive)
+	if len(live.calls) != 1 || live.calls[0] != "answer engine#3 per-project: one each" {
+		t.Fatalf("calls %v", live.calls)
+	}
+	if h.m.pane.finding != 0 || h.m.paneQuestion() {
+		t.Fatal("answer form stayed open")
+	}
+	r := h.m.byName["ork"].snap.EngineRuns[0]
+	if r.State != "implement" || r.FindingNeeds() != 0 {
+		t.Fatalf("run after answer %+v", r)
+	}
+}
+
+func TestPaneFindingAnswerFailureKeepsQuestion(t *testing.T) {
+	h := findingsHarness(t, "implement", ownerNote)
+	h.m.cfg.Live.(*fileLive).err = fmt.Errorf("adj failed")
+	h.deliver(press("o"))
+	h.deliver(press("2"))
+	h.deliver(press("y"))
+	if !h.m.paneQuestion() || !strings.Contains(h.view(), "adj failed") {
+		t.Fatal("failed answer lost question or error")
+	}
+	h.deliver(press("esc"))
+	if h.m.pane == nil || h.m.paneQuestion() {
+		t.Fatal("escape did not return to run")
+	}
+}
+
+func TestFindingPaneAnchorsAtSelectedRunRow(t *testing.T) {
+	h := findingsHarness(t, "awaiting-approval", laterOne, ownerNote)
+	ov := h.m.overview(100)
+	if ov.paneAt != ov.sel {
+		t.Fatalf("pane anchor %d, selected row %d", ov.paneAt, ov.sel)
+	}
+	h.m.cursor = 2
+	ov = h.m.overview(100)
+	if ov.paneAt != ov.sel {
+		t.Fatalf("pane anchor %d, selected finding %d", ov.paneAt, ov.sel)
+	}
+}
+
+func TestFindingRowsDoNotInflatePendingQuestions(t *testing.T) {
+	h := findingsHarness(t, "paused", laterOne, ownerNote)
+	h.m.byName["ork"].snap.EngineRuns[0].Pending = "question"
+	text := strings.Join(h.m.overview(100).body, "\n")
+	if !strings.Contains(text, "! owner questions 1") || strings.Contains(text, "! owner questions 3") {
+		t.Fatalf("question count inflated: %s", text)
+	}
+}
+
+func TestFindingHintsFitAndReturnToRun(t *testing.T) {
+	h := findingsHarness(t, "awaiting-approval", laterOne, ownerNote)
+	hint := hintLine(h.at(80, 24))
+	for _, want := range []string{"o answer", "f file slice"} {
+		if !strings.Contains(hint, want) {
+			t.Errorf("hint lacks %q: %s", want, hint)
+		}
+	}
+	h.deliver(press("o"))
+	if hint := hintLine(h.view()); !strings.Contains(hint, "esc back to run") {
+		t.Errorf("wrong escape hint: %s", hint)
+	}
+	h.deliver(press("2"))
+	if cmd := h.m.confirm.command(); !strings.Contains(cmd, ownerNote.Title) || strings.Contains(cmd, "finding 3") {
+		t.Errorf("confirmation lacks title: %s", cmd)
+	}
+}
+
+func TestFindingsFooterDoesNotReplaceOneFindingWithCounter(t *testing.T) {
+	var fs []source.EngineFinding
+	for n := 0; n < 4; n++ {
+		f := ownerNote
+		f.N = n + 1
+		f.Title = fmt.Sprintf("Owner %d", n)
+		fs = append(fs, f)
+	}
+	h := findingsHarness(t, "awaiting-approval", fs...)
+	_, lines := h.m.findingLines(100)
+	if len(lines) != 4 || strings.Contains(strings.Join(lines[3], " "), "+1 more") {
+		t.Fatalf("single finding replaced by counter: %v", lines)
+	}
+}
+
+func TestFileConfirmationEndsWithQuestion(t *testing.T) {
+	h := findingsHarness(t, "awaiting-approval", laterOne)
+	h.deliver(press("f"))
+	prompt := h.m.confirm.prompt()
+	if !strings.HasSuffix(prompt, "? [y/N] (Enter is No)") || strings.Index(prompt, "Why section") > strings.Index(prompt, "[y/N]") {
+		t.Fatalf("wrong confirmation order: %s", prompt)
+	}
+}
+
+func TestSettledFindingsLeaveCountsButStayInPane(t *testing.T) {
+	for _, state := range []string{"landed", "dismissed", "superseded"} {
+		t.Run(state, func(t *testing.T) {
+			h := findingsHarness(t, "stopped", laterOne, ownerNote)
+			p := h.m.byName["ork"]
+			switch state {
+			case "landed":
+				p.snap.EngineRuns[0].Landed = true
+			case "dismissed":
+				p.snap.EngineRuns[0].Dismissed = true
+			case "superseded":
+				old := p.snap.EngineRuns[0]
+				p.snap.EngineRuns = append(p.snap.EngineRuns, source.EngineRun{ID: "new", Item: old.Item, State: "implement", CreatedAt: old.CreatedAt.Add(time.Second)})
+			}
+			rows, _ := h.m.rows()
+			for _, r := range rows {
+				if r.group == "Findings" {
+					t.Fatal("settled finding still listed")
+				}
+			}
+			later, owner := h.m.findingLines(100)
+			if len(later) == 0 || len(owner) != 1 {
+				t.Fatal("settled findings lost from run pane")
+			}
+		})
+	}
+}
+
+func TestFileConfirmationExplainsProposedScores(t *testing.T) {
+	f := laterOne
+	f.Scores = &runrec.FindingScores{Importance: 3, Urgency: 2, Effort: 1}
+	h := findingsHarness(t, "awaiting-approval", f)
+	h.deliver(press("f"))
+	if p := h.m.confirm.prompt(); !strings.Contains(p, "slicer set") || !strings.HasSuffix(p, "? [y/N] (Enter is No)") {
+		t.Fatalf("missing scoring disclosure: %s", p)
+	}
+}
+
+func TestFindingsHintsAndFooterGoldens(t *testing.T) {
+	for _, sz := range []struct{ w, h int }{{80, 24}, {120, 40}} {
+		h := findingsHarness(t, "stopped", laterOne)
+		fs := []source.EngineFinding{laterOne}
+		for n := 0; n < 8; n++ {
+			fs = append(fs, source.EngineFinding{N: n + 2, Kind: runrec.FindingOwner, Title: fmt.Sprintf("Owner %d?", n), Ask: ownerNote.Ask})
+		}
+		h.m.byName["ork"].snap.EngineRuns[0].Findings = fs
+		view := h.at(sz.w, sz.h)
+		if !strings.Contains(hintLine(view), "o answer") || !strings.Contains(hintLine(view), "f file slice") {
+			t.Fatalf("%dx%d missing finding keys", sz.w, sz.h)
+		}
+		checkGolden(t, fmt.Sprintf("pane-finding-actions-%dx%d.txt", sz.w, sz.h), view)
+		// The full-height pane makes the count visible at both requested sizes.
+		pane := strings.Join(h.m.paneLines(sz.w, sz.h, ""), "\n")
+		if !strings.Contains(pane, "+5 more owner findings") {
+			t.Fatalf("%dx%d count hidden: %s", sz.w, sz.h, pane)
+		}
+		checkGolden(t, fmt.Sprintf("pane-finding-footer-%dx%d.txt", sz.w, sz.h), pane)
+	}
+}
+
+func TestKeyedFindingWithoutAdjDoesNotPromiseDecision(t *testing.T) {
+	f := ownerNote
+	f.Key = "cache.mode"
+	h := findingsHarness(t, "implement", f)
+	h.m.byName["ork"].reg.Adj = false
+	h.deliver(press("o"))
+	if text := strings.Join(h.m.paneLines(100, 30, ""), "\n"); strings.Contains(text, "Answer also recorded in adj") || strings.Contains(text, "ADJ_DECIDED_BY unset") {
+		t.Fatalf("no-adj question promises a decision: %s", text)
+	}
+}
+
+func TestFindingPaneFallsBackToFirstMatchingRow(t *testing.T) {
+	h := findingsHarness(t, "awaiting-approval", laterOne, ownerNote)
+	first := h.m.overview(100).paneAt
+	p := h.m.byName["ork"]
+	p.snap.EngineRuns = append(p.snap.EngineRuns, source.EngineRun{ID: "other", Item: "S99", State: "implement"})
+	h.m.cursor = len(h.m.cursorRows()) - 1
+	if got := h.m.overview(100).paneAt; got != first {
+		t.Fatalf("fallback anchor %d, first match %d", got, first)
 	}
 }

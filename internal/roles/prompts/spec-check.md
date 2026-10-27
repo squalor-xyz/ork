@@ -1,4 +1,4 @@
-Role: spec-check. Contract: relay v7
+Role: spec-check. Contract: relay v8
 
 You are the spec check before an ork wave, for the slices {{slice_id}} in the project
 checkout {{worktree}}. You read each slice's spec and say whether an implementer can

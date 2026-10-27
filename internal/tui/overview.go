@@ -15,6 +15,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -377,6 +378,14 @@ func (m *Model) rows() (needs, running []ovRow) {
 
 		joined := map[string]bool{}
 		for _, r := range s.EngineRuns {
+			if r.FindingNeeds(s.EngineRuns...) > 0 {
+				for _, f := range r.Findings {
+					if (f.Kind == runrec.FindingLater && f.Filed == "") || (f.Kind == runrec.FindingOwner && f.Answer == "") {
+						text := r.Item + "  " + f.Title
+						needs = append(needs, ovRow{engineID: r.ID, name: name, project: i, id: r.Item, state: r.State, group: "Findings", kind: "? " + f.Kind, style: th.Decision, kindW: kindWidth, rest: f.Title, text: text})
+					}
+				}
+			}
 			if r.RelayRun != "" {
 				joined[r.RelayRun] = true
 			}
@@ -544,6 +553,8 @@ func (m *Model) rows() (needs, running []ovRow) {
 			needs[i].group = "Paused"
 		case "+ approve":
 			needs[i].group = "Approve"
+		case "? owner", "? later":
+			needs[i].group = "Findings"
 		default:
 			needs[i].group = "Errors"
 		}
@@ -552,7 +563,7 @@ func (m *Model) rows() (needs, running []ovRow) {
 	return needs, running
 }
 
-var needsGroups = []string{"Decisions", "Held", "Stopped", "Paused", "Approve", "Errors"}
+var needsGroups = []string{"Decisions", "Held", "Stopped", "Paused", "Approve", "Findings", "Errors"}
 
 // clampCursor keeps a cursor index on one of n rows. It returns -1 when there
 // are no rows.
@@ -705,8 +716,9 @@ func (m *Model) overview(w int) overviewView {
 			if r.note != "" {
 				lines = append(lines, hang+th.Dim.Render(clip(r.note, max(w-len(hang), 1))))
 			}
-			if m.isPaneRow(r) {
+			if m.isPaneRow(r) && (paneAt < 0 || selected) {
 				paneAt = len(lines) - 1
+				paneExtra = 0
 				if second != "" {
 					paneExtra = 1
 				}

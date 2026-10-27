@@ -1,0 +1,24 @@
+ork  ?help         │ Overview │ Questions │ Waves │ Roadmap │ Decisions
+  Running        1 │────────────────────────────────────────────────────────────
+> Needs you     10 │Needs you 10
+1 ork           10 │  Stopped 1
+                   │  x  ork  S22  stopped  owner action  2 of 6 steps running  
+                   │    Run engine
+                   │    owner action
+                   │    [......]
+                   │
+                   │    1 later finding; next to file: "Add a --json flag to..."
+                   │    Owner question, not blocking: Owner 0? Recommended:
+                   │    per-project.
+                   │    Owner question, not blocking: Owner 1? Recommended:
+                   │    per-project.
+                   │    Owner question, not blocking: Owner 2? Recommended:
+                   │    per-project.
+                   │    +5 more owner findings
+                   │    Stopped; relaunch, or clear with: ork dismiss engine
+                   │  Findings 9
+                   │  ?  ork  S22  Add a --json flag to ork status
+                   │  +17 more lines
+                   │────────────────────────────────────────────────────────────
+                   │ o answer; f file slice; pgup/pgdown line; esc close pane
+                   │ 1 project | refreshed 16:42:00

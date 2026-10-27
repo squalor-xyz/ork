@@ -1,7 +1,7 @@
 [1mork[m  ?help                 │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
-[1;7m> Needs you              1 [m│[1mNeeds you 1[m
-[2m1[m ork                    1 │  [1mApprove 1[m
+[1;7m> Needs you              4 [m│[1mNeeds you 4[m
+[2m1[m ork                    4 │  [1mApprove 1[m
                            │[1;7m  +  ork  engine  S22  awaiting approval  2m  owner action  2 of 6 st...[m
                            │    [1mRun engine[m
                            │    owner action
@@ -14,17 +14,17 @@
                            │    2 later findings; next to file: "Add a --json flag to ork status"
                            │    Owner question, not blocking: Should the cache be shared?
                            │    Recommended: per-project.
+                           │  [1mFindings 3[m
+                           │  [1m?[m  ork  S22  Add a --json flag to ork status
+                           │  [1m?[m  ork  S22  Retire the old cache
+                           │  [1m?[m  ork  S22  Should the cache be shared?
                            │
                            │[1mRunning 0[m
                            │  [2mnothing running[m
                            │
                            │[1mRecent[m
                            │  [2mnone[m
-                           │
-                           │[1mReady to land[m
-                           │  [2mnone[m
-                           │
-                           │
+                           │[2m  +3 more lines[m
                            │[2m────────────────────────────────────────────────────────────────────────[m
-                           │ a [2mapprove[m; x [2mstop[m; pgup/pgdown [2mline[m; ctrl+d/u [2mhalf page[m; esc [2mclose pane[m
+                           │ a [2mapprove[m; o [2manswer[m; f [2mfile slice[m; pgup/pgdown [2mline[m; esc [2mclose pane[m
                            │ 1 project | refreshed 16:42:00

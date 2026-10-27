@@ -1991,3 +1991,10 @@
 {"when": "2026-10-27T12:00:52Z", "item": "S137", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-27T12:00:52Z", "item": "S137", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-27T12:00:52Z", "item": "S137", "action": "set", "from": "", "to": "", "note": "size S→M"}
+{"when": "2026-10-27T12:01:14Z", "item": "S137", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-27T13:40:37Z", "item": "S137", "action": "note", "from": "", "to": "", "note": "Later (review round 2, 2026-10-27): d.runs.recordLocks is ne", "by": "Jon R"}
+{"when": "2026-10-27T13:40:37Z", "item": "S137", "action": "note", "from": "", "to": "", "note": "Later (review round 2, 2026-10-27): A committed run merged o", "by": "Jon R"}
+{"when": "2026-10-27T13:40:38Z", "item": "S137", "action": "note", "from": "", "to": "", "note": "Later (review round 2, 2026-10-27): Findings rows use one gl", "by": "Jon R"}
+{"when": "2026-10-27T13:40:38Z", "item": "S137", "action": "note", "from": "", "to": "", "note": "Later (review round 2, 2026-10-27): The 80x24 approval-card ", "by": "Jon R"}
+{"when": "2026-10-27T13:42:35Z", "item": "S137", "action": "status", "from": "started", "to": "done", "note": "Every owner blocker is asked; an answered blocker cannot loop; run.file is serialized per run with a fresh record; findings count in Needs you and ork status for runs not yet landed; o answers a non-blocking owner finding; ork file RUN N; later findings may carry proposed scores applied with slicer set; role prompts say relay v8. Review PASS (2 rounds), UI pass PASS, gate PASS (run-20261027-120059-ee33).", "by": "Jon R"}
+{"when": "2026-10-27T13:42:35Z", "item": "S137", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 15, S137): 5 owner questions before", "by": "Jon R"}

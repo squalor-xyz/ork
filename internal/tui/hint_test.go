@@ -341,8 +341,8 @@ func TestHintBarListsCleanupOnlyOnAMergedReadyRow(t *testing.T) {
 					t.Errorf("merged %s: hint %q lists %q = %v, but the row accepts the key = %v", merged, hint, k.word, listed, accepted)
 				}
 			}
-			if strings.Contains(hint, "enter") {
-				t.Errorf("enter does nothing on a Ready row: %q", hint)
+			if !strings.Contains(hint, "enter open") {
+				t.Errorf("Ready row must offer its run pane: %q", hint)
 			}
 		})
 	}

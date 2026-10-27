@@ -180,6 +180,9 @@ func (d *Daemon) cleanupRun(ctx context.Context, a RunAction) error {
 // markCleaned records a finished cleanup, and drops the "cleanup failed" reason
 // of a landed run, so the row leaves Ready to land (S119, S95).
 func (d *Daemon) markCleaned(id string) error {
+	lock := d.runRecordLock(id)
+	lock.Lock()
+	defer lock.Unlock()
 	at := time.Now().UTC()
 	d.runs.mu.Lock()
 	managed := d.runs.runs[id]

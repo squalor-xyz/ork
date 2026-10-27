@@ -300,7 +300,13 @@ slice.
     pause the round with a `question` pending, as an `## Owner needed`
     section does (`questions[]`, the answer reaches the same role, and
     `reviewDone` runs that role again). A malformed owner or later finding is
-    a report shape error.
+    a report shape error. Proposed (S137): every blocker is asked, with
+    remaining questions persisted in `queued_questions`; the role reruns
+    after all answers. Repeating an answered blocker pauses with an error
+    instead of asking again. The resumed role receives all its recorded answers.
+    A non-blocking finding can be answered from the pane without pausing or
+    advancing the run; its answer and timestamp stay on the finding, and a
+    decision key also records the answer in adj when the project has adj.
   - *later*: ork keeps it in `findings[]` as an offer. Nothing is filed until
     the owner confirms in the pane (`run.file`). Then ork itself runs
     `slicer add TITLE --discovered-from ITEM --key RUN-later-N --render` in
@@ -308,8 +314,12 @@ slice.
     with a Why section made from the finding, both as `writes[]` entries. The
     key makes a retry return the slice the first call filed; when that slice
     already has its spec, ork skips `promote`. slicer owns the
-    record (`docs/boundaries.md`); the new row is unscored and the owner
-    scores it with `slicer set`.
+    record (`docs/boundaries.md`). Proposed (S137): a role supplies
+    `Importance: N`, `Urgency: N` and `Effort: N` on indented lines, each
+    from 1 to 3. Non-numeric lines with these labels remain prose and do not
+    count as proposed scores. ork applies a complete proposal with `slicer set`
+    after promotion. A missing proposal leaves the slice unscored. Failed scoring
+    keeps the finding retryable.
   The same finding raised again in a later round under the same title is kept
   once. A gate FAIL sends back the gate's report without its owner and later
   findings.
@@ -891,6 +901,7 @@ ork wave start P ITEM...    check the specs, then launch (asks unless --yes)
 ork run P ID                show a plan and launch one slice (S17)
 ork approve RUN             finish a passed slice, commit and land it
 ork answer RUN TEXT         answer an owner question
+ork file RUN N              file a later finding through the daemon
 ork dismiss RUN             clear a stopped run from Needs you
 ork retry RUN               retry a paused role or step
 ork stop RUN|WAVE           stop and record why
@@ -1008,7 +1019,18 @@ not wait for the run, so it works while a role runs and on a stopped or
 committed run that the daemon did not rebuild at its start (the record comes
 from the store), and it refuses a finding that is not a later finding or is
 already filed. The engine run rows carry
-`findings:[{n,kind,title,ask?,filed?}]` for the pane.
+`findings:[{n,kind,title,ask?,key?,scores?,answer?,filed?}]` for the pane.
+Proposed (S137): finding calls share a per-run lock. Finished-run calls open
+the record and load an engine fresh inside that lock on every call, preserving
+dismissal and cleanup timestamps. Dismissal and cleanup use the same lock;
+no finished-run engine is cached. `ork file RUN N` calls `run.file`.
+`run.answer` with `finding: N` answers a non-blocking owner finding without advancing the run;
+a keyed finding in a project with adj requires the caller's `by` and files
+in adj before recording the answer. Without adj it records the answer only.
+Unfiled later findings and unanswered owner findings each add one to Needs you
+and status counts only while their run is not landed, dismissed or superseded.
+The wire retains dismissed runs with `dismissed: true`, hidden from lists,
+so an open run pane can still show their findings.
 `run.dismiss` takes `{run}` and returns the run record (adj #117). It refuses
 a run that is not stopped or is busy. An unknown run returns `not_found`.
 
@@ -1030,7 +1052,7 @@ a run that is not stopped or is busy. An unknown run returns `not_found`.
   The engine makes the same check before it creates a run. v8 changes only
   the outer session's hand-back handling and the orchestrator's last line
   (`waiting on: ROLE AGENT-ID`; `slicer/CHANGELOG.md:20`). ork's role prompts
-  remain written against v7;
+  are written against v8;
 - each project's path exists and is a directory; a configured check command
   passes `sh -n -c` and its first word after leading `VAR=value` assignments
   resolves on PATH, or against the project directory when it contains `/`.

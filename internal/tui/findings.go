@@ -80,7 +80,7 @@ func (m *Model) findingLines(width int) (later []string, owner [][]string) {
 	}
 	later = lines
 	for _, f := range run.Findings {
-		if f.Kind != runrec.FindingOwner {
+		if f.Kind != runrec.FindingOwner || f.Answer != "" {
 			continue
 		}
 		text := "Owner question, not blocking: " + f.Title
@@ -88,6 +88,14 @@ func (m *Model) findingLines(width int) (later []string, owner [][]string) {
 			text += " Recommended: " + a.Options[a.Recommend-1].Label + "."
 		}
 		owner = append(owner, wrapText(text, width))
+	}
+	if len(owner) > 4 {
+		more := len(owner) - 3
+		noun := "findings"
+		if more == 1 {
+			noun = "finding"
+		}
+		owner = append(owner[:3], []string{fmt.Sprintf("+%d more owner %s", more, noun)})
 	}
 	return later, owner
 }
@@ -143,5 +151,20 @@ func (m *Model) requestFile() {
 	later := m.paneLater()
 	r, _ := m.actionRow()
 	m.actionStatus = ""
-	m.confirm = &runAction{verb: "file", run: r.engineID, project: r.name, item: r.id, finding: later[0].N, text: later[0].Title}
+	m.confirm = &runAction{verb: "file", run: r.engineID, project: r.name, item: r.id, finding: later[0].N, text: later[0].Title, scores: later[0].Scores}
+}
+
+// paneOwner returns the selected finding, or the first unanswered owner finding.
+func (m *Model) paneOwner() *source.EngineFinding {
+	r := m.paneRun()
+	if r == nil || r.Unavailable {
+		return nil
+	}
+	for i := range r.Findings {
+		f := &r.Findings[i]
+		if f.Kind == runrec.FindingOwner && f.Answer == "" && f.Ask != nil && (m.pane.finding == 0 || m.pane.finding == f.N) {
+			return f
+		}
+	}
+	return nil
 }

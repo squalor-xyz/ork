@@ -41,7 +41,7 @@ func (e *Engine) recordFindings(r round, t *Triaged) error {
 		}
 	}
 	for _, f := range t.Later {
-		add = append(add, runrec.Finding{Kind: runrec.FindingLater, Title: f.Title, Text: f.Text})
+		add = append(add, runrec.Finding{Kind: runrec.FindingLater, Title: f.Title, Text: f.Text, Scores: f.Scores})
 	}
 	if len(add) == 0 {
 		return nil
@@ -106,7 +106,7 @@ func (e *Engine) FileLater(ctx context.Context, n int) (string, error) {
 	}
 	if added.Existing && added.HasSlice {
 		// An earlier call already wrote the Why section; promote would refuse it.
-		return e.markFiled(n, added.ID)
+		return e.scoreAndMarkFiled(ctx, n, added.ID, f.Scores)
 	}
 	outline := fmt.Sprintf("## %s\n\n### Why\n\nRaised by the %s in round %d of ork run %s for %s (discovered from %s):\n\n%s\n",
 		f.Title, f.Role, f.Round, rec.ID, rec.Item, rec.Item, f.Text)
@@ -117,7 +117,7 @@ func (e *Engine) FileLater(ctx context.Context, n int) (string, error) {
 	if err := e.d.Slicer.Promote(ctx, e.wr, e.proj.Path, added.ID, path); err != nil {
 		return "", fmt.Errorf("filed %s, but its Why section failed (filing again retries it): slicer promote: %w", added.ID, err)
 	}
-	return e.markFiled(n, added.ID)
+	return e.scoreAndMarkFiled(ctx, n, added.ID, f.Scores)
 }
 
 // markFiled keeps the new slice's id on finding n.
@@ -129,4 +129,53 @@ func (e *Engine) markFiled(n int, id string) (string, error) {
 		}
 	})
 	return id, err
+}
+
+// scoreAndMarkFiled applies a role's proposal only after the slice has its Why
+// section. Failed scoring keeps the offer retryable with the same filing key.
+func (e *Engine) scoreAndMarkFiled(ctx context.Context, n int, id string, scores *runrec.FindingScores) (string, error) {
+	if scores != nil {
+		if err := e.d.Slicer.SetScores(ctx, e.wr, e.proj.Path, id, *scores); err != nil {
+			return "", fmt.Errorf("filed %s, but proposed scores failed (filing again retries them): %w", id, err)
+		}
+	}
+	return e.markFiled(n, id)
+}
+
+// AnswerFinding records a non-blocking finding's answer without advancing or
+// pausing the run. Filing and answering share the record's action mutex.
+func (e *Engine) AnswerFinding(ctx context.Context, n int, text, by string) (string, error) {
+	e.fileMu.Lock()
+	defer e.fileMu.Unlock()
+	rec := e.Snapshot()
+	if n < 1 || n > len(rec.Findings) {
+		return "", fmt.Errorf("run %s has no finding %d", rec.ID, n)
+	}
+	f := rec.Findings[n-1]
+	if f.Kind != runrec.FindingOwner || f.Ask == nil {
+		return "", fmt.Errorf("finding %d is not an owner question", n)
+	}
+	if f.Answer != "" {
+		return "", fmt.Errorf("finding %d is already answered", n)
+	}
+	text = strings.TrimSpace(text)
+	if text == "" {
+		return "", fmt.Errorf("the answer is empty")
+	}
+	message := "answer recorded"
+	if f.Key != "" && e.proj.Adj {
+		if strings.TrimSpace(by) == "" {
+			return "", fmt.Errorf("ADJ_DECIDED_BY is unset; set it in the caller before filing an answer in adj")
+		}
+		var err error
+		message, err = fileDecision(ctx, e.d, e.wr, e.AdjRoot(), f.Key, f.Title, rec.Item, questionText(f.Ask), text, by)
+		if err != nil {
+			return "", err
+		}
+	}
+	err := e.run.Update(func(r *runrec.Record) {
+		r.Findings[n-1].Answer = text
+		r.Findings[n-1].AnsweredAt = e.d.now()
+	})
+	return message, err
 }

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -273,5 +274,11 @@ func (c Client) Add(ctx context.Context, w runrec.Writer, root, title, discovere
 // outline.
 func (c Client) Promote(ctx context.Context, w runrec.Writer, root, id, file string) error {
 	_, err := c.write(ctx, w, root, "promote", id, "--file", file, "--render", "--json", "--lean")
+	return err
+}
+
+// SetScores applies a role's proposed scores to a filed slice.
+func (c Client) SetScores(ctx context.Context, w runrec.Writer, root, id string, scores runrec.FindingScores) error {
+	_, err := c.write(ctx, w, root, "set", id, "--importance", strconv.Itoa(scores.Importance), "--urgency", strconv.Itoa(scores.Urgency), "--effort", strconv.Itoa(scores.Effort), "--render", "--json", "--lean")
 	return err
 }

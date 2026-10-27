@@ -49,7 +49,7 @@ func TestBuildBriefFillsThePromptPlaceholders(t *testing.T) {
 		i := strings.Index(got, "{{")
 		t.Fatalf("a placeholder is left: %q", got[i:min(len(got), i+30)])
 	}
-	if first, _, _ := strings.Cut(got, "\n"); first != "Role: implementer. Contract: relay v7" {
+	if first, _, _ := strings.Cut(got, "\n"); first != "Role: implementer. Contract: relay v8" {
 		t.Errorf("first line %q", first)
 	}
 	for _, want := range []string{

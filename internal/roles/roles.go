@@ -31,10 +31,9 @@ import (
 var promptFS embed.FS
 
 // ContractVersion is the version of slicer's relay contract that the prompts
-// are written against (v7). It matches each prompt's first line. v8 changes
-// only the outer session's hand-back handling (slicer/CHANGELOG.md:20). ork
-// accepts the versions in AcceptedContracts, which include this one.
-const ContractVersion = 7
+// are written against. It matches each prompt's first line. ork accepts the
+// versions in AcceptedContracts, which include this one.
+const ContractVersion = 8
 
 var names = []string{"implementer", "reviewer", "gate", "architect", "ui", "spec-check"}
 

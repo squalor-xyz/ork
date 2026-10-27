@@ -430,7 +430,7 @@ func TestApprovalCardGoldens(t *testing.T) {
 						t.Errorf("%dx%d: a line ends in an unclosed quote: %q", size.w, size.h, line)
 					}
 				}
-				for _, want := range []string{"Run engine", "Gate PASS", "Owner question, not blocking", "Recommended: per-project.", "Human checks (1 of 3 open)", "[~] " + humanTwo, "F fix round", "esc close pane"} {
+				for _, want := range []string{"Run engine", "Gate PASS", "Owner question, not blocking", "Recommended: per-project.", "Human checks (1 of 3 open)", "[~] " + humanTwo, "o answer", "f file slice", "esc close pane"} {
 					if !strings.Contains(plain, want) {
 						t.Errorf("%dx%d lacks %q:\n%s", size.w, size.h, want, plain)
 					}

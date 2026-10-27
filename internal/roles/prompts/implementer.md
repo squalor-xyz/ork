@@ -1,4 +1,4 @@
-Role: implementer. Contract: relay v7
+Role: implementer. Contract: relay v8
 
 You are the implementer in an ork slice run. You own one slice, {{slice_id}}, and
 you implement exactly that slice, test-first, in the worktree {{worktree}}. ork

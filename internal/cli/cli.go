@@ -46,6 +46,7 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
                               show the plans and launch the chosen items
   ork approve RUN             finish and commit a passed slice
   ork stop RUN|WAVE           stop a slice or every unfinished run in a wave
+  ork file RUN N              file a later finding as a slice
   ork answer RUN TEXT         answer and resume a paused role
   ork dismiss RUN             clear a stopped run from Needs you
   ork retry RUN               retry a paused role or step
@@ -173,7 +174,7 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		return a.runSlice(ctx, o, rest)
 	case "wave":
 		return a.wave(ctx, o, rest)
-	case "approve", "stop", "answer", "retry", "dismiss":
+	case "approve", "stop", "answer", "retry", "dismiss", "file":
 		return a.ownerCommand(ctx, o, cmd, rest)
 	case "status":
 		return a.status(ctx, o, rest)

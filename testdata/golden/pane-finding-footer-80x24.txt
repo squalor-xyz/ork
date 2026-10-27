@@ -1,0 +1,11 @@
+  [1mRun engine  S22  stopped[m
+  owner action
+  [2m[......][m
+  [2mimplementer[m > [2mreviewer[m > [2mgate[m
+
+  1 later finding; next to file: "Add a --json flag to ork status"
+  Owner question, not blocking: Owner 0? Recommended: per-project.
+  Owner question, not blocking: Owner 1? Recommended: per-project.
+  Owner question, not blocking: Owner 2? Recommended: per-project.
+  +5 more owner findings
+  Stopped; relaunch, or clear with: ork dismiss engine

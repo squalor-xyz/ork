@@ -596,6 +596,14 @@ func (m *Model) helpLines(w, bodyH int) []string {
 	for _, group := range m.keys.FullHelp() {
 		for _, binding := range group {
 			h := binding.Help()
+			if h == m.keys.Owner.Help() || h == m.keys.NextView.Help() {
+				continue
+			}
+			if h == m.keys.PrevView.Help() {
+				next := m.keys.NextView.Help()
+				lines = append(lines, clip(next.Key+" "+next.Desc+"; "+h.Key+" "+h.Desc, w))
+				continue
+			}
 			// Refresh shares the quit line, and the filter and sidebar keys one
 			// line, so the help keeps its last line with ctrl+d/u added (S149).
 			if h == m.keys.Refresh.Help() {
@@ -642,6 +650,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 				} else {
 					lines = append(lines, packHints(actionHints, w)...)
 				}
+				lines = append(lines, clip("o answer owner finding (run pane)", w))
 			}
 			lines = append(lines, clip(h.Key+" "+h.Desc, w))
 		}

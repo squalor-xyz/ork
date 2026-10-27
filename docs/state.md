@@ -216,8 +216,18 @@ block, with the structured `ask` and an optional `key`) or `later` (an offer to
 file a slice). `title` is the finding's one-line title and `text` its body.
 `filed` and `filed_at` are set once the owner confirmed and ork ran
 `slicer add` and `slicer promote` for it; `filed` is the new slice id. A finding
-raised again under the same title is kept once. An older ork refuses a
-`run.json` with `findings` because `Store.Open` uses strict keys.
+raised again under the same title is kept once.
+Proposed (S137): optional `scores` carries a role's proposed `importance`,
+`urgency` and `effort` (each 1 to 3). ork applies a complete proposal with
+`slicer set` after filing; absent scores leave the slice unscored.
+An answered non-blocking owner finding has `answer` and `answered_at`.
+Recording it does not pause or advance the run. A key also files the answer
+in adj when the project has adj.
+The record version stays 1. Records without these fields still load; an older
+ork that does not know `scores`, `answer` or `answered_at` refuses a
+`run.json` containing them because `Store.Open` uses strict keys.
+Landed, dismissed and superseded runs retain their findings for the run pane,
+but those findings no longer contribute to Needs you or status counts.
 `card` (omitted until the gate first passes; *proposed*, S118) is the approval
 card, built each time the gate passes: the gate's `verdict` and test counts
 (`passed`, `failed`, from its `Tests:` line), `diff_stat` (the output of `git
@@ -254,8 +264,10 @@ role's `model`, `effort` and `denials`, a check's `log`, and a write's
 
 A stopped run can be dismissed with `ork dismiss RUN` (S34, adj #117).
 This sets `dismissed_at` to the dismissal time. It is omitted until then.
-Dismissal removes the run from the snapshot, Needs you and `ork status`.
-It keeps the record and its files; finished-run retention is unchanged.
+The snapshot keeps the run marked `dismissed: true`, hidden from lists,
+Needs you and `ork status` text. Its findings are excluded from counts.
+`ork status --json` includes the dismissed run. Dismissal keeps the record
+and its files; finished-run retention is unchanged.
 A dismissed run still hides older stopped runs of the same slice.
 Repeating dismissal does not change the record. A run that is not stopped
 returns `run is not stopped` (`ErrNotStopped`). The version stays 1.

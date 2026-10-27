@@ -23,6 +23,7 @@ const noticeFor = 5 * time.Second
 
 // runPane keeps its run target while snapshots reorder Overview rows.
 type runPane struct {
+	finding                   int // one-based non-blocking owner finding being answered
 	run, project              string
 	answered, answerDone      bool
 	answerState, answerNotice string
@@ -186,7 +187,7 @@ func (m *Model) actionRow() (ovRow, bool) {
 
 func (m *Model) paneQuestion() bool {
 	r, _, ok := m.paneRow()
-	return ok && !r.unavailable && !m.pane.ledger && r.state == "paused" && r.pending == "question"
+	return ok && !r.unavailable && !m.pane.ledger && (m.pane.finding > 0 || (r.state == "paused" && r.pending == "question"))
 }
 
 func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
@@ -205,6 +206,13 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 		}
 		if m.paneAsk() != nil && m.pane.freeText {
 			m.pane.freeText = false
+			m.actionStatus = ""
+			return nil
+		}
+		if m.pane.finding > 0 {
+			m.pane.finding = 0
+			m.pane.freeText = false
+			m.pane.input = textField{}
 			m.actionStatus = ""
 			return nil
 		}
@@ -232,7 +240,7 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 		return m.renderKey(msg)
 	}
 	if m.paneQuestion() {
-		if msg.String() == "ctrl+a" {
+		if msg.String() == "ctrl+a" && m.pane.finding == 0 {
 			if _, reason := m.paneAdjKey(); reason == "" {
 				m.pane.adj = !m.pane.adj
 			}
@@ -268,6 +276,15 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 	}
 	if cmd, ok := m.cardKey(msg); ok {
 		return cmd
+	}
+	if key.Matches(msg, m.keys.Owner) {
+		if f := m.paneOwner(); f != nil && m.cfg.Live != nil {
+			m.pane.finding = f.N
+			m.pane.adj = f.Key != ""
+			m.pane.input = textField{}
+			m.pane.freeText = false
+		}
+		return nil
 	}
 	if key.Matches(msg, m.keys.FileSlice) {
 		m.requestFile() // a finished run keeps its later findings
@@ -383,7 +400,7 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 	case m.pane.ledger:
 		// The note "started elsewhere, read-only; esc close pane" is on the hint
 		// line (S149).
-	case r.state == "paused" && r.pending == "question":
+	case m.paneQuestion():
 		if ask := m.paneAsk(); ask != nil && !m.pane.freeText {
 			title := wrapText(ask.Title, width)
 			for i := range title {
@@ -400,7 +417,13 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 			addFooter(wrapText("Why "+strconv.Itoa(ask.Recommend)+": "+ask.Reason, width), 2)
 		} else {
 			addFooter([]string{"Answer: " + m.pane.input.view(max(width-len("Answer: "), 1), m.cfg.Theme)}, 0)
-			addFooter(wrapText("ork answer "+r.engineID+" "+shellQuote(m.pane.input.Value()), width), 5)
+			command := "ork answer " + r.engineID + " " + shellQuote(m.pane.input.Value())
+			if m.pane.finding > 0 {
+				if f := m.paneOwner(); f != nil {
+					command = "Record answer to " + strconv.Quote(f.Title) + ": " + m.pane.input.Value()
+				}
+			}
+			addFooter(wrapText(command, width), 5)
 		}
 		decisionKey, disabledReason := m.paneAdjKey()
 		on := m.pane.adj && disabledReason == ""
@@ -410,6 +433,16 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		}
 		if disabledReason != "" {
 			toggle = "adj filing off: " + disabledReason
+		}
+		if m.pane.finding > 0 {
+			toggle = ""
+			if f := m.paneOwner(); f != nil && f.Key != "" && m.byName[m.pane.project].reg.Adj {
+				toggle = "Answer also recorded in adj as " + f.Key
+				on = true
+			} else {
+				on = false
+				disabledReason = ""
+			}
 		}
 		warningAt := len(toggle)
 		if on && strings.TrimSpace(os.Getenv("ADJ_DECIDED_BY")) == "" {
@@ -551,6 +584,12 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 }
 
 func (m *Model) paneAdjKey() (string, string) {
+	if m.pane.finding > 0 {
+		if f := m.paneOwner(); f != nil && m.byName[m.pane.project].reg.Adj && f.Key != "" {
+			return f.Key, ""
+		}
+		return "", "question has no available adj decision key"
+	}
 	p := m.byName[m.pane.project]
 	if p == nil {
 		return "", "no adj in this project"
@@ -571,6 +610,12 @@ func (m *Model) paneAdjKey() (string, string) {
 
 func (m *Model) paneAsk() *runrec.OwnerQuestion {
 	if m.pane == nil || !m.paneQuestion() {
+		return nil
+	}
+	if m.pane.finding > 0 {
+		if f := m.paneOwner(); f != nil {
+			return f.Ask
+		}
 		return nil
 	}
 	p := m.byName[m.pane.project]

@@ -183,17 +183,21 @@ type EngineRole struct {
 // action names. Filed is the id of the slice ork filed from it. Proposed wire
 // fields (adj 163).
 type EngineFinding struct {
-	N     int                   `json:"n"`
-	Kind  string                `json:"kind"`
-	Title string                `json:"title"`
-	Ask   *runrec.OwnerQuestion `json:"ask,omitempty"`
-	Filed string                `json:"filed,omitempty"`
+	Scores *runrec.FindingScores `json:"scores,omitempty"`
+	Answer string                `json:"answer,omitempty"`
+	Key    string                `json:"key,omitempty"`
+	N      int                   `json:"n"`
+	Kind   string                `json:"kind"`
+	Title  string                `json:"title"`
+	Ask    *runrec.OwnerQuestion `json:"ask,omitempty"`
+	Filed  string                `json:"filed,omitempty"`
 }
 
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
-	Findings       []EngineFinding       `json:"findings,omitempty"` // proposed: owner and later findings (adj 163)
-	Card           *runrec.ApprovalCard  `json:"card,omitempty"`     // proposed: the approval card of an awaiting-approval run (S118)
+	Dismissed      bool                  `json:"dismissed,omitempty"` // retained for an open run pane; hidden from lists
+	Findings       []EngineFinding       `json:"findings,omitempty"`  // proposed: owner and later findings (adj 163)
+	Card           *runrec.ApprovalCard  `json:"card,omitempty"`      // proposed: the approval card of an awaiting-approval run (S118)
 	Question       *runrec.OwnerQuestion `json:"question,omitempty"`
 	LiveUsageKnown bool                  `json:"live_usage_known,omitempty"` // proposed: current attempt reported usage
 	UsageKnown     bool                  `json:"usage_known,omitempty"`      // proposed: includes reported zero usage
@@ -257,10 +261,13 @@ const (
 
 // Section classifies a run among runs for a single project.
 func (r EngineRun) Section(runs []EngineRun) Section {
+	if r.Dismissed {
+		return SectionHidden
+	}
 	if r.Unavailable {
 		return SectionNeeds
 	}
-	if r.State == runrec.StateCommitted || r.Superseded(runs) {
+	if r.Dismissed || r.State == runrec.StateCommitted || r.Superseded(runs) {
 		return SectionHidden
 	}
 	switch r.State {
@@ -303,4 +310,18 @@ type UnavailableReader interface {
 // RemovedProjectHelp gives the recovery steps for a display-only run group.
 func RemovedProjectHelp(name string) string {
 	return fmt.Sprintf("No actions: project %q is not registered. Re-add it with ork projects add PATH --name %s, then run ork daemon restart.", name, name)
+}
+
+// FindingNeeds counts unresolved findings that the owner can act on.
+func (r EngineRun) FindingNeeds(runs ...EngineRun) int {
+	if r.Unavailable || r.Landed || r.Dismissed || r.Superseded(runs) {
+		return 0
+	}
+	n := 0
+	for _, f := range r.Findings {
+		if (f.Kind == runrec.FindingLater && f.Filed == "") || (f.Kind == runrec.FindingOwner && f.Answer == "") {
+			n++
+		}
+	}
+	return n
 }

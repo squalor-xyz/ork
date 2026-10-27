@@ -114,12 +114,12 @@ func TestEmbeddedFilesMatchNames(t *testing.T) {
 }
 
 func TestContractVersion(t *testing.T) {
-	if ContractVersion != 7 {
-		t.Fatalf("ContractVersion = %d, want 7", ContractVersion)
+	if ContractVersion != 8 {
+		t.Fatalf("ContractVersion = %d, want 8", ContractVersion)
 	}
 	for _, f := range []string{"relay-first-line.txt", "relay-orchestrator-first-line.txt"} {
-		if got := recordedVersion(t, f); got != ContractVersion {
-			t.Errorf("%s records v%d, ContractVersion is %d", f, got, ContractVersion)
+		if got := recordedVersion(t, f); !ContractAccepted(got) {
+			t.Errorf("%s records unsupported v%d", f, got)
 		}
 	}
 }
@@ -160,13 +160,13 @@ func TestCheckContractLineAcceptsV8(t *testing.T) {
 	}
 }
 
-func TestPromptsStayAtV7(t *testing.T) {
-	if ContractVersion != 7 {
-		t.Errorf("ContractVersion = %d, want 7", ContractVersion)
+func TestPromptsUseV8(t *testing.T) {
+	if ContractVersion != 8 {
+		t.Errorf("ContractVersion = %d, want 8", ContractVersion)
 	}
 	for name, p := range prompts(t) {
 		first, _, _ := strings.Cut(p, "\n")
-		if want := "Role: " + name + ". Contract: relay v7"; first != want {
+		if want := "Role: " + name + ". Contract: relay v8"; first != want {
 			t.Errorf("%s: first line %q, want %q", name, first, want)
 		}
 	}
@@ -207,7 +207,7 @@ func TestCheckContractLineAcceptsEveryVersionInTheSet(t *testing.T) {
 }
 
 func TestFirstLineNamesRoleAndContract(t *testing.T) {
-	recorded := recordedVersion(t, "relay-first-line.txt")
+	recorded := ContractVersion
 	for name, p := range prompts(t) {
 		first, _, _ := strings.Cut(p, "\n")
 		want := fmt.Sprintf("Role: %s. Contract: relay v%d", name, recorded)

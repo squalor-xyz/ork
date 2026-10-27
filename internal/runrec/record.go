@@ -303,18 +303,28 @@ const (
 	FindingLater = "later" // later work offered to the owner as a new slice
 )
 
+// FindingScores is a role's proposed slicer ranking, with each value from 1 to 3.
+type FindingScores struct {
+	Importance int `json:"importance"`
+	Urgency    int `json:"urgency"`
+	Effort     int `json:"effort"`
+}
+
 // Finding is a review finding that is not a fix. An owner finding holds its
 // structured question in Ask; a later finding waits for the owner to file it
 // as a slice, and Filed holds the new slice's id once ork has.
 type Finding struct {
-	Kind    string         `json:"kind"`
-	Role    string         `json:"role"`
-	Round   int            `json:"round"`
-	Title   string         `json:"title"`
-	Text    string         `json:"text"`
-	Ask     *OwnerQuestion `json:"ask,omitempty"`
-	Key     string         `json:"key,omitempty"`
-	At      time.Time      `json:"at"`
-	Filed   string         `json:"filed,omitempty"`
-	FiledAt time.Time      `json:"filed_at,omitzero"`
+	Scores     *FindingScores `json:"scores,omitempty"`
+	Answer     string         `json:"answer,omitempty"`
+	AnsweredAt time.Time      `json:"answered_at,omitzero"`
+	Kind       string         `json:"kind"`
+	Role       string         `json:"role"`
+	Round      int            `json:"round"`
+	Title      string         `json:"title"`
+	Text       string         `json:"text"`
+	Ask        *OwnerQuestion `json:"ask,omitempty"`
+	Key        string         `json:"key,omitempty"`
+	At         time.Time      `json:"at"`
+	Filed      string         `json:"filed,omitempty"`
+	FiledAt    time.Time      `json:"filed_at,omitzero"`
 }

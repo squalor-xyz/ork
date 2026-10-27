@@ -470,3 +470,103 @@ func TestFileLaterSkipsPromoteWhenTheSliceAlreadyHasItsSpec(t *testing.T) {
 		})
 	}
 }
+
+func TestEveryOwnerBlockerAsked(t *testing.T) {
+	h := newHarness(t)
+	second := strings.ReplaceAll(blockerFinding, "old wire field", "legacy flag")
+	second = strings.ReplaceAll(second, "wire.old-field", "wire.legacy-flag")
+	reviewerSays(h, review(blockerFinding+"\n"+second, "nothing", "nothing", "nothing"))
+	e := h.start()
+	requireState(t, e, runrec.StatePaused)
+	if err := e.Answer(context.Background(), "keep first"); err != nil {
+		t.Fatal(err)
+	}
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending.Ask.Title != "Drop the legacy flag now?" {
+		t.Fatalf("second blocker not asked: %+v", rec.Pending)
+	}
+	if len(h.runner.requests()) != 2 {
+		t.Fatal("role reran before all answers")
+	}
+	if err := e.Answer(context.Background(), "keep second"); err != nil {
+		t.Fatal(err)
+	}
+	rec = requireState(t, e, runrec.StateAwaitingApproval)
+	if len(rec.Questions) != 2 || rec.Questions[0].Answer == "" || rec.Questions[1].Answer == "" {
+		t.Fatalf("questions %+v", rec.Questions)
+	}
+	brief := h.runner.requests()[2].Brief
+	for _, answer := range []string{"keep first", "keep second"} {
+		if !strings.Contains(brief, answer) {
+			t.Errorf("brief lacks %q", answer)
+		}
+	}
+}
+
+func TestAnsweredBlockerDoesNotLoop(t *testing.T) {
+	h := newHarness(t)
+	h.runner.script = func(req Request, _ int) (Result, error) {
+		if req.Role == RoleReviewer {
+			return Result{Exit: ExitOK, Report: review(blockerFinding, "nothing", "nothing", "nothing")}, nil
+		}
+		return Result{}, nil
+	}
+	e := h.start()
+	if err := e.Answer(context.Background(), "keep"); err != nil {
+		t.Fatal(err)
+	}
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending.Kind == runrec.PendingQuestion || !strings.Contains(rec.Pending.Reason, "answered blocker") {
+		t.Fatalf("answered blocker asked again: %+v", rec.Pending)
+	}
+	if len(rec.Questions) != 1 {
+		t.Fatalf("duplicate questions: %+v", rec.Questions)
+	}
+}
+
+func TestLaterFindingProposedScoresApplied(t *testing.T) {
+	h := newHarness(t, fileRoutes("S130"), func(o *harnessOpts) {
+		o.routes = append(o.routes, clitest.Route{Tool: "slicer", Args: []string{"set"}, Prefix: true, Stdout: `{}`})
+	})
+	reviewerSays(h, review(laterFinding+"\n  Importance: 3\n  Urgency: 2\n  Effort: 1", "nothing", "nothing", "nothing"))
+	e := h.start()
+	if _, err := e.FileLater(context.Background(), 1); err != nil {
+		t.Fatal(err)
+	}
+	calls := h.calls("slicer", "set")
+	want := []string{"set", "S130", "--importance", "3", "--urgency", "2", "--effort", "1", "--render", "--json", "--lean", "--root", h.P}
+	if len(calls) != 1 || !reflect.DeepEqual(calls[0], want) {
+		t.Fatalf("score calls %q, want %q", calls, want)
+	}
+}
+
+func TestLaterFindingRejectsMalformedScores(t *testing.T) {
+	for _, text := range []string{"Importance: 4\n  Urgency: 2\n  Effort: 1", "Importance: 2", "Importance: 2\n  Importance: 3\n  Urgency: 2\n  Effort: 1"} {
+		if _, err := Triage(review(laterFinding+"\n  "+text, "nothing", "nothing", "nothing")); err == nil {
+			t.Errorf("accepted malformed proposal %q", text)
+		}
+	}
+}
+
+func TestLaterFindingIgnoresProseScores(t *testing.T) {
+	tri, err := Triage(review(laterFinding+"\n  Importance: useful later\n  Urgency: low priority\n  Effort: unknown", "nothing", "nothing", "nothing"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tri.Later[0].Scores != nil {
+		t.Fatal("prose became proposed scores")
+	}
+}
+
+func TestResumedBriefIncludesEachAnswerOnce(t *testing.T) {
+	h := newHarness(t)
+	reviewerSays(h, review(blockerFinding, "nothing", "nothing", "nothing"))
+	e := h.start()
+	if err := e.Answer(context.Background(), "unique owner reply"); err != nil {
+		t.Fatal(err)
+	}
+	brief := h.runner.requests()[2].Brief
+	if n := strings.Count(brief, "unique owner reply"); n != 1 {
+		t.Fatalf("latest answer appears %d times", n)
+	}
+}

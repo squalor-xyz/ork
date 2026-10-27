@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"os"
 	"path/filepath"
 	"strings"
@@ -371,5 +372,35 @@ func TestBudgetPauseIsNeedsYou(t *testing.T) {
 	}
 	if r.Pending != "budget" || r.Section([]EngineRun{r}) != SectionNeeds || r.Wait != "token budget 9000 reached (9100 used)" {
 		t.Fatalf("budget pause: %+v", r)
+	}
+}
+
+func TestFindingNeedsExcludesSettledRuns(t *testing.T) {
+	f := []EngineFinding{{Kind: runrec.FindingLater, Title: "Later"}, {Kind: runrec.FindingOwner, Title: "Owner"}}
+	now := time.Now()
+	for _, tc := range []struct {
+		name  string
+		run   EngineRun
+		newer bool
+		want  int
+	}{
+		{"unlanded committed", EngineRun{ID: "old", Item: "S1", State: runrec.StateCommitted, Findings: f}, false, 2},
+		{"landed", EngineRun{ID: "old", Item: "S1", State: runrec.StateCommitted, Landed: true, Findings: f}, false, 0},
+		{"dismissed", EngineRun{ID: "old", Item: "S1", State: runrec.StateStopped, Dismissed: true, Findings: f}, false, 0},
+		{"superseded", EngineRun{ID: "old", Item: "S1", State: runrec.StateStopped, CreatedAt: now, Findings: f}, true, 0},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			runs := []EngineRun{tc.run}
+			if tc.newer {
+				runs = append(runs, EngineRun{ID: "new", Item: "S1", State: runrec.StateImplement, CreatedAt: now.Add(time.Second)})
+			}
+			// Production callers must supply sibling runs for supersession.
+			if got := tc.run.FindingNeeds(runs...); got != tc.want {
+				t.Errorf("count %d, want %d", got, tc.want)
+			}
+			if tc.newer && !tc.run.Superseded(runs) {
+				t.Fatal("invalid supersession fixture")
+			}
+		})
 	}
 }
