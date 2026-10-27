@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-161 items · — 43 · done 113 · retired 5
+161 items · — 42 · done 114 · retired 5
 
 ## v1.1
 
@@ -106,7 +106,7 @@
 | 49 | [S68](slices/S68.md) | Roadmap editing: reorder an item from the TUI (needs adj 11) | S | 2 |  |  | — |
 | 50 | [S69](slices/S69.md) | Roadmap editing: open slicer tui for the project (needs adj 11) | S | 1 |  | Owner 2026-10-23: the Roadmap replaces leaving for slicer tui; adj 11 stays the owner's to close | — |
 | 51 | [S72](slices/S72.md) | Grok adapter and v1 role (after credits reset 2026-11-01) | M | 2 |  |  | — |
-| 52 | [S91](slices/S91.md) | Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes | S | 1 |  | discovered from S49 | — |
+| 52 | [S91](slices/S91.md) | Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes | S | 1 |  | discovered from S49 | done |
 | 53 | [S90](slices/S90.md) | Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on | S | 1 |  | discovered from S88 | — |
 | 54 | [S39](slices/S39.md) | ork run prompt tests catch swapped answers; help text says y/n | S | 1 |  | discovered from S21 | — |
 | 55 | [S105](slices/S105.md) | Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases | S | 2 |  |  | done |

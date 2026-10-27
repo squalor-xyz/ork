@@ -23,8 +23,8 @@ once:
 - The **engine** runs waves of slices in parallel. For each slice, ork does
   Setup, launches every role (implementer, reviewer, gate, architect)
   headlessly on Claude, Codex or Grok, runs deterministic checks between
-  roles, falls back across vendors on rate limits, and commits the slice
-  branch once the owner approves the result.
+  roles, falls back across vendors on rate-limited or error exits, and
+  commits the slice branch once the owner approves the result.
 
 ork replaces the outer Claude session's manual relay work and the agents
 repo's scripted orchestrator (N6, `orchestrate.sh`, `relay-call.sh`)
@@ -151,7 +151,7 @@ v1 is the monitoring dashboard plus launching and supervising slice waves
 
 | Risk | Mitigation |
 |---|---|
-| Three vendors and automatic fallback in v1 widen the surface a lot | A vendor capability spike first (design.md, Vendors); fallback only on classified rate limits, everything else stops for the owner (`vendor.ratelimit-detection`) |
+| Three vendors and automatic fallback in v1 widen the surface a lot | A vendor capability spike first (design.md, Vendors); fallback on a rate-limited or error exit; auth, denials and unclassified exits stop for the owner (`vendor.fallback-trigger-v2`, decision 156; `vendor.ratelimit-detection`) |
 | ork's Go engine and slicer's prose contract drift | Accept only listed contract versions and refuse others; slicer item for machine-readable contract parts (`boundary.contract`) |
 | Embedded role prompts drift from the agents repo's copies | ork is canonical; the agents repo generates from `ork roles print` (`roles.prompts`) |
 | Host-run agents with scoped permissions can still do damage | Per-role allowlists, read-only fingerprint, worktree per slice, commit only on slice branches, owner checkpoints |

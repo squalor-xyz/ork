@@ -2054,3 +2054,6 @@
 {"when": "2026-10-27T17:44:08Z", "item": "S161", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-10-27T17:44:08Z", "item": "S161", "action": "set", "from": "", "to": "", "note": "effort -→2"}
 {"when": "2026-10-27T17:44:08Z", "item": "S136", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-27 (interactive): ui_doc is set by ed", "by": "Jon R"}
+{"when": "2026-10-27T17:59:04Z", "item": "S91", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-27T18:20:40Z", "item": "S91", "action": "status", "from": "started", "to": "done", "note": "PROJECT.md says fallback is on a rate-limited or error exit; auth, denials and unclassified exits stop (adj 156). Owner approved the wording 2026-10-27. Review and gate PASS (run-20261027-175847-0ae9).", "by": "Jon R"}
+{"when": "2026-10-27T18:20:41Z", "item": "S91", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 22, S91): 1 owner question (PROJECT", "by": "Jon R"}
