@@ -231,13 +231,13 @@ func TestCleanupKeyConfirmsThenCalls(t *testing.T) {
 		})
 	}
 }
-func TestSelectingAReadyRowOffersNothingExceptCleanupOnAMergedOne(t *testing.T) {
+func TestSelectingAReadyRowOpensPaneAndOnlyCleanupActs(t *testing.T) {
 	for _, merged := range []string{"true", "false", "null"} {
 		for _, k := range []string{"enter", "a", "x", "t", "l", "c"} {
 			t.Run(merged+"/"+k, func(t *testing.T) {
 				h, l := cleanupHarness(t, merged)
 				_, cmd := h.m.Update(press(k))
-				if cmd != nil || h.m.pane != nil || h.m.launch != nil || l.calls != 0 {
+				if cmd != nil || (h.m.pane != nil) != (k == "enter") || h.m.launch != nil || l.calls != 0 {
 					t.Fatal("Ready row acted as a run row")
 				}
 				if (h.m.confirm != nil) != (k == "c" && merged == "true") {

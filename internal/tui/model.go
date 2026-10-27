@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -22,6 +23,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/poll"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -82,6 +84,7 @@ func (p *projectState) needs() int {
 	}
 	n := p.open + p.held
 	for _, r := range p.snap.EngineRuns {
+		n += r.FindingNeeds(p.snap.EngineRuns...)
 		if r.Section(p.snap.EngineRuns) == source.SectionNeeds {
 			n++
 		}
@@ -382,6 +385,14 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 					break
 				}
 				m.pane.input = textField{}
+				if msg.action.finding > 0 {
+					m.pane.finding = 0
+					m.pane.answered = false
+					if m.actionStatus == "" {
+						m.actionStatus = "answer recorded"
+					}
+					break
+				}
 				// A tracking that the run's next state already dropped stays dropped.
 				m.pane.answerDone, m.pane.answerNotice = true, msg.message
 				m.refreshAnswerStatus()
@@ -658,9 +669,6 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			return m.openItem()
 		}
 		if r, ok := m.selectedRow(); ok {
-			if r.ready {
-				return nil
-			}
 			if (r.engineID != "" || r.ledgerID != "") && !m.showHelp {
 				return m.openPane(r)
 			}
@@ -1022,6 +1030,8 @@ func (m *Model) moveView(delta int) tea.Cmd {
 
 // runAction retains the exact target while a confirmation is on screen.
 type runAction struct {
+	findingTitle             string
+	scores                   *runrec.FindingScores
 	verb, run, project, text string
 	item                     string // file: the slice the finding came from
 	finding                  int    // file: the one-based finding
@@ -1058,6 +1068,9 @@ func (a runAction) command() string {
 	if a.verb == "launch" {
 		return "ork run " + a.project + " " + a.run
 	}
+	if a.verb == "answer" && a.finding > 0 {
+		return "Record answer to " + strconv.Quote(a.findingTitle) + ": " + a.text
+	}
 	if a.verb == "file" {
 		return "slicer add " + shellQuote(a.text) + " --discovered-from " + a.item
 	}
@@ -1081,7 +1094,7 @@ func (a runAction) prompt() string {
 	if a.verb == "cleanup" {
 		return a.command() + "\nRemove worktree and branch? [y/N] (Enter is No)"
 	}
-	if a.verb == "approve" {
+	if a.verb == "approve" || a.verb == "file" {
 		return a.promptWidth(0)
 	}
 	prompt := a.command() + "? [y/N] (Enter is No)"
@@ -1102,6 +1115,18 @@ func (a runAction) prompt() string {
 // approval confirms (S119, adj 162, adj 152). The keys `[y/N] (Enter is No)`
 // stay whole: they go on their own line when question and keys do not fit one.
 func (a runAction) promptWidth(w int) string {
+	if a.verb == "file" {
+		note := "ork adds a Why section from the finding."
+		if a.scores != nil {
+			note += " Then slicer set applies proposed importance, urgency and effort."
+		}
+		question := "File this finding as a slice?"
+		const keys = "[y/N] (Enter is No)"
+		if w > 0 && lipgloss.Width(question+" "+keys) > w {
+			return a.command() + "\n" + note + "\n" + question + "\n" + keys
+		}
+		return a.command() + "\n" + note + "\n" + question + " " + keys
+	}
 	if a.verb != "approve" {
 		return a.prompt()
 	}
@@ -1197,7 +1222,7 @@ func (m *Model) actionRefusal(verb string, r ovRow, ok bool) (status string, ref
 			return "answer with: ork answer " + r.engineID + " TEXT", true
 		}
 	}
-	if verb == "answer" && (r.state != "paused" || r.pending != "question") {
+	if verb == "answer" && (m.pane == nil || m.pane.finding == 0) && (r.state != "paused" || r.pending != "question") {
 		return "", true
 	}
 	return "", false
@@ -1228,9 +1253,13 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 	}
 	if verb == "answer" {
 		a.text = m.pane.input.Value()
+		a.finding = m.pane.finding
+		if f := m.paneOwner(); a.finding > 0 && f != nil {
+			a.findingTitle = f.Title
+		}
 		_, reason := m.paneAdjKey()
 		a.adj = m.pane.adj && reason == ""
-		if a.adj {
+		if a.adj || a.finding > 0 {
 			a.by = os.Getenv("ADJ_DECIDED_BY")
 		}
 	}
@@ -1271,7 +1300,7 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 	if a.verb == "fix" && m.pane != nil {
 		m.pane.fixing, m.pane.input = false, textField{}
 	}
-	if a.verb == "answer" && m.pane != nil {
+	if a.verb == "answer" && a.finding == 0 && m.pane != nil {
 		// The call blocks until the run rests, so follow the snapshots meanwhile.
 		m.pane.answered, m.pane.answerDone = true, false
 		m.pane.answerState, m.pane.answerNotice = "", ""
@@ -1306,7 +1335,7 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 				err = errors.New("this daemon connection cannot file slices")
 			}
 		case "answer":
-			message, err = live.AnswerAction(context.Background(), daemon.RunAction{Run: a.run, Text: a.text, Adj: a.adj, By: a.by})
+			message, err = live.AnswerAction(context.Background(), daemon.RunAction{Run: a.run, Text: a.text, Adj: a.adj, By: a.by, Finding: a.finding})
 		}
 		return actionMsg{action: a, err: err, message: message}
 	}

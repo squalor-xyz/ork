@@ -125,7 +125,8 @@ func (c *stopCall) abandon(err error) {
 // runManager serializes admission and owner actions; the engine serializes
 // each run's state transitions. Background jobs use the daemon's lifetime.
 type runManager struct {
-	cleaning     map[string]bool // cleanup calls in flight; guarded by mu
+	recordLocks  map[string]*sync.Mutex // per-run record writes; guarded by mu
+	cleaning     map[string]bool        // cleanup calls in flight; guarded by mu
 	heads        map[string]string
 	merged       map[string]*bool
 	lastRegistry *registry.File             // last successful run-manager read; guarded by mu
@@ -151,7 +152,7 @@ func (d *Daemon) initRunManager() {
 	if deps.Store == nil {
 		deps.Store = &runrec.Store{Dir: filepath.Join(d.cfg.Paths.Dir, "runs")}
 	}
-	d.runs = runManager{cleaning: map[string]bool{}, heads: map[string]string{}, merged: map[string]*bool{}, ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}, waveStops: map[string]int{}, specs: map[string]specEntry{}, specCancels: map[int]context.CancelFunc{}}
+	d.runs = runManager{recordLocks: map[string]*sync.Mutex{}, cleaning: map[string]bool{}, heads: map[string]string{}, merged: map[string]*bool{}, ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}, waveStops: map[string]int{}, specs: map[string]specEntry{}, specCancels: map[int]context.CancelFunc{}}
 }
 func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 	deps := d.runs.deps
@@ -947,6 +948,13 @@ func (d *Daemon) joinStop(ctx context.Context, c *stopCall) (runrec.Record, erro
 // fileFinding files a later finding of a run as a slice. It does not take the
 // run's owner-action turn: the run may be busy, and a role keeps running.
 func (d *Daemon) fileFinding(ctx context.Context, p RunAction) (RunReply, error) {
+	return d.findingAction(ctx, p, false)
+}
+
+func (d *Daemon) findingAction(ctx context.Context, p RunAction, answer bool) (RunReply, error) {
+	lock := d.runRecordLock(p.Run)
+	lock.Lock()
+	defer lock.Unlock()
 	d.runs.mu.Lock()
 	if d.runs.closed {
 		d.runs.mu.Unlock()
@@ -958,28 +966,58 @@ func (d *Daemon) fileFinding(ctx context.Context, p RunAction) (RunReply, error)
 	}
 	d.runs.mu.Unlock()
 	if eng == nil {
-		// A stopped or committed run is not rebuilt at a daemon start, but its
-		// later findings stay fileable. It has no role running, so a second
-		// engine over its record is safe for this one call.
-		run, err := d.runs.deps.Store.Open(p.Run)
-		if err != nil {
-			return RunReply{}, &ipc.Error{Code: CodeNotFound, Message: "no run " + p.Run}
-		}
-		rec := run.Snapshot()
-		if !runrec.IsFinal(rec.State) {
-			return RunReply{}, &ipc.Error{Code: CodeNotFound, Message: "no run engine for " + p.Run}
-		}
-		proj, err := d.registered(rec.Project)
+		var err error
+		eng, err = d.loadFinishedEngine(p.Run)
 		if err != nil {
 			return RunReply{}, err
 		}
-		eng = engine.Load(d.runDeps(proj), proj, run)
 	}
-	id, err := eng.FileLater(ctx, p.Finding)
+	var id string
+	var err error
+	if answer {
+		id, err = eng.AnswerFinding(ctx, p.Finding, p.Text, p.By)
+		if err != nil {
+			return RunReply{}, err
+		}
+		return RunReply{Record: eng.Snapshot(), Message: id}, nil
+	}
+	id, err = eng.FileLater(ctx, p.Finding)
 	if err != nil {
 		return RunReply{}, err
 	}
 	return RunReply{Record: eng.Snapshot(), Message: "filed as " + id}, nil
+}
+
+// runRecordLock returns the mutex shared by finding actions, dismissal and
+// cleanup. Callers take it before the manager lock and keep it through writes.
+func (d *Daemon) runRecordLock(id string) *sync.Mutex {
+	d.runs.mu.Lock()
+	defer d.runs.mu.Unlock()
+	lock := d.runs.recordLocks[id]
+	if lock == nil {
+		lock = &sync.Mutex{}
+		d.runs.recordLocks[id] = lock
+	}
+	return lock
+}
+
+func (d *Daemon) loadFinishedEngine(id string) (*engine.Engine, error) {
+	// A stopped or committed run is not rebuilt at a daemon start, but its
+	// findings stay actionable. Open it fresh while holding the per-run lock
+	// so other finished-run writes cannot be overwritten by an older snapshot.
+	run, err := d.runs.deps.Store.Open(id)
+	if err != nil {
+		return nil, &ipc.Error{Code: CodeNotFound, Message: "no run " + id}
+	}
+	rec := run.Snapshot()
+	if !runrec.IsFinal(rec.State) {
+		return nil, &ipc.Error{Code: CodeNotFound, Message: "no run engine for " + id}
+	}
+	proj, err := d.registered(rec.Project)
+	if err != nil {
+		return nil, err
+	}
+	return engine.Load(d.runDeps(proj), proj, run), nil
 }
 
 func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMessage) (any, error) {
@@ -1000,6 +1038,12 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 	if method == MethodRunDismiss {
 		return d.dismissRun(p)
 	}
+	if method == MethodRunAnswer && p.Finding != 0 {
+		if strings.TrimSpace(p.Text) == "" {
+			return nil, errors.New("the answer is empty")
+		}
+		return d.findingAction(ctx, p, true)
+	}
 	if method == MethodRunAnswer {
 		return d.ownerRunReply(ctx, method, p)
 	}
@@ -1014,6 +1058,9 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 
 // dismissRun holds the manager lock so dismissal cannot race an owner action.
 func (d *Daemon) dismissRun(p RunAction) (runrec.Record, error) {
+	lock := d.runRecordLock(p.Run)
+	lock.Lock()
+	defer lock.Unlock()
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
 	if d.runs.closed {
@@ -1072,7 +1119,6 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		fmt.Fprintf(os.Stderr, "run status: %v\n", err)
 	}
 	runs := []EngineRun{}
-	dismissed := map[string]time.Time{}
 	for _, r := range stored {
 		rec := r.Snapshot()
 		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
@@ -1081,12 +1127,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		if rec.Project != project {
 			continue
 		}
-		if !rec.DismissedAt.IsZero() {
-			if newer, ok := dismissed[rec.Item]; !ok || rec.CreatedAt.After(newer) {
-				dismissed[rec.Item] = rec.CreatedAt
-			}
-			continue
-		}
+
 		var question *runrec.OwnerQuestion
 		questionKey := ""
 		pending := ""
@@ -1159,23 +1200,15 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		}
 		var findings []source.EngineFinding
 		for i, f := range rec.Findings {
-			findings = append(findings, source.EngineFinding{N: i + 1, Kind: f.Kind, Title: f.Title, Ask: f.Ask, Filed: f.Filed})
+			findings = append(findings, source.EngineFinding{N: i + 1, Kind: f.Kind, Title: f.Title, Ask: f.Ask, Filed: f.Filed, Answer: f.Answer, Key: f.Key, Scores: f.Scores})
 		}
 		var card *runrec.ApprovalCard
 		if rec.State == runrec.StateAwaitingApproval {
 			card = rec.Card
 		}
-		runs = append(runs, EngineRun{Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
+		runs = append(runs, EngineRun{Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
 	}
-	// Dismissed records still supersede older stopped runs of the same slice.
-	visible := runs[:0]
-	for _, r := range runs {
-		if newer, ok := dismissed[r.Item]; ok && r.State == runrec.StateStopped && newer.After(r.CreatedAt) {
-			continue
-		}
-		visible = append(visible, r)
-	}
-	return visible
+	return runs
 }
 
 // roleDenials returns the text of each denial a role had (DeniedCommand.Text).

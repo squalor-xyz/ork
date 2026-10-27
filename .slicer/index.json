@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 160,
+  "next_id": 161,
   "preamble": "",
   "passes": [
     {
@@ -5558,10 +5558,66 @@
       "id": "S137",
       "title": "Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings",
       "short_title": "Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "9924bf89-ece0-47a6-b1cb-c0fe616717f5",
+          "kind": "",
+          "text": "**2026-10-27** — Later (review round 2, 2026-10-27): d.runs.recordLocks is never pruned. Drop a run’s lock when retention pruning removes that run.",
+          "created_at": "2026-10-27T13:40:37Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "746654fb-5e21-4ba7-92ab-8c6b5a560f40",
+          "kind": "",
+          "text": "**2026-10-27** — Later (review round 2, 2026-10-27): A committed run merged outside ork has Merged set but no LandedAt, so its findings still count until the run is pruned.",
+          "created_at": "2026-10-27T13:40:37Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "f67997a6-a3c5-43cc-90d4-83fc4aef392e",
+          "kind": "",
+          "text": "**2026-10-27** — Later (review round 2, 2026-10-27): Findings rows use one glyph for later and owner findings. The finding numbers required by ork file RUN N appear only in --json output.",
+          "created_at": "2026-10-27T13:40:38Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "3864321e-d085-4174-ace4-0c3520a9dd07",
+          "kind": "",
+          "text": "**2026-10-27** — Later (review round 2, 2026-10-27): The 80x24 approval-card hint loses x stop and F fix round when the finding actions are shown.",
+          "created_at": "2026-10-27T13:40:38Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "ce9cc7ac-0f63-4148-8300-ab056c567e85",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial (run 15, S137): 5 owner questions before the start and 2 during, no stalls, 2 fix rounds, no merge conflicts so far, ran in parallel with S86 and S98; Codex sol/medium implementer, opus reviewer, UI pass and gate.",
+          "created_at": "2026-10-27T13:42:35Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -5579,7 +5635,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -6385,6 +6441,46 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S160",
+      "title": "Add project from the TUI when projects are registered: + works outside Welcome",
+      "short_title": "Add key beyond Welcome",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "8cf6ed93-de1f-47f7-b88e-82d35dea7ad8",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decisions 2026-10-27 (interactive): scope is add AND remove projects from the TUI at any time, not only on Welcome. Add: + from any view. Remove: - (minus) removes the active project after a y/N confirm naming it, and refuses with a message while the project has a running or paused run (check what ork rm does today, internal/cli/daemoncmds.go:183, and match it). Removing the last project returns to Welcome. Hint, help and docs/dashboard.md updated; golden views. Tests: TestAddKeyWorksWithProjectsRegistered, TestRemoveKeyConfirmsAndRemoves, TestRemoveRefusedWhileRunActive.",
+          "created_at": "2026-10-27T13:39:05Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S96",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
         "attempts": 0
       }
     }

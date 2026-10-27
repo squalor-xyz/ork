@@ -324,6 +324,7 @@ func projectStatus(p registry.Project, s source.Snapshot, now time.Time) Project
 		ps.Open = append(ps.Open, OpenRecord{ID: r.ID, Key: r.Key, Title: r.Title})
 	}
 	for _, r := range ps.EngineRuns {
+		ps.NeedsYou += r.FindingNeeds(ps.EngineRuns...)
 		if r.Section(ps.EngineRuns) == source.SectionNeeds {
 			ps.NeedsYou++
 		}

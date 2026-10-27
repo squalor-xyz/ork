@@ -1,7 +1,7 @@
 [1mork[m  ?help         │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
 [90m  Running        0 [m│[90m────────────────────────────────────────────────────────────[m
-[1;7;97;44m> Needs you      1 [m│[1;36mNeeds you 1[m
-[90m1[m ork            1 │  [1mApprove 1[m
+[1;7;97;44m> Needs you      3 [m│[1;36mNeeds you 3[m
+[90m1[m ork            3 │  [1mApprove 1[m
                    │[1;7;97;44m  +  ork  S22  awaiting approval  2m  owner action  2 of ...[m
                    │    [1mRun engine[m
                    │
@@ -16,9 +16,9 @@
                    │    2 [~] Resize to 80x24 and read the card. (later)
                    │    3 [ ] Press F, type a note and send it.
                    │    Approve lands it, then removes its worktree and branch.
-                   │
-                   │[1;36mRunning 0[m
-                   │[90m  +7 more lines[m
+                   │  [1mFindings 2[m
+                   │  [1;33m?[m  ork  S22  Add a --json flag to ork status
+                   │[90m  +10 more lines[m
                    │[90m────────────────────────────────────────────────────────────[m
-                   │ x [2mstop[m; 1-3 [2mtick/later[m; F [2mfix round[m; esc [2mclose pane[m
+                   │ 1-3 [2mtick/later[m; o [2manswer[m; f [2mfile slice[m; esc [2mclose pane[m
                    │ 1 project | refreshed 16:42:00

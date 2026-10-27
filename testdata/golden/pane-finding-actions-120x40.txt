@@ -1,0 +1,40 @@
+ork  ?help                 │ Overview │ Questions │ Waves │ Roadmap │ Decisions
+  Running                1 │────────────────────────────────────────────────────────────────────────────────────────────
+> Needs you             10 │Needs you 10
+1 ork                   10 │  Stopped 1
+                           │  x  ork  engine  S22  stopped  owner action  2 of 6 steps running                          
+                           │    Run engine
+                           │    owner action
+                           │    [......]
+                           │    implementer > reviewer > gate
+                           │
+                           │    1 later finding; next to file: "Add a --json flag to ork status"
+                           │    Owner question, not blocking: Owner 0? Recommended: per-project.
+                           │    Owner question, not blocking: Owner 1? Recommended: per-project.
+                           │    Owner question, not blocking: Owner 2? Recommended: per-project.
+                           │    +5 more owner findings
+                           │    Stopped; relaunch, or clear with: ork dismiss engine
+                           │  Findings 9
+                           │  ?  ork  S22  Add a --json flag to ork status
+                           │  ?  ork  S22  Owner 0?
+                           │  ?  ork  S22  Owner 1?
+                           │  ?  ork  S22  Owner 2?
+                           │  ?  ork  S22  Owner 3?
+                           │  ?  ork  S22  Owner 4?
+                           │  ?  ork  S22  Owner 5?
+                           │  ?  ork  S22  Owner 6?
+                           │  ?  ork  S22  Owner 7?
+                           │
+                           │Running 0
+                           │  nothing running
+                           │
+                           │Recent
+                           │  none
+                           │
+                           │Ready to land
+                           │  none
+                           │
+                           │
+                           │────────────────────────────────────────────────────────────────────────────────────────────
+                           │ o answer; f file slice; pgup/pgdown line; ctrl+d/u half page; esc close pane
+                           │ 1 project | refreshed 16:42:00

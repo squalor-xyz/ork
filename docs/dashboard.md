@@ -117,7 +117,11 @@ not before, `x stop` not on a stopped run, `t retry` only on a paused run that
 does not wait for an answer, `c clean up` only on a merged Ready row, and the
 run keys not at all while there is no daemon connection. `f file slice` shows
 only with a later finding to file, a daemon that can file, and no filing in
-flight. The option digits and `enter submit` of a question pane show only while
+flight. `o answer` shows in a run pane with an unanswered structured owner
+finding and a daemon connection. Both finding keys stay ahead of scroll hints
+when space is short. In a finding question, Esc reads `esc back to run`;
+free text first returns to the options. The option digits and `enter submit`
+of a question pane show only while
 the answer would go out (a daemon, and no call in flight for the run). The check
 digits and `F fix round` show only for a daemon that can mark checks and send
 fixes; `space tick item` not while a plan is pending for another item, and `l`
@@ -248,7 +252,7 @@ move it to the next and previous row. It goes through
 section headings, blank lines, multi-line rows and the detail are not counted
 as rows. `}` and `{` move it to
 the first row of the next group and of the current or previous group. The
-groups are the Needs you groups (Decisions, Held, Stopped, Paused, Approve and
+groups are the Needs you groups (Decisions, Held, Stopped, Paused, Approve, Findings and
 Errors), then Running, Recent and Ready to land. The Roadmap, Questions,
 Decisions and Waves cursors take the first, last and page keys; only the
 Overview has the group keys. With a pane open, no row key moves the cursor;
@@ -299,10 +303,14 @@ and decided records refresh every 5 min or on HEAD changes and manual refresh. `
 ## Overview (all projects)
 
 Needs you and Running headings carry row counts. Needs you groups rows as
-Decisions, Held, Stopped, Paused, Approve and Errors, omitting empty groups
-(`ui.overview-layout`, adj 149). Errors includes failed calls, removed runs
-and projects awaiting their first reply. Cursor order follows these groups,
-keeping the existing order within each group. Each row retains its kind
+Decisions, Held, Stopped, Paused, Approve, Findings and Errors, omitting empty
+groups
+(`ui.overview-layout`, adj 149). Findings contains unfiled later and unanswered
+owner findings from runs that are not landed, dismissed or superseded.
+Findings rows open the run pane;
+they are not additional pending owner questions. Errors includes failed calls,
+removed runs and projects awaiting their first reply. Cursor order follows
+these groups, keeping the existing order within each group. Each row retains its kind
 symbol (`?`, `#`, `x`, `=`, `+`, `!` or `~`). Decision IDs, keys and titles
 align in separate columns; keys use at most a third of the pane and longer
 keys end in `...`. Held rows omit the redundant flag suffix. On the all-projects view,
@@ -411,8 +419,9 @@ the text column, falling back to a shorter indent when needed to fit.
    copy. Ready rows follow Needs you, Running and Recent in the cursor order and
    scroll into view with their command lines. The selected row shows full
    commands wrapped in the detail area; other rows keep clipped commands.
-   Enter does nothing on these rows. Run action keys explain that only
-   cleanup is available on a merged row.
+   Enter opens the run pane, including its findings and filing action.
+   On the Ready row itself, run action keys explain that only cleanup is
+   available on a merged row.
    An unknown merge state says "merge state unknown" and still offers the
    land command; slicer checks that the branch is merged. A known unmerged
    branch says "merge first" with no command.
@@ -503,8 +512,10 @@ Other active engine states appear under Running. Committed runs do not appear
 in either section. A stopped run disappears once a newer engine record exists
 for the same slice, ordered by `created_at`; ledger runs do not clear it
 (`ui.stopped-newer`). The owner can also clear a stopped run with
-`ork dismiss RUN` (`ui.dismiss-run`, adj #117). Dismissal keeps its run
-record and removes it from the snapshot, Needs you and `ork status`.
+`ork dismiss RUN` (`ui.dismiss-run`, adj #117). The snapshot keeps the run
+marked `dismissed: true`, hidden from lists, Needs you and `ork status` text.
+Its findings are excluded from counts. `ork status --json` includes the
+dismissed run. Dismissal keeps its run record and files.
 A dismissed run still hides older stopped runs of the same slice.
 Needs-you counts include open questions, held items and these engine waits
 in both the sidebar and `ork status`. `ork status` text lists each open
@@ -767,12 +778,29 @@ findings read `N later findings; next to file: "TITLE"`. When one can be
 filed, the shared hint line offers `f file slice` when it fits, on a
 stopped run too, and after a daemon restart for a stopped or committed run.
 `f` shows the command first:
-`slicer add 'TITLE' --discovered-from ITEM? [y/N] (Enter is No)`. `y` makes
-ork run it in the project, then give the new slice a Why section from the
-finding; the status line then says `filed as ID`, and the next press offers the
+`slicer add 'TITLE' --discovered-from ITEM`, followed by the note that
+ork adds a Why section. When scores were proposed, the note also names
+`slicer set`. The final line asks `File this finding as a slice? [y/N]
+(Enter is No)`. `y` makes ork run it in the project and add the Why section.
+The status line then says `filed as ID`, and the next press offers the
 next finding. Filed findings read `Filed as slices: ID` and are not offered
 again. An *owner* finding that does not block reads `Owner question, not
-blocking: TITLE Recommended: LABEL.`; it only informs, and the slice goes on.
+blocking: TITLE Recommended: LABEL.`; the slice goes on. Proposed (S137):
+`o answer owner finding` opens the first unanswered finding as its structured
+question. Answering records it without pausing the run; a decision key also
+records the answer in adj when the project has adj (the caller must set
+`ADJ_DECIDED_BY`). Otherwise it only records the answer on the finding.
+The confirmation names the finding's title. The footer shows all four owner
+findings when there are four; with five or more, it shows three and then
+`+N more owner findings`. A single remaining finding is shown in full.
+Unfiled later and unanswered owner findings appear in the Needs you Findings
+group and contribute one each to the counts only until their run is landed,
+dismissed or superseded. Those findings remain visible in an open run pane.
+Enter on a Ready-to-land row
+opens its run pane, where `f` works too. `ork file RUN N` files a later
+finding through the daemon. The filing confirmation says ork adds a Why section.
+A role's complete proposed importance, urgency and effort scores are applied
+after filing; absent scores leave it unscored.
 An owner finding marked a blocker pauses the slice as an ordinary structured
 question (the question pane above). A fix finding goes to the fix round and
 shows nowhere in the pane. `f` and `F fix round` in the key help sit on the line with

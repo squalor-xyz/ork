@@ -241,6 +241,11 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			in.Sections = append(in.Sections, section)
 		}
 	}
+	for _, q := range rec.Questions {
+		if q.Answer != "" && q.Role == r.role && (pend == nil || q.Text != pend.Question) {
+			in.Sections = append(in.Sections, BriefSection{Title: "Owner answer", Body: q.Text + "\n\nOwner answered: " + q.Answer})
+		}
+	}
 	if rec.Decisions != "" {
 		// The worktree's spec lacks the owner's spec check answers (S116).
 		in.Sections = append([]BriefSection{{Title: "Owner decisions", Body: rec.Decisions}}, in.Sections...)
@@ -426,8 +431,25 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			return outcome{}, err
 		}
 		// An owner finding blocks the gate only when its report marks it.
-		if b := tri.Blocker(); b != nil {
-			return outcome{}, e.askBlocker(r, *b)
+		if tri.Blocker() != nil {
+			for _, f := range tri.Owner {
+				if !f.Blocker {
+					continue
+				}
+				for _, q := range e.run.Snapshot().Questions {
+					if q.Answer != "" && q.Ask != nil && findingKey(KindOwner, q.Ask.Title) == findingKey(KindOwner, f.Title) {
+						return outcome{}, e.pauseError(r, "answered blocker repeated: "+f.Title)
+					}
+				}
+			}
+			for _, f := range tri.Owner {
+				if f.Blocker {
+					if err := e.askBlocker(r, f); err != nil {
+						return outcome{}, err
+					}
+				}
+			}
+			return outcome{}, nil
 		}
 	}
 	return outcome{ok: true, text: text, report: rep, findings: findings, triage: tri, file: file}, nil

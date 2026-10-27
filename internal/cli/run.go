@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
@@ -177,12 +178,15 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 		return o.usage("%s: %v", command, err)
 	}
 	want := 1
-	if command == "answer" {
+	if command == "answer" || command == "file" {
 		want = 2
 	}
 	if len(pos) != want {
 		if command == "stop" {
 			return o.usage("stop takes RUN or WAVE")
+		}
+		if command == "file" {
+			return o.usage("file takes RUN N")
 		}
 		return o.usage("%s takes RUN%s", command, map[bool]string{true: " TEXT"}[command == "answer"])
 	}
@@ -194,6 +198,22 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 		return printWave(o, result)
 	}
 	p := daemon.RunAction{Run: pos[0]}
+	if command == "file" {
+		n, err := strconv.Atoi(pos[1])
+		if err != nil || n < 1 {
+			return o.usage("file N must be a positive finding number")
+		}
+		p.Finding = n
+		var reply daemon.RunReply
+		if code := a.call(ctx, o, daemon.MethodRunFile, p, &reply); code != 0 {
+			return code
+		}
+		if o.json {
+			return o.printJSON(reply)
+		}
+		fmt.Fprintln(o.stdout, reply.Message)
+		return ExitOK
+	}
 	if command == "answer" {
 		p.Text = pos[1]
 		if strings.TrimSpace(p.Text) == "" {

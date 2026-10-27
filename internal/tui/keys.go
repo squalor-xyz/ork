@@ -22,6 +22,7 @@ type keyMap struct {
 	Stop       key.Binding
 	Retry      key.Binding
 	FileSlice  key.Binding
+	Owner      key.Binding
 	Fix        key.Binding
 	MarkCheck  key.Binding
 	Renders    key.Binding
@@ -69,6 +70,7 @@ func newKeyMap() keyMap {
 		Approve:    key.NewBinding(key.WithKeys("a"), key.WithHelp("a", "approve")),
 		Stop:       key.NewBinding(key.WithKeys("x"), key.WithHelp("x", "stop")),
 		Retry:      key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "retry")),
+		Owner:      key.NewBinding(key.WithKeys("o"), key.WithHelp("o", "answer owner finding")),
 		FileSlice:  key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "file slice")),
 		Fix:        key.NewBinding(key.WithKeys("F", "shift+f"), key.WithHelp("F", "fix round")),
 		MarkCheck:  key.NewBinding(key.WithKeys("1", "2", "3", "4", "5", "6", "7", "8", "9"), key.WithHelp("1-9", "mark check")),
@@ -111,7 +113,7 @@ func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Refresh, k.He
 
 // FullHelp implements help.KeyMap.
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add}, {k.Tick, k.EditLineup, k.Launch}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.FileSlice, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
+	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add}, {k.Tick, k.EditLineup, k.Launch}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
 }
 
 // short is b with a short label and words for the hint line. It answers to the
@@ -131,10 +133,9 @@ type hintEntry struct {
 }
 
 // The drop order of the hint line, first to go first: the row's rarer keys
-// (file, renders, fix, the check digits, retry, stop), then the pane scroll
-// keys' second form and the global tab and quit, then the rest.
+// (renders, fix, the check digits, retry, stop), then the pane scroll keys'
+// second form and the global tab and quit. Finding actions stay with row keys.
 const (
-	dropFile   = 20
 	dropRender = 19
 	dropFix    = 18
 	dropMark   = 17
@@ -342,7 +343,7 @@ func (m *Model) contextHints() []hintEntry {
 		if r, ok := m.selectedRow(); ok {
 			switch {
 			case r.ready:
-				// Enter does nothing on a Ready row.
+				l.add(dropRow, short(k.Select, "enter", "open"))
 			case r.engineID != "" || r.ledgerID != "":
 				l.add(dropRow, short(k.Select, "enter", "open"))
 			default:
@@ -427,15 +428,21 @@ func (m *Model) paneHints() []hintEntry {
 		switch {
 		case ask != nil && !m.pane.freeText:
 			l.add(dropRow, offer(answers(), k.PickOption, fmt.Sprintf("1-%d", len(ask.Options)), "pick"), short(k.FreeAnswer, "t", "free text"))
-			l.add(dropRow+1, offer(noAdj == "", k.FileAdj, "ctrl+a", "file in adj"))
+			l.add(dropRow+1, offer(noAdj == "" && m.pane.finding == 0, k.FileAdj, "ctrl+a", "file in adj"))
 			scroll()
-			esc("close pane")
+			if m.pane.finding > 0 {
+				esc("back to run")
+			} else {
+				esc("close pane")
+			}
 		default:
 			l.add(dropRow, offer(answers(), k.Answer, "enter", "submit"))
-			l.add(dropRow+1, offer(noAdj == "", k.FileAdj, "ctrl+a", "file in adj"))
+			l.add(dropRow+1, offer(noAdj == "" && m.pane.finding == 0, k.FileAdj, "ctrl+a", "file in adj"))
 			scroll()
-			if ask != nil {
+			if ask != nil && m.pane.freeText {
 				esc("back to options")
+			} else if m.pane.finding > 0 {
+				esc("back to run")
 			} else {
 				esc("close pane")
 			}
@@ -477,8 +484,11 @@ func (m *Model) paneHints() []hintEntry {
 			l.add(fixDrop, offer(canFix, k.Fix, "F", "fix round"))
 			l.add(dropRender, offer(len(card.Renders) > 0, k.Renders, "v", "renders"))
 		}
+		if m.paneOwner() != nil && m.cfg.Live != nil && !m.paneQuestion() {
+			l.add(dropRow, short(k.Owner, "o", "answer"))
+		}
 		if _, refused := m.fileRefusal(); !refused && !m.paneQuestion() {
-			l.add(dropFile, short(k.FileSlice, "f", "file slice"))
+			l.add(dropRow, short(k.FileSlice, "f", "file slice"))
 		}
 		scroll()
 		esc("close pane")

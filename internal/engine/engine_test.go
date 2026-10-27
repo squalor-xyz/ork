@@ -50,7 +50,7 @@ func TestHappyPathReachesAwaitingApproval(t *testing.T) {
 		if want := filepath.Join(h.store.RunDir(rec.ID), r.Role+"-1.md"); r.ReportPath != want {
 			t.Errorf("%s report path %q, want %q", r.Role, r.ReportPath, want)
 		}
-		if !strings.HasPrefix(r.Brief, "Role: "+r.Role+". Contract: relay v7\n") || !strings.Contains(r.Brief, `"id":"S04"`) || !strings.Contains(r.Brief, "Shell: zsh on darwin.") {
+		if !strings.HasPrefix(r.Brief, "Role: "+r.Role+". Contract: relay v8\n") || !strings.Contains(r.Brief, `"id":"S04"`) || !strings.Contains(r.Brief, "Shell: zsh on darwin.") {
 			t.Errorf("%s brief is missing its parts:\n%.300s", r.Role, r.Brief)
 		}
 	}

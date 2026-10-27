@@ -1991,6 +1991,13 @@
 {"when": "2026-10-27T12:00:52Z", "item": "S137", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-27T12:00:52Z", "item": "S137", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-27T12:00:52Z", "item": "S137", "action": "set", "from": "", "to": "", "note": "size S→M"}
+{"when": "2026-10-27T12:01:14Z", "item": "S137", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-27T13:40:37Z", "item": "S137", "action": "note", "from": "", "to": "", "note": "Later (review round 2, 2026-10-27): d.runs.recordLocks is ne", "by": "Jon R"}
+{"when": "2026-10-27T13:40:37Z", "item": "S137", "action": "note", "from": "", "to": "", "note": "Later (review round 2, 2026-10-27): A committed run merged o", "by": "Jon R"}
+{"when": "2026-10-27T13:40:38Z", "item": "S137", "action": "note", "from": "", "to": "", "note": "Later (review round 2, 2026-10-27): Findings rows use one gl", "by": "Jon R"}
+{"when": "2026-10-27T13:40:38Z", "item": "S137", "action": "note", "from": "", "to": "", "note": "Later (review round 2, 2026-10-27): The 80x24 approval-card ", "by": "Jon R"}
+{"when": "2026-10-27T13:42:35Z", "item": "S137", "action": "status", "from": "started", "to": "done", "note": "Every owner blocker is asked; an answered blocker cannot loop; run.file is serialized per run with a fresh record; findings count in Needs you and ork status for runs not yet landed; o answers a non-blocking owner finding; ork file RUN N; later findings may carry proposed scores applied with slicer set; role prompts say relay v8. Review PASS (2 rounds), UI pass PASS, gate PASS (run-20261027-120059-ee33).", "by": "Jon R"}
+{"when": "2026-10-27T13:42:35Z", "item": "S137", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 15, S137): 5 owner questions before", "by": "Jon R"}
 {"when": "2026-10-27T12:15:39Z", "item": "S86", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-27T12:27:58Z", "item": "S86", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-27T12:28:08Z", "item": "S86", "action": "note", "from": "", "to": "", "note": "Review PASS and UI pass PASS reported by the owner. Applied ", "by": "Jon R"}
@@ -2003,3 +2010,9 @@
 {"when": "2026-10-27T13:59:12Z", "item": "S98", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-27 (interactive): the Welcome guide ", "by": "Jon R"}
 {"when": "2026-10-27T13:59:12Z", "item": "S98", "action": "status", "from": "started", "to": "done", "note": "Welcome leaves when a project is added elsewhere (status 'Found NAME PATH', discovery with one request in flight), ~ expands in the path field, no 'refreshed never' with zero projects, messages sit next to the field and are capitalised, the guide says 'add one'. Review PASS (2 rounds), UI pass PASS, gate PASS (run-20261027-133541-c884).", "by": "Jon R"}
 {"when": "2026-10-27T13:59:12Z", "item": "S98", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 16, S98): 1 owner question before t", "by": "Jon R"}
+{"when": "2026-10-27T13:37:24Z", "item": "S160", "action": "add", "from": "", "to": "open", "note": "Add project from the TUI when projects are registered: + works outside Welcome"}
+{"when": "2026-10-27T13:37:24Z", "item": "S160", "action": "set", "from": "", "to": "", "note": "importance 2→3; urgency 2→3; effort -→1"}
+{"when": "2026-10-27T13:37:31Z", "item": "S160", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-27T13:37:39Z", "item": "S160", "action": "set", "from": "", "to": "", "note": "effort,importance,urgency"}
+{"when": "2026-10-27T13:39:05Z", "item": "S160", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-27 (interactive): scope is add AND r", "by": "Jon R"}
+{"when": "2026-10-27T13:39:10Z", "item": "S160", "action": "set", "from": "", "to": "", "note": "effort 1→2"}

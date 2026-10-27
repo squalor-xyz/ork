@@ -5,7 +5,10 @@ package engine
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
+
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
 // The finding kinds a reviewer, UI pass or gate report may tag (adj 163,
@@ -18,6 +21,7 @@ const (
 
 // Finding is one tagged finding of a report.
 type Finding struct {
+	Scores  *runrec.FindingScores
 	Kind    string
 	Blocker bool // an owner finding that blocks the gate
 	Title   string
@@ -133,7 +137,28 @@ func (g segment) finding() (Finding, string) {
 	}
 	rest := dedent(g.lines[1:])
 	f.Text = strings.TrimSpace(f.Title + "\n" + strings.Join(rest, "\n"))
-	if g.kind != KindOwner {
+	if g.kind == KindLater {
+		scores := map[string]int{}
+		for _, line := range rest {
+			name, value, ok := strings.Cut(strings.TrimSpace(line), ":")
+			if !ok || (name != "Importance" && name != "Urgency" && name != "Effort") {
+				continue
+			}
+			n, err := strconv.Atoi(strings.TrimSpace(value))
+			if err != nil {
+				continue
+			}
+			if n < 1 || n > 3 || scores[name] != 0 {
+				return f, fmt.Sprintf("later finding %q needs unique Importance, Urgency and Effort values from 1 to 3", f.Title)
+			}
+			scores[name] = n
+		}
+		if len(scores) != 0 {
+			if len(scores) != 3 {
+				return f, fmt.Sprintf("later finding %q needs all three proposed scores: Importance, Urgency and Effort", f.Title)
+			}
+			f.Scores = &runrec.FindingScores{Importance: scores["Importance"], Urgency: scores["Urgency"], Effort: scores["Effort"]}
+		}
 		return f, ""
 	}
 	var body []string

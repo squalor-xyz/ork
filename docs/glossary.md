@@ -143,7 +143,7 @@ slicer.
 
 **Contract version.** The integer on the first line of `slicer ai relay` and
 `slicer ai relay-orchestrator` (`Contract: relay v8`). ork accepts v7 and v8;
-its embedded role prompts remain written against v7. v8 changes only the outer
+its embedded role prompts are written against v8. v8 changes only the outer
 session's hand-back handling and the orchestrator's last line
 (`waiting on: ROLE AGENT-ID`; `slicer/CHANGELOG.md:20`). It is bumped only when a
 rule changes. The agents-repo orchestrator role carries a matching

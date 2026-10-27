@@ -8,8 +8,7 @@
                            │ [38;2;59;130;246m█[m[38;2;59;130;246m█[m  [38;2;139;92;246m█[m[38;2;139;92;246m█[m  [38;2;234;88;12m█[m[38;2;234;88;12m█[m 
                            │
                            │[1;36mKeys[m
-                           │tab next view
-                           │shift+tab previous view
+                           │tab next view; shift+tab previous view
                            │] next project
                            │[ previous project
                            │1-9 jump to project; 0 Needs you
@@ -24,6 +23,7 @@
                            │e edit ticked item lineup (Waves)
                            │l launch a ready slice (Roadmap) or wave (Waves)
                            │a approve; F fix round; x stop; t retry; v view renders; f file slice
+                           │o answer owner finding (run pane)
                            │enter (answer) submit free text
                            │1-4 (question) pick an option; y sends
                            │t (question) type a free answer
