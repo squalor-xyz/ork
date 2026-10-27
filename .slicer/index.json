@@ -6518,10 +6518,66 @@
       "id": "S153",
       "title": "S95 later notes: stale Ready rows, cleanup confirm shows only steps that run, cleanup status text",
       "short_title": "S95 later notes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "9460d76e-ea19-440a-8140-a88abe2d4be7",
+          "kind": "",
+          "text": "**2026-10-27** — Later (S153 fix round): a retry after a stop or a failed commit can record relay-run steps on an already ended ledger run, because the skip in stepStart keys on rec.Commit only. Extend the skip to every state where the first finish step has ended the ledger run (for example a persisted ledger-ended mark on the run record).",
+          "created_at": "2026-10-27T20:45:03Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "cc4f08e3-bebf-4baa-8a27-382a2368d017",
+          "kind": "",
+          "text": "**2026-10-27** — Later (S153 UI pass): the selected detail of a 'not listed' Ready row only repeats the row. Suggest: 'not listed in slicer (landed with slicer land, or retired); c removes the branch and worktree'.",
+          "created_at": "2026-10-27T20:45:03Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "fc0e2fe7-d5a5-4c3c-b5a0-9991245a994a",
+          "kind": "",
+          "text": "**2026-10-27** — Later (S153 reviewer): the stale-run mark persists cleaned_at on the run record from a merge pass (markCleaned) instead of deriving cleaned on the wire. It needs a worktree-gone, branch-gone and commit-in-HEAD read each HEAD change for a run that is never marked; if that cost matters, derive it in the snapshot instead.",
+          "created_at": "2026-10-27T20:45:04Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "d1280efe-35ae-45a9-a492-cadb246f86d1",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decisions 2026-10-27 (interactive): a landing fix round after the ledger run ended skips relay-run steps; doubled error code fixed in the TUI only; the cleanup status names the item; an item missing from slicer's list reads 'not listed'. Open HUMAN CHECK: press c on the old S78 row or see it leave Ready (it leaves only when its worktree path is gone too).",
+          "created_at": "2026-10-27T20:52:06Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "c83887d8-df65-4112-8dab-2a9a8c84df85",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial (run 26, S153): 3 owner questions during the fix rounds, no stalls, 2 fix rounds, merge of main at landing; ran in parallel with S150 and S144; implementer Claude sonnet-high fallback (Codex out of credits), opus reviewer and UI pass.",
+          "created_at": "2026-10-27T20:52:06Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -6539,7 +6595,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

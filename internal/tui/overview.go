@@ -67,6 +67,7 @@ type ovRow struct {
 	ready             bool
 	merged            bool
 	mergeKnown        bool
+	worktreeGone      bool // the worktree path no longer exists (S153)
 	branch, worktree  string
 	compact           bool       // a run row on a narrow terminal drops its run ID and vendor/model
 	live              *liveRun   // a live run's board cells, for the Running entry
@@ -1438,12 +1439,18 @@ func (m *Model) readyRows() []ovRow {
 				note = strings.TrimPrefix(strings.TrimPrefix(run.CleanupFailed, "landed; "), "cleanup failed at ")
 				detail = run.CleanupFailed
 				if run.Merged != nil && *run.Merged {
-					detail += "\nc finishes the cleanup: " + strings.ReplaceAll(cleanupCommand(m.projects[i].reg.Path, run.Worktree, run.Branch), "\n", "; ")
+					detail += "\nc finishes the cleanup: " + strings.ReplaceAll(cleanupCommand(m.projects[i].reg.Path, run.Worktree, run.Branch, run.WorktreeGone), "\n", "; ")
 				}
 			case run.Branch == "":
 				rest = "branch unknown"
 			case run.Merged != nil && !*run.Merged:
 				rest += "  merge first"
+			case slicerLanded(p.snap, run.Item):
+				// Slicer no longer lists the item: `slicer land` ran outside ork, or
+				// the item was retired (the default list hides both). The landing
+				// and render lines have nothing left to do; c still removes the
+				// branch and worktree (S153).
+				rest += "  not listed"
 			default:
 				commands = append(commands, fmt.Sprintf("slicer land %s --branch %s --note %s", shellQuote(run.Item), shellQuote(run.Branch), shellQuote("Landed "+run.Branch)))
 				if run.Merged == nil {
@@ -1453,11 +1460,22 @@ func (m *Model) readyRows() []ovRow {
 					commands = append(commands, "slicer render")
 				}
 			}
-			ready = append(ready, ovRow{mergeKnown: run.Merged != nil, ready: true, engineID: run.ID, state: run.State, merged: run.Merged != nil && *run.Merged, branch: run.Branch, worktree: run.Worktree, project: i, name: p.reg.Name, style: m.cfg.Theme.Title,
+			ready = append(ready, ovRow{mergeKnown: run.Merged != nil, worktreeGone: run.WorktreeGone, ready: true, engineID: run.ID, state: run.State, merged: run.Merged != nil && *run.Merged, branch: run.Branch, worktree: run.Worktree, project: i, name: p.reg.Name, style: m.cfg.Theme.Title,
 				id: run.Item, rest: rest, text: run.Item + "  " + rest, commands: commands, note: note, detail: detail})
 		}
 	}
 	return ready
+}
+
+// slicerLanded reports that slicer no longer lists the item: its default list
+// omits done and retired items, so an item missing from a list that was read
+// without error was landed (as `slicer land` leaves it) or retired (S153). A
+// list that was never read or that failed says nothing.
+func slicerLanded(s source.Snapshot, item string) bool {
+	if s.Items.Err != nil || s.Items.ReadAt.IsZero() {
+		return false
+	}
+	return !slices.ContainsFunc(s.Items.Value, func(it slicercli.Item) bool { return it.ID == item })
 }
 
 func shellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", `'"'"'`) + "'" }

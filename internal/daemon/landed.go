@@ -61,6 +61,44 @@ func (d *Daemon) landed(ctx context.Context, p registry.Project, rec runrec.Reco
 	}
 	return nil, err
 }
+
+// goneAndMerged reports whether the run's worktree and branch no longer exist
+// and the commit ork made on it is in HEAD. Anything else, including a git
+// error or a worktree that is still there, is false: the run keeps its state
+// (S153).
+func (d *Daemon) goneAndMerged(ctx context.Context, p registry.Project, rec runrec.Record) bool {
+	if !worktreeGone(rec) || rec.Commit == nil || rec.Commit.SHA == "" || strings.HasPrefix(rec.Commit.SHA, "-") || rec.Branch == "" || strings.HasPrefix(rec.Branch, "-") {
+		return false
+	}
+	result, err := d.git(ctx, p, "rev-parse", "--verify", "--quiet", "refs/heads/"+rec.Branch)
+	var exit *clirun.ExitError
+	if !errors.As(err, &exit) || result.ExitCode != 1 {
+		return false // the branch exists, or git could not say
+	}
+	_, err = d.git(ctx, p, "merge-base", "--is-ancestor", rec.Commit.SHA, "HEAD")
+	return err == nil
+}
+
+// cleanedLocked reads the run's record and reports whether it is cleaned.
+// The caller holds the manager lock.
+func (d *Daemon) cleanedLocked(id string) bool {
+	if managed := d.runs.runs[id]; managed != nil && managed.engine != nil {
+		return managed.engine.Snapshot().Cleaned()
+	}
+	r, err := d.runs.deps.Store.Open(id)
+	return err == nil && r.Snapshot().Cleaned()
+}
+
+// worktreeGone reports whether the run has a worktree path that no longer
+// exists, so the cleanup has no git worktree remove to run (S153).
+func worktreeGone(rec runrec.Record) bool {
+	if rec.Worktree == "" {
+		return false
+	}
+	_, err := os.Stat(rec.Worktree)
+	return errors.Is(err, fs.ErrNotExist)
+}
+
 func (d *Daemon) checkMerged(ctx context.Context, p registry.Project, head string) {
 	d.runs.mu.Lock()
 	key := p.Name + "\x00" + p.Path
@@ -98,12 +136,25 @@ func (d *Daemon) checkMerged(ctx context.Context, p registry.Project, head strin
 		results[rec.ID] = merged
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "merge detection %s: %v\n", rec.ID, err)
+			// A run from before S95 can have no worktree or branch left: its
+			// commit in HEAD says it was merged and cleaned up (S153).
+			if d.goneAndMerged(ctx, p, rec) {
+				if err := d.markCleaned(rec.ID); err != nil {
+					fmt.Fprintf(os.Stderr, "merge detection %s: mark cleaned: %v\n", rec.ID, err)
+				}
+			}
 		}
 	}
 	d.runs.mu.Lock()
 	// A newer HEAD check owns the displayed state if it overtook this pass.
 	if d.runs.heads[key] == head {
 		for id, merged := range results {
+			// A cleanup that finished while git ran leaves no branch to have a
+			// merge state: do not write one back (S153).
+			if merged != nil && d.cleanedLocked(id) {
+				delete(d.runs.merged, id)
+				continue
+			}
 			d.runs.merged[id] = merged
 		}
 	}
@@ -162,7 +213,7 @@ func (d *Daemon) cleanupRun(ctx context.Context, a RunAction) error {
 	// A cleanup that stopped at branch -d already removed the worktree, and
 	// git worktree remove would fail on the path that is gone: skip it.
 	steps := [][]string{{"branch", "-d", rec.Branch}}
-	if _, err := os.Stat(rec.Worktree); !errors.Is(err, fs.ErrNotExist) {
+	if !worktreeGone(rec) {
 		steps = append([][]string{{"worktree", "remove", rec.Worktree}}, steps...)
 	}
 	for _, args := range steps {

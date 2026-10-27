@@ -521,9 +521,11 @@ func (e *Engine) pauseError(r round, reason string) error {
 
 // stepStart records a role round as a ledger step under the orchestrator step
 // ork owns, and returns its id. Recording is advisory: it returns "" when the
-// call fails.
+// call fails. Once the first finish step has ended the ledger run (the run is
+// committed), a landing fix round records no steps: relay-run refuses them with
+// run_ended, and the engine run record keeps the rounds (S153).
 func (e *Engine) stepStart(ctx context.Context, rec runrec.Record, r round, entry runrec.LineupEntry) string {
-	if rec.RelayRun == "" {
+	if rec.RelayRun == "" || rec.Commit != nil {
 		return ""
 	}
 	role := r.role

@@ -696,3 +696,195 @@ func TestPruneRemovesACleanedFinishedRunBeyondTheKeepLimit(t *testing.T) {
 		t.Errorf("merge checks=%d, want 99 (cleaned runs are not checked)", n)
 	}
 }
+
+// staleRun is a run from before S95: committed, its branch and worktree
+// gone, never marked cleaned. sha is the commit ork made on the slice branch;
+// "none" records no commit at all.
+func staleRun(t *testing.T, store *runrec.Store, p registry.Project, sha string) {
+	t.Helper()
+	rec := runrec.Record{ID: "run", Project: p.Name, Item: "S63", State: runrec.StateCommitted, Branch: "s63", Worktree: p.Path + "/.worktrees/s63"}
+	if sha != "none" {
+		rec.Commit = &runrec.Commit{SHA: sha, Title: "S63: work"}
+	}
+	if _, err := store.Create(rec); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// staleGit fakes git for the merge pass of a run whose branch may be gone:
+// the branch merge check fails as git does for a missing branch (exit 128),
+// rev-parse says whether the branch still exists, and the commit check says
+// whether the commit is in HEAD.
+func staleGit(t *testing.T, d *Daemon, p registry.Project, branchExit, shaExit int) *clitest.Fake {
+	t.Helper()
+	// The fake routes are process-wide: the HEAD read of the cache needs its own.
+	f := clitest.Install(t,
+		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "rev-parse", "HEAD"}, Stdout: "h1"},
+		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "merge-base", "--is-ancestor", "s63", "HEAD"}, Exit: 128},
+		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "rev-parse", "--verify", "--quiet", "refs/heads/s63"}, Exit: branchExit},
+		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "merge-base", "--is-ancestor", "abc123", "HEAD"}, Exit: shaExit},
+		// An empty commit must not be asked about; if it were, git would say yes.
+		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "merge-base", "--is-ancestor", "", "HEAD"}},
+		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "merge-base", "--is-ancestor", "--x", "HEAD"}})
+	setGitBin(d, f.Bin("git"))
+	return f
+}
+
+// removeWorktree does what the old cleanup did to the run's worktree.
+func removeWorktree(t *testing.T, p registry.Project) {
+	t.Helper()
+	if err := os.RemoveAll(p.Path + "/.worktrees/s63"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// A committed run whose branch and worktree are gone and whose commit is in
+// HEAD is cleaned up already: it leaves Ready, is not offered the cleanup key, and git writes
+// nothing (S153, owner decision 2026-10-26).
+func TestStaleRunWithGoneBranchAndMergedCommitIsCleaned(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 128, "")
+	staleRun(t, s, p, "abc123")
+	removeWorktree(t, p)
+	f := staleGit(t, d, p, 1, 0)
+	refreshHead(t, d, p)
+	if rec := runRecord(t, s, "run"); rec.CleanedAt.IsZero() || !rec.Cleaned() || rec.State != runrec.StateCommitted {
+		t.Errorf("the stale run is not marked cleaned: %+v", rec)
+	}
+	if row := d.engineRuns(p.Name)[0]; !row.Cleaned {
+		t.Errorf("the wire does not say cleaned: %+v", row)
+	}
+	for _, c := range f.CallsTo("git") {
+		if c.Args[2] != "merge-base" && c.Args[2] != "rev-parse" {
+			t.Errorf("git wrote: %v", c)
+		}
+	}
+	if err := cleanupRequest(d); err == nil || !strings.Contains(err.Error(), "already cleaned") {
+		t.Errorf("cleanup of the stale run: %v, want already cleaned", err)
+	}
+}
+
+// Anything short of "the branch and worktree are gone and the commit is in
+// HEAD" leaves the run as it was: one variable at a time.
+func TestStaleRunIsNotCleanedUnlessAllHold(t *testing.T) {
+	for _, tc := range []struct {
+		name                string
+		sha                 string
+		branchExit, shaExit int
+		keepWorktree        bool
+	}{
+		{"the branch still exists", "abc123", 0, 0, false},
+		{"the worktree is still there", "abc123", 1, 0, true},
+		{"the commit is not in HEAD", "abc123", 1, 1, false},
+		{"git fails reading the commit", "abc123", 1, 2, false},
+		{"git fails reading the branch", "abc123", 2, 0, false},
+		{"no commit is recorded", "none", 1, 0, false},
+		{"the commit has no sha", "", 1, 0, false},
+		{"the commit looks like an option", "--x", 1, 0, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			d, s, p, _ := landingDaemon(t, 128, "")
+			staleRun(t, s, p, tc.sha)
+			if !tc.keepWorktree {
+				removeWorktree(t, p)
+			}
+			f := staleGit(t, d, p, tc.branchExit, tc.shaExit)
+			refreshHead(t, d, p)
+			if mergeCalls(f) == 0 {
+				t.Fatal("the merge pass did not run")
+			}
+			if rec := runRecord(t, s, "run"); !rec.CleanedAt.IsZero() || rec.Cleaned() {
+				t.Errorf("marked cleaned: %+v", rec)
+			}
+			if row := d.engineRuns(p.Name)[0]; row.Cleaned || row.Merged != nil {
+				t.Errorf("row %+v, want not cleaned and merge state unknown", row)
+			}
+		})
+	}
+}
+
+// A cleaned stale run is pruned like any cleaned run beyond the keep limit.
+func TestStaleCleanedRunIsPruned(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 128, "")
+	staleRun(t, s, p, "abc123")
+	removeWorktree(t, p)
+	for i := 0; i < 100; i++ {
+		committedRun(t, s, p, fmt.Sprintf("zlater%03d", i), "committed")
+	}
+	staleGit(t, d, p, 1, 0)
+	refreshHead(t, d, p)
+	if _, err := s.Open("run"); err == nil {
+		t.Error("the stale cleaned run was not pruned")
+	}
+}
+
+func TestWorktreeGoneIsProposedOnTheRow(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 0, "")
+	committedRun(t, s, p, "run", "committed")
+	row := d.engineRuns(p.Name)[0]
+	if row.WorktreeGone {
+		t.Errorf("worktree there, flag set: %+v", row)
+	}
+	if wire, _ := json.Marshal(row); strings.Contains(string(wire), "worktree_gone") {
+		t.Errorf("wire: %s", wire)
+	}
+	if err := os.RemoveAll(p.Path + "/.worktrees/s63"); err != nil {
+		t.Fatal(err)
+	}
+	row = d.engineRuns(p.Name)[0]
+	if !row.WorktreeGone {
+		t.Errorf("worktree gone, flag unset: %+v", row)
+	}
+	if wire, _ := json.Marshal(row); !strings.Contains(string(wire), `"worktree_gone":true`) {
+		t.Errorf("wire: %s", wire)
+	}
+}
+
+// Only a committed run that is not cleaned yet has a cleanup to adjust: a
+// cleaned run, or one still running, never carries the flag.
+func TestWorktreeGoneOnlyForUncleanedCommittedRuns(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 0, "")
+	landedRun(t, s, p, "cleaned", "")
+	committedRun(t, s, p, "running", "implement")
+	if err := os.RemoveAll(p.Path + "/.worktrees/s63"); err != nil {
+		t.Fatal(err)
+	}
+	for _, row := range d.engineRuns(p.Name) {
+		if row.WorktreeGone {
+			t.Errorf("flag set on %s (cleaned %v, state %s)", row.ID, row.Cleaned, row.State)
+		}
+	}
+}
+
+// A run without a worktree path has no worktree to be gone.
+func TestWorktreeGoneNeedsAWorktreePath(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 0, "")
+	if _, err := s.Create(runrec.Record{ID: "run", Project: p.Name, Item: "S63", State: runrec.StateCommitted, Branch: "s63"}); err != nil {
+		t.Fatal(err)
+	}
+	if row := d.engineRuns(p.Name)[0]; row.WorktreeGone {
+		t.Errorf("flag set without a worktree path: %+v", row)
+	}
+}
+
+// A cleanup that finishes while a merge pass is in flight must not let the
+// pass write a merged value for the cleaned run.
+func TestAPassDoesNotWriteMergedForARunCleanedMeanwhile(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 0, "")
+	committedRun(t, s, p, "run", "committed")
+	refreshHead(t, d, p)
+	dir, release := blockedGit(t, d)
+	pass := make(chan struct{})
+	go func() { d.checkMerged(context.Background(), p, "changed"); close(pass) }()
+	waitFor(t, "the merge check started", func() bool { _, err := os.Stat(filepath.Join(dir, "started")); return err == nil })
+	if err := d.markCleaned("run"); err != nil {
+		t.Fatal(err)
+	}
+	release()
+	<-pass
+	d.runs.mu.Lock()
+	_, has := d.runs.merged["run"]
+	d.runs.mu.Unlock()
+	if has {
+		t.Error("the pass wrote a merged value for a run cleaned meanwhile")
+	}
+}
