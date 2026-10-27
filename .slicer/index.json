@@ -5064,7 +5064,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "48817ce1-0fe4-4ac5-8bc9-ab1fff4761a0",
+          "kind": "",
+          "text": "**2026-10-27** — Spec preflight 2026-10-27: owner chose \"You run it\". Probes 11 and 12 ran with gpt-6.1-sol low in a scratch repo; both passed (temp and worktree writable, outside denied). Docs cite them; nothing is marked unverified. Anchors fixed to design.md:733-741.",
+          "created_at": "2026-10-27T10:49:03Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",

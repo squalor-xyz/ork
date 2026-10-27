@@ -16,15 +16,15 @@
     },
     {
       "heading": "Files",
-      "body": "- `docs/design.md:517-523`: mark --add-dir and writable_roots *unverified* until the probe lands.\n- `testdata/vendors/codex/`: a new probe (like the S89 probes) that runs a write round with --add-dir and a resumed round with writable_roots, writing one file in each temp dir.\n- `internal/agent/codex/codex.go`: only if the probe shows a different flag form."
+      "body": "- `docs/design.md:733-741`: the Codex adapter paragraph states --add-dir and writable_roots as fact; cite probes 11 and 12 there (`testdata/vendors/codex/11-fresh-add-dir.*`, `12-resume-writable-roots.*`). Do not mark them unverified: both probes passed.\n- `testdata/vendors/codex/`: probes 11 and 12 are already recorded (owner chose \"You run it\", 2026-10-27; the outer session ran both in a scratch repo). Do not edit them.\n- `internal/agent/codex/codex.go`: no change; the probe shows the same flag forms (`--add-dir TEMP` fresh, `-c sandbox_workspace_write.writable_roots=[...]` on resume)."
     },
     {
       "heading": "Failing tests",
-      "body": "The probe script records both writes succeeding, or the denial text; the design.md lines cite the probe file."
+      "body": "None to write. The design.md paragraph names probe 11 (fresh --add-dir: temp and worktree writable, the probe repo outside denied with \"operation not permitted\") and probe 12 (resume with writable_roots: same result), by file name."
     },
     {
       "heading": "Implement",
-      "body": "The probe runs the real codex CLI by hand (the owner runs it; tests never call a real vendor). Record the transcript under testdata/vendors/codex like the earlier probes. S31's live ork run also exercises the flags; record what it showed."
+      "body": "Docs only. In the Codex adapter paragraph, after the sentence on --add-dir and after the sentence on writable_roots, add a short clause citing the probe file (like the S89 probe 08 cite). One more sentence: both probes wrote to the temp dir and the worktree, and were denied outside them. Short plain sentences. No other doc changes."
     },
     {
       "heading": "Check",
