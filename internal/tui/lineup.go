@@ -15,13 +15,13 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
-var lineupRoles = [...]string{"implementer", "reviewer"}
+var lineupRoles = [...]string{"implementer", "reviewer", "architect"}
 
 type lineupEditor struct {
 	item    string
 	plan    *daemon.RunPlan
-	chains  [2][]runrec.LineupEntry
-	choice  [2]int
+	chains  [len(lineupRoles)][]runrec.LineupEntry
+	choice  [len(lineupRoles)]int
 	budgets [2]textField
 	row     int
 	custom  bool
@@ -102,12 +102,12 @@ func (m *Model) lineupKey(msg tea.KeyPressMsg) tea.Cmd {
 	}
 	switch msg.String() {
 	case "down", "tab":
-		e.row = (e.row + 1) % 4
+		e.row = (e.row + 1) % (len(lineupRoles) + len(e.budgets))
 	case "up", "shift+tab":
-		e.row = (e.row + 3) % 4
+		e.row = (e.row + len(lineupRoles) + len(e.budgets) - 1) % (len(lineupRoles) + len(e.budgets))
 	case "left", "right":
-		if e.row >= 2 {
-			e.budgets[e.row-2].update(msg)
+		if e.row >= len(lineupRoles) {
+			e.budgets[e.row-len(lineupRoles)].update(msg)
 			break
 		}
 		chain := e.plan.Lineup[lineupRoles[e.row]]
@@ -122,8 +122,13 @@ func (m *Model) lineupKey(msg tea.KeyPressMsg) tea.Cmd {
 		choice := e.choice[e.row]
 		e.chains[e.row] = append([]runrec.LineupEntry{chain[choice]}, chain[:choice]...)
 		e.chains[e.row] = append(e.chains[e.row], chain[choice+1:]...)
+	case "d":
+		if e.row < len(lineupRoles) && lineupRoles[e.row] == "architect" {
+			e.chains[e.row] = nil
+			e.choice[e.row] = 0
+		}
 	case "c":
-		if e.row < 2 {
+		if e.row < len(lineupRoles) {
 			entry := runrec.LineupEntry{}
 			if len(e.chains[e.row]) > 0 {
 				entry = e.chains[e.row][0]
@@ -137,8 +142,8 @@ func (m *Model) lineupKey(msg tea.KeyPressMsg) tea.Cmd {
 	case "enter":
 		return m.saveLineup()
 	default:
-		if e.row >= 2 {
-			e.budgets[e.row-2].update(msg)
+		if e.row >= len(lineupRoles) {
+			e.budgets[e.row-len(lineupRoles)].update(msg)
 		}
 	}
 	return nil
@@ -150,7 +155,7 @@ func (m *Model) saveLineup() tea.Cmd {
 	for i := range values {
 		value, err := strconv.Atoi(e.budgets[i].Value())
 		if err != nil || value < 0 {
-			e.row = i + 2
+			e.row = i + len(lineupRoles)
 			m.actionStatus = "Budget must be a whole number of zero or more"
 			return nil
 		}
@@ -219,9 +224,12 @@ func (m *Model) lineupBody(width int) overviewView {
 			label += "*"
 		}
 		value := entry.Vendor + " " + entry.Model + " " + entry.Effort
+		if role == "architect" && len(e.chains[i]) == 0 {
+			value = "off"
+		}
 		if e.custom && e.row == i {
 			value += " (editing)"
-		} else if focused {
+		} else if focused && len(e.chains[i]) > 0 {
 			if n := len(e.plan.Lineup[role]); n > 1 {
 				value = fmt.Sprintf("< %s >  %d/%d", value, e.choice[i]+1, n)
 			} else {
@@ -248,12 +256,12 @@ func (m *Model) lineupBody(width int) overviewView {
 	}
 	for i, label := range []string{"Budget minutes", "Budget tokens"} {
 		prefix := "  "
-		if e.row == i+2 {
+		if e.row == i+len(lineupRoles) {
 			prefix = "> "
 			out.sel = len(out.body)
 		}
 		text := e.budgets[i].Value()
-		if e.row == i+2 {
+		if e.row == i+len(lineupRoles) {
 			text = e.budgets[i].view(max(width-len(label)-6, 1), th)
 		}
 		add(prefix + label + ": " + text)

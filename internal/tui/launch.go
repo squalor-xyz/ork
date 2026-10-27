@@ -307,7 +307,10 @@ func (m *Model) launchView(w int) overviewView {
 		add("worktree: " + p.Worktree)
 		add("branch: " + p.Branch)
 		add("check: " + p.CheckCommand)
-		for _, role := range []string{"implementer", "reviewer", "gate"} {
+		for _, role := range []string{"implementer", "reviewer", "architect", "gate"} {
+			if role == "architect" && len(p.Lineup[role]) == 0 {
+				continue
+			}
 			for _, e := range p.Lineup[role] {
 				add(fmt.Sprintf("%s: %s %s %s", role, e.Vendor, e.Model, e.Effort))
 			}

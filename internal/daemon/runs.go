@@ -414,8 +414,13 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		plan.Permissions[engine.RoleUI] = perm
 	}
 	for role, entries := range p.Lineup {
-		if role != engine.RoleImplementer && role != engine.RoleReviewer {
+		if role != engine.RoleImplementer && role != engine.RoleReviewer && role != engine.RoleArchitect {
 			return nil, badParams(fmt.Errorf("cannot override lineup role %q", role))
+		}
+		if role == engine.RoleArchitect && len(entries) == 0 {
+			delete(plan.Lineup, role)
+			delete(plan.Permissions, role)
+			continue
 		}
 		if len(entries) == 0 {
 			return nil, badParams(fmt.Errorf("lineup for %s needs at least one entry", role))
@@ -429,6 +434,13 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 			}
 		}
 		plan.Lineup[role] = append([]runrec.LineupEntry(nil), entries...)
+		if role == engine.RoleArchitect {
+			perm, err := engine.ResolvePermission(proj, role)
+			if err != nil {
+				return nil, err
+			}
+			plan.Permissions[role] = perm
+		}
 	}
 	plan.Lineup[engine.RoleGate] = append([]runrec.LineupEntry(nil), plan.Lineup[engine.RoleReviewer]...)
 	plan.Budgets = proj.Budgets

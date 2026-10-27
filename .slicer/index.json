@@ -1271,7 +1271,7 @@
       "id": "S94",
       "title": "Plan views and lineup edit cover the architect",
       "short_title": "Plan views and lineup edit cover the architect",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -1281,6 +1281,28 @@
           "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): a matched architect row with no ork adapter keeps refusing (fail closed); do not drop the architect.",
           "created_at": "2026-10-27T13:35:39Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "68ccdcb6-819c-4466-a619-32d70104f454",
+          "kind": "",
+          "text": "**2026-10-27** — UI pass observations deferred, not implemented (2026-10-27): Waves lists arch after gate (internal/tui/waves.go), while CLI and confirmation list architect before gate. The launch golden fixture mixes Codex gpt and codex sol. The d key no longer reaches budget fields; this is harmless for numeric budgets.",
+          "created_at": "2026-10-27T14:08:48Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "ec4b15ca-bdc4-4365-b389-54498ae896d8",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial (run 17, S94): 1 owner question before the start, none during, no stalls, 1 fix round, no merge conflicts so far, ran in parallel with S98 and S160; Codex sol/medium implementer, opus reviewer, UI pass and gate.",
+          "created_at": "2026-10-27T14:13:24Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -1304,7 +1326,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

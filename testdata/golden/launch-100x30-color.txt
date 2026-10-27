@@ -9,10 +9,10 @@
                            │    allowlist: 
                            │  reviewer: Claude opus medium
                            │    permissions: read-only
+                           │  architect: codex sol high
+                           │    permissions: read-only
                            │  gate: Codex gpt low
                            │    allowlist: 
-                           │
-                           │
                            │
                            │
                            │

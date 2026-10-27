@@ -358,3 +358,17 @@ func TestBehindNoticeOverDaemonConnection(t *testing.T) {
 		})
 	}
 }
+
+func TestPlanTextShowsTheArchitectRow(t *testing.T) {
+	for _, present := range []bool{false, true} {
+		plan := daemon.RunPlan{Lineup: map[string][]runrec.LineupEntry{}}
+		if present {
+			plan.Lineup["architect"] = []runrec.LineupEntry{{Vendor: "codex", Model: "sol", Effort: "high"}}
+		}
+		var out bytes.Buffer
+		printRunPlan(&out, plan)
+		if strings.Contains(out.String(), "architect: codex sol high") != present {
+			t.Fatalf("present=%v: %s", present, out.String())
+		}
+	}
+}

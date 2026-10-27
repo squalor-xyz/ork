@@ -703,6 +703,10 @@ func waveLineup(p daemon.RunParams) []string {
 	}
 	for _, role := range []struct{ key, label string }{{"implementer", "impl"}, {"reviewer", "rev"}, {"gate", "gate"}, {"architect", "arch"}} {
 		chain := p.Expected.Lineup[role.key]
+		if override, edited := p.Lineup[role.key]; role.key == "architect" && edited && len(override) == 0 {
+			lines = append(lines, "arch*: off")
+			continue
+		}
 		if len(chain) == 0 {
 			continue
 		}
