@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 159,
+  "next_id": 160,
   "preamble": "",
   "passes": [
     {
@@ -6263,6 +6263,46 @@
         "group": "",
         "reason": "",
         "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S159",
+      "title": "S135 later notes: plan note shown, retry context with a queued question",
+      "short_title": "S135 later notes",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "14f0c046-7a16-4f1f-931c-29de86523685",
+          "kind": "",
+          "text": "**2026-10-27** — **2026-10-27** - From the S135 relay (landed a6d9572).\n1. RunPlan.note (planned without a ui role because the rules call failed) shows only in the RPC and JSON. Show it in printRunPlan (internal/cli/run.go near :151) and the TUI launch confirm (internal/tui/launch.go near :309). UI pass needed.\n2. Owner call: when the first pause is not a question (shape, lost, error) and a sibling question is queued, Retry pops the queued question over the first pause context (engine.go near :303), so the rerun role loses its Report shape or Earlier process lost brief and its session resume. Options: ask the question first and keep the retry context for after; or keep the retry context and ask the queued question after the rerun.",
+          "created_at": "2026-10-27T11:37:42Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S135",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
         "urgency": 1,
         "effort": 1,
         "attempts": 0
