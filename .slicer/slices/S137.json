@@ -4,7 +4,7 @@
   "lead": [],
   "depends_note": null,
   "findings_note": "",
-  "size": "S",
+  "size": "M",
   "flags": [],
   "trees_note": "",
   "trees_plural": false,
@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/kinds.go`\n- `internal/engine/later.go`\n- `internal/daemon/runs.go`\n- `internal/tui/findings.go`\n- `internal/cli`\n- `internal/roles/prompts`"
+      "body": "- `internal/engine/kinds.go`\n- `internal/engine/later.go`\n- `internal/engine/round.go`\n- `internal/engine/engine.go`\n- `internal/runrec/record.go`\n- `internal/daemon/runs.go`\n- `internal/tui/findings.go`\n- `internal/tui/keys.go`\n- `internal/cli`\n- `internal/roles/prompts`\n- `docs/design.md`\n- `docs/dashboard.md`"
     },
     {
       "heading": "Failing tests",
@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": "Re-anchor from the code after S120. Ask the owner choices (5), (6), (7) and the v7/v8 prompt line at preflight."
+      "body": "Re-anchor from the code after S120 and S135 (S135 added queued_questions on runrec.Record, popped in advance; reuse it for several blockers). Owner decisions at preflight (2026-10-27, interactive):\n(5) Non-blocking [owner] findings get a pane key that asks the finding as its structured question (recorded on the finding, and as an adj decision when it has a key); the run is not paused.\n(6) A role agent proposes importance, urgency and effort in a later finding; ork applies them with slicer set after filing. Role prompts and the finding parser carry the proposal; a missing proposal leaves the slice unscored.\n(7) Add ork file RUN N, like ork answer, through the daemon.\n(8) Role prompts first line: Contract: relay v8.\nAlso: ask every owner blocker of a report (queue the rest), guard an answered blocker that repeats, serialize run.file for finished runs, count unfiled later and non-blocking owner findings in Needs you and ork status, cap the findings footer with +N more, say in the confirm prompt that ork adds a Why section, and make the Ready-to-land pane path testable."
     },
     {
       "heading": "Check",

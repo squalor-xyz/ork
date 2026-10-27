@@ -5484,7 +5484,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
