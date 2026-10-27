@@ -9,7 +9,7 @@
                            │  [ ] C  Gamma                                                                        [90m<A[m    
                            │[1m── Wave 5 ─────────────────────────────────────────────────────────────────────────── 1 item[m
                            │  [ ] C  Gamma                                                                        [90m<A[m    
-                           │  [90m4 more waves; [a] show all[m
+                           │  [90m4 more waves; [A] show all[m
                            │[1m── Unplaced ───────────────────────────────────────────────────────────────────────── 1 item[m
                            │  [ ] D  Delta (no files listed)                                                            
                            │

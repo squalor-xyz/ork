@@ -6069,10 +6069,44 @@
       "id": "S144",
       "title": "Key follow-ups: status nudge for [ and ], Waves show-all on A, help wording and hidden tab help",
       "short_title": "Key follow-ups: status nudge for [ and ], Waves show-all on A, help wording and hidden tab help",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "3cfe3b58-2b62-45a4-90f3-5386c3b46ff9",
+          "kind": "note",
+          "text": "**2026-10-27** — Open after S144 (2026-10-27): Waves help is still cut at 100x30 (+2 more lines: the blank line and the views-available line); the help cannot scroll (j/k are ignored under help); the left/right nudge shares the message band and replaces the selected row's detail on Overview until the cursor moves; the merged bracket line could read ']/[ next/previous project or entry'; S144's Files list missed view.go, decisions_test.go and waves_test.go.",
+          "created_at": "2026-10-27T21:01:48Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "3c2aa8e4-3962-4b23-90e0-aac44d38a1e6",
+          "kind": "",
+          "text": "**2026-10-27** — Later (S144 relay): Decisions help still ends '+3 more lines' at 100x30 (esc line pushed below the cut; fold 'A toggles all projects' into the top line to win a row); the owner's call on that wording.",
+          "created_at": "2026-10-27T21:07:43Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "224cbb08-817d-4e16-be48-720240bca30b",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial (run 27, S144): 0 owner questions during the run, no stalls, 1 fix round, merge of main at landing; ran in parallel with S153 and S159; implementer Claude sonnet-high fallback (Codex out of credits), opus reviewer and UI pass.",
+          "created_at": "2026-10-27T21:07:43Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -6090,7 +6124,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

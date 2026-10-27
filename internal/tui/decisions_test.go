@@ -463,13 +463,13 @@ func TestDecisionsFixHelpIsReadOnlyAndContextual(t *testing.T) {
 	if strings.Contains(help, "a approve") || strings.Contains(help, "add project (Welcome)") {
 		t.Error("Decisions help advertises approve or Add")
 	}
-	footer := "On Decisions, left/right switch tabs; [ and ] switch projects."
-	if !strings.Contains(help, footer) || !strings.Contains(help, "1-9 jump to project; 0 Needs you\n") {
-		t.Error("missing Decisions footer or plain project hint")
+	line := "Decisions: left/right switch tabs; [ and ] switch projects or entries."
+	if !strings.Contains(help, line) || !strings.Contains(help, "1-9 jump to project; 0 Needs you\n") {
+		t.Error("missing Decisions line or plain project hint")
 	}
 	h.m.view = 0
 	help = strings.Join(h.m.helpLines(120, 60), "\n")
-	if strings.Contains(help, footer) || !strings.Contains(help, "a approve") {
+	if strings.Contains(help, line) || !strings.Contains(help, "a approve") {
 		t.Error("Decisions help leaked into Overview")
 	}
 }

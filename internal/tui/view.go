@@ -616,7 +616,10 @@ func (m *Model) helpLines(w, bodyH int) []string {
 	th := m.cfg.Theme
 	lines := []string{th.Heading.Render("Keys")}
 	if m.view == wavesView {
-		lines = append(lines, wrapText("Waves: a shows all waves. <S65: shares files with S65, an earlier item.", max(w, 1))...)
+		lines = append(lines, wrapText("Waves: A shows all waves. <S65: shares files with S65, an earlier item.", max(w, 1))...)
+	}
+	if m.view == decisionsView {
+		lines = append(lines, wrapText("Decisions: left/right switch tabs; [ and ] switch projects or entries.", max(w, 1))...)
 	}
 	var actionHints []string
 	refresh, filter := "", ""
@@ -629,6 +632,14 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			if h == m.keys.PrevView.Help() {
 				next := m.keys.NextView.Help()
 				lines = append(lines, clip(next.Key+" "+next.Desc+"; "+h.Key+" "+h.Desc, w))
+				continue
+			}
+			if h == m.keys.Next.Help() {
+				p := m.keys.Prev.Help()
+				lines = append(lines, clip(h.Key+" "+h.Desc+"; "+p.Key+" "+p.Desc, w))
+				continue
+			}
+			if h == m.keys.Prev.Help() {
 				continue
 			}
 			// Refresh shares the quit line, and the filter and sidebar keys one
@@ -693,9 +704,6 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			}
 			lines = append(lines, clip(h.Key+" "+desc, w))
 		}
-	}
-	if m.view == decisionsView {
-		lines = append(lines, wrapText("On Decisions, left/right switch tabs; [ and ] switch projects.", max(w, 1))...)
 	}
 	lines = append(lines, "", clip("Overview, Questions, Waves, Roadmap and Decisions are available.", w))
 	mark := brand.Mark(!th.Mono, m.cfg.ASCII)

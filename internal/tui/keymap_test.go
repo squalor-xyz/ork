@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"charm.land/bubbles/v2/key"
+
 	"github.com/squalor-xyz/ork/internal/adjcli"
 )
 
@@ -225,5 +227,154 @@ func TestHelpNamesTheNewKeys(t *testing.T) {
 		if strings.Contains(v, gone) {
 			t.Errorf("help still holds %q:\n%s", gone, v)
 		}
+	}
+}
+
+// Where left and right do nothing (Overview, Questions, Waves and Roadmap
+// outside a pane or field), the status line says which keys switch projects
+// (S144). Decisions uses them for its tabs and says nothing.
+func TestStatusNudgeWhenLeftRightDoNothing(t *testing.T) {
+	const nudge = "[ and ] switch projects"
+	for _, view := range []int{0, 1, 2, 3} {
+		for _, k := range []string{"left", "right"} {
+			t.Run(viewNames[view]+" "+k, func(t *testing.T) {
+				h := decisionsHarness(t)
+				h.m.view = view
+				h.m.actionStatus = ""
+				h.send(press(k))
+				if h.m.actionStatus != nudge {
+					t.Errorf("status = %q, want %q", h.m.actionStatus, nudge)
+				}
+				if !strings.Contains(h.view(), nudge) {
+					t.Errorf("the nudge is not on screen:\n%s", h.view())
+				}
+			})
+		}
+	}
+	h := decisionsHarness(t)
+	h.m.view = 0
+	h.send(press("?"))
+	h.send(press("left"))
+	if h.m.actionStatus != "" {
+		t.Errorf("the nudge was set under the help: %q", h.m.actionStatus)
+	}
+	h = decisionsHarness(t)
+	h.send(press("right"))
+	if h.m.decisionsTab != 1 || h.m.actionStatus != "" || strings.Contains(h.view(), "switch projects") {
+		t.Errorf("Decisions: tab %d, status %q", h.m.decisionsTab, h.m.actionStatus)
+	}
+}
+
+// A shows all waves, as it shows all projects on Decisions; a is Approve and
+// does nothing on Waves (S144).
+func TestWavesShowAllIsCapitalA(t *testing.T) {
+	h, l := wavesHarness(t)
+	for range 3 {
+		l.suggest.Waves = append(l.suggest.Waves, l.suggest.Waves[1])
+	}
+	openWaves(t, h)
+	hidden := len(h.m.waves.rows())
+	body := func() string { return sgr.ReplaceAllString(strings.Join(h.m.wavesBody(72).body, "\n"), "") }
+	if !strings.Contains(body(), "more waves; [A] show all") {
+		t.Errorf("the hidden-waves line does not name A:\n%s", body())
+	}
+	h.deliver(press("a"))
+	if h.m.waves.showAll || len(h.m.waves.rows()) != hidden || l.writes != 0 {
+		t.Fatalf("a showed all waves: showAll %v, rows %d, want %d", h.m.waves.showAll, len(h.m.waves.rows()), hidden)
+	}
+	h.m.waves.cursor = len(h.m.waves.rows()) - 1 // Unplaced D
+	h.deliver(press("A"))
+	if !h.m.waves.showAll || len(h.m.waves.rows()) <= hidden {
+		t.Fatalf("A did not show all waves: showAll %v, rows %d", h.m.waves.showAll, len(h.m.waves.rows()))
+	}
+	if got := h.m.waves.rows()[h.m.waves.cursor].ID; got != "D" {
+		t.Errorf("A moved the cursor to %s", got)
+	}
+	if strings.Contains(body(), "show all") {
+		t.Errorf("the show-all line stays after A:\n%s", body())
+	}
+	h.m.waves.showAll = false
+	h.deliver(press("?"))
+	if !strings.Contains(h.view(), "Waves: A shows all waves.") {
+		t.Errorf("the Waves help does not name A:\n%s", h.view())
+	}
+}
+
+// The tab keys' help strings were never shown (not in FullHelp); the keys
+// carry none, and the Decisions help line names left and right (S144).
+func TestTabKeysCarryNoHiddenHelp(t *testing.T) {
+	k := newKeyMap()
+	for name, b := range map[string]key.Binding{"TabNext": k.TabNext, "TabPrev": k.TabPrev} {
+		if h := b.Help(); h.Key != "" || h.Desc != "" {
+			t.Errorf("%s carries help %q %q that no help view shows", name, h.Key, h.Desc)
+		}
+		if len(b.Keys()) != 1 {
+			t.Errorf("%s keys = %v", name, b.Keys())
+		}
+	}
+}
+
+// [ and ] also land on Running and Needs you, so the help says entries and
+// not only projects (S144).
+func TestHelpSaysProjectsAndEntries(t *testing.T) {
+	h := newHarness(t, four...)
+	h.start()
+	h.send(press("?"))
+	v := h.view()
+	for _, want := range []string{"] next project or entry", "[ previous project or entry"} {
+		if !strings.Contains(v, want) {
+			t.Errorf("help misses %q:\n%s", want, v)
+		}
+	}
+	h.m.view = decisionsView
+	help := strings.Join(h.m.helpLines(120, 60), "\n")
+	if !strings.Contains(help, "Decisions: left/right switch tabs; [ and ] switch projects or entries.") {
+		t.Errorf("the Decisions line does not say entries:\n%s", help)
+	}
+}
+
+// The full help fits the standard terminal (100x30; h.view always renders
+// that size) without a "more lines" marker (S144). A real 80x24 is shorter and
+// cuts the help; there the way out stays visible.
+func TestFullHelpGoldenFits(t *testing.T) {
+	for _, view := range []int{0, 1, 3} { // Waves and Decisions add lines of their own
+		t.Run(viewNames[view], func(t *testing.T) {
+			h := newHarness(t, four...)
+			h.start()
+			h.m.view = view
+			h.send(press("?"))
+			v := h.view()
+			if strings.Contains(v, "more lines") {
+				t.Errorf("the help is cut:\n%s", v)
+			}
+			if !strings.Contains(v, "esc close run, question, item, decision, help or message") {
+				t.Errorf("the help misses its last key:\n%s", v)
+			}
+		})
+	}
+}
+
+// The view's own help line sits at the top of the help, so the cut at the
+// bottom of a standard terminal never hides it (S144): Decisions names
+// left/right and the bracket keys, Waves names A.
+func TestViewHelpLinesStayVisibleAt100x30(t *testing.T) {
+	for _, tc := range []struct {
+		view int
+		want string
+	}{
+		{decisionsView, "Decisions: left/right switch tabs; [ and ] switch projects or entries."},
+		{wavesView, "Waves: A shows all waves."},
+	} {
+		t.Run(viewNames[tc.view], func(t *testing.T) {
+			h := newHarness(t, four...)
+			h.start()
+			h.m.view = tc.view
+			h.send(press("?"))
+			v := h.view()
+			at, keys := strings.Index(v, tc.want), strings.Index(v, "tab next view")
+			if at < 0 || at > keys {
+				t.Errorf("the help misses %q or puts it below the keys:\n%s", tc.want, v)
+			}
+		})
 	}
 }

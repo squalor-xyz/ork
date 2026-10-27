@@ -254,7 +254,9 @@ through "Running", "Needs you" and the sorted projects
 (`ui.project-keys`, adj 160). `left` and `right` never change the project:
 they belong to the view's own tabs and fields (the Open and Decided tabs on
 Decisions, the lineup, and text fields such as an answer). Outside those they
-do nothing.
+do nothing but set the status line to `[ and ] switch projects` (S144; no
+layout cost). The help names `]` and `[` as next and previous "project or
+entry", since they also land on Running and Needs you.
 `1`-`9` select the first nine projects in the order the sidebar draws them,
 and the sidebar shows those numbers dimmed. `0` selects "Needs you"; the
 Running entry has no number. A number with no project does nothing. `tab` and
@@ -943,8 +945,9 @@ The Waves composer is available (S82). Select one project. `tab` and
 `shift+tab` reach it between Questions and Roadmap. It loads `wave.suggest`
 when opened or the project changes.
 The first three suggested waves appear in slicer's order. A dim `N more
-waves` line (`1 more wave` for one) offers `[a] show all`; hidden waves cannot be selected until
-expanded. Unplaced items remain available. Wave headers are full-width
+waves` line (`1 more wave` for one) offers `[A] show all` (shift-a, as on
+Decisions; `a` is Approve and does nothing here); hidden waves cannot be
+selected until expanded. Unplaced items remain available. Wave headers are full-width
 box-drawing rules with item counts, or hyphens in ASCII mode. Tick, item id, title and
 Shares form aligned columns. The dim Shares column contains only the
 predecessor id, for example `<A` means shares files with predecessor A;
@@ -1212,7 +1215,7 @@ recommendation. The active tab uses the view heading style, distinct from the
 record cursor. The scope heading names the project or says
 `All projects using adj`. The hint line lists the tab, scope and
 open-record keys. On "Needs you", it omits the scope toggle hint. `left` and
-`right` switch the Open and Decided tabs; `[` and `]` switch projects. `A`
+`right` switch the Open and Decided tabs; `[` and `]` switch projects or entries. `A`
 (shift-a) toggles between the selected project and all projects that use adj. The toggle
 persists when switching projects. With "Needs you" selected, Decisions shows
 all projects that use adj. A project without adj shows `no adj in this project`.

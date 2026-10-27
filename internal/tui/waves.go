@@ -662,7 +662,7 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 			if n == 1 {
 				noun = "wave"
 			}
-			add(th.Dim.Render(fmt.Sprintf("%d more %s; [a] show all", n, noun)))
+			add(th.Dim.Render(fmt.Sprintf("%d more %s; [A] show all", n, noun)))
 		}
 		if len(w.suggest.Unplaced) > 0 {
 			rule("Unplaced", len(w.suggest.Unplaced))

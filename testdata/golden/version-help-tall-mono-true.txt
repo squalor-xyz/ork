@@ -9,8 +9,7 @@
                            │
                            │[1mKeys[m
                            │tab next view; shift+tab previous view
-                           │] next project
-                           │[ previous project
+                           │] next project or entry; [ previous project or entry
                            │1-9 jump to project; 0 Needs you
                            │j/k down/up row; g/G home/end first/last
                            │pgdown/pgup page rows or scroll a pane

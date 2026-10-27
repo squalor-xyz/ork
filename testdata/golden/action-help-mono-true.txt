@@ -2,8 +2,7 @@
   Running                1 │[2m────────────────────────────────────────────────────────────────────────[m
 [1;7m0>Needs you              0 [m│[1mKeys[m
 [2m1[m ork                     *│tab next view; shift+tab previous view
-                           │] next project
-                           │[ previous project
+                           │] next project or entry; [ previous project or entry
                            │1-9 jump to project; 0 Needs you
                            │j/k down/up row; g/G home/end first/last
                            │pgdown/pgup page rows or scroll a pane
@@ -24,7 +23,8 @@
                            │c remove merged worktree and branch (Ready)
                            │r refresh now; q quit; ? show or hide this help
                            │esc close run, question, item, decision, help or message
-                           │[2m  +2 more lines[m
+                           │
+                           │Overview, Questions, Waves, Roadmap and Decisions are available.
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │ ? or esc [2mclose help[m; q [2mquit[m
                            │ 1 project | refreshed 16:42:00
