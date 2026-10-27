@@ -2041,3 +2041,7 @@
 {"when": "2026-10-27T14:38:32Z", "item": "S124", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 19, S124): 0 owner questions, no st", "by": "Jon R"}
 {"when": "2026-10-27T16:44:33Z", "item": "S134", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-27 (interactive): mark the followed r", "by": "Jon R"}
 {"when": "2026-10-27T16:44:33Z", "item": "S136", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-27 (interactive): the project's desig", "by": "Jon R"}
+{"when": "2026-10-27T17:44:07Z", "item": "S161", "action": "add", "from": "", "to": "open", "note": "ork projects set: change a project's optional registry fields"}
+{"when": "2026-10-27T17:44:08Z", "item": "S161", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-27T17:44:08Z", "item": "S161", "action": "set", "from": "", "to": "", "note": "effort -→2"}
+{"when": "2026-10-27T17:44:08Z", "item": "S136", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-27 (interactive): ui_doc is set by ed", "by": "Jon R"}

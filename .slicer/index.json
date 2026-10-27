@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 161,
+  "next_id": 162,
   "preamble": "",
   "passes": [
     {
@@ -5622,6 +5622,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "7fd69f78-9121-4a1c-bdcf-dfbbef9c65d1",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): ui_doc is set by editing the registry file for now; a general ork projects set is filed as S161.",
+          "created_at": "2026-10-27T17:44:08Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -6638,6 +6649,34 @@
         "urgency": 3,
         "effort": 2,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S161",
+      "title": "ork projects set: change a project's optional registry fields",
+      "short_title": "projects set",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S136",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
       }
     }
   ],

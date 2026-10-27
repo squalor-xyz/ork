@@ -1,0 +1,39 @@
+{
+  "id": "S161",
+  "title": "ork projects set: change a project's optional registry fields",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S136 (2026-10-27): ork projects has only list, add and rm, so the optional registry fields (push, ui_doc, worktree_pattern, branch_pattern, check command, budgets) can only be changed by editing the registry file by hand. The owner decided for S136 to edit the file for now. Add `ork projects set NAME --field VALUE` (daemon RPC, CLI, validation of each field, doctor message, docs/state.md and docs/design.md), and a TUI path later if wanted. Check slicer does not already provide the capability."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/cli/daemoncmds.go`\n- `internal/daemon/handlers.go`\n- `internal/registry/registry.go`\n- `docs/state.md`\n- `docs/design.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "TestProjectsSetUpdatesOneField; TestProjectsSetRefusesUnknownField; TestProjectsSetValidatesUIDoc."
+    },
+    {
+      "heading": "Implement",
+      "body": "Interview the owner at preflight: which fields, the flag syntax, and whether it refuses while the project has unfinished runs."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./internal/cli ./internal/daemon ./internal/registry; go vet; gofmt -l; slicer check; adj lint."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
