@@ -133,6 +133,7 @@ func (m *Model) questions(w int) overviewView {
 			continue
 		}
 		line := prefix + clip(text, max(w-lipgloss.Width(prefix), 1))
+		out.rows = append(out.rows, len(out.body))
 		if index == cursor {
 			out.sel = len(out.body)
 			line = m.cfg.Theme.TabActive.Render(indent + kind + " " + project + clip(text, max(w-lipgloss.Width(prefix), 1)))

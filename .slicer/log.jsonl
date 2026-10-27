@@ -2060,3 +2060,7 @@
 {"when": "2026-10-27T18:37:28Z", "item": "S148", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-27 (interactive): take approve status", "by": "Jon R"}
 {"when": "2026-10-27T18:37:28Z", "item": "S150", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-27 (interactive): take the UI-pass la", "by": "Jon R"}
 {"when": "2026-10-27T18:38:49Z", "item": "S151", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-27 (interactive): { and } on Roadmap", "by": "Jon R"}
+{"when": "2026-10-27T18:39:13Z", "item": "S151", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-27T19:26:10Z", "item": "S151", "action": "note", "from": "", "to": "", "note": "Owner confirmed 2026-10-27 (interactive): { and } on Waves j", "by": "Jon R"}
+{"when": "2026-10-27T19:26:10Z", "item": "S151", "action": "status", "from": "started", "to": "done", "note": "Pager-style page keys (first unseen row on top, cursor on it, one render per key), help overlay ignores row keys, G reaches the trailing Ready to land lines, { } on Roadmap (pass groups) and Waves (wave sections), the selected project shows as 1>ork. Review PASS, UI pass PASS, gate PASS (run-20261027-183852-0312).", "by": "Jon R"}
+{"when": "2026-10-27T19:26:10Z", "item": "S151", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 23, S151): 2 owner questions before", "by": "Jon R"}

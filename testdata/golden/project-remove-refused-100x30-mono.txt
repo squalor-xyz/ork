@@ -1,7 +1,7 @@
 [1mork[m  ?help                 │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
 [2m0[m Needs you              1 │[1mNeeds you 1[m
-[1;7m> alpha                    [m│  [1mErrors 1[m
+[1;7m1>alpha                    [m│  [1mErrors 1[m
                            │[1;7m  ~ waiting for the first reply                                         [m
                            │
                            │[1mRunning 1[m

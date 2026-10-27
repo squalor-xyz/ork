@@ -6350,7 +6350,7 @@
       "id": "S151",
       "title": "S85 later notes: pager-style page keys, help overlay, group keys on Roadmap and Waves",
       "short_title": "S85 later notes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -6360,6 +6360,28 @@
           "text": "**2026-10-27** — Owner decisions 2026-10-27 (interactive): { and } on Roadmap jump between pass groups and on Waves between Ready / Picked / Sitting; the selected project's sidebar row shows the number then the arrow (1>ork). Take all the other notes (help overlay: page keys and j/k return early; page-key test for a Ready row with cut command lines; trailing Ready to land / none lines reachable with G; help says 'scroll a pane' accurately for the Roadmap item pane; help overlay not cut at 80x24 if cheap; digit keys vs pane test; pageRows cost).",
           "created_at": "2026-10-27T18:38:49Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "d4143827-79a0-4dcb-9e71-714ed1662693",
+          "kind": "",
+          "text": "**2026-10-27** — Owner confirmed 2026-10-27 (interactive): { and } on Waves jump between wave sections (each wave, then Unplaced), replacing Ready / Picked / Sitting, which Waves does not have. Later: the Roadmap draws no pass heading or field, so { } jump to boundaries the owner cannot see (filed separately); the help overlay is still cut at 80x24 (way out stays in the hint line); k above a paged window jumps back about a page; pgdown skips a row whose continuation lines are cut; drawnRows.sel is unused; docs/dashboard.md:90 layout sketch shows '> Needs you' without the number.",
+          "created_at": "2026-10-27T19:26:10Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "1dc19a4c-e688-4873-88b4-54b96934a498",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial (run 23, S151): 2 owner questions before the start and 1 during, no stalls, 0 fix rounds, merge of main at landing; ran in parallel with S148; implementer Claude sonnet-high fallback (Codex out of credits), opus reviewer and UI pass.",
+          "created_at": "2026-10-27T19:26:10Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -6383,7 +6405,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

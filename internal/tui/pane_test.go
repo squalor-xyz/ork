@@ -118,7 +118,7 @@ func TestPaneReasonAndPendingAreIndependent(t *testing.T) {
 func TestPaneEscape(t *testing.T) {
 	h := paneHarness(t, "paused", "question")
 	h.deliver(press("esc"))
-	if v := h.view(); strings.Contains(v, "Run engine") || !strings.Contains(v, "> Needs you") {
+	if v := h.view(); strings.Contains(v, "Run engine") || !strings.Contains(v, "0>Needs you") {
 		t.Fatalf("Escape must close pane without switching project:\n%s", v)
 	}
 }
@@ -137,7 +137,7 @@ func TestPaneNonEngineEnter(t *testing.T) {
 			}
 			h.m.apply(snapshotMsg{name: "ork", snap: s})
 			h.deliver(press("enter"))
-			if v := h.view(); strings.Contains(v, "Run ") || !strings.Contains(v, "> ork") {
+			if v := h.view(); strings.Contains(v, "Run ") || !strings.Contains(v, "1>ork") {
 				t.Fatalf("non-engine Enter must switch project without pane:\n%s", v)
 			}
 		})

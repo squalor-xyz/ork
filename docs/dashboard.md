@@ -237,8 +237,10 @@ Selection uses reverse and `>`, including under `NO_COLOR`. Projects with
 needs come first, then running projects, then the rest; registry order breaks
 ties. Selection follows the project.
 The first nine project rows show their number, dimmed, in the margin where the
-selection arrow stands; the selected row shows the arrow instead. "Needs you"
-shows a dimmed `0` there. The Running entry has no number.
+selection arrow stands. The selected row shows its number, then the arrow, as
+`1>ork` (S151). "Needs you" shows a dimmed `0` there. Selected, it shows
+`0>Needs you`. The Running entry has no number, so its selected row shows the
+arrow alone.
 A project with no `.slicer/` folder shows `no slicer`, dimmed, in place of its
 count. It has no Overview rows and adds nothing to any count or to the bell.
 When it is selected, its detail line says to run `slicer init`
@@ -267,15 +269,26 @@ The Overview has a row cursor (`ui.overview-cursor`). `down`/`j` and `up`/`k`
 move it to the next and previous row. It goes through
 "Needs you", Running and Ready, and it stops at the first and last row.
 `g`/`home` and `G`/`end` move the cursor to the first and last row.
-`pgdown`/`pgup` move it by the number of rows the body draws on screen, so
-section headings, blank lines, multi-line rows and the detail are not counted
-as rows. `}` and `{` move it to
+`pgdown` and `pgup` page like `less`: `pgdown` scrolls the window so the first
+row not yet seen is its top row and puts the cursor on it; `pgup` is the mirror,
+and puts the cursor on the last row above the window, which then ends the
+window. Section headings, blank lines and multi-line rows are not counted as
+rows. The last page ends flush with the body instead of leaving blank lines.
+The window stays while `j`/`k` move the cursor inside it, and follows the cursor when it leaves. When
+every row is already on screen, `pgdown` goes to the last row. On the last row
+the lines after it come into view while they fit, so the empty Recent and Ready
+to land sections can be seen (S151). `}` and `{` move it to
 the first row of the next group and of the current or previous group. The
 groups are the Needs you groups (Decisions, Held, Stopped, Paused, Approve, Findings and
-Errors), then Running, Recent and Ready to land. The Roadmap, Questions,
-Decisions and Waves cursors take the first, last and page keys; only the
-Overview has the group keys. With a pane open, no row key moves the cursor;
-`pgdown` and `pgup` scroll a run, decision or Waves item pane, and in a run pane
+Errors), then Running, Recent and Ready to land. On the Roadmap a group is a run
+of items with the same pass, and on Waves a wave, then Unplaced (S151,
+*proposed*). The Roadmap, Questions, Decisions and Waves cursors take the first,
+last and page keys; the Overview, Roadmap and Waves have the group keys. With
+the help open, no row key moves the cursor, which is hidden under it. With a
+pane open, no row key moves the cursor;
+`pgdown` and `pgup` scroll a run, decision or Waves item pane (the Roadmap item
+pane does not scroll, and the Roadmap help says only `pgdown/pgup page rows`),
+and in a run pane
 `ctrl+d` and `ctrl+u` scroll it by half the pane's scrolling part (S149,
 *proposed*). `ctrl+u` in an answer or fix-note field still clears the field, so
 there the hint shows only `ctrl+d`. Keys that type into a

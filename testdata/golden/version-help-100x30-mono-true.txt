@@ -1,6 +1,6 @@
 [1mork[m [2mdev[m  ?help             │ [1mOverview[m[2m │ [mQuestions 3[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
   Running                1 │[2m────────────────────────────────────────────────────────────────────────[m
-[1;7m> Needs you              6 [m│[1mKeys[m
+[1;7m0>Needs you              6 [m│[1mKeys[m
 [2m1[m slicer                 3*│tab next view; shift+tab previous view
 [2m2[m adjudicate             1 │] next project
 [2m3[m DataBall                 │[ previous project
@@ -8,7 +8,7 @@
                            │j/k down/up row; g/G home/end first/last
                            │pgdown/pgup page rows or scroll a pane
                            │ctrl+d/u scroll a run pane half a page
-                           │}/{ next/previous group (Overview)
+                           │}/{ next/previous group, pass or wave
                            │enter open run, question, item or decision; other rows select project
                            │/ filter projects; esc clears; s hide/show sidebar
                            │+ add project; - remove active project

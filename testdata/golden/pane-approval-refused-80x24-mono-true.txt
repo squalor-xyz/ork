@@ -1,6 +1,6 @@
 [1mork[m  ?help         │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
 [2m  Running        0 [m│[2m────────────────────────────────────────────────────────────[m
-[1;7m> Needs you      2 [m│[1mNeeds you 2[m
+[1;7m0>Needs you      2 [m│[1mNeeds you 2[m
 [2m1[m ork            2 │  [1mApprove 1[m
                    │[1;7m  +  ork  S22  awaiting approval  2m  owner action  2 of ...[m
                    │    [1mRun engine[m

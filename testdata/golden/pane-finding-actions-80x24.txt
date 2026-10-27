@@ -1,6 +1,6 @@
 ork  ?help         │ Overview │ Questions │ Waves │ Roadmap │ Decisions
   Running        1 │────────────────────────────────────────────────────────────
-> Needs you     10 │Needs you 10
+0>Needs you     10 │Needs you 10
 1 ork           10 │  Stopped 1
                    │  x  ork  S22  stopped  owner action  2 of 6 steps running  
                    │    Run engine

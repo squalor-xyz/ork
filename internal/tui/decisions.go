@@ -162,6 +162,7 @@ func (m *Model) decisions(w int) overviewView {
 		r := row.record
 		prefix += fmt.Sprintf("#%d %s  ", r.ID, r.Key)
 		line := prefix + clip(r.Title, max(w-lipgloss.Width(prefix), 1))
+		out.rows = append(out.rows, len(out.body))
 		if index == cursor {
 			out.sel = len(out.body)
 			line = th.TabActive.Render(line)

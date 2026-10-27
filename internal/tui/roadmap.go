@@ -198,6 +198,7 @@ func (m *Model) roadmap(w int) overviewView {
 		room := max(w-lipgloss.Width(prefix)-lipgloss.Width(fields)-2, 1)
 		title = clip(title, room)
 		line := prefix + title + strings.Repeat(" ", max(w-lipgloss.Width(prefix)-lipgloss.Width(title)-lipgloss.Width(fields), 2)) + fields
+		out.rows = append(out.rows, len(out.body))
 		if i == cursor {
 			out.sel = len(out.body)
 			line = th.TabActive.Render(line)
