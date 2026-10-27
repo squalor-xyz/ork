@@ -2075,3 +2075,18 @@
 {"when": "2026-10-27T20:23:48Z", "item": "S150", "action": "note", "from": "", "to": "", "note": "Review leftovers (not fixed in S150): (1) internal/daemon/la", "by": "Jon R"}
 {"when": "2026-10-27T20:38:29Z", "item": "S150", "action": "status", "from": "started", "to": "done", "note": "Running row line 2: title in the default foreground, two spaces, only the output dim or amber; long titles clip to leave the output about 20 columns; a selected denial is black on amber with line 2 not bold; stripTaskLabel compiled once (daemon.StripTaskLabel); '/' in the label docs; scroll bump never hides line 1; ork status running: cuts the task label. Review PASS, UI pass PASS (2 rounds), gate PASS (run-20261027-192914-166a).", "by": "Jon R"}
 {"when": "2026-10-27T20:38:29Z", "item": "S150", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 25, S150): 1 owner question before ", "by": "Jon R"}
+{"when": "2026-10-27T20:46:56Z", "item": "S159", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-27 (interactive): on Retry with a que", "by": "Jon R"}
+{"when": "2026-10-27T20:46:56Z", "item": "S162", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-27 (interactive): a dim heading line ", "by": "Jon R"}
+{"when": "2026-10-27T20:46:56Z", "item": "S161", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-27 (interactive): all optional field", "by": "Jon R"}
+{"when": "2026-10-27T20:46:56Z", "item": "S140", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-27T20:46:56Z", "item": "S140", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-27T20:46:57Z", "item": "S140", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-27T20:46:57Z", "item": "S141", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-27T20:46:57Z", "item": "S141", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-27T20:46:57Z", "item": "S141", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-27T20:46:57Z", "item": "S143", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-27T20:46:57Z", "item": "S143", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-27T20:46:57Z", "item": "S143", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-27T20:46:57Z", "item": "S144", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-27T20:46:57Z", "item": "S144", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-27T20:46:58Z", "item": "S144", "action": "edit", "from": "", "to": "", "note": "Check"}

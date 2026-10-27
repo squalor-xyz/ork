@@ -6714,6 +6714,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "d19f1056-76a6-4f03-8aaf-189b5b8f3ff9",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): on Retry with a queued sibling question while the first pause is not a question, ask the question first; then the retry resumes with that answer in the brief and the retry context (engine.go ~303). Also show RunPlan.note in printRunPlan (internal/cli/run.go ~151) and the TUI launch confirm (internal/tui/launch.go ~309). UI pass applies.",
+          "created_at": "2026-10-27T20:46:56Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -6849,7 +6860,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "da7b0090-0b36-440f-b699-5145e119e67e",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decisions 2026-10-27 (interactive): all optional fields, one flag each: ork projects set NAME --push on|off --ui-doc PATH --worktree-pattern P --branch-pattern P --check CMD --budget-minutes N --budget-tokens N; refuses while the project has unfinished runs (as ork projects rm does, CodeProjectBusy); validates each value (ui_doc a relative path inside the project; patterns need {id} or {id_lower}); a daemon RPC does the write under regMu.",
+          "created_at": "2026-10-27T20:46:56Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -6877,7 +6900,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "acbb83b1-bbe1-4cd9-ab63-c88399afd29c",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): a dim heading line per pass above its items (e.g. 'v1.0 (24)'); { and } jump to headings.",
+          "created_at": "2026-10-27T20:46:56Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
