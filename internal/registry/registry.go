@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -66,8 +67,15 @@ func (p *Permission) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// FillPattern fills {id} with the item id and {id_lower} with its lowercase form.
+// Other text, including unknown placeholders, stays unchanged.
+func FillPattern(pattern, id string) string {
+	return strings.NewReplacer("{id}", id, "{id_lower}", strings.ToLower(id)).Replace(pattern)
+}
+
 // Project is one registry entry. Fields other than Name, Path and Adj are
-// optional; a zero value means unset and is not written.
+// optional; a zero value means unset and is not written. WorktreePattern and
+// BranchPattern accept {id} and {id_lower} (S124, *proposed*).
 type Project struct {
 	Name             string                       `json:"name"`
 	Path             string                       `json:"path"`

@@ -5242,7 +5242,7 @@
       "id": "S124",
       "title": "Worktree and branch patterns can lowercase the item id",
       "short_title": "Worktree and branch patterns can lowercase the item id",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -5252,6 +5252,28 @@
           "text": "**2026-10-26** — From the S71 preflight (2026-10-26): ork doctor will flag a worktree or branch pattern without {id} (owner decision). When S124 adds {id_lower}, extend that doctor rule to accept either placeholder.",
           "created_at": "2026-10-26T21:56:40Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "f1dd9571-6ccf-4f9b-a889-019d751d3470",
+          "kind": "",
+          "text": "**2026-10-27** — Out of scope, not implemented: doctor does not flag unknown {...} placeholders; only {id} and {id_lower} are filled.",
+          "created_at": "2026-10-27T14:31:46Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "8ad313eb-2d84-45ce-a118-3e818ba5d7df",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial (run 19, S124): 0 owner questions, no stalls, 1 doc-only fix round (done by the Claude fallback; Codex out of credits), no merge conflicts so far, ran in parallel with S160 and S134.",
+          "created_at": "2026-10-27T14:38:32Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -5275,7 +5297,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

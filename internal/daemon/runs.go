@@ -459,7 +459,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	if pattern == "" {
 		pattern = ".worktrees/{id}"
 	}
-	plan.Worktree = strings.ReplaceAll(pattern, "{id}", p.Item)
+	plan.Worktree = registry.FillPattern(pattern, p.Item)
 	if !filepath.IsAbs(plan.Worktree) {
 		plan.Worktree = filepath.Join(proj.Path, plan.Worktree)
 	}
@@ -468,7 +468,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	if pattern == "" {
 		pattern = "{id}"
 	}
-	plan.Branch = strings.ReplaceAll(pattern, "{id}", p.Item)
+	plan.Branch = registry.FillPattern(pattern, p.Item)
 	return plan, nil
 }
 func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, error) {

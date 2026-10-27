@@ -2216,3 +2216,41 @@ func TestRunPlanValidatesArchitectEntries(t *testing.T) {
 		}
 	}
 }
+
+func TestPlanAndEngineAgreeOnPaths(t *testing.T) {
+	for _, tc := range []struct{ name, worktree, branch, wantWorktree, wantBranch string }{
+		{"defaults", "", "", ".worktrees/S78", "S78"},
+		{"id", ".worktrees/{id}", "{id}", ".worktrees/S78", "S78"},
+		{"lower", ".worktrees/{id_lower}", "{id_lower}", ".worktrees/s78", "s78"},
+		{"mixed", "Fixed/{id}/{id_lower}/{id_lower}", "feat/{id}/{id_lower}", "Fixed/S78/s78/s78", "feat/S78/s78"},
+		{"absolute", "/absolute/{id_lower}/../{id}", "{id_lower}", "/absolute/S78", "s78"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			d, _, p := runDaemon(t, nil)
+			p.WorktreePattern, p.BranchPattern = tc.worktree, tc.branch
+			if err := registry.Save(d.registryPath(), &registry.File{Version: registry.Version, Projects: []registry.Project{p}}); err != nil {
+				t.Fatal(err)
+			}
+			plan, err := d.planRun(context.Background(), RunParams{Project: p.Name, Item: "S78"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			e, err := engine.New(context.Background(), *d.cfg.Engine, engine.Config{Project: p, Item: "S78", Lineup: plan.Lineup, Queued: true})
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := tc.wantWorktree
+			if !filepath.IsAbs(want) {
+				want = filepath.Join(p.Path, want)
+			}
+			rec := e.Snapshot()
+			if plan.Worktree != want || rec.Worktree != want || plan.Branch != tc.wantBranch || rec.Branch != tc.wantBranch {
+				t.Errorf("plan %q %q; engine %q %q; want %q %q", plan.Worktree, plan.Branch, rec.Worktree, rec.Branch, want, tc.wantBranch)
+			}
+			runs, err := d.cfg.Engine.Store.List()
+			if err != nil || len(runs) != 1 || rec.State != runrec.StateQueued {
+				t.Fatalf("queued engine record: %v %v, state %s", runs, err, rec.State)
+			}
+		})
+	}
+}

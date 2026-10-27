@@ -172,8 +172,8 @@ func checkProject(ctx context.Context, p registry.Project) projectCheck {
 	for _, pattern := range []struct{ name, value string }{
 		{"worktree_pattern", p.WorktreePattern}, {"branch_pattern", p.BranchPattern},
 	} {
-		if pattern.value != "" && !strings.Contains(pattern.value, "{id}") {
-			check.addFinding("%s %q has no {id}", pattern.name, pattern.value)
+		if pattern.value != "" && !strings.Contains(pattern.value, "{id}") && !strings.Contains(pattern.value, "{id_lower}") {
+			check.addFinding("%s %q has no {id} or {id_lower}", pattern.name, pattern.value)
 		}
 	}
 	return check
