@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 160,
+  "next_id": 161,
   "preamble": "",
   "passes": [
     {
@@ -6351,6 +6351,34 @@
         "reason": "",
         "importance": 2,
         "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S160",
+      "title": "Add project from the TUI when projects are registered: + works outside Welcome",
+      "short_title": "Add key beyond Welcome",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S96",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
         "effort": 1,
         "attempts": 0
       }
