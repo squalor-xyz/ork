@@ -279,8 +279,9 @@ func (e *Engine) review(ctx context.Context) error {
 	}
 	// The reviewer and the UI pass run at the same time and neither waits for
 	// the other. Each round ends its own way. The first pause is kept; a stop
-	// overrides a pause (pause refuses when paused or stopped, stop refuses
-	// only when already stopped).
+	// overrides a pause. A sibling owner question is queued behind the first.
+	reviewCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	outs := make([]outcome, len(todo))
 	errs := make([]error, len(todo))
 	var wg sync.WaitGroup
@@ -288,14 +289,25 @@ func (e *Engine) review(ctx context.Context) error {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			outs[i], errs[i] = e.runRound(ctx, r, pendFor(pend, r.role))
+			p := pendFor(pend, r.role)
+			if p == nil {
+				p = answeredQuestion(rec, r.role)
+			}
+			outs[i], errs[i] = e.runRound(reviewCtx, r, p)
+			if e.run.Snapshot().State == runrec.StateStopped {
+				cancel()
+			}
 		}()
 	}
 	wg.Wait()
+	stopped := e.run.Snapshot().State == runrec.StateStopped
 	for i := range todo {
-		if errs[i] != nil {
+		if errs[i] != nil && !(stopped && ctx.Err() == nil && errors.Is(errs[i], context.Canceled)) {
 			return errs[i]
 		}
+	}
+	if stopped {
+		return ctx.Err()
 	}
 	for i := range todo {
 		if !outs[i].ok {
@@ -347,6 +359,21 @@ func fixBody(t *Triaged, text string) string {
 		return t.Fix
 	}
 	return text
+}
+
+// answeredQuestion restores each parallel role's answer after queued questions
+// have been answered, including across a daemon restart.
+func answeredQuestion(rec runrec.Record, role string) *runrec.Pending {
+	for i := len(rec.Questions) - 1; i >= 0; i-- {
+		q := rec.Questions[i]
+		if q.Role == role && q.Round == rec.Round {
+			if q.Answer == "" {
+				return nil
+			}
+			return &runrec.Pending{Kind: runrec.PendingQuestion, State: runrec.StateReview, Role: role, Round: q.Round, Question: q.Text, Ask: q.Ask, Key: q.Key, Answer: q.Answer}
+		}
+	}
+	return nil
 }
 
 // pendFor is the pause context a round of the review state takes: its own, or

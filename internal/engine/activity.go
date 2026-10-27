@@ -3,6 +3,7 @@
 package engine
 
 import (
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -24,8 +25,18 @@ type activityBucket struct {
 	count int
 }
 
-func (e *Engine) startActivity() (event func(), end func()) {
-	a := &e.activity
+// roleActivity isolates callbacks and attempt generations for each role.
+func (e *Engine) roleActivity(role []string) *activityRing {
+	name := ""
+	if len(role) > 0 {
+		name = role[0]
+	}
+	a, _ := e.activity.LoadOrStore(name, &activityRing{})
+	return a.(*activityRing)
+}
+
+func (e *Engine) startActivity(role ...string) (event func(), end func()) {
+	a := e.roleActivity(role)
 	a.mu.Lock()
 	a.generation++
 	generation := a.generation
@@ -56,8 +67,26 @@ func (e *Engine) startActivity() (event func(), end func()) {
 
 // Activity returns ten wall-clock 30-second buckets, oldest first, against the
 // snapshot caller's clock. No active role means no series, including after load.
-func (e *Engine) Activity(now time.Time) []int {
-	a := &e.activity
+func (e *Engine) Activity(now time.Time, role ...string) []int {
+	if len(role) > 0 {
+		return e.roleActivity(role).series(now)
+	}
+	var out []int
+	e.activity.Range(func(_, value any) bool {
+		if series := value.(*activityRing).series(now); series != nil {
+			if out == nil {
+				out = make([]int, 10)
+			}
+			for i, n := range series {
+				out[i] += n
+			}
+		}
+		return true
+	})
+	return out
+}
+
+func (a *activityRing) series(now time.Time) []int {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if !a.active {
@@ -76,8 +105,8 @@ func (e *Engine) Activity(now time.Time) []int {
 }
 
 // liveHook captures the current attempt so late callbacks cannot contaminate a retry.
-func (e *Engine) liveHook() func(Live) {
-	a := &e.activity
+func (e *Engine) liveHook(role ...string) func(Live) {
+	a := e.roleActivity(role)
 	a.mu.Lock()
 	generation := a.generation
 	a.mu.Unlock()
@@ -108,8 +137,29 @@ func (e *Engine) liveHook() func(Live) {
 }
 
 // Live returns a copy of the current attempt's transient output and token total.
-func (e *Engine) Live() Live {
-	a := &e.activity
+func (e *Engine) Live(role ...string) Live {
+	if len(role) > 0 {
+		return e.roleActivity(role).snapshot()
+	}
+	// Stable role order keeps parallel output readable in the existing snapshot.
+	var names []string
+	e.activity.Range(func(key, _ any) bool { names = append(names, key.(string)); return true })
+	slices.Sort(names)
+	var out Live
+	for _, name := range names {
+		live := e.roleActivity([]string{name}).snapshot()
+		if out.Text != "" && live.Text != "" {
+			out.Text += "\n"
+		}
+		out.Text += live.Text
+		out.Tokens += live.Tokens
+		out.UsageKnown = out.UsageKnown || live.UsageKnown
+		out.TailTruncated = out.TailTruncated || live.TailTruncated
+	}
+	return out
+}
+
+func (a *activityRing) snapshot() Live {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	if !a.active {

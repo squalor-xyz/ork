@@ -167,6 +167,10 @@ a slot under the caps and has no process and no writes. `round` counts implement
 `pending` (kind `question`, `shape`, `lost`, `interrupted`, `budget` or `error`, with
 the state and role to re-enter, the reason, and for a question the optional adj
 `key`, the text and the answer) is set while a slice is paused.
+The proposed optional `queued_questions[]` (S135) keeps sibling owner questions
+as pending objects while `pending` stays single. Answering the current question
+shows the next queued question before roles resume. Each role receives its own
+answer from `questions[]`. Old records without the queue still load.
 Both `pending` and each entry in `questions[]` may carry `ask`, the structured
 question object: `title`, `options:[{label,summary}]`, one-based `recommend`
 and `reason` (adj #168). The raw question text is kept alongside it. Older

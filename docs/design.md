@@ -266,11 +266,12 @@ slice.
     rule u10). On any other slice no UI round runs. The UI pass is read-only
     with the fingerprint applied, gives no verdict, and reports sections
     (A) to (D) like the reviewer. It runs once, with the first review. The
-    findings of the two reports go to one fix round. When both
-    ask to pause, the first pause is kept. A stop overrides a pause, because
-    `pause()` refuses when the slice is paused or stopped and `stop()` refuses
-    only when it is already stopped. After a pause, a retry runs again only the
-    role whose report does not stand. Renders (*proposed*, S121; adj #165): the
+    findings of the two reports go to one fix round. A sibling owner
+    question is queued in `queued_questions[]` and asked after the first
+    answer; other sibling pauses are still dropped. A stop overrides a pause
+    and cancels the running sibling, recorded with exit `cancelled`. After a
+    pause, a retry runs again only the role whose report does not stand.
+    Renders (*proposed*, S121; adj #165): the
     UI pass writes each changed view as plain text files at 80x24, 120x40 and in
     ASCII mode, in `tmp/ui-N/renders/` of the run directory, using the
     project's own tooling. ork has no render code. When the gate passes, the
@@ -384,11 +385,14 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   exit of class `error`. Auth and unclassified exits stop the slice with
   the reason even when a next lineup entry exists.
 - **Role activity (S07).** The engine keeps a ring of ten 30-second buckets
-  for the current role attempt, with its own mutex because `Run` holds the
+  for each current role attempt, with its own mutex because `Run` holds the
   engine mutex. Every role attempt starts empty. The daemon reads the series
   against its own clock at snapshot time, oldest first, on wall-clock bucket
   boundaries. The proposed optional `engine_runs[].activity` display field
-  carries ten counts while a role runs and is omitted otherwise. Restarts and
+  carries ten counts summed across active roles and is omitted otherwise. Live
+  token counts are summed too; non-empty live text is joined with a newline
+  between roles, in role-name order. Ending one parallel role leaves the
+  sibling's activity intact. Restarts and
   source-less ledger runs have no series. Activity stays in daemon memory;
   it is not in `run.json` and adds no state-file field.
 - **States.** `queued` (waits for a slot; `Dequeue` moves it to `setup`), `setup`, `implement`, `checks`, `review`, `architect`, `gate`,
@@ -969,7 +973,10 @@ overridden role to its full chain of `{vendor,model,effort}` entries
 confirmed, including lineup and merged budgets. `run.approve`, `run.stop`
 and `run.answer` take
 `{run,text?}`. Plan returns `{project,item,worktree,branch,check_command,
-lineup,budgets,permissions}`; the project contains only its name and path.
+lineup,budgets,permissions,note?}`; the project contains only its name and path.
+The proposed optional `note` (S135) explains a failed `relay-roles show` read.
+The plan then treats UI and spec-check rules as absent; a failed recommendation
+still prevents planning.
 Start and owner commands return the run record. With `--json`, run prints
 the plan on stderr and a single result JSON value on stdout; declining
 prints `{"started":false}` on stdout. Interactive questions go on stderr

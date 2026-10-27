@@ -360,7 +360,7 @@ func TestFileLaterRetriesAfterAFailedWhySection(t *testing.T) {
 }
 
 // A blocker raised in the same round as another role's pause is asked once
-// that pause is answered: the reviewer's round does not stand.
+// that pause is answered: the queued blocker is shown before roles rerun.
 func TestBlockerBesideAnotherRolesPauseIsStillAsked(t *testing.T) {
 	h := uiHarness(t, tuiFiles)
 	uiDone := make(chan struct{})
@@ -397,9 +397,17 @@ func TestBlockerBesideAnotherRolesPauseIsStillAsked(t *testing.T) {
 			reviewerRounds++
 		}
 	}
-	if reviewerRounds != 2 {
-		t.Errorf("the reviewer's blocker is not asked: roles %v", h.runner.roles())
+	if reviewerRounds != 1 {
+		t.Errorf("reviewer reran before its queued question was answered: %v", h.runner.roles())
 	}
+	rec = requireState(t, e, runrec.StatePaused)
+	if rec.Pending.Role != RoleReviewer || rec.Pending.Ask == nil || rec.Pending.Ask.Title != "Drop the old wire field now?" {
+		t.Fatalf("queued blocker not shown: %+v", rec.Pending)
+	}
+	if err := e.Answer(context.Background(), "keep"); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateAwaitingApproval)
 }
 
 func TestUIPassFindingsAreSortedByKindToo(t *testing.T) {

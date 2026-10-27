@@ -5399,7 +5399,7 @@
       "id": "S135",
       "title": "Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions",
       "short_title": "Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -5409,6 +5409,17 @@
           "text": "**2026-10-27** — Spec preflight 2026-10-27: owner chose queue the sibling question (Pending stays single) and plan without a ui role when relay-roles rules fail.",
           "created_at": "2026-10-27T11:12:22Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "96080f08-e22b-4260-b085-f886782d8719",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial run 13: owner questions 2 before / 0 during; stalls 0; fix rounds 1; merge conflicts 0; about 30 min; compactions 0.",
+          "created_at": "2026-10-27T11:35:05Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -5432,7 +5443,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

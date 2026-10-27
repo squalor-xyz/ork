@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -89,9 +90,13 @@ func (e *Engine) Reconcile(ctx context.Context) error {
 			}
 		}
 		last := lost[len(lost)-1]
-		how := "its process group was gone"
-		if killed[last.PGID] {
-			how = fmt.Sprintf("its process group %d was still running and was killed", last.PGID)
+		var reasons []string
+		for _, role := range lost {
+			how := "its process group was gone"
+			if killed[role.PGID] {
+				how = fmt.Sprintf("its process group %d was still running and was killed", role.PGID)
+			}
+			reasons = append(reasons, fmt.Sprintf("%s round %d lost: %s", role.Role, role.Round, how))
 		}
 		p := runrec.Pending{}
 		if rec.Pending != nil {
@@ -101,7 +106,7 @@ func (e *Engine) Reconcile(ctx context.Context) error {
 		if rec.State != runrec.StatePaused {
 			p.State = rec.State
 		}
-		p.Reason = fmt.Sprintf("%s round %d lost: %s", last.Role, last.Round, how)
+		p.Reason = strings.Join(reasons, "; ")
 		if err := e.pause(p); err != nil {
 			return err
 		}

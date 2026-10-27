@@ -3,6 +3,8 @@
 package daemon
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
@@ -121,5 +123,33 @@ func TestPlanDropsAnEntryIdenticalToThePreviousOne(t *testing.T) {
 		if want := []runrec.LineupEntry{opus}; !reflect.DeepEqual(plan.Lineup[role], want) {
 			t.Errorf("%s chain %+v, want %+v", role, plan.Lineup[role], want)
 		}
+	}
+}
+
+func TestPlanWithoutUIRoleWhenMatrixUnreadable(t *testing.T) {
+	for _, route := range []clitest.Route{
+		{Tool: "slicer", Args: []string{"relay-roles", "show"}, Prefix: true, Exit: 1, Stderr: "matrix unreadable"},
+		{Tool: "slicer", Args: []string{"relay-roles", "show"}, Prefix: true, Stdout: "invalid JSON"},
+	} {
+		t.Run(route.Stdout+route.Stderr, func(t *testing.T) {
+			d, _, _ := runDaemon(t, nil, route)
+			plan, err := d.planRun(context.Background(), RunParams{Project: "p", Item: "S1"})
+			if err != nil {
+				t.Fatalf("rules failure must keep plan available: %v", err)
+			}
+			if len(plan.Lineup[engine.RoleUI]) != 0 {
+				t.Fatal("unexpected UI role")
+			}
+			b, _ := json.Marshal(plan)
+			var fields map[string]json.RawMessage
+			json.Unmarshal(b, &fields)
+			if !strings.Contains(string(fields["note"]), "relay-roles") {
+				t.Fatalf("plan omits failure note: %s", b)
+			}
+		})
+	}
+	d, _, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "recommend"}, Prefix: true, Exit: 1})
+	if _, err := d.planRun(context.Background(), RunParams{Project: "p", Item: "S1"}); err == nil {
+		t.Fatal("recommend failure must stay an error")
 	}
 }

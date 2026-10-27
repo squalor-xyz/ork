@@ -77,6 +77,7 @@ type RunPlan struct {
 	Lineup       map[string][]runrec.LineupEntry `json:"lineup"`
 	Budgets      registry.Budgets                `json:"budgets"`
 	Permissions  map[string]engine.Permission    `json:"permissions"`
+	Note         string                          `json:"note,omitempty"` // why rule-based roles could not be identified
 }
 
 // EngineRun is the owner's status of one engine run. Wire fields are proposed.
@@ -336,9 +337,9 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	if err != nil {
 		return nil, err
 	}
-	rules, err := d.runs.deps.Slicer.RelayRules(ctx, proj.Path)
-	if err != nil {
-		return nil, err
+	rules, rulesErr := d.runs.deps.Slicer.RelayRules(ctx, proj.Path)
+	if rulesErr != nil {
+		rules = nil
 	}
 	// The UI pass row is a reviewer row that only the rule naming it tells
 	// apart (rule u10; slicer s392 will give it a ui role). It runs as the UI
@@ -349,6 +350,9 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	specRow := slicercli.SpecCheckRowID(rules)
 	var uiRows []slicercli.Row
 	plan := &RunPlan{project: proj, Project: registry.Project{Name: proj.Name, Path: proj.Path}, Item: p.Item, CheckCommand: proj.CheckCommand, Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
+	if rulesErr != nil {
+		plan.Note = "slicer relay-roles show failed; planning without UI or spec-check rules: " + rulesErr.Error()
+	}
 	for _, role := range []string{engine.RoleImplementer, engine.RoleReviewer, engine.RoleGate, engine.RoleArchitect} {
 		sourceRole := role
 		if role == engine.RoleGate {

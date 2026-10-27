@@ -275,16 +275,27 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		return outcome{}, err
 	}
 
-	onEvent, endActivity := e.startActivity()
+	onEvent, endActivity := e.startActivity(r.role)
 	res, runErr := e.d.Runner.Run(ctx, Request{
 		Role: r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
 		Brief: brief, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
 		Allowlist: perm.Allow, ReadOnly: perm.ReadOnly, Resume: session,
-		OnEvent: onEvent, OnLive: e.liveHook(),
+		OnEvent: onEvent, OnLive: e.liveHook(r.role),
 		OnStart: func(pgid int) { e.run.Update(func(rr *runrec.Record) { rr.Roles[idx].PGID = pgid }) },
 	})
 	endActivity()
 	if err := ctx.Err(); err != nil {
+		if e.run.Snapshot().State == runrec.StateStopped {
+			updateErr := e.run.Update(func(rr *runrec.Record) {
+				role := &rr.Roles[idx]
+				role.EndedAt = e.d.now()
+				role.Exit = "cancelled"
+				role.Session = res.Session
+				role.Tokens = res.Tokens
+				role.CostUSD = res.CostUSD
+			})
+			return outcome{}, updateErr
+		}
 		return outcome{}, err // the role stays running in the record; a restart marks it lost
 	}
 	class := res.Exit

@@ -119,3 +119,23 @@ func TestZeroUsageEventSurvivesLiveSnapshot(t *testing.T) {
 		t.Fatal("usage presence survived round end")
 	}
 }
+
+func TestParallelLiveTextSeparatedInRoleOrder(t *testing.T) {
+	e := &Engine{}
+	// Start in reverse name order and include an active role with no text.
+	_, endUI := e.startActivity(RoleUI)
+	defer endUI()
+	e.liveHook(RoleUI)(Live{Text: "ui", Tokens: 5})
+	_, endReviewer := e.startActivity(RoleReviewer)
+	defer endReviewer()
+	e.liveHook(RoleReviewer)(Live{Text: "reviewer", Tokens: 3})
+	_, endEmpty := e.startActivity(RoleImplementer)
+	defer endEmpty()
+	if got := e.Live(); got.Text != "reviewer\nui" || got.Tokens != 8 {
+		t.Fatalf("parallel live text: %+v, want reviewer\\nui and 8 tokens", got)
+	}
+	endReviewer()
+	if got := e.Live().Text; got != "ui" {
+		t.Fatalf("ended or empty role added separators: %q", got)
+	}
+}

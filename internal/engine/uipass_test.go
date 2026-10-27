@@ -530,3 +530,284 @@ func TestUIPassStopOverridesAPause(t *testing.T) {
 		t.Fatalf("reason %q, pending %+v", rec.Reason, rec.Pending)
 	}
 }
+
+// contextRunner lets the harness observe cancellation without a vendor process.
+type contextRunner struct {
+	run func(context.Context, Request) (Result, error)
+}
+
+func (r contextRunner) Run(ctx context.Context, req Request) (Result, error) { return r.run(ctx, req) }
+
+func TestStopCancelsSiblingReviewRound(t *testing.T) {
+	for _, stopping := range []string{RoleReviewer, RoleUI} {
+		t.Run(stopping, func(t *testing.T) {
+			h := uiHarness(t, tuiFiles)
+			started := make(chan struct{})
+			cancelled := make(chan struct{})
+			h.deps.Runner = contextRunner{run: func(ctx context.Context, req Request) (Result, error) {
+				if req.Role != RoleReviewer && req.Role != RoleUI {
+					return defaultResult(req), nil
+				}
+				if req.Role == stopping {
+					<-started
+					return Result{Exit: ExitAuth}, nil
+				}
+				close(started)
+				select {
+				case <-ctx.Done():
+					close(cancelled)
+					return Result{}, ctx.Err()
+				case <-time.After(2 * time.Second):
+					return defaultResult(req), nil
+				}
+			}}
+			e := h.start()
+			requireState(t, e, runrec.StateStopped)
+			select {
+			case <-cancelled:
+			default:
+				t.Fatal("stopped round did not cancel sibling context")
+			}
+			for _, r := range e.Snapshot().Roles {
+				if r.Running() {
+					t.Fatalf("cancelled role still running: %+v", r)
+				}
+			}
+		})
+	}
+}
+
+func TestParallelRoundsKeepSeparateActivity(t *testing.T) {
+	h := uiHarness(t, tuiFiles)
+	now := time.Date(2026, 10, 27, 12, 0, 0, 0, time.UTC)
+	h.deps.Now = func() time.Time { return now }
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reviewerStarted := make(chan struct{})
+	uiStarted := make(chan struct{})
+	h.runner.script = func(req Request, _ int) (Result, error) {
+		switch req.Role {
+		case RoleReviewer:
+			req.OnEvent()
+			req.OnLive(Live{Tokens: 3, Text: "reviewer"})
+			close(reviewerStarted)
+			<-uiStarted
+			for deadline := time.Now().Add(2 * time.Second); time.Now().Before(deadline); time.Sleep(time.Millisecond) {
+				rec := e.Snapshot()
+				ended := false
+				for _, r := range rec.Roles {
+					if r.Role == RoleUI && !r.Running() {
+						ended = true
+					}
+				}
+				if ended {
+					break
+				}
+			}
+			got := e.Activity(now)
+			if len(got) != 10 || got[9] != 1 || e.Live().Tokens != 3 || e.Live().Text != "reviewer" {
+				t.Errorf("sibling completion erased reviewer activity: %v %+v", got, e.Live())
+			}
+		case RoleUI:
+			<-reviewerStarted
+			req.OnEvent()
+			req.OnEvent()
+			req.OnLive(Live{Tokens: 5, Text: "ui"})
+			close(uiStarted)
+			if got := e.Activity(now, RoleReviewer); len(got) != 10 || got[9] != 1 || e.Live(RoleReviewer).Tokens != 3 {
+				t.Errorf("reviewer ring: %v %+v", got, e.Live(RoleReviewer))
+			}
+			if got := e.Activity(now, RoleUI); len(got) != 10 || got[9] != 2 || e.Live(RoleUI).Tokens != 5 {
+				t.Errorf("UI ring: %v %+v", got, e.Live(RoleUI))
+			}
+			if got := e.Activity(now); len(got) != 10 || got[9] != 3 || e.Live().Tokens != 8 {
+				t.Errorf("parallel activity lost: %v %+v", got, e.Live())
+			}
+		}
+		return Result{}, nil
+	}
+	if err := e.Run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestLostPauseNamesEveryLostRole(t *testing.T) {
+	h := uiHarness(t, tuiFiles)
+	h.seed("parallel-lost", runrec.StateReview, runningRole(RoleReviewer, 111, "2"), runningRole(RoleUI, 222, "3"))
+	h.proc.alive[111] = true
+	rec := requireState(t, h.recover()["parallel-lost"], runrec.StatePaused)
+	for _, name := range []string{"reviewer round 1 lost", "ui round 1 lost", "111", "killed", "gone"} {
+		if !strings.Contains(rec.Reason, name) {
+			t.Errorf("lost pause omits %q: %s", name, rec.Reason)
+		}
+	}
+}
+
+func TestSiblingOwnerQuestionKept(t *testing.T) {
+	for _, first := range []string{RoleReviewer, RoleUI} {
+		t.Run(first, func(t *testing.T) {
+			h := uiHarness(t, tuiFiles)
+			e, err := New(context.Background(), h.deps, h.cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			h.runner.script = func(req Request, _ int) (Result, error) {
+				if req.Role != RoleReviewer && req.Role != RoleUI {
+					return Result{}, nil
+				}
+				if strings.Contains(req.Brief, "Owner answer") {
+					if !strings.Contains(req.Brief, "answer-"+req.Role) || !strings.Contains(req.Brief, "question-"+req.Role) {
+						t.Errorf("wrong answer brief: %s", req.Brief)
+					}
+					return Result{}, nil
+				}
+				if req.Role != first {
+					for deadline := time.Now().Add(2 * time.Second); time.Now().Before(deadline); time.Sleep(time.Millisecond) {
+						if e.Snapshot().State == runrec.StatePaused {
+							break
+						}
+					}
+				}
+				return Result{Exit: ExitOK, Session: "sess-" + req.Role, Report: strings.Replace(cleanReview, "none", "question-"+req.Role, 1)}, nil
+			}
+			if err := e.Run(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			rec := requireState(t, e, runrec.StatePaused)
+			if rec.Pending.Role != first || len(rec.Questions) != 2 || len(rec.QueuedQuestions) != 1 {
+				t.Fatalf("questions: %+v pending: %+v", rec.Questions, rec.Pending)
+			}
+			// Reload before each answer to prove the queue and answer context are durable.
+			load := func() {
+				run, err := h.store.Open(rec.ID)
+				if err != nil {
+					t.Fatal(err)
+				}
+				e = Load(h.deps, h.proj, run)
+			}
+			load()
+			if err := e.Answer(context.Background(), "answer-"+first); err != nil {
+				t.Fatal(err)
+			}
+			rec = requireState(t, e, runrec.StatePaused)
+			if rec.Pending.Role == first {
+				t.Fatalf("sibling question was dropped: %+v", rec.Pending)
+			}
+			second := rec.Pending.Role
+			if len(h.runner.requests()) != 3 {
+				t.Fatal("roles reran before both questions were answered")
+			}
+			load()
+			if err := e.Answer(context.Background(), "answer-"+second); err != nil {
+				t.Fatal(err)
+			}
+			rec = requireState(t, e, runrec.StateAwaitingApproval)
+			for _, q := range rec.Questions {
+				if q.Answer != "answer-"+q.Role {
+					t.Errorf("misassigned answer: %+v", q)
+				}
+			}
+		})
+	}
+}
+
+// A locked ledger end holds the stopping round open while its sibling exits
+// and cancels reviewCtx. Its retry must keep the ledger operation's context.
+func TestStopLedgerEndSurvivesSiblingCancellation(t *testing.T) {
+	for _, stopping := range []string{RoleReviewer, RoleUI} {
+		t.Run(stopping, func(t *testing.T) {
+			h := newHarness(t, func(o *harnessOpts) {
+				o.routesFor = func(_, W string) []clitest.Route {
+					return []clitest.Route{
+						{Tool: "slicer", Args: []string{"show", item, "--json", "--lean", "--root", W}, Stdout: uiSliceJSON(tuiFiles)},
+						{Tool: "slicer", Args: []string{"relay-run", "end", "run-1"}, Prefix: true, Seq: []clitest.Reply{
+							{Exit: 3, Stderr: `{"error":{"code":"locked","message":"busy"}}`},
+							{Stdout: `{"run":{"id":"run-1","state":"ended"}}`},
+						}},
+					}
+				}
+			})
+			h.cfg.Lineup[RoleUI] = []runrec.LineupEntry{{Vendor: "claude", Model: "opus", Effort: "medium"}}
+			siblingCtx := make(chan context.Context, 1)
+			siblingStarted := make(chan struct{})
+			releaseSibling := make(chan struct{})
+			h.deps.Runner = contextRunner{run: func(ctx context.Context, req Request) (Result, error) {
+				if req.Role != RoleReviewer && req.Role != RoleUI {
+					return defaultResult(req), nil
+				}
+				if req.Role == stopping {
+					<-siblingStarted
+					return Result{Exit: ExitAuth}, nil
+				}
+				siblingCtx <- ctx
+				close(siblingStarted)
+				<-releaseSibling
+				return defaultResult(req), nil
+			}}
+			e, err := New(context.Background(), h.deps, h.cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			e.wr.Sleep = func(ctx context.Context, _ time.Duration) error {
+				reviewCtx := <-siblingCtx
+				close(releaseSibling)
+				select {
+				case <-reviewCtx.Done():
+				case <-time.After(2 * time.Second):
+					t.Error("sibling did not cancel review context")
+				}
+				if err := ctx.Err(); err != nil {
+					t.Errorf("stop ledger end context cancelled by sibling: %v", err)
+				}
+				return ctx.Err()
+			}
+			if err := e.Run(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			rec := requireState(t, e, runrec.StateStopped)
+			if ends := h.calls("slicer", "relay-run", "end"); len(ends) != 2 {
+				t.Errorf("ledger end did not complete its retry: %v", ends)
+			}
+			var last runrec.Write
+			for _, w := range rec.Writes {
+				if len(w.Argv) > 1 && w.Argv[0] == "relay-run" && w.Argv[1] == "end" {
+					last = w
+				}
+			}
+			if last.Exit != 0 || last.Error != "" {
+				t.Errorf("ledger end failed: %+v", last)
+			}
+		})
+	}
+}
+
+func TestStopClearsQueuedSiblingQuestion(t *testing.T) {
+	h := newHarness(t)
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, role := range []string{RoleReviewer, RoleUI} {
+		if err := e.pause(runrec.Pending{Kind: runrec.PendingQuestion, State: runrec.StateReview, Role: role, Round: 1, Question: "question-" + role}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if len(e.Snapshot().QueuedQuestions) != 1 {
+		t.Fatal("sibling question was not queued")
+	}
+	if err := e.Stop(context.Background(), "stop with unanswered questions"); err != nil {
+		t.Fatal(err)
+	}
+	rec := requireState(t, e, runrec.StateStopped)
+	loaded, err := h.store.Open(rec.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, r := range []runrec.Record{rec, loaded.Snapshot()} {
+		if len(r.QueuedQuestions) != 0 || r.Pending != nil {
+			t.Fatalf("stopped run kept questions: pending=%+v queue=%+v", r.Pending, r.QueuedQuestions)
+		}
+	}
+}

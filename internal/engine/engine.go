@@ -114,7 +114,7 @@ type Config struct {
 // Answer, Retry, Stop, Reconcile) run one at a time; Snapshot may be called
 // at any moment.
 type Engine struct {
-	activity       activityRing
+	activity       sync.Map // role name -> *activityRing
 	heartbeatEvery time.Duration
 	mu             sync.Mutex
 	fileMu         sync.Mutex // one filing of a later finding at a time
@@ -299,6 +299,16 @@ func (e *Engine) advance(ctx context.Context) error {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
+		rec := e.run.Snapshot()
+		if !resting(rec.State) && len(rec.QueuedQuestions) > 0 {
+			return e.run.Update(func(r *runrec.Record) {
+				p := r.QueuedQuestions[0]
+				r.QueuedQuestions = r.QueuedQuestions[1:]
+				r.Pending = &p
+				r.State = runrec.StatePaused
+				r.Reason = p.Reason
+			})
+		}
 		var err error
 		switch state := e.run.Snapshot().State; state {
 		case runrec.StateSetup:
@@ -388,7 +398,7 @@ func (e *Engine) Answer(ctx context.Context, text string) error {
 	}
 	err := e.run.Update(func(r *runrec.Record) {
 		for i := len(r.Questions) - 1; i >= 0; i-- {
-			if r.Questions[i].Answer == "" {
+			if r.Questions[i].Answer == "" && r.Questions[i].Role == r.Pending.Role && r.Questions[i].Round == r.Pending.Round && r.Questions[i].Text == r.Pending.Question {
 				r.Questions[i].Answer = text
 				r.Questions[i].AnsweredAt = e.d.now()
 				break
@@ -454,12 +464,15 @@ func (e *Engine) stop(ctx context.Context, reason string) error {
 		r.State = runrec.StateStopped
 		r.Reason = reason
 		r.Pending = nil
+		r.QueuedQuestions = nil
 	})
 	if err != nil || already {
 		return err
 	}
 	if !ended {
-		e.endRelay(ctx, "stopped", "fail")
+		// A sibling can cancel the review context after the stop is recorded.
+		// The ledger end must finish; each CLI call still has its own timeout.
+		e.endRelay(context.WithoutCancel(ctx), "stopped", "fail")
 	}
 	return nil
 }
@@ -467,10 +480,17 @@ func (e *Engine) stop(ctx context.Context, reason string) error {
 // pause moves the slice to paused, waiting for the owner. The caller holds
 // e.mu. A slice that is already paused or stopped keeps its first pause or
 // stop: two roles of one state (the reviewer and the UI pass) may both ask.
+// A sibling owner question is persisted in the queue until its turn.
 // stop() is the stronger of the two: it refuses only when already stopped.
 func (e *Engine) pause(p runrec.Pending) error {
 	return e.run.Update(func(r *runrec.Record) {
-		if r.State == runrec.StatePaused || r.State == runrec.StateStopped {
+		if r.State == runrec.StateStopped {
+			return
+		}
+		if r.State == runrec.StatePaused {
+			if p.Kind == runrec.PendingQuestion {
+				r.QueuedQuestions = append(r.QueuedQuestions, p)
+			}
 			return
 		}
 		r.State = runrec.StatePaused

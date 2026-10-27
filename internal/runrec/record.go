@@ -260,6 +260,7 @@ type Record struct {
 	CleanedAt        time.Time                `json:"cleaned_at,omitzero"`    // when the worktree and branch were removed (S95)
 	Reason           string                   `json:"reason,omitempty"`
 	Pending          *Pending                 `json:"pending,omitempty"`
+	QueuedQuestions  []Pending                `json:"queued_questions,omitempty"` // sibling owner questions (S135, proposed)
 	Feedback         *Feedback                `json:"feedback,omitempty"`
 	Lineup           map[string][]LineupEntry `json:"lineup,omitempty"`
 	Roles            []RoleRecord             `json:"roles"`
