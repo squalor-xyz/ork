@@ -61,6 +61,15 @@ this file on startup (`registry.no-seed`, adj 157). The first successful
 ```
 
 Notes on the fields:
+- `worktree_pattern` and `branch_pattern` accept `{id}` for the unchanged
+  item id and `{id_lower}` (*proposed*, S124) for its lowercase form. For
+  item `S78`, `.worktrees/{id_lower}` gives `.worktrees/s78` and
+  `{id_lower}` gives branch `s78`. Other text keeps its case. The defaults
+  remain `.worktrees/{id}` and `{id}`. A relative worktree path is resolved
+  from the project directory; an absolute path is used as given, after
+  cleaning. Before rolling back to an ork binary without S124, put the
+  registry patterns back to `{id}`: an older ork leaves `{id_lower}` as
+  literal text, and every item would plan the same worktree.
 - `daemon_idle_minutes` is how long an idle daemon waits before it exits
   (`daemon.idle`). 0 or absent means 10. It is new in version 2.
 - `check_command` is a fallback. ork prefers slicer's config key once

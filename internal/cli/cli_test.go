@@ -732,13 +732,14 @@ func TestDoctorPatternWithoutIdIsReported(t *testing.T) {
 	for _, tc := range []struct{ worktree, branch, finding string }{
 		{"", "", ""}, {".worktrees/{id}", "slice/{id}", ""},
 		{".worktrees/fixed", "", "worktree_pattern"}, {"", "fixed", "branch_pattern"},
-		{"{id_lower}", "", "worktree_pattern"},
+		{"{id_lower}", "", ""}, {"", "{id_lower}", ""},
+		{"Fixed/{id}/{id_lower}", "feat/{id_lower}/{id}", ""},
 	} {
 		t.Run(tc.worktree+"/"+tc.branch, func(t *testing.T) {
 			app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir(), WorktreePattern: tc.worktree, BranchPattern: tc.branch})
 			d := projectReport(t, app)
 			got := strings.Join(d.Projects[0].Findings, " ")
-			if tc.finding == "" && got != "" || tc.finding != "" && (!strings.Contains(got, tc.finding) || !strings.Contains(got, "has no {id}") || !strings.Contains(got, fmt.Sprintf("%q", tc.worktree+tc.branch))) {
+			if tc.finding == "" && got != "" || tc.finding != "" && (!strings.Contains(got, tc.finding) || !strings.Contains(got, "has no {id} or {id_lower}") || !strings.Contains(got, fmt.Sprintf("%q", tc.worktree+tc.branch))) {
 				t.Fatalf("findings %q, want %q", got, tc.finding)
 			}
 		})

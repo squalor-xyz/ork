@@ -5242,7 +5242,7 @@
       "id": "S124",
       "title": "Worktree and branch patterns can lowercase the item id",
       "short_title": "Worktree and branch patterns can lowercase the item id",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -5252,6 +5252,28 @@
           "text": "**2026-10-26** — From the S71 preflight (2026-10-26): ork doctor will flag a worktree or branch pattern without {id} (owner decision). When S124 adds {id_lower}, extend that doctor rule to accept either placeholder.",
           "created_at": "2026-10-26T21:56:40Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "f1dd9571-6ccf-4f9b-a889-019d751d3470",
+          "kind": "",
+          "text": "**2026-10-27** — Out of scope, not implemented: doctor does not flag unknown {...} placeholders; only {id} and {id_lower} are filled.",
+          "created_at": "2026-10-27T14:31:46Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "8ad313eb-2d84-45ce-a118-3e818ba5d7df",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial (run 19, S124): 0 owner questions, no stalls, 1 doc-only fix round (done by the Claude fallback; Codex out of credits), no merge conflicts so far, ran in parallel with S160 and S134.",
+          "created_at": "2026-10-27T14:38:32Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -5275,7 +5297,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -5478,6 +5500,17 @@
       "depends_on": [],
       "note_records": [
         {
+          "id": "b42f0c5d-8cb3-4d67-a24d-f046ed36c8c8",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): mark the followed run's Overview row with a leading '>' glyph in the marker column for the 5 s of the switch notice; nothing else changes.",
+          "created_at": "2026-10-27T16:44:33Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
           "id": "f27507ea-0b31-4ae3-b8d9-e8806bf8f158",
           "kind": "",
           "text": "**2026-10-27** — S134 later notes (2026-10-27, UI pass): (1) the wrapText change in internal/tui/overview.go (wrapText) is global: every caller now drops the whole run of spaces at an added break, not only the detail strip; a line that relies on a leading double space after a break would lose it. (2) docs/dashboard.md has long unwrapped lines in the pane-follow paragraph (about line 614) and the answer-tracking paragraph (about line 650); wrap them in a docs pass.",
@@ -5578,7 +5611,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "eac1c0d4-029e-4075-ab38-e54bf096670f",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): the project's design doc path comes from a new optional registry field ui_doc (settable with ork projects; document in docs/state.md); the UI-pass brief names it. With no field the brief tells the UI pass to find the project's own UI docs. ork's own paths leave internal/roles/prompts/ui.md. Check the lineup/plan displays: S94 already added the architect row; add the ui row where missing.",
+          "created_at": "2026-10-27T16:44:33Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",

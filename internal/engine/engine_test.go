@@ -678,3 +678,22 @@ func TestChecksLogIsWrittenAt0600EvenOverAnExistingFile(t *testing.T) {
 		t.Fatalf("the checks log was not rewritten")
 	}
 }
+
+func TestPatternIdLower(t *testing.T) {
+	for _, tc := range []struct{ pattern, want string }{
+		{".worktrees/{id_lower}", ".worktrees/s78"},
+		{".worktrees/{id}", ".worktrees/S78"},
+		{"{id}/{id_lower}/{id_lower}/{other}", "S78/s78/s78/{other}"},
+		{"Fixed/{id_lower}", "Fixed/s78"},
+	} {
+		t.Run(tc.pattern, func(t *testing.T) {
+			p := registry.Project{Path: "/project", WorktreePattern: tc.pattern, BranchPattern: tc.pattern}
+			if got := worktreePath(p, "S78"); got != filepath.Join(p.Path, tc.want) {
+				t.Errorf("worktree = %q, want %q", got, filepath.Join(p.Path, tc.want))
+			}
+			if got := branchName(p, "S78"); got != tc.want {
+				t.Errorf("branch = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}

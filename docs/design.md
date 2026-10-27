@@ -1062,7 +1062,8 @@ a run that is not stopped or is busy. An unknown run returns `not_found`.
   Lookup is skipped for POSIX reserved words and special builtins, plus `cd`
   and `command`, and words containing `$` or a backtick or starting with `~`.
   Doctor never executes the check command. Nonempty worktree and branch
-  patterns must contain `{id}`; empty patterns use the defaults.
+  patterns must contain `{id}` or `{id_lower}` (*proposed*, S124); empty
+  patterns use the defaults.
   The registry is read only; a missing registry is empty and is not created.
   A registry read error is advisory: JSON has `registry_error` (omitted when
   there is no error), separate from the daemon's `warning`. Text prints

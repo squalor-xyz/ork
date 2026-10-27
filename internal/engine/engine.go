@@ -128,14 +128,14 @@ func newEngine(d Deps, proj registry.Project, run *runrec.Run) *Engine {
 	return &Engine{d: d, heartbeatEvery: d.HeartbeatEvery, proj: proj, run: run, wr: runrec.Writer{Sink: run, Now: d.now, Sleep: d.Sleep, Backoff: d.Backoff}}
 }
 
-// worktreePath is the project's worktree pattern with {id} filled, relative
+// worktreePath is the project's worktree pattern with its item placeholders filled, relative
 // to the project directory unless it is absolute (git.worktrees).
 func worktreePath(p registry.Project, id string) string {
 	pattern := p.WorktreePattern
 	if pattern == "" {
 		pattern = ".worktrees/{id}"
 	}
-	pattern = strings.ReplaceAll(pattern, "{id}", id)
+	pattern = registry.FillPattern(pattern, id)
 	if filepath.IsAbs(pattern) {
 		return filepath.Clean(pattern)
 	}
@@ -147,7 +147,7 @@ func branchName(p registry.Project, id string) string {
 	if pattern == "" {
 		pattern = "{id}"
 	}
-	return strings.ReplaceAll(pattern, "{id}", id)
+	return registry.FillPattern(pattern, id)
 }
 
 // lineup returns the primary entry for a role. The gate is the resumed
