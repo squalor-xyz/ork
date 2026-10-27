@@ -6209,7 +6209,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "88c0dac7-2635-4b86-a7df-aba68d28291c",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): take approve status text 'landing S22: pending', dashboard.md:482 wording, the double human-checks note on a second approval, show the c detail only when the merge state is known, show the cleanup-failed reason in full, Recent reads 'landed, cleanup failed'. Skip the adj 98 item (owner will supersede) and the implementer-allowlist verification (file separately if wanted).",
+          "created_at": "2026-10-27T18:37:28Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -6301,7 +6313,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "56ec9aa2-298f-462d-9eec-6b82d0cfcaa5",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): take the UI-pass layout set only: line 2 styling (title default foreground, two spaces between title and output, only the output dim or amber), clip a long title at 80x24, compile the stripTaskLabel regex once, '/' in the docs separators, selected-row denial cue (and line 2 not bold on a reversed row), ork status prints the new running text, scroll bump hiding line 1. Leave for later: parallel-role tail, sidebar Running entry, ledger round counts, error rows, engine vs ledger look-alike.",
+          "created_at": "2026-10-27T18:37:28Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
