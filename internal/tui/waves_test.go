@@ -1458,3 +1458,23 @@ func TestWavesArchitectLineup(t *testing.T) {
 		checkGolden(t, "waves-architect-100x30-"+theme+".txt", h.m.View().Content)
 	}
 }
+
+// The Waves lineup column shows the UI pass row when the plan has one (S136).
+func TestWavesLineupShowsUIPass(t *testing.T) {
+	h, _ := wavesHarness(t)
+	openWaves(t, h)
+	tickWave(t, h, "y", "n")
+	p := h.m.waves.picked["A"]
+	if strings.Contains(strings.Join(waveLineup(p), "\n"), "ui:") {
+		t.Fatal("absent UI pass shown")
+	}
+	p.Expected.Lineup["ui"] = []runrec.LineupEntry{{Vendor: "claude", Model: "opus", Effort: "medium"}, {Vendor: "codex", Model: "sol", Effort: "high"}}
+	lines := waveLineup(p)
+	joined := strings.Join(lines, "\n")
+	if !strings.Contains(joined, "ui:    claude opus medium") || !strings.Contains(joined, "+1 fallbacks") {
+		t.Fatalf("lineup lines: %q", lines)
+	}
+	if !strings.Contains(h.view(), "ui:    claude opus medium") {
+		t.Fatal(h.view())
+	}
+}

@@ -484,7 +484,7 @@ func TestUIPrompt(t *testing.T) {
 		"(B) Key hints and interaction",
 		"(C) Notes for later",
 		"(D) Doc accuracy",
-		"`docs/dashboard.md`",
+		"UI design doc",
 		"CONFIRMED",
 		"PLAUSIBLE",
 	} {
@@ -500,6 +500,17 @@ func TestUIPrompt(t *testing.T) {
 	}
 	if !ascii(p) {
 		t.Error("ui prompt holds a non-ASCII character")
+	}
+}
+
+// The UI pass runs in any project, so its prompt names no path of ork's own:
+// the project's design doc comes from the brief (S136).
+func TestUIPromptHasNoOrkPaths(t *testing.T) {
+	p := prompts(t)["ui"]
+	for _, bad := range []string{"docs/dashboard.md", "dashboard.md", "internal/", "testdata/", "golden"} {
+		if strings.Contains(p, bad) {
+			t.Errorf("ui prompt names an ork path %q", bad)
+		}
 	}
 }
 

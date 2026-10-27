@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-160 items · — 44 · done 111 · retired 5
+160 items · — 43 · done 112 · retired 5
 
 ## v1.1
 
@@ -189,7 +189,7 @@
 | 132 | [S133](slices/S133.md) | Codex out of credits is a classified limit, so the role falls back | S | 1 |  | discovered from S127 | done |
 | 133 | [S134](slices/S134.md) | Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap | S | 1 |  | discovered from S127 | — |
 | 134 | [S135](slices/S135.md) | Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions | S | 2 |  | discovered from S117 | done |
-| 135 | [S136](slices/S136.md) | UI pass visible everywhere and project-neutral: lineup and rounds in run, waves, runtree; ui.md names the project's design doc | S | 1 |  | discovered from S117 | — |
+| 135 | [S136](slices/S136.md) | UI pass visible everywhere and project-neutral: lineup and rounds in run, waves, runtree; ui.md names the project's design doc | S | 1 |  | discovered from S117 | done |
 | 136 | [S137](slices/S137.md) | Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings | M | 2 |  | discovered from S120 | done |
 | 137 | [S138](slices/S138.md) | An awaiting-approval engine run whose ledger went stale shows as stale, dimmed, with a frozen age | S | 1 |  | discovered from S31 | done |
 | 138 | [S139](slices/S139.md) | Commit title without a Git section: fall back to 'ID: title' | S | 1 |  | discovered from S31 | done |

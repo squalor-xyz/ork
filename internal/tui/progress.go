@@ -13,7 +13,8 @@ import (
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
-// pipelinePhases ignores earlier-round results after a fix round starts.
+// pipelinePhases ignores earlier-round results after a fix round starts. A
+// ui step (the UI pass) is part of the reviewer stage.
 func pipelinePhases(steps []runTreeStep) map[string]string {
 	steps = laneSteps(steps)
 	latestImpl := -1
@@ -25,11 +26,33 @@ func pipelinePhases(steps []runTreeStep) map[string]string {
 		}
 	}
 	phases := map[string]string{}
+	ui, gated := "", false
 	for i, s := range steps {
 		if rounds > 1 && i < latestImpl {
 			continue
 		}
+		if s.Role == "ui" {
+			// A UI pass that starts after the gate is not part of the review.
+			if !gated {
+				ui = s.Phase
+			}
+			continue
+		}
+		gated = gated || s.Role == "gate"
 		phases[s.Role] = s.Phase
+	}
+	// The UI pass runs beside the reviewer and has no stage of its own: it
+	// counts in the reviewer's stage (S136). The stage is running while either
+	// runs, then failed if either failed.
+	if ui != "" {
+		switch reviewer := phases["reviewer"]; {
+		case reviewer == "":
+			phases["reviewer"] = ui
+		case ui == "start" || reviewer == "start":
+			phases["reviewer"] = "start"
+		case ui == "fail" || reviewer == "fail":
+			phases["reviewer"] = "fail"
+		}
 	}
 	return phases
 }

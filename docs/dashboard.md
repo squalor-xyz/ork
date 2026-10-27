@@ -374,7 +374,10 @@ the text column, falling back to a shorter indent when needed to fit.
      step. Limit: a relay started elsewhere that records a failing gate as
      `done` with a task that does not say fix reads one fix round low until the
      next review begins. A UI pass and the orchestrator are not part of the
-     count. The pane's pipeline line keeps `round N` (the fix rounds plus one)
+     count. The UI pass has no stage of its own: it counts in the reviewer
+     stage of the bar and the pipeline, which reads running while the reviewer
+     or the UI pass runs, failed if either failed, and done otherwise (S136). A
+     UI pass step that comes after the gate is not part of the review. The pane's pipeline line keeps `round N` (the fix rounds plus one)
      only for a run whose bar has no round word. The Running row leaves the word
      `gate` off the bar when the gate is the working role (the role cell says
      it); the pane bar and the Running entry keep it.
@@ -943,8 +946,9 @@ the hint changes to `tab next field; enter plan; esc cancel`.
 `tab` or `shift+tab` switches the active field; `enter` validates both and plans the item.
 `esc` cancels that tick. The Lineup column appears only while at least
 one item is ticked and fills from the plan (`ui.wave-composer`). It uses
-short role labels: impl, rev, gate and arch, padded so the values share one
-column. Each role shows its primary entry and a dim `+N fallbacks` line
+short role labels: impl, rev, ui, gate and arch, padded so the values share one
+column. The `ui` row shows only when the plan has a UI pass row (S136); it is
+never marked `*`, since the launch edit does not change it. Each role shows its primary entry and a dim `+N fallbacks` line
 under the values; `e` keeps the full chain available.
 The column fits its longest line, capped at half the pane width. Long
 primary entries wrap within the column.
@@ -1060,7 +1064,11 @@ are never combined.
 Each node shows `glyph role phase elapsed  vendor model effort` in that order.
 Role and phase columns use text widths to align the phase and elapsed time,
 with padding capped to fit deep nodes. Engine role nodes add `round N` on the
-same line. A `start` step has an ASCII spinner (`| / - \`) and uses the heading
+same line. A UI pass step of a linked ledger run, which the engine records as
+a reviewer step because slicer has no ui role, shows as `ui` with `round N`
+(read from the engine's role record by step id) and does not count toward the
+reviewer's `xN`. Only the `ui` node shows a round in a linked tree. A ledger
+run with no engine record shows it as a second reviewer step. A `start` step has an ASCII spinner (`| / - \`) and uses the heading
 style (bold cyan in colour, bold in mono). A `done` step has `+` and is dim
 (grey in colour, faint in mono). A `fail` step has `!` and uses the error style
 (bold red in colour, bold in mono). Other phases use a neutral `.` and retain
@@ -1110,8 +1118,10 @@ Launch asks "Well specified? [y/n]:" and then "Split? [y/n]:". Neither has a
 default. Enter submits y, yes, n or no in any case; invalid input asks again.
 The TUI calls `run.plan` after both answers and shows "pending: run.plan".
 The plan summary shows project, item, worktree, branch, check command, and
-implementer, reviewer, architect (when present) and gate lineup entries
-as vendor, model and effort, with each role's permissions. The confirmation bar shows
+implementer, reviewer, ui (when the plan has a UI pass row, S136), architect
+(when present) and gate lineup entries as vendor, model and effort, with each
+role's permissions. `ork run` prints the same rows in its plan text, in the
+same order. The confirmation bar shows
 `ork run PROJECT ITEM? [y/N] (Enter is No)`. The displayed command omits the
 two answers. `y` or `Y` calls `run.start` with those answers and the displayed
 plan as Expected. At confirmation, Enter, n, N and Esc cancel. Esc cancels

@@ -54,7 +54,8 @@ this file on startup (`registry.no-seed`, adj 157). The first successful
         "reviewer": "read-only"
       },
       "vendor_env": {"codex": {"VENDOR_CODEX_NETWORK": "1"}},
-      "push": true
+      "push": true,
+      "ui_doc": "docs/ui.md"
     }
   ]
 }
@@ -82,6 +83,14 @@ Notes on the fields:
   pushes (the example turns it on). ork does not write it; the owner sets it by editing the file
   (docs/manual-steps.md). An older ork refuses a registry with `push` because
   `Load` uses strict keys.
+- `ui_doc` (*proposed*, S136, owner decision 2026-10-27) is the path of the
+  project's UI design doc, relative to the project (the example uses
+  `docs/ui.md`). The UI pass's brief names it, so the pass judges the screens
+  against that project's own design and not ork's. Absent means the brief
+  tells the UI pass to find the project's own UI docs. ork does not write
+  it, and `ork projects` has no command to set it yet (a general
+  `ork projects set` is S161); until then the owner sets it by editing the file. An older ork
+  refuses a registry with `ui_doc` because `Load` uses strict keys.
 - `vendor_env` is shown as an example. The DataBall entry reflects the
   agents repo's note that Codex needs network access for `dotnet test`
   (`agents/setup/lib/workflow-vendor.sh`).

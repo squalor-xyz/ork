@@ -186,3 +186,36 @@ func checkBriefInstructionsOnlyForImplementer(t *testing.T) {
 		})
 	}
 }
+
+// The UI pass brief names the project's design doc from the registry field
+// ui_doc, or tells the pass to find the project's own UI docs (S136).
+func TestUIBriefNamesTheProjectDesignDoc(t *testing.T) {
+	in := baseBrief()
+	in.Role = RoleUI
+	in.UIDoc = "docs/ui.md"
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, "## UI design doc\n\nThe project's UI design doc is `docs/ui.md`.") {
+		t.Errorf("brief does not name the doc:\n%s", got)
+	}
+	in.UIDoc = ""
+	got, err = BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, "## UI design doc\n\nThe registry names no UI design doc for this project. Find the project's own UI docs") || strings.Contains(got, "docs/ui.md") {
+		t.Errorf("brief does not tell the pass to look:\n%s", got)
+	}
+	// Other roles get no such section.
+	in = baseBrief()
+	in.UIDoc = "docs/ui.md"
+	got, err = BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(got, "UI design doc") {
+		t.Errorf("implementer brief names the UI doc:\n%s", got)
+	}
+}

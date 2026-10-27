@@ -708,3 +708,17 @@ func TestPlanTextShowsTheArchitectRow(t *testing.T) {
 		}
 	}
 }
+
+func TestLaunchPlanShowsUIPassRow(t *testing.T) {
+	for _, present := range []bool{false, true} {
+		h, l := launchHarness(t)
+		if present {
+			l.plan.Lineup["ui"] = []runrec.LineupEntry{{Vendor: "claude", Model: "opus", Effort: "medium"}}
+			l.plan.Permissions["ui"] = engine.Permission{ReadOnly: true}
+		}
+		launchConfirmed(t, h)
+		if strings.Contains(h.view(), "ui: claude opus medium") != present {
+			t.Fatalf("present=%v: %s", present, h.view())
+		}
+	}
+}

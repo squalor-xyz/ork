@@ -811,3 +811,29 @@ func TestStopClearsQueuedSiblingQuestion(t *testing.T) {
 		}
 	}
 }
+
+// The engine hands the registry's ui_doc to the UI pass's brief and to no
+// other role's (S136).
+func TestUIPassBriefCarriesTheRegistryUIDoc(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.project = func(p *registry.Project) { p.UIDoc = "docs/ui.md" }
+		o.routesFor = func(P, W string) []clitest.Route {
+			return []clitest.Route{{Tool: "slicer", Args: []string{"show", item, "--json", "--lean", "--root", W}, Stdout: uiSliceJSON(tuiFiles)}}
+		}
+	})
+	h.cfg.Lineup[RoleUI] = []runrec.LineupEntry{{Vendor: "claude", Model: "opus", Effort: "medium"}}
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	seen := 0
+	for _, req := range h.runner.requests() {
+		has := strings.Contains(req.Brief, "The project's UI design doc is `docs/ui.md`.")
+		if has != (req.Role == RoleUI) {
+			t.Errorf("%s brief names the UI doc: %v", req.Role, has)
+		}
+		if req.Role == RoleUI {
+			seen++
+		}
+	}
+	if seen != 1 {
+		t.Fatalf("the UI pass ran %d times", seen)
+	}
+}

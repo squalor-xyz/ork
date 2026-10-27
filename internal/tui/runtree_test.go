@@ -399,3 +399,102 @@ func TestRunTreeReadOnlyLabel(t *testing.T) {
 		t.Fatalf("the hint line must explain the read-only state: %q", hint)
 	}
 }
+
+// The engine records a UI pass round as a reviewer step in the ledger (slicer
+// has no ui role), with the task "S55 ui". The tree of a linked run reads the
+// role and the round from the engine's role record, so the UI pass is not a
+// second reviewer (S136).
+func TestRunTreeShowsUIPassRound(t *testing.T) {
+	runs := []slicercli.RelayRun{{ID: "tree", Items: []string{"S55"}, State: "active", BeganAt: "2026-10-19T16:40:00Z", Steps: []slicercli.Step{
+		{ID: "root", Role: "orchestrator", Vendor: "codex", Model: "sol", Phase: "start", BeganAt: "2026-10-19T16:40:00Z"},
+		{ID: "rev", Parent: "root", Role: "reviewer", Vendor: "claude", Model: "opus", Phase: "done", Task: "S55 reviewer", BeganAt: "2026-10-19T16:41:00Z", UpdatedAt: "2026-10-19T16:42:00Z"},
+		{ID: "ui", Parent: "root", Role: "reviewer", Vendor: "claude", Model: "sonnet", Phase: "done", Task: "S55 ui", BeganAt: "2026-10-19T16:41:00Z", UpdatedAt: "2026-10-19T16:43:00Z"},
+	}}}
+	engine := `{"id":"engine","item":"S55","state":"review","relay_run":"tree","roles":[` +
+		`{"role":"reviewer","round":2,"vendor":"claude","model":"opus","step":"rev","started_at":"2026-10-19T16:41:00Z","ended_at":"2026-10-19T16:42:00Z","exit":"ok"},` +
+		`{"role":"ui","round":2,"vendor":"claude","model":"sonnet","step":"ui","started_at":"2026-10-19T16:41:00Z","ended_at":"2026-10-19T16:43:00Z","exit":"ok"}]}`
+	h := treeHarness(t, runs, engine)
+	tree := sgr.ReplaceAllString(strings.Join(h.m.runTreeLines(h.m.paneSteps(), 100, 0), "\n"), "")
+	if !strings.Contains(tree, "+ ui ") || !strings.Contains(tree, "claude sonnet round 2") {
+		t.Fatalf("the UI pass round is not named:\n%s", tree)
+	}
+	if strings.Contains(tree, "x2") {
+		t.Fatalf("the UI pass counts as a second reviewer:\n%s", tree)
+	}
+}
+
+// The UI pass has no stage of its own: while it runs and the reviewer is done,
+// the stage bar and the pipeline line both show the reviewer stage running,
+// for an engine-only run and for one linked to a ledger run (S136).
+func TestUIPassCountsInTheReviewerStage(t *testing.T) {
+	roles := `{"role":"implementer","round":1,"vendor":"claude","model":"sonnet","step":"impl","started_at":"2026-10-19T16:40:00Z","ended_at":"2026-10-19T16:41:00Z","exit":"ok"},` +
+		`{"role":"reviewer","round":1,"vendor":"claude","model":"opus","step":"rev","started_at":"2026-10-19T16:41:00Z","ended_at":"2026-10-19T16:42:00Z","exit":"ok"},` +
+		`{"role":"ui","round":1,"vendor":"claude","model":"sonnet","step":"ui","started_at":"2026-10-19T16:41:00Z"}`
+	ledger := []slicercli.RelayRun{{ID: "tree", Items: []string{"S55"}, State: "active", BeganAt: "2026-10-19T16:40:00Z", Steps: []slicercli.Step{
+		{ID: "root", Role: "orchestrator", Phase: "start", BeganAt: "2026-10-19T16:40:00Z"},
+		{ID: "impl", Parent: "root", Role: "implementer", Phase: "done", BeganAt: "2026-10-19T16:40:00Z", UpdatedAt: "2026-10-19T16:41:00Z"},
+		{ID: "rev", Parent: "root", Role: "reviewer", Phase: "done", Task: "S55 reviewer", BeganAt: "2026-10-19T16:41:00Z", UpdatedAt: "2026-10-19T16:42:00Z"},
+		{ID: "ui", Parent: "root", Role: "reviewer", Phase: "start", Task: "S55 ui", BeganAt: "2026-10-19T16:41:00Z"},
+	}}}
+	for _, linked := range []bool{false, true} {
+		engine := `{"id":"engine","item":"S55","state":"review","roles":[` + roles + `]}`
+		var runs []slicercli.RelayRun
+		if linked {
+			engine = `{"id":"engine","item":"S55","state":"review","relay_run":"tree","roles":[` + roles + `]}`
+			runs = ledger
+		}
+		h := treeHarness(t, runs, engine)
+		steps := h.m.paneSteps()
+		if bar := stageBar(steps, 0, true); bar != "[##~~..]" {
+			t.Errorf("linked=%v: stage bar %q, want [##~~..]", linked, bar)
+		}
+		line := sgr.ReplaceAllString(h.m.pipelineLine(steps, false, 120), "")
+		if !strings.Contains(line, "implementer > [reviewer] > gate") {
+			t.Errorf("linked=%v: pipeline line %q", linked, line)
+		}
+		if got := runningRole(steps); got != "[reviewer]" {
+			t.Errorf("linked=%v: running role %q", linked, got)
+		}
+	}
+}
+
+// The reviewer stage reads running while the reviewer or the UI pass runs,
+// failed if either failed, and otherwise done, whichever started first (S136).
+func TestReviewerStageCombinesTheUIPass(t *testing.T) {
+	step := func(role, phase string) runTreeStep {
+		return runTreeStep{Step: slicercli.Step{Role: role, Phase: phase}}
+	}
+	for _, tc := range []struct{ reviewer, ui, want string }{
+		{"done", "start", "start"},
+		{"start", "done", "start"},
+		{"done", "fail", "fail"},
+		{"fail", "done", "fail"},
+		{"done", "done", "done"},
+		{"", "start", "start"},
+		{"start", "", "start"},
+	} {
+		var steps []runTreeStep
+		if tc.reviewer != "" {
+			steps = append(steps, step("reviewer", tc.reviewer))
+		}
+		if tc.ui != "" {
+			steps = append(steps, step("ui", tc.ui))
+		}
+		if got := pipelinePhases(steps)["reviewer"]; got != tc.want {
+			t.Errorf("reviewer %q ui %q: stage %q, want %q", tc.reviewer, tc.ui, got, tc.want)
+		}
+	}
+}
+
+// A UI pass step that comes after the gate is not part of the review, so it
+// does not reopen the reviewer stage (S136).
+func TestUIPassAfterTheGateLeavesTheReviewerStage(t *testing.T) {
+	steps := []runTreeStep{
+		{Step: slicercli.Step{Role: "reviewer", Phase: "done"}},
+		{Step: slicercli.Step{Role: "gate", Phase: "start"}},
+		{Step: slicercli.Step{Role: "ui", Phase: "start"}},
+	}
+	if got := pipelinePhases(steps)["reviewer"]; got != "done" {
+		t.Fatalf("reviewer stage %q, want done", got)
+	}
+}

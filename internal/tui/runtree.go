@@ -290,7 +290,8 @@ func boardTreeSteps(run slicercli.RelayRun) []runTreeStep {
 }
 
 // roleDetails joins transient engine data onto the ledger tree by step ID.
-// Source-less ledger steps have no usage or tail.
+// Source-less ledger steps have no usage or tail. A UI pass step, which the
+// ledger holds as a reviewer step, is named ui and shows its round.
 func (m *Model) roleDetails(steps []runTreeStep, r source.EngineRun) []runTreeStep {
 	steps = withEngineState(steps, r.State)
 	active := -1
@@ -315,6 +316,14 @@ func (m *Model) roleDetails(steps []runTreeStep, r source.EngineRun) []runTreeSt
 				continue
 			}
 			used[j] = true
+			if role.Role == "ui" {
+				// The engine records a UI pass round as a reviewer step (slicer has
+				// no ui role yet) and its own role record says what it was (S136).
+				steps[i].Role = "ui"
+				if steps[i].round == 0 {
+					steps[i].round = role.Round
+				}
+			}
 			steps[i].hasUsage = true
 			steps[i].tokens = role.Tokens
 			steps[i].cost = role.CostUSD

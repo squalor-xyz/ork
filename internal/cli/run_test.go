@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -368,6 +369,23 @@ func TestPlanTextShowsTheArchitectRow(t *testing.T) {
 		var out bytes.Buffer
 		printRunPlan(&out, plan)
 		if strings.Contains(out.String(), "architect: codex sol high") != present {
+			t.Fatalf("present=%v: %s", present, out.String())
+		}
+	}
+}
+
+// The UI pass row is part of the plan the owner confirms (S136): its
+// vendor, model and effort, and that it is read-only.
+func TestPlanShowsUIPassRow(t *testing.T) {
+	for _, present := range []bool{false, true} {
+		plan := daemon.RunPlan{Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
+		if present {
+			plan.Lineup["ui"] = []runrec.LineupEntry{{Vendor: "claude", Model: "opus", Effort: "medium"}}
+			plan.Permissions["ui"] = engine.Permission{ReadOnly: true}
+		}
+		var out bytes.Buffer
+		printRunPlan(&out, plan)
+		if strings.Contains(out.String(), "ui: claude opus medium\n  permissions: read-only") != present {
 			t.Fatalf("present=%v: %s", present, out.String())
 		}
 	}

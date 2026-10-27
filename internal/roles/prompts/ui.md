@@ -38,12 +38,13 @@ verdict: the gate decides.
 1. Load the slice's **Check**, **Files** and **Not in this slice**; the owner
    decisions recorded in its notes (a deviation the owner accepted is the contract,
    not a failure); and the diff the brief names. Read the design the slice builds on:
-   `docs/dashboard.md`, and the golden views next to the TUI tests when the project
-   has them.
-2. Judge the screen the owner sees, not the code. Work from the diff, the golden
-   views, the view code and the output of the TUI tests. You cannot use a terminal
+   the project's UI design doc, which the brief names under UI design doc (or tells
+   you to find), and the view snapshots next to the project's UI tests when it has
+   them.
+2. Judge the screen the owner sees, not the code. Work from the diff, the view
+   snapshots, the view code and the output of the TUI tests. You cannot use a terminal
    here, so do not start the program; say what you could not see.
-3. Cite `file:line` (or the golden file and its line) for every claim. Mark each
+3. Cite `file:line` (or the snapshot file and its line) for every claim. Mark each
    finding CONFIRMED (you traced it or ran something) or PLAUSIBLE. Do not report a
    check you did not run. Do not suggest extra scope.
 
@@ -51,7 +52,7 @@ verdict: the gate decides.
 
 ork shows the owner the views the diff changes on the approval card, so the owner
 sees them without opening a terminal. You produce them with the project's own
-tooling (its `AGENTS.md`, its TUI tests and golden views say how); ork has no render
+tooling (its `AGENTS.md`, its UI tests and view snapshots say how); ork has no render
 code of its own. Do not add a render path to the tree. For each view the diff adds
 or changes, write plain text files in `{{temp_dir}}/renders/`:
 
@@ -61,8 +62,8 @@ or changes, write plain text files in `{{temp_dir}}/renders/`:
   view needs more.
 
 `VIEW` is a short name for the view, with letters, digits and `-`. Write the text
-as the screen shows it, with no color codes. If the project's goldens hold color
-codes, write the plain view (the tests' plain or stripped helper), not the golden
+as the screen shows it, with no color codes. If the project's snapshots hold color
+codes, write the plain view (the tests' plain or stripped helper), not the snapshot
 file. ork keeps up to 24 files, 24 KiB each,
 and only `.txt` files that are not links. If the tooling cannot render a view
 without changing the tree, write no file for it and say so in your report, under
@@ -97,7 +98,7 @@ Report these sections, and write "nothing" for an empty one:
   nothing, focus that cannot be seen. For each give a concrete edit.
 - (C) Notes for later: polish that the slice does not need. Name the item and the
   note text.
-- (D) Doc accuracy: whether `docs/dashboard.md` matches the screens, including its
+- (D) Doc accuracy: whether the UI design doc matches the screens, including its
   sizes and key lists.
 
 ## Finding kinds

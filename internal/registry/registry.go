@@ -92,6 +92,10 @@ type Project struct {
 	// Push says ork pushes the base branch after it lands a slice (S119,
 	// *proposed*; adj 162). Off by default; the owner turns it on per project.
 	Push bool `json:"push,omitempty"`
+	// UIDoc is the path, relative to the project, of the project's UI design
+	// doc (S136, *proposed*). The UI pass's brief names it. Empty means the
+	// brief tells the pass to find the project's own UI docs.
+	UIDoc string `json:"ui_doc,omitempty"`
 }
 
 // File is the content of projects.json.

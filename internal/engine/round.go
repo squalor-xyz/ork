@@ -233,6 +233,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Role: r.role, SliceID: rec.Item, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
 		SliceJSON: string(sliceJSON), EnvLines: e.proj.EnvironmentLines,
 		CheckCommand: e.proj.CheckCommand,
+		UIDoc:        e.proj.UIDoc,
 		Finish:       r.finish,
 		Sections:     append(pendingSection(pend), r.sections...),
 	}

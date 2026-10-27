@@ -307,8 +307,8 @@ func (m *Model) launchView(w int) overviewView {
 		add("worktree: " + p.Worktree)
 		add("branch: " + p.Branch)
 		add("check: " + p.CheckCommand)
-		for _, role := range []string{"implementer", "reviewer", "architect", "gate"} {
-			if role == "architect" && len(p.Lineup[role]) == 0 {
+		for _, role := range []string{"implementer", "reviewer", "ui", "architect", "gate"} {
+			if (role == "architect" || role == "ui") && len(p.Lineup[role]) == 0 {
 				continue
 			}
 			for _, e := range p.Lineup[role] {

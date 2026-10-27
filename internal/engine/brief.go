@@ -21,6 +21,7 @@ type BriefInput struct {
 	Finish       bool   // the finish step has no checks after its round
 	CheckCommand string // the project check command; empty means only slicer check
 	Role         string
+	UIDoc        string // the project's UI design doc (registry ui_doc); only the UI pass's brief names it
 	SliceID      string
 	Worktree     string
 	TempDir      string
@@ -73,6 +74,14 @@ func BuildBrief(in BriefInput) (string, error) {
 			b.WriteString(l + "\n")
 		}
 		b.WriteString("\n")
+	}
+	if in.Role == RoleUI {
+		b.WriteString("## UI design doc\n\n")
+		if in.UIDoc != "" {
+			fmt.Fprintf(&b, "The project's UI design doc is `%s`. It is a path in the worktree. Judge the screens against it.\n\n", in.UIDoc)
+		} else {
+			b.WriteString("The registry names no UI design doc for this project. Find the project's own UI docs (start with its `AGENTS.md` and its docs directory) and its own view snapshots, and judge the screens against them.\n\n")
+		}
 	}
 	fmt.Fprintf(&b, "## Your files\n\nYour temp directory: %s\nYour report path: %s\n\n", in.TempDir, in.ReportPath)
 	if in.Role == RoleImplementer && !in.Finish {

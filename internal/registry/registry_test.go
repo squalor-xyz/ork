@@ -100,6 +100,9 @@ func TestRoundTripKeepsEveryField(t *testing.T) {
 	if p.VendorEnv["codex"]["VENDOR_CODEX_NETWORK"] != "1" {
 		t.Fatalf("vendor_env: %+v", p.VendorEnv)
 	}
+	if p.UIDoc != "docs/ui.md" {
+		t.Fatalf("ui_doc: the docs example sets docs/ui.md, the project has %q", p.UIDoc)
+	}
 	if !p.Push {
 		t.Fatalf("push: the docs example sets it, the project has %v", p.Push)
 	}
