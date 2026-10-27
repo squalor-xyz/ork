@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 160,
+  "next_id": 161,
   "preamble": "",
   "passes": [
     {
@@ -1220,10 +1220,33 @@
       "id": "S86",
       "title": "Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default",
       "short_title": "Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "1b910861-6b82-49fb-a345-54e940522d30",
+          "kind": "",
+          "text": "**2026-10-27** — Review PASS and UI pass PASS reported by the owner. Applied the UI documentation correction: the Waves lineup shows effective budgets when overridden, and a zero override shows the project default. Added internal/tui/waves.go and docs/dashboard.md to Files. Leave for later: (a) a zero override with a zero project default reads like zero budget rather than no limit; (b) an override equal to the default is stored and starred. Keep lineupRefusals view check: the hint in internal/tui/keys.go still uses it. No finish step was run by the implementer.",
+          "created_at": "2026-10-27T12:28:08Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "daec3b68-3692-4db0-84df-3e5416c8c97d",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial (run 14, S86): 0 owner questions, no stalls, 1 doc-only fix round, no merge conflicts, ran in parallel with S137; Codex sol/medium implementer, opus reviewer + UI pass + gate.",
+          "created_at": "2026-10-27T12:29:21Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1241,7 +1264,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -1251,7 +1274,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "062ff97a-ea75-4ce5-ad37-498e5057ca51",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): a matched architect row with no ork adapter keeps refusing (fail closed); do not drop the architect.",
+          "created_at": "2026-10-27T13:35:39Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1279,7 +1314,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "793d3bfd-dd59-4820-9e23-a5473d8f308d",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): the guide says 'add one'.",
+          "created_at": "2026-10-27T13:35:39Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -6361,6 +6408,46 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S160",
+      "title": "Add project from the TUI when projects are registered: + works outside Welcome",
+      "short_title": "Add key beyond Welcome",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "8cf6ed93-de1f-47f7-b88e-82d35dea7ad8",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decisions 2026-10-27 (interactive): scope is add AND remove projects from the TUI at any time, not only on Welcome. Add: + from any view. Remove: - (minus) removes the active project after a y/N confirm naming it, and refuses with a message while the project has a running or paused run (check what ork rm does today, internal/cli/daemoncmds.go:183, and match it). Removing the last project returns to Welcome. Hint, help and docs/dashboard.md updated; golden views. Tests: TestAddKeyWorksWithProjectsRegistered, TestRemoveKeyConfirmsAndRemoves, TestRemoveRefusedWhileRunActive.",
+          "created_at": "2026-10-27T13:39:05Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S96",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
         "attempts": 0
       }
     }

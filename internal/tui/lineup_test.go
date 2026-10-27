@@ -4,6 +4,7 @@ package tui
 
 import (
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -47,6 +48,78 @@ func TestLineupEditorStartsFromPlan(t *testing.T) {
 		if !strings.Contains(h.view(), text) {
 			t.Errorf("missing %q:\n%s", text, h.view())
 		}
+	}
+}
+
+func TestLineupKeyIgnoredOutsideWaves(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		view int
+		help bool
+	}{
+		{"Overview", 0, false},
+		{"Questions", questionsView, false},
+		{"Roadmap", roadmapView, false},
+		{"Decisions", decisionsView, false},
+		{"help", wavesView, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, ready := range []bool{false, true} {
+				h, l := wavesHarness(t)
+				if ready {
+					openWaves(t, h)
+					tickWave(t, h, "y", "n")
+				}
+				h.m.view = tc.view
+				h.m.showHelp = tc.help
+				plans := len(l.plans)
+				h.deliver(press("e"))
+				if h.m.actionStatus != "" {
+					t.Errorf("ready=%t: e set status %q", ready, h.m.actionStatus)
+				}
+				if h.m.waves != nil && h.m.waves.lineup != nil {
+					t.Errorf("ready=%t: e opened the lineup", ready)
+				}
+				if len(l.plans) != plans || l.writes != 0 || h.m.view != tc.view || h.m.showHelp != tc.help {
+					t.Errorf("ready=%t: e changed the view or called the live service", ready)
+				}
+			}
+		})
+	}
+}
+
+func TestLineupBudgetZeroShowsDefault(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		override  registry.Budgets
+		effective registry.Budgets
+		want      string
+	}{
+		{"minutes", registry.Budgets{Minutes: 0, Tokens: 1234}, registry.Budgets{Minutes: 45, Tokens: 1234}, "budgets*: 45 min, 1234 tokens"},
+		{"tokens", registry.Budgets{Minutes: 12, Tokens: 0}, registry.Budgets{Minutes: 12, Tokens: 9000}, "budgets*: 12 min, 9000 tokens"},
+		{"both", registry.Budgets{}, registry.Budgets{Minutes: 45, Tokens: 9000}, "budgets*: 45 min, 9000 tokens"},
+		{"zero default", registry.Budgets{}, registry.Budgets{}, "budgets*: 0 min, 0 tokens"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h, _ := lineupHarness(t)
+			h.deliver(press("esc"))
+			p := h.m.waves.picked["A"]
+			// Recorded plan values already include the daemon's project defaults.
+			p.Budgets = &tc.override
+			p.Expected.Budgets = tc.effective
+			h.m.waves.picked["A"] = p
+			if !strings.Contains(h.view(), tc.want) {
+				t.Errorf("missing %q:\n%s", tc.want, h.view())
+			}
+			h.deliver(press("e"))
+			got := h.m.waves.lineup.budgets
+			if got[0].Value() != strconv.Itoa(tc.effective.Minutes) || got[1].Value() != strconv.Itoa(tc.effective.Tokens) {
+				t.Errorf("editor budgets = %q, %q; want %+v", got[0].Value(), got[1].Value(), tc.effective)
+			}
+			if *h.m.waves.picked["A"].Budgets != tc.override {
+				t.Fatal("drawing the effective budget changed the override")
+			}
+		})
 	}
 }
 
