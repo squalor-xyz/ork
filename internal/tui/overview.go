@@ -791,6 +791,19 @@ func textColumn(r ovRow, nameW int) int {
 	return col
 }
 
+// followed is true for the row of the run the pane moved to, while the switch
+// notice shows (S109 note, S134).
+func (m *Model) followed(r ovRow) bool {
+	p := m.pane
+	if p == nil || p.notice == "" || r.name != p.project {
+		return false
+	}
+	if p.ledger {
+		return r.ledgerID == p.run
+	}
+	return r.engineID == p.run
+}
+
 // rowLine is one row on one line. The kind, the project's name and the text are
 // cut to the pane. The selected row is drawn reversed, which works under
 // NO_COLOR too.
@@ -814,6 +827,9 @@ func (m *Model) rowLine(r ovRow, selected bool, nameW, w int) string {
 		if nameW > 0 && m.refreshing(r.name) {
 			mark = "~"
 		}
+		if nameW > 0 && m.followed(r) {
+			mark = ">"
+		}
 		prefix := indent + kind + " "
 		if r.noLabel {
 			prefix = indent
@@ -830,6 +846,9 @@ func (m *Model) rowLine(r ovRow, selected bool, nameW, w int) string {
 	mark := " "
 	if nameW > 0 && m.refreshing(r.name) {
 		mark = th.Pending.Render("~")
+	}
+	if nameW > 0 && m.followed(r) {
+		mark = th.Title.Render(">")
 	}
 	styledKind := kind
 	if kind != "" {
@@ -1355,7 +1374,8 @@ func clip(s string, n int) string {
 }
 
 // wrapText preserves explicit line breaks and wraps each line to n columns.
-// An added break drops a single space, or splits a word longer than n.
+// An added break drops the run of spaces it breaks at, or splits a word longer
+// than n.
 func wrapText(s string, n int) []string {
 	s = strings.NewReplacer("\r\n", "\n", "\r", "\n").Replace(s)
 	if strings.Contains(s, "\n") {
@@ -1368,7 +1388,7 @@ func wrapText(s string, n int) []string {
 	var out []string
 	for lipgloss.Width(s) > n {
 		if i := breakAt(s, n); i > 0 {
-			out, s = append(out, s[:i]), s[i+1:]
+			out, s = append(out, s[:i]), strings.TrimLeft(s[i+1:], " ")
 			continue
 		}
 		head, rest := splitAt(s, n)

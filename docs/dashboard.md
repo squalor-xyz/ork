@@ -596,7 +596,11 @@ stage. The Questions tab, with no row above its pane, keeps the full header.
 The body scrolls to the pane's last line, and the pane takes at
 most `height - 11` lines (`height - 8` under 24 lines), so its row and the
 rows around it stay on screen. The hint line takes the row the pane gave up (S149). It shows the full `wait` reason before
-the run tree. `pgup` and `pgdown` scroll the reason and tree while the action
+the run tree, without the daemon's closing `; next: ork ...` command: the
+hint line names the key, and on a paused run `t retry` drops after the scroll
+keys, so it stays at 80x24 (S134). A bare blank row sets the reason off from the
+progress line when the pane has room for the reason, the blank and one
+progress line (S134). `pgup` and `pgdown` scroll the reason and tree while the action
 area stays visible. `esc` closes the pane (`ui.answer-ui`,
 `ui.answer-pane-keys`, `ui.run-tree`). Ledger runs started elsewhere open a
 read-only tree pane with no action keys or answer input. The hint line says
@@ -612,7 +616,9 @@ pane starts at the top, with no answer or filing state, and a line under the
 header says why, cause first, for example `S27 committed; now showing S28`.
 An ended ledger run reads `passed`, `failed` or `stopped`, as in Recent. The
 line is dim (faint under `NO_COLOR`) and fades on the first snapshot 5 s or
-more after the switch. Only a pane opened on the Overview follows; the
+more after the switch, or on the first key pressed in the pane (S134). While
+the line shows, the followed run's Overview row carries a leading `>` in its
+marker column, the column of the refresh `~` (S134). Only a pane opened on the Overview follows; the
 Questions tab's pane stays on its run. Paused and awaiting-approval runs stay
 in the pane, because they wait for the owner. The pane also stays put while its answer field holds text or a confirmation is
 open, and when nothing else is running it stays on the ended run with its
@@ -638,14 +644,19 @@ The actions follow the state (`ui.answer-pane-scope`):
   Answer field directly.
   The exact `ork answer RUN 'TEXT'` command follows the text live. A
   submit shows `sending answer` in the footer while the call runs, not the
-  command form. The call returns only when the run rests, so the footer follows
+  command form: the `ork answer` preview line leaves the pane while the call
+  runs. The call returns only when the run rests, so the footer follows
   the snapshots meanwhile: once the run leaves paused it reads
   `answered; implementer resumed (round N)`, and after the call returns
   without a resumed role it reads `answered`. If the owner closed the pane
   first, the result shows `answered` with any adj notice, never the command
   form. Any adj notice follows. The
-  status ends at the run's next state change and does not return when a late
-  result arrives; an error replaces it. Once the run is not
+  status ends at the run's next state change, or when the run pauses again
+  with other wait text (a new question), and does not return when a late
+  result arrives; an error replaces it. It writes the status line only while
+  the line still shows the status it wrote or is empty (typing in the field
+  clears it), so another message stays (S134). A new question is told by its
+  wait text or its decision key. Once the run is not
   paused, its Running row and pane header drop the answered question and
   their wait text (S127). Enter submits
   without y/n; an empty or whitespace-only answer is refused. The field owns

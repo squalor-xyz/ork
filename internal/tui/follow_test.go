@@ -297,3 +297,76 @@ func TestPaneSwitchNoticeIsDim(t *testing.T) {
 		t.Fatalf("notice must be dim (%q):\n%s", want, h.m.View().Content)
 	}
 }
+
+func TestFirstKeyInThePaneClearsTheSwitchNotice(t *testing.T) {
+	h := followHarness(t)
+	h.applyRuns([]source.EngineRun{followRun("A", "S27", "committed", 10*time.Minute), followRun("B", "S28", "review", time.Minute)})
+	if h.m.pane.notice == "" {
+		t.Fatal("no switch notice to clear")
+	}
+	h.deliver(press("pgdown"))
+	if h.m.pane == nil || h.m.pane.notice != "" || strings.Contains(h.view(), "now showing") {
+		t.Fatalf("the first key must clear the notice: %+v", h.m.pane)
+	}
+}
+
+// followNewestRun acts on the pane's own project only: the snapshot of another
+// project that has a running run must not move the pane.
+func TestFollowNewestRunIgnoresOtherProjects(t *testing.T) {
+	h := newHarness(t, proj("ork", false), proj("other", false))
+	h.src.set(followSnap([]source.EngineRun{followRun("A", "S27", "committed", 10*time.Minute)}))
+	other := followSnap([]source.EngineRun{followRun("C", "S30", "implement", time.Minute)})
+	other.Project = proj("other", false)
+	h.src.set(other)
+	h.start()
+	h.m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
+	h.m.openPane(ovRow{engineID: "A", name: "ork"})
+	h.m.followNewestRun("other")
+	if h.m.pane.run != "A" || h.m.pane.project != "ork" || h.m.pane.notice != "" {
+		t.Fatalf("a snapshot of another project moved the pane: %+v", h.m.pane)
+	}
+}
+
+// While the switch notice shows, the followed run's Overview row carries a
+// leading ">" in the marker column, and only that row (S109 note, S134).
+func TestFollowedRunRowIsMarkedWhileTheNoticeShows(t *testing.T) {
+	h := followHarness(t)
+	h.m.Update(tea.WindowSizeMsg{Width: 120, Height: 40})
+	rowOf := func(item string) string {
+		for _, line := range strings.Split(plainView(h.m), "\n") {
+			if strings.Contains(line, "ork  "+item+"  ") || strings.Contains(line, ">ork  "+item+"  ") {
+				return line
+			}
+		}
+		t.Fatalf("no row for %s:\n%s", item, plainView(h.m))
+		return ""
+	}
+	if strings.Contains(rowOf("S28"), ">ork") {
+		t.Fatalf("a row is marked before any switch:\n%s", plainView(h.m))
+	}
+	h.applyRuns([]source.EngineRun{followRun("A", "S27", "committed", 10*time.Minute), followRun("B", "S28", "review", time.Minute)})
+	if !strings.Contains(rowOf("S28"), ">ork  S28") {
+		t.Fatalf("the followed run's row is not marked:\n%s", plainView(h.m))
+	}
+	if strings.Contains(rowOf("S27"), ">ork") {
+		t.Fatalf("another row is marked:\n%s", plainView(h.m))
+	}
+	// Both the selected and the plain row line carry it.
+	_, rows := h.m.rows()
+	for _, row := range rows {
+		if row.engineID != "B" {
+			continue
+		}
+		for _, selected := range []bool{true, false} {
+			if line := sgr.ReplaceAllString(h.m.rowLine(row, selected, 3, 100), ""); !strings.Contains(line, ">ork") {
+				t.Errorf("selected=%v: row line is not marked: %q", selected, line)
+			}
+		}
+	}
+	// The mark goes with the notice, after its 5 s.
+	h.now = h.now.Add(noticeFor)
+	h.applyRuns([]source.EngineRun{followRun("A", "S27", "committed", 10*time.Minute), followRun("B", "S28", "review", time.Minute)})
+	if h.m.pane.notice != "" || strings.Contains(rowOf("S28"), ">ork") {
+		t.Fatalf("the mark outlived the notice:\n%s", plainView(h.m))
+	}
+}

@@ -27,6 +27,8 @@ type runPane struct {
 	run, project              string
 	answered, answerDone      bool
 	answerState, answerNotice string
+	answerStatus              string // the status text answer tracking wrote last (S134)
+	answerWait, answerKey     string // the run's wait text and decision key when the answer was sent
 	freeText                  bool
 	fixing                    bool                   // the fix note field of the approval card is open
 	render                    int                    // the card's render on show, one-based; 0 shows the card (S121, proposed)
@@ -50,6 +52,16 @@ func (m *Model) openPane(r ovRow) tea.Cmd {
 	return nil
 }
 
+// dropNextCommand removes the daemon's closing "; next: ork ..." from a wait
+// reason. The pane names the key in its hint line, so the CLI form adds noise
+// (S134).
+func dropNextCommand(wait string) string {
+	if i := strings.LastIndex(wait, "; next: ork "); i >= 0 && !strings.Contains(wait[i:], "\n") {
+		return wait[:i]
+	}
+	return wait
+}
+
 func (m *Model) paneRow() (ovRow, string, bool) {
 	p := m.byName[m.pane.project]
 	if p != nil {
@@ -63,7 +75,7 @@ func (m *Model) paneRow() (ovRow, string, bool) {
 		}
 		for _, r := range p.snap.EngineRuns {
 			if r.ID == m.pane.run {
-				reason := r.Wait
+				reason := dropNextCommand(r.Wait)
 				if !showsWait(r) {
 					reason = ""
 				}
@@ -191,6 +203,7 @@ func (m *Model) paneQuestion() bool {
 }
 
 func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
+	m.pane.notice = "" // the first key read the switch notice
 	switch msg.String() {
 	case "ctrl+c":
 		return tea.Quit
@@ -417,13 +430,16 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 			addFooter(wrapText("Why "+strconv.Itoa(ask.Recommend)+": "+ask.Reason, width), 2)
 		} else {
 			addFooter([]string{"Answer: " + m.pane.input.view(max(width-len("Answer: "), 1), m.cfg.Theme)}, 0)
-			command := "ork answer " + r.engineID + " " + shellQuote(m.pane.input.Value())
-			if m.pane.finding > 0 {
-				if f := m.paneOwner(); f != nil {
-					command = "Record answer to " + strconv.Quote(f.Title) + ": " + m.pane.input.Value()
+			// The preview stays out while the call runs: the command is sent.
+			if !m.answerInFlight() {
+				command := "ork answer " + r.engineID + " " + shellQuote(m.pane.input.Value())
+				if m.pane.finding > 0 {
+					if f := m.paneOwner(); f != nil {
+						command = "Record answer to " + strconv.Quote(f.Title) + ": " + m.pane.input.Value()
+					}
 				}
+				addFooter(wrapText(command, width), 5)
 			}
-			addFooter(wrapText(command, width), 5)
 		}
 		decisionKey, disabledReason := m.paneAdjKey()
 		on := m.pane.adj && disabledReason == ""
@@ -528,6 +544,7 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		}
 		reason = strings.TrimSpace(strings.Join(context, "\n"))
 	}
+	sepAt := -1 // the row that sets the reason off from the progress line
 	if viewing {
 		lines = m.renderLines(card, idx, width)
 	} else {
@@ -536,6 +553,10 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		}
 		if card != nil {
 			lines = append(lines, m.cardBody(card, width)...)
+		}
+		if reason != "" && len(lines) > 0 && lines[len(lines)-1] != "" {
+			sepAt = len(lines)
+			lines = append(lines, "") // the progress line starts after a blank line
 		}
 		steps := m.paneSteps()
 		lines = append(lines, m.boardLines(steps, width)...)
@@ -552,6 +573,11 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		lines = wrapText(reason, width)
 	}
 	room := max(h-len(header)-len(footer)-1, 0)
+	if sepAt >= 0 && room < sepAt+2 {
+		// The reason, the blank and one progress line must fit; else the blank goes.
+		lines = append(lines[:sepAt], lines[sepAt+1:]...)
+		sepAt = -1
+	}
 	last := max(len(lines)-room, 0)
 	if len(lines) > room && room >= 3 {
 		last++ // the marker above uses one line at the bottom of the content
@@ -563,6 +589,9 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		for i := range section {
 			section[i] = indent + section[i]
 		}
+	}
+	if sepAt >= 0 {
+		lines[sepAt] = "" // the separator row stays bare
 	}
 	for viewing && len(lines) < room {
 		lines = append(lines, "") // the footer stays at the bottom of the pane
@@ -627,42 +656,75 @@ func (m *Model) paneAsk() *runrec.OwnerQuestion {
 	return nil
 }
 
-// refreshAnswerStatus follows the resumed run until its next state change.
+// paneRunQuestion is the wait text and the decision key of the pane's engine
+// run: together they tell one question from the next.
+func (m *Model) paneRunQuestion() (wait, key string) {
+	if p := m.byName[m.pane.project]; p != nil {
+		for _, r := range p.snap.EngineRuns {
+			if r.ID == m.pane.run {
+				return r.Wait, r.Key
+			}
+		}
+	}
+	return "", ""
+}
+
+// refreshAnswerStatus follows the resumed run until its next state change, or
+// until it pauses again with other wait text, which is a new question. The
+// tracking writes the status line only while the line still shows what it
+// wrote last or is empty (typing in the field clears it), so another message
+// stays until something replaces it (S134).
 func (m *Model) refreshAnswerStatus() {
 	p := m.pane
 	if p == nil || !p.answered {
 		return
+	}
+	write := func(text string) {
+		if m.actionStatus == p.answerStatus || m.actionStatus == "" {
+			m.actionStatus, p.answerStatus = text, text
+		}
 	}
 	project := m.byName[p.project]
 	for _, r := range project.snap.EngineRuns {
 		if r.ID != p.run {
 			continue
 		}
-		if p.answerState != "" && r.State != p.answerState {
+		if p.answerState != "" && r.State != p.answerState || p.answerState == "" && r.State == "paused" && (r.Wait != p.answerWait || r.Key != p.answerKey) {
 			p.answered = false
-			m.actionStatus = ""
+			write("")
 			return
 		}
-		m.actionStatus = "sending answer"
+		text := "sending answer"
 		if p.answerDone {
-			m.actionStatus = "answered"
+			text = "answered"
 		}
 		if r.State != "paused" {
 			p.answerState = r.State
-			m.actionStatus = "answered"
+			text = "answered"
 			for i := len(r.Roles) - 1; i >= 0; i-- {
 				role := r.Roles[i]
 				if role.EndedAt.IsZero() && role.Round > 0 {
-					m.actionStatus += fmt.Sprintf("; %s resumed (round %d)", role.Role, role.Round)
+					text += fmt.Sprintf("; %s resumed (round %d)", role.Role, role.Round)
 					break
 				}
 			}
 		}
 		if p.answerNotice != "" {
-			m.actionStatus += "; " + p.answerNotice
+			text += "; " + p.answerNotice
 		}
+		write(text)
 		return
 	}
 	p.answered = false
-	m.actionStatus = ""
+	write("")
+}
+
+// answerInFlight is true while an answer to the pane's run is being sent.
+func (m *Model) answerInFlight() bool {
+	for _, a := range m.actionFlights[m.pane.run] {
+		if a.verb == "answer" {
+			return true
+		}
+	}
+	return false
 }

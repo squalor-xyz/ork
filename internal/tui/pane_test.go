@@ -1178,3 +1178,174 @@ func TestAnswerResultAfterPaneClosedUsesPlainWords(t *testing.T) {
 		t.Fatalf("status after the pane closed: %q", got)
 	}
 }
+
+// setPaneWait replaces the engine run's wait text and applies the snapshot.
+func setPaneWait(h *harness, wait string) {
+	s := h.m.byName["ork"].snap
+	s.EngineRuns = append([]source.EngineRun(nil), s.EngineRuns...)
+	s.EngineRuns[0].Wait = wait
+	h.src.set(s)
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+}
+
+// restingLive takes an answer without changing the run's state, as when the
+// run resumes and pauses again between two snapshots.
+type restingLive struct{ *actionLive }
+
+func (l restingLive) AnswerAction(context.Context, daemon.RunAction) (string, error) {
+	return "", nil
+}
+
+// Answer tracking owns the status line only while it shows the tracking's own
+// text (S134). Any other message stays until something replaces it.
+func TestOtherStatusSurvivesAnswerTracking(t *testing.T) {
+	h := paneHarness(t, "paused", "question")
+	h.m.cfg.Live = restingLive{h.m.cfg.Live.(*actionLive)}
+	typeAnswer(h, "use local storage")
+	h.deliver(press("enter"))
+	if !h.m.pane.answered || h.m.actionStatus != "answered" {
+		t.Fatalf("tracking did not start: answered=%v status=%q", h.m.pane.answered, h.m.actionStatus)
+	}
+	h.m.actionStatus = "fix note must not be empty"
+	h.m.apply(snapshotMsg{name: "ork", snap: h.m.byName["ork"].snap})
+	if h.m.actionStatus != "fix note must not be empty" {
+		t.Fatalf("a snapshot overwrote another status: %q", h.m.actionStatus)
+	}
+	// A state change drops the tracking without clearing the other message.
+	s := h.m.byName["ork"].snap
+	s.EngineRuns = append([]source.EngineRun(nil), s.EngineRuns...)
+	s.EngineRuns[0].State = "implement"
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	if h.m.actionStatus != "fix note must not be empty" {
+		t.Fatalf("a state change cleared another status: %q", h.m.actionStatus)
+	}
+}
+
+func TestAnsweredClearsWhenPendingTextChanges(t *testing.T) {
+	h := paneHarness(t, "paused", "question")
+	h.m.cfg.Live = restingLive{h.m.cfg.Live.(*actionLive)}
+	setPaneWait(h, "Which storage?")
+	typeAnswer(h, "use local storage")
+	h.deliver(press("enter"))
+	setPaneWait(h, "Which storage?")
+	if !h.m.pane.answered || !strings.Contains(h.view(), "answered") {
+		t.Fatalf("an unchanged question must keep the answered status:\n%s", h.view())
+	}
+	// The run resumed and paused again with a new question between two snapshots.
+	setPaneWait(h, "Which cache?")
+	if h.m.pane.answered || h.m.actionStatus != "" {
+		t.Fatalf("a new question kept the answered status: answered=%v status=%q", h.m.pane.answered, h.m.actionStatus)
+	}
+	if v := h.view(); strings.Contains(v, "answered") || !strings.Contains(v, "Which cache?") {
+		t.Fatalf("the pane must show the new question without answered:\n%s", v)
+	}
+}
+
+func TestInFlightPreviewShowsNoCLICommand(t *testing.T) {
+	h := paneHarness(t, "paused", "question")
+	live := &blockingAnswerLive{actionLive: h.m.cfg.Live.(*actionLive), release: make(chan struct{})}
+	h.m.cfg.Live = live
+	typeAnswer(h, "use local storage")
+	if v := h.view(); !strings.Contains(v, "ork answer engine 'use local storage'") {
+		t.Fatalf("the command preview must show before the call:\n%s", v)
+	}
+	_, cmd := h.m.Update(press("enter"))
+	done := make(chan tea.Msg, 1)
+	go func() { done <- cmd() }()
+	v := h.view()
+	if strings.Contains(v, "ork answer") || !strings.Contains(v, "sending answer") {
+		t.Fatalf("in-flight pane must not show the CLI command:\n%s", v)
+	}
+	close(live.release)
+	h.deliver(<-done)
+}
+
+// A reason that ends with the CLI form of the next step shows without it in
+// the pane: the hint line already names the key (S134).
+func TestPaneReasonDropsNextCommand(t *testing.T) {
+	for _, tc := range []struct{ wait, want string }{
+		{"token budget 9000 reached (9100 used); next: ork retry engine", "token budget 9000 reached (9100 used)"},
+		{"bad report; next: ork retry engine", "bad report"},
+		{"Which library?; next: ork answer engine TEXT", "Which library?"},
+		{"plain reason", "plain reason"},
+	} {
+		h := paneHarness(t, "paused", "budget")
+		setPaneWait(h, tc.wait)
+		pane := sgr.ReplaceAllString(strings.Join(h.m.paneLines(120, 40, ""), "\n"), "")
+		if !strings.Contains(pane, "  "+tc.want+"\n") || strings.Contains(pane, "next:") {
+			t.Errorf("%q: pane reason must be %q without the CLI suffix:\n%s", tc.wait, tc.want, pane)
+		}
+	}
+}
+
+func TestPaneReasonIsSeparatedFromProgress(t *testing.T) {
+	h := paneHarness(t, "paused", "budget")
+	setPaneWait(h, "token budget reached")
+	lines := strings.Split(sgr.ReplaceAllString(strings.Join(h.m.paneLines(120, 40, ""), "\n"), ""), "\n")
+	at := -1
+	for i, l := range lines {
+		if strings.Contains(l, "token budget reached") {
+			at = i
+		}
+	}
+	if at < 0 || at+2 >= len(lines) || lines[at+1] != "" || strings.TrimSpace(lines[at+2]) == "" {
+		t.Fatalf("want one bare blank line after the reason, then the progress line:\n%s", strings.Join(lines, "\n"))
+	}
+}
+
+func TestOpenPaneClearsStatus(t *testing.T) {
+	h := actionHarness(t, "paused", "question")
+	h.m.actionStatus = "left over from the Overview"
+	h.m.openPane(ovRow{engineID: "engine", name: "ork"})
+	if h.m.actionStatus != "" {
+		t.Fatalf("a new pane kept the old status: %q", h.m.actionStatus)
+	}
+}
+
+// Typing in the field while the call runs clears the status line; the next
+// snapshot writes the tracking's text back (S134).
+func TestTypingDuringTheFlightDoesNotSilenceTracking(t *testing.T) {
+	h := paneHarness(t, "paused", "question")
+	live := &blockingAnswerLive{actionLive: h.m.cfg.Live.(*actionLive), release: make(chan struct{})}
+	h.m.cfg.Live = live
+	typeAnswer(h, "use local storage")
+	_, cmd := h.m.Update(press("enter"))
+	done := make(chan tea.Msg, 1)
+	go func() { done <- cmd() }()
+	typeAnswer(h, "x")
+	if h.m.actionStatus != "" {
+		t.Fatalf("typing must clear the status: %q", h.m.actionStatus)
+	}
+	h.m.apply(snapshotMsg{name: "ork", snap: h.m.byName["ork"].snap})
+	if h.m.actionStatus != "sending answer" {
+		t.Fatalf("tracking stayed silent after typing: %q", h.m.actionStatus)
+	}
+	close(live.release)
+	h.deliver(<-done)
+}
+
+// A new question can carry the same wait text: its decision key tells them
+// apart (S134).
+func TestAnsweredClearsWhenTheDecisionKeyChanges(t *testing.T) {
+	h := paneHarness(t, "paused", "question")
+	h.m.cfg.Live = restingLive{h.m.cfg.Live.(*actionLive)}
+	setPaneKey := func(key string) {
+		s := h.m.byName["ork"].snap
+		s.EngineRuns = append([]source.EngineRun(nil), s.EngineRuns...)
+		s.EngineRuns[0].Key = key
+		h.src.set(s)
+		h.m.apply(snapshotMsg{name: "ork", snap: s})
+	}
+	setPaneKey("storage.engine")
+	typeAnswer(h, "use local storage")
+	h.deliver(press("enter"))
+	setPaneKey("storage.engine")
+	if !h.m.pane.answered || h.m.actionStatus != "answered" {
+		t.Fatalf("the same question must keep the status: answered=%v status=%q", h.m.pane.answered, h.m.actionStatus)
+	}
+	setPaneKey("storage.cache")
+	if h.m.pane.answered || h.m.actionStatus != "" {
+		t.Fatalf("a new decision key kept the answered status: answered=%v status=%q", h.m.pane.answered, h.m.actionStatus)
+	}
+}

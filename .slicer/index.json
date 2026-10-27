@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 161,
+  "next_id": 162,
   "preamble": "",
   "passes": [
     {
@@ -5495,7 +5495,7 @@
       "id": "S134",
       "title": "Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap",
       "short_title": "Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -5505,6 +5505,28 @@
           "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): mark the followed run's Overview row with a leading '>' glyph in the marker column for the 5 s of the switch notice; nothing else changes.",
           "created_at": "2026-10-27T16:44:33Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "f27507ea-0b31-4ae3-b8d9-e8806bf8f158",
+          "kind": "",
+          "text": "**2026-10-27** — S134 later notes (2026-10-27, UI pass): (1) the wrapText change in internal/tui/overview.go (wrapText) is global: every caller now drops the whole run of spaces at an added break, not only the detail strip; a line that relies on a leading double space after a break would lose it. (2) docs/dashboard.md has long unwrapped lines in the pane-follow paragraph (about line 614) and the answer-tracking paragraph (about line 650); wrap them in a docs pass.",
+          "created_at": "2026-10-27T16:51:33Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "7c574770-c08e-4def-8369-905bca9792d1",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial (run 20, S134): 2 owner questions during the preflight/fix round, no stalls, 1 fix round, no merge conflicts so far, ran in parallel with S124 and S136; implementer Claude sonnet-high fallback (Codex out of credits), opus reviewer, UI pass and gate.",
+          "created_at": "2026-10-27T16:59:26Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -5528,7 +5550,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -5595,6 +5617,17 @@
           "kind": "",
           "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): the project's design doc path comes from a new optional registry field ui_doc (settable with ork projects; document in docs/state.md); the UI-pass brief names it. With no field the brief tells the UI pass to find the project's own UI docs. ork's own paths leave internal/roles/prompts/ui.md. Check the lineup/plan displays: S94 already added the architect row; add the ui row where missing.",
           "created_at": "2026-10-27T16:44:33Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "7fd69f78-9121-4a1c-bdcf-dfbbef9c65d1",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): ui_doc is set by editing the registry file for now; a general ork projects set is filed as S161.",
+          "created_at": "2026-10-27T17:44:08Z",
           "attempt": 0,
           "by": "Jon R",
           "verified_by": "",
@@ -6693,6 +6726,34 @@
         "urgency": 3,
         "effort": 2,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S161",
+      "title": "ork projects set: change a project's optional registry fields",
+      "short_title": "projects set",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S136",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
       }
     }
   ],
