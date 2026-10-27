@@ -648,7 +648,11 @@ ork adds:
 - **Ledger.** Each role round is recorded with `slicer relay-run step` with
   role, vendor, model, effort and `--task "ID role"`, and its phase is
   updated on exit. A heartbeat goes out every 10 minutes while
-  it runs.
+  it runs. The first finish step ends the ledger run (`relay-run end`). A
+  landing fix round (S119) starts after that, so its rounds, the checks, the
+  gate and the second finish step run without ledger steps: `relay-run`
+  would refuse them with `run_ended`. The engine run record keeps those
+  rounds, and ork records no ledger step once the run has a commit (S153).
 
 ## Owner questions
 

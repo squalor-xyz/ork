@@ -314,7 +314,7 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 	switch msg := msg.(type) {
 	case unavailableProjectsMsg:
 		if msg.err != nil {
-			m.actionStatus = "Read unavailable runs: " + msg.err.Error()
+			m.actionStatus = "Read unavailable runs: " + actionError(msg.err)
 			return m, nil
 		}
 		for _, group := range msg.groups {
@@ -370,7 +370,7 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		if r, ok := m.actionRow(); ok && r.engineID == msg.action.run && r.name == msg.action.project {
 			switch {
 			case msg.err != nil:
-				m.actionStatus = msg.action.command() + ": " + actionError(msg.err)
+				m.actionStatus = msg.action.named() + ": " + actionError(msg.err)
 				if msg.action.verb == "answer" && m.pane != nil {
 					m.pane.answered = false
 				}
@@ -1105,6 +1105,7 @@ type runAction struct {
 	adj                      bool
 	by                       string
 	cleanupCommand           string
+	worktreeGone             bool // cleanup: the daemon skips git worktree remove, so the confirm omits it (S153)
 	items                    []daemon.RunParams
 	held                     []string // wave: ticked items left out because they wait on spec questions
 	plan                     *daemon.RunPlan
@@ -1113,11 +1114,43 @@ type runAction struct {
 	outcome                  string // approve: what the reply's run record shows, "landed" or "fix round"; "" if neither
 }
 
-// cleanupCommand is the two git commands of the cleanup key, one per line
-// (git.cleanup-key, adj 152).
-func cleanupCommand(project, worktree, branch string) string {
+// cleanupCommand is the git commands of the cleanup key that will run, one per
+// line (git.cleanup-key, adj 152). The daemon skips git worktree remove when
+// the worktree is gone, so the command then leaves it out (S153).
+func cleanupCommand(project, worktree, branch string, worktreeGone bool) string {
 	path := shellQuote(project)
-	return "git -C " + path + " worktree remove " + shellQuote(worktree) + "\ngit -C " + path + " branch -d " + shellQuote(branch)
+	branchStep := "git -C " + path + " branch -d " + shellQuote(branch)
+	if worktreeGone {
+		return branchStep
+	}
+	return "git -C " + path + " worktree remove " + shellQuote(worktree) + "\n" + branchStep
+}
+
+// cleanupQuestion asks about the steps that will run.
+func (a runAction) cleanupQuestion() string {
+	if a.worktreeGone {
+		return "Remove branch? [y/N] (Enter is No)"
+	}
+	return "Remove worktree and branch? [y/N] (Enter is No)"
+}
+
+// named is how the status line calls the action. The cleanup is named by its
+// item (S63, not the run id): its git commands are the confirm's, and the
+// status must not echo steps that may not have run (S153).
+func (a runAction) named() string {
+	if a.verb == "cleanup" {
+		return "cleanup " + a.cleanupItem()
+	}
+	return a.command()
+}
+
+// cleanupItem is the slice a cleanup acts on; the run id stands in when the
+// row carried none.
+func (a runAction) cleanupItem() string {
+	if a.item != "" {
+		return a.item
+	}
+	return a.run
 }
 
 func (a runAction) command() string {
@@ -1158,7 +1191,7 @@ func (a runAction) command() string {
 // prompt keeps the cleanup and approve questions separate from the command.
 func (a runAction) prompt() string {
 	if a.verb == "cleanup" {
-		return a.command() + "\nRemove worktree and branch? [y/N] (Enter is No)"
+		return a.command() + "\n" + a.cleanupQuestion()
 	}
 	if a.verb == "approve" || a.verb == "file" {
 		return a.promptWidth(0)
@@ -1225,7 +1258,7 @@ func (a runAction) cleanupConfirmLines(width, limit int) []string {
 		}
 		lines = append(lines, wrapped...)
 	}
-	return append(lines, "Remove worktree and branch? [y/N] (Enter is No)")
+	return append(lines, a.cleanupQuestion())
 }
 
 type actionMsg struct {
@@ -1266,6 +1299,10 @@ func (m *Model) actionRefusal(verb string, r ovRow, ok bool) (status string, ref
 	for _, a := range m.actionFlights[r.engineID] {
 		// Stop can interrupt an approve or retry, but a second stop waits.
 		if verb != "stop" || a.verb == "stop" {
+			if a.verb == "cleanup" {
+				// One wording for the pending state, first press or second.
+				return a.pendingText(), true
+			}
 			return a.command() + " is pending", true
 		}
 	}
@@ -1315,7 +1352,9 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 	}
 	a := runAction{verb: verb, run: r.engineID, project: r.name}
 	if verb == "cleanup" {
-		a.cleanupCommand = cleanupCommand(m.projects[r.project].reg.Path, r.worktree, r.branch)
+		a.worktreeGone = r.worktreeGone
+		a.item = r.id
+		a.cleanupCommand = cleanupCommand(m.projects[r.project].reg.Path, r.worktree, r.branch, r.worktreeGone)
 	}
 	if verb == "answer" {
 		a.text = m.pane.input.Value()
@@ -1421,7 +1460,8 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 func actionError(err error) string {
 	var wire *ipc.Error
 	if errors.As(err, &wire) {
-		return wire.Code + ": " + wire.Message
+		// Some messages lead with the code in words ("bad params: ..."): say it once.
+		return wire.Code + ": " + strings.TrimPrefix(wire.Message, strings.ReplaceAll(wire.Code, "_", " ")+": ")
 	}
 	return err.Error()
 }

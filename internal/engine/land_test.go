@@ -611,6 +611,57 @@ func TestLandConflictRunsOneFixRoundThenReturnsToApproval(t *testing.T) {
 	}
 }
 
+// The finish step ends the ledger run. A landing fix round starts after that:
+// its rounds run without ledger steps (relay-run would refuse them with
+// run_ended), and the engine run record keeps the rounds (S153).
+func TestLandFixRoundRecordsNoLedgerStepsAfterTheRunEnded(t *testing.T) {
+	env := newLandEnv(t)
+	writeFile(t, filepath.Join(env.W, "shared.txt"), "branch\n")
+	env.moveBase("shared.txt", "main\n")
+	env.runner.script = func(req Request, n int) (Result, error) {
+		if req.Role == RoleImplementer && strings.Contains(req.Brief, "## Landing blocked") {
+			writeFile(t, filepath.Join(req.Worktree, "shared.txt"), "resolved\n")
+			gitRun(t, req.Worktree, "add", "-A")
+			gitRun(t, req.Worktree, "commit", "-q", "--no-edit")
+		}
+		return Result{}, nil
+	}
+	env.approve()
+	requireState(t, env.e, runrec.StateAwaitingApproval)
+	env.approve()
+	rec := requireState(t, env.e, runrec.StateCommitted)
+	calls := env.log("slicer.log")
+	end := indexOf(calls, "relay-run end ")
+	if end < 0 {
+		t.Fatalf("the ledger run was never ended: %q", calls)
+	}
+	for _, l := range calls[end+1:] {
+		if strings.HasPrefix(l, "relay-run step ") {
+			t.Errorf("a ledger step after the run ended: %q", l)
+		}
+	}
+	// The ledger steps before the end are still recorded.
+	if indexOf(calls[:end], "relay-run step ") < 0 {
+		t.Errorf("no ledger steps before the run ended: %q", calls[:end])
+	}
+	// The fix round and the second finish step ran and stay in the run record,
+	// without a ledger step id.
+	var withStep, withoutStep, fixRound int
+	for _, r := range rec.Roles {
+		if r.Step != "" {
+			withStep++
+		} else {
+			withoutStep++
+		}
+		if r.Role == RoleImplementer && r.Round > 0 {
+			fixRound++
+		}
+	}
+	if withStep == 0 || withoutStep < 2 || fixRound < 3 {
+		t.Errorf("roles in the record: %d with a step, %d without, %d implementer rounds: %+v", withStep, withoutStep, fixRound, rec.Roles)
+	}
+}
+
 func TestLandConflictTwiceStopsAndKeepsTheWorktree(t *testing.T) {
 	env := newLandEnv(t)
 	writeFile(t, filepath.Join(env.W, "shared.txt"), "branch\n")

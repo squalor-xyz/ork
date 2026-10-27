@@ -12,6 +12,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
+	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -187,6 +188,7 @@ func TestReadyRowsAreSelectable(t *testing.T) {
 type cleanupLive struct {
 	fakeLive
 	calls int
+	err   error // what the daemon answers
 }
 
 func (l *cleanupLive) Cleanup(_ context.Context, run string) error {
@@ -194,7 +196,7 @@ func (l *cleanupLive) Cleanup(_ context.Context, run string) error {
 		return fmt.Errorf("wrong run %s", run)
 	}
 	l.calls++
-	return nil
+	return l.err
 }
 func cleanupHarness(t *testing.T, merged string) (*harness, *cleanupLive) {
 	h := landingHarness(t, `[{"id":"ready","item":"S63","state":"committed","branch":"s63","worktree":"/p/wt","merged":`+merged+`}]`)
@@ -531,5 +533,192 @@ func TestCleanedRunsLeaveReadyToLand(t *testing.T) {
 	}
 	if rows := h.m.readyRows(); len(rows) != 1 || rows[0].engineID != "r1" {
 		t.Errorf("ready rows: %+v", rows)
+	}
+}
+
+// gone is the cleanup harness with the worktree path no longer there: the
+// daemon sends the proposed worktree_gone flag (S153).
+func goneHarness(t *testing.T) (*harness, *cleanupLive) {
+	t.Helper()
+	h := landingHarness(t, `[{"id":"ready","item":"S63","state":"committed","branch":"s63","worktree":"/p/wt","merged":true,"worktree_gone":true}]`)
+	l := &cleanupLive{}
+	h.m.cfg.Live = l
+	return h, l
+}
+
+// The confirm shows only the steps that will run: the daemon skips git
+// worktree remove when the worktree is gone, so the confirm neither names it
+// nor asks to remove it (S153, adj 152 git.cleanup-key).
+func TestCleanupConfirmOmitsWorktreeRemoveWhenTheWorktreeIsGone(t *testing.T) {
+	h, l := goneHarness(t)
+	h.send(tea.WindowSizeMsg{Width: 80, Height: 24})
+	h.send(press("c"))
+	if h.m.confirm == nil {
+		t.Fatal("cleanup key did not show confirmation")
+	}
+	command := h.m.confirm.command()
+	if strings.Contains(command, "worktree") || strings.Contains(command, "\n") || !strings.Contains(command, "branch -d 's63'") {
+		t.Errorf("confirm command: %q, want the branch step alone", command)
+	}
+	v := plainView(h.m)
+	if strings.Contains(v, "worktree") || !strings.Contains(v, "Remove branch? [y/N] (Enter is No)") {
+		t.Errorf("confirm view names the worktree or lacks the branch question:\n%s", v)
+	}
+	if prompt := h.m.confirm.prompt(); strings.Contains(prompt, "worktree") || !strings.Contains(prompt, "Remove branch? [y/N]") {
+		t.Errorf("prompt: %q", prompt)
+	}
+	h.deliver(press("y"))
+	if l.calls != 1 {
+		t.Errorf("cleanup calls=%d, want 1", l.calls)
+	}
+}
+
+// Without the flag both steps stay, as before.
+func TestCleanupConfirmKeepsBothStepsWhenTheWorktreeIsThere(t *testing.T) {
+	h, _ := cleanupHarness(t, "true")
+	h.send(press("c"))
+	command := h.m.confirm.command()
+	if !strings.Contains(command, "worktree remove '/p/wt'") || !strings.Contains(command, "branch -d 's63'") {
+		t.Errorf("confirm command: %q", command)
+	}
+	if prompt := h.m.confirm.prompt(); !strings.Contains(prompt, "Remove worktree and branch? [y/N]") {
+		t.Errorf("prompt: %q", prompt)
+	}
+}
+
+// The Ready detail of a landed run whose cleanup failed names the cleanup the
+// key will run, so it too drops the worktree step when that is gone.
+func TestReadyDetailOmitsWorktreeRemoveWhenTheWorktreeIsGone(t *testing.T) {
+	for _, tc := range []struct {
+		name, flag string
+		want       bool
+	}{{"gone", `"worktree_gone":true,`, false}, {"there", "", true}} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := landingHarness(t, `[{"id":"r3","item":"S11","state":"committed","branch":"s11","merged":true,`+tc.flag+`"worktree":"/p/.worktrees/s11","landed":true,"cleanup_failed":"landed; cleanup failed at git branch -d s11: checked out"}]`)
+			var detail string
+			for _, row := range h.m.readyRows() {
+				detail = strings.Join(detailLines(row, 200, "|"), "\n")
+			}
+			if has := strings.Contains(detail, "worktree remove"); has != tc.want {
+				t.Errorf("worktree remove in the detail = %v, want %v:\n%s", has, tc.want, detail)
+			}
+			if !strings.Contains(detail, "c finishes the cleanup: git -C ") || !strings.Contains(detail, "branch -d 's11'") {
+				t.Errorf("the branch step is missing:\n%s", detail)
+			}
+		})
+	}
+}
+
+func TestCleanupStatusNamesTheItemNotTheCommands(t *testing.T) {
+	h, l := cleanupHarness(t, "true")
+	h.send(press("c"))
+	h.send(press("y"))
+	if l.calls != 1 {
+		t.Fatalf("cleanup calls=%d", l.calls)
+	}
+	if h.m.actionStatus != "cleaning up S63: pending" {
+		t.Errorf("pending status %q", h.m.actionStatus)
+	}
+}
+
+func TestCleanupDoneStatusSaysCleanedUp(t *testing.T) {
+	h, _ := cleanupHarness(t, "true")
+	h.deliver(press("c"))
+	h.deliver(press("y"))
+	if h.m.actionStatus != "cleaned up S63" {
+		t.Errorf("status %q, want %q", h.m.actionStatus, "cleaned up S63")
+	}
+}
+
+// A daemon refusal reads once: no git command that never ran, and the code is
+// not said twice (S153).
+func TestCleanupRefusalStatusHasNoCommandsAndOneErrorCode(t *testing.T) {
+	h, l := cleanupHarness(t, "true")
+	l.err = &ipc.Error{Code: "bad_params", Message: "bad params: this run is already cleaned up: its worktree and branch are gone"}
+	h.deliver(press("c"))
+	h.deliver(press("y"))
+	const want = "cleanup S63: bad_params: this run is already cleaned up: its worktree and branch are gone"
+	if h.m.actionStatus != want {
+		t.Errorf("status %q, want %q", h.m.actionStatus, want)
+	}
+}
+
+func TestActionErrorSaysTheCodeOnce(t *testing.T) {
+	for _, tc := range []struct {
+		err  error
+		want string
+	}{
+		{&ipc.Error{Code: "bad_params", Message: "bad params: x is wrong"}, "bad_params: x is wrong"},
+		{&ipc.Error{Code: "not_found", Message: "no run engine"}, "not_found: no run engine"},
+		{&ipc.Error{Code: "bad_params", Message: "the bad params of x"}, "bad_params: the bad params of x"},
+		{fmt.Errorf("plain"), "plain"},
+	} {
+		if got := actionError(tc.err); got != tc.want {
+			t.Errorf("actionError(%v) = %q, want %q", tc.err, got, tc.want)
+		}
+	}
+}
+
+// After an external `slicer land` the slice leaves slicer's open list, and the
+// row stops offering the landing and render lines slicer already ran (S153).
+func TestReadyRowDropsLandingLinesOnceSlicerReportsTheItemLanded(t *testing.T) {
+	read := time.Date(2026, 10, 27, 12, 0, 0, 0, time.UTC)
+	for _, tc := range []struct {
+		name  string
+		items source.Result[[]slicercli.Item]
+		lines bool
+	}{
+		{"item still listed", source.Result[[]slicercli.Item]{ReadAt: read, Value: []slicercli.Item{{ID: "S09", Status: "started"}}}, true},
+		{"item left the list", source.Result[[]slicercli.Item]{ReadAt: read, Value: []slicercli.Item{{ID: "S10", Status: "open"}}}, false},
+		{"list never read", source.Result[[]slicercli.Item]{}, true},
+		{"list failed", source.Result[[]slicercli.Item]{ReadAt: read, Err: fmt.Errorf("slicer: exit 2")}, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := landingHarness(t, `[{"id":"r1","item":"S09","state":"committed","branch":"s09","merged":true,"worktree":"/p/wt"}]`)
+			h.m.projects[0].snap.Items = tc.items
+			rows := h.m.readyRows()
+			if len(rows) != 1 {
+				t.Fatalf("rows=%d", len(rows))
+			}
+			row := rows[0]
+			if has := len(row.commands) > 0; has != tc.lines {
+				t.Errorf("commands %q, want lines %v", row.commands, tc.lines)
+			}
+			text := landingText(h)
+			if has := strings.Contains(text, "slicer land") || strings.Contains(text, "slicer render"); has != tc.lines {
+				t.Errorf("landing text has the lines = %v, want %v:\n%s", has, tc.lines, text)
+			}
+			// Slicer's default list also hides retired items: say "not listed", not "landed".
+			if has := strings.Contains(row.rest, "not listed"); has == tc.lines {
+				t.Errorf("row %q: not listed = %v, want %v", row.rest, has, !tc.lines)
+			}
+			if strings.Contains(row.rest, "landed") {
+				t.Errorf("the row says landed: %q", row.rest)
+			}
+			// c still works: the branch and worktree are what is left.
+			if !row.ready || !row.merged || row.worktree == "" {
+				t.Errorf("the row cannot be cleaned up: %+v", row)
+			}
+		})
+	}
+}
+
+// A second c while a cleanup runs says it in the pending wording of the first
+// press, naming the item (the run id is "ready", the item S63).
+func TestSecondCleanupKeyReadsAsThePendingStatusWhilePending(t *testing.T) {
+	h, l := cleanupHarness(t, "true")
+	h.m.actionFlights = map[string][]runAction{"ready": {{verb: "cleanup", run: "ready", item: "S63", cleanupCommand: "git -C '/p' worktree remove '/p/wt'\ngit -C '/p' branch -d 's63'"}}}
+	h.send(press("c"))
+	if h.m.actionStatus != "cleaning up S63: pending" || h.m.confirm != nil || l.calls != 0 {
+		t.Errorf("status %q, confirm %v, calls %d", h.m.actionStatus, h.m.confirm, l.calls)
+	}
+}
+
+// A daemon error on the unavailable-runs read shows its code once too.
+func TestUnavailableRunsErrorSaysTheCodeOnce(t *testing.T) {
+	h := landingHarness(t, `[]`)
+	h.deliver(unavailableProjectsMsg{err: &ipc.Error{Code: "bad_params", Message: "bad params: no groups"}})
+	if want := "Read unavailable runs: bad_params: no groups"; h.m.actionStatus != want {
+		t.Errorf("status %q, want %q", h.m.actionStatus, want)
 	}
 }

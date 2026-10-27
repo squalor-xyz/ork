@@ -53,7 +53,7 @@ func buildProject(t *testing.T, root, build string) map[string]bool {
 		t.Fatal(err)
 	}
 	d.cfg.BuildID = build
-	d.runs.deps.GitBin = "git"
+	setGitBin(d, "git")
 	out, err := d.status(context.Background(), StatusParams{})
 	if err != nil {
 		t.Fatal(err)

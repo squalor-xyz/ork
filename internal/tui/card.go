@@ -515,6 +515,9 @@ func (a runAction) pendingText() string {
 	if a.verb == "approve" && a.item != "" {
 		return "landing " + a.item + ": pending"
 	}
+	if a.verb == "cleanup" {
+		return "cleaning up " + a.cleanupItem() + ": pending"
+	}
 	return a.command() + ": pending"
 }
 
@@ -557,6 +560,9 @@ func (a runAction) doneText() string {
 			return fmt.Sprintf("check %d reopened", a.check)
 		}
 		return fmt.Sprintf("check %d marked %s", a.check, markWord(a.state))
+	}
+	if a.verb == "cleanup" {
+		return "cleaned up " + a.cleanupItem()
 	}
 	return a.command() + ": done"
 }

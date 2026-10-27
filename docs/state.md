@@ -211,6 +211,9 @@ cleaned, including one landed with `slicer land` (which leaves `landed_at`
 empty), and the same update clears the landing's `reason`. A run is *cleaned*
 when `cleaned_at` is set, or when ork landed it and left no `reason`; the
 daemon sends that as `cleaned: true` on the run's snapshot row (*proposed*).
+A committed, uncleaned run whose `worktree` path no longer exists also carries
+`worktree_gone: true` on its row (*proposed*, S153): the cleanup key then skips
+`git worktree remove` and the confirm omits it.
 The version stays 1, as for `dismissed_at`: an older ork refuses a `run.json`
 with `cleaned_at` because `Store.Open` uses strict keys.
 `wait_started_at` (omitted when zero; S138) records entry into
@@ -383,7 +386,13 @@ true means merged and false means unmerged. The daemon supplies it from the
 HEAD-change check (`landing.merge-detect`, adj #128). It remembers the last HEAD per project. The first successful HEAD
 read and each changed HEAD check every committed branch with
 `git -C PATH merge-base --is-ancestor BRANCH HEAD`. Exit 0 means merged,
-exit 1 means unmerged, and another error leaves the state unknown. An
+exit 1 means unmerged, and another error leaves the state unknown. When that
+error is a missing branch (`git rev-parse --verify --quiet refs/heads/BRANCH`
+exits 1), the run's worktree path no longer exists and its `commit.sha` is in
+HEAD, the run is from before S95: the daemon sets its `cleaned_at` (S153). A
+missing branch with a worktree still there, with no recorded commit, or with a
+commit not in HEAD, leaves the state unknown. A pass does not write a merge
+state for a run that was cleaned while git ran. An
 unchanged HEAD adds no merge reads. While a pass runs, each run keeps the
 value of the last pass, so a snapshot and the cleanup key never see "unknown"
 because of a pass in flight; the pass writes its results back when it ends.

@@ -215,6 +215,7 @@ type EngineRun struct {
 	Landed         bool                  `json:"landed,omitempty"`         // proposed: ork landed the slice on the base branch (S119)
 	CleanupFailed  string                `json:"cleanup_failed,omitempty"` // proposed: why the cleanup after a landing failed (S119)
 	Cleaned        bool                  `json:"cleaned,omitempty"`        // proposed: the worktree and branch are gone (S95)
+	WorktreeGone   bool                  `json:"worktree_gone,omitempty"`  // proposed: a committed run's worktree path no longer exists, so the cleanup skips git worktree remove (S153)
 	Roles          []EngineRole          `json:"roles,omitempty"`
 	ID             string                `json:"id"`
 	Item           string                `json:"item"`

@@ -471,6 +471,14 @@ the text column, falling back to a shorter indent when needed to fit.
    `git -C PATH worktree remove WORKTREE` then
    `git -C PATH branch -d BRANCH`. The question is on a separate line.
    Enter is No; `n` cancels; `y` calls `run.cleanup` once (`git.cleanup-key`, adj #152).
+   The confirm shows only the steps that will run (S153): when the run's
+   worktree path no longer exists, the daemon sends the proposed `worktree_gone`
+   flag on the row, the confirm and the detail leave out `git worktree remove`,
+   and the question reads `Remove branch?` instead of `Remove worktree and
+   branch?`. The status line names the item, not the commands or the run id: `cleaning up
+   S119: pending` (also on a second `c` while it runs), then `cleaned up S119`,
+   or `cleanup S119: CODE: REASON` when the daemon refuses (the code is said
+   once). A status that shows a daemon error says its code once too.
    Cleanup never forces removal, merges or lands a branch. Git errors are
    shown verbatim. After S119, a run that ork landed itself leaves this list, and
    its ledger run reads `✓ landed` in Recent instead of `✓ pass`. A run that ork
@@ -481,11 +489,21 @@ the text column, falling back to a shorter indent when needed to fit.
    (`landed; cleanup failed at git ...: ERROR`), wrapped to the pane. When the
    run's merge state is known to be merged, a second part reads `c finishes the
    cleanup: git -C P worktree remove W; git -C P branch -d B`, and `c` runs it
-   (and clears the reason). With the merge state unknown the part is left out,
+   (and clears the reason); the `worktree remove` step is left out when the
+   worktree is gone (S153). With the merge state unknown the part is left out,
    because `c` refuses a run that is not known to be merged.
    After S95 a successful cleanup marks the run cleaned, and a cleaned run
    leaves this list, with its landing and render lines, whether ork landed it or
    `slicer land` did. A second `c` on it is refused ("already cleaned up").
+   A run from before S95 whose branch and worktree are gone but never marked
+   cleaned leaves the list by itself: when a merge pass finds no worktree and no
+   branch and the run's recorded commit is in HEAD, the daemon marks it cleaned
+   (S153). A worktree that is still there keeps the run as it was.
+   When the item has left slicer's default list (`slicer land` ran outside ork,
+   or the item was retired; the list hides done and retired items) the row reads
+   `S09  s09  not listed` with no `slicer land` or `slicer render` line, and `c`
+   still removes the branch and worktree. A
+   snapshot whose slicer list was not read, or failed, keeps the lines.
    If `git worktree remove` succeeded and `git branch -d` failed, the row stays;
    the next `c` skips the worktree step when the worktree path is gone and
    runs `git branch -d`.
