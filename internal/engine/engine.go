@@ -304,6 +304,9 @@ func (e *Engine) advance(ctx context.Context) error {
 			return e.run.Update(func(r *runrec.Record) {
 				p := r.QueuedQuestions[0]
 				r.QueuedQuestions = r.QueuedQuestions[1:]
+				if r.Pending != nil && p.Retry == nil {
+					p.Retry = r.Pending.Retry // a retry context waits through every queued question
+				}
 				r.Pending = &p
 				r.State = runrec.StatePaused
 				r.Reason = p.Reason
@@ -431,6 +434,20 @@ func (e *Engine) Retry(ctx context.Context) error {
 	}
 	if rec.Pending.Kind == runrec.PendingQuestion {
 		return errors.New("the slice waits for an answer; answer it or stop the slice")
+	}
+	if rec.Pending.Retry == nil && len(rec.QueuedQuestions) > 0 {
+		// A sibling's owner question is asked before the role runs again. The
+		// pause that is retried rides on the question, so the rerun still has
+		// its context (report shape or lost process section; a question or
+		// shape pause also resumes the session) after the answer (S159).
+		return e.run.Update(func(r *runrec.Record) {
+			q := r.QueuedQuestions[0]
+			r.QueuedQuestions = r.QueuedQuestions[1:]
+			retry := *r.Pending
+			q.Retry = &retry
+			r.Pending = &q
+			r.Reason = q.Reason
+		})
 	}
 	if err := e.run.Update(func(r *runrec.Record) { r.State = r.Pending.State; r.Reason = "" }); err != nil {
 		return err

@@ -274,6 +274,12 @@ slice.
     answer; other sibling pauses are still dropped. A stop overrides a pause
     and cancels the running sibling, recorded with exit `cancelled`. After a
     pause, a retry runs again only the role whose report does not stand.
+    When the first pause is not a question and a sibling question is queued,
+    a retry asks that question first and runs no role. The retried pause
+    rides on the question as `pending.retry`; after the answer the retried
+    role runs with its own context (the report shape or lost process section;
+    a question or shape pause also resumes the role's session) and the sibling
+    role with its answer (S159, *proposed*).
     Renders (*proposed*, S121; adj #165): the
     UI pass writes each changed view as plain text files at 80x24, 120x40 and in
     ASCII mode, in `tmp/ui-N/renders/` of the run directory, using the
@@ -996,7 +1002,8 @@ and `run.answer` take
 lineup,budgets,permissions,note?}`; the project contains only its name and path.
 The proposed optional `note` (S135) explains a failed `relay-roles show` read.
 The plan then treats UI and spec-check rules as absent; a failed recommendation
-still prevents planning.
+still prevents planning. `ork run` and the TUI launch confirm show the note
+under the plan rows (S159, *proposed*).
 Start and owner commands return the run record. With `--json`, run prints
 the plan on stderr and a single result JSON value on stdout; declining
 prints `{"started":false}` on stdout. Interactive questions go on stderr

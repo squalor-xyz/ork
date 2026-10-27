@@ -157,6 +157,10 @@ type Pending struct {
 	Reason   string         `json:"reason"`
 	Question string         `json:"question,omitempty"`
 	Answer   string         `json:"answer,omitempty"`
+	// Retry is the context of a retry that waits for this question: the first
+	// pause (shape, lost, budget or error) of another role, kept while the
+	// sibling's queued question is asked first (S159, *proposed*).
+	Retry *Pending `json:"retry,omitempty"`
 }
 
 // Feedback names the file that holds what the next implementer round must

@@ -157,6 +157,31 @@ func TestLaunchPlanBeforeConfirm(t *testing.T) {
 		}
 	}
 }
+
+// A plan made without the UI or spec-check rules shows its note under the
+// plan lines in the confirm, before the question (S159). The note is a
+// warning: drawn in the Warn style (owner decision 2026-10-27).
+func TestLaunchConfirmShowsThePlanNote(t *testing.T) {
+	const note = "planning without UI or spec-check rules: exit 2"
+	for _, present := range []bool{false, true} {
+		h, l := launchHarness(t)
+		h.m.cfg.Theme = NewTheme(false)
+		if present {
+			l.plan.Note = note
+		}
+		launchConfirmed(t, h)
+		view := h.view()
+		if present && !strings.Contains(h.m.View().Content, h.m.cfg.Theme.Warn.Render("note: "+note)) {
+			t.Errorf("the note is not drawn in the Warn style:\n%q", h.m.View().Content)
+		}
+		if got := strings.Contains(view, "note: "+note); got != present {
+			t.Fatalf("present=%v:\n%s", present, view)
+		}
+		if present && !(strings.Index(view, "gate: Codex gpt low") < strings.Index(view, "note: ") && strings.Index(view, "note: ") < strings.Index(view, "ork run ork S90?")) {
+			t.Errorf("the note is not between the plan and the question:\n%s", view)
+		}
+	}
+}
 func TestLaunchYesStartsWithExpectedPlan(t *testing.T) {
 	for _, k := range []string{"y", "Y", "enter", "n", "N", "esc"} {
 		t.Run(k, func(t *testing.T) {
@@ -582,6 +607,7 @@ func TestGoldenLaunch(t *testing.T) {
 			h, l := launchHarness(t)
 			l.plan.Lineup["architect"] = []runrec.LineupEntry{{Vendor: "codex", Model: "sol", Effort: "high"}}
 			l.plan.Permissions["architect"] = engine.Permission{ReadOnly: true}
+			l.plan.Note = "slicer relay-roles show failed; planning without UI or spec-check rules: exit 2"
 			h.m.cfg.Theme = NewTheme(tc.mono)
 			launchConfirmed(t, h)
 			checkGolden(t, tc.name, h.m.View().Content)

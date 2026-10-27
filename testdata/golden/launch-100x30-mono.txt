@@ -13,8 +13,8 @@
                            │    permissions: read-only
                            │  gate: Codex gpt low
                            │    allowlist: 
-                           │
-                           │
+                           │  note: slicer relay-roles show failed; planning without UI or
+                           │  spec-check rules: exit 2
                            │
                            │
                            │

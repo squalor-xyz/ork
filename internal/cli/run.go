@@ -165,6 +165,9 @@ func printRunPlan(w io.Writer, p daemon.RunPlan) {
 			fmt.Fprintf(w, "  allowlist: %s\n", strings.Join(perm.Allow, ", "))
 		}
 	}
+	if p.Note != "" {
+		fmt.Fprintf(w, "note: %s\n", p.Note)
+	}
 }
 func printRun(o *output, r runrec.Record) int {
 	if o.json {

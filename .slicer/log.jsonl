@@ -2097,3 +2097,13 @@
 {"when": "2026-10-27T20:46:57Z", "item": "S144", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-10-27T20:46:57Z", "item": "S144", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-27T20:46:58Z", "item": "S144", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-27T20:57:45Z", "item": "S159", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-27T20:57:49Z", "item": "S159", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-27T21:44:08Z", "item": "S159", "action": "note", "from": "", "to": "", "note": "Later (from the S159 review): internal/engine/recover.go:101", "by": "Jon R"}
+{"when": "2026-10-27T21:44:08Z", "item": "S159", "action": "note", "from": "", "to": "", "note": "Later (from the S159 review): a retried budget pause grants ", "by": "Jon R"}
+{"when": "2026-10-27T21:44:09Z", "item": "S159", "action": "note", "from": "", "to": "", "note": "Later (from the S159 review): after a retry that asked a que", "by": "Jon R"}
+{"when": "2026-10-27T21:44:09Z", "item": "S159", "action": "note", "from": "", "to": "", "note": "Later (from the S159 review): the plan note repeats the comm", "by": "Jon R"}
+{"when": "2026-10-27T21:44:09Z", "item": "S159", "action": "note", "from": "", "to": "", "note": "Process (from the S159 review): TestRetryAsksTheQueuedQuesti", "by": "Jon R"}
+{"when": "2026-10-27T21:48:05Z", "item": "S159", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-27 (interactive): on Retry with a qu", "by": "Jon R"}
+{"when": "2026-10-27T21:48:06Z", "item": "S159", "action": "status", "from": "started", "to": "done", "note": "Retry with a queued sibling question asks the question first and keeps the retry context through every queued question (optional Pending.Retry, recorded in docs/state.md); the plan note shows in ork run and in the launch confirm (Warn). Review PASS, UI pass PASS, gate PASS (run-20261027-205734-b558).", "by": "Jon R"}
+{"when": "2026-10-27T21:48:06Z", "item": "S159", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 28, S159): 1 owner question during ", "by": "Jon R"}
