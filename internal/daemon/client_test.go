@@ -135,3 +135,58 @@ func TestClientSpecCheckAndAnswer(t *testing.T) {
 		t.Fatalf("answer: %+v %v", ans, err)
 	}
 }
+
+// ApproveRecord returns the run record the approve reply carries, with the
+// fields that tell a landing from a landing fix round (S148); Approve keeps
+// its error-only result.
+func TestClientApproveRecordCarriesTheLandingFields(t *testing.T) {
+	landedAt := time.Date(2026, 10, 27, 12, 0, 0, 0, time.UTC)
+	socket := filepath.Join(shortDir(t), "s")
+	listener, err := ipc.Listen(socket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := &ipc.Server{Handler: func(_ context.Context, method string, raw json.RawMessage) (any, error) {
+		var got RunAction
+		if err := json.Unmarshal(raw, &got); err != nil || method != MethodRunApprove {
+			return nil, fmt.Errorf("wrong request: %s %s", method, raw)
+		}
+		switch got.Run {
+		case "landed":
+			return RunReply{Record: runrec.Record{ID: "landed", State: runrec.StateCommitted, LandedAt: landedAt}}, nil
+		case "fix":
+			return RunReply{Record: runrec.Record{ID: "fix", State: runrec.StateAwaitingApproval, LandFixes: 1}}, nil
+		}
+		return nil, &ipc.Error{Code: "bad_params", Message: "no such run"}
+	}}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- server.Serve(ctx, listener) }()
+	t.Cleanup(func() {
+		cancel()
+		select {
+		case <-done:
+		case <-time.After(2 * time.Second):
+			t.Error("server did not stop")
+		}
+	})
+	c, err := Dial(ctx, socket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+	rec, err := c.ApproveRecord(ctx, "landed")
+	if err != nil || rec.State != runrec.StateCommitted || !rec.LandedAt.Equal(landedAt) {
+		t.Fatalf("landed: %+v %v", rec, err)
+	}
+	rec, err = c.ApproveRecord(ctx, "fix")
+	if err != nil || rec.State != runrec.StateAwaitingApproval || rec.LandFixes != 1 {
+		t.Fatalf("fix round: %+v %v", rec, err)
+	}
+	if err := c.Approve(ctx, "landed"); err != nil {
+		t.Fatalf("Approve: %v", err)
+	}
+	if _, err := c.ApproveRecord(ctx, "missing"); err == nil {
+		t.Fatal("an error reply was swallowed")
+	}
+}

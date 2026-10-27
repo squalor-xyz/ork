@@ -6206,7 +6206,7 @@
       "id": "S148",
       "title": "S119 later notes: landing status text, cleanup-failed rows, fix-round allowlist",
       "short_title": "S119 later notes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -6216,6 +6216,28 @@
           "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): take approve status text 'landing S22: pending', dashboard.md:482 wording, the double human-checks note on a second approval, show the c detail only when the merge state is known, show the cleanup-failed reason in full, Recent reads 'landed, cleanup failed'. Skip the adj 98 item (owner will supersede) and the implementer-allowlist verification (file separately if wanted).",
           "created_at": "2026-10-27T18:37:28Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "dd9b85e4-0e57-4079-8b7c-eb6c40e6f946",
+          "kind": "",
+          "text": "**2026-10-27** — Later (from the S148 relay, 2026-10-27): docs/dashboard.md:482 item dropped, its round-1 wording was never recorded and the line no longer points at S119 text (refile if the owner can name it); a check added or a mark changed before a second approval after a land fix round is not noted (store the written note text, write again only when it differs; needs a runrec field); no engine test for a note failing on retry after a land fix round; with an unknown merge state the Ready detail shows only the reason with no next step; the Recent row keeps the check mark for a landed run with a failed cleanup; the landed done text does not mention a failed cleanup; the approver fallback test does not assert Approve was called.",
+          "created_at": "2026-10-27T19:32:46Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "8078a951-c742-4bf5-bbc2-ff43a64931c5",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial (run 24, S148): 1 owner question before the start and 1 during, no stalls, 2 fix rounds, merge of main at landing; ran in parallel with S151 and S150; implementer Claude sonnet-high fallback (Codex out of credits), opus reviewer and UI pass.",
+          "created_at": "2026-10-27T19:32:46Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -6239,7 +6261,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

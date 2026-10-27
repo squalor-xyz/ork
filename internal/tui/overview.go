@@ -1431,11 +1431,15 @@ func (m *Model) readyRows() []ovRow {
 			switch {
 			case run.Landed:
 				// Landed, but the cleanup failed: no landing command. The reason is a
-				// note under the row, not a copyable line; the detail names the
-				// cleanup key (c).
+				// clipped note under the row, not a copyable line; the detail holds it
+				// in full and, when the run is known to be merged (c refuses
+				// otherwise), names the cleanup key (c).
 				rest += "  landed  cleanup failed"
 				note = strings.TrimPrefix(strings.TrimPrefix(run.CleanupFailed, "landed; "), "cleanup failed at ")
-				detail = "c finishes the cleanup: " + strings.ReplaceAll(cleanupCommand(m.projects[i].reg.Path, run.Worktree, run.Branch), "\n", "; ")
+				detail = run.CleanupFailed
+				if run.Merged != nil && *run.Merged {
+					detail += "\nc finishes the cleanup: " + strings.ReplaceAll(cleanupCommand(m.projects[i].reg.Path, run.Worktree, run.Branch), "\n", "; ")
+				}
 			case run.Branch == "":
 				rest = "branch unknown"
 			case run.Merged != nil && !*run.Merged:

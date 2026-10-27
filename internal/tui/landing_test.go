@@ -401,9 +401,66 @@ func TestLandedRunsLeaveReadyToLand(t *testing.T) {
 				t.Errorf("the detail lacks %q:\n%s", want, detail)
 			}
 		}
-		if strings.Contains(detail, "locked") {
-			t.Errorf("the detail repeats the reason:\n%s", detail)
+		// The selected row's detail holds the reason in full (S148).
+		if !strings.Contains(detail, "landed; cleanup failed at git worktree remove /p/.worktrees/s11: locked") {
+			t.Errorf("the detail lacks the whole reason:\n%s", detail)
 		}
+	}
+}
+
+// The reason is the detail's first words, whole, wrapped at the pane width;
+// the cleanup key's line follows it only when the run is known to be merged,
+// because `c` refuses an unknown merge state (S148).
+func TestCleanupFailedDetailShowsTheWholeReasonAndTheKeyOnlyWhenMerged(t *testing.T) {
+	const reason = "landed; cleanup failed at git worktree remove /p/.worktrees/s11: contains modified or untracked files, use --force to delete it"
+	for _, tc := range []struct {
+		name, run string
+		key       bool
+	}{
+		{"merged", `"merged":true,`, true},
+		{"unknown", ``, false},
+		{"unmerged", `"merged":false,`, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := landingHarness(t, `[{"id":"r3","item":"S11","state":"committed","branch":"s11",`+tc.run+`"worktree":"/p/.worktrees/s11","landed":true,"cleanup_failed":"`+reason+`"}]`)
+			h.send(tea.WindowSizeMsg{Width: 100, Height: 30})
+			rows := h.m.readyRows()
+			if len(rows) != 1 {
+				t.Fatalf("%d ready rows", len(rows))
+			}
+			for _, width := range []int{200, 50} {
+				detail := strings.Join(detailLines(rows[0], width, "|"), "\n")
+				if got := strings.Join(strings.Fields(detail), " "); !strings.Contains(got, reason) {
+					t.Errorf("width %d: the detail lacks the whole reason:\n%s", width, detail)
+				}
+				if got := strings.Contains(detail, "c finishes the cleanup"); got != tc.key {
+					t.Errorf("width %d: the cleanup key line is %v, want %v:\n%s", width, got, tc.key, detail)
+				}
+			}
+		})
+	}
+}
+
+// The ledger run of a landed slice whose cleanup failed reads that in Recent.
+func TestCleanupFailedRunShowsInRecent(t *testing.T) {
+	h := landingHarness(t, `[{"id":"r2","item":"S10","state":"committed","branch":"s10","landed":true,"relay_run":"led-1","cleanup_failed":"landed; cleanup failed at git branch -d s10: x"},`+
+		`{"id":"r3","item":"S11","state":"committed","branch":"s11","landed":true,"relay_run":"led-2"}]`)
+	s := h.m.byName["ork"].snap
+	for i, id := range []string{"led-1", "led-2"} {
+		s.BoardRuns.Value = append(s.BoardRuns.Value, slicercli.RelayRun{ID: id, Items: []string{fmt.Sprintf("S1%d", i)}, State: "ended", Outcome: "pass",
+			BeganAt: h.now.Add(-20 * time.Minute).Format(time.RFC3339), UpdatedAt: h.now.Add(-5 * time.Minute).Format(time.RFC3339),
+			Steps: []slicercli.Step{{Role: "implementer"}}})
+	}
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	got := map[string]string{}
+	for _, r := range h.m.recentRows() {
+		got[r.ledgerID] = r.text
+	}
+	if !strings.Contains(got["led-1"], "✓ landed, cleanup failed") {
+		t.Errorf("the cleanup-failed slice's ledger run: %q", got["led-1"])
+	}
+	if !strings.Contains(got["led-2"], "✓ landed") || strings.Contains(got["led-2"], "cleanup failed") {
+		t.Errorf("a landed slice whose cleanup worked: %q", got["led-2"])
 	}
 }
 

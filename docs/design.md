@@ -535,7 +535,9 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   `slicer note` on the slice (`Human checks at approval (ID):` and one
   `- ticked: TEXT` or `- later: TEXT` line per check) and goes on to the finish
   step. This note replaces the human-check adj records. A note that fails
-  refuses the approval, so no mark is lost; the owner approves again.
+  refuses the approval, so no mark is lost; the owner approves again. A
+  second approval, after a landing fix round (S119), does not write the note
+  again (S148).
   `Fix(note)` is the owner's third action beside `Approve` and `Reject`: it
   starts an implementer fix round with the note as `owner` feedback, resumed
   as any fix round is, then the checks and the gate, with no review in
@@ -1001,6 +1003,9 @@ in JSON mode.
 once the fix round, the checks and the gate have ended and the run rests
 again; `run.check` takes `{run,check,state}` (the one-based human check;
 `state` `ticked`, `later` or empty to reopen) and returns the run record.
+`run.approve` returns the run record once the run rests again (S148): the TUI
+reads `landed_at` (landed) or `state` `awaiting-approval` with `land_fixes` above
+0 (a blocked landing went to its fix round) from it, with no new field.
 `run.approve` fails with the open checks named while any is open. The engine
 run rows of a run that awaits approval carry `card` (`state.md`). There is no
 `ork` command for fix or check yet; `ork approve` on a run with human checks

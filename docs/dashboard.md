@@ -455,7 +455,8 @@ the text column, falling back to a shorter indent when needed to fit.
    longer on the row, which shows the role, the model and the task line instead.
 3. **Recent (proposed):** ended ledger runs within the last hour, newest
    first. Rows show `✓ pass` for pass, `✗ fail` for fail, and `~ stopped` for
-   any other outcome, then items, run time,
+   any other outcome (`✓ landed` for a pass that ork landed, `✓ landed, cleanup
+   failed` when its cleanup failed; S148), then items, run time,
    `ended N ago`, and counts such as `impl 1  review 1  gate 0`. Empty state: `none`.
    Rows follow Running in cursor order. Enter opens a read-only ledger pane.
 4. **Ready to land:** committed engine runs that ork did not land, plus a landed run
@@ -486,9 +487,13 @@ the text column, falling back to a shorter indent when needed to fit.
    its ledger run reads `✓ landed` in Recent instead of `✓ pass`. A run that ork
    landed but could not clean up stays here. Its row reads `S11  s11  landed
    cleanup failed`; the line under it is the reason (the failed git command and
-   its error), which is not one of the copy lines, and there is no landing
-   command. Its detail reads `c finishes the cleanup: git -C P worktree remove W;
-   git -C P branch -d B`, and `c` runs it (and clears the reason).
+   its error), clipped to one dim line and not one of the copy lines, and there
+   is no landing command. Its detail on the selected row holds the reason in full
+   (`landed; cleanup failed at git ...: ERROR`), wrapped to the pane. When the
+   run's merge state is known to be merged, a second part reads `c finishes the
+   cleanup: git -C P worktree remove W; git -C P branch -d B`, and `c` runs it
+   (and clears the reason). With the merge state unknown the part is left out,
+   because `c` refuses a run that is not known to be merged.
    After S95 a successful cleanup marks the run cleaned, and a cleaned run
    leaves this list, with its landing and render lines, whether ork landed it or
    `slicer land` did. A second `c` on it is refused ("already cleaned up").
@@ -586,7 +591,13 @@ of their own, so they are never cut. In the
 pane, on the approval card, `a` still approves at once; the card's own line says
 the same (below). Only `y` confirms; `n`, `esc` and Enter cancel. The
 confirmation keeps its original run target while snapshots change. Approve
-shows `ork approve RUN` as pending, then its result. Calls run asynchronously;
+shows `landing ITEM: pending` (S148), then what happened: `landed ITEM` after a
+landing, or `landing ITEM blocked; fix round done, awaiting approval` when the
+landing was blocked: the reply comes after the fix round has ended and the run
+waits for approval again. Any other result (a pause, a stop) reads `ork approve
+RUN: done`, and a failure keeps the command with its error. The pane's approval
+card says the same. The TUI reads the outcome from the run record in the
+`run.approve` reply (`landed_at`, `land_fixes`, `state`). Calls run asynchronously;
 every completed call refreshes the project's snapshot, and a failed call shows
 its code and message verbatim in the detail area. Actions on other runs remain
 available while a call is pending. Stop can interrupt a pending approve or
@@ -771,7 +782,8 @@ pending`) and the owner presses again. A mark says what it does in words, while
 it runs and when it is done: `marking check 2 done` then `check 2 marked done`,
 `marking check 2 for later` then `check 2 marked for later`, and `reopening
 check 2` then `check 2 reopened`. When ork approves, it records the marks as a slicer
-note on the slice, which replaces the human-check adj records. A card needs the
+note on the slice, which replaces the human-check adj records. It writes the
+note once: a second approval, after a landing fix round, does not write it again. A card needs the
 owner to mark checks in the TUI; `ork approve` cannot.
 
 `F` (shift-f) opens the fix note. It is a capital because `f` files later

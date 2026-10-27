@@ -45,6 +45,11 @@ func (l *cardLive) Render(_ context.Context, run, name string) (string, error) {
 	return text, nil
 }
 
+func (l *cardLive) ApproveRecord(ctx context.Context, run string) (runrec.Record, error) {
+	l.approves++
+	return l.actionLive.ApproveRecord(ctx, run)
+}
+
 func (l *cardLive) Approve(ctx context.Context, run string) error {
 	l.approves++
 	return l.actionLive.Approve(ctx, run)
