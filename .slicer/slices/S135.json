@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": "Re-anchor from the code after S117. Tests first with the engine harness fakes."
+      "body": "Owner decisions 2026-10-27 (interactive questions). (4) Keep Pending single: store the sibling round's owner question on the run record as a queued list; after the first answer the run pauses again on the next queued question (persist it in the run file; old files without it still load). (5) planRun: when RelayRules fails, plan without a ui role (UI and spec-check rows treated as absent) and carry a note on the plan saying why; RecommendRoles failing stays an error. Items (1) to (3): cancel the sibling round when one stops the slice; one activity ring per role; a lost pause names every lost role. Re-anchor from the code after S117 (round.go:315 is the sibling-pause guard; engine.go:471 pause; runs.go:321 planRun). Tests first with the engine harness fakes. If the queued list touches the TUI Questions tab or an RPC shape, keep it minimal and say so in the report (UI pass runs then)."
     },
     {
       "heading": "Check",
