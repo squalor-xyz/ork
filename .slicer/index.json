@@ -5061,7 +5061,7 @@
       "id": "S122",
       "title": "Probe Codex --add-dir and writable_roots; mark them unverified until then",
       "short_title": "Probe Codex --add-dir and writable_roots; mark them unverified until then",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -5071,6 +5071,17 @@
           "text": "**2026-10-27** — Spec preflight 2026-10-27: owner chose \"You run it\". Probes 11 and 12 ran with gpt-6.1-sol low in a scratch repo; both passed (temp and worktree writable, outside denied). Docs cite them; nothing is marked unverified. Anchors fixed to design.md:733-741.",
           "created_at": "2026-10-27T10:49:03Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "198fac3f-2f0b-4461-810c-2ccaca5069f9",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial run 11: owner questions 1 before / 0 during; stalls 0; fix rounds 1 (doc wording); merge conflicts 0; about 12 min after the probes; compactions 1 (before this slice).",
+          "created_at": "2026-10-27T10:53:41Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -5094,7 +5105,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

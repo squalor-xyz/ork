@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-158 items · — 51 · done 102 · retired 5
+158 items · — 50 · done 103 · retired 5
 
 ## v1.1
 
@@ -184,7 +184,7 @@
 | 127 | [S95](slices/S95.md) | Cleanup finishes cleanly: mark the run cleaned, retry after a half-done cleanup, steady merge state | S | 2 |  | discovered from S63 | done |
 | 128 | [S96](slices/S96.md) | First run opens blank: no seeded projects; a TUI welcome adds them | M | 2 |  | discovered from S03 | done |
 | 129 | [S97](slices/S97.md) | Running rows and the run pane show the relay board's information: pipeline, round, last heard, waiting steps, recent runs | M | 2 |  | discovered from S55 | done |
-| 130 | [S122](slices/S122.md) | Probe Codex --add-dir and writable_roots; mark them unverified until then | S | 1 |  | discovered from S87 | — |
+| 130 | [S122](slices/S122.md) | Probe Codex --add-dir and writable_roots; mark them unverified until then | S | 1 |  | discovered from S87 | done |
 | 131 | [S124](slices/S124.md) | Worktree and branch patterns can lowercase the item id | S | 1 |  | discovered from S31 | — |
 | 132 | [S133](slices/S133.md) | Codex out of credits is a classified limit, so the role falls back | S | 1 |  | discovered from S127 | — |
 | 133 | [S134](slices/S134.md) | Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap | S | 1 |  | discovered from S127 | — |

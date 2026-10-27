@@ -736,11 +736,16 @@ probes 05 to 07 ran on 0.164.0), grok 1.0.62. Grok has no successful run, so mos
   `read-only` for read-only roles. Resume runs from the worktree as
   `codex exec resume ID -m MODEL --json -c model_reasoning_effort=LEVEL
   -c 'sandbox_mode="MODE"' PROMPT`, with no `-s` or `-C` (S89 probe 08).
-  For write roles, a fresh round adds `--add-dir TEMP` after `-C WORKTREE`.
+  For write roles, a fresh round adds `--add-dir TEMP` after `-C WORKTREE`
+  (`testdata/vendors/codex/11-fresh-add-dir.stdout`).
   A resumed write role adds
   `-c 'sandbox_workspace_write.writable_roots=["TEMP","WORKTREE"]'`
-  after the sandbox mode setting. If no worktree is set, the array contains
-  only TEMP. Read-only roles get neither extra writable-root setting.
+  after the sandbox mode setting
+  (`testdata/vendors/codex/12-resume-writable-roots.stdout`). Both probes
+  wrote to the temp directory and the worktree (command events, exit 0).
+  The model reported the write outside them denied with "operation not
+  permitted"; that write has no command event, and `.repo-status` is empty.
+  If no worktree is set, the array contains only TEMP. Read-only roles get neither extra writable-root setting.
   When the role has a temp directory, its environment sets `GOCACHE` to
   `TEMP/gocache`, replacing any inherited value and keeping other entries.
   JSONL thread, item and turn events supply the session, last agent
