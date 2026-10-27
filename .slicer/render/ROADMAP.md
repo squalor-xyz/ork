@@ -213,7 +213,7 @@
 | 156 | S157 | S73 later: next * writes | S | 1 |  | discovered from S73 | — |
 | 157 | S158 | S71 later notes | S | 1 |  | discovered from S71 | — |
 | 158 | S159 | S135 later notes | S | 1 |  | discovered from S135 | — |
-| 159 | [S160](slices/S160.md) | Add key beyond Welcome | S | 1 |  | discovered from S96 | — |
+| 159 | [S160](slices/S160.md) | Add key beyond Welcome | S | 2 |  | discovered from S96 | — |
 
 ---
 
