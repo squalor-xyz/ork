@@ -1991,3 +1991,8 @@
 {"when": "2026-10-27T12:00:52Z", "item": "S137", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-27T12:00:52Z", "item": "S137", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-27T12:00:52Z", "item": "S137", "action": "set", "from": "", "to": "", "note": "size S→M"}
+{"when": "2026-10-27T12:15:39Z", "item": "S86", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-27T12:27:58Z", "item": "S86", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-27T12:28:08Z", "item": "S86", "action": "note", "from": "", "to": "", "note": "Review PASS and UI pass PASS reported by the owner. Applied ", "by": "Jon R"}
+{"when": "2026-10-27T12:29:21Z", "item": "S86", "action": "status", "from": "started", "to": "done", "note": "Waves e is ignored outside Waves with no status; the Waves lineup column shows the effective budgets (a 0 override shows the project default). Review PASS, UI pass PASS, gate PASS (run-20261027-121521-7e70).", "by": "Jon R"}
+{"when": "2026-10-27T12:29:21Z", "item": "S86", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 14, S86): 0 owner questions, no sta", "by": "Jon R"}

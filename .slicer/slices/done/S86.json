@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/tui/lineup.go` and `internal/tui/model.go`: return nil with no status unless the view is Waves; show the project default for a 0 budget.\n- `internal/tui/lineup_test.go`: tests for both."
+      "body": "- `internal/tui/lineup.go` and `internal/tui/model.go`: return nil with no status unless the view is Waves; show the project default for a 0 budget.\n- `internal/tui/lineup_test.go`: tests for both.\n- `internal/tui/waves.go`: draw the effective budgets in the Waves lineup summary.\n- `docs/dashboard.md`: document effective budgets and zero overrides."
     },
     {
       "heading": "Failing tests",

@@ -49,6 +49,9 @@ func (m *Model) lineupRefusal() (string, bool) {
 }
 
 func (m *Model) openLineup() tea.Cmd {
+	if m.view != wavesView || m.showHelp {
+		return nil
+	}
 	if status, refused := m.lineupRefusal(); refused {
 		m.actionStatus = status
 		return nil

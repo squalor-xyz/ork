@@ -956,8 +956,9 @@ default, following the daemon's budget semantics.
 Launch waits for the replan. Errors show verbatim and keep the old plan
 and overrides. `esc` discards the editor's changes, including custom fields.
 The editor marks roles whose chains differ from its starting plan with `*`.
-The Waves Lineup column marks overridden roles with `*` and shows saved
-budget overrides as `budgets*: MIN min, TOKENS tokens`.
+The Waves Lineup column marks overridden roles with `*`. When budgets are
+overridden, it shows the effective budgets as `budgets*: MIN min, TOKENS tokens`;
+a zero override shows the project default.
 Edits apply to that run only and travel with that item's confirmed plan;
 the matrix is unchanged (`ui.lineup-editor`, `lineup.override-scope`).
 

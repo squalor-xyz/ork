@@ -1220,10 +1220,33 @@
       "id": "S86",
       "title": "Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default",
       "short_title": "Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "1b910861-6b82-49fb-a345-54e940522d30",
+          "kind": "",
+          "text": "**2026-10-27** — Review PASS and UI pass PASS reported by the owner. Applied the UI documentation correction: the Waves lineup shows effective budgets when overridden, and a zero override shows the project default. Added internal/tui/waves.go and docs/dashboard.md to Files. Leave for later: (a) a zero override with a zero project default reads like zero budget rather than no limit; (b) an override equal to the default is stored and starred. Keep lineupRefusals view check: the hint in internal/tui/keys.go still uses it. No finish step was run by the implementer.",
+          "created_at": "2026-10-27T12:28:08Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "daec3b68-3692-4db0-84df-3e5416c8c97d",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial (run 14, S86): 0 owner questions, no stalls, 1 doc-only fix round, no merge conflicts, ran in parallel with S137; Codex sol/medium implementer, opus reviewer + UI pass + gate.",
+          "created_at": "2026-10-27T12:29:21Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1241,7 +1264,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
