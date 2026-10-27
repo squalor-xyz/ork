@@ -5,6 +5,7 @@
                            │[1;7;97;44m  +  ork  engine  S22  awaiting approval  2m  owner action  2 of 6 st...[m
                            │    [1mRun engine[m
                            │    owner action
+                           │
                            │    [......]
                            │    [90mimplementer[m > [90mreviewer[m > [90mgate[m
                            │    [90m. implementer waiting[m
@@ -23,8 +24,7 @@
                            │  [90mnothing running[m
                            │
                            │[1;36mRecent[m
-                           │  [90mnone[m
-                           │[90m  +3 more lines[m
+                           │[90m  +4 more lines[m
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │ a [2mapprove[m; o [2manswer[m; f [2mfile slice[m; pgup/pgdown [2mline[m; esc [2mclose pane[m
                            │ 1 project | refreshed 16:42:00

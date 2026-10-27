@@ -5,6 +5,7 @@
                            │[1;7;97;44m  ?  ork  engine  S22  paused  2m  owner action  2 of 6 steps running   [m
                            │    [1mRun engine[m
                            │    owner action
+                           │
                            │    [90m[......][m
                            │    [90mimplementer[m > [90mreviewer[m > [90mgate[m
                            │
@@ -20,7 +21,6 @@
                            │
                            │[1;36mReady to land[m
                            │  [90mnone[m
-                           │
                            │
                            │
                            │

@@ -399,6 +399,7 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 				}
 				// A tracking that the run's next state already dropped stays dropped.
 				m.pane.answerDone, m.pane.answerNotice = true, msg.message
+				m.pane.answerStatus = m.actionStatus // the result replaced the status; tracking writes over it
 				m.refreshAnswerStatus()
 			default:
 				m.actionStatus = msg.action.doneText()
@@ -1325,6 +1326,8 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 		// The call blocks until the run rests, so follow the snapshots meanwhile.
 		m.pane.answered, m.pane.answerDone = true, false
 		m.pane.answerState, m.pane.answerNotice = "", ""
+		m.pane.answerStatus = m.actionStatus
+		m.pane.answerWait, m.pane.answerKey = m.paneRunQuestion()
 		m.refreshAnswerStatus()
 	}
 	return func() tea.Msg {

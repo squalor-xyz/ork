@@ -6,6 +6,7 @@
                            │    [1mRun engine[m
                            │    The storage migration is blocked.
                            │    Keep the existing data intact.
+                           │
                            │    [90m[......][m
                            │    [90mimplementer[m > [90mreviewer[m > [90mgate[m
                            │
@@ -23,7 +24,6 @@
                            │
                            │[1;36mReady to land[m
                            │  [90mnone[m
-                           │
                            │
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │ 1-2 [2mpick[m; t [2mfree text[m; pgup/pgdown [2mline[m; esc [2mclose pane[m

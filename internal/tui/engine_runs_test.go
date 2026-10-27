@@ -735,11 +735,56 @@ func TestBudgetPausedRowAndPane(t *testing.T) {
 	h.m.pane = &runPane{run: s.EngineRuns[0].ID, project: "ork"}
 	h.m.cfg.Live = &actionLive{src: h.src}
 	pane := sgr.ReplaceAllString(strings.Join(h.m.paneLines(200, 40, ""), "\n"), "")
-	if !strings.Contains(pane, s.EngineRuns[0].Wait) || !strings.Contains(wideHint(h), "t retry") {
+	reason := strings.TrimSuffix(s.EngineRuns[0].Wait, "; next: ork retry "+s.EngineRuns[0].ID)
+	if !strings.Contains(pane, reason) || strings.Contains(pane, "next:") || !strings.Contains(wideHint(h), "t retry") {
 		t.Fatalf("budget pane missing reason or grant hint: %s", pane)
 	}
 	narrow := sgr.ReplaceAllString(strings.Join(h.m.paneLines(30, 40, ""), "\n"), "")
 	if !strings.Contains(sgr.ReplaceAllString(h.m.hintLine(30), ""), "esc close pane") {
 		t.Fatalf("narrow budget pane missing close hint: %s", narrow)
+	}
+}
+
+// A wrapped detail line breaks at a space and drops the whole run of spaces
+// there, so a continuation line starts at its text (S134).
+func TestDetailStripContinuationHasNoLeadingSpace(t *testing.T) {
+	rows := map[string]ovRow{
+		"cells": {detailCells: []string{"S22  implementer  waiting  on  the  reviewer", "last heard 1m ago"}},
+		"text":  {text: "S22  implementer  waiting  on  the  reviewer  last heard 1m ago"},
+	}
+	for name, r := range rows {
+		t.Run(name, func(t *testing.T) {
+			lines := detailLines(r, 24, "|")
+			if len(lines) < 3 {
+				t.Fatalf("the strip must wrap:\n%s", strings.Join(lines, "\n"))
+			}
+			for i, line := range lines {
+				if !strings.HasPrefix(line, indent) || strings.HasPrefix(line, indent+" ") {
+					t.Errorf("line %d starts with a stray space: %q", i, line)
+				}
+			}
+		})
+	}
+}
+
+// On a paused run the pane keeps the resume key to the last: the reason no
+// longer carries the CLI form, so the hint line must name the key even at
+// 80x24, where the scroll keys go first (S134).
+func TestPausedPaneHintKeepsRetryAt80x24(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	s := engineSnapshot(t, "paused", "ledger")
+	s.EngineRuns[0].Pending = "budget"
+	s.EngineRuns[0].Wait = "token budget 9000 reached (9100 used); next: ork retry " + s.EngineRuns[0].ID
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	h.m.pane = &runPane{run: s.EngineRuns[0].ID, project: "ork"}
+	h.m.cfg.Live = &actionLive{src: h.src}
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	v := plainView(h.m)
+	if !strings.Contains(v, "t retry") || strings.Contains(v, "next: ork") {
+		t.Fatalf("the 80x24 budget pane must show t retry in the hint:\n%s", v)
+	}
+	if !strings.Contains(v, "esc close pane") {
+		t.Fatalf("the way out must stay:\n%s", v)
 	}
 }

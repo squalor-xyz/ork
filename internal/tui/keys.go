@@ -152,6 +152,7 @@ const (
 	dropPage   = 10
 	dropAppr   = 9
 	dropClean  = 8
+	dropResume = 6 // the pane's retry on a paused run: it outlasts the scroll keys (S134)
 	dropRow    = 5
 	dropPinned = 0
 )
@@ -386,7 +387,11 @@ func (l *hintList) rowActions(m *Model, r ovRow, ok, cleanup bool) {
 	}
 	l.add(dropAppr, offer(allowed("approve"), k.Approve, "a", "approve"))
 	l.add(dropStop, offer(allowed("stop"), k.Stop, "x", "stop"))
-	l.add(dropRetry, offer(allowed("retry"), k.Retry, "t", "retry"))
+	retry := dropRetry
+	if !cleanup && r.state == "paused" {
+		retry = dropResume // a pane: the reason no longer carries the CLI form
+	}
+	l.add(retry, offer(allowed("retry"), k.Retry, "t", "retry"))
 	if cleanup {
 		l.add(dropClean, offer(allowed("cleanup"), k.Cleanup, "c", "clean up"))
 	}

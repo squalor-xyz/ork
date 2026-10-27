@@ -5473,10 +5473,33 @@
       "id": "S134",
       "title": "Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap",
       "short_title": "Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "f27507ea-0b31-4ae3-b8d9-e8806bf8f158",
+          "kind": "",
+          "text": "**2026-10-27** — S134 later notes (2026-10-27, UI pass): (1) the wrapText change in internal/tui/overview.go (wrapText) is global: every caller now drops the whole run of spaces at an added break, not only the detail strip; a line that relies on a leading double space after a break would lose it. (2) docs/dashboard.md has long unwrapped lines in the pane-follow paragraph (about line 614) and the answer-tracking paragraph (about line 650); wrap them in a docs pass.",
+          "created_at": "2026-10-27T16:51:33Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "7c574770-c08e-4def-8369-905bca9792d1",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial (run 20, S134): 2 owner questions during the preflight/fix round, no stalls, 1 fix round, no merge conflicts so far, ran in parallel with S124 and S136; implementer Claude sonnet-high fallback (Codex out of credits), opus reviewer, UI pass and gate.",
+          "created_at": "2026-10-27T16:59:26Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -5494,7 +5517,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

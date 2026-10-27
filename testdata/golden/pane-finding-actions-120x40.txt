@@ -5,6 +5,7 @@ ork  ?help                 │ Overview │ Questions │ Waves │ Roadmap │ 
                            │  x  ork  engine  S22  stopped  owner action  2 of 6 steps running                          
                            │    Run engine
                            │    owner action
+                           │
                            │    [......]
                            │    implementer > reviewer > gate
                            │
@@ -33,7 +34,6 @@ ork  ?help                 │ Overview │ Questions │ Waves │ Roadmap │ 
                            │
                            │Ready to land
                            │  none
-                           │
                            │
                            │────────────────────────────────────────────────────────────────────────────────────────────
                            │ o answer; f file slice; pgup/pgdown line; ctrl+d/u half page; esc close pane

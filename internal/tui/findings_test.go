@@ -529,3 +529,17 @@ func TestFindingPaneFallsBackToFirstMatchingRow(t *testing.T) {
 		t.Fatalf("fallback anchor %d, first match %d", got, first)
 	}
 }
+
+// The blank line under a reason needs room for the progress line after it; on
+// a short pane the blank goes and the progress line stays (S134).
+func TestShortPaneKeepsProgressLineBeforeSeparator(t *testing.T) {
+	h := findingsHarness(t, "stopped", laterOne)
+	fs := []source.EngineFinding{laterOne}
+	for n := 0; n < 8; n++ {
+		fs = append(fs, source.EngineFinding{N: n + 2, Kind: runrec.FindingOwner, Title: fmt.Sprintf("Owner %d?", n), Ask: ownerNote.Ask})
+	}
+	h.m.byName["ork"].snap.EngineRuns[0].Findings = fs
+	if view := h.at(80, 24); !strings.Contains(view, "[......]") {
+		t.Fatalf("the 80x24 pane lost its progress line:\n%s", view)
+	}
+}
