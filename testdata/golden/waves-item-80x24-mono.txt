@@ -1,7 +1,7 @@
 [1mork[m  ?help         │ Overview[2m │ [mQuestions[2m │ [m[1mWaves[m[2m │ [mRoadmap[2m │ [mDecisions
 [2m  Running        0 [m│[2m────────────────────────────────────────────────────────────[m
 [2m0[m Needs you      0 │[1mItem A  (esc returns)[m
-[1;7m> ork              [m│[1mShared engine file[m
+[1;7m1>ork              [m│[1mShared engine file[m
 [2m2[m other            │  Shares files with S65
                    │    internal/engine/fixtures/a long shared path with
                    │    spaces/round-details.go

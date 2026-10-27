@@ -1,7 +1,7 @@
 [1mork[m  ?help                 │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
 [2m0[m Needs you              1 │  [1mRemove project[m
-[1;7m> alpha                    [m│
+[1;7m1>alpha                    [m│
                            │  ork projects rm 'alpha'? [y/N] (Enter is No)
                            │  [2mFiles on disk are untouched; past runs stay in a read-only removed[m
                            │  [2mgroup.[m

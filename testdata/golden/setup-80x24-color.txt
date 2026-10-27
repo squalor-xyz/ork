@@ -3,7 +3,7 @@
 [90m0[m Needs you      3 │[1;36mNeeds you 0[m
 [90m1[m slicer         2 │  [90mnothing needs you[m
 [90m2[m adjudicate       │
-[1;7;2;97;44m> Dat... no slicer [m│[1;36mRunning 0[m
+[1;7;2;97;44m3>Dat... no slicer [m│[1;36mRunning 0[m
 [90m4[m agents           │  [90mnothing running[m
                    │
                    │[1;36mRecent[m

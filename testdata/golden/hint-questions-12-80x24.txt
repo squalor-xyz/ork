@@ -1,6 +1,6 @@
 [1mork[m  ?help         │ [1mOverview[m[2m │ [mQuestions 12[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
 [2m  Running        0 [m│[2m────────────────────────────────────────────────────────────[m
-[1;7m> Needs you     12 [m│[1mNeeds you 12[m
+[1;7m0>Needs you     12 [m│[1mNeeds you 12[m
 [2m1[m zeta          12 │  [1mDecisions 12[m
                    │[1;7m  ?  zeta  #1   k.q  question 1                             [m
                    │  [1m?[m  zeta  #2   k.q  question 2

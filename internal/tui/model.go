@@ -142,6 +142,7 @@ type Model struct {
 	filter        string
 	focusing      bool
 	showHelp      bool
+	pageTop       pagerTop
 	width         int
 	height        int
 	treeFrame     int
@@ -578,6 +579,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			}
 		}
 		return nil
+	case m.showHelp && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev):
+		// The cursor is hidden under the help: the line keys leave it where it is.
+		return nil
 	case key.Matches(msg, m.keys.First, m.keys.Last, m.keys.PageDown, m.keys.PageUp, m.keys.NextGroup, m.keys.PrevGroup):
 		m.moveRows(msg)
 	case m.view == questionsView && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev):
@@ -711,41 +715,6 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	return nil
 }
 
-// pageRows is how far pgdown and pgup move the cursor: the number of rows the
-// body draws on screen now. It draws the screen at the cursor, then at each
-// neighbouring row to find which rows start inside the window, so the section
-// headings, blank lines and multi-line rows of every view are counted.
-func (m *Model) pageRows() int {
-	cur, n := m.rowCursor()
-	if cur == nil || n == 0 {
-		return 1
-	}
-	saved := *cur
-	defer func() { *cur = saved }()
-	at := clampCursor(saved, n)
-	line := func(row int) int {
-		*cur = row
-		m.screen()
-		return m.drawn.sel
-	}
-	line(at)
-	lo, hi := m.drawn.lo, m.drawn.hi
-	rows := 0
-	for row := at; row < n; row++ {
-		if l := line(row); l < lo || l >= hi {
-			break
-		}
-		rows++
-	}
-	for row := at - 1; row >= 0; row-- {
-		if l := line(row); l < lo || l >= hi {
-			break
-		}
-		rows++
-	}
-	return max(rows, 1)
-}
-
 // rowCursor is the cursor the row keys move in the current view and the number
 // of rows it walks. It is nil when an open pane holds the view.
 func (m *Model) rowCursor() (*int, int) {
@@ -768,9 +737,37 @@ func (m *Model) rowCursor() (*int, int) {
 	return &m.cursor, len(m.cursorRows())
 }
 
-// groupStarts lists the cursor rows that start a group on the Overview: each
-// Needs you group, then the Running, Recent and Ready sections.
+// groupStarts lists the cursor rows that start a group: on the Overview each
+// Needs you group, then the Running, Recent and Ready sections; on the
+// Roadmap each run of items with one pass; on Waves each wave, then Unplaced.
 func (m *Model) groupStarts() []int {
+	switch m.view {
+	case roadmapView:
+		var starts []int
+		for i, it := range m.roadmapItems() {
+			if i == 0 || it.Fields.Pass != m.roadmapItems()[i-1].Fields.Pass {
+				starts = append(starts, i)
+			}
+		}
+		return starts
+	case wavesView:
+		w := m.waves
+		if w == nil || w.suggest == nil {
+			return nil
+		}
+		var starts []int
+		next := 0
+		for _, wave := range w.suggest.Waves[:w.visibleWaveCount()] {
+			if len(wave.Items) > 0 {
+				starts = append(starts, next)
+			}
+			next += len(wave.Items)
+		}
+		if len(w.suggest.Unplaced) > 0 {
+			starts = append(starts, next)
+		}
+		return starts
+	}
 	if m.view != 0 {
 		return nil
 	}
@@ -802,8 +799,12 @@ func (m *Model) groupStarts() []int {
 
 // moveRows handles the first, last, page and group keys. They move the row
 // cursor of the view. With a decision open on Questions or Decisions the page
-// keys scroll it, and the others do nothing.
+// keys scroll it, and the others do nothing. With the help open they do
+// nothing: the cursor is hidden under it.
 func (m *Model) moveRows(msg tea.KeyPressMsg) {
+	if m.showHelp {
+		return
+	}
 	if m.decisionPane != nil && (m.view == questionsView || m.view == decisionsView) {
 		switch {
 		case key.Matches(msg, m.keys.PageDown):
@@ -828,9 +829,9 @@ func (m *Model) moveRows(msg tea.KeyPressMsg) {
 	case key.Matches(msg, m.keys.Last):
 		next = n - 1
 	case key.Matches(msg, m.keys.PageDown):
-		next = min(at+m.pageRows(), n-1)
+		next = m.pageDown(at, n)
 	case key.Matches(msg, m.keys.PageUp):
-		next = max(at-m.pageRows(), 0)
+		next = m.pageUp(at)
 	case key.Matches(msg, m.keys.NextGroup):
 		for _, start := range m.groupStarts() {
 			if start > at {
@@ -849,6 +850,48 @@ func (m *Model) moveRows(msg tea.KeyPressMsg) {
 		m.actionStatus = ""
 	}
 	*cur = next
+}
+
+// pagerTop holds the window of a page down: the body line it starts at, kept
+// while the cursor stays inside it (S151). A key that moves the cursor out of
+// the window drops it, and the window follows the cursor again.
+type pagerTop struct {
+	view, active, line int
+	on                 bool
+}
+
+// pageDown is the row a pgdown puts the cursor on. The page keys scroll like
+// less ctrl-f: the window starts at the first row below the one on screen, and
+// the cursor goes to that row. It draws the screen once, for the rows it shows.
+func (m *Model) pageDown(at, n int) int {
+	m.screen()
+	d := m.drawn
+	m.pageTop = pagerTop{}
+	if len(d.rows) != n {
+		return min(at+1, n-1)
+	}
+	for row, line := range d.rows {
+		if line >= d.hi {
+			row = max(row, at)
+			m.pageTop = pagerTop{view: m.view, active: m.active, line: d.rows[row], on: true}
+			return row
+		}
+	}
+	return n - 1 // every row is on screen: the end
+}
+
+// pageUp is the mirror: the cursor goes to the last row above the window, which
+// then ends the window.
+func (m *Model) pageUp(at int) int {
+	m.screen()
+	d := m.drawn
+	m.pageTop = pagerTop{}
+	for row := len(d.rows) - 1; row >= 0; row-- {
+		if d.rows[row] < d.lo {
+			return min(row, at)
+		}
+	}
+	return 0
 }
 
 // switchTo selects registry project i, or an aggregate entry below zero, and

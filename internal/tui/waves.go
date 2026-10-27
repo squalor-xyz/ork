@@ -614,6 +614,7 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 			}
 		}
 		selected := row == clampCursor(w.cursor, len(rows))
+		out.rows = append(out.rows, len(out.body))
 		if selected {
 			out.sel = len(out.body)
 		}

@@ -70,6 +70,7 @@ func (m *Model) screen() string {
 	var body, detail, footer []string
 	bodyH, start := max(h-4, 1), 0
 	m.drawn = drawnRows{sel: -1}
+	var rowStarts []int // the body line each row starts on, for the page keys
 	selectedLine, selExtra := -1, 0
 	overviewBody := false
 	collapse := false // a render on show takes the whole body (S121, *proposed*)
@@ -113,11 +114,13 @@ func (m *Model) screen() string {
 		}
 		body = rv.body
 		selectedLine = rv.sel
+		rowStarts = rv.rows
 	} else {
 		// Detail shares the height with its rule, the body and screen chrome.
 		overviewBody = true
 		ov := m.overview(mainW)
 		body, detail = ov.body, ov.detail
+		rowStarts = ov.rows
 		status := m.actionStatus
 		if m.confirm != nil {
 			status = m.confirm.promptWidth(max(mainW-len(indent), 1))
@@ -137,7 +140,9 @@ func (m *Model) screen() string {
 			// the pane give way, so the pane leaves its row for the detail.
 			if collapse = m.renderOn() > 0; collapse {
 				detail = m.paneLines(mainW, max(h-4, 1), status)
+				rowStarts = nil
 			} else {
+				rowStarts = nil // the pane's lines move the rows below it
 				// Four columns in, the pane sits inside its row (S106).
 				pane := m.paneLinesAs(max(mainW-len(indent), 1), paneHeight, status, true)
 				for i := range pane {
@@ -212,12 +217,30 @@ func (m *Model) screen() string {
 		}
 	}
 
+	// The last row brings the lines after it into view while they fit, so the
+	// sections below it, empty or not, can be scrolled to (S151).
+	if overviewBody && m.pane == nil && len(rowStarts) > 0 && rowLine == rowStarts[len(rowStarts)-1] {
+		if trailing := len(body) - 1 - rowLine; trailing > 0 && bodyH >= trailing+2 {
+			selectedLine = max(selectedLine, len(body)-1)
+		}
+	}
 	if selectedLine >= 0 {
 		start = windowStart(selectedLine, len(body), bodyH)
+		if top := m.pageTop; top.on {
+			// A page down left the window at its first unseen row. Keep it while
+			// the cursor is inside; the last page ends flush with the body.
+			from := min(top.line, windowStart(len(body)-1, len(body), bodyH))
+			hi, _, _ := span(len(body), from, bodyH)
+			if top.view == m.view && top.active == m.active && m.pane == nil && !m.showHelp && bodyH > 0 && rowLine >= from && selectedLine < hi {
+				start = from
+			} else {
+				m.pageTop = pagerTop{}
+			}
+		}
 	}
 	if bodyH > 0 {
 		hi, _, _ := span(len(body), start, bodyH)
-		m.drawn = drawnRows{lo: start, hi: hi, sel: rowLine}
+		m.drawn = drawnRows{lo: start, hi: hi, sel: rowLine, rows: rowStarts}
 		body = window(body, start, bodyH, th)
 	}
 	_, horizontal := th.rules(m.cfg.ASCII)
@@ -258,7 +281,10 @@ func (m *Model) screen() string {
 
 // drawnRows is the window of body lines the last screen drew, lines lo up to
 // hi, and the body line of the row under the cursor (-1 when none is drawn).
-type drawnRows struct{ lo, hi, sel int }
+type drawnRows struct {
+	lo, hi, sel int
+	rows        []int // the body line each row starts on; nil when the screen has no row list
+}
 
 func (m *Model) sidebar(w, h int) []string {
 	header := m.cfg.Theme.Title.Render("ork")
@@ -334,7 +360,8 @@ func (m *Model) sidebar(w, h int) []string {
 		label = clip(label, max(w-4-lipgloss.Width(badge), 1))
 		label += strings.Repeat(" ", max(w-4-lipgloss.Width(label)-lipgloss.Width(badge), 0)) + badge + marker
 		// A number takes the selection arrow's place on a project row, and 0
-		// on Needs you. A dim row is dimmed whole, so its number is not styled
+		// on Needs you; the selected row shows the number, then the arrow
+		// (1>ork). A dim row is dimmed whole, so its number is not styled
 		// twice.
 		prefix := "  "
 		number := -1 // the Running entry has none
@@ -351,6 +378,9 @@ func (m *Model) sidebar(w, h int) []string {
 		}
 		if idx == m.active {
 			prefix = "> "
+			if number >= 0 {
+				prefix = strconv.Itoa(number) + ">"
+			}
 		}
 		label = prefix + label
 		switch {
@@ -652,7 +682,11 @@ func (m *Model) helpLines(w, bodyH int) []string {
 				}
 				lines = append(lines, clip("o answer owner finding (run pane)", w))
 			}
-			lines = append(lines, clip(h.Key+" "+h.Desc, w))
+			desc := h.Desc
+			if h == m.keys.PageDown.Help() && m.view == roadmapView {
+				desc = "page rows" // the Roadmap item pane does not scroll
+			}
+			lines = append(lines, clip(h.Key+" "+desc, w))
 		}
 	}
 	if m.view == decisionsView {

@@ -1,6 +1,6 @@
 [1mork[m [90mdev[m  ?help             │ [1;36mOverview[m[90m │ [mQuestions 1[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
 [90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[m
-[1;7;97;44m> Needs you              3 [m│[1;36mNeeds you 3[m
+[1;7;97;44m0>Needs you              3 [m│[1;36mNeeds you 3[m
 [90m1[m slicer                 2 │  [1mDecisions 1[m
 [90m2[m adjudicate               │[1;7;97;44m  ?  slicer  #11  ui.slicer-tui  Reuse slicer tui?                                                                                  [m
 [90m3 DataBall       no slicer [m│  [1mHeld 1[m

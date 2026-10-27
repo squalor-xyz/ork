@@ -232,12 +232,16 @@ next:
 	return n
 }
 
-// activeTab returns the name inside the bracketed tab.
+// selectedRowRE is the arrow that starts the selected sidebar row: after its
+// number when it has one (1>ork), alone when it has none (> Running).
+var selectedRowRE = regexp.MustCompile(`^(?:[0-9]>|> )`)
+
+// activeTab returns the name of the selected sidebar row.
 func activeTab(t *testing.T, view string) string {
 	t.Helper()
 	for _, line := range strings.Split(view, "\n") {
-		if strings.HasPrefix(line, "> ") {
-			return strings.Fields(strings.TrimPrefix(line, "> "))[0]
+		if loc := selectedRowRE.FindStringIndex(line); loc != nil {
+			return strings.Fields(line[loc[1]:])[0]
 		}
 	}
 	t.Fatalf("no selected sidebar row in %q", view)
@@ -313,7 +317,7 @@ func TestViewKeysDoNotMoveTheProject(t *testing.T) {
 				t.Errorf("after %s: active %d, cursor %d; want Needs you and cursor 1", k, h.m.active, h.m.cursor)
 			}
 			v := h.view()
-			if !strings.Contains(v, "> Needs you") {
+			if !strings.Contains(v, "0>Needs you") {
 				t.Errorf("after %s the sidebar selection moved:\n%s", k, v)
 			}
 			if bar := strings.Split(v, "\n")[0]; !strings.Contains(bar, "Overview │ Questions 2 │ Waves │ Roadmap │ Decisions") {
@@ -688,7 +692,7 @@ func TestRowKeysMoveTheCursorNotTheProject(t *testing.T) {
 				if got := detailText(h.m, 72); !strings.HasPrefix(got, s.row) {
 					t.Fatalf("after %s the cursor row is %q, want %q", s.key, got, s.row)
 				}
-				if v := h.view(); !strings.Contains(v, "> Needs you") {
+				if v := h.view(); !strings.Contains(v, "0>Needs you") {
 					t.Fatalf("after %s the project changed:\n%s", s.key, v)
 				}
 			}
@@ -773,7 +777,7 @@ func TestDashboardDocsListTheNavigationKeys(t *testing.T) {
 		"`0` selects \"Needs you\"; the Running entry has no number.",
 		"\"Needs you\" shows a dimmed `0` there.",
 		"`g`/`home` and `G`/`end` move the cursor to the first and last row.",
-		"`pgdown`/`pgup` move it by the number of rows the body draws on screen",
+		"`pgdown` scrolls the window so the first row not yet seen is its top row and puts the cursor on it",
 		"`}` and `{` move it to the first row of the next group and of the current or previous group",
 		"`tab` and `shift+tab` switch views",
 		"`space` ticks or unticks the selected item",
@@ -1006,7 +1010,7 @@ func TestSelectedNoSlicerProjectGivesTheInitHint(t *testing.T) {
 	if v := h.view(); !strings.Contains(v, "no .slicer/") || !strings.Contains(v, "slicer init") {
 		t.Fatalf("the selected project gives no init hint:\n%s", v)
 	}
-	if row := sidebarRow(h.m, "> DataBall"); !dimmed(row, "DataBall") {
+	if row := sidebarRow(h.m, "3>DataBall"); !dimmed(row, "DataBall") {
 		t.Errorf("the selected project's sidebar row is not dimmed: %q", row)
 	}
 }
@@ -1877,7 +1881,7 @@ func TestNumberKeysFollowTheSidebar(t *testing.T) {
 			t.Errorf("the sidebar has no row starting %q:\n%s", line, top)
 		}
 	}
-	if sidebarLine(v, "  Running") < 0 || sidebarLine(v, "> Needs you") < 0 {
+	if sidebarLine(v, "  Running") < 0 || sidebarLine(v, "0>Needs you") < 0 {
 		t.Errorf("the Running entry must have no number, and Needs you is selected:\n%s", top)
 	}
 	for i, name := range drawn {
@@ -2020,9 +2024,10 @@ func manyRows(t *testing.T) *harness {
 	return h
 }
 
-// With no pane open, pgdown and pgup move the cursor by the number of rows the
-// body draws on screen, headings and the detail included, and stop at the first
-// and last row. With a pane open they scroll the pane and leave the cursor.
+// With no pane open, pgdown and pgup move the cursor a screen of rows (the
+// first row below the window, the last above it), headings and the detail not
+// counted, and stop at the first and last row. With a pane open they scroll the
+// pane and leave the cursor.
 func TestPageKeysMoveRowsWithoutAPane(t *testing.T) {
 	pgdown, pgup := tea.KeyPressMsg{Code: tea.KeyPgDown}, tea.KeyPressMsg{Code: tea.KeyPgUp}
 	h := manyRows(t)
@@ -2202,7 +2207,7 @@ func TestHelpListsTheRowKeys(t *testing.T) {
 	h := newHarness(t, four...)
 	h.start()
 	help := strings.Split(strings.Join(h.m.helpLines(44, 40), "\n"), "\n")
-	for _, want := range []string{"1-9 jump to project; 0 Needs you", "j/k down/up row; g/G home/end first/last", "pgdown/pgup page rows or scroll a pane", "}/{ next/previous group (Overview)"} {
+	for _, want := range []string{"1-9 jump to project; 0 Needs you", "j/k down/up row; g/G home/end first/last", "pgdown/pgup page rows or scroll a pane", "}/{ next/previous group, pass or wave"} {
 		if !slices.Contains(help, want) {
 			t.Errorf("the help has no line %q:\n%s", want, strings.Join(help, "\n"))
 		}
@@ -2276,5 +2281,371 @@ func TestRowKeysCancelAPendingRunJump(t *testing.T) {
 				t.Errorf("after %s the snapshot moved the cursor from %d to %d (jumpRun %q)", k, at, h.m.cursor, h.m.jumpRun)
 			}
 		})
+	}
+}
+
+// questionNumbers lists the numbers of the "question NN" rows the view draws
+// in the main area, top to bottom.
+func questionNumbers(view string) []int {
+	var out []int
+	for _, line := range strings.Split(view, "\n") {
+		_, main, ok := strings.Cut(line, "│")
+		if !ok || !strings.Contains(main, "  slicer  ") {
+			continue
+		}
+		var n int
+		if _, err := fmt.Sscanf(main[strings.LastIndex(main, "question ")+len("question "):], "%d", &n); err == nil && strings.Contains(main, "question ") {
+			out = append(out, n)
+		}
+	}
+	return out
+}
+
+// pgdown scrolls the window so that the first row not yet seen is its top row,
+// and puts the cursor on it, like less ctrl-f (S151, owner 2026-10-26). The
+// body shows "+N lines above" over it, so it is the first row under the marker.
+func TestPgDownShowsTheFirstUnseenRowAtTheTop(t *testing.T) {
+	for _, size := range []struct{ w, h int }{{80, 24}, {100, 30}} {
+		t.Run(fmt.Sprintf("%dx%d", size.w, size.h), func(t *testing.T) {
+			h := manyRows(t)
+			h.send(tea.WindowSizeMsg{Width: size.w, Height: size.h})
+			for page := 1; page <= 2; page++ {
+				seen := questionNumbers(plainView(h.m))
+				if len(seen) < 8 {
+					t.Fatalf("setup: only %d rows drawn", len(seen))
+				}
+				last := seen[len(seen)-1]
+				h.send(tea.KeyPressMsg{Code: tea.KeyPgDown})
+				if want := last; h.m.cursor != want {
+					t.Fatalf("page %d: pgdown after row %d drawn put the cursor on %d, want %d (the first unseen row)", page, last, h.m.cursor, want)
+				}
+				v := plainView(h.m)
+				now := questionNumbers(v)
+				// The last page ends flush with the body instead of leaving blank
+				// lines, so its top may be a few rows above the first unseen one.
+				flush := !strings.Contains(v, "more lines")
+				if len(now) < 8 || (now[0] != last+1 && !flush) || !slices.Contains(now, last+1) {
+					t.Fatalf("page %d: the rows drawn are %v, want question %02d at the top:\n%s", page, now, last+1, v)
+				}
+			}
+		})
+	}
+}
+
+// The window a pgdown leaves stays put while the cursor moves inside it, and
+// follows the cursor again when it leaves.
+func TestPgDownWindowStaysWhileTheCursorMovesInsideIt(t *testing.T) {
+	h := manyRows(t)
+	h.send(tea.KeyPressMsg{Code: tea.KeyPgDown})
+	top := questionNumbers(plainView(h.m))[0]
+	for range 3 {
+		h.send(press("j"))
+	}
+	if now := questionNumbers(plainView(h.m)); now[0] != top {
+		t.Errorf("j inside the window moved its top from question %d to %d", top, now[0])
+	}
+	if h.m.cursor != top-1+3 {
+		t.Fatalf("setup: cursor on %d", h.m.cursor)
+	}
+	for range 4 { // one row above the window top
+		h.send(press("k"))
+	}
+	if v := plainView(h.m); !slices.Contains(questionNumbers(v), top-1) {
+		t.Errorf("k above the window left the cursor row question %d out of view:\n%s", top-1, v)
+	}
+}
+
+// pgup is the mirror: the last row above the window is the bottom row, and
+// the cursor is on it.
+func TestPgUpShowsTheLastUnseenRowAtTheBottom(t *testing.T) {
+	for _, size := range []struct{ w, h int }{{80, 24}, {100, 30}} {
+		t.Run(fmt.Sprintf("%dx%d", size.w, size.h), func(t *testing.T) {
+			h := manyRows(t)
+			h.send(tea.WindowSizeMsg{Width: size.w, Height: size.h})
+			for range 2 {
+				h.send(tea.KeyPressMsg{Code: tea.KeyPgDown})
+			}
+			for page := 1; page <= 2; page++ {
+				seen := questionNumbers(plainView(h.m))
+				if len(seen) < 8 || seen[0] < 3 {
+					t.Fatalf("page %d setup: rows %v drawn", page, seen)
+				}
+				first := seen[0]
+				h.send(tea.KeyPressMsg{Code: tea.KeyPgUp})
+				if want := first - 2; h.m.cursor != want { // question N is row N-1
+					t.Fatalf("page %d: pgup with row %d on top put the cursor on %d, want %d (the row above it)", page, first, h.m.cursor, want)
+				}
+				now := questionNumbers(plainView(h.m))
+				// Near the top the first page shows, with the cursor inside it.
+				if len(now) == 0 || (now[len(now)-1] != first-1 && now[0] != 1) {
+					t.Fatalf("page %d: the rows drawn are %v, want question %02d at the bottom:\n%s", page, now, first-1, plainView(h.m))
+				}
+				if now[0] == 1 {
+					break
+				}
+			}
+		})
+	}
+}
+
+// With the help overlay open the cursor is hidden, so no row key moves it.
+func TestHelpOverlayKeepsTheRowCursorStill(t *testing.T) {
+	for _, k := range []string{"pgdown", "pgup", "j", "k", "down", "up", "g", "G", "{", "}"} {
+		t.Run(k, func(t *testing.T) {
+			h := manyRows(t)
+			h.send(press("down"))
+			h.send(press("down"))
+			h.send(press("?"))
+			if !h.m.showHelp {
+				t.Fatal("? did not open the help")
+			}
+			msg := press(k)
+			switch k {
+			case "pgdown":
+				msg = tea.KeyPressMsg{Code: tea.KeyPgDown}
+			case "pgup":
+				msg = tea.KeyPressMsg{Code: tea.KeyPgUp}
+			}
+			h.send(msg)
+			if h.m.cursor != 2 {
+				t.Errorf("%s with the help open moved the cursor to %d, want it still on 2", k, h.m.cursor)
+			}
+		})
+	}
+}
+
+// readyRows is an 80-column Overview of 12 decisions and six merged Ready rows,
+// each with two command lines under it.
+func readyRowsHarness(t *testing.T, height int) *harness {
+	t.Helper()
+	h := newHarness(t, four...)
+	var open []adjcli.Record
+	for i := 1; i <= 12; i++ {
+		open = append(open, openRec(i, fmt.Sprintf("a.k%02d", i), fmt.Sprintf("question %02d", i)))
+	}
+	s := snap(four[0], open, nil)
+	merged := true
+	for i := 1; i <= 6; i++ {
+		s.EngineRuns = append(s.EngineRuns, source.EngineRun{ID: fmt.Sprintf("run%d", i), Item: fmt.Sprintf("S%02d", i), State: "committed", Branch: fmt.Sprintf("branch%d", i), Merged: &merged})
+	}
+	h.src.set(s)
+	h.start()
+	h.send(tea.WindowSizeMsg{Width: 80, Height: height})
+	return h
+}
+
+// bodyOf is the main area's body lines of a view: those between the rule under
+// the view bar and the next rule, so the detail under it does not count.
+func bodyOf(view string) string {
+	var out []string
+	rules := 0
+	for _, line := range strings.Split(view, "\n") {
+		_, main, ok := strings.Cut(line, "│")
+		if !ok {
+			continue
+		}
+		if strings.HasPrefix(main, "──") {
+			rules++
+			continue
+		}
+		if rules == 1 {
+			out = append(out, main)
+		}
+	}
+	return strings.Join(out, "\n")
+}
+
+// A page key that lands on a Ready row shows the row's command lines under it
+// while they fit, and keeps the row itself in view when a short terminal cuts
+// them (mutation P5 of the S85 review).
+func TestPageKeysOnReadyRowsWithCommandLines(t *testing.T) {
+	pgdown, pgup := tea.KeyPressMsg{Code: tea.KeyPgDown}, tea.KeyPressMsg{Code: tea.KeyPgUp}
+	t.Run("commands fit", func(t *testing.T) {
+		h := readyRowsHarness(t, 24)
+		h.send(press("G"))
+		for h.m.cursor > 12 {
+			r, _ := h.m.selectedRow()
+			v := bodyOf(plainView(h.m))
+			if !r.ready || !strings.Contains(v, "slicer land '"+r.id+"' --branch '"+r.branch+"'") {
+				t.Fatalf("cursor %d on %s: its land command is cut:\n%s", h.m.cursor, r.id, v)
+			}
+			h.send(press("k"))
+		}
+		// From the last row the page keys land on Ready rows too.
+		h.send(press("G"))
+		h.send(pgup)
+		if r, ok := h.m.selectedRow(); !ok || !r.ready {
+			t.Fatalf("pgup from the last row landed on %+v, want a Ready row", r)
+		}
+		r, _ := h.m.selectedRow()
+		if v := bodyOf(plainView(h.m)); !strings.Contains(v, "slicer land '"+r.id+"' --branch '"+r.branch+"'") || !strings.Contains(v, "slicer render") {
+			t.Errorf("pgup onto %s cut its command lines:\n%s", r.id, v)
+		}
+	})
+	t.Run("commands cut", func(t *testing.T) {
+		h := readyRowsHarness(t, 8) // the body is three lines: a row and its commands do not fit
+		h.send(press("G"))
+		for i := 0; i < 30 && h.m.cursor > 0; i++ {
+			h.send(pgup)
+			r, _ := h.m.selectedRow()
+			if v := bodyOf(plainView(h.m)); !strings.Contains(v, r.id) {
+				t.Fatalf("pgup put the cursor on %s (row %d) and it is out of view:\n%s", r.id, h.m.cursor, v)
+			}
+		}
+		for i := 0; i < 30 && h.m.cursor < len(h.m.cursorRows())-1; i++ {
+			h.send(pgdown)
+			r, _ := h.m.selectedRow()
+			if v := bodyOf(plainView(h.m)); !strings.Contains(v, r.id) {
+				t.Fatalf("pgdown put the cursor on %s (row %d) and it is out of view:\n%s", r.id, h.m.cursor, v)
+			}
+		}
+		if h.m.cursor != len(h.m.cursorRows())-1 {
+			t.Errorf("pgdown stopped on row %d of %d", h.m.cursor, len(h.m.cursorRows()))
+		}
+	})
+}
+
+// G on an overflowing Overview scrolls the lines after the last row into view,
+// so the owner can see that Ready to land is empty (S85 note).
+func TestLastRowShowsTheSectionsAfterIt(t *testing.T) {
+	h := manyRows(t)
+	if strings.Contains(plainView(h.m), "Ready to land") {
+		t.Fatal("setup: Ready to land is drawn before G")
+	}
+	h.send(press("G"))
+	v := plainView(h.m)
+	if !strings.Contains(v, "Ready to land") || !strings.Contains(v, "none") {
+		t.Errorf("G left the lines after the last row out of view:\n%s", v)
+	}
+	if r, ok := h.m.selectedRow(); !ok || r.engineID == "" {
+		t.Errorf("the cursor is not on the stopped run: %+v", r)
+	}
+}
+
+// Help says the page keys scroll a pane. The Roadmap item pane does not scroll,
+// so there the help says only that they page rows.
+func TestHelpDoesNotPromiseAScrollingRoadmapPane(t *testing.T) {
+	h := roadmapHarness(t)
+	h.send(press("?"))
+	v := strings.Join(h.m.helpLines(60, 40), "\n")
+	if strings.Contains(v, "scroll a pane") || !strings.Contains(v, "pgdown/pgup page rows") {
+		t.Errorf("the Roadmap help:\n%s", v)
+	}
+	ov := newHarness(t, four...)
+	ov.start()
+	if v := strings.Join(ov.m.helpLines(60, 40), "\n"); !strings.Contains(v, "pgdown/pgup page rows or scroll a pane") {
+		t.Errorf("the Overview help lost its pane scroll:\n%s", v)
+	}
+}
+
+// The key list is longer than the 80x24 body and is cut, but the hint line
+// under it still names the way out: esc closes the help and q quits, so
+// neither is hidden below the fold (S149 hint line, S151 note).
+func TestHelpOverlayKeepsTheWayOutInView(t *testing.T) {
+	for _, name := range []string{"overview", "questions", "waves", "roadmap", "decisions"} {
+		t.Run(name, func(t *testing.T) {
+			h := manyRows(t)
+			h.m.view = map[string]int{"overview": 0, "questions": 1, "waves": 2, "roadmap": 3, "decisions": 4}[name]
+			h.send(press("?"))
+			lines := strings.Split(plainView(h.m), "\n")
+			if hint := lines[len(lines)-2]; !strings.Contains(hint, "? or esc close help") || !strings.Contains(hint, "q quit") {
+				t.Errorf("the hint line under the help is %q, want the way out", hint)
+			}
+		})
+	}
+}
+
+// A pane takes the digit keys first: an owner question picks its option and
+// the approval card marks its check, and neither switches project (S111,
+// S118, S85 number keys).
+func TestPanesTakeTheDigitKeysBeforeTheProjectNumbers(t *testing.T) {
+	h := optionsHarness(t)
+	active := h.m.active
+	h.deliver(press("1"))
+	if h.m.pane == nil || h.m.active != active || h.m.confirm == nil || h.m.confirm.text != "use: local storage" {
+		t.Errorf("1 in a question pane: pane open %v, active %d (was %d), confirm %+v; want option 1 picked in place", h.m.pane != nil, h.m.active, active, h.m.confirm)
+	}
+	c := cardHarness(t, approvalCard(openChecksThree()...))
+	active = c.m.active
+	c.deliver(press("1"))
+	if c.m.pane == nil || c.m.active != active || len(c.live().marks) != 1 {
+		t.Errorf("1 on the approval card: pane open %v, active %d (was %d), marks %v; want check 1 marked in place", c.m.pane != nil, c.m.active, active, c.live().marks)
+	}
+}
+
+// The selected project's row shows its number, then the arrow, as 1>ork; Needs
+// you shows 0>, and the Running entry, which has no number, a plain arrow.
+func TestSidebarSelectedRowShowsTheNumberThenTheArrow(t *testing.T) {
+	var projects []registry.Project
+	for i := 1; i <= 10; i++ {
+		projects = append(projects, proj(fmt.Sprintf("p%02d", i), false))
+	}
+	h := newHarness(t, projects...)
+	h.start()
+	for _, c := range []struct{ key, want string }{{"2", "2>p02"}, {"0", "0>Needs you"}, {"9", "9>p09"}} {
+		h.send(press(c.key))
+		h.view()
+		if row := sidebarRow(h.m, c.want); row == "" {
+			t.Errorf("after %s the sidebar has no row %q:\n%s", c.key, c.want, plainView(h.m))
+		}
+	}
+	h.send(press("["))
+	h.view()
+	if h.m.active == runningEntry && sidebarRow(h.m, "> Running") == "" {
+		t.Errorf("the Running entry has no plain arrow:\n%s", plainView(h.m))
+	}
+	// The tenth project has no number to show.
+	h.m.switchTo(9)
+	h.view()
+	if sidebarRow(h.m, "> p10") == "" {
+		t.Errorf("the tenth project has no plain arrow:\n%s", plainView(h.m))
+	}
+}
+
+// } and { on the Roadmap jump between pass groups: runs of items with the
+// same pass.
+func TestGroupKeysOnTheRoadmapJumpBetweenPasses(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	var items []slicercli.Item
+	for i, pass := range []string{"v1.0", "v1.0", "v1.0", "v1.1", "v1.1", "v1.2"} {
+		it := item(fmt.Sprintf("S%02d", i+1), "title")
+		it.Fields.Pass = pass
+		items = append(items, it)
+	}
+	h.src.set(snap(proj("ork", false), nil, items))
+	h.start()
+	h.m.switchTo(0)
+	h.m.view = roadmapView
+	h.view()
+	for _, step := range []struct {
+		key  string
+		want int
+	}{{"}", 3}, {"}", 5}, {"}", 5}, {"{", 3}, {"{", 0}, {"{", 0}} {
+		h.send(press(step.key))
+		if h.m.roadmapCursor != step.want {
+			t.Fatalf("%s put the roadmap cursor on %d, want %d", step.key, h.m.roadmapCursor, step.want)
+		}
+	}
+	h.send(press("down"))
+	h.send(press("{")) // inside the first pass: its own first row
+	if h.m.roadmapCursor != 0 {
+		t.Errorf("{ inside a pass put the cursor on %d, want its first row 0", h.m.roadmapCursor)
+	}
+}
+
+// } and { on Waves jump between the wave sections: each wave, then Unplaced.
+func TestGroupKeysOnWavesJumpBetweenSections(t *testing.T) {
+	h, _ := wavesHarness(t)
+	openWaves(t, h)
+	// A and B are wave 2, C is wave 4, D is Unplaced.
+	h.deliver(press("down"))
+	for _, step := range []struct {
+		key  string
+		want int
+	}{{"{", 0}, {"}", 2}, {"}", 3}, {"}", 3}, {"{", 2}, {"{", 0}, {"{", 0}} {
+		h.deliver(press(step.key))
+		if h.m.waves.cursor != step.want {
+			t.Fatalf("%s put the waves cursor on %d, want %d", step.key, h.m.waves.cursor, step.want)
+		}
 	}
 }

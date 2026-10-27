@@ -111,7 +111,7 @@ func TestSidebarHasARunningEntryAboveNeedsYouAndShowsItDimWhenNothingRuns(t *tes
 	h := newHarness(t, runningProjects...)
 	h.start()
 	v := h.view()
-	running, needs := sidebarLine(v, "  Running"), sidebarLine(v, "> Needs you")
+	running, needs := sidebarLine(v, "  Running"), sidebarLine(v, "0>Needs you")
 	if running < 0 || needs < 0 || running+1 != needs {
 		t.Fatalf("the Running entry must sit directly above Needs you (rows %d and %d):\n%s", running, needs, v)
 	}
@@ -169,7 +169,7 @@ func TestRunningEntryIsReachedWithTheSidebarKeysNotADigit(t *testing.T) {
 	h.send(press("/"))
 	h.send(press("z"))
 	v := h.view()
-	if sidebarLine(v, "  Running") < 0 || sidebarLine(v, "> Needs you") < 0 {
+	if sidebarLine(v, "  Running") < 0 || sidebarLine(v, "0>Needs you") < 0 {
 		t.Fatalf("the filter hid an aggregate entry:\n%s", v)
 	}
 }

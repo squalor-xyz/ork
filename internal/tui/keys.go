@@ -94,7 +94,7 @@ func newKeyMap() keyMap {
 		PageUp:     key.NewBinding(key.WithKeys("pgup"), key.WithHelp("pgup", "page up")),
 		ScrollDown: key.NewBinding(key.WithKeys("ctrl+d"), key.WithHelp("ctrl+d/u", "scroll a run pane half a page")),
 		ScrollUp:   key.NewBinding(key.WithKeys("ctrl+u"), key.WithHelp("ctrl+u", "scroll a pane back half a page")),
-		NextGroup:  key.NewBinding(key.WithKeys("}"), key.WithHelp("}/{", "next/previous group (Overview)")),
+		NextGroup:  key.NewBinding(key.WithKeys("}"), key.WithHelp("}/{", "next/previous group, pass or wave")),
 		PrevGroup:  key.NewBinding(key.WithKeys("{"), key.WithHelp("{", "previous group")),
 		Select:     key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "open run, question, item or decision; other rows select project")),
 		FileAdj:    key.NewBinding(key.WithKeys("ctrl+a"), key.WithHelp("ctrl+a (answer)", "toggle filing the answer in adj")),

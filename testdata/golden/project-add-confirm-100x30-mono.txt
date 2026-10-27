@@ -1,7 +1,7 @@
 [1mork[m  ?help                 │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
 [2m0[m Needs you              1 │  [1mAdd project[m
-[1;7m> alpha                    [m│
+[1;7m1>alpha                    [m│
                            │  Project path: [1m/work/mine[m
                            │  ork projects add '/work/mine'? [y/N] (Enter is No)
                            │  [2mType an absolute path, or leave it empty and press Enter to use the[m

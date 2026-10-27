@@ -621,6 +621,9 @@ type overviewView struct {
 	paneExtra int
 	// selExtra is 1 when the selected row has a second line (S145).
 	selExtra int
+	// rows is the body line each cursor row starts on, in cursor order. The
+	// page keys read it to find the first row below or above the window (S151).
+	rows []int
 }
 
 // isPaneRow reports whether r is the row of the open run pane.
@@ -684,6 +687,7 @@ func (m *Model) overview(w int) overviewView {
 
 	var lines []string
 	sel, paneAt, paneExtra, selExtra := -1, -1, 0, 0
+	var rowAt []int
 	section := func(rows []ovRow, first int, empty string) {
 		if len(rows) == 0 {
 			lines = append(lines, indent+th.Dim.Render(empty))
@@ -691,6 +695,7 @@ func (m *Model) overview(w int) overviewView {
 		}
 		for i, r := range rows {
 			selected := first+i == cursor
+			rowAt = append(rowAt, len(lines))
 			if selected {
 				sel = len(lines)
 			}
@@ -763,7 +768,7 @@ func (m *Model) overview(w int) overviewView {
 	ready := m.readyRows()
 	section(ready, len(needs)+len(running)+len(recent), "none")
 
-	ov := overviewView{body: lines, sel: sel, paneAt: paneAt, paneExtra: paneExtra, selExtra: selExtra}
+	ov := overviewView{body: lines, sel: sel, paneAt: paneAt, paneExtra: paneExtra, selExtra: selExtra, rows: rowAt}
 	switch {
 	case m.active >= 0 && m.projects[m.active].setup():
 		// The hint is the detail line of a selected project with no rows.
@@ -1604,10 +1609,12 @@ func (m *Model) runningOverview(w int) overviewView {
 	}
 	lines := []string{heading}
 	sel, paneAt := -1, -1
+	var rowAt []int
 	if live == 0 {
 		lines = append(lines, indent+th.Dim.Render("nothing running"))
 	}
 	for i, r := range running {
+		rowAt = append(rowAt, len(lines))
 		if i == cursor {
 			sel = len(lines)
 		}
@@ -1625,6 +1632,7 @@ func (m *Model) runningOverview(w int) overviewView {
 		lines = append(lines, indent+th.Dim.Render("none"))
 	}
 	for i, r := range recent {
+		rowAt = append(rowAt, len(lines))
 		if len(running)+i == cursor {
 			sel = len(lines)
 		}
@@ -1633,7 +1641,7 @@ func (m *Model) runningOverview(w int) overviewView {
 			paneAt = len(lines) - 1
 		}
 	}
-	ov := overviewView{body: lines, sel: sel, paneAt: paneAt}
+	ov := overviewView{body: lines, sel: sel, paneAt: paneAt, rows: rowAt}
 	if cursor >= 0 {
 		vertical, _ := th.rules(m.cfg.ASCII)
 		ov.detail = detailLines(all[cursor], w, vertical)
