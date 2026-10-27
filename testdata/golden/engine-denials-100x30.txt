@@ -5,7 +5,7 @@
                            │
                            │[1mRunning 1[m
                            │[1;7m   ork  S22  implement  [......]                                        [m
-                           │[1;7m          denied: Write, Bash                                           [m
+                           │[7m          denied: Write, Bash                                           [m
                            │
                            │[1mRecent[m
                            │  [2mnone[m

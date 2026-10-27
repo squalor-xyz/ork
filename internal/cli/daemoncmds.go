@@ -59,7 +59,10 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 			}
 			fmt.Fprintf(o.stdout, "  %s %s %s (%d steps, %d running)\n", r.ID, items, r.State, r.Steps, r.Running)
 			if step := r.RunningStep; step != nil {
-				fmt.Fprintf(o.stdout, "    %s\n", daemon.FormatRelayStep("running", *step))
+				// Say what the Running row says: no "<id> <role>" label (S150).
+				running := *step
+				running.Task = daemon.StripTaskLabel(running.Task, r.Items, running.Role)
+				fmt.Fprintf(o.stdout, "    %s\n", daemon.FormatRelayStep("running", running))
 			}
 			if step := r.FailedStep; step != nil {
 				fmt.Fprintf(o.stdout, "    %s\n", daemon.FormatRelayStep("failed", *step))

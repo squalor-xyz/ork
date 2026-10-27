@@ -5,7 +5,6 @@ package tui
 import (
 	"errors"
 	"fmt"
-	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -92,17 +91,14 @@ type runRow struct {
 	secondWarn  bool   // line 2 is a denial, which the owner should not miss
 }
 
-// line2 is the text of a run's second line: its title when the layout moved
-// the titles there, then a colon and the role's latest line. It is "" when the
-// run has neither.
-func (rr *runRow) line2(l *runLayout) string {
-	if l == nil || !l.titleBelow || rr.title == "" {
-		return rr.second
+// line2 is the two parts of a run's second line: its title when the layout moved
+// the titles there, and the role's latest line. Either is "" when the run has
+// none.
+func (rr *runRow) line2(l *runLayout) (title, output string) {
+	if l == nil || !l.titleBelow {
+		return "", rr.second
 	}
-	if rr.second == "" {
-		return rr.title
-	}
-	return rr.title + ": " + rr.second
+	return rr.title, rr.second
 }
 
 // Cells of line 1, left to right.
@@ -701,12 +697,13 @@ func (m *Model) overview(w int) overviewView {
 			}
 			lines = append(lines, m.rowLine(r, selected, nameW, w))
 			hang := strings.Repeat(" ", textColumn(r, nameW))
-			second := ""
+			title, output := "", ""
 			if r.run != nil {
-				second = r.run.line2(r.layout)
+				title, output = r.run.line2(r.layout)
 			}
+			second := title + output
 			if second != "" {
-				lines = append(lines, m.runSecondLine(r, second, hang, w, selected))
+				lines = append(lines, m.runSecondLine(r, title, output, hang, w, selected))
 				if selected {
 					selExtra = 1
 				}
@@ -971,7 +968,7 @@ func (m *Model) ledgerRunRow(s source.Snapshot, r slicercli.RelayRun) *runRow {
 			rr.role, rr.model, rr.second, rr.stateOnly = step.Role, step.Model, treeText(step.Task), false
 		}
 	}
-	rr.second = stripTaskLabel(rr.second, r.Items, rr.role)
+	rr.second = daemon.StripTaskLabel(rr.second, r.Items, rr.role)
 	rr.finishRow(r)
 	return rr
 }
@@ -992,60 +989,6 @@ func (rr *runRow) markStale(ledger slicercli.RelayRun) {
 	if ledger.State == "stale" && !strings.HasPrefix(rr.role, "stale") {
 		rr.role = "stale " + rr.role
 	}
-}
-
-// taskRepeatsLabel reports whether a step task is only the label the relay
-// contract asks for, "<id> <role>" (or the id or the role alone, the ids of a
-// run on several slices joined), which line 1 already says. Case, spacing and
-// -, _ and , between the words do not matter.
-func taskRepeatsLabel(task string, items []string, role string) bool {
-	norm := func(s string) string {
-		s = strings.NewReplacer("-", " ", "_", " ", ",", " ", "/", " ").Replace(strings.ToLower(s))
-		return strings.Join(strings.Fields(s), " ")
-	}
-	task, role = norm(task), norm(role)
-	if task == "" {
-		return false
-	}
-	ids := append([]string{norm(strings.Join(items, " "))}, items...)
-	if task == role {
-		return true
-	}
-	for _, id := range ids {
-		id = norm(id)
-		if id != "" && (task == id || task == id+" "+role) {
-			return true
-		}
-	}
-	return false
-}
-
-// stripTaskLabel cuts the leading "<id> <role>" label off a step task, with the
-// ":", "-" and spaces after it, as line 1 says it already; "round 2: x" is left
-// of "s41 gate round 2: x". A task that is only the label (or the id or the
-// role alone) is "". Anything else is returned as it is.
-func stripTaskLabel(task string, items []string, role string) string {
-	if taskRepeatsLabel(task, items, role) {
-		return ""
-	}
-	ids := append([]string{strings.Join(items, " ")}, items...)
-	sep := `[\s_,/-]+`
-	for _, id := range ids {
-		words := append(strings.Fields(strings.NewReplacer("-", " ", "_", " ", ",", " ", "/", " ").Replace(id)),
-			strings.Fields(strings.NewReplacer("-", " ", "_", " ", ",", " ", "/", " ").Replace(role))...)
-		if len(words) == 0 || id == "" {
-			continue
-		}
-		for i, w := range words {
-			words[i] = regexp.QuoteMeta(w)
-		}
-		re := regexp.MustCompile(`(?i)^\s*` + strings.Join(words, sep) + `(?:[\s:_,/-]+|$)`)
-		if loc := re.FindStringIndex(task); loc != nil {
-			rest := strings.TrimLeft(task[loc[1]:], " :-")
-			return rest
-		}
-	}
-	return task
 }
 
 // lastTailLine is the newest nonblank line of a role's output tail.
@@ -1097,23 +1040,66 @@ func (m *Model) runLine(r ovRow, room int) string {
 	return b.String()
 }
 
-// runSecondLine is line 2 of a Running run: the role's latest output line under
-// the slice id, set in by one indent, dim (a denial is amber), cut to the pane.
-// The selected run's line is reversed whole, as its first line is, and not
-// dimmed, so it reads in monochrome too.
-func (m *Model) runSecondLine(r ovRow, second, hang string, w int, selected bool) string {
+// Line 2 clipping (S150): when the title and the output do not fit side by
+// side, the title is cut to the room that leaves the output outputRoom columns,
+// and never under titleMin. A title that fits beside its output stays whole.
+const (
+	outputRoom = 20
+	lineGap    = "  "
+)
+
+// runSecondLine is line 2 of a Running run, under the slice id and set in by one
+// indent, cut to the pane: the title in the default foreground when the layout
+// moved it here, two spaces, then the role's latest output line, dim (a denial
+// is amber). The selected run's line is reversed whole, as its first line is,
+// and not dimmed or bold, so it reads in monochrome too; a denial keeps its
+// amber cue as the reversed colour.
+func (m *Model) runSecondLine(r ovRow, title, output, hang string, w int, selected bool) string {
 	th := m.cfg.Theme
 	prefix := hang + indent
-	text := clip(second, max(w-lipgloss.Width(prefix), 1))
+	avail := max(w-lipgloss.Width(prefix), 1)
+	if title != "" && output != "" {
+		if lipgloss.Width(title)+len(lineGap)+lipgloss.Width(output) > avail {
+			if cut := max(avail-len(lineGap)-outputRoom, titleMin); lipgloss.Width(title) > cut {
+				title = clip(title, cut)
+			}
+		}
+		room := avail - lipgloss.Width(title) - len(lineGap)
+		if room < 1 {
+			title, output = clip(title, avail), ""
+		} else {
+			output = clip(output, room)
+		}
+	} else {
+		title, output = clip(title, avail), clip(output, avail)
+	}
+	text, gap := title+output, ""
+	if title != "" && output != "" {
+		gap = lineGap
+		text = title + gap + output
+	}
 	if selected {
 		line := prefix + text
-		return th.TabActive.Render(line + strings.Repeat(" ", max(w-lipgloss.Width(line), 0)))
+		style := th.TabActive.Bold(false)
+		if r.run.secondWarn {
+			// Reversed, so the amber is the background; the foreground is set
+			// too, so it reads black on amber in a light terminal as in a dark
+			// one. Monochrome has no colour and stays reversed.
+			style = th.Warn.Reverse(true)
+			if !th.Mono {
+				style = style.Background(lipgloss.Color("0"))
+			}
+		}
+		return style.Render(line + strings.Repeat(" ", max(w-lipgloss.Width(line), 0)))
 	}
 	style := th.Dim
 	if r.run.secondWarn {
 		style = th.Warn
 	}
-	return prefix + style.Render(text)
+	if output == "" {
+		return prefix + title
+	}
+	return prefix + title + gap + style.Render(output)
 }
 
 // rowText is a row's text cut to room columns. A run's ID stays whole: the rest

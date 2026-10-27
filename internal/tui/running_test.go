@@ -1129,7 +1129,7 @@ func TestSelectedRunDrawsBothLinesReversed(t *testing.T) {
 		if !strings.Contains(line2, "all four new tests fail") {
 			t.Fatalf("mono %v: no second line under the selected row: %q", mono, line2)
 		}
-		if want := th.TabActive.Render(line2); body[i+1] != want {
+		if want := th.TabActive.Bold(false).Render(line2); body[i+1] != want {
 			t.Errorf("mono %v: the selected run's second line must be reversed whole:\n got %q\nwant %q", mono, body[i+1], want)
 		}
 		if body[i+1] == th.Dim.Render(strings.TrimSpace(line2)) || strings.Contains(body[i+1], th.Dim.Render("all four")) {
@@ -1171,7 +1171,7 @@ func TestRunningRowsAlignWithAndWithoutAModel(t *testing.T) {
 
 // Where the title does not fit on line 1, the whole section moves it to line 2:
 // line 1 is status only (the model comes back if it fits), and line 2 is the
-// title, then a colon and the role's latest line. A run with no latest line gets
+// title, then two spaces and the role's latest line. A run with no latest line gets
 // the title alone, so it has a line 2 even when its ledger label is bare
 // (S145, owner decision).
 func TestTitleMovesToLineTwoForTheWholeSection(t *testing.T) {
@@ -1208,10 +1208,15 @@ func TestTitleMovesToLineTwoForTheWholeSection(t *testing.T) {
 			continue
 		}
 		// Moved: line 2 starts with the title, then the latest line.
-		for i, want := range []string{"Thirty short: all four new tests fail for the stated reason", "Forty-one untitled: round 2: rechecking the golden views", "Fifty-two short"} {
-			got := strings.TrimSpace(line2[i])
-			if !strings.HasPrefix(want, strings.TrimSuffix(got, "...")) || (!strings.HasSuffix(got, "...") && got != want) {
-				t.Fatalf("width %d: line 2 of row %d is %q, want %q (or a cut of it)", w, i, got, want)
+		// Each part is whole or a cut of itself; a title that crowds its output
+		// is cut (S150).
+		cutOf := func(got, want string) bool {
+			return got == want || (strings.HasSuffix(got, "...") && strings.HasPrefix(want, strings.TrimSuffix(got, "...")))
+		}
+		for i, want := range [][2]string{{"Thirty short", "all four new tests fail for the stated reason"}, {"Forty-one untitled", "round 2: rechecking the golden views"}, {"Fifty-two short", ""}} {
+			title, output, _ := strings.Cut(strings.TrimSpace(line2[i]), "  ")
+			if !cutOf(title, want[0]) || (want[1] == "") != (output == "") || (output != "" && !cutOf(strings.TrimSpace(output), want[1])) {
+				t.Fatalf("width %d: line 2 of row %d is %q, want %q, two spaces, %q (or cuts of them)", w, i, line2[i], want[0], want[1])
 			}
 		}
 		model := strings.Contains(line1[0], "reviewer opus")
@@ -1301,6 +1306,205 @@ func TestLongPaneUnderATitleOnlyEngineRowKeepsTheHeadings(t *testing.T) {
 	for _, want := range []string{"Needs you 0", "Running 1", "Thirty short", "esc close pane"} {
 		if !strings.Contains(v, want) {
 			t.Fatalf("missing %q:\n%s", want, v)
+		}
+	}
+}
+
+// body is the Overview body at that terminal size, with its styles.
+func (h *harness) body(w, ht int) []string {
+	h.m.Update(tea.WindowSizeMsg{Width: w, Height: ht})
+	lw, _, sideW := h.m.layoutSize()
+	return h.m.overview(max(lw-sideW, 1)).body
+}
+
+// bodyLine is the first body line whose plain text holds all words.
+func bodyLine(t *testing.T, body []string, words ...string) int {
+	t.Helper()
+	i := rowIndex(plainLines(body), words...)
+	if i < 0 {
+		t.Fatalf("no body line with %q:\n%s", words, strings.Join(plainLines(body), "\n"))
+	}
+	return i
+}
+
+func plainLines(body []string) []string {
+	out := make([]string, len(body))
+	for i, l := range body {
+		out[i] = sgr.ReplaceAllString(l, "")
+	}
+	return out
+}
+
+// clipHarness is one relay started elsewhere with a long title and a long task
+// line, on a terminal where the title moves to line 2.
+func clipHarness(t *testing.T, title string) *harness {
+	t.Helper()
+	p := proj("a-long-project-name", false)
+	h := newHarness(t, p)
+	r := externalRun("ext-60", "S60")
+	r.Steps[1].Task = "s60 reviewer rechecking all four golden views carefully"
+	s := snap(p, nil, []slicercli.Item{{ID: "S60", Title: title, ShortTitle: title}}, r)
+	h.src.set(s)
+	h.start()
+	return h
+}
+
+// A title that would crowd the output off line 2 is cut so the output keeps 20
+// columns: to the room left (never under 12 columns) once the title and the
+// output do not fit side by side (S150, owner decision 2026-10-27).
+func TestLongTitleOnLineTwoIsClippedToLeaveTheOutputRoom(t *testing.T) {
+	long := "Make the very long slice title clip nicely"
+	for _, size := range []struct{ w, ht int }{{70, 24}, {80, 24}, {90, 24}} {
+		h := clipHarness(t, long)
+		body := h.body(size.w, size.ht)
+		plain := plainLines(body)
+		i := bodyLine(t, plain, "S60")
+		// The selected row's line 2 is padded to the pane: its width less the
+		// indent is the room line 2 has.
+		prefix := len(plain[i+1]) - len(strings.TrimLeft(plain[i+1], " "))
+		avail := lipgloss.Width(body[i+1]) - prefix
+		line2 := strings.TrimSpace(plain[i+1])
+		title, rest, ok := strings.Cut(line2, "...  ")
+		want := max(avail-2-20, 12)
+		if !ok || lipgloss.Width(title+"...") != want || !strings.HasPrefix(long, title) {
+			t.Fatalf("%dx%d: the title must be cut to %d columns, then two spaces: %q", size.w, size.ht, want, line2)
+		}
+		// The output keeps 20 columns, or what the 12 column floor leaves.
+		if rest = strings.TrimSpace(rest); lipgloss.Width(rest) < min(20, avail-2-12) || !strings.HasPrefix("rechecking all four golden views carefully", strings.TrimSuffix(rest, "...")) {
+			t.Fatalf("%dx%d: the output must keep at least 20 columns: %q", size.w, size.ht, line2)
+		}
+	}
+}
+
+// A title that fits beside its output is left whole, whatever its length; one
+// that does not is cut for a short output too, and never under 12 columns.
+func TestTitleIsWholeWhenItFitsBesideTheOutput(t *testing.T) {
+	for _, tc := range []struct{ title, task, want string }{
+		{"Twenty-four column title", "s60 reviewer all fine", "Twenty-four column title  all fine"},
+		{"Thirty character slice title.", "s60 reviewer done", "Thirty character slice title.  done"},
+	} {
+		h := clipHarness(t, tc.title)
+		h.m.byName["a-long-project-name"].snap.Runs.Value[0].Steps[1].Task = tc.task
+		body := plainLines(h.body(90, 24))
+		i := bodyLine(t, body, "S60")
+		if line2 := strings.TrimSpace(body[i+1]); !strings.HasPrefix(line2, tc.want) {
+			t.Errorf("title %q task %q: line 2 = %q, want it to start %q", tc.title, tc.task, line2, tc.want)
+		}
+	}
+	// 41 + 2 + 4 columns do not fit in 44: the title gives way, the output stays.
+	h := clipHarness(t, "Make the very long slice title clip nicely")
+	h.m.byName["a-long-project-name"].snap.Runs.Value[0].Steps[1].Task = "s60 reviewer done"
+	body := plainLines(h.body(90, 24))
+	i := bodyLine(t, body, "S60")
+	if line2 := strings.TrimSpace(body[i+1]); !strings.HasSuffix(line2, "...  done") || strings.Contains(line2, "title clip") {
+		t.Errorf("a title that does not fit beside the output is cut: %q", line2)
+	}
+}
+
+// open is the escape sequence a style starts with.
+func open(st lipgloss.Style) string {
+	r := st.Render("x")
+	return r[:strings.Index(r, "x")]
+}
+
+// Line 2 draws the title in the default foreground and only the output dim, two
+// spaces apart. A denial colours only its own text (S150).
+func TestLineTwoStylesOnlyTheOutput(t *testing.T) {
+	h := glanceHarnessIn(t, "a-long-project-name")
+	h.m.cfg.Theme = NewTheme(false)
+	th := h.m.cfg.Theme
+	if open(th.Warn) == "" || open(th.Dim) == "" {
+		t.Fatal("the colour theme draws no styles in this test")
+	}
+	h.m.byName["a-long-project-name"].snap.EngineRuns[0].Denials = []string{"Bash: git push origin main"}
+	h.send(press("down")) // S41 is selected; S30 is not
+	body := h.body(80, 24)
+	plain := plainLines(body)
+	for _, tc := range []struct{ id, title, output string }{
+		{"S30", "Thirty short", "denied:"},
+		{"S41", "Forty-one...", "round 2:"}, // the title is cut to leave the output its room
+	} {
+		i := bodyLine(t, plain, tc.id, "reviewer")
+		if p := plain[i+1]; !strings.Contains(p, tc.title+"  "+tc.output) {
+			t.Fatalf("%s: title, two spaces, output: %q", tc.id, p)
+		}
+	}
+	// S30, unselected, with a denial: the title is plain, the denial amber.
+	raw := strings.TrimLeft(body[bodyLine(t, plain, "S30", "reviewer")+1], " ")
+	if !strings.HasPrefix(raw, "Thirty short  "+open(th.Warn)+"denied:") || strings.Contains(raw, open(th.Dim)) {
+		t.Errorf("a denial colours only itself: %q", raw)
+	}
+	// S41, unselected... is selected here; S52 has only a title: plain, not dim.
+	raw = strings.TrimLeft(body[bodyLine(t, plain, "S52", "reviewer")+1], " ")
+	if !strings.HasPrefix(raw, "Fifty-two short") || strings.Contains(raw, open(th.Dim)) {
+		t.Errorf("a title alone is in the default foreground: %q", raw)
+	}
+	h.send(press("up")) // back to S30
+	h.send(press("down"))
+	h.send(press("down")) // S52, so S41 is not selected
+	raw = strings.TrimLeft(h.body(80, 24)[bodyLine(t, plain, "S41", "reviewer")+1], " ")
+	if !strings.HasPrefix(raw, "Forty-one...  "+open(th.Dim)+"round 2:") {
+		t.Errorf("only the output is dim: %q", raw)
+	}
+}
+
+// The selected row keeps a denial's amber cue and line 2 is reversed but not
+// bold (S150).
+func TestSelectedDenialKeepsItsCueAndLineTwoIsNotBold(t *testing.T) {
+	h := glanceHarnessIn(t, "a-long-project-name")
+	h.m.cfg.Theme = NewTheme(false)
+	th := h.m.cfg.Theme
+	if open(th.Warn) == "" {
+		t.Fatal("the colour theme draws no styles in this test")
+	}
+	h.m.byName["a-long-project-name"].snap.EngineRuns[0].Denials = []string{"Bash: git push origin main"}
+	body := h.body(80, 24) // S30 is selected
+	i := bodyLine(t, plainLines(body), "S30", "reviewer")
+	line2 := plainLines(body)[i+1]
+	if !strings.Contains(line2, "denied:") {
+		t.Fatalf("no denial under the selected row: %q", line2)
+	}
+	// Both colours are set, so the line reverses to black on amber in any
+	// terminal theme, not the terminal's own background on amber.
+	want := th.Warn.Reverse(true).Background(lipgloss.Color("0")).Render(line2)
+	if body[i+1] != want {
+		t.Errorf("a selected denial must be reversed black on amber, not bold:\n got %q\nwant %q", body[i+1], want)
+	}
+	if !strings.Contains(body[i+1], "33") || !strings.Contains(body[i+1], "40") {
+		t.Errorf("the denial line sets amber and black: %q", body[i+1])
+	}
+	// Monochrome has no colour to set: it stays reversed, not bold.
+	h.m.cfg.Theme = NewTheme(true)
+	body = h.body(80, 24)
+	if got, want := body[i+1], h.m.cfg.Theme.Warn.Reverse(true).Render(line2); got != want {
+		t.Errorf("mono: a selected denial is reversed only:\n got %q\nwant %q", got, want)
+	}
+}
+
+// At the smallest body heights the scroll bump for a Running run's second line
+// must not push the run's own first line out of the window (S150).
+func TestScrollBumpNeverHidesLineOne(t *testing.T) {
+	p := proj("ork", false)
+	h := newHarness(t, p)
+	var runs []slicercli.RelayRun
+	for i := 0; i < 8; i++ {
+		r := externalRun(fmt.Sprintf("ext-%d", i), fmt.Sprintf("S%d", 40+i))
+		r.Steps[1].Task = fmt.Sprintf("task line %d", i)
+		runs = append(runs, r)
+	}
+	h.src.set(snap(p, nil, nil, runs...))
+	h.start()
+	for height := 5; height <= 12; height++ {
+		h.m.Update(tea.WindowSizeMsg{Width: 100, Height: height})
+		for i := 0; i < 7; i++ {
+			h.send(press("down"))
+		}
+		v := plainView(h.m)
+		if i := lineWith(mainLines(v), 0, "S47", "reviewer"); i < 0 {
+			t.Fatalf("height %d: the last run's first line is not on screen:\n%s", height, v)
+		}
+		for i := 0; i < 7; i++ {
+			h.send(press("up"))
 		}
 	}
 }
