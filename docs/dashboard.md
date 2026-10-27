@@ -364,10 +364,19 @@ the text column, falling back to a shorter indent when needed to fit.
    is that role's latest output line, dim and set in under the id; it is
    omitted when the role has said nothing. Where the title does not fit on line
    1, every run in the section moves it down together: line 1 is then status
-   only (the model comes back if it fits) and line 2 reads `Short title: latest
+   only (the model comes back if it fits) and line 2 reads `Short title  latest
    line`, or the title alone when the role has said nothing, so the run has a
-   line 2 even when its ledger label is bare. The selected run is drawn reversed
-   on both lines (the second is not dimmed), which reads in monochrome too. The run id and `started elsewhere`
+   line 2 even when its ledger label is bare. The title is in the default
+   foreground and two spaces separate it from the output; only the output is
+   dim (or amber, for a denial), so a denial does not colour the title. When
+   the output would not fit beside the whole title, or would get fewer than 20
+   columns, the title is cut to the room that leaves the output 20 columns,
+   and never under 12 columns (*proposed*, S150); a title that fits beside its
+   output stays whole. The selected run is drawn reversed
+   on both lines (the second is not dimmed and not bold), which reads in
+   monochrome too; a denial on the selected run keeps its warning colour as the
+   reversed colour, black on amber in any terminal theme (`denied:` carries the
+   cue in monochrome). The run id and `started elsewhere`
    are not on the row: the pane names the run (`Run ID`), and the hint line
    says a relay started elsewhere is read-only. The selected row's detail line
    keeps the run id, the engine state, the steps and the elapsed time in full. A project
@@ -402,8 +411,8 @@ the text column, falling back to a shorter indent when needed to fit.
      phase `start`, so a subagent shows ahead of its orchestrator). The relay
      contract asks for a bare label there, `ID role` such as `s145 implementer`,
      which line 1 already says. A leading `ID role` is cut from the task, with
-     the `:`, `-` and spaces after it (case, spacing and `-`, `_` or `,` between
-     the words do not matter; the ids of a run on several slices are joined), so
+     the `:`, `-` and spaces after it (case, spacing and `-`, `_`, `,` or `/`
+     between the words do not matter; the ids of a run on several slices are joined), so
      `s145 implementer fix round 2` shows `fix round 2`. A task that is only that
      label (or the id or the role alone) says nothing, and gives no line 2 unless
      the title has moved there.
@@ -439,7 +448,9 @@ the text column, falling back to a shorter indent when needed to fit.
    For relays started elsewhere, the *proposed* step details (also indented
    under each relay in `ork status`) are `running: ROLE VENDOR/MODEL: TASK` for
    the last step in ledger order with phase `start` (a working subagent wins
-   over its orchestrator), then `failed: ROLE: TASK` for the last step with
+   over its orchestrator; `ork status` cuts the leading `ID role` label from
+   the running task, as line 2 does, and `--json` keeps the task as recorded),
+   then `failed: ROLE: TASK` for the last step with
    phase `fail`. They are on the selected row's detail line in full and no
    longer on the row, which shows the role, the model and the task line instead.
 3. **Recent (proposed):** ended ledger runs within the last hour, newest

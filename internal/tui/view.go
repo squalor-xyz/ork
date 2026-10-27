@@ -226,6 +226,11 @@ func (m *Model) screen() string {
 	}
 	if selectedLine >= 0 {
 		start = windowStart(selectedLine, len(body), bodyH)
+		if rowLine >= 0 && selectedLine > rowLine && start > rowLine {
+			// The bump to the row's second line pushed its first line out of a
+			// window too small for both with the markers: the row wins (S150).
+			start = windowStart(rowLine, len(body), bodyH)
+		}
 		if top := m.pageTop; top.on {
 			// A page down left the window at its first unseen row. Keep it while
 			// the cursor is inside; the last page ends flush with the body.

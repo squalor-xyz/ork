@@ -1144,6 +1144,37 @@ func TestStatusRelaySteps(t *testing.T) {
 	}
 }
 
+// ork status says what the Running row says: the leading "<id> <role>" label is
+// cut from the running step's task (S150). The failed step and --json keep the
+// task as it was recorded.
+func TestStatusRunningTextCutsTheTaskLabel(t *testing.T) {
+	for _, tc := range []struct{ task, running string }{
+		{"s30 implementer", "running: implementer codex/gpt-6.1"},
+		{"S30/Implementer", "running: implementer codex/gpt-6.1"},
+		{"s30 implementer fix round 2", "running: implementer codex/gpt-6.1: fix round 2"},
+		{"s30 implementer - fix round 2: x", "running: implementer codex/gpt-6.1: fix round 2: x"},
+		{"Implement S30", "running: implementer codex/gpt-6.1: Implement S30"},
+	} {
+		t.Run(tc.task, func(t *testing.T) {
+			w := newWorld(t, stubSource{"ork": {Runs: source.Result[[]slicercli.RelayRun]{Value: []slicercli.RelayRun{
+				{ID: "ledger", Items: []string{"S30"}, State: "active", Steps: []slicercli.Step{
+					{Role: "implementer", Vendor: "codex", Model: "gpt-6.1", Task: tc.task, Phase: "start"},
+					{Role: "reviewer", Task: "s30 reviewer", Phase: "fail"},
+				}},
+			}}}}, registry.Project{Name: "ork", Path: "/projects/ork"})
+			code, stdout, stderr := run(t, w.app, "status")
+			want := "ork: needs you 0, active relays 1\n  ledger S30 active (0 steps, 0 running)\n    " + tc.running + "\n    failed: reviewer: s30 reviewer\n"
+			if code != 0 || stdout != want {
+				t.Fatalf("exit %d: %s\ngot %q\nwant %q", code, stderr, stdout, want)
+			}
+			code, stdout, _ = run(t, w.app, "status", "--json")
+			if code != 0 || !strings.Contains(stdout, `"task": "`+tc.task+`"`) && !strings.Contains(stdout, `"task":"`+tc.task+`"`) {
+				t.Fatalf("--json must keep the recorded task %q:\n%s", tc.task, stdout)
+			}
+		})
+	}
+}
+
 func TestStatusRelayOptionalFields(t *testing.T) {
 	for _, tc := range []struct {
 		name, vendor, model, task, running, failed string

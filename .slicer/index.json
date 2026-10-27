@@ -6332,7 +6332,7 @@
       "id": "S150",
       "title": "S145 later notes: line 2 styling, title clip, label parsing, one-line leftovers",
       "short_title": "S145 later notes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -6342,6 +6342,28 @@
           "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): take the UI-pass layout set only: line 2 styling (title default foreground, two spaces between title and output, only the output dim or amber), clip a long title at 80x24, compile the stripTaskLabel regex once, '/' in the docs separators, selected-row denial cue (and line 2 not bold on a reversed row), ork status prints the new running text, scroll bump hiding line 1. Leave for later: parallel-role tail, sidebar Running entry, ledger round counts, error rows, engine vs ledger look-alike.",
           "created_at": "2026-10-27T18:37:28Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "29ff4c75-b5f9-49dd-9c4c-913adb9c31ec",
+          "kind": "",
+          "text": "**2026-10-27** — Review leftovers (not fixed in S150): (1) internal/daemon/label.go labelPatterns cache grows by one entry per distinct items+role and its keys are case-sensitive; lower-case the key if a long-lived daemon calls StripTaskLabel. (2) internal/tui/view.go: the row-wins clamp after windowStart (start > rowLine) also applies to the ready-row commands bump and the S151 trailing bump; test those at small heights. (3) TestLineTwoStylesOnlyTheOutput in internal/tui/running_test.go indexes a later render with an earlier render's line index and has a garbled comment ('S41, unselected... is selected here').",
+          "created_at": "2026-10-27T20:23:48Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "8c09d22f-2344-4eb0-a95d-56773fcfca1c",
+          "kind": "",
+          "text": "**2026-10-27** — Orchestration trial (run 25, S150): 1 owner question before the start and 2 during (ork status reading, title clip), no stalls, 1 fix round, merge of main at landing; ran in parallel with S148 and S153; implementer Claude sonnet-high fallback (Codex out of credits), opus reviewer and UI pass.",
+          "created_at": "2026-10-27T20:38:29Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -6365,7 +6387,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -6748,6 +6770,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "d19f1056-76a6-4f03-8aaf-189b5b8f3ff9",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): on Retry with a queued sibling question while the first pause is not a question, ask the question first; then the retry resumes with that answer in the brief and the retry context (engine.go ~303). Also show RunPlan.note in printRunPlan (internal/cli/run.go ~151) and the TUI launch confirm (internal/tui/launch.go ~309). UI pass applies.",
+          "created_at": "2026-10-27T20:46:56Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -6883,7 +6916,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "da7b0090-0b36-440f-b699-5145e119e67e",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decisions 2026-10-27 (interactive): all optional fields, one flag each: ork projects set NAME --push on|off --ui-doc PATH --worktree-pattern P --branch-pattern P --check CMD --budget-minutes N --budget-tokens N; refuses while the project has unfinished runs (as ork projects rm does, CodeProjectBusy); validates each value (ui_doc a relative path inside the project; patterns need {id} or {id_lower}); a daemon RPC does the write under regMu.",
+          "created_at": "2026-10-27T20:46:56Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -6911,7 +6956,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "acbb83b1-bbe1-4cd9-ab63-c88399afd29c",
+          "kind": "",
+          "text": "**2026-10-27** — Owner decision 2026-10-27 (interactive): a dim heading line per pass above its items (e.g. 'v1.0 (24)'); { and } jump to headings.",
+          "created_at": "2026-10-27T20:46:56Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",

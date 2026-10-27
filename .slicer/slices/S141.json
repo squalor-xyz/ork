@@ -20,15 +20,15 @@
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "TestOrkCheckMarksAHumanCheck; TestOrkFixFilesTheOwnerFix; TestOrkApproveFromTheShellWithChecks; TestApprovalNotesWhenChecksCannotBeRead (approve and write a slicer note that the checks could not be read); TestFixNoteCarriedIntoLaterGateBriefs (after a red check or a gate FAIL); TestChecksTenAndAboveCanBeMarked; TestRefusedOwnerActionShowsNoErrorMarker; TestApprovalNoteNotDuplicatedWhenTheUpdateFails; TestCardAlignsNewFilesWithTheDiffStat; TestCardBlankLineBetweenBlocksAbove24Rows; TestWrappedCheckLineKeepsTheRecommendation at 80x24; goldens."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "Re-anchor from the code after S118 and S148 (approval and card code changed). Owner decisions 2026-10-26: add ork check and ork fix CLI so ork approve works from the shell with human checks; when checks cannot be read at approval, approve and write a slicer note saying so. Check marking for 10 and above: type the number (digits accumulate with a short timeout or Enter) or use j/k plus space; pick the simplest that keeps 1-9 as they are and note it. A refused owner action shows the refusal text in the status line, not an 'error:' marker on the run row. UI slice: UI pass (r14). Interview the owner at preflight only if a point above is unclear."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "go test -race ./internal/engine ./internal/cli ./internal/tui; goldens (go test ./internal/tui -update, review the diff); go vet ./...; gofmt -l .; slicer check; adj lint."
     },
     {
       "heading": "Git",

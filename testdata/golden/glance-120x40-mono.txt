@@ -5,7 +5,7 @@
 [2m2[m adjudicate              *│
 [2m3[m DataBall                 │[1mRunning 3[m
 [2m4[m agents                   │[1;7m   slicer      S30  Thirty short        implementer sonnet  [~~....] fix 1  heard 3m        [m
-                           │[1;7m                 updating the golden views for the two-line rows                            [m
+                           │[7m                 updating the golden views for the two-line rows                            [m
                            │   adjudicate  [1mS41[m  Forty-one untitled  gate [2mopus[m           [####~~]        [2mheard 2m[m
                            │                 [2mround 2: rerunning the checks[m
                            │   adjudicate  [1mS52[m  Fifty-two short     implementer [2mgpt-5[m   [~~....]        ! heard 14m
