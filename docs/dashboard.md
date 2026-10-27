@@ -963,10 +963,11 @@ plan prevents launching the chosen set; the owner can untick it. The
 wave.plan-failure decision remains open (adj 146).
 
 `e` edits the selected ticked item after its plan is ready (S83).
-The editor starts from that item's plan: implementer and reviewer, then
-budget minutes and tokens. The gate follows the reviewer and has no field.
+The editor starts from that item's plan: implementer, reviewer and architect,
+then budget minutes and tokens. The architect shows `off` when absent.
+The gate follows the reviewer and has no field.
 When the plan has a `ui` entry (the matrix's UI pass row), a line below the
-reviewer lists its chain for information: the UI pass runs beside the reviewer
+architect lists its chain for information: the UI pass runs beside the reviewer
 only on a slice that touches the UI (`roles.ui-pass`, adj #165), has no field,
 and the cursor skips it.
 `up`/`down`, `tab` and `shift+tab` move between rows.
@@ -975,6 +976,9 @@ and the cursor skips it.
 daemon plan has one row per role, so left and right have no effect; use
 `c` to change a role. The TUI adds no matrix read.
 `c` opens vendor, model and effort fields for a custom primary entry.
+On the architect row, `c` adds an absent architect and `d` drops its whole
+chain. A dropped architect shows `architect*: off` without cycle arrows or
+an alternatives label. Saving sends an empty architect override to drop it.
 `tab` and `shift+tab` switch fields; `enter` uses the custom entry.
 Cycling moves the chosen row to the front; the rest keep their order.
 Custom entry replaces the primary; fallback entries cannot be edited here.
@@ -984,7 +988,9 @@ default, following the daemon's budget semantics.
 Launch waits for the replan. Errors show verbatim and keep the old plan
 and overrides. `esc` discards the editor's changes, including custom fields.
 The editor marks roles whose chains differ from its starting plan with `*`.
-The Waves Lineup column marks overridden roles with `*`. When budgets are
+The Waves Lineup column marks overridden roles with `*` and shows a dropped
+architect as `arch*: off`. At narrow widths, the drop hint disappears before
+`enter save and replan`. When budgets are
 overridden, it shows the effective budgets as `budgets*: MIN min, TOKENS tokens`;
 a zero override shows the project default.
 Edits apply to that run only and travel with that item's confirmed plan;
@@ -995,6 +1001,7 @@ Edit lineup: A  Alpha
   Run only; gate follows reviewer.
   > implementer: claude sonnet high (no alternatives)
     reviewer: claude opus medium
+    architect: off
     ui: claude opus medium (UI slices only; from the matrix)
     Budget minutes: 45
     Budget tokens: 9000
@@ -1073,8 +1080,8 @@ Launch asks "Well specified? [y/n]:" and then "Split? [y/n]:". Neither has a
 default. Enter submits y, yes, n or no in any case; invalid input asks again.
 The TUI calls `run.plan` after both answers and shows "pending: run.plan".
 The plan summary shows project, item, worktree, branch, check command, and
-implementer, reviewer and gate lineup entries as vendor, model and effort,
-with each role's permissions. The confirmation bar shows
+implementer, reviewer, architect (when present) and gate lineup entries
+as vendor, model and effort, with each role's permissions. The confirmation bar shows
 `ork run PROJECT ITEM? [y/N] (Enter is No)`. The displayed command omits the
 two answers. `y` or `Y` calls `run.start` with those answers and the displayed
 plan as Expected. At confirmation, Enter, n, N and Esc cancel. Esc cancels

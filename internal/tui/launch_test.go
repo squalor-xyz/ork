@@ -579,7 +579,9 @@ func TestGoldenLaunch(t *testing.T) {
 		{"launch-100x30-color.txt", false}, {"launch-100x30-mono.txt", true},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			h, _ := launchHarness(t)
+			h, l := launchHarness(t)
+			l.plan.Lineup["architect"] = []runrec.LineupEntry{{Vendor: "codex", Model: "sol", Effort: "high"}}
+			l.plan.Permissions["architect"] = engine.Permission{ReadOnly: true}
 			h.m.cfg.Theme = NewTheme(tc.mono)
 			launchConfirmed(t, h)
 			checkGolden(t, tc.name, h.m.View().Content)
@@ -689,6 +691,20 @@ func TestLaunchStartsWithBothAnswers(t *testing.T) {
 					t.Fatalf("Plan and Start: %+v %+v", l.plans, l.starts)
 				}
 			})
+		}
+	}
+}
+
+func TestPlanTextShowsTheArchitectRow(t *testing.T) {
+	for _, present := range []bool{false, true} {
+		h, l := launchHarness(t)
+		if present {
+			l.plan.Lineup["architect"] = []runrec.LineupEntry{{Vendor: "codex", Model: "sol", Effort: "high"}}
+			l.plan.Permissions["architect"] = engine.Permission{ReadOnly: true}
+		}
+		launchConfirmed(t, h)
+		if strings.Contains(h.view(), "architect: codex sol high") != present {
+			t.Fatalf("present=%v: %s", present, h.view())
 		}
 	}
 }

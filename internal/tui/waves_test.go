@@ -1436,3 +1436,25 @@ func TestWavesLaunchedRowMarker(t *testing.T) {
 		}
 	}
 }
+
+func TestWavesArchitectLineup(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		h, _ := wavesHarness(t)
+		h.m.cfg.Theme = NewTheme(mono)
+		openWaves(t, h)
+		tickWave(t, h, "y", "n")
+		p := h.m.waves.picked["A"]
+		if strings.Contains(strings.Join(waveLineup(p), "\n"), "arch:") {
+			t.Fatal("absent architect shown")
+		}
+		p.Expected.Lineup["architect"] = []runrec.LineupEntry{{Vendor: "codex", Model: "sol", Effort: "high"}}
+		if !strings.Contains(h.view(), "arch:  codex sol high") {
+			t.Fatal(h.view())
+		}
+		theme := "color"
+		if mono {
+			theme = "mono"
+		}
+		checkGolden(t, "waves-architect-100x30-"+theme+".txt", h.m.View().Content)
+	}
+}

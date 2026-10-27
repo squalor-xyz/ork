@@ -188,6 +188,7 @@ func TestLineupBudgetsMustBeNumbers(t *testing.T) {
 			h, l := lineupHarness(t)
 			h.deliver(press("down"))
 			h.deliver(press("down"))
+			h.deliver(press("down"))
 			replaceLineupField(h, value)
 			h.deliver(press("enter"))
 			if len(l.plans) != 1 || !strings.Contains(h.view(), "whole number") {
@@ -200,6 +201,7 @@ func TestLineupBudgetsMustBeNumbers(t *testing.T) {
 func TestWaveStartCarriesOverrides(t *testing.T) {
 	h, l := lineupHarness(t)
 	changeImplementer(h)
+	h.deliver(press("down"))
 	h.deliver(press("down"))
 	h.deliver(press("down"))
 	replaceLineupField(h, "0")
@@ -346,7 +348,7 @@ func TestLineupOnlyOpensTickedReadyItem(t *testing.T) {
 
 func TestLineupTokenValidationAndPasteDoesNotSubmit(t *testing.T) {
 	h, l := lineupHarness(t)
-	for range 3 {
+	for range 4 {
 		h.deliver(press("tab"))
 	}
 	replaceLineupField(h, "oops\r\n")
@@ -363,6 +365,7 @@ func TestLineupCustomEscDiscardsWholeEditor(t *testing.T) {
 	h, l := lineupHarness(t)
 	old := h.m.waves.picked["A"]
 	changeImplementer(h)
+	h.deliver(press("down"))
 	h.deliver(press("down"))
 	h.deliver(press("down"))
 	replaceLineupField(h, "12")
@@ -404,6 +407,7 @@ func TestLineupSavedBudgetVisible(t *testing.T) {
 	h, _ := lineupHarness(t)
 	h.deliver(press("down"))
 	h.deliver(press("down"))
+	h.deliver(press("down"))
 	replaceLineupField(h, "0")
 	h.deliver(press("down"))
 	replaceLineupField(h, "1234")
@@ -439,6 +443,7 @@ func TestLineupEditorAffordances(t *testing.T) {
 		t.Error("custom mode must focus only the field and label the editing role")
 	}
 	h.deliver(press("enter"))
+	h.deliver(press("down"))
 	h.deliver(press("down"))
 	h.deliver(press("down"))
 	if hint := wideHint(h); !strings.Contains(hint, "up/down/tab row") || strings.Contains(hint, "left/right cycle") {
@@ -484,8 +489,8 @@ func TestLineupEditorShowsTheUIPassRow(t *testing.T) {
 	if !strings.Contains(body(), "\n    reviewer:") || !strings.Contains(body(), "\n    ui: claude") {
 		t.Fatalf("ui row is not indented like the reviewer row:\n%s", body())
 	}
-	// The row is not one the cursor visits: four rows, as before.
-	for i := 0; i < 4; i++ {
+	// The row is not one the cursor visits: five editable rows.
+	for i := 0; i < 5; i++ {
 		h.deliver(press("down"))
 	}
 	if h.m.waves.lineup.row != 0 || strings.Contains(strings.Join(h.m.lineupBody(100).body, "\n"), "> ui") {
@@ -496,5 +501,113 @@ func TestLineupEditorShowsTheUIPassRow(t *testing.T) {
 		if w := lipgloss.Width(line); w > 40 {
 			t.Errorf("line of %d cells at width 40: %q", w, line)
 		}
+	}
+}
+
+func TestLineupEditorCanAddAndDropTheArchitect(t *testing.T) {
+	h, l := lineupHarness(t)
+	h.deliver(press("down"))
+	h.deliver(press("down"))
+	if !strings.Contains(h.view(), "> architect: off") {
+		t.Fatal("architect row missing: " + h.view())
+	}
+	h.deliver(press("c"))
+	replaceLineupField(h, "codex")
+	h.deliver(press("tab"))
+	replaceLineupField(h, "sol")
+	h.deliver(press("tab"))
+	replaceLineupField(h, "high")
+	h.deliver(press("enter"))
+	h.deliver(press("enter"))
+	p := h.m.waves.picked["A"]
+	want := []runrec.LineupEntry{{Vendor: "codex", Model: "sol", Effort: "high"}}
+	if len(l.plans) != 2 || !reflect.DeepEqual(p.Lineup["architect"], want) || !reflect.DeepEqual(p.Expected.Lineup["architect"], want) {
+		t.Fatalf("add: %+v plans=%d", p, len(l.plans))
+	}
+	if !strings.Contains(h.view(), "arch*:") {
+		t.Fatal(h.view())
+	}
+	h.deliver(press("e"))
+	h.deliver(press("down"))
+	h.deliver(press("down"))
+	h.deliver(press("d"))
+	h.deliver(press("enter"))
+	p = h.m.waves.picked["A"]
+	chain, overridden := p.Lineup["architect"]
+	if len(l.plans) != 3 || !overridden || len(chain) != 0 || len(p.Expected.Lineup["architect"]) != 0 {
+		t.Fatalf("drop: %+v plans=%d", p, len(l.plans))
+	}
+	if !strings.Contains(h.view(), "arch*: off") {
+		t.Fatal(h.view())
+	}
+	h.deliver(press("e"))
+	h.deliver(press("enter"))
+	if len(l.plans) != 3 {
+		t.Fatal("unchanged off architect replanned")
+	}
+}
+
+func TestArchitectDropHintUsesDAndKeepsSaveAt80x24(t *testing.T) {
+	h, _ := lineupHarness(t)
+	e := h.m.waves.lineup
+	e.plan.Lineup["architect"] = []runrec.LineupEntry{{Vendor: "codex", Model: "sol", Effort: "high"}}
+	e.chains[2] = append([]runrec.LineupEntry(nil), e.plan.Lineup["architect"]...)
+	e.row = 2
+	found := false
+	for _, hint := range h.m.contextHints() {
+		if hint.b.Help().Desc == "drop architect" {
+			found = true
+			if !reflect.DeepEqual(hint.b.Keys(), []string{"d"}) {
+				t.Errorf("drop hint keys = %q, want [d]", hint.b.Keys())
+			}
+		}
+	}
+	if !found {
+		t.Fatal("missing drop hint")
+	}
+	hint := hintLine(h.at(80, 24))
+	if !strings.Contains(hint, "enter save and replan") {
+		t.Errorf("save lost at 80x24: %s", hint)
+	}
+}
+
+func TestArchitectOffHasNoCycleDecoration(t *testing.T) {
+	for _, chain := range [][]runrec.LineupEntry{nil, {{Vendor: "codex", Model: "sol", Effort: "high"}}, {{Vendor: "codex", Model: "sol", Effort: "high"}, {Vendor: "claude", Model: "opus", Effort: "medium"}}} {
+		h, _ := lineupHarness(t)
+		e := h.m.waves.lineup
+		e.plan.Lineup["architect"] = chain
+		e.chains[2] = append([]runrec.LineupEntry(nil), chain...)
+		e.row = 2
+		h.deliver(press("d"))
+		want := "> architect: off"
+		if len(chain) > 0 {
+			want = "> architect*: off"
+		}
+		for _, line := range h.m.lineupBody(100).body {
+			if strings.Contains(line, "architect") && strings.TrimSpace(sgr.ReplaceAllString(line, "")) != want {
+				t.Errorf("off row = %q, want %q", sgr.ReplaceAllString(line, ""), want)
+			}
+		}
+	}
+}
+
+func TestArchitectDroppedGolden(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		h, _ := lineupHarness(t)
+		h.m.cfg.Theme = NewTheme(mono)
+		e := h.m.waves.lineup
+		e.plan.Lineup["architect"] = []runrec.LineupEntry{{Vendor: "codex", Model: "sol", Effort: "high"}, {Vendor: "claude", Model: "opus", Effort: "medium"}}
+		e.chains[2] = append([]runrec.LineupEntry(nil), e.plan.Lineup["architect"]...)
+		e.row = 2
+		theme := "color"
+		if mono {
+			theme = "mono"
+		}
+		h.at(80, 24)
+		checkGolden(t, "lineup-architect-80x24-"+theme+".txt", h.m.View().Content)
+		h.deliver(press("d"))
+		checkGolden(t, "lineup-architect-off-80x24-"+theme+".txt", h.m.View().Content)
+		h.deliver(press("enter"))
+		checkGolden(t, "waves-architect-off-80x24-"+theme+".txt", h.m.View().Content)
 	}
 }

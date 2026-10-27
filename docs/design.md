@@ -171,9 +171,12 @@ ork (TUI)  ork status --json (CLI)
    it has no adapter for (`lineup.launch-edit`). The edits travel as the
    full lineup per role plus budgets, and the plan echoes them
    (`run.launch-wire`).
-   S80 accepts implementer and reviewer chains on `run.plan` and
-   `run.start`. Each entry needs a model, effort and a runnable vendor
-   (`claude` or `codex`). The gate copies the reviewer's chain; a gate
+   The daemon accepts implementer, reviewer and architect chains on
+   `run.plan`, `run.start` and `wave.start`. An empty architect chain drops
+   the architect; an omitted override keeps the recommendation. Adding an
+   architect resolves its read-only permissions. A matched architect row
+   with no ork adapter refuses planning, even with an override. Each entry
+   needs a model, effort and a runnable vendor (`claude` or `codex`). The gate copies the reviewer's chain; a gate
    override is refused. Without an override, the plan keeps every row with
    an adapter in matrix order: matrix agent `Claude Code` maps to `claude`, and
    `Codex` maps to `codex` (`engine.adapter-key`, decision 155).

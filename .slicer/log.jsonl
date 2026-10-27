@@ -2011,3 +2011,7 @@
 {"when": "2026-10-27T13:37:39Z", "item": "S160", "action": "set", "from": "", "to": "", "note": "effort,importance,urgency"}
 {"when": "2026-10-27T13:39:05Z", "item": "S160", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-27 (interactive): scope is add AND r", "by": "Jon R"}
 {"when": "2026-10-27T13:39:10Z", "item": "S160", "action": "set", "from": "", "to": "", "note": "effort 1→2"}
+{"when": "2026-10-27T13:47:31Z", "item": "S94", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-27T14:08:48Z", "item": "S94", "action": "note", "from": "", "to": "", "note": "UI pass observations deferred, not implemented (2026-10-27):", "by": "Jon R"}
+{"when": "2026-10-27T14:13:23Z", "item": "S94", "action": "status", "from": "started", "to": "done", "note": "The architect shows in ork run, the launch confirm and the Waves lineup column; the lineup editor adds or drops it (architect*: off, arch*: off); run.plan and wave.start accept an architect override (empty drops it); a matched architect row with no adapter still refuses. Review PASS, UI pass PASS (2 rounds), gate PASS (run-20261027-134719-989c).", "by": "Jon R"}
+{"when": "2026-10-27T14:13:24Z", "item": "S94", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 17, S94): 1 owner question before t", "by": "Jon R"}

@@ -268,10 +268,12 @@ func TestPlanAddsTheArchitectRowOnlyWhenRecommended(t *testing.T) {
 
 func TestRunPlanRefusesAnArchitectRecommendationWithoutAnAdapter(t *testing.T) {
 	roles := `{"roles":[{"role":"implementer","row":{"agent":"Claude Code","model":"sonnet","reasoning":"high"}},{"role":"reviewer","row":{"agent":"Claude Code","model":"opus","reasoning":"medium"}},{"role":"architect","row":{"agent":"Unknown","vendor":"Claude","model":"wrong"}}]}`
-	d, _, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: roles})
-	_, err := d.handle(context.Background(), MethodRunPlan, json.RawMessage(`{"project":"p","item":"S1"}`))
-	if err == nil || !strings.Contains(err.Error(), "no row with an adapter for architect") {
-		t.Fatalf("unsupported architect row: %v", err)
+	for _, extra := range []string{"", `,"lineup":{"architect":[]}`, `,"lineup":{"architect":[{"vendor":"codex","model":"sol","effort":"high"}]}`} {
+		d, _, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: roles})
+		_, err := d.handle(context.Background(), MethodRunPlan, json.RawMessage(`{"project":"p","item":"S1"`+extra+`}`))
+		if err == nil || !strings.Contains(err.Error(), "no row with an adapter for architect") {
+			t.Fatalf("unsupported architect row with %s: %v", extra, err)
+		}
 	}
 }
 
@@ -327,7 +329,7 @@ func TestRunPlanWithoutOverrideIsUnchanged(t *testing.T) {
 
 func TestRunPlanRefusesBadOverride(t *testing.T) {
 	for name, override := range map[string]string{
-		"unknown role":       `"lineup":{"architect":[{"vendor":"claude","model":"m","effort":"high"}]}`,
+		"unknown role":       `"lineup":{"unknown":[{"vendor":"claude","model":"m","effort":"high"}]}`,
 		"gate":               `"lineup":{"gate":[{"vendor":"claude","model":"m","effort":"high"}]}`,
 		"empty chain":        `"lineup":{"implementer":[]}`,
 		"null chain":         `"lineup":{"reviewer":null}`,
@@ -2167,5 +2169,50 @@ func TestAnsweredRunWaitClearsPendingQuestion(t *testing.T) {
 	rows := d.engineRuns(p.Name)
 	if len(rows) != 1 || rows[0].Wait != "" || rows[0].Pending != "" || rows[0].Question != nil {
 		t.Fatalf("answered run exposes pending question: %+v", rows)
+	}
+}
+
+func TestRunPlanAcceptsAnArchitectOverride(t *testing.T) {
+	for _, chain := range []string{`[{"vendor":"codex","model":"custom","effort":"high"},{"vendor":"claude","model":"backup","effort":"medium"}]`, `[]`, `null`} {
+		t.Run(chain, func(t *testing.T) {
+			d, _, _ := runDaemon(t, nil)
+			plan := launchPlan(t, d, `{"project":"p","item":"S1","lineup":{"architect":`+chain+`}}`)
+			var want []runrec.LineupEntry
+			if err := json.Unmarshal([]byte(chain), &want); err != nil {
+				t.Fatal(err)
+			}
+			if len(want) == 0 {
+				if _, ok := plan.Lineup["architect"]; ok {
+					t.Fatal("dropped architect remains in plan")
+				}
+				if _, ok := plan.Permissions["architect"]; ok {
+					t.Fatal("dropped architect retains permissions")
+				}
+			} else if !reflect.DeepEqual(plan.Lineup["architect"], want) || !plan.Permissions["architect"].ReadOnly {
+				t.Fatalf("architect override: %+v", plan)
+			}
+		})
+	}
+}
+
+func TestRunPlanDropsARecommendedArchitect(t *testing.T) {
+	roles := `{"roles":[{"role":"implementer","row":{"agent":"Claude Code","model":"sonnet","reasoning":"high"}},{"role":"reviewer","row":{"agent":"Claude Code","model":"opus","reasoning":"medium"}},{"role":"architect","row":{"agent":"Codex","model":"sol","reasoning":"high"}}]}`
+	d, _, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: roles})
+	plan := launchPlan(t, d, `{"project":"p","item":"S1","lineup":{"architect":[]}}`)
+	if _, ok := plan.Lineup["architect"]; ok {
+		t.Fatal("architect not dropped")
+	}
+	if _, ok := plan.Permissions["architect"]; ok {
+		t.Fatal("architect permission not dropped")
+	}
+}
+
+func TestRunPlanValidatesArchitectEntries(t *testing.T) {
+	for _, entry := range []string{`{"vendor":"unknown","model":"m","effort":"high"}`, `{"vendor":"codex","effort":"high"}`, `{"vendor":"codex","model":"m"}`} {
+		d, _, _ := runDaemon(t, nil)
+		_, err := d.handle(context.Background(), MethodRunPlan, json.RawMessage(`{"project":"p","item":"S1","lineup":{"architect":[`+entry+`]}}`))
+		if err == nil || !strings.Contains(err.Error(), "architect") || strings.Contains(err.Error(), "cannot override") {
+			t.Fatalf("validation: %v", err)
+		}
 	}
 }

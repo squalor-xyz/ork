@@ -276,3 +276,12 @@ func TestWaveStartRefusesTwoEngineSlices(t *testing.T) {
 		t.Fatalf("one engine slice was refused: %v", runs)
 	}
 }
+
+func TestWaveStartAcceptsAnArchitectOverride(t *testing.T) {
+	w := newWaveRig(t, 4, 0)
+	_, runs := waveRecords(t, w.d, `{"items":[{"project":"p","item":"S1","lineup":{"architect":[{"vendor":"codex","model":"sol","effort":"high"}]}},{"project":"p","item":"S2","lineup":{"architect":[]}}]}`)
+	if len(runs) != 2 || len(runs[0].Lineup["architect"]) != 1 || runs[0].Lineup["architect"][0].Model != "sol" || len(runs[1].Lineup["architect"]) != 0 {
+		t.Fatalf("architect overrides: %+v", runs)
+	}
+	w.expectStarts(t, "S1", "S2")
+}

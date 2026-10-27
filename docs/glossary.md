@@ -218,7 +218,8 @@ The terms below are ork's own. Those backed by an adj decision cite its
 key.
 
 **Engine.** The ork daemon's state machine that runs slices: setup,
-implement, checks, review, fix round, gate, awaiting approval, commit. See
+implement, checks, review, fix round, architect (when its lineup has an
+entry), gate, awaiting approval, commit. See
 [design.md](design.md).
 
 **Wave.** In ork, a set of items from one project that the owner launched

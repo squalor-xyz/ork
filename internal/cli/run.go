@@ -151,7 +151,10 @@ func yesNo(v string) string {
 }
 func printRunPlan(w io.Writer, p daemon.RunPlan) {
 	fmt.Fprintf(w, "%s %s\nworktree: %s\nbranch: %s\ncheck: %s\n", p.Project.Name, p.Item, p.Worktree, p.Branch, p.CheckCommand)
-	for _, role := range []string{"implementer", "reviewer", "gate"} {
+	for _, role := range []string{"implementer", "reviewer", "architect", "gate"} {
+		if role == "architect" && len(p.Lineup[role]) == 0 {
+			continue
+		}
 		for _, entry := range p.Lineup[role] {
 			fmt.Fprintf(w, "%s: %s %s %s\n", role, entry.Vendor, entry.Model, entry.Effort)
 		}

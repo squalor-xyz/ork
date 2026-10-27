@@ -439,8 +439,8 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			e := m.waves.lineup
 			if e.custom {
 				e.fields[e.focus].update(msg)
-			} else if e.row >= 2 {
-				e.budgets[e.row-2].update(msg)
+			} else if e.row >= len(lineupRoles) {
+				e.budgets[e.row-len(lineupRoles)].update(msg)
 			}
 			m.actionStatus = ""
 			return m, nil

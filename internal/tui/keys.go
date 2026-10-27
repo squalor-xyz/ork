@@ -252,10 +252,13 @@ func (m *Model) contextHints() []hintEntry {
 			l.add(dropRow, short(k.NextView, "tab/shift+tab", "field"), short(k.Select, "enter", "use entry"))
 		} else {
 			l.add(dropRow, short(k.NextView, "up/down/tab", "row"))
-			if e.row < 2 {
+			if e.row < len(lineupRoles) {
 				l.add(dropRow, offer(len(e.plan.Lineup[lineupRoles[e.row]]) > 1, k.TabNext, "left/right", "cycle"), key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "custom")))
 			}
-			l.add(dropRow, short(k.Select, "enter", "save and replan"))
+			if e.row < len(lineupRoles) && lineupRoles[e.row] == "architect" && len(e.chains[e.row]) > 0 {
+				l.add(dropRow+1, key.NewBinding(key.WithKeys("d"), key.WithHelp("d", "drop architect")))
+			}
+			l.add(dropRow-1, short(k.Select, "enter", "save and replan"))
 		}
 		l.add(dropPinned, short(k.Close, "esc", "discard"))
 	case m.waves != nil && m.waves.inputs != nil:
