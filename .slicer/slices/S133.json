@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": "Preflight: the JSON event shape for this error is not recorded (the log above was text mode); build a fixture from the existing turn.failed shape and mark it unverified. Owner to confirm at preflight that out of credits counts as a classified limit under adj 156 (recommended: yes, the vendor is unavailable for the run, as with a usage limit)."
+      "body": "Owner decision 2026-10-27 (interactive question): out of credits counts as a classified limit under adj 156 (yes). Match the message text \"out of credits\" (case-sensitive substring, as for \"You've hit your usage limit\") in turn.failed and error events and set limited. The JSON event shape is not recorded (the log was text mode): build the fixture from the existing turn.failed shape and mark it unverified in design.md and the test comment. Add the case to the table test near codex_test.go:258 and to the loop near :124. design.md: add the new text to the classified-limit sentence."
     },
     {
       "heading": "Check",

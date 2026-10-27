@@ -1975,3 +1975,5 @@
 {"when": "2026-10-27T10:49:36Z", "item": "S122", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-27T10:53:41Z", "item": "S122", "action": "status", "from": "started", "to": "done", "note": "Docs cite probes 11 and 12 (design.md Codex adapter). Reviewer PASS; denial outside has no command event, so the doc says so. Later: record codex-cli version on probes 11 and 12.", "by": "Jon R"}
 {"when": "2026-10-27T10:53:41Z", "item": "S122", "action": "note", "from": "", "to": "", "note": "Orchestration trial run 11: owner questions 1 before / 0 dur", "by": "Jon R"}
+{"when": "2026-10-27T10:59:02Z", "item": "S133", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-27T10:59:03Z", "item": "S133", "action": "note", "from": "", "to": "", "note": "Spec preflight 2026-10-27: owner chose yes (out of credits i", "by": "Jon R"}
