@@ -1,1 +1,0 @@
-~/bin/ork daemon restart
