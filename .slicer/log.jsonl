@@ -2116,3 +2116,6 @@
 {"when": "2026-10-28T11:18:00Z", "item": "S162", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-27 (interactive): a dim heading line ", "by": "Jon R"}
 {"when": "2026-10-28T11:18:00Z", "item": "S162", "action": "status", "from": "started", "to": "done", "note": "The Roadmap draws a dim heading line per pass (e.g. 'v1.0 (24)'; a pass that returns gets its own heading; no pass reads 'No pass'); { and } land on the first item under each heading. Review and UI check PASS (run-20261027-215302-6ed3).", "by": "Jon R"}
 {"when": "2026-10-28T11:18:00Z", "item": "S162", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 29, S162): 0 owner questions during", "by": "Jon R"}
+{"when": "2026-10-28T11:24:26Z", "item": "S163", "action": "add", "from": "", "to": "open", "note": "Recent row counts: review 0 and gate 0 for relays whose reviewer and gate steps were not recorded; check the duration"}
+{"when": "2026-10-28T11:24:26Z", "item": "S163", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-28T11:24:26Z", "item": "S163", "action": "set", "from": "", "to": "", "note": "effort -→1"}
