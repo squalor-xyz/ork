@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 164,
+  "next_id": 165,
   "preamble": "",
   "passes": [
     {
@@ -7315,6 +7315,34 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S162",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S164",
+      "title": "Running view: expand more than one run at a time",
+      "short_title": "Expand several runs",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S140",
         "parent": "",
         "cites": [],
         "key": "",
