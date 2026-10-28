@@ -7339,7 +7339,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "a6ced240-a85e-4cd9-a40b-e8801cedc228",
+          "kind": "",
+          "text": "**2026-10-28** — Owner decisions 2026-10-28 (preflight): (1) Recent shows a dash for review and gate when the ledger holds no step of that role (review - gate -), the number once one is recorded. (2) The duration is wall time (run start to end, includes waits); show both: wall time plus active time summed from recorded steps, e.g. 13h27m (active 1h40m), wall time only when no step times exist. Document in docs/dashboard.md that the first figure is wall time.",
+          "created_at": "2026-10-28T13:27:58Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -7367,7 +7379,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d0c4319a-f7e5-4193-a206-cc1ed7944212",
+          "kind": "",
+          "text": "**2026-10-28** — Owner decisions 2026-10-28 (preflight): (1) Space toggles the selected Running row and it stays open when the cursor moves; E expands or collapses all; the selected row is still shown open as today. (2) The expanded set survives a refresh and a view switch (kept by run id in the model, dropped when a run leaves the list). At small sizes (80x24) the pane scrolls and the cursor row is always fully visible. Add the key to the hint bar and the help overlay.",
+          "created_at": "2026-10-28T13:27:58Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",

@@ -2151,3 +2151,5 @@
 {"when": "2026-10-28T12:34:03Z", "item": "S164", "action": "add", "from": "", "to": "open", "note": "Running view: expand more than one run at a time"}
 {"when": "2026-10-28T12:34:03Z", "item": "S164", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-10-28T12:34:03Z", "item": "S164", "action": "set", "from": "", "to": "", "note": "effort -→1"}
+{"when": "2026-10-28T13:27:58Z", "item": "S163", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-28 (preflight): (1) Recent shows a d", "by": "Jon R"}
+{"when": "2026-10-28T13:27:58Z", "item": "S164", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-28 (preflight): (1) Space toggles th", "by": "Jon R"}
