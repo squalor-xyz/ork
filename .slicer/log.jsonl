@@ -2165,3 +2165,12 @@
 {"when": "2026-10-28T18:25:24Z", "item": "S163", "action": "note", "from": "", "to": "", "note": "Later (review and UI pass round 2): (1) at 80 columns a mult", "by": "Jon R"}
 {"when": "2026-10-28T18:25:24Z", "item": "S163", "action": "status", "from": "started", "to": "done", "note": "Recent rows: review and gate show a dash when no step of that role is recorded; the duration shows wall time plus active time (union of done/failed worker steps). Review and UI pass PASS after one fix round.", "by": "Jon R"}
 {"when": "2026-10-28T18:25:24Z", "item": "S163", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 35, S163): Codex sol/medium impleme", "by": "Jon R"}
+{"when": "2026-10-28T13:28:52Z", "item": "S164", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-28T14:30:21Z", "item": "S164", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-28T14:32:19Z", "item": "S164", "action": "note", "from": "", "to": "", "note": "Help overlay at 100x30 has no headroom: consider the wording", "by": "Jon R"}
+{"when": "2026-10-28T14:32:19Z", "item": "S164", "action": "note", "from": "", "to": "", "note": "Expanded detail repeats cells already on the row at 100 colu", "by": "Jon R"}
+{"when": "2026-10-28T14:32:19Z", "item": "S164", "action": "note", "from": "", "to": "", "note": "pgdown at 80x24 with every run open skips partly visible row", "by": "Jon R"}
+{"when": "2026-10-28T14:32:19Z", "item": "S164", "action": "note", "from": "", "to": "", "note": "While a run pane is open, the other Running rows draw closed", "by": "Jon R"}
+{"when": "2026-10-28T14:38:26Z", "item": "S164", "action": "note", "from": "", "to": "", "note": "Later (UI pass round 2): the dashboard.md sentence on hint d", "by": "Jon R"}
+{"when": "2026-10-28T14:38:26Z", "item": "S164", "action": "status", "from": "started", "to": "done", "note": "Running view expands several runs: space toggles the selected run, E all, the open set survives refresh and view switch, detail lines faint. Review and UI pass PASS after one fix round.", "by": "Jon R"}
+{"when": "2026-10-28T14:38:26Z", "item": "S164", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 34, S164): Claude sonnet-high imple", "by": "Jon R"}

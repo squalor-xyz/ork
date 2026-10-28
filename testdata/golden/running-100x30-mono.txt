@@ -26,5 +26,5 @@
                            │  run-1  S110  review  12m  [##~~..]  heard 4m
                            │  implementer>[reviewer]>gate  activity ▁▂▂▄█▃▁▂▅▂
                            │[2m────────────────────────────────────────────────────────────────────────[m
-                           │ enter [2mopen[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
+                           │ enter [2mopen[m; space [2mexpand[m; E [2mexpand all[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
                            │ 4 projects | refreshed 16:42:07

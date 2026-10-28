@@ -334,11 +334,15 @@ func (m *Model) compact() bool {
 
 // rows lists Needs you and Running. recentRows and then readyRows follow
 // them in the Overview cursor order. The lists do not depend on the width.
-func (m *Model) rows() (needs, running []ovRow) {
+func (m *Model) rows() (needs, running []ovRow) { return m.rowsIn(m.active) }
+
+// rowsIn is rows for the entry active: a registry index for one project, or
+// an aggregate entry below zero for every project.
+func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 	th := m.cfg.Theme
 	compact := m.compact()
 	for i, p := range m.projects {
-		if m.active >= 0 && i != m.active {
+		if active >= 0 && i != active {
 			continue
 		}
 		name := p.reg.Name
@@ -1499,8 +1503,11 @@ func showsWait(r source.EngineRun) bool {
 // section of the aggregate Overview, plus every run that waits on the owner
 // with a question or a stop, which Needs you holds. They stay in project
 // order, so a run that starts waiting does not change the order of the rows.
-func (m *Model) runningRows() []ovRow {
-	needs, running := m.rows()
+func (m *Model) runningRows() []ovRow { return m.runningRowsIn(m.active) }
+
+// runningRowsIn is runningRows for the entry active.
+func (m *Model) runningRowsIn(active int) []ovRow {
+	needs, running := m.rowsIn(active)
 	rows := append([]ovRow(nil), running...)
 	for _, r := range needs {
 		if r.live != nil && r.live.alert != "" {
@@ -1515,6 +1522,103 @@ func (m *Model) runningRows() []ovRow {
 		}
 	}
 	return rows
+}
+
+// expandKey names a Running run for the set of runs the owner opened: the
+// project and the run's id, so the choice survives a refresh and a switch of
+// view. It is "" for a row that is not a live run (S164).
+func expandKey(r ovRow) string {
+	switch {
+	case r.live == nil:
+		return ""
+	case r.engineID != "":
+		return r.name + "|" + r.engineID
+	case r.ledgerID != "":
+		return r.name + "|ledger|" + r.ledgerID
+	}
+	return ""
+}
+
+// expandableKeys are the keys of the runs the Running entry can open. It
+// reads every project's runs, whichever entry is selected, so a refresh on a
+// project's Overview does not forget the runs open on the Running entry.
+func (m *Model) expandableKeys() []string {
+	var keys []string
+	for _, r := range m.runningRowsIn(runningEntry) {
+		if k := expandKey(r); k != "" {
+			keys = append(keys, k)
+		}
+	}
+	return keys
+}
+
+// allExpanded reports whether every run the Running entry lists is open.
+func (m *Model) allExpanded() bool {
+	keys := m.expandableKeys()
+	return len(keys) > 0 && !slices.ContainsFunc(keys, func(k string) bool { return !m.expanded[k] })
+}
+
+// toggleExpanded opens the run under the cursor, or closes it; it stays open
+// when the cursor moves. A row that is not a live run does nothing.
+func (m *Model) toggleExpanded() {
+	r, ok := m.selectedRow()
+	if !ok {
+		return
+	}
+	k := expandKey(r)
+	if k == "" {
+		return
+	}
+	if m.expanded[k] {
+		delete(m.expanded, k)
+		return
+	}
+	if m.expanded == nil {
+		m.expanded = map[string]bool{}
+	}
+	m.expanded[k] = true
+}
+
+// toggleAllExpanded closes every run when all are open, and opens every run
+// otherwise.
+func (m *Model) toggleAllExpanded() {
+	keys := m.expandableKeys()
+	if len(keys) == 0 {
+		return
+	}
+	if m.allExpanded() {
+		m.expanded = nil
+		return
+	}
+	m.expanded = map[string]bool{}
+	for _, k := range keys {
+		m.expanded[k] = true
+	}
+}
+
+// pruneExpanded forgets the runs that left the Running list, so a run that
+// ends and comes back under its id is closed.
+func (m *Model) pruneExpanded() {
+	if len(m.expanded) == 0 {
+		return
+	}
+	kept := map[string]bool{}
+	for _, k := range m.expandableKeys() {
+		if m.expanded[k] {
+			kept[k] = true
+		}
+	}
+	m.expanded = kept
+}
+
+// expandedLines is the detail of an open run, set in under its row.
+func (m *Model) expandedLines(r ovRow, w int) []string {
+	vertical, _ := m.cfg.Theme.rules(m.cfg.ASCII)
+	lines := detailLines(r, max(w-len(indent), 1), vertical)
+	for i := range lines {
+		lines[i] = m.cfg.Theme.Dim.Render(indent + lines[i])
+	}
+	return lines
 }
 
 // liveRunCount is the number of runs the Running entry counts. An error or a
@@ -1737,7 +1841,7 @@ func (m *Model) runningOverview(w int) overviewView {
 		heading += "  " + th.Warn.Bold(true).Render(fmt.Sprintf("x stopped %d", stops))
 	}
 	lines := []string{heading}
-	sel, paneAt := -1, -1
+	sel, paneAt, selExtra := -1, -1, 0
 	var rowAt []int
 	if len(running) == 0 {
 		lines = append(lines, indent+th.Dim.Render("nothing running"))
@@ -1755,6 +1859,15 @@ func (m *Model) runningOverview(w int) overviewView {
 		if m.isPaneRow(r) {
 			paneAt = len(lines) - 1
 		}
+		// An open run shows its detail under its row; an open pane takes the
+		// room instead (S164).
+		if k := expandKey(r); k != "" && m.expanded[k] && m.pane == nil {
+			open := m.expandedLines(r, w)
+			lines = append(lines, open...)
+			if i == cursor {
+				selExtra = len(open)
+			}
+		}
 	}
 	lines = append(lines, "", th.Heading.Render("Recent"))
 	if len(recent) == 0 {
@@ -1770,8 +1883,9 @@ func (m *Model) runningOverview(w int) overviewView {
 			paneAt = len(lines) - 1
 		}
 	}
-	ov := overviewView{body: lines, sel: sel, paneAt: paneAt, rows: rowAt}
-	if cursor >= 0 {
+	ov := overviewView{body: lines, sel: sel, paneAt: paneAt, selExtra: selExtra, rows: rowAt}
+	// The selected run's detail is below the rows, unless it is open under its row.
+	if cursor >= 0 && selExtra == 0 {
 		vertical, _ := th.rules(m.cfg.ASCII)
 		ov.detail = detailLines(all[cursor], w, vertical)
 	}

@@ -1,0 +1,30 @@
+[1mork[m [2mdev[m  ?help             │ [1mOverview (Running)[m[2m │ [mQuestions 1[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1;7m> Running                4 [m│[2m────────────────────────────────────────────────────────────────────────[m
+[2m0[m Needs you              2 │[1mRunning 4[m  [1m? owner questions 1[m  [1mx stopped 1[m
+[2m1[m DataBall               1 │   slicer      [1mS110[m  [##~~..]       [2mheard 4m[m   [reviewer]
+[2m2[m agents                 1 │[2m    run-1  S110  review  12m  [##~~..]  heard 4m[m
+[2m3[m slicer                  *│[2m    implementer>[reviewer]>gate  activity ▁▂▂▄█▃▁▂▅▂[m
+[2m4[m adjudicate              *│[1;7m   adjudicate  S97   [####~~] gate  heard 2m   [gate]                   [m
+                           │[2m    ext-1  S97  active, 2 of 6 steps running  9m  [####~~] gate[m
+                           │[2m    heard 2m  running: gate  implementer>reviewer>[gate][m
+                           │ [1m?[m DataBall    [1mS42[m   [~~....]       [2mheard 19m[m  [implementer]
+                           │[2m    run-2  S42  paused  20m  Which store?  [~~....]  heard 19m[m
+                           │[2m    [implementer]>reviewer>gate[m
+                           │ [1mx[m agents      [1mS07[m   [####..]       [2mheard 15m[m  [reviewer]
+                           │[2m    run-3  S07  stopped  owner action  [####..]  heard 15m[m
+                           │[2m    implementer>[reviewer]>gate[m
+                           │
+                           │[1mRecent[m
+                           │  [2mnone[m
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ enter [2mopen[m; space [2mcollapse[m; E [2mcollapse all[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
+                           │ 4 projects | refreshed 16:42:07

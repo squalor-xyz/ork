@@ -143,6 +143,7 @@ type Model struct {
 	focusing      bool
 	showHelp      bool
 	pageTop       pagerTop
+	expanded      map[string]bool // the Running runs the owner opened, by project and run id (S164)
 	width         int
 	height        int
 	treeFrame     int
@@ -623,6 +624,10 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		}
 	case m.view == decisionsView && key.Matches(msg, m.keys.Select):
 		m.openDecision()
+	case m.view == 0 && m.active == runningEntry && !m.showHelp && key.Matches(msg, m.keys.Expand):
+		m.toggleExpanded()
+	case m.view == 0 && m.active == runningEntry && !m.showHelp && key.Matches(msg, m.keys.ExpandAll):
+		m.toggleAllExpanded()
 	case key.Matches(msg, m.keys.EditLineup):
 		return m.openLineup()
 	case key.Matches(msg, m.keys.Tick):
@@ -972,6 +977,7 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 		m.followNewestRun(msg.name)
 	}
 	m.selectJumpRun()
+	m.pruneExpanded()
 	var cmds []tea.Cmd
 	if ps.dirty {
 		ps.dirty = false
