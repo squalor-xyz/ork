@@ -1915,7 +1915,19 @@
       "depends_on": [
         "S08"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "69935e26-74be-4e7c-b609-10e8cf61a1b3",
+          "kind": "",
+          "text": "**2026-10-28** — Spec filled 2026-10-28 with owner decisions (opt-in per run, parallel when disjoint max 3, one cap slot).",
+          "created_at": "2026-10-28T20:43:22Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -2060,7 +2072,19 @@
       "depends_on": [
         "S61"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b3f0a1a2-15bb-4f61-8f09-1b2461bb5b6b",
+          "kind": "",
+          "text": "**2026-10-28** — Spec filled 2026-10-28 with owner decision: run a parent's slivers as one chain (ork run PARENT --slivers), one worktree, one landing.",
+          "created_at": "2026-10-28T20:43:22Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "L",
@@ -6193,7 +6217,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "8a82458b-efc4-4543-a9fc-d16cdc9eed42",
+          "kind": "",
+          "text": "**2026-10-28** — Upstream follow-up from the owner 2026-10-28: slicer's v10 vendor-limit rule should also fall back on a plain error exit, as ork's decision 156 does; the owner will get this changed for slicer's next release. Installed slicer here is 1.15.0 (v8); v10 (s402, s405) is on slicer main after tag v1.16.0.",
+          "created_at": "2026-10-28T20:43:22Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",

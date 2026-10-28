@@ -2174,3 +2174,31 @@
 {"when": "2026-10-28T14:38:26Z", "item": "S164", "action": "note", "from": "", "to": "", "note": "Later (UI pass round 2): the dashboard.md sentence on hint d", "by": "Jon R"}
 {"when": "2026-10-28T14:38:26Z", "item": "S164", "action": "status", "from": "started", "to": "done", "note": "Running view expands several runs: space toggles the selected run, E all, the open set survives refresh and view switch, detail lines faint. Review and UI pass PASS after one fix round.", "by": "Jon R"}
 {"when": "2026-10-28T14:38:26Z", "item": "S164", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 34, S164): Claude sonnet-high imple", "by": "Jon R"}
+{"when": "2026-10-28T20:33:58Z", "item": "S100", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-28T20:33:58Z", "item": "S100", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-28T20:33:58Z", "item": "S100", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-28T20:33:58Z", "item": "S100", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-28T20:33:58Z", "item": "S100", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-28T20:33:58Z", "item": "S100", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-28T20:34:06Z", "item": "S100", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-28T20:34:18Z", "item": "S100", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-28T20:34:44Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-28T20:34:44Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-28T20:34:44Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-28T20:34:44Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-28T20:34:44Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-28T20:34:57Z", "item": "S72", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-28T20:34:57Z", "item": "S72", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-28T20:34:57Z", "item": "S72", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-28T20:42:57Z", "item": "S142", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-28T20:42:57Z", "item": "S142", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-28T20:42:57Z", "item": "S142", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-28T20:42:58Z", "item": "S142", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-28T20:42:58Z", "item": "S142", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-28T20:43:21Z", "item": "S61", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-28T20:43:21Z", "item": "S61", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-28T20:43:21Z", "item": "S62", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-28T20:43:21Z", "item": "S62", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-28T20:43:22Z", "item": "S61", "action": "note", "from": "", "to": "", "note": "Spec filled 2026-10-28 with owner decisions (opt-in per run,", "by": "Jon R"}
+{"when": "2026-10-28T20:43:22Z", "item": "S62", "action": "note", "from": "", "to": "", "note": "Spec filled 2026-10-28 with owner decision: run a parent's s", "by": "Jon R"}
+{"when": "2026-10-28T20:43:22Z", "item": "S142", "action": "note", "from": "", "to": "", "note": "Upstream follow-up from the owner 2026-10-28: slicer's v10 v", "by": "Jon R"}

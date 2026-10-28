@@ -12,23 +12,23 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "S07 originally promised a bell with the live role detail. Owner 2026-10-24: moved to v1.1. Open for the owner when it is picked up: what rings it (a role needing you, a run ending, both), whether it is off by default, and the setting name (a ui.* adj key)."
+      "body": "S07 originally promised a bell with the live role detail. Premise checked 2026-10-28: the bell already ships (ui.notify, adj 44: terminal bell and tab badge). internal/tui/model.go:935-990 rings it when a project's open or held count rises past an earlier reading (Config.Bell, default writes BEL to stderr); docs/dashboard.md:363. Owner decisions 2026-10-28 (interactive): (1) also ring once when a run ends (pass, fail, stopped or landed); (2) the bell stays on by default and is switched per project with a registry field `bell` (*proposed*, on when unset), set with `ork projects set NAME --bell on|off` (S161)."
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/tui/model.go`\n- `internal/registry/registry.go`\n- `internal/cli/cli.go`\n- `internal/cli/daemoncmds.go`\n- `docs/dashboard.md`\n- `docs/state.md`"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "TestBellRingsWhenARunEnds; TestBellDoesNotRingForARunAlreadyEndedAtStart; TestBellOffForAProjectWithBellOff; TestBellStillRingsWhenCountRises; TestRegistryBellFieldDefaultsOn; TestProjectsSetBellOnOff; TestProjectsSetBellRefusesWhileRunsUnfinished."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "Tests first. Re-anchor from the code: the rise detection in Model.apply (model.go) and the project registry fields added by S161 (the `projects set` flags). 1. Add optional field `Bell *bool` (json `bell,omitempty`; nil means on) to registry.Project and a validator-free accessor; `ork projects set NAME --bell on|off` follows S161's refuse-while-unfinished rule and its plan-changed confirm. 2. In Model.apply, remember each project's set of ended run ids (engine runs with a terminal state and ledger board runs with state ended); the first reading after startup or a setup state is a baseline and rings nothing; a run id seen ending after the baseline rings once. 3. Skip every bell for a project whose Bell is false (counts and badges still update). 4. Document in docs/dashboard.md next to the bell paragraph and in docs/state.md (registry fields); `ork doctor` needs no change unless it lists registry fields. UI slice: UI pass (r14)."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "go test -race ./internal/tui ./internal/registry ./internal/cli; go vet; gofmt -l; slicer check; adj lint."
     },
     {
       "heading": "Git",
