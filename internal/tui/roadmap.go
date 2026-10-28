@@ -176,7 +176,14 @@ func (m *Model) roadmap(w int) overviewView {
 		return out
 	}
 	cursor := clampCursor(m.roadmapCursor, len(s.Items.Value))
+	headings := map[int]string{} // item index of a run's first item -> its heading
+	for _, run := range passRuns(s.Items.Value) {
+		headings[run.start] = fmt.Sprintf("%s (%d)", run.label(), run.n)
+	}
 	for i, it := range s.Items.Value {
+		if text, ok := headings[i]; ok {
+			out.body = append(out.body, indent+th.Dim.Render(text))
+		}
 		readiness := " "
 		if s.Deps.Err != nil {
 			readiness = "?"
@@ -218,6 +225,37 @@ func (m *Model) roadmap(w int) overviewView {
 		add("No items")
 	}
 	return out
+}
+
+// passRun is a run of consecutive items with one pass: the index of its first
+// item and its length.
+type passRun struct {
+	pass     string
+	start, n int
+}
+
+// label is the pass as the Roadmap heading names it.
+func (r passRun) label() string {
+	if r.pass == "" {
+		return "No pass"
+	}
+	return r.pass
+}
+
+// passRuns splits items, in slicer's order, into runs of one pass. Slicer
+// lists a pass together, but a pass that comes back after another starts a
+// new run with its own heading (S162). The headings and the group keys both
+// use these runs.
+func passRuns(items []slicercli.Item) []passRun {
+	var runs []passRun
+	for i, it := range items {
+		if i > 0 && it.Fields.Pass == runs[len(runs)-1].pass {
+			runs[len(runs)-1].n++
+			continue
+		}
+		runs = append(runs, passRun{pass: it.Fields.Pass, start: i, n: 1})
+	}
+	return runs
 }
 
 // readySlice is shared by the Roadmap and launch list. Claims are not exposed

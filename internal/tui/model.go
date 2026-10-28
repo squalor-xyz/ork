@@ -744,16 +744,13 @@ func (m *Model) rowCursor() (*int, int) {
 
 // groupStarts lists the cursor rows that start a group: on the Overview each
 // Needs you group, then the Running, Recent and Ready sections; on the
-// Roadmap each run of items with one pass; on Waves each wave, then Unplaced.
+// Roadmap each run of items with one pass, the first row under its heading; on Waves each wave, then Unplaced.
 func (m *Model) groupStarts() []int {
 	switch m.view {
 	case roadmapView:
 		var starts []int
-		items := m.roadmapItems()
-		for i, it := range items {
-			if i == 0 || it.Fields.Pass != items[i-1].Fields.Pass {
-				starts = append(starts, i)
-			}
+		for _, run := range passRuns(m.roadmapItems()) {
+			starts = append(starts, run.start)
 		}
 		return starts
 	case wavesView:

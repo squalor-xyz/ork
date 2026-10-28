@@ -321,6 +321,11 @@ func (m *Model) launchView(w int) overviewView {
 				add("  allowlist: " + strings.Join(perm.Allow, ", "))
 			}
 		}
+		if p.Note != "" {
+			for _, line := range wrapText("note: "+p.Note, max(w-2, 1)) {
+				out.body = append(out.body, indent+th.Warn.Render(line))
+			}
+		}
 	}
 	return out
 }

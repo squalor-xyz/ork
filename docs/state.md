@@ -189,6 +189,12 @@ The proposed optional `queued_questions[]` (S135) keeps sibling owner questions
 as pending objects while `pending` stays single. Answering the current question
 shows the next queued question before roles resume. Each role receives its own
 answer from `questions[]`. Old records without the queue still load.
+When the first pause is not a question, a retry shows the first queued
+question instead of running a role; the optional `pending.retry` (S159,
+*proposed*) holds the pause that was retried, with the same fields, and a
+role named in it resumes with that context after the answer. Records without
+`retry` still load; an older ork refuses one that has it, because
+`Store.Open` uses strict keys.
 Both `pending` and each entry in `questions[]` may carry `ask`, the structured
 question object: `title`, `options:[{label,summary}]`, one-based `recommend`
 and `reason` (adj #168). The raw question text is kept alongside it. Older

@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"strings"
 	"testing"
@@ -23,10 +24,10 @@ func roadmapHarness(t *testing.T) *harness {
 	var s source.Snapshot
 	if err := json.Unmarshal([]byte(`{
  "Items":{"Value":[
- {"id":"S90","title":"Full ninety","short_title":"Ninety","status":"open","has_slice":true,"fields":{"size":"M","effort":2},"claim":{"owner":"SECRET-CLAIM"}},
- {"id":"S02","title":"Two","status":"open","has_slice":true,"fields":{"size":"S","effort":1}},
- {"id":"S03","title":"Started","status":"started","has_slice":true},
- {"id":"S04","title":"Unspecified","status":"open","has_slice":false}]},
+ {"id":"S90","title":"Full ninety","short_title":"Ninety","status":"open","has_slice":true,"fields":{"size":"M","effort":2,"pass":"v1.0"},"claim":{"owner":"SECRET-CLAIM"}},
+ {"id":"S02","title":"Two","status":"open","has_slice":true,"fields":{"size":"S","effort":1,"pass":"v1.0"}},
+ {"id":"S03","title":"Started","status":"started","has_slice":true,"fields":{"pass":"v1.1"}},
+ {"id":"S04","title":"Unspecified","status":"open","has_slice":false,"fields":{"pass":"v1.1"}}]},
  "Deps":{"Value":[{"id":"S90"},{"id":"S03"},{"id":"S04"}]},
  "Goals":{"Value":{"goals":"Keep the owner informed","records":{"goal":[{"id":"C01","title":"Visible progress","body":"Across projects"}]}}}
  }`), &s); err != nil {
@@ -406,6 +407,92 @@ func TestRoadmapASCIIAndUnbrokenCursor(t *testing.T) {
 			if line != h.m.cfg.Theme.TabActive.Render(plain) {
 				t.Errorf("cursor bar interrupted by nested marker style: %q", line)
 			}
+		}
+	}
+}
+
+// passItems is a roadmap with passes in slicer order: v1.0 twice, v1.1 once,
+// two items with no pass, then v1.0 again after a gap (S162).
+func passItems() []slicercli.Item {
+	var items []slicercli.Item
+	for i, pass := range []string{"v1.0", "v1.0", "v1.1", "", "", "v1.0"} {
+		it := item(fmt.Sprintf("S%02d", i+1), fmt.Sprintf("title %d", i+1))
+		it.HasSlice = true
+		it.Fields.Pass = pass
+		items = append(items, it)
+	}
+	return items
+}
+
+func passHarness(t *testing.T, items []slicercli.Item) *harness {
+	t.Helper()
+	h := newHarness(t, proj("ork", false))
+	h.m.cfg.Theme = NewTheme(false)
+	h.src.set(snap(proj("ork", false), nil, items))
+	h.start()
+	h.m.switchTo(0)
+	h.m.view = roadmapView
+	return h
+}
+
+// Each run of items with one pass sits under a dim heading naming the pass and
+// the run's size. A pass that comes back after another is a new run with its
+// own heading, and items with no pass say so (S162).
+func TestRoadmapShowsPassHeadings(t *testing.T) {
+	h := passHarness(t, passItems())
+	th := h.m.cfg.Theme
+	v := h.m.roadmap(80)
+	if len(v.rows) != 6 {
+		t.Fatalf("rows = %v, want one per item", v.rows)
+	}
+	want := map[int]string{0: "v1.0 (2)", 2: "v1.1 (1)", 3: "No pass (2)", 5: "v1.0 (1)"}
+	for i, line := range v.rows {
+		above := v.body[line-1]
+		if text, ok := want[i]; ok {
+			if above != indent+th.Dim.Render(text) {
+				t.Errorf("above row %d = %q, want the dim heading %q", i, above, text)
+			}
+		} else if strings.Contains(sgr.ReplaceAllString(above, ""), "(") {
+			t.Errorf("row %d has a heading above it inside a run: %q", i, above)
+		}
+	}
+	plain := sgr.ReplaceAllString(strings.Join(v.body, "\n"), "")
+	if n := strings.Count(plain, "v1.0 ("); n != 2 {
+		t.Errorf("%d v1.0 headings, want one per run (2):\n%s", n, plain)
+	}
+}
+
+// } and { put the cursor on the first row of a pass, and the heading that
+// names the pass is on screen above it even in a short window (S162).
+func TestRoadmapGroupKeysLandOnHeadings(t *testing.T) {
+	var items []slicercli.Item
+	for i := 0; i < 24; i++ {
+		it := item(fmt.Sprintf("S%02d", i+1), fmt.Sprintf("title %d", i+1))
+		it.HasSlice = true
+		it.Fields.Pass = []string{"v1.0", "v1.1", "v1.2"}[i/8]
+		items = append(items, it)
+	}
+	h := passHarness(t, items)
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 14})
+	for _, step := range []struct {
+		key     string
+		cursor  int
+		heading string
+	}{{"}", 8, "v1.1 (8)"}, {"}", 16, "v1.2 (8)"}, {"{", 8, "v1.1 (8)"}, {"{", 0, "v1.0 (8)"}} {
+		h.send(press(step.key))
+		if h.m.roadmapCursor != step.cursor {
+			t.Fatalf("%s put the cursor on %d, want %d", step.key, h.m.roadmapCursor, step.cursor)
+		}
+		lines := strings.Split(plainView(h.m), "\n")
+		at := -1
+		for i, line := range lines {
+			if strings.Contains(line, step.heading) {
+				at = i
+			}
+		}
+		id := fmt.Sprintf("S%02d", step.cursor+1)
+		if at < 0 || at+1 >= len(lines) || !strings.Contains(lines[at+1], id) {
+			t.Fatalf("%s: the heading %q is not on screen directly above %s:\n%s", step.key, step.heading, id, strings.Join(lines, "\n"))
 		}
 	}
 }

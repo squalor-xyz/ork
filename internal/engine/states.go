@@ -378,8 +378,23 @@ func answeredQuestion(rec runrec.Record, role string) *runrec.Pending {
 
 // pendFor is the pause context a round of the review state takes: its own, or
 // a budget grant, which is for the whole review.
+//
+// A question that was asked before a retry carries that retry's context (S159).
+// The role the question names gets its answer; any other role takes the
+// retried pause if it names that role.
 func pendFor(p *runrec.Pending, role string) *runrec.Pending {
-	if p != nil && (p.Role == "" || p.Role == role || p.Kind == runrec.PendingBudget) {
+	if p == nil {
+		return nil
+	}
+	if p.Role == role {
+		return p
+	}
+	if p.Retry != nil {
+		if r := pendFor(p.Retry, role); r != nil {
+			return r
+		}
+	}
+	if p.Role == "" || p.Kind == runrec.PendingBudget {
 		return p
 	}
 	return nil
@@ -405,8 +420,10 @@ func (e *Engine) roundReport(rec runrec.Record, role string) (name, text string)
 // round: it exited well, and its report has the shape and asks nothing. A
 // role that the pause names runs again.
 func (e *Engine) reviewDone(rec runrec.Record, pend *runrec.Pending, role string) bool {
-	if pend != nil && pend.Kind != runrec.PendingBudget && (pend.Role == "" || pend.Role == role) {
-		return false
+	for p := pend; p != nil; p = p.Retry {
+		if p.Kind != runrec.PendingBudget && (p.Role == "" || p.Role == role) {
+			return false
+		}
 	}
 	for i := len(rec.Roles) - 1; i >= 0; i-- {
 		r := rec.Roles[i]

@@ -390,3 +390,24 @@ func TestPlanShowsUIPassRow(t *testing.T) {
 		}
 	}
 }
+
+// A plan made without the UI or spec-check rules says so (S159): the note was
+// in the RPC and the JSON only. It follows the plan lines.
+func TestPrintRunPlanShowsTheNote(t *testing.T) {
+	const note = "slicer relay-roles show failed; planning without UI or spec-check rules: exit 2"
+	for _, present := range []bool{false, true} {
+		plan := daemon.RunPlan{Lineup: map[string][]runrec.LineupEntry{"implementer": {{Vendor: "codex", Model: "sol", Effort: "high"}}}, Permissions: map[string]engine.Permission{}}
+		if present {
+			plan.Note = note
+		}
+		var out bytes.Buffer
+		printRunPlan(&out, plan)
+		got := out.String()
+		if strings.Contains(got, "note:") != present {
+			t.Fatalf("present=%v: %s", present, got)
+		}
+		if present && !strings.HasSuffix(got, "\nnote: "+note+"\n") {
+			t.Errorf("the note does not follow the plan lines: %q", got)
+		}
+	}
+}
