@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-163 items · — 35 · done 123 · retired 5
+164 items · — 34 · done 125 · retired 5
 
 ## v1.1
 
@@ -194,7 +194,7 @@
 | 137 | [S138](slices/S138.md) | An awaiting-approval engine run whose ledger went stale shows as stale, dimmed, with a frozen age | S | 1 |  | discovered from S31 | done |
 | 138 | [S139](slices/S139.md) | Commit title without a Git section: fall back to 'ID: title' | S | 1 |  | discovered from S31 | done |
 | 139 | [S140](slices/S140.md) | Running view follow-ups: error marker, stale runs not live, detail order, stopped role, empty golden, other tabs on Running | S | 1 |  | discovered from S110 | done |
-| 140 | [S141](slices/S141.md) | Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note | M | 2 |  | discovered from S118 | — |
+| 140 | [S141](slices/S141.md) | Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note | M | 2 |  | discovered from S118 | done |
 | 141 | [S142](slices/S142.md) | Accept relay contract v9 and follow it: finding kinds, spec check, UI pass, approval and landing, ledger wait phase, conformance JSON | M | 2 |  |  | — |
 | 142 | [S143](slices/S143.md) | Spec check follow-ups: answers survive a restart, main moving mid-check, sitting freeze, dropped Owner needed, shape retry, state dir cleanup | M | 2 |  | discovered from S116 | done |
 | 143 | [S144](slices/S144.md) | Key follow-ups: status nudge for [ and ], Waves show-all on A, help wording and hidden tab help | S | 1 |  | discovered from S105 | done |
@@ -214,12 +214,13 @@
 | 157 | S158 | S71 later notes | S | 1 |  | discovered from S71 | — |
 | 158 | [S159](slices/S159.md) | S135 later notes | S | 1 |  | discovered from S135 | done |
 | 159 | [S160](slices/S160.md) | Add/remove projects | S | 2 |  | discovered from S96 | done |
-| 160 | [S161](slices/S161.md) | projects set | M | 2 |  | discovered from S136 | — |
+| 160 | [S161](slices/S161.md) | projects set | M | 2 |  | discovered from S136 | done |
 | 161 | [S162](slices/S162.md) | Roadmap pass headings | S | 1 |  | discovered from S151 | done |
 | 162 | [S163](slices/S163.md) | Recent counts and duration | S | 1 |  | discovered from S162 | — |
+| 163 | [S164](slices/S164.md) | Expand several runs | S | 1 |  | discovered from S140 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 163 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 164 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
