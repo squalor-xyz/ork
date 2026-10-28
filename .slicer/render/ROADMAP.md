@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-162 items · — 37 · done 120 · retired 5
+163 items · — 36 · done 122 · retired 5
 
 ## v1.1
 
@@ -212,13 +212,14 @@
 | 155 | S156 | S102 later notes | S | 1 |  | discovered from S102 | — |
 | 156 | S157 | S73 later: next * writes | S | 1 |  | discovered from S73 | — |
 | 157 | S158 | S71 later notes | S | 1 |  | discovered from S71 | — |
-| 158 | S159 | S135 later notes | S | 1 |  | discovered from S135 | — |
+| 158 | [S159](slices/S159.md) | S135 later notes | S | 1 |  | discovered from S135 | done |
 | 159 | [S160](slices/S160.md) | Add/remove projects | S | 2 |  | discovered from S96 | done |
 | 160 | [S161](slices/S161.md) | projects set | M | 2 |  | discovered from S136 | — |
-| 161 | [S162](slices/S162.md) | Roadmap pass headings | S | 1 |  | discovered from S151 | — |
+| 161 | [S162](slices/S162.md) | Roadmap pass headings | S | 1 |  | discovered from S151 | done |
+| 162 | [S163](slices/S163.md) | Recent counts and duration | S | 1 |  | discovered from S162 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 162 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 163 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
