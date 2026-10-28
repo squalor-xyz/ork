@@ -234,6 +234,30 @@ is on the detail line, which wraps between cells and never inside one. A run
 that ends leaves Running and shows under Recent on the next snapshot, with no
 keypress.
 
+**Several runs open (S164).** The selected run shows its detail below the rows,
+on the detail line. `space` opens the run under the cursor in place: its detail
+(the run ID, state and elapsed time, the stage bar and last heard, the pipeline
+and the activity, wrapped between cells) sits indented under its row, drawn
+faint (dim, and SGR 2 under `NO_COLOR`, as last heard is), and the run stays
+open when the cursor moves away. `space` on an open run closes it. `E` opens
+every run, or closes every run when all are open; it needs no run under the
+cursor and works from any row of the Running entry, a Recent or an error row
+included. Only `space` ignores a row that is not a live run. Neither key works
+under the help overlay or outside the Running entry. The selected run shows its
+detail once: under its row while it is open, on the detail line otherwise. The
+open runs are kept by project and run ID, in the model only: they survive a
+refresh (on any entry) and a switch of view or entry, and a run that leaves the
+list is forgotten, so it is closed if it comes back. While a run pane is open
+the rows are drawn closed; they open again when the pane closes. The pane
+scrolls and keeps the cursor row whole at every size, 80x24 included: the
+row and all its detail lines are on the screen. `pgdown` and `pgup` count rows,
+not lines, as before. The hint line offers `space expand` (`space collapse`
+on an open run) on a live run's row, and `E expand all` (`E collapse all` when
+all are open) on every row while any run can be opened; the help names both.
+Owner decision 2026-10-28: the two hints may push `+ add project` (at 100
+columns) and `tab views` (at 80 columns) off the Running entry's hint line;
+they keep their place elsewhere and in the help.
+
 While the Running entry is selected the other tabs show every project together
 (S140), each row led by its project name as on Needs you. Questions and
 Decisions list all projects (Decisions all that use adj); Roadmap lists every

@@ -19,6 +19,8 @@ type keyMap struct {
 	Cleanup    key.Binding
 	EditLineup key.Binding
 	Tick       key.Binding
+	Expand     key.Binding
+	ExpandAll  key.Binding
 	Launch     key.Binding
 	Approve    key.Binding
 	Stop       key.Binding
@@ -67,8 +69,10 @@ func newKeyMap() keyMap {
 		Remove:     key.NewBinding(key.WithKeys("-"), key.WithHelp("-", "remove active project")),
 		Add:        key.NewBinding(key.WithKeys("+"), key.WithHelp("+", "add project")),
 		Cleanup:    key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "remove merged worktree and branch (Ready)")),
-		EditLineup: key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit ticked item lineup (Waves)")),
+		EditLineup: key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit lineup (Waves)")),
 		Tick:       key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "tick item and ask inputs (Waves)")),
+		Expand:     key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "expand or collapse a run (Running)")),
+		ExpandAll:  key.NewBinding(key.WithKeys("E", "shift+e"), key.WithHelp("E", "expand or collapse all")),
 		Launch:     key.NewBinding(key.WithKeys("l"), key.WithHelp("l", "launch a ready slice (Roadmap) or wave (Waves)")),
 		Approve:    key.NewBinding(key.WithKeys("a"), key.WithHelp("a", "approve")),
 		Stop:       key.NewBinding(key.WithKeys("x"), key.WithHelp("x", "stop")),
@@ -116,7 +120,7 @@ func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Refresh, k.He
 
 // FullHelp implements help.KeyMap.
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add, k.Remove}, {k.Tick, k.EditLineup, k.Launch}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
+	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add, k.Remove}, {k.Expand, k.ExpandAll, k.Tick, k.EditLineup, k.Launch}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
 }
 
 // short is b with a short label and words for the hint line. It answers to the
@@ -368,6 +372,23 @@ func (m *Model) contextHints() []hintEntry {
 				l.add(dropRow, short(k.Select, "enter", "go to project"))
 			}
 			l.rowActions(m, r, ok, true)
+			if m.active == runningEntry {
+				// space acts on a live run's row; E on the whole entry, from any row.
+				if expandKey(r) != "" {
+					space := "expand"
+					if m.expanded[expandKey(r)] {
+						space = "collapse"
+					}
+					l.add(dropRow, short(k.Expand, "space", space))
+				}
+				if len(m.expandableKeys()) > 0 {
+					all := "expand all"
+					if m.allExpanded() {
+						all = "collapse all"
+					}
+					l.add(dropLine, short(k.ExpandAll, "E", all))
+				}
+			}
 		}
 		global()
 	}

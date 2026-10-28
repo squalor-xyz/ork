@@ -653,7 +653,19 @@ func (m *Model) helpLines(w, bodyH int) []string {
 				lines = append(lines, clip(h.Key+" "+h.Desc+"; "+r.Key+" "+r.Desc, w))
 				continue
 			}
-			if h == m.keys.Remove.Help() {
+			if h == m.keys.Remove.Help() || h == m.keys.ExpandAll.Help() || h == m.keys.Tick.Help() {
+				continue
+			}
+			// The two Waves keys share a line, which pays for the expand keys' (S164).
+			if h == m.keys.EditLineup.Help() {
+				tick := m.keys.Tick.Help()
+				lines = append(lines, clip(tick.Key+" "+tick.Desc+"; "+h.Key+" "+h.Desc, w))
+				continue
+			}
+			// The two expand keys share a line (S164).
+			if h == m.keys.Expand.Help() {
+				all := m.keys.ExpandAll.Help()
+				lines = append(lines, clip(h.Key+" "+h.Desc+"; "+all.Key+" "+all.Desc, w))
 				continue
 			}
 			if h == m.keys.Filter.Help() {

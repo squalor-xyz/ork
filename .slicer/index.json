@@ -7376,7 +7376,7 @@
       "id": "S164",
       "title": "Running view: expand more than one run at a time",
       "short_title": "Expand several runs",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -7386,6 +7386,72 @@
           "text": "**2026-10-28** — Owner decisions 2026-10-28 (preflight): (1) Space toggles the selected Running row and it stays open when the cursor moves; E expands or collapses all; the selected row is still shown open as today. (2) The expanded set survives a refresh and a view switch (kept by run id in the model, dropped when a run leaves the list). At small sizes (80x24) the pane scrolls and the cursor row is always fully visible. Add the key to the hint bar and the help overlay.",
           "created_at": "2026-10-28T13:27:58Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "69061b31-d686-462f-91da-4eb746e38fc2",
+          "kind": "",
+          "text": "**2026-10-28** — Help overlay at 100x30 has no headroom: consider the wording \"E expand or collapse all runs\" for the help line.",
+          "created_at": "2026-10-28T14:32:19Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "904ff13a-f71b-4eaa-b2e9-7869fbb3bd00",
+          "kind": "",
+          "text": "**2026-10-28** — Expanded detail repeats cells already on the row at 100 columns; a compact form would save lines.",
+          "created_at": "2026-10-28T14:32:19Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "c5dd5cf5-7df3-4c47-ae84-2e78ae2709c5",
+          "kind": "",
+          "text": "**2026-10-28** — pgdown at 80x24 with every run open skips partly visible rows; they become whole when the cursor reaches them.",
+          "created_at": "2026-10-28T14:32:19Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "4ac9a2f7-940c-4f23-889a-445f04399000",
+          "kind": "",
+          "text": "**2026-10-28** — While a run pane is open, the other Running rows draw closed.",
+          "created_at": "2026-10-28T14:32:19Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "610bdc32-1e5c-433a-8cb5-26bd58f0ce03",
+          "kind": "",
+          "text": "**2026-10-28** — Later (UI pass round 2): the dashboard.md sentence on hint drops is loose (at 80 columns both + add project and tab views drop; say 'from 100 columns down'); the owner-question text in an expanded detail is faint now, consider normal weight for it.",
+          "created_at": "2026-10-28T14:38:26Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "2790b8d3-b5d5-4a54-b4f1-0d8d2882c48a",
+          "kind": "",
+          "text": "**2026-10-28** — Orchestration trial (run 34, S164): Claude sonnet-high implementer paired with Codex on S163; review FAIL then PASS, UI pass FAIL then PASS, 1 fix round, 4 owner questions; ledger steps recorded per round.",
+          "created_at": "2026-10-28T14:38:26Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -7409,7 +7475,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],
