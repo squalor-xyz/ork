@@ -58,6 +58,13 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
   ork projects add [PATH] [--name N]
                               register a project
   ork projects rm NAME        unregister a project
+  ork projects set NAME [--push on|off] [--ui-doc PATH]
+                              [--worktree-pattern P] [--branch-pattern P]
+                              [--check CMD] [--check-minutes N] [--cap N]
+                              [--budget-minutes N] [--budget-tokens N]
+                              change a project's optional fields; an empty
+                              value or 0 clears one; refused while the
+                              project has unfinished runs
   ork roles print [ROLE]      print the embedded role prompts
   ork daemon run              serve the daemon in the foreground
   ork daemon stop [--force]   stop the daemon

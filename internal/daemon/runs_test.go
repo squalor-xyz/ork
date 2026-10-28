@@ -149,6 +149,18 @@ func TestRunPlanKeepsEveryRowWithAnAdapter(t *testing.T) {
 // RecommendRoles call, after planRun's read and before startRun's admission.
 func startRunRegistrationDaemon(t *testing.T, remove bool) (*Daemon, *runrec.Store, registry.Project, <-chan struct{}) {
 	t.Helper()
+	return startRunRegistryChange(t, func(f *registry.File) {
+		if remove {
+			f.Projects = f.Projects[1:]
+		}
+	})
+}
+
+// startRunRegistryChange runs change on the registry inside the fake
+// RecommendRoles call, as startRunRegistrationDaemon does. The registry holds
+// the project first, then "other".
+func startRunRegistryChange(t *testing.T, change func(*registry.File)) (*Daemon, *runrec.Store, registry.Project, <-chan struct{}) {
+	t.Helper()
 	started := make(chan struct{}, 1)
 	d, store, p := runDaemon(t, func(ctx context.Context, _ engine.Request) (engine.Result, error) {
 		started <- struct{}{}
@@ -160,9 +172,7 @@ func startRunRegistrationDaemon(t *testing.T, remove bool) (*Daemon, *runrec.Sto
 	if err := registry.Save(d.registryPath(), f); err != nil {
 		t.Fatal(err)
 	}
-	if remove {
-		f.Projects = []registry.Project{other}
-	}
+	change(f)
 	data, err := json.Marshal(f)
 	if err != nil {
 		t.Fatal(err)
@@ -210,6 +220,32 @@ func TestStartRunRefusesAProjectRemovedAfterPlanning(t *testing.T) {
 		if slices.Equal(call.Args, []string{"ai", "relay"}) {
 			t.Error("removed project reached engine.New's contract read")
 		}
+	}
+}
+
+// A projects.set that lands between planRun and admission must not start the
+// run with the old fields (S161).
+func TestStartRunRefusesAProjectChangedAfterPlanning(t *testing.T) {
+	d, store, p, _ := startRunRegistryChange(t, func(f *registry.File) {
+		f.Projects[0].WorktreePattern = ".wt/{id}"
+	})
+	_, err := d.startRun(context.Background(), RunParams{Project: p.Name, Item: "S1"})
+	if err == nil || !strings.Contains(err.Error(), "plan changed; run the command again to confirm it") {
+		t.Errorf("changed project must fail with plan changed: %v", err)
+	}
+	if runs, err := store.List(); err != nil || len(runs) != 0 {
+		t.Errorf("changed project created run records: %v, %v", runs, err)
+	}
+	d.runs.mu.Lock()
+	engines := len(d.runs.runs)
+	d.runs.mu.Unlock()
+	if engines != 0 {
+		t.Errorf("changed project created managed engines: %d", engines)
+	}
+	// Planning again reads the new fields, so the second start is admitted.
+	rec, err := d.startRun(context.Background(), RunParams{Project: p.Name, Item: "S1"})
+	if err != nil || !strings.HasSuffix(rec.Worktree, filepath.Join(".wt", "S1")) {
+		t.Errorf("second start: %+v, %v", rec, err)
 	}
 }
 

@@ -1478,3 +1478,238 @@ func TestProjectStatusRelaySteps(t *testing.T) {
 		}
 	}
 }
+
+// ---- projects set (S161) ----
+
+func setParams(t *testing.T, raw string) json.RawMessage {
+	t.Helper()
+	return json.RawMessage(raw)
+}
+
+func TestProjectsSetUpdatesOneField(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	other := registry.Project{Name: "other", Path: filepath.Join(filepath.Dir(p.Path), "other"), Cap: 3, UIDoc: "keep.md"}
+	f, err := registry.Load(d.registryPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Projects[0].EnvironmentLines = []string{"zsh"}
+	f.Projects[0].Permissions = map[string]registry.Permission{"reviewer": {Preset: "read-only"}}
+	f.Projects[0].Push = false
+	f.GlobalCap = 4
+	f.DaemonIdleMinutes = 7
+	f.Projects = append(f.Projects, other)
+	if err := registry.Save(d.registryPath(), f); err != nil {
+		t.Fatal(err)
+	}
+	before, _ := registry.Load(d.registryPath())
+
+	got, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","push":true}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res, ok := got.(registry.Project); !ok || !res.Push || res.Name != "p" {
+		t.Fatalf("result: %#v", got)
+	}
+	after, err := registry.Load(d.registryPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := *before
+	want.Projects = slices.Clone(before.Projects)
+	want.Projects[0].Push = true
+	if !reflect.DeepEqual(*after, want) {
+		t.Fatalf("only push should change:\n got %+v\nwant %+v", *after, want)
+	}
+}
+
+func TestProjectsSetSetsAndClearsEveryField(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	all := `{"name":"p","push":true,"ui_doc":"docs/ui.md","worktree_pattern":".wt/{id_lower}","branch_pattern":"b/{id}","check_command":"make test","check_minutes":9,"cap":2,"budget_minutes":30,"budget_tokens":5000}`
+	if _, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, all)); err != nil {
+		t.Fatal(err)
+	}
+	f, _ := registry.Load(d.registryPath())
+	want := registry.Project{Name: "p", Path: f.Projects[0].Path, Push: true, UIDoc: "docs/ui.md", WorktreePattern: ".wt/{id_lower}", BranchPattern: "b/{id}",
+		CheckCommand: "make test", CheckMinutes: 9, Cap: 2, Budgets: registry.Budgets{Minutes: 30, Tokens: 5000}}
+	if !reflect.DeepEqual(f.Projects[0], want) {
+		t.Fatalf("set all:\n got %+v\nwant %+v", f.Projects[0], want)
+	}
+	// One budget alone leaves the other budget.
+	if _, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","budget_tokens":0}`)); err != nil {
+		t.Fatal(err)
+	}
+	f, _ = registry.Load(d.registryPath())
+	want.Budgets = registry.Budgets{Minutes: 30}
+	if !reflect.DeepEqual(f.Projects[0], want) {
+		t.Fatalf("clear one budget:\n got %+v\nwant %+v", f.Projects[0], want)
+	}
+	// An empty string and zero clear the rest.
+	clear := `{"name":"p","push":false,"ui_doc":"","worktree_pattern":"","branch_pattern":"","check_command":"","check_minutes":0,"cap":0,"budget_minutes":0}`
+	if _, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, clear)); err != nil {
+		t.Fatal(err)
+	}
+	f, _ = registry.Load(d.registryPath())
+	if !reflect.DeepEqual(f.Projects[0], registry.Project{Name: "p", Path: want.Path}) {
+		t.Fatalf("clear all: %+v", f.Projects[0])
+	}
+}
+
+func TestProjectsSetRefusesUnknownField(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	before, _ := os.ReadFile(d.registryPath())
+	for _, raw := range []string{`{"name":"p","adj":true}`, `{"name":"p","path":"/x"}`, `{"name":"p","nope":1}`, `{"name":"p","permissions":{}}`} {
+		_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
+		var re *ipc.Error
+		if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "unknown field") {
+			t.Errorf("%s: %v", raw, err)
+		}
+	}
+	after, _ := os.ReadFile(d.registryPath())
+	if string(after) != string(before) {
+		t.Fatalf("a refusal changed the registry:\n%s", after)
+	}
+}
+
+func TestProjectsSetRefusesNoFieldsAndUnknownProject(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p"}`))
+	var re *ipc.Error
+	if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "no field") {
+		t.Fatalf("no fields: %v", err)
+	}
+	_, err = d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"nope","push":true}`))
+	if !errors.As(err, &re) || re.Code != CodeNotFound || !strings.Contains(re.Message, `"nope"`) {
+		t.Fatalf("unknown project: %v", err)
+	}
+	_, err = d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"push":true}`))
+	if !errors.As(err, &re) || re.Code != CodeBadParams {
+		t.Fatalf("no name: %v", err)
+	}
+}
+
+func TestProjectsSetValidatesUIDoc(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	before, _ := os.ReadFile(d.registryPath())
+	for _, bad := range []string{"/etc/passwd", "../outside.md", "docs/../../outside.md", ".."} {
+		raw, _ := json.Marshal(map[string]any{"name": "p", "ui_doc": bad})
+		_, err := d.handle(context.Background(), MethodProjectsSet, raw)
+		var re *ipc.Error
+		if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "ui_doc") {
+			t.Errorf("ui_doc %q: %v", bad, err)
+		}
+	}
+	after, _ := os.ReadFile(d.registryPath())
+	if string(after) != string(before) {
+		t.Fatalf("a refusal changed the registry:\n%s", after)
+	}
+	// A valid path is stored cleaned.
+	if _, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","ui_doc":"./docs/../docs/ui.md"}`)); err != nil {
+		t.Fatal(err)
+	}
+	f, _ := registry.Load(d.registryPath())
+	if f.Projects[0].UIDoc != "docs/ui.md" {
+		t.Fatalf("ui_doc %q", f.Projects[0].UIDoc)
+	}
+}
+
+func TestProjectsSetValidatesPatternsAndNumbers(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	before, _ := os.ReadFile(d.registryPath())
+	cases := map[string]string{
+		`{"name":"p","worktree_pattern":".worktrees/x"}`: "worktree_pattern",
+		`{"name":"p","branch_pattern":"{ID}"}`:           "branch_pattern",
+		`{"name":"p","cap":-1}`:                          "cap",
+		`{"name":"p","check_minutes":-2}`:                "check_minutes",
+		`{"name":"p","budget_minutes":-3}`:               "budget_minutes",
+		`{"name":"p","budget_tokens":-4}`:                "budget_tokens",
+	}
+	for raw, field := range cases {
+		_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
+		var re *ipc.Error
+		if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, field) {
+			t.Errorf("%s: %v", raw, err)
+		}
+	}
+	after, _ := os.ReadFile(d.registryPath())
+	if string(after) != string(before) {
+		t.Fatalf("a refusal changed the registry:\n%s", after)
+	}
+}
+
+func TestProjectsSetRefusesAnUnfinishedRun(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	busy, err := store.Create(runrec.Record{ID: "a-run", Project: p.Name, State: runrec.StatePaused})
+	if err != nil {
+		t.Fatal(err)
+	}
+	before, _ := os.ReadFile(d.registryPath())
+	_, err = d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","push":true}`))
+	var re *ipc.Error
+	if !errors.As(err, &re) || re.Code != CodeProjectBusy || re.Message != "project p has unfinished runs: a-run" {
+		t.Fatalf("unfinished run: %v", err)
+	}
+	after, _ := os.ReadFile(d.registryPath())
+	if string(after) != string(before) {
+		t.Fatalf("refusal changed registry:\n%s", after)
+	}
+	// A run of another project, or a final run, does not block.
+	if _, err := store.Create(runrec.Record{ID: "other-run", Project: "other", State: runrec.StateImplement}); err != nil {
+		t.Fatal(err)
+	}
+	if err := busy.Update(func(r *runrec.Record) { r.State = runrec.StateStopped }); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","push":true}`)); err != nil {
+		t.Fatalf("final run: %v", err)
+	}
+}
+
+func TestProjectsSetConcurrentCallsKeepEveryChange(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	calls := []string{
+		`{"name":"p","push":true}`, `{"name":"p","ui_doc":"u.md"}`, `{"name":"p","worktree_pattern":"w/{id}"}`,
+		`{"name":"p","branch_pattern":"b/{id}"}`, `{"name":"p","check_command":"make"}`, `{"name":"p","check_minutes":4}`,
+		`{"name":"p","cap":2}`, `{"name":"p","budget_minutes":6}`, `{"name":"p","budget_tokens":7}`,
+	}
+	var wg sync.WaitGroup
+	for _, raw := range calls {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if _, err := d.handle(context.Background(), MethodProjectsSet, json.RawMessage(raw)); err != nil {
+				t.Errorf("%s: %v", raw, err)
+			}
+		}()
+	}
+	wg.Wait()
+	f, err := registry.Load(d.registryPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := registry.Project{Name: "p", Path: f.Projects[0].Path, Push: true, UIDoc: "u.md", WorktreePattern: "w/{id}", BranchPattern: "b/{id}",
+		CheckCommand: "make", CheckMinutes: 4, Cap: 2, Budgets: registry.Budgets{Minutes: 6, Tokens: 7}}
+	if !reflect.DeepEqual(f.Projects[0], want) {
+		t.Fatalf("a concurrent set lost a change:\n got %+v\nwant %+v", f.Projects[0], want)
+	}
+}
+
+func TestProjectsSetOverTheSocket(t *testing.T) {
+	e := newEnv(t)
+	e.writeRegistry(t, 7, registry.Project{Name: "keep", Path: "/p/keep"})
+	e.start(t)
+	c := e.dial(t)
+	push, doc := true, "docs/ui.md"
+	p, err := c.SetProject(context.Background(), SetProjectParams{Name: "keep", Push: &push, UIDoc: &doc})
+	if err != nil || !p.Push || p.UIDoc != doc {
+		t.Fatalf("set: %+v, %v", p, err)
+	}
+	saved, _ := registry.Load(e.regPath)
+	if saved.DaemonIdleMinutes != 7 || !saved.Projects[0].Push || saved.Projects[0].UIDoc != doc {
+		t.Fatalf("saved: %+v", saved)
+	}
+	list, _ := c.Projects(context.Background())
+	if len(list) != 1 || !list[0].Push {
+		t.Fatalf("list: %+v", list)
+	}
+}

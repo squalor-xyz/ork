@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"sort"
 	"strings"
@@ -504,8 +505,15 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 	if err != nil {
 		return runrec.Record{}, err
 	}
-	if _, ok := find(f, plan.project.Name); !ok {
+	current, ok := find(f, plan.project.Name)
+	if !ok {
 		return runrec.Record{}, notFound(plan.project.Name, f)
+	}
+	// projects.set (S161) changes a project's fields only while it has no
+	// unfinished run, and it holds this lock to save. A set between planRun's
+	// read and here would leave the plan on the old fields, so refuse.
+	if !reflect.DeepEqual(current, plan.project) {
+		return runrec.Record{}, errors.New("plan changed; run the command again to confirm it")
 	}
 	queued := !d.hasRoomLocked(f, plan.project.Name)
 	wave := p.wave

@@ -398,3 +398,40 @@ func TestSaveStillReplaces(t *testing.T) {
 		t.Fatalf("Load after Save: %+v, %v", got, err)
 	}
 }
+
+func TestValidateUIDocAcceptsOnlyPathsInsideTheProject(t *testing.T) {
+	for _, ok := range []string{"", "docs/ui.md", "ui.md", "a/b/c.md", "docs/../ui.md"} {
+		if err := ValidateUIDoc(ok); err != nil {
+			t.Errorf("ValidateUIDoc(%q) = %v, want nil", ok, err)
+		}
+	}
+	for _, bad := range []string{"/etc/ui.md", "../ui.md", "docs/../../ui.md", "..", ".", "./", "docs/..", "a\x00b"} {
+		if err := ValidateUIDoc(bad); err == nil {
+			t.Errorf("ValidateUIDoc(%q) = nil, want an error", bad)
+		}
+	}
+}
+
+func TestValidateUIDocNamesTheProblem(t *testing.T) {
+	if err := ValidateUIDoc("/etc/ui.md"); err == nil || !strings.Contains(err.Error(), "not absolute") {
+		t.Errorf("absolute path: %v", err)
+	}
+	if err := ValidateUIDoc("../ui.md"); err == nil || !strings.Contains(err.Error(), "inside the project") {
+		t.Errorf("escaping path: %v", err)
+	}
+}
+
+func TestValidatePatternNeedsAnIDPlaceholder(t *testing.T) {
+	for _, ok := range []string{"", "{id}", ".worktrees/{id}", "{id_lower}", "/abs/{id_lower}/x", "{id}-{id_lower}"} {
+		if err := ValidatePattern("worktree_pattern", ok); err != nil {
+			t.Errorf("ValidatePattern(%q) = %v, want nil", ok, err)
+		}
+	}
+	err := ValidatePattern("branch_pattern", "feature")
+	if err == nil || !strings.Contains(err.Error(), "branch_pattern") || !strings.Contains(err.Error(), "{id}") {
+		t.Errorf("ValidatePattern without a placeholder = %v", err)
+	}
+	if err := ValidatePattern("branch_pattern", "{ID}"); err == nil {
+		t.Error("ValidatePattern({ID}) = nil, want an error: placeholders are case sensitive")
+	}
+}

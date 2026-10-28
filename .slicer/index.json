@@ -7201,7 +7201,7 @@
       "id": "S161",
       "title": "ork projects set: change a project's optional registry fields",
       "short_title": "projects set",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -7211,6 +7211,39 @@
           "text": "**2026-10-27** — Owner decisions 2026-10-27 (interactive): all optional fields, one flag each: ork projects set NAME --push on|off --ui-doc PATH --worktree-pattern P --branch-pattern P --check CMD --budget-minutes N --budget-tokens N; refuses while the project has unfinished runs (as ork projects rm does, CodeProjectBusy); validates each value (ui_doc a relative path inside the project; patterns need {id} or {id_lower}); a daemon RPC does the write under regMu.",
           "created_at": "2026-10-27T20:46:56Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "24004e18-8a4c-4910-a484-a65bf9420149",
+          "kind": "",
+          "text": "**2026-10-28** — S161 follow-ups (implementer, 2026-10-28): (1) The dashboard keeps each project registry entry from startup (internal/tui/model.go:~207), so an open dashboard approval card still says \"Approve lands it\" after `ork projects set NAME --push on` until the dashboard is reopened; refresh the registry entry from projects.list on the dashboard refresh. (2) ui_doc is checked by name only; symlinks inside the project are not resolved. (3) branch_pattern is not checked for git ref validity.",
+          "created_at": "2026-10-28T12:44:13Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "2e37f321-0e88-4c3d-b9c3-d2e14dd3c0cf",
+          "kind": "",
+          "text": "**2026-10-28** — Owner decisions 2026-10-28 (interactive): a run planned before a projects set is refused at admission ('plan changed; run the command again to confirm it'); ork doctor's pattern finding names the ork projects set fix. 2026-10-27: all optional fields one flag each; refuses while the project has unfinished runs.",
+          "created_at": "2026-10-28T12:51:24Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "00cf2282-dc8b-42db-9c4a-5cce30e72c11",
+          "kind": "",
+          "text": "**2026-10-28** — Orchestration trial (run 32, S161): 2 owner questions during the fix round, no stalls, 1 fix round, merge of main at landing; ran in parallel with S141 and S143 (Codex); implementer Claude sonnet-high (Codex pair rule), one opus reviewer doing review and CLI text check; ledger steps recorded per round.",
+          "created_at": "2026-10-28T12:51:25Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -7234,7 +7267,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

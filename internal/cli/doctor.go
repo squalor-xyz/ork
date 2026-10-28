@@ -123,6 +123,20 @@ func checkCommandWord(command string) string {
 	return ""
 }
 
+// shellWord quotes s for a shell only when it needs it.
+func shellWord(s string) string {
+	plain := s != ""
+	for _, r := range s {
+		if !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || strings.ContainsRune("._-/", r)) {
+			plain = false
+		}
+	}
+	if plain {
+		return s
+	}
+	return "'" + strings.ReplaceAll(s, "'", `'"'"'`) + "'"
+}
+
 // addFinding keeps every stored finding on a single text line.
 func (p *projectCheck) addFinding(format string, args ...any) {
 	p.Findings = append(p.Findings, strings.Join(strings.Fields(fmt.Sprintf(format, args...)), " "))
@@ -173,7 +187,8 @@ func checkProject(ctx context.Context, p registry.Project) projectCheck {
 		{"worktree_pattern", p.WorktreePattern}, {"branch_pattern", p.BranchPattern},
 	} {
 		if pattern.value != "" && !strings.Contains(pattern.value, "{id}") && !strings.Contains(pattern.value, "{id_lower}") {
-			check.addFinding("%s %q has no {id} or {id_lower}", pattern.name, pattern.value)
+			check.addFinding("%s %q has no {id} or {id_lower} (fix: ork projects set %s --%s PATTERN)",
+				pattern.name, pattern.value, shellWord(p.Name), strings.ReplaceAll(pattern.name, "_", "-"))
 		}
 	}
 	return check

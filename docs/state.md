@@ -80,17 +80,28 @@ Notes on the fields:
   syntax per vendor waits on the vendor spike (design.md).
 - `push` (*proposed*, S119, adj 162) says ork runs `git push` in the main
   checkout after it lands a slice there. Absent or `false` means ork never
-  pushes (the example turns it on). ork does not write it; the owner sets it by editing the file
-  (docs/manual-steps.md). An older ork refuses a registry with `push` because
-  `Load` uses strict keys.
+  pushes (the example turns it on). ork writes it only when the owner runs
+  `ork projects set NAME --push on|off` (below); the owner can also edit the
+  file (docs/manual-steps.md). An older ork refuses a registry with `push`
+  because `Load` uses strict keys.
 - `ui_doc` (*proposed*, S136, owner decision 2026-10-27) is the path of the
   project's UI design doc, relative to the project (the example uses
   `docs/ui.md`). The UI pass's brief names it, so the pass judges the screens
   against that project's own design and not ork's. Absent means the brief
-  tells the UI pass to find the project's own UI docs. ork does not write
-  it, and `ork projects` has no command to set it yet (a general
-  `ork projects set` is S161); until then the owner sets it by editing the file. An older ork
+  tells the UI pass to find the project's own UI docs. The owner sets it with
+  `ork projects set NAME --ui-doc PATH` or by editing the file. An older ork
   refuses a registry with `ui_doc` because `Load` uses strict keys.
+- `ork projects set` (*proposed*, S161, owner decision 2026-10-27) is the only
+  way ork writes the optional fields. It changes `push`, `ui_doc`,
+  `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`,
+  `cap` and `budgets.minutes` and `budgets.tokens`, and leaves every other
+  key as it was (`name`, `path`, `adj`, `global_cap`, `daemon_idle_minutes`,
+  `environment_lines`, `permissions` and `vendor_env` are file edits). The daemon validates each value, refuses
+  while the project has unfinished runs, and saves under its registry lock.
+  A `ui_doc` must be a relative path inside the project (checked by name;
+  symlinks are not resolved; it is stored cleaned; the file need not exist yet). A pattern must hold `{id}` or
+  `{id_lower}`. Numbers must not be negative. An empty string or 0 clears
+  a field (zero means unset). The command is design.md's `projects set`.
 - `vendor_env` is shown as an example. The DataBall entry reflects the
   agents repo's note that Codex needs network access for `dotnet test`
   (`agents/setup/lib/workflow-vendor.sh`).

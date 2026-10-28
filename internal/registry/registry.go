@@ -73,6 +73,37 @@ func FillPattern(pattern, id string) string {
 	return strings.NewReplacer("{id}", id, "{id_lower}", strings.ToLower(id)).Replace(pattern)
 }
 
+// ValidateUIDoc checks a ui_doc value (S161, *proposed*). Empty means unset.
+// Otherwise the value must be a relative path that stays inside the project
+// and names a file below it, so "." and ".." are refused. Whether the file
+// exists is not checked.
+func ValidateUIDoc(path string) error {
+	if path == "" {
+		return nil
+	}
+	if strings.ContainsRune(path, 0) {
+		return errors.New("ui_doc contains a NUL byte")
+	}
+	if filepath.IsAbs(path) {
+		return fmt.Errorf("ui_doc %q must be relative to the project, not absolute", path)
+	}
+	if clean := filepath.Clean(path); clean == "." || !filepath.IsLocal(clean) {
+		return fmt.Errorf("ui_doc %q must name a file inside the project", path)
+	}
+	return nil
+}
+
+// ValidatePattern checks a worktree_pattern or branch_pattern value (S161,
+// *proposed*). Empty means unset. Otherwise it must hold {id} or {id_lower},
+// so two items never plan the same worktree or branch. The placeholders are
+// case sensitive, as FillPattern fills them.
+func ValidatePattern(name, pattern string) error {
+	if pattern == "" || strings.Contains(pattern, "{id}") || strings.Contains(pattern, "{id_lower}") {
+		return nil
+	}
+	return fmt.Errorf("%s %q must contain {id} or {id_lower}", name, pattern)
+}
+
 // Project is one registry entry. Fields other than Name, Path and Adj are
 // optional; a zero value means unset and is not written. WorktreePattern and
 // BranchPattern accept {id} and {id_lower} (S124, *proposed*).

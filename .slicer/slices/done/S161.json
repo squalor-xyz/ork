@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/cli/daemoncmds.go`\n- `internal/daemon/handlers.go`\n- `internal/registry/registry.go`\n- `docs/state.md`\n- `docs/design.md`"
+      "body": "- `internal/cli/daemoncmds.go`\n- `internal/cli/cli.go`\n- `internal/cli/doctor.go`\n- `internal/daemon/handlers.go`\n- `internal/daemon/runs.go`\n- `internal/daemon/wire.go`\n- `internal/daemon/client.go`\n- `internal/registry/registry.go`\n- `docs/state.md`\n- `docs/design.md`\n- `docs/manual-steps.md`"
     },
     {
       "heading": "Failing tests",

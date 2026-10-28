@@ -110,6 +110,7 @@ ork (TUI)  ork status --json (CLI)
   | `projects.list` | none | `{"projects":[...]}`; an empty registry is valid |
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
   | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
+  | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `ui_doc`, `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` | the project as saved; an omitted field keeps its value, `""` or 0 clears one; `bad_params` for an unknown field, no field or an invalid value, `not_found`, `project_busy` while a run is unfinished |
 
   Error codes the daemon adds: `unknown_method`, `bad_params`, `not_found`,
   `duplicate_name`, `invalid_path`, `registry`, *proposed* `project_busy`, *proposed*
@@ -369,7 +370,8 @@ slice.
      change as `ID done` (`git commit -- .slicer`, so files the owner staged
      stay out of it); in `done` mode there is nothing to commit.
   4. `git -C P push` when the project's `push` setting is on (off by default;
-     ork never sets it). A failed push pauses the slice; the branch is on the
+     ork writes it only when the owner runs
+     `ork projects set NAME --push on|off`). A failed push pauses the slice; the branch is on the
      base branch already, and a retry pushes again.
   5. Cleanup, as the owner's approval confirmed it: `git -C P worktree remove
      W`, then `git -C P branch -d BRANCH`. Never `--force` or `-D`. A cleanup
@@ -946,7 +948,8 @@ ork daemon stop [--force]   stop the daemon; on a daemon that predates
 ork daemon restart [--force]
                             stop and start the current executable
 ork roles print [ROLE]      print the embedded role prompts
-ork projects add|list|rm    manage the registry
+ork projects add|list|rm|set
+                            manage the registry
 ork doctor                  check versions, CLIs, logins, contract, ork path, projects
 ```
 
@@ -1105,7 +1108,8 @@ a run that is not stopped or is busy. An unknown run returns `not_found`.
   and `command`, and words containing `$` or a backtick or starting with `~`.
   Doctor never executes the check command. Nonempty worktree and branch
   patterns must contain `{id}` or `{id_lower}` (*proposed*, S124); empty
-  patterns use the defaults.
+  patterns use the defaults. A finding names the fix, `ork projects set NAME
+  --worktree-pattern PATTERN` or `--branch-pattern PATTERN` (S161).
   The registry is read only; a missing registry is empty and is not created.
   A registry read error is advisory: JSON has `registry_error` (omitted when
   there is no error), separate from the daemon's `warning`. Text prints
@@ -1191,6 +1195,24 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   stopped. This includes queued, paused, awaiting-approval and running states.
   The message names the run ids. The project stays registered.
   A planned start that loses the race to removal is refused with `not_found`.
+- `projects set NAME [--push on|off] [--ui-doc PATH] [--worktree-pattern P]
+  [--branch-pattern P] [--check CMD] [--check-minutes N] [--cap N]
+  [--budget-minutes N] [--budget-tokens N]` (*proposed*, S161): one flag per
+  optional registry field, as in state.md. A flag that is given sets its
+  field; a flag that is left out keeps the value. An empty string or 0 clears
+  a field. `--push` takes `on` or `off`. At least one flag is required, and
+  an unknown flag, a bad `--push` value or a non-number is a usage error
+  (exit 2) before the daemon starts. The daemon (`projects.set`) validates the
+  values and refuses with `bad_params` (a `ui_doc` that is absolute or leaves
+  the project, a pattern without `{id}` or `{id_lower}`, a negative number) or
+  `project_busy`, as `projects rm` does, and then changes nothing. JSON:
+  `{"project":{...}}`. Text: `updated NAME: FIELD=VALUE, ...` in flag order,
+  with `unset` for a cleared field; the text shows the values as saved (a
+  `ui_doc` is cleaned). The daemon reads the registry for each start, so a run
+  that starts later uses the new values and the daemon needs no restart. A
+  start whose plan was read before the change and that is admitted after it is
+  refused with `plan changed; run the command again to confirm it`; run
+  the command again.
 - `roles print [ROLE]`: `{"roles":[{"name","prompt"}]}`. Text: the prompt of
   ROLE as embedded, or all four with a `==== NAME ====` line before each.
 - `doctor`: `{"ok","tools":[{"name","required","present","path","version",

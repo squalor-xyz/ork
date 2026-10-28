@@ -742,7 +742,19 @@ func TestDoctorPatternWithoutIdIsReported(t *testing.T) {
 			if tc.finding == "" && got != "" || tc.finding != "" && (!strings.Contains(got, tc.finding) || !strings.Contains(got, "has no {id} or {id_lower}") || !strings.Contains(got, fmt.Sprintf("%q", tc.worktree+tc.branch))) {
 				t.Fatalf("findings %q, want %q", got, tc.finding)
 			}
+			if hint := "(fix: ork projects set demo --" + strings.ReplaceAll(tc.finding, "_", "-") + " PATTERN)"; tc.finding != "" && !strings.Contains(got, hint) {
+				t.Fatalf("findings %q lack the hint %q", got, hint)
+			}
 		})
+	}
+}
+
+func TestDoctorPatternHintQuotesAnAwkwardName(t *testing.T) {
+	app, _ := doctorProjects(t, registry.Project{Name: "my proj", Path: t.TempDir(), BranchPattern: "fixed"})
+	d := projectReport(t, app)
+	got := strings.Join(d.Projects[0].Findings, " ")
+	if !strings.Contains(got, "(fix: ork projects set 'my proj' --branch-pattern PATTERN)") {
+		t.Fatalf("findings %q", got)
 	}
 }
 
@@ -1208,5 +1220,128 @@ func TestStatusBoundsDenials(t *testing.T) {
 	code, stdout, stderr := run(t, app, "status")
 	if code != 0 || !strings.Contains(stdout, "(denied: A, B, C and 2 more)\n") {
 		t.Fatalf("bounded denials missing: code %d stdout=%s stderr=%s", code, stdout, stderr)
+	}
+}
+
+// ---- projects set (S161) ----
+
+func TestProjectsSetUpdatesOneField(t *testing.T) {
+	w := newWorld(t, stubSource{},
+		registry.Project{Name: "keep", Path: "/p/keep", Cap: 2, UIDoc: "a.md"},
+		registry.Project{Name: "other", Path: "/p/other", CheckCommand: "make"})
+	code, stdout, stderr := run(t, w.app, "projects", "set", "other", "--push", "on")
+	if code != 0 || stdout != "updated other: push=on\n" {
+		t.Fatalf("exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	saved, err := registry.Load(w.regPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantKeep := registry.Project{Name: "keep", Path: "/p/keep", Cap: 2, UIDoc: "a.md"}
+	wantOther := registry.Project{Name: "other", Path: "/p/other", CheckCommand: "make", Push: true}
+	if !reflect.DeepEqual(saved.Projects, []registry.Project{wantKeep, wantOther}) {
+		t.Fatalf("saved: %+v", saved.Projects)
+	}
+
+	// Several flags at once, in a fixed order; --json prints the project.
+	code, stdout, stderr = run(t, w.app, "projects", "set", "other", "--json",
+		"--budget-tokens", "900", "--budget-minutes", "30", "--check", "go test ./...", "--ui-doc", "docs/ui.md",
+		"--worktree-pattern", ".wt/{id_lower}", "--branch-pattern", "{id_lower}", "--cap", "3", "--check-minutes", "5", "--push", "off")
+	var res struct{ Project registry.Project }
+	mustJSON(t, stdout, &res)
+	want := registry.Project{Name: "other", Path: "/p/other", CheckCommand: "go test ./...", CheckMinutes: 5, Cap: 3, UIDoc: "docs/ui.md",
+		WorktreePattern: ".wt/{id_lower}", BranchPattern: "{id_lower}", Budgets: registry.Budgets{Minutes: 30, Tokens: 900}}
+	if code != 0 || !reflect.DeepEqual(res.Project, want) {
+		t.Fatalf("exit %d\nstdout: %s\nstderr: %s", code, stdout, stderr)
+	}
+	saved, _ = registry.Load(w.regPath)
+	if !reflect.DeepEqual(saved.Projects[1], want) || !reflect.DeepEqual(saved.Projects[0], wantKeep) {
+		t.Fatalf("saved: %+v", saved.Projects)
+	}
+
+	// An empty value clears a text field, and the text output says so.
+	code, stdout, _ = run(t, w.app, "projects", "set", "other", "--ui-doc", "", "--check-minutes", "0")
+	if code != 0 || stdout != "updated other: ui_doc=unset, check_minutes=unset\n" {
+		t.Fatalf("clear: exit %d: %q", code, stdout)
+	}
+}
+
+// The text says what the registry now holds, not what was typed (S161).
+func TestProjectsSetPrintsTheStoredValues(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
+	code, stdout, stderr := run(t, w.app, "projects", "set", "keep", "--ui-doc", "./docs/../docs/ui.md")
+	if code != 0 || stdout != "updated keep: ui_doc=\"docs/ui.md\"\n" {
+		t.Fatalf("exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+}
+
+func TestProjectsSetRefusesUnknownField(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
+	starts := w.starts.Load()
+	for _, tc := range []struct {
+		args []string
+		want string
+	}{
+		{[]string{"projects", "set", "keep", "--nope", "x"}, "flag provided but not defined: -nope"},
+		{[]string{"projects", "set", "keep", "--adj", "on"}, "flag provided but not defined: -adj"},
+		{[]string{"projects", "set", "keep"}, "needs at least one field flag"},
+		{[]string{"projects", "set", "--push", "on"}, "takes one NAME, got 0"},
+		{[]string{"projects", "set", "keep", "other", "--push", "on"}, "takes one NAME, got 2"},
+		{[]string{"projects", "set", "keep", "--push", "maybe"}, `--push takes on or off, got "maybe"`},
+		{[]string{"projects", "set", "keep", "--cap", "many"}, `invalid value "many" for flag -cap`},
+	} {
+		code, _, stderr := run(t, w.app, tc.args...)
+		if code != 2 || !strings.Contains(stderr, "projects set") || !strings.Contains(stderr, tc.want) {
+			t.Errorf("%v: exit %d: %q, want %q", tc.args, code, stderr, tc.want)
+		}
+	}
+	if w.starts.Load() != starts {
+		t.Fatal("a usage error started the daemon")
+	}
+	if saved, _ := registry.Load(w.regPath); !reflect.DeepEqual(saved.Projects, []registry.Project{{Name: "keep", Path: "/p/keep"}}) {
+		t.Fatalf("a refusal changed the registry: %+v", saved.Projects)
+	}
+}
+
+func TestProjectsSetValidatesUIDoc(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep", UIDoc: "old.md"})
+	for _, bad := range []string{"/abs/ui.md", "../ui.md", "a/../../ui.md"} {
+		code, _, stderr := run(t, w.app, "projects", "set", "keep", "--ui-doc", bad)
+		if code != 1 || !strings.Contains(stderr, "ui_doc") || !strings.Contains(stderr, bad) {
+			t.Errorf("%q: exit %d: %q", bad, code, stderr)
+		}
+	}
+	code, stdout, _ := run(t, w.app, "projects", "set", "keep", "--ui-doc", "../x.md", "--json")
+	var e struct {
+		Error struct{ Code, Message string }
+	}
+	mustJSON(t, stdout, &e)
+	if code != 1 || e.Error.Code != daemon.CodeBadParams {
+		t.Fatalf("--json: exit %d: %s", code, stdout)
+	}
+	if saved, _ := registry.Load(w.regPath); saved.Projects[0].UIDoc != "old.md" {
+		t.Fatalf("a refusal changed the registry: %+v", saved.Projects)
+	}
+}
+
+func TestProjectsSetRefusesAnUnfinishedRun(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
+	if code, _, stderr := run(t, w.app, "projects", "list"); code != 0 {
+		t.Fatalf("start daemon: exit %d: %s", code, stderr)
+	}
+	store := &runrec.Store{Dir: filepath.Join(w.paths.Dir, "runs")}
+	if _, err := store.Create(runrec.Record{ID: "busy-run", Project: "keep", State: runrec.StatePaused}); err != nil {
+		t.Fatal(err)
+	}
+	code, _, stderr := run(t, w.app, "projects", "set", "keep", "--push", "on")
+	if code != 1 || !strings.Contains(stderr, "project keep has unfinished runs: busy-run") {
+		t.Fatalf("exit %d: %q", code, stderr)
+	}
+	if saved, _ := registry.Load(w.regPath); saved.Projects[0].Push {
+		t.Fatal("a busy refusal changed the registry")
+	}
+	code, _, stderr = run(t, w.app, "projects", "set", "nope", "--push", "on")
+	if code != 1 || !strings.Contains(stderr, `"nope"`) {
+		t.Fatalf("unknown project: exit %d: %q", code, stderr)
 	}
 }

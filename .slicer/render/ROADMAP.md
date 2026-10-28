@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-163 items · — 35 · done 123 · retired 5
+163 items · — 34 · done 124 · retired 5
 
 ## v1.1
 
@@ -214,7 +214,7 @@
 | 157 | S158 | S71 later notes | S | 1 |  | discovered from S71 | — |
 | 158 | [S159](slices/S159.md) | S135 later notes | S | 1 |  | discovered from S135 | done |
 | 159 | [S160](slices/S160.md) | Add/remove projects | S | 2 |  | discovered from S96 | done |
-| 160 | [S161](slices/S161.md) | projects set | M | 2 |  | discovered from S136 | — |
+| 160 | [S161](slices/S161.md) | projects set | M | 2 |  | discovered from S136 | done |
 | 161 | [S162](slices/S162.md) | Roadmap pass headings | S | 1 |  | discovered from S151 | done |
 | 162 | [S163](slices/S163.md) | Recent counts and duration | S | 1 |  | discovered from S162 | — |
 
