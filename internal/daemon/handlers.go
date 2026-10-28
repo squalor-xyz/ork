@@ -424,6 +424,8 @@ func (d *Daemon) addProject(p AddProjectParams) (registry.Project, error) {
 }
 
 func (d *Daemon) removeProject(name string) error {
+	d.runs.specStateMu.Lock()
+	defer d.runs.specStateMu.Unlock()
 	d.regMu.Lock()
 	defer d.regMu.Unlock()
 	f, err := d.loadRegistry()
@@ -449,7 +451,7 @@ func (d *Daemon) removeProject(name string) error {
 		return &ipc.Error{Code: CodeRegistry, Message: err.Error()}
 	}
 	d.cache.Forget(name)
-	return nil
+	return d.removeProjectSpecsLocked(name)
 }
 
 // setProject changes the optional registry fields p sets (S161, *proposed*).

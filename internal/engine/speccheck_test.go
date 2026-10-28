@@ -4,7 +4,9 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -47,9 +49,28 @@ func specSliceJSON(id, why string) string {
 // specHarness answers `slicer show` for S10 and S11 in the project checkout
 // and git status in it with the given replies (one per call).
 func specHarness(t *testing.T, status ...string) *harness {
+	return specHarnessHead(t, nil, status...)
+}
+
+func specHarnessHead(t *testing.T, heads []clitest.Reply, status ...string) *harness {
+	var reads []string
+	for i := 0; i < len(status); i += 2 {
+		after := status[i]
+		if i+1 < len(status) {
+			after = status[i+1]
+		}
+		reads = append(reads, status[i], status[i], after)
+	}
+	return specHarnessStatusReads(t, heads, reads...)
+}
+
+func specHarnessStatusReads(t *testing.T, heads []clitest.Reply, status ...string) *harness {
 	t.Helper()
 	h := newHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {
+			if len(heads) == 0 {
+				heads = []clitest.Reply{{Stdout: "abc\n"}}
+			}
 			var seq []clitest.Reply
 			for _, s := range status {
 				seq = append(seq, clitest.Reply{Stdout: s})
@@ -58,6 +79,7 @@ func specHarness(t *testing.T, status ...string) *harness {
 				seq = []clitest.Reply{{}}
 			}
 			return []clitest.Route{
+				{Tool: "git", Args: []string{"-C", P, "rev-parse", "HEAD"}, Seq: heads},
 				{Tool: "slicer", Args: []string{"show", "S10", "--json", "--lean", "--root", P}, Stdout: specSliceJSON("S10", "ten")},
 				{Tool: "slicer", Args: []string{"show", "S11", "--json", "--lean", "--root", P}, Stdout: specSliceJSON("S11", "eleven")},
 				{Tool: "git", Args: []string{"-C", P, "status", "--porcelain"}, Seq: seq},
@@ -471,5 +493,117 @@ func TestARunWithoutDecisionsHasNoDecisionsSection(t *testing.T) {
 		if strings.Contains(r.Brief, "Owner decisions") {
 			t.Errorf("%s brief has a decisions section", r.Role)
 		}
+	}
+}
+
+func TestCheckRerunsOnceWhenMainMovesDuringTheCheck(t *testing.T) {
+	for _, keepsMoving := range []bool{false, true} {
+		t.Run(fmt.Sprint(keepsMoving), func(t *testing.T) {
+			heads := []clitest.Reply{{Stdout: "a"}, {Stdout: "b"}, {Stdout: "b"}, {Stdout: "b"}}
+			if keepsMoving {
+				heads[3].Stdout = "c"
+			}
+			h := specHarnessHead(t, heads, "", " M a.go\n", "", "")
+			res, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+			if keepsMoving {
+				if err == nil || !strings.Contains(err.Error(), "main moved") || res != nil {
+					t.Fatalf("result %+v, error %v", res, err)
+				}
+			} else if err != nil || res == nil {
+				t.Fatalf("retry failed: %v", err)
+			}
+			if n := len(h.runner.requests()); n != 2 {
+				t.Fatalf("%d attempts, want 2", n)
+			}
+		})
+	}
+}
+
+func TestCheckRerunsOnceOnAShapeError(t *testing.T) {
+	for _, alwaysBad := range []bool{false, true} {
+		t.Run(fmt.Sprint(alwaysBad), func(t *testing.T) {
+			h := specHarness(t)
+			h.runner.script = func(req Request, n int) (Result, error) {
+				report := specReport
+				if n == 0 || alwaysBad {
+					report = "Malformed report"
+				}
+				return Result{Exit: ExitOK, Report: report}, nil
+			}
+			res, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+			if alwaysBad {
+				var se *ShapeError
+				if !errors.As(err, &se) || res != nil {
+					t.Fatalf("result %+v, error %v", res, err)
+				}
+			} else if err != nil || res == nil {
+				t.Fatalf("retry failed: %v", err)
+			}
+			if n := len(h.runner.requests()); n != 2 {
+				t.Fatalf("%d attempts, want 2", n)
+			}
+		})
+	}
+}
+
+func TestOwnerNeededTextIsKept(t *testing.T) {
+	h := specHarness(t)
+	h.runner.script = func(req Request, n int) (Result, error) {
+		return Result{Exit: ExitOK, Report: strings.Replace(specReport, "\nnone\n", "\nConfirm the rollout window with the owner.\n", 1)}, nil
+	}
+	res, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := json.Marshal(res)
+	if err != nil || !strings.Contains(string(b), "Confirm the rollout window with the owner.") {
+		t.Fatalf("owner text dropped: %s %v", b, err)
+	}
+}
+
+func TestMovingMainDoesNotRetryAPermissionDenial(t *testing.T) {
+	h := specHarnessHead(t, []clitest.Reply{{Stdout: "a"}, {Stdout: "b"}})
+	h.runner.script = func(req Request, n int) (Result, error) {
+		return Result{Exit: ExitError, Denials: []runrec.DeniedCommand{{Tool: "Bash", Command: "blocked command"}}}, nil
+	}
+	_, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+	if err == nil || !strings.Contains(err.Error(), "permission denied") || len(h.runner.requests()) != 1 {
+		t.Fatalf("denial retried: %v (%d attempts)", err, len(h.runner.requests()))
+	}
+}
+
+func TestSpecCheckRetriesStatusChangesOutsideTheRole(t *testing.T) {
+	for _, again := range []bool{false, true} {
+		t.Run(fmt.Sprint(again), func(t *testing.T) {
+			statuses := []string{"", " M outside.go\n", " M outside.go\n", " M outside.go\n", " M outside.go\n"}
+			if again {
+				statuses[3] = " M another.go\n"
+			}
+			h := specHarnessStatusReads(t, nil, statuses...)
+			res, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+			if again {
+				if err == nil || !strings.Contains(err.Error(), "retry") || !strings.Contains(err.Error(), "check again") {
+					t.Fatalf("second change: %v", err)
+				}
+			} else if err != nil || res == nil {
+				t.Fatalf("external status change failed: %v", err)
+			}
+		})
+	}
+}
+
+func TestSpecCheckRetryFailureExplainsRecovery(t *testing.T) {
+	for _, shape := range []bool{false, true} {
+		t.Run(fmt.Sprint(shape), func(t *testing.T) {
+			h := specHarnessHead(t, []clitest.Reply{{Stdout: "a"}, {Stdout: "b"}, {Stdout: "b"}, {Stdout: "c"}})
+			if shape {
+				h = specHarness(t)
+				h.runner.script = func(Request, int) (Result, error) { return Result{Exit: ExitOK, Report: "bad shape"}, nil }
+			}
+			_, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+			if err == nil || !strings.Contains(err.Error(), "retry") || !strings.Contains(err.Error(), "check again") {
+				t.Fatalf("unhelpful retry failure: %v", err)
+			}
+		})
 	}
 }

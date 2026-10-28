@@ -4,19 +4,19 @@
 [1;7m1>ork              [m│[1m         Items             Shares  Lineup (* edited)        [m
 [2m2[m other            │[1m── Wave 2 ────────────────────────────────────────── 2 items[m
                    │  [x] A  Alpha                     impl:  claude sonnet high
-                   │         [2mspec ready[m
-                   │                                   rev:   claude opus medium
+                   │         [2mspec ready[m                rev:   claude opus medium
                    │                                   gate:  claude opus medium
                    │[1;7m  [x] B  [m[1;7mBeta            [m[1;7m  [m[1;7m      [m[1;7m  [m[1;7mimpl:  claude sonnet high[m
-                   │         [2mwaits on 2 spec questions[m
-                   │[1;7m         [m[1;7m                [m[1;7m  [m[1;7m      [m[1;7m  [m[1;7mrev:   claude opus medium[m
-                   │[1;7m         [m[1;7m                [m[1;7m  [m[1;7m      [m[1;7m  [m[1;7mgate:  claude opus medium[m
+                   │[1;7m         [m[1;7mwaits on 2 spec         [m[1;7m  [m[1;7mrev:   claude opus medium[m
+                   │[1;7m         [m[1;7mquestions               [m[1;7m  [m[1;7mgate:  claude opus medium[m
                    │[1m── Wave 4 ─────────────────────────────────────────── 1 item[m
                    │  [ ] C  Gamma                                              
                    │[1m── Unplaced ───────────────────────────────────────── 1 item[m
                    │  [ ] D  Delta                                              
                    │         [2mno files listed[m
-                   │[2m  +2 more lines[m
+                   │  ! A and B both touch shared.go
+                   │  ! A and B both touch second.go
+                   │
                    │[2m────────────────────────────────────────────────────────────[m
                    │  Cancelled
                    │[2m────────────────────────────────────────────────────────────[m

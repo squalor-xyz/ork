@@ -18,6 +18,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
@@ -317,8 +318,8 @@ func TestSpecCheckBadParams(t *testing.T) {
 }
 
 func TestSpecCheckStopsWhenTheRoleChangedTheTree(t *testing.T) {
-	// The only git calls of a spec check are the status reads before and after the role.
-	rig := newSpecRig(t, rulesJSON(u11), clitest.Route{Tool: "git", Args: []string{"-C"}, Prefix: true, Seq: []clitest.Reply{{}, {Stdout: " M a.go\n"}}})
+	// Script the status reads; HEAD stays unchanged.
+	rig := newSpecRig(t, rulesJSON(u11), clitest.Route{Tool: "git", Args: []string{"-C"}, Prefix: true, Seq: []clitest.Reply{{}, {}, {}, {Stdout: " M a.go\n"}, {}, {}, {}, {}, {}, {}}})
 	_, err := rig.d.handle(context.Background(), MethodSpecCheck, json.RawMessage(`{"project":"p","items":["S1","S2"]}`))
 	if err == nil || !strings.Contains(err.Error(), "changed the tree") {
 		t.Fatalf("error %v", err)
@@ -500,5 +501,371 @@ func TestForcedStopCancelsARunningSpecCheck(t *testing.T) {
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("the check did not return")
+	}
+}
+
+func answeredSpecRig(t *testing.T) *specRig {
+	t.Helper()
+	rig := newSpecRig(t, rulesJSON(u11))
+	rig.check(t, "S1", "S2")
+	request(t, rig.d, MethodSpecAnswer, `{"project":"p","item":"S2","answers":["memory","long"]}`)
+	return rig
+}
+
+func restartSpecRig(t *testing.T, rig *specRig) {
+	t.Helper()
+	old := rig.d
+	old.closeRuns()
+	old.cache.Close()
+	rig.d = New(old.cfg)
+	t.Cleanup(rig.d.closeRuns)
+	t.Cleanup(rig.d.cache.Close)
+}
+
+func TestOwnerAnswersSurviveARestart(t *testing.T) {
+	for _, recheck := range []bool{false, true} {
+		t.Run(fmt.Sprint(recheck), func(t *testing.T) {
+			rig := answeredSpecRig(t)
+			rig.report = specQuestionsReport + "\n## Owner needed\nnone\n"
+			restartSpecRig(t, rig)
+			if recheck {
+				res := rig.check(t, "S2")
+				if !rig.item(res, "S2").Ready || len(rig.requests()) != 1 {
+					t.Fatalf("answers lost after restart: %+v (%d checks)", res, len(rig.requests()))
+				}
+			}
+			b := request(t, rig.d, MethodWaveStart, `{"items":[{"project":"p","item":"S2"}]}`)
+			var out WaveResult
+			if err := json.Unmarshal(b, &out); err != nil {
+				t.Fatal(err)
+			}
+			if len(out.Items) != 1 || out.Items[0].Run == nil || !strings.Contains(out.Items[0].Run.Decisions, "Which store holds the index? -> memory") {
+				t.Fatalf("run lost decisions: %s", b)
+			}
+			if _, err := os.Stat(filepath.Join(rig.d.specDir("p", "S2"), "answers.json")); !errors.Is(err, os.ErrNotExist) {
+				t.Fatalf("answers not consumed at run start: %v", err)
+			}
+		})
+	}
+}
+
+func TestSpecChangeDropsStoredAnswers(t *testing.T) {
+	rig := answeredSpecRig(t)
+	paths, err := filepath.Glob(filepath.Join(rig.d.cfg.Paths.Dir, "spec-checks", "*", "*", "answers.json"))
+	if err != nil || len(paths) != 1 {
+		t.Fatalf("answers not stored: %v %v", paths, err)
+	}
+	rig.setSpec(t, "S2", "new spec")
+	rig.mu.Lock()
+	rig.report = "## Slice S2\nReady\n\n## Owner needed\nnone\n"
+	rig.mu.Unlock()
+	rig.check(t, "S2")
+	restartSpecRig(t, rig)
+	// A reverted spec must not resurrect the old answers.
+	rig.setSpec(t, "S2", "why S2")
+	rig.check(t, "S2")
+	rig.d.runs.mu.Lock()
+	decisions := rig.d.runs.specs[specKey("p", "S2")].decisions
+	rig.d.runs.mu.Unlock()
+	if decisions != "" {
+		t.Fatalf("stale decisions: %q", decisions)
+	}
+	if len(rig.requests()) != 3 {
+		t.Fatalf("stored answers survived a spec change: %d checks", len(rig.requests()))
+	}
+}
+
+func TestSittingDoesNotFreezeWhileAnAnswerWaitsOnSpecMu(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON(u11))
+	rig.check(t, "S1", "S2")
+	socket := filepath.Join(shortDir(t), "s")
+	ln, err := ipc.Listen(socket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	entered := make(chan struct{})
+	server := &ipc.Server{Handler: func(ctx context.Context, method string, raw json.RawMessage) (any, error) {
+		if method == MethodSpecAnswer {
+			close(entered)
+		}
+		return rig.d.handle(ctx, method, raw)
+	}}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { done <- server.Serve(ctx, ln) }()
+	defer func() { cancel(); <-done }()
+	client, err := Dial(ctx, socket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer client.Close()
+	rig.d.runs.specMu.Lock()
+	answers := make(chan error, 1)
+	go func() {
+		_, err := client.SpecAnswer(ctx, SpecAnswerParams{Project: "p", Item: "S2", Answers: []string{"memory", "long"}})
+		answers <- err
+	}()
+	select {
+	case <-entered:
+	case <-time.After(2 * time.Second):
+		rig.d.runs.specMu.Unlock()
+		t.Fatal("answer did not arrive")
+	}
+	projects := make(chan error, 1)
+	go func() { _, err := client.Projects(ctx); projects <- err }()
+	frozen := false
+	select {
+	case err := <-projects:
+		if err != nil {
+			t.Error(err)
+		}
+	case <-time.After(250 * time.Millisecond):
+		frozen = true
+	}
+	rig.d.runs.specMu.Unlock()
+	if err := <-answers; err != nil {
+		t.Error(err)
+	}
+	if frozen {
+		<-projects
+		t.Fatal("sitting connection froze behind the answer waiting on specMu")
+	}
+}
+
+func TestSpecCheckDirRemovedWhenTheRunLands(t *testing.T) {
+	d, store, _ := runDaemon(t, func(ctx context.Context, r engine.Request) (engine.Result, error) {
+		report := "Tests: 1 passed, 0 failed\n\n## Owner needed\nnone\n"
+		if r.Role == engine.RoleReviewer {
+			report = "(A): nothing\n(B): nothing\n(D): nothing\n\n## Owner needed\nnone\n"
+		}
+		if r.Role == engine.RoleGate {
+			report = "VERDICT: PASS\n" + report
+		}
+		return engine.Result{Exit: engine.ExitOK, Report: report}, nil
+	})
+	dir := d.specDir("p", "S1")
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "spec-check.md"), []byte("report"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	b := request(t, d, MethodRunStart, `{"project":"p","item":"S1","well_specified":true}`)
+	var rec runrec.Record
+	if err := json.Unmarshal(b, &rec); err != nil {
+		t.Fatal(err)
+	}
+	waitState(t, store, rec.ID, runrec.StateAwaitingApproval)
+	waitIdle(t, d, rec.ID)
+	assertSpecMuDoesNotBlock(t, d, func() error {
+		_, err := d.ownerRun(context.Background(), MethodRunApprove, RunAction{Run: rec.ID})
+		return err
+	})
+	waitIdle(t, d, rec.ID)
+	r, err := store.Open(rec.ID)
+	if err != nil || r.Snapshot().LandedAt.IsZero() {
+		t.Fatalf("run did not land: %v", err)
+	}
+	if _, err := os.Stat(dir); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("landed check directory remains: %v", err)
+	}
+}
+
+func TestSpecCheckDirsSweptAtDaemonStart(t *testing.T) {
+	for _, listFails := range []bool{false, true} {
+		t.Run(fmt.Sprint(listFails), func(t *testing.T) {
+			exit := 0
+			if listFails {
+				exit = 1
+			}
+			rig := newSpecRig(t, rulesJSON(u11), clitest.Route{Tool: "slicer", Args: []string{"list"}, Prefix: true, Stdout: `[{"id":"S1"}]`, Exit: exit})
+			old := time.Now().Add(-15 * 24 * time.Hour)
+			for _, item := range []string{"S1", "S2", "S3"} {
+				dir := rig.d.specDir("p", item)
+				if err := writeSpecJSON(filepath.Join(dir, "check.json"), map[string]string{"project": "p", "item": item}); err != nil {
+					t.Fatal(err)
+				}
+				if item != "S3" {
+					if err := os.Chtimes(dir, old, old); err != nil {
+						t.Fatal(err)
+					}
+				}
+			}
+			if err := rig.d.recoverRuns(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			for _, item := range []string{"S1", "S2", "S3"} {
+				_, err := os.Stat(rig.d.specDir("p", item))
+				removed := errors.Is(err, os.ErrNotExist)
+				if removed != (item == "S2" && !listFails) {
+					t.Errorf("%s removed=%v, error %v", item, removed, err)
+				}
+			}
+		})
+	}
+}
+
+func TestSpecCheckDirsRemovedWithProject(t *testing.T) {
+	rig := answeredSpecRig(t)
+	paths, _ := filepath.Glob(filepath.Join(rig.d.cfg.Paths.Dir, "spec-checks", "*", "*", "answers.json"))
+	if len(paths) != 1 {
+		t.Fatalf("missing stored answers: %v", paths)
+	}
+	if err := rig.d.removeProject("p"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Dir(paths[0])); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("removed project's answers remain: %v", err)
+	}
+}
+
+func TestSpecCheckKeepsOwnerNeededTextInCachedReplies(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON(u11))
+	rig.report = strings.Replace(rig.report, "\nnone\n", "\nConfirm the rollout window.\n", 1)
+	for i := 0; i < 2; i++ {
+		b, _ := json.Marshal(rig.check(t, "S1", "S2"))
+		if !strings.Contains(string(b), `"owner_needed":"Confirm the rollout window."`) {
+			t.Fatalf("owner text lost: %s", b)
+		}
+	}
+	if n := len(rig.requests()); n != 1 {
+		t.Fatalf("%d checks", n)
+	}
+}
+
+func assertSpecMuDoesNotBlock(t *testing.T, d *Daemon, fn func() error) {
+	t.Helper()
+	d.runs.specMu.Lock()
+	done := make(chan error, 1)
+	go func() { done <- fn() }()
+	timedOut := false
+	var err error
+	select {
+	case err = <-done:
+	case <-time.After(2 * time.Second):
+		timedOut = true
+	}
+	d.runs.specMu.Unlock()
+	if timedOut {
+		err = <-done
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+	if timedOut {
+		t.Fatal("operation waited for the role's specMu")
+	}
+}
+
+func TestRunStartDoesNotWaitForSpecMu(t *testing.T) {
+	rig := answeredSpecRig(t)
+	assertSpecMuDoesNotBlock(t, rig.d, func() error {
+		_, err := rig.d.startRun(context.Background(), RunParams{Project: "p", Item: "S2"})
+		return err
+	})
+}
+
+func TestSpecLifecycleDoesNotWaitForSpecMu(t *testing.T) {
+	t.Run("recover landed", func(t *testing.T) {
+		d, store, _ := runDaemon(t, nil)
+		if _, err := store.Create(runrec.Record{ID: "landed", Project: "p", Item: "S1", State: runrec.StateCommitted, LandedAt: time.Now()}); err != nil {
+			t.Fatal(err)
+		}
+		assertSpecMuDoesNotBlock(t, d, func() error { return d.recoverRuns(context.Background()) })
+	})
+	t.Run("remove project", func(t *testing.T) {
+		rig := answeredSpecRig(t)
+		assertSpecMuDoesNotBlock(t, rig.d, func() error { return rig.d.removeProject("p") })
+	})
+}
+
+func TestInvalidStoredSpecAnswersAreDiscardedAndLogged(t *testing.T) {
+	for _, body := range []string{"broken JSON", "", "{}", "null"} {
+		t.Run(fmt.Sprintf("body-%q", body), func(t *testing.T) {
+			rig := answeredSpecRig(t)
+			rig.report = specQuestionsReport + "\n## Owner needed\nnone\n"
+			restartSpecRig(t, rig)
+			path := filepath.Join(rig.d.specDir("p", "S2"), "answers.json")
+			if err := os.WriteFile(path, []byte(body), 0600); err != nil {
+				t.Fatal(err)
+			}
+			log, err := os.CreateTemp(t.TempDir(), "daemon-log")
+			if err != nil {
+				t.Fatal(err)
+			}
+			old := os.Stderr
+			os.Stderr = log
+			defer func() { os.Stderr = old; log.Close() }()
+			res, checkErr := rig.d.specCheck(context.Background(), SpecCheckParams{Project: "p", Items: []string{"S2"}})
+			os.Stderr = old
+			b, _ := os.ReadFile(log.Name())
+			if checkErr != nil {
+				t.Fatalf("invalid answer blocked re-check: %v", checkErr)
+			}
+			if res.Items[0].Ready || len(res.Items[0].Questions) != 2 {
+				t.Fatalf("questions not asked again: %+v", res)
+			}
+			if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
+				t.Errorf("invalid answer remains: %v", err)
+			}
+			if !strings.Contains(string(b), path) {
+				t.Errorf("log lacks full path %s: %s", path, b)
+			}
+		})
+	}
+}
+
+func TestSpecSweepRemovesDoneRetiredUnregisteredAndLegacy(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON(u11), clitest.Route{Tool: "slicer", Args: []string{"list"}, Prefix: true, Stdout: `[{"id":"S1","status":"open"},{"id":"S2","status":"done"},{"id":"S3","status":"retired"}]`})
+	old := time.Now().Add(-15 * 24 * time.Hour)
+	var dirs []string
+	for _, pair := range [][2]string{{"p", "S1"}, {"p", "S2"}, {"p", "S3"}, {"removed", "S1"}} {
+		dir := rig.d.specDir(pair[0], pair[1])
+		if err := writeSpecJSON(filepath.Join(dir, "check.json"), specCheckIdentity{Project: pair[0], Item: pair[1]}); err != nil {
+			t.Fatal(err)
+		}
+		dirs = append(dirs, dir)
+	}
+	for _, name := range []string{"20261001-120000-abcd", "20261027-120000-1234", "unidentified"} {
+		dir := filepath.Join(rig.d.cfg.Paths.Dir, "spec-checks", name)
+		if err := os.MkdirAll(dir, 0700); err != nil {
+			t.Fatal(err)
+		}
+		dirs = append(dirs, dir)
+	}
+	for i, dir := range dirs {
+		if i != 5 {
+			if err := os.Chtimes(dir, old, old); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	if err := rig.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	for i, dir := range dirs {
+		_, err := os.Stat(dir)
+		wantRemoved := i == 1 || i == 2 || i == 3 || i == 4
+		if errors.Is(err, os.ErrNotExist) != wantRemoved {
+			t.Errorf("%s removal=%v, want %v", dir, err, wantRemoved)
+		}
+	}
+	for _, call := range rig.fake.CallsTo("slicer") {
+		for _, arg := range call.Args {
+			if arg == "--all" {
+				t.Fatal("sweep used --all")
+			}
+		}
+	}
+}
+
+func TestSpecRetryFailureHasAnActionableWireCode(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON(u11))
+	rig.report = "bad shape"
+	_, err := rig.d.specCheck(context.Background(), SpecCheckParams{Project: "p", Items: []string{"S1"}})
+	wire := ipc.ErrorOf(err)
+	if wire == nil || wire.Code == ipc.CodeInternal || !strings.Contains(wire.Message, "retry") || !strings.Contains(wire.Message, "check again") {
+		t.Fatalf("retry failure wire: %+v", wire)
 	}
 }

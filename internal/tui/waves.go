@@ -51,8 +51,9 @@ type wavesState struct {
 	showAll        bool
 	launched       map[string]string
 	starting       bool
-	checking       bool                             // a spec check is in flight
-	checkRequest   uint64                           // the check whose reply counts
+	checking       bool   // a spec check is in flight
+	checkRequest   uint64 // the check whose reply counts
+	ownerNeeded    string
 	specs          map[string]daemon.SpecItemResult // the spec check's latest answer for each item
 	sitting        *specSitting                     // the spec questions on screen
 }
@@ -709,9 +710,15 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 		if reasonBelow {
 			addAt(waveReason(it.Reason), true)
 		}
-		if runBelow {
+		compactNote := runBelow && run == "" && showLineup && len(lineup) > 1
+		if runBelow && !compactNote {
 			addAt(note, true)
 		}
+		var noteParts []string
+		if compactNote {
+			noteParts = wrapText(note, max(titleWidth+2+sharesWidth, 1))
+		}
+		noteRow := 0
 		// Wrap the compact role summaries within their column.
 		for i, text := range lineup {
 			parts := wrapText(text, max(lineupWidth, 1))
@@ -720,8 +727,17 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 			}
 			for _, part := range parts {
 				fallback := strings.HasPrefix(strings.TrimSpace(part), "+")
-				out.body = append(out.body, columns("", "", "", part, false, fallback, selected))
+				if noteRow < len(noteParts) {
+					line := cell(indent, titleCol, false, selected) + cell(noteParts[noteRow], titleWidth+2+sharesWidth, !selected, selected) + cell("", 2, false, selected) + cell(part, lineupWidth, fallback, selected)
+					out.body = append(out.body, line)
+					noteRow++
+				} else {
+					out.body = append(out.body, columns("", "", "", part, false, fallback, selected))
+				}
 			}
+		}
+		for _, part := range noteParts[noteRow:] {
+			addAt(part, true)
 		}
 		if w.inputs != nil && w.inputs.item == it.ID {
 			addAt("launch inputs", true)
@@ -789,6 +805,9 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 				add("! " + pair.A + " and " + pair.B + " both touch " + path)
 			}
 		}
+	}
+	if w.ownerNeeded != "" {
+		add("Owner needed: " + w.ownerNeeded)
 	}
 	return out, nil
 }

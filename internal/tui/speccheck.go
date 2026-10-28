@@ -94,6 +94,7 @@ func (m *Model) applyCheck(msg wavesMsg) tea.Cmd {
 		m.actionStatus = "No spec check returned"
 		return nil
 	}
+	w.ownerNeeded = msg.check.OwnerNeeded
 	if w.specs == nil {
 		w.specs = map[string]daemon.SpecItemResult{}
 	}
@@ -302,7 +303,7 @@ func (m *Model) sittingParts(width int) (overviewView, []string) {
 	if len(s.asks) == 1 {
 		noun = "question"
 	}
-	out.body = append(out.body, th.Heading.Render(fmt.Sprintf("Spec check: %d %s for %s", len(s.asks), noun, strings.Join(items, ", "))))
+	out.body = append(out.body, th.Dim.Render(fmt.Sprintf("Spec check: %d %s for %s", len(s.asks), noun, strings.Join(items, ", "))))
 	ask := s.current()
 	if ask == nil {
 		add(nil, "Recording answers", "")
@@ -338,6 +339,10 @@ func (m *Model) sittingParts(width int) (overviewView, []string) {
 	}
 	out.body = append(out.body, "")
 	add(dim, fmt.Sprintf("%d of %d answered", s.pos, len(s.asks)), "")
+	if w.ownerNeeded != "" {
+		out.body = append(out.body, "")
+		add(dim, "Owner needed: "+w.ownerNeeded, "")
+	}
 	return out, nil
 }
 
