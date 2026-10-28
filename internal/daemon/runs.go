@@ -135,7 +135,8 @@ type runManager struct {
 	specJobs     int                        // spec checks in flight; guarded by mu
 	specSeq      int                        // numbers the spec check jobs; guarded by mu
 	specCancels  map[int]context.CancelFunc // cancels each spec check job; guarded by mu
-	specMu       sync.Mutex                 // one spec check or answer at a time
+	specMu       sync.Mutex                 // serializes spec checks and answers
+	specStateMu  sync.Mutex                 // short state operations; lock order: specMu -> specStateMu -> mu
 	closed       bool
 	mu           sync.Mutex
 	ctx          context.Context
@@ -178,6 +179,7 @@ func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 // recoverRuns reconciles outside the manager lock, then publishes each fully
 // initialized run under the lock used by run-manager readers.
 func (d *Daemon) recoverRuns(ctx context.Context) error {
+	d.sweepSpecDirs(ctx)
 	defer func() { d.runs.mu.Lock(); defer d.runs.mu.Unlock(); d.pruneRunsLocked() }()
 	d.runs.ctx = ctx
 	stored, err := d.runs.deps.Store.List()
@@ -196,6 +198,13 @@ func (d *Daemon) recoverRuns(ctx context.Context) error {
 	for _, r := range stored {
 		rec := r.Snapshot()
 		if runrec.IsFinal(rec.State) {
+			if !rec.LandedAt.IsZero() {
+				d.runs.specStateMu.Lock()
+				d.runs.mu.Lock()
+				d.removeSpecDirLocked(rec.Project, rec.Item)
+				d.runs.mu.Unlock()
+				d.runs.specStateMu.Unlock()
+			}
 			continue
 		}
 		p, ok := find(f, rec.Project)
@@ -476,6 +485,9 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 	if err != nil {
 		return runrec.Record{}, err
 	}
+	if err := d.restoreRunSpecAnswers(ctx, plan.project, p.Item); err != nil {
+		return runrec.Record{}, err
+	}
 	if p.Expected != nil {
 		shown, _ := json.Marshal(p.Expected)
 		current, _ := json.Marshal(plan)
@@ -483,6 +495,8 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 			return runrec.Record{}, errors.New("plan changed; run the command again to confirm it")
 		}
 	}
+	d.runs.specStateMu.Lock()
+	defer d.runs.specStateMu.Unlock()
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
 	if d.runs.closed {
@@ -519,6 +533,11 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 	if err != nil {
 		return runrec.Record{}, err
 	}
+	// The run record now owns the paragraph, including for queued runs.
+	if err := os.Remove(filepath.Join(d.specDir(plan.project.Name, p.Item), "answers.json")); err != nil && !errors.Is(err, os.ErrNotExist) {
+		fmt.Fprintf(os.Stderr, "remove transferred spec answers: %v\n", err)
+	}
+	delete(d.runs.specs, specKey(plan.project.Name, p.Item))
 	r := &managedRun{engine: e}
 	rec := e.Snapshot()
 	d.runs.runs[rec.ID] = r
@@ -779,12 +798,19 @@ func (d *Daemon) launchRun(r *managedRun, fn func(context.Context) error) {
 		defer d.runs.wg.Done()
 		defer cancel()
 		err := fn(ctx)
+		if !r.engine.Snapshot().LandedAt.IsZero() {
+			d.runs.specStateMu.Lock()
+			defer d.runs.specStateMu.Unlock()
+		}
 		d.runs.mu.Lock()
 		result.err = err
 		if !errors.Is(err, context.Canceled) {
 			r.failure = err
 		}
 		result.record = r.engine.Snapshot()
+		if !result.record.LandedAt.IsZero() {
+			d.removeSpecDirLocked(result.record.Project, result.record.Item)
+		}
 		r.busy = false
 		close(r.done)
 		f, err := d.loadRunRegistryLocked()

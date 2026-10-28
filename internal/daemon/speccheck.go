@@ -4,13 +4,11 @@ package daemon
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
@@ -48,7 +46,8 @@ type SpecItemResult struct {
 
 // SpecCheckResult has one entry for each requested item, in order.
 type SpecCheckResult struct {
-	Items []SpecItemResult `json:"items"`
+	Items       []SpecItemResult `json:"items"`
+	OwnerNeeded string           `json:"owner_needed,omitempty"`
 }
 
 // SpecAnswerParams carries the owner's answers to one item's open questions,
@@ -72,12 +71,13 @@ type SpecAnswerResult struct {
 
 // specEntry is what the daemon remembers of a check: the verdict, and the
 // fingerprint of the spec it was made against. A verdict counts only while
-// the spec still has that fingerprint. The daemon keeps entries in memory; a
-// restart asks again.
+// the spec still has that fingerprint. Role verdicts live in memory; owner
+// answers are also saved beside the check until run start or a spec change.
 type specEntry struct {
 	fingerprint string
 	ready       bool
 	questions   []engine.SpecQuestion
+	ownerNeeded string
 	decisions   string // the paragraph recorded for the answers; the item's run carries it
 }
 
@@ -142,12 +142,12 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 			items = append(items, item)
 		}
 	}
+	d.runs.specMu.Lock()
+	defer d.runs.specMu.Unlock()
 	proj, err := d.registered(p.Project)
 	if err != nil {
 		return nil, err
 	}
-	d.runs.specMu.Lock()
-	defer d.runs.specMu.Unlock()
 	deps := d.runDeps(proj)
 	var stale []string
 	for _, item := range items {
@@ -158,6 +158,9 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 		fp, err := engine.SpecFingerprint(raw)
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", item, err)
+		}
+		if err := d.loadSpecAnswers(proj.Name, item, fp); err != nil {
+			return nil, err
 		}
 		d.runs.mu.Lock()
 		e, ok := d.runs.specs[specKey(proj.Name, item)]
@@ -174,9 +177,17 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 	out := &SpecCheckResult{Items: []SpecItemResult{}}
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
+	ownerTexts := map[string]bool{}
 	for _, item := range items {
 		e := d.runs.specs[specKey(proj.Name, item)]
 		out.Items = append(out.Items, SpecItemResult{Item: item, Ready: e.ready, Questions: e.questions})
+		if e.ownerNeeded != "" && !ownerTexts[e.ownerNeeded] {
+			if out.OwnerNeeded != "" {
+				out.OwnerNeeded += "\n\n"
+			}
+			out.OwnerNeeded += e.ownerNeeded
+			ownerTexts[e.ownerNeeded] = true
+		}
 	}
 	return out, nil
 }
@@ -213,17 +224,45 @@ func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj regist
 		d.runs.wg.Done()
 	}()
 	ctx = jobCtx
-	b := make([]byte, 2)
-	rand.Read(b)
-	dir := filepath.Join(d.cfg.Paths.Dir, "spec-checks", time.Now().UTC().Format("20060102-150405")+"-"+hex.EncodeToString(b))
+	d.runs.specStateMu.Lock()
+	if _, err := d.registered(proj.Name); err != nil {
+		d.runs.specStateMu.Unlock()
+		return err
+	}
+	for _, item := range items {
+		if err := writeSpecJSON(filepath.Join(d.specDir(proj.Name, item), "check.json"), specCheckIdentity{Project: proj.Name, Item: item}); err != nil {
+			d.runs.specStateMu.Unlock()
+			return err
+		}
+	}
+	d.runs.specStateMu.Unlock()
+	dir := d.specDir(proj.Name, items[0])
 	res, err := engine.RunSpecCheck(ctx, deps, engine.SpecCheckConfig{Project: proj, Items: items, Lineup: chain, Dir: dir})
 	if err != nil {
+		var retried *engine.SpecCheckRetryError
+		if errors.As(err, &retried) {
+			return &ipc.Error{Code: "spec_check_retry", Message: err.Error()}
+		}
 		return err
+	}
+	d.runs.specStateMu.Lock()
+	defer d.runs.specStateMu.Unlock()
+	if _, err := d.registered(proj.Name); err != nil {
+		return err
+	}
+	report, err := os.ReadFile(filepath.Join(dir, "spec-check.md"))
+	if err != nil {
+		return err
+	}
+	for _, item := range items[1:] {
+		if err := os.WriteFile(filepath.Join(d.specDir(proj.Name, item), "spec-check.md"), report, 0600); err != nil {
+			return err
+		}
 	}
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
 	for _, v := range res.Verdicts {
-		d.runs.specs[specKey(proj.Name, v.Item)] = specEntry{fingerprint: res.Specs[v.Item], ready: v.Ready, questions: v.Questions}
+		d.runs.specs[specKey(proj.Name, v.Item)] = specEntry{fingerprint: res.Specs[v.Item], ready: v.Ready, questions: v.Questions, ownerNeeded: res.OwnerNeeded}
 	}
 	return nil
 }
@@ -235,12 +274,12 @@ func (d *Daemon) specAnswer(ctx context.Context, p SpecAnswerParams) (*SpecAnswe
 	if p.Project == "" || p.Item == "" {
 		return nil, badParams(errors.New("spec answer needs a project and an item"))
 	}
+	d.runs.specMu.Lock()
+	defer d.runs.specMu.Unlock()
 	proj, err := d.registered(p.Project)
 	if err != nil {
 		return nil, err
 	}
-	d.runs.specMu.Lock()
-	defer d.runs.specMu.Unlock()
 	d.runs.mu.Lock()
 	e, ok := d.runs.specs[specKey(proj.Name, p.Item)]
 	closed := d.runs.closed
@@ -280,8 +319,16 @@ func (d *Daemon) specAnswer(ctx context.Context, p SpecAnswerParams) (*SpecAnswe
 	if err != nil {
 		return nil, err
 	}
+	d.runs.specStateMu.Lock()
+	defer d.runs.specStateMu.Unlock()
+	if _, err := d.registered(proj.Name); err != nil {
+		return nil, err
+	}
+	if err := writeSpecJSON(filepath.Join(d.specDir(proj.Name, p.Item), "answers.json"), storedSpecAnswers{Fingerprint: fp, Decisions: decisions, OwnerNeeded: e.ownerNeeded}); err != nil {
+		return nil, fmt.Errorf("save owner answers %s: %w", filepath.Join(d.specDir(proj.Name, p.Item), "answers.json"), err)
+	}
 	d.runs.mu.Lock()
-	d.runs.specs[specKey(proj.Name, p.Item)] = specEntry{fingerprint: fp, ready: true, decisions: decisions}
+	d.runs.specs[specKey(proj.Name, p.Item)] = specEntry{fingerprint: fp, ready: true, decisions: decisions, ownerNeeded: e.ownerNeeded}
 	d.runs.mu.Unlock()
 	return &SpecAnswerResult{Item: p.Item, Ready: true, Notices: notices}, nil
 }

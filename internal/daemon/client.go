@@ -16,7 +16,10 @@ import (
 
 // Client is a connection to the daemon. Snapshot makes it a source.Source,
 // which S13 hands to the TUI.
-type Client struct{ c *ipc.Client }
+type Client struct {
+	c      *ipc.Client
+	socket string
+}
 
 var _ source.Source = (*Client)(nil)
 
@@ -26,7 +29,7 @@ func Dial(ctx context.Context, socket string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{c: c}, nil
+	return &Client{c: c, socket: socket}, nil
 }
 
 // Close closes the connection.
@@ -236,7 +239,7 @@ func (c *Client) WaveStart(ctx context.Context, params WaveStartParams) (*WaveRe
 // daemon remembers for their current specs.
 func (c *Client) SpecCheck(ctx context.Context, project string, items []string) (*SpecCheckResult, error) {
 	var out SpecCheckResult
-	if err := c.Call(ctx, MethodSpecCheck, SpecCheckParams{Project: project, Items: items}, &out); err != nil {
+	if err := c.specCall(ctx, MethodSpecCheck, SpecCheckParams{Project: project, Items: items}, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -245,7 +248,7 @@ func (c *Client) SpecCheck(ctx context.Context, project string, items []string) 
 // SpecAnswer records the owner's answers to an item's open spec questions.
 func (c *Client) SpecAnswer(ctx context.Context, params SpecAnswerParams) (*SpecAnswerResult, error) {
 	var out SpecAnswerResult
-	if err := c.Call(ctx, MethodSpecAnswer, params, &out); err != nil {
+	if err := c.specCall(ctx, MethodSpecAnswer, params, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
@@ -282,4 +285,15 @@ func (c *Client) FileFinding(ctx context.Context, run string, n int) (string, er
 	var reply RunReply
 	err := c.Call(ctx, MethodRunFile, RunAction{Run: run, Finding: n}, &reply)
 	return reply.Message, err
+}
+
+// Spec jobs can wait for the role or specMu. A separate connection keeps
+// snapshots and other sitting actions from queuing behind that wait.
+func (c *Client) specCall(ctx context.Context, method string, params, result any) error {
+	job, err := ipc.Dial(ctx, c.socket)
+	if err != nil {
+		return err
+	}
+	defer job.Close()
+	return job.Call(ctx, method, params, result)
 }

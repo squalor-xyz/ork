@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -203,6 +204,7 @@ type specStub struct {
 	t       *testing.T
 	calls   []string
 	answers []daemon.SpecAnswerParams
+	adj     bool
 	started []string
 	check   string
 }
@@ -214,6 +216,8 @@ const specCheckTwoQuestions = `{"items":[{"item":"S2","ready":true},{"item":"S1"
 func (s *specStub) call(_ context.Context, method string, params, result any) error {
 	s.calls = append(s.calls, method)
 	switch method {
+	case "projects.list":
+		return json.Unmarshal([]byte(fmt.Sprintf(`{"projects":[{"name":"p","adj":%t}]}`, s.adj)), result)
 	case "run.plan":
 		p := params.(daemon.RunParams)
 		*(result.(*daemon.RunPlan)) = daemon.RunPlan{Item: p.Item, Worktree: "/p/" + p.Item}
@@ -244,7 +248,7 @@ func runWaveStart(t *testing.T, stub *specStub, input string, extra ...string) (
 }
 
 func TestWaveStartAsksTheSpecQuestionsInOneSittingThenStartsEveryItem(t *testing.T) {
-	stub := &specStub{t: t, check: specCheckTwoQuestions}
+	stub := &specStub{t: t, check: specCheckTwoQuestions, adj: true}
 	t.Setenv("ADJ_DECIDED_BY", "jon")
 	// Option 2 for the first question, free text for the second, then the start.
 	code, out, errs := runWaveStart(t, stub, "2\nthe --flag-name\ny\n")
@@ -269,7 +273,7 @@ func TestWaveStartAsksTheSpecQuestionsInOneSittingThenStartsEveryItem(t *testing
 	if !reflect.DeepEqual(stub.started, []string{"S2", "S1"}) {
 		t.Errorf("started %v", stub.started)
 	}
-	want := []string{"run.plan", "run.plan", "spec.check", "spec.answer", "wave.start"}
+	want := []string{"run.plan", "run.plan", "spec.check", "projects.list", "spec.answer", "wave.start"}
 	if !reflect.DeepEqual(stub.calls, want) {
 		t.Errorf("calls %v, want %v", stub.calls, want)
 	}
@@ -330,5 +334,70 @@ func TestWaveStartAsksAgainForANumberOutOfRange(t *testing.T) {
 	code, out, _ := runWaveStart(t, stub, "9\n")
 	if len(stub.answers) != 0 || !strings.Contains(out, "held: S1") {
 		t.Errorf("code %d answers %v:\n%s", code, stub.answers, out)
+	}
+}
+
+func TestWaveStartJSONIncludesHeldItems(t *testing.T) {
+	stub := &specStub{t: t, check: specCheckTwoQuestions}
+	code, out, errs := runWaveStart(t, stub, "\n", "--json", "--yes")
+	var result struct {
+		Wave string   `json:"wave"`
+		Held []string `json:"held"`
+	}
+	if code != ExitOK || json.Unmarshal([]byte(out), &result) != nil || result.Wave != "wave-1" || !reflect.DeepEqual(result.Held, []string{"S1"}) {
+		t.Fatalf("code %d, stdout %s, stderr %s", code, out, errs)
+	}
+}
+
+func TestCLIAdjFlagMatchesRegistryForKeyedQuestions(t *testing.T) {
+	for _, adj := range []bool{false, true} {
+		t.Run(fmt.Sprint(adj), func(t *testing.T) {
+			stub := &specStub{t: t, check: specCheckTwoQuestions, adj: adj}
+			code, out, errs := runWaveStart(t, stub, "2\nlong\ny\n")
+			if code != ExitOK || len(stub.answers) != 1 || stub.answers[0].Adj != adj {
+				t.Fatalf("answers %+v code %d: %s %s", stub.answers, code, out, errs)
+			}
+		})
+	}
+}
+
+func TestWaveSittingKeepsOwnerNeededText(t *testing.T) {
+	stub := &specStub{t: t, check: strings.Replace(specCheckTwoQuestions, `{"items":`, `{"owner_needed":"Confirm the rollout window.","items":`, 1)}
+	code, out, errs := runWaveStart(t, stub, "\n", "--json", "--yes")
+	if code != ExitOK || !strings.Contains(errs, "Owner needed: Confirm the rollout window.") || strings.Contains(out, "Confirm the rollout") {
+		t.Fatalf("code %d: %s %s", code, out, errs)
+	}
+}
+
+func TestWaveStartJSONAlwaysIncludesHeldArray(t *testing.T) {
+	for _, tc := range []struct {
+		name, input string
+		check       string
+		want        string
+	}{
+		{"start empty", "2\nlong\n", specCheckTwoQuestions, `[]`},
+		{"cancel held", "\nn\n", specCheckTwoQuestions, `["S1"]`},
+		{"cancel empty", "2\nlong\nn\n", specCheckTwoQuestions, `[]`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			stub := &specStub{t: t, check: tc.check}
+			args := []string{"--json"}
+			if tc.name == "start empty" {
+				args = append(args, "--yes")
+			}
+			code, out, errs := runWaveStart(t, stub, tc.input, args...)
+			var result map[string]json.RawMessage
+			if code != ExitOK || json.Unmarshal([]byte(out), &result) != nil {
+				t.Fatalf("code %d: %s %s", code, out, errs)
+			}
+			var got, want []string
+			if json.Unmarshal(result["held"], &got) != nil || got == nil {
+				t.Fatalf("held is missing or null: %s", out)
+			}
+			json.Unmarshal([]byte(tc.want), &want)
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("held %v, want %v", got, want)
+			}
+		})
 	}
 }

@@ -3,12 +3,14 @@
 package tui
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strings"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
@@ -338,5 +340,117 @@ func TestWavesSittingGolden(t *testing.T) {
 				})
 			}
 		}
+	}
+}
+
+func TestHeldLayoutAt80x24KeepsOverlapWarnings(t *testing.T) {
+	h, l := wavesHarness(t)
+	questionsForB(l)
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	twoWaveItems(t, h)
+	h.deliver(press("l"))
+	h.deliver(press("esc"))
+	h.deliver(press("n"))
+	h.m.waves.ownerNeeded = strings.Repeat("Confirm the rollout window with the owner. ", 4)
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	v := plainView(h.m)
+	for _, path := range []string{"shared.go", "second.go"} {
+		if !strings.Contains(v, "A and B both touch "+path) {
+			t.Errorf("overlap %s hidden:\n%s", path, v)
+		}
+	}
+	if !strings.Contains(v, "waits on 2 spec") || !strings.Contains(v, "questions") {
+		t.Errorf("held note lost:\n%s", v)
+	}
+}
+
+func TestSittingHeadingAndQuestionTitleStylesDiffer(t *testing.T) {
+	h, l := wavesHarness(t)
+	questionsForB(l)
+	twoWaveItems(t, h)
+	h.deliver(press("l"))
+	// Mark the styles without depending on terminal color detection.
+	h.m.cfg.Theme.Heading = lipgloss.NewStyle().SetString("HEADING ")
+	h.m.cfg.Theme.Dim = lipgloss.NewStyle().SetString("DIM ")
+	out, _ := h.m.sittingParts(80)
+	heading, title := "", ""
+	for _, line := range out.body {
+		if strings.Contains(line, "Spec check:") {
+			heading = line
+		}
+		if strings.Contains(line, "[B 1/2]") {
+			title = line
+		}
+	}
+	if heading == "" || title == "" || strings.Contains(heading, "HEADING") == strings.Contains(title, "HEADING") {
+		t.Fatalf("heading %q and title %q use the same style", heading, title)
+	}
+}
+
+func TestSittingKeepsOwnerNeededText(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.check = func(items []string) (*daemon.SpecCheckResult, error) {
+		var res daemon.SpecCheckResult
+		raw := `{"owner_needed":"Confirm the rollout window.","items":[{"item":"A","ready":true},{"item":"B","questions":[{"text":"Question: Choose a window"}]}]}`
+		if err := json.Unmarshal([]byte(raw), &res); err != nil {
+			return nil, err
+		}
+		return &res, nil
+	}
+	twoWaveItems(t, h)
+	h.deliver(press("l"))
+	if v := h.view(); !strings.Contains(v, "Owner needed: Confirm the rollout window.") {
+		t.Fatalf("owner text lost:\n%s", v)
+	}
+}
+
+func TestLongSpecOwnerTextFollowsTheQuestionAt80x24(t *testing.T) {
+	h, l := wavesHarness(t)
+	questionsForB(l)
+	twoWaveItems(t, h)
+	h.deliver(press("l"))
+	h.deliver(press("t"))
+	h.m.waves.ownerNeeded = strings.Repeat("Long owner context must not displace the question or answer. ", 20)
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	v := plainView(h.m)
+	for _, text := range []string{"[B 1/2]", "1. file:", "Answer:", "0 of 2 answered"} {
+		if !strings.Contains(v, text) {
+			t.Errorf("%s hidden:\n%s", text, v)
+		}
+	}
+	parts, _ := h.m.sittingParts(60)
+	body := sgr.ReplaceAllString(strings.Join(parts.body, "\n"), "")
+	if strings.Index(body, "Owner needed:") < strings.Index(body, "0 of 2 answered") {
+		t.Errorf("owner text precedes progress:\n%s", body)
+	}
+	if !strings.Contains(body, "0 of 2 answered\n\n") {
+		t.Error("owner text has no blank separation")
+	}
+}
+
+func TestSelectedSpecNoteUsesTheSelectedRowSGR(t *testing.T) {
+	h, l := wavesHarness(t)
+	questionsForB(l)
+	twoWaveItems(t, h)
+	h.deliver(press("l"))
+	h.deliver(press("esc"))
+	h.deliver(press("n"))
+	h.m.cfg.Theme = NewTheme(false)
+	parts, _ := h.m.wavesParts(60)
+	found := false
+	for _, line := range parts.body {
+		if strings.Contains(line, "waits on 2 spec") {
+			found = true
+			expected := h.m.cfg.Theme.TabActive.Render("waits on 2 spec")
+			if !strings.Contains(line, expected[:len(expected)-len("\x1b[m")]) {
+				t.Errorf("selected note has a dim patch: %q", line)
+			}
+			if strings.Contains(line, h.m.cfg.Theme.Dim.Render("waits on 2 spec")) {
+				t.Errorf("selected note is dim: %q", line)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("selected note not rendered")
 	}
 }

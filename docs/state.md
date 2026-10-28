@@ -17,7 +17,7 @@ The files ork owns. Everything else is read live from slicer, adj and git
 | Check output per round (S04) | `~/.local/state/ork/runs/<run>/checks-<round>.log` |
 | A role's own temp directory (S04) | `~/.local/state/ork/runs/<run>/tmp/<role>-<round>/` |
 | The UI pass's renders (S121, *proposed*): `VIEW-80x24.txt`, `VIEW-120x40.txt`, `VIEW-ascii.txt` | `~/.local/state/ork/runs/<run>/tmp/ui-<round>/renders/` |
-| A spec check's report and temp directory (S116, *proposed*); the verdicts themselves live in the daemon's memory | `~/.local/state/ork/spec-checks/<check>/` |
+| A spec check's identity, report and temp directory, plus owner answers tied to the spec fingerprint until run start or a spec change (S143); role verdicts live in daemon memory | `~/.local/state/ork/spec-checks/<project-key>/<item-key>/` |
 | Fixture candidates: raw output of every non-ok vendor round or round with denials, mode 0600 | `~/.local/state/ork/fixtures/<vendor>/` |
 
 ork honors `XDG_CONFIG_HOME` and `XDG_STATE_HOME`. Nothing is written
@@ -115,7 +115,17 @@ apply to this run only and do not change the matrix or registry
 spec check questions, it holds the `Owner decisions (date)` paragraph that was
 appended to the item's spec in the main checkout. The run's worktree lacks
 that uncommitted edit, so every role's brief carries the paragraph in an
-`Owner decisions` section.
+`Owner decisions` section. Before run start, the paragraph survives daemon
+restarts in the item's `answers.json` beside its check, tied to the updated
+spec fingerprint. Run start transfers it to this record and removes that
+file; a spec change drops the stored answers. The item's check directory is
+removed when its run lands, or when its project is removed. Startup sweeps
+identified directories older than 14 days whose item is done, retired or gone,
+using the ordinary slicer list without `--all`. It also removes old directories
+for unregistered projects and legacy random-named check directories
+(`YYYYMMDD-HHMMSS-xxxx`) older than 14 days. Corrupt or empty `answers.json`
+files are discarded and logged with their full path, so the check asks the
+owner's questions again.
 
 ```json
 {

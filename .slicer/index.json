@@ -6184,10 +6184,55 @@
       "id": "S143",
       "title": "Spec check follow-ups: answers survive a restart, main moving mid-check, sitting freeze, dropped Owner needed, shape retry, state dir cleanup",
       "short_title": "Spec check follow-ups: answers survive a restart, main moving mid-check, sitting freeze, dropped Owner needed, shape retry, state dir cleanup",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7abfe0cc-16a3-4641-b5d2-aa7a16df00f1",
+          "kind": "",
+          "text": "**2026-10-28** — Later review finding (S143, 2026-10-28): recoverRuns removes the spec-check directory of every retained landed run at each daemon start. A reopened item may have newly answered questions in that directory; recovery could delete those answers. Owner explicitly requested a note only; no behavior change in this fix pass.",
+          "created_at": "2026-10-28T13:14:29Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "7d9d7afe-c007-4b78-b8ed-92b9c86fc425",
+          "kind": "",
+          "text": "**2026-10-28** — Deferred review observations (S143, 2026-10-28; owner requested notes only): a spec-check role that commits is reported as main moved and retried because the HEAD comparison precedes the tree comparison; status remains pending: spec.check during the automatic retry; docs/dashboard.md says At 80x24 although compactNote also applies at other widths; Owner needed text has no hanging indent; the sweep runs synchronously at daemon startup and runs one ordinary slicer list per project with old identified directories. These observations are not implemented in this pass.",
+          "created_at": "2026-10-28T13:14:29Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "2cf2ca3e-d83a-494f-878b-7fe73177eca4",
+          "kind": "",
+          "text": "**2026-10-28** — Later (review and UI pass round 2, owner kept the retry scope 2026-10-28): (1) The one automatic re-run covers a status change only between the first status read and the role start; a change in the main checkout during the role still fails as 'changed the tree' (owner: keep). (2) Waves list at 80x24: the whole Owner needed text can fold into '+N more lines'; clip to one line with a '+N more' marker. (3) Spec-check sitting: a long owner text is cut with no scroll. (4) The retry failure still travels with the internal wire code in the status ('internal: ...'); the daemon sends spec_check_retry but the TUI status prefix reads internal. (5) docs/dashboard.md:1086-1087 says 'At 80x24' but the shared-row note applies at any width where it wraps. (6) A project removed during its check leaves a partly filled directory for the sweep. (7) No test holds specMu while a launched run lands (launchRun finish).",
+          "created_at": "2026-10-28T13:30:25Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "5ebf279e-b35e-49b7-a104-8f97b2b082f6",
+          "kind": "",
+          "text": "**2026-10-28** — Orchestration trial (run 33, S143): Codex sol/medium implementer, 1 fix round; review and UI pass each FAIL then PASS; 4 owner questions at preflight, 1 at review; ledger steps recorded per round.",
+          "created_at": "2026-10-28T13:30:30Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -6205,7 +6250,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

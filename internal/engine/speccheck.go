@@ -50,8 +50,9 @@ type SpecCheckConfig struct {
 // SpecCheckResult holds a verdict for each item, in the order of the config,
 // and the fingerprint of the spec each verdict was made against.
 type SpecCheckResult struct {
-	Verdicts []SpecVerdict
-	Specs    map[string]string
+	Verdicts    []SpecVerdict
+	Specs       map[string]string
+	OwnerNeeded string
 }
 
 // SpecFingerprint identifies the spec in the output of `slicer show ID --json
@@ -85,12 +86,53 @@ func gitStatusAt(ctx context.Context, d Deps, dir string) (string, error) {
 	return string(res.Stdout), nil
 }
 
-// RunSpecCheck runs the spec-check role once over every item and returns a
-// verdict for each. The role is read-only: the project checkout's
-// `git status --porcelain` is read before and after, and a role that changed
-// it stops the check with an error and no verdicts. A report that does not
-// have the shape of the prompt is a *ShapeError.
+var errSpecMainMoved = errors.New("main moved during the spec check")
+var errSpecStatusChanged = errors.New("main checkout status changed outside the spec-check role")
+
+// SpecCheckRetryError retains the failure and tells clients that the automatic
+// retry has been used. It unwraps so callers can still inspect a ShapeError.
+type SpecCheckRetryError struct{ First, Cause error }
+
+func (e *SpecCheckRetryError) Unwrap() error { return e.Cause }
+func (e *SpecCheckRetryError) Error() string {
+	if errors.Is(e.First, errSpecMainMoved) && errors.Is(e.Cause, errSpecMainMoved) {
+		return "main moved during the spec check and again on its retry; check again"
+	}
+	if errors.Is(e.First, errSpecStatusChanged) && errors.Is(e.Cause, errSpecStatusChanged) {
+		return "main checkout status changed outside the role during the spec check and again on its retry; check again"
+	}
+	return fmt.Sprintf("spec check failed on its automatic retry; check again: %v", e.Cause)
+}
+
+// RunSpecCheck checks every item read-only and returns its verdict. A change
+// inside the role with HEAD unchanged stops the check. A moving HEAD, a
+// status change outside the role, or a malformed report gets one retry with
+// fresh specs. A second failure says that the retry has already been used.
 func RunSpecCheck(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCheckResult, error) {
+	var first error
+	for attempt := 0; ; attempt++ {
+		res, err := runSpecCheckOnce(ctx, d, cfg)
+		var shape *ShapeError
+		if attempt == 0 && ctx.Err() == nil && (errors.Is(err, errSpecMainMoved) || errors.Is(err, errSpecStatusChanged) || errors.As(err, &shape)) {
+			first = err
+			continue
+		}
+		if attempt > 0 && err != nil && ctx.Err() == nil {
+			return nil, &SpecCheckRetryError{First: first, Cause: err}
+		}
+		return res, err
+	}
+}
+
+func specHeadAt(ctx context.Context, d Deps, root string) (string, error) {
+	res, err := clirun.Run(ctx, clirun.Call{Bin: d.gitBin(), Args: []string{"-C", root, "rev-parse", "HEAD"}, Timeout: 30 * time.Second})
+	if err != nil {
+		return "", fmt.Errorf("spec check HEAD: %w", err)
+	}
+	return strings.TrimSpace(string(res.Stdout)), nil
+}
+
+func runSpecCheckOnce(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCheckResult, error) {
 	if len(cfg.Items) == 0 {
 		return nil, errors.New("spec check needs items")
 	}
@@ -105,6 +147,14 @@ func RunSpecCheck(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCheckR
 		return nil, err
 	}
 	root := cfg.Project.Path
+	head, err := specHeadAt(ctx, d, root)
+	if err != nil {
+		return nil, err
+	}
+	baseline, err := gitStatusAt(ctx, d, root)
+	if err != nil {
+		return nil, fmt.Errorf("read-only fingerprint: %w", err)
+	}
 	specs := map[string]string{}
 	var raws []string
 	for _, id := range cfg.Items {
@@ -136,6 +186,9 @@ func RunSpecCheck(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCheckR
 	if err != nil {
 		return nil, fmt.Errorf("read-only fingerprint: %w", err)
 	}
+	if before != baseline {
+		return nil, errSpecStatusChanged
+	}
 	var text string
 	for i, entry := range cfg.Lineup {
 		if err := os.Remove(reportPath); err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -153,8 +206,9 @@ func RunSpecCheck(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCheckR
 		if statusErr != nil {
 			return nil, fmt.Errorf("read-only fingerprint: %w", statusErr)
 		}
-		if after != before {
-			return nil, errors.New("spec-check changed the tree, and it is a read-only role")
+		afterHead, err := specHeadAt(ctx, d, root)
+		if err != nil {
+			return nil, err
 		}
 		class := res.Exit
 		if runErr != nil || class == "" {
@@ -162,6 +216,12 @@ func RunSpecCheck(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCheckR
 		}
 		if len(res.Denials) > 0 {
 			return nil, fmt.Errorf("spec-check exited %s: permission denied: %s", class, denialTexts(res.Denials))
+		}
+		if afterHead != head {
+			return nil, errSpecMainMoved
+		}
+		if after != before {
+			return nil, errors.New("spec-check changed the tree, and it is a read-only role")
 		}
 		if class == ExitOK {
 			text = readSpecReport(reportPath, res.Report)
@@ -180,7 +240,14 @@ func RunSpecCheck(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCheckR
 	if err != nil {
 		return nil, err
 	}
-	return &SpecCheckResult{Verdicts: verdicts, Specs: specs}, nil
+	if err := os.WriteFile(reportPath, []byte(text), 0600); err != nil {
+		return nil, fmt.Errorf("save spec report: %w", err)
+	}
+	owner, _ := section(text, ownerHeading)
+	if isNone(owner) {
+		owner = ""
+	}
+	return &SpecCheckResult{Verdicts: verdicts, Specs: specs, OwnerNeeded: strings.TrimSpace(owner)}, nil
 }
 
 // readSpecReport returns the report file's text, else the vendor's final

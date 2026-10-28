@@ -200,9 +200,12 @@ ork (TUI)  ork status --json (CLI)
    whose check, against its current spec, left questions open
    (`spec_questions`). The daemon keeps each verdict in memory, as an
    ephemeral job cache with a fingerprint of the slice's spec (a restart asks
-   again; see boundaries.md), so a changed spec is checked again and an
-   unchanged one is not. The clients send every ticked item each time; the
-   daemon runs the role only for the stale ones.
+   again for role verdicts; see boundaries.md), so a changed spec is checked
+   again and an unchanged one is not. The clients send every ticked item each time; the
+   daemon runs the role only for the stale ones. Owner answers are saved beside
+   each item's check, tied to the updated spec fingerprint. They survive a
+   daemon restart and are removed when the run record takes them at run start,
+   or when the spec changes (owner decisions, S143, 2026-10-27).
 5. **Approve.** The owner approves the wave. This is checkpoint 1.
 6. **Run.** Items start as slots free up under the global cap (default 4)
    and the per-project cap (`wave.limits`). Several waves, each in one
@@ -638,9 +641,14 @@ ork adds:
 - **Spec check.** A read-only role with its own prompt (`spec-check.md`) that
   runs once over a batch of slices before a wave (see the Check step of the
   Wave lifecycle). It works in the project checkout, not in a worktree, and
-  has no run record: the daemon runs it as a job, reads `git status
+  has no run record: the daemon runs it as a job, reads HEAD and `git status
   --porcelain` before and after, and fails the check, keeping no verdict, when
-  the tree changed (`role.readonly-fingerprint`). Its report has one `## Slice
+  the tree changed during the role's own run with HEAD unchanged
+  (`role.readonly-fingerprint`). If HEAD moves, the checkout's working-tree
+  status changes outside the role's own run, or the report has a shape error,
+  it checks once more with fresh specs. A second failure says the retry was
+  used and asks the owner to check again. Permission denials are never retried
+  (owner decisions, S143, 2026-10-28). Its report has one `## Slice
   ID` section per slice, holding `Ready` or one or more question blocks; the
   multi-block parse (`ParseOwnerQuestions`) reads every `Question:` block of a
   section with the strict shape of an owner question. Its lineup row is the
@@ -648,7 +656,17 @@ ork adds:
   sonnet, medium). Until slicer has a spec-check role (slicer s392), that
   row's role is `reviewer`: ork keeps it out of every run's reviewer and gate
   chains. Its report and temp directory are under
-  `~/.local/state/ork/spec-checks/`.
+  `~/.local/state/ork/spec-checks/<project-key>/<item-key>/` (hashed identities).
+  Each item has `check.json` identifying the project and item, `spec-check.md`,
+  and, after an answer, `answers.json`. The batch's first item also holds the
+  role's temp directory. A landed run or removed project loses its check
+  directories. At daemon start, directories older than 14 days are swept
+  when their item is done, retired or gone, using the ordinary slicer list
+  without `--all`. Old directories for unregistered projects are removed too.
+  Legacy random-named directories (`YYYYMMDD-HHMMSS-xxxx`) older than 14 days
+  are also removed (owner decisions, S143, 2026-10-28). Empty or corrupt
+  `answers.json` files are discarded and logged with their full path; the
+  check asks the owner's questions again.
 - **Reviewer rule.** A reviewer never wrote code in the slice. A reviewer
   may run on another vendor if the lineup names it (`review.cross-vendor`).
 - **Ledger.** Each role round is recorded with `slicer relay-run step` with
@@ -943,7 +961,9 @@ number picks an option and a number outside the options is asked again,
 other text is the answer, an empty line holds the item back). Each question
 is labeled with its item, as `[S1 1/2]`. An item whose questions stay open is
 left out of the wave and named as `held`; a wave with no item left does not start and exits 1. With
-`--json` the questions go to stderr.
+`--json` the questions and the shared `Owner needed` text go to stderr.
+The JSON result always includes a `held` array of excluded item IDs, including
+when the wave starts or the owner cancels; it is `[]` when nothing is held.
 Suggestions call `slicer plan-parallel --json --lean --root ROOT` for the
 registered project. Tool errors keep their code and message, including a
 missing `files_section`. The owner chooses the item ids (`wave.start-input`).

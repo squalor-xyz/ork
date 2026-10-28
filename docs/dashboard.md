@@ -1060,14 +1060,19 @@ yet or changed since it, so a ready item is asked again at no cost, and one
 whose spec changed is not trusted. A ready item's row says `spec ready` after
 its title; an item with open questions says `waits on N spec questions`. Items
 with questions open one sitting that replaces the table: the heading `Spec
-check: N questions for ID, ID`, then each question in turn as `[ID n/of]
-Title` with its numbered options (`(recommended)` marks the recommended one),
+check: N questions for ID, ID` in dim text, then each question in turn as
+`[ID n/of] Title` in the Heading style with its numbered options
+(`(recommended)` marks the recommended one),
 a dim `Why N: reason` and the decision key when it has one, a blank line, and
 a dim `K of N answered` line. `1`-`N` picks an option, `t` types a free answer
 (`enter` submits it, `esc` goes back to the options), and `s` or `esc` skips
 the rest of the sitting. When an item's last question is answered, ork
 appends the answers to its Implement section, keeps them for the item's run,
-and the item counts as ready; a question with a decision key is also filed in
+and the item counts as ready. The saved answers survive a daemon restart
+until run start or a spec change. Spec checks and answer writes use separate
+connections so their waits do not block other sitting requests. Any shared
+`Owner needed` text from the report is kept in the sitting and the Waves
+list. A question with a decision key is also filed in
 adj when the project has adj and `ADJ_DECIDED_BY` is set (the status line says
 why not otherwise). When the sitting ends, the confirmation below covers the
 ready items only, and says which items it leaves out after the command, for
@@ -1077,7 +1082,14 @@ on N spec questions` on its row, the launch status says `ID waits on spec
 questions`, and while a ticked item is held the hint reads `l answer spec
 questions` instead of `l launch wave`. Pressing `l` again checks the ticked
 items again and reopens the sitting. A check error shows its code and message
-and leaves the ticks alone.
+and leaves the ticks alone. A check automatically retries once if HEAD moves,
+the checkout status changes outside the role's own run, or the report has a
+shape error. A second failure says a retry already happened and asks the
+owner to check again. Permission denials are never retried.
+At 80x24, spec notes share the rows beside the lineup so the overlap warnings
+stay visible. `wave start --json` includes `held` item IDs when ready peers
+start; the CLI files keyed answers in adj only when the registry enables adj
+for that project.
 
 Until launch the composer says `N ticked, not launched`
 (not shown in the lineup editor). After admission it says `launched S78 as

@@ -158,6 +158,9 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 		params.Items = append(params.Items, p)
 	}
 	held, code := a.specCheck(ctx, o, reader, prompts, &params)
+	if held == nil {
+		held = []string{}
+	}
 	if code != ExitOK {
 		return code
 	}
@@ -175,7 +178,7 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 		}
 		if confirm != "yes" {
 			if o.json {
-				return o.printJSON(map[string]bool{"started": false})
+				return o.printJSON(map[string]any{"started": false, "held": held})
 			}
 			fmt.Fprintln(o.stdout, "cancelled")
 			return ExitOK
@@ -183,6 +186,21 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	}
 	var result daemon.WaveResult
 	if code := a.call(ctx, o, daemon.MethodWaveStart, params, &result); code != ExitOK {
+		return code
+	}
+	if o.json {
+		code := ExitOK
+		for _, item := range result.Items {
+			if item.Error != nil {
+				code = ExitFailure
+			}
+		}
+		if printed := o.printJSON(struct {
+			daemon.WaveResult
+			Held []string `json:"held"`
+		}{result, held}); printed != ExitOK {
+			return printed
+		}
 		return code
 	}
 	return printWave(o, result)
@@ -226,6 +244,9 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 	if code := a.call(ctx, o, daemon.MethodSpecCheck, daemon.SpecCheckParams{Project: params.Items[0].Project, Items: ids}, &check); code != ExitOK {
 		return nil, code
 	}
+	if check.OwnerNeeded != "" {
+		fmt.Fprintln(w, "Owner needed: "+check.OwnerNeeded)
+	}
 	open := map[string]daemon.SpecItemResult{}
 	for _, r := range check.Items {
 		if !r.Ready {
@@ -233,6 +254,7 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 		}
 	}
 	by := os.Getenv("ADJ_DECIDED_BY")
+	var projects *daemon.ProjectsResult
 	var kept []daemon.RunParams
 	for _, item := range params.Items {
 		r, ok := open[item.Item]
@@ -246,8 +268,21 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 			held = append(held, r.Item)
 			continue
 		}
+		if projects == nil {
+			projects = &daemon.ProjectsResult{}
+			if code := a.call(ctx, o, daemon.MethodProjectsList, nil, projects); code != ExitOK {
+				return held, code
+			}
+		}
+		adj := false
+		for _, p := range projects.Projects {
+			if p.Name == item.Project {
+				adj = p.Adj
+				break
+			}
+		}
 		var out daemon.SpecAnswerResult
-		p := daemon.SpecAnswerParams{Project: item.Project, Item: r.Item, Answers: answers, Adj: true, By: by}
+		p := daemon.SpecAnswerParams{Project: item.Project, Item: r.Item, Answers: answers, Adj: adj, By: by}
 		if code := a.call(ctx, o, daemon.MethodSpecAnswer, p, &out); code != ExitOK {
 			return held, code
 		}

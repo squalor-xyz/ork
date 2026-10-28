@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/speccheck.go`\n- `internal/daemon/speccheck.go`\n- `internal/tui/speccheck.go`\n- `internal/cli/`\n- `testdata/golden/`\n- `docs/dashboard.md`"
+      "body": "- `internal/engine/speccheck.go`\n- `internal/daemon/speccheck.go`\n- `internal/tui/speccheck.go`\n- `internal/cli/`\n- `testdata/golden/`\n- `docs/dashboard.md`\n- `internal/daemon/speccheck_state.go`\n- `internal/daemon/runs.go`\n- `internal/daemon/handlers.go`\n- `internal/daemon/client.go`\n- `internal/tui/waves.go`\n- `docs/design.md`\n- `docs/state.md`"
     },
     {
       "heading": "Failing tests",
