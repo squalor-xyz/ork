@@ -4,6 +4,8 @@ package engine
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -395,5 +397,199 @@ func TestApprovalRefusedWhenTheChecksNoteFails(t *testing.T) {
 	}
 	if n := len(h.calls("slicer", "note")); n != 1 {
 		t.Errorf("%d note calls", n)
+	}
+}
+
+// Human checks that cannot be read at approval do not stop the approval: ork
+// approves and writes a slicer note that says they could not be read (S141).
+func TestApprovalNotesWhenChecksCannotBeRead(t *testing.T) {
+	h := newHarness(t, withDiff, func(o *harnessOpts) {
+		good := clitest.Reply{Stdout: humanSlice(checkOne)}
+		o.routes = append(o.routes, clitest.Route{Tool: "slicer", Args: []string{"show", item}, Prefix: true,
+			Seq: []clitest.Reply{good, good, good, {Stderr: "slicer: ledger busy", Exit: 1}, good}})
+	})
+	e := h.start()
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if rec.Card == nil || rec.Card.ChecksError == "" || len(rec.Card.HumanChecks) != 0 {
+		t.Fatalf("card %+v", rec.Card)
+	}
+	if err := e.Approve(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateCommitted)
+	notes := h.calls("slicer", "note")
+	if len(notes) != 1 {
+		t.Fatalf("%d notes: %v", len(notes), notes)
+	}
+	text := notes[0][3]
+	for _, want := range []string{"Human checks at approval (" + item + ")", "could not be read", "ledger busy"} {
+		if !strings.Contains(text, want) {
+			t.Errorf("note lacks %q:\n%s", want, text)
+		}
+	}
+}
+
+// The note about unreadable checks is the owner's record like the marks: a
+// note that cannot be written refuses the approval, as it does for the marks.
+func TestApprovalRefusedWhenTheUnreadableChecksNoteFails(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		good := clitest.Reply{Stdout: humanSlice(checkOne)}
+		o.routes = append(o.routes, clitest.Route{Tool: "slicer", Args: []string{"show", item}, Prefix: true,
+			Seq: []clitest.Reply{good, good, good, {Stderr: "slicer: ledger busy", Exit: 1}, good}},
+			clitest.Route{Tool: "slicer", Args: []string{"note", item}, Prefix: true, Stderr: "slicer: cannot write the note\n", Exit: 1})
+	})
+	e := h.start()
+	requireState(t, e, runrec.StateAwaitingApproval)
+	if err := e.Approve(context.Background()); err == nil || !strings.Contains(err.Error(), "could not be read") {
+		t.Fatalf("Approve with a failing note: %v", err)
+	}
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if len(rec.Approvals) != 0 {
+		t.Errorf("a refused approval changed the run: %+v", rec.Approvals)
+	}
+}
+
+// The run record cannot be saved after the checks note was written: the owner
+// approves again and the note is not written twice (S141).
+func TestApprovalNoteNotDuplicatedWhenTheUpdateFails(t *testing.T) {
+	h := newHarness(t, withHumanChecks(checkOne))
+	e := h.start()
+	ctx := context.Background()
+	if err := e.MarkCheck(1, runrec.CheckTicked); err != nil {
+		t.Fatal(err)
+	}
+	// A directory in place of run.json makes the atomic rename fail.
+	path := filepath.Join(e.run.Dir(), "run.json")
+	saved, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(path, "keep"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.Approve(ctx); err == nil {
+		t.Fatal("Approve succeeded although the record could not be saved")
+	}
+	if rec := e.Snapshot(); rec.State != runrec.StateAwaitingApproval || len(rec.Approvals) != 0 {
+		t.Fatalf("the failed save changed the run: %s %+v", rec.State, rec.Approvals)
+	}
+	if err := os.RemoveAll(path); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, saved, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.Approve(ctx); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateCommitted)
+	if n := len(h.calls("slicer", "note")); n != 1 {
+		t.Errorf("%d notes after the approval was retried, want 1", n)
+	}
+}
+
+// The owner's fix note goes to the gate that checks the fix round. A red check
+// or a gate FAIL sends the slice to a later round; the note still goes with it
+// until a gate passes the change (S141).
+func TestFixNoteCarriedIntoLaterGateBriefs(t *testing.T) {
+	const note = "Rename the flag to --json and keep the old name as an alias."
+	for _, tc := range []struct {
+		name  string
+		setup func(h *harness)
+		roles []string
+	}{
+		{"red check", func(h *harness) {
+			h.checks.outputs = []CheckOutput{{OK: true}, {OK: false, Output: "--- FAIL: TestFlag\nFAIL\n"}, {OK: true}}
+		}, []string{"implementer-1", "reviewer-1", "gate-1", "implementer-2", "implementer-3", "gate-3"}},
+		{"gate FAIL", func(h *harness) {
+			h.runner.script = func(req Request, n int) (Result, error) {
+				if req.Role == RoleGate && req.Round == 2 {
+					return Result{Exit: ExitOK, Session: "sess-gate", Report: gateFail}, nil
+				}
+				return Result{}, nil
+			}
+		}, []string{"implementer-1", "reviewer-1", "gate-1", "implementer-2", "gate-2", "implementer-3", "gate-3"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := newHarness(t)
+			e := h.start()
+			requireState(t, e, runrec.StateAwaitingApproval)
+			tc.setup(h)
+			if err := e.Fix(context.Background(), note); err != nil {
+				t.Fatal(err)
+			}
+			requireState(t, e, runrec.StateAwaitingApproval)
+			if got := h.runner.roles(); !reflect.DeepEqual(got, tc.roles) {
+				t.Fatalf("role rounds %v, want %v", got, tc.roles)
+			}
+			reqs := h.runner.requests()
+			gate := reqs[len(reqs)-1]
+			if gate.Role != RoleGate || gate.Round != 3 {
+				t.Fatalf("last request %s round %d", gate.Role, gate.Round)
+			}
+			if !strings.Contains(gate.Brief, note) {
+				t.Errorf("the round-3 gate brief lacks the owner's note:\n%s", gate.Brief)
+			}
+		})
+	}
+}
+
+// Once a gate has passed the fix, the note is not repeated to the next gate.
+func TestFixNoteIsNotCarriedPastAGatePass(t *testing.T) {
+	h := newHarness(t)
+	e := h.start()
+	ctx := context.Background()
+	requireState(t, e, runrec.StateAwaitingApproval)
+	if err := e.Fix(ctx, "first change please"); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.Fix(ctx, "second change please"); err != nil {
+		t.Fatal(err)
+	}
+	reqs := h.runner.requests()
+	gate := reqs[len(reqs)-1]
+	if gate.Role != RoleGate || !strings.Contains(gate.Brief, "second change please") || strings.Contains(gate.Brief, "first change please") {
+		t.Errorf("the last gate brief:\n%s", gate.Brief)
+	}
+}
+
+// An owner action the engine refuses changed nothing: its error is a refusal,
+// which the daemon does not keep as a failure of the run (S141). A note that
+// cannot be written is a failure, not a refusal.
+func TestOwnerRefusalsAreMarked(t *testing.T) {
+	h := newHarness(t, withHumanChecks(checkOne), func(o *harnessOpts) {
+		o.routes = append(o.routes, clitest.Route{Tool: "slicer", Args: []string{"note", item}, Prefix: true, Stderr: "slicer: cannot write the note\n", Exit: 1})
+	})
+	e := h.start()
+	ctx := context.Background()
+	for name, err := range map[string]error{
+		"approve with an open check": e.Approve(ctx),
+		"mark a check out of range":  e.MarkCheck(9, runrec.CheckTicked),
+		"mark with a bad state":      e.MarkCheck(1, "bogus"),
+		"fix with an empty note":     e.Fix(ctx, " "),
+		"answer without a question":  e.Answer(ctx, "yes"),
+		"retry when not paused":      e.Retry(ctx),
+	} {
+		if err == nil || !IsRefusal(err) {
+			t.Errorf("%s: %v is not a refusal", name, err)
+		}
+	}
+	if err := e.MarkCheck(1, runrec.CheckTicked); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.Approve(ctx); err == nil || IsRefusal(err) {
+		t.Errorf("a failed note is a failure, not a refusal: %v", err)
+	}
+	if err := e.Reject(ctx, "no"); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.Stop(ctx, "again"); err == nil || !IsRefusal(err) {
+		t.Errorf("stop of a stopped slice: %v", err)
+	}
+	if err := e.Approve(ctx); err == nil || !IsRefusal(err) {
+		t.Errorf("approve of a stopped slice: %v", err)
 	}
 }

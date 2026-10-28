@@ -122,6 +122,7 @@ type Engine struct {
 	proj           registry.Project
 	run            *runrec.Run
 	wr             runrec.Writer
+	noted          string // the checks note written for an approval (guarded by mu)
 }
 
 func newEngine(d Deps, proj registry.Project, run *runrec.Run) *Engine {
@@ -350,20 +351,22 @@ func (e *Engine) Approve(ctx context.Context) error {
 	defer e.mu.Unlock()
 	rec := e.run.Snapshot()
 	if rec.State != runrec.StateAwaitingApproval {
-		return fmt.Errorf("the slice is %s, not awaiting approval", rec.State)
+		return refusef("the slice is %s, not awaiting approval", rec.State)
 	}
 	if open := openChecks(rec.Card); len(open) > 0 {
 		noun := "checks"
 		if len(open) == 1 {
 			noun = "check"
 		}
-		return fmt.Errorf("%d human %s still open; tick each or mark it later: %s", len(open), noun, strings.Join(open, "; "))
+		return refusef("%d human %s still open; tick each or mark it later: %s", len(open), noun, strings.Join(open, "; "))
 	}
-	// The owner's marks are recorded before the finish step closes the slice. A
-	// failed note refuses the approval: the owner approves again. A second
-	// approval, after a landing fix round, finds the note already written.
-	if rec.Card != nil && len(rec.Card.HumanChecks) > 0 && len(rec.Approvals) == 0 {
-		if err := e.d.Slicer.Note(ctx, e.wr, rec.Worktree, rec.Item, checksNote(rec.Item, rec.Card)); err != nil {
+	// The owner's marks are recorded before the finish step closes the slice;
+	// when the card could not read the checks, the note says so (S141). A failed
+	// note refuses the approval: the owner approves again. A second approval,
+	// after a landing fix round, finds the note already written; so does one
+	// after the approval record could not be saved (e.noted).
+	if note := checksNote(rec.Item, rec.Card); note != "" && len(rec.Approvals) == 0 && note != e.noted {
+		if err := e.writeChecksNote(ctx, rec, note); err != nil {
 			return fmt.Errorf("record the human checks as a slicer note: %w", err)
 		}
 	}
@@ -382,7 +385,7 @@ func (e *Engine) Reject(ctx context.Context, why string) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if state := e.run.Snapshot().State; state != runrec.StateAwaitingApproval {
-		return fmt.Errorf("the slice is %s, not awaiting approval", state)
+		return refusef("the slice is %s, not awaiting approval", state)
 	}
 	return e.stop(ctx, "rejected by the owner: "+why)
 }
@@ -395,10 +398,10 @@ func (e *Engine) Answer(ctx context.Context, text string) error {
 	text = strings.TrimSpace(text)
 	rec := e.run.Snapshot()
 	if rec.State != runrec.StatePaused || rec.Pending == nil || rec.Pending.Kind != runrec.PendingQuestion {
-		return errors.New("the slice has no owner question to answer")
+		return refusef("the slice has no owner question to answer")
 	}
 	if text == "" {
-		return errors.New("the answer is empty")
+		return refusef("the answer is empty")
 	}
 	err := e.run.Update(func(r *runrec.Record) {
 		for i := len(r.Questions) - 1; i >= 0; i-- {
@@ -425,15 +428,15 @@ func (e *Engine) Retry(ctx context.Context) error {
 	defer e.mu.Unlock()
 	rec := e.run.Snapshot()
 	if rec.State != runrec.StatePaused || rec.Pending == nil {
-		return errors.New("the slice is not paused")
+		return refusef("the slice is not paused")
 	}
 	for _, role := range rec.Roles {
 		if role.Running() {
-			return errors.New("a role is still running; reconcile it before retrying")
+			return refusef("a role is still running; reconcile it before retrying")
 		}
 	}
 	if rec.Pending.Kind == runrec.PendingQuestion {
-		return errors.New("the slice waits for an answer; answer it or stop the slice")
+		return refusef("the slice waits for an answer; answer it or stop the slice")
 	}
 	if rec.Pending.Retry == nil && len(rec.QueuedQuestions) > 0 {
 		// A sibling's owner question is asked before the role runs again. The
@@ -462,7 +465,7 @@ func (e *Engine) Stop(ctx context.Context, why string) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	if state := e.run.Snapshot().State; runrec.IsFinal(state) {
-		return fmt.Errorf("the slice is already %s", state)
+		return refusef("the slice is already %s", state)
 	}
 	return e.stop(ctx, "stopped by the owner: "+why)
 }

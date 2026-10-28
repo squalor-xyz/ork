@@ -130,7 +130,7 @@ func TestApprovalCardShowsVerdictTestsDiffstat(t *testing.T) {
 	}
 	// The per-file lines fill the room above the footer on a tall terminal.
 	h.m.Update(tea.WindowSizeMsg{Width: 120, Height: 40})
-	if v := plainView(h.m); !strings.Contains(v, "internal/tui/pane.go") || !strings.Contains(v, "internal/tui/card.go  (new)") {
+	if v := plainView(h.m); !strings.Contains(v, "internal/tui/pane.go") || !strings.Contains(v, "internal/tui/card.go      | (new)") {
 		t.Errorf("the per-file diff stat is missing at 120x40:\n%s", v)
 	}
 }

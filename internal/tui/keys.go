@@ -4,6 +4,7 @@ package tui
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"charm.land/bubbles/v2/key"
@@ -75,7 +76,7 @@ func newKeyMap() keyMap {
 		Owner:      key.NewBinding(key.WithKeys("o"), key.WithHelp("o", "answer owner finding")),
 		FileSlice:  key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "file slice")),
 		Fix:        key.NewBinding(key.WithKeys("F", "shift+f"), key.WithHelp("F", "fix round")),
-		MarkCheck:  key.NewBinding(key.WithKeys("1", "2", "3", "4", "5", "6", "7", "8", "9"), key.WithHelp("1-9", "mark check")),
+		MarkCheck:  key.NewBinding(key.WithKeys("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), key.WithHelp("1-9", "mark check")),
 		Renders:    key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "view renders")),
 		Filter:     key.NewBinding(key.WithKeys("/"), key.WithHelp("/", "filter projects; esc clears")),
 		Sidebar:    key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "hide/show sidebar")),
@@ -468,6 +469,12 @@ func (m *Model) paneHints() []hintEntry {
 				esc("close pane")
 			}
 		}
+	case card != nil && m.pane.number != "":
+		// A number that waits: the card's footer may be cut, this line is not.
+		n, _ := strconv.Atoi(m.pane.number)
+		hi := min(len(card.HumanChecks)-n*10, 9)
+		l.add(dropRow, short(k.Select, "enter", "mark check "+m.pane.number+"_"), short(k.MarkCheck, fmt.Sprintf("0-%d", hi), "longer"))
+		l.add(dropPinned, short(k.Close, "esc", "drop"))
 	case m.pane.fixing && card != nil:
 		l.add(dropRow, short(k.Select, "enter", "send note"))
 		scroll()
@@ -495,7 +502,7 @@ func (m *Model) paneHints() []hintEntry {
 			if n := len(card.HumanChecks); n > 0 {
 				label := "1"
 				if n > 1 {
-					label = fmt.Sprintf("1-%d", min(n, 9))
+					label = fmt.Sprintf("1-%d", n)
 				}
 				_, actor := m.cfg.Live.(cardActor)
 				idle := len(m.actionFlights[row.engineID]) == 0

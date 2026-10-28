@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- S141: approval card follow-ups (*proposed*). `ork check RUN N [ticked|later|open]`
+  and `ork fix RUN TEXT` call `run.check` and `run.fix`, so `ork approve` works
+  from the shell on a slice with human checks. When the card could not read the
+  checks, approval writes a slicer note that says so. The owner's fix note goes to
+  every gate round until a gate passes it (a red check or a gate FAIL no longer
+  drops it). A note written before a failed save is not written twice. A
+  refused owner action no longer leaves an `error:` marker on the run row.
+  In the TUI, checks 10 and above are marked by typing the number (digits
+  wait for the next digit or enter when the number could be longer); new files
+  align with the diff stat; a blank line sets the card's blocks apart above 24
+  rows (never taking room the body needs); and the landing line goes before an
+  owner finding on a short pane (the push line stays above it). A waiting
+  number shows in the hint line, and numbers of 10 or more checks line up.
+  Refusals have a new wire code, `refused`: the CLI and the TUI show the text
+  alone.
+
 - S139: an empty or missing slice Git section falls back to `ID: slice title`
   from `slicer show` for the commit message. Explicit Git titles keep their
   precedence. There is no pre-launch refusal; retrying a commit pause resumes

@@ -6128,10 +6128,44 @@
       "id": "S141",
       "title": "Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note",
       "short_title": "Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7225c4d5-0893-4f40-8f55-05b0bd4327bd",
+          "kind": "",
+          "text": "**2026-10-28** — S141 implementer, known limits left as they are: (1) launchRun clears r.failure before the job runs, so a refusal that follows a real failure removes the earlier error marker from the run row (save and restore would fix it). (2) The checks-note guard (Engine.noted) lives in one engine instance, so a daemon restart between a failed approval save and the retry writes the note again; a mark changed after a failed approval writes a second, different note. (3) There is no real-daemon round-trip test for ork fix / run.fix on the CLI side; the CLI tests use a scripted Call and the daemon tests cover run.fix. (4) ork check prints only 'RUN awaiting-approval'; it could name the check and the checks still open. (5) A card with more than about 9 checks is cut at 80x24 with no '+N more' marker. (6) The Overview's three blank lines push Recent further down (+5 more lines at 120x40 in the approval card golden).",
+          "created_at": "2026-10-28T12:08:54Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "1291079b-9e17-4c42-a53f-771fb6952931",
+          "kind": "",
+          "text": "**2026-10-28** — Owner decisions 2026-10-28 (interactive): the push line outranks owner findings on a short card when push is on; a dedicated wire code 'refused' replaces 'internal' for engine refusals (proposed in docs/design.md). Earlier 2026-10-26: ork check/fix CLI; approve with unreadable checks writes a note.",
+          "created_at": "2026-10-28T12:13:52Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "fdef783c-9805-423c-91e5-f0c6ed77b99e",
+          "kind": "",
+          "text": "**2026-10-28** — Orchestration trial (run 31, S141): 2 owner questions during the fix round, no stalls, 1 fix round, merge of main done by the implementer; ran in parallel with S140, S159/S162 earlier and S143 (Codex); implementer Claude sonnet-high (Codex pair rule), opus reviewer and UI pass; ledger steps recorded per round for this run.",
+          "created_at": "2026-10-28T12:13:53Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -6149,7 +6183,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

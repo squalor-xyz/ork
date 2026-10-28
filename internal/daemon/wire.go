@@ -46,6 +46,7 @@ const (
 	CodeInvalidPath   = "invalid_path"
 	CodeRegistry      = "registry"
 	CodeProjectBusy   = "project_busy" // proposed
+	CodeRefused       = "refused"      // proposed: an owner action the engine refused before it changed anything (S141)
 )
 
 // StatusParams selects the projects of a status call. An empty Project means

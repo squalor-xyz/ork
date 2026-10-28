@@ -112,7 +112,8 @@ ork (TUI)  ork status --json (CLI)
   | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
 
   Error codes the daemon adds: `unknown_method`, `bad_params`, `not_found`,
-  `duplicate_name`, `invalid_path`, `registry`, *proposed* `project_busy`.
+  `duplicate_name`, `invalid_path`, `registry`, *proposed* `project_busy`, *proposed*
+  `refused` (an owner action the engine refused).
   Registry writes happen in the daemon, one at a time. The TUI reads through
   the daemon with `snapshot` from S13. Before the daemon it called the
   adapters directly (`dash.pre-daemon`).
@@ -543,13 +544,30 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   step. This note replaces the human-check adj records. A note that fails
   refuses the approval, so no mark is lost; the owner approves again. A
   second approval, after a landing fix round (S119), does not write the note
-  again (S148).
+  again (S148); nor does one after the first approval's record could not be
+  saved once the note was written (S141). When the card could not read the
+  slice's human checks (`checks_error`), `Approve` does not wait on marks: it
+  writes a note that says they could not be read (`Human checks at approval
+  (ID): the slice's human checks could not be read, so none were marked:
+  WHY`) and goes on (S141, owner decision 2026-10-26).
+  An owner action the engine refuses before it changes anything (a wrong
+  state, an open check, an empty note, the round limit) returns a refusal
+  (`engine.IsRefusal`). The daemon returns its text to the caller and does not
+  keep it as the run's `error`, so the run row shows no `error:` marker for it
+  (S141); a failure that is not a refusal still does. *Proposed (S141):* the
+  daemon sends a refusal with its own wire error code `refused` (a failure keeps
+  `internal`). `ork` prints the text alone (`ork: TEXT`, and `{"error":
+  {"code":"refused","message":"TEXT"}}` with `--json`), and the TUI's status line
+  reads `approve: TEXT`, without the code.
   `Fix(note)` is the owner's third action beside `Approve` and `Reject`: it
   starts an implementer fix round with the note as `owner` feedback, resumed
   as any fix round is, then the checks and the gate, with no review in
   between, and returns to `awaiting-approval` on PASS. A gate FAIL goes back to
   the implementer as usual. It counts as an implementer round, so it is
-  refused (not stopped) at the round limit.
+  refused (not stopped) at the round limit. The gate's brief carries the
+  owner's note as `Owner fix request` in every gate round until a gate passes
+  the change: a red check or a gate FAIL after the fix sends the slice to a
+  later round, and the note goes with it (S141).
   The card also holds the UI pass's renders (*proposed*, S121): of the latest
   UI pass that ended well, the `.txt` files of its `tmp/ui-N/renders/`
   directory, each view's 80x24, 120x40 and ascii file in that order, the views
@@ -915,6 +933,8 @@ ork wave suggest P          slicer's suggested waves, in order, with reasons
 ork wave start P ITEM...    check the specs, then launch (asks unless --yes)
 ork run P ID                show a plan and launch one slice (S17)
 ork approve RUN             finish a passed slice, commit and land it
+ork check RUN N [STATE]     mark human check N: ticked (the default), later or open
+ork fix RUN TEXT            send a fix note to a fix round
 ork answer RUN TEXT         answer an owner question
 ork file RUN N              file a later finding through the daemon
 ork dismiss RUN             clear a stopped run from Needs you
@@ -1018,9 +1038,15 @@ again; `run.check` takes `{run,check,state}` (the one-based human check;
 reads `landed_at` (landed) or `state` `awaiting-approval` with `land_fixes` above
 0 (a blocked landing went to its fix round) from it, with no new field.
 `run.approve` fails with the open checks named while any is open. The engine
-run rows of a run that awaits approval carry `card` (`state.md`). There is no
-`ork` command for fix or check yet; `ork approve` on a run with human checks
-fails until they are marked in the TUI.
+run rows of a run that awaits approval carry `card` (`state.md`). *Proposed
+(S141):* `ork check RUN N [ticked|later|open]` calls `run.check` (ticked unless
+told; `open` reopens) and `ork fix RUN TEXT` calls `run.fix`, which returns when
+the fix round, the checks and the gate have ended. Both follow `ork answer`:
+they wait for the engine, print `RUN STATE` or, with `--json`, the run record,
+and exit 1 with the daemon's error when it refuses; a missing or non-numeric N
+or an empty TEXT is a usage error (exit 2). So `ork approve` works from the
+shell on a run with human checks: it fails naming the open checks, `ork check`
+marks them, and the next `ork approve` goes through.
 *Proposed (S121):* `run.render` takes `{run,name}` and returns `{name,text}`:
 the plain text of one render of the run's card, read from
 `tmp/ui-<ui_round>/renders/NAME` in the run directory. It reads the stored

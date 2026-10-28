@@ -232,3 +232,48 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 	}
 	return printRun(o, rec)
 }
+
+// cardCommand is ork check and ork fix: the shell's side of the approval card,
+// so that ork approve works on a slice with human checks (S141, *proposed*).
+// ork check RUN N [ticked|later|open] marks the one-based check, ticked unless
+// told; ork fix RUN TEXT sends the note to a fix round and returns when the run
+// rests again. Both print the run record like the other owner commands.
+func (a *App) cardCommand(ctx context.Context, o *output, command string, args []string) int {
+	fs := flag.NewFlagSet(command, flag.ContinueOnError)
+	fs.BoolVar(&o.json, "json", o.json, "print JSON")
+	pos, err := parse(fs, args)
+	if err != nil {
+		return o.usage("%s: %v", command, err)
+	}
+	p := daemon.RunAction{}
+	if command == "fix" {
+		if len(pos) != 2 || strings.TrimSpace(pos[1]) == "" {
+			return o.usage("fix takes RUN TEXT")
+		}
+		p.Run, p.Text = pos[0], pos[1]
+	} else {
+		if len(pos) < 2 || len(pos) > 3 {
+			return o.usage("check takes RUN N [ticked|later|open]")
+		}
+		n, err := strconv.Atoi(pos[1])
+		if err != nil || n < 1 {
+			return o.usage("check takes RUN N [ticked|later|open]: N must be a positive check number")
+		}
+		p.Run, p.Check, p.State = pos[0], n, runrec.CheckTicked
+		if len(pos) == 3 {
+			switch pos[2] {
+			case runrec.CheckTicked, runrec.CheckLater:
+				p.State = pos[2]
+			case "open":
+				p.State = ""
+			default:
+				return o.usage("check takes RUN N [ticked|later|open]: %q is not a state", pos[2])
+			}
+		}
+	}
+	var rec runrec.Record
+	if code := a.call(ctx, o, "run."+command, p, &rec); code != ExitOK {
+		return code
+	}
+	return printRun(o, rec)
+}

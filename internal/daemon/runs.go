@@ -781,7 +781,9 @@ func (d *Daemon) launchRun(r *managedRun, fn func(context.Context) error) {
 		err := fn(ctx)
 		d.runs.mu.Lock()
 		result.err = err
-		if !errors.Is(err, context.Canceled) {
+		// A refusal changed nothing: the caller has the text, and the run row
+		// shows no error for it (S141).
+		if !errors.Is(err, context.Canceled) && !engine.IsRefusal(err) {
 			r.failure = err
 		}
 		result.record = r.engine.Snapshot()
@@ -937,7 +939,12 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		return RunReply{}, ctx.Err()
 	case <-done:
 	}
-	return RunReply{Record: result.record, Message: message}, result.err
+	err := result.err
+	if engine.IsRefusal(err) {
+		// A refusal has its own wire code, so a client shows its text as it is (S141).
+		err = &ipc.Error{Code: CodeRefused, Message: err.Error()}
+	}
+	return RunReply{Record: result.record, Message: message}, err
 }
 
 // joinStop waits for the stop in flight and returns its outcome. The caller

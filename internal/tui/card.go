@@ -321,13 +321,41 @@ func (m *Model) cardBody(card *runrec.ApprovalCard, width int) []string {
 	if diffSummary(card.DiffStat) != "" {
 		files = files[:len(files)-1]
 	}
+	// The new files line up with the diff stat: names are padded to one column
+	// and every line has its bar there, so "(new)" stands where the counts do.
+	type entry struct{ name, rest string }
+	var entries []entry
+	// A name is cut to leave room for the bar and some counts, so one long name
+	// does not push every line past the pane.
+	nameCap := max(width-12, 12)
+	nameW := 0
+	add := func(e entry) {
+		if len([]rune(e.name)) > nameCap {
+			e.name = clip(e.name, nameCap)
+		}
+		nameW = max(nameW, len([]rune(e.name)))
+		entries = append(entries, e)
+	}
 	for _, f := range files {
-		if f = strings.TrimSpace(f); f != "" {
-			lines = append(lines, clip(f, width))
+		// git right-aligns the counts: keep the padding after the bar.
+		if f = strings.TrimRight(f, " \t"); strings.TrimSpace(f) == "" {
+			continue
+		}
+		if i := strings.Index(f, " | "); i >= 0 {
+			add(entry{strings.TrimSpace(f[:i]), f[i+3:]})
+		} else {
+			entries = append(entries, entry{name: strings.TrimSpace(f)})
 		}
 	}
 	for _, f := range card.Untracked {
-		lines = append(lines, clip(f+"  (new)", width))
+		add(entry{f, "(new)"})
+	}
+	for _, e := range entries {
+		if e.rest == "" {
+			lines = append(lines, clip(e.name, width)) // not a stat line: shown as git wrote it
+			continue
+		}
+		lines = append(lines, clip(fmt.Sprintf("%-*s | %s", nameW, e.name, e.rest), width))
 	}
 	if len(lines) > 0 {
 		lines = append(lines, "")
@@ -350,7 +378,10 @@ func (m *Model) cardChecks(card *runrec.ApprovalCard, width int) []string {
 		return []string{label + ": none"}
 	}
 	lines := []string{label + fmt.Sprintf(" (%d of %d open)", openCount(card), len(card.HumanChecks))}
-	const hang = len("1 [x] ") // a check's text starts at column 6
+	// A check's text starts at column 6; with ten or more checks the numbers are
+	// padded to one width, so the brackets and the text still line up (S141).
+	numW := len(strconv.Itoa(len(card.HumanChecks)))
+	hang := numW + len(" [x] ")
 	for i, c := range card.HumanChecks {
 		mark, suffix := "[ ]", ""
 		switch c.State {
@@ -361,7 +392,7 @@ func (m *Model) cardChecks(card *runrec.ApprovalCard, width int) []string {
 		}
 		for j, l := range wrapText(c.Text+suffix, max(width-hang, 1)) {
 			if j == 0 {
-				l = fmt.Sprintf("%d %s %s", i+1, mark, l)
+				l = fmt.Sprintf("%*d %s %s", numW, i+1, mark, l)
 			} else {
 				l = strings.Repeat(" ", hang) + l
 			}
@@ -378,10 +409,16 @@ func (m *Model) cardChecks(card *runrec.ApprovalCard, width int) []string {
 // the whole landing, and of the cleanup (S119, adj 162, adj 152). The line says
 // it pushes when the project's registry setting is on.
 func (m *Model) cardLandNote() string {
-	if p := m.byName[m.pane.project]; p != nil && p.reg.Push {
+	if m.cardPushes() {
 		return "Approve lands and pushes it, then removes its worktree and branch."
 	}
 	return "Approve lands it, then removes its worktree and branch."
+}
+
+// cardPushes reports whether approval pushes: the project's registry setting.
+func (m *Model) cardPushes() bool {
+	p := m.byName[m.pane.project]
+	return p != nil && p.reg.Push
 }
 
 // nextMark is the state a digit moves a check to: ticked, later, open.
@@ -400,7 +437,18 @@ func nextMark(state string) string {
 func (m *Model) cardKey(msg tea.KeyPressMsg) (tea.Cmd, bool) {
 	card := m.paneCard()
 	if card == nil {
+		m.pane.number = ""
 		return nil, false
+	}
+	if m.pane.number != "" {
+		if msg.String() == "enter" {
+			n, _ := strconv.Atoi(m.pane.number)
+			m.pane.number = ""
+			return m.markCheck(card, n), true
+		}
+		if !key.Matches(msg, m.keys.MarkCheck) {
+			m.dropNumber() // any other key drops the number, then acts
+		}
 	}
 	switch {
 	case key.Matches(msg, m.keys.Fix):
@@ -412,13 +460,51 @@ func (m *Model) cardKey(msg tea.KeyPressMsg) (tea.Cmd, bool) {
 		}
 		return nil, true
 	case key.Matches(msg, m.keys.MarkCheck):
-		n := int(msg.String()[0] - '0')
-		if n > len(card.HumanChecks) {
-			return nil, true
-		}
-		return m.requestCheck(n, nextMark(card.HumanChecks[n-1].State)), true
+		return m.markDigit(card, msg.String()), true
 	}
 	return nil, false
+}
+
+// markCheck moves the n-th human check on: ticked, later, open again.
+func (m *Model) markCheck(card *runrec.ApprovalCard, n int) tea.Cmd {
+	if n < 1 || n > len(card.HumanChecks) {
+		return nil
+	}
+	return m.requestCheck(n, nextMark(card.HumanChecks[n-1].State))
+}
+
+// dropNumber forgets a number typed but not sent.
+func (m *Model) dropNumber() {
+	m.pane.number = ""
+}
+
+// markDigit takes a digit of a check number. On a card of up to nine checks a
+// digit marks at once. With ten or more, the digits accumulate: a number that
+// no digit can make longer (10 x 10 > checks) is sent at once, and one that
+// could be the start of another (1 of 12) waits for the next digit or enter.
+// esc, or any other key, drops it (S141).
+func (m *Model) markDigit(card *runrec.ApprovalCard, digit string) tea.Cmd {
+	count := len(card.HumanChecks)
+	if count < 10 {
+		n, _ := strconv.Atoi(digit)
+		return m.markCheck(card, n)
+	}
+	if m.pane.number == "" && digit == "0" {
+		return nil // no check 0, and no number starts with 0
+	}
+	typed := m.pane.number + digit
+	n, _ := strconv.Atoi(typed)
+	switch {
+	case n > count:
+		m.pane.number = ""
+		m.actionStatus = fmt.Sprintf("the slice has no human check %d", n)
+		return nil
+	case n*10 > count:
+		m.pane.number = ""
+		return m.markCheck(card, n)
+	}
+	m.pane.number = typed // the hint line tells it
+	return nil
 }
 
 // startFix opens the note field.
