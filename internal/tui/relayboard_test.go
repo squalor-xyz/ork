@@ -231,6 +231,8 @@ func TestRelayBoardGoldens(t *testing.T) {
 				r.Items = []string{fmt.Sprintf("S%d", 93+i)}
 				r.UpdatedAt = h.now.Add(-time.Duration([]int{20, 5, 35}[i]) * time.Minute).Format(time.RFC3339)
 				r.BeganAt = h.now.Add(-time.Duration([]int{30, 15, 45}[i]) * time.Minute).Format(time.RFC3339)
+				began, _ := time.Parse(time.RFC3339, r.BeganAt)
+				r.Steps = []slicercli.Step{{Role: "implementer", Phase: "done", BeganAt: r.BeganAt, UpdatedAt: began.Add(5 * time.Minute).Format(time.RFC3339)}, {Role: "reviewer", Phase: "start"}}
 				s.BoardRuns.Value = append(s.BoardRuns.Value, r)
 			}
 			if size[0] == 120 {
@@ -248,6 +250,9 @@ func TestRelayBoardGoldens(t *testing.T) {
 			h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
 			checkGolden(t, fmt.Sprintf("board-%dx%d-mono-%t.txt", size[0], size[1], mono), h.m.View().Content)
 			h.m.openPane(ovRow{ledgerID: "s97", name: "ork"})
+			if size[0] >= 100 && !strings.Contains(h.m.View().Content, "10m (active 5m)") {
+				t.Fatal("Recent active duration missing from board pane")
+			}
 			checkGolden(t, fmt.Sprintf("board-pane-%dx%d-mono-%t.txt", size[0], size[1], mono), h.m.View().Content)
 		}
 	}

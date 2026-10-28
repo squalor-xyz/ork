@@ -2160,3 +2160,8 @@
 {"when": "2026-10-28T12:34:03Z", "item": "S164", "action": "set", "from": "", "to": "", "note": "effort -→1"}
 {"when": "2026-10-28T13:27:58Z", "item": "S163", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-28 (preflight): (1) Recent shows a d", "by": "Jon R"}
 {"when": "2026-10-28T13:27:58Z", "item": "S164", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-28 (preflight): (1) Space toggles th", "by": "Jon R"}
+{"when": "2026-10-28T13:36:09Z", "item": "S163", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-28T14:30:57Z", "item": "S163", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-28 (review round 1): (1) Corrects th", "by": "Jon R"}
+{"when": "2026-10-28T18:25:24Z", "item": "S163", "action": "note", "from": "", "to": "", "note": "Later (review and UI pass round 2): (1) at 80 columns a mult", "by": "Jon R"}
+{"when": "2026-10-28T18:25:24Z", "item": "S163", "action": "status", "from": "started", "to": "done", "note": "Recent rows: review and gate show a dash when no step of that role is recorded; the duration shows wall time plus active time (union of done/failed worker steps). Review and UI pass PASS after one fix round.", "by": "Jon R"}
+{"when": "2026-10-28T18:25:24Z", "item": "S163", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 35, S163): Codex sol/medium impleme", "by": "Jon R"}

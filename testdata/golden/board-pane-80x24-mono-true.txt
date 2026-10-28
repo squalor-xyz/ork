@@ -14,9 +14,9 @@
                    │
                    │
                    │[1mRecent[m
-                   │    ork  [1m✗ fail[m[2m  S94  10m  ended 5m ago[m
-                   │    ork  ✓ pass[2m  S93  10m  ended 20m ago[m
-                   │    ork  [2m~ stopped[m[2m  S95  10m  ended 35m ago[m
+                   │    ork  [1m✗ fail[m[2m  S94  10m (active 5m)  ended 5m ago[m
+                   │    ork  ✓ pass[2m  S93  10m (active 5m)  ended 20m ago[m
+                   │    ork  [2m~ stopped[m[2m  S95  10m (active 5m)  ended 35m ago[m
                    │
                    │[2m  +2 more lines[m
                    │[2m────────────────────────────────────────────────────────────[m

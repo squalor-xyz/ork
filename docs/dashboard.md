@@ -483,8 +483,18 @@ the text column, falling back to a shorter indent when needed to fit.
 3. **Recent (proposed):** ended ledger runs within the last hour, newest
    first. Rows show `✓ pass` for pass, `✗ fail` for fail, and `~ stopped` for
    any other outcome (`✓ landed` for a pass that ork landed, `✓ landed, cleanup
-   failed` when its cleanup failed; S148), then items, run time,
-   `ended N ago`, and counts such as `impl 1  review 1  gate 0`. Empty state: `none`.
+   failed` when its cleanup failed; S148), then items, wall time,
+   `ended N ago`, and counts such as `impl 1  review 1  gate -`. The first
+   duration is wall time from the ledger's `begun_at` to `updated_at`, including
+   waits. The parenthesised figure is active time, for example
+   `13h27m (active 1h40m)`: the union of `begun_at` to `updated_at` intervals
+   of done or failed implementer, reviewer, gate and architect steps.
+   Overlaps count once; orchestrator and still-running steps are excluded.
+   Wall time appears alone when no completed worker step has usable times.
+   Review and gate show `-` when the ledger records no step of that role,
+   and the number of recorded steps otherwise, including nested steps and
+   repeated rounds. This also applies to relays started elsewhere; a dash
+   does not say whether the role ran outside the ledger. Empty state: `none`.
    Rows follow Running in cursor order. Enter opens a read-only ledger pane.
 4. **Ready to land:** committed engine runs that ork did not land, plus a landed run
    whose cleanup failed (see below), across projects, or for the

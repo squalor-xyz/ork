@@ -226,6 +226,44 @@ func (m *Model) boardTail(steps []runTreeStep, width, roleWidth int) []string {
 	return lines
 }
 
+// recentActiveTime counts the union of completed worker intervals. A step's
+// updated_at is its end only once its phase is done or fail.
+func recentActiveTime(steps []slicercli.Step) (time.Duration, bool) {
+	type interval struct{ begin, end time.Time }
+	var intervals []interval
+	for _, step := range steps {
+		if step.Phase != "done" && step.Phase != "fail" {
+			continue
+		}
+		switch step.Role {
+		case "implementer", "reviewer", "gate", "architect":
+		default:
+			continue
+		}
+		begin, beginErr := time.Parse(time.RFC3339Nano, step.BeganAt)
+		end, endErr := time.Parse(time.RFC3339Nano, step.UpdatedAt)
+		if beginErr != nil || endErr != nil || end.Before(begin) {
+			continue
+		}
+		intervals = append(intervals, interval{begin, end})
+	}
+	if len(intervals) == 0 {
+		return 0, false
+	}
+	slices.SortFunc(intervals, func(a, b interval) int { return a.begin.Compare(b.begin) })
+	current := intervals[0]
+	var active time.Duration
+	for _, next := range intervals[1:] {
+		if next.begin.After(current.end) {
+			active += current.end.Sub(current.begin)
+			current = next
+		} else if next.end.After(current.end) {
+			current.end = next.end
+		}
+	}
+	return active + current.end.Sub(current.begin), true
+}
+
 func (m *Model) recentRows() []ovRow {
 	var rows []ovRow
 	for i, p := range m.projects {
@@ -260,8 +298,21 @@ func (m *Model) recentRows() []ovRow {
 				}
 			}
 			began, _ := time.Parse(time.RFC3339Nano, r.BeganAt)
-			counts := roleCounts(ledgerTreeSteps(r.Steps))
-			cells := []string{glyph, strings.Join(r.Items, ","), elapsed(at.Sub(began)), "ended " + elapsed(m.cfg.Now().Sub(at)) + " ago", fmt.Sprintf("impl %d  review %d  gate %d", counts["implementer"], counts["reviewer"], counts["gate"])}
+			duration := elapsed(at.Sub(began))
+			if active, ok := recentActiveTime(r.Steps); ok {
+				duration += " (active " + elapsed(active) + ")"
+			}
+			counts := map[string]int{}
+			for _, step := range r.Steps {
+				counts[step.Role]++
+			}
+			recorded := func(role string) string {
+				if counts[role] == 0 {
+					return "-"
+				}
+				return fmt.Sprint(counts[role])
+			}
+			cells := []string{glyph, strings.Join(r.Items, ","), duration, "ended " + elapsed(m.cfg.Now().Sub(at)) + " ago", fmt.Sprintf("impl %d  review %s  gate %s", counts["implementer"], recorded("reviewer"), recorded("gate"))}
 			rows = append(rows, ovRow{ledgerID: r.ID, project: i, name: p.reg.Name, style: m.cfg.Theme.Dim, text: strings.Join(cells, "  "), cells: cells, ended: at})
 		}
 	}

@@ -1302,9 +1302,18 @@ requests read it separately; status makes no board read. The adapter bounds the 
 and ended runs updated within an hour of read time. Recent applies the
 exact hour cutoff with the injected render clock, sorts newest first,
 and sits between Running and Ready to land in the cursor order. It shows
-outcome, items, elapsed run time, ended age, and role counts. Enter opens
+outcome, items, wall time, ended age, and role counts. Enter opens
 a read-only ended-run pane. Run duration and ended age use `begun_at` and
-`updated_at`; the ledger has no ended timestamp.
+`updated_at`; the ledger has no ended timestamp. The first duration is wall
+time, including waits. The parenthesised figure is active time: the union
+of `begun_at` to `updated_at` intervals for done or failed implementer,
+reviewer, gate and architect steps. A completed step's `updated_at` is its
+end time. Overlaps count once; orchestrator and still-running steps are
+excluded. Wall time appears alone when no completed worker step has usable
+times. Recent counts all recorded
+steps of each role, including nested steps and repeated rounds. Review and
+gate show a dash when no step of that role is recorded, also for relays
+started elsewhere. The dash makes no claim about unrecorded work.
 
 ### Live role activity (S07)
 

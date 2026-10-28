@@ -14,9 +14,9 @@
                            │
                            │
                            │[1;36mRecent[m
-                           │    ork  [1;31m✗ fail[m[90m  S94  10m  ended 5m ago  impl 1  review 1  gate 0[m
-                           │    ork  [32m✓ pass[m[90m  S93  10m  ended 20m ago  impl 1  review 1  gate 0[m
-                           │    ork  [90m~ stopped[m[90m  S95  10m  ended 35m ago  impl 1  review 1  gate 0[m
+                           │    ork  [1;31m✗ fail[m[90m  S94  10m (active 5m)  ended 5m ago[m
+                           │    ork  [32m✓ pass[m[90m  S93  10m (active 5m)  ended 20m ago[m
+                           │    ork  [90m~ stopped[m[90m  S95  10m (active 5m)  ended 35m ago[m
                            │
                            │[1;36mReady to land[m
                            │  [90mnone[m

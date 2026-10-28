@@ -15,9 +15,9 @@
    ork  [2mS97[m  [2mstale reviewer[m  [2m[##~~..][m  [1m!! heard 30m[m
 
 [1mRecent[m
-[1;7m    ork  ✗ fail  S94  10m  ended 5m ago  impl 1  review 1  gate 0                                                       [m
-    ork  ✓ pass[2m  S93  10m  ended 20m ago  impl 1  review 1  gate 0[m
-    ork  [2m~ stopped[m[2m  S95  10m  ended 35m ago  impl 1  review 1  gate 0[m
+[1;7m    ork  ✗ fail  S94  10m (active 5m)  ended 5m ago  impl 1  review 1  gate -                                           [m
+    ork  ✓ pass[2m  S93  10m (active 5m)  ended 20m ago  impl 1  review 1  gate -[m
+    ork  [2m~ stopped[m[2m  S95  10m (active 5m)  ended 35m ago  impl 1  review 1  gate -[m
 
 [1mReady to land[m
   [2mnone[m

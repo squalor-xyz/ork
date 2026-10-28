@@ -7,9 +7,9 @@
                            │[1;7m   ork  S97  reviewer  [##~~..]  ! heard 16m                            [m
                            │
                            │[1mRecent[m
-                           │    ork  [1m✗ fail[m[2m  S94  10m  ended 5m ago  impl 1  review 1  gate 0[m
-                           │    ork  ✓ pass[2m  S93  10m  ended 20m ago  impl 1  review 1  gate 0[m
-                           │    ork  [2m~ stopped[m[2m  S95  10m  ended 35m ago  impl 1  review 1  gate 0[m
+                           │    ork  [1m✗ fail[m[2m  S94  10m (active 5m)  ended 5m ago[m
+                           │    ork  ✓ pass[2m  S93  10m (active 5m)  ended 20m ago[m
+                           │    ork  [2m~ stopped[m[2m  S95  10m (active 5m)  ended 35m ago[m
                            │
                            │[1mReady to land[m
                            │  [2mnone[m
