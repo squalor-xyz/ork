@@ -283,8 +283,8 @@ to land sections can be seen (S151). `}` and `{` move it to
 the first row of the next group and of the current or previous group. The
 groups are the Needs you groups (Decisions, Held, Stopped, Paused, Approve, Findings and
 Errors), then Running, Recent and Ready to land. On the Roadmap a group is a run
-of items with the same pass, and on Waves a wave, then Unplaced (S151,
-*proposed*). The Roadmap, Questions, Decisions and Waves cursors take the first,
+of items with the same pass, with the cursor on its first item under the
+pass heading (S162), and on Waves a wave, then Unplaced (S151, *proposed*). The Roadmap, Questions, Decisions and Waves cursors take the first,
 last and page keys; the Overview, Roadmap and Waves have the group keys. With
 the help open, no row key moves the cursor, which is hidden under it. With a
 pane open, no row key moves the cursor;
@@ -1175,6 +1175,13 @@ decided 2026-10-21). The data comes from
 A Goals error keeps the list. A Deps error makes readiness unknown (`?`).
 `enter` loads the selected item's spec and shows pending until it arrives.
 The detail wraps and clips to the pane. `esc` returns to the list.
+Each run of items with the same pass sits under a dim heading line with the
+pass and the run's size, for example `v1.0 (24)` (S162, owner decision
+2026-10-27). Items with no pass fall under `No pass (N)`. Slicer lists a pass
+together; a pass that comes back after another pass starts a new run with its
+own heading and count, so `{` and `}` land on exactly the headings drawn. The
+headings are not rows: the cursor skips them and lands on the first item under
+one.
 On "Needs you", select a project to see its roadmap.
 `l` opens a ready list when a project is selected and no item detail is open.
 It lists only open items with a slice included by `slicer deps`, in slicer
