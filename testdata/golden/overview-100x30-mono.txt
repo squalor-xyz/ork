@@ -11,7 +11,7 @@
                            │  [1m![m  DataBall    items: no_such_item: No such item: S99.
                            │  [2m~[m  agents      waiting for the first reply
                            │
-                           │[1mRunning 2[m
+                           │[1mRunning 1[m
                            │  [1m          [m  slicer      [1mS11[m  [2mactive[m  [......]
                            │  [2m~ pending [m  agents      waiting for the first reply
                            │

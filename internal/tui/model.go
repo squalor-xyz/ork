@@ -749,29 +749,18 @@ func (m *Model) groupStarts() []int {
 	switch m.view {
 	case roadmapView:
 		var starts []int
-		for i, it := range m.roadmapItems() {
-			if i == 0 || it.Fields.Pass != m.roadmapItems()[i-1].Fields.Pass {
+		items := m.roadmapItems()
+		for i, it := range items {
+			if i == 0 || it.Fields.Pass != items[i-1].Fields.Pass {
 				starts = append(starts, i)
 			}
 		}
 		return starts
 	case wavesView:
-		w := m.waves
-		if w == nil || w.suggest == nil {
+		if m.waves == nil {
 			return nil
 		}
-		var starts []int
-		next := 0
-		for _, wave := range w.suggest.Waves[:w.visibleWaveCount()] {
-			if len(wave.Items) > 0 {
-				starts = append(starts, next)
-			}
-			next += len(wave.Items)
-		}
-		if len(w.suggest.Unplaced) > 0 {
-			starts = append(starts, next)
-		}
-		return starts
+		return m.waves.groupStarts()
 	}
 	if m.view != 0 {
 		return nil

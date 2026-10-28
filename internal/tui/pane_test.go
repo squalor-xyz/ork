@@ -911,7 +911,7 @@ func TestQuestionAlertShowsOnTheRowAndTheSummary(t *testing.T) {
 				t.Fatalf("question lacks amber alert: %+v", needs[0])
 			}
 			v := strings.Join(h.m.overview(120).body, "\n")
-			if !strings.Contains(v, "! owner questions 1") {
+			if !strings.Contains(v, "? owner questions 1") {
 				t.Fatalf("summary lacks alert: %s", v)
 			}
 		})
@@ -1005,7 +1005,7 @@ func TestMonoQuestionAlertsStayBold(t *testing.T) {
 	if !needs[0].style.GetBold() {
 		t.Error("mono question row is not bold")
 	}
-	want := h.m.cfg.Theme.Warn.Bold(true).Render("! owner questions 1")
+	want := h.m.cfg.Theme.Warn.Bold(true).Render("? owner questions 1")
 	if lines := strings.Join(h.m.overview(120).body, "\n"); !strings.Contains(lines, want) {
 		t.Errorf("mono alert is not bold: %q", lines)
 	}

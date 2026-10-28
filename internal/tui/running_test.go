@@ -3,7 +3,11 @@
 package tui
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -11,6 +15,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 
+	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
@@ -289,17 +294,18 @@ func TestQuestionOrStopShowsAnAlertOnTheSummaryRowAndEnterOpensItsPane(t *testin
 	if !strings.Contains(v, "Running 3") {
 		t.Fatalf("a run that waits on the owner is still a live run:\n%s", v)
 	}
-	if head := mainRow(v, "Running 3"); !strings.Contains(head, "! owner questions 1") || !strings.Contains(head, "x stopped 1") {
+	if head := mainRow(v, "Running 3"); !strings.Contains(head, "? owner questions 1") || !strings.Contains(head, "x stopped 1") {
 		t.Errorf("the heading must count the question and the stop: %q", head)
 	}
 	// The alert is one glyph in the mark slot before the project name, as the
-	// kind symbol is on Needs you. No row is wider or moved by it.
+	// kind symbol is on Needs you, and a space follows it. No row is wider or
+	// moved by it.
 	q := mainRow(v, "alpha", "S30")
-	if !strings.HasPrefix(q, "  ?alpha") || !strings.Contains(q, "[reviewer]") {
+	if !strings.HasPrefix(q, " ? alpha") || !strings.Contains(q, "[reviewer]") {
 		t.Errorf("the paused run's row lacks its ? glyph before the name, or its pipeline: %q", q)
 	}
 	s := mainRow(v, "beta", "S31")
-	if !strings.HasPrefix(s, "  xbeta") {
+	if !strings.HasPrefix(s, " x beta") {
 		t.Errorf("the stopped run's row lacks its x glyph before the name: %q", s)
 	}
 	c := mainRow(v, "gamma", "S32")
@@ -372,7 +378,7 @@ func TestSummaryAtEightyByTwentyFour(t *testing.T) {
 			t.Errorf("%s's row lost its stage bar %q or role %q at 80x24: %q", c.name, c.bar, c.role, row)
 		}
 	}
-	if row := mainRow(v, "alpha", "S30"); !strings.HasPrefix(row, "  ?alpha") {
+	if row := mainRow(v, "alpha", "S30"); !strings.HasPrefix(row, " ? alpha") {
 		t.Errorf("the alert glyph was lost at 80x24: %q", row)
 	}
 }
@@ -1506,5 +1512,551 @@ func TestScrollBumpNeverHidesLineOne(t *testing.T) {
 		for i := 0; i < 7; i++ {
 			h.send(press("up"))
 		}
+	}
+}
+
+// Running view follow-ups (S140).
+
+// An engine run with an error stays a live Running row, and its row carries the
+// error marker in the mark slot, as the detail line carries the words.
+func TestRunningRowKeepsErrorMarker(t *testing.T) {
+	h := newHarness(t, runningProjects[0], runningProjects[1])
+	bad := liveEngine("run-a", "S30", "review", testActivity)
+	bad.Error = "vendor exited 2"
+	h.src.set(engineSnap(runningProjects[0], bad))
+	h.src.set(engineSnap(runningProjects[1], liveEngine("run-b", "S31", "review", testActivity)))
+	h.start()
+	h.send(press("["))
+	v := h.wide()
+	a, b := mainRow(v, "alpha", "S30"), mainRow(v, "beta", "S31")
+	if !strings.HasPrefix(a, " ! alpha") {
+		t.Errorf("the errored run's row lacks its ! marker before the name: %q", a)
+	}
+	if !strings.HasPrefix(b, "   beta") {
+		t.Errorf("a healthy run carries a marker: %q", b)
+	}
+	if got := detailText(h.m, 150); !strings.Contains(got, "error: vendor exited 2") {
+		t.Errorf("the detail line must keep the error in words: %q", got)
+	}
+	if strings.Index(a, "[##") != strings.Index(b, "[##") {
+		t.Errorf("the marker moved the columns: %q against %q", a, b)
+	}
+}
+
+// The count of the badge and the heading is the runs that are live. A relay
+// ledger no run has touched for a while is stale and is listed but not counted;
+// an engine run linked to a stale ledger follows the engine's state (S138).
+func TestLiveRunCountIgnoresStaleRelayRuns(t *testing.T) {
+	h := newHarness(t, runningProjects[0], runningProjects[1])
+	linked := externalRun("ext-a", "S30")
+	linked.State = "stale"
+	engine := liveEngine("run-a", "S30", "review", testActivity)
+	engine.RelayRun = "ext-a"
+	s := engineSnap(runningProjects[0], engine)
+	s.Runs.Value = []slicercli.RelayRun{linked}
+	h.src.set(s)
+	old := externalRun("ext-old", "S41")
+	old.State = "stale"
+	old.UpdatedAt = t0.Add(-35 * time.Minute).Format(time.RFC3339)
+	h.src.set(snap(runningProjects[1], nil, nil, old))
+	h.start()
+	h.send(press("["))
+	v := h.wide()
+	if !strings.Contains(v, "Running 1") || strings.Contains(v, "Running 2") {
+		t.Errorf("the heading must count the engine run and not the stale relay:\n%s", v)
+	}
+	if row := sidebarRow(h.m, "> Running"); !strings.Contains(compactSpaces(sgr.ReplaceAllString(row, "")), "> Running 1") {
+		t.Errorf("the sidebar badge must count one live run: %q", row)
+	}
+	if mainRow(v, "beta", "S41") == "" {
+		t.Errorf("the stale relay stays listed:\n%s", v)
+	}
+	if got := h.m.liveRunCount(); got != 1 {
+		t.Errorf("liveRunCount = %d, want 1", got)
+	}
+}
+
+// A run after a fix round reads the round on the bar before last heard, on the
+// row and on the detail line.
+func TestRunningDetailOrdersRoundBeforeHeard(t *testing.T) {
+	h := newHarness(t, runningProjects[0])
+	fix := roleRun("reviewer", 6*time.Minute, 3*time.Minute)
+	fix.Exit = "fail"
+	h.src.set(engineSnap(runningProjects[0], liveEngine("run-a", "S30", "implement", nil,
+		roleRun("implementer", 9*time.Minute, 6*time.Minute), fix, roleRun("implementer", 3*time.Minute, 0))))
+	h.start()
+	h.send(press("["))
+	row := mainRow(h.wide(), "alpha", "S30")
+	if r, hd := strings.Index(row, "fix 1"), strings.Index(row, "heard"); r < 0 || hd < 0 || r > hd {
+		t.Errorf("the row must show the round before last heard: %q", row)
+	}
+	got := detailText(h.m, 150)
+	if r, hd := strings.Index(got, "fix 1"), strings.Index(got, "heard"); r < 0 || hd < 0 || r > hd {
+		t.Errorf("the detail line must show the round before last heard: %q", got)
+	}
+}
+
+// With the Running entry selected the cursor walks the Running rows, so a jump
+// to a run lands on the index in those rows, not in the Overview's.
+func TestSelectJumpRunUsesCursorRows(t *testing.T) {
+	alpha, beta := proj("alpha", true), proj("beta", false)
+	h := newHarness(t, alpha, beta)
+	a := snap(alpha, []adjcli.Record{openRec(7, "ui.x", "A question")}, nil)
+	h.src.set(a)
+	h.src.set(engineSnap(beta, liveEngine("run-b", "S31", "review", testActivity)))
+	h.start()
+	h.send(press("["))
+	if h.m.active != runningEntry {
+		t.Fatalf("active %d, want the Running entry", h.m.active)
+	}
+	h.m.cursor, h.m.jumpRun = 3, "run-b"
+	h.m.selectJumpRun()
+	rows := h.m.cursorRows()
+	if h.m.jumpRun != "" || h.m.cursor < 0 || h.m.cursor >= len(rows) || rows[h.m.cursor].engineID != "run-b" {
+		t.Errorf("cursor %d (jumpRun %q) is not on run-b among %d Running rows", h.m.cursor, h.m.jumpRun, len(rows))
+	}
+}
+
+// A stopped run's last role has ended; its row still names the role it stopped
+// on, in the role cell and in the pipeline.
+func TestStoppedRowShowsItsRole(t *testing.T) {
+	h := newHarness(t, runningProjects[0])
+	stopped := liveEngine("run-s", "S07", "stopped", nil,
+		roleRun("implementer", 29*time.Minute, 20*time.Minute), roleRun("reviewer", 19*time.Minute, 15*time.Minute))
+	stopped.Wait = "owner action"
+	h.src.set(engineSnap(runningProjects[0], stopped))
+	h.start()
+	h.send(press("["))
+	if row := mainRow(h.at(100, 30), "alpha", "S07"); !strings.Contains(row, "[reviewer]") {
+		t.Errorf("at 100 columns the stopped row lacks its role: %q", row)
+	}
+	if row := mainRow(h.at(160, 30), "alpha", "S07"); !strings.Contains(row, "implementer>[reviewer]>gate") {
+		t.Errorf("at 160 columns the stopped row's pipeline lacks its role: %q", row)
+	}
+	if row := mainRow(h.at(100, 30), "alpha", "S07"); !strings.Contains(row, "[####..]") {
+		t.Errorf("the role must not change the stage bar: %q", row)
+	}
+}
+
+func runningEmptyGoldenModel(theme Theme, w, h int) *Model {
+	m := newGoldenModel(theme)
+	for _, p := range four {
+		s := snap(p, nil, nil)
+		m.Update(snapshotMsg{name: p.Name, snap: s})
+	}
+	m.Update(tea.WindowSizeMsg{Width: w, Height: h})
+	m.Update(press("["))
+	return m
+}
+
+// The Running entry selected with nothing to run or to list under Recent.
+func TestRunningSelectedEmptyGolden(t *testing.T) {
+	for _, c := range []struct {
+		name string
+		mono bool
+	}{{"running-empty-100x30-color.txt", false}, {"running-empty-100x30-mono.txt", true}} {
+		t.Run(c.name, func(t *testing.T) {
+			m := runningEmptyGoldenModel(NewTheme(c.mono), 100, 30)
+			if m.active != runningEntry {
+				t.Fatalf("active %d, want the Running entry", m.active)
+			}
+			checkGolden(t, c.name, m.View().Content)
+		})
+	}
+}
+
+// byProjectLive answers each project's wave.suggest with its own plan or error.
+type byProjectLive struct {
+	wavesLive
+	plans map[string]*slicercli.ParallelPlan
+	errs  map[string]error
+}
+
+func (l *byProjectLive) WaveSuggest(_ context.Context, p string) (*slicercli.ParallelPlan, error) {
+	l.suggests = append(l.suggests, p)
+	return l.plans[p], l.errs[p]
+}
+
+func parsePlan(t *testing.T, doc string) *slicercli.ParallelPlan {
+	t.Helper()
+	var plan slicercli.ParallelPlan
+	if err := json.Unmarshal([]byte(doc), &plan); err != nil {
+		t.Fatal(err)
+	}
+	return &plan
+}
+
+// combinedHarness has two adj projects with a decision and an item each, on the
+// Running entry, with a wave plan per project.
+func combinedHarness(t *testing.T, live func(plans map[string]*slicercli.ParallelPlan) *byProjectLive) (*harness, *byProjectLive) {
+	t.Helper()
+	alpha, beta := proj("alpha", true), proj("beta", true)
+	h := newHarness(t, alpha, beta)
+	h.src.set(snap(alpha, []adjcli.Record{openRec(7, "ui.alpha-key", "Alpha question")}, []slicercli.Item{item("S30", "Alpha item")}))
+	h.src.set(snap(beta, []adjcli.Record{openRec(8, "ui.beta-key", "Beta question")}, []slicercli.Item{item("S41", "Beta item")}))
+	h.start()
+	l := live(map[string]*slicercli.ParallelPlan{
+		"alpha": parsePlan(t, `{"waves":[{"wave":1,"items":[{"id":"A","title":"Alpha first"}]},{"wave":2,"items":[{"id":"B","title":"Alpha second"}]}],"unplaced":[{"id":"E","title":"Alpha loose"}]}`),
+		"beta":  parsePlan(t, `{"waves":[{"wave":1,"items":[{"id":"C","title":"Beta first"}]}],"unplaced":[{"id":"D","title":"Beta loose","reason":"no_files"}]}`),
+	})
+	h.m.cfg.Live = l
+	h.m.Update(tea.WindowSizeMsg{Width: 120, Height: 40})
+	h.send(press("["))
+	if h.m.active != runningEntry {
+		t.Fatalf("active %d, want the Running entry", h.m.active)
+	}
+	return h, l
+}
+
+func plainLive(plans map[string]*slicercli.ParallelPlan) *byProjectLive {
+	return &byProjectLive{plans: plans}
+}
+
+func (h *harness) tabTo(view int) {
+	h.t.Helper()
+	for i := 0; h.m.view != view; i++ {
+		if i > 10 {
+			h.t.Fatalf("tab never reached view %d", view)
+		}
+		h.deliver(press("tab"))
+	}
+}
+
+// Questions, Waves, Roadmap and Decisions show every project together while the
+// Running entry is selected (S140, owner 2026-10-27). Questions, Decisions and
+// Roadmap lead each row with its project; Waves has one block per project.
+func TestRunningEntryTabsShowAllProjects(t *testing.T) {
+	h, l := combinedHarness(t, plainLive)
+	for _, tc := range []struct {
+		view  int
+		name  string
+		lines [][]string // words each expected line holds
+	}{
+		{questionsView, "Questions", [][]string{{"alpha", "#7", "Alpha question"}, {"beta", "#8", "Beta question"}}},
+		{roadmapView, "Roadmap", [][]string{{"alpha", "S30", "Alpha item"}, {"beta", "S41", "Beta item"}}},
+		{decisionsView, "Decisions", [][]string{{"alpha", "#7", "Alpha question"}, {"beta", "#8", "Beta question"}}},
+	} {
+		h.tabTo(tc.view)
+		v := plainView(h.m)
+		for _, words := range tc.lines {
+			if mainRow(v, words...) == "" {
+				t.Errorf("%s: no row holds %q while Running is selected:\n%s", tc.name, words, v)
+			}
+		}
+	}
+	if !reflect.DeepEqual(l.suggests, []string{"alpha", "beta"}) {
+		t.Errorf("Waves must ask each project once: %v", l.suggests)
+	}
+	// Nothing on the combined Waves or Roadmap opens or launches a project.
+	h.tabTo(wavesView)
+	h.deliver(press(" "))
+	if w := h.m.waves; w == nil || len(w.picked) != 0 || w.inputs != nil {
+		t.Fatalf("space must not tick a row of the combined Waves: %+v", w)
+	}
+	h.deliver(press("enter"))
+	if w := h.m.waves; w == nil || w.pane != nil {
+		t.Fatalf("enter must not open an item of the combined Waves: %+v", w)
+	}
+	h.tabTo(roadmapView)
+	h.deliver(press("enter"))
+	if h.m.itemPane != nil {
+		t.Errorf("Enter on the combined Roadmap must not open an item")
+	}
+}
+
+// The combined Waves tab is one block per project: the project's name, then its
+// own waves and unplaced items, in project order. Nothing is ticked there.
+func TestRunningWavesGroupByProject(t *testing.T) {
+	h, _ := combinedHarness(t, plainLive)
+	h.tabTo(wavesView)
+	lines := mainLines(plainView(h.m))
+	at := -1
+	for _, step := range [][]string{{"alpha"}, {"Wave 1"}, {"A", "Alpha first"}, {"Wave 2"}, {"B", "Alpha second"},
+		{"Unplaced"}, {"E", "Alpha loose"}, {"beta"}, {"Wave 1"}, {"C", "Beta first"}, {"Unplaced"}, {"D", "Beta loose"}} {
+		i := lineWith(lines, at+1, step...)
+		if i < 0 {
+			t.Fatalf("no line %q after line %d:\n%s", step, at, strings.Join(lines, "\n"))
+		}
+		at = i
+	}
+	for _, line := range lines {
+		if strings.Contains(line, "[ ]") || strings.Contains(line, "[x]") {
+			t.Errorf("the read-only Waves tab must not draw tick boxes: %q", line)
+		}
+	}
+	if got := len(h.m.waves.rows()); got != 5 {
+		t.Errorf("the cursor walks %d rows, want the 5 items of both projects", got)
+	}
+	// Each wave and each Unplaced list of every project starts a group.
+	if got := h.m.groupStarts(); !reflect.DeepEqual(got, []int{0, 1, 2, 3, 4}) {
+		t.Errorf("group starts = %v, want [0 1 2 3 4]", got)
+	}
+	h.deliver(press("G"))
+	if h.m.waves.cursor != 4 {
+		t.Errorf("G must reach the last item: cursor %d", h.m.waves.cursor)
+	}
+}
+
+// A project whose suggestion fails is named with its error; the others still
+// list. When every project fails each one is named.
+func TestRunningWavesNameFailedProjects(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		errs   map[string]error
+		listed []string
+		failed []string
+	}{
+		{"one", map[string]error{"beta": errors.New("slicer plan-parallel exploded")}, []string{"Alpha first"}, []string{"beta"}},
+		{"all", map[string]error{"alpha": errors.New("alpha broke"), "beta": errors.New("beta broke")}, nil, []string{"alpha", "beta"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h, _ := combinedHarness(t, func(plans map[string]*slicercli.ParallelPlan) *byProjectLive {
+				return &byProjectLive{plans: plans, errs: tc.errs}
+			})
+			h.tabTo(wavesView)
+			lines := mainLines(plainView(h.m))
+			for _, title := range tc.listed {
+				if lineWith(lines, 0, title) < 0 {
+					t.Errorf("%q is missing:\n%s", title, strings.Join(lines, "\n"))
+				}
+			}
+			if len(tc.listed) == 0 && lineWith(lines, 0, "No suggested items") >= 0 {
+				t.Errorf("\"No suggested items\" under the error lines:\n%s", strings.Join(lines, "\n"))
+			}
+			for _, project := range tc.failed {
+				if lineWith(lines, 0, project) < 0 || lineWith(lines, 0, "!", tc.errs[project].Error()) < 0 {
+					t.Errorf("failed project %s is not named with its error:\n%s", project, strings.Join(lines, "\n"))
+				}
+			}
+		})
+	}
+}
+
+// Enter opens nothing on the combined Roadmap and Waves, so the hint line does
+// not offer it; `e` explains that it needs a project.
+func TestCombinedTabsDoNotOfferWhatTheyCannotDo(t *testing.T) {
+	h, _ := combinedHarness(t, plainLive)
+	for _, view := range []int{roadmapView, wavesView} {
+		h.tabTo(view)
+		hint := sgr.ReplaceAllString(h.m.hintLine(200), "")
+		if strings.Contains(hint, "enter") {
+			t.Errorf("view %d: the hint offers enter: %q", view, hint)
+		}
+	}
+	h.deliver(press("e"))
+	if got := h.m.actionStatus; !strings.Contains(got, "Select a project") {
+		t.Errorf("e on the combined Waves must explain, got %q", got)
+	}
+}
+
+// The alert glyph is amber and bold, with a space before the project name; the
+// monochrome theme keeps the glyph and the space and shows it bold.
+func TestAlertGlyphHasAGapAndWarnStyle(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		h := newHarness(t, runningProjects...)
+		question := liveEngine("q1", "S30", "paused", nil)
+		question.Pending, question.Wait = "question", "Which store?"
+		stopped := liveEngine("s1", "S31", "stopped", nil)
+		stopped.Wait = "owner action"
+		h.src.set(engineSnap(runningProjects[0], question))
+		h.src.set(engineSnap(runningProjects[1], stopped))
+		h.src.set(engineSnap(runningProjects[2], liveEngine("run-c", "S32", "review", testActivity)))
+		h.m.cfg.Theme = NewTheme(mono)
+		h.start()
+		h.m.Update(tea.WindowSizeMsg{Width: 160, Height: 30})
+		h.send(press("["))
+		h.send(press("down"))
+		h.send(press("down")) // gamma is selected, so alpha and beta are drawn plain
+		th := h.m.cfg.Theme
+		body := h.body(160, 30)
+		plain := plainLines(body)
+		glyph := th.Warn.Bold(true)
+		for _, tc := range []struct{ item, mark, name string }{{"S30", "?", "alpha"}, {"S31", "x", "beta"}} {
+			raw := body[bodyLine(t, plain, tc.item)]
+			want := " " + glyph.Render(tc.mark) + " " + tc.name
+			if !strings.Contains(raw, want) {
+				t.Errorf("mono=%v: %s row lacks the amber bold glyph, a space, then the name %q: %q", mono, tc.item, want, raw)
+			}
+			if p := plain[bodyLine(t, plain, tc.item)]; !strings.HasPrefix(p, " "+tc.mark+" "+tc.name) {
+				t.Errorf("mono=%v: %s row text: %q", mono, tc.item, p)
+			}
+		}
+	}
+}
+
+// As the pane narrows the activity goes first, then the pipeline: a row never
+// shows the sparkline without its pipeline (S110; owner 2026-10-26).
+func TestSparklineDropsBeforeThePipeline(t *testing.T) {
+	h := runningHarness(t)
+	spark := sparkline(testActivity, false)
+	for w := 60; w <= 170; w++ {
+		row := mainRow(h.at(w, 30), "alpha", "S30")
+		if strings.Contains(row, spark) && !strings.Contains(row, "implementer>[reviewer]>gate") {
+			t.Errorf("width %d: the sparkline outlasts the pipeline: %q", w, row)
+		}
+	}
+	if row := mainRow(h.at(100, 30), "alpha", "S30"); strings.Contains(row, spark) {
+		t.Errorf("at 100x30 the sparkline must be dropped: %q", row)
+	}
+}
+
+// Only the runs listed as live make "nothing running" untrue: a stale relay is
+// listed, but the view still has no run (S140).
+func TestNothingRunningOnlyWhenNoRowIsListed(t *testing.T) {
+	h := newHarness(t, runningProjects[0])
+	old := externalRun("ext-old", "S41")
+	old.State = "stale"
+	old.UpdatedAt = t0.Add(-35 * time.Minute).Format(time.RFC3339)
+	h.src.set(snap(runningProjects[0], nil, nil, old))
+	h.start()
+	h.send(press("["))
+	v := h.wide()
+	if !strings.Contains(v, "Running 0") || mainRow(v, "alpha", "S41") == "" {
+		t.Fatalf("the stale relay is listed under Running 0:\n%s", v)
+	}
+	if strings.Contains(v, "nothing running") {
+		t.Errorf("\"nothing running\" above a listed row:\n%s", v)
+	}
+}
+
+// A stopped run's detail line names the role it stopped on in brackets, as its
+// row does; a last step that is not a pipeline role is bracketed nowhere.
+func TestStoppedDetailBracketsItsRole(t *testing.T) {
+	h := newHarness(t, runningProjects[0])
+	stopped := liveEngine("run-s", "S07", "stopped", nil,
+		roleRun("implementer", 29*time.Minute, 20*time.Minute), roleRun("reviewer", 19*time.Minute, 15*time.Minute))
+	stopped.Wait = "owner action"
+	h.src.set(engineSnap(runningProjects[0], stopped))
+	h.start()
+	h.send(press("["))
+	h.wide()
+	if got := detailText(h.m, 150); !strings.Contains(got, "implementer>[reviewer]>gate") {
+		t.Errorf("the detail line must bracket the stopped role: %q", got)
+	}
+
+	h = newHarness(t, runningProjects[0])
+	odd := liveEngine("run-o", "S08", "stopped", nil,
+		roleRun("implementer", 29*time.Minute, 20*time.Minute), roleRun("reviewer", 19*time.Minute, 15*time.Minute), roleRun("scribe", 14*time.Minute, 12*time.Minute))
+	odd.Wait = "owner action"
+	h.src.set(engineSnap(runningProjects[0], odd))
+	h.start()
+	h.send(press("["))
+	row := mainRow(h.at(100, 30), "alpha", "S08")
+	if strings.Contains(row, "[implementer]") || strings.Contains(row, "[reviewer]") || strings.Contains(row, "[scribe]") {
+		t.Errorf("a stopped run whose last step is not a pipeline role has no bracketed role: %q", row)
+	}
+	if got := detailText(h.m, 150); strings.Contains(got, "[implementer]") || strings.Contains(got, "[reviewer]") || strings.Contains(got, "[gate]") {
+		t.Errorf("the detail line brackets a role: %q", got)
+	}
+}
+
+// The heading's question count wears the row glyph, and the question and stop
+// counts are amber and bold like the glyphs.
+func TestRunningHeadingMatchesTheRowGlyphs(t *testing.T) {
+	h := newHarness(t, runningProjects...)
+	question := liveEngine("q1", "S30", "paused", nil)
+	question.Pending, question.Wait = "question", "Which store?"
+	stopped := liveEngine("s1", "S31", "stopped", nil)
+	stopped.Wait = "owner action"
+	h.src.set(engineSnap(runningProjects[0], question))
+	h.src.set(engineSnap(runningProjects[1], stopped))
+	h.m.cfg.Theme = NewTheme(false)
+	h.start()
+	h.send(press("["))
+	v := h.wide()
+	if head := mainRow(v, "Running 2"); !strings.Contains(head, "? owner questions 1") || strings.Contains(head, "!") {
+		t.Errorf("the heading must read ? owner questions 1: %q", head)
+	}
+	raw := h.m.screen()
+	warn := h.m.cfg.Theme.Warn.Bold(true)
+	for _, text := range []string{"? owner questions 1", "x stopped 1"} {
+		if !strings.Contains(raw, open(warn)+text) {
+			t.Errorf("%q is not amber and bold in the heading", text)
+		}
+	}
+}
+
+// The Overview's "Running N" counts what its Running section lists as live: a
+// run that is neither stale nor waiting on the owner (S140, owner 2026-10-28).
+// The paused question and the stopped run sit under Needs you, so the Overview
+// does not count them; the Running entry and the badge do.
+func TestOverviewRunningCountMatchesItsRunningSection(t *testing.T) {
+	h := newHarness(t, runningProjects...)
+	question := liveEngine("q1", "S31", "paused", nil)
+	question.Pending, question.Wait = "question", "Which store?"
+	stopped := liveEngine("s1", "S32", "stopped", nil)
+	stopped.Wait = "owner action"
+	s := engineSnap(runningProjects[0], liveEngine("run-a", "S30", "review", testActivity), question, stopped)
+	h.src.set(s)
+	old := externalRun("ext-old", "S41")
+	old.State = "stale"
+	old.UpdatedAt = t0.Add(-35 * time.Minute).Format(time.RFC3339)
+	h.src.set(snap(runningProjects[1], nil, nil, old))
+	h.src.set(snap(runningProjects[2], nil, nil))
+	h.start()
+	if h.m.active != needsEntry {
+		t.Fatalf("active %d, want Needs you", h.m.active)
+	}
+	v := h.wide()
+	if !strings.Contains(v, "Running 1") || strings.Contains(v, "Running 2") || strings.Contains(v, "Running 3") {
+		t.Errorf("the Overview must count its one live run:\n%s", v)
+	}
+	if strings.Contains(v, "nothing running") {
+		t.Errorf("one run is listed:\n%s", v)
+	}
+	if n := h.m.liveRunCount(); n != 3 {
+		t.Errorf("the entry still counts the question and the stop: liveRunCount = %d, want 3", n)
+	}
+}
+
+// With a stale relay as the only Running row the Overview says Running 0 and
+// does not claim "nothing running" over a listed row; a number that matches the
+// rows is all the heading promises.
+func TestOverviewRunningCountZeroOverAStaleRow(t *testing.T) {
+	h := newHarness(t, runningProjects[0])
+	old := externalRun("ext-old", "S41")
+	old.State = "stale"
+	old.UpdatedAt = t0.Add(-35 * time.Minute).Format(time.RFC3339)
+	h.src.set(snap(runningProjects[0], nil, nil, old))
+	h.start()
+	v := h.wide()
+	if !strings.Contains(v, "Running 0") || mainRow(v, "alpha", "S41") == "" || strings.Contains(v, "Running 1") {
+		t.Errorf("the stale relay is listed under Running 0:\n%s", v)
+	}
+}
+
+// The combined Roadmap's failed-project line starts its name where the item
+// rows do, past the two-column ready slot.
+func TestCombinedRoadmapErrorLineLinesUpWithItemRows(t *testing.T) {
+	h, _ := combinedHarness(t, plainLive)
+	bad := snap(proj("beta", true), nil, nil)
+	bad.Items.Err = errors.New("items broke")
+	h.src.set(bad)
+	h.send(press("r"))
+	h.tabTo(roadmapView)
+	lines := mainLines(plainView(h.m))
+	item, fail := lineWith(lines, 0, "S30"), lineWith(lines, 0, "beta", "items broke")
+	if item < 0 || fail < 0 {
+		t.Fatalf("rows missing:\n%s", strings.Join(lines, "\n"))
+	}
+	if a, b := strings.Index(lines[item], "alpha"), strings.Index(lines[fail], "beta"); a != b {
+		t.Errorf("the failed project's name starts at column %d, item rows at %d:\n%s", b, a, strings.Join(lines, "\n"))
+	}
+}
+
+// Both Overview headings word the owner questions as the Running view does.
+func TestOverviewHeadingReadsOwnerQuestionsLikeRunning(t *testing.T) {
+	h := newHarness(t, runningProjects[0])
+	question := liveEngine("q1", "S31", "paused", nil)
+	question.Pending, question.Wait = "question", "Which store?"
+	h.src.set(engineSnap(runningProjects[0], question))
+	h.m.cfg.Theme = NewTheme(false)
+	h.start()
+	v := h.wide()
+	if head := mainRow(v, "Running"); !strings.Contains(head, "? owner questions 1") || strings.Contains(head, "!") {
+		t.Errorf("the Overview heading must read ? owner questions 1: %q", head)
+	}
+	if !strings.Contains(h.m.screen(), open(h.m.cfg.Theme.Warn.Bold(true))+"? owner questions 1") {
+		t.Errorf("the Overview heading's count is not amber and bold")
 	}
 }

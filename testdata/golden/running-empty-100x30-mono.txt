@@ -1,0 +1,30 @@
+[1mork[m [2mdev[m  ?help             │ [1mOverview (Running)[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1;7;2m> Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
+[2m0[m Needs you              0 │[1mRunning 0[m
+[2m1[m slicer                   │  [2mnothing running[m
+[2m2[m adjudicate               │
+[2m3[m DataBall                 │[1mRecent[m
+[2m4[m agents                   │  [2mnone[m
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
+                           │ 4 projects | refreshed 16:42:07

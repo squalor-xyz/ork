@@ -203,16 +203,29 @@ pipeline with the running role in brackets and the ten-bucket activity
 sparkline. A run that waits on the owner is marked by one
 glyph in the mark slot before its project name, as a kind symbol is on
 Needs you: `?` for a paused run that asks the owner, `x` for a stopped one. The
-glyph is the only change to its row, so no row moves or widens. The heading
-counts the runs and adds `! owner questions N` and `x stopped N`, and the
-detail line of the selected row keeps the words. A run that waits on the owner
+glyph is amber and bold (bold alone under `NO_COLOR`) and a space follows it,
+so it never sits against the name. The space comes out of the row indent, so no
+row moves or widens. A run with an error shows a red `!` in the same slot. A stopped run
+names the role it stopped on, in brackets where a running role would stand
+(its last role has ended); its detail line brackets the same role. The heading
+counts the runs and adds `? owner questions N` and `x stopped N`, both amber
+and bold like the glyphs, and the detail line of the selected row keeps the
+words. With no run row at all the view says `nothing running`; a stale relay is
+a row, so it is listed without that line. Only live runs are counted, in the heading and
+the sidebar badge: a relay started elsewhere that has gone stale is listed, dim,
+but not counted, while an engine run follows its engine state whatever its
+linked ledger reads. The Overview's `Running N` counts the
+live, non-stale runs its own Running section lists; a run that waits on the
+owner is under Needs you there, so that number leaves it out. A run that waits
+on the owner
 stays on this view until it is answered or dismissed; a paused run with no
 question, a run awaiting approval and a removed run stay on Needs you only.
 The columns line up: the item, the bar and the pipeline are padded to the widest
 row. The cells shown are chosen once for the whole view, from the widest row,
 so every row shows the same cells (the selected row alone may be clipped). As
 the pane narrows the cells go in this order: activity first, then the pipeline
-(down to the bracketed running role), then last heard. The item, the stage bar
+(down to the bracketed running role), then last heard. A row never shows the
+activity without its pipeline, so at 100x30 the activity is dropped. The item, the stage bar
 and the running role stay, so the view is complete at 80x24. The row cursor,
 `enter` (which opens that run's pane, as on the Overview), the action keys and
 the pane work as on the Overview; the pane follows the newest running run
@@ -220,6 +233,18 @@ the pane work as on the Overview; the pane follows the newest running run
 is on the detail line, which wraps between cells and never inside one. A run
 that ends leaves Running and shows under Recent on the next snapshot, with no
 keypress.
+
+While the Running entry is selected the other tabs show every project together
+(S140), each row led by its project name as on Needs you. Questions and
+Decisions list all projects (Decisions all that use adj); Roadmap lists every
+project's items under `All projects`, with one cursor over them; Waves asks the
+daemon for each project's suggestion once and lists one block per project, in
+project order: the project's name, then its own waves and Unplaced items, with
+no tick boxes. A project whose suggestion fails keeps its block, with a `!`
+line, so every failing project is named. The combined Roadmap and Waves
+only list: opening an item, ticking, launching and editing a lineup need one
+project selected in the sidebar, and the hint line does not offer `enter`. With "Needs you" selected the Roadmap and Waves still ask to
+select a project.
 
 "Needs you" shows the aggregate Needs you row count, including error and
 pending rows, matching the main heading (`ui.overview-layout`, adj 149).
@@ -563,7 +588,7 @@ Engine runs that are awaiting approval, paused, or stopped and neither
 superseded nor dismissed appear under Needs you. Their kinds are
 `+ approve`, `= paused`, and `x stopped`. A paused owner question uses
 `? question` in amber instead. Overview and the project page also show an
-amber `! owner questions N` alert beside the Running count while questions
+amber `? owner questions N` alert beside the Running count while questions
 are waiting. In monochrome, question kinds and the alert are bold. Each kind is a symbol and a word,
 so monochrome still reads it.
 An engine-linked row and its pane use the engine state even when the ledger

@@ -32,6 +32,9 @@ type itemShowMsg struct {
 }
 
 func (m *Model) roadmapItems() []slicercli.Item {
+	if m.active == runningEntry {
+		return m.runningRoadmapItems()
+	}
 	if m.active < 0 {
 		return nil
 	}
@@ -43,6 +46,9 @@ func (m *Model) roadmapItems() []slicercli.Item {
 }
 
 func (m *Model) openItem() tea.Cmd {
+	if m.active < 0 {
+		return nil // the combined Roadmap of the Running entry only lists
+	}
 	items := m.roadmapItems()
 	i := clampCursor(m.roadmapCursor, len(items))
 	if i < 0 || m.showHelp || m.itemPane != nil {
@@ -77,6 +83,9 @@ func (m *Model) roadmap(w int) overviewView {
 		for _, line := range wrapText(text, max(w, 1)) {
 			out.body = append(out.body, th.Heading.Render(line))
 		}
+	}
+	if m.active == runningEntry {
+		return m.runningRoadmapView(w)
 	}
 	if m.active < 0 {
 		add("Select a project to see its roadmap.")

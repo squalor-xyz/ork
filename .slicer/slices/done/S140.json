@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/tui/overview.go`\n- `internal/tui/waves.go`\n- `internal/tui/running_test.go`\n- `testdata/golden/`\n- `docs/dashboard.md`"
+      "body": "- `internal/tui/overview.go`\n- `internal/tui/waves.go`\n- `internal/tui/roadmap.go`\n- `internal/tui/keys.go`\n- `internal/tui/lineup.go`\n- `internal/tui/model.go`\n- `internal/tui/running_test.go`\n- `internal/tui/tui_test.go`\n- `testdata/golden/`\n- `docs/dashboard.md`"
     },
     {
       "heading": "Failing tests",

@@ -747,7 +747,15 @@ func (m *Model) overview(w int) overviewView {
 		section(rows, first, "")
 		first += len(rows)
 	}
-	summary := th.Heading.Render(fmt.Sprintf("Running %d", len(running)))
+	// The number is the live runs the section lists: a stale relay is a row but
+	// not a run, and a run that waits on the owner sits under Needs you (S140).
+	live := 0
+	for _, r := range running {
+		if countsAsLive(r) {
+			live++
+		}
+	}
+	summary := th.Heading.Render(fmt.Sprintf("Running %d", live))
 	questions := 0
 	for _, r := range needs {
 		if r.pending == "question" {
@@ -755,7 +763,7 @@ func (m *Model) overview(w int) overviewView {
 		}
 	}
 	if questions > 0 {
-		summary += "  " + th.Warn.Bold(th.Mono).Render(fmt.Sprintf("! owner questions %d", questions))
+		summary += "  " + th.Warn.Bold(true).Render(fmt.Sprintf("? owner questions %d", questions))
 	}
 	lines = append(lines, "", summary)
 	section(running, len(needs), "nothing running")
@@ -1509,16 +1517,25 @@ func (m *Model) runningRows() []ovRow {
 	return rows
 }
 
-// liveRunCount is the number of runs the Running entry lists. An error or a
-// pending project is a row there too, but it is not a run.
+// liveRunCount is the number of runs the Running entry counts. An error or a
+// pending project is a row there too, but it is not a run, and neither is a
+// stale relay (S140).
 func (m *Model) liveRunCount() int {
 	n := 0
 	for _, r := range m.runningRows() {
-		if r.live != nil {
+		if countsAsLive(r) {
 			n++
 		}
 	}
 	return n
+}
+
+// countsAsLive reports whether a Running row is a live run. A relay ledger
+// started elsewhere that has gone stale is listed, dim, but not counted. An
+// engine run is live while its engine says so, whatever its linked ledger
+// reads (S138).
+func countsAsLive(r ovRow) bool {
+	return r.live != nil && !(r.ledgerID != "" && r.state == "stale")
 }
 
 // liveDetail is the whole text of a Running row, for the detail line, as the
@@ -1528,7 +1545,13 @@ func (m *Model) liveDetail(r ovRow) []string {
 	cells := strings.Split(r.text, "  ")
 	if r.live.alert != "" {
 		// The Needs you row carries no board cells.
-		for _, part := range m.boardRowParts(r.live.ledger, r.live.steps) {
+		parts := m.boardRowParts(r.live.ledger, r.live.steps)
+		// The pipeline is the last part. A stopped run brackets the role it
+		// stopped on, as its row does.
+		if state := r.live.ledger.State; state == "stopped" {
+			parts[len(parts)-1].text = m.pipeline(stoppedOn(r.live.steps, state), false, true)
+		}
+		for _, part := range parts {
 			cells = append(cells, part.text)
 		}
 	}
@@ -1575,6 +1598,106 @@ func runningRole(steps []runTreeStep) string {
 	return ""
 }
 
+// stoppedOn returns steps with the last lane step of a stopped run marked as
+// running, when none is, so the pipeline and the role cell name the role the run
+// stopped on. Any other run's steps come back as they are.
+func stoppedOn(steps []runTreeStep, state string) []runTreeStep {
+	if state != "stopped" {
+		return steps
+	}
+	lane := laneSteps(steps)
+	if len(lane) == 0 || slices.ContainsFunc(lane, func(s runTreeStep) bool { return s.Phase == "start" }) {
+		return steps
+	}
+	lane[len(lane)-1].Phase = "start"
+	return lane
+}
+
+// runningRoadmapItems lists the items of every project with a roadmap, in
+// registry order, for the Roadmap tab while the Running entry is selected
+// (S140). It is the list the cursor walks.
+func (m *Model) runningRoadmapItems() []slicercli.Item {
+	var items []slicercli.Item
+	for _, p := range m.projects {
+		if p.loaded && !p.setup() && !p.snap.Unavailable && p.snap.Items.Err == nil {
+			items = append(items, p.snap.Items.Value...)
+		}
+	}
+	return items
+}
+
+// runningRoadmapView is the Roadmap tab while the Running entry is selected:
+// every project's items, each row led by its project, one cursor over them all.
+// It only lists: Enter and l need a project (select one in the sidebar).
+func (m *Model) runningRoadmapView(w int) overviewView {
+	th := m.cfg.Theme
+	out := overviewView{sel: -1}
+	nameW := 0
+	for _, p := range m.projects {
+		if !p.snap.Unavailable {
+			nameW = min(max(nameW, lipgloss.Width(p.reg.Name)), 20)
+		}
+	}
+	out.body = append(out.body, th.Heading.Render("All projects"))
+	cursor := clampCursor(m.roadmapCursor, len(m.runningRoadmapItems()))
+	index := 0
+	for _, p := range m.projects {
+		if p.snap.Unavailable || p.setup() {
+			continue
+		}
+		name := clip(p.reg.Name, nameW)
+		// Past the two-column ready slot, so the name starts where the item rows' do.
+		lead := indent + "  " + fmt.Sprintf("%-*s", nameW, name) + "  "
+		switch {
+		case !p.loaded:
+			out.body = append(out.body, lead+th.Pending.Render("pending: waiting for the first reply"))
+			continue
+		case p.snap.Items.Err != nil:
+			code, msg := errParts(p.snap.Items.Err)
+			out.body = append(out.body, lead+th.Error.Render(clip((errRow{code: code, parts: []string{"items"}, msgs: []string{msg}}).text(), max(w-lipgloss.Width(lead), 1))))
+			continue
+		}
+		for _, it := range p.snap.Items.Value {
+			ready := " "
+			switch {
+			case p.snap.Deps.Err != nil:
+				ready = "?"
+			case readySlice(p.snap, it):
+				ready = "·"
+				if m.cfg.ASCII {
+					ready = "*"
+				}
+			}
+			title := it.ShortTitle
+			if title == "" {
+				title = it.Title
+			}
+			size, effort := it.Fields.Size, "-"
+			if size == "" {
+				size = "-"
+			}
+			if it.Fields.Effort != 0 {
+				effort = fmt.Sprint(it.Fields.Effort)
+			}
+			fields := size + effort
+			prefix := indent + ready + " " + fmt.Sprintf("%-*s", nameW, name) + "  " + it.ID + "  "
+			title = clip(title, max(w-lipgloss.Width(prefix)-lipgloss.Width(fields)-2, 1))
+			line := prefix + title + strings.Repeat(" ", max(w-lipgloss.Width(prefix)-lipgloss.Width(title)-lipgloss.Width(fields), 2)) + fields
+			out.rows = append(out.rows, len(out.body))
+			if index == cursor {
+				out.sel = len(out.body)
+				line = th.TabActive.Render(line)
+			}
+			out.body = append(out.body, line)
+			index++
+		}
+	}
+	if index == 0 && len(out.body) == 1 {
+		out.body = append(out.body, indent+th.Dim.Render("No items"))
+	}
+	return out
+}
+
 // runningOverview is the Running entry's screen: the live runs of every
 // project, each on one line, and the runs that ended in the last hour. It
 // reuses the Overview's rows and its cursor; nothing else is drawn.
@@ -1593,7 +1716,9 @@ func (m *Model) runningOverview(w int) overviewView {
 		if r.live == nil {
 			continue
 		}
-		live++
+		if countsAsLive(r) {
+			live++
+		}
 		liveRows = append(liveRows, r)
 		switch r.live.alert {
 		case "? question":
@@ -1606,15 +1731,15 @@ func (m *Model) runningOverview(w int) overviewView {
 	layout := m.liveLayout(liveRows, nameW, w)
 	heading := th.Heading.Render(fmt.Sprintf("Running %d", live))
 	if questions > 0 {
-		heading += "  " + th.Warn.Bold(th.Mono).Render(fmt.Sprintf("! owner questions %d", questions))
+		heading += "  " + th.Warn.Bold(true).Render(fmt.Sprintf("? owner questions %d", questions))
 	}
 	if stops > 0 {
-		heading += "  " + th.Error.Render(fmt.Sprintf("x stopped %d", stops))
+		heading += "  " + th.Warn.Bold(true).Render(fmt.Sprintf("x stopped %d", stops))
 	}
 	lines := []string{heading}
 	sel, paneAt := -1, -1
 	var rowAt []int
-	if live == 0 {
+	if len(running) == 0 {
 		lines = append(lines, indent+th.Dim.Render("nothing running"))
 	}
 	for i, r := range running {
@@ -1662,10 +1787,13 @@ type liveText struct {
 func (m *Model) liveText(r ovRow) liveText {
 	lv := r.live
 	stale := lv.ledger.State == "stale"
-	t := liveText{item: lv.item, pipeline: m.pipeline(lv.steps, stale, true)}
+	// A stopped run has no role running: the one it stopped on stands in, so the
+	// row names it (the bar keeps the steps as they are).
+	shown := stoppedOn(lv.steps, lv.ledger.State)
+	t := liveText{item: lv.item, pipeline: m.pipeline(shown, stale, true)}
 	t.bar = stageBar(lv.steps, m.treeFrame, !stale && boardLive(lv.ledger.State))
 	if !stale {
-		t.role = runningRole(lv.steps)
+		t.role = runningRole(shown)
 	}
 	t.heard, t.heardStyle = m.lastHeard(lv.ledger)
 	if len(lv.activity) > 0 {
@@ -1718,7 +1846,9 @@ func (m *Model) liveLayout(rows []ovRow, nameW, w int) liveLayout {
 	if l.pipeline = true; width() > room {
 		l.pipeline = false
 	}
-	if l.spark = l.sparkW > 0; l.spark && width() > room {
+	// The activity goes before the pipeline does: with no pipeline it is dropped
+	// whatever room is left (S140).
+	if l.spark = l.pipeline && l.sparkW > 0; l.spark && width() > room {
 		l.spark = false
 	}
 	return l
@@ -1730,11 +1860,16 @@ func (m *Model) liveLayout(rows []ovRow, nameW, w int) liveLayout {
 func (m *Model) runningLine(r ovRow, selected bool, nameW, w int, l liveLayout) string {
 	th := m.cfg.Theme
 	t := m.liveText(r)
-	// The mark slot holds the alert glyph, as the kind symbol does on Needs you.
+	// The mark slot holds the alert glyph, as the kind symbol does on Needs you:
+	// amber and bold for a question or a stop, the error style for an error.
+	// A space follows it, taken from the row indent, so the glyph never sits
+	// against the name and the columns stay where they were (S140).
 	mark, markStyle := " ", lipgloss.NewStyle()
 	switch {
 	case r.live.alert != "":
-		mark, markStyle = r.live.alert[:1], r.style
+		mark, markStyle = r.live.alert[:1], th.Warn.Bold(true)
+	case r.kind == kindError:
+		mark, markStyle = "!", th.Error
 	case m.refreshing(r.name):
 		mark, markStyle = "~", th.Pending
 	}
@@ -1776,7 +1911,7 @@ func (m *Model) runningLine(r ovRow, selected bool, nameW, w int, l liveLayout) 
 		out = append(out, style.Render(c.text)+pad)
 	}
 	if selected {
-		line := indent + mark + padded + "  " + strings.Join(raw, "  ")
+		line := " " + mark + " " + padded + "  " + strings.Join(raw, "  ")
 		line = strings.TrimRight(line, " ")
 		if lipgloss.Width(line) > w {
 			line = clip(line, w)
@@ -1786,7 +1921,7 @@ func (m *Model) runningLine(r ovRow, selected bool, nameW, w int, l liveLayout) 
 	if mark != " " {
 		mark = markStyle.Render(mark)
 	}
-	return strings.TrimRight(indent+mark+padded+"  "+strings.Join(out, "  "), " ")
+	return strings.TrimRight(" "+mark+" "+padded+"  "+strings.Join(out, "  "), " ")
 }
 
 // stateWord is the state spelling shown to the owner.

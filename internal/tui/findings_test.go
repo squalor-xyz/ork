@@ -401,7 +401,7 @@ func TestFindingRowsDoNotInflatePendingQuestions(t *testing.T) {
 	h := findingsHarness(t, "paused", laterOne, ownerNote)
 	h.m.byName["ork"].snap.EngineRuns[0].Pending = "question"
 	text := strings.Join(h.m.overview(100).body, "\n")
-	if !strings.Contains(text, "! owner questions 1") || strings.Contains(text, "! owner questions 3") {
+	if !strings.Contains(text, "? owner questions 1") || strings.Contains(text, "? owner questions 3") {
 		t.Fatalf("question count inflated: %s", text)
 	}
 }

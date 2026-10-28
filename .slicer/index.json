@@ -5945,7 +5945,7 @@
       "id": "S140",
       "title": "Running view follow-ups: error marker, stale runs not live, detail order, stopped role, empty golden, other tabs on Running",
       "short_title": "Running view follow-ups: error marker, stale runs not live, detail order, stopped role, empty golden, other tabs on Running",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -5955,6 +5955,149 @@
           "text": "**2026-10-26** — From S138 (34bb9f8): for engine-linked runs the engine state wins over a stale ledger (overview.go, relayboard.go); apply 'stale runs not live' to ledger-only runs only.",
           "created_at": "2026-10-26T18:40:13Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "ff461231-3b29-44e9-9c50-060381e1db89",
+          "kind": "",
+          "text": "**2026-10-28** — **2026-10-28** — S140 later: the combined Waves tab leaves out projects that have not loaded yet, silently (no pending line, no retry when they load); it asks each project once, on entering the tab.",
+          "created_at": "2026-10-28T11:28:20Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "4b2b35b4-c942-4a4f-a408-46a62f6471e0",
+          "kind": "",
+          "text": "**2026-10-28** — **2026-10-28** — S140 later: the combined Waves tab calls WaveSuggest for the projects one after the other, so the wait is the sum of N calls; parallel calls need a thread-safe fake in the tests.",
+          "created_at": "2026-10-28T11:28:20Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "0bb5044f-5102-41db-a743-447b371461ce",
+          "kind": "",
+          "text": "**2026-10-28** — **2026-10-28** — S140 later: the empty Running view could point to where runs start (Roadmap launch, Waves).",
+          "created_at": "2026-10-28T11:28:20Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "872fa0d1-97cd-4a01-a660-645d93b3ecf5",
+          "kind": "",
+          "text": "**2026-10-28** — **2026-10-28** — S140 later: the combined Waves error lines for a failed project are plain text; they could use the error style.",
+          "created_at": "2026-10-28T11:28:20Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "2fc8cc1e-314f-4c3c-83e7-cd0b385552ea",
+          "kind": "",
+          "text": "**2026-10-28** — **2026-10-28** — S140 later: the combined Waves heading (Suggested (slicer plan-parallel)) lacks the All projects scope that Questions, Roadmap and Decisions show.",
+          "created_at": "2026-10-28T11:28:20Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "b1e9c7c1-311d-48d7-8814-2740b8c1a6fe",
+          "kind": "",
+          "text": "**2026-10-28** — **2026-10-28** — S140 later: docs/dashboard.md Running section: re-wrap the lines around the activity sentence (long line) and reword \"can be dropped\" style phrasing; the Overview heading still reads \"! owner questions N\" while the Running view reads \"? owner questions N\" (owner decision 2026-10-28 named the Running heading only).",
+          "created_at": "2026-10-28T11:28:21Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "b81e9d94-3220-4be8-b469-68f482d47981",
+          "kind": "",
+          "text": "**2026-10-28** — **2026-10-28** — S140 later: combined Waves rows keep bare slicer IDs, so [A] show all can put the cursor on another project's row with the same ID (it re-finds the cursor row by ID).",
+          "created_at": "2026-10-28T11:38:53Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "02895e79-4d6f-412a-bdab-250ae1919dac",
+          "kind": "",
+          "text": "**2026-10-28** — **2026-10-28** — S140 later: combined Waves project headings use th.Heading, the same level as Suggested; try th.Group or a dimmer style.",
+          "created_at": "2026-10-28T11:38:53Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "bd67a273-9efe-498d-83ef-34caa7317ff2",
+          "kind": "",
+          "text": "**2026-10-28** — **2026-10-28** — S140 later: the stale `!! heard` cell is wider, so heard still drops at 80x24 with a stale row present in the Running view.",
+          "created_at": "2026-10-28T11:38:53Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "ca6dcdd3-9bf3-4689-a671-f953ffb9fbb9",
+          "kind": "",
+          "text": "**2026-10-28** — **2026-10-28** — S140 later: Recent rows put the project name one column right of live Running rows (predates S140).",
+          "created_at": "2026-10-28T11:38:53Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "eb827c02-ce6a-4404-bc37-37adc5c3bb7d",
+          "kind": "",
+          "text": "**2026-10-28** — **2026-10-28** — S140 later: docs/dashboard.md lines added by S140 run past 80 columns, and \"at 100x30 the activity is dropped\" depends on the data.",
+          "created_at": "2026-10-28T11:38:53Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "42d9ce20-86c8-4d2b-8b6e-f8d483707853",
+          "kind": "",
+          "text": "**2026-10-28** — **2026-10-28** — S140 later: the Needs you `x stopped` label stays red while the Running heading and glyph are amber; owner to confirm.",
+          "created_at": "2026-10-28T11:38:54Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "0f297adb-275c-48ee-a716-ec5666f94dad",
+          "kind": "",
+          "text": "**2026-10-28** — Orchestration trial (run 30, S140): 6 owner questions (scope and layout calls) during the relay, no stalls, 2 fix rounds, merge of main at landing; ran in parallel with S159, S162 and S141; implementer Claude sonnet-high (pair rule: Codex was off until 2026-10-28), opus reviewer and UI pass. Ledger steps for reviewer, UI pass and gate were backfilled late (outer session gap).",
+          "created_at": "2026-10-28T11:46:36Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -5978,7 +6121,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

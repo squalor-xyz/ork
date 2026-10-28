@@ -13,7 +13,7 @@
                            │    ork answer engine 'use local storage'
                            │    [90madj filing off: question has no decision key[m
                            │
-                           │[1;36mRunning 0[m  [33m! owner questions 1[m
+                           │[1;36mRunning 0[m  [1;33m? owner questions 1[m
                            │  [90mnothing running[m
                            │
                            │[1;36mRecent[m

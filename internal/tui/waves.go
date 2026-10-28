@@ -23,6 +23,10 @@ type waveInputs struct {
 }
 
 type wavesState struct {
+	// aggregate is the Waves tab of the Running entry: the suggestions of every
+	// project in one list, read-only (S140). It has no project.
+	aggregate      bool
+	groups         []waveBlock // aggregate: each project's suggestion, in project order
 	pane           *itemPane
 	paneItem       slicercli.ParallelItem
 	paneOffset     int
@@ -60,6 +64,7 @@ type wavesMsg struct {
 	kind       string
 	sequence   uint64
 	item       string
+	groups     []waveBlock
 	suggest    *slicercli.ParallelPlan
 	plan       *daemon.RunPlan
 	params     *daemon.RunParams
@@ -80,6 +85,9 @@ func (m *Model) dropWaves() {
 
 func (m *Model) openWaves() tea.Cmd {
 	m.dropWaves()
+	if m.view == wavesView && m.active == runningEntry {
+		return m.openAllWaves()
+	}
 	if m.view != wavesView || m.active < 0 || m.projects[m.active].snap.Unavailable {
 		return nil
 	}
@@ -101,26 +109,101 @@ func (m *Model) openWaves() tea.Cmd {
 	}
 }
 
-// rows keeps slicer's wave and item order. Unplaced items can also be chosen.
-func (w *wavesState) rows() []slicercli.ParallelItem {
-	if w.suggest == nil {
+// openAllWaves asks the daemon for each project's suggestion, one after the
+// other, and shows them as one list (S140). The tab is read-only: nothing on it
+// ticks, opens or launches, since each row belongs to a different project.
+func (m *Model) openAllWaves() tea.Cmd {
+	m.wavesRequest++
+	ctx, cancel := context.WithCancel(context.Background())
+	w := &wavesState{aggregate: true, request: m.wavesRequest, ctx: ctx, cancel: cancel, pending: true, picked: map[string]daemon.RunParams{}}
+	m.waves = w
+	if m.cfg.Live == nil {
+		w.pending = false
 		return nil
 	}
-	var rows []slicercli.ParallelItem
-	for _, wave := range w.suggest.Waves[:w.visibleWaveCount()] {
-		rows = append(rows, wave.Items...)
+	var names []string
+	for _, p := range m.projects {
+		if p.loaded && !p.snap.Unavailable && !p.setup() {
+			names = append(names, p.reg.Name)
+		}
 	}
-	return append(rows, w.suggest.Unplaced...)
+	live := m.cfg.Live
+	return func() tea.Msg {
+		groups := make([]waveBlock, len(names))
+		for i, name := range names {
+			if ctx.Err() != nil {
+				return nil
+			}
+			groups[i].project = name
+			groups[i].plan, groups[i].err = live.WaveSuggest(ctx, name)
+		}
+		return wavesMsg{request: w.request, kind: "suggest", groups: groups}
+	}
 }
 
-func (w *wavesState) visibleWaveCount() int {
-	if w.suggest == nil {
-		return 0
+// waveBlock is one project's suggestion on the Waves tab: the only block of a
+// project's own tab, or one of the blocks of the combined tab (S140).
+type waveBlock struct {
+	project string // set on the combined tab only
+	plan    *slicercli.ParallelPlan
+	err     error
+}
+
+// blocks lists what the Waves tab draws, in order.
+func (w *wavesState) blocks() []waveBlock {
+	switch {
+	case w.aggregate:
+		return w.groups
+	case w.suggest != nil:
+		return []waveBlock{{plan: w.suggest}}
 	}
+	return nil
+}
+
+// rows keeps slicer's wave and item order. Unplaced items can also be chosen.
+// On the combined tab it walks the projects in order.
+func (w *wavesState) rows() []slicercli.ParallelItem {
+	var rows []slicercli.ParallelItem
+	for _, b := range w.blocks() {
+		if b.plan == nil {
+			continue
+		}
+		for _, wave := range b.plan.Waves[:w.visibleWaves(b.plan)] {
+			rows = append(rows, wave.Items...)
+		}
+		rows = append(rows, b.plan.Unplaced...)
+	}
+	return rows
+}
+
+// visibleWaves is how many of plan's waves show: all after [A], else three.
+func (w *wavesState) visibleWaves(plan *slicercli.ParallelPlan) int {
 	if w.showAll {
-		return len(w.suggest.Waves)
+		return len(plan.Waves)
 	}
-	return min(3, len(w.suggest.Waves))
+	return min(3, len(plan.Waves))
+}
+
+// groupStarts lists the rows that start a wave, and each Unplaced list.
+func (w *wavesState) groupStarts() []int {
+	var starts []int
+	next := 0
+	for _, b := range w.blocks() {
+		if b.plan == nil {
+			continue
+		}
+		for _, wave := range b.plan.Waves[:w.visibleWaves(b.plan)] {
+			if len(wave.Items) > 0 {
+				starts = append(starts, next)
+			}
+			next += len(wave.Items)
+		}
+		if len(b.plan.Unplaced) > 0 {
+			starts = append(starts, next)
+		}
+		next += len(b.plan.Unplaced)
+	}
+	return starts
 }
 
 func (w *wavesState) items() []daemon.RunParams {
@@ -308,7 +391,7 @@ func (m *Model) confirmWave() tea.Cmd {
 // the plan has loaded and nothing is starting or being checked.
 func (m *Model) wavesTickable() bool {
 	w := m.waves
-	return m.view == wavesView && !m.showHelp && w != nil && !w.pending && w.err == nil && !w.starting && !w.checking
+	return m.view == wavesView && !m.showHelp && w != nil && !w.aggregate && !w.pending && w.err == nil && !w.starting && !w.checking
 }
 
 func (m *Model) startWave(a runAction) tea.Cmd {
@@ -424,6 +507,7 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 	case "suggest":
 		w.pending = false
 		w.suggest, w.err = msg.suggest, msg.err
+		w.groups = msg.groups
 	case "overlap":
 		if w.overlapRequest == msg.sequence {
 			w.overlap, w.overlapErr = msg.overlap, msg.err
@@ -484,7 +568,7 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 		}
 	}
 	out.body = append(out.body, th.Heading.Render("Suggested (slicer plan-parallel)"))
-	if m.active < 0 {
+	if m.active < 0 && m.active != runningEntry {
 		add("Select a project for Waves")
 		return out, nil
 	}
@@ -578,6 +662,9 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 	row := 0
 	draw := func(it slicercli.ParallelItem) {
 		tick := "[ ]"
+		if w.aggregate {
+			tick = "   " // read-only: nothing to tick
+		}
 		p, ok := w.picked[it.ID]
 		if ok {
 			tick = "[x]"
@@ -650,28 +737,44 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 		}
 		row++
 	}
-	if w.suggest != nil {
-		for _, wave := range w.suggest.Waves[:w.visibleWaveCount()] {
+	for _, b := range w.blocks() {
+		if w.aggregate {
+			out.body = append(out.body, th.Heading.Render(b.project))
+			if b.err != nil {
+				add("! " + actionError(b.err))
+				continue
+			}
+		}
+		plan := b.plan
+		if plan == nil {
+			continue
+		}
+		visible := w.visibleWaves(plan)
+		for _, wave := range plan.Waves[:visible] {
 			rule(fmt.Sprintf("Wave %d", wave.Wave), len(wave.Items))
 			for _, it := range wave.Items {
 				draw(it)
 			}
 		}
-		if n := len(w.suggest.Waves) - w.visibleWaveCount(); n > 0 {
+		if n := len(plan.Waves) - visible; n > 0 {
 			noun := "waves"
 			if n == 1 {
 				noun = "wave"
 			}
 			add(th.Dim.Render(fmt.Sprintf("%d more %s; [A] show all", n, noun)))
 		}
-		if len(w.suggest.Unplaced) > 0 {
-			rule("Unplaced", len(w.suggest.Unplaced))
-			for _, it := range w.suggest.Unplaced {
+		if len(plan.Unplaced) > 0 {
+			rule("Unplaced", len(plan.Unplaced))
+			for _, it := range plan.Unplaced {
 				draw(it)
 			}
 		}
 	}
-	if row == 0 {
+	failedAll := len(w.blocks()) > 0
+	for _, b := range w.blocks() {
+		failedAll = failedAll && b.err != nil
+	}
+	if row == 0 && !failedAll {
 		add("No suggested items")
 	}
 	if conflict := w.engineConflict(); conflict != "" {
@@ -733,9 +836,7 @@ func (m *Model) selectJumpRun() {
 	if m.jumpRun == "" || m.view != 0 {
 		return
 	}
-	needs, running := m.rows()
-	all := append(append(append(needs, running...), m.recentRows()...), m.readyRows()...)
-	for i, r := range all {
+	for i, r := range m.cursorRows() {
 		if r.engineID == m.jumpRun {
 			m.cursor = i
 			m.jumpRun = ""
@@ -774,7 +875,7 @@ func waveShares(reason string) (marker, paths string) {
 
 func (m *Model) openWaveItem() tea.Cmd {
 	w := m.waves
-	if m.showHelp || w == nil || w.pending || w.err != nil || w.starting || w.pane != nil {
+	if m.showHelp || w == nil || w.aggregate || w.pending || w.err != nil || w.starting || w.pane != nil {
 		return nil
 	}
 	rows := w.rows()

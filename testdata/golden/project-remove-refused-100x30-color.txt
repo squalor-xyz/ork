@@ -4,7 +4,7 @@
 [1;7;97;44m1>alpha                    [m│  [1mErrors 1[m
                            │[1;7;97;44m  ~ waiting for the first reply                                         [m
                            │
-                           │[1;36mRunning 1[m
+                           │[1;36mRunning 0[m
                            │  [90m~ pending [m waiting for the first reply
                            │
                            │[1;36mRecent[m

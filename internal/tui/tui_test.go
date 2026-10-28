@@ -1585,14 +1585,17 @@ func TestSectionHeadingsCarryCounts(t *testing.T) {
 		m.projects[1].snap.Open.Value = append(m.projects[1].snap.Open.Value, openRec(30+i, "extra", "extra"))
 	}
 	body := strings.Join(m.overview(100).body, "\n")
-	for _, want := range []string{"Needs you 15", "Running 1"} {
+	for _, want := range []string{"Needs you 15", "Running 0"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("missing %q", want)
 		}
 	}
+	// The count is the live runs the section lists (S140): a stopped run sits
+	// under Needs you and a pending first reply is a row, not a run.
 	m.projects[2].loaded = true
-	if !strings.Contains(strings.Join(m.overview(100).body, "\n"), "Running 0") {
-		t.Error("missing Running 0")
+	body = strings.Join(m.overview(100).body, "\n")
+	if !strings.Contains(body, "Running 0") || !strings.Contains(body, "nothing running") || strings.Contains(body, "waiting for the first reply") {
+		t.Errorf("a loaded project leaves Running 0 over nothing running and no pending row:\n%s", body)
 	}
 }
 

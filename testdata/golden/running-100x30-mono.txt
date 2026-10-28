@@ -1,10 +1,10 @@
 [1mork[m [2mdev[m  ?help             │ [1mOverview (Running)[m[2m │ [mQuestions 1[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
 [1;7m> Running                4 [m│[2m────────────────────────────────────────────────────────────────────────[m
-[2m0[m Needs you              2 │[1mRunning 4[m  [1m! owner questions 1[m  [1mx stopped 1[m
-[2m1[m DataBall               1 │[1;7m   slicer      S110  [##~~..]       heard 4m   [reviewer]     ▁▂▂▄█▃▁▂▅▂[m
+[2m0[m Needs you              2 │[1mRunning 4[m  [1m? owner questions 1[m  [1mx stopped 1[m
+[2m1[m DataBall               1 │[1;7m   slicer      S110  [##~~..]       heard 4m   [reviewer]               [m
 [2m2[m agents                 1 │   adjudicate  [1mS97[m   [####~~] gate  [2mheard 2m[m   [gate]
-[2m3[m slicer                  *│  [1m?[mDataBall    [1mS42[m   [~~....]       [2mheard 19m[m  [implementer]
-[2m4[m adjudicate              *│  [1mx[magents      [1mS07[m   [####..]       [2mheard 15m[m
+[2m3[m slicer                  *│ [1m?[m DataBall    [1mS42[m   [~~....]       [2mheard 19m[m  [implementer]
+[2m4[m adjudicate              *│ [1mx[m agents      [1mS07[m   [####..]       [2mheard 15m[m  [reviewer]
                            │
                            │[1mRecent[m
                            │  [2mnone[m

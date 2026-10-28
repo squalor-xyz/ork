@@ -11,7 +11,7 @@
   [1;31m![m  DataBall    items: no_such_item: No such item: S99.
   [90m~[m  agents      waiting for the first reply
 
-[1;36mRunning 2[m
+[1;36mRunning 1[m
   [36m          [m  slicer      [1mS11[m  [90mactive[m  [......]
   [90m~ pending [m  agents      waiting for the first reply
 

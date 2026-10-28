@@ -335,12 +335,12 @@ func (m *Model) contextHints() []hintEntry {
 			break
 		}
 		_, launchRefused := m.launchRefusal()
-		l.add(dropRow, offer(len(m.roadmapItems()) > 0, k.Select, "enter", "open"), offer(!launchRefused, k.Launch, "l", "launch"))
+		l.add(dropRow, offer(m.active >= 0 && len(m.roadmapItems()) > 0, k.Select, "enter", "open"), offer(!launchRefused, k.Launch, "l", "launch"))
 		global()
 	case m.view == wavesView:
 		if w := m.waves; w != nil {
 			rows := w.rows()
-			open := !w.pending && w.err == nil && !w.starting && len(rows) > 0
+			open := !w.aggregate && !w.pending && w.err == nil && !w.starting && len(rows) > 0
 			enter := "item"
 			if len(rows) > 0 && w.launched[rows[clampCursor(w.cursor, len(rows))].ID] != "" {
 				enter = "open run"
