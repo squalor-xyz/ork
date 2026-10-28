@@ -11,6 +11,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -90,5 +91,73 @@ func TestRunStatusCarriesTheApprovalCardAndItsActions(t *testing.T) {
 	waitIdle(t, d, rec.ID)
 	if rows := d.engineRuns(p.Name); rows[0].Card != nil {
 		t.Errorf("a committed run keeps no card on the wire: %+v", rows[0].Card)
+	}
+}
+
+// An owner action the engine refuses changed nothing: the caller reads the
+// refusal in the reply, and the run row shows no error marker (S141).
+func TestRefusedOwnerActionShowsNoErrorMarker(t *testing.T) {
+	d, store, p := runDaemon(t, passRunner(),
+		clitest.Route{Tool: "slicer", Args: []string{"show"}, Prefix: true, Stdout: twoHumanChecks},
+		clitest.Route{Tool: "slicer", Args: []string{"note"}, Prefix: true, Stdout: `{"id":"S1","added":true}`},
+	)
+	b := request(t, d, "run.start", `{"project":"p","item":"S1","well_specified":true,"split":false}`)
+	var rec runrec.Record
+	if err := json.Unmarshal(b, &rec); err != nil {
+		t.Fatal(err)
+	}
+	waitState(t, store, rec.ID, runrec.StateAwaitingApproval)
+	waitIdle(t, d, rec.ID)
+
+	for name, call := range map[string]string{
+		"run.approve": fmt.Sprintf(`{"run":%q}`, rec.ID),
+		"run.check":   fmt.Sprintf(`{"run":%q,"check":9,"state":"ticked"}`, rec.ID),
+		"run.fix":     fmt.Sprintf(`{"run":%q,"text":" "}`, rec.ID),
+	} {
+		_, err := d.handle(context.Background(), name, json.RawMessage(call))
+		if err == nil {
+			t.Fatalf("%s was not refused", name)
+		}
+		// A refusal has its own wire code, so a client shows its text as it is.
+		if wire := ipc.ErrorOf(err); wire.Code != CodeRefused || wire.Message == "" {
+			t.Errorf("%s: wire error %+v, want code %q", name, wire, CodeRefused)
+		}
+		waitIdle(t, d, rec.ID)
+		row := d.engineRuns(p.Name)[0]
+		if got := wireRunError(t, row); got != "" {
+			t.Errorf("%s: the run row carries the refusal as an error: %q", name, got)
+		}
+		if row.State != runrec.StateAwaitingApproval {
+			t.Errorf("%s: state %s", name, row.State)
+		}
+	}
+}
+
+// An action that fails for another reason than a refusal keeps its error on the
+// run row, as before.
+func TestFailedOwnerActionKeepsTheErrorMarker(t *testing.T) {
+	d, store, p := runDaemon(t, passRunner(),
+		clitest.Route{Tool: "slicer", Args: []string{"show"}, Prefix: true, Stdout: twoHumanChecks},
+		clitest.Route{Tool: "slicer", Args: []string{"note"}, Prefix: true, Stderr: "slicer: cannot write the note\n", Exit: 1},
+	)
+	b := request(t, d, "run.start", `{"project":"p","item":"S1","well_specified":true,"split":false}`)
+	var rec runrec.Record
+	if err := json.Unmarshal(b, &rec); err != nil {
+		t.Fatal(err)
+	}
+	waitState(t, store, rec.ID, runrec.StateAwaitingApproval)
+	waitIdle(t, d, rec.ID)
+	request(t, d, "run.check", fmt.Sprintf(`{"run":%q,"check":1,"state":"ticked"}`, rec.ID))
+	request(t, d, "run.check", fmt.Sprintf(`{"run":%q,"check":2,"state":"later"}`, rec.ID))
+	_, err := d.handle(context.Background(), "run.approve", json.RawMessage(fmt.Sprintf(`{"run":%q}`, rec.ID)))
+	if err == nil {
+		t.Fatal("approve with a failing note succeeded")
+	}
+	if wire := ipc.ErrorOf(err); wire.Code != ipc.CodeInternal {
+		t.Errorf("a failure that is not a refusal has code %q", wire.Code)
+	}
+	waitIdle(t, d, rec.ID)
+	if got := wireRunError(t, d.engineRuns(p.Name)[0]); !strings.Contains(got, "slicer note") && !strings.Contains(got, "human checks") {
+		t.Errorf("the failure is not on the run row: %q", got)
 	}
 }

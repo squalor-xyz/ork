@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"sort"
 	"strings"
@@ -518,8 +519,15 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 	if err != nil {
 		return runrec.Record{}, err
 	}
-	if _, ok := find(f, plan.project.Name); !ok {
+	current, ok := find(f, plan.project.Name)
+	if !ok {
 		return runrec.Record{}, notFound(plan.project.Name, f)
+	}
+	// projects.set (S161) changes a project's fields only while it has no
+	// unfinished run, and it holds this lock to save. A set between planRun's
+	// read and here would leave the plan on the old fields, so refuse.
+	if !reflect.DeepEqual(current, plan.project) {
+		return runrec.Record{}, errors.New("plan changed; run the command again to confirm it")
 	}
 	queued := !d.hasRoomLocked(f, plan.project.Name)
 	wave := p.wave
@@ -804,7 +812,9 @@ func (d *Daemon) launchRun(r *managedRun, fn func(context.Context) error) {
 		}
 		d.runs.mu.Lock()
 		result.err = err
-		if !errors.Is(err, context.Canceled) {
+		// A refusal changed nothing: the caller has the text, and the run row
+		// shows no error for it (S141).
+		if !errors.Is(err, context.Canceled) && !engine.IsRefusal(err) {
 			r.failure = err
 		}
 		result.record = r.engine.Snapshot()
@@ -963,7 +973,12 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		return RunReply{}, ctx.Err()
 	case <-done:
 	}
-	return RunReply{Record: result.record, Message: message}, result.err
+	err := result.err
+	if engine.IsRefusal(err) {
+		// A refusal has its own wire code, so a client shows its text as it is (S141).
+		err = &ipc.Error{Code: CodeRefused, Message: err.Error()}
+	}
+	return RunReply{Record: result.record, Message: message}, err
 }
 
 // joinStop waits for the stop in flight and returns its outcome. The caller

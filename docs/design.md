@@ -110,9 +110,11 @@ ork (TUI)  ork status --json (CLI)
   | `projects.list` | none | `{"projects":[...]}`; an empty registry is valid |
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
   | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
+  | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `ui_doc`, `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` | the project as saved; an omitted field keeps its value, `""` or 0 clears one; `bad_params` for an unknown field, no field or an invalid value, `not_found`, `project_busy` while a run is unfinished |
 
   Error codes the daemon adds: `unknown_method`, `bad_params`, `not_found`,
-  `duplicate_name`, `invalid_path`, `registry`, *proposed* `project_busy`.
+  `duplicate_name`, `invalid_path`, `registry`, *proposed* `project_busy`, *proposed*
+  `refused` (an owner action the engine refused).
   Registry writes happen in the daemon, one at a time. The TUI reads through
   the daemon with `snapshot` from S13. Before the daemon it called the
   adapters directly (`dash.pre-daemon`).
@@ -371,7 +373,8 @@ slice.
      change as `ID done` (`git commit -- .slicer`, so files the owner staged
      stay out of it); in `done` mode there is nothing to commit.
   4. `git -C P push` when the project's `push` setting is on (off by default;
-     ork never sets it). A failed push pauses the slice; the branch is on the
+     ork writes it only when the owner runs
+     `ork projects set NAME --push on|off`). A failed push pauses the slice; the branch is on the
      base branch already, and a retry pushes again.
   5. Cleanup, as the owner's approval confirmed it: `git -C P worktree remove
      W`, then `git -C P branch -d BRANCH`. Never `--force` or `-D`. A cleanup
@@ -546,13 +549,30 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   step. This note replaces the human-check adj records. A note that fails
   refuses the approval, so no mark is lost; the owner approves again. A
   second approval, after a landing fix round (S119), does not write the note
-  again (S148).
+  again (S148); nor does one after the first approval's record could not be
+  saved once the note was written (S141). When the card could not read the
+  slice's human checks (`checks_error`), `Approve` does not wait on marks: it
+  writes a note that says they could not be read (`Human checks at approval
+  (ID): the slice's human checks could not be read, so none were marked:
+  WHY`) and goes on (S141, owner decision 2026-10-26).
+  An owner action the engine refuses before it changes anything (a wrong
+  state, an open check, an empty note, the round limit) returns a refusal
+  (`engine.IsRefusal`). The daemon returns its text to the caller and does not
+  keep it as the run's `error`, so the run row shows no `error:` marker for it
+  (S141); a failure that is not a refusal still does. *Proposed (S141):* the
+  daemon sends a refusal with its own wire error code `refused` (a failure keeps
+  `internal`). `ork` prints the text alone (`ork: TEXT`, and `{"error":
+  {"code":"refused","message":"TEXT"}}` with `--json`), and the TUI's status line
+  reads `approve: TEXT`, without the code.
   `Fix(note)` is the owner's third action beside `Approve` and `Reject`: it
   starts an implementer fix round with the note as `owner` feedback, resumed
   as any fix round is, then the checks and the gate, with no review in
   between, and returns to `awaiting-approval` on PASS. A gate FAIL goes back to
   the implementer as usual. It counts as an implementer round, so it is
-  refused (not stopped) at the round limit.
+  refused (not stopped) at the round limit. The gate's brief carries the
+  owner's note as `Owner fix request` in every gate round until a gate passes
+  the change: a red check or a gate FAIL after the fix sends the slice to a
+  later round, and the note goes with it (S141).
   The card also holds the UI pass's renders (*proposed*, S121): of the latest
   UI pass that ended well, the `.txt` files of its `tmp/ui-N/renders/`
   directory, each view's 80x24, 120x40 and ascii file in that order, the views
@@ -933,6 +953,8 @@ ork wave suggest P          slicer's suggested waves, in order, with reasons
 ork wave start P ITEM...    check the specs, then launch (asks unless --yes)
 ork run P ID                show a plan and launch one slice (S17)
 ork approve RUN             finish a passed slice, commit and land it
+ork check RUN N [STATE]     mark human check N: ticked (the default), later or open
+ork fix RUN TEXT            send a fix note to a fix round
 ork answer RUN TEXT         answer an owner question
 ork file RUN N              file a later finding through the daemon
 ork dismiss RUN             clear a stopped run from Needs you
@@ -944,7 +966,8 @@ ork daemon stop [--force]   stop the daemon; on a daemon that predates
 ork daemon restart [--force]
                             stop and start the current executable
 ork roles print [ROLE]      print the embedded role prompts
-ork projects add|list|rm    manage the registry
+ork projects add|list|rm|set
+                            manage the registry
 ork doctor                  check versions, CLIs, logins, contract, ork path, projects
 ```
 
@@ -1038,9 +1061,15 @@ again; `run.check` takes `{run,check,state}` (the one-based human check;
 reads `landed_at` (landed) or `state` `awaiting-approval` with `land_fixes` above
 0 (a blocked landing went to its fix round) from it, with no new field.
 `run.approve` fails with the open checks named while any is open. The engine
-run rows of a run that awaits approval carry `card` (`state.md`). There is no
-`ork` command for fix or check yet; `ork approve` on a run with human checks
-fails until they are marked in the TUI.
+run rows of a run that awaits approval carry `card` (`state.md`). *Proposed
+(S141):* `ork check RUN N [ticked|later|open]` calls `run.check` (ticked unless
+told; `open` reopens) and `ork fix RUN TEXT` calls `run.fix`, which returns when
+the fix round, the checks and the gate have ended. Both follow `ork answer`:
+they wait for the engine, print `RUN STATE` or, with `--json`, the run record,
+and exit 1 with the daemon's error when it refuses; a missing or non-numeric N
+or an empty TEXT is a usage error (exit 2). So `ork approve` works from the
+shell on a run with human checks: it fails naming the open checks, `ork check`
+marks them, and the next `ork approve` goes through.
 *Proposed (S121):* `run.render` takes `{run,name}` and returns `{name,text}`:
 the plain text of one render of the run's card, read from
 `tmp/ui-<ui_round>/renders/NAME` in the run directory. It reads the stored
@@ -1099,7 +1128,8 @@ a run that is not stopped or is busy. An unknown run returns `not_found`.
   and `command`, and words containing `$` or a backtick or starting with `~`.
   Doctor never executes the check command. Nonempty worktree and branch
   patterns must contain `{id}` or `{id_lower}` (*proposed*, S124); empty
-  patterns use the defaults.
+  patterns use the defaults. A finding names the fix, `ork projects set NAME
+  --worktree-pattern PATTERN` or `--branch-pattern PATTERN` (S161).
   The registry is read only; a missing registry is empty and is not created.
   A registry read error is advisory: JSON has `registry_error` (omitted when
   there is no error), separate from the daemon's `warning`. Text prints
@@ -1185,6 +1215,24 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   stopped. This includes queued, paused, awaiting-approval and running states.
   The message names the run ids. The project stays registered.
   A planned start that loses the race to removal is refused with `not_found`.
+- `projects set NAME [--push on|off] [--ui-doc PATH] [--worktree-pattern P]
+  [--branch-pattern P] [--check CMD] [--check-minutes N] [--cap N]
+  [--budget-minutes N] [--budget-tokens N]` (*proposed*, S161): one flag per
+  optional registry field, as in state.md. A flag that is given sets its
+  field; a flag that is left out keeps the value. An empty string or 0 clears
+  a field. `--push` takes `on` or `off`. At least one flag is required, and
+  an unknown flag, a bad `--push` value or a non-number is a usage error
+  (exit 2) before the daemon starts. The daemon (`projects.set`) validates the
+  values and refuses with `bad_params` (a `ui_doc` that is absolute or leaves
+  the project, a pattern without `{id}` or `{id_lower}`, a negative number) or
+  `project_busy`, as `projects rm` does, and then changes nothing. JSON:
+  `{"project":{...}}`. Text: `updated NAME: FIELD=VALUE, ...` in flag order,
+  with `unset` for a cleared field; the text shows the values as saved (a
+  `ui_doc` is cleaned). The daemon reads the registry for each start, so a run
+  that starts later uses the new values and the daemon needs no restart. A
+  start whose plan was read before the change and that is admitted after it is
+  refused with `plan changed; run the command again to confirm it`; run
+  the command again.
 - `roles print [ROLE]`: `{"roles":[{"name","prompt"}]}`. Text: the prompt of
   ROLE as embedded, or all four with a `==== NAME ====` line before each.
 - `doctor`: `{"ok","tools":[{"name","required","present","path","version",

@@ -45,6 +45,9 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
   ork wave start P ITEM... [--yes --well-specified yes|no --split yes|no]
                               show the plans and launch the chosen items
   ork approve RUN             finish and commit a passed slice
+  ork check RUN N [ticked|later|open]
+                              mark human check N of a slice that awaits approval
+  ork fix RUN TEXT            send a fix note to a fix round
   ork stop RUN|WAVE           stop a slice or every unfinished run in a wave
   ork file RUN N              file a later finding as a slice
   ork answer RUN TEXT         answer and resume a paused role
@@ -55,6 +58,13 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
   ork projects add [PATH] [--name N]
                               register a project
   ork projects rm NAME        unregister a project
+  ork projects set NAME [--push on|off] [--ui-doc PATH]
+                              [--worktree-pattern P] [--branch-pattern P]
+                              [--check CMD] [--check-minutes N] [--cap N]
+                              [--budget-minutes N] [--budget-tokens N]
+                              change a project's optional fields; an empty
+                              value or 0 clears one; refused while the
+                              project has unfinished runs
   ork roles print [ROLE]      print the embedded role prompts
   ork daemon run              serve the daemon in the foreground
   ork daemon stop [--force]   stop the daemon
@@ -174,6 +184,8 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		return a.runSlice(ctx, o, rest)
 	case "wave":
 		return a.wave(ctx, o, rest)
+	case "check", "fix":
+		return a.cardCommand(ctx, o, cmd, rest)
 	case "approve", "stop", "answer", "retry", "dismiss", "file":
 		return a.ownerCommand(ctx, o, cmd, rest)
 	case "status":

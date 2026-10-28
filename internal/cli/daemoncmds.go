@@ -96,7 +96,7 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 // projects dispatches the projects subcommands.
 func (a *App) projects(ctx context.Context, o *output, args []string) int {
 	if len(args) == 0 {
-		return o.usage("projects needs add, list or rm")
+		return o.usage("projects needs add, list, rm or set")
 	}
 	sub, rest := args[0], args[1:]
 	fs := flag.NewFlagSet("projects "+sub, flag.ContinueOnError)
@@ -201,6 +201,121 @@ func (a *App) projects(ctx context.Context, o *output, args []string) int {
 			fmt.Fprintf(o.stdout, "removed %s\n", pos[0])
 			return ExitOK
 		})
+	case "set":
+		return a.projectsSet(ctx, o, fs, rest)
 	}
 	return o.usage("unknown projects command %q", sub)
+}
+
+// projectsSet is `ork projects set NAME --field VALUE...` (S161, *proposed*).
+// A flag that is given sets its field; a flag that is left out keeps the
+// registry value. An empty string or 0 clears a field.
+func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args []string) int {
+	push := fs.String("push", "", "on or off: push the base branch after a landing")
+	uiDoc := fs.String("ui-doc", "", "the UI design doc, a path inside the project")
+	worktree := fs.String("worktree-pattern", "", "the worktree path, with {id} or {id_lower}")
+	branch := fs.String("branch-pattern", "", "the branch name, with {id} or {id_lower}")
+	check := fs.String("check", "", "the check command")
+	checkMinutes := fs.Int("check-minutes", 0, "minutes the check may run")
+	capN := fs.Int("cap", 0, "the project's concurrent run cap")
+	budgetMinutes := fs.Int("budget-minutes", 0, "the run time budget in minutes")
+	budgetTokens := fs.Int("budget-tokens", 0, "the run token budget")
+	pos, err := parse(fs, args)
+	if err != nil {
+		return o.usage("projects set: %v", err)
+	}
+	if len(pos) != 1 {
+		return o.usage("projects set takes one NAME, got %d arguments", len(pos))
+	}
+	p := daemon.SetProjectParams{Name: pos[0]}
+	given := map[string]bool{}
+	fs.Visit(func(f *flag.Flag) { given[f.Name] = true })
+	if given["push"] {
+		switch *push {
+		case "on", "off":
+			on := *push == "on"
+			p.Push = &on
+		default:
+			return o.usage("projects set: --push takes on or off, got %q", *push)
+		}
+	}
+	if given["ui-doc"] {
+		p.UIDoc = uiDoc
+	}
+	if given["worktree-pattern"] {
+		p.WorktreePattern = worktree
+	}
+	if given["branch-pattern"] {
+		p.BranchPattern = branch
+	}
+	if given["check"] {
+		p.CheckCommand = check
+	}
+	if given["check-minutes"] {
+		p.CheckMinutes = checkMinutes
+	}
+	if given["cap"] {
+		p.Cap = capN
+	}
+	if given["budget-minutes"] {
+		p.BudgetMinutes = budgetMinutes
+	}
+	if given["budget-tokens"] {
+		p.BudgetTokens = budgetTokens
+	}
+	if p == (daemon.SetProjectParams{Name: p.Name}) {
+		return o.usage("projects set needs at least one field flag (--push, --ui-doc, --worktree-pattern, --branch-pattern, --check, --check-minutes, --cap, --budget-minutes, --budget-tokens)")
+	}
+	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
+		proj, err := c.SetProject(ctx, p)
+		if err != nil {
+			return o.failErr(err)
+		}
+		if o.json {
+			return o.printJSON(map[string]any{"project": proj})
+		}
+		// Say what the registry holds now: the daemon may clean a value.
+		text := func(name, value string) string {
+			if value == "" {
+				return name + "=unset"
+			}
+			return fmt.Sprintf("%s=%q", name, value)
+		}
+		number := func(name string, value int) string {
+			if value == 0 {
+				return name + "=unset"
+			}
+			return fmt.Sprintf("%s=%d", name, value)
+		}
+		var changed []string
+		if p.Push != nil {
+			changed = append(changed, map[bool]string{true: "push=on", false: "push=off"}[proj.Push])
+		}
+		if p.UIDoc != nil {
+			changed = append(changed, text("ui_doc", proj.UIDoc))
+		}
+		if p.WorktreePattern != nil {
+			changed = append(changed, text("worktree_pattern", proj.WorktreePattern))
+		}
+		if p.BranchPattern != nil {
+			changed = append(changed, text("branch_pattern", proj.BranchPattern))
+		}
+		if p.CheckCommand != nil {
+			changed = append(changed, text("check_command", proj.CheckCommand))
+		}
+		if p.CheckMinutes != nil {
+			changed = append(changed, number("check_minutes", proj.CheckMinutes))
+		}
+		if p.Cap != nil {
+			changed = append(changed, number("cap", proj.Cap))
+		}
+		if p.BudgetMinutes != nil {
+			changed = append(changed, number("budget_minutes", proj.Budgets.Minutes))
+		}
+		if p.BudgetTokens != nil {
+			changed = append(changed, number("budget_tokens", proj.Budgets.Tokens))
+		}
+		fmt.Fprintf(o.stdout, "updated %s: %s\n", proj.Name, strings.Join(changed, ", "))
+		return ExitOK
+	})
 }

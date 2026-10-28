@@ -2,7 +2,7 @@
   "version": 9,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 164,
+  "next_id": 165,
   "preamble": "",
   "passes": [
     {
@@ -6128,10 +6128,44 @@
       "id": "S141",
       "title": "Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note",
       "short_title": "Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7225c4d5-0893-4f40-8f55-05b0bd4327bd",
+          "kind": "",
+          "text": "**2026-10-28** — S141 implementer, known limits left as they are: (1) launchRun clears r.failure before the job runs, so a refusal that follows a real failure removes the earlier error marker from the run row (save and restore would fix it). (2) The checks-note guard (Engine.noted) lives in one engine instance, so a daemon restart between a failed approval save and the retry writes the note again; a mark changed after a failed approval writes a second, different note. (3) There is no real-daemon round-trip test for ork fix / run.fix on the CLI side; the CLI tests use a scripted Call and the daemon tests cover run.fix. (4) ork check prints only 'RUN awaiting-approval'; it could name the check and the checks still open. (5) A card with more than about 9 checks is cut at 80x24 with no '+N more' marker. (6) The Overview's three blank lines push Recent further down (+5 more lines at 120x40 in the approval card golden).",
+          "created_at": "2026-10-28T12:08:54Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "1291079b-9e17-4c42-a53f-771fb6952931",
+          "kind": "",
+          "text": "**2026-10-28** — Owner decisions 2026-10-28 (interactive): the push line outranks owner findings on a short card when push is on; a dedicated wire code 'refused' replaces 'internal' for engine refusals (proposed in docs/design.md). Earlier 2026-10-26: ork check/fix CLI; approve with unreadable checks writes a note.",
+          "created_at": "2026-10-28T12:13:52Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "fdef783c-9805-423c-91e5-f0c6ed77b99e",
+          "kind": "",
+          "text": "**2026-10-28** — Orchestration trial (run 31, S141): 2 owner questions during the fix round, no stalls, 1 fix round, merge of main done by the implementer; ran in parallel with S140, S159/S162 earlier and S143 (Codex); implementer Claude sonnet-high (Codex pair rule), opus reviewer and UI pass; ledger steps recorded per round for this run.",
+          "created_at": "2026-10-28T12:13:53Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -6149,7 +6183,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -7212,7 +7246,7 @@
       "id": "S161",
       "title": "ork projects set: change a project's optional registry fields",
       "short_title": "projects set",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -7222,6 +7256,39 @@
           "text": "**2026-10-27** — Owner decisions 2026-10-27 (interactive): all optional fields, one flag each: ork projects set NAME --push on|off --ui-doc PATH --worktree-pattern P --branch-pattern P --check CMD --budget-minutes N --budget-tokens N; refuses while the project has unfinished runs (as ork projects rm does, CodeProjectBusy); validates each value (ui_doc a relative path inside the project; patterns need {id} or {id_lower}); a daemon RPC does the write under regMu.",
           "created_at": "2026-10-27T20:46:56Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "24004e18-8a4c-4910-a484-a65bf9420149",
+          "kind": "",
+          "text": "**2026-10-28** — S161 follow-ups (implementer, 2026-10-28): (1) The dashboard keeps each project registry entry from startup (internal/tui/model.go:~207), so an open dashboard approval card still says \"Approve lands it\" after `ork projects set NAME --push on` until the dashboard is reopened; refresh the registry entry from projects.list on the dashboard refresh. (2) ui_doc is checked by name only; symlinks inside the project are not resolved. (3) branch_pattern is not checked for git ref validity.",
+          "created_at": "2026-10-28T12:44:13Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "2e37f321-0e88-4c3d-b9c3-d2e14dd3c0cf",
+          "kind": "",
+          "text": "**2026-10-28** — Owner decisions 2026-10-28 (interactive): a run planned before a projects set is refused at admission ('plan changed; run the command again to confirm it'); ork doctor's pattern finding names the ork projects set fix. 2026-10-27: all optional fields one flag each; refuses while the project has unfinished runs.",
+          "created_at": "2026-10-28T12:51:24Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "00cf2282-dc8b-42db-9c4a-5cce30e72c11",
+          "kind": "",
+          "text": "**2026-10-28** — Orchestration trial (run 32, S161): 2 owner questions during the fix round, no stalls, 1 fix round, merge of main at landing; ran in parallel with S141 and S143 (Codex); implementer Claude sonnet-high (Codex pair rule), one opus reviewer doing review and CLI text check; ledger steps recorded per round.",
+          "created_at": "2026-10-28T12:51:25Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -7245,7 +7312,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -7317,7 +7384,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "a6ced240-a85e-4cd9-a40b-e8801cedc228",
+          "kind": "",
+          "text": "**2026-10-28** — Owner decisions 2026-10-28 (preflight): (1) Recent shows a dash for review and gate when the ledger holds no step of that role (review - gate -), the number once one is recorded. (2) The duration is wall time (run start to end, includes waits); show both: wall time plus active time summed from recorded steps, e.g. 13h27m (active 1h40m), wall time only when no step times exist. Document in docs/dashboard.md that the first figure is wall time.",
+          "created_at": "2026-10-28T13:27:58Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -7326,6 +7405,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S162",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S164",
+      "title": "Running view: expand more than one run at a time",
+      "short_title": "Expand several runs",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "d0c4319a-f7e5-4193-a206-cc1ed7944212",
+          "kind": "",
+          "text": "**2026-10-28** — Owner decisions 2026-10-28 (preflight): (1) Space toggles the selected Running row and it stays open when the cursor moves; E expands or collapses all; the selected row is still shown open as today. (2) The expanded set survives a refresh and a view switch (kept by run id in the model, dropped when a run leaves the list). At small sizes (80x24) the pane scrolls and the cursor row is always fully visible. Add the key to the hint bar and the help overlay.",
+          "created_at": "2026-10-28T13:27:58Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S140",
         "parent": "",
         "cites": [],
         "key": "",

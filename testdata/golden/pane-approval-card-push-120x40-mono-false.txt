@@ -6,8 +6,8 @@
                            │    [1mRun engine[m
                            │    owner action
                            │    internal/engine/engine.go | 12 ++++++++----
-                           │    internal/tui/pane.go       | 40 ++++++++++++++++++++++++++++++++++++++++
-                           │    internal/tui/card.go  (new)
+                           │    internal/tui/pane.go      | 40 ++++++++++++++++++++++++++++++++++++++++
+                           │    internal/tui/card.go      | (new)
                            │    
                            │    [......]
                            │    [2mimplementer[m > [2mreviewer[m > [2mgate[m
@@ -17,10 +17,12 @@
                            │
                            │    [1mGate PASS (round 1)  Tests: 12 passed, 0 failed[m
                            │    Diff: 2 files, +48 -4, 1 new file
+                           │    
                            │    [1mHuman checks[m (3 of 3 open)
                            │    1 [ ] Open the pane on a running relay and see it move on.
                            │    2 [ ] Resize to 80x24 and read the card.
                            │    3 [ ] Press F, type a note and send it.
+                           │    
                            │    Approve lands and pushes it, then removes its worktree and branch.
                            │
                            │[1mRunning 0[m
@@ -31,8 +33,6 @@
                            │
                            │[1mReady to land[m
                            │  [2mnone[m
-                           │
-                           │
                            │
                            │
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────[m

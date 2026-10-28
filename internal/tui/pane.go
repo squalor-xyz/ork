@@ -21,6 +21,14 @@ import (
 // a snapshot every second, so the next one would be too soon to read it.
 const noticeFor = 5 * time.Second
 
+// gapPriority is the drop priority of the blank lines between the card's
+// blocks: above every other footer line, so they go first (S141).
+const gapPriority = 9
+
+// minBodyRoom is the room the pane's scrolling body keeps before the card's
+// blank lines may take any (S141).
+const minBodyRoom = 8
+
 // runPane keeps its run target while snapshots reorder Overview rows.
 type runPane struct {
 	finding                   int // one-based non-blocking owner finding being answered
@@ -31,6 +39,7 @@ type runPane struct {
 	answerWait, answerKey     string // the run's wait text and decision key when the answer was sent
 	freeText                  bool
 	fixing                    bool                   // the fix note field of the approval card is open
+	number                    string                 // digits of a check number typed on a card of 10 or more checks, not yet sent (S141)
 	render                    int                    // the card's render on show, one-based; 0 shows the card (S121, proposed)
 	renderRound               int                    // the card round that render was opened on
 	fetched                   map[string]renderFetch // run.render answers, by card round and name
@@ -204,10 +213,17 @@ func (m *Model) paneQuestion() bool {
 
 func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 	m.pane.notice = "" // the first key read the switch notice
+	if m.pane.number != "" && msg.String() != "esc" && msg.String() != "enter" && !key.Matches(msg, m.keys.MarkCheck) {
+		m.dropNumber() // any key but a digit, enter or esc drops a waiting number (S141)
+	}
 	switch msg.String() {
 	case "ctrl+c":
 		return tea.Quit
 	case "esc":
+		if m.pane.number != "" {
+			m.dropNumber()
+			return nil
+		}
 		if m.renderOn() > 0 {
 			m.pane.render, m.pane.offset = 0, 0
 			return nil
@@ -382,6 +398,9 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 	}
 	addFooter := func(lines []string, priority int) { addGroup(lines, priority, false) }
 	card := m.paneCard()
+	if card == nil {
+		m.pane.number = "" // a number waits only on a card (S141)
+	}
 	// A render on show takes the room of the card's summary and checks.
 	idx := m.renderOn()
 	viewing := idx > 0
@@ -389,6 +408,13 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		// A dim rule sets the render apart from the run line above it.
 		_, horizontal := m.cfg.Theme.rules(m.cfg.ASCII)
 		header = append(header, m.cfg.Theme.Dim.Render(strings.Repeat(horizontal, width)))
+	}
+	// A blank line sets the card's blocks apart when the terminal is taller than
+	// 24 rows. It is the first line to go when the pane is short (S141).
+	gap := func() {
+		if card != nil && !viewing && !m.pane.fixing && m.height > 24 && len(footer) > 0 {
+			addFooter([]string{""}, gapPriority)
+		}
 	}
 	if card != nil && !viewing {
 		priority := 0
@@ -400,7 +426,10 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 	if !viewing {
 		// On a short pane the later findings drop first, then the owner findings.
 		laterLines, ownerLines := m.findingLines(width)
-		addFooter(laterLines, 3)
+		if len(laterLines)+len(ownerLines) > 0 {
+			gap()
+		}
+		addFooter(laterLines, 4)
 		for _, finding := range ownerLines {
 			addGroup(finding, 2, true) // an owner finding drops whole
 		}
@@ -496,8 +525,16 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		addFooter([]string{"Fix note: " + m.pane.input.view(max(width-len("Fix note: "), 1), m.cfg.Theme)}, 0)
 		addFooter(wrapText("enter sends the note to a fix round; esc back to card", width), 0)
 	case card != nil:
+		gap()
 		addFooter(m.cardChecks(card, width), 0)
-		addFooter(wrapText(m.cardLandNote(), width), 1)
+		gap()
+		// The line that says approval lands drops before an owner finding; the one
+		// that says it also pushes ranks above it (S141).
+		landPriority := 3
+		if m.cardPushes() {
+			landPriority = 1
+		}
+		addFooter(wrapText(m.cardLandNote(), width), landPriority)
 	}
 	if status != "" {
 		priority := 1
@@ -532,6 +569,7 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		}
 	}
 	// The action area takes priority if the header no longer fits.
+	fullHeader := header
 	header = header[:min(len(header), max(h-len(footer), 0))]
 	var lines []string
 	if m.paneAsk() != nil {
@@ -573,6 +611,22 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		lines = wrapText(reason, width)
 	}
 	room := max(h-len(header)-len(footer)-1, 0)
+	if room < min(len(lines), minBodyRoom) {
+		// The blank lines between the card's blocks never take room the body
+		// needs: without enough of it they go (S141).
+		kept := 0
+		for i, p := range priorities {
+			if p != gapPriority {
+				footer[kept], priorities[kept] = footer[i], p
+				kept++
+			}
+		}
+		if kept < len(footer) {
+			footer, priorities = footer[:kept], priorities[:kept]
+			header = fullHeader[:min(len(fullHeader), max(h-len(footer), 0))]
+			room = max(h-len(header)-len(footer)-1, 0)
+		}
+	}
 	if sepAt >= 0 && room < sepAt+2 {
 		// The reason, the blank and one progress line must fit; else the blank goes.
 		lines = append(lines[:sepAt], lines[sepAt+1:]...)

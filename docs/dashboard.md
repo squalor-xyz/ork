@@ -644,7 +644,9 @@ RUN: done`, and a failure keeps the command with its error. The pane's approval
 card says the same. The TUI reads the outcome from the run record in the
 `run.approve` reply (`landed_at`, `land_fixes`, `state`). Calls run asynchronously;
 every completed call refreshes the project's snapshot, and a failed call shows
-its code and message verbatim in the detail area. Actions on other runs remain
+its code and message verbatim in the detail area, except an engine refusal
+(code `refused`, *proposed*, S141), which shows its text alone after the verb
+(`approve: 2 human checks still open; ...`). Actions on other runs remain
 available while a call is pending. Stop can interrupt a pending approve or
 retry; another action on that run names the command that is pending. A stopped
 run refuses stop. Each result names its command; the latest completed call
@@ -785,11 +787,18 @@ the action area under the run tree, in this order:
 
 - `Gate PASS (round N)  Tests: P passed, F failed` (the gate's test counts) and
   `Diff: 2 files, +48 -4, 1 new file` (one short line, from the last line of
-  `git diff --stat`). The per-file diff stat, then the new files as `PATH  (new)`, scroll above the
-  tree.
+  `git diff --stat`). The per-file diff stat, then the new files as `PATH | (new)`, scroll above the
+  tree. The names are padded to one column, so the bar of every line, and the
+  counts (git's own right-aligned padding is kept) and `(new)` after it, line
+  up; a name longer than the pane less 12 columns is cut with `...` (S141).
 - The owner findings, as under Finding kinds below (and the later findings
   count). S111's structured questions show here as `Owner question, not
   blocking: TITLE Recommended: LABEL.`
+- With a terminal taller than 24 rows, a blank line sets apart the card's
+  blocks: the summary, the findings, the human checks and the line below them
+  (S141). At 24 rows, or when the pane is short, they are the first lines to
+  go, and they never take room the scrolling body needs: when the body would
+  keep fewer than 8 lines (or all of its lines, if fewer), they are left out.
 - `Human checks (K of N open)` and one line per `[HUMAN CHECK]` item of the
   slice: `1 [ ] TEXT` open, `2 [x] TEXT` ticked, `3 [~] TEXT (later)` marked
   for later. With no items the line reads `Human checks: none`; if the daemon
@@ -801,9 +810,13 @@ the action area under the run tree, in this order:
   removes the worktree with `git worktree remove` and the branch with `git
   branch -d`. A blocked landing returns to this card after one fix round, or
   stops in Needs you with `land blocked: ...` and the worktree kept. When
-  the pane is short, lines drop in this order: the later findings, then each
-  owner finding whole (the last first), then the status line
-  (its last wrapped line first), then this line, and the human checks last. When the project's `push` setting is on, it reads
+  the pane is short, lines drop in this order: the blank lines between the
+  blocks, the later findings, then this line, then each owner finding whole
+  (the last first), then the status line (its last wrapped line first), and the
+  human checks last (S141: this line goes before an owner finding, so a check
+  that wraps at 80x24 does not push the owner's recommendation out; with push
+  on, the line that says approval pushes ranks above the owner findings, and
+  the owner findings drop first). When the project's `push` setting is on, it reads
   `Approve lands and pushes it, then removes its worktree and branch.` (it wraps
   to two lines at 80x24; the TUI reads the setting from the registry entry);
   with push off it reads `Approve lands it, then removes its worktree and
@@ -819,6 +832,17 @@ the action area under the run tree, in this order:
 
 A digit marks the human check of that number and moves it on: ticked, then
 later, then open again. The mark is saved in the run record at once (`run.check`).
+With ten or more checks the digits make a number (S141): a digit that no other
+digit can make longer marks at once (check 3 of 12), and one that could start a
+longer number (1 of 12) waits. While it waits the hint line, which is always in
+view, reads `enter mark check 1_; 0-2 longer; esc drop`; the next digit makes
+it `12`, or `enter` marks check 1. `esc` drops the number (the pane stays
+open), and so does any other key, scroll keys included, and so does the run
+leaving the card. A number past the last check says `the slice has no human
+check 13`. On a card of nine checks or fewer every digit marks at once, as
+before. With ten or more checks the numbers are padded to one width (` 1 [ ]`,
+`12 [ ]`), so the brackets and the text line up, and a wrapped check hangs
+under its text.
 `a` approves only when every check is ticked or marked later. Otherwise the
 status line says `Approve needs every human check marked; open: 2, 3 (press the
 number)` in the pane, naming the open checks, and `Approve needs every human
@@ -830,8 +854,13 @@ it runs and when it is done: `marking check 2 done` then `check 2 marked done`,
 `marking check 2 for later` then `check 2 marked for later`, and `reopening
 check 2` then `check 2 reopened`. When ork approves, it records the marks as a slicer
 note on the slice, which replaces the human-check adj records. It writes the
-note once: a second approval, after a landing fix round, does not write it again. A card needs the
-owner to mark checks in the TUI; `ork approve` cannot.
+note once: a second approval, after a landing fix round, or after the first
+approval's record could not be saved, does not write it again. When the daemon
+could not read the checks (`Human checks: not read (WHY)`), `a` approves without
+marks and the note says the checks could not be read (S141). From the shell the
+same marks are `ork check RUN N [ticked|later|open]` and the fix note is `ork
+fix RUN TEXT` (`design.md`, CLI), so `ork approve` works on a slice with human
+checks.
 
 `F` (shift-f) opens the fix note. It is a capital because `f` files later
 findings on the same card, and `e` keeps its meaning in Waves. The footer shows `Fix note: TEXT` and `enter sends the
@@ -841,7 +870,7 @@ status line follows the call, which returns when the run rests again. Meanwhile
 the run goes through its fix round, the checks and the gate, and its pane shows
 the card again on PASS, with the marks it had. A failed call (the round limit,
 a stopped run) keeps the note in the field. The status line tells the call in
-words, not as a command, because there is no `ork` command for it: `fix note
+words, not as a command: `fix note
 sent; fix round running` while it runs, then `fix round finished`; a failure
 reads `fix note: ERROR`.
 `esc` goes back to the card, and a second `esc` closes the pane. The

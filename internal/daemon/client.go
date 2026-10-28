@@ -65,6 +65,14 @@ func (c *Client) RemoveProject(ctx context.Context, name string) error {
 	return c.c.Call(ctx, MethodProjectsRm, RemoveProjectParams{Name: name}, nil)
 }
 
+// SetProject changes the optional registry fields p sets and returns the
+// project as saved (S161, *proposed*).
+func (c *Client) SetProject(ctx context.Context, p SetProjectParams) (registry.Project, error) {
+	var out registry.Project
+	err := c.c.Call(ctx, MethodProjectsSet, p, &out)
+	return out, err
+}
+
 // Snapshot implements source.Source over the socket. The daemon looks the
 // project up by p.Name. A failed call gives a snapshot whose every part holds
 // the error, as an *ipc.Error with the tool's code when there was one.

@@ -27,6 +27,7 @@ const (
 	MethodProjectsList = "projects.list" // no params, result ProjectsResult
 	MethodProjectsAdd  = "projects.add"  // params AddProjectParams, result registry.Project
 	MethodProjectsRm   = "projects.rm"   // params RemoveProjectParams, no result
+	MethodProjectsSet  = "projects.set"  // proposed (S161); params SetProjectParams, result registry.Project
 	MethodSubscribe    = "subscribe"     // params SubscribeParams, no result
 	MethodRefresh      = "refresh"       // params RefreshParams, no result
 )
@@ -46,6 +47,7 @@ const (
 	CodeInvalidPath   = "invalid_path"
 	CodeRegistry      = "registry"
 	CodeProjectBusy   = "project_busy" // proposed
+	CodeRefused       = "refused"      // proposed: an owner action the engine refused before it changed anything (S141)
 )
 
 // StatusParams selects the projects of a status call. An empty Project means
@@ -239,6 +241,23 @@ type AddProjectParams struct {
 // RemoveProjectParams is a projects.rm call.
 type RemoveProjectParams struct {
 	Name string `json:"name"`
+}
+
+// SetProjectParams is a projects.set call (S161, *proposed*). Name picks the
+// project. Every other field is a pointer: nil leaves the registry value as
+// it is, and a pointer to "" or 0 clears it (a zero value means unset). The
+// daemon refuses a call that sets no field.
+type SetProjectParams struct {
+	Name            string  `json:"name"`
+	Push            *bool   `json:"push,omitempty"`
+	UIDoc           *string `json:"ui_doc,omitempty"`
+	WorktreePattern *string `json:"worktree_pattern,omitempty"`
+	BranchPattern   *string `json:"branch_pattern,omitempty"`
+	CheckCommand    *string `json:"check_command,omitempty"`
+	CheckMinutes    *int    `json:"check_minutes,omitempty"`
+	Cap             *int    `json:"cap,omitempty"`
+	BudgetMinutes   *int    `json:"budget_minutes,omitempty"`
+	BudgetTokens    *int    `json:"budget_tokens,omitempty"`
 }
 
 // ProjectsResult is the registered projects, in registry order.

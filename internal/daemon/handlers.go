@@ -160,6 +160,12 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return nil, d.removeProject(p.Name)
+	case MethodProjectsSet:
+		var p SetProjectParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.setProject(p)
 	}
 	return nil, &ipc.Error{Code: CodeUnknownMethod, Message: "unknown method " + method}
 }
@@ -446,6 +452,103 @@ func (d *Daemon) removeProject(name string) error {
 	}
 	d.cache.Forget(name)
 	return d.removeProjectSpecsLocked(name)
+}
+
+// setProject changes the optional registry fields p sets (S161, *proposed*).
+// It validates every value before it takes regMu, refuses while the project
+// has unfinished runs as removeProject does, and saves the registry once.
+func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
+	bad := func(format string, args ...any) error {
+		return &ipc.Error{Code: CodeBadParams, Message: fmt.Sprintf(format, args...)}
+	}
+	if p.Name == "" {
+		return registry.Project{}, bad("projects.set needs a project name")
+	}
+	if p == (SetProjectParams{Name: p.Name}) {
+		return registry.Project{}, bad("projects.set sets no field")
+	}
+	if p.UIDoc != nil {
+		if err := registry.ValidateUIDoc(*p.UIDoc); err != nil {
+			return registry.Project{}, bad("%v", err)
+		}
+	}
+	if p.WorktreePattern != nil {
+		if err := registry.ValidatePattern("worktree_pattern", *p.WorktreePattern); err != nil {
+			return registry.Project{}, bad("%v", err)
+		}
+	}
+	if p.BranchPattern != nil {
+		if err := registry.ValidatePattern("branch_pattern", *p.BranchPattern); err != nil {
+			return registry.Project{}, bad("%v", err)
+		}
+	}
+	for _, n := range []struct {
+		name string
+		v    *int
+	}{{"check_minutes", p.CheckMinutes}, {"cap", p.Cap}, {"budget_minutes", p.BudgetMinutes}, {"budget_tokens", p.BudgetTokens}} {
+		if n.v != nil && *n.v < 0 {
+			return registry.Project{}, bad("%s must not be negative, got %d", n.name, *n.v)
+		}
+	}
+
+	d.regMu.Lock()
+	defer d.regMu.Unlock()
+	f, err := d.loadRegistry()
+	if err != nil {
+		return registry.Project{}, err
+	}
+	i := slices.IndexFunc(f.Projects, func(q registry.Project) bool { return q.Name == p.Name })
+	if i < 0 {
+		return registry.Project{}, notFound(p.Name, f)
+	}
+	// Hold runs.mu through Save, as removeProject does. startRun admits a run
+	// under the same lock, so a start sees either the old entry before the
+	// check above or the new one after Save. A start whose plan read the old
+	// entry and that admits after Save refuses with "plan changed".
+	d.runs.mu.Lock()
+	defer d.runs.mu.Unlock()
+	ids, err := d.unfinishedRunsLocked(p.Name)
+	if err != nil {
+		return registry.Project{}, ipc.ErrorOf(err)
+	}
+	if len(ids) != 0 {
+		return registry.Project{}, &ipc.Error{Code: CodeProjectBusy, Message: fmt.Sprintf("project %s has unfinished runs: %s", p.Name, strings.Join(ids, ", "))}
+	}
+	proj := &f.Projects[i]
+	if p.Push != nil {
+		proj.Push = *p.Push
+	}
+	if p.UIDoc != nil {
+		proj.UIDoc = *p.UIDoc
+		if proj.UIDoc != "" {
+			proj.UIDoc = filepath.Clean(proj.UIDoc)
+		}
+	}
+	if p.WorktreePattern != nil {
+		proj.WorktreePattern = *p.WorktreePattern
+	}
+	if p.BranchPattern != nil {
+		proj.BranchPattern = *p.BranchPattern
+	}
+	if p.CheckCommand != nil {
+		proj.CheckCommand = *p.CheckCommand
+	}
+	if p.CheckMinutes != nil {
+		proj.CheckMinutes = *p.CheckMinutes
+	}
+	if p.Cap != nil {
+		proj.Cap = *p.Cap
+	}
+	if p.BudgetMinutes != nil {
+		proj.Budgets.Minutes = *p.BudgetMinutes
+	}
+	if p.BudgetTokens != nil {
+		proj.Budgets.Tokens = *p.BudgetTokens
+	}
+	if err := registry.Save(d.registryPath(), f); err != nil {
+		return registry.Project{}, &ipc.Error{Code: CodeRegistry, Message: err.Error()}
+	}
+	return *proj, nil
 }
 
 // stateOf is one part's age and state, for a status.

@@ -92,14 +92,53 @@ func openChecks(card *runrec.ApprovalCard) []string {
 	return open
 }
 
-// checksNote is the slicer note that records the owner's human checks.
+// checksNote is the slicer note that records the owner's human checks, or, when
+// the card could not read them, that they could not be read (S141). It is empty
+// when the slice has no human checks to record.
 func checksNote(item string, card *runrec.ApprovalCard) string {
+	if card == nil {
+		return ""
+	}
 	var b strings.Builder
-	fmt.Fprintf(&b, "Human checks at approval (%s):", item)
-	for _, c := range card.HumanChecks {
-		fmt.Fprintf(&b, "\n- %s: %s", c.State, c.Text)
+	switch {
+	case len(card.HumanChecks) > 0:
+		fmt.Fprintf(&b, "Human checks at approval (%s):", item)
+		for _, c := range card.HumanChecks {
+			fmt.Fprintf(&b, "\n- %s: %s", c.State, c.Text)
+		}
+	case card.ChecksError != "":
+		fmt.Fprintf(&b, "Human checks at approval (%s): the slice's human checks could not be read, so none were marked: %s", item, card.ChecksError)
 	}
 	return b.String()
+}
+
+// writeLog collects the writes of a call, so the caller can tell the call's own
+// outcome from the outcome of saving its record.
+type writeLog struct{ writes []runrec.Write }
+
+func (l *writeLog) AddWrite(w runrec.Write) error {
+	l.writes = append(l.writes, w)
+	return nil
+}
+
+// writeChecksNote writes the approval's checks note once. The note counts as
+// written when the slicer call succeeded, even if the run record then could not
+// be saved: the owner approves again and the note is not written twice (S141).
+// The caller holds e.mu.
+func (e *Engine) writeChecksNote(ctx context.Context, rec runrec.Record, note string) error {
+	var log writeLog
+	w := e.wr
+	w.Sink = &log
+	err := e.d.Slicer.Note(ctx, w, rec.Worktree, rec.Item, note)
+	var saveErr error
+	for _, entry := range log.writes {
+		saveErr = errors.Join(saveErr, e.run.AddWrite(entry))
+	}
+	if err != nil {
+		return err
+	}
+	e.noted = note
+	return saveErr
 }
 
 // MarkCheck sets the owner's mark on the n-th (one-based) human check of the
@@ -110,15 +149,15 @@ func (e *Engine) MarkCheck(n int, state string) error {
 	defer e.mu.Unlock()
 	rec := e.run.Snapshot()
 	if rec.State != runrec.StateAwaitingApproval {
-		return fmt.Errorf("the slice is %s, not awaiting approval", rec.State)
+		return refusef("the slice is %s, not awaiting approval", rec.State)
 	}
 	if rec.Card == nil || n < 1 || n > len(rec.Card.HumanChecks) {
-		return fmt.Errorf("the slice has no human check %d", n)
+		return refusef("the slice has no human check %d", n)
 	}
 	switch state {
 	case "", runrec.CheckTicked, runrec.CheckLater:
 	default:
-		return fmt.Errorf("a human check is ticked, later or open, not %q", state)
+		return refusef("a human check is ticked, later or open, not %q", state)
 	}
 	return e.run.Update(func(r *runrec.Record) { r.Card.HumanChecks[n-1].State = state })
 }
@@ -131,14 +170,14 @@ func (e *Engine) Fix(ctx context.Context, note string) error {
 	defer e.mu.Unlock()
 	rec := e.run.Snapshot()
 	if rec.State != runrec.StateAwaitingApproval {
-		return fmt.Errorf("the slice is %s, not awaiting approval", rec.State)
+		return refusef("the slice is %s, not awaiting approval", rec.State)
 	}
 	note = strings.TrimSpace(note)
 	if note == "" {
-		return errors.New("the fix note is empty")
+		return refusef("the fix note is empty")
 	}
 	if rec.Round+1 > e.d.maxRounds() {
-		return fmt.Errorf("the round limit of %d implementer rounds was reached; approve or stop the slice", e.d.maxRounds())
+		return refusef("the round limit of %d implementer rounds was reached; approve or stop the slice", e.d.maxRounds())
 	}
 	name := fmt.Sprintf("owner-fix-%d.md", rec.Round+1)
 	path := filepath.Join(e.run.Dir(), name)

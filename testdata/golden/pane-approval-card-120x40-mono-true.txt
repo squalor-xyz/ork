@@ -6,8 +6,8 @@
                            │    [1mRun engine[m
                            │    owner action
                            │    internal/engine/engine.go | 12 ++++++++----
-                           │    internal/tui/pane.go       | 40 ++++++++++++++++++++++++++++++++++++++++
-                           │    internal/tui/card.go  (new)
+                           │    internal/tui/pane.go      | 40 ++++++++++++++++++++++++++++++++++++++++
+                           │    internal/tui/card.go      | (new)
                            │    
                            │    [......]
                            │    [2mimplementer[m > [2mreviewer[m > [2mgate[m
@@ -17,12 +17,15 @@
                            │
                            │    [1mGate PASS (round 1)  Tests: 12 passed, 0 failed[m
                            │    Diff: 2 files, +48 -4, 1 new file
+                           │    
                            │    1 later finding; next to file: "Add a --json flag to ork status"
                            │    Owner question, not blocking: Should the cache be shared? Recommended: per-project.
+                           │    
                            │    [1mHuman checks[m (1 of 3 open)
                            │    [2m1 [x] Open the pane on a running relay and see it move on.[m
                            │    2 [~] Resize to 80x24 and read the card. (later)
                            │    3 [ ] Press F, type a note and send it.
+                           │    
                            │    Approve lands it, then removes its worktree and branch.
                            │  [1mFindings 2[m
                            │  [1m?[m  ork  S22  Add a --json flag to ork status
@@ -31,10 +34,7 @@
                            │[1mRunning 0[m
                            │  [2mnothing running[m
                            │
-                           │[1mRecent[m
-                           │  [2mnone[m
-                           │
-                           │[2m  +2 more lines[m
+                           │[2m  +5 more lines[m
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────[m
                            │ 1-3 [2mtick/later[m; F [2mfix round[m; o [2manswer[m; f [2mfile slice[m; pgup/pgdown [2mline[m; esc [2mclose pane[m
                            │ 1 project | refreshed 16:42:00

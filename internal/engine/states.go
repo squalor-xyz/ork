@@ -540,8 +540,10 @@ func (e *Engine) gate(ctx context.Context) error {
 	if name, text := e.latestReport(rec, RoleUI); text != "" {
 		r.sections = append(r.sections, BriefSection{Title: "UI pass report (" + name + ")", Body: text})
 	}
+	// An owner fix goes to every gate until one passes the change: a red check
+	// or a gate FAIL sends the slice to a later round (S141).
 	for _, fix := range rec.Fixes {
-		if fix.Round == rec.Round {
+		if rec.Card == nil || fix.Round > rec.Card.Round {
 			r.sections = append(r.sections, BriefSection{Title: "Owner fix request", Body: "The owner asked for this change after the last pass. Check that the new diff makes it, and nothing else.\n\n" + fix.Note})
 		}
 	}

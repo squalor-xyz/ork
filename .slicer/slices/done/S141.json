@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/approval.go`\n- `internal/engine/states.go`\n- `internal/cli/`\n- `internal/tui/card.go`\n- `internal/tui/runs.go`\n- `testdata/golden/`\n- `docs/dashboard.md`"
+      "body": "- `internal/engine/approval.go`\n- `internal/engine/engine.go`\n- `internal/engine/refusal.go`\n- `internal/engine/states.go`\n- `internal/cli/`\n- `internal/daemon/runs.go`\n- `internal/daemon/wire.go`\n- `internal/tui/card.go`\n- `internal/tui/keys.go`\n- `internal/tui/model.go`\n- `internal/tui/pane.go`\n- `testdata/golden/`\n- `docs/dashboard.md`\n- `docs/design.md`\n- `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",

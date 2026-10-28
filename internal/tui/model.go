@@ -1451,6 +1451,9 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 func actionError(err error) string {
 	var wire *ipc.Error
 	if errors.As(err, &wire) {
+		if wire.Code == daemon.CodeRefused {
+			return wire.Message // the refusal is the text; the status line names the verb
+		}
 		// Some messages lead with the code in words ("bad params: ..."): say it once.
 		return wire.Code + ": " + strings.TrimPrefix(wire.Message, strings.ReplaceAll(wire.Code, "_", " ")+": ")
 	}
