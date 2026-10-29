@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-164 items · — 31 · done 128 · retired 5
+164 items · — 30 · done 129 · retired 5
 
 ## v1.1
 
@@ -108,7 +108,7 @@
 | 51 | [S72](slices/S72.md) | Grok adapter and v1 role (after credits reset 2026-11-01) | M | 2 |  |  | — |
 | 52 | [S91](slices/S91.md) | Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes | S | 1 |  | discovered from S49 | done |
 | 53 | [S90](slices/S90.md) | Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on | S | 1 |  | discovered from S88 | — |
-| 54 | [S39](slices/S39.md) | ork run prompt tests catch swapped answers; help text says y/n | S | 1 |  | discovered from S21 | — |
+| 54 | [S39](slices/S39.md) | ork run prompt tests catch swapped answers; help text says y/n | S | 1 |  | discovered from S21 | done |
 | 55 | [S105](slices/S105.md) | Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases | S | 2 |  |  | done |
 | 56 | [S106](slices/S106.md) | Run card inline | M | 2 |  |  | done |
 | 57 | [S24](slices/S24.md) | Pin and check tool contracts | M | 2 |  | owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S45 (adj-json contract version and pin). | — |
@@ -208,10 +208,10 @@
 | 151 | [S152](slices/S152.md) | S149 later notes | S | 1 |  |  | done |
 | 152 | [S153](slices/S153.md) | S95 later notes | S | 1 |  |  | done |
 | 153 | [S154](slices/S154.md) | S138 later notes | S | 1 |  |  | — |
-| 154 | S155 | S93 later notes | S | 1 |  | discovered from S93 | — |
-| 155 | S156 | S102 later notes | S | 1 |  | discovered from S102 | — |
-| 156 | S157 | S73 later: next * writes | S | 1 |  | discovered from S73 | — |
-| 157 | S158 | S71 later notes | S | 1 |  | discovered from S71 | — |
+| 154 | [S155](slices/S155.md) | S93 later notes | S | 1 |  | discovered from S93 | — |
+| 155 | [S156](slices/S156.md) | S102 later notes | S | 1 |  | discovered from S102 | — |
+| 156 | [S157](slices/S157.md) | S73 later: next * writes | S | 1 |  | discovered from S73 | — |
+| 157 | [S158](slices/S158.md) | S71 later notes | S | 1 |  | discovered from S71 | — |
 | 158 | [S159](slices/S159.md) | S135 later notes | S | 1 |  | discovered from S135 | done |
 | 159 | [S160](slices/S160.md) | Add/remove projects | S | 2 |  | discovered from S96 | done |
 | 160 | [S161](slices/S161.md) | projects set | M | 2 |  | discovered from S136 | done |
