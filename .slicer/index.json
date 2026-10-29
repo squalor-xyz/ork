@@ -7843,7 +7843,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "f13f3f14-62e1-4d65-97d4-315aec05418f",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): the entries given on --implementer/--reviewer/--architect are the whole chain (repeatable; --architect off drops it); on wave start the flags apply to every item.",
+          "created_at": "2026-10-29T16:08:53Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -7871,7 +7883,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6dfae502-55cc-4b47-ac15-50368a54d44d",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): if the spec check itself fails the launch is blocked, as waves do (no skip flag). Split: this slice keeps the daemon gate (run.start gated by specGate) and ork run; the Roadmap launch sitting moves to the new TUI slice, which runs after S166.",
+          "created_at": "2026-10-29T16:08:53Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -7899,7 +7923,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "388c76dd-392f-43b0-8a69-8b76dbf3da51",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): CLI (ork roles matrix) and a TUI pane on the Roadmap; the view notes the Gate rows ork does not use.",
+          "created_at": "2026-10-29T16:08:53Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -7927,7 +7963,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "452fce8f-ffd3-446a-9c4d-b930ff981319",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): a vendor marked out after a rate-limit or out-of-credits exit stays out for 60 minutes (fixed expiry) or until `ork vendor back`, and a daemon restart clears it (supersedes the spec's until-back default); a run waiting for a full vendor slot keeps its global-cap slot; with the vendor out and no other-vendor row the round tries the row anyway; built-in cap codex 1, claude unlimited, no registry field.",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -7955,7 +8003,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "382d42c2-374b-4a49-a381-6d9980f0baec",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): filing from an existing note is CLI --from-note only; no confirm step (the typed command or submitted form is the act). Depends on adj scope.v1-ork-edits (adj 173, open): do not start until the owner decides it. Runs after S171.",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -7983,7 +8043,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "8aed777b-80f0-4b84-a337-0a9487e69aa5",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): defaults accepted. Depends on adj scope.v1-ork-edits (adj 173, open): do not start until the owner decides it.",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -8011,7 +8083,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "a7af905f-15e2-4209-ac8f-1f1552912ca8",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): ork adj ask is CLI only (no TUI ask form); ork adj answer always prompts (no --yes, process.owner-answers #170); never reject or supersede. Split: this slice is adjcli, engine, daemon and both CLI commands; the TUI answer keys and confirmation move to the new TUI slice. Depends on adj scope.v1-ork-edits (adj 173, open): do not start until the owner decides it.",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -8039,7 +8123,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b5ee1c0a-7618-4eba-ad08-7fd05140c70f",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): defaults accepted (TUI only, five verbs, edits left uncommitted). v1.1; may split into wire and TUI editor when scheduled.",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "L",
@@ -8067,7 +8163,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7a302c40-a38f-4ff2-8f27-83ca6e418972",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): file-level fields via a new ork settings command; CLI only (no TUI view); permissions and vendor env change per role and per key.",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -8095,7 +8203,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "5166a382-3e0b-4a73-94c5-f2d205ad8856",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): defaults accepted (no shell ork end; no ending from a stopped engine run's pane).",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -8123,7 +8243,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "40a62cf2-6182-4feb-abf7-a07eebba108b",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): defaults accepted (key p; no shell ork report; check logs out of scope).",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -8151,7 +8283,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "a601d074-91fc-4c38-80d1-427f6a1d3906",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): the stop point is chosen in the lineup editor's stop row (plus the CLI flag); no land key; the Ready row's slicer land commands stay.",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -8179,7 +8323,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "8b45f753-bb20-4180-b659-ac335f435a48",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): doctor infers each sibling tool's source from the binary and prints the documented commands with ADJ_CHECKOUT and ORK_CHECKOUT placeholders; hints print only when something is behind or missing, and always with --upgrade; doctor never runs them.",
+          "created_at": "2026-10-29T16:08:55Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -8207,7 +8363,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6e596738-0c39-4bab-b6e9-e1535d1fa30b",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): v1.1. First step is the scope decision (adj 173 scope.v1-ork-edits covers filing, notes and adj answers; spec drafting needs its own record). Draft role reuses the spec-check row (u11) at first.",
+          "created_at": "2026-10-29T16:08:55Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "L",
@@ -8235,7 +8403,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "efbc102b-cb04-4048-b2bc-043f7dec3efd",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): git merge-file --union step in mergeBaseIn for a CHANGELOG.md-only conflict (root file, branch side first, no note). v1.1.",
+          "created_at": "2026-10-29T16:08:55Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -8263,7 +8443,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "fd03b71b-26b1-43e3-82bb-ca2b0f861a77",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): refuse the whole call naming the item and its blockers; wave start and the spec check only (run.start as a follow-up).",
+          "created_at": "2026-10-29T16:08:55Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -8291,7 +8483,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "60e3a22d-9f26-45ea-90ba-9e61d3965db3",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): fixed 30-minute hang limit in code (Deps.HungAfter, negative disables); after a hang the run pauses as lost for the owner, no automatic retry.",
+          "created_at": "2026-10-29T16:08:55Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
