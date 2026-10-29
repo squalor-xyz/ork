@@ -2529,3 +2529,4 @@
 {"when": "2026-10-29T19:04:20Z", "item": "S154", "action": "note", "from": "", "to": "", "note": "UI pass round 2 finding resolved by owner decision: ledger (", "by": "Jon R"}
 {"when": "2026-10-29T19:04:20Z", "item": "S154", "action": "status", "from": "started", "to": "done", "note": "Owner-wait polish: wait 19m row cell, waiting since HH:MM (with the date for an earlier day) in the pane and detail, restated wait text hidden, N of M steps for engine owner waits, no animation during an owner wait. Review and UI pass PASS after one fix round.", "by": "Jon R"}
 {"when": "2026-10-29T19:04:20Z", "item": "S154", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 43, S154): Claude sonnet-high imple", "by": "Jon R"}
+{"when": "2026-10-29T19:34:36Z", "item": "S175", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (interactive): adj 174 (dash.exter", "by": "Jon R"}
