@@ -2209,3 +2209,24 @@
 {"when": "2026-10-29T04:07:09Z", "item": "S39", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 36, S39): Claude sonnet-high implem", "by": "Jon R"}
 {"when": "2026-10-29T04:02:01Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): (1) q quit never d", "by": "Jon R"}
 {"when": "2026-10-29T04:02:01Z", "item": "S39", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (interactive): ork wave start also", "by": "Jon R"}
+{"when": "2026-10-29T11:39:05Z", "item": "relay-roles.r1", "action": "relay-roles", "from": "", "to": "implementer", "note": "remove"}
+{"when": "2026-10-29T11:39:06Z", "item": "relay-roles.r2", "action": "relay-roles", "from": "", "to": "implementer", "note": "remove"}
+{"when": "2026-10-29T11:39:06Z", "item": "relay-roles.r13", "action": "relay-roles", "from": "", "to": "implementer", "note": "remove"}
+{"when": "2026-10-29T11:39:06Z", "item": "relay-roles.r11", "action": "relay-roles", "from": "", "to": "orchestrator", "note": "remove"}
+{"when": "2026-10-29T11:39:06Z", "item": "relay-roles.r3", "action": "relay-roles", "from": "", "to": "reasoning,note", "note": "set"}
+{"when": "2026-10-29T11:39:06Z", "item": "relay-roles.r12", "action": "relay-roles", "from": "", "to": "reasoning,note", "note": "set"}
+{"when": "2026-10-29T11:39:06Z", "item": "relay-roles.r10", "action": "relay-roles", "from": "", "to": "note", "note": "set"}
+{"when": "2026-10-29T11:39:20Z", "item": "relay-roles.r12", "action": "relay-roles", "from": "5", "to": "4", "note": "move"}
+{"when": "2026-10-29T11:41:24Z", "item": "relay-roles.r17", "action": "relay-roles", "from": "", "to": "reviewer", "note": "add"}
+{"when": "2026-10-29T11:41:24Z", "item": "relay-roles.r18", "action": "relay-roles", "from": "", "to": "gate", "note": "add"}
+{"when": "2026-10-29T11:41:25Z", "item": "relay-roles.r19", "action": "relay-roles", "from": "", "to": "reviewer", "note": "add"}
+{"when": "2026-10-29T11:41:25Z", "item": "relay-roles.r20", "action": "relay-roles", "from": "", "to": "gate", "note": "add"}
+{"when": "2026-10-29T11:41:25Z", "item": "relay-roles.r16", "action": "relay-roles", "from": "", "to": "reasoning,note", "note": "set"}
+{"when": "2026-10-29T11:41:34Z", "item": "relay-roles.r17", "action": "relay-roles", "from": "13", "to": "7", "note": "move"}
+{"when": "2026-10-29T11:41:34Z", "item": "relay-roles.r19", "action": "relay-roles", "from": "15", "to": "8", "note": "move"}
+{"when": "2026-10-29T11:41:34Z", "item": "relay-roles.r18", "action": "relay-roles", "from": "15", "to": "11", "note": "move"}
+{"when": "2026-10-29T11:41:35Z", "item": "relay-roles.r20", "action": "relay-roles", "from": "16", "to": "12", "note": "move"}
+{"when": "2026-10-29T11:41:35Z", "item": "relay-roles.u7", "action": "relay-roles", "from": "", "to": "", "note": "rule-edit"}
+{"when": "2026-10-29T11:41:35Z", "item": "relay-roles.u8", "action": "relay-roles", "from": "", "to": "", "note": "rule-edit"}
+{"when": "2026-10-29T11:41:35Z", "item": "relay-roles.u9", "action": "relay-roles", "from": "", "to": "", "note": "rule-edit"}
+{"when": "2026-10-29T11:41:35Z", "item": "relay-roles.u11", "action": "relay-roles", "from": "", "to": "", "note": "rule-edit"}
