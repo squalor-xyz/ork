@@ -7114,7 +7114,7 @@
       "id": "S155",
       "title": "S93 later notes: gate walk with repeated reviewer rows; environment-dependent daemon adapter test",
       "short_title": "S93 later notes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -7124,6 +7124,28 @@
           "text": "**2026-10-26** — From the S93 relay (run-20261026-190634-c1cc, landed 2cb95b9).\n1. currentEntry (internal/engine/engine.go:181-193): with gate records, the walk starts at row 0, so a gate that started on a repeated non-adjacent reviewer row (chain A, B, A; appendEntry in internal/daemon/runs.go:314-318 drops only adjacent duplicates) can re-try row B, which the reviewer already failed. Proposed: start the walk at the reviewer's seed row when the gate's first record matches it. Gate finding, low, traced not run.\n2. TestAdaptersMapTextAndUsageEvents/claude (internal/daemon/live_test.go:43, assertion :99-100) depends on the environment: the runner is built with no environment, so the redactor reads os.Environ() (runner.go:35, :165-166) and masks trailing text that starts a secret-named variable's value (runner.go:192-196). Reproduced with a dummy REVIEW_FAKE_TOKEN=5abcdefghij on unchanged code. Proposed: give the test runner an explicit empty environment.",
           "created_at": "2026-10-26T19:33:33Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "9d312ebf-d02e-4350-81dd-0f4599a5b21d",
+          "kind": "",
+          "text": "**2026-10-29** — Later (review): a pre-S155 in-flight run whose gate history was replayed by the old bug (gate A at the seed, then B) finds no match after the seed on resume and stops (engine.go ~210-212); the gate's exhausted map counts only its own records, so after an out-of-credits fallback the gate can return to a vendor the reviewer found out of credits (a vendor-fallback follow-up); docs/design.md ~470 and ~765 do not say the gate walk starts at the reviewer seed row; no test case where the first gate record does not match the seed.",
+          "created_at": "2026-10-29T17:06:25Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "0882ec03-7619-487e-b464-36c3bbf94fd4",
+          "kind": "",
+          "text": "**2026-10-29** — Orchestration trial (run 42, S155): Codex sol/medium implementer, review PASS first time, 0 fix rounds, 0 owner questions during the run.",
+          "created_at": "2026-10-29T17:06:26Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -7147,7 +7169,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -16,6 +16,46 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
+func TestGateWalkStartsAtTheReviewersSeedRow(t *testing.T) {
+	a := runrec.LineupEntry{Vendor: "claude", Model: "opus", Effort: "high"}
+	b := runrec.LineupEntry{Vendor: "codex", Model: "sol", Effort: "medium"}
+	chain := []runrec.LineupEntry{a, b, a}
+	for _, copied := range []bool{false, true} {
+		name := "inherited-lineup"
+		if copied {
+			name = "copied-lineup"
+		}
+		t.Run(name, func(t *testing.T) {
+			for _, exit := range []ExitClass{ExitOK, ExitRateLimited, ExitError, ExitOutOfCredits} {
+				t.Run(string(exit), func(t *testing.T) {
+					rec := runrec.Record{
+						Lineup: map[string][]runrec.LineupEntry{RoleReviewer: chain},
+						Roles: []runrec.RoleRecord{
+							{Role: RoleReviewer, Vendor: a.Vendor, Model: a.Model, Effort: a.Effort, Exit: string(ExitRateLimited)},
+							{Role: RoleReviewer, Vendor: b.Vendor, Model: b.Model, Effort: b.Effort, Exit: string(ExitRateLimited)},
+							{Role: RoleReviewer, Vendor: a.Vendor, Model: a.Model, Effort: a.Effort, Exit: string(ExitOK)},
+						},
+					}
+					if copied {
+						rec.Lineup[RoleGate] = append([]runrec.LineupEntry(nil), chain...)
+					}
+					if got := currentEntry(rec, RoleGate); got != 2 {
+						t.Fatalf("gate seed row %d, want 2", got)
+					}
+					rec.Roles = append(rec.Roles, runrec.RoleRecord{Role: RoleGate, Vendor: a.Vendor, Model: a.Model, Effort: a.Effort, Exit: string(exit)})
+					want := 2
+					if exit != ExitOK {
+						want = len(chain)
+					}
+					if got := currentEntry(rec, RoleGate); got != want {
+						t.Fatalf("gate row after %s = %d, want %d; must not replay rows before the reviewer seed", exit, got, want)
+					}
+				})
+			}
+		})
+	}
+}
+
 func TestHappyPathReachesAwaitingApproval(t *testing.T) {
 	h := newHarness(t)
 	e := h.start()

@@ -167,14 +167,23 @@ func lineup(l map[string][]runrec.LineupEntry, role string) (runrec.LineupEntry,
 // advances the chain; a successful row stays selected for later rounds.
 // A gate with no history follows the reviewer's current row when its lineup
 // is empty or a copy of the reviewer's. Its own records take precedence.
+// If its first record matches the reviewer seed, walk from that seed so a
+// repeated entry cannot send the gate back through earlier failed rows.
 // Walking forward through records distinguishes identical lineup entries.
 func currentEntry(rec runrec.Record, role string) int {
 	entries := rec.Lineup[role]
 	cur := 0
 	if role == RoleGate && (len(entries) == 0 || slices.Equal(entries, rec.Lineup[RoleReviewer])) {
 		entries = rec.Lineup[RoleReviewer]
-		if !slices.ContainsFunc(rec.Roles, func(record runrec.RoleRecord) bool { return record.Role == RoleGate }) {
-			cur = currentEntry(rec, RoleReviewer)
+		seed := currentEntry(rec, RoleReviewer)
+		firstGate := slices.IndexFunc(rec.Roles, func(record runrec.RoleRecord) bool { return record.Role == RoleGate })
+		if firstGate < 0 {
+			cur = seed
+		} else if seed < len(entries) {
+			first, entry := rec.Roles[firstGate], entries[seed]
+			if first.Vendor == entry.Vendor && first.Model == entry.Model && first.Effort == entry.Effort {
+				cur = seed
+			}
 		}
 	}
 	exhausted := map[string]bool{}

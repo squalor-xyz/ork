@@ -41,6 +41,16 @@ func TestAdaptersForwardZeroUsage(t *testing.T) {
 }
 
 func TestAdaptersMapTextAndUsageEvents(t *testing.T) {
+	testAdaptersMapTextAndUsageEvents(t)
+}
+
+func TestAdaptersMapTextAndUsageEventsIgnoresTheEnvironment(t *testing.T) {
+	t.Setenv("REVIEW_FAKE_TOKEN", "5abcdefghij")
+	testAdaptersMapTextAndUsageEvents(t)
+}
+
+func testAdaptersMapTextAndUsageEvents(t *testing.T) {
+	t.Helper()
 	for _, vendor := range []string{"claude", "codex"} {
 		t.Run(vendor, func(t *testing.T) {
 			path := "../../testdata/vendors/" + vendor + "/01-plain-stream-jsonl.stdout"
@@ -62,7 +72,7 @@ func TestAdaptersMapTextAndUsageEvents(t *testing.T) {
 			req := engine.Request{Vendor: vendor, OnEvent: func() { events++ }, OnLive: func(l engine.Live) { text += l.Text; tokens += l.Tokens; beforeReturn = true }}
 			var r engine.Runner
 			if vendor == "claude" {
-				r = claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+				r = claudeRunner{env: []string{}, round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
 					for _, line := range strings.Split(strings.TrimSpace(string(raw)), "\n") {
 						ev, err := claude.ParseLine([]byte(line))
 						if err != nil {
@@ -76,7 +86,7 @@ func TestAdaptersMapTextAndUsageEvents(t *testing.T) {
 					return claude.Round{}, nil
 				}}
 			} else {
-				r = codexRunner{round: func(_ context.Context, s codex.Spec) (codex.Round, error) {
+				r = codexRunner{env: []string{}, round: func(_ context.Context, s codex.Spec) (codex.Round, error) {
 					for _, line := range strings.Split(strings.TrimSpace(string(raw)), "\n") {
 						ev, err := codex.ParseLine([]byte(line))
 						if err != nil {
