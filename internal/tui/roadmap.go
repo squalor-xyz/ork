@@ -22,6 +22,8 @@ type itemPane struct {
 	pending     bool
 	detail      *slicercli.Detail
 	err         error
+	offset      int // the first line shown below the heading (Roadmap item pane)
+	room        int // the lines of the scrolling part the last draw had
 }
 
 type itemShowMsg struct {
@@ -70,6 +72,17 @@ func (m *Model) openItem() tea.Cmd {
 	}
 }
 
+// scrollItemPane keeps the heading of the item pane and shows the rest from
+// the pane's offset, as the Waves item pane does. It notes how many lines the
+// scrolling part has for ctrl+d and ctrl+u (S152).
+func (m *Model) scrollItemPane(pane *itemPane, out *overviewView, head int) {
+	_, visible := m.decisionPage()
+	visible = max(visible-head, 1)
+	pane.room = visible
+	pane.offset = min(pane.offset, max(len(out.body)-head-visible, 0))
+	out.body = append(out.body[:head:head], out.body[head+pane.offset:]...)
+}
+
 // roadmap renders only snapshot state; detail reads run in openItem's command.
 func (m *Model) roadmap(w int) overviewView {
 	th := m.cfg.Theme
@@ -98,6 +111,7 @@ func (m *Model) roadmap(w int) overviewView {
 	}
 	if pane := m.itemPane; pane != nil {
 		heading("Item " + pane.id + "  (esc returns)")
+		head := len(out.body)
 		switch {
 		case pane.pending:
 			add("pending: item.show")
@@ -123,6 +137,7 @@ func (m *Model) roadmap(w int) overviewView {
 		default:
 			add("No item detail returned")
 		}
+		m.scrollItemPane(pane, &out, head)
 		return out
 	}
 	s := p.snap

@@ -1,4 +1,4 @@
-[1mork[m [90mdev[m  ?help     │[1;36mOverview (Running)[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[1mork[m [90mdev[m            │[1;36mOverview (Running)[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
 [1;7;97;44m> Running        4 [m│[90m────────────────────────────────────────────────────────────[m
 [90m0[m Needs you      2 │[1;36mRunning 4[m  [1;33m? owner questions 1[m  [1;33mx stopped 1[m
 [90m1[m DataBall       1 │[1;7;97;44m   slicer      S110  [##~~..]       heard 4m   [reviewer]   [m

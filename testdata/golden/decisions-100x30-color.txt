@@ -1,4 +1,4 @@
-[1mork[m  ?help                 │ Overview[90m │ [mQuestions 4[90m │ [mWaves[90m │ [mRoadmap[90m │ [m[1;36mDecisions[m
+[1mork[m                        │ Overview[90m │ [mQuestions [1;33m4[m[90m │ [mWaves[90m │ [mRoadmap[90m │ [m[1;36mDecisions[m
 [90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────[m
 [90m0[m Needs you              6 │[1;36mOpen[m[90m | [mDecided
 [1;7;97;44m1>zeta                   2 [m│[1;36mzeta[m

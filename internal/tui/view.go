@@ -300,7 +300,7 @@ func (m *Model) sidebar(w, h int) []string {
 	if version != "" {
 		header += " " + m.cfg.Theme.Dim.Render(version)
 	}
-	lines := []string{header + "  ?help"}
+	lines := []string{header}
 	nav := m.navigation()
 	if len(m.projects) == 0 {
 		nav = nil
@@ -452,10 +452,11 @@ func (m *Model) viewBarCount(count bool) string {
 		if i == 0 && m.active == runningEntry {
 			v.name = "Overview (Running)" // the Running entry is the Overview, narrowed
 		}
+		tail := "" // the Questions count, in the Badge style (S152)
 		if i == questionsView {
 			// The Questions tab counts the rows Enter opens there (S149).
 			if n := len(m.selectableQuestions()); count && n > 0 {
-				v.name = fmt.Sprintf("%s %d", v.name, n)
+				tail = " " + th.Badge.Render(strconv.Itoa(n))
 			}
 		}
 		if i > 0 {
@@ -464,15 +465,15 @@ func (m *Model) viewBarCount(count bool) string {
 		}
 		switch {
 		case len(m.projects) == 0:
-			idle += v.name
+			idle += v.name + tail
 		case i == m.view:
 			flush()
-			b.WriteString(th.ViewActive.Render(v.name))
+			b.WriteString(th.ViewActive.Render(v.name) + tail)
 		case v.built:
 			flush()
-			b.WriteString(v.name)
+			b.WriteString(v.name + tail)
 		default:
-			idle += v.name
+			idle += v.name + tail
 		}
 	}
 	flush()
@@ -544,6 +545,11 @@ func (m *Model) hintLine(w int) string {
 				continue
 			}
 			h := e.b.Help()
+			if h.Key == "" {
+				// A note with no key (a pane read-only) takes the screen's Dim style (S152).
+				hints = append(hints, m.cfg.Theme.Dim.Render(h.Desc))
+				continue
+			}
 			hints = append(hints, strings.TrimSpace(h.Key+" "+lipgloss.NewStyle().Faint(true).Render(h.Desc)))
 		}
 		return strings.Join(hints, "; ")
@@ -640,6 +646,11 @@ func (m *Model) helpLines(w, bodyH int) []string {
 				continue
 			}
 			if h == m.keys.Prev.Help() {
+				continue
+			}
+			// ctrl+u clears a field: it shares the scroll keys' line (S152).
+			if h == m.keys.ScrollDown.Help() {
+				lines = append(lines, clip(h.Key+" "+h.Desc+"; ctrl+u clears a field", w))
 				continue
 			}
 			// Refresh shares the quit line, and the filter and sidebar keys one

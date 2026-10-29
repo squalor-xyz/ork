@@ -1,4 +1,4 @@
-[1mork[m  ?help                 │ Overview[2m │ [mQuestions[2m │ [m[1mWaves[m[2m │ [mRoadmap[2m │ [mDecisions
+[1mork[m                        │ Overview[2m │ [mQuestions[2m │ [m[1mWaves[m[2m │ [mRoadmap[2m │ [mDecisions
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
 [2m0[m Needs you              0 │[1mEdit lineup: A  Alpha[m
 [1;7m1>ork                      [m│  Run only; gate follows reviewer.

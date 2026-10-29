@@ -1,4 +1,4 @@
- [1;36mOverview[m[90m │ [mQuestions 3[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+ [1;36mOverview[m[90m │ [mQuestions [1;33m3[m[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
 [90m────────────────────────────────────────────────────────────────────────────────────────────────────[m
 [1;36mNeeds you 6[m
   [1mDecisions 3[m

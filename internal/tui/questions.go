@@ -143,8 +143,6 @@ func (m *Model) questions(w int) overviewView {
 	}
 	if len(rows) == 0 {
 		out.body = append(out.body, indent+m.cfg.Theme.Dim.Render("No open questions"))
-	} else {
-		out.body = append(out.body, indent+"[enter] open")
 	}
 	return out
 }

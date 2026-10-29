@@ -1,4 +1,4 @@
-[1mork[m  ?help         │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[1mork[m                │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
 [90m  Running        0 [m│[90m────────────────────────────────────────────────────────────[m
 [1;7;97;44m0>Needs you      3 [m│[1;36mNeeds you 3[m
 [90m1[m ork            3 │  [1mApprove 1[m

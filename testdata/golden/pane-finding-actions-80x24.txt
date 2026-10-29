@@ -1,4 +1,4 @@
-ork  ?help         │ Overview │ Questions │ Waves │ Roadmap │ Decisions
+ork                │ Overview │ Questions │ Waves │ Roadmap │ Decisions
   Running        1 │────────────────────────────────────────────────────────────
 0>Needs you     10 │Needs you 10
 1 ork           10 │  Stopped 1

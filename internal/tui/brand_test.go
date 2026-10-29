@@ -18,7 +18,7 @@ func TestHeaderShowsVersion(t *testing.T) {
 			m := goldenModel(NewTheme(mono), 80, 24)
 			m.cfg.Version = v
 			got := stripANSI(m.sidebar(20, 24)[0])
-			want := "ork " + v[:min(len(v), 8)] + "  ?help"
+			want := "ork " + v[:min(len(v), 8)]
 			if !strings.HasPrefix(got, want) || lipgloss.Width(got) != 20 {
 				t.Fatalf("header %q want %q", got, want)
 			}
@@ -93,10 +93,10 @@ func TestHelpKeepsQuitVisible(t *testing.T) {
 
 func stripANSI(s string) string { return sgr.ReplaceAllString(s, "") }
 
-func TestHeaderDropsVersionBeforeHelp(t *testing.T) {
+func TestHeaderDropsVersionWhenNarrow(t *testing.T) {
 	m := goldenModel(NewTheme(true), 80, 24)
 	m.cfg.Version = "abcdefghijkl"
-	if got := stripANSI(m.sidebar(12, 24)[0]); got != "ork  ?help │" {
+	if got := stripANSI(m.sidebar(12, 24)[0]); got != "ork        │" {
 		t.Fatalf("%q", got)
 	}
 }

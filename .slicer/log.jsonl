@@ -2204,3 +2204,16 @@
 {"when": "2026-10-28T20:43:22Z", "item": "S142", "action": "note", "from": "", "to": "", "note": "Upstream follow-up from the owner 2026-10-28: slicer's v10 v", "by": "Jon R"}
 {"when": "2026-10-29T04:02:01Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): (1) q quit never d", "by": "Jon R"}
 {"when": "2026-10-29T04:02:01Z", "item": "S39", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (interactive): ork wave start also", "by": "Jon R"}
+{"when": "2026-10-29T04:03:53Z", "item": "S152", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T04:03:53Z", "item": "S152", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T04:04:01Z", "item": "S152", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-29T11:48:37Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Later note: the Files list omitted `interna", "by": "Jon R"}
+{"when": "2026-10-29T11:48:37Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Later note: the narrow half of TestCtrlDUHi", "by": "Jon R"}
+{"when": "2026-10-29T11:48:37Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Later note: the drop-order comment above th", "by": "Jon R"}
+{"when": "2026-10-29T11:48:38Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Later note (owner call): the help says ctrl", "by": "Jon R"}
+{"when": "2026-10-29T11:48:38Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Later note: the ledger pane's read-only not", "by": "Jon R"}
+{"when": "2026-10-29T11:48:38Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Later note: the decision pane scrolls its h", "by": "Jon R"}
+{"when": "2026-10-29T11:48:38Z", "item": "S152", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T11:55:04Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive, review round 1): th", "by": "Jon R"}
+{"when": "2026-10-29T11:55:04Z", "item": "S152", "action": "status", "from": "started", "to": "done", "note": "Hint, help and footer follow-ups: q quit pinned, ?help removed from the sidebar header, Questions footer dropped, whole-number budget hint, ctrl+d/u half-page in the decision, roadmap-item and waves-item panes. Review and UI pass PASS after one fix round.", "by": "Jon R"}
+{"when": "2026-10-29T11:55:04Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 37, S152): Claude sonnet-high imple", "by": "Jon R"}

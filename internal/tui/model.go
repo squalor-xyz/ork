@@ -588,6 +588,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	case m.showHelp && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev):
 		// The cursor is hidden under the help: the line keys leave it where it is.
 		return nil
+	case key.Matches(msg, m.keys.ScrollDown, m.keys.ScrollUp):
+		m.scrollHalf(key.Matches(msg, m.keys.ScrollUp))
 	case key.Matches(msg, m.keys.First, m.keys.Last, m.keys.PageDown, m.keys.PageUp, m.keys.NextGroup, m.keys.PrevGroup):
 		m.moveRows(msg)
 	case m.view == questionsView && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev):
@@ -791,6 +793,30 @@ func (m *Model) groupStarts() []int {
 	section(len(m.recentRows()))
 	section(len(m.readyRows()))
 	return starts
+}
+
+// scrollHalf is ctrl+d (ctrl+u when back) in the decision pane of Questions
+// and Decisions and in the Roadmap item pane: half of what the pane shows
+// (S152). It does nothing elsewhere, with the help open included.
+func (m *Model) scrollHalf(back bool) {
+	if m.showHelp {
+		return
+	}
+	switch {
+	case m.decisionPane != nil && (m.view == questionsView || m.view == decisionsView):
+		_, visible := m.decisionPage()
+		step := halfPage(visible)
+		if back {
+			step = -step
+		}
+		m.scrollDecision(step, false)
+	case m.itemPane != nil && m.view == roadmapView:
+		step := halfPage(m.itemPane.room)
+		if back {
+			step = -step
+		}
+		m.itemPane.offset = max(m.itemPane.offset+step, 0)
+	}
 }
 
 // moveRows handles the first, last, page and group keys. They move the row

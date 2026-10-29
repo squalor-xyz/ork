@@ -195,7 +195,7 @@ func TestWavesSkippingTheSittingLaunchesOnlyTheReadyItems(t *testing.T) {
 				t.Errorf("status %q:\n%s", h.m.actionStatus, v)
 			}
 			// The hint says what l does now: answer the held questions.
-			if !strings.Contains(v, "l answer spec questions") || strings.Contains(v, "l launch wave") {
+			if !strings.Contains(v, "l answer spec questions") || strings.Contains(v, "l launch;") {
 				t.Errorf("hint with B held:\n%s", v)
 			}
 			// A launched, so only B is still ticked. The daemon remembers B's questions.

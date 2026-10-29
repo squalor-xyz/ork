@@ -6760,7 +6760,7 @@
       "id": "S152",
       "title": "S149 later notes: Questions footer, hint polish, pane scroll keys",
       "short_title": "S149 later notes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -6770,6 +6770,94 @@
           "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): (1) q quit never drops from the hint bar on the main views (like ? help); (2) remove ?help from the sidebar header; (3) add back the 'type a whole number' hint on Waves lineup budget rows 2 and up, and wire ctrl+d/ctrl+u with their hints into the decision, roadmap-item and waves-item panes (reuse pane.room). Earlier decisions in this slice stand: drop the Questions body footer [enter] open; on Waves with nothing ticked the hint keeps not showing l.",
           "created_at": "2026-10-29T04:02:01Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "6a90947d-0865-4b76-a68d-d26330899f93",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Later note: the Files list omitted `internal/tui/keys.go`, `internal/tui/model.go` and `internal/tui/roadmap.go`; the hint changes (step 3), the half page key dispatch and the Roadmap item pane offset (step 6) required them.",
+          "created_at": "2026-10-29T11:48:37Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "37cbdabd-660c-4113-8cd1-21292f4fe34d",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Later note: the narrow half of TestCtrlDUHintsShowInThosePanes (hint_test.go, the 70 column check) can no longer fail, because q quit is pinned; the test no longer proves that ctrl+d/u drops before the way out.",
+          "created_at": "2026-10-29T11:48:37Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "d6c5e8e8-e330-467a-a3b7-1d216aa6f68a",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Later note: the drop-order comment above the drop constants in keys.go is broken across lines at 'the pane scroll keys' / 'second form'; tidy it.",
+          "created_at": "2026-10-29T11:48:37Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "9fb89afd-1c91-43e2-805f-07ec6c2c7867",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Later note (owner call): the help says ctrl+u clears a field, but the / project filter ignores ctrl+u (it handles only backspace and typed text); the wording drifts from the filter's behaviour.",
+          "created_at": "2026-10-29T11:48:38Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "766dc67d-c654-49f5-b8d4-b3d545f44b69",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Later note: the ledger pane's read-only note is drawn with the Dim style, which equals the description style (SGR 2) in the mono theme, so it looks the same there; an italic Dim would need a theme change (owner call).",
+          "created_at": "2026-10-29T11:48:38Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "b6c4be11-1249-4127-ad01-292fd98cc3ad",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Later note: the decision pane scrolls its heading away, unlike the Roadmap and Waves item panes which keep theirs, and no pane marks content above the top of its window.",
+          "created_at": "2026-10-29T11:48:38Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "3a8f6906-e144-49c3-bd1f-dca24be88e3b",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive, review round 1): the Waves hint says 'l launch', not 'l launch wave', so 'e edit lineup' fits at 100x30; the ctrl+d/u hint stays dropped early in the decision pane.",
+          "created_at": "2026-10-29T11:55:04Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "f64aeb75-b6c3-41a6-8cea-762e257fb862",
+          "kind": "",
+          "text": "**2026-10-29** — Orchestration trial (run 37, S152): Claude sonnet-high implementer in a three-slice parallel batch; review PASS, UI pass FAIL then PASS, 1 fix round, 2 owner questions in review plus 4 at preflight.",
+          "created_at": "2026-10-29T11:55:04Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -6793,7 +6881,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -1,4 +1,4 @@
-[1mork[m [2mdev[m  ?help             │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1mork[m [2mdev[m                    │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
   Running                1 │[2m────────────────────────────────────────────────────────────────────────[m
 [1;7m0>Needs you              0 [m│[1mKeys[m
 [2m1[m ork                     *│tab next view; shift+tab previous view
@@ -6,7 +6,7 @@
                            │1-9 jump to project; 0 Needs you
                            │j/k down/up row; g/G home/end first/last
                            │pgdown/pgup page rows or scroll a pane
-                           │ctrl+d/u scroll a run pane half a page
+                           │ctrl+d/u scroll a pane half a page; ctrl+u clears a field
                            │}/{ next/previous group, pass or wave
                            │enter open run, question, item or decision; other rows select project
                            │/ filter projects; esc clears; s hide/show sidebar

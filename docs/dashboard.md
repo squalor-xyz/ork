@@ -85,7 +85,7 @@ screens, the remove hint drops before the add hint.
 ## Layout
 
 ```
-ork dev  ?help       | Overview | Questions 2 | Waves | Roadmap | Decisions
+ork dev              | Overview | Questions 2 | Waves | Roadmap | Decisions
   Running         0  | --------------------------------------
 > Needs you       3  | Needs you 3
   slicer          2* |   Decisions 2
@@ -114,10 +114,12 @@ The line costs the body one row at every size: the body is `height - 5` rows
 with no detail, where it was `height - 4`. The row's own keys come first, then
 `tab views; q quit; ? help`; in a pane the pane's keys come first, then its
 scroll keys, then `esc close pane` (or `esc back to card`) at the right end.
-The way out, `esc` in a pane and `? help` elsewhere, never drops. When the line
+The way out, `esc` in a pane and `? help` elsewhere, never drops, and on the
+main views and their decision and Roadmap item panes `q quit` never drops
+either (S152). When the line
 is too narrow, whole hints drop, lowest priority first: `f file slice`,
 `v renders`, `F fix round`, the check digits, `t retry`, `x stop`, then
-`ctrl+d/u`, `tab views`, `q quit`, `pgup/pgdown`, `a approve` and `c clean up`,
+`ctrl+d/u`, `tab views`, `pgup/pgdown`, `a approve` and `c clean up`,
 and last the row's main key. When open human checks refuse approval, the check
 digits and `F fix round` rank above stop and all scroll keys; the way out stays
 pinned. After dropping, the line retries each omitted hint in priority order
@@ -147,10 +149,14 @@ fixes; `space tick item` not while a plan is pending for another item, and `l`
 on the Roadmap and Waves only when it would act. Examples: a decision row shows
 `enter go to project`; a run row shows `enter open`; an open run pane shows its
 own keys, then `pgup/pgdown line; ctrl+d/u half page`;
-Waves item and decision panes use `pgup/pgdown page; j/k line` for their
-page and line movements. The Waves item hint ends with `esc close pane`.
-A pane of a relay started elsewhere shows `started elsewhere, read-only; esc close pane`. Waves also lists
+Waves item and decision panes use `pgup/pgdown page; j/k line; ctrl+d/u half
+page` for their page, line and half page movements, and the Roadmap item pane
+shows `ctrl+d/u half page` (S152). The Waves item hint ends with `esc close pane`.
+A pane of a relay started elsewhere shows `started elsewhere, read-only; esc close pane`.
+The note has no key and is drawn in the Dim style of the theme (S152). Waves also lists
 `e edit lineup` only when the selected ticked item has a plan and editing acts.
+The Waves hint reads `l launch` (not `l launch wave`) so that `e edit lineup`
+fits beside `q quit; ? help` at 100x30 (S152, owner decision 2026-10-29).
 Welcome shows `+ add project; q quit`; its path field shows
 `enter review path; esc cancel`. The lineup hint offers `left/right cycle`
 only when the focused role has more than one entry. Wave inputs show
@@ -165,7 +171,8 @@ quit`.
 The header shows the version next to ork (ui.version-mark, adj #130).
 Development builds show the first seven revision characters, with `+` for a
 modified build, or `dev` without a revision. A narrow header clips the version
-first and keeps `?help`. With the sidebar hidden, the version appears at the
+first. The header does not carry a `?help` cue: the hint line names `? help`
+(S152). With the sidebar hidden, the version appears at the
 right of the status line when it fits after the existing text.
 
 A stale or unknown daemon build puts
@@ -338,11 +345,12 @@ last and page keys; the Overview, Roadmap and Waves have the group keys. With
 the help open, no row key moves the cursor, which is hidden under it. With a
 pane open, no row key moves the cursor;
 `pgdown` and `pgup` scroll a run, decision or Waves item pane (the Roadmap item
-pane does not scroll, and the Roadmap help says only `pgdown/pgup page rows`),
-and in a run pane
-`ctrl+d` and `ctrl+u` scroll it by half the pane's scrolling part (S149,
+pane does not take them, and the Roadmap help says only `pgdown/pgup page rows`),
+and in a run, decision, Roadmap item or Waves item pane
+`ctrl+d` and `ctrl+u` scroll it by half the pane's scrolling part (S149, S152,
 *proposed*). `ctrl+u` in an answer or fix-note field still clears the field, so
-there the hint shows only `ctrl+d`. Keys that type into a
+there the hint shows only `ctrl+d`. The help says so on the scroll keys' line:
+`ctrl+d/u scroll a pane half a page; ctrl+u clears a field` (S152). Keys that type into a
 field keep their text: `g`, `G`, `0`, `{` and `}` typed into the filter or an
 answer go into it, and digits still pick options in an owner question and mark
 checks on the approval card. `n` and
@@ -997,7 +1005,9 @@ rows never count toward the badge (`ui.setup-errors`).
 
 Questions is the second view, after Overview (`ui.answer-ui`, `ui.view-list`).
 Its tab in the view bar shows the number of questions the list holds ("Questions
-3"; just "Questions" when there are none) on every view (S149, *proposed*). When
+3"; just "Questions" when there are none) on every view (S149, *proposed*). The
+count is drawn in the Badge style (bold, amber in colour), the name keeps the
+view bar's styles (S152). When
 the bar would not fit the main pane, as with `Overview (Running)` at 80 columns,
 the count goes so that every tab name stays whole.
 It lists engine runs paused with `pending: question` and open adj records
@@ -1016,7 +1026,8 @@ error code and message. Pending and error rows are display-only and never
 take the cursor. An empty list says "No open questions" in dim text.
 The "All projects" heading states the scope. A kind column marks engine
 rows "? question", adj rows "? decision", pending rows "~ pending", and
-errors "! error". Nonempty lists end with `[enter] open`.
+errors "! error". The list has no footer: the hint line names `enter open`
+(S152).
 
 The proposed row keys (`down`/`j` and `up`/`k`) move the cursor.
 In record detail, they scroll; `pgup` and `pgdown` scroll a page.
@@ -1143,7 +1154,7 @@ example `ork wave start P A? [y/N] (Enter is No)  B waits on spec questions`
 (the part after the command is not run). A held item stays ticked with `waits
 on N spec questions` on its row, the launch status says `ID waits on spec
 questions`, and while a ticked item is held the hint reads `l answer spec
-questions` instead of `l launch wave`. Pressing `l` again checks the ticked
+questions` instead of `l launch`. Pressing `l` again checks the ticked
 items again and reopens the sitting. A check error shows its code and message
 and leaves the ticks alone. A check automatically retries once if HEAD moves,
 the checkout status changes outside the role's own run, or the report has a
@@ -1187,7 +1198,10 @@ an alternatives label. Saving sends an empty architect override to drop it.
 Cycling moves the chosen row to the front; the rest keep their order.
 Custom entry replaces the primary; fallback entries cannot be edited here.
 Budget fields accept whole numbers of zero or more; zero uses the project
-default, following the daemon's budget semantics.
+default, following the daemon's budget semantics. On a budget row the hint
+reads `up/down/tab row; type a whole number; enter save and replan; esc
+discard`; at 80 and 100 columns `up/down/tab row` goes first and the line reads
+`type a whole number; enter save and replan; esc discard` (S152).
 `enter` saves and replans; unchanged values do not call Plan.
 Launch waits for the replan. Errors show verbatim and keep the old plan
 and overrides. `esc` discards the editor's changes, including custom fields.

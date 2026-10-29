@@ -1,4 +1,4 @@
-[1mork[m [2mdev[m  ?help             │ [1mOverview (Running)[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1mork[m [2mdev[m                    │ [1mOverview (Running)[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
 [1;7;2m> Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
 [2m0[m Needs you              0 │[1mRunning 0[m
 [2m1[m slicer                   │  [2mnothing running[m

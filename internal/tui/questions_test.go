@@ -335,8 +335,8 @@ func TestQuestionsPresentation(t *testing.T) {
 			if out.sel != 1 {
 				t.Errorf("selected body line = %d, want 1", out.sel)
 			}
-			if out.body[len(out.body)-1] != indent+"[enter] open" {
-				t.Errorf("missing open hint")
+			if strings.Contains(strings.Join(out.body, "\n"), "[enter] open") {
+				t.Errorf("the list keeps its [enter] open footer (S152)")
 			}
 			for _, text := range []string{"? question zeta", "? decision zeta"} {
 				if !strings.Contains(sgr.ReplaceAllString(strings.Join(out.body, "\n"), ""), text) {

@@ -1,4 +1,4 @@
-[1mork[m  ?help                 │ Overview[2m │ [mQuestions[2m │ [m[1mWaves[m[2m │ [mRoadmap[2m │ [mDecisions
+[1mork[m                        │ Overview[2m │ [mQuestions[2m │ [m[1mWaves[m[2m │ [mRoadmap[2m │ [mDecisions
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────────────────────────[m
 [2m0[m Needs you              0 │[1mSuggested (slicer plan-parallel)[m
 [1;7m1>ork                      [m│[1m         Items                                             Shares  Lineup (* edited)        [m
@@ -36,5 +36,5 @@
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────[m
                            │  2 ticked, not launched
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────[m
-                           │ enter [2mitem[m; space [2mtick item[m; l [2mlaunch wave[m; e [2medit lineup[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
+                           │ enter [2mitem[m; space [2mtick item[m; l [2mlaunch[m; e [2medit lineup[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
                            │ 2 projects | refreshed 16:42:00
