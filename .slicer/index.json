@@ -7270,6 +7270,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "6c1c8ff8-8838-40bf-86fa-f02825a5683f",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29 (UI pass): the empty-registry doctor line reads '[--] projects  none registered: run ork projects add PATH'.",
+          "created_at": "2026-10-29T16:54:57Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
