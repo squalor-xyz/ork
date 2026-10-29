@@ -2559,3 +2559,5 @@
 {"when": "2026-10-29T20:56:29Z", "item": "S183", "action": "note", "from": "", "to": "", "note": "Added 2026-10-29 from the S178 review: docs/orchestrator-par", "by": "Jon R"}
 {"when": "2026-10-29T21:06:25Z", "item": "S187", "action": "add", "from": "", "to": "open", "note": "S166 later notes: launch replan edge case and lineup editor key polish"}
 {"when": "2026-10-29T21:06:25Z", "item": "S187", "action": "note", "from": "", "to": "", "note": "From the S166 review and UI pass (2026-10-29), all later: (1", "by": "Jon R"}
+{"when": "2026-10-29T21:17:12Z", "item": "S188", "action": "add", "from": "", "to": "open", "note": "S178 later notes: doctor hint edge cases and wording"}
+{"when": "2026-10-29T21:17:12Z", "item": "S188", "action": "note", "from": "", "to": "", "note": "From the S178 review and UI pass (2026-10-29), all later: (1", "by": "Jon R"}
