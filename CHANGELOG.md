@@ -8,8 +8,17 @@
   wave. Refusals include blocker titles and a short next step naming what to
   untick or land first. Titles are read once per distinct blocker per call;
   a failed title read falls back to the id. Failed dependency reads still
-  prevent launch. Waves keeps the ticks
-  and shows the refusal; the CLI refuses before confirmation.
+  prevent launch. Waves keeps the ticks and shows the refusal; the CLI
+  refuses before confirmation.
+
+- S175: end a stale ledger run from its pane (*proposed*). On the pane of a
+  ledger run that slicer calls stale (no event for 30 minutes), `x` asks
+  `slicer relay-run end RUN`, `--outcome stopped --close-steps fail` and
+  `End this run as stopped and fail its unfinished steps? [y/N]`, and `y`
+  ends the run through the new daemon method `run.end-ledger`. The daemon
+  reads the ledger again and refuses a run that is no longer stale, and a
+  ledger run that an unfinished engine run owns. Active, waiting and ended
+  ledger panes stay read-only. There is no `ork end` shell command.
 
 - S141: approval card follow-ups (*proposed*). `ork check RUN N [ticked|later|open]`
   and `ork fix RUN TEXT` call `run.check` and `run.fix`, so `ork approve` works

@@ -604,6 +604,9 @@ func (a runAction) pendingText() string {
 	if a.verb == "approve" && a.item != "" {
 		return "landing " + a.item + ": pending"
 	}
+	if a.verb == "end" {
+		return "ending ledger run " + a.run + ": pending"
+	}
 	if a.verb == "cleanup" {
 		return "cleaning up " + a.cleanupItem() + ": pending"
 	}
@@ -652,6 +655,9 @@ func (a runAction) doneText() string {
 	}
 	if a.verb == "cleanup" {
 		return "cleaned up " + a.cleanupItem()
+	}
+	if a.verb == "end" {
+		return "ended ledger run " + a.run
 	}
 	return a.command() + ": done"
 }

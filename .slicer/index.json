@@ -1412,7 +1412,19 @@
         "S12",
         "S52"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "8929d9ef-8751-491f-8203-c8cad4607fb5",
+          "kind": "",
+          "text": "**2026-10-29** — Moved to v1.1 on 2026-10-29: adj 173 scope.v1-ork-edits decided include (owner), whose option keeps roadmap reorder and park later.",
+          "created_at": "2026-10-29T20:22:38Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1424,7 +1436,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1.0",
+        "pass": "v1.1",
         "group": "",
         "reason": "",
         "importance": 2,
@@ -1442,7 +1454,19 @@
       "depends_on": [
         "S12"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6a4f856f-003e-46e7-a452-f81d4db01b1b",
+          "kind": "",
+          "text": "**2026-10-29** — Moved to v1.1 on 2026-10-29: adj 173 scope.v1-ork-edits decided include (owner), whose option keeps roadmap reorder and park later.",
+          "created_at": "2026-10-29T20:22:38Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1454,7 +1478,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1.0",
+        "pass": "v1.1",
         "group": "",
         "reason": "",
         "importance": 2,
@@ -1472,7 +1496,19 @@
       "depends_on": [
         "S12"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "501ec809-619c-4226-a237-18882abbbbeb",
+          "kind": "",
+          "text": "**2026-10-29** — Moved to v1.1 on 2026-10-29: adj 173 scope.v1-ork-edits decided include (owner), whose option keeps roadmap reorder and park later.",
+          "created_at": "2026-10-29T20:22:38Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1484,7 +1520,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1.0",
+        "pass": "v1.1",
         "group": "",
         "reason": "Owner 2026-10-23: the Roadmap replaces leaving for slicer tui; adj 11 stays the owner's to close",
         "importance": 2,
@@ -8387,7 +8423,7 @@
       "id": "S175",
       "title": "End a stale ledger run from the run pane",
       "short_title": "End a stale ledger run",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8397,6 +8433,61 @@
           "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): defaults accepted (no shell ork end; no ending from a stopped engine run's pane).",
           "created_at": "2026-10-29T16:08:54Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "e8bd627a-7218-40bb-9e88-344d13af7914",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29 (interactive): adj 174 (dash.external-runs-end) decided end-stale: ork may end a stale ledger run started outside ork after a y/N confirm. adj 42 (view-only) and docs/boundaries.md:77 still need the owner's supersede and an edit; this slice must update boundaries.md:77 to say ork acts on stale external runs only.",
+          "created_at": "2026-10-29T19:34:36Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "edf3d056-32db-4a39-99d8-2ea402bfbc27",
+          "kind": "",
+          "text": "**2026-10-29** — Fix round 1: slicer's relay-run end has no stale guard under the ledger lock, so ork's re-read leaves a one-subprocess window between the check and the end; consider an --if-stale flag upstream in slicer.",
+          "created_at": "2026-10-29T19:40:52Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "a70f9acc-4612-499b-b3d1-3220893d7118",
+          "kind": "",
+          "text": "**2026-10-29** — Fix round 1: a not_found result reads 'end ledger run RUN: no ledger run RUN' because the status line prefixes the verb and the daemon message repeats the run; shorten one of them.",
+          "created_at": "2026-10-29T19:40:52Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "7ac12ee4-5f70-4267-9deb-471e8bf31c0b",
+          "kind": "",
+          "text": "**2026-10-29** — Fix round 1: adj 42 (dash.external-runs, view-only, ork never acts on relays started elsewhere) and docs/boundaries.md:77 still say view-only; the owner has to supersede adj 42 before this lands.",
+          "created_at": "2026-10-29T19:40:52Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "b7d9aae8-1288-43ee-89e1-fdbe6ad7d8e8",
+          "kind": "",
+          "text": "**2026-10-29** — Orchestration trial (run 45, S175): Claude sonnet-high implementer; review PASS, UI pass FAIL then PASS, 1 fix round; 1 owner question (adj 174 conflicted with adj 42).",
+          "created_at": "2026-10-29T19:46:53Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -8420,7 +8511,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

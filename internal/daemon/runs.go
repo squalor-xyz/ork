@@ -38,6 +38,8 @@ const (
 	MethodRunFix     = "run.fix"    // proposed: send the owner's note to a fix round (S118)
 	MethodRunCheck   = "run.check"  // proposed: tick a human check or mark it later (S118)
 	MethodRunRender  = "run.render" // proposed: the text of one UI pass render of a run (S121)
+
+	MethodRunEndLedger = "run.end-ledger" // proposed: end a stale ledger run (S175)
 )
 
 // defaultGlobalCap is the global cap when the registry sets none (adj 20).
@@ -61,6 +63,7 @@ type RunAction struct {
 	State   string `json:"state,omitempty"`   // run.check: "ticked", "later" or "" to reopen
 	Finding int    `json:"finding,omitempty"` // run.file: the one-based finding to file
 	Name    string `json:"name,omitempty"`    // run.render: the render's file name, as the card lists it
+	Project string `json:"project,omitempty"` // run.end-ledger: the registered project that holds the ledger run
 	Adj     bool   `json:"adj,omitempty"`
 	By      string `json:"by,omitempty"`
 	Run     string `json:"run"`
@@ -1145,6 +1148,9 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 	if method == MethodRunRender {
 		return d.runRender(p)
 	}
+	if method == MethodRunEndLedger {
+		return d.endLedger(ctx, p)
+	}
 	return d.ownerRun(ctx, method, p)
 }
 
@@ -1353,4 +1359,46 @@ func (d *Daemon) runRender(p RunAction) (RenderReply, error) {
 		return RenderReply{}, missing
 	}
 	return RenderReply{Name: p.Name, Text: text}, nil
+}
+
+// LedgerEndReply is the reply of run.end-ledger: the ledger run it ended.
+type LedgerEndReply struct {
+	Run string `json:"run"`
+}
+
+// endLedger ends a stale slicer ledger run with outcome stopped and its running
+// steps failed (S175, *proposed*). It re-reads the ledger, so a heartbeat that
+// arrived after the owner opened the pane wins. It refuses a ledger run that an
+// unfinished engine run owns: the owner stops that run on its own pane.
+func (d *Daemon) endLedger(ctx context.Context, p RunAction) (LedgerEndReply, error) {
+	proj, err := d.registered(p.Project)
+	if err != nil {
+		return LedgerEndReply{}, err
+	}
+	runs, err := d.runs.deps.Slicer.RelayRuns(ctx, proj.Path, false)
+	if err != nil {
+		return LedgerEndReply{}, err
+	}
+	i := slices.IndexFunc(runs, func(r slicercli.RelayRun) bool { return r.ID == p.Run })
+	if i < 0 {
+		return LedgerEndReply{}, &ipc.Error{Code: CodeNotFound, Message: "no ledger run " + p.Run}
+	}
+	if state := runs[i].State; state != "stale" {
+		return LedgerEndReply{}, &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("ledger run %s is %s, not stale", p.Run, state)}
+	}
+	d.runs.mu.Lock()
+	stored, err := d.runs.deps.Store.List()
+	d.runs.mu.Unlock()
+	if err != nil {
+		return LedgerEndReply{}, err
+	}
+	for _, r := range stored {
+		if rec := r.Snapshot(); rec.RelayRun == p.Run && !runrec.IsFinal(rec.State) {
+			return LedgerEndReply{}, &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("ledger run %s belongs to engine run %s; stop that run instead", p.Run, rec.ID)}
+		}
+	}
+	if err := d.runs.deps.Slicer.RelayEnd(ctx, runrec.Writer{}, proj.Path, p.Run, "stopped", "fail"); err != nil {
+		return LedgerEndReply{}, err
+	}
+	return LedgerEndReply{Run: p.Run}, nil
 }

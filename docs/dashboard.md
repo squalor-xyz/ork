@@ -120,7 +120,8 @@ either (S152). When the line
 is too narrow, whole hints drop, lowest priority first: `f file slice`,
 `v renders`, `F fix round`, the check digits, `t retry`, `x stop`, then
 `ctrl+d/u`, `tab views`, `pgup/pgdown`, `a approve` and `c clean up`,
-and last the row's main key. When open human checks refuse approval, the check
+and last the row's main key. On a stale ledger pane `x end run` ranks with
+the row's main key, above all scroll keys (S175). When open human checks refuse approval, the check
 digits and `F fix round` rank above stop and all scroll keys; the way out stays
 pinned. After dropping, the line retries each omitted hint in priority order
 (lowest drop value first), at its original position, and keeps it if it fits.
@@ -136,7 +137,9 @@ not written by hand: a key shows only when pressing it would act. So `a
 approve` shows on an awaiting-approval run whose human checks are all marked and
 not before, `x stop` not on a stopped run, `t retry` only on a paused run that
 does not wait for an answer, `c clean up` only on a merged Ready row, and the
-run keys not at all while there is no daemon connection. `f file slice` shows
+run keys not at all while there is no daemon connection. `x end run` shows
+only on the pane of a stale ledger run, with a daemon connection and no end of
+that run in progress (S175). `f file slice` shows
 only with a later finding to file, a daemon that can file, and no filing in
 flight. `o answer` shows in a run pane with an unanswered structured owner
 finding and a daemon connection. Both finding keys stay ahead of scroll hints
@@ -152,7 +155,9 @@ own keys, then `pgup/pgdown line; ctrl+d/u half page`;
 Waves item and decision panes use `pgup/pgdown page; j/k line; ctrl+d/u half
 page` for their page, line and half page movements, and the Roadmap item pane
 shows `ctrl+d/u half page` (S152). The Waves item hint ends with `esc close pane`.
-A pane of a relay started elsewhere shows `started elsewhere, read-only; esc close pane`.
+A pane of a relay started elsewhere shows `started elsewhere, read-only; esc close pane`;
+a stale one shows `x end run; started elsewhere; esc close pane`, with no
+`read-only` beside the key (S175).
 The note has no key and is drawn in the Dim style of the theme (S152). Waves also lists
 `e edit lineup` only when the selected ticked item has a plan and editing acts.
 The Waves hint reads `l launch` (not `l launch wave`) so that `e edit lineup`
@@ -527,7 +532,18 @@ the text column, falling back to a shorter indent when needed to fit.
    and the number of recorded steps otherwise, including nested steps and
    repeated rounds. This also applies to relays started elsewhere; a dash
    does not say whether the role ran outside the ledger. Empty state: `none`.
-   Rows follow Running in cursor order. Enter opens a read-only ledger pane.
+   Rows follow Running in cursor order. Enter opens a read-only ledger pane,
+   except that the pane of a stale run can end it (*proposed*, S175): `x`
+   asks, on lines of their own, `slicer relay-run end RUN`, then
+   `--outcome stopped --close-steps fail` indented, then `End this run as
+   stopped and fail its unfinished steps? [y/N] (Enter is No)` (the keys go
+   to a line of their own when the pane is too narrow for both), and `y`
+   ends the run through the daemon. The daemon
+   reads the ledger again first, so a run that has since had an event is
+   refused (`ledger run RUN is active, not stale`), as is a ledger run that an
+   unfinished engine run owns (stop that run on its own pane). The status line
+   then reads `ended ledger run RUN`. An active, waiting or ended ledger run
+   keeps the read-only pane, and `x` does nothing there.
 4. **Ready to land:** committed engine runs that ork did not land, plus a landed run
    whose cleanup failed (see below), across projects, or for the
    selected project. Each row shows the slice and branch, with
@@ -735,7 +751,8 @@ progress line when the pane has room for the reason, the blank and one
 progress line (S134). `pgup` and `pgdown` scroll the reason and tree while the action
 area stays visible. `esc` closes the pane (`ui.answer-ui`,
 `ui.answer-pane-keys`, `ui.run-tree`). Ledger runs started elsewhere open a
-read-only tree pane with no action keys or answer input. An external ledger
+read-only tree pane with no answer input and no action keys, except that a
+stale one offers `x end run` (S175, above). An external ledger
 run waiting on the owner with an unanswered question appears in Needs you,
 counts there in the sidebar and Overview, and uses the `?` mark. It leaves
 Running and suppresses "nothing needs you". Its pane shows the question title,

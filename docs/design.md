@@ -1108,6 +1108,15 @@ plain text of at most 24 KiB. A run without a card, an unknown run, a name the
 card does not list and a file that is not there are all `not_found`. The TUI
 calls it when the owner opens the renders and again for each render it moves
 to; no snapshot carries render text.
+*Proposed (S175):* `run.end-ledger` takes `{project,run}` and returns `{run}`
+once it has ended a stale slicer ledger run with `slicer relay-run end RUN
+--outcome stopped --close-steps fail --json` (its running steps did not
+finish). It reads the ledger again (`relay-run list`) and refuses with
+`refused` unless the run is still stale, so an event that arrived after the
+owner opened the pane wins; it refuses a ledger run that an unfinished engine
+run links to (`relay_run`), whose owner stops that run on its own pane. A run
+the ledger does not list and an unregistered project are `not_found`. The call
+writes no run record; slicer's failure comes back as the error.
 *Proposed:* `run.file` takes `{run,finding}` (the one-based `findings[]` entry)
 and returns the run record with a `message` (`filed as ID`) once ork has run
 `slicer add` and `slicer promote` for that later finding (adj #163). It does

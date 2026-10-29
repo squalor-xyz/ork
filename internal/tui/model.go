@@ -377,8 +377,10 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		if len(m.actionFlights[msg.action.run]) == 0 {
 			delete(m.actionFlights, msg.action.run)
 		}
-		if r, ok := m.actionRow(); ok && r.engineID == msg.action.run && r.name == msg.action.project {
+		if r, ok := m.actionRow(); ok && (r.engineID == msg.action.run || (msg.action.verb == "end" && r.ledgerID == msg.action.run)) && r.name == msg.action.project {
 			switch {
+			case msg.err != nil && msg.action.verb == "end" && isRefused(msg.err):
+				m.actionStatus = actionError(msg.err) // the refusal names the run and its state
 			case msg.err != nil:
 				m.actionStatus = msg.action.named() + ": " + actionError(msg.err)
 				if msg.action.verb == "answer" && m.pane != nil {
@@ -1173,6 +1175,9 @@ func (a runAction) named() string {
 	if a.verb == "cleanup" {
 		return "cleanup " + a.cleanupItem()
 	}
+	if a.verb == "end" {
+		return "end ledger run " + a.run
+	}
 	return a.command()
 }
 
@@ -1198,6 +1203,9 @@ func (a runAction) command() string {
 	}
 	if a.verb == "launch" {
 		return "ork run " + a.project + " " + a.run
+	}
+	if a.verb == "end" {
+		return ledgerEndCommand(a.run)
 	}
 	if a.verb == "answer" && a.finding > 0 {
 		return "Record answer to " + strconv.Quote(a.findingTitle) + ": " + a.text
@@ -1225,7 +1233,7 @@ func (a runAction) prompt() string {
 	if a.verb == "cleanup" {
 		return a.command() + "\n" + a.cleanupQuestion()
 	}
-	if a.verb == "approve" || a.verb == "file" {
+	if a.verb == "approve" || a.verb == "file" || a.verb == "end" {
 		return a.promptWidth(0)
 	}
 	prompt := a.command() + "? [y/N] (Enter is No)"
@@ -1257,6 +1265,14 @@ func (a runAction) promptWidth(w int) string {
 			return a.command() + "\n" + note + "\n" + question + "\n" + keys
 		}
 		return a.command() + "\n" + note + "\n" + question + " " + keys
+	}
+	if a.verb == "end" {
+		const question = "End this run as stopped and fail its unfinished steps?"
+		const keys = "[y/N] (Enter is No)"
+		if w > 0 && lipgloss.Width(question+" "+keys) > w {
+			return a.command() + "\n" + question + "\n" + keys
+		}
+		return a.command() + "\n" + question + " " + keys
 	}
 	if a.verb != "approve" {
 		return a.prompt()
@@ -1462,6 +1478,8 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 			} else {
 				err = live.Approve(context.Background(), a.run)
 			}
+		case "end":
+			err = endLedger(live, a)
 		case "stop":
 			err = live.Stop(context.Background(), a.run)
 		case "retry":
@@ -1487,6 +1505,12 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 		}
 		return actionMsg{action: a, err: err, message: message}
 	}
+}
+
+// isRefused reports whether the daemon refused the action with its own reason.
+func isRefused(err error) bool {
+	var wire *ipc.Error
+	return errors.As(err, &wire) && wire.Code == daemon.CodeRefused
 }
 
 func actionError(err error) string {

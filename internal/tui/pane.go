@@ -324,6 +324,10 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 		m.requestFile() // a finished run keeps its later findings
 		return nil
 	}
+	if m.pane.ledger && key.Matches(msg, m.keys.Stop) {
+		m.requestLedgerEnd() // a stale ledger run ends here; any other ledger pane is read-only
+		return nil
+	}
 	r, _, ok := m.paneRow()
 	if !ok || m.pane.ledger || r.state == "stopped" || r.state == "committed" {
 		return nil

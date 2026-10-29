@@ -180,6 +180,12 @@ func (c *Client) Stop(ctx context.Context, run string) error {
 	return c.Call(ctx, MethodRunStop, RunAction{Run: run}, nil)
 }
 
+// EndLedger ends a stale slicer ledger run of a registered project after the
+// caller has confirmed it (run.end-ledger, S175, *proposed*).
+func (c *Client) EndLedger(ctx context.Context, project, run string) error {
+	return c.Call(ctx, MethodRunEndLedger, RunAction{Project: project, Run: run}, nil)
+}
+
 // Retry retries a paused run after the caller has confirmed it.
 func (c *Client) Retry(ctx context.Context, run string) error {
 	return c.Call(ctx, MethodRunRetry, RunAction{Run: run}, nil)
