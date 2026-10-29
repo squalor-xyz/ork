@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 191,
+  "next_id": 192,
   "preamble": "",
   "passes": [
     {
@@ -9129,6 +9129,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S168",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S191",
+      "title": "S177 later notes: stop row highlight, commit-stopped cleanup, Ready row test",
+      "short_title": "S177 later notes: stop row highlight, commit-stopped cleanup, Ready row test",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "c47826ff-50c2-42f6-a199-1c17738e7136",
+          "kind": "",
+          "text": "**2026-10-29** — From the S177 review, UI pass and gate (2026-10-29), all later: (1) highlight the selected stop and budget rows in the lineup editor as role rows are (TabActive); (2) remove the spec-check dir of a commit-stopped run once it is merged (cleanup is keyed on LandedAt); (3) add a Ready row test or golden for a run with stop_after=commit; (4) the editor row shows the bare value (land/commit) while the plan says 'after ...'; (5) docs/dashboard.md does not mention the neutral 'Approve run RUN?' prompt; (6) rollback: every new run.json stores stop_after land, which an older strict-key ork refuses (owner kept it on 2026-10-29).",
+          "created_at": "2026-10-29T22:57:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S177",
         "parent": "",
         "cites": [],
         "key": "",

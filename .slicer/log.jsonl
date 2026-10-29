@@ -2576,3 +2576,5 @@
 {"when": "2026-10-29T22:22:18Z", "item": "S190", "action": "add", "from": "", "to": "open", "note": "S168 later notes: pane scroll keys, matrix wrap width, Overview hint tie"}
 {"when": "2026-10-29T22:22:18Z", "item": "S190", "action": "note", "from": "", "to": "", "note": "From the S168 review and UI pass (2026-10-29), all later: (1", "by": "Jon R"}
 {"when": "2026-10-29T22:22:18Z", "item": "S183", "action": "note", "from": "", "to": "", "note": "Added 2026-10-29 from the S168 review: docs/orchestrator-par", "by": "Jon R"}
+{"when": "2026-10-29T22:57:53Z", "item": "S191", "action": "add", "from": "", "to": "open", "note": "S177 later notes: stop row highlight, commit-stopped cleanup, Ready row test"}
+{"when": "2026-10-29T22:57:54Z", "item": "S191", "action": "note", "from": "", "to": "", "note": "From the S177 review, UI pass and gate (2026-10-29), all lat", "by": "Jon R"}
