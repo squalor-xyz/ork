@@ -2512,3 +2512,4 @@
 {"when": "2026-10-29T17:00:09Z", "item": "S158", "action": "note", "from": "", "to": "", "note": "Owner 2026-10-29 (UI pass): the none-registered line ends wi", "by": "Jon R"}
 {"when": "2026-10-29T17:00:09Z", "item": "S158", "action": "status", "from": "started", "to": "done", "note": "ork doctor: no doubled registry word, non-greedy shell-prefix strip, time on the skip list, and '[--] projects  none registered: run ork projects add PATH' for an empty or missing registry. Review and UI pass PASS after one small fix round.", "by": "Jon R"}
 {"when": "2026-10-29T17:00:09Z", "item": "S158", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 41, S158): Claude sonnet-high imple", "by": "Jon R"}
+{"when": "2026-10-29T16:54:57Z", "item": "S158", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (UI pass): the empty-registry doct", "by": "Jon R"}
