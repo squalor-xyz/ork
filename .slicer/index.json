@@ -1,5 +1,5 @@
 {
-  "version": 9,
+  "version": 10,
   "id_prefix": "S",
   "id_width": 2,
   "next_id": 165,
@@ -1596,7 +1596,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "cca3e88a-21f7-4595-aa3f-56f58644c988",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29 (interactive): ork wave start also says y/n: wave.go flag help (:91-92) and usage error (:103), docs/dashboard.md:1055-1056, a matching usage test; add wave.go and dashboard.md to Files.",
+          "created_at": "2026-10-29T04:02:01Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -6751,7 +6763,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "00f9acbc-9f02-4deb-8aa2-0e111b283881",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): (1) q quit never drops from the hint bar on the main views (like ? help); (2) remove ?help from the sidebar header; (3) add back the 'type a whole number' hint on Waves lineup budget rows 2 and up, and wire ctrl+d/ctrl+u with their hints into the decision, roadmap-item and waves-item panes (reuse pane.room). Earlier decisions in this slice stand: drop the Questions body footer [enter] open; on Waves with nothing ticked the hint keeps not showing l.",
+          "created_at": "2026-10-29T04:02:01Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",

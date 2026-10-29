@@ -2202,3 +2202,5 @@
 {"when": "2026-10-28T20:43:22Z", "item": "S61", "action": "note", "from": "", "to": "", "note": "Spec filled 2026-10-28 with owner decisions (opt-in per run,", "by": "Jon R"}
 {"when": "2026-10-28T20:43:22Z", "item": "S62", "action": "note", "from": "", "to": "", "note": "Spec filled 2026-10-28 with owner decision: run a parent's s", "by": "Jon R"}
 {"when": "2026-10-28T20:43:22Z", "item": "S142", "action": "note", "from": "", "to": "", "note": "Upstream follow-up from the owner 2026-10-28: slicer's v10 v", "by": "Jon R"}
+{"when": "2026-10-29T04:02:01Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): (1) q quit never d", "by": "Jon R"}
+{"when": "2026-10-29T04:02:01Z", "item": "S39", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (interactive): ork wave start also", "by": "Jon R"}
