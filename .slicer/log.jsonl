@@ -2587,3 +2587,5 @@
 {"when": "2026-10-29T23:06:42Z", "item": "S192", "action": "add", "from": "", "to": "open", "note": "S174 later notes: vendor_env masking in --json, error wording, removed-vendor label"}
 {"when": "2026-10-29T23:06:42Z", "item": "S192", "action": "note", "from": "", "to": "", "note": "From the S174 review, UI pass and gate (2026-10-29), all lat", "by": "Jon R"}
 {"when": "2026-10-29T23:06:43Z", "item": "S183", "action": "note", "from": "", "to": "", "note": "Added 2026-10-29 from the S174 review: docs/orchestrator-par", "by": "Jon R"}
+{"when": "2026-10-29T23:26:23Z", "item": "S193", "action": "add", "from": "", "to": "open", "note": "S184 later notes: guide anchors, lost answer error, retry wording"}
+{"when": "2026-10-29T23:26:24Z", "item": "S193", "action": "note", "from": "", "to": "", "note": "From the S184 review, UI pass and gate (2026-10-29), all lat", "by": "Jon R"}
