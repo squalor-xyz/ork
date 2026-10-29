@@ -103,6 +103,14 @@ func (m *Model) screen() string {
 		}
 		if m.confirm != nil {
 			status = m.confirm.prompt()
+			if m.confirm.verb == "launch" {
+				if m.confirm.lineup != nil || m.confirm.budgets != nil {
+					status += "  " + th.Dim.Render("lineup edited")
+				}
+				if m.actionStatus != "" {
+					status += "\n" + m.actionStatus
+				}
+			}
 		}
 		if m.view == questionsView && m.pane != nil {
 			detail = m.paneLines(mainW, max(h-6, 1), status)

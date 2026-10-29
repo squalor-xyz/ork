@@ -15,6 +15,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/ipc"
 )
 
 func waveApp(t *testing.T, failure bool) (*App, *clitest.Fake) {
@@ -399,5 +400,79 @@ func TestWaveStartJSONAlwaysIncludesHeldArray(t *testing.T) {
 				t.Fatalf("held %v, want %v", got, want)
 			}
 		})
+	}
+}
+
+func TestWaveStartPrintsTheBlockedRefusal(t *testing.T) {
+	for _, jsonMode := range []bool{false, true} {
+		t.Run(fmt.Sprint(jsonMode), func(t *testing.T) {
+			const text = `S2 waits on S1 "Title" (in this wave, not done); untick S2 or land S1 first`
+			app := &App{Input: strings.NewReader("y\n"), Call: func(_ context.Context, method string, params, result any) error {
+				switch method {
+				case "run.plan":
+					*(result.(*daemon.RunPlan)) = daemon.RunPlan{Item: "S2"}
+					return nil
+				case "spec.check":
+					return &ipc.Error{Code: daemon.CodeRefused, Message: text}
+				default:
+					t.Fatalf("unexpected call %s", method)
+					return nil
+				}
+			}}
+			var out, errs bytes.Buffer
+			args := []string{"wave", "start", "p", "S2", "--well-specified", "yes", "--split", "no"}
+			if jsonMode {
+				args = append(args, "--json")
+			}
+			code := app.Run(context.Background(), args, &out, &errs)
+			combined := out.String() + errs.String()
+			wantText := text
+			if jsonMode {
+				raw, _ := json.Marshal(text)
+				wantText = string(raw)
+			}
+			if code != ExitFailure || strings.Count(combined, wantText) != 1 || strings.Contains(combined, "Start this wave?") {
+				t.Fatalf("code %d output %s", code, combined)
+			}
+			if jsonMode && strings.Count(out.String(), `"code": "refused"`) != 1 {
+				t.Fatalf("wire code: %s", &out)
+			}
+			if !jsonMode && strings.Contains(combined, "refused:") {
+				t.Fatalf("human refusal should show text alone: %s", combined)
+			}
+		})
+	}
+}
+
+func TestWaveStartLineupFlagsApplyToEveryItem(t *testing.T) {
+	var plans []daemon.RunParams
+	var started daemon.WaveStartParams
+	app := &App{Call: func(_ context.Context, method string, params, result any) error {
+		switch method {
+		case daemon.MethodRunPlan:
+			p := params.(daemon.RunParams)
+			plans = append(plans, p)
+			*result.(*daemon.RunPlan) = daemon.RunPlan{Item: p.Item, Lineup: p.Lineup}
+		case "spec.check":
+			return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true},{"item":"S2","ready":true}]}`), result)
+		case daemon.MethodWaveStart:
+			started = params.(daemon.WaveStartParams)
+		default:
+			t.Fatalf("unexpected %s", method)
+		}
+		return nil
+	}}
+	code, out, errs := run(t, app, "wave", "start", "p", "S1", "S2", "--yes", "--well-specified", "y", "--split", "n", "--implementer", "codex:sol:medium", "--implementer", "claude:sonnet:high", "--architect", "off", "--budget-minutes", "20", "--budget-tokens", "0")
+	if code != 0 || len(plans) != 2 || len(started.Items) != 2 {
+		t.Fatalf("exit %d plans %d items %d: %s %s", code, len(plans), len(started.Items), out, errs)
+	}
+	for i, p := range started.Items {
+		if p.Expected == nil || p.Expected.Item != plans[i].Item {
+			t.Fatal("Expected lost")
+		}
+		p.Expected = nil
+		if !reflect.DeepEqual(p, plans[i]) || len(p.Lineup["implementer"]) != 2 || p.Lineup["architect"] == nil || p.Budgets == nil || p.Budgets.Minutes != 20 || p.Budgets.Tokens != 0 {
+			t.Fatalf("item %d: %+v", i, p)
+		}
 	}
 }

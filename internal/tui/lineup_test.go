@@ -611,3 +611,33 @@ func TestArchitectDroppedGolden(t *testing.T) {
 		checkGolden(t, "waves-architect-off-80x24-"+theme+".txt", h.m.View().Content)
 	}
 }
+
+func TestWavesLineupStillWorksAfterEditorExtraction(t *testing.T) {
+	h, l := lineupHarness(t)
+	e := h.m.waves.lineup
+	original := e.plan.Lineup["implementer"][0]
+	fallback := runrec.LineupEntry{Vendor: "codex", Model: "sol", Effort: "medium"}
+	e.plan.Lineup["implementer"] = append(e.plan.Lineup["implementer"], fallback)
+	reviewer := append([]runrec.LineupEntry(nil), e.plan.Lineup["reviewer"]...)
+	h.deliver(press("right"))
+	if !reflect.DeepEqual(e.chains[0], []runrec.LineupEntry{fallback, original}) {
+		t.Fatalf("cycled chain: %+v", e.chains[0])
+	}
+	changeImplementer(h)
+	h.deliver(press("down"))
+	h.deliver(press("down"))
+	h.deliver(press("d"))
+	h.deliver(press("down"))
+	replaceLineupField(h, "20")
+	h.deliver(press("down"))
+	replaceLineupField(h, "0")
+	h.deliver(press("enter"))
+	if len(l.plans) != 2 {
+		t.Fatalf("plans %d", len(l.plans))
+	}
+	p := l.plans[1]
+	want := []runrec.LineupEntry{{Vendor: "codex", Model: "custom-model", Effort: "medium"}, original}
+	if !reflect.DeepEqual(p.Lineup["implementer"], want) || len(p.Lineup["reviewer"]) != 0 || !reflect.DeepEqual(h.m.waves.picked["A"].Expected.Lineup["reviewer"], reviewer) || len(p.Lineup["architect"]) != 0 || p.Budgets == nil || *p.Budgets != (registry.Budgets{Minutes: 20}) {
+		t.Fatalf("params: %+v", p)
+	}
+}

@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 186,
+  "next_id": 188,
   "preamble": "",
   "passes": [
     {
@@ -8041,7 +8041,7 @@
       "id": "S166",
       "title": "Lineup and budget overrides on every launch path (Roadmap launch, ork run)",
       "short_title": "Lineup overrides everywhere",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8074,7 +8074,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -8718,7 +8718,7 @@
       "id": "S181",
       "title": "Refuse or warn on a blocked item at wave start",
       "short_title": "Warn on blocked item",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8728,6 +8728,17 @@
           "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): refuse the whole call naming the item and its blockers; wave start and the spec check only (run.start as a follow-up).",
           "created_at": "2026-10-29T16:08:55Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "bc3533a3-adb1-4adb-80c3-aa401092467c",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive, review): the refusal ends with a short next step (e.g. 'untick S2 or land S1 first'); it shows blocker titles as well as ids (one extra slicer read per blocker, de-duplicated per call). Later: '(not done)' repeats after every blocker and can split on wrap; spec-check and wave.start refusals differ in prefix; the refusal comes after the per-item prompts; a dependency missing from slicer's index reads '(not done)'; one-item wave.start on an unregistered project now fails the whole call with not_found; no cycle-in-one-wave test.",
+          "created_at": "2026-10-29T19:56:31Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -8751,7 +8762,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -8801,7 +8812,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b415d296-1ae1-48fc-954a-20ebc354b1ba",
+          "kind": "",
+          "text": "**2026-10-29** — Added 2026-10-29 from the S178 review: docs/orchestrator-parity.md row 7.5 (about :111) and gap 13 (about :140) still describe the dropped ork upgrade pull-and-build command; mark them met by ork doctor --upgrade once S178 lands. Add docs/orchestrator-parity.md to Files.",
+          "created_at": "2026-10-29T20:56:28Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -8903,6 +8926,86 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S186",
+      "title": "S181 later notes: blocked refusal wording and an 80-column guard",
+      "short_title": "S181 later notes: blocked refusal wording and an 80-column guard",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "c5f22a78-f8f7-45e8-bad2-a45679ee8841",
+          "kind": "",
+          "text": "**2026-10-29** — From the S181 UI pass round 2 (2026-10-29), all later: (1) a blocker shared by several items repeats its quoted title each time, so show it only the first time; (2) 'untick S182, S183 or land S181, S175 first' reads ambiguously, so try 'untick S182 and S183, or land S181 and S175 first'; (3) titles use Go %q, so a title with a double quote shows a backslash escape; (4) no test pins the wrapped refusal at 80x24 (the TUI tests use 100 columns and squash whitespace). Previews: .scratch/s181/ui/preview80.txt.",
+          "created_at": "2026-10-29T20:32:26Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S181",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S187",
+      "title": "S166 later notes: launch replan edge case and lineup editor key polish",
+      "short_title": "S166 later notes: launch replan edge case and lineup editor key polish",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "2f577997-1a53-445e-8dc3-081879211c62",
+          "kind": "",
+          "text": "**2026-10-29** — From the S166 review and UI pass (2026-10-29), all later: (1) after an edit, a replan that returns neither a plan nor an error drops the launch instead of restoring the previous plan (internal/tui/launch.go around :268); (2) in custom entry, esc closes the whole lineup editor rather than only the custom fields (Waves and launch alike); (3) at 50 columns the shared editor hint drops 'enter save and replan' but keeps 'esc discard'; (4) usage text: 'role flags repeat to set the whole chain' sits above the command description.",
+          "created_at": "2026-10-29T21:06:25Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S166",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
         "effort": null,
         "attempts": 0
       }

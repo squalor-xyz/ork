@@ -461,8 +461,7 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			}
 			return m, nil
 		}
-		if m.waves != nil && m.waves.lineup != nil {
-			e := m.waves.lineup
+		if e := m.activeLineup(); e != nil {
 			if e.custom {
 				e.fields[e.focus].update(msg)
 			} else if e.row >= len(lineupRoles) {
@@ -517,6 +516,10 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	}
 	if m.confirm != nil {
 		switch msg.String() {
+		case "e":
+			if m.confirm.verb == "launch" {
+				return m.openLaunchLineup()
+			}
 		case "ctrl+c":
 			return tea.Quit
 		case "y", "Y":
@@ -546,6 +549,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return m.waveItemKey(msg)
 	}
 	if m.launch != nil {
+		if m.launch.stage == launchEdit {
+			return m.launchLineupKey(msg)
+		}
 		return m.launchKey(msg)
 	}
 
@@ -1142,6 +1148,8 @@ type runAction struct {
 	worktreeGone             bool // cleanup: the daemon skips git worktree remove, so the confirm omits it (S153)
 	items                    []daemon.RunParams
 	held                     []string // wave: ticked items left out because they wait on spec questions
+	lineup                   map[string][]runrec.LineupEntry
+	budgets                  *registry.Budgets
 	plan                     *daemon.RunPlan
 	wellSpecified, split     bool
 	push                     bool   // approve: the project's push setting is on

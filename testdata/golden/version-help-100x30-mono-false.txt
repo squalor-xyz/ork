@@ -12,7 +12,7 @@
                            │/ filter projects; esc clears; s hide/show sidebar
                            │+ add project; - remove active project
                            │space expand or collapse a run (Running); E expand or collapse all
-                           │space tick item and ask inputs (Waves); e edit lineup (Waves)
+                           │space tick item and ask inputs (Waves); e edit lineup (Waves, launch)
                            │l launch a ready slice (Roadmap) or wave (Waves)
                            │a approve; F fix round; x stop; t retry; v view renders; f file slice
                            │o answer owner finding (run pane)

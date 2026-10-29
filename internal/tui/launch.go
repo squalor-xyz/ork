@@ -23,18 +23,23 @@ const (
 	launchSplit
 	launchPlanPending
 	launchConfirm
+	launchEdit
 	launchStarting
 )
 
 type launchState struct {
-	stage   launchStage
-	cursor  int
-	input   textField
-	params  daemon.RunParams
-	plan    *daemon.RunPlan
-	request uint64
-	ctx     context.Context
-	cancel  context.CancelFunc
+	lineup       *lineupEditor
+	prev         *daemon.RunPlan
+	prevParams   daemon.RunParams
+	replanCancel context.CancelFunc
+	stage        launchStage
+	cursor       int
+	input        textField
+	params       daemon.RunParams
+	plan         *daemon.RunPlan
+	request      uint64
+	ctx          context.Context
+	cancel       context.CancelFunc
 }
 
 type launchMsg struct {
@@ -117,6 +122,15 @@ func (m *Model) launchKey(msg tea.KeyPressMsg) tea.Cmd {
 	case "ctrl+c":
 		return tea.Quit
 	case "esc":
+		if l.stage == launchPlanPending && l.prev != nil {
+			l.replanCancel()
+			l.replanCancel = nil
+			l.plan, l.params = l.prev, l.prevParams
+			l.prev = nil
+			m.actionStatus = ""
+			m.confirmLaunch()
+			return nil
+		}
 		if l.stage != launchStarting {
 			m.actionStatus = "Cancelled"
 		}
@@ -201,7 +215,7 @@ func (m *Model) startLaunch(a runAction) tea.Cmd {
 	m.launchFlights[a.project] = launchFlight{action: a, request: l.request}
 	l.stage = launchStarting
 	m.actionStatus = a.command() + ": pending"
-	params := daemon.RunParams{Project: a.project, Item: a.run, WellSpecified: a.wellSpecified, Split: a.split, Expected: a.plan}
+	params := daemon.RunParams{Project: a.project, Item: a.run, WellSpecified: a.wellSpecified, Split: a.split, Expected: a.plan, Lineup: a.lineup, Budgets: a.budgets}
 	live, request, ctx := m.cfg.Live, l.request, l.ctx
 	return func() tea.Msg {
 		if ctx.Err() != nil {
@@ -239,8 +253,18 @@ func (m *Model) applyLaunch(msg launchMsg) tea.Cmd {
 	if l.stage != launchPlanPending {
 		return nil
 	}
+	if l.replanCancel != nil {
+		l.replanCancel()
+		l.replanCancel = nil
+	}
 	if msg.err != nil {
-		m.dropLaunch()
+		if l.prev != nil {
+			l.plan, l.params = l.prev, l.prevParams
+			l.prev = nil
+			m.confirmLaunch()
+		} else {
+			m.dropLaunch()
+		}
 		m.actionStatus = actionError(msg.err)
 		return nil
 	}
@@ -250,14 +274,82 @@ func (m *Model) applyLaunch(msg launchMsg) tea.Cmd {
 		return nil
 	}
 	l.plan = msg.plan
+	l.prev = nil
+	m.actionStatus = ""
+	m.confirmLaunch()
+	return nil
+}
+
+func (m *Model) confirmLaunch() {
+	l := m.launch
 	l.stage = launchConfirm
-	m.confirm = &runAction{verb: "launch", project: l.params.Project, run: l.params.Item, plan: l.plan, wellSpecified: l.params.WellSpecified, split: l.params.Split}
+	m.confirm = &runAction{verb: "launch", project: l.params.Project, run: l.params.Item, plan: l.plan, wellSpecified: l.params.WellSpecified, split: l.params.Split, lineup: l.params.Lineup, budgets: l.params.Budgets}
+}
+
+func (m *Model) openLaunchLineup() tea.Cmd {
+	l := m.launch
+	if l == nil || l.stage != launchConfirm || l.plan == nil {
+		return nil
+	}
+	m.confirm = nil
+	l.lineup = newLineupEditor(l.params.Item, l.plan)
+	l.stage = launchEdit
+	m.actionStatus = ""
+	return nil
+}
+
+func (m *Model) launchLineupKey(msg tea.KeyPressMsg) tea.Cmd {
+	l := m.launch
+	m.actionStatus = ""
+	switch editLineup(l.lineup, msg) {
+	case lineupQuit:
+		return tea.Quit
+	case lineupDiscard:
+		l.lineup = nil
+		m.confirmLaunch()
+	case lineupSave:
+		p, changed, ok := lineupOverrides(l.lineup, l.params)
+		if !ok {
+			m.actionStatus = "Budget must be a whole number of zero or more"
+			return nil
+		}
+		l.lineup = nil
+		if !changed {
+			m.confirmLaunch()
+			return nil
+		}
+		l.prev, l.prevParams = l.plan, l.params
+		l.params, l.stage = p, launchPlanPending
+		// Each replan gets a new request so cancelled replies cannot replace a newer one.
+		m.launchRequest++
+		l.request = m.launchRequest
+		ctx, cancel := context.WithCancel(l.ctx)
+		l.replanCancel = cancel
+		live, request := m.cfg.Live, l.request
+		return func() tea.Msg {
+			if ctx.Err() != nil {
+				return nil
+			}
+			plan, err := live.Plan(ctx, p)
+			return launchMsg{request: request, plan: plan, err: err}
+		}
+	}
 	return nil
 }
 
 func (m *Model) launchView(w int) overviewView {
 	out := overviewView{sel: -1}
 	th, l := m.cfg.Theme, m.launch
+	if l.stage == launchEdit {
+		title := ""
+		for _, item := range m.readyLaunchItems() {
+			if item.ID == l.params.Item {
+				title = item.Title
+				break
+			}
+		}
+		return m.editorBody(l.lineup, title, w)
+	}
 	add := func(text string) {
 		for _, line := range wrapText(text, max(w-2, 1)) {
 			out.body = append(out.body, indent+line)
@@ -307,6 +399,9 @@ func (m *Model) launchView(w int) overviewView {
 		add("worktree: " + p.Worktree)
 		add("branch: " + p.Branch)
 		add("check: " + p.CheckCommand)
+		if l.params.Budgets != nil {
+			add(fmt.Sprintf("budgets: %d min, %d tokens", p.Budgets.Minutes, p.Budgets.Tokens))
+		}
 		for _, role := range []string{"implementer", "reviewer", "ui", "architect", "gate"} {
 			if (role == "architect" || role == "ui") && len(p.Lineup[role]) == 0 {
 				continue

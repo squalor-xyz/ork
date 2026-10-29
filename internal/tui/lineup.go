@@ -63,26 +63,50 @@ func (m *Model) openLineup() tea.Cmd {
 	rows := w.rows()
 	p := w.picked[rows[clampCursor(w.cursor, len(rows))].ID]
 
-	e := &lineupEditor{item: p.Item, plan: p.Expected}
-	for i, role := range lineupRoles {
-		e.chains[i] = append([]runrec.LineupEntry(nil), p.Expected.Lineup[role]...)
-	}
-	e.budgets[0].insert(strconv.Itoa(p.Expected.Budgets.Minutes))
-	e.budgets[1].insert(strconv.Itoa(p.Expected.Budgets.Tokens))
+	e := newLineupEditor(p.Item, p.Expected)
 	w.lineup = e
 	m.actionStatus = ""
 	return nil
 }
 
+type lineupEditResult int
+
+const (
+	lineupNone lineupEditResult = iota
+	lineupSave
+	lineupDiscard
+	lineupQuit
+)
+
+func newLineupEditor(item string, plan *daemon.RunPlan) *lineupEditor {
+	e := &lineupEditor{item: item, plan: plan}
+	for i, role := range lineupRoles {
+		e.chains[i] = append([]runrec.LineupEntry(nil), plan.Lineup[role]...)
+	}
+	e.budgets[0].insert(strconv.Itoa(plan.Budgets.Minutes))
+	e.budgets[1].insert(strconv.Itoa(plan.Budgets.Tokens))
+	return e
+}
+
 func (m *Model) lineupKey(msg tea.KeyPressMsg) tea.Cmd {
-	e := m.waves.lineup
 	m.actionStatus = ""
-	if msg.String() == "ctrl+c" {
+	switch editLineup(m.waves.lineup, msg) {
+	case lineupQuit:
 		return tea.Quit
+	case lineupDiscard:
+		m.waves.lineup = nil
+	case lineupSave:
+		return m.saveLineup()
+	}
+	return nil
+}
+
+func editLineup(e *lineupEditor, msg tea.KeyPressMsg) lineupEditResult {
+	if msg.String() == "ctrl+c" {
+		return lineupQuit
 	}
 	if msg.String() == "esc" {
-		m.waves.lineup = nil
-		return nil
+		return lineupDiscard
 	}
 	if e.custom {
 		switch msg.String() {
@@ -101,7 +125,7 @@ func (m *Model) lineupKey(msg tea.KeyPressMsg) tea.Cmd {
 		default:
 			e.fields[e.focus].update(msg)
 		}
-		return nil
+		return lineupNone
 	}
 	switch msg.String() {
 	case "down", "tab":
@@ -143,28 +167,26 @@ func (m *Model) lineupKey(msg tea.KeyPressMsg) tea.Cmd {
 			e.custom, e.focus = true, 0
 		}
 	case "enter":
-		return m.saveLineup()
+		return lineupSave
 	default:
 		if e.row >= len(lineupRoles) {
 			e.budgets[e.row-len(lineupRoles)].update(msg)
 		}
 	}
-	return nil
+	return lineupNone
 }
 
-func (m *Model) saveLineup() tea.Cmd {
-	w, e := m.waves, m.waves.lineup
+func lineupOverrides(e *lineupEditor, p daemon.RunParams) (daemon.RunParams, bool, bool) {
+	original := p
 	var values [2]int
 	for i := range values {
 		value, err := strconv.Atoi(e.budgets[i].Value())
 		if err != nil || value < 0 {
 			e.row = i + len(lineupRoles)
-			m.actionStatus = "Budget must be a whole number of zero or more"
-			return nil
+			return p, false, false
 		}
 		values[i] = value
 	}
-	p := w.picked[e.item]
 	p.Lineup = maps.Clone(p.Lineup)
 	for i, role := range lineupRoles {
 		if !reflect.DeepEqual(e.chains[i], e.plan.Lineup[role]) {
@@ -178,8 +200,18 @@ func (m *Model) saveLineup() tea.Cmd {
 	if budgets != e.plan.Budgets {
 		p.Budgets = &budgets
 	}
+	return p, !reflect.DeepEqual(p, original), true
+}
+
+func (m *Model) saveLineup() tea.Cmd {
+	w, e := m.waves, m.waves.lineup
+	p, changed, ok := lineupOverrides(e, w.picked[e.item])
+	if !ok {
+		m.actionStatus = "Budget must be a whole number of zero or more"
+		return nil
+	}
 	w.lineup = nil
-	if reflect.DeepEqual(p, w.picked[e.item]) {
+	if !changed {
 		return nil
 	}
 	w.planning = e.item
@@ -195,18 +227,23 @@ func (m *Model) saveLineup() tea.Cmd {
 }
 
 func (m *Model) lineupBody(width int) overviewView {
-	e, th := m.waves.lineup, m.cfg.Theme
-	out := overviewView{sel: -1}
-	add := func(s string) {
-		for _, line := range wrapText(s, max(width-2, 1)) {
-			out.body = append(out.body, indent+line)
-		}
-	}
+	e := m.waves.lineup
 	title := ""
 	for _, item := range m.waves.rows() {
 		if item.ID == e.item {
 			title = item.Title
 			break
+		}
+	}
+	return m.editorBody(e, title, width)
+}
+
+func (m *Model) editorBody(e *lineupEditor, title string, width int) overviewView {
+	th := m.cfg.Theme
+	out := overviewView{sel: -1}
+	add := func(s string) {
+		for _, line := range wrapText(s, max(width-2, 1)) {
+			out.body = append(out.body, indent+line)
 		}
 	}
 	out.body = append(out.body, th.Heading.Render("Edit lineup: "+e.item+"  "+title))
@@ -283,4 +320,14 @@ func (m *Model) lineupBody(width int) overviewView {
 		}
 	}
 	return out
+}
+
+func (m *Model) activeLineup() *lineupEditor {
+	if m.launch != nil && m.launch.stage == launchEdit {
+		return m.launch.lineup
+	}
+	if m.waves != nil {
+		return m.waves.lineup
+	}
+	return nil
 }

@@ -168,10 +168,11 @@ only when the focused role has more than one entry. Wave inputs show
 `tab next field; enter plan; esc cancel`. Launch lists `enter select slice`
 when a ready slice exists, then `enter next field` for well-specified and
 `enter plan` for split; `esc cancel` stays visible. The lineup editor and spec
-question sitting also show their current keys in this line. A confirmation names what `y` does and nothing else,
-since the prompt above it carries the rest: `y run; n cancel`, `y start; n
-cancel`, `y approve; n cancel`. The help screen shows `? or esc close help; q
-quit`.
+question sitting also show their current keys in this line. A confirmation
+names what `y` does and, at the Roadmap launch, `e`, since the prompt above
+it carries the rest: `y run; n cancel; e edit lineup`, `y start; n cancel`, `y approve; n
+cancel`. At the Roadmap launch confirmation, `e` opens the lineup editor.
+The help screen shows `? or esc close help; q quit`.
 
 The header shows the version next to ork (ui.version-mark, adj #130).
 Development builds show the first seven revision characters, with `+` for a
@@ -1105,8 +1106,18 @@ queued members without tool writes.
 
 The composer uses `wave.suggest` and `wave.overlap` reads from S81 and
 `wave.start` with per-item launch inputs and confirmed plans (`run.launch-wire`).
-No launch writes happen before confirmation. Errors show their code and
-message verbatim, including per-item launch errors.
+No launch writes happen before confirmation. Before the spec-check role runs,
+ork reads slicer's dependencies for every ticked item. A blocked item refuses
+the whole call, for example `S2 waits on S1 "Title" (in this wave, not done);
+untick S2 or land S1 first` when both items are ticked. A blocker outside the
+wave ends with `land S1 first`. Blocker titles are read once per distinct
+blocker per call; a failed title read falls back to the id alone. The status
+line shows the refusal and keeps the ticks.
+The daemon checks again at wave start; a newly blocked item also refuses the
+whole call and keeps the ticks. A failed dependency read prevents launch.
+The CLI shows the refusal before asking `Start this wave?`. Human refusal
+output shows the text alone; JSON output includes code `refused`. Other
+errors show their code and message verbatim, including per-item launch errors.
 
 ```
 Suggested (slicer plan-parallel)
@@ -1210,6 +1221,7 @@ plan prevents launching the chosen set; the owner can untick it. The
 wave.plan-failure decision remains open (adj 146).
 
 `e` edits the selected ticked item after its plan is ready (S83).
+The Roadmap launch confirmation uses the same editor with `e` (S166).
 The editor starts from that item's plan: implementer, reviewer and architect,
 then budget minutes and tokens. The architect shows `off` when absent.
 The gate follows the reviewer and has no field.
@@ -1343,7 +1355,9 @@ the list. `enter` picks a slice; `esc` cancels.
 Launch asks "Well specified? [y/n]:" and then "Split? [y/n]:". Neither has a
 default. Enter submits y, yes, n or no in any case; invalid input asks again.
 The TUI calls `run.plan` after both answers and shows "pending: run.plan".
-The plan summary shows project, item, worktree, branch, check command, and
+The plan summary shows project, item, worktree, branch and check command.
+When budgets are overridden, it adds `budgets: N min, N tokens` with the
+effective values; zero uses the project default. The lineup rows show
 implementer, reviewer, ui (when the plan has a UI pass row, S136), architect
 (when present) and gate lineup entries as vendor, model and effort, with each
 role's permissions. When the plan has a `note` (the rules call failed, S159,
@@ -1352,8 +1366,20 @@ pane; `ork run` prints the same rows in its plan text, in the same order, and
 the same `note: TEXT` line after them. The confirmation bar shows
 `ork run PROJECT ITEM? [y/N] (Enter is No)`. The displayed command omits the
 two answers. `y` or `Y` calls `run.start` with those answers and the displayed
-plan as Expected. At confirmation, Enter, n, N and Esc cancel. Esc cancels
-an unfinished plan. Changing project or view drops it, and late plan replies
+plan as Expected, including any lineup and budget overrides. At confirmation,
+`e` opens the shared lineup editor seeded from the displayed plan. `esc`
+discards edits and returns to the same confirmation without planning.
+Saving changed values shows `pending: run.plan`, then the new confirmation;
+unchanged values return without a daemon call. After an edit the status line
+adds dim `lineup edited` after the unchanged command. A failed replan shows
+its error verbatim and restores the prior plan and overrides; `y` can still
+start that plan. The confirmation hint offers `e edit lineup`; it drops with
+`y` and `n` at narrow widths. At confirmation, Enter, n, N and Esc cancel.
+Esc during the first pending plan cancels the launch. During a pending edited
+replan, the hint reads `esc back`: Esc cancels only that replan and returns
+to the previous confirmation with its previous params. A late reply from the
+cancelled replan is ignored, including while a newer replan is pending.
+Changing project or view drops the launch, and late plan replies
 do not restore it. Once Start is sent, Esc and navigation close the launch
 without cancelling Start. The status stays `ork run PROJECT ITEM: pending`.
 Pressing `l` for that project says `ork run PROJECT ITEM is pending` until

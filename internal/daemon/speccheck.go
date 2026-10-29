@@ -148,6 +148,9 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 	if err != nil {
 		return nil, err
 	}
+	if err := d.blockedItems(ctx, proj, items); err != nil {
+		return nil, err
+	}
 	deps := d.runDeps(proj)
 	var stale []string
 	for _, item := range items {

@@ -5,6 +5,7 @@ package daemon
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -284,4 +285,120 @@ func TestWaveStartAcceptsAnArchitectOverride(t *testing.T) {
 		t.Fatalf("architect overrides: %+v", runs)
 	}
 	w.expectStarts(t, "S1", "S2")
+}
+
+func TestWaveStartRefusesABlockedItem(t *testing.T) {
+	testBlockedWave(t, []string{"S1", "S2"}, []clitest.Route{{Tool: "slicer", Args: []string{"deps", "S2"}, Prefix: true, Stdout: `{"id":"S2","blocked_by":["S9"]}`}}, `S2 waits on S9 "Title" (not done); land S9 first`, CodeRefused)
+}
+func TestWaveStartNamesABlockerInTheSameWave(t *testing.T) {
+	testBlockedWave(t, []string{"S1", "S2"}, []clitest.Route{{Tool: "slicer", Args: []string{"deps", "S2"}, Prefix: true, Stdout: `{"id":"S2","blocked_by":["S1"]}`}}, `S2 waits on S1 "Title" (in this wave, not done); untick S2 or land S1 first`, CodeRefused)
+}
+func TestWaveStartRefusesWhenTheDepsReadFails(t *testing.T) {
+	testBlockedWave(t, []string{"S1"}, []clitest.Route{{Tool: "slicer", Args: []string{"deps", "S1"}, Prefix: true, Exit: 2, Stdout: `{"error":{"code":"locked","message":"deps locked"}}`}}, "deps locked", "locked")
+}
+func testBlockedWave(t *testing.T, ids []string, routes []clitest.Route, want, code string) {
+	t.Helper()
+	d, store, _ := runDaemon(t, func(context.Context, engine.Request) (engine.Result, error) {
+		t.Error("role ran before dependency refusal")
+		return engine.Result{}, nil
+	}, routes...)
+	params := WaveStartParams{}
+	for _, id := range ids {
+		params.Items = append(params.Items, RunParams{Project: "p", Item: id})
+	}
+	result, err := d.startWave(context.Background(), params)
+	if err == nil || ipc.ErrorOf(err).Code != code || ipc.ErrorOf(err).Message != want {
+		t.Errorf("result %+v error %v, want %s: %s", result, err, code, want)
+	}
+	if runs, err := store.List(); err != nil || len(runs) != 0 {
+		t.Errorf("refusal wrote runs: %v %v", runs, err)
+	}
+	for _, call := range lastFake.CallsTo("slicer") {
+		if len(call.Args) > 0 && call.Args[0] != "deps" && call.Args[0] != "show" {
+			t.Errorf("unexpected call before refusal: %+v", call)
+		}
+	}
+}
+func TestWaveStartAllowsItemsWithNoBlockers(t *testing.T) {
+	w := newWaveRig(t, 4, 0)
+	_, runs := waveRecords(t, w.d, `{"items":[{"project":"p","item":"S1"},{"project":"p","item":"S2"}]}`)
+	if len(runs) != 2 {
+		t.Fatalf("runs: %+v", runs)
+	}
+	w.expectStarts(t, "S1", "S2")
+}
+
+func TestWaveStartPreservesDependencyOrderAndReadsEachItemOnce(t *testing.T) {
+	routes := []clitest.Route{
+		{Tool: "slicer", Args: []string{"deps", "S3"}, Prefix: true, Stdout: `{"id":"S3","blocked_by":["S9","S2"]}`},
+		{Tool: "slicer", Args: []string{"deps", "S2"}, Prefix: true, Stdout: `{"id":"S2","blocked_by":["S1"]}`},
+	}
+	d, _, _ := runDaemon(t, nil, routes...)
+	_, err := d.startWave(context.Background(), WaveStartParams{Items: []RunParams{{Project: "p", Item: "S3"}, {Project: "p", Item: "S2"}, {Project: "p", Item: "S3"}}})
+	const want = `S3 waits on S9 "Title" (not done), S2 "Title" (in this wave, not done); S2 waits on S1 "Title" (not done); untick S3, S2 or land S9, S2, S1 first`
+	if err == nil || ipc.ErrorOf(err).Message != want {
+		t.Fatalf("error: %v", err)
+	}
+	calls := lastFake.CallsTo("slicer")
+	var depsIDs []string
+	for _, call := range calls {
+		if call.Args[0] == "deps" {
+			depsIDs = append(depsIDs, call.Args[1])
+		}
+	}
+	if strings.Join(depsIDs, ",") != "S3,S2" {
+		t.Fatalf("deps calls: %+v", calls)
+	}
+}
+
+func TestBlockedMessageShowsTitlesAndTheNextStep(t *testing.T) {
+	testBlockedWave(t, []string{"S2"}, []clitest.Route{
+		{Tool: "slicer", Args: []string{"deps", "S2"}, Prefix: true, Stdout: `{"blocked_by":["S9","S8"]}`},
+		{Tool: "slicer", Args: []string{"show", "S9"}, Prefix: true, Stdout: `{"title":"First title"}`},
+		{Tool: "slicer", Args: []string{"show", "S8"}, Prefix: true, Stdout: `{"title":"Second title"}`},
+	}, `S2 waits on S9 "First title" (not done), S8 "Second title" (not done); land S9, S8 first`, CodeRefused)
+}
+func TestBlockedMessageFallsBackToTheIdWhenATitleReadFails(t *testing.T) {
+	testBlockedWave(t, []string{"S2"}, []clitest.Route{
+		{Tool: "slicer", Args: []string{"deps", "S2"}, Prefix: true, Stdout: `{"blocked_by":["S9","S8"]}`},
+		{Tool: "slicer", Args: []string{"show", "S9"}, Prefix: true, Exit: 2, Stdout: `{"error":{"code":"not_found","message":"missing title"}}`},
+		{Tool: "slicer", Args: []string{"show", "S8"}, Prefix: true, Stdout: `{"title":"Known title"}`},
+	}, `S2 waits on S9 (not done), S8 "Known title" (not done); land S9, S8 first`, CodeRefused)
+}
+func TestBlockerTitlesAreReadOncePerDistinctBlocker(t *testing.T) {
+	for _, fail := range []bool{false, true} {
+		t.Run(fmt.Sprint(fail), func(t *testing.T) {
+			title := clitest.Route{Tool: "slicer", Args: []string{"show", "S9"}, Prefix: true, Stdout: `{"title":"Title"}`}
+			if fail {
+				title.Exit = 2
+				title.Stdout = `{"error":{"code":"not_found","message":"missing"}}`
+			}
+			d, _, p := runDaemon(t, nil, title, clitest.Route{Tool: "slicer", Args: []string{"deps"}, Prefix: true, Stdout: `{"blocked_by":["S9","S8"]}`})
+			for attempt := 0; attempt < 2; attempt++ {
+				err := d.blockedItems(context.Background(), p, []string{"S2", "S3", "S2"})
+				if err == nil || ipc.ErrorOf(err).Code != CodeRefused {
+					t.Fatalf("error: %v", err)
+				}
+				counts := map[string]int{}
+				for _, call := range lastFake.CallsTo("slicer") {
+					if call.Args[0] == "show" {
+						counts[call.Args[1]]++
+						want := []string{"show", call.Args[1], "--json", "--lean", "--root", p.Path}
+						if strings.Join(call.Args, "|") != strings.Join(want, "|") {
+							t.Fatalf("title read: %+v", call)
+						}
+					}
+				}
+				if counts["S9"] != attempt+1 || counts["S8"] != attempt+1 || len(counts) != 2 {
+					t.Fatalf("title reads after call %d: %+v", attempt+1, counts)
+				}
+			}
+		})
+	}
+}
+func TestWaveStartRefusesACycleInsideOneWave(t *testing.T) {
+	testBlockedWave(t, []string{"S2", "S1"}, []clitest.Route{
+		{Tool: "slicer", Args: []string{"deps", "S2"}, Prefix: true, Stdout: `{"blocked_by":["S1"]}`},
+		{Tool: "slicer", Args: []string{"deps", "S1"}, Prefix: true, Stdout: `{"blocked_by":["S2"]}`},
+	}, `S2 waits on S1 "Title" (in this wave, not done); S1 waits on S2 "Title" (in this wave, not done); untick S2, S1 or land S1, S2 first`, CodeRefused)
 }
