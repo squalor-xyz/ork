@@ -2272,3 +2272,5 @@
 {"when": "2026-10-29T11:53:48Z", "item": "S154", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (interactive): all four items (wai", "by": "Jon R"}
 {"when": "2026-10-29T11:53:48Z", "item": "S146", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (interactive): take the visible UI", "by": "Jon R"}
 {"when": "2026-10-29T11:53:48Z", "item": "S147", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (interactive): correctness set onl", "by": "Jon R"}
+{"when": "2026-10-29T12:00:42Z", "item": "S165", "action": "add", "from": "", "to": "open", "note": "How ork works: guide with diagrams, and an orchestrator-parity gap analysis"}
+{"when": "2026-10-29T12:00:42Z", "item": "S165", "action": "set", "from": "", "to": "", "note": "importance 2→3; effort -→2"}
