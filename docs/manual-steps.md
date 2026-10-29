@@ -53,6 +53,7 @@ Wave planning by hand became s376 (`slicer plan-parallel`), done on
 | Limit parallel relays to about four on 8 cores; suite takes 20-40 min under load | playbook Lessons | Throttle a wave and put realistic suite times in the brief |
 | Catalog ID collisions between parallel slices; decisions filed at landing | `adjudicate/.slicer` slice S38 Git section | Queue catalog filings and apply them at landing |
 | Relay contract copies drift between repos | slicer s373 | Check the contract version, keep no copy |
+| Upgrade slicer, adj and ork by hand, then check `ork doctor` | `docs/orchestrator-parity.md` row 7.5 | *Proposed (S178):* `ork doctor --upgrade` prints the commands for the owner to run; ork runs none of them |
 
 ## Failures that point at harness behavior
 

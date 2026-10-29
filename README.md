@@ -31,6 +31,9 @@ Go writes `ork` to `$(go env GOBIN)`, or to `$(go env GOPATH)/bin` when
 `GOBIN` is unset. `GOPATH` defaults to `~/go`, so no sudo is needed unless you
 set `GOBIN` or `GOPATH` elsewhere. Put that directory on your `PATH`. `ork doctor` prints the path of the binary
 it runs, which shows which copy you are calling.
+`ork doctor` also prints the commands to upgrade slicer, adj or ork when one is
+behind or missing, and `ork doctor --upgrade` prints them for all three. It runs
+none of them.
 
 ## What ork is
 

@@ -34,6 +34,12 @@ type toolCheck struct {
 	Version  string `json:"version,omitempty"`
 	OK       bool   `json:"ok"`
 	Error    string `json:"error,omitempty"`
+	// Resolved, Install, Checkout and Build are set for slicer and adj only
+	// (see describeInstall).
+	Resolved string        `json:"resolved,omitempty"`
+	Install  string        `json:"install,omitempty"`
+	Checkout *checkoutInfo `json:"checkout,omitempty"`
+	Build    *buildInfo    `json:"build,omitempty"`
 }
 
 type contractCheck struct {
@@ -64,6 +70,7 @@ type DoctorReport struct {
 	DaemonBuildID string         `json:"daemon_build_id,omitempty"`
 	BehindNotice  string         `json:"behind_notice,omitempty"`
 	Warning       string         `json:"warning,omitempty"`
+	Upgrade       []upgradeHint  `json:"upgrade"`
 }
 
 // assignmentPrefix recognizes only literal shell assignment names. Values are
@@ -270,6 +277,7 @@ func checkContract(ctx context.Context, slicer toolCheck, root string) contractC
 func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	fs := flag.NewFlagSet("doctor", flag.ContinueOnError)
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
+	all := fs.Bool("upgrade", false, "print upgrade commands for slicer, adj and ork even when none is behind")
 	pos, err := parse(fs, args)
 	if err != nil {
 		return o.usage("doctor: %v", err)
@@ -279,7 +287,7 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	}
 
 	t := a.Tools
-	rep := DoctorReport{OK: true, Projects: []projectCheck{}}
+	rep := DoctorReport{OK: true, Projects: []projectCheck{}, Upgrade: []upgradeHint{}}
 	registryPath, registryErr := registry.DefaultPath()
 	if registryErr == nil {
 		var file *registry.File
@@ -331,6 +339,9 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 		{"claude", t.Claude, false}, {"codex", t.Codex, false}, {"grok", t.Grok, false},
 	} {
 		tc := checkTool(ctx, c.name, c.bin, c.required)
+		if c.name == "slicer" || c.name == "adj" {
+			describeInstall(ctx, &tc, t.Git)
+		}
 		rep.Tools = append(rep.Tools, tc)
 		if c.required && !tc.OK {
 			rep.OK = false
@@ -345,6 +356,8 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	if !rep.Contract.OK {
 		rep.OK = false
 	}
+	// Hints are printed, never run, and never change the exit code.
+	rep.Upgrade = buildHints(rep, *all)
 
 	if registryErr != nil {
 		rep.RegistryError = registryErr.Error()
@@ -403,6 +416,15 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 		fmt.Fprintf(o.stdout, "[ok] contract  accepts %s%s\n", accepted, found)
 	} else {
 		fmt.Fprintf(o.stdout, "[FAIL] contract  accepts %s%s: %s\n", accepted, found, c.Error)
+	}
+	for _, h := range rep.Upgrade {
+		fmt.Fprintf(o.stdout, "[upgrade] %s  %s\n", h.Tool, h.Reason)
+		if h.Note != "" {
+			fmt.Fprintf(o.stdout, "  note: %s\n", h.Note)
+		}
+		for _, command := range h.Commands {
+			fmt.Fprintf(o.stdout, "  %s\n", command)
+		}
 	}
 	if rep.RegistryError != "" {
 		// The error text already begins with "registry"; the label says it once.

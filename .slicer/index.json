@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 188,
+  "next_id": 189,
   "preamble": "",
   "passes": [
     {
@@ -8598,7 +8598,7 @@
       "id": "S178",
       "title": "ork doctor reports sibling tool versions and prints upgrade commands",
       "short_title": "Doctor upgrade hints",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8631,7 +8631,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -8998,6 +8998,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S166",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S188",
+      "title": "S178 later notes: doctor hint edge cases and wording",
+      "short_title": "S178 later notes: doctor hint edge cases and wording",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "73d678a2-676b-4a84-b03a-e5139ccadd42",
+          "kind": "",
+          "text": "**2026-10-29** — From the S178 review and UI pass (2026-10-29), all later: (1) a slicer checkout whose venv is not .venv gets the PyPI hint; (2) no test changes the accepted contract set, so a hard-coded min/max in contractDirection would pass (needs a roles seam); (3) no behind hint for adj from its build info against its checkout; (4) with --upgrade and a current tool, the reason could show the installed version; (5) reason wording 'older than the versions ork accepts'; (6) the ork note says 'ORK_CHECKOUT is your ork checkout' while adj uses '='; (7) docs/design.md usage line near :988 is 87 columns.",
+          "created_at": "2026-10-29T21:17:12Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S178",
         "parent": "",
         "cites": [],
         "key": "",
