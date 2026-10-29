@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-183 items · — 48 · done 130 · retired 5
+185 items · — 50 · done 130 · retired 5
 
 ## v1.1
 
@@ -237,9 +237,11 @@
 | 180 | [S181](slices/S181.md) | Warn on blocked item | S | - |  | discovered from S165 | — |
 | 181 | [S182](slices/S182.md) | Hung role watchdog | M | - |  | discovered from S165 | — |
 | 182 | [S183](slices/S183.md) | Fix stale doc statements | S | - |  | discovered from S165 | — |
+| 183 | [S184](slices/S184.md) | Launch spec check sitting | M | - |  | discovered from S167 | — |
+| 184 | [S185](slices/S185.md) | adj answer keys in the TUI | S | - |  | discovered from S172 | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 183 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 185 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |

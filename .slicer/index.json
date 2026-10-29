@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 184,
+  "next_id": 186,
   "preamble": "",
   "passes": [
     {
@@ -7894,6 +7894,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "cd9469fe-4b65-424f-8737-07b9eebd568d",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Split (owner, 2026-10-29): the Roadmap launch half (TUI sitting between plan and confirmation, TestLaunch* tests, launch-sitting goldens, dashboard docs) moved to S184, which depends on this slice and on S166. This slice is the daemon gate and ork run.",
+          "created_at": "2026-10-29T16:11:26Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -8089,6 +8100,17 @@
           "kind": "",
           "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): ork adj ask is CLI only (no TUI ask form); ork adj answer always prompts (no --yes, process.owner-answers #170); never reject or supersede. Split: this slice is adjcli, engine, daemon and both CLI commands; the TUI answer keys and confirmation move to the new TUI slice. Depends on adj scope.v1-ork-edits (adj 173, open): do not start until the owner decides it.",
           "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "b3aae8ff-5fbc-4bef-9536-b8b773dfd582",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Split (owner, 2026-10-29): the TUI half (decision pane 1-4 and t keys, confirmation naming the option, hints, decision-answer goldens, dashboard docs) moved to S185, which depends on this slice. Both halves never reject, supersede or withdraw, and wait on adj 173 (scope.v1-ork-edits, open).",
+          "created_at": "2026-10-29T16:11:26Z",
           "attempt": 0,
           "by": "Jon R",
           "verified_by": "",
@@ -8532,6 +8554,91 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S184",
+      "title": "Roadmap launch runs the spec check before the confirmation",
+      "short_title": "Launch spec check sitting",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S167",
+        "S166"
+      ],
+      "note_records": [
+        {
+          "id": "ef3af9c0-4e87-46a6-b3c8-122566377f32",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Split from S167 (owner, 2026-10-29). Runs after S167 (daemon gate) and S166. A spec-check failure blocks the launch, no skip key.",
+          "created_at": "2026-10-29T16:11:26Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S167",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S185",
+      "title": "Decisions tab: answer an adj record with number keys and a confirmation",
+      "short_title": "adj answer keys in the TUI",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S172"
+      ],
+      "note_records": [
+        {
+          "id": "c77ce06f-133f-441c-9849-3dda0b37ee54",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Split from S172 (owner, 2026-10-29). Runs after S172; waits on adj 173 (scope.v1-ork-edits, open). No TUI ask form; no reject, supersede or withdraw.",
+          "created_at": "2026-10-29T16:11:26Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S172",
         "parent": "",
         "cites": [],
         "key": "",

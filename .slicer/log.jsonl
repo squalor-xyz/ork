@@ -2467,3 +2467,33 @@
 {"when": "2026-10-29T16:08:55Z", "item": "S180", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): git merge-file --u", "by": "Jon R"}
 {"when": "2026-10-29T16:08:55Z", "item": "S181", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): refuse the whole c", "by": "Jon R"}
 {"when": "2026-10-29T16:08:55Z", "item": "S182", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): fixed 30-minute ha", "by": "Jon R"}
+{"when": "2026-10-29T16:09:36Z", "item": "S184", "action": "add", "from": "", "to": "open", "note": "Roadmap launch runs the spec check before the confirmation"}
+{"when": "2026-10-29T16:09:36Z", "item": "S185", "action": "add", "from": "", "to": "open", "note": "Decisions tab: answer an adj record with number keys and a confirmation"}
+{"when": "2026-10-29T16:11:19Z", "item": "S184", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T16:11:19Z", "item": "S185", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T16:11:26Z", "item": "S184", "action": "set", "from": "", "to": "", "note": "depends_on -→S167,S166"}
+{"when": "2026-10-29T16:11:26Z", "item": "S185", "action": "set", "from": "", "to": "", "note": "depends_on -→S172"}
+{"when": "2026-10-29T16:11:26Z", "item": "S167", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Split (owner, 2026-10-29): the Roadmap laun", "by": "Jon R"}
+{"when": "2026-10-29T16:11:26Z", "item": "S172", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Split (owner, 2026-10-29): the TUI half (de", "by": "Jon R"}
+{"when": "2026-10-29T16:11:26Z", "item": "S184", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Split from S167 (owner, 2026-10-29). Runs a", "by": "Jon R"}
+{"when": "2026-10-29T16:11:26Z", "item": "S185", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Split from S172 (owner, 2026-10-29). Runs a", "by": "Jon R"}
+{"when": "2026-10-29T16:11:30Z", "item": "S184", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T16:11:30Z", "item": "S184", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T16:11:30Z", "item": "S184", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T16:11:30Z", "item": "S184", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T16:11:31Z", "item": "S184", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T16:11:31Z", "item": "S185", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T16:11:31Z", "item": "S185", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T16:11:31Z", "item": "S185", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T16:11:31Z", "item": "S185", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T16:11:31Z", "item": "S185", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T16:11:31Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T16:11:31Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T16:11:31Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T16:11:32Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T16:11:32Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T16:11:32Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T16:11:32Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T16:11:32Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T16:11:32Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T16:11:32Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Check"}
