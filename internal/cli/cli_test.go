@@ -908,7 +908,7 @@ exit 2
 }
 
 func TestDoctorSkipsShellWords(t *testing.T) {
-	words := strings.Fields("! { } case do done elif else esac fi for if in then until while . : break continue eval exec exit export readonly return set shift times trap unset cd command")
+	words := strings.Fields("! { } case do done elif else esac fi for if in then until while . : break continue eval exec exit export readonly return set shift times trap unset cd command time")
 	words = append(words, "$TOOL", "${TOOL}", "$(printf tool)", "`printf tool`", "~/bin/check", "~someone/bin/check")
 	for _, word := range words {
 		t.Run(word, func(t *testing.T) {
@@ -1351,4 +1351,98 @@ func TestProjectsSetRefusesAnUnfinishedRun(t *testing.T) {
 	if code != 1 || !strings.Contains(stderr, `"nope"`) {
 		t.Fatalf("unknown project: exit %d: %q", code, stderr)
 	}
+}
+
+func TestDoctorRegistryErrorDoesNotRepeatTheWord(t *testing.T) {
+	app, path := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir()})
+	if err := os.WriteFile(path, []byte("{"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	_, out, _ := run(t, app, "doctor")
+	if strings.Contains(out, "registry  registry") {
+		t.Fatalf("registry word repeated:\n%s", out)
+	}
+	want := "[WARN] registry  " + path + ": unexpected end of JSON input\n"
+	if !strings.Contains(out, want) {
+		t.Fatalf("output lacks %q:\n%s", want, out)
+	}
+	// The JSON field keeps the full error text.
+	_, out, _ = run(t, app, "doctor", "--json")
+	var d struct {
+		RegistryError string `json:"registry_error"`
+	}
+	mustJSON(t, out, &d)
+	if want := "registry " + path + ": unexpected end of JSON input"; d.RegistryError != want {
+		t.Fatalf("registry_error %q, want %q", d.RegistryError, want)
+	}
+}
+
+func TestDoctorShellErrorPrefixStopsAtTheFirstMarker(t *testing.T) {
+	app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "go test ("})
+	dir := t.TempDir()
+	script := `#!/bin/sh
+printf '%s\n' "sh: -c: line 1: unexpected word sh: 2: tail" >&2
+exit 2
+`
+	if err := os.WriteFile(filepath.Join(dir, "sh"), []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	d := projectReport(t, app)
+	want := "check_command: unexpected word sh: 2: tail"
+	if got := strings.Join(d.Projects[0].Findings, " "); got != want {
+		t.Fatalf("finding %q, want %q", got, want)
+	}
+}
+
+func TestDoctorTimeIsOnTheShellWordSkipList(t *testing.T) {
+	// PATH holds only sh, so a lookup of time would warn on any host.
+	pathDir := t.TempDir()
+	if err := os.Symlink("/bin/sh", filepath.Join(pathDir, "sh")); err != nil {
+		t.Fatal(err)
+	}
+	app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "time go test"})
+	t.Setenv("PATH", pathDir)
+	d := projectReport(t, app)
+	if len(d.Projects[0].Findings) != 0 {
+		t.Fatalf("findings: %+v", d.Projects[0].Findings)
+	}
+}
+
+func TestDoctorShowsNoneRegisteredForAnEmptyRegistry(t *testing.T) {
+	const want = "[--] projects  none registered: run ork projects add PATH\n"
+	t.Run("missing", func(t *testing.T) {
+		app, _ := doctorProjects(t)
+		_, out, _ := run(t, app, "doctor")
+		if !strings.Contains(out, want) || strings.Index(out, want) < strings.Index(out, "[ok] contract") {
+			t.Fatalf("output lacks %q after the contract line:\n%s", want, out)
+		}
+	})
+	t.Run("empty", func(t *testing.T) {
+		app, path := doctorProjects(t)
+		if err := registry.Save(path, &registry.File{Version: registry.Version, Projects: []registry.Project{}}); err != nil {
+			t.Fatal(err)
+		}
+		_, out, _ := run(t, app, "doctor")
+		if !strings.Contains(out, want) {
+			t.Fatalf("output lacks %q:\n%s", want, out)
+		}
+	})
+	t.Run("projects", func(t *testing.T) {
+		app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir()})
+		_, out, _ := run(t, app, "doctor")
+		if strings.Contains(out, "none registered") {
+			t.Fatalf("unexpected line:\n%s", out)
+		}
+	})
+	t.Run("unreadable", func(t *testing.T) {
+		app, path := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir()})
+		if err := os.WriteFile(path, []byte("{"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		_, out, _ := run(t, app, "doctor")
+		if strings.Contains(out, "none registered") {
+			t.Fatalf("unexpected line:\n%s", out)
+		}
+	})
 }

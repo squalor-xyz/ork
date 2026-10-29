@@ -112,7 +112,7 @@ func checkCommandWord(command string) string {
 			value := word.String()
 			switch value {
 			case "!", "{", "}", "case", "do", "done", "elif", "else", "esac", "fi", "for", "if", "in", "then", "until", "while",
-				".", ":", "break", "continue", "eval", "exec", "exit", "export", "readonly", "return", "set", "shift", "times", "trap", "unset", "cd", "command":
+				".", ":", "break", "continue", "eval", "exec", "exit", "export", "readonly", "return", "set", "shift", "times", "trap", "unset", "cd", "command", "time":
 				return ""
 			}
 			if strings.ContainsAny(value, "$`") || strings.HasPrefix(value, "~") {
@@ -144,7 +144,7 @@ func (p *projectCheck) addFinding(format string, args ...any) {
 	p.Findings = append(p.Findings, strings.Join(strings.Fields(fmt.Sprintf(format, args...)), " "))
 }
 
-var shellErrorPrefix = regexp.MustCompile(`^.*sh: (?:-c: line [0-9]+: |[0-9]+: )`)
+var shellErrorPrefix = regexp.MustCompile(`^.*?sh: (?:-c: line [0-9]+: |[0-9]+: )`)
 
 func checkProject(ctx context.Context, p registry.Project) projectCheck {
 	check := projectCheck{Name: p.Name, Path: p.Path, Findings: []string{}}
@@ -405,7 +405,10 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 		fmt.Fprintf(o.stdout, "[FAIL] contract  accepts %s%s: %s\n", accepted, found, c.Error)
 	}
 	if rep.RegistryError != "" {
-		fmt.Fprintf(o.stdout, "[WARN] registry  %s\n", rep.RegistryError)
+		// The error text already begins with "registry"; the label says it once.
+		fmt.Fprintf(o.stdout, "[WARN] registry  %s\n", strings.TrimPrefix(rep.RegistryError, "registry "))
+	} else if len(rep.Projects) == 0 {
+		fmt.Fprintln(o.stdout, "[--] projects  none registered: run ork projects add PATH")
 	}
 	for _, p := range rep.Projects {
 		status := "ok"

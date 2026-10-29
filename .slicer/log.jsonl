@@ -2512,3 +2512,8 @@
 {"when": "2026-10-29T17:06:25Z", "item": "S155", "action": "note", "from": "", "to": "", "note": "Later (review): a pre-S155 in-flight run whose gate history ", "by": "Jon R"}
 {"when": "2026-10-29T17:06:25Z", "item": "S155", "action": "status", "from": "started", "to": "done", "note": "Gate walk starts at the reviewer's seed row when the gate's first record matches it (chain A,B,A no longer retries a failed row); the daemon adapter test runs with an explicit empty environment. Review PASS first time.", "by": "Jon R"}
 {"when": "2026-10-29T17:06:26Z", "item": "S155", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 42, S155): Codex sol/medium impleme", "by": "Jon R"}
+{"when": "2026-10-29T16:31:08Z", "item": "S158", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-29T17:00:09Z", "item": "S158", "action": "note", "from": "", "to": "", "note": "Owner 2026-10-29 (UI pass): the none-registered line ends wi", "by": "Jon R"}
+{"when": "2026-10-29T17:00:09Z", "item": "S158", "action": "status", "from": "started", "to": "done", "note": "ork doctor: no doubled registry word, non-greedy shell-prefix strip, time on the skip list, and '[--] projects  none registered: run ork projects add PATH' for an empty or missing registry. Review and UI pass PASS after one small fix round.", "by": "Jon R"}
+{"when": "2026-10-29T17:00:09Z", "item": "S158", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 41, S158): Claude sonnet-high imple", "by": "Jon R"}
+{"when": "2026-10-29T16:54:57Z", "item": "S158", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (UI pass): the empty-registry doct", "by": "Jon R"}
