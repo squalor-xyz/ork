@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -50,17 +51,63 @@ func runPrompted(t *testing.T, input string, args ...string) promptRun {
 }
 
 func TestRunLineupPromptsTakeYAndN(t *testing.T) {
+	// The two prompts get different answers, so swapped prompts fail.
 	for _, tc := range []struct {
-		answer string
-		yes    bool
-	}{{"y", true}, {"Y", true}, {"yes", true}, {"YES", true}, {"n", false}, {"N", false}, {"no", false}, {"No", false}} {
-		t.Run(tc.answer, func(t *testing.T) {
-			r := runPrompted(t, tc.answer+"\n"+tc.answer+"\nyes\n")
-			want := fmt.Sprintf(`{"project":"p","item":"S1","well_specified":%t,"split":%t}`, tc.yes, tc.yes)
+		well, split         string
+		wantWell, wantSplit bool
+	}{
+		{"y", "n", true, false}, {"n", "y", false, true},
+		{"Yes", "NO", true, false}, {"NO", "Yes", false, true},
+		{"Y", "no", true, false}, {"no", "Y", false, true},
+		{"yes", "N", true, false}, {"N", "yes", false, true},
+	} {
+		t.Run(tc.well+"/"+tc.split, func(t *testing.T) {
+			r := runPrompted(t, tc.well+"\n"+tc.split+"\nyes\n")
+			want := fmt.Sprintf(`{"project":"p","item":"S1","well_specified":%t,"split":%t}`, tc.wantWell, tc.wantSplit)
 			if r.code != ExitOK || r.plan != want || !r.started {
 				t.Fatalf("code %d plan %s started %t: %s %s", r.code, r.plan, r.started, r.out, r.errs)
 			}
 		})
+	}
+}
+
+func TestRunUsageSaysYAndN(t *testing.T) {
+	r := runPrompted(t, "", "--yes", "--well-specified", "maybe", "--split", "n")
+	if r.code != ExitUsage || !strings.Contains(r.errs, "--well-specified y/n and --split y/n") || strings.Contains(r.errs, "yes|no") {
+		t.Fatalf("usage error: code %d: %s", r.code, r.errs)
+	}
+	var out, errs bytes.Buffer
+	if code := (&App{}).Run(context.Background(), []string{"help"}, &out, &errs); code != ExitOK {
+		t.Fatalf("help: code %d: %s", code, errs.String())
+	}
+	if !strings.Contains(out.String(), "ork run P ID [--yes --well-specified y/n --split y/n]") || strings.Contains(out.String(), "yes|no") {
+		t.Fatalf("usage text: %s", out.String())
+	}
+}
+
+func TestWaveStartUsageSaysYAndN(t *testing.T) {
+	var out, errs bytes.Buffer
+	code := (&App{}).Run(context.Background(), []string{"wave", "start", "p", "S1", "--yes", "--well-specified", "maybe", "--split", "n"}, &out, &errs)
+	if code != ExitUsage || !strings.Contains(errs.String(), "wave start: --well-specified y/n and --split y/n are required with --yes") || strings.Contains(errs.String(), "yes|no") {
+		t.Fatalf("usage error: code %d: %s", code, errs.String())
+	}
+	// parse discards the flag package's help output, so no run of the command
+	// shows the flag help strings; check the source that defines them.
+	for _, file := range []string{"run.go", "wave.go"} {
+		src, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(string(src), "yes or no") {
+			t.Errorf("%s: flag help still says yes or no", file)
+		}
+	}
+	wave, err := os.ReadFile("wave.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := strings.Count(string(wave), `"y/n for every item"`); n != 2 {
+		t.Errorf("wave.go: %d flag help strings say y/n for every item, want 2", n)
 	}
 }
 

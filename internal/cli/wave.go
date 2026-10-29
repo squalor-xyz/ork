@@ -88,8 +88,8 @@ func (a *App) waveSuggest(ctx context.Context, o *output, args []string) int {
 func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	fs := flag.NewFlagSet("wave start", flag.ContinueOnError)
 	yes := fs.Bool("yes", false, "confirm all plans")
-	well := fs.String("well-specified", "", "yes or no for every item")
-	split := fs.String("split", "", "yes or no for every item")
+	well := fs.String("well-specified", "", "y/n for every item")
+	split := fs.String("split", "", "y/n for every item")
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
 	pos, err := parse(fs, args)
 	if err != nil {
@@ -100,7 +100,7 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	}
 	valid := func(v string) bool { return v == "" || yesNo(v) != "" }
 	if !valid(*well) || !valid(*split) || (*yes && (*well == "" || *split == "")) {
-		return o.usage("wave start: --well-specified yes|no and --split yes|no are required with --yes")
+		return o.usage("wave start: --well-specified y/n and --split y/n are required with --yes")
 	}
 	input := a.Input
 	if input == nil {
