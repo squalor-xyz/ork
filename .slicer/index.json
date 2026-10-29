@@ -8812,7 +8812,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b415d296-1ae1-48fc-954a-20ebc354b1ba",
+          "kind": "",
+          "text": "**2026-10-29** — Added 2026-10-29 from the S178 review: docs/orchestrator-parity.md row 7.5 (about :111) and gap 13 (about :140) still describe the dropped ork upgrade pull-and-build command; mark them met by ork doctor --upgrade once S178 lands. Add docs/orchestrator-parity.md to Files.",
+          "created_at": "2026-10-29T20:56:28Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
