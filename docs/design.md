@@ -199,8 +199,8 @@ ork (TUI)  ork status --json (CLI)
    `wave.start`, before admitting any member or writing a run record. This
    dependency check applies to wave start and the spec check; `run.start`
    does not repeat the dependency read.
-   At launch (`l` in Waves, `ork wave start`, or `ork run`), before the owner
-   approves, ork runs one spec check over the selected items (adj 164,
+   At launch (`l` in Waves or Roadmap, `ork wave start`, or `ork run`), before
+   the owner approves, ork runs one spec check over the selected items (adj 164,
    `roles.spec-check`; *proposed* until the Wave lifecycle is reviewed). It
    comes after the lineup and the plan because the owner ticks and plans items
    first. The check is one read-only pass of the spec-check role over the
@@ -1036,6 +1036,10 @@ An empty line or end of input holds the slice and exits 1, without starting.
 `--yes` skips only confirmation and still runs the spec check. A failed
 check blocks launch. With `--json`, the sitting goes to stderr and stdout
 holds one result; a held slice returns `{"started":false,"held":["ID"]}`.
+The Roadmap launch uses the same sitting after its plan and before its
+confirmation (S184). Skipping leaves the slice held and closes the launch;
+a failed check blocks launch with no skip key. Editing the confirmed lineup
+replans without another spec check.
 `ork run` refuses a blocked item through the spec check (S181); raw
 `run.start` does not read dependencies yet.
 

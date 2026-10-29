@@ -368,6 +368,13 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		}
 	case wavesMsg:
 		return m, m.applyWaves(msg)
+	case launchSpecMsg:
+		return m, m.applyLaunchSpec(msg)
+	case specAnswerMsg:
+		if state, done := m.activeSpec(); state != nil && state == msg.state {
+			return m, m.applyAnswer(state, done, msg)
+		}
+		return m, nil
 	case launchMsg:
 		return m, m.applyLaunch(msg)
 	case renderMsg:
@@ -462,8 +469,8 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			}
 			return m, nil
 		}
-		if m.waves != nil && m.waves.sitting != nil {
-			if s := m.waves.sitting; s.free {
+		if state, _ := m.activeSpec(); state != nil {
+			if s := state.sitting; s.free {
 				s.input.update(msg)
 			}
 			return m, nil
@@ -543,8 +550,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 
-	if m.waves != nil && m.waves.sitting != nil {
-		return m.sittingKey(msg)
+	if state, done := m.activeSpec(); state != nil {
+		return m.sittingKey(state, done, msg)
 	}
 	if m.waves != nil && m.waves.lineup != nil {
 		return m.lineupKey(msg)

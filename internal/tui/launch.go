@@ -23,12 +23,15 @@ const (
 	launchWell
 	launchSplit
 	launchPlanPending
+	launchSpecPending
+	launchSitting
 	launchConfirm
 	launchEdit
 	launchStarting
 )
 
 type launchState struct {
+	specState
 	lineup       *lineupEditor
 	prev         *daemon.RunPlan
 	prevParams   daemon.RunParams
@@ -274,10 +277,83 @@ func (m *Model) applyLaunch(msg launchMsg) tea.Cmd {
 		m.actionStatus = "No run plan returned"
 		return nil
 	}
+	replan := l.prev != nil
 	l.plan = msg.plan
 	l.prev = nil
 	m.actionStatus = ""
-	m.confirmLaunch()
+	if replan {
+		m.confirmLaunch()
+		return nil
+	}
+	l.stage = launchSpecPending
+	l.checking = true
+	live, ctx, request, project, item := m.cfg.Live, l.ctx, l.request, l.params.Project, l.params.Item
+	return func() tea.Msg {
+		if ctx.Err() != nil {
+			return nil
+		}
+		res, err := live.SpecCheck(ctx, project, []string{item})
+		return launchSpecMsg{request: request, check: res, err: err}
+	}
+}
+
+type launchSpecMsg struct {
+	request uint64
+	check   *daemon.SpecCheckResult
+	err     error
+}
+
+func (m *Model) applyLaunchSpec(msg launchSpecMsg) tea.Cmd {
+	l := m.launch
+	if l == nil || l.request != msg.request || l.stage != launchSpecPending || m.view != roadmapView || m.active < 0 || m.projects[m.active].reg.Name != l.params.Project {
+		return nil
+	}
+	l.checking = false
+	m.actionStatus = ""
+	if msg.err != nil {
+		m.dropLaunch()
+		m.actionStatus = actionError(msg.err)
+		return nil
+	}
+	if msg.check == nil {
+		m.dropLaunch()
+		m.actionStatus = "No spec check returned"
+		return nil
+	}
+	l.answerProject = l.params.Project
+	l.ownerNeeded = msg.check.OwnerNeeded
+	l.specs = map[string]daemon.SpecItemResult{}
+	for _, r := range msg.check.Items {
+		l.specs[r.Item] = r
+	}
+	r := l.specs[l.params.Item]
+	if r.Ready {
+		return m.finishLaunchSpec()
+	}
+	var asks []specAsk
+	for i, q := range r.Questions {
+		asks = append(asks, specAsk{item: l.params.Item, n: i + 1, of: len(r.Questions), q: q})
+	}
+	if len(asks) == 0 {
+		return m.finishLaunchSpec()
+	}
+	l.sitting = &specSitting{asks: asks, answers: map[string][]string{}, free: asks[0].freeOnly()}
+	l.stage = launchSitting
+	return nil
+}
+
+func (m *Model) finishLaunchSpec() tea.Cmd {
+	l := m.launch
+	if l.specReady(l.params.Item) {
+		m.confirmLaunch()
+		return nil
+	}
+	status := l.params.Item + " " + specNote(l.specs[l.params.Item]) + "; l checks again"
+	m.dropLaunch()
+	if m.actionStatus != "" {
+		status = m.actionStatus + "; " + status
+	}
+	m.actionStatus = status
 	return nil
 }
 
@@ -341,6 +417,10 @@ func (m *Model) launchLineupKey(msg tea.KeyPressMsg) tea.Cmd {
 func (m *Model) launchView(w int) overviewView {
 	out := overviewView{sel: -1}
 	th, l := m.cfg.Theme, m.launch
+	if l.stage == launchSitting {
+		out, _ := m.sittingParts(&l.specState, w)
+		return out
+	}
 	if l.stage == launchEdit {
 		title := ""
 		for _, item := range m.readyLaunchItems() {
@@ -394,6 +474,8 @@ func (m *Model) launchView(w int) overviewView {
 		out.body = append(out.body, indent+l.input.view(max(w-2, 1), th))
 	case launchPlanPending:
 		add("pending: run.plan")
+	case launchSpecPending:
+		add("pending: spec.check")
 	case launchConfirm, launchStarting:
 		p := l.plan
 		add(p.Project.Name + " " + p.Item)

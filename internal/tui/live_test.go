@@ -231,8 +231,12 @@ func (*fakeLive) WaveStart(context.Context, daemon.WaveStartParams) (*daemon.Wav
 	return nil, errors.New("unexpected wave start")
 }
 
-func (*fakeLive) SpecCheck(context.Context, string, []string) (*daemon.SpecCheckResult, error) {
-	return nil, errors.New("unexpected spec check")
+func (*fakeLive) SpecCheck(_ context.Context, _ string, items []string) (*daemon.SpecCheckResult, error) {
+	out := &daemon.SpecCheckResult{}
+	for _, id := range items {
+		out.Items = append(out.Items, daemon.SpecItemResult{Item: id, Ready: true})
+	}
+	return out, nil
 }
 func (*fakeLive) SpecAnswer(context.Context, daemon.SpecAnswerParams) (*daemon.SpecAnswerResult, error) {
 	return nil, errors.New("unexpected spec answer")

@@ -18,6 +18,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
 type launchLive struct {
@@ -25,6 +26,10 @@ type launchLive struct {
 	plans, starts     []daemon.RunParams
 	plan              daemon.RunPlan
 	planErr, startErr error
+	checks            [][]string
+	check             func([]string) (*daemon.SpecCheckResult, error)
+	answers           []daemon.SpecAnswerParams
+	answerErr         error
 }
 
 func (l *launchLive) Plan(_ context.Context, p daemon.RunParams) (*daemon.RunPlan, error) {
@@ -35,6 +40,21 @@ func (l *launchLive) Plan(_ context.Context, p daemon.RunParams) (*daemon.RunPla
 func (l *launchLive) Start(_ context.Context, p daemon.RunParams) (runrec.Record, error) {
 	l.starts = append(l.starts, p)
 	return runrec.Record{ID: "new-run"}, l.startErr
+}
+func (l *launchLive) SpecCheck(_ context.Context, project string, items []string) (*daemon.SpecCheckResult, error) {
+	l.checks = append(l.checks, append([]string{project}, items...))
+	if l.check != nil {
+		return l.check(items)
+	}
+	out := &daemon.SpecCheckResult{}
+	for _, id := range items {
+		out.Items = append(out.Items, daemon.SpecItemResult{Item: id, Ready: true})
+	}
+	return out, nil
+}
+func (l *launchLive) SpecAnswer(_ context.Context, p daemon.SpecAnswerParams) (*daemon.SpecAnswerResult, error) {
+	l.answers = append(l.answers, p)
+	return &daemon.SpecAnswerResult{Item: p.Item, Ready: true}, l.answerErr
 }
 func launchHarness(t *testing.T) (*harness, *launchLive) {
 	t.Helper()
@@ -78,7 +98,7 @@ func launchPlanning(t *testing.T, h *harness) tea.Cmd {
 }
 func launchConfirmed(t *testing.T, h *harness) {
 	t.Helper()
-	h.m.Update(launchPlanning(t, h)())
+	h.deliver(launchPlanning(t, h)())
 	if !strings.Contains(h.view(), "ork run ork S90? [y/N] (Enter is No)") {
 		t.Fatalf("missing confirmation:\n%s", h.view())
 	}
@@ -133,7 +153,7 @@ func TestLaunchAsksWellSpecifiedAndSplit(t *testing.T) {
 			if c == nil {
 				t.Fatal("accepted answer gave no Plan")
 			}
-			h.m.Update(c())
+			h.deliver(c())
 			want := strings.HasPrefix(strings.ToLower(a), "y")
 			if len(l.plans) != 1 || l.plans[0].WellSpecified != want || l.plans[0].Split != want {
 				t.Fatalf("answers: %+v", l.plans)
@@ -147,7 +167,7 @@ func TestLaunchPlanBeforeConfirm(t *testing.T) {
 	if len(l.plans) != 0 || len(l.starts) != 0 || !strings.Contains(h.view(), "pending: run.plan") {
 		t.Fatal("Plan must run in command")
 	}
-	h.m.Update(c())
+	h.deliver(c())
 	want := daemon.RunParams{Project: "ork", Item: "S90", WellSpecified: true, Split: false}
 	if len(l.plans) != 1 || !reflect.DeepEqual(l.plans[0], want) || len(l.starts) != 0 {
 		t.Fatalf("calls: %+v %+v", l.plans, l.starts)
@@ -227,13 +247,13 @@ func TestLaunchErrorVerbatim(t *testing.T) {
 				l.startErr = e
 			}
 			c := launchPlanning(t, h)
-			h.m.Update(c())
+			h.deliver(c())
 			if stage == "start" {
 				_, c = h.m.Update(press("y"))
 				if c == nil {
 					t.Fatal("missing Start")
 				}
-				h.m.Update(c())
+				h.deliver(c())
 			}
 			if !strings.Contains(h.view(), "launch_failed: Exact ERROR: keep punctuation.") {
 				t.Fatalf("error changed:\n%s", h.view())
@@ -389,7 +409,7 @@ func TestLaunchReadyListNavigation(t *testing.T) {
 		if c == nil {
 			t.Fatal("missing Plan")
 		}
-		h.m.Update(c())
+		h.deliver(c())
 		if !strings.Contains(h.view(), "ork run ork S91?") {
 			t.Fatalf("wrong selection for %v", keys)
 		}
@@ -574,7 +594,7 @@ func TestLaunchQueuedStartDropped(t *testing.T) {
 			launchConfirmed(t, h)
 			_, c := h.m.Update(press("y"))
 			h.m.Update(press(key))
-			h.m.Update(c())
+			h.deliver(c())
 			if len(l.starts) != 0 || len(h.m.launchFlights) != 0 {
 				t.Fatal("dropped queued Start called the daemon or left a flight")
 			}
@@ -708,12 +728,12 @@ func TestLaunchStartsWithBothAnswers(t *testing.T) {
 				if c == nil {
 					t.Fatal("no Plan")
 				}
-				h.m.Update(c())
+				h.deliver(c())
 				_, c = h.m.Update(press("y"))
 				if c == nil {
 					t.Fatal("no Start")
 				}
-				h.m.Update(c())
+				h.deliver(c())
 				if len(l.plans) != 1 || len(l.starts) != 1 || l.starts[0].WellSpecified != well || l.starts[0].Split != split || !reflect.DeepEqual(l.starts[0].Expected, &l.plan) {
 					t.Fatalf("Plan and Start: %+v %+v", l.plans, l.starts)
 				}
@@ -1022,5 +1042,217 @@ func TestLaunchFirstPlanEscStillCancels(t *testing.T) {
 	h.m.Update(cmd())
 	if h.m.launch != nil || h.m.confirm != nil || !strings.Contains(h.view(), "Cancelled") {
 		t.Fatal("first plan Esc did not cancel")
+	}
+}
+
+func launchQuestions(l *launchLive) {
+	l.check = func([]string) (*daemon.SpecCheckResult, error) {
+		return &daemon.SpecCheckResult{OwnerNeeded: "Confirm the rollout window.", Items: []daemon.SpecItemResult{{Item: "S90", Questions: twoQuestions()}}}, nil
+	}
+}
+func TestLaunchRunsTheSpecCheckBeforeTheConfirmation(t *testing.T) {
+	h, l := launchHarness(t)
+	_, check := h.m.Update(launchPlanning(t, h)())
+	if check == nil || h.m.confirm != nil || !strings.Contains(h.view(), "pending: spec.check") {
+		t.Fatalf("no pending check before confirmation:\n%s", h.view())
+	}
+	if m := h.m; m.actionStatus != "" || strings.Count(h.view(), "pending: spec.check") != 1 {
+		t.Fatalf("pending check must appear in the launch body only; status %q:\n%s", m.actionStatus, h.view())
+	}
+	h.deliver(press("y"))
+	h.deliver(press("s"))
+	h.deliver(press("l"))
+	if len(l.checks) != 0 || len(l.starts) != 0 {
+		t.Fatal("check ran synchronously or launch skipped it")
+	}
+	h.deliver(check())
+	if !reflect.DeepEqual(l.checks, [][]string{{"ork", "S90"}}) || h.m.confirm == nil {
+		t.Fatalf("checks %v confirm %v", l.checks, h.m.confirm)
+	}
+}
+func TestLaunchSittingAnswersRecordThenConfirm(t *testing.T) {
+	h, l := launchHarness(t)
+	launchQuestions(l)
+	t.Setenv("ADJ_DECIDED_BY", "jon")
+	h.m.byName["ork"].reg.Adj = true
+	h.deliver(launchPlanning(t, h)())
+	if !strings.Contains(h.view(), "[S90 1/2]") || h.m.confirm != nil {
+		t.Fatalf("no sitting:\n%s", h.view())
+	}
+	h.deliver(press("2"))
+	if len(l.answers) != 0 || !strings.Contains(h.view(), "[S90 2/2]") {
+		t.Fatal("partial answer recorded or question not advanced")
+	}
+	h.deliver(press("t"))
+	h.deliver(tea.PasteMsg{Content: "call it --widen"})
+	_, cmd := h.m.Update(press("enter"))
+	if h.m.confirm != nil {
+		t.Fatal("confirmed before recording")
+	}
+	if cmd != nil {
+		h.deliver(cmd())
+	}
+	want := daemon.SpecAnswerParams{Project: "ork", Item: "S90", Answers: []string{"memory: rebuilt at each start", "call it --widen"}, Adj: true, By: "jon"}
+	if !reflect.DeepEqual(l.answers, []daemon.SpecAnswerParams{want}) || h.m.confirm == nil || len(l.starts) != 0 {
+		t.Fatalf("answers %v confirm %v starts %v", l.answers, h.m.confirm, l.starts)
+	}
+	h.deliver(press("y"))
+	if len(l.starts) != 1 {
+		t.Fatal("ready launch did not start")
+	}
+}
+func TestLaunchSittingSkipClosesTheLaunchWithAStatus(t *testing.T) {
+	for _, key := range []string{"s", "esc"} {
+		t.Run(key, func(t *testing.T) {
+			h, l := launchHarness(t)
+			launchQuestions(l)
+			h.deliver(launchPlanning(t, h)())
+			if !strings.Contains(h.view(), "[S90 1/2]") {
+				t.Fatal("no sitting")
+			}
+			h.deliver(press("1"))
+			h.deliver(press(key))
+			h.deliver(press("y"))
+			if h.m.launch != nil || h.m.confirm != nil || len(l.starts) != 0 || len(l.answers) != 0 || h.m.actionStatus != "S90 waits on 2 spec questions; l checks again" {
+				t.Fatalf("launch %v confirm %v status %q", h.m.launch, h.m.confirm, h.m.actionStatus)
+			}
+			h.deliver(launchPlanning(t, h)())
+			if len(l.checks) != 2 {
+				t.Fatal("retry did not check again")
+			}
+		})
+	}
+}
+func TestLaunchSpecCheckErrorDropsTheLaunch(t *testing.T) {
+	blocked := daemon.BlockedMessage([]string{"S90"}, []slicercli.ItemDeps{{ID: "S90", BlockedBy: []string{"S89"}}}, map[string]string{"S89": "Prior slice"})
+	for _, tc := range []struct {
+		err  *ipc.Error
+		want string
+	}{
+		{err: &ipc.Error{Code: "internal", Message: "Exact CHECK failure."}, want: "internal: Exact CHECK failure."},
+		{err: &ipc.Error{Code: "refused", Message: blocked}, want: blocked},
+	} {
+		e := tc.err
+		t.Run(e.Code, func(t *testing.T) {
+			h, l := launchHarness(t)
+			l.check = func([]string) (*daemon.SpecCheckResult, error) { return nil, e }
+			h.deliver(launchPlanning(t, h)())
+			h.deliver(press("y"))
+			h.deliver(press("s"))
+			if h.m.launch != nil || h.m.confirm != nil || len(l.starts) != 0 || h.m.actionStatus != tc.want {
+				t.Fatalf("launch %v status %q", h.m.launch, h.m.actionStatus)
+			}
+		})
+	}
+}
+func TestLaunchReplanAfterEditDoesNotCheckAgain(t *testing.T) {
+	h, l := launchHarness(t)
+	launchConfirmed(t, h)
+	if len(l.checks) != 1 {
+		t.Fatalf("initial checks %v", l.checks)
+	}
+	h.deliver(editTestLaunchLineup(t, h)())
+	if len(l.checks) != 1 || h.m.confirm == nil || len(l.plans) != 2 {
+		t.Fatalf("checks %v confirm %v plans %v", l.checks, h.m.confirm, l.plans)
+	}
+}
+func TestLaunchSittingGolden(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		t.Run(fmt.Sprint(mono), func(t *testing.T) {
+			h, l := launchHarness(t)
+			h.m.cfg.Theme = NewTheme(mono)
+			launchQuestions(l)
+			h.deliver(launchPlanning(t, h)())
+			if !strings.Contains(h.view(), "[S90 1/2]") {
+				t.Fatal("no launch sitting")
+			}
+			theme := "color"
+			if mono {
+				theme = "mono"
+			}
+			h.at(100, 30)
+			checkGolden(t, "launch-sitting-100x30-"+theme+".txt", h.m.View().Content)
+		})
+	}
+}
+
+func TestLaunchSittingAnswerFailureBlocksLaunch(t *testing.T) {
+	h, l := launchHarness(t)
+	launchQuestions(l)
+	l.answerErr = &ipc.Error{Code: "internal", Message: "Exact ANSWER failure."}
+	h.deliver(launchPlanning(t, h)())
+	h.deliver(press("1"))
+	h.deliver(press("1"))
+	if h.m.launch != nil || h.m.confirm != nil || len(l.starts) != 0 || !strings.Contains(h.m.actionStatus, "internal: Exact ANSWER failure.") {
+		t.Fatalf("launch %v status %q", h.m.launch, h.m.actionStatus)
+	}
+}
+
+func TestLaunchStaleSpecCheckAfterNavigation(t *testing.T) {
+	for _, key := range []string{"esc", "]", "tab"} {
+		t.Run(key, func(t *testing.T) {
+			h, l := launchHarness(t)
+			_, cmd := h.m.Update(launchPlanning(t, h)())
+			if cmd == nil {
+				t.Fatal("no check")
+			}
+			late := cmd()
+			h.deliver(press(key))
+			h.deliver(late)
+			if h.m.launch != nil || h.m.confirm != nil || len(l.starts) != 0 {
+				t.Fatal("stale check restored launch")
+			}
+		})
+	}
+	// A reply from the previous launch must not finish a newer launch's check.
+	h, l := launchHarness(t)
+	_, cmd := h.m.Update(launchPlanning(t, h)())
+	late := cmd()
+	h.deliver(press("esc"))
+	_, next := h.m.Update(launchPlanning(t, h)())
+	h.deliver(late)
+	if h.m.confirm != nil || !strings.Contains(h.view(), "pending: spec.check") {
+		t.Fatal("old request confirmed new launch")
+	}
+	h.deliver(next())
+	if h.m.confirm == nil || len(l.checks) != 2 {
+		t.Fatal("new check lost")
+	}
+}
+
+func TestLaunchMissingSpecCheckDoesNotConfirm(t *testing.T) {
+	for _, res := range []*daemon.SpecCheckResult{nil, {}, {Items: []daemon.SpecItemResult{{Item: "different", Ready: true}}}} {
+		t.Run(fmt.Sprint(res), func(t *testing.T) {
+			h, l := launchHarness(t)
+			l.check = func([]string) (*daemon.SpecCheckResult, error) { return res, nil }
+			h.deliver(launchPlanning(t, h)())
+			h.deliver(press("y"))
+			if h.m.launch != nil || h.m.confirm != nil || len(l.starts) != 0 {
+				t.Fatal("missing readiness allowed launch")
+			}
+		})
+	}
+}
+
+func TestLaunchLateAnswerDoesNotConfirmAnotherLaunch(t *testing.T) {
+	h, l := launchHarness(t)
+	launchQuestions(l)
+	h.deliver(launchPlanning(t, h)())
+	h.deliver(press("1"))
+	_, record := h.m.Update(press("1"))
+	if record == nil {
+		t.Fatal("no answer command")
+	}
+	// Navigation can drop a launch while an answer is being recorded.
+	h.m.switchTo(1)
+	h.m.switchTo(0)
+	l.check = nil
+	launchConfirmed(t, h)
+	confirm := h.m.confirm
+	for _, msg := range exec(record) {
+		h.deliver(msg)
+	}
+	if h.m.confirm != confirm || len(l.answers) != 1 || len(l.starts) != 0 {
+		t.Fatal("old answer affected new launch or was not recorded")
 	}
 }

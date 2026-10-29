@@ -51,11 +51,8 @@ type wavesState struct {
 	showAll        bool
 	launched       map[string]string
 	starting       bool
-	checking       bool   // a spec check is in flight
 	checkRequest   uint64 // the check whose reply counts
-	ownerNeeded    string
-	specs          map[string]daemon.SpecItemResult // the spec check's latest answer for each item
-	sitting        *specSitting                     // the spec questions on screen
+	specState
 }
 
 type wavesMsg struct {
@@ -498,8 +495,6 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 	switch msg.kind {
 	case "check":
 		return m.applyCheck(msg)
-	case "answer":
-		return m.applyAnswer(msg)
 	case "detail":
 		if w.pane != nil && w.paneRequest == msg.sequence && w.pane.id == msg.item {
 			w.pane.pending = false
@@ -561,7 +556,7 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 		return m.waveItemBody(width), nil
 	}
 	if w != nil && w.sitting != nil {
-		return m.sittingParts(width)
+		return m.sittingParts(&w.specState, width)
 	}
 	add := func(text string) {
 		for _, line := range wrapText(text, max(width-2, 1)) {

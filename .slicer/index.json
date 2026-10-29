@@ -8860,7 +8860,7 @@
       "id": "S184",
       "title": "Roadmap launch runs the spec check before the confirmation",
       "short_title": "Launch spec check sitting",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S167",
@@ -8896,7 +8896,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -1196,10 +1196,11 @@ and the item counts as ready. The saved answers survive a daemon restart
 until run start or a spec change. Spec checks and answer writes use separate
 connections so their waits do not block other sitting requests. Any shared
 `Owner needed` text from the report is kept in the sitting and the Waves
-list. A question with a decision key is also filed in
-adj when the project has adj and `ADJ_DECIDED_BY` is set (the status line says
-why not otherwise). When the sitting ends, the confirmation below covers the
-ready items only, and says which items it leaves out after the command, for
+list. The Roadmap launch uses the same sitting for its selected slice (S184).
+A question with a decision key is also filed in adj when the project has adj
+and `ADJ_DECIDED_BY` is set (the status line says why not otherwise). When the
+sitting ends, the confirmation below covers the ready items only, and says
+which items it leaves out after the command, for
 example `ork wave start P A? [y/N] (Enter is No)  B waits on spec questions`
 (the part after the command is not run). A held item stays ticked with `waits
 on N spec questions` on its row, the launch status says `ID waits on spec
@@ -1363,6 +1364,20 @@ the list. `enter` picks a slice; `esc` cancels.
 Launch asks "Well specified? [y/n]:" and then "Split? [y/n]:". Neither has a
 default. Enter submits y, yes, n or no in any case; invalid input asks again.
 The TUI calls `run.plan` after both answers and shows "pending: run.plan".
+After the plan, it calls `spec.check` for the selected slice and shows
+`pending: spec.check` in the launch body only, with an empty status line,
+before confirmation (S184). A ready slice proceeds to confirmation. Questions
+open the same sitting as Waves: `1`-`N` picks an option, `t` types an answer
+and `enter` submits it. The last answer is
+recorded with `spec.answer` before confirmation. `s` or `esc` skips the rest
+(`esc` in an option's free-text field first returns to the options). A slice
+with open questions closes the launch with `ITEM waits on N spec questions;
+l checks again`; nothing starts. A check error, including a blocked-item
+refusal, closes the launch and uses the same `actionError` text as Waves
+and plan errors. Refusals show the message without a `refused:` prefix;
+other errors keep their code, for example `internal: Exact CHECK failure.`
+There is no key to skip a failed check. An unchanged spec uses the daemon's
+cache; a changed spec runs the check again.
 The plan summary shows project, item, worktree, branch and check command.
 When budgets are overridden, it adds `budgets: N min, N tokens` with the
 effective values; zero uses the project default. The lineup rows show
@@ -1386,17 +1401,18 @@ There is no project default; the choice applies only to that run.
 
 At confirmation, `e` opens the shared lineup editor seeded from the displayed plan. `esc`
 discards edits and returns to the same confirmation without planning.
-Saving changed values shows `pending: run.plan`, then the new confirmation;
-unchanged values return without a daemon call. After an edit the status line
-adds dim `lineup edited` after the unchanged command. A failed replan shows
-its error verbatim and restores the prior plan and overrides; `y` can still
+Saving changed values shows `pending: run.plan`, then the new confirmation
+without repeating the spec check; unchanged values return without a daemon
+call. After an edit the status line adds dim `lineup edited` after the
+unchanged command. A failed replan shows its error verbatim and restores the
+prior plan and overrides; `y` can still
 start that plan. The confirmation hint offers `e edit lineup`; it drops with
 `y` and `n` at narrow widths. At confirmation, Enter, n, N and Esc cancel.
 Esc during the first pending plan cancels the launch. During a pending edited
 replan, the hint reads `esc back`: Esc cancels only that replan and returns
 to the previous confirmation with its previous params. A late reply from the
 cancelled replan is ignored, including while a newer replan is pending.
-Changing project or view drops the launch, and late plan replies
+Changing project or view drops the launch, and late plan or spec-check replies
 do not restore it. Once Start is sent, Esc and navigation close the launch
 without cancelling Start. The status stays `ork run PROJECT ITEM: pending`.
 Pressing `l` for that project says `ork run PROJECT ITEM is pending` until
