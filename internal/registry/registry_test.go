@@ -435,3 +435,70 @@ func TestValidatePatternNeedsAnIDPlaceholder(t *testing.T) {
 		t.Error("ValidatePattern({ID}) = nil, want an error: placeholders are case sensitive")
 	}
 }
+
+func TestValidateEnvLineAndVendorEnv(t *testing.T) {
+	for _, ok := range []string{"zsh on darwin", "Go 1.27.x; use go -C DIR", "tab\there", "x"} {
+		if err := ValidateEnvLine(ok); err != nil {
+			t.Errorf("ValidateEnvLine(%q) = %v, want nil", ok, err)
+		}
+	}
+	for _, bad := range []string{"", "   ", "\t", "two\nlines", "carriage\rreturn", "nul\x00byte"} {
+		err := ValidateEnvLine(bad)
+		if err == nil || !strings.Contains(err.Error(), "environment_lines") {
+			t.Errorf("ValidateEnvLine(%q) = %v, want an error naming environment_lines", bad, err)
+		}
+	}
+
+	for _, ok := range [][3]string{{"codex", "VENDOR_CODEX_NETWORK", "1"}, {"claude", "_x9", ""}, {"my-vendor_2", "A", "a b=c\nd"}} {
+		if err := ValidateVendorEnv(ok[0], ok[1], ok[2]); err != nil {
+			t.Errorf("ValidateVendorEnv(%q, %q, %q) = %v, want nil", ok[0], ok[1], ok[2], err)
+		}
+	}
+	for _, bad := range []struct {
+		vendor, key, value string
+		field              string
+	}{
+		{"", "A", "1", "vendor"},
+		{"Codex", "A", "1", "vendor"},
+		{"co dex", "A", "1", "vendor"},
+		{"co/dex", "A", "1", "vendor"},
+		{"codex", "", "1", "key"},
+		{"codex", "1A", "1", "key"},
+		{"codex", "A-B", "1", "key"},
+		{"codex", "A=B", "1", "key"},
+		{"codex", "A B", "1", "key"},
+		{"codex", "A", "x\x00y", "value"},
+	} {
+		err := ValidateVendorEnv(bad.vendor, bad.key, bad.value)
+		if err == nil || !strings.Contains(err.Error(), "vendor_env") || !strings.Contains(err.Error(), bad.field) {
+			t.Errorf("ValidateVendorEnv(%q, %q, %q) = %v, want an error naming vendor_env and %s", bad.vendor, bad.key, bad.value, err, bad.field)
+		}
+	}
+	// An error never quotes the value.
+	if err := ValidateVendorEnv("codex", "A", "sec\x00ret"); err == nil || strings.Contains(err.Error(), "sec") {
+		t.Errorf("value error quotes the value: %v", err)
+	}
+}
+
+func TestValidatePermissionEntry(t *testing.T) {
+	for _, ok := range []Permission{{Preset: "read-only"}, {Allow: []string{"Read"}}, {Allow: []string{"Read", "Bash(go test*)"}}} {
+		if err := ValidatePermissionEntry("implementer", ok); err != nil {
+			t.Errorf("ValidatePermissionEntry(%+v) = %v, want nil", ok, err)
+		}
+	}
+	for _, bad := range []Permission{
+		{},
+		{Allow: []string{}},
+		{Preset: "write-all"},
+		{Preset: "read-only", Allow: []string{"Read"}},
+		{Allow: []string{""}},
+		{Allow: []string{"Read", "  "}},
+		{Allow: []string{"Re\nad"}},
+		{Allow: []string{"Re\x00ad"}},
+	} {
+		err := ValidatePermissionEntry("implementer", bad)
+		if err == nil || !strings.Contains(err.Error(), "permissions.implementer") {
+			t.Errorf("ValidatePermissionEntry(%+v) = %v, want an error naming permissions.implementer", bad, err)
+		}
+	}
+}

@@ -5,15 +5,19 @@ package cli
 import (
 	"bufio"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"text/tabwriter"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
@@ -220,6 +224,12 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	capN := fs.Int("cap", 0, "the project's concurrent run cap")
 	budgetMinutes := fs.Int("budget-minutes", 0, "the run time budget in minutes")
 	budgetTokens := fs.Int("budget-tokens", 0, "the run token budget")
+	var envLines, permissions, allows, vendorEnvs, unsetVendorEnvs stringList
+	fs.Var(&envLines, "env-line", "an environment line for the role briefs; repeat to give the list, one empty value clears it")
+	fs.Var(&permissions, "permission", "ROLE=read-only sets a role's preset, ROLE= removes its entry")
+	fs.Var(&allows, "allow", "ROLE=PATTERN allows a tool pattern; repeat to give the role's list")
+	fs.Var(&vendorEnvs, "vendor-env", "VENDOR:KEY=VALUE sets one vendor environment variable")
+	fs.Var(&unsetVendorEnvs, "unset-vendor-env", "VENDOR:KEY removes one vendor environment variable")
 	pos, err := parse(fs, args)
 	if err != nil {
 		return o.usage("projects set: %v", err)
@@ -263,8 +273,18 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	if given["budget-tokens"] {
 		p.BudgetTokens = budgetTokens
 	}
-	if p == (daemon.SetProjectParams{Name: p.Name}) {
-		return o.usage("projects set needs at least one field flag (--push, --ui-doc, --worktree-pattern, --branch-pattern, --check, --check-minutes, --cap, --budget-minutes, --budget-tokens)")
+	if given["env-line"] {
+		lines := []string(slices.Clone(envLines))
+		if len(lines) == 1 && lines[0] == "" {
+			lines = []string{}
+		}
+		p.EnvironmentLines = &lines
+	}
+	if err := setPermissionsAndVendorEnv(&p, permissions, allows, vendorEnvs, unsetVendorEnvs); err != nil {
+		return o.usage("projects set: %v", err)
+	}
+	if p.SetsNothing() {
+		return o.usage("projects set needs at least one field flag (--push, --ui-doc, --worktree-pattern, --branch-pattern, --check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --permission, --allow, --vendor-env, --unset-vendor-env)")
 	}
 	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
 		proj, err := c.SetProject(ctx, p)
@@ -315,7 +335,137 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		if p.BudgetTokens != nil {
 			changed = append(changed, number("budget_tokens", proj.Budgets.Tokens))
 		}
+		if p.EnvironmentLines != nil {
+			if len(proj.EnvironmentLines) == 0 {
+				changed = append(changed, "environment_lines=unset")
+			} else {
+				changed = append(changed, "environment_lines="+count(len(proj.EnvironmentLines), "line"))
+			}
+		}
+		if len(p.Permissions) != 0 {
+			var roles []string
+			for _, role := range slices.Sorted(maps.Keys(p.Permissions)) {
+				entry, has := proj.Permissions[role]
+				switch {
+				case !has:
+					roles = append(roles, role+":default")
+				case entry.Preset != "":
+					roles = append(roles, role+":"+entry.Preset)
+				default:
+					roles = append(roles, role+":"+count(len(entry.Allow), "pattern"))
+				}
+			}
+			changed = append(changed, "permissions="+strings.Join(roles, "; "))
+		}
+		if len(p.VendorEnv) != 0 {
+			// Keys only: a value is never printed.
+			var vendors []string
+			for _, vendor := range slices.Sorted(maps.Keys(p.VendorEnv)) {
+				keys := slices.Sorted(maps.Keys(proj.VendorEnv[vendor]))
+				if len(keys) == 0 {
+					vendors = append(vendors, vendor+":unset")
+				} else {
+					vendors = append(vendors, vendor+":"+strings.Join(keys, ","))
+				}
+			}
+			changed = append(changed, "vendor_env="+strings.Join(vendors, "; "))
+		}
 		fmt.Fprintf(o.stdout, "updated %s: %s\n", proj.Name, strings.Join(changed, ", "))
 		return ExitOK
 	})
+}
+
+// count is "1 line" or "3 lines".
+func count(n int, noun string) string {
+	if n == 1 {
+		return "1 " + noun
+	}
+	return fmt.Sprintf("%d %ss", n, noun)
+}
+
+// stringList is a flag that can be given more than once.
+type stringList []string
+
+func (s *stringList) String() string {
+	if s == nil {
+		return ""
+	}
+	return strings.Join(*s, ",")
+}
+
+func (s *stringList) Set(v string) error {
+	*s = append(*s, v)
+	return nil
+}
+
+// setPermissionsAndVendorEnv turns the --permission, --allow, --vendor-env and
+// --unset-vendor-env values into params (S174, *proposed*). Every error is a
+// usage error. None quotes a --vendor-env value, even a malformed one.
+func setPermissionsAndVendorEnv(p *daemon.SetProjectParams, permissions, allows, vendorEnvs, unsets stringList) error {
+	if len(permissions) != 0 || len(allows) != 0 {
+		p.Permissions = map[string]*registry.Permission{}
+	}
+	for _, s := range permissions {
+		role, preset, ok := strings.Cut(s, "=")
+		if !ok || role == "" {
+			return fmt.Errorf("--permission wants ROLE=read-only or ROLE=, got %q", s)
+		}
+		if _, dup := p.Permissions[role]; dup {
+			return fmt.Errorf("--permission names %s twice", role)
+		}
+		if preset == "" {
+			p.Permissions[role] = nil
+		} else {
+			p.Permissions[role] = &registry.Permission{Preset: preset}
+		}
+	}
+	allowed := map[string][]string{}
+	for _, s := range allows {
+		role, pattern, ok := strings.Cut(s, "=")
+		if !ok || role == "" {
+			return fmt.Errorf("--allow wants ROLE=PATTERN, got %q", s)
+		}
+		if _, has := p.Permissions[role]; has && allowed[role] == nil {
+			return fmt.Errorf("--permission and --allow both set %s", role)
+		}
+		allowed[role] = append(allowed[role], pattern)
+	}
+	for role, patterns := range allowed {
+		p.Permissions[role] = &registry.Permission{Allow: patterns}
+	}
+
+	if len(vendorEnvs) != 0 || len(unsets) != 0 {
+		p.VendorEnv = map[string]map[string]*string{}
+	}
+	put := func(vendor, key string, value *string) {
+		if p.VendorEnv[vendor] == nil {
+			p.VendorEnv[vendor] = map[string]*string{}
+		}
+		p.VendorEnv[vendor][key] = value
+	}
+	for _, s := range vendorEnvs {
+		vendor, rest, ok := strings.Cut(s, ":")
+		key, value, ok2 := strings.Cut(rest, "=")
+		if !ok || !ok2 || vendor == "" || key == "" || strings.Contains(vendor, "=") {
+			return errors.New("--vendor-env wants VENDOR:KEY=VALUE")
+		}
+		if _, dup := p.VendorEnv[vendor][key]; dup {
+			return fmt.Errorf("--vendor-env names %s:%s twice", vendor, key)
+		}
+		put(vendor, key, &value)
+	}
+	for _, s := range unsets {
+		vendor, key, ok := strings.Cut(s, ":")
+		if !ok || vendor == "" || key == "" || strings.ContainsAny(s, "=") {
+			return errors.New("--unset-vendor-env wants VENDOR:KEY")
+		}
+		if v, dup := p.VendorEnv[vendor][key]; dup {
+			if v != nil {
+				return fmt.Errorf("--vendor-env and --unset-vendor-env both name %s:%s", vendor, key)
+			}
+			return fmt.Errorf("--unset-vendor-env names %s:%s twice", vendor, key)
+		}
+		put(vendor, key, nil)
+	}
+	return nil
 }

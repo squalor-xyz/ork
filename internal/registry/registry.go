@@ -104,6 +104,78 @@ func ValidatePattern(name, pattern string) error {
 	return fmt.Errorf("%s %q must contain {id} or {id_lower}", name, pattern)
 }
 
+// ValidateEnvLine checks one environment_lines entry (S174, *proposed*). It
+// must hold text, and be one line without a NUL byte.
+func ValidateEnvLine(line string) error {
+	if strings.TrimSpace(line) == "" {
+		return errors.New("environment_lines entry is blank")
+	}
+	if strings.ContainsAny(line, "\x00\r\n") {
+		return errors.New("environment_lines entry must be one line without a NUL byte")
+	}
+	return nil
+}
+
+// ValidateVendorEnv checks one vendor_env entry (S174, *proposed*): a vendor
+// name of [a-z0-9_-], a key that is a shell name ([A-Za-z_][A-Za-z0-9_]*), and
+// a value without a NUL byte. The errors never quote the value.
+func ValidateVendorEnv(vendor, key, value string) error {
+	if vendor == "" || strings.ContainsFunc(vendor, func(r rune) bool {
+		return !(r >= 'a' && r <= 'z' || r >= '0' && r <= '9' || r == '_' || r == '-')
+	}) {
+		return fmt.Errorf("vendor_env vendor %q must be one or more of a-z, 0-9, _ and -", vendor)
+	}
+	if !isShellName(key) {
+		return fmt.Errorf("vendor_env key %q for %s must be a shell name ([A-Za-z_][A-Za-z0-9_]*)", key, vendor)
+	}
+	if strings.ContainsRune(value, 0) {
+		return fmt.Errorf("vendor_env value for %s:%s contains a NUL byte", vendor, key)
+	}
+	return nil
+}
+
+func isShellName(s string) bool {
+	if s == "" {
+		return false
+	}
+	for i, r := range s {
+		letter := r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r == '_'
+		if !letter && (i == 0 || r < '0' || r > '9') {
+			return false
+		}
+	}
+	return true
+}
+
+// ValidatePermissionEntry checks one permissions entry (S174, *proposed*): the
+// preset "read-only", or a list of patterns that are not blank and hold no NUL
+// byte or newline. The pattern syntax per vendor stays unchecked
+// (docs/state.md). Whether the role may have an allowlist is
+// engine.ResolvePermission's call, not this one's.
+func ValidatePermissionEntry(role string, p Permission) error {
+	name := "permissions." + role
+	switch {
+	case p.Preset != "" && len(p.Allow) > 0:
+		return fmt.Errorf("%s must be the preset read-only or a list of patterns, not both", name)
+	case p.Preset != "":
+		if p.Preset != "read-only" {
+			return fmt.Errorf("%s: unknown preset %q (the only preset is read-only)", name, p.Preset)
+		}
+		return nil
+	case len(p.Allow) == 0:
+		return fmt.Errorf("%s must be the preset read-only or a non-empty list of patterns", name)
+	}
+	for _, pat := range p.Allow {
+		if strings.TrimSpace(pat) == "" {
+			return fmt.Errorf("%s has a blank pattern", name)
+		}
+		if strings.ContainsAny(pat, "\x00\r\n") {
+			return fmt.Errorf("%s has a pattern with a NUL byte or a newline", name)
+		}
+	}
+	return nil
+}
+
 // Project is one registry entry. Fields other than Name, Path and Adj are
 // optional; a zero value means unset and is not written. WorktreePattern and
 // BranchPattern accept {id} and {id_lower} (S124, *proposed*).

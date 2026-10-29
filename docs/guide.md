@@ -117,10 +117,26 @@ An empty value or 0 clears a field. The command is refused while the project
 has unfinished runs, and the daemon needs no restart: the next run uses the
 new values (`docs/design.md:1218-1235`, `docs/state.md:94-103`).
 
-Some fields have no command and are file edits in
-`~/.config/ork/projects.json`: `environment_lines`, `permissions`,
-`vendor_env`, `global_cap` and `daemon_idle_minutes` (`docs/state.md:92-103`).
-`global_cap` defaults to 4 (`internal/daemon/runs.go:44`).
+Three more fields take repeatable flags (*proposed*, S174):
+
+| Flag | What it sets |
+|---|---|
+| `--env-line LINE` | an environment line for the role briefs; the lines given replace the list, and one empty `--env-line ""` clears it |
+| `--permission ROLE=read-only` | the role's preset; `--permission ROLE=` removes the role's entry, so the default applies |
+| `--allow ROLE=PATTERN` | a tool pattern for the implementer; the patterns given for a role replace its list |
+| `--vendor-env VENDOR:KEY=VALUE` | one environment variable for a vendor's processes; `--unset-vendor-env VENDOR:KEY` removes one |
+
+A role or a vendor key changes alone, so you do not retype the others. ork's
+text output and error messages name vendor variables and never print their
+values; `--json` prints the project as the registry holds it, values included.
+Do not put secrets in `vendor_env`: `projects.json` is readable by other users
+of the machine (`docs/state.md`).
+
+Two settings belong to the whole registry. Change them with `ork settings set
+[--global-cap N] [--daemon-idle-minutes N]` and read them with `ork settings
+show`. `global_cap` defaults to 4 and `daemon_idle_minutes` to 10; 0 clears
+one. Unlike `projects set`, `settings set` works while runs are unfinished, and
+a higher cap starts queued runs at once.
 
 ## 6. The role lineup
 

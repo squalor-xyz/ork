@@ -1558,7 +1558,7 @@ func TestProjectsSetSetsAndClearsEveryField(t *testing.T) {
 func TestProjectsSetRefusesUnknownField(t *testing.T) {
 	d, _, _ := runDaemon(t, nil)
 	before, _ := os.ReadFile(d.registryPath())
-	for _, raw := range []string{`{"name":"p","adj":true}`, `{"name":"p","path":"/x"}`, `{"name":"p","nope":1}`, `{"name":"p","permissions":{}}`} {
+	for _, raw := range []string{`{"name":"p","adj":true}`, `{"name":"p","path":"/x"}`, `{"name":"p","nope":1}`, `{"name":"p","global_cap":3}`, `{"name":"p","daemon_idle_minutes":3}`} {
 		_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
 		var re *ipc.Error
 		if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "unknown field") {
@@ -1691,6 +1691,218 @@ func TestProjectsSetConcurrentCallsKeepEveryChange(t *testing.T) {
 		CheckCommand: "make", CheckMinutes: 4, Cap: 2, Budgets: registry.Budgets{Minutes: 6, Tokens: 7}}
 	if !reflect.DeepEqual(f.Projects[0], want) {
 		t.Fatalf("a concurrent set lost a change:\n got %+v\nwant %+v", f.Projects[0], want)
+	}
+}
+
+// seedSetFixture gives the registry other keys and a second project, so a
+// test can see that a call changes only what it sets.
+func seedSetFixture(t *testing.T, d *Daemon) {
+	t.Helper()
+	f, err := registry.Load(d.registryPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.GlobalCap = 5
+	f.DaemonIdleMinutes = 7
+	f.Projects[0].Push = true
+	f.Projects[0].Cap = 2
+	f.Projects[0].Budgets = registry.Budgets{Minutes: 9}
+	f.Projects = append(f.Projects, registry.Project{Name: "other", Path: filepath.Join(filepath.Dir(f.Projects[0].Path), "other"),
+		EnvironmentLines: []string{"keep"}, Permissions: map[string]registry.Permission{"implementer": {Allow: []string{"Read"}}},
+		VendorEnv: map[string]map[string]string{"codex": {"K": "v"}}})
+	if err := registry.Save(d.registryPath(), f); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestProjectsSetEnvironmentPermissionsAndVendorEnv(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	seedSetFixture(t, d)
+	before, _ := registry.Load(d.registryPath())
+	want := *before
+	want.Projects = slices.Clone(before.Projects)
+	call := func(raw string) registry.Project {
+		t.Helper()
+		got, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
+		if err != nil {
+			t.Fatalf("%s: %v", raw, err)
+		}
+		return got.(registry.Project)
+	}
+
+	res := call(`{"name":"p","environment_lines":["zsh on darwin","Go 1.27.x"],"permissions":{"implementer":["Read","Grep"],"reviewer":"read-only"},"vendor_env":{"codex":{"A":"1","B":"two words"},"claude":{"X":"y"}}}`)
+	want.Projects[0].EnvironmentLines = []string{"zsh on darwin", "Go 1.27.x"}
+	want.Projects[0].Permissions = map[string]registry.Permission{"implementer": {Allow: []string{"Read", "Grep"}}, "reviewer": {Preset: "read-only"}}
+	want.Projects[0].VendorEnv = map[string]map[string]string{"codex": {"A": "1", "B": "two words"}, "claude": {"X": "y"}}
+	after, err := registry.Load(d.registryPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(*after, want) || !reflect.DeepEqual(res, want.Projects[0]) {
+		t.Fatalf("first call:\n got %+v\nwant %+v\n res %+v", *after, want, res)
+	}
+
+	// One more key leaves the earlier keys and roles.
+	call(`{"name":"p","vendor_env":{"codex":{"C":"3"}}}`)
+	want.Projects[0].VendorEnv["codex"]["C"] = "3"
+	after, _ = registry.Load(d.registryPath())
+	if !reflect.DeepEqual(*after, want) {
+		t.Fatalf("one more key:\n got %+v\nwant %+v", *after, want)
+	}
+
+	// null removes one role's entry; the other role stays.
+	call(`{"name":"p","permissions":{"reviewer":null}}`)
+	delete(want.Projects[0].Permissions, "reviewer")
+	after, _ = registry.Load(d.registryPath())
+	if !reflect.DeepEqual(*after, want) {
+		t.Fatalf("remove a role:\n got %+v\nwant %+v", *after, want)
+	}
+
+	// A role set again replaces its list.
+	call(`{"name":"p","permissions":{"implementer":["Edit"]}}`)
+	want.Projects[0].Permissions["implementer"] = registry.Permission{Allow: []string{"Edit"}}
+	after, _ = registry.Load(d.registryPath())
+	if !reflect.DeepEqual(*after, want) {
+		t.Fatalf("replace a role:\n got %+v\nwant %+v", *after, want)
+	}
+
+	// Removing the last role drops the map; removing the last key drops the
+	// vendor, and the last vendor drops the map.
+	res = call(`{"name":"p","permissions":{"implementer":null},"vendor_env":{"claude":{"X":null},"codex":{"A":null,"B":null,"C":null}}}`)
+	want.Projects[0].Permissions = nil
+	want.Projects[0].VendorEnv = nil
+	if res.Permissions != nil || res.VendorEnv != nil {
+		t.Fatalf("the result holds an emptied map: %+v", res)
+	}
+	after, _ = registry.Load(d.registryPath())
+	if !reflect.DeepEqual(*after, want) {
+		t.Fatalf("empty vendors:\n got %+v\nwant %+v", *after, want)
+	}
+	raw, _ := os.ReadFile(d.registryPath())
+	if strings.Contains(string(raw), "vendor_env\": {}") || strings.Contains(string(raw), "permissions\": {}") {
+		t.Fatalf("an emptied map was written:\n%s", raw)
+	}
+
+	// An empty list clears the env lines.
+	res = call(`{"name":"p","environment_lines":[]}`)
+	if res.EnvironmentLines != nil {
+		t.Fatalf("the result holds an empty list: %+v", res)
+	}
+	want.Projects[0].EnvironmentLines = nil
+	after, _ = registry.Load(d.registryPath())
+	if !reflect.DeepEqual(*after, want) {
+		t.Fatalf("clear env lines:\n got %+v\nwant %+v", *after, want)
+	}
+}
+
+func TestProjectsSetValidatesTheNewFields(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	before, _ := os.ReadFile(d.registryPath())
+	for raw, want := range map[string]string{
+		`{"name":"p","permissions":{"boss":"read-only"}}`:                   "boss",
+		`{"name":"p","permissions":{"boss":null}}`:                          "boss", // not in the file, so there is nothing to remove
+		`{"name":"p","permissions":{"reviewer":["Read"]}}`:                  "read-only",
+		`{"name":"p","permissions":{"gate":["Read"]}}`:                      "read-only",
+		`{"name":"p","permissions":{"implementer":"write-all"}}`:            "write-all",
+		`{"name":"p","permissions":{"implementer":["Read",""]}}`:            "permissions.implementer",
+		`{"name":"p","permissions":{"implementer":[]}}`:                     "permissions.implementer",
+		`{"name":"p","environment_lines":["ok",""]}`:                        "environment_lines",
+		`{"name":"p","environment_lines":["two\nlines"]}`:                   "environment_lines",
+		`{"name":"p","vendor_env":{"Codex":{"A":"1"}}}`:                     "vendor",
+		`{"name":"p","vendor_env":{"codex":{"1A":"1"}}}`:                    "key",
+		`{"name":"p","vendor_env":{"codex":{"A-B":"1"}}}`:                   "key",
+		`{"name":"p","vendor_env":{"codex":{"A":"x\u0000y"}}}`:              "NUL",
+		`{"name":"p","vendor_env":{"codex":{"A":"ok","B":"sec\u0000ret"}}}`: "NUL",
+	} {
+		_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
+		var re *ipc.Error
+		if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, want) {
+			t.Errorf("%s: %v, want bad_params naming %q", raw, err, want)
+			continue
+		}
+		if strings.Contains(re.Message, "sec") || strings.Contains(re.Message, "two words") {
+			t.Errorf("%s: the message quotes a vendor_env value: %q", raw, re.Message)
+		}
+	}
+	after, _ := os.ReadFile(d.registryPath())
+	if string(after) != string(before) {
+		t.Fatalf("a refusal changed the registry:\n%s", after)
+	}
+}
+
+// A null entry removes any role key that exists in the file, even one ork
+// does not know, so a hand-edited typo can be cleaned up. Setting an unknown
+// role stays refused (S174, owner decision 2026-10-29).
+func TestProjectsSetNullRemovesAnyExistingRoleKey(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	f, err := registry.Load(d.registryPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Projects[0].Permissions = map[string]registry.Permission{
+		"reviwer": {Preset: "read-only"}, "implementer": {Allow: []string{"Read"}}}
+	if err := registry.Save(d.registryPath(), f); err != nil {
+		t.Fatal(err)
+	}
+	// Setting a role ork does not know is refused even when the key is in the file.
+	_, err = d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","permissions":{"reviwer":["Read"]}}`))
+	var re *ipc.Error
+	if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "unknown role") {
+		t.Fatalf("setting an existing unknown role: %v", err)
+	}
+	if _, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","permissions":{"reviwer":null}}`)); err != nil {
+		t.Fatalf("removing a hand-edited role key: %v", err)
+	}
+	after, _ := registry.Load(d.registryPath())
+	if want := map[string]registry.Permission{"implementer": {Allow: []string{"Read"}}}; !reflect.DeepEqual(after.Projects[0].Permissions, want) {
+		t.Fatalf("permissions after removal: %+v, want %+v", after.Projects[0].Permissions, want)
+	}
+	// The same key is gone now, so a second removal is an unknown role again.
+	// Setting an unknown role is refused, and so is a mixed call.
+	before, _ := os.ReadFile(d.registryPath())
+	for _, raw := range []string{
+		`{"name":"p","permissions":{"reviwer":null}}`,
+		`{"name":"p","permissions":{"bogus":"read-only"}}`,
+		`{"name":"p","permissions":{"implementer":null,"bogus":["Read"]}}`,
+	} {
+		_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
+		if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "unknown role") {
+			t.Errorf("%s: %v, want bad_params unknown role", raw, err)
+		}
+	}
+	if got, _ := os.ReadFile(d.registryPath()); string(got) != string(before) {
+		t.Fatalf("a refusal changed the registry:\n%s", got)
+	}
+}
+
+func TestProjectsSetNewFieldsRefuseAnUnfinishedRun(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	if _, err := store.Create(runrec.Record{ID: "a-run", Project: p.Name, State: runrec.StatePaused}); err != nil {
+		t.Fatal(err)
+	}
+	before, _ := os.ReadFile(d.registryPath())
+	for _, raw := range []string{
+		`{"name":"p","environment_lines":["x"]}`,
+		`{"name":"p","permissions":{"reviewer":"read-only"}}`,
+		`{"name":"p","vendor_env":{"codex":{"A":"1"}}}`,
+	} {
+		_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
+		var re *ipc.Error
+		if !errors.As(err, &re) || re.Code != CodeProjectBusy || re.Message != "project p has unfinished runs: a-run" {
+			t.Errorf("%s: %v", raw, err)
+		}
+	}
+	// A call that sets nothing stays bad_params, empty maps included.
+	for _, raw := range []string{`{"name":"p"}`, `{"name":"p","permissions":{}}`, `{"name":"p","vendor_env":{}}`} {
+		_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
+		var re *ipc.Error
+		if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "sets no field") {
+			t.Errorf("%s: %v", raw, err)
+		}
+	}
+	after, _ := os.ReadFile(d.registryPath())
+	if string(after) != string(before) {
+		t.Fatalf("a refusal changed the registry:\n%s", after)
 	}
 }
 

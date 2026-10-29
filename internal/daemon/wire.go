@@ -29,6 +29,8 @@ const (
 	MethodProjectsAdd  = "projects.add"  // params AddProjectParams, result registry.Project
 	MethodProjectsRm   = "projects.rm"   // params RemoveProjectParams, no result
 	MethodProjectsSet  = "projects.set"  // proposed (S161); params SetProjectParams, result registry.Project
+	MethodSettingsGet  = "settings.get"  // proposed (S174); no params, result SettingsResult
+	MethodSettingsSet  = "settings.set"  // proposed (S174); params SetSettingsParams, result SettingsResult
 	MethodSubscribe    = "subscribe"     // params SubscribeParams, no result
 	MethodRefresh      = "refresh"       // params RefreshParams, no result
 )
@@ -245,20 +247,56 @@ type RemoveProjectParams struct {
 }
 
 // SetProjectParams is a projects.set call (S161, *proposed*). Name picks the
-// project. Every other field is a pointer: nil leaves the registry value as
-// it is, and a pointer to "" or 0 clears it (a zero value means unset). The
-// daemon refuses a call that sets no field.
+// project. Every other field is a pointer or a map: nil leaves the registry
+// value as it is, and a pointer to "" or 0 clears it (a zero value means
+// unset). The daemon refuses a call that sets no field.
+//
+// S174 (*proposed*) adds three groups. EnvironmentLines replaces the list; a
+// pointer to an empty list clears it. Permissions changes one role at a time:
+// a non-nil entry sets the role's permission, and a nil entry (JSON null)
+// removes it, so the default applies. VendorEnv changes one key at a time: a
+// non-nil value sets the key, and a nil value removes it; a vendor with no
+// keys left is removed.
 type SetProjectParams struct {
-	Name            string  `json:"name"`
-	Push            *bool   `json:"push,omitempty"`
-	UIDoc           *string `json:"ui_doc,omitempty"`
-	WorktreePattern *string `json:"worktree_pattern,omitempty"`
-	BranchPattern   *string `json:"branch_pattern,omitempty"`
-	CheckCommand    *string `json:"check_command,omitempty"`
-	CheckMinutes    *int    `json:"check_minutes,omitempty"`
-	Cap             *int    `json:"cap,omitempty"`
-	BudgetMinutes   *int    `json:"budget_minutes,omitempty"`
-	BudgetTokens    *int    `json:"budget_tokens,omitempty"`
+	Name             string                          `json:"name"`
+	Push             *bool                           `json:"push,omitempty"`
+	UIDoc            *string                         `json:"ui_doc,omitempty"`
+	WorktreePattern  *string                         `json:"worktree_pattern,omitempty"`
+	BranchPattern    *string                         `json:"branch_pattern,omitempty"`
+	CheckCommand     *string                         `json:"check_command,omitempty"`
+	CheckMinutes     *int                            `json:"check_minutes,omitempty"`
+	Cap              *int                            `json:"cap,omitempty"`
+	BudgetMinutes    *int                            `json:"budget_minutes,omitempty"`
+	BudgetTokens     *int                            `json:"budget_tokens,omitempty"`
+	EnvironmentLines *[]string                       `json:"environment_lines,omitempty"`
+	Permissions      map[string]*registry.Permission `json:"permissions,omitempty"`
+	VendorEnv        map[string]map[string]*string   `json:"vendor_env,omitempty"`
+}
+
+// SetsNothing reports whether the call sets no field. The struct holds maps,
+// so it cannot be compared with ==. The daemon and the command line both use it.
+func (p SetProjectParams) SetsNothing() bool {
+	return p.Push == nil && p.UIDoc == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
+		p.CheckCommand == nil && p.CheckMinutes == nil && p.Cap == nil && p.BudgetMinutes == nil &&
+		p.BudgetTokens == nil && p.EnvironmentLines == nil && len(p.Permissions) == 0 && len(p.VendorEnv) == 0
+}
+
+// SetSettingsParams is a settings.set call (S174, *proposed*). Each field is a
+// pointer: nil leaves the registry value as it is, and a pointer to 0 clears
+// it (zero means unset). The daemon refuses a call that sets no field and a
+// negative number.
+type SetSettingsParams struct {
+	GlobalCap         *int `json:"global_cap,omitempty"`
+	DaemonIdleMinutes *int `json:"daemon_idle_minutes,omitempty"`
+}
+
+// SettingsResult is the registry's file-level settings (S174, *proposed*):
+// the stored values (0 means unset) and the values the daemon uses.
+type SettingsResult struct {
+	GlobalCap                  int `json:"global_cap"`
+	DaemonIdleMinutes          int `json:"daemon_idle_minutes"`
+	EffectiveGlobalCap         int `json:"effective_global_cap"`
+	EffectiveDaemonIdleMinutes int `json:"effective_daemon_idle_minutes"`
 }
 
 // ProjectsResult is the registered projects, in registry order.
