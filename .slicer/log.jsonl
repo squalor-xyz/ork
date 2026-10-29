@@ -2508,3 +2508,7 @@
 {"when": "2026-10-29T16:25:09Z", "item": "S157", "action": "note", "from": "", "to": "", "note": "Owner note (review): slicer next with --root DIR no longer m", "by": "Jon R"}
 {"when": "2026-10-29T16:25:09Z", "item": "S157", "action": "status", "from": "started", "to": "done", "note": "Allow rules: replaced Bash(slicer next *) with exact read-only forms (slicer next, next --json, next --json --lean); audited the other starred slicer and adj rules, none has a write flag. Review PASS.", "by": "Jon R"}
 {"when": "2026-10-29T16:25:09Z", "item": "S157", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 40, S157): Claude sonnet-high imple", "by": "Jon R"}
+{"when": "2026-10-29T16:31:08Z", "item": "S158", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-29T17:00:09Z", "item": "S158", "action": "note", "from": "", "to": "", "note": "Owner 2026-10-29 (UI pass): the none-registered line ends wi", "by": "Jon R"}
+{"when": "2026-10-29T17:00:09Z", "item": "S158", "action": "status", "from": "started", "to": "done", "note": "ork doctor: no doubled registry word, non-greedy shell-prefix strip, time on the skip list, and '[--] projects  none registered: run ork projects add PATH' for an empty or missing registry. Review and UI pass PASS after one small fix round.", "by": "Jon R"}
+{"when": "2026-10-29T17:00:09Z", "item": "S158", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 41, S158): Claude sonnet-high imple", "by": "Jon R"}

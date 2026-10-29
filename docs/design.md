@@ -1143,7 +1143,9 @@ a run that is not stopped or is busy. An unknown run returns `not_found`.
   passes `sh -n -c` and its first word after leading `VAR=value` assignments
   resolves on PATH, or against the project directory when it contains `/`.
   Lookup is skipped for POSIX reserved words and special builtins, plus `cd`
-  and `command`, and words containing `$` or a backtick or starting with `~`.
+  and `command`, plus `time`, and words containing `$` or a backtick or
+  starting with `~`. A syntax finding drops the shell prefix up to its first
+  marker: `sh: -c: line N: ` or `sh: N: `, and any text before that `sh: `.
   Doctor never executes the check command. Nonempty worktree and branch
   patterns must contain `{id}` or `{id_lower}` (*proposed*, S124); empty
   patterns use the defaults. A finding names the fix, `ork projects set NAME
@@ -1151,8 +1153,12 @@ a run that is not stopped or is busy. An unknown run returns `not_found`.
   The registry is read only; a missing registry is empty and is not created.
   A registry read error is advisory: JSON has `registry_error` (omitted when
   there is no error), separate from the daemon's `warning`. Text prints
-  `[WARN] registry  ERR` just before the project lines. It does not change
-  `ok` or the exit code.
+  `[WARN] registry  ERR` just before the project lines, with the leading
+  word `registry` of the error text dropped so the label is not repeated;
+  the JSON field keeps the full text. With a readable registry that holds no
+  projects (missing or empty), text prints
+  `[--] projects  none registered: run ork projects add PATH` in the same
+  place. Neither line changes `ok` or the exit code.
 
 Doctor exits 1 when slicer, adj or the contract check fails. Project findings
 do not change `ok` or the exit code. `roles print`
@@ -1257,9 +1263,9 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   "ok","error"}],"contract":{"accepted":[9,10],"found","ok","error"},"binary",
   "projects":[{"name","path","findings":[]}],"registry_error"?}`,
   where `binary` is the path of the running ork binary (empty when it cannot
-  be read). Text: one `[ok]`, `[--]` or `[FAIL]` line per check, and the first
-  line is `[ok] ork  PATH`, or `[--] ork  path unknown: ERROR` when the path
-  cannot be read. Projects have one `project NAME  PATH` line each, with
+  be read). Text: one `[ok]`, `[--]`, `[WARN]` or `[FAIL]` line per check, and
+  the first line is `[ok] ork  PATH`, or `[--] ork  path unknown: ERROR`
+  when the path cannot be read. Projects have one `project NAME  PATH` line each, with
   findings indented below. Every finding is stored on one line.
 
 ## Testing
