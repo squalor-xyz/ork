@@ -2280,3 +2280,6 @@
 {"when": "2026-10-29T12:01:30Z", "item": "S165", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-10-29T12:01:30Z", "item": "S165", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-29T12:01:30Z", "item": "S165", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:28:44Z", "item": "S165", "action": "note", "from": "", "to": "", "note": "Later (S165 review): the parity doc and guide were checked a", "by": "Jon R"}
+{"when": "2026-10-29T13:28:45Z", "item": "S165", "action": "status", "from": "open", "to": "done", "note": "Ork guide, six Mermaid diagrams and an orchestrator-parity analysis (41 jobs: 18 exist, 14 partial, 9 missing) with 18 gaps filed as slices. Review FAIL then PASS after one docs fix round.", "by": "Jon R"}
+{"when": "2026-10-29T13:28:45Z", "item": "S165", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 38, S165): sonnet-high lead with a ", "by": "Jon R"}

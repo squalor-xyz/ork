@@ -46,6 +46,15 @@ One TUI over all your projects (slicer, adjudicate, DataBall, agents):
 A background daemon keeps waves running when the TUI is closed. ork reads
 and writes slicer and adj only through their CLIs.
 
+## Guide
+
+- [docs/guide.md](docs/guide.md): a walk-through for a new owner, from
+  install to a landed slice, a wave, and daily monitoring.
+- [docs/diagrams.md](docs/diagrams.md): Mermaid diagrams of the components,
+  a run's states, one relay round, a wave, setup and daily use.
+- [docs/orchestrator-parity.md](docs/orchestrator-parity.md): what the
+  outer orchestrating session does that ork does, partly does, or does not.
+
 ## Documents
 
 - [PROJECT.md](PROJECT.md): summary, v1 scope, goals, non-goals, risks.
