@@ -2209,3 +2209,298 @@
 {"when": "2026-10-29T16:14:57Z", "item": "S142", "action": "note", "from": "", "to": "", "note": "Later (UI pass round 2): the external owner-question row is ", "by": "Jon R"}
 {"when": "2026-10-29T16:14:57Z", "item": "S142", "action": "status", "from": "started", "to": "done", "note": "Accept relay contract v9 and v10: root- and pin-aware contract checks, ai relay --json conformance, ui and spec-check ledger roles, wait phase with ask/answer mirroring, v10 fail reasons with out-of-credits vendor skipping, external owner questions under Needs you. Review and UI pass PASS after one fix round.", "by": "Jon R"}
 {"when": "2026-10-29T16:14:57Z", "item": "S142", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 39, S142): Codex sol/medium impleme", "by": "Jon R"}
+{"when": "2026-10-29T03:55:11Z", "item": "S39", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-29T04:02:26Z", "item": "S39", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T04:07:09Z", "item": "S39", "action": "note", "from": "", "to": "", "note": "Later: the source-text check in TestWaveStartUsageSaysYAndN ", "by": "Jon R"}
+{"when": "2026-10-29T04:07:09Z", "item": "S39", "action": "status", "from": "started", "to": "done", "note": "ork run and ork wave start prompt tests catch swapped answers; usage, flag help and docs say y/n. Review and UI pass PASS after one fix round.", "by": "Jon R"}
+{"when": "2026-10-29T04:07:09Z", "item": "S39", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 36, S39): Claude sonnet-high implem", "by": "Jon R"}
+{"when": "2026-10-29T04:02:01Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): (1) q quit never d", "by": "Jon R"}
+{"when": "2026-10-29T04:02:01Z", "item": "S39", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (interactive): ork wave start also", "by": "Jon R"}
+{"when": "2026-10-29T04:03:53Z", "item": "S152", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T04:03:53Z", "item": "S152", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T04:04:01Z", "item": "S152", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-29T11:48:37Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Later note: the Files list omitted `interna", "by": "Jon R"}
+{"when": "2026-10-29T11:48:37Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Later note: the narrow half of TestCtrlDUHi", "by": "Jon R"}
+{"when": "2026-10-29T11:48:37Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Later note: the drop-order comment above th", "by": "Jon R"}
+{"when": "2026-10-29T11:48:38Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Later note (owner call): the help says ctrl", "by": "Jon R"}
+{"when": "2026-10-29T11:48:38Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Later note: the ledger pane's read-only not", "by": "Jon R"}
+{"when": "2026-10-29T11:48:38Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Later note: the decision pane scrolls its h", "by": "Jon R"}
+{"when": "2026-10-29T11:48:38Z", "item": "S152", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T11:55:04Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive, review round 1): th", "by": "Jon R"}
+{"when": "2026-10-29T11:55:04Z", "item": "S152", "action": "status", "from": "started", "to": "done", "note": "Hint, help and footer follow-ups: q quit pinned, ?help removed from the sidebar header, Questions footer dropped, whole-number budget hint, ctrl+d/u half-page in the decision, roadmap-item and waves-item panes. Review and UI pass PASS after one fix round.", "by": "Jon R"}
+{"when": "2026-10-29T11:55:04Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 37, S152): Claude sonnet-high imple", "by": "Jon R"}
+{"when": "2026-10-29T11:39:05Z", "item": "relay-roles.r1", "action": "relay-roles", "from": "", "to": "implementer", "note": "remove"}
+{"when": "2026-10-29T11:39:06Z", "item": "relay-roles.r2", "action": "relay-roles", "from": "", "to": "implementer", "note": "remove"}
+{"when": "2026-10-29T11:39:06Z", "item": "relay-roles.r13", "action": "relay-roles", "from": "", "to": "implementer", "note": "remove"}
+{"when": "2026-10-29T11:39:06Z", "item": "relay-roles.r11", "action": "relay-roles", "from": "", "to": "orchestrator", "note": "remove"}
+{"when": "2026-10-29T11:39:06Z", "item": "relay-roles.r3", "action": "relay-roles", "from": "", "to": "reasoning,note", "note": "set"}
+{"when": "2026-10-29T11:39:06Z", "item": "relay-roles.r12", "action": "relay-roles", "from": "", "to": "reasoning,note", "note": "set"}
+{"when": "2026-10-29T11:39:06Z", "item": "relay-roles.r10", "action": "relay-roles", "from": "", "to": "note", "note": "set"}
+{"when": "2026-10-29T11:39:20Z", "item": "relay-roles.r12", "action": "relay-roles", "from": "5", "to": "4", "note": "move"}
+{"when": "2026-10-29T11:41:24Z", "item": "relay-roles.r17", "action": "relay-roles", "from": "", "to": "reviewer", "note": "add"}
+{"when": "2026-10-29T11:41:24Z", "item": "relay-roles.r18", "action": "relay-roles", "from": "", "to": "gate", "note": "add"}
+{"when": "2026-10-29T11:41:25Z", "item": "relay-roles.r19", "action": "relay-roles", "from": "", "to": "reviewer", "note": "add"}
+{"when": "2026-10-29T11:41:25Z", "item": "relay-roles.r20", "action": "relay-roles", "from": "", "to": "gate", "note": "add"}
+{"when": "2026-10-29T11:41:25Z", "item": "relay-roles.r16", "action": "relay-roles", "from": "", "to": "reasoning,note", "note": "set"}
+{"when": "2026-10-29T11:41:34Z", "item": "relay-roles.r17", "action": "relay-roles", "from": "13", "to": "7", "note": "move"}
+{"when": "2026-10-29T11:41:34Z", "item": "relay-roles.r19", "action": "relay-roles", "from": "15", "to": "8", "note": "move"}
+{"when": "2026-10-29T11:41:34Z", "item": "relay-roles.r18", "action": "relay-roles", "from": "15", "to": "11", "note": "move"}
+{"when": "2026-10-29T11:41:35Z", "item": "relay-roles.r20", "action": "relay-roles", "from": "16", "to": "12", "note": "move"}
+{"when": "2026-10-29T11:41:35Z", "item": "relay-roles.u7", "action": "relay-roles", "from": "", "to": "", "note": "rule-edit"}
+{"when": "2026-10-29T11:41:35Z", "item": "relay-roles.u8", "action": "relay-roles", "from": "", "to": "", "note": "rule-edit"}
+{"when": "2026-10-29T11:41:35Z", "item": "relay-roles.u9", "action": "relay-roles", "from": "", "to": "", "note": "rule-edit"}
+{"when": "2026-10-29T11:41:35Z", "item": "relay-roles.u11", "action": "relay-roles", "from": "", "to": "", "note": "rule-edit"}
+{"when": "2026-10-29T11:53:18Z", "item": "S155", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T11:53:18Z", "item": "S156", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T11:53:18Z", "item": "S157", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T11:53:19Z", "item": "S158", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T11:53:45Z", "item": "S155", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T11:53:45Z", "item": "S155", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T11:53:45Z", "item": "S155", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T11:53:46Z", "item": "S155", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T11:53:46Z", "item": "S155", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T11:53:46Z", "item": "S156", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T11:53:46Z", "item": "S156", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T11:53:46Z", "item": "S156", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T11:53:46Z", "item": "S156", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T11:53:46Z", "item": "S156", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T11:53:46Z", "item": "S157", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T11:53:47Z", "item": "S157", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T11:53:47Z", "item": "S157", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T11:53:47Z", "item": "S157", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T11:53:47Z", "item": "S157", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T11:53:47Z", "item": "S158", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T11:53:47Z", "item": "S158", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T11:53:47Z", "item": "S158", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T11:53:48Z", "item": "S158", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T11:53:48Z", "item": "S158", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T11:53:48Z", "item": "S90", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29: folded into S142 (its docs pass r", "by": "Jon R"}
+{"when": "2026-10-29T11:53:48Z", "item": "S142", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29: S142 also covers S90's stale line", "by": "Jon R"}
+{"when": "2026-10-29T11:53:48Z", "item": "S154", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (interactive): all four items (wai", "by": "Jon R"}
+{"when": "2026-10-29T11:53:48Z", "item": "S146", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (interactive): take the visible UI", "by": "Jon R"}
+{"when": "2026-10-29T11:53:48Z", "item": "S147", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (interactive): correctness set onl", "by": "Jon R"}
+{"when": "2026-10-29T12:00:42Z", "item": "S165", "action": "add", "from": "", "to": "open", "note": "How ork works: guide with diagrams, and an orchestrator-parity gap analysis"}
+{"when": "2026-10-29T12:00:42Z", "item": "S165", "action": "set", "from": "", "to": "", "note": "importance 2→3; effort -→2"}
+{"when": "2026-10-29T12:01:17Z", "item": "S165", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T12:01:30Z", "item": "S165", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T12:01:30Z", "item": "S165", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T12:01:30Z", "item": "S165", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T12:01:30Z", "item": "S165", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T12:01:30Z", "item": "S165", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:28:44Z", "item": "S165", "action": "note", "from": "", "to": "", "note": "Later (S165 review): the parity doc and guide were checked a", "by": "Jon R"}
+{"when": "2026-10-29T13:28:45Z", "item": "S165", "action": "status", "from": "open", "to": "done", "note": "Ork guide, six Mermaid diagrams and an orchestrator-parity analysis (41 jobs: 18 exist, 14 partial, 9 missing) with 18 gaps filed as slices. Review FAIL then PASS after one docs fix round.", "by": "Jon R"}
+{"when": "2026-10-29T13:28:45Z", "item": "S165", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 38, S165): sonnet-high lead with a ", "by": "Jon R"}
+{"when": "2026-10-29T13:26:41Z", "item": "S166", "action": "add", "from": "", "to": "open", "note": "Lineup and budget overrides on every launch path (Roadmap launch, ork run)"}
+{"when": "2026-10-29T13:26:41Z", "item": "S167", "action": "add", "from": "", "to": "open", "note": "Spec check on a single-slice launch"}
+{"when": "2026-10-29T13:26:41Z", "item": "S168", "action": "add", "from": "", "to": "open", "note": "Role matrix view in ork (read-only)"}
+{"when": "2026-10-29T13:26:41Z", "item": "S169", "action": "add", "from": "", "to": "open", "note": "Per-vendor slot cap and vendor-out memory (one Codex slot, Claude stand-in)"}
+{"when": "2026-10-29T13:26:42Z", "item": "S170", "action": "add", "from": "", "to": "open", "note": "File a slice from a note or a request in ork"}
+{"when": "2026-10-29T13:26:42Z", "item": "S171", "action": "add", "from": "", "to": "open", "note": "Add a note to a slice in ork"}
+{"when": "2026-10-29T13:26:42Z", "item": "S172", "action": "add", "from": "", "to": "open", "note": "Answer and ask adj records in ork"}
+{"when": "2026-10-29T13:26:42Z", "item": "S173", "action": "add", "from": "", "to": "open", "note": "Role matrix editor in ork"}
+{"when": "2026-10-29T13:26:42Z", "item": "S174", "action": "add", "from": "", "to": "open", "note": "Registry settings for the remaining fields and the global cap"}
+{"when": "2026-10-29T13:26:42Z", "item": "S175", "action": "add", "from": "", "to": "open", "note": "End a stale ledger run from the run pane"}
+{"when": "2026-10-29T13:26:42Z", "item": "S176", "action": "add", "from": "", "to": "open", "note": "Open a role report in the run pane"}
+{"when": "2026-10-29T13:26:42Z", "item": "S177", "action": "add", "from": "", "to": "open", "note": "Per-run stop point: after commit, or at land"}
+{"when": "2026-10-29T13:26:43Z", "item": "S178", "action": "add", "from": "", "to": "open", "note": "ork doctor reports sibling tool versions and prints upgrade commands"}
+{"when": "2026-10-29T13:26:43Z", "item": "S179", "action": "add", "from": "", "to": "open", "note": "Spec drafting round in ork"}
+{"when": "2026-10-29T13:26:43Z", "item": "S180", "action": "add", "from": "", "to": "open", "note": "Changelog conflict resolver at landing"}
+{"when": "2026-10-29T13:26:43Z", "item": "S181", "action": "add", "from": "", "to": "open", "note": "Refuse or warn on a blocked item at wave start"}
+{"when": "2026-10-29T13:26:43Z", "item": "S182", "action": "add", "from": "", "to": "open", "note": "Watchdog for a hung role"}
+{"when": "2026-10-29T13:26:51Z", "item": "S183", "action": "add", "from": "", "to": "open", "note": "Fix stale statements found in S165 review (README, PROJECT, boundaries, state, design, dashboard)"}
+{"when": "2026-10-29T13:26:51Z", "item": "S166", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:51Z", "item": "S167", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S168", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S169", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S170", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S171", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S172", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S173", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S174", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S175", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S176", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S177", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S178", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S179", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S180", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S181", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S182", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S183", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S183", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:26:53Z", "item": "S183", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:26:54Z", "item": "S183", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:26:54Z", "item": "S183", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:26:54Z", "item": "S183", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:34:28Z", "item": "S166", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:34:28Z", "item": "S166", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:35:04Z", "item": "S166", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:35:04Z", "item": "S166", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:35:05Z", "item": "S166", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:35:13Z", "item": "S166", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:36:09Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:36:09Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:36:09Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:36:09Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:36:09Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:37:14Z", "item": "S168", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:37:14Z", "item": "S168", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:37:14Z", "item": "S168", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:37:15Z", "item": "S168", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:37:15Z", "item": "S168", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:37:21Z", "item": "S175", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:37:21Z", "item": "S175", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:37:21Z", "item": "S175", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:37:22Z", "item": "S168", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:37:22Z", "item": "S175", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:37:22Z", "item": "S175", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:37:24Z", "item": "S171", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:37:24Z", "item": "S171", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:37:24Z", "item": "S171", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:37:24Z", "item": "S171", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:37:24Z", "item": "S171", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:37:25Z", "item": "S168", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:37:28Z", "item": "S175", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:37:56Z", "item": "S176", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:37:56Z", "item": "S176", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:37:56Z", "item": "S176", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:37:57Z", "item": "S176", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:37:57Z", "item": "S176", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:38:11Z", "item": "S176", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:38:11Z", "item": "S176", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:38:12Z", "item": "S176", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:38:16Z", "item": "S176", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:38:59Z", "item": "S171", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:38:59Z", "item": "S171", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:38:59Z", "item": "S171", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:39:00Z", "item": "S171", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:39:00Z", "item": "S171", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:39:00Z", "item": "S170", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:39:00Z", "item": "S170", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:39:00Z", "item": "S170", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:39:00Z", "item": "S170", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:39:00Z", "item": "S170", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:39:01Z", "item": "S169", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:39:01Z", "item": "S169", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:39:01Z", "item": "S169", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:39:01Z", "item": "S169", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:39:01Z", "item": "S169", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:39:11Z", "item": "S169", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:39:17Z", "item": "S177", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:39:17Z", "item": "S177", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:39:18Z", "item": "S177", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:39:18Z", "item": "S177", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:39:18Z", "item": "S177", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:39:35Z", "item": "S177", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:39:35Z", "item": "S177", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:39:36Z", "item": "S177", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:39:45Z", "item": "S177", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:40:35Z", "item": "S182", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:40:35Z", "item": "S182", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:40:35Z", "item": "S182", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:40:35Z", "item": "S182", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:40:35Z", "item": "S182", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:40:36Z", "item": "S181", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:40:36Z", "item": "S181", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:40:36Z", "item": "S181", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:40:36Z", "item": "S181", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:40:36Z", "item": "S181", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:40:53Z", "item": "S181", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:40:53Z", "item": "S181", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:40:53Z", "item": "S181", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:40:57Z", "item": "S182", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:41:26Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:41:26Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:41:27Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:41:27Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:41:27Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:42:38Z", "item": "S173", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:42:38Z", "item": "S173", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:42:38Z", "item": "S173", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:42:38Z", "item": "S173", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:42:38Z", "item": "S173", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:42:38Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:42:38Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:42:39Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:42:39Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:42:39Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:42:39Z", "item": "S180", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:42:39Z", "item": "S180", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:42:39Z", "item": "S180", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:42:40Z", "item": "S180", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:42:40Z", "item": "S180", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:42:42Z", "item": "S174", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:42:42Z", "item": "S174", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:42:42Z", "item": "S174", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:42:42Z", "item": "S174", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:42:42Z", "item": "S174", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:42:52Z", "item": "S180", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:42:52Z", "item": "S180", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:42:57Z", "item": "S173", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:43:03Z", "item": "S176", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:43:10Z", "item": "S174", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:43:10Z", "item": "S174", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:43:10Z", "item": "S174", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:43:10Z", "item": "S174", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:43:10Z", "item": "S174", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:44:58Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:44:58Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:44:59Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:44:59Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:44:59Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:45:13Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:45:13Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:45:13Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:45:13Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:45:13Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:45:32Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:45:32Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:45:32Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:45:32Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:45:32Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T16:08:53Z", "item": "S166", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): the entries given ", "by": "Jon R"}
+{"when": "2026-10-29T16:08:53Z", "item": "S167", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): if the spec check ", "by": "Jon R"}
+{"when": "2026-10-29T16:08:53Z", "item": "S168", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): CLI (ork roles mat", "by": "Jon R"}
+{"when": "2026-10-29T16:08:54Z", "item": "S169", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): a vendor marked ou", "by": "Jon R"}
+{"when": "2026-10-29T16:08:54Z", "item": "S170", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): filing from an exi", "by": "Jon R"}
+{"when": "2026-10-29T16:08:54Z", "item": "S171", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): defaults accepted.", "by": "Jon R"}
+{"when": "2026-10-29T16:08:54Z", "item": "S172", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): ork adj ask is CLI", "by": "Jon R"}
+{"when": "2026-10-29T16:08:54Z", "item": "S173", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): defaults accepted ", "by": "Jon R"}
+{"when": "2026-10-29T16:08:54Z", "item": "S174", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): file-level fields ", "by": "Jon R"}
+{"when": "2026-10-29T16:08:54Z", "item": "S175", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): defaults accepted ", "by": "Jon R"}
+{"when": "2026-10-29T16:08:54Z", "item": "S176", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): defaults accepted ", "by": "Jon R"}
+{"when": "2026-10-29T16:08:54Z", "item": "S177", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): the stop point is ", "by": "Jon R"}
+{"when": "2026-10-29T16:08:55Z", "item": "S178", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): doctor infers each", "by": "Jon R"}
+{"when": "2026-10-29T16:08:55Z", "item": "S179", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): v1.1. First step i", "by": "Jon R"}
+{"when": "2026-10-29T16:08:55Z", "item": "S180", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): git merge-file --u", "by": "Jon R"}
+{"when": "2026-10-29T16:08:55Z", "item": "S181", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): refuse the whole c", "by": "Jon R"}
+{"when": "2026-10-29T16:08:55Z", "item": "S182", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): fixed 30-minute ha", "by": "Jon R"}
+{"when": "2026-10-29T16:09:36Z", "item": "S184", "action": "add", "from": "", "to": "open", "note": "Roadmap launch runs the spec check before the confirmation"}
+{"when": "2026-10-29T16:09:36Z", "item": "S185", "action": "add", "from": "", "to": "open", "note": "Decisions tab: answer an adj record with number keys and a confirmation"}
+{"when": "2026-10-29T16:11:19Z", "item": "S184", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T16:11:19Z", "item": "S185", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T16:11:26Z", "item": "S184", "action": "set", "from": "", "to": "", "note": "depends_on -→S167,S166"}
+{"when": "2026-10-29T16:11:26Z", "item": "S185", "action": "set", "from": "", "to": "", "note": "depends_on -→S172"}
+{"when": "2026-10-29T16:11:26Z", "item": "S167", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Split (owner, 2026-10-29): the Roadmap laun", "by": "Jon R"}
+{"when": "2026-10-29T16:11:26Z", "item": "S172", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Split (owner, 2026-10-29): the TUI half (de", "by": "Jon R"}
+{"when": "2026-10-29T16:11:26Z", "item": "S184", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Split from S167 (owner, 2026-10-29). Runs a", "by": "Jon R"}
+{"when": "2026-10-29T16:11:26Z", "item": "S185", "action": "note", "from": "", "to": "", "note": "**2026-10-29** — Split from S172 (owner, 2026-10-29). Runs a", "by": "Jon R"}
+{"when": "2026-10-29T16:11:30Z", "item": "S184", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T16:11:30Z", "item": "S184", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T16:11:30Z", "item": "S184", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T16:11:30Z", "item": "S184", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T16:11:31Z", "item": "S184", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T16:11:31Z", "item": "S185", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T16:11:31Z", "item": "S185", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T16:11:31Z", "item": "S185", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T16:11:31Z", "item": "S185", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T16:11:31Z", "item": "S185", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T16:11:31Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T16:11:31Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T16:11:31Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T16:11:32Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T16:11:32Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T16:11:32Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T16:11:32Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T16:11:32Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T16:11:32Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T16:11:32Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Check"}

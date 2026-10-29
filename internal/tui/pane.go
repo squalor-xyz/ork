@@ -211,6 +211,11 @@ func (m *Model) paneQuestion() bool {
 	return ok && !r.unavailable && !m.pane.ledger && (m.pane.finding > 0 || (r.state == "paused" && r.pending == "question"))
 }
 
+// halfPage is the step of ctrl+d and ctrl+u in a pane that shows room lines
+// of its scrolling part: the run pane's room, or what the decision, Roadmap
+// item and Waves item panes last drew (S152).
+func halfPage(room int) int { return max(room/2, 1) }
+
 func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 	m.pane.notice = "" // the first key read the switch notice
 	if m.pane.number != "" && msg.String() != "esc" && msg.String() != "enter" && !key.Matches(msg, m.keys.MarkCheck) {
@@ -256,12 +261,12 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	case "ctrl+d":
 		// Half a page of the scrolling part (S149). Nothing in a field uses ctrl+d.
-		m.pane.offset += max(m.pane.room/2, 1)
+		m.pane.offset += halfPage(m.pane.room)
 		return nil
 	case "ctrl+u":
 		// ctrl+u in an answer field or the fix note still clears the field.
 		if !m.paneField() {
-			m.pane.offset = max(m.pane.offset-max(m.pane.room/2, 1), 0)
+			m.pane.offset = max(m.pane.offset-halfPage(m.pane.room), 0)
 			return nil
 		}
 	}

@@ -1,0 +1,39 @@
+{
+  "id": "S184",
+  "title": "Roadmap launch runs the spec check before the confirmation",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Split from S167 on 2026-10-29. The Roadmap launch never runs the spec check: `startLaunch` sends `run.start` with no check (`internal/tui/launch.go:190-213`), while `l` in Waves does (`internal/tui/waves.go:388`, `internal/tui/speccheck.go:62-78`). So a one-off slice started from the Roadmap can start on a thin spec that a wave would have held. S167 gates the daemon (`run.start` refuses an item with open spec questions, `spec_questions`) and adds the check to `ork run`; this slice adds it to the Roadmap launch.\n\nParity row: 1.2 (check that a spec is ready) and gap 2 of the prioritized list in `docs/orchestrator-parity.md` (from S165).\n\nOwner decisions that apply:\n- The spec check is one read-only pass of the spec-check role; it asks structured questions, the owner answers in one sitting, ork appends an `Owner decisions (date)` paragraph with `slicer edit --append` and files keyed questions in adj only when the project has adj and the owner turned filing on (adj 164 roles.spec-check; `docs/design.md:188-212`). Verdicts are an in-memory job cache tied to a fingerprint of the spec; ork stores no verdict (`docs/boundaries.md:18`).\n- If the spec check itself fails, the launch is blocked, as waves do. There is no skip key (owner, 2026-10-29).\n- The role is read-only; filling a thin spec is S179 (v1.1), not this slice.\n\nCost to note: one spec-check role run per unchecked or changed spec, as for a wave. An item already checked and unchanged is answered from the daemon cache at no cost (`internal/daemon/speccheck.go:166-171`).\n\nDesign (*proposed*): the check runs between the plan and the start confirmation, the same place as in a wave. The Roadmap launch shows the same sitting as Waves. An item whose questions stay open is held: the launch closes with a status line. The daemon gate from S167 stays behind it, so the wire cannot skip the check.\n\nNot in this slice: the daemon gate and `ork run` (S167), filling or drafting a spec (S179), a key that skips the check, changing the spec-check prompt or its lineup, the wave path (its behaviour and goldens must not change).\n\nOrder: after S167 (the daemon gate) and after S166 (same files, `internal/tui/launch.go` and `model.go`). S168 and S169 do not touch these paths.\n\nSize: M. Moving the sitting out of Waves (step 1) is most of it."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/speccheck.go`\n- `internal/tui/launch.go`\n- `internal/tui/waves.go:28-78`\n- `internal/tui/model.go:434-535`\n- `internal/tui/keys.go:251-267`\n- `internal/tui/view.go:83-99`\n- `internal/tui/launch_test.go`\n- `internal/tui/speccheck_test.go`\n- `internal/tui/live_test.go:225-235`\n- `docs/design.md:186-212`\n- `docs/dashboard.md:1124-1170`\n- `docs/dashboard.md:1275-1331`\n- `docs/guide.md` (from S165; edit the Roadmap launch text in sections 7 and 9 once it has landed)\n- `testdata/golden/launch-sitting-100x30-color.txt` (new)\n- `testdata/golden/launch-sitting-100x30-mono.txt` (new)"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestLaunchRunsTheSpecCheckBeforeTheConfirmation` (`internal/tui/launch_test.go`): after the plan, the status shows `pending: spec.check`; a ready item goes to the confirmation.\n- `TestLaunchSittingAnswersRecordThenConfirm`: questions open one sitting; `1`-`N`, `t` and `enter` answer; the last answer calls `SpecAnswer`; the confirmation follows.\n- `TestLaunchSittingSkipClosesTheLaunchWithAStatus`: `s` or `esc` closes the launch with `S90 waits on N spec questions`, and no Start.\n- `TestLaunchSpecCheckErrorDropsTheLaunch`: a `SpecCheck` error drops the launch, shows its code and message verbatim, and sends no Start.\n- `TestLaunchReplanAfterEditDoesNotCheckAgain`: a re-plan after an S166 edit goes straight to the confirmation without a second `SpecCheck`.\n- `TestWavesLaunchRunsTheSpecCheckBeforeTheConfirmation` (`internal/tui/speccheck_test.go:42`): unchanged and still green; it guards the move of the sitting out of Waves.\n- `TestLaunchSittingGolden`: the sitting on the launch at 100x30, colour and mono (`launch-sitting-100x30-color.txt`, `-mono.txt`)."
+    },
+    {
+      "heading": "Implement",
+      "body": "UI slice: UI pass (r14). It touches `internal/tui`, its golden views and `docs/dashboard.md`. Test-first: write the tests above. Then:\n1. TUI state: the sitting, the in-flight flag, the answers cache and the owner-needed text now live on `wavesState` (`internal/tui/waves.go:54-58`). Move them into a `specState` that both `wavesState` and `launchState` hold. `sittingKey`, `answerSitting`, `endSitting`, `finishSitting`, `applyAnswer` and `sittingParts` (`internal/tui/speccheck.go:144-340`) take the `specState` and a done callback (waves: `askLaunch`, launch: confirm). Waves behaviour and its goldens must not change; `TestWavesLaunchRunsTheSpecCheckBeforeTheConfirmation` (`internal/tui/speccheck_test.go:42`) is the guard.\n2. `internal/tui/launch.go`: add stages `launchSpecPending` and `launchSitting` between `launchPlanPending` and `launchConfirm` (`:20-27`). In `applyLaunch` (`:252-254`) a new plan starts `live.SpecCheck(ctx, project, []string{item})` instead of the confirmation; a reply is a `launchSpecMsg` matched by `l.request`. Ready: set `m.confirm` as before. Questions: open the sitting. Sitting ended with the item ready: confirm. Skipped: `dropLaunch`, status `ITEM waits on N spec questions; l checks again`. A check error drops the launch and shows its code and message verbatim (as plan errors do, `:242-246`). A re-plan after an S166 edit does not check again.\n3. `internal/tui/model.go:447-452,525-529` (paste and key routing), `internal/tui/keys.go:253-267` (hints) and `internal/tui/view.go:95-96` (`launchView` draws `sittingParts` in stage `launchSitting`): route to whichever of waves or launch holds the sitting.\n4. `internal/tui/live_test.go:230` and `launchLive` (`internal/tui/launch_test.go:24`): the launch tests' fake answers `SpecCheck` ready by default, as `wavesLive` does (`internal/tui/waves_test.go:41`).\n5. Docs: `docs/design.md:186-200` (the check also runs on the Roadmap launch; S167 adds the `ork run` text), `docs/dashboard.md:1124-1170` and `:1275-1331`, `docs/guide.md` sections 7 and 9 (S165) for the Roadmap launch.\n6. Goldens: `go test ./internal/tui -update`; review `testdata/golden/` (only the two launch-sitting files are new; the Waves goldens must not change)."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` prints nothing.\n- `go test ./internal/tui -update`, then review the diff of `testdata/golden/`.\n- `slicer render --root /Users/jon/code/squalor-xyz/ork`, then `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

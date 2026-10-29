@@ -36,5 +36,5 @@
 
 
 [90m────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────[m
- pgup/pgdown [2mline[m; ctrl+d/u [2mhalf page[m; [2mstarted elsewhere, read-only[m; esc [2mclose pane[m
+ pgup/pgdown [2mline[m; ctrl+d/u [2mhalf page[m; [90mstarted elsewhere, read-only[m; esc [2mclose pane[m
  1 project | refreshed 16:42:00

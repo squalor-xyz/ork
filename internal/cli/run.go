@@ -46,8 +46,8 @@ func (a *App) call(ctx context.Context, o *output, method string, params, result
 func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 	fs := flag.NewFlagSet("run", flag.ContinueOnError)
 	yes := fs.Bool("yes", false, "confirm the plan")
-	well := fs.String("well-specified", "", "yes or no")
-	split := fs.String("split", "", "yes or no")
+	well := fs.String("well-specified", "", "y/n")
+	split := fs.String("split", "", "y/n")
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
 	pos, err := parse(fs, args)
 	if err != nil {
@@ -57,11 +57,11 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		return o.usage("run takes PROJECT ID")
 	}
 	// adj #86 run.lineup-inputs: prompt at confirmation, or require both
-	// explicit yes|no inputs when --yes skips the prompt. adj #87
+	// explicit y/n inputs when --yes skips the prompt. adj #87
 	// run.prompt-answers: y, yes, n and no are accepted in any case.
 	valid := func(v string) bool { return v == "" || yesNo(v) != "" }
 	if !valid(*well) || !valid(*split) || (*yes && (*well == "" || *split == "")) {
-		return o.usage("run: --well-specified yes|no and --split yes|no are required with --yes")
+		return o.usage("run: --well-specified y/n and --split y/n are required with --yes")
 	}
 	*well, *split = yesNo(*well), yesNo(*split)
 	input := a.Input

@@ -1,4 +1,4 @@
-[1mork[m  ?help                 │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[1mork[m                        │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
 [90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────[m
 [90m0[m Needs you              1 │  [1;36mAdd project[m
 [1;7;97;44m1>alpha                    [m│

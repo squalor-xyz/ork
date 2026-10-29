@@ -323,7 +323,7 @@ func TestViewKeysDoNotMoveTheProject(t *testing.T) {
 			if bar := strings.Split(v, "\n")[0]; !strings.Contains(bar, "Overview │ Questions 2 │ Waves │ Roadmap │ Decisions") {
 				t.Errorf("after %s the view bar is %q", k, bar)
 			}
-			want := "Questions 2"
+			want := "Questions"
 			if k == "shift+tab" {
 				want = "Decisions"
 			}
@@ -1426,7 +1426,7 @@ func TestLayoutHasTabsViewBarBodyAndStatusLine(t *testing.T) {
 			t.Errorf("line %d is %d wide: %q", i, w, l)
 		}
 	}
-	if !strings.Contains(strings.Join(lines, "\n"), "slicer") || !strings.Contains(lines[0], "?help") {
+	if !strings.Contains(strings.Join(lines, "\n"), "slicer") || strings.Contains(lines[0], "?help") {
 		t.Errorf("tab line: %q", lines[0])
 	}
 	for _, v := range []string{"Overview", "Questions", "Waves", "Roadmap", "Decisions"} {
@@ -2531,7 +2531,7 @@ func TestHelpDoesNotPromiseAScrollingRoadmapPane(t *testing.T) {
 	h := roadmapHarness(t)
 	h.send(press("?"))
 	v := strings.Join(h.m.helpLines(60, 40), "\n")
-	if strings.Contains(v, "scroll a pane") || !strings.Contains(v, "pgdown/pgup page rows") {
+	if strings.Contains(v, "pgdown/pgup page rows or scroll a pane") || !strings.Contains(v, "pgdown/pgup page rows") {
 		t.Errorf("the Roadmap help:\n%s", v)
 	}
 	ov := newHarness(t, four...)

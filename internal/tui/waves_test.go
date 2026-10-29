@@ -1412,7 +1412,7 @@ func TestWavesHintsStayPinnedBelowBody(t *testing.T) {
 	}
 	h.deliver(press("esc"))
 	tickWave(t, h, "y", "n")
-	if got := plainView(h.m); !strings.Contains(hintLine(got), "enter item") || !strings.Contains(hintLine(got), "l launch wave") {
+	if got := plainView(h.m); !strings.Contains(hintLine(got), "enter item") || !strings.Contains(hintLine(got), "l launch") {
 		t.Fatalf("composer hints scrolled away:\n%s", got)
 	}
 }

@@ -1,0 +1,39 @@
+{
+  "id": "S173",
+  "title": "Role matrix editor in ork",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "L",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Parity row 2.2 and gap 8 (docs/orchestrator-parity.md in the s165 worktree). The role matrix and the lineup it recommends belong to slicer (`docs/boundaries.md`, Ownership table; adj `lineup.source`). The matrix lives in `.slicer/relay-roles.json` and changes only through `slicer relay-roles add|set|remove|move|rule-edit` (also `rule-add`, `rule-remove`; `slicer relay-roles --help`). Each takes `--render`. No ork code calls them: ork runs only `relay-roles show --json` and `recommend` (`internal/slicercli/write.go:94-102`, `:193-205`). So to change a model, effort or row order the owner goes to the outer session. This slice is a v1.1 slice (owner decision 2026-10-29, orchestrator-parity.md, Owner decisions); it follows S168, the read-only matrix view.\n\nDesign (*proposed*): ork stays a front end for slicer's commands and never edits `.slicer` files. The editor works on the view S168 draws. Each edit shows the exact `slicer relay-roles ...` command and asks `[y/N]`; the daemon runs it in the project's main checkout through the write helper with no run record (the pattern of `internal/engine/speccheck.go:373`), with `--render`, and leaves the change uncommitted for the owner. Slicer's own validation errors are shown verbatim. A run already started keeps its lineup (`runrec.Record.Lineup`); an open launch plan that the edit changes is refused by the `plan changed` check at `run.start` (`internal/daemon/runs.go:489-495`). Rows whose agent ork has no adapter for are skipped when planning (`matrixAdapters`, `runs.go:321,395`); the editor warns when a row would be skipped."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/slicercli/write.go:104-113`\n- `internal/slicercli/write.go:193-205`\n- `internal/slicercli/write_test.go`\n- `internal/daemon/runs.go:321`\n- `internal/daemon/handlers.go:60-100`\n- `internal/daemon/client.go:171-181`\n- `internal/daemon/matrix.go` (new)\n- `internal/daemon/matrix_test.go` (new)\n- `internal/tui/matrix.go` (new in S168; this slice adds the editor to it)\n- `internal/tui/matrix_edit.go` (new)\n- `internal/tui/matrix_edit_test.go` (new)\n- `internal/tui/live.go:19-39`\n- `docs/dashboard.md`\n- `docs/boundaries.md:14`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestRelayRowSetPassesOnlyTheGivenFields (slicercli): `set r5 --model opus` builds `relay-roles set r5 --model opus --render --json --root R` and no other flag.\n- TestRelayRowAddRemoveMoveRuleEditArgv (slicercli): the argv of `add`, `remove`, `move --before`/`--last` and `rule-edit`.\n- TestMatrixEditRunsTheSlicerCommand (daemon): `matrix.edit` runs exactly one `relay-roles` write in the project path, with no run record and a `writes` log line.\n- TestMatrixEditPassesSlicersRefusalThrough (daemon): a failing command returns slicer's code and text unchanged.\n- TestMatrixEditRefusesAnUnregisteredProject (daemon): `not_found`, no call.\n- TestMatrixEditorAsksWithTheExactCommand (tui): the prompt shows the full command and `[y/N] (Enter is No)`; `n`, Enter and `esc` make no call.\n- TestMatrixEditorWarnsOnARowOrkCannotRun (tui): an agent other than `Claude Code` or `Codex` shows the skip warning.\n- TestMatrixEditorShowsTheNewMatrixAfterAnEdit (tui): the view reloads and the status names the row.\n- TestMatrixEditorGoldens (tui): golden of the edit form and prompt at 80x24, colour and monochrome."
+    },
+    {
+      "heading": "Implement",
+      "body": "UI slice: UI pass (r14). After S168; reuse its row cursor and its `relay-roles show` read. Size L: if the spec grows, split into the wire (slicercli, daemon, a CLI form) and the TUI editor.\n1. Tests first (above).\n2. `internal/slicercli/write.go`: `RelayRowAdd`, `RelayRowSet`, `RelayRowRemove`, `RelayRowMove`, `RelayRuleEdit` over `c.write` with a nil-sink writer. Pass flags only when given.\n3. `internal/daemon/matrix.go`: method `matrix.edit` (*proposed*) `{project, op, id, fields}` for the five ops; resolve the project with `d.registered`; return slicer's error as is.\n4. `internal/tui`: edit keys on the S168 view (default: `e` edit row, `n` new row, `d` remove, `m` move, `r` rule text); a form per op; confirm; reload the matrix after success.\n5. Docs: `dashboard.md` (matrix editor), `boundaries.md` (ork calls the edit commands, slicer still owns the file), `CHANGELOG.md`. Goldens: `go test ./internal/tui -update`.\nOpen: (1) Surface: TUI editor only (default), or also `ork roles matrix set|add|remove|move|rule-edit` for scripts. (2) Verbs: the five the gap names (default), or also `rule-add` and `rule-remove`. (3) Free text for agent, vendor and model (default, with the skip warning), or a pick list of the two agents ork runs. (4) Leave the edit uncommitted (default), or ork commits `.slicer` as `Edit relay roles` (a git write the owner has not allowed)."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `go test ./internal/tui -update`, then review the diff in `testdata/golden/`\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 165,
+  "next_id": 186,
   "preamble": "",
   "passes": [
     {
@@ -1568,7 +1568,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "05717345-c729-421f-bcfc-ebba7dda5e2b",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29: folded into S142 (its docs pass rewrites boundaries.md, design.md, glossary.md and roles.go wording for v9/v10). Retire S90 once S142 lands.",
+          "created_at": "2026-10-29T11:53:48Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1593,10 +1605,44 @@
       "id": "S39",
       "title": "ork run prompt tests catch swapped answers; help text says y/n",
       "short_title": "ork run prompt tests catch swapped answers; help text says y/n",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "cca3e88a-21f7-4595-aa3f-56f58644c988",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29 (interactive): ork wave start also says y/n: wave.go flag help (:91-92) and usage error (:103), docs/dashboard.md:1055-1056, a matching usage test; add wave.go and dashboard.md to Files.",
+          "created_at": "2026-10-29T04:02:01Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "ea660b13-a746-4953-9d40-109ad0f5ed43",
+          "kind": "",
+          "text": "**2026-10-29** — Later: the source-text check in TestWaveStartUsageSaysYAndN fails on any 'yes or no' text in run.go or wave.go including a comment; scope it to the fs.String lines if it bites. Flag help is never shown (parse discards flag output); showing it through -h is a separate item if wanted.",
+          "created_at": "2026-10-29T04:07:09Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "06dbc59c-b791-4a48-9a5d-0b5c84ed74d8",
+          "kind": "",
+          "text": "**2026-10-29** — Orchestration trial (run 36, S39): Claude sonnet-high implementer in a three-slice parallel batch; review and UI pass FAIL then PASS on one scope call (wave start wording), 1 fix round, 1 owner question.",
+          "created_at": "2026-10-29T04:07:09Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1614,7 +1660,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -6230,6 +6276,17 @@
           "stale_after": ""
         },
         {
+          "id": "be952fb6-e356-4541-ba33-8be97a5ffdd3",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29: S142 also covers S90's stale lines (boundaries.md v7/s382 text, the 'waiting on' wording in design.md, glossary.md and roles.go); retire S90 when S142 lands. Prompts: roles.prompt-seed (adj 30) is decided as slicer-fresh, so re-seeding from v10 needs no new decision.",
+          "created_at": "2026-10-29T11:53:48Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
           "id": "51d6b031-e2b0-40d0-bea9-d883b3d27961",
           "kind": "",
           "text": "**2026-10-29** — Owner decision 2026-10-29 (interactive, UI pass): a ledger run started outside ork that waits on the owner with a v10 question moves to Needs you (counts there, gets the ? mark) and the pane shows the question title and options read-only. Later (review round 1): Claude runner does not classify out-of-credits or pass Result.Reason (runner.go ~69-79); ork status / daemon relay summary shows no step for a waiting relay (handlers.go ~358-365); relay-run answer always sends --text, use --option when an option label was picked (write.go ~316-319); questions whose options contain ; or | or a multi-line reason are refused by relay-run ask and not mirrored, and a crash between Answer's record update and RelayAnswer leaves the ledger question open (ledger.go ~34, engine.go ~426-443). Later (UI pass): waiting runs still say '0 of 3 steps running'; the pane still shows last heard on waits (S154 covers waiting since); 'waiting on approval' widens the phase column to 19; wait rows have no emphasis in mono and share amber with the last-heard warning; the doctor line for an unaccepted version repeats itself and gives no upgrade hint.",
@@ -6478,7 +6535,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "99465d1f-11b3-48d5-a99b-dd967b45eee9",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29 (interactive): take the visible UI bullets: fit-test for the compact layout instead of the fixed 100 columns, A2 fallback pane placement, sidebar stall cue at 80x24, empty tokens line on a running step, detail footer wrap. The test-hygiene bullets stay as later notes.",
+          "created_at": "2026-10-29T11:53:48Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -6506,7 +6575,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "cf3597bc-a43c-4963-831c-132d9af12601",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29 (interactive): correctness set only: per-pane sequence number for run.render answers, corrupt run.json reads as unreadable not 'no run', a read error says why renders could not be read, renderOn() stops resetting pane state from the draw path. Side-scroll and the other bullets stay later notes.",
+          "created_at": "2026-10-29T11:53:48Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -6781,10 +6862,110 @@
       "id": "S152",
       "title": "S149 later notes: Questions footer, hint polish, pane scroll keys",
       "short_title": "S149 later notes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "00f9acbc-9f02-4deb-8aa2-0e111b283881",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): (1) q quit never drops from the hint bar on the main views (like ? help); (2) remove ?help from the sidebar header; (3) add back the 'type a whole number' hint on Waves lineup budget rows 2 and up, and wire ctrl+d/ctrl+u with their hints into the decision, roadmap-item and waves-item panes (reuse pane.room). Earlier decisions in this slice stand: drop the Questions body footer [enter] open; on Waves with nothing ticked the hint keeps not showing l.",
+          "created_at": "2026-10-29T04:02:01Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "6a90947d-0865-4b76-a68d-d26330899f93",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Later note: the Files list omitted `internal/tui/keys.go`, `internal/tui/model.go` and `internal/tui/roadmap.go`; the hint changes (step 3), the half page key dispatch and the Roadmap item pane offset (step 6) required them.",
+          "created_at": "2026-10-29T11:48:37Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "37cbdabd-660c-4113-8cd1-21292f4fe34d",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Later note: the narrow half of TestCtrlDUHintsShowInThosePanes (hint_test.go, the 70 column check) can no longer fail, because q quit is pinned; the test no longer proves that ctrl+d/u drops before the way out.",
+          "created_at": "2026-10-29T11:48:37Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "d6c5e8e8-e330-467a-a3b7-1d216aa6f68a",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Later note: the drop-order comment above the drop constants in keys.go is broken across lines at 'the pane scroll keys' / 'second form'; tidy it.",
+          "created_at": "2026-10-29T11:48:37Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "9fb89afd-1c91-43e2-805f-07ec6c2c7867",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Later note (owner call): the help says ctrl+u clears a field, but the / project filter ignores ctrl+u (it handles only backspace and typed text); the wording drifts from the filter's behaviour.",
+          "created_at": "2026-10-29T11:48:38Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "766dc67d-c654-49f5-b8d4-b3d545f44b69",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Later note: the ledger pane's read-only note is drawn with the Dim style, which equals the description style (SGR 2) in the mono theme, so it looks the same there; an italic Dim would need a theme change (owner call).",
+          "created_at": "2026-10-29T11:48:38Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "b6c4be11-1249-4127-ad01-292fd98cc3ad",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Later note: the decision pane scrolls its heading away, unlike the Roadmap and Waves item panes which keep theirs, and no pane marks content above the top of its window.",
+          "created_at": "2026-10-29T11:48:38Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "3a8f6906-e144-49c3-bd1f-dca24be88e3b",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive, review round 1): the Waves hint says 'l launch', not 'l launch wave', so 'e edit lineup' fits at 100x30; the ctrl+d/u hint stays dropped early in the decision pane.",
+          "created_at": "2026-10-29T11:55:04Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "f64aeb75-b6c3-41a6-8cea-762e257fb862",
+          "kind": "",
+          "text": "**2026-10-29** — Orchestration trial (run 37, S152): Claude sonnet-high implementer in a three-slice parallel batch; review PASS, UI pass FAIL then PASS, 1 fix round, 2 owner questions in review plus 4 at preflight.",
+          "created_at": "2026-10-29T11:55:04Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -6802,7 +6983,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -6896,7 +7077,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "24d3dc82-13ff-4fa9-ab72-5f48f6bb6baf",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29 (interactive): all four items (waiting since HH:MM replaces last heard for awaiting-approval/paused; hide Wait text that only restates the state; '2 of 6 steps' for owner-wait states; no stage-bar animation during an owner wait). Run after S142, which changes the same wait-phase rows.",
+          "created_at": "2026-10-29T11:53:48Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -6922,7 +7115,7 @@
       "title": "S93 later notes: gate walk with repeated reviewer rows; environment-dependent daemon adapter test",
       "short_title": "S93 later notes",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -6962,7 +7155,7 @@
       "title": "S102 later notes: registration re-check by name only; worktree assertions in the removal test",
       "short_title": "S102 later notes",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -7002,7 +7195,7 @@
       "title": "Allow rule slicer next * also approves next --start and --render",
       "short_title": "S73 later: next * writes",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -7042,7 +7235,7 @@
       "title": "S71 later notes: doctor registry line, sh prefix strip, time, no-projects line",
       "short_title": "S71 later notes",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -7623,6 +7816,872 @@
         "urgency": 2,
         "effort": 1,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S165",
+      "title": "How ork works: guide with diagrams, and an orchestrator-parity gap analysis",
+      "short_title": "Ork guide and parity gaps",
+      "status": "done",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "17100b7e-ef1a-4ada-bd22-00c797c47241",
+          "kind": "",
+          "text": "**2026-10-29** — Later (S165 review): the parity doc and guide were checked against the code by reading only; Mermaid blocks were checked by reading, not rendered. Gap slices filed from the analysis: S166-S182 (S173, S179, S180 in v1.1) and S183 for the stale statements. Docs claims rely on file:line anchors that move; re-run the spot check after S142.",
+          "created_at": "2026-10-29T13:28:44Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "adf34ddc-40e0-46f6-add1-f9cb9bb17da0",
+          "kind": "",
+          "text": "**2026-10-29** — Orchestration trial (run 38, S165): sonnet-high lead with a haiku-xhigh docs reader and two sonnet surveys; review FAIL then PASS, 1 fix round, 4 owner questions on gap scope.",
+          "created_at": "2026-10-29T13:28:45Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S142",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S166",
+      "title": "Lineup and budget overrides on every launch path (Roadmap launch, ork run)",
+      "short_title": "Lineup overrides everywhere",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "f13f3f14-62e1-4d65-97d4-315aec05418f",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): the entries given on --implementer/--reviewer/--architect are the whole chain (repeatable; --architect off drops it); on wave start the flags apply to every item.",
+          "created_at": "2026-10-29T16:08:53Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S167",
+      "title": "Spec check on a single-slice launch",
+      "short_title": "Spec check on one launch",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "6dfae502-55cc-4b47-ac15-50368a54d44d",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): if the spec check itself fails the launch is blocked, as waves do (no skip flag). Split: this slice keeps the daemon gate (run.start gated by specGate) and ork run; the Roadmap launch sitting moves to the new TUI slice, which runs after S166.",
+          "created_at": "2026-10-29T16:08:53Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "cd9469fe-4b65-424f-8737-07b9eebd568d",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Split (owner, 2026-10-29): the Roadmap launch half (TUI sitting between plan and confirmation, TestLaunch* tests, launch-sitting goldens, dashboard docs) moved to S184, which depends on this slice and on S166. This slice is the daemon gate and ork run.",
+          "created_at": "2026-10-29T16:11:26Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S168",
+      "title": "Role matrix view in ork (read-only)",
+      "short_title": "Role matrix view",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "388c76dd-392f-43b0-8a69-8b76dbf3da51",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): CLI (ork roles matrix) and a TUI pane on the Roadmap; the view notes the Gate rows ork does not use.",
+          "created_at": "2026-10-29T16:08:53Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S169",
+      "title": "Per-vendor slot cap and vendor-out memory (one Codex slot, Claude stand-in)",
+      "short_title": "Vendor slots and stand-in",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "452fce8f-ffd3-446a-9c4d-b930ff981319",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): a vendor marked out after a rate-limit or out-of-credits exit stays out for 60 minutes (fixed expiry) or until `ork vendor back`, and a daemon restart clears it (supersedes the spec's until-back default); a run waiting for a full vendor slot keeps its global-cap slot; with the vendor out and no other-vendor row the round tries the row anyway; built-in cap codex 1, claude unlimited, no registry field.",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S170",
+      "title": "File a slice from a note or a request in ork",
+      "short_title": "File a slice in ork",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "382d42c2-374b-4a49-a381-6d9980f0baec",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): filing from an existing note is CLI --from-note only; no confirm step (the typed command or submitted form is the act). Depends on adj scope.v1-ork-edits (adj 173, open): do not start until the owner decides it. Runs after S171.",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S171",
+      "title": "Add a note to a slice in ork",
+      "short_title": "Add a slice note in ork",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "8aed777b-80f0-4b84-a337-0a9487e69aa5",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): defaults accepted. Depends on adj scope.v1-ork-edits (adj 173, open): do not start until the owner decides it.",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S172",
+      "title": "Answer and ask adj records in ork",
+      "short_title": "adj answers in ork",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "a7af905f-15e2-4209-ac8f-1f1552912ca8",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): ork adj ask is CLI only (no TUI ask form); ork adj answer always prompts (no --yes, process.owner-answers #170); never reject or supersede. Split: this slice is adjcli, engine, daemon and both CLI commands; the TUI answer keys and confirmation move to the new TUI slice. Depends on adj scope.v1-ork-edits (adj 173, open): do not start until the owner decides it.",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "b3aae8ff-5fbc-4bef-9536-b8b773dfd582",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Split (owner, 2026-10-29): the TUI half (decision pane 1-4 and t keys, confirmation naming the option, hints, decision-answer goldens, dashboard docs) moved to S185, which depends on this slice. Both halves never reject, supersede or withdraw, and wait on adj 173 (scope.v1-ork-edits, open).",
+          "created_at": "2026-10-29T16:11:26Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S173",
+      "title": "Role matrix editor in ork",
+      "short_title": "Role matrix editor",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "b5ee1c0a-7618-4eba-ad08-7fd05140c70f",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): defaults accepted (TUI only, five verbs, edits left uncommitted). v1.1; may split into wire and TUI editor when scheduled.",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "L",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S174",
+      "title": "Registry settings for the remaining fields and the global cap",
+      "short_title": "More registry settings",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "7a302c40-a38f-4ff2-8f27-83ca6e418972",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): file-level fields via a new ork settings command; CLI only (no TUI view); permissions and vendor env change per role and per key.",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S175",
+      "title": "End a stale ledger run from the run pane",
+      "short_title": "End a stale ledger run",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "5166a382-3e0b-4a73-94c5-f2d205ad8856",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): defaults accepted (no shell ork end; no ending from a stopped engine run's pane).",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S176",
+      "title": "Open a role report in the run pane",
+      "short_title": "Open a role report",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "40a62cf2-6182-4feb-abf7-a07eebba108b",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): defaults accepted (key p; no shell ork report; check logs out of scope).",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S177",
+      "title": "Per-run stop point: after commit, or at land",
+      "short_title": "Per-run stop point",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "a601d074-91fc-4c38-80d1-427f6a1d3906",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): the stop point is chosen in the lineup editor's stop row (plus the CLI flag); no land key; the Ready row's slicer land commands stay.",
+          "created_at": "2026-10-29T16:08:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S178",
+      "title": "ork doctor reports sibling tool versions and prints upgrade commands",
+      "short_title": "Doctor upgrade hints",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "8b45f753-bb20-4180-b659-ac335f435a48",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): doctor infers each sibling tool's source from the binary and prints the documented commands with ADJ_CHECKOUT and ORK_CHECKOUT placeholders; hints print only when something is behind or missing, and always with --upgrade; doctor never runs them.",
+          "created_at": "2026-10-29T16:08:55Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S179",
+      "title": "Spec drafting round in ork",
+      "short_title": "Spec drafting round",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "6e596738-0c39-4bab-b6e9-e1535d1fa30b",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): v1.1. First step is the scope decision (adj 173 scope.v1-ork-edits covers filing, notes and adj answers; spec drafting needs its own record). Draft role reuses the spec-check row (u11) at first.",
+          "created_at": "2026-10-29T16:08:55Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "L",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S180",
+      "title": "Changelog conflict resolver at landing",
+      "short_title": "Changelog conflict resolver",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "efbc102b-cb04-4048-b2bc-043f7dec3efd",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): git merge-file --union step in mergeBaseIn for a CHANGELOG.md-only conflict (root file, branch side first, no note). v1.1.",
+          "created_at": "2026-10-29T16:08:55Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S181",
+      "title": "Refuse or warn on a blocked item at wave start",
+      "short_title": "Warn on blocked item",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "fd03b71b-26b1-43e3-82bb-ca2b0f861a77",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): refuse the whole call naming the item and its blockers; wave start and the spec check only (run.start as a follow-up).",
+          "created_at": "2026-10-29T16:08:55Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S182",
+      "title": "Watchdog for a hung role",
+      "short_title": "Hung role watchdog",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "60e3a22d-9f26-45ea-90ba-9e61d3965db3",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): fixed 30-minute hang limit in code (Deps.HungAfter, negative disables); after a hang the run pauses as lost for the owner, no automatic retry.",
+          "created_at": "2026-10-29T16:08:55Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S183",
+      "title": "Fix stale statements found in S165 review (README, PROJECT, boundaries, state, design, dashboard)",
+      "short_title": "Fix stale doc statements",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S165",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S184",
+      "title": "Roadmap launch runs the spec check before the confirmation",
+      "short_title": "Launch spec check sitting",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S167",
+        "S166"
+      ],
+      "note_records": [
+        {
+          "id": "ef3af9c0-4e87-46a6-b3c8-122566377f32",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Split from S167 (owner, 2026-10-29). Runs after S167 (daemon gate) and S166. A spec-check failure blocks the launch, no skip key.",
+          "created_at": "2026-10-29T16:11:26Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S167",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S185",
+      "title": "Decisions tab: answer an adj record with number keys and a confirmation",
+      "short_title": "adj answer keys in the TUI",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S172"
+      ],
+      "note_records": [
+        {
+          "id": "c77ce06f-133f-441c-9849-3dda0b37ee54",
+          "kind": "",
+          "text": "**2026-10-29** — **2026-10-29** — Split from S172 (owner, 2026-10-29). Runs after S172; waits on adj 173 (scope.v1-ork-edits, open). No TUI ask form; no reject, supersede or withdraw.",
+          "created_at": "2026-10-29T16:11:26Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S172",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
       }
     }
   ],

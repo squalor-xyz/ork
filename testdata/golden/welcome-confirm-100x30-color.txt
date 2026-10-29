@@ -1,4 +1,4 @@
-[1mork[m  ?help                 │ [90mOverview │ Questions │ Waves │ Roadmap │ Decisions[m
+[1mork[m                        │ [90mOverview │ Questions │ Waves │ Roadmap │ Decisions[m
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │  [1;36mWelcome[m
                            │

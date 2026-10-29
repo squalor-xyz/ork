@@ -39,10 +39,10 @@ const (
 
 const usageText = `usage: ork COMMAND [ARGS] [--json]
 
-  ork run P ID [--yes --well-specified yes|no --split yes|no]
+  ork run P ID [--yes --well-specified y/n --split y/n]
                               show the plan and launch one slice
   ork wave suggest P          show slicer's suggested waves
-  ork wave start P ITEM... [--yes --well-specified yes|no --split yes|no]
+  ork wave start P ITEM... [--yes --well-specified y/n --split y/n]
                               show the plans and launch the chosen items
   ork approve RUN             finish and commit a passed slice
   ork check RUN N [ticked|later|open]

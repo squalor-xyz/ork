@@ -97,7 +97,7 @@ func newKeyMap() keyMap {
 		Last:       key.NewBinding(key.WithKeys("G", "shift+g", "end"), key.WithHelp("G/end", "last row")),
 		PageDown:   key.NewBinding(key.WithKeys("pgdown"), key.WithHelp("pgdown/pgup", "page rows or scroll a pane")),
 		PageUp:     key.NewBinding(key.WithKeys("pgup"), key.WithHelp("pgup", "page up")),
-		ScrollDown: key.NewBinding(key.WithKeys("ctrl+d"), key.WithHelp("ctrl+d/u", "scroll a run pane half a page")),
+		ScrollDown: key.NewBinding(key.WithKeys("ctrl+d"), key.WithHelp("ctrl+d/u", "scroll a pane half a page")),
 		ScrollUp:   key.NewBinding(key.WithKeys("ctrl+u"), key.WithHelp("ctrl+u", "scroll a pane back half a page")),
 		NextGroup:  key.NewBinding(key.WithKeys("}"), key.WithHelp("}/{", "next/previous group, pass or wave")),
 		PrevGroup:  key.NewBinding(key.WithKeys("{"), key.WithHelp("{", "previous group")),
@@ -133,7 +133,8 @@ func short(b key.Binding, label, desc string) key.Binding {
 
 // hintEntry is one hint of the hint line and how soon it drops when the line
 // is too narrow: the highest drop goes first, and drop 0 never goes (the way
-// out, esc in a pane and ? help elsewhere, which stand at the right end).
+// out, esc in a pane and ? help elsewhere, which stand at the right end, and
+// q quit on the main views, S152).
 type hintEntry struct {
 	b    key.Binding
 	drop int
@@ -142,7 +143,7 @@ type hintEntry struct {
 // The drop order of the hint line, first to go first: remove project, then
 // the row's rarer keys (renders, fix, the check digits, retry, stop), then
 // the pane scroll keys'
-// second form and the global tab and quit. Finding actions stay with row keys.
+// second form and the global tab. Finding actions stay with row keys.
 const (
 	dropRemove = 20
 	dropRender = 19
@@ -221,8 +222,7 @@ func (m *Model) contextHints() []hintEntry {
 		l.add(dropTab, short(k.NextView, "tab", "views"))
 		l.add(dropTab, short(k.Add, "+", "add project"))
 		l.add(dropRemove, offer(m.active >= 0 && !m.projects[m.active].snap.Unavailable, k.Remove, "-", "remove project"))
-		l.add(dropQuit, short(k.Quit, "q", "quit"))
-		l.add(dropPinned, short(k.Help, "?", "help"))
+		l.add(dropPinned, short(k.Quit, "q", "quit"), short(k.Help, "?", "help"))
 	}
 	switch {
 	case m.removing.name != "":
@@ -270,7 +270,15 @@ func (m *Model) contextHints() []hintEntry {
 		if e.custom {
 			l.add(dropRow, short(k.NextView, "tab/shift+tab", "field"), short(k.Select, "enter", "use entry"))
 		} else {
-			l.add(dropRow, short(k.NextView, "up/down/tab", "row"))
+			// On a budget row the number hint outranks the row key (S152).
+			rowDrop := dropRow
+			if e.row >= len(lineupRoles) {
+				rowDrop = dropRow + 1
+			}
+			l.add(rowDrop, short(k.NextView, "up/down/tab", "row"))
+			if e.row >= len(lineupRoles) {
+				l.add(dropRow, short(k.MarkCheck, "type", "a whole number")) // the budget fields (S152)
+			}
 			if e.row < len(lineupRoles) {
 				l.add(dropRow, offer(len(e.plan.Lineup[lineupRoles[e.row]]) > 1, k.TabNext, "left/right", "cycle"), key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "custom")))
 			}
@@ -300,6 +308,7 @@ func (m *Model) contextHints() []hintEntry {
 	case m.view == wavesView && m.waves != nil && m.waves.pane != nil:
 		l.add(dropPage, short(k.PageDown, "pgup/pgdown", "page"))
 		l.add(dropLine, short(k.RowNext, "j/k", "line"))
+		l.add(dropHalf, short(k.ScrollDown, "ctrl+d/u", "half page"))
 		l.add(dropPinned, short(k.Close, "esc", "close pane"))
 	case m.pane != nil:
 		return m.paneHints()
@@ -313,9 +322,9 @@ func (m *Model) contextHints() []hintEntry {
 		if m.decisionPane != nil {
 			l.add(dropPage, short(k.PageDown, "pgup/pgdown", "page"))
 			l.add(dropLine, short(k.RowNext, "j/k", "line"))
+			l.add(dropHalf, short(k.ScrollDown, "ctrl+d/u", "half page"))
 			l.add(dropTab, short(k.NextView, "tab", "views"))
-			l.add(dropQuit, short(k.Quit, "q", "quit"))
-			l.add(dropPinned, short(k.Close, "esc", "close"), short(k.Help, "?", "help"))
+			l.add(dropPinned, short(k.Quit, "q", "quit"), short(k.Close, "esc", "close"), short(k.Help, "?", "help"))
 			break
 		}
 		if m.view == questionsView {
@@ -334,9 +343,9 @@ func (m *Model) contextHints() []hintEntry {
 		global()
 	case m.view == roadmapView:
 		if m.itemPane != nil {
+			l.add(dropHalf, short(k.ScrollDown, "ctrl+d/u", "half page"))
 			l.add(dropTab, short(k.NextView, "tab", "views"))
-			l.add(dropQuit, short(k.Quit, "q", "quit"))
-			l.add(dropPinned, short(k.Close, "esc", "close"), short(k.Help, "?", "help"))
+			l.add(dropPinned, short(k.Quit, "q", "quit"), short(k.Close, "esc", "close"), short(k.Help, "?", "help"))
 			break
 		}
 		_, launchRefused := m.launchRefusal()
@@ -352,7 +361,7 @@ func (m *Model) contextHints() []hintEntry {
 			}
 			_, tickRefused := m.tickRefusal()
 			_, launchRefused := m.waveLaunchRefusal()
-			launch := "launch wave"
+			launch := "launch"
 			if w.heldWithQuestions() {
 				launch = "answer spec questions"
 			}

@@ -1,4 +1,4 @@
-[1mork[m  ?help                 │ Overview[2m │ [m[1mQuestions 7[m[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1mork[m                        │ Overview[2m │ [m[1mQuestions[m [1m7[m[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
   Running                3 │[2m────────────────────────────────────────────────────────────────────────[m
 [1;7m0>Needs you              9 [m│[1mAll projects[m
 [2m1[m zeta                   3 │[1;7m  ? question zeta   engine-zeta  S27  Choose storage[m
@@ -8,7 +8,7 @@
                            │  [1m? decision[m alpha  #9 owner.first  First choice
                            │  [1m? decision[m alpha  #2 owner.second  Second choice
                            │  [1m? question[m plain  engine-plain  S27  Choose storage
-                           │  [enter] open
+                           │
                            │
                            │
                            │

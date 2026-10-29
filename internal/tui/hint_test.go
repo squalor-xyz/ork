@@ -12,6 +12,7 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
 // hintLine is the line above the status line, without the sidebar column.
@@ -216,7 +217,9 @@ func TestHintBarFitsNarrowScreens(t *testing.T) {
 		}
 		// A hint is dropped whole or kept whole.
 		hint := hintLine(plainView(h.m))
-		if !strings.HasPrefix(hint, "enter") {
+		// q quit never drops (S152), so at the narrowest width it and ? help
+		// are all that fit beside the sidebar.
+		if !strings.HasPrefix(hint, "enter") && !(width == 30 && hint == "q quit; ? help") {
 			t.Errorf("width %d: the row's own key is not first: %q", width, hint)
 		}
 		if strings.HasSuffix(hint, ";") || strings.HasSuffix(hint, " a") || strings.HasSuffix(hint, "...") {
@@ -665,7 +668,7 @@ func TestHintBarUsesTheScreensOwnWords(t *testing.T) {
 		twoWaveItems(t, h)
 		hint := hintLine(h.view())
 		v := h.view()
-		for _, want := range []string{"enter item", "space tick item", "l launch wave"} {
+		for _, want := range []string{"enter item", "space tick item", "l launch"} {
 			if !strings.Contains(hint, want) {
 				t.Errorf("waves hint lacks %q: %q", want, hint)
 			}
@@ -682,7 +685,7 @@ func TestHintBarUsesTheScreensOwnWords(t *testing.T) {
 			t.Fatalf("B is not held:\n%s", h.view())
 		}
 		hint = hintLine(h.view())
-		if !strings.Contains(hint, "l answer spec questions") || strings.Contains(hint, "l launch wave") {
+		if !strings.Contains(hint, "l answer spec questions") || strings.Contains(hint, "l launch") {
 			t.Errorf("held waves hint: %q", hint)
 		}
 	})
@@ -889,5 +892,367 @@ func TestHintRound3PaneScrollWords(t *testing.T) {
 	decision.deliver(press("enter"))
 	if got := wideHint(decision); !strings.Contains(got, "pgup/pgdown page") || !strings.Contains(got, "j/k line") {
 		t.Errorf("decision hint: %q", got)
+	}
+}
+
+// S152: the Questions list ends with its rows, as Decisions does; the hint line
+// already names enter.
+func TestQuestionsBodyHasNoEnterOpenFooter(t *testing.T) {
+	h := questionsHarness(t)
+	h.view()
+	body := sgr.ReplaceAllString(strings.Join(h.m.questions(72).body, "\n"), "")
+	if strings.Contains(body, "[enter] open") {
+		t.Errorf("the Questions body keeps its footer:\n%s", body)
+	}
+	if !strings.Contains(body, "engine-zeta") {
+		t.Errorf("the rows are gone:\n%s", body)
+	}
+	if hint := wideHint(h); !strings.Contains(hint, "enter open") {
+		t.Errorf("the hint line lost enter: %q", hint)
+	}
+}
+
+// The lineup's budget rows take a number, and the hint says so again (S152).
+// The role rows do not: they cycle or take a custom entry.
+func TestWavesBudgetRowsShowTheWholeNumberHint(t *testing.T) {
+	h, _ := lineupHarness(t)
+	for row := 0; row < len(lineupRoles)+2; row++ {
+		if got := h.m.waves.lineup.row; got != row {
+			t.Fatalf("the editor is on row %d, want %d", got, row)
+		}
+		hint := wideHint(h)
+		budget := row >= len(lineupRoles)
+		if has := strings.Contains(hint, "type a whole number"); has != budget {
+			t.Errorf("row %d: type a whole number shown %v, want %v: %q", row, has, budget, hint)
+		}
+		if budget && (!strings.Contains(hint, "up/down/tab row") || strings.Contains(hint, "left/right cycle") || !strings.HasSuffix(hint, "esc discard")) {
+			t.Errorf("row %d: the budget hint is wrong: %q", row, hint)
+		}
+		// At the standard sizes the row key goes before the number hint does.
+		if budget {
+			for _, size := range [][2]int{{80, 24}, {100, 30}} {
+				h.send(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+				if got := hintLine(plainView(h.m)); !strings.Contains(got, "type a whole number; enter save and replan; esc discard") {
+					t.Errorf("row %d at %dx%d: the budget hint is %q", row, size[0], size[1], got)
+				}
+			}
+		}
+		h.deliver(press("down"))
+	}
+}
+
+// q quit stands at the right end with ? help on the main views, at both
+// standard sizes, with a pane open or not (S152).
+func TestQuitHintNeverDropsOnMainViews(t *testing.T) {
+	type fixture struct {
+		name string
+		make func(t *testing.T) *harness
+	}
+	pane := func(view int, enter int) func(t *testing.T) *harness {
+		return func(t *testing.T) *harness {
+			var h *harness
+			switch view {
+			case decisionsView:
+				h = decisionsHarness(t)
+			case roadmapView:
+				h = roadmapHarness(t)
+				h.m.cfg.Live = &roadmapLive{detail: &slicercli.Detail{Item: slicercli.Item{ID: "S90"}}}
+			}
+			for range enter {
+				h.deliver(press("enter"))
+			}
+			return h
+		}
+	}
+	fixtures := []fixture{
+		{"Overview", func(t *testing.T) *harness { return actionHarness(t, "awaiting-approval", "") }},
+		{"Questions", questionsHarness},
+		{"Waves", func(t *testing.T) *harness {
+			h, _ := wavesHarness(t)
+			openWaves(t, h)
+			tickWave(t, h, "y", "n")
+			return h
+		}},
+		{"Roadmap", func(t *testing.T) *harness {
+			h := roadmapHarness(t)
+			h.m.cfg.Live = &actionLive{src: h.src}
+			return h
+		}},
+		{"Decisions", decisionsHarness},
+		{"Decisions pane", pane(decisionsView, 1)},
+		{"Roadmap pane", pane(roadmapView, 1)},
+	}
+	for _, f := range fixtures {
+		for _, size := range [][2]int{{80, 24}, {100, 30}} {
+			t.Run(fmt.Sprintf("%s %dx%d", f.name, size[0], size[1]), func(t *testing.T) {
+				h := f.make(t)
+				h.send(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+				hint := hintLine(plainView(h.m))
+				if !strings.Contains(hint, "q quit") {
+					t.Errorf("the hint lost q quit: %q", hint)
+				}
+				// Whatever else is crowded out, the two stay.
+				for w := 68; w >= 54; w -= 2 {
+					h.send(tea.WindowSizeMsg{Width: w, Height: size[1]})
+					if got := hintLine(plainView(h.m)); !strings.Contains(got, "q quit") || !strings.Contains(got, "help") {
+						t.Errorf("width %d: %q", w, got)
+					}
+				}
+			})
+		}
+	}
+}
+
+// ?help leaves the sidebar header: the hint line shows the help key (S152).
+func TestSidebarHeaderHasNoHelpCue(t *testing.T) {
+	h := newHarness(t, four...)
+	h.start()
+	header := stripANSI(h.m.sidebar(28, 30)[0])
+	if strings.Contains(header, "help") || !strings.Contains(header, "ork") {
+		t.Errorf("the sidebar header is %q", header)
+	}
+	if first := strings.Split(h.view(), "\n")[0]; strings.Contains(first, "?help") {
+		t.Errorf("the first screen line keeps the cue: %q", first)
+	}
+	if hint := wideHint(h); !strings.Contains(hint, "? help") {
+		t.Errorf("the hint line lost ? help: %q", hint)
+	}
+}
+
+// The Questions count has its own style, the Badge, and the name keeps the
+// view-bar styles (S152).
+func TestQuestionsTabCountIsStyled(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		for _, view := range []int{0, questionsView} {
+			h := questionsHarness(t)
+			h.m.cfg.Theme = NewTheme(mono)
+			h.m.view = view
+			n := len(h.m.selectableQuestions())
+			bar := h.m.viewBar()
+			if want := h.m.cfg.Theme.Badge.Render(fmt.Sprint(n)); !strings.Contains(bar, want) {
+				t.Errorf("mono %v view %d: the count %d is not in the Badge style: %q", mono, view, n, bar)
+			}
+			if plain := stripANSI(bar); !strings.Contains(plain, fmt.Sprintf("Questions %d", n)) {
+				t.Errorf("mono %v view %d: the bar reads %q", mono, view, plain)
+			}
+		}
+	}
+}
+
+// The read-only note of a ledger pane has no key, so it takes the Dim style of
+// the screen; the esc hint keeps the faint description (S152).
+func TestLedgerPaneReadOnlyNoteHasItsOwnStyle(t *testing.T) {
+	h := treeHarness(t, treeFixture(t, "relay-run-tree.json"), "")
+	h.m.cfg.Theme = NewTheme(false)
+	got := h.m.hintLine(200)
+	note := h.m.cfg.Theme.Dim.Render("started elsewhere, read-only")
+	if !strings.Contains(got, note) {
+		t.Errorf("the note lacks the Dim style %q: %q", note, got)
+	}
+	if !strings.Contains(got, "esc \x1b[2mclose pane\x1b[") {
+		t.Errorf("the esc hint lost its faint description: %q", got)
+	}
+}
+
+// ctrl+d and ctrl+u move the decision, Roadmap item and Waves item panes by
+// half of what they show, as they do in a run pane (S152).
+func TestCtrlDUScrollDecisionRoadmapAndWavesItemPanes(t *testing.T) {
+	var lines []string
+	for i := 0; i < 120; i++ {
+		lines = append(lines, fmt.Sprintf("long line %03d", i))
+	}
+	long := strings.Join(lines, "\n")
+	ctrl := func(h *harness, k string) { h.deliver(press(k)) }
+
+	t.Run("decision pane", func(t *testing.T) {
+		h := decisionsHarness(t)
+		h.m.projects[0].snap.Open.Value[0].Context = long
+		h.deliver(press("enter"))
+		_, visible := h.m.decisionPage()
+		want := max(visible/2, 1)
+		ctrl(h, "ctrl+d")
+		if h.m.decisionScroll != want || want < 5 {
+			t.Fatalf("ctrl+d scrolled %d, want half a page, %d", h.m.decisionScroll, want)
+		}
+		ctrl(h, "ctrl+d")
+		if h.m.decisionScroll != 2*want {
+			t.Errorf("a second ctrl+d scrolled to %d, want %d", h.m.decisionScroll, 2*want)
+		}
+		ctrl(h, "ctrl+u")
+		ctrl(h, "ctrl+u")
+		ctrl(h, "ctrl+u")
+		if h.m.decisionScroll != 0 {
+			t.Errorf("ctrl+u went to %d, want the top", h.m.decisionScroll)
+		}
+		for range 40 {
+			ctrl(h, "ctrl+d")
+		}
+		if v := h.view(); !strings.Contains(v, "long line 119") {
+			t.Errorf("ctrl+d does not reach the end:\n%s", v)
+		}
+	})
+
+	t.Run("decision pane on Questions", func(t *testing.T) {
+		h := questionsHarness(t)
+		h.m.projects[0].snap.Open.Value[0].Context = long
+		h.deliver(press("down")) // the first adj record
+		h.deliver(press("enter"))
+		if h.m.decisionPane == nil {
+			t.Fatal("enter did not open the record")
+		}
+		_, visible := h.m.decisionPage()
+		ctrl(h, "ctrl+d")
+		if want := max(visible/2, 1); h.m.decisionScroll != want {
+			t.Fatalf("ctrl+d scrolled %d, want %d", h.m.decisionScroll, want)
+		}
+		ctrl(h, "ctrl+u")
+		if h.m.decisionScroll != 0 {
+			t.Errorf("ctrl+u left %d", h.m.decisionScroll)
+		}
+	})
+
+	t.Run("roadmap item pane", func(t *testing.T) {
+		h := roadmapHarness(t)
+		h.m.cfg.Live = &roadmapLive{detail: &slicercli.Detail{Item: slicercli.Item{ID: "S90", Title: "Detail title"}, Slice: &slicercli.Spec{Title: "Spec title", Sections: []slicercli.Section{{Heading: "Why", Body: long}}}}}
+		_, cmd := h.m.Update(press("enter"))
+		h.m.Update(cmd())
+		top := h.view()
+		if !strings.Contains(top, "long line 000") || strings.Contains(top, "long line 119") {
+			t.Fatalf("the pane does not start at the top of a long item:\n%s", top)
+		}
+		pane := h.m.itemPane
+		want := max(pane.room/2, 1)
+		if pane.room < 5 {
+			t.Fatalf("the pane drew %d lines of room", pane.room)
+		}
+		ctrl(h, "ctrl+d")
+		if pane.offset != want {
+			t.Fatalf("ctrl+d scrolled %d, want half a page, %d", pane.offset, want)
+		}
+		v := h.view()
+		if !strings.Contains(v, "esc returns") || !strings.Contains(v, fmt.Sprintf("long line %03d", want)) || strings.Contains(v, "long line 000") {
+			t.Errorf("ctrl+d did not scroll the item under its heading:\n%s", v)
+		}
+		ctrl(h, "ctrl+u")
+		ctrl(h, "ctrl+u")
+		if pane.offset != 0 {
+			t.Errorf("ctrl+u went to %d, want the top", pane.offset)
+		}
+		for range 40 {
+			ctrl(h, "ctrl+d")
+			h.view()
+		}
+		if v := h.view(); !strings.Contains(v, "long line 119") {
+			t.Errorf("ctrl+d does not reach the end:\n%s", v)
+		}
+		ctrl(h, "ctrl+u")
+		if pane.offset == 0 {
+			t.Error("ctrl+u after the end went all the way to the top")
+		}
+	})
+
+	t.Run("waves item pane", func(t *testing.T) {
+		h, l := wavesHarness(t)
+		l.details = map[string]*slicercli.Detail{"A": {Slice: &slicercli.Spec{Title: "Alpha", Sections: []slicercli.Section{{Heading: "Files", Body: long}}}}}
+		openWaves(t, h)
+		h.deliver(press("enter"))
+		h.view()
+		pane := h.m.waves.pane
+		want := max(pane.room/2, 1)
+		if pane.room < 5 {
+			t.Fatalf("the pane drew %d lines of room", pane.room)
+		}
+		ctrl(h, "ctrl+d")
+		if h.m.waves.paneOffset != want {
+			t.Fatalf("ctrl+d scrolled %d, want half a page, %d", h.m.waves.paneOffset, want)
+		}
+		h.view()
+		ctrl(h, "ctrl+d")
+		if h.m.waves.paneOffset != 2*want {
+			t.Errorf("a second ctrl+d scrolled to %d, want %d", h.m.waves.paneOffset, 2*want)
+		}
+		ctrl(h, "ctrl+u")
+		ctrl(h, "ctrl+u")
+		ctrl(h, "ctrl+u")
+		if h.m.waves.paneOffset != 0 {
+			t.Errorf("ctrl+u went to %d, want the top", h.m.waves.paneOffset)
+		}
+	})
+}
+
+func TestCtrlDUHintsShowInThosePanes(t *testing.T) {
+	cases := map[string]func(t *testing.T) *harness{
+		"decision pane": func(t *testing.T) *harness {
+			h := decisionsHarness(t)
+			h.deliver(press("enter"))
+			return h
+		},
+		"questions decision pane": func(t *testing.T) *harness {
+			h := questionsHarness(t)
+			h.deliver(press("down"))
+			h.deliver(press("enter"))
+			return h
+		},
+		"roadmap item pane": func(t *testing.T) *harness {
+			h := roadmapHarness(t)
+			h.m.cfg.Live = &roadmapLive{detail: &slicercli.Detail{Item: slicercli.Item{ID: "S90"}}}
+			h.deliver(press("enter"))
+			return h
+		},
+		"waves item pane": func(t *testing.T) *harness {
+			h, _ := wavesHarness(t)
+			openWaves(t, h)
+			h.deliver(press("enter"))
+			return h
+		},
+	}
+	for name, build := range cases {
+		t.Run(name, func(t *testing.T) {
+			h := build(t)
+			hint := wideHint(h)
+			if !strings.Contains(hint, "ctrl+d/u half page") {
+				t.Errorf("the hint lacks the half page keys: %q", hint)
+			}
+			// They are among the first hints to go, ahead of the way out.
+			h.send(tea.WindowSizeMsg{Width: 70, Height: 24})
+			if got := hintLine(plainView(h.m)); strings.Contains(got, "ctrl+d/u") && !strings.Contains(got, "q quit") {
+				t.Errorf("ctrl+d/u outlasts q quit: %q", got)
+			}
+		})
+	}
+}
+
+// ctrl+u clears the text in a field, and the help says so on the line of the
+// scroll keys, which leaves the standard help as long as it was (S152).
+func TestHelpMentionsCtrlUClearsAField(t *testing.T) {
+	h := newHarness(t, four...)
+	h.start()
+	h.send(press("?"))
+	v := h.view()
+	if !strings.Contains(v, "ctrl+u clears a field") {
+		t.Errorf("the help does not say what ctrl+u does in a field:\n%s", v)
+	}
+	if !strings.Contains(v, "ctrl+d/u scroll a pane half a page") {
+		t.Errorf("the help lost the scroll keys:\n%s", v)
+	}
+	if strings.Contains(v, "more lines") || !strings.Contains(v, "esc close run, question, item, decision, help or message") {
+		t.Errorf("the help is cut at 100x30:\n%s", v)
+	}
+}
+
+// The Waves hint at the standard size holds the edit key beside the way out
+// (owner decision 2026-10-29: l launch, not l launch wave).
+func TestWavesHintHoldsEditLineupAt100x30(t *testing.T) {
+	h, _ := wavesHarness(t)
+	twoWaveItems(t, h)
+	h.send(tea.WindowSizeMsg{Width: 100, Height: 30})
+	hint := hintLine(plainView(h.m))
+	for _, want := range []string{"enter item", "l launch", "e edit lineup", "q quit", "? help"} {
+		if !strings.Contains(hint, want) {
+			t.Errorf("the Waves hint lacks %q: %q", want, hint)
+		}
+	}
+	if strings.Contains(hint, "launch wave") {
+		t.Errorf("the Waves hint still says launch wave: %q", hint)
 	}
 }

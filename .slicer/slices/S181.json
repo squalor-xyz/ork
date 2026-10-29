@@ -1,0 +1,39 @@
+{
+  "id": "S181",
+  "title": "Refuse or warn on a blocked item at wave start",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Parity row 3.7 and gap 17 (docs/orchestrator-parity.md in the s165 worktree). The outer session orders a wave by dependencies. ork asks `slicer plan-parallel` for suggested waves (`wave.suggest`, `internal/daemon/reads.go:55-63`), but `startWave` admits whatever the caller names, in the order given. It checks the engine-conflict guard and then the spec gate (`internal/daemon/runs.go:597-645`); no code there reads slicer's dependency state (searched `internal/daemon` for `blocked` and `deps`: only `wave.overlap` uses `slicer deps --overlap`). In Waves the owner can tick a wave-2 item with its wave-1 dependency, and `ork wave start PROJECT ID...` takes any ids, so an item whose dependency is not done can start (`internal/cli/wave.go:60-175`).\n\nSlicer already answers this: `slicer deps ID --json --lean` returns `blocked_by`, the dependencies not in a satisfying status plus any open slivers (`slicer/src/slicer/cli.py:2292-2312`, `slicer/src/slicer/graph.py:83-107`). A dependency in the same wave is still not done, so it blocks. ork calls the command and does not recompute the graph.\n\nOwner decision 2026-10-29 (orchestrator-parity.md, Owner decisions): every gap is a v1.0 slice. The wording \"refuse or warn\" is the analysis's; the safest default below is to refuse (Open 1).\n\nDesign (*proposed*): a new read `slicercli.Client.ItemDeps(root, id)` over `slicer deps ID --json --lean`. A shared daemon check `blockedItems(ctx, proj, items)` runs at the top of `specCheck` (`internal/daemon/speccheck.go:130`), so the owner is refused before any spec-check role costs tokens, and again at the top of `startWave` (the authority, before any member is admitted). A blocked item refuses the whole call with code `refused` and the text `S2 waits on S1 (not done); S3 waits on S4 (in this wave, not done)`. A failed read refuses too (fail closed). Nothing is written. The TUI and CLI already show a refusal verbatim."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/slicercli/slicercli.go:56-67`\n- `internal/slicercli/types.go:36-52`\n- `internal/slicercli/slicercli_test.go`\n- `internal/daemon/runs.go:597-645`\n- `internal/daemon/speccheck.go:126-160`\n- `internal/daemon/build.go:60-70`\n- `internal/daemon/runs_test.go:51-68`\n- `internal/daemon/wave_test.go:253-278`\n- `internal/daemon/speccheck_test.go:147-170`\n- `internal/cli/wave.go:86-175`\n- `internal/cli/wave_test.go`\n- `internal/tui/waves.go:347-390`\n- `internal/tui/waves_test.go`\n- `docs/design.md:162-200`\n- `docs/dashboard.md:1060-1100`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestItemDepsReadsBlockedBy (slicercli): `slicer deps S2 --json --lean --root R` with `{\"id\":\"S2\",\"blocked_by\":[\"S1\"]}` decodes `BlockedBy`; the lean `{\"id\":\"S2\"}` decodes to empty lists.\n- TestWaveStartRefusesABlockedItem (daemon): S1 clean and S2 with `blocked_by: [\"S9\"]` gives code `refused` naming `S2` and `S9`, no run record is written for either item (S1 is not admitted), and no spec-check role runs.\n- TestWaveStartNamesABlockerInTheSameWave (daemon): S2 blocked by S1 with both in the wave is refused with `in this wave`.\n- TestWaveStartAllowsItemsWithNoBlockers (daemon): the existing admission tests still pass with the default `deps` route (empty `blocked_by`); two clean items start.\n- TestWaveStartRefusesWhenTheDepsReadFails (daemon): a failing `slicer deps` refuses with its error and writes nothing.\n- TestSpecCheckRefusesABlockedItemBeforeAnyRole (daemon): `spec.check` on a blocked item is `refused` and the runner is never called (the fake runner fails the test if it runs).\n- TestWaveStartPrintsTheBlockedRefusal (cli): with the daemon call stubbed to return the refusal, `ork wave start` exits with failure, prints the text and its code once, and never reaches `Start this wave?`.\n- TestWavesLaunchShowsTheBlockedRefusal (tui): `l` with a ticked blocked item shows the daemon's text in the status line, starts nothing, and keeps the items ticked.\n- TestWavesStartRefusalKeepsTheTicks (tui): a `wave.start` that returns the refusal (a block that appeared after the check) shows the text and leaves the items ticked and the view open."
+    },
+    {
+      "heading": "Implement",
+      "body": "UI slice: UI pass (r14), for the refusal text on the status line and `docs/dashboard.md`. Independent of S166 and S167; if S167 lands first its single-slice launch passes through `specCheck` and so inherits the refusal (see Open 2).\n1. Tests first. Add a default route to `runDaemon` (`internal/daemon/runs_test.go:51-68`): `clitest.Route{Tool: \"slicer\", Args: []string{\"deps\"}, Prefix: true, Stdout: `{\"id\":\"S1\"}`}` so existing wave and spec-check tests keep their meaning. A test that needs a blocker passes its own route first (`append(routes, ...)` puts caller routes first).\n2. `internal/slicercli/types.go`: `ItemDeps{ID string; WaitsOn, BlockedBy, Dependents []string}` with the JSON names slicer prints. `slicercli.go`: `ItemDeps(ctx, root, id)` beside `Deps` (:58), running `deps ID --json --lean --root ROOT`.\n3. `internal/daemon/build.go` (next to `EngineConflict`, :66): `BlockedMessage` formats `S2 waits on S1 (not done)`, adding `in this wave, ` when the blocker is another item of the call; items in the order given, blockers in slicer's order.\n4. `internal/daemon/runs.go`: `func (d *Daemon) blockedItems(ctx, proj registry.Project, ids []string) error` calls `ItemDeps` per distinct id and returns `&ipc.Error{Code: CodeRefused, Message: BlockedMessage(...)}` when any `BlockedBy` is non-empty; a read error is returned as is.\n5. `startWave` (:597): call it after the item checks at :600-607, before the Files inspection, for one or more items (the engine-conflict loop at :610-632 runs only for two or more). `specCheck` (`speccheck.go:130`): call it after `d.registered` (:150) and before any `ShowRaw` or role call.\n6. TUI and CLI: no new code expected. `applyWaves` shows an error from `kind == \"start\"` and the spec-check path shows its error through `actionError` (`internal/tui/model.go:1483`), which prints a `refused` message alone. Confirm that in the TUI tests; fix only what they show.\n7. Docs: `design.md:162-200` (Check step: dependencies are read first), `dashboard.md:1060-1100` (the refusal), `CHANGELOG.md`.\nOpen: (1) Refuse or warn. Default: refuse the whole call. Alternative: warn on the status line and require a second `l` (more code, and a blocked item may still fail later). (2) Scope: wave start and the spec check only (default), or also `run.plan`/`run.start`, so `ork run` and the Roadmap launch refuse a blocked item too (the Roadmap already lists only ready slices; `ork run PROJECT ID` can name any). (3) Show `<` dependency markers in the Waves rows before launch (default: no; the refusal is enough)."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `go test ./internal/tui -update`, then review the diff in `testdata/golden/`\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

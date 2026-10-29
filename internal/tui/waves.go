@@ -941,6 +941,10 @@ func (m *Model) waveItemKey(msg tea.KeyPressMsg) tea.Cmd {
 			step = -step
 		}
 		m.waves.paneOffset = max(m.waves.paneOffset+step, 0)
+	case "ctrl+d":
+		m.waves.paneOffset += halfPage(m.waves.pane.room)
+	case "ctrl+u":
+		m.waves.paneOffset = max(m.waves.paneOffset-halfPage(m.waves.pane.room), 0)
 	case "down", "j":
 		m.waves.paneOffset++
 	case "up", "k":
@@ -1006,6 +1010,7 @@ func (m *Model) waveItemBody(width int) overviewView {
 	_, height, _ := m.layoutSize()
 	visible := max(height-4-len(out.body), 1)
 	w.paneOffset = min(w.paneOffset, max(len(body)-visible, 0))
+	w.pane.room = visible
 	out.body = append(out.body, body[w.paneOffset:]...)
 	return out
 }
