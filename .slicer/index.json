@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 187,
+  "next_id": 188,
   "preamble": "",
   "passes": [
     {
@@ -8958,6 +8958,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S181",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S187",
+      "title": "S166 later notes: launch replan edge case and lineup editor key polish",
+      "short_title": "S166 later notes: launch replan edge case and lineup editor key polish",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "2f577997-1a53-445e-8dc3-081879211c62",
+          "kind": "",
+          "text": "**2026-10-29** — From the S166 review and UI pass (2026-10-29), all later: (1) after an edit, a replan that returns neither a plan nor an error drops the launch instead of restoring the previous plan (internal/tui/launch.go around :268); (2) in custom entry, esc closes the whole lineup editor rather than only the custom fields (Waves and launch alike); (3) at 50 columns the shared editor hint drops 'enter save and replan' but keeps 'esc discard'; (4) usage text: 'role flags repeat to set the whole chain' sits above the command description.",
+          "created_at": "2026-10-29T21:06:25Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S166",
         "parent": "",
         "cites": [],
         "key": "",
