@@ -2539,3 +2539,9 @@
 {"when": "2026-10-29T19:46:53Z", "item": "S175", "action": "status", "from": "started", "to": "done", "note": "A stale ledger run can be ended from its run pane: x end run, y/N confirm, run.end-ledger calls slicer relay-run end --outcome stopped --close-steps fail; refused for an active or ended run and for one an unfinished ork engine run owns. Owner decision adj 174 (end-stale) amends adj 42 for stale runs only. Review PASS and UI pass PASS after one fix round.", "by": "Jon R"}
 {"when": "2026-10-29T19:46:53Z", "item": "S175", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 45, S175): Claude sonnet-high imple", "by": "Jon R"}
 {"when": "2026-10-29T19:34:36Z", "item": "S175", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (interactive): adj 174 (dash.exter", "by": "Jon R"}
+{"when": "2026-10-29T20:22:38Z", "item": "S67", "action": "set", "from": "", "to": "", "note": "pass_key v1.0→v1.1"}
+{"when": "2026-10-29T20:22:38Z", "item": "S68", "action": "set", "from": "", "to": "", "note": "pass_key v1.0→v1.1"}
+{"when": "2026-10-29T20:22:38Z", "item": "S69", "action": "set", "from": "", "to": "", "note": "pass_key v1.0→v1.1"}
+{"when": "2026-10-29T20:22:38Z", "item": "S67", "action": "note", "from": "", "to": "", "note": "Moved to v1.1 on 2026-10-29: adj 173 scope.v1-ork-edits deci", "by": "Jon R"}
+{"when": "2026-10-29T20:22:38Z", "item": "S68", "action": "note", "from": "", "to": "", "note": "Moved to v1.1 on 2026-10-29: adj 173 scope.v1-ork-edits deci", "by": "Jon R"}
+{"when": "2026-10-29T20:22:38Z", "item": "S69", "action": "note", "from": "", "to": "", "note": "Moved to v1.1 on 2026-10-29: adj 173 scope.v1-ork-edits deci", "by": "Jon R"}

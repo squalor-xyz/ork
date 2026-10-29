@@ -1412,7 +1412,19 @@
         "S12",
         "S52"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "8929d9ef-8751-491f-8203-c8cad4607fb5",
+          "kind": "",
+          "text": "**2026-10-29** — Moved to v1.1 on 2026-10-29: adj 173 scope.v1-ork-edits decided include (owner), whose option keeps roadmap reorder and park later.",
+          "created_at": "2026-10-29T20:22:38Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1424,7 +1436,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1.0",
+        "pass": "v1.1",
         "group": "",
         "reason": "",
         "importance": 2,
@@ -1442,7 +1454,19 @@
       "depends_on": [
         "S12"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6a4f856f-003e-46e7-a452-f81d4db01b1b",
+          "kind": "",
+          "text": "**2026-10-29** — Moved to v1.1 on 2026-10-29: adj 173 scope.v1-ork-edits decided include (owner), whose option keeps roadmap reorder and park later.",
+          "created_at": "2026-10-29T20:22:38Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1454,7 +1478,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1.0",
+        "pass": "v1.1",
         "group": "",
         "reason": "",
         "importance": 2,
@@ -1472,7 +1496,19 @@
       "depends_on": [
         "S12"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "501ec809-619c-4226-a237-18882abbbbeb",
+          "kind": "",
+          "text": "**2026-10-29** — Moved to v1.1 on 2026-10-29: adj 173 scope.v1-ork-edits decided include (owner), whose option keeps roadmap reorder and park later.",
+          "created_at": "2026-10-29T20:22:38Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -1484,7 +1520,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1.0",
+        "pass": "v1.1",
         "group": "",
         "reason": "Owner 2026-10-23: the Roadmap replaces leaving for slicer tui; adj 11 stays the owner's to close",
         "importance": 2,
