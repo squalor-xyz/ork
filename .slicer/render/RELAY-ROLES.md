@@ -9,19 +9,19 @@
 | r8 | Implementer | sliver | Claude Code | Claude | haiku | xhigh | per sliver |
 | r4 | Implementer | split part | Claude Code | Claude | haiku | xhigh | per part of a split slice |
 | r15 | Implementer | whole slice, not a sliver, size L | Codex | OpenAI | gpt-6.1-sol | high | owner lineup 2026-10-23: Codex implementer at high on a size L slice |
+| r12 | Implementer | whole slice, effort 3 | Codex | OpenAI | gpt-6.1-sol | high | effort 3 slice: Codex at high (owner 2026-10-29) |
 | r9 | Implementer | whole slice | Codex | OpenAI | gpt-6.1-sol | medium | default implementer for a whole slice (owner lineup 2026-10-23: medium); Codex sandbox cannot bind Unix sockets, so rerun socket-test packages outside it |
-| r1 | Implementer | well specified, whole slice, effort 1, size S or M | Claude Code | Claude | haiku | xhigh | - |
-| r2 | Implementer | well specified, whole slice, effort 2, size S | Claude Code | Claude | haiku | xhigh | - |
-| r12 | Implementer | whole slice, effort 3 | Codex | OpenAI | gpt-6.1-sol | xhigh | effort 3 slice |
-| r13 | Implementer | whole slice, effort 3 | Claude Code | Claude | sonnet | high | Claude alternate for an effort 3 slice |
-| r3 | Implementer | whole slice | Claude Code | Claude | sonnet | medium | Claude fallback for anything the rows above do not match |
+| r3 | Implementer | whole slice | Claude Code | Claude | sonnet | high | Claude stand-in for a whole slice at sonnet high: used when Codex is out of credits or the owner picks Claude (owner 2026-10-29) |
+| r17 | Reviewer | effort 3 | Claude Code | Claude | opus | high | reviewer at high for a effort 3 slice (owner 2026-10-29) |
+| r19 | Reviewer | size L | Claude Code | Claude | opus | high | reviewer at high for a size L slice (owner 2026-10-29) |
 | r5 | Reviewer | every slice | Claude Code | Claude | opus | medium | - |
 | r14 | Reviewer | every slice | Claude Code | Claude | opus | medium | UI pass, only for a slice that touches the UI (rule u10) |
+| r18 | Gate | effort 3 | Claude Code | Claude | opus | high | gate at high for a effort 3 slice (owner 2026-10-29) |
+| r20 | Gate | size L | Claude Code | Claude | opus | high | gate at high for a size L slice (owner 2026-10-29) |
 | r6 | Gate | every slice | Claude Code | Claude | opus | medium | - |
 | r7 | Architect | size L | Claude Code | Claude | opus | high | - |
-| r10 | Orchestrator | every slice | Claude Code | Claude | sonnet | high | default orchestrator |
-| r11 | Orchestrator | every slice | Codex | OpenAI | gpt-6.1-sol | high | alternate orchestrator |
-| r16 | Reviewer | every slice | Claude Code | Claude | sonnet | medium | Spec check row |
+| r10 | Orchestrator | every slice | Claude Code | Claude | sonnet | high | the outer session the owner talks to orchestrates; ork's engine spawns roles itself (owner 2026-10-29) |
+| r16 | Reviewer | every slice | Claude Code | Claude | sonnet | high | Spec check row (sonnet high, owner 2026-10-29) |
 
 ## Rules
 
@@ -31,8 +31,8 @@
 - u4: "well specified" means the slice names its files, failing tests, implementation steps and checks, and needs no open owner decision.
 - u5: Split a slice only into parts with disjoint files and their own tests; a slice too big for one implementer is two slices or a slivered slice.
 - u6: Sliver a slice only at effort 1, or at effort 2 when every sliver is effort 1; never at effort 3.
-- u7: Slivers with disjoint files and their own tests may run in parallel, at most 3 at once; the rest run in order.
-- u8: A sliver that fails its gate twice, or whose diff falls short of the orchestrator's check, moves to the next model up (haiku to sonnet high).
-- u9: The orchestrator reads a Haiku implementer's diff itself before review, and switches that role to Sonnet early when quality falls short.
+- u7: Slivers share the parent's worktree and branch, run one after another, and land once (record 124); `ork run PARENT --slivers` runs the chain.
+- u8: A sliver that fails its gate twice, or whose diff falls short of the check, moves to the next model up (haiku to sonnet high). The Haiku rows are for slivers (r8) and parts of a split slice (r4) only; whole slices run on Codex (r9, r12, r15) with Claude sonnet high (r3) as the stand-in.
+- u9: The orchestrator reads a Haiku sliver or part diff itself before review and switches that role to Sonnet early when quality falls short.
 - u10: A slice that touches the UI (internal/tui and its golden views, docs/dashboard.md, internal/cli output, or a ui.* adj key) also runs the UI pass row (r14) as its own role, in parallel with the reviewer, not instead of it, on every size. The UI pass runs as a general-purpose subagent (it needs the Skill tool), loads the tui-design:tui-design and frontend-design:frontend-design skills (plugins enabled in .claude/settings.json), edits nothing, and sends suggested design edits to the orchestrator for the implementer; the gate still decides. Folding it into the relay-reviewer on size S was tried and dropped on 2026-10-26 (owner): relay-reviewer has no Skill tool. A vendor that cannot load these skills gets ork's vendor-neutral UI prompt instead. This holds for each slice in a wave.
-- u11: The spec check before a wave runs the Spec check row (r16): one read-only pass over every ticked slice, answered in one sitting. It is a reviewer row only until slicer has a spec-check role (s392); it is never a fallback of the reviewer or the gate, and the reviewer's rule u1 does not apply to it because it reads specs and writes no code.
+- u11: The spec check before a wave runs the Spec check row (r16): one read-only pass over every ticked slice, answered in one sitting. The matrix has no spec-check or ui role (slicer's ledger records them as roles spec-check and ui, but a row is a reviewer row), so r14 and r16 are reviewer rows with notes; they are never a fallback of the reviewer or the gate, and the reviewer's rule u1 does not apply to the spec check because it reads specs and writes no code.

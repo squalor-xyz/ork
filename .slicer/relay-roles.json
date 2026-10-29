@@ -58,6 +58,26 @@
       "note": "owner lineup 2026-10-23: Codex implementer at high on a size L slice"
     },
     {
+      "id": "r12",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [
+          3
+        ],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": false,
+        "sliver": null
+      },
+      "agent": "Codex",
+      "vendor": "OpenAI",
+      "model": "gpt-6.1-sol",
+      "reasoning": "high",
+      "note": "effort 3 slice: Codex at high (owner 2026-10-29)"
+    },
+    {
       "id": "r9",
       "role": "implementer",
       "when": {
@@ -76,91 +96,6 @@
       "note": "default implementer for a whole slice (owner lineup 2026-10-23: medium); Codex sandbox cannot bind Unix sockets, so rerun socket-test packages outside it"
     },
     {
-      "id": "r1",
-      "role": "implementer",
-      "when": {
-        "size": [
-          "S",
-          "M"
-        ],
-        "effort": [
-          1
-        ],
-        "importance": [],
-        "urgency": [],
-        "well_specified": true,
-        "split": false,
-        "sliver": null
-      },
-      "agent": "Claude Code",
-      "vendor": "Claude",
-      "model": "haiku",
-      "reasoning": "xhigh",
-      "note": ""
-    },
-    {
-      "id": "r2",
-      "role": "implementer",
-      "when": {
-        "size": [
-          "S"
-        ],
-        "effort": [
-          2
-        ],
-        "importance": [],
-        "urgency": [],
-        "well_specified": true,
-        "split": false,
-        "sliver": null
-      },
-      "agent": "Claude Code",
-      "vendor": "Claude",
-      "model": "haiku",
-      "reasoning": "xhigh",
-      "note": ""
-    },
-    {
-      "id": "r12",
-      "role": "implementer",
-      "when": {
-        "size": [],
-        "effort": [
-          3
-        ],
-        "importance": [],
-        "urgency": [],
-        "well_specified": null,
-        "split": false,
-        "sliver": null
-      },
-      "agent": "Codex",
-      "vendor": "OpenAI",
-      "model": "gpt-6.1-sol",
-      "reasoning": "xhigh",
-      "note": "effort 3 slice"
-    },
-    {
-      "id": "r13",
-      "role": "implementer",
-      "when": {
-        "size": [],
-        "effort": [
-          3
-        ],
-        "importance": [],
-        "urgency": [],
-        "well_specified": null,
-        "split": false,
-        "sliver": null
-      },
-      "agent": "Claude Code",
-      "vendor": "Claude",
-      "model": "sonnet",
-      "reasoning": "high",
-      "note": "Claude alternate for an effort 3 slice"
-    },
-    {
       "id": "r3",
       "role": "implementer",
       "when": {
@@ -175,8 +110,48 @@
       "agent": "Claude Code",
       "vendor": "Claude",
       "model": "sonnet",
-      "reasoning": "medium",
-      "note": "Claude fallback for anything the rows above do not match"
+      "reasoning": "high",
+      "note": "Claude stand-in for a whole slice at sonnet high: used when Codex is out of credits or the owner picks Claude (owner 2026-10-29)"
+    },
+    {
+      "id": "r17",
+      "role": "reviewer",
+      "when": {
+        "size": [],
+        "effort": [
+          3
+        ],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "opus",
+      "reasoning": "high",
+      "note": "reviewer at high for a effort 3 slice (owner 2026-10-29)"
+    },
+    {
+      "id": "r19",
+      "role": "reviewer",
+      "when": {
+        "size": [
+          "L"
+        ],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "opus",
+      "reasoning": "high",
+      "note": "reviewer at high for a size L slice (owner 2026-10-29)"
     },
     {
       "id": "r5",
@@ -213,6 +188,46 @@
       "model": "opus",
       "reasoning": "medium",
       "note": "UI pass, only for a slice that touches the UI (rule u10)"
+    },
+    {
+      "id": "r18",
+      "role": "gate",
+      "when": {
+        "size": [],
+        "effort": [
+          3
+        ],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "opus",
+      "reasoning": "high",
+      "note": "gate at high for a effort 3 slice (owner 2026-10-29)"
+    },
+    {
+      "id": "r20",
+      "role": "gate",
+      "when": {
+        "size": [
+          "L"
+        ],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Claude Code",
+      "vendor": "Claude",
+      "model": "opus",
+      "reasoning": "high",
+      "note": "gate at high for a size L slice (owner 2026-10-29)"
     },
     {
       "id": "r6",
@@ -268,25 +283,7 @@
       "vendor": "Claude",
       "model": "sonnet",
       "reasoning": "high",
-      "note": "default orchestrator"
-    },
-    {
-      "id": "r11",
-      "role": "orchestrator",
-      "when": {
-        "size": [],
-        "effort": [],
-        "importance": [],
-        "urgency": [],
-        "well_specified": null,
-        "split": null,
-        "sliver": null
-      },
-      "agent": "Codex",
-      "vendor": "OpenAI",
-      "model": "gpt-6.1-sol",
-      "reasoning": "high",
-      "note": "alternate orchestrator"
+      "note": "the outer session the owner talks to orchestrates; ork's engine spawns roles itself (owner 2026-10-29)"
     },
     {
       "id": "r16",
@@ -303,8 +300,8 @@
       "agent": "Claude Code",
       "vendor": "Claude",
       "model": "sonnet",
-      "reasoning": "medium",
-      "note": "Spec check row"
+      "reasoning": "high",
+      "note": "Spec check row (sonnet high, owner 2026-10-29)"
     }
   ],
   "rules": [
@@ -334,15 +331,15 @@
     },
     {
       "id": "u7",
-      "text": "Slivers with disjoint files and their own tests may run in parallel, at most 3 at once; the rest run in order."
+      "text": "Slivers share the parent's worktree and branch, run one after another, and land once (record 124); `ork run PARENT --slivers` runs the chain."
     },
     {
       "id": "u8",
-      "text": "A sliver that fails its gate twice, or whose diff falls short of the orchestrator's check, moves to the next model up (haiku to sonnet high)."
+      "text": "A sliver that fails its gate twice, or whose diff falls short of the check, moves to the next model up (haiku to sonnet high). The Haiku rows are for slivers (r8) and parts of a split slice (r4) only; whole slices run on Codex (r9, r12, r15) with Claude sonnet high (r3) as the stand-in."
     },
     {
       "id": "u9",
-      "text": "The orchestrator reads a Haiku implementer's diff itself before review, and switches that role to Sonnet early when quality falls short."
+      "text": "The orchestrator reads a Haiku sliver or part diff itself before review and switches that role to Sonnet early when quality falls short."
     },
     {
       "id": "u10",
@@ -350,9 +347,9 @@
     },
     {
       "id": "u11",
-      "text": "The spec check before a wave runs the Spec check row (r16): one read-only pass over every ticked slice, answered in one sitting. It is a reviewer row only until slicer has a spec-check role (s392); it is never a fallback of the reviewer or the gate, and the reviewer's rule u1 does not apply to it because it reads specs and writes no code."
+      "text": "The spec check before a wave runs the Spec check row (r16): one read-only pass over every ticked slice, answered in one sitting. The matrix has no spec-check or ui role (slicer's ledger records them as roles spec-check and ui, but a row is a reviewer row), so r14 and r16 are reviewer rows with notes; they are never a fallback of the reviewer or the gate, and the reviewer's rule u1 does not apply to the spec check because it reads specs and writes no code."
     }
   ],
-  "next_row": 17,
+  "next_row": 21,
   "next_rule": 12
 }

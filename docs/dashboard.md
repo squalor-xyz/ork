@@ -1064,7 +1064,7 @@ from `slicer plan-parallel`, including reasons. `ork wave start PROJECT
 ITEM...` takes the chosen item ids (`wave.start-input`), plans each item,
 runs the spec check and asks its open questions (S116; see design.md, Wave
 lifecycle), then asks for confirmation. `--yes` requires explicit `--well-specified
-yes|no` and `--split yes|no`; these flags apply to every item. One wave
+y/n` and `--split y/n`; these flags apply to every item. One wave
 contains one project (`wave.scope`). Its runs share a wave id and respect
 the global and project caps. A failed or stopped item leaves the others
 running (`wave.failure`). `ork stop WAVE` uses the `wave-` prefix

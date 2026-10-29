@@ -1,0 +1,39 @@
+{
+  "id": "S155",
+  "title": "S93 later notes: gate walk with repeated reviewer rows; environment-dependent daemon adapter test",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Later notes from the S93 relay (run-20261026-190634-c1cc, landed 2cb95b9). Owner decision 2026-10-29 (interactive): fix both. (1) A gate that started on a repeated non-adjacent reviewer row (chain A, B, A) can retry row B, which the reviewer already failed. (2) TestAdaptersMapTextAndUsageEvents/claude depends on the environment."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/engine.go`\n- `internal/engine/engine_test.go`\n- `internal/daemon/runs.go`\n- `internal/daemon/live_test.go`\n- `internal/daemon/runner.go`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "TestGateWalkStartsAtTheReviewersSeedRow (chain A, B, A with the gate's first record on A does not retry B); TestAdaptersMapTextAndUsageEventsIgnoresTheEnvironment (set REVIEW_FAKE_TOKEN=5abcdefghij in the test environment and the claude subtest still passes)."
+    },
+    {
+      "heading": "Implement",
+      "body": "Tests first; re-anchor line numbers from the code. 1. engine.go currentEntry (~181-193): when the gate has records, start the walk at the reviewer's seed row if the gate's first record matches that row, instead of row 0; keep appendEntry's adjacent-duplicate rule (runs.go ~314-318). Add the chain A,B,A test that fails first. 2. In live_test.go build the test runner with an explicit empty environment so the redactor (runner.go ~35, 165-166, 192-196) does not read os.Environ(); reproduce the failure first with a dummy REVIEW_FAKE_TOKEN=5abcdefghij on unchanged code, then fix. No UI."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race -count=1 ./...; go vet ./...; gofmt -l .; slicer check; adj lint."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
