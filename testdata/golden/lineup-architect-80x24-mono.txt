@@ -6,10 +6,10 @@
                    │    reviewer: claude opus medium
                    │[1;7m  > architect: < codex sol high >  1/2[m
                    │[1;7m  [2m    fallback: claude opus medium[m[m
+                   │    stop: land
                    │    Budget minutes: 45
                    │    Budget tokens: 9000
                    │  Zero budget uses the project default.
-                   │
                    │
                    │
                    │

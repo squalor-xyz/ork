@@ -8558,7 +8558,7 @@
       "id": "S177",
       "title": "Per-run stop point: after commit, or at land",
       "short_title": "Per-run stop point",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8591,7 +8591,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

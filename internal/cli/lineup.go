@@ -18,6 +18,7 @@ func (c *lineupChain) String() string         { return strings.Join(*c, ",") }
 func (c *lineupChain) Set(value string) error { *c = append(*c, value); return nil }
 
 type lineupFlags struct {
+	stopAfter                        string
 	implementer, reviewer, architect lineupChain
 	minutes, tokens                  int
 	fs                               *flag.FlagSet
@@ -25,6 +26,7 @@ type lineupFlags struct {
 
 func (f *lineupFlags) register(fs *flag.FlagSet) {
 	f.fs = fs
+	fs.StringVar(&f.stopAfter, "stop-after", "", "land|commit; per-run stop point (default land)")
 	fs.Var(&f.implementer, "implementer", "VENDOR:MODEL:EFFORT; repeat for the whole chain")
 	fs.Var(&f.reviewer, "reviewer", "VENDOR:MODEL:EFFORT; repeat for the whole chain")
 	fs.Var(&f.architect, "architect", "VENDOR:MODEL:EFFORT; repeat for the whole chain, or off")
@@ -32,6 +34,10 @@ func (f *lineupFlags) register(fs *flag.FlagSet) {
 	fs.IntVar(&f.tokens, "budget-tokens", 0, "run budget; 0 uses project default")
 }
 func (f *lineupFlags) apply(p *daemon.RunParams) error {
+	if f.stopAfter != "" && f.stopAfter != runrec.StopAfterLand && f.stopAfter != runrec.StopAfterCommit {
+		return fmt.Errorf("--stop-after must be land or commit")
+	}
+	p.StopAfter = f.stopAfter
 	if f.minutes < 0 || f.tokens < 0 {
 		return fmt.Errorf("--budget-minutes and --budget-tokens must be zero or more")
 	}

@@ -602,7 +602,7 @@ func failSummary(report string) string {
 
 // commit commits the approved slice in its worktree with the title of the
 // slice's Git section, falling back to "ID: title", and no attribution
-// (git.commit). The landing follows.
+// (git.commit). The run stops here for stop_after commit; otherwise landing follows.
 func (e *Engine) commit(ctx context.Context) error {
 	rec := e.run.Snapshot()
 	pauseWith := func(reason string) error {
@@ -651,6 +651,9 @@ func (e *Engine) commit(ctx context.Context) error {
 		r.Pending = nil
 		r.Commit = &runrec.Commit{SHA: strings.TrimSpace(sha), Title: title, At: e.d.now()}
 		r.State = runrec.StateLand
+		if r.StopAfter == runrec.StopAfterCommit {
+			r.State = runrec.StateCommitted
+		}
 	})
 }
 

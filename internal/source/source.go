@@ -195,9 +195,10 @@ type EngineFinding struct {
 
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
-	Dismissed      bool                  `json:"dismissed,omitempty"` // retained for an open run pane; hidden from lists
-	Findings       []EngineFinding       `json:"findings,omitempty"`  // proposed: owner and later findings (adj 163)
-	Card           *runrec.ApprovalCard  `json:"card,omitempty"`      // proposed: the approval card of an awaiting-approval run (S118)
+	StopAfter      string                `json:"stop_after,omitempty"` // proposed: per-run stop point (S177)
+	Dismissed      bool                  `json:"dismissed,omitempty"`  // retained for an open run pane; hidden from lists
+	Findings       []EngineFinding       `json:"findings,omitempty"`   // proposed: owner and later findings (adj 163)
+	Card           *runrec.ApprovalCard  `json:"card,omitempty"`       // proposed: the approval card of an awaiting-approval run (S118)
 	Question       *runrec.OwnerQuestion `json:"question,omitempty"`
 	LiveUsageKnown bool                  `json:"live_usage_known,omitempty"` // proposed: current attempt reported usage
 	UsageKnown     bool                  `json:"usage_known,omitempty"`      // proposed: includes reported zero usage

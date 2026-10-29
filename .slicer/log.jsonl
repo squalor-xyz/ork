@@ -2566,3 +2566,6 @@
 {"when": "2026-10-29T21:17:12Z", "item": "S188", "action": "note", "from": "", "to": "", "note": "From the S178 review and UI pass (2026-10-29), all later: (1", "by": "Jon R"}
 {"when": "2026-10-29T22:09:54Z", "item": "S189", "action": "add", "from": "", "to": "open", "note": "S167 later notes: spec sitting EOF line, run JSON shapes, refusal prefix, run.start deps"}
 {"when": "2026-10-29T22:09:54Z", "item": "S189", "action": "note", "from": "", "to": "", "note": "From the S167 review and UI pass (2026-10-29), all later: (1", "by": "Jon R"}
+{"when": "2026-10-29T22:10:16Z", "item": "S177", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-29T22:35:28Z", "item": "S177", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T22:52:04Z", "item": "S177", "action": "status", "from": "started", "to": "done", "note": "Per-run stop point: stop_after land (default) or commit on run.plan/run.start, echoed in the plan and kept in the run record; commit ends in state committed with the worktree and branch kept for the owner to land from the Ready row. Lineup editor stop row (roles, stop, budgets), --stop-after on ork run and wave start. Gate PASS round 2 (opus medium), UI pass PASS round 2.", "by": "Jon R"}

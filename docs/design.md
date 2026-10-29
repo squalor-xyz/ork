@@ -361,10 +361,17 @@ slice.
   from `slicer show`; it does not block launch (S139, owner decision 2026-10-26).
   There is no AI attribution, and roles never commit
   (`git.commit`). The finish step precedes this commit (adj #81).
+  The per-run `stop_after` input (*proposed*, S177) is `land` by default or
+  `commit`. With `commit`, this step ends in `committed`, clears `pending`,
+  leaves `landed_at` unset and keeps the worktree and branch. The ledger has
+  already ended with outcome `pass`. No landing, push or cleanup follows;
+  the owner uses the Ready row's slicer land commands. The finish step still
+  follows slicer's `implement_finish`; there is no separate handoff stop point.
 - **Finish step:** run per the project's `implement_finish` setting (`done`
   or `handoff`), after PASS and owner approval, before the commit.
 - **land** (S119, adj #162 `landing.in-ork`, which supersedes `landing.v1`):
-  the step after the commit, all through git and slicer, each step logged in
+  the step after the commit when `stop_after` is `land` or absent, all through
+  git and slicer, each step logged in
   `writes[]`. One landing per project runs at a time: the engines of a project
   share a lock (`engine.Landings`), and the next landing waits, then reads the
   base branch the first one moved. The base branch is the branch the main checkout is on. Each step
@@ -1036,6 +1043,14 @@ The CLI asks the two y/n inputs for each item, shows each `run.plan`, then
 asks `Start this wave? [y/N]`. `--well-specified` and `--split` apply to
 every item; both are required with `--yes`. In JSON mode, prompts and plans
 go to stderr and stdout holds one result.
+
+`ork run` and `ork wave start` accept `--stop-after land|commit` (*proposed*,
+S177). The plan prints `stop: after landing` or
+`stop: after commit (you land it)`. Invalid values exit 2 before any daemon
+call. Wave start applies the flag to every item. `run.plan` validates and
+normalizes an absent value to `land`; `RunPlan` echoes `stop_after`, and
+`run.start` refuses a changed value in the confirmed plan. Each run record
+keeps the chosen value. The choice is per run; there is no registry default.
 
 `ork run` and `ork wave start` accept `--implementer`, `--reviewer` and
 `--architect`, each taking `VENDOR:MODEL:EFFORT`. Repeat a role flag to set

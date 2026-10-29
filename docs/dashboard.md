@@ -847,6 +847,13 @@ The actions follow the state (`ui.answer-pane-scope`):
 - Stopped: show the full reason with no key actions. Stop is final; relaunch,
   or clear the row with `ork dismiss RUN`.
 
+For `stop_after: commit` (*proposed*, S177), Overview approval asks
+`Commit ID on its branch? [y/N] (Enter is No)`. After approval, the status
+reads `committed ID; ready to land`. The card says
+`Approve commits it; its worktree and branch stay for you to land.`
+The Ready row keeps its slicer land commands. There is no land key.
+The default `land` approval prompt and card text remain as below.
+
 Awaiting-approval runs offer `a` approve and `x` stop (and the approval card
 below, when the run has one); other active runs offer `x` stop. A successful answer clears the field and refreshes the pane and row.
 A failed call permits another attempt. Tool-coded errors retain their code and
@@ -1265,6 +1272,7 @@ Edit lineup: A  Alpha
     reviewer: claude opus medium
     architect: off
     ui: claude opus medium (UI slices only; from the matrix)
+    stop: land
     Budget minutes: 45
     Budget tokens: 9000
   Zero budget uses the project default.
@@ -1366,8 +1374,17 @@ pane; `ork run` prints the same rows in its plan text, in the same order, and
 the same `note: TEXT` line after them. The confirmation bar shows
 `ork run PROJECT ITEM? [y/N] (Enter is No)`. The displayed command omits the
 two answers. `y` or `Y` calls `run.start` with those answers and the displayed
-plan as Expected, including any lineup and budget overrides. At confirmation,
-`e` opens the shared lineup editor seeded from the displayed plan. `esc`
+plan as Expected, including any lineup, budget and stop-point overrides.
+
+The shared lineup editor has a `stop` row between the roles and budgets (*proposed*,
+S177). Left/right cycles `land` and `commit`; saving replans the item with
+that choice. Both Waves and the Roadmap launch use this editor. Waves shows
+`stop*: commit` (or `stop*: land`) only when the item has an explicit edit.
+The Roadmap confirmation shows `stop: after landing` or
+`stop: after commit (you land it)` and Start carries the confirmed choice.
+There is no project default; the choice applies only to that run.
+
+At confirmation, `e` opens the shared lineup editor seeded from the displayed plan. `esc`
 discards edits and returns to the same confirmation without planning.
 Saving changed values shows `pending: run.plan`, then the new confirmation;
 unchanged values return without a daemon call. After an edit the status line

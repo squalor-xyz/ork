@@ -28,7 +28,7 @@ const (
 	StateAwaitingApproval = "awaiting-approval"
 	StateCommit           = "commit" // the finish step is done; ork commits next
 	StateFinish           = "finish" // approved; the implementer runs the finish step
-	StateLand             = "land"   // committed; ork merges the base branch in, re-checks, merges, pushes if set and cleans up (S119)
+	StateLand             = "land"   // after commit when stop_after is land or empty; merges, re-checks, pushes if set and cleans up (S119)
 	StateCommitted        = "committed"
 	StatePaused           = "paused"
 	StateStopped          = "stopped"
@@ -244,8 +244,15 @@ type Write struct {
 	MS    int64     `json:"ms"`
 }
 
+// Stop points are per-run inputs; an empty value preserves landing.
+const (
+	StopAfterLand   = "land"
+	StopAfterCommit = "commit"
+)
+
 // Record is the content of run.json.
 type Record struct {
+	StopAfter        string                   `json:"stop_after,omitempty"`
 	Version          int                      `json:"version"`
 	ID               string                   `json:"id"`
 	Wave             string                   `json:"wave,omitempty"`

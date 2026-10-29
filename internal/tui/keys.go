@@ -275,14 +275,17 @@ func (m *Model) contextHints() []hintEntry {
 		if e.custom {
 			l.add(dropRow, short(k.NextView, "tab/shift+tab", "field"), short(k.Select, "enter", "use entry"))
 		} else {
-			// On a budget row the number hint outranks the row key (S152).
+			// The value hint outranks navigation on stop and budget rows (S152).
 			rowDrop := dropRow
-			if e.row >= len(lineupRoles) {
+			if e.row >= len(lineupRoles) && e.row <= len(lineupRoles)+len(e.budgets) {
 				rowDrop = dropRow + 1
 			}
 			l.add(rowDrop, short(k.NextView, "up/down/tab", "row"))
-			if e.row >= len(lineupRoles) {
+			if e.row > len(lineupRoles) && e.row <= len(lineupRoles)+len(e.budgets) {
 				l.add(dropRow, short(k.MarkCheck, "type", "a whole number")) // the budget fields (S152)
+			}
+			if e.row == len(lineupRoles) {
+				l.add(dropRow, short(k.TabNext, "left/right", "cycle"))
 			}
 			if e.row < len(lineupRoles) {
 				l.add(dropRow, offer(len(e.plan.Lineup[lineupRoles[e.row]]) > 1, k.TabNext, "left/right", "cycle"), key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "custom")))

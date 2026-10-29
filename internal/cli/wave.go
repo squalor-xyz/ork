@@ -149,7 +149,7 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 			}
 		}
 		p := daemon.RunParams{Project: pos[0], Item: item, WellSpecified: w == "yes", Split: s == "yes"}
-		p.Lineup, p.Budgets = overrides.Lineup, overrides.Budgets
+		p.Lineup, p.Budgets, p.StopAfter = overrides.Lineup, overrides.Budgets, overrides.StopAfter
 		var plan daemon.RunPlan
 		if code := a.call(ctx, o, daemon.MethodRunPlan, p, &plan); code != ExitOK {
 			return code

@@ -402,3 +402,21 @@ func TestWaveStartRefusesACycleInsideOneWave(t *testing.T) {
 		{Tool: "slicer", Args: []string{"deps", "S1"}, Prefix: true, Stdout: `{"blocked_by":["S2"]}`},
 	}, `S2 waits on S1 "Title" (in this wave, not done); S1 waits on S2 "Title" (in this wave, not done); untick S2, S1 or land S1, S2 first`, CodeRefused)
 }
+
+func TestWaveStartCarriesStopAfterPerItem(t *testing.T) {
+	w := newWaveRig(t, 4, 0)
+	_, runs := waveRecords(t, w.d, `{"items":[{"project":"p","item":"S1","stop_after":"commit"},{"project":"p","item":"S2","stop_after":"land"}]}`)
+	if len(runs) != 2 || runs[0].StopAfter != "commit" || runs[1].StopAfter != "land" {
+		t.Fatalf("runs: %+v", runs)
+	}
+	for _, rec := range runs {
+		disk, err := w.store.Open(rec.ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if disk.Snapshot().StopAfter != rec.StopAfter {
+			t.Fatal("stop point lost")
+		}
+	}
+	w.expectStarts(t, "S1", "S2")
+}

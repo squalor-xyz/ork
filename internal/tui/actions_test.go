@@ -506,7 +506,8 @@ func TestActionApprovePendingStatusSaysLanding(t *testing.T) {
 }
 
 // The done text says what the approval did: the slice landed, or the landing
-// was blocked and went to a fix round (S148). The reply's run record tells
+// was blocked and went to a fix round (S148), or it committed for the owner
+// to land (S177). The reply's run record tells
 // which; any other outcome keeps the command's text.
 func TestActionApproveDoneTextSaysWhatHappened(t *testing.T) {
 	landedAt := time.Date(2026, 10, 27, 12, 0, 0, 0, time.UTC)
@@ -519,7 +520,7 @@ func TestActionApproveDoneTextSaysWhatHappened(t *testing.T) {
 		{"landed, cleanup failed", runrec.Record{State: runrec.StateCommitted, LandedAt: landedAt, Reason: "landed; cleanup failed at git branch -d s22: x"}, "landed S22"},
 		{"fix round", runrec.Record{State: runrec.StateAwaitingApproval, LandFixes: 1}, "landing S22 blocked; fix round done, awaiting approval"},
 		{"neither", runrec.Record{State: runrec.StatePaused}, "ork approve engine: done"},
-		{"committed, not landed", runrec.Record{State: runrec.StateCommitted}, "ork approve engine: done"},
+		{"committed, not landed", runrec.Record{State: runrec.StateCommitted}, "committed S22; ready to land"},
 		{"awaiting approval, no fix round", runrec.Record{State: runrec.StateAwaitingApproval}, "ork approve engine: done"},
 	} {
 		for _, where := range []string{"overview", "card"} {

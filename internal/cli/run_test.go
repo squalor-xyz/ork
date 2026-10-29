@@ -481,7 +481,7 @@ func overrideRun(t *testing.T, flags ...string) ([]daemon.RunParams, string) {
 		p := params.(daemon.RunParams)
 		calls = append(calls, p)
 		if method == daemon.MethodRunPlan {
-			*result.(*daemon.RunPlan) = daemon.RunPlan{Item: p.Item, Lineup: p.Lineup}
+			*result.(*daemon.RunPlan) = daemon.RunPlan{StopAfter: p.StopAfter, Item: p.Item, Lineup: p.Lineup}
 		} else if method != daemon.MethodRunStart {
 			t.Fatalf("method %s", method)
 		}
@@ -795,5 +795,41 @@ func TestRunRefusesBlockedItemBeforeConfirmation(t *testing.T) {
 				t.Fatalf("refusal: %q", errs.String())
 			}
 		})
+	}
+}
+
+func TestRunStopAfterFlag(t *testing.T) {
+	calls, printed := overrideRun(t, "--stop-after", "commit")
+	if !strings.Contains(printed, "stop: after commit (you land it)") {
+		t.Fatal(printed)
+	}
+	for _, p := range calls {
+		if p.StopAfter != "commit" {
+			t.Fatalf("params: %+v", p)
+		}
+	}
+	var out bytes.Buffer
+	printRunPlan(&out, daemon.RunPlan{StopAfter: "commit"}, false)
+	if !strings.Contains(out.String(), "stop: after commit (you land it)") {
+		t.Fatal(out.String())
+	}
+	r := runPrompted(t, "", "--stop-after", "merge")
+	if r.code != ExitUsage || r.plan != "" {
+		t.Fatalf("invalid flag: %+v", r)
+	}
+}
+
+func TestStopAfterInRunAndWaveHelp(t *testing.T) {
+	_, out, _ := run(t, &App{}, "help")
+	if strings.Count(out, "[--stop-after land|commit]") != 2 {
+		t.Fatal(out)
+	}
+}
+
+func TestRunPlanSaysAfterLanding(t *testing.T) {
+	var out bytes.Buffer
+	printRunPlan(&out, daemon.RunPlan{StopAfter: "land"}, false)
+	if !strings.Contains(out.String(), "stop: after landing\n") {
+		t.Fatal(out.String())
 	}
 }

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-189 items · — 43 · done 141 · retired 5
+189 items · — 42 · done 142 · retired 5
 
 ## v1.1
 
@@ -236,7 +236,7 @@
 | 179 | [S174](slices/S174.md) | More registry settings | M | - |  | discovered from S165 | — |
 | 180 | [S175](slices/S175.md) | End a stale ledger run | S | - |  | discovered from S165 | done |
 | 181 | [S176](slices/S176.md) | Open a role report | S | - |  | discovered from S165 | — |
-| 182 | [S177](slices/S177.md) | Per-run stop point | S | - |  | discovered from S165 | — |
+| 182 | [S177](slices/S177.md) | Per-run stop point | S | - |  | discovered from S165 | done |
 | 183 | [S178](slices/S178.md) | Doctor upgrade hints | S | - |  | discovered from S165 | done |
 | 184 | [S181](slices/S181.md) | Warn on blocked item | S | - |  | discovered from S165 | done |
 | 185 | [S182](slices/S182.md) | Hung role watchdog | M | - |  | discovered from S165 | — |

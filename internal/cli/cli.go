@@ -40,6 +40,7 @@ const (
 const usageText = `usage: ork COMMAND [ARGS] [--json]
 
   ork run P ID [--yes --well-specified y/n --split y/n]
+                              [--stop-after land|commit]
                               [--implementer VENDOR:MODEL:EFFORT]
                               [--reviewer VENDOR:MODEL:EFFORT]
                               [--architect VENDOR:MODEL:EFFORT|off]
@@ -48,6 +49,7 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
                               show the plan and launch one slice
   ork wave suggest P          show slicer's suggested waves
   ork wave start P ITEM... [--yes --well-specified y/n --split y/n]
+                              [--stop-after land|commit]
                               the run lineup and budget flags, for every item
                               show the plans and launch the chosen items
   ork approve RUN             finish and commit a passed slice

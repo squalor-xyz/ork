@@ -916,12 +916,12 @@ func TestQuestionsBodyHasNoEnterOpenFooter(t *testing.T) {
 // The role rows do not: they cycle or take a custom entry.
 func TestWavesBudgetRowsShowTheWholeNumberHint(t *testing.T) {
 	h, _ := lineupHarness(t)
-	for row := 0; row < len(lineupRoles)+2; row++ {
+	for row := 0; row < len(lineupRoles)+3; row++ {
 		if got := h.m.waves.lineup.row; got != row {
 			t.Fatalf("the editor is on row %d, want %d", got, row)
 		}
 		hint := wideHint(h)
-		budget := row >= len(lineupRoles)
+		budget := row > len(lineupRoles)
 		if has := strings.Contains(hint, "type a whole number"); has != budget {
 			t.Errorf("row %d: type a whole number shown %v, want %v: %q", row, has, budget, hint)
 		}

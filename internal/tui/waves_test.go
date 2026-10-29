@@ -68,7 +68,7 @@ func (l *wavesLive) WaveOverlap(_ context.Context, p string, ids []string) (*sli
 }
 func (l *wavesLive) Plan(_ context.Context, p daemon.RunParams) (*daemon.RunPlan, error) {
 	l.plans = append(l.plans, p)
-	plan := &daemon.RunPlan{Item: p.Item, Lineup: map[string][]runrec.LineupEntry{
+	plan := &daemon.RunPlan{StopAfter: p.StopAfter, Item: p.Item, Lineup: map[string][]runrec.LineupEntry{
 		"implementer": {{Vendor: "claude", Model: "sonnet", Effort: "high"}},
 		"reviewer":    {{Vendor: "claude", Model: "opus", Effort: "medium"}},
 		"gate":        {{Vendor: "claude", Model: "opus", Effort: "medium"}},

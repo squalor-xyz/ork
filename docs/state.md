@@ -250,6 +250,13 @@ that transition's timestamp. A run created in either wait starts at creation.
 The version stays 1 under the same additive-field policy as `landed_at` and
 `cleaned_at`. Older records without the field still load; older ork versions
 that do not know the field refuse records containing it through strict keys.
+`stop_after` (*proposed*, S177) records the per-run stop point: `land` or
+`commit`. An absent field means `land`. With `commit`, the final state is
+`committed` with `landed_at` unset and the worktree and branch retained.
+The version stays 1 under the additive-field policy; older records still
+load, and older ork versions refuse the new field through strict keys.
+The daemon echoes it on the engine-run snapshot row so approval wording
+matches the run's choice.
 `land_fixes` (omitted when 0; *proposed*, S119) counts the fix rounds a blocked
 landing has had; the `land` state allows one (a merge conflict, or a red
 re-check after the base branch was merged in), and a second block stops the run
