@@ -8132,7 +8132,7 @@
       "id": "S168",
       "title": "Role matrix view in ork (read-only)",
       "short_title": "Role matrix view",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8165,7 +8165,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

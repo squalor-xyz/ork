@@ -215,6 +215,16 @@ func (c *Client) WaveOverlap(ctx context.Context, project string, items []string
 	return &out, nil
 }
 
+// RolesMatrix reads the registered project's role matrix with ork's reading
+// of each row.
+func (c *Client) RolesMatrix(ctx context.Context, project string) (*RolesMatrixResult, error) {
+	var out RolesMatrixResult
+	if err := c.Call(ctx, MethodRolesMatrix, RolesMatrixParams{Project: project}, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // ItemShow reads the registered project's item detail.
 func (c *Client) ItemShow(ctx context.Context, project, id string) (*slicercli.Detail, error) {
 	var out ItemShowResult

@@ -5,6 +5,7 @@ package slicercli
 import (
 	"context"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/squalor-xyz/ork/internal/clitest"
@@ -23,6 +24,42 @@ func TestRelayRules(t *testing.T) {
 	}
 	if got := fake.CallsTo("slicer")[0].Args; !reflect.DeepEqual(got, []string{"relay-roles", "show", "--json", "--root", root}) {
 		t.Fatalf("args %v", got)
+	}
+}
+
+func TestRelayMatrixReadsShowJSON(t *testing.T) {
+	const show = `{"relay_roles":"# Relay roles\n\n| ID | Role |\n","rows":[` +
+		`{"id":"r3","role":"implementer","when":{"size":[],"sliver":null},"agent":"Claude Code","vendor":"Claude","model":"sonnet","reasoning":"high","note":"stand-in"},` +
+		`{"id":"r6","role":"gate","agent":"Codex","vendor":"OpenAI","model":"gpt","reasoning":"medium","note":""}],` +
+		`"rules":[{"id":"u1","text":"A reviewer never wrote code."}]}`
+	c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "show", "--json", "--root", root}, Stdout: show})
+	got, err := c.RelayMatrix(context.Background(), root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := &Matrix{
+		Markdown: "# Relay roles\n\n| ID | Role |\n",
+		Rows: []Row{
+			{ID: "r3", Role: "implementer", Agent: "Claude Code", Vendor: "Claude", Model: "sonnet", Reasoning: "high", Note: "stand-in"},
+			{ID: "r6", Role: "gate", Agent: "Codex", Vendor: "OpenAI", Model: "gpt", Reasoning: "medium"},
+		},
+		Rules: []Rule{{ID: "u1", Text: "A reviewer never wrote code."}},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("matrix %+v, want %+v", got, want)
+	}
+	calls := fake.CallsTo("slicer")
+	if len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, []string{"relay-roles", "show", "--json", "--root", root}) {
+		t.Fatalf("calls %+v", calls)
+	}
+}
+
+func TestRelayMatrixErrorKeepsSlicersMessage(t *testing.T) {
+	c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "show", "--json", "--root", root}, Exit: 2,
+		Stdout: `{"error":{"code":"usage","message":"matrix unreadable"}}`})
+	got, err := c.RelayMatrix(context.Background(), root)
+	if got != nil || err == nil || !strings.Contains(err.Error(), "matrix unreadable") {
+		t.Fatalf("got %+v, err %v; want no matrix and slicer's message", got, err)
 	}
 }
 

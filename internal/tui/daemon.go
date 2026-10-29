@@ -148,6 +148,14 @@ func (d *Daemon) WaveOverlap(ctx context.Context, project string, items []string
 	defer c.Close()
 	return c.WaveOverlap(ctx, project, items)
 }
+func (d *Daemon) RolesMatrix(ctx context.Context, project string) (*daemon.RolesMatrixResult, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.RolesMatrix(ctx, project)
+}
 func (d *Daemon) WaveStart(ctx context.Context, params daemon.WaveStartParams) (*daemon.WaveResult, error) {
 	c, err := d.Connect(ctx)
 	if err != nil {

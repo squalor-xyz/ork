@@ -104,6 +104,7 @@ ork (TUI)  ork status --json (CLI)
   | `wave.start` (`run.launch-wire`; proposed shape) | `{"items":[RunParams...]}`; each item has `project`, `item`, `well_specified`, `split`, optional `lineup`, `budgets` and `expected` as in `run.start` | `{"wave","items":[{"item","run"?,"error"?}]}`; one wave id, one project, admission errors kept per item |
   | `wave.stop` (proposed wire) | `{"wave"}` | the same wave result; stops each unfinished member through `run.stop`, skips final members |
   | `wave.suggest` (proposed wire) | `{"project"}` | slicer's `plan-parallel` result for the registered project, limited to the fields `ParallelPlan` reads; slicer runs on each call, not from the cache |
+  | `roles.matrix` (proposed wire, S168) | `{"project"}` | `{"markdown","rows":[{"id","role","agent","use"}],"rules":[{"id","text"}]}` from `slicer relay-roles show --json`: slicer's own text, and for each row what ork does with it (`use`: `used as claude\|codex`, `UI pass row, ...`, `Spec check row, ...`, `skipped: no adapter for AGENT`, `not used: the gate runs the reviewer's lineup`, `not run by ork`, `not used: ork has no role ROLE`); read-only, no slicer write; slicer's error keeps its code and message; slicer runs on each call |
   | `wave.overlap` (proposed wire) | `{"project","items":[ID...]}` | `{"overlap":[{"a","b","shared"?}]}` from `slicer deps --overlap`; `shared` is absent when a pair shares no path; fewer than two items is `bad_params`; slicer runs on each call |
   | `subscribe` | `{"focus":[names]}` | none; the connection gets notices (below) and the named projects become visible |
   | `refresh` | `{"project"}` | none; reads every part of the project now and returns once they are read |
@@ -995,6 +996,8 @@ ork daemon stop [--force]   stop the daemon; on a daemon that predates
 ork daemon restart [--force]
                             stop and start the current executable
 ork roles print [ROLE]      print the embedded role prompts
+ork roles matrix P          show the role matrix as slicer prints it, then
+                            which rows ork uses, skips or does not run (S168)
 ork projects add|list|rm|set
                             manage the registry
 ork doctor [--upgrade]      check versions, CLIs, logins, contract, ork path, projects;
@@ -1322,6 +1325,14 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   the command again.
 - `roles print [ROLE]`: `{"roles":[{"name","prompt"}]}`. Text: the prompt of
   ROLE as embedded, or all four with a `==== NAME ====` line before each.
+- `roles matrix PROJECT` (S168): the `roles.matrix` result as one value. Text:
+  slicer's matrix text, a blank line, `## ork`, then one line per row,
+  `- ID ROLE: USE`. It reads through the daemon (`print` does not) and writes
+  nothing; the matrix is slicer's and stays so. An unknown project is
+  `not_found` (exit 1); a missing or extra argument is a usage error (exit 2).
+  The Gate rows are marked unused because the gate follows the reviewer's
+  lineup (S83). The TUI pane shows the same lines with the `## ork` section
+  first, then slicer's text (owner, 2026-10-29).
 - `doctor`: `{"ok","tools":[{"name","required","present","path","version",
   "ok","error"}],"contract":{"accepted":[9,10],"found","ok","error"},"binary",
   "projects":[{"name","path","findings":[]}],"registry_error"?}`,

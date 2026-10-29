@@ -2561,3 +2561,7 @@
 {"when": "2026-10-29T21:06:25Z", "item": "S187", "action": "note", "from": "", "to": "", "note": "From the S166 review and UI pass (2026-10-29), all later: (1", "by": "Jon R"}
 {"when": "2026-10-29T21:17:12Z", "item": "S188", "action": "add", "from": "", "to": "open", "note": "S178 later notes: doctor hint edge cases and wording"}
 {"when": "2026-10-29T21:17:12Z", "item": "S188", "action": "note", "from": "", "to": "", "note": "From the S178 review and UI pass (2026-10-29), all later: (1", "by": "Jon R"}
+{"when": "2026-10-29T21:17:52Z", "item": "S168", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-29T22:03:24Z", "item": "S168", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T22:12:15Z", "item": "S168", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T22:16:18Z", "item": "S168", "action": "status", "from": "started", "to": "done", "note": "Read-only role matrix view: daemon roles.matrix over slicer relay-roles show --json, ork roles matrix PROJECT (slicer text first, then the ork Use labels), and m on the Roadmap opens a scrolling pane (ork section first, hung wrapped lines). Hint order remove, add, m, tab (owner). Gate PASS round 2 (opus medium), UI pass PASS round 2. Implementer Claude sonnet high.", "by": "Jon R"}

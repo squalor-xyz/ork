@@ -1,0 +1,24 @@
+[1mork[m                │ Overview[2m │ [mQuestions[2m │ [mWaves[2m │ [m[1mRoadmap[m[2m │ [mDecisions
+[2m  Running        0 [m│[2m────────────────────────────────────────────────────────────[m
+[2m0[m Needs you      0 │[1mRole matrix  (esc returns)[m
+[1;7m1>ork              [m│  [1m## ork[m
+[2m2[m other            │  - r9 implementer: [2mused as codex[m
+                   │  - r3 implementer: [2mused as claude[m
+                   │  - r21 implementer: [1mskipped: no adapter for Acme Agent[m
+                   │  - r14 reviewer: [2mUI pass row, used as claude[m
+                   │  - r6 gate: [2mnot used: the gate runs the reviewer's lineup[m
+                   │  - r10 orchestrator: [2mnot run by ork[m
+                   │  
+                   │  [1m# Relay roles[m
+                   │  
+                   │  [1m## Matrix[m
+                   │  
+                   │  | ID | Role | When | Agent | Vendor | Model | Reasoning
+                   │    | Note |
+                   │  | --- | --- | --- | --- | --- | --- | --- | --- |
+                   │  | r9 | Implementer | whole slice, effort 3, not a sliver
+                   │    | Codex | OpenAI | gpt-6.1-sol | medium | default
+                   │[2m  +21 more lines[m
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ pgup/pgdown [2mpage[m; j/k [2mline[m; q [2mquit[m; esc [2mclose[m; ? [2mhelp[m
+                   │ 2 projects | refreshed 16:42:00

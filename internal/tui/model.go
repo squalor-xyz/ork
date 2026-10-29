@@ -359,6 +359,13 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			pane.pending = false
 			pane.detail, pane.err = msg.detail, msg.err
 		}
+	case matrixMsg:
+		if pane := m.itemPane; pane != nil && m.matrixPaneOpen() && m.active >= 0 &&
+			pane.project == msg.project && pane.request == msg.request &&
+			m.projects[m.active].reg.Name == msg.project {
+			pane.pending = false
+			pane.matrix, pane.err = msg.result, msg.err
+		}
 	case wavesMsg:
 		return m, m.applyWaves(msg)
 	case launchMsg:
@@ -605,6 +612,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	case m.showHelp && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev):
 		// The cursor is hidden under the help: the line keys leave it where it is.
 		return nil
+	case m.matrixPaneOpen() && !m.showHelp && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.PageDown, m.keys.PageUp):
+		m.scrollMatrix(msg)
 	case key.Matches(msg, m.keys.ScrollDown, m.keys.ScrollUp):
 		m.scrollHalf(key.Matches(msg, m.keys.ScrollUp))
 	case key.Matches(msg, m.keys.First, m.keys.Last, m.keys.PageDown, m.keys.PageUp, m.keys.NextGroup, m.keys.PrevGroup):
@@ -656,6 +665,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			return m.confirmWave()
 		}
 		return m.openLaunch()
+	case key.Matches(msg, m.keys.Matrix):
+		return m.openMatrix()
 	case key.Matches(msg, m.keys.Cleanup):
 		return m.requestAction("cleanup")
 	case key.Matches(msg, m.keys.Approve):
