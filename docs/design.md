@@ -985,7 +985,8 @@ ork daemon restart [--force]
 ork roles print [ROLE]      print the embedded role prompts
 ork projects add|list|rm|set
                             manage the registry
-ork doctor                  check versions, CLIs, logins, contract, ork path, projects
+ork doctor [--upgrade]      check versions, CLIs, logins, contract, ork path, projects;
+                            print upgrade commands (S178)
 ```
 
 S03 ships `status`, `projects`, `roles print` and `doctor`
@@ -1140,6 +1141,33 @@ a run that is not stopped or is busy. An unknown run returns `not_found`.
   needs only the vendors a lineup uses (`doctor.vendors-optional`). The login check (by
   running a trivial command, without reading credentials) comes in S06, and
   doctor makes no model call;
+- *Proposed (S178):* where slicer and adj came from, and the commands to
+  upgrade them. Each of the two tools gains `resolved` (symlinks followed) and
+  `install`: for slicer `checkout` (the resolved path is `D/.venv/bin/slicer`
+  and `D` is a git root; `checkout` then holds `dir`, `describe`, `branch`,
+  `upstream` and `behind`, the commits the upstream branch has that HEAD lacks
+  as of the last fetch, or -1 without an upstream) or `venv` (`V/bin/slicer`
+  with `V/pyvenv.cfg`); for adj `go-binary` (the standard library's
+  `debug/buildinfo` reads `build`: `module`, `version`, `revision`,
+  `modified`); otherwise `unknown`. The report gains `upgrade`, always
+  present and empty when nothing is behind: a list of `{tool, reason,
+  commands[], note?}` for slicer, adj and ork. A hint appears when the
+  contract line is older than the lowest accepted version (slicer is behind),
+  when it is newer than the highest (ork is behind), when a slicer checkout
+  is behind its upstream, or when slicer or adj is missing; `--upgrade`
+  prints all three whether or not anything is behind. Text prints
+  `[upgrade] TOOL  REASON`, an optional `note:` line, then each command on its
+  own line, indented, after the contract line. slicer: a checkout gets
+  `git -C DIR pull --ff-only` and `DIR/.venv/bin/pip install -e DIR`, a venv
+  gets `V/bin/pip install --upgrade squalor-slicer`. adj and ork get a pull
+  and the documented build with the installed path filled in and the checkout
+  named as a placeholder (`ADJ_CHECKOUT`, `ORK_CHECKOUT`), and ork also gets
+  `ork daemon restart` by its installed path. A source that is not recognized
+  gets a `note` naming the sibling README section and no commands. Doctor
+  reads only local facts: symlinks, build information, and `git -C DIR`
+  `rev-parse`, `describe` and `rev-list`. It never fetches, pulls, builds,
+  makes a network call or runs a printed command, and a hint never changes the
+  exit code;
 - the slicer contract: the first line of `slicer ai relay --root ROOT`
   against the accepted set (`roles.AcceptedContracts`, v9 and v10;
   `boundary.contract`). Any other version fails. A project pin mismatch

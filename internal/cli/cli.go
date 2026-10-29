@@ -70,17 +70,20 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
   ork daemon stop [--force]   stop the daemon
   ork daemon restart [--force]
                               stop and start the daemon
-  ork doctor                  check the slicer and adj versions, the vendor
+  ork doctor [--upgrade]      check the slicer and adj versions, the vendor
                               CLIs and the slicer contract pin, and print the
-                              path of this ork binary
+                              path of this ork binary; print the commands to
+                              upgrade a tool that is behind or missing
+                              (slicer, adj and ork with --upgrade), and run
+                              none of them
 
 Every command takes --json. Exit codes: 0 ok, 1 failure, 2 usage.
 `
 
-// Tools names the CLIs that doctor checks. An empty field means the tool's
-// own name, found on PATH.
+// Tools names the CLIs that doctor checks, and the git that it reads a
+// checkout with. An empty field means the tool's own name, found on PATH.
 type Tools struct {
-	Slicer, Adj, Claude, Codex, Grok string
+	Slicer, Adj, Git, Claude, Codex, Grok string
 }
 
 // App is the command line with its dependencies.

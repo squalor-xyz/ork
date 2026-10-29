@@ -8598,7 +8598,7 @@
       "id": "S178",
       "title": "ork doctor reports sibling tool versions and prints upgrade commands",
       "short_title": "Doctor upgrade hints",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8631,7 +8631,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -595,18 +595,26 @@ type doctorOut struct {
 
 func doctorApp(t *testing.T, relayFirstLine string) (app *App, fake *clitest.Fake, logs map[string]string) {
 	t.Helper()
+	return doctorAppWith(t, relayFirstLine)
+}
+
+// doctorAppWith is doctorApp with extra fake routes (for example git), which
+// go after the slicer and adj routes.
+func doctorAppWith(t *testing.T, relayFirstLine string, extra ...clitest.Route) (app *App, fake *clitest.Fake, logs map[string]string) {
+	t.Helper()
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v10.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	contractJSON := strings.Replace(string(raw), `"contract": "relay v10"`, `"contract": "`+strings.TrimPrefix(relayFirstLine, "Contract: ")+`"`, 1)
-	fake = clitest.Install(t,
-		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json"}, Prefix: true, Stdout: contractJSON},
-		clitest.Route{Tool: "slicer", Args: []string{"--version"}, Stdout: "slicer 1.15.0\n"},
-		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--root"}, Prefix: true, Stdout: relayFirstLine + "\n\n# Slice relay\nmore text\n"},
-		clitest.Route{Tool: "adj", Args: []string{"--version"}, Stdout: "v0.1.0\n"},
-	)
+	routes := []clitest.Route{
+		{Tool: "slicer", Args: []string{"ai", "relay", "--json"}, Prefix: true, Stdout: contractJSON},
+		{Tool: "slicer", Args: []string{"--version"}, Stdout: "slicer 1.15.0\n"},
+		{Tool: "slicer", Args: []string{"ai", "relay", "--root"}, Prefix: true, Stdout: relayFirstLine + "\n\n# Slice relay\nmore text\n"},
+		{Tool: "adj", Args: []string{"--version"}, Stdout: "v0.1.0\n"},
+	}
+	fake = clitest.Install(t, append(routes, extra...)...)
 	dir := t.TempDir()
 	logs = map[string]string{}
 	var bins = map[string]string{}
@@ -614,7 +622,7 @@ func doctorApp(t *testing.T, relayFirstLine string) (app *App, fake *clitest.Fak
 		bins[name], logs[name] = fakeVendor(t, dir, name, ver)
 	}
 	app = noDaemon(t)
-	app.Tools = Tools{Slicer: fake.Bin("slicer"), Adj: fake.Bin("adj"), Claude: bins["claude"], Codex: bins["codex"], Grok: bins["grok"]}
+	app.Tools = Tools{Slicer: fake.Bin("slicer"), Adj: fake.Bin("adj"), Git: fake.Bin("git"), Claude: bins["claude"], Codex: bins["codex"], Grok: bins["grok"]}
 	return app, fake, logs
 }
 
