@@ -520,7 +520,7 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 		return runrec.Record{}, err
 	}
 	current, ok := find(f, plan.project.Name)
-	if !ok {
+	if !ok || current.Path != plan.project.Path {
 		return runrec.Record{}, notFound(plan.project.Name, f)
 	}
 	// projects.set (S161) changes a project's fields only while it has no

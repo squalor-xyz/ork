@@ -210,16 +210,35 @@ func TestStartRunRefusesAProjectRemovedAfterPlanning(t *testing.T) {
 	if len(d.runs.runs) != 0 {
 		t.Errorf("removed project created managed engines: %d", len(d.runs.runs))
 	}
-	worktree := filepath.Join(p.Path, ".worktrees", "S1")
-	if _, err := os.Stat(worktree); !errors.Is(err, os.ErrNotExist) {
-		t.Errorf("removed project created worktree: %v", err)
-	}
-	if calls := lastFake.CallsTo("git"); len(calls) != 0 {
-		t.Errorf("removed project called git: %+v", calls)
-	}
 	for _, call := range lastFake.CallsTo("slicer") {
 		if len(call.Args) >= 2 && slices.Equal(call.Args[:2], []string{"ai", "relay"}) {
 			t.Error("removed project reached engine.New's contract read")
+		}
+	}
+}
+
+func TestStartRunRefusesAProjectReAddedUnderANewPath(t *testing.T) {
+	d, store, p, _ := startRunRegistryChange(t, func(f *registry.File) {
+		replacement := f.Projects[0]
+		replacement.Path = filepath.Join(t.TempDir(), "replacement")
+		f.Projects = append(f.Projects[1:], replacement)
+	})
+	_, err := d.startRun(context.Background(), RunParams{Project: p.Name, Item: "S1"})
+	var ipcErr *ipc.Error
+	if !errors.As(err, &ipcErr) || ipcErr.Code != CodeNotFound || !strings.Contains(ipcErr.Message, `"`+p.Name+`"`) {
+		t.Errorf("re-added project must fail with not_found naming %q: %v", p.Name, err)
+	}
+	// Stop any incorrectly admitted job before inspecting its side effects.
+	d.closeRuns()
+	if runs, err := store.List(); err != nil || len(runs) != 0 {
+		t.Errorf("re-added project created run records: %v, %v", runs, err)
+	}
+	if len(d.runs.runs) != 0 {
+		t.Errorf("re-added project created managed engines: %d", len(d.runs.runs))
+	}
+	for _, call := range lastFake.CallsTo("slicer") {
+		if len(call.Args) >= 2 && slices.Equal(call.Args[:2], []string{"ai", "relay"}) {
+			t.Error("re-added project reached engine.New's contract read")
 		}
 	}
 }

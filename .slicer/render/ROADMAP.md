@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-185 items · — 46 · done 134 · retired 5
+185 items · — 45 · done 135 · retired 5
 
 ## v1.1
 
@@ -212,7 +212,7 @@
 | 155 | [S153](slices/S153.md) | S95 later notes | S | 1 |  |  | done |
 | 156 | [S154](slices/S154.md) | S138 later notes | S | 1 |  |  | — |
 | 157 | [S155](slices/S155.md) | S93 later notes | S | 1 |  | discovered from S93 | done |
-| 158 | [S156](slices/S156.md) | S102 later notes | S | 1 |  | discovered from S102 | — |
+| 158 | [S156](slices/S156.md) | S102 later notes | S | 1 |  | discovered from S102 | done |
 | 159 | [S157](slices/S157.md) | S73 later: next * writes | S | 1 |  | discovered from S73 | done |
 | 160 | [S158](slices/S158.md) | S71 later notes | S | 1 |  | discovered from S71 | done |
 | 161 | [S159](slices/S159.md) | S135 later notes | S | 1 |  | discovered from S135 | done |
