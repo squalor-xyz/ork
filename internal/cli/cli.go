@@ -70,9 +70,23 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
                               [--worktree-pattern P] [--branch-pattern P]
                               [--check CMD] [--check-minutes N] [--cap N]
                               [--budget-minutes N] [--budget-tokens N]
+                              [--env-line LINE]...
+                              [--permission ROLE=read-only|ROLE=]...
+                              [--allow ROLE=PATTERN]...
+                              [--vendor-env VENDOR:KEY=VALUE]...
+                              [--unset-vendor-env VENDOR:KEY]...
                               change a project's optional fields; an empty
-                              value or 0 clears one; refused while the
-                              project has unfinished runs
+                              value or 0 clears one; --env-line and --allow
+                              repeat to give the whole list, and one empty
+                              --env-line clears it; a role or a vendor key
+                              changes alone; --unset-vendor-env removes a key
+                              and an empty --vendor-env value is kept; refused
+                              while the project has unfinished runs
+  ork settings show           show global_cap and daemon_idle_minutes, stored
+                              and effective
+  ork settings set [--global-cap N] [--daemon-idle-minutes N]
+                              change them; 0 clears one; allowed while runs
+                              are unfinished
   ork roles print [ROLE]      print the embedded role prompts
   ork roles matrix P          show the role matrix as slicer prints it, then
                               which rows ork uses, skips or does not run
@@ -205,6 +219,8 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		return a.status(ctx, o, rest)
 	case "projects":
 		return a.projects(ctx, o, rest)
+	case "settings":
+		return a.settings(ctx, o, rest)
 	case "roles":
 		return a.roles(ctx, o, rest)
 	case "doctor":

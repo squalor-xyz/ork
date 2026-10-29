@@ -111,7 +111,9 @@ ork (TUI)  ork status --json (CLI)
   | `projects.list` | none | `{"projects":[...]}`; an empty registry is valid |
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
   | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
-  | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `ui_doc`, `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` | the project as saved; an omitted field keeps its value, `""` or 0 clears one; `bad_params` for an unknown field, no field or an invalid value, `not_found`, `project_busy` while a run is unfinished |
+  | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `ui_doc`, `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`) | the project as saved; an omitted field keeps its value, `""` or 0 clears one; `null` removes one role or one vendor key, and the other roles and keys stay; `bad_params` for an unknown field, no field or an invalid value, `not_found`, `project_busy` while a run is unfinished |
+  | `settings.get` (*proposed*, S174) | none | `{"global_cap","daemon_idle_minutes","effective_global_cap","effective_daemon_idle_minutes"}`; the first two are the stored values (0 is unset) |
+  | `settings.set` (*proposed*, S174) | `{"global_cap"?,"daemon_idle_minutes"?}`, at least one | the same shape as `settings.get`; 0 clears one; `bad_params` for no field or a negative number; not refused while runs are unfinished; a raised `global_cap` starts the queued runs that now fit |
 
   Error codes the daemon adds: `unknown_method`, `bad_params`, `not_found`,
   `duplicate_name`, `invalid_path`, `registry`, *proposed* `project_busy`, *proposed*
@@ -1338,11 +1340,32 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   A planned start that loses the race to removal is refused with `not_found`.
 - `projects set NAME [--push on|off] [--ui-doc PATH] [--worktree-pattern P]
   [--branch-pattern P] [--check CMD] [--check-minutes N] [--cap N]
-  [--budget-minutes N] [--budget-tokens N]` (*proposed*, S161): one flag per
-  optional registry field, as in state.md. A flag that is given sets its
-  field; a flag that is left out keeps the value. An empty string or 0 clears
-  a field. `--push` takes `on` or `off`. At least one flag is required, and
-  an unknown flag, a bad `--push` value or a non-number is a usage error
+  [--budget-minutes N] [--budget-tokens N] [--env-line LINE]...
+  [--permission ROLE=read-only|ROLE=]... [--allow ROLE=PATTERN]...
+  [--vendor-env VENDOR:KEY=VALUE]... [--unset-vendor-env VENDOR:KEY]...`
+  (*proposed*, S161; the last five groups S174): one flag per optional
+  registry field, as in state.md. A flag that is given sets its field; a flag
+  that is left out keeps the value. An empty string or 0 clears a field.
+  S174 flags: `--env-line` repeats and the lines given replace the list (one
+  empty `--env-line ""` clears it). `--permission ROLE=read-only` sets the
+  role's preset and `--permission ROLE=` removes its entry, so the default
+  applies; `ROLE=` also removes a role key that ork does not know when the
+  file holds it (a hand-edited typo), while setting an unknown role is
+  refused. `--allow ROLE=PATTERN` repeats, and the patterns given for a role
+  replace that role's list. `--vendor-env VENDOR:KEY=VALUE` sets one key (the
+  first `:` ends the vendor and the first `=` ends the key) and
+  `--unset-vendor-env VENDOR:KEY` removes one key, and the vendor once it is
+  empty; an empty value (`VENDOR:KEY=`) is kept as an empty string. A role or a key changes alone, so a second command does not need the
+  first one's values. A malformed value, `--permission` and `--allow` for the
+  same role, or `--vendor-env` and `--unset-vendor-env` for the same key is a
+  usage error (exit 2) before the daemon starts, and a usage error never
+  quotes a `--vendor-env` value. The text line names the fields and counts
+  (`environment_lines=2 lines`, `permissions=implementer:3 patterns;
+  reviewer:read-only`, `vendor_env=codex:A,B`, with `unset` or `default` for
+  a removal) and never prints a `vendor_env` value; `--json` prints the
+  project as the registry holds it, as `projects list --json` does, so it
+  includes the `vendor_env` values. `--push` takes `on` or `off`. At least one
+  flag is required, and an unknown flag, a bad `--push` value or a non-number is a usage error
   (exit 2) before the daemon starts. The daemon (`projects.set`) validates the
   values and refuses with `bad_params` (a `ui_doc` that is absolute or leaves
   the project, a pattern without `{id}` or `{id_lower}`, a negative number) or
@@ -1354,6 +1377,20 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   start whose plan was read before the change and that is admitted after it is
   refused with `plan changed; run the command again to confirm it`; run
   the command again.
+- `settings show` and `settings set [--global-cap N] [--daemon-idle-minutes N]`
+  (*proposed*, S174, owner decision 2026-10-29): the file-level registry
+  settings, over `settings.get` and `settings.set`. `show` prints
+  `global_cap=VALUE (effective N)` and `daemon_idle_minutes=VALUE (effective
+  N)`, with `unset` for a stored 0 and the effective value 4 and 10 when
+  unset. `set` needs at least one flag; 0 clears one; a negative number, a
+  non-number, an unknown subcommand or flag and no flag are usage errors
+  (exit 2) before the daemon starts. Text: `updated settings: FIELD=VALUE,
+  ...` with the stored value (`unset` for 0). JSON: `{"settings":{...}}` for
+  both, with the keys of `settings.get`. Unlike `projects set`, `settings set`
+  is not refused while runs are unfinished: the global cap is read for every
+  admission and the idle minutes each time the idle clock arms. Raising the
+  cap starts queued runs that now fit, with no other event; lowering it
+  stops no running run. S169 (per-vendor cap) should extend this command.
 - `roles print [ROLE]`: `{"roles":[{"name","prompt"}]}`. Text: the prompt of
   ROLE as embedded, or all four with a `==== NAME ====` line before each.
 - `roles matrix PROJECT` (S168): the `roles.matrix` result as one value. Text:

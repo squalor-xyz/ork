@@ -73,6 +73,21 @@ func (c *Client) SetProject(ctx context.Context, p SetProjectParams) (registry.P
 	return out, err
 }
 
+// SetSettings changes the file-level registry settings p sets and returns
+// them as saved (S174, *proposed*).
+func (c *Client) SetSettings(ctx context.Context, p SetSettingsParams) (SettingsResult, error) {
+	var out SettingsResult
+	err := c.c.Call(ctx, MethodSettingsSet, p, &out)
+	return out, err
+}
+
+// Settings returns the file-level registry settings (S174, *proposed*).
+func (c *Client) Settings(ctx context.Context) (SettingsResult, error) {
+	var out SettingsResult
+	err := c.c.Call(ctx, MethodSettingsGet, nil, &out)
+	return out, err
+}
+
 // Snapshot implements source.Source over the socket. The daemon looks the
 // project up by p.Name. A failed call gives a snapshot whose every part holds
 // the error, as an *ipc.Error with the tool's code when there was one.

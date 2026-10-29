@@ -172,6 +172,14 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return d.setProject(p)
+	case MethodSettingsGet:
+		return d.getSettings()
+	case MethodSettingsSet:
+		var p SetSettingsParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.setSettings(p)
 	}
 	return nil, &ipc.Error{Code: CodeUnknownMethod, Message: "unknown method " + method}
 }
@@ -470,7 +478,7 @@ func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
 	if p.Name == "" {
 		return registry.Project{}, bad("projects.set needs a project name")
 	}
-	if p == (SetProjectParams{Name: p.Name}) {
+	if p.SetsNothing() {
 		return registry.Project{}, bad("projects.set sets no field")
 	}
 	if p.UIDoc != nil {
@@ -497,6 +505,10 @@ func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
 		}
 	}
 
+	if err := validateProjectExtras(p); err != nil {
+		return registry.Project{}, err
+	}
+
 	d.regMu.Lock()
 	defer d.regMu.Unlock()
 	f, err := d.loadRegistry()
@@ -521,6 +533,11 @@ func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
 		return registry.Project{}, &ipc.Error{Code: CodeProjectBusy, Message: fmt.Sprintf("project %s has unfinished runs: %s", p.Name, strings.Join(ids, ", "))}
 	}
 	proj := &f.Projects[i]
+	withExtras, err := withProjectExtras(*proj, p)
+	if err != nil {
+		return registry.Project{}, err
+	}
+	proj.EnvironmentLines, proj.Permissions, proj.VendorEnv = withExtras.EnvironmentLines, withExtras.Permissions, withExtras.VendorEnv
 	if p.Push != nil {
 		proj.Push = *p.Push
 	}

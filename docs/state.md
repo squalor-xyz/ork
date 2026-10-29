@@ -92,16 +92,48 @@ Notes on the fields:
   `ork projects set NAME --ui-doc PATH` or by editing the file. An older ork
   refuses a registry with `ui_doc` because `Load` uses strict keys.
 - `ork projects set` (*proposed*, S161, owner decision 2026-10-27) is the only
-  way ork writes the optional fields. It changes `push`, `ui_doc`,
+  way ork writes the optional per-project fields. It changes `push`, `ui_doc`,
   `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`,
-  `cap` and `budgets.minutes` and `budgets.tokens`, and leaves every other
-  key as it was (`name`, `path`, `adj`, `global_cap`, `daemon_idle_minutes`,
-  `environment_lines`, `permissions` and `vendor_env` are file edits). The daemon validates each value, refuses
-  while the project has unfinished runs, and saves under its registry lock.
+  `cap`, `budgets.minutes`, `budgets.tokens` and, since S174 (*proposed*,
+  owner decision 2026-10-29), `environment_lines`, `permissions` and
+  `vendor_env`, and leaves every other key as it was (`name`, `path` and
+  `adj` are set by `projects add`; `global_cap` and `daemon_idle_minutes` are
+  file-level and belong to `ork settings set`, below). The daemon validates
+  each value, refuses while the project has unfinished runs, and saves under
+  its registry lock.
   A `ui_doc` must be a relative path inside the project (checked by name;
   symlinks are not resolved; it is stored cleaned; the file need not exist yet). A pattern must hold `{id}` or
   `{id_lower}`. Numbers must not be negative. An empty string or 0 clears
   a field (zero means unset). The command is design.md's `projects set`.
+- S174 (*proposed*) changes the three list and map fields without retyping
+  what stays. `environment_lines` is replaced as a whole by the lines given;
+  an empty list clears it. A line must hold text and be one line without a NUL
+  byte. `permissions` changes one role at a time: the role's entry is set to
+  the preset `read-only` or to the list of patterns given, or removed so the
+  default applies; a null entry also removes a role key that ork does not know
+  when the file holds it (a hand-edited typo), but setting an unknown role is
+  refused. A pattern must not be blank or hold a NUL byte or a
+  newline; the pattern syntax per vendor stays unchecked. The daemon resolves
+  each changed role with the engine's rules, so an allowlist for a read-only
+  role (reviewer, gate, architect, UI pass, spec check), a preset other than
+  `read-only` and an unknown role are refused. `vendor_env` changes one key at
+  a time: a vendor name is `[a-z0-9_-]`, a key is a shell name
+  (`[A-Za-z_][A-Za-z0-9_]*`), a value holds no NUL byte, and a vendor with no
+  keys left is removed. A hand-edited file that holds values these checks
+  refuse still loads: `Load` does not apply them.
+- `ork settings set` (*proposed*, S174, owner decision 2026-10-29) writes the
+  file-level `global_cap` and `daemon_idle_minutes`; 0 clears one. Unlike
+  `projects set` it is not refused while runs are unfinished: the cap is read
+  for every admission and the idle minutes each time the idle clock arms.
+  Raising the cap starts queued runs that now fit; lowering it never stops a
+  running one. `ork settings show` prints the stored and the effective values
+  (4 and 10 minutes when unset).
+- `vendor_env` is not a place for secrets. `projects.json` is written at mode
+  0644, so other users of the machine can read it, and ork never reads vendor
+  credentials. Use it for switches such as `VENDOR_CODEX_NETWORK`. ork's text
+  output and error messages name the keys of `vendor_env` and never a value.
+  `--json` output prints a project as the registry holds it, as `projects list
+  --json` does, so it includes the values.
 - `vendor_env` is shown as an example. The DataBall entry reflects the
   agents repo's note that Codex needs network access for `dotnet test`
   (`agents/setup/lib/workflow-vendor.sh`).
@@ -448,8 +480,10 @@ the ledger run is absent from the active snapshot. In `ork status`,
 - **One directory per run,** so parallel runs never write the same file.
 - **Strict keys:** an unknown key in `projects.json` is an error naming it;
   new fields come with a version bump (`registry.unknown-keys`).
-- **Zero means unset:** `global_cap`, `cap` and `check_minutes` of 0 read
-  as absent, and the default applies (`registry.zero-values`).
+- **Zero means unset:** `global_cap`, `daemon_idle_minutes`, `cap` and
+  `check_minutes` of 0 read as absent, and the default applies
+  (`registry.zero-values`). `ork settings set` and `ork projects set` clear a
+  value by writing 0, and ork does not write a zero value.
 - **Versioned files:** every file has a `version`, and ork refuses a
   version it does not know. `projects.json` is at version 2; ork still reads
   version 1 files, which lack `daemon_idle_minutes` and are strict about it

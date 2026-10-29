@@ -1454,3 +1454,186 @@ func TestDoctorShowsNoneRegisteredForAnEmptyRegistry(t *testing.T) {
 		}
 	})
 }
+
+// ---- projects set: env lines, permissions and vendor env (S174) ----
+
+func TestProjectsSetEnvLinePermissionAndAllowFlags(t *testing.T) {
+	keep := registry.Project{Name: "keep", Path: "/p/keep", Cap: 2, EnvironmentLines: []string{"old"},
+		Permissions: map[string]registry.Permission{"gate": {Preset: "read-only"}},
+		VendorEnv:   map[string]map[string]string{"codex": {"K": "v"}}}
+	other := registry.Project{Name: "other", Path: "/p/other", EnvironmentLines: []string{"other line"}}
+	w := newWorld(t, stubSource{}, keep, other)
+	saved := func() registry.Project {
+		t.Helper()
+		f, err := registry.Load(w.regPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(f.Projects[1], other) {
+			t.Fatalf("the other project changed: %+v", f.Projects[1])
+		}
+		return f.Projects[0]
+	}
+
+	code, stdout, stderr := run(t, w.app, "projects", "set", "keep",
+		"--env-line", "zsh on darwin", "--env-line", "Go 1.27.x",
+		"--permission", "reviewer=read-only", "--allow", "implementer=Read", "--allow", "implementer=Bash(go test*)",
+		"--vendor-env", "codex:A=1", "--vendor-env", "codex:URL=http://x?a=b")
+	want := "updated keep: environment_lines=2 lines, permissions=implementer:2 patterns; reviewer:read-only, vendor_env=codex:A,K,URL\n"
+	if code != 0 || stdout != want {
+		t.Fatalf("exit %d\nstdout: %q\nwant:   %q\nstderr: %q", code, stdout, want, stderr)
+	}
+	wantKeep := keep
+	wantKeep.EnvironmentLines = []string{"zsh on darwin", "Go 1.27.x"}
+	wantKeep.Permissions = map[string]registry.Permission{"gate": {Preset: "read-only"}, "reviewer": {Preset: "read-only"},
+		"implementer": {Allow: []string{"Read", "Bash(go test*)"}}}
+	wantKeep.VendorEnv = map[string]map[string]string{"codex": {"K": "v", "A": "1", "URL": "http://x?a=b"}}
+	if got := saved(); !reflect.DeepEqual(got, wantKeep) {
+		t.Fatalf("saved:\n got %+v\nwant %+v", got, wantKeep)
+	}
+
+	// One empty --env-line clears the list.
+	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--env-line", "")
+	if code != 0 || stdout != "updated keep: environment_lines=unset\n" {
+		t.Fatalf("clear env lines: exit %d: %q %q", code, stdout, stderr)
+	}
+	wantKeep.EnvironmentLines = nil
+	if got := saved(); !reflect.DeepEqual(got, wantKeep) {
+		t.Fatalf("after clearing env lines:\n got %+v\nwant %+v", got, wantKeep)
+	}
+
+	// One line and one pattern read in the singular.
+	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--env-line", "just one", "--allow", "implementer=Edit")
+	if code != 0 || stdout != "updated keep: environment_lines=1 line, permissions=implementer:1 pattern\n" {
+		t.Fatalf("singular: exit %d: %q %q", code, stdout, stderr)
+	}
+	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--env-line", "")
+	if code != 0 || stdout != "updated keep: environment_lines=unset\n" {
+		t.Fatalf("clear again: exit %d: %q %q", code, stdout, stderr)
+	}
+	wantKeep.Permissions["implementer"] = registry.Permission{Allow: []string{"Edit"}}
+
+	// ROLE= removes the role's entry; the other roles stay.
+	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--permission", "reviewer=")
+	if code != 0 || stdout != "updated keep: permissions=reviewer:default\n" {
+		t.Fatalf("remove a role: exit %d: %q %q", code, stdout, stderr)
+	}
+	delete(wantKeep.Permissions, "reviewer")
+	if got := saved(); !reflect.DeepEqual(got, wantKeep) {
+		t.Fatalf("after removing a role:\n got %+v\nwant %+v", got, wantKeep)
+	}
+
+	// --unset-vendor-env removes one key, then the vendor once it is empty.
+	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--unset-vendor-env", "codex:K", "--unset-vendor-env", "codex:A")
+	if code != 0 || stdout != "updated keep: vendor_env=codex:URL\n" {
+		t.Fatalf("unset keys: exit %d: %q %q", code, stdout, stderr)
+	}
+	code, stdout, _ = run(t, w.app, "projects", "set", "keep", "--unset-vendor-env", "codex:URL", "--json")
+	var res struct{ Project registry.Project }
+	mustJSON(t, stdout, &res)
+	wantKeep.VendorEnv = nil
+	if code != 0 || !reflect.DeepEqual(res.Project, wantKeep) {
+		t.Fatalf("--json after the last key: exit %d: %s", code, stdout)
+	}
+	if got := saved(); !reflect.DeepEqual(got, wantKeep) {
+		t.Fatalf("after unsetting every key:\n got %+v\nwant %+v", got, wantKeep)
+	}
+	code, stdout, _ = run(t, w.app, "projects", "set", "keep", "--unset-vendor-env", "codex:URL")
+	if code != 0 || stdout != "updated keep: vendor_env=codex:unset\n" {
+		t.Fatalf("unset a missing key: exit %d: %q", code, stdout)
+	}
+}
+
+// A hand-edited role key that ork does not know can be removed with ROLE=;
+// setting an unknown role is refused (S174, owner decision 2026-10-29).
+func TestProjectsSetRemovesAHandEditedRoleKey(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep",
+		Permissions: map[string]registry.Permission{"reviwer": {Preset: "read-only"}, "gate": {Preset: "read-only"}}})
+	code, stdout, stderr := run(t, w.app, "projects", "set", "keep", "--permission", "bogus=read-only")
+	if code != 1 || !strings.Contains(stderr, "unknown role") {
+		t.Fatalf("set an unknown role: exit %d: %q %q", code, stdout, stderr)
+	}
+	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--permission", "reviwer=")
+	if code != 0 || stdout != "updated keep: permissions=reviwer:default\n" {
+		t.Fatalf("remove the typo: exit %d: %q %q", code, stdout, stderr)
+	}
+	saved, _ := registry.Load(w.regPath)
+	if want := map[string]registry.Permission{"gate": {Preset: "read-only"}}; !reflect.DeepEqual(saved.Projects[0].Permissions, want) {
+		t.Fatalf("saved: %+v", saved.Projects[0].Permissions)
+	}
+}
+
+func TestProjectsSetNeverPrintsVendorEnvValues(t *testing.T) {
+	const secret = "s3cr3t-value"
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
+	code, stdout, stderr := run(t, w.app, "projects", "set", "keep", "--vendor-env", "codex:MYKEY="+secret)
+	if code != 0 || !strings.Contains(stdout, "MYKEY") || strings.Contains(stdout+stderr, secret) {
+		t.Fatalf("set: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	// A call the daemon refuses names the key and not the value.
+	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--vendor-env", "codex:1BAD="+secret)
+	if code != 1 || !strings.Contains(stderr, "1BAD") || strings.Contains(stdout+stderr, secret) {
+		t.Fatalf("daemon refusal: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--vendor-env", "Codex:MYKEY="+secret)
+	if code != 1 || strings.Contains(stdout+stderr, secret) {
+		t.Fatalf("daemon refusal of the vendor: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	// A usage error quotes no value, even when the flag is malformed.
+	for _, arg := range []string{secret, "MYKEY=" + secret, "codex-" + secret, "A=" + secret + ":B=c"} {
+		code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--vendor-env", arg)
+		if code != 2 || strings.Contains(stdout+stderr, secret) {
+			t.Errorf("--vendor-env %q: exit %d\nstdout: %q\nstderr: %q", arg, code, stdout, stderr)
+		}
+	}
+	// A refusal for an unfinished run names no value either.
+	if code, _, stderr := run(t, w.app, "projects", "list"); code != 0 {
+		t.Fatalf("start daemon: %s", stderr)
+	}
+	store := &runrec.Store{Dir: filepath.Join(w.paths.Dir, "runs")}
+	if _, err := store.Create(runrec.Record{ID: "busy-run", Project: "keep", State: runrec.StatePaused}); err != nil {
+		t.Fatal(err)
+	}
+	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--vendor-env", "codex:MYKEY="+secret)
+	if code != 1 || !strings.Contains(stderr, "unfinished runs") || strings.Contains(stdout+stderr, secret) {
+		t.Fatalf("busy: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+}
+
+func TestProjectsSetNewFlagUsageErrors(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
+	starts := w.starts.Load()
+	for _, tc := range []struct {
+		args []string
+		want string
+	}{
+		{[]string{"--allow", "implementer"}, "--allow wants ROLE=PATTERN"},
+		{[]string{"--allow", "=Read"}, "--allow wants ROLE=PATTERN"},
+		{[]string{"--permission", "reviewer"}, "--permission wants ROLE=read-only or ROLE="},
+		{[]string{"--permission", "=read-only"}, "--permission wants ROLE=read-only or ROLE="},
+		{[]string{"--vendor-env", "codex"}, "--vendor-env wants VENDOR:KEY=VALUE"},
+		{[]string{"--vendor-env", "codex:A"}, "--vendor-env wants VENDOR:KEY=VALUE"},
+		{[]string{"--vendor-env", "A=1"}, "--vendor-env wants VENDOR:KEY=VALUE"},
+		{[]string{"--vendor-env", ":A=1"}, "--vendor-env wants VENDOR:KEY=VALUE"},
+		{[]string{"--vendor-env", "A=1:B=2"}, "--vendor-env wants VENDOR:KEY=VALUE"},
+		{[]string{"--unset-vendor-env", "A"}, "--unset-vendor-env wants VENDOR:KEY"},
+		{[]string{"--unset-vendor-env", "codex:"}, "--unset-vendor-env wants VENDOR:KEY"},
+		{[]string{"--permission", "reviewer=read-only", "--allow", "reviewer=Read"}, "--permission and --allow both set reviewer"},
+		{[]string{"--permission", "reviewer=", "--allow", "reviewer=Read"}, "--permission and --allow both set reviewer"},
+		{[]string{"--permission", "reviewer=read-only", "--permission", "reviewer="}, "--permission names reviewer twice"},
+		{[]string{"--vendor-env", "codex:A=1", "--unset-vendor-env", "codex:A"}, "--vendor-env and --unset-vendor-env both name codex:A"},
+		{[]string{"--vendor-env", "codex:A=1", "--vendor-env", "codex:A=2"}, "--vendor-env names codex:A twice"},
+	} {
+		args := append([]string{"projects", "set", "keep"}, tc.args...)
+		code, _, stderr := run(t, w.app, args...)
+		if code != 2 || !strings.Contains(stderr, "projects set") || !strings.Contains(stderr, tc.want) {
+			t.Errorf("%v: exit %d: %q, want %q", tc.args, code, stderr, tc.want)
+		}
+	}
+	if w.starts.Load() != starts {
+		t.Fatal("a usage error started the daemon")
+	}
+	if saved, _ := registry.Load(w.regPath); !reflect.DeepEqual(saved.Projects, []registry.Project{{Name: "keep", Path: "/p/keep"}}) {
+		t.Fatalf("a refusal changed the registry: %+v", saved.Projects)
+	}
+}
