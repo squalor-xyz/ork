@@ -2207,3 +2207,5 @@
 {"when": "2026-10-29T04:07:09Z", "item": "S39", "action": "note", "from": "", "to": "", "note": "Later: the source-text check in TestWaveStartUsageSaysYAndN ", "by": "Jon R"}
 {"when": "2026-10-29T04:07:09Z", "item": "S39", "action": "status", "from": "started", "to": "done", "note": "ork run and ork wave start prompt tests catch swapped answers; usage, flag help and docs say y/n. Review and UI pass PASS after one fix round.", "by": "Jon R"}
 {"when": "2026-10-29T04:07:09Z", "item": "S39", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 36, S39): Claude sonnet-high implem", "by": "Jon R"}
+{"when": "2026-10-29T04:02:01Z", "item": "S152", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-10-29 (interactive): (1) q quit never d", "by": "Jon R"}
+{"when": "2026-10-29T04:02:01Z", "item": "S39", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (interactive): ork wave start also", "by": "Jon R"}
