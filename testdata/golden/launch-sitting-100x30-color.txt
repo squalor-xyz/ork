@@ -1,0 +1,30 @@
+[1mork[m                        │ Overview[90m │ [mQuestions[90m │ [mWaves[90m │ [m[1;36mRoadmap[m[90m │ [mDecisions
+[90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────[m
+[90m0[m Needs you              0 │[90mSpec check: 2 questions for S90[m
+[1;7;97;44m1>ork                      [m│
+[90m2[m other                    │  [90mS90  Full ninety[m
+                           │  [1;36m[S90 1/2] Which store holds the index?[m
+                           │    1. file: one JSON file
+                           │    2. memory: rebuilt at each start (recommended)
+                           │    [90mWhy 2: nothing reads it across restarts[m
+                           │    [90mDecision key: cache.index-store[m
+                           │
+                           │  [90m0 of 2 answered[m
+                           │
+                           │  [90mOwner needed: Confirm the rollout window.[m
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ 1-2 [2mpick[m; t [2mfree text[m; s/esc [2mskip the rest[m
+                           │ 2 projects | refreshed 16:42:00

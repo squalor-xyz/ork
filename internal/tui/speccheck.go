@@ -14,13 +14,36 @@ import (
 	"github.com/squalor-xyz/ork/internal/engine"
 )
 
-// The spec check in Waves (adj 164, S116). Pressing l first asks the daemon
-// to check the ticked items that are not yet known to be ready. Items that
-// come back with questions are shown in one sitting, one question at a time.
-// An item whose questions are all answered is recorded in its spec and
-// counts as ready. When the sitting ends (every question answered, or the
-// owner skipped the rest), the wave confirmation covers the ready items; the
-// others stay ticked with their questions on the row.
+// The spec check (adj 164, S116, S184) runs before Waves and Roadmap
+// launch confirmations. Open questions share one sitting. Waves confirms
+// its ready items; a Roadmap launch closes if its item is still held.
+
+// specState is the check and owner sitting shared by Waves and Roadmap launch.
+type specState struct {
+	checking      bool
+	ownerNeeded   string
+	specs         map[string]daemon.SpecItemResult
+	sitting       *specSitting
+	answerProject string
+}
+
+type specAnswerMsg struct {
+	state  *specState
+	item   string
+	answer *daemon.SpecAnswerResult
+	err    error
+}
+
+// activeSpec routes input and answer replies to the sitting that owns them.
+func (m *Model) activeSpec() (*specState, func() tea.Cmd) {
+	if m.launch != nil && m.launch.sitting != nil {
+		return &m.launch.specState, m.finishLaunchSpec
+	}
+	if m.waves != nil && m.waves.sitting != nil {
+		return &m.waves.specState, m.askLaunch
+	}
+	return nil, nil
+}
 
 // specAsk is one question of the sitting: the n-th of the item's of questions.
 type specAsk struct {
@@ -50,7 +73,7 @@ func (s *specSitting) current() *specAsk {
 // freeOnly reports whether the question has no options to pick from.
 func (a specAsk) freeOnly() bool { return a.q.Ask == nil || len(a.q.Ask.Options) == 0 }
 
-func (w *wavesState) specReady(id string) bool {
+func (w *specState) specReady(id string) bool {
 	r, ok := w.specs[id]
 	return ok && r.Ready
 }
@@ -94,6 +117,7 @@ func (m *Model) applyCheck(msg wavesMsg) tea.Cmd {
 		m.actionStatus = "No spec check returned"
 		return nil
 	}
+	w.answerProject = w.project
 	w.ownerNeeded = msg.check.OwnerNeeded
 	if w.specs == nil {
 		w.specs = map[string]daemon.SpecItemResult{}
@@ -141,8 +165,8 @@ func (m *Model) askLaunch() tea.Cmd {
 	return nil
 }
 
-func (m *Model) sittingKey(msg tea.KeyPressMsg) tea.Cmd {
-	s := m.waves.sitting
+func (m *Model) sittingKey(state *specState, done func() tea.Cmd, msg tea.KeyPressMsg) tea.Cmd {
+	s := state.sitting
 	if msg.String() == "ctrl+c" {
 		return tea.Quit
 	}
@@ -157,10 +181,10 @@ func (m *Model) sittingKey(msg tea.KeyPressMsg) tea.Cmd {
 				s.free = false
 				return nil
 			}
-			return m.endSitting()
+			return m.endSitting(state, done)
 		case "enter":
 			if text := strings.TrimSpace(s.input.Value()); text != "" {
-				return m.answerSitting(text)
+				return m.answerSitting(state, done, text)
 			}
 		default:
 			s.input.update(msg)
@@ -169,14 +193,14 @@ func (m *Model) sittingKey(msg tea.KeyPressMsg) tea.Cmd {
 	}
 	switch k := msg.String(); k {
 	case "esc", "s":
-		return m.endSitting()
+		return m.endSitting(state, done)
 	case "t":
 		s.free = true
 		s.input = textField{}
 	default:
 		if n, err := strconv.Atoi(k); err == nil && n >= 1 && n <= len(ask.q.Ask.Options) {
 			o := ask.q.Ask.Options[n-1]
-			return m.answerSitting(o.Label + ": " + o.Summary)
+			return m.answerSitting(state, done, o.Label+": "+o.Summary)
 		}
 	}
 	return nil
@@ -184,8 +208,7 @@ func (m *Model) sittingKey(msg tea.KeyPressMsg) tea.Cmd {
 
 // answerSitting takes the answer to the current question. The last answer of
 // an item records them all in the item's spec.
-func (m *Model) answerSitting(text string) tea.Cmd {
-	w := m.waves
+func (m *Model) answerSitting(w *specState, done func() tea.Cmd, text string) tea.Cmd {
 	s := w.sitting
 	ask := *s.current()
 	s.answers[ask.item] = append(s.answers[ask.item], text)
@@ -196,7 +219,7 @@ func (m *Model) answerSitting(text string) tea.Cmd {
 	if ask.n == ask.of {
 		s.recording++
 		answers := s.answers[ask.item]
-		live, request, project := m.cfg.Live, w.request, w.project
+		live, project := m.cfg.Live, w.answerProject
 		params := daemon.SpecAnswerParams{Project: project, Item: ask.item, Answers: answers, By: os.Getenv("ADJ_DECIDED_BY")}
 		if ps := m.byName[project]; ps != nil {
 			params.Adj = ps.reg.Adj
@@ -204,7 +227,7 @@ func (m *Model) answerSitting(text string) tea.Cmd {
 		// The owner's answers are written even if the view changes meanwhile.
 		record = func() tea.Msg {
 			res, err := live.SpecAnswer(context.Background(), params)
-			return wavesMsg{request: request, kind: "answer", item: params.Item, answer: res, err: err}
+			return specAnswerMsg{state: w, item: params.Item, answer: res, err: err}
 		}
 	}
 	if next := s.current(); next != nil {
@@ -212,29 +235,27 @@ func (m *Model) answerSitting(text string) tea.Cmd {
 		return record
 	}
 	s.ended = true
-	return tea.Batch(record, m.finishSitting())
+	return tea.Batch(record, m.finishSitting(w, done))
 }
 
 // endSitting skips the questions that are left.
-func (m *Model) endSitting() tea.Cmd {
-	m.waves.sitting.ended = true
-	return m.finishSitting()
+func (m *Model) endSitting(w *specState, done func() tea.Cmd) tea.Cmd {
+	w.sitting.ended = true
+	return m.finishSitting(w, done)
 }
 
 // finishSitting closes the sitting once it has ended and every answer is
 // recorded, and goes on to the confirmation of the ready items.
-func (m *Model) finishSitting() tea.Cmd {
-	w := m.waves
+func (m *Model) finishSitting(w *specState, done func() tea.Cmd) tea.Cmd {
 	if s := w.sitting; s == nil || !s.ended || s.recording > 0 {
 		return nil
 	}
 	w.sitting = nil
-	return m.askLaunch()
+	return done()
 }
 
 // applyAnswer marks the item ready once its answers are in its spec.
-func (m *Model) applyAnswer(msg wavesMsg) tea.Cmd {
-	w := m.waves
+func (m *Model) applyAnswer(w *specState, done func() tea.Cmd, msg specAnswerMsg) tea.Cmd {
 	if s := w.sitting; s != nil {
 		s.recording--
 	}
@@ -250,7 +271,7 @@ func (m *Model) applyAnswer(msg wavesMsg) tea.Cmd {
 			m.actionStatus = strings.Join(msg.answer.Notices, "; ")
 		}
 	}
-	return m.finishSitting()
+	return m.finishSitting(w, done)
 }
 
 // specNote is the row's note on its spec check: ready, or the open questions
@@ -277,10 +298,9 @@ func (w *wavesState) heldWithQuestions() bool {
 }
 
 // sittingParts draws the sitting in place of the table.
-func (m *Model) sittingParts(width int) (overviewView, []string) {
+func (m *Model) sittingParts(w *specState, width int) (overviewView, []string) {
 	out := overviewView{sel: -1}
 	th := m.cfg.Theme
-	w := m.waves
 	s := w.sitting
 	add := func(style func(...string) string, text string, extra string) {
 		for _, line := range wrapText(text, max(width-len(indent), 1)) {
@@ -310,9 +330,17 @@ func (m *Model) sittingParts(width int) (overviewView, []string) {
 		return out, nil
 	}
 	title := ""
-	for _, row := range w.rows() {
-		if row.ID == ask.item {
-			title = row.Title
+	if m.view == wavesView && m.waves != nil {
+		for _, row := range m.waves.rows() {
+			if row.ID == ask.item {
+				title = row.Title
+			}
+		}
+	} else {
+		for _, row := range m.readyLaunchItems() {
+			if row.ID == ask.item {
+				title = row.Title
+			}
 		}
 	}
 	out.body = append(out.body, "")

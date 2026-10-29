@@ -372,7 +372,7 @@ func TestSittingHeadingAndQuestionTitleStylesDiffer(t *testing.T) {
 	// Mark the styles without depending on terminal color detection.
 	h.m.cfg.Theme.Heading = lipgloss.NewStyle().SetString("HEADING ")
 	h.m.cfg.Theme.Dim = lipgloss.NewStyle().SetString("DIM ")
-	out, _ := h.m.sittingParts(80)
+	out, _ := h.m.sittingParts(&h.m.waves.specState, 80)
 	heading, title := "", ""
 	for _, line := range out.body {
 		if strings.Contains(line, "Spec check:") {
@@ -418,7 +418,7 @@ func TestLongSpecOwnerTextFollowsTheQuestionAt80x24(t *testing.T) {
 			t.Errorf("%s hidden:\n%s", text, v)
 		}
 	}
-	parts, _ := h.m.sittingParts(60)
+	parts, _ := h.m.sittingParts(&h.m.waves.specState, 60)
 	body := sgr.ReplaceAllString(strings.Join(parts.body, "\n"), "")
 	if strings.Index(body, "Owner needed:") < strings.Index(body, "0 of 2 answered") {
 		t.Errorf("owner text precedes progress:\n%s", body)

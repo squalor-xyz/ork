@@ -221,6 +221,7 @@ func (m *Model) contextHelp() []key.Binding {
 // launchRefusal, waveLaunchRefusal, tickRefusal) lets it through, so the hint
 // never offers a key the row refuses.
 func (m *Model) contextHints() []hintEntry {
+	spec, _ := m.activeSpec()
 	k := m.keys
 	var l hintList
 	// Elsewhere than in a pane the way out is ? help, at the right end.
@@ -259,8 +260,8 @@ func (m *Model) contextHints() []hintEntry {
 		if m.confirm.verb == "launch" {
 			l.add(dropRow, short(k.EditLineup, "e", "edit lineup"))
 		}
-	case m.waves != nil && m.waves.sitting != nil:
-		sitting := m.waves.sitting
+	case spec != nil:
+		sitting := spec.sitting
 		if ask := sitting.current(); ask != nil {
 			if sitting.free {
 				l.add(dropRow, offer(strings.TrimSpace(sitting.input.Value()) != "", k.Answer, "enter", "submit"))

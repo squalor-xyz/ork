@@ -183,9 +183,19 @@ failing tests, steps and checks is "well specified".
 open the list of ready slices, move to one and press `enter`. Answer the two
 questions (well specified, split; `enter` moves to the next field), read the
 plan (worktree, branch, check command and lineup, plus budgets when overridden).
+Before confirmation, ork runs the spec check. `pending: spec.check` appears
+in the launch body only; the status line stays empty. Questions use the same
+sitting as Waves: pick with `1`-`N`, or press `t`, type an answer and press
+`enter`.
+The last answer is recorded before confirmation. `s` or `esc` skips the rest
+and closes the launch with `ITEM waits on N spec questions; l checks again`.
+A failed check also blocks launch; there is no skip key. A refusal shows its
+message without `refused:`; other errors keep their code.
 Press `e` at the
 confirmation to edit the lineup and budgets, `enter` to save and replan, or
-`esc` to discard. Press `y` at the confirmation to start (`docs/dashboard.md:1300-1305`, `internal/tui/keys.go:294-307`).
+`esc` to discard. Replanning an edited lineup does not repeat the spec check.
+Press `y` at the confirmation to start (`docs/dashboard.md:1364-1392`,
+`internal/tui/keys.go:258-262`).
 
 **On the command line.**
 
@@ -246,9 +256,10 @@ suggested waves. For each item you want:
 3. Press `l` to launch. ork first runs the spec check over every ticked item.
    If it has questions, they come one at a time: `1`-`4` picks an option, `t`
    types an answer, `s` or `esc` skips the rest. Items with open questions are
-   held back.
+   held back. The Roadmap launch uses the same sitting for one slice
+   (section 7); skipping closes that launch.
 4. Confirm with `y`. The status line shows `ork wave start PROJECT ID...`
-   (`docs/dashboard.md:1041-1215`, `internal/tui/keys.go:253-293`).
+   (`docs/dashboard.md:1177-1213`, `internal/tui/keys.go:258-277`).
 
 **On the command line.**
 

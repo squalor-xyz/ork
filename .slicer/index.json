@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 193,
+  "next_id": 194,
   "preamble": "",
   "passes": [
     {
@@ -8871,7 +8871,7 @@
       "id": "S184",
       "title": "Roadmap launch runs the spec check before the confirmation",
       "short_title": "Launch spec check sitting",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S167",
@@ -8907,7 +8907,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -9220,6 +9220,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S174",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S193",
+      "title": "S184 later notes: guide anchors, lost answer error, retry wording",
+      "short_title": "S184 later notes: guide anchors, lost answer error, retry wording",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "dc692080-56aa-4164-89fe-7aff91c1d205",
+          "kind": "",
+          "text": "**2026-10-29** — From the S184 review, UI pass and gate (2026-10-29), all later: (1) re-anchor the docs/guide.md citations into docs/design.md (lines 57, 64, 70, 77, 92, 95, 118) after S184 and S174; (2) a failed spec.answer write after the launch was dropped shows no status; (3) 'l checks again' is terse (l reopens the whole launch flow); (4) after an answer-write failure the status says the slice waits on N spec questions although all were answered; (5) the sitting shows the full slice title while the Roadmap row shows the short title (same as Waves).",
+          "created_at": "2026-10-29T23:26:24Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S184",
         "parent": "",
         "cites": [],
         "key": "",
