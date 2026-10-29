@@ -695,7 +695,7 @@ func TestHintBarUsesTheScreensOwnWords(t *testing.T) {
 // the rest, so the hint does not repeat "enter is no".
 func TestHintBarConfirmNamesWhatYDoes(t *testing.T) {
 	for verb, want := range map[string]string{
-		"launch": "y run; n cancel", "wave": "y start; n cancel", "approve": "y approve; n cancel",
+		"launch": "y run; n cancel; e edit lineup", "wave": "y start; n cancel", "approve": "y approve; n cancel",
 		"stop": "y stop; n cancel", "retry": "y retry; n cancel", "cleanup": "y clean up; n cancel",
 		"answer": "y send; n cancel", "file": "y file; n cancel", "other": "y confirm; n cancel",
 	} {
@@ -1254,5 +1254,17 @@ func TestWavesHintHoldsEditLineupAt100x30(t *testing.T) {
 	}
 	if strings.Contains(hint, "launch wave") {
 		t.Errorf("the Waves hint still says launch wave: %q", hint)
+	}
+}
+
+func TestLineupHelpIncludesLaunchAndConfirmReusesBinding(t *testing.T) {
+	h, _ := launchHarness(t)
+	if got := h.m.keys.EditLineup.Help().Desc; got != "edit lineup (Waves, launch)" {
+		t.Errorf("help: %q", got)
+	}
+	launchConfirmed(t, h)
+	h.m.keys.EditLineup.SetEnabled(false)
+	if hint := hintLine(h.view()); strings.Contains(hint, "e edit lineup") {
+		t.Errorf("confirmation ignored disabled shared binding: %s", hint)
 	}
 }

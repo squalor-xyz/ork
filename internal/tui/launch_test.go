@@ -29,7 +29,8 @@ type launchLive struct {
 
 func (l *launchLive) Plan(_ context.Context, p daemon.RunParams) (*daemon.RunPlan, error) {
 	l.plans = append(l.plans, p)
-	return &l.plan, l.planErr
+	plan := l.plan
+	return &plan, l.planErr
 }
 func (l *launchLive) Start(_ context.Context, p daemon.RunParams) (runrec.Record, error) {
 	l.starts = append(l.starts, p)
@@ -746,5 +747,280 @@ func TestLaunchPlanShowsUIPassRow(t *testing.T) {
 		if strings.Contains(h.view(), "ui: claude opus medium") != present {
 			t.Fatalf("present=%v: %s", present, h.view())
 		}
+	}
+}
+
+func openTestLaunchLineup(t *testing.T, h *harness) {
+	t.Helper()
+	h.m.Update(press("e"))
+	if !strings.Contains(h.view(), "Edit lineup: S90") {
+		t.Fatalf("editor not opened:\n%s", h.view())
+	}
+}
+func TestLaunchConfirmEKeyOpensLineupEditor(t *testing.T) {
+	h, l := launchHarness(t)
+	launchConfirmed(t, h)
+	old := h.m.confirm
+	openTestLaunchLineup(t, h)
+	if !strings.Contains(h.view(), "Codex gpt high") || h.m.confirm != nil {
+		t.Fatal("editor not seeded or confirmation still open")
+	}
+	h.m.Update(press("esc"))
+	if h.m.confirm == nil || !reflect.DeepEqual(h.m.confirm, old) || len(l.plans) != 1 {
+		t.Fatal("discard changed confirmation or planned")
+	}
+}
+func editTestLaunchLineup(t *testing.T, h *harness) tea.Cmd {
+	t.Helper()
+	openTestLaunchLineup(t, h)
+	changeImplementer(h)
+	for range 3 {
+		h.m.Update(press("down"))
+	}
+	replaceLineupField(h, "20")
+	_, cmd := h.m.Update(press("enter"))
+	if cmd == nil {
+		t.Fatal("save did not replan")
+	}
+	return cmd
+}
+func TestLaunchLineupSaveReplansWithOverrides(t *testing.T) {
+	h, l := launchHarness(t)
+	launchConfirmed(t, h)
+	cmd := editTestLaunchLineup(t, h)
+	if len(l.plans) != 1 || !strings.Contains(h.view(), "pending: run.plan") {
+		t.Fatal("missing pending or synchronous Plan")
+	}
+	msg := cmd()
+	if len(l.plans) != 2 {
+		t.Fatalf("plans %d", len(l.plans))
+	}
+	p := l.plans[1]
+	if p.Lineup["implementer"][0].Model != "custom-model" || p.Budgets == nil || p.Budgets.Minutes != 20 {
+		t.Fatalf("params: %+v", p)
+	}
+	h.m.Update(msg)
+	if h.m.confirm == nil || !strings.Contains(h.view(), "lineup edited") {
+		t.Fatal("new confirmation missing")
+	}
+}
+func TestLaunchLineupReplanErrorKeepsOldPlan(t *testing.T) {
+	for _, priorEdit := range []bool{false, true} {
+		t.Run(fmt.Sprint(priorEdit), func(t *testing.T) {
+			h, l := launchHarness(t)
+			launchConfirmed(t, h)
+			if priorEdit {
+				cmd := editTestLaunchLineup(t, h)
+				l.plan.Lineup = map[string][]runrec.LineupEntry{"implementer": {{Vendor: "Codex", Model: "custom-model", Effort: "high"}}}
+				l.plan.Budgets = registry.Budgets{Minutes: 20}
+				h.m.Update(cmd())
+			}
+			old := *h.m.confirm
+			l.planErr = &ipc.Error{Code: "bad_params", Message: "Exact override failure."}
+			openTestLaunchLineup(t, h)
+			changeImplementer(h)
+			for range 3 {
+				h.m.Update(press("down"))
+			}
+			replaceLineupField(h, "30")
+			_, cmd := h.m.Update(press("enter"))
+			if cmd == nil {
+				t.Fatal("missing replan")
+			}
+			h.m.Update(cmd())
+			if !strings.Contains(h.view(), "bad_params: Exact override failure.") || !reflect.DeepEqual(h.m.confirm, &old) {
+				t.Fatalf("old confirmation/error lost:\n%s", h.view())
+			}
+			_, start := h.m.Update(press("y"))
+			if start == nil {
+				t.Fatal("old plan cannot start")
+			}
+			start()
+			if len(l.starts) != 1 || l.starts[0].Expected != old.plan || !reflect.DeepEqual(l.starts[0].Lineup, old.lineup) || !reflect.DeepEqual(l.starts[0].Budgets, old.budgets) {
+				t.Fatalf("start: %+v", l.starts)
+			}
+		})
+	}
+}
+func TestLaunchStartCarriesOverridesAndEditedPlan(t *testing.T) {
+	h, l := launchHarness(t)
+	launchConfirmed(t, h)
+	cmd := editTestLaunchLineup(t, h)
+	edited := l.plan
+	edited.Branch = "edited"
+	edited.Lineup = map[string][]runrec.LineupEntry{"implementer": {{Vendor: "Codex", Model: "custom-model", Effort: "high"}}}
+	edited.Budgets = registry.Budgets{Minutes: 20}
+	l.plan = edited
+	h.m.Update(cmd())
+	_, start := h.m.Update(press("y"))
+	if start == nil {
+		t.Fatal("no Start")
+	}
+	start()
+	if len(l.starts) != 1 {
+		t.Fatal("no start call")
+	}
+	p := l.starts[0]
+	if p.Lineup["implementer"][0].Model != "custom-model" || p.Budgets == nil || p.Budgets.Minutes != 20 || !reflect.DeepEqual(p.Expected, &edited) {
+		t.Fatalf("start: %+v", p)
+	}
+}
+func TestLaunchUnchangedEditorDoesNotPlan(t *testing.T) {
+	h, l := launchHarness(t)
+	launchConfirmed(t, h)
+	openTestLaunchLineup(t, h)
+	_, cmd := h.m.Update(press("enter"))
+	if cmd != nil || len(l.plans) != 1 || h.m.confirm == nil {
+		t.Fatal("unchanged save planned or lost confirmation")
+	}
+}
+func TestLaunchLineupGolden(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		h, _ := launchHarness(t)
+		h.m.cfg.Theme = NewTheme(mono)
+		launchConfirmed(t, h)
+		openTestLaunchLineup(t, h)
+		theme := "color"
+		if mono {
+			theme = "mono"
+		}
+		h.at(100, 30)
+		checkGolden(t, "launch-lineup-100x30-"+theme+".txt", h.m.View().Content)
+	}
+}
+
+func TestLaunchBudgetOnlyEditShowsEffectiveBudgets(t *testing.T) {
+	for _, value := range []string{"20", "0"} {
+		t.Run(value, func(t *testing.T) {
+			h, l := launchHarness(t)
+			l.plan.Budgets = registry.Budgets{Minutes: 45, Tokens: 9000}
+			launchConfirmed(t, h)
+			if strings.Contains(h.view(), "budgets:") {
+				t.Fatal("unoverridden budget shown")
+			}
+			openTestLaunchLineup(t, h)
+			for range 3 {
+				h.m.Update(press("down"))
+			}
+			replaceLineupField(h, value)
+			_, cmd := h.m.Update(press("enter"))
+			if cmd == nil {
+				t.Fatal("missing budget replan")
+			}
+			if value == "20" {
+				l.plan.Budgets.Minutes = 20
+			}
+			h.m.Update(cmd())
+			p := l.plans[len(l.plans)-1]
+			if p.Lineup != nil || p.Budgets == nil {
+				t.Fatalf("not a budget-only edit: %+v", p)
+			}
+			row := fmt.Sprintf("budgets: %d min, 9000 tokens", l.plan.Budgets.Minutes)
+			if !strings.Contains(h.view(), row) {
+				t.Fatalf("effective budget missing: %s", h.view())
+			}
+		})
+	}
+}
+
+type replanContextLive struct {
+	*launchLive
+	planContext context.Context
+}
+
+func (l *replanContextLive) Plan(ctx context.Context, p daemon.RunParams) (*daemon.RunPlan, error) {
+	l.planContext = ctx
+	return l.launchLive.Plan(ctx, p)
+}
+
+func TestLaunchPendingReplanEscRestoresConfirmation(t *testing.T) {
+	for _, priorEdit := range []bool{false, true} {
+		t.Run(fmt.Sprint(priorEdit), func(t *testing.T) {
+			h, l := launchHarness(t)
+			launchConfirmed(t, h)
+			if priorEdit {
+				cmd := editTestLaunchLineup(t, h)
+				l.plan.Lineup = map[string][]runrec.LineupEntry{"implementer": {{Vendor: "Codex", Model: "custom-model", Effort: "high"}}}
+				l.plan.Budgets = registry.Budgets{Minutes: 20}
+				h.m.Update(cmd())
+			}
+			old := *h.m.confirm
+			live := &replanContextLive{launchLive: l}
+			h.m.cfg.Live = live
+			openTestLaunchLineup(t, h)
+			for range 3 {
+				h.m.Update(press("down"))
+			}
+			replaceLineupField(h, "30")
+			_, cmd := h.m.Update(press("enter"))
+			if cmd == nil {
+				t.Fatal("no replan command")
+			}
+			if !strings.Contains(hintLine(h.view()), "esc back") {
+				t.Errorf("pending replan hint: %s", hintLine(h.view()))
+			}
+			late := cmd()
+			h.m.Update(press("esc"))
+			if h.m.launch == nil || !reflect.DeepEqual(h.m.confirm, &old) {
+				t.Fatal("Esc lost previous confirmation")
+			}
+			if live.planContext.Err() != context.Canceled {
+				t.Fatal("replan context not cancelled")
+			}
+			h.m.Update(late)
+			if !reflect.DeepEqual(h.m.confirm, &old) || h.m.confirm.plan != old.plan {
+				t.Fatal("late reply changed confirmation")
+			}
+			_, start := h.m.Update(press("y"))
+			if start == nil {
+				t.Fatal("old plan cannot start")
+			}
+			start()
+			if len(l.starts) != 1 || !reflect.DeepEqual(l.starts[0], daemon.RunParams{Project: "ork", Item: "S90", WellSpecified: true, Expected: old.plan, Lineup: old.lineup, Budgets: old.budgets}) {
+				t.Fatalf("old params lost: %+v", l.starts)
+			}
+		})
+	}
+}
+
+func TestLaunchCancelledReplanLateReplyIgnored(t *testing.T) {
+	for _, fail := range []bool{false, true} {
+		t.Run(fmt.Sprint(fail), func(t *testing.T) {
+			h, l := launchHarness(t)
+			launchConfirmed(t, h)
+			cmd := editTestLaunchLineup(t, h)
+			if fail {
+				l.planErr = errors.New("cancelled replan error")
+			}
+			late := cmd()
+			l.planErr = nil
+			h.m.Update(press("esc"))
+			if h.m.confirm == nil {
+				t.Fatal("Esc dropped launch")
+			}
+			cmd2 := editTestLaunchLineup(t, h)
+			request := h.m.launch.request
+			h.m.Update(late)
+			if h.m.launch == nil || h.m.launch.stage != launchPlanPending || h.m.launch.request != request || h.m.confirm != nil || strings.Contains(h.view(), "cancelled replan error") {
+				t.Fatal("cancelled reply affected newer pending replan")
+			}
+			h.m.Update(cmd2())
+			if h.m.confirm == nil {
+				t.Fatal("new replan lost")
+			}
+		})
+	}
+}
+
+func TestLaunchFirstPlanEscStillCancels(t *testing.T) {
+	h, _ := launchHarness(t)
+	cmd := launchPlanning(t, h)
+	if !strings.Contains(hintLine(h.view()), "esc cancel") {
+		t.Fatal("first plan hint changed")
+	}
+	h.m.Update(press("esc"))
+	h.m.Update(cmd())
+	if h.m.launch != nil || h.m.confirm != nil || !strings.Contains(h.view(), "Cancelled") {
+		t.Fatal("first plan Esc did not cancel")
 	}
 }

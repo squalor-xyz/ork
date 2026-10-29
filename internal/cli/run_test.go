@@ -8,11 +8,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -414,7 +416,7 @@ func TestPlanTextShowsTheArchitectRow(t *testing.T) {
 			plan.Lineup["architect"] = []runrec.LineupEntry{{Vendor: "codex", Model: "sol", Effort: "high"}}
 		}
 		var out bytes.Buffer
-		printRunPlan(&out, plan)
+		printRunPlan(&out, plan, false)
 		if strings.Contains(out.String(), "architect: codex sol high") != present {
 			t.Fatalf("present=%v: %s", present, out.String())
 		}
@@ -431,7 +433,7 @@ func TestPlanShowsUIPassRow(t *testing.T) {
 			plan.Permissions["ui"] = engine.Permission{ReadOnly: true}
 		}
 		var out bytes.Buffer
-		printRunPlan(&out, plan)
+		printRunPlan(&out, plan, false)
 		if strings.Contains(out.String(), "ui: claude opus medium\n  permissions: read-only") != present {
 			t.Fatalf("present=%v: %s", present, out.String())
 		}
@@ -448,13 +450,169 @@ func TestPrintRunPlanShowsTheNote(t *testing.T) {
 			plan.Note = note
 		}
 		var out bytes.Buffer
-		printRunPlan(&out, plan)
+		printRunPlan(&out, plan, false)
 		got := out.String()
 		if strings.Contains(got, "note:") != present {
 			t.Fatalf("present=%v: %s", present, got)
 		}
 		if present && !strings.HasSuffix(got, "\nnote: "+note+"\n") {
 			t.Errorf("the note does not follow the plan lines: %q", got)
+		}
+	}
+}
+
+// overrideRun records the wire params without starting a daemon or vendor.
+func overrideRun(t *testing.T, flags ...string) ([]daemon.RunParams, string) {
+	t.Helper()
+	var calls []daemon.RunParams
+	app := &App{Call: func(_ context.Context, method string, params, result any) error {
+		p := params.(daemon.RunParams)
+		calls = append(calls, p)
+		if method == daemon.MethodRunPlan {
+			*result.(*daemon.RunPlan) = daemon.RunPlan{Item: p.Item, Lineup: p.Lineup}
+		} else if method != daemon.MethodRunStart {
+			t.Fatalf("method %s", method)
+		}
+		return nil
+	}}
+	args := append([]string{"run", "p", "S1", "--yes", "--well-specified", "y", "--split", "n"}, flags...)
+	code, out, errs := run(t, app, args...)
+	if code != 0 {
+		t.Fatalf("exit %d: %s %s", code, out, errs)
+	}
+	if len(calls) != 2 || calls[1].Expected == nil || calls[1].Expected.Item != "S1" {
+		t.Fatalf("calls: %+v", calls)
+	}
+	return calls, out
+}
+func TestRunLineupFlagsSendLineupOnPlanAndStart(t *testing.T) {
+	calls, out := overrideRun(t, "--implementer", "codex:gpt-6.1-sol:medium", "--implementer", "claude:sonnet:high", "--reviewer", "claude:model:with:colons:high")
+	for _, p := range calls {
+		chain := p.Lineup["implementer"]
+		if len(chain) != 2 || chain[0].Model != "gpt-6.1-sol" || chain[1].Vendor != "claude" || p.Lineup["reviewer"][0].Model != "model:with:colons" {
+			t.Fatalf("lineup: %+v", p.Lineup)
+		}
+	}
+	if !strings.Contains(out, "implementer: codex gpt-6.1-sol medium") || !strings.Contains(out, "implementer: claude sonnet high") {
+		t.Fatal(out)
+	}
+	if !reflect.DeepEqual(calls[1].Expected.Lineup, calls[0].Lineup) {
+		t.Fatal("Expected lost printed lineup")
+	}
+}
+func TestRunArchitectOffSendsEmptyArchitect(t *testing.T) {
+	calls, _ := overrideRun(t, "--architect", "off")
+	for _, p := range calls {
+		raw, _ := json.Marshal(p)
+		if !strings.Contains(string(raw), `"architect":[]`) {
+			t.Fatalf("wire: %s", raw)
+		}
+	}
+}
+func TestRunBudgetFlagsSendBudgets(t *testing.T) {
+	calls, _ := overrideRun(t, "--budget-minutes", "20", "--budget-tokens", "0")
+	for _, p := range calls {
+		if p.Budgets == nil || p.Budgets.Minutes != 20 || p.Budgets.Tokens != 0 {
+			t.Fatalf("budgets: %+v", p.Budgets)
+		}
+	}
+}
+func TestRunWithoutLineupFlagsSendsNoOverrides(t *testing.T) {
+	calls, _ := overrideRun(t)
+	raw, _ := json.Marshal(calls[0])
+	if strings.Contains(string(raw), `"lineup"`) || strings.Contains(string(raw), `"budgets"`) {
+		t.Fatal(string(raw))
+	}
+}
+func TestRunLineupFlagUsageErrors(t *testing.T) {
+	for _, flags := range [][]string{{"--implementer", "codex:sol"}, {"--reviewer", "claude::high"}, {"--implementer", ":sol:high"}, {"--reviewer", "claude:opus:"}, {"--architect", "off", "--architect", "codex:sol:high"}, {"--architect", "codex:sol:high", "--architect", "off"}, {"--budget-minutes", "-1"}, {"--budget-tokens", "-1"}} {
+		for _, base := range [][]string{{"run", "p", "S1"}, {"wave", "start", "p", "S1", "S2"}} {
+			app := &App{Call: func(context.Context, string, any, any) error { t.Fatal("daemon called for invalid flags"); return nil }}
+			args := append(append([]string{}, base...), flags...)
+			code, _, errs := run(t, app, args...)
+			if code != ExitUsage || errs == "" || strings.Contains(errs, "flag provided but not defined") {
+				t.Fatalf("%v: exit %d %s", args, code, errs)
+			}
+		}
+	}
+}
+
+func TestLaunchUsageFitsEightyColumns(t *testing.T) {
+	for _, line := range strings.Split(usageText, "\n") {
+		if len(line) > 80 {
+			t.Errorf("usage line has %d columns: %s", len(line), line)
+		}
+	}
+}
+
+func TestLineupErrorsNameCommandAndFlags(t *testing.T) {
+	for _, base := range [][]string{{"run", "p", "S1"}, {"wave", "start", "p", "S1", "S2"}} {
+		name := "run"
+		if base[0] == "wave" {
+			name = "wave start"
+		}
+		for _, tc := range []struct {
+			flags   []string
+			message string
+		}{
+			{[]string{"--implementer", "bad"}, "--implementer requires VENDOR:MODEL:EFFORT"},
+			{[]string{"--architect", "bad"}, "--architect requires VENDOR:MODEL:EFFORT or off"},
+			{[]string{"--architect", "off", "--architect", "codex:sol:high"}, "--architect off cannot be combined with an entry"},
+			{[]string{"--budget-minutes", "-1"}, "--budget-minutes and --budget-tokens must be zero or more"},
+			{[]string{"--budget-tokens", "-1"}, "--budget-minutes and --budget-tokens must be zero or more"},
+		} {
+			app := &App{Call: func(context.Context, string, any, any) error { t.Fatal("invalid flags called daemon"); return nil }}
+			code, _, errs := run(t, app, append(append([]string{}, base...), tc.flags...)...)
+			want := "ork: " + name + ": " + tc.message + "\n"
+			if code != ExitUsage || !strings.HasPrefix(errs, want) {
+				t.Errorf("%v: exit %d errors %q want prefix %q", tc.flags, code, errs, want)
+			}
+		}
+	}
+}
+
+func TestRunAndWavePlanShowOnlyOverriddenBudgets(t *testing.T) {
+	for _, wave := range []bool{false, true} {
+		for _, flags := range [][]string{nil, {"--budget-minutes", "20"}, {"--budget-minutes", "0", "--budget-tokens", "0"}} {
+			t.Run(fmt.Sprint(wave, flags), func(t *testing.T) {
+				effective := registry.Budgets{Minutes: 45, Tokens: 9000}
+				if len(flags) == 2 {
+					effective.Minutes = 20
+				}
+				var out, errs bytes.Buffer
+				app := &App{Input: strings.NewReader("y\nn\nn\n"), Call: func(_ context.Context, method string, params, result any) error {
+					switch method {
+					case daemon.MethodRunPlan:
+						*result.(*daemon.RunPlan) = daemon.RunPlan{Item: "S1", Budgets: effective}
+					case "spec.check":
+						return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true}]}`), result)
+					default:
+						t.Fatalf("unexpected %s", method)
+					}
+					return nil
+				}}
+				base := []string{"run", "p", "S1"}
+				prompt := "Start this slice?"
+				if wave {
+					base = []string{"wave", "start", "p", "S1"}
+					prompt = "Start this wave?"
+				}
+				code := app.Run(context.Background(), append(base, flags...), &out, &errs)
+				text := out.String()
+				row := fmt.Sprintf("budgets: %d min, %d tokens", effective.Minutes, effective.Tokens)
+				if code != ExitOK {
+					t.Fatal(code, errs.String())
+				}
+				if len(flags) == 0 {
+					if strings.Contains(text, "budgets:") {
+						t.Fatal(text)
+					}
+				} else {
+					if !strings.Contains(text, row) || strings.Index(text, row) > strings.Index(text, prompt) {
+						t.Fatalf("budget row absent or after confirmation: %s", text)
+					}
+				}
+			})
 		}
 	}
 }

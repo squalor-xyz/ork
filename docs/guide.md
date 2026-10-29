@@ -138,7 +138,13 @@ for is skipped; ork runs `claude` and `codex` only (`docs/design.md:181-185`).
 
 At launch you can change the lineup and the budgets for that one run. The
 matrix stays as it was (`docs/design.md:170-175`). In the TUI the key is `e`
-on the Waves view (section 9). On the command line there is no flag for it.
+on the Waves view (section 9), or at the Roadmap launch confirmation.
+On the command line, `--implementer`, `--reviewer` and `--architect` take
+`VENDOR:MODEL:EFFORT`. Repeat a role flag to give its whole chain, primary
+first; `--architect off` alone drops that role. Gate follows reviewer and the
+UI pass stays from the matrix. `--budget-minutes N` and `--budget-tokens N`
+set run budgets; zero uses the project default. On `ork wave start`, these
+flags apply to every selected item.
 
 ## 7. Run one slice
 
@@ -148,8 +154,10 @@ failing tests, steps and checks is "well specified".
 **In the TUI.** Open the Roadmap view and select the project. Press `l` to
 open the list of ready slices, move to one and press `enter`. Answer the two
 questions (well specified, split; `enter` moves to the next field), read the
-plan (worktree, branch, check command, budgets, lineup) and press `y` to
-start (`docs/dashboard.md:1300-1305`, `internal/tui/keys.go:294-307`).
+plan (worktree, branch, check command and lineup, plus budgets when overridden).
+Press `e` at the
+confirmation to edit the lineup and budgets, `enter` to save and replan, or
+`esc` to discard. Press `y` at the confirmation to start (`docs/dashboard.md:1300-1305`, `internal/tui/keys.go:294-307`).
 
 **On the command line.**
 
@@ -159,6 +167,12 @@ It asks `Well specified?` and `Split?`, prints the plan, and asks `Start this
 slice? [y/N]`. For a script, give `--yes --well-specified y/n --split y/n`
 (`internal/cli/run.go:48-50`, `docs/design.md:1010-1018`).
 
+For example, to use a Codex primary with a Claude fallback for this run:
+
+    ork run PROJECT ID --implementer codex:gpt-6.1-sol:medium --implementer claude:sonnet:high --budget-minutes 20
+
+The printed plan includes lineup overrides and, when overridden, budgets.
+It is the plan confirmed at start.
 The run is now in the daemon. Closing the TUI or the shell does not stop it.
 
 The roles run in this order (`docs/design.md:223-300`):

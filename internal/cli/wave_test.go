@@ -443,3 +443,36 @@ func TestWaveStartPrintsTheBlockedRefusal(t *testing.T) {
 		})
 	}
 }
+
+func TestWaveStartLineupFlagsApplyToEveryItem(t *testing.T) {
+	var plans []daemon.RunParams
+	var started daemon.WaveStartParams
+	app := &App{Call: func(_ context.Context, method string, params, result any) error {
+		switch method {
+		case daemon.MethodRunPlan:
+			p := params.(daemon.RunParams)
+			plans = append(plans, p)
+			*result.(*daemon.RunPlan) = daemon.RunPlan{Item: p.Item, Lineup: p.Lineup}
+		case "spec.check":
+			return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true},{"item":"S2","ready":true}]}`), result)
+		case daemon.MethodWaveStart:
+			started = params.(daemon.WaveStartParams)
+		default:
+			t.Fatalf("unexpected %s", method)
+		}
+		return nil
+	}}
+	code, out, errs := run(t, app, "wave", "start", "p", "S1", "S2", "--yes", "--well-specified", "y", "--split", "n", "--implementer", "codex:sol:medium", "--implementer", "claude:sonnet:high", "--architect", "off", "--budget-minutes", "20", "--budget-tokens", "0")
+	if code != 0 || len(plans) != 2 || len(started.Items) != 2 {
+		t.Fatalf("exit %d plans %d items %d: %s %s", code, len(plans), len(started.Items), out, errs)
+	}
+	for i, p := range started.Items {
+		if p.Expected == nil || p.Expected.Item != plans[i].Item {
+			t.Fatal("Expected lost")
+		}
+		p.Expected = nil
+		if !reflect.DeepEqual(p, plans[i]) || len(p.Lineup["implementer"]) != 2 || p.Lineup["architect"] == nil || p.Budgets == nil || p.Budgets.Minutes != 20 || p.Budgets.Tokens != 0 {
+			t.Fatalf("item %d: %+v", i, p)
+		}
+	}
+}

@@ -172,7 +172,8 @@ ork (TUI)  ork status --json (CLI)
    It may set any vendor, model and effort per role; ork refuses a vendor
    it has no adapter for (`lineup.launch-edit`). The edits travel as the
    full lineup per role plus budgets, and the plan echoes them
-   (`run.launch-wire`).
+   (`run.launch-wire`). The Waves editor and Roadmap launch confirmation
+   share the same run-only editor (`e`). Neither writes the matrix or registry.
    The daemon accepts implementer, reviewer and architect chains on
    `run.plan`, `run.start` and `wave.start`. An empty architect chain drops
    the architect; an omitted override keeps the recommendation. Adding an
@@ -1022,6 +1023,20 @@ The CLI asks the two y/n inputs for each item, shows each `run.plan`, then
 asks `Start this wave? [y/N]`. `--well-specified` and `--split` apply to
 every item; both are required with `--yes`. In JSON mode, prompts and plans
 go to stderr and stdout holds one result.
+
+`ork run` and `ork wave start` accept `--implementer`, `--reviewer` and
+`--architect`, each taking `VENDOR:MODEL:EFFORT`. Repeat a role flag to set
+its whole chain in order, primary first. The model may contain colons;
+vendor and effort are the first and last parts. `--architect off` alone
+removes the architect. Gate follows reviewer and the UI pass stays from the
+matrix; neither has a flag. `--budget-minutes N` and `--budget-tokens N`
+accept whole numbers of zero or more; zero uses the project default. Omitted
+flags keep the recommendation and project defaults. Invalid flag syntax,
+empty parts, mixed architect off and entries, and negative budgets exit 2
+before a daemon call. Vendor, model and effort validation stays in the daemon.
+On `wave start` these overrides apply to every item. The CLI sends the same
+overrides on planning and starting, with the printed plan as Expected.
+Edits apply to those runs only; the matrix and registry stay unchanged.
 
 Wave items carry optional lineup, budgets and a confirmed `expected` plan.
 Each item uses the existing `run.start` override validation and plan check

@@ -8041,7 +8041,7 @@
       "id": "S166",
       "title": "Lineup and budget overrides on every launch path (Roadmap launch, ork run)",
       "short_title": "Lineup overrides everywhere",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8074,7 +8074,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

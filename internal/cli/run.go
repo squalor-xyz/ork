@@ -48,6 +48,8 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 	yes := fs.Bool("yes", false, "confirm the plan")
 	well := fs.String("well-specified", "", "y/n")
 	split := fs.String("split", "", "y/n")
+	var lineup lineupFlags
+	lineup.register(fs)
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
 	pos, err := parse(fs, args)
 	if err != nil {
@@ -64,6 +66,10 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		return o.usage("run: --well-specified y/n and --split y/n are required with --yes")
 	}
 	*well, *split = yesNo(*well), yesNo(*split)
+	var overrides daemon.RunParams
+	if err := lineup.apply(&overrides); err != nil {
+		return o.usage("run: %v", err)
+	}
 	input := a.Input
 	if input == nil {
 		input = os.Stdin
@@ -104,6 +110,7 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		}
 	}
 	params := daemon.RunParams{Project: pos[0], Item: pos[1], WellSpecified: *well == "yes", Split: *split == "yes"}
+	params.Lineup, params.Budgets = overrides.Lineup, overrides.Budgets
 	var plan daemon.RunPlan
 	if code := a.call(ctx, o, daemon.MethodRunPlan, params, &plan); code != 0 {
 		return code
@@ -115,7 +122,7 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 			return code
 		}
 	} else {
-		printRunPlan(o.stdout, plan)
+		printRunPlan(o.stdout, plan, params.Budgets != nil)
 	}
 	if !*yes {
 		confirm, err := ask("Start this slice?", "y/N", "no")
@@ -149,8 +156,11 @@ func yesNo(v string) string {
 	}
 	return ""
 }
-func printRunPlan(w io.Writer, p daemon.RunPlan) {
+func printRunPlan(w io.Writer, p daemon.RunPlan, budgetsOverridden bool) {
 	fmt.Fprintf(w, "%s %s\nworktree: %s\nbranch: %s\ncheck: %s\n", p.Project.Name, p.Item, p.Worktree, p.Branch, p.CheckCommand)
+	if budgetsOverridden {
+		fmt.Fprintf(w, "budgets: %d min, %d tokens\n", p.Budgets.Minutes, p.Budgets.Tokens)
+	}
 	for _, role := range []string{"implementer", "reviewer", "ui", "architect", "gate"} {
 		if (role == "architect" || role == "ui") && len(p.Lineup[role]) == 0 {
 			continue

@@ -69,7 +69,7 @@ func newKeyMap() keyMap {
 		Remove:     key.NewBinding(key.WithKeys("-"), key.WithHelp("-", "remove active project")),
 		Add:        key.NewBinding(key.WithKeys("+"), key.WithHelp("+", "add project")),
 		Cleanup:    key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "remove merged worktree and branch (Ready)")),
-		EditLineup: key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit lineup (Waves)")),
+		EditLineup: key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit lineup (Waves, launch)")),
 		Tick:       key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "tick item and ask inputs (Waves)")),
 		Expand:     key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "expand or collapse a run (Running)")),
 		ExpandAll:  key.NewBinding(key.WithKeys("E", "shift+e"), key.WithHelp("E", "expand or collapse all")),
@@ -252,6 +252,9 @@ func (m *Model) contextHints() []hintEntry {
 		}
 	case m.confirm != nil:
 		l.add(dropRow, short(k.Yes, "y", confirmWord(m.confirm.verb)), short(k.No, "n", "cancel"))
+		if m.confirm.verb == "launch" {
+			l.add(dropRow, short(k.EditLineup, "e", "edit lineup"))
+		}
 	case m.waves != nil && m.waves.sitting != nil:
 		sitting := m.waves.sitting
 		if ask := sitting.current(); ask != nil {
@@ -267,8 +270,8 @@ func (m *Model) contextHints() []hintEntry {
 				l.add(dropPinned, key.NewBinding(key.WithKeys("s", "esc"), key.WithHelp("s/esc", "skip the rest")))
 			}
 		}
-	case m.waves != nil && m.waves.lineup != nil:
-		e := m.waves.lineup
+	case m.activeLineup() != nil:
+		e := m.activeLineup()
 		if e.custom {
 			l.add(dropRow, short(k.NextView, "tab/shift+tab", "field"), short(k.Select, "enter", "use entry"))
 		} else {
@@ -303,6 +306,9 @@ func (m *Model) contextHints() []hintEntry {
 			l.add(dropRow, short(k.Select, "enter", "plan"))
 		}
 		desc := "cancel"
+		if m.launch.stage == launchPlanPending && m.launch.prev != nil {
+			desc = "back"
+		}
 		if m.launch.stage == launchStarting {
 			desc = "close"
 		}

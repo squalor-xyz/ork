@@ -40,9 +40,15 @@ const (
 const usageText = `usage: ork COMMAND [ARGS] [--json]
 
   ork run P ID [--yes --well-specified y/n --split y/n]
+                              [--implementer VENDOR:MODEL:EFFORT]
+                              [--reviewer VENDOR:MODEL:EFFORT]
+                              [--architect VENDOR:MODEL:EFFORT|off]
+                              [--budget-minutes N] [--budget-tokens N]
+                              role flags repeat to set the whole chain
                               show the plan and launch one slice
   ork wave suggest P          show slicer's suggested waves
   ork wave start P ITEM... [--yes --well-specified y/n --split y/n]
+                              the run lineup and budget flags, for every item
                               show the plans and launch the chosen items
   ork approve RUN             finish and commit a passed slice
   ork check RUN N [ticked|later|open]

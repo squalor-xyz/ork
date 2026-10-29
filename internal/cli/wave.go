@@ -90,6 +90,8 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	yes := fs.Bool("yes", false, "confirm all plans")
 	well := fs.String("well-specified", "", "y/n for every item")
 	split := fs.String("split", "", "y/n for every item")
+	var lineup lineupFlags
+	lineup.register(fs)
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
 	pos, err := parse(fs, args)
 	if err != nil {
@@ -101,6 +103,10 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	valid := func(v string) bool { return v == "" || yesNo(v) != "" }
 	if !valid(*well) || !valid(*split) || (*yes && (*well == "" || *split == "")) {
 		return o.usage("wave start: --well-specified y/n and --split y/n are required with --yes")
+	}
+	var overrides daemon.RunParams
+	if err := lineup.apply(&overrides); err != nil {
+		return o.usage("wave start: %v", err)
 	}
 	input := a.Input
 	if input == nil {
@@ -143,6 +149,7 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 			}
 		}
 		p := daemon.RunParams{Project: pos[0], Item: item, WellSpecified: w == "yes", Split: s == "yes"}
+		p.Lineup, p.Budgets = overrides.Lineup, overrides.Budgets
 		var plan daemon.RunPlan
 		if code := a.call(ctx, o, daemon.MethodRunPlan, p, &plan); code != ExitOK {
 			return code
@@ -152,7 +159,7 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 				return code
 			}
 		} else {
-			printRunPlan(o.stdout, plan)
+			printRunPlan(o.stdout, plan, p.Budgets != nil)
 		}
 		p.Expected = &plan
 		params.Items = append(params.Items, p)
