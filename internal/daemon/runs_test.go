@@ -2379,3 +2379,19 @@ func TestRunStartRefusesAChangedStopAfter(t *testing.T) {
 		})
 	}
 }
+
+// The hung-role watchdog (S182): the daemon's runs use the fixed 30-minute
+// limit, and an engine value set in the config is kept, including the
+// negative value that turns the watchdog off.
+func TestDaemonRunsUseTheThirtyMinuteWatchdog(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	if got := d.runDeps(p).HungAfter; got != 30*time.Minute {
+		t.Errorf("default HungAfter %s, want 30m", got)
+	}
+	for _, set := range []time.Duration{7 * time.Second, -1} {
+		d.runs.deps.HungAfter = set
+		if got := d.runDeps(p).HungAfter; got != set {
+			t.Errorf("HungAfter %s from the config became %s", set, got)
+		}
+	}
+}

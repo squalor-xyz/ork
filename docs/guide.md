@@ -335,7 +335,8 @@ something newly needs you (`internal/tui/model.go:949-1014`).
 | A run is paused with no question (shape, error, lost, interrupted) | `t` on the row, or `ork retry RUN` (`docs/design.md:1028-1031`) |
 | A run is paused at a budget limit | `t` or `ork retry RUN` grants one more role round (`docs/design.md:926-937`) |
 | A run is stopped | Read the reason in the pane. Fix the cause and launch again, or clear it with `ork dismiss RUN` |
-| Nothing for 30 minutes on a running row (`!!`) | ork marks the row stale (`docs/dashboard.md:495-498`). Open it and read the last output. If it is not coming back, stop it with `x` or `ork stop RUN`, then launch again |
+| A run is paused with a reason like `implementer round 1 hung: no output for 30m` | ork killed a role that sent nothing for 30 minutes. Read the reason in the pane, then retry with `t` or `ork retry RUN`: the same role runs again and is told that the earlier process was lost. ork does not retry for you |
+| A relay that ork did not start shows `!!` and `stale` | Open its pane and press `x`. It ends the ledger run as stopped (`internal/tui/pane.go:327`, `internal/tui/ledgerend.go:27`), but only when the run is stale and no unfinished ork run owns it (`internal/daemon/runs.go:1401-1412`). `ork stop RUN` does not take such a run: it names ork runs and waves, and the daemon answers `no run` for a ledger id (`internal/daemon/runs.go:906-908`) |
 | You want to stop work | `x` on a row or `ork stop RUN`; `ork stop WAVE-ID` for a wave |
 | The daemon died or you stopped it | Start `ork` again. On start the daemon checks every unfinished run against live processes and marks a role with no process and no report as lost, then the slice waits for you (`docs/design.md:154-160`) |
 | Commands warn that the daemon build differs | `ork daemon restart`. It refuses while a role runs unless you add `--force` (`docs/design.md:41-48`) |

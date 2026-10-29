@@ -163,6 +163,9 @@ func (d *Daemon) initRunManager() {
 }
 func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 	deps := d.runs.deps
+	if deps.HungAfter == 0 {
+		deps.HungAfter = engine.DefaultHungAfter // a role silent for 30 minutes is killed (S182); not a setting
+	}
 	if deps.Runner == nil {
 		envFor := func(vendor string) []string {
 			if len(p.VendorEnv[vendor]) == 0 {

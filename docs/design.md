@@ -721,12 +721,31 @@ question. Answer, approve, fix and retry record `--phase start` to continue.
   are also removed (owner decisions, S143, 2026-10-28). Empty or corrupt
   `answers.json` files are discarded and logged with their full path; the
   check asks the owner's questions again.
+- **Hung role** (S182, *proposed*). Every role round has a watchdog. It keeps
+  the time of the last vendor stream event or assistant text (`Request.OnEvent`
+  and `OnLive`). When a role has sent neither for 30 minutes, the watchdog ends
+  the context the round runs under, and the vendor adapter kills the role's
+  whole process group. ork kills only the group it recorded for that role
+  (`OnStart`); it never kills a process it did not start. The limit is fixed
+  at 30 minutes, the stale cutoff of the Running row (owner decision,
+  2026-10-29); `Deps.HungAfter` sets it for tests, and a negative value turns
+  the watchdog off. The role is recorded with exit `hung`, its ledger step
+  ends `fail`, the heartbeat stops, and the slice pauses (kind `lost`) with a
+  reason that names the role, the round, the limit and, when ork recorded
+  one, the killed process group. A hang is not a vendor limit: it does not fall back to the next
+  lineup row and marks no vendor out. There is no automatic retry. The owner
+  retries (`ork retry RUN`, or `t`), and the same row runs again with the
+  "Earlier process lost" section in its brief. An owner stop during the role
+  stays a stop (exit `cancelled`). The wait for a vendor slot is not counted
+  as silence. The spec-check role and the checks command are not watched; the
+  checks command has its own timeout (`check_minutes`).
 - **Reviewer rule.** A reviewer never wrote code in the slice. A reviewer
   may run on another vendor if the lineup names it (`review.cross-vendor`).
 - **Ledger.** Each role round is recorded with `slicer relay-run step` with
   role, vendor, model, effort and `--task "ID role"`, and its phase is
   updated on exit. A heartbeat goes out every 10 minutes while
-  it runs. The first finish step ends the ledger run (`relay-run end`). A
+  it runs. The heartbeat says only that ork is alive; it does not show
+  that the role is. The first finish step ends the ledger run (`relay-run end`). A
   landing fix round (S119) starts after that, so its rounds, the checks, the
   gate and the second finish step run without ledger steps: `relay-run`
   would refuse them with `run_ended`. The engine run record keeps those
@@ -1103,7 +1122,8 @@ the run store and reconciles stored runs before accepting clients.
 `approve` runs the finish step, then commits once (adj #81), then lands it (land state, adj #162); `answer`
 resumes a paused role that asked a question. `retry` calls `Engine.Retry`
 to rerun the role or step of a `shape`, `error`, `lost` or `interrupted`
-pause (adj #101). A question needs `answer` or `stop`. An `answer` on a
+pause (adj #101). A `lost` pause also covers a role the watchdog killed as hung
+(S182); the retry runs the same row. A question needs `answer` or `stop`. An `answer` on a
 pause without a question names `ork retry RUN`. Status shows the pause
 reason or question and the next command: `ork retry RUN` or
 `ork answer RUN TEXT`. These owner commands wait for the engine

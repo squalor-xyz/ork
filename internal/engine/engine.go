@@ -55,6 +55,7 @@ type Deps struct {
 	Backoff        []time.Duration                                  // locked-retry delays; nil means runrec.DefaultBackoff
 	RandHex        func() string                                    // four hex digits for run ids; nil is random
 	HeartbeatEvery time.Duration                                    // 0 means heartbeatInterval
+	HungAfter      time.Duration                                    // 0 means DefaultHungAfter; negative turns the hung-role watchdog off
 	MaxRounds      int                                              // 0 means DefaultMaxRounds
 	Landings       *Landings                                        // one landing per project at a time; nil means one shared by the process
 }

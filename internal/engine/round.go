@@ -282,13 +282,22 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 
 	onEvent, endActivity := e.startActivity(r.role)
-	res, runErr := e.d.Runner.Run(ctx, Request{
+	onLive := e.liveHook(r.role)
+	// The watchdog (S182) ends runCtx when the role has been silent for too
+	// long; the adapters kill the role's process group when their context ends.
+	runCtx, kill := context.WithCancel(ctx)
+	defer kill()
+	watch, stopWatch, hung := e.watchRole(runCtx, kill)
+	defer stopWatch()
+	res, runErr := e.d.Runner.Run(runCtx, Request{
 		Role: r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
 		Brief: brief, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
 		Allowlist: perm.Allow, ReadOnly: perm.ReadOnly, Resume: session,
-		OnEvent: onEvent, OnLive: e.liveHook(r.role),
+		OnEvent: func() { watch.touch(); onEvent() },
+		OnLive:  func(l Live) { watch.touch(); onLive(l) },
 		OnStart: func(pgid int) { e.run.Update(func(rr *runrec.Record) { rr.Roles[idx].PGID = pgid }) },
 	})
+	stopWatch()
 	endActivity()
 	if err := ctx.Err(); err != nil {
 		if e.run.Snapshot().State == runrec.StateStopped {
@@ -303,6 +312,10 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			return outcome{}, updateErr
 		}
 		return outcome{}, err // the role stays running in the record; a restart marks it lost
+	}
+	if hung() {
+		limit, _ := e.d.hungLimit()
+		return e.endHungRound(ctx, rec, r, idx, stepID, res, limit, stop)
 	}
 	class := res.Exit
 	switch {

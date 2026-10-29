@@ -499,7 +499,15 @@ the text column, falling back to a shorter indent when needed to fit.
      column leave little for the title, so the titles usually sit on line 2
      there.
    `! heard` is amber after 10 minutes with no event; `!! heard` is red after
-   30 minutes, the stale cutoff, and marks stale runs. The unselected cell uses
+   30 minutes, the stale cutoff, and marks stale runs. The cue reads the ledger
+   run's `updated_at`. For an engine run that has a ledger run, ork's heartbeat
+   (`relay-run step --phase start`, every 10 minutes while a role runs) refreshes
+   it, so a hung role's row does not reach `!!`; it can show an amber `!`
+   between two ticks. For an engine run with no ledger run, `!!` shows 30
+   minutes after the role started. The engine's watchdog (S182, *proposed*, `docs/design.md`)
+   kills a role that sends nothing for 30 minutes and pauses the run, so a hung
+   engine run reaches Needs you as a paused run instead of waiting for the
+   cue. The unselected cell uses
    the warning color (amber) or the error color (red); in monochrome the words
    `!` and `!!` carry the cue, and red is bold. Stale runs stay under Running,
    dimmed; elapsed time freezes at their last event in the detail line. A row
@@ -840,7 +848,9 @@ The actions follow the state (`ui.answer-pane-scope`):
   when available. Retry grants exactly one
   role round, then the budget check applies again (`run.budget-resume`).
 - Paused for another reason (not a question or budget): show the reason and
-  `t` retries, with the same
+  `t` retries. A `lost` pause after the watchdog killed a hung role (S182,
+  *proposed*) reads like any other: the reason names the role, the round, the
+  30-minute limit and, when ork recorded one, the killed process group, and `t` runs the same row again, with the same
   `ork retry RUN` y/n confirmation as the Overview. When a sibling's owner
   question is queued, the retry shows that question first; the retried role
   runs after the answer (S159, *proposed*).
