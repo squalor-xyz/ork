@@ -409,9 +409,12 @@ func (m *Model) cardChecks(card *runrec.ApprovalCard, width int) []string {
 }
 
 // cardLandNote says what approval does. The approval is the owner's confirm of
-// the whole landing, and of the cleanup (S119, adj 162, adj 152). The line says
-// it pushes when the project's registry setting is on.
+// the stop point: commit only, or the whole landing and cleanup (S119, S177).
+// For landing, the line says it pushes when the project's setting is on.
 func (m *Model) cardLandNote() string {
+	if run := m.paneRun(); run != nil && run.StopAfter == runrec.StopAfterCommit {
+		return "Approve commits it; its worktree and branch stay for you to land."
+	}
 	if m.cardPushes() {
 		return "Approve lands and pushes it, then removes its worktree and branch."
 	}
@@ -602,6 +605,9 @@ func (a runAction) pendingText() string {
 		return fmt.Sprintf("marking check %d %s", a.check, markWord(a.state))
 	}
 	if a.verb == "approve" && a.item != "" {
+		if a.stopAfter == runrec.StopAfterCommit {
+			return "committing " + a.item + ": pending"
+		}
 		return "landing " + a.item + ": pending"
 	}
 	if a.verb == "end" {
@@ -622,12 +628,14 @@ type approver interface {
 var _ approver = (*Daemon)(nil)
 
 // approveOutcome reads what an approval did from the run record the reply
-// carries: the slice landed, or a blocked landing went to its fix round and
+// carries: the slice committed, landed, or a blocked landing went to its fix round and
 // the run awaits approval again. Any other state (a pause, a stop) is "".
 func approveOutcome(rec runrec.Record) string {
 	switch {
 	case rec.State == runrec.StateCommitted && !rec.LandedAt.IsZero():
 		return "landed"
+	case rec.State == runrec.StateCommitted:
+		return "committed"
 	case rec.State == runrec.StateAwaitingApproval && rec.LandFixes > 0:
 		return "fix round"
 	}
@@ -638,6 +646,8 @@ func approveOutcome(rec runrec.Record) string {
 func (a runAction) doneText() string {
 	if a.verb == "approve" && a.item != "" {
 		switch a.outcome {
+		case "committed":
+			return "committed " + a.item + "; ready to land"
 		case "landed":
 			return "landed " + a.item
 		case "fix round":

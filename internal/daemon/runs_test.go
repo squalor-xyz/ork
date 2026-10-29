@@ -2311,3 +2311,71 @@ func TestPlanAndEngineAgreeOnPaths(t *testing.T) {
 		})
 	}
 }
+
+func TestRunPlanEchoesStopAfter(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	for _, stop := range []string{"", "land", "commit"} {
+		plan, err := d.planRun(context.Background(), RunParams{Project: "p", Item: "S1", StopAfter: stop})
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := stop
+		if want == "" {
+			want = "land"
+		}
+		if plan.StopAfter != want {
+			t.Fatalf("stop %q: got %q", stop, plan.StopAfter)
+		}
+	}
+}
+func TestRunPlanRefusesAnUnknownStopAfter(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	_, err := d.handle(context.Background(), MethodRunPlan, json.RawMessage(`{"project":"p","item":"S1","stop_after":"merge"}`))
+	var rpc *ipc.Error
+	if !errors.As(err, &rpc) || rpc.Code != "bad_params" {
+		t.Fatalf("error: %v", err)
+	}
+}
+func TestRunStartRefusesAChangedStopAfter(t *testing.T) {
+	for _, stop := range []string{"land", "commit"} {
+		t.Run(stop, func(t *testing.T) {
+			d, store, _ := runDaemon(t, func(ctx context.Context, _ engine.Request) (engine.Result, error) {
+				<-ctx.Done()
+				return engine.Result{}, ctx.Err()
+			})
+			p := RunParams{Project: "p", Item: "S1", StopAfter: stop}
+			plan, err := d.planRun(context.Background(), p)
+			if err != nil {
+				t.Fatal(err)
+			}
+			p.Expected = plan
+			if stop == "land" {
+				p.StopAfter = "commit"
+			} else {
+				p.StopAfter = "land"
+			}
+			if _, err := d.startRun(context.Background(), p); err == nil || err.Error() != "plan changed; run the command again to confirm it" {
+				t.Fatalf("error: %v", err)
+			}
+			if runs, err := store.List(); err != nil || len(runs) != 0 {
+				t.Fatalf("runs %v, %v", runs, err)
+			}
+			p.StopAfter = stop
+			rec, err := d.startRun(context.Background(), p)
+			if err != nil {
+				t.Fatal(err)
+			}
+			disk, err := store.Open(rec.ID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if rec.StopAfter != stop || disk.Snapshot().StopAfter != stop {
+				t.Fatalf("stop point lost: %+v", rec)
+			}
+			rows := d.engineRuns("p")
+			if len(rows) != 1 || rows[0].StopAfter != stop {
+				t.Fatalf("wire stop point: %+v", rows)
+			}
+		})
+	}
+}

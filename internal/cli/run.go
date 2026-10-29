@@ -110,7 +110,7 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		}
 	}
 	params := daemon.RunParams{Project: pos[0], Item: pos[1], WellSpecified: *well == "yes", Split: *split == "yes"}
-	params.Lineup, params.Budgets = overrides.Lineup, overrides.Budgets
+	params.Lineup, params.Budgets, params.StopAfter = overrides.Lineup, overrides.Budgets, overrides.StopAfter
 	var plan daemon.RunPlan
 	if code := a.call(ctx, o, daemon.MethodRunPlan, params, &plan); code != 0 {
 		return code
@@ -171,6 +171,11 @@ func yesNo(v string) string {
 }
 func printRunPlan(w io.Writer, p daemon.RunPlan, budgetsOverridden bool) {
 	fmt.Fprintf(w, "%s %s\nworktree: %s\nbranch: %s\ncheck: %s\n", p.Project.Name, p.Item, p.Worktree, p.Branch, p.CheckCommand)
+	stop := "after landing"
+	if p.StopAfter == runrec.StopAfterCommit {
+		stop = "after commit (you land it)"
+	}
+	fmt.Fprintf(w, "stop: %s\n", stop)
 	if budgetsOverridden {
 		fmt.Fprintf(w, "budgets: %d min, %d tokens\n", p.Budgets.Minutes, p.Budgets.Tokens)
 	}

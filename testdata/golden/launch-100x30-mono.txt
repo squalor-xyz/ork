@@ -5,6 +5,7 @@
 [2m2[m other                    │  worktree: /project/.worktrees/S90
                            │  branch: S90
                            │  check: go test ./...
+                           │  stop: after landing
                            │  implementer: Codex gpt high
                            │    allowlist: 
                            │  reviewer: Claude opus medium
@@ -15,7 +16,6 @@
                            │    allowlist: 
                            │  note: slicer relay-roles show failed; planning without UI or
                            │  spec-check rules: exit 2
-                           │
                            │
                            │
                            │

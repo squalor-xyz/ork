@@ -5,10 +5,10 @@
 [2m2[m other                    │[1;7m  > implementer: claude sonnet high (no alternatives)[m
                            │    reviewer: claude opus medium
                            │    architect: off
+                           │    stop: land
                            │    Budget minutes: 45
                            │    Budget tokens: 9000
                            │  Zero budget uses the project default.
-                           │
                            │
                            │
                            │

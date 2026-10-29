@@ -5,10 +5,10 @@
 [90m2[m other            │    implementer: claude sonnet high
                    │    reviewer: claude opus medium
                    │[1;7;97;44m  > architect*: off[m
+                   │    stop: land
                    │    Budget minutes: 45
                    │    Budget tokens: 9000
                    │  Zero budget uses the project default.
-                   │
                    │
                    │
                    │

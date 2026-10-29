@@ -844,6 +844,9 @@ func waveLineup(p daemon.RunParams) []string {
 			lines = append(lines, fmt.Sprintf("%6s +%d fallbacks", "", len(chain)-1))
 		}
 	}
+	if p.StopAfter != "" {
+		lines = append(lines, "stop*: "+p.Expected.StopAfter)
+	}
 	if p.Budgets != nil {
 		lines = append(lines, fmt.Sprintf("budgets*: %d min, %d tokens", p.Expected.Budgets.Minutes, p.Expected.Budgets.Tokens))
 	}

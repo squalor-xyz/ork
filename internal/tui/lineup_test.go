@@ -189,6 +189,7 @@ func TestLineupBudgetsMustBeNumbers(t *testing.T) {
 			h.deliver(press("down"))
 			h.deliver(press("down"))
 			h.deliver(press("down"))
+			h.deliver(press("down"))
 			replaceLineupField(h, value)
 			h.deliver(press("enter"))
 			if len(l.plans) != 1 || !strings.Contains(h.view(), "whole number") {
@@ -201,6 +202,7 @@ func TestLineupBudgetsMustBeNumbers(t *testing.T) {
 func TestWaveStartCarriesOverrides(t *testing.T) {
 	h, l := lineupHarness(t)
 	changeImplementer(h)
+	h.deliver(press("down"))
 	h.deliver(press("down"))
 	h.deliver(press("down"))
 	h.deliver(press("down"))
@@ -348,7 +350,7 @@ func TestLineupOnlyOpensTickedReadyItem(t *testing.T) {
 
 func TestLineupTokenValidationAndPasteDoesNotSubmit(t *testing.T) {
 	h, l := lineupHarness(t)
-	for range 4 {
+	for range len(lineupRoles) + 2 {
 		h.deliver(press("tab"))
 	}
 	replaceLineupField(h, "oops\r\n")
@@ -368,7 +370,9 @@ func TestLineupCustomEscDiscardsWholeEditor(t *testing.T) {
 	h.deliver(press("down"))
 	h.deliver(press("down"))
 	h.deliver(press("down"))
+	h.deliver(press("down"))
 	replaceLineupField(h, "12")
+	h.deliver(press("up"))
 	h.deliver(press("up"))
 	h.deliver(press("c"))
 	replaceLineupField(h, "discard-vendor")
@@ -408,6 +412,7 @@ func TestLineupSavedBudgetVisible(t *testing.T) {
 	h.deliver(press("down"))
 	h.deliver(press("down"))
 	h.deliver(press("down"))
+	h.deliver(press("down"))
 	replaceLineupField(h, "0")
 	h.deliver(press("down"))
 	replaceLineupField(h, "1234")
@@ -443,6 +448,7 @@ func TestLineupEditorAffordances(t *testing.T) {
 		t.Error("custom mode must focus only the field and label the editing role")
 	}
 	h.deliver(press("enter"))
+	h.deliver(press("down"))
 	h.deliver(press("down"))
 	h.deliver(press("down"))
 	h.deliver(press("down"))
@@ -489,8 +495,8 @@ func TestLineupEditorShowsTheUIPassRow(t *testing.T) {
 	if !strings.Contains(body(), "\n    reviewer:") || !strings.Contains(body(), "\n    ui: claude") {
 		t.Fatalf("ui row is not indented like the reviewer row:\n%s", body())
 	}
-	// The row is not one the cursor visits: five editable rows.
-	for i := 0; i < 5; i++ {
+	// The UI pass row is not visited: roles, budgets and the stop row are editable.
+	for i := 0; i < len(lineupRoles)+len(h.m.waves.lineup.budgets)+1; i++ {
 		h.deliver(press("down"))
 	}
 	if h.m.waves.lineup.row != 0 || strings.Contains(strings.Join(h.m.lineupBody(100).body, "\n"), "> ui") {
@@ -627,6 +633,7 @@ func TestWavesLineupStillWorksAfterEditorExtraction(t *testing.T) {
 	h.deliver(press("down"))
 	h.deliver(press("down"))
 	h.deliver(press("d"))
+	h.deliver(press("down"))
 	h.deliver(press("down"))
 	replaceLineupField(h, "20")
 	h.deliver(press("down"))

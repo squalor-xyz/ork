@@ -774,7 +774,7 @@ func editTestLaunchLineup(t *testing.T, h *harness) tea.Cmd {
 	t.Helper()
 	openTestLaunchLineup(t, h)
 	changeImplementer(h)
-	for range 3 {
+	for range len(lineupRoles) + 1 {
 		h.m.Update(press("down"))
 	}
 	replaceLineupField(h, "20")
@@ -819,7 +819,7 @@ func TestLaunchLineupReplanErrorKeepsOldPlan(t *testing.T) {
 			l.planErr = &ipc.Error{Code: "bad_params", Message: "Exact override failure."}
 			openTestLaunchLineup(t, h)
 			changeImplementer(h)
-			for range 3 {
+			for range len(lineupRoles) + 1 {
 				h.m.Update(press("down"))
 			}
 			replaceLineupField(h, "30")
@@ -899,7 +899,7 @@ func TestLaunchBudgetOnlyEditShowsEffectiveBudgets(t *testing.T) {
 				t.Fatal("unoverridden budget shown")
 			}
 			openTestLaunchLineup(t, h)
-			for range 3 {
+			for range len(lineupRoles) + 1 {
 				h.m.Update(press("down"))
 			}
 			replaceLineupField(h, value)
@@ -948,7 +948,7 @@ func TestLaunchPendingReplanEscRestoresConfirmation(t *testing.T) {
 			live := &replanContextLive{launchLive: l}
 			h.m.cfg.Live = live
 			openTestLaunchLineup(t, h)
-			for range 3 {
+			for range len(lineupRoles) + 1 {
 				h.m.Update(press("down"))
 			}
 			replaceLineupField(h, "30")

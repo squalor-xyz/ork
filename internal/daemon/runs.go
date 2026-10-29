@@ -47,6 +47,7 @@ const defaultGlobalCap = 4
 
 // RunParams are the owner's launch inputs (run.lineup-inputs, run.launch-wire).
 type RunParams struct {
+	StopAfter     string                          `json:"stop_after,omitempty"`
 	wave          string                          // daemon-assigned; never accepted from a run.start client
 	Project       string                          `json:"project"`
 	Item          string                          `json:"item"`
@@ -72,6 +73,7 @@ type RunAction struct {
 
 // RunPlan is checkpoint 1 (run.launch-wire).
 type RunPlan struct {
+	StopAfter    string                          `json:"stop_after,omitempty"`
 	project      registry.Project                // registry settings are private to the daemon
 	Project      registry.Project                `json:"project"`
 	Item         string                          `json:"item"`
@@ -334,6 +336,12 @@ func appendEntry(chain []runrec.LineupEntry, e runrec.LineupEntry) []runrec.Line
 }
 
 func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
+	if p.StopAfter == "" {
+		p.StopAfter = runrec.StopAfterLand
+	}
+	if p.StopAfter != runrec.StopAfterLand && p.StopAfter != runrec.StopAfterCommit {
+		return nil, badParams(errors.New("stop_after must be land or commit"))
+	}
 	if p.Project == "" || p.Item == "" {
 		return nil, badParams(errors.New("run needs project and item"))
 	}
@@ -363,7 +371,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	// spec check, so a run's chains never hold it.
 	specRow := slicercli.SpecCheckRowID(rules)
 	var uiRows []slicercli.Row
-	plan := &RunPlan{project: proj, Project: registry.Project{Name: proj.Name, Path: proj.Path}, Item: p.Item, CheckCommand: proj.CheckCommand, Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
+	plan := &RunPlan{StopAfter: p.StopAfter, project: proj, Project: registry.Project{Name: proj.Name, Path: proj.Path}, Item: p.Item, CheckCommand: proj.CheckCommand, Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
 	if rulesErr != nil {
 		plan.Note = "slicer relay-roles show failed; planning without UI or spec-check rules: " + rulesErr.Error()
 	}
@@ -539,7 +547,7 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 	}
 	// A spec check that the owner answered gave the item decisions that its
 	// worktree's spec lacks; the run carries them into every brief (S116).
-	cfg := engine.Config{Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: wave, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions}
+	cfg := engine.Config{StopAfter: plan.StopAfter, Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: wave, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions}
 	e, err := engine.New(ctx, d.runDeps(plan.project), cfg)
 	if err != nil {
 		return runrec.Record{}, err
@@ -1307,7 +1315,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		if rec.State == runrec.StateAwaitingApproval {
 			card = rec.Card
 		}
-		runs = append(runs, EngineRun{Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), WorktreeGone: rec.State == runrec.StateCommitted && !rec.Cleaned() && worktreeGone(rec), State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
+		runs = append(runs, EngineRun{StopAfter: rec.StopAfter, Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), WorktreeGone: rec.State == runrec.StateCommitted && !rec.Cleaned() && worktreeGone(rec), State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
 	}
 	return runs
 }

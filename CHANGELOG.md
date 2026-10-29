@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- S177: per-run stop point (*proposed*). `--stop-after commit` on run or wave
+  start, or the shared lineup editor's stop row, commits after approval and
+  keeps the branch and worktree for the owner to land. The default is `land`.
+  Plans confirm the choice; approval prompts, cards and status name it.
+  Ready rows keep the slicer land commands; there is no land key or registry
+  default.
+
 - S181: wave start and the spec check read slicer's dependency state before
   running roles or admitting any member. A blocked item refuses the whole
   call, naming its blockers, including dependencies selected in the same

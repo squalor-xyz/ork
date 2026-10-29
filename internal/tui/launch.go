@@ -12,6 +12,7 @@ import (
 	"charm.land/lipgloss/v2"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
@@ -215,7 +216,7 @@ func (m *Model) startLaunch(a runAction) tea.Cmd {
 	m.launchFlights[a.project] = launchFlight{action: a, request: l.request}
 	l.stage = launchStarting
 	m.actionStatus = a.command() + ": pending"
-	params := daemon.RunParams{Project: a.project, Item: a.run, WellSpecified: a.wellSpecified, Split: a.split, Expected: a.plan, Lineup: a.lineup, Budgets: a.budgets}
+	params := daemon.RunParams{Project: a.project, Item: a.run, WellSpecified: a.wellSpecified, Split: a.split, Expected: a.plan, StopAfter: a.stopAfter, Lineup: a.lineup, Budgets: a.budgets}
 	live, request, ctx := m.cfg.Live, l.request, l.ctx
 	return func() tea.Msg {
 		if ctx.Err() != nil {
@@ -283,7 +284,7 @@ func (m *Model) applyLaunch(msg launchMsg) tea.Cmd {
 func (m *Model) confirmLaunch() {
 	l := m.launch
 	l.stage = launchConfirm
-	m.confirm = &runAction{verb: "launch", project: l.params.Project, run: l.params.Item, plan: l.plan, wellSpecified: l.params.WellSpecified, split: l.params.Split, lineup: l.params.Lineup, budgets: l.params.Budgets}
+	m.confirm = &runAction{verb: "launch", project: l.params.Project, run: l.params.Item, plan: l.plan, wellSpecified: l.params.WellSpecified, split: l.params.Split, stopAfter: l.params.StopAfter, lineup: l.params.Lineup, budgets: l.params.Budgets}
 }
 
 func (m *Model) openLaunchLineup() tea.Cmd {
@@ -399,6 +400,11 @@ func (m *Model) launchView(w int) overviewView {
 		add("worktree: " + p.Worktree)
 		add("branch: " + p.Branch)
 		add("check: " + p.CheckCommand)
+		stop := "after landing"
+		if p.StopAfter == runrec.StopAfterCommit {
+			stop = "after commit (you land it)"
+		}
+		add("stop: " + stop)
 		if l.params.Budgets != nil {
 			add(fmt.Sprintf("budgets: %d min, %d tokens", p.Budgets.Minutes, p.Budgets.Tokens))
 		}

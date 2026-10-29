@@ -471,8 +471,8 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		if e := m.activeLineup(); e != nil {
 			if e.custom {
 				e.fields[e.focus].update(msg)
-			} else if e.row >= len(lineupRoles) {
-				e.budgets[e.row-len(lineupRoles)].update(msg)
+			} else if e.row > len(lineupRoles) && e.row <= len(lineupRoles)+len(e.budgets) {
+				e.budgets[e.row-len(lineupRoles)-1].update(msg)
 			}
 			m.actionStatus = ""
 			return m, nil
@@ -1146,6 +1146,7 @@ func (m *Model) moveView(delta int) tea.Cmd {
 
 // runAction retains the exact target while a confirmation is on screen.
 type runAction struct {
+	stopAfter                string
 	findingTitle             string
 	scores                   *runrec.FindingScores
 	verb, run, project, text string
@@ -1164,7 +1165,7 @@ type runAction struct {
 	plan                     *daemon.RunPlan
 	wellSpecified, split     bool
 	push                     bool   // approve: the project's push setting is on
-	outcome                  string // approve: what the reply's run record shows, "landed" or "fix round"; "" if neither
+	outcome                  string // approve: "committed", "landed", "fix round", or ""
 }
 
 // cleanupCommand is the git commands of the cleanup key that will run, one per
@@ -1299,6 +1300,12 @@ func (a runAction) promptWidth(w int) string {
 	question := "Land " + a.item + ", then remove its worktree and branch?"
 	if a.push {
 		question = "Land and push " + a.item + ", then remove its worktree and branch?"
+	}
+	if a.stopAfter == runrec.StopAfterCommit {
+		question = "Commit " + a.item + " on its branch?"
+	}
+	if a.item == "" {
+		question = "Approve run " + a.run + "?"
 	}
 	const keys = "[y/N] (Enter is No)"
 	if w > 0 && lipgloss.Width(question+" "+keys) > w {
@@ -1437,10 +1444,10 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 	}
 	if verb == "approve" {
 		// The prompt and the status line name the slice the approval lands.
-		a.item, a.push = r.engineID, m.projects[r.project].reg.Push
+		a.push = m.projects[r.project].reg.Push
 		for _, run := range m.projects[r.project].snap.EngineRuns {
 			if run.ID == r.engineID {
-				a.item = run.Item
+				a.item, a.stopAfter = run.Item, run.StopAfter
 			}
 		}
 	}
