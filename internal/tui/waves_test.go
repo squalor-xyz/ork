@@ -1478,3 +1478,28 @@ func TestWavesLineupShowsUIPass(t *testing.T) {
 		t.Fatal(h.view())
 	}
 }
+
+func TestWavesLaunchShowsTheBlockedRefusal(t *testing.T) {
+	h, l := wavesHarness(t)
+	twoWaveItems(t, h)
+	const text = `B waits on A "Alpha" (in this wave, not done); untick B or land A first`
+	l.check = func([]string) (*daemon.SpecCheckResult, error) {
+		return nil, &ipc.Error{Code: daemon.CodeRefused, Message: text}
+	}
+	h.deliver(press("l"))
+	if h.m.actionStatus != text || !strings.Contains(strings.Join(strings.Fields(strings.ReplaceAll(h.view(), "│", " ")), " "), text) || h.m.view != wavesView || len(l.starts) != 0 || l.writes != 0 || len(h.m.waves.picked) != 2 || h.m.confirm != nil {
+		t.Fatalf("status %q starts %+v picked %+v\n%s", h.m.actionStatus, l.starts, h.m.waves.picked, h.view())
+	}
+}
+func TestWavesStartRefusalKeepsTheTicks(t *testing.T) {
+	h, l := wavesHarness(t)
+	twoWaveItems(t, h)
+	const text = `B waits on A "Alpha" (in this wave, not done); untick B or land A first`
+	l.result = nil
+	l.startErr = &ipc.Error{Code: daemon.CodeRefused, Message: text}
+	h.deliver(press("l"))
+	h.deliver(press("y"))
+	if !strings.Contains(h.m.actionStatus, text) || !strings.Contains(strings.Join(strings.Fields(strings.ReplaceAll(h.view(), "│", " ")), " "), text) || h.m.view != wavesView || len(l.starts) != 1 || len(h.m.waves.picked) != 2 || h.m.waves.starting || len(h.m.waves.launched) != 0 {
+		t.Fatalf("status %q picked %+v\n%s", h.m.actionStatus, h.m.waves.picked, h.view())
+	}
+}

@@ -594,6 +594,42 @@ func waveItem(item string, rec runrec.Record, err error) WaveItemResult {
 	return WaveItemResult{Item: item, Run: &rec}
 }
 
+// blockedItems reads slicer's dependency state before any member is admitted.
+func (d *Daemon) blockedItems(ctx context.Context, proj registry.Project, ids []string) error {
+	seen := make(map[string]bool, len(ids))
+	var deps []slicercli.ItemDeps
+	for _, id := range ids {
+		if seen[id] {
+			continue
+		}
+		seen[id] = true
+		item, err := d.runs.deps.Slicer.ItemDeps(ctx, proj.Path, id)
+		if err != nil {
+			return err
+		}
+		// The requested id names the item even when lean output omits it.
+		item.ID = id
+		deps = append(deps, *item)
+	}
+	titles := map[string]string{}
+	for _, item := range deps {
+		for _, blocker := range item.BlockedBy {
+			if _, read := titles[blocker]; read {
+				continue
+			}
+			// Remember failed reads too: titles are optional, the refusal is not.
+			titles[blocker] = ""
+			if detail, err := d.runs.deps.Slicer.Show(ctx, proj.Path, blocker); err == nil {
+				titles[blocker] = detail.Title
+			}
+		}
+	}
+	if message := BlockedMessage(ids, deps, titles); message != "" {
+		return &ipc.Error{Code: CodeRefused, Message: message}
+	}
+	return nil
+}
+
 func (d *Daemon) startWave(ctx context.Context, p WaveStartParams) (*WaveResult, error) {
 	if len(p.Items) == 0 {
 		return nil, badParams(errors.New("wave needs items from one project"))
@@ -607,16 +643,19 @@ func (d *Daemon) startWave(ctx context.Context, p WaveStartParams) (*WaveResult,
 			return nil, badParams(errors.New("wave item is empty"))
 		}
 	}
+	proj, err := d.registered(project)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]string, 0, len(p.Items))
+	for _, item := range p.Items {
+		ids = append(ids, item.Item)
+	}
+	if err := d.blockedItems(ctx, proj, ids); err != nil {
+		return nil, err
+	}
 	// Inspect every Files section before admitting any member.
 	if len(p.Items) > 1 {
-		f, err := d.loadRegistry()
-		if err != nil {
-			return nil, err
-		}
-		proj, ok := find(f, project)
-		if !ok {
-			return nil, notFound(project, f)
-		}
 		first := ""
 		for _, item := range p.Items {
 			detail, err := d.runs.deps.Slicer.Show(ctx, proj.Path, item.Item)

@@ -289,3 +289,28 @@ func TestDepsOverlapPairWithoutSharedPaths(t *testing.T) {
 		t.Fatalf("overlap: %+v", got.Overlap)
 	}
 }
+
+func TestItemDepsReadsBlockedBy(t *testing.T) {
+	for _, body := range []string{`{"id":"S2","waits_on":["S1"],"blocked_by":["S1"],"dependents":["S3"]}`, `{"id":"S2"}`} {
+		t.Run(body, func(t *testing.T) {
+			c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"deps", "S2", "--json", "--lean", "--root", root}, Stdout: body})
+			got, err := c.ItemDeps(context.Background(), root, "S2")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.ID != "S2" {
+				t.Fatalf("deps: %+v", got)
+			}
+			if strings.Contains(body, "blocked_by") {
+				if !reflect.DeepEqual(got.BlockedBy, []string{"S1"}) || !reflect.DeepEqual(got.WaitsOn, []string{"S1"}) || !reflect.DeepEqual(got.Dependents, []string{"S3"}) {
+					t.Fatalf("deps: %+v", got)
+				}
+			} else if len(got.BlockedBy)+len(got.WaitsOn)+len(got.Dependents) != 0 {
+				t.Fatalf("lean deps: %+v", got)
+			}
+			if len(fake.CallsTo("slicer")) != 1 {
+				t.Fatal("expected one deps call")
+			}
+		})
+	}
+}

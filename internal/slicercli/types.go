@@ -39,6 +39,14 @@ type ParallelPlan struct {
 	} `json:"unspecified"`
 }
 
+// ItemDeps is the dependency state from `slicer deps ID --json --lean`.
+type ItemDeps struct {
+	ID         string   `json:"id"`
+	WaitsOn    []string `json:"waits_on"`
+	BlockedBy  []string `json:"blocked_by"`
+	Dependents []string `json:"dependents"`
+}
+
 // OverlapPair is one pair in `slicer deps --overlap`. Shared lists the paths
 // both items' files sections name. With --lean, slicer leaves "shared" out of
 // a pair that shares nothing, so Shared is nil for that pair.

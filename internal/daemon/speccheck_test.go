@@ -869,3 +869,23 @@ func TestSpecRetryFailureHasAnActionableWireCode(t *testing.T) {
 		t.Fatalf("retry failure wire: %+v", wire)
 	}
 }
+
+func TestSpecCheckRefusesABlockedItemBeforeAnyRole(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON(u11), clitest.Route{Tool: "slicer", Args: []string{"deps", "S2"}, Prefix: true, Stdout: `{"id":"S2","blocked_by":["S9"]}`})
+	rig.d.runs.deps.Runner = roundRunner(func(context.Context, engine.Request) (engine.Result, error) {
+		t.Error("blocked spec check ran a role")
+		return engine.Result{}, nil
+	})
+	_, err := rig.d.handle(context.Background(), MethodSpecCheck, json.RawMessage(`{"project":"p","items":["S2"]}`))
+	if err == nil || ipc.ErrorOf(err).Code != CodeRefused || ipc.ErrorOf(err).Message != `S2 waits on S9 "Title" (not done); land S9 first` {
+		t.Errorf("error: %v", err)
+	}
+	if runs, err := rig.store.List(); err != nil || len(runs) != 0 {
+		t.Errorf("runs: %v %v", runs, err)
+	}
+	for _, call := range rig.fake.CallsTo("slicer") {
+		if call.Args[0] != "deps" && call.Args[0] != "show" {
+			t.Errorf("call before dependency refusal: %+v", call)
+		}
+	}
+}

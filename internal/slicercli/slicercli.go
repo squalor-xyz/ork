@@ -64,6 +64,15 @@ func (c Client) Deps(ctx context.Context, root string) ([]Item, error) {
 	return items, nil
 }
 
+// ItemDeps runs `slicer deps ID --json --lean --root ROOT`.
+func (c Client) ItemDeps(ctx context.Context, root, id string) (*ItemDeps, error) {
+	var deps ItemDeps
+	if err := clirun.RunJSON(ctx, c.call("deps", id, "--json", "--lean", "--root", root), &deps); err != nil {
+		return nil, err
+	}
+	return &deps, nil
+}
+
 // Show runs `slicer show ID --json --lean --root ROOT`.
 func (c Client) Show(ctx context.Context, root, id string) (*Detail, error) {
 	var d Detail

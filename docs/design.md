@@ -185,7 +185,18 @@ ork (TUI)  ork status --json (CLI)
 3. **Plan.** For each item, ork shows the worktree path, the branch, the
    check command, the budgets, and whether it runs an architect, a split or
    slivers. Then it shows the wave's place in the global queue.
-4. **Check.** At launch (`l` in Waves, `ork wave start`), before the owner
+4. **Check.** ork first reads `slicer deps ID --json --lean` for each
+   selected item. Any `blocked_by` entry refuses the whole call before a
+   spec-check role runs, naming the item and its blockers. Each blocker shows
+   its id and quoted title from `slicer show ID --json --lean`, read once per
+   distinct blocker per call. Failed title reads fall back to the id alone.
+   The refusal ends with a next step: land the blockers first, or untick the
+   blocked items when a blocker is selected in this wave. A blocker selected
+   in the same wave is still not done and is marked `in this wave`. A failed
+   dependency read also refuses the call. The daemon repeats this read at
+   `wave.start`, before admitting any member or writing a run record. This
+   check applies to wave start and the spec check; `run.start` is unchanged.
+   At launch (`l` in Waves, `ork wave start`), before the owner
    approves, ork runs one spec check over the wave's items (adj 164,
    `roles.spec-check`; *proposed* until the Wave lifecycle is reviewed). It
    comes after the lineup and the plan because the owner ticks and plans items

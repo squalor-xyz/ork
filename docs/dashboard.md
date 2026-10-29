@@ -1088,8 +1088,18 @@ queued members without tool writes.
 
 The composer uses `wave.suggest` and `wave.overlap` reads from S81 and
 `wave.start` with per-item launch inputs and confirmed plans (`run.launch-wire`).
-No launch writes happen before confirmation. Errors show their code and
-message verbatim, including per-item launch errors.
+No launch writes happen before confirmation. Before the spec-check role runs,
+ork reads slicer's dependencies for every ticked item. A blocked item refuses
+the whole call, for example `S2 waits on S1 "Title" (in this wave, not done);
+untick S2 or land S1 first` when both items are ticked. A blocker outside the
+wave ends with `land S1 first`. Blocker titles are read once per distinct
+blocker per call; a failed title read falls back to the id alone. The status
+line shows the refusal and keeps the ticks.
+The daemon checks again at wave start; a newly blocked item also refuses the
+whole call and keeps the ticks. A failed dependency read prevents launch.
+The CLI shows the refusal before asking `Start this wave?`. Human refusal
+output shows the text alone; JSON output includes code `refused`. Other
+errors show their code and message verbatim, including per-item launch errors.
 
 ```
 Suggested (slicer plan-parallel)

@@ -15,6 +15,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/ipc"
 )
 
 func waveApp(t *testing.T, failure bool) (*App, *clitest.Fake) {
@@ -397,6 +398,47 @@ func TestWaveStartJSONAlwaysIncludesHeldArray(t *testing.T) {
 			json.Unmarshal([]byte(tc.want), &want)
 			if !reflect.DeepEqual(got, want) {
 				t.Fatalf("held %v, want %v", got, want)
+			}
+		})
+	}
+}
+
+func TestWaveStartPrintsTheBlockedRefusal(t *testing.T) {
+	for _, jsonMode := range []bool{false, true} {
+		t.Run(fmt.Sprint(jsonMode), func(t *testing.T) {
+			const text = `S2 waits on S1 "Title" (in this wave, not done); untick S2 or land S1 first`
+			app := &App{Input: strings.NewReader("y\n"), Call: func(_ context.Context, method string, params, result any) error {
+				switch method {
+				case "run.plan":
+					*(result.(*daemon.RunPlan)) = daemon.RunPlan{Item: "S2"}
+					return nil
+				case "spec.check":
+					return &ipc.Error{Code: daemon.CodeRefused, Message: text}
+				default:
+					t.Fatalf("unexpected call %s", method)
+					return nil
+				}
+			}}
+			var out, errs bytes.Buffer
+			args := []string{"wave", "start", "p", "S2", "--well-specified", "yes", "--split", "no"}
+			if jsonMode {
+				args = append(args, "--json")
+			}
+			code := app.Run(context.Background(), args, &out, &errs)
+			combined := out.String() + errs.String()
+			wantText := text
+			if jsonMode {
+				raw, _ := json.Marshal(text)
+				wantText = string(raw)
+			}
+			if code != ExitFailure || strings.Count(combined, wantText) != 1 || strings.Contains(combined, "Start this wave?") {
+				t.Fatalf("code %d output %s", code, combined)
+			}
+			if jsonMode && strings.Count(out.String(), `"code": "refused"`) != 1 {
+				t.Fatalf("wire code: %s", &out)
+			}
+			if !jsonMode && strings.Contains(combined, "refused:") {
+				t.Fatalf("human refusal should show text alone: %s", combined)
 			}
 		})
 	}

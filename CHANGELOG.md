@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- S181: wave start and the spec check read slicer's dependency state before
+  running roles or admitting any member. A blocked item refuses the whole
+  call, naming its blockers, including dependencies selected in the same
+  wave. Refusals include blocker titles and a short next step naming what to
+  untick or land first. Titles are read once per distinct blocker per call;
+  a failed title read falls back to the id. Failed dependency reads still
+  prevent launch. Waves keeps the ticks
+  and shows the refusal; the CLI refuses before confirmation.
+
 - S141: approval card follow-ups (*proposed*). `ork check RUN N [ticked|later|open]`
   and `ork fix RUN TEXT` call `run.check` and `run.fix`, so `ork approve` works
   from the shell on a slice with human checks. When the card could not read the

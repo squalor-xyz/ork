@@ -8627,7 +8627,7 @@
       "id": "S181",
       "title": "Refuse or warn on a blocked item at wave start",
       "short_title": "Warn on blocked item",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8637,6 +8637,17 @@
           "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): refuse the whole call naming the item and its blockers; wave start and the spec check only (run.start as a follow-up).",
           "created_at": "2026-10-29T16:08:55Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "bc3533a3-adb1-4adb-80c3-aa401092467c",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive, review): the refusal ends with a short next step (e.g. 'untick S2 or land S1 first'); it shows blocker titles as well as ids (one extra slicer read per blocker, de-duplicated per call). Later: '(not done)' repeats after every blocker and can split on wrap; spec-check and wave.start refusals differ in prefix; the refusal comes after the per-item prompts; a dependency missing from slicer's index reads '(not done)'; one-item wave.start on an unregistered project now fails the whole call with not_found; no cycle-in-one-wave test.",
+          "created_at": "2026-10-29T19:56:31Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -8660,7 +8671,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
