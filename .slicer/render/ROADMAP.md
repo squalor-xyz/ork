@@ -208,10 +208,10 @@
 | 151 | [S152](slices/S152.md) | S149 later notes | S | 1 |  |  | — |
 | 152 | [S153](slices/S153.md) | S95 later notes | S | 1 |  |  | done |
 | 153 | [S154](slices/S154.md) | S138 later notes | S | 1 |  |  | — |
-| 154 | S155 | S93 later notes | S | 1 |  | discovered from S93 | — |
-| 155 | S156 | S102 later notes | S | 1 |  | discovered from S102 | — |
-| 156 | S157 | S73 later: next * writes | S | 1 |  | discovered from S73 | — |
-| 157 | S158 | S71 later notes | S | 1 |  | discovered from S71 | — |
+| 154 | [S155](slices/S155.md) | S93 later notes | S | 1 |  | discovered from S93 | — |
+| 155 | [S156](slices/S156.md) | S102 later notes | S | 1 |  | discovered from S102 | — |
+| 156 | [S157](slices/S157.md) | S73 later: next * writes | S | 1 |  | discovered from S73 | — |
+| 157 | [S158](slices/S158.md) | S71 later notes | S | 1 |  | discovered from S71 | — |
 | 158 | [S159](slices/S159.md) | S135 later notes | S | 1 |  | discovered from S135 | done |
 | 159 | [S160](slices/S160.md) | Add/remove projects | S | 2 |  | discovered from S96 | done |
 | 160 | [S161](slices/S161.md) | projects set | M | 2 |  | discovered from S136 | done |

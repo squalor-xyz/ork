@@ -1568,7 +1568,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "05717345-c729-421f-bcfc-ebba7dda5e2b",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29: folded into S142 (its docs pass rewrites boundaries.md, design.md, glossary.md and roles.go wording for v9/v10). Retire S90 once S142 lands.",
+          "created_at": "2026-10-29T11:53:48Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -6262,6 +6274,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "be952fb6-e356-4541-ba33-8be97a5ffdd3",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29: S142 also covers S90's stale lines (boundaries.md v7/s382 text, the 'waiting on' wording in design.md, glossary.md and roles.go); retire S90 when S142 lands. Prompts: roles.prompt-seed (adj 30) is decided as slicer-fresh, so re-seeding from v10 needs no new decision.",
+          "created_at": "2026-10-29T11:53:48Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -6479,7 +6502,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "99465d1f-11b3-48d5-a99b-dd967b45eee9",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29 (interactive): take the visible UI bullets: fit-test for the compact layout instead of the fixed 100 columns, A2 fallback pane placement, sidebar stall cue at 80x24, empty tokens line on a running step, detail footer wrap. The test-hygiene bullets stay as later notes.",
+          "created_at": "2026-10-29T11:53:48Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -6507,7 +6542,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "cf3597bc-a43c-4963-831c-132d9af12601",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29 (interactive): correctness set only: per-pane sequence number for run.render answers, corrupt run.json reads as unreadable not 'no run', a read error says why renders could not be read, renderOn() stops resetting pane state from the draw path. Side-scroll and the other bullets stay later notes.",
+          "created_at": "2026-10-29T11:53:48Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -6909,7 +6956,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "24d3dc82-13ff-4fa9-ab72-5f48f6bb6baf",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29 (interactive): all four items (waiting since HH:MM replaces last heard for awaiting-approval/paused; hide Wait text that only restates the state; '2 of 6 steps' for owner-wait states; no stage-bar animation during an owner wait). Run after S142, which changes the same wait-phase rows.",
+          "created_at": "2026-10-29T11:53:48Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -6935,7 +6994,7 @@
       "title": "S93 later notes: gate walk with repeated reviewer rows; environment-dependent daemon adapter test",
       "short_title": "S93 later notes",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -6975,7 +7034,7 @@
       "title": "S102 later notes: registration re-check by name only; worktree assertions in the removal test",
       "short_title": "S102 later notes",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -7015,7 +7074,7 @@
       "title": "Allow rule slicer next * also approves next --start and --render",
       "short_title": "S73 later: next * writes",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -7055,7 +7114,7 @@
       "title": "S71 later notes: doctor registry line, sh prefix strip, time, no-projects line",
       "short_title": "S71 later notes",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
