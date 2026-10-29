@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/daemon/runs.go:30-40`\n- `internal/daemon/runs.go:59-68`\n- `internal/daemon/runs.go:1076-1110`\n- `internal/daemon/handlers.go:113`\n- `internal/daemon/client.go:179-181`\n- `internal/daemon/ledger_test.go` (new)\n- `internal/tui/live.go:19-39`\n- `internal/tui/daemon.go:73-80`\n- `internal/tui/pane.go:326-337`\n- `internal/tui/keys.go:515-519`\n- `internal/tui/model.go:360-380`\n- `internal/tui/model.go:1179-1215`\n- `internal/tui/card.go:591-650`\n- `internal/tui/ledgerend.go` (new)\n- `internal/tui/ledgerend_test.go` (new)\n- `docs/dashboard.md:530`\n- `docs/design.md:1102`\n- `CHANGELOG.md`"
+      "body": "- `internal/daemon/runs.go:30-40`\n- `internal/daemon/runs.go:59-68`\n- `internal/daemon/runs.go:1076-1110`\n- `internal/daemon/handlers.go:113`\n- `internal/daemon/client.go:179-181`\n- `internal/daemon/ledger_test.go` (new)\n- `internal/tui/live.go:19-39`\n- `internal/tui/daemon.go:73-80`\n- `internal/tui/pane.go:326-337`\n- `internal/tui/keys.go:515-519`\n- `internal/tui/model.go:360-380`\n- `internal/tui/model.go:1179-1215`\n- `internal/tui/card.go:591-650`\n- `internal/tui/ledgerend.go` (new)\n- `internal/tui/ledgerend_test.go` (new)\n- `docs/dashboard.md:530`\n- `docs/design.md:1102`\n- `CHANGELOG.md`\n- `docs/boundaries.md`\n- `testdata/golden/`"
     },
     {
       "heading": "Failing tests",

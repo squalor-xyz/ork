@@ -8387,7 +8387,7 @@
       "id": "S175",
       "title": "End a stale ledger run from the run pane",
       "short_title": "End a stale ledger run",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8397,6 +8397,50 @@
           "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): defaults accepted (no shell ork end; no ending from a stopped engine run's pane).",
           "created_at": "2026-10-29T16:08:54Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "edf3d056-32db-4a39-99d8-2ea402bfbc27",
+          "kind": "",
+          "text": "**2026-10-29** — Fix round 1: slicer's relay-run end has no stale guard under the ledger lock, so ork's re-read leaves a one-subprocess window between the check and the end; consider an --if-stale flag upstream in slicer.",
+          "created_at": "2026-10-29T19:40:52Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "a70f9acc-4612-499b-b3d1-3220893d7118",
+          "kind": "",
+          "text": "**2026-10-29** — Fix round 1: a not_found result reads 'end ledger run RUN: no ledger run RUN' because the status line prefixes the verb and the daemon message repeats the run; shorten one of them.",
+          "created_at": "2026-10-29T19:40:52Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "7ac12ee4-5f70-4267-9deb-471e8bf31c0b",
+          "kind": "",
+          "text": "**2026-10-29** — Fix round 1: adj 42 (dash.external-runs, view-only, ork never acts on relays started elsewhere) and docs/boundaries.md:77 still say view-only; the owner has to supersede adj 42 before this lands.",
+          "created_at": "2026-10-29T19:40:52Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "b7d9aae8-1288-43ee-89e1-fdbe6ad7d8e8",
+          "kind": "",
+          "text": "**2026-10-29** — Orchestration trial (run 45, S175): Claude sonnet-high implementer; review PASS, UI pass FAIL then PASS, 1 fix round; 1 owner question (adj 174 conflicted with adj 42).",
+          "created_at": "2026-10-29T19:46:53Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -8420,7 +8464,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

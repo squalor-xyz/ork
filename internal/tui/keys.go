@@ -194,6 +194,8 @@ func confirmWord(verb string) string {
 		return verb
 	case "cleanup":
 		return "clean up"
+	case "end":
+		return "end run"
 	case "answer":
 		return "send"
 	}
@@ -513,9 +515,16 @@ func (m *Model) paneHints() []hintEntry {
 		scroll()
 		esc("close pane")
 	case m.pane.ledger:
-		// A relay started elsewhere has no actions (S149 moved this note here).
+		// A relay started elsewhere has no actions (S149 moved this note here),
+		// except that a stale one can be ended (S175).
 		scroll()
-		l.add(dropPinned, short(k.Close, "", "started elsewhere, read-only"))
+		note := "started elsewhere, read-only"
+		if m.paneLedgerStale() {
+			// x outranks the scroll keys, and the note no longer says read-only.
+			l.add(dropRow, offer(m.cfg.Live != nil && !m.ledgerEndPending(), k.Stop, "x", "end run"))
+			note = "started elsewhere"
+		}
+		l.add(dropPinned, short(k.Close, "", note))
 		esc("close pane")
 	case row.unavailable:
 		scroll()

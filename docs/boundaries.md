@@ -75,4 +75,5 @@ change the contract by itself.
   `git branch -d` for a merged run (`git.cleanup-key`). No merge, push or
   tag in v1.
 - Act only on runs that ork launched. Relays started elsewhere are
-  view-only (`dash.external-runs`).
+  view-only (`dash.external-runs`), with one exception: ork may end a
+  stale ledger run after a y/N confirm (`dash.external-runs-end`, adj 174).

@@ -1,0 +1,24 @@
+[1mork[m                │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[90m  Running        0 [m│[90m────────────────────────────────────────────────────────────[m
+[1;7;97;44m0>Needs you      0 [m│[1;36mNeeds you 0[m
+[90m1[m ork             *│  [90mnothing needs you[m
+                   │
+                   │[1;36mRunning 0[m
+                   │[1;7;97;44m   ork  S27  stale  [......]  !! heard 45m                  [m
+                   │    [90mRun run-20261029-004308-40d4[m
+                   │    [90m[......][m  [1;31m!! last heard 45m ago[m
+                   │    [90mimplementer[m > [90mreviewer[m > [90mgate[m
+                   │    [90m. implementer queued[m
+                   │    [90m. reviewer    queued[m
+                   │    [90m. gate        queued[m
+                   │
+                   │    slicer relay-run end run-20261029-004308-40d4
+                   │      --outcome stopped --close-steps fail
+                   │    End this run as stopped and fail its unfinished steps?
+                   │    [y/N] (Enter is No)
+                   │
+                   │[1;36mRecent[m
+                   │[90m  +4 more lines[m
+                   │[90m────────────────────────────────────────────────────────────[m
+                   │ y [2mend run[m; n [2mcancel[m
+                   │ 1 project | refreshed 16:42:00

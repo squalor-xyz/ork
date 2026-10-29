@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-185 items · — 44 · done 136 · retired 5
+185 items · — 43 · done 137 · retired 5
 
 ## v1.1
 
@@ -230,7 +230,7 @@
 | 173 | [S171](slices/S171.md) | Add a slice note in ork | S | - |  | discovered from S165 | — |
 | 174 | [S172](slices/S172.md) | adj answers in ork | M | - |  | discovered from S165 | — |
 | 175 | [S174](slices/S174.md) | More registry settings | M | - |  | discovered from S165 | — |
-| 176 | [S175](slices/S175.md) | End a stale ledger run | S | - |  | discovered from S165 | — |
+| 176 | [S175](slices/S175.md) | End a stale ledger run | S | - |  | discovered from S165 | done |
 | 177 | [S176](slices/S176.md) | Open a role report | S | - |  | discovered from S165 | — |
 | 178 | [S177](slices/S177.md) | Per-run stop point | S | - |  | discovered from S165 | — |
 | 179 | [S178](slices/S178.md) | Doctor upgrade hints | S | - |  | discovered from S165 | — |

@@ -78,6 +78,16 @@ func (d *Daemon) Stop(ctx context.Context, run string) error {
 	defer c.Close()
 	return c.Stop(ctx, run)
 }
+
+// EndLedger ends a stale ledger run of the project (run.end-ledger, S175).
+func (d *Daemon) EndLedger(ctx context.Context, project, run string) error {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	return c.EndLedger(ctx, project, run)
+}
 func (d *Daemon) Retry(ctx context.Context, run string) error {
 	c, err := d.Connect(ctx)
 	if err != nil {
