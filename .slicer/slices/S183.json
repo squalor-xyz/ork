@@ -1,0 +1,39 @@
+{
+  "id": "S183",
+  "title": "Fix stale statements found in S165 review (README, PROJECT, boundaries, state, design, dashboard)",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S165 review found statements that disagree with the code: README.md:22 says the Waves screen is later work (it exists); PROJECT.md:3 says spec only, no code; docs/boundaries.md:38 says v7 today and :77-78 says no merge, push or tag in v1 (landing is in ork); docs/state.md:77-78 says check_minutes sets the stale flag and goes into briefs (it is only the check command's timeout, engine/states.go:198); docs/design.md:423-426 lists the states without land (runrec/record.go:31); docs/dashboard.md:12-13 promises mouse clicks (no mouse code until S66). Run after S142, which rewrites the contract wording in boundaries.md and design.md."
+    },
+    {
+      "heading": "Files",
+      "body": "- `README.md`\n- `PROJECT.md`\n- `docs/boundaries.md`\n- `docs/state.md`\n- `docs/design.md`\n- `docs/dashboard.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "No Go tests. Check by reading: each statement above matches the code or doc it cites after the edit."
+    },
+    {
+      "heading": "Implement",
+      "body": "Docs only. Re-anchor each line after S142 lands (line numbers move). Fix the six statements; for the mouse sentence say clicks are opt-in and arrive with S66 (*proposed*); for boundaries.md say what ork does at landing (ff-only merge, push when the project allows it, no tag) per docs/design.md:351-391. Not a UI slice."
+    },
+    {
+      "heading": "Check",
+      "body": "slicer check; adj lint; rg each cited sentence to confirm it is gone."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

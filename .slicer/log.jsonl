@@ -2280,3 +2280,44 @@
 {"when": "2026-10-29T12:01:30Z", "item": "S165", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-10-29T12:01:30Z", "item": "S165", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-29T12:01:30Z", "item": "S165", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-29T13:26:41Z", "item": "S166", "action": "add", "from": "", "to": "open", "note": "Lineup and budget overrides on every launch path (Roadmap launch, ork run)"}
+{"when": "2026-10-29T13:26:41Z", "item": "S167", "action": "add", "from": "", "to": "open", "note": "Spec check on a single-slice launch"}
+{"when": "2026-10-29T13:26:41Z", "item": "S168", "action": "add", "from": "", "to": "open", "note": "Role matrix view in ork (read-only)"}
+{"when": "2026-10-29T13:26:41Z", "item": "S169", "action": "add", "from": "", "to": "open", "note": "Per-vendor slot cap and vendor-out memory (one Codex slot, Claude stand-in)"}
+{"when": "2026-10-29T13:26:42Z", "item": "S170", "action": "add", "from": "", "to": "open", "note": "File a slice from a note or a request in ork"}
+{"when": "2026-10-29T13:26:42Z", "item": "S171", "action": "add", "from": "", "to": "open", "note": "Add a note to a slice in ork"}
+{"when": "2026-10-29T13:26:42Z", "item": "S172", "action": "add", "from": "", "to": "open", "note": "Answer and ask adj records in ork"}
+{"when": "2026-10-29T13:26:42Z", "item": "S173", "action": "add", "from": "", "to": "open", "note": "Role matrix editor in ork"}
+{"when": "2026-10-29T13:26:42Z", "item": "S174", "action": "add", "from": "", "to": "open", "note": "Registry settings for the remaining fields and the global cap"}
+{"when": "2026-10-29T13:26:42Z", "item": "S175", "action": "add", "from": "", "to": "open", "note": "End a stale ledger run from the run pane"}
+{"when": "2026-10-29T13:26:42Z", "item": "S176", "action": "add", "from": "", "to": "open", "note": "Open a role report in the run pane"}
+{"when": "2026-10-29T13:26:42Z", "item": "S177", "action": "add", "from": "", "to": "open", "note": "Per-run stop point: after commit, or at land"}
+{"when": "2026-10-29T13:26:43Z", "item": "S178", "action": "add", "from": "", "to": "open", "note": "ork doctor reports sibling tool versions and prints upgrade commands"}
+{"when": "2026-10-29T13:26:43Z", "item": "S179", "action": "add", "from": "", "to": "open", "note": "Spec drafting round in ork"}
+{"when": "2026-10-29T13:26:43Z", "item": "S180", "action": "add", "from": "", "to": "open", "note": "Changelog conflict resolver at landing"}
+{"when": "2026-10-29T13:26:43Z", "item": "S181", "action": "add", "from": "", "to": "open", "note": "Refuse or warn on a blocked item at wave start"}
+{"when": "2026-10-29T13:26:43Z", "item": "S182", "action": "add", "from": "", "to": "open", "note": "Watchdog for a hung role"}
+{"when": "2026-10-29T13:26:51Z", "item": "S183", "action": "add", "from": "", "to": "open", "note": "Fix stale statements found in S165 review (README, PROJECT, boundaries, state, design, dashboard)"}
+{"when": "2026-10-29T13:26:51Z", "item": "S166", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:51Z", "item": "S167", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S168", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S169", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S170", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S171", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S172", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S173", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S174", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S175", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:52Z", "item": "S176", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S177", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S178", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S179", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S180", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S181", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S182", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S183", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-29T13:26:53Z", "item": "S183", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-29T13:26:53Z", "item": "S183", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T13:26:54Z", "item": "S183", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-29T13:26:54Z", "item": "S183", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-29T13:26:54Z", "item": "S183", "action": "edit", "from": "", "to": "", "note": "Check"}
