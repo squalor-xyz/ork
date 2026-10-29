@@ -196,9 +196,10 @@ ork (TUI)  ork status --json (CLI)
    in the same wave is still not done and is marked `in this wave`. A failed
    dependency read also refuses the call. The daemon repeats this read at
    `wave.start`, before admitting any member or writing a run record. This
-   check applies to wave start and the spec check; `run.start` is unchanged.
-   At launch (`l` in Waves, `ork wave start`), before the owner
-   approves, ork runs one spec check over the wave's items (adj 164,
+   dependency check applies to wave start and the spec check; `run.start`
+   does not repeat the dependency read.
+   At launch (`l` in Waves, `ork wave start`, or `ork run`), before the owner
+   approves, ork runs one spec check over the selected items (adj 164,
    `roles.spec-check`; *proposed* until the Wave lifecycle is reviewed). It
    comes after the lineup and the plan because the owner ticks and plans items
    first. The check is one read-only pass of the spec-check role over the
@@ -212,7 +213,9 @@ ork (TUI)  ork status --json (CLI)
    not have the main checkout's edit. Only ready items, or items whose
    questions are all answered, can be approved: the daemon refuses an item
    whose check, against its current spec, left questions open
-   (`spec_questions`). The daemon keeps each verdict in memory, as an
+   on both `wave.start` and `run.start`
+   (`spec_questions`). A failed spec check blocks launch; there is no skip
+   flag. The daemon keeps each verdict in memory, as an
    ephemeral job cache with a fingerprint of the slice's spec (a restart asks
    again for role verdicts; see boundaries.md), so a changed spec is checked
    again and an unchanged one is not. The clients send every ticked item each time; the
@@ -980,7 +983,7 @@ ork                         open the TUI (start the daemon if needed)
 ork status [--project P]    waves, slices, roles, needs-you
 ork wave suggest P          slicer's suggested waves, in order, with reasons
 ork wave start P ITEM...    check the specs, then launch (asks unless --yes)
-ork run P ID                show a plan and launch one slice (S17)
+ork run P ID                show a plan, check the spec, then launch one slice
 ork approve RUN             finish a passed slice, commit and land it
 ork check RUN N [STATE]     mark human check N: ticked (the default), later or open
 ork fix RUN TEXT            send a fix note to a fix round
@@ -1016,6 +1019,15 @@ left out of the wave and named as `held`; a wave with no item left does not star
 `--json` the questions and the shared `Owner needed` text go to stderr.
 The JSON result always includes a `held` array of excluded item IDs, including
 when the wave starts or the owner cancels; it is `[]` when nothing is held.
+S167 gives `ork run` the same sitting after the plan and before
+`Start this slice? [y/N]`. A number picks an option; text answers directly.
+An empty line or end of input holds the slice and exits 1, without starting.
+`--yes` skips only confirmation and still runs the spec check. A failed
+check blocks launch. With `--json`, the sitting goes to stderr and stdout
+holds one result; a held slice returns `{"started":false,"held":["ID"]}`.
+`ork run` refuses a blocked item through the spec check (S181); raw
+`run.start` does not read dependencies yet.
+
 Suggestions call `slicer plan-parallel --json --lean --root ROOT` for the
 registered project. Tool errors keep their code and message, including a
 missing `files_section`. The owner chooses the item ids (`wave.start-input`).
@@ -1051,7 +1063,7 @@ tool writes, even as stopping active members frees slots. A wave result
 with any item error exits 1; successful peers remain visible in the result.
 
 `ork run P ID` asks `Well specified?` and `Split?` as y/n questions
-(`[y/n]`, no default) before showing the plan, then asks
+(`[y/n]`, no default) before showing the plan, runs the spec check, then asks
 `Start this slice?` (`[y/N]`, Enter takes No) (adj #86,
 `run.lineup-inputs`). The prompts take y, yes, n or no in any case, and
 Enter alone is an error where there is no default (adj #87,

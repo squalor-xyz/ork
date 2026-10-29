@@ -163,9 +163,14 @@ confirmation to edit the lineup and budgets, `enter` to save and replan, or
 
     ork run PROJECT ID
 
-It asks `Well specified?` and `Split?`, prints the plan, and asks `Start this
-slice? [y/N]`. For a script, give `--yes --well-specified y/n --split y/n`
-(`internal/cli/run.go:48-50`, `docs/design.md:1010-1018`).
+It asks `Well specified?` and `Split?`, prints the plan, and runs the spec
+check before asking `Start this slice? [y/N]`. Answer each spec question
+with an option number or text. An empty line or end of input holds the
+slice and exits 1. A failed check also blocks launch.
+For a script, give `--yes --well-specified y/n --split y/n`; `--yes`
+still runs the spec check. With `--json`, the sitting goes to stderr and
+stdout holds one result. A held slice returns
+`{"started":false,"held":["ID"]}` (`internal/cli/run.go`).
 
 For example, to use a Codex primary with a Claude fallback for this run:
 
@@ -223,8 +228,8 @@ suggested waves. For each item you want:
     ork wave start PROJECT ITEM... [--yes --well-specified y/n --split y/n]
     ork stop WAVE-ID
 
-`wave start` asks the spec-check questions on standard input and prints each
-plan before it asks to start (`docs/design.md:974-996`,
+Like `ork run`, `wave start` asks the spec-check questions on standard input
+and prints each plan before it asks to start (`docs/design.md:974-996`,
 `internal/cli/wave.go:90-92`). `ork stop` takes the `wave-` id it prints and
 stops every unfinished run in that wave, queued ones included
 (`docs/design.md:1004-1008`).
