@@ -620,10 +620,17 @@ ork adds:
 - a read-only role that changed the tree;
 - a lost process.
 
+An orchestrator waiting for an owner answer records `--phase wait --waiting-on
+owner`; awaiting approval records `--waiting-on approval`. A waiting step
+never goes stale. Structured blocker questions are mirrored with `relay-run
+ask`, and the owner's answer with `relay-run answer`. Legacy unstructured
+questions retain ork's owner wait but cannot be filed as a structured ledger
+question. Answer, approve, fix and retry record `--phase start` to continue.
+
 ## Roles
 
 - **Prompts.** Embedded in ork and canonical (`roles.prompts`). They are
-  seeded from slicer's v7 contract, with anything else written fresh
+  seeded from slicer's v10 contract, with anything else written fresh
   (`roles.prompt-seed`). They carry no Claude Code-only mechanics (Agent
   tool, SendMessage, nesting), because roles here never spawn agents.
   `ork roles print [ROLE]` prints them so the agents repo can generate its
@@ -653,16 +660,18 @@ ork adds:
   monospace, clipping, key hints, and the renders it writes), the same for every vendor. It runs beside
   the reviewer on a slice that touches the UI (see the review state). Its
   lineup row is the matrix row that the rule naming "UI pass row (rNN)" gives
-  (u10 today). Until slicer has a `ui` role (slicer s392), that row's role is
-  `reviewer`: ork keeps it out of the reviewer's and the gate's fallback
-  chains and puts it in the `ui` lineup, and the ledger step has role
-  `reviewer` with the task `ID ui`. In any fallback chain, an entry identical
+  (u10 today). The matrix may still label that row `reviewer`: ork keeps
+  it out of the reviewer's and the gate's fallback
+  chains and puts it in the `ui` lineup. The contract JSON supplies the
+  ledger role `ui`, with the task `ID ui`. In any fallback chain, an entry identical
   to the one before it is dropped.
 - **Spec check.** A read-only role with its own prompt (`spec-check.md`) that
   runs once over a batch of slices before a wave (see the Check step of the
   Wave lifecycle). It works in the project checkout, not in a worktree, and
-  has no run record: the daemon runs it as a job, reads HEAD and `git status
-  --porcelain` before and after, and fails the check, keeping no verdict, when
+  has no engine run record. It begins a ledger run on the batch, records
+  `spec-check` steps with no parent, and ends it with `pass` after reading the
+  report, or `stopped` on failure or cancellation. The daemon runs it as a job,
+  reads HEAD and `git status --porcelain` before and after, and fails the check, keeping no verdict, when
   the tree changed during the role's own run with HEAD unchanged
   (`role.readonly-fingerprint`). If HEAD moves, the checkout's working-tree
   status changes outside the role's own run, or the report has a shape error,
@@ -673,9 +682,9 @@ ork adds:
   multi-block parse (`ParseOwnerQuestions`) reads every `Question:` block of a
   section with the strict shape of an owner question. Its lineup row is the
   matrix row that the rule naming "Spec check row (rNN)" gives (u11 today:
-  sonnet, medium). Until slicer has a spec-check role (slicer s392), that
-  row's role is `reviewer`: ork keeps it out of every run's reviewer and gate
-  chains. Its report and temp directory are under
+  sonnet, medium). That matrix row remains separate from every run's
+  reviewer and gate chains. The ledger role comes from the contract JSON as
+  `spec-check`. Its report and temp directory are under
   `~/.local/state/ork/spec-checks/<project-key>/<item-key>/` (hashed identities).
   Each item has `check.json` identifying the project and item, `spec-check.md`,
   and, after an answer, `answers.json`. The batch's first item also holds the
@@ -735,11 +744,19 @@ probes 05 to 07 ran on 0.164.0), grok 1.0.62. Grok has no successful run, so mos
 | Rate-limit signal | Not forced. Stream output carried `rate_limit_event` with `rate_limit_info.status` `allowed`, `rateLimitType` `five_hour` and `resetsAt`. Utilization is at `rate_limit_info.unifiedWindows.{five_hour,seven_day}.utilization` (`testdata/vendors/claude/02-stream-json.stdout`). A `rejected` status and the exit code when limited are *unverified*. The help documents only `--fallback-model`, for "overloaded or not available" (`testdata/vendors/claude/rate-limit-help-grep.txt`). | *unverified*: no rate-limit or quota term appears in `codex --help` or `codex exec --help` (`testdata/vendors/codex/rate-limit-help-grep.txt`). No JSON limit signal was observed. Decided: ork matches the reported strings, "You've hit your usage limit" and HTTP 429 `rate_limit_exceeded`, in `turn.failed` or `error` events and falls back automatically (`vendor.codex-ratelimit`). The owner added "out of credits" on 2026-10-27 (S133), classified as a limit under decision 156 (`vendor.fallback-trigger-v2`). The text matches are case-sensitive substrings. The out-of-credits message was observed in text mode on 2026-10-26; its JSON event shape is *unverified*. `testdata/vendors/codex/out-of-credits-unverified.stdout` is synthetic, based on the existing `turn.failed` shape. Real JSON samples are still to be captured. | *unverified*: every run that reached the API (probes 01, 02, 04 and 05) got HTTP 403, "used all available credits or reached its monthly spending limit" (`testdata/vendors/grok/01-plain-json.stdout`). That is a quota limit, not a documented rate-limit signal, and ork has no class for it yet. No rate-limit term appears in `grok --help` (`testdata/vendors/grok/rate-limit-help-grep.txt`). |
 
 - **Fallback** (`vendor.fallback-trigger-v2`, decision 156): an exit
-  classified as rate-limited or error moves the role to the next entry in
+  classified as rate-limited, out of credits or error moves the role to the next eligible entry in
   its chain, in the same state and round. Auth and unclassified exits, an
   unsuccessful round with permission denials, and a changed tree in a
   read-only role still stop.
   If no row remains, the stop reason names each failed row and its exit.
+  Out of credits skips all later rows on that vendor; a rate limit takes
+  the plain next row. On v10 the failed ledger step includes the classified
+  vendor message as `--reason`; v9 omits that flag. Falling back on a plain
+  error exit is an owner-approved deviation from v10 (decision 156, S142).
+  The approval card names each switch as `role switched: ROLE FROM to TO
+  (REASON)`, identifying rows by vendor, model and effort. It has no
+  "Deviation:" prefix. The reason reads "out of credits", "rate limited" or
+  "error exit".
   The role stays on the fallback row for the rest of the run
   (`vendor.fallback-sticky`, decision 115). The ordered role records determine
   the row from vendor, model, effort and exit; no new run record field is needed.
@@ -1114,13 +1131,14 @@ a run that is not stopped or is busy. An unknown run returns `not_found`.
   needs only the vendors a lineup uses (`doctor.vendors-optional`). The login check (by
   running a trivial command, without reading credentials) comes in S06, and
   doctor makes no model call;
-- the slicer contract: the first line of `slicer ai relay` against ork's
-  accepted set of versions (`roles.AcceptedContracts`, v7 and v8;
-  `boundary.contract`). Any other version, older or newer, fails the check.
-  The engine makes the same check before it creates a run. v8 changes only
-  the outer session's hand-back handling and the orchestrator's last line
-  (`waiting on: ROLE AGENT-ID`; `slicer/CHANGELOG.md:20`). ork's role prompts
-  are written against v8;
+- the slicer contract: the first line of `slicer ai relay --root ROOT`
+  against the accepted set (`roles.AcceptedContracts`, v9 and v10;
+  `boundary.contract`). Any other version fails. A project pin mismatch
+  (`contract_mismatch`, exit 3) reports the pin. Doctor and the engine also
+  validate `ai relay --json`: exact finding kinds `fix`, `owner`, `later`,
+  required conformance keys, ledger role names, gate criteria and verdicts,
+  and outcomes. The run records its version, roles and gate criteria for
+  resumed runs. Embedded role prompts are written against v10;
 - each project's path exists and is a directory; a configured check command
   passes `sh -n -c` and its first word after leading `VAR=value` assignments
   resolves on PATH, or against the project directory when it contains `/`.
@@ -1236,7 +1254,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
 - `roles print [ROLE]`: `{"roles":[{"name","prompt"}]}`. Text: the prompt of
   ROLE as embedded, or all four with a `==== NAME ====` line before each.
 - `doctor`: `{"ok","tools":[{"name","required","present","path","version",
-  "ok","error"}],"contract":{"accepted":[7],"found","ok","error"},"binary",
+  "ok","error"}],"contract":{"accepted":[9,10],"found","ok","error"},"binary",
   "projects":[{"name","path","findings":[]}],"registry_error"?}`,
   where `binary` is the path of the running ork binary (empty when it cannot
   be read). Text: one `[ok]`, `[--]` or `[FAIL]` line per check, and the first

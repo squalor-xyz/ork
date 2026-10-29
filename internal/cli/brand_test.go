@@ -10,7 +10,7 @@ import (
 
 func TestDoctorTextStartsWithMark(t *testing.T) {
 	for _, locale := range []string{"C", "en_US.UTF-8"} {
-		app, _, _ := doctorApp(t, "Contract: relay v7")
+		app, _, _ := doctorApp(t, "Contract: relay v10")
 		app.Getenv = func(k string) string {
 			if k == "LANG" {
 				return locale
@@ -25,7 +25,7 @@ func TestDoctorTextStartsWithMark(t *testing.T) {
 	}
 }
 func TestDoctorJSONHasNoMark(t *testing.T) {
-	app, _, _ := doctorApp(t, "Contract: relay v7")
+	app, _, _ := doctorApp(t, "Contract: relay v10")
 	var previous string
 	for _, locale := range []string{"C", "en_US.UTF-8"} {
 		app.Getenv = func(k string) string {

@@ -231,7 +231,11 @@ func newHarness(t *testing.T, opts ...func(*harnessOpts)) *harness {
 		routes = append(routes, o.routesFor(P, W)...)
 	}
 	routes = append(routes,
-		with(s("ai", "relay"), "Contract: relay v7\n\n# Slice relay\n"),
+		with(s("ai", "relay", "--root", P), "Contract: relay v10\n\n# Slice relay\n"),
+		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v10.json")},
+		with(clitest.Route{Tool: "slicer", Args: []string{"relay-run", "begin"}, Prefix: true}, `{"run":{"id":"run-1"}}`),
+		with(clitest.Route{Tool: "slicer", Args: []string{"relay-run", "ask"}, Prefix: true}, `{"question":{"id":"q1"}}`),
+		with(clitest.Route{Tool: "slicer", Args: []string{"relay-run", "answer"}, Prefix: true}, `{}`),
 		with(s("show", item, "--json", "--lean", "--root", W), sliceJSON()),
 		with(s("config", "implement_finish", "--json", "--root", W), `{"key":"implement_finish","value":"done"}`),
 		with(s("check", "--json", "--root", W), `{"ok":true,"stale_render":[],"stale_sync":[],"problems":[],"warnings":[]}`),

@@ -127,7 +127,7 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 	}
 	phaseWidth := 0
 	for _, step := range steps {
-		phaseWidth = max(phaseWidth, lipgloss.Width(treeText(step.Phase)))
+		phaseWidth = max(phaseWidth, lipgloss.Width(treeText(stepPhaseLabel(step.Step))))
 	}
 	byID := make(map[string]int, len(steps))
 	for i, s := range steps {
@@ -163,6 +163,9 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 		case "start":
 			glyph = string("|/-\\"[frame%4])
 			style = m.cfg.Theme.Heading
+		case "wait":
+			glyph = "?"
+			style = m.cfg.Theme.Warn
 		case "done":
 			glyph = "+"
 			style = m.cfg.Theme.Dim
@@ -181,10 +184,10 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 		role := treeClip(treeText(s.Role), roleColumns)
 		role += strings.Repeat(" ", max(roleColumns-lipgloss.Width(role), 0))
 		phaseColumns := min(phaseWidth, max(available-roleColumns-4, 1))
-		phase := treeClip(treeText(s.Phase), phaseColumns)
+		phase := treeClip(treeText(stepPhaseLabel(s.Step)), phaseColumns)
 		phase += strings.Repeat(" ", max(phaseColumns-lipgloss.Width(phase), 0))
 		parts := []string{glyph, role, phase}
-		if began, err := time.Parse(time.RFC3339Nano, s.BeganAt); err == nil {
+		if began, err := time.Parse(time.RFC3339Nano, s.BeganAt); err == nil && s.Phase != "wait" {
 			end := now
 			valid := s.Phase == "start"
 			if !valid {
@@ -291,7 +294,7 @@ func boardTreeSteps(run slicercli.RelayRun) []runTreeStep {
 
 // roleDetails joins transient engine data onto the ledger tree by step ID.
 // Source-less ledger steps have no usage or tail. A UI pass step, which the
-// ledger holds as a reviewer step, is named ui and shows its round.
+// ledger records under its own role name and shows its round.
 func (m *Model) roleDetails(steps []runTreeStep, r source.EngineRun) []runTreeStep {
 	steps = withEngineState(steps, r.State)
 	active := -1
@@ -316,13 +319,8 @@ func (m *Model) roleDetails(steps []runTreeStep, r source.EngineRun) []runTreeSt
 				continue
 			}
 			used[j] = true
-			if role.Role == "ui" {
-				// The engine records a UI pass round as a reviewer step (slicer has
-				// no ui role yet) and its own role record says what it was (S136).
-				steps[i].Role = "ui"
-				if steps[i].round == 0 {
-					steps[i].round = role.Round
-				}
+			if role.Role == "ui" && steps[i].round == 0 {
+				steps[i].round = role.Round
 			}
 			steps[i].hasUsage = true
 			steps[i].tokens = role.Tokens
@@ -370,4 +368,23 @@ func tailRows(text string, width int, truncated bool) []string {
 		}
 	}
 	return rows
+}
+
+func stepPhaseLabel(s slicercli.Step) string {
+	if s.Phase == "wait" {
+		if s.WaitingOn != "" {
+			return "waiting on " + s.WaitingOn
+		}
+		return "waiting"
+	}
+	return s.Phase
+}
+
+func ledgerWaiting(r slicercli.RelayRun) bool {
+	for _, s := range r.Steps {
+		if s.Phase == "wait" {
+			return true
+		}
+	}
+	return r.Counts.Waiting > 0
 }

@@ -122,7 +122,7 @@ func TestCodexRateLimitStringsClassifyAsRateLimited(t *testing.T) {
 	// Synthetic JSON, not captured vendor fixtures. The out-of-credits message
 	// was observed in text mode; its JSON event shape is unverified.
 	for _, kind := range []string{"error", "turn.failed"} {
-		for _, message := range []string{"You've hit your usage limit", `HTTP 429 rate_limit_exceeded`, "Your workspace is out of credits. Add credits to continue."} {
+		for _, message := range []string{"You've hit your usage limit", `HTTP 429 rate_limit_exceeded`} {
 			event := map[string]any{"type": kind, "message": message}
 			if kind == "turn.failed" {
 				event = map[string]any{"type": kind, "error": map[string]string{"message": message}}
@@ -136,7 +136,7 @@ func TestCodexRateLimitStringsClassifyAsRateLimited(t *testing.T) {
 		}
 	}
 }
-func TestOutOfCreditsIsRateLimited(t *testing.T) {
+func TestOutOfCreditsHasItsOwnClassification(t *testing.T) {
 	// Synthetic fixture based on the existing turn.failed shape. The message was
 	// observed in text mode; its JSON event shape is unverified.
 	output := fixture(t, "out-of-credits-unverified")
@@ -144,8 +144,8 @@ func TestOutOfCreditsIsRateLimited(t *testing.T) {
 		name, output string
 		want         Exit
 	}{
-		{"turn.failed", output, ExitRateLimited},
-		{"error", `{"type":"error","message":"Your workspace is out of credits. Add credits to continue."}`, ExitRateLimited},
+		{"turn.failed", output, Exit("out_of_credits")},
+		{"error", `{"type":"error","message":"Your workspace is out of credits. Add credits to continue."}`, Exit("out_of_credits")},
 		{"case-sensitive", strings.ReplaceAll(output, "out of credits", "Out of credits"), ExitError},
 		{"agent-message", `{"type":"item.completed","item":{"type":"agent_message","text":"Your workspace is out of credits. Add credits to continue."}}`, ExitError},
 	} {
@@ -278,7 +278,7 @@ func TestCodexFixtureCandidates(t *testing.T) {
 	}{
 		{"error", "raw invalid JSON\n", true, ExitError, false},
 		{"rate-limited", `{"type":"error","message":"You've hit your usage limit"}` + "\n", true, ExitRateLimited, false},
-		{"out-of-credits", fixture(t, "out-of-credits-unverified"), true, ExitRateLimited, false},
+		{"out-of-credits", fixture(t, "out-of-credits-unverified"), true, Exit("out_of_credits"), false},
 		{"ok", `{"type":"turn.completed","usage":{}}` + "\n", false, ExitOK, false},
 		{"configured-dir", "raw invalid JSON\n", true, ExitError, true},
 	} {

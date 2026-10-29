@@ -6,7 +6,7 @@ are ork's own.
 
 Sources are in the sibling repos under `squalor-xyz/`. For slicer's relay
 contract the source is the constant in `slicer/src/slicer/ai.py` that prints
-the text (relay v8), since the line numbers move. ork accepts v7 and v8.
+the text (relay v10), since the line numbers move. ork accepts v9 and v10.
 
 ## Relay roles
 
@@ -62,7 +62,7 @@ fix. Owner: ork (a *proposed* convention of its role prompts).
 **Spec check.** A read-only pass of the spec-check role over the slices of a
 proposed wave, before the lineup (adj #164). Each slice comes back ready, or
 with structured owner questions that the owner answers in one sitting. Owner:
-ork (a *proposed* role; slicer has no spec-check role until its s392).
+ork; slicer records its ledger role as `spec-check`.
 
 ## Lineup and vendors
 
@@ -142,10 +142,10 @@ worktrees of a clone. A run goes stale after 30 minutes with no event. Owner:
 slicer.
 
 **Contract version.** The integer on the first line of `slicer ai relay` and
-`slicer ai relay-orchestrator` (`Contract: relay v8`). ork accepts v7 and v8;
-its embedded role prompts are written against v8. v8 changes only the outer
-session's hand-back handling and the orchestrator's last line
-(`waiting on: ROLE AGENT-ID`; `slicer/CHANGELOG.md:20`). It is bumped only when a
+`slicer ai relay-orchestrator` (`Contract: relay v10`). ork accepts v9 and v10;
+its embedded role prompts are written against v10. The engine and doctor
+validate the machine-readable contract with `slicer ai relay --json`.
+It is bumped only when a
 rule changes. The agents-repo orchestrator role carries a matching
 `Expects:` line. Owner: slicer, `RELAY_CONTRACT`.
 

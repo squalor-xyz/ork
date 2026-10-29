@@ -42,7 +42,7 @@ func humanCheckTexts(sections []slicercli.Section) []string {
 // on a check with the same text carry over. A diff stat that cannot be read
 // is left empty; human checks that cannot be read are named on the card.
 func (e *Engine) buildCard(ctx context.Context, rec runrec.Record, rep *Report) *runrec.ApprovalCard {
-	card := &runrec.ApprovalCard{Round: rec.Round, Verdict: rep.Verdict, Passed: rep.Passed, Failed: rep.Failed}
+	card := &runrec.ApprovalCard{Round: rec.Round, Verdict: rep.Verdict, Passed: rep.Passed, Failed: rep.Failed, Deviations: roleSwitches(rec)}
 	if out, err := e.gitRead(ctx, rec.Worktree, "diff", "--stat", "HEAD"); err == nil {
 		card.DiffStat = strings.TrimSpace(out)
 	}
@@ -194,6 +194,7 @@ func (e *Engine) Fix(ctx context.Context, note string) error {
 	if err != nil {
 		return err
 	}
+	e.orchestratorPhase(ctx, "start", "")
 	return e.advance(ctx)
 }
 
@@ -342,4 +343,34 @@ func sortRenders(ents []fs.DirEntry) {
 		}
 		return ri < rj
 	})
+}
+
+// roleSwitches names each fallback on the approval card. A row's vendor, model
+// and effort identify it in ork's recorded lineup.
+func roleSwitches(rec runrec.Record) []string {
+	var out []string
+	pending := map[string]runrec.RoleRecord{}
+	for _, r := range rec.Roles {
+		if prev, ok := pending[r.Role]; ok {
+			out = append(out, fmt.Sprintf("role switched: %s %s %s %s to %s %s %s (%s)", r.Role, prev.Vendor, prev.Model, prev.Effort, r.Vendor, r.Model, r.Effort, switchReason(prev.Exit)))
+			delete(pending, r.Role)
+		}
+		if fallbackExit(ExitClass(r.Exit)) {
+			pending[r.Role] = r
+		}
+	}
+	return out
+}
+
+func switchReason(exit string) string {
+	switch ExitClass(exit) {
+	case ExitOutOfCredits:
+		return "out of credits"
+	case ExitRateLimited:
+		return "rate limited"
+	case ExitError:
+		return "error exit"
+	default:
+		return exit
+	}
 }

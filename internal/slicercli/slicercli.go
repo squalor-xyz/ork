@@ -84,7 +84,7 @@ func (c Client) Goals(ctx context.Context, root string) (*Goals, error) {
 
 // RelayRuns runs `slicer relay-run list --json --lean [--active] --root ROOT`.
 // With activeOnly, slicer lists only runs that have not ended and have had an
-// event in the last 30 minutes.
+// event in the last 30 minutes, or have a waiting step.
 func (c Client) RelayRuns(ctx context.Context, root string, activeOnly bool) ([]RelayRun, error) {
 	args := []string{"relay-run", "list", "--json", "--lean"}
 	if activeOnly {

@@ -128,10 +128,12 @@ func (r codexRunner) Run(ctx context.Context, req engine.Request) (engine.Result
 		class = engine.ExitOK
 	case codex.ExitUnclassified:
 		class = engine.ExitUnclassified
+	case codex.ExitOutOfCredits:
+		class = engine.ExitOutOfCredits
 	case codex.ExitRateLimited:
 		class = engine.ExitRateLimited
 	}
-	return engine.Result{Exit: class, Session: round.Session, Report: round.Report, Tokens: round.Tokens}, err
+	return engine.Result{Exit: class, Reason: round.Reason, Session: round.Session, Report: round.Report, Tokens: round.Tokens}, err
 }
 
 // codexEnv keeps the role's Go build cache inside its writable temp directory.

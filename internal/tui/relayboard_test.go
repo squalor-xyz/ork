@@ -128,10 +128,10 @@ func TestPipelineLineRoundFollowsTheFixRounds(t *testing.T) {
 	}
 }
 
-func TestWaitingRolesShowAsWaiting(t *testing.T) {
+func TestQueuedRolesShowAsQueued(t *testing.T) {
 	h := treeHarness(t, []slicercli.RelayRun{{ID: "one", State: "active", Steps: []slicercli.Step{{Role: "implementer", Phase: "start"}}}}, "")
 	v := treePaneView(h.m, 120, 60)
-	for _, want := range []string{"reviewer    waiting", "gate        waiting"} {
+	for _, want := range []string{"reviewer    queued", "gate        queued"} {
 		if !strings.Contains(v, want) {
 			t.Fatal(v)
 		}

@@ -51,7 +51,8 @@ func runDaemon(t *testing.T, runner roundRunner, routes ...clitest.Route) (*Daem
 	fake := clitest.Install(t, append(routes, []clitest.Route{
 		clitest.Route{Tool: "slicer", Args: []string{"plan-parallel", "--json", "--lean", "--root", p.Path}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "plan-parallel.json")},
 		clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: `{"roles":[{"role":"implementer","row":{"agent":"Unknown","vendor":"Claude","model":"wrong"},"alternatives":[{"agent":"Claude Code","vendor":"Acme","model":"sonnet","reasoning":"high"},{"agent":"Codex","vendor":"OpenAI","model":"gpt","reasoning":"high"}]},{"role":"reviewer","row":{"agent":"Claude Code","vendor":"Claude","model":"opus","reasoning":"medium"}},{"role":"architect","row":null,"alternatives":[],"selected_by":"unmatched"}]}`},
-		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay"}, Stdout: "Contract: relay v7\n"},
+		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--root", p.Path}, Stdout: "Contract: relay v10\n"},
+		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", p.Path}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v10.json")},
 		clitest.Route{Tool: "slicer", Args: []string{"show"}, Prefix: true, Stdout: `{"slice":{"sections":[{"heading":"Git","body":"One commit: \"S1: test\"."}]}}`},
 		clitest.Route{Tool: "slicer", Args: []string{"config"}, Prefix: true, Stdout: `{"value":"done"}`},
 		clitest.Route{Tool: "slicer", Args: []string{"check"}, Prefix: true, Stdout: `{"ok":true}`},
@@ -217,7 +218,7 @@ func TestStartRunRefusesAProjectRemovedAfterPlanning(t *testing.T) {
 		t.Errorf("removed project called git: %+v", calls)
 	}
 	for _, call := range lastFake.CallsTo("slicer") {
-		if slices.Equal(call.Args, []string{"ai", "relay"}) {
+		if len(call.Args) >= 2 && slices.Equal(call.Args[:2], []string{"ai", "relay"}) {
 			t.Error("removed project reached engine.New's contract read")
 		}
 	}

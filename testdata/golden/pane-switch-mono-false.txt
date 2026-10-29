@@ -9,9 +9,9 @@
                            │    [90mS27 committed; now showing S28[m
                            │    [......]  [90mlast heard 1m ago[m
                            │    [90mimplementer[m > [90mreviewer[m > [90mgate[m
-                           │    [90m. implementer waiting[m
-                           │    [90m. reviewer    waiting[m
-                           │    [90m. gate        waiting[m
+                           │    [90m. implementer queued[m
+                           │    [90m. reviewer    queued[m
+                           │    [90m. gate        queued[m
                            │
                            │
                            │[1;36mRecent[m

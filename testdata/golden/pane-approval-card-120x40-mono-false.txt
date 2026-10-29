@@ -11,9 +11,9 @@
                            │    
                            │    [......]
                            │    [90mimplementer[m > [90mreviewer[m > [90mgate[m
-                           │    [90m. implementer waiting[m
-                           │    [90m. reviewer    waiting[m
-                           │    [90m. gate        waiting[m
+                           │    [90m. implementer queued[m
+                           │    [90m. reviewer    queued[m
+                           │    [90m. gate        queued[m
                            │
                            │    [1;36mGate PASS (round 1)  Tests: 12 passed, 0 failed[m
                            │    Diff: 2 files, +48 -4, 1 new file

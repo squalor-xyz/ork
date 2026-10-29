@@ -177,17 +177,21 @@ func currentEntry(rec runrec.Record, role string) int {
 			cur = currentEntry(rec, RoleReviewer)
 		}
 	}
+	exhausted := map[string]bool{}
 	for _, record := range rec.Roles {
 		if record.Role != role {
 			continue
+		}
+		if record.Exit == string(ExitOutOfCredits) {
+			exhausted[record.Vendor] = true
 		}
 		matched := false
 		for j := cur; j < len(entries); j++ {
 			entry := entries[j]
 			if record.Vendor == entry.Vendor && record.Model == entry.Model && record.Effort == entry.Effort {
 				cur = j
-				if record.Exit == string(ExitRateLimited) || record.Exit == string(ExitError) {
-					cur++
+				if fallbackExit(ExitClass(record.Exit)) {
+					cur = nextEntry(entries, j, ExitClass(record.Exit))
 				}
 				matched = true
 				break
@@ -198,6 +202,9 @@ func currentEntry(rec runrec.Record, role string) int {
 			// Other incompatible history exhausts the chain instead of replaying it.
 			return len(entries)
 		}
+	}
+	for cur < len(entries) && exhausted[entries[cur].Vendor] {
+		cur++
 	}
 	return cur
 }
@@ -225,13 +232,24 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 			return nil, err
 		}
 	}
-	line, err := d.Slicer.Contract(ctx)
+	line, err := d.Slicer.Contract(ctx, cfg.Project.Path)
 	if err != nil {
 		return nil, fmt.Errorf("slicer ai relay: %w", err)
 	}
 	version, err := roles.CheckContractLine(line)
 	if err != nil {
 		return nil, err
+	}
+	contract, err := d.Slicer.RelayContract(ctx, cfg.Project.Path)
+	if err != nil {
+		return nil, fmt.Errorf("slicer ai relay --json: %w", err)
+	}
+	if contract.Contract != fmt.Sprintf("relay v%d", version) {
+		return nil, errors.New("slicer contract changed during setup")
+	}
+	ledgerRoles := map[string]string{}
+	for _, role := range append(roles.Names(), "orchestrator") {
+		ledgerRoles[role] = contract.LedgerRole(role)
 	}
 	copied := map[string][]runrec.LineupEntry{}
 	for role, entries := range cfg.Lineup {
@@ -252,7 +270,7 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 	run, err := d.Store.Create(runrec.Record{
 		ID: id, Wave: cfg.Wave, Project: cfg.Project.Name, Item: cfg.Item,
 		Worktree: worktreePath(cfg.Project, cfg.Item), Branch: branchName(cfg.Project, cfg.Item),
-		Contract: version, State: state, Round: 1, Lineup: copied, Budgets: budgets, Decisions: cfg.Decisions,
+		Contract: version, GateCriteria: contract.Gate.Criteria, LedgerRoles: ledgerRoles, State: state, Round: 1, Lineup: copied, Budgets: budgets, Decisions: cfg.Decisions,
 	})
 	if err != nil {
 		return nil, err
@@ -296,6 +314,7 @@ func (e *Engine) Run(ctx context.Context) error {
 // error means the engine could not go on at all (the context ended or the run
 // record cannot be written); a stop or a pause is not an error.
 func (e *Engine) advance(ctx context.Context) error {
+	defer e.ownerWait(context.WithoutCancel(ctx))
 	for {
 		if err := ctx.Err(); err != nil {
 			return err
@@ -377,6 +396,7 @@ func (e *Engine) Approve(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	e.orchestratorPhase(ctx, "start", "")
 	return e.advance(ctx)
 }
 
@@ -418,6 +438,10 @@ func (e *Engine) Answer(ctx context.Context, text string) error {
 	if err != nil {
 		return err
 	}
+	if rec.Pending.LedgerQuestion != "" {
+		e.d.Slicer.RelayAnswer(ctx, e.wr, rec.Worktree, rec.RelayRun, rec.Pending.LedgerQuestion, text)
+	}
+	e.orchestratorPhase(ctx, "start", "")
 	return e.advance(ctx)
 }
 
@@ -443,6 +467,7 @@ func (e *Engine) Retry(ctx context.Context) error {
 		// pause that is retried rides on the question, so the rerun still has
 		// its context (report shape or lost process section; a question or
 		// shape pause also resumes the session) after the answer (S159).
+		defer e.ownerWait(ctx)
 		return e.run.Update(func(r *runrec.Record) {
 			q := r.QueuedQuestions[0]
 			r.QueuedQuestions = r.QueuedQuestions[1:]
@@ -455,6 +480,7 @@ func (e *Engine) Retry(ctx context.Context) error {
 	if err := e.run.Update(func(r *runrec.Record) { r.State = r.Pending.State; r.Reason = "" }); err != nil {
 		return err
 	}
+	e.orchestratorPhase(ctx, "start", "")
 	return e.advance(ctx)
 }
 

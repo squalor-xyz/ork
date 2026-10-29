@@ -408,7 +408,7 @@ func TestRunTreeShowsUIPassRound(t *testing.T) {
 	runs := []slicercli.RelayRun{{ID: "tree", Items: []string{"S55"}, State: "active", BeganAt: "2026-10-19T16:40:00Z", Steps: []slicercli.Step{
 		{ID: "root", Role: "orchestrator", Vendor: "codex", Model: "sol", Phase: "start", BeganAt: "2026-10-19T16:40:00Z"},
 		{ID: "rev", Parent: "root", Role: "reviewer", Vendor: "claude", Model: "opus", Phase: "done", Task: "S55 reviewer", BeganAt: "2026-10-19T16:41:00Z", UpdatedAt: "2026-10-19T16:42:00Z"},
-		{ID: "ui", Parent: "root", Role: "reviewer", Vendor: "claude", Model: "sonnet", Phase: "done", Task: "S55 ui", BeganAt: "2026-10-19T16:41:00Z", UpdatedAt: "2026-10-19T16:43:00Z"},
+		{ID: "ui", Parent: "root", Role: "ui", Vendor: "claude", Model: "sonnet", Phase: "done", Task: "S55 ui", BeganAt: "2026-10-19T16:41:00Z", UpdatedAt: "2026-10-19T16:43:00Z"},
 	}}}
 	engine := `{"id":"engine","item":"S55","state":"review","relay_run":"tree","roles":[` +
 		`{"role":"reviewer","round":2,"vendor":"claude","model":"opus","step":"rev","started_at":"2026-10-19T16:41:00Z","ended_at":"2026-10-19T16:42:00Z","exit":"ok"},` +
@@ -434,7 +434,7 @@ func TestUIPassCountsInTheReviewerStage(t *testing.T) {
 		{ID: "root", Role: "orchestrator", Phase: "start", BeganAt: "2026-10-19T16:40:00Z"},
 		{ID: "impl", Parent: "root", Role: "implementer", Phase: "done", BeganAt: "2026-10-19T16:40:00Z", UpdatedAt: "2026-10-19T16:41:00Z"},
 		{ID: "rev", Parent: "root", Role: "reviewer", Phase: "done", Task: "S55 reviewer", BeganAt: "2026-10-19T16:41:00Z", UpdatedAt: "2026-10-19T16:42:00Z"},
-		{ID: "ui", Parent: "root", Role: "reviewer", Phase: "start", Task: "S55 ui", BeganAt: "2026-10-19T16:41:00Z"},
+		{ID: "ui", Parent: "root", Role: "ui", Phase: "start", Task: "S55 ui", BeganAt: "2026-10-19T16:41:00Z"},
 	}}}
 	for _, linked := range []bool{false, true} {
 		engine := `{"id":"engine","item":"S55","state":"review","roles":[` + roles + `]}`
@@ -496,5 +496,38 @@ func TestUIPassAfterTheGateLeavesTheReviewerStage(t *testing.T) {
 	}
 	if got := pipelinePhases(steps)["reviewer"]; got != "done" {
 		t.Fatalf("reviewer stage %q, want done", got)
+	}
+}
+
+func TestRunTreeRendersWaitPhase(t *testing.T) {
+	runs := treeFixture(t, "relay-run-tree.json")[:1]
+	runs[0].Steps = []slicercli.Step{{ID: "1", Role: "orchestrator", Phase: "wait", WaitingOn: "approval", Task: "S04 orchestrator", BeganAt: "2026-10-19T00:00:00Z", UpdatedAt: "2026-10-19T00:00:00Z"}}
+	runs[0].UpdatedAt = "2026-10-19T00:00:00Z"
+	runs[0].Counts.Waiting = 1
+	h := treeHarness(t, runs, "")
+	steps := ledgerTreeSteps(runs[0].Steps)
+	a := strings.Join(h.m.runTreeLines(steps, 100, 0), "\n")
+	b := strings.Join(h.m.runTreeLines(steps, 100, 1), "\n")
+	if a != b || !strings.Contains(a, "waiting on approval") {
+		t.Errorf("wait needs a static, explicit label:\n%s\n%s", a, b)
+	}
+	heard, _ := h.m.lastHeard(runs[0])
+	if strings.Contains(heard, "!") {
+		t.Errorf("waiting run marked stale: %s", heard)
+	}
+	row := h.m.ledgerRunRow(h.m.byName["ork"].snap, runs[0])
+	if !strings.Contains(row.role, "waiting") {
+		t.Errorf("overview role = %q", row.role)
+	}
+}
+
+func TestWaitPipelineAndStageBarStayStatic(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	steps := []runTreeStep{{Step: slicercli.Step{Role: "implementer", Phase: "wait", WaitingOn: "owner"}}}
+	if a, b := stageBar(steps, 0, true), stageBar(steps, 1, true); a != b {
+		t.Fatalf("waiting stage animated: %s / %s", a, b)
+	}
+	if text := h.m.pipeline(steps, false, true); !strings.Contains(text, "waiting") || strings.Contains(text, "[") {
+		t.Fatalf("waiting pipeline: %s", text)
 	}
 }

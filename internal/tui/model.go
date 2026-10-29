@@ -83,9 +83,18 @@ func (p *projectState) needs() int {
 		return 0
 	}
 	n := p.open + p.held
+	linked := map[string]bool{}
 	for _, r := range p.snap.EngineRuns {
+		if r.RelayRun != "" {
+			linked[r.RelayRun] = true
+		}
 		n += r.FindingNeeds(p.snap.EngineRuns...)
 		if r.Section(p.snap.EngineRuns) == source.SectionNeeds {
+			n++
+		}
+	}
+	for _, r := range boardLedgers(p.snap) {
+		if !linked[r.ID] && ledgerOwnerQuestion(r) != nil {
 			n++
 		}
 	}
@@ -961,7 +970,7 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 		if msg.snap.Runs.Err == nil {
 			ps.running = engineActive
 			for _, r := range msg.snap.Runs.Value {
-				if !linked[r.ID] {
+				if !linked[r.ID] && ledgerOwnerQuestion(r) == nil {
 					ps.running = true
 				}
 			}

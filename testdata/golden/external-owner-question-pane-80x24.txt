@@ -1,0 +1,24 @@
+[1mork[m  ?help         │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[2m  Running        0 [m│[2m────────────────────────────────────────────────────────────[m
+[1;7m0>Needs you      1 [m│[1mNeeds you 1[m
+[2m1[m ork            1 │  [1mPaused 1[m
+                   │[1;7m  ?  ork  S77  reviewer waiting opus  [..--..]  heard 16h42m[m
+                   │[7m            S77 reviewer                                    [m
+                   │    [1mRun external[m
+                   │    [..--..]  [2mlast heard 16h42m ago[m
+                   │    [2mimplementer[m > reviewer waiting > [2mgate[m
+                   │    ? reviewer    waiting on owner  opus
+                   │    [2m    S77 reviewer[m
+                   │    [2m. implementer queued[m
+                   │    [2m. gate        queued[m
+                   │
+                   │    [1mWhich store holds the index?[m
+                   │    1. file: one JSON file (recommended)
+                   │    2. memory: rebuild at startup
+                   │
+                   │[1mRunning 0[m  [1m? owner questions 1[m
+                   │  [2mnothing running[m
+                   │[2m  +6 more lines[m
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ [2mstarted elsewhere, read-only[m; esc [2mclose pane[m
+                   │ 1 project | refreshed 16:42:00
