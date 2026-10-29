@@ -7161,7 +7161,7 @@
       "id": "S157",
       "title": "Allow rule slicer next * also approves next --start and --render",
       "short_title": "S73 later: next * writes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -7171,6 +7171,28 @@
           "text": "**2026-10-26** — From the S73 review (run-20261026-212646-f5f2, landed 820ee1c). .claude/settings.json allows Bash(slicer next *), and slicer next --help lists --start and --render, which write. Replace it with exact read-only forms (for example slicer next --json, slicer next --json --lean) or drop it; check the other starred slicer and adj rules for write flags the same way.",
           "created_at": "2026-10-26T21:49:52Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "4aa6a454-106c-492f-bf29-ae6f28b78870",
+          "kind": "",
+          "text": "**2026-10-29** — Owner note (review): slicer next with --root DIR no longer matches the allow rules and will prompt; no starred next rule is safe because the write flags (--start, --render) sit on the same subcommand. Use slicer status --root DIR --json or slicer list --root DIR for a read-only next.",
+          "created_at": "2026-10-29T16:25:09Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "1c305831-ab55-4b04-9ce3-6ac3a25730fd",
+          "kind": "",
+          "text": "**2026-10-29** — Orchestration trial (run 40, S157): Claude sonnet-high implementer, config-only slice, review PASS first time, 0 fix rounds, 0 owner questions during the run.",
+          "created_at": "2026-10-29T16:25:09Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -7194,7 +7216,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
