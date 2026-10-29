@@ -7790,7 +7790,7 @@
       "title": "How ork works: guide with diagrams, and an orchestrator-parity gap analysis",
       "short_title": "Ork guide and parity gaps",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,

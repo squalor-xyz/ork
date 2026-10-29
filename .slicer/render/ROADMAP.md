@@ -218,7 +218,7 @@
 | 161 | [S162](slices/S162.md) | Roadmap pass headings | S | 1 |  | discovered from S151 | done |
 | 162 | [S163](slices/S163.md) | Recent counts and duration | S | 1 |  | discovered from S162 | done |
 | 163 | [S164](slices/S164.md) | Expand several runs | S | 1 |  | discovered from S140 | done |
-| 164 | S165 | Ork guide and parity gaps | M | 2 |  | discovered from S142 | — |
+| 164 | [S165](slices/S165.md) | Ork guide and parity gaps | M | 2 |  | discovered from S142 | — |
 
 ---
 
