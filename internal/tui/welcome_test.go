@@ -816,8 +816,12 @@ func TestAddHintSurvivesRemoveHintAt80Columns(t *testing.T) {
 		t.Fatalf("remove needs its own lower priority: add=%d remove=%d", addDrop, removeDrop)
 	}
 	hint := hintLine(plainView(h.m))
-	if !strings.Contains(hint, "+ add project") || strings.Contains(hint, "- remove project") {
-		t.Fatalf("add must survive remove in narrow hints: %s", hint)
+	// remove goes first. Add goes next, before m matrix (S168, owner 2026-10-29:
+	// m outlasts add and remove and drops before tab views), so at 80 columns
+	// the line holds m matrix and tab views and not add.
+	if strings.Contains(hint, "- remove project") || strings.Contains(hint, "+ add project") ||
+		!strings.Contains(hint, "m matrix") || !strings.Contains(hint, "tab views") {
+		t.Fatalf("remove goes before add, add before m matrix, m matrix before tab views: %s", hint)
 	}
 	checkGolden(t, "project-hints-80x24-mono.txt", h.m.View().Content)
 }

@@ -22,6 +22,7 @@ type keyMap struct {
 	Expand     key.Binding
 	ExpandAll  key.Binding
 	Launch     key.Binding
+	Matrix     key.Binding
 	Approve    key.Binding
 	Stop       key.Binding
 	Retry      key.Binding
@@ -74,6 +75,7 @@ func newKeyMap() keyMap {
 		Expand:     key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "expand or collapse a run (Running)")),
 		ExpandAll:  key.NewBinding(key.WithKeys("E", "shift+e"), key.WithHelp("E", "expand or collapse all")),
 		Launch:     key.NewBinding(key.WithKeys("l"), key.WithHelp("l", "launch a ready slice (Roadmap) or wave (Waves)")),
+		Matrix:     key.NewBinding(key.WithKeys("m"), key.WithHelp("m", "matrix")),
 		Approve:    key.NewBinding(key.WithKeys("a"), key.WithHelp("a", "approve")),
 		Stop:       key.NewBinding(key.WithKeys("x"), key.WithHelp("x", "stop")),
 		Retry:      key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "retry")),
@@ -120,7 +122,7 @@ func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Refresh, k.He
 
 // FullHelp implements help.KeyMap.
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add, k.Remove}, {k.Expand, k.ExpandAll, k.Tick, k.EditLineup, k.Launch}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
+	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add, k.Remove}, {k.Expand, k.ExpandAll, k.Tick, k.EditLineup, k.Launch, k.Matrix}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
 }
 
 // short is b with a short label and words for the hint line. It answers to the
@@ -151,6 +153,8 @@ const (
 	dropMark   = 17
 	dropRetry  = 16
 	dropStop   = 15
+	dropAdd    = 15 // + add project: it goes before m matrix, which goes before tab views (S168, owner)
+	dropMatrix = 14 // the Roadmap's role matrix outlasts add and remove project and drops before tab views
 	dropHalf   = 14
 	dropTab    = 13
 	dropQuit   = 12
@@ -222,7 +226,7 @@ func (m *Model) contextHints() []hintEntry {
 	// Elsewhere than in a pane the way out is ? help, at the right end.
 	global := func() {
 		l.add(dropTab, short(k.NextView, "tab", "views"))
-		l.add(dropTab, short(k.Add, "+", "add project"))
+		l.add(dropAdd, short(k.Add, "+", "add project"))
 		l.add(dropRemove, offer(m.active >= 0 && !m.projects[m.active].snap.Unavailable, k.Remove, "-", "remove project"))
 		l.add(dropPinned, short(k.Quit, "q", "quit"), short(k.Help, "?", "help"))
 	}
@@ -354,13 +358,20 @@ func (m *Model) contextHints() []hintEntry {
 		global()
 	case m.view == roadmapView:
 		if m.itemPane != nil {
+			if m.matrixPaneOpen() {
+				// The matrix pane scrolls by line and page too, as the Waves item pane does.
+				l.add(dropPage, short(k.PageDown, "pgup/pgdown", "page"))
+				l.add(dropLine, short(k.RowNext, "j/k", "line"))
+			}
 			l.add(dropHalf, short(k.ScrollDown, "ctrl+d/u", "half page"))
 			l.add(dropTab, short(k.NextView, "tab", "views"))
 			l.add(dropPinned, short(k.Quit, "q", "quit"), short(k.Close, "esc", "close"), short(k.Help, "?", "help"))
 			break
 		}
 		_, launchRefused := m.launchRefusal()
+		_, matrixRefused := m.matrixRefusal()
 		l.add(dropRow, offer(m.active >= 0 && len(m.roadmapItems()) > 0, k.Select, "enter", "open"), offer(!launchRefused, k.Launch, "l", "launch"))
+		l.add(dropMatrix, offer(!matrixRefused, k.Matrix, "m", "matrix"))
 		global()
 	case m.view == wavesView:
 		if w := m.waves; w != nil {

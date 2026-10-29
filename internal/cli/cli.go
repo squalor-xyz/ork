@@ -74,6 +74,8 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
                               value or 0 clears one; refused while the
                               project has unfinished runs
   ork roles print [ROLE]      print the embedded role prompts
+  ork roles matrix P          show the role matrix as slicer prints it, then
+                              which rows ork uses, skips or does not run
   ork daemon run              serve the daemon in the foreground
   ork daemon stop [--force]   stop the daemon
   ork daemon restart [--force]
@@ -204,7 +206,7 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 	case "projects":
 		return a.projects(ctx, o, rest)
 	case "roles":
-		return a.roles(o, rest)
+		return a.roles(ctx, o, rest)
 	case "doctor":
 		return a.doctor(ctx, o, rest)
 	case "daemon":

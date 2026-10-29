@@ -191,16 +191,31 @@ type Rule struct {
 	Text string `json:"text"`
 }
 
-// RelayRules runs `slicer relay-roles show --json --root ROOT` and returns the
-// matrix's rules.
-func (c Client) RelayRules(ctx context.Context, root string) ([]Rule, error) {
-	var out struct {
-		Rules []Rule `json:"rules"`
-	}
+// Matrix is `slicer relay-roles show --json`: slicer's own text of the matrix,
+// its rows and its rules.
+type Matrix struct {
+	Markdown string `json:"relay_roles"`
+	Rows     []Row  `json:"rows"`
+	Rules    []Rule `json:"rules"`
+}
+
+// RelayMatrix runs `slicer relay-roles show --json --root ROOT`.
+func (c Client) RelayMatrix(ctx context.Context, root string) (*Matrix, error) {
+	var out Matrix
 	if err := clirun.RunJSON(ctx, c.call("relay-roles", "show", "--json", "--root", root), &out); err != nil {
 		return nil, err
 	}
-	return out.Rules, nil
+	return &out, nil
+}
+
+// RelayRules runs `slicer relay-roles show --json --root ROOT` and returns the
+// matrix's rules.
+func (c Client) RelayRules(ctx context.Context, root string) ([]Rule, error) {
+	m, err := c.RelayMatrix(ctx, root)
+	if err != nil {
+		return nil, err
+	}
+	return m.Rules, nil
 }
 
 var uiPassRow = regexp.MustCompile(`UI pass row \((r\d+)\)`)

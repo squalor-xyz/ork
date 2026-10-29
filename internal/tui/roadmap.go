@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"strings"
 
+	"charm.land/bubbles/v2/key"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 
+	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -21,6 +23,7 @@ type itemPane struct {
 	request     uint64
 	pending     bool
 	detail      *slicercli.Detail
+	matrix      *daemon.RolesMatrixResult // the Roadmap's role matrix pane (id matrixPaneID)
 	err         error
 	offset      int // the first line shown below the heading (Roadmap item pane)
 	room        int // the lines of the scrolling part the last draw had
@@ -31,6 +34,70 @@ type itemShowMsg struct {
 	request     uint64
 	detail      *slicercli.Detail
 	err         error
+}
+
+// matrixPaneID is the id of the item pane that shows the role matrix (S168).
+const matrixPaneID = "matrix"
+
+type matrixMsg struct {
+	project string
+	request uint64
+	result  *daemon.RolesMatrixResult
+	err     error
+}
+
+// matrixPaneOpen reports whether the Roadmap shows the role matrix pane.
+func (m *Model) matrixPaneOpen() bool {
+	return m.view == roadmapView && m.itemPane != nil && m.itemPane.id == matrixPaneID
+}
+
+// matrixRefusal is why m does not open the role matrix on the Roadmap: the
+// status line text, or "" for a silent refusal. The key refuses by it and the
+// hint line lists m only when it does not.
+func (m *Model) matrixRefusal() (status string, refused bool) {
+	if m.view != roadmapView || m.active < 0 || m.itemPane != nil || m.showHelp || !m.projects[m.active].loaded || m.projects[m.active].snap.Unavailable {
+		return "", true
+	}
+	if m.cfg.Live == nil {
+		return "No daemon connection; action unavailable", true
+	}
+	return "", false
+}
+
+// openMatrix opens the read-only role matrix pane of the active project. The
+// read runs in the command, as the item pane's does.
+func (m *Model) openMatrix() tea.Cmd {
+	if status, refused := m.matrixRefusal(); refused {
+		if status != "" {
+			m.actionStatus = status
+		}
+		return nil
+	}
+	m.itemRequest++
+	pane := &itemPane{project: m.projects[m.active].reg.Name, id: matrixPaneID, request: m.itemRequest, pending: true}
+	m.itemPane = pane
+	m.actionStatus = ""
+	live, project, request := m.cfg.Live, pane.project, pane.request
+	return func() tea.Msg {
+		result, err := live.RolesMatrix(context.Background(), project)
+		return matrixMsg{project: project, request: request, result: result, err: err}
+	}
+}
+
+// scrollMatrix moves the matrix pane by a line (j, k) or a page (pgdown,
+// pgup), as the Waves item pane does; ctrl+d and ctrl+u are scrollHalf's.
+func (m *Model) scrollMatrix(msg tea.KeyPressMsg) {
+	pane := m.itemPane
+	switch {
+	case key.Matches(msg, m.keys.RowNext):
+		pane.offset++
+	case key.Matches(msg, m.keys.RowPrev):
+		pane.offset = max(pane.offset-1, 0)
+	case key.Matches(msg, m.keys.PageDown):
+		pane.offset += max(pane.room, 1)
+	case key.Matches(msg, m.keys.PageUp):
+		pane.offset = max(pane.offset-max(pane.room, 1), 0)
+	}
 }
 
 func (m *Model) roadmapItems() []slicercli.Item {
@@ -83,6 +150,38 @@ func (m *Model) scrollItemPane(pane *itemPane, out *overviewView, head int) {
 	out.body = append(out.body[:head:head], out.body[head+pane.offset:]...)
 }
 
+// matrixLines draws the role matrix pane's body: ork's section first, with the
+// words of each row's use dim and a skipped row in the warning colour, then
+// slicer's text as it prints it. The text is daemon.FormatMatrixOrkFirst (the
+// CLI prints slicer's text first). A wrapped line hangs two spaces under its
+// first line, so each table row and each rule bullet stands out.
+func (m *Model) matrixLines(out *overviewView, r *daemon.RolesMatrixResult, w int) {
+	th := m.cfg.Theme
+	for i, text := range daemon.FormatMatrixOrkFirst(r) {
+		ork := i >= 1 && i <= len(r.Rows) // the rows of ork's section; line 0 is its heading
+		for j, line := range wrapText(text, max(w-4, 1)) {
+			switch {
+			case ork:
+				style := th.Dim
+				if strings.Contains(r.Rows[i-1].Use, "skipped") {
+					style = th.Warn.Bold(th.Mono)
+				}
+				if head, use, ok := strings.Cut(line, ": "); ok && j == 0 {
+					line = head + ": " + style.Render(use)
+				} else if j > 0 {
+					line = style.Render(line)
+				}
+			case strings.HasPrefix(text, "#"):
+				line = th.Heading.Render(line)
+			}
+			if j > 0 {
+				line = "  " + line
+			}
+			out.body = append(out.body, indent+line)
+		}
+	}
+}
+
 // roadmap renders only snapshot state; detail reads run in openItem's command.
 func (m *Model) roadmap(w int) overviewView {
 	th := m.cfg.Theme
@@ -107,6 +206,22 @@ func (m *Model) roadmap(w int) overviewView {
 	p := m.projects[m.active]
 	if !p.loaded {
 		add("pending: waiting for the first reply")
+		return out
+	}
+	if pane := m.itemPane; pane != nil && pane.id == matrixPaneID {
+		heading("Role matrix  (esc returns)")
+		head := len(out.body)
+		switch {
+		case pane.pending:
+			add("pending: roles.matrix")
+		case pane.err != nil:
+			add(actionError(pane.err))
+		case pane.matrix != nil:
+			m.matrixLines(&out, pane.matrix, w)
+		default:
+			add("No role matrix returned")
+		}
+		m.scrollItemPane(pane, &out, head)
 		return out
 	}
 	if pane := m.itemPane; pane != nil {

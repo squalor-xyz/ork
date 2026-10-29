@@ -19,6 +19,7 @@ const (
 	MethodWaveStop     = "wave.stop"     // proposed wire; params WaveAction, result WaveResult
 	MethodWaveSuggest  = "wave.suggest"  // proposed wire; params WaveSuggestParams, result slicercli.ParallelPlan
 	MethodWaveOverlap  = "wave.overlap"  // proposed wire; params WaveOverlapParams, result slicercli.Overlap
+	MethodRolesMatrix  = "roles.matrix"  // proposed (S168); params RolesMatrixParams, result RolesMatrixResult
 	MethodDaemonInfo   = "daemon.info"   // no params, result DaemonInfoResult
 	MethodDaemonStop   = "daemon.stop"   // params StopParams, result StopResult
 	MethodStatus       = "status"        // params StatusParams, result StatusResult

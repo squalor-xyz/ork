@@ -709,6 +709,17 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			if h.Key == m.keys.AllProjects.Help().Key && m.view != decisionsView {
 				continue
 			}
+			// The Roadmap's role matrix key shares the launch key's line, which
+			// pays for it at the standard height (S168). Only the Roadmap offers
+			// it, and not with a pane open.
+			if h == m.keys.Matrix.Help() {
+				continue
+			}
+			if h == m.keys.Launch.Help() && m.view == roadmapView && m.itemPane == nil {
+				mk := m.keys.Matrix.Help()
+				lines = append(lines, clip(h.Key+" "+h.Desc+"; "+mk.Key+" "+mk.Desc, w))
+				continue
+			}
 			if h == m.keys.Approve.Help() && (m.view == decisionsView || m.view == questionsView) {
 				continue
 			}

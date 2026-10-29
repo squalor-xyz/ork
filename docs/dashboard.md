@@ -1404,6 +1404,33 @@ the reply. Success shows `ork run PROJECT ITEM: done` and refreshes the
 project, even after leaving the Roadmap or project. Plan and Start errors
 show their code and message verbatim. A failed Start is not retried.
 
+`m` opens the project's role matrix in a read-only pane (S168, owner decision
+2026-10-29), in place of the list, with the heading `Role matrix  (esc returns)`
+and `pending: roles.matrix` until the `roles.matrix` reply arrives. The pane
+shows a short `## ork` section first, with one line per row (`- r3 implementer:
+used as claude`), then a blank line and slicer's matrix text as
+`slicer relay-roles show` prints it, which starts with slicer's own heading
+(the owner chose this order for the pane on 2026-10-29; the command prints
+slicer's text first). A wrapped line hangs two spaces under its first line, so
+each table row and each rule bullet stands out. The words after the colon are
+dim; a row that ork skips is in the warning colour (bold in mono). They say
+what ork does with the row:
+`used as claude` or `used as codex` (a row maps to an adapter by its agent,
+adj 155), `UI pass row, ...` and `Spec check row, ...` for the two reviewer
+rows that a rule names (rules u10 and u11), `skipped: no adapter for AGENT`,
+`not used: the gate runs the reviewer's lineup` for a Gate row, `not run by
+ork` for an Orchestrator row (ork is the orchestrator), and `not used: ork has
+no role ROLE` for any other role in the matrix. `j`/`k`, `pgup`/`pgdown`
+and `ctrl+d`/`ctrl+u` scroll the pane, `esc` closes it, and no other key
+acts in it. The key is offered on the hint line and in `?` on the Roadmap only,
+when a project is selected and no pane is open; with no daemon it says "No
+daemon connection; action unavailable". On a narrow hint line `- remove
+project` and `+ add project` drop first, then `m matrix`, then `tab views` (at
+100 columns the line keeps `m matrix` and drops `+ add project`; at 80 columns
+on an empty Roadmap it is `l launch; m matrix; tab views; q quit; ? help`). The matrix is slicer's: ork reads it through
+`slicer relay-roles show --json`, never edits it and never opens `.slicer`
+files (`docs/boundaries.md`). The same text is `ork roles matrix PROJECT`.
+
 Adding an item to the wave composer comes in a later slice.
 Editing comes after v1, and `ui.slicer-tui` is open.
 

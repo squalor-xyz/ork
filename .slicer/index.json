@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 190,
+  "next_id": 191,
   "preamble": "",
   "passes": [
     {
@@ -8132,7 +8132,7 @@
       "id": "S168",
       "title": "Role matrix view in ork (read-only)",
       "short_title": "Role matrix view",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8165,7 +8165,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -8823,6 +8823,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "f351e220-b5dd-476b-a063-281be66cd33b",
+          "kind": "",
+          "text": "**2026-10-29** — Added 2026-10-29 from the S168 review: docs/orchestrator-parity.md row 2.1 and gap 3 still say the matrix view is missing; mark them met by S168 (ork roles matrix and the Roadmap m pane).",
+          "created_at": "2026-10-29T22:22:18Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -9078,6 +9089,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S167",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S190",
+      "title": "S168 later notes: pane scroll keys, matrix wrap width, Overview hint tie",
+      "short_title": "S168 later notes: pane scroll keys, matrix wrap width, Overview hint tie",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "c731f437-98db-4bd4-b930-9c6a6e693bac",
+          "kind": "",
+          "text": "**2026-10-29** — From the S168 review and UI pass (2026-10-29), all later: (1) give the Roadmap item pane j/k/up/down/pgup/pgdown scrolling like the matrix and Waves panes; (2) g/G (home/end) in every scrolling pane; (3) matrixLines wraps first lines at w-4, so a first line loses the 2 columns kept for the hang: wrap the first line at w-2 and continuations at w-4; (4) Overview at 80 columns: x stop and t retry now outlast + add project (dropAdd 15 ties stop), add a hint test or a doc line; (5) docs/dashboard.md matrix hint sentence has a line over 80 columns; (6) guide.md sections 13/14 anchors drifted; (7) the help label could read 'm role matrix' if room allows.",
+          "created_at": "2026-10-29T22:22:18Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S168",
         "parent": "",
         "cites": [],
         "key": "",

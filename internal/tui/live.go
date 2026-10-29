@@ -15,7 +15,8 @@ import (
 // a project now. Focus makes the named projects the ones the owner sees,
 // which the daemon reads every 5 s. Next waits for the next change notice
 // for the projects in focus and names its project. The TUI calls each one in
-// a command, never in Update. ItemShow reads a project item.
+// a command, never in Update. ItemShow reads a project item and
+// RolesMatrix its role matrix.
 // Approve, Stop, Retry and Answer act on engine run IDs. Plan and Start take
 // a project and an item, with the owner's two launch answers.
 type Live interface {
@@ -30,6 +31,7 @@ type Live interface {
 	Plan(context.Context, daemon.RunParams) (*daemon.RunPlan, error)
 	Start(context.Context, daemon.RunParams) (runrec.Record, error)
 	ItemShow(ctx context.Context, project, id string) (*slicercli.Detail, error)
+	RolesMatrix(ctx context.Context, project string) (*daemon.RolesMatrixResult, error)
 	Refresh(ctx context.Context, project string) error
 	Focus(ctx context.Context, projects []string) error
 	Next(ctx context.Context) (project string, err error)

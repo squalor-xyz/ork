@@ -125,7 +125,19 @@ Some fields have no command and are file edits in
 ## 6. The role lineup
 
 Which model runs each role comes from the role matrix, which slicer owns.
-ork does not edit it. Look at it and change it with slicer:
+ork does not edit it. Read it in ork: press `m` on the Roadmap, or run
+
+    ork roles matrix PROJECT
+
+Both show slicer's matrix text and a short `ork` section that says, row by
+row, what ork does with it (the pane puts the `ork` section first, the command
+puts slicer's text first): `used as claude` or `used as codex`, `skipped: no
+adapter for AGENT`, `UI pass row` and `Spec check row` for the two reviewer rows
+that a rule names, `not used: the gate runs the reviewer's lineup` for Gate rows
+(ork's gate follows the reviewer), `not run by ork` for the Orchestrator
+row (ork is the orchestrator), and `not used: ork has no role ROLE` for any other
+role. The view is read-only. Change the matrix with
+slicer:
 
     slicer relay-roles show --root DIR
     slicer relay-roles add|set|remove|move|rule-add|rule-edit|rule-remove
@@ -333,7 +345,7 @@ them all (`internal/tui/keys.go:13-124`).
 | Run pane | `1`-`9`, `F`, `v`, `f`, `o` | mark check, fix note, renders, file slice, answer owner finding |
 | Question | `1`-`4` then `y`; `t` then `enter`; `ctrl+a` | load an option and send it; type a free answer and send it; file in adj |
 | Running entry | `space`, `E` | expand a run, expand all |
-| Roadmap | `l` | launch a ready slice |
+| Roadmap | `l`, `m` | launch a ready slice, show the role matrix (read-only; `esc` closes) |
 | Waves | `space`, `e`, `l`, `A` | tick, edit lineup, launch, show all waves |
 | Decisions | `A` | all projects / one project |
 | Confirmations | `y` / `n` | yes / no (Enter is No) |
@@ -356,6 +368,7 @@ them all (`internal/tui/keys.go:13-124`).
     ork dismiss RUN
     ork file RUN N
     ork roles print [ROLE]
+    ork roles matrix PROJECT
     ork daemon run | stop [--force] | restart [--force]
     ork doctor
 
@@ -367,7 +380,7 @@ Every command takes `--json`. Exit codes: 0 ok, 1 failure, 2 usage
 The owner still does these outside ork today. The list and a proposed slice
 for each is in [orchestrator-parity.md](orchestrator-parity.md).
 
-- Edit the role matrix (`slicer relay-roles ...`).
+- Edit the role matrix (`slicer relay-roles ...`); ork only shows it.
 - Write or fill in slice specs, and add or promote roadmap items by hand.
 - Decide in adj: ork can file an answer you give, but you make decisions
   with `adj` (`AGENTS.md`, Decisions).

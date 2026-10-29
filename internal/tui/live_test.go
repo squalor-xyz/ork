@@ -210,6 +210,10 @@ func (l *fakeLive) ItemShow(context.Context, string, string) (*slicercli.Detail,
 	return nil, nil
 }
 
+func (*fakeLive) RolesMatrix(context.Context, string) (*daemon.RolesMatrixResult, error) {
+	return nil, errors.New("unexpected roles matrix")
+}
+
 func (*fakeLive) Plan(context.Context, daemon.RunParams) (*daemon.RunPlan, error) {
 	return nil, errors.New("unexpected plan")
 }
