@@ -36,7 +36,7 @@ func (e *Engine) setup(ctx context.Context) error {
 	if run, err := e.d.Slicer.RelayBegin(ctx, e.wr, rec.Worktree, rec.Worktree, rec.Item); err == nil {
 		e.run.Update(func(r *runrec.Record) { r.RelayRun = run.ID })
 		step, err := e.d.Slicer.RelayStep(ctx, e.wr, rec.Worktree, run.ID, slicercli.StepSpec{
-			Role: "orchestrator", Agent: "ork", Phase: "start", Task: rec.Item + " orchestrator",
+			Role: rec.LedgerRoles["orchestrator"], Agent: "ork", Phase: "start", Task: rec.Item + " orchestrator",
 		})
 		if err == nil {
 			e.run.Update(func(r *runrec.Record) { r.OrchestratorStep = step.ID })
@@ -522,7 +522,6 @@ func (e *Engine) architect(ctx context.Context) error {
 
 const gateCriteria = "You are the gate. A small fix round is reviewed and gated in one pass: check the new diff against the earlier findings and decide. " +
 	"The first line of your report is exactly `VERDICT: PASS` or `VERDICT: FAIL`. " +
-	"The criteria are: earlier blockers resolved with a proving test, no new issue of medium severity or worse, tests green, and docs matching the code. " +
 	"Run the project's check command yourself and give the counts on a `Tests: N passed, M failed` line."
 
 func (e *Engine) gate(ctx context.Context) error {
@@ -531,6 +530,9 @@ func (e *Engine) gate(ctx context.Context) error {
 	r := round{role: RoleGate, n: rec.Round, state: runrec.StateGate, task: rec.Item + " gate",
 		resumeFrom: []string{RoleGate, RoleReviewer},
 		sections:   []BriefSection{{Title: "Gate", Body: gateCriteria}}}
+	if len(rec.GateCriteria) > 0 {
+		r.sections[0].Body += "\nThe criteria from slicer are:\n- " + strings.Join(rec.GateCriteria, "\n- ")
+	}
 	if name, text := e.latestReport(rec, RoleImplementer); text != "" {
 		r.sections = append(r.sections, BriefSection{Title: "Implementer report (" + name + ")", Body: text})
 	}
@@ -553,7 +555,11 @@ func (e *Engine) gate(ctx context.Context) error {
 	}
 	if out.report.Verdict == "PASS" {
 		card := e.buildCard(ctx, e.run.Snapshot(), out.report)
-		return e.run.Update(func(rr *runrec.Record) { rr.Card = card; rr.State = runrec.StateAwaitingApproval; rr.Reason = "" })
+		err := e.run.Update(func(rr *runrec.Record) { rr.Card = card; rr.State = runrec.StateAwaitingApproval; rr.Reason = "" })
+		if err == nil {
+			e.orchestratorPhase(ctx, "wait", "approval")
+		}
+		return err
 	}
 	// FAIL: record it on the item, then back to the implementer.
 	if err := e.run.Update(func(rr *runrec.Record) { rr.Fails++ }); err != nil {

@@ -596,9 +596,15 @@ type doctorOut struct {
 func doctorApp(t *testing.T, relayFirstLine string) (app *App, fake *clitest.Fake, logs map[string]string) {
 	t.Helper()
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v10.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	contractJSON := strings.Replace(string(raw), `"contract": "relay v10"`, `"contract": "`+strings.TrimPrefix(relayFirstLine, "Contract: ")+`"`, 1)
 	fake = clitest.Install(t,
+		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json"}, Prefix: true, Stdout: contractJSON},
 		clitest.Route{Tool: "slicer", Args: []string{"--version"}, Stdout: "slicer 1.15.0\n"},
-		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay"}, Stdout: relayFirstLine + "\n\n# Slice relay\nmore text\n"},
+		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--root"}, Prefix: true, Stdout: relayFirstLine + "\n\n# Slice relay\nmore text\n"},
 		clitest.Route{Tool: "adj", Args: []string{"--version"}, Stdout: "v0.1.0\n"},
 	)
 	dir := t.TempDir()
@@ -615,7 +621,7 @@ func doctorApp(t *testing.T, relayFirstLine string) (app *App, fake *clitest.Fak
 // doctorProjects writes only a temporary registry and uses fake tool binaries.
 func doctorProjects(t *testing.T, projects ...registry.Project) (*App, string) {
 	t.Helper()
-	app, _, _ := doctorApp(t, "Contract: relay v7")
+	app, _, _ := doctorApp(t, "Contract: relay v10")
 	path, err := registry.DefaultPath()
 	if err != nil {
 		t.Fatal(err)
@@ -960,7 +966,8 @@ func TestDoctorReportsEachToolAndTheAcceptedContracts(t *testing.T) {
 	for _, c := range fake.CallsTo("slicer") {
 		slicerCalls = append(slicerCalls, c.Args)
 	}
-	if fmt.Sprint(slicerCalls) != "[[--version] [ai relay]]" {
+	cwd, _ := os.Getwd()
+	if fmt.Sprint(slicerCalls) != "[[--version] [ai relay --root "+cwd+"] [ai relay --json --root "+cwd+"]]" {
 		t.Fatalf("slicer calls: %v", slicerCalls)
 	}
 	if got := fake.CallsTo("adj"); len(got) != 1 || fmt.Sprint(got[0].Args) != "[--version]" {
@@ -969,7 +976,7 @@ func TestDoctorReportsEachToolAndTheAcceptedContracts(t *testing.T) {
 }
 
 func TestDoctorTextOutput(t *testing.T) {
-	app, _, _ := doctorApp(t, "Contract: relay v7")
+	app, _, _ := doctorApp(t, "Contract: relay v10")
 	app.Tools.Grok = filepath.Join(t.TempDir(), "no-such-grok")
 	code, stdout, _ := run(t, app, "doctor")
 	if code != 0 {
@@ -981,7 +988,7 @@ func TestDoctorTextOutput(t *testing.T) {
 		"[ok] claude  2.1.303 (Claude Code)\n",
 		"[ok] codex  codex-cli 0.163.0\n",
 		"[--] grok  not found (optional)\n",
-		"[ok] contract  accepts v7, v8, slicer prints \"Contract: relay v7\"\n",
+		"[ok] contract  accepts v9, v10, slicer prints \"Contract: relay v10\"\n",
 	} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("output lacks %q:\n%s", want, stdout)
@@ -1000,7 +1007,7 @@ func TestDoctorReportsWhereTheBinaryIs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	app, _, _ := doctorApp(t, "Contract: relay v7")
+	app, _, _ := doctorApp(t, "Contract: relay v10")
 	code, stdout, stderr := run(t, app, "doctor", "--json")
 	var d doctorOut
 	mustJSON(t, stdout, &d)
@@ -1013,22 +1020,22 @@ func TestDoctorReportsWhereTheBinaryIs(t *testing.T) {
 	}
 }
 
-func TestDoctorAcceptsAV8Slicer(t *testing.T) {
-	app, _, _ := doctorApp(t, "Contract: relay v8")
+func TestDoctorAcceptsAV9Slicer(t *testing.T) {
+	app, _, _ := doctorApp(t, "Contract: relay v9")
 	code, stdout, _ := run(t, app, "doctor", "--json")
 	var d doctorOut
 	mustJSON(t, stdout, &d)
-	if code != 0 || !d.OK || !d.Contract.OK || d.Contract.Found != "Contract: relay v8" || !reflect.DeepEqual(d.Contract.Accepted, []int{7, 8}) || d.Contract.Error != "" {
+	if code != 0 || !d.OK || !d.Contract.OK || d.Contract.Found != "Contract: relay v9" || !reflect.DeepEqual(d.Contract.Accepted, []int{9, 10}) || d.Contract.Error != "" {
 		t.Fatalf("exit %d\n%s", code, stdout)
 	}
 }
 
 func TestDoctorContractMismatchFails(t *testing.T) {
-	app, _, _ := doctorApp(t, "Contract: relay v9")
+	app, _, _ := doctorApp(t, "Contract: relay v8")
 	code, stdout, _ := run(t, app, "doctor", "--json")
 	var d doctorOut
 	mustJSON(t, stdout, &d)
-	if code != 1 || d.OK || d.Contract.OK || d.Contract.Found != "Contract: relay v9" || d.Contract.Error == "" {
+	if code != 1 || d.OK || d.Contract.OK || d.Contract.Found != "Contract: relay v8" || d.Contract.Error == "" {
 		t.Fatalf("exit %d\n%s", code, stdout)
 	}
 	for _, tool := range d.Tools {
@@ -1045,12 +1052,12 @@ func TestDoctorContractMismatchFails(t *testing.T) {
 // The accepted set replaces the exact pin (boundary.contract): an older
 // version is refused as well as a newer one, and the error names both sides.
 func TestDoctorRefusesEveryVersionOutsideTheAcceptedSet(t *testing.T) {
-	for _, v := range []int{6, 9, 70} {
+	for _, v := range []int{6, 7, 8, 70} {
 		app, _, _ := doctorApp(t, fmt.Sprintf("Contract: relay v%d", v))
 		code, stdout, _ := run(t, app, "doctor", "--json")
 		var d doctorOut
 		mustJSON(t, stdout, &d)
-		if code != 1 || d.OK || d.Contract.OK || !strings.Contains(d.Contract.Error, fmt.Sprintf("v%d", v)) || !strings.Contains(d.Contract.Error, "ork accepts relay v7, v8") {
+		if code != 1 || d.OK || d.Contract.OK || !strings.Contains(d.Contract.Error, fmt.Sprintf("v%d", v)) || !strings.Contains(d.Contract.Error, "ork accepts relay v9, v10") {
 			t.Errorf("v%d: exit %d\n%s", v, code, stdout)
 		}
 	}
@@ -1069,7 +1076,7 @@ func TestDoctorUnrecognizedContractLine(t *testing.T) {
 func TestDoctorMissingRequiredToolFails(t *testing.T) {
 	for _, tool := range []string{"slicer", "adj"} {
 		t.Run(tool, func(t *testing.T) {
-			app, _, _ := doctorApp(t, "Contract: relay v7")
+			app, _, _ := doctorApp(t, "Contract: relay v10")
 			missing := filepath.Join(t.TempDir(), "gone")
 			if tool == "slicer" {
 				app.Tools.Slicer = missing
@@ -1095,7 +1102,7 @@ func TestDoctorMissingRequiredToolFails(t *testing.T) {
 }
 
 func TestDoctorMissingVendorIsNotAFailure(t *testing.T) {
-	app, _, _ := doctorApp(t, "Contract: relay v7")
+	app, _, _ := doctorApp(t, "Contract: relay v10")
 	app.Tools.Codex = filepath.Join(t.TempDir(), "gone")
 	code, stdout, _ := run(t, app, "doctor", "--json")
 	var d doctorOut
@@ -1109,7 +1116,7 @@ func TestDoctorMissingVendorIsNotAFailure(t *testing.T) {
 }
 
 func TestDoctorToolThatFailsItsVersionCall(t *testing.T) {
-	app, _, _ := doctorApp(t, "Contract: relay v7")
+	app, _, _ := doctorApp(t, "Contract: relay v10")
 	bad := filepath.Join(t.TempDir(), "claude")
 	os.WriteFile(bad, []byte("#!/bin/sh\necho 'boom' >&2\nexit 3\n"), 0o755)
 	app.Tools.Claude = bad

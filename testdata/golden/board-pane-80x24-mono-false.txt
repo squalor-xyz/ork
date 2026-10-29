@@ -10,7 +10,7 @@
                    │    [32mimplementer[m > [36m[reviewer][m > [90mgate[m                  [90mround 1[m
                    │    [90m+ implementer done[m
                    │    [1;36m| reviewer    start[m
-                   │    [90m. gate        waiting[m
+                   │    [90m. gate        queued[m
                    │
                    │
                    │[1;36mRecent[m

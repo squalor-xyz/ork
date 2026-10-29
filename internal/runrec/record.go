@@ -148,15 +148,16 @@ const (
 // Pending says why a slice is paused and what resumes it. State is the state
 // to re-enter; Role and Round name the role to run again.
 type Pending struct {
-	Ask      *OwnerQuestion `json:"ask,omitempty"`
-	Key      string         `json:"key,omitempty"`
-	Kind     string         `json:"kind"`
-	State    string         `json:"state"`
-	Role     string         `json:"role,omitempty"`
-	Round    int            `json:"round,omitempty"`
-	Reason   string         `json:"reason"`
-	Question string         `json:"question,omitempty"`
-	Answer   string         `json:"answer,omitempty"`
+	LedgerQuestion string         `json:"ledger_question,omitempty"`
+	Ask            *OwnerQuestion `json:"ask,omitempty"`
+	Key            string         `json:"key,omitempty"`
+	Kind           string         `json:"kind"`
+	State          string         `json:"state"`
+	Role           string         `json:"role,omitempty"`
+	Round          int            `json:"round,omitempty"`
+	Reason         string         `json:"reason"`
+	Question       string         `json:"question,omitempty"`
+	Answer         string         `json:"answer,omitempty"`
 	// Retry is the context of a retry that waits for this question: the first
 	// pause (shape, lost, budget or error) of another role, kept while the
 	// sibling's queued question is asked first (S159, *proposed*).
@@ -192,6 +193,7 @@ func (c HumanCheck) Resolved() bool { return c.State == CheckTicked || c.State =
 // slice's human checks. The engine builds it when the gate passes. Owner
 // findings are in Record.Findings.
 type ApprovalCard struct {
+	Deviations  []string     `json:"deviations,omitempty"`
 	Round       int          `json:"round"`
 	Verdict     string       `json:"verdict"`
 	Passed      int          `json:"passed"`
@@ -254,6 +256,8 @@ type Record struct {
 	Branch           string                   `json:"branch"`
 	RelayRun         string                   `json:"relay_run,omitempty"`
 	OrchestratorStep string                   `json:"orchestrator_step,omitempty"`
+	GateCriteria     []string                 `json:"gate_criteria,omitempty"`
+	LedgerRoles      map[string]string        `json:"ledger_roles,omitempty"`
 	Contract         int                      `json:"contract"`
 	State            string                   `json:"state"`
 	Round            int                      `json:"round"`

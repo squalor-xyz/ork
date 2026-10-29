@@ -81,6 +81,9 @@ func (m *Model) pipeline(steps []runTreeStep, stale, compact bool) string {
 				text = "[" + role + "]"
 			}
 			style = m.cfg.Theme.Running
+		case "wait":
+			text = role + " waiting"
+			style = m.cfg.Theme.Warn
 		case "fail":
 			style = m.cfg.Theme.Error
 		}
@@ -135,7 +138,7 @@ func (m *Model) lastHeard(r slicercli.RelayRun) (string, lipgloss.Style) {
 		return "", m.cfg.Theme.Dim
 	}
 	age := m.cfg.Now().Sub(at)
-	if r.State == "awaiting-approval" || !boardLive(r.State) {
+	if ledgerWaiting(r) || r.State == "awaiting-approval" || !boardLive(r.State) {
 		return "heard " + elapsed(age), m.cfg.Theme.Dim
 	}
 	cue := ""
@@ -220,7 +223,7 @@ func (m *Model) boardTail(steps []runTreeStep, width, roleWidth int) []string {
 			}
 		}
 		if !begun {
-			lines = append(lines, m.cfg.Theme.Dim.Render(treeClip(fmt.Sprintf(". %-*s waiting", roleWidth, role), width)))
+			lines = append(lines, m.cfg.Theme.Dim.Render(treeClip(fmt.Sprintf(". %-*s queued", roleWidth, role), width)))
 		}
 	}
 	return lines
@@ -374,4 +377,18 @@ func boardLive(state string) bool {
 	default:
 		return true
 	}
+}
+
+// ledgerOwnerQuestion identifies an unanswered owner question on an external
+// ledger wait. A plain wait or approval wait has no question to show.
+func ledgerOwnerQuestion(r slicercli.RelayRun) *slicercli.LedgerQuestion {
+	if r.State == "ended" {
+		return nil
+	}
+	for _, s := range r.Steps {
+		if s.Phase == "wait" && s.WaitingOn == "owner" && s.Question != nil && s.Question.AnsweredAt == "" && len(s.Question.Answer) == 0 {
+			return s.Question
+		}
+	}
+	return nil
 }

@@ -121,7 +121,7 @@ func TestRunningRowWarnCellAndFullDetail(t *testing.T) {
 	}
 }
 
-func TestWaitingRowsShareTreePhaseColumn(t *testing.T) {
+func TestQueuedRowsShareTreePhaseColumn(t *testing.T) {
 	h := treeHarness(t, []slicercli.RelayRun{{ID: "live", State: "active", Steps: []slicercli.Step{{Role: "implementer", Phase: "start"}}}}, "")
 	v := treePaneView(h.m, 120, 60)
 	column := -1
@@ -130,15 +130,15 @@ func TestWaitingRowsShareTreePhaseColumn(t *testing.T) {
 		if strings.Contains(line, "| implementer") {
 			column = strings.Index(line, "start")
 		}
-		if strings.Contains(line, "waiting") {
+		if strings.Contains(line, "queued") {
 			waiting++
-			if got := strings.Index(line, "waiting"); got != column {
+			if got := strings.Index(line, "queued"); got != column {
 				t.Errorf("phase column %d, want %d: %q", got, column, line)
 			}
 		}
 	}
 	if waiting != 2 {
-		t.Fatalf("waiting rows %d", waiting)
+		t.Fatalf("queued rows %d", waiting)
 	}
 }
 

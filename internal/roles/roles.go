@@ -33,7 +33,7 @@ var promptFS embed.FS
 // ContractVersion is the version of slicer's relay contract that the prompts
 // are written against. It matches each prompt's first line. ork accepts the
 // versions in AcceptedContracts, which include this one.
-const ContractVersion = 8
+const ContractVersion = 10
 
 var names = []string{"implementer", "reviewer", "gate", "architect", "ui", "spec-check"}
 
@@ -53,10 +53,8 @@ func Prompt(name string) (string, error) {
 	return string(b), nil
 }
 
-// acceptedContracts is the accepted set (boundary.contract, record 67): the
-// relay contract versions ork supports. Adding a version means checking what
-// the bump changed. v8 leaves ork's role prompts unchanged.
-var acceptedContracts = []int{7, 8}
+// acceptedContracts is the owner-decided supported set (S142, boundary.contract).
+var acceptedContracts = []int{9, 10}
 
 // AcceptedContracts returns the relay contract versions ork supports
 // (boundary.contract).

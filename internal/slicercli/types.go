@@ -2,7 +2,10 @@
 
 package slicercli
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"github.com/squalor-xyz/ork/internal/runrec"
+)
 
 // ParallelItem is an item in a plan-parallel wave or its unplaced list.
 type ParallelItem struct {
@@ -130,21 +133,25 @@ type Goals struct {
 
 // Step is one role or subagent step of a relay run.
 type Step struct {
-	ID        string `json:"id"`
-	Role      string `json:"role"`
-	Agent     string `json:"agent"`
-	Vendor    string `json:"vendor"`
-	Model     string `json:"model"`
-	Reasoning string `json:"reasoning"`
-	Phase     string `json:"phase"`
-	Task      string `json:"task"`
-	Parent    string `json:"parent"`
-	BeganAt   string `json:"begun_at"`
-	UpdatedAt string `json:"updated_at"`
+	WaitingOn string          `json:"waiting_on"`
+	Reason    string          `json:"reason"`
+	Question  *LedgerQuestion `json:"question"`
+	ID        string          `json:"id"`
+	Role      string          `json:"role"`
+	Agent     string          `json:"agent"`
+	Vendor    string          `json:"vendor"`
+	Model     string          `json:"model"`
+	Reasoning string          `json:"reasoning"`
+	Phase     string          `json:"phase"`
+	Task      string          `json:"task"`
+	Parent    string          `json:"parent"`
+	BeganAt   string          `json:"begun_at"`
+	UpdatedAt string          `json:"updated_at"`
 }
 
 // Counts summarizes a run's steps.
 type Counts struct {
+	Waiting   int            `json:"waiting"`
 	Steps     int            `json:"steps"`
 	Running   int            `json:"running"`
 	Subagents int            `json:"subagents"`
@@ -174,7 +181,10 @@ type StepSpec struct {
 	Vendor    string
 	Model     string
 	Reasoning string
-	Phase     string // start, done or fail
+	Phase     string // start, wait, done or fail
+	WaitingOn string
+	Reason    string
+	Question  *LedgerQuestion // question metadata; use RelayAsk to write it (step has no question flag)
 	Task      string
 	Parent    string
 }
@@ -218,4 +228,18 @@ type Recommendation struct {
 	Sliver        bool         `json:"sliver"`
 	Unmatched     []string     `json:"unmatched"`
 	Roles         []RoleChoice `json:"roles"`
+}
+
+// LedgerQuestion is the latest owner question on a ledger step.
+type LedgerQuestion struct {
+	ID         string            `json:"id"`
+	Title      string            `json:"title"`
+	Options    []runrec.Option   `json:"options"`
+	Recommend  string            `json:"recommend"`
+	Blocker    bool              `json:"blocker"`
+	Key        string            `json:"key"`
+	Reasoning  string            `json:"reasoning"`
+	AskedAt    string            `json:"asked_at"`
+	AnsweredAt string            `json:"answered_at"`
+	Answer     map[string]string `json:"answer"`
 }

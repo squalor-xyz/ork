@@ -50,7 +50,7 @@ func TestHappyPathReachesAwaitingApproval(t *testing.T) {
 		if want := filepath.Join(h.store.RunDir(rec.ID), r.Role+"-1.md"); r.ReportPath != want {
 			t.Errorf("%s report path %q, want %q", r.Role, r.ReportPath, want)
 		}
-		if !strings.HasPrefix(r.Brief, "Role: "+r.Role+". Contract: relay v8\n") || !strings.Contains(r.Brief, `"id":"S04"`) || !strings.Contains(r.Brief, "Shell: zsh on darwin.") {
+		if !strings.HasPrefix(r.Brief, "Role: "+r.Role+". Contract: relay v10\n") || !strings.Contains(r.Brief, `"id":"S04"`) || !strings.Contains(r.Brief, "Shell: zsh on darwin.") {
 			t.Errorf("%s brief is missing its parts:\n%.300s", r.Role, r.Brief)
 		}
 	}
@@ -64,7 +64,7 @@ func TestHappyPathReachesAwaitingApproval(t *testing.T) {
 	if impl.Vendor != "claude" || impl.Model != "sonnet" || impl.Effort != "high" || rev.Model != "opus" || gate.Model != "opus" {
 		t.Errorf("lineup not applied: %+v %+v %+v", impl, rev, gate)
 	}
-	if rec.Contract != 7 || rec.Item != item || rec.Worktree != h.W || rec.Branch != item || rec.RelayRun != "run-1" || rec.Project != "ork" {
+	if rec.Contract != 10 || rec.Item != item || rec.Worktree != h.W || rec.Branch != item || rec.RelayRun != "run-1" || rec.Project != "ork" {
 		t.Errorf("record: %+v", rec)
 	}
 	if len(rec.Roles) != 3 || len(rec.Checks) != 1 || !rec.Checks[0].OK || rec.Checks[0].Command != "go test ./..." {
@@ -180,7 +180,7 @@ func TestEveryRoleRoundIsALedgerStepUnderTheOrchestratorStepOrkOwns(t *testing.T
 	h := newHarness(t)
 	h.start()
 	steps := h.steps()
-	if len(steps) != 7 {
+	if len(steps) != 8 {
 		t.Fatalf("%d step calls: %+v", len(steps), steps)
 	}
 	orch := steps[0]
@@ -524,15 +524,22 @@ func TestEveryWriteIsInWritesAndNoReadIs(t *testing.T) {
 
 func TestContractCheckAcceptsTheSetAndRefusesOthers(t *testing.T) {
 	for line, wantErr := range map[string]string{
-		"Contract: relay v7":   "",
-		"Contract: relay v8":   "",
-		"Contract: relay v9":   "v9",
+		"Contract: relay v7":   "v7",
+		"Contract: relay v8":   "v8",
+		"Contract: relay v9":   "",
+		"Contract: relay v10":  "",
 		"Contract: relay v6":   "v6",
 		"something else":       "contract line",
 		"Contract: relay v7 x": "contract line",
 	} {
 		h := newHarness(t, func(o *harnessOpts) {
-			o.routes = []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay"}, Stdout: line + "\n\n# Slice relay\n"}}
+			o.routesFor = func(P, W string) []clitest.Route {
+				raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v10.json"))
+				if err != nil {
+					t.Fatal(err)
+				}
+				return []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--root", P}, Stdout: line + "\n"}, {Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, Stdout: strings.Replace(string(raw), `"contract": "relay v10"`, `"contract": "`+strings.TrimPrefix(line, "Contract: ")+`"`, 1)}}
+			}
 		})
 		_, err := New(context.Background(), h.deps, h.cfg)
 		if wantErr == "" {
@@ -560,7 +567,7 @@ func TestNewRecordsTheRunAndRefusesBadInput(t *testing.T) {
 		t.Fatal(err)
 	}
 	rec := e.Snapshot()
-	if rec.ID != "ork-20261019-161201-a1b2" || rec.State != runrec.StateSetup || rec.Contract != 7 || rec.Round != 1 || rec.Item != item {
+	if rec.ID != "ork-20261019-161201-a1b2" || rec.State != runrec.StateSetup || rec.Contract != 10 || rec.Round != 1 || rec.Item != item {
 		t.Fatalf("record: %+v", rec)
 	}
 	if !reflect.DeepEqual(rec.Lineup, h.cfg.Lineup) || rec.Worktree != h.W || rec.Branch != item {

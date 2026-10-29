@@ -19,7 +19,9 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/roles"
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
 // SpecQuestion is one open question of a spec check: the parsed block, its
@@ -41,6 +43,7 @@ type SpecVerdict struct {
 // SpecCheckConfig describes one spec check: a batch of slices, checked in one
 // read-only pass of the spec-check row's chain (adj 164, roles.spec-check).
 type SpecCheckConfig struct {
+	ledger  *specLedger
 	Project registry.Project
 	Items   []string
 	Lineup  []runrec.LineupEntry // the spec check row, then its fallbacks
@@ -104,11 +107,40 @@ func (e *SpecCheckRetryError) Error() string {
 	return fmt.Sprintf("spec check failed on its automatic retry; check again: %v", e.Cause)
 }
 
+type specLedger struct {
+	current   int
+	exhausted map[string]bool
+	run       string
+	contract  *slicercli.RelayContract
+	writer    runrec.Writer
+}
+
 // RunSpecCheck checks every item read-only and returns its verdict. A change
 // inside the role with HEAD unchanged stops the check. A moving HEAD, a
 // status change outside the role, or a malformed report gets one retry with
 // fresh specs. A second failure says that the retry has already been used.
-func RunSpecCheck(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCheckResult, error) {
+func RunSpecCheck(ctx context.Context, d Deps, cfg SpecCheckConfig) (result *SpecCheckResult, finalErr error) {
+	if len(cfg.Items) == 0 {
+		return nil, errors.New("spec check needs items")
+	}
+	contract, err := d.Slicer.RelayContract(ctx, cfg.Project.Path)
+	if err != nil {
+		return nil, fmt.Errorf("slicer ai relay --json: %w", err)
+	}
+	cfg.ledger = &specLedger{contract: contract, exhausted: map[string]bool{}, writer: runrec.Writer{Now: d.now, Sleep: d.Sleep, Backoff: d.Backoff}}
+	if run, err := d.Slicer.RelayBegin(ctx, cfg.ledger.writer, cfg.Project.Path, cfg.Project.Path, cfg.Items...); err == nil {
+		cfg.ledger.run = run.ID
+	}
+	defer func() {
+		if cfg.ledger.run != "" {
+			outcome, close := "pass", "done"
+			if finalErr != nil {
+				outcome, close = "stopped", "fail"
+			}
+			d.Slicer.RelayEnd(context.WithoutCancel(ctx), cfg.ledger.writer, cfg.Project.Path, cfg.ledger.run, outcome, close)
+		}
+	}()
+
 	var first error
 	for attempt := 0; ; attempt++ {
 		res, err := runSpecCheckOnce(ctx, d, cfg)
@@ -190,15 +222,47 @@ func runSpecCheckOnce(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCh
 		return nil, errSpecStatusChanged
 	}
 	var text string
+	exhausted := cfg.ledger.exhausted
 	for i, entry := range cfg.Lineup {
+		if i < cfg.ledger.current || exhausted[entry.Vendor] {
+			continue
+		}
 		if err := os.Remove(reportPath); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return nil, fmt.Errorf("old report: %w", err)
+		}
+
+		stepID := ""
+		if cfg.ledger != nil && cfg.ledger.run != "" {
+			step, err := d.Slicer.RelayStep(ctx, cfg.ledger.writer, root, cfg.ledger.run, slicercli.StepSpec{Role: cfg.ledger.contract.LedgerRole(RoleSpecCheck), Agent: entry.Vendor, Vendor: entry.Vendor, Model: entry.Model, Reasoning: entry.Effort, Phase: "start", Task: strings.Join(cfg.Items, ", ") + " spec-check"})
+			if err == nil {
+				stepID = step.ID
+			}
 		}
 		res, runErr := d.Runner.Run(ctx, Request{
 			Role: RoleSpecCheck, Round: 1, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
 			Brief: brief, Worktree: root, TempDir: tempDir, ReportPath: reportPath,
 			Allowlist: perm.Allow, ReadOnly: perm.ReadOnly,
 		})
+
+		if stepID != "" {
+			phase := "done"
+			reason := ""
+			if runErr != nil || res.Exit != ExitOK {
+				phase = "fail"
+				reason = res.Reason
+				if reason == "" {
+					reason = string(res.Exit)
+				}
+				if runErr != nil {
+					reason = runErr.Error()
+				}
+			}
+			version, _ := roles.CheckContractLine("Contract: " + cfg.ledger.contract.Contract)
+			if version < 10 {
+				reason = ""
+			}
+			d.Slicer.RelayStep(context.WithoutCancel(ctx), cfg.ledger.writer, root, cfg.ledger.run, slicercli.StepSpec{Step: stepID, Phase: phase, Reason: strings.Join(strings.Fields(reason), " ")})
+		}
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
@@ -227,7 +291,15 @@ func runSpecCheckOnce(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCh
 			text = readSpecReport(reportPath, res.Report)
 			break
 		}
-		if (class == ExitRateLimited || class == ExitError) && i+1 < len(cfg.Lineup) {
+		if class == ExitOutOfCredits {
+			exhausted[entry.Vendor] = true
+		}
+		next := i + 1
+		for next < len(cfg.Lineup) && exhausted[cfg.Lineup[next].Vendor] {
+			next++
+		}
+		if fallbackExit(class) && next < len(cfg.Lineup) {
+			cfg.ledger.current = next
 			continue
 		}
 		msg := fmt.Sprintf("spec-check (%s %s %s) exited %s", entry.Vendor, entry.Model, entry.Effort, class)

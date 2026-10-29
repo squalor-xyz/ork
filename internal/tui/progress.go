@@ -50,6 +50,8 @@ func pipelinePhases(steps []runTreeStep) map[string]string {
 			phases["reviewer"] = ui
 		case ui == "start" || reviewer == "start":
 			phases["reviewer"] = "start"
+		case ui == "wait" || reviewer == "wait":
+			phases["reviewer"] = "wait"
 		case ui == "fail" || reviewer == "fail":
 			phases["reviewer"] = "fail"
 		}
@@ -69,6 +71,8 @@ func stageBar(steps []runTreeStep, frame int, live bool) string {
 		switch phases[role] {
 		case "done":
 			cell = "##"
+		case "wait":
+			cell = "--"
 		case "fail":
 			cell = "!!"
 		case "start", "stale", "ended", "paused", "stopped", "committed":

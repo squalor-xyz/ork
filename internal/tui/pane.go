@@ -445,6 +445,20 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 	case r.unavailable:
 		addFooter(wrapText(source.RemovedProjectHelp(r.name), width), 2)
 	case m.pane.ledger:
+		if q := ledgerOwnerQuestion(m.paneBoardRun()); q != nil {
+			title := wrapText(q.Title, width)
+			for i := range title {
+				title[i] = m.cfg.Theme.Heading.Render(title[i])
+			}
+			addFooter(title, 0)
+			for i, o := range q.Options {
+				text := fmt.Sprintf("%d. %s: %s", i+1, o.Label, o.Summary)
+				if o.Label == q.Recommend {
+					text += " (recommended)"
+				}
+				addFooter(wrapText(text, width), 0)
+			}
+		}
 		// The note "started elsewhere, read-only; esc close pane" is on the hint
 		// line (S149).
 	case m.paneQuestion():

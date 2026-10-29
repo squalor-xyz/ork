@@ -30,8 +30,8 @@ func (c Client) longCall(args ...string) clirun.Call {
 }
 
 // Contract runs `slicer ai relay` and returns its first line.
-func (c Client) Contract(ctx context.Context) (string, error) {
-	res, err := clirun.Run(ctx, c.call("ai", "relay"))
+func (c Client) Contract(ctx context.Context, root string) (string, error) {
+	res, err := clirun.Run(ctx, c.call("ai", "relay", "--root", root))
 	if err != nil {
 		return "", err
 	}
@@ -135,6 +135,7 @@ func (c Client) RelayStep(ctx context.Context, w runrec.Writer, root, run string
 		{"--step", s.Step}, {"--role", s.Role}, {"--agent", s.Agent}, {"--vendor", s.Vendor},
 		{"--model", s.Model}, {"--reasoning", s.Reasoning}, {"--parent", s.Parent},
 		{"--phase", s.Phase}, {"--task", s.Task},
+		{"--waiting-on", s.WaitingOn}, {"--reason", s.Reason},
 	} {
 		if f.val != "" {
 			argv = append(argv, f.flag, f.val)
@@ -206,8 +207,7 @@ var uiPassRow = regexp.MustCompile(`UI pass row \((r\d+)\)`)
 
 // UIPassRowID finds the matrix row of the UI pass: the id that a rule names as
 // "UI pass row (rNN)" (rule u10 today). It is empty when no rule names one.
-// Until slicer has a ui role (s392), the row's role is reviewer and this rule
-// is the only way to tell it from the reviewer's own rows.
+// The matrix can still use a reviewer row for this separate ledger role.
 func UIPassRowID(rules []Rule) string {
 	for _, r := range rules {
 		if m := uiPassRow.FindStringSubmatch(r.Text); m != nil {
@@ -221,9 +221,8 @@ var specCheckRow = regexp.MustCompile(`Spec check row \((r\d+)\)`)
 
 // SpecCheckRowID finds the matrix row of the spec check: the id that a rule
 // names as "Spec check row (rNN)" (rule u11 today). It is empty when no rule
-// names one. Until slicer has a spec-check role (s392), the row's role is
-// reviewer and this rule is the only way to tell it from the reviewer's own
-// rows.
+// names one. The matrix can still use a reviewer row for this separate
+// ledger role.
 func SpecCheckRowID(rules []Rule) string {
 	for _, r := range rules {
 		if m := specCheckRow.FindStringSubmatch(r.Text); m != nil {
@@ -280,5 +279,42 @@ func (c Client) Promote(ctx context.Context, w runrec.Writer, root, id, file str
 // SetScores applies a role's proposed scores to a filed slice.
 func (c Client) SetScores(ctx context.Context, w runrec.Writer, root, id string, scores runrec.FindingScores) error {
 	_, err := c.write(ctx, w, root, "set", id, "--importance", strconv.Itoa(scores.Importance), "--urgency", strconv.Itoa(scores.Urgency), "--effort", strconv.Itoa(scores.Effort), "--render", "--json", "--lean")
+	return err
+}
+
+// RelayAsk mirrors a structured blocker question on the orchestrator step.
+func (c Client) RelayAsk(ctx context.Context, w runrec.Writer, root, run, step, key string, q runrec.OwnerQuestion) (string, error) {
+	argv := []string{"relay-run", "ask", run, "--step", step, "--title", q.Title, "--blocker"}
+	for _, o := range q.Options {
+		argv = append(argv, "--option", o.Label+":"+o.Summary)
+	}
+	if q.Recommend > 0 && q.Recommend <= len(q.Options) {
+		argv = append(argv, "--recommend", q.Options[q.Recommend-1].Label)
+	}
+	if key != "" {
+		argv = append(argv, "--key", key)
+	}
+	if q.Reason != "" {
+		argv = append(argv, "--reasoning", q.Reason)
+	}
+	argv = append(argv, "--json")
+	res, err := c.write(ctx, w, root, argv...)
+	if err != nil {
+		return "", err
+	}
+	var out struct {
+		Question struct {
+			ID string `json:"id"`
+		} `json:"question"`
+	}
+	if err := json.Unmarshal(res.Stdout, &out); err != nil || out.Question.ID == "" {
+		return "", fmt.Errorf("slicer relay-run ask: no question id in output")
+	}
+	return out.Question.ID, nil
+}
+
+// RelayAnswer records the owner's free-text answer, ending that question's wait.
+func (c Client) RelayAnswer(ctx context.Context, w runrec.Writer, root, run, question, text string) error {
+	_, err := c.write(ctx, w, root, "relay-run", "answer", run, question, "--text", text, "--json")
 	return err
 }

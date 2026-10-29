@@ -520,11 +520,18 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 			if r.State == "stale" {
 				style = th.Dim
 			}
-			// A relay started elsewhere has no label: the pane says so (S145).
-			running = append(running, ovRow{ledgerID: r.ID, state: r.State, style: style, noLabel: true, project: i, name: name,
+			// External Running rows have no label; owner questions use Needs you.
+			row := ovRow{ledgerID: r.ID, state: r.State, style: style, noLabel: true, project: i, name: name,
 				text: text, id: id, rest: rest, stepParts: steps, dim: r.State == "stale", compact: compact,
 				run:  m.ledgerRunRow(s, r),
-				live: &liveRun{item: strings.Join(r.Items, ","), ledger: r, steps: ledgerTreeSteps(r.Steps)}})
+				live: &liveRun{item: strings.Join(r.Items, ","), ledger: r, steps: ledgerTreeSteps(r.Steps)}}
+			if ledgerOwnerQuestion(r) != nil {
+				row.kind, row.pending, row.kindW, row.noLabel, row.style = "? question", "question", kindWidth, false, th.Warn.Bold(th.Mono)
+				row.live.alert = "? question"
+				needs = append(needs, row)
+			} else {
+				running = append(running, row)
+			}
 		}
 	}
 	// Run rows drop the empty label only while no other Running row has one;
@@ -977,7 +984,9 @@ func (m *Model) ledgerRunRow(s source.Snapshot, r slicercli.RelayRun) *runRow {
 	rr := m.newRunRow(strings.Join(r.Items, ","), title, r, ledgerTreeSteps(r.Steps))
 	rr.role, rr.stateOnly = r.State, true
 	for _, step := range r.Steps {
-		if step.Phase == "start" {
+		if step.Phase == "wait" {
+			rr.role, rr.model, rr.second, rr.stateOnly = step.Role+" waiting", step.Model, treeText(step.Task), false
+		} else if step.Phase == "start" {
 			rr.role, rr.model, rr.second, rr.stateOnly = step.Role, step.Model, treeText(step.Task), false
 		}
 	}
@@ -1235,12 +1244,14 @@ func runParts(r slicercli.RelayRun, now time.Time) (id, rest string, steps []rel
 	}
 
 	// The last start wins so a subagent is shown ahead of its orchestrator.
-	var running, failed *slicercli.Step
+	var running, waiting, failed *slicercli.Step
 	for i := range r.Steps {
 		step := &r.Steps[i]
 		switch step.Phase {
 		case "start":
 			running = step
+		case "wait":
+			waiting = step
 		case "fail":
 			failed = step
 		}
@@ -1249,7 +1260,7 @@ func runParts(r slicercli.RelayRun, now time.Time) (id, rest string, steps []rel
 	for _, selected := range []struct {
 		label string
 		step  *slicercli.Step
-	}{{"running", running}, {"failed", failed}} {
+	}{{"running", running}, {"waiting", waiting}, {"failed", failed}} {
 		if selected.step == nil {
 			continue
 		}
@@ -1510,7 +1521,7 @@ func (m *Model) runningRowsIn(active int) []ovRow {
 	needs, running := m.rowsIn(active)
 	rows := append([]ovRow(nil), running...)
 	for _, r := range needs {
-		if r.live != nil && r.live.alert != "" {
+		if r.live != nil && r.live.alert != "" && r.ledgerID == "" {
 			rows = append(rows, r)
 		}
 	}

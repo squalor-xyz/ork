@@ -1,0 +1,59 @@
+{
+  "_source": "Synthetic run envelope; step serialized with extracted slicer v10 Step.to_dict(), no ledger writes.",
+  "runs": [
+    {
+      "id": "fixture-v10",
+      "state": "active",
+      "items": [
+        "S142"
+      ],
+      "counts": {
+        "steps": 1,
+        "running": 0,
+        "waiting": 1,
+        "subagents": 0,
+        "roles": {
+          "orchestrator": 1
+        }
+      },
+      "steps": [
+        {
+          "id": "1",
+          "role": "orchestrator",
+          "agent": "ork",
+          "vendor": "",
+          "model": "",
+          "reasoning": "",
+          "phase": "wait",
+          "waiting_on": "owner",
+          "task": "S142 orchestrator",
+          "parent": "",
+          "begun_at": "2026-10-29T03:00:00Z",
+          "updated_at": "2026-10-29T04:00:00Z",
+          "question": {
+            "id": "q1",
+            "title": "Which cap?",
+            "options": [
+              {
+                "label": "four",
+                "summary": "cap at 4"
+              },
+              {
+                "label": "eight",
+                "summary": "cap at 8"
+              }
+            ],
+            "recommend": "four",
+            "blocker": true,
+            "key": "engine.cap",
+            "reasoning": "smaller",
+            "asked_at": "2026-10-29T04:00:00Z",
+            "answered_at": "",
+            "answer": null
+          },
+          "reason": ""
+        }
+      ]
+    }
+  ]
+}

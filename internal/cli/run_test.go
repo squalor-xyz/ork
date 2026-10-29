@@ -353,7 +353,7 @@ func TestBehindNoticeOnlyWhenIdle(t *testing.T) {
 	for _, command := range []string{"status", "doctor"} {
 		for _, active := range []bool{false, true} {
 			t.Run(fmt.Sprintf("%s/active=%v", command, active), func(t *testing.T) {
-				app, _, _ := doctorApp(t, "Contract: relay v7")
+				app, _, _ := doctorApp(t, "Contract: relay v10")
 				app.Call = func(_ context.Context, method string, params, result any) error {
 					if method == daemon.MethodStatus {
 						return json.Unmarshal([]byte(fmt.Sprintf(`{"build_id":"dev","roles_running":%v,"projects":[{"name":"ork","self_host":true,"behind_main":true}]}`, active)), result)
@@ -395,7 +395,7 @@ func TestBehindNoticeOnlyWhenIdle(t *testing.T) {
 func TestBehindNoticeOverDaemonConnection(t *testing.T) {
 	for _, command := range []string{"status", "doctor"} {
 		t.Run(command, func(t *testing.T) {
-			app, _, _ := doctorApp(t, "Contract: relay v7")
+			app, _, _ := doctorApp(t, "Contract: relay v10")
 			predatingDaemon(t, app.Socket, func() (any, error) {
 				return daemon.StatusResult{BuildID: "dev", Projects: []daemon.ProjectStatus{{Name: "ork", SelfHost: true, BehindMain: true}}}, nil
 			})

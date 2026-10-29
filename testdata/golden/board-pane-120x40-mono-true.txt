@@ -10,7 +10,7 @@
     implementer > [reviewer] > [2mgate[m                                                                              [2mround 1[m
     [2m+ implementer done[m
     [1m| reviewer    start[m
-    [2m. gate        waiting[m
+    [2m. gate        queued[m
 
    ork  [2mS97[m  [2mstale reviewer[m  [2m[##~~..][m  [1m!! heard 30m[m
 

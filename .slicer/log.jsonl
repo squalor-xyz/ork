@@ -2202,6 +2202,13 @@
 {"when": "2026-10-28T20:43:22Z", "item": "S61", "action": "note", "from": "", "to": "", "note": "Spec filled 2026-10-28 with owner decisions (opt-in per run,", "by": "Jon R"}
 {"when": "2026-10-28T20:43:22Z", "item": "S62", "action": "note", "from": "", "to": "", "note": "Spec filled 2026-10-28 with owner decision: run a parent's s", "by": "Jon R"}
 {"when": "2026-10-28T20:43:22Z", "item": "S142", "action": "note", "from": "", "to": "", "note": "Upstream follow-up from the owner 2026-10-28: slicer's v10 v", "by": "Jon R"}
+{"when": "2026-10-29T03:54:01Z", "item": "S142", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-29T12:16:24Z", "item": "S142", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-10-29 (interactive, UI pass): a ledger r", "by": "Jon R"}
+{"when": "2026-10-29T12:17:31Z", "item": "S142", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T12:23:32Z", "item": "S142", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-29T16:14:57Z", "item": "S142", "action": "note", "from": "", "to": "", "note": "Later (UI pass round 2): the external owner-question row is ", "by": "Jon R"}
+{"when": "2026-10-29T16:14:57Z", "item": "S142", "action": "status", "from": "started", "to": "done", "note": "Accept relay contract v9 and v10: root- and pin-aware contract checks, ai relay --json conformance, ui and spec-check ledger roles, wait phase with ask/answer mirroring, v10 fail reasons with out-of-credits vendor skipping, external owner questions under Needs you. Review and UI pass PASS after one fix round.", "by": "Jon R"}
+{"when": "2026-10-29T16:14:57Z", "item": "S142", "action": "note", "from": "", "to": "", "note": "Orchestration trial (run 39, S142): Codex sol/medium impleme", "by": "Jon R"}
 {"when": "2026-10-29T03:55:11Z", "item": "S39", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-29T04:02:26Z", "item": "S39", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-29T04:07:09Z", "item": "S39", "action": "note", "from": "", "to": "", "note": "Later: the source-text check in TestWaveStartUsageSaysYAndN ", "by": "Jon R"}

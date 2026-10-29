@@ -6260,7 +6260,7 @@
       "id": "S142",
       "title": "Accept relay contract v9 and follow it: finding kinds, spec check, UI pass, approval and landing, ledger wait phase, conformance JSON",
       "short_title": "Accept relay contract v9 and follow it: finding kinds, spec check, UI pass, approval and landing, ledger wait phase, conformance JSON",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -6285,6 +6285,39 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "51d6b031-e2b0-40d0-bea9-d883b3d27961",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29 (interactive, UI pass): a ledger run started outside ork that waits on the owner with a v10 question moves to Needs you (counts there, gets the ? mark) and the pane shows the question title and options read-only. Later (review round 1): Claude runner does not classify out-of-credits or pass Result.Reason (runner.go ~69-79); ork status / daemon relay summary shows no step for a waiting relay (handlers.go ~358-365); relay-run answer always sends --text, use --option when an option label was picked (write.go ~316-319); questions whose options contain ; or | or a multi-line reason are refused by relay-run ask and not mirrored, and a crash between Answer's record update and RelayAnswer leaves the ledger question open (ledger.go ~34, engine.go ~426-443). Later (UI pass): waiting runs still say '0 of 3 steps running'; the pane still shows last heard on waits (S154 covers waiting since); 'waiting on approval' widens the phase column to 19; wait rows have no emphasis in mono and share amber with the last-heard warning; the doctor line for an unaccepted version repeats itself and gives no upgrade hint.",
+          "created_at": "2026-10-29T12:16:24Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "93892823-01b5-4d02-96bb-0c4ad9241a8c",
+          "kind": "",
+          "text": "**2026-10-29** — Later (UI pass round 2): the external owner-question row is grouped under Paused with a detail line saying 'active'; an 'Owner questions' label would fit better; the detail line for an external run does not show the question title; the doctor pin-in-JSON path prefixes contract_mismatch while the exit-3 path suffixes it; dashboard.md should say which group the external row lands in and that an engine run paused on a question stays in Running with ?.",
+          "created_at": "2026-10-29T16:14:57Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "60d1e295-ff28-4895-bc83-6d3d6badc131",
+          "kind": "",
+          "text": "**2026-10-29** — Orchestration trial (run 39, S142): Codex sol/medium implementer (50 files, +1481/-226, then a 43-file fix round); review and UI pass FAIL then PASS; 1 fix round; 4 owner questions at preflight and 1 in review; tests were added after code in the first pass (deviation noted).",
+          "created_at": "2026-10-29T16:14:57Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -6304,7 +6337,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

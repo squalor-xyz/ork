@@ -122,18 +122,17 @@ func TestUIPassRunsWithReviewerOnUISlice(t *testing.T) {
 	}
 }
 
-// The ledger has no ui role yet (slicer s392), so the UI pass is a reviewer
-// step whose task says ui.
-func TestUIPassLedgerStepIsReviewerWithUITask(t *testing.T) {
+// The UI pass has its own ledger role, beside the reviewer.
+func TestUIPassLedgerStepUsesOwnRole(t *testing.T) {
 	h := uiHarness(t, tuiFiles)
 	requireState(t, h.start(), runrec.StateAwaitingApproval)
 	var tasks []string
 	for _, s := range h.steps() {
-		if s.Phase == "start" && s.Task != "" && s.Role == "reviewer" {
+		if s.Phase == "start" && s.Task != "" && (s.Role == "reviewer" || s.Role == "ui") {
 			tasks = append(tasks, s.Task)
 		}
-		if s.Role == "ui" {
-			t.Errorf("ledger step uses role ui, which slicer does not know: %+v", s)
+		if s.Task == "S04 ui" && s.Role != "ui" {
+			t.Errorf("UI task recorded as %s", s.Role)
 		}
 	}
 	sort.Strings(tasks)

@@ -37,8 +37,8 @@ func TestANonEmptyOwnerNeededPausesTheSliceAndAnAnswerResumesTheRole(t *testing.
 	if len(h.checks.calls) != 0 || len(h.runner.requests()) != 1 {
 		t.Fatalf("a paused slice runs nothing: checks %v, roles %v", h.checks.calls, h.runner.roles())
 	}
-	if st := h.steps(); st[len(st)-1].Phase != "done" {
-		t.Errorf("a role that asked a question finished its step: %+v", st[len(st)-1])
+	if st := h.steps(); st[len(st)-1].Phase != "wait" {
+		t.Errorf("orchestrator waits after a role asked a question: %+v", st[len(st)-1])
 	}
 	if len(h.calls("slicer", "relay-run", "end")) != 0 {
 		t.Errorf("a paused slice does not end its run")

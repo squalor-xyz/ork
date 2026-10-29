@@ -114,8 +114,8 @@ func TestEmbeddedFilesMatchNames(t *testing.T) {
 }
 
 func TestContractVersion(t *testing.T) {
-	if ContractVersion != 8 {
-		t.Fatalf("ContractVersion = %d, want 8", ContractVersion)
+	if ContractVersion != 10 {
+		t.Fatalf("ContractVersion = %d, want 10", ContractVersion)
 	}
 	for _, f := range []string{"relay-first-line.txt", "relay-orchestrator-first-line.txt"} {
 		if got := recordedVersion(t, f); !ContractAccepted(got) {
@@ -137,13 +137,13 @@ func TestOwnerQuestionWording(t *testing.T) {
 	}
 }
 
-func TestAcceptedContracts(t *testing.T) {
-	if got := AcceptedContracts(); !reflect.DeepEqual(got, []int{7, 8}) {
-		t.Fatalf("AcceptedContracts() = %v, want [7 8]", got)
+func TestAcceptedContractsAreV9AndV10(t *testing.T) {
+	if got := AcceptedContracts(); !reflect.DeepEqual(got, []int{9, 10}) {
+		t.Fatalf("AcceptedContracts() = %v, want [9 10]", got)
 	}
 	got := AcceptedContracts()
 	got[0] = 99
-	if again := AcceptedContracts(); again[0] != 7 {
+	if again := AcceptedContracts(); again[0] != 9 {
 		t.Fatalf("AcceptedContracts hands out its own slice: %v", again)
 	}
 	if !ContractAccepted(ContractVersion) {
@@ -151,42 +151,26 @@ func TestAcceptedContracts(t *testing.T) {
 	}
 }
 
-func TestCheckContractLineAcceptsV8(t *testing.T) {
-	if v, err := CheckContractLine("Contract: relay v8"); err != nil || v != 8 {
-		t.Fatalf("v8: %d, %v", v, err)
-	}
-	if v, err := CheckContractLine("Contract: relay v7 x"); err == nil || v != 0 {
-		t.Fatalf("malformed v7: %d, %v", v, err)
-	}
-}
-
-func TestPromptsUseV8(t *testing.T) {
-	if ContractVersion != 8 {
-		t.Errorf("ContractVersion = %d, want 8", ContractVersion)
+func TestPromptsFirstLineNamesTheirContract(t *testing.T) {
+	if ContractVersion != 10 {
+		t.Errorf("ContractVersion = %d, want 10", ContractVersion)
 	}
 	for name, p := range prompts(t) {
 		first, _, _ := strings.Cut(p, "\n")
-		if want := "Role: " + name + ". Contract: relay v8"; first != want {
+		if want := "Role: " + name + ". Contract: relay v10"; first != want {
 			t.Errorf("%s: first line %q, want %q", name, first, want)
 		}
 	}
 }
 
 func TestCheckContractLine(t *testing.T) {
-	if v, err := CheckContractLine("Contract: relay v7"); err != nil || v != 7 {
-		t.Fatalf("v7: %d, %v", v, err)
+	for _, v := range []int{7, 8, 9, 10, 11} {
+		got, err := CheckContractLine(fmt.Sprintf("Contract: relay v%d", v))
+		if got != v || (err == nil) != (v == 9 || v == 10) {
+			t.Errorf("v%d: %d, %v", v, got, err)
+		}
 	}
-	if v, err := CheckContractLine("Contract: relay v7  "); err != nil || v != 7 {
-		t.Fatalf("v7 with trailing spaces: %d, %v", v, err)
-	}
-	v, err := CheckContractLine("Contract: relay v9")
-	if err == nil || v != 9 || err.Error() != "ork accepts relay v7, v8 and slicer prints v9" {
-		t.Fatalf("v9: %d, %v", v, err)
-	}
-	if v, err := CheckContractLine("Contract: relay v6"); err == nil || v != 6 {
-		t.Fatalf("v6: %d, %v", v, err)
-	}
-	for _, bad := range []string{"", "something else entirely", "Contract: relay v", "Contract: relay v7 extra"} {
+	for _, bad := range []string{"", "something else", "Contract: relay v", "Contract: relay v10 extra"} {
 		if v, err := CheckContractLine(bad); err == nil || v != 0 {
 			t.Errorf("%q: %d, %v", bad, v, err)
 		}
@@ -281,7 +265,8 @@ func TestGateCriteria(t *testing.T) {
 	for _, want := range []string{
 		"earlier blockers",
 		"proving test",
-		"medium severity",
+		"no new `fix` finding of medium severity or worse",
+		"no `blocker` owner finding",
 		"tests green",
 		"docs",
 		"Non-blocking",
@@ -364,7 +349,7 @@ func TestSharedRules(t *testing.T) {
 			"lowercase dotted decision key",
 			"Never change directory",
 			"Never open, search, parse or edit tracking files",
-			"foreground",
+			"Run your own shell commands in the foreground and background none.",
 			"Never commit",
 			"Never read vendor credential or login files",
 			"Do not run `adj ask` yourself; ork shows the question to the owner (and may file it)",

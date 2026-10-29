@@ -118,6 +118,9 @@ func (m *Model) cardSummary(card *runrec.ApprovalCard, width int) []string {
 		diff += fmt.Sprintf(", %d new files", n)
 	}
 	lines = append(lines, wrapText("Diff: "+diff, width)...)
+	for _, deviation := range card.Deviations {
+		lines = append(lines, wrapText(deviation, width)...)
+	}
 	return append(lines, m.rendersLine(card, width)...)
 }
 

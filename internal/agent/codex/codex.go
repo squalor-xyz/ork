@@ -24,6 +24,7 @@ const (
 	ExitOK           Exit = "ok"
 	ExitError        Exit = "error"
 	ExitUnclassified Exit = "unclassified"
+	ExitOutOfCredits Exit = "out_of_credits"
 	ExitRateLimited  Exit = "rate_limited"
 )
 
@@ -131,6 +132,7 @@ func ParseLine(line []byte) (Event, error) {
 // Round carries the vendor result. Tokens sums input and output. Whether cached
 // input and reasoning output are subsets of those counts is unverified.
 type Round struct {
+	Reason          string // classified vendor failure message
 	Exit            Exit
 	Session, Report string
 	Tokens          int
@@ -142,11 +144,11 @@ type Round struct {
 	CandidateErr    error
 }
 type stream struct {
-	pending                    []byte
-	raw                        bytes.Buffer
-	round                      Round
-	completed, failed, limited bool
-	onEvent                    func(Event)
+	pending                                  []byte
+	raw                                      bytes.Buffer
+	round                                    Round
+	completed, failed, limited, outOfCredits bool
+	onEvent                                  func(Event)
 }
 
 func (r *stream) Write(p []byte) (int, error) {
@@ -191,8 +193,13 @@ func (r *stream) line(line []byte) {
 		if e.Error != nil {
 			message = e.Error.Message
 		}
-		if strings.Contains(message, "You've hit your usage limit") || strings.Contains(message, "out of credits") || (strings.Contains(message, "429") && strings.Contains(message, "rate_limit_exceeded")) {
+		if strings.Contains(message, "You've hit your usage limit") || (strings.Contains(message, "429") && strings.Contains(message, "rate_limit_exceeded")) {
 			r.limited = true
+			r.round.Reason = message
+		}
+		if strings.Contains(message, "out of credits") {
+			r.outOfCredits = true
+			r.round.Reason = message
 		}
 	}
 	if r.onEvent != nil {
@@ -259,7 +266,9 @@ func Run(ctx context.Context, s Spec) (round Round, err error) {
 	if runErr != nil && !errors.As(runErr, &exitErr) && !errors.Is(runErr, exec.ErrWaitDelay) {
 		return round, fmt.Errorf("codex: %w", runErr)
 	}
-	if out.limited {
+	if out.outOfCredits {
+		round.Exit = ExitOutOfCredits
+	} else if out.limited {
 		round.Exit = ExitRateLimited
 	} else if round.ExitCode == 0 && out.completed && !out.failed {
 		round.Exit = ExitOK

@@ -5,6 +5,7 @@ package cli
 import (
 	"bytes"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -19,6 +20,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/roles"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
 // versionTimeout bounds each doctor call.
@@ -238,20 +240,25 @@ func checkTool(ctx context.Context, name, bin string, required bool) toolCheck {
 
 // checkContract compares the first line of `slicer ai relay` with the
 // accepted set of contract versions (boundary.contract).
-func checkContract(ctx context.Context, slicer toolCheck) contractCheck {
+func checkContract(ctx context.Context, slicer toolCheck, root string) contractCheck {
 	cc := contractCheck{Accepted: roles.AcceptedContracts()}
 	if !slicer.Present {
 		cc.Error = "slicer is not available"
 		return cc
 	}
-	res, err := clirun.Run(ctx, clirun.Call{Bin: slicer.Path, Args: []string{"ai", "relay"}, Timeout: versionTimeout})
-	cc.Found = firstLine(res.Stdout)
+	client := slicercli.Client{Bin: slicer.Path, Timeout: versionTimeout}
+	line, err := client.Contract(ctx, root)
+	cc.Found = line
 	if err != nil {
-		cc.Error = err.Error()
+		cc.Error = contractError(err)
 		return cc
 	}
 	if _, err := roles.CheckContractLine(cc.Found); err != nil {
-		cc.Error = err.Error()
+		cc.Error = contractError(err)
+		return cc
+	}
+	if _, err := client.RelayContract(ctx, root); err != nil {
+		cc.Error = contractError(err)
 		return cc
 	}
 	cc.OK = true
@@ -329,7 +336,12 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 			rep.OK = false
 		}
 	}
-	rep.Contract = checkContract(ctx, rep.Tools[0])
+	root, rootErr := os.Getwd()
+	if rootErr != nil {
+		rep.Contract = contractCheck{Accepted: roles.AcceptedContracts(), Error: rootErr.Error()}
+	} else {
+		rep.Contract = checkContract(ctx, rep.Tools[0], root)
+	}
 	if !rep.Contract.OK {
 		rep.OK = false
 	}
@@ -406,4 +418,12 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 		}
 	}
 	return code
+}
+
+func contractError(err error) string {
+	var tool *clirun.ToolError
+	if errors.As(err, &tool) {
+		return fmt.Sprintf("%s (%s)", tool.Message, tool.Code)
+	}
+	return err.Error()
 }

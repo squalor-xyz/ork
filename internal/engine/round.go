@@ -326,8 +326,8 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	if class == ExitOK {
 		text, file = e.readReport(reportPath, reportName, res.Report)
 	}
-	fallback := class == ExitRateLimited || class == ExitError
-	fallingBack := fallback && len(res.Denials) == 0 && !changed && statusErr == nil && entryIndex+1 < len(entries)
+	fallback := fallbackExit(class)
+	fallingBack := fallback && len(res.Denials) == 0 && !changed && statusErr == nil && nextEntry(entries, entryIndex, class) < len(entries)
 	err = e.run.Update(func(rr *runrec.Record) {
 		// A sibling round of the same state may have paused the slice already;
 		// its pause context is not this round's to clear.
@@ -350,7 +350,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 
 	if fallingBack {
 		stop()
-		e.stepEnd(ctx, rec, stepID, "fail")
+		e.stepFail(ctx, rec, stepID, class, res.Reason, runErr)
 		return outcome{}, nil
 	}
 
@@ -372,7 +372,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 	if stopReason != "" {
 		stop()
-		e.stepEnd(ctx, rec, stepID, "fail")
+		e.stepFail(ctx, rec, stepID, class, res.Reason, runErr)
 		return outcome{}, e.stop(ctx, stopReason)
 	}
 	stop()
@@ -485,7 +485,7 @@ func fallbackSection(rec runrec.Record, role string, earlier []runrec.LineupEntr
 func fallbackReasons(rec runrec.Record, role string) string {
 	var reasons []string
 	for _, r := range rec.Roles {
-		if r.Role == role && (r.Exit == string(ExitRateLimited) || r.Exit == string(ExitError)) {
+		if r.Role == role && (fallbackExit(ExitClass(r.Exit))) {
 			reasons = append(reasons, fmt.Sprintf("%s round %d (%s %s %s) exited %s", role, r.Round, r.Vendor, r.Model, r.Effort, r.Exit))
 		}
 	}
@@ -528,10 +528,10 @@ func (e *Engine) stepStart(ctx context.Context, rec runrec.Record, r round, entr
 	if rec.RelayRun == "" || rec.Commit != nil {
 		return ""
 	}
-	role := r.role
-	if role == RoleUI {
-		role = RoleReviewer // slicer has no ui role yet (s392); the task says ui
-	}
+	role := rec.LedgerRoles[r.role]
+	if role == "" {
+		role = r.role
+	} // records created before the contract snapshot
 	step, err := e.d.Slicer.RelayStep(ctx, e.wr, rec.Worktree, rec.RelayRun, slicercli.StepSpec{
 		Role: role, Agent: entry.Vendor, Vendor: entry.Vendor, Model: entry.Model, Reasoning: entry.Effort,
 		Parent: rec.OrchestratorStep, Phase: "start", Task: r.task,

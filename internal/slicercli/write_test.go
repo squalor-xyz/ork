@@ -36,12 +36,12 @@ func rawRoute(args []string, file string) clitest.Route {
 }
 
 func TestContractReturnsTheFirstLine(t *testing.T) {
-	c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"ai", "relay"}, Stdout: "Contract: relay v7\n\n# Slice relay\nmore\n"})
-	got, err := c.Contract(context.Background())
+	c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--root", root}, Stdout: "Contract: relay v7\n\n# Slice relay\nmore\n"})
+	got, err := c.Contract(context.Background(), root)
 	if err != nil || got != "Contract: relay v7" {
 		t.Fatalf("%q, %v", got, err)
 	}
-	if calls := fake.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, []string{"ai", "relay"}) {
+	if calls := fake.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, []string{"ai", "relay", "--root", root}) {
 		t.Fatalf("calls: %+v", calls)
 	}
 }

@@ -727,7 +727,14 @@ progress line when the pane has room for the reason, the blank and one
 progress line (S134). `pgup` and `pgdown` scroll the reason and tree while the action
 area stays visible. `esc` closes the pane (`ui.answer-ui`,
 `ui.answer-pane-keys`, `ui.run-tree`). Ledger runs started elsewhere open a
-read-only tree pane with no action keys or answer input. The hint line says
+read-only tree pane with no action keys or answer input. An external ledger
+run waiting on the owner with an unanswered question appears in Needs you,
+counts there in the sidebar and Overview, and uses the `?` mark. It leaves
+Running and suppresses "nothing needs you". Its pane shows the question title,
+numbered option labels and summaries, and the recommended option read-only;
+answering stays with whoever started the run. Linked engine runs keep the
+engine's classification and are not counted twice. Approval waits and waits
+without a question stay in Running. The hint line says
 "started elsewhere, read-only; esc close pane" (the inline header is the run ID
 alone); the pane's footer no longer carries it (S149).
 
@@ -1248,14 +1255,17 @@ are never combined.
 Each node shows `glyph role phase elapsed  vendor model effort` in that order.
 Role and phase columns use text widths to align the phase and elapsed time,
 with padding capped to fit deep nodes. Engine role nodes add `round N` on the
-same line. A UI pass step of a linked ledger run, which the engine records as
-a reviewer step because slicer has no ui role, shows as `ui` with `round N`
-(read from the engine's role record by step id) and does not count toward the
-reviewer's `xN`. Only the `ui` node shows a round in a linked tree. A ledger
-run with no engine record shows it as a second reviewer step. A `start` step has an ASCII spinner (`| / - \`) and uses the heading
+same line. A UI pass is recorded under its own `ui` ledger role. In a linked
+engine tree it shows `round N`, read from the engine's role record by step id,
+and does not count toward the reviewer's `xN`. Only the `ui` node shows a round
+in a linked tree. A ledger run without an engine record also names the step
+`ui`. A `start` step has an ASCII spinner (`| / - \`) and uses the heading
 style (bold cyan in colour, bold in mono). A `done` step has `+` and is dim
 (grey in colour, faint in mono). A `fail` step has `!` and uses the error style
-(bold red in colour, bold in mono). Other phases use a neutral `.` and retain
+(bold red in colour, bold in mono). A `wait` step uses the Needs-you glyph
+`?` and the warning style, with `waiting on owner` or `waiting on approval`.
+It is static and shows no elapsed time; the earlier time before the wait is
+not a waiting duration. Other phases use a neutral `.` and retain
 their raw text in plain style. An unfinished engine role in a stopped, paused
 or committed run uses that state word and the neutral glyph.
 Elapsed time advances from the injected clock for running steps and stops at
@@ -1364,9 +1374,12 @@ record makes no additional adj call. Answering owner questions from a running
 slice happens on the Waves screen (`owner.questions`).
 
 The run pane's *proposed* board details keep the S55 tree. A pipeline above
-it colors finished roles green, running cyan, failed red, and waiting dim.
+it colors finished roles green, running cyan, failed red, and unstarted roles dim.
+A role in phase `wait` reads `ROLE waiting` in the pipeline and ledger row,
+using the warning style with no running brackets. Its detail line reads
+`waiting: ROLE: task`.
 The running role uses brackets only for live, non-stale runs. In monochrome
-failed is bold and waiting is dim; passed is not bold. Warning text is plain
+failed is bold and unstarted is dim; passed is not bold. Warning text is plain
 with the `!` cue and no underline. `round N` counts review rounds (the fix
 rounds plus one, S145), appears only when positive, and drops first when
 narrow. It is right-aligned on the pipeline line only for a run whose bar has no
@@ -1376,10 +1389,11 @@ N ago` is dim through 10 minutes, amber (the warning color) past 10 minutes,
 and red (the error color) past 30 minutes or for a stale run; the cue is `!` for
 amber and `!!` for red, so monochrome keeps it. It sits on the bar's line, after
 the bar and its round (S106). Ended, stopped, paused and committed runs have a dim pipeline,
-no waiting rows. Their last-heard age stays dim, with no warning. Awaiting-approval runs also
-keep last heard dim, without a `!` or `!!` alarm. A
-live run adds waiting rows only for pipeline roles with no lane step;
-queued steps keep their existing tree row. Waiting rows share the tree's
+no queued tail rows. Their last-heard age stays dim, with no warning. Awaiting-approval runs also
+keep last heard dim, without a `!` or `!!` alarm. Any run with a waiting
+step also keeps last heard dim with no stale cue, regardless of age. A
+live run adds `queued` tail rows only for pipeline roles with no lane step;
+queued steps keep their existing tree row. Queued rows share the tree's
 phase column. Repeated roles carry `xN` on the latest tree node. A failed
 gate has a `✗ gate FAIL -> implementer round N` line beneath it, followed by
 `: REASON` only when the task is non-empty. Started steps
@@ -1388,10 +1402,11 @@ Engine runs without a ledger derive pipeline and round from role records,
 and last heard from the latest role timestamp.
 
 S07 adds an ASCII bar above the pane pipeline. Each role has a two-column
-cell: done `##`, waiting `..`, failed `!!`, and running `~~`, `~=`, `==`, `=~`.
+cell: done `##`, unstarted `..`, waiting `--`, failed `!!`, and running
+`~~`, `~=`, `==`, `=~`. A waiting cell stays static.
 The normal order is implementer, reviewer, gate; an architect leads when
 present. A new implementer round reopens its cell and resets earlier reviewer,
-gate and architect steps to waiting. The round word follows the bar once there
+gate and architect steps to unstarted. The round word follows the bar once there
 is one (`fix 1`, `fix 2`, `gate`; it replaced `rN`, which counted implementer
 steps and so counted the finish step and resumed steps, S145), and last heard
 follows it on the same line (S106); a pane

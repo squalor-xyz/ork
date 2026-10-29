@@ -353,7 +353,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		rules = nil
 	}
 	// The UI pass row is a reviewer row that only the rule naming it tells
-	// apart (rule u10; slicer s392 will give it a ui role). It runs as the UI
+	// apart (rule u10). Its ledger role is ui. It runs as the UI
 	// pass on a UI slice and is never a fallback of the reviewer or the gate.
 	uiRow := slicercli.UIPassRowID(rules)
 	// The spec check row is a reviewer row too (rule u11). It runs only the

@@ -29,6 +29,7 @@ type ExitClass string
 
 const (
 	ExitOK           ExitClass = "ok"
+	ExitOutOfCredits ExitClass = "out_of_credits"
 	ExitRateLimited  ExitClass = "rate_limited"
 	ExitAuth         ExitClass = "auth"
 	ExitError        ExitClass = "error"
@@ -71,6 +72,7 @@ type Live struct {
 
 // Result is what a role round produced.
 type Result struct {
+	Reason  string // classified vendor failure message, when available
 	Exit    ExitClass
 	Session string                 // the vendor session id, for a later resume
 	Report  string                 // the final result text; the report file takes precedence
