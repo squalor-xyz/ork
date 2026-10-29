@@ -410,7 +410,12 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 					continue
 				}
 				if ledger.Counts.Steps > 0 {
-					parts = append(parts, fmt.Sprintf("%d of %d steps running", ledger.Counts.Running, ledger.Counts.Steps))
+					// A run that waits on the owner has nothing running to count.
+					word := " running"
+					if ownerWaitState(r.State) {
+						word = ""
+					}
+					parts = append(parts, fmt.Sprintf("%d of %d steps%s", ledger.Counts.Running, ledger.Counts.Steps, word))
 				}
 				if at, err := time.Parse(time.RFC3339, ledger.BeganAt); err == nil {
 					began = at
@@ -418,11 +423,8 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 				break
 			}
 			if r.State == "awaiting-approval" || r.State == "paused" {
-				if !r.WaitStartedAt.IsZero() {
-					began = r.WaitStartedAt
-				} else if !r.UpdatedAt.IsZero() {
-					// Older records have no durable wait-start timestamp.
-					began = r.UpdatedAt
+				if at := waitStart(r); !at.IsZero() {
+					began = at
 				}
 			}
 			if r.State == "stopped" {
@@ -449,7 +451,7 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 				}
 			}
 			// The engine owns the state; a linked ledger supplies only its steps.
-			ledger.State = r.State
+			ledger = engineLedger(ledger, r)
 			// The engine's state tells a fix round from the finish step (S145).
 			steps = withEngineState(steps, r.State)
 			if !r.Unavailable {
@@ -943,7 +945,7 @@ func sliceTitle(items []slicercli.Item, id string) string {
 func (m *Model) newRunRow(id, title string, ledger slicercli.RelayRun, steps []runTreeStep) *runRow {
 	live := ledger.State != "stale" && boardLive(ledger.State)
 	rr := &runRow{id: id, title: title, bar: stageBar(steps, m.treeFrame, live)}
-	rr.heard, rr.heardStyle = m.lastHeard(ledger)
+	rr.heard, rr.heardStyle = m.heardCell(ledger)
 	return rr
 }
 
@@ -1199,8 +1201,13 @@ func outlastBar(parts []relayRowPart, room int) []relayRowPart {
 // detailLines wraps a Ready row's full commands, or another row's full text,
 // at the pane width. The row already shows the project's name.
 func detailLines(r ovRow, w int, separator string) []string {
-	if len(r.detailCells) > 0 {
-		lines := packCells(r.detailCells, max(w-len(indent), 1))
+	cells := r.detailCells
+	if len(cells) == 0 && strings.Contains(r.text, "  waiting since ") {
+		// Wrap between cells, so "waiting since 00:02" stays whole (S154).
+		cells = strings.Split(r.text, "  ")
+	}
+	if len(cells) > 0 {
+		lines := packCells(cells, max(w-len(indent), 1))
 		for i := range lines {
 			lines[i] = indent + lines[i]
 		}
@@ -1505,9 +1512,19 @@ func shellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", `'"'"
 
 // showsWait reports whether the run's wait text still applies. A run that
 // resumed after an answer keeps no question in its row or pane; the removed
-// project help always applies.
+// project help always applies. Wait text that only says the state again
+// ("awaiting approval  owner approval") is left out (S154).
 func showsWait(r source.EngineRun) bool {
-	return r.Unavailable || r.State == "paused" || r.State == "stopped" || r.State == "awaiting-approval"
+	if r.Unavailable {
+		return true
+	}
+	return (r.State == "paused" || r.State == "stopped" || r.State == "awaiting-approval") && !restatesState(r)
+}
+
+// restatesState reports whether the run's wait text adds nothing to its state.
+func restatesState(r source.EngineRun) bool {
+	wait := strings.ToLower(strings.TrimSpace(r.Wait))
+	return wait == stateWord(r.State) || (r.State == "awaiting-approval" && wait == "owner approval")
 }
 
 // runningRows lists the Running entry's rows (S110, adj 169): the Running
@@ -1920,7 +1937,7 @@ func (m *Model) liveText(r ovRow) liveText {
 	if !stale {
 		t.role = runningRole(shown)
 	}
-	t.heard, t.heardStyle = m.lastHeard(lv.ledger)
+	t.heard, t.heardStyle = m.heardCell(lv.ledger)
 	if len(lv.activity) > 0 {
 		t.spark = sparkline(lv.activity, m.cfg.ASCII)
 	}

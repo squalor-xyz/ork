@@ -7,8 +7,8 @@
 [2m4[m adjudicate              *│[1;7m   adjudicate  S97   [####~~] gate  heard 2m   [gate]                   [m
                            │[2m    ext-1  S97  active, 2 of 6 steps running  9m  [####~~] gate[m
                            │[2m    heard 2m  running: gate  implementer>reviewer>[gate][m
-                           │ [1m?[m DataBall    [1mS42[m   [~~....]       [2mheard 19m[m  [implementer]
-                           │[2m    run-2  S42  paused  20m  Which store?  [~~....]  heard 19m[m
+                           │ [1m?[m DataBall    [1mS42[m   [~~....]       [2mwait 19m[m   [implementer]
+                           │[2m    run-2  S42  paused  20m  Which store?  [~~....]  waiting since 16:23[m
                            │[2m    [implementer]>reviewer>gate[m
                            │ [1mx[m agents      [1mS07[m   [####..]       [2mheard 15m[m  [reviewer]
                            │[2m    run-3  S07  stopped  owner action  [####..]  heard 15m[m

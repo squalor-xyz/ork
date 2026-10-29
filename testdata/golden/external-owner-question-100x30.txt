@@ -2,7 +2,7 @@
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
 [1;7m0>Needs you              1 [m│[1mNeeds you 1[m
 [2m1[m ork                    1 │  [1mPaused 1[m
-                           │[1;7m  ?  ork  S77  reviewer waiting opus  [..--..]  heard 16h42m            [m
+                           │[1;7m  ?  ork  S77  reviewer waiting opus  [..--..]  wait 16h40m             [m
                            │[7m            S77 reviewer                                                [m
                            │
                            │[1mRunning 0[m  [1m? owner questions 1[m
@@ -21,10 +21,10 @@
                            │
                            │
                            │
-                           │
                            │[2m────────────────────────────────────────────────────────────────────────[m
-                           │  external  S77  active, 0 of 1 steps running  [..--..]  heard 16h42m
-                           │  waiting: reviewer: S77 reviewer  implementer>reviewer waiting>gate
+                           │  external  S77  active, 0 of 1 steps running  [..--..]
+                           │  waiting since 00:02  waiting: reviewer: S77 reviewer
+                           │  implementer>reviewer waiting>gate
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │ enter [2mopen[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
                            │ 1 project | refreshed 16:42:00

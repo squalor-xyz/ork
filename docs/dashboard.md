@@ -637,8 +637,16 @@ An engine-linked row and its pane use the engine state even when the ledger
 run is stale. Awaiting approval reads `awaiting approval`; the row stays
 undimmed and Enter opens its engine pane with the linked ledger steps.
 On Approve and Paused rows, the wait age goes immediately after the state
-word, before the reason and other details: `awaiting approval  19h00m  owner
-approval`. Narrow rows clip the tail after the age.
+word, before the reason and other details: `paused  19h00m  Which store?`.
+Narrow rows clip the tail after the age. Wait text that only says the state
+again is left out of the row and the pane: an awaiting-approval run reads
+`awaiting approval  19h00m`, not `awaiting approval  19h00m  owner approval`
+(S154). Any other wait text stays.
+An engine run that waits on the owner (awaiting approval or paused) counts its
+steps without the word `running`, because none runs: `2 of 6 steps`, where a
+working or stopped run reads `2 of 6 steps running`. A relay started elsewhere
+keeps slicer's own count, `2 of 6 steps running`, even with a step waiting
+(S154).
 Awaiting-approval and paused ages count from the persisted `wait_started_at`
 using the current clock, including while the ledger is stale. Human-check
 marks do not reset the age. Older records fall back to `updated_at`, then the
@@ -1389,9 +1397,23 @@ N ago` is dim through 10 minutes, amber (the warning color) past 10 minutes,
 and red (the error color) past 30 minutes or for a stale run; the cue is `!` for
 amber and `!!` for red, so monochrome keeps it. It sits on the bar's line, after
 the bar and its round (S106). Ended, stopped, paused and committed runs have a dim pipeline,
-no queued tail rows. Their last-heard age stays dim, with no warning. Awaiting-approval runs also
-keep last heard dim, without a `!` or `!!` alarm. Any run with a waiting
-step also keeps last heard dim with no stale cue, regardless of age. A
+no queued tail rows. Their last-heard age stays dim, with no warning.
+Awaiting-approval runs are in the same group: none of them runs, so the pane
+shows no queued rows and no activity line, and the stage bar, the pipeline and
+the spinner of an unfinished step (`|`) stay still across frames; no frame tick
+is armed for the pane (S154). A run that
+waits on the owner (awaiting approval, paused, or any ledger step in phase
+`wait`) replaces last heard with `waiting since HH:MM`, dim, with no `!` or
+`!!` alarm and no stale cue, regardless of age. It sits where last heard does:
+on the bar's line in the pane and in the detail line. The time is when the wait
+began, in the clock's zone: the wait step's `updated_at` for a ledger step, the
+persisted `wait_started_at` (then `updated_at`) for an engine run. A wait that
+began on an earlier day than the clock's names the day: `waiting since Oct 27
+16:42`; the same day reads `waiting since 16:42`. The phrase does not age and
+the detail line never breaks inside it. The row cell is shorter, as rows are
+narrow: `wait 19m`, the age as `heard 19m` gives it, dim, in the same place. A
+run that is not live and not waiting on the owner (stopped, committed or ended)
+never reads as waiting, even if its ledger kept a step in phase `wait`. A
 live run adds `queued` tail rows only for pipeline roles with no lane step;
 queued steps keep their existing tree row. Queued rows share the tree's
 phase column. Repeated roles carry `xN` on the latest tree node. A failed

@@ -2,18 +2,15 @@
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────────────────────────[m
 [1;7m0>Needs you              1 [m│[1mNeeds you 1[m
 [2m1[m ork                    1 │  [1mApprove 1[m
-                           │[1;7m  +  ork  engine  S22  awaiting approval  2m  owner action  2 of 6 steps running            [m
+                           │[1;7m  +  ork  engine  S22  awaiting approval  2m  owner action  2 of 6 steps                    [m
                            │    [1mRun engine[m
                            │    owner action
                            │    internal/engine/engine.go | 12 ++++++++----
                            │    internal/tui/pane.go      | 40 ++++++++++++++++++++++++++++++++++++++++
                            │    internal/tui/card.go      | (new)
                            │    
-                           │    [......]
+                           │    [2m[......][m
                            │    [2mimplementer[m > [2mreviewer[m > [2mgate[m
-                           │    [2m. implementer queued[m
-                           │    [2m. reviewer    queued[m
-                           │    [2m. gate        queued[m
                            │
                            │    [1mGate PASS (round 1)  Tests: 12 passed, 0 failed[m
                            │    Diff: 2 files, +48 -4, 1 new file
@@ -33,6 +30,9 @@
                            │
                            │[1mReady to land[m
                            │  [2mnone[m
+                           │
+                           │
+                           │
                            │
                            │
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────[m

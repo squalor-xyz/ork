@@ -2,10 +2,10 @@
 [2m  Running        0 [m│[2m────────────────────────────────────────────────────────────[m
 [1;7m0>Needs you      1 [m│[1mNeeds you 1[m
 [2m1[m ork            1 │  [1mPaused 1[m
-                   │[1;7m  ?  ork  S77  reviewer waiting opus  [..--..]  heard 16h42m[m
+                   │[1;7m  ?  ork  S77  reviewer waiting opus  [..--..]  wait 16h40m [m
                    │[7m            S77 reviewer                                    [m
                    │    [1mRun external[m
-                   │    [..--..]  [2mlast heard 16h42m ago[m
+                   │    [..--..]  [2mwaiting since 00:02[m
                    │    [2mimplementer[m > reviewer waiting > [2mgate[m
                    │    ? reviewer    waiting on owner  opus
                    │    [2m    S77 reviewer[m

@@ -2,15 +2,12 @@
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
 [1;7m0>Needs you              4 [m│[1mNeeds you 4[m
 [2m1[m ork                    4 │  [1mApprove 1[m
-                           │[1;7m  +  ork  engine  S22  awaiting approval  2m  owner action  2 of 6 st...[m
+                           │[1;7m  +  ork  engine  S22  awaiting approval  2m  owner action  2 of 6 steps[m
                            │    [1mRun engine[m
                            │    owner action
                            │
-                           │    [......]
+                           │    [2m[......][m
                            │    [2mimplementer[m > [2mreviewer[m > [2mgate[m
-                           │    [2m. implementer queued[m
-                           │    [2m. reviewer    queued[m
-                           │    [2m. gate        queued[m
                            │
                            │    2 later findings; next to file: "Add a --json flag to ork status"
                            │    Owner question, not blocking: Should the cache be shared?
@@ -24,7 +21,10 @@
                            │  [2mnothing running[m
                            │
                            │[1mRecent[m
-                           │[2m  +4 more lines[m
+                           │  [2mnone[m
+                           │
+                           │[1mReady to land[m
+                           │  [2mnone[m
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │ a [2mapprove[m; o [2manswer[m; f [2mfile slice[m; pgup/pgdown [2mline[m; esc [2mclose pane[m
                            │ 1 project | refreshed 16:42:00

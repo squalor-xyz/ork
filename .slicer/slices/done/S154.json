@@ -1,0 +1,39 @@
+{
+  "id": "S154",
+  "title": "S138 later notes: owner-wait rows and pane wording",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Later notes from the S138 relay (run-20261026-175512-e95d, landed 34bb9f8), not fixed in that slice:\n- The pane could replace \"last heard\" with \"waiting since HH:MM\" for awaiting-approval and paused (owner: dim it now, this later).\n- \"awaiting approval  19h00m  owner approval\" repeats the word approval; hide the Wait text when it only restates the state (`internal/tui/overview.go` showsWait).\n- \"2 of 6 steps running\" on an awaiting-approval row reads as active work; say \"2 of 6 steps\" for owner-wait states.\n- While awaiting approval, the pane's stage bar and its \"waiting\" tail animate as if live (`internal/tui/relayboard.go`, boardLive); decide whether an owner wait should animate.\n- Trial wall clock 45 min, 1 fix round."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/overview.go`, `internal/tui/relayboard.go`, `internal/tui/pane.go`.\n- Tests: `internal/tui/approval_stale_test.go`, `internal/tui/engine_runs_test.go`, `internal/tui/relayboard_review_test.go`.\n- Goldens: `testdata/golden/`.\n- `docs/dashboard.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "TestAwaitingApprovalRowShowsWaitingSince (the pane and detail show 'waiting since HH:MM' in place of 'last heard' for awaiting-approval, paused and ledger wait steps); TestWaitTextHiddenWhenItRestatesTheState ('awaiting approval' row has no 'owner approval' repeat); TestOwnerWaitRowsSayNOfMSteps (no 'running' wording: '2 of 6 steps'); TestOwnerWaitDoesNotAnimateTheStageBar (stage bar and the waiting tail identical across ticks, boardLive false for an owner wait); TestWaitSinceUsesTheStepUpdatedAt; goldens at 80x24 and 100x30."
+    },
+    {
+      "heading": "Implement",
+      "body": "Owner decision 2026-10-29: all four items. Tests first; re-anchor line numbers from the code (S142 landed the wait phase rendering: ledger wait steps, the ? glyph, 'ROLE waiting'). 1. For awaiting-approval, paused and a ledger step in phase wait, replace 'last heard' with 'waiting since HH:MM' (dim), using the wait step's updated_at or the record's paused time (relayboard.go, overview.go detail). 2. overview.go showsWait: hide the Wait text when it only restates the state ('awaiting approval  19h00m  owner approval' repeats approval). 3. Say 'N of M steps' (no 'running') for owner-wait states. 4. relayboard.go boardLive: no stage-bar or tail animation for an owner wait; the bar stays static. 5. docs/dashboard.md. UI slice: UI pass (r14). Files already listed; add internal/tui/runtree.go and progress.go if touched."
+    },
+    {
+      "heading": "Check",
+      "body": "- go test -race -count=1 ./...\n- go vet ./...\n- gofmt -l .\n- go test ./internal/tui -update, then review the golden diff\n- slicer check"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -623,7 +623,12 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 				roleWidth = max(roleWidth, len(role))
 			}
 		}
-		lines = append(lines, m.runTreeLinesWithRoleWidth(steps, width, m.treeFrame, roleWidth)...)
+		// The spinner of a step that has not ended stands still while nothing runs.
+		frame := m.treeFrame
+		if !boardLive(m.paneBoardRun().State) {
+			frame = 0
+		}
+		lines = append(lines, m.runTreeLinesWithRoleWidth(steps, width, frame, roleWidth)...)
 		lines = append(lines, m.boardTail(steps, width, roleWidth)...)
 	}
 	if len(lines) == 0 {

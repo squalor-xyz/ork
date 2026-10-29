@@ -1,0 +1,24 @@
+[1mork[m                │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[2m  Running        0 [m│[2m────────────────────────────────────────────────────────────[m
+[1;7m0>Needs you      1 [m│[1mNeeds you 1[m
+[2m1[m ork            1 │  [1mApprove 1[m
+                   │[1;7m  +  ork  S22  awaiting approval  19h00m                    [m
+                   │    [1mRun engine[m
+                   │    [2m[######][m  [2mwaiting since Oct 18 21:42[m
+                   │    [2mimplementer[m > [2mreviewer[m > [2mgate[m                    [2mround 1[m
+                   │    [1m| orchestrator start[m
+                   │      [2m+ implementer  done[m
+                   │      [2m+ reviewer     done[m
+                   │      [2m+ gate         done[m
+                   │
+                   │
+                   │[1mRunning 0[m
+                   │  [2mnothing running[m
+                   │
+                   │[1mRecent[m
+                   │  [2mnone[m
+                   │
+                   │[2m  +2 more lines[m
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ pgup/pgdown [2mline[m; ctrl+d/u [2mhalf page[m; esc [2mclose pane[m
+                   │ 1 project | refreshed 16:42:00
