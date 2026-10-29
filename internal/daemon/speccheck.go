@@ -18,16 +18,16 @@ import (
 )
 
 // The spec check (adj 164, roles.spec-check; docs/design.md, Wave lifecycle).
-// The clients ask for it before they start a wave. It is a read-only job of
-// the daemon, not a run: no run record, no worktree, and the role works in
+// The clients ask for it before they start a wave or a single slice. It is a
+// read-only job of the daemon, not a run: no run record, no worktree. The role works in
 // the project checkout with the tree fingerprint of a read-only role.
 const (
 	MethodSpecCheck  = "spec.check"  // proposed wire; params SpecCheckParams, result SpecCheckResult
 	MethodSpecAnswer = "spec.answer" // proposed wire; params SpecAnswerParams, result SpecAnswerResult
 )
 
-// CodeSpecQuestions is the error code of an item that wave.start refuses
-// because its spec check left questions open.
+// CodeSpecQuestions is the error code when wave.start or run.start refuses
+// an item because its spec check left questions open.
 const CodeSpecQuestions = "spec_questions"
 
 // SpecCheckParams names the project and the items to check in one pass.
@@ -338,7 +338,7 @@ func (d *Daemon) specAnswer(ctx context.Context, p SpecAnswerParams) (*SpecAnswe
 
 // specGate refuses an item whose check, against its current spec, left
 // questions open. An item that was never checked, or whose spec changed since,
-// passes: the clients run the check before they start a wave.
+// passes: the clients run the check before they start a wave or a single slice.
 func (d *Daemon) specGate(ctx context.Context, project, item string) error {
 	d.runs.mu.Lock()
 	e, ok := d.runs.specs[specKey(project, item)]

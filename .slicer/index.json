@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 189,
+  "next_id": 190,
   "preamble": "",
   "passes": [
     {
@@ -8081,7 +8081,7 @@
       "id": "S167",
       "title": "Spec check on a single-slice launch",
       "short_title": "Spec check on one launch",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8125,7 +8125,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -9038,6 +9038,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S178",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S189",
+      "title": "S167 later notes: spec sitting EOF line, run JSON shapes, refusal prefix, run.start deps",
+      "short_title": "S167 later notes: spec sitting EOF line, run JSON shapes, refusal prefix, run.start deps",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "de741869-fee1-470d-bba9-f5d08a9e2e7f",
+          "kind": "",
+          "text": "**2026-10-29** — From the S167 review and UI pass (2026-10-29), all later: (1) at EOF the held line runs onto the prompt line because askSpecQuestions prints a newline only when err == nil (internal/cli/wave.go about :343; shared with wave); (2) ork run --json on cancel prints {\"started\":false} with no held key while wave always has \"held\":[]; (3) a text-mode spec-check error is a bare 'ork: MESSAGE' with no 'spec check failed' prefix (both commands); (4) role-supplied question and option text is not wrapped to 80 columns (shared); (5) S181 follow-up: should raw run.start read dependencies (ork run already refuses through the spec check).",
+          "created_at": "2026-10-29T22:09:54Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S167",
         "parent": "",
         "cites": [],
         "key": "",

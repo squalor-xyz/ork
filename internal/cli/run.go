@@ -124,6 +124,19 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 	} else {
 		printRunPlan(o.stdout, plan, params.Budgets != nil)
 	}
+	checked := daemon.WaveStartParams{Items: []daemon.RunParams{params}}
+	held, code := a.specCheck(ctx, o, reader, prompts, &checked)
+	if code != ExitOK {
+		return code
+	}
+	if len(checked.Items) == 0 {
+		if o.json {
+			if code := o.printJSON(map[string]any{"started": false, "held": held}); code != ExitOK {
+				return code
+			}
+		}
+		return ExitFailure
+	}
 	if !*yes {
 		confirm, err := ask("Start this slice?", "y/N", "no")
 		if err != nil {

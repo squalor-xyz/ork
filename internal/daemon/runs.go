@@ -1124,6 +1124,9 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 		if method == MethodRunPlan {
 			return d.planRun(ctx, p)
 		}
+		if err := d.specGate(ctx, p.Project, p.Item); err != nil {
+			return nil, err
+		}
 		return d.startRun(ctx, p)
 	}
 	var p RunAction

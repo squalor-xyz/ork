@@ -14,8 +14,10 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
@@ -40,6 +42,8 @@ func runPrompted(t *testing.T, input string, args ...string) promptRun {
 			raw, _ := json.Marshal(params)
 			r.plan = string(raw)
 			return json.Unmarshal([]byte(`{"project":{"name":"p"},"item":"S1"}`), result)
+		case "spec.check":
+			return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true}]}`), result)
 		case "run.start":
 			r.started = true
 			return json.Unmarshal([]byte(`{"id":"r1","state":"setup"}`), result)
@@ -221,6 +225,8 @@ func TestRunShowsPlanBeforeConfirmation(t *testing.T) {
 					}
 					b := []byte(`{"project":{"name":"p"},"item":"S1","worktree":"/p/.worktrees/S1","branch":"S1","check_command":"go test ./...","lineup":{"implementer":[{"vendor":"claude","model":"sonnet","effort":"high"}]},"permissions":{"implementer":{"ReadOnly":false,"Allow":["Read","Write"]}}}`)
 					return json.Unmarshal(b, result)
+				case "spec.check":
+					return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true}]}`), result)
 				case "run.start":
 					if !strings.Contains(out.String(), "/p/.worktrees/S1") || !strings.Contains(out.String(), "go test ./...") || !strings.Contains(out.String(), "sonnet") || !strings.Contains(out.String(), "Write") {
 						t.Fatalf("plan missing before start: %s", &out)
@@ -258,6 +264,9 @@ func TestRunYesStartsAndOwnerCommands(t *testing.T) {
 			app := &App{Call: func(_ context.Context, method string, params, result any) error {
 				if method == "run.plan" {
 					return json.Unmarshal([]byte(`{"project":{"name":"p"},"item":"S1"}`), result)
+				}
+				if method == daemon.MethodSpecCheck {
+					return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true}]}`), result)
 				}
 				if method != tc.method {
 					t.Fatalf("method %s", method)
@@ -466,6 +475,9 @@ func overrideRun(t *testing.T, flags ...string) ([]daemon.RunParams, string) {
 	t.Helper()
 	var calls []daemon.RunParams
 	app := &App{Call: func(_ context.Context, method string, params, result any) error {
+		if method == daemon.MethodSpecCheck {
+			return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true}]}`), result)
+		}
 		p := params.(daemon.RunParams)
 		calls = append(calls, p)
 		if method == daemon.MethodRunPlan {
@@ -614,5 +626,174 @@ func TestRunAndWavePlanShowOnlyOverriddenBudgets(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+// singleSpecRun reuses the wave sitting's recorded replies without a daemon.
+func singleSpecRun(t *testing.T, input, check string, checkErr error, extra ...string) (int, string, string, *specStub) {
+	t.Helper()
+	stub := &specStub{t: t, check: check}
+	var out, errs bytes.Buffer
+	app := &App{Input: strings.NewReader(input), Call: func(ctx context.Context, method string, params, result any) error {
+		if method == daemon.MethodSpecCheck {
+			if !strings.Contains(out.String()+errs.String(), "/p/S1") || strings.Contains(out.String()+errs.String(), "Start this slice?") {
+				t.Fatal("spec check must follow plan and precede confirmation")
+			}
+			p := params.(daemon.SpecCheckParams)
+			if p.Project != "p" || !reflect.DeepEqual(p.Items, []string{"S1"}) {
+				t.Fatalf("check params: %+v", p)
+			}
+			if checkErr != nil {
+				stub.calls = append(stub.calls, method)
+				return checkErr
+			}
+		}
+		if method == daemon.MethodRunStart {
+			stub.calls = append(stub.calls, method)
+			stub.started = append(stub.started, params.(daemon.RunParams).Item)
+			if !strings.Contains(out.String()+errs.String(), "Start this slice?") && !containsYes(extra) {
+				t.Fatal("start before confirmation")
+			}
+			return json.Unmarshal([]byte(`{"id":"r1","state":"setup"}`), result)
+		}
+		return stub.call(ctx, method, params, result)
+	}}
+	args := append([]string{"run", "p", "S1", "--well-specified", "y", "--split", "n"}, extra...)
+	code := app.Run(context.Background(), args, &out, &errs)
+	return code, out.String(), errs.String(), stub
+}
+
+func containsYes(args []string) bool {
+	for _, arg := range args {
+		if arg == "--yes" {
+			return true
+		}
+	}
+	return false
+}
+
+func TestRunCallsTheSpecCheckAfterThePlanAndBeforeConfirmation(t *testing.T) {
+	for _, yes := range []bool{false, true} {
+		flags := []string{}
+		if yes {
+			flags = append(flags, "--yes")
+		}
+		code, out, errs, stub := singleSpecRun(t, "y\n", `{"items":[{"item":"S1","ready":true}]}`, nil, flags...)
+		if code != ExitOK || !reflect.DeepEqual(stub.calls, []string{"run.plan", "spec.check", "run.start"}) {
+			t.Fatalf("exit %d calls %v: %s %s", code, stub.calls, out, errs)
+		}
+	}
+}
+
+func TestRunAsksSpecQuestionsOnStdinThenStarts(t *testing.T) {
+	code, out, errs, stub := singleSpecRun(t, "2\ncustom flag\ny\n", specCheckTwoQuestions, nil)
+	want := []string{"run.plan", "spec.check", "projects.list", "spec.answer", "run.start"}
+	if code != ExitOK || !reflect.DeepEqual(stub.calls, want) || len(stub.answers) != 1 || !reflect.DeepEqual(stub.answers[0].Answers, []string{"memory: rebuilt at each start", "custom flag"}) {
+		t.Fatalf("exit %d calls %v answers %+v: %s %s", code, stub.calls, stub.answers, out, errs)
+	}
+	if !strings.Contains(out, "[S1 1/2] Which store?") {
+		t.Fatal(out)
+	}
+}
+
+func TestRunHoldsAnItemWhoseQuestionsStayOpen(t *testing.T) {
+	for _, input := range []string{"\n", ""} {
+		code, out, errs, stub := singleSpecRun(t, input, specCheckTwoQuestions, nil, "--yes")
+		if code != ExitFailure || len(stub.started) != 0 || !strings.Contains(out, "held: S1 has 2 open spec questions") {
+			t.Fatalf("exit %d started %v: %s %s", code, stub.started, out, errs)
+		}
+	}
+}
+
+func TestRunSpecCheckErrorStopsBeforeStart(t *testing.T) {
+	for _, jsonMode := range []bool{false, true} {
+		flags := []string{"--yes"}
+		if jsonMode {
+			flags = append(flags, "--json")
+		}
+		code, out, errs, stub := singleSpecRun(t, "", "", &ipc.Error{Code: "spec_failed", Message: "no Spec check row"}, flags...)
+		if code != ExitFailure || len(stub.started) != 0 || !strings.Contains(out+errs, "no Spec check row") {
+			t.Fatalf("exit %d calls %v: %s %s", code, stub.calls, out, errs)
+		}
+		if jsonMode {
+			var result struct{ Error ipc.Error }
+			if err := json.Unmarshal([]byte(out), &result); err != nil || result.Error.Code != "spec_failed" {
+				t.Fatalf("error result: %s %v", out, err)
+			}
+		}
+	}
+}
+
+func TestRunJSONKeepsTheSittingOffStdout(t *testing.T) {
+	for _, held := range []bool{false, true} {
+		input := "2\ncustom flag\n"
+		if held {
+			input = ""
+		}
+		code, out, errs, stub := singleSpecRun(t, input, specCheckTwoQuestions, nil, "--yes", "--json")
+		var value map[string]any
+		if err := json.Unmarshal([]byte(out), &value); err != nil {
+			t.Fatalf("stdout is not one JSON value: %s %v", out, err)
+		}
+		if !strings.Contains(errs, "[S1 1/2] Which store?") || strings.Contains(out, "Which store?") {
+			t.Fatalf("sitting: %s %s", out, errs)
+		}
+		if held {
+			if code != ExitFailure || value["started"] != false || !reflect.DeepEqual(value["held"], []any{"S1"}) || len(stub.started) != 0 {
+				t.Fatalf("held exit %d: %s", code, out)
+			}
+		} else if code != ExitOK || value["id"] != "r1" {
+			t.Fatalf("start exit %d: %s", code, out)
+		}
+	}
+}
+
+func TestRunRefusesBlockedItemBeforeConfirmation(t *testing.T) {
+	message := daemon.BlockedMessage([]string{"S2"}, []slicercli.ItemDeps{{ID: "S2", BlockedBy: []string{"S1"}}}, map[string]string{"S1": "Title"})
+	const wantMessage = `S2 waits on S1 "Title" (not done); land S1 first`
+	if message != wantMessage {
+		t.Fatalf("blocked message: %q", message)
+	}
+	for _, jsonMode := range []bool{false, true} {
+		t.Run(fmt.Sprintf("json=%t", jsonMode), func(t *testing.T) {
+			var out, errs bytes.Buffer
+			var calls []string
+			app := &App{Input: strings.NewReader("y\n"), Call: func(_ context.Context, method string, params, result any) error {
+				calls = append(calls, method)
+				switch method {
+				case daemon.MethodRunPlan:
+					*result.(*daemon.RunPlan) = daemon.RunPlan{Item: "S2"}
+					return nil
+				case daemon.MethodSpecCheck:
+					p := params.(daemon.SpecCheckParams)
+					if p.Project != "p" || !reflect.DeepEqual(p.Items, []string{"S2"}) {
+						t.Fatalf("check params: %+v", p)
+					}
+					return &ipc.Error{Code: daemon.CodeRefused, Message: message}
+				default:
+					t.Fatalf("blocked item called %s", method)
+					return nil
+				}
+			}}
+			args := []string{"run", "p", "S2", "--well-specified", "y", "--split", "n"}
+			if jsonMode {
+				args = append(args, "--json")
+			}
+			code := app.Run(context.Background(), args, &out, &errs)
+			if code != ExitFailure || !reflect.DeepEqual(calls, []string{daemon.MethodRunPlan, daemon.MethodSpecCheck}) {
+				t.Fatalf("exit %d calls %v: %s %s", code, calls, &out, &errs)
+			}
+			if strings.Contains(out.String()+errs.String(), "Start this slice?") {
+				t.Fatal("blocked item reached confirmation")
+			}
+			if jsonMode {
+				var result struct{ Error ipc.Error }
+				if err := json.Unmarshal(out.Bytes(), &result); err != nil || result.Error.Code != daemon.CodeRefused || result.Error.Message != wantMessage {
+					t.Fatalf("refusal: %s (%v)", &out, err)
+				}
+			} else if errs.String() != "ork: "+wantMessage+"\n" {
+				t.Fatalf("refusal: %q", errs.String())
+			}
+		})
 	}
 }

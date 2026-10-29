@@ -889,3 +889,61 @@ func TestSpecCheckRefusesABlockedItemBeforeAnyRole(t *testing.T) {
 		}
 	}
 }
+
+func TestRunStartRefusesAnItemWithOpenSpecQuestions(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON(u11))
+	rig.check(t, "S1", "S2")
+	_, err := rig.d.handle(context.Background(), MethodRunStart, json.RawMessage(`{"project":"p","item":"S2"}`))
+	var wire *ipc.Error
+	if !errors.As(err, &wire) || wire.Code != CodeSpecQuestions {
+		t.Fatalf("run.start error: %v, want spec_questions", err)
+	}
+	if runs, err := rig.store.List(); err != nil || len(runs) != 0 {
+		t.Fatalf("refused start wrote runs: %v %v", runs, err)
+	}
+	if len(rig.roleRequests()) != 0 {
+		t.Fatal("refused start ran a role")
+	}
+}
+
+func TestRunStartDoesNotRefuseAnItemNeverChecked(t *testing.T) {
+	for _, changed := range []bool{false, true} {
+		t.Run(fmt.Sprint(changed), func(t *testing.T) {
+			rig := newSpecRig(t, rulesJSON(u11))
+			if changed {
+				rig.check(t, "S1", "S2")
+				rig.setSpec(t, "S2", "changed spec")
+			}
+			b := request(t, rig.d, MethodRunStart, `{"project":"p","item":"S2"}`)
+			var rec runrec.Record
+			if err := json.Unmarshal(b, &rec); err != nil || rec.ID == "" {
+				t.Fatalf("start: %s %v", b, err)
+			}
+		})
+	}
+}
+
+func TestSingleRunCarriesSpecAnswersIntoTheBrief(t *testing.T) {
+	rig := answeredSpecRig(t)
+	b := request(t, rig.d, MethodRunStart, `{"project":"p","item":"S2"}`)
+	var rec runrec.Record
+	if err := json.Unmarshal(b, &rec); err != nil {
+		t.Fatal(err)
+	}
+	want := "Which store holds the index? -> memory [cache.index-store]. What names the flag? -> long."
+	deadline := time.Now().Add(5 * time.Second)
+	for len(rig.roleRequests()) == 0 && time.Now().Before(deadline) {
+		time.Sleep(time.Millisecond)
+	}
+	reqs := rig.roleRequests()
+	if len(reqs) == 0 || reqs[0].Role != engine.RoleImplementer || !strings.Contains(reqs[0].Brief, "## Owner decisions") || !strings.Contains(reqs[0].Brief, want) {
+		t.Fatalf("implementer requests lack answers: %+v", reqs)
+	}
+	stored, err := rig.store.Open(rec.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(rec.Decisions, want) || !strings.Contains(stored.Snapshot().Decisions, want) {
+		t.Fatalf("decisions missing: %+v", rec)
+	}
+}
