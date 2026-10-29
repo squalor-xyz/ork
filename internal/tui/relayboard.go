@@ -132,13 +132,39 @@ const (
 	heardRed   = 30 * time.Minute
 )
 
+// clockOrDay is the time of day in now's zone, with the day ("Oct 27 16:42")
+// when it is not now's day.
+func clockOrDay(at, now time.Time) string {
+	at = at.In(now.Location())
+	if at.Year() == now.Year() && at.YearDay() == now.YearDay() {
+		return at.Format("15:04")
+	}
+	return at.Format("Jan 2 15:04")
+}
+
+// heardCell is lastHeard for a row, where room is short: a run that waits says
+// how long ("wait 19m"), not the clock. The pane and the detail line keep the
+// clock (S154).
+func (m *Model) heardCell(r slicercli.RelayRun) (string, lipgloss.Style) {
+	if since, ok := waitingSince(r); ok {
+		return "wait " + elapsed(m.cfg.Now().Sub(since)), m.cfg.Theme.Dim
+	}
+	return m.lastHeard(r)
+}
+
+// lastHeard is the quiet-time cell of a run. A run that waits on the owner, or
+// has a step in phase wait, has not gone quiet: it says when the wait began
+// instead, in the clock's zone and dim (S154).
 func (m *Model) lastHeard(r slicercli.RelayRun) (string, lipgloss.Style) {
+	if since, ok := waitingSince(r); ok {
+		return "waiting since " + clockOrDay(since, m.cfg.Now()), m.cfg.Theme.Dim
+	}
 	at, err := time.Parse(time.RFC3339Nano, r.UpdatedAt)
 	if err != nil {
 		return "", m.cfg.Theme.Dim
 	}
 	age := m.cfg.Now().Sub(at)
-	if ledgerWaiting(r) || r.State == "awaiting-approval" || !boardLive(r.State) {
+	if !boardLive(r.State) {
 		return "heard " + elapsed(age), m.cfg.Theme.Dim
 	}
 	cue := ""
@@ -154,6 +180,54 @@ func (m *Model) lastHeard(r slicercli.RelayRun) (string, lipgloss.Style) {
 	return cue + "heard " + elapsed(age), style
 }
 
+// waitingSince is when the run's wait on the owner began. An engine run that
+// is awaiting approval or paused carries its wait start in UpdatedAt (see
+// engineLedger). Any other run takes the newest wait step's updated_at, or its
+// own when the step has none. A run that is neither live nor waiting on the
+// owner (ended, stopped, committed) is not waiting, whatever its ledger kept.
+func waitingSince(r slicercli.RelayRun) (time.Time, bool) {
+	if !boardLive(r.State) && !ownerWaitState(r.State) {
+		return time.Time{}, false
+	}
+	if !ownerWaitState(r.State) {
+		if !ledgerWaiting(r) {
+			return time.Time{}, false
+		}
+		for i := len(r.Steps) - 1; i >= 0; i-- {
+			if r.Steps[i].Phase != "wait" {
+				continue
+			}
+			if at, err := time.Parse(time.RFC3339Nano, r.Steps[i].UpdatedAt); err == nil {
+				return at, true
+			}
+			break
+		}
+	}
+	at, err := time.Parse(time.RFC3339Nano, r.UpdatedAt)
+	return at, err == nil
+}
+
+// waitStart is when an engine run's wait on the owner began. Older records have
+// no durable wait-start timestamp, so their last update stands in. It is zero
+// when the record has neither.
+func waitStart(r source.EngineRun) time.Time {
+	if !r.WaitStartedAt.IsZero() {
+		return r.WaitStartedAt
+	}
+	return r.UpdatedAt
+}
+
+// engineLedger is the ledger the board shows for an engine run. The engine owns
+// the state; a linked ledger supplies only its steps. A run that waits on the
+// owner has no quiet time to report, so UpdatedAt carries the start of the wait.
+func engineLedger(ledger slicercli.RelayRun, r source.EngineRun) slicercli.RelayRun {
+	ledger.State = r.State
+	if at := waitStart(r); ownerWaitState(r.State) && !at.IsZero() {
+		ledger.UpdatedAt = at.Format(time.RFC3339Nano)
+	}
+	return ledger
+}
+
 func (m *Model) paneBoardRun() slicercli.RelayRun {
 	p := m.byName[m.pane.project]
 	if p == nil {
@@ -165,12 +239,11 @@ func (m *Model) paneBoardRun() slicercli.RelayRun {
 			if r.ID == id {
 				for _, ledger := range boardLedgers(p.snap) {
 					if r.RelayRun != "" && ledger.ID == r.RelayRun {
-						ledger.State = r.State
-						return ledger
+						return engineLedger(ledger, r)
 					}
 				}
 				ledger, _ := engineBoard(r)
-				return ledger
+				return engineLedger(ledger, r)
 			}
 		}
 	}
@@ -195,7 +268,9 @@ func (m *Model) boardLines(steps []runTreeStep, width int) []string {
 	// Last heard sits on the bar's line, after its round word. A
 	// pane too narrow for both keeps it on a line of its own.
 	if heard, style := m.lastHeard(r); heard != "" {
-		heard = strings.Replace(heard, "heard ", "last heard ", 1) + " ago"
+		if !strings.HasPrefix(heard, "waiting since ") {
+			heard = strings.Replace(heard, "heard ", "last heard ", 1) + " ago"
+		}
 		if lipgloss.Width(bar)+2+lipgloss.Width(heard) <= width {
 			lines[0] += "  " + style.Render(heard)
 		} else {
@@ -369,10 +444,18 @@ func engineBoard(r source.EngineRun) (slicercli.RelayRun, []runTreeStep) {
 	return slicercli.RelayRun{State: r.State, UpdatedAt: stamp}, steps
 }
 
-// boardLive excludes finished or suspended runs from live-only board cues.
+// ownerWaitState reports the engine states in which the run waits on the owner
+// and nothing runs.
+func ownerWaitState(state string) bool {
+	return state == "awaiting-approval" || state == "paused"
+}
+
+// boardLive excludes finished, suspended and owner-wait runs from live-only
+// board cues: the bar, the queued rows, the spinner and the activity line stay
+// still while nothing runs (S154).
 func boardLive(state string) bool {
 	switch state {
-	case "ended", "stopped", "paused", "committed":
+	case "ended", "stopped", "paused", "committed", "awaiting-approval":
 		return false
 	default:
 		return true

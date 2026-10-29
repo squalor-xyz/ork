@@ -7074,7 +7074,7 @@
       "id": "S154",
       "title": "S138 later notes: owner-wait rows and pane wording",
       "short_title": "S138 later notes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -7084,6 +7084,39 @@
           "text": "**2026-10-29** — Owner decision 2026-10-29 (interactive): all four items (waiting since HH:MM replaces last heard for awaiting-approval/paused; hide Wait text that only restates the state; '2 of 6 steps' for owner-wait states; no stage-bar animation during an owner wait). Run after S142, which changes the same wait-phase rows.",
           "created_at": "2026-10-29T11:53:48Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "02f0a46f-2b2f-4187-902b-0b82de4e4e21",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive, review round 1): the row cell is 'wait 19m' (8 columns; pane and detail keep 'waiting since HH:MM'); a wait that began on another day shows the date ('waiting since Oct 27 16:42'); ledger (externally started) runs keep slicer's running count: only engine owner-wait states (awaiting-approval, paused) drop the word running. Later: stopped engine rows still say 'N of M steps running'; the Running view drops heard and its stall cues for all rows when any cell is wider than the room (liveLayout ~1974; keep cue rows as fitRunLayout does); frozen orchestrator step glyph still looks like a spinner (use ? or dim); 'waiting' repeats four times in the ledger detail at 100x30; the pipeline token splits 'reviewer' / 'waiting>gate'.",
+          "created_at": "2026-10-29T18:55:55Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "9bdcde72-046f-45c3-af59-1cec87534a88",
+          "kind": "",
+          "text": "**2026-10-29** — UI pass round 2 finding resolved by owner decision: ledger (externally started) runs keep slicer's running count, so 'N of M steps running' stays on an external run waiting on the owner. Later: the frozen orchestrator step glyph still looks like a spinner; 'waiting' repeats several times in the ledger detail.",
+          "created_at": "2026-10-29T19:04:20Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "2b9de57f-9e76-4a36-8bb7-48f0f0beee02",
+          "kind": "",
+          "text": "**2026-10-29** — Orchestration trial (run 43, S154): Claude sonnet-high implementer; review and UI pass FAIL then PASS; 1 fix round; 2 owner questions at preflight plus 3 in review.",
+          "created_at": "2026-10-29T19:04:20Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -7107,7 +7140,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -2,16 +2,11 @@
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────────────────────────[m
 [1;7m0>Needs you              1 [m│[1mNeeds you 1[m
 [2m1[m ork                    1 │  [1mApprove 1[m
-                           │[1;7m  +  ork  engine  S22  awaiting approval  19h00m  owner approval                            [m
+                           │[1;7m  +  ork  engine  S22  awaiting approval  19h00m                                            [m
                            │    [1mRun engine[m
-                           │    owner approval
-                           │
-                           │    [......]  [2mlast heard 19h37m ago[m
+                           │    [2m[......][m  [2mwaiting since Oct 18 21:42[m
                            │    [2mimplementer[m > [2mreviewer[m > [2mgate[m
                            │    [1m| orchestrator start[m
-                           │    [2m. implementer  queued[m
-                           │    [2m. reviewer     queued[m
-                           │    [2m. gate         queued[m
                            │
                            │
                            │[1mRunning 0[m
@@ -22,6 +17,11 @@
                            │
                            │[1mReady to land[m
                            │  [2mnone[m
+                           │
+                           │
+                           │
+                           │
+                           │
                            │
                            │
                            │

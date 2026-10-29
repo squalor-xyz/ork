@@ -54,7 +54,11 @@ func TestEngineRunRows(t *testing.T) {
 			if wantNeeds {
 				row += "  owner action"
 			}
-			row += "  2 of 6 steps running"
+			if state == "awaiting-approval" || state == "paused" {
+				row += "  2 of 6 steps" // an owner wait has nothing running (S154)
+			} else {
+				row += "  2 of 6 steps running"
+			}
 			if !wantNeeds {
 				row += "  2m"
 			}

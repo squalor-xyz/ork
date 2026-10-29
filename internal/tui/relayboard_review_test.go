@@ -61,7 +61,8 @@ func TestInactiveBoardDetails(t *testing.T) {
 				r.Roles = r.Roles[:1]
 			}
 			v := treePaneView(h.m, 120, 60)
-			if strings.Contains(v, "waiting") {
+			// The paused cell says "waiting since"; a waiting row would not.
+			if strings.Contains(strings.ReplaceAll(v, "waiting since", ""), "waiting") {
 				t.Errorf("inactive waiting rows:\n%s", v)
 			}
 			steps := h.m.paneSteps()
@@ -72,14 +73,19 @@ func TestInactiveBoardDetails(t *testing.T) {
 				t.Errorf("inactive pipeline not dim: %q", line)
 			}
 			r := slicercli.RelayRun{State: state, UpdatedAt: h.now.Add(-time.Hour).Format(time.RFC3339)}
+			// An owner wait names when it began, which does not age (S154).
+			wantFirst, wantSecond := "heard 1h00m", "heard 2h00m"
+			if state == "paused" {
+				wantFirst, wantSecond = "waiting since 15:42", "waiting since 15:42"
+			}
 			first, style := h.m.lastHeard(r)
-			if first != "heard 1h00m" || strings.Contains(first, "!") || style.Render("x") != h.m.cfg.Theme.Dim.Render("x") {
-				t.Errorf("inactive heard age/style: got %q, want heard 1h00m dim", first)
+			if first != wantFirst || strings.Contains(first, "!") || style.Render("x") != h.m.cfg.Theme.Dim.Render("x") {
+				t.Errorf("inactive heard age/style: got %q, want %q dim", first, wantFirst)
 			}
 			h.now = h.now.Add(time.Hour)
 			second, secondStyle := h.m.lastHeard(r)
-			if second != "heard 2h00m" || strings.Contains(second, "!") || secondStyle.Render("x") != h.m.cfg.Theme.Dim.Render("x") {
-				t.Errorf("inactive heard age/style: got %q, want heard 2h00m dim", second)
+			if second != wantSecond || strings.Contains(second, "!") || secondStyle.Render("x") != h.m.cfg.Theme.Dim.Render("x") {
+				t.Errorf("inactive heard age/style: got %q, want %q dim", second, wantSecond)
 			}
 		})
 	}
