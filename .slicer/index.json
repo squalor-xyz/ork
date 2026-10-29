@@ -8403,6 +8403,17 @@
           "stale_after": ""
         },
         {
+          "id": "e8bd627a-7218-40bb-9e88-344d13af7914",
+          "kind": "",
+          "text": "**2026-10-29** — Owner decision 2026-10-29 (interactive): adj 174 (dash.external-runs-end) decided end-stale: ork may end a stale ledger run started outside ork after a y/N confirm. adj 42 (view-only) and docs/boundaries.md:77 still need the owner's supersede and an edit; this slice must update boundaries.md:77 to say ork acts on stale external runs only.",
+          "created_at": "2026-10-29T19:34:36Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
           "id": "edf3d056-32db-4a39-99d8-2ea402bfbc27",
           "kind": "",
           "text": "**2026-10-29** — Fix round 1: slicer's relay-run end has no stale guard under the ledger lock, so ork's re-read leaves a one-subprocess window between the check and the end; consider an --if-stale flag upstream in slicer.",
