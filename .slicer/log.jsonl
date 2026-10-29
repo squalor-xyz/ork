@@ -2548,3 +2548,5 @@
 {"when": "2026-10-29T20:22:38Z", "item": "S67", "action": "note", "from": "", "to": "", "note": "Moved to v1.1 on 2026-10-29: adj 173 scope.v1-ork-edits deci", "by": "Jon R"}
 {"when": "2026-10-29T20:22:38Z", "item": "S68", "action": "note", "from": "", "to": "", "note": "Moved to v1.1 on 2026-10-29: adj 173 scope.v1-ork-edits deci", "by": "Jon R"}
 {"when": "2026-10-29T20:22:38Z", "item": "S69", "action": "note", "from": "", "to": "", "note": "Moved to v1.1 on 2026-10-29: adj 173 scope.v1-ork-edits deci", "by": "Jon R"}
+{"when": "2026-10-29T20:32:20Z", "item": "S186", "action": "add", "from": "", "to": "open", "note": "S181 later notes: blocked refusal wording and an 80-column guard"}
+{"when": "2026-10-29T20:32:26Z", "item": "S186", "action": "note", "from": "", "to": "", "note": "From the S181 UI pass round 2 (2026-10-29), all later: (1) a", "by": "Jon R"}

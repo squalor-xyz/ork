@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 186,
+  "next_id": 187,
   "preamble": "",
   "passes": [
     {
@@ -8914,6 +8914,46 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S186",
+      "title": "S181 later notes: blocked refusal wording and an 80-column guard",
+      "short_title": "S181 later notes: blocked refusal wording and an 80-column guard",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "c5f22a78-f8f7-45e8-bad2-a45679ee8841",
+          "kind": "",
+          "text": "**2026-10-29** — From the S181 UI pass round 2 (2026-10-29), all later: (1) a blocker shared by several items repeats its quoted title each time, so show it only the first time; (2) 'untick S182, S183 or land S181, S175 first' reads ambiguously, so try 'untick S182 and S183, or land S181 and S175 first'; (3) titles use Go %q, so a title with a double quote shows a backslash escape; (4) no test pins the wrapped refusal at 80x24 (the TUI tests use 100 columns and squash whitespace). Previews: .scratch/s181/ui/preview80.txt.",
+          "created_at": "2026-10-29T20:32:26Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S181",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
         "effort": null,
         "attempts": 0
       }
