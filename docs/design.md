@@ -614,9 +614,11 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   the listing named), at most 24 of them and 24 KiB of each, as plain text
   (escape sequences and other control characters dropped, so none can reach the
   owner's terminal). The card lists each render by name and size and holds no
-  text; the text is read on demand (`run.render`, wire section). The
-  directory is cleared when the UI pass starts, so a rerun keeps no file of an
-  earlier attempt. After an owner fix round the card is built again with the
+  text; the text is read on demand (`run.render`, wire section). A renders
+  directory, or a listed file, that exists and cannot be read is named in the
+  card's `renders_error` (S147), so the owner does not read it as "wrote
+  none". The directory is cleared when the UI pass starts, so a rerun keeps
+  no file of an earlier attempt. After an owner fix round the card is built again with the
   same renders; its `ui_round` says which round they come from.
 - **Commit and finish.** On `Approve`, the implementer is resumed for the
   finish step first: the closing note, then `slicer done` or `slicer handoff`
@@ -1238,10 +1240,15 @@ the plain text of one render of the run's card, read from
 record and the file, so it works while a role runs and on a finished run. The
 name must be one the run's card lists; the file must be a regular `.txt` file of
 that directory (a link, a path or a directory is refused), and the text is
-plain text of at most 24 KiB. A run without a card, an unknown run, a name the
-card does not list and a file that is not there are all `not_found`. The TUI
-calls it when the owner opens the renders and again for each render it moves
-to; no snapshot carries render text.
+plain text of at most 24 KiB. A run without a card, an unknown run, a run id
+that is not a plain name, a name the card does not list and a file that is not
+there are all `not_found`. A run whose `run.json` exists and cannot be read
+(not valid JSON, an unknown version) is not "no run": the call fails with the
+code `internal` (no new wire code) and the message `run ID cannot be read: WHY`.
+`run.report` answers the same way. The TUI calls it when the owner opens the
+renders and again for each render it moves to, and keeps only the answer to its
+latest call for a render (each call carries a number from a counter on the
+model that never restarts); no snapshot carries render text.
 *Proposed (S176):* `run.report` takes `{run,name}` and returns `{name,text}`.
 The name must be listed in the stored record's `roles[].report`. The daemon
 reads the record and file without waiting for the run. The file must be a

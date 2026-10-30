@@ -53,7 +53,7 @@ func (e *Engine) buildCard(ctx context.Context, rec runrec.Record, rep *Report) 
 			}
 		}
 	}
-	card.UIRound, card.Renders, card.RendersDropped = e.uiRenders(rec)
+	card.UIRound, card.Renders, card.RendersDropped, card.RendersError = e.uiRenders(rec)
 	marks := map[string]string{}
 	if rec.Card != nil {
 		for _, c := range rec.Card.HumanChecks {
@@ -214,14 +214,16 @@ func rendersPath(runDir string, round int) string {
 // listRenders lists the renders directory as the card shows it: the regular
 // .txt files, in card order. The directory is the role's own, so a missing
 // directory, a link in its place and every entry that is not a regular .txt
-// file (a link, a directory) are left out.
-func listRenders(dir string) []fs.DirEntry {
+// file (a link, a directory) are left out without a word. A directory that is
+// there but cannot be read is an error (S147), so the card can say why it has
+// no renders.
+func listRenders(dir string) ([]fs.DirEntry, error) {
 	if info, err := os.Lstat(dir); err != nil || !info.IsDir() {
-		return nil
+		return nil, nil
 	}
 	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	var kept []fs.DirEntry
 	for _, ent := range entries {
@@ -230,34 +232,53 @@ func listRenders(dir string) []fs.DirEntry {
 		}
 	}
 	sortRenders(kept)
-	return kept
+	return kept, nil
+}
+
+// readReason is the cause of a read error without the path: the card shows it
+// beside a name, and the path is the run directory's own.
+func readReason(err error) string {
+	var pe *fs.PathError
+	if errors.As(err, &pe) {
+		return pe.Err.Error()
+	}
+	return err.Error()
 }
 
 // uiRenders lists the renders of the latest UI pass that ended well: the round
 // it ran in (0 when none did), each render's name and size, and how many files
 // past the limit were left out. The text is not kept; ReadRender reads it.
-func (e *Engine) uiRenders(rec runrec.Record) (round int, renders []runrec.Render, dropped int) {
+// When the directory, or a listed file, exists and cannot be read, readErr says
+// why (the first reason), so the card does not report it as "wrote none".
+func (e *Engine) uiRenders(rec runrec.Record) (round int, renders []runrec.Render, dropped int, readErr string) {
 	for _, r := range rec.Roles {
 		if r.Role == RoleUI && r.Exit == string(ExitOK) {
 			round = r.Round
 		}
 	}
 	if round == 0 {
-		return 0, nil, 0
+		return 0, nil, 0, ""
 	}
 	dir := rendersPath(e.run.Dir(), round)
-	for _, ent := range listRenders(dir) {
+	ents, err := listRenders(dir)
+	if err != nil {
+		readErr = readReason(err)
+	}
+	for _, ent := range ents {
 		if len(renders) == maxRenders {
 			dropped++
 			continue
 		}
-		text, ok := readRender(dir, ent)
-		if !ok {
+		text, err := readRender(dir, ent)
+		if err != nil {
+			if readErr == "" {
+				readErr = ent.Name() + ": " + readReason(err)
+			}
 			continue
 		}
 		renders = append(renders, runrec.Render{Name: ent.Name(), Size: len(text)})
 	}
-	return round, renders, dropped
+	return round, renders, dropped, readErr
 }
 
 // ErrNoRender is the error of ReadRender for a render that is not there.
@@ -270,11 +291,12 @@ var ErrNoRender = errors.New("no such render")
 // at most 24 KiB.
 func ReadRender(runDir string, round int, name string) (string, error) {
 	dir := rendersPath(runDir, round)
-	for _, ent := range listRenders(dir) {
+	ents, _ := listRenders(dir) // a directory that cannot be read lists nothing
+	for _, ent := range ents {
 		if ent.Name() != name {
 			continue
 		}
-		if text, ok := readRender(dir, ent); ok {
+		if text, err := readRender(dir, ent); err == nil {
 			return text, nil
 		}
 		break
@@ -282,11 +304,16 @@ func ReadRender(runDir string, round int, name string) (string, error) {
 	return "", ErrNoRender
 }
 
-// readRender reads one render file as plain text of bounded size.
-func readRender(dir string, ent fs.DirEntry) (string, bool) {
+// errNotThatFile is the error of readRender for a file that is no longer the
+// one the listing named (a link put in its place).
+var errNotThatFile = errors.New("not the listed file")
+
+// readRender reads one render file as plain text of bounded size. It returns
+// the error of an open or a read that failed, or errNotThatFile.
+func readRender(dir string, ent fs.DirEntry) (string, error) {
 	f, err := os.Open(filepath.Join(dir, ent.Name()))
 	if err != nil {
-		return "", false
+		return "", err
 	}
 	defer f.Close()
 	// The listing said a regular file; the open must reach that same file,
@@ -294,11 +321,11 @@ func readRender(dir string, ent fs.DirEntry) (string, bool) {
 	info, err := ent.Info()
 	opened, err2 := f.Stat()
 	if err != nil || err2 != nil || !opened.Mode().IsRegular() || !os.SameFile(info, opened) {
-		return "", false
+		return "", errNotThatFile
 	}
 	b, err := io.ReadAll(io.LimitReader(f, maxRenderBytes+1))
 	if err != nil {
-		return "", false
+		return "", err
 	}
 	text := runrec.PlainText(string(b))
 	if len(b) > maxRenderBytes {
@@ -308,7 +335,7 @@ func readRender(dir string, ent fs.DirEntry) (string, bool) {
 		}
 		text += "\n(cut: over 24 KiB)"
 	}
-	return text, true
+	return text, nil
 }
 
 // viewSizes is the order of a view's renders on the card.

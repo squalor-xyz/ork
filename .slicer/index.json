@@ -6630,7 +6630,7 @@
       "id": "S147",
       "title": "S121 later notes: render pane robustness and wording",
       "short_title": "S121 later notes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -6663,7 +6663,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

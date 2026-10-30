@@ -167,6 +167,7 @@ type Model struct {
 	launchRequest uint64
 	launchFlights map[string]launchFlight
 	actionFlights map[string][]runAction
+	renderSeq     int // the number of the last run.render ask; never restarts, so a closed pane's answer cannot match a new ask (S147)
 	actionStatus  string
 	lastRefresh   time.Time
 	drawn         drawnRows // the body window of the last screen, for the page keys
@@ -348,7 +349,9 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 	case tickMsg:
 		return m, m.tick(m.cfg.Now())
 	case snapshotMsg:
-		return m, m.apply(msg)
+		cmd := m.apply(msg)
+		m.settleRender()
+		return m, cmd
 	case projectsDiscoveredMsg:
 		return m, m.applyProjectsDiscovered(msg)
 	case projectRemovedMsg:

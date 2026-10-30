@@ -13,6 +13,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/source"
 )
 
 // The approval card shows the renders the UI pass wrote (S121, *proposed*;
@@ -501,5 +502,136 @@ func TestApprovalCardRenderHasARuleUnderTheRunLine(t *testing.T) {
 				t.Errorf("a box-drawing rule in ASCII mode")
 			}
 		})
+	}
+}
+
+// Answers can come back in any order, and the same render can be asked for
+// more than once (S147). Only the answer to the latest ask for a render is
+// kept; an older one never replaces it.
+func TestOutOfOrderRenderAnswerKeepsTheLatest(t *testing.T) {
+	h := rendersHarness(t)
+	var cmds []tea.Cmd
+	for range 3 {
+		_, cmd := h.m.Update(press("v")) // renders 1, 2, 3
+		cmds = append(cmds, cmd)
+	}
+	h.deliver(press("v")) // back to the card
+	_, cmd := h.m.Update(press("v"))
+	cmds = append(cmds, cmd) // render 1 again: call 4
+	answer := func(cmd tea.Cmd, text string) {
+		t.Helper()
+		msgs := exec(cmd)
+		if len(msgs) != 1 {
+			t.Fatalf("a render call gave %d messages", len(msgs))
+		}
+		msg, ok := msgs[0].(renderMsg)
+		if !ok {
+			t.Fatalf("a render call gave %T", msgs[0])
+		}
+		msg.text, msg.err = text, nil
+		h.deliver(msg)
+	}
+	answer(cmds[3], "SECOND")
+	answer(cmds[0], "FIRST")
+	v := h.at(80, 24)
+	if !strings.Contains(v, "Render 1 of 3") || !strings.Contains(v, "SECOND") || strings.Contains(v, "FIRST") {
+		t.Errorf("the older answer replaced the latest:\n%s", v)
+	}
+}
+
+// A pane that was closed and opened again is a new ask: an answer to the old
+// pane's call does not fill it.
+func TestRenderAnswerFromAClosedPaneIsIgnored(t *testing.T) {
+	h := rendersHarness(t)
+	_, old := h.m.Update(press("v"))
+	h.deliver(press("esc")) // back to the card
+	h.deliver(press("esc")) // closes the pane
+	if h.m.pane != nil {
+		t.Fatal("the pane must be closed")
+	}
+	h.deliver(press("enter")) // opens it again
+	h.m.Update(press("v"))    // asks again; the new call is not answered yet
+	msgs := exec(old)
+	msg := msgs[0].(renderMsg)
+	msg.text = "OLD PANE ANSWER"
+	h.deliver(msg)
+	v := h.at(80, 24)
+	if !strings.Contains(v, "Loading launch-80x24.txt") || strings.Contains(v, "OLD PANE ANSWER") {
+		t.Errorf("an answer to the old pane's call filled the new pane:\n%s", v)
+	}
+}
+
+// Drawing and asking which render is on show never change the pane (S147).
+// A render the card no longer holds ends the mode for the owner, and the keys
+// that leave it still work.
+func TestRenderOnDoesNotWritePaneState(t *testing.T) {
+	h := rendersHarness(t)
+	for range 3 {
+		h.deliver(press("v")) // render 3 of 3
+	}
+	card := *h.m.paneCard()
+	card.Renders = card.Renders[:1] // the card lost render 3
+	h.m.byName["ork"].snap.EngineRuns[0].Card = &card
+	before := *h.m.pane
+	if v := h.view(); strings.Contains(v, "Render ") || !strings.Contains(v, "Human checks") {
+		t.Errorf("the card must show once the render is gone:\n%s", v)
+	}
+	if got := h.m.renderOn(); got != 0 {
+		t.Errorf("renderOn = %d, want 0 for a render that is gone", got)
+	}
+	if !reflect.DeepEqual(*h.m.pane, before) {
+		t.Errorf("drawing or renderOn changed the pane: render %d/round %d before, %d/%d after", before.render, before.renderRound, h.m.pane.render, h.m.pane.renderRound)
+	}
+	h.deliver(press("v")) // the first render of the new card
+	if v := h.at(80, 24); !strings.Contains(v, "Render 1 of 1") {
+		t.Errorf("v must open the first render:\n%s", v)
+	}
+	h.deliver(press("esc")) // back to the card
+	if v := h.at(80, 24); strings.Contains(v, "Render ") || !strings.Contains(v, "Human checks") {
+		t.Errorf("esc must return to the card:\n%s", v)
+	}
+	if h.m.pane == nil {
+		t.Error("esc from a render must keep the pane open")
+	}
+}
+
+// A renders directory the daemon could not read is told apart from a UI pass
+// that wrote none (S147).
+func TestApprovalCardSaysWhyRendersCouldNotBeRead(t *testing.T) {
+	card := approvalCard(openChecksThree()...)
+	card.UIRound, card.RendersError = 1, "permission denied"
+	h := cardHarness(t, card)
+	v := h.at(120, 40)
+	if !strings.Contains(v, "Renders: the UI pass (round 1) could not be read: permission denied") || strings.Contains(v, "wrote none") {
+		t.Errorf("the card must say why:\n%s", v)
+	}
+	// Some renders listed, one not readable: the count stays and the reason is added.
+	card = rendersCard()
+	card.RendersError = "b.txt: permission denied"
+	h = cardHarness(t, card)
+	v = h.at(120, 40)
+	if !strings.Contains(v, "Renders: 3 from the UI pass (round 1)") || !strings.Contains(v, "could not be read: b.txt: permission denied") {
+		t.Errorf("the card must count the renders and say why some are missing:\n%s", v)
+	}
+}
+
+// The draw path no longer ends the render mode, so the snapshot that takes the
+// render away does: a card that comes back later does not bring the render
+// back with it (S147).
+func TestRenderModeEndsWhenASnapshotDropsTheRender(t *testing.T) {
+	h := rendersHarness(t)
+	for range 3 {
+		h.deliver(press("v")) // render 3 of 3
+	}
+	full := h.m.byName["ork"].snap
+	lost := full
+	lost.EngineRuns = append([]source.EngineRun(nil), full.EngineRuns...)
+	card := *full.EngineRuns[0].Card
+	card.Renders = card.Renders[:1]
+	lost.EngineRuns[0].Card = &card
+	h.deliver(snapshotMsg{name: "ork", snap: lost})
+	h.deliver(snapshotMsg{name: "ork", snap: full}) // the three renders are back
+	if v := h.at(80, 24); strings.Contains(v, "Render ") || !strings.Contains(v, "Human checks") {
+		t.Errorf("the render came back with the card:\n%s", v)
 	}
 }

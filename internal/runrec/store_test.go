@@ -3,6 +3,7 @@
 package runrec
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -83,4 +84,18 @@ func TestLoadDoesNotChangeModes(t *testing.T) {
 	requireMode(t, s.Dir, 0o755)
 	requireMode(t, s.RunDir("old"), 0o755)
 	requireMode(t, path, 0o644)
+}
+
+// A run id that is not a plain name is ErrBadRunID, so a caller can tell it
+// from a record that is missing or unreadable (S147).
+func TestOpenNamesABadRunID(t *testing.T) {
+	s := &Store{Dir: t.TempDir()}
+	for _, id := range []string{"", ".", "..", "../r1", `a\b`, "a/b"} {
+		if _, err := s.Open(id); !errors.Is(err, ErrBadRunID) {
+			t.Errorf("Open(%q) = %v, want ErrBadRunID", id, err)
+		}
+	}
+	if _, err := s.Open("missing"); errors.Is(err, ErrBadRunID) || !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("Open(missing) = %v, want a not-exist error", err)
+	}
 }

@@ -122,3 +122,32 @@ func TestRunRowsCarryRenderNamesNotText(t *testing.T) {
 		t.Errorf("wire row: %s", wire)
 	}
 }
+
+// A run record that exists but cannot be read is not "no run": the owner sees
+// that the run is there and why its text cannot be had (S147). An unknown run
+// and a run id that is not a plain name stay not_found. run.report answers the
+// same way.
+func TestRunRenderSaysWhenTheRecordIsUnreadable(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	renderRun(t, store, p.Name, "r1", map[string]string{"a-80x24.txt": "a"}, "a-80x24.txt")
+	renderRun(t, store, p.Name, "bad", map[string]string{"a-80x24.txt": "a"}, "a-80x24.txt")
+	if err := os.WriteFile(filepath.Join(store.RunDir("bad"), "run.json"), []byte("{not json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, method := range []string{MethodRunRender, MethodRunReport} {
+		t.Run(method, func(t *testing.T) {
+			_, err := d.handle(context.Background(), method, renderParams("bad", "a-80x24.txt"))
+			wire := ipc.ErrorOf(err)
+			if wire == nil || wire.Code != ipc.CodeInternal || !strings.Contains(wire.Message, "run bad cannot be read: ") || !strings.Contains(wire.Message, "run.json") {
+				t.Fatalf("an unreadable record gave %v, want an internal error that names the run and says why", err)
+			}
+			for _, run := range []string{"nope", "../r1"} {
+				_, err := d.handle(context.Background(), method, renderParams(run, "a-80x24.txt"))
+				var re *ipc.Error
+				if !errors.As(err, &re) || re.Code != CodeNotFound || re.Message != "no run "+run {
+					t.Errorf("run %q gave %v, want not_found \"no run %s\"", run, err, run)
+				}
+			}
+		})
+	}
+}

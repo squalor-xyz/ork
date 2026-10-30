@@ -947,8 +947,11 @@ the action area under the run tree, in this order:
   has no key footer.
 - `Renders: N from the UI pass (round R)` (dim; `, K more not kept` when the
   card dropped files), under the diff line. When the UI pass ran and wrote
-  none it reads `Renders: the UI pass (round R) wrote none`. Without a UI pass
-  the card has no such line.
+  none it reads `Renders: the UI pass (round R) wrote none`. When the renders
+  could not be read (`renders_error`, S147) it reads `Renders: the UI pass
+  (round R) could not be read: WHY` instead, and when some were listed and
+  another could not be read, the count is followed by `, some could not be
+  read: WHY`. Without a UI pass the card has no such line.
 
 A digit marks the human check of that number and moves it on: ticked, then
 later, then open again. The mark is saved in the run record at once (`run.check`).
