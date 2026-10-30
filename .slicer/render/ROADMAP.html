@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">204 items · — 40 · done 157 · retired 7</p>
+<p class="summary">205 items · — 41 · done 157 · retired 7</p>
 <h2>v1.1</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S67</td><td>Roadmap editing: park and unpark from the TUI (needs adj 11)</td><td>S</td><td>1</td><td></td><td></td><td class="status">—</td></tr>
@@ -89,175 +89,176 @@
 <tr class="open"><td>37</td><td>S202</td><td>S185 later notes: decide refusal codes, option wrap, help with no options</td><td>S</td><td>-</td><td></td><td>discovered from S185</td><td class="status">—</td></tr>
 <tr class="open"><td>38</td><td>S203</td><td>S112 later notes: dash-leading answers, Via passthrough, ledger option rendering</td><td>S</td><td>-</td><td></td><td>discovered from S112</td><td class="status">—</td></tr>
 <tr class="open"><td>39</td><td>S204</td><td>Engine v11 process rules</td><td>M</td><td>-</td><td></td><td>S198 preflight 2026-10-30: owner split the engine rules out of S198 · discovered from S198</td><td class="status">—</td></tr>
+<tr class="open"><td>40</td><td>S205</td><td>S198 later notes</td><td>S</td><td>-</td><td></td><td>S198 review, gate and UI pass 2026-10-30 (later findings) · discovered from S198</td><td class="status">—</td></tr>
 </tbody></table>
 <h2>v1.0</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
-<tr class="done"><td>40</td><td>S87</td><td>Codex rounds in ork: GOCACHE and the role temp dir inside the sandbox</td><td>S</td><td>1</td><td></td><td>discovered from S83</td><td class="status">done</td></tr>
-<tr class="done"><td>41</td><td>S31</td><td>Run a small slice through ork run end to end</td><td>S</td><td>1</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
-<tr class="done"><td>42</td><td>S78</td><td>recoverRuns map writes under lock</td><td>S</td><td>1</td><td></td><td>discovered from S05</td><td class="status">done</td></tr>
-<tr class="done"><td>43</td><td>S126</td><td>Implementer brief: ork runs the check command itself; a sandbox limit is not an owner question</td><td>S</td><td>1</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
-<tr class="done"><td>44</td><td>S114</td><td>Self-hosting: run ork on its own repo safely</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>45</td><td>S115</td><td>Implementer brief: re-anchor the spec first and self-check before reporting</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>46</td><td>S70</td><td>Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed)</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>47</td><td>S99</td><td>Live role detail: output tail and tokens/cost in the run pane</td><td>M</td><td>2</td><td></td><td>discovered from S07</td><td class="status">done</td></tr>
-<tr class="done"><td>48</td><td>S125</td><td>Waves composer focus: next waves only, inputs inline under the ticked item</td><td>M</td><td>2</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
-<tr class="done"><td>49</td><td>S107</td><td>Waves as a table: shares as a dim column, wave header rules, Lineup column only after ticking</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>50</td><td>S111</td><td>Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork</td><td>M</td><td>2</td><td></td><td>discovered from S28</td><td class="status">done</td></tr>
-<tr class="done"><td>51</td><td>S127</td><td>After an answer: clear the question from the row and pane, and say the role resumed</td><td>S</td><td>1</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
-<tr class="done"><td>52</td><td>S109</td><td>Run pane follows the newest running run, with a 1 s ledger refresh while a run is visible</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>53</td><td>S110</td><td>Running: a live summary of every running project above Needs you in the sidebar</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>54</td><td>S118</td><td>Approval card: everything needed to approve on one screen</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>55</td><td>S119</td><td>Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>56</td><td>S120</td><td>Finding kinds: fix, owner or later in reviewer, UI pass and gate reports</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>57</td><td>S117</td><td>UI pass role in the engine, in parallel with the reviewer</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>58</td><td>S121</td><td>UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>59</td><td>S116</td><td>Spec check: a batch readiness check before a wave, answered in one sitting</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>60</td><td>S92</td><td>Fallback brief tells the next row about earlier rows and an already-started slice</td><td>S</td><td>1</td><td></td><td>discovered from S49</td><td class="status">done</td></tr>
-<tr class="done"><td>61</td><td>S93</td><td>The gate follows the reviewer&#x27;s current row after a fallback</td><td>S</td><td>1</td><td></td><td>discovered from S49</td><td class="status">done</td></tr>
-<tr class="done"><td>62</td><td>S102</td><td>startRun re-checks that the project is still registered</td><td>S</td><td>1</td><td></td><td>discovered from S38</td><td class="status">done</td></tr>
-<tr class="done"><td>63</td><td>S113</td><td>Answer with adj on and no decision key must proceed</td><td>S</td><td>1</td><td></td><td>discovered from S28</td><td class="status">done</td></tr>
-<tr class="done"><td>64</td><td>S73</td><td>Allowlist --root-first calls</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>65</td><td>S75</td><td>Run directory modes</td><td>S</td><td>1</td><td></td><td>discovered from S51</td><td class="status">done</td></tr>
-<tr class="done"><td>66</td><td>S71</td><td>Doctor checks each project&#x27;s check command and patterns (docs/design.md:613-614)</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>67</td><td>S85</td><td>Navigation keys</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>68</td><td>S86</td><td>Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default</td><td>S</td><td>1</td><td></td><td>discovered from S83</td><td class="status">done</td></tr>
-<tr class="done"><td>69</td><td>S94</td><td>Plan views and lineup edit cover the architect</td><td>S</td><td>2</td><td></td><td>discovered from S08</td><td class="status">done</td></tr>
-<tr class="done"><td>70</td><td>S98</td><td>Welcome polish: notice projects added elsewhere, tilde paths, status line and wording</td><td>S</td><td>1</td><td></td><td>discovered from S96</td><td class="status">done</td></tr>
-<tr class="open"><td>71</td><td>S72</td><td>Grok adapter and v1 role (after credits reset 2026-11-01)</td><td>M</td><td>2</td><td></td><td></td><td class="status">—</td></tr>
-<tr class="done"><td>72</td><td>S91</td><td>Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes</td><td>S</td><td>1</td><td></td><td>discovered from S49</td><td class="status">done</td></tr>
-<tr class="retired"><td>73</td><td>S90</td><td>Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on</td><td>S</td><td>1</td><td></td><td>Relayed 2026-10-30 (run-20261030-010033-9d07): S142 already corrected every stale line in scope (docs/boundaries.md:38, docs/glossary.md:144, internal/roles/roles.go:56); no change needed, as the 2026-10-29 owner note said (retire once S142 lands). Remaining out-of-scope matches go to S183. · discovered from S88</td><td class="status">retired</td></tr>
-<tr class="done"><td>74</td><td>S39</td><td>ork run prompt tests catch swapped answers; help text says y/n</td><td>S</td><td>1</td><td></td><td>discovered from S21</td><td class="status">done</td></tr>
-<tr class="done"><td>75</td><td>S105</td><td>Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases</td><td>S</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>76</td><td>S106</td><td>Run card inline</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>77</td><td>S112</td><td>Answer questions of externally run relays from ork (needs slicer relay-run ask and answer)</td><td>M</td><td>2</td><td></td><td>discovered from S28</td><td class="status">done</td></tr>
-<tr class="open"><td>78</td><td>S24</td><td>Pin and check tool contracts</td><td>M</td><td>2</td><td></td><td>owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S45 (adj-json contract version and pin).</td><td class="status">—</td></tr>
-<tr class="done"><td>79</td><td>S01</td><td>Vendor spike</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>80</td><td>S02</td><td>Core and adapters</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>81</td><td>S03</td><td>Daemon and CLI</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>82</td><td>S04</td><td>Engine core</td><td>M</td><td>3</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>83</td><td>S05</td><td>Waves and caps: queue, admission</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="retired"><td>84</td><td>S06</td><td>Vendors and fallback</td><td>M</td><td>2</td><td></td><td>Umbrella over S47, S48 and S49. Notes move to the grok adapter (S72) and budgets (S65); owner 2026-10-20.</td><td class="status">retired</td></tr>
-<tr class="done"><td>85</td><td>S07</td><td>Live role detail</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>86</td><td>S08</td><td>Architect role</td><td>L</td><td>3</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>87</td><td>S09</td><td>Landing help: ready list</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>88</td><td>S10</td><td>Role prompts</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>89</td><td>S11</td><td>TUI shell and Overview</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>90</td><td>S12</td><td>Roadmap screen</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>91</td><td>S13</td><td>Wire binary and socket</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>92</td><td>S14</td><td>Charm v2 port</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>93</td><td>S15</td><td>Snapshot cache</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>94</td><td>S16</td><td>Claude adapter</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>95</td><td>S17</td><td>Single-slice CLI</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>96</td><td>S19</td><td>Project sidebar</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>97</td><td>S20</td><td>Overview rows</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>98</td><td>S21</td><td>Y/N answers and defaults for ork run prompts</td><td>S</td><td>1</td><td></td><td>discovered from S17</td><td class="status">done</td></tr>
-<tr class="done"><td>99</td><td>S22</td><td>Overview shows ork&#x27;s own engine runs</td><td>M</td><td>2</td><td></td><td>discovered from S17</td><td class="status">done</td></tr>
-<tr class="done"><td>100</td><td>S23</td><td>A denied tool call does not fail a finished role</td><td>S</td><td>2</td><td></td><td>discovered from S21</td><td class="status">done</td></tr>
-<tr class="done"><td>101</td><td>S25</td><td>TUI actions: launch, approve and stop</td><td>M</td><td>2</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
-<tr class="done"><td>102</td><td>S26</td><td>TUI: answer a stopped run or question in a detail pane</td><td>M</td><td>2</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
-<tr class="done"><td>103</td><td>S27</td><td>TUI: Questions tab across projects</td><td>S</td><td>1</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
-<tr class="done"><td>104</td><td>S28</td><td>TUI answers can file an adj ask and decide</td><td>S</td><td>2</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
-<tr class="done"><td>105</td><td>S29</td><td>Put the ork binary on PATH</td><td>S</td><td>1</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
-<tr class="done"><td>106</td><td>S30</td><td>Show the running role for relays started outside ork</td><td>S</td><td>2</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
-<tr class="done"><td>107</td><td>S32</td><td>One needs, running and hidden builder for ork status and the TUI</td><td>S</td><td>1</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
-<tr class="done"><td>108</td><td>S33</td><td>Show the engine run ID in the Overview row; engine-row edge cases</td><td>S</td><td>1</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
-<tr class="done"><td>109</td><td>S34</td><td>Clear an old stopped run from Needs you</td><td>S</td><td>2</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
-<tr class="done"><td>110</td><td>S35</td><td>Runs skipped at recovery or failed in the background stay visible</td><td>S</td><td>2</td><td></td><td>discovered from S17</td><td class="status">done</td></tr>
-<tr class="done"><td>111</td><td>S36</td><td>A second ork stop does not cancel the first</td><td>S</td><td>1</td><td></td><td>discovered from S17</td><td class="status">done</td></tr>
-<tr class="retired"><td>112</td><td>S37</td><td>Tidy status error logging and the stderr swap</td><td>S</td><td>1</td><td></td><td>Obsolete: the status error helpers exist only in tests; the live print is in daemon/runs.go. Owner review 2026-10-20. · discovered from S17</td><td class="status">retired</td></tr>
-<tr class="done"><td>113</td><td>S38</td><td>projects rm refuses while the project has unfinished runs</td><td>S</td><td>1</td><td></td><td>discovered from S17</td><td class="status">done</td></tr>
-<tr class="done"><td>114</td><td>S40</td><td>Implementer prompt limits searches to code and docs</td><td>S</td><td>1</td><td></td><td>discovered from S21</td><td class="status">done</td></tr>
-<tr class="retired"><td>115</td><td>S41</td><td>Overview engine-row edge cases: setup projects, padding, hidden ledger runs</td><td>S</td><td>2</td><td></td><td>Folded into S33: the same row code; claim 3 is already documented. · discovered from S22</td><td class="status">retired</td></tr>
-<tr class="retired"><td>116</td><td>S42</td><td>Tidy engine-run state constants and a weak assertion</td><td>S</td><td>1</td><td></td><td>Folded into S32: state constants and the weak assertion are done there. · discovered from S22</td><td class="status">retired</td></tr>
-<tr class="done"><td>117</td><td>S43</td><td>Denied tools: dedupe the list, bound the line, fix stale slicer-rule docs</td><td>S</td><td>1</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
-<tr class="done"><td>118</td><td>S44</td><td>A report-shape pause can be answered or retried</td><td>S</td><td>2</td><td></td><td>discovered from S29</td><td class="status">done</td></tr>
-<tr class="done"><td>119</td><td>S45</td><td>Record the denied command, not just the tool name</td><td>S</td><td>1</td><td></td><td>discovered from S29</td><td class="status">done</td></tr>
-<tr class="done"><td>120</td><td>S46</td><td>ork daemon stop and restart, and doctor flags a stale daemon</td><td>S</td><td>2</td><td></td><td>discovered from S29</td><td class="status">done</td></tr>
-<tr class="done"><td>121</td><td>S47</td><td>Codex adapter for write roles in the engine (#100)</td><td>M</td><td>3</td><td></td><td>discovered from S29</td><td class="status">done</td></tr>
-<tr class="done"><td>122</td><td>S48</td><td>Measure the codex workspace-write sandbox</td><td>S</td><td>2</td><td></td><td>discovered from S29</td><td class="status">done</td></tr>
-<tr class="done"><td>123</td><td>S49</td><td>Fall back to the next matrix row on a rate limit or error</td><td>M</td><td>2</td><td></td><td>discovered from S29</td><td class="status">done</td></tr>
-<tr class="done"><td>124</td><td>S51</td><td>run.json at 0600; strip control characters from recorded commands</td><td>S</td><td>1</td><td></td><td>discovered from S45</td><td class="status">done</td></tr>
-<tr class="done"><td>125</td><td>S52</td><td>TUI: launch a slice from a ready list</td><td>M</td><td>2</td><td></td><td>discovered from S25</td><td class="status">done</td></tr>
-<tr class="done"><td>126</td><td>S53</td><td>Create the ork logo</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>127</td><td>S54</td><td>Show the ork version and logo in the terminal: TUI, --version, doctor</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>128</td><td>S55</td><td>Run tree: orchestrator, roles and steps with live status</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>129</td><td>S56</td><td>daemon stop and restart cope with a daemon that predates daemon.stop</td><td>S</td><td>1</td><td></td><td>discovered from S46</td><td class="status">done</td></tr>
-<tr class="done"><td>130</td><td>S57</td><td>TUI keys: up/down move rows, tab and left/right move projects</td><td>S</td><td>1</td><td></td><td>discovered from S26</td><td class="status">done</td></tr>
-<tr class="done"><td>131</td><td>S58</td><td>Tab and shift+tab switch views; left/right and 1-9 switch projects</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>132</td><td>S59</td><td>Decisions screen: open and decided records, one project or all</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>133</td><td>S60</td><td>ork wave suggest and start; ork stop WAVE</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>134</td><td>S63</td><td>Landing: merge detection, branch cleanup and run pruning</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="retired"><td>135</td><td>S64</td><td>Contract check passes --root so each project&#x27;s slicer contract is checked</td><td>S</td><td>1</td><td></td><td>No effect today: slicer ai relay prints the same contract line for every project (checked 2026-10-20). Folded into S24, which passes --root when slicer s387 adds the pin.</td><td class="status">retired</td></tr>
-<tr class="done"><td>136</td><td>S65</td><td>Enforce run.budgets: pause with a budget kind before a round</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>137</td><td>S74</td><td>Timeout on the stop-hint status call</td><td>S</td><td>1</td><td></td><td>discovered from S56</td><td class="status">done</td></tr>
-<tr class="done"><td>138</td><td>S76</td><td>Queue advance survives a registry read error</td><td>S</td><td>1</td><td></td><td>discovered from S05</td><td class="status">done</td></tr>
-<tr class="done"><td>139</td><td>S77</td><td>Queued run of a removed project</td><td>S</td><td>1</td><td></td><td>discovered from S05</td><td class="status">done</td></tr>
-<tr class="done"><td>140</td><td>S79</td><td>Wave-ready Files sections: set files_section and backtick paths</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>141</td><td>S80</td><td>Per-launch lineup and budget overrides on run.plan and run.start</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>142</td><td>S81</td><td>Daemon reads for the Waves screen: wave.suggest and wave.overlap</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>143</td><td>S82</td><td>Waves screen: suggested list, tick items, overlap warnings, launch a wave</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>144</td><td>S83</td><td>Waves screen: edit a slice&#x27;s lineup and budgets before launch</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>145</td><td>S84</td><td>Overview layout pass</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>146</td><td>S88</td><td>Accept relay contract v8 alongside v7</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>147</td><td>S89</td><td>Close the codex sandbox gaps: resume sandbox, socket bind, worktree .git, main-checkout block</td><td>S</td><td>2</td><td></td><td>discovered from S48</td><td class="status">done</td></tr>
-<tr class="done"><td>148</td><td>S95</td><td>Cleanup finishes cleanly: mark the run cleaned, retry after a half-done cleanup, steady merge state</td><td>S</td><td>2</td><td></td><td>discovered from S63</td><td class="status">done</td></tr>
-<tr class="done"><td>149</td><td>S96</td><td>First run opens blank: no seeded projects; a TUI welcome adds them</td><td>M</td><td>2</td><td></td><td>discovered from S03</td><td class="status">done</td></tr>
-<tr class="done"><td>150</td><td>S97</td><td>Running rows and the run pane show the relay board&#x27;s information: pipeline, round, last heard, waiting steps, recent runs</td><td>M</td><td>2</td><td></td><td>discovered from S55</td><td class="status">done</td></tr>
-<tr class="done"><td>151</td><td>S122</td><td>Probe Codex --add-dir and writable_roots; mark them unverified until then</td><td>S</td><td>1</td><td></td><td>discovered from S87</td><td class="status">done</td></tr>
-<tr class="done"><td>152</td><td>S124</td><td>Worktree and branch patterns can lowercase the item id</td><td>S</td><td>1</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
-<tr class="done"><td>153</td><td>S133</td><td>Codex out of credits is a classified limit, so the role falls back</td><td>S</td><td>1</td><td></td><td>discovered from S127</td><td class="status">done</td></tr>
-<tr class="done"><td>154</td><td>S134</td><td>Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap</td><td>S</td><td>1</td><td></td><td>discovered from S127</td><td class="status">done</td></tr>
-<tr class="done"><td>155</td><td>S135</td><td>Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions</td><td>S</td><td>2</td><td></td><td>discovered from S117</td><td class="status">done</td></tr>
-<tr class="done"><td>156</td><td>S136</td><td>UI pass visible everywhere and project-neutral: lineup and rounds in run, waves, runtree; ui.md names the project&#x27;s design doc</td><td>S</td><td>1</td><td></td><td>discovered from S117</td><td class="status">done</td></tr>
-<tr class="done"><td>157</td><td>S137</td><td>Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings</td><td>M</td><td>2</td><td></td><td>discovered from S120</td><td class="status">done</td></tr>
-<tr class="done"><td>158</td><td>S138</td><td>An awaiting-approval engine run whose ledger went stale shows as stale, dimmed, with a frozen age</td><td>S</td><td>1</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
-<tr class="done"><td>159</td><td>S139</td><td>Commit title without a Git section: fall back to &#x27;ID: title&#x27;</td><td>S</td><td>1</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
-<tr class="done"><td>160</td><td>S140</td><td>Running view follow-ups: error marker, stale runs not live, detail order, stopped role, empty golden, other tabs on Running</td><td>S</td><td>1</td><td></td><td>discovered from S110</td><td class="status">done</td></tr>
-<tr class="done"><td>161</td><td>S141</td><td>Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note</td><td>M</td><td>2</td><td></td><td>discovered from S118</td><td class="status">done</td></tr>
-<tr class="done"><td>162</td><td>S142</td><td>Accept relay contract v9 and follow it: finding kinds, spec check, UI pass, approval and landing, ledger wait phase, conformance JSON</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>163</td><td>S143</td><td>Spec check follow-ups: answers survive a restart, main moving mid-check, sitting freeze, dropped Owner needed, shape retry, state dir cleanup</td><td>M</td><td>2</td><td></td><td>discovered from S116</td><td class="status">done</td></tr>
-<tr class="done"><td>164</td><td>S144</td><td>Key follow-ups: status nudge for [ and ], Waves show-all on A, help wording and hidden tab help</td><td>S</td><td>1</td><td></td><td>discovered from S105</td><td class="status">done</td></tr>
-<tr class="done"><td>165</td><td>S145</td><td>Running rows at a glance</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>166</td><td>S146</td><td>S106 later notes</td><td>M</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>167</td><td>S147</td><td>S121 later notes</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>168</td><td>S148</td><td>S119 later notes</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>169</td><td>S149</td><td>Context hint bar</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>170</td><td>S150</td><td>S145 later notes</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>171</td><td>S151</td><td>S85 later notes</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>172</td><td>S152</td><td>S149 later notes</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>173</td><td>S153</td><td>S95 later notes</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>174</td><td>S154</td><td>S138 later notes</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="done"><td>175</td><td>S155</td><td>S93 later notes</td><td>S</td><td>1</td><td></td><td>discovered from S93</td><td class="status">done</td></tr>
-<tr class="done"><td>176</td><td>S156</td><td>S102 later notes</td><td>S</td><td>1</td><td></td><td>discovered from S102</td><td class="status">done</td></tr>
-<tr class="done"><td>177</td><td>S157</td><td>S73 later: next * writes</td><td>S</td><td>1</td><td></td><td>discovered from S73</td><td class="status">done</td></tr>
-<tr class="done"><td>178</td><td>S158</td><td>S71 later notes</td><td>S</td><td>1</td><td></td><td>discovered from S71</td><td class="status">done</td></tr>
-<tr class="done"><td>179</td><td>S159</td><td>S135 later notes</td><td>S</td><td>1</td><td></td><td>discovered from S135</td><td class="status">done</td></tr>
-<tr class="done"><td>180</td><td>S160</td><td>Add/remove projects</td><td>S</td><td>2</td><td></td><td>discovered from S96</td><td class="status">done</td></tr>
-<tr class="done"><td>181</td><td>S161</td><td>projects set</td><td>M</td><td>2</td><td></td><td>discovered from S136</td><td class="status">done</td></tr>
-<tr class="done"><td>182</td><td>S162</td><td>Roadmap pass headings</td><td>S</td><td>1</td><td></td><td>discovered from S151</td><td class="status">done</td></tr>
-<tr class="done"><td>183</td><td>S163</td><td>Recent counts and duration</td><td>S</td><td>1</td><td></td><td>discovered from S162</td><td class="status">done</td></tr>
-<tr class="done"><td>184</td><td>S164</td><td>Expand several runs</td><td>S</td><td>1</td><td></td><td>discovered from S140</td><td class="status">done</td></tr>
-<tr class="done"><td>185</td><td>S165</td><td>Ork guide and parity gaps</td><td>M</td><td>2</td><td></td><td>discovered from S142</td><td class="status">done</td></tr>
-<tr class="done"><td>186</td><td>S166</td><td>Lineup overrides everywhere</td><td>M</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
-<tr class="done"><td>187</td><td>S167</td><td>Spec check on one launch</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
-<tr class="done"><td>188</td><td>S168</td><td>Role matrix view</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
-<tr class="done"><td>189</td><td>S169</td><td>Vendor slots and stand-in</td><td>M</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
-<tr class="done"><td>190</td><td>S170</td><td>File a slice in ork</td><td>M</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
-<tr class="done"><td>191</td><td>S171</td><td>Add a slice note in ork</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
-<tr class="done"><td>192</td><td>S172</td><td>adj answers in ork</td><td>M</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
-<tr class="done"><td>193</td><td>S174</td><td>More registry settings</td><td>M</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
-<tr class="done"><td>194</td><td>S175</td><td>End a stale ledger run</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
-<tr class="done"><td>195</td><td>S176</td><td>Open a role report</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
-<tr class="done"><td>196</td><td>S177</td><td>Per-run stop point</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
-<tr class="done"><td>197</td><td>S178</td><td>Doctor upgrade hints</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
-<tr class="done"><td>198</td><td>S181</td><td>Warn on blocked item</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
-<tr class="done"><td>199</td><td>S182</td><td>Hung role watchdog</td><td>M</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
-<tr class="done"><td>200</td><td>S183</td><td>Fix stale doc statements</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
-<tr class="done"><td>201</td><td>S184</td><td>Launch spec check sitting</td><td>M</td><td>-</td><td></td><td>discovered from S167</td><td class="status">done</td></tr>
-<tr class="done"><td>202</td><td>S185</td><td>adj answer keys in the TUI</td><td>S</td><td>-</td><td></td><td>discovered from S172</td><td class="status">done</td></tr>
-<tr class="done"><td>203</td><td>S198</td><td>Accept relay v11</td><td>M</td><td>2</td><td></td><td>owner contract review 2026-10-30 (slicer, adj, ork alignment); slicer s424 (relay v11 cleanup and bump)</td><td class="status">done</td></tr>
+<tr class="done"><td>41</td><td>S87</td><td>Codex rounds in ork: GOCACHE and the role temp dir inside the sandbox</td><td>S</td><td>1</td><td></td><td>discovered from S83</td><td class="status">done</td></tr>
+<tr class="done"><td>42</td><td>S31</td><td>Run a small slice through ork run end to end</td><td>S</td><td>1</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
+<tr class="done"><td>43</td><td>S78</td><td>recoverRuns map writes under lock</td><td>S</td><td>1</td><td></td><td>discovered from S05</td><td class="status">done</td></tr>
+<tr class="done"><td>44</td><td>S126</td><td>Implementer brief: ork runs the check command itself; a sandbox limit is not an owner question</td><td>S</td><td>1</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
+<tr class="done"><td>45</td><td>S114</td><td>Self-hosting: run ork on its own repo safely</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>46</td><td>S115</td><td>Implementer brief: re-anchor the spec first and self-check before reporting</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>47</td><td>S70</td><td>Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed)</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>48</td><td>S99</td><td>Live role detail: output tail and tokens/cost in the run pane</td><td>M</td><td>2</td><td></td><td>discovered from S07</td><td class="status">done</td></tr>
+<tr class="done"><td>49</td><td>S125</td><td>Waves composer focus: next waves only, inputs inline under the ticked item</td><td>M</td><td>2</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
+<tr class="done"><td>50</td><td>S107</td><td>Waves as a table: shares as a dim column, wave header rules, Lineup column only after ticking</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>51</td><td>S111</td><td>Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork</td><td>M</td><td>2</td><td></td><td>discovered from S28</td><td class="status">done</td></tr>
+<tr class="done"><td>52</td><td>S127</td><td>After an answer: clear the question from the row and pane, and say the role resumed</td><td>S</td><td>1</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
+<tr class="done"><td>53</td><td>S109</td><td>Run pane follows the newest running run, with a 1 s ledger refresh while a run is visible</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>54</td><td>S110</td><td>Running: a live summary of every running project above Needs you in the sidebar</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>55</td><td>S118</td><td>Approval card: everything needed to approve on one screen</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>56</td><td>S119</td><td>Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>57</td><td>S120</td><td>Finding kinds: fix, owner or later in reviewer, UI pass and gate reports</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>58</td><td>S117</td><td>UI pass role in the engine, in parallel with the reviewer</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>59</td><td>S121</td><td>UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>60</td><td>S116</td><td>Spec check: a batch readiness check before a wave, answered in one sitting</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>61</td><td>S92</td><td>Fallback brief tells the next row about earlier rows and an already-started slice</td><td>S</td><td>1</td><td></td><td>discovered from S49</td><td class="status">done</td></tr>
+<tr class="done"><td>62</td><td>S93</td><td>The gate follows the reviewer&#x27;s current row after a fallback</td><td>S</td><td>1</td><td></td><td>discovered from S49</td><td class="status">done</td></tr>
+<tr class="done"><td>63</td><td>S102</td><td>startRun re-checks that the project is still registered</td><td>S</td><td>1</td><td></td><td>discovered from S38</td><td class="status">done</td></tr>
+<tr class="done"><td>64</td><td>S113</td><td>Answer with adj on and no decision key must proceed</td><td>S</td><td>1</td><td></td><td>discovered from S28</td><td class="status">done</td></tr>
+<tr class="done"><td>65</td><td>S73</td><td>Allowlist --root-first calls</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>66</td><td>S75</td><td>Run directory modes</td><td>S</td><td>1</td><td></td><td>discovered from S51</td><td class="status">done</td></tr>
+<tr class="done"><td>67</td><td>S71</td><td>Doctor checks each project&#x27;s check command and patterns (docs/design.md:613-614)</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>68</td><td>S85</td><td>Navigation keys</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>69</td><td>S86</td><td>Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default</td><td>S</td><td>1</td><td></td><td>discovered from S83</td><td class="status">done</td></tr>
+<tr class="done"><td>70</td><td>S94</td><td>Plan views and lineup edit cover the architect</td><td>S</td><td>2</td><td></td><td>discovered from S08</td><td class="status">done</td></tr>
+<tr class="done"><td>71</td><td>S98</td><td>Welcome polish: notice projects added elsewhere, tilde paths, status line and wording</td><td>S</td><td>1</td><td></td><td>discovered from S96</td><td class="status">done</td></tr>
+<tr class="open"><td>72</td><td>S72</td><td>Grok adapter and v1 role (after credits reset 2026-11-01)</td><td>M</td><td>2</td><td></td><td></td><td class="status">—</td></tr>
+<tr class="done"><td>73</td><td>S91</td><td>Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes</td><td>S</td><td>1</td><td></td><td>discovered from S49</td><td class="status">done</td></tr>
+<tr class="retired"><td>74</td><td>S90</td><td>Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on</td><td>S</td><td>1</td><td></td><td>Relayed 2026-10-30 (run-20261030-010033-9d07): S142 already corrected every stale line in scope (docs/boundaries.md:38, docs/glossary.md:144, internal/roles/roles.go:56); no change needed, as the 2026-10-29 owner note said (retire once S142 lands). Remaining out-of-scope matches go to S183. · discovered from S88</td><td class="status">retired</td></tr>
+<tr class="done"><td>75</td><td>S39</td><td>ork run prompt tests catch swapped answers; help text says y/n</td><td>S</td><td>1</td><td></td><td>discovered from S21</td><td class="status">done</td></tr>
+<tr class="done"><td>76</td><td>S105</td><td>Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases</td><td>S</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>77</td><td>S106</td><td>Run card inline</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>78</td><td>S112</td><td>Answer questions of externally run relays from ork (needs slicer relay-run ask and answer)</td><td>M</td><td>2</td><td></td><td>discovered from S28</td><td class="status">done</td></tr>
+<tr class="open"><td>79</td><td>S24</td><td>Pin and check tool contracts</td><td>M</td><td>2</td><td></td><td>owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S45 (adj-json contract version and pin).</td><td class="status">—</td></tr>
+<tr class="done"><td>80</td><td>S01</td><td>Vendor spike</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>81</td><td>S02</td><td>Core and adapters</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>82</td><td>S03</td><td>Daemon and CLI</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>83</td><td>S04</td><td>Engine core</td><td>M</td><td>3</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>84</td><td>S05</td><td>Waves and caps: queue, admission</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="retired"><td>85</td><td>S06</td><td>Vendors and fallback</td><td>M</td><td>2</td><td></td><td>Umbrella over S47, S48 and S49. Notes move to the grok adapter (S72) and budgets (S65); owner 2026-10-20.</td><td class="status">retired</td></tr>
+<tr class="done"><td>86</td><td>S07</td><td>Live role detail</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>87</td><td>S08</td><td>Architect role</td><td>L</td><td>3</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>88</td><td>S09</td><td>Landing help: ready list</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>89</td><td>S10</td><td>Role prompts</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>90</td><td>S11</td><td>TUI shell and Overview</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>91</td><td>S12</td><td>Roadmap screen</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>92</td><td>S13</td><td>Wire binary and socket</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>93</td><td>S14</td><td>Charm v2 port</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>94</td><td>S15</td><td>Snapshot cache</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>95</td><td>S16</td><td>Claude adapter</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>96</td><td>S17</td><td>Single-slice CLI</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>97</td><td>S19</td><td>Project sidebar</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>98</td><td>S20</td><td>Overview rows</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>99</td><td>S21</td><td>Y/N answers and defaults for ork run prompts</td><td>S</td><td>1</td><td></td><td>discovered from S17</td><td class="status">done</td></tr>
+<tr class="done"><td>100</td><td>S22</td><td>Overview shows ork&#x27;s own engine runs</td><td>M</td><td>2</td><td></td><td>discovered from S17</td><td class="status">done</td></tr>
+<tr class="done"><td>101</td><td>S23</td><td>A denied tool call does not fail a finished role</td><td>S</td><td>2</td><td></td><td>discovered from S21</td><td class="status">done</td></tr>
+<tr class="done"><td>102</td><td>S25</td><td>TUI actions: launch, approve and stop</td><td>M</td><td>2</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
+<tr class="done"><td>103</td><td>S26</td><td>TUI: answer a stopped run or question in a detail pane</td><td>M</td><td>2</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
+<tr class="done"><td>104</td><td>S27</td><td>TUI: Questions tab across projects</td><td>S</td><td>1</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
+<tr class="done"><td>105</td><td>S28</td><td>TUI answers can file an adj ask and decide</td><td>S</td><td>2</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
+<tr class="done"><td>106</td><td>S29</td><td>Put the ork binary on PATH</td><td>S</td><td>1</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
+<tr class="done"><td>107</td><td>S30</td><td>Show the running role for relays started outside ork</td><td>S</td><td>2</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
+<tr class="done"><td>108</td><td>S32</td><td>One needs, running and hidden builder for ork status and the TUI</td><td>S</td><td>1</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
+<tr class="done"><td>109</td><td>S33</td><td>Show the engine run ID in the Overview row; engine-row edge cases</td><td>S</td><td>1</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
+<tr class="done"><td>110</td><td>S34</td><td>Clear an old stopped run from Needs you</td><td>S</td><td>2</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
+<tr class="done"><td>111</td><td>S35</td><td>Runs skipped at recovery or failed in the background stay visible</td><td>S</td><td>2</td><td></td><td>discovered from S17</td><td class="status">done</td></tr>
+<tr class="done"><td>112</td><td>S36</td><td>A second ork stop does not cancel the first</td><td>S</td><td>1</td><td></td><td>discovered from S17</td><td class="status">done</td></tr>
+<tr class="retired"><td>113</td><td>S37</td><td>Tidy status error logging and the stderr swap</td><td>S</td><td>1</td><td></td><td>Obsolete: the status error helpers exist only in tests; the live print is in daemon/runs.go. Owner review 2026-10-20. · discovered from S17</td><td class="status">retired</td></tr>
+<tr class="done"><td>114</td><td>S38</td><td>projects rm refuses while the project has unfinished runs</td><td>S</td><td>1</td><td></td><td>discovered from S17</td><td class="status">done</td></tr>
+<tr class="done"><td>115</td><td>S40</td><td>Implementer prompt limits searches to code and docs</td><td>S</td><td>1</td><td></td><td>discovered from S21</td><td class="status">done</td></tr>
+<tr class="retired"><td>116</td><td>S41</td><td>Overview engine-row edge cases: setup projects, padding, hidden ledger runs</td><td>S</td><td>2</td><td></td><td>Folded into S33: the same row code; claim 3 is already documented. · discovered from S22</td><td class="status">retired</td></tr>
+<tr class="retired"><td>117</td><td>S42</td><td>Tidy engine-run state constants and a weak assertion</td><td>S</td><td>1</td><td></td><td>Folded into S32: state constants and the weak assertion are done there. · discovered from S22</td><td class="status">retired</td></tr>
+<tr class="done"><td>118</td><td>S43</td><td>Denied tools: dedupe the list, bound the line, fix stale slicer-rule docs</td><td>S</td><td>1</td><td></td><td>discovered from S23</td><td class="status">done</td></tr>
+<tr class="done"><td>119</td><td>S44</td><td>A report-shape pause can be answered or retried</td><td>S</td><td>2</td><td></td><td>discovered from S29</td><td class="status">done</td></tr>
+<tr class="done"><td>120</td><td>S45</td><td>Record the denied command, not just the tool name</td><td>S</td><td>1</td><td></td><td>discovered from S29</td><td class="status">done</td></tr>
+<tr class="done"><td>121</td><td>S46</td><td>ork daemon stop and restart, and doctor flags a stale daemon</td><td>S</td><td>2</td><td></td><td>discovered from S29</td><td class="status">done</td></tr>
+<tr class="done"><td>122</td><td>S47</td><td>Codex adapter for write roles in the engine (#100)</td><td>M</td><td>3</td><td></td><td>discovered from S29</td><td class="status">done</td></tr>
+<tr class="done"><td>123</td><td>S48</td><td>Measure the codex workspace-write sandbox</td><td>S</td><td>2</td><td></td><td>discovered from S29</td><td class="status">done</td></tr>
+<tr class="done"><td>124</td><td>S49</td><td>Fall back to the next matrix row on a rate limit or error</td><td>M</td><td>2</td><td></td><td>discovered from S29</td><td class="status">done</td></tr>
+<tr class="done"><td>125</td><td>S51</td><td>run.json at 0600; strip control characters from recorded commands</td><td>S</td><td>1</td><td></td><td>discovered from S45</td><td class="status">done</td></tr>
+<tr class="done"><td>126</td><td>S52</td><td>TUI: launch a slice from a ready list</td><td>M</td><td>2</td><td></td><td>discovered from S25</td><td class="status">done</td></tr>
+<tr class="done"><td>127</td><td>S53</td><td>Create the ork logo</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>128</td><td>S54</td><td>Show the ork version and logo in the terminal: TUI, --version, doctor</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>129</td><td>S55</td><td>Run tree: orchestrator, roles and steps with live status</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>130</td><td>S56</td><td>daemon stop and restart cope with a daemon that predates daemon.stop</td><td>S</td><td>1</td><td></td><td>discovered from S46</td><td class="status">done</td></tr>
+<tr class="done"><td>131</td><td>S57</td><td>TUI keys: up/down move rows, tab and left/right move projects</td><td>S</td><td>1</td><td></td><td>discovered from S26</td><td class="status">done</td></tr>
+<tr class="done"><td>132</td><td>S58</td><td>Tab and shift+tab switch views; left/right and 1-9 switch projects</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>133</td><td>S59</td><td>Decisions screen: open and decided records, one project or all</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>134</td><td>S60</td><td>ork wave suggest and start; ork stop WAVE</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>135</td><td>S63</td><td>Landing: merge detection, branch cleanup and run pruning</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="retired"><td>136</td><td>S64</td><td>Contract check passes --root so each project&#x27;s slicer contract is checked</td><td>S</td><td>1</td><td></td><td>No effect today: slicer ai relay prints the same contract line for every project (checked 2026-10-20). Folded into S24, which passes --root when slicer s387 adds the pin.</td><td class="status">retired</td></tr>
+<tr class="done"><td>137</td><td>S65</td><td>Enforce run.budgets: pause with a budget kind before a round</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>138</td><td>S74</td><td>Timeout on the stop-hint status call</td><td>S</td><td>1</td><td></td><td>discovered from S56</td><td class="status">done</td></tr>
+<tr class="done"><td>139</td><td>S76</td><td>Queue advance survives a registry read error</td><td>S</td><td>1</td><td></td><td>discovered from S05</td><td class="status">done</td></tr>
+<tr class="done"><td>140</td><td>S77</td><td>Queued run of a removed project</td><td>S</td><td>1</td><td></td><td>discovered from S05</td><td class="status">done</td></tr>
+<tr class="done"><td>141</td><td>S79</td><td>Wave-ready Files sections: set files_section and backtick paths</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>142</td><td>S80</td><td>Per-launch lineup and budget overrides on run.plan and run.start</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>143</td><td>S81</td><td>Daemon reads for the Waves screen: wave.suggest and wave.overlap</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>144</td><td>S82</td><td>Waves screen: suggested list, tick items, overlap warnings, launch a wave</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>145</td><td>S83</td><td>Waves screen: edit a slice&#x27;s lineup and budgets before launch</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>146</td><td>S84</td><td>Overview layout pass</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>147</td><td>S88</td><td>Accept relay contract v8 alongside v7</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>148</td><td>S89</td><td>Close the codex sandbox gaps: resume sandbox, socket bind, worktree .git, main-checkout block</td><td>S</td><td>2</td><td></td><td>discovered from S48</td><td class="status">done</td></tr>
+<tr class="done"><td>149</td><td>S95</td><td>Cleanup finishes cleanly: mark the run cleaned, retry after a half-done cleanup, steady merge state</td><td>S</td><td>2</td><td></td><td>discovered from S63</td><td class="status">done</td></tr>
+<tr class="done"><td>150</td><td>S96</td><td>First run opens blank: no seeded projects; a TUI welcome adds them</td><td>M</td><td>2</td><td></td><td>discovered from S03</td><td class="status">done</td></tr>
+<tr class="done"><td>151</td><td>S97</td><td>Running rows and the run pane show the relay board&#x27;s information: pipeline, round, last heard, waiting steps, recent runs</td><td>M</td><td>2</td><td></td><td>discovered from S55</td><td class="status">done</td></tr>
+<tr class="done"><td>152</td><td>S122</td><td>Probe Codex --add-dir and writable_roots; mark them unverified until then</td><td>S</td><td>1</td><td></td><td>discovered from S87</td><td class="status">done</td></tr>
+<tr class="done"><td>153</td><td>S124</td><td>Worktree and branch patterns can lowercase the item id</td><td>S</td><td>1</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
+<tr class="done"><td>154</td><td>S133</td><td>Codex out of credits is a classified limit, so the role falls back</td><td>S</td><td>1</td><td></td><td>discovered from S127</td><td class="status">done</td></tr>
+<tr class="done"><td>155</td><td>S134</td><td>Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap</td><td>S</td><td>1</td><td></td><td>discovered from S127</td><td class="status">done</td></tr>
+<tr class="done"><td>156</td><td>S135</td><td>Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions</td><td>S</td><td>2</td><td></td><td>discovered from S117</td><td class="status">done</td></tr>
+<tr class="done"><td>157</td><td>S136</td><td>UI pass visible everywhere and project-neutral: lineup and rounds in run, waves, runtree; ui.md names the project&#x27;s design doc</td><td>S</td><td>1</td><td></td><td>discovered from S117</td><td class="status">done</td></tr>
+<tr class="done"><td>158</td><td>S137</td><td>Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings</td><td>M</td><td>2</td><td></td><td>discovered from S120</td><td class="status">done</td></tr>
+<tr class="done"><td>159</td><td>S138</td><td>An awaiting-approval engine run whose ledger went stale shows as stale, dimmed, with a frozen age</td><td>S</td><td>1</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
+<tr class="done"><td>160</td><td>S139</td><td>Commit title without a Git section: fall back to &#x27;ID: title&#x27;</td><td>S</td><td>1</td><td></td><td>discovered from S31</td><td class="status">done</td></tr>
+<tr class="done"><td>161</td><td>S140</td><td>Running view follow-ups: error marker, stale runs not live, detail order, stopped role, empty golden, other tabs on Running</td><td>S</td><td>1</td><td></td><td>discovered from S110</td><td class="status">done</td></tr>
+<tr class="done"><td>162</td><td>S141</td><td>Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note</td><td>M</td><td>2</td><td></td><td>discovered from S118</td><td class="status">done</td></tr>
+<tr class="done"><td>163</td><td>S142</td><td>Accept relay contract v9 and follow it: finding kinds, spec check, UI pass, approval and landing, ledger wait phase, conformance JSON</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>164</td><td>S143</td><td>Spec check follow-ups: answers survive a restart, main moving mid-check, sitting freeze, dropped Owner needed, shape retry, state dir cleanup</td><td>M</td><td>2</td><td></td><td>discovered from S116</td><td class="status">done</td></tr>
+<tr class="done"><td>165</td><td>S144</td><td>Key follow-ups: status nudge for [ and ], Waves show-all on A, help wording and hidden tab help</td><td>S</td><td>1</td><td></td><td>discovered from S105</td><td class="status">done</td></tr>
+<tr class="done"><td>166</td><td>S145</td><td>Running rows at a glance</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>167</td><td>S146</td><td>S106 later notes</td><td>M</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>168</td><td>S147</td><td>S121 later notes</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>169</td><td>S148</td><td>S119 later notes</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>170</td><td>S149</td><td>Context hint bar</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>171</td><td>S150</td><td>S145 later notes</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>172</td><td>S151</td><td>S85 later notes</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>173</td><td>S152</td><td>S149 later notes</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>174</td><td>S153</td><td>S95 later notes</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>175</td><td>S154</td><td>S138 later notes</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>176</td><td>S155</td><td>S93 later notes</td><td>S</td><td>1</td><td></td><td>discovered from S93</td><td class="status">done</td></tr>
+<tr class="done"><td>177</td><td>S156</td><td>S102 later notes</td><td>S</td><td>1</td><td></td><td>discovered from S102</td><td class="status">done</td></tr>
+<tr class="done"><td>178</td><td>S157</td><td>S73 later: next * writes</td><td>S</td><td>1</td><td></td><td>discovered from S73</td><td class="status">done</td></tr>
+<tr class="done"><td>179</td><td>S158</td><td>S71 later notes</td><td>S</td><td>1</td><td></td><td>discovered from S71</td><td class="status">done</td></tr>
+<tr class="done"><td>180</td><td>S159</td><td>S135 later notes</td><td>S</td><td>1</td><td></td><td>discovered from S135</td><td class="status">done</td></tr>
+<tr class="done"><td>181</td><td>S160</td><td>Add/remove projects</td><td>S</td><td>2</td><td></td><td>discovered from S96</td><td class="status">done</td></tr>
+<tr class="done"><td>182</td><td>S161</td><td>projects set</td><td>M</td><td>2</td><td></td><td>discovered from S136</td><td class="status">done</td></tr>
+<tr class="done"><td>183</td><td>S162</td><td>Roadmap pass headings</td><td>S</td><td>1</td><td></td><td>discovered from S151</td><td class="status">done</td></tr>
+<tr class="done"><td>184</td><td>S163</td><td>Recent counts and duration</td><td>S</td><td>1</td><td></td><td>discovered from S162</td><td class="status">done</td></tr>
+<tr class="done"><td>185</td><td>S164</td><td>Expand several runs</td><td>S</td><td>1</td><td></td><td>discovered from S140</td><td class="status">done</td></tr>
+<tr class="done"><td>186</td><td>S165</td><td>Ork guide and parity gaps</td><td>M</td><td>2</td><td></td><td>discovered from S142</td><td class="status">done</td></tr>
+<tr class="done"><td>187</td><td>S166</td><td>Lineup overrides everywhere</td><td>M</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
+<tr class="done"><td>188</td><td>S167</td><td>Spec check on one launch</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
+<tr class="done"><td>189</td><td>S168</td><td>Role matrix view</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
+<tr class="done"><td>190</td><td>S169</td><td>Vendor slots and stand-in</td><td>M</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
+<tr class="done"><td>191</td><td>S170</td><td>File a slice in ork</td><td>M</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
+<tr class="done"><td>192</td><td>S171</td><td>Add a slice note in ork</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
+<tr class="done"><td>193</td><td>S172</td><td>adj answers in ork</td><td>M</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
+<tr class="done"><td>194</td><td>S174</td><td>More registry settings</td><td>M</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
+<tr class="done"><td>195</td><td>S175</td><td>End a stale ledger run</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
+<tr class="done"><td>196</td><td>S176</td><td>Open a role report</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
+<tr class="done"><td>197</td><td>S177</td><td>Per-run stop point</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
+<tr class="done"><td>198</td><td>S178</td><td>Doctor upgrade hints</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
+<tr class="done"><td>199</td><td>S181</td><td>Warn on blocked item</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
+<tr class="done"><td>200</td><td>S182</td><td>Hung role watchdog</td><td>M</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
+<tr class="done"><td>201</td><td>S183</td><td>Fix stale doc statements</td><td>S</td><td>-</td><td></td><td>discovered from S165</td><td class="status">done</td></tr>
+<tr class="done"><td>202</td><td>S184</td><td>Launch spec check sitting</td><td>M</td><td>-</td><td></td><td>discovered from S167</td><td class="status">done</td></tr>
+<tr class="done"><td>203</td><td>S185</td><td>adj answer keys in the TUI</td><td>S</td><td>-</td><td></td><td>discovered from S172</td><td class="status">done</td></tr>
+<tr class="done"><td>204</td><td>S198</td><td>Accept relay v11</td><td>M</td><td>2</td><td></td><td>owner contract review 2026-10-30 (slicer, adj, ork alignment); slicer s424 (relay v11 cleanup and bump)</td><td class="status">done</td></tr>
 </tbody></table>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
-<tr class="done"><td>204</td><td>S18</td><td>ork logos</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
+<tr class="done"><td>205</td><td>S18</td><td>ork logos</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
 </tbody></table>
 </body></html>

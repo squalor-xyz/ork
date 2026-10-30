@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 205,
+  "next_id": 206,
   "preamble": "",
   "passes": [
     {
@@ -10909,7 +10909,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "1d52c4fd-e1a5-439a-85bf-6a25162bcd44",
+          "kind": "",
+          "text": "**2026-10-30** — From S198 review (2026-10-30): a v11 gate step is closed with the report's verdict at internal/engine/round.go:400, before a TriageGate shape error (round.go:471-481) or an Owner needed question (round.go:493-505) can pause the round, so the ledger can show pass for a round the engine did not accept; a retry then records a second gate round that slicer's gate_rounds/with_verdict counts (../slicer/src/slicer/relayrun.py:973-982) would count twice (retry behaviour not traced). Decide whether such a round closes with its verdict (now) or without one.",
+          "created_at": "2026-10-30T20:37:43Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -10917,6 +10932,34 @@
         "trees": [],
         "trees_literal": false,
         "findings": "S198 preflight 2026-10-30: owner split the engine rules out of S198",
+        "discovered_from": "S198",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S205",
+      "title": "S198 later notes: gate close on a failed status read, doctor FAIL line repeat, gate no-fix wording",
+      "short_title": "S198 later notes",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S198 review, gate and UI pass 2026-10-30 (later findings)",
         "discovered_from": "S198",
         "parent": "",
         "cites": [],
