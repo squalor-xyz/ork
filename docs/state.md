@@ -337,7 +337,12 @@ plain text of at most 24 KiB; ork drops terminal escape sequences and other
 control characters, and cuts a longer one at the last line end within 24 KiB
 (at the 24 KiB mark when there is none), with a last line `(cut: over 24
 KiB)`. A renders directory that is a link is not read. The files stay in the
-run directory.
+run directory. `renders_error` (omitted when empty; *proposed*, S147) says why
+the renders directory, or a render file it lists, exists and could not be read
+(for example `permission denied`), like `checks_error` for the checks. A missing
+directory is no error: the card then has `ui_round` and no `renders`.
+The record version stays 1; an older ork refuses a `run.json` with
+`renders_error` because `Store.Open` uses strict keys.
 `fixes` (omitted when empty; *proposed*, S118) keeps each note the owner sent
 to a fix round from the card: the `round` that acts on it, the `note` and the
 time. The note is also the file `owner-fix-N.md` in the run directory, which is

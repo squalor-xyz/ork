@@ -1372,12 +1372,28 @@ type ReportReply struct {
 	Text string `json:"text"`
 }
 
+// openRun opens the stored record of a run for a read-only call. A run id that
+// is not a plain name and a run with no record are not_found. A record that is
+// there but cannot be read is not "no run": it is a plain error, so the wire
+// code is internal, and its message names the run and says why (S147).
+func (d *Daemon) openRun(id string) (*runrec.Run, error) {
+	run, err := d.runs.deps.Store.Open(id)
+	switch {
+	case err == nil:
+		return run, nil
+	case errors.Is(err, runrec.ErrBadRunID), errors.Is(err, os.ErrNotExist):
+		return nil, &ipc.Error{Code: CodeNotFound, Message: "no run " + id}
+	}
+	return nil, fmt.Errorf("run %s cannot be read: %w", id, err)
+}
+
 // runReport reads only a role report listed in the stored record. It does
-// not wait for the run; every missing record, name or file is not_found.
+// not wait for the run; every missing name or file is not_found, and so is a
+// run with no record. A record that cannot be read is an error that says so.
 func (d *Daemon) runReport(p RunAction) (ReportReply, error) {
-	run, err := d.runs.deps.Store.Open(p.Run)
+	run, err := d.openRun(p.Run)
 	if err != nil {
-		return ReportReply{}, &ipc.Error{Code: CodeNotFound, Message: "no run " + p.Run}
+		return ReportReply{}, err
 	}
 	missing := &ipc.Error{Code: CodeNotFound, Message: "no report " + p.Name + " for run " + p.Run}
 	if p.Name == "" || !slices.ContainsFunc(run.Snapshot().Roles, func(r runrec.RoleRecord) bool { return r.Report == p.Name }) {
@@ -1401,12 +1417,13 @@ type RenderReply struct {
 // render must be one the run's card lists, and the engine's ReadRender applies
 // its guards to the file: a regular .txt file of the UI pass's renders
 // directory, not a link, as plain text of at most 24 KiB. Any run, name or file
-// that fails is not_found. It does not wait for the run: it reads the stored
-// record and the file.
+// that fails is not_found, except a record that exists and cannot be read: that
+// is an error saying so (openRun). It does not wait for the run: it reads the
+// stored record and the file.
 func (d *Daemon) runRender(p RunAction) (RenderReply, error) {
-	run, err := d.runs.deps.Store.Open(p.Run)
+	run, err := d.openRun(p.Run)
 	if err != nil {
-		return RenderReply{}, &ipc.Error{Code: CodeNotFound, Message: "no run " + p.Run}
+		return RenderReply{}, err
 	}
 	missing := &ipc.Error{Code: CodeNotFound, Message: "no render " + p.Name + " for run " + p.Run}
 	card := run.Snapshot().Card

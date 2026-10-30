@@ -292,8 +292,8 @@ func TestReadRenderRefusesAFileSwappedForALink(t *testing.T) {
 	if err != nil || len(entries) != 1 {
 		t.Fatalf("%v %v", entries, err)
 	}
-	if text, ok := readRender(dir, entries[0]); !ok || text != "real" {
-		t.Fatalf("an untouched file: %q, %v", text, ok)
+	if text, err := readRender(dir, entries[0]); err != nil || text != "real" {
+		t.Fatalf("an untouched file: %q, %v", text, err)
 	}
 	secret := filepath.Join(t.TempDir(), "secret.txt")
 	if err := os.WriteFile(secret, []byte("secret"), 0o600); err != nil {
@@ -305,8 +305,8 @@ func TestReadRenderRefusesAFileSwappedForALink(t *testing.T) {
 	if err := os.Symlink(secret, path); err != nil {
 		t.Fatal(err)
 	}
-	if text, ok := readRender(dir, entries[0]); ok {
-		t.Fatalf("a swapped link was read: %q", text)
+	if text, err := readRender(dir, entries[0]); !errors.Is(err, errNotThatFile) {
+		t.Fatalf("a swapped link was read: %q, %v", text, err)
 	}
 }
 
@@ -396,5 +396,75 @@ func TestRunRecordHoldsNoRenderText(t *testing.T) {
 	}
 	if len(doc.Card.Renders) != 1 || doc.Card.Renders[0]["name"] != "launch-80x24.txt" || doc.Card.Renders[0]["size"] != float64(len(strings.TrimRight(render80, "\n"))) || len(doc.Card.Renders[0]) != 2 {
 		t.Errorf("card renders in run.json: %v", doc.Card.Renders)
+	}
+}
+
+// A renders directory or a render file that exists but cannot be read is not
+// "wrote none": the card says why (S147). A directory the role never made is
+// still just no renders.
+func TestCardSaysWhyRendersCouldNotBeRead(t *testing.T) {
+	// mode0 makes the path unreadable and skips the test when this user reads
+	// it anyway (root), so the assertions below cannot pass vacuously.
+	mode0 := func(t *testing.T, path string, probe func(string) error) {
+		t.Helper()
+		if err := os.Chmod(path, 0); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { _ = os.Chmod(path, 0o755) })
+		if probe(path) == nil {
+			t.Skip("this user can read a mode 0 path; the unreadable case cannot be set up")
+		}
+	}
+	readDir := func(p string) error { _, err := os.ReadDir(p); return err }
+	readFile := func(p string) error { _, err := os.ReadFile(p); return err }
+
+	for name, tc := range map[string]struct {
+		script    func(t *testing.T, req Request)
+		wantError bool
+		wantNames []string
+	}{
+		"a directory with mode 0": {
+			script: func(t *testing.T, req Request) {
+				writeRenders(t, req, map[string]string{"a-80x24.txt": "a"})
+				mode0(t, filepath.Join(req.TempDir, "renders"), readDir)
+			},
+			wantError: true,
+		},
+		"a file with mode 0": {
+			script: func(t *testing.T, req Request) {
+				writeRenders(t, req, map[string]string{"a-80x24.txt": "a", "b-80x24.txt": "b"})
+				mode0(t, filepath.Join(req.TempDir, "renders", "b-80x24.txt"), readFile)
+			},
+			wantError: true,
+			wantNames: []string{"a-80x24.txt"},
+		},
+		"no directory": {script: func(*testing.T, Request) {}},
+		"an empty directory": {script: func(t *testing.T, req Request) {
+			writeRenders(t, req, nil)
+		}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h := uiHarness(t, tuiFiles)
+			h.runner.script = func(req Request, _ int) (Result, error) {
+				if req.Role == RoleUI {
+					tc.script(t, req)
+				}
+				return Result{}, nil
+			}
+			rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
+			card := rec.Card
+			if card.UIRound != 1 {
+				t.Fatalf("card %+v: the UI pass must have run", card)
+			}
+			if got := renderNames(card); !reflect.DeepEqual(got, tc.wantNames) {
+				t.Errorf("renders %v, want %v", got, tc.wantNames)
+			}
+			if tc.wantError && !strings.Contains(card.RendersError, "permission denied") {
+				t.Errorf("RendersError %q, want the reason (permission denied)", card.RendersError)
+			}
+			if !tc.wantError && card.RendersError != "" {
+				t.Errorf("RendersError %q, want empty", card.RendersError)
+			}
+		})
 	}
 }

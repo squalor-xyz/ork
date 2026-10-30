@@ -220,6 +220,7 @@ func (m *Model) paneQuestion() bool {
 func halfPage(room int) int { return max(room/2, 1) }
 
 func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
+	m.settleRender()
 	m.pane.notice = "" // the first key read the switch notice
 	if m.pane.number != "" && msg.String() != "esc" && msg.String() != "enter" && !key.Matches(msg, m.keys.MarkCheck) {
 		m.dropNumber() // any key but a digit, enter or esc drops a waiting number (S141)

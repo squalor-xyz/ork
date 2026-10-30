@@ -52,9 +52,13 @@ type Run struct {
 	rec   Record
 }
 
+// ErrBadRunID is the error of Open and Create for a run id that is not a plain
+// name. A caller tells it from a record that is missing or unreadable (S147).
+var ErrBadRunID = errors.New("run id is not a plain name")
+
 func validID(id string) error {
 	if id == "" || id == "." || id == ".." || strings.ContainsAny(id, `/\`) {
-		return fmt.Errorf("run id %q is not a plain name", id)
+		return fmt.Errorf("run id %q: %w", id, ErrBadRunID)
 	}
 	return nil
 }

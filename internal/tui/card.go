@@ -125,7 +125,8 @@ func (m *Model) cardSummary(card *runrec.ApprovalCard, width int) []string {
 }
 
 // rendersLine says what the UI pass left to see (S121, *proposed*): how many
-// renders, or that it wrote none. It is empty when no UI pass ran.
+// renders, why they could not be read (S147), or that it wrote none. It is
+// empty when no UI pass ran.
 func (m *Model) rendersLine(card *runrec.ApprovalCard, width int) []string {
 	var text string
 	switch {
@@ -134,6 +135,11 @@ func (m *Model) rendersLine(card *runrec.ApprovalCard, width int) []string {
 		if card.RendersDropped > 0 {
 			text += fmt.Sprintf(", %d more not kept", card.RendersDropped)
 		}
+		if card.RendersError != "" {
+			text += ", some could not be read: " + card.RendersError
+		}
+	case card.RendersError != "":
+		text = fmt.Sprintf("Renders: the UI pass (round %d) could not be read: %s", card.UIRound, card.RendersError)
 	case card.UIRound > 0:
 		text = fmt.Sprintf("Renders: the UI pass (round %d) wrote none", card.UIRound)
 	default:
@@ -149,17 +155,28 @@ func (m *Model) rendersLine(card *runrec.ApprovalCard, width int) []string {
 // renderOn is the one-based render on show, or 0 for the card. A render is
 // on show only while the card still holds it: when the card has gone, lost the
 // render, or was built again for a new round (a fix round started from another
-// TUI), the mode ends here.
+// TUI), the mode ends here. It only reads: the draw path calls it, so it never
+// writes the pane (S147). The stale field is overwritten by nextRender and
+// cleared by esc.
 func (m *Model) renderOn() int {
 	if m.pane == nil || m.pane.render == 0 {
 		return 0
 	}
 	card := m.paneCard()
 	if card == nil || m.pane.render > len(card.Renders) || m.pane.renderRound != card.Round {
-		m.pane.render = 0
 		return 0
 	}
 	return m.pane.render
+}
+
+// settleRender ends a render mode whose render the card no longer holds, so a
+// card that comes back later does not bring the old render with it. It is the
+// write that renderOn does not make, and it runs where the pane changes (a
+// snapshot, a key), never in the draw path (S147).
+func (m *Model) settleRender() {
+	if m.pane != nil && m.pane.render != 0 && m.renderOn() == 0 {
+		m.pane.render = 0
+	}
 }
 
 // renderTitle names the render on show.
@@ -173,12 +190,14 @@ type renderFetch struct {
 	done bool
 	text string
 	err  string
+	seq  int // the ask this state belongs to (Model.renderSeq); 0 for a report (S147)
 }
 
 // renderMsg is the daemon's answer to a run.render call.
 type renderMsg struct {
 	run, name string
 	round     int // the card round the call was made for
+	seq       int // the ask it answers; only the latest ask for a render is kept (S147)
 	text      string
 	err       error
 }
@@ -221,26 +240,33 @@ func (m *Model) fetchRender(card *runrec.ApprovalCard) tea.Cmd {
 		m.pane.fetched[k] = renderFetch{done: true, err: "this daemon connection cannot read renders"}
 		return nil
 	}
-	m.pane.fetched[k] = renderFetch{}
+	m.renderSeq++
+	seq := m.renderSeq
+	m.pane.fetched[k] = renderFetch{seq: seq}
 	return func() tea.Msg {
 		text, err := reader.Render(context.Background(), run, name)
-		return renderMsg{run: run, name: name, round: round, text: text, err: err}
+		return renderMsg{run: run, name: name, round: round, seq: seq, text: text, err: err}
 	}
 }
 
-// renderArrived keeps the answer for the pane that asked.
+// renderArrived keeps the answer for the ask that made it. Every ask takes a
+// number from the model's counter, which never restarts, and the pane keeps the
+// number of its latest ask for each render. An answer that is not for that ask
+// (an older ask for the same render, or an ask of a pane that was closed) is
+// dropped (S147).
 func (m *Model) renderArrived(msg renderMsg) {
 	if m.pane == nil || m.pane.run != msg.run {
 		return
 	}
-	if m.pane.fetched == nil {
-		m.pane.fetched = map[string]renderFetch{}
+	k := renderKeyFor(msg.round, msg.name)
+	if f, asked := m.pane.fetched[k]; !asked || f.seq != msg.seq {
+		return
 	}
-	f := renderFetch{done: true, text: msg.text}
+	f := renderFetch{done: true, text: msg.text, seq: msg.seq}
 	if msg.err != nil {
 		f.err = actionError(msg.err)
 	}
-	m.pane.fetched[renderKeyFor(msg.round, msg.name)] = f
+	m.pane.fetched[k] = f
 }
 
 // renderLines is the body of the viewer: the render's text, one pane line per

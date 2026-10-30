@@ -206,10 +206,13 @@ type ApprovalCard struct {
 	// The UI pass's renders (S121, *proposed*; adj 165): the changed views as
 	// plain text files, listed by name and size. UIRound is the round of the UI pass they come from, or 0
 	// when no UI pass ran for the slice. RendersDropped counts files the card
-	// did not keep.
+	// did not keep. RendersError says why the renders directory or a render
+	// file could not be read (S147); it is empty when all could be read or
+	// there was nothing to read.
 	UIRound        int      `json:"ui_round,omitempty"`
 	Renders        []Render `json:"renders,omitempty"`
 	RendersDropped int      `json:"renders_dropped,omitempty"`
+	RendersError   string   `json:"renders_error,omitempty"`
 }
 
 // Render is one view the UI pass wrote as a text file, for example
