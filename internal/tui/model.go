@@ -377,6 +377,9 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		return m, nil
 	case launchMsg:
 		return m, m.applyLaunch(msg)
+	case reportMsg:
+		m.reportArrived(msg)
+		return m, nil
 	case renderMsg:
 		m.renderArrived(msg)
 		return m, nil
@@ -504,6 +507,9 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 }
 
 func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
+	if m.reportOn() > 0 {
+		return m.paneKey(msg)
+	}
 	if m.welcome.editing || m.welcome.pending || m.welcome.confirm != "" {
 		return m.welcomeKey(msg)
 	}

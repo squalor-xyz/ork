@@ -8518,7 +8518,7 @@
       "id": "S176",
       "title": "Open a role report in the run pane",
       "short_title": "Open a role report",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8528,6 +8528,17 @@
           "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): defaults accepted (key p; no shell ork report; check logs out of scope).",
           "created_at": "2026-10-29T16:08:54Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "447feac4-f41d-4ca3-ad19-9f1f923b380b",
+          "kind": "",
+          "text": "**2026-10-30** — Review FAIL (gate round 2, 2026-10-29): wrapping a long report line with no spaces is quadratic in splitAt via wrapText (measured 2.2 s for 4000 bytes, 142 s for 16000 bytes at width 60) and reportLines reruns on every View, so a 64 KiB no-space report can freeze the TUI. Fix round 2: hard-cut no-space runs in one forward pass and cache wrapped lines by report and width.",
+          "created_at": "2026-10-30T00:00:40Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -8551,7 +8562,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

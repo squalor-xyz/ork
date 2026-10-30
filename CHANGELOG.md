@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- S176: open a role report with `p` in an engine run pane (*proposed*).
+  Reports run newest to oldest, then back to the run; `esc` returns at once.
+  `run.report` reads only a stored role report name, with regular-file guards,
+  terminal controls removed and a 64 KiB bound. Rows carry names only.
+  Ledger panes and check logs have no report viewer.
+
 - S177: per-run stop point (*proposed*). `--stop-after commit` on run or wave
   start, or the shared lineup editor's stop row, commits after approval and
   keeps the branch and worktree for the owner to land. The default is `land`.

@@ -31,7 +31,10 @@ const minBodyRoom = 8
 
 // runPane keeps its run target while snapshots reorder Overview rows.
 type runPane struct {
-	finding                   int // one-based non-blocking owner finding being answered
+	reportLayout              *reportLayout          // the shown report layout, before pane indentation
+	reportName                string                 // proposed: role report on show (S176)
+	reports                   map[string]renderFetch // run.report answers, by file name
+	finding                   int                    // one-based non-blocking owner finding being answered
 	run, project              string
 	answered, answerDone      bool
 	answerState, answerNotice string
@@ -225,6 +228,10 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 	case "ctrl+c":
 		return tea.Quit
 	case "esc":
+		if m.reportOn() > 0 {
+			m.pane.reportName, m.pane.offset = "", 0
+			return nil
+		}
 		if m.pane.number != "" {
 			m.dropNumber()
 			return nil
@@ -270,8 +277,14 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 			return nil
 		}
 	}
+	if m.reportOn() > 0 {
+		return m.reportKey(msg)
+	}
 	if m.renderOn() > 0 {
 		return m.renderKey(msg)
+	}
+	if key.Matches(msg, m.keys.Report) && !m.paneField() && !m.pane.ledger {
+		return m.reportKey(msg)
 	}
 	if m.paneQuestion() {
 		if msg.String() == "ctrl+a" && m.pane.finding == 0 {
@@ -410,9 +423,10 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 	if card == nil {
 		m.pane.number = "" // a number waits only on a card (S141)
 	}
-	// A render on show takes the room of the card's summary and checks.
+	// A render or report on show takes the room of the card's summary and checks.
 	idx := m.renderOn()
-	viewing := idx > 0
+	reporting := m.reportOn() > 0
+	viewing := idx > 0 || reporting
 	if viewing {
 		// A dim rule sets the render apart from the run line above it.
 		_, horizontal := m.cfg.Theme.rules(m.cfg.ASCII)
@@ -444,6 +458,8 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		}
 	}
 	switch {
+	case reporting:
+		addFooter(wrapText(m.reportTitle(), width), 0)
 	case viewing:
 		addFooter(wrapText(m.renderTitle(card), width), 0)
 	case r.unavailable:
@@ -606,7 +622,9 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		reason = strings.TrimSpace(strings.Join(context, "\n"))
 	}
 	sepAt := -1 // the row that sets the reason off from the progress line
-	if viewing {
+	if reporting {
+		lines = m.reportLines(width)
+	} else if viewing {
 		lines = m.renderLines(card, idx, width)
 	} else {
 		if reason != "" {

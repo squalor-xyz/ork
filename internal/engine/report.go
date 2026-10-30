@@ -5,6 +5,10 @@ package engine
 import (
 	"errors"
 	"fmt"
+	"io"
+	"io/fs"
+	"os"
+	"path/filepath"
 	"regexp"
 	"slices"
 	"strconv"
@@ -12,6 +16,65 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+// ErrNoReport means the requested report cannot be read.
+var ErrNoReport = errors.New("no such report")
+
+const maxReportBytes = 64 << 10
+
+// ReadReport reads a regular .md file by its plain name in the run directory.
+// Links, paths, missing files and failed reads return ErrNoReport. Text is
+// sanitized for the terminal and cut at a line end when over 64 KiB.
+func ReadReport(runDir, name string) (string, error) {
+	if filepath.Base(name) != name || !strings.HasSuffix(name, ".md") {
+		return "", ErrNoReport
+	}
+	entries, err := os.ReadDir(runDir)
+	if err != nil {
+		return "", ErrNoReport
+	}
+	for _, ent := range entries {
+		if ent.Name() == name {
+			if text, ok := readReport(runDir, ent); ok {
+				return text, nil
+			}
+			break
+		}
+	}
+	return "", ErrNoReport
+}
+
+func readReport(dir string, ent fs.DirEntry) (string, bool) {
+	info, err := ent.Info()
+	if err != nil || !info.Mode().IsRegular() {
+		return "", false
+	}
+	path := filepath.Join(dir, ent.Name())
+	f, err := os.Open(path)
+	if err != nil {
+		return "", false
+	}
+	defer f.Close()
+	opened, err := f.Stat()
+	current, err2 := os.Lstat(path)
+	// Both the opened file and the name must still be the listed regular file.
+	if err != nil || err2 != nil || !opened.Mode().IsRegular() || !current.Mode().IsRegular() || !os.SameFile(info, opened) || !os.SameFile(current, opened) {
+		return "", false
+	}
+	b, err := io.ReadAll(io.LimitReader(f, maxReportBytes+1))
+	if err != nil {
+		return "", false
+	}
+	text := runrec.PlainText(string(b))
+	if len(b) > maxReportBytes {
+		text = runrec.PlainText(string(b[:maxReportBytes]))
+		if i := strings.LastIndex(text, "\n"); i >= 0 {
+			text = text[:i]
+		}
+		text += "\n(cut: over 64 KiB)"
+	}
+	return text, true
+}
 
 // OwnerQuestion and Option share the persisted question shape.
 type OwnerQuestion = runrec.OwnerQuestion

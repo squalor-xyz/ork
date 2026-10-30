@@ -1,0 +1,24 @@
+[1mork[m                │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[90m  Running        0 [m│[90m────────────────────────────────────────────────────────────[m
+[1;7;97;44m0>Needs you      1 [m│  [1mRun engine  S22  awaiting approval[m
+[90m1[m ork            1 │  [90m──────────────────────────────────────────────────────────[m
+                   │  Report body for gate-1.md
+                   │  The gate report explains the remaining changes so the
+                   │  owner can review the result without opening files outside
+                   │  the run pane.
+                   │  
+                   │  | internal/tui/report.go | prose wraps; table rows keep...
+                   │  Tests: 12 passed, 0 failed
+                   │  ## Owner needed
+                   │  None.
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │  [1;36mReport 1 of 3: gate-1.md  gate round 1[m
+                   │[90m────────────────────────────────────────────────────────────[m
+                   │ p [2mnext report[m; s [2msidebar[m; pgup/pgdown [2mline[m; esc [2mback to run[m
+                   │ 1 project | refreshed 16:42:00

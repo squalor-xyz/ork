@@ -164,6 +164,7 @@ func (d *Direct) Snapshot(ctx context.Context, p registry.Project) Snapshot {
 
 // EngineRole is the display subset of a role record. Wire fields are proposed.
 type EngineRole struct {
+	Report    string    `json:"report,omitempty"`   // proposed (S176)
 	Tokens    int       `json:"tokens,omitempty"`   // proposed
 	CostUSD   float64   `json:"cost_usd,omitempty"` // proposed
 	Role      string    `json:"role"`

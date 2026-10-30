@@ -1160,6 +1160,17 @@ plain text of at most 24 KiB. A run without a card, an unknown run, a name the
 card does not list and a file that is not there are all `not_found`. The TUI
 calls it when the owner opens the renders and again for each render it moves
 to; no snapshot carries render text.
+*Proposed (S176):* `run.report` takes `{run,name}` and returns `{name,text}`.
+The name must be listed in the stored record's `roles[].report`. The daemon
+reads the record and file without waiting for the run. The file must be a
+regular `.md` file directly in the run directory. Links, paths, directories,
+unlisted names, missing files and unknown runs are `not_found`. The engine
+checks that the opened file is the same regular file that was listed,
+drops terminal controls with `runrec.PlainText`, and bounds the read at
+64 KiB, cutting at a line end with `(cut: over 64 KiB)` when longer. Status
+role rows carry `report` names (omitted when empty), never report text. The
+TUI reads text on demand when `p` opens or moves to a report.
+
 *Proposed (S175):* `run.end-ledger` takes `{project,run}` and returns `{run}`
 once it has ended a stale slicer ledger run with `slicer relay-run end RUN
 --outcome stopped --close-steps fail --json` (its running steps did not
