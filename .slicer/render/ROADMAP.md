@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-197 items · — 41 · done 150 · retired 6
+198 items · — 41 · done 151 · retired 6
 
 ## v1.1
 
@@ -238,7 +238,7 @@
 | 181 | [S167](slices/S167.md) | Spec check on one launch | S | - |  | discovered from S165 | done |
 | 182 | [S168](slices/S168.md) | Role matrix view | S | - |  | discovered from S165 | done |
 | 183 | [S169](slices/S169.md) | Vendor slots and stand-in | M | - |  | discovered from S165 | done |
-| 184 | [S170](slices/S170.md) | File a slice in ork | M | - |  | discovered from S165 | — |
+| 184 | [S170](slices/S170.md) | File a slice in ork | M | - |  | discovered from S165 | done |
 | 185 | [S171](slices/S171.md) | Add a slice note in ork | S | - |  | discovered from S165 | done |
 | 186 | [S172](slices/S172.md) | adj answers in ork | M | - |  | discovered from S165 | — |
 | 187 | [S174](slices/S174.md) | More registry settings | M | - |  | discovered from S165 | done |
@@ -251,9 +251,10 @@
 | 194 | [S183](slices/S183.md) | Fix stale doc statements | S | - |  | discovered from S165 | — |
 | 195 | [S184](slices/S184.md) | Launch spec check sitting | M | - |  | discovered from S167 | done |
 | 196 | [S185](slices/S185.md) | adj answer keys in the TUI | S | - |  | discovered from S172 | — |
+| 197 | [S198](slices/S198.md) | Accept relay v11 | M | 2 |  | owner contract review 2026-10-30 (slicer, adj, ork alignment); slicer s424 (relay v11 cleanup and bump) | — |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 197 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 198 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
