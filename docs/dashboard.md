@@ -119,7 +119,8 @@ main views and their decision and Roadmap item panes `q quit` never drops
 either (S152). When the line
 is too narrow, whole hints drop, lowest priority first: `f file slice`,
 `v renders`, `F fix round`, the check digits, `t retry`, `x stop`, then
-`ctrl+d/u`, `tab views`, `pgup/pgdown`, `a approve` and `c clean up`,
+`ctrl+d/u half page`, `p report`, `tab views`, `pgup/pgdown`, `a approve`
+and `c clean up`,
 and last the row's main key. On a stale ledger pane `x end run` ranks with
 the row's main key, above all scroll keys (S175). When open human checks refuse approval, the check
 digits and `F fix round` rank above stop and all scroll keys; the way out stays
@@ -984,6 +985,30 @@ At 80x24 the card's footer keeps one line for the header that names the run
 (`Run ID  ITEM  STATE`), so the card gives up lower-priority lines first (the
 later and owner findings) before that header goes; the
 tree and Overview rows may scroll out of sight.
+
+**Reports** (*proposed*, S176). `p` on an engine run pane opens the newest
+role report. Each further `p` moves one report older; after the oldest it
+returns to the run. `esc` returns at once. The hint lists `p report` when the
+run has a report. It drops just after `ctrl+d/u half page`, so at 80x24 a
+running or failed run pane keeps `p report`, `pgup/pgdown line` and
+`esc close pane`. Other hints, such as `x stop`, remain when they fit.
+In the viewer the hint lists `p next report; s sidebar` and `esc back to run`;
+on the oldest report it lists `p back to run` instead of `p next report`.
+Ledger panes have no reports. In an answer or fix field, `p` remains text.
+
+The viewer takes the room of the card, findings, tree and Overview rows,
+with a dim rule under the run line. Its heading is
+`Report N of M: NAME  ROLE round R`. The pane asks `run.report` for the text
+each time it moves to a report; run rows carry file names only. The body
+shows `Loading NAME ...` until the answer arrives, or
+`Could not read NAME: WHY` if it fails. `p` and `esc` still work after a
+failure. Prose lines wrap to the pane width. Lines starting with `|` (table
+rows) keep their columns and are cut with `...` at the pane edge.
+
+Only `p`, `esc`, the scroll keys (`pgup`/`pgdown` and `ctrl+d`/`ctrl+u`),
+`s` and `ctrl+c` act while the viewer shows. `s` hides or shows the sidebar;
+`ctrl+c` quits. There is no shell report command. Check logs remain outside
+this viewer.
 
 **Renders** (*proposed*, S121; adj #165). `v` on the card opens the viewer on
 the first render the UI pass wrote. The order is each view's `VIEW-80x24.txt`,

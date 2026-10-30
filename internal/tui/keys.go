@@ -30,6 +30,7 @@ type keyMap struct {
 	Owner      key.Binding
 	Fix        key.Binding
 	MarkCheck  key.Binding
+	Report     key.Binding
 	Renders    key.Binding
 	Next       key.Binding
 	Prev       key.Binding
@@ -83,6 +84,7 @@ func newKeyMap() keyMap {
 		FileSlice:  key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "file slice")),
 		Fix:        key.NewBinding(key.WithKeys("F", "shift+f"), key.WithHelp("F", "fix round")),
 		MarkCheck:  key.NewBinding(key.WithKeys("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), key.WithHelp("1-9", "mark check")),
+		Report:     key.NewBinding(key.WithKeys("p"), key.WithHelp("p", "report")),
 		Renders:    key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "view renders")),
 		Filter:     key.NewBinding(key.WithKeys("/"), key.WithHelp("/", "filter projects; esc clears")),
 		Sidebar:    key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "hide/show sidebar")),
@@ -122,7 +124,7 @@ func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Refresh, k.He
 
 // FullHelp implements help.KeyMap.
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add, k.Remove}, {k.Expand, k.ExpandAll, k.Tick, k.EditLineup, k.Launch, k.Matrix}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
+	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add, k.Remove}, {k.Expand, k.ExpandAll, k.Tick, k.EditLineup, k.Launch, k.Matrix}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.Report, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
 }
 
 // short is b with a short label and words for the hint line. It answers to the
@@ -148,6 +150,7 @@ type hintEntry struct {
 // second form and the global tab. Finding actions stay with row keys.
 const (
 	dropRemove = 20
+	dropReport = dropHalf - 1 // report outlasts the half-page hint (S176, owner)
 	dropRender = 19
 	dropFix    = 18
 	dropMark   = 17
@@ -454,7 +457,7 @@ func (l *hintList) rowActions(m *Model, r ovRow, ok, cleanup bool) {
 // paneField reports whether the open pane holds a text field that owns the
 // keys: the answer field, or the fix note. ctrl+u edits that field.
 func (m *Model) paneField() bool {
-	if m.pane == nil || m.renderOn() > 0 {
+	if m.pane == nil || m.renderOn() > 0 || m.reportOn() > 0 {
 		return false
 	}
 	if m.paneQuestion() {
@@ -489,6 +492,14 @@ func (m *Model) paneHints() []hintEntry {
 		return !refused
 	}
 	switch {
+	case m.reportOn() > 0:
+		desc := "next report"
+		if m.reportOn() == len(m.reportList()) {
+			desc = "back to run"
+		}
+		l.add(dropRow, short(k.Report, "p", desc), short(k.Sidebar, "s", "sidebar"))
+		scroll()
+		esc("back to run")
 	case m.renderOn() > 0:
 		desc := "next render"
 		if card != nil && m.renderOn() == len(card.Renders) {
@@ -551,6 +562,7 @@ func (m *Model) paneHints() []hintEntry {
 		scroll()
 		esc("close pane")
 	default:
+		l.add(dropReport, offer(len(m.reportList()) > 0, k.Report, "p", "report"))
 		if row.state != "stopped" && row.state != "committed" {
 			l.rowActions(m, row, rowOK, false)
 		}

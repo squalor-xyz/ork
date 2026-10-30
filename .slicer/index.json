@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 195,
+  "next_id": 196,
   "preamble": "",
   "passes": [
     {
@@ -1601,7 +1601,7 @@
       "id": "S90",
       "title": "Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on",
       "short_title": "Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -1630,7 +1630,7 @@
         "key": "docs-v8-stale",
         "pass": "v1.0",
         "group": "",
-        "reason": "",
+        "reason": "Relayed 2026-10-30 (run-20261030-010033-9d07): S142 already corrected every stale line in scope (docs/boundaries.md:38, docs/glossary.md:144, internal/roles/roles.go:56); no change needed, as the 2026-10-29 owner note said (retire once S142 lands). Remaining out-of-scope matches go to S183.",
         "importance": 1,
         "urgency": 1,
         "effort": 1,
@@ -8529,7 +8529,7 @@
       "id": "S176",
       "title": "Open a role report in the run pane",
       "short_title": "Open a role report",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8539,6 +8539,17 @@
           "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): defaults accepted (key p; no shell ork report; check logs out of scope).",
           "created_at": "2026-10-29T16:08:54Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "447feac4-f41d-4ca3-ad19-9f1f923b380b",
+          "kind": "",
+          "text": "**2026-10-30** — Review FAIL (gate round 2, 2026-10-29): wrapping a long report line with no spaces is quadratic in splitAt via wrapText (measured 2.2 s for 4000 bytes, 142 s for 16000 bytes at width 60) and reportLines reruns on every View, so a 64 KiB no-space report can freeze the TUI. Fix round 2: hard-cut no-space runs in one forward pass and cache wrapped lines by report and width.",
+          "created_at": "2026-10-30T00:00:40Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -8562,7 +8573,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -9322,6 +9333,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S182",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S195",
+      "title": "S176 later notes: report open guards, viewer heading and list indent",
+      "short_title": "S176 later notes: report open guards, viewer heading and list indent",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "db1929d6-0988-435c-9b77-9b2437f0a128",
+          "kind": "",
+          "text": "**2026-10-30** — From the S176 review, UI pass and gates (2026-10-29), all later: (1) ReadReport and readRender open with plain os.Open, so a FIFO swapped in could block a daemon handler: open with O_NONBLOCK|O_NOFOLLOW; (2) a failed read shows the wire code (not_found: no report), shared with renders; (3) the heading repeats the file name's role and round, could show the verdict; (4) a wrapped markdown list item continues at the left margin; (5) non-ASCII report text is shown as written (PlainText strips controls only); (6) on the approval-card pane p report now displaces x stop from the hint line (owner priority).",
+          "created_at": "2026-10-30T01:00:21Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S176",
         "parent": "",
         "cites": [],
         "key": "",

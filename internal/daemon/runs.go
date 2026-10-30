@@ -37,6 +37,7 @@ const (
 	MethodRunFile    = "run.file"   // proposed: file a later finding as a slice (adj 163)
 	MethodRunFix     = "run.fix"    // proposed: send the owner's note to a fix round (S118)
 	MethodRunCheck   = "run.check"  // proposed: tick a human check or mark it later (S118)
+	MethodRunReport  = "run.report" // proposed: role report text (S176)
 	MethodRunRender  = "run.render" // proposed: the text of one UI pass render of a run (S121)
 
 	MethodRunEndLedger = "run.end-ledger" // proposed: end a stale ledger run (S175)
@@ -63,7 +64,7 @@ type RunAction struct {
 	Check   int    `json:"check,omitempty"`   // run.check: the one-based human check
 	State   string `json:"state,omitempty"`   // run.check: "ticked", "later" or "" to reopen
 	Finding int    `json:"finding,omitempty"` // run.file: the one-based finding to file
-	Name    string `json:"name,omitempty"`    // run.render: the render's file name, as the card lists it
+	Name    string `json:"name,omitempty"`    // run.render or run.report: a file name listed in the stored record
 	Project string `json:"project,omitempty"` // run.end-ledger: the registered project that holds the ledger run
 	Adj     bool   `json:"adj,omitempty"`
 	By      string `json:"by,omitempty"`
@@ -1172,6 +1173,9 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 	if method == MethodRunFile {
 		return d.fileFinding(ctx, p)
 	}
+	if method == MethodRunReport {
+		return d.runReport(p)
+	}
 	if method == MethodRunRender {
 		return d.runRender(p)
 	}
@@ -1284,7 +1288,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		denialCounts := map[string]int{}
 		var roles []source.EngineRole
 		for _, role := range rec.Roles {
-			roles = append(roles, source.EngineRole{Role: role.Role, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit, Tokens: role.Tokens, CostUSD: role.CostUSD})
+			roles = append(roles, source.EngineRole{Report: role.Report, Role: role.Role, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit, Tokens: role.Tokens, CostUSD: role.CostUSD})
 			for _, text := range roleDenials(role) {
 				if denialCounts[text] == 0 {
 					denials = append(denials, text)
@@ -1360,6 +1364,30 @@ func cleanupFailed(rec runrec.Record) string {
 		return ""
 	}
 	return rec.Reason
+}
+
+// ReportReply is the answer of run.report (proposed, S176).
+type ReportReply struct {
+	Name string `json:"name"`
+	Text string `json:"text"`
+}
+
+// runReport reads only a role report listed in the stored record. It does
+// not wait for the run; every missing record, name or file is not_found.
+func (d *Daemon) runReport(p RunAction) (ReportReply, error) {
+	run, err := d.runs.deps.Store.Open(p.Run)
+	if err != nil {
+		return ReportReply{}, &ipc.Error{Code: CodeNotFound, Message: "no run " + p.Run}
+	}
+	missing := &ipc.Error{Code: CodeNotFound, Message: "no report " + p.Name + " for run " + p.Run}
+	if p.Name == "" || !slices.ContainsFunc(run.Snapshot().Roles, func(r runrec.RoleRecord) bool { return r.Report == p.Name }) {
+		return ReportReply{}, missing
+	}
+	text, err := engine.ReadReport(d.runs.deps.Store.RunDir(p.Run), p.Name)
+	if err != nil {
+		return ReportReply{}, missing
+	}
+	return ReportReply{Name: p.Name, Text: text}, nil
 }
 
 // RenderReply is the answer of run.render: the render's name and its text,

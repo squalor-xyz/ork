@@ -206,6 +206,13 @@ func (c *Client) Render(ctx context.Context, run, name string) (string, error) {
 	return reply.Text, err
 }
 
+// Report reads one role report by its stored name (proposed, S176).
+func (c *Client) Report(ctx context.Context, run, name string) (string, error) {
+	var reply ReportReply
+	err := c.Call(ctx, MethodRunReport, RunAction{Run: run, Name: name}, &reply)
+	return reply.Text, err
+}
+
 // Stop stops an engine run after the caller has confirmed it.
 func (c *Client) Stop(ctx context.Context, run string) error {
 	return c.Call(ctx, MethodRunStop, RunAction{Run: run}, nil)

@@ -146,9 +146,9 @@ func (m *Model) screen() string {
 				// A Running run's second line is one more row line (S145).
 				paneHeight = max(paneHeight-ov.paneExtra, 1)
 			}
-			// A render on show takes the whole body: the Overview rows above
+			// A render or report on show takes the whole body: the Overview rows above
 			// the pane give way, so the pane leaves its row for the detail.
-			if collapse = m.renderOn() > 0; collapse {
+			if collapse = m.renderOn() > 0 || m.reportOn() > 0; collapse {
 				detail = m.paneLines(mainW, max(h-4, 1), status)
 				rowStarts = nil
 			} else {
@@ -669,7 +669,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 	for _, group := range m.keys.FullHelp() {
 		for _, binding := range group {
 			h := binding.Help()
-			if h == m.keys.Owner.Help() || h == m.keys.NextView.Help() {
+			if h == m.keys.Owner.Help() || h == m.keys.Report.Help() || h == m.keys.NextView.Help() {
 				continue
 			}
 			if h == m.keys.PrevView.Help() {
@@ -767,7 +767,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 				} else {
 					lines = append(lines, packHints(actionHints, w)...)
 				}
-				lines = append(lines, clip("o answer owner finding (run pane)", w))
+				lines = append(lines, clip("o answer owner finding; p report (run pane)", w))
 			}
 			desc := h.Desc
 			if h == m.keys.PageDown.Help() && m.view == roadmapView {
