@@ -526,6 +526,18 @@ on stderr. The daemon continues using its original binary, never a relay
 worktree build, and never restarts itself. See docs/design.md for wave
 admission rules.
 
+### Vendor memory (S169, *proposed*)
+
+The vendors that are out, and the rounds that wait for a vendor slot, are
+daemon memory only. Neither is in `run.json` or `projects.json`, and a daemon
+restart clears both: nothing remembers a vendor as out across a restart, and
+a run that resumes starts with no wait. A mark made by a rate-limit or
+out-of-credits exit lasts 60 minutes or until `ork vendor back`; a mark the
+owner sets with `ork vendor out` has no expiry and holds until `back`. The slot cap (`codex` 1, `claude` unlimited) is built in
+and is not a registry field. The proposed snapshot fields `vendors_out[]`
+(`vendor`, `reason`, `since`, and `until`, absent for an owner mark) and `engine_runs[].vendor_wait` carry
+them to the clients.
+
 ### Transient role detail (S99)
 
 The output tail is daemon memory only. It is never a `run.json` field and is

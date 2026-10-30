@@ -58,6 +58,7 @@ type Deps struct {
 	HungAfter      time.Duration                                    // 0 means DefaultHungAfter; negative turns the hung-role watchdog off
 	MaxRounds      int                                              // 0 means DefaultMaxRounds
 	Landings       *Landings                                        // one landing per project at a time; nil means one shared by the process
+	Vendors        *Vendors                                         // the per-vendor slot cap and vendor-out memory (S169); nil means no cap and no memory
 }
 
 func (d Deps) now() time.Time {
@@ -124,7 +125,8 @@ type Engine struct {
 	proj           registry.Project
 	run            *runrec.Run
 	wr             runrec.Writer
-	noted          string // the checks note written for an approval (guarded by mu)
+	noted          string      // the checks note written for an approval (guarded by mu)
+	vendorWait     vendorWaits // the vendors whose slot a round waits for (S169); own lock, because Run holds mu
 }
 
 func newEngine(d Deps, proj registry.Project, run *runrec.Run) *Engine {

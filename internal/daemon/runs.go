@@ -160,6 +160,13 @@ func (d *Daemon) initRunManager() {
 	if deps.Store == nil {
 		deps.Store = &runrec.Store{Dir: filepath.Join(d.cfg.Paths.Dir, "runs")}
 	}
+	if deps.Vendors == nil {
+		// One value for every run of the daemon, so the cap holds across runs (S169).
+		deps.Vendors = engine.NewVendors(defaultVendorCaps)
+		if d.cfg.Clock != nil {
+			deps.Vendors.WithClock(d.cfg.Clock.Now)
+		}
+	}
 	d.runs = runManager{recordLocks: map[string]*sync.Mutex{}, cleaning: map[string]bool{}, heads: map[string]string{}, merged: map[string]*bool{}, ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}, waveStops: map[string]int{}, specs: map[string]specEntry{}, specCancels: map[int]context.CancelFunc{}}
 }
 func (d *Daemon) runDeps(p registry.Project) engine.Deps {
@@ -468,6 +475,12 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		}
 	}
 	plan.Lineup[engine.RoleGate] = append([]runrec.LineupEntry(nil), plan.Lineup[engine.RoleReviewer]...)
+	if note := d.vendorNote(plan.Lineup); note != "" {
+		if plan.Note != "" {
+			plan.Note += "; "
+		}
+		plan.Note += note
+	}
 	plan.Budgets = proj.Budgets
 	if p.Budgets != nil {
 		if p.Budgets.Minutes < 0 || p.Budgets.Tokens < 0 {
@@ -1322,7 +1335,11 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		if rec.State == runrec.StateAwaitingApproval {
 			card = rec.Card
 		}
-		runs = append(runs, EngineRun{StopAfter: rec.StopAfter, Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), WorktreeGone: rec.State == runrec.StateCommitted && !rec.Cleaned() && worktreeGone(rec), State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
+		vendorWait := ""
+		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
+			vendorWait = m.engine.VendorWait()
+		}
+		runs = append(runs, EngineRun{VendorWait: vendorWait, StopAfter: rec.StopAfter, Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), WorktreeGone: rec.State == runrec.StateCommitted && !rec.Cleaned() && worktreeGone(rec), State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
 	}
 	return runs
 }

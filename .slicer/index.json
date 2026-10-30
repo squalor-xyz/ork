@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 196,
+  "next_id": 197,
   "preamble": "",
   "passes": [
     {
@@ -8172,7 +8172,7 @@
       "id": "S169",
       "title": "Per-vendor slot cap and vendor-out memory (one Codex slot, Claude stand-in)",
       "short_title": "Vendor slots and stand-in",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8182,6 +8182,17 @@
           "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): a vendor marked out after a rate-limit or out-of-credits exit stays out for 60 minutes (fixed expiry) or until `ork vendor back`, and a daemon restart clears it (supersedes the spec's until-back default); a run waiting for a full vendor slot keeps its global-cap slot; with the vendor out and no other-vendor row the round tries the row anyway; built-in cap codex 1, claude unlimited, no registry field.",
           "created_at": "2026-10-29T16:08:54Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "d01c59f8-c5e5-43b3-907d-68832f71bccc",
+          "kind": "",
+          "text": "**2026-10-30** — Review FAIL (review round 1, 2026-10-29): a round waiting for the codex slot still runs its codex row after the slot holder went out, because the holder releases the slot before it marks the vendor out (round.go release before MarkOut) and the waiter picked its row before the wait. Fix round 1 moves the mark before the release and re-picks the row after a waited acquire.",
+          "created_at": "2026-10-30T00:59:56Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -8205,7 +8216,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -8878,6 +8889,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "0562165e-b8c1-4b38-a7a0-ed608532591e",
+          "kind": "",
+          "text": "**2026-10-30** — Added 2026-10-30 from S169: docs/orchestrator-parity.md row 2.4 and gap 4 still describe vendor fallback before S169 (vendor slots and vendor-out memory); mark them met. Also docs/orchestrator-parity.md and docs/diagrams.md cite drifted line numbers in round.go, engine.go, runs.go, wire.go, cli.go, daemoncmds.go.",
+          "created_at": "2026-10-30T12:57:01Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -9373,6 +9395,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S176",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S196",
+      "title": "S169 later notes: wait heartbeat, vendor push, multi-waiter test, spec-check slots",
+      "short_title": "S169 later notes: wait heartbeat, vendor push, multi-waiter test, spec-check slots",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "08373b86-cad5-4195-9cd6-4680239e845a",
+          "kind": "",
+          "text": "**2026-10-30** — From the S169 review, UI pass and gate (2026-10-30), all later: (1) a run waiting for a vendor slot has no ledger step or heartbeat, so slicer marks it stale after 30 minutes (the TUI cue is dimmed); record a wait marker or heartbeat; (2) ork vendor changes and expiries are not pushed to open TUIs (no snapshot.changed); (3) test a re-pick with two or more waiters queued behind a holder that hits a limit; (4) spec-check rounds take no vendor slot; (5) the status line drops vendor fields at 80 (and codex at 100) while the daemon-build notice shows; (6) two out vendors join with '; ' in the plan note; (7) an owner mark never expires, so a forgotten one keeps codex skipped until back or restart; (8) Claude rate-limit class still unmeasured; (9) no per-mark duration; (10) parity/diagram line cites drifted.",
+          "created_at": "2026-10-30T12:57:01Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S169",
         "parent": "",
         "cites": [],
         "key": "",

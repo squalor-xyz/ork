@@ -40,6 +40,10 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 	if o.json {
 		return o.printJSON(res)
 	}
+	// The vendors that are out come first: they change what every run does (S169).
+	for _, v := range res.VendorsOut {
+		fmt.Fprintln(o.stdout, v.Sentence())
+	}
 	if len(res.Projects) == 0 {
 		fmt.Fprintln(o.stdout, daemon.NoProjectsGuide)
 		return ExitOK

@@ -232,6 +232,13 @@ ork (TUI)  ork status --json (CLI)
    and the per-project cap (`wave.limits`). Several waves, each in one
    project, may run at once (`wave.scope`). An item over a cap
    waits as a queued run and starts, oldest first, as a slot frees.
+   Beside the run caps there is a vendor cap (S169, *proposed*, owner decision
+   2026-10-29): one `codex` role at a time over all runs of the daemon, and
+   `claude` unlimited. It is built in; the registry has no field for it. It
+   is enforced per role round, not per run (see Vendors, below). A run that
+   waits for the Codex slot keeps its global-cap slot, because the wait lasts
+   at most one role round. Spec-check rounds are not counted: they run before
+   a run and take no vendor slot.
 7. **Result.** Each item that reaches a passed gate waits for the owner's
    approval. This is checkpoint 2. Once approved, ork runs the finish step, then
    commits (adj #81), then lands the slice (`landing.in-ork`, adj #162; the
@@ -825,6 +832,59 @@ probes 05 to 07 ran on 0.164.0), grok 1.0.62. Grok has no successful run, so mos
   Claude has no measured rate-limit class, so its rows can fall back only
   on an error until a sample exists
   (`vendor.unsampled-classes`).
+- **Vendor slots and the vendor-out memory** (S169, *proposed*; owner decisions
+  2026-10-29). One `engine.Vendors` value in `engine.Deps` is shared by every
+  run of the daemon, as `Landings` is. It is in memory only, so a daemon
+  restart clears it. A nil value means no cap and no memory, so engine tests
+  that set none are unchanged.
+  - *Slots.* A round that starts a vendor process first takes that vendor's
+    slot and frees it when the process ends. The built-in caps are `codex` 1
+    and `claude` unlimited. Rounds on a full vendor wait, oldest first. The
+    wait comes before the ledger step and the role record, so it is not role
+    run time (the budget never counts it) and not silence for the watchdog.
+    The run keeps its global-cap slot while it waits, and its Running row says
+    `waits for codex`; its heard cell is dim, with no `!` or `!!` cue, while it
+    waits (a ledger heartbeat during the wait is a later slice). `ork stop`
+    cancels the wait; it leaves no role record and no ledger step. The
+    reviewer and the UI pass of one state can wait for each other's slot, but
+    they cannot deadlock: each round holds one vendor slot only, and a slot is
+    freed when its process ends. Spec-check rounds (`speccheck.go`) take no
+    slot and are not counted.
+  - *Memory.* A round that exits `rate_limited` or `out_of_credits` marks its
+    vendor out, with the time and the exit text. An `error` exit, an auth exit
+    and a role the watchdog killed (S182) mark nothing. The mark is made
+    before the round frees its slot, so a round that waits for the slot finds
+    the vendor out when it gets it. An exit mark expires after 60 minutes
+    (`engine.VendorOutFor`, a fixed expiry; the classifier cannot tell a 429,
+    a usage window and out of credits apart, and adj 51 records that the
+    usage-limit text can appear with quota left). The owner ends it earlier
+    with `ork vendor back NAME`. The owner can also mark a vendor out before a
+    round fails, with `ork vendor out NAME`: that mark has no expiry and
+    holds until `back` or a daemon restart (owner decision 2026-10-29). A
+    second exit mark renews the exit text and the expiry and keeps the first
+    time; an exit mark does not change an owner mark.
+  - *Effect.* Before a round starts, rows of a vendor that is out are skipped
+    to the first later row on a vendor that is not out. With no such row the
+    round tries its row anyway, as before. This skips rows before a round;
+    stickiness (`vendor.fallback-sticky`) is unchanged, because the role's
+    records then match the later row going forward, and a skipped row is not a
+    failed attempt (no fallback note). A round that waited for a slot picks
+    its row again when it gets the slot: if its vendor went out meanwhile (the
+    holder of the slot hit a limit, or the owner marked it), it frees the slot
+    and takes the row of another vendor, before any ledger step or role record
+    is written. This differs from slicer s405, which on a rate limit takes the
+    next matching row: after a rate limit ork also skips later rows of the same
+    vendor while it is out, because the exit cannot tell a 429, a usage window
+    and out of credits apart.
+  - *Plan.* `run.plan` carries a note for each vendor that is out and that a
+    chain of the plan uses, as `codex is out until HH:MM (since HH:MM; reason)`
+    (`codex is out until back (...)` for an owner mark) and `ork vendor back
+    NAME`. `ork status` and `ork vendor` say it the same way. A plan the owner
+    confirmed before the note changed is refused as changed.
+  - *Wire.* `vendors.list` and `vendors.set` (params `{vendor, out, reason}`;
+    the vendor must be one ork can run, `claude` or `codex`, else
+    `bad_params`). `status` and `snapshot` carry `vendors_out`, and an engine
+    run row carries `vendor_wait`.
 - **Detection** (`vendor.ratelimit-detection`): the classifier matches only
   documented signals. Every non-ok round and every round with permission
   denials saves its raw stdout, stderr and JSON at mode 0600 under
@@ -1437,7 +1497,8 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   is not refused while runs are unfinished: the global cap is read for every
   admission and the idle minutes each time the idle clock arms. Raising the
   cap starts queued runs that now fit, with no other event; lowering it
-  stops no running run. S169 (per-vendor cap) should extend this command.
+  stops no running run. The per-vendor cap (S169) is built in and is not a
+  setting; `ork vendor` shows and sets the vendor memory.
 - `roles print [ROLE]`: `{"roles":[{"name","prompt"}]}`. Text: the prompt of
   ROLE as embedded, or all four with a `==== NAME ====` line before each.
 - `roles matrix PROJECT` (S168): the `roles.matrix` result as one value. Text:

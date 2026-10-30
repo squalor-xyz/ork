@@ -89,6 +89,11 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
   ork settings set [--global-cap N] [--daemon-idle-minutes N]
                               change them; 0 clears one; allowed while runs
                               are unfinished
+  ork vendor [list]           list the vendors the daemon remembers as out;
+                              marks happen on their own; a restart clears them
+  ork vendor out NAME [--reason TEXT]
+                              mark claude or codex out until back
+  ork vendor back NAME        say the vendor is back; ends the mark early
   ork roles print [ROLE]      print the embedded role prompts
   ork roles matrix P          show the role matrix as slicer prints it, then
                               which rows ork uses, skips or does not run
@@ -225,6 +230,8 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		return a.projects(ctx, o, rest)
 	case "settings":
 		return a.settings(ctx, o, rest)
+	case "vendor":
+		return a.vendor(ctx, o, rest)
 	case "roles":
 		return a.roles(ctx, o, rest)
 	case "doctor":

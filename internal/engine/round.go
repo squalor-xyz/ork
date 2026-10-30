@@ -184,7 +184,36 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	if entryIndex >= len(entries) {
 		return outcome{}, e.stop(ctx, fallbackReasons(rec, r.role))
 	}
-	entry := entries[entryIndex]
+	// The vendor's slot (S169). A vendor that is out is not tried while a later
+	// row is on another vendor; the role's records then match that later row
+	// going forward. The row is picked before the wait and again after a wait:
+	// the vendor may have gone out meanwhile (the holder of the slot hit a
+	// limit, or the owner marked it), and then the round takes the other row
+	// and frees the slot it got. The wait is before the brief, the ledger step
+	// and the role record, so it is neither role run time nor a silent role.
+	// The slot is freed when the vendor process ends; a cancelled wait leaves
+	// no record.
+	first := entryIndex
+	var entry runrec.LineupEntry
+	var release func()
+	for {
+		entryIndex = e.skipVendorsOut(entries, first)
+		entry = entries[entryIndex]
+		rel, waited, err := e.d.Vendors.AcquireWait(ctx, entry.Vendor, func() { e.vendorWait.add(entry.Vendor, 1) })
+		if waited {
+			e.vendorWait.add(entry.Vendor, -1)
+		}
+		if err != nil {
+			return outcome{}, err
+		}
+		if waited && e.skipVendorsOut(entries, first) != entryIndex {
+			rel()
+			continue
+		}
+		release = rel
+		break
+	}
+	defer release()
 	perm, err := ResolvePermission(e.proj, r.role)
 	if err != nil {
 		return outcome{}, e.pauseError(r, "permissions: "+err.Error())
@@ -300,6 +329,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	stopWatch()
 	endActivity()
 	if err := ctx.Err(); err != nil {
+		release()
 		if e.run.Snapshot().State == runrec.StateStopped {
 			updateErr := e.run.Update(func(rr *runrec.Record) {
 				role := &rr.Roles[idx]
@@ -314,6 +344,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		return outcome{}, err // the role stays running in the record; a restart marks it lost
 	}
 	if hung() {
+		release()
 		limit, _ := e.d.hungLimit()
 		return e.endHungRound(ctx, rec, r, idx, stepID, res, limit, stop)
 	}
@@ -325,6 +356,21 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		class = ExitError
 		runErr = errors.New("the runner gave no exit class")
 	}
+
+	// A rate limit or out of credits ends the vendor's turn for a while: the
+	// next rounds, of this run and of others, skip its rows (S169). An error
+	// exit does not, and neither does a hung role (it returned above). The mark
+	// comes before the slot is freed, so that a round that waits for the slot
+	// finds the vendor out when it gets it. The vendor process has ended, so
+	// the slot is freed here.
+	if class == ExitRateLimited || class == ExitOutOfCredits {
+		reason := strings.TrimSpace(res.Reason)
+		if reason == "" {
+			reason = string(class)
+		}
+		e.d.Vendors.MarkOut(entry.Vendor, reason, e.d.now())
+	}
+	release()
 
 	var changed bool
 	var statusErr error
