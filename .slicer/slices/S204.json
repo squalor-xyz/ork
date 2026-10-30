@@ -1,0 +1,41 @@
+{
+  "id": "S204",
+  "title": "Engine follows relay v11 process rules",
+  "lead": [
+    "ork's engine follows the process rules relay v11 adds for fix rounds, merges, Check lines and owner questions."
+  ],
+  "depends_note": null,
+  "findings_note": "S198 preflight 2026-10-30: owner split the engine rules out of S198",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Split out of S198 on 2026-10-30 (owner, interactive): S198 accepts v11, updates the prompts and records the gate verdict; the engine rules below have no failing test there and slicer does not enforce them.\n\nRules to check against the engine and implement where it differs (confirm each against `slicer ai relay` and `slicer ai relay-orchestrator` on v11):\n\n- A small fix round is checked and gated in one pass by the read-only role that raised its findings.\n- A clean merge of main is regated by the one-pass small-fix check on the merge diff.\n- A Check line marked [AFTER LAND] is deferred to Land step 6.\n- A non-blocker owner question is asked in the ledger as it arises (`relay-run ask` without `--blocker`, step stays running) and read with `relay-run answer --get` before the finish step; ork's `internal/slicercli/write.go:308` always asks with `--blocker`.\n- `relay-run list` `counts.roles` counts lane steps only (ork reads `Counts` at `internal/slicercli/types.go:179`).\n\nNeeds a spec round (files, failing tests, owner decisions) before it is ready."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

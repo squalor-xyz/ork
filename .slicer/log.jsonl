@@ -2672,3 +2672,14 @@
 {"when": "2026-10-30T17:13:51Z", "item": "S112", "action": "note", "from": "", "to": "", "note": "Fix round 2: Overview free-text field is sized for the inlin", "by": "Jon R"}
 {"when": "2026-10-30T17:20:03Z", "item": "S203", "action": "add", "from": "", "to": "open", "note": "S112 later notes: dash-leading answers, Via passthrough, ledger option rendering"}
 {"when": "2026-10-30T17:20:04Z", "item": "S203", "action": "note", "from": "", "to": "", "note": "From the S112 review, UI passes and gate (2026-10-30), all l", "by": "Jon R"}
+{"when": "2026-10-30T17:34:54Z", "item": "S24", "action": "note", "from": "", "to": "", "note": "Preflight 2026-10-30 (owner, interactive): (1) Order: S198 l", "by": "Jon R"}
+{"when": "2026-10-30T20:04:25Z", "item": "S204", "action": "add", "from": "", "to": "open", "note": "Engine follows relay v11 process rules"}
+{"when": "2026-10-30T20:04:36Z", "item": "S198", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-10-30T20:04:43Z", "item": "S204", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-30T20:04:43Z", "item": "S204", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-10-30T20:04:43Z", "item": "S204", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-30T20:05:04Z", "item": "S198", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-30T20:05:04Z", "item": "S198", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-30T20:05:04Z", "item": "S198", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-30T20:05:05Z", "item": "S198", "action": "note", "from": "", "to": "", "note": "Preflight 2026-10-30 (owner, interactive): UNBLOCKED, slicer", "by": "Jon R"}
+{"when": "2026-10-30T20:05:27Z", "item": "S198", "action": "edit", "from": "", "to": "", "note": "lead"}
