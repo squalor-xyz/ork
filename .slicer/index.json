@@ -9527,7 +9527,19 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "001a8946-40a2-4e66-aa64-53049aa92d9d",
+          "kind": "",
+          "text": "**2026-10-30** — More v11 rules decided 2026-10-30 (slicer s408, s411, s425): (1) a gate round is closed with relay-run step --phase done --verdict pass|fail; ork records the verdict. (2) relay-run ask without --blocker records the question and leaves the step running (no owner wait); ork must not treat it as a wait. (3) After a merge of main that needs no code fix, the regate is the one-pass small-fix check on the merge diff. (4) A small fix round is rechecked by the read-only role that raised the findings. (5) A Check line marked [AFTER LAND] is deferred to Land. (6) relay-run list counts.roles counts lane steps only. Confirm each against the landed v11 text.",
+          "created_at": "2026-10-30T14:03:23Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
