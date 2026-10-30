@@ -4,6 +4,7 @@ package tui
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/brand"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/source"
 )
 
 // Size used until the terminal reports its own.
@@ -518,13 +520,23 @@ func (m *Model) statusLine(w int) string {
 			SelfHost: project.snap.SelfHost, BehindMain: project.snap.BehindMain,
 		})
 	}
+	notices := 0 // the daemon notice, which stays first
 	if notice := daemon.BehindWarning(status); notice != "" {
 		fields = append([]string{m.cfg.Theme.Warn.Render(notice)}, fields...)
+		notices = 1
 	} else if (m.cfg.BuildID != "" || m.cfg.DaemonBuild != "") && daemon.StaleBuild(m.cfg.BuildID, m.cfg.DaemonBuild) {
 		// Empty builds are the seam for runs with no daemon info (tests).
 		// The behind notice replaces the stale marker while it is shown.
 		fields = append([]string{m.cfg.Theme.Warn.Render("daemon build differs: ork daemon restart")}, fields...)
+		notices = 1
 	}
+	// A vendor that the daemon remembers as out comes next after the daemon
+	// notices (S169), so a narrow line drops the other fields first.
+	var out []string
+	for _, v := range m.vendorsOut() {
+		out = append(out, m.cfg.Theme.Warn.Render(v.Vendor+" out until "+v.UntilText()))
+	}
+	fields = slices.Insert(fields, notices, out...)
 	line := " " + strings.Join(fields, " | ")
 	for len(fields) > 1 && lipgloss.Width(line) > w {
 		fields = fields[:len(fields)-1]
@@ -534,6 +546,23 @@ func (m *Model) statusLine(w int) string {
 		line += strings.Repeat(" ", w-lipgloss.Width(line)-lipgloss.Width(m.cfg.Version)) + m.cfg.Theme.Dim.Render(m.cfg.Version)
 	}
 	return lipgloss.NewStyle().MaxWidth(max(w, 1)).Render(line)
+}
+
+// vendorsOut is the vendors that the daemon remembers as out, once each, sorted
+// by vendor. Every snapshot carries the same global list (S169).
+func (m *Model) vendorsOut() []source.VendorOut {
+	seen := map[string]bool{}
+	var out []source.VendorOut
+	for _, project := range m.projects {
+		for _, v := range project.snap.VendorsOut {
+			if !seen[v.Vendor] {
+				seen[v.Vendor] = true
+				out = append(out, v)
+			}
+		}
+	}
+	slices.SortFunc(out, func(a, b source.VendorOut) int { return strings.Compare(a.Vendor, b.Vendor) })
+	return out
 }
 
 // hintLine is the line above the status line: the keys that work now, from

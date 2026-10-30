@@ -187,6 +187,14 @@ the project and refresh fields, unless the behind notice is shown (see
 Self-hosting). The behind notice replaces the stale-build marker. At narrow
 widths, trailing fields are dropped first so the behind notice keeps priority.
 
+A vendor that the daemon remembers as out (S169, *proposed*) adds one warning
+field, `codex out until 17:02` (`codex out until back` for a mark the owner
+set), for each such vendor, in vendor order. The
+fields come after the daemon notice and before the project count, so a narrow
+line drops the other fields first. The TUI only shows them; the owner sets and
+clears the memory with `ork vendor` (see docs/design.md, Vendors). A change
+made outside the TUI shows at the next snapshot.
+
 The six-row text mark appears above `?` help only when the pane can fit the
 mark, a blank line and every help line, and is at least twelve columns wide
 (ui.version-mark, adj #131). At 100x30 it is omitted so quit stays visible.
@@ -495,7 +503,9 @@ the text column, falling back to a shorter indent when needed to fit.
      (the model returns if it fits), then last heard unless a row's carries a `!`
      or `!!` cue, the role, and the bar, so a cue outlasts the bar (S106). The id
      stays. Line 2 does not depend on the width: it is cut to the pane with
-     `...`. The same order holds at 80x24, where the sidebar and the project
+     `...`. A run whose round waits for a full vendor slot (S169, *proposed*)
+     has `waits for codex` on line 2 in place of the output tail (a denial
+     still comes first), and its heard cell is dim with no `!` or `!!` cue. The same order holds at 80x24, where the sidebar and the project
      column leave little for the title, so the titles usually sit on line 2
      there.
    `! heard` is amber after 10 minutes with no event; `!! heard` is red after

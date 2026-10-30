@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-194 items · — 43 · done 146 · retired 5
+194 items · — 42 · done 147 · retired 5
 
 ## v1.1
 
@@ -234,7 +234,7 @@
 | 177 | [S166](slices/S166.md) | Lineup overrides everywhere | M | - |  | discovered from S165 | done |
 | 178 | [S167](slices/S167.md) | Spec check on one launch | S | - |  | discovered from S165 | done |
 | 179 | [S168](slices/S168.md) | Role matrix view | S | - |  | discovered from S165 | done |
-| 180 | [S169](slices/S169.md) | Vendor slots and stand-in | M | - |  | discovered from S165 | — |
+| 180 | [S169](slices/S169.md) | Vendor slots and stand-in | M | - |  | discovered from S165 | done |
 | 181 | [S170](slices/S170.md) | File a slice in ork | M | - |  | discovered from S165 | — |
 | 182 | [S171](slices/S171.md) | Add a slice note in ork | S | - |  | discovered from S165 | — |
 | 183 | [S172](slices/S172.md) | adj answers in ork | M | - |  | discovered from S165 | — |

@@ -965,9 +965,19 @@ func (m *Model) engineRunRow(s source.Snapshot, r source.EngineRun, ledger slice
 		}
 	}
 	rr.finishRow(ledger)
+	if r.VendorWait != "" {
+		// The run has not gone quiet: it waits for a vendor slot. The heard cell
+		// is dim and carries no cue (S169). A ledger heartbeat during the wait is
+		// a later slice.
+		rr.heard = strings.TrimPrefix(strings.TrimPrefix(rr.heard, "!! "), "! ")
+		rr.heardStyle = m.cfg.Theme.Dim
+	}
 	switch {
 	case len(r.Denials) > 0:
 		rr.second, rr.secondWarn = "denied: "+source.DenialsText(r.Denials), true
+	case r.VendorWait != "":
+		// The round has not started: it waits for the vendor's slot (S169).
+		rr.second = "waits for " + r.VendorWait
 	default:
 		rr.second = lastTailLine(r.Tail)
 	}

@@ -66,10 +66,11 @@ func result[T any](v T, err error) Result[T] {
 // one failed call does not blank the others. Open and Decided stay empty, with
 // no error, for a project whose registry entry has adj false.
 type Snapshot struct {
-	SelfHost     bool // proposed: running build revision exists in the project
-	BehindMain   bool // proposed: local main descends from the running build
-	RolesRunning bool // global daemon activity, for the idle restart notice
-	Unavailable  bool // proposed: display group for runs without a registered project
+	SelfHost     bool        // proposed: running build revision exists in the project
+	BehindMain   bool        // proposed: local main descends from the running build
+	RolesRunning bool        // global daemon activity, for the idle restart notice
+	VendorsOut   []VendorOut // proposed: vendors the daemon remembers as out (S169); global, not per project
+	Unavailable  bool        // proposed: display group for runs without a registered project
 	EngineRuns   []EngineRun
 	Project      registry.Project
 	Items        Result[[]slicercli.Item]
@@ -193,6 +194,37 @@ type EngineFinding struct {
 	Filed  string                `json:"filed,omitempty"`
 }
 
+// VendorOut is a vendor that the daemon remembers as out after a rate limit or
+// out of credits, or because the owner marked it (S169, *proposed*). The
+// memory lasts until Until, `ork vendor back` or a daemon restart. A mark the
+// owner set has no Until (the zero time) and holds until back. Wire fields are
+// proposed.
+type VendorOut struct {
+	Vendor string    `json:"vendor"`
+	Reason string    `json:"reason,omitempty"`
+	Since  time.Time `json:"since"`
+	Until  time.Time `json:"until,omitzero"`
+}
+
+// UntilText is when the mark ends, as HH:MM, or "back" for a mark the owner
+// set, which holds until `ork vendor back`.
+func (v VendorOut) UntilText() string {
+	if v.Until.IsZero() {
+		return "back"
+	}
+	return v.Until.Format("15:04")
+}
+
+// Sentence is how ork status, ork vendor and a run plan say a vendor is out:
+// the end first, then when it began and why.
+func (v VendorOut) Sentence() string {
+	detail := "since " + v.Since.Format("15:04")
+	if reason := strings.Join(strings.Fields(v.Reason), " "); reason != "" {
+		detail += "; " + reason
+	}
+	return fmt.Sprintf("%s is out until %s (%s)", v.Vendor, v.UntilText(), detail)
+}
+
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
 	StopAfter      string                `json:"stop_after,omitempty"` // proposed: per-run stop point (S177)
@@ -222,8 +254,9 @@ type EngineRun struct {
 	Item           string                `json:"item"`
 	State          string                `json:"state"`
 	Wait           string                `json:"wait,omitempty"`
-	Pending        string                `json:"pending,omitempty"` // paused runrec pending kind (ui.pending-kind)
-	Denials        []string              `json:"denials,omitempty"` // distinct denial texts in first-seen order, with " xN" for repeats
+	VendorWait     string                `json:"vendor_wait,omitempty"` // proposed: the vendor whose slot a round of this run waits for (S169); daemon memory only
+	Pending        string                `json:"pending,omitempty"`     // paused runrec pending kind (ui.pending-kind)
+	Denials        []string              `json:"denials,omitempty"`     // distinct denial texts in first-seen order, with " xN" for repeats
 	RelayRun       string                `json:"relay_run,omitempty"`
 	CreatedAt      time.Time             `json:"created_at"`
 	WaitStartedAt  time.Time             `json:"wait_started_at,omitzero"` // entry into awaiting-approval or paused (S138)

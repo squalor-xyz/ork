@@ -81,6 +81,21 @@ func (c *Client) SetSettings(ctx context.Context, p SetSettingsParams) (Settings
 	return out, err
 }
 
+// Vendors lists the vendors the daemon remembers as out (S169, *proposed*).
+func (c *Client) Vendors(ctx context.Context) (VendorsResult, error) {
+	var out VendorsResult
+	err := c.c.Call(ctx, MethodVendorsList, nil, &out)
+	return out, err
+}
+
+// SetVendor marks a vendor out, or back, and returns the vendors that are out
+// then (S169, *proposed*).
+func (c *Client) SetVendor(ctx context.Context, p SetVendorParams) (VendorsResult, error) {
+	var out VendorsResult
+	err := c.c.Call(ctx, MethodVendorsSet, p, &out)
+	return out, err
+}
+
 // Settings returns the file-level registry settings (S174, *proposed*).
 func (c *Client) Settings(ctx context.Context) (SettingsResult, error) {
 	var out SettingsResult
@@ -109,6 +124,7 @@ func (c *Client) Snapshot(ctx context.Context, p registry.Project) source.Snapsh
 		SelfHost:     out.SelfHost,
 		BehindMain:   out.BehindMain,
 		RolesRunning: out.RolesRunning,
+		VendorsOut:   out.VendorsOut,
 		Unavailable:  out.Unavailable,
 		Project:      out.Project,
 		EngineRuns:   out.EngineRuns,

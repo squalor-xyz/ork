@@ -31,6 +31,8 @@ const (
 	MethodProjectsSet  = "projects.set"  // proposed (S161); params SetProjectParams, result registry.Project
 	MethodSettingsGet  = "settings.get"  // proposed (S174); no params, result SettingsResult
 	MethodSettingsSet  = "settings.set"  // proposed (S174); params SetSettingsParams, result SettingsResult
+	MethodVendorsList  = "vendors.list"  // proposed (S169); no params, result VendorsResult
+	MethodVendorsSet   = "vendors.set"   // proposed (S169); params SetVendorParams, result VendorsResult
 	MethodSubscribe    = "subscribe"     // params SubscribeParams, no result
 	MethodRefresh      = "refresh"       // params RefreshParams, no result
 )
@@ -63,6 +65,7 @@ type StatusParams struct {
 type StatusResult struct {
 	BuildID      string          `json:"build_id"`
 	RolesRunning bool            `json:"roles_running"`
+	VendorsOut   []VendorOut     `json:"vendors_out,omitempty"` // proposed (S169): the vendors the daemon remembers as out
 	Projects     []ProjectStatus `json:"projects"`
 }
 
@@ -222,6 +225,7 @@ type SnapshotResult struct {
 	SelfHost     bool                       `json:"self_host"`             // proposed
 	BehindMain   bool                       `json:"behind_main"`           // proposed
 	RolesRunning bool                       `json:"roles_running"`         // global activity, as in status
+	VendorsOut   []VendorOut                `json:"vendors_out,omitempty"` // proposed (S169): as in status
 	Unavailable  bool                       `json:"unavailable,omitempty"` // proposed: stored runs only
 	BoardRuns    Part[[]slicercli.RelayRun] `json:"board_runs"`            // proposed: stale and recently ended runs
 	EngineRuns   []EngineRun                `json:"engine_runs"`

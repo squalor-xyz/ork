@@ -1,0 +1,30 @@
+[1mork[m [2mdev[m                    │ [1mOverview[m[2m │ [mQuestions [1m3[m[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+  Running                2 │[2m────────────────────────────────────────────────────────────────────────[m
+[1;7m0>Needs you              6 [m│[1mNeeds you 6[m
+[2m1[m slicer                 3*│  [1mDecisions 3[m
+[2m2[m adjudicate             1 │[1;7m  ?  slicer      #11  ui.slicer-tui           Does ork reimplement sl...[m
+[2m3[m DataBall                 │  [1m?[m  slicer      #51  vendor.codex-ratelimit  Does codex count as rat...
+[2m4[m agents                   │  [1m?[m  adjudicate  #3   output.shape            Which JSON shape does i...
+                           │  [1mHeld 1[m
+                           │  [1m#[m  slicer      S12  Roadmap and Decisions screens, read-only
+                           │  [1mErrors 2[m
+                           │  [1m![m  DataBall    items: no_such_item: No such item: S99.
+                           │  [2m~[m  agents      waiting for the first reply
+                           │
+                           │[1mRunning 2[m
+                           │  [1m          [m  slicer      [1mS12[m  [2mimplement[m  [......]  [2mheard 12m[m
+                           │                            Roadmap and Decisio...  [2mwaits for codex[m
+                           │  [1m          [m  slicer      [1mS11[m  [2mactive[m     [......]
+                           │  [2m~ pending [m  agents      waiting for the first reply
+                           │
+                           │[1mRecent[m
+                           │  [2mnone[m
+                           │
+                           │[1mReady to land[m
+                           │  [2mnone[m
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │  #11 open
+                           │  Does ork reimplement slicer's roadmap editor or reuse slicer tui?
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ enter [2mgo to project[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
+                           │ codex out until 17:02 | 4 projects | refreshed 16:42:07 | pending 1

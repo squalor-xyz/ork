@@ -16,7 +16,7 @@ ork runs slice relays for you across projects. A slice is one tracked unit of
 work in slicer. For each slice ork makes a git worktree, runs an implementer,
 runs the project checks, runs a reviewer, runs fix rounds, runs a gate, and
 then waits for you. You approve; ork finishes, commits and lands the slice on
-the base branch (`docs/design.md:162-221`, `docs/design.md:351-382`).
+the base branch (`docs/design.md:162-221`, `docs/design.md:358-389`).
 
 What ork owns: the list of projects, a record per run, role reports, and the
 daemon (`docs/state.md:8-26`). What it does not own: the roadmap and the
@@ -54,27 +54,27 @@ while a role is running unless you add `--force` (`docs/design.md:41-48`).
     ork doctor
 
 It prints the path of the ork binary first, then one line per check
-(`internal/cli/cli.go:73-75`, `docs/design.md:1105-1144`):
+(`internal/cli/cli.go:73-75`, `docs/design.md:1165-1204`):
 
 - the slicer and adj versions;
 - each vendor CLI (claude, codex, grok) and its version. ork runs roles on `claude` and `codex` only; grok has no adapter (`docs/design.md:181`). A missing vendor is
   reported and does not fail the check, because ork needs only the vendors
   your lineup uses;
 - the slicer relay contract. ork accepts v7 and v8 only; any other version
-  fails (`docs/design.md:1117-1121`);
+  fails (`docs/design.md:1177-1181`);
 - each registered project: the path exists, the check command parses, and the
   worktree and branch patterns contain `{id}` or `{id_lower}`.
 
 `ork doctor` exits 1 when slicer, adj or the contract check fails. Fix those
 before you run anything. Project findings are warnings and do not change the
-exit code (`docs/design.md:1139-1140`).
+exit code (`docs/design.md:1199-1200`).
 
 ork never reads vendor credentials. Log in with each vendor CLI's own login
 (`AGENTS.md`, Project Rules).
 
 ## 4. Add a project
 
-ork needs an existing absolute directory (`docs/design.md:1203-1209`). The
+ork needs an existing absolute directory (`docs/design.md:1263-1269`). The
 TUI Welcome view offers the current directory only if it holds `.slicer` or
 `.adjudicate.json` (`docs/dashboard.md:31-35`), and the roadmap and ledger
 features need slicer. To set a directory up, run `slicer init` and `adj init`
@@ -89,10 +89,10 @@ Add it in either way:
 - **On the command line.**
   `ork projects add /abs/path/to/project --name NAME`. With no path in text
   mode it offers the current directory (`internal/cli/cli.go:58-59`,
-  `docs/design.md:1201-1210`).
+  `docs/design.md:1261-1270`).
 
 Other commands: `ork projects list` and `ork projects rm NAME`. Removal is
-refused while the project has unfinished runs (`docs/design.md:1213-1217`).
+refused while the project has unfinished runs (`docs/design.md:1273-1277`).
 The first add creates `~/.config/ork/projects.json`; ork never seeds it
 (`docs/state.md:28-33`).
 
@@ -115,7 +115,7 @@ The registry holds optional per-project settings. Change them with
 
 An empty value or 0 clears a field. The command is refused while the project
 has unfinished runs, and the daemon needs no restart: the next run uses the
-new values (`docs/design.md:1218-1235`, `docs/state.md:94-103`).
+new values (`docs/design.md:1278-1295`, `docs/state.md:94-103`).
 
 Three more fields take repeatable flags (*proposed*, S174):
 
@@ -160,7 +160,7 @@ slicer:
 
 For each slice ork calls `slicer relay-roles recommend ID --well-specified
 y/n --split y/n` and turns the answer into the lineup for implementer,
-reviewer, gate, and an architect when the lineup has one (the matrix gives one on size L) (`docs/design.md:167-186`, `docs/design.md:265-268`,
+reviewer, gate, and an architect when the lineup has one (the matrix gives one on size L) (`docs/design.md:167-186`, `docs/design.md:272-275`,
 `internal/slicercli/write.go:96`). A matrix row for a vendor ork has no adapter
 for is skipped; ork runs `claude` and `codex` only (`docs/design.md:181-185`).
 
@@ -194,7 +194,7 @@ message without `refused:`; other errors keep their code.
 Press `e` at the
 confirmation to edit the lineup and budgets, `enter` to save and replan, or
 `esc` to discard. Replanning an edited lineup does not repeat the spec check.
-Press `y` at the confirmation to start (`docs/dashboard.md:1364-1392`,
+Press `y` at the confirmation to start (`docs/dashboard.md:1374-1402`,
 `internal/tui/keys.go:258-262`).
 
 **On the command line.**
@@ -218,7 +218,7 @@ The printed plan includes lineup overrides and, when overridden, budgets.
 It is the plan confirmed at start.
 The run is now in the daemon. Closing the TUI or the shell does not stop it.
 
-The roles run in this order (`docs/design.md:223-300`):
+The roles run in this order (`docs/design.md:223-307`):
 
 1. **setup**: git worktree and branch, and a slicer ledger run.
 2. **implement**: one implementer role.
@@ -226,7 +226,7 @@ The roles run in this order (`docs/design.md:223-300`):
    to the implementer without spending a review.
 4. **review**: a reviewer, and the UI pass beside it on a slice that touches
    the UI. Findings go to one fix round.
-5. **architect**: only when the lineup has an architect entry; the matrix gives one on size L (`docs/design.md:265-268`).
+5. **architect**: only when the lineup has an architect entry; the matrix gives one on size L (`docs/design.md:272-275`).
 6. **gate**: the first line of its report is `VERDICT: PASS` or
    `VERDICT: FAIL`. The third FAIL stops the run.
 7. **awaiting approval**: your turn (section 10).
@@ -236,11 +236,21 @@ The roles run in this order (`docs/design.md:223-300`):
 The Overview shows **Needs you** first, then **Running**, then recent and
 ready slices. Each Running row shows the role at work, the stage bar and when
 ork last heard from it. `!` after 10 minutes and `!!` after 30 minutes without
-an event mark a slow or stale run (`docs/dashboard.md:495-498`). `enter` opens
+an event mark a slow or stale run (`docs/dashboard.md:503-506`). `enter` opens
 a run's pane with the role tree, the live output and the actions.
 
+When Codex runs out of credits or hits a limit, ork marks it out for 60
+minutes (S169, *proposed*): the status line shows `codex out until 17:02`, and
+new rounds start on the next row of the chain on another vendor, if there is
+one. Only one Codex role runs at a time over all runs (spec-check rounds are
+not counted); a run that waits for the slot says `waits for codex` on its
+Running row. `ork vendor` lists the vendors that are out, `ork vendor out NAME
+[--reason TEXT]` marks one until you say it is back (no expiry) and `ork
+vendor back NAME` clears it. A daemon restart clears the memory too.
+
 On the command line, `ork status [--project P]` prints the same counts and
-rows. Add `--json` to any command for scripts (`internal/cli/cli.go:56`,
+rows, and a line such as `codex is out until 17:02 (since 16:02; reason)` for
+each vendor that is out. Add `--json` to any command for scripts (`internal/cli/cli.go:56`,
 `internal/cli/cli.go:77`).
 
 ## 9. Run a wave
@@ -259,7 +269,7 @@ suggested waves. For each item you want:
    held back. The Roadmap launch uses the same sitting for one slice
    (section 7); skipping closes that launch.
 4. Confirm with `y`. The status line shows `ork wave start PROJECT ID...`
-   (`docs/dashboard.md:1177-1213`, `internal/tui/keys.go:258-277`).
+   (`docs/dashboard.md:1187-1223`, `internal/tui/keys.go:258-277`).
 
 **On the command line.**
 
@@ -268,10 +278,10 @@ suggested waves. For each item you want:
     ork stop WAVE-ID
 
 Like `ork run`, `wave start` asks the spec-check questions on standard input
-and prints each plan before it asks to start (`docs/design.md:974-996`,
+and prints each plan before it asks to start (`docs/design.md:1034-1056`,
 `internal/cli/wave.go:90-92`). `ork stop` takes the `wave-` id it prints and
 stops every unfinished run in that wave, queued ones included
-(`docs/design.md:1004-1008`).
+(`docs/design.md:1064-1068`).
 
 Runs start as slots free. The global cap is 4 and a project's cap is its
 `cap` setting. A run over a cap waits as `queued`
@@ -302,7 +312,7 @@ at launch. See section 9.
 
 When the gate passes, the run waits in **Needs you** as "Approve". Open it.
 The approval card shows the gate result, the diff summary, owner findings and
-the slice's human checks (`docs/dashboard.md:826-935`).
+the slice's human checks (`docs/dashboard.md:836-945`).
 
 - Press the check's number to mark each human check: ticked, then later, then
   open again. `a` works only when none is open.
@@ -313,7 +323,7 @@ the slice's human checks (`docs/dashboard.md:826-935`).
   merges the base branch into the worktree if the base moved, re-runs the
   checks, fast-forwards the main checkout, runs `slicer land`, pushes if the
   project's `push` setting is on, and removes the worktree and the branch
-  (`docs/design.md:344-390`).
+  (`docs/design.md:351-397`).
 
 From the shell: `ork check RUN N [ticked|later|open]`, `ork fix RUN TEXT`,
 `ork approve RUN` (`internal/cli/cli.go:47-50`).
@@ -321,7 +331,7 @@ From the shell: `ork check RUN N [ticked|later|open]`, `ork fix RUN TEXT`,
 If the merge has a conflict or the re-check is red, ork does not fix it
 itself. The slice gets one implementer fix round and comes back for a new
 approval. A second block stops the run with the worktree kept
-(`docs/design.md:383-390`).
+(`docs/design.md:390-397`).
 
 ## 11. Watch several projects
 
@@ -331,7 +341,7 @@ Use this loop each day:
    `0` jumps to Needs you, `1`-`9` to a project, `[` and `]` move between them
    (`internal/tui/keys.go:87-93`).
 2. Clear **Needs you** from the top. Group order is Decisions, Held, Stopped,
-   Paused, Approve, Findings, Errors (`docs/dashboard.md:396-399`).
+   Paused, Approve, Findings, Errors (`docs/dashboard.md:404-407`).
 3. Open **Questions** for every open question in one list.
 4. Open **Decisions** for adj records and **Roadmap** for what is next.
 5. Press `r` to refresh now. `/` filters projects. `?` shows every key.
@@ -343,11 +353,12 @@ something newly needs you (`internal/tui/model.go:949-1014`).
 
 | Situation | What to do |
 |---|---|
-| A run is paused with no question (shape, error, lost, interrupted) | `t` on the row, or `ork retry RUN` (`docs/design.md:1028-1031`) |
-| A run is paused at a budget limit | `t` or `ork retry RUN` grants one more role round (`docs/design.md:926-937`) |
+| A run is paused with no question (shape, error, lost, interrupted) | `t` on the row, or `ork retry RUN` (`docs/design.md:1088-1091`) |
+| A run is paused at a budget limit | `t` or `ork retry RUN` grants one more role round (`docs/design.md:986-997`) |
 | A run is stopped | Read the reason in the pane. Fix the cause and launch again, or clear it with `ork dismiss RUN` |
 | A run is paused with a reason like `implementer round 1 hung: no output for 30m` | ork killed a role that sent nothing for 30 minutes. Read the reason in the pane, then retry with `t` or `ork retry RUN`: the same role runs again and is told that the earlier process was lost. ork does not retry for you |
-| A relay that ork did not start shows `!!` and `stale` | Open its pane and press `x`. It ends the ledger run as stopped (`internal/tui/pane.go:327`, `internal/tui/ledgerend.go:27`), but only when the run is stale and no unfinished ork run owns it (`internal/daemon/runs.go:1401-1412`). `ork stop RUN` does not take such a run: it names ork runs and waves, and the daemon answers `no run` for a ledger id (`internal/daemon/runs.go:906-908`) |
+| A relay that ork did not start shows `!!` and `stale` | Open its pane and press `x`. It ends the ledger run as stopped (`internal/tui/pane.go:327`, `internal/tui/ledgerend.go:27`), but only when the run is stale and no unfinished ork run owns it (`internal/daemon/runs.go:1418-1429`). `ork stop RUN` does not take such a run: it names ork runs and waves, and the daemon answers `no run` for a ledger id (`internal/daemon/runs.go:919-921`) |
+| Codex is out of credits or at a limit | Nothing is needed: ork marks it out for 60 minutes and starts new rounds on the next row of another vendor. Check with `ork vendor`. To keep it out longer, `ork vendor out codex` holds until you run `back`. `ork vendor back codex` ends the mark early, for example after you add credits. A run that waits for the one Codex slot is not stuck: it starts when the other Codex role ends |
 | You want to stop work | `x` on a row or `ork stop RUN`; `ork stop WAVE-ID` for a wave |
 | The daemon died or you stopped it | Start `ork` again. On start the daemon checks every unfinished run against live processes and marks a role with no process and no report as lost, then the slice waits for you (`docs/design.md:154-160`) |
 | Commands warn that the daemon build differs | `ork daemon restart`. It refuses while a role runs unless you add `--force` (`docs/design.md:41-48`) |
@@ -395,6 +406,7 @@ them all (`internal/tui/keys.go:13-124`).
     ork stop RUN|WAVE
     ork dismiss RUN
     ork file RUN N
+    ork vendor [list] | out NAME [--reason TEXT] | back NAME
     ork roles print [ROLE]
     ork roles matrix PROJECT
     ork daemon run | stop [--force] | restart [--force]

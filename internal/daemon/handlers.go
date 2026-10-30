@@ -172,6 +172,14 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return d.setProject(p)
+	case MethodVendorsList:
+		return d.listVendors()
+	case MethodVendorsSet:
+		var p SetVendorParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.setVendor(p)
 	case MethodSettingsGet:
 		return d.getSettings()
 	case MethodSettingsSet:
@@ -234,6 +242,7 @@ func (d *Daemon) snapshot(ctx context.Context, p SnapshotParams) (*SnapshotResul
 		SelfHost:     selfHost,
 		BehindMain:   behindMain,
 		RolesRunning: d.cfg.WaveRunning() || d.activeRuns(),
+		VendorsOut:   d.vendorsOut(),
 		Project:      s.Project,
 		EngineRuns:   s.EngineRuns,
 		Items:        partOf(s.Items, now),
@@ -282,7 +291,7 @@ func (d *Daemon) status(ctx context.Context, p StatusParams) (*StatusResult, err
 	wg.Wait()
 
 	now := d.cfg.Clock.Now()
-	out := &StatusResult{BuildID: d.cfg.BuildID, RolesRunning: d.cfg.WaveRunning() || d.activeRuns(), Projects: make([]ProjectStatus, 0, len(projects))}
+	out := &StatusResult{BuildID: d.cfg.BuildID, RolesRunning: d.cfg.WaveRunning() || d.activeRuns(), VendorsOut: d.vendorsOut(), Projects: make([]ProjectStatus, 0, len(projects))}
 	for i, s := range snaps {
 		ps := projectStatus(projects[i], s, now)
 		ps.SelfHost, ps.BehindMain = d.projectBuild(ctx, projects[i])
