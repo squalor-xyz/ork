@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `README.md`\n- `PROJECT.md`\n- `docs/boundaries.md`\n- `docs/state.md`\n- `docs/design.md`\n- `docs/dashboard.md`"
+      "body": "- `README.md`\n- `PROJECT.md`\n- `docs/boundaries.md`\n- `docs/state.md`\n- `docs/design.md`\n- `docs/dashboard.md`\n\n- `docs/orchestrator-parity.md`\n- `docs/diagrams.md`"
     },
     {
       "heading": "Failing tests",

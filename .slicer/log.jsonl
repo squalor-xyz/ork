@@ -2652,3 +2652,4 @@
 {"when": "2026-10-30T14:50:37Z", "item": "S201", "action": "note", "from": "", "to": "", "note": "From the S147 review, UI pass and gate (2026-10-30), all lat", "by": "Jon R"}
 {"when": "2026-10-30T15:54:12Z", "item": "S202", "action": "add", "from": "", "to": "open", "note": "S185 later notes: decide refusal codes, option wrap, help with no options"}
 {"when": "2026-10-30T15:54:12Z", "item": "S202", "action": "note", "from": "", "to": "", "note": "From the S185 review, UI pass and gate (2026-10-30), all lat", "by": "Jon R"}
+{"when": "2026-10-30T15:54:26Z", "item": "S183", "action": "edit", "from": "", "to": "", "note": "Files"}
