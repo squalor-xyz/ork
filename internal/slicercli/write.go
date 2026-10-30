@@ -334,9 +334,22 @@ func (c Client) RelayAsk(ctx context.Context, w runrec.Writer, root, run, step, 
 	return out.Question.ID, nil
 }
 
-// RelayAnswer records the owner's free-text answer, ending that question's wait.
-func (c Client) RelayAnswer(ctx context.Context, w runrec.Writer, root, run, question, text string) error {
-	_, err := c.write(ctx, w, root, "relay-run", "answer", run, question, "--text", text, "--json")
+// RelayAnswerSpec selects an option or supplies a free-text owner answer.
+type RelayAnswerSpec struct{ Option, Text, By string }
+
+// RelayAnswer records an answer, ending that question's wait.
+func (c Client) RelayAnswer(ctx context.Context, w runrec.Writer, root, run, question string, spec RelayAnswerSpec) error {
+	args := []string{"relay-run", "answer", run, question}
+	if spec.Option != "" {
+		args = append(args, "--option", spec.Option)
+	} else {
+		args = append(args, "--text", spec.Text)
+	}
+	if spec.By != "" {
+		args = append(args, "--by", spec.By)
+	}
+	args = append(args, "--json")
+	_, err := c.write(ctx, w, root, args...)
 	return err
 }
 

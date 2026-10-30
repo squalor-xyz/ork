@@ -1,0 +1,30 @@
+[1mork[m                        │ [1;36mOverview[m[90m │ [mQuestions [1;33m1[m[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+  Running                1 │[90m────────────────────────────────────────────────────────────────────────[m
+[1;7;97;44m0>Needs you              1 [m│[1;36mNeeds you 1[m
+[90m1[m ork                     *│  [1mDecisions 1[m
+                           │[1;7;97;44m  ?  ork  #12  storage.engine                                           [m
+                           │
+                           │[1;36mRunning 1[m
+                           │   ork  [1mS27[m    [......]  [1;31m!! heard 45m[m
+                           │    [1mRun x1[m
+                           │    [......]  [1;31m!! last heard 45m ago[m
+                           │    [90mimplementer[m > [90mreviewer[m > [90mgate[m
+                           │    [1;36m|             start[m
+                           │    [90m. implementer queued[m
+                           │    [90m. reviewer    queued[m
+                           │    [90m. gate        queued[m
+                           │
+                           │    [1;36mStorage[m
+                           │    1. Files: 
+                           │    2. Database:  (recommended)
+                           │    Answer #q1 (Storage) on x1 as "Database" (recommended) in the ledger
+                           │    and adj #12 as Jon R?
+                           │    [y/N] (Enter is No)
+                           │
+                           │[1;36mRecent[m
+                           │  [90mnone[m
+                           │
+                           │[90m  +2 more lines[m
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ y [2manswer[m; n [2mcancel[m
+                           │ 1 project | refreshed 16:42:00

@@ -790,18 +790,28 @@ keys, so it stays at 80x24 (S134). A bare blank row sets the reason off from the
 progress line when the pane has room for the reason, the blank and one
 progress line (S134). `pgup` and `pgdown` scroll the reason and tree while the action
 area stays visible. `esc` closes the pane (`ui.answer-ui`,
-`ui.answer-pane-keys`, `ui.run-tree`). Ledger runs started elsewhere open a
-read-only tree pane with no answer input and no action keys, except that a
-stale one offers `x end run` (S175, above). An external ledger
-run waiting on the owner with an unanswered question appears in Needs you,
-counts there in the sidebar and Overview, and uses the `?` mark. It leaves
-Running and suppresses "nothing needs you". Its pane shows the question title,
-numbered option labels and summaries, and the recommended option read-only;
-answering stays with whoever started the run. Linked engine runs keep the
-engine's classification and are not counted twice. Approval waits and waits
-without a question stay in Running. The hint line says
-"started elsewhere, read-only; esc close pane" (the inline header is the run ID
-alone); the pane's footer no longer carries it (S149).
+`ui.answer-pane-keys`, `ui.run-tree`). Ledger runs started elsewhere open a tree pane. A stale one offers only
+`x end run` (S175, above). An external ledger run waiting on the owner with
+an unanswered question appears in Needs you, counts there in the sidebar
+and Overview, and uses the `?` mark. It leaves Running and suppresses
+"nothing needs you". Linked engine runs keep the engine's classification
+and answer path and are not counted twice. Approval waits and waits without
+a question stay in Running.
+
+Proposed (S112): the pane shows the latest unanswered question on any step
+of a live, non-stale, unlinked run, including non-blocker questions. It offers
+`1-N pick` for numbered options (N is the option count, at most 4) and
+`t free text`. Enter reviews non-empty
+text; `y` confirms and Enter, `n` or `esc` cancels. The confirmation names
+the question, run, answer and owner from `ADJ_DECIDED_BY`. A missing owner
+name refuses the answer. The daemon writes the ledger first. If the question's
+adj key names an open record, the confirmation can also name that record.
+The daemon answers adj only if that same confirmed ID is still open. The
+result explains skipped or failed adj answers when the question has a key
+and the project uses adj.
+Non-blocker questions do not change Needs you or its counts. Runs without an
+answerable question retain the "started elsewhere, read-only" hint; `esc`
+closes the pane. Answering closes the pane and refreshes the project.
 
 The pane follows the newest running run (*proposed*, S109). When the pane's
 run is over (an engine run that is stopped, superseded or committed, or a

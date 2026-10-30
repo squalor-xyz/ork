@@ -621,6 +621,9 @@ func markWord(state string) string {
 
 // pendingText is the status line while the call runs.
 func (a runAction) pendingText() string {
+	if a.verb == "relay-answer" {
+		return "answering #" + a.question + " on " + a.run + " in the ledger: pending"
+	}
 	if a.verb == "decide" {
 		return fmt.Sprintf("deciding #%d in adj", a.adjID)
 	}

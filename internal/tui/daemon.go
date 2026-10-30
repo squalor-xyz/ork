@@ -280,3 +280,13 @@ func (d *Daemon) AdjAnswer(ctx context.Context, p daemon.AdjAnswerParams) (strin
 	defer c.Close()
 	return c.AdjAnswer(ctx, p)
 }
+
+// RelayAnswer sends an explicitly confirmed external answer through the daemon.
+func (d *Daemon) RelayAnswer(ctx context.Context, p daemon.RelayAnswerParams) (string, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer c.Close()
+	return c.RelayAnswer(ctx, p)
+}

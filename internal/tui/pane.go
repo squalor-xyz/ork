@@ -466,7 +466,11 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 	case r.unavailable:
 		addFooter(wrapText(source.RemovedProjectHelp(r.name), width), 2)
 	case m.pane.ledger:
-		if q := ledgerOwnerQuestion(m.paneBoardRun()); q != nil {
+		q := m.externalQuestion()
+		if q == nil {
+			q = ledgerOwnerQuestion(m.paneBoardRun())
+		}
+		if q != nil {
 			title := wrapText(q.Title, width)
 			for i := range title {
 				title[i] = m.cfg.Theme.Heading.Render(title[i])
@@ -480,8 +484,7 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 				addFooter(wrapText(text, width), 0)
 			}
 		}
-		// The note "started elsewhere, read-only; esc close pane" is on the hint
-		// line (S149).
+		// The external-run note and available keys are on the hint line.
 	case m.paneQuestion():
 		if ask := m.paneAsk(); ask != nil && !m.pane.freeText {
 			title := wrapText(ask.Title, width)
@@ -578,7 +581,7 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 	}
 	if status != "" {
 		priority := 1
-		if m.confirm != nil && m.confirm.verb == "answer" {
+		if m.relayInput != nil || (m.confirm != nil && (m.confirm.verb == "answer" || m.confirm.verb == "relay-answer")) {
 			priority = -1
 		}
 		addFooter(wrapText(status, width), priority)

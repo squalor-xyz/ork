@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-202 items · — 40 · done 155 · retired 7
+202 items · — 39 · done 156 · retired 7
 
 ## v1.1
 
@@ -129,7 +129,7 @@
 | 72 | [S39](slices/S39.md) | ork run prompt tests catch swapped answers; help text says y/n | S | 1 |  | discovered from S21 | done |
 | 73 | [S105](slices/S105.md) | Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases | S | 2 |  |  | done |
 | 74 | [S106](slices/S106.md) | Run card inline | M | 2 |  |  | done |
-| 75 | [S112](slices/S112.md) | Answer questions of externally run relays from ork (needs slicer relay-run ask and answer) | M | 2 |  | discovered from S28 | — |
+| 75 | [S112](slices/S112.md) | Answer questions of externally run relays from ork (needs slicer relay-run ask and answer) | M | 2 |  | discovered from S28 | done |
 | 76 | [S24](slices/S24.md) | Pin and check tool contracts | M | 2 |  | owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S45 (adj-json contract version and pin). | — |
 | 77 | [S01](slices/S01.md) | Vendor spike | S | 1 |  |  | done |
 | 78 | [S02](slices/S02.md) | Core and adapters | M | 2 |  |  | done |

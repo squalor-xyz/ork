@@ -1290,6 +1290,24 @@ drops terminal controls with `runrec.PlainText`, and bounds the read at
 role rows carry `report` names (omitted when empty), never report text. The
 TUI reads text on demand when `p` opens or moves to a report.
 
+*Proposed (S112):* `relay.answer` takes
+`{project,run,question,option?,text?,by,via,adj?}` and returns `{message}`.
+The daemon re-reads the ledger and refuses unregistered projects, missing,
+ended or stale runs, linked engine runs, missing or answered questions,
+unoffered options and missing owner names. Exactly one option or non-empty
+text answer is required. The TUI calls only this daemon method. It writes
+`slicer relay-run answer` with the option or text and `--by`, without
+`--why`. The optional `adj` integer carries the record ID named in the owner's
+confirmation. The TUI sends it only when the confirmation says "and adj #N".
+When the question has an adj key and the project uses adj, the daemon checks
+that key again. It answers through `engine.AnswerRecord` with Via `tui` only
+if the same confirmed ID is still open. Otherwise it writes only the ledger
+and explains the missing confirmation, different ID, or non-open key.
+The message preserves ledger success and reports adj failures. Questions
+without a key and projects without adj receive only the ledger success
+message, with no adj suffix.
+The daemon refreshes the ledger and decision cache after writing.
+
 *Proposed (S175):* `run.end-ledger` takes `{project,run}` and returns `{run}`
 once it has ended a stale slicer ledger run with `slicer relay-run end RUN
 --outcome stopped --close-steps fail --json` (its running steps did not

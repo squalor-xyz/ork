@@ -109,6 +109,9 @@ func (m *Model) requestDecision(option, text string) {
 }
 
 func (a runAction) flightKey() string {
+	if a.verb == "relay-answer" {
+		return relayFlightKey(a)
+	}
 	if a.verb == "decide" {
 		return fmt.Sprintf("adj:%s#%d", a.project, a.adjID)
 	}

@@ -386,3 +386,10 @@ func (c *Client) AdjAsk(ctx context.Context, p AdjAskParams) (int, error) {
 	err := c.Call(ctx, MethodAdjAsk, p, &out)
 	return out.ID, err
 }
+
+// RelayAnswer records an owner answer to an external relay question.
+func (c *Client) RelayAnswer(ctx context.Context, p RelayAnswerParams) (string, error) {
+	var out RelayAnswerResult
+	err := c.Call(ctx, MethodRelayAnswer, p, &out)
+	return out.Message, err
+}

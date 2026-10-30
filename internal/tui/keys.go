@@ -209,6 +209,8 @@ func confirmWord(verb string) string {
 		return "clean up"
 	case "end":
 		return "end run"
+	case "relay-answer":
+		return "answer"
 	case "answer":
 		return "send"
 	}
@@ -312,6 +314,9 @@ func (m *Model) contextHints() []hintEntry {
 		l.add(dropPinned, short(k.Close, "esc", "discard"))
 	case m.waves != nil && m.waves.inputs != nil:
 		l.add(dropRow, short(k.NextView, "tab", "next field"), short(k.Select, "enter", "plan"))
+		l.add(dropPinned, short(k.Close, "esc", "cancel"))
+	case m.relayInput != nil:
+		l.add(dropRow, offer(strings.TrimSpace(m.relayInput.Value()) != "", k.Select, "enter", "review"))
 		l.add(dropPinned, short(k.Close, "esc", "cancel"))
 	case m.decisionInput != nil:
 		l.add(dropRow, offer(strings.TrimSpace(m.decisionInput.Value()) != "", k.Select, "enter", "review"))
@@ -573,10 +578,15 @@ func (m *Model) paneHints() []hintEntry {
 		scroll()
 		esc("close pane")
 	case m.pane.ledger:
-		// A relay started elsewhere has no actions (S149 moved this note here),
-		// except that a stale one can be ended (S175).
+		// Live external questions can be answered; stale runs can only end.
 		scroll()
 		note := "started elsewhere, read-only"
+		if m.relayAnswerable() {
+			n := min(len(m.externalQuestion().Options), 4)
+			ready := !m.relayAnswerPending()
+			l.add(dropRow, offer(ready && n > 0, k.PickOption, fmt.Sprintf("1-%d", n), "pick"), offer(ready, k.FreeAnswer, "t", "free text"))
+			note = "started elsewhere"
+		}
 		if m.paneLedgerStale() {
 			// x outranks the scroll keys, and the note no longer says read-only.
 			l.add(dropRow, offer(m.cfg.Live != nil && !m.ledgerEndPending(), k.Stop, "x", "end run"))

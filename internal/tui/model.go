@@ -140,6 +140,7 @@ type Model struct {
 	decisionsTab    int
 	decisionsCursor int
 	decisionPane    *decisionRow
+	relayInput      *textField
 	decisionInput   *textField
 	decisionScroll  int
 
@@ -405,6 +406,17 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		if len(m.actionFlights[msg.action.flightKey()]) == 0 {
 			delete(m.actionFlights, msg.action.flightKey())
 		}
+		if msg.action.verb == "relay-answer" {
+			if msg.err != nil {
+				m.actionStatus = actionError(msg.err)
+			} else {
+				m.actionStatus = msg.message
+				if m.pane != nil && m.pane.ledger && m.pane.project == msg.action.project && m.pane.run == msg.action.run {
+					m.pane = nil
+					m.relayInput = nil
+				}
+			}
+		}
 		if msg.action.verb == "decide" {
 			if msg.err != nil {
 				m.actionStatus = actionError(msg.err)
@@ -514,6 +526,10 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			m.actionStatus = ""
 			return m, nil
 		}
+		if m.relayInput != nil && m.confirm == nil {
+			m.relayInput.update(msg)
+			return m, nil
+		}
 		if m.decisionInput != nil && m.confirm == nil {
 			m.decisionInput.update(msg)
 			return m, nil
@@ -599,6 +615,15 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	}
 	if m.view == wavesView && m.waves != nil && m.waves.pane != nil {
 		return m.waveItemKey(msg)
+	}
+	if m.relayInput != nil {
+		return m.relayKey(msg)
+	}
+	if m.pane != nil && !m.showHelp && m.relayAnswerable() {
+		switch msg.String() {
+		case "1", "2", "3", "4", "t":
+			return m.relayKey(msg)
+		}
 	}
 	if m.decisionInput != nil {
 		return m.decisionKey(msg)
@@ -1210,6 +1235,7 @@ func (m *Model) moveView(delta int) tea.Cmd {
 // runAction retains the exact target while a confirmation is on screen.
 type runAction struct {
 	adjID                    int
+	question                 string
 	option, adjTitle         string
 	adjRecommended           bool
 	stopAfter                string
@@ -1326,7 +1352,7 @@ func (a runAction) prompt() string {
 	if a.verb == "cleanup" {
 		return a.command() + "\n" + a.cleanupQuestion()
 	}
-	if a.verb == "approve" || a.verb == "file" || a.verb == "end" || a.verb == "decide" {
+	if a.verb == "approve" || a.verb == "file" || a.verb == "end" || a.verb == "decide" || a.verb == "relay-answer" {
 		return a.promptWidth(0)
 	}
 	prompt := a.command() + "? [y/N] (Enter is No)"
@@ -1347,7 +1373,7 @@ func (a runAction) prompt() string {
 // approval confirms (S119, adj 162, adj 152). The keys `[y/N] (Enter is No)`
 // stay whole: they go on their own line when question and keys do not fit one.
 func (a runAction) promptWidth(w int) string {
-	if a.verb == "decide" {
+	if a.verb == "decide" || a.verb == "relay-answer" {
 		label := a.option
 		if label == "" {
 			label = a.text
@@ -1357,6 +1383,13 @@ func (a runAction) promptWidth(w int) string {
 			picked += " (recommended)"
 		}
 		question := fmt.Sprintf("Decide #%d (%s) as %s in adj as %s?", a.adjID, a.adjTitle, picked, a.by)
+		if a.verb == "relay-answer" {
+			target := "in the ledger"
+			if a.adjID > 0 {
+				target += fmt.Sprintf(" and adj #%d", a.adjID)
+			}
+			question = fmt.Sprintf("Answer #%s (%s) on %s as %s %s as %s?", a.question, a.adjTitle, a.run, picked, target, a.by)
+		}
 		const keys = "[y/N] (Enter is No)"
 		if w > 0 && lipgloss.Width(question+" "+keys) > w {
 			return question + "\n" + keys
@@ -1584,6 +1617,12 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 		var err error
 		var message string
 		switch a.verb {
+		case "relay-answer":
+			if answerer, ok := live.(relayAnswerer); ok {
+				message, err = answerer.RelayAnswer(context.Background(), daemon.RelayAnswerParams{Adj: a.adjID, Project: a.project, Run: a.run, Question: a.question, Option: a.option, Text: a.text, By: a.by, Via: "tui"})
+			} else {
+				err = errors.New("this daemon connection cannot answer ledger questions")
+			}
 		case "decide":
 			if answerer, ok := live.(adjAnswerer); ok {
 				message, err = answerer.AdjAnswer(context.Background(), daemon.AdjAnswerParams{Project: a.project, ID: a.adjID, Option: a.option, Text: a.text, By: a.by, Via: "tui"})

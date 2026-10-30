@@ -304,3 +304,25 @@ func TestNoteRefusesEmptyItem(t *testing.T) {
 		}
 	}
 }
+
+func TestRelayAnswerPassesOptionOrTextAndBy(t *testing.T) {
+	for _, spec := range []RelayAnswerSpec{{Option: "Database", By: "Jon R"}, {Text: "keep files", By: "Jon R"}, {Text: "engine answer"}} {
+		args := []string{"relay-run", "answer", "run-1", "q1"}
+		if spec.Option != "" {
+			args = append(args, "--option", spec.Option)
+		} else {
+			args = append(args, "--text", spec.Text)
+		}
+		if spec.By != "" {
+			args = append(args, "--by", spec.By)
+		}
+		args = append(args, "--json", "--root", root)
+		c, f := client(t, clitest.Route{Tool: "slicer", Args: args})
+		if err := c.RelayAnswer(context.Background(), runrec.Writer{}, root, "run-1", "q1", spec); err != nil {
+			t.Fatal(err)
+		}
+		if calls := f.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, args) {
+			t.Fatalf("calls: %+v", calls)
+		}
+	}
+}

@@ -15,6 +15,7 @@ import (
 
 // The methods a client can call.
 const (
+	MethodRelayAnswer  = "relay.answer"  // proposed (S112)
 	MethodAdjAnswer    = "adj.answer"    // proposed; params AdjAnswerParams, result AdjAnswerResult
 	MethodAdjAsk       = "adj.ask"       // proposed; params AdjAskParams, result AdjAskResult
 	MethodWaveStart    = "wave.start"    // params WaveStartParams (run.launch-wire), proposed result shape WaveResult
@@ -420,4 +421,21 @@ type AdjAskParams struct {
 // AdjAskResult is the new adj record id. Proposed wire field.
 type AdjAskResult struct {
 	ID int `json:"id"`
+}
+
+// RelayAnswerParams is an explicitly confirmed external ledger answer. Proposed.
+type RelayAnswerParams struct {
+	Adj      int    `json:"adj,omitempty"`
+	Project  string `json:"project"`
+	Run      string `json:"run"`
+	Question string `json:"question"`
+	Option   string `json:"option,omitempty"`
+	Text     string `json:"text,omitempty"`
+	By       string `json:"by"`
+	Via      string `json:"via"`
+}
+
+// RelayAnswerResult preserves ledger success if a secondary adj write fails.
+type RelayAnswerResult struct {
+	Message string `json:"message"`
 }

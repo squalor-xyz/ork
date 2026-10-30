@@ -452,7 +452,7 @@ func (e *Engine) Answer(ctx context.Context, text string) error {
 		return err
 	}
 	if rec.Pending.LedgerQuestion != "" {
-		e.d.Slicer.RelayAnswer(ctx, e.wr, rec.Worktree, rec.RelayRun, rec.Pending.LedgerQuestion, text)
+		e.d.Slicer.RelayAnswer(ctx, e.wr, rec.Worktree, rec.RelayRun, rec.Pending.LedgerQuestion, slicercli.RelayAnswerSpec{Text: text})
 	}
 	e.orchestratorPhase(ctx, "start", "")
 	return e.advance(ctx)

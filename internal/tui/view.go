@@ -114,6 +114,12 @@ func (m *Model) screen() string {
 				}
 			}
 		}
+		if m.relayInput != nil {
+			status = "Answer in the ledger:\n" + m.relayInput.view(max(mainW-2, 1), th)
+			if m.actionStatus != "" {
+				status += "\n" + m.actionStatus
+			}
+		}
 		if m.decisionInput != nil {
 			status = "Answer in adj:\n" + m.decisionInput.view(max(mainW-2, 1), th)
 			if m.actionStatus != "" {
@@ -165,6 +171,12 @@ func (m *Model) screen() string {
 		status := m.actionStatus
 		if m.confirm != nil {
 			status = m.confirm.promptWidth(max(mainW-len(indent), 1))
+		}
+		if m.relayInput != nil {
+			status = "Answer in the ledger:\n" + m.relayInput.view(max(mainW-len(indent)-2, 1), th)
+			if m.actionStatus != "" {
+				status += "\n" + m.actionStatus
+			}
 		}
 		if m.pane != nil {
 			// The pane opens inline under its row (S106), so it takes no
@@ -813,6 +825,16 @@ func (m *Model) helpLines(w, bodyH int) []string {
 					lines = append(lines, packHints(actionHints, w)...)
 				}
 				lines = append(lines, clip("o answer owner finding; p report (run pane)", w))
+			}
+			if m.relayAnswerable() {
+				if h == m.keys.PickOption.Help() {
+					lines = append(lines, clip(fmt.Sprintf("1-%d pick a ledger option; y answers after confirmation", min(len(m.externalQuestion().Options), 4)), w))
+					continue
+				}
+				if h == m.keys.FreeAnswer.Help() {
+					lines = append(lines, clip("t type a free ledger answer; enter reviews", w))
+					continue
+				}
 			}
 			if m.decisionPane != nil && m.decisionAnswerable() {
 				if h == m.keys.PickOption.Help() {

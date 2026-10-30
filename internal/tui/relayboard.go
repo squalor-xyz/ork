@@ -475,3 +475,24 @@ func ledgerOwnerQuestion(r slicercli.RelayRun) *slicercli.LedgerQuestion {
 	}
 	return nil
 }
+
+// ledgerExternalQuestion returns the latest unanswered question on a live run.
+// Needs you deliberately continues using ledgerOwnerQuestion.
+func ledgerExternalQuestion(r slicercli.RelayRun) *slicercli.LedgerQuestion {
+	if r.State == "stale" || !boardLive(r.State) {
+		return nil
+	}
+	var latest *slicercli.LedgerQuestion
+	var latestAt time.Time
+	for _, s := range r.Steps {
+		q := s.Question
+		if q == nil || q.AnsweredAt != "" || len(q.Answer) > 0 {
+			continue
+		}
+		at, _ := time.Parse(time.RFC3339Nano, q.AskedAt)
+		if latest == nil || !at.Before(latestAt) {
+			latest, latestAt = q, at
+		}
+	}
+	return latest
+}
