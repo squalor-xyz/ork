@@ -156,8 +156,11 @@ on the Roadmap and Waves only when it would act. Examples: a decision row shows
 `enter go to project`; a run row shows `enter open`; an open run pane shows its
 own keys, then `pgup/pgdown line; ctrl+d/u half page`;
 Waves item and decision panes use `pgup/pgdown page; j/k line; ctrl+d/u half
-page` for their page, line and half page movements, and the Roadmap item pane
-shows `ctrl+d/u half page` (S152). The Waves item hint ends with `esc close pane`.
+page` for their page, line and half page movements. An answerable open record's
+pane starts with `1-N pick; t free text` while no answer is in flight. Its
+free-text field shows `enter review` only for non-empty trimmed text, followed
+by `esc cancel`. Enter opens the confirmation; `y` confirms.
+The Roadmap item pane shows `ctrl+d/u half page` (S152). The Waves item hint ends with `esc close pane`.
 A pane of a relay started elsewhere shows `started elsewhere, read-only; esc close pane`;
 a stale one shows `x end run; started elsewhere; esc close pane`, with no
 `read-only` beside the key (S175).
@@ -1115,9 +1118,9 @@ the count goes so that every tab name stays whole.
 It lists engine runs paused with `pending: question` and open adj records
 from every project. Enter on an engine question opens the run detail pane
 and its Answer field and optional adj filing toggle. Enter on an adj question
-opens read-only record detail,
-including options and the recommendation. `esc` returns to the list.
-An adj answer path is outside this view's current scope.
+opens record detail, including options and the recommendation. `esc` returns
+to the list. The proposed adj answer keys are shared with Decisions below
+(S185).
 
 The proposed rows follow registry order. Within a project, engine questions
 come first, then adj records in inbox order. Every row names its project.
@@ -1135,7 +1138,8 @@ The proposed row keys (`down`/`j` and `up`/`k`) move the cursor.
 In record detail, they scroll; `pgup` and `pgdown` scroll a page.
 The list always shows all projects. Sidebar selection, project filtering and
 `[`/`]` project keys do not change it. There is no scope toggle.
-`a`, `x`, `t` and `c` have no action on the list or read-only record detail.
+`a`, `x` and `c` have no action on the list or record detail. `t` opens a
+free answer only in an answerable open record's detail.
 The engine pane behaves as on Overview. It keeps its answer typing and
 submit keys. If the run changes state while the pane is open, its approve,
 stop and retry keys follow the run state and the shared hint line.
@@ -1593,15 +1597,36 @@ decision, rationale and history; `esc` returns. The detail has project and recor
 headings, indented body text and a separate History heading. Row keys scroll
 one line; `pgup`/`pgdown` scroll one page. Scrolling stops at either end. Leaving
 the view or selecting a project closes the detail and resets the record cursor.
-The current view has no run cursor or write action. Asking and answering adj
-records are in v1.0 scope (S172, S185). Decisions help hides
-Approve and Add, and explains how to reach "Needs you" through another view.
+The view has no run cursor. Decisions help hides Approve and Add, and explains
+how to reach "Needs you" through another view.
+
+The *proposed* answer keys (S185) are available in an open record's detail on
+Questions and Decisions when the project uses adj and the daemon supports
+`adj.answer`. Numbered options show `1.` through `4.`; `1` through `N` pick
+an option, and `t` opens a free answer field. In the field, `enter` opens the
+confirmation and `esc` cancels; other keys, including `+`, `-` and `q`, type
+text. Empty answers keep the field open. Decided records offer no answer keys.
+
+Every answer requires confirmation naming the record id and title, the chosen
+label or text, and the owner, for example:
+`Decide #12 (Storage) as "Database" (recommended) in adj as Jon R? [y/N] (Enter is No)`.
+The recommended option carries `(recommended)`. Only `y` sends the answer;
+`n`, `enter` and `esc` cancel. The owner comes from the caller's
+`ADJ_DECIDED_BY`. If unset, answer keys show
+`ADJ_DECIDED_BY is unset; set it before answering in adj` and send nothing.
+The TUI calls the daemon's `adj.answer` with `Via` `tui`; the daemon caller
+must also set `ADJ_DECIDED_BY`. A daemon refusal is shown verbatim. Success
+closes the record pane, shows `decided #ID in adj` and fetches the project.
+While the call runs, the status reads `deciding #ID in adj`. A pending
+answer blocks another answer to the same record. There is no TUI form to ask
+an adj record; use `ork adj ask` (S172). ork never rejects, supersedes or
+withdraws a record.
 
 The data comes from `adj inbox --json` and `adj list --json --status decided`,
 called per registered project. Failed inbox or list calls show their code and
 message with wrapped continuations aligned under the message, while other
 projects' rows remain visible. Non-visible projects poll every 30 seconds, so all-projects rows can be up to 30 seconds old. Opening a
-record makes no additional adj call. Answering owner questions from a running
+record makes no additional adj call; confirming an answer is the write. Answering owner questions from a running
 slice happens on the Waves screen (`owner.questions`).
 
 The run pane's *proposed* board details keep the S55 tree. A pipeline above

@@ -83,7 +83,7 @@ func (m *Model) openQuestion() tea.Cmd {
 func (m *Model) questions(w int) overviewView {
 	out := overviewView{sel: -1}
 	if m.decisionPane != nil {
-		detail := recordDetailLines(*m.decisionPane, w, m.cfg.Theme)
+		detail := recordDetailLines(*m.decisionPane, w, m.cfg.Theme, m.decisionAnswerable())
 		_, visible := m.decisionPage()
 		start := min(m.decisionScroll, max(len(detail)-visible, 0))
 		out.body = detail[start:]

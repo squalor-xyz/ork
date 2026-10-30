@@ -104,7 +104,7 @@ func (m *Model) screen() string {
 			status = fmt.Sprintf("%d ticked, not launched", len(m.waves.picked))
 		}
 		if m.confirm != nil {
-			status = m.confirm.prompt()
+			status = m.confirm.promptWidth(max(mainW-len(indent), 1))
 			if m.confirm.verb == "launch" {
 				if m.confirm.lineup != nil || m.confirm.budgets != nil {
 					status += "  " + th.Dim.Render("lineup edited")
@@ -112,6 +112,12 @@ func (m *Model) screen() string {
 				if m.actionStatus != "" {
 					status += "\n" + m.actionStatus
 				}
+			}
+		}
+		if m.decisionInput != nil {
+			status = "Answer in adj:\n" + m.decisionInput.view(max(mainW-2, 1), th)
+			if m.actionStatus != "" {
+				status += "\n" + m.actionStatus
 			}
 		}
 		if c := m.compose; c != nil {
@@ -807,6 +813,16 @@ func (m *Model) helpLines(w, bodyH int) []string {
 					lines = append(lines, packHints(actionHints, w)...)
 				}
 				lines = append(lines, clip("o answer owner finding; p report (run pane)", w))
+			}
+			if m.decisionPane != nil && m.decisionAnswerable() {
+				if h == m.keys.PickOption.Help() {
+					lines = append(lines, clip(fmt.Sprintf("1-%d pick an adj option; y decides after confirmation", min(len(m.decisionPane.record.Options), 4)), w))
+					continue
+				}
+				if h == m.keys.FreeAnswer.Help() {
+					lines = append(lines, clip("t type a free adj answer; enter reviews", w))
+					continue
+				}
 			}
 			desc := h.Desc
 			if h == m.keys.PageDown.Help() && m.view == roadmapView {

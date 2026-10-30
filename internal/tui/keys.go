@@ -203,7 +203,7 @@ func confirmWord(verb string) string {
 		return "run"
 	case "wave":
 		return "start"
-	case "approve", "stop", "retry", "file":
+	case "approve", "stop", "retry", "file", "decide":
 		return verb
 	case "cleanup":
 		return "clean up"
@@ -313,6 +313,9 @@ func (m *Model) contextHints() []hintEntry {
 	case m.waves != nil && m.waves.inputs != nil:
 		l.add(dropRow, short(k.NextView, "tab", "next field"), short(k.Select, "enter", "plan"))
 		l.add(dropPinned, short(k.Close, "esc", "cancel"))
+	case m.decisionInput != nil:
+		l.add(dropRow, offer(strings.TrimSpace(m.decisionInput.Value()) != "", k.Select, "enter", "review"))
+		l.add(dropPinned, short(k.Close, "esc", "cancel"))
 	case m.compose != nil:
 		if m.compose.kind == composeNew {
 			l.add(dropRow, offer(!m.compose.pending, k.NextView, "tab", "field"))
@@ -355,6 +358,9 @@ func (m *Model) contextHints() []hintEntry {
 		l.add(dropQuit, short(k.Quit, "q", "quit"))
 	case m.view == questionsView || m.view == decisionsView:
 		if m.decisionPane != nil {
+			answerable := m.decisionAnswerable() && !m.decisionAnswerPending()
+			n := min(len(m.decisionPane.record.Options), 4)
+			l.add(dropRow, offer(answerable && n > 0, k.PickOption, fmt.Sprintf("1-%d", n), "pick"), offer(answerable, k.FreeAnswer, "t", "free text"))
 			l.add(dropPage, short(k.PageDown, "pgup/pgdown", "page"))
 			l.add(dropLine, short(k.RowNext, "j/k", "line"))
 			l.add(dropHalf, short(k.ScrollDown, "ctrl+d/u", "half page"))

@@ -21,7 +21,7 @@ type projectRemovedMsg struct {
 
 // Project keys remain text while an existing field owns keyboard input.
 func (m *Model) projectTextEntry() bool {
-	return m.filtering || m.compose != nil || m.launch != nil ||
+	return m.decisionInput != nil || m.filtering || m.compose != nil || m.launch != nil ||
 		(m.waves != nil && (m.waves.sitting != nil || m.waves.lineup != nil || m.waves.inputs != nil)) ||
 		(m.pane != nil && (m.pane.fixing || (m.paneQuestion() && (m.paneAsk() == nil || m.pane.freeText))))
 }

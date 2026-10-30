@@ -595,6 +595,9 @@ func markWord(state string) string {
 
 // pendingText is the status line while the call runs.
 func (a runAction) pendingText() string {
+	if a.verb == "decide" {
+		return fmt.Sprintf("deciding #%d in adj", a.adjID)
+	}
 	switch a.verb {
 	case "fix":
 		return "fix note sent; fix round running"
@@ -644,6 +647,9 @@ func approveOutcome(rec runrec.Record) string {
 
 // doneText is the status line when the call has returned.
 func (a runAction) doneText() string {
+	if a.verb == "decide" {
+		return fmt.Sprintf("decided #%d in adj", a.adjID)
+	}
 	if a.verb == "approve" && a.item != "" {
 		switch a.outcome {
 		case "committed":

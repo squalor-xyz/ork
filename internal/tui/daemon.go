@@ -270,3 +270,13 @@ func (d *Daemon) ItemNew(ctx context.Context, p daemon.ItemNewParams) (daemon.It
 	defer c.Close()
 	return c.ItemNew(ctx, p)
 }
+
+// AdjAnswer sends an explicitly confirmed owner answer through the daemon.
+func (d *Daemon) AdjAnswer(ctx context.Context, p daemon.AdjAnswerParams) (string, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer c.Close()
+	return c.AdjAnswer(ctx, p)
+}

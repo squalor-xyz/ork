@@ -76,7 +76,7 @@ func (m *Model) decisionPage() (w, visible int) {
 	w, visible = max(width-sideW, 1), max(height-4, 1)
 	status := m.actionStatus
 	if m.confirm != nil {
-		status = m.confirm.prompt()
+		status = m.confirm.promptWidth(max(w-len(indent), 1))
 	}
 	if status != "" {
 		lines := min(len(wrapText(status, max(w-len(indent), 1))), max(height-5, 1))
@@ -90,7 +90,7 @@ func (m *Model) scrollDecision(delta int, page bool) {
 	if page {
 		delta *= visible
 	}
-	detail := recordDetailLines(*m.decisionPane, w, m.cfg.Theme)
+	detail := recordDetailLines(*m.decisionPane, w, m.cfg.Theme, m.decisionAnswerable())
 	last := max(len(detail)-visible, 0)
 	m.decisionScroll = min(max(min(m.decisionScroll, last)+delta, 0), last)
 }
@@ -104,7 +104,7 @@ func (m *Model) decisions(w int) overviewView {
 		}
 	}
 	if pane := m.decisionPane; pane != nil {
-		detail := recordDetailLines(*pane, w, th)
+		detail := recordDetailLines(*pane, w, th, m.decisionAnswerable())
 		_, visible := m.decisionPage()
 		start := min(m.decisionScroll, max(len(detail)-visible, 0))
 		out.body = detail[start:]
@@ -169,7 +169,7 @@ func (m *Model) decisions(w int) overviewView {
 		}
 		out.body = append(out.body, line)
 		if m.decisionsTab == 0 {
-			out.body = append(out.body, recordOptions(*r, w, th, indent+indent)...)
+			out.body = append(out.body, recordOptions(*r, w, th, indent+indent, false)...)
 		}
 		index++
 	}
@@ -179,7 +179,7 @@ func (m *Model) decisions(w int) overviewView {
 	return finish()
 }
 
-func recordOptions(r adjcli.Record, w int, th Theme, prefix string) []string {
+func recordOptions(r adjcli.Record, w int, th Theme, prefix string, numbered bool) []string {
 	var lines []string
 	add := func(text string, subordinate bool) {
 		lead := prefix
@@ -194,8 +194,12 @@ func recordOptions(r adjcli.Record, w int, th Theme, prefix string) []string {
 			lines = append(lines, line)
 		}
 	}
-	for _, o := range r.Options {
-		add(o.Label+": "+o.Summary, false)
+	for i, o := range r.Options {
+		label := o.Label
+		if numbered && i < 4 {
+			label = fmt.Sprintf("%d. %s", i+1, label)
+		}
+		add(label+": "+o.Summary, false)
 		if o.Tradeoffs != "" {
 			add(o.Tradeoffs, true)
 		}
@@ -213,7 +217,7 @@ func recordOptions(r adjcli.Record, w int, th Theme, prefix string) []string {
 }
 
 // recordDetailLines uses the snapshot only; opening a record needs no CLI call.
-func recordDetailLines(row decisionRow, w int, th Theme) []string {
+func recordDetailLines(row decisionRow, w int, th Theme, answerable bool) []string {
 	r := row.record
 	var lines []string
 	heading := func(text string) {
@@ -231,7 +235,7 @@ func recordDetailLines(row decisionRow, w int, th Theme) []string {
 	if r.Context != "" {
 		add("Context: " + r.Context)
 	}
-	lines = append(lines, recordOptions(*r, w, th, indent)...)
+	lines = append(lines, recordOptions(*r, w, th, indent, answerable)...)
 	if r.Decision != "" {
 		add("Decision: " + r.Decision)
 	}

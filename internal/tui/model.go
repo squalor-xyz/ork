@@ -140,6 +140,7 @@ type Model struct {
 	decisionsTab    int
 	decisionsCursor int
 	decisionPane    *decisionRow
+	decisionInput   *textField
 	decisionScroll  int
 
 	roadmapCursor int
@@ -391,17 +392,27 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		m.renderArrived(msg)
 		return m, nil
 	case actionMsg:
-		flights := m.actionFlights[msg.action.run]
+		flights := m.actionFlights[msg.action.flightKey()]
 		for i, a := range flights {
 			if a.verb == msg.action.verb {
-				m.actionFlights[msg.action.run] = append(flights[:i], flights[i+1:]...)
+				m.actionFlights[msg.action.flightKey()] = append(flights[:i], flights[i+1:]...)
 				break
 			}
 		}
-		if len(m.actionFlights[msg.action.run]) == 0 {
-			delete(m.actionFlights, msg.action.run)
+		if len(m.actionFlights[msg.action.flightKey()]) == 0 {
+			delete(m.actionFlights, msg.action.flightKey())
 		}
-		if r, ok := m.actionRow(); ok && (r.engineID == msg.action.run || (msg.action.verb == "end" && r.ledgerID == msg.action.run)) && r.name == msg.action.project {
+		if msg.action.verb == "decide" {
+			if msg.err != nil {
+				m.actionStatus = actionError(msg.err)
+			} else {
+				m.actionStatus = msg.action.doneText()
+				if p := m.decisionPane; p != nil && p.project == msg.action.project && p.record.ID == msg.action.adjID {
+					m.decisionPane, m.decisionInput = nil, nil
+				}
+			}
+		}
+		if r, ok := m.actionRow(); ok && msg.action.run != "" && (r.engineID == msg.action.run || (msg.action.verb == "end" && r.ledgerID == msg.action.run)) && r.name == msg.action.project {
 			switch {
 			case msg.err != nil && msg.action.verb == "end" && isRefused(msg.err):
 				m.actionStatus = actionError(msg.err) // the refusal names the run and its state
@@ -500,6 +511,10 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			m.actionStatus = ""
 			return m, nil
 		}
+		if m.decisionInput != nil && m.confirm == nil {
+			m.decisionInput.update(msg)
+			return m, nil
+		}
 		if m.compose != nil {
 			if !m.compose.pending {
 				m.compose.field().update(msg)
@@ -581,6 +596,15 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	}
 	if m.view == wavesView && m.waves != nil && m.waves.pane != nil {
 		return m.waveItemKey(msg)
+	}
+	if m.decisionInput != nil {
+		return m.decisionKey(msg)
+	}
+	if m.decisionPane != nil && !m.showHelp && m.decisionAnswerable() {
+		switch msg.String() {
+		case "1", "2", "3", "4", "t":
+			return m.decisionKey(msg)
+		}
 	}
 	if m.compose != nil {
 		return m.composeKey(msg)
@@ -1182,6 +1206,9 @@ func (m *Model) moveView(delta int) tea.Cmd {
 
 // runAction retains the exact target while a confirmation is on screen.
 type runAction struct {
+	adjID                    int
+	option, adjTitle         string
+	adjRecommended           bool
 	stopAfter                string
 	findingTitle             string
 	scores                   *runrec.FindingScores
@@ -1247,6 +1274,13 @@ func (a runAction) cleanupItem() string {
 }
 
 func (a runAction) command() string {
+	if a.verb == "decide" {
+		flag, value := "--option", a.option
+		if value == "" {
+			flag, value = "--text", a.text
+		}
+		return fmt.Sprintf("ork adj answer %s %d %s %s", a.project, a.adjID, flag, strconv.Quote(value))
+	}
 	if a.verb == "cleanup" {
 		return a.cleanupCommand
 	}
@@ -1289,7 +1323,7 @@ func (a runAction) prompt() string {
 	if a.verb == "cleanup" {
 		return a.command() + "\n" + a.cleanupQuestion()
 	}
-	if a.verb == "approve" || a.verb == "file" || a.verb == "end" {
+	if a.verb == "approve" || a.verb == "file" || a.verb == "end" || a.verb == "decide" {
 		return a.promptWidth(0)
 	}
 	prompt := a.command() + "? [y/N] (Enter is No)"
@@ -1310,6 +1344,23 @@ func (a runAction) prompt() string {
 // approval confirms (S119, adj 162, adj 152). The keys `[y/N] (Enter is No)`
 // stay whole: they go on their own line when question and keys do not fit one.
 func (a runAction) promptWidth(w int) string {
+	if a.verb == "decide" {
+		label := a.option
+		if label == "" {
+			label = a.text
+		}
+		picked := strconv.Quote(label)
+		if a.adjRecommended {
+			picked += " (recommended)"
+		}
+		question := fmt.Sprintf("Decide #%d (%s) as %s in adj as %s?", a.adjID, a.adjTitle, picked, a.by)
+		const keys = "[y/N] (Enter is No)"
+		if w > 0 && lipgloss.Width(question+" "+keys) > w {
+			return question + "\n" + keys
+		}
+		return question + " " + keys
+	}
+
 	if a.verb == "file" {
 		note := "ork adds a Why section from the finding."
 		if a.scores != nil {
@@ -1513,7 +1564,7 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 	if m.actionFlights == nil {
 		m.actionFlights = make(map[string][]runAction)
 	}
-	m.actionFlights[a.run] = append(m.actionFlights[a.run], a)
+	m.actionFlights[a.flightKey()] = append(m.actionFlights[a.flightKey()], a)
 	m.actionStatus = a.pendingText()
 	if a.verb == "fix" && m.pane != nil {
 		m.pane.fixing, m.pane.input = false, textField{}
@@ -1530,6 +1581,12 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 		var err error
 		var message string
 		switch a.verb {
+		case "decide":
+			if answerer, ok := live.(adjAnswerer); ok {
+				message, err = answerer.AdjAnswer(context.Background(), daemon.AdjAnswerParams{Project: a.project, ID: a.adjID, Option: a.option, Text: a.text, By: a.by, Via: "tui"})
+			} else {
+				err = errors.New("this daemon connection cannot answer in adj")
+			}
 		case "cleanup":
 			err = live.Cleanup(context.Background(), a.run)
 		case "approve":
