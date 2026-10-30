@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 201,
+  "next_id": 202,
   "preamble": "",
   "passes": [
     {
@@ -9647,6 +9647,46 @@
         "reason": "",
         "importance": 1,
         "urgency": 1,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S201",
+      "title": "S147 later notes: report viewer order, loadFinishedEngine, viewer error wording",
+      "short_title": "S147 later notes: report viewer order, loadFinishedEngine, viewer error wording",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "ce2182bb-24ab-4565-b7cd-287d9a4fd1fd",
+          "kind": "",
+          "text": "**2026-10-30** — From the S147 review, UI pass and gate (2026-10-30), all later: (1) the S176 report viewer (reportOn, fetchReport) has the same draw-path and answer-order issues S147 fixed for renders (owner decision 2026-10-30); (2) loadFinishedEngine still maps every Store.Open error to not_found; (3) no test for a run.json of an unknown version in openRun (shares the corrupt-JSON branch); (4) the viewer error for an unreadable run.json repeats itself (Could not read NAME: internal: run X cannot be read: ...) and shows the absolute run.json path, unlike the card's readReason; (5) the partial renders line says 'not the listed file' for a swapped link (internal wording, for example 'replaced while being read'), and chains two colons where a parenthesis would scan better.",
+          "created_at": "2026-10-30T14:50:37Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S147",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
         "effort": null,
         "attempts": 0
       }

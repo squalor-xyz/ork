@@ -2645,3 +2645,5 @@
 {"when": "2026-10-30T14:40:37Z", "item": "S147", "action": "status", "from": "started", "to": "done", "note": "Gate PASS (round 2, opus medium). Reviewer round 1 PASS, UI pass round 1 PASS. Doc fixes: renders_error compat note in state.md, design.md re-wrap.", "by": "Jon R"}
 {"when": "2026-10-30T14:29:55Z", "item": "S200", "action": "add", "from": "", "to": "open", "note": "S172 later notes: ask asker env, control characters in adj text, EOF newline"}
 {"when": "2026-10-30T14:29:55Z", "item": "S200", "action": "note", "from": "", "to": "", "note": "From the S172 review, UI pass and gate (2026-10-30), all lat", "by": "Jon R"}
+{"when": "2026-10-30T14:50:30Z", "item": "S201", "action": "add", "from": "", "to": "open", "note": "S147 later notes: report viewer order, loadFinishedEngine, viewer error wording"}
+{"when": "2026-10-30T14:50:37Z", "item": "S201", "action": "note", "from": "", "to": "", "note": "From the S147 review, UI pass and gate (2026-10-30), all lat", "by": "Jon R"}
