@@ -2600,3 +2600,4 @@
 {"when": "2026-10-29T23:39:31Z", "item": "S183", "action": "note", "from": "", "to": "", "note": "Added 2026-10-29 from the S182 review: docs/orchestrator-par", "by": "Jon R"}
 {"when": "2026-10-30T01:00:21Z", "item": "S195", "action": "add", "from": "", "to": "open", "note": "S176 later notes: report open guards, viewer heading and list indent"}
 {"when": "2026-10-30T01:00:21Z", "item": "S195", "action": "note", "from": "", "to": "", "note": "From the S176 review, UI pass and gates (2026-10-29), all la", "by": "Jon R"}
+{"when": "2026-10-30T01:04:59Z", "item": "S90", "action": "retire", "from": "open", "to": "retired", "note": "Relayed 2026-10-30 (run-20261030-010033-9d07): S142 already corrected every stale line in scope (docs/boundaries.md:38, docs/glossary.md:144, internal/roles/roles.go:56); no change needed, as the 2026-10-29 owner note said (retire once S142 lands). Remaining out-of-scope matches go to S183."}

@@ -1601,7 +1601,7 @@
       "id": "S90",
       "title": "Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on",
       "short_title": "Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -1630,7 +1630,7 @@
         "key": "docs-v8-stale",
         "pass": "v1.0",
         "group": "",
-        "reason": "",
+        "reason": "Relayed 2026-10-30 (run-20261030-010033-9d07): S142 already corrected every stale line in scope (docs/boundaries.md:38, docs/glossary.md:144, internal/roles/roles.go:56); no change needed, as the 2026-10-29 owner note said (retire once S142 lands). Remaining out-of-scope matches go to S183.",
         "importance": 1,
         "urgency": 1,
         "effort": 1,

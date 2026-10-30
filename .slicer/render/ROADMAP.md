@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-195 items · — 43 · done 147 · retired 5
+195 items · — 42 · done 147 · retired 6
 
 ## v1.1
 
@@ -120,7 +120,7 @@
 | 63 | [S98](slices/S98.md) | Welcome polish: notice projects added elsewhere, tilde paths, status line and wording | S | 1 |  | discovered from S96 | done |
 | 64 | [S72](slices/S72.md) | Grok adapter and v1 role (after credits reset 2026-11-01) | M | 2 |  |  | — |
 | 65 | [S91](slices/S91.md) | Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes | S | 1 |  | discovered from S49 | done |
-| 66 | [S90](slices/S90.md) | Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on | S | 1 |  | discovered from S88 | — |
+| 66 | [S90](slices/S90.md) | Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on | S | 1 |  | Relayed 2026-10-30 (run-20261030-010033-9d07): S142 already corrected every stale line in scope (docs/boundaries.md:38, docs/glossary.md:144, internal/roles/roles.go:56); no change needed, as the 2026-10-29 owner note said (retire once S142 lands). Remaining out-of-scope matches go to S183. · discovered from S88 | retired |
 | 67 | [S39](slices/S39.md) | ork run prompt tests catch swapped answers; help text says y/n | S | 1 |  | discovered from S21 | done |
 | 68 | [S105](slices/S105.md) | Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases | S | 2 |  |  | done |
 | 69 | [S106](slices/S106.md) | Run card inline | M | 2 |  |  | done |
