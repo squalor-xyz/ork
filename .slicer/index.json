@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 198,
+  "next_id": 199,
   "preamble": "",
   "passes": [
     {
@@ -2131,6 +2131,17 @@
           "created_at": "2026-10-26T15:09:20Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "9da9bf82-f4ea-488d-90e0-16e102c6b2c1",
+          "kind": "",
+          "text": "**2026-10-30** — Spec is stale as of 2026-10-30: it cites acceptedContracts = {7} and tests --relay 7 (accepted) and --relay 9 (refused); today ork accepts {9, 10} and S198 moves it to v11. Re-spec the versions and test cases against the accepted set at claim. Contract still parses the text first line (internal/slicercli/write.go:34); switch it to ai relay --json.",
+          "created_at": "2026-10-30T13:29:26Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
@@ -9506,6 +9517,34 @@
         "importance": 1,
         "urgency": 1,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S198",
+      "title": "ork accepts slicer relay v11",
+      "short_title": "Accept relay v11",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "owner contract review 2026-10-30 (slicer, adj, ork alignment); slicer s424 (relay v11 cleanup and bump)",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }
