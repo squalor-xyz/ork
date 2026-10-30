@@ -1252,7 +1252,10 @@ func TestSelectedTitleLineScrollsIntoView(t *testing.T) {
 	s := snap(p, nil, items, runs...)
 	h.src.set(s)
 	h.start()
-	for height := 13; height <= 20; height++ { // the hint line takes a row, so 13 is the old 12 (S149)
+	// The hint line takes a row, so 13 was the old 12 (S149). The detail line now
+	// wraps between cells and takes a line more at this width (S146), so the
+	// sweep starts at 14.
+	for height := 14; height <= 20; height++ {
 		h.m.Update(tea.WindowSizeMsg{Width: 70, Height: height})
 		for i := 0; i < 7; i++ {
 			h.send(press("down"))
@@ -2058,5 +2061,37 @@ func TestOverviewHeadingReadsOwnerQuestionsLikeRunning(t *testing.T) {
 	}
 	if !strings.Contains(h.m.screen(), open(h.m.cfg.Theme.Warn.Bold(true))+"? owner questions 1") {
 		t.Errorf("the Overview heading's count is not amber and bold")
+	}
+}
+
+// A run that waits for a vendor's slot has not gone quiet: on the Running entry
+// its heard cell is dim and carries no cue, as on the Overview (S169, S146).
+func TestRunningEntryHeardCellOfAVendorWaitCarriesNoCue(t *testing.T) {
+	for _, wait := range []string{"", "codex"} {
+		p := proj("ork", false)
+		h := newHarness(t, p)
+		h.m.cfg.Theme = NewTheme(false)
+		th := h.m.cfg.Theme
+		// The first run is the selected row; the second, unselected, shows its colours.
+		first := liveEngine("run-a", "S29", "implement", nil)
+		second := liveEngine("run-b", "S30", "implement", nil, roleRun("implementer", 31*time.Minute, 0))
+		second.VendorWait, second.CreatedAt = wait, t0.Add(-31*time.Minute)
+		h.src.set(engineSnap(p, first, second))
+		h.start()
+		h.send(press("["))
+		row := mainRow(h.wide(), "ork", "S30")
+		raw := h.m.View().Content
+		if wait == "" {
+			if !strings.Contains(row, "!! heard 31m") || !strings.Contains(raw, th.Error.Render("!! heard 31m")) {
+				t.Errorf("a quiet run keeps its cue: %q", row)
+			}
+			continue
+		}
+		if !strings.Contains(row, "heard 31m") || strings.Contains(row, "!") {
+			t.Errorf("a vendor wait has a heard cell without a cue: %q", row)
+		}
+		if !strings.Contains(raw, th.Dim.Render("heard 31m")) {
+			t.Errorf("the heard cell of a vendor wait is dim:\n%s", raw)
+		}
 	}
 }

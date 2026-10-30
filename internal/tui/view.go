@@ -152,8 +152,14 @@ func (m *Model) screen() string {
 			paneHeight := max(h-7, 1)
 			if h+hintRows >= 24 { // a terminal of 24 rows or more
 				paneHeight = max(h-10, 1)
-				// A Running run's second line is one more row line (S145).
-				paneHeight = max(paneHeight-ov.paneExtra, 1)
+				// A Running run's second line is one more row line (S145). A pane
+				// whose run left the rows sits under the cursor's row, so it takes
+				// that row's second line into account (S146).
+				extra := ov.paneExtra
+				if ov.paneAt < 0 {
+					extra = ov.selExtra
+				}
+				paneHeight = max(paneHeight-extra, 1)
 			}
 			// A render or report on show takes the whole body: the Overview rows above
 			// the pane give way, so the pane leaves its row for the detail.
@@ -171,7 +177,7 @@ func (m *Model) screen() string {
 				}
 				at := ov.paneAt
 				if at < 0 {
-					at = ov.sel // the pane's run left the rows: keep it under the cursor
+					at = ov.selEnd // the pane's run left the rows: keep it under the cursor's row and its own lines (S146)
 				}
 				at = min(max(at, -1), len(body)-1)
 				body = append(append(append([]string(nil), body[:at+1]...), pane...), body[at+1:]...)

@@ -377,10 +377,11 @@ func TestRunTreeFieldsAndStyles(t *testing.T) {
 func TestRunTreeEngineRoundOnNode(t *testing.T) {
 	h := treeHarness(t, nil, treeEngine)
 	lines := h.m.runTreeLines(h.m.paneSteps(), 100, 0)
-	if len(lines) != 5 {
-		t.Fatalf("engine roles need nodes, usage and gate result, got %d: %v", len(lines), lines)
+	// The running reviewer has no usage event yet, so it has no tokens line (S146).
+	if len(lines) != 4 {
+		t.Fatalf("engine roles need nodes and gate result, got %d: %v", len(lines), lines)
 	}
-	for _, i := range []int{0, 1, 3} {
+	for _, i := range []int{0, 1, 2} {
 		line := lines[i]
 		if !strings.Contains(line, "round 1") {
 			t.Errorf("node missing round: %q", line)

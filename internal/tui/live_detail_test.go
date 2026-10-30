@@ -157,12 +157,31 @@ func TestUsagePlacementAndUnknownCost(t *testing.T) {
 func TestRunningUnknownUsageAndOverviewOmission(t *testing.T) {
 	h := treeHarness(t, nil, `{"id":"engine","item":"S99","state":"implement","roles":[{"role":"implementer","vendor":"codex"}]}`)
 	v := treePaneView(h.m, 100, 40)
-	if !strings.Contains(v, "tokens -  $-") {
-		t.Fatal(v)
+	if strings.Contains(v, "tokens") {
+		t.Fatalf("a running node has no tokens line until its first usage event:\n%s", v)
 	}
 	_, rows := h.m.rows()
 	if strings.Contains(rowText(rows[0], 400), "tokens") {
 		t.Fatal(rowText(rows[0], 400))
+	}
+}
+
+// A running node shows its tokens line once usage is known, zero included. A
+// stopped node keeps "tokens -  $-" inline (S146).
+func TestRunningNodeWithNoUsageHasNoTokensLine(t *testing.T) {
+	const noUsage = `{"id":"engine","item":"S99","state":"implement","roles":[{"role":"implementer","vendor":"codex"}]}`
+	h := treeHarness(t, nil, noUsage)
+	v := treePaneView(h.m, 100, 40)
+	if !strings.Contains(v, "implementer") || strings.Contains(v, "tokens") {
+		t.Errorf("no usage event: the node has no tokens line:\n%s", v)
+	}
+	known := treeHarness(t, nil, `{"id":"engine","item":"S99","state":"implement","usage_known":true,"live_usage_known":true,"roles":[{"role":"implementer","vendor":"codex"}]}`)
+	if v := treePaneView(known.m, 100, 40); !strings.Contains(v, "\n      tokens 0  $-") {
+		t.Errorf("a reported zero shows on its own line:\n%s", v)
+	}
+	stopped := treeHarness(t, nil, strings.Replace(noUsage, `"implement"`, `"stopped"`, 1))
+	if v := treePaneView(stopped.m, 200, 40); strings.Contains(v, "\n      tokens") || !strings.Contains(v, "tokens -  $-") {
+		t.Errorf("a stopped node shows unknown usage inline:\n%s", v)
 	}
 }
 

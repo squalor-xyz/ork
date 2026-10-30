@@ -6579,7 +6579,7 @@
       "id": "S146",
       "title": "S106 later notes: compact fit-test, pane and cue edge cases, tokens line",
       "short_title": "S106 later notes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -6612,7 +6612,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

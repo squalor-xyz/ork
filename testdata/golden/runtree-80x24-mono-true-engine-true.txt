@@ -10,7 +10,6 @@
                    │    implementer > [reviewer] > [1mgate[m                  [2mround 1[m
                    │    [2m+ implementer done  1m  claude sonnet high round 1[m
                    │    [1m| reviewer    start 1m  claude opus round 1[m
-                   │    [2m    tokens -  $-[m
                    │    [1m! gate        fail  30s  codex sol round 1  tokens 0  $-[m
                    │    [1m    ✗ gate FAIL -> implementer round 2[m
                    │
@@ -18,7 +17,8 @@
                    │[1mRecent[m
                    │  [2mnone[m
                    │
-                   │[2m  +2 more lines[m
+                   │[1mReady to land[m
+                   │  [2mnone[m
                    │[2m────────────────────────────────────────────────────────────[m
                    │ pgup/pgdown [2mline[m; ctrl+d/u [2mhalf page[m; esc [2mclose pane[m
                    │ 1 project | refreshed 16:42:00

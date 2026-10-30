@@ -49,6 +49,8 @@ type ovRow struct {
 	style             lipgloss.Style
 	kindW             int
 	noLabel           bool           // a Running engine row has no label column
+	runID             bool           // id is a run's, which goes whole when it does not fit with the rest (S146)
+	dropID            bool           // the section decided the run IDs go, as one does not fit (S146)
 	project           int            // registry index; Enter selects non-run rows
 	name              string         // the project's name
 	text              string         // the row's text after the name, in full
@@ -69,7 +71,6 @@ type ovRow struct {
 	mergeKnown        bool
 	worktreeGone      bool // the worktree path no longer exists (S153)
 	branch, worktree  string
-	compact           bool       // a run row on a narrow terminal drops its run ID and vendor/model
 	live              *liveRun   // a live run's board cells, for the Running entry
 	detailCells       []string   // a live run's detail line, wrapped between cells
 	run               *runRow    // a Running run's two-line form (S145)
@@ -139,8 +140,9 @@ type runLayout struct {
 // shortens (to titleMin columns) and the model goes. A title that would still
 // get less moves to line 2 for every run (titleBelow), and the model comes back
 // if it then fits. Last heard drops next unless a row has a cue, then the role,
-// then the stage bar, so a cue outlasts the bar as it does elsewhere (S106). The
-// id stays.
+// then the stage bar, so a cue outlasts the bar as it does elsewhere (S106). A
+// cue that fits with nothing else but the id leaves the bar for a last stage that
+// keeps the bar alone (S146). The id stays.
 func fitRunLayout(rows []*runRow, room int) runLayout {
 	var full, roleOnly, roleModel runLayout
 	cue := false
@@ -168,6 +170,8 @@ func fitRunLayout(rows []*runRow, room int) runLayout {
 		{false, false, cue, true, true, false},
 		{false, false, cue, false, true, false},
 		{false, false, cue, false, false, false},
+		// A cue that does not fit leaves the bar, never the id alone (S146).
+		{false, false, false, false, true, false},
 	}
 	for i, s := range stages {
 		l := full
@@ -302,34 +306,15 @@ type liveRun struct {
 	steps    []runTreeStep
 	activity []int
 	alert    string // "? question" or "x stopped" when the run waits on the owner
+	// vendorWait is the vendor an engine run waits for a slot of (S169); its
+	// heard cell is dim and carries no cue.
+	vendorWait string
 }
 
 // relayRowPart keeps a role's label and identity whole when its task is cut.
 type relayRowPart struct {
 	header string
 	text   string
-	// The part without its vendor/model column, which a compact row shows
-	// instead; empty when the part has none.
-	shortHeader, shortText string
-}
-
-// in is the part's header and text in a row that is compact or not.
-func (p relayRowPart) in(compact bool) (header, text string) {
-	if compact && p.shortText != "" {
-		return p.shortHeader, p.shortText
-	}
-	return p.header, p.text
-}
-
-// compactWidth is the terminal width below which a run row drops its run ID and
-// the vendor/model column (S106). It is the width that already narrows the
-// sidebar. The pane title and the selected row's detail keep both.
-const compactWidth = 100
-
-// compact reports whether the terminal is narrower than compactWidth. Before the
-// terminal reports its size the rows stay whole.
-func (m *Model) compact() bool {
-	return m.width > 0 && m.width < compactWidth
 }
 
 // rows lists Needs you and Running. recentRows and then readyRows follow
@@ -340,7 +325,6 @@ func (m *Model) rows() (needs, running []ovRow) { return m.rowsIn(m.active) }
 // an aggregate entry below zero for every project.
 func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 	th := m.cfg.Theme
-	compact := m.compact()
 	for i, p := range m.projects {
 		if active >= 0 && i != active {
 			continue
@@ -441,7 +425,7 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 				}
 			}
 			rest := strings.Join(parts, "  ")
-			row := ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: r.Item + "  " + rest, text: r.ID + "  " + r.Item + "  " + rest, compact: compact}
+			row := ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: r.Item + "  " + rest, text: r.ID + "  " + r.Item + "  " + rest, runID: true}
 			ledger, steps := engineBoard(r)
 			for _, linked := range boardLedgers(s) {
 				if r.RelayRun != "" && linked.ID == r.RelayRun {
@@ -455,7 +439,7 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 			// The engine's state tells a fix round from the finish step (S145).
 			steps = withEngineState(steps, r.State)
 			if !r.Unavailable {
-				row.live = &liveRun{item: r.Item, ledger: ledger, steps: steps, activity: r.Activity}
+				row.live = &liveRun{item: r.Item, ledger: ledger, steps: steps, activity: r.Activity, vendorWait: r.VendorWait}
 			}
 			if r.Section(s.EngineRuns) == source.SectionRunning {
 				row.noLabel = r.Error == ""
@@ -524,7 +508,7 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 			}
 			// External Running rows have no label; owner questions use Needs you.
 			row := ovRow{ledgerID: r.ID, state: r.State, style: style, noLabel: true, project: i, name: name,
-				text: text, id: id, rest: rest, stepParts: steps, dim: r.State == "stale", compact: compact,
+				text: text, id: id, rest: rest, stepParts: steps, dim: r.State == "stale", runID: true,
 				run:  m.ledgerRunRow(s, r),
 				live: &liveRun{item: strings.Join(r.Items, ","), ledger: r, steps: ledgerTreeSteps(r.Steps)}}
 			if ledgerOwnerQuestion(r) != nil {
@@ -625,6 +609,10 @@ type overviewView struct {
 	body   []string
 	sel    int
 	detail []string
+	// selEnd is the last body line of the selected row: its second line,
+	// commands, note or opened detail. The Overview and the Running entry set
+	// it; the open pane of a run that left the snapshot goes under it (S146).
+	selEnd int
 	paneAt int // the body line the open run pane goes under (S106); -1 when none
 	// paneExtra is the lines the pane's row takes beyond one: a Running run's
 	// second line (S145).
@@ -676,6 +664,9 @@ func (m *Model) overview(w int) overviewView {
 		}
 	}
 
+	settleRunIDs(needs, nameW, w)
+	settleRunIDs(running, nameW, w)
+
 	// One line-1 layout for every run in Running: the tightest row decides which
 	// cells all rows keep, and the cells line up (S145).
 	var runs []*runRow
@@ -696,7 +687,7 @@ func (m *Model) overview(w int) overviewView {
 	}
 
 	var lines []string
-	sel, paneAt, paneExtra, selExtra := -1, -1, 0, 0
+	sel, selEnd, paneAt, paneExtra, selExtra := -1, -1, -1, 0, 0
 	var rowAt []int
 	section := func(rows []ovRow, first int, empty string) {
 		if len(rows) == 0 {
@@ -731,6 +722,9 @@ func (m *Model) overview(w int) overviewView {
 			}
 			if r.note != "" {
 				lines = append(lines, hang+th.Dim.Render(clip(r.note, max(w-len(hang), 1))))
+			}
+			if selected {
+				selEnd = len(lines) - 1
 			}
 			if m.isPaneRow(r) && (paneAt < 0 || selected) {
 				paneAt = len(lines) - 1
@@ -787,7 +781,7 @@ func (m *Model) overview(w int) overviewView {
 	ready := m.readyRows()
 	section(ready, len(needs)+len(running)+len(recent), "none")
 
-	ov := overviewView{body: lines, sel: sel, paneAt: paneAt, paneExtra: paneExtra, selExtra: selExtra, rows: rowAt}
+	ov := overviewView{body: lines, sel: sel, selEnd: selEnd, paneAt: paneAt, paneExtra: paneExtra, selExtra: selExtra, rows: rowAt}
 	switch {
 	case m.active >= 0 && m.projects[m.active].setup():
 		// The hint is the detail line of a selected project with no rows.
@@ -797,6 +791,22 @@ func (m *Model) overview(w int) overviewView {
 		ov.detail = detailLines(all[cursor], w, vertical)
 	}
 	return ov
+}
+
+// settleRunIDs decides the run IDs of one section at once: when any run row
+// cannot fit its ID with the rest of its text, every such row drops its ID, so
+// the item column lines up (S146).
+func settleRunIDs(rows []ovRow, nameW, w int) {
+	idRow := func(r ovRow) bool { return r.runID && r.run == nil && len(r.cells) == 0 && r.rest != "" }
+	drop := false
+	for _, r := range rows {
+		if idRow(r) && lipgloss.Width(r.id)+len("  ")+lipgloss.Width(r.rest) > max(w-textColumn(r, nameW), 1) {
+			drop = true
+		}
+	}
+	for i := range rows {
+		rows[i].dropID = drop && idRow(rows[i])
+	}
 }
 
 // textColumn is the column a row's text starts at: after its indent, kind and
@@ -1155,10 +1165,11 @@ func rowText(r ovRow, room int) string {
 	if r.id == "" {
 		return clip(r.text, room)
 	}
-	// A compact row starts at its text: the run ID is in the pane title and in
-	// the detail line of the selected row.
+	// A run row whose ID does not fit with the rest of its text, or whose
+	// section dropped the IDs, starts at its text: the run ID is in the pane
+	// title and in the detail line of the selected row (S106, S146).
 	head, gap := r.id, "  "
-	if r.compact && r.rest != "" {
+	if r.rest != "" && (r.dropID || (r.runID && lipgloss.Width(r.id)+len(gap)+lipgloss.Width(r.rest) > room)) {
 		head, gap = "", ""
 	}
 	avail := room - lipgloss.Width(head) - len(gap)
@@ -1168,7 +1179,7 @@ func rowText(r ovRow, room int) string {
 	case lipgloss.Width(r.rest) <= avail:
 		text := head + gap + r.rest
 		for _, part := range outlastBar(r.stepParts, room-lipgloss.Width(text)) {
-			header, partText := part.in(r.compact)
+			header, partText := part.header, part.text
 			available := room - lipgloss.Width(text) - 2
 			required := lipgloss.Width(header)
 			if partText != header {
@@ -1212,8 +1223,9 @@ func outlastBar(parts []relayRowPart, room int) []relayRowPart {
 // at the pane width. The row already shows the project's name.
 func detailLines(r ovRow, w int, separator string) []string {
 	cells := r.detailCells
-	if len(cells) == 0 && strings.Contains(r.text, "  waiting since ") {
-		// Wrap between cells, so "waiting since 00:02" stays whole (S154).
+	if len(cells) == 0 && (strings.Contains(r.text, "  waiting since ") || r.live != nil) {
+		// Wrap between cells, so "waiting since 00:02" and a live run's
+		// "active, 2 of 6 steps running" stay whole (S154, S146).
 		cells = strings.Split(r.text, "  ")
 	}
 	if len(cells) > 0 {
@@ -1287,11 +1299,6 @@ func runParts(r slicercli.RelayRun, now time.Time) (id, rest string, steps []rel
 		part := relayRowPart{text: text}
 		summary.Task = ""
 		part.header = daemon.FormatRelayStep(selected.label, summary)
-		// The compact variant drops only the vendor and model.
-		summary.Vendor, summary.Model = "", ""
-		part.shortHeader = daemon.FormatRelayStep(selected.label, summary)
-		summary.Task = step.Task
-		part.shortText = daemon.FormatRelayStep(selected.label, summary)
 		steps = append(steps, part)
 	}
 	return r.ID, strings.Join(parts, "  "), steps
@@ -1879,7 +1886,7 @@ func (m *Model) runningOverview(w int) overviewView {
 		heading += "  " + th.Warn.Bold(true).Render(fmt.Sprintf("x stopped %d", stops))
 	}
 	lines := []string{heading}
-	sel, paneAt, selExtra := -1, -1, 0
+	sel, selEnd, paneAt, selExtra := -1, -1, -1, 0
 	var rowAt []int
 	if len(running) == 0 {
 		lines = append(lines, indent+th.Dim.Render("nothing running"))
@@ -1906,6 +1913,9 @@ func (m *Model) runningOverview(w int) overviewView {
 				selExtra = len(open)
 			}
 		}
+		if i == cursor {
+			selEnd = len(lines) - 1
+		}
 	}
 	lines = append(lines, "", th.Heading.Render("Recent"))
 	if len(recent) == 0 {
@@ -1917,11 +1927,14 @@ func (m *Model) runningOverview(w int) overviewView {
 			sel = len(lines)
 		}
 		lines = append(lines, m.rowLine(r, len(running)+i == cursor, nameW, w))
+		if len(running)+i == cursor {
+			selEnd = sel
+		}
 		if m.isPaneRow(r) {
 			paneAt = len(lines) - 1
 		}
 	}
-	ov := overviewView{body: lines, sel: sel, paneAt: paneAt, selExtra: selExtra, rows: rowAt}
+	ov := overviewView{body: lines, sel: sel, selEnd: selEnd, paneAt: paneAt, selExtra: selExtra, rows: rowAt}
 	// The selected run's detail is below the rows, unless it is open under its row.
 	if cursor >= 0 && selExtra == 0 {
 		vertical, _ := th.rules(m.cfg.ASCII)
@@ -1948,6 +1961,11 @@ func (m *Model) liveText(r ovRow) liveText {
 		t.role = runningRole(shown)
 	}
 	t.heard, t.heardStyle = m.heardCell(lv.ledger)
+	if lv.vendorWait != "" {
+		// The run has not gone quiet: it waits for a vendor slot (S169).
+		t.heard = strings.TrimPrefix(strings.TrimPrefix(t.heard, "!! "), "! ")
+		t.heardStyle = m.cfg.Theme.Dim
+	}
 	if len(lv.activity) > 0 {
 		t.spark = sparkline(lv.activity, m.cfg.ASCII)
 	}
@@ -1960,15 +1978,22 @@ func (m *Model) liveText(r ovRow) liveText {
 type liveLayout struct {
 	itemW, barW, roleW, pipelineW, heardW, sparkW int
 	pipeline, heard, spark                        bool
+	// bare: the role or pipeline cell is dropped to make room for a stall cue
+	// (S146).
+	bare bool
 }
 
 // liveLayout keeps the item, the stage bar and the running role. As the pane
 // narrows the cells go in this order: activity, the pipeline (down to the
-// running role), last heard.
+// running role), last heard. A last heard cell with a stall cue (! or !!)
+// outlasts the role: when it fits beside the item and the bar but not beside the
+// role too, the role goes instead. The bar always stays (S146).
 func (m *Model) liveLayout(rows []ovRow, nameW, w int) liveLayout {
 	var l liveLayout
+	cue := false
 	for _, r := range rows {
 		t := m.liveText(r)
+		cue = cue || strings.HasPrefix(t.heard, "!")
 		l.itemW = max(l.itemW, lipgloss.Width(t.item))
 		l.barW = max(l.barW, lipgloss.Width(t.bar))
 		l.roleW = max(l.roleW, lipgloss.Width(t.role))
@@ -1979,7 +2004,9 @@ func (m *Model) liveLayout(rows []ovRow, nameW, w int) liveLayout {
 	room := w - len(indent) - 1 - nameW - 2
 	width := func() int {
 		n := l.itemW + 2 + l.barW
-		if l.pipeline {
+		if l.bare {
+			// no role or pipeline cell
+		} else if l.pipeline {
 			n += 2 + l.pipelineW
 		} else if l.roleW > 0 {
 			n += 2 + l.roleW
@@ -1994,8 +2021,15 @@ func (m *Model) liveLayout(rows []ovRow, nameW, w int) liveLayout {
 	}
 	if l.heard = l.heardW > 0; l.heard && width() > room {
 		l.heard = false
+		if cue {
+			// The cue goes before the role does.
+			l.heard, l.bare = true, true
+			if width() > room {
+				l.heard, l.bare = false, false
+			}
+		}
 	}
-	if l.pipeline = true; width() > room {
+	if l.pipeline = !l.bare; l.pipeline && width() > room {
 		l.pipeline = false
 	}
 	// The activity goes before the pipeline does: with no pipeline it is dropped
@@ -2039,6 +2073,7 @@ func (m *Model) runningLine(r ovRow, selected bool, nameW, w int, l liveLayout) 
 		cols = append(cols, col{t.heard, l.heardW, t.heardStyle})
 	}
 	switch {
+	case l.bare:
 	case l.pipeline:
 		cols = append(cols, col{t.pipeline, l.pipelineW, plain})
 	case l.roleW > 0:

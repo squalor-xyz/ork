@@ -2624,3 +2624,6 @@
 {"when": "2026-10-30T13:22:11Z", "item": "S147", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-30T13:22:11Z", "item": "S146", "action": "set", "from": "", "to": "", "note": "size S→M"}
 {"when": "2026-10-30T13:22:11Z", "item": "S66", "action": "note", "from": "", "to": "", "note": "Added 2026-10-30 from the S146 triage: S66 hit-testing must ", "by": "Jon R"}
+{"when": "2026-10-30T13:22:57Z", "item": "S146", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-30T13:49:46Z", "item": "S146", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-30T14:00:13Z", "item": "S146", "action": "status", "from": "started", "to": "done", "note": "S106 later notes: run-id fit decided once per section (settleRunIDs; Needs you and Running), fallback pane under the row's own lines (selEnd), stall cue outlasts the role on the Running entry with the bar kept and a bar-only stage on the Overview, no tokens line on a running node until usage, detail wrap between cells for live-run rows, S169 vendor-wait cue strip on the Running entry. Gate PASS round 2 (opus medium); UI pass PASS round 2. Implementer Claude sonnet high.", "by": "Jon R"}

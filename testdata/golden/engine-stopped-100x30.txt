@@ -2,7 +2,7 @@
   Running                1 │[2m────────────────────────────────────────────────────────────────────────[m
 [1;7m0>Needs you              1 [m│[1mNeeds you 1[m
 [2m1[m ork                    1 │  [1mStopped 1[m
-                           │[1;7m  x  ork  ork-20261019-164000-abcd  S22  stopped  owner action  2 of ...[m
+                           │[1;7m  x  ork  S22  stopped  owner action  2 of 6 steps running  2d ago      [m
                            │
                            │[1mRunning 0[m
                            │  [2mnothing running[m
@@ -23,8 +23,8 @@
                            │
                            │
                            │[2m────────────────────────────────────────────────────────────────────────[m
-                           │  ork-20261019-164000-abcd  S22  stopped  owner action  2 of 6 steps
-                           │  running  2d ago
+                           │  ork-20261019-164000-abcd  S22  stopped  owner action
+                           │  2 of 6 steps running  2d ago
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │ enter [2mopen[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
                            │ 1 project | refreshed 16:42:00
