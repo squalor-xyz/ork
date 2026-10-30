@@ -2050,6 +2050,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "0956545b-99e8-43a5-92cf-5e69006a61b5",
+          "kind": "",
+          "text": "**2026-10-30** — Added 2026-10-30 from the S146 triage: S66 hit-testing must allow for the inline run pane that S106 draws below the selected row (and the S146 fallback pane position).",
+          "created_at": "2026-10-30T13:22:11Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -6586,7 +6597,7 @@
       ],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,

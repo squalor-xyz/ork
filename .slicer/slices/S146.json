@@ -4,7 +4,7 @@
   "lead": [],
   "depends_note": null,
   "findings_note": "",
-  "size": "S",
+  "size": "M",
   "flags": [],
   "trees_note": "",
   "trees_plural": false,
@@ -16,15 +16,15 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/tui/overview.go`, `internal/tui/relayboard.go`, `internal/tui/pane.go`, `internal/tui/view.go`.\n- Tests: `internal/tui/runcard_test.go`, `internal/tui/pane_test.go`."
+      "body": "- `internal/tui/overview.go`\n- `internal/tui/view.go`\n- `internal/tui/runtree.go`\n- `internal/tui/runcard_test.go`\n- `internal/tui/pane_test.go`\n- `internal/tui/live_detail_test.go`\n- `docs/dashboard.md`\n- Goldens under `testdata/golden/` (engine-*, runcard-*, live-detail-*, runtree-*, pane-tail-ascii): review each diff."
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "- `TestNeedsRowShowsRunIdOnlyWhenItFits` (`internal/tui/runcard_test.go`): a paused engine Needs row with id `engine` at width 99 shows the id; the same row with a 24-character id at width 100 drops the id and keeps the state word and `owner action`.\n- `TestFallbackPaneSitsBelowTheRowsOwnLines` (`internal/tui/pane_test.go`): with `readyRowsHarness`, the cursor on the last Ready row and `m.pane = &runPane{run:\"gone\", project:\"ork\"}`, the line `Run gone` comes after the row's last command line; a second case with a Running row that has a second line.\n- `TestRunningEntryKeepsTheCueOverTheRole` (`internal/tui/runcard_test.go`): a 31-minute-old external run in the Running entry at widths 44 to 100: whenever the row shows the bar and has room for `!! heard 31m` in place of the role or pipeline cell, the cue is shown; the bar is always kept.\n- `TestOverviewKeepsTheBarWhenTheCueDoesNotFit` (`internal/tui/runcard_test.go`): project name `adjudicate-xyz` at width 52 shows the bar, not only the id; with room for the cue the cue still shows first (`TestHeardCueOutlastsTheBarOnNarrowRows` stays green).\n- `TestRunningNodeWithNoUsageHasNoTokensLine` (`internal/tui/live_detail_test.go`): a running node with no usage event has no tokens line; once usage is known, `tokens 0  $-` shows; a stopped node still shows `tokens -  $-` inline. Rewrite `TestRunningUnknownUsageAndOverviewOmission` to match.\n- `TestOverviewDetailWrapsBetweenCells` (`internal/tui/runcard_test.go`): at 80x24 with the Running run selected, `active, 2 of 6 steps running` stays on one detail line.\n- Goldens at 100x30 and 80x24 for the changed rows."
     },
     {
       "heading": "Implement",
-      "body": "Triage first: some notes may be folded into S145 or S101. Spec each kept note with a failing test before building."
+      "body": "UI slice: UI pass (r14). Tests first. Line anchors are from main at 7d5bfb8 (2026-10-30); re-anchor.\n1. Fit-test. In `rowText` (`internal/tui/overview.go` about :1158-1164) replace `r.compact && r.rest != \"\"` with: drop the id head when id + gap + rest is wider than the room. Remove `compactWidth` and `Model.compact()` (about :324-333) and the `compact` field if nothing else reads them; check whether `relayRowPart.in` is still used. Leave the sidebar width test in `termSize` (`view.go` about :56).\n2. Fallback pane. Give `overviewView` a `selEnd` field (the last body line of the selected row: second line, commands, note), set in `overview()` and `runningOverview()` after any expanded lines; in `view.go` about :163-165 use it instead of `ov.sel`, and set `paneExtra` from `selExtra` in the fallback case so the pane height allows for the second line.\n3. Cue. In `liveLayout` (`overview.go` about :1995-1997), when the heard cell carries a `!` cue, test its fit without the role or pipeline cell and drop that cell instead; the bar is always kept. Add a final stage to `fitRunLayout` (about :166-173): bar only, no heard.\n4. Tokens line. In `runtree.go` about :245 draw a running node's usage line only once usage or cost is known. Update `docs/dashboard.md` (the Running-node tokens sentence, about :1640-1641; keep the finished and interrupted `tokens -  $-` rule).\n5. Detail wrap. In `detailLines` (`overview.go` about :1214-1218) split `r.text` on two spaces when the row has a live run and no `detailCells`, as the `waiting since` branch does. Live run rows only.\n6. `go test ./internal/tui -update`; review each golden diff; update `docs/dashboard.md` (the narrow-terminal and Running-entry sentences about :526-531, and the detail-line sentence about :255).\n\nOwner decisions 2026-10-30 (interactive, spec drafting): a running node hides its tokens line until the first usage event; on the Running entry the bar always stays and the stall cue outlasts the role or pipeline cell only (edit the doc sentence that says the entry drops heard before the bar); the fit-test fix stays in S146 (v1.0) and lands before S101; the detail wrap applies to live run rows only. The test-hygiene notes (a 3+ Needs rows golden with the pane open at 80x24, the Questions-tab title test calling paneLines directly) stay later, and S66 hit-testing for the inline pane goes to S66 as a note."
     },
     {
       "heading": "Check",
