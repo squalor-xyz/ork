@@ -1,0 +1,41 @@
+{
+  "id": "S198",
+  "title": "ork accepts slicer relay v11",
+  "lead": [
+    "ork accepts slicer relay v11, its role prompts and engine follow v11's rules, and it reads the gate role and the stop rules from v11's JSON instead of special-casing them."
+  ],
+  "depends_note": null,
+  "findings_note": "owner contract review 2026-10-30 (slicer, adj, ork alignment); slicer s424 (relay v11 cleanup and bump)",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** the contract pins (S24), adj's JSON contract (adjudicate S45), serving or translating an older contract, and any change to slicer.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "slicer v1.17 bumps the relay contract to v11 (`../slicer` s424, which lands after s391, s407, s409 and s412). ork accepts only v9 and v10 (`internal/roles/roles.go`, `acceptedContracts`), so engine start and doctor refuse a project once its slicer prints v11 (`internal/cli/upgrade.go`, `internal/engine/engine.go`). Owner decision 2026-10-30: one v11 bump in slicer v1.17, with this companion slice in ork.\n\n**Blocked on slicer s424 landing.** The golden and the exact rule text come from its output; until it lands, re-read `slicer ai relay --json` from `../slicer` main and the final `RELAY_CHANGES` entry for 11 before claiming.\n\nv11 changes ork must follow (as planned in s424; confirm against the landed text):\n\n- No `cd` for every role, the read-only ones included; a resumed headless role runs in the slice worktree (slicer s391).\n- Implementer re-anchors cited lines and runs a defect self-check before review: concurrency and handle lifetime, docs updated with the code, a test that fails when the wiring is removed (slicer s407). `prompts/implementer.md` already re-anchors; add the self-check.\n- A small fix round may be re-checked by whichever read-only role holds the findings; non-blocking owner questions are asked as they arise; parallel slices gate once on the merged result (slicer s412, as settled there).\n- A `blocker` owner question is a wait, not a stop: it leaves `stop[]`. `stop[]` entries gain keys. `roles[]` gains `gate` with `ledger_role` `gate` (slicer s424).\n\nAlignment gap found in the same review: ork's engine falls back to the next row on an exit classified `error` (S169 notes: a Claude limit shows as `error`), while the v10 `vendor_limit` obligation says any failure other than a classified limit stops. Owner decision 2026-10-30: the contract follows ork. slicer s424 widens the v11 fallback to an error exit of the agent process, so ork's existing behaviour conforms and needs no change; confirm against the landed text, and follow the conformance key if s424 renames it (`vendor_limit` to `role_fallback`, say)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/roles/roles.go`: `ContractVersion = 11`; `acceptedContracts = {10, 11}`. Owner decision 2026-10-30: v9 is dropped. Record it under S142's `boundary.contract` with `adj`, and update `internal/cli/upgrade.go`'s older-than message test.\n- `internal/roles/prompts/*.md`: first line `relay v11`, plus the rule changes above (implementer, reviewer, gate, architect, ui, spec-check as each applies).\n- `internal/slicercli/contract.go`: decode `stop[]` with keys; for v11 require `gate` in `roles[]` and drop the gate special case in `LedgerRole` for v11 (keep it for v10 while v10 is accepted).\n- `internal/engine/`: the brief builders and round logic for the fix-round re-check and owner-question rules.\n- `internal/cli/upgrade.go` messages if the accepted set's wording changes.\n- `testdata/cli/slicer/relay-v11.json` recorded from slicer after s424 lands (decision 0047); keep `relay-v10.json` while 10 is accepted.\n- `docs/boundaries.md`, `docs/guide.md`, `docs/glossary.md` where they name the contract version; CHANGELOG."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `CheckContractLine(\"Contract: relay v11\")` returns 11 with no error; a version outside the set lists the new set.\n- `RelayContract.Validate` accepts the recorded v11 JSON, refuses v11 JSON with no `gate` in `roles[]`, and still accepts the recorded v10 JSON.\n- `CheckContractLine(\"Contract: relay v9\")` is refused and names {10, 11}.\n- Validate requires the v11 fallback conformance key (renamed or not) for v>=11.\n- `LedgerRole(\"gate\")` on v11 reads the contract's `ledger_role`.\n- Each prompt's first line equals `relay v11` (the existing first-line test, retargeted).\n- The implementer prompt names the self-check categories; each role prompt forbids `cd`.\n- Engine start with a fake slicer printing v11 creates a run; with v12 it refuses naming the accepted set."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. After slicer s424 lands, record `relay-v11.json` from it and read its `RELAY_CHANGES` entry for 11.\n2. Record the accepted-set change ({10, 11}) with `adj` under `boundary.contract`.\n3. Write the red tests against the recorded output, then the code and prompts.\n4. Update the docs listed in Files. Refer to slicer's commands; do not paste its contract text."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race ./...`, `go vet ./...` and `gofmt -l .` are clean. SPDX headers. No new dependency.\n- `slicer check` and `adj lint` pass.\n- [HUMAN CHECK] With slicer v1.17 installed, `ork doctor` is ok and one relay runs end to end on a scratch project."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit: \"<ID>: accept relay v11\"."
+    }
+  ],
+  "notes": []
+}

@@ -1079,6 +1079,7 @@ ork check RUN N [STATE]     mark human check N: ticked (the default), later or o
 ork fix RUN TEXT            send a fix note to a fix round
 ork answer RUN TEXT         answer an owner question
 ork file RUN N              file a later finding through the daemon
+ork new P TITLE [FLAGS]     file a slice from a request or note
 ork dismiss RUN             clear a stopped run from Needs you
 ork retry RUN               retry a paused role or step
 ork stop RUN|WAVE           stop and record why
@@ -1282,6 +1283,31 @@ The wire retains dismissed runs with `dismissed: true`, hidden from lists,
 so an open run pane can still show their findings.
 `run.dismiss` takes `{run}` and returns the run record (adj #117). It refuses
 a run that is not stopped or is busy. An unknown run returns `not_found`.
+
+`ork new PROJECT TITLE [--why TEXT|-] [--from ITEM] [--from-note N]`
+accepts optional `--size S|M|L`, `--importance N`, `--urgency N`, `--effort N`
+and `--json` (S170). `--why -` reads stdin verbatim. A blank or multi-line
+title, invalid size, invalid score or invalid note argument exits 2 before
+dialing. Scores are 1-3; omitted scores stay unspecified. `--from-note` is
+one-based and requires `--from`. The submitted command is the owner's act;
+there is no confirmation prompt.
+
+The proposed `item.new` wire method takes
+`{project,title,why,from,from_note,size,importance,urgency,effort}` and returns
+`{id,existing}`. The daemon resolves the registered project and calls
+`engine.FileNewSlice` without a run. It uses `slicer show` to read the source
+note if requested, `slicer add` with non-empty optional fields, then
+`slicer promote` with a temporary, mode-0600 outline removed after the call.
+The outline has only Why: owner text, else the quoted note, else
+`Filed in ork on DATE. No description was given.` A source adds
+`Discovered from ITEM.` The key is `ork-new-` plus 16 hex digits of SHA-256
+over the project path, normalized title, owner Why, source and note number.
+This identity excludes the generated date so retries on another day keep
+their key. An existing slice skips promote. A failed promote names the filed
+ID and a retry promotes that same item. Success refreshes Items and Deps.
+Text output is `filed ID` or `ID is already filed`; JSON is
+`{"id":"ID","existing":false}` (true on an already filed request).
+Filing is in v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
 
 `ork note PROJECT ITEM [--] TEXT [--json]` calls `item.note` (S171).
 Quote TEXT as one argument. Text after ITEM is literal even when it starts

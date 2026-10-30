@@ -57,6 +57,10 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
                               mark human check N of a slice that awaits approval
   ork fix RUN TEXT            send a fix note to a fix round
   ork stop RUN|WAVE           stop a slice or every unfinished run in a wave
+  ork new P TITLE [--why TEXT|-] [--from ITEM] [--from-note N]
+                              [--size S|M|L] [--importance N]
+                              [--urgency N] [--effort N]
+                              file a slice from a request or note
   ork note P ITEM [--] TEXT   add a slice note; quote TEXT; leading - is literal
                               TEXT - reads stdin; --json before P or after TEXT
   ork file RUN N              file a later finding as a slice
@@ -214,6 +218,8 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 	case "-h", "--help", "help":
 		fmt.Fprint(stdout, usageText)
 		return ExitOK
+	case "new":
+		return a.newSlice(ctx, o, rest)
 	case "note":
 		return a.note(ctx, o, rest)
 	case "run":

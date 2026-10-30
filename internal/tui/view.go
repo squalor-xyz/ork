@@ -116,8 +116,24 @@ func (m *Model) screen() string {
 		}
 		if c := m.compose; c != nil {
 			status = "Note for " + c.item + ":\n" + c.input.view(max(mainW-2, 1), th)
+			if c.kind == composeNew {
+				title, why := clip(c.fields[0].Value(), max(mainW-9, 1)), clip(c.fields[1].Value(), max(mainW-7, 1))
+				if c.focus == 0 {
+					title = c.fields[0].view(max(mainW-9, 1), th)
+				} else {
+					why = c.fields[1].view(max(mainW-7, 1), th)
+				}
+				status = "New slice:\nTitle: " + title + "\nWhy: " + why
+				if c.item != "" {
+					status += "\nDiscovered from " + c.item
+				}
+			}
 			if c.pending {
-				status += "\npending: item.note"
+				if c.kind == composeNew {
+					status += "\npending: item.new"
+				} else {
+					status += "\npending: item.note"
+				}
 			}
 			if m.actionStatus != "" {
 				status += "\n" + m.actionStatus
@@ -755,7 +771,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			}
 			// Roadmap note and matrix keys share the launch line so help fits
 			// at the standard height. The matrix has no item to note.
-			if h == m.keys.Matrix.Help() || h == m.keys.Note.Help() {
+			if h == m.keys.Matrix.Help() || h == m.keys.Note.Help() || h == m.keys.New.Help() {
 				continue
 			}
 			if h == m.keys.Launch.Help() && m.view == roadmapView {
@@ -764,7 +780,10 @@ func (m *Model) helpLines(w, bodyH int) []string {
 					text += "; m matrix"
 				}
 				if !m.matrixPaneOpen() {
-					text += "; N note on item"
+					text += "; N note; n new slice"
+				}
+				if lipgloss.Width(text) > w {
+					text = strings.Replace(text, "l launch a ready slice (Roadmap)", "l launch ready slice", 1)
 				}
 				lines = append(lines, clip(text, w))
 				continue

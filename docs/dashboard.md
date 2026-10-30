@@ -1503,19 +1503,44 @@ and `ctrl+d`/`ctrl+u` scroll the pane, `esc` closes it, and no other key
 acts in it. The key is offered on the hint line and in `?` on the Roadmap only,
 when a project is selected and no pane is open; with no daemon it says "No
 daemon connection; action unavailable". On a narrow hint line `- remove
-project` and `+ add project` drop first, then `N note` on its own tier, then
-`m matrix`, then `tab views` (at
-100 columns the line keeps `N note` and `m matrix` and drops `+ add project`;
+project`, `+ add project` and `n new slice` drop first, then `N note` on its
+own tier, then `m matrix`, then `tab views` (at 100 columns the line keeps
+`N note` and `m matrix` and drops `+ add project`;
 at 80x24 with a selected item it is
-`enter open; l launch; m matrix; tab views; q quit; ? help`). The matrix is slicer's: ork reads it through
-`slicer relay-roles show --json`, never edits it and never opens `.slicer`
-files (`docs/boundaries.md`). The same text is `ork roles matrix PROJECT`.
+`enter open; l launch; m matrix; tab views; q quit; ? help`). The matrix is
+slicer's: ork reads it through `slicer relay-roles show --json`, never edits it
+and never opens `.slicer` files (`docs/boundaries.md`). The same text is
+`ork roles matrix PROJECT`.
 
 Adding an item to the wave composer comes in a later slice.
 v1.0 includes filing a slice (S170), adding notes (S171), and answering or
 asking adj records (S172, S185), as decided in `scope.v1-ork-edits` (#173).
 Reordering or parking items (S67-S69), the role matrix editor (S173) and spec
 drafting (S179) stay later.
+
+`n new slice` opens a form in the status area with Title and Why fields
+(S170). It is available on the Roadmap with a loaded, available project and
+a daemon, including when the project has no items. In the item pane it sets
+that item as the source; the list files without a source.
+The form shows `Discovered from ITEM` for that source and `pending: item.new`
+while filing is in progress. Help and the matrix pane block the form. `tab`
+and `shift+tab` switch fields, `enter send` files the slice and `esc cancel`
+closes it without writing. The fields own action
+letters, digits, `+` and `-`. A blank title keeps the form open with
+`Title must not be empty`. There is no second confirmation: submitting is the
+owner's act. While pending, a second Enter does nothing and `esc close`
+closes the form without stopping the write. An error keeps the fields for
+retry. Success says `Filed ID` or `ID is already filed` and refreshes the
+project. The row appears in slicer's order. The new hint uses tier 16,
+above note (15) and matrix (14); matrix stays visible at 80 and 100 columns.
+
+Filing from an existing note is CLI-only:
+`ork new PROJECT TITLE --from ITEM --from-note N`, with one-based N.
+`--why TEXT` supplies the description; `--why -` reads stdin. Optional
+`--size S|M|L`, `--importance N`, `--urgency N` and `--effort N` pass owner
+scores to slicer. The slice has a Why section only; launch still checks its
+spec. Repeating the same request returns the first slice. Spec drafting,
+dependencies and passes remain outside this form.
 
 `N` (shift-n) opens a one-line field in the status area: `Note for ITEM:`.
 It targets the cursor row, or the item shown in the open item pane. It is

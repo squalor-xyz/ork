@@ -85,3 +85,28 @@ func TestEditAppendRefusesEmptyText(t *testing.T) {
 		t.Errorf("calls: %+v", fake.Calls())
 	}
 }
+
+func TestAddItemArguments(t *testing.T) {
+	for _, tc := range []struct {
+		spec   AddSpec
+		args   []string
+		output string
+		bad    bool
+	}{
+		{AddSpec{Title: "--Title", Key: "K", Size: "M", Importance: 2, Urgency: 2, Effort: 1}, []string{"add", "Title", "--key", "K", "--size", "M", "--importance", "2", "--urgency", "2", "--effort", "1"}, `{"id":"S184"}`, false},
+		{AddSpec{Title: "Title"}, []string{"add", "Title"}, `{"id":"S184"}`, false},
+		{AddSpec{Title: "Title", DiscoveredFrom: "S12"}, []string{"add", "Title", "--discovered-from", "S12"}, `{"id":"S184"}`, false},
+		{AddSpec{Title: "Title"}, []string{"add", "Title"}, `{}`, true},
+	} {
+		c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"add"}, Prefix: true, Stdout: tc.output})
+		w, _ := writer()
+		got, err := c.AddItem(context.Background(), w, root, tc.spec)
+		if (err != nil) != tc.bad {
+			t.Fatalf("got=%+v err=%v", got, err)
+		}
+		want := append(tc.args, "--render", "--json", "--lean", "--root", root)
+		if calls := fake.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, want) {
+			t.Fatalf("calls=%v want=%v", calls, want)
+		}
+	}
+}

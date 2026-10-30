@@ -23,6 +23,7 @@ const (
 	MethodDaemonInfo   = "daemon.info"   // no params, result DaemonInfoResult
 	MethodDaemonStop   = "daemon.stop"   // params StopParams, result StopResult
 	MethodStatus       = "status"        // params StatusParams, result StatusResult
+	MethodItemNew      = "item.new"      // proposed; params ItemNewParams, result ItemNewResult
 	MethodItemNote     = "item.note"     // proposed; params ItemNoteParams, result ItemNoteResult
 	MethodItemShow     = "item.show"     // proposed; params ItemShowParams, result ItemShowResult
 	MethodSnapshot     = "snapshot"      // params SnapshotParams, result SnapshotResult
@@ -363,4 +364,23 @@ type WaveSuggestParams struct {
 type WaveOverlapParams struct {
 	Project string   `json:"project"`
 	Items   []string `json:"items"`
+}
+
+// ItemNewParams files an owner request. Proposed wire fields.
+type ItemNewParams struct {
+	Project    string `json:"project"`
+	Title      string `json:"title"`
+	Why        string `json:"why,omitempty"`
+	From       string `json:"from,omitempty"`
+	FromNote   int    `json:"from_note,omitempty"`
+	Size       string `json:"size,omitempty"`
+	Importance int    `json:"importance,omitempty"`
+	Urgency    int    `json:"urgency,omitempty"`
+	Effort     int    `json:"effort,omitempty"`
+}
+
+// ItemNewResult names the slice filed. Proposed wire fields.
+type ItemNewResult struct {
+	ID       string `json:"id"`
+	Existing bool   `json:"existing"`
 }

@@ -36,6 +36,14 @@ Source: `slicer/.slicer/render/ROADMAP.md`, rows s322-s329.
 Wave planning by hand became s376 (`slicer plan-parallel`), done on
 2026-10-18.
 
+## Filing requests in ork
+
+S170 handles filing a thin slice from an owner request: `ork new PROJECT
+TITLE --why TEXT`, or `n new slice` on the Roadmap. From an existing note,
+use `ork new PROJECT TITLE --from ITEM --from-note N` (CLI only). ork calls
+slicer's add and promote commands, with a stable key for retries. Completing
+the remaining spec sections stays manual (S179).
+
 ## Still manual
 
 | Step or failure | Source | Candidate ork capability |

@@ -355,6 +355,8 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		return m, m.applyProjectRemoved(msg)
 	case projectAddedMsg:
 		return m, m.applyProjectAdded(msg)
+	case newSliceMsg:
+		return m, m.applyNew(msg)
 	case noteMsg:
 		return m, m.applyNote(msg)
 	case itemShowMsg:
@@ -500,7 +502,7 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		}
 		if m.compose != nil {
 			if !m.compose.pending {
-				m.compose.input.update(msg)
+				m.compose.field().update(msg)
 				m.actionStatus = ""
 			}
 			return m, nil
@@ -688,6 +690,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return m.openLineup()
 	case key.Matches(msg, m.keys.Tick):
 		return m.tickWave()
+	case key.Matches(msg, m.keys.New):
+		return m.openNew()
 	case key.Matches(msg, m.keys.Note):
 		return m.openNote()
 	case key.Matches(msg, m.keys.Launch):

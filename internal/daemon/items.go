@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -45,4 +46,24 @@ func (d *Daemon) itemNote(ctx context.Context, p ItemNoteParams) (*ItemNoteResul
 		return nil, err
 	}
 	return &ItemNoteResult{Item: p.Item}, nil
+}
+
+func (d *Daemon) itemNew(ctx context.Context, p ItemNewParams) (*ItemNewResult, error) {
+	cfg := engine.NewSliceConfig{Title: p.Title, Why: p.Why, From: p.From, FromNote: p.FromNote, Size: p.Size, Importance: p.Importance, Urgency: p.Urgency, Effort: p.Effort, TempDir: d.cfg.Paths.Dir}
+	if err := engine.ValidateNewSlice(cfg); err != nil {
+		return nil, badParams(err)
+	}
+	proj, err := d.registered(p.Project)
+	if err != nil {
+		return nil, err
+	}
+	cfg.Project = proj
+	id, existing, err := engine.FileNewSlice(ctx, d.runDeps(proj), cfg)
+	if err != nil {
+		return nil, err
+	}
+	if err := d.cache.Refresh(ctx, proj, source.Items, source.Deps); err != nil {
+		return nil, err
+	}
+	return &ItemNewResult{ID: id, Existing: existing}, nil
 }
