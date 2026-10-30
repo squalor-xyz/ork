@@ -2631,3 +2631,4 @@
 {"when": "2026-10-30T13:29:26Z", "item": "S198", "action": "add", "from": "", "to": "open", "note": "ork accepts slicer relay v11"}
 {"when": "2026-10-30T13:29:26Z", "item": "S24", "action": "note", "from": "", "to": "", "note": "Spec is stale as of 2026-10-30: it cites acceptedContracts =", "by": "Jon Robbins"}
 {"when": "2026-10-30T13:44:08Z", "item": "S198", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-30T14:03:23Z", "item": "S198", "action": "note", "from": "", "to": "", "note": "More v11 rules decided 2026-10-30 (slicer s408, s411, s425):", "by": "Jon Robbins"}
