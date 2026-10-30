@@ -242,7 +242,8 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 			}
 			lines = append(lines, prefix+style.Render(treeClip(failure, available)))
 		}
-		if s.hasUsage && running {
+		// A running node has no tokens line until its first usage event (S146).
+		if s.hasUsage && running && (s.usageKnown || s.costKnown) {
 			lines = append(lines, prefix+m.cfg.Theme.Dim.Render(treeClip("    "+usage, available)))
 		}
 		if s.Task != "" {

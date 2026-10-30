@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
@@ -1347,5 +1348,115 @@ func TestAnsweredClearsWhenTheDecisionKeyChanges(t *testing.T) {
 	setPaneKey("storage.cache")
 	if h.m.pane.answered || h.m.actionStatus != "" {
 		t.Fatalf("a new decision key kept the answered status: answered=%v status=%q", h.m.pane.answered, h.m.actionStatus)
+	}
+}
+
+// A pane whose run left the snapshot opens under the cursor's row and the lines
+// that belong to it: a Ready row's commands, a Running run's second line (S146).
+func TestFallbackPaneSitsBelowTheRowsOwnLines(t *testing.T) {
+	t.Run("ready row commands", func(t *testing.T) {
+		h := readyRowsHarness(t, 30)
+		h.send(press("G"))
+		h.m.pane = &runPane{run: "gone", project: "slicer"}
+		v := plainView(h.m)
+		lines := mainLines(v)
+		row := lineWith(lines, 0, "S06", "merged")
+		last := lineWith(lines, row+1, "slicer render")
+		title := lineWith(lines, 0, "Run gone")
+		if row < 0 || last < 0 || title < 0 || title < last {
+			t.Fatalf("the pane must come after the last command line (row %d, last command %d, title %d):\n%s", row, last, title, v)
+		}
+	})
+	t.Run("running row second line", func(t *testing.T) {
+		h := runCardHarness(t, 100, 30, true)
+		h.m.byName["ork"].snap.EngineRuns[0].Tail = "latest output line"
+		h.selectRun()
+		h.m.pane = &runPane{run: "gone", project: "ork"}
+		v := plainView(h.m)
+		lines := mainLines(v)
+		row := lineWith(lines, 0, "S30", "implementer")
+		second := lineWith(lines, row+1, "latest output line")
+		title := lineWith(lines, 0, "Run gone")
+		if row < 0 || second != row+1 || title != second+1 {
+			t.Fatalf("the pane must come right after the second line (row %d, second line %d, title %d):\n%s", row, second, title, v)
+		}
+	})
+}
+
+// A pane that is not under any row of the entry (its run is in another
+// project) sits under the cursor's row, and its height allows for that row's
+// second line, so the screen holds the same lines as with a one-line row (S146).
+func TestFallbackPaneHeightAllowsForTheRowsSecondLine(t *testing.T) {
+	paneLines := func(tail string) int {
+		a, b := proj("ork", false), proj("other", false)
+		h := newHarness(t, a, b)
+		sa := engineSnap(a, liveEngine(runCardID, "S30", "review", testActivity, runCardRoles()...))
+		for i := 0; i < 8; i++ { // a pane taller than the room it gets
+			sa.EngineRuns[0].Roles = append([]source.EngineRole{roleRun("reviewer", 20*time.Minute, 19*time.Minute)}, sa.EngineRuns[0].Roles...)
+		}
+		sb := engineSnap(b, liveEngine("other-run", "S31", "review", testActivity, runCardRoles()...))
+		sb.EngineRuns[0].Tail = tail
+		h.src.set(sa)
+		h.src.set(sb)
+		h.start()
+		h.m.Update(tea.WindowSizeMsg{Width: 100, Height: 24})
+		h.selectRun()
+		h.send(press("enter"))
+		h.m.active, h.m.cursor = 1, 0 // the other project; the pane stays on ork's run
+		lines := mainLines(plainView(h.m))
+		title := lineWith(lines, 0, "Run "+runCardID)
+		more := -1
+		for i := title + 1; i < len(lines) && more < 0; i++ {
+			if strings.HasPrefix(lines[i], "    +") && strings.HasSuffix(strings.TrimSpace(lines[i]), "more lines") {
+				more = i
+			}
+		}
+		if title < 0 || more < 0 {
+			t.Fatalf("no clipped pane (title %d, marker %d):\n%s", title, more, strings.Join(lines, "\n"))
+		}
+		if (tail != "") != (lineWith(lines, 0, "latest output line") == title-1) {
+			t.Fatalf("the pane is not directly under the row and its second line:\n%s", strings.Join(lines, "\n"))
+		}
+		return more - title + 1
+	}
+	one, two := paneLines(""), paneLines("latest output line")
+	if two != one-1 {
+		t.Errorf("a row with a second line leaves the pane one line fewer: %d lines against %d", two, one)
+	}
+}
+
+// On the Running entry the fallback pane sits under the cursor's row too.
+func TestFallbackPaneOnTheRunningEntrySitsUnderTheCursorsRow(t *testing.T) {
+	h := runningHarness(t)
+	h.send(press("down"))
+	h.m.pane = &runPane{run: "gone", project: "alpha"}
+	v := plainView(h.m)
+	lines := mainLines(v)
+	row := lineWith(lines, 0, "beta", "S41")
+	if title := lineWith(lines, 0, "Run gone"); row < 0 || title != row+1 {
+		t.Fatalf("the pane must be directly under the cursor's row (row %d, title %d):\n%s", row, title, v)
+	}
+}
+
+// On the Running entry the fallback pane sits under a selected Recent row too.
+func TestFallbackPaneOnTheRunningEntrySitsUnderASelectedRecentRow(t *testing.T) {
+	h := runningHarness(t)
+	ended := snap(runningProjects[2], nil, nil)
+	ended.BoardRuns = source.Result[[]slicercli.RelayRun]{Value: []slicercli.RelayRun{{
+		ID: "ledger-g", Items: []string{"S50"}, State: "ended", Outcome: "pass",
+		BeganAt: t0.Add(-10 * time.Minute).Format(time.RFC3339), UpdatedAt: t0.Add(-time.Minute).Format(time.RFC3339),
+	}}}
+	h.m.apply(snapshotMsg{name: "gamma", snap: ended})
+	h.send(press("down"))
+	h.send(press("down")) // the two Running rows, then the Recent row
+	if r, ok := h.m.selectedRow(); !ok || r.ledgerID != "ledger-g" {
+		t.Fatalf("the cursor is not on the Recent row: %+v", r)
+	}
+	h.m.pane = &runPane{run: "gone", project: "alpha"}
+	v := plainView(h.m)
+	lines := mainLines(v)
+	row := lineWith(lines, 0, "gamma", "S50", "pass")
+	if title := lineWith(lines, 0, "Run gone"); row < 0 || title != row+1 {
+		t.Fatalf("the pane must be directly under the Recent row (row %d, title %d):\n%s", row, title, v)
 	}
 }

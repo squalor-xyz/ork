@@ -14,11 +14,11 @@
                    │    [90m+ implementer done  3m  claude round 1  tokens 0  $0.00[m
                    │    [90m+ reviewer    done  2m  claude round 1  tokens 0  $0.00[m
                    │    [1;36m| implementer start 2m  claude round 2 x2[m
-                   │    [90m    tokens -  $-[m
                    │    [90m. gate        queued[m
                    │
                    │
-                   │[90m  +5 more lines[m
+                   │[1;36mRecent[m
+                   │[90m  +4 more lines[m
                    │[90m────────────────────────────────────────────────────────────[m
                    │ pgup/pgdown [2mline[m; ctrl+d/u [2mhalf page[m; esc [2mclose pane[m
                    │ 1 project | refreshed 16:42:00

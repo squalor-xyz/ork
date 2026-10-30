@@ -14,11 +14,11 @@
                    │[1;36mRunning 1[m
                    │[1;7;97;44m              slicer      S11  active  [......]             [m
                    │  [90m~ pending [m  agents      waiting for the first reply
-                   │
-                   │[90m  +5 more lines[m
+                   │[90m  +6 more lines[m
                    │[90m────────────────────────────────────────────────────────────[m
-                   │  run-20261019-004308-40d4  S11  active, 2 of 6 steps
-                   │  running  1h00m  [......]  implementer>reviewer>gate
+                   │  run-20261019-004308-40d4  S11
+                   │  active, 2 of 6 steps running  1h00m  [......]
+                   │  implementer>reviewer>gate
                    │[90m────────────────────────────────────────────────────────────[m
                    │ enter [2mopen[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
                    │ 4 projects | refreshed 16:42:07 | pending 1

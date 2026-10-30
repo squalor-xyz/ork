@@ -4,6 +4,7 @@ package tui
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -675,4 +676,184 @@ func TestPausedHungRunShowsTheReasonAndRetry(t *testing.T) {
 		t.Errorf("the pane lacks the retry hint:\n%s", v)
 	}
 	checkGolden(t, "engine-paused-hung-100x30.txt", h.m.View().Content)
+}
+
+// needsRowView is a paused engine run with the id given, on the Needs you list
+// at width columns.
+func needsRowView(t *testing.T, id string, width int) string {
+	t.Helper()
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	s := engineSnapshot(t, "paused", "ledger")
+	s.EngineRuns[0].ID = id
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	h.m.Update(tea.WindowSizeMsg{Width: width, Height: 30})
+	return plainView(h.m)
+}
+
+// A Needs you run row drops its run id when the id does not fit with the rest
+// of the row, not below a fixed width (S146). The id is on the detail line then.
+func TestNeedsRowShowsRunIdOnlyWhenItFits(t *testing.T) {
+	short := mainRow(needsRowView(t, "engine", 99), "S22", "paused")
+	if !strings.Contains(short, "engine  S22") {
+		t.Errorf("a short id fits at 99 columns and stays: %q", short)
+	}
+	const long = "ork-20261019-164000-abcd"
+	v := needsRowView(t, long, 100)
+	row := mainRow(v, "S22", "paused")
+	if strings.Contains(row, long) || !strings.Contains(row, "paused") || !strings.Contains(row, "owner action") {
+		t.Errorf("a 24-character id does not fit at 100 columns and goes, keeping the state and the wait: %q", row)
+	}
+	if !strings.Contains(v, long) {
+		t.Errorf("the id stays on the detail line:\n%s", v)
+	}
+}
+
+// On the Running entry the bar always stays, and a stall cue outlasts the role
+// or pipeline cell: when the item, the bar and the cue fit but the role does
+// not, the role goes (S146).
+func TestRunningEntryKeepsTheCueOverTheRole(t *testing.T) {
+	p := proj("ork", false)
+	red := externalRun("ext-red", "S42")
+	red.UpdatedAt = t0.Add(-31 * time.Minute).Format(time.RFC3339)
+	h := newHarness(t, p)
+	h.src.set(snap(p, nil, nil, red))
+	h.start()
+	h.send(press("["))
+	const bar, cue = "[##~~..]", "!! heard 31m"
+	// The row is the mark slot and the name (3 + 3 + 2 columns), then the item,
+	// the bar and the cue, each after two spaces.
+	needed := 3 + len("ork") + 2 + len("S42") + 2 + len(bar) + 2 + len(cue)
+	shown := 0
+	for w := 44; w <= 100; w++ {
+		h.m.Update(tea.WindowSizeMsg{Width: w, Height: 24})
+		_, _, sideW := h.m.termSize()
+		row := mainRow(plainView(h.m), "S42")
+		if !strings.Contains(row, bar) {
+			t.Errorf("width %d: the bar is always kept: %q", w, row)
+		}
+		room := w - sideW
+		if room >= needed {
+			shown++
+			if !strings.Contains(row, cue) {
+				t.Errorf("width %d: the cue fits in place of the role and must show: %q", w, row)
+			}
+		}
+		// The role is not drawn where it does not fit beside the cue.
+		if room >= needed && room < needed+2+len("[reviewer]") && strings.Contains(row, "[rev") {
+			t.Errorf("width %d: the role does not fit beside the cue and must go: %q", w, row)
+		}
+	}
+	if shown == 0 {
+		t.Fatal("no width fits the cue")
+	}
+}
+
+// On the Overview a row that has room for the bar but not for the cue shows the
+// bar, not the id alone. When the cue fits it still comes first (S146).
+func TestOverviewKeepsTheBarWhenTheCueDoesNotFit(t *testing.T) {
+	p := proj("adjudicate-xyz", false)
+	red := externalRun("ext-red", "S42")
+	red.UpdatedAt = t0.Add(-31 * time.Minute).Format(time.RFC3339)
+	h := newHarness(t, p)
+	h.src.set(snap(p, nil, nil, red))
+	h.start()
+	const bar, cue = "[##~~..]", "!! heard 31m"
+	// The mark slot and the name (3 + 14 + 2 columns), the item, two spaces, the bar.
+	barNeeded := 3 + len("adjudicate-xyz") + 2 + len("S42") + 2 + len(bar)
+	seenBarOnly, seenCue := false, false
+	for w := 44; w <= 100; w++ {
+		h.m.Update(tea.WindowSizeMsg{Width: w, Height: 24})
+		_, _, sideW := h.m.termSize()
+		row := mainRow(plainView(h.m), "S42")
+		hasBar, hasCue := strings.Contains(row, bar), strings.Contains(row, cue)
+		if w-sideW >= barNeeded && !hasBar && !hasCue {
+			t.Errorf("width %d: room for the bar and it shows only the id: %q", w, row)
+		}
+		seenBarOnly = seenBarOnly || (hasBar && !hasCue)
+		seenCue = seenCue || (hasCue && !hasBar)
+	}
+	if !seenBarOnly || !seenCue {
+		t.Errorf("the sweep must reach a bar without the cue (%t) and the cue before the bar (%t)", seenBarOnly, seenCue)
+	}
+}
+
+// The detail line of a live run wraps between cells, so a state cell such as
+// "active, 2 of 6 steps running" stays on one line (S146).
+func TestOverviewDetailWrapsBetweenCells(t *testing.T) {
+	p := proj("ork", false)
+	ext := externalRun("run-20261019-004308-40d4", "S41")
+	ext.Counts = slicercli.Counts{Steps: 6, Running: 2}
+	ext.Steps[1].Vendor, ext.Steps[1].Model, ext.Steps[1].Task = "codex", "gpt-5", "check the engine's retry path"
+	h := newHarness(t, p)
+	h.src.set(snap(p, nil, nil, ext))
+	h.start()
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	r, ok := h.m.selectedRow()
+	if !ok || r.live == nil {
+		t.Fatalf("the Running run is not selected: %+v", r)
+	}
+	v := plainView(h.m)
+	if !strings.Contains(v, "active, 2 of 6 steps running") {
+		t.Fatalf("the state cell is broken across detail lines:\n%s", v)
+	}
+	// The cells still wrap: no detail line is wider than the pane.
+	for _, line := range detailLines(r, 60, "|") {
+		if len([]rune(line)) > 60 {
+			t.Errorf("detail line wider than the pane: %q", line)
+		}
+	}
+}
+
+// twoNeedsRows is two paused engine runs under Needs you at width columns.
+func twoNeedsRows(t *testing.T, waitA, waitB string, width int) string {
+	t.Helper()
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	s := snap(proj("ork", false), nil, nil)
+	raw := fmt.Sprintf(`{"EngineRuns":[{"id":"run-aaa","item":"S22","state":"paused","wait":%q},{"id":"run-bbb","item":"S23","state":"paused","wait":%q}]}`, waitA, waitB)
+	if err := json.Unmarshal([]byte(raw), &s); err != nil {
+		t.Fatal(err)
+	}
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	h.m.Update(tea.WindowSizeMsg{Width: width, Height: 30})
+	return plainView(h.m)
+}
+
+// The run id is kept or dropped for the whole section, so the item column lines
+// up: when one Needs you row cannot fit its id, no row shows one (S146).
+func TestRunIdFitIsDecidedOncePerSection(t *testing.T) {
+	long := strings.Repeat("a long wait reason ", 6)
+	v := twoNeedsRows(t, long, "short", 120)
+	for _, id := range []string{"run-aaa", "run-bbb"} {
+		if row := mainRow(v, "S22", "paused"); strings.Contains(row, id) {
+			t.Errorf("one row cannot fit its id, so none shows it (%s): %q", id, row)
+		}
+		if row := mainRow(v, "S23", "paused"); strings.Contains(row, id) {
+			t.Errorf("one row cannot fit its id, so none shows it (%s): %q", id, row)
+		}
+	}
+	a, b := strings.Index(mainRow(v, "S22", "paused"), "S22"), strings.Index(mainRow(v, "S23", "paused"), "S23")
+	if a < 0 || a != b {
+		t.Errorf("the item column must line up (%d, %d):\n%s", a, b, v)
+	}
+	v = twoNeedsRows(t, "short", "short too", 120)
+	for _, want := range []string{"run-aaa  S22", "run-bbb  S23"} {
+		if !strings.Contains(v, want) {
+			t.Errorf("every row fits, so every row shows its id (%q):\n%s", want, v)
+		}
+	}
+}
+
+// Only run rows drop their id: a Ready row keeps its item when the rest of its
+// text is long and gets cut instead (S146).
+func TestReadyRowKeepsItsItemWhenTheRestIsLong(t *testing.T) {
+	h := landingHarness(t, `[{"id":"ork-ready","item":"S09","state":"committed","branch":"s09-`+strings.Repeat("x", 60)+`","merged":true}]`)
+	rows := h.m.readyRows()
+	if len(rows) != 1 {
+		t.Fatalf("%d ready rows", len(rows))
+	}
+	if text := rowText(rows[0], 40); !strings.HasPrefix(text, "S09  s09-") {
+		t.Fatalf("the item must stay and the rest be cut: %q", text)
+	}
 }

@@ -249,8 +249,11 @@ row. The cells shown are chosen once for the whole view, from the widest row,
 so every row shows the same cells (the selected row alone may be clipped). As
 the pane narrows the cells go in this order: activity first, then the pipeline
 (down to the bracketed running role), then last heard. A row never shows the
-activity without its pipeline, so at 100x30 the activity is dropped. The item, the stage bar
-and the running role stay, so the view is complete at 80x24. The row cursor,
+activity without its pipeline, so at 100x30 the activity is dropped. The item
+and the stage bar stay, and so does the running role, except that a last heard
+cell with a `!` or `!!` cue outlasts it: when the cue fits beside the item and
+the bar but not beside the role too, the role goes (S146). The view is complete
+at 80x24. The row cursor,
 `enter` (which opens that run's pane, as on the Overview), the action keys and
 the pane work as on the Overview; the pane follows the newest running run
 (S109). The selected row's whole text, with the run ID, state and elapsed time,
@@ -377,11 +380,16 @@ the rows from its detail. Decisions show status, a nonzero option count and
 the recommended label when present, then the wrapped title. Metadata uses
 the theme's vertical rule as its separator. An empty detail block adds no
 extra rule or band. Detail height reserves room for the hint and status lines. Other rows show
-their full text, wrapped at the pane's width so no word is cut. `enter` opens
+their full text, wrapped at the pane's width so no word is cut. The detail
+of every row with a live run, a Running row or an engine run under Needs you,
+wraps between its cells, which are separated by two spaces, so a cell such as
+`active, 2 of 6 steps running` stays on one line (S146). Decision, held, Ready
+and Recent rows keep the word wrap. `enter` opens
 a run's detail pane; on decision and held-item rows it selects the row's project
 (`ui.answer-pane-keys`). Project keys and `1`-`9` select a project and
 put the cursor on its first row. Rows are cut with `...` to one line. A run's ID
-is never cut: the rest of the run's text is cut first. The rows scroll to keep
+is never cut: it stays whole or goes whole, when it does not fit with the rest
+of the run's text, for every run row of the section at once (S146). The rows scroll to keep
 the cursor row on screen, with `+N lines above` and `+N more lines` where lines
 are hidden.
 
@@ -505,10 +513,12 @@ the text column, falling back to a shorter indent when needed to fit.
      title shortens (to 12 columns), the model, then the title moves to line 2
      (the model returns if it fits), then last heard unless a row's carries a `!`
      or `!!` cue, the role, and the bar, so a cue outlasts the bar (S106). The id
-     stays. Line 2 does not depend on the width: it is cut to the pane with
+     stays. A cue that cannot fit even beside the id alone gives way to the bar
+     (S146). Line 2 does not depend on the width: it is cut to the pane with
      `...`. A run whose round waits for a full vendor slot (S169, *proposed*)
      has `waits for codex` on line 2 in place of the output tail (a denial
-     still comes first), and its heard cell is dim with no `!` or `!!` cue. The same order holds at 80x24, where the sidebar and the project
+     still comes first), and its heard cell is dim with no `!` or `!!` cue, on
+     the Running entry too (S146). The same order holds at 80x24, where the sidebar and the project
      column leave little for the title, so the titles usually sit on line 2
      there.
    `! heard` is amber after 10 minutes with no event; `!! heard` is red after
@@ -525,12 +535,16 @@ the text column, falling back to a shorter indent when needed to fit.
    `!` and `!!` carry the cue, and red is bold. Stale runs stay under Running,
    dimmed; elapsed time freezes at their last event in the detail line. A row
    with an `error` keeps the older one-line form with its `! error` label (the
-   run id, state, wait, denials and error), cut to the pane with the run id
-   whole; on a terminal narrower than 100 columns that form drops its run id
-   (S106). Rows have a label column only while some Running row has a label
+   run id, state, wait, denials and error), cut to the pane. The form drops its
+   run id when the id does not fit with the rest of the row, whatever the
+   terminal's width (S106, S146). A section decides this once: if any such row
+   in it would drop its id, every such row does, so the item column lines up. Rows have a label column only while some
+   Running row has a label
    (`! error` or `~ pending`); the other rows then pad to it so they line up
    (S33). The Running entry is unchanged but for the round word: it always
-   keeps the bar and drops heard before it.
+   keeps the bar. Last heard drops before the role or the pipeline, unless it
+   carries a `!` or `!!` cue: the cue outlasts the role or the pipeline cell,
+   which goes first when the cue fits beside the item and the bar (S146).
    For relays started elsewhere, the *proposed* step details (also indented
    under each relay in `ork status`) are `running: ROLE VENDOR/MODEL: TASK` for
    the last step in ledger order with phase `start` (a working subagent wins
@@ -759,7 +773,8 @@ It sits under the row's landing commands on a Ready row and under the Running
 entry's row on that entry. The pane keeps that run's
 ID while snapshots reorder the rows, and stays under that run's row even when
 the cursor is on another. If the run has left the snapshot the pane stays under
-the cursor. Every pane line is indented four columns, so the pane sits inside
+the cursor's row, below the lines that belong to it: a Ready row's commands, a
+Running run's second line (S146). Every pane line is indented four columns, so the pane sits inside
 its row, and its title is "Run" and the run ID alone, in the row title style
 (bold), not the section heading's colour: the row above names the item and the
 stage. The Questions tab, with no row above its pane, keeps the full header.
@@ -1698,7 +1713,8 @@ not expose text deltas in the measured fixtures. Tool calls and tool output
 do not enter the tail.
 
 Only the running node gets a separate `tokens N  $C` line. Until its first
-usage event, it shows `tokens -  $-`. A reported zero is shown as zero.
+usage event it has none (S146); then it shows `tokens N  $C`, and a reported
+zero is shown as zero.
 Finished roles append recorded usage to their node line; that whole suffix
 drops first when narrow. An interrupted role in a stopped run also uses the
 node suffix: missing recorded usage and cost show `tokens -  $-`, with no
