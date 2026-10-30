@@ -343,7 +343,9 @@ to a fix round from the card: the `round` that acts on it, the `note` and the
 time. The note is also the file `owner-fix-N.md` in the run directory, which is
 the `owner` feedback of that round. An older ork refuses a `run.json` with
 `card` or `fixes` because `Store.Open` uses strict keys.
-A role with no `ended_at` is running; a restart marks it `lost`. `commit` is
+A role with no `ended_at` is running; a restart marks it `lost`. A role the
+watchdog killed after 30 minutes without output has `exit` `hung` (S182,
+*proposed*) and an `ended_at`; its pause is kind `lost`. `commit` is
 `{"sha","title","at"}` once ork has committed. The fields `orchestrator_step`,
 `fails`, `reason`, `pending`, `feedback`, `created_at`, `updated_at`, the
 role's `model`, `effort` and `denials`, a check's `log`, and a write's
@@ -382,7 +384,9 @@ keys.
 For a paused `question`, `ork answer RUN TEXT` resumes the role with the
 answer. For a `shape`, `error`, `lost` or `interrupted` pause, `ork retry RUN`
 calls `Engine.Retry` to rerun the pending role or step (adj #101,
-`engine.pause-resume`). `ork stop RUN` stops the run. Retrying a question
+`engine.pause-resume`). `lost` also means a hung role that the watchdog killed
+(S182, *proposed*); its `reason` names the role, round, limit and, when ork recorded one, the
+killed process group. `ork stop RUN` stops the run. Retrying a question
 names `answer` and `stop`; answering a pause without a question names
 `retry`.
 

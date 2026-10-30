@@ -3,6 +3,7 @@
 package tui
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"testing"
@@ -647,4 +648,31 @@ func TestPipelineLineDropsRoundWhenTheBarShowsIt(t *testing.T) {
 	if !strings.Contains(pane, "round 1") {
 		t.Errorf("round 1 lost its pipeline-line round:\n%s", pane)
 	}
+}
+
+// A run that the watchdog paused as lost (S182): the pane keeps the reason the
+// engine wrote, which names the role, the limit and the killed process group,
+// and the retry hint. The TUI has no code of its own for it.
+func TestPausedHungRunShowsTheReasonAndRetry(t *testing.T) {
+	const reason = "implementer round 1 hung: no output for 30m; its process group 4242 was killed"
+	h := actionHarness(t, "paused", "lost")
+	s := h.src.Snapshot(context.Background(), proj("ork", false))
+	s.EngineRuns[0].ID = "ork-20261019-164000-abcd"
+	s.EngineRuns[0].Wait = reason
+	s.EngineRuns[0].UpdatedAt = h.now.Add(-48 * time.Hour)
+	h.src.set(s)
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	h.deliver(press("enter"))
+	v := plainView(h.m)
+	if !strings.Contains(v, "Run ork-20261019-164000-abcd") {
+		t.Fatalf("Enter did not open the pane:\n%s", v)
+	}
+	// The pane wraps the reason at its width.
+	if flat := strings.Join(strings.Fields(strings.Join(mainLines(v), " ")), " "); !strings.Contains(flat, reason) {
+		t.Errorf("the pane lacks the hung reason:\n%s", v)
+	}
+	if !strings.Contains(v, "t retry") {
+		t.Errorf("the pane lacks the retry hint:\n%s", v)
+	}
+	checkGolden(t, "engine-paused-hung-100x30.txt", h.m.View().Content)
 }

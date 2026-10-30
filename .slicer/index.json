@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 194,
+  "next_id": 195,
   "preamble": "",
   "passes": [
     {
@@ -8780,7 +8780,7 @@
       "id": "S182",
       "title": "Watchdog for a hung role",
       "short_title": "Hung role watchdog",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8813,7 +8813,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -8851,6 +8851,17 @@
           "kind": "",
           "text": "**2026-10-29** — Added 2026-10-29 from the S174 review: docs/orchestrator-parity.md rows 3.5 and 7.2 and gap 9 still say environment lines, permissions, vendor env and the global cap are file edits; mark them met by S174 (ork projects set, ork settings).",
           "created_at": "2026-10-29T23:06:43Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "3ee4c8cb-beb0-4035-917b-d1e6664e2da0",
+          "kind": "",
+          "text": "**2026-10-29** — Added 2026-10-29 from the S182 review: docs/orchestrator-parity.md row 7.4 and gap 18: mark the watchdog half met by S182.",
+          "created_at": "2026-10-29T23:39:31Z",
           "attempt": 0,
           "by": "Jon R",
           "verified_by": "",
@@ -9271,6 +9282,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S184",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S194",
+      "title": "S182 later notes: hung sibling retry brief, vendor event cadence, Overview reason clip",
+      "short_title": "S182 later notes: hung sibling retry brief, vendor event cadence, Overview reason clip",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "f2b72645-31c6-451f-81c2-97bbb89477bf",
+          "kind": "",
+          "text": "**2026-10-29** — From the S182 review, UI pass and gate (2026-10-29), all later: (1) after two hung siblings, a retry gives the Earlier process lost section only to the role named in pending; (2) verify how often real Claude and Codex emit events during a long silent tool call, so the 30 minutes cannot kill a healthy role (long go test or build); (3) a role that exits OK in the same tick the watchdog fires is recorded hung; (4) at 100x30 the Overview Paused row clips before hung/lost (the run id comes first); (5) for an engine run with no ledger run, !! means 30 minutes since the role started, not since the last event; the watchdog could expose its last-event time.",
+          "created_at": "2026-10-29T23:39:31Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S182",
         "parent": "",
         "cites": [],
         "key": "",
