@@ -183,7 +183,8 @@ the owner's words of 2026-10-29 above.
 S183 corrects the stale Waves status in README, development status in
 PROJECT, landing rules in boundaries, check timeout in state, the missing
 `land` state in design, and the mouse promise in dashboard. The contract
-wording in boundaries already says v9 and v10 and needs no change.
+wording in boundaries already said v9 and v10 and needed no change (S198 moved
+it to v10 and v11).
 
 The dated notes and review update matrix viewing (S168), vendor slots and memory
 (S169), registry settings (S174), upgrade hints (S178),

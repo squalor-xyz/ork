@@ -10,6 +10,8 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -603,11 +605,19 @@ func doctorApp(t *testing.T, relayFirstLine string) (app *App, fake *clitest.Fak
 func doctorAppWith(t *testing.T, relayFirstLine string, extra ...clitest.Route) (app *App, fake *clitest.Fake, logs map[string]string) {
 	t.Helper()
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
-	raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v10.json"))
+	// The recorded contract of the version in the line: v11 and newer lines use
+	// the v11 file, every other line the v10 file.
+	file, recordedAs := "relay-v10.json", `"contract": "relay v10"`
+	if m := regexp.MustCompile(`relay v(\d+)$`).FindStringSubmatch(relayFirstLine); m != nil {
+		if n, _ := strconv.Atoi(m[1]); n >= 11 {
+			file, recordedAs = "relay-v11.json", `"contract": "relay v11"`
+		}
+	}
+	raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", file))
 	if err != nil {
 		t.Fatal(err)
 	}
-	contractJSON := strings.Replace(string(raw), `"contract": "relay v10"`, `"contract": "`+strings.TrimPrefix(relayFirstLine, "Contract: ")+`"`, 1)
+	contractJSON := strings.Replace(string(raw), recordedAs, `"contract": "`+strings.TrimPrefix(relayFirstLine, "Contract: ")+`"`, 1)
 	routes := []clitest.Route{
 		{Tool: "slicer", Args: []string{"ai", "relay", "--json"}, Prefix: true, Stdout: contractJSON},
 		{Tool: "slicer", Args: []string{"--version"}, Stdout: "slicer 1.15.0\n"},
@@ -984,7 +994,7 @@ func TestDoctorReportsEachToolAndTheAcceptedContracts(t *testing.T) {
 }
 
 func TestDoctorTextOutput(t *testing.T) {
-	app, _, _ := doctorApp(t, "Contract: relay v10")
+	app, _, _ := doctorApp(t, "Contract: relay v11")
 	app.Tools.Grok = filepath.Join(t.TempDir(), "no-such-grok")
 	code, stdout, _ := run(t, app, "doctor")
 	if code != 0 {
@@ -996,7 +1006,7 @@ func TestDoctorTextOutput(t *testing.T) {
 		"[ok] claude  2.1.303 (Claude Code)\n",
 		"[ok] codex  codex-cli 0.163.0\n",
 		"[--] grok  not found (optional)\n",
-		"[ok] contract  accepts v9, v10, slicer prints \"Contract: relay v10\"\n",
+		"[ok] contract  accepts v10, v11, slicer prints \"Contract: relay v11\"\n",
 	} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("output lacks %q:\n%s", want, stdout)
@@ -1028,12 +1038,12 @@ func TestDoctorReportsWhereTheBinaryIs(t *testing.T) {
 	}
 }
 
-func TestDoctorAcceptsAV9Slicer(t *testing.T) {
-	app, _, _ := doctorApp(t, "Contract: relay v9")
+func TestDoctorAcceptsAV10Slicer(t *testing.T) {
+	app, _, _ := doctorApp(t, "Contract: relay v10")
 	code, stdout, _ := run(t, app, "doctor", "--json")
 	var d doctorOut
 	mustJSON(t, stdout, &d)
-	if code != 0 || !d.OK || !d.Contract.OK || d.Contract.Found != "Contract: relay v9" || !reflect.DeepEqual(d.Contract.Accepted, []int{9, 10}) || d.Contract.Error != "" {
+	if code != 0 || !d.OK || !d.Contract.OK || d.Contract.Found != "Contract: relay v10" || !reflect.DeepEqual(d.Contract.Accepted, []int{10, 11}) || d.Contract.Error != "" {
 		t.Fatalf("exit %d\n%s", code, stdout)
 	}
 }
@@ -1060,12 +1070,12 @@ func TestDoctorContractMismatchFails(t *testing.T) {
 // The accepted set replaces the exact pin (boundary.contract): an older
 // version is refused as well as a newer one, and the error names both sides.
 func TestDoctorRefusesEveryVersionOutsideTheAcceptedSet(t *testing.T) {
-	for _, v := range []int{6, 7, 8, 70} {
+	for _, v := range []int{6, 7, 8, 9, 12, 70} {
 		app, _, _ := doctorApp(t, fmt.Sprintf("Contract: relay v%d", v))
 		code, stdout, _ := run(t, app, "doctor", "--json")
 		var d doctorOut
 		mustJSON(t, stdout, &d)
-		if code != 1 || d.OK || d.Contract.OK || !strings.Contains(d.Contract.Error, fmt.Sprintf("v%d", v)) || !strings.Contains(d.Contract.Error, "ork accepts relay v9, v10") {
+		if code != 1 || d.OK || d.Contract.OK || !strings.Contains(d.Contract.Error, fmt.Sprintf("v%d", v)) || !strings.Contains(d.Contract.Error, "ork accepts relay v10, v11") {
 			t.Errorf("v%d: exit %d\n%s", v, code, stdout)
 		}
 	}

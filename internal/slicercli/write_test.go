@@ -148,10 +148,12 @@ func TestRelayStepAddsOrUpdatesAStep(t *testing.T) {
 	orch := []string{"relay-run", "step", "run-1", "--role", "orchestrator", "--agent", "ork", "--phase", "start", "--task", "S04 orchestrator", "--json"}
 	full := []string{"relay-run", "step", "run-1", "--role", "implementer", "--agent", "claude", "--vendor", "claude", "--model", "sonnet", "--reasoning", "high", "--parent", "1", "--phase", "start", "--task", "S04 implementer", "--json"}
 	update := []string{"relay-run", "step", "run-1", "--step", "2", "--phase", "done", "--json"}
+	verdict := []string{"relay-run", "step", "run-1", "--step", "2", "--phase", "done", "--verdict", "fail", "--json"}
 	c, fake := client(t,
 		rawRoute(append(append([]string{}, orch...), "--root", wt), "relay-run-step.json"),
 		rawRoute(append(append([]string{}, full...), "--root", wt), "relay-run-step.json"),
 		rawRoute(append(append([]string{}, update...), "--root", wt), "relay-run-step.json"),
+		rawRoute(append(append([]string{}, verdict...), "--root", wt), "relay-run-step.json"),
 	)
 	w, sink := writer()
 	ctx := context.Background()
@@ -165,10 +167,13 @@ func TestRelayStepAddsOrUpdatesAStep(t *testing.T) {
 	if _, err := c.RelayStep(ctx, w, wt, "run-1", StepSpec{Step: "2", Phase: "done"}); err != nil {
 		t.Fatalf("update step: %v", err)
 	}
-	if len(fake.CallsTo("slicer")) != 3 || len(sink.writes) != 3 {
+	if _, err := c.RelayStep(ctx, w, wt, "run-1", StepSpec{Step: "2", Phase: "done", Verdict: "fail"}); err != nil {
+		t.Fatalf("verdict step: %v", err)
+	}
+	if len(fake.CallsTo("slicer")) != 4 || len(sink.writes) != 4 {
 		t.Fatalf("calls %d, writes %d", len(fake.CallsTo("slicer")), len(sink.writes))
 	}
-	for i, argv := range [][]string{orch, full, update} {
+	for i, argv := range [][]string{orch, full, update, verdict} {
 		if !reflect.DeepEqual(sink.writes[i].Argv, argv) {
 			t.Errorf("write %d argv %v, want %v", i, sink.writes[i].Argv, argv)
 		}

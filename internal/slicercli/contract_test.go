@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"slices"
 	"strings"
 	"testing"
 
@@ -85,24 +86,124 @@ func TestRelayContractDecodesNumericPin(t *testing.T) {
 	}
 }
 
-func TestV9ContractDoesNotRequireV10VendorLimitKey(t *testing.T) {
-	raw, err := os.ReadFile(recorded("relay-v10.json"))
+// editContract decodes a recorded contract file, applies edit to its generic
+// form and returns the typed result.
+func editContract(t *testing.T, file string, edit func(map[string]any)) RelayContract {
+	t.Helper()
+	raw, err := os.ReadFile(recorded(file))
 	if err != nil {
 		t.Fatal(err)
 	}
-	var contract RelayContract
-	if err := json.Unmarshal(raw, &contract); err != nil {
+	var generic map[string]any
+	if err := json.Unmarshal(raw, &generic); err != nil {
 		t.Fatal(err)
 	}
-	contract.Contract = "relay v9"
-	for i, c := range contract.Conformance {
-		if c.Key == "vendor_limit" {
-			contract.Conformance = append(contract.Conformance[:i], contract.Conformance[i+1:]...)
-			break
+	edit(generic)
+	data, err := json.Marshal(generic)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out RelayContract
+	if err := json.Unmarshal(data, &out); err != nil {
+		t.Fatalf("%s: %v", file, err)
+	}
+	return out
+}
+
+// dropEntry removes the entries of a generic list whose field equals value.
+func dropEntry(generic map[string]any, list, field, value string) {
+	var kept []any
+	for _, e := range generic[list].([]any) {
+		if e.(map[string]any)[field] != value {
+			kept = append(kept, e)
 		}
 	}
-	if err := contract.Validate(); err != nil {
+	generic[list] = kept
+}
+
+// v11 renames the conformance key vendor_limit to role_fallback, adds
+// blocker_wait and puts the gate in roles[] (slicer s424).
+func TestRelayContractV11Validate(t *testing.T) {
+	if got := editContract(t, "relay-v11.json", func(map[string]any) {}); got.Validate() != nil {
+		t.Fatalf("recorded v11 JSON refused: %v", got.Validate())
+	}
+	for name, edit := range map[string]func(map[string]any){
+		"no gate in roles[]": func(g map[string]any) { dropEntry(g, "roles", "role", "gate") },
+		"no role_fallback":   func(g map[string]any) { dropEntry(g, "conformance", "key", "role_fallback") },
+		"no blocker_wait":    func(g map[string]any) { dropEntry(g, "conformance", "key", "blocker_wait") },
+		"v10 key vendor_limit": func(g map[string]any) {
+			dropEntry(g, "conformance", "key", "role_fallback")
+			g["conformance"] = append(g["conformance"].([]any), map[string]any{"key": "vendor_limit", "text": "x"})
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			err := editContract(t, "relay-v11.json", edit).Validate()
+			if err == nil {
+				t.Fatal("accepted")
+			}
+		})
+	}
+	// stop[] keys are decoded, not required (owner decision 2026-10-30).
+	if err := editContract(t, "relay-v11.json", func(g map[string]any) { g["stop"] = []any{"plain"} }).Validate(); err != nil {
+		t.Fatalf("v11 with plain stop[] strings refused: %v", err)
+	}
+}
+
+// Recorded v10 JSON keeps validating, with plain-string stop[] and vendor_limit.
+func TestRelayContractV10StillValidates(t *testing.T) {
+	got := editContract(t, "relay-v10.json", func(map[string]any) {})
+	if err := got.Validate(); err != nil {
 		t.Fatal(err)
+	}
+	if len(got.Stop) != 3 || got.Stop[0].Key != "" || got.Stop[0].Text != "the same slice fails its gate three times" {
+		t.Fatalf("v10 stop[]: %+v", got.Stop)
+	}
+	if err := editContract(t, "relay-v10.json", func(g map[string]any) { dropEntry(g, "conformance", "key", "vendor_limit") }).Validate(); err == nil {
+		t.Fatal("v10 without vendor_limit accepted")
+	}
+}
+
+func TestRelayContractV9IsRefused(t *testing.T) {
+	got := editContract(t, "relay-v10.json", func(g map[string]any) { g["contract"] = "relay v9" })
+	err := got.Validate()
+	if err == nil || !strings.Contains(err.Error(), "v10, v11") {
+		t.Fatalf("v9: %v", err)
+	}
+}
+
+func TestRelayContractV11DecodesStopKeys(t *testing.T) {
+	got := editContract(t, "relay-v11.json", func(map[string]any) {})
+	var keys []string
+	for _, s := range got.Stop {
+		if strings.TrimSpace(s.Text) == "" {
+			t.Errorf("stop %q has no text", s.Key)
+		}
+		keys = append(keys, s.Key)
+	}
+	if want := []string{"gate_fail_3", "spec_wrong", "permission_denied", "no_eligible_row"}; !slices.Equal(keys, want) {
+		t.Fatalf("stop keys %v, want %v", keys, want)
+	}
+}
+
+func TestLedgerRoleGate(t *testing.T) {
+	v11 := editContract(t, "relay-v11.json", func(map[string]any) {})
+	if got := v11.LedgerRole("gate"); got != "gate" {
+		t.Fatalf("v11 gate = %q", got)
+	}
+	// The v11 contract's own ledger_role is read, not assumed.
+	renamed := editContract(t, "relay-v11.json", func(g map[string]any) {
+		for _, r := range g["roles"].([]any) {
+			if m := r.(map[string]any); m["role"] == "gate" {
+				m["ledger_role"] = "judge"
+			}
+		}
+	})
+	if got := renamed.LedgerRole("gate"); got != "judge" {
+		t.Fatalf("renamed gate = %q, want the contract's ledger_role", got)
+	}
+	v10 := editContract(t, "relay-v10.json", func(map[string]any) {})
+	if got := v10.LedgerRole("gate"); got != "gate" {
+		t.Fatalf("v10 gate = %q", got)
 	}
 }
 

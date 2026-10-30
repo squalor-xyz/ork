@@ -135,7 +135,7 @@ func (c Client) RelayStep(ctx context.Context, w runrec.Writer, root, run string
 		{"--step", s.Step}, {"--role", s.Role}, {"--agent", s.Agent}, {"--vendor", s.Vendor},
 		{"--model", s.Model}, {"--reasoning", s.Reasoning}, {"--parent", s.Parent},
 		{"--phase", s.Phase}, {"--task", s.Task},
-		{"--waiting-on", s.WaitingOn}, {"--reason", s.Reason},
+		{"--waiting-on", s.WaitingOn}, {"--reason", s.Reason}, {"--verdict", s.Verdict},
 	} {
 		if f.val != "" {
 			argv = append(argv, f.flag, f.val)

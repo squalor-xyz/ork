@@ -4,6 +4,7 @@ package slicercli
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"slices"
 	"strings"
@@ -11,6 +12,29 @@ import (
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/roles"
 )
+
+// StopRule is one entry of the contract's stop[]. A v11 entry is an object with
+// a key and text; a v10 entry is a plain string, which decodes to Text alone.
+type StopRule struct {
+	Key  string `json:"key"`
+	Text string `json:"text"`
+}
+
+// UnmarshalJSON accepts a plain string or a {key, text} object.
+func (s *StopRule) UnmarshalJSON(b []byte) error {
+	var text string
+	if err := json.Unmarshal(b, &text); err == nil {
+		*s = StopRule{Text: text}
+		return nil
+	}
+	type plain StopRule
+	var p plain
+	if err := json.Unmarshal(b, &p); err != nil {
+		return fmt.Errorf("stop rule is neither a string nor a {key, text} object: %w", err)
+	}
+	*s = StopRule(p)
+	return nil
+}
 
 // RelayContract is the machine-readable relay contract, read from slicer.
 type RelayContract struct {
@@ -36,7 +60,8 @@ type RelayContract struct {
 		Key  string `json:"key"`
 		Text string `json:"text"`
 	} `json:"conformance"`
-	Outcomes []string `json:"outcomes"`
+	Outcomes []string   `json:"outcomes"`
+	Stop     []StopRule `json:"stop"`
 }
 
 // LedgerRole resolves ork's role to the ledger name supplied by the contract.
@@ -53,7 +78,8 @@ func (r RelayContract) LedgerRole(role string) string {
 			return v.LedgerRole
 		}
 	}
-	// Gate is absent from v9/v10 roles[]; its ledger round keeps its own name.
+	// v11 lists the gate in roles[] and the loop above reads it. v10 does not;
+	// its gate round keeps its own name.
 	if role == "gate" {
 		return "gate"
 	}
@@ -78,7 +104,10 @@ func (r RelayContract) Validate() error {
 		return fmt.Errorf("relay finding_kinds must be exactly fix, owner, later")
 	}
 	needed := []string{"role_order", "gate_rule", "finding_kinds", "stop_rules", "ledger", "finish_after_pass", "run_report", "worktree_scope", "commit_scope"}
-	if version >= 10 {
+	if version >= 11 {
+		// v11 renames vendor_limit to role_fallback and adds blocker_wait.
+		needed = append(needed, "role_fallback", "blocker_wait")
+	} else {
 		needed = append(needed, "vendor_limit")
 	}
 	for _, key := range needed {
@@ -98,6 +127,15 @@ func (r RelayContract) Validate() error {
 		if r.LedgerRole(role) == "" {
 			return fmt.Errorf("relay roles missing ledger_role for %s", role)
 		}
+	}
+	// LedgerRole falls back to "gate" for v10, so v11 needs the entry itself.
+	if version >= 11 && !slices.ContainsFunc(r.Roles, func(v struct {
+		Role       string `json:"role"`
+		LedgerRole string `json:"ledger_role"`
+	}) bool {
+		return v.Role == "gate" && v.LedgerRole != ""
+	}) {
+		return fmt.Errorf("relay roles missing ledger_role for gate")
 	}
 	for _, outcome := range []string{"pass", "fail", "stopped"} {
 		if !slices.Contains(r.Outcomes, outcome) {

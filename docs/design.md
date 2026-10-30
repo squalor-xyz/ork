@@ -665,7 +665,7 @@ question. Answer, approve, fix and retry record `--phase start` to continue.
 ## Roles
 
 - **Prompts.** Embedded in ork and canonical (`roles.prompts`). They are
-  seeded from slicer's v10 contract, with anything else written fresh
+  seeded from slicer's v11 contract, with anything else written fresh
   (`roles.prompt-seed`). They carry no Claude Code-only mechanics (Agent
   tool, SendMessage, nesting), because roles here never spawn agents.
   `ork roles print [ROLE]` prints them so the agents repo can generate its
@@ -804,9 +804,11 @@ probes 05 to 07 ran on 0.164.0), grok 1.0.62. Grok has no successful run, so mos
   read-only role still stop.
   If no row remains, the stop reason names each failed row and its exit.
   Out of credits skips all later rows on that vendor; a rate limit takes
-  the plain next row. On v10 the failed ledger step includes the classified
-  vendor message as `--reason`; v9 omits that flag. Falling back on a plain
-  error exit is an owner-approved deviation from v10 (decision 156, S142).
+  the plain next row. On v10 and v11 the failed ledger step includes the classified
+  vendor message as `--reason`. Falling back on a plain error exit was an
+  owner-approved deviation from v10 (decision 156, S142). v11 follows ork: its
+  `role_fallback` conformance key (v10 called it `vendor_limit`) falls back on
+  an error exit of the agent process too, so ork's behaviour conforms.
   The approval card names each switch as `role switched: ROLE FROM to TO
   (REASON)`, identifying rows by vendor, model and effort. It has no
   "Deviation:" prefix. The reason reads "out of credits", "rate limited" or
@@ -1419,13 +1421,17 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   makes a network call or runs a printed command, and a hint never changes the
   exit code;
 - the slicer contract: the first line of `slicer ai relay --root ROOT`
-  against the accepted set (`roles.AcceptedContracts`, v9 and v10;
-  `boundary.contract`). Any other version fails. A project pin mismatch
+  against the accepted set (`roles.AcceptedContracts`, v10 and v11;
+  `boundary.contract-set`, adj 175). Any other version fails. A project pin mismatch
   (`contract_mismatch`, exit 3) reports the pin. Doctor and the engine also
   validate `ai relay --json`: exact finding kinds `fix`, `owner`, `later`,
-  required conformance keys, ledger role names, gate criteria and verdicts,
-  and outcomes. The run records its version, roles and gate criteria for
-  resumed runs. Embedded role prompts are written against v10;
+  required conformance keys (v11: `role_fallback` and `blocker_wait` in place of
+  `vendor_limit`), ledger role names (v11 includes `gate`), gate criteria and
+  verdicts, and outcomes. The run records its version, roles and gate criteria
+  for resumed runs. On v11 a gate round closes its ledger step with
+  `--phase done --verdict pass|fail`; v10 closes it without the flag. A gate
+  report with no valid verdict line closes without one. Embedded role prompts
+  are written against v11;
 - each project's path exists and is a directory; a configured check command
   passes `sh -n -c` and its first word after leading `VAR=value` assignments
   resolves on PATH, or against the project directory when it contains `/`.

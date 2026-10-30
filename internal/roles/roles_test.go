@@ -114,12 +114,12 @@ func TestEmbeddedFilesMatchNames(t *testing.T) {
 }
 
 func TestContractVersion(t *testing.T) {
-	if ContractVersion != 10 {
-		t.Fatalf("ContractVersion = %d, want 10", ContractVersion)
+	if ContractVersion != 11 {
+		t.Fatalf("ContractVersion = %d, want 11", ContractVersion)
 	}
 	for _, f := range []string{"relay-first-line.txt", "relay-orchestrator-first-line.txt"} {
-		if got := recordedVersion(t, f); !ContractAccepted(got) {
-			t.Errorf("%s records unsupported v%d", f, got)
+		if got := recordedVersion(t, f); got != ContractVersion {
+			t.Errorf("%s records v%d, want v%d", f, got, ContractVersion)
 		}
 	}
 }
@@ -137,13 +137,13 @@ func TestOwnerQuestionWording(t *testing.T) {
 	}
 }
 
-func TestAcceptedContractsAreV9AndV10(t *testing.T) {
-	if got := AcceptedContracts(); !reflect.DeepEqual(got, []int{9, 10}) {
-		t.Fatalf("AcceptedContracts() = %v, want [9 10]", got)
+func TestAcceptedContractsAreV10AndV11(t *testing.T) {
+	if got := AcceptedContracts(); !reflect.DeepEqual(got, []int{10, 11}) {
+		t.Fatalf("AcceptedContracts() = %v, want [10 11]", got)
 	}
 	got := AcceptedContracts()
 	got[0] = 99
-	if again := AcceptedContracts(); again[0] != 9 {
+	if again := AcceptedContracts(); again[0] != 10 {
 		t.Fatalf("AcceptedContracts hands out its own slice: %v", again)
 	}
 	if !ContractAccepted(ContractVersion) {
@@ -152,25 +152,28 @@ func TestAcceptedContractsAreV9AndV10(t *testing.T) {
 }
 
 func TestPromptsFirstLineNamesTheirContract(t *testing.T) {
-	if ContractVersion != 10 {
-		t.Errorf("ContractVersion = %d, want 10", ContractVersion)
+	if ContractVersion != 11 {
+		t.Errorf("ContractVersion = %d, want 11", ContractVersion)
 	}
 	for name, p := range prompts(t) {
 		first, _, _ := strings.Cut(p, "\n")
-		if want := "Role: " + name + ". Contract: relay v10"; first != want {
+		if want := "Role: " + name + ". Contract: relay v11"; first != want {
 			t.Errorf("%s: first line %q, want %q", name, first, want)
 		}
 	}
 }
 
 func TestCheckContractLine(t *testing.T) {
-	for _, v := range []int{7, 8, 9, 10, 11} {
+	for _, v := range []int{7, 8, 9, 10, 11, 12} {
 		got, err := CheckContractLine(fmt.Sprintf("Contract: relay v%d", v))
-		if got != v || (err == nil) != (v == 9 || v == 10) {
+		if got != v || (err == nil) != (v == 10 || v == 11) {
 			t.Errorf("v%d: %d, %v", v, got, err)
 		}
+		if err != nil && !strings.Contains(err.Error(), "relay v10, v11 and slicer prints v"+strconv.Itoa(v)) {
+			t.Errorf("v%d: message %q does not name the set {10, 11}", v, err)
+		}
 	}
-	for _, bad := range []string{"", "something else", "Contract: relay v", "Contract: relay v10 extra"} {
+	for _, bad := range []string{"", "something else", "Contract: relay v", "Contract: relay v11 extra"} {
 		if v, err := CheckContractLine(bad); err == nil || v != 0 {
 			t.Errorf("%q: %d, %v", bad, v, err)
 		}
@@ -265,7 +268,7 @@ func TestGateCriteria(t *testing.T) {
 	for _, want := range []string{
 		"earlier blockers",
 		"proving test",
-		"no new `fix` finding of medium severity or worse",
+		"no `fix` finding",
 		"no `blocker` owner finding",
 		"tests green",
 		"docs",
@@ -273,6 +276,29 @@ func TestGateCriteria(t *testing.T) {
 	} {
 		if !has(g, want) {
 			t.Errorf("gate does not mention %q", want)
+		}
+	}
+}
+
+// v11: every `fix` finding fails the gate, with no severity scale, and a minor
+// item is tagged `later`.
+func TestGateHasNoSeverityScale(t *testing.T) {
+	g := prompts(t)["gate"]
+	for _, bad := range []string{"severity", "medium"} {
+		if has(strings.ToLower(g), bad) {
+			t.Errorf("gate prompt still mentions %q", bad)
+		}
+	}
+	if !has(g, "A minor item is `[later]`") {
+		t.Error("gate prompt does not say a minor item is tagged `[later]`")
+	}
+}
+
+// v11: no role changes directory, the read-only ones included.
+func TestEveryRoleForbidsCd(t *testing.T) {
+	for name, p := range prompts(t) {
+		if !has(p, "Use absolute paths. Never change directory.") {
+			t.Errorf("%s does not forbid changing directory", name)
 		}
 	}
 }
@@ -405,6 +431,8 @@ func TestImplementerPromptSelfCheck(t *testing.T) {
 		"handle lifetime",
 		"docs updated with code",
 		"test that fails when the wiring is removed",
+		"fix rounds included",
+		"`n/a`",
 	} {
 		t.Run(want, func(t *testing.T) {
 			if !has(section, want) {

@@ -435,13 +435,30 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		return outcome{}, e.stop(ctx, stopReason)
 	}
 	stop()
-	e.stepEnd(ctx, rec, stepID, "done")
+	// From relay v11 a gate round closes with its verdict, which is known only
+	// once the report is read (slicer s408). Every other round, and every v10
+	// round, closes here.
+	closeWithVerdict := r.role == RoleGate && rec.Contract >= 11
+	if !closeWithVerdict {
+		e.stepEnd(ctx, rec, stepID, "done", "")
+	}
 	if statusErr != nil {
+		if closeWithVerdict {
+			e.stepEnd(ctx, rec, stepID, "done", "")
+		}
 		return fail("read-only fingerprint", statusErr)
 	}
 
 	// The report.
 	rep, err := CheckReport(r.role, r.finish, text)
+	if closeWithVerdict {
+		// A report with a shape error has no verdict to record.
+		verdict := ""
+		if rep != nil {
+			verdict = strings.ToLower(rep.Verdict)
+		}
+		e.stepEnd(ctx, rec, stepID, "done", verdict)
+	}
 	var problems []string
 	var se *ShapeError
 	if errors.As(err, &se) {
@@ -601,12 +618,13 @@ func (e *Engine) stepStart(ctx context.Context, rec runrec.Record, r round, entr
 	return step.ID
 }
 
-// stepEnd sets the phase of a ledger step when its round ends.
-func (e *Engine) stepEnd(ctx context.Context, rec runrec.Record, id, phase string) {
+// stepEnd sets the phase of a ledger step when its round ends. verdict is
+// "pass", "fail" or "": a v11 gate round closes with its verdict.
+func (e *Engine) stepEnd(ctx context.Context, rec runrec.Record, id, phase, verdict string) {
 	if id == "" || rec.RelayRun == "" {
 		return
 	}
-	e.d.Slicer.RelayStep(ctx, e.wr, rec.Worktree, rec.RelayRun, slicercli.StepSpec{Step: id, Phase: phase})
+	e.d.Slicer.RelayStep(ctx, e.wr, rec.Worktree, rec.RelayRun, slicercli.StepSpec{Step: id, Phase: phase, Verdict: verdict})
 }
 
 // heartbeat refreshes a running ledger step. Recording is advisory.

@@ -32,15 +32,20 @@ defined in [glossary.md](glossary.md).
 
 ork implements slicer's relay contract in Go: the outer session's Setup and
 Order, and the orchestrator's rules. Its role prompts are ork's own text,
-seeded from contract v10 (`roles.prompt-seed`). Two things keep them in line
+seeded from contract v11 (`roles.prompt-seed`). Two things keep them in line
 (`boundary.contract`):
 
-1. ork accepts exactly v9 and v10. `ork doctor` and the engine check the
-   contract with `--root`, respecting the project's pin, before a run starts.
+1. ork accepts exactly v10 and v11 (`boundary.contract-set`, adj 175; v9
+   is dropped). `ork doctor` and the engine check the contract with `--root`,
+   respecting the project's pin, before a run starts.
 2. ork reads `slicer ai relay --json` and validates its finding kinds,
    conformance keys, ledger roles, gate criteria and verdicts, and outcomes.
    The run keeps its contract version, ledger role names and gate criteria.
-   v10-only fail reasons are gated on that recorded version.
+   Version-specific behaviour is gated on that recorded version: the failed
+   step's `--reason` (v10 and later) and the gate's `--verdict` (v11 only).
+   v11 adds the conformance keys `role_fallback` and `blocker_wait` (v10 has
+   `vendor_limit`) and the `gate` entry in `roles[]`, and ork decodes the
+   `stop[]` keys without requiring them.
 
 Where ork's model differs from the contract, because there is no
 orchestrator agent and ork plays both the outer session and the

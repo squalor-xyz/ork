@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- S198: ork accepts slicer relay v11 (*proposed*). The accepted set is v10 and
+  v11; v9 is dropped (adj 175). The role prompts are written against v11: the
+  gate fails on every `fix` finding (a minor item is `[later]`), and the
+  implementer's self-check runs before each review, fix rounds included, and
+  reports each check or `n/a`. v11 validation needs the conformance keys
+  `role_fallback` and `blocker_wait` and the `gate` entry in `roles[]`; v10
+  still needs `vendor_limit`. `stop[]` entries decode as `{key, text}` (v10's
+  plain strings still decode). On v11 a gate round closes its ledger step with
+  `--phase done --verdict pass|fail`; v10 sends no verdict. The engine's other
+  v11 process rules are S204.
+  Docs updated: `AGENTS.md`, `docs/boundaries.md`, `docs/design.md`,
+  `docs/glossary.md`, `docs/guide.md`, `docs/orchestrator-parity.md`.
+
 - S176: open a role report with `p` in an engine run pane (*proposed*).
   Reports run newest to oldest, then back to the run; `esc` returns at once.
   `run.report` reads only a stored role report name, with regular-file guards,

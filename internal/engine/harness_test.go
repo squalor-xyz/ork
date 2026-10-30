@@ -162,6 +162,7 @@ type harnessOpts struct {
 	routesFor func(P, W string) []clitest.Route // the same, for routes that name the paths
 	project   func(*registry.Project)
 	exclude   *string // contents of .git/info/exclude; nil means the file does not exist
+	contract  int     // relay contract version the fake slicer prints: 10 (default) or 11
 }
 
 type harness struct {
@@ -230,9 +231,13 @@ func newHarness(t *testing.T, opts ...func(*harnessOpts)) *harness {
 	if o.routesFor != nil {
 		routes = append(routes, o.routesFor(P, W)...)
 	}
+	version := 10
+	if o.contract != 0 {
+		version = o.contract
+	}
 	routes = append(routes,
-		with(s("ai", "relay", "--root", P), "Contract: relay v10\n\n# Slice relay\n"),
-		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v10.json")},
+		with(s("ai", "relay", "--root", P), fmt.Sprintf("Contract: relay v%d\n\n# Slice relay\n", version)),
+		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", fmt.Sprintf("relay-v%d.json", version))},
 		with(clitest.Route{Tool: "slicer", Args: []string{"relay-run", "begin"}, Prefix: true}, `{"run":{"id":"run-1"}}`),
 		with(clitest.Route{Tool: "slicer", Args: []string{"relay-run", "ask"}, Prefix: true}, `{"question":{"id":"q1"}}`),
 		with(clitest.Route{Tool: "slicer", Args: []string{"relay-run", "answer"}, Prefix: true}, `{}`),

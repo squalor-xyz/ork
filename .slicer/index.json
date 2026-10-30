@@ -10620,7 +10620,7 @@
       "id": "S198",
       "title": "ork accepts slicer relay v11",
       "short_title": "Accept relay v11",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -10670,7 +10670,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

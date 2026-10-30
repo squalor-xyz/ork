@@ -60,8 +60,8 @@ It prints the path of the ork binary first, then one line per check
 - each vendor CLI (claude, codex, grok) and its version. ork runs roles on `claude` and `codex` only; grok has no adapter (`docs/design.md:181`). A missing vendor is
   reported and does not fail the check, because ork needs only the vendors
   your lineup uses;
-- the slicer relay contract. ork accepts v7 and v8 only; any other version
-  fails (`docs/design.md:1177-1181`);
+- the slicer relay contract (the first line of `slicer ai relay`). ork accepts
+  v10 and v11 only; any other version fails (`docs/design.md:1423-1434`);
 - each registered project: the path exists, the check command parses, and the
   worktree and branch patterns contain `{id}` or `{id_lower}`.
 

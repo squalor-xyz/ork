@@ -192,6 +192,7 @@ type StepSpec struct {
 	Phase     string // start, wait, done or fail
 	WaitingOn string
 	Reason    string
+	Verdict   string          // pass or fail; with Phase done on a gate step (relay v11)
 	Question  *LedgerQuestion // question metadata; use RelayAsk to write it (step has no question flag)
 	Task      string
 	Parent    string

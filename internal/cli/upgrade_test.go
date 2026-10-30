@@ -328,14 +328,14 @@ func TestDoctorReadsAGoBinarysBuildInfo(t *testing.T) {
 }
 
 func TestDoctorHintsWhenSlicerContractIsOlder(t *testing.T) {
-	env := setupUpgrade(t, upOpts{slicer: "checkout", contract: "Contract: relay v8", behind: "0\t0"})
+	env := setupUpgrade(t, upOpts{slicer: "checkout", contract: "Contract: relay v9", behind: "0\t0"})
 	code, stdout, _ := run(t, env.app, "doctor")
 	if code != 1 {
 		t.Fatalf("exit %d, want 1 (the contract check failed)\n%s", code, stdout)
 	}
 	d := env.slicerD
 	for _, want := range []string{
-		"[upgrade] slicer  ",
+		"[upgrade] slicer  slicer prints relay v9, older than ork accepts (v10, v11)\n",
 		"\n  git -C " + shellWord(d) + " pull --ff-only\n",
 		"\n  " + shellWord(d+"/.venv/bin/pip") + " install -e " + shellWord(d) + "\n",
 	} {
@@ -384,7 +384,7 @@ func TestDoctorQuotesPathsInHints(t *testing.T) {
 }
 
 func TestDoctorHintsWhenSlicerContractIsNewer(t *testing.T) {
-	env := setupUpgrade(t, upOpts{contract: "Contract: relay v11"})
+	env := setupUpgrade(t, upOpts{contract: "Contract: relay v12"})
 	code, stdout, _ := run(t, env.app, "doctor")
 	if code != 1 {
 		t.Fatalf("exit %d, want 1\n%s", code, stdout)
@@ -398,7 +398,7 @@ func TestDoctorHintsWhenSlicerContractIsNewer(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, want := range []string{
-		"[upgrade] ork  ",
+		"[upgrade] ork  slicer prints relay v12, newer than ork accepts (v10, v11)\n",
 		"\n  go -C ORK_CHECKOUT build -o " + shellWord(bin) + " ./cmd/ork\n",
 		"\n  " + shellWord(bin) + " daemon restart\n",
 	} {
@@ -600,7 +600,7 @@ func TestDoctorNeverRunsAnUpgradeCommand(t *testing.T) {
 		check string
 	}{
 		{"older contract", upOpts{slicer: "checkout", contract: "Contract: relay v8", behind: "0\t0"}, nil, ""},
-		{"newer contract", upOpts{contract: "Contract: relay v11"}, nil, ""},
+		{"newer contract", upOpts{contract: "Contract: relay v12"}, nil, ""},
 		{"behind", upOpts{slicer: "checkout", behind: "0\t3"}, nil, ""},
 		{"nothing behind", upOpts{slicer: "checkout", behind: "0\t0"}, nil, ""},
 		{"upgrade flag", upOpts{slicer: "checkout", behind: "0\t0", adj: "build"}, []string{"--upgrade"}, ""},
