@@ -112,6 +112,15 @@ func (m *Model) screen() string {
 				}
 			}
 		}
+		if c := m.compose; c != nil {
+			status = "Note for " + c.item + ":\n" + c.input.view(max(mainW-2, 1), th)
+			if c.pending {
+				status += "\npending: item.note"
+			}
+			if m.actionStatus != "" {
+				status += "\n" + m.actionStatus
+			}
+		}
 		if m.view == questionsView && m.pane != nil {
 			detail = m.paneLines(mainW, max(h-6, 1), status)
 		} else if status != "" {
@@ -709,15 +718,20 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			if h.Key == m.keys.AllProjects.Help().Key && m.view != decisionsView {
 				continue
 			}
-			// The Roadmap's role matrix key shares the launch key's line, which
-			// pays for it at the standard height (S168). Only the Roadmap offers
-			// it, and not with a pane open.
-			if h == m.keys.Matrix.Help() {
+			// Roadmap note and matrix keys share the launch line so help fits
+			// at the standard height. The matrix has no item to note.
+			if h == m.keys.Matrix.Help() || h == m.keys.Note.Help() {
 				continue
 			}
-			if h == m.keys.Launch.Help() && m.view == roadmapView && m.itemPane == nil {
-				mk := m.keys.Matrix.Help()
-				lines = append(lines, clip(h.Key+" "+h.Desc+"; "+mk.Key+" "+mk.Desc, w))
+			if h == m.keys.Launch.Help() && m.view == roadmapView {
+				text := "l launch a ready slice (Roadmap)"
+				if m.itemPane == nil {
+					text += "; m matrix"
+				}
+				if !m.matrixPaneOpen() {
+					text += "; N note on item"
+				}
+				lines = append(lines, clip(text, w))
 				continue
 			}
 			if h == m.keys.Approve.Help() && (m.view == decisionsView || m.view == questionsView) {

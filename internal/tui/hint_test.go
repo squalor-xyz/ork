@@ -1268,3 +1268,43 @@ func TestLineupHelpIncludesLaunchAndConfirmReusesBinding(t *testing.T) {
 		t.Errorf("confirmation ignored disabled shared binding: %s", hint)
 	}
 }
+
+func TestHintBarOffersNoteOnTheRoadmap(t *testing.T) {
+	h := roadmapHarness(t)
+	h.m.cfg.Live = &noteLive{}
+	if !strings.Contains(wideHint(h), "N note") {
+		t.Fatalf("note hint absent: %s", wideHint(h))
+	}
+	h.m.cfg.Live = nil
+	if strings.Contains(wideHint(h), "N note") {
+		t.Fatal("note hint without daemon")
+	}
+	h.m.cfg.Live = &noteLive{}
+	h.m.switchTo(runningEntry)
+	if strings.Contains(wideHint(h), "N note") {
+		t.Fatal("note hint without project")
+	}
+}
+
+func TestRoadmapNoteHintDropsBeforeMatrix(t *testing.T) {
+	for _, width := range []int{80, 100} {
+		t.Run(fmt.Sprint(width), func(t *testing.T) {
+			h := roadmapHarness(t)
+			h.m.cfg.Live = &noteLive{}
+			h.m.Update(tea.WindowSizeMsg{Width: width, Height: 24})
+			hint := hintLine(plainView(h.m))
+			for _, text := range []string{"enter open", "l launch", "m matrix", "tab views"} {
+				if !strings.Contains(hint, text) {
+					t.Errorf("%d: missing %s: %s", width, text, hint)
+				}
+			}
+			if strings.Contains(hint, "N note") != (width == 100) {
+				t.Errorf("%d: note drop: %s", width, hint)
+			}
+			h.m.Update(press("?"))
+			if !strings.Contains(h.view(), "N note") {
+				t.Fatal("help omits note")
+			}
+		})
+	}
+}

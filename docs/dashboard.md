@@ -1,9 +1,11 @@
 # Dashboard
 
 The screens of the ork TUI. Owner decisions are cited by adj key. Layouts
-and keys are *proposed* drafts to change after a prototype. Roadmap and
-decision editing are not in v1 (`scope.v1`). Their screens are read-only
-until then.
+and keys are *proposed* drafts to change after a prototype. v1.0 includes
+filing a slice (S170), adding notes (S171), and answering or asking adj records
+(S172, S185), as decided in `scope.v1-ork-edits` (#173). Reordering or parking
+items (S67-S69), the role matrix editor (S173) and spec drafting (S179) stay
+later.
 
 ## Principles
 
@@ -1476,16 +1478,48 @@ and `ctrl+d`/`ctrl+u` scroll the pane, `esc` closes it, and no other key
 acts in it. The key is offered on the hint line and in `?` on the Roadmap only,
 when a project is selected and no pane is open; with no daemon it says "No
 daemon connection; action unavailable". On a narrow hint line `- remove
-project` and `+ add project` drop first, then `m matrix`, then `tab views` (at
-100 columns the line keeps `m matrix` and drops `+ add project`; at 80 columns
-on an empty Roadmap it is `l launch; m matrix; tab views; q quit; ? help`). The matrix is slicer's: ork reads it through
+project` and `+ add project` drop first, then `N note` on its own tier, then
+`m matrix`, then `tab views` (at
+100 columns the line keeps `N note` and `m matrix` and drops `+ add project`;
+at 80x24 with a selected item it is
+`enter open; l launch; m matrix; tab views; q quit; ? help`). The matrix is slicer's: ork reads it through
 `slicer relay-roles show --json`, never edits it and never opens `.slicer`
 files (`docs/boundaries.md`). The same text is `ork roles matrix PROJECT`.
 
 Adding an item to the wave composer comes in a later slice.
-Editing comes after v1, and `ui.slicer-tui` is open.
+v1.0 includes filing a slice (S170), adding notes (S171), and answering or
+asking adj records (S172, S185), as decided in `scope.v1-ork-edits` (#173).
+Reordering or parking items (S67-S69), the role matrix editor (S173) and spec
+drafting (S179) stay later.
 
-## Decisions (one project or all, read-only in v1)
+`N` (shift-n) opens a one-line field in the status area: `Note for ITEM:`.
+It targets the cursor row, or the item shown in the open item pane. It is
+unavailable on Running, with no selected project, on an unavailable project,
+in the matrix pane, with help open or without the daemon. The hint line
+offers `N note` on the Roadmap list and item pane when it can act.
+The field owns the keys, including `+`, `-`, digits and action letters.
+`enter send` writes the note; `esc cancel` closes an unsent field without a
+write. While a send is pending, `esc close` closes the field without stopping
+the write. A blank field stays open with `Note must not be empty`. A pending
+send cannot be sent twice; an error keeps the text for retry. Success says `Noted ITEM`,
+refreshes the project and reloads the item pane if it still shows that item.
+The item pane lists notes after the spec sections under `Notes (N)`, with
+a `- ` bullet for each entry and a two-space hanging indent on wrapped
+continuation lines. Items with no notes have no Notes heading.
+
+`ork note PROJECT ITEM [--] TEXT [--json]` does the same write from the shell.
+Quote TEXT as one argument. Leading dashes are literal:
+`ork note P S12 "- text"` and `ork note P S12 -- "-x"` both work as typed.
+`--json` may precede PROJECT or follow TEXT. TEXT `-` reads stdin and removes
+its trailing newline. Blank ITEM is a usage error before dialing the daemon.
+A blank note says `Note must not be empty`. Wrong argument counts report
+`note: takes PROJECT ITEM TEXT, got N arguments; quote TEXT`. Text output is
+`noted ITEM`; JSON is `{"item":"ITEM","noted":true}`. Slicer owns the
+note and its date. ork reads and writes through the CLI and keeps no copy.
+Editing or removing notes, note kinds and multi-line TUI notes remain outside
+this slice.
+
+## Decisions (one project or all)
 
 Open questions are on the first tab, each with its options, tradeoffs and
 recommendation. The active tab uses the view heading style, distinct from the
@@ -1509,7 +1543,8 @@ decision, rationale and history; `esc` returns. The detail has project and recor
 headings, indented body text and a separate History heading. Row keys scroll
 one line; `pgup`/`pgdown` scroll one page. Scrolling stops at either end. Leaving
 the view or selecting a project closes the detail and resets the record cursor.
-There is no run cursor or write action on this screen. Decisions help hides
+The current view has no run cursor or write action. Asking and answering adj
+records are in v1.0 scope (S172, S185). Decisions help hides
 Approve and Add, and explains how to reach "Needs you" through another view.
 
 The data comes from `adj inbox --json` and `adj list --json --status decided`,

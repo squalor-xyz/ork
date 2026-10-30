@@ -172,6 +172,9 @@ type Model struct {
 	drawn         drawnRows // the body window of the last screen, for the page keys
 	listening     bool      // the daemon's notice feed is being listened to (S13)
 
+	compose        *composeState
+	composeRequest uint64
+
 	projectsReading  bool
 	projectsRevision uint64
 }
@@ -352,6 +355,8 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		return m, m.applyProjectRemoved(msg)
 	case projectAddedMsg:
 		return m, m.applyProjectAdded(msg)
+	case noteMsg:
+		return m, m.applyNote(msg)
 	case itemShowMsg:
 		if pane := m.itemPane; pane != nil && m.view == roadmapView && m.active >= 0 &&
 			pane.project == msg.project && pane.id == msg.id && pane.request == msg.request &&
@@ -493,6 +498,13 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			m.actionStatus = ""
 			return m, nil
 		}
+		if m.compose != nil {
+			if !m.compose.pending {
+				m.compose.input.update(msg)
+				m.actionStatus = ""
+			}
+			return m, nil
+		}
 		if m.launchPrompt() {
 			m.launch.input.update(msg)
 			m.actionStatus = ""
@@ -567,6 +579,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	}
 	if m.view == wavesView && m.waves != nil && m.waves.pane != nil {
 		return m.waveItemKey(msg)
+	}
+	if m.compose != nil {
+		return m.composeKey(msg)
 	}
 	if m.launch != nil {
 		if m.launch.stage == launchEdit {
@@ -673,6 +688,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return m.openLineup()
 	case key.Matches(msg, m.keys.Tick):
 		return m.tickWave()
+	case key.Matches(msg, m.keys.Note):
+		return m.openNote()
 	case key.Matches(msg, m.keys.Launch):
 		if m.view == wavesView {
 			return m.confirmWave()
@@ -969,6 +986,7 @@ func (m *Model) switchTo(i int) tea.Cmd {
 		m.actionStatus = ""
 	}
 	m.dropLaunch()
+	m.compose = nil
 	m.pane = nil
 	m.active = i
 	m.roadmapCursor = 0
@@ -1144,6 +1162,7 @@ func (m *Model) moveView(delta int) tea.Cmd {
 				m.actionStatus = ""
 			}
 			m.dropLaunch()
+			m.compose = nil
 			m.view = i
 			m.roadmapCursor = 0
 			m.decisionsCursor = 0

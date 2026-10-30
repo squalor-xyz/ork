@@ -168,6 +168,12 @@ func (c Client) RelayEnd(ctx context.Context, w runrec.Writer, root, run, outcom
 
 // Note runs `slicer note ID --text TEXT --render --json`.
 func (c Client) Note(ctx context.Context, w runrec.Writer, root, id, text string) error {
+	if strings.TrimSpace(id) == "" {
+		return errors.New("item must not be empty")
+	}
+	if strings.TrimSpace(text) == "" {
+		return errors.New("Note must not be empty")
+	}
 	_, err := c.write(ctx, w, root, "note", id, "--text", text, "--render", "--json")
 	return err
 }

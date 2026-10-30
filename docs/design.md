@@ -100,6 +100,7 @@ ork (TUI)  ork status --json (CLI)
   | `daemon.info` (proposed wire) | none | `{"build_id"}`; no registry or project reads |
   | `daemon.stop` (proposed wire) | `{"force"?}` | `{"stopped":true}`; `daemon_busy` refuses active work without force |
   | `snapshot` | `{"project"}` | the project's `source.Snapshot` (`items`, `deps`, `goals`, `runs`, `open`, `decided`) from the cache, plus the daemon's `engine_runs` array and *proposed* `board_runs` (neither is a Part); each part is `{"value", "age_ms", "read_at"?, "stale"?, "error"?}`: the last good value, its age in ms (0 if never read), when it was read (absent if never), and the last read's error |
+  | `item.note` (proposed wire, S171) | `{"project","item","text"}` | `{"item"}`; slicer note at the registered project root, then refresh Items; blank item or text is `bad_params`; slicer errors keep their code |
   | `item.show` (proposed wire) | `{"project","id"}` | `{"detail"}`; slicer show for the registered project |
   | `wave.start` (`run.launch-wire`; proposed shape) | `{"items":[RunParams...]}`; each item has `project`, `item`, `well_specified`, `split`, optional `lineup`, `budgets` and `expected` as in `run.start` | `{"wave","items":[{"item","run"?,"error"?}]}`; one wave id, one project, admission errors kept per item |
   | `wave.stop` (proposed wire) | `{"wave"}` | the same wave result; stops each unfinished member through `run.stop`, skips final members |
@@ -1221,6 +1222,21 @@ The wire retains dismissed runs with `dismissed: true`, hidden from lists,
 so an open run pane can still show their findings.
 `run.dismiss` takes `{run}` and returns the run record (adj #117). It refuses
 a run that is not stopped or is busy. An unknown run returns `not_found`.
+
+`ork note PROJECT ITEM [--] TEXT [--json]` calls `item.note` (S171).
+Quote TEXT as one argument. Text after ITEM is literal even when it starts
+with `-`: `ork note P S12 "- text"` and `ork note P S12 -- "-x"` both work.
+`--json` may precede PROJECT or follow TEXT. TEXT `-` reads stdin, removing
+its trailing newline. A blank ITEM, blank note or wrong argument count exits
+2 before dialing the daemon. Blank text says `Note must not be empty`;
+wrong counts say `note: takes PROJECT ITEM TEXT, got N arguments; quote TEXT`. Success prints `noted ITEM` or
+`{"item":"ITEM","noted":true}`. The daemon validates the item and text,
+resolves the registered project, and runs
+`slicer note ITEM --text TEXT --render --json --root PROJECT`. It uses a
+writer with no run sink because this write is outside a run. After success
+it refreshes only Items before returning. Notes belong to slicer; snapshots
+and item detail carry its notes without an ork-owned copy. Notes are part
+of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
 
 `ork doctor` checks:
 - the running ork binary: its path, resolved through symlinks

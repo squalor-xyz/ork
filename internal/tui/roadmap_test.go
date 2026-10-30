@@ -164,7 +164,7 @@ func TestRoadmapWritesNothing(t *testing.T) {
 	for _, state := range []string{"awaiting-approval", "paused", "implement"} {
 		for _, detail := range []bool{false, true} {
 			h := roadmapHarness(t)
-			l := &roadmapLive{}
+			l := &noteLive{}
 			h.m.cfg.Live = l
 			h.m.projects[0].snap.EngineRuns = []source.EngineRun{{ID: "engine", Item: "S90", State: state, Pending: "question"}}
 			if detail {
@@ -173,7 +173,7 @@ func TestRoadmapWritesNothing(t *testing.T) {
 					h.m.Update(cmd())
 				}
 			}
-			for _, k := range []string{"a", "x", "t", "y", "enter", "hello", "esc", "down", "up", "j", "k", "n", "p", "?", "?", "s", "s", "/", "esc", "r"} {
+			for _, k := range []string{"a", "x", "t", "y", "enter", "hello", "esc", "N", "typed note", "esc", "down", "up", "j", "k", "n", "p", "?", "?", "s", "s", "/", "esc", "r"} {
 				// Refresh from r is a read and is allowed.
 				_, cmd := h.m.Update(press(k))
 				for _, msg := range exec(cmd) {
@@ -493,6 +493,46 @@ func TestRoadmapGroupKeysLandOnHeadings(t *testing.T) {
 		id := fmt.Sprintf("S%02d", step.cursor+1)
 		if at < 0 || at+1 >= len(lines) || !strings.Contains(lines[at+1], id) {
 			t.Fatalf("%s: the heading %q is not on screen directly above %s:\n%s", step.key, step.heading, id, strings.Join(lines, "\n"))
+		}
+	}
+}
+
+func TestItemPaneListsNotes(t *testing.T) {
+	h := roadmapHarness(t)
+	d := &slicercli.Detail{Item: slicercli.Item{Title: "Title", Notes: []string{"first note", "second note"}}, Slice: &slicercli.Spec{Sections: []slicercli.Section{{Heading: "Why", Body: "section text"}}}}
+	h.m.itemPane = &itemPane{project: "ork", id: "S90", detail: d}
+	v := h.view()
+	if !strings.Contains(v, "Notes (2)") || !strings.Contains(v, "first note") || !strings.Contains(v, "second note") || strings.Index(v, "Notes (2)") < strings.Index(v, "section text") {
+		t.Fatalf("notes missing or before sections:\n%s", v)
+	}
+	d.Notes = nil
+	if strings.Contains(h.view(), "Notes (") {
+		t.Fatal("empty notes heading")
+	}
+}
+
+func TestItemPaneNotesUseHangingBullets(t *testing.T) {
+	h := roadmapHarness(t)
+	h.m.itemPane = &itemPane{project: "ork", id: "S90", detail: &slicercli.Detail{Item: slicercli.Item{Notes: []string{"first note wraps over several lines in this pane", "second note"}}}}
+	lines := h.m.roadmap(24).body
+	var notes []string
+	inNotes := false
+	for _, line := range lines {
+		line = sgr.ReplaceAllString(line, "")
+		if line == "Notes (2)" {
+			inNotes = true
+			continue
+		}
+		if inNotes {
+			notes = append(notes, line)
+		}
+	}
+	if len(notes) < 3 || !strings.HasPrefix(notes[0], indent+"- ") || !strings.HasPrefix(notes[1], indent+"  ") || notes[len(notes)-1] != indent+"- second note" {
+		t.Fatalf("notes: %q", notes)
+	}
+	for _, line := range notes {
+		if lipgloss.Width(line) > 24 {
+			t.Errorf("overwide: %q", line)
 		}
 	}
 }

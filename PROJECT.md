@@ -62,12 +62,16 @@ reads and writes them only through their CLIs.
 ## v1 scope
 
 v1 is the monitoring dashboard plus launching and supervising slice waves
-(`scope.v1`). Editing roadmaps and decisions waits for a later version.
+(`scope.v1`). v1.0 includes filing a slice (S170), adding slice notes (S171),
+and answering or asking adj records (S172, S185), as decided in
+`scope.v1-ork-edits` (#173). Reordering or parking items (S67-S69), the role
+matrix editor (S173) and spec drafting (S179) stay later.
 
 **In v1:**
 - Dashboard over 4 registered projects: slicer, adjudicate, DataBall and
   agents (`registry.initial`).
-- Read-only roadmap and decision views.
+- Roadmap and decision views, with slice filing, notes, and asking or answering
+  adj records (`scope.v1-ork-edits`).
 - Relays with per-role detail: output tail, tokens and cost, elapsed time
   and stale flags, diff stat and tests, and ASCII charts and animations
   (`dash.role-detail`). Relays started outside ork appear view-only
@@ -106,8 +110,9 @@ v1 is the monitoring dashboard plus launching and supervising slice waves
   JSON CLI (`daemon.lifetime`, `daemon.start`, `cli.json`).
 
 **After v1:**
-- Roadmap editing (`ui.slicer-tui` is open).
-- Decision editing beyond owner questions inside a slice.
+- Reordering or parking roadmap items (S67-S69), the role matrix editor
+  (S173), and spec drafting (S179).
+- Decision editing beyond asking and answering adj records.
 - Batched landing and changelog conflict resolution.
 - agentbox sandboxing.
 - A web front end.

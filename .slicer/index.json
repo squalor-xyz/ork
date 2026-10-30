@@ -8252,7 +8252,7 @@
       "id": "S171",
       "title": "Add a note to a slice in ork",
       "short_title": "Add a slice note in ork",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8262,6 +8262,17 @@
           "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): defaults accepted. Depends on adj scope.v1-ork-edits (adj 173, open): do not start until the owner decides it.",
           "created_at": "2026-10-29T16:08:54Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "48ac0b69-4850-4730-940e-e5360892a982",
+          "kind": "",
+          "text": "**2026-10-30** — Review FAIL (review round 1, 2026-10-30): ork note rejects positional text starting with - (shared parse re-runs flag.Parse), and PROJECT.md/docs/dashboard.md say other edits wait for later, contradicting adj 173 (include). Fix round 1.",
+          "created_at": "2026-10-30T01:17:53Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -8285,7 +8296,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

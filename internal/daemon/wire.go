@@ -23,6 +23,7 @@ const (
 	MethodDaemonInfo   = "daemon.info"   // no params, result DaemonInfoResult
 	MethodDaemonStop   = "daemon.stop"   // params StopParams, result StopResult
 	MethodStatus       = "status"        // params StatusParams, result StatusResult
+	MethodItemNote     = "item.note"     // proposed; params ItemNoteParams, result ItemNoteResult
 	MethodItemShow     = "item.show"     // proposed; params ItemShowParams, result ItemShowResult
 	MethodSnapshot     = "snapshot"      // params SnapshotParams, result SnapshotResult
 	MethodProjectsList = "projects.list" // no params, result ProjectsResult
@@ -333,6 +334,18 @@ type ItemShowParams struct {
 // ItemShowResult wraps slicer's detail. Proposed wire field.
 type ItemShowResult struct {
 	Detail *slicercli.Detail `json:"detail"`
+}
+
+// ItemNoteParams adds owner text to a registered project's item. Proposed wire fields.
+type ItemNoteParams struct {
+	Project string `json:"project"`
+	Item    string `json:"item"`
+	Text    string `json:"text"`
+}
+
+// ItemNoteResult names the item noted. Proposed wire field.
+type ItemNoteResult struct {
+	Item string `json:"item"`
 }
 
 // WaveSuggestParams names the project whose plan-parallel waves are read.

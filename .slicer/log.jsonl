@@ -2601,3 +2601,9 @@
 {"when": "2026-10-30T01:00:21Z", "item": "S195", "action": "add", "from": "", "to": "open", "note": "S176 later notes: report open guards, viewer heading and list indent"}
 {"when": "2026-10-30T01:00:21Z", "item": "S195", "action": "note", "from": "", "to": "", "note": "From the S176 review, UI pass and gates (2026-10-29), all la", "by": "Jon R"}
 {"when": "2026-10-30T01:04:59Z", "item": "S90", "action": "retire", "from": "open", "to": "retired", "note": "Relayed 2026-10-30 (run-20261030-010033-9d07): S142 already corrected every stale line in scope (docs/boundaries.md:38, docs/glossary.md:144, internal/roles/roles.go:56); no change needed, as the 2026-10-29 owner note said (retire once S142 lands). Remaining out-of-scope matches go to S183."}
+{"when": "2026-10-30T01:05:24Z", "item": "S171", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-30T01:17:53Z", "item": "S171", "action": "note", "from": "", "to": "", "note": "Review FAIL (review round 1, 2026-10-30): ork note rejects p", "by": "Jon R"}
+{"when": "2026-10-30T12:44:08Z", "item": "S171", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-30T12:47:03Z", "item": "S171", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-30T12:47:03Z", "item": "S171", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-30T13:00:01Z", "item": "S171", "action": "status", "from": "started", "to": "done", "note": "Add a slice note from ork: daemon item.note over slicer note (CLI only, no copy), ork note PROJECT ITEM [--] TEXT|-, N on the Roadmap and item pane opens a one-line composer; notes list with hanging bullets in the item pane; N tier below m matrix (owner). Gate PASS round 2 (opus medium) after a fix round; UI pass PASS round 2.", "by": "Jon R"}

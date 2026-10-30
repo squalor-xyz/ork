@@ -124,6 +124,12 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return d.status(ctx, p)
+	case MethodItemNote:
+		var p ItemNoteParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.itemNote(ctx, p)
 	case MethodItemShow:
 		var p ItemShowParams
 		if err := decode(params, &p); err != nil {

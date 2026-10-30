@@ -21,6 +21,13 @@ type laterFiler interface {
 
 var _ laterFiler = (*Daemon)(nil)
 
+// itemNoter is optional for Live test doubles.
+type itemNoter interface {
+	ItemNote(ctx context.Context, project, item, text string) error
+}
+
+var _ itemNoter = (*Daemon)(nil)
+
 // paneRun is the engine run the pane shows, as the last snapshot has it.
 func (m *Model) paneRun() *source.EngineRun {
 	if m.pane == nil || m.pane.ledger {

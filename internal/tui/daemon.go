@@ -115,6 +115,16 @@ func (d *Daemon) ItemShow(ctx context.Context, project, id string) (*slicercli.D
 	return c.ItemShow(ctx, project, id)
 }
 
+// ItemNote adds a note to the registered project's item.
+func (d *Daemon) ItemNote(ctx context.Context, project, item, text string) error {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	return c.ItemNote(ctx, project, item, text)
+}
+
 func (d *Daemon) Plan(ctx context.Context, params daemon.RunParams) (*daemon.RunPlan, error) {
 	c, err := d.Connect(ctx)
 	if err != nil {

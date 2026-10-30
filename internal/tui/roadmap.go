@@ -249,6 +249,18 @@ func (m *Model) roadmap(w int) overviewView {
 				heading(d.Title)
 				add("Size: " + d.Fields.Size)
 			}
+			if len(d.Notes) > 0 {
+				heading(fmt.Sprintf("Notes (%d)", len(d.Notes)))
+				for _, note := range d.Notes {
+					for i, line := range wrapText(note, max(w-4, 1)) {
+						prefix := "- "
+						if i > 0 {
+							prefix = "  "
+						}
+						out.body = append(out.body, indent+prefix+line)
+					}
+				}
+			}
 		default:
 			add("No item detail returned")
 		}

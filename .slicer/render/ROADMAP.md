@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-195 items · — 42 · done 147 · retired 6
+195 items · — 41 · done 148 · retired 6
 
 ## v1.1
 
@@ -237,7 +237,7 @@
 | 180 | [S168](slices/S168.md) | Role matrix view | S | - |  | discovered from S165 | done |
 | 181 | [S169](slices/S169.md) | Vendor slots and stand-in | M | - |  | discovered from S165 | — |
 | 182 | [S170](slices/S170.md) | File a slice in ork | M | - |  | discovered from S165 | — |
-| 183 | [S171](slices/S171.md) | Add a slice note in ork | S | - |  | discovered from S165 | — |
+| 183 | [S171](slices/S171.md) | Add a slice note in ork | S | - |  | discovered from S165 | done |
 | 184 | [S172](slices/S172.md) | adj answers in ork | M | - |  | discovered from S165 | — |
 | 185 | [S174](slices/S174.md) | More registry settings | M | - |  | discovered from S165 | done |
 | 186 | [S175](slices/S175.md) | End a stale ledger run | S | - |  | discovered from S165 | done |

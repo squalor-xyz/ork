@@ -278,3 +278,29 @@ func TestReadsAreNotWrites(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestNoteRefusesEmptyText(t *testing.T) {
+	for _, text := range []string{"", " \t\n"} {
+		c, fake := client(t)
+		w, _ := writer()
+		if err := c.Note(context.Background(), w, wt, "S04", text); err == nil {
+			t.Error("blank note accepted")
+		}
+		if calls := fake.CallsTo("slicer"); len(calls) != 0 {
+			t.Fatalf("blank note called slicer: %v", calls)
+		}
+	}
+}
+
+func TestNoteRefusesEmptyItem(t *testing.T) {
+	for _, id := range []string{"", " \t"} {
+		c, fake := client(t)
+		w, _ := writer()
+		if err := c.Note(context.Background(), w, wt, id, "text"); err == nil {
+			t.Error("blank item accepted")
+		}
+		if calls := fake.CallsTo("slicer"); len(calls) != 0 {
+			t.Fatalf("blank item called slicer: %v", calls)
+		}
+	}
+}

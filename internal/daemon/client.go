@@ -256,6 +256,12 @@ func (c *Client) ItemShow(ctx context.Context, project, id string) (*slicercli.D
 	return out.Detail, nil
 }
 
+// ItemNote adds a note through slicer and refreshes the project's items.
+func (c *Client) ItemNote(ctx context.Context, project, item, text string) error {
+	var out ItemNoteResult
+	return c.Call(ctx, MethodItemNote, ItemNoteParams{Project: project, Item: item, Text: text}, &out)
+}
+
 // Plan resolves the slice's launch plan without starting it.
 func (c *Client) Plan(ctx context.Context, params RunParams) (*RunPlan, error) {
 	var out RunPlan
