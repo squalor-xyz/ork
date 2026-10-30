@@ -2653,3 +2653,7 @@
 {"when": "2026-10-30T15:54:12Z", "item": "S202", "action": "add", "from": "", "to": "open", "note": "S185 later notes: decide refusal codes, option wrap, help with no options"}
 {"when": "2026-10-30T15:54:12Z", "item": "S202", "action": "note", "from": "", "to": "", "note": "From the S185 review, UI pass and gate (2026-10-30), all lat", "by": "Jon R"}
 {"when": "2026-10-30T15:54:26Z", "item": "S183", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-30T16:02:37Z", "item": "S104", "action": "note", "from": "", "to": "", "note": "Owner 2026-10-30 (interactive): retire as met by S185 (7e243", "by": "Jon R"}
+{"when": "2026-10-30T16:02:37Z", "item": "S202", "action": "note", "from": "", "to": "", "note": "From S104 (retired 2026-10-30 as met by S185): S104's spec a", "by": "Jon R"}
+{"when": "2026-10-30T16:02:41Z", "item": "S104", "action": "retire", "from": "open", "to": "retired", "note": "Met by S185 (owner 2026-10-30)"}
+{"when": "2026-10-30T16:02:42Z", "item": "S112", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1.0"}
