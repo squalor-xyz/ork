@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 200,
+  "next_id": 201,
   "preamble": "",
   "passes": [
     {
@@ -9599,6 +9599,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S146",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S200",
+      "title": "S172 later notes: ask asker env, control characters in adj text, EOF newline",
+      "short_title": "S172 later notes: ask asker env, control characters in adj text, EOF newline",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "4441f46b-dbbb-46a2-9f2b-96bf14082b54",
+          "kind": "",
+          "text": "**2026-10-30** — From the S172 review, UI pass and gate (2026-10-30), all later: (1) adj.ask without --by takes the daemon environment's ADJ_ASKED_BY, not the caller's (adjudicate/internal/cli/ask.go:79-81); (2) ork adj answer prints adj record titles and summaries with no control-character filter (internal/cli/adj.go about :97-103); (3) on input that ends without a newline, cancelled prints on the prompt line (same as ork run).",
+          "created_at": "2026-10-30T14:29:55Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S172",
         "parent": "",
         "cites": [],
         "key": "",

@@ -2641,3 +2641,5 @@
 {"when": "2026-10-30T14:03:23Z", "item": "S198", "action": "note", "from": "", "to": "", "note": "More v11 rules decided 2026-10-30 (slicer s408, s411, s425):", "by": "Jon Robbins"}
 {"when": "2026-10-30T14:08:14Z", "item": "S199", "action": "add", "from": "", "to": "open", "note": "S146 later notes: id fit boundary test, section toggle, short step part"}
 {"when": "2026-10-30T14:08:14Z", "item": "S199", "action": "note", "from": "", "to": "", "note": "From the S146 review, UI pass and gate (2026-10-30), all lat", "by": "Jon R"}
+{"when": "2026-10-30T14:29:55Z", "item": "S200", "action": "add", "from": "", "to": "open", "note": "S172 later notes: ask asker env, control characters in adj text, EOF newline"}
+{"when": "2026-10-30T14:29:55Z", "item": "S200", "action": "note", "from": "", "to": "", "note": "From the S172 review, UI pass and gate (2026-10-30), all lat", "by": "Jon R"}
