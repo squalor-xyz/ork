@@ -2635,3 +2635,5 @@
 {"when": "2026-10-30T13:29:26Z", "item": "S24", "action": "note", "from": "", "to": "", "note": "Spec is stale as of 2026-10-30: it cites acceptedContracts =", "by": "Jon Robbins"}
 {"when": "2026-10-30T13:44:08Z", "item": "S198", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-10-30T14:03:23Z", "item": "S198", "action": "note", "from": "", "to": "", "note": "More v11 rules decided 2026-10-30 (slicer s408, s411, s425):", "by": "Jon Robbins"}
+{"when": "2026-10-30T14:08:14Z", "item": "S199", "action": "add", "from": "", "to": "open", "note": "S146 later notes: id fit boundary test, section toggle, short step part"}
+{"when": "2026-10-30T14:08:14Z", "item": "S199", "action": "note", "from": "", "to": "", "note": "From the S146 review, UI pass and gate (2026-10-30), all lat", "by": "Jon R"}

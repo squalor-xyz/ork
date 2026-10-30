@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 199,
+  "next_id": 200,
   "preamble": "",
   "passes": [
     {
@@ -9557,6 +9557,46 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S199",
+      "title": "S146 later notes: id fit boundary test, section toggle, short step part",
+      "short_title": "S146 later notes: id fit boundary test, section toggle, short step part",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "c30aa2f8-4cf9-4642-8628-a9541a75f34f",
+          "kind": "",
+          "text": "**2026-10-30** — From the S146 review, UI pass and gate (2026-10-30), all later: (1) no test at the exact width where settleRunIDs switches (a 2-column room shift went unnoticed); (2) a section's ids still toggle together as ages grow near the edge (hysteresis was option d, not picked); (3) removing shortHeader/shortText dropped the no-vendor/model step-part fallback for one-line ledger rows; (4) the Running entry's non-live rows keep the per-row fit; (5) test hygiene: a 3+ Needs rows golden with the pane open at 80x24, and the Questions-tab title test calling paneLines directly.",
+          "created_at": "2026-10-30T14:08:14Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S146",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": null,
         "attempts": 0
       }
     }
