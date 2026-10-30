@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 203,
+  "next_id": 204,
   "preamble": "",
   "passes": [
     {
@@ -10819,6 +10819,49 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S185",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S203",
+      "title": "S112 later notes: dash-leading answers, Via passthrough, ledger option rendering",
+      "short_title": "S112 later notes: dash-leading answers, Via passthrough, ledger option rendering",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "17daa86c-8122-49c7-afea-fa1f5e3d5955",
+          "kind": "",
+          "text": "**2026-10-30** — From the S112 review, UI passes and gate (2026-10-30), all later: (1) a one-word answer, option or name that starts with - is rejected by slicer's argparse (expected one argument); use --text=VALUE, --option=VALUE, --by=VALUE in internal/slicercli/write.go about :343-350 (adjcli.go :151,:231 have the same pattern); (2) the daemon accepts Via cli or tui but always passes Via tui to AnswerRecord (internal/daemon/relayanswer.go about :107); (3) ledger options with an empty summary render 'Files: ' with a trailing colon (pane.go:480); (4) option 5 and later are numbered but no key picks them; (5) a long run id wraps mid-word and the inline header can shrink to a bare Run when the footer is full (pane.go:389). Process note: S112 fix round 1 fell back to Claude when Codex ran out of credits (2026-10-30).",
+          "created_at": "2026-10-30T17:20:04Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S112",
         "parent": "",
         "cites": [],
         "key": "",
