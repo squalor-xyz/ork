@@ -2656,3 +2656,12 @@
 {"when": "2026-10-30T15:54:49Z", "item": "S183", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-30T16:09:39Z", "item": "S183", "action": "note", "from": "", "to": "", "note": "Review FAIL (round 1, opus medium): boundaries.md landing bu", "by": "Jon R"}
 {"when": "2026-10-30T16:15:04Z", "item": "S183", "action": "status", "from": "started", "to": "done", "note": "Fixed review round 1 documentation findings: qualified slice-result commits and the handoff base-branch .slicer commit, applied decided mouse policy, restored keyed run-answer filing, corrected UI-pass and stop-point anchors, refreshed completed parity rows and gaps including independently verified dependency refusal, and recounted 32 exists, 3 partial, 6 missing. Verified against code and adj 129, 173 and 174. Race suite passed all 20 packages; go vet, formatting, slicer check, adj lint, git diff --check, 16 documentation checks and removed-text rg checks passed. No Go code or golden views changed.", "by": "Jon R"}
+{"when": "2026-10-30T16:02:37Z", "item": "S104", "action": "note", "from": "", "to": "", "note": "Owner 2026-10-30 (interactive): retire as met by S185 (7e243", "by": "Jon R"}
+{"when": "2026-10-30T16:02:37Z", "item": "S202", "action": "note", "from": "", "to": "", "note": "From S104 (retired 2026-10-30 as met by S185): S104's spec a", "by": "Jon R"}
+{"when": "2026-10-30T16:02:41Z", "item": "S104", "action": "retire", "from": "open", "to": "retired", "note": "Met by S185 (owner 2026-10-30)"}
+{"when": "2026-10-30T16:02:42Z", "item": "S112", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1.0"}
+{"when": "2026-10-30T16:06:19Z", "item": "S112", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-30T16:06:19Z", "item": "S112", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-10-30T16:06:19Z", "item": "S112", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-30T16:06:20Z", "item": "S112", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-30T16:07:20Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Implement"}
