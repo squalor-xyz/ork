@@ -2624,3 +2624,5 @@
 {"when": "2026-10-30T13:22:11Z", "item": "S147", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-30T13:22:11Z", "item": "S146", "action": "set", "from": "", "to": "", "note": "size S→M"}
 {"when": "2026-10-30T13:22:11Z", "item": "S66", "action": "note", "from": "", "to": "", "note": "Added 2026-10-30 from the S146 triage: S66 hit-testing must ", "by": "Jon R"}
+{"when": "2026-10-30T13:29:26Z", "item": "S198", "action": "add", "from": "", "to": "open", "note": "ork accepts slicer relay v11"}
+{"when": "2026-10-30T13:29:26Z", "item": "S24", "action": "note", "from": "", "to": "", "note": "Spec is stale as of 2026-10-30: it cites acceptedContracts =", "by": "Jon Robbins"}
