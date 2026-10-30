@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 195,
+  "next_id": 196,
   "preamble": "",
   "passes": [
     {
@@ -9322,6 +9322,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S182",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S195",
+      "title": "S176 later notes: report open guards, viewer heading and list indent",
+      "short_title": "S176 later notes: report open guards, viewer heading and list indent",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "db1929d6-0988-435c-9b77-9b2437f0a128",
+          "kind": "",
+          "text": "**2026-10-30** — From the S176 review, UI pass and gates (2026-10-29), all later: (1) ReadReport and readRender open with plain os.Open, so a FIFO swapped in could block a daemon handler: open with O_NONBLOCK|O_NOFOLLOW; (2) a failed read shows the wire code (not_found: no report), shared with renders; (3) the heading repeats the file name's role and round, could show the verdict; (4) a wrapped markdown list item continues at the left margin; (5) non-ASCII report text is shown as written (PlainText strips controls only); (6) on the approval-card pane p report now displaces x stop from the hint line (owner priority).",
+          "created_at": "2026-10-30T01:00:21Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S176",
         "parent": "",
         "cites": [],
         "key": "",

@@ -2598,3 +2598,5 @@
 {"when": "2026-10-29T23:39:31Z", "item": "S194", "action": "add", "from": "", "to": "open", "note": "S182 later notes: hung sibling retry brief, vendor event cadence, Overview reason clip"}
 {"when": "2026-10-29T23:39:31Z", "item": "S194", "action": "note", "from": "", "to": "", "note": "From the S182 review, UI pass and gate (2026-10-29), all lat", "by": "Jon R"}
 {"when": "2026-10-29T23:39:31Z", "item": "S183", "action": "note", "from": "", "to": "", "note": "Added 2026-10-29 from the S182 review: docs/orchestrator-par", "by": "Jon R"}
+{"when": "2026-10-30T01:00:21Z", "item": "S195", "action": "add", "from": "", "to": "open", "note": "S176 later notes: report open guards, viewer heading and list indent"}
+{"when": "2026-10-30T01:00:21Z", "item": "S195", "action": "note", "from": "", "to": "", "note": "From the S176 review, UI pass and gates (2026-10-29), all la", "by": "Jon R"}
