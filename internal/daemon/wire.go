@@ -15,6 +15,8 @@ import (
 
 // The methods a client can call.
 const (
+	MethodAdjAnswer    = "adj.answer"    // proposed; params AdjAnswerParams, result AdjAnswerResult
+	MethodAdjAsk       = "adj.ask"       // proposed; params AdjAskParams, result AdjAskResult
 	MethodWaveStart    = "wave.start"    // params WaveStartParams (run.launch-wire), proposed result shape WaveResult
 	MethodWaveStop     = "wave.stop"     // proposed wire; params WaveAction, result WaveResult
 	MethodWaveSuggest  = "wave.suggest"  // proposed wire; params WaveSuggestParams, result slicercli.ParallelPlan
@@ -383,4 +385,39 @@ type ItemNewParams struct {
 type ItemNewResult struct {
 	ID       string `json:"id"`
 	Existing bool   `json:"existing"`
+}
+
+// AdjAnswerParams records the answer explicitly confirmed by the owner.
+// Proposed wire fields (S172); Via is cli or tui.
+type AdjAnswerParams struct {
+	Project string `json:"project"`
+	ID      int    `json:"id"`
+	Option  string `json:"option,omitempty"`
+	Text    string `json:"text,omitempty"`
+	By      string `json:"by"`
+	Via     string `json:"via"`
+}
+
+// AdjAnswerResult is the adj notice after deciding. Proposed wire field.
+type AdjAnswerResult struct {
+	Message string `json:"message"`
+}
+
+// AdjAskParams files an owner question. Proposed wire fields (S172).
+type AdjAskParams struct {
+	Project   string             `json:"project"`
+	Title     string             `json:"title"`
+	Key       string             `json:"key,omitempty"`
+	Context   string             `json:"context,omitempty"`
+	Options   []adjcli.AskOption `json:"options,omitempty"`
+	Recommend string             `json:"recommend,omitempty"`
+	Reasoning string             `json:"reasoning,omitempty"`
+	Refs      []string           `json:"refs,omitempty"`
+	Tags      []string           `json:"tags,omitempty"`
+	By        string             `json:"by,omitempty"`
+}
+
+// AdjAskResult is the new adj record id. Proposed wire field.
+type AdjAskResult struct {
+	ID int `json:"id"`
 }

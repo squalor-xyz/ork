@@ -2631,3 +2631,7 @@
 {"when": "2026-10-30T13:29:26Z", "item": "S198", "action": "add", "from": "", "to": "open", "note": "ork accepts slicer relay v11"}
 {"when": "2026-10-30T13:29:26Z", "item": "S24", "action": "note", "from": "", "to": "", "note": "Spec is stale as of 2026-10-30: it cites acceptedContracts =", "by": "Jon Robbins"}
 {"when": "2026-10-30T13:44:08Z", "item": "S198", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-30T13:50:35Z", "item": "S172", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-30T14:08:01Z", "item": "S172", "action": "note", "from": "", "to": "", "note": "Review FAIL (review round 1, 2026-10-30): a leading-dash tit", "by": "Jon R"}
+{"when": "2026-10-30T14:08:01Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-10-30T14:20:58Z", "item": "S172", "action": "status", "from": "started", "to": "done", "note": "Answer and ask adj records in ork: adjcli Show/Ask/DecideOption, engine AnswerRecord/AskRecord (adj check first; refuses decided/closed records, wrong labels, leading-dash titles, a via other than cli/tui), daemon adj.answer/adj.ask with refresh, ork adj answer (always prompts, shows #ID Title with the recommended option marked; no --yes) and ork adj ask. Never rejects or supersedes. Gate PASS round 2 (opus medium) after a fix round; UI pass PASS round 2.", "by": "Jon R"}

@@ -207,3 +207,59 @@ func TestAdjPlainAnswerErrorsHideArgv(t *testing.T) {
 		})
 	}
 }
+
+func TestAdjClientShowAskAndDecideOption(t *testing.T) {
+	c := client(t,
+		clitest.Route{Tool: "adj", Args: []string{"show", "12", "--json", "--root", root}, Stdout: `{"id":12,"title":"Which?","status":"open"}`},
+		clitest.Route{Tool: "adj", Args: []string{"ask", "Which?", "--key", "a.b", "--context", "C", "--option", "a:A", "--option", "b:B", "--tradeoffs", "a:T", "--recommend", "a", "--reasoning", "R", "--ref", "X", "--tag", "tag", "--by", "NAME", "--root", root}, Stdout: "12\n"},
+		clitest.Route{Tool: "adj", Args: []string{"decide", "12", "a", "--why", "W", "--by", "NAME", "--root", root}},
+	)
+	r, err := c.Show(context.Background(), root, 12)
+	if err != nil || r.ID != 12 || r.Title != "Which?" {
+		t.Fatalf("show: %+v %v", r, err)
+	}
+	id, err := c.AskQuestion(context.Background(), runrec.Writer{}, root, AskSpec{Title: "Which?", Key: "a.b", Context: "C", Options: []AskOption{{Label: "a", Summary: "A", Tradeoffs: "T"}, {Label: "b", Summary: "B"}}, Recommend: "a", Reasoning: "R", Refs: []string{"X"}, Tags: []string{"tag"}, By: "NAME"})
+	if err != nil || id != 12 {
+		t.Fatalf("ask: %d %v", id, err)
+	}
+	if err := c.DecideOption(context.Background(), runrec.Writer{}, root, 12, "a", "W", "NAME"); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile("adjcli.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, verb := range []string{`"reject"`, `"supersede"`, `"withdraw"`} {
+		if strings.Contains(string(b), verb) {
+			t.Fatal("forbidden verb", verb)
+		}
+	}
+}
+
+func TestAdjRecordErrorsHideArgv(t *testing.T) {
+	for _, verb := range []string{"show", "check", "ask", "decide"} {
+		t.Run(verb, func(t *testing.T) {
+			c := client(t, clitest.Route{Tool: "adj", Args: []string{verb}, Prefix: true, Stderr: "disk full\n", Exit: 1})
+			var err error
+			switch verb {
+			case "show":
+				_, err = c.Show(context.Background(), root, 12)
+			case "check":
+				_, _, err = c.Check(context.Background(), runrec.Writer{}, root, "private.key")
+			case "ask":
+				_, err = c.AskQuestion(context.Background(), runrec.Writer{}, root, AskSpec{Title: "private title", Context: "private context"})
+			case "decide":
+				err = c.DecideOption(context.Background(), runrec.Writer{}, root, 12, "private label", "private reason", "owner")
+			}
+			if err == nil || err.Error() != "adj: exit 1: disk full" {
+				t.Fatalf("error %v", err)
+			}
+		})
+	}
+	for _, out := range []string{"", "0", "-1", "created 12"} {
+		c := client(t, clitest.Route{Tool: "adj", Args: []string{"ask"}, Prefix: true, Stdout: out})
+		if _, err := c.AskQuestion(context.Background(), runrec.Writer{}, root, AskSpec{Title: "Title"}); err == nil {
+			t.Fatalf("accepted id %q", out)
+		}
+	}
+}

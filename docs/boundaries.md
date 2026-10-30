@@ -69,7 +69,9 @@ change the contract by itself.
   hand.
 - `adj decide` runs only on an explicit owner action, as the owner, for
   example when the owner answers a question inside a slice
-  (`owner.questions`). No role and no automatic step triggers it.
+  (`owner.questions`) or confirms an open record with `ork adj answer`.
+  The latter always prompts and has no `--yes`. No role and no automatic
+  step triggers it. ork never rejects, supersedes or withdraws a record.
 - Commits only on slice branches, only after the owner approves the slice
   (`git.commit`). Confirmed cleanup may run `git worktree remove` then
   `git branch -d` for a merged run (`git.cleanup-key`). No merge, push or
