@@ -43,7 +43,7 @@ What to take from it:
 
 One slice run, from launch to landed. Any state can go to `paused` (a
 question, a budget limit or an error) or to `stopped` (a stop rule or your
-stop). The names are the states in `internal/runrec/record.go:22-35`.
+stop). The names are the states in `internal/runrec/record.go:21-35`.
 
 ```mermaid
 stateDiagram-v2
@@ -77,14 +77,14 @@ Notes:
 - `awaiting_approval` is the state `awaiting-approval` (Mermaid does not
   allow the hyphen).
 - When the lineup has an architect (the matrix gives one on size L), an `architect` round runs after review and before the
-  gate (`docs/design.md:233`). It is left out here to keep the picture short.
+  gate (`docs/design.md:290-293`). It is left out here to keep the picture short.
 - A stopped run waits in Needs you until you dismiss it (`ork dismiss RUN`).
 
 ## 3. One relay round
 
 The roles of one slice, in order, with what you do. The reviewer and the UI
 pass run at the same time. The UI pass runs only on a slice that touches the
-UI (`docs/design.md:269-275`).
+UI (`docs/design.md:295-319`).
 
 ```mermaid
 sequenceDiagram
@@ -118,7 +118,7 @@ Notes:
   waits for your answer. See diagram 6.
 - Landing is: merge the base branch into the worktree if it moved, re-check,
   fast-forward the main checkout, `slicer land`, push if the project's `push`
-  is on, then remove the worktree and branch (`docs/design.md:351-382`).
+  is on, then remove the worktree and branch (`docs/design.md:383-416`).
 
 ## 4. A wave
 
@@ -142,10 +142,10 @@ flowchart TD
 Notes:
 
 - One wave holds one project. Several waves can run at once
-  (`docs/design.md:212-214`).
+  (`docs/design.md:231-233`).
 - The global cap is 4 busy runs unless the registry sets `global_cap`
-  (`internal/daemon/runs.go:44`). A project has no cap unless its `cap` is set
-  (`internal/daemon/runs.go:727-745`). An item over a cap waits as `queued`.
+  (`internal/daemon/runs.go:47`). A project has no cap unless its `cap` is set
+  (`internal/daemon/runs.go:793-813`). An item over a cap waits as `queued`.
 - One failed or stopped item leaves the others running. `ork stop WAVE`
   stops every unfinished member.
 
@@ -158,7 +158,7 @@ flowchart TD
     a["Install and build ork"] --> b["ork doctor"]
     b --> c["Add a project: + in the TUI, or ork projects add"]
     c --> d["Project settings: ork projects set"]
-    d --> e["Check the role matrix in slicer"]
+    d --> e["Check the role matrix in ork"]
     e --> f["Pick a slice: l on the Roadmap, or ork run"]
     f --> g["Answer well specified and split, read the plan, confirm"]
     g --> h["Watch it on the Overview"]
@@ -167,12 +167,15 @@ flowchart TD
 
 Notes:
 
-- Step "Check the role matrix" is done with `slicer relay-roles` outside ork
-  today. ork shows the chosen lineup in the plan and lets you change it for
-  one run (`e` in Waves). It does not edit the matrix.
+- Step "Check the role matrix" uses `ork roles matrix PROJECT` or `m` on
+  the Roadmap (S168; `internal/cli/roles.go:69-89`,
+  `internal/tui/roadmap.go:67-85`). ork shows the chosen lineup in the plan
+  and lets you change it for one run
+  (`e` in Waves or the Roadmap launch confirmation). It does not edit the
+  matrix.
 - `ork doctor` reports whether the slicer contract is one ork accepts. It is
   not a gate: the engine makes the same contract check itself before it
-  creates a run (`docs/design.md:1117-1121`).
+  creates a run (`docs/design.md:1403-1410`).
 
 ## 6. Daily monitoring and answering
 

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-202 items · — 42 · done 154 · retired 6
+202 items · — 41 · done 155 · retired 6
 
 ## v1.1
 
@@ -252,7 +252,7 @@
 | 195 | [S178](slices/S178.md) | Doctor upgrade hints | S | - |  | discovered from S165 | done |
 | 196 | [S181](slices/S181.md) | Warn on blocked item | S | - |  | discovered from S165 | done |
 | 197 | [S182](slices/S182.md) | Hung role watchdog | M | - |  | discovered from S165 | done |
-| 198 | [S183](slices/S183.md) | Fix stale doc statements | S | - |  | discovered from S165 | — |
+| 198 | [S183](slices/S183.md) | Fix stale doc statements | S | - |  | discovered from S165 | done |
 | 199 | [S184](slices/S184.md) | Launch spec check sitting | M | - |  | discovered from S167 | done |
 | 200 | [S185](slices/S185.md) | adj answer keys in the TUI | S | - |  | discovered from S172 | done |
 | 201 | [S198](slices/S198.md) | Accept relay v11 | M | 2 |  | owner contract review 2026-10-30 (slicer, adj, ork alignment); slicer s424 (relay v11 cleanup and bump) | — |

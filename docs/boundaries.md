@@ -72,10 +72,16 @@ change the contract by itself.
   (`owner.questions`) or confirms an open record with `ork adj answer`.
   The latter always prompts and has no `--yes`. No role and no automatic
   step triggers it. ork never rejects, supersedes or withdraws a record.
-- Commits only on slice branches, only after the owner approves the slice
-  (`git.commit`). Confirmed cleanup may run `git worktree remove` then
-  `git branch -d` for a merged run (`git.cleanup-key`). No merge, push or
-  tag in v1.
+- Slice result commits go on slice branches, only after the owner approves
+  the slice (`git.commit`).
+  In handoff mode, landing also commits the `.slicer` change on the base
+  branch as `ID done` (`internal/engine/land.go:68-80`).
+  Confirmed cleanup may run `git worktree remove` then
+  `git branch -d` for a merged run (`git.cleanup-key`).
+  Landing fast-forwards the base branch after merging it into the slice
+  branch and re-checking if it moved. ork runs `slicer land`, pushes when
+  the project allows it, and cleans up
+  (`landing.in-ork`). ork does not tag.
 - Act only on runs that ork launched. Relays started elsewhere are
   view-only (`dash.external-runs`), with one exception: ork may end a
   stale ledger run after a y/N confirm (`dash.external-runs-end`, adj 174).

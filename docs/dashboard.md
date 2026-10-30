@@ -11,8 +11,8 @@ later.
 
 - **Needs-you first.** Every screen answers one question first: what needs
   the owner now.
-- **One keystroke** for every common action on any screen. Mouse clicks do
-  the same things.
+- **One keystroke** for every common action on any screen.
+  Mouse clicks are off in v1; if S66 builds them, they are opt-in by a flag (`ui.mouse`).
 - **Color is never the only signal.** Every colored state also has a word
   or symbol, and there is a monochrome theme.
 - **Show the command.** Every write shows the exact command it will run.

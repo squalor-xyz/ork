@@ -1,7 +1,7 @@
 # ork — dashboard and engine for parallel slice relays
 
-Status: spec only, no code. Language Go. License GPL-3.0-or-later (Squalor
-LLC).
+Status: in development, with a Go CLI, TUI and relay engine.
+License GPL-3.0-or-later (Squalor LLC).
 
 This file says what ork is and why. The relay engine is specified in
 [docs/design.md](docs/design.md), the screens in

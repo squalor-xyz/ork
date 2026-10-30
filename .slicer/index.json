@@ -9843,7 +9843,7 @@
       "id": "S183",
       "title": "Fix stale statements found in S165 review (README, PROJECT, boundaries, state, design, dashboard)",
       "short_title": "Fix stale doc statements",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -9916,6 +9916,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "2241f763-3dc3-4c1e-aec8-5bb130eabbd3",
+          "kind": "",
+          "text": "**2026-10-30** — Review FAIL (round 1, opus medium): boundaries.md landing bullet omits the base-branch ID done commit; dashboard.md mouse line marks a decided point (ui.mouse #129) as proposed; parity row 6.2 dropped the true ctrl+a adj filing sentence; design.md UI-pass anchor off by one (295-319).",
+          "created_at": "2026-10-30T16:09:39Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -9935,7 +9949,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

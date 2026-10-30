@@ -454,7 +454,7 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   source-less ledger runs have no series. Activity stays in daemon memory;
   it is not in `run.json` and adds no state-file field.
 - **States.** `queued` (waits for a slot; `Dequeue` moves it to `setup`), `setup`, `implement`, `checks`, `review`, `architect`, `gate`,
-  `awaiting-approval`, `finish`, `commit`, `committed`, plus the two rests
+  `awaiting-approval`, `finish`, `commit`, `land`, `committed`, plus the two rests
   `paused` and `stopped`. The owner moves a slice with `Approve`, `Reject`,
   `Fix`, `Answer`, `Retry` and `Stop`.
 - **Setup order.** Add `.worktrees/` to `info/exclude` if missing, then

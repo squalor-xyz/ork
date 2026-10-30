@@ -19,7 +19,8 @@ dashboard plus launching and supervising slice waves. See [PROJECT.md](PROJECT.m
 `ork wave suggest PROJECT` prints slicer's suggested waves. Choose item ids
 and run `ork wave start PROJECT ITEM...` to review the plans and confirm
 the launch. `ork stop WAVE` stops the unfinished runs in the returned
-`wave-` id, including queued runs. The Waves screen is later work.
+`wave-` id, including queued runs.
+The Waves screen also composes and launches waves.
 
 ## Install
 

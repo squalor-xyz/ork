@@ -75,7 +75,7 @@ Notes on the fields:
   (`daemon.idle`). 0 or absent means 10. It is new in version 2.
 - `check_command` is a fallback. ork prefers slicer's config key once
   slicer has one (`project.check-command`). The `check_minutes` value sets
-  the stale flag and goes into briefs.
+  the check command timeout (`internal/engine/states.go:198-202`).
 - `permissions` is the per-role allowlist (`launch.permissions`). Its exact
   syntax per vendor waits on the vendor spike (design.md).
 - `push` (*proposed*, S119, adj 162) says ork runs `git push` in the main
