@@ -2614,3 +2614,5 @@
 {"when": "2026-10-30T12:57:01Z", "item": "S196", "action": "add", "from": "", "to": "open", "note": "S169 later notes: wait heartbeat, vendor push, multi-waiter test, spec-check slots"}
 {"when": "2026-10-30T12:57:01Z", "item": "S196", "action": "note", "from": "", "to": "", "note": "From the S169 review, UI pass and gate (2026-10-30), all lat", "by": "Jon R"}
 {"when": "2026-10-30T12:57:01Z", "item": "S183", "action": "note", "from": "", "to": "", "note": "Added 2026-10-30 from S169: docs/orchestrator-parity.md row ", "by": "Jon R"}
+{"when": "2026-10-30T13:06:23Z", "item": "S197", "action": "add", "from": "", "to": "open", "note": "S171 later notes: note refresh after write, guide entries, hint tier side effects"}
+{"when": "2026-10-30T13:06:23Z", "item": "S197", "action": "note", "from": "", "to": "", "note": "From the S171 review, UI pass and gate (2026-10-30), all lat", "by": "Jon R"}

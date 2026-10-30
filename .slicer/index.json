@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 197,
+  "next_id": 198,
   "preamble": "",
   "passes": [
     {
@@ -9435,6 +9435,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S169",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S197",
+      "title": "S171 later notes: note refresh after write, guide entries, hint tier side effects",
+      "short_title": "S171 later notes: note refresh after write, guide entries, hint tier side effects",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "ea51b5cb-2375-4bd4-ac26-1be21de06fb9",
+          "kind": "",
+          "text": "**2026-10-30** — From the S171 review, UI pass and gate (2026-10-30), all later: (1) item.note returns an error if the Items refresh fails after slicer wrote the note, so a retry writes it twice; return success; (2) docs/guide.md key table and command list lack N and ork note; (3) dropAdd 16 now drops + add project before t retry outside the Roadmap; (4) CLI prints 'note: Note must not be empty' (capital N mid-line; use TEXT); (5) in the item pane N note drops before ctrl+d/u; (6) the shared text field does not mark a scrolled-off start; (7) notes show slicer's raw **date** markup; (8) slicer goal C11 still says roadmap editing is after v1 (adj 173 include).",
+          "created_at": "2026-10-30T13:06:23Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S171",
         "parent": "",
         "cites": [],
         "key": "",
