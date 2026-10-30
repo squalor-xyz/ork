@@ -260,3 +260,13 @@ func (d *Daemon) ProjectsRemove(ctx context.Context, name string) error {
 	defer c.Close()
 	return c.RemoveProject(ctx, name)
 }
+
+// ItemNew files a slice in a registered project.
+func (d *Daemon) ItemNew(ctx context.Context, p daemon.ItemNewParams) (daemon.ItemNewResult, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return daemon.ItemNewResult{}, err
+	}
+	defer c.Close()
+	return c.ItemNew(ctx, p)
+}

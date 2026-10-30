@@ -1308,3 +1308,57 @@ func TestRoadmapNoteHintDropsBeforeMatrix(t *testing.T) {
 		})
 	}
 }
+
+func TestHintBarOffersNewOnTheRoadmap(t *testing.T) {
+	for _, pane := range []bool{false, true} {
+		h := roadmapHarness(t)
+		h.m.cfg.Live = &newLive{}
+		if pane {
+			_, cmd := h.m.Update(press("enter"))
+			h.m.Update(cmd())
+		}
+		if !strings.Contains(wideHint(h), "n new slice") {
+			t.Fatalf("missing new hint: %s", wideHint(h))
+		}
+		h.m.Update(press("n"))
+		hint := wideHint(h)
+		for _, s := range []string{"tab field", "enter send", "esc cancel"} {
+			if !strings.Contains(hint, s) {
+				t.Fatalf("missing %s: %s", s, hint)
+			}
+		}
+		h.m.Update(press("esc"))
+		h.m.cfg.Live = nil
+		if strings.Contains(wideHint(h), "n new slice") {
+			t.Fatal("new without daemon")
+		}
+		h.m.cfg.Live = &newLive{}
+		h.m.active = runningEntry
+		if strings.Contains(wideHint(h), "n new slice") {
+			t.Fatal("new without project")
+		}
+	}
+	for _, width := range []int{80, 100} {
+		h := roadmapHarness(t)
+		h.m.cfg.Live = &newLive{}
+		h.m.Update(tea.WindowSizeMsg{Width: width, Height: 24})
+		hint := hintLine(plainView(h.m))
+		if !strings.Contains(hint, "m matrix") {
+			t.Fatalf("%d lost matrix: %s", width, hint)
+		}
+		h.m.Update(press("?"))
+		if !strings.Contains(h.view(), "n new slice") {
+			t.Fatal("help omits new slice")
+		}
+	}
+}
+
+func TestRoadmapNewHelpFitsEightyColumns(t *testing.T) {
+	h := roadmapHarness(t)
+	h.m.cfg.Live = &newLive{}
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	h.m.Update(press("?"))
+	if v := plainView(h.m); !strings.Contains(v, "n new slice") {
+		t.Fatalf("new action clipped in help:\n%s", v)
+	}
+}

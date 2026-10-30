@@ -164,7 +164,7 @@ func TestRoadmapWritesNothing(t *testing.T) {
 	for _, state := range []string{"awaiting-approval", "paused", "implement"} {
 		for _, detail := range []bool{false, true} {
 			h := roadmapHarness(t)
-			l := &noteLive{}
+			l := &newLive{}
 			h.m.cfg.Live = l
 			h.m.projects[0].snap.EngineRuns = []source.EngineRun{{ID: "engine", Item: "S90", State: state, Pending: "question"}}
 			if detail {
@@ -173,7 +173,7 @@ func TestRoadmapWritesNothing(t *testing.T) {
 					h.m.Update(cmd())
 				}
 			}
-			for _, k := range []string{"a", "x", "t", "y", "enter", "hello", "esc", "N", "typed note", "esc", "down", "up", "j", "k", "n", "p", "?", "?", "s", "s", "/", "esc", "r"} {
+			for _, k := range []string{"a", "x", "t", "y", "enter", "hello", "esc", "N", "typed note", "esc", "down", "up", "j", "k", "n", "enter", "typed title", "esc", "p", "?", "?", "s", "s", "/", "esc", "r"} {
 				// Refresh from r is a read and is allowed.
 				_, cmd := h.m.Update(press(k))
 				for _, msg := range exec(cmd) {

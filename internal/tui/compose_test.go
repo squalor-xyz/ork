@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
@@ -209,5 +210,209 @@ func TestNoteKeyIsSilentInMatrixPane(t *testing.T) {
 	_, cmd := h.m.Update(press("N"))
 	if cmd != nil || h.m.compose != nil || h.m.actionStatus != "previous status" {
 		t.Fatalf("N acted in matrix: %q", h.m.actionStatus)
+	}
+}
+
+// newLive implements filing independently of notes, as optional Live interfaces.
+type newLive struct {
+	noteLive
+	filed    []daemon.ItemNewParams
+	existing bool
+}
+
+func (l *newLive) ItemNew(_ context.Context, p daemon.ItemNewParams) (daemon.ItemNewResult, error) {
+	l.writes++
+	l.filed = append(l.filed, p)
+	return daemon.ItemNewResult{ID: "S184", Existing: l.existing}, l.err
+}
+func TestRoadmapNewFormSendsTitleAndWhy(t *testing.T) {
+	h := roadmapHarness(t)
+	l := &newLive{}
+	h.m.cfg.Live = l
+	h.m.Update(press("n"))
+	if h.m.compose == nil || !strings.Contains(h.view(), "Title:") {
+		t.Fatal("new form missing")
+	}
+	_, cmd := h.m.Update(press("enter"))
+	if cmd != nil || h.m.compose == nil || !strings.Contains(h.view(), "Title must not be empty") {
+		t.Fatal("blank title not refused")
+	}
+	h.m.Update(tea.PasteMsg{Content: "Title"})
+	h.m.Update(press("tab"))
+	h.m.Update(tea.PasteMsg{Content: "Why"})
+	_, cmd = h.m.Update(press("enter"))
+	if cmd == nil || l.writes != 0 {
+		t.Fatal("send must be async")
+	}
+	if _, again := h.m.Update(press("enter")); again != nil {
+		t.Fatal("duplicate send")
+	}
+	applyNoteCommands(h, cmd)
+	if len(l.filed) != 1 || l.filed[0].Project != "ork" || l.filed[0].Title != "Title" || l.filed[0].Why != "Why" || l.filed[0].From != "" || l.refreshes != 1 || h.m.actionStatus != "Filed S184" {
+		t.Fatalf("filed=%v refresh=%d status=%q", l.filed, l.refreshes, h.m.actionStatus)
+	}
+	h.m.Update(press("n"))
+	h.m.Update(tea.PasteMsg{Content: "cancel"})
+	h.m.Update(press("esc"))
+	if h.m.compose != nil || l.writes != 1 {
+		t.Fatal("cancel wrote")
+	}
+}
+func TestRoadmapNewFromTheItemPaneSetsTheSource(t *testing.T) {
+	h := roadmapHarness(t)
+	l := &newLive{}
+	h.m.cfg.Live = l
+	_, cmd := h.m.Update(press("enter"))
+	h.m.Update(cmd())
+	h.m.roadmapCursor = 1
+	h.m.Update(press("n"))
+	for _, k := range []string{"+", "-", "q", "1", "9"} {
+		h.m.Update(press(k))
+	}
+	h.m.Update(press("shift+tab"))
+	h.m.Update(tea.PasteMsg{Content: "Why"})
+	_, cmd = h.m.Update(press("enter"))
+	applyNoteCommands(h, cmd)
+	if len(l.filed) != 1 || l.filed[0].From != "S90" || l.filed[0].Title != "+-q19" || l.filed[0].Why != "Why" {
+		t.Fatalf("filed=%v", l.filed)
+	}
+}
+func TestGoldenRoadmapNew(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		h := roadmapHarness(t)
+		h.m.cfg.Live = &newLive{}
+		h.m.cfg.Theme = NewTheme(mono)
+		h.m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
+		h.m.Update(press("n"))
+		if h.m.compose == nil {
+			t.Fatal("new form missing")
+		}
+		h.m.Update(tea.PasteMsg{Content: "File the owner's request"})
+		h.m.Update(press("tab"))
+		h.m.Update(tea.PasteMsg{Content: "Keep the request in the roadmap"})
+		name := "color"
+		if mono {
+			name = "mono"
+		}
+		checkGolden(t, fmt.Sprintf("roadmap-new-100x30-%s.txt", name), h.m.View().Content)
+	}
+}
+
+func TestNewFormRefusalsAndEmptyProject(t *testing.T) {
+	for _, state := range []string{"no daemon", "not filer", "no project", "unavailable", "unloaded", "help", "matrix", "other view", "empty"} {
+		t.Run(state, func(t *testing.T) {
+			h := roadmapHarness(t)
+			l := &newLive{}
+			h.m.cfg.Live = l
+			switch state {
+			case "no daemon":
+				h.m.cfg.Live = nil
+			case "not filer":
+				h.m.cfg.Live = &noteLive{}
+			case "no project":
+				h.m.active = runningEntry
+			case "unavailable":
+				h.m.projects[0].snap.Unavailable = true
+			case "unloaded":
+				h.m.projects[0].loaded = false
+			case "help":
+				h.m.showHelp = true
+			case "matrix":
+				h.m.itemPane = &itemPane{id: matrixPaneID}
+			case "other view":
+				h.m.view = 0
+			case "empty":
+				h.m.projects[0].snap.Items.Value = nil
+			}
+			h.m.Update(press("n"))
+			if (h.m.compose != nil) != (state == "empty") || l.writes != 0 {
+				t.Fatalf("state %s compose=%+v writes=%d", state, h.m.compose, l.writes)
+			}
+		})
+	}
+}
+func TestNewFormRetryAndLateReplies(t *testing.T) {
+	h := roadmapHarness(t)
+	l := &newLive{}
+	h.m.cfg.Live = l
+	h.m.Update(press("n"))
+	h.m.Update(tea.PasteMsg{Content: "Title"})
+	l.err = fmt.Errorf("write failed")
+	_, cmd := h.m.Update(press("enter"))
+	applyNoteCommands(h, cmd)
+	if h.m.compose == nil || !strings.Contains(h.view(), "Title") || !strings.Contains(h.view(), "write failed") || l.refreshes != 0 {
+		t.Fatal("error lost form")
+	}
+	l.err = nil
+	l.existing = true
+	_, cmd = h.m.Update(press("enter"))
+	applyNoteCommands(h, cmd)
+	if h.m.actionStatus != "S184 is already filed" || l.refreshes != 1 || h.m.compose != nil {
+		t.Fatal("retry failed")
+	}
+	h.m.Update(press("n"))
+	h.m.Update(tea.PasteMsg{Content: "Second"})
+	_, cmd = h.m.Update(press("enter"))
+	h.m.Update(press("esc"))
+	h.m.Update(press("n"))
+	h.m.Update(tea.PasteMsg{Content: "Third"})
+	applyNoteCommands(h, cmd)
+	if h.m.compose == nil || h.m.compose.field().Value() != "Third" || l.refreshes != 1 {
+		t.Fatal("late result changed new form")
+	}
+}
+
+func TestNewFormLongFieldsStayOnOneLine(t *testing.T) {
+	for _, mono := range []bool{false, true} {
+		h := roadmapHarness(t)
+		h.m.cfg.Live = &newLive{}
+		h.m.cfg.Theme = NewTheme(mono)
+		h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+		h.m.Update(press("n"))
+		h.m.Update(tea.PasteMsg{Content: strings.Repeat("Title界", 80)})
+		h.m.Update(press("tab"))
+		h.m.Update(tea.PasteMsg{Content: strings.Repeat("Why界", 120)})
+		first := -1
+		for i := 0; i < 2; i++ {
+			v := plainView(h.m)
+			lines := strings.Split(v, "\n")
+			start, end := -1, -1
+			for n, line := range lines {
+				if strings.Contains(line, "New slice:") {
+					start = n
+				}
+				if strings.Contains(line, "esc cancel") {
+					end = n
+				}
+			}
+			if start < 0 || end-start != 4 || len(lines) != 24 {
+				t.Fatalf("form must occupy three lines at 80x24: start=%d end=%d\n%s", start, end, v)
+			}
+			if first >= 0 && first != start {
+				t.Fatal("form moved when focus changed")
+			}
+			first = start
+			field := "Title: "
+			if i == 1 {
+				field = "Why: "
+			}
+			for _, line := range lines {
+				if strings.Contains(line, field) && !strings.HasSuffix(strings.TrimSpace(line), "...") {
+					t.Fatalf("unfocused field is not clipped: %q", line)
+				}
+			}
+			h.m.Update(press("tab"))
+		}
+	}
+}
+func TestComposeOffRoadmapRefusalsNameTheAction(t *testing.T) {
+	for _, tc := range []struct{ key, want string }{{"N", "Notes are available on the Roadmap"}, {"n", "Slice filing is available on the Roadmap"}} {
+		h := roadmapHarness(t)
+		h.m.cfg.Live = &newLive{}
+		h.m.view = 0
+		h.m.Update(press(tc.key))
+		if h.m.actionStatus != tc.want || h.m.compose != nil {
+			t.Fatalf("%s: %q", tc.key, h.m.actionStatus)
+		}
 	}
 }

@@ -339,3 +339,37 @@ func (c Client) RelayAnswer(ctx context.Context, w runrec.Writer, root, run, que
 	_, err := c.write(ctx, w, root, "relay-run", "answer", run, question, "--text", text, "--json")
 	return err
 }
+
+// AddSpec contains the optional fields of an owner-filed item.
+type AddSpec struct {
+	Title, DiscoveredFrom, Key, Size string
+	Importance, Urgency, Effort      int
+}
+
+// AddItem files an item, leaving unspecified fields to slicer.
+func (c Client) AddItem(ctx context.Context, w runrec.Writer, root string, spec AddSpec) (*Added, error) {
+	args := []string{"add", strings.TrimLeft(spec.Title, "- ")}
+	for _, field := range []struct{ name, value string }{{"discovered-from", spec.DiscoveredFrom}, {"key", spec.Key}, {"size", spec.Size}} {
+		if field.value != "" {
+			args = append(args, "--"+field.name, field.value)
+		}
+	}
+	for _, field := range []struct {
+		name  string
+		value int
+	}{{"importance", spec.Importance}, {"urgency", spec.Urgency}, {"effort", spec.Effort}} {
+		if field.value != 0 {
+			args = append(args, "--"+field.name, strconv.Itoa(field.value))
+		}
+	}
+	args = append(args, "--render", "--json", "--lean")
+	res, err := c.write(ctx, w, root, args...)
+	if err != nil {
+		return nil, err
+	}
+	var out Added
+	if err := json.Unmarshal(bytes.TrimSpace(res.Stdout), &out); err != nil || out.ID == "" {
+		return nil, fmt.Errorf("slicer add: no item id in the output")
+	}
+	return &out, nil
+}

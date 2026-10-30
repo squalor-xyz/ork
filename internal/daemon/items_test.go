@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -143,5 +144,63 @@ func TestItemNoteKeepsTheSlicerErrorCode(t *testing.T) {
 	}
 	if d.cfg.Source.(*stubSource).count("items p") != 0 {
 		t.Fatal("failed write refreshed")
+	}
+}
+
+func TestItemNewFilesASliceAndReadsItemsAgain(t *testing.T) {
+	t.Run("files", func(t *testing.T) {
+		d, _, p := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"add"}, Prefix: true, Stdout: `{"id":"S184"}`}, clitest.Route{Tool: "slicer", Args: []string{"promote"}, Prefix: true, Stdout: `{}`})
+		if err := os.MkdirAll(d.cfg.Paths.Dir, 0700); err != nil {
+			t.Fatal(err)
+		}
+		// Warm the cache so its initial reads cannot mask a missing refresh.
+		if err := d.cache.Refresh(context.Background(), p, source.Items, source.Deps); err != nil {
+			t.Fatal(err)
+		}
+		src := d.cfg.Source.(*stubSource)
+		src.mu.Lock()
+		src.snaps = make(map[string]source.Snapshot)
+		src.mu.Unlock()
+		itemsBefore, depsBefore := src.count("items p"), src.count("deps p")
+		src.put("p", source.Snapshot{Items: source.Result[[]slicercli.Item]{Value: []slicercli.Item{{ID: "S184"}}}, Deps: source.Result[[]slicercli.Item]{Value: []slicercli.Item{{ID: "S184"}}}})
+		v, err := d.handle(context.Background(), "item.new", json.RawMessage(`{"project":"p","title":"Title","why":"why","size":"M"}`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		raw, _ := json.Marshal(v)
+		if string(raw) != `{"id":"S184","existing":false}` {
+			t.Fatalf("result %s", raw)
+		}
+		calls := lastFake.CallsTo("slicer")
+		if len(calls) != 2 || calls[0].Args[0] != "add" || calls[1].Args[0] != "promote" {
+			t.Fatalf("calls %v", calls)
+		}
+		for _, call := range calls {
+			if call.Args[len(call.Args)-1] != p.Path {
+				t.Fatalf("wrong root %v", call)
+			}
+		}
+		if src.count("items p") != itemsBefore+1 || src.count("deps p") != depsBefore+1 {
+			t.Fatalf("did not refresh Items and Deps")
+		}
+		snap, err := d.snapshot(context.Background(), SnapshotParams{Project: "p"})
+		if err != nil || len(snap.Items.Value) != 1 || snap.Items.Value[0].ID != "S184" || len(snap.Deps.Value) != 1 || snap.Deps.Value[0].ID != "S184" {
+			t.Fatalf("stale snapshot %+v %v", snap, err)
+		}
+	})
+	for _, tc := range []struct{ name, raw, code string }{
+		{"blank", `{"project":"p","title":" "}`, CodeBadParams},
+		{"unknown project", `{"project":"unknown","title":"Title"}`, CodeNotFound},
+		{"unknown field", `{"project":"p","title":"Title","other":true}`, CodeBadParams},
+		{"invalid score", `{"project":"p","title":"Title","effort":4}`, CodeBadParams},
+		{"slicer error", `{"project":"p","title":"Title"}`, "add_failed"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			d, _, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"add"}, Prefix: true, Stdout: `{"error":{"code":"add_failed","message":"failed"}}`, Exit: 2})
+			_, err := d.handle(context.Background(), "item.new", json.RawMessage(tc.raw))
+			if e := ipc.ErrorOf(err); e == nil || e.Code != tc.code {
+				t.Fatalf("error %v want %s", err, tc.code)
+			}
+		})
 	}
 }

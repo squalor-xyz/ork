@@ -7,9 +7,14 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/squalor-xyz/ork/internal/daemon"
 )
 
+const composeNew = "new"
+
 type composeState struct {
+	fields              [2]textField
+	focus               int
 	kind, project, item string
 	input               textField
 	request             uint64
@@ -22,20 +27,33 @@ type noteMsg struct {
 	err           error
 }
 
-func (m *Model) noteRefusal() (string, bool) {
+func (m *Model) composeRefusal(kind string) (string, bool) {
+	action := "add a note"
+	if kind == composeNew {
+		action = "file a slice"
+	}
 	switch {
 	case m.view != roadmapView:
+		if kind == composeNew {
+			return "Slice filing is available on the Roadmap", true
+		}
 		return "Notes are available on the Roadmap", true
 	case m.active < 0:
-		return "Select a project to add a note", true
+		return "Select a project to " + action, true
 	case m.showHelp:
-		return "Close help to add a note", true
+		return "Close help to " + action, true
 	case !m.projects[m.active].loaded || m.projects[m.active].snap.Unavailable:
-		return "Project unavailable; cannot add a note", true
+		return "Project unavailable; cannot " + action, true
 	case m.matrixPaneOpen():
 		return "", true
 	case m.cfg.Live == nil:
 		return "No daemon connection; action unavailable", true
+	}
+	if kind == composeNew {
+		if _, ok := m.cfg.Live.(itemFiler); !ok {
+			return "Slice filing unavailable", true
+		}
+		return "", false
 	}
 	if _, ok := m.cfg.Live.(itemNoter); !ok {
 		return "Note action unavailable", true
@@ -47,7 +65,7 @@ func (m *Model) noteRefusal() (string, bool) {
 }
 
 func (m *Model) openNote() tea.Cmd {
-	if status, refused := m.noteRefusal(); refused {
+	if status, refused := m.composeRefusal("note"); refused {
 		if status != "" {
 			m.actionStatus = status
 		}
@@ -84,6 +102,9 @@ func (m *Model) composeKey(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 	m.actionStatus = ""
+	if c.kind == composeNew {
+		return m.newKey(msg)
+	}
 	if msg.String() != "enter" {
 		c.input.update(msg)
 		return nil
@@ -129,4 +150,87 @@ func (m *Model) applyNote(msg noteMsg) tea.Cmd {
 		})
 	}
 	return tea.Batch(cmds...)
+}
+
+func (c *composeState) field() *textField {
+	if c.kind == composeNew {
+		return &c.fields[c.focus]
+	}
+	return &c.input
+}
+
+// itemFiler is optional for Live test doubles.
+type itemFiler interface {
+	ItemNew(context.Context, daemon.ItemNewParams) (daemon.ItemNewResult, error)
+}
+
+var _ itemFiler = (*Daemon)(nil)
+
+type newSliceMsg struct {
+	project string
+	request uint64
+	result  daemon.ItemNewResult
+	err     error
+}
+
+func (m *Model) openNew() tea.Cmd {
+	if status, refused := m.composeRefusal(composeNew); refused {
+		if status != "" {
+			m.actionStatus = status
+		}
+		return nil
+	}
+	m.composeRequest++
+	c := &composeState{kind: composeNew, project: m.projects[m.active].reg.Name, request: m.composeRequest}
+	if m.itemPane != nil {
+		c.item = m.itemPane.id
+	}
+	m.compose = c
+	m.actionStatus = ""
+	return nil
+}
+
+func (m *Model) newKey(msg tea.KeyPressMsg) tea.Cmd {
+	c := m.compose
+	switch msg.String() {
+	case "tab", "shift+tab":
+		c.focus = 1 - c.focus
+		return nil
+	case "enter":
+		title := strings.TrimSpace(c.fields[0].Value())
+		if title == "" {
+			m.actionStatus = "Title must not be empty"
+			return nil
+		}
+		p := daemon.ItemNewParams{Project: c.project, Title: title, Why: c.fields[1].Value(), From: c.item}
+		filer, request := m.cfg.Live.(itemFiler), c.request
+		c.pending = true
+		return func() tea.Msg {
+			result, err := filer.ItemNew(context.Background(), p)
+			return newSliceMsg{project: p.Project, request: request, result: result, err: err}
+		}
+	default:
+		c.field().update(msg)
+		return nil
+	}
+}
+
+func (m *Model) applyNew(msg newSliceMsg) tea.Cmd {
+	if msg.err != nil {
+		m.actionStatus = actionError(msg.err)
+	} else if msg.result.Existing {
+		m.actionStatus = msg.result.ID + " is already filed"
+	} else {
+		m.actionStatus = "Filed " + msg.result.ID
+	}
+	c := m.compose
+	if c == nil || c.request != msg.request {
+		return nil
+	}
+	if msg.err != nil {
+		c.pending = false
+		return nil
+	}
+	m.compose = nil
+	return m.fetch(msg.project, true)
 }

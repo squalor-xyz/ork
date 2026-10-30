@@ -365,3 +365,10 @@ func (c *Client) specCall(ctx context.Context, method string, params, result any
 	defer job.Close()
 	return job.Call(ctx, method, params, result)
 }
+
+// ItemNew files a slice without a run.
+func (c *Client) ItemNew(ctx context.Context, p ItemNewParams) (ItemNewResult, error) {
+	var out ItemNewResult
+	err := c.Call(ctx, MethodItemNew, p, &out)
+	return out, err
+}

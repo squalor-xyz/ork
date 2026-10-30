@@ -8223,7 +8223,7 @@
       "id": "S170",
       "title": "File a slice from a note or a request in ork",
       "short_title": "File a slice in ork",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8233,6 +8233,17 @@
           "text": "**2026-10-29** — Owner decisions 2026-10-29 (interactive): filing from an existing note is CLI --from-note only; no confirm step (the typed command or submitted form is the act). Depends on adj scope.v1-ork-edits (adj 173, open): do not start until the owner decides it. Runs after S171.",
           "created_at": "2026-10-29T16:08:54Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        },
+        {
+          "id": "2dc58261-227d-488e-8b12-a83d1a7f49df",
+          "kind": "",
+          "text": "**2026-10-30** — Review FAIL (review round 1, 2026-10-30): the owner Why goes into the promote outline unescaped, so a line starting ## files the item and then fails promote on every retry (bad_promote_source), ### lines add sections and # lines vanish. UI pass FAIL: an unfocused long field wraps across many lines; n new slice is clipped in ? help at 80x24. Fix round 1.",
+          "created_at": "2026-10-30T13:30:01Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -8256,7 +8267,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
