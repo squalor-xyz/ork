@@ -2,7 +2,7 @@
   "version": 10,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 200,
+  "next_id": 201,
   "preamble": "",
   "passes": [
     {
@@ -8347,7 +8347,7 @@
       "id": "S172",
       "title": "Answer and ask adj records in ork",
       "short_title": "adj answers in ork",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -8372,6 +8372,17 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": ""
+        },
+        {
+          "id": "d866ceea-eb85-45ea-8e07-c21ed6dfac03",
+          "kind": "",
+          "text": "**2026-10-30** — Review FAIL (review round 1, 2026-10-30): a leading-dash title is accepted by ork but always rejected by adj (its flag parser takes it as a flag); the answer via is not checked, so the why can omit the surface; design.md wording on --by. Fix round 1.",
+          "created_at": "2026-10-30T14:08:01Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
         }
       ],
       "claim": null,
@@ -8391,7 +8402,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -9588,6 +9599,46 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S146",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S200",
+      "title": "S172 later notes: ask asker env, control characters in adj text, EOF newline",
+      "short_title": "S172 later notes: ask asker env, control characters in adj text, EOF newline",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "4441f46b-dbbb-46a2-9f2b-96bf14082b54",
+          "kind": "",
+          "text": "**2026-10-30** — From the S172 review, UI pass and gate (2026-10-30), all later: (1) adj.ask without --by takes the daemon environment's ADJ_ASKED_BY, not the caller's (adjudicate/internal/cli/ask.go:79-81); (2) ork adj answer prints adj record titles and summaries with no control-character filter (internal/cli/adj.go about :97-103); (3) on input that ends without a newline, cancelled prints on the prompt line (same as ork run).",
+          "created_at": "2026-10-30T14:29:55Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S172",
         "parent": "",
         "cites": [],
         "key": "",

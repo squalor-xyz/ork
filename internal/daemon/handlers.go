@@ -60,6 +60,18 @@ func decode(params json.RawMessage, v any) error {
 
 func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessage) (any, error) {
 	switch method {
+	case MethodAdjAnswer:
+		var p AdjAnswerParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.adjAnswer(ctx, p)
+	case MethodAdjAsk:
+		var p AdjAskParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.adjAsk(ctx, p)
 	case MethodWaveStart:
 		var p WaveStartParams
 		if err := decode(params, &p); err != nil {

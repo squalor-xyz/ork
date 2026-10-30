@@ -64,6 +64,14 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
   ork note P ITEM [--] TEXT   add a slice note; quote TEXT; leading - is literal
                               TEXT - reads stdin; --json before P or after TEXT
   ork file RUN N              file a later finding as a slice
+  ork adj answer P ID (--option LABEL | --text TEXT)
+                              show the question and confirm an adj answer
+  ork adj ask P TITLE [--key K] [--context TEXT|-]
+                              [--option LABEL:SUMMARY]...
+                              [--tradeoffs LABEL:TEXT]...
+                              [--recommend LABEL] [--reasoning TEXT]
+                              [--ref R]... [--tag T]...
+                              ask an adj question without deciding it
   ork answer RUN TEXT         answer and resume a paused role
   ork dismiss RUN             clear a stopped run from Needs you
   ork retry RUN               retry a paused role or step
@@ -218,6 +226,8 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 	case "-h", "--help", "help":
 		fmt.Fprint(stdout, usageText)
 		return ExitOK
+	case "adj":
+		return a.adj(ctx, o, rest)
 	case "new":
 		return a.newSlice(ctx, o, rest)
 	case "note":

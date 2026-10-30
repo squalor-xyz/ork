@@ -372,3 +372,17 @@ func (c *Client) ItemNew(ctx context.Context, p ItemNewParams) (ItemNewResult, e
 	err := c.Call(ctx, MethodItemNew, p, &out)
 	return out, err
 }
+
+// AdjAnswer records an owner answer and returns adj's notice.
+func (c *Client) AdjAnswer(ctx context.Context, p AdjAnswerParams) (string, error) {
+	var out AdjAnswerResult
+	err := c.Call(ctx, MethodAdjAnswer, p, &out)
+	return out.Message, err
+}
+
+// AdjAsk files an owner question and returns its id.
+func (c *Client) AdjAsk(ctx context.Context, p AdjAskParams) (int, error) {
+	var out AdjAskResult
+	err := c.Call(ctx, MethodAdjAsk, p, &out)
+	return out.ID, err
+}

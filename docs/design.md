@@ -1216,6 +1216,36 @@ the plan on stderr and a single result JSON value on stdout; declining
 prints `{"started":false}` on stdout. Interactive questions go on stderr
 in JSON mode.
 
+*Proposed (S172):* `ork adj answer PROJECT ID (--option LABEL | --text TEXT)`
+reads the project's open records, prints `#ID Title` and the options, marks
+the recommended option with ` (recommended)`, and asks
+`Decide #ID as LABEL in adj as NAME? [y/N]`. A typed answer is quoted in the
+prompt. Enter and closed input cancel. The command always prompts; it has
+no `--yes`. `ADJ_DECIDED_BY` must name the owner before the prompt.
+`adj.answer` takes `{project,id,option?,text?,by,via}` and returns `{message}`.
+The engine reads the record again and refuses a record that is not open or
+an option it does not offer. Only the confirmed option or typed answer goes
+to `adj decide`, with `--by` set to the owner and a `--why` naming ork,
+the surface (`cli` or `tui`) and the date. No role or automatic step calls
+this method.
+
+`ork adj ask PROJECT TITLE [--key K] [--context TEXT|-]` also accepts repeated
+`--option LABEL:SUMMARY`, `--tradeoffs LABEL:TEXT`, `--ref R` and `--tag T`,
+plus `--recommend LABEL` and `--reasoning TEXT`. It is CLI only and has no
+confirmation because it decides nothing. Context `-` reads stdin. The asker
+is `ADJ_ASKED_BY`, falling back to `ADJ_DECIDED_BY`, or empty. It offers zero
+options or two to four. A title starting with `-` is refused because adj
+treats it as a flag. A recommendation must name an option, and reasoning
+needs a recommendation. With a key, `adj check` runs first; an existing
+open, decided or closed record is reported by id and prevents asking again.
+`adj.ask` takes `{project,title,key?,context?,options?,recommend?,reasoning?,
+refs?,tags?,by?}` and returns `{id}`. Both methods require a registered project
+that uses adj and refresh its Open and Decided parts after a successful
+write. The CLI prints the notice or new id; `--json` prints `{message}` or
+`{id}` and sends the confirmation to stderr. Declining prints `cancelled`,
+or `{"cancelled":true}` in JSON mode, and exits 0. ork never rejects,
+supersedes or withdraws a record. TUI answer controls are S185.
+
 `run.retry` takes `{run}` and returns the run record (adj #101).
 *Proposed (S118):* `run.fix` takes `{run,text}` and returns the run record
 once the fix round, the checks and the gate have ended and the run rests

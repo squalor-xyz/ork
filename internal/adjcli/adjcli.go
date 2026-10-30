@@ -111,7 +111,7 @@ func (c Client) write(ctx context.Context, w runrec.Writer, root string, argv ..
 func (c Client) Check(ctx context.Context, w runrec.Writer, root, key string) (string, int, error) {
 	res, err := c.write(ctx, w, root, "check", key, "--json")
 	if err != nil {
-		return "", 0, err
+		return "", 0, answerError(err)
 	}
 	var out struct{ Decided, Open, Closed []Record }
 	if err := json.Unmarshal(res.Stdout, &out); err != nil {
@@ -159,4 +159,75 @@ func answerError(err error) error {
 		return fmt.Errorf("adj: exit %d: %s", exit.Result.ExitCode, strings.TrimSpace(string(exit.Result.Stderr)))
 	}
 	return err
+}
+
+// Show reads one record through adj without accessing its store.
+func (c Client) Show(ctx context.Context, root string, id int) (*Record, error) {
+	var out Record
+	if err := clirun.RunJSON(ctx, c.call("show", strconv.Itoa(id), "--json", "--root", root), &out); err != nil {
+		return nil, answerError(err)
+	}
+	return &out, nil
+}
+
+// AskOption is an option and its optional tradeoffs for a new question.
+type AskOption struct {
+	Label     string `json:"label"`
+	Summary   string `json:"summary"`
+	Tradeoffs string `json:"tradeoffs,omitempty"`
+}
+
+// AskSpec holds the fields adj accepts when asking a question.
+type AskSpec struct {
+	Title, Key, Context, By, Recommend, Reasoning string
+	Options                                       []AskOption
+	Refs, Tags                                    []string
+}
+
+// AskQuestion files an owner question and returns the id adj prints.
+func (c Client) AskQuestion(ctx context.Context, w runrec.Writer, root string, spec AskSpec) (int, error) {
+	args := []string{"ask", spec.Title}
+	for _, field := range []struct{ flag, value string }{{"--key", spec.Key}, {"--context", spec.Context}} {
+		if field.value != "" {
+			args = append(args, field.flag, field.value)
+		}
+	}
+	for _, opt := range spec.Options {
+		args = append(args, "--option", opt.Label+":"+opt.Summary)
+	}
+	for _, opt := range spec.Options {
+		if opt.Tradeoffs != "" {
+			args = append(args, "--tradeoffs", opt.Label+":"+opt.Tradeoffs)
+		}
+	}
+	if spec.Recommend != "" {
+		args = append(args, "--recommend", spec.Recommend)
+	}
+	if spec.Reasoning != "" {
+		args = append(args, "--reasoning", spec.Reasoning)
+	}
+	for _, ref := range spec.Refs {
+		args = append(args, "--ref", ref)
+	}
+	for _, tag := range spec.Tags {
+		args = append(args, "--tag", tag)
+	}
+	if spec.By != "" {
+		args = append(args, "--by", spec.By)
+	}
+	res, err := c.write(ctx, w, root, args...)
+	if err != nil {
+		return 0, answerError(err)
+	}
+	id, err := strconv.Atoi(strings.TrimSpace(string(res.Stdout)))
+	if err != nil || id <= 0 {
+		return 0, fmt.Errorf("adj ask: no record id in the output")
+	}
+	return id, nil
+}
+
+// DecideOption records the option the owner explicitly confirmed.
+func (c Client) DecideOption(ctx context.Context, w runrec.Writer, root string, id int, label, why, by string) error {
+	_, err := c.write(ctx, w, root, "decide", strconv.Itoa(id), label, "--why", why, "--by", by)
+	return answerError(err)
 }
