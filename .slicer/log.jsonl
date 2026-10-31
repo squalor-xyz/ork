@@ -2711,3 +2711,4 @@
 {"when": "2026-10-31T04:51:54Z", "item": "S207", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-10-31T04:51:54Z", "item": "S207", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-10-31T04:51:54Z", "item": "S24", "action": "note", "from": "", "to": "", "note": "**2026-10-31** — S24 review and UI pass later items filed as", "by": "Jon R"}
+{"when": "2026-10-31T04:56:00Z", "item": "S207", "action": "note", "from": "", "to": "", "note": "**2026-10-31** — From the S24 gate: docs/design.md:1637-1638", "by": "Jon R"}
