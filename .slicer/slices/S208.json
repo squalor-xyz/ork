@@ -1,0 +1,41 @@
+{
+  "id": "S208",
+  "title": "Global run cap defaults to 2",
+  "lead": [
+    "Owner decision 2026-10-31 (adj 172, `engine.default-cap`): the global run cap defaults to 2, not 4. The code and five documents still say 4."
+  ],
+  "depends_note": null,
+  "findings_note": "adj 172",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The owner answered adj 172 with the option \"two\" in an interactive question on 2026-10-31. The 2026-10-26 orchestration trial ran slices one at a time with no stalls, and the earlier parallel stretch had three landing conflicts (docs/review-2026-10-26-orchestration-trial.md, O2). The owner can raise the cap per wave or in config (ork settings set --global-cap N). The default is the built-in value used when the registry sets none (see Files). adj 20 set 4 and adj 172 changes it. AGENTS.md says documents follow decided records."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/runs.go:46-47` (`defaultGlobalCap`) and `internal/daemon/runs.go:789-796` (`hasRoomLocked`).\n- `internal/daemon/settings.go:126` (effective value when unset).\n- `internal/daemon/settings_test.go:80` and `internal/daemon/settings_test.go:114` (both expect an effective cap of 4).\n- `internal/daemon/daemon_test.go:1499` (sets `GlobalCap = 4` explicitly; check whether it relies on the default).\n- `PROJECT.md:83`, `docs/design.md:231`, `docs/guide.md:153`, `docs/guide.md:302`, `docs/diagrams.md:146`, `docs/orchestrator-parity.md:71`.\n- `CHANGELOG.md` (Unreleased entry)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- With no `global_cap` in the registry, `settings.get` reports an effective global cap of 2.\n- With no `global_cap`, a third run queues while two are busy, and starts when one finishes.\n- A registry that sets `global_cap` keeps that value."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Tests first from the failing list. Update the two expectations in `internal/daemon/settings_test.go`.\n2. Change `defaultGlobalCap` to 2 and its comment to cite adj 172.\n3. Change every \"4\" in the listed documents that names the default. Do not touch a \"4\" that names the cache's 4-process cap or anything else.\n4. Add a CHANGELOG entry in the style of the surrounding entries."
+    },
+    {
+      "heading": "Check",
+      "body": "`go test -race ./...`; `go vet ./...`; `gofmt -l .`; `slicer check`; `adj lint`; `rg -n \"global cap.*4|default 4|defaults to 4\" PROJECT.md docs` lists nothing that names the global cap."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"Global run cap defaults to 2\"."
+    }
+  ],
+  "notes": []
+}

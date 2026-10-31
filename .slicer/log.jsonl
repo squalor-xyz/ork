@@ -2716,3 +2716,7 @@
 {"when": "2026-10-31T04:56:00Z", "item": "S207", "action": "note", "from": "", "to": "", "note": "**2026-10-31** — From the S24 gate: docs/design.md:1637-1638", "by": "Jon R"}
 {"when": "2026-10-31T12:17:22Z", "item": "S72", "action": "set", "from": "", "to": "", "note": "pass_key v1.0→v1.1"}
 {"when": "2026-10-31T12:17:23Z", "item": "S72", "action": "note", "from": "", "to": "", "note": "Owner 2026-10-31 (this session): S72 moves from v1.0 to v1.1", "by": "Jon R"}
+{"when": "2026-10-31T12:25:46Z", "item": "S208", "action": "add", "from": "", "to": "open", "note": "Global run cap defaults to 2"}
+{"when": "2026-10-31T12:25:46Z", "item": "S209", "action": "add", "from": "", "to": "open", "note": "UI pass skills line from an ork config key"}
+{"when": "2026-10-31T12:25:55Z", "item": "S208", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-31T12:25:55Z", "item": "S209", "action": "edit", "from": "", "to": "", "note": "Why"}

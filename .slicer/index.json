@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 208,
+  "next_id": 210,
   "preamble": "",
   "passes": [
     {
@@ -11115,6 +11115,62 @@
         "importance": 1,
         "urgency": 1,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S208",
+      "title": "Global run cap defaults to 2",
+      "short_title": "Global cap default 2",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "adj 172",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "cap-default-two",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S209",
+      "title": "UI pass skills line from an ork config key",
+      "short_title": "UI pass skills line",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "adj 171",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ui-pass-skills",
+        "pass": "v1.0",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }

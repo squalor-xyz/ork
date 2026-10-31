@@ -1,0 +1,41 @@
+{
+  "id": "S209",
+  "title": "UI pass skills line from an ork config key",
+  "lead": [
+    "Owner decisions 2026-10-31 (adj 171, `roles.ui-pass-skills`): a Claude UI pass gets a line naming the skills, and every vendor still gets ork's vendor-neutral UI prompt as the base. The skill names come from an ork registry key, set per project."
+  ],
+  "depends_note": null,
+  "findings_note": "adj 171",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The owner answered adj 171 with the option \"both\" in an interactive question on 2026-10-31. Relays already load the tui-design and frontend-design skills (rule u10 in `slicer relay-roles show`), but ork's engine UI prompt is vendor-neutral by test and names no skill (see Files, roles_test.go). The matrix rows carry no skills field, so the names are not available as data. The owner chose an ork config key over parsing rule u10 or asking slicer for a field (interactive question, 2026-10-31). A project that sets no list gets only the neutral prompt. Codex cannot load Claude plugin skills, so the line goes only to a Claude UI pass."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/registry/registry.go:175-201` (`Project`; `UIDoc` at :198-201 and `ValidateUIDoc` at :76-91 are the pattern to follow).\n- `internal/daemon/wire.go:272` and `:288` (the project settings params and their empty check), `internal/daemon/handlers.go:523` (where `ui_doc` is validated and saved).\n- `internal/cli/` (`ork projects set`, `internal/cli/daemoncmds.go:232` area; add the flag beside `--ui-doc`).\n- `internal/engine/brief.go:24`, `:78-86` (the UI design doc section of the brief) and `internal/engine/round.go:265` (where `UIDoc` is passed).\n- `internal/engine/brief_test.go` and `internal/roles/roles_test.go:486-519` (the neutral prompt stays free of skill names).\n- `docs/state.md`, `docs/design.md`, `docs/guide.md`, `docs/glossary.md` (the new key), `CHANGELOG.md`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- The registry round-trips a project `ui_pass_skills` list; an empty or blank name is refused; an unknown key is still refused.\n- `projects.set` saves the list; `ork projects set NAME --ui-pass-skills a,b` and clearing it work.\n- A UI pass brief for a Claude role with a non-empty list contains a line naming each skill; with an empty list it contains no such line.\n- A UI pass brief for a Codex role never contains the line, even with a non-empty list.\n- The neutral UI prompt text is unchanged and still names no skill."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Name the key and flag with the owner before coding if the name `ui_pass_skills` does not fit; follow `ui_doc` for validation, wire params, CLI flag and docs.\n2. Tests first. Add the field, the wire params, the CLI flag and the brief line. The line sits in the brief, not in the role prompt, so the prompt stays vendor-neutral.\n3. The line is advice to load the skills, nothing more. ork does not check that a skill exists (it never reads vendor files).\n4. Docs: the key in `docs/state.md`, the brief in `docs/design.md`, the flag in `docs/guide.md`, and a CHANGELOG entry."
+    },
+    {
+      "heading": "Check",
+      "body": "`go test -race ./...`; `go vet ./...`; `gofmt -l .`; `slicer check`; `adj lint`; the UI pass prompt test still passes unchanged."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"UI pass skills line from an ork config key\"."
+    }
+  ],
+  "notes": []
+}
