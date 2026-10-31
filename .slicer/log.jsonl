@@ -2707,3 +2707,7 @@
 {"when": "2026-10-31T03:57:38Z", "item": "S206", "action": "set", "from": "", "to": "", "note": "depends_on -→S24; effort -→2"}
 {"when": "2026-10-31T03:57:39Z", "item": "S206", "action": "note", "from": "", "to": "", "note": "**2026-10-30** — Waits on adjudicate S45 (not started on 202", "by": "Jon R"}
 {"when": "2026-10-31T03:58:32Z", "item": "S24", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-31T04:51:45Z", "item": "S207", "action": "add", "from": "", "to": "open", "note": "S24 later notes"}
+{"when": "2026-10-31T04:51:54Z", "item": "S207", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-10-31T04:51:54Z", "item": "S207", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-10-31T04:51:54Z", "item": "S24", "action": "note", "from": "", "to": "", "note": "**2026-10-31** — S24 review and UI pass later items filed as", "by": "Jon R"}
