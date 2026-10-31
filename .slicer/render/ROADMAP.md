@@ -51,45 +51,46 @@
 | 1 | [S67](slices/S67.md) | Roadmap editing: park and unpark from the TUI (needs adj 11) | S | 1 |  |  | — |
 | 2 | [S68](slices/S68.md) | Roadmap editing: reorder an item from the TUI (needs adj 11) | S | 2 |  |  | — |
 | 3 | [S69](slices/S69.md) | Roadmap editing: open slicer tui for the project (needs adj 11) | S | 1 |  | Owner 2026-10-23: the Roadmap replaces leaving for slicer tui; adj 11 stays the owner's to close | — |
-| 4 | [S101](slices/S101.md) | Overview engine rows at 80x24: pad the kind column only when needed; no repeated state word; stopped age placement | S | 1 |  | discovered from S33 | — |
-| 5 | [S103](slices/S103.md) | Version and logo polish: clear the stale marker after a daemon restart; keep --version script-friendly | S | 1 |  | discovered from S54 | — |
-| 6 | [S108](slices/S108.md) | Fold finished steps in the run tree to one line each | S | 1 |  |  | — |
-| 7 | [S104](slices/S104.md) | Answer an open adj record from the Questions tab: pick an option, type the reason, confirm | M | 2 |  | Met by S185 (owner 2026-10-30) · discovered from S27 | retired |
-| 8 | [S50](slices/S50.md) | Check the diff against the slice's Files list | S | 2 |  | discovered from S29 | — |
-| 9 | [S61](slices/S61.md) | Split parts: lead and parts in one worktree | M | 2 |  |  | — |
-| 10 | [S66](slices/S66.md) | Mouse support: click tabs, rows and keys (needs ui.mouse) | M | 2 |  |  | — |
-| 11 | [S62](slices/S62.md) | Slivers as their own items under the cap | L | 3 |  |  | — |
-| 12 | [S100](slices/S100.md) | Bell: ring the terminal when a role needs the owner or a run ends | S | 1 |  | discovered from S07 | — |
-| 13 | [S123](slices/S123.md) | Relay stats: fix-round rate, role times and owner wait per run, from the ledger | M | 2 |  |  | — |
-| 14 | [S128](slices/S128.md) | Brief: fence the check command so a backtick or newline renders | S | 1 |  | discovered from S126 | — |
-| 15 | [S129](slices/S129.md) | Live usage edge cases: no result event, non-claude cost, multi-message sum, total dip | S | 1 |  | discovered from S99 | — |
-| 16 | [S130](slices/S130.md) | Run pane text polish: compact token counts, ASCII gate verdict glyph, tail markdown, h>=24 Overview rule in docs | S | 1 |  | discovered from S99 | — |
-| 17 | [S131](slices/S131.md) | Self-host check cost and base branch: cache projectBuild git calls; read the base branch | S | 1 |  | discovered from S114 | — |
-| 18 | [S132](slices/S132.md) | Structured question polish: wrapped option indent, 4 options in a short pane, alert wording, dash in Recommend, digit edge tests | S | 1 |  | discovered from S111 | — |
-| 19 | [S173](slices/S173.md) | Role matrix editor | L | - |  | discovered from S165 | — |
-| 20 | [S179](slices/S179.md) | Spec drafting round | L | - |  | discovered from S165 | — |
-| 21 | [S180](slices/S180.md) | Changelog conflict resolver | M | - |  | discovered from S165 | — |
-| 22 | S186 | S181 later notes: blocked refusal wording and an 80-column guard | S | - |  | discovered from S181 | — |
-| 23 | S187 | S166 later notes: launch replan edge case and lineup editor key polish | S | - |  | discovered from S166 | — |
-| 24 | S188 | S178 later notes: doctor hint edge cases and wording | S | - |  | discovered from S178 | — |
-| 25 | S189 | S167 later notes: spec sitting EOF line, run JSON shapes, refusal prefix, run.start deps | S | - |  | discovered from S167 | — |
-| 26 | S190 | S168 later notes: pane scroll keys, matrix wrap width, Overview hint tie | S | - |  | discovered from S168 | — |
-| 27 | S191 | S177 later notes: stop row highlight, commit-stopped cleanup, Ready row test | S | - |  | discovered from S177 | — |
-| 28 | S192 | S174 later notes: vendor_env masking in --json, error wording, removed-vendor label | S | - |  | discovered from S174 | — |
-| 29 | S193 | S184 later notes: guide anchors, lost answer error, retry wording | S | - |  | discovered from S184 | — |
-| 30 | S194 | S182 later notes: hung sibling retry brief, vendor event cadence, Overview reason clip | S | - |  | discovered from S182 | — |
-| 31 | S195 | S176 later notes: report open guards, viewer heading and list indent | S | - |  | discovered from S176 | — |
-| 32 | S196 | S169 later notes: wait heartbeat, vendor push, multi-waiter test, spec-check slots | S | - |  | discovered from S169 | — |
-| 33 | S197 | S171 later notes: note refresh after write, guide entries, hint tier side effects | S | - |  | discovered from S171 | — |
-| 34 | S199 | S146 later notes: id fit boundary test, section toggle, short step part | S | - |  | discovered from S146 | — |
-| 35 | S200 | S172 later notes: ask asker env, control characters in adj text, EOF newline | S | - |  | discovered from S172 | — |
-| 36 | S201 | S147 later notes: report viewer order, loadFinishedEngine, viewer error wording | S | - |  | discovered from S147 | — |
-| 37 | S202 | S185 later notes: decide refusal codes, option wrap, help with no options | S | - |  | discovered from S185 | — |
-| 38 | S203 | S112 later notes: dash-leading answers, Via passthrough, ledger option rendering | S | - |  | discovered from S112 | — |
-| 39 | [S204](slices/S204.md) | Engine v11 process rules | M | - |  | S198 preflight 2026-10-30: owner split the engine rules out of S198 · discovered from S198 | — |
-| 40 | [S205](slices/S205.md) | S198 later notes | S | - |  | S198 review, gate and UI pass 2026-10-30 (later findings) · discovered from S198 | — |
-| 41 | [S206](slices/S206.md) | Pin and check the adj contract | M | 2 |  | Owner 2026-10-30: adj half split out of S24; waits on adjudicate S45 (adj-json contract and pin) · discovered from S24 | — |
-| 42 | [S207](slices/S207.md) | S24 later notes | S | - |  | S24 review and UI pass later items, 2026-10-31 · discovered from S24 | — |
+| 4 | [S72](slices/S72.md) | Grok adapter and v1 role (after credits reset 2026-11-01) | M | 2 |  |  | — |
+| 5 | [S101](slices/S101.md) | Overview engine rows at 80x24: pad the kind column only when needed; no repeated state word; stopped age placement | S | 1 |  | discovered from S33 | — |
+| 6 | [S103](slices/S103.md) | Version and logo polish: clear the stale marker after a daemon restart; keep --version script-friendly | S | 1 |  | discovered from S54 | — |
+| 7 | [S108](slices/S108.md) | Fold finished steps in the run tree to one line each | S | 1 |  |  | — |
+| 8 | [S104](slices/S104.md) | Answer an open adj record from the Questions tab: pick an option, type the reason, confirm | M | 2 |  | Met by S185 (owner 2026-10-30) · discovered from S27 | retired |
+| 9 | [S50](slices/S50.md) | Check the diff against the slice's Files list | S | 2 |  | discovered from S29 | — |
+| 10 | [S61](slices/S61.md) | Split parts: lead and parts in one worktree | M | 2 |  |  | — |
+| 11 | [S66](slices/S66.md) | Mouse support: click tabs, rows and keys (needs ui.mouse) | M | 2 |  |  | — |
+| 12 | [S62](slices/S62.md) | Slivers as their own items under the cap | L | 3 |  |  | — |
+| 13 | [S100](slices/S100.md) | Bell: ring the terminal when a role needs the owner or a run ends | S | 1 |  | discovered from S07 | — |
+| 14 | [S123](slices/S123.md) | Relay stats: fix-round rate, role times and owner wait per run, from the ledger | M | 2 |  |  | — |
+| 15 | [S128](slices/S128.md) | Brief: fence the check command so a backtick or newline renders | S | 1 |  | discovered from S126 | — |
+| 16 | [S129](slices/S129.md) | Live usage edge cases: no result event, non-claude cost, multi-message sum, total dip | S | 1 |  | discovered from S99 | — |
+| 17 | [S130](slices/S130.md) | Run pane text polish: compact token counts, ASCII gate verdict glyph, tail markdown, h>=24 Overview rule in docs | S | 1 |  | discovered from S99 | — |
+| 18 | [S131](slices/S131.md) | Self-host check cost and base branch: cache projectBuild git calls; read the base branch | S | 1 |  | discovered from S114 | — |
+| 19 | [S132](slices/S132.md) | Structured question polish: wrapped option indent, 4 options in a short pane, alert wording, dash in Recommend, digit edge tests | S | 1 |  | discovered from S111 | — |
+| 20 | [S173](slices/S173.md) | Role matrix editor | L | - |  | discovered from S165 | — |
+| 21 | [S179](slices/S179.md) | Spec drafting round | L | - |  | discovered from S165 | — |
+| 22 | [S180](slices/S180.md) | Changelog conflict resolver | M | - |  | discovered from S165 | — |
+| 23 | S186 | S181 later notes: blocked refusal wording and an 80-column guard | S | - |  | discovered from S181 | — |
+| 24 | S187 | S166 later notes: launch replan edge case and lineup editor key polish | S | - |  | discovered from S166 | — |
+| 25 | S188 | S178 later notes: doctor hint edge cases and wording | S | - |  | discovered from S178 | — |
+| 26 | S189 | S167 later notes: spec sitting EOF line, run JSON shapes, refusal prefix, run.start deps | S | - |  | discovered from S167 | — |
+| 27 | S190 | S168 later notes: pane scroll keys, matrix wrap width, Overview hint tie | S | - |  | discovered from S168 | — |
+| 28 | S191 | S177 later notes: stop row highlight, commit-stopped cleanup, Ready row test | S | - |  | discovered from S177 | — |
+| 29 | S192 | S174 later notes: vendor_env masking in --json, error wording, removed-vendor label | S | - |  | discovered from S174 | — |
+| 30 | S193 | S184 later notes: guide anchors, lost answer error, retry wording | S | - |  | discovered from S184 | — |
+| 31 | S194 | S182 later notes: hung sibling retry brief, vendor event cadence, Overview reason clip | S | - |  | discovered from S182 | — |
+| 32 | S195 | S176 later notes: report open guards, viewer heading and list indent | S | - |  | discovered from S176 | — |
+| 33 | S196 | S169 later notes: wait heartbeat, vendor push, multi-waiter test, spec-check slots | S | - |  | discovered from S169 | — |
+| 34 | S197 | S171 later notes: note refresh after write, guide entries, hint tier side effects | S | - |  | discovered from S171 | — |
+| 35 | S199 | S146 later notes: id fit boundary test, section toggle, short step part | S | - |  | discovered from S146 | — |
+| 36 | S200 | S172 later notes: ask asker env, control characters in adj text, EOF newline | S | - |  | discovered from S172 | — |
+| 37 | S201 | S147 later notes: report viewer order, loadFinishedEngine, viewer error wording | S | - |  | discovered from S147 | — |
+| 38 | S202 | S185 later notes: decide refusal codes, option wrap, help with no options | S | - |  | discovered from S185 | — |
+| 39 | S203 | S112 later notes: dash-leading answers, Via passthrough, ledger option rendering | S | - |  | discovered from S112 | — |
+| 40 | [S204](slices/S204.md) | Engine v11 process rules | M | - |  | S198 preflight 2026-10-30: owner split the engine rules out of S198 · discovered from S198 | — |
+| 41 | [S205](slices/S205.md) | S198 later notes | S | - |  | S198 review, gate and UI pass 2026-10-30 (later findings) · discovered from S198 | — |
+| 42 | [S206](slices/S206.md) | Pin and check the adj contract | M | 2 |  | Owner 2026-10-30: adj half split out of S24; waits on adjudicate S45 (adj-json contract and pin) · discovered from S24 | — |
+| 43 | [S207](slices/S207.md) | S24 later notes | S | - |  | S24 review and UI pass later items, 2026-10-31 · discovered from S24 | — |
 
 ---
 
@@ -97,38 +98,37 @@
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 43 | [S87](slices/S87.md) | Codex rounds in ork: GOCACHE and the role temp dir inside the sandbox | S | 1 |  | discovered from S83 | done |
-| 44 | [S31](slices/S31.md) | Run a small slice through ork run end to end | S | 1 |  | discovered from S23 | done |
-| 45 | [S78](slices/S78.md) | recoverRuns map writes under lock | S | 1 |  | discovered from S05 | done |
-| 46 | [S126](slices/S126.md) | Implementer brief: ork runs the check command itself; a sandbox limit is not an owner question | S | 1 |  | discovered from S31 | done |
-| 47 | [S114](slices/S114.md) | Self-hosting: run ork on its own repo safely | M | 2 |  |  | done |
-| 48 | [S115](slices/S115.md) | Implementer brief: re-anchor the spec first and self-check before reporting | S | 1 |  |  | done |
-| 49 | [S70](slices/S70.md) | Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed) | S | 1 |  |  | done |
-| 50 | [S99](slices/S99.md) | Live role detail: output tail and tokens/cost in the run pane | M | 2 |  | discovered from S07 | done |
-| 51 | [S125](slices/S125.md) | Waves composer focus: next waves only, inputs inline under the ticked item | M | 2 |  | discovered from S31 | done |
-| 52 | [S107](slices/S107.md) | Waves as a table: shares as a dim column, wave header rules, Lineup column only after ticking | M | 2 |  |  | done |
-| 53 | [S111](slices/S111.md) | Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork | M | 2 |  | discovered from S28 | done |
-| 54 | [S127](slices/S127.md) | After an answer: clear the question from the row and pane, and say the role resumed | S | 1 |  | discovered from S31 | done |
-| 55 | [S109](slices/S109.md) | Run pane follows the newest running run, with a 1 s ledger refresh while a run is visible | M | 2 |  |  | done |
-| 56 | [S110](slices/S110.md) | Running: a live summary of every running project above Needs you in the sidebar | M | 2 |  |  | done |
-| 57 | [S118](slices/S118.md) | Approval card: everything needed to approve on one screen | M | 2 |  |  | done |
-| 58 | [S119](slices/S119.md) | Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up | M | 2 |  |  | done |
-| 59 | [S120](slices/S120.md) | Finding kinds: fix, owner or later in reviewer, UI pass and gate reports | M | 2 |  |  | done |
-| 60 | [S117](slices/S117.md) | UI pass role in the engine, in parallel with the reviewer | M | 2 |  |  | done |
-| 61 | [S121](slices/S121.md) | UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card | M | 2 |  |  | done |
-| 62 | [S116](slices/S116.md) | Spec check: a batch readiness check before a wave, answered in one sitting | M | 2 |  |  | done |
-| 63 | [S92](slices/S92.md) | Fallback brief tells the next row about earlier rows and an already-started slice | S | 1 |  | discovered from S49 | done |
-| 64 | [S93](slices/S93.md) | The gate follows the reviewer's current row after a fallback | S | 1 |  | discovered from S49 | done |
-| 65 | [S102](slices/S102.md) | startRun re-checks that the project is still registered | S | 1 |  | discovered from S38 | done |
-| 66 | [S113](slices/S113.md) | Answer with adj on and no decision key must proceed | S | 1 |  | discovered from S28 | done |
-| 67 | [S73](slices/S73.md) | Allowlist --root-first calls | S | 1 |  |  | done |
-| 68 | [S75](slices/S75.md) | Run directory modes | S | 1 |  | discovered from S51 | done |
-| 69 | [S71](slices/S71.md) | Doctor checks each project's check command and patterns (docs/design.md:613-614) | S | 1 |  |  | done |
-| 70 | [S85](slices/S85.md) | Navigation keys | M | 2 |  |  | done |
-| 71 | [S86](slices/S86.md) | Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default | S | 1 |  | discovered from S83 | done |
-| 72 | [S94](slices/S94.md) | Plan views and lineup edit cover the architect | S | 2 |  | discovered from S08 | done |
-| 73 | [S98](slices/S98.md) | Welcome polish: notice projects added elsewhere, tilde paths, status line and wording | S | 1 |  | discovered from S96 | done |
-| 74 | [S72](slices/S72.md) | Grok adapter and v1 role (after credits reset 2026-11-01) | M | 2 |  |  | — |
+| 44 | [S87](slices/S87.md) | Codex rounds in ork: GOCACHE and the role temp dir inside the sandbox | S | 1 |  | discovered from S83 | done |
+| 45 | [S31](slices/S31.md) | Run a small slice through ork run end to end | S | 1 |  | discovered from S23 | done |
+| 46 | [S78](slices/S78.md) | recoverRuns map writes under lock | S | 1 |  | discovered from S05 | done |
+| 47 | [S126](slices/S126.md) | Implementer brief: ork runs the check command itself; a sandbox limit is not an owner question | S | 1 |  | discovered from S31 | done |
+| 48 | [S114](slices/S114.md) | Self-hosting: run ork on its own repo safely | M | 2 |  |  | done |
+| 49 | [S115](slices/S115.md) | Implementer brief: re-anchor the spec first and self-check before reporting | S | 1 |  |  | done |
+| 50 | [S70](slices/S70.md) | Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed) | S | 1 |  |  | done |
+| 51 | [S99](slices/S99.md) | Live role detail: output tail and tokens/cost in the run pane | M | 2 |  | discovered from S07 | done |
+| 52 | [S125](slices/S125.md) | Waves composer focus: next waves only, inputs inline under the ticked item | M | 2 |  | discovered from S31 | done |
+| 53 | [S107](slices/S107.md) | Waves as a table: shares as a dim column, wave header rules, Lineup column only after ticking | M | 2 |  |  | done |
+| 54 | [S111](slices/S111.md) | Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork | M | 2 |  | discovered from S28 | done |
+| 55 | [S127](slices/S127.md) | After an answer: clear the question from the row and pane, and say the role resumed | S | 1 |  | discovered from S31 | done |
+| 56 | [S109](slices/S109.md) | Run pane follows the newest running run, with a 1 s ledger refresh while a run is visible | M | 2 |  |  | done |
+| 57 | [S110](slices/S110.md) | Running: a live summary of every running project above Needs you in the sidebar | M | 2 |  |  | done |
+| 58 | [S118](slices/S118.md) | Approval card: everything needed to approve on one screen | M | 2 |  |  | done |
+| 59 | [S119](slices/S119.md) | Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up | M | 2 |  |  | done |
+| 60 | [S120](slices/S120.md) | Finding kinds: fix, owner or later in reviewer, UI pass and gate reports | M | 2 |  |  | done |
+| 61 | [S117](slices/S117.md) | UI pass role in the engine, in parallel with the reviewer | M | 2 |  |  | done |
+| 62 | [S121](slices/S121.md) | UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card | M | 2 |  |  | done |
+| 63 | [S116](slices/S116.md) | Spec check: a batch readiness check before a wave, answered in one sitting | M | 2 |  |  | done |
+| 64 | [S92](slices/S92.md) | Fallback brief tells the next row about earlier rows and an already-started slice | S | 1 |  | discovered from S49 | done |
+| 65 | [S93](slices/S93.md) | The gate follows the reviewer's current row after a fallback | S | 1 |  | discovered from S49 | done |
+| 66 | [S102](slices/S102.md) | startRun re-checks that the project is still registered | S | 1 |  | discovered from S38 | done |
+| 67 | [S113](slices/S113.md) | Answer with adj on and no decision key must proceed | S | 1 |  | discovered from S28 | done |
+| 68 | [S73](slices/S73.md) | Allowlist --root-first calls | S | 1 |  |  | done |
+| 69 | [S75](slices/S75.md) | Run directory modes | S | 1 |  | discovered from S51 | done |
+| 70 | [S71](slices/S71.md) | Doctor checks each project's check command and patterns (docs/design.md:613-614) | S | 1 |  |  | done |
+| 71 | [S85](slices/S85.md) | Navigation keys | M | 2 |  |  | done |
+| 72 | [S86](slices/S86.md) | Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default | S | 1 |  | discovered from S83 | done |
+| 73 | [S94](slices/S94.md) | Plan views and lineup edit cover the architect | S | 2 |  | discovered from S08 | done |
+| 74 | [S98](slices/S98.md) | Welcome polish: notice projects added elsewhere, tilde paths, status line and wording | S | 1 |  | discovered from S96 | done |
 | 75 | [S91](slices/S91.md) | Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes | S | 1 |  | discovered from S49 | done |
 | 76 | [S90](slices/S90.md) | Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on | S | 1 |  | Relayed 2026-10-30 (run-20261030-010033-9d07): S142 already corrected every stale line in scope (docs/boundaries.md:38, docs/glossary.md:144, internal/roles/roles.go:56); no change needed, as the 2026-10-29 owner note said (retire once S142 lands). Remaining out-of-scope matches go to S183. · discovered from S88 | retired |
 | 77 | [S39](slices/S39.md) | ork run prompt tests catch swapped answers; help text says y/n | S | 1 |  | discovered from S21 | done |
