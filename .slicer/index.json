@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 210,
+  "next_id": 211,
   "preamble": "",
   "passes": [
     {
@@ -11171,6 +11171,34 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S210",
+      "title": "S208 later note: cite engine.default-cap beside the default in docs/design.md:231-232",
+      "short_title": "S208 later note: cite engine.default-cap beside the default in docs/design.md:231-232",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S208",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }
