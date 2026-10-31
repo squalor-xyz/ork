@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- S212: a *proposed* GitHub Actions release workflow tests on Ubuntu and
+  macOS, then builds darwin/arm64, darwin/amd64 and linux/amd64 archives when
+  the owner pushes a `v*` tag. Archives include the license, notice and README;
+  releases include checksums. New release notes combine the annotated tag
+  summary and matching CHANGELOG section; existing notes stay unchanged.
+  Manual dispatch keeps build artifacts without publishing a release.
+  The daemon session test now uses platform-specific getsid helpers so it
+  compiles on Linux as well as macOS.
+
 ## v1.0.0 (2026-10-31)
 
 - S209: a project can name `ui_pass_skills` for its Claude UI pass

@@ -2733,3 +2733,5 @@
 {"when": "2026-10-31T14:34:40Z", "item": "S212", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-10-31T14:34:40Z", "item": "S212", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-10-31T14:34:40Z", "item": "S212", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-10-31T14:35:05Z", "item": "S212", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-31T14:53:53Z", "item": "S212", "action": "status", "from": "started", "to": "done", "note": "Verified: release workflow (test, build, publish) for darwin/arm64, darwin/amd64 and linux/amd64 with four SHA-pinned actions; dispatch is a dry run; annotated tag message plus CHANGELOG section as notes; getsid test made portable so GOOS=linux go vet passes; 9 guard subtests, mutations caught, full -race suite green. Hosted run not verified: the owner dry-runs it after landing.", "by": "Jon R"}

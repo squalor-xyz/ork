@@ -91,7 +91,10 @@ change the contract by itself.
   Landing fast-forwards the base branch after merging it into the slice
   branch and re-checking if it moved. ork runs `slicer land`, pushes when
   the project allows it, and cleans up
-  (`landing.in-ork`). ork does not tag.
+  (`landing.in-ork`). ork does not tag. The *proposed* GitHub Actions release
+  workflow reacts to the owner's pushed `v*` tag; it tests, builds archives
+  and publishes release assets. A manual dispatch keeps artifacts without
+  creating or editing a release.
 - Act only on runs that ork launched. Relays started elsewhere are
   view-only (`dash.external-runs`), with one exception: ork may end a
   stale ledger run after a y/N confirm (`dash.external-runs-end`, adj 174).

@@ -132,7 +132,7 @@ func TestTwoCommandsStartTheDaemonAtOnceAndItOutlivesThem(t *testing.T) {
 	if err != nil {
 		t.Fatalf("pidfile %q: %v", b, err)
 	}
-	if sid, err := syscall.Getsid(pid); err != nil || sid != pid {
+	if sid, err := getsid(pid); err != nil || sid != pid {
 		t.Errorf("daemon %d has session %d (err %v): it must lead its own session, detached from the command", pid, sid, err)
 	}
 	if err := syscall.Kill(pid, 0); err != nil {

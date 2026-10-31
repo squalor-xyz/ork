@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-212 items · — 45 · done 160 · retired 7
+212 items · — 44 · done 161 · retired 7
 
 ## v1.1
 
@@ -93,7 +93,7 @@
 | 43 | [S207](slices/S207.md) | S24 later notes | S | - |  | S24 review and UI pass later items, 2026-10-31 · discovered from S24 | — |
 | 44 | S210 | S208 later note: cite engine.default-cap beside the default in docs/design.md:231-232 | S | 1 |  | discovered from S208 | — |
 | 45 | S211 | S209 later notes: duplicate ui_pass_skills names, claude-to-codex fallback test, untrimmed control-character doc line, full-line brief assertion | S | 1 |  | discovered from S209 | — |
-| 46 | [S212](slices/S212.md) | Release workflow | M | 2 |  |  | — |
+| 46 | [S212](slices/S212.md) | Release workflow | M | 2 |  |  | done |
 
 ---
 

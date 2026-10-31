@@ -24,6 +24,12 @@ The Waves screen also composes and launches waves.
 
 ## Install
 
+*Proposed:* download the archive for darwin/arm64, darwin/amd64 or linux/amd64
+from the [GitHub release](https://github.com/squalor-xyz/ork/releases).
+Verify it against the release's `SHA256SUMS`, extract it, and put `ork` in a
+directory on your `PATH`. Archives include `LICENSE`, `NOTICE` and this README.
+The release workflow publishes binaries when the owner pushes a `v*` tag.
+
 From the repository root, with Go installed:
 
     go install ./cmd/ork

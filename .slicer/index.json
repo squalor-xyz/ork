@@ -11249,7 +11249,7 @@
       "id": "S212",
       "title": "Release workflow: build and publish binaries when the owner pushes a version tag",
       "short_title": "Release workflow",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -11270,7 +11270,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],
