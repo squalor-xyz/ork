@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 211,
+  "next_id": 212,
   "preamble": "",
   "passes": [
     {
@@ -11205,6 +11205,34 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S208",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S211",
+      "title": "S209 later notes: duplicate ui_pass_skills names, claude-to-codex fallback test, untrimmed control-character doc line, full-line brief assertion",
+      "short_title": "S209 later notes: duplicate ui_pass_skills names, claude-to-codex fallback test, untrimmed control-character doc line, full-line brief assertion",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S209",
         "parent": "",
         "cites": [],
         "key": "",
