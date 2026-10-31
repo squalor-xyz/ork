@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 206,
+  "next_id": 207,
   "preamble": "",
   "passes": [
     {
@@ -2320,8 +2320,8 @@
     },
     {
       "id": "S24",
-      "title": "ork pins a project's slicer and adj contracts and checks every pin",
-      "short_title": "Pin and check tool contracts",
+      "title": "ork pins a project's slicer contract and checks the pin",
+      "short_title": "Pin and check the slicer contract",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
@@ -2409,6 +2409,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "5ff24452-adce-4d48-b621-4a3bcff0d33c",
+          "kind": "",
+          "text": "**2026-10-31** — **2026-10-30** — Owner decision (v1.0 session, interactive; asked in chat, not an adj record): split. S24 is the slicer pin only and stays in v1.0. The adj half moved to its own v1.1 slice behind adjudicate S45. The 2026-10-26 joint-release gate no longer includes S45. Re-specced against {10, 11} and re-anchored at 7b32077; the earlier stale-spec and preflight notes are superseded by the spec above. Checked: slicer 1.17.0 has 'config relay_contract' and 'ai relay' exits 2 with contract_mismatch (slicer/docs/agents.md:712). ork's tests and design.md:1426 say exit 3; the spec fixes both.",
+          "created_at": "2026-10-31T03:57:33Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -2417,7 +2431,7 @@
         "flags": [],
         "trees": [],
         "trees_literal": false,
-        "findings": "owner session 2026-10-20 (in slicer): slicer, ork and adjudicate lock to agreed contract versions; per-contract pins, each tool keeps its own pin, ork sets and checks them (adj 97, proposed). Companion items: slicer s387 (relay contract pin), adjudicate S45 (adj-json contract version and pin).",
+        "findings": "owner session 2026-10-20 (in slicer): ork sets and checks each tool's pin (adj 97, decided). Owner 2026-10-30: this slice is the slicer pin only; the adj half is its own v1.1 slice behind adjudicate S45. Companion: slicer s387 (relay contract pin, landed).",
         "discovered_from": "",
         "parent": "",
         "cites": [],
@@ -10985,6 +10999,51 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S206",
+      "title": "ork pins a project's adj contract and checks the pin",
+      "short_title": "Pin and check the adj contract",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S24"
+      ],
+      "note_records": [
+        {
+          "id": "e4c1d623-7c03-4c1a-b77e-74cc7ea979b6",
+          "kind": "",
+          "text": "**2026-10-31** — **2026-10-30** — Waits on adjudicate S45 (not started on 2026-10-30; adj main 656a7c1 has no contract command). Do not start before S45 lands and the interface above is checked against it.",
+          "created_at": "2026-10-31T03:57:39Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-10-30: adj half split out of S24; waits on adjudicate S45 (adj-json contract and pin)",
+        "discovered_from": "S24",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }

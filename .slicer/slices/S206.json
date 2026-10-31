@@ -1,0 +1,39 @@
+{
+  "id": "S206",
+  "title": "ork pins a project's adj contract and checks the pin",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "Owner 2026-10-30: adj half split out of S24; waits on adjudicate S45 (adj-json contract and pin)",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** the slicer pin (S24), any change to adj (adjudicate S45 adds `adj contract`), and storing a pin in `projects.json`.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Split out of S24 on 2026-10-30 (owner, interactive): v1.0 pins and checks slicer's contract only. adj 97 (`boundary.contract-pin`, decided `ork-sets-checks`) still holds for adj: ork sets and checks adj's pin too, once adjudicate S45 ships `adj contract`.\n\nork decodes adj's JSON at `internal/adjcli/adjcli.go:62-88`. adj JSON shapes may change in any 0.x minor release (`adjudicate/docs/json.md:14-19`), and doctor only runs `adj --version` and compares it against nothing (`internal/cli/doctor.go:57-78`). A shape change reaches ork as a decode error, not as a refusal naming a version.\n\nProposed interface from adjudicate S45 (unverified until it lands; confirm against `adj contract --help`): `adj contract --json` returns `version` and `pinned`, `adj --root P contract pin M` writes `contract` in `.adjudicate.json`, and adj refuses its JSON commands on a mismatch.\n\nUntil this lands, an adj with no `contract` command (installed v0.1.0 prints: unknown command \"contract\") counts as unpinned: doctor warns and passes, and engine start does not refuse.\n\nRules to carry over from S24: `acceptedAdjContracts = []int{1}` beside the relay set with `AcceptedAdjContracts` and `AdjContractAccepted` (comment cites 97); `adjcli.Contract(ctx, root)`; `ork projects pin NAME --adj M` and `unpin --adj`, run after the slicer call and not at all if it fails; the adj column in the doctor project list; the adj pin check at engine start before the first adj read. Needs a spec round against S45's landed interface before it is ready."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
