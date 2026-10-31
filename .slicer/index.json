@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 214,
+  "next_id": 215,
   "preamble": "",
   "passes": [
     {
@@ -11297,6 +11297,34 @@
         "reason": "",
         "importance": 1,
         "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S214",
+      "title": "S108 later notes: per-role ordinal on repeated done steps, overflow marker under Recent, golden for a failed step and a fix round, task-line column vs deeper child glyph",
+      "short_title": "S108 later notes: per-role ordinal on repeated done steps, overflow marker under Recent, golden for a failed step and a fix round, task-line column vs deeper child glyph",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S108",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
         "effort": 1,
         "attempts": 0
       }
