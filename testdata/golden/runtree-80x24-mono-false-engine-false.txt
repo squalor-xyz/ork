@@ -10,7 +10,6 @@
                    │    [32mimplementer[m > [36m[reviewer][m > [90mgate[m                  [90mround 1[m
                    │    [1;36m| orchestrator start  2m  codex sol high[m
                    │      [90m+ implementer  done   1m  claude sonnet[m
-                   │      [90m    Build the tree[m
                    │        [1;31m! explorer     fail   30s  codex sol[m
                    │      [1;36m| reviewer     start  1m  claude opus[m
                    │    . gate         queued  claude opus
@@ -18,7 +17,8 @@
                    │
                    │
                    │[1;36mRecent[m
-                   │[90m  +4 more lines[m
+                   │  [90mnone[m
+                   │[90m  +3 more lines[m
                    │[90m────────────────────────────────────────────────────────────[m
                    │ [90mstarted elsewhere, read-only[m; esc [2mclose pane[m
                    │ 1 project | refreshed 16:42:00

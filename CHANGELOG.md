@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- S108: done steps in the run tree show one node line without a task line.
+  All other phases keep their task text, including failed steps. The gate
+  FAIL line stays visible. Docs updated: `docs/dashboard.md`.
+
 - S212: a *proposed* GitHub Actions release workflow tests on Ubuntu and
   macOS, then builds darwin/arm64, darwin/amd64 and linux/amd64 archives when
   the owner pushes a `v*` tag. Archives include the license, notice and README;

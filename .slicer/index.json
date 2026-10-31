@@ -2043,7 +2043,7 @@
       "id": "S108",
       "title": "Fold finished steps in the run tree to one line each",
       "short_title": "Fold finished steps in the run tree to one line each",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -2064,7 +2064,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

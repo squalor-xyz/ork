@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-213 items · — 45 · done 161 · retired 7
+213 items · — 44 · done 162 · retired 7
 
 ## v1.1
 
@@ -54,7 +54,7 @@
 | 4 | [S72](slices/S72.md) | Grok adapter and v1 role (after credits reset 2026-11-01) | M | 2 |  |  | — |
 | 5 | [S101](slices/S101.md) | Overview engine rows at 80x24: pad the kind column only when needed; no repeated state word; stopped age placement | S | 1 |  | discovered from S33 | — |
 | 6 | [S103](slices/S103.md) | Version and logo polish: clear the stale marker after a daemon restart; keep --version script-friendly | S | 1 |  | discovered from S54 | — |
-| 7 | [S108](slices/S108.md) | Fold finished steps in the run tree to one line each | S | 1 |  |  | — |
+| 7 | [S108](slices/S108.md) | Fold finished steps in the run tree to one line each | S | 1 |  |  | done |
 | 8 | [S104](slices/S104.md) | Answer an open adj record from the Questions tab: pick an option, type the reason, confirm | M | 2 |  | Met by S185 (owner 2026-10-30) · discovered from S27 | retired |
 | 9 | [S50](slices/S50.md) | Check the diff against the slice's Files list | S | 2 |  | discovered from S29 | — |
 | 10 | [S61](slices/S61.md) | Split parts: lead and parts in one worktree | M | 2 |  |  | — |

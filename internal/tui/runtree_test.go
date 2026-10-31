@@ -145,7 +145,7 @@ func TestRunTreeSpinnerAndClock(t *testing.T) {
 func TestRunTreeCycleAndWidth(t *testing.T) {
 	runs := treeFixture(t, "relay-run-tree.json")
 	runs[0].Steps[0].Parent = "child" // cycle with no root
-	runs[0].Steps[1].Task = strings.Repeat("Very long task ", 50)
+	runs[0].Steps[3].Task = strings.Repeat("Very long task ", 50)
 	h := treeHarness(t, runs, treeEngine)
 	// Exercise the linked ledger through an engine pane.
 	h.m.byName["ork"].snap.EngineRuns[0].RelayRun = "tree"
@@ -191,6 +191,57 @@ func TestRunTreeGoldens(t *testing.T) {
 
 func treePaneView(m *Model, width, height int) string {
 	return sgr.ReplaceAllString(strings.Join(m.paneLines(width, height, ""), "\n"), "")
+}
+
+func TestFinishedStepIsOneLine(t *testing.T) {
+	h := treeHarness(t, nil, treeEngine)
+	steps := []runTreeStep{
+		{Step: slicercli.Step{ID: "parent", Role: "implementer", Phase: "done", Task: "Completed implementation"}},
+		{Step: slicercli.Step{ID: "child", Parent: "parent", Role: "reviewer", Phase: "done", Task: "Completed review"}},
+	}
+	for _, width := range []int{80, 100} {
+		lines := h.m.runTreeLines(steps, width, 0)
+		if len(lines) != 2 {
+			t.Fatalf("done steps should have one line each, got %d: %v", len(lines), lines)
+		}
+		if !strings.HasPrefix(sgr.ReplaceAllString(lines[0], ""), "+ implementer") ||
+			!strings.HasPrefix(sgr.ReplaceAllString(lines[1], ""), "  + reviewer") {
+			t.Fatalf("folding lost nodes or child indentation: %v", lines)
+		}
+	}
+}
+
+func TestActiveStepKeepsItsLabelLine(t *testing.T) {
+	h := treeHarness(t, nil, treeEngine)
+	for _, phase := range []string{"start", "wait", "stale", "ended", "unknown", "queued", "stopped", "paused", "committed", ""} {
+		t.Run(phase, func(t *testing.T) {
+			steps := []runTreeStep{{Step: slicercli.Step{Role: "implementer", Phase: phase, Task: "Keep this task"}}}
+			lines := h.m.runTreeLines(steps, 80, 0)
+			if len(lines) != 2 || lines[1] != h.m.cfg.Theme.Dim.Render("    Keep this task") {
+				t.Fatalf("phase %q lost its dim task line: %v", phase, lines)
+			}
+		})
+	}
+}
+
+func TestFailedStepKeepsItsTask(t *testing.T) {
+	h := treeHarness(t, nil, treeEngine)
+	for _, role := range []string{"implementer", "reviewer", "gate"} {
+		t.Run(role, func(t *testing.T) {
+			steps := []runTreeStep{{Step: slicercli.Step{Role: role, Phase: "fail", Task: "Tests failed"}}}
+			lines := h.m.runTreeLines(steps, 80, 0)
+			wantLines := 2
+			if role == "gate" {
+				wantLines = 3
+			}
+			if len(lines) != wantLines || lines[len(lines)-1] != h.m.cfg.Theme.Dim.Render("    Tests failed") {
+				t.Fatalf("failed %s lost its task: %v", role, lines)
+			}
+			if role == "gate" && !strings.Contains(sgr.ReplaceAllString(lines[1], ""), "gate FAIL -> implementer round 1: Tests failed") {
+				t.Fatalf("gate FAIL line missing: %v", lines)
+			}
+		})
+	}
 }
 
 func TestRunTreeNeutralAndMalformedTimes(t *testing.T) {
@@ -316,7 +367,9 @@ func TestRunTreeReadOnlyGuard(t *testing.T) {
 }
 
 func TestRunTreeTaskIndent(t *testing.T) {
-	h := treeHarness(t, treeFixture(t, "relay-run-tree.json"), "")
+	runs := treeFixture(t, "relay-run-tree.json")
+	runs[0].Steps[1].Phase = "start"
+	h := treeHarness(t, runs, "")
 	lines := h.m.runTreeLines(h.m.paneSteps(), 100, 0)
 	for i, line := range lines {
 		plain := sgr.ReplaceAllString(line, "")
@@ -348,8 +401,8 @@ func TestRunTreeFieldsAndStyles(t *testing.T) {
 			}{
 				{0, "| orchestrator start  2m  codex sol high", h.m.cfg.Theme.Heading, ""},
 				{1, "+ implementer  done   1m  claude sonnet", h.m.cfg.Theme.Dim, "  "},
-				{3, "! explorer     fail   30s  codex sol", h.m.cfg.Theme.Error, "    "},
-				{5, ". gate         queued  claude opus", lipgloss.NewStyle(), ""},
+				{2, "! explorer     fail   30s  codex sol", h.m.cfg.Theme.Error, "    "},
+				{4, ". gate         queued  claude opus", lipgloss.NewStyle(), ""},
 			} {
 				if want := tc.prefix + tc.style.Render(tc.text); lines[tc.index] != want {
 					t.Errorf("wrong fields/style: got %q want %q", lines[tc.index], want)

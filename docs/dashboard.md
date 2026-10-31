@@ -1394,8 +1394,9 @@ not a waiting duration. Other phases use a neutral `.` and retain
 their raw text in plain style. An unfinished engine role in a stopped, paused
 or committed run uses that state word and the neutral glyph.
 Elapsed time advances from the injected clock for running steps and stops at
-`updated_at` for finished steps. Task text is dim, clipped to the pane width,
-and starts four columns past its node's glyph. The run header uses the
+`updated_at` for finished steps. A `done` step shows no task line. For every
+other phase, task text is dim, clipped to the pane width, and starts four
+columns past its node's glyph. The run header uses the
 row title style (bold), not the section heading's colour (S106).
 
 S07 adds a stage bar, a pulsing running cell and an activity sparkline.

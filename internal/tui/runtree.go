@@ -246,7 +246,7 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 		if s.hasUsage && running && (s.usageKnown || s.costKnown) {
 			lines = append(lines, prefix+m.cfg.Theme.Dim.Render(treeClip("    "+usage, available)))
 		}
-		if s.Task != "" {
+		if s.Task != "" && s.Phase != "done" {
 			lines = append(lines, prefix+m.cfg.Theme.Dim.Render(treeClip("    "+treeText(s.Task), available)))
 		}
 		if running && !stale && s.tail != "" {
