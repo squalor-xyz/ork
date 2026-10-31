@@ -150,7 +150,7 @@ of the machine (`docs/state.md`).
 
 Two settings belong to the whole registry. Change them with `ork settings set
 [--global-cap N] [--daemon-idle-minutes N]` and read them with `ork settings
-show`. `global_cap` defaults to 4 and `daemon_idle_minutes` to 10; 0 clears
+show`. `global_cap` defaults to 2 and `daemon_idle_minutes` to 10; 0 clears
 one. Unlike `projects set`, `settings set` works while runs are unfinished, and
 a higher cap starts queued runs at once.
 
@@ -299,7 +299,7 @@ and prints each plan before it asks to start (`docs/design.md:1034-1056`,
 stops every unfinished run in that wave, queued ones included
 (`docs/design.md:1064-1068`).
 
-Runs start as slots free. The global cap is 4 and a project's cap is its
+Runs start as slots free. The global cap is 2 and a project's cap is its
 `cap` setting. A run over a cap waits as `queued`
 (`docs/design.md:212-214`). One failed run does not stop the others.
 

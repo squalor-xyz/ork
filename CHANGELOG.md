@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- S208: the global run cap defaults to 2 busy runs (*proposed*, adj 172).
+  An unset or cleared `global_cap` uses 2; an explicit registry value still
+  overrides it. A third run queues until a slot frees.
+  Docs updated: `PROJECT.md`, `docs/design.md`, `docs/guide.md`,
+  `docs/diagrams.md`, `docs/orchestrator-parity.md`, `docs/state.md` and
+  `docs/review-2026-10-26-orchestration-trial.md`.
+
 - S24: ork pins and checks a project's slicer contract (*proposed*).
   `ork projects pin NAME --relay N` (N is 10 or 11) runs
   `slicer config relay_contract N --root PROJECT` and reports the pin slicer

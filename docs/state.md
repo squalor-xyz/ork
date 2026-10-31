@@ -35,7 +35,7 @@ this file on startup (`registry.no-seed`, adj 157). The first successful
 ```json
 {
   "version": 2,
-  "global_cap": 4,
+  "global_cap": 2,
   "daemon_idle_minutes": 10,
   "projects": [
     {
@@ -127,7 +127,7 @@ Notes on the fields:
   for every admission and the idle minutes each time the idle clock arms.
   Raising the cap starts queued runs that now fit; lowering it never stops a
   running one. `ork settings show` prints the stored and the effective values
-  (4 and 10 minutes when unset).
+  (2 busy runs and 10 minutes when unset).
 - `vendor_env` is not a place for secrets. `projects.json` is written at mode
   0644, so other users of the machine can read it, and ork never reads vendor
   credentials. Use it for switches such as `VENDOR_CODEX_NETWORK`. ork's text

@@ -81,7 +81,7 @@ func TestRoundTripKeepsEveryField(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if f.Version != 2 || f.GlobalCap != 4 || f.DaemonIdleMinutes != 10 || len(f.Projects) != 1 {
+	if f.Version != 2 || f.GlobalCap != 2 || f.DaemonIdleMinutes != 10 || len(f.Projects) != 1 {
 		t.Fatalf("loaded: %+v", f)
 	}
 	p := f.Projects[0]

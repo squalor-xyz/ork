@@ -11122,7 +11122,7 @@
       "id": "S208",
       "title": "Global run cap defaults to 2",
       "short_title": "Global cap default 2",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -11143,7 +11143,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

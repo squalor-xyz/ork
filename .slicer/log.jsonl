@@ -2721,3 +2721,5 @@
 {"when": "2026-10-31T12:25:55Z", "item": "S208", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-10-31T12:25:55Z", "item": "S209", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-10-31T12:28:38Z", "item": "S209", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-10-31T12:32:00Z", "item": "S208", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-10-31T12:54:01Z", "item": "S208", "action": "status", "from": "started", "to": "done", "note": "Verified: global run cap defaults to 2 (adj 172); unset or cleared global_cap uses 2, explicit values still override; 5 red tests first, 4 mutations caught, full -race suite green, docs and CHANGELOG updated, dated 10-19 and 10-25 reviews left as written.", "by": "Jon R"}

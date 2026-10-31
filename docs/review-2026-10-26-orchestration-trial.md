@@ -99,11 +99,13 @@ already is the one orchestrator. Do not add an orchestrator agent to ork.
 
 ### O2. One slice at a time by default (*proposed*, adj ask)
 
-ork's global run cap defaults to 4 (`docs/design.md:204`). The trial ran one
+ork's global run cap now defaults to 2 (adj 172, owner decision 2026-10-31;
+`docs/design.md`). At the time of the trial it was 4. The trial ran one
 at a time with no conflicts and no idle owner. The parallel stretch before
 it had three conflicts and the owner said "there's too much going on in
 parallel". Proposed: default the cap to 1, and let the owner raise it per
-wave or in config. Asked as adj 172 (`engine.default-cap`).
+wave or in config. Asked as adj 172 (`engine.default-cap`); the owner chose
+2 on 2026-10-31 (S208).
 
 ### O3. An orchestrator text for a session that orchestrates every slice (*proposed*, slicer item)
 

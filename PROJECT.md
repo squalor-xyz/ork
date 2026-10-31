@@ -80,8 +80,8 @@ matrix editor (S173) and spec drafting (S179) stay later.
   - slicer suggests a wave and the owner edits it (`wave.selection`);
   - one project per wave, and several waves may run at once
     (`wave.scope`);
-  - a global cap of 4 running slices plus an optional cap per project
-    (`wave.limits`);
+  - a global cap of 2 running slices plus an optional cap per project
+    (`wave.limits`, `engine.default-cap`);
   - when one slice fails, the others continue (`wave.failure`).
 - The engine:
   - ork is the state machine and launches every role (`launch.mode`);

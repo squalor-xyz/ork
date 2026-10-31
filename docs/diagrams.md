@@ -143,7 +143,7 @@ Notes:
 
 - One wave holds one project. Several waves can run at once
   (`docs/design.md:231-233`).
-- The global cap is 4 busy runs unless the registry sets `global_cap`
+- The global cap is 2 busy runs unless the registry sets `global_cap`
   (`internal/daemon/runs.go:47`). A project has no cap unless its `cap` is set
   (`internal/daemon/runs.go:793-813`). An item over a cap waits as `queued`.
 - One failed or stopped item leaves the others running. `ork stop WAVE`

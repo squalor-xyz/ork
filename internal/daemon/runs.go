@@ -43,8 +43,8 @@ const (
 	MethodRunEndLedger = "run.end-ledger" // proposed: end a stale ledger run (S175)
 )
 
-// defaultGlobalCap is the global cap when the registry sets none (adj 20).
-const defaultGlobalCap = 4
+// defaultGlobalCap is the global cap when the registry sets none (adj 172).
+const defaultGlobalCap = 2
 
 // RunParams are the owner's launch inputs (run.lineup-inputs, run.launch-wire).
 type RunParams struct {
@@ -788,7 +788,7 @@ func (d *Daemon) loadRunRegistryLocked() (*registry.File, error) {
 
 // hasRoomLocked reports whether one more busy run fits under the global cap
 // and the project's cap. Zero reads as unset: the global cap then defaults
-// and a project has no cap (adj 57, adj 20). Only busy runs hold a slot (adj
+// and a project has no cap (adj 57, adj 172). Only busy runs hold a slot (adj
 // 122). The caller holds the manager lock.
 func (d *Daemon) hasRoomLocked(f *registry.File, project string) bool {
 	global := f.GlobalCap

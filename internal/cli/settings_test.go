@@ -64,7 +64,7 @@ func TestSettingsSetAndShow(t *testing.T) {
 		t.Fatalf("clear: exit %d: %q", code, stdout)
 	}
 	code, stdout, _ = run(t, w.app, "settings", "show")
-	if code != 0 || stdout != "global_cap=unset (effective 4)\ndaemon_idle_minutes=20 (effective 20)\n" {
+	if code != 0 || stdout != "global_cap=unset (effective 2)\ndaemon_idle_minutes=20 (effective 20)\n" {
 		t.Fatalf("show after clear: exit %d: %q", code, stdout)
 	}
 }

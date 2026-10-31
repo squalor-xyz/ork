@@ -77,7 +77,7 @@ func TestSettingsSetSavesGlobalCapAndIdleMinutes(t *testing.T) {
 	if after, _ = registry.Load(d.registryPath()); !reflect.DeepEqual(*after, want) {
 		t.Fatalf("clear:\n got %+v\nwant %+v", *after, want)
 	}
-	if res != (SettingsResult{EffectiveGlobalCap: 4, EffectiveDaemonIdleMinutes: 10}) {
+	if res != (SettingsResult{EffectiveGlobalCap: 2, EffectiveDaemonIdleMinutes: 10}) {
 		t.Fatalf("cleared result %+v", res)
 	}
 	raw, _ := os.ReadFile(d.registryPath())
@@ -111,7 +111,7 @@ func TestSettingsSetRefusesBadCalls(t *testing.T) {
 
 func TestSettingsGetReportsEffectiveValues(t *testing.T) {
 	d, _, _ := runDaemon(t, nil)
-	if got := settingsCall(t, d, MethodSettingsGet, ""); got != (SettingsResult{EffectiveGlobalCap: 4, EffectiveDaemonIdleMinutes: 10}) {
+	if got := settingsCall(t, d, MethodSettingsGet, ""); got != (SettingsResult{EffectiveGlobalCap: 2, EffectiveDaemonIdleMinutes: 10}) {
 		t.Fatalf("unset: %+v", got)
 	}
 	f, _ := registry.Load(d.registryPath())

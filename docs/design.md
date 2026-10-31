@@ -228,9 +228,9 @@ ork (TUI)  ork status --json (CLI)
    daemon restart and are removed when the run record takes them at run start,
    or when the spec changes (owner decisions, S143, 2026-10-27).
 5. **Approve.** The owner approves the wave. This is checkpoint 1.
-6. **Run.** Items start as slots free up under the global cap (default 4)
-   and the per-project cap (`wave.limits`). Several waves, each in one
-   project, may run at once (`wave.scope`). An item over a cap
+6. **Run.** Items start as slots free up under the global cap (default 2)
+   and the per-project cap (`wave.limits`, `engine.default-cap`). Several waves,
+   each in one project, may run at once (`wave.scope`). An item over a cap
    waits as a queued run and starts, oldest first, as a slot frees.
    Beside the run caps there is a vendor cap (S169, *proposed*, owner decision
    2026-10-29): one `codex` role at a time over all runs of the daemon, and

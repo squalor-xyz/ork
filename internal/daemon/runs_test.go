@@ -1274,6 +1274,20 @@ func (w *waveRig) expectNoStart(t *testing.T) {
 	}
 }
 
+func TestDefaultGlobalCapQueuesTheThirdRunUntilASlotFrees(t *testing.T) {
+	w := newWaveRig(t, 0, 0)
+	w.start(t, "S1")
+	w.start(t, "S2")
+	w.expectStarts(t, "S1", "S2")
+	third := w.start(t, "S3")
+	if third.State != runrec.StateQueued {
+		t.Fatalf("third run state %q, want queued", third.State)
+	}
+	w.expectNoStart(t)
+	w.free <- struct{}{}
+	w.expectStart(t, "S3")
+}
+
 func TestWaveGlobalCapQueuesTheFifthRun(t *testing.T) {
 	w := newWaveRig(t, 4, 0)
 	var recs []runrec.Record

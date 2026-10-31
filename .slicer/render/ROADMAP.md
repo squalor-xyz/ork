@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-209 items · — 44 · done 158 · retired 7
+209 items · — 43 · done 159 · retired 7
 
 ## v1.1
 
@@ -261,7 +261,7 @@
 | 204 | [S184](slices/S184.md) | Launch spec check sitting | M | - |  | discovered from S167 | done |
 | 205 | [S185](slices/S185.md) | adj answer keys in the TUI | S | - |  | discovered from S172 | done |
 | 206 | [S198](slices/S198.md) | Accept relay v11 | M | 2 |  | owner contract review 2026-10-30 (slicer, adj, ork alignment); slicer s424 (relay v11 cleanup and bump) | done |
-| 207 | [S208](slices/S208.md) | Global cap default 2 | S | 1 |  | adj 172 | — |
+| 207 | [S208](slices/S208.md) | Global cap default 2 | S | 1 |  | adj 172 | done |
 | 208 | [S209](slices/S209.md) | UI pass skills line | M | 2 |  | adj 171 | — |
 
 ---
