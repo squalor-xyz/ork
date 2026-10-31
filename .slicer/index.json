@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 213,
+  "next_id": 214,
   "preamble": "",
   "passes": [
     {
@@ -11271,6 +11271,34 @@
         "urgency": 1,
         "effort": 2,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S213",
+      "title": "S212 later notes: freebsd vet for the getsid helpers, fail the release when CHANGELOG has no section for the tag, strip signed-tag signatures from notes, persist-credentials false on test and build checkouts, setup-go cache off for release builds, guards tolerant of YAML reformats",
+      "short_title": "S212 later notes: freebsd vet for the getsid helpers, fail the release when CHANGELOG has no section for the tag, strip signed-tag signatures from notes, persist-credentials false on test and build checkouts, setup-go cache off for release builds, guards tolerant of YAML reformats",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S212",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
       }
     }
   ],
