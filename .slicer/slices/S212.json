@@ -1,0 +1,41 @@
+{
+  "id": "S212",
+  "title": "Release workflow: build and publish binaries when the owner pushes a version tag",
+  "lead": [
+    "A GitHub Actions workflow builds ork for darwin/arm64, darwin/amd64 and linux/amd64 and publishes them on the GitHub release when the owner pushes a `v*` tag. The owner still writes the changelog entry, tags and pushes; ork does not tag."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The v1.0.0 release was created by hand on 2026-10-31 with `gh release create`. The repo has no `.github/` directory and no release artifacts, and the only install path is `go install ./cmd/ork` from a clone (README, Install section). The owner chose GitHub Actions, the targets darwin/arm64, darwin/amd64 and linux/amd64, and release notes made of the CHANGELOG section for the tag plus a short summary (interactive questions, 2026-10-31). GitHub Actions is a proprietary service; the owner approved it for this purpose in that session. The version string is set at build time with the linker flag named in cmd/ork/main.go, and the stale-daemon build identity comes from the VCS revision in the build info (adj 102), so a CI build must keep VCS stamping on. Nothing in slicer's roadmap covers releasing ork: `slicer --root ../slicer find release` lists only slicer's own PyPI release work."
+    },
+    {
+      "heading": "Files",
+      "body": "- `.github/workflows/release.yml` (new).\n- `internal/release/workflow_test.go` (new; a stdlib-only test that reads the workflow as text).\n- `cmd/ork/main.go:30-31` (the version variable the build sets; read only unless the probe finds a platform problem).\n- `internal/clirun/` and `internal/daemon/` (process-group, socket and path code that must build and test on Linux; change only to fix what the probe reports).\n- `README.md:25-29` (Install section).\n- `AGENTS.md` (a short Release section: the procedure and what the workflow does).\n- `docs/boundaries.md:94` (ork does not tag; the workflow reacts to the owner's tag).\n- `CHANGELOG.md` (Unreleased entry)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- The workflow file exists and triggers on a pushed tag matching `v*` and on `workflow_dispatch`.\n- Every `uses:` line pins a full 40-character commit SHA, not a branch or a version tag.\n- The build matrix lists exactly darwin/arm64, darwin/amd64 and linux/amd64.\n- The build step passes a linker flag that sets the version from the tag, and does not turn VCS stamping off.\n- The test job runs before any build or publish job, and the publish job depends on every build job.\n- Only the publish job has `contents: write`; the other jobs have read-only permissions.\n- A `workflow_dispatch` run is a dry run: it builds and keeps the archives as workflow artifacts but never creates or edits a release.\n- The workflow names no secret other than the built-in token."
+    },
+    {
+      "heading": "Implement",
+      "body": "Do not start before the owner has confirmed the action list (step 1).\n\n1. Preflight with the owner: list every third-party action the workflow would use (candidates: the checkout action, the Go setup action, and the upload and download artifact actions), with its repository and license read from the repository itself. Ask before adding any action beyond that list. `gh` is on the runner image and needs no action. Pin each action to a full commit SHA with the version in a comment.\n2. Probe the platforms before writing the workflow. Run `GOOS=linux GOARCH=amd64 go build ./cmd/ork`, `GOOS=darwin GOARCH=amd64 go build ./cmd/ork` and `GOOS=linux GOARCH=amd64 go vet ./...` from the worktree with `go -C`. Report each failure. Process-group, unix-socket and path-length code is where Linux can differ from macOS.\n3. Tests first from the failing list. Write the workflow with jobs `test` (ubuntu and macOS, `go test -race ./...`, `go vet ./...`, `gofmt -l .`), `build` (one job per matrix entry, needs `test`), and `publish` (needs every build).\n   - The Go version comes from `go.mod` (the setup action's version file option), not a hard-coded number.\n   - `go build -trimpath -ldflags \"-X main.version=$TAG\" -o ork ./cmd/ork`, with the checkout keeping `.git` so the VCS revision is stamped.\n  - On a tag push, `$TAG` is the tag name. On workflow_dispatch it is `dev-` plus the short commit SHA (*proposed*).\n   - Each archive is `ork_$TAG_$OS_$ARCH.tar.gz` holding `ork`, `LICENSE`, `NOTICE` and `README.md`; the publish job also writes `SHA256SUMS` over the archives (*proposed*).\n4. If `go test` fails on Linux for a platform reason, stop and report it to the owner. Do not skip, tag-guard or delete the failing tests, and do not drop the target without the owner's say-so.\n5. Release notes (*proposed*): the body is the annotated tag's message (the owner's short summary), then the CHANGELOG section whose heading starts with the tag. If the tag is lightweight or has no message, the body is the CHANGELOG section alone. If the release already exists (as v1.0.0 does), the publish job uploads the archives with `--clobber` and leaves the notes alone; otherwise it creates the release.\n6. Docs: the Release section in `AGENTS.md` (CHANGELOG heading, annotated tag with summary, push the tag, check the Actions run), the README Install section (download a binary, or `go install`), and the boundary line. Mark everything the workflow adds *proposed* until an adj record decides it.\n7. Do not push a tag, run the workflow on GitHub or create a release from the worktree. The owner runs the dry run after landing."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race ./...`; `go vet ./...`; `gofmt -l .`; `slicer check`; `adj lint`.\n- The three cross-builds in Implement step 2 succeed.\n- `rg -n \"uses:\" .github/workflows/release.yml` shows only 40-character SHAs.\n- [HUMAN CHECK] [AFTER LAND] After this lands on main, the owner runs the workflow once with workflow_dispatch from the Actions tab and confirms that the test job passes on ubuntu and macOS, that three archives and SHA256SUMS appear as artifacts, that no release was created or changed, and that the linux and darwin binaries print the right version with `--version` (a dispatch run prints `dev-` plus the short commit SHA)."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"Release workflow: build and publish binaries on a version tag\"."
+    }
+  ],
+  "notes": []
+}
