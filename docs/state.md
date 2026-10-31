@@ -55,7 +55,8 @@ this file on startup (`registry.no-seed`, adj 157). The first successful
       },
       "vendor_env": {"codex": {"VENDOR_CODEX_NETWORK": "1"}},
       "push": true,
-      "ui_doc": "docs/ui.md"
+      "ui_doc": "docs/ui.md",
+      "ui_pass_skills": ["tui-design", "frontend-design"]
     }
   ]
 }
@@ -91,9 +92,21 @@ Notes on the fields:
   tells the UI pass to find the project's own UI docs. The owner sets it with
   `ork projects set NAME --ui-doc PATH` or by editing the file. An older ork
   refuses a registry with `ui_doc` because `Load` uses strict keys.
+- `ui_pass_skills` (*proposed*, S209, adj 171) is an optional JSON array
+  of skill names. Only a UI pass whose vendor is `claude` gets a brief line
+  advising it to load these skills. A `codex` UI pass never gets the line;
+  an absent or empty list adds no line. The base UI prompt stays neutral.
+  ork never checks that the skills exist and never reads vendor files.
+  Set the whole list with `ork projects set NAME --ui-pass-skills a,b`;
+  `--ui-pass-skills ""` clears it. The CLI trims whitespace around each
+  comma-separated name; `a, b` stores `["a","b"]`. The shared validator
+  refuses blank names, commas, leading or trailing whitespace, NUL, CR and
+  LF in wire calls and on registry load and save. Errors quote the bad name;
+  blank-name errors give the item's position, counted from 1.
+  An older ork refuses this key because `Load` uses strict keys.
 - `ork projects set` (*proposed*, S161, owner decision 2026-10-27) is the only
   way ork writes the optional per-project fields. It changes `push`, `ui_doc`,
-  `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`,
+  `ui_pass_skills`, `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`,
   `cap`, `budgets.minutes`, `budgets.tokens` and, since S174 (*proposed*,
   owner decision 2026-10-29), `environment_lines`, `permissions` and
   `vendor_env`, and leaves every other key as it was (`name`, `path` and
@@ -102,8 +115,9 @@ Notes on the fields:
   each value, refuses while the project has unfinished runs, and saves under
   its registry lock.
   A `ui_doc` must be a relative path inside the project (checked by name;
-  symlinks are not resolved; it is stored cleaned; the file need not exist yet). A pattern must hold `{id}` or
-  `{id_lower}`. Numbers must not be negative. An empty string or 0 clears
+  symlinks are not resolved; it is stored cleaned; the file need not exist yet).
+  A `ui_pass_skills` list replaces the whole list; an empty list clears it.
+  A pattern must hold `{id}` or `{id_lower}`. Numbers must not be negative. An empty string or 0 clears
   a field (zero means unset). The command is design.md's `projects set`.
 - S174 (*proposed*) changes the three list and map fields without retyping
   what stays. `environment_lines` is replaced as a whole by the lines given;

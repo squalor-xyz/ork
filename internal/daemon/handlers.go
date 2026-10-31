@@ -520,6 +520,11 @@ func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
 	if p.SetsNothing() {
 		return registry.Project{}, bad("projects.set sets no field")
 	}
+	if p.UIPassSkills != nil {
+		if err := registry.ValidateUIPassSkills(*p.UIPassSkills); err != nil {
+			return registry.Project{}, bad("%v", err)
+		}
+	}
 	if p.UIDoc != nil {
 		if err := registry.ValidateUIDoc(*p.UIDoc); err != nil {
 			return registry.Project{}, bad("%v", err)
@@ -579,6 +584,9 @@ func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
 	proj.EnvironmentLines, proj.Permissions, proj.VendorEnv = withExtras.EnvironmentLines, withExtras.Permissions, withExtras.VendorEnv
 	if p.Push != nil {
 		proj.Push = *p.Push
+	}
+	if p.UIPassSkills != nil {
+		proj.UIPassSkills = append([]string(nil), (*p.UIPassSkills)...)
 	}
 	if p.UIDoc != nil {
 		proj.UIDoc = *p.UIDoc

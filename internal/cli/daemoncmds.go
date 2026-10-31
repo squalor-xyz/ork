@@ -225,6 +225,7 @@ func (a *App) projects(ctx context.Context, o *output, args []string) int {
 func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args []string) int {
 	push := fs.String("push", "", "on or off: push the base branch after a landing")
 	uiDoc := fs.String("ui-doc", "", "the UI design doc, a path inside the project")
+	uiPassSkills := fs.String("ui-pass-skills", "", "comma-separated skills for a Claude UI pass; empty clears the list")
 	worktree := fs.String("worktree-pattern", "", "the worktree path, with {id} or {id_lower}")
 	branch := fs.String("branch-pattern", "", "the branch name, with {id} or {id_lower}")
 	check := fs.String("check", "", "the check command")
@@ -256,6 +257,19 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		default:
 			return o.usage("projects set: --push takes on or off, got %q", *push)
 		}
+	}
+	if given["ui-pass-skills"] {
+		skills := []string{}
+		if *uiPassSkills != "" {
+			skills = strings.Split(*uiPassSkills, ",")
+			for i := range skills {
+				// Preserve forbidden control characters for the shared validator.
+				if !strings.ContainsAny(skills[i], "\x00\r\n") {
+					skills[i] = strings.TrimSpace(skills[i])
+				}
+			}
+		}
+		p.UIPassSkills = &skills
 	}
 	if given["ui-doc"] {
 		p.UIDoc = uiDoc
@@ -292,7 +306,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		return o.usage("projects set: %v", err)
 	}
 	if p.SetsNothing() {
-		return o.usage("projects set needs at least one field flag (--push, --ui-doc, --worktree-pattern, --branch-pattern, --check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --permission, --allow, --vendor-env, --unset-vendor-env)")
+		return o.usage("projects set needs at least one field flag (--push, --ui-doc, --ui-pass-skills, --worktree-pattern, --branch-pattern, --check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --permission, --allow, --vendor-env, --unset-vendor-env)")
 	}
 	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
 		proj, err := c.SetProject(ctx, p)
@@ -321,6 +335,9 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		}
 		if p.UIDoc != nil {
 			changed = append(changed, text("ui_doc", proj.UIDoc))
+		}
+		if p.UIPassSkills != nil {
+			changed = append(changed, text("ui_pass_skills", strings.Join(proj.UIPassSkills, ",")))
 		}
 		if p.WorktreePattern != nil {
 			changed = append(changed, text("worktree_pattern", proj.WorktreePattern))

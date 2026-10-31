@@ -128,6 +128,17 @@ The registry holds optional per-project settings. Change them with
 | `--budget-tokens N` | token budget per slice |
 | `--push on\|off` | push the base branch after landing; off by default |
 | `--ui-doc PATH` | the project's UI design doc, relative to the project; the UI pass reads it |
+| `--ui-pass-skills A,B` | comma-separated skill names stored in `ui_pass_skills`; only a Claude UI pass is advised to load them (*proposed*, S209) |
+
+Give one flag value, for example `--ui-pass-skills tui-design,frontend-design`.
+The list replaces the previous list; `--ui-pass-skills ""` clears it.
+The CLI trims whitespace around each comma-separated name, so `a, b`
+stores `["a","b"]`. The shared validator refuses blank names, commas,
+leading or trailing whitespace, NUL, CR and LF on every settings and registry
+load or save path. Errors quote the bad name and identify a blank item's
+position (counted from 1); `a,,b` and `a,` report blank item 2.
+ork does not check whether a skill exists or read vendor files. With no list, the UI pass
+gets only the neutral prompt; a Codex UI pass always gets no skills line.
 
 An empty value or 0 clears a field. The command is refused while the project
 has unfinished runs, and the daemon needs no restart: the next run uses the

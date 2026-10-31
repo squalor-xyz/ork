@@ -263,6 +263,8 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		SliceJSON: string(sliceJSON), EnvLines: e.proj.EnvironmentLines,
 		CheckCommand: e.proj.CheckCommand,
 		UIDoc:        e.proj.UIDoc,
+		Vendor:       entry.Vendor,
+		UIPassSkills: e.proj.UIPassSkills,
 		Finish:       r.finish,
 		Sections:     append(pendingSection(pend), r.sections...),
 	}

@@ -270,6 +270,7 @@ type SetProjectParams struct {
 	Name             string                          `json:"name"`
 	Push             *bool                           `json:"push,omitempty"`
 	UIDoc            *string                         `json:"ui_doc,omitempty"`
+	UIPassSkills     *[]string                       `json:"ui_pass_skills,omitempty"`
 	WorktreePattern  *string                         `json:"worktree_pattern,omitempty"`
 	BranchPattern    *string                         `json:"branch_pattern,omitempty"`
 	CheckCommand     *string                         `json:"check_command,omitempty"`
@@ -285,7 +286,7 @@ type SetProjectParams struct {
 // SetsNothing reports whether the call sets no field. The struct holds maps,
 // so it cannot be compared with ==. The daemon and the command line both use it.
 func (p SetProjectParams) SetsNothing() bool {
-	return p.Push == nil && p.UIDoc == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
+	return p.Push == nil && p.UIDoc == nil && p.UIPassSkills == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
 		p.CheckCommand == nil && p.CheckMinutes == nil && p.Cap == nil && p.BudgetMinutes == nil &&
 		p.BudgetTokens == nil && p.EnvironmentLines == nil && len(p.Permissions) == 0 && len(p.VendorEnv) == 0
 }

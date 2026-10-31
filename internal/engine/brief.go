@@ -21,7 +21,9 @@ type BriefInput struct {
 	Finish       bool   // the finish step has no checks after its round
 	CheckCommand string // the project check command; empty means only slicer check
 	Role         string
-	UIDoc        string // the project's UI design doc (registry ui_doc); only the UI pass's brief names it
+	Vendor       string   // the selected lineup vendor
+	UIPassSkills []string // skills advised only for a Claude UI pass
+	UIDoc        string   // the project's UI design doc (registry ui_doc); only the UI pass's brief names it
 	SliceID      string
 	Worktree     string
 	TempDir      string
@@ -76,6 +78,9 @@ func BuildBrief(in BriefInput) (string, error) {
 		b.WriteString("\n")
 	}
 	if in.Role == RoleUI {
+		if in.Vendor == "claude" && len(in.UIPassSkills) > 0 {
+			fmt.Fprintf(&b, "## Skills\n\nLoad these skills for the UI pass: %s. If one is not available, say so in your report and go on.\n\n", strings.Join(in.UIPassSkills, ", "))
+		}
 		b.WriteString("## UI design doc\n\n")
 		if in.UIDoc != "" {
 			fmt.Fprintf(&b, "The project's UI design doc is `%s`. It is a path in the worktree. Judge the screens against it.\n\n", in.UIDoc)

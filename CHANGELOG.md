@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- S209: a project can name `ui_pass_skills` for its Claude UI pass
+  (*proposed*, adj 171). `ork projects set NAME --ui-pass-skills a,b`
+  replaces the list; an empty value clears it. Only a `claude` UI pass
+  gets the brief line advising it to load the named skills. Codex gets no
+  skills line, and the neutral role prompt stays unchanged. ork never
+  checks skill existence or reads vendor files.
+  Docs updated: `docs/state.md`, `docs/design.md`, `docs/guide.md` and
+  `docs/glossary.md`.
+
 - S208: the global run cap defaults to 2 busy runs (*proposed*, adj 172).
   An unset or cleared `global_cap` uses 2; an explicit registry value still
   overrides it. A third run queues until a slot frees.

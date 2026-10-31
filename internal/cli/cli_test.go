@@ -1653,3 +1653,80 @@ func TestProjectsSetNewFlagUsageErrors(t *testing.T) {
 		t.Fatalf("a refusal changed the registry: %+v", saved.Projects)
 	}
 }
+
+func TestProjectsSetUIPassSkills(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep", UIDoc: "keep.md"})
+	for _, tc := range []struct {
+		value, output string
+		want          []string
+	}{
+		{"tui-design,frontend-design", "updated keep: ui_pass_skills=\"tui-design,frontend-design\"\n", []string{"tui-design", "frontend-design"}},
+		{"", "updated keep: ui_pass_skills=unset\n", nil},
+	} {
+		code, stdout, stderr := run(t, w.app, "projects", "set", "keep", "--ui-pass-skills", tc.value)
+		if code != 0 || stdout != tc.output {
+			t.Fatalf("exit %d stdout %q stderr %s", code, stdout, stderr)
+		}
+		data, err := os.ReadFile(w.regPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var saved struct {
+			Projects []struct {
+				UIDoc  string   `json:"ui_doc"`
+				Skills []string `json:"ui_pass_skills"`
+			}
+		}
+		if err := json.Unmarshal(data, &saved); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(saved.Projects[0].Skills, tc.want) || saved.Projects[0].UIDoc != "keep.md" {
+			t.Fatalf("saved: %+v", saved)
+		}
+	}
+	for _, bad := range []string{"a,", ",b", " ", "a\nb", "a\x00b"} {
+		code, _, stderr := run(t, w.app, "projects", "set", "keep", "--ui-pass-skills", bad)
+		if code != 1 || !strings.Contains(stderr, "ui_pass_skills") {
+			t.Errorf("%q: exit %d: %s", bad, code, stderr)
+		}
+	}
+}
+
+func TestProjectsSetUIPassSkillsTrimsNames(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
+	code, stdout, stderr := run(t, w.app, "projects", "set", "keep", "--ui-pass-skills", " a, b ")
+	if code != 0 || stdout != "updated keep: ui_pass_skills=\"a,b\"\n" {
+		t.Fatalf("exit %d stdout %q stderr %s", code, stdout, stderr)
+	}
+	saved, err := registry.Load(w.regPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(saved.Projects[0].UIPassSkills, []string{"a", "b"}) {
+		t.Fatalf("saved names: %q", saved.Projects[0].UIPassSkills)
+	}
+}
+
+func TestProjectsSetUIPassSkillsBlankPosition(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
+	for _, bad := range []string{"a,,b", "a,"} {
+		t.Run(bad, func(t *testing.T) {
+			code, _, stderr := run(t, w.app, "projects", "set", "keep", "--ui-pass-skills", bad)
+			if code != 1 || !strings.Contains(stderr, `ui_pass_skills: item 2 name "" must not be blank`) {
+				t.Fatalf("%q exit %d: %s", bad, code, stderr)
+			}
+		})
+	}
+}
+
+func TestProjectsSetUIPassSkillsRejectsControlCharacters(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
+	for _, bad := range []string{"a\r", "a\n", "a\x00"} {
+		t.Run(fmt.Sprintf("%q", bad), func(t *testing.T) {
+			code, _, stderr := run(t, w.app, "projects", "set", "keep", "--ui-pass-skills", bad)
+			if code != 1 || !strings.Contains(stderr, fmt.Sprintf("name %q must not contain NUL, CR or LF", bad)) {
+				t.Fatalf("%q exit %d: %s", bad, code, stderr)
+			}
+		})
+	}
+}

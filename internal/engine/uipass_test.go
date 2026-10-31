@@ -836,3 +836,31 @@ func TestUIPassBriefCarriesTheRegistryUIDoc(t *testing.T) {
 		t.Fatalf("the UI pass ran %d times", seen)
 	}
 }
+
+func TestUIPassBriefCarriesRegistrySkillsForItsVendor(t *testing.T) {
+	for _, vendor := range []string{"claude", "codex"} {
+		t.Run(vendor, func(t *testing.T) {
+			h := newHarness(t, func(o *harnessOpts) {
+				o.project = func(p *registry.Project) { p.UIPassSkills = []string{"tui-design", "frontend-design"} }
+				o.routesFor = func(P, W string) []clitest.Route {
+					return []clitest.Route{{Tool: "slicer", Args: []string{"show", item, "--json", "--lean", "--root", W}, Stdout: uiSliceJSON(tuiFiles)}}
+				}
+			})
+			h.cfg.Lineup[RoleUI] = []runrec.LineupEntry{{Vendor: vendor, Model: "test", Effort: "medium"}}
+			requireState(t, h.start(), runrec.StateAwaitingApproval)
+			seen := 0
+			for _, req := range h.runner.requests() {
+				has := strings.Contains(req.Brief, "## Skills\n\nLoad these skills for the UI pass: tui-design, frontend-design. If one is not available, say so in your report and go on.\n\n## UI design doc")
+				if has != (req.Role == RoleUI && vendor == "claude") {
+					t.Errorf("%s skills line: %v", req.Role, has)
+				}
+				if req.Role == RoleUI {
+					seen++
+				}
+			}
+			if seen != 1 {
+				t.Fatalf("UI pass ran %d times", seen)
+			}
+		})
+	}
+}

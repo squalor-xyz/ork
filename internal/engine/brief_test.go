@@ -219,3 +219,36 @@ func TestUIBriefNamesTheProjectDesignDoc(t *testing.T) {
 		t.Errorf("implementer brief names the UI doc:\n%s", got)
 	}
 }
+
+func TestUIBriefSkillsOnlyForClaude(t *testing.T) {
+	for _, tc := range []struct {
+		name, role, vendor string
+		skills             []string
+		want               bool
+	}{
+		{"claude", RoleUI, "claude", []string{"tui-design", "frontend-design"}, true},
+		{"unset", RoleUI, "claude", nil, false},
+		{"empty", RoleUI, "claude", []string{}, false},
+		{"codex", RoleUI, "codex", []string{"tui-design", "frontend-design"}, false},
+		{"case-sensitive", RoleUI, "Claude", []string{"tui-design"}, false},
+		{"implementer", RoleImplementer, "claude", []string{"tui-design"}, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			in := baseBrief()
+			in.Role = tc.role
+			in.Vendor = tc.vendor
+			in.UIPassSkills = tc.skills
+			got, err := BuildBrief(in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			line := "## Skills\n\nLoad these skills for the UI pass: tui-design, frontend-design. If one is not available, say so in your report and go on.\n\n## UI design doc"
+			if strings.Contains(got, line) != tc.want {
+				t.Fatalf("skills line present=%v, want %v", strings.Contains(got, line), tc.want)
+			}
+			if !tc.want && (strings.Contains(got, "## Skills") || strings.Contains(got, "Load these skills") || strings.Contains(got, "tui-design") || strings.Contains(got, "frontend-design")) {
+				t.Fatal("skills leaked to brief")
+			}
+		})
+	}
+}

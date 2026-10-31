@@ -73,6 +73,27 @@ func FillPattern(pattern, id string) string {
 	return strings.NewReplacer("{id}", id, "{id_lower}", strings.ToLower(id)).Replace(pattern)
 }
 
+// ValidateUIPassSkills checks the optional skill list (S209, *proposed*).
+// Names must be nonblank, trimmed and free of commas, NUL, CR and LF.
+// ork does not resolve them.
+func ValidateUIPassSkills(skills []string) error {
+	for i, name := range skills {
+		if strings.TrimSpace(name) == "" {
+			return fmt.Errorf("ui_pass_skills: item %d name %q must not be blank", i+1, name)
+		}
+		if strings.ContainsRune(name, ',') {
+			return fmt.Errorf("ui_pass_skills: name %q must not contain a comma", name)
+		}
+		if strings.ContainsAny(name, "\x00\r\n") {
+			return fmt.Errorf("ui_pass_skills: name %q must not contain NUL, CR or LF", name)
+		}
+		if strings.TrimSpace(name) != name {
+			return fmt.Errorf("ui_pass_skills: name %q must not have leading or trailing whitespace", name)
+		}
+	}
+	return nil
+}
+
 // ValidateUIDoc checks a ui_doc value (S161, *proposed*). Empty means unset.
 // Otherwise the value must be a relative path that stays inside the project
 // and names a file below it, so "." and ".." are refused. Whether the file
@@ -199,6 +220,9 @@ type Project struct {
 	// doc (S136, *proposed*). The UI pass's brief names it. Empty means the
 	// brief tells the pass to find the project's own UI docs.
 	UIDoc string `json:"ui_doc,omitempty"`
+
+	// UIPassSkills names skills a Claude UI pass is advised to load (S209, *proposed*).
+	UIPassSkills []string `json:"ui_pass_skills,omitempty"`
 }
 
 // File is the content of projects.json.
@@ -299,6 +323,9 @@ func (f *File) Validate() error {
 			return fmt.Errorf("project %q: duplicate name", p.Name)
 		}
 		seen[p.Name] = true
+		if err := ValidateUIPassSkills(p.UIPassSkills); err != nil {
+			return fmt.Errorf("project %q: %w", p.Name, err)
+		}
 		if !filepath.IsAbs(p.Path) {
 			return fmt.Errorf("project %q: path %q is not absolute", p.Name, p.Path)
 		}

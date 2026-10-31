@@ -251,7 +251,14 @@ The TUI and the CLI are its clients (`daemon.lifetime`).
 both (`registry.initial`). See [state.md](state.md).
 
 **Project registry.** `projects.json`: the projects ork shows and their
-settings (caps, patterns, check command, budgets, permissions).
+settings (caps, patterns, check command, budgets, permissions, `ui_doc`
+and `ui_pass_skills`).
+
+**UI pass skills.** The optional project registry list `ui_pass_skills`
+(*proposed*, S209, adj 171), set with `--ui-pass-skills a,b`. A Claude UI
+pass's brief advises it to load these names. An empty list adds no line,
+and a Codex UI pass never gets the line. The neutral role prompt stays
+unchanged; ork never checks skills or reads vendor files.
 
 **ork run.** One slice that ork set up and runs, in one project. ork's run
 record links it to slicer's relay run by id (`ledger.write`).

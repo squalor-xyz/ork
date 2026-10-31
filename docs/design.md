@@ -112,7 +112,7 @@ ork (TUI)  ork status --json (CLI)
   | `projects.list` | none | `{"projects":[...]}`; an empty registry is valid |
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
   | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
-  | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `ui_doc`, `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`) | the project as saved; an omitted field keeps its value, `""` or 0 clears one; `null` removes one role or one vendor key, and the other roles and keys stay; `bad_params` for an unknown field, no field or an invalid value, `not_found`, `project_busy` while a run is unfinished |
+  | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `ui_doc`, `ui_pass_skills` (a list, S209), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`) | the project as saved; an omitted field keeps its value, `""` or 0 clears one, `[]` clears `ui_pass_skills`; `null` removes one role or one vendor key, and the other roles and keys stay; `bad_params` for an unknown field, no field or an invalid value, `not_found`, `project_busy` while a run is unfinished |
   | `settings.get` (*proposed*, S174) | none | `{"global_cap","daemon_idle_minutes","effective_global_cap","effective_daemon_idle_minutes"}`; the first two are the stored values (0 is unset) |
   | `settings.set` (*proposed*, S174) | `{"global_cap"?,"daemon_idle_minutes"?}`, at least one | the same shape as `settings.get`; 0 clears one; `bad_params` for no field or a negative number; not refused while runs are unfinished; a raised `global_cap` starts the queued runs that now fit |
 
@@ -311,6 +311,15 @@ slice.
     role runs with its own context (the report shape or lost process section;
     a question or shape pause also resumes the role's session) and the sibling
     role with its answer (S159, *proposed*).
+    Skills (*proposed*, S209, adj 171): `ui_pass_skills` in the project
+    registry is a list of names. The engine passes the selected lineup
+    vendor to the brief builder. Only a `claude` UI pass with a non-empty
+    list gets a `## Skills` section just before `## UI design doc`.
+    It advises the pass to load the named skills and, if one is missing,
+    report that and go on. A `codex` UI pass
+    never gets that line. The role prompt stays vendor-neutral and skill-free.
+    An absent or empty list adds no line. ork does not check skill existence
+    and never reads vendor files.
     Renders (*proposed*, S121; adj #165): the
     UI pass writes each changed view as plain text files at 80x24, 120x40 and in
     ASCII mode, in `tmp/ui-N/renders/` of the run directory, using the
@@ -1547,7 +1556,8 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   stopped. This includes queued, paused, awaiting-approval and running states.
   The message names the run ids. The project stays registered.
   A planned start that loses the race to removal is refused with `not_found`.
-- `projects set NAME [--push on|off] [--ui-doc PATH] [--worktree-pattern P]
+- `projects set NAME [--push on|off] [--ui-doc PATH]
+  [--ui-pass-skills A,B] [--worktree-pattern P]
   [--branch-pattern P] [--check CMD] [--check-minutes N] [--cap N]
   [--budget-minutes N] [--budget-tokens N] [--env-line LINE]...
   [--permission ROLE=read-only|ROLE=]... [--allow ROLE=PATTERN]...
@@ -1555,6 +1565,14 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   (*proposed*, S161; the last five groups S174): one flag per optional
   registry field, as in state.md. A flag that is given sets its field; a flag
   that is left out keeps the value. An empty string or 0 clears a field.
+  `--ui-pass-skills` (*proposed*, S209) takes one comma-separated value
+  (`a,b`) and replaces the JSON array `ui_pass_skills`. An empty value
+  clears the list. The CLI trims whitespace around each name, so `a, b`
+  stores `["a","b"]`. The shared validator refuses blank names, commas,
+  leading or trailing whitespace, NUL, CR and LF in wire calls and on
+  registry load and save. Errors quote the bad name; for a blank name they
+  give the item's position, counted from 1. `a,,b` and `a,` report item 2.
+  Text uses `ui_pass_skills="a,b"` or `ui_pass_skills=unset`.
   S174 flags: `--env-line` repeats and the lines given replace the list (one
   empty `--env-line ""` clears it). `--permission ROLE=read-only` sets the
   role's preset and `--permission ROLE=` removes its entry, so the default
@@ -1577,7 +1595,8 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   flag is required, and an unknown flag, a bad `--push` value or a non-number is a usage error
   (exit 2) before the daemon starts. The daemon (`projects.set`) validates the
   values and refuses with `bad_params` (a `ui_doc` that is absolute or leaves
-  the project, a pattern without `{id}` or `{id_lower}`, a negative number) or
+  the project, an invalid `ui_pass_skills` name, a pattern without `{id}` or
+  `{id_lower}`, a negative number) or
   `project_busy`, as `projects rm` does, and then changes nothing. JSON:
   `{"project":{...}}`. Text: `updated NAME: FIELD=VALUE, ...` in flag order,
   with `unset` for a cleared field; the text shows the values as saved (a

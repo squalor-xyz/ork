@@ -11150,10 +11150,25 @@
       "id": "S209",
       "title": "UI pass skills line from an ork config key",
       "short_title": "UI pass skills line",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "c137a240-bc03-4845-aef3-af92fa3c282e",
+          "kind": "",
+          "text": "**2026-10-31** — Owner answer (2026-10-31, interactive): skill names option A. The CLI trims spaces around each comma-separated name; the validator, on every path (CLI, wire, registry load), refuses a name that is blank, has a comma, has leading or trailing whitespace, or contains NUL, CR or LF, with an error that quotes the bad name.",
+          "created_at": "2026-10-31T13:42:46Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -11171,7 +11186,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

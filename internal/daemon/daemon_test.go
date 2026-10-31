@@ -1925,3 +1925,80 @@ func TestProjectsSetOverTheSocket(t *testing.T) {
 		t.Fatalf("list: %+v", list)
 	}
 }
+
+func TestProjectsSetUIPassSkills(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	for _, raw := range []string{`{"name":"p","ui_pass_skills":["tui-design","frontend-design"]}`, `{"name":"p","ui_pass_skills":[]}`} {
+		got, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
+		if err != nil {
+			t.Fatal(err)
+		}
+		data, _ := json.Marshal(got)
+		var result map[string]json.RawMessage
+		if err := json.Unmarshal(data, &result); err != nil {
+			t.Fatal(err)
+		}
+		var input struct {
+			Skills []string `json:"ui_pass_skills"`
+		}
+		json.Unmarshal([]byte(raw), &input)
+		var skills []string
+		if result["ui_pass_skills"] != nil {
+			json.Unmarshal(result["ui_pass_skills"], &skills)
+		}
+		if len(input.Skills) != len(skills) || (len(skills) > 0 && !reflect.DeepEqual(input.Skills, skills)) {
+			t.Fatalf("returned %s", data)
+		}
+		saved, _ := os.ReadFile(d.registryPath())
+		if len(input.Skills) > 0 && !strings.Contains(string(saved), "tui-design") {
+			t.Fatalf("not saved: %s", saved)
+		}
+		if len(input.Skills) == 0 && strings.Contains(string(saved), "tui-design") {
+			t.Fatalf("not cleared: %s", saved)
+		}
+	}
+	before, _ := os.ReadFile(d.registryPath())
+	for _, bad := range []string{"", " ", "a\x00b", "a\nb", "a\rb"} {
+		raw, _ := json.Marshal(map[string]any{"name": "p", "ui_pass_skills": []string{bad}})
+		_, err := d.handle(context.Background(), MethodProjectsSet, raw)
+		var re *ipc.Error
+		if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "ui_pass_skills") {
+			t.Errorf("%q: %v", bad, err)
+		}
+	}
+	after, _ := os.ReadFile(d.registryPath())
+	if string(before) != string(after) {
+		t.Fatal("invalid skills changed registry")
+	}
+}
+
+func TestProjectsSetUIPassSkillsStrictNames(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	before, err := os.ReadFile(d.registryPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, bad := range []string{"a,b", " b", "b ", "", "a\r", "a\n", "a\x00"} {
+		t.Run(fmt.Sprintf("%q", bad), func(t *testing.T) {
+			raw, err := json.Marshal(map[string]any{"name": "p", "ui_pass_skills": []string{"ok", bad}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			_, err = d.handle(context.Background(), MethodProjectsSet, raw)
+			var re *ipc.Error
+			if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "ui_pass_skills:") || !strings.Contains(re.Message, fmt.Sprintf("%q", bad)) {
+				t.Fatalf("name %q: expected quoted bad_params: %v", bad, err)
+			}
+			if bad == "" && !strings.Contains(re.Message, "item 2") {
+				t.Fatalf("missing blank position: %v", err)
+			}
+		})
+	}
+	after, err := os.ReadFile(d.registryPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(before) != string(after) {
+		t.Fatal("invalid skills changed registry")
+	}
+}

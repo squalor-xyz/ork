@@ -84,7 +84,7 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
                               pin the project's slicer relay contract at N
                               (v10 or v11) through slicer; needs no daemon
   ork projects unpin NAME     clear the pin through slicer
-  ork projects set NAME [--push on|off] [--ui-doc PATH]
+  ork projects set NAME [--push on|off] [--ui-doc PATH] [--ui-pass-skills A,B]
                               [--worktree-pattern P] [--branch-pattern P]
                               [--check CMD] [--check-minutes N] [--cap N]
                               [--budget-minutes N] [--budget-tokens N]
@@ -94,7 +94,8 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
                               [--vendor-env VENDOR:KEY=VALUE]...
                               [--unset-vendor-env VENDOR:KEY]...
                               change a project's optional fields; an empty
-                              value or 0 clears one; --env-line and --allow
+                              value or 0 clears one; --ui-pass-skills takes
+                              one comma-separated value; --env-line and --allow
                               repeat to give the whole list, and one empty
                               --env-line clears it; a role or a vendor key
                               changes alone; --unset-vendor-env removes a key

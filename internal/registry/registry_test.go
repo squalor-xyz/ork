@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -500,5 +501,71 @@ func TestValidatePermissionEntry(t *testing.T) {
 		if err == nil || !strings.Contains(err.Error(), "permissions.implementer") {
 			t.Errorf("ValidatePermissionEntry(%+v) = %v, want an error naming permissions.implementer", bad, err)
 		}
+	}
+}
+
+func TestUIPassSkillsRoundTrip(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "projects.json")
+	raw := []byte(`{"version":2,"projects":[{"name":"p","path":"/p","adj":false,"ui_pass_skills":["tui-design","frontend-design"]}]}`)
+	writeFile(t, path, raw)
+	f, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Save(path, f); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(asAny(t, data), asAny(t, raw)) {
+		t.Fatalf("skills lost: %s", data)
+	}
+}
+
+func TestUIPassSkillsRefusesInvalidNamesAndUnknownKey(t *testing.T) {
+	for _, name := range []string{"", " ", "\t", "a\x00b", "a\nb", "a\rb"} {
+		t.Run(fmt.Sprintf("%q", name), func(t *testing.T) {
+			raw, _ := json.Marshal(map[string]any{"version": 2, "projects": []any{map[string]any{"name": "p", "path": "/p", "ui_pass_skills": []string{name}}}})
+			path := filepath.Join(t.TempDir(), "projects.json")
+			writeFile(t, path, raw)
+			_, err := Load(path)
+			if err == nil || !strings.Contains(err.Error(), "ui_pass_skills") || strings.Contains(err.Error(), "unknown field") {
+				t.Fatalf("invalid name: %v", err)
+			}
+		})
+	}
+	path := filepath.Join(t.TempDir(), "projects.json")
+	writeFile(t, path, []byte(`{"version":2,"projects":[{"name":"p","path":"/p","ui_pass_skillz":[]}]}`))
+	if _, err := Load(path); err == nil || !strings.Contains(err.Error(), "unknown field") {
+		t.Fatalf("unknown key: %v", err)
+	}
+}
+
+func TestUIPassSkillsStrictNamesOnLoadAndSave(t *testing.T) {
+	for _, bad := range []string{"a,b", " b", "b ", "", " ", "a\r", "a\n", "a\x00"} {
+		t.Run(fmt.Sprintf("%q", bad), func(t *testing.T) {
+			p := Project{Name: "p", Path: "/p", UIPassSkills: []string{"ok", bad}}
+			f := &File{Version: Version, Projects: []Project{p}}
+			path := filepath.Join(t.TempDir(), "projects.json")
+			raw, err := json.Marshal(f)
+			if err != nil {
+				t.Fatal(err)
+			}
+			writeFile(t, path, raw)
+			check := func(err error) {
+				t.Helper()
+				if err == nil || !strings.Contains(err.Error(), "ui_pass_skills:") || !strings.Contains(err.Error(), fmt.Sprintf("%q", bad)) {
+					t.Fatalf("name %q: error must quote it: %v", bad, err)
+				}
+				if strings.TrimSpace(bad) == "" && !strings.Contains(err.Error(), "item 2") {
+					t.Fatalf("blank name must identify item 2: %v", err)
+				}
+			}
+			_, err = Load(path)
+			check(err)
+			check(Save(path, f))
+		})
 	}
 }
