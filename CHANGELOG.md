@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v1.0.0 (2026-10-31)
+
 - S209: a project can name `ui_pass_skills` for its Claude UI pass
   (*proposed*, adj 171). `ork projects set NAME --ui-pass-skills a,b`
   replaces the list; an empty value clears it. Only a `claude` UI pass
