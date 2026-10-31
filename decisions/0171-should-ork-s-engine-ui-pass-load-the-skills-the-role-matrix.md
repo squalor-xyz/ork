@@ -2,14 +2,16 @@
 {
   "id": 171,
   "title": "Should ork's engine UI pass load the skills the role matrix names?",
-  "status": "open",
+  "status": "decided",
   "key": "roles.ui-pass-skills",
   "tags": [
     "roles",
     "ui"
   ],
   "asked_by": "Claude (for jon)",
+  "decided_by": "Jon R",
   "created": "2026-10-26",
+  "decided_at": "2026-10-31",
   "context": "Owner, 2026-10-26 (session a2bf7e0e): the UI pass should use the tui-design and frontend-design skills, and ork should also support vendor-neutral prompting. Relays now load both skills (rule u10, commit 792e5a2). ork's engine UI prompt is vendor-neutral by test (internal/roles/roles_test.go:496), and Codex cannot load Claude plugin skills. The owner also chose that on a size-S slice the reviewer does the UI pass itself; adj 165 (roles.ui-pass, ui-pass-with-renders) decided a separate engine role. slicer s401 carries the matching contract note.",
   "options": [
     {
@@ -32,6 +34,8 @@
     "label": "both",
     "reasoning": "It matches the owner's ask for both skills and vendor-neutral prompting, and keeps vendor-specific text in project config. Whether the engine also folds the UI pass into the reviewer on size S follows adj 165 and needs its own answer."
   },
+  "decision": "both",
+  "rationale": "Owner picked this option in an interactive question in the v1.0 release session on 2026-10-31 (AskUserQuestion), recommendation followed.",
   "refs": [
     "S117",
     "S121"
@@ -40,6 +44,10 @@
     {
       "date": "2026-10-26",
       "event": "ask"
+    },
+    {
+      "date": "2026-10-31",
+      "event": "decide"
     }
   ]
 }
