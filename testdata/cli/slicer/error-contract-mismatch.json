@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "contract_mismatch",
+    "message": "this project pins relay v10, but this slicer serves relay v11. Install a slicer that serves relay v10, or, once the tools that consume the contract follow v11, run `slicer config relay_contract 11`",
+    "command": "ai"
+  }
+}

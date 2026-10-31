@@ -60,8 +60,11 @@ It prints the path of the ork binary first, then one line per check
 - each vendor CLI (claude, codex, grok) and its version. ork runs roles on `claude` and `codex` only; grok has no adapter (`docs/design.md:181`). A missing vendor is
   reported and does not fail the check, because ork needs only the vendors
   your lineup uses;
-- the slicer relay contract (the first line of `slicer ai relay`). ork accepts
-  v10 and v11 only; any other version fails (`docs/design.md:1423-1434`);
+- the slicer relay contract (`slicer ai relay --json`), for the directory you
+  run doctor in and for each registered project with its own pin. ork accepts
+  v10 and v11 only; any other version fails, and so does a project whose slicer
+  refuses its pin (`contract_mismatch`); an unpinned project is checked against
+  the accepted set alone (`docs/design.md:1423-1434`);
 - each registered project: the path exists, the check command parses, and the
   worktree and branch patterns contain `{id}` or `{id_lower}`.
 
@@ -93,8 +96,21 @@ Add it in either way:
 
 Other commands: `ork projects list` and `ork projects rm NAME`. Removal is
 refused while the project has unfinished runs (`docs/design.md:1273-1277`).
+
 The first add creates `~/.config/ork/projects.json`; ork never seeds it
 (`docs/state.md:28-33`).
+
+To pin the project's slicer relay contract, run
+`ork projects pin NAME --relay 11` (10 or 11). ork runs
+`slicer config relay_contract 11 --root PROJECT` and prints the pin slicer
+then reports; the pin lives in the project's slicer config, not in
+`projects.json`. `ork projects unpin NAME` clears it (`--json` prints
+`{"project":NAME,"pinned":null}`). If your slicer serves a different version
+than the pin, slicer refuses and the command exits 1 naming both versions; the
+pin stays set, and `ork doctor` lists the project as failed until you run
+`ork projects pin NAME --relay N` with the version slicer serves,
+`ork projects unpin NAME`, or install a slicer that serves the pin. Neither
+command needs the daemon.
 
 ## 5. Set a project's options
 
@@ -395,6 +411,7 @@ them all (`internal/tui/keys.go:13-124`).
     ork --version
     ork status [--project P]
     ork projects list | add [PATH] [--name N] | rm NAME | set NAME [flags]
+    ork projects pin NAME --relay N | unpin NAME
     ork run P ID
     ork wave suggest P
     ork wave start P ITEM...

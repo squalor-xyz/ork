@@ -37,7 +37,12 @@ seeded from contract v11 (`roles.prompt-seed`). Two things keep them in line
 
 1. ork accepts exactly v10 and v11 (`boundary.contract-set`, adj 175; v9
    is dropped). `ork doctor` and the engine check the contract with `--root`,
-   respecting the project's pin, before a run starts.
+   respecting the project's pin, before a run starts. A project's pin lives in
+   its own slicer config (`relay_contract`), never in ork's `projects.json`.
+   ork sets and checks it through slicer: `ork projects pin NAME --relay N`
+   runs `slicer config relay_contract N`, and `ork projects unpin NAME` clears
+   it (`boundary.contract-pin`, adj 97). The adj pin is a later slice behind
+   adjudicate S45; until it lands ork checks no adj pin.
 2. ork reads `slicer ai relay --json` and validates its finding kinds,
    conformance keys, ledger roles, gate criteria and verdicts, and outcomes.
    The run keeps its contract version, ledger role names and gate criteria.

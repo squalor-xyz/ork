@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- S24: ork pins and checks a project's slicer contract (*proposed*).
+  `ork projects pin NAME --relay N` (N is 10 or 11) runs
+  `slicer config relay_contract N --root PROJECT` and reports the pin slicer
+  prints; `ork projects unpin NAME` clears it. Neither needs the daemon, and
+  ork never writes the pin to `projects.json` (adj 97). `ork doctor` adds
+  `contract.projects`: each registered project is asked with its own `--root`,
+  and a project fails on `contract_mismatch` or a pin outside the accepted set.
+  Engine start refuses a project whose slicer reports `contract_mismatch`,
+  with slicer's error naming both versions and no run record. ork now reads
+  the contract from `slicer ai relay --json` instead of the first text line.
+  The recorded exit code for `contract_mismatch` is 2, not 3. The adj pin is a
+  later slice behind adjudicate S45.
+  Docs updated: `docs/boundaries.md`, `docs/design.md`, `docs/guide.md`.
+
 - S198: ork accepts slicer relay v11 (*proposed*). The accepted set is v10 and
   v11; v9 is dropped (adj 175). The role prompts are written against v11: the
   gate fails on every `fix` finding (a minor item is `[later]`), and the

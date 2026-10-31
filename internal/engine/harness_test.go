@@ -236,7 +236,6 @@ func newHarness(t *testing.T, opts ...func(*harnessOpts)) *harness {
 		version = o.contract
 	}
 	routes = append(routes,
-		with(s("ai", "relay", "--root", P), fmt.Sprintf("Contract: relay v%d\n\n# Slice relay\n", version)),
 		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", fmt.Sprintf("relay-v%d.json", version))},
 		with(clitest.Route{Tool: "slicer", Args: []string{"relay-run", "begin"}, Prefix: true}, `{"run":{"id":"run-1"}}`),
 		with(clitest.Route{Tool: "slicer", Args: []string{"relay-run", "ask"}, Prefix: true}, `{"question":{"id":"q1"}}`),

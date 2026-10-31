@@ -104,7 +104,7 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 // projects dispatches the projects subcommands.
 func (a *App) projects(ctx context.Context, o *output, args []string) int {
 	if len(args) == 0 {
-		return o.usage("projects needs add, list, rm or set")
+		return o.usage("projects needs add, list, rm, set, pin or unpin")
 	}
 	sub, rest := args[0], args[1:]
 	fs := flag.NewFlagSet("projects "+sub, flag.ContinueOnError)
@@ -211,6 +211,10 @@ func (a *App) projects(ctx context.Context, o *output, args []string) int {
 		})
 	case "set":
 		return a.projectsSet(ctx, o, fs, rest)
+	case "pin":
+		return a.projectsPin(ctx, o, fs, rest)
+	case "unpin":
+		return a.projectsUnpin(ctx, o, fs, rest)
 	}
 	return o.usage("unknown projects command %q", sub)
 }

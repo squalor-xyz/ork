@@ -2322,7 +2322,7 @@
       "id": "S24",
       "title": "ork pins a project's slicer contract and checks the pin",
       "short_title": "Pin and check the slicer contract",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -2442,7 +2442,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

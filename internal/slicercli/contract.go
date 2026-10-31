@@ -145,14 +145,27 @@ func (r RelayContract) Validate() error {
 	return nil
 }
 
-// RelayContract reads and validates `slicer ai relay --json --root ROOT`.
-func (c Client) RelayContract(ctx context.Context, root string) (*RelayContract, error) {
+// ReadContract reads `slicer ai relay --json --root ROOT` without validating
+// it, so a caller can read the pin of a contract that Validate refuses. A
+// project whose pin differs from what slicer serves makes slicer exit 2 with
+// the contract_mismatch tool error, which comes back as the error; its message
+// names the pinned and the served version.
+func (c Client) ReadContract(ctx context.Context, root string) (*RelayContract, error) {
 	var out RelayContract
 	if err := clirun.RunJSON(ctx, c.call("ai", "relay", "--json", "--root", root), &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// RelayContract reads and validates `slicer ai relay --json --root ROOT`.
+func (c Client) RelayContract(ctx context.Context, root string) (*RelayContract, error) {
+	out, err := c.ReadContract(ctx, root)
+	if err != nil {
 		return nil, err
 	}
 	if err := out.Validate(); err != nil {
 		return nil, err
 	}
-	return &out, nil
+	return out, nil
 }

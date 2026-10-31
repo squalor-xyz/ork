@@ -80,6 +80,10 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
   ork projects add [PATH] [--name N]
                               register a project
   ork projects rm NAME        unregister a project
+  ork projects pin NAME --relay N
+                              pin the project's slicer relay contract at N
+                              (v10 or v11) through slicer; needs no daemon
+  ork projects unpin NAME     clear the pin through slicer
   ork projects set NAME [--push on|off] [--ui-doc PATH]
                               [--worktree-pattern P] [--branch-pattern P]
                               [--check CMD] [--check-minutes N] [--cap N]
@@ -114,7 +118,8 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
   ork daemon restart [--force]
                               stop and start the daemon
   ork doctor [--upgrade]      check the slicer and adj versions, the vendor
-                              CLIs and the slicer contract pin, and print the
+                              CLIs, and the slicer contract here and for
+                              each registered project with its pin; print the
                               path of this ork binary; print the commands to
                               upgrade a tool that is behind or missing
                               (slicer, adj and ork with --upgrade), and run

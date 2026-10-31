@@ -58,12 +58,35 @@ func TestRelayContractJSONConformance(t *testing.T) {
 	}
 }
 
+// The recorded refusal of a slicer that serves v11 on a project pinned at v10
+// (slicer 1.17.0, exit 2, error object on stdout).
 func TestContractCheckPassesRootAndReportsPinMismatch(t *testing.T) {
-	c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--root", root}, Stdout: `{"error":{"code":"contract_mismatch","message":"pinned relay v9; installed relay v10","command":"ai relay"}}`, Exit: 3})
+	c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", root}, File: recorded("error-contract-mismatch.json"), Exit: 2})
 	_, err := c.Contract(context.Background(), root)
 	var tool *clirun.ToolError
-	if !errors.As(err, &tool) || tool.Code != "contract_mismatch" || !strings.Contains(err.Error(), "pinned relay v9") {
+	if !errors.As(err, &tool) || tool.Code != "contract_mismatch" || !strings.Contains(err.Error(), "pins relay v10") || !strings.Contains(err.Error(), "serves relay v11") {
 		t.Fatalf("%v", err)
+	}
+	if calls := fake.CallsTo("slicer"); len(calls) != 1 || calls[0].Args[len(calls[0].Args)-1] != root {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
+// ReadContract decodes without validating, so a caller can read the pin of a
+// contract that Validate refuses.
+func TestReadContractKeepsThePinOfARefusedContract(t *testing.T) {
+	raw, err := os.ReadFile(recorded("relay-v11-pinned.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := strings.Replace(string(raw), `"pinned": 11`, `"pinned": 9`, 1)
+	c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", root}, Stdout: body})
+	got, err := c.ReadContract(context.Background(), root)
+	if err != nil || got.Pinned == nil || *got.Pinned != 9 {
+		t.Fatalf("%+v, %v", got, err)
+	}
+	if err := got.Validate(); err == nil {
+		t.Fatal("Validate accepted pin 9 on relay v11")
 	}
 }
 

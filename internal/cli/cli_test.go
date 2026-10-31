@@ -604,6 +604,13 @@ func doctorApp(t *testing.T, relayFirstLine string) (app *App, fake *clitest.Fak
 // go after the slicer and adj routes.
 func doctorAppWith(t *testing.T, relayFirstLine string, extra ...clitest.Route) (app *App, fake *clitest.Fake, logs map[string]string) {
 	t.Helper()
+	return doctorAppLead(t, nil, relayFirstLine, extra...)
+}
+
+// doctorAppLead is doctorAppWith with routes that go first, so a route for one
+// project root beats the generic `ai relay --json` route.
+func doctorAppLead(t *testing.T, lead []clitest.Route, relayFirstLine string, extra ...clitest.Route) (app *App, fake *clitest.Fake, logs map[string]string) {
+	t.Helper()
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	// The recorded contract of the version in the line: v11 and newer lines use
 	// the v11 file, every other line the v10 file.
@@ -618,12 +625,11 @@ func doctorAppWith(t *testing.T, relayFirstLine string, extra ...clitest.Route) 
 		t.Fatal(err)
 	}
 	contractJSON := strings.Replace(string(raw), recordedAs, `"contract": "`+strings.TrimPrefix(relayFirstLine, "Contract: ")+`"`, 1)
-	routes := []clitest.Route{
-		{Tool: "slicer", Args: []string{"ai", "relay", "--json"}, Prefix: true, Stdout: contractJSON},
-		{Tool: "slicer", Args: []string{"--version"}, Stdout: "slicer 1.15.0\n"},
-		{Tool: "slicer", Args: []string{"ai", "relay", "--root"}, Prefix: true, Stdout: relayFirstLine + "\n\n# Slice relay\nmore text\n"},
-		{Tool: "adj", Args: []string{"--version"}, Stdout: "v0.1.0\n"},
-	}
+	routes := append(append([]clitest.Route{}, lead...),
+		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json"}, Prefix: true, Stdout: contractJSON},
+		clitest.Route{Tool: "slicer", Args: []string{"--version"}, Stdout: "slicer 1.15.0\n"},
+		clitest.Route{Tool: "adj", Args: []string{"--version"}, Stdout: "v0.1.0\n"},
+	)
 	fake = clitest.Install(t, append(routes, extra...)...)
 	dir := t.TempDir()
 	logs = map[string]string{}
@@ -814,7 +820,7 @@ func TestDoctorJSONListsEachProject(t *testing.T) {
 	code, out, _ := run(t, app, "doctor", "--json")
 	var d doctorOut
 	mustJSON(t, out, &d)
-	if !strings.HasPrefix(out, "{\n  \"ok\":") || strings.Index(out, `"projects":`) < strings.Index(out, `"binary":`) {
+	if !strings.HasPrefix(out, "{\n  \"ok\":") || strings.LastIndex(out, `"projects":`) < strings.Index(out, `"binary":`) {
 		t.Fatalf("field order: %s", out)
 	}
 	if strings.Contains(out, `"registry_error"`) {
@@ -985,7 +991,7 @@ func TestDoctorReportsEachToolAndTheAcceptedContracts(t *testing.T) {
 		slicerCalls = append(slicerCalls, c.Args)
 	}
 	cwd, _ := os.Getwd()
-	if fmt.Sprint(slicerCalls) != "[[--version] [ai relay --root "+cwd+"] [ai relay --json --root "+cwd+"]]" {
+	if fmt.Sprint(slicerCalls) != "[[--version] [ai relay --json --root "+cwd+"]]" {
 		t.Fatalf("slicer calls: %v", slicerCalls)
 	}
 	if got := fake.CallsTo("adj"); len(got) != 1 || fmt.Sprint(got[0].Args) != "[--version]" {
@@ -1086,7 +1092,7 @@ func TestDoctorUnrecognizedContractLine(t *testing.T) {
 	code, stdout, _ := run(t, app, "doctor", "--json")
 	var d doctorOut
 	mustJSON(t, stdout, &d)
-	if code != 1 || d.Contract.OK || d.Contract.Found != "something else entirely" {
+	if code != 1 || d.Contract.OK || d.Contract.Found != "Contract: something else entirely" {
 		t.Fatalf("exit %d\n%s", code, stdout)
 	}
 }

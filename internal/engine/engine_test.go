@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -584,7 +585,7 @@ func TestContractCheckAcceptsTheSetAndRefusesOthers(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				return []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--root", P}, Stdout: line + "\n"}, {Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, Stdout: strings.Replace(string(raw), recordedAs, `"contract": "`+strings.TrimPrefix(line, "Contract: ")+`"`, 1)}}
+				return []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, Stdout: strings.Replace(string(raw), recordedAs, `"contract": "`+strings.TrimPrefix(line, "Contract: ")+`"`, 1)}}
 			}
 		})
 		_, err := New(context.Background(), h.deps, h.cfg)
@@ -603,6 +604,27 @@ func TestContractCheckAcceptsTheSetAndRefusesOthers(t *testing.T) {
 		if runs, _ := h.store.List(); len(runs) != 0 {
 			t.Errorf("%q: a run record was created", line)
 		}
+	}
+}
+
+// A project pinned to a version other than the one its slicer serves: slicer
+// refuses `ai relay` with the recorded contract_mismatch error (exit 2).
+func TestNewRefusesAProjectWhoseSlicerReportsContractMismatch(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			return []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "error-contract-mismatch.json"), Exit: 2}}
+		}
+	})
+	_, err := New(context.Background(), h.deps, h.cfg)
+	var tool *clirun.ToolError
+	if !errors.As(err, &tool) || tool.Code != "contract_mismatch" || !strings.Contains(err.Error(), "pins relay v10") || !strings.Contains(err.Error(), "serves relay v11") {
+		t.Fatalf("error %v, want contract_mismatch naming both versions", err)
+	}
+	if n := len(h.fake.CallsTo("git")); n != 0 {
+		t.Errorf("%d git calls before the contract was accepted", n)
+	}
+	if runs, _ := h.store.List(); len(runs) != 0 {
+		t.Errorf("a run record was created: %d", len(runs))
 	}
 }
 

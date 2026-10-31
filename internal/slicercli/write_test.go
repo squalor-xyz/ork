@@ -35,14 +35,48 @@ func rawRoute(args []string, file string) clitest.Route {
 	return clitest.Route{Tool: "slicer", Args: args, File: recorded(file)}
 }
 
-func TestContractReturnsTheFirstLine(t *testing.T) {
-	c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--root", root}, Stdout: "Contract: relay v7\n\n# Slice relay\nmore\n"})
+func TestContractReadsTheJSONContractString(t *testing.T) {
+	c, fake := client(t, route("relay-v11.json", "ai", "relay", "--json", "--root", root))
 	got, err := c.Contract(context.Background(), root)
-	if err != nil || got != "Contract: relay v7" {
+	if err != nil || got != "relay v11" {
 		t.Fatalf("%q, %v", got, err)
 	}
-	if calls := fake.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, []string{"ai", "relay", "--root", root}) {
+	if calls := fake.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, []string{"ai", "relay", "--json", "--root", root}) {
 		t.Fatalf("calls: %+v", calls)
+	}
+}
+
+func TestSetRelayPinRunsConfigWithRoot(t *testing.T) {
+	c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"config", "relay_contract", "11", "--root", root}, File: recorded("config-relay-contract-set.txt")})
+	if err := c.SetRelayPin(context.Background(), root, 11); err != nil {
+		t.Fatal(err)
+	}
+	if calls := fake.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, []string{"config", "relay_contract", "11", "--root", root}) {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
+func TestUnsetRelayPinRunsConfigUnsetWithRoot(t *testing.T) {
+	c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"config", "relay_contract", "--unset", "--root", root}, File: recorded("config-relay-contract-unset.txt")})
+	if err := c.UnsetRelayPin(context.Background(), root); err != nil {
+		t.Fatal(err)
+	}
+	if calls := fake.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, []string{"config", "relay_contract", "--unset", "--root", root}) {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
+// Without --json, slicer prints a refusal on stderr only, exit 2 (recorded).
+func TestSetRelayPinReturnsSlicersMessage(t *testing.T) {
+	msg, err := os.ReadFile(recorded("error-bad-config-value.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"config", "relay_contract", "11", "--root", root}, Stderr: string(msg), Exit: 2})
+	err = c.SetRelayPin(context.Background(), root, 11)
+	var exit *clirun.ExitError
+	if !errors.As(err, &exit) || exit.Result.ExitCode != 2 || !strings.Contains(err.Error(), "relay_contract: 'abc' is not a whole number") {
+		t.Fatalf("%v", err)
 	}
 }
 

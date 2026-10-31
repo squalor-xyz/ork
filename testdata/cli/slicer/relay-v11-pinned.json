@@ -1,0 +1,330 @@
+{
+  "contract": "relay v11",
+  "pinned": 11,
+  "check_command": "",
+  "relay": "Contract: relay v11\n\n# Slice relay\n\nAn outer session runs the relay. For each slice it spawns one orchestrator, which runs\nthe slice through an implementer, a reviewer (and, on a UI slice, a UI pass), an\narchitect and a gate. The relay uses slicer's own commands.\n\n## Roles\n\nThe outer session is the session the owner talks to. It runs Setup with the\nowner, owns the relay run, spawns one orchestrator per slice, reads only that\norchestrator's run report, lands branches one at a time when the owner\nauthorizes it, files the report's later notes, and writes no product code.\n\nThe orchestrator runs one slice under the contract that\n`slicer ai relay-orchestrator` prints. It briefs every agent, reads the reports\nand reads diffs as `slicer ai relay-orchestrator` says, reruns the tests only as\nOrder says, and writes no product code.\n\nThe owner may choose the session variant at Setup, and an agent that cannot nest\nsubagents has no other choice: the outer session is also the orchestrator and follows\n`slicer ai relay-orchestrator --session` itself, compacting or starting a fresh session\nbetween slices.\n\nThe implementer owns one slice. It runs `slicer start ID --render --strict`,\nwrites the failing tests and watches them go red, implements, mutation-checks\neach new test, and closes the slice. Line numbers a slice cites may have moved since\nits spec was written; at start the implementer re-anchors them against the code in\nthe worktree.\n\nIn a split, one lead implementer owns the slice. It runs\n`slicer start ID --render --strict`, the note and the finish step. Part\nimplementers change only their own files, write and run their own tests, and\nrun no slicer command that writes.\n\nThe reviewer is read-only. It reviews correctness, test strength and direction\nagainst `slicer goals`.\n\nThe architect is read-only. It confirms each finding was fixed and reviews the\nshape.\n\nThe UI pass is read-only and edits nothing. It runs beside the reviewer on a slice\nthe project marks as UI; the project says what counts as a UI slice. It returns\ntriaged suggestions, each tagged with a finding kind, and, where the project can\nrender, the changed views. The gate still decides.\n\nThe gate is read-only and decides. It checks the diff under review against the criteria\nin Gate, gives its verdict as the first line of its report, and sends a FAIL back to the\nimplementer.\n\nThe spec check is optional, read-only and edits nothing. It runs before any worktree\nexists, on a batch of slices the owner picks. For each slice it returns `ready` or\nquestions in the shape of the run report's `owner needed` line, each with 2 to 4\noptions, a preferred one, and `blocker` where the slice cannot go on without the\nanswer. The outer session spawns it and reads its report. It has no matrix row, so the\nowner names its agent, model and reasoning effort at Setup like any role. It does not\nre-anchor the line numbers a slice cites: the implementer does that late.\n\nThe reviewer's and the gate's independence is the rule in Stop.\nThe owner chooses the models.\n\n## Setup\n\nBefore the worktree exists, the outer session reads the slice's size with\n`slicer show ID --json --lean` and confirms these with the owner:\n\n- whether to run a spec check on a batch of slices before any worktree exists (see\n  Roles). It is optional. The owner answers the whole batch in one sitting. The outer\n  session records each answer in its slice as an `Owner decisions` paragraph with\n  `slicer edit ID --section SECTION --append --text \"Owner decisions: ...\" --render`\n  (SECTION being the section the question concerns), and commits those filings on main\n  before the worktree is cut, because a worktree starts at HEAD and an uncommitted\n  filing never reaches it; the owner authorizes that commit. The brief carries the\n  same paragraph.\n- which roles run. The architect is optional: the owner decides. On a slice the\n  project marks as UI, a UI pass runs beside the reviewer, or the reviewer carries it\n  where the project folds it in by slice size.\n- whether the implementation splits into parts. The default is one implementer.\n  A split needs parts with disjoint files and their own tests; a slice too big\n  for one implementer is two slices or a slivered slice.\n- whether to sliver the slice. The default is no. Propose slivers only when the\n  slice's effort and the cut allow it (see Slivers) and when that costs less than\n  one implementer. The outer session confirms the sliver list and which slivers\n  run in parallel with the owner.\n- the agent, vendor, model and reasoning effort for each role. A role on the\n  orchestrator's own harness runs as a native subagent; a role on another harness\n  runs as a headless session in the slice worktree with the same brief.\n- the orchestrator: either the outer session itself (the session variant,\n  `slicer ai relay-orchestrator --session`) or a spawned orchestrator with its agent,\n  model and reasoning effort set explicitly on every spawn. The owner may choose the\n  session variant, also where nesting works; an agent that cannot nest subagents has no\n  other choice, and an orchestrator that no matrix row matches, or a project with no\n  matrix, means the outer session orchestrates. A spawned orchestrator runs as a\n  general-purpose agent briefed with `slicer ai relay-orchestrator`.\n- the environment lines every brief carries: the interpreter, the shell limits\n  and the scratch directory, taken from the project's own instructions.\n- where the run ends:\n  - after the finish step,\n  - after a commit on the slice branch, or\n  - landed. Land only when the owner asks.\n\nWait for the owner's answers before creating the worktree.\n\nThis project has no role matrix. `slicer relay-roles init` writes an example for the\nowner to adjust.\n\n## Order\n\nThe outer session, for each slice:\n\n1. Create the worktree, then start the run and record the orchestrator's step,\n   with the role `orchestrator` (see Record the run below).\n2. Spawn the orchestrator in the foreground where the harness can, with a brief that\n   starts \"First run `slicer ai relay-orchestrator` and follow it.\", then the\n   environment lines, the slice, the worktree and branch, the roles with agent,\n   vendor, model and reasoning effort, whether the slice is a UI slice and whether\n   the reviewer carries the UI pass, for a separate UI pass the skills the project's\n   role matrix names for the UI pass or its vendor-neutral UI prompt, the slice's\n   `Owner decisions` paragraph and any owner answer since, the end point, a temp\n   directory per role, RUN and the orchestrator's step id.\n3. Wait for its run report in the same turn. A harness that can spawn only in the\n   background (its spawn notifies on completion) does not end the outer turn while\n   the orchestrator runs: wait for the completion notice. One slice runs at a time.\n   The orchestrator hands back early only for an owner question, a permission denial\n   or a failure, or with the last line `waiting on: ROLE AGENT-ID` when the harness\n   forces its turn to end while a role runs. That last-line hand-back is a wait, not\n   a report: wait for that role's report, then resume the orchestrator with the\n   report pasted in. Do not stop the orchestrator for it. An owner answer given while\n   the run waits goes in a note on the item in the worktree,\n   `slicer note ID --text \"Owner answer: ...\" --render`, and in the resumed role's\n   brief, not in the slice on main. A hand-back whose last line is\n   `waiting on: owner QUESTION_ID` is a wait for the owner's answer to a question the\n   orchestrator asked with `relay-run ask`, not a report: `slicer relay-run list RUN`\n   shows the question. If the question is already answered (a dashboard recorded it),\n   read it with `slicer relay-run answer RUN QUESTION_ID --get` and resume the\n   orchestrator with it. Otherwise put it to the owner, record the answer with\n   `slicer relay-run answer RUN QUESTION_ID --option LABEL --why TEXT --by NAME`\n   (`slicer relay-run answer RUN QUESTION_ID --text TEXT` for a free-text answer),\n   which ends the step's owner wait, then record the note as above and resume the\n   orchestrator with the answer pasted in.\n4. Check the report's first line, the contract marker, and its last line,\n   `nothing left running: yes`. Stop the orchestrator first when a hand-back lacks\n   that last line and names no running role and no unanswered owner question, or\n   names a role that has already finished and whose report the orchestrator already\n   has, or a question whose answer the orchestrator was already resumed with.\n5. Approve, unless the end point is `finish`: end the run there with\n   `slicer relay-run end RUN --outcome pass --close-steps done`. Nothing is merged or\n   landed before the owner approves; the only commit before it is the slice commit\n   the orchestrator's brief allows. While the owner decides, record the wait on the\n   orchestrator's step with\n   `slicer relay-run step RUN --step STEP --phase wait --waiting-on approval`, or\n   with `--waiting-on owner` while the owner answers an owner-needed question from\n   the report. A `blocker` question the orchestrator asked with `relay-run ask`\n   already holds its step in that wait. Do not end the run while it waits: a waiting\n   step never makes its run stale. Show the owner the gate verdict, the tests, the\n   diff stat, each owner-needed question, and each `[HUMAN CHECK]` line of the\n   slice's Check section. Show each `[AFTER LAND]` line the report names as\n   `deferred to land:` too; it runs at Land step 6, not here. Record each human check\n   the owner confirms as a note on the item in the worktree with\n   `slicer note ID --text \"Human check: ...\" --render`. Add `--kind human-check` only\n   when `note_kinds` configures that kind. A human check the owner has not confirmed is\n   shown with a warning and does not block landing.\n   The owner approves, or sends a fix note. On approval, record\n   `slicer relay-run step RUN --step STEP --phase start` to end the wait. Record a\n   fix note as a note on the item in the worktree, record `--phase start` on the step\n   to end the wait, and resume the orchestrator with the note for a fix round, which\n   is reviewed and gated again before Approve repeats. When the finish step already\n   ran, send the item back to the project's started status with\n   `slicer set ID --status STATUS --render` (`slicer config started_status` names it)\n   before the fix round; after its PASS, the closing note and the finish step run\n   again.\n6. Land when the end point is `commit` or `landed` and the owner approved: follow\n   the Land section.\n\nEach slice gets a fresh orchestrator, so no orchestrator carries one slice's\ncontext into the next.\n\nThe orchestrator runs its one slice in the worktree it was given:\n`slicer start ID --render --strict`, red tests, implementation, review (on a slice\nthe project marks as UI, the UI pass runs in parallel with the reviewer),\naccepted findings back to the implementer, then\nthe architect, when the owner chose one, then the gate, which still decides. Close with\n`slicer note ID --text \"Describe the verified outcome\" --render` plus the finish step.\nThe orchestrator commits on the slice branch only when its brief allows it; merge\nand push are the outer session's, when the owner authorizes them.\n\nRecord the run as it goes. The outer session starts it with\n`slicer relay-run begin ID --worktree PATH`, where PATH is the slice worktree. It prints\nthe run id; keep that id as RUN. Record each role when it starts with\n`slicer relay-run step RUN --role ROLE --agent AGENT --vendor VENDOR --model MODEL --reasoning REASONING --phase start --task TASK`,\nwhich prints the step id. When the step ends, record it with\n`slicer relay-run step RUN --step STEP --phase done` or `--phase fail`. A gate round is\nclosed with its verdict, the word of its `VERDICT:` line:\n`slicer relay-run step RUN --step STEP --phase done --verdict pass`\nor `--verdict fail`. A subagent adds\n`--parent STEP` for the step that spawned it. The spec check runs before any\norchestrator, so the outer session records its round too, with `--role spec-check` and\nno `--parent`, in a run it begins on the batch's slices, and ends that run with\n`slicer relay-run end RUN --outcome pass --close-steps done` once it has read the spec\ncheck's report (`--outcome stopped` if the owner stops it).\n`slicer relay-run step RUN --step STEP --phase start` re-records a long-running step as\na heartbeat, so its run does not go stale after 30 minutes. A heartbeat on a waiting\nstep ends its wait: do not heartbeat a step that waits. A heartbeat passes no\n`--task`, so the step keeps the task it was recorded with; each round records its own\nstep, without `--step`. End the run when its end point is reached, or when the relay or\nthe owner stops it, with `slicer relay-run end RUN --outcome pass --close-steps done`\n(or `--outcome fail` or `stopped`, and `--close-steps fail` when the steps failed). It\nfirst marks each step still running, the orchestrator's own included, and without\n`--close-steps` it names those steps on stderr. For `landed`, that is after the ff-only\nmerge and before the `land` command; see Land. For `commit`, after the commit on the\nslice branch. Never end a run while a step waits for the owner or for approval.\nRecording is advisory: a failed `relay-run` call never stops the relay. A role whose\nsandbox may write only inside its worktree still records: when the shared ledger is\nunwritable, `relay-run` writes the worktree's own `.slicer/relay-runs.jsonl` and says so\non stderr, and `relay-run end` from a session that can write the shared ledger copies\nthose events into it. Making `<main>/.git/slicer` a writable root for that vendor avoids\nthe fallback.\n\nIn a split, the parts run in the slice worktree, in parallel only when their\nfiles are disjoint, otherwise one after another. The orchestrator runs the full\nsuite on the combined diff, then one review and one gate cover the whole slice.\nAccepted findings go back to the part that owns the file.\n\nA whole-slice implementer runs the full suite once; in a split, parts run only\ntheir own tests and the orchestrator's run on the combined diff is the one full\nrun. The orchestrator reruns the suite only if the diff changed after that run or\nmain moved.\n\nOwner answers: Order step 3 says where an owner answer goes. While the run goes on, the\nowner, or a dashboard that reads the ledger, may answer a non-blocker question with\n`relay-run answer`; the outer session does so only when its harness leaves it free while\nthe orchestrator runs. A project that keeps a decision log also records\nthere a design answer the owner explicitly picked, not a default an agent assumed.\n\nRun slices in parallel only when their files are disjoint. The outer session\nstarts their orchestrators together and waits for the reports without polling.\nReview and land them one at a time. When main moved and the slice branch takes a merge\nof main (Land step 3), rerun the suite on the merged branch. If it passes and the merge\nneeded no code change beyond the merge drivers' and a rebaselined golden, the regate is\nthe one-pass small-fix check: resume the read-only role that gave the last VERDICT on\nthe merge diff alone. A merge that needs a code fix gets a fix round and the usual gate.\n\n## Land\n\nLand follows Approve and covers only what the owner's end point and authorization\nallow. slicer runs no git command: the outer session runs the merge, commit, push and\nworktree removal itself. The end point `commit` stops after step 2 and then ends the run\nas in step 8; `landed` runs every step.\n\n1. Rerun the slice's Check commands in the worktree, except `[AFTER LAND]` lines, which\n   step 6 runs.\n2. Commit on the slice branch what the worktree still holds: the human-check notes,\n   and the finish step's state when the orchestrator did not commit it. Then file the\n   report's later notes as one more commit on the slice branch.\n3. When main moved, merge main into the slice branch in the worktree with slicer's\n   merge drivers (`slicer setup-git` configures them); a conflict a driver leaves goes\n   to the owner. A merge can make a golden stale: rebaseline it and commit the result.\n4. Run `slicer render` in the worktree and commit any rewritten render files.\n5. Run `slicer check`; exit 1 means drift: fix it, then render and check again.\n6. Rerun the full suite on the merged branch, then run each `[AFTER LAND]` line shown\n   at Approve, now that main is merged in. A failure of either goes back to the\n   orchestrator as a fix round. When the suite passes and the merge needed no code\n   change beyond the merge drivers' and a rebaselined golden, the regate is the one-pass\n   small-fix check on the merge diff alone, as Order says; a merge that needs a code fix\n   gets a fix round and the usual gate.\n7. On main, merge the branch with `git merge --ff-only BRANCH`; ff-only is the\n   contract's default. When main moved after step 3, go back to Land step 3.\n8. End the run with `slicer relay-run end RUN --outcome pass --close-steps done`,\n   before the `land` command, which refuses (`run_active`) while a run on the slice is\n   not ended.\n9. On main, run `slicer land ID --branch BRANCH --note \"Describe the verified outcome\"`.\n   It refuses (`not_merged`) unless the branch tip is reachable from HEAD. It marks the\n   slice done, renders and checks, and prints the git commands left.\n10. Commit `.slicer` on main with the command `land` printed, push only when the owner\n   authorizes it, then remove the worktree and the branch with the commands `land`\n   printed.\n\n## Slivers\n\nA sliver is a small item carved from a slice and linked to it by `parent`, so a\ncheaper model can implement it. The orchestrator may sliver a slice at its\ndiscretion, only when that costs less than one implementer, and only after the\nowner confirms the sliver plan at Setup.\n\n- Eligibility: effort 1 at any size; effort 2 only when every sliver comes out at\n  effort 1; effort 3 never.\n- Filing: on main before the worktree is cut, with `slicer add TITLE --parent ID`\n  or one `slicer import` file. Each sliver gets its own spec, size S, effort 1,\n  with the parent's tree and pass.\n- Order: slivers run in the parent's worktree. Each goes implement, review, gate,\n  handoff; a project that closes slices another way uses that step in place of\n  handoff. Then the parent gets one combined gate on the whole diff and its own\n  handoff.\n- Parallel: slivers with disjoint files and their own tests may run in parallel as\n  the matrix rule allows, each with its own temp directory. Slivers that share\n  files run one after another. The orchestrator runs the full suite on the combined\n  diff before the combined gate.\n- Escalation: follow the matrix rule for a sliver that fails its gate twice or\n  whose diff falls short of the orchestrator's check. Without a matrix, move it\n  to the next model up.\n\n## Gate\n\nName the diff under review. The criteria are: earlier blockers resolved with a\nproving test, no `fix` finding, no `blocker` owner finding, tests green, and docs\nmatching the code.\nThe first line is exactly `VERDICT: PASS` or `VERDICT: FAIL`.\nFAIL goes back to the implementer and then the gate again.\nA `fix` finding fails the gate: tag a minor item `later` instead.\nWrite a `Review FAIL` note only after `VERDICT: FAIL`.\nRecord a failed review on the started item with\n`slicer note ID --text \"Review FAIL: ...\" --render`.\nA gate that passed writes none, even when a fix round follows it (UI edits, say).\nAdd `--kind` only when `note_kinds` configures a kind for reviews.\nAny implementer change after a review needs another gate.\n\nFindings: every reviewer, UI pass and gate finding is tagged with one kind.\n\n- `fix`: goes to the fix round.\n- `owner`: a design call for the owner, with 2 to 4 options and a preferred one.\n  It goes in the run report as an owner-needed question and does not block the gate\n  unless it is marked `blocker`.\n- `later`: a follow-up item with a one-line title. It goes in the report's later notes.\n\n## Every brief\n\nInclude the slice from `slicer show ID --json --lean`, the tracking rule below,\nand the workspace limit: stay inside the workspace the owner named and do not\nread or write outside it. Every brief carries the slice's `Owner decisions` paragraph,\nwhen it has one, and each owner answer recorded in a note since, verbatim. The report\nis a diff stat, red lines, test counts, a mutation table, the implementer's self-check\n(each of the three: what it checked, or `n/a`) and deviations. Every brief\nnames the role's own temp directory, and no two agents share one. Every brief carries\nthe environment lines verbatim. Every brief says the role runs its own shell commands in\nthe foreground and backgrounds none, and runs long commands such as the full suite in\nthe foreground with a long timeout.\nReviewer, architect and gate briefs forbid git writes; a needed write stops and\ngoes to the owner. Every brief says that every role, the read-only ones included,\nuses absolute paths and `git -C` and never `cd`. Reviewer, UI pass and gate briefs\ntell the agent to tag each finding `fix`, `owner` or `later` as Gate defines, and to\ngive an `owner` finding its 2 to 4 options and a preferred one. The UI pass brief\nsays the agent is read-only, edits nothing and makes no git writes, and tells it to\nload the skills the project's role matrix names for the UI pass; a vendor that\ncannot load skills gets the project's vendor-neutral UI prompt instead. It asks for\neach finding's kind and, where the project can render, the changed views. The\nproject may fold the UI pass into the reviewer by slice size, such as the reviewer\non a small slice and a separate role on a larger one; where it does, the reviewer's\nbrief also carries the UI pass brief, and no separate UI pass runs. The implementer\nbrief says cited line numbers may have moved and to re-anchor them at start. Before\neach review, fix rounds included, the implementer checks its own diff for concurrency\nand handle lifetime (locks, files and processes it opens are released on every path),\nfor docs that describe the changed behaviour updated in the same diff, and for a test\nthat fails when the new wiring is removed (a mutation that disconnects the call site),\nand fixes what it finds. The spec-check brief says the agent is read-only, edits\nnothing and makes no git writes, and asks for `ready` or `owner needed` lines for each\nslice. A part brief names the part's own files and the files it must not touch. A\nCheck line marked `[AFTER LAND]` needs something main does not have yet, such as\nanother slice landed. The implementer and the gate do not run it, the finish step does\nnot wait for it, and the orchestrator names it on the deviations line as\n`deferred to land: LINE`. The outer session shows it at Approve and runs it at Land\nstep 6, after main is merged in; a failure goes back as a fix round. With end point\n`finish` or `commit`, it goes in the report's later notes instead.\n\nStart each agent with the model and reasoning effort its role row names, set\nexplicitly rather than inherited from the session. Launch it by its row's agent: on\nthe orchestrator's own harness as a native subagent, on another harness as a headless\nsession in the slice worktree with the same brief. Give each agent a short label\n`ID role`, for example `s279 implementer` or `s279 gate`, and pass the same label\nas the `--task` line of `relay-run step`.\n\nDo not open, search, parse, or edit tracking files; use the slicer commands.\n\nReviewers get the direction sources: `slicer goals --json --lean` and the queue,\n`slicer list --json --lean`.\n\n## Stop\n\nStop when the same slice fails its gate three times, the spec turns out ambiguous or\nwrong, a harness permission check denies a role's slicer step, or a role's round ends in\na vendor limit or an error exit and no eligible row is left to rerun it on (a project\nwith no role matrix has none).\n\nA vendor limit or an error exit is not a stop condition. A role's round that ends in a\nrate limit, out of credits or an error exit of the agent process is a failed round;\nclassify it from the vendor's or harness's error or the process's exit, not from the\nrole's own account. A gate FAIL, a wrong spec or a permission denial is not an error\nexit and keeps its own rule. Record the failed step with that error as its reason\n(`slicer relay-run step RUN --step STEP --phase fail --reason TEXT`), then start the\nsame round as a new `relay-run step` on a fresh agent on the role's next matching matrix\nrow, with the partial diff left in the worktree. Rows only move forward: on out of\ncredits skip later rows on the same vendor, on a rate limit or an error exit take the\nplain next matching row. The new row keeps the role for the rest of the run. The fresh\nagent is never a resumed one. Independence holds on the new row as on every row: a\nreviewer or gate never wrote code in the slice (in a split, in any part of it), and an\nimplementer never reuses the reviewer's or gate's agent. Name the switch on the report's\ndeviations line as `role switched: ROLE FROM to TO (REASON)`, FROM and TO being row ids.\nWith no eligible row left (a project with no role matrix has none), or on any other\nfailure, stop. When the orchestrator's own round ends in a vendor limit or an error\nexit, the next matching row takes over from the ledger and the worktree: the outer\nsession starts a new orchestrator on it, or the owner restarts the session when the\nsession orchestrates itself.\n\n## Conformance\n\nThese obligations bind any orchestrator, whether an LLM agent briefed with this text\nor a program that spawns the roles, records the ledger and applies the rules in code.\nThe rest of this contract is worded for an agent; a program meets each obligation in its\nown code. `slicer ai relay --json` and `slicer ai relay-orchestrator --json` carry the\norder, the gate, the finding kinds, the run report, the outcomes, the stop rules and\nthese obligations as data, so a program reads them there instead of restating them;\n`slicer ai relay --json` also carries the roles.\n\n- Run the roles in Order's sequence: the implementer, the reviewer (with the UI pass\n  beside it on a UI slice), the architect when the owner chose one, then the gate.\n  Accepted findings go back to the implementer before the next review or gate.\n- Decide the gate on the criteria in Gate, with its verdict as the first line as Gate\n  says. A FAIL, or an implementer change after a review, needs another gate.\n- Tag every reviewer, UI pass and gate finding `fix`, `owner` or `later`, and route\n  each as Gate says.\n- Stop when a stop condition in Stop holds, with OUTCOME stopped, and return the run\n  report. Do not go on past it and do not ask the owner. A permission denial stops\n  before the commit, with the denial's exact text as a `blocker` owner-needed question.\n- Wait for the answer to a `blocker` owner question instead of stopping: record it with\n  `relay-run ask`, then wait for the answer where the owner gives it. An orchestrator an\n  outer session spawned ends its turn with `waiting on: owner QUESTION_ID` and goes on\n  only from the answer the outer session records and resumes it with; a session that\n  orchestrates itself waits for the owner in its own session. Stop with OUTCOME stopped\n  only when the answer cannot be waited for.\n- When a role's round ends in a vendor limit (a rate limit or out of credits) or an\n  error exit of the agent process, record the failed step with its reason, rerun the\n  same round as a new step on a fresh agent on the role's next matching row (later rows\n  on the same vendor skipped on out of credits, independence kept as Stop says) with the\n  partial diff, and name the switch on the run report's deviations line. A gate FAIL, a\n  wrong spec or a permission denial is not an error exit. The same fallback applies to\n  an orchestrator, as Stop says. With no eligible row left, or on any other failure,\n  stop as Stop says.\n- Record each role's round in the run ledger with `relay-run step`: a new step for every\n  round, a parent step for a spawned role, and done or fail when the round ends; a gate\n  round is closed with `--verdict pass` or `--verdict fail`. The\n  outer session begins and ends the run. A failed record never stops the relay.\n- Run the closing note and the finish step only after `VERDICT: PASS`. A fix round that\n  follows runs them again only after its own PASS.\n- Return one run report, in the line order of Run report and within its line limit. Send\n  it once, never an interim run report. Its first line is the contract marker and its\n  last is `nothing left running: yes`,\n  written only after nothing the run started still runs.\n- Work only in the worktree the brief names, with absolute paths and no change of\n  directory, and write no product code.\n- Commit on the slice branch only when the brief allows it. Never merge, land, push or\n  rebase onto main: the outer session owns those.\n\n## Close\n\nClose the slice with\n`slicer done ID --note \"Describe the verified outcome\" --render --check`.\n",
+  "setup": [
+    {
+      "key": "spec_check",
+      "text": "whether to run a spec check on a batch of slices before any worktree exists (see Roles). It is optional. The owner answers the whole batch in one sitting. The outer session records each answer in its slice as an `Owner decisions` paragraph with `slicer edit ID --section SECTION --append --text \"Owner decisions: ...\" --render` (SECTION being the section the question concerns), and commits those filings on main before the worktree is cut, because a worktree starts at HEAD and an uncommitted filing never reaches it; the owner authorizes that commit. The brief carries the same paragraph."
+    },
+    {
+      "key": "roles",
+      "text": "which roles run. The architect is optional: the owner decides. On a slice the project marks as UI, a UI pass runs beside the reviewer, or the reviewer carries it where the project folds it in by slice size."
+    },
+    {
+      "key": "split",
+      "text": "whether the implementation splits into parts. The default is one implementer. A split needs parts with disjoint files and their own tests; a slice too big for one implementer is two slices or a slivered slice."
+    },
+    {
+      "key": "sliver",
+      "text": "whether to sliver the slice. The default is no. Propose slivers only when the slice's effort and the cut allow it (see Slivers) and when that costs less than one implementer. The outer session confirms the sliver list and which slivers run in parallel with the owner."
+    },
+    {
+      "key": "role_models",
+      "text": "the agent, vendor, model and reasoning effort for each role. A role on the orchestrator's own harness runs as a native subagent; a role on another harness runs as a headless session in the slice worktree with the same brief."
+    },
+    {
+      "key": "orchestrator",
+      "text": "the orchestrator: either the outer session itself (the session variant, `slicer ai relay-orchestrator --session`) or a spawned orchestrator with its agent, model and reasoning effort set explicitly on every spawn. The owner may choose the session variant, also where nesting works; an agent that cannot nest subagents has no other choice, and an orchestrator that no matrix row matches, or a project with no matrix, means the outer session orchestrates. A spawned orchestrator runs as a general-purpose agent briefed with `slicer ai relay-orchestrator`."
+    },
+    {
+      "key": "environment",
+      "text": "the environment lines every brief carries: the interpreter, the shell limits and the scratch directory, taken from the project's own instructions."
+    },
+    {
+      "key": "end_point",
+      "text": "where the run ends: - after the finish step, - after a commit on the slice branch, or - landed. Land only when the owner asks.",
+      "options": [
+        "finish",
+        "commit",
+        "landed"
+      ]
+    }
+  ],
+  "order": [
+    {
+      "step": 1,
+      "text": "Create the worktree, then start the run and record the orchestrator's step, with the role `orchestrator` (see Record the run below)."
+    },
+    {
+      "step": 2,
+      "text": "Spawn the orchestrator in the foreground where the harness can, with a brief that starts \"First run `slicer ai relay-orchestrator` and follow it.\", then the environment lines, the slice, the worktree and branch, the roles with agent, vendor, model and reasoning effort, whether the slice is a UI slice and whether the reviewer carries the UI pass, for a separate UI pass the skills the project's role matrix names for the UI pass or its vendor-neutral UI prompt, the slice's `Owner decisions` paragraph and any owner answer since, the end point, a temp directory per role, RUN and the orchestrator's step id."
+    },
+    {
+      "step": 3,
+      "text": "Wait for its run report in the same turn. A harness that can spawn only in the background (its spawn notifies on completion) does not end the outer turn while the orchestrator runs: wait for the completion notice. One slice runs at a time. The orchestrator hands back early only for an owner question, a permission denial or a failure, or with the last line `waiting on: ROLE AGENT-ID` when the harness forces its turn to end while a role runs. That last-line hand-back is a wait, not a report: wait for that role's report, then resume the orchestrator with the report pasted in. Do not stop the orchestrator for it. An owner answer given while the run waits goes in a note on the item in the worktree, `slicer note ID --text \"Owner answer: ...\" --render`, and in the resumed role's brief, not in the slice on main. A hand-back whose last line is `waiting on: owner QUESTION_ID` is a wait for the owner's answer to a question the orchestrator asked with `relay-run ask`, not a report: `slicer relay-run list RUN` shows the question. If the question is already answered (a dashboard recorded it), read it with `slicer relay-run answer RUN QUESTION_ID --get` and resume the orchestrator with it. Otherwise put it to the owner, record the answer with `slicer relay-run answer RUN QUESTION_ID --option LABEL --why TEXT --by NAME` (`slicer relay-run answer RUN QUESTION_ID --text TEXT` for a free-text answer), which ends the step's owner wait, then record the note as above and resume the orchestrator with the answer pasted in."
+    },
+    {
+      "step": 4,
+      "text": "Check the report's first line, the contract marker, and its last line, `nothing left running: yes`. Stop the orchestrator first when a hand-back lacks that last line and names no running role and no unanswered owner question, or names a role that has already finished and whose report the orchestrator already has, or a question whose answer the orchestrator was already resumed with."
+    },
+    {
+      "step": 5,
+      "text": "Approve, unless the end point is `finish`: end the run there with `slicer relay-run end RUN --outcome pass --close-steps done`. Nothing is merged or landed before the owner approves; the only commit before it is the slice commit the orchestrator's brief allows. While the owner decides, record the wait on the orchestrator's step with `slicer relay-run step RUN --step STEP --phase wait --waiting-on approval`, or with `--waiting-on owner` while the owner answers an owner-needed question from the report. A `blocker` question the orchestrator asked with `relay-run ask` already holds its step in that wait. Do not end the run while it waits: a waiting step never makes its run stale. Show the owner the gate verdict, the tests, the diff stat, each owner-needed question, and each `[HUMAN CHECK]` line of the slice's Check section. Show each `[AFTER LAND]` line the report names as `deferred to land:` too; it runs at Land step 6, not here. Record each human check the owner confirms as a note on the item in the worktree with `slicer note ID --text \"Human check: ...\" --render`. Add `--kind human-check` only when `note_kinds` configures that kind. A human check the owner has not confirmed is shown with a warning and does not block landing. The owner approves, or sends a fix note. On approval, record `slicer relay-run step RUN --step STEP --phase start` to end the wait. Record a fix note as a note on the item in the worktree, record `--phase start` on the step to end the wait, and resume the orchestrator with the note for a fix round, which is reviewed and gated again before Approve repeats. When the finish step already ran, send the item back to the project's started status with `slicer set ID --status STATUS --render` (`slicer config started_status` names it) before the fix round; after its PASS, the closing note and the finish step run again."
+    },
+    {
+      "step": 6,
+      "text": "Land when the end point is `commit` or `landed` and the owner approved: follow the Land section."
+    }
+  ],
+  "land": [
+    {
+      "step": 1,
+      "text": "Rerun the slice's Check commands in the worktree, except `[AFTER LAND]` lines, which step 6 runs."
+    },
+    {
+      "step": 2,
+      "text": "Commit on the slice branch what the worktree still holds: the human-check notes, and the finish step's state when the orchestrator did not commit it. Then file the report's later notes as one more commit on the slice branch."
+    },
+    {
+      "step": 3,
+      "text": "When main moved, merge main into the slice branch in the worktree with slicer's merge drivers (`slicer setup-git` configures them); a conflict a driver leaves goes to the owner. A merge can make a golden stale: rebaseline it and commit the result."
+    },
+    {
+      "step": 4,
+      "text": "Run `slicer render` in the worktree and commit any rewritten render files."
+    },
+    {
+      "step": 5,
+      "text": "Run `slicer check`; exit 1 means drift: fix it, then render and check again."
+    },
+    {
+      "step": 6,
+      "text": "Rerun the full suite on the merged branch, then run each `[AFTER LAND]` line shown at Approve, now that main is merged in. A failure of either goes back to the orchestrator as a fix round. When the suite passes and the merge needed no code change beyond the merge drivers' and a rebaselined golden, the regate is the one-pass small-fix check on the merge diff alone, as Order says; a merge that needs a code fix gets a fix round and the usual gate."
+    },
+    {
+      "step": 7,
+      "text": "On main, merge the branch with `git merge --ff-only BRANCH`; ff-only is the contract's default. When main moved after step 3, go back to Land step 3."
+    },
+    {
+      "step": 8,
+      "text": "End the run with `slicer relay-run end RUN --outcome pass --close-steps done`, before the `land` command, which refuses (`run_active`) while a run on the slice is not ended."
+    },
+    {
+      "step": 9,
+      "text": "On main, run `slicer land ID --branch BRANCH --note \"Describe the verified outcome\"`. It refuses (`not_merged`) unless the branch tip is reachable from HEAD. It marks the slice done, renders and checks, and prints the git commands left."
+    },
+    {
+      "step": 10,
+      "text": "Commit `.slicer` on main with the command `land` printed, push only when the owner authorizes it, then remove the worktree and the branch with the commands `land` printed."
+    }
+  ],
+  "report": {
+    "max_lines": 30,
+    "lines": [
+      {
+        "key": "contract",
+        "template": "Contract: relay v11"
+      },
+      {
+        "key": "slice",
+        "template": "SLICE ID OUTCOME pass|fail|stopped BRANCH NAME @ SHA"
+      },
+      {
+        "key": "worktree",
+        "template": "worktree: PATH"
+      },
+      {
+        "key": "rounds",
+        "template": "rounds: N, last verdict: VERDICT LINE"
+      },
+      {
+        "key": "tests",
+        "template": "tests: COUNTS"
+      },
+      {
+        "key": "diff_stat",
+        "template": "diff stat: STAT"
+      },
+      {
+        "key": "deviations",
+        "template": "deviations accepted: LIST OR none"
+      },
+      {
+        "key": "later_notes",
+        "template": "later notes: LIST OR none"
+      },
+      {
+        "key": "owner_needed",
+        "template": "owner needed: N. TITLE | options: LABEL:SUMMARY; LABEL:SUMMARY | recommend: LABEL | blocker (optional) | key: AREA.TOPIC (optional) | reasoning: TEXT"
+      },
+      {
+        "key": "role_steps",
+        "template": "role steps: STEP IDS"
+      },
+      {
+        "key": "nothing_left_running",
+        "template": "nothing left running: yes"
+      }
+    ]
+  },
+  "outcomes": [
+    "pass",
+    "fail",
+    "stopped"
+  ],
+  "stop": [
+    {
+      "key": "gate_fail_3",
+      "text": "the same slice fails its gate three times"
+    },
+    {
+      "key": "spec_wrong",
+      "text": "the spec turns out ambiguous or wrong"
+    },
+    {
+      "key": "permission_denied",
+      "text": "a harness permission check denies a role's slicer step"
+    },
+    {
+      "key": "no_eligible_row",
+      "text": "a role's round ends in a vendor limit or an error exit and no eligible row is left to rerun it on (a project with no role matrix has none)"
+    }
+  ],
+  "changes": [
+    {
+      "version": 5,
+      "text": "Setup resolves the role lineup, orchestrator included, with `relay-roles recommend` and the owner accepts it as a whole or overrides rows; a role runs as a native subagent on the orchestrator's harness and as a headless session on another."
+    },
+    {
+      "version": 6,
+      "text": "A failed review is recorded with `slicer note ID --text \"Review FAIL: ...\" --render` on the started item, not `reject`."
+    },
+    {
+      "version": 7,
+      "text": "A small fix round is reviewed and gated in one pass; a role's slicer step that a harness permission check denies stops the run before the commit instead of being worked around."
+    },
+    {
+      "version": 8,
+      "text": "A hand-back that names the role it waits on (`waiting on: ROLE AGENT-ID`) is a wait: the outer session relays that role's report to the orchestrator and stops it only when nothing is waited on."
+    },
+    {
+      "version": 9,
+      "text": "Findings carry a kind (`fix`, `owner`, `later`), and `Review FAIL` is written only after `VERDICT: FAIL`; a UI pass role runs beside the reviewer; an optional spec check runs before any worktree exists and owner answers reach the run; a `blocker` owner question waits in the ledger (`relay-run ask`, `answer`) instead of stopping the relay, and a step waiting on the owner or on approval records `--phase wait` and never goes stale; the outer session adds Approve and Land steps with ff-only landing; the ledger records the `ui` and `spec-check` roles under their own names; and a Conformance section states what a scripted orchestrator owes."
+    },
+    {
+      "version": 10,
+      "text": "Roles wait in the foreground: the outer session and the orchestrator spawn in the foreground where the harness can and wait for the report in the same turn, and wait on a headless role's process in the foreground (a timed-out wait is re-issued, never a hand-back). A harness that can only spawn in the background does not end the turn while a spawned role runs and waits for the completion notice. An early hand-back is sent only for an owner question, a permission denial or a failure; `waiting on: ROLE AGENT-ID` is only for a harness that forces the turn to end. Every role runs its own shell commands in the foreground and backgrounds none, and every brief says so. A vendor limit (a rate limit or out of credits) is not a stop: the failed step is recorded with its reason (`relay-run step --phase fail --reason`) and the round reruns as a new step on a fresh agent on the role's next matching row (never breaking the reviewer's independence), with the partial diff; the outer session does the same for an orchestrator; the switch is named on the deviations line; any other failure, or no eligible row, still stops."
+    },
+    {
+      "version": 11,
+      "text": "The contract states each rule once and carries its data in `--json`. Every role, the read-only ones included, uses absolute paths and `git -C` and never `cd`, and the orchestrator resumes a headless role in the slice worktree and checks the directory it names. Before each review, fix rounds included, the implementer checks its own diff (concurrency and handle lifetime, docs updated in the same diff, a test that fails when the new wiring is removed) and reports each check or `n/a`. A gate round is closed with `--verdict pass` or `--verdict fail`, and a heartbeat on a waiting step ends its wait. `slicer ai relay-orchestrator --session` is a variant for a session that orchestrates every slice itself: it begins and ends the run, records its own step, asks the owner directly and runs Approve and Land, and the owner may choose the session variant at Setup even where nesting works. A small fix round is checked and gated in one pass by the read-only role that raised its findings; a non-blocker owner question is asked in the ledger as it arises, without a wait, and read with `relay-run answer --get` before the finish step, and the session variant takes the same non-blocker question rule; a Check line marked `[AFTER LAND]` is deferred to Land step 6; a clean merge of main is regated by the one-pass small-fix check. A `blocker` owner question is a wait, not a stop. Every `fix` finding fails the gate, with no severity scale, and a minor item is tagged `later`. An error exit of the agent process falls back like a vendor limit, to a fresh agent on the role's next matching row, with `role_fallback` as the conformance key (was `vendor_limit`); with no eligible row (a project with no role matrix has none), or on any other failure, the run still stops. `stop` rules carry keys (`gate_fail_3`, `spec_wrong`, `permission_denied`, `no_eligible_row`), the stop no longer lists a blocker owner decision, and conformance splits the stop obligation from a new `blocker_wait` one. `roles` carries the gate with ledger role `gate`. The orchestrator always runs as a general-purpose agent briefed with `slicer ai relay-orchestrator`, never an agent type, and an unmatched orchestrator means the outer session orchestrates."
+    }
+  ],
+  "roles": [
+    {
+      "role": "outer_session",
+      "text": "The outer session is the session the owner talks to. It runs Setup with the owner, owns the relay run, spawns one orchestrator per slice, reads only that orchestrator's run report, lands branches one at a time when the owner authorizes it, files the report's later notes, and writes no product code.",
+      "ledger_role": null
+    },
+    {
+      "role": "orchestrator",
+      "text": "The orchestrator runs one slice under the contract that `slicer ai relay-orchestrator` prints. It briefs every agent, reads the reports and reads diffs as `slicer ai relay-orchestrator` says, reruns the tests only as Order says, and writes no product code.",
+      "ledger_role": "orchestrator"
+    },
+    {
+      "role": "implementer",
+      "text": "The implementer owns one slice. It runs `slicer start ID --render --strict`, writes the failing tests and watches them go red, implements, mutation-checks each new test, and closes the slice. Line numbers a slice cites may have moved since its spec was written; at start the implementer re-anchors them against the code in the worktree.",
+      "ledger_role": "implementer"
+    },
+    {
+      "role": "reviewer",
+      "text": "The reviewer is read-only. It reviews correctness, test strength and direction against `slicer goals`.",
+      "ledger_role": "reviewer"
+    },
+    {
+      "role": "architect",
+      "text": "The architect is read-only. It confirms each finding was fixed and reviews the shape.",
+      "ledger_role": "architect"
+    },
+    {
+      "role": "ui_pass",
+      "text": "The UI pass is read-only and edits nothing. It runs beside the reviewer on a slice the project marks as UI; the project says what counts as a UI slice. It returns triaged suggestions, each tagged with a finding kind, and, where the project can render, the changed views. The gate still decides.",
+      "ledger_role": "ui"
+    },
+    {
+      "role": "gate",
+      "text": "The gate is read-only and decides. It checks the diff under review against the criteria in Gate, gives its verdict as the first line of its report, and sends a FAIL back to the implementer.",
+      "ledger_role": "gate"
+    },
+    {
+      "role": "spec_check",
+      "text": "The spec check is optional, read-only and edits nothing. It runs before any worktree exists, on a batch of slices the owner picks. For each slice it returns `ready` or questions in the shape of the run report's `owner needed` line, each with 2 to 4 options, a preferred one, and `blocker` where the slice cannot go on without the answer. The outer session spawns it and reads its report. It has no matrix row, so the owner names its agent, model and reasoning effort at Setup like any role. It does not re-anchor the line numbers a slice cites: the implementer does that late.",
+      "ledger_role": "spec-check"
+    }
+  ],
+  "gate": {
+    "criteria": [
+      "earlier blockers resolved with a proving test",
+      "no `fix` finding",
+      "no `blocker` owner finding",
+      "tests green",
+      "docs matching the code"
+    ],
+    "verdicts": [
+      "VERDICT: PASS",
+      "VERDICT: FAIL"
+    ]
+  },
+  "finding_kinds": [
+    {
+      "kind": "fix",
+      "text": "goes to the fix round."
+    },
+    {
+      "kind": "owner",
+      "text": "a design call for the owner, with 2 to 4 options and a preferred one. It goes in the run report as an owner-needed question and does not block the gate unless it is marked `blocker`."
+    },
+    {
+      "kind": "later",
+      "text": "a follow-up item with a one-line title. It goes in the report's later notes."
+    }
+  ],
+  "conformance": [
+    {
+      "key": "role_order",
+      "text": "Run the roles in Order's sequence: the implementer, the reviewer (with the UI pass beside it on a UI slice), the architect when the owner chose one, then the gate. Accepted findings go back to the implementer before the next review or gate."
+    },
+    {
+      "key": "gate_rule",
+      "text": "Decide the gate on the criteria in Gate, with its verdict as the first line as Gate says. A FAIL, or an implementer change after a review, needs another gate."
+    },
+    {
+      "key": "finding_kinds",
+      "text": "Tag every reviewer, UI pass and gate finding `fix`, `owner` or `later`, and route each as Gate says."
+    },
+    {
+      "key": "stop_rules",
+      "text": "Stop when a stop condition in Stop holds, with OUTCOME stopped, and return the run report. Do not go on past it and do not ask the owner. A permission denial stops before the commit, with the denial's exact text as a `blocker` owner-needed question."
+    },
+    {
+      "key": "blocker_wait",
+      "text": "Wait for the answer to a `blocker` owner question instead of stopping: record it with `relay-run ask`, then wait for the answer where the owner gives it. An orchestrator an outer session spawned ends its turn with `waiting on: owner QUESTION_ID` and goes on only from the answer the outer session records and resumes it with; a session that orchestrates itself waits for the owner in its own session. Stop with OUTCOME stopped only when the answer cannot be waited for."
+    },
+    {
+      "key": "role_fallback",
+      "text": "When a role's round ends in a vendor limit (a rate limit or out of credits) or an error exit of the agent process, record the failed step with its reason, rerun the same round as a new step on a fresh agent on the role's next matching row (later rows on the same vendor skipped on out of credits, independence kept as Stop says) with the partial diff, and name the switch on the run report's deviations line. A gate FAIL, a wrong spec or a permission denial is not an error exit. The same fallback applies to an orchestrator, as Stop says. With no eligible row left, or on any other failure, stop as Stop says."
+    },
+    {
+      "key": "ledger",
+      "text": "Record each role's round in the run ledger with `relay-run step`: a new step for every round, a parent step for a spawned role, and done or fail when the round ends; a gate round is closed with `--verdict pass` or `--verdict fail`. The outer session begins and ends the run. A failed record never stops the relay."
+    },
+    {
+      "key": "finish_after_pass",
+      "text": "Run the closing note and the finish step only after `VERDICT: PASS`. A fix round that follows runs them again only after its own PASS."
+    },
+    {
+      "key": "run_report",
+      "text": "Return one run report, in the line order of Run report and within its line limit. Send it once, never an interim run report. Its first line is the contract marker and its last is `nothing left running: yes`, written only after nothing the run started still runs."
+    },
+    {
+      "key": "worktree_scope",
+      "text": "Work only in the worktree the brief names, with absolute paths and no change of directory, and write no product code."
+    },
+    {
+      "key": "commit_scope",
+      "text": "Commit on the slice branch only when the brief allows it. Never merge, land, push or rebase onto main: the outer session owns those."
+    }
+  ]
+}

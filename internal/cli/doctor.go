@@ -47,6 +47,23 @@ type contractCheck struct {
 	Found    string `json:"found,omitempty"`
 	OK       bool   `json:"ok"`
 	Error    string `json:"error,omitempty"`
+	// Projects holds one entry per registered project, each asked with its own
+	// --root. A failed entry fails the check.
+	Projects []projectContract `json:"projects"`
+}
+
+// projectContract is one registered project's slicer contract: the pin in its
+// slicer config (null when unpinned) and the contract slicer served for it.
+type projectContract struct {
+	Project string `json:"project"`
+	Pinned  *int   `json:"pinned"`
+	Found   string `json:"found,omitempty"`
+	OK      bool   `json:"ok"`
+	Error   string `json:"error,omitempty"`
+
+	// next is ork's own next step for a pin problem, printed in the text
+	// output only.
+	next string
 }
 
 type projectCheck struct {
@@ -56,7 +73,7 @@ type projectCheck struct {
 }
 
 // DoctorReport is what `ork doctor --json` prints. OK is false when slicer,
-// adj or the contract check fails; a vendor CLI that is missing or broken is
+// adj or the contract check (global or any registered project) fails; a vendor CLI that is missing or broken is
 // reported but does not fail the check. Project findings are also advisory.
 // Binary is the resolved path of the running ork binary, empty when that
 // path cannot be read.
@@ -245,31 +262,65 @@ func checkTool(ctx context.Context, name, bin string, required bool) toolCheck {
 	return tc
 }
 
-// checkContract compares the first line of `slicer ai relay` with the
-// accepted set of contract versions (boundary.contract).
+// checkContract compares the contract that `slicer ai relay --json` serves
+// with the accepted set of contract versions (boundary.contract).
 func checkContract(ctx context.Context, slicer toolCheck, root string) contractCheck {
-	cc := contractCheck{Accepted: roles.AcceptedContracts()}
+	cc := contractCheck{Accepted: roles.AcceptedContracts(), Projects: []projectContract{}}
 	if !slicer.Present {
 		cc.Error = "slicer is not available"
 		return cc
 	}
 	client := slicercli.Client{Bin: slicer.Path, Timeout: versionTimeout}
-	line, err := client.Contract(ctx, root)
-	cc.Found = line
+	contract, err := client.ReadContract(ctx, root)
 	if err != nil {
 		cc.Error = contractError(err)
 		return cc
 	}
+	cc.Found = "Contract: " + contract.Contract
 	if _, err := roles.CheckContractLine(cc.Found); err != nil {
 		cc.Error = contractError(err)
 		return cc
 	}
-	if _, err := client.RelayContract(ctx, root); err != nil {
+	if err := contract.Validate(); err != nil {
 		cc.Error = contractError(err)
 		return cc
 	}
 	cc.OK = true
 	return cc
+}
+
+// checkProjectContract asks the project's own slicer, with the project as
+// --root, for its contract and pin (adj 97). It fails when slicer refuses
+// with contract_mismatch, when the pin is outside the accepted set, or when
+// the contract is not one ork accepts.
+func checkProjectContract(ctx context.Context, client slicercli.Client, p registry.Project) projectContract {
+	pc := projectContract{Project: p.Name}
+	contract, err := client.ReadContract(ctx, p.Path)
+	if err != nil {
+		pc.Error = contractError(err)
+		var tool *clirun.ToolError
+		if errors.As(err, &tool) && tool.Code == "contract_mismatch" {
+			pc.next = fmt.Sprintf("run `ork projects pin %s --relay N` with the version slicer serves, or `ork projects unpin %s`", p.Name, p.Name)
+		}
+		return pc
+	}
+	pc.Pinned = contract.Pinned
+	pc.Found = contract.Contract
+	if contract.Pinned != nil && !roles.ContractAccepted(*contract.Pinned) {
+		pc.Error = fmt.Sprintf("pin v%d is outside what ork accepts (relay %s)", *contract.Pinned, acceptedList())
+		pc.next = fmt.Sprintf("run `ork projects pin %s --relay N` with %s, or `ork projects unpin %s`", p.Name, acceptedList(), p.Name)
+		return pc
+	}
+	if _, err := roles.CheckContractLine("Contract: " + contract.Contract); err != nil {
+		pc.Error = contractError(err)
+		return pc
+	}
+	if err := contract.Validate(); err != nil {
+		pc.Error = contractError(err)
+		return pc
+	}
+	pc.OK = true
+	return pc
 }
 
 // doctor checks the tools ork calls. It runs `--version` on each and
@@ -288,11 +339,13 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 
 	t := a.Tools
 	rep := DoctorReport{OK: true, Projects: []projectCheck{}, Upgrade: []upgradeHint{}}
+	var registered []registry.Project
 	registryPath, registryErr := registry.DefaultPath()
 	if registryErr == nil {
 		var file *registry.File
 		file, registryErr = registry.Load(registryPath)
 		if registryErr == nil {
+			registered = file.Projects
 			for _, p := range file.Projects {
 				rep.Projects = append(rep.Projects, checkProject(ctx, p))
 			}
@@ -349,9 +402,24 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	}
 	root, rootErr := os.Getwd()
 	if rootErr != nil {
-		rep.Contract = contractCheck{Accepted: roles.AcceptedContracts(), Error: rootErr.Error()}
+		rep.Contract = contractCheck{Accepted: roles.AcceptedContracts(), Error: rootErr.Error(), Projects: []projectContract{}}
 	} else {
 		rep.Contract = checkContract(ctx, rep.Tools[0], root)
+	}
+	// Each registered project is asked with its own --root. A project whose
+	// path is gone is skipped: its project finding says so.
+	if registryErr == nil && rep.Tools[0].Present {
+		client := slicercli.Client{Bin: rep.Tools[0].Path, Timeout: versionTimeout}
+		for _, p := range registered {
+			if info, err := os.Stat(p.Path); err != nil || !info.IsDir() {
+				continue
+			}
+			pc := checkProjectContract(ctx, client, p)
+			rep.Contract.Projects = append(rep.Contract.Projects, pc)
+			if !pc.OK {
+				rep.Contract.OK = false
+			}
+		}
 	}
 	if !rep.Contract.OK {
 		rep.OK = false
@@ -412,10 +480,25 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	if c.Found != "" {
 		found = fmt.Sprintf(", slicer prints %q", c.Found)
 	}
-	if c.OK {
+	// c.OK also covers the projects below, so the global line reads the error.
+	if c.Error == "" {
 		fmt.Fprintf(o.stdout, "[ok] contract  accepts %s%s\n", accepted, found)
 	} else {
 		fmt.Fprintf(o.stdout, "[FAIL] contract  accepts %s%s: %s\n", accepted, found, c.Error)
+	}
+	for _, pc := range c.Projects {
+		switch {
+		case !pc.OK:
+			next := ""
+			if pc.next != "" {
+				next = "; " + pc.next
+			}
+			fmt.Fprintf(o.stdout, "[FAIL] contract %s  %s%s\n", pc.Project, pc.Error, next)
+		case pc.Pinned != nil:
+			fmt.Fprintf(o.stdout, "[ok] contract %s  pinned relay v%d\n", pc.Project, *pc.Pinned)
+		default:
+			fmt.Fprintf(o.stdout, "[ok] contract %s  not pinned, slicer serves %s\n", pc.Project, pc.Found)
+		}
 	}
 	for _, h := range rep.Upgrade {
 		fmt.Fprintf(o.stdout, "[upgrade] %s  %s\n", h.Tool, h.Reason)

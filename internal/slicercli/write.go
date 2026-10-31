@@ -29,14 +29,27 @@ func (c Client) longCall(args ...string) clirun.Call {
 	return call
 }
 
-// Contract runs `slicer ai relay` and returns its first line.
+// Contract runs `slicer ai relay --json --root ROOT` and returns its contract
+// string, for example "relay v11".
 func (c Client) Contract(ctx context.Context, root string) (string, error) {
-	res, err := clirun.Run(ctx, c.call("ai", "relay", "--root", root))
+	out, err := c.ReadContract(ctx, root)
 	if err != nil {
 		return "", err
 	}
-	first, _, _ := strings.Cut(strings.TrimSpace(string(res.Stdout)), "\n")
-	return strings.TrimSpace(first), nil
+	return out.Contract, nil
+}
+
+// SetRelayPin runs `slicer config relay_contract N --root ROOT`, which pins
+// the project's relay contract in its own slicer config (adj 97).
+func (c Client) SetRelayPin(ctx context.Context, root string, n int) error {
+	_, err := clirun.Run(ctx, c.call("config", "relay_contract", strconv.Itoa(n), "--root", root))
+	return err
+}
+
+// UnsetRelayPin runs `slicer config relay_contract --unset --root ROOT`.
+func (c Client) UnsetRelayPin(ctx context.Context, root string) error {
+	_, err := clirun.Run(ctx, c.call("config", "relay_contract", "--unset", "--root", root))
+	return err
 }
 
 // ShowRaw runs `slicer show ID --json --lean --root ROOT` and returns stdout

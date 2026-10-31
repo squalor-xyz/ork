@@ -1095,7 +1095,7 @@ ork daemon restart [--force]
 ork roles print [ROLE]      print the embedded role prompts
 ork roles matrix P          show the role matrix as slicer prints it, then
                             which rows ork uses, skips or does not run (S168)
-ork projects add|list|rm|set
+ork projects add|list|rm|set|pin|unpin
                             manage the registry
 ork doctor [--upgrade]      check versions, CLIs, logins, contract, ork path, projects;
                             print upgrade commands (S178)
@@ -1420,11 +1420,26 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   `rev-parse`, `describe` and `rev-list`. It never fetches, pulls, builds,
   makes a network call or runs a printed command, and a hint never changes the
   exit code;
-- the slicer contract: the first line of `slicer ai relay --root ROOT`
-  against the accepted set (`roles.AcceptedContracts`, v10 and v11;
-  `boundary.contract-set`, adj 175). Any other version fails. A project pin mismatch
-  (`contract_mismatch`, exit 3) reports the pin. Doctor and the engine also
-  validate `ai relay --json`: exact finding kinds `fix`, `owner`, `later`,
+- the slicer contract: the `contract` string of `slicer ai relay --json --root
+  ROOT` against the accepted set (`roles.AcceptedContracts`, v10 and v11;
+  `boundary.contract-set`, adj 175). Any other version fails. The check runs
+  for the directory doctor is run in, and again for each registered project
+  with that project as `--root`, listed as `contract.projects` in the JSON
+  (`project`, `pinned`, `found`, `ok`, `error`) and as one `contract NAME` line
+  each in the text. A project fails when its pin is outside the accepted set
+  or its slicer refuses with `contract_mismatch` (exit 2, no contract text;
+  `slicer/docs/agents.md:712`); slicer's error object names the pinned and the
+  served version. An unpinned project is checked against the accepted set alone. A
+  project whose path is gone is skipped (its project finding says so). The pin
+  is set with `ork projects pin NAME --relay N`, which refuses N outside the
+  accepted set before it runs anything, runs `slicer config relay_contract N
+  --root PROJECT`, and reports the `pinned` value that `slicer ai relay
+  --json` then prints; `ork projects unpin NAME` runs `slicer config
+  relay_contract --unset --root PROJECT`. Neither needs the daemon, and ork
+  never writes the pin to `projects.json` or to slicer's config file itself
+  (`boundary.contract-pin`, adj 97). Engine start reads the same string, and a
+  `contract_mismatch` refuses the run with slicer's error and no run record.
+  Doctor and the engine also validate `ai relay --json`: exact finding kinds `fix`, `owner`, `later`,
   required conformance keys (v11: `role_fallback` and `blocker_wait` in place of
   `vendor_limit`), ledger role names (v11 includes `gate`), gate criteria and
   verdicts, and outcomes. The run records its version, roles and gate criteria
@@ -1571,6 +1586,22 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   start whose plan was read before the change and that is admitted after it is
   refused with `plan changed; run the command again to confirm it`; run
   the command again.
+- `projects pin NAME --relay N` and `projects unpin NAME` (S24): the slicer
+  contract pin of a registered project, set through slicer
+  (`boundary.contract-pin`, adj 97). Neither starts or needs the daemon; both
+  resolve NAME in the registry file. JSON: `{"project":"NAME","pinned":N}` for
+  `pin` (the `pinned` value that `slicer ai relay --json` prints after the
+  set) and `{"project":"NAME","pinned":null}` for `unpin`. Text: `pinned NAME
+  at relay vN` and `unpinned NAME`. Exit 2 (usage, before any tool runs): a
+  missing `--relay` (`projects pin needs --relay N (relay v10, v11)`), an N
+  outside the accepted set, a wrong argument count, or a NAME that is not
+  registered. Exit 1: slicer fails the set or unset call (its message is
+  shown), or slicer refuses the read-back after the set, for example a pin of
+  v10 on a slicer that serves v11. In that case the pin stays set, and the
+  message names the project, quotes slicer's error and gives the next step,
+  `ork projects pin NAME --relay N` with the version slicer serves or `ork
+  projects unpin NAME` (owner, 2026-10-31). `pin` also exits 1 when slicer
+  prints no pin after a successful set.
 - `settings show` and `settings set [--global-cap N] [--daemon-idle-minutes N]`
   (*proposed*, S174, owner decision 2026-10-29): the file-level registry
   settings, over `settings.get` and `settings.set`. `show` prints
@@ -1597,12 +1628,22 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   lineup (S83). The TUI pane shows the same lines with the `## ork` section
   first, then slicer's text (owner, 2026-10-29).
 - `doctor`: `{"ok","tools":[{"name","required","present","path","version",
-  "ok","error"}],"contract":{"accepted":[9,10],"found","ok","error"},"binary",
+  "ok","error"}],"contract":{"accepted":[10,11],"found","ok","error",
+  "projects":[{"project","pinned","found","ok","error"}]},"binary",
   "projects":[{"name","path","findings":[]}],"registry_error"?}`,
   where `binary` is the path of the running ork binary (empty when it cannot
   be read). Text: one `[ok]`, `[--]`, `[WARN]` or `[FAIL]` line per check, and
   the first line is `[ok] ork  PATH`, or `[--] ork  path unknown: ERROR`
-  when the path cannot be read. Projects have one `project NAME  PATH` line each, with
+  when the path cannot be read. In `contract`, `found` is the first line of
+  `slicer ai relay` for the directory doctor runs in ("Contract: relay vN"),
+  and `ok` is false when the global check or any project entry fails. Each
+  `contract.projects` entry is a registered project asked with its own
+  `--root`: `pinned` is the pin or null when the project is unpinned or when
+  slicer refused (the `error` then names the pinned and the served version),
+  and `found` is the bare contract ("relay vN"). A failed project's text line
+  ends with ork's next step, `run ork projects pin NAME --relay N ... or ork
+  projects unpin NAME`, for a refused pin or a pin outside the accepted set.
+  Projects have one `project NAME  PATH` line each, with
   findings indented below. Every finding is stored on one line.
 
 ## Testing

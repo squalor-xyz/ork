@@ -245,11 +245,13 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 			return nil, err
 		}
 	}
-	line, err := d.Slicer.Contract(ctx, cfg.Project.Path)
+	// A project whose pin differs from what its slicer serves fails here with
+	// slicer's contract_mismatch error, which names both versions.
+	served, err := d.Slicer.Contract(ctx, cfg.Project.Path)
 	if err != nil {
-		return nil, fmt.Errorf("slicer ai relay: %w", err)
+		return nil, fmt.Errorf("slicer ai relay --json: %w", err)
 	}
-	version, err := roles.CheckContractLine(line)
+	version, err := roles.CheckContractLine("Contract: " + served)
 	if err != nil {
 		return nil, err
 	}
