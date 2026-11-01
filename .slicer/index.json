@@ -1575,6 +1575,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "f3101e15-0d8f-4f6b-bfca-d663de69db98",
+          "kind": "",
+          "text": "**2026-11-01** — Owner decision (interactive question, 2026-11-01): Q1 J and K move one place with the exact command on the confirm bar, and say list unchanged when the daemon reports the shown order did not change (the spec default).",
+          "created_at": "2026-11-01T15:18:32Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
