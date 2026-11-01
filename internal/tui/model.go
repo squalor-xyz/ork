@@ -677,8 +677,25 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			if i := clampCursor(w.cursor, len(rows)); i >= 0 {
 				id = rows[i].ID
 			}
-			w.showAll = true
-			for i, row := range w.rows() {
+			w.showAll = !w.showAll
+			rows = w.rows()
+			w.cursor = clampCursor(len(rows)-1, len(rows))
+			if !w.showAll {
+				offset := 0
+				for _, block := range w.blocks() {
+					if block.plan == nil {
+						continue
+					}
+					for _, wave := range block.plan.Waves[:w.visibleWaves(block.plan)] {
+						offset += len(wave.Items)
+						if len(wave.Items) > 0 {
+							w.cursor = offset - 1
+						}
+					}
+					offset += len(block.plan.Unplaced)
+				}
+			}
+			for i, row := range rows {
 				if row.ID == id {
 					w.cursor = i
 					break

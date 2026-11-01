@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- S130: compact usage token counts, ASCII gate verdicts, repeated-role
+  ordinals, stopped rows without "running", wrapped Waves conflict markers,
+  an A-key toggle between three waves and all, and a short behind-main notice
+  (*proposed*). Add fix-round goldens and document raw markdown tails and the
+  measured 80x24 limit: fitting panes have six Overview lines above them;
+  overflowing panes have five lines above them: a dim `+N lines above` marker,
+  then four Overview lines. Gate FAIL verdicts omit the reason suffix and keep
+  the reason on the dim task line. Collapsing Waves moves a hidden selection
+  to the last item of the last visible wave, before Unplaced items.
+  The `xN` count and `#N` ordinal now count the same lane steps.
+
 - S108: done steps in the run tree show one node line without a task line.
   All other phases keep their task text, including failed steps. The gate
   FAIL line stays visible. Docs updated: `docs/dashboard.md`.

@@ -697,9 +697,9 @@ Narrow rows clip the tail after the age. Wait text that only says the state
 again is left out of the row and the pane: an awaiting-approval run reads
 `awaiting approval  19h00m`, not `awaiting approval  19h00m  owner approval`
 (S154). Any other wait text stays.
-An engine run that waits on the owner (awaiting approval or paused) counts its
-steps without the word `running`, because none runs: `2 of 6 steps`, where a
-working or stopped run reads `2 of 6 steps running`. A relay started elsewhere
+A stopped engine run or one that waits on the owner (awaiting approval or
+paused) counts its steps without the word `running`: `2 of 6 steps`.
+A working run reads `2 of 6 steps running`. A relay started elsewhere
 keeps slicer's own count, `2 of 6 steps running`, even with a step waiting
 (S154).
 Awaiting-approval and paused ages count from the persisted `wait_started_at`
@@ -783,7 +783,11 @@ its row, and its title is "Run" and the run ID alone, in the row title style
 stage. The Questions tab, with no row above its pane, keeps the full header.
 The body scrolls to the pane's last line, and the pane takes at
 most `height - 11` lines (`height - 8` under 24 lines), so its row and the
-rows around it stay on screen. The hint line takes the row the pane gave up (S149). It shows the full `wait` reason before
+rows around it stay on screen. At 80x24 a fitting run pane has six Overview
+lines above it when the Overview has that many. An overflowing pane has five:
+a dim `+N lines above` marker line, then four Overview lines
+(`internal/tui/view.go:183-190`).
+The hint line takes the row the pane gave up (S149). It shows the full `wait` reason before
 the run tree, without the daemon's closing `; next: ork ...` command: the
 hint line names the key, and on a paused run `t retry` drops after the scroll
 keys, so it stays at 80x24 (S134). A bare blank row sets the reason off from the
@@ -1165,7 +1169,11 @@ when opened or the project changes.
 The first three suggested waves appear in slicer's order. A dim `N more
 waves` line (`1 more wave` for one) offers `[A] show all` (shift-a, as on
 Decisions; `a` is Approve and does nothing here); hidden waves cannot be
-selected until expanded. Unplaced items remain available. Wave headers are full-width
+selected until expanded. With more than three waves, the expanded list ends
+with a dim `[A] show first 3` line. Pressing `A` again returns to three waves.
+The cursor stays on its item when visible. If its wave becomes hidden, it
+moves to the last item of the last visible wave, before any Unplaced items.
+Unplaced items remain available. Wave headers are full-width
 box-drawing rules with item counts, or hyphens in ASCII mode. Tick, item id, title and
 Shares form aligned columns. The dim Shares column contains only the
 predecessor id, for example `<A` means shares files with predecessor A;
@@ -1678,9 +1686,13 @@ run that is not live and not waiting on the owner (stopped, committed or ended)
 never reads as waiting, even if its ledger kept a step in phase `wait`. A
 live run adds `queued` tail rows only for pipeline roles with no lane step;
 queued steps keep their existing tree row. Queued rows share the tree's
-phase column. Repeated roles carry `xN` on the latest tree node. A failed
-gate has a `✗ gate FAIL -> implementer round N` line beneath it, followed by
-`: REASON` only when the task is non-empty. Started steps
+phase column. Repeated roles carry `xN` on their latest lane node. Their lane
+steps also show a per-role ordinal, `#1`, `#2`, and so on, before `xN`, unless
+the node already shows `round N`. Nested subagents do not count toward the
+ordinal or `xN`. A failed gate has a `✗ gate FAIL -> implementer round N`
+line beneath it (`x gate FAIL -> implementer round N` in ASCII mode).
+The verdict line has no reason suffix; the dim task line below it carries
+the reason when the task is non-empty. Started steps
 in stale or ended ledger runs use `~` and stop counting at the last event.
 Engine runs without a ledger derive pipeline and round from role records,
 and last heard from the latest role timestamp.
@@ -1721,7 +1733,10 @@ While no run is active, the status line shows it when a self-hosted daemon's
 revision is behind local `main`. It fires on any landing on main, not only
 engine landings. It replaces the stale-build marker while shown; otherwise
 the stale marker still shows for a differing build. At narrow widths the
-behind notice takes priority over other status fields. Text `ork doctor`
+behind notice takes priority over other status fields. The full notice plus
+its leading space measures 52 columns. Below 52 columns, the status line uses
+`behind main: ork daemon restart`, then clips if that text still does not fit.
+Text `ork doctor`
 prints `[WARN] daemon behind main: restart with ork daemon restart` on stdout.
 `ork status` prints `ork: warning: daemon behind main: restart with ork daemon restart`
 on stderr. ork never restarts on its own.
@@ -1733,6 +1748,9 @@ touch `internal/engine`, `internal/daemon` or `cmd`, naming both:
 ! engine conflict: A and B touch internal/engine, internal/daemon or cmd; launch separately
 ```
 
+The marker starts two columns in; wrapped continuations start four columns in.
+The `both touch` overlap lines keep their existing indentation.
+
 Pressing `l` puts the same conflict text, without the leading `! ` marker, in
 the action status. Launch is blocked until the selection holds at most one
 such slice. The daemon checks Files again before starting any member. See
@@ -1743,6 +1761,7 @@ docs/design.md for detection.
 The running engine role shows up to three dim rows of assistant text after
 its task. The tail has its own ASCII-safe `    > ` gutter. Text wraps to the
 remaining pane width, blank lines are removed, and the newest text is last.
+The tail shows markdown as written (owner, 2026-10-31).
 When older text is cut by the three-row window or memory cap, only the first
 row begins with `...`. The tail keeps at most 2 KB in daemon memory and
 resets at each role attempt. Stopped, paused, stale and ended runs show no
@@ -1753,7 +1772,10 @@ do not enter the tail.
 
 Only the running node gets a separate `tokens N  $C` line. Until its first
 usage event it has none (S146); then it shows `tokens N  $C`, and a reported
-zero is shown as zero.
+zero is shown as zero. Usage counts in the pane and Overview stay integers
+below 1000. Larger counts round half up to one decimal place: `1000` becomes
+`1.0k`, `23849` becomes `23.8k`, and `999950` becomes `1.0M`.
+Configured token budgets keep their integer text.
 Finished roles append recorded usage to their node line; that whole suffix
 drops first when narrow. An interrupted role in a stopped run also uses the
 node suffix: missing recorded usage and cost show `tokens -  $-`, with no

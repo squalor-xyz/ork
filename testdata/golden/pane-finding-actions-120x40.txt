@@ -2,7 +2,7 @@ ork                        │ Overview │ Questions │ Waves │ Roadmap │ 
   Running                1 │────────────────────────────────────────────────────────────────────────────────────────────
 0>Needs you             10 │Needs you 10
 1 ork                   10 │  Stopped 1
-                           │  x  ork  engine  S22  stopped  owner action  2 of 6 steps running                          
+                           │  x  ork  engine  S22  stopped  owner action  2 of 6 steps                                  
                            │    Run engine
                            │    owner action
                            │

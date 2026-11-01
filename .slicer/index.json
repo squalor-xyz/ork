@@ -6215,7 +6215,7 @@
       "id": "S130",
       "title": "Run pane and Overview text polish sweep",
       "short_title": "Run pane and Overview text polish",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -6225,6 +6225,20 @@
           "text": "**2026-11-01** — Owner decisions (interactive questions, 2026-10-31): Q1 per-role ordinal as #N on repeated roles; Q2 S214 items 2 and 4 dropped; Q3 the A key toggles Waves between three waves and all, S125 cosmetics dropped; Q4 a stopped engine row reads 'N of M steps' (drop only 'running'). Tail markdown stays raw.",
           "created_at": "2026-11-01T00:56:29Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "22aef3da-1606-4752-ba7e-59445cdfc8e5",
+          "kind": "",
+          "text": "**2026-11-01** — 2026-11-01, fix round 1: additional goldens changed by the stopped-row wording are `testdata/golden/pane-finding-actions-80x24.txt`, `testdata/golden/pane-finding-actions-120x40.txt`, `testdata/golden/pane-stopped-mono-false.txt`, and `testdata/golden/pane-stopped-mono-true.txt`. These are recorded here only; their existing stopped-row updates need no further edit.",
+          "created_at": "2026-11-01T01:35:52Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -6251,7 +6265,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

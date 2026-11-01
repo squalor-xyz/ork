@@ -29,7 +29,7 @@ func TestPaneShowsTheTailAndTokens(t *testing.T) {
 			if strings.Contains(v, "discarded") {
 				t.Fatal(v)
 			}
-			if state == "implement" && (!strings.Contains(v, "tokens 1234  $-") || !strings.Contains(v, "...")) {
+			if state == "implement" && (!strings.Contains(v, "tokens 1.2k  $-") || !strings.Contains(v, "...")) {
 				t.Fatal(v)
 			}
 			if !strings.Contains(v, "tokens 500  $0.25") {
@@ -49,16 +49,16 @@ func TestRunningRowShowsTheTokenTotal(t *testing.T) {
 	h.m.byName["ork"].snap.EngineRuns[0].Tokens = 1234
 	_, rows := h.m.rows()
 	r := rows[0]
-	if !strings.Contains(rowText(r, 400), "tokens 1234") {
+	if !strings.Contains(rowText(r, 400), "tokens 1.2k") {
 		t.Fatal(rowText(r, 400))
 	}
 	saw := false
 	for w := 20; w < 400; w++ {
 		v := rowText(r, w)
-		if strings.Contains(v, "tokens 1234") && !strings.Contains(v, "heard ") {
+		if strings.Contains(v, "tokens 1.2k") && !strings.Contains(v, "heard ") {
 			t.Fatalf("tokens survived heard: %s", v)
 		}
-		if strings.Contains(v, "heard ") && !strings.Contains(v, "tokens 1234") {
+		if strings.Contains(v, "heard ") && !strings.Contains(v, "tokens 1.2k") {
 			saw = true
 		}
 	}

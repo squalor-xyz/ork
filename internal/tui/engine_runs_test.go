@@ -54,7 +54,7 @@ func TestEngineRunRows(t *testing.T) {
 			if wantNeeds {
 				row += "  owner action"
 			}
-			if state == "awaiting-approval" || state == "paused" {
+			if state == "awaiting-approval" || state == "paused" || state == "stopped" {
 				row += "  2 of 6 steps" // an owner wait has nothing running (S154)
 			} else {
 				row += "  2 of 6 steps running"
@@ -555,7 +555,7 @@ func TestStoppedRowShowsAge(t *testing.T) {
 			h.m.apply(snapshotMsg{name: "ork", snap: s})
 			rows, _ := h.m.rows()
 			got := rows[0].text
-			want := "engine  S22  stopped  owner action  2 of 6 steps running"
+			want := "engine  S22  stopped  owner action  2 of 6 steps"
 			if tc.want != "" {
 				want += "  " + tc.want
 			}
@@ -790,5 +790,19 @@ func TestPausedPaneHintKeepsRetryAt80x24(t *testing.T) {
 	}
 	if !strings.Contains(v, "esc close pane") {
 		t.Fatalf("the way out must stay:\n%s", v)
+	}
+}
+
+func TestStoppedEngineRowDoesNotSayStepsRunning(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	s := engineSnapshot(t, "stopped", "ledger")
+	s.EngineRuns[0].UpdatedAt = h.now.Add(-48 * time.Hour)
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	rows, _ := h.m.rows()
+	line := stripANSI(h.m.rowLine(rows[0], true, 3, 60))
+	if !strings.Contains(line, "2 of 6 steps") || strings.Contains(line, "running") || !strings.Contains(line, "2d ago") {
+		t.Fatal(line)
 	}
 }

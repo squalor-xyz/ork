@@ -39,7 +39,7 @@ func pipelineRoles(steps []runTreeStep) []string {
 	return roles
 }
 
-func laneSteps(steps []runTreeStep) []runTreeStep {
+func laneIndexes(steps []runTreeStep) []int {
 	orchestrators := map[string]bool{}
 	known := map[string]bool{}
 	for _, s := range steps {
@@ -48,11 +48,19 @@ func laneSteps(steps []runTreeStep) []runTreeStep {
 			orchestrators[s.ID] = true
 		}
 	}
-	var out []runTreeStep
-	for _, s := range steps {
+	var out []int
+	for i, s := range steps {
 		if s.Parent == "" || !known[s.Parent] || orchestrators[s.Parent] {
-			out = append(out, s)
+			out = append(out, i)
 		}
+	}
+	return out
+}
+
+func laneSteps(steps []runTreeStep) []runTreeStep {
+	var out []runTreeStep
+	for _, i := range laneIndexes(steps) {
+		out = append(out, steps[i])
 	}
 	return out
 }

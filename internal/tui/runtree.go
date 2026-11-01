@@ -122,8 +122,13 @@ func treeRoleWidth(steps []runTreeStep) int {
 func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, roleWidth int) []string {
 	counts := roleCounts(steps)
 	latest := map[string]int{}
-	for i, s := range steps {
-		latest[s.Role] = i
+	ordinals := map[int]int{}
+	seen := map[string]int{}
+	for _, i := range laneIndexes(steps) {
+		role := steps[i].Role
+		seen[role]++
+		ordinals[i] = seen[role]
+		latest[role] = i
 	}
 	phaseWidth := 0
 	for _, step := range steps {
@@ -208,6 +213,9 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 		if s.round > 0 {
 			details = append(details, fmt.Sprintf("round %d", s.round))
 		}
+		if counts[s.Role] > 1 && s.round == 0 && ordinals[i] > 0 {
+			details = append(details, fmt.Sprintf("#%d", ordinals[i]))
+		}
 		if counts[s.Role] > 1 && latest[s.Role] == i {
 			details = append(details, fmt.Sprintf("x%d", counts[s.Role]))
 		}
@@ -220,7 +228,7 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 		}
 		tokens := "-"
 		if s.usageKnown {
-			tokens = fmt.Sprintf("%d", s.tokens)
+			tokens = compactTokens(s.tokens)
 		}
 		usage := fmt.Sprintf("tokens %s  %s", tokens, cost)
 		running := s.live && s.Phase == "start"
@@ -236,10 +244,11 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 					round++
 				}
 			}
-			failure := fmt.Sprintf("    ✗ gate FAIL -> implementer round %d", round+1)
-			if task := treeText(s.Task); task != "" {
-				failure += ": " + task
+			cross := "✗"
+			if m.cfg.ASCII {
+				cross = "x"
 			}
+			failure := fmt.Sprintf("    %s gate FAIL -> implementer round %d", cross, round+1)
 			lines = append(lines, prefix+style.Render(treeClip(failure, available)))
 		}
 		// A running node has no tokens line until its first usage event (S146).
@@ -388,4 +397,16 @@ func ledgerWaiting(r slicercli.RelayRun) bool {
 		}
 	}
 	return r.Counts.Waiting > 0
+}
+
+func compactTokens(n int) string {
+	if n < 1000 {
+		return fmt.Sprint(n)
+	}
+	tenths := (n + 50) / 100
+	if tenths < 10000 {
+		return fmt.Sprintf("%d.%dk", tenths/10, tenths%10)
+	}
+	m := (n + 50000) / 100000
+	return fmt.Sprintf("%d.%dM", m/10, m%10)
 }

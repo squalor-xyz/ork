@@ -141,7 +141,7 @@ func TestQueuedRolesShowAsQueued(t *testing.T) {
 func TestRepeatedRolesShowTheirCountAndTheGateFailLine(t *testing.T) {
 	h := treeHarness(t, []slicercli.RelayRun{{ID: "one", State: "active", Steps: []slicercli.Step{{Role: "implementer", Phase: "done"}, {Role: "gate", Phase: "fail", Task: "mutation stayed green"}, {Role: "implementer", Phase: "start"}}}}, "")
 	v := treePaneView(h.m, 120, 60)
-	for _, want := range []string{"x2", "✗ gate FAIL -> implementer round 2: mutation stayed green"} {
+	for _, want := range []string{"x2", "✗ gate FAIL -> implementer round 2"} {
 		if !strings.Contains(v, want) {
 			t.Fatal(v)
 		}

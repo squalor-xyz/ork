@@ -237,7 +237,7 @@ func TestFailedStepKeepsItsTask(t *testing.T) {
 			if len(lines) != wantLines || lines[len(lines)-1] != h.m.cfg.Theme.Dim.Render("    Tests failed") {
 				t.Fatalf("failed %s lost its task: %v", role, lines)
 			}
-			if role == "gate" && !strings.Contains(sgr.ReplaceAllString(lines[1], ""), "gate FAIL -> implementer round 1: Tests failed") {
+			if role == "gate" && sgr.ReplaceAllString(lines[1], "") != "    ✗ gate FAIL -> implementer round 1" {
 				t.Fatalf("gate FAIL line missing: %v", lines)
 			}
 		})
@@ -583,5 +583,113 @@ func TestWaitPipelineAndStageBarStayStatic(t *testing.T) {
 	}
 	if text := h.m.pipeline(steps, false, true); !strings.Contains(text, "waiting") || strings.Contains(text, "[") {
 		t.Fatalf("waiting pipeline: %s", text)
+	}
+}
+
+func TestTokenCountsCompact(t *testing.T) {
+	for _, tc := range []struct {
+		n    int
+		want string
+	}{{0, "0"}, {999, "999"}, {1000, "1.0k"}, {23849, "23.8k"}, {23850, "23.9k"}, {999949, "999.9k"}, {999950, "1.0M"}, {1250000, "1.3M"}} {
+		if got := compactTokens(tc.n); got != tc.want {
+			t.Errorf("%d: got %s, want %s", tc.n, got, tc.want)
+		}
+	}
+}
+
+func TestTokenCountsShowCompactInPaneAndOverview(t *testing.T) {
+	h := treeHarness(t, nil, liveDetailEngine)
+	for _, tc := range []struct {
+		n    int
+		want string
+	}{{23849, "23.8k"}, {999, "999"}} {
+		steps := []runTreeStep{{Step: slicercli.Step{Role: "implementer", Phase: "done"}, hasUsage: true, usageKnown: true, costKnown: true, tokens: tc.n, cost: .25}}
+		pane := strings.Join(h.m.runTreeLines(steps, 120, 0), "\n")
+		if !strings.Contains(pane, "tokens "+tc.want+"  $0.25") {
+			t.Errorf("pane: %s", pane)
+		}
+		h.m.byName["ork"].snap.EngineRuns[0].Tokens = tc.n
+		_, rows := h.m.rows()
+		if got := rowText(rows[0], 400); !strings.Contains(got, "tokens "+tc.want) {
+			t.Errorf("overview: %s", got)
+		}
+		if got := rows[0].text; !strings.Contains(got, "tokens "+tc.want) {
+			t.Errorf("overview text: %s", got)
+		}
+		if got := rows[0].run.tokens; got != "tokens "+tc.want {
+			t.Errorf("two-line overview: %s", got)
+		}
+	}
+}
+
+func TestAsciiGateVerdictHasNoUnicode(t *testing.T) {
+	h := treeHarness(t, nil, treeEngine)
+	steps := []runTreeStep{{Step: slicercli.Step{Role: "implementer", Phase: "done"}}, {Step: slicercli.Step{Role: "gate", Phase: "fail"}}}
+	for _, ascii := range []bool{true, false} {
+		h.m.cfg.ASCII = ascii
+		line := sgr.ReplaceAllString(h.m.runTreeLines(steps, 100, 0)[2], "")
+		glyph := "✗"
+		if ascii {
+			glyph = "x"
+			for _, b := range []byte(line) {
+				if b >= 128 {
+					t.Errorf("non-ASCII verdict: %q", line)
+					break
+				}
+			}
+		}
+		if !strings.HasPrefix(line, "    "+glyph+" gate FAIL -> implementer round 2") {
+			t.Errorf("verdict: %q", line)
+		}
+	}
+}
+
+func TestTailKeepsMarkdownRaw(t *testing.T) {
+	if got := strings.Join(tailRows("# Title\n**bold** and `code`", 80, false), "\n"); got != "# Title\n**bold** and `code`" {
+		t.Fatal(got)
+	}
+}
+
+func TestRepeatedRoleStepsShowTheirOrdinal(t *testing.T) {
+	h := treeHarness(t, nil, treeEngine)
+	steps := ledgerTreeSteps([]slicercli.Step{{ID: "o", Role: "orchestrator", Phase: "start"}, {ID: "i1", Parent: "o", Role: "implementer", Phase: "done"}, {ID: "child", Parent: "i1", Role: "implementer", Phase: "done"}, {ID: "r", Parent: "o", Role: "reviewer", Phase: "done"}, {ID: "i2", Parent: "o", Role: "implementer", Phase: "done"}})
+	lines := h.m.runTreeLines(steps, 120, 0)
+	for i, want := range map[int]string{1: "#1", 4: "#2 x2"} {
+		if !strings.Contains(lines[i], want) {
+			t.Errorf("missing %s: %v", want, lines)
+		}
+	}
+	for _, i := range []int{0, 2, 3} {
+		if strings.ContainsAny(lines[i], "#") || strings.Contains(lines[i], "x2") {
+			t.Errorf("nonrepeated lane: %s", lines[i])
+		}
+	}
+	steps[4].round = 2
+	line := h.m.runTreeLines(steps, 120, 0)[4]
+	if !strings.Contains(line, "round 2") || strings.Contains(line, "#") {
+		t.Fatal(line)
+	}
+}
+
+func TestRunTreeFixRoundGoldens(t *testing.T) {
+	runs := treeFixture(t, "relay-run-tree.json")[:1]
+	runs[0].Steps = []slicercli.Step{{ID: "o", Role: "orchestrator", Phase: "start"}, {ID: "i1", Parent: "o", Role: "implementer", Phase: "done", Task: "Build the feature"}, {ID: "r", Parent: "o", Role: "reviewer", Phase: "done", Task: "Review the feature"}, {ID: "g", Parent: "o", Role: "gate", Phase: "fail", Task: "Fix the rollback test"}, {ID: "i2", Parent: "o", Role: "implementer", Phase: "start", Task: "Repair the rollback test"}}
+	for _, size := range [][2]int{{80, 24}, {100, 30}} {
+		h := treeHarness(t, runs, "")
+		h.m.cfg.Theme = NewTheme(true)
+		h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+		lines := h.m.runTreeLines(h.m.paneSteps(), size[0], 0)
+		for i, line := range lines {
+			plain := stripANSI(line)
+			if strings.Contains(plain, "gate FAIL") {
+				if strings.TrimSpace(plain) != "✗ gate FAIL -> implementer round 2" {
+					t.Errorf("gate verdict must omit the reason: %q", plain)
+				}
+				if i+1 >= len(lines) || lines[i+1] != "  "+h.m.cfg.Theme.Dim.Render("    Fix the rollback test") {
+					t.Errorf("gate reason must stay on its dim task line: %v", lines)
+				}
+			}
+		}
+		checkGolden(t, fmt.Sprintf("runtree-fix-round-%dx%d-mono-true.txt", size[0], size[1]), h.m.View().Content)
 	}
 }

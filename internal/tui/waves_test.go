@@ -1370,7 +1370,7 @@ func TestWavesFix1NoticesHintsAndHelp(t *testing.T) {
 		t.Fatal("plain row hint changed")
 	}
 	help := sgr.ReplaceAllString(strings.Join(h.m.helpLines(100, 40), "\n"), "")
-	if !strings.Contains(help, "Waves: A shows all waves. <S65: shares files with S65, an earlier item.") {
+	if !strings.Contains(help, "Waves: A shows all waves. A again shows first 3. <S65: shares files with S65, an earlier item.") {
 		t.Fatal(help)
 	}
 }
@@ -1501,5 +1501,91 @@ func TestWavesStartRefusalKeepsTheTicks(t *testing.T) {
 	h.deliver(press("y"))
 	if !strings.Contains(h.m.actionStatus, text) || !strings.Contains(strings.Join(strings.Fields(strings.ReplaceAll(h.view(), "│", " ")), " "), text) || h.m.view != wavesView || len(l.starts) != 1 || len(h.m.waves.picked) != 2 || h.m.waves.starting || len(h.m.waves.launched) != 0 {
 		t.Fatalf("status %q picked %+v\n%s", h.m.actionStatus, h.m.waves.picked, h.view())
+	}
+}
+
+func TestWavesConflictMarkerHangIndents(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.details = map[string]*slicercli.Detail{"A": {Slice: &slicercli.Spec{Sections: []slicercli.Section{{Heading: "Files", Body: "- `internal/engine/a.go`"}}}}, "B": {Slice: &slicercli.Spec{Sections: []slicercli.Section{{Heading: "Files", Body: "- `cmd/ork/main.go`"}}}}}
+	twoWaveItems(t, h)
+	h.m.waves.overlap = nil
+	lines := h.m.wavesBody(38).body
+	start := -1
+	for i, line := range lines {
+		if strings.HasPrefix(stripANSI(line), "  ! engine conflict") {
+			start = i
+			break
+		}
+	}
+	if start < 0 || start+1 >= len(lines) {
+		t.Fatalf("no wrapped marker: %v", lines)
+	}
+	for _, line := range lines[start+1:] {
+		if !strings.HasPrefix(stripANSI(line), "    ") {
+			t.Errorf("continuation must hang-indent: %q", stripANSI(line))
+		}
+	}
+}
+
+func TestWavesAKeyTogglesBackToThreeWaves(t *testing.T) {
+	for _, unplaced := range []bool{false, true} {
+		for _, selected := range []string{"S2", "S3b", "S4", "S5", "D", "E"} {
+			if !unplaced && (selected == "D" || selected == "E") {
+				continue
+			}
+			t.Run(fmt.Sprintf("unplaced-%t/%s", unplaced, selected), func(t *testing.T) {
+				h, l := wavesHarness(t)
+				l.suggest.Waves = nil
+				l.suggest.Unplaced = nil
+				if unplaced {
+					l.suggest.Unplaced = []slicercli.ParallelItem{{ID: "D", Title: "Unplaced D"}, {ID: "E", Title: "Unplaced E"}}
+				}
+				for i := 1; i <= 5; i++ {
+					l.suggest.Waves = append(l.suggest.Waves, struct {
+						Wave  int                      `json:"wave"`
+						Items []slicercli.ParallelItem `json:"items"`
+					}{Wave: i, Items: []slicercli.ParallelItem{{ID: fmt.Sprintf("S%d", i), Title: "Feature"}}})
+				}
+				l.suggest.Waves[2].Items = append(l.suggest.Waves[2].Items, slicercli.ParallelItem{ID: "S3b", Title: "Last visible wave item"})
+				openWaves(t, h)
+				h.deliver(press("A"))
+				extra := 0
+				if unplaced {
+					extra = 2
+				}
+				if len(h.m.waves.rows()) != 6+extra {
+					t.Fatal("expand failed")
+				}
+				if !strings.Contains(strings.Join(h.m.wavesBody(80).body, "\n"), "[A] show first 3") {
+					t.Error("missing collapse hint")
+				}
+				found := false
+				for i, row := range h.m.waves.rows() {
+					if row.ID == selected {
+						h.m.waves.cursor = i
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Fatalf("missing selected fixture item %s", selected)
+				}
+				h.deliver(press("A"))
+				rows := h.m.waves.rows()
+				if len(rows) != 4+extra || h.m.waves.showAll {
+					t.Fatalf("collapse failed: %d rows", len(rows))
+				}
+				want := selected
+				if selected == "S4" || selected == "S5" {
+					want = "S3b"
+				}
+				if h.m.waves.cursor < 0 || h.m.waves.cursor >= len(rows) || rows[h.m.waves.cursor].ID != want {
+					t.Fatalf("cursor=%d, want %s", h.m.waves.cursor, want)
+				}
+				if !strings.Contains(strings.Join(h.m.wavesBody(80).body, "\n"), "2 more waves; [A] show all") {
+					t.Error("missing expand hint")
+				}
+			})
+		}
 	}
 }

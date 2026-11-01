@@ -174,7 +174,7 @@ func (w *wavesState) rows() []slicercli.ParallelItem {
 	return rows
 }
 
-// visibleWaves is how many of plan's waves show: all after [A], else three.
+// visibleWaves is how many of plan's waves show: [A] toggles all and three.
 func (w *wavesState) visibleWaves(plan *slicercli.ParallelPlan) int {
 	if w.showAll {
 		return len(plan.Waves)
@@ -773,6 +773,8 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 				noun = "wave"
 			}
 			add(th.Dim.Render(fmt.Sprintf("%d more %s; [A] show all", n, noun)))
+		} else if w.showAll && len(plan.Waves) > 3 {
+			add(th.Dim.Render("[A] show first 3"))
 		}
 		if len(plan.Unplaced) > 0 {
 			rule("Unplaced", len(plan.Unplaced))
@@ -789,7 +791,13 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 		add("No suggested items")
 	}
 	if conflict := w.engineConflict(); conflict != "" {
-		add("! " + conflict)
+		for i, line := range wrapText("! "+conflict, max(width-2-2, 1)) {
+			prefix := indent
+			if i > 0 {
+				prefix += indent
+			}
+			out.body = append(out.body, prefix+line)
+		}
 	}
 	if w.overlapErr != nil {
 		add(actionError(w.overlapErr))

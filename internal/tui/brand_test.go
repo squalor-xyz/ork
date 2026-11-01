@@ -207,3 +207,20 @@ func TestBehindNoticeGolden(t *testing.T) {
 		checkGolden(t, fmt.Sprintf("behind-main-160x30-mono-%v.txt", mono), m.View().Content)
 	}
 }
+
+func TestBehindNoticeShortFallback(t *testing.T) {
+	m := goldenModel(NewTheme(true), 160, 30)
+	m.projects[0].snap.SelfHost, m.projects[0].snap.BehindMain = true, true
+	for w := 1; w <= 80; w++ {
+		got := stripANSI(m.statusLine(w))
+		if w >= 33 && w < 1+len(daemon.BehindNotice) && !strings.HasPrefix(got, " behind main: ork daemon restart") {
+			t.Errorf("width %d: %q", w, got)
+		}
+		if w >= 1+len(daemon.BehindNotice) && !strings.Contains(got, daemon.BehindNotice) {
+			t.Errorf("width %d lost full notice: %q", w, got)
+		}
+		if w < 33 && lipgloss.Width(got) > w {
+			t.Errorf("width %d overflow: %q", w, got)
+		}
+	}
+}

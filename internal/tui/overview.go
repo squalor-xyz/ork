@@ -394,9 +394,9 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 					continue
 				}
 				if ledger.Counts.Steps > 0 {
-					// A run that waits on the owner has nothing running to count.
+					// A stopped or owner-wait run has nothing running to count.
 					word := " running"
-					if ownerWaitState(r.State) {
+					if ownerWaitState(r.State) || r.State == "stopped" {
 						word = ""
 					}
 					parts = append(parts, fmt.Sprintf("%d of %d steps%s", ledger.Counts.Running, ledger.Counts.Steps, word))
@@ -452,7 +452,7 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 					row.run = m.engineRunRow(s, r, ledger, steps)
 				}
 				if r.UsageKnown || r.Tokens != 0 {
-					tokenText := fmt.Sprintf("tokens %d", r.Tokens)
+					tokenText := "tokens " + compactTokens(r.Tokens)
 					// Trailing cells drop first: tokens, pipeline, heard, then bar. A heard
 					// cue (! or !!) outlasts the bar (rowText).
 					row.stepParts = append(row.stepParts, relayRowPart{header: tokenText, text: tokenText})
@@ -966,7 +966,7 @@ func (m *Model) newRunRow(id, title string, ledger slicercli.RelayRun, steps []r
 func (m *Model) engineRunRow(s source.Snapshot, r source.EngineRun, ledger slicercli.RelayRun, steps []runTreeStep) *runRow {
 	rr := m.newRunRow(r.Item, sliceTitle(s.Items.Value, r.Item), ledger, steps)
 	if r.UsageKnown || r.Tokens != 0 {
-		rr.tokens = fmt.Sprintf("tokens %d", r.Tokens)
+		rr.tokens = "tokens " + compactTokens(r.Tokens)
 	}
 	rr.role, rr.stateOnly = r.State, true
 	for _, role := range r.Roles {

@@ -180,8 +180,8 @@ func (m *Model) screen() string {
 		}
 		if m.pane != nil {
 			// The pane opens inline under its row (S106), so it takes no
-			// detail lines. At standard terminal heights retain six Overview
-			// rows; tiny terminals still give the pane's input and errors their
+			// detail lines. At standard terminal heights a fitting pane retains
+			// six Overview rows; tiny terminals give the pane's input and errors their
 			// priority, and leave its row and the scroll markers a line each.
 			paneHeight := max(h-7, 1)
 			if h+hintRows >= 24 { // a terminal of 24 rows or more
@@ -571,6 +571,9 @@ func (m *Model) statusLine(w int) string {
 	}
 	notices := 0 // the daemon notice, which stays first
 	if notice := daemon.BehindWarning(status); notice != "" {
+		if lipgloss.Width(" "+notice) > w {
+			notice = "behind main: ork daemon restart"
+		}
 		fields = append([]string{m.cfg.Theme.Warn.Render(notice)}, fields...)
 		notices = 1
 	} else if (m.cfg.BuildID != "" || m.cfg.DaemonBuild != "") && daemon.StaleBuild(m.cfg.BuildID, m.cfg.DaemonBuild) {
@@ -708,7 +711,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 	th := m.cfg.Theme
 	lines := []string{th.Heading.Render("Keys")}
 	if m.view == wavesView {
-		lines = append(lines, wrapText("Waves: A shows all waves. <S65: shares files with S65, an earlier item.", max(w, 1))...)
+		lines = append(lines, wrapText("Waves: A shows all waves. A again shows first 3. <S65: shares files with S65, an earlier item.", max(w, 1))...)
 	}
 	if m.view == decisionsView {
 		lines = append(lines, wrapText("Decisions: left/right switch tabs; [ and ] switch projects or entries.", max(w, 1))...)

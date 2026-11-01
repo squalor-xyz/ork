@@ -1460,3 +1460,49 @@ func TestFallbackPaneOnTheRunningEntrySitsUnderASelectedRecentRow(t *testing.T) 
 		t.Fatalf("the pane must be directly under the Recent row (row %d, title %d):\n%s", row, title, v)
 	}
 }
+
+func TestInlinePaneKeepsSixOverviewRowsAtHeight24(t *testing.T) {
+	h := treeHarness(t, treeFixture(t, "relay-run-tree.json"), "")
+	s := h.m.byName["ork"].snap
+	s.Open.Value = []adjcli.Record{openRec(1, "storage.one", "First question")}
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	view := stripANSI(h.m.View().Content)
+	lines := mainLines(view)
+	at := lineWith(lines, 0, "Run tree")
+	if at < 0 {
+		t.Fatal("pane missing")
+	}
+	above := lines[2:at]
+	if len(above) != 6 || strings.Contains(strings.Join(above, "\n"), "lines above") {
+		t.Fatalf("want six Overview lines without a scroll marker above the fitting pane:\n%s", view)
+	}
+}
+
+func TestInlinePaneOverflowKeepsFourOverviewLinesAtHeight24(t *testing.T) {
+	h := treeHarness(t, treeFixture(t, "relay-run-tree.json"), "")
+	s := h.m.byName["ork"].snap
+	for i := 1; i <= 8; i++ {
+		s.Open.Value = append(s.Open.Value, openRec(i, fmt.Sprintf("storage.question%d", i), fmt.Sprintf("Question %d", i)))
+	}
+	for i := range 12 {
+		s.Runs.Value[0].Steps = append(s.Runs.Value[0].Steps, slicercli.Step{ID: fmt.Sprintf("extra-%d", i), Parent: "root", Role: "helper", Phase: "done"})
+	}
+	h.m.apply(snapshotMsg{name: "ork", snap: s})
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	view := stripANSI(h.m.View().Content)
+	lines := mainLines(view)
+	at := lineWith(lines, 0, "Run tree")
+	if at < 0 {
+		t.Fatal("pane missing")
+	}
+	above := lines[2:at]
+	if len(above) != 5 || strings.TrimSpace(above[0]) != "+9 lines above" {
+		t.Fatalf("want one scroll marker and four Overview lines above the overflowing pane:\n%s", view)
+	}
+	for _, line := range above[1:] {
+		if strings.Contains(line, "lines above") {
+			t.Fatalf("extra scroll marker: %q", line)
+		}
+	}
+}
