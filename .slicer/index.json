@@ -10481,7 +10481,7 @@
       "id": "S188",
       "title": "CLI wording and polish: doctor hints, spec sitting and adj prompts",
       "short_title": "CLI wording and polish sweep",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -10517,7 +10517,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

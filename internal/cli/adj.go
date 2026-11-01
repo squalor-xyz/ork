@@ -94,13 +94,13 @@ func (a *App) adjAnswer(ctx context.Context, o *output, args []string) int {
 	if o.json {
 		prompts = o.stderr
 	}
-	fmt.Fprintf(prompts, "#%d %s\n", record.ID, record.Title)
+	fmt.Fprintf(prompts, "#%d %s\n", record.ID, plainLine(record.Title))
 	for _, opt := range record.Options {
 		suffix := ""
 		if record.Recommendation != nil && record.Recommendation.Label == opt.Label {
 			suffix = " (recommended)"
 		}
-		fmt.Fprintf(prompts, "  %s: %s%s\n", opt.Label, opt.Summary, suffix)
+		fmt.Fprintf(prompts, "  %s: %s%s\n", plainLine(opt.Label), plainLine(opt.Summary), suffix)
 	}
 	answer := p.Option
 	if answer == "" {
@@ -111,7 +111,7 @@ func (a *App) adjAnswer(ctx context.Context, o *output, args []string) int {
 	if input == nil {
 		input = os.Stdin
 	}
-	line, err := bufio.NewReader(input).ReadString('\n')
+	line, err := readLine(bufio.NewReader(input), prompts)
 	if err != nil && err != io.EOF {
 		return o.failErr(err)
 	}

@@ -231,11 +231,13 @@ Press `y` at the confirmation to start (`docs/dashboard.md:1374-1402`,
 It asks `Well specified?` and `Split?`, prints the plan, and runs the spec
 check before asking `Start this slice? [y/N]`. Answer each spec question
 with an option number or text. An empty line or end of input holds the
-slice and exits 1. A failed check also blocks launch.
+slice and exits 1. A failed check also blocks launch. Real spec-check failures
+carry the `spec check failed: ` prefix in text mode; refusals do not.
 For a script, give `--yes --well-specified y/n --split y/n`; `--yes`
 still runs the spec check. With `--json`, the sitting goes to stderr and
 stdout holds one result. A held slice returns
-`{"started":false,"held":["ID"]}` (`internal/cli/run.go`).
+`{"started":false,"held":["ID"]}`; declining the start returns
+`{"started":false,"held":[]}` (`internal/cli/run.go`).
 
 For example, to use a Codex primary with a Claude fallback for this run:
 

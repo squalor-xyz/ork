@@ -250,3 +250,47 @@ func TestAdjAnswerJSONCancellation(t *testing.T) {
 		})
 	}
 }
+
+func adjPolishOutput(t *testing.T, title, label, summary string) string {
+	t.Helper()
+	snapshot := fmt.Sprintf(`{"open":{"value":[{"id":12,"status":"open","title":%s,"options":[{"label":%s,"summary":%s}]}]}}`, quoteJSON(t, title), quoteJSON(t, label), quoteJSON(t, summary))
+	app := &App{Input: strings.NewReader("n"), Getenv: func(string) string { return "Jon" }, Call: func(_ context.Context, m string, p, r any) error {
+		if m != "snapshot" {
+			t.Fatalf("unexpected write %s", m)
+		}
+		return json.Unmarshal([]byte(snapshot), r)
+	}}
+	code, out, errs := run(t, app, "adj", "answer", "P", "12", "--text", "answer")
+	if code != 0 {
+		t.Fatal(code, out, errs)
+	}
+	return out
+}
+func quoteJSON(t *testing.T, s string) string {
+	t.Helper()
+	b, err := json.Marshal(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
+}
+
+func TestAdjAnswerFiltersControlCharactersInRecordText(t *testing.T) {
+	out := adjPolishOutput(t, "Visible\x1b[31m title\x07\u0085", "a\x1b[31m", "Visible\rsummary\u009f")
+	for _, r := range out {
+		if r == '\x1b' || r == '\x07' || r == '\r' || (r >= 0x80 && r <= 0x9f) {
+			t.Errorf("control %U in %q", r, out)
+		}
+	}
+	for _, want := range []string{"Visible title", "a: Visible summary"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q: %q", want, out)
+		}
+	}
+}
+func TestAdjAnswerCancelledStartsOnANewLineAtEOF(t *testing.T) {
+	out := adjPolishOutput(t, "Title", "a", "Summary")
+	if !strings.Contains(out, "[y/N] \ncancelled") {
+		t.Errorf("out %q", out)
+	}
+}

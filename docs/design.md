@@ -1108,7 +1108,8 @@ ork wave suggest P          slicer's suggested waves, in order, with reasons
 ork wave start P ITEM...    check the specs, then launch (asks unless --yes)
 ork run P ID                show a plan, check the spec, then launch one slice
 ork approve RUN             finish a passed slice, commit and land it
-ork check RUN N [STATE]     mark human check N: ticked (the default), later or open
+ork check RUN N [STATE]     mark human check N: ticked (the default),
+                            later or open
 ork fix RUN TEXT            send a fix note to a fix round
 ork answer RUN TEXT         answer an owner question
 ork file RUN N              file a later finding through the daemon
@@ -1126,8 +1127,8 @@ ork roles matrix P          show the role matrix as slicer prints it, then
                             which rows ork uses, skips or does not run (S168)
 ork projects add|list|rm|set|pin|unpin
                             manage the registry
-ork doctor [--upgrade]      check versions, CLIs, logins, contract, ork path, projects;
-                            print upgrade commands (S178)
+ork doctor [--upgrade]      check versions, CLIs, logins, contract, ork path,
+                            projects; print upgrade commands (S178)
 ```
 
 S03 ships `status`, `projects`, `roles print` and `doctor`
@@ -1244,8 +1245,9 @@ still prevents planning. `ork run` and the TUI launch confirm show the note
 under the plan rows (S159, *proposed*).
 Start and owner commands return the run record. With `--json`, run prints
 the plan on stderr and a single result JSON value on stdout; declining
-prints `{"started":false}` on stdout. Interactive questions go on stderr
-in JSON mode.
+prints `{"started":false,"held":[]}` on stdout. Interactive questions go on
+stderr in JSON mode. Real spec-check failures carry the `spec check failed: `
+prefix in text mode; refusals do not.
 
 *Proposed (S172):* `ork adj answer PROJECT ID (--option LABEL | --text TEXT)`
 reads the project's open records, prints `#ID Title` and the options, marks
@@ -1436,19 +1438,24 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   contract line is older than the lowest accepted version (slicer is behind),
   when it is newer than the highest (ork is behind), when a slicer checkout
   is behind its upstream, or when slicer or adj is missing; `--upgrade`
-  prints all three whether or not anything is behind. Text prints
-  `[upgrade] TOOL  REASON`, an optional `note:` line, then each command on its
-  own line, indented, after the contract line. slicer: a checkout gets
-  `git -C DIR pull --ff-only` and `DIR/.venv/bin/pip install -e DIR`, a venv
-  gets `V/bin/pip install --upgrade squalor-slicer`. adj and ork get a pull
-  and the documented build with the installed path filled in and the checkout
-  named as a placeholder (`ADJ_CHECKOUT`, `ORK_CHECKOUT`), and ork also gets
-  `ork daemon restart` by its installed path. A source that is not recognized
-  gets a `note` naming the sibling README section and no commands. Doctor
-  reads only local facts: symlinks, build information, and `git -C DIR`
-  `rev-parse`, `describe` and `rev-list`. It never fetches, pulls, builds,
-  makes a network call or runs a printed command, and a hint never changes the
-  exit code;
+  prints all three whether or not anything is behind. Contract reasons say
+  `older than the versions ork accepts (v10, v11)` or
+  `newer than the versions ork accepts (v10, v11)`. With `--upgrade`, a
+  current slicer or adj reason includes `(installed: VERSION)` when known.
+  Text prints `[upgrade] TOOL  REASON`, an optional `note:` line, then each
+  command on its own line, indented, after the contract line. slicer: a checkout
+  gets `git -C DIR pull --ff-only` and `DIR/.venv/bin/pip install -e DIR`, a
+  venv gets `V/bin/pip install --upgrade squalor-slicer`, with the note `PyPI
+  install assumed; a checkout venv needs git pull and pip install -e`.
+  Recognising checkout venvs outside `.venv` is not part of this hint. adj and
+  ork get a pull and the documented build with the installed path filled in and
+  the checkout named as a placeholder (`ADJ_CHECKOUT`, `ORK_CHECKOUT`), and ork
+  also gets `ork daemon restart` by its installed path. A source that is not
+  recognized gets a `note` naming the sibling README section and no commands.
+  Doctor reads only local facts: symlinks, build information, and `git -C DIR`
+  `rev-parse`, `describe` and `rev-list`. It never fetches, pulls, builds, makes
+  a network call or runs a printed command, and a hint never changes the exit
+  code;
 - the slicer contract: the `contract` string of `slicer ai relay --json --root
   ROOT` against the accepted set (`roles.AcceptedContracts`, v10 and v11;
   `boundary.contract-set`, adj 175). Any other version fails. The check runs

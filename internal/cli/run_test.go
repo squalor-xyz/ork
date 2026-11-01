@@ -833,3 +833,22 @@ func TestRunPlanSaysAfterLanding(t *testing.T) {
 		t.Fatal(out.String())
 	}
 }
+
+func TestRunDeclineJSONHasAnEmptyHeldArray(t *testing.T) {
+	code, out, errs, stub := singleSpecRun(t, "n", `{"items":[{"item":"S1","ready":true}]}`, nil, "--json")
+	var value map[string]any
+	if err := json.Unmarshal([]byte(out), &value); err != nil {
+		t.Fatal(err)
+	}
+	if code != 0 || len(stub.started) != 0 || value["started"] != false || !reflect.DeepEqual(value["held"], []any{}) {
+		t.Fatalf("code %d out %s err %s", code, out, errs)
+	}
+}
+
+func TestRunHeldLineStartsOnItsOwnLineAtEOF(t *testing.T) {
+	check := `{"items":[{"item":"S1","questions":[{"text":"Question?"}]}]}`
+	code, out, errs, _ := singleSpecRun(t, "", check, nil, "--yes")
+	if code != 1 || !strings.Contains(out, "): \nheld: S1 has 1 open spec question") {
+		t.Fatalf("code %d out %q err %s", code, out, errs)
+	}
+}

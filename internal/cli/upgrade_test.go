@@ -4,6 +4,7 @@ package cli
 
 import (
 	"debug/buildinfo"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -335,7 +336,7 @@ func TestDoctorHintsWhenSlicerContractIsOlder(t *testing.T) {
 	}
 	d := env.slicerD
 	for _, want := range []string{
-		"[upgrade] slicer  slicer prints relay v9, older than ork accepts (v10, v11)\n",
+		"[upgrade] slicer  slicer prints relay v9, older than the versions ork accepts (v10, v11)\n",
 		"\n  git -C " + shellWord(d) + " pull --ff-only\n",
 		"\n  " + shellWord(d+"/.venv/bin/pip") + " install -e " + shellWord(d) + "\n",
 	} {
@@ -398,7 +399,7 @@ func TestDoctorHintsWhenSlicerContractIsNewer(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, want := range []string{
-		"[upgrade] ork  slicer prints relay v12, newer than ork accepts (v10, v11)\n",
+		"[upgrade] ork  slicer prints relay v12, newer than the versions ork accepts (v10, v11)\n",
 		"\n  go -C ORK_CHECKOUT build -o " + shellWord(bin) + " ./cmd/ork\n",
 		"\n  " + shellWord(bin) + " daemon restart\n",
 	} {
@@ -685,5 +686,126 @@ func TestDoctorUpgradeFlagTakesNoValue(t *testing.T) {
 	code, _, stderr := run(t, env.app, "doctor", "--upgrade", "extra")
 	if code != 2 || !strings.Contains(stderr, "takes no arguments") {
 		t.Fatalf("exit %d: %s", code, stderr)
+	}
+}
+
+func TestContractDirectionFollowsTheAcceptedSet(t *testing.T) {
+	old := acceptedContracts
+	acceptedContracts = func() []int { return []int{20, 21} }
+	t.Cleanup(func() { acceptedContracts = old })
+	for _, tc := range []struct {
+		line         string
+		dir, version int
+	}{
+		{"Contract: relay v19", -1, 19}, {"Contract: relay v22", 1, 22}, {"Contract: relay v20", 0, 20}, {"Contract: relay v21", 0, 21}, {"other", 0, 0},
+	} {
+		d, v := contractDirection(tc.line)
+		if d != tc.dir || v != tc.version {
+			t.Errorf("%s: (%d,%d), want (%d,%d)", tc.line, d, v, tc.dir, tc.version)
+		}
+	}
+	if got := acceptedList(); got != "v20, v21" {
+		t.Errorf("accepted list %q", got)
+	}
+}
+
+func TestDoctorReasonsNameTheVersionsOrkAccepts(t *testing.T) {
+	for _, tc := range []struct{ version, tool, direction string }{{"9", "slicer", "older"}, {"12", "ork", "newer"}} {
+		env := setupUpgrade(t, upOpts{contract: "Contract: relay v" + tc.version})
+		_, d, _ := env.json(t)
+		want := "slicer prints relay v" + tc.version + ", " + tc.direction + " than the versions ork accepts (v10, v11)"
+		if len(d.Upgrade) != 1 || d.Upgrade[0].Tool != tc.tool || d.Upgrade[0].Reason != want {
+			t.Errorf("hints %+v want %q", d.Upgrade, want)
+		}
+	}
+}
+
+func TestDoctorUpgradeReasonShowsTheInstalledVersion(t *testing.T) {
+	env := setupUpgrade(t, upOpts{})
+	code, d, raw := env.json(t, "--upgrade")
+	if code != 0 {
+		t.Fatal(raw)
+	}
+	for _, name := range []string{"slicer", "adj", "ork"} {
+		var version string
+		var value struct {
+			Tools []struct{ Name, Version string }
+		}
+		if err := json.Unmarshal([]byte(raw), &value); err != nil {
+			t.Fatal(err)
+		}
+		for _, tool := range value.Tools {
+			if tool.Name == name {
+				version = tool.Version
+			}
+		}
+		want := "requested with --upgrade"
+		if name != "ork" {
+			if version == "" {
+				t.Fatal("fixture has no version")
+			}
+			want += " (installed: " + version + ")"
+		}
+		count := 0
+		for _, hint := range d.Upgrade {
+			if hint.Tool == name {
+				count++
+				if hint.Reason != want {
+					t.Errorf("%s reason %q, want %q", name, hint.Reason, want)
+				}
+			}
+		}
+		if count != 1 {
+			t.Errorf("%s: got %d hints, want exactly one", name, count)
+		}
+	}
+	hints := buildHints(DoctorReport{Tools: []toolCheck{{Name: "slicer", Present: true}, {Name: "adj", Present: true}}}, true)
+	for _, hint := range hints {
+		if hint.Reason != "requested with --upgrade" {
+			t.Errorf("empty version: %+v", hint)
+		}
+	}
+}
+
+func TestDoctorCheckoutPlaceholdersUseOneForm(t *testing.T) {
+	if got := orkHint("/ork", "r").Note; got != "ORK_CHECKOUT = your checkout" {
+		t.Errorf("ork note %q", got)
+	}
+	if got := adjHint(toolCheck{Present: true, Install: installGoBinary}, "r").Note; !strings.HasPrefix(got, "ADJ_CHECKOUT = your checkout") {
+		t.Errorf("adj note %q", got)
+	}
+}
+
+func TestDoctorVenvHintNotesThePyPIAssumption(t *testing.T) {
+	hint := slicerHint(toolCheck{Present: true, Install: installVenv, Resolved: "/venv/bin/slicer"}, "r")
+	if hint.Note != "PyPI install assumed; a checkout venv needs git pull and pip install -e" {
+		t.Errorf("note %q", hint.Note)
+	}
+	if !slices.Equal(hint.Commands, []string{"/venv/bin/pip install --upgrade squalor-slicer"}) {
+		t.Errorf("commands %q", hint.Commands)
+	}
+	if len("  note: "+hint.Note) > 80 {
+		t.Fatal("note exceeds 80 columns")
+	}
+}
+
+func TestDesignUsageBlockFitsEightyColumns(t *testing.T) {
+	data, err := os.ReadFile("../../docs/design.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for i, block := range strings.Split(string(data), "```") {
+		if i%2 == 1 && strings.Contains(block, "ork doctor [--upgrade]") {
+			found = true
+			for _, line := range strings.Split(block, "\n") {
+				if len([]rune(line)) > 80 {
+					t.Errorf("%d columns: %s", len([]rune(line)), line)
+				}
+			}
+		}
+	}
+	if !found {
+		t.Fatal("usage block not found")
 	}
 }

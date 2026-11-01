@@ -25,6 +25,9 @@ import (
 // readBuildInfo reads the Go build information of a binary. Tests replace it.
 var readBuildInfo = buildinfo.ReadFile
 
+// acceptedContracts lets tests exercise hints against a different accepted set.
+var acceptedContracts = roles.AcceptedContracts
+
 // The install kinds of toolCheck.Install.
 const (
 	installCheckout = "checkout"  // slicer: an editable install of a checkout
@@ -159,7 +162,7 @@ func readCheckout(ctx context.Context, git, dir string) *checkoutInfo {
 // there is no contract line to read).
 func contractDirection(found string) (dir, version int) {
 	v, _ := roles.CheckContractLine(found)
-	accepted := roles.AcceptedContracts()
+	accepted := acceptedContracts()
 	if v == 0 || len(accepted) == 0 {
 		return 0, v
 	}
@@ -174,7 +177,7 @@ func contractDirection(found string) (dir, version int) {
 
 func acceptedList() string {
 	var parts []string
-	for _, v := range roles.AcceptedContracts() {
+	for _, v := range acceptedContracts() {
 		parts = append(parts, fmt.Sprintf("v%d", v))
 	}
 	return strings.Join(parts, ", ")
@@ -202,7 +205,7 @@ func buildHints(rep DoctorReport, all bool) []upgradeHint {
 	case !slicer.Present:
 		reason = "not found on PATH"
 	case dir < 0:
-		reason = fmt.Sprintf("slicer prints relay v%d, older than ork accepts (%s)", version, acceptedList())
+		reason = fmt.Sprintf("slicer prints relay v%d, older than the versions ork accepts (%s)", version, acceptedList())
 	case slicer.Checkout != nil && slicer.Checkout.Behind > 0:
 		c := slicer.Checkout
 		upstream := c.Upstream
@@ -212,6 +215,9 @@ func buildHints(rep DoctorReport, all bool) []upgradeHint {
 		reason = fmt.Sprintf("%d %s behind %s as of its last fetch", c.Behind, plural(c.Behind, "commit"), upstream)
 	case all:
 		reason = "requested with --upgrade"
+		if slicer.Version != "" {
+			reason += " (installed: " + slicer.Version + ")"
+		}
 	}
 	if reason != "" {
 		hints = append(hints, slicerHint(slicer, reason))
@@ -224,6 +230,9 @@ func buildHints(rep DoctorReport, all bool) []upgradeHint {
 		reason = "not found on PATH"
 	case all:
 		reason = "requested with --upgrade"
+		if adj.Version != "" {
+			reason += " (installed: " + adj.Version + ")"
+		}
 	}
 	if reason != "" {
 		hints = append(hints, adjHint(adj, reason))
@@ -232,7 +241,7 @@ func buildHints(rep DoctorReport, all bool) []upgradeHint {
 	reason = ""
 	switch {
 	case dir > 0:
-		reason = fmt.Sprintf("slicer prints relay v%d, newer than ork accepts (%s)", version, acceptedList())
+		reason = fmt.Sprintf("slicer prints relay v%d, newer than the versions ork accepts (%s)", version, acceptedList())
 	case all:
 		reason = "requested with --upgrade"
 	}
@@ -252,6 +261,7 @@ func slicerHint(tc toolCheck, reason string) upgradeHint {
 			shellWord(filepath.Join(tc.Checkout.Dir, ".venv", "bin", "pip")) + " install -e " + dir,
 		}
 	case tc.Install == installVenv:
+		h.Note = "PyPI install assumed; a checkout venv needs git pull and pip install -e"
 		venv := filepath.Dir(filepath.Dir(tc.Resolved))
 		h.Commands = []string{shellWord(filepath.Join(venv, "bin", "pip")) + " install --upgrade squalor-slicer"}
 	case !tc.Present:
@@ -292,6 +302,6 @@ func orkHint(binary, reason string) upgradeHint {
 		"go -C ORK_CHECKOUT build -o " + bin + " ./cmd/ork",
 		bin + " daemon restart",
 	}
-	h.Note = "ORK_CHECKOUT is your ork checkout"
+	h.Note = "ORK_CHECKOUT = your checkout"
 	return h
 }

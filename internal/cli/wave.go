@@ -119,7 +119,7 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	}
 	ask := func(label, hint, def string) (string, error) {
 		fmt.Fprintf(prompts, "%s [%s]: ", label, hint)
-		line, err := reader.ReadString('\n')
+		line, err := readLine(reader, prompts)
 		if err != nil && err != io.EOF {
 			return "", err
 		}
@@ -248,7 +248,7 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 		ids = append(ids, item.Item)
 	}
 	var check daemon.SpecCheckResult
-	if code := a.call(ctx, o, daemon.MethodSpecCheck, daemon.SpecCheckParams{Project: params.Items[0].Project, Items: ids}, &check); code != ExitOK {
+	if code := a.callWith(ctx, o, "spec check failed: ", daemon.MethodSpecCheck, daemon.SpecCheckParams{Project: params.Items[0].Project, Items: ids}, &check); code != ExitOK {
 		return nil, code
 	}
 	if check.OwnerNeeded != "" {
@@ -315,30 +315,35 @@ func plural(n int, noun string) string {
 // the item back and returns nil.
 func askSpecQuestions(in *bufio.Reader, w io.Writer, r daemon.SpecItemResult) []string {
 	fmt.Fprintf(w, "%s needs %d %s before it can start.\n", r.Item, len(r.Questions), plural(len(r.Questions), "answer"))
+	printLine := func(format string, args ...any) {
+		for _, line := range wrapLines(fmt.Sprintf(format, args...), 80, "  ") {
+			fmt.Fprintln(w, line)
+		}
+	}
 	var answers []string
 	for i, q := range r.Questions {
-		fmt.Fprintf(w, "[%s %d/%d] ", r.Item, i+1, len(r.Questions))
+		prefix := fmt.Sprintf("[%s %d/%d] ", r.Item, i+1, len(r.Questions))
 		if q.Ask == nil {
-			fmt.Fprintf(w, "%s\n", q.Text)
+			printLine("%s%s", prefix, q.Text)
 			fmt.Fprintf(w, "Answer in text (empty holds %s back): ", r.Item)
 		} else {
-			fmt.Fprintf(w, "%s\n", q.Ask.Title)
+			printLine("%s%s", prefix, q.Ask.Title)
 			for n, o := range q.Ask.Options {
 				mark := ""
 				if n+1 == q.Ask.Recommend {
 					mark = " (recommended)"
 				}
-				fmt.Fprintf(w, "  %d. %s: %s%s\n", n+1, o.Label, o.Summary, mark)
+				printLine("  %d. %s: %s%s", n+1, o.Label, o.Summary, mark)
 			}
-			fmt.Fprintf(w, "  Why %d: %s\n", q.Ask.Recommend, q.Ask.Reason)
+			printLine("  Why %d: %s", q.Ask.Recommend, q.Ask.Reason)
 			if q.Key != "" {
-				fmt.Fprintf(w, "  Decision key: %s\n", q.Key)
+				printLine("  Decision key: %s", q.Key)
 			}
 			fmt.Fprintf(w, "Answer 1-%d, or type text (empty holds %s back): ", len(q.Ask.Options), r.Item)
 		}
 		answer := ""
 		for answer == "" {
-			line, err := in.ReadString('\n')
+			line, err := readLine(in, w)
 			line = strings.TrimSpace(line)
 			if line == "" {
 				if err == nil {

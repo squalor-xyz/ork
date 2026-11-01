@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-231 items · — 39 · done 166 · retired 26
+231 items · — 38 · done 167 · retired 26
 
 v1.2
 
@@ -87,7 +87,7 @@ v1.2
 | 30 | [S180](slices/S180.md) | Changelog conflict resolver | M | 2 |  | discovered from S165 | done |
 | 31 | S186 | S181 later notes: blocked refusal wording and an 80-column guard | S | - |  | Folded into S229 (daemon wording leftovers) and the S190 TUI sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row. · discovered from S181 | retired |
 | 32 | S187 | S166 later notes: launch replan edge case and lineup editor key polish | S | - |  | Folded into the S190 sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row. · discovered from S166 | retired |
-| 33 | [S188](slices/S188.md) | CLI wording and polish sweep | M | 2 |  | discovered from S178 | — |
+| 33 | [S188](slices/S188.md) | CLI wording and polish sweep | M | 2 |  | discovered from S178 | done |
 | 34 | S189 | S167 later notes: spec sitting EOF line, run JSON shapes, refusal prefix, run.start deps | S | - |  | Folded into the S188 sweep (owner, 2026-10-31); S189 item 5 needs an owner answer and is noted there. · discovered from S167 | retired |
 | 35 | [S190](slices/S190.md) | TUI notes sweep T2 | M | 2 |  | discovered from S168 | — |
 | 36 | S191 | S177 later notes: stop row highlight, commit-stopped cleanup, Ready row test | S | - |  | Folded into S229 (daemon wording leftovers) and the S190 TUI sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row. · discovered from S177 | retired |

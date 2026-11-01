@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- S188: polish doctor upgrade reasons with installed versions and consistent
+  checkout placeholders; note the PyPI assumption for slicer venv commands
+  (*proposed*). Keep an empty `held` array in declined `ork run --json`
+  results, prefix spec-check errors, wrap spec questions at 80 columns,
+  filter control characters from adj record text, and put held or cancelled
+  output on its own line when input ends without a newline.
+
 - S50: add a *proposed* gate-brief warning for changed files outside the
   slice's Files list, using slicer's paths and exempting `.slicer/`.
   Fence check commands containing backticks or newlines in implementer briefs,

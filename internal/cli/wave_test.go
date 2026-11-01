@@ -509,3 +509,111 @@ func TestWaveStartStopAfterFlag(t *testing.T) {
 		}
 	}
 }
+
+func TestWaveStartHeldLineStartsOnItsOwnLineAtEOF(t *testing.T) {
+	stub := &specStub{t: t, check: `{"items":[{"item":"S1","questions":[{"text":"Question?"}]},{"item":"S2","ready":true}]}`}
+	code, out, errs := runWaveStart(t, stub, "", "--yes")
+	if code != 0 || !strings.Contains(out, "): \nheld: S1 has 1 open spec question") {
+		t.Fatalf("code %d out %q err %s", code, out, errs)
+	}
+}
+
+func TestSpecCheckErrorHasAPrefixInTextMode(t *testing.T) {
+	for _, wireError := range []ipc.Error{
+		{Code: "spec_failed", Message: "MESSAGE"},
+		{Code: daemon.CodeRefused, Message: `S2 waits on S1 "Title" (not done); land S1 first`},
+	} {
+		for _, wave := range []bool{false, true} {
+			for _, jsonMode := range []bool{false, true} {
+				t.Run(fmt.Sprintf("%s/wave=%v/json=%v", wireError.Code, wave, jsonMode), func(t *testing.T) {
+					stub := &specStub{t: t}
+					app := &App{Call: func(ctx context.Context, m string, p, r any) error {
+						if m == daemon.MethodSpecCheck {
+							return &wireError
+						}
+						return stub.call(ctx, m, p, r)
+					}}
+					args := []string{"run", "p", "S1", "--well-specified", "y", "--split", "n"}
+					if wave {
+						args = append([]string{"wave", "start"}, args[1:]...)
+					}
+					if jsonMode {
+						args = append(args, "--json")
+					}
+					code, out, errs := run(t, app, args...)
+					if code != 1 {
+						t.Fatal(code, out, errs)
+					}
+					if jsonMode {
+						var result struct{ Error ipc.Error }
+						if err := json.Unmarshal([]byte(out), &result); err != nil || result.Error != wireError {
+							t.Fatal(out, err)
+						}
+					} else {
+						prefix := "spec check failed: "
+						if wireError.Code == daemon.CodeRefused {
+							prefix = ""
+						}
+						if want := "ork: " + prefix + wireError.Message + "\n"; errs != want {
+							t.Errorf("stderr %q, want %q", errs, want)
+						}
+					}
+				})
+			}
+		}
+	}
+}
+
+func TestSpecQuestionsWrapAtEightyColumns(t *testing.T) {
+	long := strings.Repeat("word ", 40)
+	check := strings.ReplaceAll(specCheckTwoQuestions, "Which store?", long)
+	check = strings.ReplaceAll(check, "one JSON file", long)
+	check = strings.ReplaceAll(check, "nothing reads it", long)
+	// Also exercise a text-only question.
+	check = strings.ReplaceAll(check, `{"ask":{"title":"What flag?","options":[{"label":"short","summary":"-x"},{"label":"long","summary":"--extra"}],"recommend":1,"reason":"short"},"text":"Question: What flag?"}`, `{"text":"`+long+`"}`)
+	for _, wave := range []bool{false, true} {
+		var code int
+		var out, errs string
+		if wave {
+			code, out, errs = runWaveStart(t, &specStub{t: t, check: check}, "1\nanswer\nn\n")
+		} else {
+			code, out, errs, _ = singleSpecRun(t, "1\nanswer\nn\n", check, nil)
+		}
+		if code != 0 {
+			t.Fatal(code, out, errs)
+		}
+		// A terminal echoes the answer's newline. The string reader does not;
+		// remove prompts before measuring the printed question lines.
+		questions := strings.ReplaceAll(out, "Answer 1-2, or type text (empty holds S1 back): ", "\n")
+		questions = strings.ReplaceAll(questions, "Answer in text (empty holds S1 back): ", "\n")
+		for _, line := range strings.Split(questions, "\n") {
+			if len([]rune(line)) > 80 {
+				t.Errorf("wave=%v: %d columns: %s", wave, len([]rune(line)), line)
+			}
+			if strings.HasPrefix(line, "word") {
+				t.Errorf("missing continuation indent: %q", line)
+			}
+		}
+		if !strings.Contains(out, "\n    word") || !strings.Contains(out, "\n  word") {
+			t.Errorf("missing hanging lines: %s", out)
+		}
+	}
+}
+
+func TestConfirmCancelledStartsOnANewLineWhenInputEndsWithoutNewline(t *testing.T) {
+	for _, wave := range []bool{false, true} {
+		check := `{"items":[{"item":"S1","ready":true},{"item":"S2","ready":true}]}`
+		var code int
+		var out, errs string
+		label := "slice"
+		if wave {
+			label = "wave"
+			code, out, errs = runWaveStart(t, &specStub{t: t, check: check}, "n")
+		} else {
+			code, out, errs, _ = singleSpecRun(t, "n", check, nil)
+		}
+		if code != 0 || !strings.Contains(out, "Start this "+label+"? [y/N]: \ncancelled") {
+			t.Errorf("wave=%v code %d out %q err %s", wave, code, out, errs)
+		}
+	}
+}

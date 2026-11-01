@@ -17,6 +17,10 @@ import (
 )
 
 func (a *App) call(ctx context.Context, o *output, method string, params, result any) int {
+	return a.callWith(ctx, o, "", method, params, result)
+}
+
+func (a *App) callWith(ctx context.Context, o *output, prefix, method string, params, result any) int {
 	finish := func() int {
 		if method == daemon.MethodStatus {
 			if status, ok := result.(*daemon.StatusResult); ok {
@@ -32,13 +36,13 @@ func (a *App) call(ctx context.Context, o *output, method string, params, result
 	}
 	if a.Call != nil {
 		if err := a.Call(ctx, method, params, result); err != nil {
-			return o.failErr(err)
+			return o.failErrWith(prefix, err)
 		}
 		return finish()
 	}
 	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
 		if err := c.Call(ctx, method, params, result); err != nil {
-			return o.failErr(err)
+			return o.failErrWith(prefix, err)
 		}
 		return finish()
 	})
@@ -83,7 +87,7 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 	// without a newline is read as typed, but closed input is not Enter.
 	ask := func(label, hint, def string) (string, error) {
 		fmt.Fprintf(prompts, "%s [%s]: ", label, hint)
-		line, err := reader.ReadString('\n')
+		line, err := readLine(reader, prompts)
 		if err != nil && err != io.EOF {
 			return "", err
 		}
@@ -129,6 +133,9 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 	if code != ExitOK {
 		return code
 	}
+	if held == nil {
+		held = []string{}
+	}
 	if len(checked.Items) == 0 {
 		if o.json {
 			if code := o.printJSON(map[string]any{"started": false, "held": held}); code != ExitOK {
@@ -144,7 +151,7 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		}
 		if confirm != "yes" {
 			if o.json {
-				return o.printJSON(map[string]bool{"started": false})
+				return o.printJSON(map[string]any{"started": false, "held": held})
 			}
 			fmt.Fprintln(o.stdout, "cancelled")
 			return ExitOK
