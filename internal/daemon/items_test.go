@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"reflect"
 	"strings"
@@ -14,6 +15,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -200,6 +202,175 @@ func TestItemNewFilesASliceAndReadsItemsAgain(t *testing.T) {
 			_, err := d.handle(context.Background(), "item.new", json.RawMessage(tc.raw))
 			if e := ipc.ErrorOf(err); e == nil || e.Code != tc.code {
 				t.Fatalf("error %v want %s", err, tc.code)
+			}
+		})
+	}
+}
+
+func TestItemParkAndUnparkCallSlicerAndRefreshItems(t *testing.T) {
+	for _, verb := range []string{"park", "unpark"} {
+		t.Run(verb, func(t *testing.T) {
+			d, _, p := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{verb}, Prefix: true, Stdout: `{}`})
+			if err := d.cache.Refresh(context.Background(), p, source.Items, source.Deps); err != nil {
+				t.Fatal(err)
+			}
+			src := d.cfg.Source.(*stubSource)
+			beforeI, beforeD := src.count("items p"), src.count("deps p")
+			v, err := d.handle(context.Background(), "item."+verb, json.RawMessage(`{"project":"p","item":"S12"}`))
+			if err != nil {
+				t.Fatal(err)
+			}
+			b, _ := json.Marshal(v)
+			if string(b) != `{"item":"S12"}` {
+				t.Fatalf("result %s", b)
+			}
+			calls := lastFake.CallsTo("slicer")
+			want := []string{verb, "S12", "--render", "--json", "--root", p.Path}
+			if len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, want) {
+				t.Fatalf("calls %v", calls)
+			}
+			if src.count("items p") != beforeI+1 || src.count("deps p") != beforeD+1 {
+				t.Fatal("Items and Deps not refreshed")
+			}
+		})
+	}
+}
+func TestItemParkRefusedWhileTheItemHasAnUnfinishedRun(t *testing.T) {
+	for _, state := range []string{"setup", "implement", "paused", "awaiting-approval", "stopped", "committed"} {
+		for _, verb := range []string{"park", "unpark"} {
+			t.Run(state+"/"+verb, func(t *testing.T) {
+				d, store, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{verb}, Prefix: true, Stdout: `{}`})
+				if _, err := store.Create(runrec.Record{ID: "run-blocker", Project: "p", Item: "S12", State: state}); err != nil {
+					t.Fatal(err)
+				}
+				_, err := d.handle(context.Background(), "item."+verb, json.RawMessage(`{"project":"p","item":"S12"}`))
+				if verb == "park" && !runrec.IsFinal(state) {
+					e := ipc.ErrorOf(err)
+					if e == nil || e.Code != CodeRefused || !strings.Contains(e.Message, "run-blocker") {
+						t.Fatalf("error %v", err)
+					}
+					if len(lastFake.CallsTo("slicer")) != 0 {
+						t.Fatal("refused park wrote")
+					}
+				} else if err != nil {
+					t.Fatal(err)
+				}
+			})
+		}
+	}
+	for _, rec := range []runrec.Record{{ID: "other-item", Project: "p", Item: "S13", State: "implement"}, {ID: "other-project", Project: "other", Item: "S12", State: "implement"}} {
+		t.Run(rec.ID, func(t *testing.T) {
+			d, store, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"park"}, Prefix: true, Stdout: `{}`})
+			if _, err := store.Create(rec); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := d.handle(context.Background(), "item.park", json.RawMessage(`{"project":"p","item":"S12"}`)); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+func TestItemParkBadParams(t *testing.T) {
+	for _, verb := range []string{"park", "unpark"} {
+		t.Run(verb, func(t *testing.T) {
+			d, _, _ := runDaemon(t, nil)
+			for _, tc := range []struct{ raw, code string }{
+				{`{"project":" ","item":"S12"}`, CodeBadParams},
+				{`{"project":"p","item":" "}`, CodeBadParams},
+				{`{"project":"unknown","item":"S12"}`, CodeNotFound},
+				{`{"project":"p","item":"S12","extra":true}`, CodeBadParams},
+			} {
+				_, err := d.handle(context.Background(), "item."+verb, json.RawMessage(tc.raw))
+				if e := ipc.ErrorOf(err); e == nil || e.Code != tc.code {
+					t.Errorf("%s: %v", tc.raw, err)
+				}
+			}
+			if len(lastFake.CallsTo("slicer")) != 0 {
+				t.Fatal("invalid params wrote")
+			}
+		})
+	}
+}
+func TestItemMoveRunsSlicerMove(t *testing.T) {
+	for _, pos := range []string{"before", "after"} {
+		t.Run(pos, func(t *testing.T) {
+			d, _, p := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"move"}, Prefix: true, Stdout: `{}`}, clitest.Route{Tool: "slicer", Args: []string{"list"}, Prefix: true, Stdout: `[{"id":"S12"},{"id":"S13"}]`})
+			if err := d.cache.Refresh(context.Background(), p, source.Items, source.Deps); err != nil {
+				t.Fatal(err)
+			}
+			src := d.cfg.Source.(*stubSource)
+			beforeI, beforeD := src.count("items p"), src.count("deps p")
+			raw := fmt.Sprintf(`{"project":"p","item":"S12","other":"S13","position":%q}`, pos)
+			if _, err := d.handle(context.Background(), "item.move", json.RawMessage(raw)); err != nil {
+				t.Fatal(err)
+			}
+			calls := lastFake.CallsTo("slicer")
+			want := []string{"move", "S12", "--" + pos, "S13", "--render", "--json", "--root", p.Path}
+			if len(calls) != 3 || !reflect.DeepEqual(calls[1].Args, want) {
+				t.Fatalf("calls %v", calls)
+			}
+			if src.count("items p") != beforeI+1 || src.count("deps p") != beforeD+1 {
+				t.Fatal("Items and Deps not refreshed")
+			}
+		})
+	}
+	d, _, _ := runDaemon(t, nil)
+	for _, raw := range []string{
+		`{"project":"p","item":"S12","other":"S13","position":"to"}`,
+		`{"project":"p","item":"S12","other":" ","position":"before"}`,
+		`{"project":"p","item":" ","other":"S13","position":"before"}`,
+		`{"project":" ","item":"S12","other":"S13","position":"before"}`,
+		`{"project":"p","item":"S12","other":"S13","position":"before","extra":true}`,
+	} {
+		_, err := d.handle(context.Background(), "item.move", json.RawMessage(raw))
+		if e := ipc.ErrorOf(err); e == nil || e.Code != CodeBadParams {
+			t.Errorf("%s: %v", raw, err)
+		}
+	}
+	if len(lastFake.CallsTo("slicer")) != 0 {
+		t.Fatal("invalid move called slicer")
+	}
+}
+func TestItemMoveReportsWhetherTheListOrderChanged(t *testing.T) {
+	for _, changed := range []bool{true, false} {
+		t.Run(fmt.Sprint(changed), func(t *testing.T) {
+			before := `[{"id":"S12"},{"id":"S13"}]`
+			after := before
+			if changed {
+				after = `[{"id":"S13"},{"id":"S12"}]`
+			}
+			d, _, p := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"move"}, Prefix: true, Stdout: `{}`}, clitest.Route{Tool: "slicer", Args: []string{"list"}, Prefix: true, Seq: []clitest.Reply{{Stdout: before}, {Stdout: after}}})
+			v, err := d.handle(context.Background(), "item.move", json.RawMessage(`{"project":"p","item":"S12","other":"S13","position":"after"}`))
+			if err != nil {
+				t.Fatal(err)
+			}
+			b, _ := json.Marshal(v)
+			want := fmt.Sprintf(`{"item":"S12","changed":%t}`, changed)
+			if string(b) != want {
+				t.Fatalf("result %s want %s", b, want)
+			}
+			calls := lastFake.CallsTo("slicer")
+			list := []string{"list", "--json", "--lean", "--root", p.Path}
+			if len(calls) != 3 || !reflect.DeepEqual(calls[0].Args, list) || !reflect.DeepEqual(calls[2].Args, list) {
+				t.Fatalf("calls %v", calls)
+			}
+		})
+	}
+}
+func TestItemEditKeepsSlicerErrorCodeAndMessage(t *testing.T) {
+	for _, verb := range []string{"park", "unpark", "move"} {
+		t.Run(verb, func(t *testing.T) {
+			d, _, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{verb}, Prefix: true, Stdout: `{"error":{"code":"cross_kind","message":"exact slicer refusal"}}`, Exit: 2}, clitest.Route{Tool: "slicer", Args: []string{"list"}, Prefix: true, Stdout: `[]`})
+			raw := `{"project":"p","item":"S12"}`
+			if verb == "move" {
+				raw = `{"project":"p","item":"S12","other":"S13","position":"after"}`
+			}
+			_, err := d.handle(context.Background(), "item."+verb, json.RawMessage(raw))
+			if e := ipc.ErrorOf(err); e == nil || e.Code != "cross_kind" || e.Message != "exact slicer refusal" {
+				t.Fatalf("error %v", err)
+			}
+			if d.cfg.Source.(*stubSource).count("items p") != 0 {
+				t.Fatal("failed edit refreshed")
 			}
 		})
 	}

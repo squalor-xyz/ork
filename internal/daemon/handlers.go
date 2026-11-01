@@ -148,6 +148,21 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return d.itemNew(ctx, p)
+	case MethodItemPark, MethodItemUnpark:
+		var p ItemParkParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		if method == MethodItemPark {
+			return d.itemPark(ctx, p)
+		}
+		return d.itemUnpark(ctx, p)
+	case MethodItemMove:
+		var p ItemMoveParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.itemMove(ctx, p)
 	case MethodItemNote:
 		var p ItemNoteParams
 		if err := decode(params, &p); err != nil {

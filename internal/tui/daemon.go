@@ -290,3 +290,33 @@ func (d *Daemon) RelayAnswer(ctx context.Context, p daemon.RelayAnswerParams) (s
 	defer c.Close()
 	return c.RelayAnswer(ctx, p)
 }
+
+// ItemPark parks the registered project's item.
+func (d *Daemon) ItemPark(ctx context.Context, project, item string) error {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	return c.ItemPark(ctx, project, item)
+}
+
+// ItemUnpark unparks the registered project's item.
+func (d *Daemon) ItemUnpark(ctx context.Context, project, item string) error {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	return c.ItemUnpark(ctx, project, item)
+}
+
+// ItemMove saves a queue move and reports whether the displayed index changed.
+func (d *Daemon) ItemMove(ctx context.Context, project, item, other, position string) (bool, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return false, err
+	}
+	defer c.Close()
+	return c.ItemMove(ctx, project, item, other, position)
+}

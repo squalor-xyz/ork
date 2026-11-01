@@ -64,8 +64,8 @@ reads and writes them only through their CLIs.
 v1 is the monitoring dashboard plus launching and supervising slice waves
 (`scope.v1`). v1.0 includes filing a slice (S170), adding slice notes (S171),
 and answering or asking adj records (S172, S185), as decided in
-`scope.v1-ork-edits` (#173). Reordering or parking items (S67-S69), the role
-matrix editor (S173) and spec drafting (S179) stay later.
+`scope.v1-ork-edits` (#173). Roadmap reordering and parking (S67, including S68) are in v1.1.
+The role matrix editor (S173) and spec drafting (S179) stay later.
 
 **In v1:**
 - Dashboard over 4 registered projects: slicer, adjudicate, DataBall and
@@ -109,9 +109,11 @@ matrix editor (S173) and spec drafting (S179) stay later.
 - A background daemon started on demand, the TUI as a client, and a small
   JSON CLI (`daemon.lifetime`, `daemon.start`, `cli.json`).
 
+**In v1.1:**
+- Reordering and parking roadmap items (S67, including S68).
+
 **After v1:**
-- Reordering or parking roadmap items (S67-S69), the role matrix editor
-  (S173), and spec drafting (S179).
+- The role matrix editor (S173) and spec drafting (S179).
 - Decision editing beyond asking and answering adj records.
 - Batched landing and changelog conflict resolution.
 - agentbox sandboxing.
