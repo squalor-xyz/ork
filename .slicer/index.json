@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 231,
+  "next_id": 232,
   "preamble": "",
   "passes": [
     {
@@ -12280,6 +12280,49 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S180",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S231",
+      "title": "S50 and S69 later notes: files-scope tests, restore after error, help-line duplicate logic",
+      "short_title": "S50 and S69 later notes: files-scope tests, restore after error, help-line duplicate logic",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "10a1f36c-7f2b-4425-aa68-bfdf317f5a67",
+          "kind": "",
+          "text": "**2026-11-01** — Later notes from pair wave 2 (S50 and S69, landed 2026-11-01), from the reviewers and the UI pass:\nS50: (1) add tests for a path containing a double quote, a worktree-column rename (status \" R\"), and internal/engine2 not being covered by an internal/engine entry; (2) files-scope reads git status, so a gate that runs after the slice commit (a landing fix round) sees only that round's edits; record this in docs/design.md or widen the check; (3) docs/design.md line 231 is 103 characters and could be reflowed.\nS69: (1) the cursor restore stays pending after an item-list error, so a later good read can move a cursor the owner has since moved; drop the restore on any snapshot of that project or once the cursor moves; (2) no test covers returning from slicer's TUI while a different project is active; (3) if a read was already in flight when slicer exited, the restore is used up against a possibly stale list and the cursor then keeps its row index; (4) the help-line condition at internal/tui/view.go near line 800 repeats part of slicerTuiRefusal and can drift; share a helper; (5) at 80x24 the help shortens \"l launch ready slice\" to \"l launch\" when O is added; (6) human check to add: resize the terminal while slicer's TUI is open, then quit it, and quit with ctrl+c to see whether \"slicer tui: exit status N\" shows; (7) the O hint was placed after enter open and l launch (before m matrix) because the owner's \"after N note\" left O first when n and N are hidden; the owner may flip it.",
+          "created_at": "2026-11-01T15:18:25Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S50",
         "parent": "",
         "cites": [],
         "key": "",
