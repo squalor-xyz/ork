@@ -1589,6 +1589,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "f9819d93-dff3-4c3a-8218-14499ebdc9b8",
+          "kind": "",
+          "text": "**2026-11-01** — Owner decisions (interactive questions, 2026-11-01), layout: the new P park and J/K move hints get higher priority so they show at 100x30 (80x24 hint line unchanged); the new keys are added to the question-mark help, and view.go and the affected help goldens may change for it.",
+          "created_at": "2026-11-01T15:51:12Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
