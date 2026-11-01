@@ -1,0 +1,41 @@
+{
+  "id": "S224",
+  "title": "Set the per-project bell with ork projects set --bell",
+  "lead": [
+    "`ork projects set NAME --bell on|off` writes the registry field `bell` through the daemon's `projects.set`, so the owner no longer edits `projects.json` by hand. It is the second half of S100 (the bell on run end and the field itself land there) and needs that slice first."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The owner decided on 2026-10-28 (interactive, S100 note) that the bell stays on by default and is switched per project with a registry field `bell`, set with `ork projects set NAME --bell on|off`. S100 stays out of `internal/daemon` so it can pair with an E-class slice (pair waves allow one slice whose Files touch `internal/engine`, `internal/daemon` or `cmd`, `docs/design.md`, search \"at most one slice whose Files touch\"). The setter cannot: `ork projects set` always goes through the daemon's `projects.set` (`internal/cli/daemoncmds.go:225-337`, `internal/daemon/handlers.go:513`), so this slice is E-class and pairs with an N-class slice.\n\nBehaviour (exact):\n- Flag `--bell on|off`. Any other value is a usage error before the daemon starts (`projects set: --bell takes on or off, got \"X\"`), as `--push` is (`internal/cli/daemoncmds.go:252-259`).\n- Wire field `bell`, a pointer to a boolean in `SetProjectParams` (`internal/daemon/wire.go:270-283`); `SetsNothing` counts it. `on` stores `true`, `off` stores `false`; there is no way back to \"absent\" other than `on`, which is the same behaviour.\n- The call is refused with `project_busy` while the project has unfinished runs, like every other field of `projects.set` (`internal/daemon/handlers.go:571-577`). See the owner question in the manifest.\n- Text output: `bell=on` or `bell=off` in the `updated NAME: ...` line, in flag order. JSON: `{\"project\":{...}}` carries `\"bell\":true|false` when set.\n- The TUI reads the setting at start, so a running TUI needs a restart to apply it (S100)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/wire.go` (`SetProjectParams` at :270-283 gets `Bell *bool` with tag `json:\"bell,omitempty\"`; `SetsNothing` at :287-290). E-class: `internal/daemon`.\n- `internal/daemon/handlers.go` (`setProject` at :513; apply it beside `Push` at :585-587).\n- `internal/daemon/daemon_test.go` (beside `TestProjectsSetUIPassSkills` at :1929).\n- `internal/cli/daemoncmds.go` (flag beside `push` at :226; parse beside :252; the no-field usage message at :309; the text line beside :334).\n- `internal/cli/cli.go` (the `projects set` usage block at :88-107: add `[--bell on|off]`; keep every line within 80 columns).\n- `internal/cli/cli_test.go` (beside `TestProjectsSetUpdatesOneField` at :1259).\n- `docs/design.md:115` (the `projects.set` row) and `:1559-1606` (the `projects set` paragraph).\n- `docs/guide.md:118-131` (the flag table).\n- `docs/state.md` (the S100 field note: replace \"lands with the setter slice\").\n- `CHANGELOG.md` (entry under `## Unreleased`, marked *proposed*).\n\nE-class: it touches `internal/daemon`. Dependency: after S100 (the `bell` field in `internal/registry/registry.go`). It shares `internal/cli/cli.go` with the contract sweep (S207); run them in different waves or keep each edit to its own lines (this slice edits the `projects set` block only)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "In `internal/daemon/daemon_test.go`:\n\n- TestProjectsSetBell: `projects.set` with `{\"name\":\"p\",\"bell\":false}` saves `bell:false` and the reply carries it; `{\"bell\":true}` saves `true`; other fields stay unchanged. Fails first: unknown field (`bad_params`).\n- TestProjectsSetBellRefusesAnUnfinishedRun: with an unfinished run, `{\"name\":\"p\",\"bell\":false}` is `project_busy` and the registry is unchanged.\n- TestSetsNothingCountsBell: `SetProjectParams{Bell: &v}.SetsNothing()` is false.\n\nIn `internal/cli/cli_test.go`:\n\n- TestProjectsSetBellOnOff: `ork projects set p --bell off` sends `bell:false` and prints `updated p: bell=off`; `--bell on` prints `bell=on`; `--json` carries the project.\n- TestProjectsSetBellRefusesABadValue: `--bell maybe` is a usage error (exit 2) and makes no daemon call.\n- TestProjectsSetNeedsAtLeastOneFlagNamesBell: the usage message for no flag lists `--bell`.\n- TestUsageTextNamesProjectsSetBell: `usageText` has `--bell on|off` and every line of it stays within 80 columns (the check at `internal/cli/upgrade_test.go:584` covers the width)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests first and run them; each must fail for the reason given.\n2. `internal/daemon/wire.go` and `handlers.go`: add the field, count it in `SetsNothing`, apply it in `setProject` under the same lock and busy check as `Push`. No new validation: a boolean needs none.\n3. `internal/cli/daemoncmds.go`: add `bell := fs.String(\"bell\", \"\", \"on or off: ring the terminal bell for this project\")`, parse it like `push`, add `--bell` to the no-flag message, and add `bell=on` / `bell=off` to the text line.\n4. `internal/cli/cli.go`: add the flag to the `projects set` usage block only.\n5. Docs: `docs/design.md` (wire row and paragraph: `--bell` takes `on` or `off`, `bell` in the wire list), `docs/guide.md` (table row: `--bell on|off`, the bell for the project's runs; the TUI reads it at start), `docs/state.md`.\n6. `CHANGELOG.md`, last (so a parallel slice's entry does not conflict): one entry at the top of `## Unreleased`.\n7. Do not touch: `internal/tui`, `internal/registry` (S100 owns the field), `internal/engine`, `cmd`.\n\nUI slice: UI pass (r14). It changes CLI output (`ork projects set`, `ork --help`)."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race -count=1 ./internal/daemon ./internal/cli`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (prints nothing)\n- `slicer check`\n- `adj lint`\n- [HUMAN CHECK] [AFTER LAND] After a rebuild and `ork daemon restart`, `ork projects set NAME --bell off` prints `updated NAME: bell=off`, `~/.config/ork/projects.json` has `\"bell\": false` for that project, and a restarted TUI rings no bell for it."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"ork projects set --bell on|off\"."
+    }
+  ],
+  "notes": []
+}

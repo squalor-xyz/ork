@@ -1,0 +1,41 @@
+{
+  "id": "S225",
+  "title": "Build the daemon-session test on the BSDs and vet it in CI",
+  "lead": [
+    "`go vet ./...` fails for `GOOS=freebsd` (and openbsd and netbsd) because the daemon-session test calls a `getsid` helper that exists only for darwin and linux. Give the BSDs the helper, and add one `GOOS=freebsd go vet ./...` step to the workflow's test job so it cannot break again."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The S212 review (later note, folded into the release-hardening slice and split off here) found that the unix-only test `cmd/ork/start_unix_test.go` (`//go:build unix`) calls `getsid(pid)` at `:135`, while the helper is defined in `cmd/ork/getsid_darwin_test.go` (`darwin`) and `cmd/ork/getsid_linux_test.go` (`linux`) only. Checked today with `GOOS=freebsd GOARCH=amd64 go -C ... vet ./...`: the only finding is `cmd/ork/start_unix_test.go:135:17: undefined: getsid`; openbsd, netbsd and dragonfly print the same. The `syscall` package has `Getsid` on darwin, dragonfly, freebsd, netbsd and openbsd (`go doc syscall.Getsid` with each `GOOS`); solaris, illumos and aix do not, and `internal/engine/proc_unix.go` does not build there either (`syscall.Getpgrp`), so they stay out of scope.\n\nThe file name `getsid_darwin_test.go` carries an implicit `darwin` constraint, so widening its `//go:build` line alone changes nothing: the file must be renamed. This is why the fix cannot be a one-line tag edit.\n\nWhy a separate slice: it names `cmd/ork`, so it is E-class (a pair wave may hold one slice whose Files touch `internal/engine`, `internal/daemon` or `cmd`), while the other five S212 notes (`S213`, key `release-hardening`) are N-class. It edits the workflow and its guard after that slice, because that slice rewrites the guard to survive reformatting.\n\nThe CI step is *proposed*: ork's release targets are darwin and linux only (owner, 2026-10-31); the step only type-checks a third unix target and builds nothing that ships. It runs on the Linux job only, to keep the macOS job unchanged. Drop the step and its guard if the owner does not want a BSD check; the helper fix stands alone."
+    },
+    {
+      "heading": "Files",
+      "body": "- `cmd/ork/getsid_darwin_test.go` (removed: renamed).\n- `cmd/ork/getsid_bsd_test.go` (new; the same body, `//go:build darwin || dragonfly || freebsd || netbsd || openbsd`). E-class: `cmd`.\n- `cmd/ork/getsid_linux_test.go` (unchanged; read only).\n- `.github/workflows/release.yml` (a step in the `test` job after `go vet ./...`).\n- `internal/release/workflow_test.go` (a `cross_vet` guard).\n- `CHANGELOG.md` (entry under `## Unreleased`).\n\nDependency: after `release-hardening` (S213), which also edits `.github/workflows/release.yml` and `internal/release/workflow_test.go` and makes the guards reformat-tolerant."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestWorkflow/cross_vet (in `internal/release/workflow_test.go`): the `test` job has a step that runs only on Linux (`if: runner.os == 'Linux'`) with `GOOS: freebsd`, `GOARCH: amd64` and `run: go vet ./...`. Fails first: no such step.\n- Compile check, not a Go test: `GOOS=freebsd GOARCH=amd64 go -C WORKTREE vet ./...` prints `undefined: getsid` before the change and nothing after. Run it for `freebsd`, `openbsd`, `netbsd` and `dragonfly` too (the same helper serves all four), and for `darwin` and `linux`, where it must stay clean."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Run the cross-vet command and record the failure.\n2. Write the `cross_vet` guard and watch it fail.\n3. `git mv cmd/ork/getsid_darwin_test.go cmd/ork/getsid_bsd_test.go`; change the constraint line to `//go:build darwin || dragonfly || freebsd || netbsd || openbsd`. The body (`return syscall.Getsid(pid)`) stays.\n4. `release.yml`: after the `go vet ./...` step of the `test` job add\n   `- name: Vet another unix target` / `if: runner.os == 'Linux'` / `shell: bash` / `env:` `GOOS: freebsd` `GOARCH: amd64` / `run: go vet ./...`. Do not change a `uses:` line, add an action or touch the other jobs.\n5. `CHANGELOG.md`, last (so a parallel slice's entry does not conflict): one entry at the top of `## Unreleased`, marked *proposed*.\n6. Do not touch: `cmd/ork/start_unix_test.go`, `cmd/ork/getsid_linux_test.go`, any non-test file in `cmd/ork`, `internal/engine`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race -count=1 ./cmd/ork ./internal/release`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `GOOS=freebsd GOARCH=amd64 go -C WORKTREE vet ./...`, the same with `openbsd`, `netbsd` and `dragonfly` (all print nothing), and with `linux` and `darwin`.\n- `gofmt -l .` (prints nothing)\n- `slicer check`\n- `adj lint`\n- `git diff` shows no `uses:` line changed in `.github/workflows/release.yml`.\n- [HUMAN CHECK] [AFTER LAND] The owner runs the workflow once with `workflow_dispatch` and confirms the new `Vet another unix target` step passes on the Linux test job and does not appear on the macOS one."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"Build the getsid test helper on the BSDs and vet freebsd in CI\"."
+    }
+  ],
+  "notes": []
+}

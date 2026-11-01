@@ -1,0 +1,41 @@
+{
+  "id": "S219",
+  "title": "Docs: re-anchor the file:line citations in docs/guide.md and docs/design.md",
+  "lead": [
+    "Fix the `file:line` citations in `docs/guide.md` and `docs/design.md` that no longer point at the text they describe, and add a small stdlib test that every such citation still names a file and a line range that exist. Docs and one test file only; no behavior change."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Three later-notes rows report the same drift (owner, 2026-10-31: later-notes rows are folded into sweep slices; the folded sub-items are listed here so nothing is lost):\n- S190 item 6: \"guide.md sections 13/14 anchors drifted\" (from the S168 review).\n- S192 item 5: \"docs/guide.md anchors to design.md drifted\" (from the S174 review). S192 itself moved to v1.2 (owner, 2026-10-31); only this item is carried here.\n- S193 item 1: \"re-anchor the docs/guide.md citations into docs/design.md (lines 57, 64, 70, 77, 92, 95, 118) after S184 and S174\".\n\nA scan on 2026-10-31 (HEAD `2b6a27a`) found 72 `path:N[-M]` citations in `docs/guide.md` and 3 sibling-repo citations in `docs/design.md` (`agents/setup/lib/workflow-vendor.sh:22-41`, `slicer/docs/agents.md:712`, `slicer/docs/tui.md:183-270`; all three resolved by hand). None is out of range, but many point at other text. Examples confirmed by reading the cited line and `rg` for the right one:\n- `docs/guide.md:331` cites `internal/tui/keys.go:80` for the `o` key; that line is `New`. `Owner` is at `internal/tui/keys.go:87`.\n- `docs/guide.md:333` cites `internal/cli/cli.go:52` for `ork file RUN N`; it is at `:66`.\n- `docs/guide.md:356` cites `internal/cli/cli.go:47-50` for `ork approve RUN`; it is at `:55-56`.\n- `docs/guide.md:392` cites `internal/tui/keys.go:71` for the `c` cleanup key; `Cleanup` is at `:75`.\n- `docs/guide.md:353` cites `docs/design.md:351-397` for landing; the `land` step starts at `docs/design.md:392` and runs to about `:432`.\n- `docs/guide.md:361` cites `docs/design.md:390-397` for the landing conflict rule; that paragraph is at `docs/design.md:425-432`.\nThese are evidence, not the list: the implementer checks all of them again, because other v1.1 slices move lines in `docs/design.md`, `docs/dashboard.md`, `internal/cli/cli.go` and `internal/tui/keys.go`.\n\nLine anchors drift every time a doc or a file above them grows. Whether to keep line anchors in guide.md at all, or to cite a section name for doc-to-doc references, is the owner's call (MANIFEST-E.md, DR-Q1). This outline keeps line anchors, as the guide does today, and adds a test that catches only gross drift (a file or line that no longer exists). The test cannot tell that a line moved to other text; the rg checks below are what does.\n\nNothing in slicer covers this: `slicer find re-anchor` and `slicer find anchors` list only done ork items (S87, S114, S115, S126, S127, S70, S112, S07, S27)."
+    },
+    {
+      "heading": "Files",
+      "body": "N-class: no internal/engine, internal/daemon or cmd path. It is docs and one test, so it can pair with any E-class slice.\n\n- `docs/guide.md` (each wrong citation).\n- `docs/design.md` (any in-repo citation that the scan finds wrong; the three sibling-repo citations at :793, :1440 and :1711 are checked and fixed only if wrong).\n- `internal/docscheck/cite_test.go` (new; a test-only package, stdlib only).\n- `CHANGELOG.md` (an entry under ## Unreleased).\n\nRun this slice after the other v1.1 slices that edit `docs/design.md`, `docs/dashboard.md`, `docs/state.md`, `internal/cli/cli.go` or `internal/tui/keys.go`, and before the release-prep slice. If it runs earlier, the citations drift again. Do not pair it with a slice that edits `docs/guide.md` or `docs/design.md` heavily (the named wave, the engine rule and the landing check all do): two edits to the same lines conflict."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "The citation test passes before and after the fix, because every cited range exists today; it is a guard, not the failing test. What fails first is each wrong citation, shown by a check command whose output names a line that differs from the cited one. Before the fix, the cited line is wrong; after it, the command prints the cited line.\n\nChecks to run now and again after the edit (the line numbers are those of HEAD `2b6a27a`; the implementer regenerates them):\n- `rg -n '^\\s+Owner:' internal/tui/keys.go` prints `87`; `docs/guide.md` must cite `internal/tui/keys.go:87` (not `:80`).\n- `rg -n 'ork file RUN N' internal/cli/cli.go` prints `66`; the guide must cite `internal/cli/cli.go:66`.\n- `rg -n 'ork approve RUN' internal/cli/cli.go` prints `55`; the guide must cite a range that includes `:55`.\n- `rg -n '^\\s+Cleanup:' internal/tui/keys.go` prints `75`; the guide must cite `:75`.\n- `rg -n '^- \\*\\*land\\*\\*' docs/design.md` prints `392`; the landing citations (`docs/guide.md:19` and `:353`) must start there.\n- `rg -n 'A merge conflict, or a red re-check' docs/design.md` prints `425`; the guide's conflict citation (`:361`) must start there.\n- One such command for every other citation the implementer finds wrong, written into the commit message and the CHANGELOG entry as `citation: old -> new`.\n\n`internal/docscheck/cite_test.go` (new):\n- `TestGuideAndDesignCitationsResolve`: for each `path:N` or `path:N-M` in a backtick span in `docs/guide.md` and `docs/design.md`, the file exists under the repo root and `1 <= N <= M <= line count`. A path that starts with `slicer/`, `adjudicate/` or `agents/` is read from the sibling directory next to the repo (`../slicer/...`); the test skips such a citation with `t.Skip`-style logging when that directory is absent (CI has only this repo).\n- `TestCitationParserHandlesRangesAndSuffixes`: `a.go:5`, `a.go:5-9`, `a.go:5-9,12` (the guide uses `pane.go:284-297,498`), and a citation inside prose with a trailing comma or parenthesis.\n- `TestCitationTestFailsOnAMissingFile` and `...OnAnOutOfRangeLine`: the parser's checker, driven with temporary files."
+    },
+    {
+      "heading": "Implement",
+      "body": "Tests first for the parser; the doc edits follow the checks above.\n\n1. List every citation: `rg -n -o '[A-Za-z0-9_./-]+\\.(go|md|json|sh|yml|txt):[0-9]+(-[0-9]+)?' docs/guide.md docs/design.md`. For each, read the cited lines and decide whether they still hold the text the sentence describes (use `rg -n` for the symbol or phrase to find where it is now). Fix only the wrong ones. Do not rewrite surrounding text, and do not re-flow lines (keep lines at or under 80 columns where they are today).\n2. Prefer the narrowest honest range: the line of the symbol, or the start and end of the section.\n3. Add the test package. The parser should accept a range list such as `284-297,498` and check each part. No dependency beyond the standard library.\n4. After the edit, re-run every check command in Failing tests and the full citation listing; write the fixed ones into the CHANGELOG entry. List any citation you could not decide in the commit message instead of guessing.\n5. Do not touch code, other docs, or `docs/orchestrator-parity.md` and `docs/dashboard.md` citations (out of scope for the three folded notes).\n6. CHANGELOG entry last, under `## Unreleased`: `Docs: ...` naming the files; add it as the final edit so a parallel slice's entry does not conflict.\n\nNot a UI slice: no `internal/tui`, no golden view, no `ui.*` key, no CLI output."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race -count=1 ./...` (the new test included); `go vet ./...`; `gofmt -l .`; `slicer check`; `adj lint`.\n- Every command under Failing tests prints the line the doc now cites.\n- `git diff --stat` lists only `docs/guide.md`, `docs/design.md`, `internal/docscheck/cite_test.go` and `CHANGELOG.md`.\n- `git diff -U0 docs/guide.md docs/design.md | rg '^[-+]' | rg -v '`'` prints nothing that is not a changed citation line (spot check that no prose changed)."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"Docs: re-anchor file:line citations in the guide and design\"."
+    }
+  ],
+  "notes": []
+}

@@ -2741,3 +2741,135 @@
 {"when": "2026-10-31T16:52:37Z", "item": "S108", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
 {"when": "2026-10-31T17:06:02Z", "item": "S108", "action": "status", "from": "started", "to": "done", "note": "Verified: a done step in the run tree shows one line with no task line; start, wait, stale, ended, unknown and failed steps keep it, and the gate FAIL line stays; 3 named tests plus retention subtests, 4 mutations caught, four runtree goldens rewritten, full -race suite green, docs/dashboard.md and CHANGELOG updated.", "by": "Jon R"}
 {"when": "2026-10-31T17:10:15Z", "item": "S214", "action": "add", "from": "", "to": "open", "note": "S108 later notes: per-role ordinal on repeated done steps, overflow marker under Recent, golden for a failed step and a fix round, task-line column vs deeper child glyph"}
+{"when": "2026-11-01T00:24:13Z", "item": "pass.v1.2", "action": "prose", "from": "", "to": "v1.2", "note": "add-pass"}
+{"when": "2026-11-01T00:24:13Z", "item": "S61", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1.2"}
+{"when": "2026-11-01T00:24:13Z", "item": "S62", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1.2"}
+{"when": "2026-11-01T00:24:13Z", "item": "S66", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1.2"}
+{"when": "2026-11-01T00:24:13Z", "item": "S179", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1.2"}
+{"when": "2026-11-01T00:24:13Z", "item": "S206", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1.2"}
+{"when": "2026-11-01T00:24:13Z", "item": "S123", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1.2"}
+{"when": "2026-11-01T00:24:13Z", "item": "S192", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1.2"}
+{"when": "2026-11-01T00:24:18Z", "item": "S61", "action": "note", "from": "", "to": "", "note": "Moved to v1.2 (owner, 2026-10-31, prescan): large cross-cutt", "by": "Jon R"}
+{"when": "2026-11-01T00:24:19Z", "item": "S62", "action": "note", "from": "", "to": "", "note": "Moved to v1.2 (owner, 2026-10-31, prescan): L, depends on S6", "by": "Jon R"}
+{"when": "2026-11-01T00:24:19Z", "item": "S66", "action": "note", "from": "", "to": "", "note": "Moved to v1.2 (owner, 2026-10-31, prescan): mouse is opt-in ", "by": "Jon R"}
+{"when": "2026-11-01T00:24:19Z", "item": "S179", "action": "note", "from": "", "to": "", "note": "Moved to v1.2 (owner, 2026-10-31, prescan): needs a new adj ", "by": "Jon R"}
+{"when": "2026-11-01T00:24:19Z", "item": "S206", "action": "note", "from": "", "to": "", "note": "Moved to v1.2 (owner, 2026-10-31, prescan): blocked on adjud", "by": "Jon R"}
+{"when": "2026-11-01T00:24:19Z", "item": "S123", "action": "note", "from": "", "to": "", "note": "Moved to v1.2 (owner, 2026-10-31, prescan): slicer relay-run", "by": "Jon R"}
+{"when": "2026-11-01T00:24:19Z", "item": "S192", "action": "note", "from": "", "to": "", "note": "Moved to v1.2 (owner, 2026-10-31, prescan): item 1 is a secr", "by": "Jon R"}
+{"when": "2026-11-01T00:54:42Z", "item": "S130", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:42Z", "item": "S130", "action": "set", "from": "", "to": "", "note": "title Run pane text polish: compact token counts, ASCII gate verdict glyph, tail markdown, h>=24 Overview rule in docs→Run pane and Overview text polish sweep; short_title Run pane text polish: compact token counts, ASCII gate verdict glyph, tail markdown, h>=24 Overview rule in docs→Run pane and Overview text polish; size S→M; effort 1→2"}
+{"when": "2026-11-01T00:54:46Z", "item": "S50", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:46Z", "item": "S50", "action": "set", "from": "", "to": "", "note": "title Check the diff against the slice's Files list→Gate brief: warn on files outside the slice's Files list, fence the check command; short_title Check the diff against the slice's Files list→Files-scope warning and brief fence; size S→M"}
+{"when": "2026-11-01T00:54:46Z", "item": "S69", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:46Z", "item": "S69", "action": "set", "from": "", "to": "", "note": "title Roadmap editing: open slicer tui for the project (needs adj 11)→Open slicer tui from the Roadmap with O; short_title Roadmap editing: open slicer tui for the project (needs adj 11)→Open slicer tui from the Roadmap"}
+{"when": "2026-11-01T00:54:47Z", "item": "S180", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:47Z", "item": "S180", "action": "set", "from": "", "to": "", "note": "effort -→2"}
+{"when": "2026-11-01T00:54:47Z", "item": "S67", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:47Z", "item": "S67", "action": "set", "from": "", "to": "", "note": "title Roadmap editing: park and unpark from the TUI (needs adj 11)→Roadmap editing from the TUI: park, unpark and reorder; short_title Roadmap editing: park and unpark from the TUI (needs adj 11)→Roadmap park, unpark, reorder; size S→M; effort 1→2"}
+{"when": "2026-11-01T00:54:47Z", "item": "S188", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:47Z", "item": "S188", "action": "set", "from": "", "to": "", "note": "title S178 later notes: doctor hint edge cases and wording→CLI wording and polish: doctor hints, spec sitting and adj prompts; short_title S178 later notes: doctor hint edge cases and wording→CLI wording and polish sweep; size S→M; effort -→2"}
+{"when": "2026-11-01T00:54:48Z", "item": "S207", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:48Z", "item": "S207", "action": "set", "from": "", "to": "", "note": "title S24 later notes→Contract and doctor cleanup: one read, one phrase, plain failures; short_title S24 later notes→Contract and doctor cleanup; size S→M; effort -→2"}
+{"when": "2026-11-01T00:54:48Z", "item": "S100", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:48Z", "item": "S100", "action": "set", "from": "", "to": "", "note": "title Bell: ring the terminal when a role needs the owner or a run ends→Bell: ring when a run ends, and a per-project bell setting; short_title Bell: ring the terminal when a role needs the owner or a run ends→Bell on run end, per-project setting"}
+{"when": "2026-11-01T00:54:48Z", "item": "S213", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:48Z", "item": "S213", "action": "set", "from": "", "to": "", "note": "title S212 later notes: freebsd vet for the getsid helpers, fail the release when CHANGELOG has no section for the tag, strip signed-tag signatures from notes, persist-credentials false on test and build checkouts, setup-go cache off for release builds, guards tolerant of YAML reformats→Release workflow hardening: changelog guard, clean notes, no stored credentials; short_title S212 later notes: freebsd vet for the getsid helpers, fail the release when CHANGELOG has no section for the tag, strip signed-tag signatures from notes, persist-credentials false on test and build checkouts, setup-go cache off for release builds, guards tolerant of YAML reformats→Release workflow hardening; size S→M; effort 1→2"}
+{"when": "2026-11-01T00:54:49Z", "item": "S204", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:49Z", "item": "S204", "action": "set", "from": "", "to": "", "note": "title Engine follows relay v11 process rules→Engine follows relay v11 process rules: gate close timing and [AFTER LAND] Check lines; effort -→2"}
+{"when": "2026-11-01T00:54:49Z", "item": "S190", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:49Z", "item": "S190", "action": "set", "from": "", "to": "", "note": "title S168 later notes: pane scroll keys, matrix wrap width, Overview hint tie→TUI notes sweep T2: launch, lineup editor, panes, report viewer and spec status; short_title S168 later notes: pane scroll keys, matrix wrap width, Overview hint tie→TUI notes sweep T2; size S→M; importance 1→2; effort -→2"}
+{"when": "2026-11-01T00:54:49Z", "item": "S132", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:49Z", "item": "S132", "action": "set", "from": "", "to": "", "note": "title Structured question polish: wrapped option indent, 4 options in a short pane, alert wording, dash in Recommend, digit edge tests→Question and answer polish sweep E6: Questions group, option wrap, dash in Recommend, answer-pane gaps; short_title Structured question polish: wrapped option indent, 4 options in a short pane, alert wording, dash in Recommend, digit edge tests→Question polish sweep E6; size S→M; urgency 2→1; effort 1→2"}
+{"when": "2026-11-01T00:54:50Z", "item": "S194", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:50Z", "item": "S194", "action": "set", "from": "", "to": "", "note": "title S182 later notes: hung sibling retry brief, vendor event cadence, Overview reason clip→Correctness sweep: watchdog, report open, vendor wait heartbeat, note retry, dash answers; short_title S182 later notes: hung sibling retry brief, vendor event cadence, Overview reason clip→Correctness sweep; size S→M; importance 1→2; urgency 1→2; effort -→2"}
+{"when": "2026-11-01T00:54:50Z", "item": "S129", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:50Z", "item": "S129", "action": "set", "from": "", "to": "", "note": "title Live usage edge cases: no result event, non-claude cost, multi-message sum, total dip→Live usage edge cases: unknown usage, reported cost, total dip at round end; short_title Live usage edge cases: no result event, non-claude cost, multi-message sum, total dip→Live usage edge cases; size S→M; effort 1→2"}
+{"when": "2026-11-01T00:54:50Z", "item": "S103", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:50Z", "item": "S103", "action": "set", "from": "", "to": "", "note": "title Version and logo polish: clear the stale marker after a daemon restart; keep --version script-friendly→Version and logo polish: mark only on a terminal, stale marker clears after a restart; short_title Version and logo polish: clear the stale marker after a daemon restart; keep --version script-friendly→Version line and stale marker"}
+{"when": "2026-11-01T00:54:51Z", "item": "S131", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:51Z", "item": "S131", "action": "set", "from": "", "to": "", "note": "title Self-host check cost and base branch: cache projectBuild git calls; read the base branch→Self-host check: base branch from the main checkout, one git call when nothing moved; short_title Self-host check cost and base branch: cache projectBuild git calls; read the base branch→Self-host check base branch"}
+{"when": "2026-11-01T00:54:51Z", "item": "S173", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:51Z", "item": "S173", "action": "set", "from": "", "to": "", "note": "title Role matrix editor in ork→Role matrix editor, wire half: relay-roles write verbs and matrix.edit; short_title Role matrix editor→Matrix editor wire; size L→M; effort -→2"}
+{"when": "2026-11-01T00:54:51Z", "item": "S72", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:51Z", "item": "S72", "action": "set", "from": "", "to": "", "note": "title Grok adapter and v1 role (after credits reset 2026-11-01)→Grok adapter: run roles on the grok CLI as a third vendor; short_title Grok adapter and v1 role (after credits reset 2026-11-01)→Grok adapter"}
+{"when": "2026-11-01T00:54:52Z", "item": "S123", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:54:52Z", "item": "S123", "action": "set", "from": "", "to": "", "note": "title Relay stats: fix-round rate, role times and owner wait per run, from the ledger→Relay stats: show slicer's relay-run stats in ork instead of computing them; short_title Relay stats: fix-round rate, role times and owner wait per run, from the ledger→Relay stats: thin display of slicer's; size M→S; effort 2→1"}
+{"when": "2026-11-01T00:55:02Z", "item": "S207", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:55:02Z", "item": "S207", "action": "set", "from": "", "to": "", "note": "effort,importance,pass_key,short_title,size,title,urgency"}
+{"when": "2026-11-01T00:55:05Z", "item": "S207", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:55:05Z", "item": "S207", "action": "set", "from": "", "to": "", "note": "effort,importance,pass_key,short_title,size,title,urgency"}
+{"when": "2026-11-01T00:55:13Z", "item": "S67", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:55:13Z", "item": "S67", "action": "set", "from": "", "to": "", "note": "effort,importance,pass_key,short_title,size,title,urgency"}
+{"when": "2026-11-01T00:55:14Z", "item": "S123", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:55:14Z", "item": "S123", "action": "set", "from": "", "to": "", "note": "effort,importance,pass_key,short_title,size,title,urgency"}
+{"when": "2026-11-01T00:55:18Z", "item": "S67", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:55:18Z", "item": "S67", "action": "set", "from": "", "to": "", "note": "effort,importance,pass_key,short_title,size,title,urgency"}
+{"when": "2026-11-01T00:55:21Z", "item": "S215", "action": "add", "from": "", "to": "open", "note": "Named wave: save a set of items under a name and start it by name (state, daemon, CLI)"}
+{"when": "2026-11-01T00:55:25Z", "item": "S216", "action": "add", "from": "", "to": "open", "note": "Named wave in the Waves screen: save the ticked set under a name and launch a saved wave by name"}
+{"when": "2026-11-01T00:55:25Z", "item": "S217", "action": "add", "from": "", "to": "open", "note": "Landing check: warn on the approval card when uncommitted files in the main checkout would block the landing"}
+{"when": "2026-11-01T00:55:25Z", "item": "S218", "action": "add", "from": "", "to": "open", "note": "Wave suggest keeps engine slices apart: at most one engine, daemon or cmd slice per suggested wave"}
+{"when": "2026-11-01T00:55:25Z", "item": "S219", "action": "add", "from": "", "to": "open", "note": "Docs: re-anchor the file:line citations in docs/guide.md and docs/design.md"}
+{"when": "2026-11-01T00:55:26Z", "item": "S220", "action": "add", "from": "", "to": "open", "note": "v1.1 release prep: CHANGELOG heading, docs sweep, tag message and release checklist"}
+{"when": "2026-11-01T00:55:26Z", "item": "S221", "action": "add", "from": "", "to": "open", "note": "Daemon restart helper: pick up a rebuilt ork without waiting for every role to end"}
+{"when": "2026-11-01T00:55:26Z", "item": "S222", "action": "add", "from": "", "to": "open", "note": "Approve a wave as one action: approve every waiting run in order and stop at the first failure"}
+{"when": "2026-11-01T00:55:26Z", "item": "S223", "action": "add", "from": "", "to": "open", "note": "Non-blocking owner questions are asked in the relay ledger and read back before the finish step"}
+{"when": "2026-11-01T00:55:26Z", "item": "S224", "action": "add", "from": "", "to": "open", "note": "Set the per-project bell with ork projects set --bell"}
+{"when": "2026-11-01T00:55:26Z", "item": "S225", "action": "add", "from": "", "to": "open", "note": "Build the daemon-session test on the BSDs and vet it in CI"}
+{"when": "2026-11-01T00:55:27Z", "item": "S226", "action": "add", "from": "", "to": "open", "note": "Role matrix editor, TUI half: edit, add, remove and move rows from the matrix pane"}
+{"when": "2026-11-01T00:55:34Z", "item": "S216", "action": "set", "from": "", "to": "", "note": "depends_on -→S215"}
+{"when": "2026-11-01T00:55:34Z", "item": "S224", "action": "set", "from": "", "to": "", "note": "depends_on -→S100"}
+{"when": "2026-11-01T00:55:34Z", "item": "S225", "action": "set", "from": "", "to": "", "note": "depends_on -→S213"}
+{"when": "2026-11-01T00:55:34Z", "item": "S226", "action": "set", "from": "", "to": "", "note": "depends_on -→S173"}
+{"when": "2026-11-01T00:55:34Z", "item": "S223", "action": "set", "from": "", "to": "", "note": "depends_on -→S204"}
+{"when": "2026-11-01T00:56:10Z", "item": "S227", "action": "add", "from": "", "to": "open", "note": "Polish carried from S182, S176, S169, S171 later notes (v1.2)"}
+{"when": "2026-11-01T00:56:10Z", "item": "S228", "action": "add", "from": "", "to": "open", "note": "Sub-items dropped from the v1.1 sweeps (S214, S125, S114, S187, S190, S191, S193, S199, S201, S202, S203)"}
+{"when": "2026-11-01T00:56:10Z", "item": "S227", "action": "note", "from": "", "to": "", "note": "Polish items carried from folded v1.1 rows (owner, 2026-10-3", "by": "Jon R"}
+{"when": "2026-11-01T00:56:10Z", "item": "S228", "action": "note", "from": "", "to": "", "note": "Sub-items dropped from the v1.1 sweeps (owner, 2026-10-31), ", "by": "Jon R"}
+{"when": "2026-11-01T00:56:22Z", "item": "S214", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S130 sweep (owner, 2026-10-31): item 1 (per-role ordinal) is in S130; items 2 and 4 dropped, kept in the v1.2 dropped-items row."}
+{"when": "2026-11-01T00:56:22Z", "item": "S101", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S130 sweep (owner, 2026-10-31): items a-c are stale; item d (stopped row wording) is in S130."}
+{"when": "2026-11-01T00:56:22Z", "item": "S128", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S50 sweep (owner, 2026-10-31)."}
+{"when": "2026-11-01T00:56:22Z", "item": "S210", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S50 sweep (owner, 2026-10-31)."}
+{"when": "2026-11-01T00:56:23Z", "item": "S68", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S67 sweep (owner, 2026-10-31)."}
+{"when": "2026-11-01T00:56:23Z", "item": "S189", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S188 sweep (owner, 2026-10-31); S189 item 5 needs an owner answer and is noted there."}
+{"when": "2026-11-01T00:56:23Z", "item": "S200", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S188 sweep (owner, 2026-10-31); S200 item 1 needs an owner answer and is noted there."}
+{"when": "2026-11-01T00:56:23Z", "item": "S205", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S207 sweep (owner, 2026-10-31)."}
+{"when": "2026-11-01T00:56:23Z", "item": "S187", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S190 sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row."}
+{"when": "2026-11-01T00:56:23Z", "item": "S193", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S190 sweep and the docs re-anchor slice (owner, 2026-10-31)."}
+{"when": "2026-11-01T00:56:23Z", "item": "S199", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S190 sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row."}
+{"when": "2026-11-01T00:56:24Z", "item": "S202", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S132 sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row."}
+{"when": "2026-11-01T00:56:24Z", "item": "S203", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S132 sweep (items 2-5) and the S194 correctness sweep (item 1) (owner, 2026-10-31)."}
+{"when": "2026-11-01T00:56:24Z", "item": "S195", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S194 correctness sweep (item 1) and the v1.2 polish row (owner, 2026-10-31)."}
+{"when": "2026-11-01T00:56:24Z", "item": "S196", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S194 correctness sweep (item 1) and the v1.2 polish row (owner, 2026-10-31)."}
+{"when": "2026-11-01T00:56:24Z", "item": "S197", "action": "retire", "from": "open", "to": "retired", "note": "Folded into the S194 correctness sweep (item 1) and the v1.2 polish row (owner, 2026-10-31)."}
+{"when": "2026-11-01T00:56:29Z", "item": "S207", "action": "set", "from": "", "to": "", "note": "depends_on -→S188"}
+{"when": "2026-11-01T00:56:29Z", "item": "S130", "action": "note", "from": "", "to": "", "note": "Owner decisions (interactive questions, 2026-10-31): Q1 per-", "by": "Jon R"}
+{"when": "2026-11-01T00:56:29Z", "item": "S50", "action": "note", "from": "", "to": "", "note": "Owner decision (interactive question, 2026-10-31): files-sco", "by": "Jon R"}
+{"when": "2026-11-01T00:56:29Z", "item": "S69", "action": "note", "from": "", "to": "", "note": "Owner decisions (interactive questions, 2026-10-31): the key", "by": "Jon R"}
+{"when": "2026-11-01T00:56:43Z", "item": "S220", "action": "set", "from": "", "to": "", "note": "depends_on -→S129,S67,S69,S103,S50,S130,S131,S173,S180,S194,S204,S215,S217,S218,S72,S132,S190,S219,S100,S188,S213,S216,S226,S223,S207,S224,S225"}
+{"when": "2026-11-01T00:58:18Z", "item": "S67", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:18Z", "item": "S207", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:22Z", "item": "S224", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:22Z", "item": "S225", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:23Z", "item": "S204", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:23Z", "item": "S223", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:24Z", "item": "S129", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:24Z", "item": "S131", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:24Z", "item": "S173", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:25Z", "item": "S226", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:25Z", "item": "S72", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:26Z", "item": "S215", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:26Z", "item": "S216", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:26Z", "item": "S217", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:27Z", "item": "S218", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:27Z", "item": "S220", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:28Z", "item": "S123", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:28Z", "item": "S221", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:29Z", "item": "S222", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting. Ask ", "by": "Jon R"}
+{"when": "2026-11-01T00:58:49Z", "item": "S188", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:58:49Z", "item": "S188", "action": "set", "from": "", "to": "", "note": "effort,importance,pass_key,short_title,size,title,urgency"}
+{"when": "2026-11-01T00:58:50Z", "item": "S100", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:58:50Z", "item": "S100", "action": "set", "from": "", "to": "", "note": "effort,importance,pass_key,short_title,size,title,urgency"}
+{"when": "2026-11-01T00:58:50Z", "item": "S190", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:58:50Z", "item": "S190", "action": "set", "from": "", "to": "", "note": "effort,importance,pass_key,short_title,size,title,urgency"}
+{"when": "2026-11-01T00:58:50Z", "item": "S213", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-01T00:58:51Z", "item": "S213", "action": "set", "from": "", "to": "", "note": "effort,importance,pass_key,short_title,size,title,urgency"}

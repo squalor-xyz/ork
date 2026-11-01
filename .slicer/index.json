@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 215,
+  "next_id": 229,
   "preamble": "",
   "passes": [
     {
@@ -14,6 +14,12 @@
     {
       "key": "v1.1",
       "heading": "",
+      "intro": "",
+      "outro": ""
+    },
+    {
+      "key": "v1.2",
+      "heading": "v1.2",
       "intro": "",
       "outro": ""
     }
@@ -1533,8 +1539,8 @@
     },
     {
       "id": "S67",
-      "title": "Roadmap editing: park and unpark from the TUI (needs adj 11)",
-      "short_title": "Roadmap editing: park and unpark from the TUI (needs adj 11)",
+      "title": "Roadmap editing from the TUI: park, unpark and reorder",
+      "short_title": "Roadmap park, unpark, reorder",
       "status": "open",
       "has_slice": true,
       "depends_on": [
@@ -1555,11 +1561,25 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "76feabf7-94f5-4804-a51a-aa90a1accb53",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nQ1 (drafter B): what J and K mean when the queue is ranked by score. \"slicer move\" changes the stored queue order, which only breaks ties; the Roadmap shows \"slicer list\" order (readiness, pass, effective score, then stored order: ../slicer/docs/commands.md:32,38, ../slicer/docs/how-it-works.md:134-140). A move past a row with another pass or score leaves the shown order unchanged.\nOptions: (a) as the owner decided on 2026-10-23: move one place with the exact command on the confirm bar, and say \"list unchanged\" when the daemon reports no change [spec default]; (b) refuse the key when the neighbour is in another pass (score is not exposed with its inheritance, so a score check is not possible); (c) ship park/unpark now and move reorder to v1.2.\nDrafter recommendation: (a).\nWaits: the changed field of item.move, the unchanged status text and TestMoveThatLeavesTheOrderSaysSo in the S67 spec.",
+          "created_at": "2026-11-01T00:58:18Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -1573,7 +1593,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": 1,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -1581,7 +1601,7 @@
       "id": "S68",
       "title": "Roadmap editing: reorder an item from the TUI (needs adj 11)",
       "short_title": "Roadmap editing: reorder an item from the TUI (needs adj 11)",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [
         "S12"
@@ -1615,7 +1635,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into the S67 sweep (owner, 2026-10-31).",
         "importance": 2,
         "urgency": 2,
         "effort": 2,
@@ -1624,8 +1644,8 @@
     },
     {
       "id": "S69",
-      "title": "Roadmap editing: open slicer tui for the project (needs adj 11)",
-      "short_title": "Roadmap editing: open slicer tui for the project (needs adj 11)",
+      "title": "Open slicer tui from the Roadmap with O",
+      "short_title": "Open slicer tui from the Roadmap",
       "status": "open",
       "has_slice": true,
       "depends_on": [
@@ -1637,6 +1657,20 @@
           "kind": "",
           "text": "**2026-10-29** — Moved to v1.1 on 2026-10-29: adj 173 scope.v1-ork-edits decided include (owner), whose option keeps roadmap reorder and park later.",
           "created_at": "2026-10-29T20:22:38Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "ebc82e26-f760-4d14-bd8f-e8a73aee1050",
+          "kind": "",
+          "text": "**2026-11-01** — Owner decisions (interactive questions, 2026-10-31): the key is O; O is refused while the Roadmap item pane is open ('Close the pane to open slicer tui').",
+          "created_at": "2026-11-01T00:56:29Z",
           "attempt": 0,
           "by": "Jon R",
           "verified_by": "",
@@ -1669,8 +1703,8 @@
     },
     {
       "id": "S72",
-      "title": "Grok adapter and v1 role (after credits reset 2026-11-01)",
-      "short_title": "Grok adapter and v1 role (after credits reset 2026-11-01)",
+      "title": "Grok adapter: run roles on the grok CLI as a third vendor",
+      "short_title": "Grok adapter",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
@@ -1694,6 +1728,20 @@
           "kind": "",
           "text": "**2026-10-31** — Owner 2026-10-31 (this session): S72 moves from v1.0 to v1.1 so v1.0 can be cut without it. Supersedes the 2026-10-30 note that the release waits for S72.",
           "created_at": "2026-10-31T12:17:23Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "82e9b6fe-892a-4b83-b381-aa15f298fd29",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nQ7 (drafter D): four points.\n(1) The matrix agent value for Grok rows and so the matrixAdapters key (the spec assumes \"grok\", case-insensitive, written \"--agent Grok\" in the reported commands).\n(2) How write roles run on grok: tool names with a permission mode (\"--tools\", \"--permission-mode\"; \"--tools\" takes names, not the claude-style patterns in Request.Allowlist) or a sandbox profile as codex does (decision 100, vendor.codex-write); the six probes only measure the first and not a full write path, so the spec makes the implementer stop and report if probes 04 and 05 do not show a safe mode. Drafter recommendation: decide after the probes, with their output in hand; do not allow bypassPermissions.\n(3) Slot cap for grok: none (defaultVendorCaps unchanged). Drafter recommendation: none until a limit is seen.\n(4) Doctor login line: none unless a probe finds a reliable no-cost command (\"grok models\" said \"not authenticated\" while \"-p\" worked); the spec adds nothing otherwise.\nWaits: S72 Implement steps 4, 6, 8.",
+          "created_at": "2026-11-01T00:58:25Z",
           "attempt": 0,
           "by": "Jon R",
           "verified_by": "",
@@ -1885,7 +1933,7 @@
       "id": "S101",
       "title": "Overview engine rows at 80x24: pad the kind column only when needed; no repeated state word; stopped age placement",
       "short_title": "Overview engine rows at 80x24: pad the kind column only when needed; no repeated state word; stopped age placement",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -1902,7 +1950,7 @@
         "key": "engine-row-narrow",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into the S130 sweep (owner, 2026-10-31): items a-c are stale; item d (stopped row wording) is in S130.",
         "importance": 2,
         "urgency": 2,
         "effort": 1,
@@ -1911,8 +1959,8 @@
     },
     {
       "id": "S103",
-      "title": "Version and logo polish: clear the stale marker after a daemon restart; keep --version script-friendly",
-      "short_title": "Version and logo polish: clear the stale marker after a daemon restart; keep --version script-friendly",
+      "title": "Version and logo polish: mark only on a terminal, stale marker clears after a restart",
+      "short_title": "Version line and stale marker",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
@@ -2187,8 +2235,8 @@
     },
     {
       "id": "S50",
-      "title": "Check the diff against the slice's Files list",
-      "short_title": "Check the diff against the slice's Files list",
+      "title": "Gate brief: warn on files outside the slice's Files list, fence the check command",
+      "short_title": "Files-scope warning and brief fence",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
@@ -2206,11 +2254,25 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "c065362a-f94b-45c0-8478-b2e295d831f9",
+          "kind": "",
+          "text": "**2026-11-01** — Owner decision (interactive question, 2026-10-31): files-scope matching as the spec writes it: an entry covers itself and anything under it; .slicer/ is exempt; an empty paths list gives no warning; CHANGELOG.md is not exempt.",
+          "created_at": "2026-11-01T00:56:29Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -2251,6 +2313,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "b1b9cc73-e1c9-4115-a609-fa00f0ca12ad",
+          "kind": "",
+          "text": "**2026-11-01** — Moved to v1.2 (owner, 2026-10-31, prescan): large cross-cutting engine change.",
+          "created_at": "2026-11-01T00:24:18Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -2264,7 +2340,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 2,
@@ -2310,6 +2386,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "8d873f88-bebf-4795-8ea5-2efb2c9d8e15",
+          "kind": "",
+          "text": "**2026-11-01** — Moved to v1.2 (owner, 2026-10-31, prescan): mouse is opt-in and has a wide TUI surface.",
+          "created_at": "2026-11-01T00:24:19Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -2323,7 +2413,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 2,
@@ -2496,6 +2586,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "cbde74f6-ceb3-4e4c-9fe3-7f685eb089aa",
+          "kind": "",
+          "text": "**2026-11-01** — Moved to v1.2 (owner, 2026-10-31, prescan): L, depends on S61.",
+          "created_at": "2026-11-01T00:24:19Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -2509,7 +2613,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 2,
@@ -2520,8 +2624,8 @@
     },
     {
       "id": "S100",
-      "title": "Bell: ring the terminal when a role needs the owner or a run ends",
-      "short_title": "Bell: ring the terminal when a role needs the owner or a run ends",
+      "title": "Bell: ring when a run ends, and a per-project bell setting",
+      "short_title": "Bell on run end, per-project setting",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
@@ -5910,15 +6014,44 @@
     },
     {
       "id": "S123",
-      "title": "Relay stats: fix-round rate, role times and owner wait per run, from the ledger",
-      "short_title": "Relay stats: fix-round rate, role times and owner wait per run, from the ledger",
+      "title": "Relay stats: show slicer's relay-run stats in ork instead of computing them",
+      "short_title": "Relay stats: thin display of slicer's",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "22b13024-3765-4d14-bd95-bd8e5a90e2d5",
+          "kind": "",
+          "text": "**2026-11-01** — Moved to v1.2 (owner, 2026-10-31, prescan): slicer relay-run stats already prints fix rounds, gate FAILs, role times and owner wait (slicer docs/agents.md:503). Re-spec as a thin display of that output, not a computation in ork.",
+          "created_at": "2026-11-01T00:24:19Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "c8626c44-d6bb-4bf2-9dca-c23eaae76868",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these. The manifest says SR-Q1 comes first.\n\nSR-Q1 (drafter E): where does the display show?\nOptions: (a) \"ork stats [PROJECT] [--since DATE] [--json]\" CLI (smallest; no daemon, no goldens; N-class); (b) a TUI panel on the project page (needs a stats.get daemon method, goldens and a key; E-class; bigger than S); (c) a stats section in \"ork doctor\"; (d) a combination.\nDrafter recommendation: (a) first; the retrospective's use is the owner reading numbers (R2, R4).\n\nSR-Q2 (drafter E): range. Pass \"--since\" through only (all-time by default), or default to a window such as the last 30 days.\nDrafter recommendation: pass-through, no default; ork does not decide a window.",
+          "created_at": "2026-11-01T00:58:28Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
-        "size": "M",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -5927,12 +6060,12 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 2,
         "urgency": 1,
-        "effort": 2,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -6011,7 +6144,7 @@
       "id": "S128",
       "title": "Brief: fence the check command so a backtick or newline renders",
       "short_title": "Brief: fence the check command so a backtick or newline renders",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -6028,7 +6161,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into the S50 sweep (owner, 2026-10-31).",
         "importance": 2,
         "urgency": 2,
         "effort": 1,
@@ -6037,15 +6170,30 @@
     },
     {
       "id": "S129",
-      "title": "Live usage edge cases: no result event, non-claude cost, multi-message sum, total dip",
-      "short_title": "Live usage edge cases: no result event, non-claude cost, multi-message sum, total dip",
+      "title": "Live usage edge cases: unknown usage, reported cost, total dip at round end",
+      "short_title": "Live usage edge cases",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7b2514f1-e497-4649-8cc2-c01d892f1ef4",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nQ2 (drafter D): how is cost known?\nOptions: (a) a finished role has a cost when its recorded cost_usd is non-zero, and usage when tokens or cost are non-zero (in the spec; agrees with docs/state.md:579 and docs/dashboard.md:1764-1766; no new wire field); (b) an explicit adapter capability, a per-role cost_known flag set by the daemon (what the old S129 text asked for: \"key cost-known on an adapter capability\"; adds a wire field and changes all test fixtures and goldens that set a claude cost).\nDrafter recommendation: (a). Also confirm the rule that a finished role with zero tokens and zero cost reads \"tokens -  $-\" (it cannot be told from \"not recorded\").\nWaits: S129 Implement steps 1-2, the docs sentences, and the golden changes.",
+          "created_at": "2026-11-01T00:58:24Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -6059,21 +6207,36 @@
         "reason": "",
         "importance": 2,
         "urgency": 3,
-        "effort": 1,
+        "effort": 2,
         "attempts": 0
       }
     },
     {
       "id": "S130",
-      "title": "Run pane text polish: compact token counts, ASCII gate verdict glyph, tail markdown, h>=24 Overview rule in docs",
-      "short_title": "Run pane text polish: compact token counts, ASCII gate verdict glyph, tail markdown, h>=24 Overview rule in docs",
+      "title": "Run pane and Overview text polish sweep",
+      "short_title": "Run pane and Overview text polish",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "f4ed5358-35a9-40c4-8364-2b528b2fa6ff",
+          "kind": "",
+          "text": "**2026-11-01** — Owner decisions (interactive questions, 2026-10-31): Q1 per-role ordinal as #N on repeated roles; Q2 S214 items 2 and 4 dropped; Q3 the A key toggles Waves between three waves and all, S125 cosmetics dropped; Q4 a stopped engine row reads 'N of M steps' (drop only 'running'). Tail markdown stays raw.",
+          "created_at": "2026-11-01T00:56:29Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -6087,18 +6250,33 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": 1,
+        "effort": 2,
         "attempts": 0
       }
     },
     {
       "id": "S131",
-      "title": "Self-host check cost and base branch: cache projectBuild git calls; read the base branch",
-      "short_title": "Self-host check cost and base branch: cache projectBuild git calls; read the base branch",
+      "title": "Self-host check: base branch from the main checkout, one git call when nothing moved",
+      "short_title": "Self-host check base branch",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "3e9a9c8e-7f56-4bff-a5e7-005a4cd6c43f",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nQ4 (drafter D): depth of the cache and the notice wording.\nOptions: (a) one \"git rev-parse HEAD --symbolic-full-name HEAD\" per snapshot or status call and a result cache keyed by tip (the spec); (b) read the base tip from the cache's Head part so a hit makes no git call (deeper, a refresh interval of lag). And: keep the notice \"daemon behind main: restart with ork daemon restart\" when the base is another branch, or rename it.\nDrafter recommendation: (a), keep the wording.\nWaits: S131 Implement steps 2-4. The measurement in step 1 is reported either way.",
+          "created_at": "2026-11-01T00:58:24Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -6121,15 +6299,15 @@
     },
     {
       "id": "S132",
-      "title": "Structured question polish: wrapped option indent, 4 options in a short pane, alert wording, dash in Recommend, digit edge tests",
-      "short_title": "Structured question polish: wrapped option indent, 4 options in a short pane, alert wording, dash in Recommend, digit edge tests",
+      "title": "Question and answer polish sweep E6: Questions group, option wrap, dash in Recommend, answer-pane gaps",
+      "short_title": "Question polish sweep E6",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -6142,8 +6320,8 @@
         "group": "",
         "reason": "",
         "importance": 2,
-        "urgency": 2,
-        "effort": 1,
+        "urgency": 1,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -9427,8 +9605,8 @@
     },
     {
       "id": "S173",
-      "title": "Role matrix editor in ork",
-      "short_title": "Role matrix editor",
+      "title": "Role matrix editor, wire half: relay-roles write verbs and matrix.edit",
+      "short_title": "Matrix editor wire",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
@@ -9446,11 +9624,25 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "e5ca2859-e171-43c7-aa09-b1d4f7e8bd4b",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nQ5 (drafter D, wire half): what does \"warning when the adapter is not installed\" mean?\nOptions: (a) ork has no adapter for the agent (matrixAdapters; S173's own \"skip warning\"; the spec); (b) the vendor CLI binary is missing from PATH (a LookPath in the daemon).\nDrafter recommendation: (a). Also accepted as a limit: a dash-leading rule text with no space is refused by rule-edit (slicer's parser would read it as a flag).\nWaits: the S173 warning test and the handler.",
+          "created_at": "2026-11-01T00:58:24Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
       "fields": {
-        "size": "L",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -9464,7 +9656,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -9788,6 +9980,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "3418cf11-c6ca-44ac-a2ee-f9ada5be4dfd",
+          "kind": "",
+          "text": "**2026-11-01** — Moved to v1.2 (owner, 2026-10-31, prescan): needs a new adj record for spec editing (scope.spec-drafting not found); about 19 files.",
+          "created_at": "2026-11-01T00:24:19Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -9801,7 +10007,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 2,
@@ -9849,7 +10055,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -10204,7 +10410,7 @@
       "id": "S187",
       "title": "S166 later notes: launch replan edge case and lineup editor key polish",
       "short_title": "S166 later notes: launch replan edge case and lineup editor key polish",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -10236,7 +10442,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into the S190 sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row.",
         "importance": 1,
         "urgency": 1,
         "effort": null,
@@ -10245,10 +10451,10 @@
     },
     {
       "id": "S188",
-      "title": "S178 later notes: doctor hint edge cases and wording",
-      "short_title": "S178 later notes: doctor hint edge cases and wording",
+      "title": "CLI wording and polish: doctor hints, spec sitting and adj prompts",
+      "short_title": "CLI wording and polish sweep",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -10268,7 +10474,7 @@
       ],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -10282,7 +10488,7 @@
         "reason": "",
         "importance": 1,
         "urgency": 1,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -10290,7 +10496,7 @@
       "id": "S189",
       "title": "S167 later notes: spec sitting EOF line, run JSON shapes, refusal prefix, run.start deps",
       "short_title": "S167 later notes: spec sitting EOF line, run JSON shapes, refusal prefix, run.start deps",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -10322,7 +10528,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into the S188 sweep (owner, 2026-10-31); S189 item 5 needs an owner answer and is noted there.",
         "importance": 1,
         "urgency": 1,
         "effort": null,
@@ -10331,10 +10537,10 @@
     },
     {
       "id": "S190",
-      "title": "S168 later notes: pane scroll keys, matrix wrap width, Overview hint tie",
-      "short_title": "S168 later notes: pane scroll keys, matrix wrap width, Overview hint tie",
+      "title": "TUI notes sweep T2: launch, lineup editor, panes, report viewer and spec status",
+      "short_title": "TUI notes sweep T2",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -10354,7 +10560,7 @@
       ],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -10366,9 +10572,9 @@
         "pass": "v1.1",
         "group": "",
         "reason": "",
-        "importance": 1,
+        "importance": 2,
         "urgency": 1,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -10436,6 +10642,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "ee734455-f44e-4e7c-8645-db7e11b6736a",
+          "kind": "",
+          "text": "**2026-11-01** — Moved to v1.2 (owner, 2026-10-31, prescan): item 1 is a secrets question (mask vendor_env in --json; projects.json is mode 0644) that needs an owner decision.",
+          "created_at": "2026-11-01T00:24:19Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -10449,7 +10669,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 1,
@@ -10462,7 +10682,7 @@
       "id": "S193",
       "title": "S184 later notes: guide anchors, lost answer error, retry wording",
       "short_title": "S184 later notes: guide anchors, lost answer error, retry wording",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -10494,7 +10714,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into the S190 sweep and the docs re-anchor slice (owner, 2026-10-31).",
         "importance": 1,
         "urgency": 1,
         "effort": null,
@@ -10503,10 +10723,10 @@
     },
     {
       "id": "S194",
-      "title": "S182 later notes: hung sibling retry brief, vendor event cadence, Overview reason clip",
-      "short_title": "S182 later notes: hung sibling retry brief, vendor event cadence, Overview reason clip",
+      "title": "Correctness sweep: watchdog, report open, vendor wait heartbeat, note retry, dash answers",
+      "short_title": "Correctness sweep",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -10526,7 +10746,7 @@
       ],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -10538,9 +10758,9 @@
         "pass": "v1.1",
         "group": "",
         "reason": "",
-        "importance": 1,
-        "urgency": 1,
-        "effort": null,
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -10548,7 +10768,7 @@
       "id": "S195",
       "title": "S176 later notes: report open guards, viewer heading and list indent",
       "short_title": "S176 later notes: report open guards, viewer heading and list indent",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -10580,7 +10800,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into the S194 correctness sweep (item 1) and the v1.2 polish row (owner, 2026-10-31).",
         "importance": 1,
         "urgency": 1,
         "effort": null,
@@ -10591,7 +10811,7 @@
       "id": "S196",
       "title": "S169 later notes: wait heartbeat, vendor push, multi-waiter test, spec-check slots",
       "short_title": "S169 later notes: wait heartbeat, vendor push, multi-waiter test, spec-check slots",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -10623,7 +10843,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into the S194 correctness sweep (item 1) and the v1.2 polish row (owner, 2026-10-31).",
         "importance": 1,
         "urgency": 1,
         "effort": null,
@@ -10634,7 +10854,7 @@
       "id": "S197",
       "title": "S171 later notes: note refresh after write, guide entries, hint tier side effects",
       "short_title": "S171 later notes: note refresh after write, guide entries, hint tier side effects",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -10666,7 +10886,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into the S194 correctness sweep (item 1) and the v1.2 polish row (owner, 2026-10-31).",
         "importance": 1,
         "urgency": 1,
         "effort": null,
@@ -10734,7 +10954,7 @@
       "id": "S199",
       "title": "S146 later notes: id fit boundary test, section toggle, short step part",
       "short_title": "S146 later notes: id fit boundary test, section toggle, short step part",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -10766,7 +10986,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into the S190 sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row.",
         "importance": 1,
         "urgency": 1,
         "effort": null,
@@ -10777,7 +10997,7 @@
       "id": "S200",
       "title": "S172 later notes: ask asker env, control characters in adj text, EOF newline",
       "short_title": "S172 later notes: ask asker env, control characters in adj text, EOF newline",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -10809,7 +11029,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into the S188 sweep (owner, 2026-10-31); S200 item 1 needs an owner answer and is noted there.",
         "importance": 1,
         "urgency": 1,
         "effort": null,
@@ -10863,7 +11083,7 @@
       "id": "S202",
       "title": "S185 later notes: decide refusal codes, option wrap, help with no options",
       "short_title": "S185 later notes: decide refusal codes, option wrap, help with no options",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -10909,7 +11129,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into the S132 sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row.",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -10920,7 +11140,7 @@
       "id": "S203",
       "title": "S112 later notes: dash-leading answers, Via passthrough, ledger option rendering",
       "short_title": "S112 later notes: dash-leading answers, Via passthrough, ledger option rendering",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -10952,7 +11172,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into the S132 sweep (items 2-5) and the S194 correctness sweep (item 1) (owner, 2026-10-31).",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -10961,7 +11181,7 @@
     },
     {
       "id": "S204",
-      "title": "Engine follows relay v11 process rules",
+      "title": "Engine follows relay v11 process rules: gate close timing and [AFTER LAND] Check lines",
       "short_title": "Engine v11 process rules",
       "status": "open",
       "has_slice": true,
@@ -10972,6 +11192,20 @@
           "kind": "",
           "text": "**2026-10-30** — From S198 review (2026-10-30): a v11 gate step is closed with the report's verdict at internal/engine/round.go:400, before a TriageGate shape error (round.go:471-481) or an Owner needed question (round.go:493-505) can pause the round, so the ledger can show pass for a round the engine did not accept; a retry then records a second gate round that slicer's gate_rounds/with_verdict counts (../slicer/src/slicer/relayrun.py:973-982) would count twice (retry behaviour not traced). Decide whether such a round closes with its verdict (now) or without one.",
           "created_at": "2026-10-30T20:37:43Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "ad13ecab-9c06-4a1a-9c04-0ce43ad9d000",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nQ1 (drafter C; suggested adj key relay.gate-verdict): does a v11 gate round close with its verdict before the engine accepts the round?\nWhat the drafter traced: internal/engine/round.go:439-462: for a v11 gate the step is closed with \"--phase done --verdict pass or fail\" right after the report is read, before TriageGate (:477), before the \"## Owner needed\" pause (:500-509) and before the [owner blocker] hold (:513-530). CheckReport returns no report on a shape error, so a report with a bad first line already closes without a verdict (TestV11GateWithoutAVerdictLineClosesWithoutOne). After a pause, Answer or Retry runs the gate again as a new attempt with a new ledger step (round.go:226-233 names the attempt, stepStart at :605-622 opens the step), and the engine counts the slice's gate FAILs only for accepted rounds (internal/engine/states.go:554-584, rec.Fails++). slicer's _measure counts every gate-role lane step as a gate round regardless of phase and verdict (../slicer/src/slicer/relayrun.py:973-982), so the retried gate is two gate rounds in both options. What the verdict changes: with the verdict on the first step, with_verdict counts it and gate_fails counts it when it says fail although ork wrote no \"Review FAIL\" note and did not send the slice back; without it, gates.by_proxy counts the round (:1052) and gate_fails counts it only when an implementer fix round follows it (:977-982), which a retried gate is not. So the \"twice\" in the S198 note is two rounds, not one verdict counted twice; the real difference is a verdict in the ledger for a round ork did not act on.\nOptions: (a) keep: close with the verdict as the report says it; the ledger shows a PASS or FAIL for a round that then paused. (b) Close with the verdict only for a round the engine accepts (the one that returns outcome ok true, round.go:534); a round paused for a shape error, an owner question or a blocker finding closes done with no verdict, and the retried gate carries it. (c) Close such a round \"--phase fail --reason ...\" with no verdict; the drafter does not recommend it: fail means the role's process failed, and the run tree draws it as a failed step.\nDrafter recommendation: (b): the ledger verdict matches what ork acted on.\nWaits: S204 Implement step 3 and the \"Gate close\" tests. Other S204 steps do not wait.\n\nQ2 (drafter C): how are v11 rules 1 and 2 recorded?\nRule 1, \"a small fix round is checked and gated in one pass by the read-only role that raised its findings\": ork's fix round goes to checks and then the gate, which resumes the reviewer's session (internal/engine/states.go:164-176,523-531); there is no second review round. Pinned by TestReviewFindingsStartAFixRoundAndTheResumedReviewerGatesIt (internal/engine/engine_test.go:361).\nRule 2, \"a clean merge of main is regated by the one-pass small-fix check on the merge diff\": ork merges main in, renders, re-runs the project check command and \"slicer check\", then fast-forwards, with no role round (internal/engine/land.go:110-175); the ledger run has already ended at the finish step, so a regate round could not be recorded (S153).\nOptions: (a) document rule 1 as met and rule 2 as a deviation in docs/design.md and docs/orchestrator-parity.md; (b) build a one-pass gate round on the merge diff in land.go with no ledger step: a separate M, E-class slice.\nDrafter recommendation: (a): nothing to build, and it matches how ork already runs.\nWaits: the wording of two docs rows in S204 step 7; no code.\n\nQ3 (drafter C): does ork run an [AFTER LAND] Check line itself at landing?\nOptions: (a) no: the approval card lists each such line as \"deferred to land: ...\" (already in state later), and the owner runs it after landing; ork runs only the project check command, never a slice's Check lines, and a line may be prose. (b) Yes, for a line that is one backticked command: run it in the main checkout after the fast-forward, and a failure pauses the slice. A separate slice.\nDrafter recommendation: (a).\nWaits: S204 Implement step 4 is written for (a); under (b) report and stop.",
+          "created_at": "2026-11-01T00:58:23Z",
           "attempt": 0,
           "by": "Jon R",
           "verified_by": "",
@@ -10998,7 +11232,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -11006,7 +11240,7 @@
       "id": "S205",
       "title": "S198 later notes: gate close on a failed status read, doctor FAIL line repeat, gate no-fix wording",
       "short_title": "S198 later notes",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -11023,7 +11257,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into the S207 sweep (owner, 2026-10-31).",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -11053,6 +11287,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "acb26bc2-eca9-456a-ae62-6ea0a26484e5",
+          "kind": "",
+          "text": "**2026-11-01** — Moved to v1.2 (owner, 2026-10-31, prescan): blocked on adjudicate S45; adj contract does not exist yet.",
+          "created_at": "2026-11-01T00:24:19Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -11066,7 +11314,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 2,
@@ -11077,11 +11325,13 @@
     },
     {
       "id": "S207",
-      "title": "S24 later notes",
-      "short_title": "S24 later notes",
+      "title": "Contract and doctor cleanup: one read, one phrase, plain failures",
+      "short_title": "Contract and doctor cleanup",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S188"
+      ],
       "note_records": [
         {
           "id": "02b0d7d3-5f0b-40d4-aaa9-0dd0ce0bd4c7",
@@ -11096,11 +11346,25 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "0ee638b1-da21-4f87-ac58-547f3d0bf1f8",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nQ5 (drafter B): the two \"found\" formats in \"ork doctor\". Global contract.found is \"Contract: relay v11\", a project's is \"relay v11\".\nOptions: (a) keep both and document them [spec default]; (b) make both bare; (c) make both \"Contract: ...\". (b) and (c) change JSON that scripts may read and contractDirection (internal/cli/upgrade.go:160).\nDrafter recommendation: (a).\nWaits: the docs/design.md:1656-1662 wording only.\n\nQ6 (drafter B): the exit code for an unknown NAME in \"projects pin\" and \"projects unpin\". The S24 docs say exit 2 \"usage\" on purpose (docs/design.md:1614-1616); neighbouring commands give not_found, exit 1 (internal/cli/wave.go:85).\nOptions: (a) not_found, exit 1, with the hint \"run 'ork projects list'\" [spec default]; (b) keep exit 2 and add only the hint.\nDrafter recommendation: (a).\nWaits: step 5 of the S207 spec and TestProjectsPinAndUnpinUnknownNameIsNotFound.\n\nQ7 (drafter B, from S211 item 1): duplicate ui_pass_skills names (\"a,a\").\nOptions: (a) the shared validator refuses a repeated name, quoting it, on every path, like the other bad names [spec default]; (b) the CLI drops duplicates silently; (c) leave it.\nDrafter recommendation: (a). An existing projects.json that already holds a duplicate would then fail to load.\nWaits: step 7 of the S207 spec and the two tests marked \"waits on manifest question Q7\".\n\nQ8 (drafter B, S211 items 3 and 4, not specced in S207): what they say. \"slicer show S211\" and \"slicer log --item S211\" carry only the title (\"untrimmed control-character doc line, full-line brief assertion\"); the S209 review text is not in the slice. The drafter could not tell which doc line or which assertion is meant (ValidateUIPassSkills refuses NUL, CR, LF and untrimmed names but accepts other control characters; the brief tests assert a full \"## Skills\" line at internal/engine/brief_test.go:245 and uipass_test.go:853).\nOptions: (a) the owner or the S209 reviewer states them and the drafter adds them; (b) drop both.\nDrafter recommendation: (a) if the S209 gate output is still in a session; otherwise (b).\nWaits: retirement of S211 (keep S211 open until items 3 and 4 are known).",
+          "created_at": "2026-11-01T00:58:18Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -11114,7 +11378,7 @@
         "reason": "",
         "importance": 1,
         "urgency": 1,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -11193,7 +11457,7 @@
       "id": "S210",
       "title": "S208 later note: cite engine.default-cap beside the default in docs/design.md:231-232",
       "short_title": "S208 later note: cite engine.default-cap beside the default in docs/design.md:231-232",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [],
@@ -11210,7 +11474,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into the S50 sweep (owner, 2026-10-31).",
         "importance": 1,
         "urgency": 1,
         "effort": 1,
@@ -11275,15 +11539,15 @@
     },
     {
       "id": "S213",
-      "title": "S212 later notes: freebsd vet for the getsid helpers, fail the release when CHANGELOG has no section for the tag, strip signed-tag signatures from notes, persist-credentials false on test and build checkouts, setup-go cache off for release builds, guards tolerant of YAML reformats",
-      "short_title": "S212 later notes: freebsd vet for the getsid helpers, fail the release when CHANGELOG has no section for the tag, strip signed-tag signatures from notes, persist-credentials false on test and build checkouts, setup-go cache off for release builds, guards tolerant of YAML reformats",
+      "title": "Release workflow hardening: changelog guard, clean notes, no stored credentials",
+      "short_title": "Release workflow hardening",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -11297,7 +11561,7 @@
         "reason": "",
         "importance": 1,
         "urgency": 1,
-        "effort": 1,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -11305,7 +11569,7 @@
       "id": "S214",
       "title": "S108 later notes: per-role ordinal on repeated done steps, overflow marker under Recent, golden for a failed step and a fix round, task-line column vs deeper child glyph",
       "short_title": "S108 later notes: per-role ordinal on repeated done steps, overflow marker under Recent, golden for a failed step and a fix round, task-line column vs deeper child glyph",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [],
@@ -11321,6 +11585,631 @@
         "cites": [],
         "key": "",
         "pass": "v1.1",
+        "group": "",
+        "reason": "Folded into the S130 sweep (owner, 2026-10-31): item 1 (per-role ordinal) is in S130; items 2 and 4 dropped, kept in the v1.2 dropped-items row.",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S215",
+      "title": "Named wave: save a set of items under a name and start it by name (state, daemon, CLI)",
+      "short_title": "Named wave: state, daemon, CLI",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "47c253a8-27ff-4667-bbed-cf58fac2a5c3",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nNW-Q1 (drafter E): how do define, list, rm and start name the project, and does \"start NAME\" take it from the saved wave? The brief's forms have no project, but the file is keyed by project and name and \"wave start\" takes PROJECT ITEM... today (internal/cli/wave.go:100-102).\nOptions: (a) a \"--project P\" flag: required on define, optional on list, optional on rm and start when the name is unique across projects (the saved wave supplies the project), required when ambiguous; (b) positional \"ork wave define P NAME ITEM...\" and \"ork wave start P NAME\" (but \"start P NAME\" is indistinguishable from \"start P ITEM\"); (c) \"--project\" always required.\nDrafter recommendation: (a): one positional means a name, two or more keep the typed form, nothing existing changes.\nWaits: the CLI step and TestWaveProjectArgumentFollowsNWQ1.\n\nNW-Q2 (drafter E): name syntax and limits.\nOptions: (a) 1 to 32 characters of [a-z0-9._-], starting with a letter or digit, never starting with \"wave-\" (adj 138 tells wave ids from run ids by that prefix), case-sensitive; item ids must exist as written, no repeats, at most 20 items; (b) any single-line text up to 64 characters without NUL, any number of items.\nDrafter recommendation: (a).\nWaits: wavestore name rules and tests.\n\nNW-Q3 (drafter E): what does define do with a name that already exists for the project?\nOptions: (a) refuse with duplicate_name unless \"--replace\" is given (the TUI asks \"Replace NAME? [y/N]\"); (b) replace silently; (c) always refuse (remove first).\nDrafter recommendation: (a).\nWaits: TestWaveDefineDuplicateNameFollowsNWQ3 and the TUI replace test.\n\nNW-Q4 (drafter E): unknown, retired or done members. At define time: (a) refuse an item slicer does not know (recommended); (b) accept it. At start time, for a member that is done (already decided: skipped), retired, or no longer in slicer: (a) skip it like a done member and name it with its status, never rewriting the saved file (recommended); (b) refuse the whole start naming them; (c) drop them from the saved wave.\nWaits: Startable, TestWaveDefineItemRulesFollowNWQ4, TestSavedWaveStartableSkipsDoneRetiredAndMissing.\n\nNW-Q5 (drafter E): file name, directory and mode. The brief says next to the registry.\nOptions: file waves.json in the registry's directory (~/.config/ork/, found as filepath.Dir of the registry path so tests need no new setting) with mode 0644 like projects.json, or 0600 (it holds only names and item ids); or ~/.local/state/ork/waves.json beside the run records.\nDrafter recommendation: waves.json beside projects.json, mode 0600 (no cost, least exposure).\nWaits: wavestore, docs/state.md, the mode test.\n\nNW-Q6 (drafter E): \"ork projects rm\" and saved waves of that project.\nOptions: (a) drop them in the same step, as spec-check state is dropped today (removeProjectSpecsLocked, internal/daemon/handlers.go:479-508); (b) keep them and list them as \"project not registered\"; (c) refuse while any exist.\nDrafter recommendation: (a).\nWaits: TestRemoveProjectKeepsOrDropsSavedWavesPerNWQ6.\n\nNW-Q9 (drafter E, short form; full text on S216): show the wave name in the TUI (run pane or Overview row)? Run records carry it from this slice. Options: (a) not in the TUI for now (it is in \"ork status --json\"); (b) a \"wave NAME\" line in the run pane, which needs source.EngineRun and engineRuns changes and makes the TUI slice E-class. Drafter recommendation: (a).",
+          "created_at": "2026-11-01T00:58:26Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "named-wave",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S216",
+      "title": "Named wave in the Waves screen: save the ticked set under a name and launch a saved wave by name",
+      "short_title": "Waves screen: save and load named wave",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S215"
+      ],
+      "note_records": [
+        {
+          "id": "62cb85fb-6019-4e4c-86bd-6a5262889372",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nNW-Q7 (drafter E): keys for save and for the saved list on the Waves screen. Free letters today (internal/tui/keys.go:60-124): w, W, L, b, u.\nOptions: w save and L list; S and L; or one key that opens a small menu.\nDrafter recommendation: w (write) and L (list/load, next to l launch).\nWaits: keys, hint lines, goldens.\n\nNW-Q8 (drafter E): load semantics.\nOptions: (a) load ticks the startable members that are rows of the table (including Unplaced) and opens their y/n inputs in turn; members not in slicer's current suggestion (blocked, held, unspecified) are named with the reason and not ticked; the name goes onto the launch only if the launched set equals the startable set; the owner still presses l. (b) Load launches directly, asking the inputs for every member without the table, so absent members start too (same as the CLI). (c) Like (a) but absent members are added as extra rows.\nDrafter recommendation: (a): no second launch path, spec check, overlap warnings and engine-conflict mark all apply. Note: the CLI starts members the suggestion would not offer, so the screen and the CLI differ under (a).\nWaits: the load and launch tests in the named-wave-tui spec.\n\nNW-Q9 (drafter E): show the wave name in the TUI (run pane or Overview row)? Run records carry it from the named-wave slice.\nOptions: (a) not in the TUI for now (it is in \"ork status --json\"); (b) a \"wave NAME\" line in the run pane, which needs source.EngineRun and engineRuns changes and makes this slice E-class.\nDrafter recommendation: (a) to keep this slice N-class and pairable.\n\nNW-Q3 (drafter E, short form; full text on S215): the TUI replace test waits on whether define refuses a duplicate name unless \"--replace\" is given (the TUI asks \"Replace NAME? [y/N]\"). Drafter recommendation: refuse unless replace is given.",
+          "created_at": "2026-11-01T00:58:26Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "named-wave-tui",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S217",
+      "title": "Landing check: warn on the approval card when uncommitted files in the main checkout would block the landing",
+      "short_title": "Warn when main is dirty before landing",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "54516258-702f-488e-9b02-aa1a780d02f9",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these. The spec contains recommended answers for all three.\n\nLM-Q1 (drafter E): where is the check computed?\nOptions: (a) a new read method run.landcheck that the TUI calls when the pane of an awaiting-approval run opens and on each refresh of that run (recommended: engineRuns runs under runs.mu and must not spawn git); (b) inside engineRuns for every snapshot (git under the run-manager lock; no); (c) once, when the card is built, stored in the card (stale by the time the owner approves).\nWaits: daemon, Live, TUI refresh test.\n\nLM-Q2 (drafter E): scope.\nOptions: (a) warn only for a path that is dirty or untracked in main and also changed by the merge (recommended; main is routinely dirty under .slicer/ here, so a plain dirty test would always fire); (b) warn on any dirty path; and independently: also warn when main is not on a branch or is on the slice branch (the other pauses at internal/engine/land.go:46-50), and also print the warning in \"ork approve\" output.\nDrafter recommendation: (a) with neither extra for this slice.\nWaits: CheckLanding, TestCheckLandingReportsAMainCheckoutThatIsNotOnABranch.\n\nLM-Q3 (drafter E): when the check itself fails (git error).\nOptions: show nothing (recommended; a warning that cannot be read must not look like a block) or a dim \"Landing check: not read (WHY)\" line like \"Human checks: not read\".\nWaits: one TUI test.",
+          "created_at": "2026-11-01T00:58:26Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "landing-main-check",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S218",
+      "title": "Wave suggest keeps engine slices apart: at most one engine, daemon or cmd slice per suggested wave",
+      "short_title": "Wave suggest: one engine slice per wave",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "9d921592-ffb6-48a5-875d-e2968909ee9e",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nSE-Q1 (drafter E): may ork reorder slicer's suggestion? docs/boundaries.md lists wave suggestion as slicer's (wave.selection).\nOptions: (a) ork post-processes wave.suggest and \"ork wave suggest\" by its own self-hosting rule (adj 166), as this outline does; (b) slicer gains a path-class option and ork passes it (a slicer slice, outside this repo; \"slicer find\" shows no such item); (c) only mark engine slices in the suggestion, no reshaping.\nDrafter recommendation: (a), documented as an ork exception in the Ownership row. If (b) or (c), the outline does not apply.\nWaits: the whole slice.\n\nSE-Q2 (drafter E): how far does the reshaping go?\nOptions: (a) a deferred engine slice goes alone into a new wave right after its wave: no overlap or dependency reads, order cannot break, but the deferred slice runs alone unless the owner adds another by hand (as written; fits S); (b) fill it into the next wave that has no engine slice and room, checked with \"slicer deps --overlap\" and each member's dependencies (better pairs, an M slice with several slicer reads per placement).\nDrafter recommendation: (a) now and (b) as a follow-up if the owner still hand-pairs.\nWaits: ApplyEngineRule and its tests.",
+          "created_at": "2026-11-01T00:58:27Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "wave-suggest-engine-rule",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S219",
+      "title": "Docs: re-anchor the file:line citations in docs/guide.md and docs/design.md",
+      "short_title": "Re-anchor guide and design citations",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "docs-reanchor",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S220",
+      "title": "v1.1 release prep: CHANGELOG heading, docs sweep, tag message and release checklist",
+      "short_title": "v1.1 release prep",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S129",
+        "S67",
+        "S69",
+        "S103",
+        "S50",
+        "S130",
+        "S131",
+        "S173",
+        "S180",
+        "S194",
+        "S204",
+        "S215",
+        "S217",
+        "S218",
+        "S72",
+        "S132",
+        "S190",
+        "S219",
+        "S100",
+        "S188",
+        "S213",
+        "S216",
+        "S226",
+        "S223",
+        "S207",
+        "S224",
+        "S225"
+      ],
+      "note_records": [
+        {
+          "id": "586a84e8-6178-480b-8cff-6ee9482183d3",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nRP-Q1 (drafter E): version and date. v1.1.0 is from the brief; the date is the day the owner tags. The slice needs both before the heading is written.\nDrafter recommendation: the owner states the date in the relay brief.\n\nRP-Q2 (drafter E): how long is the tag summary? v1.0.0's tag message is the single line \"ork v1.0.0\".\nOptions: one line; or three to five plain lines (what v1.1 adds, one per theme). The workflow appends the CHANGELOG section either way.\nDrafter recommendation: three to five lines.\n\nRP-Q3 (drafter E): has the workflow_dispatch dry run been done? AGENTS.md asks for it after landing and the workflow is still named \"Release (proposed)\". The drafter could not see GitHub. If it has not run, the checklist in the spec puts it before the tag.",
+          "created_at": "2026-11-01T00:58:27Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "v11-release-prep",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S221",
+      "title": "Daemon restart helper: pick up a rebuilt ork without waiting for every role to end",
+      "short_title": "Daemon restart helper (options)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "f7cb4595-0de0-4697-b602-616460a5a542",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nDH-Q1 (drafter E): which option? Options in the spec: (A) \"ork daemon restart --when-idle\" (waits, then restarts the current executable; builds nothing); (B) \"ork upgrade --self\" or similar (builds ork's own binary; reverses S178 for ork); (C) wording only: the behind-main notice prints the two commands; (D) document the script and the pair-wave limit.\nDrafter recommendation: (A) if the owner wants less manual work (it does not conflict with S178's \"builds nothing\", though it is a restart ork performs at a later moment than the key press), otherwise (D).\nWaits: the whole slice (Implement is empty).\n\nDH-Q2 (drafter E): if B, record a decision that supersedes S178's rule \"doctor never runs them / ork builds nothing\". S178's rule is a slicer note and design text, not an adj record (\"adj check\" found none). Only the owner decides or supersedes; ork's agents must not run \"adj supersede\".",
+          "created_at": "2026-11-01T00:58:28Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "daemon-restart-helper",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S222",
+      "title": "Approve a wave as one action: approve every waiting run in order and stop at the first failure",
+      "short_title": "Approve a wave in order",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "45157195-8eb7-4387-a8ca-95b7cd2e6f9e",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nAW-Q1 (drafter E): scope.\nOptions: (a) one wave, selected by its wave- id or by the selected row's wave (recommended; needs EngineRun.Wave); (b) every run waiting on approval in the project; (c) every waiting run in all projects.\nDrafter recommendation: (a): landing is per project, and a wave is the unit the owner launched.\nWaits: the method params and the TUI.\n\nAW-Q2 (drafter E): human checks (none may be skipped).\nOptions: (a) refuse the whole call up front, naming each run and its open checks, approving nothing (recommended); (b) approve in order and stop at the first run that has an open check; (c) skip such runs and continue (violates \"stop at the first failure\"). No option ticks a check for the owner.\nWaits: two tests.\n\nAW-Q3 (drafter E): order.\nOptions: (a) start order, created_at ascending (recommended: what the owner launched, deterministic); (b) the order the runs reached approval (wait_started_at); (c) item id order.\nWaits: the order test.\n\nAW-Q4 (drafter E): the key.\nOptions: A (shift-a; used today only by Decisions and Waves, internal/tui/keys.go:71 and model.go:673, :716), W, or ctrl+w. CLI: \"ork approve WAVE-ID\" mirrors \"ork stop\" (decided only for stop, adj 138).\nDrafter recommendation: A on Overview and the pane, and \"ork approve wave-...\".\nWaits: keys, hint, golden.",
+          "created_at": "2026-11-01T00:58:29Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "approve-wave-in-order",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S223",
+      "title": "Non-blocking owner questions are asked in the relay ledger and read back before the finish step",
+      "short_title": "Ledger non-blocker owner questions",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S204"
+      ],
+      "note_records": [
+        {
+          "id": "b1dc5763-b73e-4d69-a81a-0faf06d3cff4",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nQ4 (drafter C): how much of the non-blocker owner question rule does ork build? Today a non-blocking [owner] finding stays in findings[], the owner answers it in ork (AnswerFinding), and the ledger never sees it.\nOptions: (a) ask it in the ledger without \"--blocker\", write the owner's answer through, and read the ledger answer back (\"relay-run answer --get\") when the card is built and before the finish step; a read answer is recorded on the finding and not filed in adj. (b) Ask and write through only; no read-back. (c) Build none of it; record it as a deviation.\nDrafter recommendation: (a): it is what the contract orders, and the owner sees the answer on the card before approving, so no new engine pause is needed.\nRelated sub-question for (a): should a ledger-read answer on a keyed finding also be filed in adj as AnswerFinding does? The drafter left it out (process.owner-answers, adj 170, limits what is recorded as decided); the owner says if it is wanted.\nWaits: steps 3 to 5 of Implement (scope of step 5); the spec is written for (a).",
+          "created_at": "2026-11-01T00:58:23Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "engine-v11-rules-2",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S224",
+      "title": "Set the per-project bell with ork projects set --bell",
+      "short_title": "ork projects set --bell on|off",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S100"
+      ],
+      "note_records": [
+        {
+          "id": "33a530cf-05b2-4811-8d2a-a975a0d30115",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nQ10 (drafter B): may \"--bell\" change while the project has unfinished runs? Every field of projects.set is refused then (internal/daemon/handlers.go:571-577). The old S100 text says to follow that rule.\nOptions: (a) refuse like the rest [spec default]; (b) allow a call that sets only bell.\nDrafter recommendation: (a): the TUI reads the setting at start, so a change during a run needs a TUI restart anyway.\nWaits: step 2 of the bell-setter spec.",
+          "created_at": "2026-11-01T00:58:22Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "bell-setter",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S225",
+      "title": "Build the daemon-session test on the BSDs and vet it in CI",
+      "short_title": "getsid helper on BSDs, freebsd vet",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S213"
+      ],
+      "note_records": [
+        {
+          "id": "10a6917c-41ae-44b2-9714-de2c51f887a9",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nQ11 (drafter B): is a \"GOOS=freebsd go vet ./...\" step wanted in the release workflow's test job? Release targets are darwin and linux only. The helper fix needs no step.\nOptions: (a) add the Linux-only step as a guard [spec default]; (b) fix the helper only.\nDrafter recommendation: (a): it costs one vet run and stops the regression.\nWaits: steps 2 and 4 of the getsid-bsd-vet spec.",
+          "created_at": "2026-11-01T00:58:22Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "getsid-bsd-vet",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S226",
+      "title": "Role matrix editor, TUI half: edit, add, remove and move rows from the matrix pane",
+      "short_title": "Matrix editor in the TUI",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S173"
+      ],
+      "note_records": [
+        {
+          "id": "b22c07d6-2894-4b30-9f6e-ad192a79b7f0",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nQ6 (drafter D, TUI half): the editor's interaction design.\nThe spec uses: keys e edit, n add, d remove, m move, r rule (the defaults the S173 spec named; confirm them as for S69's O); a row is chosen by typing its id (the pane has no cursor) rather than a row cursor in the \"## ork\" section; one field per prompt (two status lines) rather than a form with all fields (up to eight status lines at 80x24); the fields offered are agent, vendor, model, reasoning and note (role for add); the seven row conditions (size, effort, importance, urgency, well-specified, split, sliver) and clearing a field stay in \"slicer relay-roles\" (the wire half supports them).\nDrafter recommendation: as in the spec.\nWaits: the whole matrix-editor-tui spec; it must be answered before that relay starts.",
+          "created_at": "2026-11-01T00:58:25Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "matrix-editor-tui",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S227",
+      "title": "Polish carried from S182, S176, S169, S171 later notes (v1.2)",
+      "short_title": "Polish carried from S182, S176, S169, S171 later notes (v1.2)",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "5a9af98a-1a0b-41e6-9c92-f3f378ee5283",
+          "kind": "",
+          "text": "**2026-11-01** — Polish items carried from folded v1.1 rows (owner, 2026-10-31: later-notes rows fold into sweeps). Text taken from the slicer notes of 2026-10-29 and 2026-10-30; each is from a review and unverified:\nPolish items of the folded rows, to carry in one v1.2 notes row (text taken from the slicer notes of 2026-10-29 and -30; each is from a review and unverified):\n- S182 (S194): (1) after two hung siblings a retry gives the \"Earlier process lost\" section only to the role named in pending; (4) at 100x30 the Overview Paused row clips before hung/lost (the run id comes first); (5) for an engine run with no ledger run, `!!` means 30 minutes since the role started, not since the last event; the watchdog could expose its last-event time.\n- S176 (S195): (2) a failed read shows the wire code (`not_found: no report`), shared with renders; (3) the heading repeats the file name's role and round, could show the verdict; (4) a wrapped markdown list item continues at the left margin; (5) non-ASCII report text is shown as written (PlainText strips controls only); (6) on the approval-card pane `p report` displaces `x stop` from the hint line (owner priority; the owner may want this in v1.1).\n- S169 (S196): (2) vendor changes and expiries are not pushed to open TUIs (no `snapshot.changed`); (3) test a re-pick with two or more waiters queued behind a holder that hits a limit; (4) spec-check rounds take no vendor slot; (5) the status line drops vendor fields at 80 (codex at 100) while the daemon-build notice shows; (6) two out vendors join with `; ` in the plan note; (7) an owner mark never expires; (8) Claude rate-limit class unmeasured; (9) no per-mark duration; (10) parity/diagram line cites drifted.\n- S171 (S197): (2) `docs/guide.md` key table and command list lack `N` and `ork note`; (3) `dropAdd 16` drops `+ add project` before `t retry` outside the Roadmap; (4) CLI prints `note: Note must not be empty` (capital N mid-line); (5) in the item pane `N note` drops before `ctrl+d/u`; (6) the shared text field does not mark a scrolled-off start; (7) notes show slicer's raw `**date**` markup; (8) slicer goal C11 still says roadmap editing is after v1 (adj 173 include).\n- Found while verifying (new, not in any note): the other `os.ReadFile` reads of role-written report paths (`internal/engine/round.go:578`, `internal/engine/speccheck.go:328`, `internal/agent/claude/report.go:17`, `internal/agent/codex/codex.go:280`) can block on a FIFO the same way; the same refresh-after-write error pattern as `item.note` in `internal/daemon/adjwrite.go:30,52` and `internal/daemon/relayanswer.go:115`; dash-leading single-word values are also refused by `slicer note --text`, `edit --text` and the `relay-run ask` title/option flags (`internal/slicercli/write.go:190,276,321-323`; argparse behaviour verified on slicer 1.17.0 for `relay-run answer` and `relay-roles`, assumed for the others).\n\nFound while verifying S194 (new, not in any note):",
+          "created_at": "2026-11-01T00:56:10Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S228",
+      "title": "Sub-items dropped from the v1.1 sweeps (S214, S125, S114, S187, S190, S191, S193, S199, S201, S202, S203)",
+      "short_title": "Sub-items dropped from the v1.1 sweeps (S214, S125, S114, S187, S190, S191, S193, S199, S201, S202, S203)",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "530bb3a2-f6e4-4c4c-b8f3-144de945f179",
+          "kind": "",
+          "text": "**2026-11-01** — Sub-items dropped from the v1.1 sweeps (owner, 2026-10-31), kept here so they are not lost. Each is a taste call, a design choice or needs an owner decision.\n\nS130 sweep:\n- S214 item 2, \"overflow marker under Recent\": the S214 note is a title only. The visible candidate is the shared `+N more lines` window marker (`internal/tui/view.go:894-910`, seen under `Recent / none` at 80x24 in `runtree-80x24-mono-true-engine-false.txt`), which every view uses. Changing it touches all views and goldens. Dropped pending Q2.\n- S214 item 4, \"task-line column vs deeper child glyph\": the task line starts four columns past the node glyph (`docs/dashboard.md` run tree node text, `runtree.go:250`), which is the column of a grandchild's glyph; they differ by style (dim, no glyph). Intent not recorded. Dropped pending Q2.\n- S130 \"tail markdown\": decided raw (owner, 2026-10-31). The code does not change; a characterization test and one doc sentence pin it.\n- S125 (inside S130's Why) \"a softer ticked-row highlight while inputs are open\" and \"a dim `awaiting inputs` in the empty Lineup cell\": no rendering is described and both are taste calls. Dropped pending Q3. \"Dim text inside the cursor style needs a look in a real terminal\" is kept as a [HUMAN CHECK].\n- S130 (S114) \"Waves overlap lines `! A and B both touch PATH` also hang-indent\": only the engine-conflict marker was asked for; left as is.\n- The Recent rows' non-ASCII `✓`/`✗` (`internal/tui/relayboard.go:365-371`) are the same class of problem as the gate verdict glyph; not in the notes, so not touched. Mentioned in the spec as out of scope.\n\n## Sub-items dropped (with reason)\n\nS190 sweep:\n- S186 items 1-3: daemon (above). S186 item 4 is built (test).\n- S187 item 3 (hint drop at 50 columns): the drop order is a design call; item 4 (usage text order): same layout as `ork wave start`, no defect.\n- S190 item 4 (Overview 80-column hint tie): a drop order, already documented at `docs/dashboard.md:1523-1530`. Item 5 (doc line over 80 columns): no line in the matrix paragraph is over 80 now (checked `docs/dashboard.md:1500-1570`). Item 6 (guide anchors): the other drafter's `NEW-docs-reanchor.md`. Item 7 (`m role matrix` label): wording only.\n- S191 item 2: daemon. Item 4 (bare `land`/`commit` in the editor row versus `after ...` in the plan): tests pin `stop: land` (`internal/tui/stopafter_test.go:61`); wording preference. Item 6 (rollback note): the owner kept it on 2026-10-29.\n- S193 item 1 (guide anchors): `NEW-docs-reanchor.md`. Item 5 (full title versus short title in the sitting): design choice.\n- S199 item 2 (hysteresis, \"was option d, not picked\"), item 3 (short step part fallback), item 4 (non-live Running rows), item 5 second half (a 3+ Needs rows golden): each needs a layout decision or only adds a golden; the first half of item 5 (the `paneLines` test) is also left out. Item 1 is built.\n- S201 items 2-5: daemon and engine (above).\n\nS132 sweep:\n- S132 \"alert wording `! owner questions 1` -> `! 1 owner question`\": see Q5.\n- S202 item 4 (open record pane follows the snapshot): no defined behavior; the engine already refuses a stale answer. Item 6 (success message): conditional on adj returning notices. Item 8 (free-text field hints): layout choice.\n- S203 item 4 (option 5 and later have no key): slicer limits questions to 4 options (`../slicer/src/slicer/relayrun.py:80-82`). Item 5 (long run id wraps mid-word; inline header shrinks to `Run`): needs a header-versus-footer priority call (`internal/tui/pane.go:391,616`). Item 1 is excluded as instructed (another drafter's correctness sweep).",
+          "created_at": "2026-11-01T00:56:10Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 2,

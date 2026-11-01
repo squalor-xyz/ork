@@ -1,0 +1,41 @@
+{
+  "id": "S221",
+  "title": "Daemon restart helper: pick up a rebuilt ork without waiting for every role to end",
+  "lead": [
+    "*Options only; this slice waits on the owner decision.* After a landing changes ork itself, the owner has to rebuild the binary by hand and restart the daemon, and a restart refuses while any run works. The slice would shorten that path, but every real fix runs into an owner decision S178 recorded, so no implementation is specified yet."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Friction found in the v1.1 prescan (2026-10-31, friction 3). ork develops itself (adj 166, `engine.self-host`, decided main-binary-restart: the daemon runs a binary built from the base branch, never a worktree; \"after a slice that changes internal/engine, internal/daemon or cmd lands, ork offers a daemon restart once no run is active\"; `docs/design.md:1757-1790`). The owner's rebuild is a script in the repo root, `run-in-home-dir.sh`: `go build -o ~/bin/ork ./cmd/ork`, `~/bin/ork daemon restart`, `~/bin/ork`.\n\nWhat blocks a restart: `ork daemon restart` stops the daemon, and `daemon.stop` refuses with `daemon_busy` unless `--force` while a spec check runs, a job is busy, or any run is in a working state (`stopDaemon`, `internal/daemon/runs.go:324-330`; `activeRunsLocked`, `:295-320`). It does not refuse while a run only waits on the owner: `committed`, `stopped`, `paused` and `awaiting-approval` count as at rest (`:312-314`). `--force` cancels the running roles (`docs/design.md:41-48`; `docs/guide.md:391`). The CLI wiring is `daemonCommand` in `internal/cli/lifecycle.go:67-140`.\n\nWhy it hurts in v1.1: the plan runs pair waves, two relays at once in two worktrees (owner, 2026-10-31). While either relay works, the daemon is busy, so a landed engine slice cannot be tried in `~/bin/ork` until both relays reach approval or end, and the owner then rebuilds by hand. The \"behind main\" notice (`BehindNotice`, `internal/daemon/build.go:16`; `docs/dashboard.md`, Self-hosting) tells the owner to run `ork daemon restart`; it does not help with the rebuild.\n\n`ork doctor --upgrade` prints the build commands and runs none of them: `orkHint` builds the list `git -C ORK_CHECKOUT pull --ff-only`, `go -C ORK_CHECKOUT build -o BINARY ./cmd/ork`, `BINARY daemon restart` (`internal/cli/upgrade.go:283-297`).\n\nSlicer check: `slicer find restart` finds ork's S31, S114, S103 and S04 only (S103 clears the stale marker after a restart); `slicer find rebuild` and `slicer find self-update` find nothing. Slicer has no such command.\n\n**The conflict.**\n\n- S178 (done), owner decisions 2026-10-29 (slicer note on S178): \"doctor infers each sibling tool's source from the binary and prints the documented commands with ADJ_CHECKOUT and ORK_CHECKOUT placeholders; hints print only when something is behind or missing, and always with --upgrade; doctor never runs them.\" S178's Why: \"The owner runs the commands. ork makes no network call, pulls nothing and builds nothing. This replaces the proposed `ork upgrade` command that would have pulled and built slicer and adj.\" Its Open 1 rejected a `tools` section in the registry that would record checkout paths (option B), so ork does not know where its own checkout is. These live in a slicer note and in `docs/design.md:1410-1430` (the doctor upgrade hints); `adj check \"doctor.upgrade\"` and `adj check \"tools.upgrade\"` return `not found`, so no adj record holds them.\n- `docs/design.md:1781` (\"ork never restarts the daemon on its own\") and `docs/dashboard.md:1727` (\"ork never restarts on its own\").\n- adj 118 (`daemon.legacy-stop`, decided print-pid): ork sends no signal to a daemon that predates `daemon.stop`.\n- adj 166: the daemon runs the main-branch binary and the restart is offered, not forced.\n\nA helper that builds, or one that restarts by itself, contradicts one or more of these. A helper that only waits for an idle point and then restarts the current executable does not contradict S178 (it builds nothing), but it is a restart ork performs without the owner pressing a key at that moment, which is what \"never restarts on its own\" rules out unless the owner has asked for that one restart.\n\n**Options.**\n\nAll of these are *proposed*; none is decided.\n- A. `ork daemon restart --when-idle`: waits until the daemon is idle (the same test `daemon.stop` uses, or only \"no run in a working state\"), then stops and starts the current executable. Builds nothing. The owner still builds `~/bin/ork` first. It would hold a CLI process open for as long as the wait lasts (a pair wave can take hours), or return at once and leave a pending restart in the daemon.\n- B. `ork upgrade --self` (or `ork daemon rebuild`): builds the ork checkout into the running binary's path with `go build`, then A or a plain restart. Reverses S178 for ork's own binary: ork would run `go`, and would need to know its checkout (a registry field, or the project registered as `ork`).\n- C. Make the restart available sooner without any new command: treat a run that waits at `awaiting-approval` as at rest (already true) and have the \"behind main\" notice name the exact two commands, or print them in the pane. Docs and wording only.\n- D. Do nothing; document the script and the pair-wave limitation in `docs/guide.md`."
+    },
+    {
+      "heading": "Files",
+      "body": "Waits on the owner decision. The provisional Files per option, for the owner's sizing only:\n- A: `internal/cli/lifecycle.go:67-140`, `internal/daemon/runs.go:324-330` (a pending-restart flag if the daemon holds the wait), `internal/daemon/wire.go`, `internal/cli/cli.go:40-77`, `docs/design.md:41-60`, `docs/guide.md:391`, `CHANGELOG.md`. E-class (daemon). UI slice (CLI output).\n- B: A plus `internal/cli/upgrade.go`, the registry (a checkout path) or a project lookup, and a supersede of the S178 decision. E-class.\n- C: `internal/cli/upgrade.go`, `internal/tui/view.go` (the notice), `docs/dashboard.md`, goldens. N-class.\n- D: `docs/guide.md`, `docs/manual-steps.md`, `CHANGELOG.md`. N-class."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "Waits on the owner decision."
+    },
+    {
+      "heading": "Implement",
+      "body": "Waits on the owner decision. Do not start. When the owner has decided:\n- If B, the owner must first record a decision that changes S178's rule (only the owner supersedes or decides; ork's agents never run `adj reject` or `adj supersede`).\n- Then re-spec this slice from the chosen option with Files, named failing tests, Implement steps and Check, test-first, and mark everything the helper adds *proposed* until an adj record decides it."
+    },
+    {
+      "heading": "Check",
+      "body": "When the Implement section exists: `go test -race -count=1 ./...`; `go vet ./...`; `gofmt -l .`; `slicer check`; `adj lint`; and for a restart helper a [HUMAN CHECK] [AFTER LAND] that the owner restarts a daemon with one run at `awaiting-approval` and one working, with and without the helper."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch once specified, for example: \"Daemon restart helper\"."
+    }
+  ],
+  "notes": []
+}
