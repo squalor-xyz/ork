@@ -792,21 +792,36 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			}
 			// Roadmap note and matrix keys share the launch line so help fits
 			// at the standard height. The matrix has no item to note.
-			if h == m.keys.Matrix.Help() || h == m.keys.Note.Help() || h == m.keys.New.Help() {
+			if h == m.keys.OpenSlicerTui.Help() || h == m.keys.Matrix.Help() || h == m.keys.Note.Help() || h == m.keys.New.Help() {
 				continue
 			}
 			if h == m.keys.Launch.Help() && m.view == roadmapView {
 				text := "l launch a ready slice (Roadmap)"
+				slicerTui := m.itemPane == nil && m.active >= 0 && m.projects[m.active].loaded && !m.projects[m.active].snap.Unavailable && !m.projects[m.active].setup()
 				if m.itemPane == nil {
 					text += "; m matrix"
 				}
 				if !m.matrixPaneOpen() {
 					text += "; N note; n new slice"
 				}
+				// At 100x30 there is room for a separate line. At 80x24
+				// keep the keys together so help's way out stays visible.
+				// The 25 body rows need 29 layout rows plus the hint row:
+				// a terminal height of 30 or more.
+				separate := slicerTui && bodyH >= 25
+				if slicerTui && !separate {
+					text += "; O slicer tui"
+				}
 				if lipgloss.Width(text) > w {
 					text = strings.Replace(text, "l launch a ready slice (Roadmap)", "l launch ready slice", 1)
 				}
+				if lipgloss.Width(text) > w && slicerTui {
+					text = strings.Replace(text, "l launch ready slice", "l launch", 1)
+				}
 				lines = append(lines, clip(text, w))
+				if separate {
+					lines = append(lines, clip("O slicer tui", w))
+				}
 				continue
 			}
 			if h == m.keys.Approve.Help() && (m.view == decisionsView || m.view == questionsView) {

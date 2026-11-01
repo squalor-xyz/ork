@@ -1646,7 +1646,7 @@
       "id": "S69",
       "title": "Open slicer tui from the Roadmap with O",
       "short_title": "Open slicer tui from the Roadmap",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S12"
@@ -1698,7 +1698,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

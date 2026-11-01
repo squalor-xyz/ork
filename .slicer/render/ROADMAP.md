@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-230 items · — 40 · done 164 · retired 26
+230 items · — 39 · done 165 · retired 26
 
 v1.2
 
@@ -69,7 +69,7 @@ v1.2
 |---|---|---|---|---|---|---|---|
 | 13 | [S67](slices/S67.md) | Roadmap park, unpark, reorder | M | 2 |  |  | — |
 | 14 | [S68](slices/S68.md) | Roadmap editing: reorder an item from the TUI (needs adj 11) | S | 2 |  | Folded into the S67 sweep (owner, 2026-10-31). | retired |
-| 15 | [S69](slices/S69.md) | Open slicer tui from the Roadmap | S | 1 |  | Owner 2026-10-23: the Roadmap replaces leaving for slicer tui; adj 11 stays the owner's to close | — |
+| 15 | [S69](slices/S69.md) | Open slicer tui from the Roadmap | S | 1 |  | Owner 2026-10-23: the Roadmap replaces leaving for slicer tui; adj 11 stays the owner's to close | done |
 | 16 | [S72](slices/S72.md) | Grok adapter | M | 2 |  |  | — |
 | 17 | [S101](slices/S101.md) | Overview engine rows at 80x24: pad the kind column only when needed; no repeated state word; stopped age placement | S | 1 |  | Folded into the S130 sweep (owner, 2026-10-31): items a-c are stale; item d (stopped row wording) is in S130. · discovered from S33 | retired |
 | 18 | [S103](slices/S103.md) | Version line and stale marker | S | 1 |  | discovered from S54 | — |

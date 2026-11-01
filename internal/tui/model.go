@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	osexec "os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -36,10 +37,12 @@ const holdFlag = "needs-owner"
 // Projects has a default, and tests replace the clock, the timer and the bell
 // so no test sleeps.
 type Config struct {
-	Version     string                 // header version
-	BuildID     string                 // this TUI build
-	DaemonBuild string                 // daemon build reported by daemon.info
-	Getwd       func() (string, error) // empty Welcome path offer; default os.Getwd
+	SlicerBin   string                                      // empty means slicer on PATH
+	Exec        func(*osexec.Cmd, tea.ExecCallback) tea.Cmd // default tea.ExecProcess
+	Version     string                                      // header version
+	BuildID     string                                      // this TUI build
+	DaemonBuild string                                      // daemon build reported by daemon.info
+	Getwd       func() (string, error)                      // empty Welcome path offer; default os.Getwd
 	Source      source.Source
 	Projects    []registry.Project
 	Now         func() time.Time              // default time.Now
@@ -144,36 +147,37 @@ type Model struct {
 	decisionInput   *textField
 	decisionScroll  int
 
-	roadmapCursor int
-	itemPane      *itemPane
-	itemRequest   uint64
-	cursor        int // the Overview row under the cursor; drawn clamped to the rows there are
-	sidebarHidden bool
-	filtering     bool
-	filter        string
-	focusing      bool
-	showHelp      bool
-	pageTop       pagerTop
-	expanded      map[string]bool // the Running runs the owner opened, by project and run id (S164)
-	width         int
-	height        int
-	treeFrame     int
-	frameArmed    bool
-	pane          *runPane
-	confirm       *runAction
-	jumpRun       string
-	waves         *wavesState
-	wavesRequest  uint64
-	waveFlights   map[string]runAction
-	launch        *launchState
-	launchRequest uint64
-	launchFlights map[string]launchFlight
-	actionFlights map[string][]runAction
-	renderSeq     int // the number of the last run.render ask; never restarts, so a closed pane's answer cannot match a new ask (S147)
-	actionStatus  string
-	lastRefresh   time.Time
-	drawn         drawnRows // the body window of the last screen, for the page keys
-	listening     bool      // the daemon's notice feed is being listened to (S13)
+	roadmapCursor    int
+	slicerTuiRestore *slicerTuiSelection
+	itemPane         *itemPane
+	itemRequest      uint64
+	cursor           int // the Overview row under the cursor; drawn clamped to the rows there are
+	sidebarHidden    bool
+	filtering        bool
+	filter           string
+	focusing         bool
+	showHelp         bool
+	pageTop          pagerTop
+	expanded         map[string]bool // the Running runs the owner opened, by project and run id (S164)
+	width            int
+	height           int
+	treeFrame        int
+	frameArmed       bool
+	pane             *runPane
+	confirm          *runAction
+	jumpRun          string
+	waves            *wavesState
+	wavesRequest     uint64
+	waveFlights      map[string]runAction
+	launch           *launchState
+	launchRequest    uint64
+	launchFlights    map[string]launchFlight
+	actionFlights    map[string][]runAction
+	renderSeq        int // the number of the last run.render ask; never restarts, so a closed pane's answer cannot match a new ask (S147)
+	actionStatus     string
+	lastRefresh      time.Time
+	drawn            drawnRows // the body window of the last screen, for the page keys
+	listening        bool      // the daemon's notice feed is being listened to (S13)
 
 	compose        *composeState
 	composeRequest uint64
@@ -184,6 +188,12 @@ type Model struct {
 
 // New returns a Model that has not fetched anything. Init starts the fetches.
 func New(cfg Config) *Model {
+	if cfg.SlicerBin == "" {
+		cfg.SlicerBin = "slicer"
+	}
+	if cfg.Exec == nil {
+		cfg.Exec = tea.ExecProcess
+	}
 	if cfg.Getwd == nil {
 		cfg.Getwd = os.Getwd
 	}
@@ -360,6 +370,13 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		return m, m.applyProjectRemoved(msg)
 	case projectAddedMsg:
 		return m, m.applyProjectAdded(msg)
+	case slicerTuiDoneMsg:
+		m.slicerTuiRestore = msg.selection
+		m.actionStatus = ""
+		if msg.err != nil {
+			m.actionStatus = "slicer tui: " + msg.err.Error()
+		}
+		return m, m.fetch(msg.project, true)
 	case newSliceMsg:
 		return m, m.applyNew(msg)
 	case noteMsg:
@@ -761,6 +778,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return m.tickWave()
 	case key.Matches(msg, m.keys.New):
 		return m.openNew()
+	case key.Matches(msg, m.keys.OpenSlicerTui):
+		return m.openSlicerTui()
 	case key.Matches(msg, m.keys.Note):
 		return m.openNote()
 	case key.Matches(msg, m.keys.Launch):
@@ -1130,6 +1149,7 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 	}
 	ps.loaded = true
 	ps.snap = msg.snap
+	m.restoreSlicerTuiCursor(msg.name)
 	if m.pane != nil && m.pane.project == msg.name {
 		m.refreshAnswerStatus()
 		m.followNewestRun(msg.name)

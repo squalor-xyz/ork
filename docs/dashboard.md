@@ -1529,19 +1529,50 @@ and `ctrl+d`/`ctrl+u` scroll the pane, `esc` closes it, and no other key
 acts in it. The key is offered on the hint line and in `?` on the Roadmap only,
 when a project is selected and no pane is open; with no daemon it says "No
 daemon connection; action unavailable". On a narrow hint line `- remove
-project`, `+ add project` and `n new slice` drop first, then `N note` on its
-own tier, then `m matrix`, then `tab views` (at 100 columns the line keeps
-`N note` and `m matrix` and drops `+ add project`;
+project`, `+ add project`, `n new slice` and `O slicer tui` drop first, then
+`N note` on its own tier, then `m matrix`, then `tab views` (at 100 columns
+the line keeps `N note` and `m matrix` and drops `+ add project`;
 at 80x24 with a selected item it is
 `enter open; l launch; m matrix; tab views; q quit; ? help`). The matrix is
 slicer's: ork reads it through `slicer relay-roles show --json`, never edits it
 and never opens `.slicer` files (`docs/boundaries.md`). The same text is
 `ork roles matrix PROJECT`.
 
+`O` opens `slicer tui --root PROJECT_PATH` from the Roadmap (S69;
+`ui.slicer-tui`, key confirmed by the owner on 2026-10-31). Bubble Tea's
+`ExecProcess` hands over the terminal and resumes ork when slicer's TUI
+exits. Slicer's TUI edits slicer's files itself; ork writes none of them
+([boundaries.md](boundaries.md)). This action needs no daemon. On return,
+ork re-reads that project, requesting a daemon refresh first when connected,
+so the Roadmap, counts and readiness show the edits. After the refreshed
+project arrives, the cursor follows the item selected when `O` was pressed.
+If that item is gone, ork keeps the old row index clamped to the new list.
+When a project read is already in flight, restoration waits for its reply.
+A failed exit shows `slicer tui: ERROR` on the status line and still
+re-reads the project.
+
+*Proposed:* `O` is refused outside the Roadmap, without a selected project,
+with help open, or with an unloaded, unavailable or uninitialized project.
+The matrix pane blocks it silently. An open item pane says
+`Close the pane to open slicer tui` (owner, 2026-10-31). A missing slicer
+binary shows `slicer tui: slicer not found on PATH` on the status line
+without leaving ork (using the configured binary name). Other lookup errors
+keep their original text. The hint offers `O slicer tui` only when the action
+can run. It follows the row actions (`enter open`, `l launch`) and precedes
+`m matrix`, so ork's edits lead and slicer's TUI reads as "for the rest".
+When notes and filing are unavailable, the 80x24 empty-list hint is
+`l launch; O slicer tui; m matrix; tab views; q quit; ? help`.
+Without a daemon, the 100x30 Roadmap hint is
+`enter open; O slicer tui; tab views; + add project; q quit; ? help`.
+`O slicer tui` drops with `+ add project` and `n new slice`, before `N note`.
+At 100x30 Roadmap help gives `O slicer tui` its own line. At 80x24 it shares
+the launch, matrix, note and new-slice line, shortening the launch label to
+keep the keys visible.
+
 Adding an item to the wave composer comes in a later slice.
 v1.0 includes filing a slice (S170), adding notes (S171), and answering or
 asking adj records (S172, S185), as decided in `scope.v1-ork-edits` (#173).
-Reordering or parking items (S67-S69), the role matrix editor (S173) and spec
+Reordering or parking items (S67-S68), the role matrix editor (S173) and spec
 drafting (S179) stay later.
 
 `n new slice` opens a form in the status area with Title and Why fields

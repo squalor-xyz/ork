@@ -34,6 +34,13 @@
   attempt to restore conflict markers. Docs updated: `docs/design.md`,
   `docs/manual-steps.md` and `docs/orchestrator-parity.md`.
 
+- S69: `O` opens slicer's TUI from the Roadmap and re-reads the project on
+  return (*proposed*), following the selected item or clamping the old row if
+  it is gone. The action needs no daemon, reports a missing slicer binary
+  and exit errors, and refuses an open item pane. Add Roadmap help and a hint
+  after row actions that drops with project additions and new slices.
+  Docs updated: `docs/dashboard.md`.
+
 ## v1.0.0 (2026-10-31)
 
 - S209: a project can name `ui_pass_skills` for its Claude UI pass
