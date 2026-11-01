@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 232,
+  "next_id": 233,
   "preamble": "",
   "passes": [
     {
@@ -12365,6 +12365,49 @@
         "trees_literal": false,
         "findings": "",
         "discovered_from": "S50",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S232",
+      "title": "S67 and S188 later notes: park race, dash ids, role text wrapping, doctor reason wording",
+      "short_title": "S67 and S188 later notes: park race, dash ids, role text wrapping, doctor reason wording",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "f8f8e100-675c-4b28-927e-0c3dfd44d37d",
+          "kind": "",
+          "text": "**2026-11-01** — Later notes from pair wave 3 (S67 and S188, landed 2026-11-01), from the reviewers and the UI passes:\nS67: (1) item.park checks for an unfinished run and then writes, but releases the run lock in between (internal/daemon/items.go refuseUnfinishedItem): hold run admission across the check and the write, or re-check after; (2) item ids that start with a dash are not guarded in any slicer write wrapper (Park, Unpark, Move, Note in internal/slicercli/write.go); guard them all together; (3) after P the parked item drops to the end of the list and the cursor stays on its old index, now on the next item; it could follow the item the way a move does; (4) the Roadmap summary counts parked items as other; \"N parked\" would match the new row label; (5) the confirm bar leaves out the flags the daemon passes (--render --json --root), which matches the existing convention; (6) 80x24 help still ends with \"+8 more lines\".\nS188: (1) wrapLines splits on whitespace, so line breaks inside a role's question text are flattened, and role-supplied question and option text is not filtered with plainLine as adj text is (ESC and BEL from a role reach the terminal); split on newlines, filter each line, then wrap; (2) the doctor upgrade reason names the tool twice (\"slicer requested with --upgrade (installed: slicer X)\"); (3) option continuation lines hang at column 4 but option text starts at column 5; align under the label; (4) the answer prompts \"Answer 1-N, or type text\" are not wrapped and overflow 80 columns with a long item id; (5) docs say \"Real spec-check failures\" and could say \"Other spec-check errors\"; (6) the Decision key wrap line is not exercised by a test.\nFriction: the landing script merged main into a slice branch and hit a CHANGELOG conflict that S180's resolver only handles inside ork; resolved by hand (both entries kept, branch first). The wave 4 dogfood runs landing through ork.",
+          "created_at": "2026-11-01T16:25:53Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S67",
         "parent": "",
         "cites": [],
         "key": "",
