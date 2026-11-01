@@ -252,3 +252,42 @@ func TestUIBriefSkillsOnlyForClaude(t *testing.T) {
 		})
 	}
 }
+
+func TestBriefFencesCheckCommandWithBackticks(t *testing.T) {
+	for _, command := range []string{"echo `pwd`\ngo test ./...", "echo `pwd`", "go test ./...\nslicer check"} {
+		assertCheckFence(t, command, "```")
+	}
+}
+
+func TestBriefKeepsAPlainCheckCommandInline(t *testing.T) {
+	in := baseBrief()
+	in.CheckCommand = "go test -race ./..."
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, "ork runs `go test -race ./...` and `slicer check` after the round, outside your sandbox.") {
+		t.Fatal("plain check instructions changed")
+	}
+}
+
+func TestBriefFenceGrowsWithTheCommand(t *testing.T) {
+	assertCheckFence(t, "echo ```code```", "````")
+}
+
+func assertCheckFence(t *testing.T, command, fence string) {
+	t.Helper()
+	in := baseBrief()
+	in.CheckCommand = command
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "ork runs this command, then `slicer check`, after the round, outside your sandbox:\n\n" + fence + "\n" + command + "\n" + fence + "\n"
+	if !strings.Contains(got, want) {
+		t.Fatalf("brief lacks fenced instructions %q", want)
+	}
+	if strings.Contains(got, "ork runs `"+command+"`") {
+		t.Fatal("command still wrapped inline")
+	}
+}

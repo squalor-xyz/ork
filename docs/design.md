@@ -228,8 +228,8 @@ ork (TUI)  ork status --json (CLI)
    daemon restart and are removed when the run record takes them at run start,
    or when the spec changes (owner decisions, S143, 2026-10-27).
 5. **Approve.** The owner approves the wave. This is checkpoint 1.
-6. **Run.** Items start as slots free up under the global cap (default 2)
-   and the per-project cap (`wave.limits`, `engine.default-cap`). Several waves,
+6. **Run.** Items start as slots free up under the global cap (default 2, `engine.default-cap`, adj 172)
+   and the per-project cap (`wave.limits`). Several waves,
    each in one project, may run at once (`wave.scope`). An item over a cap
    waits as a queued run and starts, oldest first, as a slot frees.
    Beside the run caps there is a vendor cap (S169, *proposed*, owner decision
@@ -376,6 +376,13 @@ slice.
   `VERDICT: FAIL`. On S and M items the gate is the resumed reviewer
   ("lite"). A FAIL is recorded with `slicer note ID --text "Review FAIL:
   ..."` (contract v6).
+  *Proposed* (S50): the gate brief warns about changed paths from `git status`
+  in the worktree that fall outside the item's Files paths from
+  `slicer show --json` `paths` (slicer s395). An entry covers itself and
+  paths under it; `.slicer/` is exempt. An empty Files paths list or a failed
+  read adds no section. The gate decides whether each file is needed; this
+  warning alone does not fail the gate (`engine.files-scope`, adj 119).
+  Nothing from this check is recorded in `run.json`.
 - **commit:** ork commits in the worktree with the title from the slice's
   Git section. An empty or missing Git section falls back to `ID: slice title`
   from `slicer show`; it does not block launch (S139, owner decision 2026-10-26).

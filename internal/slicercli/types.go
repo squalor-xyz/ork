@@ -115,7 +115,8 @@ type Spec struct {
 // item without a slice.
 type Detail struct {
 	Item
-	Slice *Spec `json:"slice"`
+	Slice *Spec    `json:"slice"`
+	Paths []string `json:"paths,omitempty"`
 }
 
 // GoalRecord is one goal or non-goal.

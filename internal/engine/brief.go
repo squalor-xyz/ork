@@ -90,11 +90,26 @@ func BuildBrief(in BriefInput) (string, error) {
 	}
 	fmt.Fprintf(&b, "## Your files\n\nYour temp directory: %s\nYour report path: %s\n\n", in.TempDir, in.ReportPath)
 	if in.Role == RoleImplementer && !in.Finish {
-		b.WriteString("## Checks ork runs\n\nork runs ")
-		if in.CheckCommand != "" {
-			fmt.Fprintf(&b, "`%s` and ", in.CheckCommand)
+		b.WriteString("## Checks ork runs\n\n")
+		if strings.ContainsAny(in.CheckCommand, "`\n") {
+			longest, run := 0, 0
+			for _, c := range in.CheckCommand {
+				if c == '`' {
+					run++
+					longest = max(longest, run)
+				} else {
+					run = 0
+				}
+			}
+			fence := strings.Repeat("`", max(3, longest+1))
+			fmt.Fprintf(&b, "ork runs this command, then `slicer check`, after the round, outside your sandbox:\n\n%s\n%s\n%s\n\n", fence, in.CheckCommand, fence)
+		} else {
+			b.WriteString("ork runs ")
+			if in.CheckCommand != "" {
+				fmt.Fprintf(&b, "`%s` and ", in.CheckCommand)
+			}
+			b.WriteString("`slicer check` after the round, outside your sandbox.\n\n")
 		}
-		b.WriteString("`slicer check` after the round, outside your sandbox.\n\n")
 	}
 	for _, s := range in.Sections {
 		fmt.Fprintf(&b, "## %s\n\n%s\n\n", s.Title, strings.TrimSpace(s.Body))

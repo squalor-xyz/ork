@@ -356,7 +356,7 @@ func TestCardNamesHumanChecksItCouldNotRead(t *testing.T) {
 	h := newHarness(t, withDiff, func(o *harnessOpts) {
 		good := clitest.Reply{Stdout: humanSlice(checkOne)}
 		o.routes = append(o.routes, clitest.Route{Tool: "slicer", Args: []string{"show", item}, Prefix: true,
-			Seq: []clitest.Reply{good, good, good, {Stderr: "slicer: ledger busy", Exit: 1}}})
+			Seq: []clitest.Reply{good, good, good, good, {Stderr: "slicer: ledger busy", Exit: 1}}})
 	})
 	e := h.start()
 	rec := requireState(t, e, runrec.StateAwaitingApproval)
@@ -406,7 +406,7 @@ func TestApprovalNotesWhenChecksCannotBeRead(t *testing.T) {
 	h := newHarness(t, withDiff, func(o *harnessOpts) {
 		good := clitest.Reply{Stdout: humanSlice(checkOne)}
 		o.routes = append(o.routes, clitest.Route{Tool: "slicer", Args: []string{"show", item}, Prefix: true,
-			Seq: []clitest.Reply{good, good, good, {Stderr: "slicer: ledger busy", Exit: 1}, good}})
+			Seq: []clitest.Reply{good, good, good, good, {Stderr: "slicer: ledger busy", Exit: 1}, good}})
 	})
 	e := h.start()
 	rec := requireState(t, e, runrec.StateAwaitingApproval)
@@ -435,7 +435,7 @@ func TestApprovalRefusedWhenTheUnreadableChecksNoteFails(t *testing.T) {
 	h := newHarness(t, func(o *harnessOpts) {
 		good := clitest.Reply{Stdout: humanSlice(checkOne)}
 		o.routes = append(o.routes, clitest.Route{Tool: "slicer", Args: []string{"show", item}, Prefix: true,
-			Seq: []clitest.Reply{good, good, good, {Stderr: "slicer: ledger busy", Exit: 1}, good}},
+			Seq: []clitest.Reply{good, good, good, good, {Stderr: "slicer: ledger busy", Exit: 1}, good}},
 			clitest.Route{Tool: "slicer", Args: []string{"note", item}, Prefix: true, Stderr: "slicer: cannot write the note\n", Exit: 1})
 	})
 	e := h.start()

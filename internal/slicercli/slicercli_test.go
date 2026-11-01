@@ -314,3 +314,22 @@ func TestItemDepsReadsBlockedBy(t *testing.T) {
 		})
 	}
 }
+
+func TestShowReadsFilesPaths(t *testing.T) {
+	for _, file := range []string{"show-paths.json", "show-S02.json"} {
+		t.Run(file, func(t *testing.T) {
+			c, _ := client(t, route(file, "show", "S02", "--json", "--lean", "--root", root))
+			got, err := c.Show(context.Background(), root, "S02")
+			if err != nil {
+				t.Fatal(err)
+			}
+			var want []string
+			if file == "show-paths.json" {
+				want = []string{"internal/engine", "docs/design.md", "internal/slicercli/"}
+			}
+			if !reflect.DeepEqual(got.Paths, want) {
+				t.Fatalf("paths %v, want %v", got.Paths, want)
+			}
+		})
+	}
+}

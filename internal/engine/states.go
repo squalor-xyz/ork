@@ -549,6 +549,9 @@ func (e *Engine) gate(ctx context.Context) error {
 			r.sections = append(r.sections, BriefSection{Title: "Owner fix request", Body: "The owner asked for this change after the last pass. Check that the new diff makes it, and nothing else.\n\n" + fix.Note})
 		}
 	}
+	if section := e.scopeSection(ctx, rec); section != nil {
+		r.sections = append(r.sections, *section)
+	}
 	out, err := e.runRound(ctx, r, pend)
 	if err != nil || !out.ok {
 		return err

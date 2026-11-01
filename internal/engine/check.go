@@ -6,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
@@ -36,4 +38,35 @@ func tail(s string, n int) string {
 		return s
 	}
 	return "[...cut...]\n" + s[len(s)-n:]
+}
+
+// ScopeWarnings returns the sorted, unique changed paths outside the Files list.
+// Without a list there is no scope to judge. Tracking paths are always exempt.
+func ScopeWarnings(changed, allowed []string) []string {
+	if len(allowed) == 0 {
+		return nil
+	}
+	seen := make(map[string]bool)
+	for _, path := range changed {
+		if path == ".slicer" || strings.HasPrefix(path, ".slicer/") {
+			continue
+		}
+		covered := false
+		for _, entry := range allowed {
+			entry = strings.TrimRight(entry, "/")
+			if path == entry || strings.HasPrefix(path, entry+"/") {
+				covered = true
+				break
+			}
+		}
+		if !covered {
+			seen[path] = true
+		}
+	}
+	var warnings []string
+	for path := range seen {
+		warnings = append(warnings, path)
+	}
+	sort.Strings(warnings)
+	return warnings
 }
