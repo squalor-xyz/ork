@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 229,
+  "next_id": 230,
   "preamble": "",
   "passes": [
     {
@@ -10367,7 +10367,7 @@
       "id": "S186",
       "title": "S181 later notes: blocked refusal wording and an 80-column guard",
       "short_title": "S181 later notes: blocked refusal wording and an 80-column guard",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -10399,7 +10399,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into S229 (daemon wording leftovers) and the S190 TUI sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row.",
         "importance": 1,
         "urgency": 1,
         "effort": null,
@@ -10582,7 +10582,7 @@
       "id": "S191",
       "title": "S177 later notes: stop row highlight, commit-stopped cleanup, Ready row test",
       "short_title": "S177 later notes: stop row highlight, commit-stopped cleanup, Ready row test",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -10614,7 +10614,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into S229 (daemon wording leftovers) and the S190 TUI sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row.",
         "importance": 1,
         "urgency": 1,
         "effort": null,
@@ -11040,7 +11040,7 @@
       "id": "S201",
       "title": "S147 later notes: report viewer order, loadFinishedEngine, viewer error wording",
       "short_title": "S147 later notes: report viewer order, loadFinishedEngine, viewer error wording",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -11072,7 +11072,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Folded into S229 (daemon wording leftovers) and the S190 TUI sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row.",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -11802,33 +11802,7 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [
-        "S129",
-        "S67",
-        "S69",
-        "S103",
-        "S50",
-        "S130",
-        "S131",
-        "S173",
-        "S180",
-        "S194",
-        "S204",
-        "S215",
-        "S217",
-        "S218",
-        "S72",
-        "S132",
-        "S190",
-        "S219",
-        "S100",
-        "S188",
-        "S213",
-        "S216",
-        "S226",
-        "S223",
-        "S207",
-        "S224",
-        "S225"
+        "S229"
       ],
       "note_records": [
         {
@@ -12214,6 +12188,49 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S229",
+      "title": "Daemon and engine wording leftovers from the TUI notes",
+      "short_title": "Daemon wording leftovers",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "b034d796-d600-4d4e-ada2-4031b5f2bad1",
+          "kind": "",
+          "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting (drafter F). The spec is written for option (a) in both; neither blocks the implementer, but the owner may change them before the relay starts. Q1: exact wording of the blocked refusal, the unreadable-record message and the renders error; recommended as drafted. Q2: remove the spec-check directory when the merge is found (recommended, option a) or only at run cleanup (option b).",
+          "created_at": "2026-11-01T01:00:33Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "daemon-wording-leftovers",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
         "effort": 1,
         "attempts": 0
       }

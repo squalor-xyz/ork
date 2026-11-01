@@ -2873,3 +2873,9 @@
 {"when": "2026-11-01T00:58:50Z", "item": "S190", "action": "set", "from": "", "to": "", "note": "effort,importance,pass_key,short_title,size,title,urgency"}
 {"when": "2026-11-01T00:58:50Z", "item": "S213", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-01T00:58:51Z", "item": "S213", "action": "set", "from": "", "to": "", "note": "effort,importance,pass_key,short_title,size,title,urgency"}
+{"when": "2026-11-01T01:00:33Z", "item": "S229", "action": "add", "from": "", "to": "open", "note": "Daemon and engine wording leftovers from the TUI notes"}
+{"when": "2026-11-01T01:00:33Z", "item": "S229", "action": "note", "from": "", "to": "", "note": "Open owner questions from the 2026-10-31 spec drafting (draf", "by": "Jon R"}
+{"when": "2026-11-01T01:00:33Z", "item": "S220", "action": "set", "from": "", "to": "", "note": "depends_on S129,S67,S69,S103,S50,S130,S131,S173,S180,S194,S204,S215,S217,S218,S72,S132,S190,S219,S100,S188,S213,S216,S226,S223,S207,S224,S225→S229"}
+{"when": "2026-11-01T01:00:33Z", "item": "S186", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S229 (daemon wording leftovers) and the S190 TUI sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row."}
+{"when": "2026-11-01T01:00:34Z", "item": "S191", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S229 (daemon wording leftovers) and the S190 TUI sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row."}
+{"when": "2026-11-01T01:00:34Z", "item": "S201", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S229 (daemon wording leftovers) and the S190 TUI sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row."}
