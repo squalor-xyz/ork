@@ -4,8 +4,9 @@ The steps the outer session or the owner does by hand in a slice relay today,
 and the failures seen in relay trials. Each row names its source and the
 ork capability that addresses it. Since the 2026-10-18 interview, the ork
 engine replaces the outer session and the orchestrator agent outright
-(`launch.mode`), so every row in "Still manual" is in v1, except
-changelog conflicts, which come after v1. Landing after approval is in v1
+(`launch.mode`), so every row in "Still manual" is in v1, except changelog
+conflicts, which have the *proposed* S180 resolver in v1.1. Landing after
+approval is in v1
 (`landing.in-ork`, #162, which supersedes `landing.v1`; S119). The harness
 failures at the end no longer apply to ork runs, because no role spawns or
 hands back to an agent. Paths are in the sibling repos under
@@ -59,7 +60,7 @@ the remaining spec sections stays manual (S179).
 | Turn on pushing after a landing for the ork project (S119): run `ork projects set ork --push on` (S161; it is refused while the project has unfinished runs). It is off by default. Reopen the dashboard, then the approval card says it pushes ("Approve lands and pushes it, then removes its worktree and branch.") | adj 162 (`landing.in-ork`), owner decision 2026-10-26 | `ork projects set NAME --push on` (S161) |
 | Change the global run cap or the daemon idle time: edit `global_cap` or `daemon_idle_minutes` in `projects.json` | `docs/state.md` (projects.json) | *Proposed (S174):* `ork settings set --global-cap N --daemon-idle-minutes N` (`ork settings show` prints both, stored and effective) |
 | Change a project's environment lines, a role's permissions or a vendor environment variable: edit `environment_lines`, `permissions` or `vendor_env` in `projects.json` | `docs/state.md` (projects.json) | *Proposed (S174):* `ork projects set NAME --env-line LINE`, `--permission ROLE=read-only`, `--allow ROLE=PATTERN`, `--vendor-env VENDOR:KEY=VALUE` and `--unset-vendor-env VENDOR:KEY`; a role or a key changes alone |
-| Changelog conflict on every merge | playbook Lessons | Resolve per `###` heading from the branch's own additions |
+| Changelog conflict on every merge | playbook Lessons | *Proposed (S180):* landing resolves a conflict only in root `CHANGELOG.md` with an entry-aware merge in Go, branch additions first, then commits silently; other conflicts keep the fix round |
 | Limit parallel relays to about four on 8 cores; suite takes 20-40 min under load | playbook Lessons | Throttle a wave and put realistic suite times in the brief |
 | Catalog ID collisions between parallel slices; decisions filed at landing | `adjudicate/.slicer` slice S38 Git section | Queue catalog filings and apply them at landing |
 | Relay contract copies drift between repos | slicer s373 | Check the contract version, keep no copy |

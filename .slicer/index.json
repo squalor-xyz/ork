@@ -10020,7 +10020,7 @@
       "id": "S180",
       "title": "Changelog conflict resolver at landing",
       "short_title": "Changelog conflict resolver",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -10056,7 +10056,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

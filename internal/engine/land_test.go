@@ -46,6 +46,9 @@ const fakeGitScript = `#!/bin/sh
 d=$(dirname "$0")
 echo "$@" >> "$d/git.log"
 if [ "$3" = merge ] && [ "$4" = -m ] && [ -f "$d/merge-fails" ]; then echo "merge broke" >&2; exit 1; fi
+for op in add commit; do
+	if [ "$3" = "$op" ] && [ -f "$d/$op-fails" ]; then rm "$d/$op-fails"; echo "$op broke" >&2; exit 1; fi
+done
 if [ "$3" = push ]; then
 	if [ -f "$d/push-fails" ]; then echo "push refused" >&2; exit 1; fi
 	exit 0
