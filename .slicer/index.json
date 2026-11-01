@@ -2237,7 +2237,7 @@
       "id": "S50",
       "title": "Gate brief: warn on files outside the slice's Files list, fence the check command",
       "short_title": "Files-scope warning and brief fence",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -2287,7 +2287,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- S50: add a *proposed* gate-brief warning for changed files outside the
+  slice's Files list, using slicer's paths and exempting `.slicer/`.
+  Fence check commands containing backticks or newlines in implementer briefs,
+  and cite the default-cap decision beside the default in the design doc.
+
 - S130: compact usage token counts, ASCII gate verdicts, repeated-role
   ordinals, stopped rows without "running", wrapped Waves conflict markers,
   an A-key toggle between three waves and all, and a short behind-main notice

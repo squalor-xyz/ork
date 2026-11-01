@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-230 items · — 40 · done 164 · retired 26
+230 items · — 39 · done 165 · retired 26
 
 v1.2
 
@@ -75,7 +75,7 @@ v1.2
 | 18 | [S103](slices/S103.md) | Version line and stale marker | S | 1 |  | discovered from S54 | — |
 | 19 | [S108](slices/S108.md) | Fold finished steps in the run tree to one line each | S | 1 |  |  | done |
 | 20 | [S104](slices/S104.md) | Answer an open adj record from the Questions tab: pick an option, type the reason, confirm | M | 2 |  | Met by S185 (owner 2026-10-30) · discovered from S27 | retired |
-| 21 | [S50](slices/S50.md) | Files-scope warning and brief fence | M | 2 |  | discovered from S29 | — |
+| 21 | [S50](slices/S50.md) | Files-scope warning and brief fence | M | 2 |  | discovered from S29 | done |
 | 22 | [S100](slices/S100.md) | Bell on run end, per-project setting | S | 1 |  | discovered from S07 | — |
 | 23 | [S128](slices/S128.md) | Brief: fence the check command so a backtick or newline renders | S | 1 |  | Folded into the S50 sweep (owner, 2026-10-31). · discovered from S126 | retired |
 | 24 | [S129](slices/S129.md) | Live usage edge cases | M | 2 |  | discovered from S99 | — |
