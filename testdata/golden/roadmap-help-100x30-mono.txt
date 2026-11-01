@@ -1,0 +1,30 @@
+[1mork[m                        │ Overview[2m │ [mQuestions[2m │ [mWaves[2m │ [m[1mRoadmap[m[2m │ [mDecisions
+[2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
+[2m0[m Needs you              0 │[1mKeys[m
+[1;7m1>ork                      [m│tab next view; shift+tab previous view
+[2m2[m other                    │] next project or entry; [ previous project or entry
+                           │1-9 jump to project; 0 Needs you
+                           │j/k down/up row; g/G home/end first/last
+                           │pgdown/pgup page rows
+                           │ctrl+d/u scroll a pane half a page; ctrl+u clears a field
+                           │}/{ next/previous group, pass or wave
+                           │enter open run, question, item or decision; other rows select project
+                           │/ filter projects; esc clears; s hide/show sidebar
+                           │+ add project; - remove active project
+                           │e edit lineup (Waves, launch)
+                           │l launch a ready slice (Roadmap); m matrix; N note; n new slice
+                           │O slicer tui; P park/unpark; J/K move item down/up
+                           │a approve; F fix round; x stop; t retry; v view renders; f file slice
+                           │o answer owner finding; p report (run pane)
+                           │enter (answer) submit free text
+                           │1-4 (question) pick an option; y sends
+                           │t (question) type a free answer
+                           │ctrl+a (answer) toggle filing the answer in adj
+                           │c remove merged worktree and branch (Ready)
+                           │r refresh now; q quit; ? show or hide this help
+                           │esc close run, question, item, decision, help or message
+                           │
+                           │Overview, Questions, Waves, Roadmap and Decisions are available.
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ ? or esc [2mclose help[m; q [2mquit[m
+                           │ 2 projects | refreshed 16:42:00

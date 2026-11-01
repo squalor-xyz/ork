@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- S67: add *proposed* Roadmap keys `P` to park or unpark and `J` / `K`
+  to reorder, each with an exact slicer command confirmation. Refuse parking
+  during an unfinished run, label parked rows, follow moved items and report
+  when ranking leaves the list unchanged. Follow moves even when the snapshot
+  arrives before the edit reply. Keep matrix and edit hints at 100x30 and the
+  existing 80x24 hint line; keep lineup editing in compact Roadmap help.
+  Docs: `docs/dashboard.md`.
+
 - S50: add a *proposed* gate-brief warning for changed files outside the
   slice's Files list, using slicer's paths and exempting `.slicer/`.
   Fence check commands containing backticks or newlines in implementer briefs,

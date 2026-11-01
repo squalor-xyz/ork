@@ -365,3 +365,60 @@ func TestRelayAnswerPassesOptionOrTextAndBy(t *testing.T) {
 		}
 	}
 }
+
+func TestParkAndUnparkRunTheSlicerCommand(t *testing.T) {
+	for _, verb := range []string{"park", "unpark"} {
+		t.Run(verb, func(t *testing.T) {
+			args := []string{verb, "S1", "--render", "--json", "--root", root}
+			c, fake := client(t, clitest.Route{Tool: "slicer", Args: args, Stdout: `{}`})
+			w, _ := writer()
+			var err error
+			if verb == "park" {
+				err = c.Park(context.Background(), w, root, "S1")
+			} else {
+				err = c.Unpark(context.Background(), w, root, "S1")
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if calls := fake.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, args) {
+				t.Fatalf("calls %v", calls)
+			}
+		})
+	}
+}
+func TestMoveRunsBeforeAndAfter(t *testing.T) {
+	for _, pos := range []string{"before", "after"} {
+		t.Run(pos, func(t *testing.T) {
+			args := []string{"move", "S1", "--" + pos, "S2", "--render", "--json", "--root", root}
+			c, fake := client(t, clitest.Route{Tool: "slicer", Args: args, Stdout: `{}`})
+			w, _ := writer()
+			if err := c.Move(context.Background(), w, root, "S1", "S2", pos); err != nil {
+				t.Fatal(err)
+			}
+			if calls := fake.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, args) {
+				t.Fatalf("calls %v", calls)
+			}
+		})
+	}
+}
+func TestEditWrappersRefuseEmptyArguments(t *testing.T) {
+	c, fake := client(t)
+	w, _ := writer()
+	for _, id := range []string{"", " "} {
+		if err := c.Park(context.Background(), w, root, id); err == nil {
+			t.Error("park accepted blank item")
+		}
+		if err := c.Unpark(context.Background(), w, root, id); err == nil {
+			t.Error("unpark accepted blank item")
+		}
+	}
+	for _, tc := range []struct{ id, other, pos string }{{"", "S2", "before"}, {" ", "S2", "after"}, {"S1", "", "before"}, {"S1", " ", "after"}, {"S1", "S2", "to"}} {
+		if err := c.Move(context.Background(), w, root, tc.id, tc.other, tc.pos); err == nil {
+			t.Errorf("accepted %+v", tc)
+		}
+	}
+	if calls := fake.CallsTo("slicer"); len(calls) != 0 {
+		t.Fatalf("invalid edits called slicer: %v", calls)
+	}
+}

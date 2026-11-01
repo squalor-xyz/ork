@@ -393,3 +393,22 @@ func (c *Client) RelayAnswer(ctx context.Context, p RelayAnswerParams) (string, 
 	err := c.Call(ctx, MethodRelayAnswer, p, &out)
 	return out.Message, err
 }
+
+// ItemPark parks an item and refreshes the project's items and dependencies.
+func (c *Client) ItemPark(ctx context.Context, project, item string) error {
+	var out ItemParkResult
+	return c.Call(ctx, MethodItemPark, ItemParkParams{Project: project, Item: item}, &out)
+}
+
+// ItemUnpark unparks an item and refreshes the project's items and dependencies.
+func (c *Client) ItemUnpark(ctx context.Context, project, item string) error {
+	var out ItemParkResult
+	return c.Call(ctx, MethodItemUnpark, ItemParkParams{Project: project, Item: item}, &out)
+}
+
+// ItemMove saves a queue move and reports whether the displayed index changed.
+func (c *Client) ItemMove(ctx context.Context, project, item, other, position string) (bool, error) {
+	var out ItemMoveResult
+	err := c.Call(ctx, MethodItemMove, ItemMoveParams{Project: project, Item: item, Other: other, Position: position}, &out)
+	return out.Changed, err
+}

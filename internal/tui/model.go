@@ -179,6 +179,9 @@ type Model struct {
 	drawn            drawnRows // the body window of the last screen, for the page keys
 	listening        bool      // the daemon's notice feed is being listened to (S13)
 
+	roadmapFollow     *runAction
+	roadmapNavigation uint64
+
 	compose        *composeState
 	composeRequest uint64
 
@@ -379,6 +382,8 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		return m, m.fetch(msg.project, true)
 	case newSliceMsg:
 		return m, m.applyNew(msg)
+	case roadmapEditMsg:
+		return m, m.applyRoadmapEdit(msg)
 	case noteMsg:
 		return m, m.applyNote(msg)
 	case itemShowMsg:
@@ -591,6 +596,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	}
 	if key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.Next, m.keys.Prev, m.keys.NextView, m.keys.PrevView, m.keys.Jump, m.keys.First, m.keys.Last, m.keys.PageDown, m.keys.PageUp, m.keys.NextGroup, m.keys.PrevGroup, m.keys.Filter, m.keys.Select, m.keys.Close) {
 		m.jumpRun = ""
+		m.roadmapFollow = nil
+		m.roadmapNavigation++
 	}
 	if m.registeredProjectCount() == 0 && m.pane == nil {
 		editing := m.welcome.editing || m.welcome.pending || m.welcome.confirm != ""
@@ -780,6 +787,12 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return m.openNew()
 	case key.Matches(msg, m.keys.OpenSlicerTui):
 		return m.openSlicerTui()
+	case key.Matches(msg, m.keys.Park):
+		return m.requestRoadmapEdit("park")
+	case key.Matches(msg, m.keys.MoveDown):
+		return m.requestRoadmapEdit("down")
+	case key.Matches(msg, m.keys.MoveUp):
+		return m.requestRoadmapEdit("up")
 	case key.Matches(msg, m.keys.Note):
 		return m.openNote()
 	case key.Matches(msg, m.keys.Launch):
@@ -1147,6 +1160,17 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 		}
 
 	}
+	if follow := m.roadmapFollow; follow != nil && follow.project == msg.name && msg.snap.Items.Err == nil && !sameRoadmapOrder(ps.snap.Items.Value, msg.snap.Items.Value) {
+		if m.view == roadmapView && m.active >= 0 && m.projects[m.active].reg.Name == msg.name {
+			for i, it := range msg.snap.Items.Value {
+				if it.ID == follow.item {
+					m.roadmapCursor = i
+					break
+				}
+			}
+		}
+		m.roadmapFollow = nil
+	}
 	ps.loaded = true
 	ps.snap = msg.snap
 	m.restoreSlicerTuiCursor(msg.name)
@@ -1279,6 +1303,7 @@ type runAction struct {
 	findingTitle             string
 	scores                   *runrec.FindingScores
 	verb, run, project, text string
+	other, position          string // move: the neighbouring item and before/after
 	item                     string // file: the slice the finding came from
 	finding                  int    // file: the one-based finding
 	check                    int    // check: the one-based human check
@@ -1340,6 +1365,12 @@ func (a runAction) cleanupItem() string {
 }
 
 func (a runAction) command() string {
+	switch a.verb {
+	case "park", "unpark":
+		return "slicer " + a.verb + " " + a.item
+	case "move":
+		return "slicer move " + a.item + " --" + a.position + " " + a.other
+	}
 	if a.verb == "decide" {
 		flag, value := "--option", a.option
 		if value == "" {
@@ -1627,6 +1658,9 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 }
 
 func (m *Model) callAction(a runAction) tea.Cmd {
+	if a.verb == "park" || a.verb == "unpark" || a.verb == "move" {
+		return m.startRoadmapEdit(a)
+	}
 	if a.verb == "wave" {
 		return m.startWave(a)
 	}

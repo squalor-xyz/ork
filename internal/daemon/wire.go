@@ -27,6 +27,9 @@ const (
 	MethodDaemonStop   = "daemon.stop"   // params StopParams, result StopResult
 	MethodStatus       = "status"        // params StatusParams, result StatusResult
 	MethodItemNew      = "item.new"      // proposed; params ItemNewParams, result ItemNewResult
+	MethodItemPark     = "item.park"     // proposed; params ItemParkParams, result ItemParkResult
+	MethodItemUnpark   = "item.unpark"   // proposed; params ItemParkParams, result ItemParkResult
+	MethodItemMove     = "item.move"     // proposed; params ItemMoveParams, result ItemMoveResult
 	MethodItemNote     = "item.note"     // proposed; params ItemNoteParams, result ItemNoteResult
 	MethodItemShow     = "item.show"     // proposed; params ItemShowParams, result ItemShowResult
 	MethodSnapshot     = "snapshot"      // params SnapshotParams, result SnapshotResult
@@ -439,4 +442,30 @@ type RelayAnswerParams struct {
 // RelayAnswerResult preserves ledger success if a secondary adj write fails.
 type RelayAnswerResult struct {
 	Message string `json:"message"`
+}
+
+// ItemParkParams parks or unparks a registered project's item. Proposed wire fields.
+type ItemParkParams struct {
+	Project string `json:"project"`
+	Item    string `json:"item"`
+}
+
+// ItemParkResult names the item parked or unparked. Proposed wire field.
+type ItemParkResult struct {
+	Item string `json:"item"`
+}
+
+// ItemMoveParams moves an item before or after another. Proposed wire fields.
+type ItemMoveParams struct {
+	Project  string `json:"project"`
+	Item     string `json:"item"`
+	Other    string `json:"other"`
+	Position string `json:"position"`
+}
+
+// ItemMoveResult reports whether the item's displayed list index changed.
+// Proposed wire fields.
+type ItemMoveResult struct {
+	Item    string `json:"item"`
+	Changed bool   `json:"changed"`
 }

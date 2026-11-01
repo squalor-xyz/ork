@@ -348,6 +348,9 @@ func (m *Model) roadmap(w int) overviewView {
 			effort = fmt.Sprint(it.Fields.Effort)
 		}
 		fields := size + effort
+		if it.Status == "parked" {
+			fields = th.Dim.Render("parked ") + fields
+		}
 		marker := readiness
 		if i != cursor {
 			marker = th.Dim.Render(marker)

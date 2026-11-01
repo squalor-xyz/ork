@@ -3,9 +3,9 @@
 The screens of the ork TUI. Owner decisions are cited by adj key. Layouts
 and keys are *proposed* drafts to change after a prototype. v1.0 includes
 filing a slice (S170), adding notes (S171), and answering or asking adj records
-(S172, S185), as decided in `scope.v1-ork-edits` (#173). Reordering or parking
-items (S67-S69), the role matrix editor (S173) and spec drafting (S179) stay
-later.
+(S172, S185), as decided in `scope.v1-ork-edits` (#173). Roadmap reordering and
+parking (S67, including S68) are in v1.1. The role matrix editor (S173) and
+spec drafting (S179) stay later.
 
 ## Principles
 
@@ -1530,10 +1530,14 @@ acts in it. The key is offered on the hint line and in `?` on the Roadmap only,
 when a project is selected and no pane is open; with no daemon it says "No
 daemon connection; action unavailable". On a narrow hint line `- remove
 project`, `+ add project`, `n new slice` and `O slicer tui` drop first, then
-`N note` on its own tier, then `m matrix`, then `tab views` (at 100 columns
-the line keeps `N note` and `m matrix` and drops `+ add project`;
-at 80x24 with a selected item it is
-`enter open; l launch; m matrix; tab views; q quit; ? help`). The matrix is
+`N note` on its own tier. S67's 2026-11-01 higher-priority hint note keeps
+Roadmap edits visible at 100 columns. There `tab views` drops before
+`J/K move`, `P park` and `m matrix`; the tab bar still names the views.
+With the daemon connected and an editable list, the 100x30 line is
+`enter open; l launch; P park; J/K move; m matrix; q quit; ? help`.
+`N note` stays dropped on this line.
+Below 100 columns the edit hints drop first, preserving the 80x24 line:
+`enter open; l launch; m matrix; tab views; q quit; ? help`. The matrix is
 slicer's: ork reads it through `slicer relay-roles show --json`, never edits it
 and never opens `.slicer` files (`docs/boundaries.md`). The same text is
 `ork roles matrix PROJECT`.
@@ -1565,15 +1569,20 @@ When notes and filing are unavailable, the 80x24 empty-list hint is
 Without a daemon, the 100x30 Roadmap hint is
 `enter open; O slicer tui; tab views; + add project; q quit; ? help`.
 `O slicer tui` drops with `+ add project` and `n new slice`, before `N note`.
-At 100x30 Roadmap help gives `O slicer tui` its own line. At 80x24 it shares
-the launch, matrix, note and new-slice line, shortening the launch label to
-keep the keys visible.
+At 100x30 Roadmap help groups `O slicer tui` with
+`P park/unpark; J/K move item down/up` on one line. At 80x24 `O slicer tui`
+shares the launch, matrix, note and new-slice line, shortening the launch
+label to keep the keys visible; the edit keys have their own line.
+Roadmap help keeps `e edit lineup (Waves, launch)`, since `e` edits the
+lineup on the launch confirmation. It omits the Running-only space keys.
+The help fits at 100x30; at 80x24 the edit keys and the way out remain
+visible above and below the clipped help body.
 
 Adding an item to the wave composer comes in a later slice.
 v1.0 includes filing a slice (S170), adding notes (S171), and answering or
 asking adj records (S172, S185), as decided in `scope.v1-ork-edits` (#173).
-Reordering or parking items (S67-S68), the role matrix editor (S173) and spec
-drafting (S179) stay later.
+Roadmap reordering and parking (S67, including S68) are in v1.1. The role
+matrix editor (S173) and spec drafting (S179) stay later.
 
 `n new slice` opens a form in the status area with Title and Why fields
 (S170). It is available on the Roadmap with a loaded, available project and
@@ -1625,6 +1634,27 @@ A blank note says `Note must not be empty`. Wrong argument counts report
 note and its date. ork reads and writes through the CLI and keeps no copy.
 Editing or removing notes, note kinds and multi-line TUI notes remain outside
 this slice.
+
+On the Roadmap list, `P` parks the cursor item, or unparks a parked item
+(S67, *proposed*). `J` moves it one place down in slicer's stored queue;
+`K` moves it one place up. Each key shows the exact slicer command on the
+confirm bar: `slicer park ID`, `slicer unpark ID`, or
+`slicer move ID --before OTHER` / `slicer move ID --after OTHER`, followed by
+`? [y/N] (Enter is No)`. Only `y` runs it through the daemon; Enter, `n` and
+`esc` cancel. Parking refuses an item with an unfinished run and names the
+run. Unparking is allowed. Parked rows show a dim `parked` word before the
+size and effort fields. These keys act only on the list of a loaded,
+available project with a daemon; item panes, the matrix and help block them.
+A list with fewer than two items does not offer `J/K move`.
+After a successful move, the cursor follows the item when the refreshed
+list order changes, including when that snapshot arrives before the edit
+reply; a row key cancels that follow. Slicer's stored queue order only
+breaks ties: readiness, pass and effective score rank first.
+A saved move that leaves the displayed index unchanged says
+`Moved S12 after S13 in queue; list order unchanged`, using the actual IDs
+and `before` or `after`. It reports the result without attributing a cause
+at readiness or parked boundaries.
+Lowercase `j` / `k` remain row movement keys.
 
 ## Decisions (one project or all)
 

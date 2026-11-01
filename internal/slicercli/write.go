@@ -399,3 +399,33 @@ func (c Client) AddItem(ctx context.Context, w runrec.Writer, root string, spec 
 	}
 	return &out, nil
 }
+
+// Park runs `slicer park ID --render --json`.
+func (c Client) Park(ctx context.Context, w runrec.Writer, root, id string) error {
+	if strings.TrimSpace(id) == "" {
+		return errors.New("item must not be empty")
+	}
+	_, err := c.write(ctx, w, root, "park", id, "--render", "--json")
+	return err
+}
+
+// Unpark runs `slicer unpark ID --render --json`.
+func (c Client) Unpark(ctx context.Context, w runrec.Writer, root, id string) error {
+	if strings.TrimSpace(id) == "" {
+		return errors.New("item must not be empty")
+	}
+	_, err := c.write(ctx, w, root, "unpark", id, "--render", "--json")
+	return err
+}
+
+// Move changes the stored queue position before or after another item.
+func (c Client) Move(ctx context.Context, w runrec.Writer, root, id, other, position string) error {
+	if strings.TrimSpace(id) == "" || strings.TrimSpace(other) == "" {
+		return errors.New("item and other must not be empty")
+	}
+	if position != "before" && position != "after" {
+		return errors.New("position must be before or after")
+	}
+	_, err := c.write(ctx, w, root, "move", id, "--"+position, other, "--render", "--json")
+	return err
+}

@@ -721,6 +721,13 @@ func (m *Model) helpLines(w, bodyH int) []string {
 	for _, group := range m.keys.FullHelp() {
 		for _, binding := range group {
 			h := binding.Help()
+			// Roadmap edits share a compact line. The Running space keys
+			// have no action on the Roadmap and need no row in its help.
+			if h == m.keys.Park.Help() || h == m.keys.MoveDown.Help() || h == m.keys.MoveUp.Help() ||
+				(m.view == roadmapView && h == m.keys.Expand.Help()) {
+				continue
+			}
+
 			if h == m.keys.Owner.Help() || h == m.keys.Report.Help() || h == m.keys.NextView.Help() {
 				continue
 			}
@@ -758,6 +765,10 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			}
 			// The two Waves keys share a line, which pays for the expand keys' (S164).
 			if h == m.keys.EditLineup.Help() {
+				if m.view == roadmapView {
+					lines = append(lines, clip(h.Key+" "+h.Desc, w))
+					continue
+				}
 				tick := m.keys.Tick.Help()
 				lines = append(lines, clip(tick.Key+" "+tick.Desc+"; "+h.Key+" "+h.Desc, w))
 				continue
@@ -819,8 +830,15 @@ func (m *Model) helpLines(w, bodyH int) []string {
 					text = strings.Replace(text, "l launch ready slice", "l launch", 1)
 				}
 				lines = append(lines, clip(text, w))
+				editHelp := "P park/unpark; J/K move item down/up"
 				if separate {
-					lines = append(lines, clip("O slicer tui", w))
+					text := "O slicer tui"
+					if m.itemPane == nil {
+						text += "; " + editHelp
+					}
+					lines = append(lines, clip(text, w))
+				} else if m.itemPane == nil {
+					lines = append(lines, clip(editHelp, w))
 				}
 				continue
 			}

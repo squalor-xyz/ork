@@ -23,6 +23,9 @@ type keyMap struct {
 	Expand     key.Binding
 	ExpandAll  key.Binding
 	New        key.Binding
+	Park       key.Binding
+	MoveDown   key.Binding
+	MoveUp     key.Binding
 	Note       key.Binding
 	Launch     key.Binding
 	Matrix     key.Binding
@@ -80,6 +83,9 @@ func newKeyMap() keyMap {
 		Expand:     key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "expand or collapse a run (Running)")),
 		ExpandAll:  key.NewBinding(key.WithKeys("E", "shift+e"), key.WithHelp("E", "expand or collapse all")),
 		New:        key.NewBinding(key.WithKeys("n"), key.WithHelp("n", "new slice")),
+		Park:       key.NewBinding(key.WithKeys("P", "shift+p"), key.WithHelp("P", "park/unpark Roadmap item")),
+		MoveDown:   key.NewBinding(key.WithKeys("J", "shift+j"), key.WithHelp("J", "move Roadmap item down")),
+		MoveUp:     key.NewBinding(key.WithKeys("K", "shift+k"), key.WithHelp("K", "move Roadmap item up")),
 		Note:       key.NewBinding(key.WithKeys("N", "shift+n"), key.WithHelp("N", "note on the Roadmap item")),
 		Launch:     key.NewBinding(key.WithKeys("l"), key.WithHelp("l", "launch a ready slice (Roadmap) or wave (Waves)")),
 		Matrix:     key.NewBinding(key.WithKeys("m"), key.WithHelp("m", "matrix")),
@@ -130,7 +136,7 @@ func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Refresh, k.He
 
 // FullHelp implements help.KeyMap.
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add, k.Remove}, {k.Expand, k.ExpandAll, k.Tick, k.EditLineup, k.Launch, k.New, k.Note, k.Matrix, k.OpenSlicerTui}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.Report, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
+	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add, k.Remove}, {k.Expand, k.ExpandAll, k.Tick, k.EditLineup, k.Launch, k.New, k.Note, k.Park, k.MoveDown, k.MoveUp, k.Matrix, k.OpenSlicerTui}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.Report, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
 }
 
 // short is b with a short label and words for the hint line. It answers to the
@@ -155,28 +161,31 @@ type hintEntry struct {
 // the pane scroll keys'
 // second form and the global tab. Finding actions stay with row keys.
 const (
-	dropRemove    = 20
-	dropReport    = dropHalf - 1 // report outlasts the half-page hint (S176, owner)
-	dropRender    = 19
-	dropFix       = 18
-	dropMark      = 17
-	dropRetry     = 16
-	dropStop      = 15
-	dropAdd       = 16      // project edits drop before note, matrix and tab on the Roadmap
-	dropNew       = 16      // new slice drops with project edits, before note and matrix
-	dropSlicerTui = dropNew // slicer tui drops with add project and new slice
-	dropNote      = 15      // note drops before matrix (S171, owner decision 2026-10-30)
-	dropMatrix    = 14      // the Roadmap's role matrix outlasts add and remove project and drops before tab views
-	dropHalf      = 14
-	dropTab       = 13
-	dropQuit      = 12
-	dropLine      = 11
-	dropPage      = 10
-	dropAppr      = 9
-	dropClean     = 8
-	dropResume    = 6 // the pane's retry on a paused run: it outlasts the scroll keys (S134)
-	dropRow       = 5
-	dropPinned    = 0
+	dropMove       = 12 // wide Roadmap edits outlast project edits, notes and tab views
+	dropPark       = 11
+	dropMatrixWide = 10 // at 100 columns matrix outlasts tab views, alongside the edit keys
+	dropRemove     = 20
+	dropReport     = dropHalf - 1 // report outlasts the half-page hint (S176, owner)
+	dropRender     = 19
+	dropFix        = 18
+	dropMark       = 17
+	dropRetry      = 16
+	dropStop       = 15
+	dropAdd        = 16      // project edits drop before note, matrix and tab on the Roadmap
+	dropNew        = 16      // new slice drops with project edits, before note and matrix
+	dropSlicerTui  = dropNew // slicer tui drops with add project and new slice
+	dropNote       = 15      // note drops before matrix (S171, owner decision 2026-10-30)
+	dropMatrix     = 14      // the Roadmap's role matrix outlasts add and remove project and drops before tab views
+	dropHalf       = 14
+	dropTab        = 13
+	dropQuit       = 12
+	dropLine       = 11
+	dropPage       = 10
+	dropAppr       = 9
+	dropClean      = 8
+	dropResume     = 6 // the pane's retry on a paused run: it outlasts the scroll keys (S134)
+	dropRow        = 5
+	dropPinned     = 0
 )
 
 // hintList collects the entries a context offers; an entry whose binding is
@@ -206,7 +215,7 @@ func confirmWord(verb string) string {
 		return "run"
 	case "wave":
 		return "start"
-	case "approve", "stop", "retry", "file", "decide":
+	case "approve", "stop", "retry", "file", "decide", "park", "unpark", "move":
 		return verb
 	case "cleanup":
 		return "clean up"
@@ -409,9 +418,25 @@ func (m *Model) contextHints() []hintEntry {
 		_, launchRefused := m.launchRefusal()
 		_, matrixRefused := m.matrixRefusal()
 		l.add(dropRow, offer(m.active >= 0 && len(m.roadmapItems()) > 0, k.Select, "enter", "open"), offer(!launchRefused, k.Launch, "l", "launch"))
+		_, parkRefused := m.roadmapEditRefusal("park")
+		_, moveRefused := m.roadmapEditRefusal("move")
+		park := "park"
+		items := m.roadmapItems()
+		if i := clampCursor(m.roadmapCursor, len(items)); i >= 0 && items[i].Status == "parked" {
+			park = "unpark"
+		}
+		parkDrop, moveDrop, matrixDrop := dropPark, dropMove, dropMatrix
+		if w, _, _ := m.termSize(); w < 100 {
+			// Preserve the established 80-column line; these keys remain in help.
+			parkDrop, moveDrop = dropNew+1, dropNew+2
+		} else {
+			matrixDrop = dropMatrixWide
+		}
+		l.add(parkDrop, offer(!parkRefused, k.Park, "P", park))
+		l.add(moveDrop, offer(!moveRefused, k.MoveDown, "J/K", "move"))
 		_, slicerTuiRefused := m.slicerTuiRefusal()
 		l.add(dropSlicerTui, offer(!slicerTuiRefused, k.OpenSlicerTui, "O", "slicer tui"))
-		l.add(dropMatrix, offer(!matrixRefused, k.Matrix, "m", "matrix"))
+		l.add(matrixDrop, offer(!matrixRefused, k.Matrix, "m", "matrix"))
 		global()
 	case m.view == wavesView:
 		if w := m.waves; w != nil {

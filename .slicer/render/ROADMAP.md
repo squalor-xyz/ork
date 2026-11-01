@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-231 items · — 39 · done 166 · retired 26
+231 items · — 38 · done 167 · retired 26
 
 v1.2
 
@@ -68,7 +68,7 @@ v1.2
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 14 | [S67](slices/S67.md) | Roadmap park, unpark, reorder | M | 2 |  |  | — |
+| 14 | [S67](slices/S67.md) | Roadmap park, unpark, reorder | M | 2 |  |  | done |
 | 15 | [S68](slices/S68.md) | Roadmap editing: reorder an item from the TUI (needs adj 11) | S | 2 |  | Folded into the S67 sweep (owner, 2026-10-31). | retired |
 | 16 | [S69](slices/S69.md) | Open slicer tui from the Roadmap | S | 1 |  | Owner 2026-10-23: the Roadmap replaces leaving for slicer tui; adj 11 stays the owner's to close | done |
 | 17 | [S72](slices/S72.md) | Grok adapter | M | 2 |  |  | — |

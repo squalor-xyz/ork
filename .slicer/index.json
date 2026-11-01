@@ -1541,7 +1541,7 @@
       "id": "S67",
       "title": "Roadmap editing from the TUI: park, unpark and reorder",
       "short_title": "Roadmap park, unpark, reorder",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S12",
@@ -1608,7 +1608,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
