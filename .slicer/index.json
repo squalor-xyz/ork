@@ -1589,6 +1589,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "f9819d93-dff3-4c3a-8218-14499ebdc9b8",
+          "kind": "",
+          "text": "**2026-11-01** — Owner decisions (interactive questions, 2026-11-01), layout: the new P park and J/K move hints get higher priority so they show at 100x30 (80x24 hint line unchanged); the new keys are added to the question-mark help, and view.go and the affected help goldens may change for it.",
+          "created_at": "2026-11-01T15:51:12Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -11380,6 +11394,20 @@
           "kind": "",
           "text": "**2026-11-01** — Open owner questions from the 2026-10-31 spec drafting. Ask the owner before the relay starts; the spec waits on these.\n\nQ5 (drafter B): the two \"found\" formats in \"ork doctor\". Global contract.found is \"Contract: relay v11\", a project's is \"relay v11\".\nOptions: (a) keep both and document them [spec default]; (b) make both bare; (c) make both \"Contract: ...\". (b) and (c) change JSON that scripts may read and contractDirection (internal/cli/upgrade.go:160).\nDrafter recommendation: (a).\nWaits: the docs/design.md:1656-1662 wording only.\n\nQ6 (drafter B): the exit code for an unknown NAME in \"projects pin\" and \"projects unpin\". The S24 docs say exit 2 \"usage\" on purpose (docs/design.md:1614-1616); neighbouring commands give not_found, exit 1 (internal/cli/wave.go:85).\nOptions: (a) not_found, exit 1, with the hint \"run 'ork projects list'\" [spec default]; (b) keep exit 2 and add only the hint.\nDrafter recommendation: (a).\nWaits: step 5 of the S207 spec and TestProjectsPinAndUnpinUnknownNameIsNotFound.\n\nQ7 (drafter B, from S211 item 1): duplicate ui_pass_skills names (\"a,a\").\nOptions: (a) the shared validator refuses a repeated name, quoting it, on every path, like the other bad names [spec default]; (b) the CLI drops duplicates silently; (c) leave it.\nDrafter recommendation: (a). An existing projects.json that already holds a duplicate would then fail to load.\nWaits: step 7 of the S207 spec and the two tests marked \"waits on manifest question Q7\".\n\nQ8 (drafter B, S211 items 3 and 4, not specced in S207): what they say. \"slicer show S211\" and \"slicer log --item S211\" carry only the title (\"untrimmed control-character doc line, full-line brief assertion\"); the S209 review text is not in the slice. The drafter could not tell which doc line or which assertion is meant (ValidateUIPassSkills refuses NUL, CR, LF and untrimmed names but accepts other control characters; the brief tests assert a full \"## Skills\" line at internal/engine/brief_test.go:245 and uipass_test.go:853).\nOptions: (a) the owner or the S209 reviewer states them and the drafter adds them; (b) drop both.\nDrafter recommendation: (a) if the S209 gate output is still in a session; otherwise (b).\nWaits: retirement of S211 (keep S211 open until items 3 and 4 are known).",
           "created_at": "2026-11-01T00:58:18Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "5b1d36a3-0da4-4c88-8f12-ba6209ef5313",
+          "kind": "",
+          "text": "**2026-11-01** — Owner decisions (interactive question, 2026-11-01): Q5 keep both found formats in ork doctor and document them; Q6 an unknown NAME in projects pin and unpin gives not_found, exit 1, with the hint to run ork projects list; Q7 refuse duplicate ui_pass_skills names on every path, quoting the name; Q8 drop S211 items 3 and 4 and retire S211 once this slice lands.",
+          "created_at": "2026-11-01T15:39:44Z",
           "attempt": 0,
           "by": "Jon R",
           "verified_by": "",
