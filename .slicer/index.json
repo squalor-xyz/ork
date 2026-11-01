@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 230,
+  "next_id": 231,
   "preamble": "",
   "passes": [
     {
@@ -12245,6 +12245,49 @@
         "reason": "",
         "importance": 1,
         "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S230",
+      "title": "S180 and S130 later notes: landing brief header, CRLF test, combined-tab collapse, six-line overflow, golden realism",
+      "short_title": "S180 and S130 later notes: landing brief header, CRLF test, combined-tab collapse, six-line overflow, golden realism",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "c7aecbb3-1c40-4adb-bbbd-fb693037b67e",
+          "kind": "",
+          "text": "**2026-11-01** — Later notes from pair wave 1 (S180 and S130, landed 2026-11-01), from the reviewers and the UI pass:\nS180: (1) after a failed merge commit the landing brief still opens with \"stopped on conflicts in: CHANGELOG.md\" although the file is merged and staged (internal/engine/land.go near line 143); (2) no test covers a CRLF CHANGELOG or Unreleased as the last section of the file; (3) the resolver rewrites spacing: one blank line between entries and before the next section, so a file whose Unreleased is last gains one blank line.\nS130: (1) on the combined Waves tab the A-collapse cursor fallback walks every project and ends in the last one; ask whether it should stay inside the selection's own project (tests cover one project only); (2) the owner may want an overflowing run pane to keep six Overview lines instead of the measured five (marker plus four), a layout change not done; (3) the fix-round goldens have no times, vendor or usage, so the # column is off by one and no golden shows a compact count such as 23.8k together with the ordinal; (4) at 100x30 the stopped pane header leaves its age on its own line (engine-stopped-100x30 golden); (5) the fix-round goldens exist only as mono and have no colour or ASCII variants.",
+          "created_at": "2026-11-01T02:50:15Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S180",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
         "effort": 1,
         "attempts": 0
       }

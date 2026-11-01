@@ -2885,3 +2885,5 @@
 {"when": "2026-11-01T01:00:33Z", "item": "S186", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S229 (daemon wording leftovers) and the S190 TUI sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row."}
 {"when": "2026-11-01T01:00:34Z", "item": "S191", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S229 (daemon wording leftovers) and the S190 TUI sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row."}
 {"when": "2026-11-01T01:00:34Z", "item": "S201", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S229 (daemon wording leftovers) and the S190 TUI sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row."}
+{"when": "2026-11-01T02:50:15Z", "item": "S230", "action": "add", "from": "", "to": "open", "note": "S180 and S130 later notes: landing brief header, CRLF test, combined-tab collapse, six-line overflow, golden realism"}
+{"when": "2026-11-01T02:50:15Z", "item": "S230", "action": "note", "from": "", "to": "", "note": "Later notes from pair wave 1 (S180 and S130, landed 2026-11-", "by": "Jon R"}
