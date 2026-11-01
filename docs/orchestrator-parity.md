@@ -87,7 +87,7 @@ the tables below.
 | 5.1 | Merge main into the worktree, render, re-check | exists | `git merge BASE` in the worktree, `slicer render`, commit, re-run checks (`internal/engine/land.go:136`, `docs/design.md:391-402`) | none |
 | 5.2 | Fast-forward merge, `slicer land`, push, remove worktree and branch | exists | `internal/engine/land.go:61,65,83,90`. Push needs `ork projects set NAME --push on` | none |
 | 5.3 | End the ledger run | exists | `RelayEnd` (`internal/engine/engine.go:567-573`) | none |
-| 5.4 | Resolve merge conflicts | partial | A conflict or red re-check goes to one implementer fix round; a second block stops the run with the worktree kept (`docs/design.md:417-424`). Changelog conflicts are listed as after v1 (`docs/manual-steps.md:7-9`, `:62`). Missing: resolving a conflict the fix round cannot | "Changelog conflict resolver" (M, UI) |
+| 5.4 | Resolve merge conflicts | exists | Met by S180: *proposed* root `CHANGELOG.md`-only entry-aware resolver in Go, branch additions first with complete entries preserved exactly once, committed silently (`internal/engine/changelog.go`). Other conflicts and resolver failures keep the one implementer fix round; a second block stops the run with the worktree kept | none |
 | 5.5 | Land a slice that ork did not run | partial | Ready rows show landing commands and `c` removes a merged worktree (`docs/dashboard.md:586-644`, `internal/tui/keys.go:75`). ork does not land a branch it did not run | none proposed; the outer session lands only branches it ran |
 
 ## 6. Bookkeeping and decisions
@@ -139,7 +139,7 @@ numbers. Met rows record the later slices; other titles remain *proposed*.
 | 12 | Per-run stop point: after commit, or land (2.6) | S | yes | Met by S177: per-run `--stop-after land\|commit` |
 | 13 | Upgrade command hints (7.5) | M | yes | Met by S178: `ork doctor --upgrade` prints commands; the owner runs them |
 | 14 | Spec drafting round (1.5, 1.3) | L | yes | Deferred to v1.1 by adj 173 (`scope.v1-ork-edits`) |
-| 15 | Changelog conflict resolver (5.4) | M | yes | Listed as after v1 |
+| 15 | Changelog conflict resolver (5.4) | M | no | Met by S180: *proposed* root `CHANGELOG.md`-only entry-aware resolver in Go at landing |
 | 16 | Run a slice as parts or a sliver chain (2.7) | L | yes | Largest; the matrix already has slivers (r8) |
 | 17 | Refuse or warn on a blocked item at wave start (3.7) | S | yes | Met: wave start refuses blocked selections before admitting any member (3.7) |
 | 18 | Watchdog for a hung role (7.4) | M | yes | Met by S182: silent roles pause as lost after the watchdog kills their process group |

@@ -405,7 +405,14 @@ slice.
      green re-check (or by the hand-off to the fix round). A retry with it set
      merges the base if it is not in yet (a crash between marker and merge),
      then renders and re-checks, and never fast-forwards a tree that was not
-     checked.
+     checked. *Proposed (S180):* if only the root `CHANGELOG.md` conflicts
+     and all three index stages exist, ork merges complete Unreleased entries
+     in Go. The prefix and release suffix must stay unchanged; both sides must
+     retain the original entries unchanged and in order. The result puts branch
+     additions first, then base-branch additions, then the original entries,
+     with one blank line between entries. Identical additions appear once;
+     every entry must survive exactly once. ork stages the result and commits
+     it as `Merge BASE into BRANCH`. This resolution is silent.
   2. `git -C P merge --ff-only BRANCH` in the main checkout. A failure (for
      example an untracked file in the way) pauses the slice with the git
      message; `t` retries.
@@ -422,9 +429,15 @@ slice.
      W`, then `git -C P branch -d BRANCH`. Never `--force` or `-D`. A cleanup
      that fails leaves the run `committed` with the reason; the merged-branch
      cleanup key (`git.cleanup-key`) then works as before.
-  A merge conflict, or a red re-check after the merge (for example goldens that
-  another slice changed on the base branch), is not fixed by ork and is not
-  aborted by ork. The slice goes to one implementer fix round
+  *Proposed (S180):* a conflict only in the root `CHANGELOG.md` is resolved
+  as above. Any other merge conflict, an unavailable changelog stage, a failed
+  changelog resolution, an edited or ambiguous entry, a changed prefix or suffix,
+  or a red re-check after the merge (for example goldens
+  another slice changed on the base branch) goes to one implementer fix round.
+  ork leaves the merge in place. A failed changelog resolution names the
+  failure in the brief; a failed stat, file write or stage-add makes a
+  best-effort attempt to restore the conflict markers.
+  The slice goes to that fix round
   (`feedback.kind` `land`) with the conflict or the red output as the brief,
   then the checks, the gate and a new approval. `land_fixes` counts it. If the
   second landing is blocked the same way, the slice stops with `land blocked:

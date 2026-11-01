@@ -26,6 +26,14 @@
   The daemon session test now uses platform-specific getsid helpers so it
   compiles on Linux as well as macOS.
 
+- S180: landing resolves a conflict only in the root `CHANGELOG.md` with
+  an entry-aware merge in Go, preserving complete Unreleased entries exactly
+  once with branch additions first, then commits silently (*proposed*).
+  Changed existing entries or surrounding text, other conflicts and resolver
+  failures keep the existing implementer fix round. File or staging failures
+  attempt to restore conflict markers. Docs updated: `docs/design.md`,
+  `docs/manual-steps.md` and `docs/orchestrator-parity.md`.
+
 ## v1.0.0 (2026-10-31)
 
 - S209: a project can name `ui_pass_skills` for its Claude UI pass

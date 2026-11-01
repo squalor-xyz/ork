@@ -138,10 +138,17 @@ func (e *Engine) mergeBaseIn(ctx context.Context, rec runrec.Record, base string
 			// ork aborts nothing: the conflict stays in the worktree for the fix round.
 			files, ferr := e.gitRead(ctx, W, "diff", "--name-only", "--diff-filter=U")
 			if ferr == nil && strings.TrimSpace(files) != "" {
-				detail := fmt.Sprintf("`git merge %s` in the worktree stopped on conflicts in:\n\n%s\n\ngit said:\n\n```\n%s\n```", base, strings.TrimSpace(files), tail(outputText(res), 6000))
-				return false, e.landBlocked(ctx, "merge conflict", detail)
+				resolved, resolveErr := e.resolveChangelog(ctx, rec, base, strings.Split(strings.TrimSpace(files), "\n"))
+				if !resolved {
+					detail := fmt.Sprintf("`git merge %s` in the worktree stopped on conflicts in:\n\n%s\n\ngit said:\n\n```\n%s\n```", base, strings.TrimSpace(files), tail(outputText(res), 6000))
+					if resolveErr != nil {
+						detail += "\n\nork tried to merge CHANGELOG.md: " + resolveErr.Error()
+					}
+					return false, e.landBlocked(ctx, "merge conflict", detail)
+				}
+			} else {
+				return pauseWith("git merge " + base + ": " + errText(err))
 			}
-			return pauseWith("git merge " + base + ": " + errText(err))
 		}
 	}
 	if err := e.d.Slicer.Render(ctx, e.wr, W); err != nil {
