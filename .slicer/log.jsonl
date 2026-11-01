@@ -2894,3 +2894,4 @@
 {"when": "2026-11-01T15:18:25Z", "item": "S231", "action": "add", "from": "", "to": "open", "note": "S50 and S69 later notes: files-scope tests, restore after error, help-line duplicate logic"}
 {"when": "2026-11-01T15:18:25Z", "item": "S231", "action": "note", "from": "", "to": "", "note": "Later notes from pair wave 2 (S50 and S69, landed 2026-11-01", "by": "Jon R"}
 {"when": "2026-11-01T15:18:32Z", "item": "S67", "action": "note", "from": "", "to": "", "note": "Owner decision (interactive question, 2026-11-01): Q1 J and ", "by": "Jon R"}
+{"when": "2026-11-01T15:39:44Z", "item": "S207", "action": "note", "from": "", "to": "", "note": "Owner decisions (interactive question, 2026-11-01): Q5 keep ", "by": "Jon R"}

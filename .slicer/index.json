@@ -11388,6 +11388,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "5b1d36a3-0da4-4c88-8f12-ba6209ef5313",
+          "kind": "",
+          "text": "**2026-11-01** — Owner decisions (interactive question, 2026-11-01): Q5 keep both found formats in ork doctor and document them; Q6 an unknown NAME in projects pin and unpin gives not_found, exit 1, with the hint to run ork projects list; Q7 refuse duplicate ui_pass_skills names on every path, quoting the name; Q8 drop S211 items 3 and 4 and retire S211 once this slice lands.",
+          "created_at": "2026-11-01T15:39:44Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
