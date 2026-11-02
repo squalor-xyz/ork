@@ -2902,3 +2902,4 @@
 {"when": "2026-11-01T15:51:12Z", "item": "S67", "action": "note", "from": "", "to": "", "note": "Owner decisions (interactive questions, 2026-11-01), layout:", "by": "Jon R"}
 {"when": "2026-11-01T16:25:52Z", "item": "S232", "action": "add", "from": "", "to": "open", "note": "S67 and S188 later notes: park race, dash ids, role text wrapping, doctor reason wording"}
 {"when": "2026-11-01T16:25:53Z", "item": "S232", "action": "note", "from": "", "to": "", "note": "Later notes from pair wave 3 (S67 and S188, landed 2026-11-0", "by": "Jon R"}
+{"when": "2026-11-02T12:51:49Z", "item": "S233", "action": "add", "from": "", "to": "open", "note": "ork ai: print the agent guide and install the ork skill for Claude, Codex and Grok"}
