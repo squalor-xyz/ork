@@ -8,6 +8,10 @@
   pin or unpin name, and shorten the gate's no-fix criterion. Refuse duplicate
   UI pass skill names on every path (*proposed*).
 
+- S100: ring once when a run ends; add the *proposed* per-project `bell`
+  registry field (on when absent). Muting a project keeps counts and badges
+  updating. Restart the TUI after editing; the setter command lands in S224.
+
 - S188: polish doctor upgrade reasons with installed versions and consistent
   checkout placeholders; note the PyPI assumption for slicer venv commands
   (*proposed*). Keep an empty `held` array in declined `ork run --json`

@@ -23,8 +23,9 @@ spec drafting (S179) stay later.
 - **Nothing blocks.** A slow call shows as pending on its row.
 - **Errors verbatim.** A failed CLI call shows its `error.code` and
   message. ork does not guess.
-- **Bell.** A terminal bell plus a badge on the project sidebar row when something
-  newly needs the owner (`ui.notify`).
+- **Bell.** A terminal bell when an open or held count rises or a run ends
+  (`ui.notify`, S100). A project with `bell: false` rings nothing; its
+  counts and sidebar badge still update. The TUI reads the setting at start.
 
 ## Welcome
 
@@ -396,8 +397,16 @@ of the run's text, for every run row of the section at once (S146). The rows scr
 the cursor row on screen, with `+N lines above` and `+N more lines` where lines
 are hidden.
 
-The terminal bell rings when a project's count rises past an earlier good
-reading (`ui.notify`). The status line shows project count, last refresh,
+The terminal bell rings once per snapshot when a project's open adj or held-item
+count rises past an earlier good reading, or when a run ends (S100). An engine
+run ends at `committed` or `stopped`; a ledger-only relay ends at `ended`.
+An engine run and its linked ledger run ring only once. The first good reading
+is a baseline: counts and runs already ended at startup ring nothing.
+The optional per-project registry field `bell` (*proposed*) is on when absent
+or `true`. With `"bell": false`, every bell for that project is silent;
+counts and sidebar badges still update. The TUI reads the setting at start,
+so restart ork after editing it. The setter command lands in S224.
+The status line shows project count, last refresh,
 and the pending count only when it is nonzero. Daemon uptime and token
 charts await their slices.
 

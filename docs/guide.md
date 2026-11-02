@@ -375,8 +375,15 @@ Use this loop each day:
 4. Open **Decisions** for adj records and **Roadmap** for what is next.
 5. Press `r` to refresh now. `/` filters projects. `?` shows every key.
 
-ork rings the terminal bell and puts a badge on the sidebar row when
-something newly needs you (`internal/tui/model.go:949-1014`).
+ork rings the terminal bell once when an open adj or held-item count rises,
+or a run ends (`Model.apply` in `internal/tui/model.go`, S100).
+An engine run ends at `committed` or `stopped`; a ledger-only relay ends at
+`ended`. Linked engine and ledger runs ring only once. The first good
+reading is a baseline and rings nothing. The per-project registry field
+`bell` (*proposed*) is on when absent or `true`; `"bell": false` silences
+every bell for that project. Counts and sidebar badges still update.
+The TUI reads the setting at start, so restart ork after editing it.
+The `ork projects set NAME --bell on|off` command lands in S224.
 
 ## 12. Recover
 

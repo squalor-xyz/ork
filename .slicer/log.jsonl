@@ -2913,3 +2913,11 @@
 {"when": "2026-11-02T14:42:34Z", "item": "S207", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S207):", "by": "Jon R"}
 {"when": "2026-11-02T14:43:09Z", "item": "S207", "action": "note", "from": "", "to": "", "note": "Implemented one relay-contract read, shared accepted-version", "by": "Jon R"}
 {"when": "2026-11-02T14:43:12Z", "item": "S207", "action": "status", "from": "started", "to": "done", "note": "Implemented one relay-contract read, shared accepted-version wording, concise doctor failures, not_found pin and unpin errors, duplicate UI skill rejection, and short gate wording. Reviewed test and documentation nits are resolved. Gate PASS and owner approval are supplied in the finish brief; human CLI checks remain deferred as later.", "by": "Jon R"}
+{"when": "2026-11-02T00:43:38Z", "item": "S100", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-02T00:43:38Z", "item": "S100", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-02T00:43:38Z", "item": "S100", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-11-02T00:48:54Z", "item": "S100", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-02T14:37:07Z", "item": "S100", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S100):", "by": "Jon R"}
+{"when": "2026-11-02T14:37:18Z", "item": "S100", "action": "note", "from": "", "to": "", "note": "Verified run-end bells with linked-run deduplication and per", "by": "Jon R"}
+{"when": "2026-11-02T14:37:23Z", "item": "S100", "action": "status", "from": "started", "to": "done", "note": "Verified run-end bells with linked-run deduplication and per-project bell control; counts and badges remain active when muted. Focused race tests passed, and documentation names S224 for the setter. Gate returned VERDICT: PASS and the owner approved; human terminal and after-land checks are deferred as recorded.", "by": "Jon R"}
+{"when": "2026-11-02T12:51:49Z", "item": "S233", "action": "add", "from": "", "to": "open", "note": "ork ai: print the agent guide and install the ork skill for Claude, Codex and Grok"}
