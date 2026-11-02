@@ -11472,6 +11472,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "56b03025-0d8a-4f63-b372-d7d4f32fe7e3",
+          "kind": "",
+          "text": "**2026-11-02** — Verified outcome: one relay-contract read in the engine, one accepted-version phrase built from roles.AcceptedContractsPhrase, concise doctor FAIL lines, not_found (exit 1) for unknown names in projects pin and unpin, duplicate ui_pass_skills names refused on every path, short gate no-fix wording. Gate PASS on the merged tree; human CLI checks remain deferred as later.",
+          "created_at": "2026-11-02T15:39:30Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
