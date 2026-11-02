@@ -536,3 +536,124 @@ func TestItemPaneNotesUseHangingBullets(t *testing.T) {
 		}
 	}
 }
+
+// longItemDetail is an item with enough sections to scroll in a 100x30 pane.
+func longItemDetail() *slicercli.Detail {
+	spec := &slicercli.Spec{Title: "Spec title", Size: "M"}
+	for i := range 60 {
+		spec.Sections = append(spec.Sections, slicercli.Section{Heading: fmt.Sprintf("Section %03d", i), Body: fmt.Sprintf("body of section %03d", i)})
+	}
+	return &slicercli.Detail{Item: slicercli.Item{ID: "S90"}, Slice: spec}
+}
+
+func openLongItemPane(t *testing.T) *harness {
+	t.Helper()
+	h := roadmapHarness(t)
+	h.m.cfg.Live = &roadmapLive{detail: longItemDetail()}
+	_, cmd := h.m.Update(press("enter"))
+	if cmd == nil {
+		t.Fatal("enter returned no command")
+	}
+	h.m.Update(cmd())
+	if v := h.view(); !strings.Contains(v, "Section 000") || strings.Contains(v, "Section 059") {
+		t.Fatalf("the pane does not start at the top:\n%s", v)
+	}
+	return h
+}
+
+// The Roadmap item pane scrolls by line, page and to its ends, as the matrix
+// and Waves panes do (S190, S190 note).
+func TestRoadmapItemPaneScrollsByLinePageAndEnds(t *testing.T) {
+	h := openLongItemPane(t)
+	pane := h.m.itemPane
+	room := pane.room
+	if room < 5 {
+		t.Fatalf("the pane drew %d lines of room", room)
+	}
+	offset := func(want int, what string) {
+		t.Helper()
+		if pane.offset != want {
+			t.Fatalf("%s: offset %d, want %d", what, pane.offset, want)
+		}
+		h.view()
+	}
+	h.deliver(press("j"))
+	offset(1, "j")
+	h.deliver(press("down"))
+	offset(2, "down")
+	h.deliver(press("k"))
+	offset(1, "k")
+	h.deliver(press("up"))
+	offset(0, "up")
+	h.deliver(press("k"))
+	offset(0, "k at the top")
+	h.deliver(press("pgdown"))
+	offset(room, "pgdown")
+	h.deliver(press("pgup"))
+	offset(0, "pgup")
+	h.deliver(press("G"))
+	h.view()
+	last := pane.offset
+	if last <= room {
+		t.Fatalf("G stopped at %d, room %d", last, room)
+	}
+	if v := h.view(); !strings.Contains(v, "Section 059") {
+		t.Fatalf("G does not show the last section:\n%s", v)
+	}
+	h.deliver(press("g"))
+	offset(0, "g")
+	h.deliver(tea.KeyPressMsg{Code: tea.KeyEnd})
+	h.view()
+	if pane.offset != last {
+		t.Fatalf("end left the offset at %d, want %d", pane.offset, last)
+	}
+	h.deliver(tea.KeyPressMsg{Code: tea.KeyHome})
+	offset(0, "home")
+	// The cursor of the Roadmap under the pane does not move.
+	if h.m.roadmapCursor != 0 {
+		t.Errorf("the roadmap cursor moved to %d", h.m.roadmapCursor)
+	}
+	// A short pane stays at 0.
+	h = roadmapHarness(t)
+	h.m.cfg.Live = &roadmapLive{detail: &slicercli.Detail{Item: slicercli.Item{ID: "S90"}, Slice: &slicercli.Spec{Title: "Short"}}}
+	_, cmd := h.m.Update(press("enter"))
+	h.m.Update(cmd())
+	h.view()
+	for _, k := range []string{"j", "down", "pgdown", "G"} {
+		h.deliver(press(k))
+		if h.view(); h.m.itemPane.offset != 0 {
+			t.Fatalf("%s moved a short pane to %d", k, h.m.itemPane.offset)
+		}
+	}
+}
+
+// The Roadmap item pane offers the page and line keys in its hint, and they go
+// before esc close at 80 columns (S190).
+func TestRoadmapItemPaneHintOffersLineAndPage(t *testing.T) {
+	h := openLongItemPane(t)
+	hint := wideHint(h)
+	for _, want := range []string{"pgup/pgdown page", "j/k line", "ctrl+d/u half page", "esc close"} {
+		if !strings.Contains(hint, want) {
+			t.Errorf("the item pane hint lacks %q: %s", want, hint)
+		}
+	}
+	// Narrower, the hints go and esc close stays; the page and line hints are
+	// among those that go first.
+	dropped := false
+	for width := 100; width >= 40; width -= 5 {
+		h.send(tea.WindowSizeMsg{Width: width, Height: 24})
+		hint = hintLine(plainView(h.m))
+		if !strings.Contains(hint, "esc close") {
+			t.Errorf("esc close was dropped at %d columns: %s", width, hint)
+		}
+		if lipgloss.Width(hint) > width {
+			t.Errorf("the hint is %d columns at %d: %s", lipgloss.Width(hint), width, hint)
+		}
+		if !strings.Contains(hint, "pgup/pgdown page") && !strings.Contains(hint, "j/k line") {
+			dropped = true
+		}
+	}
+	if !dropped {
+		t.Error("the page and line hints were never dropped before esc close")
+	}
+}

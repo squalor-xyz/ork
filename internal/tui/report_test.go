@@ -165,6 +165,78 @@ func TestPaneIgnoresALateReportAnswer(t *testing.T) {
 	h.m.Update(reportMsg{run: "engine", name: "gate-1.md", text: "WRONG"})
 }
 
+// reportOn only reads, as renderOn does: the draw path calls it. A report the
+// run no longer lists ends the viewer where the pane changes, in settleReport
+// (S190, S201 note; S147).
+func TestReportOnNeverWritesThePane(t *testing.T) {
+	h, _ := reportHarness(t)
+	h.deliver(press("p"))
+	name := h.m.pane.reportName
+	if name == "" || h.m.reportOn() != 1 {
+		t.Fatalf("the viewer is not open: %q", name)
+	}
+	h.m.byName["ork"].snap.EngineRuns[0].Roles = nil
+	if got := h.m.reportOn(); got != 0 {
+		t.Fatalf("reportOn() = %d for a report the run does not list", got)
+	}
+	if h.m.pane.reportName != name {
+		t.Fatalf("reportOn wrote the pane: reportName %q, want %q", h.m.pane.reportName, name)
+	}
+	h.m.settleReport()
+	if h.m.pane.reportName != "" {
+		t.Fatalf("settleReport left reportName %q", h.m.pane.reportName)
+	}
+
+	// The writes run where the pane changes: a snapshot, a key.
+	h, _ = reportHarness(t)
+	h.deliver(press("p"))
+	s := h.m.byName["ork"].snap
+	s.EngineRuns = append([]source.EngineRun(nil), s.EngineRuns...)
+	s.EngineRuns[0].Roles = nil
+	h.m.Update(snapshotMsg{name: "ork", snap: s})
+	if h.m.pane == nil || h.m.pane.reportName != "" {
+		t.Errorf("a snapshot that drops the report left the viewer: %+v", h.m.pane)
+	}
+	h, _ = reportHarness(t)
+	h.deliver(press("p"))
+	h.m.byName["ork"].snap.EngineRuns[0].Roles = nil
+	h.deliver(press("ctrl+d"))
+	if h.m.pane == nil || h.m.pane.reportName != "" {
+		t.Errorf("a key did not end the viewer of a removed report: %+v", h.m.pane)
+	}
+}
+
+// numberedReportLive answers each read with the number of the read, so a test
+// can tell which ask a reply belongs to.
+type numberedReportLive struct {
+	*reportLive
+	n int
+}
+
+func (l *numberedReportLive) Report(context.Context, string, string) (string, error) {
+	l.n++
+	return fmt.Sprintf("reply of ask %d", l.n), nil
+}
+
+// An older reply for the same report name does not overwrite a newer one
+// (S190, S201 note; S147).
+func TestReportOlderAnswerIsDropped(t *testing.T) {
+	h, l := reportHarness(t)
+	h.m.cfg.Live = &numberedReportLive{reportLive: l}
+	_, first := h.m.Update(press("p"))
+	h.deliver(press("esc")) // the viewer closes; the pane stays
+	_, second := h.m.Update(press("p"))
+	if first == nil || second == nil {
+		t.Fatal("a report key returned no read")
+	}
+	older, newer := first(), second()
+	h.deliver(newer)
+	h.deliver(older)
+	if v := h.at(120, 40); !strings.Contains(v, "reply of ask 2") || strings.Contains(v, "reply of ask 1") {
+		t.Fatalf("the older reply overwrote the newer:\n%s", v)
+	}
+}
+
 func TestDaemonReportWire(t *testing.T) {
 	var seen []daemon.RunAction
 	var methods []string

@@ -845,6 +845,28 @@ func TestRunIdFitIsDecidedOncePerSection(t *testing.T) {
 	}
 }
 
+// settleRunIDs keeps ids while the id, two spaces and the rest fill the room
+// exactly, and drops them in every row of the section one column short (S190,
+// S199 note; the edge S146 missed).
+func TestSettleRunIDsSwitchesAtTheExactWidth(t *testing.T) {
+	const nameW = 0
+	row := func(rest string) ovRow { return ovRow{runID: true, id: "run-aaa", rest: rest, kindW: 5} }
+	rest := strings.Repeat("r", 20)
+	w := textColumn(row(rest), nameW) + len("run-aaa") + len("  ") + len(rest)
+	for _, tc := range []struct {
+		width int
+		drop  bool
+	}{{w, false}, {w + 1, false}, {w - 1, true}} {
+		rows := []ovRow{row("short"), row(rest), row("also short")}
+		settleRunIDs(rows, nameW, tc.width)
+		for i, r := range rows {
+			if r.dropID != tc.drop {
+				t.Errorf("width %d (exact %d): row %d dropID %v, want %v", tc.width, w, i, r.dropID, tc.drop)
+			}
+		}
+	}
+}
+
 // Only run rows drop their id: a Ready row keeps its item when the rest of its
 // text is long and gets cut instead (S146).
 func TestReadyRowKeepsItsItemWhenTheRestIsLong(t *testing.T) {

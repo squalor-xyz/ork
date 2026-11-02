@@ -1113,7 +1113,7 @@ func TestLaunchSittingSkipClosesTheLaunchWithAStatus(t *testing.T) {
 			h.deliver(press("1"))
 			h.deliver(press(key))
 			h.deliver(press("y"))
-			if h.m.launch != nil || h.m.confirm != nil || len(l.starts) != 0 || len(l.answers) != 0 || h.m.actionStatus != "S90 waits on 2 spec questions; l checks again" {
+			if h.m.launch != nil || h.m.confirm != nil || len(l.starts) != 0 || len(l.answers) != 0 || h.m.actionStatus != "S90 waits on 2 spec questions; l starts the launch again" {
 				t.Fatalf("launch %v confirm %v status %q", h.m.launch, h.m.confirm, h.m.actionStatus)
 			}
 			h.deliver(launchPlanning(t, h)())
@@ -1121,6 +1121,56 @@ func TestLaunchSittingSkipClosesTheLaunchWithAStatus(t *testing.T) {
 				t.Fatal("retry did not check again")
 			}
 		})
+	}
+}
+
+// A failed answer write leaves the item's questions open, but the owner did
+// answer them: the status says the answers were not saved and what starts the
+// launch again, not a count of questions (S190, S193 note).
+func TestSpecStatusAfterAFailedAnswerWriteSaysTheAnswersWereNotSaved(t *testing.T) {
+	h, l := launchHarness(t)
+	launchQuestions(l)
+	l.answerErr = &ipc.Error{Code: "internal", Message: "Exact ANSWER failure."}
+	h.deliver(launchPlanning(t, h)())
+	h.deliver(press("1"))
+	h.deliver(press("1"))
+	const want = "S90: internal: Exact ANSWER failure.; S90: answers not saved; l starts the launch again"
+	if h.m.launch != nil || h.m.actionStatus != want {
+		t.Fatalf("launch %v status %q, want %q", h.m.launch, h.m.actionStatus, want)
+	}
+	// A new sitting of the same launch flow starts clean: a skip reads the count.
+	l.answerErr = nil
+	h.deliver(launchPlanning(t, h)())
+	h.deliver(press("1"))
+	h.deliver(press("s"))
+	if h.m.actionStatus != "S90 waits on 2 spec questions; l starts the launch again" {
+		t.Fatalf("status after a skip: %q", h.m.actionStatus)
+	}
+}
+
+// Replan with no plan and no error keeps the plan the owner was looking at
+// (S190, S187 note).
+func TestReplanWithNoPlanRestoresThePreviousPlan(t *testing.T) {
+	h, _ := launchHarness(t)
+	launchConfirmed(t, h)
+	old := *h.m.confirm
+	editTestLaunchLineup(t, h)
+	if h.m.launch == nil || h.m.launch.stage != launchPlanPending || h.m.launch.prev == nil {
+		t.Fatal("the replan is not pending")
+	}
+	h.deliver(launchMsg{request: h.m.launch.request})
+	if h.m.launch == nil || h.m.confirm == nil || !reflect.DeepEqual(*h.m.confirm, old) || h.m.launch.prev != nil || h.m.actionStatus != "No run plan returned" {
+		t.Fatalf("launch %v confirm %v status %q", h.m.launch != nil, h.m.confirm, h.m.actionStatus)
+	}
+	if !strings.Contains(h.view(), "ork run ork S90? [y/N] (Enter is No)") {
+		t.Fatalf("the old confirmation is not back:\n%s", h.view())
+	}
+	// A first plan with no plan still closes the launch.
+	h, _ = launchHarness(t)
+	launchPlanning(t, h)
+	h.deliver(launchMsg{request: h.m.launch.request})
+	if h.m.launch != nil || h.m.actionStatus != "No run plan returned" {
+		t.Fatalf("first plan: launch %v status %q", h.m.launch != nil, h.m.actionStatus)
 	}
 }
 func TestLaunchSpecCheckErrorDropsTheLaunch(t *testing.T) {

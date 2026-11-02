@@ -1491,6 +1491,42 @@ func TestWavesLaunchShowsTheBlockedRefusal(t *testing.T) {
 		t.Fatalf("status %q starts %+v picked %+v\n%s", h.m.actionStatus, l.starts, h.m.waves.picked, h.view())
 	}
 }
+
+// The refusal wraps on the status lines at 80x24 with no word cut and no line
+// over the width (S190, S186 note). Whitespace is not squashed: the lines of
+// the status block, trimmed and joined by one space, are the refusal.
+func TestBlockedWaveRefusalWrapsAt80Columns(t *testing.T) {
+	h, l := wavesHarness(t)
+	twoWaveItems(t, h)
+	const text = `B waits on A "Alpha" (in this wave, not done); untick B or land A first`
+	l.check = func([]string) (*daemon.SpecCheckResult, error) {
+		return nil, &ipc.Error{Code: daemon.CodeRefused, Message: text}
+	}
+	h.deliver(press("l"))
+	h.send(tea.WindowSizeMsg{Width: 80, Height: 24})
+	lines := strings.Split(plainView(h.m), "\n")
+	var rules []int
+	for i, line := range lines {
+		if w := lipgloss.Width(line); w > 80 {
+			t.Errorf("line %d is %d columns wide: %q", i, w, line)
+		}
+		if isRule(line) {
+			rules = append(rules, i)
+		}
+	}
+	if len(rules) < 2 {
+		t.Fatalf("no status block:\n%s", strings.Join(lines, "\n"))
+	}
+	// The status block sits between the last two rules, above the hint line.
+	var status []string
+	for _, line := range lines[rules[len(rules)-2]+1 : rules[len(rules)-1]] {
+		_, rest, _ := strings.Cut(line, "│")
+		status = append(status, strings.TrimSpace(rest))
+	}
+	if len(status) < 2 || strings.Join(status, " ") != text {
+		t.Fatalf("the refusal is not wrapped whole on the status lines %q:\n%s", status, strings.Join(lines, "\n"))
+	}
+}
 func TestWavesStartRefusalKeepsTheTicks(t *testing.T) {
 	h, l := wavesHarness(t)
 	twoWaveItems(t, h)

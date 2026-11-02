@@ -108,6 +108,27 @@ func TestReadyToLandUnknownMergeState(t *testing.T) {
 	}
 }
 
+// The Ready row follows the committed state, not stop_after: a run that was
+// told to stop at the commit lists its branch and the land command like any
+// committed run, and the row is selectable (S190, S191 note).
+func TestReadyRowForACommitStoppedRun(t *testing.T) {
+	h := landingHarness(t, `[{"id":"stopped-at-commit","item":"S09","state":"committed","stop_after":"commit","branch":"s09","merged":true}]`)
+	rows := h.m.readyRows()
+	if len(rows) != 1 || !rows[0].ready || rows[0].id != "S09" || rows[0].branch != "s09" {
+		t.Fatalf("ready rows: %+v", rows)
+	}
+	v := landingText(h)
+	for _, want := range []string{"S09  s09  merged", `slicer land 'S09' --branch 's09' --note 'Landed s09'`} {
+		if !strings.Contains(v, want) {
+			t.Errorf("missing %q:\n%s", want, v)
+		}
+	}
+	h.send(press("down"))
+	if r, ok := h.m.selectedRow(); !ok || !r.ready || r.id != "S09" {
+		t.Fatalf("the Ready row is not selectable: %+v", r)
+	}
+}
+
 func TestReadyToLandUnmergedSaysMergeFirst(t *testing.T) {
 	h := landingHarness(t, `[{"item":"S09","state":"committed","branch":"s09","merged":false}]`)
 	v := landingText(h)

@@ -23,6 +23,7 @@ var _ reportReader = (*Daemon)(nil)
 
 type reportMsg struct {
 	run, name, text string
+	seq             int // the ask it answers; only the latest ask for a report is kept (S190)
 	err             error
 }
 
@@ -51,7 +52,9 @@ func (m *Model) reportList() []source.EngineRole {
 	return out
 }
 
-// reportOn is the one-based report on show; a removed report ends the viewer.
+// reportOn is the one-based report on show, or 0 when none is or the run no
+// longer lists it. It only reads: the draw path calls it, so it never writes
+// the pane (S147, S190). settleReport ends the viewer of a removed report.
 func (m *Model) reportOn() int {
 	if m.pane == nil || m.pane.reportName == "" {
 		return 0
@@ -61,8 +64,17 @@ func (m *Model) reportOn() int {
 			return i + 1
 		}
 	}
-	m.pane.reportName = ""
 	return 0
+}
+
+// settleReport ends the viewer of a report the run no longer lists, so a report
+// that comes back later does not bring the old viewer with it. It is the write
+// that reportOn does not make, and it runs where the pane changes (a snapshot,
+// a key), never in the draw path, as settleRender does (S190).
+func (m *Model) settleReport() {
+	if m.pane != nil && m.pane.reportName != "" && m.reportOn() == 0 {
+		m.pane.reportName = ""
+	}
 }
 
 func (m *Model) fetchReport() tea.Cmd {
@@ -76,21 +88,26 @@ func (m *Model) fetchReport() tea.Cmd {
 		m.pane.reports[name] = renderFetch{done: true, err: "this daemon connection cannot read reports"}
 		return nil
 	}
-	m.pane.reports[name] = renderFetch{}
+	m.reportSeq++
+	seq := m.reportSeq
+	m.pane.reports[name] = renderFetch{seq: seq}
 	return func() tea.Msg {
 		text, err := reader.Report(context.Background(), run, name)
-		return reportMsg{run: run, name: name, text: text, err: err}
+		return reportMsg{run: run, name: name, seq: seq, text: text, err: err}
 	}
 }
 
+// reportArrived keeps the answer for the ask that made it, as renderArrived
+// does: an older ask for the same report, read again after the viewer closed
+// and opened, is dropped (S190).
 func (m *Model) reportArrived(msg reportMsg) {
 	if m.pane == nil || m.pane.run != msg.run || m.pane.reportName == "" || m.pane.reportName != msg.name {
 		return
 	}
-	if m.pane.reports == nil {
-		m.pane.reports = map[string]renderFetch{}
+	if f, asked := m.pane.reports[msg.name]; !asked || f.seq != msg.seq {
+		return
 	}
-	f := renderFetch{done: true, text: msg.text}
+	f := renderFetch{done: true, text: msg.text, seq: msg.seq}
 	if msg.err != nil {
 		f.err = actionError(msg.err)
 	}

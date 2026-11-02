@@ -2941,3 +2941,20 @@
 {"when": "2026-11-02T18:18:49Z", "item": "S238", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S238):", "by": "Jon R"}
 {"when": "2026-11-02T18:18:56Z", "item": "S238", "action": "note", "from": "", "to": "", "note": "Landing merge-in without a role is implemented and verified.", "by": "Jon R"}
 {"when": "2026-11-02T18:19:00Z", "item": "S238", "action": "status", "from": "started", "to": "done", "note": "Landing merge-in without a role: ork merges the CHANGELOG.md entries, commits the merge itself and pauses on other conflicts with a one-line reason; retry stages marker-free files and commits; land fix round covers a red re-check only; ork status marks a repeat approval. Full suite green with race, vet, gofmt and slicer check clean.", "by": "Jon R"}
+{"when": "2026-11-02T16:37:40Z", "item": "S190", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-11-02T16:57:36Z", "item": "S190", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-02T16:57:52Z", "item": "S190", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-02T18:13:44Z", "item": "S190", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S190):", "by": "Jon R"}
+{"when": "2026-11-02T18:13:50Z", "item": "S190", "action": "note", "from": "", "to": "", "note": "Verified: TUI notes sweep T2 done in internal/tui. Replan wi", "by": "Jon R"}
+{"when": "2026-11-02T18:13:56Z", "item": "S190", "action": "status", "from": "started", "to": "done", "note": "Verified: TUI notes sweep T2 in internal/tui; go test -race -count=1 ./... passes (4552 passed, 0 failed), go vet, gofmt, slicer check and adj lint clean. Gate PASS and owner approved. Manual HUMAN CHECKs left to the owner.", "by": "Jon R"}
+{"when": "2026-11-02T17:33:55Z", "item": "relay-roles.r21", "action": "relay-roles", "from": "", "to": "orchestrator", "note": "add"}
+{"when": "2026-11-02T17:33:55Z", "item": "relay-roles.r22", "action": "relay-roles", "from": "", "to": "reviewer", "note": "add"}
+{"when": "2026-11-02T17:33:55Z", "item": "relay-roles.r23", "action": "relay-roles", "from": "", "to": "gate", "note": "add"}
+{"when": "2026-11-02T17:33:55Z", "item": "relay-roles.r24", "action": "relay-roles", "from": "", "to": "reviewer", "note": "add"}
+{"when": "2026-11-02T17:41:51Z", "item": "relay-roles.r21", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
+{"when": "2026-11-02T17:41:51Z", "item": "relay-roles.r22", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
+{"when": "2026-11-02T17:41:51Z", "item": "relay-roles.r23", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
+{"when": "2026-11-02T17:41:52Z", "item": "relay-roles.r24", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
+{"when": "2026-11-02T17:41:52Z", "item": "relay-roles.r21", "action": "relay-roles", "from": "", "to": "note", "note": "set"}
+{"when": "2026-11-02T17:42:00Z", "item": "S243", "action": "add", "from": "", "to": "open", "note": "Claude fallback implementer: shell rules in the brief, one automatic report nudge, a short denied count in status"}
+{"when": "2026-11-02T17:42:07Z", "item": "S72", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-02 (interactive): Grok rows in the matrix use ", "by": "Jon R"}

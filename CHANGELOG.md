@@ -12,6 +12,19 @@
   after it as a repeat. Docs: `docs/design.md`, `docs/guide.md`,
   `docs/state.md`, `docs/dashboard.md`.
 
+- S190: TUI notes sweep. A launch replan that returns no plan keeps the
+  confirmation of the old plan instead of closing the launch. `esc` in the
+  lineup editor's custom fields steps back to the rows; a second `esc`
+  discards the editor (*proposed*). The Roadmap item pane scrolls by line
+  (`j`/`k`), page and to its ends, and the matrix pane takes `g`/`G` too
+  (*proposed*); the matrix pane's first lines use the two columns they
+  lost. The focused stop and budget rows of the lineup editor are drawn as a
+  bar. After a failed answer write the launch status says
+  `ITEM: answers not saved; l starts the launch again`, and
+  a failed write after the launch closed shows its error. The report viewer
+  no longer writes the pane in the draw path, and an older report reply no
+  longer overwrites a newer one. Docs: the neutral approve question.
+
 - S207: read the relay contract once during engine setup and use one accepted
   version phrase. Name the set once on doctor's unsupported-contract FAIL
   line, return `not_found` (exit 1) with a project-list hint for an unknown

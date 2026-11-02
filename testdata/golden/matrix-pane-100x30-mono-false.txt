@@ -21,10 +21,10 @@
                            │    Unix sockets, so rerun socket-test packages outside it |
                            │  | r3 | Implementer | whole slice | Claude Code | Claude | sonnet |
                            │    high | - |
-                           │  | r21 | Implementer | whole slice | Acme Agent | Acme | tiny | low |
-                           │    - |
-                           │  | r14 | Reviewer | every slice | Claude Code | Claude | opus |
-                           │[90m  +12 more lines[m
+                           │  | r21 | Implementer | whole slice | Acme Agent | Acme | tiny | low | -
+                           │    |
+                           │  | r14 | Reviewer | every slice | Claude Code | Claude | opus | medium
+                           │[90m  +11 more lines[m
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │ pgup/pgdown [2mpage[m; j/k [2mline[m; tab [2mviews[m; q [2mquit[m; esc [2mclose[m; ? [2mhelp[m
                            │ 2 projects | refreshed 16:42:00

@@ -2525,13 +2525,13 @@ func TestLastRowShowsTheSectionsAfterIt(t *testing.T) {
 	}
 }
 
-// Help says the page keys scroll a pane. The Roadmap item pane does not scroll,
-// so there the help says only that they page rows.
-func TestHelpDoesNotPromiseAScrollingRoadmapPane(t *testing.T) {
+// Help says the page keys scroll a pane. The Roadmap item pane scrolls since
+// S190, so there too (it said only that they page rows before).
+func TestHelpPromisesAScrollingRoadmapPane(t *testing.T) {
 	h := roadmapHarness(t)
 	h.send(press("?"))
 	v := strings.Join(h.m.helpLines(60, 40), "\n")
-	if strings.Contains(v, "pgdown/pgup page rows or scroll a pane") || !strings.Contains(v, "pgdown/pgup page rows") {
+	if !strings.Contains(v, "pgdown/pgup page rows or scroll a pane") {
 		t.Errorf("the Roadmap help:\n%s", v)
 	}
 	ov := newHarness(t, four...)
