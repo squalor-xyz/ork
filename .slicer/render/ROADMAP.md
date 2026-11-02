@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-252 items · — 53 · done 172 · retired 27
+252 items · — 52 · done 173 · retired 27
 
 v1.2
 
@@ -120,7 +120,7 @@ v1.2
 | 63 | S210 | S208 later note: cite engine.default-cap beside the default in docs/design.md:231-232 | S | 1 |  | Folded into the S50 sweep (owner, 2026-10-31). · discovered from S208 | retired |
 | 64 | S211 | S209 later notes: duplicate ui_pass_skills names, claude-to-codex fallback test, untrimmed control-character doc line, full-line brief assertion | S | 1 |  | Folded: the S209 later notes were handled by S207 (owner, 2026-11-01: items 3 and 4 dropped; 1 and 2 landed with S207). · discovered from S209 | retired |
 | 65 | [S212](slices/S212.md) | Release workflow | M | 2 |  |  | done |
-| 66 | [S213](slices/S213.md) | Release workflow hardening | M | 2 |  | discovered from S212 | — |
+| 66 | [S213](slices/S213.md) | Release workflow hardening | M | 2 |  | discovered from S212 | done |
 | 67 | S214 | S108 later notes: per-role ordinal on repeated done steps, overflow marker under Recent, golden for a failed step and a fix round, task-line column vs deeper child glyph | S | 1 |  | Folded into the S130 sweep (owner, 2026-10-31): item 1 (per-role ordinal) is in S130; items 2 and 4 dropped, kept in the v1.2 dropped-items row. · discovered from S108 | retired |
 | 68 | [S215](slices/S215.md) | Named wave: state, daemon, CLI | M | 2 |  |  | — |
 | 69 | [S216](slices/S216.md) | Waves screen: save and load named wave | M | 2 |  |  | — |

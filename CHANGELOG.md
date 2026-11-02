@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- S213: release workflow hardening (*proposed*). The release fails, before
+  it is created, when `CHANGELOG.md` has no section for the tag. A signed
+  tag's signature is left out of the release notes. The test and build
+  checkouts set `persist-credentials: false`, and the build job's
+  `setup-go` sets `cache: false`, so a release build restores no cache. The
+  guard test `internal/release/workflow_test.go` reads the workflow through
+  a normaliser, so a reformat (indent width, quote style, comments, blank
+  lines, CRLF, list dashes at the key's indent) no longer fails it, and
+  real changes still do.
+
 - S238: landing merge-in without a role (*proposed*). When merging the base
   branch conflicts, ork merges the `CHANGELOG.md` entries itself even when
   other files conflict, then pauses the run with a one-line reason that names
