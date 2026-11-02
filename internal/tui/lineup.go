@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -109,11 +110,10 @@ func editLineup(e *lineupEditor, msg tea.KeyPressMsg) lineupEditResult {
 	if msg.String() == "ctrl+c" {
 		return lineupQuit
 	}
-	if msg.String() == "esc" {
-		return lineupDiscard
-	}
 	if e.custom {
 		switch msg.String() {
+		case "esc":
+			e.custom = false // a step back to the rows; the next esc discards (S190)
 		case "tab":
 			e.focus = (e.focus + 1) % 3
 		case "shift+tab":
@@ -132,6 +132,8 @@ func editLineup(e *lineupEditor, msg tea.KeyPressMsg) lineupEditResult {
 		return lineupNone
 	}
 	switch msg.String() {
+	case "esc":
+		return lineupDiscard
 	case "down", "tab":
 		e.row = (e.row + 1) % (len(lineupRoles) + len(e.budgets) + 1)
 	case "up", "shift+tab":
@@ -329,18 +331,30 @@ func (m *Model) editorBody(e *lineupEditor, title string, width int) overviewVie
 	if e.row == len(lineupRoles) {
 		value = "< " + value + " >"
 	}
+	start := len(out.body)
 	add(prefix + label + ": " + value)
+	if e.row == len(lineupRoles) {
+		for j := start; j < len(out.body); j++ {
+			out.body[j] = th.TabActive.Render(out.body[j])
+		}
+	}
 	for i, label := range []string{"Budget minutes", "Budget tokens"} {
 		prefix := "  "
-		if e.row == i+len(lineupRoles)+1 {
-			prefix = "> "
-			out.sel = len(out.body)
+		if e.row != i+len(lineupRoles)+1 {
+			add(prefix + label + ": " + e.budgets[i].Value())
+			continue
 		}
-		text := e.budgets[i].Value()
-		if e.row == i+len(lineupRoles)+1 {
-			text = e.budgets[i].view(max(width-len(label)-6, 1), th)
+		// The focused row is a bar like a role row. Its cursor is the inverse of
+		// the bar, so it shows against it (S190).
+		out.sel = len(out.body)
+		room := max(width-len(label)-6, 1)
+		before, cursor, after := e.budgets[i].parts(room)
+		line := th.TabActive.Render(indent + "> " + label + ": " + before)
+		line += th.TabActive.Reverse(false).Render(cursor)
+		if left := room - lipgloss.Width(before) - lipgloss.Width(cursor); left > 0 && after != "" {
+			line += th.TabActive.Render(lipgloss.NewStyle().MaxWidth(left).Render(after))
 		}
-		add(prefix + label + ": " + text)
+		out.body = append(out.body, line)
 	}
 	add("Zero budget uses the project default.")
 	if e.custom {

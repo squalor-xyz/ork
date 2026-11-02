@@ -2934,3 +2934,9 @@
 {"when": "2026-11-02T16:15:01Z", "item": "S242", "action": "add", "from": "", "to": "open", "note": "Daemon visibility: ork daemon status, a daemon line in doctor, and a stale rule that ignores commits with no code change"}
 {"when": "2026-11-02T16:15:08Z", "item": "S240", "action": "set", "from": "", "to": "", "note": "depends_on -→S222"}
 {"when": "2026-11-02T16:15:13Z", "item": "S233", "action": "set", "from": "", "to": "", "note": "depends_on -→S240,S241,S242"}
+{"when": "2026-11-02T16:37:40Z", "item": "S190", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-11-02T16:57:36Z", "item": "S190", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-02T16:57:52Z", "item": "S190", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-02T18:13:44Z", "item": "S190", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S190):", "by": "Jon R"}
+{"when": "2026-11-02T18:13:50Z", "item": "S190", "action": "note", "from": "", "to": "", "note": "Verified: TUI notes sweep T2 done in internal/tui. Replan wi", "by": "Jon R"}
+{"when": "2026-11-02T18:13:56Z", "item": "S190", "action": "status", "from": "started", "to": "done", "note": "Verified: TUI notes sweep T2 in internal/tui; go test -race -count=1 ./... passes (4552 passed, 0 failed), go vet, gofmt, slicer check and adj lint clean. Gate PASS and owner approved. Manual HUMAN CHECKs left to the owner.", "by": "Jon R"}

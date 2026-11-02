@@ -454,3 +454,38 @@ func TestSelectedSpecNoteUsesTheSelectedRowSGR(t *testing.T) {
 		t.Fatal("selected note not rendered")
 	}
 }
+
+// A failed answer write whose launch is gone still tells the owner (S190, S193
+// note): the answers were not saved, and nothing else would say so.
+func TestFailedSpecAnswerAfterTheLaunchWasDroppedShowsAStatus(t *testing.T) {
+	h, l := launchHarness(t)
+	launchQuestions(l)
+	l.answerErr = &ipc.Error{Code: "internal", Message: "Exact ANSWER failure."}
+	h.deliver(launchPlanning(t, h)())
+	h.deliver(press("1"))
+	_, record := h.m.Update(press("1"))
+	if record == nil {
+		t.Fatal("no answer command")
+	}
+	// esc is held by the finished sitting while its write runs (sittingKey has no
+	// question left); navigation is what drops a launch then.
+	h.deliver(press("esc"))
+	h.m.switchTo(1)
+	h.m.switchTo(0)
+	if h.m.launch != nil {
+		t.Fatal("the launch is still open")
+	}
+	h.m.actionStatus = ""
+	for _, msg := range exec(record) {
+		h.deliver(msg)
+	}
+	if want := "S90: internal: Exact ANSWER failure."; h.m.actionStatus != want {
+		t.Fatalf("status %q, want %q", h.m.actionStatus, want)
+	}
+	// A write that worked says nothing.
+	h.m.actionStatus = ""
+	h.deliver(specAnswerMsg{state: &specState{}, item: "S90"})
+	if h.m.actionStatus != "" {
+		t.Fatalf("a good write set the status %q", h.m.actionStatus)
+	}
+}

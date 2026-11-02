@@ -389,6 +389,86 @@ func TestMatrixHintOutlastsAddAndRemoveAndDropsBeforeTabViews(t *testing.T) {
 	}
 }
 
+// g and G (home and end) go to the ends of the matrix pane, as in the Roadmap
+// item pane (S190, S190 note).
+func TestMatrixPaneScrollsToTheEndsWithGAndG(t *testing.T) {
+	h := roadmapHarness(t)
+	openMatrixPane(t, h, &matrixLive{result: longMatrix()})
+	pane := h.m.itemPane
+	h.view()
+	room := pane.room
+	h.deliver(press("G"))
+	h.view()
+	last := pane.offset
+	if last <= room {
+		t.Fatalf("G stopped at %d, room %d", last, room)
+	}
+	if v := h.view(); !strings.Contains(v, "long line 119") || strings.Contains(v, "long line 000") {
+		t.Fatalf("G does not show the end of the matrix:\n%s", v)
+	}
+	h.deliver(press("g"))
+	if h.view(); pane.offset != 0 {
+		t.Fatalf("g left the offset at %d", pane.offset)
+	}
+	h.deliver(tea.KeyPressMsg{Code: tea.KeyEnd})
+	if h.view(); pane.offset != last {
+		t.Fatalf("end left the offset at %d, want %d", pane.offset, last)
+	}
+	h.deliver(tea.KeyPressMsg{Code: tea.KeyHome})
+	if h.view(); pane.offset != 0 {
+		t.Fatalf("home left the offset at %d", pane.offset)
+	}
+	if h.m.roadmapCursor != 0 {
+		t.Errorf("the roadmap cursor moved to %d", h.m.roadmapCursor)
+	}
+}
+
+// A first line needs only the pane indent: at 80 columns it holds 78. Only the
+// continuations hang two spaces, so they hold 76 (S190, S190 note).
+func TestMatrixPaneFirstLineUsesTheFullWidth(t *testing.T) {
+	h := roadmapHarness(t)
+	const w = 80
+	fits := "FITS" + strings.Repeat("-", w-2-4) // exactly 78 columns
+	first := "LONGLN" + strings.Repeat(" abcde", 12)
+	tail := strings.Repeat("x", 38) + " " + strings.Repeat("y", 39) // 78 columns: two lines at 76
+	result := &daemon.RolesMatrixResult{Markdown: fits + "\n" + first + " " + tail + "\n"}
+	openMatrixPane(t, h, &matrixLive{result: result})
+	var lines []string
+	for _, l := range h.m.roadmap(w).body {
+		lines = append(lines, sgr.ReplaceAllString(l, ""))
+	}
+	at := func(prefix string) int {
+		for i, l := range lines {
+			if strings.HasPrefix(l, indent+prefix) {
+				return i
+			}
+		}
+		t.Fatalf("no line starts with %q:\n%s", prefix, strings.Join(lines, "\n"))
+		return -1
+	}
+	if i := at("FITS"); lines[i] != indent+fits || lipgloss.Width(lines[i]) != w {
+		t.Errorf("a 78-column line was wrapped: %q", lines[i])
+	}
+	i := at("LONGLN")
+	if lines[i] != indent+first || lipgloss.Width(lines[i]) != w {
+		t.Errorf("the first line does not use 78 columns: %q", lines[i])
+	}
+	if i+2 >= len(lines) {
+		t.Fatalf("the long line has no two continuations:\n%s", strings.Join(lines, "\n"))
+	}
+	if want := indent + "  " + strings.Repeat("x", 38); lines[i+1] != want {
+		t.Errorf("first continuation %q, want %q", lines[i+1], want)
+	}
+	if want := indent + "  " + strings.Repeat("y", 39); lines[i+2] != want {
+		t.Errorf("second continuation %q, want %q", lines[i+2], want)
+	}
+	for j, l := range lines {
+		if lipgloss.Width(l) > w {
+			t.Errorf("line %d is %d columns wide, over %d: %q", j, lipgloss.Width(l), w, l)
+		}
+	}
+}
+
 // Wrapped lines hang two spaces under their first line, so each table row and
 // each rule bullet stands out (UI pass, S168).
 func TestMatrixPaneWrappedLinesHang(t *testing.T) {

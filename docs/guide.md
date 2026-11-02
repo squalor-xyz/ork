@@ -215,7 +215,8 @@ in the launch body only; the status line stays empty. Questions use the same
 sitting as Waves: pick with `1`-`N`, or press `t`, type an answer and press
 `enter`.
 The last answer is recorded before confirmation. `s` or `esc` skips the rest
-and closes the launch with `ITEM waits on N spec questions; l checks again`.
+and closes the launch with `ITEM waits on N spec questions; l starts the
+launch again`.
 A failed check also blocks launch; there is no skip key. A refusal shows its
 message without `refused:`; other errors keep their code.
 Press `e` at the

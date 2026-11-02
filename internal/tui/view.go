@@ -882,11 +882,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 					continue
 				}
 			}
-			desc := h.Desc
-			if h == m.keys.PageDown.Help() && m.view == roadmapView {
-				desc = "page rows" // the Roadmap item pane does not scroll
-			}
-			lines = append(lines, clip(h.Key+" "+desc, w))
+			lines = append(lines, clip(h.Key+" "+h.Desc, w))
 		}
 	}
 	lines = append(lines, "", clip("Overview, Questions, Waves, Roadmap and Decisions are available.", w))

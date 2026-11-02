@@ -5,6 +5,7 @@ package tui
 import (
 	"context"
 	"fmt"
+	"math"
 	"strings"
 
 	"charm.land/bubbles/v2/key"
@@ -46,6 +47,12 @@ type matrixMsg struct {
 	err     error
 }
 
+// roadmapPaneOpen reports whether the Roadmap shows an item pane or the role
+// matrix pane: the panes that scroll by line, page and to the ends.
+func (m *Model) roadmapPaneOpen() bool {
+	return m.view == roadmapView && m.itemPane != nil
+}
+
 // matrixPaneOpen reports whether the Roadmap shows the role matrix pane.
 func (m *Model) matrixPaneOpen() bool {
 	return m.view == roadmapView && m.itemPane != nil && m.itemPane.id == matrixPaneID
@@ -84,11 +91,17 @@ func (m *Model) openMatrix() tea.Cmd {
 	}
 }
 
-// scrollMatrix moves the matrix pane by a line (j, k) or a page (pgdown,
-// pgup), as the Waves item pane does; ctrl+d and ctrl+u are scrollHalf's.
-func (m *Model) scrollMatrix(msg tea.KeyPressMsg) {
+// scrollRoadmapPane moves the item pane or the matrix pane by a line (j, k), a
+// page (pgdown, pgup) or to an end (g, G), as the Waves item pane does; ctrl+d
+// and ctrl+u are scrollHalf's. The draw clamps an offset past the end
+// (scrollItemPane).
+func (m *Model) scrollRoadmapPane(msg tea.KeyPressMsg) {
 	pane := m.itemPane
 	switch {
+	case key.Matches(msg, m.keys.First):
+		pane.offset = 0
+	case key.Matches(msg, m.keys.Last):
+		pane.offset = math.MaxInt32
 	case key.Matches(msg, m.keys.RowNext):
 		pane.offset++
 	case key.Matches(msg, m.keys.RowPrev):
@@ -150,6 +163,18 @@ func (m *Model) scrollItemPane(pane *itemPane, out *overviewView, head int) {
 	out.body = append(out.body[:head:head], out.body[head+pane.offset:]...)
 }
 
+// hangWrap wraps text with its first line at first columns and the lines that
+// follow at rest columns, which leaves room for the hang the caller adds under
+// the first line. The words break as wrapText breaks them.
+func hangWrap(text string, first, rest int) []string {
+	lines := wrapText(text, first)
+	if len(lines) < 2 || strings.Contains(text, "\n") {
+		return lines
+	}
+	remainder := strings.TrimLeft(strings.TrimPrefix(text, lines[0]), " ")
+	return append(lines[:1:1], wrapText(remainder, rest)...)
+}
+
 // matrixLines draws the role matrix pane's body: ork's section first, with the
 // words of each row's use dim and a skipped row in the warning colour, then
 // slicer's text as it prints it. The text is daemon.FormatMatrixOrkFirst (the
@@ -159,7 +184,7 @@ func (m *Model) matrixLines(out *overviewView, r *daemon.RolesMatrixResult, w in
 	th := m.cfg.Theme
 	for i, text := range daemon.FormatMatrixOrkFirst(r) {
 		ork := i >= 1 && i <= len(r.Rows) // the rows of ork's section; line 0 is its heading
-		for j, line := range wrapText(text, max(w-4, 1)) {
+		for j, line := range hangWrap(text, max(w-2, 1), max(w-4, 1)) {
 			switch {
 			case ork:
 				style := th.Dim

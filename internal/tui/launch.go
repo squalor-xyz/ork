@@ -273,7 +273,15 @@ func (m *Model) applyLaunch(msg launchMsg) tea.Cmd {
 		return nil
 	}
 	if msg.plan == nil {
-		m.dropLaunch()
+		// A replan with no plan acts as one with an error: the plan the owner was
+		// looking at stays (S190).
+		if l.prev != nil {
+			l.plan, l.params = l.prev, l.prevParams
+			l.prev = nil
+			m.confirmLaunch()
+		} else {
+			m.dropLaunch()
+		}
 		m.actionStatus = "No run plan returned"
 		return nil
 	}
@@ -338,6 +346,7 @@ func (m *Model) applyLaunchSpec(msg launchSpecMsg) tea.Cmd {
 		return m.finishLaunchSpec()
 	}
 	l.sitting = &specSitting{asks: asks, answers: map[string][]string{}, free: asks[0].freeOnly()}
+	l.unsaved = nil
 	l.stage = launchSitting
 	return nil
 }
@@ -348,7 +357,12 @@ func (m *Model) finishLaunchSpec() tea.Cmd {
 		m.confirmLaunch()
 		return nil
 	}
-	status := l.params.Item + " " + specNote(l.specs[l.params.Item]) + "; l checks again"
+	// l starts the whole launch flow again. A failed write means the owner did
+	// answer: say the answers were not saved, not that questions remain (S190).
+	status := l.params.Item + " " + specNote(l.specs[l.params.Item]) + "; l starts the launch again"
+	if l.unsaved[l.params.Item] {
+		status = l.params.Item + ": answers not saved; l starts the launch again"
+	}
 	m.dropLaunch()
 	if m.actionStatus != "" {
 		status = m.actionStatus + "; " + status

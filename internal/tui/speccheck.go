@@ -25,6 +25,7 @@ type specState struct {
 	specs         map[string]daemon.SpecItemResult
 	sitting       *specSitting
 	answerProject string
+	unsaved       map[string]bool // items whose answers the daemon failed to write in this sitting (S190)
 }
 
 type specAnswerMsg struct {
@@ -261,11 +262,16 @@ func (m *Model) applyAnswer(w *specState, done func() tea.Cmd, msg specAnswerMsg
 	}
 	if msg.err != nil {
 		m.actionStatus = msg.item + ": " + actionError(msg.err)
+		if w.unsaved == nil {
+			w.unsaved = map[string]bool{}
+		}
+		w.unsaved[msg.item] = true
 	} else {
 		if w.specs == nil {
 			w.specs = map[string]daemon.SpecItemResult{}
 		}
 		w.specs[msg.item] = daemon.SpecItemResult{Item: msg.item, Ready: true}
+		delete(w.unsaved, msg.item)
 		m.actionStatus = ""
 		if msg.answer != nil && len(msg.answer.Notices) > 0 {
 			m.actionStatus = strings.Join(msg.answer.Notices, "; ")

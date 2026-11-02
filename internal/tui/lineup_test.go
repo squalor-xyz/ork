@@ -363,22 +363,96 @@ func TestLineupTokenValidationAndPasteDoesNotSubmit(t *testing.T) {
 	}
 }
 
-func TestLineupCustomEscDiscardsWholeEditor(t *testing.T) {
-	h, l := lineupHarness(t)
-	old := h.m.waves.picked["A"]
-	changeImplementer(h)
+// esc in the custom fields steps back to the rows; a second esc discards the
+// editor (S190, S187 note; it was one esc for both).
+func TestEscInCustomEntryOnlyClosesTheCustomFields(t *testing.T) {
+	t.Run("waves", func(t *testing.T) {
+		h, l := lineupHarness(t)
+		old := h.m.waves.picked["A"]
+		changeImplementer(h)
+		h.deliver(press("down"))
+		h.deliver(press("down"))
+		h.deliver(press("down"))
+		h.deliver(press("down"))
+		replaceLineupField(h, "12")
+		h.deliver(press("up"))
+		h.deliver(press("up"))
+		e := h.m.waves.lineup
+		rows := e.chains
+		h.deliver(press("c"))
+		replaceLineupField(h, "discard-vendor")
+		if hint := wideHint(h); !strings.Contains(hint, "esc back") || strings.Contains(hint, "esc discard") {
+			t.Errorf("custom entry hint: %q", hint)
+		}
+		h.deliver(press("esc"))
+		if h.m.waves.lineup != e || e.custom || !reflect.DeepEqual(e.chains, rows) {
+			t.Fatalf("esc left the editor %v, custom %v, rows %+v", h.m.waves.lineup != nil, e.custom, e.chains)
+		}
+		if hint := wideHint(h); !strings.Contains(hint, "esc discard") {
+			t.Errorf("row hint: %q", hint)
+		}
+		h.deliver(press("esc"))
+		if h.m.waves.lineup != nil || !reflect.DeepEqual(old, h.m.waves.picked["A"]) || len(l.plans) != 1 {
+			t.Fatal("the second esc did not discard the editor")
+		}
+	})
+	t.Run("launch", func(t *testing.T) {
+		h, l := launchHarness(t)
+		launchConfirmed(t, h)
+		old := h.m.confirm
+		openTestLaunchLineup(t, h)
+		e := h.m.launch.lineup
+		rows := e.chains
+		h.deliver(press("c"))
+		replaceLineupField(h, "discard-vendor")
+		h.deliver(press("esc"))
+		if h.m.launch == nil || h.m.launch.stage != launchEdit || h.m.launch.lineup != e || e.custom || !reflect.DeepEqual(e.chains, rows) {
+			t.Fatalf("esc left the launch editor, custom %v, rows %+v", e.custom, e.chains)
+		}
+		h.deliver(press("esc"))
+		if h.m.launch == nil || h.m.launch.stage != launchConfirm || !reflect.DeepEqual(h.m.confirm, old) || len(l.plans) != 1 {
+			t.Fatal("the second esc did not discard the editor")
+		}
+	})
+}
+
+// The focused stop and budget rows are highlighted as a role row is (S190,
+// S191 note). A budget field keeps its cursor, drawn as the inverse of the bar.
+func TestLineupEditorHighlightsTheStopAndBudgetRows(t *testing.T) {
+	h, _ := lineupHarness(t)
+	h.m.cfg.Theme = NewTheme(false)
+	th := h.m.cfg.Theme
+	if th.TabActive.Render("x") == "x" {
+		t.Fatal("the theme draws no highlight")
+	}
+	focused := func() (string, string) {
+		ov := h.m.lineupBody(100)
+		if ov.sel < 0 {
+			t.Fatal("no focused row")
+		}
+		return ov.body[ov.sel], sgr.ReplaceAllString(ov.body[ov.sel], "")
+	}
+	line, plain := focused()
+	if !strings.Contains(plain, "implementer") || line != th.TabActive.Render(plain) {
+		t.Fatalf("role row: %q", line)
+	}
 	h.deliver(press("down"))
 	h.deliver(press("down"))
 	h.deliver(press("down"))
-	h.deliver(press("down"))
-	replaceLineupField(h, "12")
-	h.deliver(press("up"))
-	h.deliver(press("up"))
-	h.deliver(press("c"))
-	replaceLineupField(h, "discard-vendor")
-	h.deliver(press("esc"))
-	if h.m.waves.lineup != nil || !reflect.DeepEqual(old, h.m.waves.picked["A"]) || len(l.plans) != 1 {
-		t.Fatal("custom esc did not discard the whole editor")
+	line, plain = focused()
+	if !strings.Contains(plain, "> stop: < land >") || line != th.TabActive.Render(plain) {
+		t.Errorf("stop row is not highlighted: %q", line)
+	}
+	for _, label := range []string{"Budget minutes: 45", "Budget tokens: 9000"} {
+		h.deliver(press("down"))
+		line, plain = focused()
+		if !strings.Contains(plain, "> "+label) {
+			t.Fatalf("focus is not on %q: %q", label, plain)
+		}
+		cursor := th.TabActive.Reverse(false).Render(" ")
+		if want := th.TabActive.Render(strings.TrimSuffix(plain, " ")) + cursor; line != want {
+			t.Errorf("%s row is not highlighted:\n got %q\nwant %q", label, line, want)
+		}
 	}
 }
 

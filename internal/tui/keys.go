@@ -300,7 +300,9 @@ func (m *Model) contextHints() []hintEntry {
 		}
 	case m.activeLineup() != nil:
 		e := m.activeLineup()
+		desc := "discard"
 		if e.custom {
+			desc = "back"
 			l.add(dropRow, short(k.NextView, "tab/shift+tab", "field"), short(k.Select, "enter", "use entry"))
 		} else {
 			// The value hint outranks navigation on stop and budget rows (S152).
@@ -323,7 +325,7 @@ func (m *Model) contextHints() []hintEntry {
 			}
 			l.add(dropRow-1, short(k.Select, "enter", "save and replan"))
 		}
-		l.add(dropPinned, short(k.Close, "esc", "discard"))
+		l.add(dropPinned, short(k.Close, "esc", desc))
 	case m.waves != nil && m.waves.inputs != nil:
 		l.add(dropRow, short(k.NextView, "tab", "next field"), short(k.Select, "enter", "plan"))
 		l.add(dropPinned, short(k.Close, "esc", "cancel"))
@@ -405,11 +407,9 @@ func (m *Model) contextHints() []hintEntry {
 		_, noteRefused := m.composeRefusal("note")
 		l.add(dropNote, offer(!noteRefused, k.Note, "N", "note"))
 		if m.itemPane != nil {
-			if m.matrixPaneOpen() {
-				// The matrix pane scrolls by line and page too, as the Waves item pane does.
-				l.add(dropPage, short(k.PageDown, "pgup/pgdown", "page"))
-				l.add(dropLine, short(k.RowNext, "j/k", "line"))
-			}
+			// Both Roadmap panes scroll by line and page, as the Waves item pane does.
+			l.add(dropPage, short(k.PageDown, "pgup/pgdown", "page"))
+			l.add(dropLine, short(k.RowNext, "j/k", "line"))
 			l.add(dropHalf, short(k.ScrollDown, "ctrl+d/u", "half page"))
 			l.add(dropTab, short(k.NextView, "tab", "views"))
 			l.add(dropPinned, short(k.Quit, "q", "quit"), short(k.Close, "esc", "close"), short(k.Help, "?", "help"))

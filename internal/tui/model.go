@@ -178,6 +178,7 @@ type Model struct {
 	launchFlights    map[string]launchFlight
 	actionFlights    map[string][]runAction
 	renderSeq        int // the number of the last run.render ask; never restarts, so a closed pane's answer cannot match a new ask (S147)
+	reportSeq        int // the number of the last run.report ask; never restarts, as renderSeq does (S190)
 	actionStatus     string
 	lastRefresh      time.Time
 	drawn            drawnRows // the body window of the last screen, for the page keys
@@ -370,6 +371,7 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 	case snapshotMsg:
 		cmd := m.apply(msg)
 		m.settleRender()
+		m.settleReport()
 		return m, cmd
 	case projectsDiscoveredMsg:
 		return m, m.applyProjectsDiscovered(msg)
@@ -411,6 +413,10 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 	case specAnswerMsg:
 		if state, done := m.activeSpec(); state != nil && state == msg.state {
 			return m, m.applyAnswer(state, done, msg)
+		} else if state == nil && msg.err != nil {
+			// The sitting is gone (the launch was dropped while the write ran): the
+			// answers were still lost, and nothing else says so (S190).
+			m.actionStatus = msg.item + ": " + actionError(msg.err)
 		}
 		return m, nil
 	case launchMsg:
@@ -739,8 +745,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	case m.showHelp && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev):
 		// The cursor is hidden under the help: the line keys leave it where it is.
 		return nil
-	case m.matrixPaneOpen() && !m.showHelp && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.PageDown, m.keys.PageUp):
-		m.scrollMatrix(msg)
+	case m.roadmapPaneOpen() && !m.showHelp && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.PageDown, m.keys.PageUp, m.keys.First, m.keys.Last):
+		m.scrollRoadmapPane(msg)
 	case key.Matches(msg, m.keys.ScrollDown, m.keys.ScrollUp):
 		m.scrollHalf(key.Matches(msg, m.keys.ScrollUp))
 	case key.Matches(msg, m.keys.First, m.keys.Last, m.keys.PageDown, m.keys.PageUp, m.keys.NextGroup, m.keys.PrevGroup):

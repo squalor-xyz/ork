@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-242 items · — 45 · done 170 · retired 27
+242 items · — 44 · done 171 · retired 27
 
 v1.2
 
@@ -95,7 +95,7 @@ v1.2
 | 38 | S187 | S166 later notes: launch replan edge case and lineup editor key polish | S | - |  | Folded into the S190 sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row. · discovered from S166 | retired |
 | 39 | [S188](slices/S188.md) | CLI wording and polish sweep | M | 2 |  | discovered from S178 | done |
 | 40 | S189 | S167 later notes: spec sitting EOF line, run JSON shapes, refusal prefix, run.start deps | S | - |  | Folded into the S188 sweep (owner, 2026-10-31); S189 item 5 needs an owner answer and is noted there. · discovered from S167 | retired |
-| 41 | [S190](slices/S190.md) | TUI notes sweep T2 | M | 2 |  | discovered from S168 | — |
+| 41 | [S190](slices/S190.md) | TUI notes sweep T2 | M | 2 |  | discovered from S168 | done |
 | 42 | S191 | S177 later notes: stop row highlight, commit-stopped cleanup, Ready row test | S | - |  | Folded into S229 (daemon wording leftovers) and the S190 TUI sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row. · discovered from S177 | retired |
 | 43 | S193 | S184 later notes: guide anchors, lost answer error, retry wording | S | - |  | Folded into the S190 sweep and the docs re-anchor slice (owner, 2026-10-31). · discovered from S184 | retired |
 | 44 | [S194](slices/S194.md) | Correctness sweep | M | 2 |  | discovered from S182 | — |

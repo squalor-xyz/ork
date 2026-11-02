@@ -51,7 +51,15 @@ func (f *textField) insert(text string) {
 func (f textField) Value() string { return string(f.text) }
 
 func (f textField) view(width int, th Theme) string {
-	// Keep the cursor visible as a reversed character, including at the end.
+	before, cursor, after := f.parts(width)
+	text := th.Title.Render(before) + th.TabActive.Render(cursor) + th.Title.Render(after)
+	return lipgloss.NewStyle().MaxWidth(width).Render(text)
+}
+
+// parts splits the visible text at the cursor: what comes before it, the cursor
+// character (a space at the end) and what comes after, which the caller cuts to
+// the room that is left. The text before scrolls so the cursor stays in width.
+func (f textField) parts(width int) (before, cursor, after string) {
 	cursor, end := " ", f.cursor
 	if end < len(f.text) {
 		cursor = string(f.text[end])
@@ -61,6 +69,5 @@ func (f textField) view(width int, th Theme) string {
 	for start < f.cursor && lipgloss.Width(string(f.text[start:f.cursor]))+lipgloss.Width(cursor) > width {
 		start++
 	}
-	text := th.Title.Render(string(f.text[start:f.cursor])) + th.TabActive.Render(cursor) + th.Title.Render(string(f.text[end:]))
-	return lipgloss.NewStyle().MaxWidth(width).Render(text)
+	return string(f.text[start:f.cursor]), cursor, string(f.text[end:])
 }

@@ -10609,7 +10609,7 @@
       "id": "S190",
       "title": "TUI notes sweep T2: launch, lineup editor, panes, report viewer and spec status",
       "short_title": "TUI notes sweep T2",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -10619,6 +10619,34 @@
           "text": "**2026-10-29** — From the S168 review and UI pass (2026-10-29), all later: (1) give the Roadmap item pane j/k/up/down/pgup/pgdown scrolling like the matrix and Waves panes; (2) g/G (home/end) in every scrolling pane; (3) matrixLines wraps first lines at w-4, so a first line loses the 2 columns kept for the hang: wrap the first line at w-2 and continuations at w-4; (4) Overview at 80 columns: x stop and t retry now outlast + add project (dropAdd 15 ties stop), add a hint test or a doc line; (5) docs/dashboard.md matrix hint sentence has a line over 80 columns; (6) guide.md sections 13/14 anchors drifted; (7) the help label could read 'm role matrix' if room allows.",
           "created_at": "2026-10-29T22:22:18Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "71873e52-eb27-40a4-abb2-fa6bff2c928d",
+          "kind": "",
+          "text": "**2026-11-02** — Human checks at approval (S190):\n- later: At 100x30 and at 80x24: open a Roadmap item, scroll its pane with `j`, `k`, `pgdown`, `pgup`, `G`, `g`; open the matrix pane and read its wrapped lines; open the Waves lineup editor, press `c`, then `esc` once (back to the rows) and again (editor closes); move to the stop and budget rows and see them highlighted.\n- later: [AFTER LAND] After landing and rebuilding `~/bin/ork`, answer a spec question, press `esc` while it records, and see an error status if the daemon refuses the write.",
+          "created_at": "2026-11-02T18:13:44Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "ad7ac79a-165b-40b3-a9d1-749e67e4f7ac",
+          "kind": "",
+          "text": "**2026-11-02** — Verified: TUI notes sweep T2 done in internal/tui. Replan with no plan keeps the old confirmation; esc in lineup custom fields steps back, second esc discards; Roadmap item pane and matrix pane scroll by line, page and to the ends (g/G/home/end); matrix first lines wrap at w-2; stop and budget rows drawn as a bar; failed spec.answer after a dropped launch shows a status, and the launch status says 'l starts the launch again' or 'answers not saved'; report viewer reportOn is a pure read with settleReport and per-ask seq. Docs, CHANGELOG and ten goldens updated. go test -race -count=1 ./... passes (4552 passed, 0 failed), go vet, gofmt, slicer check and adj lint clean. Manual HUMAN CHECKs not run.",
+          "created_at": "2026-11-02T18:13:50Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -10645,7 +10673,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

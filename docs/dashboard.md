@@ -161,7 +161,10 @@ page` for their page, line and half page movements. An answerable open record's
 pane starts with `1-N pick; t free text` while no answer is in flight. Its
 free-text field shows `enter review` only for non-empty trimmed text, followed
 by `esc cancel`. Enter opens the confirmation; `y` confirms.
-The Roadmap item pane shows `ctrl+d/u half page` (S152). The Waves item hint ends with `esc close pane`.
+The Roadmap item pane and the role matrix pane show
+`pgup/pgdown page; j/k line; ctrl+d/u half page` (S152; S190, *proposed*); on
+a narrow line the page and line hints go before `esc close`. The Waves item
+hint ends with `esc close pane`.
 A pane of a relay started elsewhere shows `started elsewhere, read-only; esc close pane`;
 a stale one shows `x end run; started elsewhere; esc close pane`, with no
 `read-only` beside the key (S175).
@@ -368,8 +371,10 @@ pass heading (S162), and on Waves a wave, then Unplaced (S151, *proposed*). The 
 last and page keys; the Overview, Roadmap and Waves have the group keys. With
 the help open, no row key moves the cursor, which is hidden under it. With a
 pane open, no row key moves the cursor;
-`pgdown` and `pgup` scroll a run, decision or Waves item pane (the Roadmap item
-pane does not take them, and the Roadmap help says only `pgdown/pgup page rows`),
+`pgdown` and `pgup` scroll a run, decision, Roadmap item, matrix or Waves item
+pane, and `j`, `k`, `g` and `G` (or `down`, `up`, `home` and `end`) scroll a
+Roadmap item or matrix pane by a line or to its ends (S190, *proposed*; the
+Roadmap help says `pgdown/pgup page rows or scroll a pane`),
 and in a run, decision, Roadmap item or Waves item pane
 `ctrl+d` and `ctrl+u` scroll it by half the pane's scrolling part (S149, S152,
 *proposed*). `ctrl+u` in an answer or fix-note field still clears the field, so
@@ -744,7 +749,10 @@ retries a paused run. Stop and retry show the exact command (`ork stop RUN` or
 like the cleanup does: the command `ork approve RUN`, then the question on its
 own line, naming what the approval does: `Land ITEM, then remove its worktree and
 branch? [y/N] (Enter is No)`, or `Land and push ITEM, then remove its worktree
-and branch? [y/N] (Enter is No)` when the project's `push` setting is on. When
+and branch? [y/N] (Enter is No)` when the project's `push` setting is on. A run
+that stops at the commit asks `Commit ITEM on its branch? [y/N] (Enter is No)`.
+When the run's item is not known, the question is neutral:
+`Approve run RUN? [y/N] (Enter is No)`. When
 the question and `[y/N] (Enter is No)` do not fit one line, the keys go on a line
 of their own, so they are never cut. In the
 pane, on the approval card, `a` still approves at once; the card's own line says
@@ -1342,7 +1350,9 @@ daemon plan has one row per role, so left and right have no effect; use
 On the architect row, `c` adds an absent architect and `d` drops its whole
 chain. A dropped architect shows `architect*: off` without cycle arrows or
 an alternatives label. Saving sends an empty architect override to drop it.
-`tab` and `shift+tab` switch fields; `enter` uses the custom entry.
+`tab` and `shift+tab` switch fields; `enter` uses the custom entry; `esc`
+steps back to the rows and drops the entry (S190, *proposed*). In the custom
+fields the hint reads `tab/shift+tab field; enter use entry; esc back`.
 Cycling moves the chosen row to the front; the rest keep their order.
 Custom entry replaces the primary; fallback entries cannot be edited here.
 Budget fields accept whole numbers of zero or more; zero uses the project
@@ -1352,7 +1362,10 @@ discard`; at 80 and 100 columns `up/down/tab row` goes first and the line reads
 `type a whole number; enter save and replan; esc discard` (S152).
 `enter` saves and replans; unchanged values do not call Plan.
 Launch waits for the replan. Errors show verbatim and keep the old plan
-and overrides. `esc` discards the editor's changes, including custom fields.
+and overrides. `esc` on the rows discards the editor's changes; in the custom
+fields it steps back to the rows first, and a second `esc` discards. The
+focused role, stop and budget rows are drawn as a bar; the budget field's
+cursor is the inverse of the bar (S190, *proposed*).
 The editor marks roles whose chains differ from its starting plan with `*`.
 The Waves Lineup column marks overridden roles with `*` and shows a dropped
 architect as `arch*: off`. At narrow widths, the drop hint disappears before
@@ -1469,7 +1482,13 @@ and `enter` submits it. The last answer is
 recorded with `spec.answer` before confirmation. `s` or `esc` skips the rest
 (`esc` in an option's free-text field first returns to the options). A slice
 with open questions closes the launch with `ITEM waits on N spec questions;
-l checks again`; nothing starts. A check error, including a blocked-item
+l starts the launch again`; nothing starts (`l` runs the whole flow again,
+S190, *proposed*). When the write of the answers failed, the error comes first,
+then `ITEM: answers not saved; l starts the launch again`. If the launch was
+closed while the write ran and the write fails, the status reads `ITEM: ` and
+the error. A replan that returns no plan keeps the confirmation of the plan the
+owner was looking at, with the status `No run plan returned`. A check error,
+including a blocked-item
 refusal, closes the launch and uses the same `actionError` text as Waves
 and plan errors. Refusals show the message without a `refused:` prefix;
 other errors keep their code, for example `internal: Exact CHECK failure.`
@@ -1533,8 +1552,9 @@ adj 155), `UI pass row, ...` and `Spec check row, ...` for the two reviewer
 rows that a rule names (rules u10 and u11), `skipped: no adapter for AGENT`,
 `not used: the gate runs the reviewer's lineup` for a Gate row, `not run by
 ork` for an Orchestrator row (ork is the orchestrator), and `not used: ork has
-no role ROLE` for any other role in the matrix. `j`/`k`, `pgup`/`pgdown`
-and `ctrl+d`/`ctrl+u` scroll the pane, `esc` closes it, and no other key
+no role ROLE` for any other role in the matrix. `j`/`k`, `pgup`/`pgdown`,
+`g`/`G` (`home`/`end`) and `ctrl+d`/`ctrl+u` scroll the pane, `esc` closes it,
+and no other key
 acts in it. The key is offered on the hint line and in `?` on the Roadmap only,
 when a project is selected and no pane is open; with no daemon it says "No
 daemon connection; action unavailable". On a narrow hint line `- remove
