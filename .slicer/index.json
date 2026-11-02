@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 252,
+  "next_id": 253,
   "preamble": "",
   "passes": [
     {
@@ -13100,6 +13100,34 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S252",
+      "title": "S238 and S190 later notes: pause reason wording, pane clamp, vendor-out timing, retry keeps vendor",
+      "short_title": "S238 and S190 later notes: pause reason wording, pane clamp, vendor-out timing, retry keeps vendor",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "**2026-11-02** — Later notes from pair wave 5 (S238 and S190, run by ork on the Claude fallback implementer and landed 2026-11-02). S238: (1) the conflict pause reason names ork retry RUN twice in ork status; (2) check how the TUI pane wraps a long conflict pause reason at 80x24, with (5) a pane view test for a five-file conflict reason at 80x24; (3) the pause reason does not say how to resolve a deletion and (4) that a file resolved by deletion needs git rm. S190: (1,4) the help j/k and g/G lines do not mention panes; (2,5) the Roadmap pane offset is clamped in the draw path (clamp it when the content or height changes); (3) hangWrap gives up the hang width for text with a newline. Friction not yet in a slice: F30 ork vendor shows nothing out until the first role of that vendor fails (the out-until time is only learned then); F35 an ork retry resumes the recorded vendor session, so a run that started on the Claude fallback stays on Claude after Codex is back and the owner must stop and rerun to change vendor. Log: .scratch/v11/wave4-friction.md.",
+        "discovered_from": "S238",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
         "effort": 2,
         "attempts": 0
       }

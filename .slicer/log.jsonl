@@ -2967,3 +2967,4 @@
 {"when": "2026-11-02T18:23:11Z", "item": "S250", "action": "add", "from": "", "to": "open", "note": "Apply a matrix change set through slicer relay-roles apply"}
 {"when": "2026-11-02T18:23:12Z", "item": "S251", "action": "add", "from": "", "to": "open", "note": "Project settings pane in the TUI: every setting by owner, and the setup steps"}
 {"when": "2026-11-02T18:23:23Z", "item": "S251", "action": "set", "from": "", "to": "", "note": "depends_on -→S247,S249"}
+{"when": "2026-11-02T18:23:41Z", "item": "S252", "action": "add", "from": "", "to": "open", "note": "S238 and S190 later notes: pause reason wording, pane clamp, vendor-out timing, retry keeps vendor"}
