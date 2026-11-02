@@ -569,3 +569,39 @@ func TestUIPassSkillsStrictNamesOnLoadAndSave(t *testing.T) {
 		})
 	}
 }
+
+func TestRegistryBellFieldDefaultsOn(t *testing.T) {
+	for _, value := range []string{"absent", "false", "true"} {
+		t.Run(value, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "projects.json")
+			field := ""
+			if value != "absent" {
+				field = ",\"bell\":" + value
+			}
+			writeFile(t, path, []byte(`{"version":2,"projects":[{"name":"a","path":"/p/a","adj":false`+field+`}]}`))
+			for round := 0; round < 2; round++ {
+				f, err := Load(path)
+				if err != nil {
+					t.Fatal(err)
+				}
+				p := f.Projects[0]
+				if p.BellOn() != (value != "false") {
+					t.Fatalf("BellOn() = %v for %s", p.BellOn(), value)
+				}
+				if (p.Bell == nil) != (value == "absent") {
+					t.Fatalf("Bell presence differs for %s", value)
+				}
+				if err := Save(path, f); err != nil {
+					t.Fatal(err)
+				}
+				data, err := os.ReadFile(path)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if bytes.Contains(data, []byte(`"bell"`)) != (value != "absent") {
+					t.Fatalf("saved bell presence differs for %s: %s", value, data)
+				}
+			}
+		})
+	}
+}

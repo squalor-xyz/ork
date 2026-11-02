@@ -40,6 +40,7 @@ this file on startup (`registry.no-seed`, adj 157). The first successful
   "projects": [
     {
       "name": "DataBall",
+      "bell": false,
       "path": "/Users/jon/code/squalor-xyz/DataBall",
       "adj": false,
       "cap": 2,
@@ -104,6 +105,12 @@ Notes on the fields:
   LF in wire calls and on registry load and save. Errors quote the bad name;
   blank-name errors give the item's position, counted from 1.
   An older ork refuses this key because `Load` uses strict keys.
+- `bell` (*proposed*, S100) is an optional JSON boolean per project.
+  Absent or `true` means on; `false` silences every bell for that project.
+  Counts and sidebar badges still update. The TUI reads it at start; restart
+  ork after editing the file. An older ork refuses this key because `Load`
+  uses strict keys. Set it by hand for now; `ork projects set NAME --bell on|off`
+  lands with the separate setter slice S224.
 - `ork projects set` (*proposed*, S161, owner decision 2026-10-27) is the only
   way ork writes the optional per-project fields. It changes `push`, `ui_doc`,
   `ui_pass_skills`, `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`,

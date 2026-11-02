@@ -223,7 +223,13 @@ type Project struct {
 
 	// UIPassSkills names skills a Claude UI pass is advised to load (S209, *proposed*).
 	UIPassSkills []string `json:"ui_pass_skills,omitempty"`
+
+	// Bell controls every terminal bell for this project (S100, *proposed*).
+	Bell *bool `json:"bell,omitempty"`
 }
+
+// BellOn reports whether the project rings the bell; absent means on.
+func (p Project) BellOn() bool { return p.Bell == nil || *p.Bell }
 
 // File is the content of projects.json.
 type File struct {

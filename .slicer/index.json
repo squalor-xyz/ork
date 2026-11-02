@@ -2654,7 +2654,7 @@
       "id": "S100",
       "title": "Bell: ring when a run ends, and a per-project bell setting",
       "short_title": "Bell on run end, per-project setting",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -2664,6 +2664,34 @@
           "text": "**2026-10-25** — 2026-10-25 spec check: the bell already exists in the TUI Model (internal/tui/model.go apply, m.cfg.Bell); check this slice's premise before running it.",
           "created_at": "2026-10-25T17:20:41Z",
           "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "d53d65a4-76f0-4257-8325-1e308eba4456",
+          "kind": "",
+          "text": "**2026-11-02** — Human checks at approval (S100):\n- later: With `\"bell\": false` added by hand to one project in `~/.config/ork/projects.json` (after the daemon and TUI are restarted), a run of that project ends in the TUI with no BEL, and a run of another project does ring. In a terminal that shows the bell (visual bell or a tab flash), check at 100x30 and 80x24 that nothing else on screen changed.\n- later: [AFTER LAND] The owner rebuilds `~/bin/ork`, restarts the TUI, lets one slice run to `committed` and confirms one bell.",
+          "created_at": "2026-11-02T14:37:07Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "eb1937e8-b886-4a93-83d2-be4764ea5718",
+          "kind": "",
+          "text": "**2026-11-02** — Verified run-end bells with linked-run deduplication and per-project bell control; counts and badges remain active when muted. Focused race tests passed, and documentation names S224 for the setter. Gate returned VERDICT: PASS and the owner approved; human terminal and after-land checks are deferred as recorded.",
+          "created_at": "2026-11-02T14:37:18Z",
+          "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
           "verified_at": "",
@@ -2690,7 +2718,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -79,6 +79,10 @@ type projectState struct {
 	hasHeld bool // Items has had a good reading
 	running bool
 	dirty   bool
+
+	ended         map[string]bool // final run ids seen in earlier good readings
+	hasEngineEnds bool
+	hasBoardEnds  bool
 }
 
 func (p *projectState) needs() int {
@@ -1113,6 +1117,8 @@ func (m *Model) switchTo(i int) tea.Cmd {
 // new need. The bell rings when a part's count rises past an earlier good
 // reading of that same part; a part's first good reading is its baseline, so
 // needs that were already there before ork could read them do not ring.
+// Newly ended runs also ring after their first good reading. A project can
+// silence every bell with its registry setting; counts still update.
 func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 	ps := m.byName[msg.name]
 	if ps == nil || ps.snap.Unavailable {
@@ -1123,10 +1129,12 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 	m.lastRefresh = now
 
 	rose := false
+	endedRose := false
 	if isSetup(msg.snap) {
 		// No .slicer/ folder: the project counts for nothing and rings nothing.
 		// Its counts reset, so the first reading after a setup is a baseline.
 		ps.open, ps.hasOpen, ps.held, ps.hasHeld, ps.running = 0, false, 0, false, false
+		ps.ended, ps.hasEngineEnds, ps.hasBoardEnds = nil, false, false
 	} else {
 		if msg.snap.Open.Err == nil {
 			n := len(msg.snap.Open.Value)
@@ -1138,15 +1146,34 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 			rose = rose || (ps.hasHeld && n > ps.held)
 			ps.held, ps.hasHeld = n, true
 		}
+		if ps.ended == nil {
+			ps.ended = map[string]bool{}
+		}
 		linked := map[string]bool{}
 		engineActive := false
 		for _, r := range msg.snap.EngineRuns {
 			if r.RelayRun != "" {
 				linked[r.RelayRun] = true
 			}
+			if !r.Unavailable && runrec.IsFinal(r.State) {
+				id := "engine:" + r.ID
+				endedRose = endedRose || (ps.hasEngineEnds && !ps.ended[id])
+				ps.ended[id] = true
+			}
 			if r.Section(msg.snap.EngineRuns) == source.SectionRunning {
 				engineActive = true
 			}
+		}
+		ps.hasEngineEnds = true
+		if msg.snap.BoardRuns.Err == nil {
+			for _, r := range msg.snap.BoardRuns.Value {
+				if r.State == "ended" && !linked[r.ID] {
+					id := "ledger:" + r.ID
+					endedRose = endedRose || (ps.hasBoardEnds && !ps.ended[id])
+					ps.ended[id] = true
+				}
+			}
+			ps.hasBoardEnds = true
 		}
 		if msg.snap.Runs.Err == nil {
 			ps.running = engineActive
@@ -1185,7 +1212,7 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 		ps.dirty = false
 		cmds = append(cmds, m.fetch(msg.name, false))
 	}
-	if rose {
+	if (rose || endedRose) && ps.reg.BellOn() {
 		bell := m.cfg.Bell
 		cmds = append(cmds, func() tea.Msg { bell(); return nil })
 	}
