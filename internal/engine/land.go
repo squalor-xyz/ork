@@ -22,9 +22,13 @@ import (
 // the cleanup (adj 152, git.cleanup-key). Each step reads git first, so a
 // retry after a pause picks up where the landing stopped.
 //
-// A merge conflict, or a red re-check after the merge, gets one implementer
-// fix round with the details as the brief, then the checks, the gate and a new
-// approval. A second block stops the slice in Needs you with the worktree kept.
+// A merge conflict is the owner's (*proposed*, S238): ork merges the CHANGELOG.md
+// entries itself, pauses with a one-line reason that names the other files, and
+// after `ork retry` stages the files the owner resolved and commits the merge.
+// No role commits. A red re-check after the merge gets one implementer fix
+// round with the details as the brief, then the checks, the gate and a new
+// approval. A second red re-check stops the slice in Needs you with the
+// worktree kept.
 func (e *Engine) land(ctx context.Context) error {
 	// One landing per project at a time: the next waits, then reads the base
 	// branch the first one moved.
@@ -106,7 +110,8 @@ func (e *Engine) land(ctx context.Context) error {
 // mergeBaseIn merges the base branch into the slice branch in the worktree
 // when the base moved, renders and re-checks. proceed is true when the branch
 // is ready to fast-forward onto the base; otherwise the slice has been moved
-// to a fix round, a stop or a pause, and err is the result to return.
+// to a fix round (red re-check), a stop or a pause (a conflict among them),
+// and err is the result to return.
 func (e *Engine) mergeBaseIn(ctx context.Context, rec runrec.Record, base string) (proceed bool, err error) {
 	W, B := rec.Worktree, rec.Branch
 	pauseWith := func(reason string) (bool, error) {
@@ -133,21 +138,20 @@ func (e *Engine) mergeBaseIn(ctx context.Context, rec runrec.Record, base string
 		return pauseWith("git merge-base: " + err.Error())
 	}
 	if !has {
-		res, err := e.gitWrite(ctx, W, "merge", "-m", "Merge "+base+" into "+B, base)
-		if err != nil {
-			// ork aborts nothing: the conflict stays in the worktree for the fix round.
-			files, ferr := e.gitRead(ctx, W, "diff", "--name-only", "--diff-filter=U")
-			if ferr == nil && strings.TrimSpace(files) != "" {
-				resolved, resolveErr := e.resolveChangelog(ctx, rec, base, strings.Split(strings.TrimSpace(files), "\n"))
-				if !resolved {
-					detail := fmt.Sprintf("`git merge %s` in the worktree stopped on conflicts in:\n\n%s\n\ngit said:\n\n```\n%s\n```", base, strings.TrimSpace(files), tail(outputText(res), 6000))
-					if resolveErr != nil {
-						detail += "\n\nork tried to merge CHANGELOG.md: " + resolveErr.Error()
-					}
-					return false, e.landBlocked(ctx, "merge conflict", detail)
-				}
-			} else {
+		if e.mergeInProgress(ctx, W) {
+			// A merge that stopped on conflicts is still open: the run was
+			// retried after the owner worked on it. Settle it; never merge again.
+			if done, err := e.settleMerge(ctx, rec, base, true); !done {
+				return false, err
+			}
+		} else if _, err := e.gitWrite(ctx, W, "merge", "-m", "Merge "+base+" into "+B, base); err != nil {
+			// ork aborts nothing: the conflict stays in the worktree for the owner.
+			files, ferr := e.unmergedFiles(ctx, W)
+			if ferr != nil || len(files) == 0 {
 				return pauseWith("git merge " + base + ": " + errText(err))
+			}
+			if done, err := e.settleMerge(ctx, rec, base, false); !done {
+				return false, err
 			}
 		}
 	}
@@ -181,8 +185,10 @@ func (e *Engine) mergeBaseIn(ctx context.Context, rec runrec.Record, base string
 	return true, nil
 }
 
-// landBlocked sends a blocked landing to its one implementer fix round, or
-// stops the slice when it already had one. The worktree and the branch stay.
+// landBlocked sends a landing whose re-check is red to its one implementer
+// fix round, or stops the slice when it already had one. A merge conflict does
+// not come here: it pauses for the owner (settleMerge). The worktree and the
+// branch stay.
 func (e *Engine) landBlocked(ctx context.Context, what, detail string) error {
 	rec := e.run.Snapshot()
 	if rec.LandFixes >= 1 {
@@ -218,15 +224,6 @@ func errText(err error) string {
 		return ""
 	}
 	return err.Error()
-}
-
-// outputText is what a failed git call printed, for a reason.
-func outputText(res clirun.Result) string {
-	s := strings.TrimSpace(string(res.Stdout) + string(res.Stderr))
-	if s == "" {
-		return ""
-	}
-	return "\n" + s
 }
 
 // MarkCleaned records that the owner's cleanup removed the worktree and the

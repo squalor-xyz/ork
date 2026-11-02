@@ -370,8 +370,8 @@ func TestLandStopsOnRedRecheck(t *testing.T) {
 	env.setCheckOutputs(red, CheckOutput{OK: true, Output: "ok\n"}, red)
 
 	env.approve()
-	// A red re-check is treated like a conflict: one implementer fix round, the
-	// check, the gate, and back to awaiting approval. Nothing reached main.
+	// A red re-check gets one implementer fix round, the check, the gate, and
+	// back to awaiting approval. Nothing reached main.
 	rec := requireState(t, env.e, runrec.StateAwaitingApproval)
 	if rec.LandFixes != 1 {
 		t.Errorf("land fixes %d, want 1", rec.LandFixes)
@@ -559,22 +559,20 @@ func TestLandKeepsTheRunCommittedWhenTheCleanupFails(t *testing.T) {
 
 func TestLandConflictRunsOneFixRoundThenReturnsToApproval(t *testing.T) {
 	env := newLandEnv(t)
-	writeFile(t, filepath.Join(env.W, "shared.txt"), "branch\n")
-	env.moveBase("shared.txt", "main\n")
+	env.moveBase("base.txt", "from main\n")
+	// call 0: the re-check after the merge is red; call 1: the checks after
+	// the fix round are green.
+	env.setCheckOutputs(CheckOutput{Output: "FAIL TestGolden sidebar\n"}, CheckOutput{OK: true, Output: "ok\n"})
 	var brief string
 	env.runner.script = func(req Request, n int) (Result, error) {
 		if req.Role == RoleImplementer && strings.Contains(req.Brief, "## Landing blocked") {
 			brief = req.Brief
-			// the conflict is still in the tree: ork aborted nothing
-			if _, err := os.Stat(filepath.Join(req.Worktree, ".git")); err != nil {
-				t.Error(err)
-			}
-			if got := gitRun(t, req.Worktree, "diff", "--name-only", "--diff-filter=U"); got != "shared.txt" {
+			// ork merged and committed already: no merge is open in the tree
+			if got := gitRun(t, req.Worktree, "diff", "--name-only", "--diff-filter=U"); got != "" {
 				t.Errorf("unmerged files at the start of the fix round: %q", got)
 			}
+			// the role edits and does not commit; ork commits at the approval
 			writeFile(t, filepath.Join(req.Worktree, "shared.txt"), "resolved\n")
-			gitRun(t, req.Worktree, "add", "-A")
-			gitRun(t, req.Worktree, "commit", "-q", "--no-edit")
 		}
 		return Result{}, nil
 	}
@@ -583,7 +581,7 @@ func TestLandConflictRunsOneFixRoundThenReturnsToApproval(t *testing.T) {
 	if rec.LandFixes != 1 {
 		t.Errorf("land fixes %d, want 1", rec.LandFixes)
 	}
-	for _, want := range []string{"## Landing blocked", "merge conflict", "shared.txt"} {
+	for _, want := range []string{"## Landing blocked", "checks red after merging main", "FAIL TestGolden sidebar"} {
 		if !strings.Contains(brief, want) {
 			t.Errorf("fix brief lacks %q:\n%s", want, brief)
 		}
@@ -619,13 +617,11 @@ func TestLandConflictRunsOneFixRoundThenReturnsToApproval(t *testing.T) {
 // run_ended), and the engine run record keeps the rounds (S153).
 func TestLandFixRoundRecordsNoLedgerStepsAfterTheRunEnded(t *testing.T) {
 	env := newLandEnv(t)
-	writeFile(t, filepath.Join(env.W, "shared.txt"), "branch\n")
-	env.moveBase("shared.txt", "main\n")
+	env.moveBase("base.txt", "from main\n")
+	env.setCheckOutputs(CheckOutput{Output: "FAIL TestGolden sidebar\n"}, CheckOutput{OK: true, Output: "ok\n"})
 	env.runner.script = func(req Request, n int) (Result, error) {
 		if req.Role == RoleImplementer && strings.Contains(req.Brief, "## Landing blocked") {
 			writeFile(t, filepath.Join(req.Worktree, "shared.txt"), "resolved\n")
-			gitRun(t, req.Worktree, "add", "-A")
-			gitRun(t, req.Worktree, "commit", "-q", "--no-edit")
 		}
 		return Result{}, nil
 	}
@@ -667,14 +663,14 @@ func TestLandFixRoundRecordsNoLedgerStepsAfterTheRunEnded(t *testing.T) {
 
 func TestLandConflictTwiceStopsAndKeepsTheWorktree(t *testing.T) {
 	env := newLandEnv(t)
-	writeFile(t, filepath.Join(env.W, "shared.txt"), "branch\n")
-	env.moveBase("shared.txt", "main\n")
+	env.moveBase("base.txt", "from main\n")
+	red := CheckOutput{Output: "FAIL TestGolden sidebar\n"}
+	// red after the merge; green after the fix round; red again at the second landing
+	env.setCheckOutputs(red, CheckOutput{OK: true, Output: "ok\n"}, red)
 	env.runner.script = func(req Request, n int) (Result, error) {
 		if req.Role == RoleImplementer && strings.Contains(req.Brief, "## Landing blocked") {
 			writeFile(t, filepath.Join(req.Worktree, "shared.txt"), "resolved\n")
-			gitRun(t, req.Worktree, "add", "-A")
-			gitRun(t, req.Worktree, "commit", "-q", "--no-edit")
-			env.moveBase("shared.txt", "main again\n") // main changes the same line again
+			env.moveBase("later.txt", "main moves again\n") // so the second landing merges again
 		}
 		return Result{}, nil
 	}
@@ -682,7 +678,7 @@ func TestLandConflictTwiceStopsAndKeepsTheWorktree(t *testing.T) {
 	requireState(t, env.e, runrec.StateAwaitingApproval)
 	env.approve()
 	rec := requireState(t, env.e, runrec.StateStopped)
-	if rec.Reason != "land blocked: merge conflict" {
+	if rec.Reason != "land blocked: checks red after merging main" {
 		t.Errorf("reason %q", rec.Reason)
 	}
 	if _, err := os.Stat(env.W); err != nil {

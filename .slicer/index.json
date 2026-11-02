@@ -12638,10 +12638,39 @@
       "id": "S238",
       "title": "Landing merge-in: ork resolves and commits the merge of main itself, and stops the run on conflicts it cannot resolve",
       "short_title": "Landing merge-in without a role",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "e1b0de21-2e75-4b3a-b85c-b2ea75e46841",
+          "kind": "",
+          "text": "**2026-11-02** — Human checks at approval (S238):\n- later: On a scratch repo with two slices that both edit `CHANGELOG.md` and the same line of another file, land the second through ork: the run pauses with a one-line message that names only the second file and the worktree; after editing that file (no `git add`) and `ork retry`, the landing finishes with a merge commit by ork and no role round.",
+          "created_at": "2026-11-02T18:18:49Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "3aa02f4d-935b-4243-8820-c10932524281",
+          "kind": "",
+          "text": "**2026-11-02** — Landing merge-in without a role is implemented and verified. When merging the base branch conflicts, ork merges the CHANGELOG.md entries itself, stages and commits the merge, and pauses the run with a one-line reason naming the remaining files, the worktree and ork retry. On retry ork stages the marker-free files, commits the merge, renders and re-checks; a conflict without markers is never staged on the first pass (owner answer 2026-11-02). The land fix round and brief now cover a red re-check only and tell the role not to commit; ork status marks a repeat approval via land_fixes. Verified: go test -race -count=1 ./... green in all 21 packages, go vet, gofmt and slicer check clean, mutation checks red for each new assertion.",
+          "created_at": "2026-11-02T18:18:56Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -12659,7 +12688,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

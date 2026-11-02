@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- S238: landing merge-in without a role (*proposed*). When merging the base
+  branch conflicts, ork merges the `CHANGELOG.md` entries itself even when
+  other files conflict, then pauses the run with a one-line reason that names
+  the remaining files, the worktree and `ork retry RUN`. After the owner
+  resolves them (no `git add` needed), ork stages them, commits the merge,
+  renders and re-checks. No role is asked to commit. The land fix round now
+  covers a red re-check only, and `ork status` marks the second approval
+  after it as a repeat. Docs: `docs/design.md`, `docs/guide.md`,
+  `docs/state.md`, `docs/dashboard.md`.
+
 - S207: read the relay contract once during engine setup and use one accepted
   version phrase. Name the set once on doctor's unsupported-contract FAIL
   line, return `not_found` (exit 1) with a project-list hint for an unknown

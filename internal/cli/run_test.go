@@ -307,6 +307,32 @@ func TestStatusPrintsEngineStateAndWait(t *testing.T) {
 	}
 }
 
+// After a red re-check and its fix round the owner approves a second time;
+// status says so (S238).
+func TestStatusSaysApprovalIsRepeatedAfterABlockedLanding(t *testing.T) {
+	var out, errs bytes.Buffer
+	app := &App{Call: func(_ context.Context, method string, params, result any) error {
+		return json.Unmarshal([]byte(`{"projects":[{"name":"p","needs_you":1,"engine_runs":[{"id":"r1","item":"S1","state":"awaiting-approval","wait":"owner approval","land_fixes":1}]}]}`), result)
+	}}
+	code := app.Run(context.Background(), []string{"status"}, &out, &errs)
+	want := "  r1 S1 awaiting-approval (wait: owner approval, again: the landing was blocked and its fix round is done)\n"
+	if code != 0 || !strings.Contains(out.String(), want) {
+		t.Fatalf("status code %d: %s %s", code, &out, &errs)
+	}
+}
+
+func TestStatusFirstApprovalIsUnchanged(t *testing.T) {
+	var out, errs bytes.Buffer
+	app := &App{Call: func(_ context.Context, method string, params, result any) error {
+		return json.Unmarshal([]byte(`{"projects":[{"name":"p","needs_you":1,"engine_runs":[{"id":"r1","item":"S1","state":"awaiting-approval","wait":"owner approval","land_fixes":0}]}]}`), result)
+	}}
+	code := app.Run(context.Background(), []string{"status"}, &out, &errs)
+	want := "  r1 S1 awaiting-approval (wait: owner approval)\n"
+	if code != 0 || !strings.Contains(out.String(), want) || strings.Contains(out.String(), "again") {
+		t.Fatalf("status code %d: %s %s", code, &out, &errs)
+	}
+}
+
 func TestStatusSectionsAndNeedsRows(t *testing.T) {
 	const reply = `{"projects":[{"name":"p","needs_you":5,"open":[{"id":125,"key":"ui.status-list","title":"Status list"}],"held":[{"id":"S32","title":"Owner answer"}],"active_relays":[{"id":"ledger","items":["S1"],"state":"active"}],"engine_runs":[{"id":"old","item":"S1","state":"stopped","created_at":"2026-10-23T12:00:00Z"},{"id":"current","item":"S1","state":"implement","created_at":"2026-10-23T12:01:00Z"},{"id":"done","item":"S2","state":"committed"},{"id":"approval","item":"S3","state":"awaiting-approval"},{"id":"paused","item":"S4","state":"paused","wait":"Question?","denials":["Write"]},{"id":"stopped","item":"S5","state":"stopped","updated_at":"2026-10-23T12:00:00Z"}]}]}`
 	app := &App{Call: func(_ context.Context, _ string, _, result any) error { return json.Unmarshal([]byte(reply), result) }}

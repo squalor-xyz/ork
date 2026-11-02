@@ -256,6 +256,7 @@ type EngineRun struct {
 	State          string                `json:"state"`
 	Wait           string                `json:"wait,omitempty"`
 	VendorWait     string                `json:"vendor_wait,omitempty"` // proposed: the vendor whose slot a round of this run waits for (S169); daemon memory only
+	LandFixes      int                   `json:"land_fixes,omitempty"`  // proposed: fix rounds a red landing re-check has had; a second approval follows (S238)
 	Pending        string                `json:"pending,omitempty"`     // paused runrec pending kind (ui.pending-kind)
 	Denials        []string              `json:"denials,omitempty"`     // distinct denial texts in first-seen order, with " xN" for repeats
 	RelayRun       string                `json:"relay_run,omitempty"`

@@ -64,12 +64,13 @@ stateDiagram-v2
     finish --> commit
     commit --> land
     land --> committed: merged, cleaned up
-    land --> implement: merge conflict, one fix round
+    land --> implement: red re-check, one fix round
+    land --> paused: merge conflict
     committed --> [*]
     implement --> paused: question, budget, error
     paused --> implement: answer or retry
     gate --> stopped: third FAIL
-    land --> stopped: second conflict
+    land --> stopped: second red re-check
 ```
 
 Notes:

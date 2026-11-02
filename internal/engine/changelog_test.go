@@ -81,65 +81,36 @@ func TestLandChangelogResolutionCommitsTheMerge(t *testing.T) {
 	}
 }
 
-// Inspect the actual conflict before the fake implementer resolves it. No vendor runs.
-func inspectChangelogFix(t *testing.T, env *landEnv, files, failed string, markers bool) {
+// pauseOnConflict approves and requires the landing to pause on exactly the
+// unmerged files in files, with no role round. markers says CHANGELOG.md must
+// still hold its conflict markers. It returns the pause reason.
+func pauseOnConflict(t *testing.T, env *landEnv, files string, markers bool) string {
 	t.Helper()
-	seen := false
-	env.runner.script = func(req Request, n int) (Result, error) {
-		if req.Role == RoleImplementer && strings.Contains(req.Brief, "## Landing blocked") {
-			seen = true
-			if got := gitRun(t, env.W, "diff", "--name-only", "--diff-filter=U"); got != files {
-				t.Errorf("unmerged = %q, want %q", got, files)
-			}
-			if failed != "" && !strings.Contains(req.Brief, "ork tried to merge CHANGELOG.md: git "+failed) {
-				t.Errorf("brief lacks %q: %s", failed, req.Brief)
-			}
-			if markers {
-				b, err := os.ReadFile(filepath.Join(env.W, "CHANGELOG.md"))
-				if err != nil {
-					t.Fatal(err)
-				}
-				if !strings.Contains(string(b), "<<<<<<<") {
-					t.Errorf("conflict markers lost: %s", b)
-				}
-			}
-			for _, name := range []string{"CHANGELOG.md", "docs/CHANGELOG.md", "shared.txt"} {
-				if _, err := os.Stat(filepath.Join(env.W, name)); err == nil {
-					writeFile(t, filepath.Join(env.W, name), "resolved\n")
-				}
-			}
-			gitRun(t, env.W, "add", "-A")
-			gitRun(t, env.W, "commit", "-q", "--no-edit")
-		}
-		return Result{}, nil
-	}
 	env.approve()
-	if !seen {
-		t.Error("no landing fix round")
+	rec := requireConflictPause(t, env)
+	if got := unmerged(t, env); got != files {
+		t.Errorf("unmerged = %q, want %q", got, files)
 	}
-	if got := env.run.Snapshot().LandFixes; got != 1 {
-		t.Errorf("LandFixes = %d, want 1", got)
-	}
-	for _, call := range env.gitCalls() {
-		if strings.Contains(call, "--abort") || strings.Contains(call, "reset") {
-			t.Errorf("undid merge: %s", call)
+	for _, name := range strings.Fields(files) {
+		if !strings.Contains(rec.Reason, name) {
+			t.Errorf("reason lacks %s: %q", name, rec.Reason)
 		}
 	}
-}
-
-func TestLandLeavesOtherConflictsToTheFixRound(t *testing.T) {
-	env := changelogConflict(t, "CHANGELOG.md", true)
-	writeFile(t, filepath.Join(env.W, "shared.txt"), "branch\n")
-	env.moveBase("shared.txt", "base\n")
-	inspectChangelogFix(t, env, "CHANGELOG.md\nshared.txt", "", true)
-	if indexOf(env.gitCalls(), "W: add -- CHANGELOG.md") >= 0 {
-		t.Error("attempted resolution of mixed conflicts")
+	if markers {
+		b, err := os.ReadFile(filepath.Join(env.W, "CHANGELOG.md"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(b), "<<<<<<<") {
+			t.Errorf("conflict markers lost: %s", b)
+		}
 	}
+	return rec.Reason
 }
 
 func TestLandChangelogResolverIgnoresOtherChangelogNames(t *testing.T) {
 	env := changelogConflict(t, "docs/CHANGELOG.md", true)
-	inspectChangelogFix(t, env, "docs/CHANGELOG.md", "", false)
+	pauseOnConflict(t, env, "docs/CHANGELOG.md", false)
 	if indexOf(env.gitCalls(), "W: add -- CHANGELOG.md") >= 0 {
 		t.Error("attempted resolution of nested changelog")
 	}
@@ -149,22 +120,28 @@ func TestLandChangelogResolverFailureFallsBack(t *testing.T) {
 	env := changelogConflict(t, "CHANGELOG.md", true)
 	script := strings.Replace(fakeGitScript, "exec git", "if [ \"$3\" = merge ] && [ \"$4\" = -m ]; then touch \"$d/add-fails\"; fi\nexec git", 1)
 	writeFile(t, filepath.Join(env.fakes, "gitw"), script)
-	inspectChangelogFix(t, env, "CHANGELOG.md", "add", true)
+	reason := pauseOnConflict(t, env, "CHANGELOG.md", true)
+	if !strings.Contains(reason, "ork could not merge CHANGELOG.md: git add") {
+		t.Errorf("reason lacks the resolver failure: %q", reason)
+	}
 	if indexOf(env.gitCalls(), "W: checkout --merge -- CHANGELOG.md") < 0 {
 		t.Error("markers were not restored")
 	}
 }
 
-func TestLandChangelogMergeCommitFailureGoesToTheFixRound(t *testing.T) {
+func TestLandChangelogMergeCommitFailurePausesWithGitsMessage(t *testing.T) {
 	env := changelogConflict(t, "CHANGELOG.md", true)
 	script := strings.Replace(fakeGitScript, "exec git", "if [ \"$3\" = merge ] && [ \"$4\" = -m ]; then touch \"$d/commit-fails\"; fi\nexec git", 1)
 	writeFile(t, filepath.Join(env.fakes, "gitw"), script)
-	inspectChangelogFix(t, env, "", "commit", false)
+	reason := pauseOnConflict(t, env, "", false)
+	if !strings.Contains(reason, "git commit") || !strings.Contains(reason, "commit broke") {
+		t.Errorf("reason lacks git's message: %q", reason)
+	}
 }
 
 func TestLandChangelogResolverNeedsAllThreeStages(t *testing.T) {
 	env := changelogConflict(t, "CHANGELOG.md", false)
-	inspectChangelogFix(t, env, "CHANGELOG.md", "", true)
+	pauseOnConflict(t, env, "CHANGELOG.md", true)
 	if indexOf(env.gitCalls(), "W: add -- CHANGELOG.md") >= 0 {
 		t.Error("attempted resolution without an ancestor stage")
 	}

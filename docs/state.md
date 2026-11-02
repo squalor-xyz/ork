@@ -311,10 +311,13 @@ load, and older ork versions refuse the new field through strict keys.
 The daemon echoes it on the engine-run snapshot row so approval wording
 matches the run's choice.
 `land_fixes` (omitted when 0; *proposed*, S119) counts the fix rounds a blocked
-landing has had; the `land` state allows one (a merge conflict, or a red
-re-check after the base branch was merged in), and a second block stops the run
-with `land blocked: ...`. A run that landed is `committed` with its worktree and
-branch removed; if the cleanup failed, `reason` says so.
+landing has had; the `land` state allows one (a red re-check after the base
+branch was merged in), and a second red re-check stops the run with `land
+blocked: ...`. A merge conflict does not count: it pauses the run for the
+owner (*proposed*, S238). The daemon echoes `land_fixes` on the engine-run
+row, and `ork status` marks a repeat approval with it. A run that landed is
+`committed` with its worktree and branch removed; if the cleanup failed,
+`reason` says so.
 The `architect` state runs only when the lineup includes that role (adj #151),
 after accepted reviewer findings and before the gate (adj #123). Its whole
 report becomes `architect` feedback for a fix round (adj #150).

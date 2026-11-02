@@ -804,6 +804,45 @@ func TestStatusIncludesEngineWaitsAndNeedsYou(t *testing.T) {
 		t.Fatalf("status: %s", b)
 	}
 }
+
+// A landing whose re-check was red had a fix round; the row carries the count
+// so `ork status` can say the next approval is a repeat (S238).
+func TestEngineRunRowCarriesLandFixes(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	for id, fixes := range map[string]int{"again": 1, "first": 0} {
+		if _, err := store.Create(runrec.Record{ID: id, Item: id, Project: p.Name, State: runrec.StateAwaitingApproval, LandFixes: fixes}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	b := request(t, d, "status", `{"project":"p"}`)
+	var reply struct {
+		Projects []struct {
+			EngineRuns []json.RawMessage `json:"engine_runs"`
+		} `json:"projects"`
+	}
+	if err := json.Unmarshal(b, &reply); err != nil || len(reply.Projects) != 1 {
+		t.Fatalf("status: %s (%v)", b, err)
+	}
+	seen := 0
+	for _, raw := range reply.Projects[0].EngineRuns {
+		var row source.EngineRun
+		if err := json.Unmarshal(raw, &row); err != nil {
+			t.Fatal(err)
+		}
+		want := map[string]int{"again": 1, "first": 0}[row.ID]
+		if row.LandFixes != want {
+			t.Errorf("%s: LandFixes %d, want %d", row.ID, row.LandFixes, want)
+		}
+		if has := strings.Contains(string(raw), "land_fixes"); has != (want > 0) {
+			t.Errorf("%s: land_fixes in the JSON = %v: %s", row.ID, has, raw)
+		}
+		seen++
+	}
+	if seen != 2 {
+		t.Fatalf("%d rows, want 2: %s", seen, b)
+	}
+}
+
 func TestActiveRunInhibitsDaemonIdleExit(t *testing.T) {
 	d, store, p := runDaemon(t, nil)
 	_, err := store.Create(runrec.Record{ID: "active", Project: p.Name, State: runrec.StateImplement})

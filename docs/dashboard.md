@@ -954,8 +954,11 @@ the action area under the run tree, in this order:
   adj 152). ork then merges the base branch in if it moved, re-checks, merges
   into the base branch, pushes when the project's `push` setting is on, and
   removes the worktree with `git worktree remove` and the branch with `git
-  branch -d`. A blocked landing returns to this card after one fix round, or
-  stops in Needs you with `land blocked: ...` and the worktree kept. When
+  branch -d`. A landing whose re-check is red returns to this card after one fix
+  round (`ork status` then says the approval is a repeat), or stops in Needs
+  you with `land blocked: ...` and the worktree kept. A merge conflict pauses
+  the run with a one-line reason that names the files and the worktree
+  (*proposed*, S238); the owner resolves them there and retries. When
   the pane is short, lines drop in this order: the blank lines between the
   blocks, the later findings, then this line, then each owner finding whole
   (the last first), then the status line (its last wrapped line first), and the

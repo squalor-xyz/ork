@@ -12,12 +12,11 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
-// resolveChangelog merges complete entries only in the root changelog.
+// resolveChangelog merges complete entries in the unmerged root changelog and
+// stages the result. It does not commit: settleMerge commits the merge once
+// no unmerged file is left. The caller names only the root CHANGELOG.md.
 // Stage 2 is the slice branch, so its additions precede the base branch's.
-func (e *Engine) resolveChangelog(ctx context.Context, rec runrec.Record, base string, unmerged []string) (bool, error) {
-	if len(unmerged) != 1 || unmerged[0] != "CHANGELOG.md" {
-		return false, nil
-	}
+func (e *Engine) resolveChangelog(ctx context.Context, rec runrec.Record) (bool, error) {
 	var stages [3]string
 	for i := range stages {
 		text, err := e.gitRead(ctx, rec.Worktree, "show", fmt.Sprintf(":%d:CHANGELOG.md", i+1))
@@ -32,9 +31,6 @@ func (e *Engine) resolveChangelog(ctx context.Context, rec runrec.Record, base s
 	}
 	if err := e.writeChangelog(ctx, rec, merged, os.WriteFile); err != nil {
 		return false, err
-	}
-	if _, err := e.gitWrite(ctx, rec.Worktree, "commit", "-m", "Merge "+base+" into "+rec.Branch); err != nil {
-		return false, fmt.Errorf("git commit: %w", err)
 	}
 	return true, nil
 }

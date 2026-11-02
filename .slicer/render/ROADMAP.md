@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-242 items · — 45 · done 170 · retired 27
+242 items · — 44 · done 171 · retired 27
 
 v1.2
 
@@ -129,7 +129,7 @@ v1.2
 | 72 | [S235](slices/S235.md) | Sleep and wake awareness | M | 2 |  |  | — |
 | 73 | [S236](slices/S236.md) | Reap the process tree of a kill | M | 2 |  |  | — |
 | 74 | [S237](slices/S237.md) | answer and retry return at once | M | 2 |  |  | — |
-| 75 | [S238](slices/S238.md) | Landing merge-in without a role | M | 2 |  |  | — |
+| 75 | [S238](slices/S238.md) | Landing merge-in without a role | M | 2 |  |  | done |
 | 76 | [S239](slices/S239.md) | Check failures: excerpt and one rerun | M | 2 |  |  | — |
 
 ---

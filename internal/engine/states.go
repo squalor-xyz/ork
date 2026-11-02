@@ -116,10 +116,9 @@ func (e *Engine) feedbackSection(fb *runrec.Feedback) BriefSection {
 	case "owner":
 		return BriefSection{Title: "Owner fix request", Body: "The owner read the approval card and asks for the change below. Make it and nothing else: the slice already passed the gate. Say in your report what you changed.\n\n" + body}
 	case "land":
-		return BriefSection{Title: "Landing blocked", Body: "The owner approved the slice and ork began to land it: it merged the base branch into the slice branch in your worktree. That stopped, and the details are below. " +
-			"ork aborted nothing and reset nothing. If a merge is in progress, resolve every conflict so that both sides' changes stay, `git add` the files and finish the merge with `git commit --no-edit`. " +
-			"If the checks are red after the merge, fix them; the base branch moved, for example a golden view that another slice changed. After a merge, run `slicer render` and commit what it rewrote. " +
-			"Do not rebase, force, reset or abort, and do not change anything else. The gate runs again after this round, and the owner approves again. Say in your report what you resolved.\n\n" + body}
+		return BriefSection{Title: "Landing blocked", Body: "The owner approved the slice and ork began to land it: it merged the base branch into the slice branch in your worktree, rendered and committed. The checks are red after that merge, and the output is below. " +
+			"Fix them; the base branch moved, for example a golden view that another slice changed. " +
+			"You do not commit: ork commits your change at the next approval. Do not commit, rebase, force, reset or abort, and do not change anything else. The gate runs again after this round, and the owner approves again. Say in your report what you fixed.\n\n" + body}
 	case "architect":
 		return BriefSection{Title: "Architect findings", Body: "The architect's whole report is below. Apply its change-now findings. If a finding is wrong, say so in your report with your evidence. Keep later work out of this slice.\n\n" + body}
 	default:

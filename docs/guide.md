@@ -357,10 +357,14 @@ the slice's human checks (`docs/dashboard.md:836-945`).
 From the shell: `ork check RUN N [ticked|later|open]`, `ork fix RUN TEXT`,
 `ork approve RUN` (`internal/cli/cli.go:47-50`).
 
-If the merge has a conflict or the re-check is red, ork does not fix it
-itself. The slice gets one implementer fix round and comes back for a new
-approval. A second block stops the run with the worktree kept
-(`docs/design.md:390-397`).
+*Proposed (S238):* if the merge has a conflict, ork merges the `CHANGELOG.md`
+entries itself and pauses the run on any other file, with a one-line message
+that names the files and the worktree. Resolve them in the worktree (no need
+to `git add`), then run `ork retry RUN`: ork stages the files, commits the
+merge, renders, re-checks and lands. No role takes part. If the re-check is
+red, the slice gets one implementer fix round and comes back for a new
+approval; `ork status` then says the approval is a repeat. A second red
+re-check stops the run with the worktree kept (`docs/design.md`, land).
 
 ## 11. Watch several projects
 

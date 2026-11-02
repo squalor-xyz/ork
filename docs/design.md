@@ -266,10 +266,11 @@ setup -> implement -> checks --red--> implement (fix)
                         | PASS
                         v
                 awaiting-approval --approve--> finish -> commit -> land -> committed
-                        | fix (owner's note)      | reject        | blocked: one fix round,
+                        | fix (owner's note)      | reject        | red re-check: one fix round,
                         v                         v               v then back to implement
-                implement (fix round) -> checks -> gate      stopped  (a second block: stopped)
+                implement (fix round) -> checks -> gate      stopped  (a second red: stopped)
                         (back to awaiting-approval on PASS)
+                                                  land --merge conflict--> paused (owner resolves, ork retry)
 ```
 
 Any state can go to `stopped` on a stop rule (below), or to `paused` on a
@@ -415,14 +416,36 @@ slice.
      green re-check (or by the hand-off to the fix round). A retry with it set
      merges the base if it is not in yet (a crash between marker and merge),
      then renders and re-checks, and never fast-forwards a tree that was not
-     checked. *Proposed (S180):* if only the root `CHANGELOG.md` conflicts
-     and all three index stages exist, ork merges complete Unreleased entries
-     in Go. The prefix and release suffix must stay unchanged; both sides must
-     retain the original entries unchanged and in order. The result puts branch
-     additions first, then base-branch additions, then the original entries,
-     with one blank line between entries. Identical additions appear once;
-     every entry must survive exactly once. ork stages the result and commits
-     it as `Merge BASE into BRANCH`. This resolution is silent.
+     checked. *Proposed (S180):* if the root `CHANGELOG.md` conflicts (even
+     when other files do) and all three index stages exist, ork merges
+     complete Unreleased entries in Go. The prefix and release suffix must
+     stay unchanged; both sides must retain the original entries unchanged and
+     in order. The result puts branch additions first, then base-branch
+     additions, then the original entries, with one blank line between
+     entries. Identical additions appear once; every entry must survive
+     exactly once. ork stages the result (`git add -- CHANGELOG.md`); the
+     merge commit follows below. This resolution is silent.
+     *Proposed (S238):* ork, not a role, settles a conflicted merge. After the
+     changelog step it commits the merge as `Merge BASE into BRANCH` when no
+     unmerged file is left. Otherwise it pauses the run (`paused`, pending
+     kind `error`, state `land`) with a one-line reason that names up to five
+     files and `+N more`, the worktree and `ork retry RUN`; `ork retry`
+     and `t` work. The files are the owner's, as the relay contract says
+     (`slicer ai relay`, Land). No role resolves them: roles do not commit
+     (`git.commit`) and the default implementer allowlist has no `git add` or
+     `git commit`. The conflict is left in the worktree; ork never runs `git
+     merge --abort` or `git reset`. On `ork retry` with the merge still open
+     (`MERGE_HEAD` set), ork does not merge again: it tries the
+     changelog step again if `CHANGELOG.md` still has markers, stages each
+     unmerged file that exists and holds no conflict markers (`<<<<<<< ` and
+     `>>>>>>> ` lines), by name and never with `git add -A`, pauses again if
+     any file is left, and otherwise commits the merge, renders, commits what render
+     rewrote and re-checks as above. A file that git left unmerged without
+     markers (a binary file, a modify/delete) is staged only on a retry, never
+     right after `git merge` stops. If the owner committed the merge, ork
+     skips the merge and goes on to render and re-check; if the owner aborted
+     it, ork merges again and pauses again. A failed merge commit pauses with
+     git's message.
   2. `git -C P merge --ff-only BRANCH` in the main checkout. A failure (for
      example an untracked file in the way) pauses the slice with the git
      message; `t` retries.
@@ -439,20 +462,20 @@ slice.
      W`, then `git -C P branch -d BRANCH`. Never `--force` or `-D`. A cleanup
      that fails leaves the run `committed` with the reason; the merged-branch
      cleanup key (`git.cleanup-key`) then works as before.
-  *Proposed (S180):* a conflict only in the root `CHANGELOG.md` is resolved
-  as above. Any other merge conflict, an unavailable changelog stage, a failed
-  changelog resolution, an edited or ambiguous entry, a changed prefix or suffix,
-  or a red re-check after the merge (for example goldens
-  another slice changed on the base branch) goes to one implementer fix round.
-  ork leaves the merge in place. A failed changelog resolution names the
-  failure in the brief; a failed stat, file write or stage-add makes a
-  best-effort attempt to restore the conflict markers.
-  The slice goes to that fix round
-  (`feedback.kind` `land`) with the conflict or the red output as the brief,
-  then the checks, the gate and a new approval. `land_fixes` counts it. If the
-  second landing is blocked the same way, the slice stops with `land blocked:
-  merge conflict` or `land blocked: checks red after merging BASE`, in Needs
-  you, with the worktree and the branch kept.
+  *Proposed (S180, S238):* an unavailable changelog stage, a failed
+  changelog resolution, an edited or ambiguous entry or a changed prefix or
+  suffix leaves `CHANGELOG.md` conflicted like any other file: the run pauses
+  as in step 1 and the reason adds why ork could not merge it. A failed stat,
+  file write or stage-add makes a best-effort attempt to restore the conflict
+  markers. A red re-check after the merge (for example goldens another slice
+  changed on the base branch) goes to one implementer fix round
+  (`feedback.kind` `land`) with the red output as the brief. The role does not
+  commit: ork commits its change at the next approval. Then the checks, the
+  gate and a new approval follow. `land_fixes` counts that round only, and
+  `ork status` says the approval is a repeat (`again: the landing was blocked
+  and its fix round is done`). If the second re-check is red, the slice stops
+  with `land blocked: checks red after merging BASE`, in Needs you, with the
+  worktree and the branch kept.
 
 ### Engine (S04)
 

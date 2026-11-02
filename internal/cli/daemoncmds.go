@@ -83,7 +83,12 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 				}
 				fmt.Fprintf(o.stdout, "  %s %s %s", r.ID, r.Item, r.State)
 				if r.Wait != "" {
-					fmt.Fprintf(o.stdout, " (wait: %s)", r.Wait)
+					again := ""
+					if r.State == "awaiting-approval" && r.LandFixes > 0 {
+						// A red landing re-check had its fix round: this is the second approval (S238).
+						again = ", again: the landing was blocked and its fix round is done"
+					}
+					fmt.Fprintf(o.stdout, " (wait: %s%s)", r.Wait, again)
 				}
 				if len(r.Denials) > 0 {
 					fmt.Fprintf(o.stdout, " (denied: %s)", source.DenialsText(r.Denials))
