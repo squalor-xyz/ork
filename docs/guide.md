@@ -101,7 +101,7 @@ The first add creates `~/.config/ork/projects.json`; ork never seeds it
 (`docs/state.md:28-33`).
 
 To pin the project's slicer relay contract, run
-`ork projects pin NAME --relay 11` (10 or 11). ork runs
+`ork projects pin NAME --relay 11` (v10 or v11). ork runs
 `slicer config relay_contract 11 --root PROJECT` and prints the pin slicer
 then reports; the pin lives in the project's slicer config, not in
 `projects.json`. `ork projects unpin NAME` clears it (`--json` prints

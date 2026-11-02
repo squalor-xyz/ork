@@ -12,10 +12,12 @@ import (
 	"fmt"
 	"io"
 	"slices"
+	"strings"
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/ipc"
+	"github.com/squalor-xyz/ork/internal/roles"
 )
 
 // Exit codes.
@@ -37,7 +39,9 @@ const (
 	codeDaemon = "daemon_unavailable"
 )
 
-const usageText = `usage: ork COMMAND [ARGS] [--json]
+var usageText = strings.Replace(usageTemplate, "{CONTRACTS}", roles.AcceptedContractsPhrase(), 1)
+
+const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
 
   ork run P ID [--yes --well-specified y/n --split y/n]
                               [--stop-after land|commit]
@@ -82,7 +86,7 @@ const usageText = `usage: ork COMMAND [ARGS] [--json]
   ork projects rm NAME        unregister a project
   ork projects pin NAME --relay N
                               pin the project's slicer relay contract at N
-                              (v10 or v11) through slicer; needs no daemon
+                              ({CONTRACTS}) through slicer; needs no daemon
   ork projects unpin NAME     clear the pin through slicer
   ork projects set NAME [--push on|off] [--ui-doc PATH] [--ui-pass-skills A,B]
                               [--worktree-pattern P] [--branch-pattern P]

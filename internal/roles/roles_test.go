@@ -169,7 +169,7 @@ func TestCheckContractLine(t *testing.T) {
 		if got != v || (err == nil) != (v == 10 || v == 11) {
 			t.Errorf("v%d: %d, %v", v, got, err)
 		}
-		if err != nil && !strings.Contains(err.Error(), "relay v10, v11 and slicer prints v"+strconv.Itoa(v)) {
+		if err != nil && !strings.Contains(err.Error(), "relay v10 or v11 and slicer prints v"+strconv.Itoa(v)) {
 			t.Errorf("v%d: message %q does not name the set {10, 11}", v, err)
 		}
 	}
@@ -268,7 +268,7 @@ func TestGateCriteria(t *testing.T) {
 	for _, want := range []string{
 		"earlier blockers",
 		"proving test",
-		"no `fix` finding",
+		"no `[fix]` finding",
 		"no `blocker` owner finding",
 		"tests green",
 		"docs",
@@ -289,7 +289,7 @@ func TestGateHasNoSeverityScale(t *testing.T) {
 			t.Errorf("gate prompt still mentions %q", bad)
 		}
 	}
-	if !has(g, "A minor item is `[later]`") {
+	if !has(g, "tag a minor item `[later]` instead") {
 		t.Error("gate prompt does not say a minor item is tagged `[later]`")
 	}
 }
@@ -562,5 +562,35 @@ func TestSpecCheckPrompt(t *testing.T) {
 	}
 	if !ascii(p) {
 		t.Error("spec-check prompt holds a non-ASCII character")
+	}
+}
+
+func TestAcceptedContractsPhrase(t *testing.T) {
+	for _, tc := range []struct {
+		versions []int
+		want     string
+	}{{[]int{10}, "v10"}, {[]int{10, 11}, "v10 or v11"}, {[]int{10, 11, 12}, "v10, v11 or v12"}} {
+		if got := phrase(tc.versions); got != tc.want {
+			t.Errorf("phrase(%v) = %q, want %q", tc.versions, got, tc.want)
+		}
+	}
+	if got := AcceptedContractsPhrase(); got != "v10 or v11" {
+		t.Errorf("accepted phrase: %q", got)
+	}
+	if _, err := CheckContractLine("Contract: relay v9"); err == nil || err.Error() != "ork accepts relay v10 or v11 and slicer prints v9" {
+		t.Errorf("contract error: %v", err)
+	}
+}
+
+func TestGatePromptNoFixCriterionIsShort(t *testing.T) {
+	g := prompts(t)["gate"]
+	if !strings.Contains(g, "   - no `[fix]` finding (tag a minor item `[later]` instead);\n") || strings.Contains(g, "however small") {
+		t.Error("gate no-fix criterion is not the short fragment")
+	}
+	criteria := strings.Split(strings.Split(g, "3. Judge these criteria")[1], "4. Cite")[0]
+	for _, line := range strings.Split(criteria, "\n") {
+		if strings.HasPrefix(line, "   - ") && !strings.HasSuffix(line, ";") && !strings.HasSuffix(line, ".") {
+			t.Errorf("criterion is not a one-line fragment: %s", line)
+		}
 	}
 }

@@ -74,9 +74,10 @@ func FillPattern(pattern, id string) string {
 }
 
 // ValidateUIPassSkills checks the optional skill list (S209, *proposed*).
-// Names must be nonblank, trimmed and free of commas, NUL, CR and LF.
+// Names must be unique, nonblank, trimmed and free of commas, NUL, CR and LF.
 // ork does not resolve them.
 func ValidateUIPassSkills(skills []string) error {
+	seen := map[string]int{}
 	for i, name := range skills {
 		if strings.TrimSpace(name) == "" {
 			return fmt.Errorf("ui_pass_skills: item %d name %q must not be blank", i+1, name)
@@ -90,6 +91,10 @@ func ValidateUIPassSkills(skills []string) error {
 		if strings.TrimSpace(name) != name {
 			return fmt.Errorf("ui_pass_skills: name %q must not have leading or trailing whitespace", name)
 		}
+		if first, ok := seen[name]; ok {
+			return fmt.Errorf("ui_pass_skills: name %q is listed twice (items %d and %d)", name, first, i+1)
+		}
+		seen[name] = i + 1
 	}
 	return nil
 }

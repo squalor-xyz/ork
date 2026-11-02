@@ -1442,8 +1442,8 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   when it is newer than the highest (ork is behind), when a slicer checkout
   is behind its upstream, or when slicer or adj is missing; `--upgrade`
   prints all three whether or not anything is behind. Contract reasons say
-  `older than the versions ork accepts (v10, v11)` or
-  `newer than the versions ork accepts (v10, v11)`. With `--upgrade`, a
+  `older than the versions ork accepts (v10 or v11)` or
+  `newer than the versions ork accepts (v10 or v11)`. With `--upgrade`, a
   current slicer or adj reason includes `(installed: VERSION)` when known.
   Text prints `[upgrade] TOOL  REASON`, an optional `note:` line, then each
   command on its own line, indented, after the contract line. slicer: a checkout
@@ -1599,9 +1599,10 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   (`a,b`) and replaces the JSON array `ui_pass_skills`. An empty value
   clears the list. The CLI trims whitespace around each name, so `a, b`
   stores `["a","b"]`. The shared validator refuses blank names, commas,
-  leading or trailing whitespace, NUL, CR and LF in wire calls and on
-  registry load and save. Errors quote the bad name; for a blank name they
-  give the item's position, counted from 1. `a,,b` and `a,` report item 2.
+  leading or trailing whitespace, NUL, CR, LF and duplicate names in wire
+  calls and on registry load and save. Errors quote the bad name; for a
+  blank name they give the item's position, counted from 1. Duplicate errors
+  quote the name and give both positions. `a,,b` and `a,` report item 2.
   Text uses `ui_pass_skills="a,b"` or `ui_pass_skills=unset`.
   S174 flags: `--env-line` repeats and the lines given replace the list (one
   empty `--env-line ""` clears it). `--permission ROLE=read-only` sets the
@@ -1642,9 +1643,10 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `pin` (the `pinned` value that `slicer ai relay --json` prints after the
   set) and `{"project":"NAME","pinned":null}` for `unpin`. Text: `pinned NAME
   at relay vN` and `unpinned NAME`. Exit 2 (usage, before any tool runs): a
-  missing `--relay` (`projects pin needs --relay N (relay v10, v11)`), an N
-  outside the accepted set, a wrong argument count, or a NAME that is not
-  registered. Exit 1: slicer fails the set or unset call (its message is
+  missing `--relay` (`projects pin needs --relay N (v10 or v11)`), an N
+  outside the accepted set, or a wrong argument count. An unregistered NAME
+  is `not_found` (exit 1), with a hint to run `ork projects list`.
+  Exit 1 also covers when slicer fails the set or unset call (its message is
   shown), or slicer refuses the read-back after the set, for example a pin of
   v10 on a slicer that serves v11. In that case the pin stays set, and the
   message names the project, quotes slicer's error and gives the next step,
@@ -1683,15 +1685,17 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   where `binary` is the path of the running ork binary (empty when it cannot
   be read). Text: one `[ok]`, `[--]`, `[WARN]` or `[FAIL]` line per check, and
   the first line is `[ok] ork  PATH`, or `[--] ork  path unknown: ERROR`
-  when the path cannot be read. In `contract`, `found` is the first line of
-  `slicer ai relay` for the directory doctor runs in ("Contract: relay vN"),
-  and `ok` is false when the global check or any project entry fails. Each
+  when the path cannot be read. In `contract`, `found` is `Contract: ` plus
+  the `contract` string from `slicer ai relay --json --root ROOT`, where
+  ROOT is the directory doctor runs in ("Contract: relay vN"), and `ok` is
+  false when the global check or any project entry fails. Each
   `contract.projects` entry is a registered project asked with its own
   `--root`: `pinned` is the pin or null when the project is unpinned or when
   slicer refused (the `error` then names the pinned and the served version),
-  and `found` is the bare contract ("relay vN"). A failed project's text line
-  ends with ork's next step, `run ork projects pin NAME --relay N ... or ork
-  projects unpin NAME`, for a refused pin or a pin outside the accepted set.
+  and `found` is the bare contract string ("relay vN"). Both formats are
+  kept on purpose. A failed project's text line ends with ork's next step,
+  `run ork projects pin NAME --relay N ... or ork projects unpin NAME`,
+  for a refused pin or a pin outside the accepted set.
   Projects have one `project NAME  PATH` line each, with
   findings indented below. Every finding is stored on one line.
 

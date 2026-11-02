@@ -92,7 +92,7 @@ func TestProjectsPinNeedsRelayFlag(t *testing.T) {
 	P := t.TempDir()
 	app, fake, _ := pinWorld(t, nil, registry.Project{Name: "p", Path: P})
 	code, _, stderr := run(t, app, "projects", "pin", "p")
-	if code != 2 || !strings.Contains(stderr, "projects pin needs --relay N (relay v10, v11)") || strings.Contains(stderr, "--relay 0") {
+	if code != 2 || !strings.Contains(stderr, "projects pin needs --relay N (v10 or v11)") || strings.Contains(stderr, "--relay 0") {
 		t.Fatalf("exit %d: %s", code, stderr)
 	}
 	if calls := fake.Calls(); len(calls) != 0 {
@@ -110,7 +110,7 @@ func TestProjectsPinRefusesVersionsOutsideTheAcceptedSet(t *testing.T) {
 		if code != 2 {
 			t.Errorf("%v: exit %d, want 2: %s", args, code, stderr)
 		}
-		if !strings.Contains(stderr, "v10, v11") {
+		if !strings.Contains(stderr, "v10 or v11") {
 			t.Errorf("%v: stderr %q does not list the accepted set", args, stderr)
 		}
 		if calls := fake.Calls(); len(calls) != 0 {
@@ -124,7 +124,7 @@ func TestProjectsPinAndUnpinRefuseAnUnknownName(t *testing.T) {
 	for _, args := range [][]string{{"pin", "nope", "--relay", "11"}, {"unpin", "nope"}} {
 		app, fake, _ := pinWorld(t, nil, registry.Project{Name: "p", Path: P})
 		code, _, stderr := run(t, app, append([]string{"projects"}, args...)...)
-		if code != 2 || !strings.Contains(stderr, `"nope"`) {
+		if code != 1 || !strings.Contains(stderr, `"nope"`) {
 			t.Errorf("%v: exit %d: %s", args, code, stderr)
 		}
 		if calls := fake.Calls(); len(calls) != 0 {
@@ -319,7 +319,7 @@ func TestDoctorFailsAProjectPinnedOutsideTheAcceptedSet(t *testing.T) {
 		t.Fatalf("exit %d: %+v", code, d)
 	}
 	got := d.Contract.Projects[0]
-	if got.OK || got.Pinned == nil || *got.Pinned != 9 || !strings.Contains(got.Error, "pin v9") || !strings.Contains(got.Error, "v10, v11") {
+	if got.OK || got.Pinned == nil || *got.Pinned != 9 || !strings.Contains(got.Error, "pin v9") || !strings.Contains(got.Error, "v10 or v11") {
 		t.Fatalf("%+v", got)
 	}
 }
@@ -388,7 +388,7 @@ func TestDoctorTextForAPinOutsideTheSetNamesTheAcceptedVersions(t *testing.T) {
 	pinned9 := strings.Replace(string(raw), `"pinned": 11`, `"pinned": 9`, 1)
 	app, _, _ := pinWorld(t, []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, Stdout: pinned9}}, registry.Project{Name: "p", Path: P})
 	_, out, _ := run(t, app, "doctor")
-	if !strings.Contains(out, "run `ork projects pin p --relay N` with v10, v11, or `ork projects unpin p`") {
+	if !strings.Contains(out, "run `ork projects pin p --relay N` with v10 or v11, or `ork projects unpin p`") {
 		t.Fatalf("the text lacks the next step:\n%s", out)
 	}
 }
@@ -405,5 +405,65 @@ func TestDoctorTextGivesNoPinAdviceForAnUnacceptedContract(t *testing.T) {
 	_, out, _ := run(t, app, "doctor")
 	if !strings.Contains(out, "[FAIL] contract p  ") || strings.Contains(out, "ork projects unpin p") {
 		t.Fatalf("output:\n%s", out)
+	}
+}
+
+func TestContractWordingUsesOnePhrase(t *testing.T) {
+	for _, tc := range []struct {
+		args []string
+		want string
+	}{
+		{[]string{"projects", "pin", "p"}, "projects pin needs --relay N (v10 or v11)"},
+		{[]string{"projects", "pin", "p", "--relay", "9"}, "projects pin: --relay 9 is not a version ork accepts (v10 or v11)"},
+	} {
+		t.Run(tc.want, func(t *testing.T) {
+			app, _, _ := pinWorld(t, nil)
+			_, _, err := run(t, app, tc.args...)
+			if !strings.Contains(err, tc.want) {
+				t.Errorf("want %q, got %s", tc.want, err)
+			}
+		})
+	}
+	t.Run("pin", func(t *testing.T) {
+		P := t.TempDir()
+		raw, err := os.ReadFile(recordedSlicer("relay-v11-pinned.json"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		app, _, _ := pinWorld(t, []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, Stdout: strings.Replace(string(raw), `"pinned": 11`, `"pinned": 9`, 1)}}, registry.Project{Name: "p", Path: P})
+		_, d := doctorContracts(t, app)
+		if len(d.Contract.Projects) != 1 || d.Contract.Projects[0].Error != "pin v9 is outside what ork accepts (v10 or v11)" {
+			t.Errorf("pin error: %+v", d.Contract.Projects)
+		}
+	})
+	t.Run("ok", func(t *testing.T) {
+		app, _, _ := doctorApp(t, "Contract: relay v11")
+		_, out, _ := run(t, app, "doctor")
+		if !strings.Contains(out, "[ok] contract  accepts v10 or v11, slicer prints \"Contract: relay v11\"\n") {
+			t.Errorf("contract line: %s", out)
+		}
+	})
+}
+
+func TestProjectsPinAndUnpinUnknownNameIsNotFound(t *testing.T) {
+	for _, args := range [][]string{{"projects", "pin", "nope", "--relay", "11"}, {"projects", "unpin", "nope"}} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			app, _, _ := pinWorld(t, nil)
+			code, _, stderr := run(t, app, args...)
+			want := "ork: no project named \"nope\"; run 'ork projects list'\n"
+			if code != 1 || stderr != want {
+				t.Errorf("exit %d, stderr %q, want %q", code, stderr, want)
+			}
+			code, out, _ := run(t, app, append(args, "--json")...)
+			var d struct {
+				Error struct {
+					Code string `json:"code"`
+				} `json:"error"`
+			}
+			mustJSON(t, out, &d)
+			if code != 1 || d.Error.Code != "not_found" {
+				t.Errorf("JSON exit %d: %s", code, out)
+			}
+		})
 	}
 }

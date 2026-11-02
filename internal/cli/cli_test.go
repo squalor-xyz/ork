@@ -1012,7 +1012,7 @@ func TestDoctorTextOutput(t *testing.T) {
 		"[ok] claude  2.1.303 (Claude Code)\n",
 		"[ok] codex  codex-cli 0.163.0\n",
 		"[--] grok  not found (optional)\n",
-		"[ok] contract  accepts v10, v11, slicer prints \"Contract: relay v11\"\n",
+		"[ok] contract  accepts v10 or v11, slicer prints \"Contract: relay v11\"\n",
 	} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("output lacks %q:\n%s", want, stdout)
@@ -1081,7 +1081,7 @@ func TestDoctorRefusesEveryVersionOutsideTheAcceptedSet(t *testing.T) {
 		code, stdout, _ := run(t, app, "doctor", "--json")
 		var d doctorOut
 		mustJSON(t, stdout, &d)
-		if code != 1 || d.OK || d.Contract.OK || !strings.Contains(d.Contract.Error, fmt.Sprintf("v%d", v)) || !strings.Contains(d.Contract.Error, "ork accepts relay v10, v11") {
+		if code != 1 || d.OK || d.Contract.OK || !strings.Contains(d.Contract.Error, fmt.Sprintf("v%d", v)) || !strings.Contains(d.Contract.Error, "ork accepts relay v10 or v11") {
 			t.Errorf("v%d: exit %d\n%s", v, code, stdout)
 		}
 	}
@@ -1726,6 +1726,102 @@ func TestProjectsSetUIPassSkillsRejectsControlCharacters(t *testing.T) {
 			code, _, stderr := run(t, w.app, "projects", "set", "keep", "--ui-pass-skills", bad)
 			if code != 1 || !strings.Contains(stderr, fmt.Sprintf("name %q must not contain NUL, CR or LF", bad)) {
 				t.Fatalf("%q exit %d: %s", bad, code, stderr)
+			}
+		})
+	}
+}
+
+func TestUsageTextBuildsTheAcceptedSetFromRoles(t *testing.T) {
+	if !strings.Contains(usageText, "("+roles.AcceptedContractsPhrase()+") through slicer") {
+		t.Fatal("usage does not use accepted phrase")
+	}
+}
+
+func TestProjectsSetRefusesDuplicateSkillNames(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "p", Path: "/p"})
+	before, err := os.ReadFile(w.regPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	code, _, stderr := run(t, w.app, "projects", "set", "p", "--ui-pass-skills", "a,a")
+	if code != 1 || !strings.Contains(stderr, `name "a" is listed twice (items 1 and 2)`) {
+		t.Errorf("duplicate exit %d: %s", code, stderr)
+	}
+	after, err := os.ReadFile(w.regPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(before) != string(after) {
+		t.Error("duplicate request changed registry")
+	}
+}
+
+func TestDoctorContractFailLineNamesTheSetOnce(t *testing.T) {
+	for _, tc := range []struct {
+		line, want string
+		invalid    bool
+	}{
+		{"Contract: relay v9", "[FAIL] contract  ork accepts relay v10 or v11 and slicer prints v9", false},
+		{"Contract: relay v11", `[FAIL] contract  accepts v10 or v11, slicer prints "Contract: relay v11": relay conformance missing finding_kinds`, true},
+		{"something else entirely", "[FAIL] contract  accepts v10 or v11, slicer prints \"Contract: something else entirely\": the first line of `slicer ai relay` is not a contract line", false},
+	} {
+		t.Run(tc.line+fmt.Sprint(tc.invalid), func(t *testing.T) {
+			var lead []clitest.Route
+			if tc.invalid {
+				raw, err := os.ReadFile(recordedSlicer("relay-v11.json"))
+				if err != nil {
+					t.Fatal(err)
+				}
+				lead = []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--json"}, Prefix: true, Stdout: strings.ReplaceAll(string(raw), `"key": "finding_kinds"`, `"key": "missing"`)}}
+			}
+			app, _, _ := doctorAppLead(t, lead, tc.line)
+			code, out, _ := run(t, app, "doctor")
+			if code != 1 || !strings.Contains(out, tc.want+"\n") {
+				t.Errorf("exit %d, want line %q:\n%s", code, tc.want, out)
+			}
+			_, raw, _ := run(t, app, "doctor", "--json")
+			var d doctorOut
+			mustJSON(t, raw, &d)
+			found := "Contract: " + strings.TrimPrefix(tc.line, "Contract: ")
+			_, wantErr := roles.CheckContractLine(found)
+			wantError := "relay conformance missing finding_kinds"
+			if !tc.invalid {
+				wantError = wantErr.Error()
+			}
+			if d.Contract.Found != found || d.Contract.Error != wantError {
+				t.Errorf("JSON contract changed: %+v", d.Contract)
+			}
+		})
+	}
+}
+
+func TestDoctorSkipsTheContractCheckOfAMissingProject(t *testing.T) {
+	for _, file := range []bool{false, true} {
+		t.Run(fmt.Sprint(file), func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "project")
+			if file {
+				if err := os.WriteFile(path, nil, 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
+			app, fake, _ := pinWorld(t, nil, registry.Project{Name: "p", Path: path})
+			_, raw, _ := run(t, app, "doctor", "--json")
+			var d DoctorReport
+			mustJSON(t, raw, &d)
+			if len(d.Contract.Projects) != 0 {
+				t.Errorf("contract checked invalid path: %+v", d.Contract.Projects)
+			}
+			for _, c := range fake.CallsTo("slicer") {
+				if reflect.DeepEqual(c.Args, []string{"ai", "relay", "--json", "--root", path}) {
+					t.Error("slicer asked for invalid project root")
+				}
+			}
+			want := "path: does not exist"
+			if file {
+				want = "path: not a directory"
+			}
+			if len(d.Projects) != 1 || strings.Join(d.Projects[0].Findings, " ") != want {
+				t.Errorf("missing path finding: %+v", d.Projects)
 			}
 		})
 	}

@@ -247,20 +247,16 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 	}
 	// A project whose pin differs from what its slicer serves fails here with
 	// slicer's contract_mismatch error, which names both versions.
-	served, err := d.Slicer.Contract(ctx, cfg.Project.Path)
+	contract, err := d.Slicer.ReadContract(ctx, cfg.Project.Path)
 	if err != nil {
 		return nil, fmt.Errorf("slicer ai relay --json: %w", err)
 	}
-	version, err := roles.CheckContractLine("Contract: " + served)
+	version, err := roles.CheckContractLine("Contract: " + contract.Contract)
 	if err != nil {
 		return nil, err
 	}
-	contract, err := d.Slicer.RelayContract(ctx, cfg.Project.Path)
-	if err != nil {
+	if err := contract.Validate(); err != nil {
 		return nil, fmt.Errorf("slicer ai relay --json: %w", err)
-	}
-	if contract.Contract != fmt.Sprintf("relay v%d", version) {
-		return nil, errors.New("slicer contract changed during setup")
 	}
 	ledgerRoles := map[string]string{}
 	for _, role := range append(roles.Names(), "orchestrator") {

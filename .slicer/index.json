@@ -11369,7 +11369,7 @@
       "id": "S207",
       "title": "Contract and doctor cleanup: one read, one phrase, plain failures",
       "short_title": "Contract and doctor cleanup",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S188"
@@ -11416,6 +11416,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "26564178-df9d-425d-ab1d-aed6b2d537c6",
+          "kind": "",
+          "text": "**2026-11-02** — Human checks at approval (S207):\n- later: `ork doctor` against a slicer that serves another version shows one FAIL line that names the set once; `ork projects pin nope --relay 11` says no project named and points to `ork projects list`.",
+          "created_at": "2026-11-02T14:42:34Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "73b00ad5-5761-4e87-b88f-0f3b24c2eaae",
+          "kind": "",
+          "text": "**2026-11-02** — Implemented one relay-contract read, shared accepted-version wording, concise doctor failures, not_found pin and unpin errors, duplicate UI skill rejection, and short gate wording. Reviewed test and documentation nits are resolved. Gate PASS and owner approval are supplied in the finish brief; human CLI checks remain deferred as later.",
+          "created_at": "2026-11-02T14:43:09Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -11435,7 +11463,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

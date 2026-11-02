@@ -307,7 +307,7 @@ func checkProjectContract(ctx context.Context, client slicercli.Client, p regist
 	pc.Pinned = contract.Pinned
 	pc.Found = contract.Contract
 	if contract.Pinned != nil && !roles.ContractAccepted(*contract.Pinned) {
-		pc.Error = fmt.Sprintf("pin v%d is outside what ork accepts (relay %s)", *contract.Pinned, acceptedList())
+		pc.Error = fmt.Sprintf("pin v%d is outside what ork accepts (%s)", *contract.Pinned, acceptedList())
 		pc.next = fmt.Sprintf("run `ork projects pin %s --relay N` with %s, or `ork projects unpin %s`", p.Name, acceptedList(), p.Name)
 		return pc
 	}
@@ -471,11 +471,7 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 		}
 	}
 	c := rep.Contract
-	accepts := make([]string, len(c.Accepted))
-	for i, v := range c.Accepted {
-		accepts[i] = fmt.Sprintf("v%d", v)
-	}
-	accepted := strings.Join(accepts, ", ")
+	accepted := roles.AcceptedContractsPhrase()
 	found := ""
 	if c.Found != "" {
 		found = fmt.Sprintf(", slicer prints %q", c.Found)
@@ -483,6 +479,8 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	// c.OK also covers the projects below, so the global line reads the error.
 	if c.Error == "" {
 		fmt.Fprintf(o.stdout, "[ok] contract  accepts %s%s\n", accepted, found)
+	} else if version, err := roles.CheckContractLine(c.Found); version != 0 && err != nil {
+		fmt.Fprintf(o.stdout, "[FAIL] contract  %s\n", c.Error)
 	} else {
 		fmt.Fprintf(o.stdout, "[FAIL] contract  accepts %s%s: %s\n", accepted, found, c.Error)
 	}

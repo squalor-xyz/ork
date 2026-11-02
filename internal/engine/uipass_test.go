@@ -864,3 +864,35 @@ func TestUIPassBriefCarriesRegistrySkillsForItsVendor(t *testing.T) {
 		})
 	}
 }
+
+func TestUIPassBriefOnAClaudeToCodexFallbackHasNoSkillsLine(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.project = func(p *registry.Project) { p.UIPassSkills = []string{"tui-design"} }
+		o.routesFor = func(P, W string) []clitest.Route {
+			return []clitest.Route{{Tool: "slicer", Args: []string{"show", item, "--json", "--lean", "--root", W}, Stdout: uiSliceJSON(tuiFiles)}}
+		}
+	})
+	h.cfg.Lineup[RoleUI] = []runrec.LineupEntry{{Vendor: "claude", Model: "test", Effort: "medium"}, {Vendor: "codex", Model: "test", Effort: "medium"}}
+	h.runner.script = func(req Request, _ int) (Result, error) {
+		if req.Role == RoleUI && req.Vendor == "claude" {
+			return Result{Exit: ExitRateLimited}, nil
+		}
+		return Result{}, nil
+	}
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	var briefs []string
+	for _, req := range h.runner.requests() {
+		if req.Role == RoleUI {
+			briefs = append(briefs, req.Brief)
+		}
+	}
+	if len(briefs) != 2 {
+		t.Fatalf("UI briefs: %d, want 2", len(briefs))
+	}
+	if !strings.Contains(briefs[0], "## Skills\n\nLoad these skills for the UI pass: tui-design.") {
+		t.Error("claude brief lacks skills line")
+	}
+	if strings.Contains(briefs[1], "## Skills") || strings.Contains(briefs[1], "tui-design") {
+		t.Error("codex fallback brief contains skills")
+	}
+}

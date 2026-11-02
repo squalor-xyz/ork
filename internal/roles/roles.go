@@ -81,15 +81,21 @@ func CheckContractLine(line string) (int, error) {
 		return 0, errors.New("the first line of `slicer ai relay` is not a contract line")
 	}
 	if !ContractAccepted(v) {
-		return v, fmt.Errorf("ork accepts relay %s and slicer prints v%d", versionList(), v)
+		return v, fmt.Errorf("ork accepts relay %s and slicer prints v%d", AcceptedContractsPhrase(), v)
 	}
 	return v, nil
 }
 
-func versionList() string {
-	parts := make([]string, len(acceptedContracts))
-	for i, v := range acceptedContracts {
+// AcceptedContractsPhrase returns the accepted versions as a readable list.
+func AcceptedContractsPhrase() string { return phrase(acceptedContracts) }
+
+func phrase(versions []int) string {
+	parts := make([]string, len(versions))
+	for i, v := range versions {
 		parts[i] = "v" + strconv.Itoa(v)
 	}
-	return strings.Join(parts, ", ")
+	if len(parts) < 2 {
+		return strings.Join(parts, "")
+	}
+	return strings.Join(parts[:len(parts)-1], ", ") + " or " + parts[len(parts)-1]
 }

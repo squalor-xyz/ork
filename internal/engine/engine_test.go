@@ -5,6 +5,7 @@ package engine
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -768,6 +769,49 @@ func TestPatternIdLower(t *testing.T) {
 			}
 			if got := branchName(p, "S78"); got != tc.want {
 				t.Errorf("branch = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestEngineStartReadsTheContractOnce(t *testing.T) {
+	h := newHarness(t)
+	if _, err := New(context.Background(), h.deps, h.cfg); err != nil {
+		t.Fatal(err)
+	}
+	if n := len(h.calls("slicer", "ai", "relay")); n != 1 {
+		t.Fatalf("contract reads = %d, want 1", n)
+	}
+}
+
+func TestEngineStartKeepsTheContractErrorTexts(t *testing.T) {
+	for _, invalid := range []bool{false, true} {
+		t.Run(fmt.Sprint(invalid), func(t *testing.T) {
+			h := newHarness(t, func(o *harnessOpts) {
+				o.routesFor = func(P, W string) []clitest.Route {
+					raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v11.json"))
+					if err != nil {
+						t.Fatal(err)
+					}
+					s := string(raw)
+					if invalid {
+						s = strings.ReplaceAll(s, `"key": "finding_kinds"`, `"key": "missing"`)
+					} else {
+						s = strings.Replace(s, `"contract": "relay v11"`, `"contract": "relay v12"`, 1)
+					}
+					return []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, Stdout: s}}
+				}
+			})
+			_, err := New(context.Background(), h.deps, h.cfg)
+			if err == nil {
+				t.Fatal("missing contract error")
+			}
+			if invalid {
+				if !strings.HasPrefix(err.Error(), "slicer ai relay --json: relay conformance missing finding_kinds") {
+					t.Fatalf("conformance error: %v", err)
+				}
+			} else if !strings.Contains(err.Error(), "v12") || strings.HasPrefix(err.Error(), "slicer ai relay --json:") {
+				t.Fatalf("version error: %v", err)
 			}
 		})
 	}

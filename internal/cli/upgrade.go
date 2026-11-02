@@ -175,13 +175,7 @@ func contractDirection(found string) (dir, version int) {
 	return 0, v
 }
 
-func acceptedList() string {
-	var parts []string
-	for _, v := range acceptedContracts() {
-		parts = append(parts, fmt.Sprintf("v%d", v))
-	}
-	return strings.Join(parts, ", ")
-}
+func acceptedList() string { return roles.AcceptedContractsPhrase() }
 
 // buildHints lists, in the order slicer, adj, ork, the tools that are behind
 // or missing, or every one of them when all is set (--upgrade). A hint has the

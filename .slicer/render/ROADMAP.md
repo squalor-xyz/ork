@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-232 items · — 38 · done 168 · retired 26
+232 items · — 37 · done 169 · retired 26
 
 v1.2
 
@@ -104,7 +104,7 @@ v1.2
 | 47 | S203 | S112 later notes: dash-leading answers, Via passthrough, ledger option rendering | S | - |  | Folded into the S132 sweep (items 2-5) and the S194 correctness sweep (item 1) (owner, 2026-10-31). · discovered from S112 | retired |
 | 48 | [S204](slices/S204.md) | Engine v11 process rules | M | 2 |  | S198 preflight 2026-10-30: owner split the engine rules out of S198 · discovered from S198 | — |
 | 49 | [S205](slices/S205.md) | S198 later notes | S | - |  | S198 review, gate and UI pass 2026-10-30 (later findings) · Folded into the S207 sweep (owner, 2026-10-31). · discovered from S198 | retired |
-| 50 | [S207](slices/S207.md) | Contract and doctor cleanup | M | 2 |  | S24 review and UI pass later items, 2026-10-31 · discovered from S24 | — |
+| 50 | [S207](slices/S207.md) | Contract and doctor cleanup | M | 2 |  | S24 review and UI pass later items, 2026-10-31 · discovered from S24 | done |
 | 51 | S210 | S208 later note: cite engine.default-cap beside the default in docs/design.md:231-232 | S | 1 |  | Folded into the S50 sweep (owner, 2026-10-31). · discovered from S208 | retired |
 | 52 | S211 | S209 later notes: duplicate ui_pass_skills names, claude-to-codex fallback test, untrimmed control-character doc line, full-line brief assertion | S | 1 |  | discovered from S209 | — |
 | 53 | [S212](slices/S212.md) | Release workflow | M | 2 |  |  | done |

@@ -16,6 +16,7 @@ import (
 	"runtime/debug"
 
 	"github.com/squalor-xyz/ork/internal/clitest"
+	"github.com/squalor-xyz/ork/internal/roles"
 )
 
 // upgradeOut is the part of `ork doctor --json` that S178 adds.
@@ -336,7 +337,7 @@ func TestDoctorHintsWhenSlicerContractIsOlder(t *testing.T) {
 	}
 	d := env.slicerD
 	for _, want := range []string{
-		"[upgrade] slicer  slicer prints relay v9, older than the versions ork accepts (v10, v11)\n",
+		"[upgrade] slicer  slicer prints relay v9, older than the versions ork accepts (v10 or v11)\n",
 		"\n  git -C " + shellWord(d) + " pull --ff-only\n",
 		"\n  " + shellWord(d+"/.venv/bin/pip") + " install -e " + shellWord(d) + "\n",
 	} {
@@ -399,7 +400,7 @@ func TestDoctorHintsWhenSlicerContractIsNewer(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, want := range []string{
-		"[upgrade] ork  slicer prints relay v12, newer than the versions ork accepts (v10, v11)\n",
+		"[upgrade] ork  slicer prints relay v12, newer than the versions ork accepts (v10 or v11)\n",
 		"\n  go -C ORK_CHECKOUT build -o " + shellWord(bin) + " ./cmd/ork\n",
 		"\n  " + shellWord(bin) + " daemon restart\n",
 	} {
@@ -704,7 +705,7 @@ func TestContractDirectionFollowsTheAcceptedSet(t *testing.T) {
 			t.Errorf("%s: (%d,%d), want (%d,%d)", tc.line, d, v, tc.dir, tc.version)
 		}
 	}
-	if got := acceptedList(); got != "v20, v21" {
+	if got := acceptedList(); got != roles.AcceptedContractsPhrase() {
 		t.Errorf("accepted list %q", got)
 	}
 }
@@ -713,7 +714,7 @@ func TestDoctorReasonsNameTheVersionsOrkAccepts(t *testing.T) {
 	for _, tc := range []struct{ version, tool, direction string }{{"9", "slicer", "older"}, {"12", "ork", "newer"}} {
 		env := setupUpgrade(t, upOpts{contract: "Contract: relay v" + tc.version})
 		_, d, _ := env.json(t)
-		want := "slicer prints relay v" + tc.version + ", " + tc.direction + " than the versions ork accepts (v10, v11)"
+		want := "slicer prints relay v" + tc.version + ", " + tc.direction + " than the versions ork accepts (v10 or v11)"
 		if len(d.Upgrade) != 1 || d.Upgrade[0].Tool != tc.tool || d.Upgrade[0].Reason != want {
 			t.Errorf("hints %+v want %q", d.Upgrade, want)
 		}

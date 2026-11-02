@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- S207: read the relay contract once during engine setup and use one accepted
+  version phrase. Name the set once on doctor's unsupported-contract FAIL
+  line, return `not_found` (exit 1) with a project-list hint for an unknown
+  pin or unpin name, and shorten the gate's no-fix criterion. Refuse duplicate
+  UI pass skill names on every path (*proposed*).
+
 - S188: polish doctor upgrade reasons with installed versions and consistent
   checkout placeholders; note the PyPI assumption for slicer venv commands
   (*proposed*). Keep an empty `held` array in declined `ork run --json`

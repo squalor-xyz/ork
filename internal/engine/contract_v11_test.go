@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -130,5 +131,24 @@ func TestEngineStartWithV11CreatesARun(t *testing.T) {
 	}
 	if rec := e.Snapshot(); rec.Contract != 11 || rec.State != runrec.StateSetup {
 		t.Fatalf("record: %+v", rec)
+	}
+}
+
+func TestV11GateStatusReadFailureClosesTheStepWithoutAVerdict(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.contract = 11
+		o.routesFor = func(P, W string) []clitest.Route {
+			return []clitest.Route{{Tool: "git", Args: []string{"-C", W, "status", "--porcelain"}, Seq: []clitest.Reply{{}, {}, {}, {Exit: 1, Stderr: "status failed"}}}}
+		}
+	})
+	rec := requireState(t, h.start(), runrec.StatePaused)
+	if !strings.Contains(rec.Reason, "read-only fingerprint") {
+		t.Errorf("pause reason: %s", rec.Reason)
+	}
+	if got := gateDone(t, h); strings.Contains(got, "--verdict") {
+		t.Errorf("gate close carries verdict: %s", got)
+	}
+	if n := len(h.calls("git", "-C", h.W, "status", "--porcelain")); n != 4 {
+		t.Errorf("status calls = %d, want 4", n)
 	}
 }

@@ -569,3 +569,31 @@ func TestUIPassSkillsStrictNamesOnLoadAndSave(t *testing.T) {
 		})
 	}
 }
+
+func TestUIPassSkillsRefusesDuplicateNames(t *testing.T) {
+	skills := []string{"a", "b", "a"}
+	p := Project{Name: "p", Path: "/p", UIPassSkills: skills}
+	f := &File{Version: Version, Projects: []Project{p}}
+	raw, err := json.Marshal(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, pathway := range []string{"validate", "load", "save"} {
+		t.Run(pathway, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "projects.json")
+			writeFile(t, path, raw)
+			var err error
+			switch pathway {
+			case "validate":
+				err = ValidateUIPassSkills(skills)
+			case "load":
+				_, err = Load(path)
+			case "save":
+				err = Save(path, f)
+			}
+			if err == nil || !strings.Contains(err.Error(), `name "a" is listed twice (items 1 and 3)`) {
+				t.Fatalf("duplicate error: %v", err)
+			}
+		})
+	}
+}

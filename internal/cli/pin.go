@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 
+	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/roles"
@@ -30,7 +31,7 @@ func (a *App) registeredProject(o *output, name string) (registry.Project, int, 
 			return p, ExitOK, true
 		}
 	}
-	return registry.Project{}, o.usage("no project named %q", name), false
+	return registry.Project{}, o.fail(ExitFailure, daemon.CodeNotFound, fmt.Sprintf("no project named %q; run 'ork projects list'", name)), false
 }
 
 // projectsPin is `ork projects pin NAME --relay N`: it sets the project's
@@ -48,10 +49,10 @@ func (a *App) projectsPin(ctx context.Context, o *output, fs *flag.FlagSet, args
 	given := false
 	fs.Visit(func(f *flag.Flag) { given = given || f.Name == "relay" })
 	if !given {
-		return o.usage("projects pin needs --relay N (relay %s)", acceptedList())
+		return o.usage("projects pin needs --relay N (%s)", acceptedList())
 	}
 	if !roles.ContractAccepted(*relay) {
-		return o.usage("projects pin: --relay %d is not a version ork accepts (relay %s)", *relay, acceptedList())
+		return o.usage("projects pin: --relay %d is not a version ork accepts (%s)", *relay, acceptedList())
 	}
 	p, code, ok := a.registeredProject(o, pos[0])
 	if !ok {

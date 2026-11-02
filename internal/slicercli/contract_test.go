@@ -189,7 +189,7 @@ func TestRelayContractV10StillValidates(t *testing.T) {
 func TestRelayContractV9IsRefused(t *testing.T) {
 	got := editContract(t, "relay-v10.json", func(g map[string]any) { g["contract"] = "relay v9" })
 	err := got.Validate()
-	if err == nil || !strings.Contains(err.Error(), "v10, v11") {
+	if err == nil || !strings.Contains(err.Error(), "v10 or v11") {
 		t.Fatalf("v9: %v", err)
 	}
 }
