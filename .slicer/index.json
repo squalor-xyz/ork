@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 253,
+  "next_id": 254,
   "preamble": "",
   "passes": [
     {
@@ -13158,6 +13158,34 @@
         "importance": 1,
         "urgency": 1,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S253",
+      "title": "S213 later notes: guard that the changelog section and tag message reach release-notes.md; gate stale after fixes",
+      "short_title": "S213 later notes: guard that the changelog section and tag message reach release-notes.md; gate stale after fixes",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S213 gate: no test requires the cat changelog-section.md line that feeds release-notes.md (.github/workflows/release.yml:120), so dropping it would pass every guard. Wave 6 friction: a resumed gate session re-reports a fixed state as open; the gate ran in plan mode and could not write its report; the Sonnet implementer sandbox denies rm and a script run in its own worktree.",
+        "discovered_from": "S213",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }
