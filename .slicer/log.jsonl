@@ -2924,3 +2924,13 @@
 {"when": "2026-11-02T15:39:30Z", "item": "S207", "action": "note", "from": "", "to": "", "note": "Verified outcome: one relay-contract read in the engine, one", "by": "Jon R"}
 {"when": "2026-11-02T15:46:29Z", "item": "S211", "action": "retire", "from": "open", "to": "retired", "note": "Folded: the S209 later notes were handled by S207 (owner, 2026-11-01: items 3 and 4 dropped; 1 and 2 landed with S207)."}
 {"when": "2026-11-02T15:46:33Z", "item": "S234", "action": "add", "from": "", "to": "open", "note": "S100 and S207 later notes: muted-bell cue, bell baseline, doctor wording, acceptedList hook"}
+{"when": "2026-11-02T16:14:59Z", "item": "S235", "action": "add", "from": "", "to": "open", "note": "Sleep and wake: do not kill a healthy role for time the machine slept, and show how long work has run"}
+{"when": "2026-11-02T16:14:59Z", "item": "S236", "action": "add", "from": "", "to": "open", "note": "Reap the whole process tree of a killed role or check"}
+{"when": "2026-11-02T16:14:59Z", "item": "S237", "action": "add", "from": "", "to": "open", "note": "ork answer and ork retry return once the run has resumed"}
+{"when": "2026-11-02T16:15:00Z", "item": "S238", "action": "add", "from": "", "to": "open", "note": "Landing merge-in: ork resolves and commits the merge of main itself, and stops the run on conflicts it cannot resolve"}
+{"when": "2026-11-02T16:15:00Z", "item": "S239", "action": "add", "from": "", "to": "open", "note": "Check failures: show the failing tests to the fix round and run a failed check once more before sending it"}
+{"when": "2026-11-02T16:15:00Z", "item": "S240", "action": "add", "from": "", "to": "open", "note": "ork status text: label the ids, show when a state began, print the whole question and list what needs-you counts"}
+{"when": "2026-11-02T16:15:00Z", "item": "S241", "action": "add", "from": "", "to": "open", "note": "Plan and launch output: label the fallback, show push and skills, say engine slice and pair rule, show the spec check and what to do next"}
+{"when": "2026-11-02T16:15:01Z", "item": "S242", "action": "add", "from": "", "to": "open", "note": "Daemon visibility: ork daemon status, a daemon line in doctor, and a stale rule that ignores commits with no code change"}
+{"when": "2026-11-02T16:15:08Z", "item": "S240", "action": "set", "from": "", "to": "", "note": "depends_on -→S222"}
+{"when": "2026-11-02T16:15:13Z", "item": "S233", "action": "set", "from": "", "to": "", "note": "depends_on -→S240,S241,S242"}
