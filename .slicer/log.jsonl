@@ -2938,3 +2938,10 @@
 {"when": "2026-11-02T17:33:55Z", "item": "relay-roles.r22", "action": "relay-roles", "from": "", "to": "reviewer", "note": "add"}
 {"when": "2026-11-02T17:33:55Z", "item": "relay-roles.r23", "action": "relay-roles", "from": "", "to": "gate", "note": "add"}
 {"when": "2026-11-02T17:33:55Z", "item": "relay-roles.r24", "action": "relay-roles", "from": "", "to": "reviewer", "note": "add"}
+{"when": "2026-11-02T17:41:51Z", "item": "relay-roles.r21", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
+{"when": "2026-11-02T17:41:51Z", "item": "relay-roles.r22", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
+{"when": "2026-11-02T17:41:51Z", "item": "relay-roles.r23", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
+{"when": "2026-11-02T17:41:52Z", "item": "relay-roles.r24", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
+{"when": "2026-11-02T17:41:52Z", "item": "relay-roles.r21", "action": "relay-roles", "from": "", "to": "note", "note": "set"}
+{"when": "2026-11-02T17:42:00Z", "item": "S243", "action": "add", "from": "", "to": "open", "note": "Claude fallback implementer: shell rules in the brief, one automatic report nudge, a short denied count in status"}
+{"when": "2026-11-02T17:42:07Z", "item": "S72", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-02 (interactive): Grok rows in the matrix use ", "by": "Jon R"}

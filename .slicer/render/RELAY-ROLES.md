@@ -22,10 +22,10 @@
 | r7 | Architect | size L | Claude Code | Claude | opus | high | - |
 | r10 | Orchestrator | every slice | Claude Code | Claude | sonnet | high | the outer session the owner talks to orchestrates; ork's engine spawns roles itself (owner 2026-10-29) |
 | r16 | Reviewer | every slice | Claude Code | Claude | sonnet | high | Spec check row (sonnet high, owner 2026-10-29) |
-| r21 | Orchestrator | every slice | Grok | xAI | grok-4.6 | medium | Grok orchestrator alternative (owner 2026-11-02, grok-4.6 medium); ork cannot run Grok until S72 lands, so it is used by hand in a session until then |
-| r22 | Reviewer | every slice | Grok | xAI | grok-4.6 | medium | Grok reviewer alternative (owner 2026-11-02); the owner allows this cross-vendor review for a row picked on purpose (rule u2); ork cannot run Grok until S72 lands |
-| r23 | Gate | every slice | Grok | xAI | grok-4.6 | medium | Grok gate alternative (owner 2026-11-02); cross-vendor gate allowed when picked on purpose (rule u2); ork cannot run Grok until S72 lands |
-| r24 | Reviewer | every slice | Grok | xAI | grok-4.6 | medium | Spec check row on Grok (owner 2026-11-02): one read-only pass over every ticked slice before a wave (rule u11); an alternative to r16 |
+| r21 | Orchestrator | every slice | Grok | xAI | latest | medium | Grok orchestrator alternative (owner 2026-11-02). Model 'latest' = do not pin a version: use the grok CLI default (grok-4.7 on 2026-11-02); owner 2026-11-02: default to the latest unless asked. ork cannot run Grok until S72 lands, so it is used by hand until then |
+| r22 | Reviewer | every slice | Grok | xAI | latest | medium | Grok reviewer alternative (owner 2026-11-02); the owner allows this cross-vendor review for a row picked on purpose (rule u2); ork cannot run Grok until S72 lands |
+| r23 | Gate | every slice | Grok | xAI | latest | medium | Grok gate alternative (owner 2026-11-02); cross-vendor gate allowed when picked on purpose (rule u2); ork cannot run Grok until S72 lands |
+| r24 | Reviewer | every slice | Grok | xAI | latest | medium | Spec check row on Grok (owner 2026-11-02): one read-only pass over every ticked slice before a wave (rule u11); an alternative to r16 |
 
 ## Rules
 
