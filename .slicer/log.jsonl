@@ -2958,3 +2958,12 @@
 {"when": "2026-11-02T17:41:52Z", "item": "relay-roles.r21", "action": "relay-roles", "from": "", "to": "note", "note": "set"}
 {"when": "2026-11-02T17:42:00Z", "item": "S243", "action": "add", "from": "", "to": "open", "note": "Claude fallback implementer: shell rules in the brief, one automatic report nudge, a short denied count in status"}
 {"when": "2026-11-02T17:42:07Z", "item": "S72", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-02 (interactive): Grok rows in the matrix use ", "by": "Jon R"}
+{"when": "2026-11-02T18:23:10Z", "item": "S244", "action": "add", "from": "", "to": "open", "note": "Resolve a matrix model of \"latest\" to the newest model of the row's family"}
+{"when": "2026-11-02T18:23:10Z", "item": "S245", "action": "add", "from": "", "to": "open", "note": "Show \"latest (resolves to X)\" in plans and lineups"}
+{"when": "2026-11-02T18:23:10Z", "item": "S246", "action": "add", "from": "", "to": "open", "note": "Prefer slicer's check_command over the registry's, as adj 32 decided"}
+{"when": "2026-11-02T18:23:11Z", "item": "S247", "action": "add", "from": "", "to": "open", "note": "ork projects show: every setting of one project, from ork, slicer and adj, in one read"}
+{"when": "2026-11-02T18:23:11Z", "item": "S248", "action": "add", "from": "", "to": "open", "note": "ork projects set --dry-run: validate and show a change without saving it"}
+{"when": "2026-11-02T18:23:11Z", "item": "S249", "action": "add", "from": "", "to": "open", "note": "Set up a project through its tools: slicer init, matrix init, adj init and the adj flag"}
+{"when": "2026-11-02T18:23:11Z", "item": "S250", "action": "add", "from": "", "to": "open", "note": "Apply a matrix change set through slicer relay-roles apply"}
+{"when": "2026-11-02T18:23:12Z", "item": "S251", "action": "add", "from": "", "to": "open", "note": "Project settings pane in the TUI: every setting by owner, and the setup steps"}
+{"when": "2026-11-02T18:23:23Z", "item": "S251", "action": "set", "from": "", "to": "", "note": "depends_on -→S247,S249"}

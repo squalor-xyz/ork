@@ -1,0 +1,41 @@
+{
+  "id": "S246",
+  "title": "Prefer slicer's check_command over the registry's, as adj 32 decided",
+  "lead": [
+    "A run's check command is slicer's `check_command` config key when it is set, and the registry's `check_command` only when slicer's is empty. The plan says which one it used. `ork doctor` checks the same effective command."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "adj 32 (`project.check-command`, decided 2026-10-18, `slicer-then-registry`): \"until it ships ork uses its registry value, and prefers slicer's once it exists\". slicer now has the key: `check_command: str = \"\"` in `slicer/src/slicer/config.py:189`, read with `slicer config check_command --json` (`{\"key\": \"check_command\", \"value\": \"\"}` on this repo, 2026-11-02). ork still reads only the registry: the plan copies `proj.CheckCommand` (`internal/daemon/runs.go:385`), the engine runs `e.proj.CheckCommand` (`internal/engine/states.go:207`, `:233`; brief at `internal/engine/round.go:264`; implementer allowlist at `internal/engine/perm.go:68`), and doctor checks `p.CheckCommand` (`internal/cli/doctor.go:183`). `docs/state.md:78-79` already says ork prefers slicer's key once slicer has one. So the same setting lives in two places, and the decided rule is not applied.\n\nThe slicer client already reads a config key (`internal/slicercli/write.go:65-74`, `Client.Config`).\n\nDesign (*proposed* where not decided):\n- The daemon resolves the effective project in one helper, `d.effectiveProject(ctx, p registry.Project) (registry.Project, string)`: it reads `slicer config check_command --json --root PATH`; a non-empty value replaces `CheckCommand`, and the source is `slicer`; otherwise the registry value stays, and the source is `registry` (or `none` when both are empty). A failed read keeps the registry value with source `registry` and a plan note `slicer config check_command failed: ...` (see the manifest question).\n- `run.plan` keeps `plan.project` as the raw registry entry, so the `plan changed` check at `internal/daemon/runs.go:557` still compares like with like. `RunPlan.CheckCommand` holds the effective command and a new `check_source` field names its source. The engine config gets the effective project (`internal/daemon/runs.go:567`).\n- A run reloaded after a daemon restart (`engine.Load` at `internal/daemon/runs.go:234`, `:251`, `:1140`) resolves the same way, so a resumed run uses the same rule.\n- doctor checks the effective command and names the source in its finding (`check_command (slicer): ...`).\n- `ork projects set --check` still writes the registry; whether it should write slicer's key instead is an owner question."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/runs.go:83` (RunPlan gains `CheckSource string \\`json:\"check_source,omitempty\"\\``), `:385` (plan), `:567` (engine config), `:234`, `:251` and `:1140` (reload).\n- `internal/daemon/runs_test.go` (beside `TestRunPlanKeepsEveryRowWithAnAdapter` at `:124`).\n- `internal/cli/doctor.go:172-200` (`checkProject` takes the effective command and source; the slicer read uses the client the doctor already has for the contract check).\n- `internal/cli/cli_test.go` (the doctor tests).\n- `internal/cli/run.go` (the plan text prints `check: CMD (from slicer|registry)` where it prints the check command today, if it does; otherwise one new line).\n- `docs/state.md:78-79` (the note becomes current behavior).\n- `docs/design.md` (the `run.plan` wire row: `check_source`; find with `rg -n \"run.plan\" docs/design.md`).\n- `CHANGELOG.md` (entry under `## Unreleased`).\n\nClass: E (`internal/daemon`). UI slice: yes (plan text and doctor text in `internal/cli` output)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestRunPlanPrefersSlicersCheckCommand`: slicer route `config check_command --json --root P` returns `{\"key\":\"check_command\",\"value\":\"make test\"}`, registry has `go test ./...`: the plan's `check_command` is `make test` and `check_source` is `slicer`. Fails first: the plan has the registry value.\n- `TestRunPlanFallsBackToTheRegistryCheckCommand`: slicer value `\"\"`: registry value, source `registry`; both empty: `\"\"`, source `none`.\n- `TestRunPlanCheckCommandReadFailureKeepsTheRegistry`: slicer exits 3: registry value, source `registry`, and the plan note names the failure.\n- `TestRunStartPassesTheEffectiveCheckCommandToTheEngine`: after `run.start`, the engine's first check round runs `make test` (use the fake check runner the engine tests in `internal/daemon` already wire). The `plan changed` check does not fire.\n- `TestReloadedRunUsesTheEffectiveCheckCommand`: a stored run reloaded at daemon start runs slicer's command.\n- `TestDoctorChecksTheEffectiveCheckCommand` (`internal/cli`): with slicer `make test` and a registry value, doctor checks `make` on PATH and names `(slicer)`."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests; see each fail for the reason given.\n2. Add `effectiveProject` in `internal/daemon/runs.go` and use it at the plan, start and reload sites. Never write the registry from it.\n3. Add `check_source` to the plan and its text.\n4. doctor: resolve the same way, through the slicer client, with `--root`.\n5. Docs and CHANGELOG (added last).\n6. Do not touch `internal/engine` (it keeps reading `proj.CheckCommand`), `internal/registry`, or `projects.set`.\n\nUI slice: UI pass (r14)."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -race -count=1 ./internal/daemon ./internal/cli`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`"
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"Prefer slicer's check_command over the registry's\"."
+    }
+  ],
+  "notes": []
+}
