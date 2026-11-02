@@ -2934,3 +2934,7 @@
 {"when": "2026-11-02T16:15:01Z", "item": "S242", "action": "add", "from": "", "to": "open", "note": "Daemon visibility: ork daemon status, a daemon line in doctor, and a stale rule that ignores commits with no code change"}
 {"when": "2026-11-02T16:15:08Z", "item": "S240", "action": "set", "from": "", "to": "", "note": "depends_on -→S222"}
 {"when": "2026-11-02T16:15:13Z", "item": "S233", "action": "set", "from": "", "to": "", "note": "depends_on -→S240,S241,S242"}
+{"when": "2026-11-02T17:33:55Z", "item": "relay-roles.r21", "action": "relay-roles", "from": "", "to": "orchestrator", "note": "add"}
+{"when": "2026-11-02T17:33:55Z", "item": "relay-roles.r22", "action": "relay-roles", "from": "", "to": "reviewer", "note": "add"}
+{"when": "2026-11-02T17:33:55Z", "item": "relay-roles.r23", "action": "relay-roles", "from": "", "to": "gate", "note": "add"}
+{"when": "2026-11-02T17:33:55Z", "item": "relay-roles.r24", "action": "relay-roles", "from": "", "to": "reviewer", "note": "add"}

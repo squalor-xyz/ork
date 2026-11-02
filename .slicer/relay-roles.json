@@ -302,6 +302,78 @@
       "model": "sonnet",
       "reasoning": "high",
       "note": "Spec check row (sonnet high, owner 2026-10-29)"
+    },
+    {
+      "id": "r21",
+      "role": "orchestrator",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Grok",
+      "vendor": "xAI",
+      "model": "grok-4.6",
+      "reasoning": "medium",
+      "note": "Grok orchestrator alternative (owner 2026-11-02, grok-4.6 medium); ork cannot run Grok until S72 lands, so it is used by hand in a session until then"
+    },
+    {
+      "id": "r22",
+      "role": "reviewer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Grok",
+      "vendor": "xAI",
+      "model": "grok-4.6",
+      "reasoning": "medium",
+      "note": "Grok reviewer alternative (owner 2026-11-02); the owner allows this cross-vendor review for a row picked on purpose (rule u2); ork cannot run Grok until S72 lands"
+    },
+    {
+      "id": "r23",
+      "role": "gate",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Grok",
+      "vendor": "xAI",
+      "model": "grok-4.6",
+      "reasoning": "medium",
+      "note": "Grok gate alternative (owner 2026-11-02); cross-vendor gate allowed when picked on purpose (rule u2); ork cannot run Grok until S72 lands"
+    },
+    {
+      "id": "r24",
+      "role": "reviewer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Grok",
+      "vendor": "xAI",
+      "model": "grok-4.6",
+      "reasoning": "medium",
+      "note": "Spec check row on Grok (owner 2026-11-02): one read-only pass over every ticked slice before a wave (rule u11); an alternative to r16"
     }
   ],
   "rules": [
@@ -350,6 +422,6 @@
       "text": "The spec check before a wave runs the Spec check row (r16): one read-only pass over every ticked slice, answered in one sitting. The matrix has no spec-check or ui role (slicer's ledger records them as roles spec-check and ui, but a row is a reviewer row), so r14 and r16 are reviewer rows with notes; they are never a fallback of the reviewer or the gate, and the reviewer's rule u1 does not apply to the spec check because it reads specs and writes no code."
     }
   ],
-  "next_row": 21,
+  "next_row": 25,
   "next_rule": 12
 }
