@@ -2986,3 +2986,6 @@
 {"when": "2026-11-03T12:32:45Z", "item": "S257", "action": "add", "from": "", "to": "open", "note": "ork wait: block until a run changes state"}
 {"when": "2026-11-03T12:33:58Z", "item": "S72", "action": "note", "from": "", "to": "", "note": "Owner answers to Q7 (interactive, 2026-11-03): (1) Adapter k", "by": "Jon R"}
 {"when": "2026-11-03T12:36:40Z", "item": "S258", "action": "add", "from": "", "to": "open", "note": "Spec check row: ork picks it by a setting, offers the fix when it is missing, and keeps it out of the lineups"}
+{"when": "2026-11-03T12:44:25Z", "item": "S259", "action": "add", "from": "", "to": "open", "note": "S235 later notes: guard the watchdog against a sleep detector never started, and test that the daemon starts it"}
+{"when": "2026-11-03T12:44:25Z", "item": "S260", "action": "add", "from": "", "to": "open", "note": "Launch prompts: drop well-specified and split, take them from the spec check and a default"}
+{"when": "2026-11-03T12:44:26Z", "item": "S261", "action": "add", "from": "", "to": "open", "note": "Shared role matrix: apply ork's matrix to one project or to every registered project"}
