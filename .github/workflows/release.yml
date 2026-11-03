@@ -16,6 +16,8 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version-file: go.mod
@@ -42,9 +44,12 @@ jobs:
             arch: amd64
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version-file: go.mod
+          cache: false
       - name: Build and archive
         shell: bash
         env:
@@ -98,15 +103,20 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release upload "$TAG" dist/*.tar.gz dist/SHA256SUMS --clobber
           else
-            : > release-notes.md
             git fetch --force --no-tags origin "+refs/tags/$TAG:refs/tags/$TAG"
-            if [[ "$(git cat-file -t "refs/tags/$TAG")" == tag ]]; then
-              git for-each-ref --format='%(contents)' "refs/tags/$TAG" > release-notes.md
-              printf '\n' >> release-notes.md
-            fi
-            awk -v tag="$TAG" '
+            if ! awk -v tag="$TAG" '
               /^## / { if (found) exit; if ($2 == tag) { found=1; next } }
               found { print }
-            ' CHANGELOG.md >> release-notes.md
+              END { exit !found }
+            ' CHANGELOG.md > changelog-section.md; then
+              echo "::error::CHANGELOG.md has no section headed '## $TAG'"
+              exit 1
+            fi
+            if [[ "$(git cat-file -t "refs/tags/$TAG")" == tag ]]; then
+              msg=$(git for-each-ref --format='%(contents)' "refs/tags/$TAG")
+              sig=$(git for-each-ref --format='%(contents:signature)' "refs/tags/$TAG")
+              printf '%s\n\n' "${msg%"$sig"}" > release-notes.md
+            fi
+            cat changelog-section.md >> release-notes.md
             gh release create "$TAG" dist/*.tar.gz dist/SHA256SUMS --verify-tag --title "$TAG" --notes-file release-notes.md
           fi
