@@ -13239,7 +13239,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "39b6c132-0ca9-462d-a1e0-dfb067b0829f",
+          "kind": "",
+          "text": "**2026-11-03** — Owner answers 2026-11-03 (interactive): Q1 ork commits tracking edits on main before the merge-in (b), only when the slice also changes the file, plus the early one-line stop for any other dirty file the slice touches. All remaining recommendations accepted as written: Q2 tracking files are .slicer/ except config.json and relay-roles.json; Q3 act only when the slice also changes the file; Q4 message 'Tracking edits on main before landing ID'; Q5 commit a new edit made during the re-check and go back to the merge-in once, then pause; Q6 silent commit, visible in git log and writes[]; Q7 two [HUMAN CHECK] [AFTER LAND] lines. Group B tests are rewritten to these answers. Needs adj key landing.tracking-commit and the boundaries.md and state.md changes; the owner decides the key in a later pass. Size is now M.",
+          "created_at": "2026-11-03T13:28:28Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -13295,7 +13310,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d78c20cf-d10b-4de5-bf6f-268b0eeacdb7",
+          "kind": "",
+          "text": "**2026-11-03** — Owner answers 2026-11-03 (interactive): Q1 final message is the report for a read-only role (brief says so, no code fence), read-only mode stays; Q5 accepted (ignore fence-only lines inside Owner needed). Q2 and Q3 accepted: every resumed round gets the fixed Resumed session section (re-run git status and git diff, plus ork's git status --porcelain), and ork retry RUN [TEXT] delivers TEXT as an owner note. Q4 keep adj 26 (resume else fresh); no fresh-session change. All remaining recommendations in Open owner questions accepted as written. Land after S237 (same Retry lines) or rebase on it. adj keys left for the owner's later pass.",
+          "created_at": "2026-11-03T13:28:28Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -13463,7 +13493,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "c3aa131b-9d14-47c6-b548-2b7756af55ba",
+          "kind": "",
+          "text": "**2026-11-03** — Owner answers 2026-11-03 (interactive): Q1 and Q2 the Running entry shows Overview (Running) and Questions only; Questions lists every project as on Needs you; no keys to hidden tabs; the combined Waves and Roadmap code is deleted (Q2b). This reverses adj 121 ui.view-list for Running and the S140 owner decision of 2026-10-27. Q3 and Q5 as written: jump to Running with the first launched run selected when every item is accepted; stay on Waves on any item error, after leaving Waves, or while an item is held for spec questions; also after a single-item Roadmap launch; never after retry, answer, approve or fix. All remaining recommendations accepted (Q4 no new key, Q6 no banner, Q7 adj records ui.running-tabs and ui.launch-jump with --ref S262, left for the owner's later pass). Do not share a wave with S264.",
+          "created_at": "2026-11-03T13:28:28Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -13519,7 +13564,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7679b5bb-122d-4b36-b2d6-368cde60bdf9",
+          "kind": "",
+          "text": "**2026-11-03** — Owner answers 2026-11-03 (interactive): Q1 an elapsed clock with the item count, TUI only (e.g. 'spec check: 2 items, 1m12s; wait for the confirmation'), no per-item count. All remaining recommendations accepted as written: Q2 the same two places as today; Q3 l stays refused with the wait text; Q4 fix both ends (engine drops fence lines and treats text starting none as none; Waves list shows one line plus (+N more lines)); Q5 one CLI line before the call. S262 and S264 edit the same waves.go and launch.go: do not share a wave.",
+          "created_at": "2026-11-03T13:28:28Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -13547,7 +13607,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "9992370a-e872-4f63-9adc-a0a149761d8b",
+          "kind": "",
+          "text": "**2026-11-03** — Owner answers 2026-11-03 (interactive): Q2 --allow adds to the role's list (starting from the default when the role has no entry) and --replace-allow replaces; this reverses the S174 decision for --allow. All remaining recommendations accepted as written: Q1 --preset go|python writes the expanded list (narrow python preset); Q3 warnings in a new plan field and as doctor findings, always; Q4 no check command is a warning only; Q5 projects set during unfinished runs allows only cap, budgets and patterns, with a clearer refusal for the rest; Q6 v1.1, size M, one slice. adj keys left for the owner's later pass.",
+          "created_at": "2026-11-03T13:28:28Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
