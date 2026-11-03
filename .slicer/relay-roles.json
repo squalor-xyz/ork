@@ -20,6 +20,42 @@
       "note": "per sliver"
     },
     {
+      "id": "r27",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": true
+      },
+      "agent": "Codex",
+      "vendor": "OpenAI",
+      "model": "gpt-6.1-terra",
+      "reasoning": "medium",
+      "note": "terra medium per sliver: Haiku-class Codex model (owner 2026-11-03)"
+    },
+    {
+      "id": "r28",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": true
+      },
+      "agent": "Codex",
+      "vendor": "OpenAI",
+      "model": "gpt-6.1-terra",
+      "reasoning": "high",
+      "note": "terra high per sliver: Haiku-class Codex model (owner 2026-11-03)"
+    },
+    {
       "id": "r4",
       "role": "implementer",
       "when": {
@@ -36,6 +72,42 @@
       "model": "haiku",
       "reasoning": "xhigh",
       "note": "per part of a split slice"
+    },
+    {
+      "id": "r29",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": true,
+        "sliver": null
+      },
+      "agent": "Codex",
+      "vendor": "OpenAI",
+      "model": "gpt-6.1-terra",
+      "reasoning": "medium",
+      "note": "terra medium per part of a split slice (owner 2026-11-03)"
+    },
+    {
+      "id": "r30",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": true,
+        "sliver": null
+      },
+      "agent": "Codex",
+      "vendor": "OpenAI",
+      "model": "gpt-6.1-terra",
+      "reasoning": "high",
+      "note": "terra high per part of a split slice (owner 2026-11-03)"
     },
     {
       "id": "r15",
@@ -94,6 +166,44 @@
       "model": "gpt-6.1-sol",
       "reasoning": "medium",
       "note": "default implementer for a whole slice (owner lineup 2026-10-23: medium); Codex sandbox cannot bind Unix sockets, so rerun socket-test packages outside it"
+    },
+    {
+      "id": "r25",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [
+          3
+        ],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": false,
+        "sliver": null
+      },
+      "agent": "Codex",
+      "vendor": "OpenAI",
+      "model": "gpt-6.1-terra",
+      "reasoning": "high",
+      "note": "terra high, effort 3 slice: Sonnet-class Codex model (owner 2026-11-03), after sol"
+    },
+    {
+      "id": "r26",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": false,
+        "sliver": null
+      },
+      "agent": "Codex",
+      "vendor": "OpenAI",
+      "model": "gpt-6.1-terra",
+      "reasoning": "medium",
+      "note": "terra medium, whole slice: Sonnet-class Codex model (owner 2026-11-03), after sol"
     },
     {
       "id": "r3",
@@ -337,7 +447,7 @@
       "vendor": "xAI",
       "model": "latest",
       "reasoning": "medium",
-      "note": "Grok reviewer alternative (owner 2026-11-02); the owner allows this cross-vendor review for a row picked on purpose (rule u2); ork cannot run Grok until S72 lands"
+      "note": "Grok reviewer alternative (owner 2026-11-02); cross-vendor review is allowed by review.cross-vendor (#25); ork cannot run Grok until S72 lands"
     },
     {
       "id": "r23",
@@ -355,7 +465,7 @@
       "vendor": "xAI",
       "model": "latest",
       "reasoning": "medium",
-      "note": "Grok gate alternative (owner 2026-11-02); cross-vendor gate allowed when picked on purpose (rule u2); ork cannot run Grok until S72 lands"
+      "note": "Grok gate alternative (owner 2026-11-02); cross-vendor gate is allowed by review.cross-vendor (#25); ork cannot run Grok until S72 lands"
     },
     {
       "id": "r24",
@@ -380,10 +490,6 @@
     {
       "id": "u1",
       "text": "A reviewer never wrote code in the slice it reviews."
-    },
-    {
-      "id": "u2",
-      "text": "No cross-vendor reviewer unless the owner asks."
     },
     {
       "id": "u3",
@@ -422,6 +528,6 @@
       "text": "The spec check before a wave runs the Spec check row (r16): one read-only pass over every ticked slice, answered in one sitting. The matrix has no spec-check or ui role (slicer's ledger records them as roles spec-check and ui, but a row is a reviewer row), so r14 and r16 are reviewer rows with notes; they are never a fallback of the reviewer or the gate, and the reviewer's rule u1 does not apply to the spec check because it reads specs and writes no code."
     }
   ],
-  "next_row": 25,
+  "next_row": 31,
   "next_rule": 12
 }

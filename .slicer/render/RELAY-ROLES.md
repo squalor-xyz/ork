@@ -7,10 +7,16 @@
 | ID | Role | When | Agent | Vendor | Model | Reasoning | Note |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | r8 | Implementer | sliver | Claude Code | Claude | haiku | xhigh | per sliver |
+| r27 | Implementer | sliver | Codex | OpenAI | gpt-6.1-terra | medium | terra medium per sliver: Haiku-class Codex model (owner 2026-11-03) |
+| r28 | Implementer | sliver | Codex | OpenAI | gpt-6.1-terra | high | terra high per sliver: Haiku-class Codex model (owner 2026-11-03) |
 | r4 | Implementer | split part | Claude Code | Claude | haiku | xhigh | per part of a split slice |
+| r29 | Implementer | split part | Codex | OpenAI | gpt-6.1-terra | medium | terra medium per part of a split slice (owner 2026-11-03) |
+| r30 | Implementer | split part | Codex | OpenAI | gpt-6.1-terra | high | terra high per part of a split slice (owner 2026-11-03) |
 | r15 | Implementer | whole slice, not a sliver, size L | Codex | OpenAI | gpt-6.1-sol | high | owner lineup 2026-10-23: Codex implementer at high on a size L slice |
 | r12 | Implementer | whole slice, effort 3 | Codex | OpenAI | gpt-6.1-sol | high | effort 3 slice: Codex at high (owner 2026-10-29) |
 | r9 | Implementer | whole slice | Codex | OpenAI | gpt-6.1-sol | medium | default implementer for a whole slice (owner lineup 2026-10-23: medium); Codex sandbox cannot bind Unix sockets, so rerun socket-test packages outside it |
+| r25 | Implementer | whole slice, effort 3 | Codex | OpenAI | gpt-6.1-terra | high | terra high, effort 3 slice: Sonnet-class Codex model (owner 2026-11-03), after sol |
+| r26 | Implementer | whole slice | Codex | OpenAI | gpt-6.1-terra | medium | terra medium, whole slice: Sonnet-class Codex model (owner 2026-11-03), after sol |
 | r3 | Implementer | whole slice | Claude Code | Claude | sonnet | high | Claude stand-in for a whole slice at sonnet high: used when Codex is out of credits or the owner picks Claude (owner 2026-10-29) |
 | r17 | Reviewer | effort 3 | Claude Code | Claude | opus | high | reviewer at high for a effort 3 slice (owner 2026-10-29) |
 | r19 | Reviewer | size L | Claude Code | Claude | opus | high | reviewer at high for a size L slice (owner 2026-10-29) |
@@ -23,14 +29,13 @@
 | r10 | Orchestrator | every slice | Claude Code | Claude | sonnet | high | the outer session the owner talks to orchestrates; ork's engine spawns roles itself (owner 2026-10-29) |
 | r16 | Reviewer | every slice | Claude Code | Claude | sonnet | high | Spec check row (sonnet high, owner 2026-10-29) |
 | r21 | Orchestrator | every slice | Grok | xAI | latest | medium | Grok orchestrator alternative (owner 2026-11-02). Model 'latest' = do not pin a version: use the grok CLI default (grok-4.7 on 2026-11-02); owner 2026-11-02: default to the latest unless asked. ork cannot run Grok until S72 lands, so it is used by hand until then |
-| r22 | Reviewer | every slice | Grok | xAI | latest | medium | Grok reviewer alternative (owner 2026-11-02); the owner allows this cross-vendor review for a row picked on purpose (rule u2); ork cannot run Grok until S72 lands |
-| r23 | Gate | every slice | Grok | xAI | latest | medium | Grok gate alternative (owner 2026-11-02); cross-vendor gate allowed when picked on purpose (rule u2); ork cannot run Grok until S72 lands |
+| r22 | Reviewer | every slice | Grok | xAI | latest | medium | Grok reviewer alternative (owner 2026-11-02); cross-vendor review is allowed by review.cross-vendor (#25); ork cannot run Grok until S72 lands |
+| r23 | Gate | every slice | Grok | xAI | latest | medium | Grok gate alternative (owner 2026-11-02); cross-vendor gate is allowed by review.cross-vendor (#25); ork cannot run Grok until S72 lands |
 | r24 | Reviewer | every slice | Grok | xAI | latest | medium | Spec check row on Grok (owner 2026-11-02): one read-only pass over every ticked slice before a wave (rule u11); an alternative to r16 |
 
 ## Rules
 
 - u1: A reviewer never wrote code in the slice it reviews.
-- u2: No cross-vendor reviewer unless the owner asks.
 - u3: Roles on the orchestrator's own agent run as subagents; a role on another agent runs headless in the slice worktree with the same brief.
 - u4: "well specified" means the slice names its files, failing tests, implementation steps and checks, and needs no open owner decision.
 - u5: Split a slice only into parts with disjoint files and their own tests; a slice too big for one implementer is two slices or a slivered slice.

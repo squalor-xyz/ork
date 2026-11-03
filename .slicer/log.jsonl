@@ -2989,3 +2989,18 @@
 {"when": "2026-11-03T12:44:25Z", "item": "S259", "action": "add", "from": "", "to": "open", "note": "S235 later notes: guard the watchdog against a sleep detector never started, and test that the daemon starts it"}
 {"when": "2026-11-03T12:44:25Z", "item": "S260", "action": "add", "from": "", "to": "open", "note": "Launch prompts: drop well-specified and split, take them from the spec check and a default"}
 {"when": "2026-11-03T12:44:26Z", "item": "S261", "action": "add", "from": "", "to": "open", "note": "Shared role matrix: apply ork's matrix to one project or to every registered project"}
+{"when": "2026-11-03T12:45:02Z", "item": "relay-roles.u2", "action": "relay-roles", "from": "", "to": "", "note": "rule-remove"}
+{"when": "2026-11-03T12:45:03Z", "item": "relay-roles.r22", "action": "relay-roles", "from": "", "to": "note", "note": "set"}
+{"when": "2026-11-03T12:45:03Z", "item": "relay-roles.r23", "action": "relay-roles", "from": "", "to": "note", "note": "set"}
+{"when": "2026-11-03T12:45:04Z", "item": "relay-roles.r25", "action": "relay-roles", "from": "", "to": "implementer", "note": "add"}
+{"when": "2026-11-03T12:45:05Z", "item": "relay-roles.r26", "action": "relay-roles", "from": "", "to": "implementer", "note": "add"}
+{"when": "2026-11-03T12:45:05Z", "item": "relay-roles.r27", "action": "relay-roles", "from": "", "to": "implementer", "note": "add"}
+{"when": "2026-11-03T12:45:06Z", "item": "relay-roles.r28", "action": "relay-roles", "from": "", "to": "implementer", "note": "add"}
+{"when": "2026-11-03T12:45:06Z", "item": "relay-roles.r29", "action": "relay-roles", "from": "", "to": "implementer", "note": "add"}
+{"when": "2026-11-03T12:45:07Z", "item": "relay-roles.r30", "action": "relay-roles", "from": "", "to": "implementer", "note": "add"}
+{"when": "2026-11-03T12:45:11Z", "item": "relay-roles.r25", "action": "relay-roles", "from": "21", "to": "6", "note": "move"}
+{"when": "2026-11-03T12:45:11Z", "item": "relay-roles.r26", "action": "relay-roles", "from": "22", "to": "7", "note": "move"}
+{"when": "2026-11-03T12:45:12Z", "item": "relay-roles.r27", "action": "relay-roles", "from": "23", "to": "2", "note": "move"}
+{"when": "2026-11-03T12:45:12Z", "item": "relay-roles.r28", "action": "relay-roles", "from": "24", "to": "3", "note": "move"}
+{"when": "2026-11-03T12:45:12Z", "item": "relay-roles.r29", "action": "relay-roles", "from": "25", "to": "5", "note": "move"}
+{"when": "2026-11-03T12:45:13Z", "item": "relay-roles.r30", "action": "relay-roles", "from": "26", "to": "6", "note": "move"}
