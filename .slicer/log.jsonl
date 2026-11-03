@@ -3062,3 +3062,5 @@
 {"when": "2026-11-03T15:38:54Z", "item": "relay-roles.r26", "action": "relay-roles", "from": "", "to": "reasoning,note", "note": "set"}
 {"when": "2026-11-03T15:38:54Z", "item": "relay-roles.r32", "action": "relay-roles", "from": "", "to": "implementer", "note": "add"}
 {"when": "2026-11-03T15:39:00Z", "item": "relay-roles.r32", "action": "relay-roles", "from": "27", "to": "10", "note": "move"}
+{"when": "2026-11-03T15:51:36Z", "item": "S272", "action": "add", "from": "", "to": "open", "note": "Run pane: show vendor, model and effort on every role row, queued ones too"}
+{"when": "2026-11-03T15:51:39Z", "item": "S272", "action": "set", "from": "", "to": "", "note": "importance 2→3; urgency 2→3; effort -→1"}

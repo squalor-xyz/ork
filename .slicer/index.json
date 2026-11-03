@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 272,
+  "next_id": 273,
   "preamble": "",
   "passes": [
     {
@@ -13892,6 +13892,34 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S272",
+      "title": "Run pane: show vendor, model and effort on every role row, queued ones too",
+      "short_title": "Run pane: show vendor, model and effort on every role row, queued ones too",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-03 (screenshot of the Running pane for s443): the orchestrator row shows no model or effort, and the queued reviewer and gate rows show only \"queued\". Fact: the orchestrator step is ork's own (agent ork, no vendor or model; docs/design.md:528), so it has none to show; the row should say so (\"ork engine\") instead of staying blank. The queued roles already have a planned vendor, model and effort in the run plan; show it on the row so the owner sees what will run before it starts. Open: whether a failed-over row also shows the row that was skipped.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
         "effort": 1,
         "attempts": 0
       }
