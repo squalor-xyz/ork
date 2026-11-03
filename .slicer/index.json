@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 271,
+  "next_id": 272,
   "preamble": "",
   "passes": [
     {
@@ -13779,6 +13779,34 @@
         "reason": "",
         "importance": 1,
         "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S271",
+      "title": "Claude roles get TMPDIR set to their temp dir, so they stop prefixing commands with env TMPDIR",
+      "short_title": "Set TMPDIR for Claude roles",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner asked 2026-11-03 whether the slicer wave's denied commands need fixing. ork makes each role a temp dir (internal/engine/round.go:236-239) and the implementer prompt says to put scratch files there, never in /tmp (internal/roles/prompts/implementer.md:14-17), but it does not set TMPDIR in the role's process env (S87 covered GOCACHE and the temp dir for Codex only). So Claude roles work around it with 'env TMPDIR=DIR python3 -m unittest ...' and 'mkdir -p DIR', which no allowlist pattern matches (the python3 -m unittest* pattern does not match an env prefix), and are denied (s443, s370 on 2026-11-03: denied 'python3 -V', 'python3.12', 'mkdir', 'env TMPDIR=...'). The suite runs but they burn turns and fall back to the system temp dir, against the prompt. Proposed: ork sets TMPDIR to the role's temp dir for every vendor role (Claude and Codex) and the prompt says TMPDIR already points there, so no prefix or mkdir is needed. Slice needs a check that the dir exists before the role starts (round.go already makes it) and that Claude's own env settings do not drop TMPDIR. Not covered by S265 (allowlist presets and --allow). Open owner question: also allow 'python3 -V' style version probes in the python preset (S265), or leave them denied.",
+        "discovered_from": "S87",
+        "parent": "",
+        "cites": [],
+        "key": "claude-tmpdir-env",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
         "effort": 1,
         "attempts": 0
       }
