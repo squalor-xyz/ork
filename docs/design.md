@@ -1275,7 +1275,14 @@ overridden role to its full chain of `{vendor,model,effort}` entries
 (`lineup.launch-edit`). Start also accepts `expected`, the plan the owner
 confirmed, including lineup and merged budgets. `run.approve`, `run.stop`
 and `run.answer` take
-`{run,text?}`. Plan returns `{project,item,worktree,branch,check_command,
+`{run,text?}`. *Proposed (S237):* `run.answer` and `run.retry` also take an
+optional `no_wait` boolean, which only the CLI sends. With it, the reply
+returns the run record once the engine has applied the action and the run has
+left its pause, and the job goes on under the daemon; a failure of the job
+shows in `ork status` as the run's error. A refusal or a failure that comes
+first is the reply. Without it (the TUI), the reply waits until the run rests.
+A second owner action is refused as busy until the job ends.
+Plan returns `{project,item,worktree,branch,check_command,
 lineup,budgets,permissions,note?}`; the project contains only its name and path.
 The proposed optional `note` (S135) explains a failed `relay-roles show` read.
 The plan then treats UI and spec-check rules as absent; a failed recommendation
@@ -1317,7 +1324,11 @@ write. The CLI prints the notice or new id; `--json` prints `{message}` or
 or `{"cancelled":true}` in JSON mode, and exits 0. ork never rejects,
 supersedes or withdraws a record. TUI answer controls are S185.
 
-`run.retry` takes `{run}` and returns the run record (adj #101).
+`run.retry` takes `{run}` and returns the run record (adj #101). *Proposed
+(S237):* it also takes `no_wait` (see the wire fields). `run.answer` and
+`run.retry` with a slicer relay run id, not an ork run id, answer `not_found`
+with `no run ID; that is the slicer run of ork run ORKID`; the id is not an
+alias.
 *Proposed (S118):* `run.fix` takes `{run,text}` and returns the run record
 once the fix round, the checks and the gate have ended and the run rests
 again; `run.check` takes `{run,check,state}` (the one-based human check;

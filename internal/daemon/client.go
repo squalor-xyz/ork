@@ -224,7 +224,8 @@ func (c *Client) EndLedger(ctx context.Context, project, run string) error {
 	return c.Call(ctx, MethodRunEndLedger, RunAction{Project: project, Run: run}, nil)
 }
 
-// Retry retries a paused run after the caller has confirmed it.
+// Retry retries a paused run after the caller has confirmed it. It sends no
+// no_wait, so the call waits until the run rests (S237).
 func (c *Client) Retry(ctx context.Context, run string) error {
 	return c.Call(ctx, MethodRunRetry, RunAction{Run: run}, nil)
 }
@@ -340,7 +341,8 @@ func (c *Client) UnavailableProjects(ctx context.Context) ([]source.Snapshot, er
 	return groups, nil
 }
 
-// AnswerAction passes the TUI's optional adj filing request and returns its notice.
+// AnswerAction passes the TUI's optional adj filing request and returns its
+// notice. The TUI sends no no_wait, so the call waits until the run rests (S237).
 func (c *Client) AnswerAction(ctx context.Context, action RunAction) (string, error) {
 	var reply RunReply
 	err := c.Call(ctx, MethodRunAnswer, action, &reply)

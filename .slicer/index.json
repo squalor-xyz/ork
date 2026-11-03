@@ -12724,10 +12724,39 @@
       "id": "S237",
       "title": "ork answer and ork retry return once the run has resumed",
       "short_title": "answer and retry return at once",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "2ab16409-1af8-46f1-8aa5-d7f6a04e3389",
+          "kind": "",
+          "text": "**2026-11-03** — Human checks at approval (S237):\n- later: [AFTER LAND] With a real run paused on a question, `ork answer RUN \"text\"` returns within a second and prints the new state; `ork status` then shows the role running; `ork answer RUN \"again\"` is refused as busy.\n- later: In the TUI, answer a question and retry a lost run: the pane and the footer behave as before (the call still waits).",
+          "created_at": "2026-11-03T15:41:19Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "0230b087-4f09-4184-baf0-1a6e01a9a3a8",
+          "kind": "",
+          "text": "**2026-11-03** — Verified outcome: ork answer and ork retry now return once the run has resumed and print its new state (r1 implement); --wait waits until the run rests. The wire gained an optional no_wait boolean on run.answer and run.retry that only the CLI sends; the TUI path still waits. A slicer relay run id passed as a run now names the ork run in the not-found error. Full suite green under -race, go vet, gofmt and slicer check clean; mutation checks went red in the intended tests. Human checks (real run, TUI) left for the owner.",
+          "created_at": "2026-11-03T15:41:24Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -12745,7 +12774,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

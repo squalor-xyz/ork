@@ -455,6 +455,7 @@ func (e *Engine) Answer(ctx context.Context, text string) error {
 		e.d.Slicer.RelayAnswer(ctx, e.wr, rec.Worktree, rec.RelayRun, rec.Pending.LedgerQuestion, slicercli.RelayAnswerSpec{Text: text})
 	}
 	e.orchestratorPhase(ctx, "start", "")
+	applied(ctx)()
 	return e.advance(ctx)
 }
 
@@ -481,7 +482,7 @@ func (e *Engine) Retry(ctx context.Context) error {
 		// its context (report shape or lost process section; a question or
 		// shape pause also resumes the session) after the answer (S159).
 		defer e.ownerWait(ctx)
-		return e.run.Update(func(r *runrec.Record) {
+		err := e.run.Update(func(r *runrec.Record) {
 			q := r.QueuedQuestions[0]
 			r.QueuedQuestions = r.QueuedQuestions[1:]
 			retry := *r.Pending
@@ -489,11 +490,16 @@ func (e *Engine) Retry(ctx context.Context) error {
 			r.Pending = &q
 			r.Reason = q.Reason
 		})
+		if err == nil {
+			applied(ctx)()
+		}
+		return err
 	}
 	if err := e.run.Update(func(r *runrec.Record) { r.State = r.Pending.State; r.Reason = "" }); err != nil {
 		return err
 	}
 	e.orchestratorPhase(ctx, "start", "")
+	applied(ctx)()
 	return e.advance(ctx)
 }
 

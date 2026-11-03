@@ -80,6 +80,24 @@ func TestRetryAsksTheQueuedQuestionFirst(t *testing.T) {
 	}
 }
 
+// The retry path that returns without advance still reports the action as
+// applied, once, when it returns.
+func TestRetryOfAQueuedQuestionCallsTheHookOnce(t *testing.T) {
+	_, e, _ := retryWithQueuedQuestion(t)
+	var calls int
+	var state string
+	ctx := WithApplied(context.Background(), func() { calls++; state = e.Snapshot().State })
+	if err := e.Retry(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if calls != 1 {
+		t.Errorf("hook called %d times, want 1", calls)
+	}
+	if state != runrec.StatePaused {
+		t.Errorf("state at the hook %q, want paused (the question)", state)
+	}
+}
+
 // The retry that follows the answer still carries the first pause's context:
 // the reviewer's brief has its report shape section and resumes its session,
 // and the UI pass gets the owner's answer.

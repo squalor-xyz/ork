@@ -5,7 +5,9 @@ package engine
 import (
 	"context"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -239,5 +241,179 @@ func TestFreeTextOwnerNeededStillPausesTheRun(t *testing.T) {
 	rec := requireState(t, h.start(), runrec.StatePaused)
 	if rec.Pending.Kind != runrec.PendingQuestion || rec.Pending.Question != question || rec.Pending.Ask != nil {
 		t.Fatalf("free text: %+v", rec.Pending)
+	}
+}
+
+// gatedRunner makes the harness runner block each round until release closes.
+// returned counts the rounds that came back.
+type gatedRunner struct {
+	release  chan struct{}
+	returned atomic.Int32
+}
+
+// gate lets first answer a round (a result with an exit class) or pass; every
+// round first leaves to the default, and blocks until the test releases it.
+func gate(h *harness, first func(req Request, n int) (Result, error)) *gatedRunner {
+	g := &gatedRunner{release: make(chan struct{})}
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if first != nil {
+			if res, err := first(req, n); res.Exit != "" || err != nil {
+				return res, err
+			}
+		}
+		<-g.release
+		g.returned.Add(1)
+		return Result{}, nil
+	}
+	return g
+}
+
+// hookProbe is an applied hook that records what the run looked like when it
+// fired, and how often it fired.
+type hookProbe struct {
+	calls    atomic.Int32
+	fired    chan struct{}
+	snapshot runrec.Record
+	returned int32
+	g        *gatedRunner
+	e        *Engine
+}
+
+func newProbe(e *Engine, g *gatedRunner) *hookProbe {
+	return &hookProbe{fired: make(chan struct{}, 4), g: g, e: e}
+}
+
+func (p *hookProbe) hook() {
+	p.calls.Add(1)
+	p.snapshot = p.e.Snapshot()
+	if p.g != nil {
+		p.returned = p.g.returned.Load()
+	}
+	p.fired <- struct{}{}
+}
+
+func waitFired(t *testing.T, p *hookProbe) {
+	t.Helper()
+	select {
+	case <-p.fired:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the applied hook was not called")
+	}
+}
+
+func TestAnswerCallsTheAppliedHookBeforeTheRoleRuns(t *testing.T) {
+	h := newHarness(t)
+	g := gate(h, func(req Request, n int) (Result, error) {
+		if n == 0 {
+			return Result{Exit: ExitOK, Session: "sess-implementer", Report: withQuestion(implReport)}, nil
+		}
+		return Result{}, nil
+	})
+	e := h.start()
+	requireState(t, e, runrec.StatePaused)
+	p := newProbe(e, g)
+	done := make(chan error, 1)
+	go func() { done <- e.Answer(WithApplied(context.Background(), p.hook), "8") }()
+	waitFired(t, p)
+	if p.snapshot.State != runrec.StateImplement {
+		t.Errorf("state at the hook %q, want implement", p.snapshot.State)
+	}
+	if len(p.snapshot.Questions) != 1 || p.snapshot.Questions[0].Answer != "8" {
+		t.Errorf("answer not recorded at the hook: %+v", p.snapshot.Questions)
+	}
+	if p.returned != 0 {
+		t.Errorf("%d rounds had returned when the hook fired", p.returned)
+	}
+	select {
+	case err := <-done:
+		t.Fatalf("Answer returned before the role was released: %v", err)
+	case <-time.After(50 * time.Millisecond):
+	}
+	close(g.release)
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateAwaitingApproval)
+	if got := p.calls.Load(); got != 1 {
+		t.Errorf("hook called %d times, want 1", got)
+	}
+}
+
+func TestAppliedHookIsNotCalledOnARefusal(t *testing.T) {
+	var calls atomic.Int32
+	ctx := WithApplied(context.Background(), func() { calls.Add(1) })
+
+	h := newHarness(t)
+	e := h.start() // awaiting approval: no question
+	if err := e.Answer(ctx, "x"); !IsRefusal(err) {
+		t.Errorf("answer with no question: %v", err)
+	}
+	if err := e.Retry(ctx); !IsRefusal(err) {
+		t.Errorf("retry of a run that is not paused: %v", err)
+	}
+
+	h = newHarness(t)
+	h.runner.script = func(req Request, n int) (Result, error) {
+		return Result{Exit: ExitOK, Session: "s", Report: withQuestion(implReport)}, nil
+	}
+	e = h.start()
+	requireState(t, e, runrec.StatePaused)
+	if err := e.Answer(ctx, "   "); !IsRefusal(err) {
+		t.Errorf("empty answer: %v", err)
+	}
+	if err := e.Retry(ctx); !IsRefusal(err) {
+		t.Errorf("retry of a question pause: %v", err)
+	}
+	if got := calls.Load(); got != 0 {
+		t.Errorf("hook called %d times on refusals", got)
+	}
+}
+
+func TestAnswerWithoutAHookBehavesAsBefore(t *testing.T) {
+	h := newHarness(t)
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if n == 0 {
+			return Result{Exit: ExitOK, Session: "s", Report: withQuestion(implReport)}, nil
+		}
+		return Result{}, nil
+	}
+	e := h.start()
+	if err := e.Answer(context.Background(), "8"); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateAwaitingApproval)
+}
+
+func TestRetryCallsTheAppliedHookBeforeTheRoleRuns(t *testing.T) {
+	h := newHarness(t)
+	h.seed("run-a", runrec.StateImplement, runningRole(RoleImplementer, 111, "2"))
+	engines := h.recover()
+	e := engines["run-a"]
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingLost {
+		t.Fatalf("pending %+v, want a lost pause", rec.Pending)
+	}
+	g := gate(h, nil)
+	p := newProbe(e, g)
+	done := make(chan error, 1)
+	go func() { done <- e.Retry(WithApplied(context.Background(), p.hook)) }()
+	waitFired(t, p)
+	if p.snapshot.State != runrec.StateImplement {
+		t.Errorf("state at the hook %q, want implement", p.snapshot.State)
+	}
+	if p.returned != 0 {
+		t.Errorf("%d rounds had returned when the hook fired", p.returned)
+	}
+	select {
+	case err := <-done:
+		t.Fatalf("Retry returned before the role was released: %v", err)
+	case <-time.After(50 * time.Millisecond):
+	}
+	close(g.release)
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	if got := p.calls.Load(); got != 1 {
+		t.Errorf("hook called %d times, want 1", got)
 	}
 }

@@ -19,6 +19,14 @@ import (
 
 func adjAnswerRun(t *testing.T, check string, decideError bool, keys ...string) (*Daemon, *runrec.Store, string) {
 	t.Helper()
+	return adjAnswerRunGated(t, nil, check, decideError, keys...)
+}
+
+// adjAnswerRunGated is adjAnswerRun with a gate that holds the role round
+// that follows the answer (the brief then carries the answer) until the test
+// opens it.
+func adjAnswerRunGated(t *testing.T, gate *roleGate, check string, decideError bool, keys ...string) (*Daemon, *runrec.Store, string) {
+	t.Helper()
 	routes := []clitest.Route{
 		{Tool: "adj", Args: []string{"check"}, Prefix: true, Stdout: check},
 		{Tool: "adj", Args: []string{"ask"}, Prefix: true, Stdout: "42\n"},
@@ -27,7 +35,15 @@ func adjAnswerRun(t *testing.T, check string, decideError bool, keys ...string) 
 	if decideError {
 		routes[2].Seq = []clitest.Reply{{Stderr: `{"error":{"code":"io","message":"disk full verbatim"}}`, Exit: 3}, {Stdout: "42\n"}}
 	}
-	runner := roundRunner(func(_ context.Context, r engine.Request) (engine.Result, error) {
+	runner := roundRunner(func(ctx context.Context, r engine.Request) (engine.Result, error) {
+		if gate != nil && strings.Contains(r.Brief, "use stdlib") {
+			gate.started <- struct{}{}
+			select {
+			case <-gate.release:
+			case <-ctx.Done():
+				return engine.Result{}, ctx.Err()
+			}
+		}
 		report := "Tests: 1 passed, 0 failed\n## Owner needed\nnone\n"
 		if r.Role == engine.RoleImplementer && !strings.Contains(r.Brief, "use stdlib") {
 			report = "Tests: 1 passed, 0 failed\n## Owner needed\nDecision key: storage.engine\n- Which library?\nOptions here.\n"
@@ -100,6 +116,35 @@ func TestAnswerFilesAdjAskAndDecideWhenToggled(t *testing.T) {
 			}
 		})
 	}
+}
+
+// An early reply (no_wait) comes after the adj filing, not before it, and
+// carries the filing message.
+func TestRunAnswerNoWaitFilesInAdjBeforeReturning(t *testing.T) {
+	// The resumed role is held, so the reply can only be the early one.
+	gate := &roleGate{started: make(chan struct{}, 8), release: make(chan struct{})}
+	d, store, id := adjAnswerRunGated(t, gate, `{"result":"not found"}`, false)
+	t.Cleanup(gate.open)
+	b, _ := json.Marshal(RunAction{Run: id, Text: "use stdlib", Adj: true, By: "owner", NoWait: true})
+	rep, err := callWithin(t, d, MethodRunAnswer, string(b), 2*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.State != runrec.StateImplement {
+		t.Errorf("early reply state %q, want implement", rep.State)
+	}
+	if !strings.Contains(rep.Message, "decided in adj as #42") {
+		t.Errorf("early reply lacks the filing message: %q", rep.Message)
+	}
+	if calls := lastFake.CallsTo("adj"); len(calls) != 3 || calls[2].Args[0] != "decide" {
+		t.Errorf("adj calls at the reply: %+v", calls)
+	}
+	if !busyNow(d, id) {
+		t.Error("the run is not busy while its role is held")
+	}
+	gate.open()
+	waitState(t, store, id, runrec.StateAwaitingApproval)
+	waitIdle(t, d, id)
 }
 
 func TestAnswerSkipsAskWhenKeyIsOpenOrDecided(t *testing.T) {

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-267 items · — 66 · done 174 · retired 27
+267 items · — 65 · done 175 · retired 27
 
 v1.2
 
@@ -137,7 +137,7 @@ v1.2
 | 80 | [S229](slices/S229.md) | Daemon wording leftovers | S | 1 |  |  | — |
 | 81 | [S235](slices/S235.md) | Sleep and wake awareness | M | 2 |  |  | done |
 | 82 | [S236](slices/S236.md) | Reap the process tree of a kill | M | 2 |  |  | — |
-| 83 | [S237](slices/S237.md) | answer and retry return at once | M | 2 |  |  | — |
+| 83 | [S237](slices/S237.md) | answer and retry return at once | M | 2 |  |  | done |
 | 84 | [S238](slices/S238.md) | Landing merge-in without a role | M | 2 |  |  | done |
 | 85 | [S239](slices/S239.md) | Check failures: excerpt and one rerun | M | 2 |  |  | — |
 | 86 | [S243](slices/S243.md) | Claude fallback implementer | M | 2 |  |  | — |

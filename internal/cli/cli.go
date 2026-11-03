@@ -76,9 +76,11 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               [--recommend LABEL] [--reasoning TEXT]
                               [--ref R]... [--tag T]...
                               ask an adj question without deciding it
-  ork answer RUN TEXT         answer and resume a paused role
+  ork answer RUN TEXT [--wait]
+                              answer and resume a paused role; returns once
+                              it runs, --wait waits until it rests
   ork dismiss RUN             clear a stopped run from Needs you
-  ork retry RUN               retry a paused role or step
+  ork retry RUN [--wait]      retry a paused role or step; returns like answer
   ork status [--project P]    projects, needs-you counts and active relays
   ork projects list           list the registered projects
   ork projects add [PATH] [--name N]

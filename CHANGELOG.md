@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- S237: `ork answer` and `ork retry` return once the run has resumed
+  (*proposed*); `--wait` waits until it rests. A relay run id passed as a run
+  names the ork run. Docs: `docs/design.md`, `docs/guide.md`.
+
 - S235: sleep and wake awareness (*proposed*). Do not count machine sleep as
   silence for the hung-role watchdog; show working time, last output and slept
   time in `ork status`. Docs: `docs/design.md`, `docs/guide.md`,

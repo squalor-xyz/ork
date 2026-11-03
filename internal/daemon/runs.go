@@ -70,6 +70,7 @@ type RunAction struct {
 	By      string `json:"by,omitempty"`
 	Run     string `json:"run"`
 	Text    string `json:"text,omitempty"`
+	NoWait  bool   `json:"no_wait,omitempty"` // proposed, run.answer and run.retry: return once the action is applied and the run has left its pause (S237)
 }
 
 // RunPlan is checkpoint 1 (run.launch-wire).
@@ -927,8 +928,16 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 	}
 	r := d.runs.runs[p.Run]
 	if r == nil {
+		text := "no run " + p.Run
+		// The slicer relay run id is not an ork run id; name the ork run (S237).
+		for id, m := range d.runs.runs {
+			if m.engine != nil && p.Run != "" && m.engine.Snapshot().RelayRun == p.Run {
+				text += "; that is the slicer run of ork run " + id
+				break
+			}
+		}
 		d.runs.mu.Unlock()
-		return RunReply{}, &ipc.Error{Code: CodeNotFound, Message: "no run " + p.Run}
+		return RunReply{}, &ipc.Error{Code: CodeNotFound, Message: text}
 	}
 	if r.engine == nil {
 		run, err := d.runs.deps.Store.Open(p.Run)
@@ -1035,6 +1044,18 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		d.runs.mu.Unlock()
 		return RunReply{}, errors.New("unknown owner action")
 	}
+	// A caller that asks not to wait is answered once the engine has applied the
+	// action and the run has left its pause; the job goes on under the manager's
+	// context (S237). A refusal never fires the hook, so it comes back on done.
+	var appliedCh chan struct{}
+	if p.NoWait && (method == MethodRunAnswer || method == MethodRunRetry) {
+		appliedCh = make(chan struct{})
+		var once sync.Once
+		run := fn
+		fn = func(ctx context.Context) error {
+			return run(engine.WithApplied(ctx, func() { once.Do(func() { close(appliedCh) }) }))
+		}
+	}
 	d.launchRun(r, fn)
 	r.stop = call // launchRun cleared the handle; a stop sets it again for later stops to join
 	if call != nil {
@@ -1043,10 +1064,17 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 	result := r.result
 	done := r.done
 	d.runs.mu.Unlock()
-	// Owner commands return once the engine has durably applied the action.
+	// Owner commands return once the engine has durably applied the action
+	// and, unless the caller asked not to wait, the run rests.
 	select {
 	case <-ctx.Done():
 		return RunReply{}, ctx.Err()
+	case <-appliedCh: // nil when the caller waits
+		select {
+		case <-done: // the job also ended: its result, and any error, is the reply
+		default:
+			return RunReply{Record: r.engine.Snapshot(), Message: message}, nil
+		}
 	case <-done:
 	}
 	err := result.err

@@ -214,6 +214,12 @@ func printRun(o *output, r runrec.Record) int {
 func (a *App) ownerCommand(ctx context.Context, o *output, command string, args []string) int {
 	fs := flag.NewFlagSet(command, flag.ContinueOnError)
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
+	// answer and retry return once the run has resumed; --wait waits until it
+	// rests again, as the TUI's calls do (S237, *proposed*).
+	var wait bool
+	if command == "answer" || command == "retry" {
+		fs.BoolVar(&wait, "wait", false, "wait until the run rests")
+	}
 	pos, err := parse(fs, args)
 	if err != nil {
 		return o.usage("%s: %v", command, err)
@@ -238,7 +244,7 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 		}
 		return printWave(o, result)
 	}
-	p := daemon.RunAction{Run: pos[0]}
+	p := daemon.RunAction{Run: pos[0], NoWait: (command == "answer" || command == "retry") && !wait}
 	if command == "file" {
 		n, err := strconv.Atoi(pos[1])
 		if err != nil || n < 1 {

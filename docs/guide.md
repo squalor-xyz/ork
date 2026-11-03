@@ -332,7 +332,12 @@ appear in the **Questions** view and under **Needs you** on the Overview.
   needs `ADJ_DECIDED_BY` set in the environment of the TUI
   (`internal/tui/keys.go:106-108`, `internal/tui/pane.go:284-297,498`).
 - On the command line: `ork answer RUN TEXT`. The CLI sends the text only; it
-  does not file in adj (`internal/cli/run.go:223-228`).
+  does not file in adj (`internal/cli/run.go:247,264-268`). *Proposed (S237):* the
+  command returns as soon as the run has resumed and prints its new state
+  (for example `r1 implement`); `ork status` shows the role at work. Add
+  `--wait` to wait until the run rests again. `ork retry RUN` works the same
+  way. RUN is the ork run id; a slicer relay run id gets an error that names
+  the ork run.
 - Findings tagged owner but not blocking do not pause the run. Answer one
   with `o` in the run pane (`internal/tui/keys.go:80`).
 - A finding tagged later can become a new slice: `f` in the run pane, or
@@ -443,11 +448,11 @@ them all (`internal/tui/keys.go:13-124`).
     ork run P ID
     ork wave suggest P
     ork wave start P ITEM...
-    ork answer RUN TEXT
+    ork answer RUN TEXT [--wait]
     ork check RUN N [ticked|later|open]
     ork fix RUN TEXT
     ork approve RUN
-    ork retry RUN
+    ork retry RUN [--wait]
     ork stop RUN|WAVE
     ork dismiss RUN
     ork file RUN N
