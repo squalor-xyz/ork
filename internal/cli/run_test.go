@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/engine"
@@ -304,6 +305,54 @@ func TestStatusPrintsEngineStateAndWait(t *testing.T) {
 	code := app.Run(context.Background(), []string{"status"}, &out, &errs)
 	if code != 0 || !strings.Contains(out.String(), "r1 S1 paused (wait: Which library?) (denied: Write, Bash)\n    error: background broke\n") {
 		t.Fatalf("status code %d: %s %s", code, &out, &errs)
+	}
+}
+
+// A running role or the checks step shows how long it has run, how long ago
+// the role sent output and how long the machine slept meanwhile (S235).
+func workingApp(raw string, now time.Time) *App {
+	return &App{Now: func() time.Time { return now }, Call: func(_ context.Context, method string, params, result any) error {
+		return json.Unmarshal([]byte(raw), result)
+	}}
+}
+
+func TestStatusPrintsWorkingTimes(t *testing.T) {
+	now := time.Date(2026, 11, 2, 22, 0, 0, 0, time.UTC)
+	app := workingApp(`{"projects":[{"name":"p","engine_runs":[{"id":"r1","item":"S1","state":"implement","error":"broke","working":[{"what":"implementer round 2","since":"2026-11-02T21:46:00Z","last_output":"2026-11-02T21:58:00Z","slept_seconds":3780}]}]}]}`, now)
+	code, stdout, stderr := run(t, app, "status")
+	want := "  r1 S1 implement\n    working: implementer round 2, 14m (last output 2m ago, slept 1h03m)\n    error: broke\n"
+	if code != 0 || !strings.Contains(stdout, want) {
+		t.Fatalf("status exit %d: %s\ngot:\n%swant:\n%s", code, stderr, stdout, want)
+	}
+}
+
+func TestStatusPrintsEachWorkingEntry(t *testing.T) {
+	now := time.Date(2026, 11, 2, 22, 0, 0, 0, time.UTC)
+	app := workingApp(`{"projects":[{"name":"p","engine_runs":[{"id":"r1","item":"S1","state":"review","working":[{"what":"reviewer round 1","since":"2026-11-02T21:59:15Z","last_output":"2026-11-02T21:59:50Z"},{"what":"ui round 1","since":"2026-11-02T21:30:00Z"}]}]}]}`, now)
+	_, stdout, _ := run(t, app, "status")
+	want := "    working: reviewer round 1, 45s (last output 10s ago)\n    working: ui round 1, 30m\n"
+	if !strings.Contains(stdout, want) {
+		t.Fatalf("got:\n%swant:\n%s", stdout, want)
+	}
+}
+
+func TestStatusPrintsChecksWorkingWithoutLastOutput(t *testing.T) {
+	now := time.Date(2026, 11, 2, 22, 0, 0, 0, time.UTC)
+	app := workingApp(`{"projects":[{"name":"p","engine_runs":[{"id":"r1","item":"S1","state":"checks","working":[{"what":"checks","since":"2026-11-02T21:48:00Z"}]}]}]}`, now)
+	_, stdout, _ := run(t, app, "status")
+	if want := "    working: checks, 12m\n"; !strings.Contains(stdout, want) {
+		t.Fatalf("got:\n%swant:\n%s", stdout, want)
+	}
+}
+
+func TestStatusWorkingJSONKeepsTheTimes(t *testing.T) {
+	now := time.Date(2026, 11, 2, 22, 0, 0, 0, time.UTC)
+	app := workingApp(`{"projects":[{"name":"p","engine_runs":[{"id":"r1","item":"S1","state":"implement","working":[{"what":"implementer round 2","since":"2026-11-02T21:46:00Z","last_output":"2026-11-02T21:58:00Z","slept_seconds":3780}]}]}]}`, now)
+	_, stdout, _ := run(t, app, "status", "--json")
+	for _, want := range []string{`"since": "2026-11-02T21:46:00Z"`, `"last_output": "2026-11-02T21:58:00Z"`, `"slept_seconds": 3780`} {
+		if !strings.Contains(stdout, want) {
+			t.Errorf("json lacks %s:\n%s", want, stdout)
+		}
 	}
 }
 

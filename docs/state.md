@@ -374,7 +374,9 @@ the `owner` feedback of that round. An older ork refuses a `run.json` with
 `card` or `fixes` because `Store.Open` uses strict keys.
 A role with no `ended_at` is running; a restart marks it `lost`. A role the
 watchdog killed after 30 minutes without output has `exit` `hung` (S182,
-*proposed*) and an `ended_at`; its pause is kind `lost`. `commit` is
+*proposed*) and an `ended_at`; its pause is kind `lost`. Time the machine
+slept is not counted in those 30 minutes, and nothing about sleep is stored
+in `run.json` (S235, *proposed*). `commit` is
 `{"sha","title","at"}` once ork has committed. The fields `orchestrator_step`,
 `fails`, `reason`, `pending`, `feedback`, `created_at`, `updated_at`, the
 role's `model`, `effort` and `denials`, a check's `log`, and a write's

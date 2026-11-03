@@ -190,6 +190,7 @@ type checkRun struct {
 // paused is true; the caller returns err then.
 func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix string) (run checkRun, paused bool, err error) {
 	start := e.d.now()
+	defer e.beginWork(prefix, nil)()
 	check := e.d.Check
 	if check == nil {
 		check = RunCheck

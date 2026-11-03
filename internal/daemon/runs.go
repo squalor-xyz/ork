@@ -167,6 +167,14 @@ func (d *Daemon) initRunManager() {
 			deps.Vendors.WithClock(d.cfg.Clock.Now)
 		}
 	}
+	if deps.Wake == nil {
+		// One detector for every run of the daemon (S235); recoverRuns starts it.
+		now := time.Now
+		if d.cfg.Clock != nil {
+			now = d.cfg.Clock.Now
+		}
+		deps.Wake = engine.NewWake(now)
+	}
 	d.runs = runManager{recordLocks: map[string]*sync.Mutex{}, cleaning: map[string]bool{}, heads: map[string]string{}, merged: map[string]*bool{}, ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}, waveStops: map[string]int{}, specs: map[string]specEntry{}, specCancels: map[int]context.CancelFunc{}}
 }
 func (d *Daemon) runDeps(p registry.Project) engine.Deps {
@@ -199,6 +207,7 @@ func (d *Daemon) recoverRuns(ctx context.Context) error {
 	d.sweepSpecDirs(ctx)
 	defer func() { d.runs.mu.Lock(); defer d.runs.mu.Unlock(); d.pruneRunsLocked() }()
 	d.runs.ctx = ctx
+	d.runs.deps.Wake.Start(ctx) // samples until the daemon's context ends
 	stored, err := d.runs.deps.Store.List()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "recover runs: %v\n", err)
@@ -1311,10 +1320,14 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		}
 		var live engine.Live
 		var activity []int
+		var working []source.EngineWork
 		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
 			activity = m.engine.Activity(d.cfg.Clock.Now())
 			live = m.engine.Live()
 			tokens += live.Tokens
+			for _, w := range m.engine.Working() {
+				working = append(working, source.EngineWork{What: w.What, Since: w.Since, LastOutput: w.LastOutput, SleptSeconds: int(w.Slept.Seconds())})
+			}
 		}
 		unavailable := false
 		if m := d.runs.runs[rec.ID]; m != nil {
@@ -1339,7 +1352,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
 			vendorWait = m.engine.VendorWait()
 		}
-		runs = append(runs, EngineRun{VendorWait: vendorWait, StopAfter: rec.StopAfter, Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), LandFixes: rec.LandFixes, Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), WorktreeGone: rec.State == runrec.StateCommitted && !rec.Cleaned() && worktreeGone(rec), State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
+		runs = append(runs, EngineRun{VendorWait: vendorWait, StopAfter: rec.StopAfter, Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Working: working, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), LandFixes: rec.LandFixes, Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), WorktreeGone: rec.State == runrec.StateCommitted && !rec.Cleaned() && worktreeGone(rec), State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
 	}
 	return runs
 }

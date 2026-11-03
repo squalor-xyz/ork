@@ -2447,3 +2447,70 @@ func TestDaemonRunsUseTheThirtyMinuteWatchdog(t *testing.T) {
 		}
 	}
 }
+
+// A running role shows in the status rows as working: what runs, since when
+// and the last output (S235). A run at rest has no working key, and every
+// run of the daemon shares one sleep detector.
+func TestStatusCarriesWorkingForARunningRun(t *testing.T) {
+	started := make(chan struct{}, 1)
+	d, store, p := runDaemon(t, func(ctx context.Context, req engine.Request) (engine.Result, error) {
+		req.OnEvent()
+		started <- struct{}{}
+		<-ctx.Done()
+		return engine.Result{}, ctx.Err()
+	})
+	if d.runDeps(p).Wake == nil || d.runDeps(p).Wake != d.runDeps(registry.Project{Name: "other"}).Wake {
+		t.Error("the runs do not share one Wake")
+	}
+	before := time.Now()
+	request(t, d, MethodRunStart, `{"project":"p","item":"S1","lineup":{"implementer":[{"vendor":"claude","model":"sonnet","effort":"high"}]}}`)
+	select {
+	case <-started:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the role never ran")
+	}
+	b, err := json.Marshal(d.engineRuns("p")[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	var row struct {
+		Working []struct {
+			What       string    `json:"what"`
+			Since      time.Time `json:"since"`
+			LastOutput time.Time `json:"last_output"`
+		} `json:"working"`
+	}
+	if err := json.Unmarshal(b, &row); err != nil {
+		t.Fatal(err)
+	}
+	if len(row.Working) != 1 || row.Working[0].What != "implementer round 1" {
+		t.Fatalf("working: %s", b)
+	}
+	w := row.Working[0]
+	if w.Since.Before(before.Add(-time.Second)) || w.LastOutput.IsZero() || w.LastOutput.Before(w.Since) {
+		t.Errorf("since %s, last output %s", w.Since, w.LastOutput)
+	}
+
+	// A run at rest has no working key.
+	rest, err := store.Create(runrec.Record{ID: "rest", Project: "p", Item: "S2", State: runrec.StateStopped})
+	if err != nil {
+		t.Fatal(err)
+	}
+	d.runs.mu.Lock()
+	d.runs.runs["rest"] = &managedRun{engine: engine.Load(d.runDeps(p), p, rest)}
+	d.runs.mu.Unlock()
+	for _, r := range d.engineRuns("p") {
+		if r.ID != "rest" {
+			continue
+		}
+		b, err := json.Marshal(r)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(string(b), `"working"`) {
+			t.Errorf("a run at rest has a working key: %s", b)
+		}
+		return
+	}
+	t.Error("the run at rest is not listed")
+}

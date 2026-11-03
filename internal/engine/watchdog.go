@@ -40,11 +40,14 @@ func (d Deps) hungLimit() (time.Duration, bool) {
 
 // roleWatch keeps the time of the last sign of life from one role round.
 type roleWatch struct {
-	now  func() time.Time
-	mu   sync.Mutex
-	last time.Time
-	over bool // the round ended or the watchdog fired; nothing more is recorded
-	hung bool
+	now         func() time.Time
+	wake        *Wake // the sleep detector (S235); nil counts no sleep
+	mu          sync.Mutex
+	last        time.Time     // the last sign of life, or the start of the round
+	output      time.Time     // the last sign of life; zero before the first
+	sleptAtLast time.Duration // wake.Slept() when last was stored
+	over        bool          // the round ended or the watchdog fired; nothing more is recorded
+	hung        bool
 }
 
 // touch records a sign of life. A nil watch is the watchdog turned off.
@@ -55,8 +58,32 @@ func (w *roleWatch) touch() {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if !w.over {
+		// Slept first: a jump between the two reads then leaves the silence
+		// short, never long, so it cannot cause a kill.
+		w.sleptAtLast = w.wake.Slept()
 		w.last = w.now()
+		w.output = w.last
 	}
+}
+
+// silence is how long the role has been silent, less the time the machine
+// slept since its last sign of life (S235). Call it with w.mu held. Slept
+// samples the clock itself, after now is read, so the total never lacks a
+// jump that now has already crossed.
+func (w *roleWatch) silence() time.Duration {
+	now := w.now() // before Slept: its sample is later, so it holds any jump now holds
+	return now.Sub(w.last) - (w.wake.Slept() - w.sleptAtLast)
+}
+
+// lastOutput is the time of the last sign of life, zero before the first. A
+// nil watch (the watchdog off) has none.
+func (w *roleWatch) lastOutput() time.Time {
+	if w == nil {
+		return time.Time{}
+	}
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return w.output
 }
 
 // watchRole starts the watchdog for one role round, or returns a nil watch
@@ -68,7 +95,8 @@ func (e *Engine) watchRole(ctx context.Context, kill func()) (w *roleWatch, stop
 	if !on {
 		return nil, func() {}, func() bool { return false }
 	}
-	w = &roleWatch{now: e.d.now}
+	w = &roleWatch{now: e.d.now, wake: e.d.Wake}
+	w.sleptAtLast = w.wake.Slept()
 	w.last = w.now()
 	every := min(limit/4, maxHungCheck)
 	every = max(every, time.Millisecond)
@@ -88,7 +116,7 @@ func (e *Engine) watchRole(ctx context.Context, kill func()) (w *roleWatch, stop
 					w.mu.Unlock()
 					return
 				}
-				if w.now().Sub(w.last) <= limit {
+				if w.silence() <= limit {
 					w.mu.Unlock()
 					continue
 				}

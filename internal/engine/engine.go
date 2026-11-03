@@ -59,6 +59,7 @@ type Deps struct {
 	MaxRounds      int                                              // 0 means DefaultMaxRounds
 	Landings       *Landings                                        // one landing per project at a time; nil means one shared by the process
 	Vendors        *Vendors                                         // the per-vendor slot cap and vendor-out memory (S169); nil means no cap and no memory
+	Wake           *Wake                                            // the sleep detector (S235); nil means sleep is not detected
 }
 
 func (d Deps) now() time.Time {
@@ -127,6 +128,7 @@ type Engine struct {
 	wr             runrec.Writer
 	noted          string      // the checks note written for an approval (guarded by mu)
 	vendorWait     vendorWaits // the vendors whose slot a round waits for (S169); own lock, because Run holds mu
+	work           workings    // the roles and checks that run now (S235); own lock, because Run holds mu
 }
 
 func newEngine(d Deps, proj registry.Project, run *runrec.Run) *Engine {

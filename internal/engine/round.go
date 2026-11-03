@@ -320,6 +320,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	defer kill()
 	watch, stopWatch, hung := e.watchRole(runCtx, kill)
 	defer stopWatch()
+	defer e.beginWork(fmt.Sprintf("%s round %d", r.role, r.n), watch)()
 	res, runErr := e.d.Runner.Run(runCtx, Request{
 		Role: r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
 		Brief: brief, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,

@@ -2968,3 +2968,9 @@
 {"when": "2026-11-02T18:23:12Z", "item": "S251", "action": "add", "from": "", "to": "open", "note": "Project settings pane in the TUI: every setting by owner, and the setup steps"}
 {"when": "2026-11-02T18:23:23Z", "item": "S251", "action": "set", "from": "", "to": "", "note": "depends_on -→S247,S249"}
 {"when": "2026-11-02T18:23:41Z", "item": "S252", "action": "add", "from": "", "to": "open", "note": "S238 and S190 later notes: pause reason wording, pane clamp, vendor-out timing, retry keeps vendor"}
+{"when": "2026-11-02T18:40:44Z", "item": "S235", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-11-02T21:43:00Z", "item": "S235", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-02T21:43:12Z", "item": "S235", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-03T12:37:50Z", "item": "S235", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S235):", "by": "Jon R"}
+{"when": "2026-11-03T12:38:00Z", "item": "S235", "action": "note", "from": "", "to": "", "note": "Verified: the hung-role watchdog no longer counts machine sl", "by": "Jon R"}
+{"when": "2026-11-03T12:38:04Z", "item": "S235", "action": "status", "from": "started", "to": "done", "note": "Verified: the hung-role watchdog no longer counts machine sleep as silence (shared wall-clock-gap Wake detector, silence minus slept time since last output; 30m limit unchanged). ork status prints a working line per running role or checks step (elapsed, last output age, slept time in NhMMm), daemon memory only. Full suite 4597 passed, 0 failed; go test -race ./... ok; go vet, gofmt, slicer check and adj lint clean; mutation checks all went red. Human checks (real sleep, 100-column wrap) are left for after landing.", "by": "Jon R"}

@@ -15,6 +15,7 @@ import (
 	"slices"
 	"strings"
 	"text/tabwriter"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/registry"
@@ -47,6 +48,10 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 	if len(res.Projects) == 0 {
 		fmt.Fprintln(o.stdout, daemon.NoProjectsGuide)
 		return ExitOK
+	}
+	now := time.Now()
+	if a.Now != nil {
+		now = a.Now()
 	}
 	for _, p := range res.Projects {
 		name := p.Name
@@ -94,6 +99,9 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 					fmt.Fprintf(o.stdout, " (denied: %s)", source.DenialsText(r.Denials))
 				}
 				fmt.Fprintln(o.stdout)
+				for _, w := range r.Working {
+					fmt.Fprintf(o.stdout, "    %s\n", workingLine(w, now))
+				}
 				if r.Error != "" {
 					fmt.Fprintf(o.stdout, "    error: %s\n", strings.NewReplacer("\r\n", " ", "\n", " ", "\r", " ").Replace(r.Error))
 				}
@@ -104,6 +112,37 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 		}
 	}
 	return ExitOK
+}
+
+// workingLine says what runs, for how long, how long ago a role last sent
+// output and how long the machine slept meanwhile (S235, proposed). A check has
+// no last output, and a clause that does not apply is left out.
+func workingLine(w source.EngineWork, now time.Time) string {
+	line := fmt.Sprintf("working: %s, %s", w.What, workingDuration(now.Sub(w.Since)))
+	var clauses []string
+	if !w.LastOutput.IsZero() {
+		clauses = append(clauses, "last output "+workingDuration(now.Sub(w.LastOutput))+" ago")
+	}
+	if w.SleptSeconds > 0 {
+		clauses = append(clauses, "slept "+workingDuration(time.Duration(w.SleptSeconds)*time.Second))
+	}
+	if len(clauses) > 0 {
+		line += " (" + strings.Join(clauses, ", ") + ")"
+	}
+	return line
+}
+
+// workingDuration prints seconds under a minute, NNm under an hour and
+// NhMMm above. A negative span (clocks that disagree) prints as zero.
+func workingDuration(d time.Duration) string {
+	d = max(d, 0)
+	switch {
+	case d < time.Minute:
+		return fmt.Sprintf("%ds", int(d/time.Second))
+	case d < time.Hour:
+		return fmt.Sprintf("%dm", int(d/time.Minute))
+	}
+	return fmt.Sprintf("%dh%02dm", int(d/time.Hour), int(d%time.Hour/time.Minute))
 }
 
 // projects dispatches the projects subcommands.

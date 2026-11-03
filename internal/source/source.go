@@ -226,6 +226,15 @@ func (v VendorOut) Sentence() string {
 	return fmt.Sprintf("%s is out until %s (%s)", v.Vendor, v.UntilText(), detail)
 }
 
+// EngineWork is one step of an engine run that is running now: a role round or
+// the checks (S235, proposed). Daemon memory only; nothing is written to run.json.
+type EngineWork struct {
+	What         string    `json:"what"`                    // "implementer round 2", "checks"
+	Since        time.Time `json:"since"`                   // when the step started
+	LastOutput   time.Time `json:"last_output,omitzero"`    // the last sign of life from a role; absent for a check and before the first
+	SleptSeconds int       `json:"slept_seconds,omitempty"` // seconds the machine slept since Since
+}
+
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
 	StopAfter      string                `json:"stop_after,omitempty"` // proposed: per-run stop point (S177)
@@ -243,6 +252,7 @@ type EngineRun struct {
 	Unavailable    bool                  `json:"unavailable,omitempty"`      // proposed: no engine or owner actions
 	Error          string                `json:"error,omitempty"`            // proposed: daemon memory only
 	Activity       []int                 `json:"activity,omitempty"`         // proposed: current role stream events, ten 30 s buckets
+	Working        []EngineWork          `json:"working,omitempty"`          // proposed: daemon memory only; the roles and checks running now (S235)
 	Worktree       string                `json:"worktree,omitempty"`
 	Branch         string                `json:"branch,omitempty"`
 	Merged         *bool                 `json:"merged,omitempty"`         // nil: unknown

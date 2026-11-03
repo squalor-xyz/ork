@@ -802,8 +802,20 @@ question. Answer, approve, fix and retry record `--phase start` to continue.
   retries (`ork retry RUN`, or `t`), and the same row runs again with the
   "Earlier process lost" section in its brief. An owner stop during the role
   stays a stop (exit `cancelled`). The wait for a vendor slot is not counted
-  as silence. The spec-check role and the checks command are not watched; the
-  checks command has its own timeout (`check_minutes`).
+  as silence. Time the machine slept is not counted as silence either
+  (S235, *proposed*), so a wake alone never kills a healthy role. One shared
+  detector in the daemon samples the wall clock about every 5 seconds; a gap
+  of more than 30 seconds between two samples is a sleep, and the gap less one
+  step is added to the time slept. The watchdog subtracts the time slept since
+  the role's last sign of life from its silence; silence before and after the
+  sleep still counts, and the limit does not change. The time slept is kept in
+  daemon memory and shown by `ork status`, which also prints, under a run row,
+  `working: implementer round 2, 14m (last output 2m ago, slept 1h03m)` for
+  each role or checks step that runs now (S235, *proposed*); the clauses that
+  do not apply are left out. Nothing about sleep is stored in `run.json`. The
+  spec-check role and the checks command are not watched; the checks command
+  has its own timeout (`check_minutes`), which is a Go timer and is not
+  changed.
 - **Reviewer rule.** A reviewer never wrote code in the slice. A reviewer
   may run on another vendor if the lineup names it (`review.cross-vendor`).
 - **Ledger.** Each role round is recorded with `slicer relay-run step` with

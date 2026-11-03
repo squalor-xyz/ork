@@ -146,6 +146,7 @@ type App struct {
 	BuildID string                                        // CLI build identity; empty means dev
 	Input   io.Reader                                     // confirmation input; nil uses os.Stdin
 	Call    func(context.Context, string, any, any) error // nil uses the daemon socket
+	Now     func() time.Time                              // the clock for working times in status (S235); nil uses time.Now
 
 	Socket    string                          // the daemon's socket
 	Pid       string                          // the daemon's pid file; used only for the stop hint

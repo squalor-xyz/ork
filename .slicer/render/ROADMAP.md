@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-252 items · — 53 · done 172 · retired 27
+252 items · — 52 · done 173 · retired 27
 
 v1.2
 
@@ -133,7 +133,7 @@ v1.2
 | 76 | [S225](slices/S225.md) | getsid helper on BSDs, freebsd vet | S | 1 |  |  | — |
 | 77 | [S226](slices/S226.md) | Matrix editor in the TUI | M | 2 |  |  | — |
 | 78 | [S229](slices/S229.md) | Daemon wording leftovers | S | 1 |  |  | — |
-| 79 | [S235](slices/S235.md) | Sleep and wake awareness | M | 2 |  |  | — |
+| 79 | [S235](slices/S235.md) | Sleep and wake awareness | M | 2 |  |  | done |
 | 80 | [S236](slices/S236.md) | Reap the process tree of a kill | M | 2 |  |  | — |
 | 81 | [S237](slices/S237.md) | answer and retry return at once | M | 2 |  |  | — |
 | 82 | [S238](slices/S238.md) | Landing merge-in without a role | M | 2 |  |  | done |

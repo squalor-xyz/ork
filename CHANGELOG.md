@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- S235: sleep and wake awareness (*proposed*). Do not count machine sleep as
+  silence for the hung-role watchdog; show working time, last output and slept
+  time in `ork status`. Docs: `docs/design.md`, `docs/guide.md`,
+  `docs/state.md`, `docs/dashboard.md`.
+
 - S238: landing merge-in without a role (*proposed*). When merging the base
   branch conflicts, ork merges the `CHANGELOG.md` entries itself even when
   other files conflict, then pauses the run with a one-line reason that names

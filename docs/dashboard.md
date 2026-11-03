@@ -545,7 +545,8 @@ the text column, falling back to a shorter indent when needed to fit.
    it, so a hung role's row does not reach `!!`; it can show an amber `!`
    between two ticks. For an engine run with no ledger run, `!!` shows 30
    minutes after the role started. The engine's watchdog (S182, *proposed*, `docs/design.md`)
-   kills a role that sends nothing for 30 minutes and pauses the run, so a hung
+   kills a role that sends nothing for 30 minutes (time the machine slept is
+   not counted, S235, *proposed*) and pauses the run, so a hung
    engine run reaches Needs you as a paused run instead of waiting for the
    cue. The unselected cell uses
    the warning color (amber) or the error color (red); in monochrome the words

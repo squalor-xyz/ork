@@ -12596,10 +12596,39 @@
       "id": "S235",
       "title": "Sleep and wake: do not kill a healthy role for time the machine slept, and show how long work has run",
       "short_title": "Sleep and wake awareness",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7b5b8090-f4dc-4112-a552-04d30166d27a",
+          "kind": "",
+          "text": "**2026-11-03** — Human checks at approval (S235):\n- later: [AFTER LAND] Start a real run, close the lid or run `pmset sleepnow` for longer than the hung limit (35 minutes is enough proof), wake the machine, and confirm that the role is still running, `ork status` shows `slept` for it, and no `hung` pause appears.\n- later: `ork status` on a live run at 100 columns: the working line wraps cleanly under the run row.",
+          "created_at": "2026-11-03T12:37:50Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "923ce7b7-8b89-4e48-860c-b3c8728d00ed",
+          "kind": "",
+          "text": "**2026-11-03** — Verified: the hung-role watchdog no longer counts machine sleep as silence (shared wall-clock-gap Wake detector, silence minus slept time since last output; 30m limit unchanged). ork status prints a working line per running role or checks step (elapsed, last output age, slept time in NhMMm), carried in daemon memory only. Full suite 4597 passed, 0 failed; go test -race ./... ok; go vet, gofmt, slicer check and adj lint clean; mutation checks all went red. Not run: the two human checks (real sleep, 100-column wrap).",
+          "created_at": "2026-11-03T12:38:00Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -12617,7 +12646,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

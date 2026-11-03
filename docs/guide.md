@@ -280,7 +280,10 @@ vendor back NAME` clears it. A daemon restart clears the memory too.
 
 On the command line, `ork status [--project P]` prints the same counts and
 rows, and a line such as `codex is out until 17:02 (since 16:02; reason)` for
-each vendor that is out. Add `--json` to any command for scripts (`internal/cli/cli.go:56`,
+each vendor that is out. Under the row of a run whose role or checks step is
+running, it prints `working: implementer round 2, 14m (last output 2m ago,
+slept 1h03m)` (S235, *proposed*): how long the step has run, how long ago the
+role last sent output, and how long the machine slept meanwhile. Add `--json` to any command for scripts (`internal/cli/cli.go:56`,
 `internal/cli/cli.go:77`).
 
 ## 9. Run a wave
@@ -397,7 +400,7 @@ The `ork projects set NAME --bell on|off` command lands in S224.
 | A run is paused with no question (shape, error, lost, interrupted) | `t` on the row, or `ork retry RUN` (`docs/design.md:1088-1091`) |
 | A run is paused at a budget limit | `t` or `ork retry RUN` grants one more role round (`docs/design.md:986-997`) |
 | A run is stopped | Read the reason in the pane. Fix the cause and launch again, or clear it with `ork dismiss RUN` |
-| A run is paused with a reason like `implementer round 1 hung: no output for 30m` | ork killed a role that sent nothing for 30 minutes. Read the reason in the pane, then retry with `t` or `ork retry RUN`: the same role runs again and is told that the earlier process was lost. ork does not retry for you |
+| A run is paused with a reason like `implementer round 1 hung: no output for 30m` | ork killed a role that sent nothing for 30 minutes. Time the machine slept does not count, so a wake alone does not cause this (S235, *proposed*). Read the reason in the pane, then retry with `t` or `ork retry RUN`: the same role runs again and is told that the earlier process was lost. ork does not retry for you |
 | A relay that ork did not start shows `!!` and `stale` | Open its pane and press `x`. It ends the ledger run as stopped (`internal/tui/pane.go:327`, `internal/tui/ledgerend.go:27`), but only when the run is stale and no unfinished ork run owns it (`internal/daemon/runs.go:1418-1429`). `ork stop RUN` does not take such a run: it names ork runs and waves, and the daemon answers `no run` for a ledger id (`internal/daemon/runs.go:919-921`) |
 | Codex is out of credits or at a limit | Nothing is needed: ork marks it out for 60 minutes and starts new rounds on the next row of another vendor. Check with `ork vendor`. To keep it out longer, `ork vendor out codex` holds until you run `back`. `ork vendor back codex` ends the mark early, for example after you add credits. A run that waits for the one Codex slot is not stuck: it starts when the other Codex role ends |
 | You want to stop work | `x` on a row or `ork stop RUN`; `ork stop WAVE-ID` for a wave |

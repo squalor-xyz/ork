@@ -415,3 +415,213 @@ func TestTwoHungSiblingRoundsPauseOnce(t *testing.T) {
 		t.Errorf("reason %q", rec.Reason)
 	}
 }
+
+// Sleep and wake (S235, *proposed*). The tests move a clock that the engine
+// and the sleep detector share by an hour while a role is silent, as a sleep
+// does, and watch whether the watchdog kills the role.
+
+// wakeRig is a harness with a silent implementer whose script a test writes.
+type wakeRig struct {
+	h        *harness
+	clock    *clockWithOffset
+	killedAt atomic.Int64 // unix nanoseconds when the role's context ended; 0 if it did not
+	onEvent  func()       // the running role's OnEvent
+}
+
+// newWakeRig runs the implementer's script with the shared clock. With
+// withWake false the engine has no sleep detector. The detector's step is a
+// few milliseconds, so the silence a sleep leaves behind stays small.
+func newWakeRig(t *testing.T, withWake bool, script func(ctx context.Context, rig *wakeRig) (Result, error)) *wakeRig {
+	t.Helper()
+	rig := &wakeRig{clock: &clockWithOffset{}}
+	hr := &hangRunner{silent: onlyRole(RoleImplementer)}
+	hr.script = func(ctx context.Context, req Request) (Result, error) {
+		rig.onEvent = req.OnEvent
+		res, err := script(ctx, rig)
+		if ctx.Err() != nil {
+			rig.killedAt.Store(time.Now().UnixNano())
+		}
+		if err == nil && res.Exit == "" {
+			res = defaultResult(req)
+		}
+		return res, err
+	}
+	rig.h = hungHarness(t, testHungAfter, hr)
+	rig.h.deps.Now = rig.clock.Now
+	if withWake {
+		w := newWake(rig.clock.Now, testWakeEvery, testWakeGap)
+		ctx, cancel := context.WithCancel(context.Background())
+		t.Cleanup(cancel)
+		w.Start(ctx)
+		rig.h.deps.Wake = w
+	}
+	return rig
+}
+
+// wait sleeps for d and says whether the role was still alive afterwards.
+func wait(ctx context.Context, d time.Duration) bool {
+	select {
+	case <-ctx.Done():
+		return false
+	case <-time.After(d):
+		return true
+	}
+}
+
+// waitForKill blocks until the role's context ends or the safety stop.
+func waitForKill(ctx context.Context) (Result, error) {
+	select {
+	case <-ctx.Done():
+		return Result{}, ctx.Err()
+	case <-time.After(safetyStop):
+		return Result{}, errors.New("test safety stop: the watchdog never ended the context")
+	}
+}
+
+func requireNoHungRole(t *testing.T, rec runrec.Record) {
+	t.Helper()
+	for _, role := range rec.Roles {
+		if role.Exit == "hung" {
+			t.Errorf("a role was recorded hung: %+v", role)
+		}
+	}
+}
+
+func TestWakeJumpDoesNotKillASilentRole(t *testing.T) {
+	rig := newWakeRig(t, true, func(ctx context.Context, rig *wakeRig) (Result, error) {
+		if !wait(ctx, 100*time.Millisecond) {
+			return Result{}, ctx.Err()
+		}
+		rig.clock.jump(time.Hour)
+		// 200ms of real silence in all, under the 250ms limit. A watchdog that
+		// reads the jump as silence kills at its next tick, about 125ms in.
+		if !wait(ctx, 100*time.Millisecond) {
+			return Result{}, ctx.Err()
+		}
+		return Result{}, nil
+	})
+	e := rig.h.start()
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	requireNoHungRole(t, rec)
+	if rig.killedAt.Load() != 0 {
+		t.Error("the role's context was ended")
+	}
+}
+
+func TestSilenceAfterAWakeStillKills(t *testing.T) {
+	var jumpedAt atomic.Int64
+	rig := newWakeRig(t, true, func(ctx context.Context, rig *wakeRig) (Result, error) {
+		if !wait(ctx, 100*time.Millisecond) {
+			return Result{}, ctx.Err()
+		}
+		rig.clock.jump(time.Hour)
+		jumpedAt.Store(time.Now().UnixNano())
+		return waitForKill(ctx)
+	})
+	e := rig.h.start()
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingLost || !strings.Contains(rec.Pending.Reason, "hung: no output for 250ms") {
+		t.Fatalf("pending: %+v", rec.Pending)
+	}
+	// The 100ms before the jump count, so the kill comes 150ms or more after
+	// the jump; a watchdog that read the jump as silence would kill at once.
+	if gap := time.Duration(rig.killedAt.Load() - jumpedAt.Load()); gap < 100*time.Millisecond {
+		t.Errorf("killed %s after the jump", gap)
+	}
+}
+
+func TestSilenceBeforeAWakeIsStillCounted(t *testing.T) {
+	var jumpedAt atomic.Int64
+	rig := newWakeRig(t, true, func(ctx context.Context, rig *wakeRig) (Result, error) {
+		if !wait(ctx, 150*time.Millisecond) {
+			return Result{}, ctx.Err()
+		}
+		rig.clock.jump(time.Hour)
+		jumpedAt.Store(time.Now().UnixNano())
+		return waitForKill(ctx)
+	})
+	e := rig.h.start()
+	requireState(t, e, runrec.StatePaused)
+	// 150ms of silence came before the jump, so only about 100ms more is
+	// needed. A watchdog that forgot the earlier silence would wait for the
+	// whole 250ms after the jump.
+	if gap := time.Duration(rig.killedAt.Load() - jumpedAt.Load()); gap <= 0 || gap >= testHungAfter-20*time.Millisecond {
+		t.Errorf("killed %s after the jump, want under %s", gap, testHungAfter-20*time.Millisecond)
+	}
+}
+
+func TestEventAfterAWakeResetsTheSilence(t *testing.T) {
+	rig := newWakeRig(t, true, func(ctx context.Context, rig *wakeRig) (Result, error) {
+		if !wait(ctx, 60*time.Millisecond) {
+			return Result{}, ctx.Err()
+		}
+		rig.clock.jump(time.Hour)
+		if !wait(ctx, 100*time.Millisecond) { // a watchdog that counts the jump kills here
+			return Result{}, ctx.Err()
+		}
+		rig.onEvent()
+		if !wait(ctx, 150*time.Millisecond) { // under the limit
+			return Result{}, ctx.Err()
+		}
+		return Result{}, nil
+	})
+	e := rig.h.start()
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	requireNoHungRole(t, rec)
+}
+
+func TestSilenceAfterAnEventAfterAWakeStillKills(t *testing.T) {
+	var eventAt atomic.Int64
+	rig := newWakeRig(t, true, func(ctx context.Context, rig *wakeRig) (Result, error) {
+		if !wait(ctx, 60*time.Millisecond) {
+			return Result{}, ctx.Err()
+		}
+		rig.clock.jump(time.Hour)
+		if !wait(ctx, 100*time.Millisecond) {
+			return Result{}, ctx.Err()
+		}
+		rig.onEvent()
+		eventAt.Store(time.Now().UnixNano())
+		return waitForKill(ctx)
+	})
+	e := rig.h.start()
+	requireState(t, e, runrec.StatePaused)
+	// The silence counts from the event, not from before the jump: the kill
+	// comes a full limit after it.
+	if gap := time.Duration(rig.killedAt.Load() - eventAt.Load()); gap < testHungAfter-20*time.Millisecond {
+		t.Errorf("killed %s after the event, want about %s", gap, testHungAfter)
+	}
+}
+
+// A sleep from before the role started is not part of its silence, so it
+// cannot hide a hang that comes later.
+func TestSleepBeforeTheRoleStartedDoesNotHideAHang(t *testing.T) {
+	rig := newWakeRig(t, true, func(ctx context.Context, rig *wakeRig) (Result, error) {
+		return waitForKill(ctx)
+	})
+	rig.clock.jump(time.Hour) // the machine slept before the round began
+	time.Sleep(3 * testWakeEvery)
+	e := rig.h.start()
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending == nil || !strings.Contains(rec.Pending.Reason, "hung: no output for 250ms") {
+		t.Fatalf("pending: %+v", rec.Pending)
+	}
+}
+
+func TestWatchdogWithoutWakeKeepsTheOldBehaviour(t *testing.T) {
+	rig := newWakeRig(t, false, func(ctx context.Context, rig *wakeRig) (Result, error) {
+		if !wait(ctx, 100*time.Millisecond) {
+			return Result{}, ctx.Err()
+		}
+		rig.clock.jump(time.Hour)
+		return waitForKill(ctx)
+	})
+	e := rig.h.start()
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingLost {
+		t.Fatalf("pending: %+v", rec.Pending)
+	}
+	if rig.h.deps.Wake != nil {
+		t.Error("the rig built a Wake")
+	}
+}
