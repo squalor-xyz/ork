@@ -168,12 +168,16 @@
       "note": "default implementer for a whole slice (owner lineup 2026-10-23: medium); Codex sandbox cannot bind Unix sockets, so rerun socket-test packages outside it"
     },
     {
-      "id": "r25",
+      "id": "r26",
       "role": "implementer",
       "when": {
-        "size": [],
+        "size": [
+          "S",
+          "M"
+        ],
         "effort": [
-          3
+          1,
+          2
         ],
         "importance": [],
         "urgency": [],
@@ -184,26 +188,8 @@
       "agent": "Codex",
       "vendor": "OpenAI",
       "model": "gpt-6.1-terra",
-      "reasoning": "high",
-      "note": "terra high, effort 3 slice: Sonnet-class Codex model (owner 2026-11-03), after sol"
-    },
-    {
-      "id": "r26",
-      "role": "implementer",
-      "when": {
-        "size": [],
-        "effort": [],
-        "importance": [],
-        "urgency": [],
-        "well_specified": null,
-        "split": false,
-        "sliver": null
-      },
-      "agent": "Codex",
-      "vendor": "OpenAI",
-      "model": "gpt-6.1-terra",
       "reasoning": "medium",
-      "note": "terra medium, whole slice: Sonnet-class Codex model (owner 2026-11-03), after sol"
+      "note": "terra medium, whole slice of size S or M at effort 1 or 2 (owner 2026-11-03): Sonnet-class Codex model, after sol; larger or effort 3 slices go from sol to Claude sonnet high"
     },
     {
       "id": "r3",

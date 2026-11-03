@@ -3051,3 +3051,5 @@
 {"when": "2026-11-03T15:34:23Z", "item": "relay-roles.r23", "action": "relay-roles", "from": "26", "to": "18", "note": "move"}
 {"when": "2026-11-03T15:34:30Z", "item": "relay-roles.r22", "action": "relay-roles", "from": "", "to": "note", "note": "set"}
 {"when": "2026-11-03T15:34:30Z", "item": "relay-roles.r23", "action": "relay-roles", "from": "", "to": "note", "note": "set"}
+{"when": "2026-11-03T15:37:29Z", "item": "relay-roles.r26", "action": "relay-roles", "from": "", "to": "note,size,effort", "note": "set"}
+{"when": "2026-11-03T15:37:29Z", "item": "relay-roles.r25", "action": "relay-roles", "from": "", "to": "implementer", "note": "remove"}
