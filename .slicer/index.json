@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 270,
+  "next_id": 271,
   "preamble": "",
   "passes": [
     {
@@ -13751,6 +13751,34 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S270",
+      "title": "Decisions tab: say how to set up adj when a project has none",
+      "short_title": "No-adj hint",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-03 (screenshot of the slicer project's Decisions tab): the tab reads 'no adj in this project' with nothing else. The slicer repo has no .adjudicate.json (adj check there: 'no repo root found: no .adjudicate.json in ...; run adj init first'), so the message is accurate but gives no way forward. Sites: internal/tui/decisions.go:124-126 (the Decisions tab) and internal/tui/pane.go:729 and :734 (the answer pane, same words). Proposed: the Decisions tab says 'no adj in this project; run adj init in its repo to start one' (wording to confirm), and the pane keeps its short form. TUI text only: ork does not run adj init (boundaries: adj is the owner's tool). Golden views for the empty state change; UI pass applies (u10). Open owner question: exact wording, and whether the pane line should change too.",
+        "discovered_from": "S140",
+        "parent": "",
+        "cites": [],
+        "key": "decisions-no-adj-hint",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
         "effort": 1,
         "attempts": 0
       }
