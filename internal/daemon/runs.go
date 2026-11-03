@@ -197,6 +197,7 @@ func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 		deps.Runner = vendorRunner{
 			claude: claudeRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "claude"), env: envFor("claude")},
 			codex:  codexRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "codex"), env: envFor("codex")},
+			grok:   grokRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "grok"), env: envFor("grok")},
 		}
 	}
 	return deps
@@ -344,7 +345,7 @@ func (d *Daemon) stopDaemon(p StopParams) (*StopResult, error) {
 }
 
 // matrixAdapters maps matrix agents to the names used by the dispatcher.
-var matrixAdapters = map[string]string{"claude code": "claude", "codex": "codex"}
+var matrixAdapters = map[string]string{"claude code": "claude", "codex": "codex", "grok": "grok"}
 
 // appendEntry adds an entry to a fallback chain, unless it is identical to the
 // entry before it: two matrix rows with the same vendor, model and effort give

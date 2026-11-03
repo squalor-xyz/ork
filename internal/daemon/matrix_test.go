@@ -100,6 +100,42 @@ func TestRolesMatrixSkipsAUIRowWithoutAnAdapter(t *testing.T) {
 	}
 }
 
+func TestMatrixAdaptersMapTheGrokAgent(t *testing.T) {
+	row := func(id, role, agent string) map[string]any {
+		return map[string]any{"id": id, "role": role, "agent": agent, "vendor": "xAI", "model": "latest", "reasoning": "high", "note": ""}
+	}
+	body, err := json.Marshal(map[string]any{
+		"relay_roles": "x",
+		"rows": []map[string]any{
+			row("r21", "orchestrator", "Grok"),
+			row("r22", "reviewer", "Grok"),
+			row("r23", "reviewer", "grok"),
+			row("r24", "architect", "GROK"),
+		},
+		"rules": []map[string]string{},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if matrixAdapters["grok"] != "grok" {
+		t.Fatalf("matrixAdapters %v", matrixAdapters)
+	}
+	d := readDaemon(t, matrixRoute(string(body)))
+	var got RolesMatrixResult
+	if err := json.Unmarshal(request(t, d, "roles.matrix", `{"project":"p"}`), &got); err != nil {
+		t.Fatal(err)
+	}
+	want := []MatrixRow{
+		{"r21", "orchestrator", "Grok", "not run by ork"},
+		{"r22", "reviewer", "Grok", "used as grok"},
+		{"r23", "reviewer", "grok", "used as grok"},
+		{"r24", "architect", "GROK", "used as grok"},
+	}
+	if !reflect.DeepEqual(got.Rows, want) {
+		t.Errorf("rows\n got %+v\nwant %+v", got.Rows, want)
+	}
+}
+
 func TestRolesMatrixUnknownProject(t *testing.T) {
 	d := readDaemon(t, matrixRoute(matrixShow(t)))
 	_, err := d.handle(context.Background(), "roles.matrix", json.RawMessage(`{"project":"nope"}`))

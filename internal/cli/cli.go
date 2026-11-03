@@ -115,7 +115,7 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
   ork vendor [list]           list the vendors the daemon remembers as out;
                               marks happen on their own; a restart clears them
   ork vendor out NAME [--reason TEXT]
-                              mark claude or codex out until back
+                              mark claude, codex or grok out until back
   ork vendor back NAME        say the vendor is back; ends the mark early
   ork roles print [ROLE]      print the embedded role prompts
   ork roles matrix P          show the role matrix as slicer prints it, then

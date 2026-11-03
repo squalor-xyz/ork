@@ -13,6 +13,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/agent/claude"
 	"github.com/squalor-xyz/ork/internal/agent/codex"
+	"github.com/squalor-xyz/ork/internal/agent/grok"
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
@@ -84,15 +85,17 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 }
 
 // vendorRunner dispatches only to measured adapters.
-type vendorRunner struct{ claude, codex engine.Runner }
+type vendorRunner struct{ claude, codex, grok engine.Runner }
 
-func supportsVendor(v string) bool { return v == "claude" || v == "codex" }
+func supportsVendor(v string) bool { return v == "claude" || v == "codex" || v == "grok" }
 func (r vendorRunner) Run(ctx context.Context, req engine.Request) (engine.Result, error) {
 	switch req.Vendor {
 	case "claude":
 		return r.claude.Run(ctx, req)
 	case "codex":
 		return r.codex.Run(ctx, req)
+	case "grok":
+		return r.grok.Run(ctx, req)
 	default:
 		return engine.Result{}, fmt.Errorf("unsupported vendor %q", req.Vendor)
 	}
@@ -132,6 +135,45 @@ func (r codexRunner) Run(ctx context.Context, req engine.Request) (engine.Result
 		class = engine.ExitOutOfCredits
 	case codex.ExitRateLimited:
 		class = engine.ExitRateLimited
+	}
+	return engine.Result{Exit: class, Reason: round.Reason, Session: round.Session, Report: round.Report, Tokens: round.Tokens}, err
+}
+
+// grokRunner connects the engine's vendor-neutral request to the grok adapter
+// (S72, *proposed*). Request.Allowlist and TempDir are not used: grok runs
+// read-only roles in plan mode and refuses write roles.
+type grokRunner struct {
+	fixtureDir string
+	env        []string
+	round      func(context.Context, grok.Spec) (grok.Round, error)
+}
+
+func (r grokRunner) Run(ctx context.Context, req engine.Request) (engine.Result, error) {
+	call := r.round
+	if call == nil {
+		call = grok.Run
+	}
+	live := newLiveRedactor(r.env, req.OnLive)
+	round, err := call(ctx, grok.Spec{Dir: req.Worktree, Env: r.env, Prompt: req.Brief, Model: req.Model, Effort: req.Effort, ReadOnly: req.ReadOnly, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev grok.Event) {
+		if text, ok := ev.TextDelta(); ok {
+			live.send(text, 0, false)
+		}
+		if ev.Type == "result" && ev.Usage != nil {
+			live.usage(ev.Usage.Total())
+		}
+		if req.OnEvent != nil {
+			req.OnEvent()
+		}
+	}, FixtureDir: r.fixtureDir})
+	live.send("", 0, true)
+	class := engine.ExitError
+	switch round.Exit {
+	case grok.ExitOK:
+		class = engine.ExitOK
+	case grok.ExitUnclassified:
+		class = engine.ExitUnclassified
+	case grok.ExitOutOfCredits:
+		class = engine.ExitOutOfCredits
 	}
 	return engine.Result{Exit: class, Reason: round.Reason, Session: round.Session, Report: round.Report, Tokens: round.Tokens}, err
 }

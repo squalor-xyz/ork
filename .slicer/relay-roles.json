@@ -168,12 +168,38 @@
       "note": "default implementer for a whole slice (owner lineup 2026-10-23: medium); Codex sandbox cannot bind Unix sockets, so rerun socket-test packages outside it"
     },
     {
-      "id": "r25",
+      "id": "r32",
       "role": "implementer",
       "when": {
-        "size": [],
+        "size": [
+          "M"
+        ],
         "effort": [
-          3
+          2
+        ],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": false,
+        "sliver": null
+      },
+      "agent": "Codex",
+      "vendor": "OpenAI",
+      "model": "gpt-6.1-terra",
+      "reasoning": "xhigh",
+      "note": "terra xhigh, whole slice of size M at effort 2 (owner 2026-11-03), ahead of terra high; Claude sonnet high is the fallback"
+    },
+    {
+      "id": "r26",
+      "role": "implementer",
+      "when": {
+        "size": [
+          "S",
+          "M"
+        ],
+        "effort": [
+          1,
+          2
         ],
         "importance": [],
         "urgency": [],
@@ -185,25 +211,7 @@
       "vendor": "OpenAI",
       "model": "gpt-6.1-terra",
       "reasoning": "high",
-      "note": "terra high, effort 3 slice: Sonnet-class Codex model (owner 2026-11-03), after sol"
-    },
-    {
-      "id": "r26",
-      "role": "implementer",
-      "when": {
-        "size": [],
-        "effort": [],
-        "importance": [],
-        "urgency": [],
-        "well_specified": null,
-        "split": false,
-        "sliver": null
-      },
-      "agent": "Codex",
-      "vendor": "OpenAI",
-      "model": "gpt-6.1-terra",
-      "reasoning": "medium",
-      "note": "terra medium, whole slice: Sonnet-class Codex model (owner 2026-11-03), after sol"
+      "note": "terra high, whole slice of size S or M at effort 1 or 2 (owner 2026-11-03): Sonnet-class Codex model, after sol; larger or effort 3 slices go from sol to Claude sonnet high"
     },
     {
       "id": "r3",
@@ -222,6 +230,24 @@
       "model": "sonnet",
       "reasoning": "high",
       "note": "Claude stand-in for a whole slice at sonnet high: used when Codex is out of credits or the owner picks Claude (owner 2026-10-29)"
+    },
+    {
+      "id": "r22",
+      "role": "reviewer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Grok",
+      "vendor": "xAI",
+      "model": "latest",
+      "reasoning": "medium",
+      "note": "Grok reviewer, first choice (owner 2026-11-03); Claude opus (r5) is the fallback. cross-vendor review is allowed by review.cross-vendor (#25). Model 'latest' = the grok CLI default. Grok runs in plan mode, which can run read-only shell commands (probe 13, 2026-11-03)."
     },
     {
       "id": "r17",
@@ -300,6 +326,24 @@
       "note": "UI pass, only for a slice that touches the UI (rule u10)"
     },
     {
+      "id": "r23",
+      "role": "gate",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Grok",
+      "vendor": "xAI",
+      "model": "latest",
+      "reasoning": "medium",
+      "note": "Grok gate, first choice (owner 2026-11-03); Claude opus (r6) is the fallback. cross-vendor gate is allowed by review.cross-vendor (#25). Model 'latest' = the grok CLI default. Grok runs in plan mode, which can run read-only shell commands (probe 13, 2026-11-03)."
+    },
+    {
       "id": "r18",
       "role": "gate",
       "when": {
@@ -356,6 +400,26 @@
       "model": "opus",
       "reasoning": "medium",
       "note": ""
+    },
+    {
+      "id": "r31",
+      "role": "architect",
+      "when": {
+        "size": [
+          "L"
+        ],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Grok",
+      "vendor": "xAI",
+      "model": "latest",
+      "reasoning": "high",
+      "note": "Grok architect, size L (owner 2026-11-03): first choice, Claude opus (r7) is the fallback; model 'latest' = the grok CLI default; grok runs read-only in plan mode, which can run read-only shell commands (probe 13, 2026-11-03)"
     },
     {
       "id": "r7",
@@ -432,42 +496,6 @@
       "note": "Grok orchestrator alternative (owner 2026-11-02). Model 'latest' = do not pin a version: use the grok CLI default (grok-4.7 on 2026-11-02); owner 2026-11-02: default to the latest unless asked. ork cannot run Grok until S72 lands, so it is used by hand until then"
     },
     {
-      "id": "r22",
-      "role": "reviewer",
-      "when": {
-        "size": [],
-        "effort": [],
-        "importance": [],
-        "urgency": [],
-        "well_specified": null,
-        "split": null,
-        "sliver": null
-      },
-      "agent": "Grok",
-      "vendor": "xAI",
-      "model": "latest",
-      "reasoning": "medium",
-      "note": "Grok reviewer alternative (owner 2026-11-02); cross-vendor review is allowed by review.cross-vendor (#25); ork cannot run Grok until S72 lands"
-    },
-    {
-      "id": "r23",
-      "role": "gate",
-      "when": {
-        "size": [],
-        "effort": [],
-        "importance": [],
-        "urgency": [],
-        "well_specified": null,
-        "split": null,
-        "sliver": null
-      },
-      "agent": "Grok",
-      "vendor": "xAI",
-      "model": "latest",
-      "reasoning": "medium",
-      "note": "Grok gate alternative (owner 2026-11-02); cross-vendor gate is allowed by review.cross-vendor (#25); ork cannot run Grok until S72 lands"
-    },
-    {
       "id": "r24",
       "role": "reviewer",
       "when": {
@@ -528,6 +556,6 @@
       "text": "The spec check before a wave runs the Spec check row (r16): one read-only pass over every ticked slice, answered in one sitting. The matrix has no spec-check or ui role (slicer's ledger records them as roles spec-check and ui, but a row is a reviewer row), so r14 and r16 are reviewer rows with notes; they are never a fallback of the reviewer or the gate, and the reviewer's rule u1 does not apply to the spec check because it reads specs and writes no code."
     }
   ],
-  "next_row": 31,
+  "next_row": 33,
   "next_rule": 12
 }

@@ -6,13 +6,20 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
 )
 
-// vendorNames are the vendors ork runs; the daemon accepts the same two.
-var vendorNames = []string{"claude", "codex"}
+// vendorNames are the vendors ork runs; the daemon accepts the same three.
+var vendorNames = []string{"claude", "codex", "grok"}
+
+// vendorList reads "claude, codex or grok".
+func vendorList() string {
+	n := len(vendorNames) - 1
+	return strings.Join(vendorNames[:n], ", ") + " or " + vendorNames[n]
+}
 
 // vendor is `ork vendor [list]`, `ork vendor out NAME [--reason TEXT]` and
 // `ork vendor back NAME`: the vendors the daemon remembers as out (S169,
@@ -61,14 +68,14 @@ func (a *App) vendor(ctx context.Context, o *output, args []string) int {
 			return o.usage("vendor %s: %v", sub, err)
 		}
 		if len(pos) == 0 {
-			return o.usage("vendor %s needs a vendor name (%s)", sub, strings.Join(vendorNames, " or "))
+			return o.usage("vendor %s needs a vendor name (%s)", sub, vendorList())
 		}
 		if len(pos) > 1 {
 			return o.usage("vendor %s takes one vendor name, got %q", sub, strings.Join(pos, " "))
 		}
 		name := pos[0]
-		if name != "claude" && name != "codex" {
-			return o.usage("vendor %s: unsupported vendor %q; use %s", sub, name, strings.Join(vendorNames, " or "))
+		if !slices.Contains(vendorNames, name) {
+			return o.usage("vendor %s: unsupported vendor %q; use %s", sub, name, vendorList())
 		}
 		p := daemon.SetVendorParams{Vendor: name, Out: sub == "out"}
 		if reason != nil {

@@ -27,7 +27,7 @@ flowchart TD
     engine -->|"CLI calls"| slicer["slicer: roadmap, ledger, matrix"]
     engine -->|"CLI calls"| adj["adj: decisions"]
     engine -->|"CLI calls"| git["git: worktrees, commits, merges"]
-    engine -->|"one process per role round"| vendors["claude and codex"]
+    engine -->|"one process per role round"| vendors["claude, codex and grok"]
     daemon --> files["ork files: projects.json and run records"]
 ```
 

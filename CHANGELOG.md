@@ -6,6 +6,18 @@
   (*proposed*); `--wait` waits until it rests. A relay run id passed as a run
   names the ork run. Docs: `docs/design.md`, `docs/guide.md`.
 
+- S72: Grok adapter (*proposed*). ork runs read-only roles on the `grok` CLI
+  (`--permission-mode plan`, streamed output so the watchdog sees a live role)
+  as a third vendor next to `claude` and `codex`. `grok` is accepted in a
+  launch override, by `ork vendor out|back`, and as the matrix agent `Grok`
+  (case-insensitive); a matrix model of `latest` passes no model flag. A 403
+  "used all available credits" is classed out of credits; every other failure
+  is unclassified. A write role is refused: headless grok refuses every write
+  under `dontAsk` and `acceptEdits` (probes 10 to 12), and the owner rules out
+  `bypassPermissions` and `--always-approve`.
+  Grok is never a default. Docs: `docs/design.md`, `docs/guide.md`,
+  `docs/diagrams.md`.
+
 - S235: sleep and wake awareness (*proposed*). Do not count machine sleep as
   silence for the hung-role watchdog; show working time, last output and slept
   time in `ork status`. Docs: `docs/design.md`, `docs/guide.md`,

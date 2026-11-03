@@ -78,6 +78,25 @@ func TestVendorCommandListsMarksAndClears(t *testing.T) {
 	}
 }
 
+func TestVendorOutAndBackAcceptGrok(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
+	code, stdout, stderr := run(t, w.app, "vendor", "out", "grok", "--reason", "credits")
+	if code != 0 || !regexp.MustCompile(`^grok is out until back \(since \d\d:\d\d; credits\)\n$`).MatchString(stdout) {
+		t.Fatalf("out: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	if code, stdout, _ = run(t, w.app, "vendor", "back", "grok"); code != 0 || stdout != "grok is back\n" {
+		t.Fatalf("back: exit %d: %q", code, stdout)
+	}
+	code, _, stderr = run(t, w.app, "vendor", "out", "gemini")
+	if code != 2 || !strings.Contains(stderr, "use claude, codex or grok") {
+		t.Fatalf("refusal: exit %d: %q", code, stderr)
+	}
+	_, help, _ := run(t, w.app, "help")
+	if !strings.Contains(help, "mark claude, codex or grok out until back") {
+		t.Fatalf("usage text:\n%s", help)
+	}
+}
+
 func TestVendorCommandUsageErrors(t *testing.T) {
 	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
 	starts := w.starts.Load()

@@ -1,1 +1,29 @@
-{"type":"error","message":"Internal error: {\n  \"message\": \"API error (status 403 Forbidden): Your team REDACTED-TEAM-ID has either used all available credits or reached its monthly spending limit. To continue making API requests, please purchase more credits or raise your spending limit.\",\n  \"http_status\": 403\n}","cwd":"<probe-repo>"}
+{
+  "text": "`notes.txt` is one line: `hello`.\n\nAfter approval, replace that word with `bye` so the file contains only `bye`, then reply `DONE`.\n\nNo other files change. No tests to run.",
+  "stopReason": "end_turn",
+  "sessionId": "01a1a178-a155-7762-ad16-fc20b39861c7",
+  "requestId": "5526fbe9-8a95-4604-9375-8b62d5aa97e1",
+  "cwd": "<probe-repo>",
+  "thought": "I will replace \"hello\" with \"bye\" in notes.txt and reply DONE.\n\nPlan mode is active. I will write a plan and exit plan mode instead of editing files directly.\n\nI will read notes.txt first to verify the current content before drafting the plan.The file contains a single line with the word \"hello\".Plan mode is active. I will reply with the full plan and stop.",
+  "usage": {
+    "input_tokens": 14923,
+    "cache_read_input_tokens": 69248,
+    "cache_creation_input_tokens": 0,
+    "output_tokens": 777,
+    "reasoning_tokens": 535,
+    "total_tokens": 84948
+  },
+  "num_turns": 4,
+  "total_cost_usd": 0.02350488,
+  "total_cost_usd_ticks": 235048800,
+  "modelUsage": {
+    "grok-4.7-build": {
+      "inputTokens": 14923,
+      "outputTokens": 777,
+      "cacheReadInputTokens": 69248,
+      "cacheCreationInputTokens": 0,
+      "modelCalls": 4,
+      "costUSD": 0.02350488
+    }
+  }
+}

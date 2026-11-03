@@ -15,22 +15,23 @@
 | r15 | Implementer | whole slice, not a sliver, size L | Codex | OpenAI | gpt-6.1-sol | high | owner lineup 2026-10-23: Codex implementer at high on a size L slice |
 | r12 | Implementer | whole slice, effort 3 | Codex | OpenAI | gpt-6.1-sol | high | effort 3 slice: Codex at high (owner 2026-10-29) |
 | r9 | Implementer | whole slice | Codex | OpenAI | gpt-6.1-sol | medium | default implementer for a whole slice (owner lineup 2026-10-23: medium); Codex sandbox cannot bind Unix sockets, so rerun socket-test packages outside it |
-| r25 | Implementer | whole slice, effort 3 | Codex | OpenAI | gpt-6.1-terra | high | terra high, effort 3 slice: Sonnet-class Codex model (owner 2026-11-03), after sol |
-| r26 | Implementer | whole slice | Codex | OpenAI | gpt-6.1-terra | medium | terra medium, whole slice: Sonnet-class Codex model (owner 2026-11-03), after sol |
+| r32 | Implementer | whole slice, effort 2, size M | Codex | OpenAI | gpt-6.1-terra | xhigh | terra xhigh, whole slice of size M at effort 2 (owner 2026-11-03), ahead of terra high; Claude sonnet high is the fallback |
+| r26 | Implementer | whole slice, effort 1 or 2, size S or M | Codex | OpenAI | gpt-6.1-terra | high | terra high, whole slice of size S or M at effort 1 or 2 (owner 2026-11-03): Sonnet-class Codex model, after sol; larger or effort 3 slices go from sol to Claude sonnet high |
 | r3 | Implementer | whole slice | Claude Code | Claude | sonnet | high | Claude stand-in for a whole slice at sonnet high: used when Codex is out of credits or the owner picks Claude (owner 2026-10-29) |
+| r22 | Reviewer | every slice | Grok | xAI | latest | medium | Grok reviewer, first choice (owner 2026-11-03); Claude opus (r5) is the fallback. cross-vendor review is allowed by review.cross-vendor (#25). Model 'latest' = the grok CLI default. Grok runs in plan mode, which can run read-only shell commands (probe 13, 2026-11-03). |
 | r17 | Reviewer | effort 3 | Claude Code | Claude | opus | high | reviewer at high for a effort 3 slice (owner 2026-10-29) |
 | r19 | Reviewer | size L | Claude Code | Claude | opus | high | reviewer at high for a size L slice (owner 2026-10-29) |
 | r5 | Reviewer | every slice | Claude Code | Claude | opus | medium | - |
 | r14 | Reviewer | every slice | Claude Code | Claude | opus | medium | UI pass, only for a slice that touches the UI (rule u10) |
+| r23 | Gate | every slice | Grok | xAI | latest | medium | Grok gate, first choice (owner 2026-11-03); Claude opus (r6) is the fallback. cross-vendor gate is allowed by review.cross-vendor (#25). Model 'latest' = the grok CLI default. Grok runs in plan mode, which can run read-only shell commands (probe 13, 2026-11-03). |
 | r18 | Gate | effort 3 | Claude Code | Claude | opus | high | gate at high for a effort 3 slice (owner 2026-10-29) |
 | r20 | Gate | size L | Claude Code | Claude | opus | high | gate at high for a size L slice (owner 2026-10-29) |
 | r6 | Gate | every slice | Claude Code | Claude | opus | medium | - |
+| r31 | Architect | size L | Grok | xAI | latest | high | Grok architect, size L (owner 2026-11-03): first choice, Claude opus (r7) is the fallback; model 'latest' = the grok CLI default; grok runs read-only in plan mode, which can run read-only shell commands (probe 13, 2026-11-03) |
 | r7 | Architect | size L | Claude Code | Claude | opus | high | - |
 | r10 | Orchestrator | every slice | Claude Code | Claude | sonnet | high | the outer session the owner talks to orchestrates; ork's engine spawns roles itself (owner 2026-10-29) |
 | r16 | Reviewer | every slice | Claude Code | Claude | sonnet | high | Spec check row (sonnet high, owner 2026-10-29) |
 | r21 | Orchestrator | every slice | Grok | xAI | latest | medium | Grok orchestrator alternative (owner 2026-11-02). Model 'latest' = do not pin a version: use the grok CLI default (grok-4.7 on 2026-11-02); owner 2026-11-02: default to the latest unless asked. ork cannot run Grok until S72 lands, so it is used by hand until then |
-| r22 | Reviewer | every slice | Grok | xAI | latest | medium | Grok reviewer alternative (owner 2026-11-02); cross-vendor review is allowed by review.cross-vendor (#25); ork cannot run Grok until S72 lands |
-| r23 | Gate | every slice | Grok | xAI | latest | medium | Grok gate alternative (owner 2026-11-02); cross-vendor gate is allowed by review.cross-vendor (#25); ork cannot run Grok until S72 lands |
 | r24 | Reviewer | every slice | Grok | xAI | latest | medium | Spec check row on Grok (owner 2026-11-02): one read-only pass over every ticked slice before a wave (rule u11); an alternative to r16 |
 
 ## Rules

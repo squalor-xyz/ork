@@ -15,6 +15,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/agent/claude"
 	"github.com/squalor-xyz/ork/internal/agent/codex"
+	"github.com/squalor-xyz/ork/internal/agent/grok"
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
@@ -113,7 +114,7 @@ printf '%s' "$ORK_CODEX_OUTPUT"
 	}
 }
 func TestDaemonRunnerDispatchesByVendor(t *testing.T) {
-	for _, vendor := range []string{"claude", "codex", "grok"} {
+	for _, vendor := range []string{"claude", "codex", "grok", "acme"} {
 		called := ""
 		r := vendorRunner{claude: roundRunner(func(context.Context, engine.Request) (engine.Result, error) {
 			called = "claude"
@@ -121,15 +122,99 @@ func TestDaemonRunnerDispatchesByVendor(t *testing.T) {
 		}), codex: roundRunner(func(context.Context, engine.Request) (engine.Result, error) {
 			called = "codex"
 			return engine.Result{Session: "codex"}, nil
+		}), grok: roundRunner(func(context.Context, engine.Request) (engine.Result, error) {
+			called = "grok"
+			return engine.Result{Session: "grok"}, nil
 		})}
 		got, err := r.Run(context.Background(), engine.Request{Vendor: vendor})
-		if vendor == "grok" {
+		if vendor == "acme" {
 			if err == nil || !strings.Contains(err.Error(), "unsupported vendor") || called != "" {
 				t.Fatalf("%+v %v called %s", got, err, called)
 			}
 		} else if err != nil || called != vendor || got.Session != vendor {
 			t.Fatalf("%+v %v called %s", got, err, called)
 		}
+	}
+}
+func TestSupportsVendorNamesTheThreeAdapters(t *testing.T) {
+	for vendor, want := range map[string]bool{"claude": true, "codex": true, "grok": true, "acme": false, "Grok": false, "": false} {
+		if supportsVendor(vendor) != want {
+			t.Errorf("supportsVendor(%q) = %v", vendor, !want)
+		}
+	}
+}
+func TestRunPlanAcceptsGrokOverride(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	plan := launchPlan(t, d, `{"project":"p","item":"S1","lineup":{"reviewer":[{"vendor":"grok","model":"latest","effort":"high"}]}}`)
+	if got := plan.Lineup[engine.RoleReviewer]; len(got) != 1 || got[0].Vendor != "grok" {
+		t.Fatalf("%+v", plan.Lineup)
+	}
+}
+func TestGrokRunnerForwardsRequestAndClasses(t *testing.T) {
+	for _, class := range []grok.Exit{grok.ExitOK, grok.ExitOutOfCredits, grok.ExitUnclassified, grok.ExitError} {
+		started := 0
+		req := engine.Request{Vendor: "grok", Worktree: "/work", TempDir: "/temp", Brief: "brief", Model: "latest", Effort: "high", Resume: "sid", ReportPath: "/report", ReadOnly: true, OnStart: func(pid int) { started = pid }}
+		sentinel := errors.New("round error")
+		r := grokRunner{fixtureDir: "/state/fixtures/grok", env: []string{"KEY=value"}, round: func(_ context.Context, s grok.Spec) (grok.Round, error) {
+			if s.Dir != req.Worktree || s.Prompt != req.Brief || s.Model != req.Model || s.Effort != req.Effort || s.Resume != req.Resume || s.ReportFile != req.ReportPath || s.FixtureDir != "/state/fixtures/grok" || !s.ReadOnly || !reflect.DeepEqual(s.Env, []string{"KEY=value"}) {
+				t.Fatalf("spec %+v", s)
+			}
+			s.OnStart(123)
+			return grok.Round{Exit: class, Reason: "why", Session: "session", Report: "report", Tokens: 12}, sentinel
+		}}
+		got, err := r.Run(context.Background(), req)
+		want := engine.Result{Exit: engine.ExitClass(class), Reason: "why", Session: "session", Report: "report", Tokens: 12}
+		if !errors.Is(err, sentinel) || !reflect.DeepEqual(got, want) || started != 123 {
+			t.Fatalf("%s: %+v %v started %d", class, got, err, started)
+		}
+	}
+}
+func TestGrokRunnerStreamsTextAndTouchesTheWatchdog(t *testing.T) {
+	var live []engine.Live
+	events := 0
+	r := grokRunner{round: func(_ context.Context, s grok.Spec) (grok.Round, error) {
+		for _, line := range []string{
+			`{"type":"system","subtype":"init","session_id":"s"}`,
+			`{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"hel"}}}`,
+			`{"type":"stream_event","event":{"type":"content_block_delta","index":0,"delta":{"type":"text_delta","text":"lo"}}}`,
+			`{"type":"result","subtype":"success","is_error":false,"result":"hello","usage":{"input_tokens":10,"output_tokens":2,"cache_read_input_tokens":5}}`,
+		} {
+			ev, err := grok.ParseLine([]byte(line))
+			if err != nil {
+				t.Fatal(err)
+			}
+			s.OnEvent(ev)
+		}
+		return grok.Round{Exit: grok.ExitOK}, nil
+	}}
+	_, err := r.Run(context.Background(), engine.Request{Vendor: "grok", OnLive: func(l engine.Live) { live = append(live, l) }, OnEvent: func() { events++ }})
+	var text strings.Builder
+	tokens := 0
+	for _, l := range live {
+		text.WriteString(l.Text)
+		if l.UsageKnown {
+			tokens += l.Tokens
+		}
+	}
+	if err != nil || events != 4 || text.String() != "hello" || tokens != 17 {
+		t.Fatalf("events %d text %q tokens %d: %v", events, text.String(), tokens, err)
+	}
+}
+func TestGrokRunnerRunsTheFakeBinaryEndToEnd(t *testing.T) {
+	dir := t.TempDir()
+	script := `#!/bin/sh
+printf '%s' "$ORK_GROK_OUTPUT"
+`
+	if err := os.WriteFile(filepath.Join(dir, "grok"), []byte(script), 0700); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir)
+	t.Setenv("ORK_GROK_OUTPUT", `{"type":"system","subtype":"init","session_id":"session"}
+{"type":"result","subtype":"success","is_error":false,"result":"report","usage":{"input_tokens":10,"output_tokens":2,"cache_read_input_tokens":5}}`)
+	got, err := (grokRunner{fixtureDir: filepath.Join(dir, "fixtures")}).Run(context.Background(), engine.Request{Vendor: "grok", Brief: "brief", Worktree: dir, Model: "latest", Effort: "high", ReadOnly: true})
+	want := engine.Result{Exit: engine.ExitOK, Session: "session", Report: "report", Tokens: 17}
+	if err != nil || !reflect.DeepEqual(got, want) {
+		t.Fatalf("result %+v %v", got, err)
 	}
 }
 func TestRunPlanAcceptsCodexOverride(t *testing.T) {

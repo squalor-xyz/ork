@@ -1,0 +1,4 @@
+Error: Internal error: {
+  "message": "API error (status 403 Forbidden): Your team REDACTED-TEAM-ID has either used all available credits or reached its monthly spending limit. To continue making API requests, please purchase more credits or raise your spending limit.",
+  "http_status": 403
+}
