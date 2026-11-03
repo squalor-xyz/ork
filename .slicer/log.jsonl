@@ -3010,3 +3010,13 @@
 {"when": "2026-11-03T12:50:34Z", "item": "S261", "action": "edit", "from": "", "to": "", "note": "boundary"}
 {"when": "2026-11-03T13:09:28Z", "item": "S264", "action": "add", "from": "", "to": "open", "note": "Launch: show the spec check's progress, say to wait for it, and keep raw report text out of the sitting"}
 {"when": "2026-11-03T13:09:28Z", "item": "S265", "action": "add", "from": "", "to": "open", "note": "Non-Go projects: ork projects setup for the check command and shell allowlist, and a warning when they are missing"}
+{"when": "2026-11-03T13:13:42Z", "item": "S266", "action": "add", "from": "", "to": "open", "note": "Spec check: a report-shape failure survives its one retry; nudge the same session instead"}
+{"when": "2026-11-03T13:20:20Z", "item": "S256", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-03T13:21:02Z", "item": "S265", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-03T13:21:13Z", "item": "S264", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-03T13:21:29Z", "item": "S254", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-03T13:21:40Z", "item": "S264", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-03T13:21:46Z", "item": "S254", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-03T13:21:58Z", "item": "S254", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-03T13:21:58Z", "item": "S262", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-03T13:22:07Z", "item": "S262", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
