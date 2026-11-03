@@ -3004,3 +3004,7 @@
 {"when": "2026-11-03T12:45:12Z", "item": "relay-roles.r28", "action": "relay-roles", "from": "24", "to": "3", "note": "move"}
 {"when": "2026-11-03T12:45:12Z", "item": "relay-roles.r29", "action": "relay-roles", "from": "25", "to": "5", "note": "move"}
 {"when": "2026-11-03T12:45:13Z", "item": "relay-roles.r30", "action": "relay-roles", "from": "26", "to": "6", "note": "move"}
+{"when": "2026-11-03T12:49:57Z", "item": "S262", "action": "add", "from": "", "to": "open", "note": "Running view: only the tabs that fit it, and jump to it after a wave launch"}
+{"when": "2026-11-03T12:49:57Z", "item": "S263", "action": "add", "from": "", "to": "open", "note": "Daemon log: stop repeating the same merge-detection error on every poll"}
+{"when": "2026-11-03T12:50:21Z", "item": "S261", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-03T12:50:34Z", "item": "S261", "action": "edit", "from": "", "to": "", "note": "boundary"}

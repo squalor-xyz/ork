@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 262,
+  "next_id": 264,
   "preamble": "",
   "passes": [
     {
@@ -13433,7 +13433,7 @@
       "title": "Shared role matrix: apply ork's matrix to one project or to every registered project",
       "short_title": "Shared role matrix: apply ork's matrix to one project or to every registered project",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
@@ -13453,6 +13453,62 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S262",
+      "title": "Running view: only the tabs that fit it, and jump to it after a wave launch",
+      "short_title": "Running view: only the tabs that fit it, and jump to it after a wave launch",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-03 (screenshots of the Running entry and of a Waves launch): (1) With Running selected the view bar still shows Questions, Waves, Roadmap and Decisions as cross-project views (S140; docs/dashboard.md:295). Proposed: while Running is selected show only Overview (Running) and Questions (a paused run asks there); hide Waves, Roadmap and Decisions. Waves asks the daemon for every project's suggestion, so it is also the costly one. This reverses part of S140. (2) After l on the Waves screen the TUI stays put: the only sign is a footer status (launched N items; enter on a running row opens its run, internal/tui/waves.go:~443-452), and the owner reported it looked like it went nowhere (a slicer wave of four items ended after its spec check; ork status then showed no run for slicer; the footer text was not seen, so the cause is unverified). Proposed: after the daemon accepts the launch, jump to the Running entry with the new run's row selected; do not jump while the spec check holds an item for questions, because those are answered on the Waves screen (pending: spec.check). Open owner questions: which tabs to keep on Running, what the jump selects when several items launch, how the owner gets back to the Waves composer (esc or the sidebar), and whether a held launch should say so in a banner. A ui.* adj key and docs/dashboard.md change; UI pass applies. Related: S140, S82, S190, S251.",
+        "discovered_from": "S140",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S263",
+      "title": "Daemon log: stop repeating the same merge-detection error on every poll",
+      "short_title": "Daemon log: stop repeating the same merge-detection error on every poll",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-03: /Users/jon/.local/state/ork/daemon.log holds 50 lines, all the same: 'merge detection ork-20261025-175709-e8c9: git -C .../ork merge-base --is-ancestor S78 HEAD: exit 128: fatal: Not a valid object name S78'. The run's branch S78 no longer exists, so merge detection fails and logs on every pass, and real daemon messages are buried. Fix: log a given run and error once (or on change), and treat a branch that no longer exists as merged-or-gone for that run, with a one-line reason in the record. Owner decision needed on which state the run takes.",
+        "discovered_from": "S114",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 2,
+        "effort": 1,
         "attempts": 0
       }
     }
