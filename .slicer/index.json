@@ -1733,7 +1733,7 @@
       "id": "S72",
       "title": "Grok adapter: run roles on the grok CLI as a third vendor",
       "short_title": "Grok adapter",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -1806,6 +1806,48 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "30e393ce-acc2-40e8-80db-b004a1560989",
+          "kind": "",
+          "text": "**2026-11-03** — Orchestrator, 2026-11-03: the owner picked 'I run them once, then retry' (interactive). Implement step 1 is DONE: the orchestrator ran the six grok probes once, with no -m flag for probes 01-05 (the CLI default applies: grok-4.7 in the stream init line) and the bad-model flag in 06. The fixtures are already in this worktree: testdata/vendors/grok/01..06 (.cmd, .exit, .stdout, .stderr, and the 04 and 05 .repo-status) are modified against HEAD; read git status and git diff --stat first. Do NOT run grok and do NOT rerun the probes (the sandbox denies grok, and the probes are billed and one-shot). Results: 01-05 exit 0; 06 exits 1 with 'unknown model id'. The plain JSON result names the session sessionId (camelCase), the streaming form uses session_id. Probe 04 (--tools Read --permission-mode dontAsk) and probe 05 (--permission-mode plan) left the probe repo clean. Start at step 2 and build the adapter from these fixtures. Decide the write mode with the output in hand (owner Q7(2)); never allow bypassPermissions; if the fixtures show no safe write mode, stop and report that as an owner question. Report with the Tests line and the Owner needed section.",
+          "created_at": "2026-11-03T13:01:00Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "c95caa0a-2bf3-42c8-9332-3ea267dddb5f",
+          "kind": "",
+          "text": "**2026-11-03** — Human checks at approval (S72):\n- later: [AFTER LAND] The owner adds the Grok matrix rows with the reported commands, runs `ork vendor out grok` and `ork vendor back grok`, and runs one low-risk role on a Grok row (for example a reviewer on a small slice, chosen by the owner) to see a live tail, tokens and a clean exit. Not before the daemon is rebuilt and restarted.",
+          "created_at": "2026-11-03T15:25:34Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "9c979d14-566b-4d20-8187-82e264c4f1d0",
+          "kind": "",
+          "text": "**2026-11-03** — Verified: ork runs read-only roles on the grok CLI as a third vendor (internal/agent/grok, grokRunner, grok accepted in launch overrides and ork vendor out|back, matrix agent Grok matched case-insensitively, model latest passes no -m). Output is streamed so the watchdog sees each line; a 403 'used all available credits' is out of credits, other failures are unclassified. Write roles are refused: probes 10-12 show headless grok refuses every write under dontAsk and acceptEdits, and bypassPermissions is ruled out. Follow-ups for the owner to file: planning skips a Grok write row; classify a refused streamed run once a sample exists. go test -race ./... passed (22 packages), go vet and gofmt clean, slicer check passed.",
+          "created_at": "2026-11-03T15:25:51Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -1825,7 +1867,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

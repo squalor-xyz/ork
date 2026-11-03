@@ -172,6 +172,26 @@ func TestVendorsListSetAndBackOverTheWire(t *testing.T) {
 	}
 }
 
+func TestVendorOutAndBackAcceptGrok(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	var set VendorsResult
+	if err := json.Unmarshal(request(t, d, "vendors.set", `{"vendor":"grok","out":true,"reason":"credits"}`), &set); err != nil || len(set.VendorsOut) != 1 || set.VendorsOut[0].Vendor != "grok" || !d.runs.deps.Vendors.IsOut("grok") {
+		t.Fatalf("out: %+v %v", set, err)
+	}
+	var back VendorsResult
+	if err := json.Unmarshal(request(t, d, "vendors.set", `{"vendor":"grok","out":false}`), &back); err != nil || !back.WasOut || d.runs.deps.Vendors.IsOut("grok") {
+		t.Fatalf("back: %+v %v", back, err)
+	}
+	_, err := d.handle(context.Background(), "vendors.set", json.RawMessage(`{"vendor":"acme","out":true}`))
+	if err == nil || !strings.Contains(err.Error(), "use claude, codex or grok") {
+		t.Fatalf("refusal names the vendors: %v", err)
+	}
+	// Grok has no slot cap (owner 2026-11-03).
+	if _, ok := defaultVendorCaps["grok"]; ok {
+		t.Fatalf("defaultVendorCaps %v", defaultVendorCaps)
+	}
+}
+
 func TestDaemonSharesOneVendorsValueAndDefaultsCodexToOne(t *testing.T) {
 	var mu sync.Mutex
 	var started []string

@@ -3004,3 +3004,12 @@
 {"when": "2026-11-03T12:45:12Z", "item": "relay-roles.r28", "action": "relay-roles", "from": "24", "to": "3", "note": "move"}
 {"when": "2026-11-03T12:45:12Z", "item": "relay-roles.r29", "action": "relay-roles", "from": "25", "to": "5", "note": "move"}
 {"when": "2026-11-03T12:45:13Z", "item": "relay-roles.r30", "action": "relay-roles", "from": "26", "to": "6", "note": "move"}
+{"when": "2026-11-03T12:49:51Z", "item": "S72", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-11-03T12:50:55Z", "item": "S72", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-03T13:01:00Z", "item": "S72", "action": "note", "from": "", "to": "", "note": "Orchestrator, 2026-11-03: the owner picked 'I run them once,", "by": "Jon R"}
+{"when": "2026-11-03T13:22:02Z", "item": "S72", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-03T13:22:14Z", "item": "S72", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-03T13:42:43Z", "item": "S72", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-03T15:25:34Z", "item": "S72", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S72):", "by": "Jon R"}
+{"when": "2026-11-03T15:25:51Z", "item": "S72", "action": "note", "from": "", "to": "", "note": "Verified: ork runs read-only roles on the grok CLI as a thir", "by": "Jon R"}
+{"when": "2026-11-03T15:26:01Z", "item": "S72", "action": "status", "from": "started", "to": "done", "note": "Verified: ork runs read-only roles on the grok CLI as a third vendor (internal/agent/grok, grokRunner, grok accepted in launch overrides and ork vendor out|back, matrix agent Grok matched case-insensitively, model latest passes no -m). Streamed output feeds the watchdog; 403 used-all-credits is out of credits, other failures unclassified. Write roles refused (probes 10-12: headless grok refuses every write under dontAsk and acceptEdits; bypassPermissions ruled out). go test -race ./... passed (22 packages), go vet and gofmt clean, slicer check passed.", "by": "Jon R"}

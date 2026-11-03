@@ -1,1 +1,28 @@
-{"type":"error","message":"Internal error: {\n  \"message\": \"API error (status 403 Forbidden): Your team REDACTED-TEAM-ID has either used all available credits or reached its monthly spending limit. To continue making API requests, please purchase more credits or raise your spending limit.\",\n  \"http_status\": 403\n}","cwd":"<probe-repo>"}
+{
+  "text": "OK",
+  "stopReason": "end_turn",
+  "sessionId": "01a1a178-1dc7-76d3-98bc-4a0415443df2",
+  "requestId": "8b30e205-ee44-4b1a-84cf-91c9ae5163a7",
+  "cwd": "<probe-repo>",
+  "usage": {
+    "input_tokens": 18014,
+    "cache_read_input_tokens": 1152,
+    "cache_creation_input_tokens": 0,
+    "output_tokens": 24,
+    "reasoning_tokens": 23,
+    "total_tokens": 19190
+  },
+  "num_turns": 1,
+  "total_cost_usd": 0.01249432,
+  "total_cost_usd_ticks": 124943200,
+  "modelUsage": {
+    "grok-4.6-build": {
+      "inputTokens": 18014,
+      "outputTokens": 24,
+      "cacheReadInputTokens": 1152,
+      "cacheCreationInputTokens": 0,
+      "modelCalls": 1,
+      "costUSD": 0.01249432
+    }
+  }
+}

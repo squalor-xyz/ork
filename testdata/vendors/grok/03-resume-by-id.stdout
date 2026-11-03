@@ -1,0 +1,29 @@
+{
+  "text": "OK",
+  "stopReason": "end_turn",
+  "sessionId": "01a1a178-1dc7-76d3-98bc-4a0415443df2",
+  "requestId": "7f442be4-52b2-48d1-acbb-0237cbeb3721",
+  "cwd": "<probe-repo>",
+  "thought": "The user is asking what exact word I was asked to reply with at the start of this session.",
+  "usage": {
+    "input_tokens": 18868,
+    "cache_read_input_tokens": 512,
+    "cache_creation_input_tokens": 0,
+    "output_tokens": 52,
+    "reasoning_tokens": 51,
+    "total_tokens": 19432
+  },
+  "num_turns": 1,
+  "total_cost_usd": 0.01302336,
+  "total_cost_usd_ticks": 130233600,
+  "modelUsage": {
+    "grok-4.6-build": {
+      "inputTokens": 18868,
+      "outputTokens": 52,
+      "cacheReadInputTokens": 512,
+      "cacheCreationInputTokens": 0,
+      "modelCalls": 1,
+      "costUSD": 0.01302336
+    }
+  }
+}

@@ -146,6 +146,18 @@ func TestRunPlanKeepsEveryRowWithAnAdapter(t *testing.T) {
 	}
 }
 
+// A Grok alternate comes after the recommended row, never before it (S72).
+func TestPlanKeepsAGrokAlternateAfterTheRecommendedRow(t *testing.T) {
+	roles := `{"roles":[{"role":"implementer","row":{"agent":"Claude Code","vendor":"Anthropic","model":"sonnet","reasoning":"high"},"alternatives":[{"agent":"Grok","vendor":"xAI","model":"latest","reasoning":"high"},{"agent":"Codex","vendor":"OpenAI","model":"gpt","reasoning":"high"}]},{"role":"reviewer","row":{"agent":"Claude Code","vendor":"Anthropic","model":"opus","reasoning":"medium"},"alternatives":[{"agent":"Grok","vendor":"xAI","model":"latest","reasoning":"high"}]}]}`
+	d, _, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: roles})
+	plan := launchPlan(t, d, `{"project":"p","item":"S1"}`)
+	wantImpl := []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "high"}, {Vendor: "grok", Model: "latest", Effort: "high"}, {Vendor: "codex", Model: "gpt", Effort: "high"}}
+	wantReview := []runrec.LineupEntry{{Vendor: "claude", Model: "opus", Effort: "medium"}, {Vendor: "grok", Model: "latest", Effort: "high"}}
+	if !reflect.DeepEqual(plan.Lineup[engine.RoleImplementer], wantImpl) || !reflect.DeepEqual(plan.Lineup[engine.RoleReviewer], wantReview) || !reflect.DeepEqual(plan.Lineup[engine.RoleGate], wantReview) {
+		t.Fatalf("lineup %+v", plan.Lineup)
+	}
+}
+
 // startRunRegistrationDaemon changes the registry inside the fake
 // RecommendRoles call, after planRun's read and before startRun's admission.
 func startRunRegistrationDaemon(t *testing.T, remove bool) (*Daemon, *runrec.Store, registry.Project, <-chan struct{}) {
@@ -391,8 +403,8 @@ func TestRunPlanRefusesBadOverride(t *testing.T) {
 		"null chain":         `"lineup":{"reviewer":null}`,
 		"empty model":        `"lineup":{"implementer":[{"vendor":"claude","effort":"high"}]}`,
 		"empty effort":       `"lineup":{"reviewer":[{"vendor":"claude","model":"m"}]}`,
-		"unsupported vendor": `"lineup":{"implementer":[{"vendor":"grok","model":"m","effort":"high"}]}`,
-		"bad alternative":    `"lineup":{"implementer":[{"vendor":"claude","model":"m","effort":"high"},{"vendor":"grok","model":"m","effort":"high"}]}`,
+		"unsupported vendor": `"lineup":{"implementer":[{"vendor":"acme","model":"m","effort":"high"}]}`,
+		"bad alternative":    `"lineup":{"implementer":[{"vendor":"claude","model":"m","effort":"high"},{"vendor":"acme","model":"m","effort":"high"}]}`,
 		"alternative model":  `"lineup":{"reviewer":[{"vendor":"claude","model":"m","effort":"high"},{"vendor":"claude","effort":"low"}]}`,
 		"alternative effort": `"lineup":{"reviewer":[{"vendor":"claude","model":"m","effort":"high"},{"vendor":"claude","model":"m"}]}`,
 		"negative minutes":   `"budgets":{"minutes":-1}`,

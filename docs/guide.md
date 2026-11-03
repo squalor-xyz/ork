@@ -57,7 +57,7 @@ It prints the path of the ork binary first, then one line per check
 (`internal/cli/cli.go:73-75`, `docs/design.md:1165-1204`):
 
 - the slicer and adj versions;
-- each vendor CLI (claude, codex, grok) and its version. ork runs roles on `claude` and `codex` only; grok has no adapter (`docs/design.md:181`). A missing vendor is
+- each vendor CLI (claude, codex, grok) and its version. ork runs roles on `claude`, `codex` and `grok` (`docs/design.md:189`); grok runs read-only roles only, as an alternate row (*proposed*). A missing vendor is
   reported and does not fail the check, because ork needs only the vendors
   your lineup uses;
 - the slicer relay contract (`slicer ai relay --json`), for the directory you
@@ -174,7 +174,7 @@ ork does not edit it. Read it in ork: press `m` on the Roadmap, or run
 
 Both show slicer's matrix text and a short `ork` section that says, row by
 row, what ork does with it (the pane puts the `ork` section first, the command
-puts slicer's text first): `used as claude` or `used as codex`, `skipped: no
+puts slicer's text first): `used as claude`, `used as codex` or `used as grok`, `skipped: no
 adapter for AGENT`, `UI pass row` and `Spec check row` for the two reviewer rows
 that a rule names, `not used: the gate runs the reviewer's lineup` for Gate rows
 (ork's gate follows the reviewer), `not run by ork` for the Orchestrator
@@ -189,7 +189,10 @@ For each slice ork calls `slicer relay-roles recommend ID --well-specified
 y/n --split y/n` and turns the answer into the lineup for implementer,
 reviewer, gate, and an architect when the lineup has one (the matrix gives one on size L) (`docs/design.md:167-186`, `docs/design.md:272-275`,
 `internal/slicercli/write.go:96`). A matrix row for a vendor ork has no adapter
-for is skipped; ork runs `claude` and `codex` only (`docs/design.md:181-185`).
+for is skipped; ork runs `claude`, `codex` and `grok` (`docs/design.md:184-198`). Grok
+runs read-only roles (reviewer, gate, architect, spec check) in plan mode and
+refuses a write role, so a Grok implementer row fails when it runs (*proposed*,
+S72). A matrix model of `latest` on a Grok row passes no model flag.
 
 At launch you can change the lineup and the budgets for that one run. The
 matrix stays as it was (`docs/design.md:170-175`). In the TUI the key is `e`
