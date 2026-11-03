@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 264,
+  "next_id": 266,
   "preamble": "",
   "passes": [
     {
@@ -13509,6 +13509,62 @@
         "importance": 1,
         "urgency": 2,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S264",
+      "title": "Launch: show the spec check's progress, say to wait for it, and keep raw report text out of the sitting",
+      "short_title": "Launch: show the spec check's progress, say to wait for it, and keep raw report text out of the sitting",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-03 (screenshots of a slicer wave launch): after l the Waves screen shows only 'pending: spec.check' in the footer, with no progress and no hint that the owner must wait for the spec check to finish before the confirm. Wanted: a spec check progress bar (items checked of ticked) and a plain line such as 'spec check: 2 of 4 items; wait, the launch confirm comes next'. Also seen in the same flow: the spec check sitting under Unplaced showed raw model text ('Owner needed: none', a stray code fence, and 'Reading the code closed these gaps. None needs an owner decision: - **s443:** ...', then '+13 more lines'), so the report's prose reached the sitting instead of only questions; cause not traced. Both the Waves screen and 'ork run' print the spec check state; check both. Related: S262 (jump to Running after launch), S258, S243.",
+        "discovered_from": "S116",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S265",
+      "title": "Non-Go projects: ork projects setup for the check command and shell allowlist, and a warning when they are missing",
+      "short_title": "Non-Go projects: ork projects setup for the check command and shell allowlist, and a warning when they are missing",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-03: the slicer project had no check_command and no implementer permissions in the ork registry, so its Claude implementers were denied python3 (the default allowlist is Go-centric, internal/engine/perm.go:24-36), and the project check step had nothing to run, so a slice could pass with no tests. Found only from a screenshot of denied commands. Friction: (1) ork doctor and the launch plan do not warn when a project has no check command. (2) 'ork projects set --allow ROLE=PATTERN' replaces the role's whole list with the patterns given in that call: one call with a single pattern left an implementer that could not Read or Edit, and a second call dropped the first pattern; the plan printed only 'allowlist: Bash(python3 -m unittest*)' with no warning. (3) 'ork projects set' is refused while the project has unfinished runs, so a launched wave must be stopped before its project can be fixed. Proposed: a setup step or preset per language (go, python) that sets the check command and a full allowlist; --allow adds to the list unless told to replace; a warning in doctor and in the plan. Owner decision on the presets. Related: S243, S249, S251, S258.",
+        "discovered_from": "S114",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }

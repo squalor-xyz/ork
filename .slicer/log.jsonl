@@ -3008,3 +3008,5 @@
 {"when": "2026-11-03T12:49:57Z", "item": "S263", "action": "add", "from": "", "to": "open", "note": "Daemon log: stop repeating the same merge-detection error on every poll"}
 {"when": "2026-11-03T12:50:21Z", "item": "S261", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-03T12:50:34Z", "item": "S261", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-11-03T13:09:28Z", "item": "S264", "action": "add", "from": "", "to": "open", "note": "Launch: show the spec check's progress, say to wait for it, and keep raw report text out of the sitting"}
+{"when": "2026-11-03T13:09:28Z", "item": "S265", "action": "add", "from": "", "to": "open", "note": "Non-Go projects: ork projects setup for the check command and shell allowlist, and a warning when they are missing"}
