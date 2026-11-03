@@ -2978,3 +2978,4 @@
 {"when": "2026-11-03T12:32:44Z", "item": "S255", "action": "add", "from": "", "to": "open", "note": "Retry restarts the vendor chain at the first lineup entry"}
 {"when": "2026-11-03T12:32:45Z", "item": "S256", "action": "add", "from": "", "to": "open", "note": "Gate: a report path it can write, and a resumed gate re-reads the tree"}
 {"when": "2026-11-03T12:32:45Z", "item": "S257", "action": "add", "from": "", "to": "open", "note": "ork wait: block until a run changes state"}
+{"when": "2026-11-03T12:33:58Z", "item": "S72", "action": "note", "from": "", "to": "", "note": "Owner answers to Q7 (interactive, 2026-11-03): (1) Adapter k", "by": "Jon R"}
