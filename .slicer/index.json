@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 267,
+  "next_id": 268,
   "preamble": "",
   "passes": [
     {
@@ -13667,6 +13667,34 @@
         "reason": "",
         "importance": 2,
         "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S267",
+      "title": "Running view: queued runs show no stale cue, and the orchestrator row stops reading as stuck",
+      "short_title": "Queued runs: no stale cue",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-03 (screenshot of the Running entry). (1) A run that is queued behind the cap shows the stale cue: s370 and S237 read '!! heard 32m' and '! heard 19m' although they have not started. lastHeard (internal/tui/relayboard.go:~167-190) ages the ledger run's updated_at, which nothing refreshes while the engine run is queued, so the row turns amber then red and looks hung. The docs only exempt a run that waits for a vendor slot (docs/dashboard.md:~535-538, S146/S169) and a wait on the owner (S154). Proposed: a queued engine run shows 'queued' or 'queued 19m' in the heard cell, dim, with no ! or !! cue. (2) The orchestrator step shows as the pane's live line ('- orchestrator start 32m', s443 on slicer) while the implementer, reviewer and gate rows are the work: the elapsed time is the relay's age, not a role's, and reads as a stuck orchestrator. Proposed: when ork runs the roles itself, show the orchestrator step dim with its state and no running clock; owner to confirm. Open owner questions: the heard text for a queued row, and whether the orchestrator row should hide or stay dim. A UI pass applies (u10); likely docs/dashboard.md and golden views change. Related: S146, S154, S169, S262.",
+        "discovered_from": "S262",
+        "parent": "",
+        "cites": [],
+        "key": "running-queued-cue",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
         "effort": 1,
         "attempts": 0
       }
