@@ -13621,6 +13621,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "b7c7ceda-826f-4010-9398-819cee33d1de",
+          "kind": "",
+          "text": "**2026-11-03** — Owner pick 2026-11-03 (interactive, s443 check timeouts): raise slicer's check limit to 30 minutes. Evidence for this slice: the slicer full suite took 8 to 16 minutes with four parallel runs and timed out ork's 10-minute check twice (s443 checks-1 and checks-4, every test passing); each timeout cost a fix round. 'ork projects set --check-minutes' was refused while the wave ran, so the fix waited for the wave to end. Proposed addition to Q5 (busy rule): also allow --check-minutes while runs are unfinished; it is read when the next check starts, like --cap.",
+          "created_at": "2026-11-03T15:22:37Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
