@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 258,
+  "next_id": 259,
   "preamble": "",
   "passes": [
     {
@@ -13303,6 +13303,34 @@
         "trees_literal": false,
         "findings": "Wave 6, 2026-11-02: an agent or script that steers ork from the CLI has no way to wait for a change. The orchestrator session polls ork status in a shell loop (.scratch/v11/watch.sh, zsh-only) and restarts it each time it fires. Proposed: 'ork wait [RUN] [--timeout D]' prints the status block and exits when a run's state, item or step changes, a question is pending, or no run is active; exit code says which. The daemon already pushes snapshots to the TUI, so the CLI can reuse them. Owner decision needed on the exit codes and on --json. Related: S237 (answer and retry return at once), S233 (ork ai guide), S240 (status text clarity).",
         "discovered_from": "S235",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S258",
+      "title": "Spec check row: ork picks it by a setting, offers the fix when it is missing, and keeps it out of the lineups",
+      "short_title": "Spec check row: ork picks it by a setting, offers the fix when it is missing, and keeps it out of the lineups",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-03: (1) A wave launch on the slicer project failed with 'internal: the matrix has no Spec check row: add a rule that names it as Spec check row (rNN)'. The matrix had no such rule; the owner had me add r18 and rule u10 there. The adjudicate, daystar, pitfight and squalify matrices have none either (read from their relay-roles files; use 'slicer relay-roles show --root' to confirm). The message is prefixed 'internal:' although the owner can fix it, and the TUI offers no fix: it could show the exact add and rule-add commands, or a setup step in the S251 settings pane. (2) Ork finds the row only through a rule that matches Spec check row (rNN) (internal/slicercli/write.go:254), and skips only that row, the UI pass row and unknown agents when it builds the reviewer and gate chains (internal/daemon/runs.go:381-405). A second spec-check row on a vendor ork runs (for example a terra row, owner request 2026-11-03) would leak into the reviewer and gate chains and cannot be picked for the spec check. Needed: a way to choose among spec-check rows (a project setting or a note marker on the row), and every spec-check row skipped from the chains. The owner decides the marker. Related: S116, S167, S251.",
+        "discovered_from": "S116",
         "parent": "",
         "cites": [],
         "key": "",
