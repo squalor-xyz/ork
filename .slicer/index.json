@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 285,
+  "next_id": 286,
   "preamble": "",
   "passes": [
     {
@@ -14352,6 +14352,34 @@
         "parent": "",
         "cites": [],
         "key": "tests-fake-scripts-once",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S285",
+      "title": "Separate round check command from the gate and landing check command",
+      "short_title": "Separate round check command from the gate and landing check command",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-04 chose: fix test speed first (S284, slicer s448), then run a faster check in implementer rounds and the full traced run at the gate and landing. Today one command serves every check (internal/engine/states.go:207 and :233, project key check_command, docs/state.md:49,78; ADR 0032 wants slicer's config key). For slicer the round command would add -p 'test*.py' to python3 -m unittest discover -s tests -t tests (same tests, no line tracer, per .scratch/v11/test-trim-proposal.md); the full command keeps tests/test_affected.py's tracer and refreshes the affected-test map. Proposed (spec step must confirm with the owner and run adj check first; the key name, where it lives, and whether it is ork or slicer config are open): an optional round_check_command setting, used by implementer-round checks only; check_command stays for the gate and the landing re-check; unset means check_command everywhere. Acceptance: (1) with it unset, behavior and run logs are unchanged; (2) with it set, round checks run it and the log header names it, while the gate and landing run check_command; (3) the status and checks display name which command ran; (4) docs/state.md and docs/design.md document the key; (5) tests cover set, unset, and a failing round command followed by a passing gate. Order: after S284 and slicer s448 land and their measured savings are known; this is the second step (option 1 after option 3).",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "round-check-command",
         "pass": "v1.1",
         "group": "",
         "reason": "",
