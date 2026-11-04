@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 284,
+  "next_id": 285,
   "preamble": "",
   "passes": [
     {
@@ -14330,6 +14330,34 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S284",
+      "title": "Go tests: write fake vendor and git scripts once per test binary",
+      "short_title": "Go tests: write fake vendor and git scripts once per test binary",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "ork go test ./... measures 523 s over five packages; a round waits on internal/engine (230-305 s) and cli (148 s). On this Mac the first run of a newly written script costs 200-440 ms, a later run or a link 7-10 ms. cli fakeVendor (internal/cli/cli_test.go:553) writes three scripts for each of 64 doctor tests (136 s of cli's 148 s); engine newLandEnv (internal/engine/land_test.go:129) writes two for about 50 landing tests. Change: write each fake script once per test binary (TestMain or sync.Once) and symlink or hard-link it into each test's dir. Acceptance: (1) go test ./... passes with the same test count and no test removed or skipped; (2) go test ./internal/cli -count=1 wall time is at most 60 s and ./internal/engine at most 200 s, measured on the same machine and quoted before and after in the report; (3) no test depends on another's script file; (4) gofmt -l . and go vet ./... are clean. Source: .scratch/v11/ork-test-trim-proposal.md B1-B3.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "tests-fake-scripts-once",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }
