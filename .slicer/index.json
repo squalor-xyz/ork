@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 281,
+  "next_id": 284,
   "preamble": "",
   "passes": [
     {
@@ -12913,7 +12913,22 @@
       "depends_on": [
         "S222"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "65f4a899-b362-46ca-a5c0-fc178e0041af",
+          "kind": "",
+          "text": "**2026-11-04** — Owner 2026-11-04 screenshot: the Running pane prints every denied Bash command of a run (five lines for s313 and S08), and the full text of each command, which pushes the useful lines (steps, tokens, last heard) down. Show a count of denied commands with the first one, and the rest in the run pane.",
+          "created_at": "2026-11-04T12:29:50Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -13324,6 +13339,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "84952166-ab3f-401e-a87e-79fcbf7a7a71",
+          "kind": "",
+          "text": "**2026-11-04** — Owner 2026-11-04 evidence: the s443 landing in slicer paused with \"Your local changes to the following files would be overwritten by merge: .slicer/index.json, log.jsonl, render/ROADMAP.*\" because slicer main held uncommitted tracking edits (matrix rows, filings). It cost one approval round and a commit by the owner. The abort is the F40 case; warn before the landing starts (S217) or commit the tracking-only edits.",
+          "created_at": "2026-11-04T12:29:50Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -13452,7 +13481,22 @@
       "status": "open",
       "has_slice": false,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "c2e48737-9795-426c-971e-d8ce5199fdcc",
+          "kind": "",
+          "text": "**2026-11-04** — Owner 2026-11-04 evidence: .scratch/v11/watch.sh exits on any status change, including every output tick of a running role, so it fired about ten times for one slice. What I need: ork wait RUN --until awaiting-approval,paused,stopped,landed that blocks until that run enters one of those states and prints the state.",
+          "created_at": "2026-11-04T12:29:49Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -13726,6 +13770,20 @@
           "kind": "",
           "text": "**2026-11-03** — Owner pick 2026-11-03 (interactive, s443 check timeouts): raise slicer's check limit to 30 minutes. Evidence for this slice: the slicer full suite took 8 to 16 minutes with four parallel runs and timed out ork's 10-minute check twice (s443 checks-1 and checks-4, every test passing); each timeout cost a fix round. 'ork projects set --check-minutes' was refused while the wave ran, so the fix waited for the wave to end. Proposed addition to Q5 (busy rule): also allow --check-minutes while runs are unfinished; it is read when the next check starts, like --cap.",
           "created_at": "2026-11-03T15:22:37Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "dcab27bb-4964-485d-992b-b427364ab444",
+          "kind": "",
+          "text": "**2026-11-04** — Owner 2026-11-04 evidence (slicer wave 7): the Claude implementers on slicer were denied PYTHONPATH=src python3 -m slicer, python3.12, commands with a pipe, and commands with an env prefix such as TMPDIR=... (S271). Results: s313 ran no tests in one round (reported Tests: 0 passed, NOT RUN), s443 skipped its scratch-project check, and the reviewer raised a [fix] that the slice tracking steps (start, note, handoff) were never run. projects setup should offer the python and slicer allow patterns for a Python project, and say that --allow changes are refused while runs are unfinished.",
+          "created_at": "2026-11-04T12:29:47Z",
           "attempt": 0,
           "by": "Jon R",
           "verified_by": "",
@@ -14071,7 +14129,22 @@
       "status": "open",
       "has_slice": false,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b2af9b6b-d0c2-4458-a1a8-2344807fef5e",
+          "kind": "",
+          "text": "**2026-11-04** — Owner 2026-11-04 evidence: the reviewer raised \"[fix] the slice is still open, tracking steps were never run\" for s313, though the implementer was denied every slicer command by the sandbox. The reviewer and gate briefs should say that a tracking step the implementer was denied is a Deviation for the orchestrator to run, not a [fix] for the implementer, so a fix round is not spent on it.",
+          "created_at": "2026-11-04T12:29:48Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -14173,6 +14246,90 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S281",
+      "title": "ork show RUN: pause reason, question, latest report and checks in one command",
+      "short_title": "ork show RUN: pause reason, question, latest report and checks in one command",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Wave 7, 2026-11-04: to steer paused runs I had to read run.json, report files and the grok fixture dir under ~/.local/state/ork by hand, and ork status takes no run argument (\"ork: status takes no arguments, got ork-...\"). ork status also prints a paused run long wait reason and every denied command on one line. Needed: ork show RUN prints the run state, the whole pause reason or owner question with its options, the path of the latest report per role, the check results with log paths, and the denied commands as a count with the first few. Related: S247 (ork projects show), S240.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S282",
+      "title": "Relaunch of a stopped run continues at the stage it stopped, not at round 1",
+      "short_title": "Relaunch of a stopped run continues at the stage it stopped, not at round 1",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Wave 7, 2026-11-04 (slicer s313): a stopped run cannot be retried, so I relaunched with ork wave start. The new run started the implementer at round 1 again (claude/haiku, about 30 minutes) although the worktree already held a finished, test-green diff, and after the reviewer round failed (S280) the second relaunch did the same. Needed: when ork wave start reuses a worktree whose diff is unchanged since the last green check, it starts at the stage that stopped (review or gate), keeps the earlier reports, and asks the owner only if the diff changed. Open: how ork proves the diff is unchanged (hash of the diff against the recorded round). Related: S255, S279, S280.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S283",
+      "title": "wave start: one item without a spec must not fail the whole wave",
+      "short_title": "wave start: one item without a spec must not fail the whole wave",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Wave 7, 2026-11-03: ork wave start ork S256 S271 failed with \"spec check failed: S271: the item has no slice spec\" and launched nothing, although S256 was ready. I had to rerun with S256 alone. Needed: the wave starts the items that have a spec and prints the skipped ones with the reason and the command that fixes it (slicer promote). Open: whether failing the whole wave is deliberate; owner decides. Related: S258, S260, S264.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
         "attempts": 0
       }
     }

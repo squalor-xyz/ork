@@ -3080,3 +3080,11 @@
 {"when": "2026-11-04T03:41:32Z", "item": "S278", "action": "add", "from": "", "to": "open", "note": "Spec check: every slice has explicit, verifiable acceptance criteria"}
 {"when": "2026-11-04T05:21:05Z", "item": "S279", "action": "add", "from": "", "to": "open", "note": "Round checks: a worktree behind main must not fail on tracking that needs main's code"}
 {"when": "2026-11-04T06:17:01Z", "item": "S280", "action": "add", "from": "", "to": "open", "note": "Grok reviewer cancelled by a permission prompt: brief it, and fall back to the next row"}
+{"when": "2026-11-04T12:29:45Z", "item": "S281", "action": "add", "from": "", "to": "open", "note": "ork show RUN: pause reason, question, latest report and checks in one command"}
+{"when": "2026-11-04T12:29:46Z", "item": "S282", "action": "add", "from": "", "to": "open", "note": "Relaunch of a stopped run continues at the stage it stopped, not at round 1"}
+{"when": "2026-11-04T12:29:47Z", "item": "S283", "action": "add", "from": "", "to": "open", "note": "wave start: one item without a spec must not fail the whole wave"}
+{"when": "2026-11-04T12:29:47Z", "item": "S265", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-04 evidence (slicer wave 7): the Claude implem", "by": "Jon R"}
+{"when": "2026-11-04T12:29:48Z", "item": "S277", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-04 evidence: the reviewer raised \"[fix] the sl", "by": "Jon R"}
+{"when": "2026-11-04T12:29:49Z", "item": "S257", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-04 evidence: .scratch/v11/watch.sh exits on an", "by": "Jon R"}
+{"when": "2026-11-04T12:29:50Z", "item": "S254", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-04 evidence: the s443 landing in slicer paused", "by": "Jon R"}
+{"when": "2026-11-04T12:29:50Z", "item": "S240", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-04 screenshot: the Running pane prints every d", "by": "Jon R"}
