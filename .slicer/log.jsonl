@@ -3064,3 +3064,10 @@
 {"when": "2026-11-03T15:39:00Z", "item": "relay-roles.r32", "action": "relay-roles", "from": "27", "to": "10", "note": "move"}
 {"when": "2026-11-03T15:51:36Z", "item": "S272", "action": "add", "from": "", "to": "open", "note": "Run pane: show vendor, model and effort on every role row, queued ones too"}
 {"when": "2026-11-03T15:51:39Z", "item": "S272", "action": "set", "from": "", "to": "", "note": "importance 2→3; urgency 2→3; effort -→1"}
+{"when": "2026-11-04T01:48:34Z", "item": "S273", "action": "add", "from": "", "to": "open", "note": "Vendor out mark ends at the vendor's reset time"}
+{"when": "2026-11-04T01:48:41Z", "item": "S274", "action": "add", "from": "", "to": "open", "note": "Project cap: a paused run keeps its project slot"}
+{"when": "2026-11-04T01:48:41Z", "item": "S275", "action": "add", "from": "", "to": "open", "note": "Shape-only pause: retry once on its own"}
+{"when": "2026-11-04T01:48:42Z", "item": "S276", "action": "add", "from": "", "to": "open", "note": "Implementer prompt: the report lines it must write exactly"}
+{"when": "2026-11-04T01:48:45Z", "item": "S274", "action": "move", "from": "274", "to": "272", "note": ""}
+{"when": "2026-11-04T01:48:45Z", "item": "S275", "action": "move", "from": "275", "to": "273", "note": ""}
+{"when": "2026-11-04T01:48:45Z", "item": "S276", "action": "move", "from": "276", "to": "274", "note": ""}
