@@ -139,7 +139,7 @@ func TestSpecCheckMarksReadyAndQuestions(t *testing.T) {
 	if req.Role != RoleSpecCheck || !req.ReadOnly || len(req.Allowlist) != 0 || req.Worktree != h.P {
 		t.Errorf("request: %+v", req)
 	}
-	for _, want := range []string{"Role: spec-check", "S10, S11", `"body":"eleven"`, `"id":"S11"`} {
+	for _, want := range []string{"Role: spec-check", "S10, S11", `"body":"eleven"`, `"id":"S11"`, "(ork saves your final message there; you cannot write it)"} {
 		if !strings.Contains(req.Brief, want) {
 			t.Errorf("brief lacks %q", want)
 		}

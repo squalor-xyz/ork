@@ -110,7 +110,7 @@ func TestApproveFixCheckAndStopAreUnchanged(t *testing.T) {
 func TestUsageNamesTheWaitFlag(t *testing.T) {
 	var out, errs bytes.Buffer
 	(&App{}).Run(context.Background(), []string{"help"}, &out, &errs)
-	for _, want := range []string{"ork answer RUN TEXT [--wait]", "ork retry RUN [--wait]"} {
+	for _, want := range []string{"ork answer RUN TEXT [--wait]", "ork retry RUN [TEXT] [--wait]"} {
 		if !strings.Contains(out.String(), want) {
 			t.Errorf("help omits %q:\n%s", want, &out)
 		}
@@ -126,21 +126,45 @@ func TestAnswerEarlyReplyJSON(t *testing.T) {
 }
 
 func TestRetryTakesOneRun(t *testing.T) {
-	for _, args := range [][]string{{"retry"}, {"retry", "r1", "extra"}} {
+	for _, args := range [][]string{{"retry"}, {"retry", "r1", "a", "b"}} {
 		t.Run(strings.Join(args, "-"), func(t *testing.T) {
 			var out, errs bytes.Buffer
 			code := (&App{}).Run(context.Background(), args, &out, &errs)
-			if code != ExitUsage || !strings.Contains(errs.String(), "retry takes RUN") {
+			if code != ExitUsage || !strings.Contains(errs.String(), "retry takes RUN [TEXT]") {
 				t.Fatalf("retry usage: code %d, stderr %q", code, &errs)
 			}
 		})
 	}
 }
 
+func TestRetryTakesAnOptionalNote(t *testing.T) {
+	calls, code, _, stderr := ownerCalls(t, "retry", "r1", "re-read testdata")
+	if want := `run.retry {"run":"r1","text":"re-read testdata","no_wait":true}`; code != ExitOK || len(calls) != 1 || calls[0] != want {
+		t.Errorf("retry with a note: code %d, stderr %q, calls %q, want %q", code, stderr, calls, want)
+	}
+	calls, code, _, stderr = ownerCalls(t, "retry", "r1", "re-read testdata", "--wait")
+	if want := `run.retry {"run":"r1","text":"re-read testdata"}`; code != ExitOK || len(calls) != 1 || calls[0] != want {
+		t.Errorf("retry with a note and --wait: code %d, stderr %q, calls %q, want %q", code, stderr, calls, want)
+	}
+	calls, code, _, stderr = ownerCalls(t, "retry", "r1")
+	if want := `run.retry {"run":"r1","no_wait":true}`; code != ExitOK || len(calls) != 1 || calls[0] != want {
+		t.Errorf("retry without a note: code %d, stderr %q, calls %q, want %q", code, stderr, calls, want)
+	}
+	calls, code, _, stderr = ownerCalls(t, "retry", "r1", "  ")
+	if code != ExitUsage || len(calls) != 0 || !strings.Contains(stderr, "retry TEXT is empty") {
+		t.Errorf("retry with a blank note: code %d, stderr %q, calls %q", code, stderr, calls)
+	}
+}
+
 func TestUsageNamesRetry(t *testing.T) {
 	var out, errs bytes.Buffer
 	(&App{}).Run(context.Background(), []string{"help"}, &out, &errs)
-	if !strings.Contains(out.String(), "ork retry RUN") {
+	if !strings.Contains(out.String(), "ork retry RUN [TEXT]") {
 		t.Fatalf("help omits retry: %s", &out)
+	}
+	for _, line := range strings.Split(out.String(), "\n") {
+		if strings.Contains(line, "ork retry RUN") && len(line) > 80 {
+			t.Errorf("usage line over 80 columns: %q", line)
+		}
 	}
 }

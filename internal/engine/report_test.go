@@ -352,3 +352,26 @@ func TestStructuredQuestionRejectsContextInsideBlock(t *testing.T) {
 		})
 	}
 }
+
+const fencedQuestionBlock = "Question: ONE LINE TITLE\nOptions:\n1. LABEL: summary\n2. OTHER: another summary\nRecommend: 1 - reason"
+
+func TestStructuredQuestionInsideAFenceIsAccepted(t *testing.T) {
+	for _, open := range []string{"```text", "```"} {
+		t.Run(open, func(t *testing.T) {
+			q, err := parseOwnerQuestion(open + "\n" + fencedQuestionBlock + "\n```\n")
+			if err != nil || q == nil {
+				t.Fatalf("fenced question: %v, %v", q, err)
+			}
+			if q.Title != "ONE LINE TITLE" || len(q.Options) != 2 || q.Recommend != 1 {
+				t.Errorf("parsed %+v", q)
+			}
+		})
+	}
+}
+
+func TestFenceDoesNotHideContextInsideTheBlock(t *testing.T) {
+	_, err := parseOwnerQuestion("```text\n" + fencedQuestionBlock + "\nSome context after the block.\n```\n")
+	if err == nil || !strings.Contains(err.Error(), "Owner needed requires") {
+		t.Errorf("context inside a fenced block was accepted: %v", err)
+	}
+}

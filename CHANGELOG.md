@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- S256: a resumed role is told to re-read the tree (*proposed*); a read-only
+  role is told to report in its final message; a fenced owner question is
+  accepted; `ork retry RUN [TEXT]` sends a note. Docs: `docs/design.md`,
+  `docs/state.md`, `docs/guide.md`.
+
 - S237: `ork answer` and `ork retry` return once the run has resumed
   (*proposed*); `--wait` waits until it rests. A relay run id passed as a run
   names the ork run. Docs: `docs/design.md`, `docs/guide.md`.

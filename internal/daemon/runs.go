@@ -1022,7 +1022,7 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 			d.runs.mu.Unlock()
 			return RunReply{}, fmt.Errorf("run %s waits for an answer; use ork answer %s TEXT or ork stop %s", p.Run, p.Run, p.Run)
 		}
-		fn = r.engine.Retry
+		fn = func(ctx context.Context) error { return r.engine.RetryNote(ctx, p.Text) }
 	case MethodRunApprove:
 		fn = r.engine.Approve
 	case MethodRunFix:

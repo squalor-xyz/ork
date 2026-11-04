@@ -291,3 +291,101 @@ func assertCheckFence(t *testing.T, command, fence string) {
 		t.Fatal("command still wrapped inline")
 	}
 }
+
+func yourFilesSection(t *testing.T, brief string) string {
+	t.Helper()
+	_, rest, ok := strings.Cut(brief, "## Your files\n\n")
+	if !ok {
+		t.Fatalf("no Your files section:\n%s", brief)
+	}
+	section, _, _ := strings.Cut(rest, "\n## ")
+	return section
+}
+
+func TestReadOnlyBriefSaysTheReportIsTheFinalMessage(t *testing.T) {
+	const pathLine = "Your report path: /state/runs/r1/implementer-1.md (ork saves your final message there; you cannot write it)\n"
+	const finalLine = "Give your whole report as your final message, as plain text. Do not wrap it or any part of it in a code fence.\n"
+	for _, role := range []string{RoleReviewer, RoleGate, RoleArchitect, RoleUI, RoleSpecCheck} {
+		t.Run(role, func(t *testing.T) {
+			in := baseBrief()
+			in.Role = role
+			in.ReadOnly = true
+			got, err := BuildBrief(in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			section := yourFilesSection(t, got)
+			if !strings.Contains(section, pathLine) || !strings.Contains(section, finalLine) {
+				t.Errorf("Your files section:\n%s", section)
+			}
+		})
+	}
+	got, err := BuildBrief(baseBrief())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if section := yourFilesSection(t, got); strings.Contains(section, "you cannot write it") || strings.Contains(section, "code fence") || !strings.Contains(section, "Your report path: /state/runs/r1/implementer-1.md\n") {
+		t.Errorf("an implementer brief changed:\n%s", section)
+	}
+}
+
+func TestResumedBriefAsksToReReadTheTree(t *testing.T) {
+	const body = "ork resumed your earlier session. The worktree may have changed since your last report. Before you judge or change anything, run git status and git diff again and read again every file you cite. Do not repeat an earlier finding, verdict or answer without checking it against the tree as it is now."
+	in := baseBrief()
+	in.Resumed = true
+	in.Tree = " M a.go\n?? b.go\n"
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "## Your files\n\nYour temp directory: /state/runs/r1/tmp/implementer-1\nYour report path: /state/runs/r1/implementer-1.md\n\n" +
+		"## Resumed session\n\n" + body + "\n\ngit status --porcelain when this round started:\n\n```\n M a.go\n?? b.go\n```\n"
+	if !strings.Contains(got, want) {
+		t.Errorf("resumed section with a tree:\n%s", got)
+	}
+
+	in.Tree = ""
+	got, err = BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want = "## Resumed session\n\n" + body + "\n\nThe tree had no uncommitted changes when this round started.\n"
+	if !strings.Contains(got, want) || strings.Contains(got, "git status --porcelain when this round started") {
+		t.Errorf("resumed section with a clean tree:\n%s", got)
+	}
+
+	// A listing that holds a backtick run gets a longer fence.
+	in.Tree = "?? a```b.go\n"
+	got, err = BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, "\n````\n?? a```b.go\n````\n") {
+		t.Errorf("fence is not longer than the listing's backticks:\n%s", got)
+	}
+
+	// The section sits after Your files and before the round's own sections.
+	in.Sections = []BriefSection{{Title: "Round", Body: "fix round 1"}}
+	got, err = BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if files, resumed, round := strings.Index(got, "## Your files"), strings.Index(got, "## Resumed session"), strings.Index(got, "## Round"); files < 0 || files > resumed || resumed > round {
+		t.Errorf("section order:\n%s", got)
+	}
+}
+
+func TestFreshBriefHasNoResumedSection(t *testing.T) {
+	for _, role := range []string{RoleImplementer, RoleReviewer, RoleGate, RoleArchitect, RoleUI, RoleSpecCheck} {
+		in := baseBrief()
+		in.Role = role
+		in.Tree = " M a.go\n" // a tree alone does not make a resumed brief
+		got, err := BuildBrief(in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(got, "## Resumed session") || strings.Contains(got, "git status --porcelain when") {
+			t.Errorf("%s: a fresh brief has a resumed section", role)
+		}
+	}
+}

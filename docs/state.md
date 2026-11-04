@@ -269,6 +269,11 @@ question instead of running a role; the optional `pending.retry` (S159,
 role named in it resumes with that context after the answer. Records without
 `retry` still load; an older ork refuses one that has it, because
 `Store.Open` uses strict keys.
+The optional `pending.note` (S256, *proposed*) is the text the owner sent with
+`ork retry RUN TEXT`. It goes to the rerun's brief as an owner note and leaves
+the record when that round ends. While a sibling's queued question is asked
+first, it rides in `pending.retry.note`. Records without `note` still load; an
+older ork refuses one that has it, for the same reason.
 Both `pending` and each entry in `questions[]` may carry `ask`, the structured
 question object: `title`, `options:[{label,summary}]`, one-based `recommend`
 and `reason` (adj #168). The raw question text is kept alongside it. Older

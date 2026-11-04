@@ -85,6 +85,32 @@ func TestRunRetryResumesPausedRole(t *testing.T) {
 	}
 }
 
+func TestRunRetryCarriesTheText(t *testing.T) {
+	for _, tc := range []struct{ params, note string }{
+		{`{"run":"r1","text":"re-read testdata"}`, "## Owner note\n\nre-read testdata\n"},
+		{`{"run":"r1"}`, ""},
+	} {
+		var mu sync.Mutex
+		var briefs []string
+		runner := func(ctx context.Context, r engine.Request) (engine.Result, error) {
+			mu.Lock()
+			briefs = append(briefs, r.Brief)
+			mu.Unlock()
+			return retryRunner(ctx, r)
+		}
+		d, _, _ := retryDaemonWith(t, runrec.StatePaused, &runrec.Pending{Kind: runrec.PendingShape, State: runrec.StateImplement, Role: engine.RoleImplementer, Round: 1, Reason: "bad report"}, runner, nil)
+		request(t, d, "run.retry", tc.params)
+		mu.Lock()
+		if len(briefs) == 0 {
+			t.Fatalf("%s: the role did not run again", tc.params)
+		}
+		if got := strings.Contains(briefs[0], "## Owner note"); got != (tc.note != "") || !strings.Contains(briefs[0], tc.note) {
+			t.Errorf("%s: owner note in the rerun brief %v, want %q:\n%s", tc.params, got, tc.note, briefs[0])
+		}
+		mu.Unlock()
+	}
+}
+
 func TestRunRetryResumesPausedStep(t *testing.T) {
 	for _, kind := range []string{runrec.PendingError, runrec.PendingInterrupted} {
 		t.Run(kind, func(t *testing.T) {

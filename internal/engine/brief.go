@@ -32,6 +32,23 @@ type BriefInput struct {
 	EnvLines     []string // the project's environment lines, verbatim
 	Sections     []BriefSection
 	Earlier      []EarlierReport
+	ReadOnly     bool   // the role cannot write its report path: it reports in its final message (S256, *proposed*)
+	Resumed      bool   // ork resumed the role's earlier session (S256, *proposed*)
+	Tree         string // `git status --porcelain` when the round started; read only for a resumed round
+}
+
+// fenceFor returns a code fence longer than any backtick run in text.
+func fenceFor(text string) string {
+	longest, run := 0, 0
+	for _, c := range text {
+		if c == '`' {
+			run++
+			longest = max(longest, run)
+		} else {
+			run = 0
+		}
+	}
+	return strings.Repeat("`", max(3, longest+1))
 }
 
 const trackingRule = "Do not open, search, parse, or edit tracking files; use the slicer commands."
@@ -88,20 +105,26 @@ func BuildBrief(in BriefInput) (string, error) {
 			b.WriteString("The registry names no UI design doc for this project. Find the project's own UI docs (start with its `AGENTS.md` and its docs directory) and its own view snapshots, and judge the screens against them.\n\n")
 		}
 	}
-	fmt.Fprintf(&b, "## Your files\n\nYour temp directory: %s\nYour report path: %s\n\n", in.TempDir, in.ReportPath)
+	if in.ReadOnly {
+		// A read-only role cannot write the report path; ork saves its final
+		// message there (adj 27, role.report-io; S256, *proposed*).
+		fmt.Fprintf(&b, "## Your files\n\nYour temp directory: %s\nYour report path: %s (ork saves your final message there; you cannot write it)\nGive your whole report as your final message, as plain text. Do not wrap it or any part of it in a code fence.\n\n", in.TempDir, in.ReportPath)
+	} else {
+		fmt.Fprintf(&b, "## Your files\n\nYour temp directory: %s\nYour report path: %s\n\n", in.TempDir, in.ReportPath)
+	}
+	if in.Resumed {
+		b.WriteString("## Resumed session\n\nork resumed your earlier session. The worktree may have changed since your last report. Before you judge or change anything, run git status and git diff again and read again every file you cite. Do not repeat an earlier finding, verdict or answer without checking it against the tree as it is now.\n\n")
+		if tree := strings.TrimRight(in.Tree, "\n"); tree != "" {
+			fence := fenceFor(tree)
+			fmt.Fprintf(&b, "git status --porcelain when this round started:\n\n%s\n%s\n%s\n\n", fence, tree, fence)
+		} else {
+			b.WriteString("The tree had no uncommitted changes when this round started.\n\n")
+		}
+	}
 	if in.Role == RoleImplementer && !in.Finish {
 		b.WriteString("## Checks ork runs\n\n")
 		if strings.ContainsAny(in.CheckCommand, "`\n") {
-			longest, run := 0, 0
-			for _, c := range in.CheckCommand {
-				if c == '`' {
-					run++
-					longest = max(longest, run)
-				} else {
-					run = 0
-				}
-			}
-			fence := strings.Repeat("`", max(3, longest+1))
+			fence := fenceFor(in.CheckCommand)
 			fmt.Fprintf(&b, "ork runs this command, then `slicer check`, after the round, outside your sandbox:\n\n%s\n%s\n%s\n\n", fence, in.CheckCommand, fence)
 		} else {
 			b.WriteString("ork runs ")

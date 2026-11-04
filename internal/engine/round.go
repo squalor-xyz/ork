@@ -121,11 +121,19 @@ func (e *Engine) earlierReports(rec runrec.Record) []EarlierReport {
 }
 
 // pendingSection is what a resumed round tells its role about why it runs
-// again.
+// again. The owner's note, when a retry carried one, follows (S256, *proposed*).
 func pendingSection(p *runrec.Pending) []BriefSection {
 	if p == nil {
 		return nil
 	}
+	sections := pendingKindSection(p)
+	if note := strings.TrimSpace(p.Note); note != "" {
+		sections = append(sections, BriefSection{Title: "Owner note", Body: note})
+	}
+	return sections
+}
+
+func pendingKindSection(p *runrec.Pending) []BriefSection {
 	if p.Answer != "" {
 		return []BriefSection{{Title: "Owner answer", Body: fmt.Sprintf("Your report asked the owner:\n\n%s\n\nThe owner answered:\n\n%s", p.Question, p.Answer)}}
 	}
@@ -285,16 +293,22 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	if session == "" {
 		in.Earlier = e.earlierReports(rec)
 	}
+	in.ReadOnly = perm.ReadOnly
+	in.Resumed = session != ""
+	// One git call serves the resumed section and the read-only fingerprint.
+	var before string
+	if perm.ReadOnly || in.Resumed {
+		if before, err = e.treeStatus(ctx, rec.Worktree); err != nil {
+			if perm.ReadOnly {
+				return fail("read-only fingerprint", err)
+			}
+			return fail("resumed session tree", err)
+		}
+		in.Tree = before
+	}
 	brief, err := BuildBrief(in)
 	if err != nil {
 		return fail("brief", err)
-	}
-
-	var before string
-	if perm.ReadOnly {
-		if before, err = e.treeStatus(ctx, rec.Worktree); err != nil {
-			return fail("read-only fingerprint", err)
-		}
 	}
 
 	stepID := e.stepStart(ctx, rec, r, entry)

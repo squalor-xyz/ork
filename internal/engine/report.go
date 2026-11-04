@@ -176,11 +176,17 @@ func CheckReport(role string, finish bool, text string) (*Report, error) {
 var optionLine = regexp.MustCompile(`^([1-4])\. ([^:]+): (.+)$`)
 var recommendLine = regexp.MustCompile(`^Recommend: ([1-4]) - (.+)$`)
 
+// fenceLine is a code fence line: three or more backticks, then at most one word.
+var fenceLine = regexp.MustCompile("^`{3,}[A-Za-z]*$")
+
 func parseOwnerQuestion(body string) (*OwnerQuestion, error) {
 	var lines []string
 	structured := false
 	for _, line := range strings.Split(body, "\n") {
 		line = strings.TrimSpace(line)
+		if fenceLine.MatchString(line) {
+			continue // the example in the role prompt is fenced; a copied fence is not context (S256, *proposed*)
+		}
 		if strings.HasPrefix(line, "Question:") || line == "Options:" || strings.HasPrefix(line, "Recommend:") {
 			structured = true
 		}

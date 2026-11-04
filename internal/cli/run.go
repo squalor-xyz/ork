@@ -228,7 +228,11 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 	if command == "answer" || command == "file" {
 		want = 2
 	}
-	if len(pos) != want {
+	// retry takes an optional TEXT, a note for the rerun (S256, *proposed*).
+	if len(pos) != want && !(command == "retry" && len(pos) == 2) {
+		if command == "retry" {
+			return o.usage("retry takes RUN [TEXT]")
+		}
 		if command == "stop" {
 			return o.usage("stop takes RUN or WAVE")
 		}
@@ -261,10 +265,10 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 		fmt.Fprintln(o.stdout, reply.Message)
 		return ExitOK
 	}
-	if command == "answer" {
+	if command == "answer" || (command == "retry" && len(pos) == 2) {
 		p.Text = pos[1]
 		if strings.TrimSpace(p.Text) == "" {
-			return o.usage("answer TEXT is empty")
+			return o.usage("%s TEXT is empty", command)
 		}
 	}
 	var rec runrec.Record

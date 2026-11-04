@@ -461,9 +461,16 @@ func (e *Engine) Answer(ctx context.Context, text string) error {
 
 // Retry runs again the role, or the step, that a paused slice stopped at. A
 // question needs an answer instead.
-func (e *Engine) Retry(ctx context.Context) error {
+func (e *Engine) Retry(ctx context.Context) error { return e.RetryNote(ctx, "") }
+
+// RetryNote is Retry with the owner's note for the rerun (S256, *proposed*).
+// The note goes to the rerun's brief as an owner note and is held in
+// pending.note, or in pending.retry.note while a sibling's queued question is
+// asked first, until the round ends. A blank note adds nothing.
+func (e *Engine) RetryNote(ctx context.Context, note string) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	note = strings.TrimSpace(note)
 	rec := e.run.Snapshot()
 	if rec.State != runrec.StatePaused || rec.Pending == nil {
 		return refusef("the slice is not paused")
@@ -486,6 +493,9 @@ func (e *Engine) Retry(ctx context.Context) error {
 			q := r.QueuedQuestions[0]
 			r.QueuedQuestions = r.QueuedQuestions[1:]
 			retry := *r.Pending
+			if note != "" {
+				retry.Note = note
+			}
 			q.Retry = &retry
 			r.Pending = &q
 			r.Reason = q.Reason
@@ -495,7 +505,13 @@ func (e *Engine) Retry(ctx context.Context) error {
 		}
 		return err
 	}
-	if err := e.run.Update(func(r *runrec.Record) { r.State = r.Pending.State; r.Reason = "" }); err != nil {
+	if err := e.run.Update(func(r *runrec.Record) {
+		r.State = r.Pending.State
+		r.Reason = ""
+		if note != "" {
+			r.Pending.Note = note
+		}
+	}); err != nil {
 		return err
 	}
 	e.orchestratorPhase(ctx, "start", "")

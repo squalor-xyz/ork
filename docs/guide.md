@@ -405,7 +405,7 @@ The `ork projects set NAME --bell on|off` command lands in S224.
 
 | Situation | What to do |
 |---|---|
-| A run is paused with no question (shape, error, lost, interrupted) | `t` on the row, or `ork retry RUN` (`docs/design.md:1088-1091`) |
+| A run is paused with no question (shape, error, lost, interrupted) | `t` on the row, or `ork retry RUN` (`docs/design.md:1088-1091`). *Proposed (S256):* `ork retry RUN "TEXT"` also sends a note, for example after you fixed the tree: the rerun brief shows it as an owner note. A resumed role is told to read `git status` and the diff again; the `t` key sends no note. `ork answer` and `ork fix` do not work on such a pause |
 | A run is paused at a budget limit | `t` or `ork retry RUN` grants one more role round (`docs/design.md:986-997`) |
 | A run is stopped | Read the reason in the pane. Fix the cause and launch again, or clear it with `ork dismiss RUN` |
 | A run is paused with a reason like `implementer round 1 hung: no output for 30m` | ork killed a role that sent nothing for 30 minutes. Time the machine slept does not count, so a wake alone does not cause this (S235, *proposed*). Read the reason in the pane, then retry with `t` or `ork retry RUN`: the same role runs again and is told that the earlier process was lost. ork does not retry for you |
@@ -455,7 +455,7 @@ them all (`internal/tui/keys.go:13-124`).
     ork check RUN N [ticked|later|open]
     ork fix RUN TEXT
     ork approve RUN
-    ork retry RUN [--wait]
+    ork retry RUN [TEXT] [--wait]
     ork stop RUN|WAVE
     ork dismiss RUN
     ork file RUN N

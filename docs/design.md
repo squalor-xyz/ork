@@ -563,14 +563,22 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   records, the gate starts on the reviewer's current row. Its own records
   take precedence for later attempts. Without a matching session the role
   starts fresh and its brief carries the earlier reports
-  (`role.resume`).
+  (`role.resume`). *Proposed (S256):* a resumed round's brief also has a
+  fixed `## Resumed session` section after `## Your files` (see Brief). A
+  resumed role keeps its memory of the tree; the section tells it that the
+  worktree may have changed and to read it again before it judges.
 - **Report checks.** `CheckReport` refuses a gate report whose first line is
   not exactly `VERDICT: PASS` or `VERDICT: FAIL`, an implementer or gate
   report with no `Tests: N passed, M failed` line (the finish step needs
   none), and any report with no `## Owner needed` section. All problems are
   listed. A gate PASS with a nonzero failed-test count is also refused.
   The slice pauses (kind `shape`) with them; `Retry` resumes the
-  role and tells it what was wrong.
+  role and tells it what was wrong. *Proposed (S256):* inside `## Owner
+  needed`, lines that hold only a code fence (three or more backticks, then
+  at most one word such as `text`) are ignored before the strict question
+  check, because the role prompt shows its example in a fence.
+  Any other extra line inside the question block is still refused, and a
+  fence around a whole report is not unwrapped.
 - **Decision keys.** An Owner needed section may include one line
   `Decision key: area.topic` anywhere in the section. The key must be lowercase
   and dotted; a malformed or repeated key is a `role.report-shape` error.
@@ -736,7 +744,21 @@ question. Answer, approve, fix and retry record `--phase start` to continue.
   - the tracking rule and the workspace limit;
   - the environment lines from the project's AGENTS.md;
   - the role's own temp directory;
-  - the report path;
+  - the report path. *Proposed (S256):* for a read-only role (reviewer,
+    gate, architect, UI pass, spec check) the line says that ork saves the
+    final message there and the role cannot write it, and another line asks
+    for the whole report as the final message in plain text, with no code
+    fence. The role's permission mode is not a write mode on any vendor
+    (`--permission-mode plan` for Claude and Grok, `-s read-only` for Codex),
+    so the final message is the only route (`role.report-io`);
+  - *proposed (S256):* for a resumed round, a `## Resumed session` section
+    right after `## Your files`. It says that ork resumed the earlier
+    session, that the worktree may have changed, and to run `git status` and
+    `git diff` again, read again every file it cites and not repeat an earlier
+    finding, verdict or answer without checking it. It then shows ork's own
+    `git status --porcelain` from when the round started, in a fence, or says
+    that the tree had no uncommitted changes. The listing is the same call as
+    the read-only fingerprint, so a read-only role costs no extra git call;
   - for the implementer, the project check command (when configured) and
     `slicer check`, which ork runs after the round (not the finish step)
     outside the role's sandbox;
@@ -744,7 +766,9 @@ question. Answer, approve, fix and retry record `--phase start` to continue.
 - **Report.** The role writes its final report to
   `~/.local/state/ork/runs/<run>/<role>-<round>.md` and exits
   (`role.report-io`). If the file is missing, ork uses the vendor JSON's
-  final result text. ork validates the shape: the gate's first line, the
+  final result text. A read-only role cannot write the file, so its brief
+  tells it to report in its final message, which ork saves to the report path
+  (S256, *proposed*). ork validates the shape: the gate's first line, the
   test counts. The prompts ask for one line `Tests: N passed, M failed`
   in the implementer's and the gate's report, and for a final `## Owner
   needed` section in every report (`role.report-shape`).
@@ -1170,7 +1194,8 @@ ork answer RUN TEXT         answer an owner question
 ork file RUN N              file a later finding through the daemon
 ork new P TITLE [FLAGS]     file a slice from a request or note
 ork dismiss RUN             clear a stopped run from Needs you
-ork retry RUN               retry a paused role or step
+ork retry RUN [TEXT]        retry a paused role or step; TEXT is a note for
+                            the rerun (S256, proposed)
 ork stop RUN|WAVE           stop and record why
 ork daemon run              serve the daemon in the foreground
 ork daemon stop [--force]   stop the daemon; on a daemon that predates
@@ -1342,6 +1367,13 @@ or `{"cancelled":true}` in JSON mode, and exits 0. ork never rejects,
 supersedes or withdraws a record. TUI answer controls are S185.
 
 `run.retry` takes `{run}` and returns the run record (adj #101). *Proposed
+(S256):* it also takes an optional `text`, the owner's note for the rerun. The
+brief gets it as `## Owner note` after the pause's own section, when the retry
+runs a role (a retried step, such as the checks, runs no role and the note has
+no reader). It is held in `pending.note`, or in
+`pending.retry.note` while a sibling's queued question is asked first, and
+leaves the record when the round ends. A question pause still refuses a
+retry. *Proposed
 (S237):* it also takes `no_wait` (see the wire fields). `run.answer` and
 `run.retry` with a slicer relay run id, not an ork run id, answer `not_found`
 with `no run ID; that is the slicer run of ork run ORKID`; the id is not an

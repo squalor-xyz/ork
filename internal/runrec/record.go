@@ -158,6 +158,9 @@ type Pending struct {
 	Reason         string         `json:"reason"`
 	Question       string         `json:"question,omitempty"`
 	Answer         string         `json:"answer,omitempty"`
+	// Note is the owner's text sent with a retry. It goes to the rerun's brief
+	// and leaves the record when the round ends (S256, *proposed*).
+	Note string `json:"note,omitempty"`
 	// Retry is the context of a retry that waits for this question: the first
 	// pause (shape, lost, budget or error) of another role, kept while the
 	// sibling's queued question is asked first (S159, *proposed*).
