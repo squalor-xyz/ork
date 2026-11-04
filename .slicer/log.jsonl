@@ -3067,3 +3067,12 @@
 {"when": "2026-11-04T01:52:10Z", "item": "S256", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S256):", "by": "Jon R"}
 {"when": "2026-11-04T01:52:18Z", "item": "S256", "action": "note", "from": "", "to": "", "note": "Verified: read-only roles are told their final message is th", "by": "Jon R"}
 {"when": "2026-11-04T01:52:20Z", "item": "S256", "action": "status", "from": "started", "to": "done", "note": "Verified: read-only roles are told their final message is the report; resumed rounds get a Resumed session section with ork's git status --porcelain; fence-only lines in Owner needed are ignored; ork retry RUN [TEXT] delivers an owner note. go test -race -count=1 ./... 4717 passed, 0 failed; go vet, gofmt, slicer check clean.", "by": "Jon R"}
+{"when": "2026-11-03T15:51:36Z", "item": "S272", "action": "add", "from": "", "to": "open", "note": "Run pane: show vendor, model and effort on every role row, queued ones too"}
+{"when": "2026-11-03T15:51:39Z", "item": "S272", "action": "set", "from": "", "to": "", "note": "importance 2→3; urgency 2→3; effort -→1"}
+{"when": "2026-11-04T01:48:34Z", "item": "S273", "action": "add", "from": "", "to": "open", "note": "Vendor out mark ends at the vendor's reset time"}
+{"when": "2026-11-04T01:48:41Z", "item": "S274", "action": "add", "from": "", "to": "open", "note": "Project cap: a paused run keeps its project slot"}
+{"when": "2026-11-04T01:48:41Z", "item": "S275", "action": "add", "from": "", "to": "open", "note": "Shape-only pause: retry once on its own"}
+{"when": "2026-11-04T01:48:42Z", "item": "S276", "action": "add", "from": "", "to": "open", "note": "Implementer prompt: the report lines it must write exactly"}
+{"when": "2026-11-04T01:48:45Z", "item": "S274", "action": "move", "from": "274", "to": "272", "note": ""}
+{"when": "2026-11-04T01:48:45Z", "item": "S275", "action": "move", "from": "275", "to": "273", "note": ""}
+{"when": "2026-11-04T01:48:45Z", "item": "S276", "action": "move", "from": "276", "to": "274", "note": ""}
