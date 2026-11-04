@@ -137,6 +137,47 @@ func TestOwnerQuestionWording(t *testing.T) {
 	}
 }
 
+func TestEveryRoleShowsTheOwnerNeededHeadingLiterally(t *testing.T) {
+	numbered := regexp.MustCompile(`(?m)^\s*(?:[0-9]+\.\s*)?## [0-9]+\.`)
+	for name, p := range prompts(t) {
+		t.Run(name, func(t *testing.T) {
+			if !strings.Contains(p, "\n## Owner needed\n") {
+				t.Error("missing literal standalone Owner needed heading")
+			}
+			if numbered.MatchString(p) {
+				t.Error("prompt contains a numbered heading")
+			}
+		})
+	}
+}
+
+func TestImplementerAndGateShowTheTestsLineLiterally(t *testing.T) {
+	ps := prompts(t)
+	for _, name := range []string{"implementer", "gate"} {
+		t.Run(name, func(t *testing.T) {
+			if !strings.Contains(ps[name], "\nTests: N passed, M failed\n") {
+				t.Error("missing literal standalone Tests line")
+			}
+		})
+	}
+	for _, want := range []string{
+		"with nothing before or after them on that line",
+		"put skipped or blocked tests under item 6, not on the Tests line",
+	} {
+		t.Run(want, func(t *testing.T) {
+			if !has(ps["implementer"], want) {
+				t.Errorf("implementer missing guidance: %s", want)
+			}
+		})
+	}
+}
+
+func TestPromptsTellRolesListNumbersAreNotHeadings(t *testing.T) {
+	if !has(prompts(t)["implementer"], "They are not part of the report: never number a heading.") {
+		t.Error("implementer does not explain list numbers are not part of the report and headings are never numbered")
+	}
+}
+
 func TestAcceptedContractsAreV10AndV11(t *testing.T) {
 	if got := AcceptedContracts(); !reflect.DeepEqual(got, []int{10, 11}) {
 		t.Fatalf("AcceptedContracts() = %v, want [10 11]", got)

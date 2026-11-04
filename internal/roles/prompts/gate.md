@@ -121,6 +121,15 @@ nothing before it and nothing else on that line. Then:
 - `## Owner needed`: a design choice that is the owner's, as the question, the
   options and your recommendation, or "none".
 
+These two lines must appear exactly as shown, each on its own line, with nothing
+before or after them on that line. The heading has no number. Replace N and M
+with integers; put skipped or blocked tests elsewhere, not on the Tests line:
+
+```text
+Tests: N passed, M failed
+## Owner needed
+```
+
 For each [later] finding, propose scores on three indented lines, each 1 to 3:
   Importance: N
   Urgency: N

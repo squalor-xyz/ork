@@ -133,6 +133,12 @@ When you finish, write your final report to {{report_path}} and exit. If you can
 write that file, put the whole report in your final message instead. End the report
 with `## Owner needed`: your questions for the owner, or "none".
 
+The heading is exactly `## Owner needed`, with no number and nothing after it:
+
+```text
+## Owner needed
+```
+
 For each [later] finding, propose scores on three indented lines, each 1 to 3:
   Importance: N
   Urgency: N

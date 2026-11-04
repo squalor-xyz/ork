@@ -99,3 +99,9 @@ write that file, put the whole report in your final message instead. End the rep
 with `## Owner needed`: write "none" there, because your questions belong under
 their slices. Use it only for something that stopped the whole check, such as a slice
 you could not read, and say what.
+
+The heading is exactly `## Owner needed`, with no number and nothing after it:
+
+```text
+## Owner needed
+```

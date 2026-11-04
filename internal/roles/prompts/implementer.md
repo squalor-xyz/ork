@@ -144,3 +144,17 @@ concise, as Markdown, with these parts in order:
    Spec edits: list the re-anchored Files and Failing tests, or "none".
 7. `## Owner needed`: your questions for the owner, or "none". Do not put
    sandbox-limited checks here.
+
+The numbers above are for you. They are not part of the report: never number a
+heading. These two lines are read by a program and must appear exactly as shown,
+each on its own line, with nothing before or after them on that line:
+
+```text
+Tests: N passed, M failed
+## Owner needed
+```
+
+Replace N and M with integers; put skipped or blocked tests under item 6, not on
+the Tests line. When you ran no tests, write the counts of what you ran and say why
+in item 6. Write the Tests line as item 4 and the heading as item 7; put the Owner
+needed body under its heading.

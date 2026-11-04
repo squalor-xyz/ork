@@ -14042,10 +14042,39 @@
       "id": "S276",
       "title": "Implementer prompt: the report lines it must write exactly",
       "short_title": "Implementer prompt: the report lines it must write exactly",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "5fd2375b-f9dc-4995-aa8a-c85b5ee589ac",
+          "kind": "",
+          "text": "**2026-11-04** — Human checks at approval (S276):\n- later: [AFTER LAND] On the next Claude-fallback implementer round, `checks` shows no report-shape pause (the Tests line has no trailing text and the heading has no number).",
+          "created_at": "2026-11-04T16:39:58Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "f59c07ac-1c1a-43ac-b054-06a405117733",
+          "kind": "",
+          "text": "**2026-11-04** — Role prompts show literal Tests and Owner needed lines, with unnumbered headings and explicit report order. Four tests cover the wording and CheckReport example; mutation checks prove removing the example fails both wiring tests. Corrected focused filter passes, roles and engine full suites pass, and vet, formatting and tracking checks pass. Gate returned PASS and owner approved; Claude fallback human check remains after landing.",
+          "created_at": "2026-11-04T16:40:13Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -14063,7 +14092,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

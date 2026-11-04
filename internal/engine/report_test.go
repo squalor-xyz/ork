@@ -8,9 +8,38 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/squalor-xyz/ork/internal/roles"
 )
 
 const ownerNone = "\n## Owner needed\n\nnone\n"
+
+func TestImplementerPromptExampleBlockPassesTheShapeCheck(t *testing.T) {
+	prompt, err := roles.Prompt("implementer")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, report, ok := strings.Cut(prompt, "## Report\n")
+	if !ok {
+		t.Fatal("implementer prompt has no Report section")
+	}
+	_, tail, ok := strings.Cut(report, "```text\n")
+	if !ok {
+		t.Fatal("implementer report example block does not exist")
+	}
+	example, _, ok := strings.Cut(tail, "\n```")
+	if !ok {
+		t.Fatal("implementer report example block is not closed")
+	}
+	text := strings.ReplaceAll(example, "Tests: N passed, M failed", "Tests: 5 passed, 0 failed")
+	rep, err := CheckReport(RoleImplementer, false, text)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.Passed != 5 {
+		t.Fatalf("Passed = %d, want 5", rep.Passed)
+	}
+}
 
 func TestReportFileTakesPrecedenceOverVendorResult(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "report.md")

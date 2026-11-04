@@ -99,3 +99,9 @@ write that file, put the whole report in your final message instead. End the rev
 with the blockers, or "no blockers". After that, write `## Owner needed`: a design
 choice that is the owner's, as the question, the options and your recommendation, or
 "none".
+
+The heading is exactly `## Owner needed`, with no number and nothing after it:
+
+```text
+## Owner needed
+```
