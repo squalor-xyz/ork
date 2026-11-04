@@ -87,6 +87,9 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 					continue
 				}
 				fmt.Fprintf(o.stdout, "  %s %s %s", r.ID, r.Item, r.State)
+				if r.ShapeRetry {
+					fmt.Fprint(o.stdout, " (shape retry)")
+				}
 				if r.Wait != "" {
 					again := ""
 					if r.State == "awaiting-approval" && r.LandFixes > 0 {

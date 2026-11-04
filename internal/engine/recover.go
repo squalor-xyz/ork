@@ -103,6 +103,7 @@ func (e *Engine) Reconcile(ctx context.Context) error {
 			p = *rec.Pending
 		}
 		p.Kind, p.Role, p.Round = runrec.PendingLost, last.Role, last.Round
+		p.AutomaticShapeRetry = false
 		if rec.State != runrec.StatePaused {
 			p.State = rec.State
 		}
@@ -111,6 +112,25 @@ func (e *Engine) Reconcile(ctx context.Context) error {
 			return err
 		}
 		return nil
+	}
+	// A shape retry recorded between attempts has no process, and nothing in
+	// the daemon relaunches the run. It pauses (kind shape) like any
+	// interrupted run; Retry then resumes the role with the shape brief
+	// (S275, proposed).
+	if !resting(rec.State) {
+		if p := rec.AutomaticShapeRetry(); p != nil {
+			p.AutomaticShapeRetry = false
+			if err := e.run.Update(func(rr *runrec.Record) {
+				for i := range rr.Roles {
+					if sr := rr.Roles[i].ShapeRetry; sr != nil && sr.AutomaticShapeRetry {
+						rr.Roles[i].ShapeRetry = nil
+					}
+				}
+			}); err != nil {
+				return err
+			}
+			return e.pause(*p)
+		}
 	}
 	if !resting(rec.State) && rec.Pending != nil && rec.Pending.Answer != "" {
 		p := *rec.Pending

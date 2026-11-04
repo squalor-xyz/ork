@@ -225,7 +225,7 @@ func TestUIPassRetryRunsOnlyThePausedRole(t *testing.T) {
 		mu.Lock()
 		defer mu.Unlock()
 		uiRuns++
-		if uiRuns == 1 {
+		if uiRuns <= 2 {
 			return Result{Exit: ExitOK, Report: noSections}, nil
 		}
 		return Result{Exit: ExitOK, Report: cleanReview}, nil
@@ -243,8 +243,8 @@ func TestUIPassRetryRunsOnlyThePausedRole(t *testing.T) {
 	for _, r := range h.runner.roles() {
 		count[r]++
 	}
-	if count["reviewer-1"] != 1 || count["ui-1"] != 2 {
-		t.Fatalf("roles %v: the reviewer must run once and the UI pass twice", h.runner.roles())
+	if count["reviewer-1"] != 1 || count["ui-1"] != 3 {
+		t.Fatalf("roles %v: the reviewer must run once and the UI pass three times", h.runner.roles())
 	}
 }
 
@@ -265,7 +265,7 @@ func TestUIPassBothPauseKeepsOnePauseAndRerunsBoth(t *testing.T) {
 		if strings.Contains(req.Brief, "ork checked your last report and refused it") {
 			refused[req.Role] = true
 		}
-		if runs[req.Role] == 1 {
+		if runs[req.Role] <= 2 {
 			return Result{Exit: ExitOK, Report: noSections}, nil
 		}
 		return Result{Exit: ExitOK, Report: cleanReview}, nil
@@ -279,12 +279,12 @@ func TestUIPassBothPauseKeepsOnePauseAndRerunsBoth(t *testing.T) {
 		t.Fatal(err)
 	}
 	requireState(t, e, runrec.StateAwaitingApproval)
-	if runs[RoleReviewer] != 2 || runs[RoleUI] != 2 {
-		t.Fatalf("runs %v, want each role twice", runs)
+	if runs[RoleReviewer] != 3 || runs[RoleUI] != 3 {
+		t.Fatalf("runs %v, want each role three times", runs)
 	}
-	// The pause names one role; the other reruns without its pause context.
-	if len(refused) != 1 || !refused[rec.Pending.Role] {
-		t.Fatalf("shape pause reached the briefs of %v, want only %s", refused, rec.Pending.Role)
+	// Both roles received their own automatic shape context before the pause.
+	if len(refused) != 2 {
+		t.Fatalf("shape pause reached the briefs of %v, want both roles", refused)
 	}
 }
 

@@ -154,7 +154,7 @@ func TestRendersProducedForChangedGoldens(t *testing.T) {
 			mu.Lock()
 			defer mu.Unlock()
 			runs++
-			if runs == 1 {
+			if runs <= 2 {
 				writeRenders(t, req, map[string]string{"old-80x24.txt": "old"})
 				return Result{Exit: ExitOK, Report: noSections}, nil
 			}

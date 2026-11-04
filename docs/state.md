@@ -259,6 +259,25 @@ a slot under the caps and has no process and no writes. `round` counts implement
 `pending` (kind `question`, `shape`, `lost`, `interrupted`, `budget` or `error`, with
 the state and role to re-enter, the reason, and for a question the optional adj
 `key`, the text and the answer) is set while a slice is paused.
+*Proposed (S275):* `pending.automatic_shape_retry: true` also allows a shape
+context while the run stays in its active state. It schedules one automatic
+retry of the same role and round, without an owner note. A successful retry
+clears that pending context; another shape error pauses with the marker cleared.
+The refused attempt's `roles[]` entry keeps `shape_retry`, a pending-shaped
+context, until the retry attempt starts, so concurrent reviewer and UI retries survive a sibling taking the single
+pending slot. The retry attempt clears its own context's automatic marker when
+it ends. The latest entry for a role and round determines its retry context;
+older entries are history. Attempt report filenames remain distinct, preserving
+the refused report. A restart between attempts pauses the run (kind `shape`,
+marker cleared, role contexts dropped), because nothing relaunches an active
+run; `ork retry` then resumes the role. Records without these fields
+still load; older ork versions reject them because `Store.Open` uses strict keys.
+The proposed status fields `shape_retry` on engine runs and role rows are booleans.
+An active retry marks the run. Only the `roles[]` entry that ran as the
+automatic retry keeps `shape_retry` (the refused attempt's is cleared when the
+retry starts), so only that row is marked, and it stays marked after the retry
+ends. Text status and the TUI display "shape retry". No owner notice accompanies the first
+shape-only refusal.
 The proposed optional `queued_questions[]` (S135) keeps sibling owner questions
 as pending objects while `pending` stays single. Answering the current question
 shows the next queued question before roles resume. Each role receives its own

@@ -379,6 +379,9 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 			}
 			displayState := stateWord(r.State)
 			parts := []string{displayState}
+			if r.ShapeRetry {
+				parts = append(parts, "shape retry")
+			}
 			if r.Wait != "" && showsWait(r) {
 				parts = append(parts, r.Wait)
 			}
@@ -974,7 +977,12 @@ func (m *Model) engineRunRow(s source.Snapshot, r source.EngineRun, ledger slice
 			rr.role, rr.model, rr.stateOnly = role.Role, role.Model, false
 		}
 	}
+	// finishRow first: it matches the bare role name to name the gate once.
+	// finishRow first: it matches the bare role name to name the gate once.
 	rr.finishRow(ledger)
+	if r.ShapeRetry {
+		rr.role += " shape retry"
+	}
 	if r.VendorWait != "" {
 		// The run has not gone quiet: it waits for a vendor slot. The heard cell
 		// is dim and carries no cue (S169). A ledger heartbeat during the wait is

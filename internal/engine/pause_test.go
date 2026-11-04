@@ -143,10 +143,10 @@ func TestAReportThatBreaksTheShapePausesWithTheProblemsAndRetryResumesTheRole(t 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			h := newHarness(t)
-			bad := true
+			bad := 2
 			h.runner.script = func(req Request, n int) (Result, error) {
-				if req.Role == tc.role && bad {
-					bad = false
+				if req.Role == tc.role && bad > 0 {
+					bad--
 					return Result{Exit: ExitOK, Session: "sess-" + req.Role, Report: tc.report}, nil
 				}
 				return Result{}, nil

@@ -128,10 +128,10 @@ func TestArchitectFindingsGoBackToTheImplementer(t *testing.T) {
 func TestArchitectShapeErrorPausesAndRetryResumesIt(t *testing.T) {
 	h := architectHarness(t)
 	arch := h.runner.script
-	bad := true
+	bad := 2
 	h.runner.script = func(req Request, n int) (Result, error) {
-		if req.Role == "architect" && bad {
-			bad = false
+		if req.Role == "architect" && bad > 0 {
+			bad--
 			return Result{Exit: ExitOK, Session: "architect-session", Report: "No blockers, but missing the owner section."}, nil
 		}
 		return arch(req, n)
@@ -145,8 +145,8 @@ func TestArchitectShapeErrorPausesAndRetryResumesIt(t *testing.T) {
 		t.Fatal(err)
 	}
 	requireState(t, e, runrec.StateAwaitingApproval)
-	req := h.runner.requests()[3]
-	if req.Role != "architect" || req.Resume != "architect-session" || !strings.Contains(req.Brief, "Owner needed") || filepath.Base(req.ReportPath) != "architect-1-attempt-2.md" {
+	req := lastRequest(t, h, RoleArchitect)
+	if req.Role != "architect" || req.Resume != "architect-session" || !strings.Contains(req.Brief, "Owner needed") || filepath.Base(req.ReportPath) != "architect-1-attempt-3.md" {
 		t.Fatalf("retry: %+v", req)
 	}
 }

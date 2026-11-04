@@ -2526,3 +2526,29 @@ func TestStatusCarriesWorkingForARunningRun(t *testing.T) {
 	}
 	t.Error("the run at rest is not listed")
 }
+
+func TestShapeRetryStatusFromRecord(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	retry := &runrec.Pending{Kind: runrec.PendingShape, State: runrec.StateImplement, Role: engine.RoleImplementer, Round: 1, Reason: "missing Tests", AutomaticShapeRetry: true}
+	record, err := store.Create(runrec.Record{ID: "shape", Item: "S275", Project: p.Name, State: runrec.StateImplement, Pending: retry, Roles: []runrec.RoleRecord{{Role: engine.RoleImplementer, Round: 1, EndedAt: time.Now(), ShapeRetry: retry}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := json.Marshal(d.engineRuns(p.Name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Count(string(b), `"shape_retry":true`) != 2 {
+		t.Fatalf("retry missing from run and role status: %s", b)
+	}
+	if err := record.Update(func(rec *runrec.Record) { rec.Pending = nil }); err != nil {
+		t.Fatal(err)
+	}
+	b, err = json.Marshal(d.engineRuns(p.Name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Count(string(b), `"shape_retry":true`) != 2 {
+		t.Fatalf("role-only retry missing from status: %s", b)
+	}
+}

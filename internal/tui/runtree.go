@@ -16,6 +16,7 @@ import (
 // runTreeStep keeps engine-only display fields out of the ledger wire.
 type runTreeStep struct {
 	slicercli.Step
+	shapeRetry    bool
 	round         int
 	hasUsage      bool
 	usageKnown    bool
@@ -210,6 +211,9 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 				details = append(details, treeText(field))
 			}
 		}
+		if s.shapeRetry {
+			details = append(details, "shape retry")
+		}
 		if s.round > 0 {
 			details = append(details, fmt.Sprintf("round %d", s.round))
 		}
@@ -332,6 +336,7 @@ func (m *Model) roleDetails(steps []runTreeStep, r source.EngineRun) []runTreeSt
 			if role.Role == "ui" && steps[i].round == 0 {
 				steps[i].round = role.Round
 			}
+			steps[i].shapeRetry = role.ShapeRetry
 			steps[i].hasUsage = true
 			steps[i].tokens = role.Tokens
 			steps[i].cost = role.CostUSD

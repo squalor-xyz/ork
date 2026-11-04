@@ -65,6 +65,10 @@ type RoleRecord struct {
 	Denials   []string  `json:"denials,omitempty"`
 	// DeniedCommands holds one entry per denial, in the same order as Denials.
 	DeniedCommands []DeniedCommand `json:"denied_commands,omitempty"`
+
+	// ShapeRetry keeps the automatic retry context with its role, including
+	// when a concurrent sibling owns Pending (S275, proposed).
+	ShapeRetry *Pending `json:"shape_retry,omitempty"`
 }
 
 // Running reports whether the role was started and has no end recorded.
@@ -165,6 +169,10 @@ type Pending struct {
 	// pause (shape, lost, budget or error) of another role, kept while the
 	// sibling's queued question is asked first (S159, *proposed*).
 	Retry *Pending `json:"retry,omitempty"`
+
+	// AutomaticShapeRetry marks the one automatic shape retry in progress
+	// (S275, proposed). An owner pause clears it.
+	AutomaticShapeRetry bool `json:"automatic_shape_retry,omitempty"`
 }
 
 // Feedback names the file that holds what the next implementer round must
@@ -348,4 +356,27 @@ type Finding struct {
 	At         time.Time      `json:"at"`
 	Filed      string         `json:"filed,omitempty"`
 	FiledAt    time.Time      `json:"filed_at,omitzero"`
+}
+
+// AutomaticShapeRetry returns an active automatic retry, including one whose
+// concurrent sibling consumed the single pending slot (S275, proposed).
+// Only the latest entry of each role can have a retry still in progress.
+func (r Record) AutomaticShapeRetry() *Pending {
+	if p := r.Pending; p != nil && p.AutomaticShapeRetry && p.State == r.State {
+		copy := *p
+		return &copy
+	}
+	seen := map[string]bool{}
+	for i := len(r.Roles) - 1; i >= 0; i-- {
+		role := r.Roles[i]
+		if seen[role.Role] {
+			continue
+		}
+		seen[role.Role] = true
+		if p := role.ShapeRetry; p != nil && p.AutomaticShapeRetry && p.State == r.State {
+			copy := *p
+			return &copy
+		}
+	}
+	return nil
 }

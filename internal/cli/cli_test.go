@@ -1826,3 +1826,13 @@ func TestDoctorSkipsTheContractCheckOfAMissingProject(t *testing.T) {
 		})
 	}
 }
+
+func TestStatusShowsShapeRetry(t *testing.T) {
+	app := &App{Call: func(_ context.Context, _ string, _, result any) error {
+		return json.Unmarshal([]byte(`{"projects":[{"name":"p","engine_runs":[{"id":"r1","item":"S275","state":"implement","shape_retry":true}]}]}`), result)
+	}}
+	code, stdout, stderr := run(t, app, "status")
+	if code != 0 || !strings.Contains(stdout, "r1 S275 implement (shape retry)") {
+		t.Fatalf("shape retry missing: code %d stdout=%s stderr=%s", code, stdout, stderr)
+	}
+}

@@ -1324,9 +1324,10 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		}
 		var denials []string
 		denialCounts := map[string]int{}
+		shapeRetry := rec.AutomaticShapeRetry() != nil
 		var roles []source.EngineRole
 		for _, role := range rec.Roles {
-			roles = append(roles, source.EngineRole{Report: role.Report, Role: role.Role, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit, Tokens: role.Tokens, CostUSD: role.CostUSD})
+			roles = append(roles, source.EngineRole{ShapeRetry: role.ShapeRetry != nil, Report: role.Report, Role: role.Role, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit, Tokens: role.Tokens, CostUSD: role.CostUSD})
 			for _, text := range roleDenials(role) {
 				if denialCounts[text] == 0 {
 					denials = append(denials, text)
@@ -1381,7 +1382,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
 			vendorWait = m.engine.VendorWait()
 		}
-		runs = append(runs, EngineRun{VendorWait: vendorWait, StopAfter: rec.StopAfter, Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Working: working, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), LandFixes: rec.LandFixes, Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), WorktreeGone: rec.State == runrec.StateCommitted && !rec.Cleaned() && worktreeGone(rec), State: rec.State, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
+		runs = append(runs, EngineRun{VendorWait: vendorWait, StopAfter: rec.StopAfter, Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Working: working, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), LandFixes: rec.LandFixes, Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), WorktreeGone: rec.State == runrec.StateCommitted && !rec.Cleaned() && worktreeGone(rec), State: rec.State, ShapeRetry: shapeRetry, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
 	}
 	return runs
 }

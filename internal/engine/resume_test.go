@@ -29,10 +29,10 @@ func requestNamed(t *testing.T, h *harness, name string) Request {
 // gateShapePause runs the harness until the gate breaks the report shape.
 func gateShapePause(t *testing.T, h *harness) *Engine {
 	t.Helper()
-	bad := true
+	bad := 2
 	h.runner.script = func(req Request, n int) (Result, error) {
-		if req.Role == RoleGate && bad {
-			bad = false
+		if req.Role == RoleGate && bad > 0 {
+			bad--
 			return Result{Exit: ExitOK, Session: "sess-gate", Report: gateNoVerdict}, nil
 		}
 		return Result{}, nil

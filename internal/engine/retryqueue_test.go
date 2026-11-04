@@ -38,7 +38,7 @@ func retryWithQueuedQuestion(t *testing.T) (*harness, *Engine, runrec.Record) {
 			return Result{Exit: ExitOK, Session: "sess-" + req.Role, Report: cleanReview}, nil
 		}
 		if req.Role == RoleReviewer {
-			return Result{Exit: ExitOK, Session: "sess-reviewer", Report: noSections}, nil
+			return Result{Exit: ExitOK, Session: "sess-reviewer", Report: strings.Replace(noSections, "none", "Which report format?", 1)}, nil
 		}
 		for deadline := time.Now().Add(2 * time.Second); time.Now().Before(deadline); time.Sleep(time.Millisecond) {
 			if e.Snapshot().State == runrec.StatePaused {

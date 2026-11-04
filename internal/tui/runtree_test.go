@@ -693,3 +693,34 @@ func TestRunTreeFixRoundGoldens(t *testing.T) {
 		checkGolden(t, fmt.Sprintf("runtree-fix-round-%dx%d-mono-true.txt", size[0], size[1]), h.m.View().Content)
 	}
 }
+
+func TestRunTreeShowsShapeRetry(t *testing.T) {
+	raw := strings.Replace(treeEngine, `"role":"reviewer"`, `"role":"reviewer","shape_retry":true`, 1)
+	h := treeHarness(t, nil, raw)
+	lines := strings.Join(h.m.runTreeLines(h.m.paneSteps(), 120, 0), "\n")
+	if !strings.Contains(lines, "shape retry") {
+		t.Fatalf("role row lacks shape retry: %s", lines)
+	}
+}
+
+func TestRunLineShowsShapeRetry(t *testing.T) {
+	raw := strings.Replace(treeEngine, `"state":"implement"`, `"state":"implement","shape_retry":true`, 1)
+	h := treeHarness(t, nil, raw)
+	h.deliver(press("esc"))
+	if got := mainRow(h.view(), "ork", "S55"); !strings.Contains(got, "shape retry") {
+		t.Fatalf("run line lacks shape retry: %s", got)
+	}
+}
+
+func TestRunLineNamesTheGateOnceDuringAShapeRetry(t *testing.T) {
+	raw := `{"id":"engine","item":"S55","state":"gate","shape_retry":true,"roles":[{"role":"gate","round":1,"vendor":"codex","model":"sol","started_at":"2026-10-19T16:40:00Z","shape_retry":true}]}`
+	h := treeHarness(t, nil, raw)
+	h.deliver(press("esc"))
+	got := mainRow(h.view(), "ork", "S55")
+	if !strings.Contains(got, "gate shape retry") {
+		t.Fatalf("run line lacks gate shape retry: %s", got)
+	}
+	if n := strings.Count(got, "gate"); n != 1 {
+		t.Fatalf("run line names the gate %d times: %s", n, got)
+	}
+}

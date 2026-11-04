@@ -177,6 +177,8 @@ type EngineRole struct {
 	StartedAt time.Time `json:"started_at"`
 	EndedAt   time.Time `json:"ended_at,omitzero"`
 	Exit      string    `json:"exit,omitempty"`
+
+	ShapeRetry bool `json:"shape_retry,omitempty"` // proposed (S275)
 }
 
 // EngineFinding is a review finding that is not a fix, as the daemon shows
@@ -237,10 +239,11 @@ type EngineWork struct {
 
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
-	StopAfter      string                `json:"stop_after,omitempty"` // proposed: per-run stop point (S177)
-	Dismissed      bool                  `json:"dismissed,omitempty"`  // retained for an open run pane; hidden from lists
-	Findings       []EngineFinding       `json:"findings,omitempty"`   // proposed: owner and later findings (adj 163)
-	Card           *runrec.ApprovalCard  `json:"card,omitempty"`       // proposed: the approval card of an awaiting-approval run (S118)
+	ShapeRetry     bool                  `json:"shape_retry,omitempty"` // proposed (S275): automatic retry active
+	StopAfter      string                `json:"stop_after,omitempty"`  // proposed: per-run stop point (S177)
+	Dismissed      bool                  `json:"dismissed,omitempty"`   // retained for an open run pane; hidden from lists
+	Findings       []EngineFinding       `json:"findings,omitempty"`    // proposed: owner and later findings (adj 163)
+	Card           *runrec.ApprovalCard  `json:"card,omitempty"`        // proposed: the approval card of an awaiting-approval run (S118)
 	Question       *runrec.OwnerQuestion `json:"question,omitempty"`
 	LiveUsageKnown bool                  `json:"live_usage_known,omitempty"` // proposed: current attempt reported usage
 	UsageKnown     bool                  `json:"usage_known,omitempty"`      // proposed: includes reported zero usage

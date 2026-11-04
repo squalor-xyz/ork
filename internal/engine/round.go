@@ -34,7 +34,7 @@ type round struct {
 }
 
 // outcome is what a finished round gives its state function. ok is false when
-// the round already stopped or paused the slice.
+// the round stopped, paused, or scheduled an automatic retry.
 type outcome struct {
 	ok       bool
 	text     string
@@ -173,10 +173,24 @@ func (e *Engine) overBudget(rec runrec.Record) (string, bool) {
 }
 
 // runRound runs one role round: brief, ledger step, process, stop rules,
-// report checks. When it returns ok false the slice is already stopped or
-// paused (or err says why not).
+// report checks. When it returns ok false the slice stopped, paused, or has
+// an automatic retry ready (or err says why not).
 func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (outcome, error) {
 	rec := e.run.Snapshot()
+	// A sibling can own the single pending slot. The latest role record keeps
+	// this role's automatic retry durable until its next attempt ends.
+	if pend == nil {
+		for i := len(rec.Roles) - 1; i >= 0; i-- {
+			old := rec.Roles[i]
+			if old.Role == r.role && old.Round == r.n {
+				if old.ShapeRetry != nil {
+					p := *old.ShapeRetry
+					pend = &p
+				}
+				break
+			}
+		}
+	}
 	// A retry of a budget pause grants this round. Its pending context is
 	// cleared when the round ends, so the next round checks the limits again.
 	if pend == nil || pend.Kind != runrec.PendingBudget {
@@ -316,9 +330,20 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	defer stop()
 	idx := -1
 	err = e.run.Update(func(rr *runrec.Record) {
+		// Only the attempt that runs as the automatic retry carries its context;
+		// the refused attempt stays as history without the label.
+		retry := automaticShapeRetry(pend)
+		if retry != nil {
+			for i := range rr.Roles {
+				if rr.Roles[i].Role == r.role && rr.Roles[i].Round == r.n {
+					rr.Roles[i].ShapeRetry = nil
+				}
+			}
+		}
 		rr.Roles = append(rr.Roles, runrec.RoleRecord{
 			Role: r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
-			Step: stepID, StartedAt: e.d.now(),
+			ShapeRetry: retry,
+			Step:       stepID, StartedAt: e.d.now(),
 		})
 		idx = len(rr.Roles) - 1
 	})
@@ -407,7 +432,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	err = e.run.Update(func(rr *runrec.Record) {
 		// A sibling round of the same state may have paused the slice already;
 		// its pause context is not this round's to clear.
-		if !fallingBack && rr.State == r.state {
+		if !fallingBack && rr.State == r.state && (rr.Pending == nil || rr.Pending.Role == "" || rr.Pending.Role == r.role) {
 			rr.Pending = nil
 		}
 		role := &rr.Roles[idx]
@@ -419,6 +444,9 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		role.Denials = denialNames(res.Denials)
 		role.DeniedCommands = res.Denials
 		role.Report = file
+		if role.ShapeRetry != nil {
+			role.ShapeRetry.AutomaticShapeRetry = false
+		}
 	})
 	if err != nil {
 		return outcome{}, err
@@ -502,10 +530,24 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		}
 	}
 	if len(problems) > 0 {
-		return outcome{}, e.pause(runrec.Pending{
+		p := runrec.Pending{
 			Kind: runrec.PendingShape, State: r.state, Role: r.role, Round: r.n,
 			Reason: (&ShapeError{Problems: problems}).Error(),
-		})
+		}
+		// CheckReport returns no Report on a shape error. Read its existing
+		// section helper so even a malformed owner question prevents an auto retry.
+		body, _ := section(text, ownerHeading)
+		if isNone(body) && (tri == nil || len(tri.Owner) == 0) &&
+			!(pend != nil && pend.Kind == runrec.PendingShape && pend.Role == r.role && pend.Round == r.n) {
+			p.AutomaticShapeRetry = true
+			return outcome{}, e.run.Update(func(rr *runrec.Record) {
+				rr.Roles[idx].ShapeRetry = &p
+				if rr.State == r.state && (rr.Pending == nil || rr.Pending.Role == r.role) {
+					rr.Pending = &p
+				}
+			})
+		}
+		return outcome{}, e.pause(p)
 	}
 	if rep.Question != "" {
 		err := e.run.Update(func(rr *runrec.Record) {
@@ -673,4 +715,14 @@ func (e *Engine) heartbeat(ctx context.Context, rec runrec.Record, id string) fu
 		}
 	}()
 	return func() { cancel(); <-done }
+}
+
+// automaticShapeRetry copies the active context so ending a role cannot change
+// the brief's pending context or another role record.
+func automaticShapeRetry(p *runrec.Pending) *runrec.Pending {
+	if p == nil || !p.AutomaticShapeRetry {
+		return nil
+	}
+	copy := *p
+	return &copy
 }

@@ -96,7 +96,7 @@ func TestBudgetMinutesCountRoleTimeNotPausedTime(t *testing.T) {
 		c.Advance(10 * time.Second)
 		res := defaultResult(req)
 		if n == 0 {
-			res.Report = "bad shape"
+			res.Report = "bad shape\n## Owner needed\nWhich format?\n"
 		}
 		return res, nil
 	}
@@ -199,7 +199,7 @@ func TestBudgetGrantSpentOnShapePause(t *testing.T) {
 	h.runner.script = func(req Request, n int) (Result, error) {
 		res := defaultResult(req)
 		if n == 1 {
-			res.Report = "bad shape"
+			res.Report = "bad shape\n## Owner needed\nWhich format?\n"
 		}
 		return res, nil
 	}
