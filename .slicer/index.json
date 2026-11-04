@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 280,
+  "next_id": 281,
   "preamble": "",
   "passes": [
     {
@@ -14135,6 +14135,34 @@
         "trees": [],
         "trees_literal": false,
         "findings": "Wave 7, 2026-11-03/04 (slicer s313): all 8 implementer rounds ended with the project tests green (3202 OK) and `slicer check` red on \"s443 / Why: unknown flag --stdin)\", because s443 had landed on main with relay-roles apply but the s313 worktree branch was cut before it, so its slicer check validated that tracking text against code without apply. The run hit the 8-round limit and stopped; each fix round cost about 10 minutes of tests. Fixed by hand: stash, git merge main in the worktree, stash pop; slicer check then passed. Needed: when a round check fails only on a finding outside the slice (a tracked item not in its Files) ork merges main into the worktree before it asks the implementer for another round, or runs the check against a main-merged tree; and a round that fails on the same outside finding twice stops early with that reason instead of burning rounds. Related: S274, S275.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S280",
+      "title": "Grok reviewer cancelled by a permission prompt: brief it, and fall back to the next row",
+      "short_title": "Grok reviewer cancelled by a permission prompt: brief it, and fall back to the next row",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Wave 7, 2026-11-04 (slicer s313): the first real Grok reviewer round (grok-4.7 medium, plan mode) ran 3.5 minutes, then tried a multi-statement `python3 -c` that wrote a temp file. stderr: \"permission required: Execute ... was not run, as a headless run cannot ask for approval\". The CLI cancelled the whole run (result subtype error_during_execution, is_error true, stop_reason cancelled, exit 0), and ork ended it as \"reviewer round 1 exited unclassified\", which stopped the run. The reviewer had already written its full report; it was lost. Evidence: ~/.local/state/ork/fixtures/grok/20261104T061623Z-1183348939 (cmd, stderr, stdout). Needed: (1) the Grok read-only brief lists the commands that run without approval (git, rg, cat, ls, read-only test runs) and says a command that needs approval ends the run, so do not issue one; (2) an unclassified or cancelled Grok round moves to the next row of the role (Claude) instead of stopping the run, as out_of_credits does; (3) a cancelled round that already produced its final report text keeps that report. Related: S268, S269, S277.",
         "discovered_from": "",
         "parent": "",
         "cites": [],
