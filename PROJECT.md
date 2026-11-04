@@ -3,7 +3,9 @@
 Status: in development, with a Go CLI, TUI and relay engine.
 License GPL-3.0-or-later (Squalor LLC).
 
-This file says what ork is and why. The relay engine is specified in
+This file says what ork is and why. How the three tools fit, and how one
+slice runs, is in [docs/how-it-works.md](docs/how-it-works.md). The relay
+engine is specified in
 [docs/design.md](docs/design.md), the screens in
 [docs/dashboard.md](docs/dashboard.md), ork's own files in
 [docs/state.md](docs/state.md), ownership in

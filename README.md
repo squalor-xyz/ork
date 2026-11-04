@@ -58,6 +58,8 @@ and writes slicer and adj only through their CLIs.
 
 ## Guide
 
+- [docs/how-it-works.md](docs/how-it-works.md): read this first. The three
+  tools, one slice, and who drafts, checks and judges.
 - [docs/guide.md](docs/guide.md): a walk-through for a new owner, from
   install to a landed slice, a wave, and daily monitoring.
 - [docs/diagrams.md](docs/diagrams.md): Mermaid diagrams of the components,
