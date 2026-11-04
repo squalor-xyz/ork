@@ -13983,6 +13983,49 @@
       }
     },
     {
+      "id": "S277",
+      "title": "Role briefs: explicit acceptance criteria for every role and every resumed round",
+      "short_title": "Role briefs: explicit acceptance criteria for every role and every resumed round",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "b2af9b6b-d0c2-4458-a1a8-2344807fef5e",
+          "kind": "",
+          "text": "**2026-11-04** — Owner 2026-11-04 evidence: the reviewer raised \"[fix] the slice is still open, tracking steps were never run\" for s313, though the implementer was denied every slicer command by the sandbox. The reviewer and gate briefs should say that a tracking step the implementer was denied is a Deviation for the orchestrator to run, not a [fix] for the implementer, so a fix round is not spent on it.",
+          "created_at": "2026-11-04T12:29:48Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-03: when ork instructs a role it should be explicit, above all about acceptance criteria for what that role is doing; ork is the orchestrator, so this matters more for ork than for any one session. Fact: rg for \"acceptance\" and \"done when\" in internal/roles/prompts/*.md finds nothing. Evidence of the gap (wave 7): the Claude fallback wrote \"## 7. Owner needed\" and a Tests: line with trailing text, and one implementer ended with Tests: 0 passed after the sandbox denied python3.12, because the brief did not say what a finished round must show or what to do when a check cannot run. Needed: each role brief (implementer, reviewer, gate, architect, spec-check, UI pass, and the Resumed session section) states, as a short checklist, what the role must have produced to be done: the exact report lines and headings, the test command that works in its sandbox, and what to write when a check is blocked. Related: S276 (the two report lines), S275, S256.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
       "id": "S274",
       "title": "Project cap: a paused run keeps its project slot",
       "short_title": "Project cap: a paused run keeps its project slot",
@@ -14148,49 +14191,6 @@
         "importance": 3,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
-      }
-    },
-    {
-      "id": "S277",
-      "title": "Role briefs: explicit acceptance criteria for every role and every resumed round",
-      "short_title": "Role briefs: explicit acceptance criteria for every role and every resumed round",
-      "status": "open",
-      "has_slice": false,
-      "depends_on": [],
-      "note_records": [
-        {
-          "id": "b2af9b6b-d0c2-4458-a1a8-2344807fef5e",
-          "kind": "",
-          "text": "**2026-11-04** — Owner 2026-11-04 evidence: the reviewer raised \"[fix] the slice is still open, tracking steps were never run\" for s313, though the implementer was denied every slicer command by the sandbox. The reviewer and gate briefs should say that a tracking step the implementer was denied is a Deviation for the orchestrator to run, not a [fix] for the implementer, so a fix round is not spent on it.",
-          "created_at": "2026-11-04T12:29:48Z",
-          "attempt": 0,
-          "by": "Jon R",
-          "verified_by": "",
-          "verified_at": "",
-          "stale_after": "",
-          "retracted_by": "",
-          "retracted_at": "",
-          "retracted_reason": ""
-        }
-      ],
-      "claim": null,
-      "fields": {
-        "size": "M",
-        "flags": [],
-        "trees": [],
-        "trees_literal": false,
-        "findings": "Owner 2026-11-03: when ork instructs a role it should be explicit, above all about acceptance criteria for what that role is doing; ork is the orchestrator, so this matters more for ork than for any one session. Fact: rg for \"acceptance\" and \"done when\" in internal/roles/prompts/*.md finds nothing. Evidence of the gap (wave 7): the Claude fallback wrote \"## 7. Owner needed\" and a Tests: line with trailing text, and one implementer ended with Tests: 0 passed after the sandbox denied python3.12, because the brief did not say what a finished round must show or what to do when a check cannot run. Needed: each role brief (implementer, reviewer, gate, architect, spec-check, UI pass, and the Resumed session section) states, as a short checklist, what the role must have produced to be done: the exact report lines and headings, the test command that works in its sandbox, and what to write when a check is blocked. Related: S276 (the two report lines), S275, S256.",
-        "discovered_from": "",
-        "parent": "",
-        "cites": [],
-        "key": "",
-        "pass": "v1.1",
-        "group": "",
-        "reason": "",
-        "importance": 3,
-        "urgency": 3,
-        "effort": 2,
         "attempts": 0
       }
     },

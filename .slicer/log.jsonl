@@ -3102,3 +3102,5 @@
 {"when": "2026-11-04T16:40:13Z", "item": "S276", "action": "note", "from": "", "to": "", "note": "Role prompts show literal Tests and Owner needed lines, with", "by": "Jon R"}
 {"when": "2026-11-04T16:40:13Z", "item": "S276", "action": "status", "from": "started", "to": "done", "note": "Role prompts show the required Tests line and unnumbered Owner needed heading literally. Prompt order and focused test filter findings are resolved; example-removal mutations fail the expected tests. Gate PASS and owner approval authorize completion; the Claude fallback human check remains after landing.", "by": "Jon R"}
 {"when": "2026-11-04T17:07:48Z", "item": "S275", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T18:00:37Z", "item": "S277", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T18:00:41Z", "item": "S277", "action": "move", "from": "277", "to": "272", "note": ""}
