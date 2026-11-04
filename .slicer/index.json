@@ -14043,7 +14043,7 @@
       "title": "Implementer prompt: the report lines it must write exactly",
       "short_title": "Implementer prompt: the report lines it must write exactly",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
