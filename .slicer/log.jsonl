@@ -3091,3 +3091,4 @@
 {"when": "2026-11-04T13:02:28Z", "item": "S284", "action": "add", "from": "", "to": "open", "note": "Go tests: write fake vendor and git scripts once per test binary"}
 {"when": "2026-11-04T13:37:54Z", "item": "S285", "action": "add", "from": "", "to": "open", "note": "Separate round check command from the gate and landing check command"}
 {"when": "2026-11-04T13:37:54Z", "item": "S285", "action": "move", "from": "285", "to": "285", "note": ""}
+{"when": "2026-11-04T14:51:50Z", "item": "S286", "action": "add", "from": "", "to": "open", "note": "Read release target and wave from slicer: wave start, status and the Waves screen"}
