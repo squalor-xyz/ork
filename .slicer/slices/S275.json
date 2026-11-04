@@ -1,0 +1,41 @@
+{
+  "id": "S275",
+  "title": "Shape-only pause: retry once on its own",
+  "lead": [
+    "*Proposed.* When a role's round ends with a report that breaks the shape checks and has no owner question, the engine resumes the same role's session once by itself, with the shape error as the brief, and pauses the run only if the rerun's report is still wrong. This is the same rule the spec check already uses (`internal/engine/speccheck.go:147`)."
+  ],
+  "depends_note": null,
+  "findings_note": "Owner 2026-11-03 (wave 7): five runs paused on report shape only (the Claude fallback wrote \"## 7. Owner needed\" and \"Tests: 3216 passed, 0 failed (1 skipped ...)\"). ork retry with no text fixed both runs I resumed, because the resumed round carries the shape problem. Needed: when a round ends with a shape problem and no owner question, the engine resumes the same session once by itself, then pauses if the shape is still wrong. Related: S266 (the spec-check version of this), S256 (retry with text).",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Wave 7 (2026-11-03): five runs paused on report shape and nothing else (the Claude fallback wrote `## 7. Owner needed` and `Tests: 3216 passed, 0 failed (1 skipped ...)`). `ork retry RUN` with no text fixed both runs I resumed, because the resumed round already carries the shape problem: `pendingKindSection` gives a resumed role \"ork checked your last report and refused it: REASON\" and asks for the report again (`internal/engine/round.go:143-145`). So the owner's only job was to press retry. Each pause also held a project slot and an owner's attention for no decision.\n\nOwner decisions (interview in the ork session, 2026-11-04, recorded here until adj has a record for key `engine.shape-retry`):\n\n1. Every role that reports gets the one automatic resume: implementer, reviewer, gate, architect and UI pass. Spec check keeps its own retry.\n2. The automatic resume is a retry of the same round, not a new round: the round number stays and the 8 implementer-round limit (`DefaultMaxRounds`, `internal/engine/engine.go:26`) does not count it.\n3. It is shown in the run record and the status line only: no owner notice and no pause unless the rerun is still wrong.\n\nWhat the code shows at HEAD of main (read 2026-11-04): a shape problem is found in `runRound` after `CheckReport` (and, for the reviewer, UI pass and gate, `Triage`) and goes straight to `e.pause` with `Kind: runrec.PendingShape` (`internal/engine/round.go:503-509`). `RetryNote` then sets the state back to `Pending.State` and calls `advance` (`internal/engine/engine.go:470-520`); the rerun resumes the role's session because `latestSession` allows the role's own session after a question or shape pause (`internal/engine/round.go:260-263`)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/round.go:480-510` (the shape branch of `runRound`: on a first shape problem with no owner question, record an automatic retry and run the same role and round again instead of pausing).\n- `internal/engine/round.go:143-145` (the `Report shape` brief section: when the rerun is automatic, the wording stays the same).\n- `internal/runrec/record.go:140-166` (`Pending` gets a field that marks a shape pause as an automatic retry in progress; the field name is proposed).\n- `internal/engine/engine.go:464-520` (`RetryNote` must not treat an automatic retry as an owner retry; no owner note is attached).\n- `internal/tui/` and `internal/cli/` status text only where a role row or the run line names the retry (find with `rg -n 'shape' internal/tui internal/cli`); golden views change only if a row text changes (`go test ./internal/tui -update`, then review the diff).\n- `docs/design.md` and `docs/state.md` (document the rule and the new field).\n- `internal/engine/round_test.go` and `internal/engine/report_test.go` (new tests; find the harness with `rg -n 'func newHarness' internal/engine`)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "In `internal/engine/round_test.go` (use the existing harness and a fake runner that returns the scripted reports in order):\n\n- `TestShapeProblemRetriesOnceOnItsOwn`: the implementer's first report has no `Tests:` line; the second is valid. Expect: the runner is called twice for the same role and round number, the second call resumes the first call's session id, its brief contains the `Report shape` section naming the problem, and the run reaches the next state with no pause. Fails first: the run pauses after the first report.\n- `TestShapeProblemPausesWhenTheRetryIsStillWrong`: both reports break the shape. Expect: exactly two runner calls, then `State == paused` with `Pending.Kind == shape`, and `ork retry` then runs the role a third time. Fails first: only one call is made.\n- `TestAutomaticShapeRetryDoesNotUseARound`: with `MaxRounds` set to 1, a shape slip on the first implementer round and a valid rerun still reaches the reviewer. Fails first: the run stops with \"round limit\" or pauses.\n- `TestShapeRetryAppliesToEveryReportingRole`: table over reviewer, gate, architect and UI pass (each with a first report missing `## Owner needed`): each reruns once and passes. Fails first: each pauses.\n- `TestShapeProblemWithAQuestionStillPausesForTheOwner`: a report that breaks the shape but also carries an owner question pauses at once; no automatic retry. (This guards the no-owner-question condition.)\n- `TestShapeRetryIsRecorded`: after a retried round the record shows the retry (the field and the refused report kept as a file or in the role row), and a restart of the daemon between the two calls does not run a third call."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Tests first from the failing list; confirm each fails for the reason given.\n2. In the shape branch of `runRound` (`round.go:503`), when `len(problems) > 0` and the report has no question: if the round's pending state is not already an automatic shape retry for the same role and round, record one (the `Pending` marker, the refused report saved beside the new one) and return so the same role and round run again with a resumed session. If it is already marked, pause as today with `Kind: runrec.PendingShape` and clear the marker.\n3. Keep the round number. Do not touch `DefaultMaxRounds` counting beyond making sure the retry is not counted as a new round.\n4. A report with an owner question and a shape problem pauses at once (today's behavior).\n5. Show the retry in the status line and the role row with the words \"shape retry\" (keep the text short); do not add a notice.\n6. Do not change `CheckReport`, `Triage` or the prompts (S276 owns the prompts). Do not change the spec check's own retry.\n7. Update `docs/design.md` and `docs/state.md` in the same diff."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go -C WORKTREE test -count=1 ./internal/engine ./internal/runrec ./internal/tui ./internal/cli -run 'ShapeProblem|ShapeRetry|Pending|Golden'`: all pass.\n- `go -C WORKTREE test -race -count=1 ./...`, `go -C WORKTREE vet ./...`, `gofmt -l WORKTREE` (empty), `slicer check`, `adj lint`.\n- Mutation: make the shape branch pause on the first problem; `TestShapeProblemRetriesOnceOnItsOwn` goes red. Make the marker never clear; `TestShapeProblemPausesWhenTheRetryIsStillWrong` goes red.\n- [HUMAN CHECK] [AFTER LAND] On the next wave, if a Claude fallback role slips on the report shape, the run shows \"shape retry\" and carries on without a pause."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"A shape-only report error retries the role once before it pauses the run\"."
+    }
+  ],
+  "notes": []
+}

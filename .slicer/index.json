@@ -14015,7 +14015,7 @@
       "title": "Shape-only pause: retry once on its own",
       "short_title": "Shape-only pause: retry once on its own",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
