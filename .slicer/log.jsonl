@@ -3077,3 +3077,4 @@
 {"when": "2026-11-04T01:48:45Z", "item": "S275", "action": "move", "from": "275", "to": "273", "note": ""}
 {"when": "2026-11-04T01:48:45Z", "item": "S276", "action": "move", "from": "276", "to": "274", "note": ""}
 {"when": "2026-11-04T03:39:15Z", "item": "S277", "action": "add", "from": "", "to": "open", "note": "Role briefs: explicit acceptance criteria for every role and every resumed round"}
+{"when": "2026-11-04T03:41:32Z", "item": "S278", "action": "add", "from": "", "to": "open", "note": "Spec check: every slice has explicit, verifiable acceptance criteria"}

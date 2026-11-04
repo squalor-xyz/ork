@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 278,
+  "next_id": 279,
   "preamble": "",
   "passes": [
     {
@@ -14089,6 +14089,34 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S278",
+      "title": "Spec check: every slice has explicit, verifiable acceptance criteria",
+      "short_title": "Spec check: every slice has explicit, verifiable acceptance criteria",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-03: slicer and ork should both encourage well defined acceptance criteria for every slice. Fact: ork prompts/spec-check.md asks only that a slice \"names its checks\" (line 40), so a vague Check passes. Needed: the spec check flags a slice whose Check or Failing tests do not say how to tell it is done (no command to run, no expected output or observable result, or a check the sandbox cannot run) and asks the owner to tighten it before the wave starts. Related: S277 (role briefs), slicer S102 (empty Check blocks next).",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
         "attempts": 0
       }
     }
