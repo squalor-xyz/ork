@@ -3139,3 +3139,19 @@
 {"when": "2026-11-04T19:56:34Z", "item": "S290", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-04T19:56:35Z", "item": "S291", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-04T19:56:40Z", "item": "S291", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:59:53Z", "item": "S287", "action": "note", "from": "", "to": "", "note": "Owner answers 2026-11-04 (interactive): all recommendations ", "by": "Jon Robbins"}
+{"when": "2026-11-04T19:59:53Z", "item": "S288", "action": "note", "from": "", "to": "", "note": "Owner answers 2026-11-04 (interactive): all recommendations ", "by": "Jon Robbins"}
+{"when": "2026-11-04T19:59:54Z", "item": "S289", "action": "note", "from": "", "to": "", "note": "Owner answers 2026-11-04 (interactive): all recommendations ", "by": "Jon Robbins"}
+{"when": "2026-11-04T19:59:54Z", "item": "S290", "action": "note", "from": "", "to": "", "note": "Owner answers 2026-11-04 (interactive): all recommendations ", "by": "Jon Robbins"}
+{"when": "2026-11-04T19:59:54Z", "item": "S291", "action": "note", "from": "", "to": "", "note": "Owner answers 2026-11-04 (interactive): all recommendations ", "by": "Jon Robbins"}
+{"when": "2026-11-04T19:59:54Z", "item": "S292", "action": "note", "from": "", "to": "", "note": "Owner answers 2026-11-04 (interactive): all recommendations ", "by": "Jon Robbins"}
+{"when": "2026-11-04T20:00:22Z", "item": "S289", "action": "note", "from": "", "to": "", "note": "Slicer item for Q3 filed 2026-11-04: s449 in slicer's store ", "by": "Jon Robbins"}
+{"when": "2026-11-04T20:02:38Z", "item": "S243", "action": "set", "from": "", "to": "", "note": "title Claude fallback implementer: shell rules in the brief, one automatic report nudge, a short denied count in status→Claude fallback implementer: shell rules in the brief, a short denied count in status"}
+{"when": "2026-11-04T20:02:38Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-04T20:02:38Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-04T20:02:38Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-04T20:02:38Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-04T20:02:39Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-04T20:02:39Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-04T20:02:39Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-04T20:02:39Z", "item": "S243", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-04 (ork S287 Q2): part (b) dropped because S27", "by": "Jon Robbins"}

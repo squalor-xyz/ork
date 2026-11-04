@@ -13007,12 +13007,27 @@
     },
     {
       "id": "S243",
-      "title": "Claude fallback implementer: shell rules in the brief, one automatic report nudge, a short denied count in status",
+      "title": "Claude fallback implementer: shell rules in the brief, a short denied count in status",
       "short_title": "Claude fallback implementer",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "5bedbf6c-9edd-4cb1-9526-f4879ec5c083",
+          "kind": "",
+          "text": "**2026-11-04** — Owner 2026-11-04 (ork S287 Q2): part (b) dropped because S275 landed the automatic same-session retry; parts (a) and (c) stay.",
+          "created_at": "2026-11-04T20:02:39Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -14541,7 +14556,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "4b0b87e9-5ef8-4973-945c-6e46e67750ce",
+          "kind": "",
+          "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 retry-first: resume the role once with the shape problems and the note to keep its question, then ask or pause. Q2 drop-part-b: S243 loses its part (b), the automatic report nudge, and its nudge_test.go tests; parts (a) and (c) stay. The S243 edit is done as part of this slice's filing step.",
+          "created_at": "2026-11-04T19:59:53Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -14569,7 +14599,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d2df756c-1ce5-4732-9b60-3546af7fe35b",
+          "kind": "",
+          "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 both: the prompts state the exact body rule with a refused and an accepted example, and the parser keeps extra lines as context. Q2 in-context: lines in the body that are not the block become context shown with the question. Q3 accept: strip one leading list marker from Options, the option lines and Recommend. Q4 findings-only: the Owner needed block and spec-check blocks are unchanged.",
+          "created_at": "2026-11-04T19:59:53Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -14597,7 +14642,36 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "0d64f22f-67d7-4569-af82-1ee1989e657a",
+          "kind": "",
+          "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 pause-with-command: keep the pause, with one line naming the file, the side to take and the exact git command, then ork retry. Q2 base: the command takes the base branch's copy, as on U26; the human check reads the notes after landing. Q3 ask-slicer: the owner files a slicer item for a merge-slice driver (merges notes by id and sections by heading); filed in slicer's store 2026-11-04 (see the slicer item for its ID).",
+          "created_at": "2026-11-04T19:59:54Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "2059a6a4-bef3-49a0-9e03-eeec2e7e1fab",
+          "kind": "",
+          "text": "**2026-11-04** — Slicer item for Q3 filed 2026-11-04: s449 in slicer's store (v1.20, size M): merge driver for slice JSON.",
+          "created_at": "2026-11-04T20:00:22Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -14625,7 +14699,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "84ccaeb1-f1ab-4928-9d88-cd4735d18cdb",
+          "kind": "",
+          "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 usage-block: a subcommand's help prints that command's block cut from the one usage text. Q2 sub-only: ork help SUB prints the same block as ork SUB --help, and an unknown SUB is a usage error.",
+          "created_at": "2026-11-04T19:59:54Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -14653,7 +14742,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "034c6f92-336b-4e8c-a510-ee228a8b2c99",
+          "kind": "",
+          "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 both: accept any case and store lowercase, and for an unknown name list the vendors. Q2 cli-and-daemon: the CLI for an early error and the daemon on the wire. Q3 no: only claude, codex and grok; matrix names such as Claude Code are not accepted on the command line.",
+          "created_at": "2026-11-04T19:59:54Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -14681,7 +14785,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "77059f0d-2f22-4ab0-8c81-87d315fe73af",
+          "kind": "",
+          "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 project-only: fingerprint every path under the project root, its own .slicer included. Q2 no-lock: scope the paths only; the spec check takes no lock.",
+          "created_at": "2026-11-04T19:59:54Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
