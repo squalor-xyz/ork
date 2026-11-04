@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-286 items · — 80 · done 179 · retired 27
+292 items · — 86 · done 179 · retired 27
 
 v1.2
 
@@ -175,6 +175,12 @@ v1.2
 | 118 | S283 | wave start: one item without a spec must not fail the whole wave | S | 1 |  | Wave 7, 2026-11-03: ork wave start ork S256 S271 failed with "spec check failed: S271: the item has no slice spec" and launched nothing, although S256 was ready. I had to rerun with S256 alone. Needed: the wave starts the items that have a spec and prints the skipped ones with the reason and the command that fixes it (slicer promote). Open: whether failing the whole wave is deliberate; owner decides. Related: S258, S260, S264. | — |
 | 119 | S284 | Go tests: write fake vendor and git scripts once per test binary | S | 2 |  | ork go test ./... measures 523 s over five packages; a round waits on internal/engine (230-305 s) and cli (148 s). On this Mac the first run of a newly written script costs 200-440 ms, a later run or a link 7-10 ms. cli fakeVendor (internal/cli/cli_test.go:553) writes three scripts for each of 64 doctor tests (136 s of cli's 148 s); engine newLandEnv (internal/engine/land_test.go:129) writes two for about 50 landing tests. Change: write each fake script once per test binary (TestMain or sync.Once) and symlink or hard-link it into each test's dir. Acceptance: (1) go test ./... passes with the same test count and no test removed or skipped; (2) go test ./internal/cli -count=1 wall time is at most 60 s and ./internal/engine at most 200 s, measured on the same machine and quoted before and after in the report; (3) no test depends on another's script file; (4) gofmt -l . and go vet ./... are clean. Source: .scratch/v11/ork-test-trim-proposal.md B1-B3. | — |
 | 120 | S285 | Separate round check command from the gate and landing check command | M | 2 |  | Owner 2026-11-04 chose: fix test speed first (S284, slicer s448), then run a faster check in implementer rounds and the full traced run at the gate and landing. Today one command serves every check (internal/engine/states.go:207 and :233, project key check_command, docs/state.md:49,78; ADR 0032 wants slicer's config key). For slicer the round command would add -p 'test*.py' to python3 -m unittest discover -s tests -t tests (same tests, no line tracer, per .scratch/v11/test-trim-proposal.md); the full command keeps tests/test_affected.py's tracer and refreshes the affected-test map. Proposed (spec step must confirm with the owner and run adj check first; the key name, where it lives, and whether it is ork or slicer config are open): an optional round_check_command setting, used by implementer-round checks only; check_command stays for the gate and the landing re-check; unset means check_command everywhere. Acceptance: (1) with it unset, behavior and run logs are unchanged; (2) with it set, round checks run it and the log header names it, while the gate and landing run check_command; (3) the status and checks display name which command ran; (4) docs/state.md and docs/design.md document the key; (5) tests cover set, unset, and a failing round command followed by a passing gate. Order: after S284 and slicer s448 land and their measured savings are known; this is the second step (option 1 after option 3). | — |
+| 121 | [S287](slices/S287.md) | Shape retry when a malformed report also asks the owner | S | 1 |  | Owner 2026-11-04 (prism-ui wave): shape pauses in implementer, reviewer and gate; the orchestrator ran ork retry up to 6 times per run. S275 (landed 2026-11-04) covers shape-only reports; after its build the remaining pauses were malformed reports that also asked the owner (round.go:539-541 skips the retry then). Spec-check version: S266. S243 part (b) is now S275. · discovered from S275 | — |
+| 122 | [S288](slices/S288.md) | Owner findings: state the exact body shape to reviewers and gates, or keep extra prose as context | S | 1 |  | Owner 2026-11-04 (prism-ui wave): U26 reviewer and U31 gate [owner] findings with prose or list markers in the body were shape errors (kinds.go:133-187 via parseOwnerQuestion); four gate attempts before one was accepted. Prompts do not say the body must hold only Options, options, Recommend and Decision key. · discovered from S277 | — |
+| 123 | [S289](slices/S289.md) | Landing: a merge-in conflict only in tracking files, such as the slice's own JSON | S | 1 |  | Owner 2026-11-04 (prism-ui wave): U26 landing paused on a merge-in conflict in .slicer/slices/U26.json (run state and notes edited on both sides); the owner took the base side, git add, ork retry. slicer defines no merge driver for slices/*.json. · discovered from S238 | — |
+| 124 | [S290](slices/S290.md) | Subcommand help: every command prints its own usage and exits 0 on --help or -h | S | 1 |  | Owner 2026-11-04: ork retry --help prints 'ork: retry: flag: help requested' and 'Run ork help for usage.' (exit 2). Verified 2026-11-04 for every command in ork help: none prints its own usage on --help or -h; ork help SUB prints the whole usage. | — |
+| 125 | [S291](slices/S291.md) | Vendor names on the command line: Claude is refused, claude works | S | 1 |  | Owner 2026-11-04: ork wave start ... --implementer Claude:sonnet:high is refused as unsupported vendor; claude:sonnet:high works. The daemon matches vendors exactly (runner.go:90, runs.go:471-474) while matrix rows are matched case-insensitively (runs.go:428). | — |
+| 126 | [S292](slices/S292.md) | Spec check: a sibling project's tracking write in the same git repo must not fail the read-only check | S | 1 |  | Owner 2026-11-04: prism and prism-ui are ork projects in one git repo; ork wave start prism S63 failed with 'spec-check changed the tree, and it is a read-only role' while ork wave start prism-ui U34 wrote prism-ui/.slicer in the shared checkout; a retry passed. gitStatusAt (speccheck.go:84-90) fingerprints the whole repository. · discovered from S254 | — |
 
 ---
 
@@ -182,174 +188,174 @@ v1.2
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 121 | [S87](slices/S87.md) | Codex rounds in ork: GOCACHE and the role temp dir inside the sandbox | S | 1 |  | discovered from S83 | done |
-| 122 | [S31](slices/S31.md) | Run a small slice through ork run end to end | S | 1 |  | discovered from S23 | done |
-| 123 | [S78](slices/S78.md) | recoverRuns map writes under lock | S | 1 |  | discovered from S05 | done |
-| 124 | [S126](slices/S126.md) | Implementer brief: ork runs the check command itself; a sandbox limit is not an owner question | S | 1 |  | discovered from S31 | done |
-| 125 | [S114](slices/S114.md) | Self-hosting: run ork on its own repo safely | M | 2 |  |  | done |
-| 126 | [S115](slices/S115.md) | Implementer brief: re-anchor the spec first and self-check before reporting | S | 1 |  |  | done |
-| 127 | [S70](slices/S70.md) | Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed) | S | 1 |  |  | done |
-| 128 | [S99](slices/S99.md) | Live role detail: output tail and tokens/cost in the run pane | M | 2 |  | discovered from S07 | done |
-| 129 | [S125](slices/S125.md) | Waves composer focus: next waves only, inputs inline under the ticked item | M | 2 |  | discovered from S31 | done |
-| 130 | [S107](slices/S107.md) | Waves as a table: shares as a dim column, wave header rules, Lineup column only after ticking | M | 2 |  |  | done |
-| 131 | [S111](slices/S111.md) | Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork | M | 2 |  | discovered from S28 | done |
-| 132 | [S127](slices/S127.md) | After an answer: clear the question from the row and pane, and say the role resumed | S | 1 |  | discovered from S31 | done |
-| 133 | [S109](slices/S109.md) | Run pane follows the newest running run, with a 1 s ledger refresh while a run is visible | M | 2 |  |  | done |
-| 134 | [S110](slices/S110.md) | Running: a live summary of every running project above Needs you in the sidebar | M | 2 |  |  | done |
-| 135 | [S118](slices/S118.md) | Approval card: everything needed to approve on one screen | M | 2 |  |  | done |
-| 136 | [S119](slices/S119.md) | Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up | M | 2 |  |  | done |
-| 137 | [S120](slices/S120.md) | Finding kinds: fix, owner or later in reviewer, UI pass and gate reports | M | 2 |  |  | done |
-| 138 | [S117](slices/S117.md) | UI pass role in the engine, in parallel with the reviewer | M | 2 |  |  | done |
-| 139 | [S121](slices/S121.md) | UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card | M | 2 |  |  | done |
-| 140 | [S116](slices/S116.md) | Spec check: a batch readiness check before a wave, answered in one sitting | M | 2 |  |  | done |
-| 141 | [S92](slices/S92.md) | Fallback brief tells the next row about earlier rows and an already-started slice | S | 1 |  | discovered from S49 | done |
-| 142 | [S93](slices/S93.md) | The gate follows the reviewer's current row after a fallback | S | 1 |  | discovered from S49 | done |
-| 143 | [S102](slices/S102.md) | startRun re-checks that the project is still registered | S | 1 |  | discovered from S38 | done |
-| 144 | [S113](slices/S113.md) | Answer with adj on and no decision key must proceed | S | 1 |  | discovered from S28 | done |
-| 145 | [S73](slices/S73.md) | Allowlist --root-first calls | S | 1 |  |  | done |
-| 146 | [S75](slices/S75.md) | Run directory modes | S | 1 |  | discovered from S51 | done |
-| 147 | [S71](slices/S71.md) | Doctor checks each project's check command and patterns (docs/design.md:613-614) | S | 1 |  |  | done |
-| 148 | [S85](slices/S85.md) | Navigation keys | M | 2 |  |  | done |
-| 149 | [S86](slices/S86.md) | Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default | S | 1 |  | discovered from S83 | done |
-| 150 | [S94](slices/S94.md) | Plan views and lineup edit cover the architect | S | 2 |  | discovered from S08 | done |
-| 151 | [S98](slices/S98.md) | Welcome polish: notice projects added elsewhere, tilde paths, status line and wording | S | 1 |  | discovered from S96 | done |
-| 152 | [S91](slices/S91.md) | Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes | S | 1 |  | discovered from S49 | done |
-| 153 | [S90](slices/S90.md) | Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on | S | 1 |  | Relayed 2026-10-30 (run-20261030-010033-9d07): S142 already corrected every stale line in scope (docs/boundaries.md:38, docs/glossary.md:144, internal/roles/roles.go:56); no change needed, as the 2026-10-29 owner note said (retire once S142 lands). Remaining out-of-scope matches go to S183. · discovered from S88 | retired |
-| 154 | [S39](slices/S39.md) | ork run prompt tests catch swapped answers; help text says y/n | S | 1 |  | discovered from S21 | done |
-| 155 | [S105](slices/S105.md) | Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases | S | 2 |  |  | done |
-| 156 | [S106](slices/S106.md) | Run card inline | M | 2 |  |  | done |
-| 157 | [S112](slices/S112.md) | Answer questions of externally run relays from ork (needs slicer relay-run ask and answer) | M | 2 |  | discovered from S28 | done |
-| 158 | [S24](slices/S24.md) | Pin and check the slicer contract | M | 2 |  | owner session 2026-10-20 (in slicer): ork sets and checks each tool's pin (adj 97, decided). Owner 2026-10-30: this slice is the slicer pin only; the adj half is its own v1.1 slice behind adjudicate S45. Companion: slicer s387 (relay contract pin, landed). | done |
-| 159 | [S01](slices/S01.md) | Vendor spike | S | 1 |  |  | done |
-| 160 | [S02](slices/S02.md) | Core and adapters | M | 2 |  |  | done |
-| 161 | [S03](slices/S03.md) | Daemon and CLI | M | 2 |  |  | done |
-| 162 | [S04](slices/S04.md) | Engine core | M | 3 |  |  | done |
-| 163 | [S05](slices/S05.md) | Waves and caps: queue, admission | M | 2 |  |  | done |
-| 164 | S06 | Vendors and fallback | M | 2 |  | Umbrella over S47, S48 and S49. Notes move to the grok adapter (S72) and budgets (S65); owner 2026-10-20. | retired |
-| 165 | [S07](slices/S07.md) | Live role detail | M | 2 |  |  | done |
-| 166 | [S08](slices/S08.md) | Architect role | L | 3 |  |  | done |
-| 167 | [S09](slices/S09.md) | Landing help: ready list | S | 1 |  |  | done |
-| 168 | [S10](slices/S10.md) | Role prompts | M | 2 |  |  | done |
-| 169 | [S11](slices/S11.md) | TUI shell and Overview | M | 2 |  |  | done |
-| 170 | [S12](slices/S12.md) | Roadmap screen | M | 2 |  |  | done |
-| 171 | [S13](slices/S13.md) | Wire binary and socket | S | 1 |  |  | done |
-| 172 | [S14](slices/S14.md) | Charm v2 port | S | 1 |  |  | done |
-| 173 | [S15](slices/S15.md) | Snapshot cache | S | 1 |  |  | done |
-| 174 | [S16](slices/S16.md) | Claude adapter | M | 2 |  |  | done |
-| 175 | [S17](slices/S17.md) | Single-slice CLI | M | 2 |  |  | done |
-| 176 | [S19](slices/S19.md) | Project sidebar | M | 2 |  |  | done |
-| 177 | [S20](slices/S20.md) | Overview rows | S | 1 |  |  | done |
-| 178 | [S21](slices/S21.md) | Y/N answers and defaults for ork run prompts | S | 1 |  | discovered from S17 | done |
-| 179 | [S22](slices/S22.md) | Overview shows ork's own engine runs | M | 2 |  | discovered from S17 | done |
-| 180 | [S23](slices/S23.md) | A denied tool call does not fail a finished role | S | 2 |  | discovered from S21 | done |
-| 181 | [S25](slices/S25.md) | TUI actions: launch, approve and stop | M | 2 |  | discovered from S23 | done |
-| 182 | [S26](slices/S26.md) | TUI: answer a stopped run or question in a detail pane | M | 2 |  | discovered from S23 | done |
-| 183 | [S27](slices/S27.md) | TUI: Questions tab across projects | S | 1 |  | discovered from S23 | done |
-| 184 | [S28](slices/S28.md) | TUI answers can file an adj ask and decide | S | 2 |  | discovered from S23 | done |
-| 185 | [S29](slices/S29.md) | Put the ork binary on PATH | S | 1 |  | discovered from S23 | done |
-| 186 | [S30](slices/S30.md) | Show the running role for relays started outside ork | S | 2 |  | discovered from S23 | done |
-| 187 | [S32](slices/S32.md) | One needs, running and hidden builder for ork status and the TUI | S | 1 |  | discovered from S31 | done |
-| 188 | [S33](slices/S33.md) | Show the engine run ID in the Overview row; engine-row edge cases | S | 1 |  | discovered from S31 | done |
-| 189 | [S34](slices/S34.md) | Clear an old stopped run from Needs you | S | 2 |  | discovered from S31 | done |
-| 190 | [S35](slices/S35.md) | Runs skipped at recovery or failed in the background stay visible | S | 2 |  | discovered from S17 | done |
-| 191 | [S36](slices/S36.md) | A second ork stop does not cancel the first | S | 1 |  | discovered from S17 | done |
-| 192 | [S37](slices/S37.md) | Tidy status error logging and the stderr swap | S | 1 |  | Obsolete: the status error helpers exist only in tests; the live print is in daemon/runs.go. Owner review 2026-10-20. · discovered from S17 | retired |
-| 193 | [S38](slices/S38.md) | projects rm refuses while the project has unfinished runs | S | 1 |  | discovered from S17 | done |
-| 194 | [S40](slices/S40.md) | Implementer prompt limits searches to code and docs | S | 1 |  | discovered from S21 | done |
-| 195 | [S41](slices/S41.md) | Overview engine-row edge cases: setup projects, padding, hidden ledger runs | S | 2 |  | Folded into S33: the same row code; claim 3 is already documented. · discovered from S22 | retired |
-| 196 | [S42](slices/S42.md) | Tidy engine-run state constants and a weak assertion | S | 1 |  | Folded into S32: state constants and the weak assertion are done there. · discovered from S22 | retired |
-| 197 | [S43](slices/S43.md) | Denied tools: dedupe the list, bound the line, fix stale slicer-rule docs | S | 1 |  | discovered from S23 | done |
-| 198 | [S44](slices/S44.md) | A report-shape pause can be answered or retried | S | 2 |  | discovered from S29 | done |
-| 199 | [S45](slices/S45.md) | Record the denied command, not just the tool name | S | 1 |  | discovered from S29 | done |
-| 200 | [S46](slices/S46.md) | ork daemon stop and restart, and doctor flags a stale daemon | S | 2 |  | discovered from S29 | done |
-| 201 | [S47](slices/S47.md) | Codex adapter for write roles in the engine (#100) | M | 3 |  | discovered from S29 | done |
-| 202 | [S48](slices/S48.md) | Measure the codex workspace-write sandbox | S | 2 |  | discovered from S29 | done |
-| 203 | [S49](slices/S49.md) | Fall back to the next matrix row on a rate limit or error | M | 2 |  | discovered from S29 | done |
-| 204 | [S51](slices/S51.md) | run.json at 0600; strip control characters from recorded commands | S | 1 |  | discovered from S45 | done |
-| 205 | [S52](slices/S52.md) | TUI: launch a slice from a ready list | M | 2 |  | discovered from S25 | done |
-| 206 | [S53](slices/S53.md) | Create the ork logo | S | 1 |  |  | done |
-| 207 | [S54](slices/S54.md) | Show the ork version and logo in the terminal: TUI, --version, doctor | M | 2 |  |  | done |
-| 208 | [S55](slices/S55.md) | Run tree: orchestrator, roles and steps with live status | M | 2 |  |  | done |
-| 209 | [S56](slices/S56.md) | daemon stop and restart cope with a daemon that predates daemon.stop | S | 1 |  | discovered from S46 | done |
-| 210 | [S57](slices/S57.md) | TUI keys: up/down move rows, tab and left/right move projects | S | 1 |  | discovered from S26 | done |
-| 211 | [S58](slices/S58.md) | Tab and shift+tab switch views; left/right and 1-9 switch projects | S | 1 |  |  | done |
-| 212 | [S59](slices/S59.md) | Decisions screen: open and decided records, one project or all | M | 2 |  |  | done |
-| 213 | [S60](slices/S60.md) | ork wave suggest and start; ork stop WAVE | M | 2 |  |  | done |
-| 214 | [S63](slices/S63.md) | Landing: merge detection, branch cleanup and run pruning | M | 2 |  |  | done |
-| 215 | S64 | Contract check passes --root so each project's slicer contract is checked | S | 1 |  | No effect today: slicer ai relay prints the same contract line for every project (checked 2026-10-20). Folded into S24, which passes --root when slicer s387 adds the pin. | retired |
-| 216 | [S65](slices/S65.md) | Enforce run.budgets: pause with a budget kind before a round | M | 2 |  |  | done |
-| 217 | [S74](slices/S74.md) | Timeout on the stop-hint status call | S | 1 |  | discovered from S56 | done |
-| 218 | [S76](slices/S76.md) | Queue advance survives a registry read error | S | 1 |  | discovered from S05 | done |
-| 219 | [S77](slices/S77.md) | Queued run of a removed project | S | 1 |  | discovered from S05 | done |
-| 220 | [S79](slices/S79.md) | Wave-ready Files sections: set files_section and backtick paths | S | 1 |  |  | done |
-| 221 | [S80](slices/S80.md) | Per-launch lineup and budget overrides on run.plan and run.start | M | 2 |  |  | done |
-| 222 | [S81](slices/S81.md) | Daemon reads for the Waves screen: wave.suggest and wave.overlap | S | 1 |  |  | done |
-| 223 | [S82](slices/S82.md) | Waves screen: suggested list, tick items, overlap warnings, launch a wave | M | 2 |  |  | done |
-| 224 | [S83](slices/S83.md) | Waves screen: edit a slice's lineup and budgets before launch | M | 2 |  |  | done |
-| 225 | [S84](slices/S84.md) | Overview layout pass | M | 2 |  |  | done |
-| 226 | [S88](slices/S88.md) | Accept relay contract v8 alongside v7 | S | 1 |  |  | done |
-| 227 | [S89](slices/S89.md) | Close the codex sandbox gaps: resume sandbox, socket bind, worktree .git, main-checkout block | S | 2 |  | discovered from S48 | done |
-| 228 | [S95](slices/S95.md) | Cleanup finishes cleanly: mark the run cleaned, retry after a half-done cleanup, steady merge state | S | 2 |  | discovered from S63 | done |
-| 229 | [S96](slices/S96.md) | First run opens blank: no seeded projects; a TUI welcome adds them | M | 2 |  | discovered from S03 | done |
-| 230 | [S97](slices/S97.md) | Running rows and the run pane show the relay board's information: pipeline, round, last heard, waiting steps, recent runs | M | 2 |  | discovered from S55 | done |
-| 231 | [S122](slices/S122.md) | Probe Codex --add-dir and writable_roots; mark them unverified until then | S | 1 |  | discovered from S87 | done |
-| 232 | [S124](slices/S124.md) | Worktree and branch patterns can lowercase the item id | S | 1 |  | discovered from S31 | done |
-| 233 | [S133](slices/S133.md) | Codex out of credits is a classified limit, so the role falls back | S | 1 |  | discovered from S127 | done |
-| 234 | [S134](slices/S134.md) | Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap | S | 1 |  | discovered from S127 | done |
-| 235 | [S135](slices/S135.md) | Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions | S | 2 |  | discovered from S117 | done |
-| 236 | [S136](slices/S136.md) | UI pass visible everywhere and project-neutral: lineup and rounds in run, waves, runtree; ui.md names the project's design doc | S | 1 |  | discovered from S117 | done |
-| 237 | [S137](slices/S137.md) | Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings | M | 2 |  | discovered from S120 | done |
-| 238 | [S138](slices/S138.md) | An awaiting-approval engine run whose ledger went stale shows as stale, dimmed, with a frozen age | S | 1 |  | discovered from S31 | done |
-| 239 | [S139](slices/S139.md) | Commit title without a Git section: fall back to 'ID: title' | S | 1 |  | discovered from S31 | done |
-| 240 | [S140](slices/S140.md) | Running view follow-ups: error marker, stale runs not live, detail order, stopped role, empty golden, other tabs on Running | S | 1 |  | discovered from S110 | done |
-| 241 | [S141](slices/S141.md) | Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note | M | 2 |  | discovered from S118 | done |
-| 242 | [S142](slices/S142.md) | Accept relay contract v9 and follow it: finding kinds, spec check, UI pass, approval and landing, ledger wait phase, conformance JSON | M | 2 |  |  | done |
-| 243 | [S143](slices/S143.md) | Spec check follow-ups: answers survive a restart, main moving mid-check, sitting freeze, dropped Owner needed, shape retry, state dir cleanup | M | 2 |  | discovered from S116 | done |
-| 244 | [S144](slices/S144.md) | Key follow-ups: status nudge for [ and ], Waves show-all on A, help wording and hidden tab help | S | 1 |  | discovered from S105 | done |
-| 245 | [S145](slices/S145.md) | Running rows at a glance | M | 2 |  |  | done |
-| 246 | [S146](slices/S146.md) | S106 later notes | M | 1 |  |  | done |
-| 247 | [S147](slices/S147.md) | S121 later notes | S | 1 |  |  | done |
-| 248 | [S148](slices/S148.md) | S119 later notes | S | 1 |  |  | done |
-| 249 | [S149](slices/S149.md) | Context hint bar | M | 2 |  |  | done |
-| 250 | [S150](slices/S150.md) | S145 later notes | S | 1 |  |  | done |
-| 251 | [S151](slices/S151.md) | S85 later notes | S | 1 |  |  | done |
-| 252 | [S152](slices/S152.md) | S149 later notes | S | 1 |  |  | done |
-| 253 | [S153](slices/S153.md) | S95 later notes | S | 1 |  |  | done |
-| 254 | [S154](slices/S154.md) | S138 later notes | S | 1 |  |  | done |
-| 255 | [S155](slices/S155.md) | S93 later notes | S | 1 |  | discovered from S93 | done |
-| 256 | [S156](slices/S156.md) | S102 later notes | S | 1 |  | discovered from S102 | done |
-| 257 | [S157](slices/S157.md) | S73 later: next * writes | S | 1 |  | discovered from S73 | done |
-| 258 | [S158](slices/S158.md) | S71 later notes | S | 1 |  | discovered from S71 | done |
-| 259 | [S159](slices/S159.md) | S135 later notes | S | 1 |  | discovered from S135 | done |
-| 260 | [S160](slices/S160.md) | Add/remove projects | S | 2 |  | discovered from S96 | done |
-| 261 | [S161](slices/S161.md) | projects set | M | 2 |  | discovered from S136 | done |
-| 262 | [S162](slices/S162.md) | Roadmap pass headings | S | 1 |  | discovered from S151 | done |
-| 263 | [S163](slices/S163.md) | Recent counts and duration | S | 1 |  | discovered from S162 | done |
-| 264 | [S164](slices/S164.md) | Expand several runs | S | 1 |  | discovered from S140 | done |
-| 265 | [S165](slices/S165.md) | Ork guide and parity gaps | M | 2 |  | discovered from S142 | done |
-| 266 | [S166](slices/S166.md) | Lineup overrides everywhere | M | - |  | discovered from S165 | done |
-| 267 | [S167](slices/S167.md) | Spec check on one launch | S | - |  | discovered from S165 | done |
-| 268 | [S168](slices/S168.md) | Role matrix view | S | - |  | discovered from S165 | done |
-| 269 | [S169](slices/S169.md) | Vendor slots and stand-in | M | - |  | discovered from S165 | done |
-| 270 | [S170](slices/S170.md) | File a slice in ork | M | - |  | discovered from S165 | done |
-| 271 | [S171](slices/S171.md) | Add a slice note in ork | S | - |  | discovered from S165 | done |
-| 272 | [S172](slices/S172.md) | adj answers in ork | M | - |  | discovered from S165 | done |
-| 273 | [S174](slices/S174.md) | More registry settings | M | - |  | discovered from S165 | done |
-| 274 | [S175](slices/S175.md) | End a stale ledger run | S | - |  | discovered from S165 | done |
-| 275 | [S176](slices/S176.md) | Open a role report | S | - |  | discovered from S165 | done |
-| 276 | [S177](slices/S177.md) | Per-run stop point | S | - |  | discovered from S165 | done |
-| 277 | [S178](slices/S178.md) | Doctor upgrade hints | S | - |  | discovered from S165 | done |
-| 278 | [S181](slices/S181.md) | Warn on blocked item | S | - |  | discovered from S165 | done |
-| 279 | [S182](slices/S182.md) | Hung role watchdog | M | - |  | discovered from S165 | done |
-| 280 | [S183](slices/S183.md) | Fix stale doc statements | S | - |  | discovered from S165 | done |
-| 281 | [S184](slices/S184.md) | Launch spec check sitting | M | - |  | discovered from S167 | done |
-| 282 | [S185](slices/S185.md) | adj answer keys in the TUI | S | - |  | discovered from S172 | done |
-| 283 | [S198](slices/S198.md) | Accept relay v11 | M | 2 |  | owner contract review 2026-10-30 (slicer, adj, ork alignment); slicer s424 (relay v11 cleanup and bump) | done |
-| 284 | [S208](slices/S208.md) | Global cap default 2 | S | 1 |  | adj 172 | done |
-| 285 | [S209](slices/S209.md) | UI pass skills line | M | 2 |  | adj 171 | done |
+| 127 | [S87](slices/S87.md) | Codex rounds in ork: GOCACHE and the role temp dir inside the sandbox | S | 1 |  | discovered from S83 | done |
+| 128 | [S31](slices/S31.md) | Run a small slice through ork run end to end | S | 1 |  | discovered from S23 | done |
+| 129 | [S78](slices/S78.md) | recoverRuns map writes under lock | S | 1 |  | discovered from S05 | done |
+| 130 | [S126](slices/S126.md) | Implementer brief: ork runs the check command itself; a sandbox limit is not an owner question | S | 1 |  | discovered from S31 | done |
+| 131 | [S114](slices/S114.md) | Self-hosting: run ork on its own repo safely | M | 2 |  |  | done |
+| 132 | [S115](slices/S115.md) | Implementer brief: re-anchor the spec first and self-check before reporting | S | 1 |  |  | done |
+| 133 | [S70](slices/S70.md) | Heartbeat every 10 minutes while a role runs (docs/design.md:423, proposed) | S | 1 |  |  | done |
+| 134 | [S99](slices/S99.md) | Live role detail: output tail and tokens/cost in the run pane | M | 2 |  | discovered from S07 | done |
+| 135 | [S125](slices/S125.md) | Waves composer focus: next waves only, inputs inline under the ticked item | M | 2 |  | discovered from S31 | done |
+| 136 | [S107](slices/S107.md) | Waves as a table: shares as a dim column, wave header rules, Lineup column only after ticking | M | 2 |  |  | done |
+| 137 | [S111](slices/S111.md) | Structured owner questions: options and a recommendation in Owner needed, picked by digit in ork | M | 2 |  | discovered from S28 | done |
+| 138 | [S127](slices/S127.md) | After an answer: clear the question from the row and pane, and say the role resumed | S | 1 |  | discovered from S31 | done |
+| 139 | [S109](slices/S109.md) | Run pane follows the newest running run, with a 1 s ledger refresh while a run is visible | M | 2 |  |  | done |
+| 140 | [S110](slices/S110.md) | Running: a live summary of every running project above Needs you in the sidebar | M | 2 |  |  | done |
+| 141 | [S118](slices/S118.md) | Approval card: everything needed to approve on one screen | M | 2 |  |  | done |
+| 142 | [S119](slices/S119.md) | Land after approval: merge main in, re-check, slicer land, ff-merge, optional push, clean up | M | 2 |  |  | done |
+| 143 | [S120](slices/S120.md) | Finding kinds: fix, owner or later in reviewer, UI pass and gate reports | M | 2 |  |  | done |
+| 144 | [S117](slices/S117.md) | UI pass role in the engine, in parallel with the reviewer | M | 2 |  |  | done |
+| 145 | [S121](slices/S121.md) | UI pass renders: changed views at 80x24, 120x40 and ASCII on the approval card | M | 2 |  |  | done |
+| 146 | [S116](slices/S116.md) | Spec check: a batch readiness check before a wave, answered in one sitting | M | 2 |  |  | done |
+| 147 | [S92](slices/S92.md) | Fallback brief tells the next row about earlier rows and an already-started slice | S | 1 |  | discovered from S49 | done |
+| 148 | [S93](slices/S93.md) | The gate follows the reviewer's current row after a fallback | S | 1 |  | discovered from S49 | done |
+| 149 | [S102](slices/S102.md) | startRun re-checks that the project is still registered | S | 1 |  | discovered from S38 | done |
+| 150 | [S113](slices/S113.md) | Answer with adj on and no decision key must proceed | S | 1 |  | discovered from S28 | done |
+| 151 | [S73](slices/S73.md) | Allowlist --root-first calls | S | 1 |  |  | done |
+| 152 | [S75](slices/S75.md) | Run directory modes | S | 1 |  | discovered from S51 | done |
+| 153 | [S71](slices/S71.md) | Doctor checks each project's check command and patterns (docs/design.md:613-614) | S | 1 |  |  | done |
+| 154 | [S85](slices/S85.md) | Navigation keys | M | 2 |  |  | done |
+| 155 | [S86](slices/S86.md) | Waves lineup editor: e outside Waves shows no stray status; budgets 0 shows the default | S | 1 |  | discovered from S83 | done |
+| 156 | [S94](slices/S94.md) | Plan views and lineup edit cover the architect | S | 2 |  | discovered from S08 | done |
+| 157 | [S98](slices/S98.md) | Welcome polish: notice projects added elsewhere, tilde paths, status line and wording | S | 1 |  | discovered from S96 | done |
+| 158 | [S91](slices/S91.md) | Docs: PROJECT.md says fallback only on classified rate limits; adj 156 supersedes | S | 1 |  | discovered from S49 | done |
+| 159 | [S90](slices/S90.md) | Docs: boundaries.md v7-today and s382 lines are stale; v8 wording about waiting on | S | 1 |  | Relayed 2026-10-30 (run-20261030-010033-9d07): S142 already corrected every stale line in scope (docs/boundaries.md:38, docs/glossary.md:144, internal/roles/roles.go:56); no change needed, as the 2026-10-29 owner note said (retire once S142 lands). Remaining out-of-scope matches go to S183. · discovered from S88 | retired |
+| 160 | [S39](slices/S39.md) | ork run prompt tests catch swapped answers; help text says y/n | S | 1 |  | discovered from S21 | done |
+| 161 | [S105](slices/S105.md) | Key collisions: [ and ] switch projects, a/A/+ split, drop the n and p row aliases | S | 2 |  |  | done |
+| 162 | [S106](slices/S106.md) | Run card inline | M | 2 |  |  | done |
+| 163 | [S112](slices/S112.md) | Answer questions of externally run relays from ork (needs slicer relay-run ask and answer) | M | 2 |  | discovered from S28 | done |
+| 164 | [S24](slices/S24.md) | Pin and check the slicer contract | M | 2 |  | owner session 2026-10-20 (in slicer): ork sets and checks each tool's pin (adj 97, decided). Owner 2026-10-30: this slice is the slicer pin only; the adj half is its own v1.1 slice behind adjudicate S45. Companion: slicer s387 (relay contract pin, landed). | done |
+| 165 | [S01](slices/S01.md) | Vendor spike | S | 1 |  |  | done |
+| 166 | [S02](slices/S02.md) | Core and adapters | M | 2 |  |  | done |
+| 167 | [S03](slices/S03.md) | Daemon and CLI | M | 2 |  |  | done |
+| 168 | [S04](slices/S04.md) | Engine core | M | 3 |  |  | done |
+| 169 | [S05](slices/S05.md) | Waves and caps: queue, admission | M | 2 |  |  | done |
+| 170 | S06 | Vendors and fallback | M | 2 |  | Umbrella over S47, S48 and S49. Notes move to the grok adapter (S72) and budgets (S65); owner 2026-10-20. | retired |
+| 171 | [S07](slices/S07.md) | Live role detail | M | 2 |  |  | done |
+| 172 | [S08](slices/S08.md) | Architect role | L | 3 |  |  | done |
+| 173 | [S09](slices/S09.md) | Landing help: ready list | S | 1 |  |  | done |
+| 174 | [S10](slices/S10.md) | Role prompts | M | 2 |  |  | done |
+| 175 | [S11](slices/S11.md) | TUI shell and Overview | M | 2 |  |  | done |
+| 176 | [S12](slices/S12.md) | Roadmap screen | M | 2 |  |  | done |
+| 177 | [S13](slices/S13.md) | Wire binary and socket | S | 1 |  |  | done |
+| 178 | [S14](slices/S14.md) | Charm v2 port | S | 1 |  |  | done |
+| 179 | [S15](slices/S15.md) | Snapshot cache | S | 1 |  |  | done |
+| 180 | [S16](slices/S16.md) | Claude adapter | M | 2 |  |  | done |
+| 181 | [S17](slices/S17.md) | Single-slice CLI | M | 2 |  |  | done |
+| 182 | [S19](slices/S19.md) | Project sidebar | M | 2 |  |  | done |
+| 183 | [S20](slices/S20.md) | Overview rows | S | 1 |  |  | done |
+| 184 | [S21](slices/S21.md) | Y/N answers and defaults for ork run prompts | S | 1 |  | discovered from S17 | done |
+| 185 | [S22](slices/S22.md) | Overview shows ork's own engine runs | M | 2 |  | discovered from S17 | done |
+| 186 | [S23](slices/S23.md) | A denied tool call does not fail a finished role | S | 2 |  | discovered from S21 | done |
+| 187 | [S25](slices/S25.md) | TUI actions: launch, approve and stop | M | 2 |  | discovered from S23 | done |
+| 188 | [S26](slices/S26.md) | TUI: answer a stopped run or question in a detail pane | M | 2 |  | discovered from S23 | done |
+| 189 | [S27](slices/S27.md) | TUI: Questions tab across projects | S | 1 |  | discovered from S23 | done |
+| 190 | [S28](slices/S28.md) | TUI answers can file an adj ask and decide | S | 2 |  | discovered from S23 | done |
+| 191 | [S29](slices/S29.md) | Put the ork binary on PATH | S | 1 |  | discovered from S23 | done |
+| 192 | [S30](slices/S30.md) | Show the running role for relays started outside ork | S | 2 |  | discovered from S23 | done |
+| 193 | [S32](slices/S32.md) | One needs, running and hidden builder for ork status and the TUI | S | 1 |  | discovered from S31 | done |
+| 194 | [S33](slices/S33.md) | Show the engine run ID in the Overview row; engine-row edge cases | S | 1 |  | discovered from S31 | done |
+| 195 | [S34](slices/S34.md) | Clear an old stopped run from Needs you | S | 2 |  | discovered from S31 | done |
+| 196 | [S35](slices/S35.md) | Runs skipped at recovery or failed in the background stay visible | S | 2 |  | discovered from S17 | done |
+| 197 | [S36](slices/S36.md) | A second ork stop does not cancel the first | S | 1 |  | discovered from S17 | done |
+| 198 | [S37](slices/S37.md) | Tidy status error logging and the stderr swap | S | 1 |  | Obsolete: the status error helpers exist only in tests; the live print is in daemon/runs.go. Owner review 2026-10-20. · discovered from S17 | retired |
+| 199 | [S38](slices/S38.md) | projects rm refuses while the project has unfinished runs | S | 1 |  | discovered from S17 | done |
+| 200 | [S40](slices/S40.md) | Implementer prompt limits searches to code and docs | S | 1 |  | discovered from S21 | done |
+| 201 | [S41](slices/S41.md) | Overview engine-row edge cases: setup projects, padding, hidden ledger runs | S | 2 |  | Folded into S33: the same row code; claim 3 is already documented. · discovered from S22 | retired |
+| 202 | [S42](slices/S42.md) | Tidy engine-run state constants and a weak assertion | S | 1 |  | Folded into S32: state constants and the weak assertion are done there. · discovered from S22 | retired |
+| 203 | [S43](slices/S43.md) | Denied tools: dedupe the list, bound the line, fix stale slicer-rule docs | S | 1 |  | discovered from S23 | done |
+| 204 | [S44](slices/S44.md) | A report-shape pause can be answered or retried | S | 2 |  | discovered from S29 | done |
+| 205 | [S45](slices/S45.md) | Record the denied command, not just the tool name | S | 1 |  | discovered from S29 | done |
+| 206 | [S46](slices/S46.md) | ork daemon stop and restart, and doctor flags a stale daemon | S | 2 |  | discovered from S29 | done |
+| 207 | [S47](slices/S47.md) | Codex adapter for write roles in the engine (#100) | M | 3 |  | discovered from S29 | done |
+| 208 | [S48](slices/S48.md) | Measure the codex workspace-write sandbox | S | 2 |  | discovered from S29 | done |
+| 209 | [S49](slices/S49.md) | Fall back to the next matrix row on a rate limit or error | M | 2 |  | discovered from S29 | done |
+| 210 | [S51](slices/S51.md) | run.json at 0600; strip control characters from recorded commands | S | 1 |  | discovered from S45 | done |
+| 211 | [S52](slices/S52.md) | TUI: launch a slice from a ready list | M | 2 |  | discovered from S25 | done |
+| 212 | [S53](slices/S53.md) | Create the ork logo | S | 1 |  |  | done |
+| 213 | [S54](slices/S54.md) | Show the ork version and logo in the terminal: TUI, --version, doctor | M | 2 |  |  | done |
+| 214 | [S55](slices/S55.md) | Run tree: orchestrator, roles and steps with live status | M | 2 |  |  | done |
+| 215 | [S56](slices/S56.md) | daemon stop and restart cope with a daemon that predates daemon.stop | S | 1 |  | discovered from S46 | done |
+| 216 | [S57](slices/S57.md) | TUI keys: up/down move rows, tab and left/right move projects | S | 1 |  | discovered from S26 | done |
+| 217 | [S58](slices/S58.md) | Tab and shift+tab switch views; left/right and 1-9 switch projects | S | 1 |  |  | done |
+| 218 | [S59](slices/S59.md) | Decisions screen: open and decided records, one project or all | M | 2 |  |  | done |
+| 219 | [S60](slices/S60.md) | ork wave suggest and start; ork stop WAVE | M | 2 |  |  | done |
+| 220 | [S63](slices/S63.md) | Landing: merge detection, branch cleanup and run pruning | M | 2 |  |  | done |
+| 221 | S64 | Contract check passes --root so each project's slicer contract is checked | S | 1 |  | No effect today: slicer ai relay prints the same contract line for every project (checked 2026-10-20). Folded into S24, which passes --root when slicer s387 adds the pin. | retired |
+| 222 | [S65](slices/S65.md) | Enforce run.budgets: pause with a budget kind before a round | M | 2 |  |  | done |
+| 223 | [S74](slices/S74.md) | Timeout on the stop-hint status call | S | 1 |  | discovered from S56 | done |
+| 224 | [S76](slices/S76.md) | Queue advance survives a registry read error | S | 1 |  | discovered from S05 | done |
+| 225 | [S77](slices/S77.md) | Queued run of a removed project | S | 1 |  | discovered from S05 | done |
+| 226 | [S79](slices/S79.md) | Wave-ready Files sections: set files_section and backtick paths | S | 1 |  |  | done |
+| 227 | [S80](slices/S80.md) | Per-launch lineup and budget overrides on run.plan and run.start | M | 2 |  |  | done |
+| 228 | [S81](slices/S81.md) | Daemon reads for the Waves screen: wave.suggest and wave.overlap | S | 1 |  |  | done |
+| 229 | [S82](slices/S82.md) | Waves screen: suggested list, tick items, overlap warnings, launch a wave | M | 2 |  |  | done |
+| 230 | [S83](slices/S83.md) | Waves screen: edit a slice's lineup and budgets before launch | M | 2 |  |  | done |
+| 231 | [S84](slices/S84.md) | Overview layout pass | M | 2 |  |  | done |
+| 232 | [S88](slices/S88.md) | Accept relay contract v8 alongside v7 | S | 1 |  |  | done |
+| 233 | [S89](slices/S89.md) | Close the codex sandbox gaps: resume sandbox, socket bind, worktree .git, main-checkout block | S | 2 |  | discovered from S48 | done |
+| 234 | [S95](slices/S95.md) | Cleanup finishes cleanly: mark the run cleaned, retry after a half-done cleanup, steady merge state | S | 2 |  | discovered from S63 | done |
+| 235 | [S96](slices/S96.md) | First run opens blank: no seeded projects; a TUI welcome adds them | M | 2 |  | discovered from S03 | done |
+| 236 | [S97](slices/S97.md) | Running rows and the run pane show the relay board's information: pipeline, round, last heard, waiting steps, recent runs | M | 2 |  | discovered from S55 | done |
+| 237 | [S122](slices/S122.md) | Probe Codex --add-dir and writable_roots; mark them unverified until then | S | 1 |  | discovered from S87 | done |
+| 238 | [S124](slices/S124.md) | Worktree and branch patterns can lowercase the item id | S | 1 |  | discovered from S31 | done |
+| 239 | [S133](slices/S133.md) | Codex out of credits is a classified limit, so the role falls back | S | 1 |  | discovered from S127 | done |
+| 240 | [S134](slices/S134.md) | Answer pane follow-ups: status overwrite, answered vs new question, in-flight preview, detail strip wrap | S | 1 |  | discovered from S127 | done |
+| 241 | [S135](slices/S135.md) | Parallel review rounds: cancel the sibling on stop, per-role activity, name every lost role, keep both owner questions | S | 2 |  | discovered from S117 | done |
+| 242 | [S136](slices/S136.md) | UI pass visible everywhere and project-neutral: lineup and rounds in run, waves, runtree; ui.md names the project's design doc | S | 1 |  | discovered from S117 | done |
+| 243 | [S137](slices/S137.md) | Finding kinds follow-ups: every owner blocker asked, no answered-blocker loop, run.file serialized, counts include findings | M | 2 |  | discovered from S120 | done |
+| 244 | [S138](slices/S138.md) | An awaiting-approval engine run whose ledger went stale shows as stale, dimmed, with a frozen age | S | 1 |  | discovered from S31 | done |
+| 245 | [S139](slices/S139.md) | Commit title without a Git section: fall back to 'ID: title' | S | 1 |  | discovered from S31 | done |
+| 246 | [S140](slices/S140.md) | Running view follow-ups: error marker, stale runs not live, detail order, stopped role, empty golden, other tabs on Running | S | 1 |  | discovered from S110 | done |
+| 247 | [S141](slices/S141.md) | Approval card follow-ups: ork check/fix CLI, note for unreadable checks, fix note in later gate briefs, checks 10+, refused-action wording, duplicate note | M | 2 |  | discovered from S118 | done |
+| 248 | [S142](slices/S142.md) | Accept relay contract v9 and follow it: finding kinds, spec check, UI pass, approval and landing, ledger wait phase, conformance JSON | M | 2 |  |  | done |
+| 249 | [S143](slices/S143.md) | Spec check follow-ups: answers survive a restart, main moving mid-check, sitting freeze, dropped Owner needed, shape retry, state dir cleanup | M | 2 |  | discovered from S116 | done |
+| 250 | [S144](slices/S144.md) | Key follow-ups: status nudge for [ and ], Waves show-all on A, help wording and hidden tab help | S | 1 |  | discovered from S105 | done |
+| 251 | [S145](slices/S145.md) | Running rows at a glance | M | 2 |  |  | done |
+| 252 | [S146](slices/S146.md) | S106 later notes | M | 1 |  |  | done |
+| 253 | [S147](slices/S147.md) | S121 later notes | S | 1 |  |  | done |
+| 254 | [S148](slices/S148.md) | S119 later notes | S | 1 |  |  | done |
+| 255 | [S149](slices/S149.md) | Context hint bar | M | 2 |  |  | done |
+| 256 | [S150](slices/S150.md) | S145 later notes | S | 1 |  |  | done |
+| 257 | [S151](slices/S151.md) | S85 later notes | S | 1 |  |  | done |
+| 258 | [S152](slices/S152.md) | S149 later notes | S | 1 |  |  | done |
+| 259 | [S153](slices/S153.md) | S95 later notes | S | 1 |  |  | done |
+| 260 | [S154](slices/S154.md) | S138 later notes | S | 1 |  |  | done |
+| 261 | [S155](slices/S155.md) | S93 later notes | S | 1 |  | discovered from S93 | done |
+| 262 | [S156](slices/S156.md) | S102 later notes | S | 1 |  | discovered from S102 | done |
+| 263 | [S157](slices/S157.md) | S73 later: next * writes | S | 1 |  | discovered from S73 | done |
+| 264 | [S158](slices/S158.md) | S71 later notes | S | 1 |  | discovered from S71 | done |
+| 265 | [S159](slices/S159.md) | S135 later notes | S | 1 |  | discovered from S135 | done |
+| 266 | [S160](slices/S160.md) | Add/remove projects | S | 2 |  | discovered from S96 | done |
+| 267 | [S161](slices/S161.md) | projects set | M | 2 |  | discovered from S136 | done |
+| 268 | [S162](slices/S162.md) | Roadmap pass headings | S | 1 |  | discovered from S151 | done |
+| 269 | [S163](slices/S163.md) | Recent counts and duration | S | 1 |  | discovered from S162 | done |
+| 270 | [S164](slices/S164.md) | Expand several runs | S | 1 |  | discovered from S140 | done |
+| 271 | [S165](slices/S165.md) | Ork guide and parity gaps | M | 2 |  | discovered from S142 | done |
+| 272 | [S166](slices/S166.md) | Lineup overrides everywhere | M | - |  | discovered from S165 | done |
+| 273 | [S167](slices/S167.md) | Spec check on one launch | S | - |  | discovered from S165 | done |
+| 274 | [S168](slices/S168.md) | Role matrix view | S | - |  | discovered from S165 | done |
+| 275 | [S169](slices/S169.md) | Vendor slots and stand-in | M | - |  | discovered from S165 | done |
+| 276 | [S170](slices/S170.md) | File a slice in ork | M | - |  | discovered from S165 | done |
+| 277 | [S171](slices/S171.md) | Add a slice note in ork | S | - |  | discovered from S165 | done |
+| 278 | [S172](slices/S172.md) | adj answers in ork | M | - |  | discovered from S165 | done |
+| 279 | [S174](slices/S174.md) | More registry settings | M | - |  | discovered from S165 | done |
+| 280 | [S175](slices/S175.md) | End a stale ledger run | S | - |  | discovered from S165 | done |
+| 281 | [S176](slices/S176.md) | Open a role report | S | - |  | discovered from S165 | done |
+| 282 | [S177](slices/S177.md) | Per-run stop point | S | - |  | discovered from S165 | done |
+| 283 | [S178](slices/S178.md) | Doctor upgrade hints | S | - |  | discovered from S165 | done |
+| 284 | [S181](slices/S181.md) | Warn on blocked item | S | - |  | discovered from S165 | done |
+| 285 | [S182](slices/S182.md) | Hung role watchdog | M | - |  | discovered from S165 | done |
+| 286 | [S183](slices/S183.md) | Fix stale doc statements | S | - |  | discovered from S165 | done |
+| 287 | [S184](slices/S184.md) | Launch spec check sitting | M | - |  | discovered from S167 | done |
+| 288 | [S185](slices/S185.md) | adj answer keys in the TUI | S | - |  | discovered from S172 | done |
+| 289 | [S198](slices/S198.md) | Accept relay v11 | M | 2 |  | owner contract review 2026-10-30 (slicer, adj, ork alignment); slicer s424 (relay v11 cleanup and bump) | done |
+| 290 | [S208](slices/S208.md) | Global cap default 2 | S | 1 |  | adj 172 | done |
+| 291 | [S209](slices/S209.md) | UI pass skills line | M | 2 |  | adj 171 | done |
 
 ---
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 286 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 292 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
