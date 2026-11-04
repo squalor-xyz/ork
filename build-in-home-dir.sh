@@ -4,3 +4,6 @@
 set -eu
 go -C "${0:A:h}" build -o ~/bin/ork ./cmd/ork
 echo "built ~/bin/ork"
+
+
+~/bin/ork daemon restart || echo "daemon not restarted (roles running?); it stays on the old build" >&2
