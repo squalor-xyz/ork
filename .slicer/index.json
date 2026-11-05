@@ -14698,6 +14698,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "c188b65c-38a7-4c02-bd14-436210634ccb",
+          "kind": "",
+          "text": "**2026-11-05** — Correction: the slicer item for the slice-JSON merge driver is s451 (the s449 named in the owner-answer note was taken by another item on slicer's main).",
+          "created_at": "2026-11-05T15:51:13Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
