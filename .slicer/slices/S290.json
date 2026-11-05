@@ -1,0 +1,45 @@
+{
+  "id": "S290",
+  "title": "Subcommand help: every command prints its own usage and exits 0 on --help or -h",
+  "lead": [
+    "*Proposed.* `ork SUB --help` and `ork SUB -h` print that subcommand's usage on stdout and exit 0, for every command in `ork help`. A test walks the command table so a new command cannot skip it. What the subcommand help prints, and what `ork help SUB` does, are open: see `Open owner questions`."
+  ],
+  "depends_note": null,
+  "findings_note": "Owner 2026-11-04: ork retry --help prints 'ork: retry: flag: help requested' and 'Run ork help for usage.' (exit 2). Verified 2026-11-04 for every command in ork help: none prints its own usage on --help or -h; ork help SUB prints the whole usage.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** new usage wording for any command; `--json` help output; the TUI's help; `ork daemon run`'s own usage text (it is the daemon's entry point, `cmd/ork/main.go:125-128`), except that `--help` there also exits 0.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Verified on 2026-11-04 with `~/bin/ork` (built 2026-11-04 13:39 from main), read-only, for every command `ork help` lists, with both `--help` and `-h`. Every one exits 2 and prints no usage:\n\n- Commands that parse flags first print \"ork: CMD: flag: help requested\" then \"Run 'ork help' for usage.\": `run`, `wave suggest`, `wave start`, `approve`, `check`, `fix`, `stop`, `new`, `note`, `file`, `adj answer`, `adj ask`, `answer`, `dismiss`, `retry`, `status`, `projects list|add|rm|pin|unpin|set`, `settings show|set`, `vendor` (as `vendor list`), `vendor list|out|back`, `roles print`, `roles matrix`, `daemon stop|restart`, `doctor`.\n- Group commands take `--help` as an unknown subcommand: `wave` (\"wave needs suggest or start\"), `adj` (\"adj: unknown command \\\"--help\\\"\"), `projects` (\"unknown projects command \\\"--help\\\"\"), `settings`, `roles` (\"roles needs the subcommand print or matrix\"), `daemon` (\"daemon needs stop or restart [--force]\").\n- `ork daemon run --help` prints \"ork: usage: ork daemon run\" and exits 2 (`cmd/ork/main.go:125-128`).\n- `ork help retry` prints the whole usage (exit 0), not retry's.\n- Already right: only `ork help`, `ork --help` and `ork -h` (the whole usage, exit 0; `TestHelp`, `internal/cli/cli_test.go:540`; `TestHelpReachesTheCommandLine`, `cmd/ork/main_test.go:184`).\n\nThe code: every command builds a `flag.FlagSet` and calls `parse` (`internal/cli/cli.go:217-231`), which sets output to `io.Discard` and returns `flag.ErrHelp` for `-h` or `--help`. Each command then reports it as a usage error through `o.usage` (`cli.go:205-207`), and `fail` adds \"Run 'ork help' for usage.\" (`cli.go:193-203`). Help is handled only as the first word (`internal/cli/cli.go:241-243`, in App.Run). The usage is one text, `usageTemplate` (`cli.go:44` on), with one block per command that starts at a line `  ork CMD ...` and continues on lines indented 30 columns. `TestLaunchUsageFitsEightyColumns` (`internal/cli/run_test.go:627`) keeps it at 80 columns.\n\nOwner evidence, 2026-11-04: the orchestrator ran `ork retry --help` to learn the retry form and got the error above."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/cli/cli.go:205-243` (`usage`, `parse`, `App.Run`: handle `flag.ErrHelp` in one place, and `help SUB`).\n- `internal/cli/help.go` (new; `// SPDX-License-Identifier: GPL-3.0-or-later`): `commandUsage(words []string) (string, bool)`, which cuts the matching blocks out of `usageText`.\n- `cmd/ork/main.go:85-91` and `:125-128` (`daemon run --help`).\n- `internal/cli/help_test.go` (new) and `internal/cli/cli_test.go:540` (`TestHelp`), `:517` (`TestUsageErrorsExitTwo` stays green).\n- `docs/design.md:1189` (CLI: one sentence on `--help`) and `docs/guide.md` if it describes `ork help`."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "In `internal/cli/help_test.go`:\n\n- `TestEveryCommandPrintsItsOwnHelp`: build the command table from `usageText` (every line that starts with `  ork `; the command words up to the first argument in capitals or the first `[`). For each command, and for each of `--help` and `-h`, `run(t, noDaemon(t), words..., flag)` exits 0, writes nothing to stderr, and prints on stdout the block for that command (its first line starts with `ork WORDS`) and no other command's block. The daemon is never called (`App.Call` fails the test). Fails first: exit 2 with \"flag: help requested\".\n- `TestGroupHelpListsItsSubcommands`: `ork projects --help` prints every `ork projects ...` block and nothing else; the same for `wave`, `adj`, `settings`, `vendor`, `roles`, `daemon`. Fails first: exit 2.\n- `TestHelpSubcommand` (Q2 option 1): `ork help retry` prints only the retry block, exit 0; `ork help nosuch` exits 2 with \"unknown command\". Fails first: the whole usage.\n- `TestHelpFlagAfterArgumentsStillHelps`: `ork retry RUN --help` prints retry's usage and does not call the daemon. Fails first: exit 2.\n- `TestCommandTableMatchesTheDispatcher`: every command word in the table is dispatched by `App.Run` (a command that `App.Run` does not know fails the test), so the table and the switch stay in step. Fails first: compiles only once `commandUsage` exists.\n\nIn `cmd/ork/main_test.go`:\n\n- `TestDaemonRunHelpExitsZero`: `ork daemon run --help` exits 0 and prints its usage line on stdout without starting the daemon. Fails first: exit 2 on stderr."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Tests first. Confirm each fails for the reason given.\n2. `commandUsage` returns the blocks of `usageText` whose first line's command words start with the given words. A group returns all of its blocks.\n3. In `usage` (`cli.go:205`), or in one wrapper every command uses: when the error is `flag.ErrHelp`, print `commandUsage(command words)` to stdout and return `ExitOK`. Group dispatchers treat a first argument of `--help` or `-h` the same way.\n4. `App.Run`: `help` with arguments prints `commandUsage(args)` (Q2).\n5. `cmd/ork/main.go`: `daemon run --help` or `-h` prints `usage: ork daemon run` on stdout and exits 0.\n6. Do not reword any usage line. Keep `TestLaunchUsageFitsEightyColumns` green.\n7. Update `docs/design.md` (CLI) in the same diff."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go -C WORKTREE test -count=1 ./internal/cli ./cmd/ork -run 'Help|Usage'`: all pass.\n- `go -C WORKTREE test -race -count=1 ./...`, `go -C WORKTREE vet ./...`, `gofmt -l WORKTREE` (empty), `slicer check`, `adj lint`.\n- Mutation: skip the `flag.ErrHelp` branch for one command; `TestEveryCommandPrintsItsOwnHelp` goes red for that command.\n- [HUMAN CHECK] `ork retry --help`, `ork projects -h` and `ork help wave` in a terminal print the expected blocks and exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"Every subcommand prints its own usage on --help\"."
+    },
+    {
+      "heading": "Open owner questions",
+      "body": "UI slice by rule u10 (`internal/cli` output), so it gets a UI pass.\n\nQuestion: What should a subcommand's help print?\nOptions:\n1. usage-block: the command's block cut from the one usage text, so there is a single source\n2. flag-defaults: a usage line plus each flag and its default from the FlagSet\n3. full-usage: the whole ork help text, exit 0\nRecommend: 1 - one source keeps help and ork help in step, and the blocks already document every flag\n\nQuestion: What should ork help SUB print?\nOptions:\n1. sub-only: the same blocks as ork SUB --help, and an unknown SUB is a usage error\n2. full: the whole usage, as today\nRecommend: 1 - it is what the orchestrator tried first, and it costs one line in App.Run"
+    }
+  ],
+  "notes": []
+}

@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 287,
+  "next_id": 293,
   "preamble": "",
   "passes": [
     {
@@ -13007,12 +13007,27 @@
     },
     {
       "id": "S243",
-      "title": "Claude fallback implementer: shell rules in the brief, one automatic report nudge, a short denied count in status",
+      "title": "Claude fallback implementer: shell rules in the brief, a short denied count in status",
       "short_title": "Claude fallback implementer",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "5bedbf6c-9edd-4cb1-9526-f4879ec5c083",
+          "kind": "",
+          "text": "**2026-11-04** — Owner 2026-11-04 (ork S287 Q2): part (b) dropped because S275 landed the automatic same-session retry; parts (a) and (c) stay.",
+          "created_at": "2026-11-04T20:02:39Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -13347,6 +13362,20 @@
           "created_at": "2026-11-04T12:29:50Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "63a68097-0c83-40eb-8a4a-40291e8fe53c",
+          "kind": "",
+          "text": "**2026-11-04** — Owner 2026-11-04 evidence (prism-ui wave): the ff-only merge was blocked twice because ork's own run-state writes left the main checkout's tracking files (.slicer/index.json, log.jsonl, render/*, a slice JSON) uncommitted; the orchestrator committed the project's .slicer in main and ran ork retry. The project is a subdirectory (libraries/prism-ui, tracking at libraries/prism-ui/.slicer) of a larger repo that also holds another ork project (libraries/prism) landing into the same branch. The S254 spec does not handle this as written: dirtyOverlap takes paths from changedPaths (git status --porcelain=v1, internal/engine/filescope.go:36) and git diff --name-only, both relative to the repo root, while the tracking set is matched as .slicer/; so libraries/prism-ui/.slicer/... takes the stop path, and git -C P add -A -- PATHS with root-relative paths from a subdirectory P would name the wrong files. The spec should match tracking paths under the project prefix (git rev-parse --show-prefix; S292 adds such a helper) and say that a sibling project's dirty .slicer is not this landing's to commit.",
+          "created_at": "2026-11-04T19:55:30Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -13792,6 +13821,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "05c1c835-260c-4e0a-9f21-b01ddbea0821",
+          "kind": "",
+          "text": "**2026-11-04** — Owner 2026-11-04 evidence (prism-ui wave): prism-ui was registered with no check command. U23 and U27 each passed and landed one after the other; the second landing left the base branch not building (CS0019: U23 added an optional parameter to RunCompare.RunAsync, U27 assigned the method group to a delegate that did not match). ork's re-check after the merge-in ran only slicer check --json (run records: land-checks rows, internal/engine/states.go:207-233), so the orchestrator found the break, not ork (fixed by hand in 4ccd2df). ork projects set --check was refused because runs were unfinished, so it could not be set mid-wave. This argues for revisiting Q4 (answered (a), warning only): a clean per-slice pass plus a merge can break the base, so the launch plan and wave start should warn loudly or refuse without an explicit opt-out (for example --allow-no-check) when a project has no check command, and Q5 should let --check be set while runs are unfinished.",
+          "created_at": "2026-11-04T19:55:30Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -13997,6 +14040,20 @@
           "created_at": "2026-11-04T12:29:48Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "bfc4be2c-df48-45b4-8506-6f7c8e1c6244",
+          "kind": "",
+          "text": "**2026-11-04** — Owner 2026-11-04 evidence (prism-ui wave): (a) the gate runs read-only (claude --permission-mode plan, internal/agent/claude/args.go:45-46) and could not run the project's build or tests, so the U31 gate paused to ask the owner whether to accept the implementer's reported run; the brief should tell the gate what to do when it cannot run checks, and with a project check command ork should hand it ork's own check result. (b) An implementer was denied PRISM_UI_FRAMES=<dir> dotnet test ... --filter ... (env prefix plus compound command) by the allowlist and did not know which forms are accepted; the owner has since added Bash(PRISM_UI_*=* dotnet test*) to prism-ui's registry entry. (c) The spec check failed until the owner added a Spec check row to prism-ui's relay-roles by hand (relates to S258).",
+          "created_at": "2026-11-04T19:55:30Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -14454,7 +14511,22 @@
       "status": "open",
       "has_slice": false,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "ccacd48e-7829-4077-815a-99a8a44f0763",
+          "kind": "",
+          "text": "**2026-11-04** — Owner 2026-11-04 evidence (prism-ui wave): with no check command, the landing re-check after the merge-in ran only slicer check --json, and two landed slices (U23, U27) left the base not building (CS0019). Whatever the round command becomes, the landing re-check must run a real build and test command; see the 2026-11-04 note on S265.",
+          "created_at": "2026-11-04T19:55:30Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -14502,6 +14574,278 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S287",
+      "title": "Shape retry when a malformed report also asks the owner",
+      "short_title": "Shape retry when a malformed report also asks the owner",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "4b0b87e9-5ef8-4973-945c-6e46e67750ce",
+          "kind": "",
+          "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 retry-first: resume the role once with the shape problems and the note to keep its question, then ask or pause. Q2 drop-part-b: S243 loses its part (b), the automatic report nudge, and its nudge_test.go tests; parts (a) and (c) stay. The S243 edit is done as part of this slice's filing step.",
+          "created_at": "2026-11-04T19:59:53Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-04 (prism-ui wave): shape pauses in implementer, reviewer and gate; the orchestrator ran ork retry up to 6 times per run. S275 (landed 2026-11-04) covers shape-only reports; after its build the remaining pauses were malformed reports that also asked the owner (round.go:539-541 skips the retry then). Spec-check version: S266. S243 part (b) is now S275.",
+        "discovered_from": "S275",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S288",
+      "title": "Owner findings: state the exact body shape to reviewers and gates, or keep extra prose as context",
+      "short_title": "Owner findings: state the exact body shape to reviewers and gates, or keep extra prose as context",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "d2df756c-1ce5-4732-9b60-3546af7fe35b",
+          "kind": "",
+          "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 both: the prompts state the exact body rule with a refused and an accepted example, and the parser keeps extra lines as context. Q2 in-context: lines in the body that are not the block become context shown with the question. Q3 accept: strip one leading list marker from Options, the option lines and Recommend. Q4 findings-only: the Owner needed block and spec-check blocks are unchanged.",
+          "created_at": "2026-11-04T19:59:53Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-04 (prism-ui wave): U26 reviewer and U31 gate [owner] findings with prose or list markers in the body were shape errors (kinds.go:133-187 via parseOwnerQuestion); four gate attempts before one was accepted. Prompts do not say the body must hold only Options, options, Recommend and Decision key.",
+        "discovered_from": "S277",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S289",
+      "title": "Landing: a merge-in conflict only in tracking files, such as the slice's own JSON",
+      "short_title": "Landing: a merge-in conflict only in tracking files, such as the slice's own JSON",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "0d64f22f-67d7-4569-af82-1ee1989e657a",
+          "kind": "",
+          "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 pause-with-command: keep the pause, with one line naming the file, the side to take and the exact git command, then ork retry. Q2 base: the command takes the base branch's copy, as on U26; the human check reads the notes after landing. Q3 ask-slicer: the owner files a slicer item for a merge-slice driver (merges notes by id and sections by heading); filed in slicer's store 2026-11-04 (see the slicer item for its ID).",
+          "created_at": "2026-11-04T19:59:54Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "2059a6a4-bef3-49a0-9e03-eeec2e7e1fab",
+          "kind": "",
+          "text": "**2026-11-04** — Slicer item for Q3 filed 2026-11-04: s449 in slicer's store (v1.20, size M): merge driver for slice JSON.",
+          "created_at": "2026-11-04T20:00:22Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-04 (prism-ui wave): U26 landing paused on a merge-in conflict in .slicer/slices/U26.json (run state and notes edited on both sides); the owner took the base side, git add, ork retry. slicer defines no merge driver for slices/*.json.",
+        "discovered_from": "S238",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S290",
+      "title": "Subcommand help: every command prints its own usage and exits 0 on --help or -h",
+      "short_title": "Subcommand help: every command prints its own usage and exits 0 on --help or -h",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "84ccaeb1-f1ab-4928-9d88-cd4735d18cdb",
+          "kind": "",
+          "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 usage-block: a subcommand's help prints that command's block cut from the one usage text. Q2 sub-only: ork help SUB prints the same block as ork SUB --help, and an unknown SUB is a usage error.",
+          "created_at": "2026-11-04T19:59:54Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-04: ork retry --help prints 'ork: retry: flag: help requested' and 'Run ork help for usage.' (exit 2). Verified 2026-11-04 for every command in ork help: none prints its own usage on --help or -h; ork help SUB prints the whole usage.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S291",
+      "title": "Vendor names on the command line: Claude is refused, claude works",
+      "short_title": "Vendor names on the command line: Claude is refused, claude works",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "034c6f92-336b-4e8c-a510-ee228a8b2c99",
+          "kind": "",
+          "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 both: accept any case and store lowercase, and for an unknown name list the vendors. Q2 cli-and-daemon: the CLI for an early error and the daemon on the wire. Q3 no: only claude, codex and grok; matrix names such as Claude Code are not accepted on the command line.",
+          "created_at": "2026-11-04T19:59:54Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-04: ork wave start ... --implementer Claude:sonnet:high is refused as unsupported vendor; claude:sonnet:high works. The daemon matches vendors exactly (runner.go:90, runs.go:471-474) while matrix rows are matched case-insensitively (runs.go:428).",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S292",
+      "title": "Spec check: a sibling project's tracking write in the same git repo must not fail the read-only check",
+      "short_title": "Spec check: a sibling project's tracking write in the same git repo must not fail the read-only check",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "77059f0d-2f22-4ab0-8c81-87d315fe73af",
+          "kind": "",
+          "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 project-only: fingerprint every path under the project root, its own .slicer included. Q2 no-lock: scope the paths only; the spec check takes no lock.",
+          "created_at": "2026-11-04T19:59:54Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-04: prism and prism-ui are ork projects in one git repo; ork wave start prism S63 failed with 'spec-check changed the tree, and it is a read-only role' while ork wave start prism-ui U34 wrote prism-ui/.slicer in the shared checkout; a retry passed. gitStatusAt (speccheck.go:84-90) fingerprints the whole repository.",
+        "discovered_from": "S254",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }

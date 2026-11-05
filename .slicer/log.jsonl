@@ -3124,3 +3124,47 @@
 {"when": "2026-11-05T13:26:39Z", "item": "S277", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S277):", "by": "Jon R"}
 {"when": "2026-11-05T13:26:52Z", "item": "S277", "action": "note", "from": "", "to": "", "note": "Verified role-specific Done when checklists for first, fix, ", "by": "Jon R"}
 {"when": "2026-11-05T13:26:56Z", "item": "S277", "action": "status", "from": "started", "to": "done", "note": "Verified role-specific Done when checklists, permission wiring, slice test/check criteria, and denied-tracking guidance. Gate FAIL finding coverage and prose-boundary regressions passed focused tests and mutation checks. Gate PASS and owner approval received; post-land human check remains deferred.", "by": "Jon R"}
+{"when": "2026-11-04T19:54:49Z", "item": "S287", "action": "add", "from": "", "to": "open", "note": "Shape retry when a malformed report also asks the owner"}
+{"when": "2026-11-04T19:54:50Z", "item": "S288", "action": "add", "from": "", "to": "open", "note": "Owner findings: state the exact body shape to reviewers and gates, or keep extra prose as context"}
+{"when": "2026-11-04T19:54:50Z", "item": "S289", "action": "add", "from": "", "to": "open", "note": "Landing: a merge-in conflict only in tracking files, such as the slice's own JSON"}
+{"when": "2026-11-04T19:54:50Z", "item": "S290", "action": "add", "from": "", "to": "open", "note": "Subcommand help: every command prints its own usage and exits 0 on --help or -h"}
+{"when": "2026-11-04T19:54:57Z", "item": "S291", "action": "add", "from": "", "to": "open", "note": "Vendor names on the command line: Claude is refused, claude works"}
+{"when": "2026-11-04T19:54:57Z", "item": "S292", "action": "add", "from": "", "to": "open", "note": "Spec check: a sibling project's tracking write in the same git repo must not fail the read-only check"}
+{"when": "2026-11-04T19:55:01Z", "item": "S287", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:55:08Z", "item": "S287", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:55:08Z", "item": "S288", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:55:08Z", "item": "S289", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:55:08Z", "item": "S290", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:55:09Z", "item": "S291", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:55:09Z", "item": "S292", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:55:30Z", "item": "S254", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-04 evidence (prism-ui wave): the ff-only merge", "by": "Jon Robbins"}
+{"when": "2026-11-04T19:55:30Z", "item": "S265", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-04 evidence (prism-ui wave): prism-ui was regi", "by": "Jon Robbins"}
+{"when": "2026-11-04T19:55:30Z", "item": "S285", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-04 evidence (prism-ui wave): with no check com", "by": "Jon Robbins"}
+{"when": "2026-11-04T19:55:30Z", "item": "S277", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-04 evidence (prism-ui wave): (a) the gate runs", "by": "Jon Robbins"}
+{"when": "2026-11-04T19:56:10Z", "item": "S287", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:56:10Z", "item": "S288", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:56:11Z", "item": "S289", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:56:11Z", "item": "S290", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:56:11Z", "item": "S291", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:56:11Z", "item": "S292", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:56:34Z", "item": "S288", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:56:34Z", "item": "S289", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:56:34Z", "item": "S290", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:56:35Z", "item": "S291", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:56:40Z", "item": "S291", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-04T19:59:53Z", "item": "S287", "action": "note", "from": "", "to": "", "note": "Owner answers 2026-11-04 (interactive): all recommendations ", "by": "Jon Robbins"}
+{"when": "2026-11-04T19:59:53Z", "item": "S288", "action": "note", "from": "", "to": "", "note": "Owner answers 2026-11-04 (interactive): all recommendations ", "by": "Jon Robbins"}
+{"when": "2026-11-04T19:59:54Z", "item": "S289", "action": "note", "from": "", "to": "", "note": "Owner answers 2026-11-04 (interactive): all recommendations ", "by": "Jon Robbins"}
+{"when": "2026-11-04T19:59:54Z", "item": "S290", "action": "note", "from": "", "to": "", "note": "Owner answers 2026-11-04 (interactive): all recommendations ", "by": "Jon Robbins"}
+{"when": "2026-11-04T19:59:54Z", "item": "S291", "action": "note", "from": "", "to": "", "note": "Owner answers 2026-11-04 (interactive): all recommendations ", "by": "Jon Robbins"}
+{"when": "2026-11-04T19:59:54Z", "item": "S292", "action": "note", "from": "", "to": "", "note": "Owner answers 2026-11-04 (interactive): all recommendations ", "by": "Jon Robbins"}
+{"when": "2026-11-04T20:00:22Z", "item": "S289", "action": "note", "from": "", "to": "", "note": "Slicer item for Q3 filed 2026-11-04: s449 in slicer's store ", "by": "Jon Robbins"}
+{"when": "2026-11-04T20:02:38Z", "item": "S243", "action": "set", "from": "", "to": "", "note": "title Claude fallback implementer: shell rules in the brief, one automatic report nudge, a short denied count in status→Claude fallback implementer: shell rules in the brief, a short denied count in status"}
+{"when": "2026-11-04T20:02:38Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-04T20:02:38Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-04T20:02:38Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-04T20:02:38Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-04T20:02:39Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-04T20:02:39Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-04T20:02:39Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-04T20:02:39Z", "item": "S243", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-04 (ork S287 Q2): part (b) dropped because S27", "by": "Jon Robbins"}
