@@ -3169,3 +3169,100 @@
 {"when": "2026-11-04T20:02:39Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Git"}
 {"when": "2026-11-04T20:02:39Z", "item": "S243", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-04 (ork S287 Q2): part (b) dropped because S27", "by": "Jon Robbins"}
 {"when": "2026-11-05T15:51:13Z", "item": "S289", "action": "note", "from": "", "to": "", "note": "Correction: the slicer item for the slice-JSON merge driver ", "by": "Jon Robbins"}
+{"when": "2026-11-05T16:14:56Z", "item": "S293", "action": "add", "from": "", "to": "open", "note": "Check command: run it from the project's own folder when the project lives in a subfolder of its repo (monorepo)"}
+{"when": "2026-11-05T17:38:55Z", "item": "S294", "action": "add", "from": "", "to": "open", "note": "Fix rounds: stop and ask when they make no progress, and lower the cap to 4"}
+{"when": "2026-11-05T17:38:55Z", "item": "S294", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-05T17:39:01Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-05T17:39:01Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-11-05T17:39:01Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T17:39:01Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T17:39:01Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T17:39:01Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T17:39:02Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T17:39:02Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-05T17:39:02Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T17:39:02Z", "item": "S294", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→2"}
+{"when": "2026-11-05T17:39:13Z", "item": "S295", "action": "add", "from": "", "to": "open", "note": "Check command: verify it once where it will run, at projects set and at run setup"}
+{"when": "2026-11-05T17:39:13Z", "item": "S295", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-05T17:39:13Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-05T17:39:13Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-11-05T17:39:13Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T17:39:13Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T17:39:13Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T17:39:13Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T17:39:14Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T17:39:14Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-05T17:39:14Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T17:39:14Z", "item": "S296", "action": "add", "from": "", "to": "open", "note": "Resume a run stopped at the round limit from its worktree"}
+{"when": "2026-11-05T17:39:14Z", "item": "S296", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-05T17:39:14Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-05T17:39:14Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-11-05T17:39:14Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T17:39:15Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T17:39:15Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T17:39:15Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T17:39:15Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T17:39:15Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-05T17:39:15Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T17:39:15Z", "item": "S295", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→2"}
+{"when": "2026-11-05T17:39:15Z", "item": "S296", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→2"}
+{"when": "2026-11-05T17:39:31Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-11-05T17:39:31Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T17:39:32Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T17:39:32Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T17:39:32Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T17:39:32Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T17:39:32Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T17:39:32Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-11-05T17:39:32Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T17:39:32Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T17:39:33Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T17:39:33Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T17:39:33Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T17:39:33Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T17:39:33Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-11-05T17:39:33Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T17:39:33Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T17:39:34Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T17:39:34Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T17:39:34Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T17:39:34Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T17:39:55Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T17:39:56Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T17:39:56Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T17:40:02Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T17:40:10Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T17:40:30Z", "item": "S254", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-05 evidence (prism-ui wave, filed from S293's ", "by": "Jon Robbins"}
+{"when": "2026-11-05T17:40:30Z", "item": "S289", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-05 evidence (prism-ui wave, filed from S293's ", "by": "Jon Robbins"}
+{"when": "2026-11-05T17:40:58Z", "item": "S293", "action": "note", "from": "", "to": "", "note": "Correction 2026-11-05: the last sentence of the findings is ", "by": "Jon Robbins"}
+{"when": "2026-11-05T17:50:10Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-05T17:50:10Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-11-05T17:50:10Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T17:50:10Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T17:50:10Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T17:50:10Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T17:50:10Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T17:50:11Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-05T17:50:11Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T17:50:15Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-05T17:50:15Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-11-05T17:50:15Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T17:50:15Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T17:50:15Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T17:50:15Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T17:50:16Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T17:50:16Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-05T17:50:16Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T17:50:16Z", "item": "S294", "action": "set", "from": "", "to": "", "note": "title Fix rounds: stop and ask when they make no progress, and lower the cap to 4→Fix rounds: pause and ask when they make no progress, and pause after round 3 instead of stopping at 8; short_title Fix rounds: stop and ask when they make no progress, and lower the cap to 4→Fix rounds: pause and ask when they make no progress, and pause after round 3 instead of stopping at 8"}
+{"when": "2026-11-05T17:50:16Z", "item": "S296", "action": "set", "from": "", "to": "", "note": "title Resume a run stopped at the round limit from its worktree→Resume a stopped run from its worktree; short_title Resume a run stopped at the round limit from its worktree→Resume a stopped run from its worktree"}
+{"when": "2026-11-05T17:50:27Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-05T17:50:27Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-11-05T17:50:27Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T17:50:28Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T17:50:28Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T17:50:28Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T17:50:28Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T17:50:28Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-05T17:50:28Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T17:50:28Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T17:50:28Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}

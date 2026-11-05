@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 293,
+  "next_id": 297,
   "preamble": "",
   "passes": [
     {
@@ -13382,6 +13382,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "865290d7-a592-4d78-9e41-750ad1d3ec39",
+          "kind": "",
+          "text": "**2026-11-05** — Owner 2026-11-05 evidence (prism-ui wave, filed from S293's friction set): the ff-only landing paused on 'Your local changes to the following files would be overwritten by merge' with only tracking files dirty (.slicer/log.jsonl, render/slices/ID.md) for U38, U37, U30 and U36; each time the fix was git add of the project's .slicer plus a 'slicer: run state' commit on main, then ork retry (platforms repo: dd7a66b, 21536a1, c193ecf, 44c3b56, e6196af on 2026-11-05). The owner asked for ork to commit these itself. This slice's answered design (Q1 b, commit by pathspec before the merge-in) already covers it, so no new slice was filed. Points to keep when it is built: match tracking paths under the project prefix (the 2026-11-04 note; prism-ui is libraries/prism-ui in its repo); a fixed message; never commit any path outside the project's tracking set, and a sibling project's .slicer is not this landing's. The owner's request also said 'only when nothing else is dirty'; Q3 as answered acts when the slice also changes the file and stops early for other overlapping dirty files, which is compatible but not identical; confirm with the owner when the slice is picked up.",
+          "created_at": "2026-11-05T17:40:30Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -14712,6 +14726,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "4201449a-6eee-49d3-8123-0a672a49e2e4",
+          "kind": "",
+          "text": "**2026-11-05** — Owner 2026-11-05 evidence (prism-ui wave, filed from S293's friction set): U36's merge-in of the base stopped on a conflict only in .slicer/slices/U36.json, the same section body edited on both sides: the branch changed the Files text and the base had an owner-answer note line added. The owner resolved it by hand by merging both texts, then ork retry (platforms repo merge fbe13a6, 2026-11-05). This is a counterexample to Q2's answer (take the base side): the base copy would have dropped the branch's Files edit. Until slicer's s451 (merge driver for slice JSON, open in slicer's store, no slice file yet) lands, the pause-with-command of Q1 should not prescribe the base side when the branch changed a section body; it should name both sides and say to merge them, or the owner revisits Q2. Once s451 lands and slicer setup-git is configured in the repo, git uses the driver from .slicer/.gitattributes and this case should not conflict; a check that the driver is configured (git config merge.<driver>.driver) is the only ork-side work left, not specified here. No new slice was filed for this; the owner asked that ork use slicer's merge support with the pause as the fallback, which is this slice plus s451.",
+          "created_at": "2026-11-05T17:40:30Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -14860,6 +14888,133 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S293",
+      "title": "Check command: run it from the project's own folder when the project lives in a subfolder of its repo (monorepo)",
+      "short_title": "Check command: run it from the project's own folder when the project lives in a subfolder of its repo (monorepo)",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "9de817ce-203c-4263-b854-00cdd13753bc",
+          "kind": "",
+          "text": "**2026-11-05** — Correction 2026-11-05: the last sentence of the findings is wrong. A stopped run does not block 'ork projects set' (runrec.IsFinal counts it as final; the set succeeded as soon as U41 and U30 were both stopped). The refusal came while both runs were still active. See S296.",
+          "created_at": "2026-11-05T17:40:58Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-05, prism-ui (libraries/prism-ui inside the platforms repo): the configured check 'dotnet build PrismUi.slnx ...' ran from the worktree root and failed MSB1009 on every round, so U41 burned all 8 fix rounds on a red check no code change could fix (the implementer said so in rounds 2 to 7). Wanted: run the check with the project's subfolder as the working directory, or stop fix rounds when the same check output repeats unchanged after a no-change implementer report. Also: 'ork projects set' refuses while any run is unfinished, so the owner could not fix the config mid-wave; a stopped run counts as unfinished.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S294",
+      "title": "Fix rounds: pause and ask when they make no progress, and pause after round 3 instead of stopping at 8",
+      "short_title": "Fix rounds: pause and ask when they make no progress, and pause after round 3 instead of stopping at 8",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-05, prism-ui: runs ork-20261105-160022-7f6e (U41) and -03e0 (U30) each ran 8 implementer rounds against a check that could not pass (MSB1009 from the wrong directory, S293); from round 2 the implementer reported no change and blamed the check; all 16 check logs are byte-identical. Owner 2026-11-05: '8 fix rounds is too many! More than three should throw some kind of alert or do something different.' Wanted: default cap 4 (DefaultMaxRounds, internal/engine/engine.go:26, not configurable per project or run); pause into Needs you after round 3 with options (more rounds, change the check, stop); pause at once when a round changed nothing and the check output repeats byte for byte. Related: S279, S293.",
+        "discovered_from": "S293",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S295",
+      "title": "Check command: verify it once where it will run, at projects set and at run setup",
+      "short_title": "Check command: verify it once where it will run, at projects set and at run setup",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-05, prism-ui: both check commands the owner set (dotnet build PrismUi.slnx ...) were wrong from the worktree root, and nothing noticed until U41 and U30 burned 8 rounds each on MSB1009. Wanted: at run or wave setup and in 'ork projects set --check', verify the command in the exact directory the check will use and say so, with the command and directory, before any role starts. Bounded cost: a full check at setup is too slow. ork doctor already parses with sh -n and resolves the first word (internal/cli/doctor.go:171-210), but only for the main checkout and not the files the command names. Not S293 (which directory); this validates it.",
+        "discovered_from": "S293",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S296",
+      "title": "Resume a stopped run from its worktree",
+      "short_title": "Resume a stopped run from its worktree",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-05, prism-ui: ork retry on ork-20261105-160022-7f6e (U41, stopped by the round limit) answered 'run is not paused with a pending step; use ork stop' (internal/daemon/runs.go:1015-1020). The way on was ork dismiss and a new ork run, which reused the worktree with the work (DocBuildTests.cs still there; ensureWorktree, internal/engine/states.go:705-741). Wanted: ork retry (or ork resume) of a stopped run that reloads the project settings, grants N more rounds and continues from the worktree. The owner also saw ork projects set refused while the run sat stopped; the code counts stopped as final (runrec.IsFinal, record.go:39), so that refusal must have named other runs (not verified). Related: S282, S255, S265.",
+        "discovered_from": "S293",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 2,
         "attempts": 0
       }
     }
