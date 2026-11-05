@@ -4,6 +4,7 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 	"testing"
 
@@ -20,6 +21,7 @@ func TestFirstRowBriefIsUnchanged(t *testing.T) {
 		TempDir: req.TempDir, ReportPath: req.ReportPath,
 		SliceJSON: sliceJSON(), EnvLines: h.proj.EnvironmentLines,
 		CheckCommand: h.proj.CheckCommand,
+		Allow:        DefaultImplementerAllowlist(h.proj.CheckCommand),
 		Sections:     []BriefSection{{Title: "Round", Body: "This is the first round. The slice is not started: run `slicer start " + item + " --render --strict` first."}},
 	})
 	if err != nil {
@@ -387,5 +389,158 @@ func TestFreshBriefHasNoResumedSection(t *testing.T) {
 		if strings.Contains(got, "## Resumed session") || strings.Contains(got, "git status --porcelain when") {
 			t.Errorf("%s: a fresh brief has a resumed section", role)
 		}
+	}
+}
+
+// Inspect only the generated checklist, never matching text elsewhere in the prompt.
+func checklist(t *testing.T, in BriefInput) string {
+	t.Helper()
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, rest, ok := strings.Cut(got, "\n## Done when\n\n")
+	if !ok {
+		t.Fatal("missing Done when section")
+	}
+	section, _, _ := strings.Cut(rest, "\n\n## ")
+	return section
+}
+
+func requireChecklistText(t *testing.T, in BriefInput, wants ...string) {
+	t.Helper()
+	got := checklist(t, in)
+	for _, want := range wants {
+		if !strings.Contains(got, want) {
+			t.Errorf("checklist lacks %q", want)
+		}
+	}
+}
+
+func TestEveryRoleBriefHasADoneWhenSection(t *testing.T) {
+	for _, role := range []string{RoleImplementer, RoleReviewer, RoleGate, RoleArchitect, RoleUI, RoleSpecCheck} {
+		t.Run(role, func(t *testing.T) {
+			in := baseBrief()
+			in.Role = role
+			got := checklist(t, in)
+			if strings.Count(got, "- [ ] ") < 3 {
+				t.Fatal("fewer than three checklist items")
+			}
+			if len(strings.Split(got, "\n")) >= 40 {
+				t.Fatal("checklist reaches 40 lines")
+			}
+		})
+	}
+}
+
+func TestImplementerDoneWhenNamesTheExactReportLines(t *testing.T) {
+	requireChecklistText(t, baseBrief(), "Tests: N passed, M failed", "## Owner needed", "nothing may follow the counts", "skipped tests go under item 6", "report parts in the prompt", "docs")
+}
+
+func TestImplementerDoneWhenListsTheSlicesFailingTestsAndChecks(t *testing.T) {
+	in := baseBrief()
+	in.SliceJSON = `{"slice":{"sections":[{"heading":"Failing tests","body":"- TestA\n- TestB"},{"heading":"Check","body":"- go test ./alpha\n- go test ./beta\n- [HUMAN CHECK] look"}]}}`
+	requireChecklistText(t, in, "TestA: red before the code, green after", "TestB: red before the code, green after", "go test ./alpha", "go test ./beta")
+	if strings.Contains(checklist(t, in), "HUMAN CHECK") {
+		t.Fatal("human check required in sandbox")
+	}
+	requireChecklistText(t, baseBrief(), "Failing tests: the slice lists none", "Check: the slice lists none")
+}
+
+func TestImplementerDoneWhenShowsTheAllowedCommands(t *testing.T) {
+	in := baseBrief()
+	in.Allow = DefaultImplementerAllowlist("python3 -m unittest")
+	requireChecklistText(t, in, append(in.Allow, "any other command is denied", "no pipes, no cd, no env prefix unless an entry allows it")...)
+	in.Allow = []string{"Bash(go  test*)"}
+	requireChecklistText(t, in, "Bash(go  test*)")
+	in.ReadOnly = true
+	requireChecklistText(t, in, "may only read")
+}
+
+func TestDoneWhenSaysWhatToWriteWhenACheckCannotRun(t *testing.T) {
+	requireChecklistText(t, baseBrief(), "denied or impossible check", "item 6", "verbatim command and denial text", "counts of tests actually run", "never a made-up zero", "ork re-runs the checks outside the sandbox")
+}
+
+func TestFixRoundDoneWhenListsEachFinding(t *testing.T) {
+	for _, title := range []string{"Review findings", "Gate FAIL", "Architect findings"} {
+		t.Run(title, func(t *testing.T) {
+			in := baseBrief()
+			in.Sections = []BriefSection{{Title: title, Body: "- [fix] alpha.go:1 loses error\n  Fix: return it\n- [later] polish\n- [fix] beta.go:2 races"}}
+			requireChecklistText(t, in, "alpha.go:1 loses error: proving test or a stated reason it needs none", "beta.go:2 races: proving test or a stated reason it needs none")
+			if strings.Contains(checklist(t, in), "polish") {
+				t.Fatal("later finding included")
+			}
+		})
+	}
+}
+
+func TestDoneWhenSeparatesBulletsAcrossProse(t *testing.T) {
+	for _, tc := range []struct{ heading, first, second string }{
+		{"Failing tests", "- [ ] First item continued: red before the code, green after", "- [ ] Second item: red before the code, green after"},
+		{"Check", "- [ ] Run or report blocked: First item continued\n", "- [ ] Run or report blocked: Second item"},
+	} {
+		t.Run(tc.heading, func(t *testing.T) {
+			in := baseBrief()
+			raw, err := json.Marshal(map[string]any{"slice": map[string]any{"sections": []map[string]string{{"heading": tc.heading, "body": "- First item\n  continued\nIn other_test.go:\n  Detached prose\n- Second item"}}}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			in.SliceJSON = string(raw)
+			got := checklist(t, in)
+			if !strings.Contains(got, tc.first) {
+				t.Errorf("first bullet does not retain only its indented continuation: %s", got)
+			}
+			if !strings.Contains(got, tc.second) {
+				t.Errorf("second bullet missing: %s", got)
+			}
+			for _, unwanted := range []string{"In other_test.go:", "Detached prose"} {
+				if strings.Contains(got, unwanted) {
+					t.Errorf("prose leaked into checklist: %q", unwanted)
+				}
+			}
+		})
+	}
+}
+
+func TestResumedBriefRepeatsDoneWhen(t *testing.T) {
+	in := baseBrief()
+	in.Resumed = true
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Index(got, "\n## Done when\n") <= strings.Index(got, "\n## Resumed session\n") {
+		t.Fatal("Done when missing after Resumed session")
+	}
+	requireChecklistText(t, in, "First re-run git status and git diff")
+}
+
+func TestFinishStepDoneWhen(t *testing.T) {
+	in := baseBrief()
+	in.Finish = true
+	in.Sections = []BriefSection{{Title: "Finish step", Body: "1. `slicer note S04 --text \"outcome\" --render`\n2. `slicer handoff S04 --render --check`"}}
+	got := checklist(t, in)
+	requireChecklistText(t, in, "slicer note S04", "slicer handoff S04", "in order", "denied", "## Owner needed", "orchestrator", "engine.denials", "not retried")
+	if strings.Index(got, "slicer note S04") > strings.Index(got, "slicer handoff S04") {
+		t.Fatal("finish commands out of order")
+	}
+	if strings.Contains(got, "Tests:") {
+		t.Fatal("finish checklist requires Tests line")
+	}
+}
+
+func TestReviewerAndGateDoneWhen(t *testing.T) {
+	for _, role := range []string{RoleReviewer, RoleGate} {
+		t.Run(role, func(t *testing.T) {
+			in := baseBrief()
+			in.Role = role
+			in.ReadOnly = true
+			requireChecklistText(t, in, "file:line", "reproduction or a test", "Deviation", "never a [fix]", "Importance", "Urgency", "Effort", "## Owner needed", "may only read")
+			if role == RoleReviewer {
+				requireChecklistText(t, in, "untagged line under section (C)")
+			} else {
+				requireChecklistText(t, in, "first line exactly VERDICT: PASS or VERDICT: FAIL", "one evidence line per criterion", "Tests: N passed, M failed", "Deviation for the orchestrator", "no [fix]", "no blocker", "tests green", "docs match")
+			}
+		})
 	}
 }

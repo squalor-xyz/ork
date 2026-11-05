@@ -284,6 +284,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Role: r.role, SliceID: rec.Item, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
 		SliceJSON: string(sliceJSON), EnvLines: e.proj.EnvironmentLines,
 		CheckCommand: e.proj.CheckCommand,
+		Allow:        perm.Allow,
 		UIDoc:        e.proj.UIDoc,
 		Vendor:       entry.Vendor,
 		UIPassSkills: e.proj.UIPassSkills,

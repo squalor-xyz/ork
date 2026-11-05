@@ -774,7 +774,28 @@ question. Answer, approve, fix and retry record `--phase start` to continue.
   - for the implementer, the project check command (when configured) and
     `slicer check`, which ork runs after the round (not the finish step)
     outside the role's sandbox;
+  - *proposed (S277):* a `## Done when` checklist after the check instructions
+    and before the round and owner sections. It repeats on resumed rounds after
+    `## Resumed session`. Each role gets its own acceptance criteria and exact
+    report lines, read-only limits or resolved allowlist forms, and blocked-check
+    reporting instructions. The implementer gets the slice's `Failing tests` and
+    non-HUMAN `Check` items, or "the slice lists none", and one proving-test item
+    per explicit `[fix]` finding in Review findings, Gate FAIL, or Architect
+    findings feedback. Slice bullets retain indented continuations; unindented
+    prose ends the current item and is not appended to it. Finish rounds list the
+    closing note and configured finish command in order, with no test-count
+    requirement. A denied finish command goes under `## Owner needed` and is
+    not retried. Other denied checks go in implementer report item 6 with actual
+    test counts; ork runs its checks outside the sandbox. The checklist stays
+    below 40 lines, grouping overflow items without dropping their text. It
+    supplements the prompts' report parts and changes no report parser;
   - earlier reports, when the role is not resumed.
+
+  A tracking step denied to the implementer is a Deviation for the orchestrator,
+  never a `[fix]` (`roles.denied-tracking-step`). The reviewer writes an untagged
+  commentary line under section (C); the gate writes one "Deviation for the
+  orchestrator" evidence line beside its criterion lines. Neither is a finding
+  or starts a fix round.
 - **Report.** The role writes its final report to
   `~/.local/state/ork/runs/<run>/<role>-<round>.md` and exits
   (`role.report-io`). If the file is missing, ork uses the vendor JSON's

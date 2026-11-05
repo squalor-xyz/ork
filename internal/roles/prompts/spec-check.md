@@ -105,3 +105,6 @@ The heading is exactly `## Owner needed`, with no number and nothing after it:
 ```text
 ## Owner needed
 ```
+
+Use the brief's `## Done when` section as the acceptance checklist for this
+round. It overrides nothing in the report parts above.
