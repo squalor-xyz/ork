@@ -3267,3 +3267,98 @@
 {"when": "2026-11-05T17:50:28Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
 {"when": "2026-11-05T17:50:28Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
 {"when": "2026-11-05T17:50:28Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T17:58:10Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T17:58:10Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T17:58:10Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T17:58:10Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T17:58:10Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T17:58:11Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T17:58:11Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T17:58:11Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T17:58:11Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T17:58:11Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T17:58:11Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T17:58:12Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T17:58:17Z", "item": "S294", "action": "set", "from": "", "to": "", "note": "importance 1→3; urgency 1→3"}
+{"when": "2026-11-05T17:58:17Z", "item": "S295", "action": "set", "from": "", "to": "", "note": "importance 1→2; urgency 1→2; flags -→needs-owner"}
+{"when": "2026-11-05T17:58:17Z", "item": "S296", "action": "set", "from": "", "to": "", "note": "importance 1→2; urgency 1→2"}
+{"when": "2026-11-05T17:58:17Z", "item": "S293", "action": "set", "from": "", "to": "", "note": "importance 1→2; urgency 1→2"}
+{"when": "2026-11-05T17:58:49Z", "item": "S297", "action": "add", "from": "", "to": "open", "note": "ork show RUN [NAME]: print the pause reason, a role report and the check logs, with --json"}
+{"when": "2026-11-05T17:58:49Z", "item": "S298", "action": "add", "from": "", "to": "open", "note": "Report-shape pauses: name the real defect, feed it back to the role, and cap the retry loop"}
+{"when": "2026-11-05T17:58:53Z", "item": "S297", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→2"}
+{"when": "2026-11-05T17:58:53Z", "item": "S298", "action": "set", "from": "", "to": "", "note": "findings 2026-11-05, prism-ui: run ork-20261105-173816-e0c2 (U32) paused on report shape three times in a row; each ork retry re-ran the reviewer (about 3 minutes, three rounds) and the next report failed the same check on another finding. Cause: an [owner] finding fails if any line besides Options, the options and Recommend sits under its tag (kinds.go:133-187 into report.go:182-240, 5 to 7 lines, Recommend last), and the error text says Options and Recommend are missing when they are present. Nothing counts or caps consecutive shape pauses. Related: S294, S275, S287, S288, and the show command in this store's new slice for run reports.→2026-11-05, prism-ui: run ork-20261105-173816-e0c2 (U32) paused on report shape three times in a row; each ork retry re-ran the reviewer (about 3 minutes, three rounds) and the next report failed the same check. Cause: an [owner] finding fails if any line besides Options, the options and Recommend sits under its tag (internal/engine/kinds.go:133-187 into internal/engine/report.go:182-240: 5 to 7 lines, Recommend last), and the error text says Options and Recommend are missing when they are present. Nothing counts or caps consecutive shape pauses. Related: S297 (show the report), S294, S275, S287, S288.; discovered_from -→S294; importance 2→1; urgency 2→1; effort -→2"}
+{"when": "2026-11-05T17:58:53Z", "item": "S297", "action": "set", "from": "", "to": "", "note": "discovered_from -→S294"}
+{"when": "2026-11-05T17:58:57Z", "item": "S297", "action": "set", "from": "", "to": "", "note": "discovered_from S294→-"}
+{"when": "2026-11-05T17:58:57Z", "item": "S298", "action": "set", "from": "", "to": "", "note": "discovered_from S294→-"}
+{"when": "2026-11-05T18:01:55Z", "item": "S297", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-05T18:02:01Z", "item": "S298", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-05T18:02:45Z", "item": "S297", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-05T18:02:46Z", "item": "S298", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-05T18:02:59Z", "item": "S297", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-05T18:03:04Z", "item": "S298", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-05T18:03:13Z", "item": "S298", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-05T18:03:14Z", "item": "S281", "action": "note", "from": "", "to": "", "note": "2026-11-05: S297 is the full spec for this command (run.show", "by": "Jon Robbins"}
+{"when": "2026-11-05T18:03:14Z", "item": "S288", "action": "note", "from": "", "to": "", "note": "2026-11-05: S298 (report-shape pauses) found that an [owner]", "by": "Jon Robbins"}
+{"when": "2026-11-05T18:05:06Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-05T18:05:06Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-11-05T18:05:06Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T18:05:06Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T18:05:06Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T18:05:07Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T18:05:07Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T18:05:07Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T18:05:07Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-05T18:05:07Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-11-05T18:05:07Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T18:05:08Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T18:05:08Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T18:05:08Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T18:05:08Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T18:05:09Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T18:05:09Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-05T18:05:09Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-11-05T18:05:09Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T18:05:09Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T18:05:09Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T18:05:10Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T18:05:10Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T18:05:10Z", "item": "S296", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T18:05:18Z", "item": "S295", "action": "set", "from": "", "to": "", "note": "depends_on -→S296"}
+{"when": "2026-11-05T18:05:18Z", "item": "S295", "action": "decide", "from": "", "to": "", "note": "Owner decision 2026-11-05 (interactive interview), Q1 option", "by": "Jon Robbins"}
+{"when": "2026-11-05T18:05:28Z", "item": "S279", "action": "set", "from": "", "to": "", "note": "findings Wave 7, 2026-11-03/04 (slicer s313): all 8 implementer rounds ended with the project tests green (3202 OK) and `slicer check` red on \"s443 / Why: unknown flag --stdin)\", because s443 had landed on main with relay-roles apply but the s313 worktree branch was cut before it, so its slicer check validated that tracking text against code without apply. The run hit the 8-round limit and stopped; each fix round cost about 10 minutes of tests. Fixed by hand: stash, git merge main in the worktree, stash pop; slicer check then passed. Needed: when a round check fails only on a finding outside the slice (a tracked item not in its Files) ork merges main into the worktree before it asks the implementer for another round, or runs the check against a main-merged tree; and a round that fails on the same outside finding twice stops early with that reason instead of burning rounds. Related: S274, S275.→Wave 7, 2026-11-03/04 (slicer s313): all 8 implementer rounds ended with the project tests green (3202 OK) and `slicer check` red on \"s443 / Why: unknown flag --stdin)\", because s443 had landed on main with relay-roles apply but the s313 worktree branch was cut before it, so its slicer check validated that tracking text against code without apply. The run hit the 8-round limit and stopped; each fix round cost about 10 minutes of tests. Fixed by hand: stash, git merge main in the worktree, stash pop; slicer check then passed. Needed: when a round check fails only on a finding outside the slice (a tracked item not in its Files) ork merges main into the worktree before it asks the implementer for another round, or runs the check against a main-merged tree; and a round that fails on the same outside finding twice pauses the run with S294's `rounds` pause (pending kind `rounds`; `ork retry RUN [--rounds N]`, a retry grants 2 more rounds) and names that finding, instead of burning rounds. Owner decision 2026-11-05: it never stops the run, because rounds never hard-stop (S294). Ordering: S279 can land before or after S294; the first of S294, S296 and S279 to land adds the `rounds` pending kind (S294 or S279), the `--rounds` flag, wire field and record grant field, and the others reuse them (no third copy). Related: S274, S275, S294, S296."}
+{"when": "2026-11-05T18:07:44Z", "item": "S297", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T18:07:44Z", "item": "S297", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T18:07:44Z", "item": "S297", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T18:07:44Z", "item": "S297", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T18:07:44Z", "item": "S297", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T18:07:44Z", "item": "S297", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T18:07:45Z", "item": "S297", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-05T18:07:45Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T18:07:45Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T18:07:45Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T18:07:45Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T18:07:45Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T18:07:46Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T18:07:46Z", "item": "S298", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-05T18:11:34Z", "item": "S297", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-05T18:11:35Z", "item": "S297", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-11-05T18:11:35Z", "item": "S297", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T18:11:35Z", "item": "S297", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T18:11:35Z", "item": "S297", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T18:11:35Z", "item": "S297", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T18:11:35Z", "item": "S297", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T18:11:35Z", "item": "S297", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T18:11:36Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-05T18:11:36Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "boundary"}
+{"when": "2026-11-05T18:11:36Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-05T18:11:36Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T18:11:36Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T18:11:36Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T18:11:37Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-05T18:11:37Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Open owner questions"}
+{"when": "2026-11-05T18:11:46Z", "item": "S297", "action": "set", "from": "", "to": "", "note": "findings 2026-11-05, prism-ui: run ork-20261105-173816-e0c2 (U32) paused on report shape; the reviewer's report could not be read through ork. ork status prints the pause reason and no findings; ork status --json carries run fields and roles[].report names but no report text, checks or pending role and round; ork help lists no command that prints a report. The only way was the file under ~/.local/state/ork/runs/RUN/, outside the folders a coding agent may read. The daemon already has run.report (S176) for the TUI; no CLI command calls it. Related: S281 (same title row, no slice yet), S176, S294, S295.→2026-11-05, prism-ui: run ork-20261105-173816-e0c2 (U32) paused on report shape; the reviewer's report could not be read through ork. ork status prints the pause reason and no findings; ork status --json carries run fields and roles[].report names but no report text, checks or pending role and round; ork help lists no command that prints a report. The only way was the file under ~/.local/state/ork/runs/RUN/, outside the folders a coding agent may read. The daemon already has run.report (S176) for the TUI; no CLI command calls it. Related: S281 (same title row, no slice yet), S176, S294, S295. Carried from S281 (owner decision 2026-11-05, Q1 retire-s281): Wave 7, 2026-11-04: steering paused runs meant reading run.json, report files and the grok fixture dir under ~/.local/state/ork by hand; ork status takes no run argument and prints a long wait reason and every denied command on one line; wanted the run state, whole pause reason or question with options, latest report per role, check results with logs, and denied commands as a count with the first few."}
+{"when": "2026-11-05T18:11:46Z", "item": "S298", "action": "set", "from": "", "to": "", "note": "depends_on -→S288"}
+{"when": "2026-11-05T18:11:46Z", "item": "S297", "action": "decide", "from": "", "to": "", "note": "Owner decisions 2026-11-05 (interactive interview), all reco", "by": "Jon Robbins"}
+{"when": "2026-11-05T18:11:47Z", "item": "S298", "action": "decide", "from": "", "to": "", "note": "Owner decisions 2026-11-05 (interactive interview), all reco", "by": "Jon Robbins"}
+{"when": "2026-11-05T18:11:47Z", "item": "S288", "action": "note", "from": "", "to": "", "note": "2026-11-05: Owner decision (interactive interview, S298 Q3 s", "by": "Jon Robbins"}
+{"when": "2026-11-05T18:12:04Z", "item": "S288", "action": "set", "from": "", "to": "", "note": "importance 1→3; urgency 1→3"}

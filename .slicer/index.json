@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 297,
+  "next_id": 299,
   "preamble": "",
   "passes": [
     {
@@ -14364,7 +14364,7 @@
         "flags": [],
         "trees": [],
         "trees_literal": false,
-        "findings": "Wave 7, 2026-11-03/04 (slicer s313): all 8 implementer rounds ended with the project tests green (3202 OK) and `slicer check` red on \"s443 / Why: unknown flag --stdin)\", because s443 had landed on main with relay-roles apply but the s313 worktree branch was cut before it, so its slicer check validated that tracking text against code without apply. The run hit the 8-round limit and stopped; each fix round cost about 10 minutes of tests. Fixed by hand: stash, git merge main in the worktree, stash pop; slicer check then passed. Needed: when a round check fails only on a finding outside the slice (a tracked item not in its Files) ork merges main into the worktree before it asks the implementer for another round, or runs the check against a main-merged tree; and a round that fails on the same outside finding twice stops early with that reason instead of burning rounds. Related: S274, S275.",
+        "findings": "Wave 7, 2026-11-03/04 (slicer s313): all 8 implementer rounds ended with the project tests green (3202 OK) and `slicer check` red on \"s443 / Why: unknown flag --stdin)\", because s443 had landed on main with relay-roles apply but the s313 worktree branch was cut before it, so its slicer check validated that tracking text against code without apply. The run hit the 8-round limit and stopped; each fix round cost about 10 minutes of tests. Fixed by hand: stash, git merge main in the worktree, stash pop; slicer check then passed. Needed: when a round check fails only on a finding outside the slice (a tracked item not in its Files) ork merges main into the worktree before it asks the implementer for another round, or runs the check against a main-merged tree; and a round that fails on the same outside finding twice pauses the run with S294's `rounds` pause (pending kind `rounds`; `ork retry RUN [--rounds N]`, a retry grants 2 more rounds) and names that finding, instead of burning rounds. Owner decision 2026-11-05: it never stops the run, because rounds never hard-stop (S294). Ordering: S279 can land before or after S294; the first of S294, S296 and S279 to land adds the `rounds` pending kind (S294 or S279), the `--rounds` flag, wire field and record grant field, and the others reuse them (no third copy). Related: S274, S275, S294, S296.",
         "discovered_from": "",
         "parent": "",
         "cites": [],
@@ -14413,7 +14413,22 @@
       "status": "open",
       "has_slice": false,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "8804706a-7dec-4d47-8858-daf2f80267b2",
+          "kind": "",
+          "text": "**2026-11-05** — 2026-11-05: S297 is the full spec for this command (run.show, ork show RUN [NAME], check logs, --json) with the evidence of run ork-20261105-173816-e0c2. See S297 Q1 for what happens to this row.",
+          "created_at": "2026-11-05T18:03:14Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -14655,6 +14670,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "ec2ae18d-116f-4f37-85f5-40bef911d4f9",
+          "kind": "",
+          "text": "**2026-11-05** — 2026-11-05: S298 (report-shape pauses) found that an [owner] finding with detail lines after Recommend fails with a message that says Options and Recommend are missing (run ork-20261105-173816-e0c2). S298 Q3 recommends building this slice first.",
+          "created_at": "2026-11-05T18:03:14Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "213acbbb-803f-4f60-a543-ca3f2a1ff993",
+          "kind": "",
+          "text": "**2026-11-05** — 2026-11-05: Owner decision (interactive interview, S298 Q3 s288-first): build S288 before S298 and raise S288's score. S298 depends on S288 and writes its tests against the parser as S288 leaves it. Evidence: prism-ui run ork-20261105-173816-e0c2 (U32) paused three times on this parser, each rerun about 3 minutes.",
+          "created_at": "2026-11-05T18:11:47Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -14671,8 +14714,8 @@
         "pass": "v1.1",
         "group": "",
         "reason": "",
-        "importance": 1,
-        "urgency": 1,
+        "importance": 3,
+        "urgency": 3,
         "effort": 1,
         "attempts": 0
       }
@@ -14928,8 +14971,8 @@
         "pass": "v1.1",
         "group": "",
         "reason": "",
-        "importance": 1,
-        "urgency": 1,
+        "importance": 2,
+        "urgency": 2,
         "effort": 1,
         "attempts": 0
       }
@@ -14956,8 +14999,8 @@
         "pass": "v1.1",
         "group": "",
         "reason": "",
-        "importance": 1,
-        "urgency": 1,
+        "importance": 3,
+        "urgency": 3,
         "effort": 2,
         "attempts": 0
       }
@@ -14968,8 +15011,25 @@
       "short_title": "Check command: verify it once where it will run, at projects set and at run setup",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
-      "note_records": [],
+      "depends_on": [
+        "S296"
+      ],
+      "note_records": [
+        {
+          "id": "62461024-9f5d-43be-be06-da0c144c544d",
+          "kind": "decision",
+          "text": "**2026-11-05** — Owner decision 2026-11-05 (interactive interview), Q1 option (a): to fix a check command that failed verification at setup, stop the run, run ork projects set --check, then ork retry ID, which resumes the stopped run through S296. S295 depends on S296; S296's resume enters implement when no implementer round has run.",
+          "created_at": "2026-11-05T18:05:18Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -14984,8 +15044,8 @@
         "pass": "v1.1",
         "group": "",
         "reason": "",
-        "importance": 1,
-        "urgency": 1,
+        "importance": 2,
+        "urgency": 2,
         "effort": 2,
         "attempts": 0
       }
@@ -15006,6 +15066,94 @@
         "trees_literal": false,
         "findings": "2026-11-05, prism-ui: ork retry on ork-20261105-160022-7f6e (U41, stopped by the round limit) answered 'run is not paused with a pending step; use ork stop' (internal/daemon/runs.go:1015-1020). The way on was ork dismiss and a new ork run, which reused the worktree with the work (DocBuildTests.cs still there; ensureWorktree, internal/engine/states.go:705-741). Wanted: ork retry (or ork resume) of a stopped run that reloads the project settings, grants N more rounds and continues from the worktree. The owner also saw ork projects set refused while the run sat stopped; the code counts stopped as final (runrec.IsFinal, record.go:39), so that refusal must have named other runs (not verified). Related: S282, S255, S265.",
         "discovered_from": "S293",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S297",
+      "title": "ork show RUN [NAME]: print the pause reason, a role report and the check logs, with --json",
+      "short_title": "ork show RUN [NAME]: print the pause reason, a role report and the check logs, with --json",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "62588bff-4ae2-4da3-bb32-d229be812feb",
+          "kind": "decision",
+          "text": "**2026-11-05** — Owner decisions 2026-11-05 (interactive interview), all recommended options: Q1 retire-s281 (S281 stays a row until S297 lands, then is retired as done by it; its findings are carried here); Q2 paused-report; Q3 extend-run-report (run.report serves check logs listed in checks[].log, same guards; reverses S176's 2026-10-29 note for the CLI); Q4 reports-and-logs-only.",
+          "created_at": "2026-11-05T18:11:46Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-05, prism-ui: run ork-20261105-173816-e0c2 (U32) paused on report shape; the reviewer's report could not be read through ork. ork status prints the pause reason and no findings; ork status --json carries run fields and roles[].report names but no report text, checks or pending role and round; ork help lists no command that prints a report. The only way was the file under ~/.local/state/ork/runs/RUN/, outside the folders a coding agent may read. The daemon already has run.report (S176) for the TUI; no CLI command calls it. Related: S281 (same title row, no slice yet), S176, S294, S295. Carried from S281 (owner decision 2026-11-05, Q1 retire-s281): Wave 7, 2026-11-04: steering paused runs meant reading run.json, report files and the grok fixture dir under ~/.local/state/ork by hand; ork status takes no run argument and prints a long wait reason and every denied command on one line; wanted the run state, whole pause reason or question with options, latest report per role, check results with logs, and denied commands as a count with the first few.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S298",
+      "title": "Report-shape pauses: name the real defect, feed it back to the role, and cap the retry loop",
+      "short_title": "Report-shape pauses: name the real defect, feed it back to the role, and cap the retry loop",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S288"
+      ],
+      "note_records": [
+        {
+          "id": "0218d077-bb5d-48c1-8fcf-926ed322d70a",
+          "kind": "decision",
+          "text": "**2026-11-05** — Owner decisions 2026-11-05 (interactive interview), all recommended options: Q1 refuse-plain-retry (plain ork retry refused at the cap, naming ork show RUN, --accept-shape, --again, ork stop RUN); Q2 never-by-default (accept without options only with --accept-shape after the cap); Q3 s288-first (S288 builds first and owns the parser and prompt change; S298 depends on S288); Q4 two (the second consecutive shape pause is capped).",
+          "created_at": "2026-11-05T18:11:47Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-05, prism-ui: run ork-20261105-173816-e0c2 (U32) paused on report shape three times in a row; each ork retry re-ran the reviewer (about 3 minutes, three rounds) and the next report failed the same check. Cause: an [owner] finding fails if any line besides Options, the options and Recommend sits under its tag (internal/engine/kinds.go:133-187 into internal/engine/report.go:182-240: 5 to 7 lines, Recommend last), and the error text says Options and Recommend are missing when they are present. Nothing counts or caps consecutive shape pauses. Related: S297 (show the report), S294, S275, S287, S288.",
+        "discovered_from": "",
         "parent": "",
         "cites": [],
         "key": "",
