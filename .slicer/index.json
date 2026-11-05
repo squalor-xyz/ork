@@ -14326,10 +14326,39 @@
       "id": "S278",
       "title": "Spec check: every slice has explicit, verifiable acceptance criteria",
       "short_title": "Spec check: every slice has explicit, verifiable acceptance criteria",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "fbcdf6a1-9b7e-4640-b498-775731edddc2",
+          "kind": "",
+          "text": "**2026-11-05** — Human checks at approval (S278):\n- later: [AFTER LAND] Start a wave on a slice whose Check says only \"works\" (a throwaway filing): the spec check asks one question with the three options and a proposed command, and a well-specified slice still shows `Ready`.",
+          "created_at": "2026-11-05T19:23:04Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "61624846-720e-4e39-ac43-a9608a6e30bc",
+          "kind": "",
+          "text": "**2026-11-05** — Verified spec-check readiness criteria, concrete owner-question wording, worked parser example, and matching design documentation; focused tests and mutation checks passed.",
+          "created_at": "2026-11-05T19:23:17Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -14347,7 +14376,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

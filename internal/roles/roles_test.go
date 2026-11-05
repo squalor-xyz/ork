@@ -606,6 +606,57 @@ func TestSpecCheckPrompt(t *testing.T) {
 	}
 }
 
+func TestSpecCheckPromptRequiresVerifiableCriteria(t *testing.T) {
+	p := prompts(t)["spec-check"]
+	for _, want := range []string{
+		"its `Failing tests` and `Check` each say how to tell it is done",
+		"a command the implementer's sandbox can run with an expected result",
+		"counts, exit status, output text or an observable file or state",
+		"a `[HUMAN CHECK]` item says what the owner looks at and what they should see",
+		"A slice is not ready when its criteria have any of these gaps",
+		"no command and no observable result",
+		"a command the implementer's sandbox cannot run",
+		"a failing test with no name or no stated assertion",
+	} {
+		t.Run(want, func(t *testing.T) {
+			if !has(p, want) {
+				t.Errorf("spec-check does not say %q", want)
+			}
+		})
+	}
+}
+
+func TestSpecCheckPromptProposesTheWording(t *testing.T) {
+	p := prompts(t)["spec-check"]
+	for _, want := range []string{
+		"ask one question for that slice, not one for each vague line",
+		"Offer exactly three options: `tighten`, `human check` and `as written`",
+		"Put a concrete proposed command and expected result in the `tighten` summary and recommend `tighten`",
+		"Omit the Decision key line: the answer belongs to this slice",
+	} {
+		t.Run(want, func(t *testing.T) {
+			if !has(p, want) {
+				t.Errorf("spec-check does not say %q", want)
+			}
+		})
+	}
+}
+
+func TestSpecCheckPromptDoesNotAskWhatTheCodeSettles(t *testing.T) {
+	p := prompts(t)["spec-check"]
+	for _, want := range []string{
+		"Read the slice, its Files and the project's `AGENTS.md` for the command and result first",
+		"When they make the command and result obvious (for example the project's test command), close the gap and call the slice ready",
+		"Ask about criteria only when the command or result cannot be read from them",
+	} {
+		t.Run(want, func(t *testing.T) {
+			if !has(p, want) {
+				t.Errorf("spec-check does not say %q", want)
+			}
+		})
+	}
+}
+
 func TestAcceptedContractsPhrase(t *testing.T) {
 	for _, tc := range []struct {
 		versions []int

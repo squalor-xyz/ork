@@ -216,8 +216,14 @@ ork (TUI)  ork status --json (CLI)
    comes after the lineup and the plan because the owner ticks and plans items
    first. The check is one read-only pass of the spec-check role over the
    whole batch: for each slice it answers ready, or asks the
-   owner structured questions (S111 shape, with an optional decision key). The
-   owner answers them in one sitting. ork appends an `Owner decisions (date)`
+   owner structured questions (S111 shape, with an optional decision key).
+   A ready slice's Failing tests name their assertions and its Check gives a
+   sandbox-runnable command and expected result, or a `[HUMAN CHECK]` saying what
+   the owner looks at and should see; criteria gaps that reading the slice, Files
+   and `AGENTS.md` cannot settle get one question per slice, proposing concrete
+   wording to tighten them, a human check, or acceptance as written, without a
+   decision key. The owner answers them in one sitting. ork appends an
+   `Owner decisions (date)`
    paragraph to the slice's Implement section with `slicer edit --append`, and
    files a question that has a decision key in adj the way a run's answer is
    filed (`owner.questions`, S28). The paragraph is also stored in the item's

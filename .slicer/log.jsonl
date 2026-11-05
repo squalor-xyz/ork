@@ -3363,3 +3363,11 @@
 {"when": "2026-11-05T18:11:47Z", "item": "S288", "action": "note", "from": "", "to": "", "note": "2026-11-05: Owner decision (interactive interview, S298 Q3 s", "by": "Jon Robbins"}
 {"when": "2026-11-05T18:12:04Z", "item": "S288", "action": "set", "from": "", "to": "", "note": "importance 1→3; urgency 1→3"}
 {"when": "2026-11-05T18:17:29Z", "item": "S278", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T18:18:53Z", "item": "S278", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T18:18:53Z", "item": "S278", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T18:18:53Z", "item": "S278", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-11-05T18:49:25Z", "item": "S278", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T18:49:25Z", "item": "S278", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T19:23:04Z", "item": "S278", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S278):", "by": "Jon R"}
+{"when": "2026-11-05T19:23:17Z", "item": "S278", "action": "note", "from": "", "to": "", "note": "Verified spec-check readiness criteria, concrete owner-quest", "by": "Jon R"}
+{"when": "2026-11-05T19:23:21Z", "item": "S278", "action": "status", "from": "started", "to": "done", "note": "Verified spec-check readiness criteria, concrete owner-question wording, worked parser example, and matching design documentation; focused tests and mutation checks passed.", "by": "Jon R"}

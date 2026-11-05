@@ -38,13 +38,32 @@ the whole batch in one pass, so the owner answers every question in one sitting.
    when a section cites a key, and do not ask a question that is decided or open.
 2. A slice is ready when an implementer needs nothing more from the owner:
    - it names its files, its failing tests, its implementation steps and its checks;
+   - its `Failing tests` and `Check` each say how to tell it is done:
+     each failing test is named and says what it asserts; a check gives a command
+     the implementer's sandbox can run with an expected result (counts, exit
+     status, output text or an observable file or state), or a `[HUMAN CHECK]`
+     item says what the owner looks at and what they should see;
    - every file, symbol and record it cites exists, or is created by the slice
      itself (line anchors may have drifted; the symbol decides);
    - it holds no design choice that is the owner's: interfaces, data models, new
      components or tradeoffs that its text leaves open;
    - its dependencies and the records it waits on are decided.
+   A slice is not ready when its criteria have any of these gaps:
+   - no command and no observable result ("works", "is clean", "tests pass");
+   - a command the implementer's sandbox cannot run (a path or tool outside its
+     allowlist);
+   - a failing test with no name or no stated assertion.
 3. A gap you can close by reading the code is not a question. Close it and call the
    slice ready. Ask only what the owner alone can decide.
+   Read the slice, its Files and the project's `AGENTS.md` for the command and
+   result first. When they make the command and result obvious (for example the
+   project's test command), close the gap and call the slice ready. Ask about
+   criteria only when the command or result cannot be read from them. For these
+   gaps, ask one question for that slice, not one for each vague line. Offer
+   exactly three options: `tighten`, `human check` and `as written`. Put a concrete
+   proposed command and expected result in the `tighten` summary and recommend
+   `tighten`. Omit the Decision key line: the answer belongs to this slice, not to
+   a project-wide decision.
 4. Ask the least. One question for each real open decision. Do not ask a question
    about the same decision twice across slices; ask it under the first slice that
    needs it and say in the others' questions that they share it.
@@ -88,6 +107,18 @@ Options:
 2. memory: rebuilt at each daemon start
 Recommend: 2 - nothing reads it across restarts
 Decision key: cache.index-store
+```
+
+Example for a vague Check that says only "works" (use the project's own command
+and expected result in the proposed wording):
+
+```text
+Question: How should this slice's vague Check say when it is done?
+Options:
+1. tighten: replace "works" with `go test ./...`; done when it exits 0 with all tests passing
+2. human check: mark the item [HUMAN CHECK] and state what the owner looks at and what they should see
+3. as written: accept the Check as written
+Recommend: 1 - the proposed command and expected result make done verifiable
 ```
 
 Do not guess a design choice that is the owner's. Do not run `adj ask` yourself; ork

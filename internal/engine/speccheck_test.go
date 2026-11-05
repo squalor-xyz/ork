@@ -14,6 +14,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/roles"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -283,6 +284,49 @@ Recommend: 2 - since
 	}
 	if strings.Contains(blocks[0].Text, "Two?") || strings.Contains(blocks[0].Text, "Some context") || !strings.Contains(blocks[0].Text, "Decision key: area.one") {
 		t.Errorf("raw text of block 0: %q", blocks[0].Text)
+	}
+}
+
+func TestSpecCheckCriteriaExampleBlockParses(t *testing.T) {
+	p, err := roles.Prompt("spec-check")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, report, _ := strings.Cut(p, "\n## Report\n")
+	var example string
+	for _, part := range strings.Split(report, "```text\n")[1:] {
+		block, _, _ := strings.Cut(part, "```")
+		if strings.Contains(block, "1. tighten:") {
+			example = block
+			break
+		}
+	}
+	if example == "" {
+		t.Fatal("spec-check report has no worked vague-Check question block")
+	}
+	blocks, err := ParseOwnerQuestions(example)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(blocks) != 1 {
+		t.Fatalf("got %d questions, want one", len(blocks))
+	}
+	q := blocks[0]
+	if q.Key != "" {
+		t.Errorf("slice criteria question has decision key %q", q.Key)
+	}
+	want := &OwnerQuestion{
+		Title: "How should this slice's vague Check say when it is done?",
+		Options: []Option{
+			{Label: "tighten", Summary: "replace \"works\" with `go test ./...`; done when it exits 0 with all tests passing"},
+			{Label: "human check", Summary: "mark the item [HUMAN CHECK] and state what the owner looks at and what they should see"},
+			{Label: "as written", Summary: "accept the Check as written"},
+		},
+		Recommend: 1,
+		Reason:    "the proposed command and expected result make done verifiable",
+	}
+	if !reflect.DeepEqual(q.Ask, want) {
+		t.Errorf("criteria question = %+v, want %+v", q.Ask, want)
 	}
 }
 
