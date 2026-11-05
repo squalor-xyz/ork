@@ -14313,7 +14313,7 @@
       "title": "Spec check: every slice has explicit, verifiable acceptance criteria",
       "short_title": "Spec check: every slice has explicit, verifiable acceptance criteria",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
