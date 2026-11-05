@@ -1,0 +1,1 @@
+permission required: Execute `slicer goals --json --lean && echo '---LIST---' && slicer list --json --lean` was not run, as a headless run cannot ask for approval

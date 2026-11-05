@@ -14412,7 +14412,7 @@
       "title": "Grok reviewer cancelled by a permission prompt: brief it, and fall back to the next row",
       "short_title": "Grok reviewer cancelled by a permission prompt: brief it, and fall back to the next row",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
