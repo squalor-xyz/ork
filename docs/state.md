@@ -175,6 +175,15 @@ merge each nonzero launch field over the registry default. These values
 apply to this run only and do not change the matrix or registry
 (`lineup.override-scope`).
 
+*Proposed (S277):* each generated role brief has a `## Done when` checklist,
+including resumed rounds. It is generated from the resolved permission mode and
+allowlist, the slice's sections, and round sections; it adds no run-record field.
+It states the role's report criteria and blocked-check handling. A finish brief
+names its ordered commands and sends a denied finish command to `## Owner needed`
+for the orchestrator. Other denied implementer checks belong in report item 6.
+Denied tracking is reviewer section (C) commentary or a gate "Deviation for the
+orchestrator" evidence line, never a finding (`roles.denied-tracking-step`).
+
 `decisions` is optional (S116, *proposed*). When the owner answered the item's
 spec check questions, it holds the `Owner decisions (date)` paragraph that was
 appended to the item's spec in the main checkout. The run's worktree lacks

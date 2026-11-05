@@ -158,3 +158,6 @@ Replace N and M with integers; put skipped or blocked tests under item 6, not on
 the Tests line. When you ran no tests, write the counts of what you ran and say why
 in item 6. Write the Tests line as item 4 and the heading as item 7; put the Owner
 needed body under its heading.
+
+Use the brief's `## Done when` section as the acceptance checklist for this
+round. It overrides nothing in the report parts above.

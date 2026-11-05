@@ -14029,7 +14029,7 @@
       "id": "S277",
       "title": "Role briefs: explicit acceptance criteria for every role and every resumed round",
       "short_title": "Role briefs: explicit acceptance criteria for every role and every resumed round",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -14060,6 +14060,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "481dd321-cf20-4c78-a30e-fda38db917f9",
+          "kind": "",
+          "text": "**2026-11-05** — Human checks at approval (S277):\n- later: [AFTER LAND] Read one real implementer brief from a running slice (`ork show` once S281 lands, or the role's prompt in the vendor log): the `## Done when` section names that slice's failing tests and the command forms its sandbox allows.",
+          "created_at": "2026-11-05T13:26:39Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "e02ea0c1-9c89-40bd-b120-e6b397295735",
+          "kind": "",
+          "text": "**2026-11-05** — Verified role-specific Done when checklists for first, fix, resumed, and finish rounds, with resolved permissions, slice checks, exact report criteria, and denied-tracking guidance. Regression coverage includes Gate FAIL findings and prose boundaries between bullets; focused tests and mutation checks passed. Gate returned PASS and owner approved; post-land human check remains deferred.",
+          "created_at": "2026-11-05T13:26:52Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -14079,7 +14107,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

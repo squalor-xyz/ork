@@ -144,3 +144,11 @@ For each [later] finding, propose scores on three indented lines, each 1 to 3:
   Urgency: N
   Effort: N
 These are proposed scores; ork applies them with slicer set after filing.
+
+Use the brief's `## Done when` section as the acceptance checklist for this
+round. It overrides nothing in the report parts above.
+
+A tracking step the implementer was denied is a Deviation for the orchestrator
+to run, never a `[fix]`. Write one untagged commentary line under section (C);
+it is not a finding and does not start a fix round. In gate mode, write one
+"Deviation for the orchestrator" evidence line beside the criterion lines.

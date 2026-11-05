@@ -3,6 +3,7 @@
 package engine
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -18,8 +19,9 @@ type EarlierReport struct{ Name, Text string }
 
 // BriefInput is what a brief is built from (docs/design.md, Roles).
 type BriefInput struct {
-	Finish       bool   // the finish step has no checks after its round
-	CheckCommand string // the project check command; empty means only slicer check
+	Allow        []string // resolved sandbox command forms, verbatim
+	Finish       bool     // the finish step has no checks after its round
+	CheckCommand string   // the project check command; empty means only slicer check
 	Role         string
 	Vendor       string   // the selected lineup vendor
 	UIPassSkills []string // skills advised only for a Claude UI pass
@@ -134,6 +136,7 @@ func BuildBrief(in BriefInput) (string, error) {
 			b.WriteString("`slicer check` after the round, outside your sandbox.\n\n")
 		}
 	}
+	b.WriteString(doneWhen(in))
 	for _, s := range in.Sections {
 		fmt.Fprintf(&b, "## %s\n\n%s\n\n", s.Title, strings.TrimSpace(s.Body))
 	}
@@ -144,4 +147,132 @@ func BuildBrief(in BriefInput) (string, error) {
 		}
 	}
 	return strings.TrimRight(b.String(), "\n") + "\n", nil
+}
+
+// doneWhen adds acceptance criteria without replacing any role's report format.
+func doneWhen(in BriefInput) string {
+	var items []string
+	add := func(text string) { items = append(items, strings.Join(strings.Fields(text), " ")) }
+	if in.Resumed {
+		add("First re-run git status and git diff and re-read every cited file before judging or changing anything.")
+	}
+	if in.ReadOnly || readOnlyRole(in.Role) {
+		add("You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.")
+	} else {
+		items = append(items, "Allowed forms, verbatim: "+strings.Join(in.Allow, "; ")+"; any other command is denied; no pipes, no cd, no env prefix unless an entry allows it.")
+	}
+	if in.Finish {
+		for _, section := range in.Sections {
+			if section.Title == "Finish step" {
+				for _, line := range strings.Split(section.Body, "\n") {
+					if strings.HasPrefix(line, "1. ") || strings.HasPrefix(line, "2. ") {
+						add("Run in order: " + line)
+					}
+				}
+			}
+		}
+		add("A denied finish command is not retried; report its verbatim command and denial under ## Owner needed as the orchestrator's to run (decision 93, engine.denials).")
+		add("End the report with the exact heading ## Owner needed, or none beneath it when no question is open. Do not commit.")
+	} else {
+		switch in.Role {
+		case RoleImplementer:
+			add("Complete the report parts in the prompt in their stated order; docs updated with code in the same diff; self-check concurrency and handle lifetime, docs and mutation evidence.")
+			add("Item 4 has the literal line Tests: N passed, M failed, with integer counts of tests actually run; nothing may follow the counts. End with the exact unnumbered heading ## Owner needed. Both lines stand alone; skipped tests go under item 6.")
+			add("A denied or impossible check goes under item 6 with the verbatim command and denial text; never a made-up zero. Try allowed command forms; ork re-runs the checks outside the sandbox. Sandbox-limited checks are not owner questions.")
+			sections := sliceChecklistSections(in.SliceJSON)
+			for _, heading := range []string{"Failing tests", "Check"} {
+				entries := checklistEntries(sections[heading])
+				if len(entries) == 0 {
+					add(heading + ": the slice lists none")
+				}
+				for _, entry := range entries {
+					if heading == "Failing tests" {
+						add(entry + ": red before the code, green after; mutation-check every new assertion.")
+					} else if !strings.Contains(entry, "HUMAN CHECK") {
+						add("Run or report blocked: " + entry)
+					}
+				}
+			}
+			for _, section := range in.Sections {
+				switch section.Title {
+				case "Review findings", "Gate FAIL", "Architect findings":
+				default:
+					continue
+				}
+				for _, line := range strings.Split(section.Body, "\n") {
+					line = strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(line), "- "))
+					if finding, ok := strings.CutPrefix(line, "[fix] "); ok {
+						add(finding + ": proving test or a stated reason it needs none; apply only this finding or explain with evidence why it is wrong.")
+					}
+				}
+			}
+		case RoleReviewer, RoleGate:
+			add("Each [fix] has file:line and a reproduction or a test; each [later] has proposed Importance, Urgency and Effort scores (1 to 3). Apply owner answers and keep findings within the slice.")
+			if in.Role == RoleReviewer {
+				add("A tracking step denied to the implementer is a Deviation for the orchestrator, never a [fix]: one untagged line under section (C), not a finding or a reason to start a fix round.")
+				add("Complete sections (A)-(D), marking findings CONFIRMED or PLAUSIBLE; end with the exact unnumbered heading ## Owner needed and questions or none. In gate mode use the gate's first line and one evidence line per criterion; put denied tracking in a Deviation for the orchestrator evidence line.")
+			} else {
+				add("Report first line exactly VERDICT: PASS or VERDICT: FAIL, with nothing else on that line; one evidence line per criterion. PASS requires resolved earlier blockers with proving tests, no [fix], no blocker owner finding, tests green, and docs match the code; otherwise FAIL.")
+				add("For a tracking step denied to the implementer, add one Deviation for the orchestrator evidence line beside the criterion lines, never a [fix]; it is not a finding and starts no fix round.")
+				add("Include the exact standalone line Tests: N passed, M failed with integer counts of tests actually run and nothing after the counts; end with the exact unnumbered heading ## Owner needed and questions or none.")
+			}
+			add("Report blocked checks with the verbatim command and denial text, apart from test counts; never claim an unrun check passed.")
+		case RoleArchitect:
+			add("Support placement, ownership, rollback, test-shape and direction findings with file:line and CONFIRMED or PLAUSIBLE; separate change-now from later. On second check, mark every earlier finding CONFIRMED-FIXED, PARTIAL or NOT-FIXED with evidence.")
+			add("End the review with blockers or no blockers, then the exact unnumbered heading ## Owner needed with questions or none; in gate mode use its first line and evidence per criterion.")
+			add("Name blocked checks and their verbatim command and denial text; do not claim unrun checks.")
+		case RoleUI:
+			add("Complete sections (A)-(D): findings name the view, size, visible defect, file:line, concrete edit and CONFIRMED or PLAUSIBLE. Produce the required renders or explain each blocked view; list the files produced.")
+			add("End with the exact unnumbered heading ## Owner needed and questions or none; give no verdict. Each [later] has proposed Importance, Urgency and Effort scores (1 to 3).")
+			add("Name checks or views you could not run or see, with the verbatim command and denial text when blocked.")
+		case RoleSpecCheck:
+			add("Give one ## Slice ID section per slice in order, with Ready or structured owner questions. Only an unresolved owner decision is a question; close code-readable gaps yourself and respect settled decisions.")
+			add("End with the exact unnumbered heading ## Owner needed and none beneath it; questions belong under their slices. Use that final section only for a whole-check blocker.")
+			add("State any unreadable slice or blocked read with its verbatim command and denial text; never invent readiness.")
+		}
+	}
+	// Keep even large slice sections below 40 physical lines without dropping items.
+	if len(items) > 36 {
+		items = append(items[:35], strings.Join(items[35:], " | "))
+	}
+	return "## Done when\n\n- [ ] " + strings.Join(items, "\n- [ ] ") + "\n\n"
+}
+
+func sliceChecklistSections(raw string) map[string]string {
+	var detail struct {
+		Slice struct {
+			Sections []struct{ Heading, Body string }
+		}
+	}
+	sections := make(map[string]string)
+	if json.Unmarshal([]byte(raw), &detail) == nil {
+		for _, section := range detail.Slice.Sections {
+			sections[section.Heading] = section.Body
+		}
+	}
+	return sections
+}
+
+// checklistEntries keeps continuation lines with their bullet, including commands
+// on indented lines. Unindented prose ends the current entry. Sections without
+// bullets remain one item rather than disappearing.
+func checklistEntries(body string) []string {
+	var entries []string
+	active := false
+	for _, line := range strings.Split(body, "\n") {
+		if strings.HasPrefix(line, "- ") {
+			entries = append(entries, strings.TrimPrefix(line, "- "))
+			active = true
+		} else if strings.TrimSpace(line) == "" {
+			continue
+		} else if active && (strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t")) {
+			entries[len(entries)-1] += " " + strings.TrimSpace(line)
+		} else {
+			active = false
+		}
+	}
+	if len(entries) == 0 && strings.TrimSpace(body) != "" {
+		entries = append(entries, body)
+	}
+	return entries
 }

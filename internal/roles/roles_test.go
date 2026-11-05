@@ -635,3 +635,14 @@ func TestGatePromptNoFixCriterionIsShort(t *testing.T) {
 		}
 	}
 }
+
+func TestPromptsPointAtDoneWhen(t *testing.T) {
+	for name, p := range prompts(t) {
+		if !strings.Contains(p, "brief's `## Done when` section") {
+			t.Errorf("%s lacks Done when pointer", name)
+		}
+		if !strings.Contains(p, "overrides nothing in the report parts") {
+			t.Errorf("%s lacks report precedence", name)
+		}
+	}
+}
