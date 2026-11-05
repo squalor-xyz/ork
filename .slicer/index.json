@@ -14411,10 +14411,39 @@
       "id": "S280",
       "title": "Grok reviewer cancelled by a permission prompt: brief it, and fall back to the next row",
       "short_title": "Grok reviewer cancelled by a permission prompt: brief it, and fall back to the next row",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "dba9c285-ed31-4bf7-9d4b-d0128866ee02",
+          "kind": "",
+          "text": "**2026-11-05** — Human checks at approval (S280):\n- later: [AFTER LAND] With Grok marked back (`ork vendor back grok`), the next wave's first Grok reviewer round either finishes its report or falls to the Claude row, and the run does not stop.",
+          "created_at": "2026-11-05T22:11:35Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "e4b57790-1857-470a-87a7-7383225d219f",
+          "kind": "",
+          "text": "**2026-11-05** — Gate PASS and owner approval: permission-cancelled Grok rounds retain finished reports or fall back to the next role row without marking Grok out. Grok read-only briefs name verified command forms, and spec-check briefs use each row's vendor. Focused tests and mutation checks passed; repository-wide checks inside the implementer sandbox were limited by socket permissions.",
+          "created_at": "2026-11-05T22:11:59Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -14432,7 +14461,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

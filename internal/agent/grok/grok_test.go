@@ -322,6 +322,121 @@ func TestGrokIncompleteOrFailedStreamIsNotOK(t *testing.T) {
 	}
 }
 
+func permissionCancelSpec(t *testing.T, prefix string) Spec {
+	t.Helper()
+	s := fake(t, prefix+out(t, "08-permission-cancelled"), false)
+	t.Setenv("ORK_GROK_STDERR", fixture(t, "08-permission-cancelled", "stderr"))
+	return s
+}
+
+func assistantText(text string) string {
+	b, _ := json.Marshal(map[string]any{"type": "assistant", "message": map[string]any{"content": []map[string]string{{"type": "text", "text": text}}}})
+	return string(b) + "\n"
+}
+
+const cancelReason = "grok: cancelled on a permission prompt: slicer goals --json --lean && echo '---LIST---' && slicer li"
+
+func TestGrokPermissionCancelIsAnErrorExit(t *testing.T) {
+	got, err := Run(context.Background(), permissionCancelSpec(t, ""))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Exit != ExitError {
+		t.Errorf("exit = %s, want error", got.Exit)
+	}
+	if got.Reason != cancelReason {
+		t.Errorf("reason = %q, want %q", got.Reason, cancelReason)
+	}
+	if got.ExitCode != 0 {
+		t.Errorf("exit code = %d, want 0", got.ExitCode)
+	}
+}
+
+func TestGrokPermissionCancelKeepsAFinishedReport(t *testing.T) {
+	report := "Full review.\n## Owner needed\nnone\n"
+	// Earlier messages and partial deltas must not replace the last complete text.
+	prefix := assistantText("Earlier\n## Owner needed\nnone\n") + assistantText(report) + `{"type":"stream_event","event":{"delta":{"type":"text_delta","text":"partial"}}}` + "\n"
+	got, err := Run(context.Background(), permissionCancelSpec(t, prefix))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Exit != ExitOK {
+		t.Errorf("exit = %s, want ok", got.Exit)
+	}
+	if got.Report != report {
+		t.Errorf("report = %q, want %q", got.Report, report)
+	}
+	if got.Reason != cancelReason {
+		t.Errorf("reason = %q, want %q", got.Reason, cancelReason)
+	}
+}
+
+func TestGrokPermissionCancelKeepsAReportFileToo(t *testing.T) {
+	for name, prefix := range map[string]string{"message and file": assistantText("Message\n## Owner needed\nnone\n"), "file only": ""} {
+		t.Run(name, func(t *testing.T) {
+			s := permissionCancelSpec(t, prefix)
+			s.ReportFile = filepath.Join(s.Dir, "report")
+			if err := os.WriteFile(s.ReportFile, []byte("file report"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			got, err := Run(context.Background(), s)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.Exit != ExitOK {
+				t.Errorf("exit = %s, want ok", got.Exit)
+			}
+			if got.Report != "file report" {
+				t.Errorf("report = %q, want file report", got.Report)
+			}
+		})
+	}
+}
+
+func TestGrokPermissionCancelWithoutAFinishedReportIsAnErrorExit(t *testing.T) {
+	for name, prefix := range map[string]string{
+		"commentary":       assistantText("I will check the diff"),
+		"tool only":        "",
+		"inline heading":   assistantText("Text mentions ## Owner needed inline"),
+		"partial only":     `{"type":"stream_event","event":{"delta":{"type":"text_delta","text":"## Owner needed\nnone"}}}` + "\n",
+		"later commentary": assistantText("Review\n## Owner needed\nnone") + assistantText("I will check more"),
+		"later empty text": assistantText("Review\n## Owner needed\nnone") + assistantText(""),
+	} {
+		t.Run(name, func(t *testing.T) {
+			got, err := Run(context.Background(), permissionCancelSpec(t, prefix))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.Exit != ExitError {
+				t.Errorf("exit = %s, want error", got.Exit)
+			}
+			if got.Report != "" {
+				t.Errorf("unfinished report = %q", got.Report)
+			}
+		})
+	}
+}
+
+func TestGrokOtherFailuresStayUnclassified(t *testing.T) {
+	for name, output := range map[string]string{
+		"bad model":            out(t, "06-bad-model"),
+		"no cancellation":      `{"type":"result","is_error":true,"result":"bad"}` + "\n",
+		"no permission prompt": out(t, "08-permission-cancelled"),
+	} {
+		t.Run(name, func(t *testing.T) {
+			s := fake(t, output, false)
+			if name == "no cancellation" {
+				t.Setenv("ORK_GROK_STDERR", fixture(t, "08-permission-cancelled", "stderr"))
+			}
+			got, err := Run(context.Background(), s)
+			if err != nil || got.Exit != ExitUnclassified || got.Report != "" {
+				t.Fatalf("exit=%s report=%q err=%v", got.Exit, got.Report, err)
+			}
+		})
+	}
+	TestGrokIncompleteOrFailedStreamIsNotOK(t)
+}
+
 func TestGrokCreditsTextOnlyCountsInAnErrorEvent(t *testing.T) {
 	text := "Your team x has either used all available credits or reached its monthly spending limit."
 	system := `{"type":"system","subtype":"init","session_id":"s"}` + "\n"

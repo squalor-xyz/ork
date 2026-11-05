@@ -213,6 +213,36 @@ func TestSpecCheckFallsBackOnRateLimit(t *testing.T) {
 	}
 }
 
+func TestSpecCheckBriefNamesTheRowsVendorLimits(t *testing.T) {
+	h := specHarness(t)
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if req.Vendor == "grok" {
+			return Result{Exit: ExitError}, nil
+		}
+		return Result{Exit: ExitOK, Report: specReport}, nil
+	}
+	cfg := specConfig(h, t)
+	cfg.Lineup = append([]runrec.LineupEntry{{Vendor: "grok", Model: "grok-4.7", Effort: "medium"}}, cfg.Lineup...)
+	if _, err := RunSpecCheck(context.Background(), h.deps, cfg); err != nil {
+		t.Fatal(err)
+	}
+	reqs := h.runner.requests()
+	if len(reqs) != 2 {
+		t.Fatalf("got %d requests", len(reqs))
+	}
+	for _, form := range []string{"git status --short", "git diff -- PATH", "git diff --check -- PATH"} {
+		if !strings.Contains(reqs[0].Brief, form) {
+			t.Errorf("Grok brief lacks %q", form)
+		}
+		if strings.Contains(reqs[1].Brief, form) {
+			t.Errorf("Claude brief got Grok limit %q", form)
+		}
+	}
+	if !strings.Contains(reqs[1].Brief, "You may only read the tree; no git or tracking writes.") {
+		t.Error("Claude lost read-only instruction")
+	}
+}
+
 func TestSpecCheckRefusesAnEmptyLineupAndNoItems(t *testing.T) {
 	h := specHarness(t)
 	cfg := specConfig(h, t)

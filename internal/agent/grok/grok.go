@@ -26,7 +26,7 @@ type Exit string
 
 const (
 	ExitOK           Exit = "ok"
-	ExitError        Exit = "error" // the process did not run to an exit: launch failure or cancel
+	ExitError        Exit = "error" // launch failure, cancellation or a permission prompt without a report
 	ExitUnclassified Exit = "unclassified"
 	ExitOutOfCredits Exit = "out_of_credits"
 )
@@ -98,6 +98,7 @@ func (u Usage) Total() int {
 type Event struct {
 	Type        string          `json:"type"`
 	Subtype     string          `json:"subtype"`
+	StopReason  string          `json:"stop_reason"`
 	SessionID   string          `json:"session_id"`
 	IsError     bool            `json:"is_error"`
 	Result      string          `json:"result"`
@@ -176,6 +177,8 @@ type stream struct {
 	raw                        bytes.Buffer
 	round                      Round
 	completed, failed, credits bool
+	cancelled                  bool
+	assistant                  string
 	onEvent                    func(Event)
 }
 
@@ -206,12 +209,30 @@ func (r *stream) line(line []byte) {
 		return
 	}
 	switch e.Type {
+	case "assistant":
+		var message struct {
+			Content []struct{ Type, Text string }
+		}
+		if json.Unmarshal(e.Message, &message) == nil {
+			var text strings.Builder
+			hasText := false
+			for _, block := range message.Content {
+				if block.Type == "text" {
+					hasText = true
+					text.WriteString(block.Text)
+				}
+			}
+			if hasText {
+				r.assistant = text.String()
+			}
+		}
 	case "system":
 		if e.Subtype == "init" && e.SessionID != "" {
 			r.round.Session = e.SessionID
 		}
 	case "result":
 		r.completed = true
+		r.cancelled = e.StopReason == "cancelled"
 		if e.SessionID != "" {
 			r.round.Session = e.SessionID
 		}
@@ -243,8 +264,8 @@ func (r *stream) fail(message string) {
 
 // Run owns the process group and kills descendants on cancellation and exit.
 // A process that ran and did not succeed is classified (out of credits,
-// else unclassified); launch and cancellation errors return an error with the
-// partial round, like the other adapters.
+// permission cancellation, else unclassified); launch and context cancellation
+// errors return an error with the partial round, like the other adapters.
 func Run(ctx context.Context, s Spec) (round Round, err error) {
 	args, err := s.Args()
 	if err != nil {
@@ -311,13 +332,30 @@ func Run(ctx context.Context, s Spec) (round Round, err error) {
 	round.Exit = ExitUnclassified
 	if out.credits {
 		round.Exit = ExitOutOfCredits
+	} else if out.cancelled && strings.Contains(stderr.String(), "permission required") {
+		round.Exit = ExitError
+		_, command, _ := strings.Cut(stderr.String(), "permission required: Execute `")
+		command, _, _ = strings.Cut(command, "`")
+		chars := []rune(command)
+		round.Reason = "grok: cancelled on a permission prompt: " + string(chars[:min(len(chars), 60)])
+		for _, line := range strings.Split(out.assistant, "\n") {
+			if strings.TrimSuffix(line, "\r") == "## Owner needed" {
+				round.Exit, round.Report = ExitOK, out.assistant
+				break
+			}
+		}
+		if s.ReportFile != "" {
+			if b, err := os.ReadFile(s.ReportFile); err == nil && strings.TrimSpace(string(b)) != "" {
+				round.Exit, round.Report = ExitOK, string(b)
+			}
+		}
 	} else if round.ExitCode == 0 && out.completed && !out.failed {
 		round.Exit = ExitOK
 	}
 	if round.Exit != ExitOK {
 		round.Report = ""
 	}
-	if s.ReportFile != "" {
+	if round.Exit == ExitOK && s.ReportFile != "" {
 		if b, err := os.ReadFile(s.ReportFile); err == nil && strings.TrimSpace(string(b)) != "" {
 			round.Report = string(b)
 		}

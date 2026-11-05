@@ -206,14 +206,6 @@ func runSpecCheckOnce(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCh
 		return nil, fmt.Errorf("temp directory: %w", err)
 	}
 	reportPath := filepath.Join(cfg.Dir, "spec-check.md")
-	brief, err := BuildBrief(BriefInput{
-		Role: RoleSpecCheck, ReadOnly: true, SliceID: strings.Join(cfg.Items, ", "), Worktree: root, TempDir: tempDir, ReportPath: reportPath,
-		SliceJSON: "[" + strings.Join(raws, ",") + "]", EnvLines: cfg.Project.EnvironmentLines,
-		Sections: []BriefSection{{Title: "Spec check", Body: "Check these slices in one pass: " + strings.Join(cfg.Items, ", ") + ". Report one `## Slice ID` section for each, in this order. The project checkout is your working directory; you may not change it."}},
-	})
-	if err != nil {
-		return nil, err
-	}
 	before, err := gitStatusAt(ctx, d, root)
 	if err != nil {
 		return nil, fmt.Errorf("read-only fingerprint: %w", err)
@@ -229,6 +221,14 @@ func runSpecCheckOnce(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCh
 		}
 		if err := os.Remove(reportPath); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return nil, fmt.Errorf("old report: %w", err)
+		}
+		brief, err := BuildBrief(BriefInput{
+			Role: RoleSpecCheck, Vendor: entry.Vendor, ReadOnly: true, SliceID: strings.Join(cfg.Items, ", "), Worktree: root, TempDir: tempDir, ReportPath: reportPath,
+			SliceJSON: "[" + strings.Join(raws, ",") + "]", EnvLines: cfg.Project.EnvironmentLines,
+			Sections: []BriefSection{{Title: "Spec check", Body: "Check these slices in one pass: " + strings.Join(cfg.Items, ", ") + ". Report one `## Slice ID` section for each, in this order. The project checkout is your working directory; you may not change it."}},
+		})
+		if err != nil {
+			return nil, err
 		}
 
 		stepID := ""

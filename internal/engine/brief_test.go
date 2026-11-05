@@ -433,6 +433,48 @@ func TestEveryRoleBriefHasADoneWhenSection(t *testing.T) {
 	}
 }
 
+func TestGrokReadOnlyDoneWhenNamesTheFormsThatRun(t *testing.T) {
+	for _, role := range []string{RoleReviewer, RoleGate, RoleArchitect, RoleUI, RoleSpecCheck} {
+		t.Run(role, func(t *testing.T) {
+			in := baseBrief()
+			in.Role, in.Vendor = role, "grok"
+			in.Allow = []string{"Bash(unverified *)"}
+			requireChecklistText(t, in, "git status --short", "git diff -- PATH", "git diff --check -- PATH", "read_file", "grep", "list_dir", "one command per call", "&&", ";", "pipe", "echo", "redirect", "python3 -c", "needs approval ends the run", "loses the report")
+			got := checklist(t, in)
+			if !strings.Contains(got, "Use one command per call. Do not use &&, ;, a pipe, echo, a redirect or python3 -c.") {
+				t.Error("Grok lacks the single-command restrictions")
+			}
+			if strings.Contains(got, "Bash(") || strings.Contains(got, "Allowed forms") {
+				t.Errorf("Grok got Allow entries: %s", got)
+			}
+		})
+	}
+}
+
+func TestClaudeAndCodexReadOnlyDoneWhenIsUnchanged(t *testing.T) {
+	wantByRole := map[string]string{
+		RoleReviewer:  "- [ ] You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.\n- [ ] Each [fix] has file:line and a reproduction or a test; each [later] has proposed Importance, Urgency and Effort scores (1 to 3). Apply owner answers and keep findings within the slice.\n- [ ] A tracking step denied to the implementer is a Deviation for the orchestrator, never a [fix]: one untagged line under section (C), not a finding or a reason to start a fix round.\n- [ ] Complete sections (A)-(D), marking findings CONFIRMED or PLAUSIBLE; end with the exact unnumbered heading ## Owner needed and questions or none. In gate mode use the gate's first line and one evidence line per criterion; put denied tracking in a Deviation for the orchestrator evidence line.\n- [ ] Report blocked checks with the verbatim command and denial text, apart from test counts; never claim an unrun check passed.\n",
+		RoleGate:      "- [ ] You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.\n- [ ] Each [fix] has file:line and a reproduction or a test; each [later] has proposed Importance, Urgency and Effort scores (1 to 3). Apply owner answers and keep findings within the slice.\n- [ ] Report first line exactly VERDICT: PASS or VERDICT: FAIL, with nothing else on that line; one evidence line per criterion. PASS requires resolved earlier blockers with proving tests, no [fix], no blocker owner finding, tests green, and docs match the code; otherwise FAIL.\n- [ ] For a tracking step denied to the implementer, add one Deviation for the orchestrator evidence line beside the criterion lines, never a [fix]; it is not a finding and starts no fix round.\n- [ ] Include the exact standalone line Tests: N passed, M failed with integer counts of tests actually run and nothing after the counts; end with the exact unnumbered heading ## Owner needed and questions or none.\n- [ ] Report blocked checks with the verbatim command and denial text, apart from test counts; never claim an unrun check passed.\n",
+		RoleArchitect: "- [ ] You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.\n- [ ] Support placement, ownership, rollback, test-shape and direction findings with file:line and CONFIRMED or PLAUSIBLE; separate change-now from later. On second check, mark every earlier finding CONFIRMED-FIXED, PARTIAL or NOT-FIXED with evidence.\n- [ ] End the review with blockers or no blockers, then the exact unnumbered heading ## Owner needed with questions or none; in gate mode use its first line and evidence per criterion.\n- [ ] Name blocked checks and their verbatim command and denial text; do not claim unrun checks.\n",
+		RoleUI:        "- [ ] You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.\n- [ ] Complete sections (A)-(D): findings name the view, size, visible defect, file:line, concrete edit and CONFIRMED or PLAUSIBLE. Produce the required renders or explain each blocked view; list the files produced.\n- [ ] End with the exact unnumbered heading ## Owner needed and questions or none; give no verdict. Each [later] has proposed Importance, Urgency and Effort scores (1 to 3).\n- [ ] Name checks or views you could not run or see, with the verbatim command and denial text when blocked.\n",
+		RoleSpecCheck: "- [ ] You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.\n- [ ] Give one ## Slice ID section per slice in order, with Ready or structured owner questions. Only an unresolved owner decision is a question; close code-readable gaps yourself and respect settled decisions.\n- [ ] End with the exact unnumbered heading ## Owner needed and none beneath it; questions belong under their slices. Use that final section only for a whole-check blocker.\n- [ ] State any unreadable slice or blocked read with its verbatim command and denial text; never invent readiness.\n",
+	}
+	for _, vendor := range []string{"claude", "codex"} {
+		for _, role := range []string{RoleReviewer, RoleGate, RoleArchitect, RoleUI, RoleSpecCheck} {
+			in := baseBrief()
+			in.Role, in.Vendor = role, vendor
+			got := checklist(t, in)
+			want := wantByRole[role]
+			if got != want {
+				t.Errorf("%s %s checklist changed", vendor, role)
+			}
+			if !strings.HasPrefix(got, "- [ ] You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.\n") {
+				t.Errorf("read-only instruction changed: %s", got)
+			}
+		}
+	}
+}
+
 func TestImplementerDoneWhenNamesTheExactReportLines(t *testing.T) {
 	requireChecklistText(t, baseBrief(), "Tests: N passed, M failed", "## Owner needed", "nothing may follow the counts", "skipped tests go under item 6", "report parts in the prompt", "docs")
 }

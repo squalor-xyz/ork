@@ -158,6 +158,11 @@ func doneWhen(in BriefInput) string {
 	}
 	if in.ReadOnly || readOnlyRole(in.Role) {
 		add("You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.")
+		if in.Vendor == "grok" {
+			add("Grok plan mode: the fixtures show git status --short, git diff -- PATH and git diff --check -- PATH running, plus the built-in file tools read_file, grep and list_dir. rg, slicer and test commands remain unverified.")
+			add("Use one command per call. Do not use &&, ;, a pipe, echo, a redirect or python3 -c.")
+			add("A command that needs approval ends the run and loses the report unless a finished report was already produced. Do not issue one. Give the complete report as your final message.")
+		}
 	} else {
 		items = append(items, "Allowed forms, verbatim: "+strings.Join(in.Allow, "; ")+"; any other command is denied; no pipes, no cd, no env prefix unless an entry allows it.")
 	}

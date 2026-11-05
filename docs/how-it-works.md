@@ -107,8 +107,20 @@ ask for approval. Plan mode wrote nothing in the one edit probe. The owner
 ruled out `bypassPermissions` and `--always-approve` on 3 November 2026.
 Modes that would skip the prompt were not measured, so this is ork's rule
 on those probes and that instruction, not a measured limit of every
-headless mode (`docs/design.md:897`). Whether plan mode can run `git diff`
-or the tests is unverified there too.
+headless mode. Wave 7 and 8 fixtures show single `git status --short`,
+`git diff -- PATH` and `git diff --check -- PATH` commands running, plus
+`read_file`, `grep` and `list_dir`. `rg`, `slicer` and tests remain unverified.
+Grok read-only briefs name those verified forms and require one command per
+call, without compound commands, echo, redirects or `python3 -c`.
+
+*Proposed* (S280): a cancelled stream result plus stderr `permission required`
+is an error exit. The next role row takes the same round without marking
+Grok out. If a non-empty report file exists, ork keeps it instead. Otherwise
+it keeps the last complete assistant text only when it contains the exact
+line `## Owner needed`; partial deltas and tool-only messages do not replace
+that text. A retained report returns OK for the normal report shape check.
+The reason still names the refused command, truncated to 60 characters.
+Spec checks build each row's brief with that row's vendor limits.
 
 Fallback runs when a role exits rate-limited or in error, on the next row
 of that role's chain. The gate's chain is the reviewer's.

@@ -3378,3 +3378,19 @@
 {"when": "2026-11-05T20:44:46Z", "item": "S280", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-05T20:59:47Z", "item": "S280", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-05T20:59:47Z", "item": "S280", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-05T21:01:43Z", "item": "S280", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-11-05T21:01:59Z", "item": "S280", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T21:01:59Z", "item": "S280", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T21:09:20Z", "item": "S280", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T21:09:21Z", "item": "S280", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T21:15:26Z", "item": "S280", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T21:15:26Z", "item": "S280", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T21:36:53Z", "item": "S280", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T21:36:53Z", "item": "S280", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T21:41:01Z", "item": "S280", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T21:41:02Z", "item": "S280", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T22:00:38Z", "item": "S280", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-05T22:00:38Z", "item": "S280", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-05T22:11:35Z", "item": "S280", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S280):", "by": "Jon R"}
+{"when": "2026-11-05T22:11:59Z", "item": "S280", "action": "note", "from": "", "to": "", "note": "Gate PASS and owner approval: permission-cancelled Grok roun", "by": "Jon R"}
+{"when": "2026-11-05T22:12:04Z", "item": "S280", "action": "status", "from": "started", "to": "done", "note": "Gate PASS and owner approval: permission-cancelled Grok rounds retain finished reports or fall back to the next role row without marking Grok out. Grok read-only briefs name verified command forms, and spec-check briefs use each row's vendor. Focused tests and mutation checks passed; repository-wide checks inside the implementer sandbox were limited by socket permissions.", "by": "Jon R"}

@@ -44,6 +44,42 @@ func TestRunDirectoriesAre0700(t *testing.T) {
 	}
 }
 
+func TestPermissionCancelledGrokReviewerFallsBackToTheNextRow(t *testing.T) {
+	h := newHarness(t)
+	h.deps.Vendors = NewVendors(nil).WithClock(h.deps.Now)
+	h.cfg.Lineup[RoleReviewer] = append([]runrec.LineupEntry{{Vendor: "grok", Model: "grok-4.7", Effort: "medium"}}, h.cfg.Lineup[RoleReviewer]...)
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if req.Vendor == "grok" {
+			return Result{Exit: ExitError, Reason: "grok: cancelled on a permission prompt: refused command"}, nil
+		}
+		return defaultResult(req), nil
+	}
+	rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
+	reqs := shapeRequests(h, RoleReviewer)
+	if len(reqs) != 2 {
+		t.Fatalf("reviewer requests = %d, want 2", len(reqs))
+	}
+	if reqs[0].Vendor != "grok" || reqs[1].Vendor != "claude" || reqs[0].Round != reqs[1].Round {
+		t.Errorf("fallback requests = %+v", reqs)
+	}
+	if h.deps.Vendors.IsOut("grok") {
+		t.Error("permission cancellation marked Grok out")
+	}
+	foundReport := false
+	for _, role := range rec.Roles {
+		if role.Role == RoleReviewer && role.Vendor == "claude" {
+			foundReport = true
+			b, err := os.ReadFile(filepath.Join(h.store.RunDir(rec.ID), role.Report))
+			if err != nil || string(b) != defaultResult(reqs[1]).Report {
+				t.Errorf("fallback report = %q, err=%v", b, err)
+			}
+		}
+	}
+	if !foundReport {
+		t.Fatal("no Claude reviewer report recorded")
+	}
+}
+
 func TestSpecCheckTempDirectoryIs0700(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("requires Unix modes")
