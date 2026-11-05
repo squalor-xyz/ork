@@ -1,0 +1,41 @@
+{
+  "id": "S278",
+  "title": "Spec check: every slice has explicit, verifiable acceptance criteria",
+  "lead": [
+    "*Proposed.* The spec check prompt counts a slice as ready only when its `Failing tests` and `Check` sections each say how to tell the work is done: a command the implementer's sandbox can run, with the result that means done. A slice that does not gets one owner question, with a concrete wording proposed, before the wave starts. This changes the spec-check prompt and its tests only."
+  ],
+  "depends_note": null,
+  "findings_note": "Owner 2026-11-03: slicer and ork should both encourage well defined acceptance criteria for every slice. Fact: ork prompts/spec-check.md asks only that a slice \"names its checks\" (line 40), so a vague Check passes. Needed: the spec check flags a slice whose Check or Failing tests do not say how to tell it is done (no command to run, no expected output or observable result, or a check the sandbox cannot run) and asks the owner to tighten it before the wave starts. Related: S277 (role briefs), slicer S102 (empty Check blocks next).",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner 2026-11-03: slicer and ork should both encourage well defined acceptance criteria for every slice. Fact at HEAD of main (read 2026-11-05): `internal/roles/prompts/spec-check.md:38-41` makes a slice ready when it \"names its files, its failing tests, its implementation steps and its checks\". A Check that says only \"tests pass\" or \"works as described\" names a check and passes. The implementer then guesses what done means, and the reviewer and gate judge a bar nobody wrote down (wave 7, S277's Why). The slicer side is slicer's own (slicer S102, empty Check blocks the next step); this slice is the ork side and does not touch slicer.\n\nProposed design (the owner asked for \"flag it and ask the owner to tighten it\"; the option set below is proposed until the owner says otherwise):\n\n- A check is verifiable when it is a command with an expected result (counts, exit status, output text or a file or state that can be observed), or a `[HUMAN CHECK]` item that says what the owner looks at and what they should see.\n- A check is not verifiable when it has no command and no observable result (\"works\", \"is clean\", \"tests pass\" with no command), or its command cannot run in the implementer's sandbox (it needs a path or tool outside the allowlist; `DefaultImplementerAllowlist`, `internal/engine/perm.go:23-35`).\n- Failing tests are verifiable when each is named and says what it asserts."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/roles/prompts/spec-check.md:38-48` (the readiness list under step 2: add the criteria rule; step 4 and step 5 stay as they are) and the report section (one worked question block for a vague Check).\n- `internal/roles/roles_test.go` (new tests beside `TestSpecCheckPrompt` at `:583`).\n- `internal/engine/speccheck_test.go` (one test beside `TestParseOwnerQuestionsReadsEveryBlock` at `:258`).\n- `docs/design.md` (the spec check paragraph near `:214`: one sentence on the criteria rule)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "In `internal/roles/roles_test.go`:\n\n- `TestSpecCheckPromptRequiresVerifiableCriteria`: the spec-check prompt says a slice is not ready when its Check or Failing tests cannot tell done from not done, names the three cases (no command and no observable result; a command the sandbox cannot run; a failing test with no stated assertion), and says a `[HUMAN CHECK]` item counts when it says what the owner looks at and what they should see. Fails first: step 2 only says the slice \"names\" its checks.\n- `TestSpecCheckPromptProposesTheWording`: the prompt says the question for a vague Check carries a concrete proposed command and expected result in its recommended option, and shows exactly three options: tighten with the proposed wording, mark the item `[HUMAN CHECK]`, accept it as written. Fails first: no such text.\n- `TestSpecCheckPromptDoesNotAskWhatTheCodeSettles`: the prompt says to close the gap by reading the code and call the slice ready when the command is obvious from the Files and the project's `AGENTS.md` (for example the project's test command), and to ask only when no command or result can be read from them. Fails first: the new rule is absent, so this guard is absent.\n- The existing `TestSpecCheckPrompt` stays green (no `VERDICT`, `[owner]` or `[fix]`, ASCII only).\n\nIn `internal/engine/speccheck_test.go`:\n\n- `TestSpecCheckCriteriaExampleBlockParses`: take the worked vague-Check question block from the spec-check prompt and `ParseOwnerQuestions` returns one question with three options, a recommendation and a decision key. Fails first: the prompt has no such block."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Tests first from the failing list; confirm each fails for the reason given.\n2. In `spec-check.md` step 2, add a bullet: its `Failing tests` and `Check` each say how to tell it is done, as defined above. Add the three not-verifiable cases as a short list. Keep the existing bullets.\n3. Add a short rule: when a slice fails this bullet and the command or result cannot be read from the slice, its Files or `AGENTS.md`, ask one question for that slice (not one for each vague line). Name the options `tighten`, `human check` and `as written`; put proposed command and expected result text in the `tighten` summary; recommend `tighten`. Omit the Decision key line: the answer belongs to this slice, not to a project-wide decision.\n4. Add the worked question block to the report section, in the same strict shape as the existing example.\n5. Do not change `CheckReport`, `ParseOwnerQuestions` or the engine's spec-check flow (`RecordSpecAnswers` already appends an answer to the slice's Implement section).\n6. Keep the prompt ASCII and the placeholder list as they are (`TestPlaceholders`, `TestPromptsFirstLineNamesTheirContract` stay green).\n7. Update `docs/design.md` in the same diff."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go -C WORKTREE test -count=1 ./internal/roles ./internal/engine -run 'SpecCheck|ParseOwnerQuestions|Placeholders|FirstLine'`: all pass.\n- `go -C WORKTREE test -race -count=1 ./...`, `go -C WORKTREE vet ./...`, `gofmt -l WORKTREE` (empty), `slicer check`, `adj lint`.\n- `rg -n 'HUMAN CHECK' internal/roles/prompts/spec-check.md` lists the new bullet and the option text.\n- Mutation: remove the new bullet from `spec-check.md`; `TestSpecCheckPromptRequiresVerifiableCriteria` goes red. Remove the worked block; `TestSpecCheckCriteriaExampleBlockParses` goes red.\n- [HUMAN CHECK] [AFTER LAND] Start a wave on a slice whose Check says only \"works\" (a throwaway filing): the spec check asks one question with the three options and a proposed command, and a well-specified slice still shows `Ready`."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"Spec check asks for verifiable acceptance criteria\"."
+    }
+  ],
+  "notes": []
+}

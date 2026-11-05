@@ -3168,6 +3168,7 @@
 {"when": "2026-11-04T20:02:39Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-04T20:02:39Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Git"}
 {"when": "2026-11-04T20:02:39Z", "item": "S243", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-04 (ork S287 Q2): part (b) dropped because S27", "by": "Jon Robbins"}
+{"when": "2026-11-05T16:59:53Z", "item": "S278", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-05T15:51:13Z", "item": "S289", "action": "note", "from": "", "to": "", "note": "Correction: the slicer item for the slice-JSON merge driver ", "by": "Jon Robbins"}
 {"when": "2026-11-05T16:14:56Z", "item": "S293", "action": "add", "from": "", "to": "open", "note": "Check command: run it from the project's own folder when the project lives in a subfolder of its repo (monorepo)"}
 {"when": "2026-11-05T17:38:55Z", "item": "S294", "action": "add", "from": "", "to": "open", "note": "Fix rounds: stop and ask when they make no progress, and lower the cap to 4"}
