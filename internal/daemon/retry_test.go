@@ -131,6 +131,28 @@ func TestRunRetryResumesPausedStep(t *testing.T) {
 	}
 }
 
+func TestRunRetryGrantsRoundsAtTheRoundPause(t *testing.T) {
+	d, _, _ := retryDaemonWith(t, runrec.StatePaused, &runrec.Pending{Kind: "rounds", State: runrec.StateImplement}, retryRunner, func(r *runrec.Record) { r.Round = 3 })
+	b := request(t, d, "run.retry", `{"run":"r1","rounds":4}`)
+	var r runrec.Record
+	if err := json.Unmarshal(b, &r); err != nil {
+		t.Fatal(err)
+	}
+	if r.Round != 4 || r.RoundLimit != 7 || r.State != runrec.StateAwaitingApproval {
+		t.Fatalf("grant not carried: %s", b)
+	}
+}
+
+func TestStatusShowsTheRoundPauseAndItsNextStep(t *testing.T) {
+	d, _ := retryDaemon(t, runrec.StatePaused, &runrec.Pending{Kind: "rounds", State: runrec.StateImplement, Reason: "checks failed; grant more rounds, change the check, or stop"})
+	b := request(t, d, "status", `{"project":"p"}`)
+	for _, want := range []string{`"pending":"rounds"`, "checks failed; grant more rounds, change the check, or stop; next: ork retry r1 [--rounds N] or ork stop r1"} {
+		if !strings.Contains(string(b), want) {
+			t.Fatalf("status lacks %q: %s", want, b)
+		}
+	}
+}
+
 func TestRunRetryUnknownRun(t *testing.T) {
 	d, _, _ := runDaemon(t, nil)
 	_, err := d.handle(context.Background(), "run.retry", json.RawMessage(`{"run":"missing"}`))

@@ -265,9 +265,16 @@ started. They are not a copy of slicer state. The ledger link is
 `committed` and `stopped` are final. `queued` is not final: the run waits for
 a slot under the caps and has no process and no writes. `round` counts implementer rounds and
 `fails` counts gate FAILs. `reason` says why a slice is stopped or paused.
-`pending` (kind `question`, `shape`, `lost`, `interrupted`, `budget` or `error`, with
+`pending` (kind `question`, `shape`, `lost`, `interrupted`, `budget`, `rounds` or `error`, with
 the state and role to re-enter, the reason, and for a question the optional adj
 `key`, the text and the answer) is set while a slice is paused.
+*Proposed (S294):* a `rounds` pause re-enters `implement` with `feedback`
+preserved. Retry advances `round` and sets the durable `round_limit` to the
+ended round plus the granted count (default 2). `roles[].tree_sha256` hashes
+the implementer's tracked diff against HEAD, including staged and binary
+changes, followed by untracked names. `checks[].log_sha256` hashes the bytes
+of the saved check log. Both adjacent hashes must be present and equal for
+the immediate no-progress pause. Older records without hashes remain readable.
 *Proposed (S275):* `pending.automatic_shape_retry: true` also allows a shape
 context while the run stays in its active state. It schedules one automatic
 retry of the same role and round, without an owner note. A successful retry

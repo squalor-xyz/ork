@@ -416,7 +416,7 @@ func TestGateFailIsNotedAndStartsAFixRound(t *testing.T) {
 	}
 }
 
-func TestAThirdGateFailStopsTheSlice(t *testing.T) {
+func TestGateFailsStillStopAtThree(t *testing.T) {
 	h := newHarness(t)
 	h.runner.script = func(req Request, n int) (Result, error) {
 		if req.Role == RoleGate {
@@ -456,14 +456,194 @@ func TestTwoFailsThenPassIsNotAStop(t *testing.T) {
 	}
 }
 
-func TestTheRoundLimitStopsARedLoop(t *testing.T) {
-	h := newHarness(t)
+func TestTheRoundLimitPausesARedLoop(t *testing.T) {
+	h := redLoop(t, true, true)
 	h.deps.MaxRounds = 3
-	h.checks.outputs = []CheckOutput{{OK: false, Output: "red\n"}}
 	e := h.start()
-	rec := requireState(t, e, runrec.StateStopped)
+	rec := requireState(t, e, runrec.StatePaused)
 	if got := h.runner.roles(); len(got) != 3 || !strings.Contains(rec.Reason, "round") {
 		t.Fatalf("roles %v, reason %q", got, rec.Reason)
+	}
+}
+
+// redLoop scripts tracked content and check output independently. The diff
+// changes while status remains the same, as for an already modified file.
+func redLoop(t *testing.T, changedTree, changedOutput bool) *harness {
+	t.Helper()
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			var seq []clitest.Reply
+			for n := 1; n <= 12; n++ {
+				content := 1
+				if changedTree {
+					content = n
+				}
+				seq = append(seq, clitest.Reply{Stdout: fmt.Sprintf("diff --git a/a.go b/a.go\n-old\n+value%d\n", content)})
+			}
+			return []clitest.Route{
+				{Tool: "git", Args: []string{"-C", W, "diff", "HEAD", "--binary", "--no-ext-diff"}, Seq: seq},
+				{Tool: "git", Args: []string{"-C", W, "ls-files", "--others", "--exclude-standard", "-z"}},
+			}
+		}
+	})
+	for n := 1; n <= 12; n++ {
+		output := "broken\n"
+		if changedOutput {
+			output = fmt.Sprintf("broken %d\n", n)
+		}
+		h.checks.outputs = append(h.checks.outputs, CheckOutput{OK: false, Output: output})
+	}
+	return h
+}
+
+func requireRoundsPause(t *testing.T, e *Engine, n int) runrec.Record {
+	t.Helper()
+	r := requireState(t, e, runrec.StatePaused)
+	if r.Round != n || r.Pending == nil || r.Pending.Kind != "rounds" || r.Pending.State != runrec.StateImplement || r.Feedback == nil || r.Feedback.Kind != "checks" {
+		t.Fatalf("round pause: round=%d pending=%+v feedback=%+v", r.Round, r.Pending, r.Feedback)
+	}
+	return r
+}
+
+func TestARedLoopPausesAfterRoundThree(t *testing.T) {
+	h := redLoop(t, true, true)
+	e := h.start()
+	r := requireRoundsPause(t, e, 3)
+	if len(h.runner.roles()) != 3 {
+		t.Fatalf("roles %v", h.runner.roles())
+	}
+	for _, text := range []string{"round 3 ended red", "checks failed (broken 3)", "more rounds (2 by default)", "change the check", "or stop"} {
+		if !strings.Contains(r.Pending.Reason, text) {
+			t.Errorf("reason lacks %q: %s", text, r.Pending.Reason)
+		}
+	}
+	if strings.Contains(r.Pending.Reason, "ork ") {
+		t.Errorf("pause reason contains a CLI command: %s", r.Pending.Reason)
+	}
+	if strings.Contains(r.Pending.Reason, "\n") {
+		t.Fatal("multiline pause reason")
+	}
+}
+
+func TestRoundPauseNamesTheFailedCheckSection(t *testing.T) {
+	for _, tc := range []struct {
+		name                           string
+		commandOK, slicerOK, noCommand bool
+		want                           string
+	}{
+		{"command", false, true, false, "MSB1009: Project file does not exist"},
+		{"both", false, false, false, "MSB1009: Project file does not exist"},
+		{"slicer", true, false, false, `"tracking render is stale"`},
+		{"slicer only", true, false, true, `"tracking render is stale"`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := newHarness(t, func(o *harnessOpts) {
+				if tc.noCommand {
+					o.project = func(p *registry.Project) { p.CheckCommand = "" }
+				}
+				if !tc.slicerOK {
+					o.routesFor = func(P, W string) []clitest.Route {
+						return []clitest.Route{{Tool: "slicer", Args: []string{"check", "--json", "--root", W}, Exit: 1,
+							Stdout: "{\n  \"ok\": false,\n  \"problems\": [\n    \"tracking render is stale\"\n  ]\n}\n\n"}}
+					}
+				}
+			})
+			h.deps.MaxRounds = 1
+			h.checks.outputs = []CheckOutput{{OK: tc.commandOK, Output: "starting\nMSB1009: Project file does not exist\n\n"}}
+			r := requireRoundsPause(t, h.start(), 1)
+			want := "round 1 ended red: checks failed (" + tc.want + ");"
+			if !strings.HasPrefix(r.Pending.Reason, want) {
+				t.Fatalf("failure summary: %s; want prefix %s", r.Pending.Reason, want)
+			}
+		})
+	}
+}
+
+func TestRedFeedbackPausesAtRoundThree(t *testing.T) {
+	for _, tc := range []struct{ kind, step string }{{"checks", "checks"}, {"findings", "review"}, {"architect", "architect"}, {"fail", "gate"}} {
+		t.Run(tc.kind, func(t *testing.T) {
+			h := newHarness(t)
+			e, err := New(context.Background(), h.deps, h.cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := e.run.Update(func(r *runrec.Record) { r.Round = 3; r.State = tc.step }); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(e.run.Dir(), "feedback.log"), []byte("failure\n"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			if err := e.bumpRound(context.Background(), runrec.Feedback{Kind: tc.kind, File: "feedback.log"}); err != nil {
+				t.Fatal(err)
+			}
+			r := requireState(t, e, runrec.StatePaused)
+			if r.Pending == nil || r.Pending.Kind != "rounds" || r.Pending.State != runrec.StateImplement || r.Round != 3 || r.Feedback == nil || r.Feedback.Kind != tc.kind {
+				t.Fatalf("pause lost feedback: %+v", r)
+			}
+			if !strings.HasPrefix(r.Pending.Reason, "round 3 ended red: "+tc.step+" failed (failure);") {
+				t.Fatal(r.Pending.Reason)
+			}
+		})
+	}
+}
+
+func TestARedLoopNeverStopsSilently(t *testing.T) {
+	h := redLoop(t, true, true)
+	e := h.start()
+	requireRoundsPause(t, e, 3)
+	if err := e.Run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if len(h.runner.roles()) != 3 {
+		t.Fatal("round started without owner retry")
+	}
+	if err := e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	requireRoundsPause(t, e, 5)
+	if len(h.runner.roles()) != 5 {
+		t.Fatalf("roles %v", h.runner.roles())
+	}
+}
+
+func TestNoChangeAndTheSameCheckOutputPausesAtOnce(t *testing.T) {
+	h := redLoop(t, false, false)
+	r := requireRoundsPause(t, h.start(), 2)
+	if !strings.Contains(r.Pending.Reason, "no change in the worktree and the same check output as round 1") {
+		t.Fatal(r.Pending.Reason)
+	}
+}
+
+func TestSameOutputButAChangedTreeDoesNotPauseEarly(t *testing.T) {
+	h := redLoop(t, true, false)
+	requireRoundsPause(t, h.start(), 3)
+}
+
+func TestNoChangeButDifferentOutputDoesNotPauseEarly(t *testing.T) {
+	h := redLoop(t, false, true)
+	requireRoundsPause(t, h.start(), 3)
+}
+
+func TestRetryAtTheRoundPauseGrantsRounds(t *testing.T) {
+	h := redLoop(t, true, true)
+	e := h.start()
+	requireRoundsPause(t, e, 3)
+	// Reload to exercise the durable grant across daemon restarts.
+	if err := e.RetryNote(context.Background(), "continue", 2); err != nil {
+		t.Fatal(err)
+	}
+	requireRoundsPause(t, e, 5)
+	saved, err := h.store.Open(e.Snapshot().ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	e = Load(h.deps, h.proj, saved)
+	if err := e.RetryNote(context.Background(), "continue", 1); err != nil {
+		t.Fatal(err)
+	}
+	requireRoundsPause(t, e, 6)
+	if !strings.Contains(h.runner.requests()[3].Brief, "continue") {
+		t.Fatal("retry note lost")
 	}
 }
 

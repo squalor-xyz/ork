@@ -80,7 +80,7 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               answer and resume a paused role; returns once
                               it runs, --wait waits until it rests
   ork dismiss RUN             clear a stopped run from Needs you
-  ork retry RUN [TEXT] [--wait]
+  ork retry RUN [TEXT] [--wait] [--rounds N]
                               retry a paused role or step, with an optional
                               note for the rerun; returns like answer
   ork status [--project P]    projects, needs-you counts and active relays

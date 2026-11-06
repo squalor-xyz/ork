@@ -250,6 +250,8 @@ func newHarness(t *testing.T, opts ...func(*harnessOpts)) *harness {
 		with(g("-C", P, "rev-parse", "--git-path", "info/exclude"), ".git/info/exclude\n"),
 		g("-C", P, "worktree", "add", W, "-b", branch),
 		g("-C", W, "status", "--porcelain"),
+		g("-C", W, "diff", "HEAD", "--binary", "--no-ext-diff"),
+		g("-C", W, "ls-files", "--others", "--exclude-standard", "-z"),
 		g("-C", W, "add", "-A"),
 		g("-C", W, "commit", "-m", gitTitle),
 		with(g("-C", W, "rev-parse", "HEAD"), "0123abc\n"),

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- S294 (*proposed*): pause red loops after round 3, or sooner when the
+  worktree content and check log repeat. `ork retry RUN [--rounds N]` grants
+  two more rounds by default. Status names the failure and retry/stop
+  choices. Approval-card Fix runs within the current granted limit.
+
 - S256: a resumed role is told to re-read the tree (*proposed*); a read-only
   role is told to report in its final message; a fenced owner question is
   accepted; `ork retry RUN [TEXT]` sends a note. Docs: `docs/design.md`,

@@ -3394,3 +3394,14 @@
 {"when": "2026-11-05T22:11:35Z", "item": "S280", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S280):", "by": "Jon R"}
 {"when": "2026-11-05T22:11:59Z", "item": "S280", "action": "note", "from": "", "to": "", "note": "Gate PASS and owner approval: permission-cancelled Grok roun", "by": "Jon R"}
 {"when": "2026-11-05T22:12:04Z", "item": "S280", "action": "status", "from": "started", "to": "done", "note": "Gate PASS and owner approval: permission-cancelled Grok rounds retain finished reports or fall back to the next role row without marking Grok out. Grok read-only briefs name verified command forms, and spec-check briefs use each row's vendor. Focused tests and mutation checks passed; repository-wide checks inside the implementer sandbox were limited by socket permissions.", "by": "Jon R"}
+{"when": "2026-11-06T03:56:19Z", "item": "S294", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon R"}
+{"when": "2026-11-06T03:57:06Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-06T03:57:25Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-06T04:09:53Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-06T04:09:54Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-06T04:12:44Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-06T04:32:44Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-06T04:35:52Z", "item": "S294", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-06T04:46:56Z", "item": "S294", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S294):", "by": "Jon R"}
+{"when": "2026-11-06T05:02:06Z", "item": "S294", "action": "note", "from": "", "to": "", "note": "S294 passed its gate and received owner approval. Red rounds", "by": "Jon R"}
+{"when": "2026-11-06T05:02:10Z", "item": "S294", "action": "status", "from": "started", "to": "done", "note": "S294 passed its gate and received owner approval. Red rounds pause for the owner, preserving feedback; failure reasons name the failed check and offer choices in words. Regression tests and matching docs are included. The after-land Needs you and bell human check is marked later.", "by": "Jon R"}

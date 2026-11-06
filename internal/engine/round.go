@@ -4,6 +4,7 @@ package engine
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"os"
@@ -104,6 +105,20 @@ func (e *Engine) treeStatus(ctx context.Context, worktree string) (string, error
 		return "", fmt.Errorf("git status: %w", err)
 	}
 	return out, nil
+}
+
+// treeContent fingerprints tracked changes (including staged changes and
+// binary files) and untracked names. Read-only role checks keep treeStatus.
+func (e *Engine) treeContent(ctx context.Context, worktree string) (string, error) {
+	diff, err := e.gitRead(ctx, worktree, "diff", "HEAD", "--binary", "--no-ext-diff")
+	if err != nil {
+		return "", fmt.Errorf("git diff: %w", err)
+	}
+	names, err := e.gitRead(ctx, worktree, "ls-files", "--others", "--exclude-standard", "-z")
+	if err != nil {
+		return "", fmt.Errorf("git ls-files: %w", err)
+	}
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(diff+"\x00"+names))), nil
 }
 
 // earlierReports reads the reports of the rounds so far.

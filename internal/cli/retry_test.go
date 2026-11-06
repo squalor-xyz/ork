@@ -34,6 +34,19 @@ func TestRetryCallsDaemon(t *testing.T) {
 	}
 }
 
+func TestRetrySendsRoundGrant(t *testing.T) {
+	calls, code, _, stderr := ownerCalls(t, "retry", "r1", "--rounds", "4")
+	if code != ExitOK || len(calls) != 1 || calls[0] != `run.retry {"run":"r1","rounds":4,"no_wait":true}` {
+		t.Fatalf("code %d calls %v stderr %s", code, calls, stderr)
+	}
+	for _, n := range []string{"0", "-1", "many"} {
+		calls, code, _, _ := ownerCalls(t, "retry", "r1", "--rounds", n)
+		if code != ExitUsage || len(calls) != 0 {
+			t.Errorf("accepted rounds %q", n)
+		}
+	}
+}
+
 // ownerCalls runs the command against a fake daemon that answers every call
 // with a run in state implement, and returns the calls it saw as
 // "method params" and the CLI result.

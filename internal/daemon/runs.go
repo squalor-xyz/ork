@@ -70,6 +70,7 @@ type RunAction struct {
 	By      string `json:"by,omitempty"`
 	Run     string `json:"run"`
 	Text    string `json:"text,omitempty"`
+	Rounds  int    `json:"rounds,omitempty"`  // run.retry: additional implementer rounds; 0 means 2
 	NoWait  bool   `json:"no_wait,omitempty"` // proposed, run.answer and run.retry: return once the action is applied and the run has left its pause (S237)
 }
 
@@ -1022,7 +1023,7 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 			d.runs.mu.Unlock()
 			return RunReply{}, fmt.Errorf("run %s waits for an answer; use ork answer %s TEXT or ork stop %s", p.Run, p.Run, p.Run)
 		}
-		fn = func(ctx context.Context) error { return r.engine.RetryNote(ctx, p.Text) }
+		fn = func(ctx context.Context) error { return r.engine.RetryNote(ctx, p.Text, p.Rounds) }
 	case MethodRunApprove:
 		fn = r.engine.Approve
 	case MethodRunFix:
@@ -1315,6 +1316,9 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		switch rec.State {
 		case runrec.StatePaused:
 			next := "ork retry " + rec.ID
+			if rec.Pending != nil && rec.Pending.Kind == runrec.PendingRounds {
+				next += " [--rounds N] or ork stop " + rec.ID
+			}
 			if rec.Pending != nil && rec.Pending.Kind == runrec.PendingQuestion {
 				next = "ork answer " + rec.ID + " TEXT"
 			}

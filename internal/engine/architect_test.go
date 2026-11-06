@@ -220,7 +220,7 @@ func TestArchitectReportChecksOnlyTheOwnerSection(t *testing.T) {
 func TestArchitectWaitsForGreenChecksAndDoesNotRepeatAfterGateFail(t *testing.T) {
 	h := architectHarness(t)
 	// First review fix fails its checks; the architect fix also fails once.
-	h.checks.outputs = []CheckOutput{{OK: true}, {OK: false}, {OK: true}, {OK: false}, {OK: true}}
+	h.checks.outputs = []CheckOutput{{OK: true, Output: "green 1"}, {OK: false, Output: "red 2"}, {OK: true, Output: "green 3"}, {OK: false, Output: "red 4"}, {OK: true, Output: "green 5"}}
 	arch := h.runner.script
 	failedGate := false
 	h.runner.script = func(req Request, n int) (Result, error) {
@@ -233,7 +233,16 @@ func TestArchitectWaitsForGreenChecksAndDoesNotRepeatAfterGateFail(t *testing.T)
 		}
 		return arch(req, n)
 	}
-	rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
+	e := h.start()
+	// Architect findings after round 3 and gate FAIL after round 5 now need
+	// the owner's grant. Preserve the ordering assertions across those rests.
+	for i := 0; i < 2; i++ {
+		requireState(t, e, runrec.StatePaused)
+		if err := e.Retry(context.Background()); err != nil {
+			t.Fatal(err)
+		}
+	}
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
 	want := []string{"implementer-1", "reviewer-1", "implementer-2", "implementer-3", "architect-3", "implementer-4", "implementer-5", "gate-5", "implementer-6", "gate-6"}
 	if got := h.runner.roles(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("roles %v, want %v", got, want)

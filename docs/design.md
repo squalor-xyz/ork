@@ -559,9 +559,25 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
 - **Rounds.** `round` counts implementer rounds and names the report
   files (`implementer-2.md`). A repeat of the same role and round uses a
   new path (`implementer-2-attempt-2.md`), preserving the earlier report.
-  *Proposed:* a slice stops after 8 implementer
-  rounds (`MaxRounds`), so a check that never goes green cannot loop.
-  `MaxRounds` stays: it limits red loops, not spend (`run.budget-resume`).
+  *Proposed (S294):* after round 3 ends red (checks, review or architect
+  findings, or a gate FAIL), the run pauses with pending kind `rounds` and
+  preserved feedback. It also pauses immediately when adjacent red checks
+  have byte-identical logs and the implementer left the same tracked content
+  and untracked names. Missing fingerprints in old records do not prove no
+  progress. The reason names the round, failed step and last meaningful line
+  from the failing check's output. A failed project command takes precedence
+  over slicer output; slicer supplies the line only when it alone fails.
+  Blank lines and standalone closing JSON braces/brackets are skipped.
+  The reason offers more rounds (2 by default), changing the check, or
+  stopping in words. CLI commands appear only in status's trailing
+  "; next:" hint, which the TUI pane removes.
+  `ork retry RUN [--rounds N]` grants two more implementer rounds by default;
+  the durable `round_limit` is the current round plus N. A red result at that
+  limit pauses again. Rounds never silently stop a run; the third gate FAIL
+  still stops it. There is no project or run round-limit setting. The test
+  hook `Deps.MaxRounds` overrides only the first pause threshold.
+  To change the check, stop the run, set the check and start a new `ork run`;
+  retry of a stopped run is separate work (S296).
 - **Resume.** A fix round resumes the implementer's latest session and the
   gate resumes the latest gate or reviewer session from the same vendor and
   model. Daemon runs copy the reviewer's lineup into the gate; a copy counts
@@ -688,7 +704,10 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   as any fix round is, then the checks and the gate, with no review in
   between, and returns to `awaiting-approval` on PASS. A gate FAIL goes back to
   the implementer as usual. It counts as an implementer round, so it is
-  refused (not stopped) at the round limit. The gate's brief carries the
+  refused (not stopped) at the current round limit (the first threshold or
+  an earlier retry grant). Within that limit, Fix itself is owner approval
+  to run the next round immediately; no separate retry is needed.
+  The gate's brief carries the
   owner's note as `Owner fix request` in every gate round until a gate passes
   the change: a red check or a gate FAIL after the fix sends the slice to a
   later round, and the note goes with it (S141).
@@ -1406,6 +1425,8 @@ or `{"cancelled":true}` in JSON mode, and exits 0. ork never rejects,
 supersedes or withdraws a record. TUI answer controls are S185.
 
 `run.retry` takes `{run}` and returns the run record (adj #101). *Proposed
+(S294):* `rounds` is an optional positive integer at a `rounds` pause; absent
+or zero grants two rounds. Other pause kinds refuse a nonzero count. *Proposed
 (S256):* it also takes an optional `text`, the owner's note for the rerun. The
 brief gets it as `## Owner note` after the pause's own section, when the retry
 runs a role (a retried step, such as the checks, runs no role and the note has
@@ -1680,7 +1701,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   (`ui.denials-display`, `engine.denied-command`). `wait`
   contains the approval prompt, owner question, pause or stop reason. The optional
   `pending` string holds the paused run record's pending kind (`question`,
-  `shape`, `lost`, `interrupted` or `error`); other states omit it
+  `shape`, `lost`, `interrupted`, `budget`, `rounds` or `error`); other states omit it
   (`ui.pending-kind`). The optional `question` object carries `title`,
   `options:[{label,summary}]`, one-based `recommend` and `reason` for a paused
   structured question. Older snapshots without it still load. `active_relays` are slicer's active relay runs.

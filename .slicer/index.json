@@ -15039,10 +15039,39 @@
       "id": "S294",
       "title": "Fix rounds: pause and ask when they make no progress, and pause after round 3 instead of stopping at 8",
       "short_title": "Fix rounds: pause and ask when they make no progress, and pause after round 3 instead of stopping at 8",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "c40c0d29-f023-4d8a-8183-45ca9941335d",
+          "kind": "",
+          "text": "**2026-11-06** — Human checks at approval (S294):\n- later: [AFTER LAND] The next run with a check that cannot pass pauses within 2 or 3 rounds, shows in Needs you with the bell, and `ork status` names the failure and the retry and stop commands.",
+          "created_at": "2026-11-06T04:46:56Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "54020d02-2912-4228-95c2-44fd0d7cbe26",
+          "kind": "",
+          "text": "**2026-11-06** — S294 passed its gate and received owner approval. Red rounds pause for the owner, preserving feedback; failure reasons name the failed check and offer choices in words. Regression tests and matching docs are included. The after-land Needs you and bell human check is marked later.",
+          "created_at": "2026-11-06T05:02:06Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -15060,7 +15089,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -21,9 +21,8 @@ import (
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
-// DefaultMaxRounds is how many implementer rounds a slice may take before
-// the engine stops it (*proposed*; budgets are S05).
-const DefaultMaxRounds = 8
+// DefaultPauseRound is the first red round that needs the owner's OK.
+const DefaultPauseRound = 3
 
 // CheckOutput is the result of the project's check command.
 type CheckOutput struct {
@@ -56,7 +55,7 @@ type Deps struct {
 	RandHex        func() string                                    // four hex digits for run ids; nil is random
 	HeartbeatEvery time.Duration                                    // 0 means heartbeatInterval
 	HungAfter      time.Duration                                    // 0 means DefaultHungAfter; negative turns the hung-role watchdog off
-	MaxRounds      int                                              // 0 means DefaultMaxRounds
+	MaxRounds      int                                              // first pause after this red round; 0 means DefaultPauseRound
 	Landings       *Landings                                        // one landing per project at a time; nil means one shared by the process
 	Vendors        *Vendors                                         // the per-vendor slot cap and vendor-out memory (S169); nil means no cap and no memory
 	Wake           *Wake                                            // the sleep detector (S235); nil means sleep is not detected
@@ -80,7 +79,7 @@ func (d Deps) maxRounds() int {
 	if d.MaxRounds > 0 {
 		return d.MaxRounds
 	}
-	return DefaultMaxRounds
+	return DefaultPauseRound
 }
 
 func (d Deps) proc() Proc {
@@ -467,7 +466,9 @@ func (e *Engine) Retry(ctx context.Context) error { return e.RetryNote(ctx, "") 
 // The note goes to the rerun's brief as an owner note and is held in
 // pending.note, or in pending.retry.note while a sibling's queued question is
 // asked first, until the round ends. A blank note adds nothing.
-func (e *Engine) RetryNote(ctx context.Context, note string) error {
+// At a rounds pause the optional count grants that many more implementer
+// rounds; an omitted or zero count grants two. Other pauses reject a count.
+func (e *Engine) RetryNote(ctx context.Context, note string, rounds ...int) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	note = strings.TrimSpace(note)
@@ -483,6 +484,22 @@ func (e *Engine) RetryNote(ctx context.Context, note string) error {
 	if rec.Pending.Kind == runrec.PendingQuestion {
 		return refusef("the slice waits for an answer; answer it or stop the slice")
 	}
+	grant := 2
+	if len(rounds) > 0 && rounds[0] != 0 {
+		grant = rounds[0]
+	}
+	if grant < 1 || grant > int(^uint(0)>>1)-rec.Round {
+		return refusef("rounds must be a positive count within the round limit")
+	}
+	if len(rounds) > 0 && rounds[0] != 0 && rec.Pending.Kind != runrec.PendingRounds {
+		return refusef("rounds can only be granted at a rounds pause")
+	}
+	grantRounds := func(r *runrec.Record) {
+		if rec.Pending.Kind == runrec.PendingRounds {
+			r.RoundLimit = r.Round + grant
+			r.Round++
+		}
+	}
 	if rec.Pending.Retry == nil && len(rec.QueuedQuestions) > 0 {
 		// A sibling's owner question is asked before the role runs again. The
 		// pause that is retried rides on the question, so the rerun still has
@@ -490,6 +507,7 @@ func (e *Engine) RetryNote(ctx context.Context, note string) error {
 		// shape pause also resumes the session) after the answer (S159).
 		defer e.ownerWait(ctx)
 		err := e.run.Update(func(r *runrec.Record) {
+			grantRounds(r)
 			q := r.QueuedQuestions[0]
 			r.QueuedQuestions = r.QueuedQuestions[1:]
 			retry := *r.Pending
@@ -506,6 +524,7 @@ func (e *Engine) RetryNote(ctx context.Context, note string) error {
 		return err
 	}
 	if err := e.run.Update(func(r *runrec.Record) {
+		grantRounds(r)
 		r.State = r.Pending.State
 		r.Reason = ""
 		if note != "" {

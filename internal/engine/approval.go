@@ -176,8 +176,8 @@ func (e *Engine) Fix(ctx context.Context, note string) error {
 	if note == "" {
 		return refusef("the fix note is empty")
 	}
-	if rec.Round+1 > e.d.maxRounds() {
-		return refusef("the round limit of %d implementer rounds was reached; approve or stop the slice", e.d.maxRounds())
+	if rec.Round+1 > e.roundLimit(rec) {
+		return refusef("the round limit of %d implementer rounds was reached; approve or stop the slice", e.roundLimit(rec))
 	}
 	name := fmt.Sprintf("owner-fix-%d.md", rec.Round+1)
 	path := filepath.Join(e.run.Dir(), name)

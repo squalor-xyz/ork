@@ -4,6 +4,7 @@ package engine
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -126,12 +127,59 @@ func (e *Engine) feedbackSection(fb *runrec.Feedback) BriefSection {
 	}
 }
 
-// bumpRound starts the next implementer round with the feedback, or stops the
-// slice at the round limit.
-func (e *Engine) bumpRound(ctx context.Context, fb runrec.Feedback) error {
+func (e *Engine) roundLimit(rec runrec.Record) int {
+	return max(e.d.maxRounds(), rec.RoundLimit)
+}
+
+// noProgress requires adjacent checks and implementer content fingerprints.
+// Missing fingerprints from older run records cannot prove no progress.
+func noProgress(rec runrec.Record) bool {
+	var trees [2]string
+	var logs [2]string
+	for i := len(rec.Roles) - 1; i >= 0; i-- {
+		r := rec.Roles[i]
+		d := rec.Round - r.Round
+		if r.Role == RoleImplementer && d >= 0 && d < 2 && trees[d] == "" {
+			trees[d] = r.TreeSHA256
+		}
+	}
+	for i := len(rec.Checks) - 1; i >= 0; i-- {
+		c := rec.Checks[i]
+		d := rec.Round - c.Round
+		if d >= 0 && d < 2 && logs[d] == "" && c.Log == fmt.Sprintf("checks-%d.log", c.Round) {
+			logs[d] = c.LogSHA256
+		}
+	}
+	return trees[0] != "" && trees[0] == trees[1] && logs[0] != "" && logs[0] == logs[1]
+}
+
+// bumpRound preserves feedback at a pause, before the next round starts.
+func (e *Engine) bumpRound(ctx context.Context, fb runrec.Feedback, failure ...string) error {
 	rec := e.run.Snapshot()
-	if rec.Round+1 > e.d.maxRounds() {
-		return e.stop(ctx, fmt.Sprintf("the round limit of %d implementer rounds was reached", e.d.maxRounds()))
+	stalled := fb.Kind == "checks" && noProgress(rec)
+	if stalled || rec.Round >= e.roundLimit(rec) {
+		log, _ := os.ReadFile(filepath.Join(e.run.Dir(), fb.File))
+		lines := strings.Split(strings.TrimSpace(string(log)), "\n")
+		last := strings.TrimSpace(lines[len(lines)-1])
+		if len(failure) > 0 {
+			last = failure[0]
+		}
+		step := fb.Kind
+		switch fb.Kind {
+		case "findings":
+			step = "review"
+		case "fail":
+			step = "gate"
+		}
+		why := fmt.Sprintf("round %d ended red: %s failed (%s)", rec.Round, step, last)
+		if stalled {
+			why += fmt.Sprintf("; no change in the worktree and the same check output as round %d", rec.Round-1)
+		}
+		why += "; grant more rounds (2 by default), change the check (stop the run, set it, start a new run), or stop"
+		if err := e.run.Update(func(r *runrec.Record) { r.Feedback = &fb }); err != nil {
+			return err
+		}
+		return e.pause(runrec.Pending{Kind: runrec.PendingRounds, State: runrec.StateImplement, Role: RoleImplementer, Round: rec.Round + 1, Reason: why})
 	}
 	return e.run.Update(func(r *runrec.Record) {
 		r.Round++
@@ -157,6 +205,20 @@ func (e *Engine) implement(ctx context.Context) error {
 	if err != nil || !out.ok {
 		return err
 	}
+	fingerprint, err := e.treeContent(ctx, rec.Worktree)
+	if err != nil {
+		return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateImplement, Reason: "worktree fingerprint: " + err.Error()})
+	}
+	if err := e.run.Update(func(rr *runrec.Record) {
+		for i := len(rr.Roles) - 1; i >= 0; i-- {
+			if rr.Roles[i].Role == RoleImplementer && rr.Roles[i].Round == rec.Round {
+				rr.Roles[i].TreeSHA256 = fingerprint
+				break
+			}
+		}
+	}); err != nil {
+		return err
+	}
 	return e.run.Update(func(rr *runrec.Record) { rr.Feedback = nil; rr.State = runrec.StateChecks })
 }
 
@@ -167,7 +229,7 @@ func (e *Engine) checks(ctx context.Context) error {
 		return err
 	}
 	if !run.ok {
-		return e.bumpRound(ctx, runrec.Feedback{Kind: "checks", File: run.log})
+		return e.bumpRound(ctx, runrec.Feedback{Kind: "checks", File: run.log}, run.failure)
 	}
 	next := runrec.StateReview
 	for _, r := range rec.Roles {
@@ -180,8 +242,23 @@ func (e *Engine) checks(ctx context.Context) error {
 
 // checkRun is the outcome of one run of the project's checks.
 type checkRun struct {
-	ok  bool
-	log string // the log's file name in the run directory
+	ok      bool
+	log     string // the log's file name in the run directory
+	failure string // last meaningful output line from the first failed check
+}
+
+// checkFailureLine skips blank lines and standalone JSON closing punctuation.
+func checkFailureLine(output string) string {
+	lines := strings.Split(output, "\n")
+	for i := len(lines) - 1; i >= 0; i-- {
+		line := strings.TrimSpace(lines[i])
+		switch line {
+		case "", "}", "]", "},", "],":
+			continue
+		}
+		return line
+	}
+	return "no failure output"
 }
 
 // runChecks runs the project check command and `slicer check` in the worktree,
@@ -203,6 +280,7 @@ func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix
 		return checkRun{}, true, e.pause(runrec.Pending{Kind: runrec.PendingError, State: state, Reason: reason})
 	}
 	ok := true
+	failure := ""
 	var log strings.Builder
 	if cmd := e.proj.CheckCommand; cmd != "" {
 		res, err := check(ctx, rec.Worktree, cmd, timeout)
@@ -210,6 +288,9 @@ func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix
 			return pauseWith("check command: " + err.Error())
 		}
 		ok = res.OK
+		if !res.OK {
+			failure = checkFailureLine(res.Output)
+		}
 		fmt.Fprintf(&log, "$ %s\n%s\n", cmd, tail(res.Output, 30000))
 	}
 	sres, err := e.d.Slicer.Check(ctx, rec.Worktree)
@@ -217,6 +298,9 @@ func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix
 		return pauseWith("slicer check: " + err.Error())
 	}
 	if !sres.OK {
+		if ok {
+			failure = checkFailureLine(sres.Output)
+		}
 		ok = false
 	}
 	fmt.Fprintf(&log, "\n$ slicer check --json\n%s\n", tail(sres.Output, 30000))
@@ -236,9 +320,9 @@ func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix
 	}
 	err = e.run.Update(func(r *runrec.Record) {
 		r.Pending = nil
-		r.Checks = append(r.Checks, runrec.CheckRecord{Round: rec.Round, Command: command, OK: ok, Seconds: int(e.d.now().Sub(start).Seconds()), Log: logName})
+		r.Checks = append(r.Checks, runrec.CheckRecord{Round: rec.Round, Command: command, OK: ok, Seconds: int(e.d.now().Sub(start).Seconds()), Log: logName, LogSHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(log.String())))})
 	})
-	return checkRun{ok: ok, log: logName}, false, err
+	return checkRun{ok: ok, log: logName, failure: failure}, false, err
 }
 
 // latestReport returns the newest report of a role, with its name.

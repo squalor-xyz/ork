@@ -179,6 +179,56 @@ func TestFixActionAtTheRoundLimitRefusesWithoutStopping(t *testing.T) {
 	requireState(t, e, runrec.StateAwaitingApproval)
 }
 
+func TestFixWithinTheCurrentLimitRunsAtOnce(t *testing.T) {
+	h := newHarness(t)
+	e := h.start()
+	if err := e.Fix(context.Background(), "round two"); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.Fix(context.Background(), "round three"); err != nil {
+		t.Fatal(err)
+	}
+	r := requireState(t, e, runrec.StateAwaitingApproval)
+	if r.Round != 3 {
+		t.Fatalf("round %d", r.Round)
+	}
+}
+
+func TestFixPastTheCurrentLimitRefuses(t *testing.T) {
+	h := newHarness(t)
+	e := h.start()
+	for i := 0; i < 2; i++ {
+		if err := e.Fix(context.Background(), "again"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	err := e.Fix(context.Background(), "past limit")
+	if err == nil || !strings.Contains(err.Error(), "round limit") || strings.Contains(err.Error(), "\n") {
+		t.Fatalf("refusal %v", err)
+	}
+	requireState(t, e, runrec.StateAwaitingApproval)
+	// A grant made earlier in the run also permits the approval card's Fix.
+	h = redLoop(t, true, true)
+	e = h.start()
+	requireRoundsPause(t, e, 3)
+	h.checks.outputs = append(h.checks.outputs[:3], CheckOutput{OK: true, Output: "green\n"})
+	if err := e.RetryNote(context.Background(), "", 2); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateAwaitingApproval)
+	saved, err := h.store.Open(e.Snapshot().ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	e = Load(h.deps, h.proj, saved)
+	if err := e.Fix(context.Background(), "within grant"); err != nil {
+		t.Fatal(err)
+	}
+	if r := requireState(t, e, runrec.StateAwaitingApproval); r.Round != 5 {
+		t.Fatalf("round %d", r.Round)
+	}
+}
+
 func TestApprovalNeedsEveryHumanCheckTickedOrLater(t *testing.T) {
 	h := newHarness(t, withHumanChecks(checkOne, checkTwo, checkThree))
 	e := h.start()
