@@ -3409,3 +3409,6 @@
 {"when": "2026-11-06T04:16:21Z", "item": "S300", "action": "add", "from": "", "to": "open", "note": "Spec check: a denied read command retries the same session once instead of failing the wave"}
 {"when": "2026-11-06T04:16:21Z", "item": "S264", "action": "note", "from": "", "to": "", "note": "Waves 7-8 evidence (2026-11-04, friction F41): ork wave star", "by": "Jon R"}
 {"when": "2026-11-06T04:16:21Z", "item": "S257", "action": "note", "from": "", "to": "", "note": "Waves 7-8 evidence (2026-11-03 to 11-05, friction F50, F55):", "by": "Jon R"}
+{"when": "2026-11-06T05:08:27Z", "item": "S274", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-06T05:08:27Z", "item": "S279", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-06T05:08:39Z", "item": "S274", "action": "set", "from": "", "to": "", "note": "title Project cap: a paused run keeps its project slot→Caps: a resumed paused run waits for a slot, ahead of queued runs; short_title Project cap: a paused run keeps its project slot→Caps: a resumed paused run waits for a slot, ahead of queued runs"}
