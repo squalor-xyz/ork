@@ -3405,3 +3405,7 @@
 {"when": "2026-11-06T04:46:56Z", "item": "S294", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S294):", "by": "Jon R"}
 {"when": "2026-11-06T05:02:06Z", "item": "S294", "action": "note", "from": "", "to": "", "note": "S294 passed its gate and received owner approval. Red rounds", "by": "Jon R"}
 {"when": "2026-11-06T05:02:10Z", "item": "S294", "action": "status", "from": "started", "to": "done", "note": "S294 passed its gate and received owner approval. Red rounds pause for the owner, preserving feedback; failure reasons name the failed check and offer choices in words. Regression tests and matching docs are included. The after-land Needs you and bell human check is marked later.", "by": "Jon R"}
+{"when": "2026-11-06T04:16:21Z", "item": "S299", "action": "add", "from": "", "to": "open", "note": "Vendor out marks: an owner's mark survives a daemon idle exit and restart"}
+{"when": "2026-11-06T04:16:21Z", "item": "S300", "action": "add", "from": "", "to": "open", "note": "Spec check: a denied read command retries the same session once instead of failing the wave"}
+{"when": "2026-11-06T04:16:21Z", "item": "S264", "action": "note", "from": "", "to": "", "note": "Waves 7-8 evidence (2026-11-04, friction F41): ork wave star", "by": "Jon R"}
+{"when": "2026-11-06T04:16:21Z", "item": "S257", "action": "note", "from": "", "to": "", "note": "Waves 7-8 evidence (2026-11-03 to 11-05, friction F50, F55):", "by": "Jon R"}

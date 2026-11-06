@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 299,
+  "next_id": 301,
   "preamble": "",
   "passes": [
     {
@@ -13538,6 +13538,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "91d42eca-1ea6-488e-a242-b971fb9bcb3b",
+          "kind": "",
+          "text": "**2026-11-06** — Waves 7-8 evidence (2026-11-03 to 11-05, friction F50, F55): every run was watched with until-loops over ork status, and approve output was nohup'd to a log and grepped for 'committed'; ork retry was refused as busy while the run's reviewer still ran, so the orchestrator had to wait for the role to end before retrying.",
+          "created_at": "2026-11-06T04:16:21Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -13756,6 +13770,20 @@
           "kind": "",
           "text": "**2026-11-03** — Owner answers 2026-11-03 (interactive): Q1 an elapsed clock with the item count, TUI only (e.g. 'spec check: 2 items, 1m12s; wait for the confirmation'), no per-item count. All remaining recommendations accepted as written: Q2 the same two places as today; Q3 l stays refused with the wait text; Q4 fix both ends (engine drops fence lines and treats text starting none as none; Waves list shows one line plus (+N more lines)); Q5 one CLI line before the call. S262 and S264 edit the same waves.go and launch.go: do not share a wave.",
           "created_at": "2026-11-03T13:28:28Z",
+          "attempt": 0,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "1c5cb3ff-c91e-4752-8397-bd3cdbf19f7a",
+          "kind": "",
+          "text": "**2026-11-06** — Waves 7-8 evidence (2026-11-04, friction F41): ork wave start ork S277 with stdin closed ended 'held: S277 has 1 open spec question / no item is ready to start'; no run or worktree was made, and the orchestrator watched for a run that never existed, so the slice sat unstarted overnight. Same as F37 (wave 6). The held line is the last line of a long plan print and is easy to miss.",
+          "created_at": "2026-11-06T04:16:21Z",
           "attempt": 0,
           "by": "Jon R",
           "verified_by": "",
@@ -15250,6 +15278,62 @@
         "importance": 1,
         "urgency": 1,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S299",
+      "title": "Vendor out marks: an owner's mark survives a daemon idle exit and restart",
+      "short_title": "Vendor out marks: an owner's mark survives a daemon idle exit and restart",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Waves 7-8, 2026-11-05 (friction F43): the owner's ork vendor out grok mark was lost three times, once by a daemon restart and twice silently when the daemon idled out (daemon_idle_minutes effective 10) while a wave start was held on a spec question waiting for the owner. The next run put Grok on the reviewer row and stopped (reviewer round 1 exited unclassified), costing a full implementer round (about 28 min) each time. Fact: an owner mark has no expiry (internal/daemon/vendors.go:30-31) but lives only in daemon memory; ork vendor list after the idle exit printed 'no vendor is out'. Needed: owner marks (ork vendor out) are written to ork's state directory and reloaded at daemon start, so they end only with ork vendor back; automatic rate-limit and credit marks keep their own expiry (S273). The help text 'a restart clears them' changes to match. Related: S273, S169, S182.",
+        "discovered_from": "S280",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S300",
+      "title": "Spec check: a denied read command retries the same session once instead of failing the wave",
+      "short_title": "Spec check: a denied read command retries the same session once instead of failing the wave",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Wave 8, 2026-11-05 (friction F44): the read-only spec check for S278 ran rg ... | head -20 and the sandbox denied it; ork failed the whole spec check ('spec check failed: spec-check exited ok: permission denied: Bash: rg -n ... | head -20') and the wave did not start. A plain relaunch passed. Fact: TestSpecCheckStopsOnPermissionDenials (internal/engine/speccheck_test.go:179) pins the stop; the spec check already retries once on a shape error (internal/engine/speccheck.go:147). Needed: a spec check whose round ended with denied read commands and no report is resumed once in the same session with the denials named and the allowed command forms from the brief's Done when section (S277); a second denial fails the check as today. One occurrence so far; S277's Done when may already prevent it. Related: S277, S266, S275.",
+        "discovered_from": "S278",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
         "attempts": 0
       }
     }
