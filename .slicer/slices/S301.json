@@ -7,7 +7,9 @@
   "depends_note": null,
   "findings_note": "",
   "size": "M",
-  "flags": [],
+  "flags": [
+    "needs-owner"
+  ],
   "trees_note": "daemon",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",
@@ -18,23 +20,27 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/daemon/runs.go` (matrix agent to adapter map)\n- `internal/daemon/matrix.go`\n- `docs/design.md`\n- `docs/boundaries.md`"
+      "body": "- `internal/daemon/runs.go:349` (matrixAdapters: Agent to adapter)\n- `internal/daemon/runs.go:187-203` (runDeps: one Runner per vendor)\n- `internal/daemon/runs.go:429-449` (lineup entry built from a matrix row)\n- `internal/daemon/runner.go:90` (supportsVendor)\n- `internal/daemon/vendors.go:15` (defaultVendorCaps)\n- `internal/daemon/matrix.go:76` (matrixUse text)\n- `internal/daemon/speccheck.go:115`\n- `internal/agent/claude/run.go:57`\n- `internal/agent/codex/codex.go:226`\n- `internal/agent/grok/grok.go:282`\n- `docs/design.md`\n- `docs/boundaries.md`\n- `docs/state.md`"
     },
     {
       "heading": "Failing tests",
-      "body": "- To be written when the slice is specified; not yet."
+      "body": "Tests use the existing fake vendor scripts; no live server.\n\n- A matrix row with Agent `claude-local` or `codex-local` gives a lineup entry whose vendor is that name; `ork roles matrix` prints `used as claude-local`. A Grok row whose model is the configured local Grok model gives vendor `grok-local`.\n- `supportsVendor` accepts the three local vendors; `vendors set` can mark one out.\n- The dispatcher runs the claude adapter with binary `claude-local` (and codex with `codex-local`), and passes no base URL or key.\n- A cloud `claude` out mark does not skip a `claude-local` entry, and the reverse.\n- The local cap of 2 holds across the three local vendors together; a third local role waits for a slot.\n- A launcher that exits with the unreachable-endpoint output falls back to the next matrix row; a denied or unclassified exit still stops for the owner (adj 156).\n- A row with no launcher on PATH is skipped with a reason naming the launcher, and does not fail the run."
     },
     {
       "heading": "Implement",
-      "body": "1. Verify, per CLI, that a headless spawn can be pointed at the server by environment or config alone. Record the result with the command used; do not assume it.\n2. Config: base URL from `LLMNODE_BASE_URL` (default `http://127.0.0.1:8000/v1` on the server; `<tailnet-host>` form from other machines), bearer key from `LLMNODE_API_KEY`. Never store a key or the real hostname in the repo or in `projects.json`.\n3. Reasoning: the server returns thinking in a separate `reasoning` field, and `max_tokens` counts reasoning tokens, so a role needs headroom. `reasoning_effort` accepts low, medium and xhigh (high maps to medium). Check what each CLI sends and reads.\n4. Timeouts and retries: a slow local reply must not count as a failure. Check role timeouts and the rate-limit and fallback classification (adj 114, 156).\n5. Fallback: when the endpoint is unreachable, fall back to the next matrix row, a cloud row.\n6. Per-role choice: local versus frontier is the matrix row, set with `slicer relay-roles`; ork adds no separate setting."
+      "body": "Owner decisions of 2026-11-06 (this session, answered interactively; not yet recorded in adj): cover claude, codex and grok; `claude-local` and `codex-local` are executables on PATH; Grok has the local model in its regular config, so there is no separate launcher; local rows get their own vendor identity, out mark and slot cap; the cap is 2; no role defaults to local; fallback to the next cloud row is automatic when the endpoint is unreachable; one local model at a time.\n\n1. Verify first, on the owner's machine, and record each command and result: `command -v claude-local codex-local` in the environment the daemon starts with; each launcher run headless with the flags ork passes (`--effort`, `-m`, resume) against the server; the exact model name of the local entry in Grok's config. Do not assume. If a launcher is only an alias or function, stop and ask.\n2. Mapping: Agent `claude-local` maps to the claude adapter with binary `claude-local` and lineup vendor `claude-local`; Agent `codex-local` likewise with `codex-local`; a Grok row whose model is the local Grok model maps to the grok adapter with lineup vendor `grok-local`. Add the three names to `supportsVendor`. Keep the Agent field as the key (adj 155); this reading of the owner's answer is to be confirmed.\n3. Environment: the launchers own the base URL and key (`agents/llmnode/docs/agents.md:22-60`). ork adds no URL setting and passes no key; it inherits the daemon environment. Nothing local goes in `projects.json` or `vendor_env`.\n4. Caps and marks: one shared local pool of 2 slots across the three local vendors (one server, owner estimate 2 to 4 requests); each local vendor has its own out mark. Cloud and local marks are independent.\n5. Reasoning and timeouts: check what `--effort` does under the launcher, since `claude-local` sets `CLAUDE_CODE_EFFORT_LEVEL` itself and the server accepts low, medium and xhigh. Check that a reply of tens of seconds, and the 30 minute hung timer (`engine.DefaultHungAfter`), do not classify as a failure.\n6. Fallback: classify an unreachable endpoint through the existing adapter classifiers as an error, so adj 156 moves to the next matrix row; if the classifiers do not do that, add the narrowest rule.\n7. Update the matrix row r33 to the launcher Agent value with `slicer relay-roles`; local versus frontier stays a matrix row, with no separate ork setting. Update `docs/design.md`, `docs/boundaries.md` and `docs/state.md` to match."
     },
     {
       "heading": "Check",
-      "body": "- Open owner questions, to be filed with `adj ask` under `roles.local-model` with `--ref` this slice, each with a recommendation: (1) which Agent value maps a local row to an adapter; (2) which roles default to local (recommend none, opt-in implementer rows for well-specified slivers); (3) whether fallback to cloud is automatic (recommend automatic when the endpoint is unreachable); (4) whether more than one local model is supported at once (recommend no).\n- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`."
+      "body": "- Open owner questions, to file with `adj ask` under `roles.local-model` with `--ref` this slice, each with a recommendation: (1) the Agent value for each local row (recommend the launcher names `claude-local` and `codex-local`, and Agent `Grok` with the local model for Grok); (2) the name of the local model in Grok's config; (3) one shared local cap of 2 or a cap per local vendor (recommend shared, one server). The owner answered the other questions on 2026-11-06 (see Implement); record them with `adj decide` only as the owner picks.\n- Evidence from step 1 of Implement is in the handoff note.\n- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`."
     },
     {
       "heading": "Git",
       "body": "- Branch and worktree per AGENTS.md; no commit until the owner approves."
+    },
+    {
+      "heading": "Not in this slice",
+      "body": "No role defaults to local. No second local model at once. No Nemotron or 8-bit Qwen row (untested). Writing or changing the launchers and their key handling (the agents repo). Measuring local quality. A base URL or key setting in ork."
     }
   ],
   "notes": []

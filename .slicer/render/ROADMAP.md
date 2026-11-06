@@ -366,7 +366,7 @@ v1.2
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 300 | [S301](slices/S301.md) | Local model via vendor CLI | M | 2 | daemon |  | — |
+| 300 | [S301](slices/S301.md) | Local model via vendor CLI | M `[needs-owner]` | 2 | daemon |  | — |
 
 ---
 
