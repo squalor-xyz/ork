@@ -512,6 +512,24 @@
       "model": "latest",
       "reasoning": "medium",
       "note": "Spec check row on Grok (owner 2026-11-02): one read-only pass over every ticked slice before a wave (rule u11); an alternative to r16"
+    },
+    {
+      "id": "r33",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "Local (vLLM)",
+      "vendor": "Local",
+      "model": "qwen3.8-27b",
+      "reasoning": "medium",
+      "note": "candidate, proposed (owner not yet decided): local vLLM, 4-bit, 131072 ctx, in service. No per-token cost, data stays local; much weaker and slower than frontier. For mechanical edits from a clear spec, reviewed by frontier (not measured). Inert: ork has no adapter for this Agent until the local-model slice lands."
     }
   ],
   "rules": [
@@ -556,6 +574,6 @@
       "text": "The spec check before a wave runs the Spec check row (r16): one read-only pass over every ticked slice, answered in one sitting. The matrix has no spec-check or ui role (slicer's ledger records them as roles spec-check and ui, but a row is a reviewer row), so r14 and r16 are reviewer rows with notes; they are never a fallback of the reviewer or the gate, and the reviewer's rule u1 does not apply to the spec check because it reads specs and writes no code."
     }
   ],
-  "next_row": 33,
+  "next_row": 34,
   "next_rule": 12
 }

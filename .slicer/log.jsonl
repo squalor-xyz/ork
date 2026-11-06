@@ -3412,3 +3412,5 @@
 {"when": "2026-11-06T05:08:27Z", "item": "S274", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-06T05:08:27Z", "item": "S279", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-06T05:08:39Z", "item": "S274", "action": "set", "from": "", "to": "", "note": "title Project cap: a paused run keeps its project slot→Caps: a resumed paused run waits for a slot, ahead of queued runs; short_title Project cap: a paused run keeps its project slot→Caps: a resumed paused run waits for a slot, ahead of queued runs"}
+{"when": "2026-11-06T21:46:23Z", "item": "relay-roles.r33", "action": "relay-roles", "from": "", "to": "implementer", "note": "add"}
+{"when": "2026-11-06T21:46:44Z", "item": "S301", "action": "add", "from": "", "to": "open", "note": "Local model through a vendor CLI"}

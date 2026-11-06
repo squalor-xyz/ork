@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-300 items · — 90 · done 183 · retired 27
+301 items · — 91 · done 183 · retired 27
 
 v1.2
 
@@ -366,4 +366,10 @@ v1.2
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 300 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |
+| 300 | [S301](slices/S301.md) | Local model via vendor CLI | M | 2 | daemon |  | — |
+
+---
+
+| # | Slice | Title | Size | Effort | Trees | Findings | Status |
+|---|---|---|---|---|---|---|---|
+| 301 | [S18](slices/S18.md) | ork logos | S | 1 |  |  | done |

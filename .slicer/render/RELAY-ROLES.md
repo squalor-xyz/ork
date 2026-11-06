@@ -33,6 +33,7 @@
 | r16 | Reviewer | every slice | Claude Code | Claude | sonnet | high | Spec check row (sonnet high, owner 2026-10-29) |
 | r21 | Orchestrator | every slice | Grok | xAI | latest | medium | Grok orchestrator alternative (owner 2026-11-02). Model 'latest' = do not pin a version: use the grok CLI default (grok-4.7 on 2026-11-02); owner 2026-11-02: default to the latest unless asked. ork cannot run Grok until S72 lands, so it is used by hand until then |
 | r24 | Reviewer | every slice | Grok | xAI | latest | medium | Spec check row on Grok (owner 2026-11-02): one read-only pass over every ticked slice before a wave (rule u11); an alternative to r16 |
+| r33 | Implementer | every slice | Local (vLLM) | Local | qwen3.8-27b | medium | candidate, proposed (owner not yet decided): local vLLM, 4-bit, 131072 ctx, in service. No per-token cost, data stays local; much weaker and slower than frontier. For mechanical edits from a clear spec, reviewed by frontier (not measured). Inert: ork has no adapter for this Agent until the local-model slice lands. |
 
 ## Rules
 
