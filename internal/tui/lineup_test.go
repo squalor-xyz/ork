@@ -19,7 +19,7 @@ func lineupHarness(t *testing.T) (*harness, *wavesLive) {
 	t.Helper()
 	h, l := wavesHarness(t)
 	openWaves(t, h)
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	p := h.m.waves.picked["A"]
 	p.Expected.Budgets = registry.Budgets{Minutes: 45, Tokens: 9000}
 	h.m.waves.picked["A"] = p
@@ -68,7 +68,7 @@ func TestLineupKeyIgnoredOutsideWaves(t *testing.T) {
 				h, l := wavesHarness(t)
 				if ready {
 					openWaves(t, h)
-					tickWave(t, h, "y", "n")
+					tickWave(t, h)
 				}
 				h.m.view = tc.view
 				h.m.showHelp = tc.help
@@ -211,7 +211,7 @@ func TestWaveStartCarriesOverrides(t *testing.T) {
 	replaceLineupField(h, "1234")
 	h.deliver(press("enter"))
 	h.deliver(press("down"))
-	tickWave(t, h, "n", "y")
+	tickWave(t, h)
 	h.deliver(press("l"))
 	h.deliver(press("y"))
 	if len(l.starts) != 1 {
@@ -340,7 +340,7 @@ func TestLineupOnlyOpensTickedReadyItem(t *testing.T) {
 	if strings.Contains(h.view(), "Edit lineup:") || len(l.plans) != 0 {
 		t.Fatal("edited unticked item")
 	}
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	h.deliver(press("down"))
 	h.deliver(press("e"))
 	if strings.Contains(h.view(), "Edit lineup:") {

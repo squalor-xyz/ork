@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- S260 (*proposed*): launch no longer asks well specified or split (adj 189,
+  `launch.well-specified-default`, owner decision 2026-11-07, replacing adj 86,
+  87 and 135 once the owner supersedes them). `ork run`, `ork wave start`, a
+  tick on the Waves view and the single launch on the Roadmap plan every item
+  as well specified = yes and split = no; the spec check still holds an item
+  that is not Ready. `--well-specified y/n` and `--split y/n` stay as optional
+  overrides, `--yes` needs neither flag, and a value other than y, yes, n or no
+  is still a usage error (its text is now `--well-specified y/n and --split y/n
+  each take y or n`). The wire (`well_specified`, `split`) is unchanged. In the
+  TUI, space ticks and plans at once with no inputs rows, the launch goes from
+  the list to the plan, the input hints are gone, and the keys help reads
+  `space tick item and plan it (Waves)`. The `waves-inputs-*` golden views are
+  now `waves-ticked-*`. Docs: `docs/design.md`, `docs/dashboard.md`,
+  `docs/guide.md`, `docs/diagrams.md`.
+
 - S306 (*proposed*): the approval card pane keeps `x stop` on the hint line
   when `p report` shows (owner decision 2026-11-07). On a card pane, when the
   line is too narrow, hints drop in this order: the scroll keys, then `p

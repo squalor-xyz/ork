@@ -58,37 +58,16 @@ func runPrompted(t *testing.T, input string, args ...string) promptRun {
 	return r
 }
 
-func TestRunLineupPromptsTakeYAndN(t *testing.T) {
-	// The two prompts get different answers, so swapped prompts fail.
-	for _, tc := range []struct {
-		well, split         string
-		wantWell, wantSplit bool
-	}{
-		{"y", "n", true, false}, {"n", "y", false, true},
-		{"Yes", "NO", true, false}, {"NO", "Yes", false, true},
-		{"Y", "no", true, false}, {"no", "Y", false, true},
-		{"yes", "N", true, false}, {"N", "yes", false, true},
-	} {
-		t.Run(tc.well+"/"+tc.split, func(t *testing.T) {
-			r := runPrompted(t, tc.well+"\n"+tc.split+"\nyes\n")
-			want := fmt.Sprintf(`{"project":"p","item":"S1","well_specified":%t,"split":%t}`, tc.wantWell, tc.wantSplit)
-			if r.code != ExitOK || r.plan != want || !r.started {
-				t.Fatalf("code %d plan %s started %t: %s %s", r.code, r.plan, r.started, r.out, r.errs)
-			}
-		})
-	}
-}
-
 func TestRunUsageSaysYAndN(t *testing.T) {
 	r := runPrompted(t, "", "--yes", "--well-specified", "maybe", "--split", "n")
-	if r.code != ExitUsage || !strings.Contains(r.errs, "--well-specified y/n and --split y/n") || strings.Contains(r.errs, "yes|no") {
+	if r.code != ExitUsage || !strings.Contains(r.errs, "run: --well-specified y/n and --split y/n each take y or n") || strings.Contains(r.errs, "yes|no") {
 		t.Fatalf("usage error: code %d: %s", r.code, r.errs)
 	}
 	var out, errs bytes.Buffer
 	if code := (&App{}).Run(context.Background(), []string{"help"}, &out, &errs); code != ExitOK {
 		t.Fatalf("help: code %d: %s", code, errs.String())
 	}
-	if !strings.Contains(out.String(), "ork run P ID [--yes --well-specified y/n --split y/n]") || strings.Contains(out.String(), "yes|no") {
+	if !strings.Contains(out.String(), "ork run P ID [--yes] [--well-specified y/n] [--split y/n]") || strings.Contains(out.String(), "yes|no") {
 		t.Fatalf("usage text: %s", out.String())
 	}
 }
@@ -96,7 +75,7 @@ func TestRunUsageSaysYAndN(t *testing.T) {
 func TestWaveStartUsageSaysYAndN(t *testing.T) {
 	var out, errs bytes.Buffer
 	code := (&App{}).Run(context.Background(), []string{"wave", "start", "p", "S1", "--yes", "--well-specified", "maybe", "--split", "n"}, &out, &errs)
-	if code != ExitUsage || !strings.Contains(errs.String(), "wave start: --well-specified y/n and --split y/n are required with --yes") || strings.Contains(errs.String(), "yes|no") {
+	if code != ExitUsage || !strings.Contains(errs.String(), "wave start: --well-specified y/n and --split y/n each take y or n") || strings.Contains(errs.String(), "yes|no") {
 		t.Fatalf("usage error: code %d: %s", code, errs.String())
 	}
 	// parse discards the flag package's help output, so no run of the command
@@ -125,7 +104,7 @@ func TestRunConfirmTakesYAndN(t *testing.T) {
 		start  bool
 	}{{"y", true}, {"Y", true}, {"yes", true}, {"YES", true}, {"n", false}, {"N", false}, {"no", false}, {"No", false}} {
 		t.Run(tc.answer, func(t *testing.T) {
-			r := runPrompted(t, "yes\nno\n"+tc.answer+"\n")
+			r := runPrompted(t, tc.answer+"\n")
 			if r.code != ExitOK || r.started != tc.start {
 				t.Fatalf("code %d started %t: %s %s", r.code, r.started, r.out, r.errs)
 			}
@@ -134,39 +113,16 @@ func TestRunConfirmTakesYAndN(t *testing.T) {
 }
 
 func TestRunConfirmEnterTakesNo(t *testing.T) {
-	r := runPrompted(t, "yes\nno\n\n")
+	r := runPrompted(t, "\n")
 	if r.code != ExitOK || r.started || !strings.Contains(r.out, "cancelled") {
 		t.Fatalf("code %d started %t: %s %s", r.code, r.started, r.out, r.errs)
 	}
 }
 
 func TestRunConfirmPromptShowsDefaultNo(t *testing.T) {
-	r := runPrompted(t, "yes\nno\nn\n")
+	r := runPrompted(t, "n\n")
 	if !strings.Contains(r.out, "Start this slice? [y/N]: ") {
 		t.Fatalf("confirm hint: %s", r.out)
-	}
-}
-
-func TestRunWellSpecifiedPromptShowsYN(t *testing.T) {
-	r := runPrompted(t, "\n")
-	if !strings.Contains(r.out, "Well specified? [y/n]: ") {
-		t.Fatalf("well-specified hint: %s", r.out)
-	}
-}
-
-func TestRunSplitPromptShowsYN(t *testing.T) {
-	r := runPrompted(t, "yes\n\n")
-	if !strings.Contains(r.out, "Split? [y/n]: ") {
-		t.Fatalf("split hint: %s", r.out)
-	}
-}
-
-func TestRunLineupPromptsHaveNoDefault(t *testing.T) {
-	for _, input := range []string{"\nyes\n", "yes\n\n"} {
-		r := runPrompted(t, input)
-		if r.code != ExitUsage || r.plan != "" || r.started {
-			t.Fatalf("input %q: code %d plan %s: %s", input, r.code, r.plan, r.errs)
-		}
 	}
 }
 
@@ -186,30 +142,16 @@ func TestRunFlagsAcceptYAndN(t *testing.T) {
 }
 
 func TestRunRejectsOtherAnswers(t *testing.T) {
-	r := runPrompted(t, "maybe\nyes\n")
-	if r.code != ExitUsage || r.plan != "" {
-		t.Fatalf("lineup: code %d plan %s: %s", r.code, r.plan, r.errs)
-	}
-	r = runPrompted(t, "yes\nno\nsure\n")
+	r := runPrompted(t, "sure\n")
 	if r.code != ExitUsage || r.started {
 		t.Fatalf("confirm: code %d started %t: %s", r.code, r.started, r.errs)
 	}
 }
 
 func TestRunConfirmClosedInputIsNotEnter(t *testing.T) {
-	r := runPrompted(t, "yes\nno\n")
+	r := runPrompted(t, "")
 	if r.code != ExitUsage || r.started || strings.Contains(r.out, "cancelled") {
 		t.Fatalf("code %d started %t: %s %s", r.code, r.started, r.out, r.errs)
-	}
-}
-
-func TestRunYesRequiresExplicitLineupInputs(t *testing.T) {
-	for _, flags := range [][]string{nil, {"--well-specified", "yes"}, {"--split", "no"}, {"--well-specified", "maybe", "--split", "no"}} {
-		var out, errs bytes.Buffer
-		code := (&App{}).Run(context.Background(), append([]string{"run", "p", "S1", "--yes"}, flags...), &out, &errs)
-		if code != ExitUsage || !strings.Contains(errs.String(), "well-specified") || strings.Contains(errs.String(), "unknown command") {
-			t.Fatalf("code %d: %s", code, &errs)
-		}
 	}
 }
 
@@ -217,7 +159,7 @@ func TestRunShowsPlanBeforeConfirmation(t *testing.T) {
 	for _, answer := range []string{"no", "yes"} {
 		t.Run(answer, func(t *testing.T) {
 			var out, errs bytes.Buffer
-			app := &App{Input: strings.NewReader("yes\nno\n" + answer + "\n")}
+			app := &App{Input: strings.NewReader(answer + "\n")}
 			app.Call = func(_ context.Context, method string, params, result any) error {
 				switch method {
 				case "run.plan":
@@ -668,7 +610,7 @@ func TestRunAndWavePlanShowOnlyOverriddenBudgets(t *testing.T) {
 					effective.Minutes = 20
 				}
 				var out, errs bytes.Buffer
-				app := &App{Input: strings.NewReader("y\nn\nn\n"), Call: func(_ context.Context, method string, params, result any) error {
+				app := &App{Input: strings.NewReader("n\n"), Call: func(_ context.Context, method string, params, result any) error {
 					switch method {
 					case daemon.MethodRunPlan:
 						*result.(*daemon.RunPlan) = daemon.RunPlan{CheckCommand: "go test ./...", Item: "S1", Budgets: effective}
@@ -954,7 +896,7 @@ func TestPrintRunPlanShowsWarnings(t *testing.T) {
 func noCheckRun(t *testing.T, args ...string) (code int, out, errs string, methods []string, starts []daemon.RunParams) {
 	t.Helper()
 	var stdout, stderr bytes.Buffer
-	app := &App{Input: strings.NewReader("y\nn\nyes\n"), Call: func(_ context.Context, method string, params, result any) error {
+	app := &App{Input: strings.NewReader("yes\n"), Call: func(_ context.Context, method string, params, result any) error {
 		methods = append(methods, method)
 		switch method {
 		case daemon.MethodRunPlan:

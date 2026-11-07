@@ -43,7 +43,7 @@ var usageText = strings.Replace(usageTemplate, "{CONTRACTS}", roles.AcceptedCont
 
 const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
 
-  ork run P ID [--yes --well-specified y/n --split y/n]
+  ork run P ID [--yes] [--well-specified y/n] [--split y/n]
                               [--stop-after land|commit] [--allow-no-check]
                               [--implementer VENDOR:MODEL:EFFORT]
                               [--reviewer VENDOR:MODEL:EFFORT]
@@ -53,10 +53,13 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               show the plan and launch one slice; refused
                               when the project has no check command, unless
                               --allow-no-check
+                              plans well specified y and split n unless the
+                              flags say otherwise
   ork wave suggest P          show slicer's suggested waves
-  ork wave start P ITEM... [--yes --well-specified y/n --split y/n]
+  ork wave start P ITEM... [--yes] [--well-specified y/n] [--split y/n]
                               [--stop-after land|commit] [--allow-no-check]
-                              the run lineup and budget flags, for every item
+                              the run lineup and budget flags, for every item;
+                              well specified y and split n unless overridden
                               show the plans and launch the chosen items;
                               refused with no check command, as ork run
   ork approve RUN             finish and commit a passed slice

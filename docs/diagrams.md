@@ -161,7 +161,7 @@ flowchart TD
     c --> d["Project settings: ork projects set"]
     d --> e["Check the role matrix in ork"]
     e --> f["Pick a slice: l on the Roadmap, or ork run"]
-    f --> g["Answer well specified and split, read the plan, confirm"]
+    f --> g["Read the plan, confirm"]
     g --> h["Watch it on the Overview"]
     h --> i["Approve and land"]
 ```

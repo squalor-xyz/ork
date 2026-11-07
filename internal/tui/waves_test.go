@@ -117,23 +117,19 @@ func openWaves(t *testing.T, h *harness) {
 		t.Fatalf("tab reached %d, want Waves", h.m.view)
 	}
 }
-func tickWave(t *testing.T, h *harness, well, split string) {
+func tickWave(t *testing.T, h *harness) {
 	t.Helper()
 	h.deliver(press(" "))
-	if !strings.Contains(h.view(), "Well specified? [y/n]:") || !strings.Contains(h.view(), "Split? [y/n]:") {
-		t.Fatalf("both inputs must be visible:\n%s", h.view())
+	if strings.Contains(h.view(), "Well specified?") || strings.Contains(h.view(), "Split?") {
+		t.Fatalf("tick must not ask inputs:\n%s", h.view())
 	}
-	h.deliver(tea.PasteMsg{Content: well})
-	h.deliver(press("tab"))
-	h.deliver(tea.PasteMsg{Content: split})
-	h.deliver(press("enter"))
 }
 func twoWaveItems(t *testing.T, h *harness) {
 	t.Helper()
 	openWaves(t, h)
-	tickWave(t, h, "YeS", "nO")
+	tickWave(t, h)
 	h.deliver(press("down"))
-	tickWave(t, h, "n", "y")
+	tickWave(t, h)
 }
 func TestWavesListsSuggestedWaves(t *testing.T) {
 	h, l := wavesHarness(t)
@@ -163,22 +159,11 @@ func TestWavesSuggestErrorVerbatim(t *testing.T) {
 		t.Fatal(h.view())
 	}
 }
-func TestWavesTickAsksInputsThenPlans(t *testing.T) {
+func TestWavesTickShowsThePlanAndUntickRemovesIt(t *testing.T) {
 	h, l := wavesHarness(t)
 	openWaves(t, h)
-	h.deliver(press(" "))
-	for _, k := range []string{"enter", "tab", "enter"} {
-		h.deliver(press(k))
-	}
-	if len(l.plans) != 0 || !strings.Contains(h.view(), "requires y or n") {
-		t.Fatal("empty inputs must not plan")
-	}
-	h.deliver(press("tab"))
-	h.deliver(tea.PasteMsg{Content: "nO"})
-	h.deliver(press("shift+tab"))
-	h.deliver(tea.PasteMsg{Content: "YeS"})
-	h.deliver(press("enter"))
-	if len(l.plans) != 1 || !l.plans[0].WellSpecified || l.plans[0].Split || l.plans[0].Item != "A" {
+	tickWave(t, h)
+	if len(l.plans) != 1 || l.plans[0].Item != "A" {
 		t.Fatalf("plans: %+v", l.plans)
 	}
 	for _, s := range []string{"Lineup", "impl:  claude sonnet high", "rev:   claude opus medium", "gate:  claude opus medium", "[x] A"} {
@@ -235,7 +220,7 @@ func TestWavesLaunchConfirmsOnce(t *testing.T) {
 				t.Fatalf("starts: %+v", l.starts)
 			}
 			for i, p := range l.starts[0].Items {
-				if p.Project != "ork" || p.Item != []string{"A", "B"}[i] || p.Expected == nil || p.Expected.Item != p.Item || p.WellSpecified != (i == 0) || p.Split != (i == 1) {
+				if p.Project != "ork" || p.Item != []string{"A", "B"}[i] || p.Expected == nil || p.Expected.Item != p.Item || !p.WellSpecified || p.Split {
 					t.Fatalf("wrong launch: %+v", p)
 				}
 			}
@@ -316,11 +301,7 @@ func TestWavesLaunchStatusReflectsItemErrors(t *testing.T) {
 func TestWavesTickWhilePlanPendingShowsStatus(t *testing.T) {
 	h, l := wavesHarness(t)
 	openWaves(t, h)
-	h.deliver(press(" "))
-	h.deliver(tea.PasteMsg{Content: "y"})
-	h.deliver(press("tab"))
-	h.deliver(tea.PasteMsg{Content: "n"})
-	_, plan := h.m.Update(press("enter"))
+	_, plan := h.m.Update(press(" "))
 	if plan == nil {
 		t.Fatal("missing plan command")
 	}
@@ -329,11 +310,11 @@ func TestWavesTickWhilePlanPendingShowsStatus(t *testing.T) {
 	if !strings.Contains(h.view(), "A plan is pending") {
 		t.Errorf("missing pending plan status:\n%s", h.view())
 	}
-	if h.m.waves.inputs != nil || len(h.m.waves.picked) != 1 || h.m.waves.planning != "A" || len(l.plans) != 0 {
+	if len(h.m.waves.picked) != 1 || h.m.waves.planning != "A" || len(l.plans) != 0 {
 		t.Fatal("second tick changed the pending selection")
 	}
 	h.deliver(plan())
-	tickWave(t, h, "n", "y")
+	tickWave(t, h)
 	if len(l.plans) != 2 || l.plans[0].Item != "A" || l.plans[1].Item != "B" {
 		t.Fatalf("planning after pending call finished: %+v", l.plans)
 	}
@@ -389,10 +370,10 @@ func TestWavesGolden(t *testing.T) {
 func TestWavesPlanFailureBlocksWholeSelection(t *testing.T) {
 	h, l := wavesHarness(t)
 	openWaves(t, h)
-	tickWave(t, h, "yes", "no")
+	tickWave(t, h)
 	h.deliver(press("down"))
 	l.planErr = &ipc.Error{Code: "plan_failed", Message: "Exact PLAN failure."}
-	tickWave(t, h, "no", "yes")
+	tickWave(t, h)
 	if !strings.Contains(h.view(), "plan_failed: Exact PLAN failure.") {
 		t.Fatal(h.view())
 	}
@@ -442,11 +423,7 @@ func TestWavesStalePlanAfterUntickOrNavigation(t *testing.T) {
 		t.Run(change, func(t *testing.T) {
 			h, _ := wavesHarness(t)
 			openWaves(t, h)
-			h.deliver(press(" "))
-			h.deliver(tea.PasteMsg{Content: "y"})
-			h.deliver(press("tab"))
-			h.deliver(tea.PasteMsg{Content: "n"})
-			_, cmd := h.m.Update(press("enter"))
+			_, cmd := h.m.Update(press(" "))
 			if cmd == nil {
 				t.Fatal("missing plan command")
 			}
@@ -469,7 +446,7 @@ func TestWavesStalePlanAfterUntickOrNavigation(t *testing.T) {
 func TestWavesStaleOverlapAfterUntick(t *testing.T) {
 	h, _ := wavesHarness(t)
 	openWaves(t, h)
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	h.deliver(press("down"))
 	_, cmd := h.m.Update(press(" "))
 	if cmd == nil {
@@ -492,7 +469,7 @@ func TestWavesPendingLaunchSurvivesNavigationAndDeduplicates(t *testing.T) {
 	}
 	h.deliver(press("tab"))
 	h.deliver(press("shift+tab"))
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	h.deliver(press("l"))
 	if h.m.confirm != nil || !strings.Contains(h.view(), "is pending") {
 		t.Fatal("pending wave can launch twice")
@@ -502,23 +479,25 @@ func TestWavesPendingLaunchSurvivesNavigationAndDeduplicates(t *testing.T) {
 		t.Fatalf("launch lost: %s", h.view())
 	}
 }
-func TestWavesInputsCancelPasteAndNoDefaults(t *testing.T) {
+func TestWavesTickPlansAtOnceAndUntickCancels(t *testing.T) {
 	h, l := wavesHarness(t)
 	openWaves(t, h)
-	for _, answer := range []string{"Y", "YES", "n", "No"} {
-		h.deliver(press(" "))
-		h.deliver(tea.PasteMsg{Content: answer + "\n"})
-		if len(l.plans) != 0 {
-			t.Fatal("paste submitted")
-		}
-		h.deliver(press("enter"))
-		if len(l.plans) != 0 || !strings.Contains(h.view(), "Split? requires y or n") {
-			t.Fatal("split defaulted")
-		}
-		h.deliver(press("esc"))
-		if strings.Contains(h.view(), "[x] A") {
-			t.Fatal("cancel left tick")
-		}
+	_, plan := h.m.Update(press(" "))
+	if plan == nil || h.m.waves.planning != "A" || !strings.Contains(h.view(), "[x] A") {
+		t.Fatalf("tick did not start the plan:\n%s", h.view())
+	}
+	// Text pasted now reaches no field and plans nothing.
+	h.deliver(tea.PasteMsg{Content: "Y\n"})
+	if len(l.plans) != 0 {
+		t.Fatal("paste planned")
+	}
+	h.deliver(press(" "))
+	if strings.Contains(h.view(), "[x] A") || h.m.waves.planning != "" {
+		t.Fatal("untick left the tick")
+	}
+	h.deliver(plan())
+	if len(h.m.waves.picked) != 0 {
+		t.Fatalf("a late plan reply ticked the row again: %+v", h.m.waves.picked)
 	}
 	h.deliver(press("l"))
 	if h.m.confirm != nil {
@@ -546,21 +525,9 @@ func TestWavesUnplacedCanBePlanned(t *testing.T) {
 	for range 3 {
 		h.deliver(press("down"))
 	}
-	tickWave(t, h, "n", "n")
+	tickWave(t, h)
 	if len(l.plans) != 1 || l.plans[0].Item != "D" {
 		t.Fatalf("unplaced: %+v", l.plans)
-	}
-}
-
-func TestWavesInputsStayVisibleForLongLists(t *testing.T) {
-	h, l := wavesHarness(t)
-	for range 40 {
-		l.suggest.Unplaced = append(l.suggest.Unplaced, slicercli.ParallelItem{ID: "extra", Title: "Extra row"})
-	}
-	openWaves(t, h)
-	h.deliver(press(" "))
-	if !strings.Contains(h.view(), "Well specified? [y/n]:") || !strings.Contains(h.view(), "Split? [y/n]:") {
-		t.Fatal("launch fields scrolled out of view")
 	}
 }
 
@@ -655,15 +622,16 @@ func TestLineupColumnAppearsOnlyAfterTicking(t *testing.T) {
 	if strings.Contains(h.view(), "Lineup") {
 		t.Fatal("empty Lineup column visible")
 	}
-	h.deliver(press(" "))
+	_, plan := h.m.Update(press(" "))
 	if !strings.Contains(h.view(), "Lineup") {
 		t.Fatal("ticking did not show column")
 	}
-	h.deliver(press("esc"))
+	h.deliver(press(" "))
 	if strings.Contains(h.view(), "Lineup") {
 		t.Fatal("column remained after last tick cancelled")
 	}
-	tickWave(t, h, "y", "n")
+	h.deliver(plan())
+	tickWave(t, h)
 	if !strings.Contains(h.view(), "impl:") {
 		t.Fatal("planned lineup missing")
 	}
@@ -683,7 +651,7 @@ func TestWavesRowsNeverClipTheKeyColumns(t *testing.T) {
 				h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
 				openWaves(t, h)
 				if picked {
-					tickWave(t, h, "y", "n")
+					tickWave(t, h)
 				}
 				h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
 				w, _, side := h.m.layoutSize()
@@ -789,7 +757,7 @@ func TestWavesCursorBarCoversTheKeyColumns(t *testing.T) {
 			l.suggest.Waves[0].Items[0].Reason = "shares: S65 shared.go"
 			openWaves(t, h)
 			if picked {
-				tickWave(t, h, "y", "n")
+				tickWave(t, h)
 			}
 			body := h.m.wavesBody(60)
 			line := body.body[body.sel]
@@ -953,7 +921,7 @@ func TestWavesShowsFirstWavesOnly(t *testing.T) {
 	}
 }
 
-func TestTickedItemStaysInViewWithInputs(t *testing.T) {
+func TestTickedItemStaysInView(t *testing.T) {
 	for _, size := range [][2]int{{80, 24}, {120, 40}} {
 		h, l := wavesHarness(t)
 		for i := 0; i < 40; i++ {
@@ -970,41 +938,16 @@ func TestTickedItemStaysInViewWithInputs(t *testing.T) {
 		if !strings.Contains(v, "1 ticked, not launched") {
 			t.Fatalf("tick status offscreen:\n%s", v)
 		}
-		if !strings.Contains(v, "[x] "+id) || !strings.Contains(v, "Well specified? [y/n]:") || !strings.Contains(v, "Split? [y/n]:") {
-			t.Fatalf("item and fields not visible:\n%s", v)
+		if !strings.Contains(v, "[x] "+id) || strings.Contains(v, "Well specified?") || strings.Contains(v, "Split?") || strings.Contains(v, "launch inputs") {
+			t.Fatalf("item not visible, or inputs shown:\n%s", v)
 		}
-		body := sgr.ReplaceAllString(strings.Join(h.m.wavesBody(72).body, "\n"), "")
-		lines := strings.Split(body, "\n")
-		for i, line := range lines {
-			if strings.Contains(line, "[x] "+id+" ") && (i+3 >= len(lines) || !strings.Contains(lines[i+1], "launch inputs") || !strings.Contains(lines[i+2], "Well specified?") || !strings.Contains(lines[i+3], "Split?")) {
-				t.Fatalf("inputs not directly below item:\n%s", body)
-			}
-		}
-	}
-}
-
-func TestOnlyActiveInputShowsCursor(t *testing.T) {
-	h, _ := wavesHarness(t)
-	openWaves(t, h)
-	h.deliver(press(" "))
-	for focus := 0; focus < 2; focus++ {
-		body := h.m.wavesBody(72).body
-		for _, line := range body {
-			if strings.Contains(line, "[y/n]:") {
-				active := strings.Contains(line, []string{"Well specified?", "Split?"}[focus])
-				if reverseSGR.MatchString(line) != active {
-					t.Fatalf("field cursor focus %d: %q", focus, line)
-				}
-			}
-		}
-		h.deliver(press("tab"))
 	}
 }
 
 func TestWavesCompactLineupAndContinuation(t *testing.T) {
 	h, _ := wavesHarness(t)
 	openWaves(t, h)
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	p := h.m.waves.picked["A"]
 	p.Expected.Lineup["implementer"] = append(p.Expected.Lineup["implementer"], runrec.LineupEntry{Vendor: "hidden", Model: "fallback"}, runrec.LineupEntry{Vendor: "hidden", Model: "fallback2"})
 	h.m.waves.picked["A"] = p
@@ -1034,7 +977,7 @@ func TestWavesCompactLineupAndContinuation(t *testing.T) {
 func TestWavesLaunchRunNoticeAndJump(t *testing.T) {
 	h, l := wavesHarness(t)
 	openWaves(t, h)
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new", Item: "A"}}}
 	snap := h.m.projects[0].snap
 	snap.EngineRuns = []source.EngineRun{{ID: "ork-new", Item: "A", State: "queued"}}
@@ -1048,7 +991,7 @@ func TestWavesLaunchRunNoticeAndJump(t *testing.T) {
 		t.Fatal(plainView(h.m))
 	}
 	h.deliver(press(" "))
-	if h.m.waves.inputs != nil {
+	if _, ticked := h.m.waves.picked["A"]; ticked {
 		t.Fatal("launched item can be ticked again")
 	}
 	h.deliver(press("enter"))
@@ -1065,7 +1008,7 @@ func TestWavesReasonAndHintSpacing(t *testing.T) {
 	h, l := wavesHarness(t)
 	l.suggest.Unplaced[0].Title = strings.Repeat("Long title ", 10)
 	openWaves(t, h)
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	raw := h.m.wavesBody(60).body
 	plain := sgr.ReplaceAllString(strings.Join(raw, "\n"), "")
 	if !strings.Contains(plain, "no files listed") || strings.Contains(plain, "no_files") {
@@ -1091,7 +1034,7 @@ func TestWavesReasonAndHintSpacing(t *testing.T) {
 func TestWavesLineupWidthFitsLongestSummary(t *testing.T) {
 	h, _ := wavesHarness(t)
 	openWaves(t, h)
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	body := h.m.wavesBody(120).body
 	line := sgr.ReplaceAllString(body[bodyIndex(body, "[x] A")], "")
 	if got := strings.Index(line, "impl:"); got != 120-len("gate:  claude opus medium") {
@@ -1111,7 +1054,7 @@ func bodyIndex(lines []string, text string) int {
 func TestWavesLineupEditorKeepsFullFallbackChain(t *testing.T) {
 	h, _ := wavesHarness(t)
 	openWaves(t, h)
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	p := h.m.waves.picked["A"]
 	p.Expected.Lineup["implementer"] = append(p.Expected.Lineup["implementer"], runrec.LineupEntry{Vendor: "codex", Model: "fallback", Effort: "high"})
 	h.m.waves.picked["A"] = p
@@ -1124,7 +1067,7 @@ func TestWavesLineupEditorKeepsFullFallbackChain(t *testing.T) {
 func TestWavesJumpWaitsForSnapshot(t *testing.T) {
 	h, l := wavesHarness(t)
 	openWaves(t, h)
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new", Item: "A"}}}
 	h.deliver(press("l"))
 	h.deliver(press("y"))
@@ -1140,7 +1083,7 @@ func TestWavesJumpWaitsForSnapshot(t *testing.T) {
 
 func TestWavesComposerGolden(t *testing.T) {
 	for _, size := range [][2]int{{80, 24}, {120, 40}} {
-		for _, state := range []string{"inputs", "limited", "fallbacks", "launched"} {
+		for _, state := range []string{"ticked", "limited", "fallbacks", "launched"} {
 			for _, mono := range []bool{false, true} {
 				theme := "color"
 				if mono {
@@ -1160,15 +1103,16 @@ func TestWavesComposerGolden(t *testing.T) {
 					}
 					openWaves(t, h)
 					switch state {
-					case "inputs":
-						h.deliver(press(" "))
+					case "ticked":
+						// The tick plans at once: the lineup column is filled, no inputs are asked.
+						tickWave(t, h)
 					case "fallbacks":
-						tickWave(t, h, "y", "n")
+						tickWave(t, h)
 						p := h.m.waves.picked["A"]
 						p.Expected.Lineup["implementer"] = append(p.Expected.Lineup["implementer"], runrec.LineupEntry{Vendor: "claude", Model: "haiku", Effort: "high"}, runrec.LineupEntry{Vendor: "claude", Model: "sonnet", Effort: "medium"})
 						h.m.waves.picked["A"] = p
 					case "launched":
-						tickWave(t, h, "y", "n")
+						tickWave(t, h)
 						l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-20261025-123000-abcd", Item: "A"}}}
 						h.deliver(press("l"))
 						h.deliver(press("y"))
@@ -1200,7 +1144,7 @@ func TestWavesExpandPreservesUnplacedCursor(t *testing.T) {
 func TestWavesDelayedJumpYieldsToNavigation(t *testing.T) {
 	h, l := wavesHarness(t)
 	openWaves(t, h)
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new", Item: "A"}}}
 	h.deliver(press("l"))
 	h.deliver(press("y"))
@@ -1254,7 +1198,7 @@ func TestWavesFix1DimCellsAndAlignment(t *testing.T) {
 		h, l := wavesHarness(t)
 		h.m.cfg.Theme = NewTheme(mono)
 		openWaves(t, h)
-		tickWave(t, h, "y", "n")
+		tickWave(t, h)
 		p := h.m.waves.picked["A"]
 		p.Lineup = map[string][]runrec.LineupEntry{"implementer": p.Expected.Lineup["implementer"]}
 		p.Expected.Lineup["implementer"] = append(p.Expected.Lineup["implementer"], runrec.LineupEntry{Vendor: "extra"})
@@ -1295,11 +1239,11 @@ func TestWavesFix1DimCellsAndAlignment(t *testing.T) {
 	}
 }
 
-func TestWavesFix1SecondaryLinesAndInputs(t *testing.T) {
+func TestWavesFix1SecondaryLines(t *testing.T) {
 	h, l := wavesHarness(t)
 	h.m.cfg.Theme = NewTheme(false)
 	openWaves(t, h)
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	l.suggest.Unplaced[0].Title = strings.Repeat("long title ", 10)
 	h.m.waves.launched = map[string]string{"B": "ork-" + strings.Repeat("r", 36)}
 	for _, raw := range h.m.wavesBody(60).body {
@@ -1314,36 +1258,27 @@ func TestWavesFix1SecondaryLinesAndInputs(t *testing.T) {
 		}
 	}
 	h.m.waves.launched = nil
+	// Ticking again shows no input rows and no input hints (adj 189).
 	h.deliver(press(" "))
 	h.deliver(press(" "))
-	body := h.m.wavesBody(60).body
-	plain := sgr.ReplaceAllString(strings.Join(body, "\n"), "")
-	for _, raw := range body {
-		line := sgr.ReplaceAllString(raw, "")
-		if strings.Contains(line, "launch inputs") {
-			if line != "         launch inputs" {
-				t.Errorf("input header: %q", line)
-			}
-			dimAt(t, raw, "launch inputs", false)
-		}
-		if strings.Contains(line, "[y/n]:") && (!strings.HasPrefix(line, "         ") || strings.Contains(line, ">")) {
-			t.Errorf("input indentation/marker: %q", line)
-		}
+	plain := sgr.ReplaceAllString(strings.Join(h.m.wavesBody(60).body, "\n"), "")
+	if strings.Contains(plain, "launch inputs") || strings.Contains(plain, "[y/n]:") {
+		t.Errorf("input rows still drawn:\n%s", plain)
 	}
 	for _, hint := range []string{"tab next field", "enter plan", "esc cancel"} {
-		if !strings.Contains(wideHint(h), hint) {
-			t.Errorf("missing input hint %q", hint)
+		if strings.Contains(wideHint(h), hint) {
+			t.Errorf("input hint %q still listed", hint)
 		}
 	}
 	if strings.Contains(plain, "[space] tick") || strings.Contains(plain, "[l] launch") {
-		t.Error("composer hints still shown while entering inputs")
+		t.Error("composer hints shown in the body")
 	}
 }
 
 func TestWavesFix1StatusNotInLineupEditor(t *testing.T) {
 	h, _ := wavesHarness(t)
 	openWaves(t, h)
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	if !strings.Contains(plainView(h.m), "1 ticked, not launched") {
 		t.Fatal("tick status missing")
 	}
@@ -1407,11 +1342,9 @@ func TestWavesHintsStayPinnedBelowBody(t *testing.T) {
 		}
 		return -1
 	}
-	if at("tab next field") != len(lines)-2 || at("Split? [y/n]:") > at("tab next field") {
-		t.Fatalf("input hints not pinned under the body:\n%s", strings.Join(lines, "\n"))
+	if at("enter item") != len(lines)-2 || at("[x] ") < 0 || at("[x] ") > at("enter item") || at("next field") >= 0 {
+		t.Fatalf("composer hints not pinned under the body:\n%s", strings.Join(lines, "\n"))
 	}
-	h.deliver(press("esc"))
-	tickWave(t, h, "y", "n")
 	if got := plainView(h.m); !strings.Contains(hintLine(got), "enter item") || !strings.Contains(hintLine(got), "l launch") {
 		t.Fatalf("composer hints scrolled away:\n%s", got)
 	}
@@ -1442,7 +1375,7 @@ func TestWavesArchitectLineup(t *testing.T) {
 		h, _ := wavesHarness(t)
 		h.m.cfg.Theme = NewTheme(mono)
 		openWaves(t, h)
-		tickWave(t, h, "y", "n")
+		tickWave(t, h)
 		p := h.m.waves.picked["A"]
 		if strings.Contains(strings.Join(waveLineup(p), "\n"), "arch:") {
 			t.Fatal("absent architect shown")
@@ -1463,7 +1396,7 @@ func TestWavesArchitectLineup(t *testing.T) {
 func TestWavesLineupShowsUIPass(t *testing.T) {
 	h, _ := wavesHarness(t)
 	openWaves(t, h)
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	p := h.m.waves.picked["A"]
 	if strings.Contains(strings.Join(waveLineup(p), "\n"), "ui:") {
 		t.Fatal("absent UI pass shown")

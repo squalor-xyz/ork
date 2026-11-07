@@ -1753,7 +1753,7 @@ func TestRunningEntryTabsShowAllProjects(t *testing.T) {
 	// Nothing on the combined Waves or Roadmap opens or launches a project.
 	h.tabTo(wavesView)
 	h.deliver(press(" "))
-	if w := h.m.waves; w == nil || len(w.picked) != 0 || w.inputs != nil {
+	if w := h.m.waves; w == nil || len(w.picked) != 0 || w.planning != "" {
 		t.Fatalf("space must not tick a row of the combined Waves: %+v", w)
 	}
 	h.deliver(press("enter"))

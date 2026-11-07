@@ -391,7 +391,7 @@ func TestHintBarOnTheOtherViews(t *testing.T) {
 		if h.m.confirm != nil || h.m.waves.checking {
 			t.Error("l launched with nothing ticked")
 		}
-		tickWave(t, h, "y", "n")
+		tickWave(t, h)
 		hint = hintLine(h.view())
 		if !strings.Contains(hint, "l launch") {
 			t.Errorf("waves hint after a tick: %q", hint)
@@ -408,7 +408,7 @@ func TestHintBarOnTheOtherViews(t *testing.T) {
 		h.m.cfg.Live = nil
 		hint := hintLine(h.view())
 		h.deliver(press(" "))
-		if h.m.waves.inputs != nil {
+		if len(h.m.waves.picked) != 0 || h.m.waves.planning != "" {
 			t.Fatal("space ticked with no daemon")
 		}
 		if strings.Contains(hint, "space tick") {
@@ -509,11 +509,7 @@ func TestHintBarListsAnswerKeysOnlyWhenTheAnswerActs(t *testing.T) {
 func TestHintBarListsTickOnlyWhenTickingActs(t *testing.T) {
 	h, _ := wavesHarness(t)
 	openWaves(t, h)
-	h.deliver(press(" "))
-	h.deliver(tea.PasteMsg{Content: "y"})
-	h.deliver(press("tab"))
-	h.deliver(tea.PasteMsg{Content: "n"})
-	_, plan := h.m.Update(press("enter"))
+	_, plan := h.m.Update(press(" "))
 	if plan == nil || h.m.waves.planning == "" {
 		t.Fatal("no plan pending")
 	}
@@ -524,7 +520,7 @@ func TestHintBarListsTickOnlyWhenTickingActs(t *testing.T) {
 	h.deliver(press("down"))
 	hint := hintLine(h.view())
 	h.deliver(press(" "))
-	if h.m.waves.inputs != nil {
+	if len(h.m.waves.picked) != 1 || h.m.waves.planning != "A" {
 		t.Fatal("space ticked another item while a plan was pending")
 	}
 	if strings.Contains(hint, "space tick") {
@@ -730,16 +726,11 @@ func TestHintRound2Prompts(t *testing.T) {
 	if got := wideHint(w); strings.Contains(got, "e edit lineup") {
 		t.Errorf("unticked: %q", got)
 	}
-	w.deliver(press(" "))
+	tickWave(t, w)
 	if strings.Contains(plainView(w.m), "[l] launches") {
 		t.Error("Waves status repeats launch key")
 	}
-	if got := wideHint(w); !strings.Contains(got, "tab next field; enter plan; esc cancel") {
-		t.Errorf("inputs: %q", got)
-	}
-	w.deliver(press("esc"))
-	tickWave(t, w, "y", "n")
-	if got := wideHint(w); !strings.Contains(got, "e edit lineup") {
+	if got := wideHint(w); !strings.Contains(got, "e edit lineup") || strings.Contains(got, "next field") || strings.Contains(got, "enter plan") {
 		t.Errorf("planned: %q", got)
 	}
 	l, _ := launchHarness(t)
@@ -748,8 +739,8 @@ func TestHintRound2Prompts(t *testing.T) {
 		t.Errorf("launch list: %q", got)
 	}
 	l.deliver(press("enter"))
-	if got := wideHint(l); !strings.Contains(got, "enter next field; esc cancel") {
-		t.Errorf("launch input: %q", got)
+	if got := wideHint(l); !strings.Contains(got, "y run; n cancel") || strings.Contains(got, "next field") {
+		t.Errorf("launch plan: %q", got)
 	}
 }
 
@@ -970,7 +961,7 @@ func TestQuitHintNeverDropsOnMainViews(t *testing.T) {
 		{"Waves", func(t *testing.T) *harness {
 			h, _ := wavesHarness(t)
 			openWaves(t, h)
-			tickWave(t, h, "y", "n")
+			tickWave(t, h)
 			return h
 		}},
 		{"Roadmap", func(t *testing.T) *harness {

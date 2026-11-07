@@ -101,9 +101,11 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	if len(pos) < 2 {
 		return o.usage("wave start takes PROJECT ITEM...")
 	}
-	valid := func(v string) bool { return v == "" || yesNo(v) != "" }
-	if !valid(*well) || !valid(*split) || (*yes && (*well == "" || *split == "")) {
-		return o.usage("wave start: --well-specified y/n and --split y/n are required with --yes")
+	// Adj 189: the defaults are well specified = yes and split = no; the flags
+	// override them for every item.
+	wellSpecified, splitItem, ok := lineupAnswers(*well, *split)
+	if !ok {
+		return o.usage("wave start: --well-specified y/n and --split y/n each take y or n")
 	}
 	var overrides daemon.RunParams
 	if err := lineup.apply(&overrides); err != nil {
@@ -136,20 +138,7 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	}
 	params := daemon.WaveStartParams{Items: []daemon.RunParams{}}
 	for _, item := range pos[1:] {
-		w, s := yesNo(*well), yesNo(*split)
-		if w == "" {
-			w, err = ask(item+" Well specified?", "y/n", "")
-			if err != nil {
-				return o.usage("%v", err)
-			}
-		}
-		if s == "" {
-			s, err = ask(item+" Split?", "y/n", "")
-			if err != nil {
-				return o.usage("%v", err)
-			}
-		}
-		p := daemon.RunParams{Project: pos[0], Item: item, WellSpecified: w == "yes", Split: s == "yes"}
+		p := daemon.RunParams{Project: pos[0], Item: item, WellSpecified: wellSpecified, Split: splitItem}
 		p.Lineup, p.Budgets, p.StopAfter = overrides.Lineup, overrides.Budgets, overrides.StopAfter
 		p.AllowNoCheck = *allowNoCheck
 		var plan daemon.RunPlan

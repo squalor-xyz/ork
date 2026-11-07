@@ -73,28 +73,15 @@ func launchHarness(t *testing.T) (*harness, *launchLive) {
 	h.m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
 	return h, l
 }
-func launchPick(t *testing.T, h *harness) {
-	t.Helper()
-	h.m.Update(press("l"))
-	h.m.Update(press("enter"))
-	if !strings.Contains(h.view(), "Well specified? [y/n]:") {
-		t.Fatalf("missing first prompt:\n%s", h.view())
-	}
-}
-func launchAnswer(h *harness, answer string) tea.Cmd {
-	h.m.Update(tea.PasteMsg{Content: answer})
-	_, cmd := h.m.Update(press("enter"))
-	return cmd
-}
+
+// launchPlanning opens the launch list and picks the first slice. The pick
+// asks nothing and returns the run.plan command (adj 189).
 func launchPlanning(t *testing.T, h *harness) tea.Cmd {
 	t.Helper()
-	launchPick(t, h)
-	if cmd := launchAnswer(h, "YeS"); cmd != nil {
-		t.Fatal("command before both answers")
-	}
-	cmd := launchAnswer(h, "nO")
+	h.m.Update(press("l"))
+	_, cmd := h.m.Update(press("enter"))
 	if cmd == nil {
-		t.Fatal("missing plan command")
+		t.Fatalf("missing plan command:\n%s", h.view())
 	}
 	return cmd
 }
@@ -127,41 +114,8 @@ func TestLaunchListsOnlyReadySlices(t *testing.T) {
 	if v = h.view(); !strings.Contains(v, "No ready slices") || strings.Contains(v, "S90") {
 		t.Fatalf("deps error permits launch:\n%s", v)
 	}
-	h.m.Update(press("enter"))
-	if strings.Contains(h.view(), "Well specified?") {
+	if _, c := h.m.Update(press("enter")); c != nil || strings.Contains(h.view(), "pending: run.plan") {
 		t.Fatal("empty list picked a slice")
-	}
-}
-func TestLaunchAsksWellSpecifiedAndSplit(t *testing.T) {
-	for _, a := range []string{"y", "YES", "YeS", "n", "NO", "nO"} {
-		t.Run(a, func(t *testing.T) {
-			h, l := launchHarness(t)
-			launchPick(t, h)
-			for _, bad := range []string{"", "maybe"} {
-				if c := launchAnswer(h, bad); c != nil {
-					t.Fatal("invalid input issued command")
-				}
-				if !strings.Contains(h.view(), "Well specified? requires y or n") {
-					t.Fatal("missing input error")
-				}
-				h.m.Update(tea.KeyPressMsg{Code: 'u', Mod: tea.ModCtrl})
-			}
-			if c := launchAnswer(h, a); c != nil || len(l.plans) != 0 || !strings.Contains(h.view(), "Split? [y/n]:") {
-				t.Fatal("must ask split before Plan")
-			}
-			if c := launchAnswer(h, ""); c != nil || !strings.Contains(h.view(), "Split? requires y or n") {
-				t.Fatal("split has no default")
-			}
-			c := launchAnswer(h, a)
-			if c == nil {
-				t.Fatal("accepted answer gave no Plan")
-			}
-			h.deliver(c())
-			want := strings.HasPrefix(strings.ToLower(a), "y")
-			if len(l.plans) != 1 || l.plans[0].WellSpecified != want || l.plans[0].Split != want {
-				t.Fatalf("answers: %+v", l.plans)
-			}
-		})
 	}
 }
 func TestLaunchPlanBeforeConfirm(t *testing.T) {
@@ -268,17 +222,12 @@ func TestLaunchErrorVerbatim(t *testing.T) {
 	}
 }
 func TestLaunchEscapeAndLateResults(t *testing.T) {
-	for _, stage := range []string{"list", "well", "split", "pending", "confirm"} {
+	for _, stage := range []string{"list", "pending", "confirm"} {
 		t.Run(stage, func(t *testing.T) {
 			h, l := launchHarness(t)
 			var late tea.Msg
 			if stage == "list" {
 				h.m.Update(press("l"))
-			} else if stage == "well" {
-				launchPick(t, h)
-			} else if stage == "split" {
-				launchPick(t, h)
-				launchAnswer(h, "y")
 			} else {
 				c := launchPlanning(t, h)
 				late = c()
@@ -364,29 +313,6 @@ func TestLaunchScopeAndHelp(t *testing.T) {
 		t.Fatal("launch missing from help")
 	}
 }
-func TestLaunchPromptOwnsKeysAndPaste(t *testing.T) {
-	h, l := launchHarness(t)
-	launchPick(t, h)
-	for _, k := range []string{"n", "y", "q", "s", "r", "?"} {
-		if _, c := h.m.Update(press(k)); c != nil {
-			t.Fatalf("prompt key %s issued command", k)
-		}
-	}
-	if !strings.Contains(h.view(), "nyqsr?") || len(l.plans) != 0 || h.m.showHelp || h.m.sidebarHidden {
-		t.Fatalf("prompt lost keys:\n%s", h.view())
-	}
-	h.m.Update(tea.KeyPressMsg{Code: 'u', Mod: tea.ModCtrl})
-	launchAnswer(h, "yes")
-	h.m.Update(tea.PasteMsg{Content: "no"})
-	if len(l.plans) != 0 {
-		t.Fatal("paste submitted")
-	}
-	_, c := h.m.Update(press("ctrl+c"))
-	if c == nil {
-		t.Fatal("ctrl+c did not quit")
-	}
-}
-
 func TestLaunchReadyListNavigation(t *testing.T) {
 	h, _ := launchHarness(t)
 	s := h.m.projects[0].snap
@@ -406,9 +332,7 @@ func TestLaunchReadyListNavigation(t *testing.T) {
 		for _, k := range keys {
 			h.m.Update(press(k))
 		}
-		h.m.Update(press("enter"))
-		launchAnswer(h, "y")
-		c := launchAnswer(h, "n")
+		_, c := h.m.Update(press("enter"))
 		if c == nil {
 			t.Fatal("missing Plan")
 		}
@@ -714,34 +638,21 @@ func TestLaunchListUsesCurrentReadiness(t *testing.T) {
 	h.m.Update(press("l"))
 	h.m.projects[0].snap.Deps.Err = errors.New("deps failed after list opened")
 	h.m.Update(press("enter"))
-	if !strings.Contains(h.view(), "No ready slices") || strings.Contains(h.view(), "Well specified?") || len(l.plans) != 0 {
+	if !strings.Contains(h.view(), "No ready slices") || strings.Contains(h.view(), "pending: run.plan") || len(l.plans) != 0 {
 		t.Fatalf("stale readiness selected a slice:\n%s", h.view())
 	}
 }
 
-func TestLaunchStartsWithBothAnswers(t *testing.T) {
-	for _, well := range []bool{false, true} {
-		for _, split := range []bool{false, true} {
-			t.Run(fmt.Sprintf("well-%t/split-%t", well, split), func(t *testing.T) {
-				h, l := launchHarness(t)
-				launchPick(t, h)
-				answers := map[bool]string{false: "no", true: "yes"}
-				launchAnswer(h, answers[well])
-				c := launchAnswer(h, answers[split])
-				if c == nil {
-					t.Fatal("no Plan")
-				}
-				h.deliver(c())
-				_, c = h.m.Update(press("y"))
-				if c == nil {
-					t.Fatal("no Start")
-				}
-				h.deliver(c())
-				if len(l.plans) != 1 || len(l.starts) != 1 || l.starts[0].WellSpecified != well || l.starts[0].Split != split || !reflect.DeepEqual(l.starts[0].Expected, &l.plan) {
-					t.Fatalf("Plan and Start: %+v %+v", l.plans, l.starts)
-				}
-			})
-		}
+func TestLaunchStartsWithTheDefaults(t *testing.T) {
+	h, l := launchHarness(t)
+	h.deliver(launchPlanning(t, h)())
+	_, c := h.m.Update(press("y"))
+	if c == nil {
+		t.Fatal("no Start")
+	}
+	h.deliver(c())
+	if len(l.plans) != 1 || len(l.starts) != 1 || !l.plans[0].WellSpecified || l.plans[0].Split || !l.starts[0].WellSpecified || l.starts[0].Split || !reflect.DeepEqual(l.starts[0].Expected, &l.plan) {
+		t.Fatalf("Plan and Start: %+v %+v", l.plans, l.starts)
 	}
 }
 

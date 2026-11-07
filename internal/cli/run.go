@@ -64,14 +64,13 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 	if len(pos) != 2 {
 		return o.usage("run takes PROJECT ID")
 	}
-	// adj #86 run.lineup-inputs: prompt at confirmation, or require both
-	// explicit y/n inputs when --yes skips the prompt. adj #87
-	// run.prompt-answers: y, yes, n and no are accepted in any case.
-	valid := func(v string) bool { return v == "" || yesNo(v) != "" }
-	if !valid(*well) || !valid(*split) || (*yes && (*well == "" || *split == "")) {
-		return o.usage("run: --well-specified y/n and --split y/n are required with --yes")
+	// Adj 189 launch.well-specified-default: every item plans as well specified
+	// = yes and split = no, and the spec check holds an item that is not Ready.
+	// The flags override the defaults; y, yes, n and no are accepted in any case.
+	wellSpecified, splitItem, ok := lineupAnswers(*well, *split)
+	if !ok {
+		return o.usage("run: --well-specified y/n and --split y/n each take y or n")
 	}
-	*well, *split = yesNo(*well), yesNo(*split)
 	var overrides daemon.RunParams
 	if err := lineup.apply(&overrides); err != nil {
 		return o.usage("run: %v", err)
@@ -103,19 +102,7 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		}
 		return answer, nil
 	}
-	if *well == "" {
-		*well, err = ask("Well specified?", "y/n", "")
-		if err != nil {
-			return o.usage("%v", err)
-		}
-	}
-	if *split == "" {
-		*split, err = ask("Split?", "y/n", "")
-		if err != nil {
-			return o.usage("%v", err)
-		}
-	}
-	params := daemon.RunParams{Project: pos[0], Item: pos[1], WellSpecified: *well == "yes", Split: *split == "yes"}
+	params := daemon.RunParams{Project: pos[0], Item: pos[1], WellSpecified: wellSpecified, Split: splitItem}
 	params.Lineup, params.Budgets, params.StopAfter = overrides.Lineup, overrides.Budgets, overrides.StopAfter
 	params.AllowNoCheck = *allowNoCheck
 	var plan daemon.RunPlan
@@ -171,6 +158,17 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		return code
 	}
 	return printRun(o, rec)
+}
+
+// lineupAnswers is the planning inputs for well specified and split: the flag
+// values, or the defaults (yes and no) for a flag left out (adj 189). ok is
+// false when a flag holds anything but y, yes, n or no.
+func lineupAnswers(well, split string) (wellSpecified, splitItem, ok bool) {
+	valid := func(v string) bool { return v == "" || yesNo(v) != "" }
+	if !valid(well) || !valid(split) {
+		return false, false, false
+	}
+	return yesNo(well) != "no", yesNo(split) == "yes", true
 }
 
 // yesNo maps y, yes, n and no, in any case, to "yes" or "no". Anything else

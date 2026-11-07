@@ -21,8 +21,6 @@ type launchStage int
 
 const (
 	launchList launchStage = iota
-	launchWell
-	launchSplit
 	launchPlanPending
 	launchSpecPending
 	launchSitting
@@ -39,7 +37,6 @@ type launchState struct {
 	replanCancel context.CancelFunc
 	stage        launchStage
 	cursor       int
-	input        textField
 	params       daemon.RunParams
 	plan         *daemon.RunPlan
 	request      uint64
@@ -58,10 +55,6 @@ type launchMsg struct {
 type launchFlight struct {
 	action  runAction
 	request uint64
-}
-
-func (m *Model) launchPrompt() bool {
-	return m.launch != nil && (m.launch.stage == launchWell || m.launch.stage == launchSplit)
 }
 
 func (m *Model) dropLaunch() {
@@ -101,7 +94,9 @@ func (m *Model) openLaunch() tea.Cmd {
 	project := m.projects[m.active].reg.Name
 	m.launchRequest++
 	ctx, cancel := context.WithCancel(context.Background())
-	l := &launchState{params: daemon.RunParams{Project: project}, request: m.launchRequest, ctx: ctx, cancel: cancel}
+	// Adj 189: the plan is made as well specified = yes and split = no; the
+	// spec check holds an item that is not Ready.
+	l := &launchState{params: daemon.RunParams{Project: project, WellSpecified: true}, request: m.launchRequest, ctx: ctx, cancel: cancel}
 	m.launch = l
 	m.actionStatus = ""
 	return nil
@@ -142,39 +137,6 @@ func (m *Model) launchKey(msg tea.KeyPressMsg) tea.Cmd {
 		m.dropLaunch()
 		return nil
 	}
-	if m.launchPrompt() {
-		if msg.String() != "enter" {
-			l.input.update(msg)
-			m.actionStatus = ""
-			return nil
-		}
-		yes, valid := launchAnswerValue(l.input.Value())
-		if !valid {
-			label := "Well specified?"
-			if l.stage == launchSplit {
-				label = "Split?"
-			}
-			m.actionStatus = label + " requires y or n"
-			return nil
-		}
-		l.input = textField{}
-		m.actionStatus = ""
-		if l.stage == launchWell {
-			l.params.WellSpecified = yes
-			l.stage = launchSplit
-			return nil
-		}
-		l.params.Split = yes
-		l.stage = launchPlanPending
-		live, params, request, ctx := m.cfg.Live, l.params, l.request, l.ctx
-		return func() tea.Msg {
-			if ctx.Err() != nil {
-				return nil
-			}
-			plan, err := live.Plan(ctx, params)
-			return launchMsg{request: request, plan: plan, err: err}
-		}
-	}
 	items := m.readyLaunchItems()
 	l.cursor = clampCursor(l.cursor, len(items))
 	// Project and view navigation drop the launch, including a pending plan.
@@ -200,7 +162,15 @@ func (m *Model) launchKey(msg tea.KeyPressMsg) tea.Cmd {
 	case key.Matches(msg, m.keys.Select):
 		if l.stage == launchList && len(items) > 0 {
 			l.params.Item = items[l.cursor].ID
-			l.stage = launchWell
+			l.stage = launchPlanPending
+			live, params, request, ctx := m.cfg.Live, l.params, l.request, l.ctx
+			return func() tea.Msg {
+				if ctx.Err() != nil {
+					return nil
+				}
+				plan, err := live.Plan(ctx, params)
+				return launchMsg{request: request, plan: plan, err: err}
+			}
 		}
 	}
 	return nil
@@ -480,13 +450,6 @@ func (m *Model) launchView(w int) overviewView {
 			}
 			out.body = append(out.body, line)
 		}
-	case launchWell, launchSplit:
-		label := "Well specified? [y/n]:"
-		if l.stage == launchSplit {
-			label = "Split? [y/n]:"
-		}
-		add(label)
-		out.body = append(out.body, indent+l.input.view(max(w-2, 1), th))
 	case launchPlanPending:
 		add("pending: run.plan")
 	case launchSpecPending:
@@ -546,14 +509,4 @@ func (m *Model) launchView(w int) overviewView {
 		}
 	}
 	return out
-}
-
-func launchAnswerValue(text string) (yes, valid bool) {
-	switch strings.ToLower(strings.TrimSpace(text)) {
-	case "y", "yes":
-		return true, true
-	case "n", "no":
-		return false, true
-	}
-	return false, false
 }

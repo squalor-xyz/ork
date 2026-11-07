@@ -103,11 +103,11 @@ func TestWaveStartPlansChosenItemsBeforeConfirmation(t *testing.T) {
 		start       bool
 		code        int
 	}{
-		{"confirm", "y\nn\nn\ny\ny\n", nil, true, ExitOK},
-		{"decline", "y\nn\nn\ny\n\n", nil, false, ExitOK},
-		{"closed", "y\nn\nn\ny\n", nil, false, ExitUsage},
-		{"yes", "", []string{"--yes", "--well-specified", "yes", "--split", "no"}, true, ExitOK},
-		{"missing inputs", "", []string{"--yes"}, false, ExitUsage},
+		{"confirm", "y\n", nil, true, ExitOK},
+		{"decline", "\n", nil, false, ExitOK},
+		{"closed", "", nil, false, ExitUsage},
+		{"yes", "", []string{"--yes"}, true, ExitOK},
+		{"bad flag", "", []string{"--yes", "--split", "maybe"}, false, ExitUsage},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			var out, errs bytes.Buffer
@@ -121,9 +121,7 @@ func TestWaveStartPlansChosenItemsBeforeConfirmation(t *testing.T) {
 					if p.Project != "p" || p.Item != want || p.Expected != nil {
 						t.Fatalf("plan inputs: %+v", p)
 					}
-					well := plans == 0 || tc.name == "yes"
-					split := plans == 1 && tc.name != "yes"
-					if p.WellSpecified != well || p.Split != split {
+					if !p.WellSpecified || p.Split {
 						t.Fatalf("answers: %+v", p)
 					}
 					plans++
@@ -154,7 +152,7 @@ func TestWaveStartPlansChosenItemsBeforeConfirmation(t *testing.T) {
 			}
 			args := append([]string{"wave", "start", "p", "S2", "S1", "--json"}, tc.flags...)
 			code := app.Run(context.Background(), args, &out, &errs)
-			if checked != (tc.name != "missing inputs") {
+			if checked != (tc.name != "bad flag") {
 				t.Fatalf("spec check ran: %t", checked)
 			}
 			if code != tc.code || started != tc.start || !json.Valid(out.Bytes()) {

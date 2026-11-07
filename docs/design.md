@@ -173,7 +173,10 @@ ork (TUI)  ork status --json (CLI)
    `slicer next --batch`) as a proposed wave (`wave.selection`). The owner
    adds or removes items, and ork warns when two items' `Files` overlap.
 2. **Lineup.** For each item, ork runs `slicer relay-roles recommend ID
-   --well-specified ... --split ...`. The primary row per role becomes the
+   --well-specified ... --split ...`; ork passes well specified = yes and
+   split = no unless the owner overrides them with `--well-specified` or
+   `--split` (*proposed*, adj 189, `launch.well-specified-default`; the
+   spec check holds an item that is not Ready). The primary row per role becomes the
    lineup, and the alternatives, in order, become that role's fallback
    chain (`lineup.source`). The owner can edit both.
    An edit at launch applies to that run only (`lineup.override-scope`).
@@ -1339,10 +1342,12 @@ replans without another spec check.
 Suggestions call `slicer plan-parallel --json --lean --root ROOT` for the
 registered project. Tool errors keep their code and message, including a
 missing `files_section`. The owner chooses the item ids (`wave.start-input`).
-The CLI asks the two y/n inputs for each item, shows each `run.plan`, then
-asks `Start this wave? [y/N]`. `--well-specified` and `--split` apply to
-every item; both are required with `--yes`. In JSON mode, prompts and plans
-go to stderr and stdout holds one result.
+The CLI plans each item as well specified = yes and split = no, shows each
+`run.plan`, then asks `Start this wave? [y/N]` (*proposed*, adj 189,
+`launch.well-specified-default`). It asks neither input. `--well-specified`
+and `--split` are optional overrides that apply to every item; `--yes` needs
+neither. In JSON mode, prompts and plans go to stderr and stdout holds one
+result.
 
 `ork run` and `ork wave start` accept `--stop-after land|commit` (*proposed*,
 S177). The plan prints `stop: after landing` or
@@ -1378,15 +1383,15 @@ running (`wave.failure`). `ork stop` selects a wave by its `wave-` prefix
 tool writes, even as stopping active members frees slots. A wave result
 with any item error exits 1; successful peers remain visible in the result.
 
-`ork run P ID` asks `Well specified?` and `Split?` as y/n questions
-(`[y/n]`, no default) before showing the plan, runs the spec check, then asks
-`Start this slice?` (`[y/N]`, Enter takes No) (adj #86,
-`run.lineup-inputs`). The prompts take y, yes, n or no in any case, and
-Enter alone is an error where there is no default (adj #87,
-`run.prompt-answers`). Each answer can also be given with its flag,
-`--well-specified` or `--split`, which take the same spellings. With
-`--yes`, both flags are required; a missing or invalid input is a usage
-error (exit 2).
+`ork run P ID` shows the plan, runs the spec check, then asks
+`Start this slice?` (`[y/N]`, Enter takes No). It asks neither `Well
+specified?` nor `Split?`: the plan is made as well specified = yes and
+split = no, and the spec check holds an item that is not Ready, which is the
+test rule u4 of the matrix names for "well specified" (*proposed*, adj 189,
+`launch.well-specified-default`, replacing adj #86 and #87 once the owner
+supersedes them). `--well-specified` and `--split` stay as optional
+overrides; they take y, yes, n or no in any case, and any other value is a
+usage error (exit 2). `--yes` needs neither flag.
 The plan shows the worktree, branch, check command, launch budgets, lineup
 and each role's resolved permissions. Without an override, the lineup keeps
 every row with an adapter from `slicer relay-roles recommend --json` in
@@ -1408,7 +1413,10 @@ reconciles any surviving process group, and stops the run. No TUI actions
 are added in S17.
 
 *Wire fields (`run.launch-wire`).* `run.plan` and `run.start` take
-`{project,item,well_specified,split,lineup?,budgets?}`. `lineup` maps each
+`{project,item,well_specified,split,lineup?,budgets?}`. The wire is unchanged
+(adj 189). The CLI sends `well_specified: true` and `split: false` unless the
+owner overrides them with `--well-specified` or `--split`; the TUI always
+sends `well_specified: true` and `split: false`. `lineup` maps each
 overridden role to its full chain of `{vendor,model,effort}` entries
 (`lineup.launch-edit`). Start also accepts `expected`, the plan the owner
 confirmed, including lineup and merged budgets. `run.approve`, `run.stop`

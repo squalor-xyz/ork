@@ -275,9 +275,9 @@ func TestWavesStaleSpecCheckAfterNavigation(t *testing.T) {
 	stale := cmd()        // the daemon has answered, and the reply is on its way
 	h.deliver(press("]")) // another project: the waves state is dropped
 	h.deliver(press("[")) // and a fresh one for the first project
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	h.deliver(press("down"))
-	tickWave(t, h, "y", "n")
+	tickWave(t, h)
 	if len(h.m.waves.picked) != 2 {
 		t.Fatalf("picked %v", h.m.waves.picked)
 	}

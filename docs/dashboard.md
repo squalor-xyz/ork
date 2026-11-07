@@ -184,10 +184,10 @@ The Waves hint reads `l launch` (not `l launch wave`) so that `e edit lineup`
 fits beside `q quit; ? help` at 100x30 (S152, owner decision 2026-10-29).
 Welcome shows `+ add project; q quit`; its path field shows
 `enter review path; esc cancel`. The lineup hint offers `left/right cycle`
-only when the focused role has more than one entry. Wave inputs show
-`tab next field; enter plan; esc cancel`. Launch lists `enter select slice`
-when a ready slice exists, then `enter next field` for well-specified and
-`enter plan` for split; `esc cancel` stays visible. The lineup editor and spec
+only when the focused role has more than one entry. Launch lists
+`enter select slice` when a ready slice exists; `esc cancel` stays visible.
+Neither Waves nor Launch asks well specified or split, so neither has an
+input hint (*proposed*, adj 189). The lineup editor and spec
 question sitting also show their current keys in this line. A confirmation
 names what `y` does and, at the Roadmap launch, `e`, since the prompt above
 it carries the rest: `y run; n cancel; e edit lineup`, `y start; n cancel`, `y approve; n
@@ -1241,8 +1241,10 @@ S60 provides the CLI: `ork wave suggest PROJECT` prints the ordered waves
 from `slicer plan-parallel`, including reasons. `ork wave start PROJECT
 ITEM...` takes the chosen item ids (`wave.start-input`), plans each item,
 runs the spec check and asks its open questions (S116; see design.md, Wave
-lifecycle), then asks for confirmation. `--yes` requires explicit `--well-specified
-y/n` and `--split y/n`; these flags apply to every item. One wave
+lifecycle), then asks for confirmation. Every item plans as well specified =
+yes and split = no (*proposed*, adj 189); `--well-specified y/n` and
+`--split y/n` are optional overrides that apply to every item, and `--yes`
+needs neither. One wave
 contains one project (`wave.scope`). Its runs share a wave id and respect
 the global and project caps. A failed or stopped item leaves the others
 running (`wave.failure`). `ork stop WAVE` uses the `wave-` prefix
@@ -1250,7 +1252,8 @@ running (`wave.failure`). `ork stop WAVE` uses the `wave-` prefix
 queued members without tool writes.
 
 The composer uses `wave.suggest` and `wave.overlap` reads from S81 and
-`wave.start` with per-item launch inputs and confirmed plans (`run.launch-wire`).
+`wave.start` with per-item plans (well specified = yes, split = no) and
+confirmed plans (`run.launch-wire`).
 No launch writes happen before confirmation. Before the spec-check role runs,
 ork reads slicer's dependencies for every ticked item. A blocked item refuses
 the whole call, for example `S2 waits on S1 "Title" (in this wave, not done);
@@ -1295,14 +1298,14 @@ remain visible in full.
 visible page. `esc` returns to the same row. The pane offers no launch or
 editing actions.
 
-`space` ticks or unticks the selected item. Ticking shows both y/n inputs
-directly under that item, with no defaults: well-specified and split. A dim
-`launch inputs` line and both fields are indented to the title column. The
-item and both fields stay in view. Only the active field shows a cursor, and
-the hint changes to `tab next field; enter plan; esc cancel`.
-`tab` or `shift+tab` switches the active field; `enter` validates both and plans the item.
-`esc` cancels that tick. The Lineup column appears only while at least
-one item is ticked and fills from the plan (`ui.wave-composer`). It uses
+`space` ticks or unticks the selected item. Ticking asks nothing: it plans the
+item at once as well specified = yes and split = no (*proposed*, adj 189,
+`launch.well-specified-default`, replacing the ask-on-tick of adj 135), and the
+spec check at launch holds an item that is not Ready. Ticking again unticks the
+item and drops a plan still pending. The hint stays `enter item; space tick
+item; l launch`, plus `e edit lineup` once the item has a plan and when it
+fits, and the status line counts the ticked items. The Lineup column appears
+only while at least one item is ticked and fills from the plan (`ui.wave-composer`). It uses
 short role labels: impl, rev, ui, gate and arch, padded so the values share one
 column. The `ui` row shows only when the plan has a UI pass row (S136); it is
 never marked `*`, since the launch edit does not change it. Each role shows its primary entry and a dim `+N fallbacks` line
@@ -1505,9 +1508,10 @@ An empty list says "No ready slices". Without a daemon, launch says
 "No daemon connection; action unavailable". Up/down and j/k move through
 the list. `enter` picks a slice; `esc` cancels.
 
-Launch asks "Well specified? [y/n]:" and then "Split? [y/n]:". Neither has a
-default. Enter submits y, yes, n or no in any case; invalid input asks again.
-The TUI calls `run.plan` after both answers and shows "pending: run.plan".
+Launch asks nothing before the plan (*proposed*, adj 189,
+`launch.well-specified-default`): `enter` on a slice plans it as well
+specified = yes and split = no. The TUI calls `run.plan` and shows
+"pending: run.plan".
 After the plan, it calls `spec.check` for the selected slice and shows
 `pending: spec.check` in the launch body only, with an empty status line,
 before confirmation (S184). A ready slice proceeds to confirmation. Questions

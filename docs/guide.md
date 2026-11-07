@@ -193,7 +193,8 @@ slicer:
     slicer relay-roles add|set|remove|move|rule-add|rule-edit|rule-remove
 
 For each slice ork calls `slicer relay-roles recommend ID --well-specified
-y/n --split y/n` and turns the answer into the lineup for implementer,
+y/n --split y/n` (with yes and no unless you override them, *proposed*, adj 189;
+the spec check holds a slice that is not ready) and turns the answer into the lineup for implementer,
 reviewer, gate, and an architect when the lineup has one (the matrix gives one on size L) (`docs/design.md:167-186`, `docs/design.md:272-275`,
 `internal/slicercli/write.go:96`). A matrix row for a vendor ork has no adapter
 for is skipped; ork runs `claude`, `codex` and `grok` (`docs/design.md:184-198`). Grok
@@ -204,6 +205,10 @@ S72). A matrix model of `latest` on a Grok row passes no model flag.
 At launch you can change the lineup and the budgets for that one run. The
 matrix stays as it was (`docs/design.md:170-175`). In the TUI the key is `e`
 on the Waves view (section 9), or at the Roadmap launch confirmation.
+To plan a split slice or one that is not well specified, use the command line:
+`ork run PROJECT ID --split y` or `ork wave start PROJECT ITEM... --well-specified n`.
+The TUI always plans well specified and not split; `e` edits the lineup, not
+these two inputs.
 On the command line, `--implementer`, `--reviewer` and `--architect` take
 `VENDOR:MODEL:EFFORT`. Repeat a role flag to give its whole chain, primary
 first; `--architect off` alone drops that role. Gate follows reviewer and the
@@ -217,9 +222,9 @@ Pick a slice that is ready in the roadmap. A slice that lists its files,
 failing tests, steps and checks is "well specified".
 
 **In the TUI.** Open the Roadmap view and select the project. Press `l` to
-open the list of ready slices, move to one and press `enter`. Answer the two
-questions (well specified, split; `enter` moves to the next field), read the
-plan (worktree, branch, check command and lineup, plus budgets when overridden;
+open the list of ready slices, move to one and press `enter`. ork asks
+nothing about well specified or split (it plans as well specified, not split,
+*proposed*, adj 189); read the plan (worktree, branch, check command and lineup, plus budgets when overridden;
 setup warnings follow the roles, and a project with no check command shows
 `check: none` and cannot start, *proposed*, S265).
 Before confirmation, ork runs the spec check. `pending: spec.check` appears
@@ -244,8 +249,9 @@ Press `y` at the confirmation to start (`docs/dashboard.md:1374-1402`,
 
     ork run PROJECT ID
 
-It asks `Well specified?` and `Split?`, prints the plan, and runs the spec
-check before asking `Start this slice? [y/N]`. Answer each spec question
+It plans the slice as well specified and not split, prints the plan, and runs
+the spec check before asking `Start this slice? [y/N]` (*proposed*, adj 189).
+Answer each spec question
 with an option number or text. An empty line or end of input holds the
 slice and exits 1. A failed check also blocks launch. Real spec-check failures
 carry the `spec check failed: ` prefix in text mode; refusals do not. Text
@@ -253,8 +259,9 @@ mode prints only `ork: spec check failed: MESSAGE`; the error code shows with
 `--json`. A project with no spec check row fails with `no_spec_check_row`; the
 message gives the fix: `ork projects set NAME --spec-check-rows rNN` or a
 `Spec check row (rNN)` rule in the matrix.
-For a script, give `--yes --well-specified y/n --split y/n`; `--yes`
-still runs the spec check. With `--json`, the sitting goes to stderr and
+For a script, give `--yes`; it needs no other flag and still runs the spec
+check. `--well-specified y/n` and `--split y/n` override the defaults (yes and
+no). With `--json`, the sitting goes to stderr and
 stdout holds one result. A held slice returns
 `{"started":false,"held":["ID"]}`; declining the start returns
 `{"started":false,"held":[]}` (`internal/cli/run.go`).
@@ -313,7 +320,10 @@ A wave is several slices of one project that start together
 **In the TUI.** Open the Waves view (`tab` from Questions). It loads slicer's
 suggested waves. For each item you want:
 
-1. Press `space` to tick it, then answer well specified and split.
+1. Press `space` to tick it. ork plans it at once as well specified and not
+   split, and asks nothing (*proposed*, adj 189). `e` edits the lineup, not
+   these two inputs; for a split or not-well-specified item use
+   `ork wave start PROJECT ITEM... --split y` or `--well-specified n`.
 2. Press `e` to edit the lineup or budgets for that run, if you want to.
 3. Press `l` to launch. ork first runs the spec check over every ticked item.
    If it has questions, they come one at a time: `1`-`4` picks an option, `t`
@@ -326,7 +336,7 @@ suggested waves. For each item you want:
 **On the command line.**
 
     ork wave suggest PROJECT
-    ork wave start PROJECT ITEM... [--yes --well-specified y/n --split y/n]
+    ork wave start PROJECT ITEM... [--yes] [--well-specified y/n] [--split y/n]
     ork stop WAVE-ID
 
 Like `ork run`, `wave start` asks the spec-check questions on standard input

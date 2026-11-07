@@ -79,7 +79,7 @@ func newKeyMap() keyMap {
 		Add:        key.NewBinding(key.WithKeys("+"), key.WithHelp("+", "add project")),
 		Cleanup:    key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "remove merged worktree and branch (Ready)")),
 		EditLineup: key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit lineup (Waves, launch)")),
-		Tick:       key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "tick item and ask inputs (Waves)")),
+		Tick:       key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "tick item and plan it (Waves)")),
 		Expand:     key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "expand or collapse a run (Running)")),
 		ExpandAll:  key.NewBinding(key.WithKeys("E", "shift+e"), key.WithHelp("E", "expand or collapse all")),
 		New:        key.NewBinding(key.WithKeys("n"), key.WithHelp("n", "new slice")),
@@ -334,9 +334,6 @@ func (m *Model) contextHints() []hintEntry {
 			l.add(dropRow-1, short(k.Select, "enter", "save and replan"))
 		}
 		l.add(dropPinned, short(k.Close, "esc", desc))
-	case m.waves != nil && m.waves.inputs != nil:
-		l.add(dropRow, short(k.NextView, "tab", "next field"), short(k.Select, "enter", "plan"))
-		l.add(dropPinned, short(k.Close, "esc", "cancel"))
 	case m.relayInput != nil:
 		l.add(dropRow, offer(strings.TrimSpace(m.relayInput.Value()) != "", k.Select, "enter", "review"))
 		l.add(dropPinned, short(k.Close, "esc", "cancel"))
@@ -357,10 +354,6 @@ func (m *Model) contextHints() []hintEntry {
 		switch m.launch.stage {
 		case launchList:
 			l.add(dropRow, offer(len(m.readyLaunchItems()) > 0, k.Select, "enter", "select slice"), short(k.RowNext, "up/down", "row"))
-		case launchWell:
-			l.add(dropRow, short(k.Select, "enter", "next field"))
-		case launchSplit:
-			l.add(dropRow, short(k.Select, "enter", "plan"))
 		}
 		desc := "cancel"
 		if m.launch.stage == launchPlanPending && m.launch.prev != nil {

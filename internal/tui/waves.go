@@ -16,12 +16,6 @@ import (
 
 const wavesView = 2
 
-type waveInputs struct {
-	item   string
-	fields [2]textField
-	focus  int
-}
-
 type wavesState struct {
 	// aggregate is the Waves tab of the Running entry: the suggestions of every
 	// project in one list, read-only (S140). It has no project.
@@ -42,7 +36,6 @@ type wavesState struct {
 	cursor         int
 	picked         map[string]daemon.RunParams
 	lineup         *lineupEditor
-	inputs         *waveInputs
 	planning       string
 	planRequest    uint64
 	overlap        *slicercli.Overlap
@@ -279,67 +272,38 @@ func (m *Model) tickWave() tea.Cmd {
 			w.planning = ""
 		}
 	} else {
-		w.picked[id] = daemon.RunParams{Project: w.project, Item: id}
-		w.inputs = &waveInputs{item: id}
+		// Adj 189: plan at once as well specified = yes and split = no. The
+		// spec check holds an item that is not Ready.
+		p := daemon.RunParams{Project: w.project, Item: id, WellSpecified: true}
+		w.picked[id] = p
+		w.planning = id
+		w.planRequest++
+		m.actionStatus = ""
+		return tea.Batch(m.waveOverlap(), m.planTicked(p))
 	}
 	m.actionStatus = ""
 	return m.waveOverlap()
 }
 
-func (m *Model) waveInputKey(msg tea.KeyPressMsg) tea.Cmd {
+// planTicked plans the ticked item p and reads its slice, so that the screen
+// can tell an engine item from a plain one.
+func (m *Model) planTicked(p daemon.RunParams) tea.Cmd {
 	w := m.waves
-	in := w.inputs
-	switch msg.String() {
-	case "ctrl+c":
-		return tea.Quit
-	case "esc":
-		delete(w.picked, in.item)
-		w.inputs = nil
-		m.actionStatus = "Cancelled"
-		return m.waveOverlap()
-	case "tab", "shift+tab":
-		in.focus = 1 - in.focus
-		return nil
-	case "enter":
-		well, valid := launchAnswerValue(in.fields[0].Value())
-		if !valid {
-			in.focus = 0
-			m.actionStatus = "Well specified? requires y or n"
+	live, ctx, request, seq := m.cfg.Live, w.ctx, w.request, w.planRequest
+	return func() tea.Msg {
+		if ctx.Err() != nil {
 			return nil
 		}
-		split, valid := launchAnswerValue(in.fields[1].Value())
-		if !valid {
-			in.focus = 1
-			m.actionStatus = "Split? requires y or n"
-			return nil
+		plan, err := live.Plan(ctx, p)
+		var engineItem *bool
+		if err == nil {
+			detail, detailErr := live.ItemShow(ctx, p.Project, p.Item)
+			err = detailErr
+			value := daemon.EngineSlice(detail)
+			engineItem = &value
 		}
-		p := w.picked[in.item]
-		p.WellSpecified, p.Split = well, split
-		w.picked[in.item] = p
-		w.planning = in.item
-		w.inputs = nil
-		w.planRequest++
-		m.actionStatus = ""
-		live, ctx, request, seq := m.cfg.Live, w.ctx, w.request, w.planRequest
-		return func() tea.Msg {
-			if ctx.Err() != nil {
-				return nil
-			}
-			plan, err := live.Plan(ctx, p)
-			var engineItem *bool
-			if err == nil {
-				detail, detailErr := live.ItemShow(ctx, p.Project, p.Item)
-				err = detailErr
-				value := daemon.EngineSlice(detail)
-				engineItem = &value
-			}
-			return wavesMsg{engineItem: engineItem, request: request, kind: "plan", sequence: seq, item: p.Item, plan: plan, err: err}
-		}
-	default:
-		in.fields[in.focus].update(msg)
-		m.actionStatus = ""
+		return wavesMsg{engineItem: engineItem, request: request, kind: "plan", sequence: seq, item: p.Item, plan: plan, err: err}
 	}
-	return nil
 }
 
 // waveLaunchRefusal is why l does not launch the ticked items: the status line
@@ -733,18 +697,6 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 		}
 		for _, part := range noteParts[noteRow:] {
 			addAt(part, true)
-		}
-		if w.inputs != nil && w.inputs.item == it.ID {
-			addAt("launch inputs", true)
-			for i, label := range []string{"Well specified? [y/n]:", "Split? [y/n]:"} {
-				room := max(width-titleCol-len(label)-1, 1)
-				value := clip(w.inputs.fields[i].Value(), room)
-				if w.inputs.focus == i {
-					value = w.inputs.fields[i].view(room, th)
-				}
-				out.body = append(out.body, strings.Repeat(" ", titleCol)+label+" "+value)
-			}
-			out.sel = len(out.body) - 1
 		}
 		row++
 	}

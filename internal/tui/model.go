@@ -555,12 +555,6 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			m.actionStatus = ""
 			return m, nil
 		}
-		if m.waves != nil && m.waves.inputs != nil {
-			in := m.waves.inputs
-			in.fields[in.focus].update(msg)
-			m.actionStatus = ""
-			return m, nil
-		}
 		if m.relayInput != nil && m.confirm == nil {
 			m.relayInput.update(msg)
 			return m, nil
@@ -574,11 +568,6 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 				m.compose.field().update(msg)
 				m.actionStatus = ""
 			}
-			return m, nil
-		}
-		if m.launchPrompt() {
-			m.launch.input.update(msg)
-			m.actionStatus = ""
 			return m, nil
 		}
 		if m.confirm == nil && m.pane != nil && m.paneQuestion() && (m.paneAsk() == nil || m.pane.freeText) {
@@ -651,9 +640,6 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	}
 	if m.waves != nil && m.waves.lineup != nil {
 		return m.lineupKey(msg)
-	}
-	if m.waves != nil && m.waves.inputs != nil {
-		return m.waveInputKey(msg)
 	}
 	if m.view == wavesView && m.waves != nil && m.waves.pane != nil {
 		return m.waveItemKey(msg)
