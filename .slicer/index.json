@@ -13678,7 +13678,7 @@
       "id": "S260",
       "title": "Launch prompts: drop well-specified and split, take them from the spec check and a default",
       "short_title": "Launch prompts: drop well-specified and split, take them from the spec check and a default",
-      "status": "started",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -13697,10 +13697,7 @@
           "retracted_reason": ""
         }
       ],
-      "claim": {
-        "owner": "Jon Robbins",
-        "at": "2026-11-07T19:46:29Z"
-      },
+      "claim": null,
       "fields": {
         "size": "M",
         "flags": [],
