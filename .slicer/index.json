@@ -15404,7 +15404,7 @@
       "id": "S296",
       "title": "Resume a stopped run from its worktree, and continue at the stage it stopped",
       "short_title": "Resume a stopped run from its worktree, and continue at the stage it stopped",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -15414,6 +15414,20 @@
           "text": "**2026-11-07** — Owner decision 2026-11-07 (interactive answer in the relay session), Q1: option (b). ork run and ork wave start on an item whose newest run is a resumable stopped run auto-resume that run when the worktree's tree hash equals the last implementer round's tree_sha256 (S294); otherwise they start fresh and say so. This replaces the recommended (a). The hash rule, the message wording and the interaction with a dismissed run are for the implementer to settle in the spec's terms and list under Owner needed if unclear.",
           "created_at": "2026-11-07T22:53:13Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "45ae89cb-58fa-4f79-ba48-dcc784fd8c8d",
+          "kind": "",
+          "text": "**2026-11-07** — Owner decisions 2026-11-07 (interactive): Q1 option (b) auto-resume on matching tree hash; dismissed runs are never auto-resumed (ork retry RUN still resumes one); a start with no free slot is refused naming the run (ork retry bypasses caps); a retry note on a stopped run is refused. Auto-resume uses the stopped run's lineup, budgets and stop-after, not the plan confirmed at the start (said in the message). Later (S307): a run queued-then-stopped counts as superseding in supersededBy (ignore StoppedFrom == queued); spec-check answers are not moved into a resumed run; the TUI shows no start message and t retry is limited to paused runs; implement-path round_limit is stored as N but the first-pause floor of 3 applies; S295 note: a run stopped at setup after S295 pauses resumes with stopped_from=implement.",
+          "created_at": "2026-11-07T23:46:57Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -15440,7 +15454,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

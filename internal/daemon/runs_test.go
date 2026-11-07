@@ -36,12 +36,18 @@ var lastFake *clitest.Fake // the fakes of the latest runDaemon
 
 func runDaemon(t *testing.T, runner roundRunner, routes ...clitest.Route) (*Daemon, *runrec.Store, registry.Project) {
 	t.Helper()
+	return runDaemonIn(t, t.TempDir(), runner, routes...)
+}
+
+// runDaemonIn is runDaemon with its own root directory, so a test can name the
+// project's paths in its routes: the project is root/p.
+func runDaemonIn(t *testing.T, root string, runner roundRunner, routes ...clitest.Route) (*Daemon, *runrec.Store, registry.Project) {
+	t.Helper()
 	if runner == nil {
 		runner = func(context.Context, engine.Request) (engine.Result, error) {
 			return engine.Result{}, fmt.Errorf("unexpected role call")
 		}
 	}
-	root := t.TempDir()
 	p := registry.Project{Name: "p", Path: filepath.Join(root, "p"), CheckCommand: "go test ./..."}
 	store := &runrec.Store{Dir: filepath.Join(root, "runs")}
 	reg := filepath.Join(root, "projects.json")

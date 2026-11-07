@@ -501,6 +501,21 @@ in `run.json` (S235, *proposed*). `commit` is
 role's `model`, `effort` and `denials`, a check's `log`, and a write's
 `error` are *proposed* (S04).
 
+*Proposed (S296):* `stopped_from` is the state a stop left: the state the run
+was in, or for a paused run its `pending.state`. It is omitted until a stop.
+`ork retry RUN` resumes a stopped run that has no `commit`, whose
+`stopped_from` is not `setup` or `queued`, and whose worktree is intact. The
+resume clears `stopped_from`, `reason` and `dismissed_at`, advances `round`
+(to the next round for the checks; unchanged when no implementer round ran
+and the run re-enters `implement`), sets `round_limit` to that round plus the
+grant for the checks (default 2), or to the round plus the grant minus 1 for
+`implement`, whose round 1 is the first granted round (the first-pause floor
+of 3 still applies), sets `wave` when a start resumed it, replaces `relay_run` and `orchestrator_step` with the new
+ledger run's, and sets `state` to `checks`, or `implement` when `roles[]` has
+no implementer row. The older `roles[]`, `checks[]` and reports stay. The
+version stays 1; an older ork refuses a `run.json` with `stopped_from`
+because `Store.Open` uses strict keys.
+
 A stopped run can be dismissed with `ork dismiss RUN` (S34, adj #117).
 This sets `dismissed_at` to the dismissal time. It is omitted until then.
 The snapshot keeps the run marked `dismissed: true`, hidden from lists,
@@ -508,6 +523,8 @@ Needs you and `ork status` text. Its findings are excluded from counts.
 `ork status --json` includes the dismissed run. Dismissal keeps the record
 and its files; finished-run retention is unchanged.
 A dismissed run still hides older stopped runs of the same slice.
+*Proposed (S296):* `ork retry RUN` on a dismissed run resumes it and clears
+`dismissed_at`; `ork run` never resumes a dismissed run.
 Repeating dismissal does not change the record. A run that is not stopped
 returns `run is not stopped` (`ErrNotStopped`). The version stays 1.
 An older ork refuses a `run.json` with `dismissed_at` because `Store.Open`

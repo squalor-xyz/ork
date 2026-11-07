@@ -88,7 +88,10 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
   ork dismiss RUN             clear a stopped run from Needs you
   ork retry RUN [TEXT] [--wait] [--rounds N]
                               retry a paused role or step, with an optional
-                              note for the rerun; returns like answer
+                              note for the rerun; returns like answer;
+                              a stopped run resumes from its worktree with
+                              N more implementer rounds (default 2) and
+                              takes no TEXT
   ork status [--project P]    projects, needs-you counts and active relays
   ork show RUN [NAME]         print why a run is paused, its reports, checks
                               and findings; NAME prints one report or log

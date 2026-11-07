@@ -33,17 +33,25 @@ func (e *Engine) setup(ctx context.Context) error {
 	if err := e.ensureWorktree(ctx, rec); err != nil {
 		return e.stop(ctx, "setup: git worktree add: "+err.Error())
 	}
-	// Recording is advisory: a failed relay-run call never stops the relay.
-	if run, err := e.d.Slicer.RelayBegin(ctx, e.wr, rec.Worktree, rec.Worktree, rec.Item); err == nil {
-		e.run.Update(func(r *runrec.Record) { r.RelayRun = run.ID })
-		step, err := e.d.Slicer.RelayStep(ctx, e.wr, rec.Worktree, run.ID, slicercli.StepSpec{
-			Role: rec.LedgerRoles["orchestrator"], Agent: "ork", Phase: "start", Task: rec.Item + " orchestrator",
-		})
-		if err == nil {
-			e.run.Update(func(r *runrec.Record) { r.OrchestratorStep = step.ID })
-		}
-	}
+	e.beginRelay(ctx, rec)
 	return e.run.Update(func(r *runrec.Record) { r.State = runrec.StateImplement })
+}
+
+// beginRelay begins the slicer ledger run of the engine's run and its
+// orchestrator step. Recording is advisory: a failed relay-run call never
+// stops the relay.
+func (e *Engine) beginRelay(ctx context.Context, rec runrec.Record) {
+	run, err := e.d.Slicer.RelayBegin(ctx, e.wr, rec.Worktree, rec.Worktree, rec.Item)
+	if err != nil {
+		return
+	}
+	e.run.Update(func(r *runrec.Record) { r.RelayRun = run.ID })
+	step, err := e.d.Slicer.RelayStep(ctx, e.wr, rec.Worktree, run.ID, slicercli.StepSpec{
+		Role: rec.LedgerRoles["orchestrator"], Agent: "ork", Phase: "start", Task: rec.Item + " orchestrator",
+	})
+	if err == nil {
+		e.run.Update(func(r *runrec.Record) { r.OrchestratorStep = step.ID })
+	}
 }
 
 // ensureExclude adds .worktrees/ to the main checkout's info/exclude when it
@@ -821,11 +829,7 @@ func (e *Engine) commit(ctx context.Context) error {
 		}
 		if _, err := e.gitWrite(ctx, rec.Worktree, "commit", "-m", title); err != nil {
 			// finish already closed the ledger with PASS.
-			return e.run.Update(func(r *runrec.Record) {
-				r.State = runrec.StateStopped
-				r.Reason = "git commit: " + err.Error()
-				r.Pending = nil
-			})
+			return e.run.Update(func(r *runrec.Record) { markStopped(r, "git commit: "+err.Error()) })
 		}
 	}
 	sha, err := e.gitRead(ctx, rec.Worktree, "rev-parse", "HEAD")

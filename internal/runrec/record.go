@@ -337,6 +337,7 @@ type Record struct {
 	Writes           []Write                  `json:"writes"`
 	Commit           *Commit                  `json:"commit"`
 	DismissedAt      time.Time                `json:"dismissed_at,omitzero"`
+	StoppedFrom      string                   `json:"stopped_from,omitempty"` // the state a stop left, for a paused run its pending state (S296, proposed)
 	CreatedAt        time.Time                `json:"created_at"`
 	WaitStartedAt    time.Time                `json:"wait_started_at,omitzero"` // entry into awaiting-approval or paused (S138)
 	UpdatedAt        time.Time                `json:"updated_at"`
