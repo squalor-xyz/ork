@@ -16,6 +16,7 @@ import (
 	"runtime/debug"
 
 	"github.com/squalor-xyz/ork/internal/clitest"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/roles"
 )
 
@@ -338,8 +339,8 @@ func TestDoctorHintsWhenSlicerContractIsOlder(t *testing.T) {
 	d := env.slicerD
 	for _, want := range []string{
 		"[upgrade] slicer  slicer prints relay v9, older than the versions ork accepts (v10 or v11)\n",
-		"\n  git -C " + shellWord(d) + " pull --ff-only\n",
-		"\n  " + shellWord(d+"/.venv/bin/pip") + " install -e " + shellWord(d) + "\n",
+		"\n  git -C " + engine.ShellWord(d) + " pull --ff-only\n",
+		"\n  " + engine.ShellWord(d+"/.venv/bin/pip") + " install -e " + engine.ShellWord(d) + "\n",
 	} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("output lacks %q:\n%s", want, stdout)
@@ -401,8 +402,8 @@ func TestDoctorHintsWhenSlicerContractIsNewer(t *testing.T) {
 	}
 	for _, want := range []string{
 		"[upgrade] ork  slicer prints relay v12, newer than the versions ork accepts (v10 or v11)\n",
-		"\n  go -C ORK_CHECKOUT build -o " + shellWord(bin) + " ./cmd/ork\n",
-		"\n  " + shellWord(bin) + " daemon restart\n",
+		"\n  go -C ORK_CHECKOUT build -o " + engine.ShellWord(bin) + " ./cmd/ork\n",
+		"\n  " + engine.ShellWord(bin) + " daemon restart\n",
 	} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("output lacks %q:\n%s", want, stdout)
@@ -422,7 +423,7 @@ func TestDoctorHintsWhenTheCheckoutIsBehindItsUpstream(t *testing.T) {
 	if !strings.Contains(stdout, "[upgrade] slicer  3 commits behind origin/main as of its last fetch\n") {
 		t.Errorf("no reason line:\n%s", stdout)
 	}
-	if !strings.Contains(stdout, "\n  git -C "+shellWord(env.slicerD)+" pull --ff-only\n") {
+	if !strings.Contains(stdout, "\n  git -C "+engine.ShellWord(env.slicerD)+" pull --ff-only\n") {
 		t.Errorf("no pull line:\n%s", stdout)
 	}
 	if strings.Contains(stdout, "[upgrade] ork") || strings.Contains(stdout, "[upgrade] adj") {
@@ -443,7 +444,7 @@ func TestDoctorHintsForAVenvSlicer(t *testing.T) {
 		t.Fatalf("upgrade: %+v", d.Upgrade)
 	}
 	venv := filepath.Dir(filepath.Dir(d.Tools[0].Resolved))
-	want := []string{shellWord(venv+"/bin/pip") + " install --upgrade squalor-slicer"}
+	want := []string{engine.ShellWord(venv+"/bin/pip") + " install --upgrade squalor-slicer"}
 	if !slices.Equal(d.Upgrade[0].Commands, want) {
 		t.Errorf("commands %q, want %q", d.Upgrade[0].Commands, want)
 	}
@@ -473,7 +474,7 @@ func TestDoctorUpgradeFlagPrintsEveryTool(t *testing.T) {
 		for _, want := range []string{
 			"[upgrade] slicer  ", "[upgrade] adj  ", "[upgrade] ork  ",
 			"\n  git -C ADJ_CHECKOUT pull --ff-only\n",
-			"\n  go -C ADJ_CHECKOUT build -o " + shellWord(env.adjPath) + " ./cmd/adj\n",
+			"\n  go -C ADJ_CHECKOUT build -o " + engine.ShellWord(env.adjPath) + " ./cmd/adj\n",
 			"\n  go -C ORK_CHECKOUT build -o ",
 			" daemon restart\n",
 		} {

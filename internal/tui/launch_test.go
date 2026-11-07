@@ -13,6 +13,8 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
+
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
@@ -99,8 +101,9 @@ func launchPlanning(t *testing.T, h *harness) tea.Cmd {
 func launchConfirmed(t *testing.T, h *harness) {
 	t.Helper()
 	h.deliver(launchPlanning(t, h)())
-	if !strings.Contains(h.view(), "ork run ork S90? [y/N] (Enter is No)") {
-		t.Fatalf("missing confirmation:\n%s", h.view())
+	// A plan with no check command asks nothing: the bar says it is refused.
+	if v := h.view(); !strings.Contains(v, "ork run ork S90? [y/N] (Enter is No)") && !strings.Contains(v, "ork run ork S90: refused (n or esc closes)") {
+		t.Fatalf("missing confirmation:\n%s", v)
 	}
 }
 func TestLaunchListsOnlyReadySlices(t *testing.T) {
@@ -1304,5 +1307,119 @@ func TestLaunchLateAnswerDoesNotConfirmAnotherLaunch(t *testing.T) {
 	}
 	if h.m.confirm != confirm || len(l.answers) != 1 || len(l.starts) != 0 {
 		t.Fatal("old answer affected new launch or was not recorded")
+	}
+}
+
+// A plan's setup warnings show in the confirm after the plan rows and before
+// the note, in the Warn style, wrapped to the width (S265, *proposed*). An
+// empty check command reads "check: none".
+func TestLaunchConfirmShowsSetupWarnings(t *testing.T) {
+	const long = "the implementer has the built-in Go allowlist, but ork has no go.mod (fix: ork projects set ork --preset go|python, or --allow implementer=PATTERN)"
+	for _, present := range []bool{false, true} {
+		h, l := launchHarness(t)
+		h.m.cfg.Theme = NewTheme(false)
+		l.plan.Note = "a note"
+		if present {
+			l.plan.Warnings = []string{"short warning", long}
+			l.plan.CheckCommand = ""
+		}
+		launchConfirmed(t, h)
+		view := h.view()
+		if got := strings.Contains(view, "check: none"); got != present {
+			t.Fatalf("present=%v: check line:\n%s", present, view)
+		}
+		if !present {
+			if strings.Contains(view, "warning:") {
+				t.Fatalf("a plan without warnings shows one:\n%s", view)
+			}
+			continue
+		}
+		if !strings.Contains(h.m.View().Content, h.m.cfg.Theme.Warn.Render("warning: short warning")) {
+			t.Errorf("the warning is not drawn in the Warn style:\n%q", h.m.View().Content)
+		}
+		if i := strings.Index(view, "warning: short warning"); !(strings.Index(view, "gate: Codex gpt low") < i && i < strings.Index(view, "note: a note") && strings.Index(view, "note: a note") < strings.Index(view, "ork run ork S90: refused")) {
+			t.Errorf("warnings are not between the plan rows and the note:\n%s", view)
+		}
+		// The long warning wraps at the width: no line is wider than the screen.
+		for _, line := range strings.Split(view, "\n") {
+			if lipgloss.Width(line) > 100 {
+				t.Errorf("line of %d columns: %q", lipgloss.Width(line), line)
+			}
+		}
+		if joined := strings.Join(strings.Fields(strings.ReplaceAll(view, "│", " ")), " "); !strings.Contains(joined, "warning: "+long) {
+			t.Errorf("the long warning is cut:\n%s", view)
+		}
+		// At 80 columns no line runs off the edge either.
+		for _, line := range strings.Split(h.view80(), "\n") {
+			if lipgloss.Width(line) > 80 {
+				t.Errorf("line of %d columns at 80: %q", lipgloss.Width(line), line)
+			}
+		}
+	}
+}
+
+// A plan with no check command cannot start (adj 191): the confirm says why
+// and how to fix it, once, and y starts nothing.
+func TestLaunchConfirmRefusesAPlanWithNoCheckCommand(t *testing.T) {
+	h, l := launchHarness(t)
+	h.m.cfg.Theme = NewTheme(false)
+	l.plan.CheckCommand = ""
+	l.plan.Warnings = []string{engine.NoCheckMessage("ork"), "other warning"}
+	launchConfirmed(t, h)
+	view := h.view()
+	for _, want := range []string{
+		"check: none",
+		"refused: ork has no check command",
+		"fix: ork projects set ork --check CMD",
+		"start anyway: ork run ork S90 --allow-no-check",
+		"warning: other warning",
+	} {
+		if !strings.Contains(strings.Join(strings.Fields(view), " "), want) {
+			t.Errorf("missing %q:\n%s", want, view)
+		}
+	}
+	if strings.Contains(view, "warning: no check command") {
+		t.Errorf("the refusal is said twice:\n%s", view)
+	}
+	if !strings.Contains(h.m.View().Content, h.m.cfg.Theme.Warn.Render("refused: ork has no check command, so only slicer check would run.")) {
+		t.Errorf("the refusal is not drawn in the Warn style:\n%q", h.m.View().Content)
+	}
+	// The bar and the hint offer no start: no y, and the bar says it is refused.
+	if !strings.Contains(view, "ork run ork S90: refused (n or esc closes)") || strings.Contains(view, "[y/N]") {
+		t.Errorf("the bar offers a start it refuses:\n%s", view)
+	}
+	if strings.Contains(view, "y run") || !strings.Contains(view, "n cancel") {
+		t.Errorf("the hint offers a start it refuses:\n%s", view)
+	}
+	_, cmd := h.m.Update(press("y"))
+	if cmd != nil || len(l.starts) != 0 {
+		t.Fatalf("y started a run: %+v", l.starts)
+	}
+	view = h.view()
+	if !strings.Contains(view, "Not started: no check command") || !strings.Contains(view, "ork run ork S90: refused (n or esc closes)") || strings.Contains(view, "[y/N]") {
+		t.Fatalf("y must leave the confirm open and say why:\n%s", view)
+	}
+	h.m.Update(press("n"))
+	if !strings.Contains(h.view(), "Cancelled") || h.m.confirm != nil {
+		t.Fatalf("n must cancel:\n%s", h.view())
+	}
+}
+
+// The confirm of a plan with no check command and a setup warning, at the two
+// sizes the golden views cover (S265, *proposed*).
+func TestGoldenLaunchNoCheck(t *testing.T) {
+	for _, size := range [][2]int{{100, 30}, {80, 24}} {
+		for _, mono := range []bool{false, true} {
+			name := fmt.Sprintf("launch-nocheck-%dx%d-%s.txt", size[0], size[1], map[bool]string{false: "color", true: "mono"}[mono])
+			t.Run(name, func(t *testing.T) {
+				h, l := launchHarness(t)
+				l.plan.CheckCommand = ""
+				l.plan.Warnings = []string{engine.NoCheckMessage("ork"), "the implementer has the built-in Go allowlist, but ork has no go.mod (fix: ork projects set ork --preset go|python, or --allow implementer=PATTERN)"}
+				h.m.cfg.Theme = NewTheme(mono)
+				launchConfirmed(t, h)
+				h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+				checkGolden(t, name, h.m.View().Content)
+			})
+		}
 	}
 }

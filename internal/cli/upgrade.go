@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/roles"
 )
 
@@ -249,15 +250,15 @@ func slicerHint(tc toolCheck, reason string) upgradeHint {
 	h := upgradeHint{Tool: "slicer", Reason: reason, Commands: []string{}}
 	switch {
 	case tc.Install == installCheckout && tc.Checkout != nil:
-		dir := shellWord(tc.Checkout.Dir)
+		dir := engine.ShellWord(tc.Checkout.Dir)
 		h.Commands = []string{
 			"git -C " + dir + " pull --ff-only",
-			shellWord(filepath.Join(tc.Checkout.Dir, ".venv", "bin", "pip")) + " install -e " + dir,
+			engine.ShellWord(filepath.Join(tc.Checkout.Dir, ".venv", "bin", "pip")) + " install -e " + dir,
 		}
 	case tc.Install == installVenv:
 		h.Note = "PyPI install assumed; a checkout venv needs git pull and pip install -e"
 		venv := filepath.Dir(filepath.Dir(tc.Resolved))
-		h.Commands = []string{shellWord(filepath.Join(venv, "bin", "pip")) + " install --upgrade squalor-slicer"}
+		h.Commands = []string{engine.ShellWord(filepath.Join(venv, "bin", "pip")) + " install --upgrade squalor-slicer"}
 	case !tc.Present:
 		h.Note = "not installed: read slicer/README.md#install"
 	default:
@@ -278,7 +279,7 @@ func adjHint(tc toolCheck, reason string) upgradeHint {
 	}
 	h.Commands = []string{
 		"git -C ADJ_CHECKOUT pull --ff-only",
-		"go -C ADJ_CHECKOUT build -o " + shellWord(tc.Resolved) + " ./cmd/adj",
+		"go -C ADJ_CHECKOUT build -o " + engine.ShellWord(tc.Resolved) + " ./cmd/adj",
 	}
 	h.Note = "ADJ_CHECKOUT = your checkout; see adjudicate/README.md#build-from-source"
 	return h
@@ -290,7 +291,7 @@ func orkHint(binary, reason string) upgradeHint {
 		h.Note = "binary path unknown: build ORK_CHECKOUT/cmd/ork, restart the daemon"
 		return h
 	}
-	bin := shellWord(binary)
+	bin := engine.ShellWord(binary)
 	h.Commands = []string{
 		"git -C ORK_CHECKOUT pull --ff-only",
 		"go -C ORK_CHECKOUT build -o " + bin + " ./cmd/ork",

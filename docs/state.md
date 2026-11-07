@@ -79,8 +79,18 @@ Notes on the fields:
 - `check_command` is a fallback. ork prefers slicer's config key once
   slicer has one (`project.check-command`). The `check_minutes` value sets
   the check command timeout (`internal/engine/states.go:198-202`).
+  *Proposed* (S265, adj 191): with no `check_command`, `run.start` and
+  `wave.start` refuse the start unless the call carries `allow_no_check`
+  (`ork run` and `ork wave start --allow-no-check`), and `ork doctor` reports
+  the missing command. Without it only `slicer check` runs after a landing.
 - `permissions` is the per-role allowlist (`launch.permissions`). Its exact
-  syntax per vendor waits on the vendor spike (design.md).
+  syntax per vendor waits on the vendor spike (design.md). *Proposed* (S265):
+  `ork projects set NAME --preset go|python` writes the language's full
+  implementer list as plain patterns, with `Bash(<check command>*)` for the
+  check command saved in the same call, so the registry format does not change
+  and an older ork reads it. A later change of the check command does not
+  update the list; `ork doctor` warns when the list lacks a pattern for the
+  command.
 - `push` (*proposed*, S119, adj 162) says ork runs `git push` in the main
   checkout after it lands a slice there. Absent or `false` means ork never
   pushes (the example turns it on). ork writes it only when the owner runs
@@ -140,7 +150,14 @@ Notes on the fields:
   `adj` are set by `projects add`; `global_cap` and `daemon_idle_minutes` are
   file-level and belong to `ork settings set`, below). The daemon validates
   each value, refuses while the project has unfinished runs, and saves under
-  its registry lock.
+  its registry lock. *Proposed* (S265, owner answers 2026-11-03 and 2026-11-07):
+  while runs are unfinished the daemon allows a call that sets only `cap`,
+  `budgets.minutes`, `budgets.tokens`, `worktree_pattern` and `branch_pattern`,
+  fields that no started run reads (the cap is read at each admission, the
+  budgets are copied into the run record at start, and the patterns are used
+  only when a run is planned). It refuses any call that sets another field and
+  names the refused fields as command line flags; a refused call saves nothing.
+  A call that sets `cap` also starts the queued runs that now fit.
   A `ui_doc` must be a relative path inside the project (checked by name;
   symlinks are not resolved; it is stored cleaned; the file need not exist yet).
   A `ui_pass_skills` list replaces the whole list; an empty list clears it.
@@ -158,7 +175,17 @@ Notes on the fields:
   newline; the pattern syntax per vendor stays unchecked. The daemon resolves
   each changed role with the engine's rules, so an allowlist for a read-only
   role (reviewer, gate, architect, UI pass, spec check), a preset other than
-  `read-only` and an unknown role are refused. `vendor_env` changes one key at
+  `read-only` and an unknown role are refused. *Proposed* (S265, adj 190,
+  `cli.allow-adds`; reverses the S174 replace decision for `--allow` only):
+  `--allow ROLE=PATTERN` adds to the role's list, starting from the effective
+  list (the built-in default, with its check command entry, when the role has
+  no entry), and skips a pattern already in it; `--replace-allow` makes the
+  patterns of the call the role's whole list, as `--allow` did before. On the
+  wire, `allow_add` adds, `permissions` replaces, and a call that names a role
+  in both is `bad_params`; `implementer_preset` (`go` or `python`) sets the
+  implementer's list first, so `allow_add` in the same call follows it. An
+  implementer held to the `read-only` preset cannot gain patterns by adding.
+  `vendor_env` changes one key at
   a time: a vendor name is `[a-z0-9_-]`, a key is a shell name
   (`[A-Za-z_][A-Za-z0-9_]*`), a value holds no NUL byte, and a vendor with no
   keys left is removed. A hand-edited file that holds values these checks

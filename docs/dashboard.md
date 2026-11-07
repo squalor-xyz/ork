@@ -1536,7 +1536,20 @@ implementer, reviewer, ui (when the plan has a UI pass row, S136), architect
 role's permissions. When the plan has a `note` (the rules call failed, S159,
 *proposed*), a `note: TEXT` line in the warning colour (plain in mono) follows the role rows, wrapped to the
 pane; `ork run` prints the same rows in its plan text, in the same order, and
-the same `note: TEXT` line after them. The confirmation bar shows
+the same `note: TEXT` line after them. *Proposed* (S265): a plan with an
+empty check command shows `check: none`, and a plan with setup `warnings`
+(`engine.SetupWarnings`) shows a `warning: TEXT` line for each in the warning
+colour, wrapped to the pane, after the role rows and before the note (`ork run`
+prints the same lines). With no check command the daemon refuses the start
+(adj 191), so the confirm shows, in the warning colour (plain in mono) just
+under the `check: none` line, `refused: PROJECT has no check command, so only
+slicer check would run.`, `fix: ork projects set PROJECT --check CMD` and
+`start anyway: ork run PROJECT ITEM --allow-no-check`; the plan's own no-check
+warning is not repeated. The confirmation bar offers no start: it reads `ork run
+PROJECT ITEM: refused (n or esc closes)` and the hint line drops `y run` and
+keeps `n cancel`. `y` still starts nothing, leaves the confirm open and sets the
+status `Not started: no check command (see the fix above)`; `n`, Enter and Esc
+cancel as before. The TUI has no flag for starting anyway. The confirmation bar shows
 `ork run PROJECT ITEM? [y/N] (Enter is No)`. The displayed command omits the
 two answers. `y` or `Y` calls `run.start` with those answers and the displayed
 plan as Expected, including any lineup, budget and stop-point overrides.

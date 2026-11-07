@@ -3,6 +3,7 @@
 package daemon
 
 import (
+	"errors"
 	"fmt"
 	"maps"
 	"slices"
@@ -12,9 +13,10 @@ import (
 	"github.com/squalor-xyz/ork/internal/registry"
 )
 
-// validateProjectExtras checks the environment_lines, permissions and
-// vendor_env values of a projects.set call (S174, *proposed*), before the
-// registry lock. Which roles may hold which permission is checked later, on
+// validateProjectExtras checks the environment_lines, permissions,
+// implementer_preset, allow_add and vendor_env values of a projects.set call
+// (S174 and S265, *proposed*), before the registry lock. A preset's name is
+// checked when it is applied. Which roles may hold which permission is checked later, on
 // the project as it would be saved. A key removed with a nil value is not
 // checked, so an entry that a hand edit made odd can still be removed. No
 // message quotes a vendor_env value.
@@ -36,6 +38,19 @@ func validateProjectExtras(p SetProjectParams) error {
 			}
 		}
 	}
+	if p.Preset != nil {
+		if _, has := p.Permissions[engine.RoleImplementer]; has {
+			return bad(errors.New("permissions and implementer_preset both set implementer"))
+		}
+	}
+	for _, role := range slices.Sorted(maps.Keys(p.AllowAdd)) {
+		if _, has := p.Permissions[role]; has {
+			return bad(fmt.Errorf("permissions and allow_add both set %s", role))
+		}
+		if err := registry.ValidatePermissionEntry(role, registry.Permission{Allow: p.AllowAdd[role]}); err != nil {
+			return bad(err)
+		}
+	}
 	for _, vendor := range slices.Sorted(maps.Keys(p.VendorEnv)) {
 		for _, key := range slices.Sorted(maps.Keys(p.VendorEnv[vendor])) {
 			if v := p.VendorEnv[vendor][key]; v != nil {
@@ -48,8 +63,9 @@ func validateProjectExtras(p SetProjectParams) error {
 	return nil
 }
 
-// withProjectExtras returns proj with the environment_lines, permissions and
-// vendor_env changes of p applied, on copies: proj is not changed. Every role
+// withProjectExtras returns proj with the environment_lines, permissions,
+// implementer_preset, allow_add and vendor_env changes of p applied, in that
+// order (proj holds the check command the call saves), on copies: proj is not changed. Every role
 // in the permissions patch must resolve (engine.ResolvePermission) in the
 // result, so a read-only role cannot get an allowlist and an unknown role is
 // refused; the exception is a null entry for a key already in the file. An emptied map is dropped, so the file does not hold `{}`.
@@ -83,6 +99,46 @@ func withProjectExtras(proj registry.Project, p SetProjectParams) (registry.Proj
 			if _, existed := had[role]; existed && p.Permissions[role] == nil {
 				continue
 			}
+			if _, err := engine.ResolvePermission(proj, role); err != nil {
+				return registry.Project{}, &ipc.Error{Code: CodeBadParams, Message: err.Error()}
+			}
+		}
+	}
+	if p.Preset != nil || len(p.AllowAdd) != 0 {
+		perms := maps.Clone(proj.Permissions)
+		if perms == nil {
+			perms = map[string]registry.Permission{}
+		}
+		proj.Permissions = perms
+		if p.Preset != nil {
+			// The check command is the one the call saves, so the preset holds its entry.
+			list, err := engine.ImplementerPreset(*p.Preset, proj.CheckCommand)
+			if err != nil {
+				return registry.Project{}, &ipc.Error{Code: CodeBadParams, Message: err.Error()}
+			}
+			perms[engine.RoleImplementer] = registry.Permission{Allow: list}
+		}
+		for _, role := range slices.Sorted(maps.Keys(p.AllowAdd)) {
+			var list []string
+			if role == engine.RoleImplementer {
+				// No entry means the built-in default, which the owner then edits.
+				current, err := engine.ResolvePermission(proj, role)
+				if err != nil {
+					return registry.Project{}, &ipc.Error{Code: CodeBadParams, Message: err.Error()}
+				}
+				if current.ReadOnly {
+					return registry.Project{}, &ipc.Error{Code: CodeBadParams, Message: "role implementer has the read-only preset, so allow_add cannot add to it (reset it with permissions, or replace the list)"}
+				}
+				list = slices.Clone(current.Allow)
+			}
+			for _, pattern := range p.AllowAdd[role] {
+				if !slices.Contains(list, pattern) {
+					list = append(list, pattern)
+				}
+			}
+			perms[role] = registry.Permission{Allow: list}
+		}
+		for _, role := range slices.Sorted(maps.Keys(p.AllowAdd)) {
 			if _, err := engine.ResolvePermission(proj, role); err != nil {
 				return registry.Project{}, &ipc.Error{Code: CodeBadParams, Message: err.Error()}
 			}

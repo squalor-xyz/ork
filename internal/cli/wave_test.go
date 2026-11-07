@@ -127,7 +127,7 @@ func TestWaveStartPlansChosenItemsBeforeConfirmation(t *testing.T) {
 						t.Fatalf("answers: %+v", p)
 					}
 					plans++
-					*(result.(*daemon.RunPlan)) = daemon.RunPlan{Item: p.Item, Worktree: "/p/" + p.Item}
+					*(result.(*daemon.RunPlan)) = daemon.RunPlan{CheckCommand: "go test ./...", Item: p.Item, Worktree: "/p/" + p.Item}
 				case "spec.check":
 					p := params.(daemon.SpecCheckParams)
 					if plans != 2 || p.Project != "p" || !reflect.DeepEqual(p.Items, []string{"S2", "S1"}) {
@@ -221,7 +221,7 @@ func (s *specStub) call(_ context.Context, method string, params, result any) er
 		return json.Unmarshal([]byte(fmt.Sprintf(`{"projects":[{"name":"p","adj":%t}]}`, s.adj)), result)
 	case "run.plan":
 		p := params.(daemon.RunParams)
-		*(result.(*daemon.RunPlan)) = daemon.RunPlan{Item: p.Item, Worktree: "/p/" + p.Item}
+		*(result.(*daemon.RunPlan)) = daemon.RunPlan{CheckCommand: "go test ./...", Item: p.Item, Worktree: "/p/" + p.Item}
 	case "spec.check":
 		return json.Unmarshal([]byte(s.check), result)
 	case "spec.answer":
@@ -410,7 +410,7 @@ func TestWaveStartPrintsTheBlockedRefusal(t *testing.T) {
 			app := &App{Input: strings.NewReader("y\n"), Call: func(_ context.Context, method string, params, result any) error {
 				switch method {
 				case "run.plan":
-					*(result.(*daemon.RunPlan)) = daemon.RunPlan{Item: "S2"}
+					*(result.(*daemon.RunPlan)) = daemon.RunPlan{CheckCommand: "go test ./...", Item: "S2"}
 					return nil
 				case "spec.check":
 					return &ipc.Error{Code: daemon.CodeRefused, Message: text}
@@ -452,7 +452,7 @@ func TestWaveStartLineupFlagsApplyToEveryItem(t *testing.T) {
 		case daemon.MethodRunPlan:
 			p := params.(daemon.RunParams)
 			plans = append(plans, p)
-			*result.(*daemon.RunPlan) = daemon.RunPlan{Item: p.Item, Lineup: p.Lineup}
+			*result.(*daemon.RunPlan) = daemon.RunPlan{CheckCommand: "go test ./...", Item: p.Item, Lineup: p.Lineup}
 		case "spec.check":
 			return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true},{"item":"S2","ready":true}]}`), result)
 		case daemon.MethodWaveStart:
@@ -485,7 +485,7 @@ func TestWaveStartStopAfterFlag(t *testing.T) {
 		case daemon.MethodRunPlan:
 			p := params.(daemon.RunParams)
 			plans = append(plans, p)
-			*result.(*daemon.RunPlan) = daemon.RunPlan{Item: p.Item, Lineup: p.Lineup}
+			*result.(*daemon.RunPlan) = daemon.RunPlan{CheckCommand: "go test ./...", Item: p.Item, Lineup: p.Lineup}
 		case "spec.check":
 			return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true},{"item":"S2","ready":true}]}`), result)
 		case daemon.MethodWaveStart:

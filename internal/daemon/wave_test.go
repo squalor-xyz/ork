@@ -16,6 +16,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
+	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -419,4 +420,27 @@ func TestWaveStartCarriesStopAfterPerItem(t *testing.T) {
 		}
 	}
 	w.expectStarts(t, "S1", "S2")
+}
+
+func TestWaveStartRefusesAProjectWithoutACheckCommand(t *testing.T) {
+	w := newWaveRig(t, 4, 0)
+	editProject(t, w.d, func(p *registry.Project) { p.CheckCommand = "" })
+	want := "project p: no check command: ork refuses to start a run (fix: ork projects set p --check CMD, or start with --allow-no-check)"
+	// The whole wave is refused, even when one item carries the flag.
+	for _, raw := range []string{
+		`{"items":[{"project":"p","item":"S1"},{"project":"p","item":"S2"}]}`,
+		`{"items":[{"project":"p","item":"S1","allow_no_check":true},{"project":"p","item":"S2"}]}`,
+	} {
+		_, err := w.d.handle(context.Background(), MethodWaveStart, json.RawMessage(raw))
+		if re := ipc.ErrorOf(err); err == nil || re.Code != CodeRefused || re.Message != want {
+			t.Errorf("%s: %v", raw, err)
+		}
+	}
+	if runs, err := w.store.List(); err != nil || len(runs) != 0 {
+		t.Fatalf("a refusal created runs: %v %v", runs, err)
+	}
+	_, runs := waveRecords(t, w.d, `{"items":[{"project":"p","item":"S1","allow_no_check":true},{"project":"p","item":"S2","allow_no_check":true}]}`)
+	if len(runs) != 2 {
+		t.Fatalf("allow_no_check wave: %+v", runs)
+	}
 }

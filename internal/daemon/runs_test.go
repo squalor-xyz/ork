@@ -2867,3 +2867,88 @@ func TestShapeRetryStatusFromRecord(t *testing.T) {
 		t.Fatalf("role-only retry missing from status: %s", b)
 	}
 }
+
+// editProject changes the registry's first project.
+func editProject(t *testing.T, d *Daemon, change func(*registry.Project)) {
+	t.Helper()
+	f, err := d.loadRegistry()
+	if err != nil {
+		t.Fatal(err)
+	}
+	change(&f.Projects[0])
+	if err := registry.Save(d.cfg.RegistryPath, f); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestRunPlanCarriesSetupWarnings(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	if err := os.MkdirAll(p.Path, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(p.Path, "pyproject.toml"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	editProject(t, d, func(p *registry.Project) { p.CheckCommand = "" })
+	plan := launchPlan(t, d, `{"project":"p","item":"S1"}`)
+	want := []string{
+		"no check command: ork refuses to start a run (fix: ork projects set p --check CMD, or start with --allow-no-check)",
+		"the implementer has the built-in Go allowlist, but p has no go.mod (fix: ork projects set p --preset python)",
+	}
+	if !reflect.DeepEqual(plan.Warnings, want) {
+		t.Fatalf("warnings %q, want %q", plan.Warnings, want)
+	}
+
+	// A Go project with a check command has none, and the JSON has no key.
+	if err := os.WriteFile(filepath.Join(p.Path, "go.mod"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	editProject(t, d, func(p *registry.Project) { p.CheckCommand = "go test ./..." })
+	b := request(t, d, MethodRunPlan, `{"project":"p","item":"S1"}`)
+	if strings.Contains(string(b), `"warnings"`) {
+		t.Fatalf("a plan with no warnings has the key: %s", b)
+	}
+}
+
+func TestRunStartAcceptsAPlanWithWarnings(t *testing.T) {
+	d, _, _ := runDaemon(t, func(ctx context.Context, _ engine.Request) (engine.Result, error) {
+		<-ctx.Done()
+		return engine.Result{}, ctx.Err()
+	})
+	// The project directory has no go.mod, so the plan warns of the Go default.
+	plan := launchPlan(t, d, `{"project":"p","item":"S1"}`)
+	if len(plan.Warnings) != 1 {
+		t.Fatalf("warnings: %q", plan.Warnings)
+	}
+	shown, _ := json.Marshal(plan)
+	var rec runrec.Record
+	if err := json.Unmarshal(request(t, d, MethodRunStart, `{"project":"p","item":"S1","expected":`+string(shown)+`}`), &rec); err != nil || rec.ID == "" {
+		t.Fatalf("start with a warned plan: %+v, %v", rec, err)
+	}
+}
+
+func TestRunStartRefusesAProjectWithoutACheckCommand(t *testing.T) {
+	d, store, _ := runDaemon(t, func(ctx context.Context, _ engine.Request) (engine.Result, error) {
+		<-ctx.Done()
+		return engine.Result{}, ctx.Err()
+	})
+	editProject(t, d, func(p *registry.Project) { p.CheckCommand = "" })
+	_, err := d.handle(context.Background(), MethodRunStart, json.RawMessage(`{"project":"p","item":"S1"}`))
+	re := ipc.ErrorOf(err)
+	want := "project p: no check command: ork refuses to start a run (fix: ork projects set p --check CMD, or start with --allow-no-check)"
+	if err == nil || re.Code != CodeRefused || re.Message != want {
+		t.Fatalf("got %v, want %s: %s", err, CodeRefused, want)
+	}
+	if runs, err := store.List(); err != nil || len(runs) != 0 {
+		t.Fatalf("a refusal created a run: %v %v", runs, err)
+	}
+	// The plan is still shown: the owner sees `check: none` before the refusal.
+	if plan := launchPlan(t, d, `{"project":"p","item":"S1"}`); plan.CheckCommand != "" {
+		t.Fatalf("plan: %+v", plan)
+	}
+	// --allow-no-check starts it.
+	var rec runrec.Record
+	if err := json.Unmarshal(request(t, d, MethodRunStart, `{"project":"p","item":"S1","allow_no_check":true}`), &rec); err != nil || rec.ID == "" {
+		t.Fatalf("allow_no_check: %+v, %v", rec, err)
+	}
+}

@@ -523,8 +523,10 @@ func (d *Daemon) removeProject(name string) error {
 }
 
 // setProject changes the optional registry fields p sets (S161, *proposed*).
-// It validates every value before it takes regMu, refuses while the project
-// has unfinished runs as removeProject does, and saves the registry once.
+// It validates every value before it takes regMu, and saves the registry once.
+// While the project has unfinished runs it refuses a call that sets a field a
+// running slice reads, and allows the cap, the budgets and the patterns (S265,
+// *proposed*).
 func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
 	bad := func(format string, args ...any) error {
 		return &ipc.Error{Code: CodeBadParams, Message: fmt.Sprintf(format, args...)}
@@ -593,11 +595,16 @@ func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
 	if err != nil {
 		return registry.Project{}, ipc.ErrorOf(err)
 	}
-	if len(ids) != 0 {
-		return registry.Project{}, &ipc.Error{Code: CodeProjectBusy, Message: fmt.Sprintf("project %s has unfinished runs: %s", p.Name, strings.Join(ids, ", "))}
+	if refused := p.fieldsReadByARun(); len(ids) != 0 && len(refused) != 0 {
+		return registry.Project{}, &ipc.Error{Code: CodeProjectBusy, Message: busyMessage(p.Name, ids, refused)}
 	}
 	proj := &f.Projects[i]
-	withExtras, err := withProjectExtras(*proj, p)
+	// The preset and allow_add read the check command this call saves.
+	base := *proj
+	if p.CheckCommand != nil {
+		base.CheckCommand = *p.CheckCommand
+	}
+	withExtras, err := withProjectExtras(base, p)
 	if err != nil {
 		return registry.Project{}, err
 	}
@@ -641,6 +648,12 @@ func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
 	if err := registry.Save(d.registryPath(), f); err != nil {
 		return registry.Project{}, &ipc.Error{Code: CodeRegistry, Message: err.Error()}
 	}
+	if p.Cap != nil {
+		// A raised cap is read at the next admission; start the queued runs that
+		// now fit, as settings.set does (S265, *proposed*). A lowered cap stops nothing.
+		d.runs.lastRegistry = f
+		d.startQueuedLocked(f)
+	}
 	return *proj, nil
 }
 
@@ -668,4 +681,20 @@ func (d *Daemon) refresh(ctx context.Context, p RefreshParams) (any, error) {
 		return nil, notFound(p.Project, f)
 	}
 	return nil, d.cache.Refresh(ctx, proj, allParts...)
+}
+
+// busyMessage is the project_busy refusal of a projects.set call that sets
+// fields a running slice reads (S265, *proposed*). It names the command line
+// flags, since the command line is where the owner fixes the call.
+func busyMessage(project string, runs, flags []string) string {
+	list := strings.Join(flags, ", ")
+	if n := len(flags); n > 1 {
+		list = strings.Join(flags[:n-1], ", ") + " and " + flags[n-1]
+	}
+	pronoun := "it"
+	if len(flags) > 1 {
+		pronoun = "them"
+	}
+	return fmt.Sprintf("project %s has unfinished runs: %s; a running slice reads %s, so set %s after they finish or stop (--cap, the budgets and the worktree and branch patterns may change now)",
+		project, strings.Join(runs, ", "), list, pronoun)
 }

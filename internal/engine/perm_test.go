@@ -90,3 +90,47 @@ func TestReadOnlyRolesGetReadOnlyMode(t *testing.T) {
 		t.Error("an unknown role was accepted")
 	}
 }
+
+func TestImplementerPresetGoIsTheBuiltInDefault(t *testing.T) {
+	for _, check := range []string{"go test ./...", ""} {
+		got, err := ImplementerPreset("go", check)
+		if err != nil || !reflect.DeepEqual(got, DefaultImplementerAllowlist(check)) {
+			t.Errorf("check %q: %q, %v", check, got, err)
+		}
+	}
+}
+
+func TestImplementerPresetPython(t *testing.T) {
+	check := "python3 -m unittest discover -s tests -t tests"
+	want := []string{
+		"Read", "Grep", "Glob", "Edit", "Write",
+		"Bash(slicer *)", "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)",
+		"Bash(git -C * status*)", "Bash(git -C * diff*)", "Bash(git -C * log*)",
+		"Bash(adj check*)", "Bash(adj lint*)", "Bash(adj show*)", "Bash(adj inbox*)",
+		"Bash(python3 -m unittest*)", "Bash(python3 -m unittest discover -s tests -t tests*)",
+	}
+	got, err := ImplementerPreset("python", check)
+	if err != nil || !reflect.DeepEqual(got, want) {
+		t.Fatalf("got  %q, %v\nwant %q", got, err, want)
+	}
+	// Without a check command the list ends with the unittest entry.
+	got, err = ImplementerPreset("python", "")
+	if err != nil || !reflect.DeepEqual(got, want[:len(want)-1]) {
+		t.Fatalf("without a check command: %q, %v", got, err)
+	}
+	// Each call returns a slice of its own.
+	got[0] = "Changed"
+	if again, _ := ImplementerPreset("python", ""); again[0] != "Read" {
+		t.Fatalf("callers share the preset: %q", again)
+	}
+}
+
+func TestImplementerPresetUnknownName(t *testing.T) {
+	got, err := ImplementerPreset("rust", "")
+	if err == nil || err.Error() != `unknown preset "rust" (presets: go, python)` || got != nil {
+		t.Fatalf("got %q, %v", got, err)
+	}
+	if !reflect.DeepEqual(PresetNames(), []string{"go", "python"}) {
+		t.Fatalf("PresetNames: %q", PresetNames())
+	}
+}

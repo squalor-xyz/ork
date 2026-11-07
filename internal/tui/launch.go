@@ -12,6 +12,7 @@ import (
 	"charm.land/lipgloss/v2"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
@@ -495,7 +496,24 @@ func (m *Model) launchView(w int) overviewView {
 		add(p.Project.Name + " " + p.Item)
 		add("worktree: " + p.Worktree)
 		add("branch: " + p.Branch)
-		add("check: " + p.CheckCommand)
+		warn := func(text string) {
+			for _, line := range wrapText(text, max(w-2, 1)) {
+				out.body = append(out.body, indent+th.Warn.Render(line))
+			}
+		}
+		check := p.CheckCommand
+		if check == "" {
+			check = "none"
+		}
+		add("check: " + check)
+		if p.CheckCommand == "" {
+			// The daemon refuses the start (adj 191). Say so once, with both
+			// fixes, by the check line: a long plan can clip the lines below.
+			name := p.Project.Name
+			warn("refused: " + name + " has no check command, so only slicer check would run.")
+			warn("fix: ork projects set " + engine.ShellWord(name) + " --check CMD")
+			warn("start anyway: ork run " + engine.ShellWord(name) + " " + p.Item + " --allow-no-check")
+		}
 		stop := "after landing"
 		if p.StopAfter == runrec.StopAfterCommit {
 			stop = "after commit (you land it)"
@@ -518,10 +536,13 @@ func (m *Model) launchView(w int) overviewView {
 				add("  allowlist: " + strings.Join(perm.Allow, ", "))
 			}
 		}
-		if p.Note != "" {
-			for _, line := range wrapText("note: "+p.Note, max(w-2, 1)) {
-				out.body = append(out.body, indent+th.Warn.Render(line))
+		for _, warning := range p.Warnings {
+			if warning != engine.NoCheckMessage(p.Project.Name) {
+				warn("warning: " + warning)
 			}
+		}
+		if p.Note != "" {
+			warn("note: " + p.Note)
 		}
 	}
 	return out

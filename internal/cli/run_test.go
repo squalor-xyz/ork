@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -42,7 +43,7 @@ func runPrompted(t *testing.T, input string, args ...string) promptRun {
 		case "run.plan":
 			raw, _ := json.Marshal(params)
 			r.plan = string(raw)
-			return json.Unmarshal([]byte(`{"project":{"name":"p"},"item":"S1"}`), result)
+			return json.Unmarshal([]byte(`{"project":{"name":"p"},"item":"S1","check_command":"go test ./..."}`), result)
 		case "spec.check":
 			return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true}]}`), result)
 		case "run.start":
@@ -264,7 +265,7 @@ func TestRunYesStartsAndOwnerCommands(t *testing.T) {
 			var out, errs bytes.Buffer
 			app := &App{Call: func(_ context.Context, method string, params, result any) error {
 				if method == "run.plan" {
-					return json.Unmarshal([]byte(`{"project":{"name":"p"},"item":"S1"}`), result)
+					return json.Unmarshal([]byte(`{"project":{"name":"p"},"item":"S1","check_command":"go test ./..."}`), result)
 				}
 				if method == daemon.MethodSpecCheck {
 					return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true}]}`), result)
@@ -556,7 +557,7 @@ func overrideRun(t *testing.T, flags ...string) ([]daemon.RunParams, string) {
 		p := params.(daemon.RunParams)
 		calls = append(calls, p)
 		if method == daemon.MethodRunPlan {
-			*result.(*daemon.RunPlan) = daemon.RunPlan{StopAfter: p.StopAfter, Item: p.Item, Lineup: p.Lineup}
+			*result.(*daemon.RunPlan) = daemon.RunPlan{CheckCommand: "go test ./...", StopAfter: p.StopAfter, Item: p.Item, Lineup: p.Lineup}
 		} else if method != daemon.MethodRunStart {
 			t.Fatalf("method %s", method)
 		}
@@ -670,7 +671,7 @@ func TestRunAndWavePlanShowOnlyOverriddenBudgets(t *testing.T) {
 				app := &App{Input: strings.NewReader("y\nn\nn\n"), Call: func(_ context.Context, method string, params, result any) error {
 					switch method {
 					case daemon.MethodRunPlan:
-						*result.(*daemon.RunPlan) = daemon.RunPlan{Item: "S1", Budgets: effective}
+						*result.(*daemon.RunPlan) = daemon.RunPlan{CheckCommand: "go test ./...", Item: "S1", Budgets: effective}
 					case "spec.check":
 						return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true}]}`), result)
 					default:
@@ -837,7 +838,7 @@ func TestRunRefusesBlockedItemBeforeConfirmation(t *testing.T) {
 				calls = append(calls, method)
 				switch method {
 				case daemon.MethodRunPlan:
-					*result.(*daemon.RunPlan) = daemon.RunPlan{Item: "S2"}
+					*result.(*daemon.RunPlan) = daemon.RunPlan{CheckCommand: "go test ./...", Item: "S2"}
 					return nil
 				case daemon.MethodSpecCheck:
 					p := params.(daemon.SpecCheckParams)
@@ -925,5 +926,97 @@ func TestRunHeldLineStartsOnItsOwnLineAtEOF(t *testing.T) {
 	code, out, errs, _ := singleSpecRun(t, "", check, nil, "--yes")
 	if code != 1 || !strings.Contains(out, "): \nheld: S1 has 1 open spec question") {
 		t.Fatalf("code %d out %q err %s", code, out, errs)
+	}
+}
+
+func TestPrintRunPlanShowsWarnings(t *testing.T) {
+	plan := daemon.RunPlan{Project: registry.Project{Name: "p"}, Item: "S1", Lineup: map[string][]runrec.LineupEntry{"implementer": {{Vendor: "codex", Model: "sol", Effort: "high"}}},
+		Permissions: map[string]engine.Permission{"implementer": {Allow: []string{"Read"}}, "reviewer": {ReadOnly: true}, "gate": {ReadOnly: true}}, Note: "a note", Warnings: []string{"first warning", "second warning"}}
+	var out bytes.Buffer
+	printRunPlan(&out, plan, false)
+	got := out.String()
+	if !strings.Contains(got, "\ncheck: none\n") {
+		t.Errorf("an empty check command is not shown as none: %q", got)
+	}
+	if !strings.HasSuffix(got, "implementer: codex sol high\n  allowlist: Read\n  permissions: read-only\n  permissions: read-only\nwarning: first warning\nwarning: second warning\nnote: a note\n") {
+		t.Errorf("warnings do not follow the role rows and precede the note: %q", got)
+	}
+	plan.Warnings, plan.CheckCommand = nil, "go test ./..."
+	out.Reset()
+	printRunPlan(&out, plan, false)
+	if got := out.String(); strings.Contains(got, "warning:") || !strings.Contains(got, "\ncheck: go test ./...\n") {
+		t.Errorf("a plan without warnings: %q", got)
+	}
+}
+
+// noCheckRun is `ork run p S1` or `ork wave start p S1` against a daemon whose
+// project has no check command: it records which methods were called.
+func noCheckRun(t *testing.T, args ...string) (code int, out, errs string, methods []string, starts []daemon.RunParams) {
+	t.Helper()
+	var stdout, stderr bytes.Buffer
+	app := &App{Input: strings.NewReader("y\nn\nyes\n"), Call: func(_ context.Context, method string, params, result any) error {
+		methods = append(methods, method)
+		switch method {
+		case daemon.MethodRunPlan:
+			return json.Unmarshal([]byte(`{"project":{"name":"p"},"item":"S1","warnings":["no check command: ork refuses to start a run (fix: ork projects set p --check CMD, or start with --allow-no-check)"]}`), result)
+		case daemon.MethodSpecCheck:
+			return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true}]}`), result)
+		case daemon.MethodRunStart:
+			starts = append(starts, params.(daemon.RunParams))
+			return json.Unmarshal([]byte(`{"id":"r1","state":"setup"}`), result)
+		case daemon.MethodWaveStart:
+			starts = append(starts, params.(daemon.WaveStartParams).Items...)
+			return json.Unmarshal([]byte(`{"wave":"wave-1","items":[{"item":"S1","run":{"id":"r1","state":"setup"}}]}`), result)
+		}
+		t.Fatalf("method %s", method)
+		return nil
+	}}
+	code = app.Run(context.Background(), args, &stdout, &stderr)
+	return code, stdout.String(), stderr.String(), methods, starts
+}
+
+func TestRunRefusesAPlanWithNoCheckCommand(t *testing.T) {
+	for name, args := range map[string][]string{
+		"run":  {"run", "p", "S1", "--yes", "--well-specified", "y", "--split", "n"},
+		"wave": {"wave", "start", "p", "S1", "--yes", "--well-specified", "y", "--split", "n"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			code, out, errs, methods, starts := noCheckRun(t, args...)
+			if code != ExitFailure || len(starts) != 0 {
+				t.Fatalf("exit %d, starts %+v: %s %s", code, starts, out, errs)
+			}
+			// The plan is shown first, then the refusal names the fix.
+			if !strings.Contains(out, "check: none\n") || strings.Contains(out, "no check command") {
+				t.Errorf("the plan must show check: none, and leave the refusal text to the error:\n%s", out)
+			}
+			if want := "ork: project p: no check command: ork refuses to start a run (fix: ork projects set p --check CMD, or start with --allow-no-check)\n"; errs != want {
+				t.Errorf("stderr %q, want %q", errs, want)
+			}
+			if slices.Contains(methods, daemon.MethodSpecCheck) {
+				t.Errorf("the refusal came after the spec check: %v", methods)
+			}
+
+			code, out, errs, _, starts = noCheckRun(t, append(args, "--allow-no-check")...)
+			if code != ExitOK || len(starts) != 1 || !starts[len(starts)-1].AllowNoCheck {
+				t.Fatalf("--allow-no-check: exit %d, starts %+v: %s", code, starts, errs)
+			}
+			// With the flag the plan warns in plain words that do not say ork refuses.
+			if !strings.Contains(out, "\nwarning: no check command: only slicer check runs after landing\n") || strings.Contains(out, "refuses") {
+				t.Errorf("--allow-no-check plan text:\n%s", out)
+			}
+			// The confirmed plan the daemon compares is the one it sent, unchanged.
+			if exp := starts[len(starts)-1].Expected; exp == nil || len(exp.Warnings) != 1 || !strings.Contains(exp.Warnings[0], "refuses") {
+				t.Errorf("expected plan was rewritten: %+v", exp)
+			}
+		})
+	}
+	// --json prints the refusal as the command's error value.
+	code, out, _, _, _ := noCheckRun(t, "run", "p", "S1", "--json", "--yes", "--well-specified", "y", "--split", "n")
+	var e struct {
+		Error struct{ Code, Message string }
+	}
+	mustJSON(t, out, &e)
+	if code != ExitFailure || e.Error.Code != daemon.CodeRefused || !strings.Contains(e.Error.Message, "--allow-no-check") {
+		t.Fatalf("--json: exit %d: %s", code, out)
 	}
 }

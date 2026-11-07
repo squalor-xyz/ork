@@ -4,6 +4,7 @@ package engine
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/squalor-xyz/ork/internal/registry"
 )
@@ -18,20 +19,45 @@ type Permission struct {
 // presetReadOnly is the one registry preset (docs/state.md).
 const presetReadOnly = "read-only"
 
-// DefaultImplementerAllowlist is the built-in allowlist of an implementer
-// whose project has no permissions.implementer entry (launch.default-allowlist).
-// The check command's entry is left out when the project has no check command.
-func DefaultImplementerAllowlist(checkCommand string) []string {
-	list := []string{
+// PresetNames are the implementer allowlist presets (S265, *proposed*).
+func PresetNames() []string { return []string{"go", "python"} }
+
+// ImplementerPreset is the full implementer allowlist of a language (S265,
+// *proposed*): the base list, the language's entries, then the check
+// command's entry when the project has a check command. The go preset is the
+// built-in default (launch.default-allowlist). Each call returns its own slice.
+func ImplementerPreset(name, checkCommand string) ([]string, error) {
+	head := []string{
 		"Read", "Grep", "Glob", "Edit", "Write",
 		"Bash(slicer *)", "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)",
-		"Bash(go -C * test*)", "Bash(go -C * vet*)", "Bash(go test*)", "Bash(go vet*)", "Bash(gofmt *)",
+	}
+	tail := []string{
 		"Bash(git -C * status*)", "Bash(git -C * diff*)", "Bash(git -C * log*)",
 		"Bash(adj check*)", "Bash(adj lint*)", "Bash(adj show*)", "Bash(adj inbox*)",
+	}
+	var list []string
+	switch name {
+	case "go":
+		list = append(head, "Bash(go -C * test*)", "Bash(go -C * vet*)", "Bash(go test*)", "Bash(go vet*)", "Bash(gofmt *)")
+		list = append(list, tail...)
+	case "python":
+		list = append(head, tail...)
+		list = append(list, "Bash(python3 -m unittest*)")
+	default:
+		return nil, fmt.Errorf("unknown preset %q (presets: %s)", name, strings.Join(PresetNames(), ", "))
 	}
 	if checkCommand != "" {
 		list = append(list, "Bash("+checkCommand+"*)")
 	}
+	return list, nil
+}
+
+// DefaultImplementerAllowlist is the built-in allowlist of an implementer
+// whose project has no permissions.implementer entry (launch.default-allowlist):
+// the go preset. The check command's entry is left out when the project has no
+// check command.
+func DefaultImplementerAllowlist(checkCommand string) []string {
+	list, _ := ImplementerPreset("go", checkCommand)
 	return list
 }
 

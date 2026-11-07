@@ -20,6 +20,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/roles"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -658,6 +659,21 @@ func doctorProjects(t *testing.T, projects ...registry.Project) (*App, string) {
 	return app, path
 }
 
+// setUpProject gives a doctor fixture what ork wants of a project, a go.mod and
+// a check command, so doctor reports no setup finding (S265).
+func setUpProject(t *testing.T, p registry.Project) registry.Project {
+	t.Helper()
+	if p.CheckCommand == "" {
+		p.CheckCommand = "go version"
+	}
+	if info, err := os.Stat(p.Path); err == nil && info.IsDir() {
+		if err := os.WriteFile(filepath.Join(p.Path, "go.mod"), nil, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return p
+}
+
 func projectReport(t *testing.T, app *App) doctorOut {
 	t.Helper()
 	code, out, stderr := run(t, app, "doctor", "--json")
@@ -714,7 +730,7 @@ func TestDoctorChecksEachProjectCheckCommand(t *testing.T) {
 			if command == "ABSOLUTE" {
 				command = filepath.Join(dir, "local-check-tool")
 			}
-			app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: dir, CheckCommand: command})
+			app, _ := doctorProjects(t, setUpProject(t, registry.Project{Name: "demo", Path: dir, CheckCommand: command}))
 			t.Setenv("PATH", pathDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 			d := projectReport(t, app)
 			findings := strings.Join(d.Projects[0].Findings, "\n")
@@ -729,7 +745,7 @@ func TestDoctorChecksEachProjectCheckCommand(t *testing.T) {
 }
 
 func TestDoctorCheckCommandSyntaxError(t *testing.T) {
-	app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "go test ("})
+	app, _ := doctorProjects(t, setUpProject(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "go test ("}))
 	d := projectReport(t, app)
 	if got := strings.Join(d.Projects[0].Findings, " "); !strings.Contains(got, "syntax") {
 		t.Fatalf("want syntax finding: %q", got)
@@ -766,7 +782,7 @@ func TestDoctorPatternWithoutIdIsReported(t *testing.T) {
 		{"Fixed/{id}/{id_lower}", "feat/{id_lower}/{id}", ""},
 	} {
 		t.Run(tc.worktree+"/"+tc.branch, func(t *testing.T) {
-			app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir(), WorktreePattern: tc.worktree, BranchPattern: tc.branch})
+			app, _ := doctorProjects(t, setUpProject(t, registry.Project{Name: "demo", Path: t.TempDir(), WorktreePattern: tc.worktree, BranchPattern: tc.branch}))
 			d := projectReport(t, app)
 			got := strings.Join(d.Projects[0].Findings, " ")
 			if tc.finding == "" && got != "" || tc.finding != "" && (!strings.Contains(got, tc.finding) || !strings.Contains(got, "has no {id} or {id_lower}") || !strings.Contains(got, fmt.Sprintf("%q", tc.worktree+tc.branch))) {
@@ -788,11 +804,39 @@ func TestDoctorPatternHintQuotesAnAwkwardName(t *testing.T) {
 	}
 }
 
-func TestDoctorProjectWithoutCheckCommandIsNotAnError(t *testing.T) {
-	app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir()})
+func TestDoctorProjectWithoutCheckCommandHasAFinding(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "go.mod"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: dir})
 	d := projectReport(t, app)
-	if d.Projects[0].Findings == nil || len(d.Projects[0].Findings) != 0 {
-		t.Fatalf("findings: %+v", d.Projects[0])
+	want := []string{"no check command: ork refuses to start a run (fix: ork projects set demo --check CMD, or start with --allow-no-check)"}
+	if !reflect.DeepEqual(d.Projects[0].Findings, want) {
+		t.Fatalf("findings: %q, want %q", d.Projects[0].Findings, want)
+	}
+	// The finding keeps the exit code at zero.
+	code, out, _ := run(t, app, "doctor")
+	if code != 0 || !strings.Contains(out, "[WARN] project demo  "+dir+"\n  "+want[0]+"\n") {
+		t.Fatalf("text: exit %d: %s", code, out)
+	}
+}
+
+func TestDoctorWarnsOfAnAllowlistWithoutEdit(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "pyproject.toml"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: dir, CheckCommand: "true",
+		Permissions: map[string]registry.Permission{"implementer": {Allow: []string{"Bash(true*)"}}}})
+	d := projectReport(t, app)
+	want := []string{"the implementer allowlist has no Read, Edit or Write; it replaces the built-in list as a whole (fix: ork projects set demo --preset python)"}
+	if !reflect.DeepEqual(d.Projects[0].Findings, want) {
+		t.Fatalf("findings: %q, want %q", d.Projects[0].Findings, want)
+	}
+	code, out, _ := run(t, app, "doctor")
+	if code != 0 || !strings.Contains(out, "[WARN] project demo  "+dir+"\n  "+want[0]+"\n") {
+		t.Fatalf("text: exit %d: %s", code, out)
 	}
 }
 
@@ -810,10 +854,10 @@ func TestDoctorProjectFindingsKeepExitZero(t *testing.T) {
 }
 
 func TestDoctorJSONListsEachProject(t *testing.T) {
-	projects := []registry.Project{{Name: "one", Path: t.TempDir()}, {Name: "two", Path: t.TempDir(), BranchPattern: "fixed"}}
+	projects := []registry.Project{setUpProject(t, registry.Project{Name: "one", Path: t.TempDir()}), setUpProject(t, registry.Project{Name: "two", Path: t.TempDir(), BranchPattern: "fixed"})}
 	app, path := doctorProjects(t, projects...)
 	// Compact, deliberately reordered JSON detects a doctor-side Save.
-	before := []byte(fmt.Sprintf(`{"projects":[{"path":%q,"name":"one","adj":false},{"path":%q,"name":"two","adj":false,"branch_pattern":"fixed"}],"version":2}`, projects[0].Path, projects[1].Path))
+	before := []byte(fmt.Sprintf(`{"projects":[{"path":%q,"name":"one","adj":false,"check_command":"go version"},{"path":%q,"name":"two","adj":false,"branch_pattern":"fixed","check_command":"go version"}],"version":2}`, projects[0].Path, projects[1].Path))
 	if err := os.WriteFile(path, before, 0o644); err != nil {
 		t.Fatal(err)
 	}
@@ -889,7 +933,7 @@ func TestDoctorFindingsAreSingleLine(t *testing.T) {
 				}
 				path = filepath.Join(file, "child")
 			}
-			app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: path, CheckCommand: command})
+			app, _ := doctorProjects(t, setUpProject(t, registry.Project{Name: "demo", Path: path, CheckCommand: command}))
 			d := projectReport(t, app)
 			if len(d.Projects[0].Findings) != 1 {
 				t.Fatalf("findings: %+v", d.Projects[0].Findings)
@@ -914,7 +958,7 @@ func TestDoctorFindingsAreSingleLine(t *testing.T) {
 }
 
 func TestDoctorSyntaxFindingOmitsShellCall(t *testing.T) {
-	app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "go test ("})
+	app, _ := doctorProjects(t, setUpProject(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "go test ("}))
 	dir := t.TempDir()
 	script := `#!/bin/sh
 printf '%s\n' "sh: -c: line 1: syntax error near unexpected token '('" "sh: -c: line 1: go test (" >&2
@@ -946,7 +990,7 @@ func TestDoctorSkipsShellWords(t *testing.T) {
 func TestDoctorShellCommandsHaveNoLookupFinding(t *testing.T) {
 	for _, command := range []string{"if :; then :; fi", "{ :; }", ". ./missing-script", "cd /missing-dir", "command missing-check-tool", `"$TOOL"`, "`printf tool`", "~/bin/check"} {
 		t.Run(command, func(t *testing.T) {
-			app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: command})
+			app, _ := doctorProjects(t, setUpProject(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: command}))
 			d := projectReport(t, app)
 			if len(d.Projects[0].Findings) != 0 {
 				t.Fatalf("findings: %+v", d.Projects[0].Findings)
@@ -1365,7 +1409,7 @@ func TestProjectsSetRefusesAnUnfinishedRun(t *testing.T) {
 		t.Fatal(err)
 	}
 	code, _, stderr := run(t, w.app, "projects", "set", "keep", "--push", "on")
-	if code != 1 || !strings.Contains(stderr, "project keep has unfinished runs: busy-run") {
+	if code != 1 || !strings.Contains(stderr, "project keep has unfinished runs: busy-run; a running slice reads --push, so set it after they finish or stop (--cap, the budgets and the worktree and branch patterns may change now)") {
 		t.Fatalf("exit %d: %q", code, stderr)
 	}
 	if saved, _ := registry.Load(w.regPath); saved.Projects[0].Push {
@@ -1374,6 +1418,13 @@ func TestProjectsSetRefusesAnUnfinishedRun(t *testing.T) {
 	code, _, stderr = run(t, w.app, "projects", "set", "nope", "--push", "on")
 	if code != 1 || !strings.Contains(stderr, `"nope"`) {
 		t.Fatalf("unknown project: exit %d: %q", code, stderr)
+	}
+	// The cap, budgets and patterns are not read by a running slice.
+	if code, _, stderr := run(t, w.app, "projects", "set", "keep", "--cap", "2", "--budget-minutes", "30", "--branch-pattern", "b/{id}"); code != 0 {
+		t.Fatalf("safe fields: exit %d: %q", code, stderr)
+	}
+	if saved, _ := registry.Load(w.regPath); saved.Projects[0].Cap != 2 || saved.Projects[0].Budgets.Minutes != 30 || saved.Projects[0].BranchPattern != "b/{id}" {
+		t.Fatalf("safe fields did not save: %+v", saved.Projects[0])
 	}
 }
 
@@ -1402,7 +1453,7 @@ func TestDoctorRegistryErrorDoesNotRepeatTheWord(t *testing.T) {
 }
 
 func TestDoctorShellErrorPrefixStopsAtTheFirstMarker(t *testing.T) {
-	app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "go test ("})
+	app, _ := doctorProjects(t, setUpProject(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "go test ("}))
 	dir := t.TempDir()
 	script := `#!/bin/sh
 printf '%s\n' "sh: -c: line 1: unexpected word sh: 2: tail" >&2
@@ -1425,7 +1476,7 @@ func TestDoctorTimeIsOnTheShellWordSkipList(t *testing.T) {
 	if err := os.Symlink("/bin/sh", filepath.Join(pathDir, "sh")); err != nil {
 		t.Fatal(err)
 	}
-	app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "time go test"})
+	app, _ := doctorProjects(t, setUpProject(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "time go test"}))
 	t.Setenv("PATH", pathDir)
 	d := projectReport(t, app)
 	if len(d.Projects[0].Findings) != 0 {
@@ -1493,7 +1544,7 @@ func TestProjectsSetEnvLinePermissionAndAllowFlags(t *testing.T) {
 
 	code, stdout, stderr := run(t, w.app, "projects", "set", "keep",
 		"--env-line", "zsh on darwin", "--env-line", "Go 1.27.x",
-		"--permission", "reviewer=read-only", "--allow", "implementer=Read", "--allow", "implementer=Bash(go test*)",
+		"--permission", "reviewer=read-only", "--replace-allow", "--allow", "implementer=Read", "--allow", "implementer=Bash(go test*)",
 		"--vendor-env", "codex:A=1", "--vendor-env", "codex:URL=http://x?a=b")
 	want := "updated keep: environment_lines=2 lines, permissions=implementer:2 patterns; reviewer:read-only, vendor_env=codex:A,K,URL\n"
 	if code != 0 || stdout != want {
@@ -1518,16 +1569,16 @@ func TestProjectsSetEnvLinePermissionAndAllowFlags(t *testing.T) {
 		t.Fatalf("after clearing env lines:\n got %+v\nwant %+v", got, wantKeep)
 	}
 
-	// One line and one pattern read in the singular.
+	// One line reads in the singular, and --allow adds to the role's list.
 	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--env-line", "just one", "--allow", "implementer=Edit")
-	if code != 0 || stdout != "updated keep: environment_lines=1 line, permissions=implementer:1 pattern\n" {
+	if code != 0 || stdout != "updated keep: environment_lines=1 line, permissions=implementer:3 patterns\n" {
 		t.Fatalf("singular: exit %d: %q %q", code, stdout, stderr)
 	}
 	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--env-line", "")
 	if code != 0 || stdout != "updated keep: environment_lines=unset\n" {
 		t.Fatalf("clear again: exit %d: %q %q", code, stdout, stderr)
 	}
-	wantKeep.Permissions["implementer"] = registry.Permission{Allow: []string{"Edit"}}
+	wantKeep.Permissions["implementer"] = registry.Permission{Allow: []string{"Read", "Bash(go test*)", "Edit"}}
 
 	// ROLE= removes the role's entry; the other roles stay.
 	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--permission", "reviewer=")
@@ -1877,5 +1928,76 @@ func TestUsageGivesSpecCheckRowsItsOwnClause(t *testing.T) {
 		if !strings.Contains(flat, want) {
 			t.Errorf("usage lacks %q", want)
 		}
+	}
+}
+
+func TestProjectsSetAllowAdds(t *testing.T) {
+	keep := registry.Project{Name: "keep", Path: "/p/keep", Permissions: map[string]registry.Permission{"implementer": {Allow: []string{"Read", "Bash(go test*)"}}}}
+	w := newWorld(t, stubSource{}, keep)
+	list := func() []string {
+		t.Helper()
+		f, err := registry.Load(w.regPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return f.Projects[0].Permissions["implementer"].Allow
+	}
+	code, stdout, stderr := run(t, w.app, "projects", "set", "keep", "--allow", "implementer=Edit")
+	if code != 0 || stdout != "updated keep: permissions=implementer:3 patterns\n" || !reflect.DeepEqual(list(), []string{"Read", "Bash(go test*)", "Edit"}) {
+		t.Fatalf("add: exit %d: %q %q, list %q", code, stdout, stderr, list())
+	}
+	// The same call again adds nothing.
+	code, stdout, _ = run(t, w.app, "projects", "set", "keep", "--allow", "implementer=Edit")
+	if code != 0 || stdout != "updated keep: permissions=implementer:3 patterns\n" || len(list()) != 3 {
+		t.Fatalf("repeat: exit %d: %q, list %q", code, stdout, list())
+	}
+	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--replace-allow", "--allow", "implementer=Edit")
+	if code != 0 || stdout != "updated keep: permissions=implementer:1 pattern\n" || !reflect.DeepEqual(list(), []string{"Edit"}) {
+		t.Fatalf("replace: exit %d: %q %q, list %q", code, stdout, stderr, list())
+	}
+	code, _, stderr = run(t, w.app, "projects", "set", "keep", "--replace-allow", "--cap", "2")
+	if code != ExitUsage || !strings.Contains(stderr, "--replace-allow needs --allow") {
+		t.Fatalf("--replace-allow alone: exit %d: %q", code, stderr)
+	}
+	code, _, stderr = run(t, w.app, "projects", "set", "keep", "--replace-allow", "--allow", "implementer=Read", "--preset", "go")
+	if code != ExitUsage || !strings.Contains(stderr, "--preset and --replace-allow both set implementer") {
+		t.Fatalf("--preset with --replace-allow: exit %d: %q", code, stderr)
+	}
+	if !reflect.DeepEqual(list(), []string{"Edit"}) {
+		t.Fatalf("a usage error changed the registry: %q", list())
+	}
+}
+
+func TestProjectsSetPresetFlag(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "slicer", Path: "/p/slicer"})
+	const check = "python3 -m unittest discover -s tests -t tests"
+	code, stdout, stderr := run(t, w.app, "projects", "set", "slicer", "--check", check, "--preset", "python")
+	want := `updated slicer: check_command="` + check + `", permissions=implementer:18 patterns (preset python)` + "\n"
+	if code != 0 || stdout != want {
+		t.Fatalf("exit %d\nstdout: %q\nwant:   %q\nstderr: %q", code, stdout, want, stderr)
+	}
+	f, _ := registry.Load(w.regPath)
+	wantList, _ := engine.ImplementerPreset("python", check)
+	if f.Projects[0].CheckCommand != check || !reflect.DeepEqual(f.Projects[0].Permissions["implementer"].Allow, wantList) {
+		t.Fatalf("saved: %+v", f.Projects[0])
+	}
+	// --allow after the preset adds to it.
+	code, stdout, _ = run(t, w.app, "projects", "set", "slicer", "--preset", "python", "--allow", "implementer=Bash(make *)")
+	if code != 0 || stdout != "updated slicer: permissions=implementer:19 patterns (preset python)\n" {
+		t.Fatalf("preset and allow: exit %d: %q", code, stdout)
+	}
+	for _, args := range [][]string{
+		{"--preset", "python", "--permission", "implementer=read-only"},
+		{"--preset", "python", "--permission", "implementer="},
+	} {
+		code, _, stderr = run(t, w.app, append([]string{"projects", "set", "slicer"}, args...)...)
+		if code != ExitUsage || !strings.Contains(stderr, "--preset and --permission both set implementer") {
+			t.Errorf("%v: exit %d: %q", args, code, stderr)
+		}
+	}
+	// A preset the daemon does not know comes back as its error.
+	code, _, stderr = run(t, w.app, "projects", "set", "slicer", "--preset", "rust")
+	if code != 1 || !strings.Contains(stderr, `unknown preset "rust" (presets: go, python)`) {
+		t.Fatalf("unknown preset: exit %d: %q", code, stderr)
 	}
 }

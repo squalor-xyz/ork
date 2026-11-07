@@ -179,3 +179,18 @@ func TestRaisingTheGlobalCapStartsQueuedRuns(t *testing.T) {
 		}
 	}
 }
+
+// Raising a project's cap with projects.set, which is allowed while runs are
+// unfinished (S265), starts the queued runs that now fit, as settings.set does.
+func TestRaisingTheProjectCapStartsQueuedRuns(t *testing.T) {
+	w := newWaveRig(t, 4, 1)
+	w.start(t, "S1")
+	second := w.start(t, "S2")
+	w.expectStart(t, "S1")
+	if second.State != runrec.StateQueued {
+		t.Fatalf("second run state %q, want queued", second.State)
+	}
+	w.expectNoStart(t)
+	request(t, w.d, MethodProjectsSet, `{"name":"p","cap":2}`)
+	w.expectStart(t, "S2")
+}

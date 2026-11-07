@@ -1646,7 +1646,7 @@ func TestProjectsSetRefusesAnUnfinishedRun(t *testing.T) {
 	before, _ := os.ReadFile(d.registryPath())
 	_, err = d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","push":true}`))
 	var re *ipc.Error
-	if !errors.As(err, &re) || re.Code != CodeProjectBusy || re.Message != "project p has unfinished runs: a-run" {
+	if !errors.As(err, &re) || re.Code != CodeProjectBusy || re.Message != wantBusy("--push", "it") {
 		t.Fatalf("unfinished run: %v", err)
 	}
 	after, _ := os.ReadFile(d.registryPath())
@@ -1881,14 +1881,17 @@ func TestProjectsSetNewFieldsRefuseAnUnfinishedRun(t *testing.T) {
 		t.Fatal(err)
 	}
 	before, _ := os.ReadFile(d.registryPath())
-	for _, raw := range []string{
-		`{"name":"p","environment_lines":["x"]}`,
-		`{"name":"p","permissions":{"reviewer":"read-only"}}`,
-		`{"name":"p","vendor_env":{"codex":{"A":"1"}}}`,
+	for raw, field := range map[string]string{
+		`{"name":"p","environment_lines":["x"]}`:              "--env-line",
+		`{"name":"p","permissions":{"reviewer":"read-only"}}`: "--permission",
+		`{"name":"p","vendor_env":{"codex":{"A":"1"}}}`:       "--vendor-env",
+		`{"name":"p","allow_add":{"implementer":["Read"]}}`:   "--allow",
+		`{"name":"p","implementer_preset":"go"}`:              "--preset",
 	} {
 		_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
 		var re *ipc.Error
-		if !errors.As(err, &re) || re.Code != CodeProjectBusy || re.Message != "project p has unfinished runs: a-run" {
+		want := wantBusy(field, "it")
+		if !errors.As(err, &re) || re.Code != CodeProjectBusy || re.Message != want {
 			t.Errorf("%s: %v", raw, err)
 		}
 	}
@@ -2037,4 +2040,244 @@ func TestProjectsSetSpecCheckRows(t *testing.T) {
 	if string(before) != string(after) {
 		t.Fatal("an invalid list changed the registry")
 	}
+}
+
+func TestProjectsSetAllowAddAppendsToTheList(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	set := func(raw string) (registry.Project, error) {
+		t.Helper()
+		got, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
+		if err != nil {
+			return registry.Project{}, err
+		}
+		return got.(registry.Project), nil
+	}
+	list := func() []string {
+		t.Helper()
+		f, err := registry.Load(d.registryPath())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return f.Projects[0].Permissions["implementer"].Allow
+	}
+
+	// A project with no entry starts from the default, with its check command.
+	if _, err := set(`{"name":"p","allow_add":{"implementer":["Bash(python3 *)"]}}`); err != nil {
+		t.Fatal(err)
+	}
+	want := append(engine.DefaultImplementerAllowlist("go test ./..."), "Bash(python3 *)")
+	if got := list(); !reflect.DeepEqual(got, want) {
+		t.Fatalf("from the default:\n got %q\nwant %q", got, want)
+	}
+
+	// A project with a list appends to it; the same call again adds nothing.
+	editProject(t, d, func(p *registry.Project) {
+		p.Permissions = map[string]registry.Permission{"implementer": {Allow: []string{"Read", "Edit"}}}
+	})
+	for i := range 2 {
+		res, err := set(`{"name":"p","allow_add":{"implementer":["Bash(python3 *)"]}}`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := list(); !reflect.DeepEqual(got, []string{"Read", "Edit", "Bash(python3 *)"}) || !reflect.DeepEqual(res.Permissions["implementer"].Allow, got) {
+			t.Fatalf("call %d: %q, result %+v", i+1, got, res.Permissions)
+		}
+	}
+	// A pattern repeated inside one call counts once, and one already in the list is skipped.
+	if _, err := set(`{"name":"p","allow_add":{"implementer":["Edit","Write","Write"]}}`); err != nil {
+		t.Fatal(err)
+	}
+	if got := list(); !reflect.DeepEqual(got, []string{"Read", "Edit", "Bash(python3 *)", "Write"}) {
+		t.Fatalf("duplicates: %q", got)
+	}
+
+	before, _ := os.ReadFile(d.registryPath())
+	for raw, want := range map[string]string{
+		`{"name":"p","allow_add":{"reviewer":["Read"]}}`:                                           "role reviewer is read-only, but the registry gives it an allowlist",
+		`{"name":"p","allow_add":{"implementer":["Read"]},"permissions":{"implementer":["Edit"]}}`: "permissions and allow_add both set implementer",
+		`{"name":"p","allow_add":{"implementer":[""]}}`:                                            "permissions.implementer has a blank pattern",
+		`{"name":"p","allow_add":{"implementer":[]}}`:                                              "permissions.implementer must be the preset read-only or a non-empty list of patterns",
+		`{"name":"p","allow_add":{"bogus":["Read"]}}`:                                              "unknown role",
+	} {
+		_, err := set(raw)
+		var re *ipc.Error
+		if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, want) {
+			t.Errorf("%s: %v, want bad_params %q", raw, err, want)
+		}
+	}
+	if got, _ := os.ReadFile(d.registryPath()); string(got) != string(before) {
+		t.Fatalf("a refusal changed the registry:\n%s", got)
+	}
+
+	// An implementer held to the read-only preset cannot gain patterns by adding.
+	editProject(t, d, func(p *registry.Project) {
+		p.Permissions = map[string]registry.Permission{"implementer": {Preset: "read-only"}}
+	})
+	_, err := set(`{"name":"p","allow_add":{"implementer":["Read"]}}`)
+	var re *ipc.Error
+	if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "read-only preset") {
+		t.Fatalf("read-only implementer: %v", err)
+	}
+}
+
+func TestProjectsSetImplementerPreset(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	const check = "python3 -m unittest discover -s tests -t tests"
+	set := func(raw string) (registry.Project, error) {
+		t.Helper()
+		got, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
+		if err != nil {
+			return registry.Project{}, err
+		}
+		return got.(registry.Project), nil
+	}
+	res, err := set(`{"name":"p","check_command":"` + check + `","implementer_preset":"python"}`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want, _ := engine.ImplementerPreset("python", check)
+	if res.CheckCommand != check || !reflect.DeepEqual(res.Permissions["implementer"].Allow, want) {
+		t.Fatalf("preset with the new check command: %+v", res)
+	}
+	saved, _ := registry.Load(d.registryPath())
+	if !reflect.DeepEqual(saved.Projects[0], res) {
+		t.Fatalf("saved %+v, result %+v", saved.Projects[0], res)
+	}
+
+	// The preset uses the check command already saved when the call sets none.
+	if _, err := set(`{"name":"p","permissions":{"implementer":null}}`); err != nil {
+		t.Fatal(err)
+	}
+	res, err = set(`{"name":"p","implementer_preset":"go"}`)
+	if err != nil || !reflect.DeepEqual(res.Permissions["implementer"].Allow, engine.DefaultImplementerAllowlist(check)) {
+		t.Fatalf("go preset: %+v, %v", res.Permissions, err)
+	}
+
+	// allow_add in the same call follows the preset.
+	res, err = set(`{"name":"p","implementer_preset":"python","allow_add":{"implementer":["Bash(make *)"]}}`)
+	want, _ = engine.ImplementerPreset("python", check)
+	if err != nil || !reflect.DeepEqual(res.Permissions["implementer"].Allow, append(want, "Bash(make *)")) {
+		t.Fatalf("preset then add: %+v, %v", res.Permissions, err)
+	}
+
+	before, _ := os.ReadFile(d.registryPath())
+	for raw, want := range map[string]string{
+		`{"name":"p","implementer_preset":"rust"}`:                                          `unknown preset "rust" (presets: go, python)`,
+		`{"name":"p","implementer_preset":"python","permissions":{"implementer":["Edit"]}}`: "permissions and implementer_preset both set implementer",
+		`{"name":"p","implementer_preset":"python","permissions":{"implementer":null}}`:     "permissions and implementer_preset both set implementer",
+	} {
+		_, err := set(raw)
+		var re *ipc.Error
+		if !errors.As(err, &re) || re.Code != CodeBadParams || re.Message != want {
+			t.Errorf("%s: %v, want bad_params %q", raw, err, want)
+		}
+	}
+	if got, _ := os.ReadFile(d.registryPath()); string(got) != string(before) {
+		t.Fatalf("a refusal changed the registry:\n%s", got)
+	}
+}
+
+func TestProjectsSetSafeFieldsWhileARunIsUnfinished(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	if _, err := store.Create(runrec.Record{ID: "a-run", Project: p.Name, State: runrec.StatePaused}); err != nil {
+		t.Fatal(err)
+	}
+	for _, raw := range []string{
+		`{"name":"p","cap":2}`, `{"name":"p","worktree_pattern":"w/{id}"}`, `{"name":"p","branch_pattern":"b/{id}"}`,
+		`{"name":"p","budget_minutes":30}`, `{"name":"p","budget_tokens":5000}`,
+		`{"name":"p","cap":3,"budget_minutes":31,"budget_tokens":5001,"worktree_pattern":"x/{id}","branch_pattern":"y/{id}"}`,
+	} {
+		if _, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw)); err != nil {
+			t.Errorf("%s: %v", raw, err)
+		}
+	}
+	f, _ := registry.Load(d.registryPath())
+	got := f.Projects[0]
+	if got.Cap != 3 || got.Budgets != (registry.Budgets{Minutes: 31, Tokens: 5001}) || got.WorktreePattern != "x/{id}" || got.BranchPattern != "y/{id}" {
+		t.Fatalf("safe fields did not save: %+v", got)
+	}
+
+	// One refused field refuses the call and saves nothing, and the message
+	// names the refused fields in the call's order.
+	before, _ := os.ReadFile(d.registryPath())
+	pronoun := map[string]string{"--push": "it", "--push, --check and --check-minutes": "them", "--ui-doc, --ui-pass-skills and --spec-check-rows": "them"}
+	for raw, fields := range map[string]string{
+		`{"name":"p","cap":9,"push":true}`:                                                     "--push",
+		`{"name":"p","cap":9,"check_command":"make","check_minutes":3,"push":false}`:           "--push, --check and --check-minutes",
+		`{"name":"p","cap":9,"ui_doc":"d.md","ui_pass_skills":["a"],"spec_check_rows":["r1"]}`: "--ui-doc, --ui-pass-skills and --spec-check-rows",
+	} {
+		_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
+		var re *ipc.Error
+		want := wantBusy(fields, pronoun[fields])
+		if !errors.As(err, &re) || re.Code != CodeProjectBusy || re.Message != want {
+			t.Errorf("%s: %v\nwant %s", raw, err, want)
+		}
+	}
+	if after, _ := os.ReadFile(d.registryPath()); string(after) != string(before) {
+		t.Fatalf("a refusal changed the registry:\n%s", after)
+	}
+}
+
+func TestSetProjectParamsWire(t *testing.T) {
+	preset := "python"
+	p := SetProjectParams{Name: "p", AllowAdd: map[string][]string{"implementer": {"Bash(make *)"}}, Preset: &preset}
+	b, err := json.Marshal(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(b) != `{"name":"p","implementer_preset":"python","allow_add":{"implementer":["Bash(make *)"]}}` {
+		t.Fatalf("wire form: %s", b)
+	}
+	var back SetProjectParams
+	if err := json.Unmarshal(b, &back); err != nil || !reflect.DeepEqual(back, p) {
+		t.Fatalf("round trip: %+v, %v", back, err)
+	}
+	// Either new field alone is a field to set.
+	if (SetProjectParams{Name: "p", AllowAdd: map[string][]string{"implementer": {"x"}}}).SetsNothing() || (SetProjectParams{Name: "p", Preset: &preset}).SetsNothing() {
+		t.Fatal("allow_add or implementer_preset alone sets nothing")
+	}
+	if !(SetProjectParams{Name: "p", AllowAdd: map[string][]string{}}).SetsNothing() {
+		t.Fatal("an empty allow_add sets a field")
+	}
+	var run RunParams
+	if err := json.Unmarshal([]byte(`{"project":"p","item":"S1","allow_no_check":true}`), &run); err != nil || !run.AllowNoCheck {
+		t.Fatalf("allow_no_check: %+v, %v", run, err)
+	}
+}
+
+func TestProjectsSetRefusesEachFieldAStartedRunReads(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	if _, err := store.Create(runrec.Record{ID: "a-run", Project: p.Name, State: runrec.StateImplement}); err != nil {
+		t.Fatal(err)
+	}
+	before, _ := os.ReadFile(d.registryPath())
+	for raw, field := range map[string]string{
+		`{"name":"p","push":true}`:                          "--push",
+		`{"name":"p","ui_doc":"d.md"}`:                      "--ui-doc",
+		`{"name":"p","ui_pass_skills":["a"]}`:               "--ui-pass-skills",
+		`{"name":"p","spec_check_rows":["r1"]}`:             "--spec-check-rows",
+		`{"name":"p","check_command":"make"}`:               "--check",
+		`{"name":"p","check_minutes":3}`:                    "--check-minutes",
+		`{"name":"p","environment_lines":["x"]}`:            "--env-line",
+		`{"name":"p","permissions":{"implementer":null}}`:   "--permission",
+		`{"name":"p","implementer_preset":"go"}`:            "--preset",
+		`{"name":"p","allow_add":{"implementer":["Read"]}}`: "--allow",
+		`{"name":"p","vendor_env":{"codex":{"A":"1"}}}`:     "--vendor-env",
+	} {
+		_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
+		var re *ipc.Error
+		want := wantBusy(field, "it")
+		if !errors.As(err, &re) || re.Code != CodeProjectBusy || re.Message != want {
+			t.Errorf("%s: %v", raw, err)
+		}
+	}
+	if after, _ := os.ReadFile(d.registryPath()); string(after) != string(before) {
+		t.Fatalf("a refusal changed the registry:\n%s", after)
+	}
+}
+
+// wantBusy is the project_busy message for the unfinished run a-run of project
+// p; reads is the flags a running slice reads, and pronoun is "it" or "them".
+func wantBusy(reads, pronoun string) string {
+	return "project p has unfinished runs: a-run; a running slice reads " + reads + ", so set " + pronoun + " after they finish or stop (--cap, the budgets and the worktree and branch patterns may change now)"
 }

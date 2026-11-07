@@ -629,6 +629,11 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			return tea.Quit
 		case "y", "Y":
 			a := *m.confirm
+			if a.verb == "launch" && a.plan != nil && a.plan.CheckCommand == "" {
+				// The daemon would refuse (adj 191); the confirm shows the fix.
+				m.actionStatus = "Not started: no check command (see the fix above)"
+				return nil
+			}
 			m.confirm = nil
 			return m.callAction(a)
 		case "n", "N", "enter", "esc":
@@ -1458,6 +1463,10 @@ func (a runAction) prompt() string {
 	}
 	if a.verb == "approve" || a.verb == "file" || a.verb == "end" || a.verb == "decide" || a.verb == "relay-answer" {
 		return a.promptWidth(0)
+	}
+	if a.verb == "launch" && a.plan != nil && a.plan.CheckCommand == "" {
+		// The daemon would refuse the start (adj 191): offer no y.
+		return a.command() + ": refused (n or esc closes)"
 	}
 	prompt := a.command() + "? [y/N] (Enter is No)"
 	if len(a.held) > 0 {

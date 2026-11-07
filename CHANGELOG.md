@@ -208,6 +208,22 @@
   after row actions that drops with project additions and new slices.
   Docs updated: `docs/dashboard.md`.
 
+- Non-Go projects (S265, *proposed*): `ork projects set --preset go|python`
+  sets a full implementer allowlist as plain patterns, with the check command's
+  pattern from the same call. `--allow` adds a pattern to the role's list (from
+  the built-in default when the role has none) and skips a duplicate, and
+  `--replace-allow` replaces the list as `--allow` did before (owner decision
+  2026-11-07, adj 190). The run plan, the launch confirm and `ork doctor` warn
+  of a missing check command or an allowlist that does not fit the project (no
+  `go.mod` for the Go default, no Read, Edit or Write, no pattern for the check
+  command). A run or wave start on a project with no check command is refused
+  unless `ork run` or `ork wave start` gets `--allow-no-check` (adj 191); the
+  TUI launch confirm shows the refusal and the fix. While runs are unfinished
+  `ork projects set` still changes `cap`, the budgets and the worktree and
+  branch patterns, and refuses the other fields by flag name. Raising a
+  project's cap starts the queued runs that now fit. Docs updated: `docs/state.md`,
+  `docs/design.md`, `docs/guide.md`, `docs/dashboard.md`.
+
 ## v1.0.0 (2026-10-31)
 
 - S209: a project can name `ui_pass_skills` for its Claude UI pass

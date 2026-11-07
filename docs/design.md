@@ -105,7 +105,7 @@ ork (TUI)  ork status --json (CLI)
   | `item.move` (proposed wire, S67) | `{"project","item","other","position"}` | `{"item","changed"}`; position is `before` or `after`; compare the item's index in slicer list before and after the write, then refresh Items and Deps; blank fields or an invalid position are `bad_params`; slicer errors keep code and message |
   | `item.note` (proposed wire, S171) | `{"project","item","text"}` | `{"item"}`; slicer note at the registered project root, then refresh Items; blank item or text is `bad_params`; slicer errors keep their code |
   | `item.show` (proposed wire) | `{"project","id"}` | `{"detail"}`; slicer show for the registered project |
-  | `wave.start` (`run.launch-wire`; proposed shape) | `{"items":[RunParams...]}`; each item has `project`, `item`, `well_specified`, `split`, optional `lineup`, `budgets` and `expected` as in `run.start` | `{"wave","items":[{"item","run"?,"error"?}]}`; one wave id, one project, admission errors kept per item |
+  | `wave.start` (`run.launch-wire`; proposed shape) | `{"items":[RunParams...]}`; each item has `project`, `item`, `well_specified`, `split`, optional `lineup`, `budgets`, `expected` and, from S265 (*proposed*, adj 191), `allow_no_check` as in `run.start` | `{"wave","items":[{"item","run"?,"error"?}]}`; one wave id, one project, admission errors kept per item; a project with no check command refuses the whole wave with `refused`, before any member is admitted, unless every item has `allow_no_check` |
   | `wave.stop` (proposed wire) | `{"wave"}` | the same wave result; stops each unfinished member through `run.stop`, skips final members |
   | `wave.suggest` (proposed wire) | `{"project"}` | slicer's `plan-parallel` result for the registered project, limited to the fields `ParallelPlan` reads; slicer runs on each call, not from the cache |
   | `roles.matrix` (proposed wire, S168) | `{"project"}` | `{"markdown","rows":[{"id","role","agent","use"}],"rules":[{"id","text"}]}` from `slicer relay-roles show --json`: slicer's own text, and for each row what ork does with it (`use`: `used as claude\|codex\|grok`, `UI pass row, ...`, `Spec check row, ...` (every row that the project's `spec_check_rows` or a rule names), `skipped: no adapter for AGENT`, `not used: the gate runs the reviewer's lineup`, `not run by ork`, `not used: ork has no role ROLE`); read-only, no slicer write; slicer's error keeps its code and message; slicer runs on each call |
@@ -115,7 +115,7 @@ ork (TUI)  ork status --json (CLI)
   | `projects.list` | none | `{"projects":[...]}`; an empty registry is valid |
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
   | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
-  | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `ui_doc`, `ui_pass_skills` (a list, S209), `spec_check_rows` (a list, S258), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`) | the project as saved; an omitted field keeps its value, `""` or 0 clears one, `[]` clears `ui_pass_skills` or `spec_check_rows`; `null` removes one role or one vendor key, and the other roles and keys stay; `bad_params` for an unknown field, no field or an invalid value, `not_found`, `project_busy` while a run is unfinished |
+  | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `ui_doc`, `ui_pass_skills` (a list, S209), `spec_check_rows` (a list, S258), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`), and, from S265 (*proposed*), `implementer_preset` (`go` or `python`) and `allow_add` (`{ROLE: [patterns]}`) | the project as saved; an omitted field keeps its value, `""` or 0 clears one, `[]` clears `ui_pass_skills` or `spec_check_rows`; `null` removes one role or one vendor key, and the other roles and keys stay; `allow_add` appends the patterns not yet in the role's list (from the built-in default when the role has no entry) and `implementer_preset` sets the implementer's list first, so `allow_add` in the same call follows it; `bad_params` for an unknown field, no field, an invalid value, an unknown preset, or `permissions` naming a role that `allow_add` or `implementer_preset` names; `not_found`; `project_busy` while a run is unfinished and the call sets a field other than `cap`, `budget_minutes`, `budget_tokens`, `worktree_pattern` or `branch_pattern` (S265, *proposed*; the message names the refused fields as command line flags, for example `--push`); a call that sets `cap` also starts the queued runs that now fit, as `settings.set` does |
   | `settings.get` (*proposed*, S174) | none | `{"global_cap","daemon_idle_minutes","effective_global_cap","effective_daemon_idle_minutes"}`; the first two are the stored values (0 is unset) |
   | `settings.set` (*proposed*, S174) | `{"global_cap"?,"daemon_idle_minutes"?}`, at least one | the same shape as `settings.get`; 0 clears one; `bad_params` for no field or a negative number; not refused while runs are unfinished; a raised `global_cap` starts the queued runs that now fit |
 
@@ -1108,6 +1108,14 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   verified worktree writes; the other sandbox cells remain *unverified*
   as listed in the capability table. The owner relies on the tree
   fingerprint, project check, review and gate as limits.
+  *Proposed* (S265): the built-in default is the `go` preset, and `python`
+  is the second one. Both start from the same base, today's default without its
+  five Go entries (`Bash(go -C * test*)`, `Bash(go -C * vet*)`,
+  `Bash(go test*)`, `Bash(go vet*)`, `Bash(gofmt *)`); `go` adds them back
+  and `python` adds `Bash(python3 -m unittest*)`; each ends with
+  `Bash(<check command>*)` when the command is set. `ork projects set --preset`
+  writes the expanded list into the registry as plain patterns. Broader
+  Python forms such as `Bash(python3 *)` are left to `--allow`.
 - **Credentials:** ork uses each CLI's own login. It never reads, stores
   or passes credentials.
 
@@ -1413,11 +1421,35 @@ shows in `ork status` as the run's error. A refusal or a failure that comes
 first is the reply. Without it (the TUI), the reply waits until the run rests.
 A second owner action is refused as busy until the job ends.
 Plan returns `{project,item,worktree,branch,check_command,
-lineup,budgets,permissions,note?}`; the project contains only its name and path.
+lineup,budgets,permissions,note?,warnings?}`; the project contains only its name and path.
 The proposed optional `note` (S135) explains a failed `relay-roles show` read.
 The plan then treats UI and spec-check rules as absent; a failed recommendation
 still prevents planning. `ork run` and the TUI launch confirm show the note
 under the plan rows (S159, *proposed*).
+The proposed optional `warnings` (S265) lists setup problems
+(`engine.SetupWarnings`), in this order: no check command; the built-in Go
+allowlist on a project with no `go.mod`; an implementer allowlist without
+`Read`, `Edit` or `Write`; an implementer allowlist with no pattern for the
+check command. The daemon checks the project path for `go.mod` and
+`pyproject.toml` when it plans. `ork run` prints each as `warning: LINE` after
+the role rows and before the note, and the TUI launch confirm shows each in
+the Warn style, wrapped. Both show an empty check command as `check: none`.
+The `expected` plan check compares the JSON, so a plan with warnings starts as
+any other. A start on a project with no check command is refused (adj 191,
+`launch.no-check-command`, *proposed*): `run.start` carries `allow_no_check`
+(`ork run P ID --allow-no-check`; `ork wave start` sets it on every item), and
+without it the daemon replies `refused` with the message `project NAME: no
+check command: ork refuses to start a run (fix: ork projects set NAME --check
+CMD, or start with --allow-no-check)`. `run.start` makes this refusal before
+the spec gate asks anything, and `wave.start` before it admits a member. `ork
+run` and `ork wave start` refuse right after they print the plan, before the
+spec check and the confirm; the plan text leaves out the daemon's no-check
+warning (the error prints it), and with `--allow-no-check` the plan warns
+`no check command: only slicer check runs after landing` instead. The TUI
+launch confirm shows the refusal, the `ork projects set` fix and the `ork run
+... --allow-no-check` command in the Warn style by the check line, offers no
+`y` in its bar or hint, and starts nothing on `y`; the TUI has no way to give
+the flag.
 Start and owner commands return the run record. With `--json`, run prints
 the plan on stderr and a single result JSON value on stdout; declining
 prints `{"started":false,"held":[]}` on stdout. Interactive questions go on
@@ -1682,6 +1714,13 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   patterns must contain `{id}` or `{id_lower}` (*proposed*, S124); empty
   patterns use the defaults. A finding names the fix, `ork projects set NAME
   --worktree-pattern PATTERN` or `--branch-pattern PATTERN` (S161).
+  *Proposed* (S265): a project whose path is a directory also gets the
+  `engine.SetupWarnings` lines as findings: no check command (worded as the
+  refusal, adj 191), the Go allowlist on a project with no `go.mod`, an
+  implementer allowlist without `Read`, `Edit` or `Write`, and one with no
+  pattern for the check command. Each names its fix. Project findings print `[WARN]` and keep
+  exit 0, the no-check finding included (owner-side decision of the S265 UI
+  pass).
   The registry is read only; a missing registry is empty and is not created.
   A registry read error is advisory: JSON has `registry_error` (omitted when
   there is no error), separate from the daemon's `warning`. Text prints
@@ -1775,7 +1814,8 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   [--ui-pass-skills A,B] [--spec-check-rows rNN,rNN] [--worktree-pattern P]
   [--branch-pattern P] [--check CMD] [--check-minutes N] [--cap N]
   [--budget-minutes N] [--budget-tokens N] [--env-line LINE]...
-  [--permission ROLE=read-only|ROLE=]... [--allow ROLE=PATTERN]...
+  [--preset go|python] [--permission ROLE=read-only|ROLE=]...
+  [--allow ROLE=PATTERN]... [--replace-allow]
   [--vendor-env VENDOR:KEY=VALUE]... [--unset-vendor-env VENDOR:KEY]...`
   (*proposed*, S161; the last five groups S174): one flag per optional
   registry field, as in state.md. A flag that is given sets its field; a flag
@@ -1800,8 +1840,17 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   role's preset and `--permission ROLE=` removes its entry, so the default
   applies; `ROLE=` also removes a role key that ork does not know when the
   file holds it (a hand-edited typo), while setting an unknown role is
-  refused. `--allow ROLE=PATTERN` repeats, and the patterns given for a role
-  replace that role's list. `--vendor-env VENDOR:KEY=VALUE` sets one key (the
+  refused. `--allow ROLE=PATTERN` repeats and, since S265 (*proposed*, adj 190),
+  adds the patterns to the role's list, from the built-in default when the role
+  has no entry, and skips a pattern already there (the S174 decision made it
+  replace the list; `--replace-allow` keeps that behavior). `--replace-allow`
+  without `--allow` is a usage error. `--preset go|python` (S265) sets the
+  implementer's list to the preset with the check command of the same call (or
+  the saved one); `--allow implementer=...` after it adds, and `--preset` with
+  `--permission implementer=...` or with `--replace-allow --allow
+  implementer=...` is a usage error. The text line counts the roles changed
+  by `--preset` and `--allow` and names the preset applied
+  (`implementer:18 patterns (preset python)`). `--vendor-env VENDOR:KEY=VALUE` sets one key (the
   first `:` ends the vendor and the first `=` ends the key) and
   `--unset-vendor-env VENDOR:KEY` removes one key, and the vendor once it is
   empty; an empty value (`VENDOR:KEY=`) is kept as an empty string. A role or a key changes alone, so a second command does not need the
@@ -1819,7 +1868,9 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   values and refuses with `bad_params` (a `ui_doc` that is absolute or leaves
   the project, an invalid `ui_pass_skills` name, an invalid `spec_check_rows` id, a pattern without `{id}` or
   `{id_lower}`, a negative number) or
-  `project_busy`, as `projects rm` does, and then changes nothing. JSON:
+  `project_busy` (while runs are unfinished, only for a call that sets a field
+  other than `--cap`, the budgets and the worktree and branch patterns, S265
+  *proposed*; the message names the refused flags), and then changes nothing. JSON:
   `{"project":{...}}`. Text: `updated NAME: FIELD=VALUE, ...` in flag order,
   with `unset` for a cleared field; the text shows the values as saved (a
   `ui_doc` is cleaned). The daemon reads the registry for each start, so a run

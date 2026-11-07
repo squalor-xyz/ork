@@ -1137,3 +1137,15 @@ func TestPlanKeepsEverySpecCheckRowOutOfEveryChain(t *testing.T) {
 		}
 	}
 }
+
+// A project with no check command refuses the start before the spec gate, so
+// the owner is not sent to answer spec questions for a start that is refused.
+func TestRunStartRefusesNoCheckCommandBeforeTheSpecGate(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON(u11))
+	rig.check(t, "S1", "S2")
+	editProject(t, rig.d, func(p *registry.Project) { p.CheckCommand = "" })
+	_, err := rig.d.handle(context.Background(), MethodRunStart, json.RawMessage(`{"project":"p","item":"S2"}`))
+	if re := ipc.ErrorOf(err); err == nil || re.Code != CodeRefused || !strings.Contains(re.Message, "no check command") {
+		t.Fatalf("run.start error: %v, want the no-check refusal", err)
+	}
+}

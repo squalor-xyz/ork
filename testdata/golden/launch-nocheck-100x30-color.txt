@@ -1,0 +1,30 @@
+[1mork[m                        │ Overview[90m │ [mQuestions[90m │ [mWaves[90m │ [m[1;36mRoadmap[m[90m │ [mDecisions
+[90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────[m
+[90m0[m Needs you              0 │[1;36mReady slices[m
+[1;7;97;44m1>ork                      [m│  ork S90
+[90m2[m other                    │  worktree: /project/.worktrees/S90
+                           │  branch: S90
+                           │  check: none
+                           │  [33mrefused: ork has no check command, so only slicer check would run.[m
+                           │  [33mfix: ork projects set ork --check CMD[m
+                           │  [33mstart anyway: ork run ork S90 --allow-no-check[m
+                           │  stop: after landing
+                           │  implementer: Codex gpt high
+                           │    allowlist: 
+                           │  reviewer: Claude opus medium
+                           │    permissions: read-only
+                           │  gate: Codex gpt low
+                           │    allowlist: 
+                           │  [33mwarning: the implementer has the built-in Go allowlist, but ork has no[m
+                           │  [33mgo.mod (fix: ork projects set ork --preset go|python, or --allow[m
+                           │  [33mimplementer=PATTERN)[m
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │  ork run ork S90: refused (n or esc closes)
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ n [2mcancel[m; e [2medit lineup[m
+                           │ 2 projects | refreshed 16:42:00

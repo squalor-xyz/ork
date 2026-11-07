@@ -119,7 +119,7 @@ The registry holds optional per-project settings. Change them with
 
 | Flag | What it sets |
 |---|---|
-| `--check CMD` | the check command ork runs after each implementer round |
+| `--check CMD` | the check command ork runs after each implementer round. With none set, `ork run` and `ork wave start` refuse to start unless you add `--allow-no-check`, and `ork doctor` reports it (*proposed*, S265, adj 191) |
 | `--check-minutes N` | minutes the check command may run (default 10; `internal/engine/states.go:197-202`). `docs/state.md:76-78` also calls it the stale flag, which the code does not do |
 | `--worktree-pattern P` | worktree path; must contain `{id}` or `{id_lower}` (default `.worktrees/{id}`) |
 | `--branch-pattern P` | branch name; same rule (default `{id}`) |
@@ -141,9 +141,12 @@ position (counted from 1); `a,,b` and `a,` report blank item 2.
 ork does not check whether a skill exists or read vendor files. With no list, the UI pass
 gets only the neutral prompt; a Codex UI pass always gets no skills line.
 
-An empty value or 0 clears a field. The command is refused while the project
-has unfinished runs, and the daemon needs no restart: the next run uses the
-new values (`docs/design.md:1278-1295`, `docs/state.md:94-103`).
+An empty value or 0 clears a field. While the project has unfinished runs the
+command is refused, except a call that sets only `--cap`, `--budget-minutes`,
+`--budget-tokens`, `--worktree-pattern` or `--branch-pattern`, which no running
+slice reads (*proposed*, S265). The refusal names the fields it will not change
+now; set them after the runs finish or stop. The daemon needs no restart: the
+next run uses the new values (`docs/design.md:1278-1295`, `docs/state.md:94-103`).
 
 Three more fields take repeatable flags (*proposed*, S174):
 
@@ -151,7 +154,9 @@ Three more fields take repeatable flags (*proposed*, S174):
 |---|---|
 | `--env-line LINE` | an environment line for the role briefs; the lines given replace the list, and one empty `--env-line ""` clears it |
 | `--permission ROLE=read-only` | the role's preset; `--permission ROLE=` removes the role's entry, so the default applies |
-| `--allow ROLE=PATTERN` | a tool pattern for the implementer; the patterns given for a role replace its list |
+| `--preset go\|python` | the implementer's full allowlist for a language, written as plain patterns with the check command's pattern from the same call; for a Python project run `ork projects set NAME --check "python3 -m unittest discover -s tests -t tests" --preset python` (*proposed*, S265) |
+| `--allow ROLE=PATTERN` | adds a tool pattern to the role's list, starting from the default list when the role has none, and skips a pattern already there (*proposed*, S265, adj 190; before S265 it replaced the list) |
+| `--replace-allow` | with `--allow`, the patterns of the call become the role's whole list; it needs `--allow` and cannot go with `--preset` for the implementer |
 | `--vendor-env VENDOR:KEY=VALUE` | one environment variable for a vendor's processes; `--unset-vendor-env VENDOR:KEY` removes one |
 
 A role or a vendor key changes alone, so you do not retype the others. ork's
@@ -214,7 +219,9 @@ failing tests, steps and checks is "well specified".
 **In the TUI.** Open the Roadmap view and select the project. Press `l` to
 open the list of ready slices, move to one and press `enter`. Answer the two
 questions (well specified, split; `enter` moves to the next field), read the
-plan (worktree, branch, check command and lineup, plus budgets when overridden).
+plan (worktree, branch, check command and lineup, plus budgets when overridden;
+setup warnings follow the roles, and a project with no check command shows
+`check: none` and cannot start, *proposed*, S265).
 Before confirmation, ork runs the spec check. `pending: spec.check` appears
 in the launch body only; the status line stays empty. Questions use the same
 sitting as Waves: pick with `1`-`N`, or press `t`, type an answer and press

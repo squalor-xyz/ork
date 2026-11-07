@@ -282,7 +282,12 @@ func (m *Model) contextHints() []hintEntry {
 			l.add(dropPinned, short(k.Quit, "q", "quit"))
 		}
 	case m.confirm != nil:
-		l.add(dropRow, short(k.Yes, "y", confirmWord(m.confirm.verb)), short(k.No, "n", "cancel"))
+		if m.confirm.verb == "launch" && m.confirm.plan != nil && m.confirm.plan.CheckCommand == "" {
+			// The start would be refused (adj 191): the hint offers no y.
+			l.add(dropRow, short(k.No, "n", "cancel"))
+		} else {
+			l.add(dropRow, short(k.Yes, "y", confirmWord(m.confirm.verb)), short(k.No, "n", "cancel"))
+		}
 		if m.confirm.verb == "launch" {
 			l.add(dropRow, short(k.EditLineup, "e", "edit lineup"))
 		}

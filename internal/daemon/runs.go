@@ -57,6 +57,7 @@ type RunParams struct {
 	Expected      *RunPlan                        `json:"expected,omitempty"`
 	Lineup        map[string][]runrec.LineupEntry `json:"lineup,omitempty"`
 	Budgets       *registry.Budgets               `json:"budgets,omitempty"`
+	AllowNoCheck  bool                            `json:"allow_no_check,omitempty"` // proposed (S265, adj 191): start although the project has no check command
 }
 
 // RunAction names a run, and an owner answer when answering.
@@ -86,7 +87,8 @@ type RunPlan struct {
 	Lineup       map[string][]runrec.LineupEntry `json:"lineup"`
 	Budgets      registry.Budgets                `json:"budgets"`
 	Permissions  map[string]engine.Permission    `json:"permissions"`
-	Note         string                          `json:"note,omitempty"` // why rule-based roles could not be identified
+	Note         string                          `json:"note,omitempty"`     // why rule-based roles could not be identified
+	Warnings     []string                        `json:"warnings,omitempty"` // proposed (S265): setup problems, see engine.SetupWarnings
 }
 
 // EngineRun is the owner's status of one engine run. Wire fields are proposed.
@@ -496,6 +498,10 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		}
 		plan.Note += note
 	}
+	plan.Warnings = engine.SetupWarnings(proj, func(name string) bool {
+		_, err := os.Stat(filepath.Join(proj.Path, name))
+		return err == nil
+	})
 	plan.Budgets = proj.Budgets
 	if p.Budgets != nil {
 		if p.Budgets.Minutes < 0 || p.Budgets.Tokens < 0 {
@@ -524,10 +530,25 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	plan.Branch = registry.FillPattern(pattern, p.Item)
 	return plan, nil
 }
+
+// NoCheckRefusalMessage is why a start on a project with no check command is
+// refused, and how to fix it (adj 191, launch.no-check-command). The command
+// line and the daemon say it the same way.
+func NoCheckRefusalMessage(project string) string {
+	return "project " + project + ": " + engine.NoCheckMessage(project)
+}
+
+func noCheckRefusal(project string) error {
+	return &ipc.Error{Code: CodeRefused, Message: NoCheckRefusalMessage(project)}
+}
+
 func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, error) {
 	plan, err := d.planRun(ctx, p)
 	if err != nil {
 		return runrec.Record{}, err
+	}
+	if !p.AllowNoCheck && plan.project.CheckCommand == "" {
+		return runrec.Record{}, noCheckRefusal(plan.project.Name)
 	}
 	if err := d.restoreRunSpecAnswers(ctx, plan.project, p.Item); err != nil {
 		return runrec.Record{}, err
@@ -567,9 +588,10 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 	if !ok || current.Path != plan.project.Path {
 		return runrec.Record{}, notFound(plan.project.Name, f)
 	}
-	// projects.set (S161) changes a project's fields only while it has no
-	// unfinished run, and it holds this lock to save. A set between planRun's
-	// read and here would leave the plan on the old fields, so refuse.
+	// projects.set (S161) holds this lock to save. A set between planRun's
+	// read and here, including one of the fields it may change while runs are
+	// unfinished (the cap, the budgets, the patterns; S265), would leave the plan
+	// on the old fields, so refuse.
 	if !reflect.DeepEqual(current, plan.project) {
 		return runrec.Record{}, errors.New("plan changed; run the command again to confirm it")
 	}
@@ -690,6 +712,15 @@ func (d *Daemon) startWave(ctx context.Context, p WaveStartParams) (*WaveResult,
 	proj, err := d.registered(project)
 	if err != nil {
 		return nil, err
+	}
+	// A project with no check command refuses the whole wave, before any
+	// member is admitted, unless every item carries allow_no_check.
+	if proj.CheckCommand == "" {
+		for _, item := range p.Items {
+			if !item.AllowNoCheck {
+				return nil, noCheckRefusal(project)
+			}
+		}
 	}
 	ids := make([]string, 0, len(p.Items))
 	for _, item := range p.Items {
@@ -1357,6 +1388,11 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 		}
 		if method == MethodRunPlan {
 			return d.planRun(ctx, p)
+		}
+		// A project with no check command refuses the start before the spec
+		// gate asks the owner anything (adj 191). startRun checks it again.
+		if proj, err := d.registered(p.Project); err == nil && proj.CheckCommand == "" && !p.AllowNoCheck {
+			return nil, noCheckRefusal(proj.Name)
 		}
 		if err := d.specGate(ctx, p.Project, p.Item); err != nil {
 			return nil, err

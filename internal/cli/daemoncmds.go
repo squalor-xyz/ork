@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -281,10 +282,12 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	capN := fs.Int("cap", 0, "the project's concurrent run cap")
 	budgetMinutes := fs.Int("budget-minutes", 0, "the run time budget in minutes")
 	budgetTokens := fs.Int("budget-tokens", 0, "the run token budget")
+	preset := fs.String("preset", "", "go or python: set the implementer's allowlist to the language's list")
+	replaceAllow := fs.Bool("replace-allow", false, "make the --allow patterns replace the role's list instead of adding to it")
 	var envLines, permissions, allows, vendorEnvs, unsetVendorEnvs stringList
 	fs.Var(&envLines, "env-line", "an environment line for the role briefs; repeat to give the list, one empty value clears it")
 	fs.Var(&permissions, "permission", "ROLE=read-only sets a role's preset, ROLE= removes its entry")
-	fs.Var(&allows, "allow", "ROLE=PATTERN allows a tool pattern; repeat to give the role's list")
+	fs.Var(&allows, "allow", "ROLE=PATTERN adds a tool pattern to the role's list; repeat to add several")
 	fs.Var(&vendorEnvs, "vendor-env", "VENDOR:KEY=VALUE sets one vendor environment variable")
 	fs.Var(&unsetVendorEnvs, "unset-vendor-env", "VENDOR:KEY removes one vendor environment variable")
 	pos, err := parse(fs, args)
@@ -360,11 +363,24 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		}
 		p.EnvironmentLines = &lines
 	}
-	if err := setPermissionsAndVendorEnv(&p, permissions, allows, vendorEnvs, unsetVendorEnvs); err != nil {
+	if *replaceAllow && len(allows) == 0 {
+		return o.usage("projects set: --replace-allow needs --allow")
+	}
+	if err := setPermissionsAndVendorEnv(&p, permissions, allows, *replaceAllow, vendorEnvs, unsetVendorEnvs); err != nil {
 		return o.usage("projects set: %v", err)
 	}
+	if given["preset"] {
+		if _, has := p.Permissions[engine.RoleImplementer]; has {
+			flag := "--replace-allow"
+			if slices.ContainsFunc(permissions, func(s string) bool { return strings.HasPrefix(s, engine.RoleImplementer+"=") }) {
+				flag = "--permission"
+			}
+			return o.usage("projects set: --preset and %s both set implementer", flag)
+		}
+		p.Preset = preset
+	}
 	if p.SetsNothing() {
-		return o.usage("projects set needs at least one field flag (--push, --ui-doc, --ui-pass-skills, --spec-check-rows, --worktree-pattern, --branch-pattern, --check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --permission, --allow, --vendor-env, --unset-vendor-env)")
+		return o.usage("projects set needs at least one field flag (--push, --ui-doc, --ui-pass-skills, --spec-check-rows, --worktree-pattern, --branch-pattern, --check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
 	}
 	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
 		proj, err := c.SetProject(ctx, p)
@@ -428,15 +444,27 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 				changed = append(changed, "environment_lines="+count(len(proj.EnvironmentLines), "line"))
 			}
 		}
-		if len(p.Permissions) != 0 {
+		if len(p.Permissions) != 0 || p.Preset != nil || len(p.AllowAdd) != 0 {
+			touched := map[string]bool{}
+			for role := range p.Permissions {
+				touched[role] = true
+			}
+			for role := range p.AllowAdd {
+				touched[role] = true
+			}
+			if p.Preset != nil {
+				touched[engine.RoleImplementer] = true
+			}
 			var roles []string
-			for _, role := range slices.Sorted(maps.Keys(p.Permissions)) {
+			for _, role := range slices.Sorted(maps.Keys(touched)) {
 				entry, has := proj.Permissions[role]
 				switch {
 				case !has:
 					roles = append(roles, role+":default")
 				case entry.Preset != "":
 					roles = append(roles, role+":"+entry.Preset)
+				case role == engine.RoleImplementer && p.Preset != nil:
+					roles = append(roles, role+":"+count(len(entry.Allow), "pattern")+" (preset "+*p.Preset+")")
 				default:
 					roles = append(roles, role+":"+count(len(entry.Allow), "pattern"))
 				}
@@ -487,8 +515,8 @@ func (s *stringList) Set(v string) error {
 // setPermissionsAndVendorEnv turns the --permission, --allow, --vendor-env and
 // --unset-vendor-env values into params (S174, *proposed*). Every error is a
 // usage error. None quotes a --vendor-env value, even a malformed one.
-func setPermissionsAndVendorEnv(p *daemon.SetProjectParams, permissions, allows, vendorEnvs, unsets stringList) error {
-	if len(permissions) != 0 || len(allows) != 0 {
+func setPermissionsAndVendorEnv(p *daemon.SetProjectParams, permissions, allows stringList, replaceAllow bool, vendorEnvs, unsets stringList) error {
+	if len(permissions) != 0 || (len(allows) != 0 && replaceAllow) {
 		p.Permissions = map[string]*registry.Permission{}
 	}
 	for _, s := range permissions {
@@ -517,6 +545,15 @@ func setPermissionsAndVendorEnv(p *daemon.SetProjectParams, permissions, allows,
 		allowed[role] = append(allowed[role], pattern)
 	}
 	for role, patterns := range allowed {
+		// --allow adds (adj 190, cli.allow-adds); --replace-allow gives the
+		// role's whole list, as --allow did before S265.
+		if !replaceAllow {
+			if p.AllowAdd == nil {
+				p.AllowAdd = map[string][]string{}
+			}
+			p.AllowAdd[role] = patterns
+			continue
+		}
 		p.Permissions[role] = &registry.Permission{Allow: patterns}
 	}
 

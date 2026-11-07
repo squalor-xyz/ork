@@ -44,18 +44,21 @@ var usageText = strings.Replace(usageTemplate, "{CONTRACTS}", roles.AcceptedCont
 const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
 
   ork run P ID [--yes --well-specified y/n --split y/n]
-                              [--stop-after land|commit]
+                              [--stop-after land|commit] [--allow-no-check]
                               [--implementer VENDOR:MODEL:EFFORT]
                               [--reviewer VENDOR:MODEL:EFFORT]
                               [--architect VENDOR:MODEL:EFFORT|off]
                               [--budget-minutes N] [--budget-tokens N]
                               role flags repeat to set the whole chain
-                              show the plan and launch one slice
+                              show the plan and launch one slice; refused
+                              when the project has no check command, unless
+                              --allow-no-check
   ork wave suggest P          show slicer's suggested waves
   ork wave start P ITEM... [--yes --well-specified y/n --split y/n]
-                              [--stop-after land|commit]
+                              [--stop-after land|commit] [--allow-no-check]
                               the run lineup and budget flags, for every item
-                              show the plans and launch the chosen items
+                              show the plans and launch the chosen items;
+                              refused with no check command, as ork run
   ork approve RUN             finish and commit a passed slice
   ork check RUN N [ticked|later|open]
                               mark human check N of a slice that awaits approval
@@ -97,9 +100,9 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               [--worktree-pattern P] [--branch-pattern P]
                               [--check CMD] [--check-minutes N] [--cap N]
                               [--budget-minutes N] [--budget-tokens N]
-                              [--env-line LINE]...
+                              [--env-line LINE]... [--preset go|python]
                               [--permission ROLE=read-only|ROLE=]...
-                              [--allow ROLE=PATTERN]...
+                              [--allow ROLE=PATTERN]... [--replace-allow]
                               [--vendor-env VENDOR:KEY=VALUE]...
                               [--unset-vendor-env VENDOR:KEY]...
                               change a project's optional fields; an empty
@@ -107,12 +110,19 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               one comma-separated value; --spec-check-rows
                               lists the matrix rows the spec check runs on, in
                               order, as r16,r24 (a listed row leaves every
-                              run's reviewer and gate chains); --env-line and
-                              --allow repeat to give the whole list, and one
-                              empty --env-line clears it; a role or a vendor
-                              key changes alone; --unset-vendor-env removes a
-                              key and an empty --vendor-env value is kept;
-                              refused while the project has unfinished runs
+                              run's reviewer and gate chains); --env-line
+                              repeats to give the whole list, and one empty
+                              --env-line clears it; --preset sets the
+                              implementer's full allowlist for a language,
+                              with the check command's pattern; --allow adds
+                              a pattern to the role's list (the default list
+                              when it has none) and --replace-allow makes the
+                              call's patterns the whole list; a role or a
+                              vendor key changes alone; --unset-vendor-env
+                              removes a key and an empty --vendor-env value
+                              is kept; while runs are unfinished only --cap,
+                              the budgets and the worktree and branch
+                              patterns may change
   ork settings show           show global_cap and daemon_idle_minutes, stored
                               and effective
   ork settings set [--global-cap N] [--daemon-idle-minutes N]

@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -52,6 +53,7 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 	yes := fs.Bool("yes", false, "confirm the plan")
 	well := fs.String("well-specified", "", "y/n")
 	split := fs.String("split", "", "y/n")
+	allowNoCheck := fs.Bool("allow-no-check", false, "start although the project has no check command")
 	var lineup lineupFlags
 	lineup.register(fs)
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
@@ -115,6 +117,7 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 	}
 	params := daemon.RunParams{Project: pos[0], Item: pos[1], WellSpecified: *well == "yes", Split: *split == "yes"}
 	params.Lineup, params.Budgets, params.StopAfter = overrides.Lineup, overrides.Budgets, overrides.StopAfter
+	params.AllowNoCheck = *allowNoCheck
 	var plan daemon.RunPlan
 	if code := a.call(ctx, o, daemon.MethodRunPlan, params, &plan); code != 0 {
 		return code
@@ -126,7 +129,12 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 			return code
 		}
 	} else {
-		printRunPlan(o.stdout, plan, params.Budgets != nil)
+		printRunPlan(o.stdout, noCheckPlanText(plan, params.AllowNoCheck), params.Budgets != nil)
+	}
+	// The daemon refuses the start too (adj 191); refusing here spares the
+	// prompts and the spec check.
+	if plan.CheckCommand == "" && !params.AllowNoCheck {
+		return o.fail(ExitFailure, daemon.CodeRefused, daemon.NoCheckRefusalMessage(params.Project))
 	}
 	checked := daemon.WaveStartParams{Items: []daemon.RunParams{params}}
 	held, code := a.specCheck(ctx, o, reader, prompts, &checked)
@@ -176,8 +184,32 @@ func yesNo(v string) string {
 	}
 	return ""
 }
+
+// noCheckPlanText returns plan as ork shows it. The daemon's no-check warning
+// says ork refuses, and the refusal prints that text as the error, so a
+// refused start leaves it out of the plan; with --allow-no-check the plan
+// warns in plain words instead (adj 191). The plan the daemon compares at
+// start is the original, not this copy.
+func noCheckPlanText(plan daemon.RunPlan, allowed bool) daemon.RunPlan {
+	var warnings []string
+	for _, w := range plan.Warnings {
+		switch {
+		case w != engine.NoCheckMessage(plan.Project.Name):
+			warnings = append(warnings, w)
+		case allowed:
+			warnings = append(warnings, engine.NoCheckAllowedNote())
+		}
+	}
+	plan.Warnings = warnings
+	return plan
+}
+
 func printRunPlan(w io.Writer, p daemon.RunPlan, budgetsOverridden bool) {
-	fmt.Fprintf(w, "%s %s\nworktree: %s\nbranch: %s\ncheck: %s\n", p.Project.Name, p.Item, p.Worktree, p.Branch, p.CheckCommand)
+	check := p.CheckCommand
+	if check == "" {
+		check = "none"
+	}
+	fmt.Fprintf(w, "%s %s\nworktree: %s\nbranch: %s\ncheck: %s\n", p.Project.Name, p.Item, p.Worktree, p.Branch, check)
 	stop := "after landing"
 	if p.StopAfter == runrec.StopAfterCommit {
 		stop = "after commit (you land it)"
@@ -199,6 +231,9 @@ func printRunPlan(w io.Writer, p daemon.RunPlan, budgetsOverridden bool) {
 		} else {
 			fmt.Fprintf(w, "  allowlist: %s\n", strings.Join(perm.Allow, ", "))
 		}
+	}
+	for _, warning := range p.Warnings {
+		fmt.Fprintf(w, "warning: %s\n", warning)
 	}
 	if p.Note != "" {
 		fmt.Fprintf(w, "note: %s\n", p.Note)

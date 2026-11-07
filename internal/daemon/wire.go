@@ -273,6 +273,13 @@ type RemoveProjectParams struct {
 // removes it, so the default applies. VendorEnv changes one key at a time: a
 // non-nil value sets the key, and a nil value removes it; a vendor with no
 // keys left is removed.
+//
+// S265 (*proposed*) adds two. AllowAdd adds patterns to a role's list, from
+// its current list or, with no entry, from the built-in default, and skips
+// patterns already there (adj 190, cli.allow-adds). Preset (implementer_preset)
+// sets the implementer's list to a language preset, built with the check
+// command as saved by the same call; AllowAdd then follows it. Neither may
+// name a role that Permissions also names.
 type SetProjectParams struct {
 	Name             string                          `json:"name"`
 	Push             *bool                           `json:"push,omitempty"`
@@ -288,6 +295,8 @@ type SetProjectParams struct {
 	BudgetTokens     *int                            `json:"budget_tokens,omitempty"`
 	EnvironmentLines *[]string                       `json:"environment_lines,omitempty"`
 	Permissions      map[string]*registry.Permission `json:"permissions,omitempty"`
+	Preset           *string                         `json:"implementer_preset,omitempty"` // S265, *proposed*: go or python
+	AllowAdd         map[string][]string             `json:"allow_add,omitempty"`          // S265, *proposed*
 	VendorEnv        map[string]map[string]*string   `json:"vendor_env,omitempty"`
 }
 
@@ -296,7 +305,31 @@ type SetProjectParams struct {
 func (p SetProjectParams) SetsNothing() bool {
 	return p.Push == nil && p.UIDoc == nil && p.UIPassSkills == nil && p.SpecCheckRows == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
 		p.CheckCommand == nil && p.CheckMinutes == nil && p.Cap == nil && p.BudgetMinutes == nil &&
-		p.BudgetTokens == nil && p.EnvironmentLines == nil && len(p.Permissions) == 0 && len(p.VendorEnv) == 0
+		p.BudgetTokens == nil && p.EnvironmentLines == nil && len(p.Permissions) == 0 && p.Preset == nil && len(p.AllowAdd) == 0 && len(p.VendorEnv) == 0
+}
+
+// fieldsReadByARun names, as command line flags, the fields p sets that a
+// started run reads, in the order of the struct (S265, *proposed*). The cap,
+// the budgets and the worktree and branch patterns are not among them: the cap
+// is read at each admission, the budgets are copied into the run record at
+// start, and the patterns are used only when a run is planned.
+func (p SetProjectParams) fieldsReadByARun() []string {
+	var names []string
+	for _, f := range []struct {
+		flag string
+		set  bool
+	}{
+		{"--push", p.Push != nil}, {"--ui-doc", p.UIDoc != nil}, {"--ui-pass-skills", p.UIPassSkills != nil},
+		{"--spec-check-rows", p.SpecCheckRows != nil}, {"--check", p.CheckCommand != nil},
+		{"--check-minutes", p.CheckMinutes != nil}, {"--env-line", p.EnvironmentLines != nil},
+		{"--permission", len(p.Permissions) != 0}, {"--preset", p.Preset != nil},
+		{"--allow", len(p.AllowAdd) != 0}, {"--vendor-env", len(p.VendorEnv) != 0},
+	} {
+		if f.set {
+			names = append(names, f.flag)
+		}
+	}
+	return names
 }
 
 // SetSettingsParams is a settings.set call (S174, *proposed*). Each field is a

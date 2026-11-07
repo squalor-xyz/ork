@@ -90,6 +90,7 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	yes := fs.Bool("yes", false, "confirm all plans")
 	well := fs.String("well-specified", "", "y/n for every item")
 	split := fs.String("split", "", "y/n for every item")
+	allowNoCheck := fs.Bool("allow-no-check", false, "start although the project has no check command")
 	var lineup lineupFlags
 	lineup.register(fs)
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
@@ -150,6 +151,7 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 		}
 		p := daemon.RunParams{Project: pos[0], Item: item, WellSpecified: w == "yes", Split: s == "yes"}
 		p.Lineup, p.Budgets, p.StopAfter = overrides.Lineup, overrides.Budgets, overrides.StopAfter
+		p.AllowNoCheck = *allowNoCheck
 		var plan daemon.RunPlan
 		if code := a.call(ctx, o, daemon.MethodRunPlan, p, &plan); code != ExitOK {
 			return code
@@ -159,7 +161,11 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 				return code
 			}
 		} else {
-			printRunPlan(o.stdout, plan, p.Budgets != nil)
+			printRunPlan(o.stdout, noCheckPlanText(plan, p.AllowNoCheck), p.Budgets != nil)
+		}
+		// The daemon refuses the whole wave too (adj 191).
+		if plan.CheckCommand == "" && !p.AllowNoCheck {
+			return o.fail(ExitFailure, daemon.CodeRefused, daemon.NoCheckRefusalMessage(p.Project))
 		}
 		p.Expected = &plan
 		params.Items = append(params.Items, p)
