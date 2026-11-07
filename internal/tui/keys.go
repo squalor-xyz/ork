@@ -171,6 +171,9 @@ const (
 	dropMark       = 17
 	dropRetry      = 16
 	dropStop       = 15
+	dropApprCard   = 4       // on an approval card, a approve outlasts the card keys, x stop, p report and the scroll keys (S306, owner 2026-11-07)
+	dropStopCard   = 7       // x stop outlasts p report and the scroll keys, and drops before the check digits, F, o and f
+	dropReportCard = 8       // p report outlasts the scroll keys
 	dropAdd        = 16      // project edits drop before note, matrix and tab on the Roadmap
 	dropNew        = 16      // new slice drops with project edits, before note and matrix
 	dropSlicerTui  = dropNew // slicer tui drops with add project and new slice
@@ -503,8 +506,12 @@ func (l *hintList) rowActions(m *Model, r ovRow, ok, cleanup bool) {
 		_, refused := m.actionRefusal(verb, r, ok)
 		return !refused
 	}
-	l.add(dropAppr, offer(allowed("approve"), k.Approve, "a", "approve"))
-	l.add(dropStop, offer(allowed("stop"), k.Stop, "x", "stop"))
+	appr, stop := dropAppr, dropStop
+	if !cleanup && m.paneCard() != nil {
+		appr, stop = dropApprCard, dropStopCard // stopping a run at its approval card stays one key away (S306)
+	}
+	l.add(appr, offer(allowed("approve"), k.Approve, "a", "approve"))
+	l.add(stop, offer(allowed("stop"), k.Stop, "x", "stop"))
 	retry := dropRetry
 	if !cleanup && r.state == "paused" {
 		retry = dropResume // a pane: the reason no longer carries the CLI form
@@ -628,7 +635,11 @@ func (m *Model) paneHints() []hintEntry {
 		scroll()
 		esc("close pane")
 	default:
-		l.add(dropReport, offer(len(m.reportList()) > 0, k.Report, "p", "report"))
+		report := dropReport
+		if card != nil {
+			report = dropReportCard
+		}
+		l.add(report, offer(len(m.reportList()) > 0, k.Report, "p", "report"))
 		if row.state != "stopped" && row.state != "committed" {
 			l.rowActions(m, row, rowOK, false)
 		}

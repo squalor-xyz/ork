@@ -127,7 +127,16 @@ and `c clean up`,
 and last the row's main key. On a stale ledger pane `x end run` ranks with
 the row's main key, above all scroll keys (S175). When open human checks refuse approval, the check
 digits and `F fix round` rank above stop and all scroll keys; the way out stays
-pinned. After dropping, the line retries each omitted hint in priority order
+pinned. On an approval card pane (S306, *proposed*; owner decision 2026-11-07)
+the keys outlast each other in this order: `a approve`; with open checks the
+check digits, `F fix round`, `o answer` and `f file slice`; `x stop`; `p report`;
+the scroll keys (these drop first). With every check marked the digits and
+`F fix round` are not needed: they drop before all of those, the scroll keys
+included. So `x stop` outlasts `p report` and the scroll keys. On a card with a report and no owner findings, at 80x24
+and with open checks the line reads `x stop; 1-3 tick/later; F fix round; esc close pane`
+(the report drops before stop there); with every check marked
+`p report; a approve; x stop` all fit, and the refill below brings `1-3 tick/later` back. Other run panes keep the order above.
+After dropping, the line retries each omitted hint in priority order
 (lowest drop value first), at its original position, and keeps it if it fits.
 A shorter hint can return even when a higher-priority hint is too wide.
 A hint is never cut in the middle. Width and drop decisions use visible

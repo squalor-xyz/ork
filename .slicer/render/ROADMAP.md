@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-307 items · — 89 · done 185 · retired 33
+307 items · — 88 · done 185 · retired 33 · started 1
 
 v1.2
 
@@ -195,7 +195,7 @@ v1.2
 | 138 | [S303](slices/S303.md) | Local launcher unreachable: fall back to the next row | S | 2 | daemon, agent | S301 | — |
 | 139 | [S304](slices/S304.md) | Evaluate local launchers per role | M | 2 | daemon |  | — |
 | 140 | [S305](slices/S305.md) | Grok and grok-local accept write roles | M | 2 | agent, daemon |  | — |
-| 141 | [S306](slices/S306.md) | Approval card keeps x stop beside p report | S | 1 | tui | S227 item 6 (from S176 later notes); the owner flagged it as a priority and asked on 2026-11-07 for it to go in v1.1 · discovered from S227 | — |
+| 141 | [S306](slices/S306.md) | Approval card keeps x stop beside p report | S | 1 | tui | S227 item 6 (from S176 later notes); the owner flagged it as a priority and asked on 2026-11-07 for it to go in v1.1 · discovered from S227 | started |
 
 ---
 

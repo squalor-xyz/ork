@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- S306 (*proposed*): the approval card pane keeps `x stop` on the hint line
+  when `p report` shows (owner decision 2026-11-07). On a card pane, when the
+  line is too narrow, hints drop in this order: the scroll keys, then `p
+  report`, then `x stop`, then (with open checks) the check digits, `F fix
+  round`, `o answer` and `f file slice`, and `a approve` last (the way out never
+  drops). With every check marked the digits and `F fix round` are not needed
+  and drop before all of these, the scroll keys included. On a card with a
+  report and no owner findings, at 80x24 an approvable card shows `p report`,
+  `a approve` and `x stop`; with open checks the line holds `x stop`, the check
+  digits and `F fix round`, and `p report` goes first. Other run panes are
+  unchanged. Docs: `docs/dashboard.md`.
+
 - S274 (*proposed*): a resumed paused run waits for a slot, ahead of queued
   runs (adj 177, `wave.resume-slot`). A paused run still holds no slot. When
   you answer or retry it and the project cap or the global cap leaves no room,

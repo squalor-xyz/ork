@@ -17,6 +17,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/ipc"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
@@ -504,6 +505,108 @@ func TestPaneReportBoundedWrappingMatchesShortProse(t *testing.T) {
 			if got, want := wrapText(breakReportLine(text, width), width), wrapText(text, width); !reflect.DeepEqual(got, want) {
 				t.Fatalf("%q at %d: got %#v, want %#v", text, width, got, want)
 			}
+		}
+	}
+}
+
+// markAllChecks ticks every human check of the run's card, so approval is open.
+func markAllChecks(h *harness) {
+	card := h.m.byName["ork"].snap.EngineRuns[0].Card
+	for i := range card.HumanChecks {
+		card.HumanChecks[i].State = runrec.CheckTicked
+	}
+}
+
+// On an approvable card x stop stays on the hint line beside p report at
+// 80x24 (S306): stopping a run at the card stays one key away.
+func TestApprovalCardHintKeepsStopBesideReportAt80x24(t *testing.T) {
+	h, _ := reportHarness(t)
+	markAllChecks(h)
+	v := h.at(80, 24)
+	hint := hintLine(v)
+	previous := -1
+	for _, want := range []string{"p report", "a approve", "x stop", "esc close pane"} {
+		at := strings.Index(hint, want)
+		if at <= previous {
+			t.Fatalf("approval hint %q lacks %q in order", hint, want)
+		}
+		previous = at
+	}
+	checkGolden(t, "report-approval-80x24.txt", h.m.View().Content)
+}
+
+// With open checks the digits and F fix round outlast x stop (owner, S149), so
+// at 80x24 the line cannot hold p report too: the report goes first.
+func TestApprovalCardHintDropsReportBeforeStopWithOpenChecks(t *testing.T) {
+	h, _ := reportHarness(t)
+	want := "x stop; 1-3 tick/later; F fix round; esc close pane"
+	if hint := hintLine(h.at(80, 24)); hint != want {
+		t.Fatalf("hint %q, want %q", hint, want)
+	}
+}
+
+// Narrower, the drop order on a card is p report, then x stop, then (open
+// checks) the check digits and F fix round or (checks marked) a approve. One
+// variable: the width.
+func TestApprovalCardHintDropOrderOnTheCard(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		ticks bool
+		floor int // narrower, the refill rule may bring back a short hint beside a longer one that does not fit
+	}{{"open checks", false, 70}, {"every check marked", true, 40}} {
+		t.Run(tc.name, func(t *testing.T) {
+			h, _ := reportHarness(t)
+			if tc.ticks {
+				markAllChecks(h)
+			}
+			sawReportDropped, sawStop := false, false
+			for width := 140; width >= tc.floor; width -= 2 {
+				hint := hintLine(h.at(width, 30))
+				if !strings.HasSuffix(hint, "esc close pane") {
+					t.Fatalf("width %d: the way out is not at the right end: %q", width, hint)
+				}
+				has := func(s string) bool { return strings.Contains(hint, s) }
+				if has("p report") && !has("x stop") {
+					t.Errorf("width %d: p report stays while x stop goes: %q", width, hint)
+				}
+				if has("x stop") && tc.ticks && !has("a approve") {
+					t.Errorf("width %d: x stop stays while a approve goes: %q", width, hint)
+				}
+				if has("x stop") && !tc.ticks && (!has("F fix round") || !has("1-3 tick/later")) {
+					t.Errorf("width %d: x stop stays while F fix round or the check digits go: %q", width, hint)
+				}
+				// With every check marked the digits and F are not needed: they drop
+				// before a approve, x stop and p report (S149 answer 5 lifts them only
+				// while checks are open).
+				if tc.ticks && (has("F fix round") || has("1-3 tick/later")) && (!has("a approve") || !has("x stop") || !has("p report")) {
+					t.Errorf("width %d: F or the check digits stay while a approve, x stop or p report goes: %q", width, hint)
+				}
+				sawReportDropped = sawReportDropped || !has("p report")
+				sawStop = sawStop || has("x stop")
+			}
+			if !sawStop || !sawReportDropped {
+				t.Fatalf("the sweep never saw p report dropped (%t) beside x stop (%t); the test proves nothing", sawReportDropped, sawStop)
+			}
+		})
+	}
+}
+
+// A run pane with no approval card keeps its order: at 88 columns p report
+// still outlasts x stop there (S306 changes the card only).
+func TestRunPaneWithoutCardKeepsReportAheadOfStop(t *testing.T) {
+	h, _ := reportHarness(t)
+	run := &h.m.byName["ork"].snap.EngineRuns[0]
+	run.Card = nil
+	run.State = "implement"
+	for _, tc := range []struct {
+		width int
+		want  string
+	}{
+		{88, "p report; pgup/pgdown line; ctrl+d/u half page; esc close pane"},
+		{60, "pgup/pgdown line; esc close pane"}, // the scroll key still outlasts p report
+	} {
+		if hint := hintLine(h.at(tc.width, 24)); hint != tc.want {
+			t.Fatalf("width %d: hint %q, want %q", tc.width, hint, tc.want)
 		}
 	}
 }
