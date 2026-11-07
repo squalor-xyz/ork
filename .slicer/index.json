@@ -15407,7 +15407,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "907ac27b-2728-4326-97bb-0ca84958c800",
+          "kind": "",
+          "text": "**2026-11-07** — Owner decision 2026-11-07 (interactive answer in the relay session), Q1: option (b). ork run and ork wave start on an item whose newest run is a resumable stopped run auto-resume that run when the worktree's tree hash equals the last implementer round's tree_sha256 (S294); otherwise they start fresh and say so. This replaces the recommended (a). The hash rule, the message wording and the interaction with a dismissed run are for the implementer to settle in the spec's terms and list under Owner needed if unclear.",
+          "created_at": "2026-11-07T22:53:13Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
