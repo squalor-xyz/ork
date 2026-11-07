@@ -26,7 +26,7 @@
     },
     {
       "heading": "Implement",
-      "body": "Waits on the owner decision. Do not start. When the owner has decided:\n- If B, the owner must first record a decision that changes S178's rule (only the owner supersedes or decides; ork's agents never run `adj reject` or `adj supersede`).\n- Then re-spec this slice from the chosen option with Files, named failing tests, Implement steps and Check, test-first, and mark everything the helper adds *proposed* until an adj record decides it."
+      "body": "Waits on the owner decision. Do not start. When the owner has decided:\n- If B, the owner must first record a decision that changes S178's rule (only the owner supersedes or decides; ork's agents never run `adj reject` or `adj supersede`).\n- Then re-spec this slice from the chosen option with Files, named failing tests, Implement steps and Check, test-first, and mark everything the helper adds *proposed* until an adj record decides it.\n\nOwner decisions: 2026-11-07 (interview). Option A: 'ork daemon restart --when-idle'. Option B is not taken."
     },
     {
       "heading": "Check",

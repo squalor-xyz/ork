@@ -2,7 +2,7 @@
 {
   "id": 182,
   "title": "What is the local slot cap?",
-  "status": "decided",
+  "status": "superseded",
   "key": "roles.local-model.cap",
   "asked_by": "claude",
   "decided_by": "Jon",
@@ -31,6 +31,7 @@
   },
   "decision": "two",
   "rationale": "Owner picked a built-in cap of 2, interactive question, 2026-11-06.",
+  "superseded_by": 187,
   "refs": [
     "S301"
   ],
@@ -42,6 +43,11 @@
     {
       "date": "2026-11-06",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-07",
+      "event": "supersede",
+      "note": "by 187"
     }
   ]
 }

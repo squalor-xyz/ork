@@ -1,0 +1,41 @@
+{
+  "id": "S304",
+  "title": "Local model: measure which roles each local launcher suits",
+  "lead": [
+    "*Proposed:* decide, with measured runs, which roles each of claude-local, codex-local and grok-local should hold in the matrix. Today only qwen3.8-27b is served, and the owner's guidance on what suits local is a judgment, not a measurement (S301 Why)."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "daemon",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "- The owner wants the matrix tuned by evidence, not by guess: local rows start size S and well specified (owner, 2026-11-07), and the rest is open.\n- The local server is weaker and slower than the cloud models, handles about 2 to 4 concurrent requests (owner estimate), and serves one model at a time."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/matrix.go:76`\n- `docs/design.md`\n- `docs/state.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- None; this slice records measurements and matrix changes. Any ork code change it needs gets its own failing test in the slice that makes it."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. With the owner, choose a fixed set of small slices of known difficulty and run each role (implementer, reviewer, gate, spec check, UI pass) on each local launcher through a per-run lineup override.\n2. Record, per role and launcher: pass or fail, rounds used, time, and findings missed against a cloud review of the same diff.\n3. Propose matrix rows and conditions from the record; the owner decides them (adj record).\n4. Do not change a default role to local without an owner decision (adj 181)."
+    },
+    {
+      "heading": "Check",
+      "body": "- The measurements are in the handoff note with the commands that produced them.\n- `slicer check`, `adj lint`."
+    },
+    {
+      "heading": "Git",
+      "body": "- Branch and worktree per AGENTS.md; no commit until the owner approves."
+    }
+  ],
+  "notes": []
+}

@@ -2,7 +2,7 @@
 {
   "id": 185,
   "title": "What is the model name of the local entry in Grok's config?",
-  "status": "decided",
+  "status": "superseded",
   "key": "roles.local-model.grok-model",
   "asked_by": "claude",
   "decided_by": "Jon",
@@ -16,6 +16,7 @@
   },
   "decision": "The Grok config entry is [model.studio-local] with model = \"qwen3.8-27b\" in ~/.grok/config.toml (owner, typed 2026-11-06). A Grok row selects it with -m studio-local.",
   "rationale": "Owner typed the entry in an interactive question, 2026-11-06.",
+  "superseded_by": 188,
   "refs": [
     "S301"
   ],
@@ -27,6 +28,11 @@
     {
       "date": "2026-11-06",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-07",
+      "event": "supersede",
+      "note": "by 188"
     }
   ]
 }

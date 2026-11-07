@@ -1,0 +1,41 @@
+{
+  "id": "S303",
+  "title": "Local model: classify an unreachable endpoint and fall back to the next row",
+  "lead": [
+    "*Proposed:* when a `-local` launcher cannot reach the server, ork moves to the next matrix row (adj 156) instead of pausing. This is the part of S301 that needs a measured sample (adj 23, 77)."
+  ],
+  "depends_note": null,
+  "findings_note": "S301",
+  "size": "S",
+  "flags": [],
+  "trees_note": "daemon, agent",
+  "trees_plural": true,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "- The Claude classifier returns unclassified for every non-success exit (`internal/agent/claude/classify.go:19-33`), and an unclassified exit stops for the owner (`internal/engine/ledger.go:45-46`). An unreachable local server would pause the run.\n- No sample of an unreachable endpoint exists in `testdata/vendors/*`."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/agent/claude/classify.go:19-33`\n- `internal/agent/codex/codex.go:226`\n- `internal/agent/grok/grok.go:282`\n- `internal/engine/ledger.go:45-46`\n- `testdata/vendors/`\n- `docs/design.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Each launcher's captured server-down output is a fixture under `testdata/vendors/` and classifies as an error that adj 156 treats as fall-back-eligible.\n- A denied or other unclassified local exit still stops for the owner."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. The owner captures one server-down sample per launcher (claude-local, codex-local, grok-local) and puts it in the fixtures; stop and ask if a sample is missing.\n2. Add the narrowest classifier rule per vendor that matches the sample.\n3. Update the docs."
+    },
+    {
+      "heading": "Check",
+      "body": "- Samples exist for all three launchers.\n- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`."
+    },
+    {
+      "heading": "Git",
+      "body": "- Branch and worktree per AGENTS.md; no commit until the owner approves."
+    }
+  ],
+  "notes": []
+}

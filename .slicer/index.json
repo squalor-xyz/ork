@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 302,
+  "next_id": 307,
   "preamble": "",
   "passes": [
     {
@@ -10152,7 +10152,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 3,
         "attempts": 0
       }
     },
@@ -10927,7 +10927,7 @@
         "group": "",
         "reason": "",
         "importance": 2,
-        "urgency": 2,
+        "urgency": 3,
         "effort": 2,
         "attempts": 0
       }
@@ -11477,7 +11477,7 @@
         "flags": [],
         "trees": [],
         "trees_literal": false,
-        "findings": "Owner 2026-10-30: adj half split out of S24; waits on adjudicate S45 (adj-json contract and pin)",
+        "findings": "Owner 2026-10-30: adj half split out of S24. Adjudicate S45 has landed (adj v1.0.0 has adj contract; checked 2026-11-07), so the slice is specified against the real interface.",
         "discovered_from": "S24",
         "parent": "",
         "cites": [],
@@ -13315,7 +13315,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -13425,7 +13425,22 @@
       "status": "open",
       "has_slice": false,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "19998ce1-fcb2-41d7-a6d0-824dc1f5cbef",
+          "kind": "decision",
+          "text": "**2026-11-07** — Owner 2026-11-07: narrow adj 115 (sticky): a fresh-round retry restarts the vendor chain at the first entry when that vendor is back; inside a round it stays sticky. The owner must supersede adj 115; this slice stays blocked until then.",
+          "created_at": "2026-11-07T14:56:58Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -13552,6 +13567,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "444d0414-1bae-468a-9497-dcafb49546bf",
+          "kind": "decision",
+          "text": "**2026-11-07** — Owner 2026-11-07: ork wait uses distinct exit codes for question pending, state changed, nothing active and timeout, and --json prints the new state.",
+          "created_at": "2026-11-07T14:56:58Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -13579,7 +13608,7 @@
       "title": "Spec check row: ork picks it by a setting, offers the fix when it is missing, and keeps it out of the lineups",
       "short_title": "Spec check row: ork picks it by a setting, offers the fix when it is missing, and keeps it out of the lineups",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
@@ -13596,8 +13625,8 @@
         "pass": "v1.1",
         "group": "",
         "reason": "",
-        "importance": 2,
-        "urgency": 2,
+        "importance": 3,
+        "urgency": 3,
         "effort": 2,
         "attempts": 0
       }
@@ -13621,7 +13650,7 @@
         "parent": "",
         "cites": [],
         "key": "",
-        "pass": "v1.2",
+        "pass": "v1.1",
         "group": "",
         "reason": "",
         "importance": 2,
@@ -13635,7 +13664,7 @@
       "title": "Launch prompts: drop well-specified and split, take them from the spec check and a default",
       "short_title": "Launch prompts: drop well-specified and split, take them from the spec check and a default",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
@@ -13653,7 +13682,7 @@
         "group": "",
         "reason": "",
         "importance": 2,
-        "urgency": 2,
+        "urgency": 3,
         "effort": 2,
         "attempts": 0
       }
@@ -13736,7 +13765,22 @@
       "status": "open",
       "has_slice": false,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "a0213f5f-629c-46c0-b6ff-5c907f586a1c",
+          "kind": "decision",
+          "text": "**2026-11-07** — Owner 2026-11-07: a run whose branch is gone and not merged is marked cleaned with a reason recorded, and the error is logged once.",
+          "created_at": "2026-11-07T14:56:58Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -13893,16 +13937,16 @@
         "pass": "v1.1",
         "group": "",
         "reason": "",
-        "importance": 2,
-        "urgency": 2,
-        "effort": 2,
+        "importance": 3,
+        "urgency": 3,
+        "effort": 3,
         "attempts": 0
       }
     },
     {
       "id": "S266",
-      "title": "Spec check: a report-shape failure survives its one retry; nudge the same session instead",
-      "short_title": "Spec check: a report-shape failure survives its one retry; nudge the same session instead",
+      "title": "Spec check: a report-shape failure or a denied read command retries the same session once instead of failing",
+      "short_title": "Spec check: a report-shape failure or a denied read command retries the same session once instead of failing",
       "status": "open",
       "has_slice": false,
       "depends_on": [],
@@ -13913,7 +13957,7 @@
         "flags": [],
         "trees": [],
         "trees_literal": false,
-        "findings": "2026-11-03: the spec check (claude sonnet high, row r16) failed on report shape twice on S72's first and third launches: 'spec check failed on its automatic retry; check again: report shape: S72: write Ready, or question blocks that start with Question:'. The third and fourth launches passed, so the failure is flaky. S243 gives every report-checked role one automatic nudge to the same session but says the spec check keeps its own retry (S243 Why, line 33), so the flake is not covered. A failed launch costs a full spec-check pass plus a relaunch. Proposed: resume the spec check's session once with the shape error and the expected formats (Ready, or Question blocks) before the retry from scratch; and say in the launch output which item failed and that rerunning is safe. Related: S243, S116, S258, S264.",
+        "findings": "2026-11-03: the spec check (claude sonnet high, row r16) failed on report shape twice on S72's first and third launches: 'spec check failed on its automatic retry; check again: report shape: S72: write Ready, or question blocks that start with Question:'. The third and fourth launches passed, so the failure is flaky. S243 gives every report-checked role one automatic nudge to the same session but says the spec check keeps its own retry (S243 Why, line 33), so the flake is not covered. A failed launch costs a full spec-check pass plus a relaunch. Proposed: resume the spec check's session once with the shape error and the expected formats (Ready, or Question blocks) before the retry from scratch; and say in the launch output which item failed and that rerunning is safe. Related: S243, S116, S258, S264. Absorbed from S300 (retired into this row 2026-11-07): Wave 8, 2026-11-05 (friction F44): the read-only spec check for S278 ran rg ... | head -20, the sandbox denied it, and ork failed the whole spec check ('spec check failed: spec-check exited ok: permission denied: Bash: rg -n ... | head -20'); the wave did not start; a plain relaunch passed. One occurrence so far. Code (read 2026-11-07 at a1114e2): the retry loop is RunSpecCheck's (internal/engine/speccheck.go:144-156); it reruns runSpecCheckOnce from scratch once, only after a shape error, a moved main or a changed status; any denial returns at once (speccheck.go:281-282), pinned by TestSpecCheckStopsOnPermissionDenials (internal/engine/speccheck_test.go:180); the spec check never resumes a session (no Resume in speccheck.go). Needed, in this same loop: a round that ended with denied read commands or a report-shape failure is resumed once in the SAME session with a nudge that names the denials or the shape error and the expected forms, instead of failing or starting over; a second failure fails the check as today, and the launch output names the item and says a rerun is safe. Re-check before building the denial half: S277's Done when (internal/engine/brief.go:153-167) gives a read-only role only 'You may only read the tree' and no command-form rule; the 'one command per call, no pipe' lines (brief.go:161-165, commit 7bb435b) are for a Grok read-only role only. So S277 does not by itself keep a Claude spec check (row r16) from piping rg into head; re-check with the next spec-check denials (or their absence) whether S277 and S280 made the case rarer, and say so in the spec.",
         "discovered_from": "S243",
         "parent": "",
         "cites": [],
@@ -13929,7 +13973,7 @@
     },
     {
       "id": "S267",
-      "title": "Running view: queued runs show no stale cue, and the orchestrator row stops reading as stuck",
+      "title": "Run pane cues: queued runs, the orchestrator row, vendor/model/effort on every role row",
       "short_title": "Queued runs: no stale cue",
       "status": "open",
       "has_slice": false,
@@ -13941,7 +13985,7 @@
         "flags": [],
         "trees": [],
         "trees_literal": false,
-        "findings": "Owner 2026-11-03 (screenshot of the Running entry). (1) A run that is queued behind the cap shows the stale cue: s370 and S237 read '!! heard 32m' and '! heard 19m' although they have not started. lastHeard (internal/tui/relayboard.go:~167-190) ages the ledger run's updated_at, which nothing refreshes while the engine run is queued, so the row turns amber then red and looks hung. The docs only exempt a run that waits for a vendor slot (docs/dashboard.md:~535-538, S146/S169) and a wait on the owner (S154). Proposed: a queued engine run shows 'queued' or 'queued 19m' in the heard cell, dim, with no ! or !! cue. (2) The orchestrator step shows as the pane's live line ('- orchestrator start 32m', s443 on slicer) while the implementer, reviewer and gate rows are the work: the elapsed time is the relay's age, not a role's, and reads as a stuck orchestrator. Proposed: when ork runs the roles itself, show the orchestrator step dim with its state and no running clock; owner to confirm. Open owner questions: the heard text for a queued row, and whether the orchestrator row should hide or stay dim. A UI pass applies (u10); likely docs/dashboard.md and golden views change. Related: S146, S154, S169, S262.",
+        "findings": "Owner 2026-11-03 (screenshot of the Running entry). (1) A run that is queued behind the cap shows the stale cue: s370 and S237 read '!! heard 32m' and '! heard 19m' although they have not started. lastHeard (internal/tui/relayboard.go:~167-190) ages the ledger run's updated_at, which nothing refreshes while the engine run is queued, so the row turns amber then red and looks hung. The docs only exempt a run that waits for a vendor slot (docs/dashboard.md:~535-538, S146/S169) and a wait on the owner (S154). Proposed: a queued engine run shows 'queued' or 'queued 19m' in the heard cell, dim, with no ! or !! cue. (2) The orchestrator step shows as the pane's live line ('- orchestrator start 32m', s443 on slicer) while the implementer, reviewer and gate rows are the work: the elapsed time is the relay's age, not a role's, and reads as a stuck orchestrator. Proposed: when ork runs the roles itself, show the orchestrator step dim with its state and no running clock; owner to confirm. Open owner questions: the heard text for a queued row, and whether the orchestrator row should hide or stay dim. A UI pass applies (u10); likely docs/dashboard.md and golden views change. Related: S146, S154, S169, S262. | Merged from S272 (vendor, model and effort on every role row): Owner 2026-11-03 (screenshot of the Running pane for s443): the orchestrator row shows no model or effort, and the queued reviewer and gate rows show only \"queued\". Fact: the orchestrator step is ork's own (agent ork, no vendor or model; docs/design.md:528), so it has none to show; the row should say so (\"ork engine\") instead of staying blank. The queued roles already have a planned vendor, model and effort in the run plan; show it on the row so the owner sees what will run before it starts. Open: whether a failed-over row also shows the row that was skipped. | Owner 2026-11-07: all three cues. (1) A queued row shows a dim 'queued 19m' with its planned vendor, model and effort, and no stale ! cue. (2) The orchestrator row is dimmed and labelled 'ork engine', not hidden, with no running clock. (3) A failed-over row shows the current entry plus a dim 'fell back from X'. A UI pass applies (u10).",
         "discovered_from": "S262",
         "parent": "",
         "cites": [],
@@ -13978,7 +14022,7 @@
         "group": "",
         "reason": "",
         "importance": 2,
-        "urgency": 2,
+        "urgency": 3,
         "effort": 1,
         "attempts": 0
       }
@@ -13987,7 +14031,7 @@
       "id": "S269",
       "title": "Classify a refused grok run (exit 0, stopReason cancelled)",
       "short_title": "Grok refused-run class",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [],
@@ -14004,7 +14048,7 @@
         "key": "grok-refused-run",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Done by S280 (grok cancelled-run detection, grok.go:235, fixture 08-permission-cancelled)",
         "importance": 2,
         "urgency": 2,
         "effort": 1,
@@ -14162,7 +14206,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -14176,7 +14220,7 @@
         "reason": "",
         "importance": 3,
         "urgency": 3,
-        "effort": 1,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -14298,7 +14342,7 @@
       "id": "S272",
       "title": "Run pane: show vendor, model and effort on every role row, queued ones too",
       "short_title": "Run pane: show vendor, model and effort on every role row, queued ones too",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [],
@@ -14315,7 +14359,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S267 (owner 2026-11-07)",
         "importance": 3,
         "urgency": 3,
         "effort": 1,
@@ -14326,7 +14370,7 @@
       "id": "S273",
       "title": "Vendor out mark ends at the vendor's reset time",
       "short_title": "Vendor out mark ends at the vendor's reset time",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [],
@@ -14343,7 +14387,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S299 (vendor out marks persist): --until and the reset-time rule are in S299's findings.",
         "importance": 3,
         "urgency": 2,
         "effort": 1,
@@ -14496,7 +14540,7 @@
       "id": "S281",
       "title": "ork show RUN: pause reason, question, latest report and checks in one command",
       "short_title": "ork show RUN: pause reason, question, latest report and checks in one command",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -14528,7 +14572,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Duplicate of S297; the owner chose retire-s281",
         "importance": 3,
         "urgency": 3,
         "effort": 1,
@@ -14539,7 +14583,7 @@
       "id": "S282",
       "title": "Relaunch of a stopped run continues at the stage it stopped, not at round 1",
       "short_title": "Relaunch of a stopped run continues at the stage it stopped, not at round 1",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [],
@@ -14556,7 +14600,7 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S296 (resume a stopped run): its report and the tree-hash point are in S296's Why; whether a relaunch auto-resumes is S296 Q1.",
         "importance": 3,
         "urgency": 3,
         "effort": 2,
@@ -14570,7 +14614,22 @@
       "status": "open",
       "has_slice": false,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "ecc83448-c46a-48af-8968-d93b2f465dbb",
+          "kind": "decision",
+          "text": "**2026-11-07** — Owner 2026-11-07: for a missing spec only, wave start starts the items that have specs and lists the rest with a 'slicer promote' hint; other plan failures still abort. The owner must narrow adj 146 (wave.plan-failure) first.",
+          "created_at": "2026-11-07T14:56:59Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -14596,7 +14655,7 @@
       "title": "Go tests: write fake vendor and git scripts once per test binary",
       "short_title": "Go tests: write fake vendor and git scripts once per test binary",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
@@ -14614,7 +14673,7 @@
         "group": "",
         "reason": "",
         "importance": 2,
-        "urgency": 2,
+        "urgency": 3,
         "effort": 2,
         "attempts": 0
       }
@@ -14624,8 +14683,10 @@
       "title": "Separate round check command from the gate and landing check command",
       "short_title": "Separate round check command from the gate and landing check command",
       "status": "open",
-      "has_slice": false,
-      "depends_on": [],
+      "has_slice": true,
+      "depends_on": [
+        "S284"
+      ],
       "note_records": [
         {
           "id": "ccacd48e-7829-4077-815a-99a8a44f0763",
@@ -15014,7 +15075,7 @@
         "pass": "v1.1",
         "group": "",
         "reason": "",
-        "importance": 1,
+        "importance": 2,
         "urgency": 1,
         "effort": 1,
         "attempts": 0
@@ -15033,6 +15094,20 @@
           "kind": "",
           "text": "**2026-11-05** — Correction 2026-11-05: the last sentence of the findings is wrong. A stopped run does not block 'ork projects set' (runrec.IsFinal counts it as final; the set succeeded as soon as U41 and U30 were both stopped). The refusal came while both runs were still active. See S296.",
           "created_at": "2026-11-05T17:40:58Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "3ffe2258-1f8c-43b8-a3dd-ea26a84cdff9",
+          "kind": "decision",
+          "text": "**2026-11-07** — Owner 2026-11-07: find the check folder by inferring it from the project path relative to the repo top level; no new setting. Narrow the slice to the working directory only (S294's stall rule already covers repeated output).",
+          "created_at": "2026-11-07T14:56:58Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
@@ -15167,8 +15242,8 @@
     },
     {
       "id": "S296",
-      "title": "Resume a stopped run from its worktree",
-      "short_title": "Resume a stopped run from its worktree",
+      "title": "Resume a stopped run from its worktree, and continue at the stage it stopped",
+      "short_title": "Resume a stopped run from its worktree, and continue at the stage it stopped",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
@@ -15187,7 +15262,7 @@
         "pass": "v1.1",
         "group": "",
         "reason": "",
-        "importance": 2,
+        "importance": 3,
         "urgency": 2,
         "effort": 2,
         "attempts": 0
@@ -15230,8 +15305,8 @@
         "pass": "v1.1",
         "group": "",
         "reason": "",
-        "importance": 1,
-        "urgency": 1,
+        "importance": 3,
+        "urgency": 3,
         "effort": 2,
         "attempts": 0
       }
@@ -15283,8 +15358,8 @@
     },
     {
       "id": "S299",
-      "title": "Vendor out marks: an owner's mark survives a daemon idle exit and restart",
-      "short_title": "Vendor out marks: an owner's mark survives a daemon idle exit and restart",
+      "title": "Vendor out marks: an owner's mark survives a daemon restart and can end at a set time (--until)",
+      "short_title": "Vendor out marks: an owner's mark survives a daemon restart and can end at a set time (--until)",
       "status": "open",
       "has_slice": false,
       "depends_on": [],
@@ -15295,7 +15370,7 @@
         "flags": [],
         "trees": [],
         "trees_literal": false,
-        "findings": "Waves 7-8, 2026-11-05 (friction F43): the owner's ork vendor out grok mark was lost three times, once by a daemon restart and twice silently when the daemon idled out (daemon_idle_minutes effective 10) while a wave start was held on a spec question waiting for the owner. The next run put Grok on the reviewer row and stopped (reviewer round 1 exited unclassified), costing a full implementer round (about 28 min) each time. Fact: an owner mark has no expiry (internal/daemon/vendors.go:30-31) but lives only in daemon memory; ork vendor list after the idle exit printed 'no vendor is out'. Needed: owner marks (ork vendor out) are written to ork's state directory and reloaded at daemon start, so they end only with ork vendor back; automatic rate-limit and credit marks keep their own expiry (S273). The help text 'a restart clears them' changes to match. Related: S273, S169, S182.",
+        "findings": "Waves 7-8, 2026-11-05 (friction F43): the owner's ork vendor out grok mark was lost three times, once by a daemon restart and twice silently when the daemon idled out (daemon_idle_minutes effective 10) while a wave start was held on a spec question waiting for the owner. The next run put Grok on the reviewer row and stopped (reviewer round 1 exited unclassified), costing a full implementer round (about 28 min) each time. Fact: an owner mark has no expiry (internal/daemon/vendors.go:30-31) but lives only in daemon memory; ork vendor list after the idle exit printed 'no vendor is out'. Needed: owner marks (ork vendor out) are written to ork's state directory and reloaded at daemon start, so they end only with ork vendor back; automatic rate-limit and credit marks keep their own expiry (S273). The help text 'a restart clears them' changes to match. Related: S273, S169, S182. Absorbed from S273 (retired into this row 2026-11-07): Owner 2026-11-03: the codex weekly limit message said it resets 7:12 AM on 4 Nov, but ork vendor out takes no end time, so the mark lasts until ork vendor back (or, today, a daemon restart). Still needed, as part of this row: (a) ork vendor out VENDOR --until TIME sets an owner mark that ends at TIME, is persisted with the other owner marks, and is shown with its end time in the footer and ork vendor list; (b) reading a reset time from the vendor's own message is done only once a real captured message with a reset time exists as a test fixture; until then automatic marks keep their fixed expiry (MarkOut sets Until to at plus VendorOutFor, internal/engine/vendors.go:162; owner marks have none, MarkOutOwner at internal/engine/vendors.go:172-182). Do not write a parser against a guessed message shape.",
         "discovered_from": "S280",
         "parent": "",
         "cites": [],
@@ -15313,7 +15388,7 @@
       "id": "S300",
       "title": "Spec check: a denied read command retries the same session once instead of failing the wave",
       "short_title": "Spec check: a denied read command retries the same session once instead of failing the wave",
-      "status": "open",
+      "status": "retired",
       "has_slice": false,
       "depends_on": [],
       "note_records": [],
@@ -15330,9 +15405,9 @@
         "key": "",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S266 (same spec-check retry loop, speccheck.go:144-156): the denial case and what to re-check after S277 are in S266's findings.",
         "importance": 2,
-        "urgency": 2,
+        "urgency": 1,
         "effort": 1,
         "attempts": 0
       }
@@ -15358,12 +15433,172 @@
         "parent": "",
         "cites": [],
         "key": "local-model-via-vendor-cli",
-        "pass": "",
+        "pass": "v1.1",
         "group": "",
         "reason": "",
-        "importance": 2,
-        "urgency": 1,
+        "importance": 3,
+        "urgency": 3,
+        "effort": 3,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S302",
+      "title": "Add several projects at once: scan a folder, tick the repos to add",
+      "short_title": "Multi-add projects from a folder scan",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [
+          "tui",
+          "cli",
+          "daemon"
+        ],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "multi-add-projects",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S303",
+      "title": "Local model: classify an unreachable endpoint and fall back to the next row",
+      "short_title": "Local launcher unreachable: fall back to the next row",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S301"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [
+          "daemon",
+          "agent"
+        ],
+        "trees_literal": false,
+        "findings": "S301",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "local-unreachable-fallback",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S304",
+      "title": "Local model: measure which roles each local launcher suits",
+      "short_title": "Evaluate local launchers per role",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S301"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [
+          "daemon"
+        ],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "local-role-eval",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S305",
+      "title": "Grok: allow write roles",
+      "short_title": "Grok and grok-local accept write roles",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S301"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [
+          "agent",
+          "daemon"
+        ],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "grok-write-roles",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S306",
+      "title": "Approval card: keep `x stop` on the hint line when `p report` shows",
+      "short_title": "Approval card keeps x stop beside p report",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [
+          "tui"
+        ],
+        "trees_literal": false,
+        "findings": "S227 item 6 (from S176 later notes); the owner flagged it as a priority and asked on 2026-11-07 for it to go in v1.1",
+        "discovered_from": "S227",
+        "parent": "",
+        "cites": [],
+        "key": "approval-card-hint-stop",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 1,
         "attempts": 0
       }
     }

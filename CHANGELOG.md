@@ -7,6 +7,36 @@
   two more rounds by default. Status names the failure and retry/stop
   choices. Approval-card Fix runs within the current granted limit.
 
+- S280 (*proposed*): a Grok round that the CLI cancelled because a command
+  needed approval is an error exit. The role's next row takes the same round,
+  and Grok is not marked out. A finished report is kept instead: a non-empty
+  report file, or the last complete message that holds `## Owner needed`. A
+  read-only Grok role's brief names the command forms that run in plan mode
+  and asks for one command per call. A spec check builds each row's brief
+  with that row's vendor. Docs: `docs/design.md`, `docs/how-it-works.md`.
+
+- S278 (*proposed*): the spec check counts a slice as ready only when its
+  Failing tests name their assertions and its Check gives a command the
+  sandbox can run with the result that means done, or a `[HUMAN CHECK]` that
+  says what the owner looks at. Otherwise it asks one owner question for the
+  slice that proposes concrete wording. Prompt and tests only. Docs:
+  `docs/design.md`.
+
+- S277 (*proposed*): every role brief ends with a `## Done when` checklist,
+  also on resumed rounds: the role's acceptance criteria and exact report
+  lines, its read-only limits or the allowed command forms, and what to report
+  when a check cannot run. The implementer's lists the slice's Failing tests
+  and Check items and one proving test per `[fix]` finding; a finish round
+  lists its commands in order. Docs: `docs/design.md`, `docs/state.md`.
+
+- S275 (*proposed*): a report that fails the shape check and asks no owner
+  question retries the same role once, in the same round and session, with
+  the shape problems as its brief. A second bad report pauses the run (kind
+  `shape`). This covers the implementer and its finish step, the reviewer,
+  the gate, the architect and the UI pass, and uses no extra implementer
+  round. Status and role rows say "shape retry". Docs: `docs/design.md`,
+  `docs/state.md`.
+
 - S256: a resumed role is told to re-read the tree (*proposed*); a read-only
   role is told to report in its final message; a fenced owner question is
   accepted; `ork retry RUN [TEXT]` sends a note. Docs: `docs/design.md`,

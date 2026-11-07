@@ -2,7 +2,7 @@
 {
   "id": 184,
   "title": "Which matrix Agent value maps each local row to an adapter?",
-  "status": "decided",
+  "status": "superseded",
   "key": "roles.local-model.agent-value",
   "asked_by": "claude",
   "decided_by": "Jon",
@@ -27,6 +27,7 @@
   },
   "decision": "launcher-names",
   "rationale": "Owner picked launcher names, interactive question, 2026-11-06.",
+  "superseded_by": 188,
   "refs": [
     "S301",
     "adj:155"
@@ -39,6 +40,11 @@
     {
       "date": "2026-11-06",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-07",
+      "event": "supersede",
+      "note": "by 188"
     }
   ]
 }

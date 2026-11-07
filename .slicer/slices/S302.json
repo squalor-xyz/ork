@@ -1,0 +1,41 @@
+{
+  "id": "S302",
+  "title": "Add several projects at once: scan a folder, tick the repos to add",
+  "lead": [
+    "*Proposed:* give ork a folder such as `~/code/squalor-xyz/`, let it find the projects below it, show them as a checklist, and add the ticked ones in one step. No adj record decides this yet; the owner's answers of 2026-11-07 are below."
+  ],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "tui, cli, daemon",
+  "trees_plural": true,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "- Today `+` takes one typed path and asks `ork projects add 'PATH'? [y/N]` (`docs/dashboard.md:32-46`), and `ork projects add [PATH] [--name N]` takes one path (`docs/design.md:1266`). A user with many repos types a full path for each.\n- Adj 70 (`projects.add-path`) still holds: each added path must be an existing directory."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/welcome.go:119` (path field and confirmation)\n- `internal/tui/keys.go:79` (the `+` binding)\n- `internal/tui/daemon.go:211` (AddProject call)\n- `internal/daemon/wire.go:37` (`projects.add`)\n- `internal/cli` (the `projects add` command)\n- `docs/dashboard.md`\n- `docs/guide.md`\n- `docs/design.md`\n- `docs/state.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A scan of a temp tree with a `.slicer` project, an `.adjudicate.json` project, a plain git repo and a plain folder lists the first three, each tagged by what it holds, and not the folder.\n- The walk stops at depth 2, does not descend into a folder already found as a project, and skips `.worktrees`, `node_modules` and hidden folders.\n- Tracked projects (slicer or adj marker) start ticked; plain git repos start unticked.\n- A path already registered is shown greyed and cannot be ticked. A name that clashes with a registered project blocks that row and shows the reason.\n- Adding the ticked rows registers each with the folder name as the project name; one failing row does not stop the others, and the result names each outcome.\n- `ork projects add --scan DIR` lists the candidates and takes `--yes` for the tracked ones; without `--yes` it asks on standard input.\n- In the TUI, `+` with a folder that holds several projects opens the checklist; a folder that is itself a project keeps today's single-add confirmation.\n- Golden views for the checklist (80x24 and wider)."
+    },
+    {
+      "heading": "Implement",
+      "body": "Owner answers of 2026-11-07: detect a folder holding `.slicer` or `.adjudicate.json` and a plain git repo, tagged, with tracked ones preselected; walk 2 levels, stop at a hit; `+` and a CLI flag both reach it; the project name is the folder name; registered rows are greyed and a name clash blocks that row.\n\n1. Put the scan in one package function used by the TUI and the CLI (a folder walk; no new dependency).\n2. Add the checklist view (tick with `space`, all with `a`, none with `n`, confirm with `enter` or `y`; keys to be settled in the UI pass).\n3. Add `--scan DIR` to `projects add`.\n4. Add each ticked project through the existing `projects.add` call, one by one; report per row.\n5. Update the docs named in Files."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`.\n- UI pass (rule u10): this slice changes `internal/tui` and `internal/cli` output.\n- The checklist keys and wording are the UI pass's to suggest; the owner confirms."
+    },
+    {
+      "heading": "Git",
+      "body": "- Branch and worktree per AGENTS.md; no commit until the owner approves."
+    }
+  ],
+  "notes": []
+}
