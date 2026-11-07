@@ -13,8 +13,8 @@ The files ork owns. Everything else is read live from slicer, adj and git
 | UI preferences, free-form until v1 | `~/.config/ork/ui.json` |
 | Daemon socket and pidfile (the pidfile is locked while a daemon lives) | `~/.local/state/ork/ork.sock`, `ork.pid` |
 | One record per slice run | `~/.local/state/ork/runs/<run>/run.json` |
-| Role reports; `roles[].report` keeps the name, read on demand by `run.report` (S176, *proposed*) | `~/.local/state/ork/runs/<run>/<role>-<round>.md` or `<role>-<round>-attempt-<attempt>.md` |
-| Check output per round (S04) | `~/.local/state/ork/runs/<run>/checks-<round>.log` |
+| Role reports; `roles[].report` keeps the name, read on demand by `run.report` (S176, *proposed*) and printed by `ork show RUN NAME` (S297, *proposed*) | `~/.local/state/ork/runs/<run>/<role>-<round>.md` or `<role>-<round>-attempt-<attempt>.md` |
+| Check output per round (S04); `checks[].log` keeps the name, read on demand by `run.report` and printed by `ork show RUN NAME` (S297, *proposed*) | `~/.local/state/ork/runs/<run>/checks-<round>.log`, and `land-checks-<round>.log` for the landing re-check |
 | A role's own temp directory (S04) | `~/.local/state/ork/runs/<run>/tmp/<role>-<round>/` |
 | The UI pass's renders (S121, *proposed*): `VIEW-80x24.txt`, `VIEW-120x40.txt`, `VIEW-ascii.txt` | `~/.local/state/ork/runs/<run>/tmp/ui-<round>/renders/` |
 | A spec check's identity, report and temp directory, plus owner answers tied to the spec fingerprint until run start or a spec change (S143); role verdicts live in daemon memory | `~/.local/state/ork/spec-checks/<project-key>/<item-key>/` |

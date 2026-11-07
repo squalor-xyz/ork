@@ -213,6 +213,13 @@ func (c *Client) Report(ctx context.Context, run, name string) (string, error) {
 	return reply.Text, err
 }
 
+// Show reads what the stored record says of a run (run.show, S297, *proposed*).
+func (c *Client) Show(ctx context.Context, run string) (ShowReply, error) {
+	var reply ShowReply
+	err := c.Call(ctx, MethodRunShow, RunAction{Run: run}, &reply)
+	return reply, err
+}
+
 // Stop stops an engine run after the caller has confirmed it.
 func (c *Client) Stop(ctx context.Context, run string) error {
 	return c.Call(ctx, MethodRunStop, RunAction{Run: run}, nil)

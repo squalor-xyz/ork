@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- S297 (*proposed*): `ork show RUN [NAME] [--json]` prints a run's state, the
+  whole pause reason, its role reports, check results and findings, and with
+  NAME one role report or check log, so a paused run can be read without
+  opening the run directory (S297). A paused run also prints its newest report
+  (the pending role's when it has one). New wire method `run.show`;
+  `run.report` now also serves a check log listed in `checks[].log` (owner decisions 2026-11-05, Q1 to Q4).
+  Docs: `docs/design.md`, `docs/state.md`, `docs/guide.md`.
 - S288 (*proposed*): an `[owner]` or `[owner blocker]` finding in a reviewer,
   UI pass or gate report no longer pauses the run because its body holds more
   than the block (owner decision 2026-11-04, `slicer show S288`). The parser

@@ -40,6 +40,7 @@ const (
 	MethodRunCheck   = "run.check"  // proposed: tick a human check or mark it later (S118)
 	MethodRunReport  = "run.report" // proposed: role report text (S176)
 	MethodRunRender  = "run.render" // proposed: the text of one UI pass render of a run (S121)
+	MethodRunShow    = "run.show"   // proposed: a run's pause, roles, checks and findings in full (S297)
 
 	MethodRunEndLedger = "run.end-ledger" // proposed: end a stale ledger run (S175)
 )
@@ -1422,6 +1423,9 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 	if method == MethodRunReport {
 		return d.runReport(p)
 	}
+	if method == MethodRunShow {
+		return d.runShow(p)
+	}
 	if method == MethodRunRender {
 		return d.runRender(p)
 	}
@@ -1522,14 +1526,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		}
 		switch rec.State {
 		case runrec.StatePaused:
-			next := "ork retry " + rec.ID
-			if rec.Pending != nil && rec.Pending.Kind == runrec.PendingRounds {
-				next += " [--rounds N] or ork stop " + rec.ID
-			}
-			if rec.Pending != nil && rec.Pending.Kind == runrec.PendingQuestion {
-				next = "ork answer " + rec.ID + " TEXT"
-			}
-			wait += "; next: " + next
+			wait += "; next: " + pausedNext(rec)
 		case runrec.StateAwaitingApproval:
 			wait = "owner approval"
 		}
@@ -1608,6 +1605,19 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 	return runs
 }
 
+// pausedNext is the command that resumes a paused run, as ork status and
+// ork show print it.
+func pausedNext(rec runrec.Record) string {
+	next := "ork retry " + rec.ID
+	if rec.Pending != nil && rec.Pending.Kind == runrec.PendingRounds {
+		next += " [--rounds N] or ork stop " + rec.ID
+	}
+	if rec.Pending != nil && rec.Pending.Kind == runrec.PendingQuestion {
+		next = "ork answer " + rec.ID + " TEXT"
+	}
+	return next
+}
+
 // roleDenials returns the text of each denial a role had (DeniedCommand.Text).
 // A record from before S45 has no denied_commands, so its tool names stand.
 func roleDenials(role runrec.RoleRecord) []string {
@@ -1634,6 +1644,68 @@ func cleanupFailed(rec runrec.Record) string {
 type ReportReply struct {
 	Name string `json:"name"`
 	Text string `json:"text"`
+}
+
+// ShowReply is the answer of run.show (proposed, S297): what the stored record
+// says of a run, in full. It carries file names, never file text; run.report
+// serves the text. It has no owner retry note.
+type ShowReply struct {
+	ID           string        `json:"id"`
+	Item         string        `json:"item"`
+	State        string        `json:"state"`
+	Reason       string        `json:"reason,omitempty"`
+	Next         string        `json:"next,omitempty"` // the command that resumes a paused run, as ork status prints it
+	Pending      *ShowPending  `json:"pending,omitempty"`
+	Roles        []ShowRole    `json:"roles"`
+	Checks       []ShowCheck   `json:"checks"`
+	Findings     []ShowFinding `json:"findings"`
+	LatestReport string        `json:"latest_report,omitempty"` // the pending role and round's newest report, else the newest report
+}
+
+// ShowCheck is one run of the project's checks, with the name of its log. It
+// has none of the record's other fields (the log's hash).
+type ShowCheck struct {
+	Round    int      `json:"round"`
+	Command  string   `json:"command"`
+	OK       bool     `json:"ok"`
+	Seconds  int      `json:"seconds"`
+	Log      string   `json:"log,omitempty"`
+	Deferred []string `json:"deferred,omitempty"`
+}
+
+// ShowPending is the pause of a run, with the whole reason.
+type ShowPending struct {
+	Ask      *runrec.OwnerQuestion `json:"ask,omitempty"`
+	Kind     string                `json:"kind"`
+	State    string                `json:"state"`
+	Role     string                `json:"role,omitempty"`
+	Round    int                   `json:"round,omitempty"`
+	Reason   string                `json:"reason"`
+	Question string                `json:"question,omitempty"`
+	Key      string                `json:"key,omitempty"`
+}
+
+// ShowRole is one role attempt. Denied counts its denied commands and
+// DeniedFirst holds the first three.
+type ShowRole struct {
+	Role        string   `json:"role"`
+	Round       int      `json:"round"`
+	Attempt     int      `json:"attempt"`
+	Exit        string   `json:"exit,omitempty"`
+	Report      string   `json:"report,omitempty"`
+	Denied      int      `json:"denied,omitempty"`
+	DeniedFirst []string `json:"denied_first,omitempty"`
+}
+
+// ShowFinding is an owner or later finding with its full text.
+type ShowFinding struct {
+	Ask    *runrec.OwnerQuestion `json:"ask,omitempty"`
+	N      int                   `json:"n"`
+	Kind   string                `json:"kind"`
+	Title  string                `json:"title"`
+	Text   string                `json:"text"`
+	Answer string                `json:"answer,omitempty"`
+	Filed  string                `json:"filed,omitempty"`
 }
 
 // openRun opens the stored record of a run for a read-only call. A run id that
@@ -1682,16 +1754,21 @@ func (d *Daemon) unreadableCause(id string, err error) string {
 	return strings.ReplaceAll(text, dir+string(filepath.Separator), "")
 }
 
-// runReport reads only a role report listed in the stored record. It does
-// not wait for the run; every missing name or file is not_found, and so is a
-// run with no record. A record that cannot be read is an error that says so.
+// runReport reads only a file the stored record lists: a role report
+// (roles[].report) or a check log (checks[].log, S297). It does not wait for
+// the run; every missing name or file is not_found, and so is a run with no
+// record. A record that cannot be read is an error that says so. The reader
+// applies its guards to the file (engine.ReadReport).
 func (d *Daemon) runReport(p RunAction) (ReportReply, error) {
 	run, err := d.openRun(p.Run)
 	if err != nil {
 		return ReportReply{}, err
 	}
 	missing := &ipc.Error{Code: CodeNotFound, Message: "no report " + p.Name + " for run " + p.Run}
-	if p.Name == "" || !slices.ContainsFunc(run.Snapshot().Roles, func(r runrec.RoleRecord) bool { return r.Report == p.Name }) {
+	rec := run.Snapshot()
+	listed := slices.ContainsFunc(rec.Roles, func(r runrec.RoleRecord) bool { return r.Report == p.Name }) ||
+		slices.ContainsFunc(rec.Checks, func(c runrec.CheckRecord) bool { return c.Log == p.Name })
+	if p.Name == "" || !listed {
 		return ReportReply{}, missing
 	}
 	text, err := engine.ReadReport(d.runs.deps.Store.RunDir(p.Run), p.Name)
@@ -1699,6 +1776,61 @@ func (d *Daemon) runReport(p RunAction) (ReportReply, error) {
 		return ReportReply{}, missing
 	}
 	return ReportReply{Name: p.Name, Text: text}, nil
+}
+
+// maxShownDenials is how many denied commands a role row of run.show names.
+const maxShownDenials = 3
+
+// runShow answers what the stored record says of a run (run.show, S297,
+// *proposed*). Like run.report it reads the stored record and does not wait for
+// the run. It serves no file and writes nothing.
+func (d *Daemon) runShow(p RunAction) (ShowReply, error) {
+	run, err := d.openRun(p.Run)
+	if err != nil {
+		return ShowReply{}, err
+	}
+	rec := run.Snapshot()
+	reply := ShowReply{ID: rec.ID, Item: rec.Item, State: rec.State, Reason: rec.Reason, Roles: []ShowRole{}, Checks: []ShowCheck{}, Findings: []ShowFinding{}}
+	var pendingRole string
+	pendingRound := 0
+	if rec.State == runrec.StatePaused && rec.Pending != nil {
+		pd := rec.Pending
+		reply.Pending = &ShowPending{Ask: pd.Ask, Kind: pd.Kind, State: pd.State, Role: pd.Role, Round: pd.Round, Reason: pd.Reason, Question: pd.Question, Key: pd.Key}
+		reply.Reason = pd.Reason
+		pendingRole, pendingRound = pd.Role, pd.Round
+	}
+	if rec.State == runrec.StatePaused {
+		reply.Next = pausedNext(rec) // as ork status, also for a record with no pending
+	}
+	attempts := map[string]int{}
+	for _, role := range rec.Roles {
+		key := fmt.Sprintf("%s\x00%d", role.Role, role.Round)
+		attempts[key]++
+		row := ShowRole{Role: role.Role, Round: role.Round, Attempt: attempts[key], Exit: role.Exit, Report: role.Report}
+		denials := roleDenials(role)
+		row.Denied = len(denials)
+		row.DeniedFirst = denials[:min(len(denials), maxShownDenials)]
+		reply.Roles = append(reply.Roles, row)
+		if role.Report != "" {
+			reply.LatestReport = role.Report
+		}
+	}
+	if pendingRole != "" {
+		// The pending role and round's newest report wins over a later report of another role.
+		for i := len(reply.Roles) - 1; i >= 0; i-- {
+			if r := reply.Roles[i]; r.Role == pendingRole && r.Round == pendingRound && r.Report != "" {
+				reply.LatestReport = r.Report
+				break
+			}
+		}
+	}
+	for _, c := range rec.Checks {
+		reply.Checks = append(reply.Checks, ShowCheck{Round: c.Round, Command: c.Command, OK: c.OK, Seconds: c.Seconds, Log: c.Log, Deferred: c.Deferred})
+	}
+	for i, f := range rec.Findings {
+		reply.Findings = append(reply.Findings, ShowFinding{Ask: f.Ask, N: i + 1, Kind: f.Kind, Title: f.Title, Text: f.Text, Answer: f.Answer, Filed: f.Filed})
+	}
+	return reply, nil
 }
 
 // RenderReply is the answer of run.render: the render's name and its text,

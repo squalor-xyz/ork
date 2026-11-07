@@ -1605,6 +1605,44 @@ drops terminal controls with `runrec.PlainText`, and bounds the read at
 role rows carry `report` names (omitted when empty), never report text. The
 TUI reads text on demand when `p` opens or moves to a report.
 
+*Proposed (S297):* `run.report` also serves a check log. The name may be one
+listed in the stored record's `checks[].log` (`checks-ROUND.log`, and
+`land-checks-ROUND.log` from the landing re-check), and the file
+may be a regular `.log` file; every other guard above holds (plain name in the
+run directory, no link, the same file as listed, plain text, at most 64 KiB).
+Nothing else is served: no live tail, no `run.json`, no vendor output and no
+fixture directory (owner decision 2026-11-05, Q3 and Q4). The check log is a
+raw tail of each command's output (30000 bytes per command) and
+`slicer check --json`, so it can hold what a command printed.
+
+*Proposed (S297):* `run.show` takes `{run}` and returns what the stored record
+says of a run, as file names and text fields, never file text: `id`, `item`,
+`state`, `reason`, `next`, `pending` (`kind`, `state`, `role`, `round`,
+`reason`, `question`, `ask`, `key`; no owner retry note), `roles[]` (`role`,
+`round`, `attempt`, `exit`, `report`, `denied` as a count and `denied_first`
+as the first three denied commands), `checks[]` (`round`, `command`, `ok`, `seconds`, `log`, `deferred`;
+not the record's log hash), `findings[]` (`n`, `kind`, `title`, `text`, `ask`, `answer`,
+`filed`) and `latest_report`. For a paused run `reason` is the whole stored
+pause reason, without the `; next: ...` suffix that `ork status` adds, and
+`next` is that suffix's command, set for every paused run, also one whose
+record has no pending. `latest_report` is the newest report of the
+pending role and round, else the last role record that has a report.
+Like `run.report` it reads the stored record without waiting for the run and
+writes nothing. An unknown run or a run id that is not a plain name is
+`not_found`, and an unreadable record is the `internal` error above. The CLI
+command `ork show RUN [NAME] [--json]` calls it and `run.report`: with no NAME
+it prints the header (`ID ITEM STATE`), the pause (kind, role and round) with
+its whole reason, the question with its numbered options and `Recommend`
+when the kind is `question`, the next command, each role attempt with its
+report name and, when it had denials, `denied N:` and the first three, the
+checks with their log names, the findings with their text and, for a paused
+run, `latest_report` (the pending role and round's newest report when it has
+one, else the last report of the run) under a `-- NAME --` rule, followed by
+the `next:` line again so a long report does not scroll the command away. With a NAME it
+prints that one report or check log, and an unknown name exits 1 with the
+names the run has. Both forms take `--json` (the `run.show` reply, or
+`{name,text}`). `ork status` is unchanged.
+
 *Proposed (S112):* `relay.answer` takes
 `{project,run,question,option?,text?,by,via,adj?}` and returns `{message}`.
 The daemon re-reads the ledger and refuses unregistered projects, missing,

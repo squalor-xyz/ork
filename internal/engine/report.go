@@ -22,11 +22,12 @@ var ErrNoReport = errors.New("no such report")
 
 const maxReportBytes = 64 << 10
 
-// ReadReport reads a regular .md file by its plain name in the run directory.
-// Links, paths, missing files and failed reads return ErrNoReport. Text is
-// sanitized for the terminal and cut at a line end when over 64 KiB.
+// ReadReport reads a regular .md file (a role report) or .log file (a check
+// log, S297) by its plain name in the run directory. Links, paths, missing
+// files and failed reads return ErrNoReport. Text is sanitized for the
+// terminal and cut at a line end when over 64 KiB.
 func ReadReport(runDir, name string) (string, error) {
-	if filepath.Base(name) != name || !strings.HasSuffix(name, ".md") {
+	if filepath.Base(name) != name || !(strings.HasSuffix(name, ".md") || strings.HasSuffix(name, ".log")) {
 		return "", ErrNoReport
 	}
 	entries, err := os.ReadDir(runDir)

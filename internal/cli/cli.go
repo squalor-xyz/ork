@@ -90,6 +90,8 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               retry a paused role or step, with an optional
                               note for the rerun; returns like answer
   ork status [--project P]    projects, needs-you counts and active relays
+  ork show RUN [NAME]         print why a run is paused, its reports, checks
+                              and findings; NAME prints one report or log
   ork projects list           list the registered projects
   ork projects add [PATH] [--name N]
                               register a project
@@ -274,6 +276,8 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		return a.ownerCommand(ctx, o, cmd, rest)
 	case "status":
 		return a.status(ctx, o, rest)
+	case "show":
+		return a.show(ctx, o, rest)
 	case "projects":
 		return a.projects(ctx, o, rest)
 	case "settings":

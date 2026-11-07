@@ -15417,7 +15417,7 @@
       "id": "S297",
       "title": "ork show RUN [NAME]: print the pause reason, a role report and the check logs, with --json",
       "short_title": "ork show RUN [NAME]: print the pause reason, a role report and the check logs, with --json",
-      "status": "open",
+      "status": "started",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -15434,9 +15434,26 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "5a7c3c70-b439-4c02-b3f2-55b30d062f5b",
+          "kind": "",
+          "text": "**2026-11-07** — Later (S307): a check log over 64 KiB is cut keeping the head, so the slicer check part goes first (spec asked for this cut); docs/orchestrator-parity.md row 7.7 still says only role reports are exposed (check logs are now served by run.report and ork show). ork show prints next: twice for a paused run when no report sits between (documented). S281 is retired into this slice. Human check after landing: a run paused on report shape, read its reason and report with ork show.",
+          "created_at": "2026-11-07T21:51:21Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
-      "claim": null,
+      "claim": {
+        "owner": "Jon Robbins",
+        "at": "2026-11-07T21:27:24Z"
+      },
       "fields": {
         "size": "M",
         "flags": [],
@@ -15453,7 +15470,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
