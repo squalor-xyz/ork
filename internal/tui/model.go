@@ -496,6 +496,9 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 				m.pane.answerDone, m.pane.answerNotice = true, msg.message
 				m.pane.answerStatus = m.actionStatus // the result replaced the status; tracking writes over it
 				m.refreshAnswerStatus()
+			case msg.action.verb == "retry" && msg.message != "":
+				// The run is not retried yet: say why, not "done" (S274).
+				m.actionStatus = msg.action.command() + ": " + msg.message
 			default:
 				m.actionStatus = msg.action.doneText()
 				if msg.message != "" {
@@ -1615,6 +1618,10 @@ func (m *Model) actionRefusal(verb string, r ovRow, ok bool) (status string, ref
 			return why, true
 		}
 	}
+	if r.resumeWaiting && (verb == "retry" || verb == "answer") {
+		// The owner has acted; the run starts when a slot frees (S274).
+		return "resume already waits for a slot; ork stop " + r.engineID + " cancels it", true
+	}
 	if verb == "retry" {
 		if r.state != "paused" {
 			return "retry needs paused; run is " + r.state, true
@@ -1748,7 +1755,11 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 		case "stop":
 			err = live.Stop(context.Background(), a.run)
 		case "retry":
-			err = live.Retry(context.Background(), a.run)
+			if r, ok := live.(retrier); ok {
+				message, err = r.RetryAction(context.Background(), a.run)
+			} else {
+				err = live.Retry(context.Background(), a.run)
+			}
 		case "fix", "check":
 			actor, ok := live.(cardActor)
 			switch {

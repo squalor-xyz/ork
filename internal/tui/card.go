@@ -651,6 +651,15 @@ func (a runAction) pendingText() string {
 	return a.command() + ": pending"
 }
 
+// retrier is the part of the daemon connection that retries a paused run and
+// returns the reply's notice: the resume waits for a slot (S274). A test double
+// may not have it; the call then goes through Retry.
+type retrier interface {
+	RetryAction(ctx context.Context, run string) (string, error)
+}
+
+var _ retrier = (*Daemon)(nil)
+
 // approver is the part of the daemon connection that approves and returns the
 // run record the reply carries. A test double may not have it.
 type approver interface {

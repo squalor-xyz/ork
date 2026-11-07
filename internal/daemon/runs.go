@@ -105,6 +105,8 @@ type managedRun struct {
 	done           chan struct{}
 	result         *runResult
 	busy           bool
+	filing         bool          // an owner answer is being filed in adj for a resume that waits; no other owner action starts (S274)
+	filed          chan struct{} // closed when that filing ends; a stop waits on it
 	stopping       bool
 	stop           *stopCall // the owner stop in flight, which later stops join
 }
@@ -555,7 +557,8 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 		}
 	}
 	// Admission is here and only here: owner actions never reach startRun, so
-	// approve, answer, retry and stop bypass the caps (adj 122).
+	// approve and stop bypass the caps (adj 122). An answer or retry of a
+	// paused run waits for a slot instead (ownerRunReply, adj 177).
 	f, err := d.loadRunRegistryLocked()
 	if err != nil {
 		return runrec.Record{}, err
@@ -801,9 +804,17 @@ func (d *Daemon) loadRunRegistryLocked() (*registry.File, error) {
 
 // hasRoomLocked reports whether one more busy run fits under the global cap
 // and the project's cap. Zero reads as unset: the global cap then defaults
-// and a project has no cap (adj 57, adj 172). Only busy runs hold a slot (adj
-// 122). The caller holds the manager lock.
+// and a project has no cap (adj 57, adj 172). Only busy runs hold a slot, so a
+// paused run holds none (adj 122, adj 177). The caller holds the manager lock.
 func (d *Daemon) hasRoomLocked(f *registry.File, project string) bool {
+	return d.blockedByLocked(f, project) == ""
+}
+
+// blockedByLocked names the cap that leaves no room for one more busy run of
+// the project, "project cap N" or "global cap N", or is empty when there is
+// room. The project cap is named first when both hold. The caller holds the
+// manager lock.
+func (d *Daemon) blockedByLocked(f *registry.File, project string) string {
 	global := f.GlobalCap
 	if global == 0 {
 		global = defaultGlobalCap
@@ -822,15 +833,24 @@ func (d *Daemon) hasRoomLocked(f *registry.File, project string) bool {
 			inProject++
 		}
 	}
-	return total < global && (projectCap == 0 || inProject < projectCap)
+	if projectCap != 0 && inProject >= projectCap {
+		return fmt.Sprintf("project cap %d", projectCap)
+	}
+	if total >= global {
+		return fmt.Sprintf("global cap %d", global)
+	}
+	return ""
 }
 
-// startQueuedLocked starts the oldest queued run whose caps have room, and
-// repeats until none fits. The caller holds the manager lock.
+// startQueuedLocked first starts the paused runs whose answer or retry waits
+// for a slot, oldest request first, then the oldest queued run whose caps have
+// room, and repeats until none fits (adj 177: a waiting resume goes before any
+// queued run). The caller holds the manager lock.
 func (d *Daemon) startQueuedLocked(f *registry.File) {
 	if d.runs.closed || f == nil {
 		return
 	}
+	d.startResumesLocked(f)
 	type waiting struct {
 		r   *managedRun
 		rec runrec.Record
@@ -867,6 +887,93 @@ func (d *Daemon) startQueuedLocked(f *registry.File) {
 		}
 		d.launchRun(w.r, w.r.engine.Run)
 	}
+}
+
+// startResumesLocked starts the waiting resumes that fit, oldest request first.
+// A resume of a project that is no longer registered stays for the owner to
+// stop. The caller holds the manager lock.
+func (d *Daemon) startResumesLocked(f *registry.File) {
+	type waiting struct {
+		r   *managedRun
+		rec runrec.Record
+	}
+	var resumes []waiting
+	for _, r := range d.runs.runs {
+		if r.busy || r.stopping || r.engine == nil {
+			continue
+		}
+		if rec := r.engine.Snapshot(); rec.State == runrec.StatePaused && rec.Resume != nil && d.runs.waveStops[rec.Wave] == 0 {
+			resumes = append(resumes, waiting{r, rec})
+		}
+	}
+	sort.Slice(resumes, func(i, j int) bool {
+		a, b := resumes[i].rec, resumes[j].rec
+		if !a.Resume.At.Equal(b.Resume.At) {
+			return a.Resume.At.Before(b.Resume.At)
+		}
+		return a.ID < b.ID
+	})
+	for _, w := range resumes {
+		if _, ok := find(f, w.rec.Project); !ok || !d.hasRoomLocked(f, w.rec.Project) {
+			continue
+		}
+		// The request leaves the record first: a start the engine refuses is
+		// not tried again at the next free slot.
+		if err := w.r.engine.ClearResume(); err != nil {
+			fmt.Fprintf(os.Stderr, "start waiting resume %s: %v\n", w.rec.ID, err)
+			continue
+		}
+		req := w.rec.Resume
+		d.launchRun(w.r, d.resumeJob(w.r, req.Method, RunAction{Run: w.rec.ID, Text: req.Text, Rounds: req.Rounds, Adj: req.Adj, By: req.By}, nil))
+	}
+}
+
+// fileWaitingAnswerLocked files the owner's answer of a run in adj for a resume
+// that waits for a slot. The adj calls run outside the manager lock, so
+// r.filing keeps every other owner action of the run out, and a stop waits for
+// r.filed. It returns with the lock held and r.filing cleared, whatever the
+// outcome. Anything that touched the run meanwhile (a stop or job in flight, a
+// closed manager, another state) is a change: the caller stores no resume and
+// starts no job (S274).
+func (d *Daemon) fileWaitingAnswerLocked(ctx context.Context, r *managedRun, p RunAction) (string, error) {
+	r.filing, r.filed = true, make(chan struct{})
+	d.runs.mu.Unlock()
+	notice, err := r.engine.FileAnswer(ctx, p.Text, p.By)
+	d.runs.mu.Lock()
+	r.filing = false
+	close(r.filed)
+	if err != nil {
+		return "", err
+	}
+	if d.runs.closed {
+		return "", errors.New("run manager is closed")
+	}
+	rec := r.engine.Snapshot()
+	if r.busy || r.stopping || r.stop != nil || rec.State != runrec.StatePaused || rec.Pending == nil || rec.Pending.Kind != runrec.PendingQuestion || rec.Resume != nil {
+		return "", fmt.Errorf("run %s changed while its answer was filed in adj; check ork status", p.Run)
+	}
+	return notice, nil
+}
+
+// resumeJob is the job of an answer or a retry of a paused run. Both the owner
+// action and a waiting resume that starts later run it. A filed adj notice
+// goes to message when it is not nil.
+func (d *Daemon) resumeJob(r *managedRun, method string, p RunAction, message *string) func(context.Context) error {
+	if method == MethodRunAnswer || method == runrec.ResumeAnswer {
+		return func(ctx context.Context) error {
+			if p.Adj {
+				notice, err := r.engine.FileAnswer(ctx, p.Text, p.By)
+				if err != nil {
+					return err
+				}
+				if message != nil {
+					*message = notice
+				}
+			}
+			return r.engine.Answer(ctx, p.Text)
+		}
+	}
+	return func(ctx context.Context) error { return r.engine.RetryNote(ctx, p.Text, p.Rounds) }
 }
 
 // launchRun starts a job with the manager lock held. When the job ends it
@@ -912,6 +1019,9 @@ func (d *Daemon) launchRun(r *managedRun, fn func(context.Context) error) {
 	}()
 }
 
+// ResumeWaitNote is the owner's notice when an answer or retry waits for a slot.
+const ResumeWaitNote = "resume waits for a slot; it starts before queued runs"
+
 // RunReply adds a proposed transient notice to the usual run record reply.
 type RunReply struct {
 	runrec.Record
@@ -951,6 +1061,22 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		}
 		return RunReply{Record: run.Snapshot()}, failure
 	}
+	// A stop waits for an answer that is being filed in adj, then stops the run:
+	// it must not start a job beside the filing (S274).
+	for method == MethodRunStop && r.filing {
+		filed := r.filed
+		d.runs.mu.Unlock()
+		select {
+		case <-filed:
+		case <-ctx.Done():
+			return RunReply{}, ctx.Err()
+		}
+		d.runs.mu.Lock()
+		if d.runs.closed {
+			d.runs.mu.Unlock()
+			return RunReply{}, errors.New("run manager is closed")
+		}
+	}
 	// A stop that arrives while another stop is in flight joins it.
 	if method == MethodRunStop && r.stop != nil && (r.busy || r.stopping) {
 		rec, err := d.joinStop(ctx, r.stop)
@@ -960,7 +1086,7 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		d.runs.mu.Unlock()
 		return RunReply{}, fmt.Errorf("run %s is stopping", p.Run)
 	}
-	if r.busy && method != MethodRunStop {
+	if (r.busy || r.filing) && method != MethodRunStop {
 		d.runs.mu.Unlock()
 		if method == MethodRunRetry {
 			return RunReply{}, fmt.Errorf("run %s is busy; use ork stop %s to stop it", p.Run, p.Run)
@@ -987,8 +1113,15 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		}
 	}
 	r.stopping = false
+	// A resume that waits for a slot blocks a second answer or retry of either
+	// kind: the owner hears that one waits, not that the pause has another kind.
+	if (method == MethodRunAnswer || method == MethodRunRetry) && r.engine.Snapshot().Resume != nil {
+		d.runs.mu.Unlock()
+		return RunReply{}, fmt.Errorf("run %s already has a resume waiting; use ork stop %s", p.Run, p.Run)
+	}
 	var fn func(context.Context) error
 	var message string
+	var resume *runrec.ResumeRequest
 	switch method {
 	case MethodRunAnswer:
 		rec := r.engine.Snapshot()
@@ -1004,16 +1137,8 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 			d.runs.mu.Unlock()
 			return RunReply{}, errors.New("ADJ_DECIDED_BY is unset; set it in the caller before filing an answer in adj")
 		}
-		fn = func(ctx context.Context) error {
-			if p.Adj {
-				var err error
-				message, err = r.engine.FileAnswer(ctx, p.Text, p.By)
-				if err != nil {
-					return err
-				}
-			}
-			return r.engine.Answer(ctx, p.Text)
-		}
+		fn = d.resumeJob(r, method, p, &message)
+		resume = &runrec.ResumeRequest{Method: runrec.ResumeAnswer, Text: p.Text, Adj: p.Adj, By: p.By}
 	case MethodRunRetry:
 		rec := r.engine.Snapshot()
 		if rec.State != runrec.StatePaused || rec.Pending == nil {
@@ -1024,7 +1149,8 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 			d.runs.mu.Unlock()
 			return RunReply{}, fmt.Errorf("run %s waits for an answer; use ork answer %s TEXT or ork stop %s", p.Run, p.Run, p.Run)
 		}
-		fn = func(ctx context.Context) error { return r.engine.RetryNote(ctx, p.Text, p.Rounds) }
+		fn = d.resumeJob(r, method, p, nil)
+		resume = &runrec.ResumeRequest{Method: runrec.ResumeRetry, Text: p.Text, Rounds: p.Rounds}
 	case MethodRunApprove:
 		fn = r.engine.Approve
 	case MethodRunFix:
@@ -1046,6 +1172,49 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 	default:
 		d.runs.mu.Unlock()
 		return RunReply{}, errors.New("unknown owner action")
+	}
+	// A paused run holds no slot, so its answer or retry needs one (adj 177). With
+	// none free the request is kept in the record, the owner is told at once, and
+	// the run starts ahead of queued runs when a slot frees (startResumesLocked).
+	if resume != nil {
+		f, err := d.loadRunRegistryLocked()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "resume %s: %v\n", p.Run, err)
+		}
+		project := r.engine.Snapshot().Project
+		waits := f != nil && !d.hasRoomLocked(f, project)
+		if waits && resume.Adj && r.engine.Snapshot().Pending.Key != "" {
+			// The answer goes to adj now; only the engine resume waits.
+			notice, err := d.fileWaitingAnswerLocked(ctx, r, p)
+			if err != nil {
+				d.runs.mu.Unlock()
+				return RunReply{}, err
+			}
+			// Filed: neither the waiting resume nor a start files it again.
+			message, resume.Adj = notice, false
+			fn = d.resumeJob(r, method, RunAction{Run: p.Run, Text: p.Text}, nil)
+			if f, err = d.loadRunRegistryLocked(); err != nil {
+				fmt.Fprintf(os.Stderr, "resume %s: %v\n", p.Run, err)
+			}
+			waits = f != nil && !d.hasRoomLocked(f, project)
+		}
+		if waits {
+			resume.At = time.Now()
+			err := r.engine.SetResume(*resume)
+			rec := r.engine.Snapshot()
+			d.runs.mu.Unlock()
+			if engine.IsRefusal(err) {
+				err = &ipc.Error{Code: CodeRefused, Message: err.Error()}
+			}
+			if err != nil {
+				return RunReply{}, err
+			}
+			note := ResumeWaitNote
+			if message != "" {
+				note = message + "; " + note
+			}
+			return RunReply{Record: rec, Message: note}, nil
+		}
 	}
 	// A caller that asks not to wait is answered once the engine has applied the
 	// action and the run has left its pause; the job goes on under the manager's
@@ -1207,7 +1376,7 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 		}
 		return d.findingAction(ctx, p, true)
 	}
-	if method == MethodRunAnswer {
+	if method == MethodRunAnswer || method == MethodRunRetry {
 		return d.ownerRunReply(ctx, method, p)
 	}
 	if method == MethodRunFile {
@@ -1327,6 +1496,16 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		case runrec.StateAwaitingApproval:
 			wait = "owner approval"
 		}
+		if rec.State == runrec.StatePaused && rec.Resume != nil {
+			// The owner has answered or retried; the run waits for a slot (adj 177).
+			wait = "resume waits for a slot"
+			if f, _ := d.loadRunRegistryLocked(); f != nil {
+				if why := d.blockedByLocked(f, rec.Project); why != "" {
+					wait += " under " + why
+				}
+			}
+			wait += "; next: ork stop " + rec.ID
+		}
 		var denials []string
 		denialCounts := map[string]int{}
 		shapeRetry := rec.AutomaticShapeRetry() != nil
@@ -1387,7 +1566,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
 			vendorWait = m.engine.VendorWait()
 		}
-		runs = append(runs, EngineRun{VendorWait: vendorWait, StopAfter: rec.StopAfter, Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Working: working, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), LandFixes: rec.LandFixes, Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), WorktreeGone: rec.State == runrec.StateCommitted && !rec.Cleaned() && worktreeGone(rec), State: rec.State, ShapeRetry: shapeRetry, Wait: wait, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
+		runs = append(runs, EngineRun{VendorWait: vendorWait, StopAfter: rec.StopAfter, Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Working: working, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), LandFixes: rec.LandFixes, Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), WorktreeGone: rec.State == runrec.StateCommitted && !rec.Cleaned() && worktreeGone(rec), State: rec.State, ShapeRetry: shapeRetry, Wait: wait, ResumeWaiting: rec.State == runrec.StatePaused && rec.Resume != nil, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
 	}
 	return runs
 }

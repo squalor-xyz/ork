@@ -1,0 +1,30 @@
+[1mork[m [2mdev[m                    │ [1mOverview (Running)[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1;7m> Running                2 [m│[2m────────────────────────────────────────────────────────────────────────[m
+[2m0[m Needs you              3 │[1mRunning 2[m
+[2m1[m slicer                  *│   slicer      [1mS110[m  [..~~..]  [2mheard 4m[m  implementer>[reviewer]>gate
+[2m2[m adjudicate               │[1;7m   slicer      S42   [......]  wait 20m  implementer>reviewer>gate      [m
+[2m3[m DataBall                 │  [2m~ pending [m  adjudicate  waiting for the first reply
+[2m4[m agents                   │  [2m~ pending [m  DataBall    waiting for the first reply
+                           │  [2m~ pending [m  agents      waiting for the first reply
+                           │
+                           │[1mRecent[m
+                           │  [2mnone[m
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │  run-2  S42  paused  20m
+                           │  resume waits for a slot under project cap 1; next: ork stop run-2
+                           │  [......]  waiting since 16:22  implementer>reviewer>gate
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ enter [2mopen[m; space [2mexpand[m; E [2mexpand all[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
+                           │ 4 projects | refreshed 16:42:07 | pending 3

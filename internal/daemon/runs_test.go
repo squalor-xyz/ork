@@ -1251,12 +1251,14 @@ type waveRig struct {
 	started chan string // the worktree of each role that began
 	free    chan struct{}
 	fake    *clitest.Fake
+	briefs  sync.Map // the latest brief of each role, by worktree name
 }
 
 func newWaveRig(t *testing.T, global, projectCap int) *waveRig {
 	t.Helper()
 	rig := &waveRig{started: make(chan string, 32), free: make(chan struct{}, 32)}
 	d, store, p := runDaemon(t, func(ctx context.Context, r engine.Request) (engine.Result, error) {
+		rig.briefs.Store(filepath.Base(r.Worktree), r.Brief)
 		rig.started <- filepath.Base(r.Worktree)
 		select {
 		case <-rig.free:
@@ -1600,39 +1602,352 @@ func TestStopQueuedRunMakesNoWrites(t *testing.T) {
 	}
 }
 
-func TestOwnerActionsBypassTheCap(t *testing.T) {
-	w := newWaveRig(t, 1, 0)
-	// A paused run (retry), a paused question (answer), an awaiting-approval run.
-	mk := func(id, item, state string, pending *runrec.Pending) {
-		_, err := w.store.Create(runrec.Record{ID: id, Project: "p", Item: item, State: state, Pending: pending,
-			Worktree: filepath.Join(w.p.Path, ".worktrees", item), Lineup: map[string][]runrec.LineupEntry{
-				engine.RoleImplementer: {{Vendor: "claude", Model: "sonnet"}}, engine.RoleReviewer: {{Vendor: "claude", Model: "opus"}}}})
-		if err != nil {
-			t.Fatal(err)
-		}
+// mkPaused stores a paused run of project p, as a restart would find it.
+func (w *waveRig) mkPaused(t *testing.T, id, item string, pending *runrec.Pending, resume *runrec.ResumeRequest) {
+	t.Helper()
+	_, err := w.store.Create(runrec.Record{ID: id, Project: "p", Item: item, State: runrec.StatePaused, Pending: pending, Resume: resume,
+		Worktree: filepath.Join(w.p.Path, ".worktrees", item), Lineup: map[string][]runrec.LineupEntry{
+			engine.RoleImplementer: {{Vendor: "claude", Model: "sonnet"}}, engine.RoleReviewer: {{Vendor: "claude", Model: "opus"}}}})
+	if err != nil {
+		t.Fatal(err)
 	}
-	mk("retry", "R1", runrec.StatePaused, &runrec.Pending{Kind: runrec.PendingError, State: runrec.StateImplement, Role: engine.RoleImplementer, Reason: "x"})
-	mk("answer", "A1", runrec.StatePaused, &runrec.Pending{Kind: runrec.PendingQuestion, State: runrec.StateImplement, Role: engine.RoleImplementer, Reason: "q", Question: "which?"})
-	mk("approve", "P1", runrec.StateAwaitingApproval, nil)
+}
+
+func errorPause() *runrec.Pending {
+	return &runrec.Pending{Kind: runrec.PendingError, State: runrec.StateImplement, Role: engine.RoleImplementer, Reason: "x"}
+}
+
+func questionPause() *runrec.Pending {
+	return &runrec.Pending{Kind: runrec.PendingQuestion, State: runrec.StateImplement, Role: engine.RoleImplementer, Reason: "q", Question: "which?"}
+}
+
+// retryNoWait asks for a retry the way the CLI does: the reply comes once the
+// action is applied, or at once when the resume waits.
+func (w *waveRig) retryNoWait(t *testing.T, run string) RunReply {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	reply, err := w.d.ownerRunReply(ctx, MethodRunRetry, RunAction{Run: run, NoWait: true})
+	if err != nil {
+		t.Fatalf("retry %s: %v", run, err)
+	}
+	return reply
+}
+
+func (w *waveRig) record(t *testing.T, id string) runrec.Record {
+	t.Helper()
+	r, err := w.store.Open(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return r.Snapshot()
+}
+
+func TestRetryOfAPausedRunWaitsForTheProjectSlot(t *testing.T) {
+	w := newWaveRig(t, 0, 1)
+	w.mkPaused(t, "s1", "S1", errorPause(), nil)
 	if err := w.d.recoverRuns(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	w.start(t, "S1") // fills the global cap of 1
+	w.start(t, "S2") // the paused run holds no slot, so S2 starts
+	w.expectStart(t, "S2")
+	reply := w.retryNoWait(t, "s1")
+	if reply.State != runrec.StatePaused || reply.Resume == nil || reply.Resume.Method != runrec.ResumeRetry {
+		t.Fatalf("reply: state %q resume %+v, want paused with a retry waiting", reply.State, reply.Resume)
+	}
+	if !strings.Contains(reply.Message, "waits for a slot") {
+		t.Errorf("reply message %q", reply.Message)
+	}
+	w.expectNoStart(t)
+	if got := w.record(t, "s1"); got.State != runrec.StatePaused || got.Resume == nil {
+		t.Fatalf("stored record: state %q resume %+v", got.State, got.Resume)
+	}
+	w.free <- struct{}{} // S2 ends
 	w.expectStart(t, "S1")
+	waitFor(t, "resume cleared", func() bool { return w.record(t, "s1").Resume == nil })
+}
+
+func TestAnswerOfAPausedRunWaitsForTheGlobalSlot(t *testing.T) {
+	w := newWaveRig(t, 1, 0)
+	q := w.p
+	q.Name = "q"
+	if err := registry.Save(w.d.cfg.RegistryPath, &registry.File{Version: registry.Version, GlobalCap: 1, Projects: []registry.Project{w.p, q}}); err != nil {
+		t.Fatal(err)
+	}
+	w.mkPaused(t, "a1", "A1", questionPause(), nil)
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	request(t, w.d, "run.start", `{"project":"q","item":"B1"}`)
+	w.expectStart(t, "B1")
+	b := request(t, w.d, "run.answer", `{"run":"a1","text":"use stdlib","no_wait":true}`)
+	var reply RunReply
+	if err := json.Unmarshal(b, &reply); err != nil {
+		t.Fatal(err)
+	}
+	if reply.State != runrec.StatePaused || reply.Resume == nil || reply.Resume.Method != runrec.ResumeAnswer || reply.Resume.Text != "use stdlib" {
+		t.Fatalf("reply: %s", b)
+	}
+	if !strings.Contains(reply.Message, "waits for a slot") {
+		t.Errorf("reply message %q", reply.Message)
+	}
+	w.expectNoStart(t)
+	w.free <- struct{}{} // B1 ends
+	w.expectStart(t, "A1")
+	brief, _ := w.briefs.Load("A1")
+	if got, _ := brief.(string); !strings.Contains(got, "use stdlib") {
+		t.Errorf("A1 brief lacks the stored answer: %q", got)
+	}
+}
+
+func TestAWaitingResumeGoesBeforeTheOldestQueuedRun(t *testing.T) {
+	w := newWaveRig(t, 0, 1)
+	w.mkPaused(t, "s1", "S1", errorPause(), nil)
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	w.start(t, "S2")
+	w.expectStart(t, "S2")
+	s3 := w.start(t, "S3")
+	if s3.State != runrec.StateQueued {
+		t.Fatalf("S3 state %q, want queued", s3.State)
+	}
+	w.retryNoWait(t, "s1")
+	w.expectNoStart(t)   // the resume waits for S2's slot
+	w.free <- struct{}{} // S2 ends
+	w.expectStart(t, "S1")
+	w.expectNoStart(t)
+	waitState(t, w.store, s3.ID, runrec.StateQueued)
+	w.free <- struct{}{} // S1 ends
+	w.expectStart(t, "S3")
+}
+
+func TestRetryWithRoomStartsAtOnce(t *testing.T) {
+	w := newWaveRig(t, 0, 1)
+	w.mkPaused(t, "s1", "S1", errorPause(), nil)
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	reply := w.retryNoWait(t, "s1")
+	w.expectStart(t, "S1")
+	if reply.Resume != nil || reply.Message != "" {
+		t.Errorf("a resume with room waited: resume %+v message %q", reply.Resume, reply.Message)
+	}
+}
+
+func TestApproveStillBypassesTheCaps(t *testing.T) {
+	w := newWaveRig(t, 0, 1)
+	if _, err := w.store.Create(runrec.Record{ID: "p1", Project: "p", Item: "P1", State: runrec.StateAwaitingApproval,
+		Worktree: filepath.Join(w.p.Path, ".worktrees", "P1"), Lineup: map[string][]runrec.LineupEntry{
+			engine.RoleImplementer: {{Vendor: "claude", Model: "sonnet"}}, engine.RoleReviewer: {{Vendor: "claude", Model: "opus"}}}}); err != nil {
+		t.Fatal(err)
+	}
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	w.start(t, "S2")
+	w.expectStart(t, "S2") // fills the project cap of 1
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	go w.d.ownerRun(ctx, MethodRunRetry, RunAction{Run: "retry"})
-	w.expectStart(t, "R1")
-	go w.d.ownerRun(ctx, MethodRunAnswer, RunAction{Run: "answer", Text: "stdlib"})
-	w.expectStart(t, "A1")
-	for _, id := range []string{"retry", "answer"} {
-		r, _ := w.store.Open(id)
-		if r.Snapshot().State == runrec.StateQueued {
-			t.Errorf("%s was queued", id)
-		}
+	go w.d.ownerRun(ctx, MethodRunApprove, RunAction{Run: "p1"})
+	w.expectStart(t, "P1") // the finish step runs a role at once, over the cap
+}
+
+func TestAWaitingResumeSurvivesARestart(t *testing.T) {
+	w := newWaveRig(t, 0, 1)
+	resume := &runrec.ResumeRequest{Method: runrec.ResumeAnswer, Text: "use stdlib", At: time.Now()}
+	w.mkPaused(t, "s1", "S1", questionPause(), resume)
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
 	}
-	go w.d.ownerRun(ctx, MethodRunApprove, RunAction{Run: "approve"})
-	w.expectStart(t, "P1") // the finish step runs a role at once
+	w.expectStart(t, "S1") // a free slot starts the stored resume
+	brief, _ := w.briefs.Load("S1")
+	if got, _ := brief.(string); !strings.Contains(got, "use stdlib") {
+		t.Errorf("S1 brief lacks the stored answer: %q", got)
+	}
+	waitFor(t, "resume cleared", func() bool { return w.record(t, "s1").Resume == nil })
+}
+
+func TestARestartStartsTheOldestWaitingResumeFirst(t *testing.T) {
+	w := newWaveRig(t, 0, 1)
+	at := time.Now()
+	// The ids sort against the request times, so only the times can order them.
+	w.mkPaused(t, "a-late", "S2", errorPause(), &runrec.ResumeRequest{Method: runrec.ResumeRetry, At: at})
+	w.mkPaused(t, "b-early", "S1", errorPause(), &runrec.ResumeRequest{Method: runrec.ResumeRetry, At: at.Add(-time.Minute)})
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	w.expectStart(t, "S1")
+	w.expectNoStart(t) // the project cap of 1 holds the later resume
+	if got := w.record(t, "a-late"); got.State != runrec.StatePaused || got.Resume == nil {
+		t.Fatalf("later resume: state %q resume %+v", got.State, got.Resume)
+	}
+	w.free <- struct{}{}
+	w.expectStart(t, "S2")
+}
+
+func TestAWaitingRetryKeepsItsRoundGrant(t *testing.T) {
+	w := newWaveRig(t, 0, 1)
+	w.mkPaused(t, "s1", "S1", &runrec.Pending{Kind: runrec.PendingRounds, State: runrec.StateImplement, Role: engine.RoleImplementer, Round: 1, Reason: "rounds"}, nil)
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	w.start(t, "S2")
+	w.expectStart(t, "S2")
+	reply, err := w.d.ownerRunReply(context.Background(), MethodRunRetry, RunAction{Run: "s1", Rounds: 3, NoWait: true})
+	if err != nil || reply.Resume == nil || reply.Resume.Rounds != 3 {
+		t.Fatalf("retry --rounds 3: resume %+v, err %v", reply.Resume, err)
+	}
+	w.free <- struct{}{} // S2 ends
+	w.expectStart(t, "S1")
+	if got := w.record(t, "s1"); got.RoundLimit != 3 {
+		t.Errorf("round limit %d, want the stored grant of 3", got.RoundLimit)
+	}
+}
+
+func TestStopClearsAWaitingResume(t *testing.T) {
+	w := newWaveRig(t, 0, 1)
+	w.mkPaused(t, "s1", "S1", errorPause(), nil)
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	w.start(t, "S2")
+	w.expectStart(t, "S2")
+	w.start(t, "S3")
+	w.retryNoWait(t, "s1")
+	w.expectNoStart(t)
+	b := request(t, w.d, "run.stop", `{"run":"s1"}`)
+	var stopped runrec.Record
+	if err := json.Unmarshal(b, &stopped); err != nil {
+		t.Fatal(err)
+	}
+	if stopped.State != runrec.StateStopped || stopped.Resume != nil {
+		t.Fatalf("stopped reply: state %q resume %+v", stopped.State, stopped.Resume)
+	}
+	if got := w.record(t, "s1"); got.State != runrec.StateStopped || got.Resume != nil {
+		t.Fatalf("stored record: state %q resume %+v", got.State, got.Resume)
+	}
+	w.free <- struct{}{} // S2 ends
+	w.expectStart(t, "S3")
+	w.expectNoStart(t)
+}
+
+func TestASecondResumeIsRefusedWhileOneWaits(t *testing.T) {
+	w := newWaveRig(t, 0, 1)
+	w.mkPaused(t, "s1", "S1", errorPause(), nil)
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	w.start(t, "S2")
+	w.expectStart(t, "S2")
+	w.retryNoWait(t, "s1")
+	_, err := w.d.ownerRunReply(context.Background(), MethodRunRetry, RunAction{Run: "s1", NoWait: true})
+	if err == nil || !strings.Contains(err.Error(), "already has a resume waiting; use ork stop s1") {
+		t.Fatalf("second retry error: %v", err)
+	}
+}
+
+// A second answer or retry is refused as a waiting resume whatever the kind of
+// the first one or of the pause.
+func TestACrossKindResumeIsRefusedWhileOneWaits(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		pause   *runrec.Pending
+		first   string
+		second  string
+		secondA RunAction
+	}{
+		{"answer while a retry waits", errorPause(), MethodRunRetry, MethodRunAnswer, RunAction{Run: "s1", Text: "use stdlib", NoWait: true}},
+		{"retry while an answer waits", questionPause(), MethodRunAnswer, MethodRunRetry, RunAction{Run: "s1", NoWait: true}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			w := newWaveRig(t, 0, 1)
+			w.mkPaused(t, "s1", "S1", tc.pause, nil)
+			if err := w.d.recoverRuns(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			w.start(t, "S2")
+			w.expectStart(t, "S2")
+			if _, err := w.d.ownerRunReply(context.Background(), tc.first, RunAction{Run: "s1", Text: "use stdlib", NoWait: true}); err != nil {
+				t.Fatal(err)
+			}
+			_, err := w.d.ownerRunReply(context.Background(), tc.second, tc.secondA)
+			if err == nil || err.Error() != "run s1 already has a resume waiting; use ork stop s1" {
+				t.Fatalf("second %s: %v", tc.second, err)
+			}
+		})
+	}
+}
+
+// The retry reply carries the wait note, as the answer reply does, so a client
+// can show it (S274).
+func TestRetryReplyCarriesTheWaitNote(t *testing.T) {
+	w := newWaveRig(t, 0, 1)
+	w.mkPaused(t, "s1", "S1", errorPause(), nil)
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	w.start(t, "S2")
+	w.expectStart(t, "S2")
+	var reply RunReply
+	if err := json.Unmarshal(request(t, w.d, "run.retry", `{"run":"s1","no_wait":true}`), &reply); err != nil {
+		t.Fatal(err)
+	}
+	if reply.Message != ResumeWaitNote || reply.Resume == nil {
+		t.Fatalf("retry reply: message %q resume %+v", reply.Message, reply.Resume)
+	}
+}
+
+func TestARetryThatTheEngineWouldRefuseDoesNotWait(t *testing.T) {
+	w := newWaveRig(t, 0, 1)
+	w.mkPaused(t, "s1", "S1", errorPause(), nil)
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	w.start(t, "S2")
+	w.expectStart(t, "S2")
+	// Rounds can only be granted at a rounds pause; the owner hears that now.
+	_, err := w.d.ownerRunReply(context.Background(), MethodRunRetry, RunAction{Run: "s1", Rounds: 3, NoWait: true})
+	if err == nil || !strings.Contains(err.Error(), "rounds can only be granted at a rounds pause") {
+		t.Fatalf("retry --rounds error: %v", err)
+	}
+	if got := w.record(t, "s1"); got.Resume != nil {
+		t.Errorf("a refused retry stored %+v", got.Resume)
+	}
+}
+
+func TestStatusNamesAWaitingResume(t *testing.T) {
+	for _, tc := range []struct {
+		name            string
+		global, project int
+		want            string
+	}{{"project", 0, 1, "resume waits for a slot under project cap 1; next: ork stop s1"}, {"global", 1, 0, "resume waits for a slot under global cap 1; next: ork stop s1"}} {
+		t.Run(tc.name, func(t *testing.T) {
+			w := newWaveRig(t, tc.global, tc.project)
+			w.mkPaused(t, "s1", "S1", errorPause(), nil)
+			if err := w.d.recoverRuns(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			w.start(t, "S2")
+			w.expectStart(t, "S2")
+			w.retryNoWait(t, "s1")
+			var found bool
+			for _, run := range w.d.engineRuns("p") {
+				if run.ID == "s1" {
+					found = true
+					if run.Wait != tc.want {
+						t.Errorf("wait %q, want %q", run.Wait, tc.want)
+					}
+					if !run.ResumeWaiting {
+						t.Error("status does not mark the run as resume waiting")
+					}
+				}
+			}
+			if !found {
+				t.Fatal("run s1 is not in status")
+			}
+		})
+	}
 }
 
 func TestEngineRunRolesWire(t *testing.T) {

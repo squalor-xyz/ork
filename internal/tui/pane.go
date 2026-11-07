@@ -12,6 +12,7 @@ import (
 	"charm.land/bubbles/v2/key"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -91,7 +92,7 @@ func (m *Model) paneRow() (ovRow, string, bool) {
 				if !showsWait(r) {
 					reason = ""
 				}
-				return ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, name: p.reg.Name, id: r.Item, state: r.State, pending: r.Pending}, reason, true
+				return ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, name: p.reg.Name, id: r.Item, state: r.State, pending: r.Pending, resumeWaiting: r.ResumeWaiting}, reason, true
 			}
 		}
 	}
@@ -157,7 +158,8 @@ func newestRunning(s source.Snapshot) (ovRow, string, bool) {
 		}
 	}
 	for _, r := range s.EngineRuns {
-		if r.Section(s.EngineRuns) == source.SectionRunning {
+		// A run whose resume waits for a slot is not running yet.
+		if r.Section(s.EngineRuns) == source.SectionRunning && !r.ResumeWaiting {
 			consider(ovRow{engineID: r.ID, name: s.Project.Name}, r.Item, r.CreatedAt)
 		}
 	}
@@ -211,7 +213,7 @@ func (m *Model) actionRow() (ovRow, bool) {
 
 func (m *Model) paneQuestion() bool {
 	r, _, ok := m.paneRow()
-	return ok && !r.unavailable && !m.pane.ledger && (m.pane.finding > 0 || (r.state == "paused" && r.pending == "question"))
+	return ok && !r.unavailable && !m.pane.ledger && (m.pane.finding > 0 || (r.state == "paused" && r.pending == "question" && !r.resumeWaiting))
 }
 
 // halfPage is the step of ctrl+d and ctrl+u in a pane that shows room lines
@@ -794,7 +796,9 @@ func (m *Model) refreshAnswerStatus() {
 		if r.ID != p.run {
 			continue
 		}
-		if p.answerState != "" && r.State != p.answerState || p.answerState == "" && r.State == "paused" && (r.Wait != p.answerWait || r.Key != p.answerKey) {
+		// A wait that reads "resume waits for a slot" is this answer waiting, not a
+		// new question (S274).
+		if p.answerState != "" && r.State != p.answerState || p.answerState == "" && r.State == "paused" && !r.ResumeWaiting && (r.Wait != p.answerWait || r.Key != p.answerKey) {
 			p.answered = false
 			write("")
 			return
@@ -814,8 +818,13 @@ func (m *Model) refreshAnswerStatus() {
 				}
 			}
 		}
-		if p.answerNotice != "" {
-			text += "; " + p.answerNotice
+		notice := p.answerNotice
+		if r.State != "paused" {
+			// The wait note is stale once the run has started.
+			notice = strings.TrimSuffix(strings.TrimSuffix(notice, daemon.ResumeWaitNote), "; ")
+		}
+		if notice != "" {
+			text += "; " + notice
 		}
 		write(text)
 		return

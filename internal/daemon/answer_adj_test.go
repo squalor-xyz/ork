@@ -5,8 +5,12 @@ package daemon
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -14,6 +18,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
+	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -373,5 +378,278 @@ func TestStructuredOptionFilesAdjTitleAndDecisionText(t *testing.T) {
 	calls := lastFake.CallsTo("adj")
 	if len(calls) != 3 || calls[1].Args[1] != "Which library?" || calls[2].Args[3] != "local: use stdlib" {
 		t.Fatalf("calls: %+v", calls)
+	}
+}
+
+// fullProjectRig is an adj-answer run (paused on a keyed question) in a project
+// whose one slot another run holds, so an answer waits for it (S274). free
+// ends the holder's job and frees the slot.
+func fullProjectRig(t *testing.T) (d *Daemon, store *runrec.Store, id string, free func()) {
+	t.Helper()
+	d, store, id = adjAnswerRun(t, `{"result":"not found"}`, false)
+	f, err := d.loadRegistry()
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, _ := find(f, "p")
+	p.Cap = 1
+	if err := registry.Save(d.registryPath(), &registry.File{Version: registry.Version, Projects: []registry.Project{p}}); err != nil {
+		t.Fatal(err)
+	}
+	// Another run of the project holds its one slot.
+	other, err := store.Create(runrec.Record{ID: "other", Project: "p", Item: "S9", State: runrec.StateImplement})
+	if err != nil {
+		t.Fatal(err)
+	}
+	release := make(chan struct{})
+	d.runs.mu.Lock()
+	holder := &managedRun{engine: engine.Load(d.runDeps(p), p, other)}
+	d.runs.runs["other"] = holder
+	d.launchRun(holder, func(context.Context) error { <-release; return nil })
+	d.runs.mu.Unlock()
+	var once sync.Once
+	free = func() { once.Do(func() { close(release) }) }
+	t.Cleanup(free)
+	return d, store, id, free
+}
+
+// gateAdj puts a wrapper in front of the fake adj that blocks every call until
+// open is called, so a test can hold FileAnswer in the middle of its adj
+// calls. started returns once the first call has begun.
+func gateAdj(t *testing.T, d *Daemon, store *runrec.Store, id string) (started func(), open func()) {
+	t.Helper()
+	dir := t.TempDir()
+	startedFile, openFile := filepath.Join(dir, "started"), filepath.Join(dir, "open")
+	script := fmt.Sprintf("#!/bin/sh\n: > %q\nwhile [ ! -e %q ]; do sleep 0.01; done\nexec %q \"$@\"\n", startedFile, openFile, lastFake.Bin("adj"))
+	wrapper := filepath.Join(dir, "adj")
+	if err := os.WriteFile(wrapper, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	d.runs.deps.Adj = adjcli.Client{Bin: wrapper}
+	// The run's engine took its deps when it started: load the paused run again.
+	f, err := d.loadRegistry()
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, _ := find(f, "p")
+	run, err := store.Open(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	d.runs.mu.Lock()
+	d.runs.runs[id].engine = engine.Load(d.runDeps(p), p, run)
+	d.runs.mu.Unlock()
+	var once sync.Once
+	open = func() {
+		once.Do(func() {
+			if err := os.WriteFile(openFile, nil, 0o644); err != nil {
+				t.Error(err)
+			}
+		})
+	}
+	t.Cleanup(open)
+	return func() {
+		t.Helper()
+		waitFor(t, "the adj filing to begin", func() bool { _, err := os.Stat(startedFile); return err == nil })
+	}, open
+}
+
+// answerAsync sends the adj answer of run id the way the CLI does and returns
+// the channel of its reply.
+func answerAsync(d *Daemon, id string) <-chan callResult {
+	b, _ := json.Marshal(RunAction{Run: id, Text: "use stdlib", Adj: true, By: "owner", NoWait: true})
+	return startCall(d, MethodRunAnswer, string(b))
+}
+
+func waitReply(t *testing.T, ch <-chan callResult, what string) callResult {
+	t.Helper()
+	select {
+	case res := <-ch:
+		return res
+	case <-time.After(5 * time.Second):
+		t.Fatalf("%s did not return", what)
+	}
+	return callResult{}
+}
+
+func stopAsync(d *Daemon, id string) <-chan callResult {
+	return startCall(d, MethodRunStop, fmt.Sprintf(`{"run":%q}`, id))
+}
+
+// An answer that waits for a slot is filed in adj at once; only the engine
+// resume waits. The start does not file it a second time (S274, adj 177).
+func TestAnswerThatWaitsFilesInAdjAtOnce(t *testing.T) {
+	d, store, id, free := fullProjectRig(t)
+	b, _ := json.Marshal(RunAction{Run: id, Text: "use stdlib", Adj: true, By: "owner", NoWait: true})
+	rep, err := callWithin(t, d, MethodRunAnswer, string(b), 2*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.State != runrec.StatePaused || rep.Resume == nil {
+		t.Fatalf("reply: state %q resume %+v, want paused with a resume waiting", rep.State, rep.Resume)
+	}
+	if rep.Resume.Adj {
+		t.Errorf("the stored resume would file in adj again: %+v", rep.Resume)
+	}
+	if !strings.Contains(rep.Message, "decided in adj as #42") || !strings.Contains(rep.Message, ResumeWaitNote) {
+		t.Errorf("reply message %q lacks the filing notice or the wait note", rep.Message)
+	}
+	if calls := lastFake.CallsTo("adj"); len(calls) != 3 || calls[2].Args[0] != "decide" {
+		t.Fatalf("adj calls at the reply: %+v", calls)
+	}
+	free() // the slot frees; the waiting resume starts
+	waitState(t, store, id, runrec.StateAwaitingApproval)
+	waitIdle(t, d, id)
+	if calls := lastFake.CallsTo("adj"); len(calls) != 3 {
+		t.Errorf("the start filed in adj again: %+v", calls)
+	}
+}
+
+// While the answer is in adj, no other owner action starts on the run. The
+// flag is set by the real path: the test holds FileAnswer open (S274).
+func TestNoOwnerActionStartsWhileAnAnswerIsBeingFiled(t *testing.T) {
+	d, store, id, _ := fullProjectRig(t)
+	started, open := gateAdj(t, d, store, id)
+	first := answerAsync(d, id)
+	started()
+	for name, ch := range map[string]<-chan callResult{
+		"second answer": answerAsync(d, id),
+		"retry":         startCall(d, MethodRunRetry, fmt.Sprintf(`{"run":%q,"no_wait":true}`, id)),
+	} {
+		if res := waitReply(t, ch, name); res.err == nil || !strings.Contains(res.err.Error(), "is busy") {
+			t.Errorf("%s while filing: %v", name, res.err)
+		}
+	}
+	open()
+	if res := waitReply(t, first, "the first answer"); res.err != nil || res.rep.Resume == nil {
+		t.Fatalf("first answer: %+v %v", res.rep, res.err)
+	}
+	if calls := lastFake.CallsTo("adj"); len(calls) != 3 {
+		t.Errorf("adj calls: %+v", calls)
+	}
+}
+
+// A stop that arrives while the answer is in adj waits for the filing, then
+// stops the run: no second job starts, the waiting resume is not stored after
+// the stop, and the stop's channel is closed once (S274).
+func TestStopDuringAdjFilingWaitsThenStopsTheRun(t *testing.T) {
+	d, store, id, free := fullProjectRig(t)
+	started, open := gateAdj(t, d, store, id)
+	first := answerAsync(d, id)
+	started()
+	stop := stopAsync(d, id)
+	select {
+	case res := <-stop:
+		t.Fatalf("the stop returned during the filing: %+v %v", res.rep, res.err)
+	case <-time.After(200 * time.Millisecond):
+	}
+	if busyNow(d, id) {
+		t.Fatal("a job started on the run while its answer was being filed")
+	}
+	open()
+	waitReply(t, first, "the answer")
+	res := waitReply(t, stop, "the stop")
+	if res.err != nil || res.rep.State != runrec.StateStopped || res.rep.Resume != nil {
+		t.Fatalf("stop: state %q resume %+v err %v", res.rep.State, res.rep.Resume, res.err)
+	}
+	if got, _ := store.Open(id); got.Snapshot().State != runrec.StateStopped || got.Snapshot().Resume != nil {
+		t.Fatalf("stored record: %+v", got.Snapshot())
+	}
+	// A freed slot must not start the stopped run. The holder's job end starts
+	// queued runs under the lock that clears its busy flag, so once it is idle
+	// that start has happened.
+	free()
+	waitIdle(t, d, "other")
+	waitIdle(t, d, id)
+	if got, _ := store.Open(id); got.Snapshot().State != runrec.StateStopped {
+		t.Fatalf("the run left stopped: %q", got.Snapshot().State)
+	}
+	if calls := lastFake.CallsTo("adj"); len(calls) != 3 {
+		t.Errorf("adj calls: %+v", calls)
+	}
+}
+
+// A slot that frees during the filing starts the answer at once. A stop that
+// waited for the filing then cancels that job and stops the run: one job at a
+// time, one close of its channel. Which of the two the answer's reply shows
+// depends on whether the job applied the answer before the stop cancelled it,
+// so the stop case accepts both and asserts what holds either way (S274).
+func TestSlotFreedDuringAdjFilingStartsTheAnswerOnce(t *testing.T) {
+	for _, withStop := range []bool{false, true} {
+		t.Run(fmt.Sprintf("stop-%v", withStop), func(t *testing.T) {
+			d, store, id, free := fullProjectRig(t)
+			started, open := gateAdj(t, d, store, id)
+			first := answerAsync(d, id)
+			started()
+			free()
+			waitIdle(t, d, "other")
+			var stop <-chan callResult
+			if withStop {
+				stop = stopAsync(d, id)
+			}
+			open()
+			res := waitReply(t, first, "the answer")
+			if res.rep.Resume != nil {
+				t.Fatalf("a resume was stored although a slot was free: %+v", res.rep.Resume)
+			}
+			if withStop {
+				// The stop cancels the job that the filer launched, so the answer
+				// returns its reply or the cancel; nothing else is acceptable.
+				if res.err != nil && !errors.Is(res.err, context.Canceled) && !strings.Contains(res.err.Error(), "context canceled") {
+					t.Fatalf("answer with a stop behind it: %v", res.err)
+				}
+				if st := waitReply(t, stop, "the stop"); st.err != nil || st.rep.State != runrec.StateStopped || st.rep.Resume != nil {
+					t.Fatalf("stop: state %q resume %+v err %v", st.rep.State, st.rep.Resume, st.err)
+				}
+				waitIdle(t, d, id)
+				if got, _ := store.Open(id); got.Snapshot().State != runrec.StateStopped || got.Snapshot().Resume != nil {
+					t.Fatalf("stored record: state %q resume %+v", got.Snapshot().State, got.Snapshot().Resume)
+				}
+				if calls := lastFake.CallsTo("adj"); len(calls) != 3 {
+					t.Errorf("adj calls: %+v", calls)
+				}
+				return
+			}
+			if res.err != nil {
+				t.Fatalf("answer with a free slot: %v", res.err)
+			}
+			waitState(t, store, id, runrec.StateAwaitingApproval)
+			waitIdle(t, d, id)
+			if calls := lastFake.CallsTo("adj"); len(calls) != 3 {
+				t.Errorf("adj calls: %+v", calls)
+			}
+		})
+	}
+}
+
+// The filer treats anything that touched the run while it was in adj as a
+// change: it neither stores the resume nor starts a job (S274).
+func TestFilerSkipsTheResumeAndTheStartWhenTheRunChanged(t *testing.T) {
+	for name, touch := range map[string]func(r *managedRun){
+		"stopping": func(r *managedRun) { r.stopping = true },
+		"busy":     func(r *managedRun) { r.busy = true },
+		"stop":     func(r *managedRun) { r.stop = &stopCall{started: make(chan struct{})} },
+	} {
+		t.Run(name, func(t *testing.T) {
+			d, store, id, _ := fullProjectRig(t)
+			started, open := gateAdj(t, d, store, id)
+			first := answerAsync(d, id)
+			started()
+			d.runs.mu.Lock()
+			r := d.runs.runs[id]
+			touch(r)
+			d.runs.mu.Unlock()
+			open()
+			res := waitReply(t, first, "the answer")
+			d.runs.mu.Lock()
+			r.stopping, r.busy, r.stop = false, false, nil
+			d.runs.mu.Unlock()
+			if res.err == nil || !strings.Contains(res.err.Error(), "changed while its answer was filed in adj; check ork status") {
+				t.Fatalf("answer after a change: %+v %v", res.rep, res.err)
+			}
+			if got, _ := store.Open(id); got.Snapshot().Resume != nil || got.Snapshot().State != runrec.StatePaused {
+				t.Fatalf("the filer changed the record: state %q resume %+v", got.Snapshot().State, got.Snapshot().Resume)
+			}
+		})
 	}
 }

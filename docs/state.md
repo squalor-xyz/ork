@@ -357,6 +357,15 @@ A committed, uncleaned run whose `worktree` path no longer exists also carries
 `git worktree remove` and the confirm omits it.
 The version stays 1, as for `dismissed_at`: an older ork refuses a `run.json`
 with `cleaned_at` because `Store.Open` uses strict keys.
+The optional `resume` (S274, *proposed*; adj 177) is an answer or retry of a
+paused run that waits for a slot under the project cap or the global cap:
+`method` (`answer` or `retry`), `text`, `rounds`, `adj`, `by` and `at`. An answer
+that is filed in adj is filed when it is asked for, so `adj` is then false and
+the start does not file it again. The run
+stays `paused` and holds no slot. A freed slot starts it, oldest `at` first and
+before any queued run, and the field leaves the record as it starts. A stop
+clears it; a daemon restart keeps it. Records without it still load; an older
+ork refuses one that has it, because `Store.Open` uses strict keys.
 `wait_started_at` (omitted when zero; S138) records entry into
 `awaiting-approval` or `paused`. Metadata updates, including human-check marks,
 keep it. Leaving either state clears it; entering another wait resets it to

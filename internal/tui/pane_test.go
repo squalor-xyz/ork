@@ -590,6 +590,9 @@ func TestPaneAdjToggle(t *testing.T) {
 
 func (l *actionLive) AnswerAction(ctx context.Context, a daemon.RunAction) (string, error) {
 	l.answerRequest = a
+	if l.waitOnAnswer {
+		return l.answerNotice, l.waitForSlot(a.Run)
+	}
 	return l.answerNotice, l.Answer(ctx, a.Run, a.Text)
 }
 

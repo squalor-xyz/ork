@@ -209,6 +209,10 @@ func printRun(o *output, r runrec.Record) int {
 		return o.printJSON(r)
 	}
 	fmt.Fprintf(o.stdout, "%s %s\n", r.ID, r.State)
+	// An answer or retry that waits for a slot leaves the run paused (S274).
+	if r.State == runrec.StatePaused && r.Resume != nil {
+		fmt.Fprintln(o.stdout, daemon.ResumeWaitNote)
+	}
 	return ExitOK
 }
 func (a *App) ownerCommand(ctx context.Context, o *output, command string, args []string) int {

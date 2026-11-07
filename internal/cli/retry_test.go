@@ -181,3 +181,18 @@ func TestUsageNamesRetry(t *testing.T) {
 		}
 	}
 }
+
+// A resume that waits for a slot leaves the run paused with resume set; the
+// owner commands say so instead of printing a bare state (S274, *proposed*).
+func TestRetryAndAnswerSayWhenTheResumeWaits(t *testing.T) {
+	for _, args := range [][]string{{"retry", "r1"}, {"answer", "r1", "text"}} {
+		app := &App{Call: func(_ context.Context, _ string, _, result any) error {
+			return json.Unmarshal([]byte(`{"id":"r1","state":"paused","resume":{"method":"retry","at":"2026-11-07T10:00:00Z"}}`), result)
+		}}
+		code, stdout, stderr := run(t, app, args...)
+		want := "r1 paused\nresume waits for a slot; it starts before queued runs\n"
+		if code != ExitOK || stdout != want {
+			t.Errorf("%v: code %d, stdout %q, stderr %q, want %q", args, code, stdout, stderr, want)
+		}
+	}
+}

@@ -14215,10 +14215,53 @@
       "id": "S274",
       "title": "Caps: a resumed paused run waits for a slot, ahead of queued runs",
       "short_title": "Caps: a resumed paused run waits for a slot, ahead of queued runs",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "e8fbf9bb-6382-4c40-89e9-16c17c1ea85f",
+          "kind": "",
+          "text": "**2026-11-07** — Owner answer (2026-11-07): (1) UI finding 3: add a ResumeWaiting flag (or Resume) to the source snapshot (EngineRun); a run whose resume waits for a slot leaves Needs you and the Questions view and shows as waiting for a slot under Running; the answer field and retry hint are hidden. This grows the slice into internal/tui: UI pass and golden views apply. (2) UI finding 4: file the answer in adj at once on the waiting path; only the engine resume is deferred (the adj filing notice then reaches the owner as before). (3) UI finding 5: the status wait text reads 'resume waits for a slot under project cap N; next: ork stop ID' (and 'under global cap N'), no nested parentheses. Also fix: Client.Retry returns RunReply.Message so the TUI reads 'ork retry ID: resume waits for a slot; ...' instead of 'done'; the answer notice must not be wiped by refreshAnswerStatus (internal/tui/pane.go:797-800) when the wait text starts 'resume waits for a slot'; document the TUI behaviour in docs/dashboard.md.",
+          "created_at": "2026-11-07T16:17:03Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "1a017b8c-70d9-4171-bff1-0b7c2561fdcc",
+          "kind": "",
+          "text": "**2026-11-07** — Owner answer (2026-11-07), review round 2: (1) keep filing the adj answer at once on the waiting path, and fix the race Grok found: a stop that arrives while r.filing is set must wait until filing ends, and the filer must treat an in-flight stop (r.stopping, r.busy or a stop handle set while it filed) as 'the run changed' and skip both SetResume and launchRun. (2) The Running row's second line drops '; next: ork stop RUN' like the pane (reuse dropNextCommand) so the cap shows at 80 columns.",
+          "created_at": "2026-11-07T16:45:17Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "4c3197ad-eaa4-4a4d-a366-03431e0eb832",
+          "kind": "",
+          "text": "**2026-11-07** — Review FAIL (orchestrator, after the gate PASS): the slice's own Check command go test -count=1 ./internal/daemon -run 'Resume|Retry|Answer|Approve|Cap|Queue|Status' fails: TestSlotFreedDuringAdjFilingStartsTheAnswerOnce/stop-true (answer_adj_test.go:586 'answer with a free slot: resume <nil> err context canceled'), every run without -race (count=10: 10 of 10 fail), passes with -race -count=3. The gate and the implementer ran with -race only.",
+          "created_at": "2026-11-07T16:55:25Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -14236,7 +14279,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -102,6 +102,27 @@ func TestStoppedNeedsNewerEngineRun(t *testing.T) {
 	}
 }
 
+// A run whose resume waits for a slot leaves needs_you (S274, adj 177).
+func TestStatusDoesNotCountAWaitingResumeAsNeedsYou(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	for _, rec := range []runrec.Record{
+		{ID: "asks", Project: p.Name, Item: "S1", State: runrec.StatePaused, Pending: &runrec.Pending{Kind: runrec.PendingQuestion, State: runrec.StateImplement, Question: "which?"}},
+		{ID: "waits", Project: p.Name, Item: "S2", State: runrec.StatePaused, Pending: &runrec.Pending{Kind: runrec.PendingError, State: runrec.StateImplement},
+			Resume: &runrec.ResumeRequest{Method: runrec.ResumeRetry, At: time.Now()}},
+	} {
+		if _, err := store.Create(rec); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var out StatusResult
+	if err := json.Unmarshal(request(t, d, "status", `{"project":"p"}`), &out); err != nil {
+		t.Fatal(err)
+	}
+	if got := out.Projects[0].NeedsYou; got != 1 {
+		t.Fatalf("needs_you=%d, want 1 (only the question)", got)
+	}
+}
+
 func TestStatusCountsHeldItems(t *testing.T) {
 	s := source.Snapshot{Items: source.Result[[]slicercli.Item]{Value: []slicercli.Item{{ID: "S22", Fields: slicercli.Fields{Flags: []string{"needs-owner"}}}}}}
 	ps := projectStatus(registry.Project{Name: "p"}, s, time.Now())

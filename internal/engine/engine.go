@@ -462,6 +462,64 @@ func (e *Engine) Answer(ctx context.Context, text string) error {
 // question needs an answer instead.
 func (e *Engine) Retry(ctx context.Context) error { return e.RetryNote(ctx, "") }
 
+// retryGrant checks that a retry of rec is allowed and returns the number of
+// rounds it grants at a rounds pause. RetryNote and SetResume share it, so a
+// retry that waits for a slot is refused now for what the engine would refuse
+// when it starts (S274, *proposed*).
+func retryGrant(rec runrec.Record, rounds []int) (int, error) {
+	if rec.State != runrec.StatePaused || rec.Pending == nil {
+		return 0, refusef("the slice is not paused")
+	}
+	for _, role := range rec.Roles {
+		if role.Running() {
+			return 0, refusef("a role is still running; reconcile it before retrying")
+		}
+	}
+	if rec.Pending.Kind == runrec.PendingQuestion {
+		return 0, refusef("the slice waits for an answer; answer it or stop the slice")
+	}
+	grant := 2
+	if len(rounds) > 0 && rounds[0] != 0 {
+		grant = rounds[0]
+	}
+	if grant < 1 || grant > int(^uint(0)>>1)-rec.Round {
+		return 0, refusef("rounds must be a positive count within the round limit")
+	}
+	if len(rounds) > 0 && rounds[0] != 0 && rec.Pending.Kind != runrec.PendingRounds {
+		return 0, refusef("rounds can only be granted at a rounds pause")
+	}
+	return grant, nil
+}
+
+// SetResume records an answer or retry that waits for a slot, on a paused
+// run that holds none (S274, *proposed*; adj 177). A retry the engine would
+// refuse is refused here. The run stays paused until ClearResume and the
+// action itself.
+func (e *Engine) SetResume(req runrec.ResumeRequest) error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	rec := e.run.Snapshot()
+	if req.Method == runrec.ResumeRetry {
+		if _, err := retryGrant(rec, []int{req.Rounds}); err != nil {
+			return err
+		}
+	} else if rec.State != runrec.StatePaused || rec.Pending == nil || rec.Pending.Kind != runrec.PendingQuestion {
+		return refusef("the slice has no owner question to answer")
+	}
+	return e.run.Update(func(r *runrec.Record) { r.Resume = &req })
+}
+
+// ClearResume drops a waiting resume before the daemon starts it, so a
+// refused start is not tried again.
+func (e *Engine) ClearResume() error {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.run.Snapshot().Resume == nil {
+		return nil
+	}
+	return e.run.Update(func(r *runrec.Record) { r.Resume = nil })
+}
+
 // RetryNote is Retry with the owner's note for the rerun (S256, *proposed*).
 // The note goes to the rerun's brief as an owner note and is held in
 // pending.note, or in pending.retry.note while a sibling's queued question is
@@ -473,26 +531,9 @@ func (e *Engine) RetryNote(ctx context.Context, note string, rounds ...int) erro
 	defer e.mu.Unlock()
 	note = strings.TrimSpace(note)
 	rec := e.run.Snapshot()
-	if rec.State != runrec.StatePaused || rec.Pending == nil {
-		return refusef("the slice is not paused")
-	}
-	for _, role := range rec.Roles {
-		if role.Running() {
-			return refusef("a role is still running; reconcile it before retrying")
-		}
-	}
-	if rec.Pending.Kind == runrec.PendingQuestion {
-		return refusef("the slice waits for an answer; answer it or stop the slice")
-	}
-	grant := 2
-	if len(rounds) > 0 && rounds[0] != 0 {
-		grant = rounds[0]
-	}
-	if grant < 1 || grant > int(^uint(0)>>1)-rec.Round {
-		return refusef("rounds must be a positive count within the round limit")
-	}
-	if len(rounds) > 0 && rounds[0] != 0 && rec.Pending.Kind != runrec.PendingRounds {
-		return refusef("rounds can only be granted at a rounds pause")
+	grant, err := retryGrant(rec, rounds)
+	if err != nil {
+		return err
 	}
 	grantRounds := func(r *runrec.Record) {
 		if rec.Pending.Kind == runrec.PendingRounds {
@@ -566,6 +607,7 @@ func (e *Engine) stop(ctx context.Context, reason string) error {
 		r.Reason = reason
 		r.Pending = nil
 		r.QueuedQuestions = nil
+		r.Resume = nil // a stop ends a resume that waits for a slot (S274)
 	})
 	if err != nil || already {
 		return err

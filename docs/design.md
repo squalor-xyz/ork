@@ -247,6 +247,22 @@ ork (TUI)  ork status --json (CLI)
    and the per-project cap (`wave.limits`). Several waves,
    each in one project, may run at once (`wave.scope`). An item over a cap
    waits as a queued run and starts, oldest first, as a slot frees.
+   Only a busy run holds a slot, so a paused run holds none and other runs
+   may start while it waits for the owner (adj 122). The owner's answer or
+   retry of a paused run then needs a slot under the project cap and the global cap
+   (S274, *proposed*; adj 177). With room it starts at once. With none, ork stores the request in
+   the run's record (`resume`), replies at once that the resume waits for a
+   slot, and leaves the run `paused`; status says `resume waits for a slot under
+   project cap N; next: ork stop ID` (or `under global cap N`). An answer filed in adj is filed at
+   once, not when the run starts; only the engine resume waits. Other owner
+   actions on the run are refused as busy while the adj calls run, and a stop
+   waits for them and then stops the run; the daemon never starts a second job
+   beside the filing. The run is not
+   waiting for the owner: snapshots carry `resume_waiting`, and the TUI lists it
+   under Running, not Needs you or Questions (`docs/dashboard.md`). A freed slot starts the waiting resumes
+   first, oldest request first, and then the queued runs. A second answer or
+   retry, of either kind, is refused while one waits; `ork stop` ends the run
+   and clears the request. A restart keeps it. Approve and stop still bypass the caps.
    Beside the run caps there is a vendor cap (S169, *proposed*, owner decision
    2026-10-29): one `codex` role at a time over all runs of the daemon, and
    `claude` unlimited. It is built in; the registry has no field for it. It

@@ -140,7 +140,8 @@ The list is built from the key bindings and from the checks that refuse a key,
 not written by hand: a key shows only when pressing it would act. So `a
 approve` shows on an awaiting-approval run whose human checks are all marked and
 not before, `x stop` not on a stopped run, `t retry` only on a paused run that
-does not wait for an answer, `c clean up` only on a merged Ready row, and the
+does not wait for an answer and whose resume is not already waiting for a slot
+(S274), `c clean up` only on a merged Ready row, and the
 run keys not at all while there is no daemon connection. `x end run` shows
 only on the pane of a stale ledger run, with a daemon connection and no end of
 that run in progress (S175). `f file slice` shows
@@ -535,7 +536,11 @@ the text column, falling back to a shorter indent when needed to fit.
      `...`. A run whose round waits for a full vendor slot (S169, *proposed*)
      has `waits for codex` on line 2 in place of the output tail (a denial
      still comes first), and its heard cell is dim with no `!` or `!!` cue, on
-     the Running entry too (S146). The same order holds at 80x24, where the sidebar and the project
+     the Running entry too (S146). A paused run whose resume waits for a slot
+     (S274, *proposed*) has its wait text on line 2, after a denial and a vendor
+     wait: `resume waits for a slot under project cap N`, without the closing
+     `; next: ork stop RUN` (the pane drops it too; the detail line keeps it), so
+     a cut line still shows the cap. The same order holds at 80x24, where the sidebar and the project
      column leave little for the title, so the titles usually sit on line 2
      there.
    `! heard` is amber after 10 minutes with no event; `!! heard` is red after
@@ -917,6 +922,22 @@ The actions follow the state (`ui.answer-pane-scope`):
   `ork retry RUN` y/n confirmation as the Overview. When a sibling's owner
   question is queued, the retry shows that question first; the retried role
   runs after the answer (S159, *proposed*).
+- Paused, and the owner's answer or retry waits for a slot (S274, *proposed*;
+  adj 177): the run is not waiting for the owner. It leaves Needs you, its
+  count and the Questions view, and shows under Running as `paused` with the
+  wait text `resume waits for a slot under project cap N; next: ork stop RUN`
+  (or `under global cap N`). The Running row's line 2 and the pane show it
+  without the closing `; next: ork stop RUN`; the selected row's detail line
+  keeps the whole text. The pane has no
+  Answer field and no `t retry` hint, and `t` or an answer says
+  `resume already waits for a slot; ork stop RUN cancels it`. `x` still stops it
+  and drops the waiting request. The status line after an answer keeps its
+  notice (`answered; resume waits for a slot; it starts before queued runs`, with
+  the adj filing notice before it when the answer was filed, since the filing
+  happens at once). After a retry it reads `ork retry RUN: resume waits for a
+  slot; it starts before queued runs`, not `done`. When a slot frees, the run
+  starts ahead of queued runs and shows as running again. Overview auto-switch
+  (`newest running`) does not pick a run that only waits for a slot.
 - Stopped: show the full reason with no key actions. Stop is final; relaunch,
   or clear the row with `ork dismiss RUN`.
 

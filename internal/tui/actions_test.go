@@ -30,6 +30,20 @@ type actionLive struct {
 	err error
 	// approved is the run record the approve reply carries.
 	approved runrec.Record
+	// waitOnAnswer makes the answer leave the run paused with its resume
+	// waiting for a slot (S274).
+	waitOnAnswer bool
+}
+
+// waitingRetryLive answers a retry the way the daemon does when the caps leave
+// no room: with the notice, the run still paused (S274).
+type waitingRetryLive struct {
+	*actionLive
+	notice string
+}
+
+func (l waitingRetryLive) RetryAction(_ context.Context, run string) (string, error) {
+	return l.notice, l.waitForSlot(run)
 }
 
 func (l *actionLive) action(run, state string) error {
@@ -43,6 +57,23 @@ func (l *actionLive) action(run, state string) error {
 		if s.EngineRuns[i].ID == run {
 			s.EngineRuns[i].State = state
 			s.EngineRuns[i].Wait = ""
+			l.src.set(s)
+			return nil
+		}
+	}
+	return fmt.Errorf("wrong engine run: %s", run)
+}
+
+// waitForSlot changes the fake source as the daemon's snapshot does when the
+// answer or retry of a paused run waits for a slot: still paused, marked as
+// resume waiting, with the wait text (S274).
+func (l *actionLive) waitForSlot(run string) error {
+	s := l.src.Snapshot(context.Background(), proj("ork", false))
+	s.EngineRuns = append([]source.EngineRun(nil), s.EngineRuns...)
+	for i := range s.EngineRuns {
+		if s.EngineRuns[i].ID == run {
+			s.EngineRuns[i].ResumeWaiting = true
+			s.EngineRuns[i].Wait = waitText
 			l.src.set(s)
 			return nil
 		}

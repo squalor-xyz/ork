@@ -97,6 +97,17 @@ func (d *Daemon) Retry(ctx context.Context, run string) error {
 	return c.Retry(ctx, run)
 }
 
+// RetryAction is Retry that returns the daemon's notice, for example that the
+// resume waits for a slot (S274).
+func (d *Daemon) RetryAction(ctx context.Context, run string) (string, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer c.Close()
+	return c.RetryAction(ctx, run)
+}
+
 func (d *Daemon) Answer(ctx context.Context, run, text string) error {
 	c, err := d.Connect(ctx)
 	if err != nil {

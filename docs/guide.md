@@ -332,6 +332,18 @@ Runs start as slots free. The global cap is 2 and a project's cap is its
 `cap` setting. A run over a cap waits as `queued`
 (`docs/design.md:212-214`). One failed run does not stop the others.
 
+A paused run holds no slot, so other runs start while it waits for you. When
+you then answer or retry it and the project cap or the global cap leaves no
+room (S274, *proposed*), the command replies at once with `resume waits for a
+slot; it starts before queued runs`. The run stays `paused`, `ork status` shows
+`resume waits for a slot under project cap N; next: ork stop RUN` (or `under
+global cap N`), and it
+starts as soon as a slot frees, ahead of any queued run. An answer you file in
+adj from the TUI is filed at once; only the run's resume waits. A second answer
+or retry is refused while one waits; `ork stop RUN` ends the run and drops the
+request. Approve and stop do not wait for a slot. In the TUI the run leaves
+Needs you and the Questions view and shows under Running while it waits.
+
 ## 10. Answer questions, approve and land
 
 ### Answer questions

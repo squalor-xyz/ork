@@ -316,6 +316,19 @@ func TestEngineRunLandingWire(t *testing.T) {
 	}
 }
 
+// A paused run whose answer or retry waits for a slot is not waiting for the
+// owner any more: it shows under Running (S274, adj 177).
+func TestResumeWaitingRunIsRunningNotNeeds(t *testing.T) {
+	r := EngineRun{Item: "S1", State: "paused", Pending: "question"}
+	if got := r.Section([]EngineRun{r}); got != SectionNeeds {
+		t.Fatalf("paused section %v, want needs", got)
+	}
+	r.ResumeWaiting = true
+	if got := r.Section([]EngineRun{r}); got != SectionRunning {
+		t.Fatalf("resume-waiting section %v, want running", got)
+	}
+}
+
 func TestEngineRunSection(t *testing.T) {
 	at := time.Date(2026, 10, 23, 12, 0, 0, 0, time.UTC)
 	for _, tc := range []struct {

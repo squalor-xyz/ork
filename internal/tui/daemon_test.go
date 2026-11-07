@@ -162,6 +162,21 @@ func TestDaemonTypedActions(t *testing.T) {
 	}
 }
 
+// RetryAction returns the notice of the retry reply: the resume waits for a
+// slot (S274).
+func TestDaemonRetryActionReturnsTheNotice(t *testing.T) {
+	d, _, _, _ := requestServer(t, func(_ context.Context, method string, params json.RawMessage) (any, error) {
+		if method != "run.retry" || string(params) != `{"run":"engine"}` {
+			return nil, fmt.Errorf("wrong request: %s %s", method, params)
+		}
+		return daemon.RunReply{Message: daemon.ResumeWaitNote}, nil
+	})
+	got, err := d.RetryAction(context.Background(), "engine")
+	if err != nil || got != daemon.ResumeWaitNote {
+		t.Fatalf("notice %q, err %v", got, err)
+	}
+}
+
 func TestDaemonActionConnectFailure(t *testing.T) {
 	a, ok := any(&Daemon{Connect: func(context.Context) (*daemon.Client, error) { return nil, errors.New("connect failed") }}).(runActions)
 	if !ok {

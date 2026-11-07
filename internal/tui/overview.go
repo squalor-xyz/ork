@@ -63,6 +63,7 @@ type ovRow struct {
 	engineID          string // empty for ledger and non-engine rows
 	state             string
 	pending           string
+	resumeWaiting     bool     // a paused run whose answer or retry waits for a slot (S274)
 	commands          []string // plain copyable lines beneath a landing row
 	note              string   // a line beneath a landing row that is not a command (why a cleanup failed)
 	detail            string   // the selected landing row's detail, when it is not its commands
@@ -428,7 +429,7 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 				}
 			}
 			rest := strings.Join(parts, "  ")
-			row := ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, state: r.State, pending: r.Pending, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: r.Item + "  " + rest, text: r.ID + "  " + r.Item + "  " + rest, runID: true}
+			row := ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, state: r.State, pending: r.Pending, resumeWaiting: r.ResumeWaiting, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: r.Item + "  " + rest, text: r.ID + "  " + r.Item + "  " + rest, runID: true}
 			ledger, steps := engineBoard(r)
 			for _, linked := range boardLedgers(s) {
 				if r.RelayRun != "" && linked.ID == r.RelayRun {
@@ -996,6 +997,12 @@ func (m *Model) engineRunRow(s source.Snapshot, r source.EngineRun, ledger slice
 	case r.VendorWait != "":
 		// The round has not started: it waits for the vendor's slot (S169).
 		rr.second = "waits for " + r.VendorWait
+	case r.ResumeWaiting:
+		// The owner has answered or retried: the run waits for a slot under a
+		// cap and starts ahead of queued runs (S274, adj 177). Like the pane, line
+		// 2 leaves the closing "; next: ork stop RUN" to the detail line, so a cut
+		// line keeps the cap.
+		rr.second = dropNextCommand(r.Wait)
 	default:
 		rr.second = lastTailLine(r.Tail)
 	}

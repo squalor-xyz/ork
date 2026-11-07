@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- S274 (*proposed*): a resumed paused run waits for a slot, ahead of queued
+  runs (adj 177, `wave.resume-slot`). A paused run still holds no slot. When
+  you answer or retry it and the project cap or the global cap leaves no room,
+  the request is stored in the run record (`resume`), the command replies at
+  once that the resume waits, and the run stays `paused`. `ork status` shows
+  `resume waits for a slot under project cap N; next: ork stop ID` (or `under
+  global cap N`). A
+  freed slot starts waiting resumes first, oldest request first, then the
+  queued runs. A second answer or retry, of either kind, is refused while one
+  waits, `ork stop` clears it and a daemon restart keeps it. An answer filed in
+  adj is filed at once. Approve and stop still bypass the caps. In the TUI the
+  run leaves Needs you and the Questions view and shows under Running, with no
+  answer field or retry hint, and the retry status says the resume waits.
+  Docs: `docs/design.md`, `docs/guide.md`, `docs/state.md`,
+  `docs/dashboard.md`.
+
 - S258 (*proposed*): a project names the matrix rows its spec check runs on:
   `ork projects set NAME --spec-check-rows r16,r24` (registry
   `spec_check_rows`, owner decision 2026-11-07). The first row with an adapter

@@ -227,7 +227,16 @@ func (c *Client) EndLedger(ctx context.Context, project, run string) error {
 // Retry retries a paused run after the caller has confirmed it. It sends no
 // no_wait, so the call waits until the run rests (S237).
 func (c *Client) Retry(ctx context.Context, run string) error {
-	return c.Call(ctx, MethodRunRetry, RunAction{Run: run}, nil)
+	_, err := c.RetryAction(ctx, run)
+	return err
+}
+
+// RetryAction is Retry that returns the reply's notice: "resume waits for a
+// slot; ..." when the caps leave no room for the run to start (S274, *proposed*).
+func (c *Client) RetryAction(ctx context.Context, run string) (string, error) {
+	var reply RunReply
+	err := c.Call(ctx, MethodRunRetry, RunAction{Run: run}, &reply)
+	return reply.Message, err
 }
 
 // Answer resumes a paused question with the owner's text.

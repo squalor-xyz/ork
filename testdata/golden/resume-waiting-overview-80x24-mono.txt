@@ -1,0 +1,24 @@
+[1mork[m [2mdev[m            │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+  Running        1 │[2m────────────────────────────────────────────────────────────[m
+[2m0[m Needs you      3 │[1mNeeds you 0[m
+[1;7m1>slicer          *[m│  [2mnothing needs you[m
+[2m2[m adjudicate       │
+[2m3[m DataBall         │[1mRunning 1[m
+[2m4[m agents           │[1;7m  S42  paused  [......]  wait 20m                           [m
+                   │[7m    resume waits for a slot under project cap 1             [m
+                   │
+                   │[1mRecent[m
+                   │  [2mnone[m
+                   │
+                   │[1mReady to land[m
+                   │  [2mnone[m
+                   │
+                   │
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │  run-2  S42  paused  20m
+                   │  resume waits for a slot under project cap 1; next: ork
+                   │  stop run-2
+                   │  [......]  waiting since 16:22  implementer>reviewer>gate
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ enter [2mopen[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
+                   │ 4 projects | refreshed 16:42:07 | pending 3

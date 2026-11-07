@@ -178,6 +178,26 @@ type Pending struct {
 	AutomaticShapeRetry bool `json:"automatic_shape_retry,omitempty"`
 }
 
+// Resume methods: the owner action a waiting resume carries (S274, *proposed*;
+// adj 177).
+const (
+	ResumeAnswer = "answer"
+	ResumeRetry  = "retry"
+)
+
+// ResumeRequest is an answer or retry of a paused run that waits for a slot
+// under the project cap or the global cap (S274, *proposed*; adj 177). The
+// run stays paused and holds no slot. A freed slot starts it ahead of queued
+// runs, oldest At first. It lives in the record so a daemon restart keeps it.
+type ResumeRequest struct {
+	Method string    `json:"method"` // ResumeAnswer or ResumeRetry
+	Text   string    `json:"text,omitempty"`
+	Rounds int       `json:"rounds,omitempty"`
+	Adj    bool      `json:"adj,omitempty"`
+	By     string    `json:"by,omitempty"`
+	At     time.Time `json:"at"`
+}
+
 // Feedback names the file that holds what the next implementer round must
 // fix: failing check output, reviewer or architect findings, a gate FAIL
 // report, or the owner's note from the approval card. The file is in the run
@@ -293,6 +313,7 @@ type Record struct {
 	CleanedAt        time.Time                `json:"cleaned_at,omitzero"`    // when the worktree and branch were removed (S95)
 	Reason           string                   `json:"reason,omitempty"`
 	Pending          *Pending                 `json:"pending,omitempty"`
+	Resume           *ResumeRequest           `json:"resume,omitempty"`           // an answer or retry that waits for a slot (S274, proposed)
 	QueuedQuestions  []Pending                `json:"queued_questions,omitempty"` // sibling owner questions (S135, proposed)
 	Feedback         *Feedback                `json:"feedback,omitempty"`
 	Lineup           map[string][]LineupEntry `json:"lineup,omitempty"`
