@@ -227,6 +227,9 @@ func printWave(o *output, result daemon.WaveResult) int {
 			fmt.Fprintf(o.stderr, "%s: %s (%s)\n", item.Item, item.Error.Message, item.Error.Code)
 		} else if item.Run != nil {
 			printRun(o, *item.Run)
+			if item.Message != "" {
+				fmt.Fprintf(o.stdout, "%s: %s\n", item.Item, item.Message)
+			}
 		}
 	}
 	return code

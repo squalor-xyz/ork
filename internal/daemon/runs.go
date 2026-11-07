@@ -545,38 +545,92 @@ func noCheckRefusal(project string) error {
 }
 
 func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, error) {
+	reply, err := d.startRunReply(ctx, p)
+	return reply.Record, err
+}
+
+// startRunReply starts the slice, or resumes the stopped run of the item when
+// its worktree is unchanged (S296, *proposed*; owner decision 2026-11-07). The
+// message says which, and why a stopped run was not resumed.
+func (d *Daemon) startRunReply(ctx context.Context, p RunParams) (RunReply, error) {
 	plan, err := d.planRun(ctx, p)
 	if err != nil {
-		return runrec.Record{}, err
+		return RunReply{}, err
 	}
 	if !p.AllowNoCheck && plan.project.CheckCommand == "" {
-		return runrec.Record{}, noCheckRefusal(plan.project.Name)
+		return RunReply{}, noCheckRefusal(plan.project.Name)
 	}
 	if err := d.restoreRunSpecAnswers(ctx, plan.project, p.Item); err != nil {
-		return runrec.Record{}, err
+		return RunReply{}, err
 	}
 	if p.Expected != nil {
 		shown, _ := json.Marshal(p.Expected)
 		current, _ := json.Marshal(plan)
 		if string(shown) != string(current) {
-			return runrec.Record{}, errors.New("plan changed; run the command again to confirm it")
+			return RunReply{}, errors.New("plan changed; run the command again to confirm it")
 		}
 	}
+	// The tree is fingerprinted here, outside the locks; admitRun re-checks
+	// under the lock that the run it probed is unchanged.
+	probe := d.probeResume(ctx, plan.project, p.Item, plan.Worktree)
+	rec, message, resumed, err := d.admitRun(ctx, plan, p, probe)
+	if err != nil {
+		return RunReply{}, err
+	}
+	if resumed != nil {
+		// The reply waits until the engine applied the resume, so it never
+		// shows the run as stopped, and never says resumed when the engine
+		// refused the resume after all.
+		select {
+		case <-ctx.Done():
+			return RunReply{}, ctx.Err()
+		case <-resumed.applied:
+		case <-resumed.done:
+		}
+		select {
+		case <-resumed.applied:
+		default:
+			err := resumed.result.err
+			if err == nil {
+				err = fmt.Errorf("stopped run %s was not resumed", resumed.m.engine.Snapshot().ID)
+			}
+			if engine.IsRefusal(err) {
+				err = &ipc.Error{Code: CodeRefused, Message: err.Error()}
+			}
+			return RunReply{}, err
+		}
+		rec = resumed.m.engine.Snapshot()
+	}
+	return RunReply{Record: rec, Message: message}, nil
+}
+
+// resumeLaunch is a stopped run an admission resumed: its job started, and
+// applied closes once the engine has applied the resume.
+type resumeLaunch struct {
+	m       *managedRun
+	result  *runResult // the resume job's outcome, read once done is closed
+	applied chan struct{}
+	done    chan struct{}
+}
+
+// admitRun admits the planned run under the manager lock: it resumes the
+// item's stopped run, or creates and starts a new run.
+func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe *resumeProbe) (runrec.Record, string, *resumeLaunch, error) {
 	d.runs.specStateMu.Lock()
 	defer d.runs.specStateMu.Unlock()
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
 	if d.runs.closed {
-		return runrec.Record{}, errors.New("run manager is closed")
+		return runrec.Record{}, "", nil, errors.New("run manager is closed")
 	}
 	stored, err := d.runs.deps.Store.List()
 	if err != nil {
-		return runrec.Record{}, err
+		return runrec.Record{}, "", nil, err
 	}
 	for _, r := range stored {
 		rec := r.Snapshot()
 		if !runrec.IsFinal(rec.State) && rec.Worktree == plan.Worktree {
-			return runrec.Record{}, fmt.Errorf("run %s already owns %s", rec.ID, rec.Worktree)
+			return runrec.Record{}, "", nil, fmt.Errorf("run %s already owns %s", rec.ID, rec.Worktree)
 		}
 	}
 	// Admission is here and only here: owner actions never reach startRun, so
@@ -584,30 +638,40 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 	// paused run waits for a slot instead (ownerRunReply, adj 177).
 	f, err := d.loadRunRegistryLocked()
 	if err != nil {
-		return runrec.Record{}, err
+		return runrec.Record{}, "", nil, err
 	}
 	current, ok := find(f, plan.project.Name)
 	if !ok || current.Path != plan.project.Path {
-		return runrec.Record{}, notFound(plan.project.Name, f)
+		return runrec.Record{}, "", nil, notFound(plan.project.Name, f)
 	}
 	// projects.set (S161) holds this lock to save. A set between planRun's
 	// read and here, including one of the fields it may change while runs are
 	// unfinished (the cap, the budgets, the patterns; S265), would leave the plan
 	// on the old fields, so refuse.
 	if !reflect.DeepEqual(current, plan.project) {
-		return runrec.Record{}, errors.New("plan changed; run the command again to confirm it")
+		return runrec.Record{}, "", nil, errors.New("plan changed; run the command again to confirm it")
 	}
-	queued := !d.hasRoomLocked(f, plan.project.Name)
+	// An item whose newest run is a stopped one with work in its worktree
+	// resumes that run when the tree is unchanged, and otherwise starts fresh
+	// and says so (S296 Q1, option b).
 	wave := p.wave
 	if wave == "" {
 		wave = newWaveID(time.Now())
 	}
+	message, resumed, err := d.autoResumeLocked(ctx, f, current, p.Item, plan.Worktree, wave, stored, probe)
+	if err != nil {
+		return runrec.Record{}, "", nil, err
+	}
+	if resumed != nil {
+		return resumed.m.engine.Snapshot(), message, resumed, nil
+	}
+	queued := !d.hasRoomLocked(f, plan.project.Name)
 	// A spec check that the owner answered gave the item decisions that its
 	// worktree's spec lacks; the run carries them into every brief (S116).
 	cfg := engine.Config{StopAfter: plan.StopAfter, Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: wave, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions}
 	e, err := engine.New(ctx, d.runDeps(plan.project), cfg)
 	if err != nil {
-		return runrec.Record{}, err
+		return runrec.Record{}, "", nil, err
 	}
 	// The run record now owns the paragraph, including for queued runs.
 	if err := os.Remove(filepath.Join(d.specDir(plan.project.Name, p.Item), "answers.json")); err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -620,7 +684,260 @@ func (d *Daemon) startRun(ctx context.Context, p RunParams) (runrec.Record, erro
 	if !queued {
 		d.launchRun(r, e.Run)
 	}
-	return rec, nil
+	return rec, message, nil, nil
+}
+
+// resumeProbe is what a start learned about the item's stopped run before it
+// took the manager lock: the run it looked at and that run's UpdatedAt, and
+// whether the resume would be accepted and whether the worktree is still what
+// the last implementer round left. Fingerprinting the tree runs git, which
+// the start does not do under the lock (S296, *proposed*).
+type resumeProbe struct {
+	id        string
+	updatedAt time.Time
+	canErr    error // CanResume's refusal, or a record that could not be opened
+	round     int   // the last implementer round
+	match     bool  // the worktree equals that round's tree_sha256
+	cmpErr    error // why the tree cannot be compared
+}
+
+// resumeCandidateLocked is the item's newest run when a start may consider
+// resuming it (S296, *proposed*; owner decision 2026-11-07, Q1 option b).
+// Only the newest run counts, and only when it is stopped, not dismissed,
+// resumable from its record, idle, and holds the planned worktree on disk. A
+// dismissed run is the owner's word that the run is done, so a start never
+// resumes it. The caller holds the manager lock.
+func (d *Daemon) resumeCandidateLocked(proj registry.Project, item, worktree string, stored []*runrec.Run) *runrec.Record {
+	var newest *runrec.Record
+	for _, r := range stored {
+		rec := r.Snapshot()
+		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
+			rec = m.engine.Snapshot()
+		}
+		if rec.Project != proj.Name || rec.Item != item {
+			continue
+		}
+		if newest == nil || rec.CreatedAt.After(newest.CreatedAt) || rec.CreatedAt.Equal(newest.CreatedAt) && rec.ID > newest.ID {
+			c := rec
+			newest = &c
+		}
+	}
+	if newest == nil || newest.State != runrec.StateStopped || !newest.DismissedAt.IsZero() || engine.NotResumable(*newest) != "" || newest.Worktree != worktree {
+		return nil
+	}
+	if m := d.runs.runs[newest.ID]; m != nil && (m.busy || m.stopping || m.filing || m.engine == nil) {
+		return nil
+	}
+	if info, err := os.Stat(newest.Worktree); err != nil || !info.IsDir() {
+		return nil
+	}
+	return newest
+}
+
+// probeResume looks at the item's stopped run without the locks held for the
+// git calls: the manager lock is taken only to pick the run.
+func (d *Daemon) probeResume(ctx context.Context, proj registry.Project, item, worktree string) *resumeProbe {
+	d.runs.mu.Lock()
+	var cand *runrec.Record
+	if stored, err := d.runs.deps.Store.List(); err == nil {
+		cand = d.resumeCandidateLocked(proj, item, worktree, stored)
+	}
+	d.runs.mu.Unlock()
+	if cand == nil {
+		return nil
+	}
+	probe := &resumeProbe{id: cand.ID, updatedAt: cand.UpdatedAt}
+	run, err := d.runs.deps.Store.Open(cand.ID)
+	if err != nil {
+		probe.canErr = err
+		return probe
+	}
+	probe.updatedAt = run.Snapshot().UpdatedAt
+	e := engine.Load(d.runDeps(proj), proj, run)
+	if probe.canErr = e.CanResume(ctx); probe.canErr == nil {
+		probe.round, probe.match, probe.cmpErr = e.TreeMatchesLastRound(ctx)
+	}
+	return probe
+}
+
+// freshStart is the message of a start that did not resume the stopped run.
+func freshStart(id, why string) string {
+	return fmt.Sprintf("started a new run at implementer round 1 in the same worktree; stopped run %s not resumed: %s", id, why)
+}
+
+// autoResumeLocked decides what a start does with the stopped run of the item
+// (S296, *proposed*; owner decision 2026-11-07, Q1 option b): it resumes the
+// run when its worktree is unchanged (the tree fingerprint equals the last
+// implementer round's tree_sha256, probed outside the lock), through the same
+// resume as ork retry, with the default grant and in the wave of this start.
+// Anything else starts fresh, and the message says why. With no free slot the
+// start is refused, so the work is not restarted at round 1 behind the
+// owner's back; so it is while another action holds the run's record, or when
+// the run changed since the probe. The resume uses the stopped run's lineup,
+// budgets and stop-after, not the confirmed plan's. The caller holds the
+// manager lock.
+func (d *Daemon) autoResumeLocked(ctx context.Context, f *registry.File, proj registry.Project, item, worktree, wave string, stored []*runrec.Run, probe *resumeProbe) (string, *resumeLaunch, error) {
+	cand := d.resumeCandidateLocked(proj, item, worktree, stored)
+	if cand == nil && probe == nil {
+		return "", nil, nil
+	}
+	id := ""
+	switch {
+	case cand != nil:
+		id = cand.ID
+	case probe != nil:
+		id = probe.id
+	}
+	// A finding action writes the record through a handle of its own while it
+	// holds this lock; opening the record beside it could lose its update.
+	lock := d.recordLockLocked(id)
+	if !lock.TryLock() {
+		return "", nil, &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("stopped run %s is being changed by another action; start again in a moment", id)}
+	}
+	defer lock.Unlock()
+	if cand == nil || probe == nil || probe.id != cand.ID || !probe.updatedAt.Equal(cand.UpdatedAt) {
+		return "", nil, &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("stopped run %s changed while the start was being checked; start again", id)}
+	}
+	if probe.canErr != nil {
+		return freshStart(id, strings.TrimPrefix(probe.canErr.Error(), "run "+id+" ")), nil, nil
+	}
+	if probe.cmpErr != nil {
+		return freshStart(id, probe.cmpErr.Error()), nil, nil
+	}
+	if !probe.match {
+		return freshStart(id, fmt.Sprintf("its worktree changed since implementer round %d", probe.round)), nil, nil
+	}
+	if !d.hasRoomLocked(f, proj.Name) {
+		return "", nil, &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("stopped run %s has work in its worktree and no slot is free; resume it now with ork retry %s, or ork dismiss %s to start a new run", id, id, id)}
+	}
+	run, err := d.runs.deps.Store.Open(id)
+	if err != nil {
+		return "", nil, err
+	}
+	e := engine.Load(d.runDeps(proj), proj, run)
+	m := &managedRun{engine: e}
+	d.runs.runs[id] = m
+	launch := &resumeLaunch{m: m, applied: make(chan struct{})}
+	var once sync.Once
+	d.launchRun(m, func(ctx context.Context) error {
+		ctx = engine.WithApplied(engine.WithWave(ctx, wave), func() { once.Do(func() { close(launch.applied) }) })
+		return e.RetryNote(ctx, "")
+	})
+	launch.done, launch.result = m.done, m.result
+	return fmt.Sprintf("resumed stopped run %s: its worktree is unchanged since implementer round %d; granted 2 more implementer rounds; uses the stopped run's lineup, budgets and stop-after", id, probe.round), launch, nil
+}
+
+// unfinishedOfItemLocked names another unfinished run of the item. The caller
+// holds the manager lock.
+func (d *Daemon) unfinishedOfItemLocked(project, item, except string) (string, error) {
+	stored, err := d.runs.deps.Store.List()
+	if err != nil {
+		return "", err
+	}
+	for _, r := range stored {
+		rec := r.Snapshot()
+		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
+			rec = m.engine.Snapshot()
+		}
+		if rec.ID != except && rec.Project == project && rec.Item == item && !runrec.IsFinal(rec.State) {
+			return rec.ID, nil
+		}
+	}
+	return "", nil
+}
+
+// prepareResume readies a retry of a stopped run (S296, *proposed*): it
+// refuses a run that cannot be resumed, and replaces the manager's entry of
+// the run, or adds one when a daemon restart left none, with an engine built
+// from the project as the registry has it now, so a fixed check command
+// reaches the resumed run. Anything else, a run that is not stopped, busy or
+// unknown, is left to the retry that follows. The record lock keeps a
+// finding action from writing through an older handle meanwhile.
+func (d *Daemon) prepareResume(p RunAction) error {
+	lock := d.runRecordLock(p.Run)
+	lock.Lock()
+	defer lock.Unlock()
+	d.runs.mu.Lock()
+	defer d.runs.mu.Unlock()
+	if d.runs.closed {
+		return nil
+	}
+	var rec runrec.Record
+	if m := d.runs.runs[p.Run]; m != nil {
+		if m.busy || m.stopping || m.filing || m.engine == nil {
+			return nil
+		}
+		rec = m.engine.Snapshot()
+	} else {
+		run, err := d.runs.deps.Store.Open(p.Run)
+		if err != nil {
+			return nil // no such run, or not readable: the retry says so
+		}
+		rec = run.Snapshot()
+	}
+	if rec.State == runrec.StateCommitted {
+		return &ipc.Error{Code: CodeRefused, Message: "run " + p.Run + " is committed; there is nothing to resume"}
+	}
+	if rec.State != runrec.StateStopped {
+		return nil
+	}
+	if why := engine.NotResumable(rec); why != "" {
+		return &ipc.Error{Code: CodeRefused, Message: why}
+	}
+	if other, err := d.unfinishedOfItemLocked(rec.Project, rec.Item, rec.ID); err != nil {
+		return err
+	} else if other != "" {
+		return &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("run %s cannot resume while run %s of %s is unfinished; ork stop %s first", p.Run, other, rec.Item, other)}
+	}
+	stored, err := d.runs.deps.Store.List()
+	if err != nil {
+		return err
+	}
+	if newer := supersededBy(rec, stored); newer != "" {
+		return &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("run %s is superseded by run %s, which uses the same worktree; resume or stop %s instead", p.Run, newer, newer)}
+	}
+	f, err := d.loadRunRegistryLocked()
+	if err != nil {
+		return err
+	}
+	proj, ok := find(f, rec.Project)
+	if !ok {
+		return notFound(rec.Project, f)
+	}
+	run, err := d.runs.deps.Store.Open(p.Run)
+	if err != nil {
+		return err
+	}
+	d.runs.runs[p.Run] = &managedRun{engine: engine.Load(d.runDeps(proj), proj, run)}
+	return nil
+}
+
+// supersededBy names a newer run of the same item that uses the same worktree
+// as rec, or "". Resuming the older run would continue work the newer run has
+// since replaced (S296, *proposed*).
+func supersededBy(rec runrec.Record, stored []*runrec.Run) string {
+	for _, r := range stored {
+		o := r.Snapshot()
+		if o.ID == rec.ID || o.Project != rec.Project || o.Item != rec.Item || o.Worktree != rec.Worktree {
+			continue
+		}
+		if o.CreatedAt.After(rec.CreatedAt) || o.CreatedAt.Equal(rec.CreatedAt) && o.ID > rec.ID {
+			return o.ID
+		}
+	}
+	return ""
+}
+
+// stoppedNext is the command that resumes a stopped run, as ork status and
+// ork show print it, or "" when the run cannot be resumed (S296, *proposed*).
+func stoppedNext(rec runrec.Record, stored []*runrec.Run) string {
+	if engine.NotResumable(rec) != "" || supersededBy(rec, stored) != "" {
+		return ""
+	}
+	if info, err := os.Stat(rec.Worktree); err != nil || !info.IsDir() {
+		return ""
+	}
+	return "ork retry " + rec.ID + " [--rounds N] or ork dismiss " + rec.ID
 }
 
 // newWaveID returns a wave id in the form docs/state.md shows. A run started
@@ -647,6 +964,9 @@ type WaveItemResult struct {
 	Item  string         `json:"item"`
 	Run   *runrec.Record `json:"run,omitempty"`
 	Error *ipc.Error     `json:"error,omitempty"`
+	// Message says what the start did with a stopped run of the item (S296,
+	// *proposed*): resumed it, or started fresh and why.
+	Message string `json:"message,omitempty"`
 }
 
 // WaveResult is the proposed result shape of wave.start and wave.stop.
@@ -655,11 +975,15 @@ type WaveResult struct {
 	Items []WaveItemResult `json:"items"`
 }
 
-func waveItem(item string, rec runrec.Record, err error) WaveItemResult {
+func waveItem(item string, rec runrec.Record, err error, message ...string) WaveItemResult {
 	if err != nil {
 		return WaveItemResult{Item: item, Error: ipc.ErrorOf(err)}
 	}
-	return WaveItemResult{Item: item, Run: &rec}
+	res := WaveItemResult{Item: item, Run: &rec}
+	if len(message) > 0 {
+		res.Message = message[0]
+	}
+	return res
 }
 
 // blockedItems reads slicer's dependency state before any member is admitted.
@@ -754,8 +1078,8 @@ func (d *Daemon) startWave(ctx context.Context, p WaveStartParams) (*WaveResult,
 			result.Items = append(result.Items, waveItem(item.Item, runrec.Record{}, err))
 			continue
 		}
-		rec, err := d.startRun(ctx, item)
-		result.Items = append(result.Items, waveItem(item.Item, rec, err))
+		reply, err := d.startRunReply(ctx, item)
+		result.Items = append(result.Items, waveItem(item.Item, reply.Record, err, reply.Message))
 	}
 	return result, nil
 }
@@ -1174,6 +1498,13 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		resume = &runrec.ResumeRequest{Method: runrec.ResumeAnswer, Text: p.Text, Adj: p.Adj, By: p.By}
 	case MethodRunRetry:
 		rec := r.engine.Snapshot()
+		if rec.State == runrec.StateStopped {
+			// A stopped run resumes from its worktree (prepareResume built
+			// this engine from the current project). It holds no slot to
+			// wait for: owner actions bypass the caps (adj 122).
+			fn = d.resumeJob(r, method, p, nil)
+			break
+		}
 		if rec.State != runrec.StatePaused || rec.Pending == nil {
 			d.runs.mu.Unlock()
 			return RunReply{}, fmt.Errorf("run %s is not paused with a pending step; use ork stop %s to stop it", p.Run, p.Run)
@@ -1355,6 +1686,11 @@ func (d *Daemon) findingAction(ctx context.Context, p RunAction, answer bool) (R
 func (d *Daemon) runRecordLock(id string) *sync.Mutex {
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
+	return d.recordLockLocked(id)
+}
+
+// recordLockLocked is runRecordLock for a caller that holds the manager lock.
+func (d *Daemon) recordLockLocked(id string) *sync.Mutex {
 	lock := d.runs.recordLocks[id]
 	if lock == nil {
 		lock = &sync.Mutex{}
@@ -1399,7 +1735,7 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 		if err := d.specGate(ctx, p.Project, p.Item); err != nil {
 			return nil, err
 		}
-		return d.startRun(ctx, p)
+		return d.startRunReply(ctx, p)
 	}
 	var p RunAction
 	if err := decode(params, &p); err != nil {
@@ -1413,6 +1749,11 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 			return nil, errors.New("the answer is empty")
 		}
 		return d.findingAction(ctx, p, true)
+	}
+	if method == MethodRunRetry {
+		if err := d.prepareResume(p); err != nil {
+			return nil, err
+		}
 	}
 	if method == MethodRunAnswer || method == MethodRunRetry {
 		return d.ownerRunReply(ctx, method, p)
@@ -1529,6 +1870,10 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 			wait += "; next: " + pausedNext(rec)
 		case runrec.StateAwaitingApproval:
 			wait = "owner approval"
+		case runrec.StateStopped:
+			if next := stoppedNext(rec, stored); next != "" {
+				wait += "; next: " + next
+			}
 		}
 		if rec.State == runrec.StatePaused && rec.Resume != nil {
 			// The owner has answered or retried; the run waits for a slot (adj 177).
@@ -1801,6 +2146,10 @@ func (d *Daemon) runShow(p RunAction) (ShowReply, error) {
 	}
 	if rec.State == runrec.StatePaused {
 		reply.Next = pausedNext(rec) // as ork status, also for a record with no pending
+	}
+	if rec.State == runrec.StateStopped {
+		stored, _ := d.runs.deps.Store.List()
+		reply.Next = stoppedNext(rec, stored) // S296: the command that resumes a stopped run
 	}
 	attempts := map[string]int{}
 	for _, role := range rec.Roles {

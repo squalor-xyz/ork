@@ -153,11 +153,24 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		}
 	}
 	params.Expected = &plan
-	var rec runrec.Record
-	if code := a.call(ctx, o, daemon.MethodRunStart, params, &rec); code != 0 {
+	var reply daemon.RunReply
+	if code := a.call(ctx, o, daemon.MethodRunStart, params, &reply); code != 0 {
 		return code
 	}
-	return printRun(o, rec)
+	return printRunReply(o, reply)
+}
+
+// printRunReply prints the started run, and what the start did with a stopped
+// run of the item (S296, *proposed*): resumed it, or started fresh and why.
+func printRunReply(o *output, r daemon.RunReply) int {
+	if o.json {
+		return o.printJSON(r)
+	}
+	code := printRun(o, r.Record)
+	if r.Message != "" {
+		fmt.Fprintln(o.stdout, r.Message)
+	}
+	return code
 }
 
 // lineupAnswers is the planning inputs for well specified and split: the flag
@@ -256,7 +269,7 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 	var wait bool
 	var rounds int
 	if command == "retry" {
-		fs.IntVar(&rounds, "rounds", 0, "grant additional implementer rounds (default 2 at a rounds pause)")
+		fs.IntVar(&rounds, "rounds", 0, "grant additional implementer rounds (default 2 at a rounds pause or a resume)")
 	}
 	if command == "answer" || command == "retry" {
 		fs.BoolVar(&wait, "wait", false, "wait until the run rests")

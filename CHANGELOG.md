@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- S296 (*proposed*): `ork retry RUN [--rounds N]` resumes a stopped run from its
+  worktree, also after a daemon restart and for a dismissed run (which clears
+  the dismissal). It needs no commit and a worktree that is still there, and
+  it refuses a run stopped in setup. It reloads the project from the registry
+  (a fixed check command takes effect), grants N implementer rounds (2 by
+  default), begins a new ledger run and re-enters the checks, or implementer
+  round 1 when no implementer round has run (a run S295 paused at setup). `stop`
+  now records `stopped_from` in `run.json`. `ork status` and `ork show` name the
+  command for a stopped run. `ork run` and `ork wave start` on an item whose
+  newest run is a resumable stopped run resume it when the worktree equals the
+  last implementer round's `tree_sha256` (owner decision 2026-11-07, Q1 option
+  b); otherwise they start a new run and print why (`message` in the
+  `run.start` and `wave.start` replies). A dismissed run is not resumed by a
+  start. When no slot is free for the resume, the start is refused and names the
+  stopped run, instead of queuing a new run that would restart at round 1.
+  Docs: `docs/design.md`, `docs/guide.md`, `docs/state.md`.
 - S239 (*proposed*): when the project check command exits non-zero, ork runs it
   once more before it starts a fix round. A pass on the rerun does not spend the
   round and is recorded as flaky (`checks[].attempts` 2, `checks[].flaky` true in

@@ -649,8 +649,63 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   limit pauses again. Rounds never silently stop a run; the third gate FAIL
   still stops it. There is no project or run round-limit setting. The test
   hook `Deps.MaxRounds` overrides only the first pause threshold.
-  To change the check, stop the run, set the check and start a new `ork run`;
-  retry of a stopped run is separate work (S296).
+  To change the check, stop the run, set the check (`ork projects set P
+  --check CMD`; a stopped run does not block it), then resume the stopped
+  run with `ork retry RUN` (S296, below).
+- **Resume a stopped run** (S296, *proposed*). `ork retry RUN [--rounds N]`
+  also accepts a stopped run that has no commit, did not stop in setup or
+  while queued (`stopped_from`), and whose worktree path exists and passes
+  the same check as `ensureWorktree` (path, branch and git dir; ork never
+  creates the worktree on a resume). Anything else is refused in one line
+  of the form `run ID <fact>; <action>`: a committed run, a run stopped
+  during setup, a missing or foreign worktree (the line adds `ork dismiss ID
+  to start a new run`), a role still running, another unfinished run of the
+  item, or a newer run of the item that uses the same worktree (the older run
+  is superseded: its status hint and `run.show` name no retry). A retry note
+  is refused for a stopped run. `Engine.CanResume` makes these checks
+  without changing anything. The daemon opens the run from the
+  store when it holds none (after a restart) and builds the engine again
+  from the registry entry as it is at the resume, so a fixed check command
+  takes effect. The
+  resume clears `dismissed_at`, `reason` and `stopped_from`, grants N
+  implementer rounds (2 by default) and begins a new ledger run
+  (`relay-run begin`); the stopped run's ledger run stays ended as stopped.
+  It re-enters `checks` in the next round number (the earlier check log is
+  kept), or `implement` in the same round when no implementer round has run
+  (a run stopped from S295's setup pause): implementer round 1 runs first
+  with the first-round brief. N rounds mean N implementer rounds: entering
+  the checks, `round_limit` is the entered round plus N (the entered round is
+  not an implementer round); entering implement, round 1 is the first of the
+  N, so `round_limit` is N (the first-pause floor of 3 rounds still applies).
+  A red result at the limit pauses with kind `rounds` as above. `stop`
+  records `stopped_from`: the state the run left, and for a paused run its
+  pending step. Resuming bypasses the project and global caps, like every
+  owner action (adj 122), and the resumed run counts as unfinished again,
+  so `ork projects set` refuses the fields a run reads until it rests.
+  *Start on an item with a stopped run (owner decision 2026-11-07, S296
+  Q1, option b):* `ork run` and `ork wave start` look at the newest run of
+  the item. When it is stopped, not dismissed, resumable by the rules above
+  and its worktree is the planned one, ork compares the worktree with the
+  last implementer round: the fingerprint of the tracked diff against HEAD
+  and the untracked names (the one `roles[].tree_sha256` holds) must equal
+  that round's `tree_sha256`. Equal: the start resumes that run with the
+  default grant, in the wave of this start (a run started alone gets a wave
+  of one), and the reply's `message` says so. The resumed run keeps the
+  stopped run's lineup, budgets and stop-after; the confirmed plan's are not
+  applied, and the message says so. Different, a role still running, a
+  worktree that is not the run's, or no fingerprint to compare (no
+  implementer round, or an old record): the start creates a new run at round
+  1 in the same worktree, and the `message` says why. A dismissed run is
+  never resumed by a start; dismissing is the owner's word that the run is
+  done, and `ork retry RUN` still resumes it. With no free slot the start is
+  refused, naming the stopped run (`ork retry RUN` gets past the caps, as
+  every owner action does), so its work is not restarted behind the owner's
+  back. The start fingerprints the tree before it takes the manager lock; under
+  the lock it checks that the run it probed is still the newest and has the
+  same `updated_at`, and that no finding action holds the run's record, or
+  refuses the start with "start again". The reply is not sent until the
+  engine applied the resume; a resume the engine refuses after all is
+  answered as `refused`, never as resumed.
 - **Resume.** A fix round resumes the implementer's latest session and the
   gate resumes the latest gate or reviewer session from the same vendor and
   model. Daemon runs copy the reviewer's lineup into the gate; a copy counts
@@ -1362,7 +1417,9 @@ ork file RUN N              file a later finding through the daemon
 ork new P TITLE [FLAGS]     file a slice from a request or note
 ork dismiss RUN             clear a stopped run from Needs you
 ork retry RUN [TEXT]        retry a paused role or step; TEXT is a note for
-                            the rerun (S256, proposed)
+                            the rerun (S256, proposed); resume a stopped
+                            run from its worktree, --rounds N more rounds
+                            (S296, proposed)
 ork stop RUN|WAVE           stop and record why
 ork daemon run              serve the daemon in the foreground
 ork daemon stop [--force]   stop the daemon; on a daemon that predates
@@ -1707,6 +1764,13 @@ The wire retains dismissed runs with `dismissed: true`, hidden from lists,
 so an open run pane can still show their findings.
 `run.dismiss` takes `{run}` and returns the run record (adj #117). It refuses
 a run that is not stopped or is busy. An unknown run returns `not_found`.
+`run.retry` of a stopped run (S296, *proposed*) takes `{run, rounds?, no_wait?}`
+and resumes it, from the store when the manager holds none; refusals are
+`refused`. `run.start` answers the run record plus an optional `message`
+(a bare-record reader ignores it), and each `wave.start` item has an optional
+`message`: ork resumed the item's stopped run, or started a new run and why.
+`run.show` and `ork status` name `ork retry RUN [--rounds N] or ork dismiss
+RUN` for a stopped run that can resume.
 
 `ork new PROJECT TITLE [--why TEXT|-] [--from ITEM] [--from-note N]`
 accepts optional `--size S|M|L`, `--importance N`, `--urgency N`, `--effort N`
