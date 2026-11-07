@@ -272,7 +272,7 @@ func (e *Engine) uiRenders(rec runrec.Record) (round int, renders []runrec.Rende
 		text, err := readRender(dir, ent)
 		if err != nil {
 			if readErr == "" {
-				readErr = ent.Name() + ": " + readReason(err)
+				readErr = ent.Name() + " (" + readReason(err) + ")"
 			}
 			continue
 		}
@@ -306,7 +306,7 @@ func ReadRender(runDir string, round int, name string) (string, error) {
 
 // errNotThatFile is the error of readRender for a file that is no longer the
 // one the listing named (a link put in its place).
-var errNotThatFile = errors.New("not the listed file")
+var errNotThatFile = errors.New("replaced while being read")
 
 // readRender reads one render file as plain text of bounded size. It returns
 // the error of an open or a read that failed, or errNotThatFile.

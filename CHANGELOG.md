@@ -277,6 +277,17 @@
   project's cap starts the queued runs that now fit. Docs updated: `docs/state.md`,
   `docs/design.md`, `docs/guide.md`, `docs/dashboard.md`.
 
+- Daemon and engine wording leftovers (S229; closes the later-notes rows S186,
+  S191 and S201): the blocked-wave refusal shows a shared blocker's title once,
+  joins names with `and` (`untick S2 and S3, or land S1 and S4 first`) and
+  quotes a title plainly. A run stopped after commit drops its spec-check
+  directory when its branch is found merged (*proposed*). An unreadable
+  `run.json` is an `internal` error for finding actions too (not `not_found`),
+  and its message, `the record of run ID is unreadable: WHY`, no longer repeats
+  itself or shows the path. The renders error names a file as `NAME (WHY)` and
+  says `replaced while being read` for a swapped link. Docs updated:
+  `docs/design.md`, `docs/state.md`, `docs/dashboard.md`.
+
 ## v1.0.0 (2026-10-31)
 
 - S209: a project can name `ui_pass_skills` for its Claude UI pass

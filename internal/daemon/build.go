@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
@@ -77,6 +78,7 @@ func BlockedMessage(ids []string, deps []slicercli.ItemDeps, titles map[string]s
 	}
 	var messages, blockedIDs, blockerIDs []string
 	seenBlockers := map[string]bool{}
+	titled := map[string]bool{}
 	inWave := false
 	for _, item := range deps {
 		var blockers []string
@@ -87,8 +89,10 @@ func BlockedMessage(ids []string, deps []slicercli.ItemDeps, titles map[string]s
 				inWave = true
 			}
 			name := blocker
-			if title := titles[blocker]; title != "" {
-				name += fmt.Sprintf(" %q", title)
+			// A blocker shared by several items shows its title the first time only.
+			if title := strings.Join(strings.Fields(runrec.PlainText(titles[blocker])), " "); title != "" && !titled[blocker] {
+				titled[blocker] = true
+				name += ` "` + title + `"`
 			}
 			blockers = append(blockers, name+" ("+reason+")")
 			if !seenBlockers[blocker] {
@@ -104,11 +108,19 @@ func BlockedMessage(ids []string, deps []slicercli.ItemDeps, titles map[string]s
 	if len(messages) == 0 {
 		return ""
 	}
-	next := "land " + strings.Join(blockerIDs, ", ") + " first"
+	next := "land " + joinAnd(blockerIDs) + " first"
 	if inWave {
-		next = "untick " + strings.Join(blockedIDs, ", ") + " or " + next
+		next = "untick " + joinAnd(blockedIDs) + ", or " + next
 	}
 	return strings.Join(append(messages, next), "; ")
+}
+
+// joinAnd writes names as "A", "A and B" or "A, B and C".
+func joinAnd(names []string) string {
+	if len(names) < 2 {
+		return strings.Join(names, "")
+	}
+	return strings.Join(names[:len(names)-1], ", ") + " and " + names[len(names)-1]
 }
 
 // BehindWarning is available only at the daemon's idle point.

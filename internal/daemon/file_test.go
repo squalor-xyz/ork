@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -13,6 +15,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
@@ -323,4 +326,64 @@ func TestStatusSettledFindingsStopCounting(t *testing.T) {
 			}
 		})
 	}
+}
+
+// A finished run whose record cannot be read is not "no run" for a finding
+// action either (S201): the owner sees that the run is there and why it cannot
+// be used. An unknown run and an id that is not a plain name stay not_found.
+func TestUnreadableRecordIsNotNoRunForAFinishedRunAction(t *testing.T) {
+	d, store, p := runDaemon(t, nil,
+		clitest.Route{Tool: "slicer", Args: []string{"add"}, Prefix: true, Stdout: `{"id":"S131","existing":false}`},
+		clitest.Route{Tool: "slicer", Args: []string{"promote"}, Prefix: true, Stdout: `{"id":"S131"}`})
+	for _, id := range []string{"bad", "ver", "ok"} {
+		_, err := store.Create(runrec.Record{ID: id, Project: p.Name, Item: "S1", State: runrec.StateCommitted,
+			Findings: []runrec.Finding{{Kind: runrec.FindingLater, Title: "Later", Text: "Later"}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	write := func(id, text string) {
+		t.Helper()
+		if err := os.WriteFile(filepath.Join(store.RunDir(id), "run.json"), []byte(text), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("bad", "{not json")
+	write("ver", fmt.Sprintf(`{"version":%d}`, runrec.Version+1))
+	file := func(run string) *ipc.Error {
+		t.Helper()
+		_, err := d.handle(context.Background(), "run.file", json.RawMessage(fmt.Sprintf(`{"run":%q,"finding":1}`, run)))
+		return ipc.ErrorOf(err)
+	}
+	for _, run := range []string{"bad", "ver"} {
+		if wire := file(run); wire == nil || wire.Code != ipc.CodeInternal || !strings.HasPrefix(wire.Message, "the record of run "+run+" is unreadable: ") {
+			t.Errorf("run %s gave %+v, want internal: the record of run %s is unreadable: ...", run, wire, run)
+		}
+	}
+	if wire := file("bad"); wire != nil && strings.Contains(wire.Message, store.RunDir("bad")) {
+		t.Errorf("message %q has the path", wire.Message)
+	}
+	for _, run := range []string{"nope", "../x"} {
+		if wire := file(run); wire == nil || wire.Code != CodeNotFound || wire.Message != "no run "+run {
+			t.Errorf("run %q gave %+v, want not_found: no run %s", run, wire, run)
+		}
+	}
+	if wire := file("ok"); wire != nil {
+		t.Errorf("a readable run gave %+v", wire)
+	}
+	t.Run("a record with mode 0", func(t *testing.T) {
+		path := filepath.Join(store.RunDir("bad"), "run.json")
+		write("bad", "{}")
+		if err := os.Chmod(path, 0); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { _ = os.Chmod(path, 0o600) })
+		if _, err := os.ReadFile(path); err == nil {
+			t.Skip("this user can read a mode 0 file; the unreadable case cannot be set up")
+		}
+		wire := file("bad")
+		if wire == nil || wire.Code != ipc.CodeInternal || wire.Message != "the record of run bad is unreadable: permission denied" {
+			t.Errorf("mode 0 gave %+v, want internal: the record of run bad is unreadable: permission denied", wire)
+		}
+	})
 }

@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -1365,9 +1366,9 @@ func (d *Daemon) loadFinishedEngine(id string) (*engine.Engine, error) {
 	// A stopped or committed run is not rebuilt at a daemon start, but its
 	// findings stay actionable. Open it fresh while holding the per-run lock
 	// so other finished-run writes cannot be overwritten by an older snapshot.
-	run, err := d.runs.deps.Store.Open(id)
+	run, err := d.openRun(id)
 	if err != nil {
-		return nil, &ipc.Error{Code: CodeNotFound, Message: "no run " + id}
+		return nil, err
 	}
 	rec := run.Snapshot()
 	if !runrec.IsFinal(rec.State) {
@@ -1638,7 +1639,9 @@ type ReportReply struct {
 // openRun opens the stored record of a run for a read-only call. A run id that
 // is not a plain name and a run with no record are not_found. A record that is
 // there but cannot be read is not "no run": it is a plain error, so the wire
-// code is internal, and its message names the run and says why (S147).
+// code is internal, and its message names the run and says why (S147): "the
+// record of run ID is unreadable: CAUSE". The cause has no path, as the
+// approval card's reason has none (S201); the error still wraps the original.
 func (d *Daemon) openRun(id string) (*runrec.Run, error) {
 	run, err := d.runs.deps.Store.Open(id)
 	switch {
@@ -1647,7 +1650,36 @@ func (d *Daemon) openRun(id string) (*runrec.Run, error) {
 	case errors.Is(err, runrec.ErrBadRunID), errors.Is(err, os.ErrNotExist):
 		return nil, &ipc.Error{Code: CodeNotFound, Message: "no run " + id}
 	}
-	return nil, fmt.Errorf("run %s cannot be read: %w", id, err)
+	return nil, &unreadableRecordError{id: id, cause: d.unreadableCause(id, err), err: err}
+}
+
+// unreadableRecordError is a run record that is there and cannot be read. Its
+// text is "the record of run ID is unreadable: CAUSE" with no path; it wraps
+// the original error, so errors.Is and errors.As still see the cause.
+type unreadableRecordError struct {
+	id, cause string
+	err       error
+}
+
+func (e *unreadableRecordError) Error() string {
+	return "the record of run " + e.id + " is unreadable: " + e.cause
+}
+func (e *unreadableRecordError) Unwrap() error { return e.err }
+
+// unreadableCause is why a run record cannot be read, without a path: the
+// system's reason for a file error, else the error text with the record's path
+// (or, failing that, the run directory) taken out.
+func (d *Daemon) unreadableCause(id string, err error) string {
+	var pe *fs.PathError
+	if errors.As(err, &pe) {
+		return pe.Err.Error()
+	}
+	dir := d.runs.deps.Store.RunDir(id)
+	text := err.Error()
+	if rest, ok := strings.CutPrefix(text, "run record "+filepath.Join(dir, "run.json")+": "); ok {
+		return rest
+	}
+	return strings.ReplaceAll(text, dir+string(filepath.Separator), "")
 }
 
 // runReport reads only a role report listed in the stored record. It does

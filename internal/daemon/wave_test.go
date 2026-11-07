@@ -18,6 +18,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
 // Keep requests as wire JSON so these tests also cover method dispatch and decoding.
@@ -292,7 +293,7 @@ func TestWaveStartRefusesABlockedItem(t *testing.T) {
 	testBlockedWave(t, []string{"S1", "S2"}, []clitest.Route{{Tool: "slicer", Args: []string{"deps", "S2"}, Prefix: true, Stdout: `{"id":"S2","blocked_by":["S9"]}`}}, `S2 waits on S9 "Title" (not done); land S9 first`, CodeRefused)
 }
 func TestWaveStartNamesABlockerInTheSameWave(t *testing.T) {
-	testBlockedWave(t, []string{"S1", "S2"}, []clitest.Route{{Tool: "slicer", Args: []string{"deps", "S2"}, Prefix: true, Stdout: `{"id":"S2","blocked_by":["S1"]}`}}, `S2 waits on S1 "Title" (in this wave, not done); untick S2 or land S1 first`, CodeRefused)
+	testBlockedWave(t, []string{"S1", "S2"}, []clitest.Route{{Tool: "slicer", Args: []string{"deps", "S2"}, Prefix: true, Stdout: `{"id":"S2","blocked_by":["S1"]}`}}, `S2 waits on S1 "Title" (in this wave, not done); untick S2, or land S1 first`, CodeRefused)
 }
 func TestWaveStartRefusesWhenTheDepsReadFails(t *testing.T) {
 	testBlockedWave(t, []string{"S1"}, []clitest.Route{{Tool: "slicer", Args: []string{"deps", "S1"}, Prefix: true, Exit: 2, Stdout: `{"error":{"code":"locked","message":"deps locked"}}`}}, "deps locked", "locked")
@@ -336,7 +337,7 @@ func TestWaveStartPreservesDependencyOrderAndReadsEachItemOnce(t *testing.T) {
 	}
 	d, _, _ := runDaemon(t, nil, routes...)
 	_, err := d.startWave(context.Background(), WaveStartParams{Items: []RunParams{{Project: "p", Item: "S3"}, {Project: "p", Item: "S2"}, {Project: "p", Item: "S3"}}})
-	const want = `S3 waits on S9 "Title" (not done), S2 "Title" (in this wave, not done); S2 waits on S1 "Title" (not done); untick S3, S2 or land S9, S2, S1 first`
+	const want = `S3 waits on S9 "Title" (not done), S2 "Title" (in this wave, not done); S2 waits on S1 "Title" (not done); untick S3 and S2, or land S9, S2 and S1 first`
 	if err == nil || ipc.ErrorOf(err).Message != want {
 		t.Fatalf("error: %v", err)
 	}
@@ -357,14 +358,14 @@ func TestBlockedMessageShowsTitlesAndTheNextStep(t *testing.T) {
 		{Tool: "slicer", Args: []string{"deps", "S2"}, Prefix: true, Stdout: `{"blocked_by":["S9","S8"]}`},
 		{Tool: "slicer", Args: []string{"show", "S9"}, Prefix: true, Stdout: `{"title":"First title"}`},
 		{Tool: "slicer", Args: []string{"show", "S8"}, Prefix: true, Stdout: `{"title":"Second title"}`},
-	}, `S2 waits on S9 "First title" (not done), S8 "Second title" (not done); land S9, S8 first`, CodeRefused)
+	}, `S2 waits on S9 "First title" (not done), S8 "Second title" (not done); land S9 and S8 first`, CodeRefused)
 }
 func TestBlockedMessageFallsBackToTheIdWhenATitleReadFails(t *testing.T) {
 	testBlockedWave(t, []string{"S2"}, []clitest.Route{
 		{Tool: "slicer", Args: []string{"deps", "S2"}, Prefix: true, Stdout: `{"blocked_by":["S9","S8"]}`},
 		{Tool: "slicer", Args: []string{"show", "S9"}, Prefix: true, Exit: 2, Stdout: `{"error":{"code":"not_found","message":"missing title"}}`},
 		{Tool: "slicer", Args: []string{"show", "S8"}, Prefix: true, Stdout: `{"title":"Known title"}`},
-	}, `S2 waits on S9 (not done), S8 "Known title" (not done); land S9, S8 first`, CodeRefused)
+	}, `S2 waits on S9 (not done), S8 "Known title" (not done); land S9 and S8 first`, CodeRefused)
 }
 func TestBlockerTitlesAreReadOncePerDistinctBlocker(t *testing.T) {
 	for _, fail := range []bool{false, true} {
@@ -401,7 +402,57 @@ func TestWaveStartRefusesACycleInsideOneWave(t *testing.T) {
 	testBlockedWave(t, []string{"S2", "S1"}, []clitest.Route{
 		{Tool: "slicer", Args: []string{"deps", "S2"}, Prefix: true, Stdout: `{"blocked_by":["S1"]}`},
 		{Tool: "slicer", Args: []string{"deps", "S1"}, Prefix: true, Stdout: `{"blocked_by":["S2"]}`},
-	}, `S2 waits on S1 "Title" (in this wave, not done); S1 waits on S2 "Title" (in this wave, not done); untick S2, S1 or land S1, S2 first`, CodeRefused)
+	}, `S2 waits on S1 "Title" (in this wave, not done); S1 waits on S2 "Title" (in this wave, not done); untick S2 and S1, or land S1 and S2 first`, CodeRefused)
+}
+
+func TestBlockedMessageNamesASharedBlockerTitleOnce(t *testing.T) {
+	deps := []slicercli.ItemDeps{{ID: "S2", BlockedBy: []string{"S9"}}, {ID: "S3", BlockedBy: []string{"S9"}}}
+	const want = `S2 waits on S9 "Prior" (not done); S3 waits on S9 (not done); land S9 first`
+	if got := BlockedMessage([]string{"S2", "S3"}, deps, map[string]string{"S9": "Prior"}); got != want {
+		t.Errorf("message %q, want %q", got, want)
+	}
+}
+
+func TestBlockedMessageJoinsNamesWithAnd(t *testing.T) {
+	for name, tc := range map[string]struct {
+		ids  []string
+		deps []slicercli.ItemDeps
+		want string
+	}{
+		"several items, blockers in and outside the wave": {
+			ids:  []string{"S182", "S183"},
+			deps: []slicercli.ItemDeps{{ID: "S182", BlockedBy: []string{"S181"}}, {ID: "S183", BlockedBy: []string{"S182", "S175"}}},
+			want: "S182 waits on S181 (not done); S183 waits on S182 (in this wave, not done), S175 (not done); untick S182 and S183, or land S181, S182 and S175 first",
+		},
+		"one blocker in the wave": {
+			ids:  []string{"S1", "S2"},
+			deps: []slicercli.ItemDeps{{ID: "S2", BlockedBy: []string{"S1"}}},
+			want: "S2 waits on S1 (in this wave, not done); untick S2, or land S1 first",
+		},
+		"two blockers outside the wave": {
+			ids:  []string{"S2"},
+			deps: []slicercli.ItemDeps{{ID: "S2", BlockedBy: []string{"S9", "S8"}}},
+			want: "S2 waits on S9 (not done), S8 (not done); land S9 and S8 first",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if got := BlockedMessage(tc.ids, tc.deps, nil); got != tc.want {
+				t.Errorf("message %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestBlockedMessageShowsATitleWithAQuoteAsIs(t *testing.T) {
+	deps := []slicercli.ItemDeps{{ID: "S2", BlockedBy: []string{"S9"}}}
+	for title, want := range map[string]string{
+		`The "big" one`: `S2 waits on S9 "The "big" one" (not done); land S9 first`,
+		"a\x1b[31mb\nc": `S2 waits on S9 "ab c" (not done); land S9 first`,
+	} {
+		if got := BlockedMessage([]string{"S2"}, deps, map[string]string{"S9": title}); got != want {
+			t.Errorf("title %q gave %q, want %q", title, got, want)
+		}
+	}
 }
 
 func TestWaveStartCarriesStopAfterPerItem(t *testing.T) {

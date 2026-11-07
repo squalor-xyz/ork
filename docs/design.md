@@ -788,7 +788,8 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   text; the text is read on demand (`run.render`, wire section). A renders
   directory, or a listed file, that exists and cannot be read is named in the
   card's `renders_error` (S147), so the owner does not read it as "wrote
-  none". The directory is cleared when the UI pass starts, so a rerun keeps
+  none". A directory reads as its cause (`permission denied`) and a file as
+  `NAME (WHY)`. The directory is cleared when the UI pass starts, so a rerun keeps
   no file of an earlier attempt. After an owner fix round the card is built again with the
   same renders; its `ui_round` says which round they come from.
 - **Commit and finish.** On `Approve`, the implementer is resumed for the
@@ -949,7 +950,8 @@ question. Answer, approve, fix and retry record `--phase start` to continue.
   Each item has `check.json` identifying the project and item, `spec-check.md`,
   and, after an answer, `answers.json`. The batch's first item also holds the
   role's temp directory. A landed run or removed project loses its check
-  directories. At daemon start, directories older than 14 days are swept
+  directories, and so does the item of a run stopped after commit when its
+  branch is found merged (*proposed*, S229). At daemon start, directories older than 14 days are swept
   when their item is done, retired or gone, using the ordinary slicer list
   without `--all`. Old directories for unregistered projects are removed too.
   Legacy random-named directories (`YYYYMMDD-HHMMSS-xxxx`) older than 14 days
@@ -1585,8 +1587,10 @@ plain text of at most 24 KiB. A run without a card, an unknown run, a run id
 that is not a plain name, a name the card does not list and a file that is not
 there are all `not_found`. A run whose `run.json` exists and cannot be read
 (not valid JSON, an unknown version) is not "no run": the call fails with the
-code `internal` (no new wire code) and the message `run ID cannot be read: WHY`.
-`run.report` answers the same way. The TUI calls it when the owner opens the
+code `internal` (no new wire code) and the message `the record of run ID is
+unreadable: WHY`, where WHY is the cause without the record's path (S229).
+`run.report` and the run actions that open a finished run (such as `run.file`)
+answer the same way, where they used to say `not_found` `no run ID`. The TUI calls it when the owner opens the
 renders and again for each render it moves to, and keeps only the answer to its
 latest call for a render (each call carries a number from a counter on the
 model that never restarts); no snapshot carries render text.

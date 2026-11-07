@@ -1021,7 +1021,8 @@ the action area under the run tree, in this order:
   could not be read (`renders_error`, S147) it reads `Renders: the UI pass
   (round R) could not be read: WHY` instead, and when some were listed and
   another could not be read, the count is followed by `, some could not be
-  read: WHY`. Without a UI pass the card has no such line.
+  read: WHY`. For a single file WHY reads `NAME (WHY)`, for example
+  `b-80x24.txt (permission denied)`. Without a UI pass the card has no such line.
 
 A digit marks the human check of that number and moves it on: ticked, then
 later, then open again. The mark is saved in the run record at once (`run.check`).
@@ -1259,8 +1260,11 @@ confirmed plans (`run.launch-wire`).
 No launch writes happen before confirmation. Before the spec-check role runs,
 ork reads slicer's dependencies for every ticked item. A blocked item refuses
 the whole call, for example `S2 waits on S1 "Title" (in this wave, not done);
-untick S2 or land S1 first` when both items are ticked. A blocker outside the
-wave ends with `land S1 first`. Blocker titles are read once per distinct
+untick S2, or land S1 first` when both items are ticked. A blocker outside the
+wave ends with `land S1 first`. Several names are joined as `A, B and C`. A
+blocker shared by several items shows its title the first time only; later
+mentions use the id and the reason. A title is shown as it is, in plain double
+quotes. Blocker titles are read once per distinct
 blocker per call; a failed title read falls back to the id alone. The status
 line shows the refusal and keeps the ticks.
 The daemon checks again at wave start; a newly blocked item also refuses the

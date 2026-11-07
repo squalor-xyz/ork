@@ -310,6 +310,14 @@ func TestReadRenderRefusesAFileSwappedForALink(t *testing.T) {
 	}
 }
 
+// The text of a swapped file is read by the owner on the card: it has no
+// internal wording.
+func TestSwappedRenderErrorHasNoInternalWording(t *testing.T) {
+	if got := errNotThatFile.Error(); got != "replaced while being read" {
+		t.Errorf("errNotThatFile says %q, want \"replaced while being read\"", got)
+	}
+}
+
 // The card lists each view's renders as 80x24, 120x40, ascii, the views by
 // name, and then any other file by name (docs/dashboard.md).
 func TestRendersAreOrderedByViewThenSize(t *testing.T) {
@@ -419,24 +427,27 @@ func TestCardSaysWhyRendersCouldNotBeRead(t *testing.T) {
 	readFile := func(p string) error { _, err := os.ReadFile(p); return err }
 
 	for name, tc := range map[string]struct {
-		script    func(t *testing.T, req Request)
-		wantError bool
-		wantNames []string
+		script     func(t *testing.T, req Request)
+		wantError  bool
+		wantReason string
+		wantNames  []string
 	}{
 		"a directory with mode 0": {
 			script: func(t *testing.T, req Request) {
 				writeRenders(t, req, map[string]string{"a-80x24.txt": "a"})
 				mode0(t, filepath.Join(req.TempDir, "renders"), readDir)
 			},
-			wantError: true,
+			wantError:  true,
+			wantReason: "permission denied",
 		},
 		"a file with mode 0": {
 			script: func(t *testing.T, req Request) {
 				writeRenders(t, req, map[string]string{"a-80x24.txt": "a", "b-80x24.txt": "b"})
 				mode0(t, filepath.Join(req.TempDir, "renders", "b-80x24.txt"), readFile)
 			},
-			wantError: true,
-			wantNames: []string{"a-80x24.txt"},
+			wantError:  true,
+			wantReason: "b-80x24.txt (permission denied)",
+			wantNames:  []string{"a-80x24.txt"},
 		},
 		"no directory": {script: func(*testing.T, Request) {}},
 		"an empty directory": {script: func(t *testing.T, req Request) {
@@ -459,8 +470,8 @@ func TestCardSaysWhyRendersCouldNotBeRead(t *testing.T) {
 			if got := renderNames(card); !reflect.DeepEqual(got, tc.wantNames) {
 				t.Errorf("renders %v, want %v", got, tc.wantNames)
 			}
-			if tc.wantError && !strings.Contains(card.RendersError, "permission denied") {
-				t.Errorf("RendersError %q, want the reason (permission denied)", card.RendersError)
+			if tc.wantError && card.RendersError != tc.wantReason {
+				t.Errorf("RendersError %q, want %q", card.RendersError, tc.wantReason)
 			}
 			if !tc.wantError && card.RendersError != "" {
 				t.Errorf("RendersError %q, want empty", card.RendersError)
