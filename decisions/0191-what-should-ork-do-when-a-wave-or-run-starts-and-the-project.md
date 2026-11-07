@@ -2,10 +2,13 @@
 {
   "id": 191,
   "title": "What should ork do when a wave or run starts and the project has no check command?",
-  "status": "open",
+  "status": "decided",
   "key": "launch.no-check-command",
   "asked_by": "claude",
+  "decided_by": "Jon",
+  "via": "interactive question, session 8d711f67",
   "created": "2026-11-07",
+  "decided_at": "2026-11-07",
   "context": "The 2026-11-04 prism-ui break: two landings each passed with only slicer check, then the base stopped building. The owner chose on 2026-11-07 (S265 interview) to refuse unless an opt-out flag is given.",
   "options": [
     {
@@ -25,6 +28,8 @@
     "label": "refuse",
     "reasoning": "The owner's 2026-11-07 answer; a silent pass with no tests broke the base on 2026-11-04."
   },
+  "decision": "refuse",
+  "rationale": "Owner picked 'refuse' in the interactive question on 2026-11-07 (relay session).",
   "refs": [
     "S265"
   ],
@@ -32,6 +37,10 @@
     {
       "date": "2026-11-07",
       "event": "ask"
+    },
+    {
+      "date": "2026-11-07",
+      "event": "decide"
     }
   ]
 }
