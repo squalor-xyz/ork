@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 307,
+  "next_id": 308,
   "preamble": "",
   "passes": [
     {
@@ -15657,6 +15657,38 @@
         "importance": 3,
         "urgency": 2,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S307",
+      "title": "Later notes from S258 and S274 (wave 1 of v1.1)",
+      "short_title": "S258 and S274 later notes",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [
+          "daemon",
+          "tui",
+          "cli"
+        ],
+        "trees_literal": false,
+        "findings": "S258 and S274 reviews and gates, 2026-11-07",
+        "discovered_from": "S274",
+        "parent": "",
+        "cites": [],
+        "key": "s258-s274-later-notes",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }
