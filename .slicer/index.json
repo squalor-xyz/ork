@@ -14741,11 +14741,29 @@
       "id": "S284",
       "title": "Go tests: write fake vendor and git scripts once per test binary",
       "short_title": "Go tests: write fake vendor and git scripts once per test binary",
-      "status": "open",
+      "status": "started",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
-      "claim": null,
+      "note_records": [
+        {
+          "id": "f66b34f5-4969-441c-bbb9-cdccf9172a57",
+          "kind": "",
+          "text": "**2026-11-07** — Measured on Linux (6 cores, 2026-11-07): internal/cli 7.7 s before, 7.4 s after; internal/engine 26.9 s before, 27.9 s after; both already under the limits, so no speedup here. The gain was measured on a Mac only (2026-11-04) and is unverified there. Test count unchanged (3 guard tests added). Rule for future tests: use replaceFake, not writeFile, on a linked fake. Later: write the shared scripts 0o555 so a write through a link fails loudly.",
+          "created_at": "2026-11-07T20:31:00Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": {
+        "owner": "Jon Robbins",
+        "at": "2026-11-07T20:06:54Z"
+      },
       "fields": {
         "size": "S",
         "flags": [],
@@ -14762,7 +14780,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

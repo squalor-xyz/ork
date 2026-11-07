@@ -119,7 +119,7 @@ func TestLandChangelogResolverIgnoresOtherChangelogNames(t *testing.T) {
 func TestLandChangelogResolverFailureFallsBack(t *testing.T) {
 	env := changelogConflict(t, "CHANGELOG.md", true)
 	script := strings.Replace(fakeGitScript, "exec git", "if [ \"$3\" = merge ] && [ \"$4\" = -m ]; then touch \"$d/add-fails\"; fi\nexec git", 1)
-	writeFile(t, filepath.Join(env.fakes, "gitw"), script)
+	replaceFake(t, filepath.Join(env.fakes, "gitw"), script)
 	reason := pauseOnConflict(t, env, "CHANGELOG.md", true)
 	if !strings.Contains(reason, "ork could not merge CHANGELOG.md: git add") {
 		t.Errorf("reason lacks the resolver failure: %q", reason)
@@ -132,7 +132,7 @@ func TestLandChangelogResolverFailureFallsBack(t *testing.T) {
 func TestLandChangelogMergeCommitFailurePausesWithGitsMessage(t *testing.T) {
 	env := changelogConflict(t, "CHANGELOG.md", true)
 	script := strings.Replace(fakeGitScript, "exec git", "if [ \"$3\" = merge ] && [ \"$4\" = -m ]; then touch \"$d/commit-fails\"; fi\nexec git", 1)
-	writeFile(t, filepath.Join(env.fakes, "gitw"), script)
+	replaceFake(t, filepath.Join(env.fakes, "gitw"), script)
 	reason := pauseOnConflict(t, env, "", false)
 	if !strings.Contains(reason, "git commit") || !strings.Contains(reason, "commit broke") {
 		t.Errorf("reason lacks git's message: %q", reason)

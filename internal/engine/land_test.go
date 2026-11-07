@@ -101,6 +101,20 @@ func writeFile(t *testing.T, path, text string) {
 	}
 }
 
+// replaceFake gives a test its own script in place of a link to a shared one.
+// It removes the link first, because writing through it would change the
+// shared script for every later test.
+func replaceFake(t *testing.T, path, text string) {
+	t.Helper()
+	if err := os.Remove(path); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, path, text)
+	if err := os.Chmod(path, 0o755); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func newLandEnv(t *testing.T, opts ...func(*registry.Project)) *landEnv {
 	t.Helper()
 	root := t.TempDir()
@@ -126,9 +140,11 @@ func newLandEnv(t *testing.T, opts ...func(*registry.Project)) *landEnv {
 	writeFile(t, filepath.Join(W, "feature.txt"), "the slice\n")
 
 	fakes := filepath.Join(root, "fakes")
-	for name, body := range map[string]string{"slicer": fakeSlicerScript, "gitw": fakeGitScript} {
-		writeFile(t, filepath.Join(fakes, name), body)
-		if err := os.Chmod(filepath.Join(fakes, name), 0o755); err != nil {
+	if err := os.MkdirAll(fakes, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"slicer", "gitw"} {
+		if err := os.Symlink(sharedFakes[name], filepath.Join(fakes, name)); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -173,6 +189,62 @@ func newLandEnv(t *testing.T, opts ...func(*registry.Project)) *landEnv {
 	env.run = run
 	env.e = Load(env.deps, proj, run)
 	return env
+}
+
+// Two landing environments share the fake scripts but keep their own switches
+// and logs, so no test depends on another test's files.
+func TestLandFakesStayPerTest(t *testing.T) {
+	one, two := newLandEnv(t), newLandEnv(t)
+	for _, name := range []string{"slicer", "gitw"} {
+		a, errA := filepath.EvalSymlinks(filepath.Join(one.fakes, name))
+		b, errB := filepath.EvalSymlinks(filepath.Join(two.fakes, name))
+		if errA != nil || errB != nil || a != b {
+			t.Errorf("%s: the two environments do not share one script: %q (%v) and %q (%v)", name, a, errA, b, errB)
+		}
+	}
+	// A switch in the first environment's directory stops only the first.
+	writeFile(t, filepath.Join(one.fakes, "push-fails"), "")
+	if out, err := exec.Command(filepath.Join(one.fakes, "gitw"), "-C", one.P, "push").CombinedOutput(); err == nil || !strings.Contains(string(out), "push refused") {
+		t.Errorf("first push: %q, %v; want it refused", out, err)
+	}
+	if out, err := exec.Command(filepath.Join(two.fakes, "gitw"), "-C", two.P, "push").CombinedOutput(); err != nil {
+		t.Errorf("second push: %q, %v; want success", out, err)
+	}
+	// Each call is logged only in its own directory.
+	for env, arg := range map[*landEnv]string{one: "first", two: "second"} {
+		if err := exec.Command(filepath.Join(env.fakes, "slicer"), "config", arg).Run(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got := one.log("slicer.log"); len(got) != 1 || got[0] != "config first" {
+		t.Errorf("first slicer.log = %q", got)
+	}
+	if got := two.log("slicer.log"); len(got) != 1 || got[0] != "config second" {
+		t.Errorf("second slicer.log = %q", got)
+	}
+	if got := one.log("git.log"); len(got) != 1 {
+		t.Errorf("first git.log = %q", got)
+	}
+	if got := two.log("git.log"); len(got) != 1 {
+		t.Errorf("second git.log = %q", got)
+	}
+}
+
+// A test that needs its own script replaces its link and leaves the shared
+// script, and so every other test's fake, as it was.
+func TestLandReplacedFakeLeavesTheSharedScript(t *testing.T) {
+	one := newLandEnv(t)
+	replaceFake(t, filepath.Join(one.fakes, "gitw"), "#!/bin/sh\nexit 42\n")
+	if err := exec.Command(filepath.Join(one.fakes, "gitw"), "-C", one.P, "push").Run(); err == nil {
+		t.Error("the replaced fake did not run")
+	}
+	two := newLandEnv(t)
+	if out, err := exec.Command(filepath.Join(two.fakes, "gitw"), "-C", two.P, "push").CombinedOutput(); err != nil {
+		t.Errorf("another environment's fake changed: %q, %v", out, err)
+	}
+	if b, err := os.ReadFile(sharedFakes["gitw"]); err != nil || string(b) != fakeGitScript {
+		t.Errorf("the shared script changed: %q, %v", b, err)
+	}
 }
 
 // secondRun adds a run of another slice (S05) in the same project and main
