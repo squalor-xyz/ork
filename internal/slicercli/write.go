@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -258,12 +259,24 @@ var specCheckRow = regexp.MustCompile(`Spec check row \((r\d+)\)`)
 // names one. The matrix can still use a reviewer row for this separate
 // ledger role.
 func SpecCheckRowID(rules []Rule) string {
-	for _, r := range rules {
-		if m := specCheckRow.FindStringSubmatch(r.Text); m != nil {
-			return m[1]
-		}
+	if ids := SpecCheckRowIDs(rules); len(ids) > 0 {
+		return ids[0]
 	}
 	return ""
+}
+
+// SpecCheckRowIDs lists every row that a rule names as "Spec check row (rNN)",
+// in rule order, each once (S258, *proposed*). SpecCheckRowID is the first.
+func SpecCheckRowIDs(rules []Rule) []string {
+	var ids []string
+	for _, r := range rules {
+		for _, m := range specCheckRow.FindAllStringSubmatch(r.Text, -1) {
+			if !slices.Contains(ids, m[1]) {
+				ids = append(ids, m[1])
+			}
+		}
+	}
+	return ids
 }
 
 // EditAppend runs `slicer edit ID --section SECTION --append --text TEXT

@@ -57,7 +57,8 @@ this file on startup (`registry.no-seed`, adj 157). The first successful
       "vendor_env": {"codex": {"VENDOR_CODEX_NETWORK": "1"}},
       "push": true,
       "ui_doc": "docs/ui.md",
-      "ui_pass_skills": ["tui-design", "frontend-design"]
+      "ui_pass_skills": ["tui-design", "frontend-design"],
+      "spec_check_rows": ["r16", "r24"]
     }
   ]
 }
@@ -105,6 +106,25 @@ Notes on the fields:
   LF in wire calls and on registry load and save. Errors quote the bad name;
   blank-name errors give the item's position, counted from 1.
   An older ork refuses this key because `Load` uses strict keys.
+- `spec_check_rows` (*proposed*, S258, owner decision 2026-11-07) is an
+  optional ordered JSON array of matrix row ids (`r16`, `r24`). The spec
+  check runs on the first listed row that has an adapter; the next listed row
+  is its fallback. Every listed row, and every row a `Spec check row (rNN)`
+  rule names, stays out of a run's reviewer and gate chains, and
+  `roles.matrix` labels each one `Spec check row`. Absent or empty means ork
+  uses every row that a `Spec check row (rNN)` rule names, in rule order: the
+  first runs and each next one is its fallback (owner decision 2026-11-07).
+  With neither, or when none of the rows is a reviewer row with an adapter,
+  the spec check is refused with the `no_spec_check_row` code and a message
+  that gives the fix command with a real candidate row, the reviewer rows with
+  an adapter, and the warning that a spec check row leaves every run's
+  reviewer and gate chains. The list replaces the previous list; set
+  it with `ork projects set NAME --spec-check-rows r16,r24`;
+  `--spec-check-rows ""` clears it. Each item must be `r` and digits, and a
+  row is not listed twice (wire calls and registry load and save refuse
+  otherwise). ork does not check that a row exists; the matrix is slicer's and
+  ork never edits it. An older ork refuses this key because `Load` uses
+  strict keys.
 - `bell` (*proposed*, S100) is an optional JSON boolean per project.
   Absent or `true` means on; `false` silences every bell for that project.
   Counts and sidebar badges still update. The TUI reads it at start; restart
@@ -113,7 +133,7 @@ Notes on the fields:
   lands with the separate setter slice S224.
 - `ork projects set` (*proposed*, S161, owner decision 2026-10-27) is the only
   way ork writes the optional per-project fields. It changes `push`, `ui_doc`,
-  `ui_pass_skills`, `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`,
+  `ui_pass_skills`, `spec_check_rows` (S258), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`,
   `cap`, `budgets.minutes`, `budgets.tokens` and, since S174 (*proposed*,
   owner decision 2026-10-29), `environment_lines`, `permissions` and
   `vendor_env`, and leaves every other key as it was (`name`, `path` and
@@ -124,6 +144,7 @@ Notes on the fields:
   A `ui_doc` must be a relative path inside the project (checked by name;
   symlinks are not resolved; it is stored cleaned; the file need not exist yet).
   A `ui_pass_skills` list replaces the whole list; an empty list clears it.
+  A `spec_check_rows` list does the same.
   A pattern must hold `{id}` or `{id_lower}`. Numbers must not be negative. An empty string or 0 clears
   a field (zero means unset). The command is design.md's `projects set`.
 - S174 (*proposed*) changes the three list and map fields without retyping

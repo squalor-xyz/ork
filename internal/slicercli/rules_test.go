@@ -102,3 +102,22 @@ func TestSpecCheckRowID(t *testing.T) {
 		})
 	}
 }
+
+func TestSpecCheckRowIDsListsEveryNamedRow(t *testing.T) {
+	rules := []Rule{
+		{ID: "u1", Text: "A reviewer never wrote code."},
+		{ID: "u11", Text: "The spec check before a wave runs the Spec check row (r16): one read-only pass."},
+		{ID: "u12", Text: "A fallback is the Spec check row (r24)."},
+		{ID: "u13", Text: "Spec check row (r16) again."},
+		{ID: "u14", Text: "Spec check row (r31) or, failing that, Spec check row (r32)."},
+	}
+	if got, want := SpecCheckRowIDs(rules), []string{"r16", "r24", "r31", "r32"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("SpecCheckRowIDs = %q, want %q", got, want)
+	}
+	if got := SpecCheckRowID(rules); got != "r16" {
+		t.Fatalf("SpecCheckRowID = %q, want r16", got)
+	}
+	if got := SpecCheckRowIDs([]Rule{{ID: "u1", Text: "The Spec check row runs."}}); len(got) != 0 {
+		t.Fatalf("SpecCheckRowIDs with no named row = %q", got)
+	}
+}

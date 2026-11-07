@@ -540,6 +540,11 @@ func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
 			return registry.Project{}, bad("%v", err)
 		}
 	}
+	if p.SpecCheckRows != nil {
+		if err := registry.ValidateSpecCheckRows(*p.SpecCheckRows); err != nil {
+			return registry.Project{}, bad("%v", err)
+		}
+	}
 	if p.UIDoc != nil {
 		if err := registry.ValidateUIDoc(*p.UIDoc); err != nil {
 			return registry.Project{}, bad("%v", err)
@@ -602,6 +607,9 @@ func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
 	}
 	if p.UIPassSkills != nil {
 		proj.UIPassSkills = append([]string(nil), (*p.UIPassSkills)...)
+	}
+	if p.SpecCheckRows != nil {
+		proj.SpecCheckRows = append([]string(nil), (*p.SpecCheckRows)...)
 	}
 	if p.UIDoc != nil {
 		proj.UIDoc = *p.UIDoc

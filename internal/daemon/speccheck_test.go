@@ -81,7 +81,7 @@ func newSpecRig(t *testing.T, rules string, extra ...clitest.Route) *specRig {
 	row := func(id, model, effort string) string {
 		return fmt.Sprintf(`{"id":%q,"agent":"Claude Code","vendor":"Claude","model":%q,"reasoning":%q}`, id, model, effort)
 	}
-	recommend := `{"roles":[{"role":"implementer","row":` + row("r3", "sonnet", "high") + `},{"role":"reviewer","row":` + row("r5", "opus", "medium") + `,"alternatives":[` + row("r16", "sonnet-spec", "low") + `]},{"role":"architect","row":null,"alternatives":[],"selected_by":"unmatched"}]}`
+	recommend := `{"roles":[{"role":"implementer","row":` + row("r3", "sonnet", "high") + `},{"role":"reviewer","row":` + row("r5", "opus", "medium") + `,"alternatives":[` + row("r16", "sonnet-spec", "low") + `,` + row("r24", "grok-spec", "medium") + `,{"id":"r30","agent":"Acme Agent","vendor":"Acme","model":"acme-spec","reasoning":"low"}]},{"role":"architect","row":null,"alternatives":[],"selected_by":"unmatched"}]}`
 	for _, id := range []string{"S1", "S2"} {
 		rig.setSpec(t, id, "why "+id)
 	}
@@ -945,5 +945,195 @@ func TestSingleRunCarriesSpecAnswersIntoTheBrief(t *testing.T) {
 	}
 	if !strings.Contains(rec.Decisions, want) || !strings.Contains(stored.Snapshot().Decisions, want) {
 		t.Fatalf("decisions missing: %+v", rec)
+	}
+}
+
+// setSpecCheckRows stores the project's spec_check_rows setting in the
+// registry, as `ork projects set p --spec-check-rows` would.
+func setSpecCheckRows(t *testing.T, d *Daemon, rows ...string) registry.Project {
+	t.Helper()
+	f, err := registry.Load(d.registryPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Projects[0].SpecCheckRows = rows
+	if err := registry.Save(d.registryPath(), f); err != nil {
+		t.Fatal(err)
+	}
+	return f.Projects[0]
+}
+
+func specChainOf(t *testing.T, rig *specRig) ([]runrec.LineupEntry, error) {
+	t.Helper()
+	f, err := registry.Load(rig.d.registryPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	proj := f.Projects[0]
+	return rig.d.specChain(context.Background(), rig.d.runDeps(proj), proj, "S1")
+}
+
+func TestSpecChainUsesTheProjectSetting(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON(u11))
+	setSpecCheckRows(t, rig.d, "r24", "r30", "r16")
+	chain, err := specChainOf(t, rig)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The setting's order, not the matrix's; r30 has no adapter and is left out.
+	want := []runrec.LineupEntry{{Vendor: "claude", Model: "grok-spec", Effort: "medium"}, {Vendor: "claude", Model: "sonnet-spec", Effort: "low"}}
+	if !reflect.DeepEqual(chain, want) {
+		t.Fatalf("chain %+v, want %+v", chain, want)
+	}
+	rig.report = "## Slice S1\nReady\n\n## Owner needed\n\nnone\n"
+	rig.check(t, "S1")
+	if reqs := rig.requests(); len(reqs) != 1 || reqs[0].Model != "grok-spec" || reqs[0].Effort != "medium" {
+		t.Fatalf("the spec check ran on %+v, want the first listed row", reqs)
+	}
+}
+
+func TestSpecChainFallsBackToTheRuleWhenUnset(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON(u11))
+	chain, err := specChainOf(t, rig)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet-spec", Effort: "low"}}; !reflect.DeepEqual(chain, want) {
+		t.Fatalf("chain %+v, want %+v", chain, want)
+	}
+}
+
+// The setting works with no rule at all.
+func TestSpecChainNeedsNoRuleWhenTheProjectSetsRows(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON("A reviewer never wrote code."))
+	setSpecCheckRows(t, rig.d, "r24")
+	chain, err := specChainOf(t, rig)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []runrec.LineupEntry{{Vendor: "claude", Model: "grok-spec", Effort: "medium"}}; !reflect.DeepEqual(chain, want) {
+		t.Fatalf("chain %+v, want %+v", chain, want)
+	}
+}
+
+// leavesChains is the phrase of the line that says a spec check row leaves the chains.
+const leavesChains = "leaves every run's reviewer and gate chains"
+
+func TestSpecChainWithoutARowIsAnOwnerError(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON("A reviewer never wrote code."))
+	_, err := specChainOf(t, rig)
+	var re *ipc.Error
+	if !errors.As(err, &re) || re.Code != CodeNoSpecCheckRow {
+		t.Fatalf("error %v, want code %s", err, CodeNoSpecCheckRow)
+	}
+	// One line each: the problem, the fix with a real row, the rule, the rows,
+	// the warning (owner decision 2026-11-07).
+	lines := strings.Split(re.Message, "\n")
+	if len(lines) != 5 || !strings.HasPrefix(lines[0], "no Spec check row is set") ||
+		lines[1] != "fix: ork projects set p --spec-check-rows r5" ||
+		lines[2] != `or:  slicer relay-roles rule-add ... "Spec check row (rNN)"` ||
+		lines[3] != "reviewer rows with an adapter: r5, r16, r24" || !strings.Contains(lines[4], leavesChains) {
+		t.Errorf("message:\n%s", re.Message)
+	}
+	for _, line := range lines {
+		if len(line) > 80 {
+			t.Errorf("line of %d columns: %q", len(line), line)
+		}
+	}
+	// The same through the wire call: the owner sees the code, not internal.
+	_, err = rig.d.handle(context.Background(), MethodSpecCheck, json.RawMessage(`{"project":"p","items":["S1"]}`))
+	if got := ipc.ErrorOf(err); got.Code != CodeNoSpecCheckRow {
+		t.Fatalf("spec.check error code %q", got.Code)
+	}
+	if len(rig.requests()) != 0 {
+		t.Error("a role ran without a row")
+	}
+}
+
+func TestSpecChainRowNotRecommendedIsAnOwnerError(t *testing.T) {
+	const ruleHint = `or:  slicer relay-roles rule-add ... "Spec check row (rNN)"`
+	const backToRule = `or:  ork projects set p --spec-check-rows ""`
+	for _, tc := range []struct {
+		name    string
+		rule    bool
+		set     []string
+		want    []string
+		missing []string
+	}{
+		{"rule", true, nil,
+			[]string{"the spec check row (r99) is not among the reviewer rows", "\nfix: ork projects set p --spec-check-rows r5\n", "\n" + ruleHint + "\n", "\nreviewer rows with an adapter: r5, r16, r24\n", leavesChains},
+			[]string{"change it", "change them", backToRule}},
+		{"several set, rule names one", true, []string{"r98", "r99"},
+			[]string{"the spec check rows (r98, r99) are not among the reviewer rows", "\nfix: change them with ork projects set p --spec-check-rows r5\n", "\n" + backToRule + "\n", leavesChains},
+			[]string{"rule-add", " is not among"}},
+		{"one set, no rule", false, []string{"r98"},
+			[]string{"the spec check row (r98) is not among the reviewer rows", "\nfix: change it with ork projects set p --spec-check-rows r5\n", leavesChains},
+			[]string{"rule-add", backToRule, " are not among"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			rules := rulesJSON("A reviewer never wrote code.")
+			if tc.rule {
+				rules = rulesJSON(strings.ReplaceAll(u11, "r16", "r99"))
+			}
+			rig := newSpecRig(t, rules)
+			if tc.set != nil {
+				setSpecCheckRows(t, rig.d, tc.set...)
+			}
+			_, err := specChainOf(t, rig)
+			var re *ipc.Error
+			if !errors.As(err, &re) || re.Code != CodeNoSpecCheckRow {
+				t.Fatalf("error %v, want code %s", err, CodeNoSpecCheckRow)
+			}
+			for _, want := range tc.want {
+				if !strings.Contains(re.Message, want) {
+					t.Errorf("message lacks %q:\n%s", want, re.Message)
+				}
+			}
+			for _, bad := range tc.missing {
+				if strings.Contains(re.Message, bad) {
+					t.Errorf("message has %q:\n%s", bad, re.Message)
+				}
+			}
+		})
+	}
+}
+
+// With no setting, every rule-named row is a spec check row, in rule order
+// (owner decision 2026-11-07): the first runs and the next is its fallback.
+func TestSpecChainWithoutASettingUsesEveryRuleRowInOrder(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON(u11, "The Spec check row (r24) is the fallback."))
+	chain, err := specChainOf(t, rig)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet-spec", Effort: "low"}, {Vendor: "claude", Model: "grok-spec", Effort: "medium"}}
+	if !reflect.DeepEqual(chain, want) {
+		t.Fatalf("chain %+v, want %+v", chain, want)
+	}
+}
+
+func TestPlanKeepsEveryRuleNamedSpecCheckRowOutOfEveryChain(t *testing.T) {
+	plan := uiPlan(t,
+		[]string{matrixRow("r3", "sonnet", "high")},
+		[]string{matrixRow("r5", "opus", "medium"), matrixRow("r16", "sonnet-spec", "low"), matrixRow("r24", "grok-spec", "medium"), matrixRow("r20", "haiku", "high")},
+		u11, "The Spec check row (r24) is the fallback.")
+	want := []runrec.LineupEntry{{Vendor: "claude", Model: "opus", Effort: "medium"}, {Vendor: "claude", Model: "haiku", Effort: "high"}}
+	for _, role := range []string{engine.RoleReviewer, engine.RoleGate} {
+		if !reflect.DeepEqual(plan.Lineup[role], want) {
+			t.Errorf("%s chain %+v, want %+v", role, plan.Lineup[role], want)
+		}
+	}
+}
+
+func TestPlanKeepsEverySpecCheckRowOutOfEveryChain(t *testing.T) {
+	plan := uiPlanWith(t, []string{"r24"},
+		[]string{matrixRow("r3", "sonnet", "high")},
+		[]string{matrixRow("r5", "opus", "medium"), matrixRow("r16", "sonnet-spec", "low"), matrixRow("r24", "grok-spec", "medium"), matrixRow("r20", "haiku", "high")},
+		"A reviewer never wrote code.", u11)
+	want := []runrec.LineupEntry{{Vendor: "claude", Model: "opus", Effort: "medium"}, {Vendor: "claude", Model: "haiku", Effort: "high"}}
+	for _, role := range []string{engine.RoleReviewer, engine.RoleGate} {
+		if !reflect.DeepEqual(plan.Lineup[role], want) {
+			t.Errorf("%s chain %+v, want %+v", role, plan.Lineup[role], want)
+		}
 	}
 }

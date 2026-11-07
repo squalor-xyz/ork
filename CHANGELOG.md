@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- S258 (*proposed*): a project names the matrix rows its spec check runs on:
+  `ork projects set NAME --spec-check-rows r16,r24` (registry
+  `spec_check_rows`, owner decision 2026-11-07). The first row with an adapter
+  runs and the next is its fallback. Every listed row, and every row a
+  `Spec check row (rNN)` rule names, stays out of a run's reviewer and gate
+  chains, and `ork roles matrix` labels each one. With no setting ork uses
+  every row that a `Spec check row (rNN)` rule names, in rule order: the
+  first runs and each next one is its fallback. A spec check with no row to
+  run on now fails with the new `no_spec_check_row` code, not `internal`. The
+  message has lines for the fix command (with a real row), the other way out,
+  the reviewer rows with an adapter and a warning that a spec check row
+  leaves every run's reviewer and gate chains. Docs:
+  `docs/design.md`, `docs/state.md`, `docs/guide.md`, `docs/dashboard.md`,
+  `docs/glossary.md`.
+
 - S294 (*proposed*): pause red loops after round 3, or sooner when the
   worktree content and check log repeat. `ork retry RUN [--rounds N]` grants
   two more rounds by default. Status names the failure and retry/stop

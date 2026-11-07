@@ -104,6 +104,9 @@ func TestRoundTripKeepsEveryField(t *testing.T) {
 	if p.UIDoc != "docs/ui.md" {
 		t.Fatalf("ui_doc: the docs example sets docs/ui.md, the project has %q", p.UIDoc)
 	}
+	if !reflect.DeepEqual(p.SpecCheckRows, []string{"r16", "r24"}) {
+		t.Fatalf("spec_check_rows: the docs example sets r16 and r24, the project has %q", p.SpecCheckRows)
+	}
 	if !p.Push {
 		t.Fatalf("push: the docs example sets it, the project has %v", p.Push)
 	}
@@ -631,5 +634,54 @@ func TestRegistryBellFieldDefaultsOn(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestRegistryKeepsSpecCheckRows(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "projects.json")
+	raw := []byte(`{"version":2,"projects":[{"name":"p","path":"/p","adj":false,"spec_check_rows":["r16","r24"]}]}`)
+	writeFile(t, path, raw)
+	f, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(f.Projects[0].SpecCheckRows, []string{"r16", "r24"}) {
+		t.Fatalf("loaded %+v", f.Projects[0])
+	}
+	if err := Save(path, f); err != nil {
+		t.Fatal(err)
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(asAny(t, data), asAny(t, raw)) {
+		t.Fatalf("rows lost: %s", data)
+	}
+	// An empty list is not written.
+	f.Projects[0].SpecCheckRows = []string{}
+	if err := Save(path, f); err != nil {
+		t.Fatal(err)
+	}
+	if data, _ = os.ReadFile(path); strings.Contains(string(data), "spec_check_rows") {
+		t.Fatalf("an empty list is written: %s", data)
+	}
+}
+
+func TestRegistryRefusesInvalidSpecCheckRows(t *testing.T) {
+	for _, bad := range []string{"", "r1x", "16", "R16", " r16", "r"} {
+		raw, _ := json.Marshal(map[string]any{"version": 2, "projects": []any{map[string]any{"name": "p", "path": "/p", "spec_check_rows": []string{bad}}}})
+		path := filepath.Join(t.TempDir(), "projects.json")
+		writeFile(t, path, raw)
+		if _, err := Load(path); err == nil || !strings.Contains(err.Error(), "spec_check_rows") || strings.Contains(err.Error(), "unknown field") {
+			t.Errorf("%q: load error %v", bad, err)
+		}
+		if err := Save(path, &File{Version: Version, Projects: []Project{{Name: "p", Path: "/p", SpecCheckRows: []string{bad}}}}); err == nil || !strings.Contains(err.Error(), "spec_check_rows") {
+			t.Errorf("%q: save error %v", bad, err)
+		}
+	}
+	err := ValidateSpecCheckRows([]string{"r16", "r16"})
+	if err == nil || !strings.Contains(err.Error(), `"r16" is listed twice`) {
+		t.Errorf("duplicate: %v", err)
 	}
 }

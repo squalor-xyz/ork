@@ -249,3 +249,37 @@ func TestFormatMatrixOrkFirstPutsTheOrkSectionAboveSlicersText(t *testing.T) {
 		t.Fatalf("the CLI order changed: %q", got)
 	}
 }
+
+// Every row that the project's setting names, and the row of the rule, is a
+// spec check row; a row nothing names is not.
+func TestMatrixLabelsEverySpecCheckRow(t *testing.T) {
+	row := func(id, role, agent string) map[string]any {
+		return map[string]any{"id": id, "role": role, "agent": agent, "vendor": "V", "model": "m", "reasoning": "high", "note": ""}
+	}
+	body, err := json.Marshal(map[string]any{
+		"relay_roles": "x",
+		"rows": []map[string]any{
+			row("r5", "reviewer", "Claude Code"),
+			row("r16", "reviewer", "Claude Code"),
+			row("r24", "reviewer", "Grok"),
+		},
+		"rules": []map[string]string{{"id": "u11", "text": "The spec check before a wave runs the Spec check row (r16): one read-only pass."}},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	d := readDaemon(t, matrixRoute(string(body)))
+	setSpecCheckRows(t, d, "r24")
+	var got RolesMatrixResult
+	if err := json.Unmarshal(request(t, d, "roles.matrix", `{"project":"p"}`), &got); err != nil {
+		t.Fatal(err)
+	}
+	want := []MatrixRow{
+		{"r5", "reviewer", "Claude Code", "used as claude"},
+		{"r16", "reviewer", "Claude Code", "Spec check row, used as claude"},
+		{"r24", "reviewer", "Grok", "Spec check row, used as grok"},
+	}
+	if !reflect.DeepEqual(got.Rows, want) {
+		t.Errorf("rows\n got %+v\nwant %+v", got.Rows, want)
+	}
+}

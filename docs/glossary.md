@@ -251,8 +251,8 @@ The TUI and the CLI are its clients (`daemon.lifetime`).
 both (`registry.initial`). See [state.md](state.md).
 
 **Project registry.** `projects.json`: the projects ork shows and their
-settings (caps, patterns, check command, budgets, permissions, `ui_doc`
-and `ui_pass_skills`).
+settings (caps, patterns, check command, budgets, permissions, `ui_doc`,
+`ui_pass_skills` and `spec_check_rows`).
 
 **UI pass skills.** The optional project registry list `ui_pass_skills`
 (*proposed*, S209, adj 171), set with `--ui-pass-skills a,b`. A Claude UI

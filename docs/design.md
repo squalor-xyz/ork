@@ -108,20 +108,21 @@ ork (TUI)  ork status --json (CLI)
   | `wave.start` (`run.launch-wire`; proposed shape) | `{"items":[RunParams...]}`; each item has `project`, `item`, `well_specified`, `split`, optional `lineup`, `budgets` and `expected` as in `run.start` | `{"wave","items":[{"item","run"?,"error"?}]}`; one wave id, one project, admission errors kept per item |
   | `wave.stop` (proposed wire) | `{"wave"}` | the same wave result; stops each unfinished member through `run.stop`, skips final members |
   | `wave.suggest` (proposed wire) | `{"project"}` | slicer's `plan-parallel` result for the registered project, limited to the fields `ParallelPlan` reads; slicer runs on each call, not from the cache |
-  | `roles.matrix` (proposed wire, S168) | `{"project"}` | `{"markdown","rows":[{"id","role","agent","use"}],"rules":[{"id","text"}]}` from `slicer relay-roles show --json`: slicer's own text, and for each row what ork does with it (`use`: `used as claude\|codex\|grok`, `UI pass row, ...`, `Spec check row, ...`, `skipped: no adapter for AGENT`, `not used: the gate runs the reviewer's lineup`, `not run by ork`, `not used: ork has no role ROLE`); read-only, no slicer write; slicer's error keeps its code and message; slicer runs on each call |
+  | `roles.matrix` (proposed wire, S168) | `{"project"}` | `{"markdown","rows":[{"id","role","agent","use"}],"rules":[{"id","text"}]}` from `slicer relay-roles show --json`: slicer's own text, and for each row what ork does with it (`use`: `used as claude\|codex\|grok`, `UI pass row, ...`, `Spec check row, ...` (every row that the project's `spec_check_rows` or a rule names), `skipped: no adapter for AGENT`, `not used: the gate runs the reviewer's lineup`, `not run by ork`, `not used: ork has no role ROLE`); read-only, no slicer write; slicer's error keeps its code and message; slicer runs on each call |
   | `wave.overlap` (proposed wire) | `{"project","items":[ID...]}` | `{"overlap":[{"a","b","shared"?}]}` from `slicer deps --overlap`; `shared` is absent when a pair shares no path; fewer than two items is `bad_params`; slicer runs on each call |
   | `subscribe` | `{"focus":[names]}` | none; the connection gets notices (below) and the named projects become visible |
   | `refresh` | `{"project"}` | none; reads every part of the project now and returns once they are read |
   | `projects.list` | none | `{"projects":[...]}`; an empty registry is valid |
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
   | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
-  | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `ui_doc`, `ui_pass_skills` (a list, S209), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`) | the project as saved; an omitted field keeps its value, `""` or 0 clears one, `[]` clears `ui_pass_skills`; `null` removes one role or one vendor key, and the other roles and keys stay; `bad_params` for an unknown field, no field or an invalid value, `not_found`, `project_busy` while a run is unfinished |
+  | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `ui_doc`, `ui_pass_skills` (a list, S209), `spec_check_rows` (a list, S258), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`) | the project as saved; an omitted field keeps its value, `""` or 0 clears one, `[]` clears `ui_pass_skills` or `spec_check_rows`; `null` removes one role or one vendor key, and the other roles and keys stay; `bad_params` for an unknown field, no field or an invalid value, `not_found`, `project_busy` while a run is unfinished |
   | `settings.get` (*proposed*, S174) | none | `{"global_cap","daemon_idle_minutes","effective_global_cap","effective_daemon_idle_minutes"}`; the first two are the stored values (0 is unset) |
   | `settings.set` (*proposed*, S174) | `{"global_cap"?,"daemon_idle_minutes"?}`, at least one | the same shape as `settings.get`; 0 clears one; `bad_params` for no field or a negative number; not refused while runs are unfinished; a raised `global_cap` starts the queued runs that now fit |
 
   Error codes the daemon adds: `unknown_method`, `bad_params`, `not_found`,
   `duplicate_name`, `invalid_path`, `registry`, *proposed* `project_busy`, *proposed*
-  `refused` (an owner action the engine refused).
+  `refused` (an owner action the engine refused) and *proposed* `no_spec_check_row`
+  (S258: a spec check with no row to run on; the message gives the fix command).
   Registry writes happen in the daemon, one at a time. The TUI reads through
   the daemon with `snapshot` from S13. Before the daemon it called the
   adapters directly (`dash.pre-daemon`).
@@ -858,9 +859,22 @@ question. Answer, approve, fix and retry record `--phase start` to continue.
   ID` section per slice, holding `Ready` or one or more question blocks; the
   multi-block parse (`ParseOwnerQuestions`) reads every `Question:` block of a
   section with the strict shape of an owner question. Its lineup row is the
-  matrix row that the rule naming "Spec check row (rNN)" gives (u11 today:
-  sonnet, medium). That matrix row remains separate from every run's
-  reviewer and gate chains. The ledger role comes from the contract JSON as
+  matrix rows that the project's `spec_check_rows` list gives, in order (S258,
+  *proposed*; the first row with an adapter runs and the next is its
+  fallback), else every row that a rule naming "Spec check row (rNN)" gives,
+  in rule order (u11 today: sonnet, medium; owner decision 2026-11-07).
+  Those matrix rows, and every row a rule names, remain separate from every
+  run's reviewer and gate chains. With neither a setting nor a rule, or when
+  no listed row is among the reviewer rows with an adapter that slicer
+  recommends, the check is refused with code `no_spec_check_row`. The message
+  has one line each for the problem, `fix: ork projects set PROJECT
+  --spec-check-rows ROW` (ROW is a real candidate), `or:` (the
+  `slicer relay-roles rule-add` hint when the project sets no rows; when it
+  sets rows and a rule names one, the command that clears the setting to go
+  back to the rule), the reviewer rows with an adapter, and the warning that
+  a spec check row leaves every run's reviewer and gate chains. The CLI in
+  text mode prints it after `ork: spec check failed: `, with no code (the code
+  shows with `--json`); the TUI shows `CODE: message`. The ledger role comes from the contract JSON as
   `spec-check`. Its report and temp directory are under
   `~/.local/state/ork/spec-checks/<project-key>/<item-key>/` (hashed identities).
   Each item has `check.json` identifying the project and item, `spec-check.md`,
@@ -1742,7 +1756,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   The message names the run ids. The project stays registered.
   A planned start that loses the race to removal is refused with `not_found`.
 - `projects set NAME [--push on|off] [--ui-doc PATH]
-  [--ui-pass-skills A,B] [--worktree-pattern P]
+  [--ui-pass-skills A,B] [--spec-check-rows rNN,rNN] [--worktree-pattern P]
   [--branch-pattern P] [--check CMD] [--check-minutes N] [--cap N]
   [--budget-minutes N] [--budget-tokens N] [--env-line LINE]...
   [--permission ROLE=read-only|ROLE=]... [--allow ROLE=PATTERN]...
@@ -1759,6 +1773,12 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   blank name they give the item's position, counted from 1. Duplicate errors
   quote the name and give both positions. `a,,b` and `a,` report item 2.
   Text uses `ui_pass_skills="a,b"` or `ui_pass_skills=unset`.
+  `--spec-check-rows` (*proposed*, S258) takes one comma-separated list of
+  matrix row ids (`r16,r24`) and replaces the JSON array `spec_check_rows`;
+  an empty value clears it. The CLI trims whitespace around each id; the
+  shared validator refuses an id that is not `r` and digits, and a duplicate
+  (`bad_params`). Text uses `spec_check_rows="r16,r24"` or
+  `spec_check_rows=unset`.
   S174 flags: `--env-line` repeats and the lines given replace the list (one
   empty `--env-line ""` clears it). `--permission ROLE=read-only` sets the
   role's preset and `--permission ROLE=` removes its entry, so the default
@@ -1781,7 +1801,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   flag is required, and an unknown flag, a bad `--push` value or a non-number is a usage error
   (exit 2) before the daemon starts. The daemon (`projects.set`) validates the
   values and refuses with `bad_params` (a `ui_doc` that is absolute or leaves
-  the project, an invalid `ui_pass_skills` name, a pattern without `{id}` or
+  the project, an invalid `ui_pass_skills` name, an invalid `spec_check_rows` id, a pattern without `{id}` or
   `{id_lower}`, a negative number) or
   `project_busy`, as `projects rm` does, and then changes nothing. JSON:
   `{"project":{...}}`. Text: `updated NAME: FIELD=VALUE, ...` in flag order,

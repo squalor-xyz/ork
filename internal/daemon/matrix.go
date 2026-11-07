@@ -5,6 +5,7 @@ package daemon
 import (
 	"context"
 	"errors"
+	"slices"
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/engine"
@@ -47,13 +48,13 @@ func (d *Daemon) rolesMatrix(ctx context.Context, p RolesMatrixParams) (*RolesMa
 	if err != nil {
 		return nil, err
 	}
-	uiRow, specRow := slicercli.UIPassRowID(m.Rules), slicercli.SpecCheckRowID(m.Rules)
+	uiRow, specRows := slicercli.UIPassRowID(m.Rules), specCheckRowSet(project, m.Rules)
 	out := &RolesMatrixResult{Markdown: m.Markdown, Rows: []MatrixRow{}, Rules: m.Rules}
 	if out.Rules == nil {
 		out.Rules = []slicercli.Rule{}
 	}
 	for _, row := range m.Rows {
-		out.Rows = append(out.Rows, MatrixRow{ID: row.ID, Role: row.Role, Agent: row.Agent, Use: matrixUse(row, uiRow, specRow)})
+		out.Rows = append(out.Rows, MatrixRow{ID: row.ID, Role: row.Role, Agent: row.Agent, Use: matrixUse(row, uiRow, specRows)})
 	}
 	return out, nil
 }
@@ -62,7 +63,7 @@ func (d *Daemon) rolesMatrix(ctx context.Context, p RolesMatrixParams) (*RolesMa
 // lineup (S83), ork is the orchestrator, and a row maps to an engine adapter
 // by its agent (adj 155). The UI pass row and the Spec check row are
 // reviewer rows that a rule names; they use the same adapters.
-func matrixUse(row slicercli.Row, uiRow, specRow string) string {
+func matrixUse(row slicercli.Row, uiRow string, specRows []string) string {
 	switch row.Role {
 	case engine.RoleGate:
 		return "not used: the gate runs the reviewer's lineup"
@@ -79,7 +80,7 @@ func matrixUse(row slicercli.Row, uiRow, specRow string) string {
 	switch {
 	case uiRow != "" && row.ID == uiRow:
 		return "UI pass row, " + use
-	case specRow != "" && row.ID == specRow:
+	case slices.Contains(specRows, row.ID):
 		return "Spec check row, " + use
 	}
 	return use

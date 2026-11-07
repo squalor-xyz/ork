@@ -129,6 +129,7 @@ The registry holds optional per-project settings. Change them with
 | `--push on\|off` | push the base branch after landing; off by default |
 | `--ui-doc PATH` | the project's UI design doc, relative to the project; the UI pass reads it |
 | `--ui-pass-skills A,B` | comma-separated skill names stored in `ui_pass_skills`; only a Claude UI pass is advised to load them (*proposed*, S209) |
+| `--spec-check-rows rNN,rNN` | the matrix rows the spec check runs on, in order: the first with an adapter runs, the next is its fallback; **a row listed here leaves every run's reviewer and gate chains**; `""` clears it, and with none set ork uses every row the matrix's `Spec check row (rNN)` rules name, in rule order (*proposed*, S258) |
 
 Give one flag value, for example `--ui-pass-skills tui-design,frontend-design`.
 The list replaces the previous list; `--ui-pass-skills ""` clears it.
@@ -175,8 +176,9 @@ ork does not edit it. Read it in ork: press `m` on the Roadmap, or run
 Both show slicer's matrix text and a short `ork` section that says, row by
 row, what ork does with it (the pane puts the `ork` section first, the command
 puts slicer's text first): `used as claude`, `used as codex` or `used as grok`, `skipped: no
-adapter for AGENT`, `UI pass row` and `Spec check row` for the two reviewer rows
-that a rule names, `not used: the gate runs the reviewer's lineup` for Gate rows
+adapter for AGENT`, `UI pass row` for the reviewer row that a rule names and
+`Spec check row` for every row that a rule or the project's `spec_check_rows`
+names, `not used: the gate runs the reviewer's lineup` for Gate rows
 (ork's gate follows the reviewer), `not run by ork` for the Orchestrator
 row (ork is the orchestrator), and `not used: ork has no role ROLE` for any other
 role. The view is read-only. Change the matrix with
@@ -221,7 +223,10 @@ The last answer is recorded before confirmation. `s` or `esc` skips the rest
 and closes the launch with `ITEM waits on N spec questions; l starts the
 launch again`.
 A failed check also blocks launch; there is no skip key. A refusal shows its
-message without `refused:`; other errors keep their code.
+message without `refused:`; other errors keep their code. A project with no
+spec check row fails with `no_spec_check_row`; the message gives the fix:
+`ork projects set NAME --spec-check-rows rNN` or a `Spec check row (rNN)` rule
+in the matrix.
 Press `e` at the
 confirmation to edit the lineup and budgets, `enter` to save and replan, or
 `esc` to discard. Replanning an edited lineup does not repeat the spec check.
@@ -236,7 +241,11 @@ It asks `Well specified?` and `Split?`, prints the plan, and runs the spec
 check before asking `Start this slice? [y/N]`. Answer each spec question
 with an option number or text. An empty line or end of input holds the
 slice and exits 1. A failed check also blocks launch. Real spec-check failures
-carry the `spec check failed: ` prefix in text mode; refusals do not.
+carry the `spec check failed: ` prefix in text mode; refusals do not. Text
+mode prints only `ork: spec check failed: MESSAGE`; the error code shows with
+`--json`. A project with no spec check row fails with `no_spec_check_row`; the
+message gives the fix: `ork projects set NAME --spec-check-rows rNN` or a
+`Spec check row (rNN)` rule in the matrix.
 For a script, give `--yes --well-specified y/n --split y/n`; `--yes`
 still runs the spec check. With `--json`, the sitting goes to stderr and
 stdout holds one result. A held slice returns

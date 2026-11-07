@@ -391,8 +391,9 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	// pass on a UI slice and is never a fallback of the reviewer or the gate.
 	uiRow := slicercli.UIPassRowID(rules)
 	// The spec check row is a reviewer row too (rule u11). It runs only the
-	// spec check, so a run's chains never hold it.
-	specRow := slicercli.SpecCheckRowID(rules)
+	// spec check, so a run's chains never hold it. The project's
+	// spec_check_rows are spec check rows too (S258).
+	specRows := specCheckRowSet(proj, rules)
 	var uiRows []slicercli.Row
 	plan := &RunPlan{StopAfter: p.StopAfter, project: proj, Project: registry.Project{Name: proj.Name, Path: proj.Path}, Item: p.Item, CheckCommand: proj.CheckCommand, Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
 	if rulesErr != nil {
@@ -417,7 +418,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 				rows = append([]slicercli.Row{*choice.Row}, rows...)
 			}
 			for _, row := range rows {
-				if specRow != "" && sourceRole == engine.RoleReviewer && row.ID == specRow {
+				if sourceRole == engine.RoleReviewer && slices.Contains(specRows, row.ID) {
 					continue
 				}
 				if uiRow != "" && sourceRole == engine.RoleReviewer && row.ID == uiRow {

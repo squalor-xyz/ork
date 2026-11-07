@@ -2002,3 +2002,39 @@ func TestProjectsSetUIPassSkillsStrictNames(t *testing.T) {
 		t.Fatal("invalid skills changed registry")
 	}
 }
+
+func TestProjectsSetSpecCheckRows(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	for _, tc := range []struct {
+		raw  string
+		want []string
+	}{
+		{`{"name":"p","spec_check_rows":["r16","r24"]}`, []string{"r16", "r24"}},
+		{`{"name":"p","spec_check_rows":[]}`, nil},
+	} {
+		got, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, tc.raw))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if proj, ok := got.(registry.Project); !ok || !reflect.DeepEqual(proj.SpecCheckRows, tc.want) {
+			t.Fatalf("returned %+v", got)
+		}
+		f, err := registry.Load(d.registryPath())
+		if err != nil || !reflect.DeepEqual(f.Projects[0].SpecCheckRows, tc.want) {
+			t.Fatalf("saved %+v %v, want %v", f.Projects, err, tc.want)
+		}
+	}
+	before, _ := os.ReadFile(d.registryPath())
+	for _, bad := range []any{[]string{"r1x"}, []string{"16"}, []string{""}, []string{"r16", "r16"}, []string{" r16"}} {
+		raw, _ := json.Marshal(map[string]any{"name": "p", "spec_check_rows": bad})
+		_, err := d.handle(context.Background(), MethodProjectsSet, raw)
+		var re *ipc.Error
+		if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "spec_check_rows") {
+			t.Errorf("%v: %v", bad, err)
+		}
+	}
+	after, _ := os.ReadFile(d.registryPath())
+	if string(before) != string(after) {
+		t.Fatal("an invalid list changed the registry")
+	}
+}

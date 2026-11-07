@@ -1552,8 +1552,9 @@ each table row and each rule bullet stands out. The words after the colon are
 dim; a row that ork skips is in the warning colour (bold in mono). They say
 what ork does with the row:
 `used as claude` or `used as codex` (a row maps to an adapter by its agent,
-adj 155), `UI pass row, ...` and `Spec check row, ...` for the two reviewer
-rows that a rule names (rules u10 and u11), `skipped: no adapter for AGENT`,
+adj 155), `UI pass row, ...` and `Spec check row, ...` for the reviewer
+rows that a rule names (rules u10 and u11) or that the project's
+`spec_check_rows` setting lists (S258), `skipped: no adapter for AGENT`,
 `not used: the gate runs the reviewer's lineup` for a Gate row, `not run by
 ork` for an Orchestrator row (ork is the orchestrator), and `not used: ork has
 no role ROLE` for any other role in the matrix. `j`/`k`, `pgup`/`pgdown`,

@@ -61,6 +61,10 @@ const (
 	CodeRegistry      = "registry"
 	CodeProjectBusy   = "project_busy" // proposed
 	CodeRefused       = "refused"      // proposed: an owner action the engine refused before it changed anything (S141)
+
+	// CodeNoSpecCheckRow is a spec check that has no row to run on (S258,
+	// *proposed*, owner decision 2026-11-07). The message gives the fix.
+	CodeNoSpecCheckRow = "no_spec_check_row"
 )
 
 // StatusParams selects the projects of a status call. An empty Project means
@@ -274,6 +278,7 @@ type SetProjectParams struct {
 	Push             *bool                           `json:"push,omitempty"`
 	UIDoc            *string                         `json:"ui_doc,omitempty"`
 	UIPassSkills     *[]string                       `json:"ui_pass_skills,omitempty"`
+	SpecCheckRows    *[]string                       `json:"spec_check_rows,omitempty"` // S258, *proposed*: the whole ordered list; [] clears it
 	WorktreePattern  *string                         `json:"worktree_pattern,omitempty"`
 	BranchPattern    *string                         `json:"branch_pattern,omitempty"`
 	CheckCommand     *string                         `json:"check_command,omitempty"`
@@ -289,7 +294,7 @@ type SetProjectParams struct {
 // SetsNothing reports whether the call sets no field. The struct holds maps,
 // so it cannot be compared with ==. The daemon and the command line both use it.
 func (p SetProjectParams) SetsNothing() bool {
-	return p.Push == nil && p.UIDoc == nil && p.UIPassSkills == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
+	return p.Push == nil && p.UIDoc == nil && p.UIPassSkills == nil && p.SpecCheckRows == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
 		p.CheckCommand == nil && p.CheckMinutes == nil && p.Cap == nil && p.BudgetMinutes == nil &&
 		p.BudgetTokens == nil && p.EnvironmentLines == nil && len(p.Permissions) == 0 && len(p.VendorEnv) == 0
 }

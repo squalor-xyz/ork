@@ -24,6 +24,13 @@ func matrixRow(id, model, effort string) string {
 // rules are the given rule texts.
 func uiPlan(t *testing.T, implementer, reviewer []string, rules ...string) RunPlan {
 	t.Helper()
+	return uiPlanWith(t, nil, implementer, reviewer, rules...)
+}
+
+// uiPlanWith is uiPlan for a project whose spec_check_rows setting is
+// specRows.
+func uiPlanWith(t *testing.T, specRows, implementer, reviewer []string, rules ...string) RunPlan {
+	t.Helper()
 	choice := func(role string, rows []string) string {
 		return fmt.Sprintf(`{"role":%q,"row":%s,"alternatives":[%s]}`, role, rows[0], strings.Join(rows[1:], ","))
 	}
@@ -36,6 +43,9 @@ func uiPlan(t *testing.T, implementer, reviewer []string, rules ...string) RunPl
 	d, _, _ := runDaemon(t, nil,
 		clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "show"}, Prefix: true, Stdout: show},
 		clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "recommend"}, Prefix: true, Stdout: recommend})
+	if specRows != nil {
+		setSpecCheckRows(t, d, specRows...)
+	}
 	return launchPlan(t, d, `{"project":"p","item":"S1"}`)
 }
 

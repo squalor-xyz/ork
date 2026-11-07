@@ -93,6 +93,7 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               ({CONTRACTS}) through slicer; needs no daemon
   ork projects unpin NAME     clear the pin through slicer
   ork projects set NAME [--push on|off] [--ui-doc PATH] [--ui-pass-skills A,B]
+                              [--spec-check-rows rNN,rNN]
                               [--worktree-pattern P] [--branch-pattern P]
                               [--check CMD] [--check-minutes N] [--cap N]
                               [--budget-minutes N] [--budget-tokens N]
@@ -103,12 +104,15 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               [--unset-vendor-env VENDOR:KEY]...
                               change a project's optional fields; an empty
                               value or 0 clears one; --ui-pass-skills takes
-                              one comma-separated value; --env-line and --allow
-                              repeat to give the whole list, and one empty
-                              --env-line clears it; a role or a vendor key
-                              changes alone; --unset-vendor-env removes a key
-                              and an empty --vendor-env value is kept; refused
-                              while the project has unfinished runs
+                              one comma-separated value; --spec-check-rows
+                              lists the matrix rows the spec check runs on, in
+                              order, as r16,r24 (a listed row leaves every
+                              run's reviewer and gate chains); --env-line and
+                              --allow repeat to give the whole list, and one
+                              empty --env-line clears it; a role or a vendor
+                              key changes alone; --unset-vendor-env removes a
+                              key and an empty --vendor-env value is kept;
+                              refused while the project has unfinished runs
   ork settings show           show global_cap and daemon_idle_minutes, stored
                               and effective
   ork settings set [--global-cap N] [--daemon-idle-minutes N]

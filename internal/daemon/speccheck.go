@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/engine"
@@ -83,23 +84,91 @@ type specEntry struct {
 
 func specKey(project, item string) string { return project + "\x00" + item }
 
-// specChain finds the lineup of the spec check: the row that the rule naming
-// "Spec check row (rNN)" gives, taken from the reviewer rows slicer
-// recommends for the item.
+// specCheckRows is the rows the spec check runs on, in order (S258,
+// *proposed*): the project's spec_check_rows when it sets any, else every row
+// that a rule names as "Spec check row (rNN)", in rule order (owner decision
+// 2026-11-07): the first runs and each next one is its fallback. Empty means
+// neither names one.
+func specCheckRows(proj registry.Project, rules []slicercli.Rule) []string {
+	if len(proj.SpecCheckRows) > 0 {
+		return proj.SpecCheckRows
+	}
+	return slicercli.SpecCheckRowIDs(rules)
+}
+
+// specCheckRowSet is every matrix row that is a spec check row: the rows of
+// specCheckRows and every row a rule names. None of them belongs to a run's
+// reviewer or gate chain, and roles.matrix labels each one.
+func specCheckRowSet(proj registry.Project, rules []slicercli.Rule) []string {
+	set := slices.Clone(specCheckRows(proj, rules))
+	for _, id := range slicercli.SpecCheckRowIDs(rules) {
+		if !slices.Contains(set, id) {
+			set = append(set, id)
+		}
+	}
+	return set
+}
+
+// chainWarning tells the owner what naming a row costs: a spec check row is
+// never a reviewer or gate row.
+const chainWarning = "a spec check row leaves every run's reviewer and gate chains."
+
+// noSpecCheckRow is the owner-facing error of a spec check with no row to run
+// on (owner decisions 2026-11-07). The message has one line each for the
+// problem, the fix command with a real candidate row, the other way out, the
+// reviewer rows with an adapter (candidates, possibly none) and the chain
+// warning. The "or" line is the rule hint when the project sets no rows, and
+// the way back to the rule when it does and a rule names a row.
+func noSpecCheckRow(proj registry.Project, problem string, ruleNamesRow bool, candidates []string) error {
+	// A set row that has an adapter would have made a chain, so the first
+	// candidate is never one the project already lists.
+	pick := "rNN"
+	if len(candidates) > 0 {
+		pick = candidates[0]
+	}
+	fix := "ork projects set " + proj.Name + " --spec-check-rows " + pick
+	lines := []string{problem}
+	switch n := len(proj.SpecCheckRows); {
+	case n == 0:
+		lines = append(lines, "fix: "+fix, `or:  slicer relay-roles rule-add ... "Spec check row (rNN)"`)
+	case n == 1:
+		lines = append(lines, "fix: change it with "+fix)
+	default:
+		lines = append(lines, "fix: change them with "+fix)
+	}
+	if len(proj.SpecCheckRows) > 0 && ruleNamesRow {
+		lines = append(lines, `or:  ork projects set `+proj.Name+` --spec-check-rows ""`)
+	}
+	if len(candidates) > 0 {
+		lines = append(lines, "reviewer rows with an adapter: "+strings.Join(candidates, ", "))
+	}
+	lines = append(lines, chainWarning)
+	return &ipc.Error{Code: CodeNoSpecCheckRow, Message: strings.Join(lines, "\n")}
+}
+
+const noRowProblem = "no Spec check row is set: spec_check_rows is empty and no rule names one."
+
+// specChain finds the lineup of the spec check: one entry for each of the
+// project's spec check rows in order (see specCheckRows), taken from the
+// reviewer rows slicer recommends for the item. A row without an adapter is
+// left out, so the next listed row is the fallback. When no row is left, the
+// error has code no_spec_check_row.
 func (d *Daemon) specChain(ctx context.Context, deps engine.Deps, proj registry.Project, item string) ([]runrec.LineupEntry, error) {
 	rules, err := deps.Slicer.RelayRules(ctx, proj.Path)
 	if err != nil {
 		return nil, err
 	}
-	row := slicercli.SpecCheckRowID(rules)
-	if row == "" {
-		return nil, errors.New(`the matrix has no Spec check row: add a rule that names it as "Spec check row (rNN)" (slicer relay-roles rule-add)`)
-	}
+	wanted := specCheckRows(proj, rules)
 	rec, err := deps.Slicer.RecommendRoles(ctx, proj.Path, item, false, false)
 	if err != nil {
+		if len(wanted) == 0 {
+			return nil, noSpecCheckRow(proj, noRowProblem, false, nil)
+		}
 		return nil, err
 	}
-	var chain []runrec.LineupEntry
+	// The reviewer rows with an adapter, in the order slicer gives them.
+	var usable []slicercli.Row
+	var usableIDs []string
 	for _, choice := range rec.Roles {
 		if choice.Role != engine.RoleReviewer {
 			continue
@@ -109,16 +178,32 @@ func (d *Daemon) specChain(ctx context.Context, deps engine.Deps, proj registry.
 			rows = append([]slicercli.Row{*choice.Row}, rows...)
 		}
 		for _, r := range rows {
-			if r.ID != row {
-				continue
+			if matrixAdapters[strings.ToLower(r.Agent)] != "" {
+				usable = append(usable, r)
+				if !slices.Contains(usableIDs, r.ID) {
+					usableIDs = append(usableIDs, r.ID)
+				}
 			}
-			if vendor := matrixAdapters[strings.ToLower(r.Agent)]; vendor != "" {
-				chain = appendEntry(chain, runrec.LineupEntry{Vendor: vendor, Model: r.Model, Effort: r.Reasoning})
+		}
+	}
+	if len(wanted) == 0 {
+		return nil, noSpecCheckRow(proj, noRowProblem, false, usableIDs)
+	}
+	var chain []runrec.LineupEntry
+	for _, id := range wanted {
+		for _, r := range usable {
+			if r.ID == id {
+				chain = appendEntry(chain, runrec.LineupEntry{Vendor: matrixAdapters[strings.ToLower(r.Agent)], Model: r.Model, Effort: r.Reasoning})
 			}
 		}
 	}
 	if len(chain) == 0 {
-		return nil, fmt.Errorf("the Spec check row (%s) is not among the rows with an adapter that slicer recommends for %s", row, item)
+		noun, verb := "row (%s) is", "rows (%s) are"
+		if len(wanted) > 1 {
+			noun = verb
+		}
+		problem := fmt.Sprintf("the spec check "+noun+" not among the reviewer rows with an adapter that slicer recommends for %s.", strings.Join(wanted, ", "), item)
+		return nil, noSpecCheckRow(proj, problem, len(slicercli.SpecCheckRowIDs(rules)) > 0, usableIDs)
 	}
 	return chain, nil
 }

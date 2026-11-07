@@ -1836,3 +1836,46 @@ func TestStatusShowsShapeRetry(t *testing.T) {
 		t.Fatalf("shape retry missing: code %d stdout=%s stderr=%s", code, stdout, stderr)
 	}
 }
+
+func TestProjectsSetSpecCheckRows(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep", UIDoc: "keep.md"})
+	for _, tc := range []struct {
+		value, output string
+		want          []string
+	}{
+		{"r16,r24", "updated keep: spec_check_rows=\"r16,r24\"\n", []string{"r16", "r24"}},
+		{" r16 , r24 ", "updated keep: spec_check_rows=\"r16,r24\"\n", []string{"r16", "r24"}},
+		{"", "updated keep: spec_check_rows=unset\n", nil},
+	} {
+		code, stdout, stderr := run(t, w.app, "projects", "set", "keep", "--spec-check-rows", tc.value)
+		if code != 0 || stdout != tc.output {
+			t.Fatalf("%q: exit %d stdout %q stderr %s", tc.value, code, stdout, stderr)
+		}
+		saved, err := registry.Load(w.regPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(saved.Projects[0].SpecCheckRows, tc.want) || saved.Projects[0].UIDoc != "keep.md" {
+			t.Fatalf("saved: %+v", saved.Projects[0])
+		}
+	}
+	for _, bad := range []string{"r1x", "16", "r16,", "r16,r16"} {
+		code, _, stderr := run(t, w.app, "projects", "set", "keep", "--spec-check-rows", bad)
+		if code != 1 || !strings.Contains(stderr, "spec_check_rows") {
+			t.Errorf("%q: exit %d: %s", bad, code, stderr)
+		}
+	}
+}
+
+// --spec-check-rows has its own clause in the usage, so the parenthetical about
+// the chains cannot read as describing --ui-pass-skills.
+func TestUsageGivesSpecCheckRowsItsOwnClause(t *testing.T) {
+	flat := strings.Join(strings.Fields(usageText), " ")
+	for _, want := range []string{
+		"--ui-pass-skills takes one comma-separated value; --spec-check-rows lists the matrix rows the spec check runs on, in order, as r16,r24 (a listed row leaves every run's reviewer and gate chains);",
+	} {
+		if !strings.Contains(flat, want) {
+			t.Errorf("usage lacks %q", want)
+		}
+	}
+}

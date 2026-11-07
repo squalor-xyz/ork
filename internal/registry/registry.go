@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -95,6 +96,25 @@ func ValidateUIPassSkills(skills []string) error {
 			return fmt.Errorf("ui_pass_skills: name %q is listed twice (items %d and %d)", name, first, i+1)
 		}
 		seen[name] = i + 1
+	}
+	return nil
+}
+
+var specCheckRowName = regexp.MustCompile(`^r\d+$`)
+
+// ValidateSpecCheckRows checks the optional spec check row list (S258,
+// *proposed*). Each item is a matrix row id such as "r16", and no id is listed
+// twice. ork does not check that the rows exist; the matrix is slicer's.
+func ValidateSpecCheckRows(rows []string) error {
+	seen := map[string]int{}
+	for i, id := range rows {
+		if !specCheckRowName.MatchString(id) {
+			return fmt.Errorf("spec_check_rows: item %d %q is not a matrix row id such as r16", i+1, id)
+		}
+		if first, ok := seen[id]; ok {
+			return fmt.Errorf("spec_check_rows: %q is listed twice (items %d and %d)", id, first, i+1)
+		}
+		seen[id] = i + 1
 	}
 	return nil
 }
@@ -229,6 +249,12 @@ type Project struct {
 	// UIPassSkills names skills a Claude UI pass is advised to load (S209, *proposed*).
 	UIPassSkills []string `json:"ui_pass_skills,omitempty"`
 
+	// SpecCheckRows names the matrix rows the spec check runs on, in order
+	// (S258, *proposed*): the first row with an adapter runs and the next is
+	// its fallback. Every row listed stays out of the reviewer and gate
+	// chains. Unset means the row that the Spec check row rule names.
+	SpecCheckRows []string `json:"spec_check_rows,omitempty"`
+
 	// Bell controls every terminal bell for this project (S100, *proposed*).
 	Bell *bool `json:"bell,omitempty"`
 }
@@ -335,6 +361,9 @@ func (f *File) Validate() error {
 		}
 		seen[p.Name] = true
 		if err := ValidateUIPassSkills(p.UIPassSkills); err != nil {
+			return fmt.Errorf("project %q: %w", p.Name, err)
+		}
+		if err := ValidateSpecCheckRows(p.SpecCheckRows); err != nil {
 			return fmt.Errorf("project %q: %w", p.Name, err)
 		}
 		if !filepath.IsAbs(p.Path) {
