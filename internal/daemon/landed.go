@@ -145,9 +145,15 @@ func (d *Daemon) checkMerged(ctx context.Context, p registry.Project, head strin
 			}
 		}
 	}
+	// The runs whose merge this pass found, with their items (S229, *proposed*).
+	var found []runrec.Record
 	d.runs.mu.Lock()
 	// A newer HEAD check owns the displayed state if it overtook this pass.
 	if d.runs.heads[key] == head {
+		byID := make(map[string]runrec.Record, len(records))
+		for _, rec := range records {
+			byID[rec.ID] = rec
+		}
 		for id, merged := range results {
 			// A cleanup that finished while git ran leaves no branch to have a
 			// merge state: do not write one back (S153).
@@ -155,12 +161,34 @@ func (d *Daemon) checkMerged(ctx context.Context, p registry.Project, head strin
 				delete(d.runs.merged, id)
 				continue
 			}
+			if previous := d.runs.merged[id]; merged != nil && *merged && (previous == nil || !*previous) {
+				found = append(found, byID[id])
+			}
 			d.runs.merged[id] = merged
 		}
 	}
 	d.pruneRunsLocked()
 	d.runs.mu.Unlock()
+	d.removeMergedSpecDirs(found)
 	d.changed(p.Name, source.Runs)
+}
+
+// removeMergedSpecDirs drops the spec-check directory of the item of each run
+// whose merge was just found. A run stopped after commit never lands through
+// ork, so the owner's merge is the only sign that its item is done (S191,
+// *proposed*). The lock order is specStateMu before mu, as at recoverRuns; no
+// git runs under either.
+func (d *Daemon) removeMergedSpecDirs(found []runrec.Record) {
+	if len(found) == 0 {
+		return
+	}
+	d.runs.specStateMu.Lock()
+	defer d.runs.specStateMu.Unlock()
+	d.runs.mu.Lock()
+	defer d.runs.mu.Unlock()
+	for _, rec := range found {
+		d.removeSpecDirLocked(rec.Project, rec.Item)
+	}
 }
 
 // pruneRunsLocked uses only previously checked results; pruning never adds git

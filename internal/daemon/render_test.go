@@ -123,6 +123,51 @@ func TestRunRowsCarryRenderNamesNotText(t *testing.T) {
 	}
 }
 
+// A run.json of a version this ork does not read takes the unreadable branch
+// of openRun too, and the message says which version the record has (S201).
+func TestOpenRunSaysWhichVersionARecordHas(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	renderRun(t, store, p.Name, "bad", map[string]string{"a-80x24.txt": "a"}, "a-80x24.txt")
+	version := runrec.Version + 1
+	if err := os.WriteFile(filepath.Join(store.RunDir("bad"), "run.json"), []byte(fmt.Sprintf(`{"version":%d}`, version)), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	want := fmt.Sprintf("the record of run bad is unreadable: unknown version %d (this ork reads version %d)", version, runrec.Version)
+	for _, method := range []string{MethodRunRender, MethodRunReport} {
+		t.Run(method, func(t *testing.T) {
+			_, err := d.handle(context.Background(), method, renderParams("bad", "a-80x24.txt"))
+			wire := ipc.ErrorOf(err)
+			if wire == nil || wire.Code != ipc.CodeInternal || wire.Message != want {
+				t.Fatalf("an unknown version gave %v, want internal: %s", err, want)
+			}
+		})
+	}
+}
+
+// The message has no path, but the error still wraps its cause.
+func TestUnreadableRecordErrorKeepsItsCause(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	renderRun(t, store, p.Name, "bad", map[string]string{"a-80x24.txt": "a"}, "a-80x24.txt")
+	if err := os.WriteFile(filepath.Join(store.RunDir("bad"), "run.json"), []byte("{not json"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	_, err := d.openRun("bad")
+	var syntax *json.SyntaxError
+	if !errors.As(err, &syntax) {
+		t.Errorf("openRun gave %v, want an error that wraps the JSON syntax error", err)
+	}
+}
+
+// A cause with no "run record PATH: " prefix still shows no absolute path.
+func TestUnreadableCauseDropsTheRunDirectory(t *testing.T) {
+	d, store, _ := runDaemon(t, nil)
+	dir := store.RunDir("bad")
+	got := d.unreadableCause("bad", errors.New("trailing "+filepath.Join(dir, "run.json")+" and "+filepath.Join(dir, "x")))
+	if want := "trailing run.json and x"; got != want {
+		t.Errorf("cause %q, want %q", got, want)
+	}
+}
+
 // A run record that exists but cannot be read is not "no run": the owner sees
 // that the run is there and why its text cannot be had (S147). An unknown run
 // and a run id that is not a plain name stay not_found. run.report answers the
@@ -138,8 +183,11 @@ func TestRunRenderSaysWhenTheRecordIsUnreadable(t *testing.T) {
 		t.Run(method, func(t *testing.T) {
 			_, err := d.handle(context.Background(), method, renderParams("bad", "a-80x24.txt"))
 			wire := ipc.ErrorOf(err)
-			if wire == nil || wire.Code != ipc.CodeInternal || !strings.Contains(wire.Message, "run bad cannot be read: ") || !strings.Contains(wire.Message, "run.json") {
+			if wire == nil || wire.Code != ipc.CodeInternal || !strings.HasPrefix(wire.Message, "the record of run bad is unreadable: ") || !strings.Contains(wire.Message, "invalid character") {
 				t.Fatalf("an unreadable record gave %v, want an internal error that names the run and says why", err)
+			}
+			if strings.Contains(wire.Message, store.RunDir("bad")) || strings.Contains(wire.Message, "cannot be read") {
+				t.Errorf("message %q has the path or repeats itself", wire.Message)
 			}
 			for _, run := range []string{"nope", "../r1"} {
 				_, err := d.handle(context.Background(), method, renderParams(run, "a-80x24.txt"))

@@ -137,6 +137,76 @@ func TestMergedBranchIsOfferedNotRemoved(t *testing.T) {
 		t.Fatal(e)
 	}
 }
+
+// specCheckDirOfCommittedRun gives a committed run's item (S63) a stored spec
+// check and a remembered entry, as a spec check of that item left them.
+func specCheckDirOfCommittedRun(t *testing.T, d *Daemon, p registry.Project) string {
+	t.Helper()
+	dir := d.specDir(p.Name, "S63")
+	if err := writeSpecJSON(filepath.Join(dir, "answers.json"), storedSpecAnswers{Fingerprint: "f", Decisions: "d"}); err != nil {
+		t.Fatal(err)
+	}
+	d.runs.mu.Lock()
+	d.runs.specs[specKey(p.Name, "S63")] = specEntry{fingerprint: "f", ready: true, decisions: "d"}
+	d.runs.mu.Unlock()
+	return dir
+}
+func specCheckState(d *Daemon, p registry.Project, dir string) (dirKept, entryKept bool) {
+	_, err := os.Stat(dir)
+	d.runs.mu.Lock()
+	defer d.runs.mu.Unlock()
+	_, entryKept = d.runs.specs[specKey(p.Name, "S63")]
+	return err == nil, entryKept
+}
+
+// A run stopped after commit never lands through ork: the owner merges its
+// branch. The merge check finds that out and drops the item's spec-check
+// directory then (S229, *proposed*).
+func TestMergedCommitStoppedRunDropsItsSpecCheckDir(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 0, "")
+	committedRun(t, s, p, "run", "committed")
+	dir := specCheckDirOfCommittedRun(t, d, p)
+	refreshHead(t, d, p)
+	if dirKept, entryKept := specCheckState(d, p, dir); dirKept || entryKept {
+		t.Errorf("after the merge was found: directory kept %v, entry kept %v; want both gone", dirKept, entryKept)
+	}
+	// Only the pass that finds the merge removes: a later HEAD check that
+	// finds it merged again leaves a directory made since.
+	dir = specCheckDirOfCommittedRun(t, d, p)
+	refreshHead(t, d, p) // the same HEAD: no check
+	refreshHead(t, d, p) // a new HEAD: the branch is found merged again
+	if dirKept, _ := specCheckState(d, p, dir); !dirKept {
+		t.Error("a merge that was already known removed a directory made later")
+	}
+}
+
+// Not merged, and merge state unknown (a git error), remove nothing.
+func TestUnmergedOrUnknownCommitStoppedRunKeepsItsSpecCheckDir(t *testing.T) {
+	for _, exit := range []int{1, 2} {
+		t.Run(fmt.Sprint(exit), func(t *testing.T) {
+			d, s, p, _ := landingDaemon(t, exit, "")
+			committedRun(t, s, p, "run", "committed")
+			dir := specCheckDirOfCommittedRun(t, d, p)
+			refreshHead(t, d, p)
+			if dirKept, entryKept := specCheckState(d, p, dir); !dirKept || !entryKept {
+				t.Errorf("exit %d: directory kept %v, entry kept %v; want both kept", exit, dirKept, entryKept)
+			}
+		})
+	}
+}
+
+// The merge check takes specStateMu, never the role's specMu, so a spec check
+// that is running does not hold up the cache's refresh.
+func TestMergeCheckSpecCleanupDoesNotWaitForSpecMu(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 0, "")
+	committedRun(t, s, p, "run", "committed")
+	dir := specCheckDirOfCommittedRun(t, d, p)
+	assertSpecMuDoesNotBlock(t, d, func() error { return d.cache.Refresh(context.Background(), p, source.Head) })
+	if dirKept, _ := specCheckState(d, p, dir); dirKept {
+		t.Error("the directory was not removed")
+	}
+}
+
 func cleanupRequest(d *Daemon) error {
 	_, e := d.handle(context.Background(), "run.cleanup", json.RawMessage(`{"run":"run"}`))
 	return e

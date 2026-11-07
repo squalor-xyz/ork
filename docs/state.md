@@ -240,7 +240,9 @@ that uncommitted edit, so every role's brief carries the paragraph in an
 restarts in the item's `answers.json` beside its check, tied to the updated
 spec fingerprint. Run start transfers it to this record and removes that
 file; a spec change drops the stored answers. The item's check directory is
-removed when its run lands, or when its project is removed. Startup sweeps
+removed when its run lands, when a run stopped after commit is found merged
+(*proposed*, S229: the merge check at a HEAD change finds the owner's merge),
+or when its project is removed. Startup sweeps
 identified directories older than 14 days whose item is done, retired or gone,
 using the ordinary slicer list without `--all`. It also removes old directories
 for unregistered projects and legacy random-named check directories
@@ -465,7 +467,9 @@ control characters, and cuts a longer one at the last line end within 24 KiB
 KiB)`. A renders directory that is a link is not read. The files stay in the
 run directory. `renders_error` (omitted when empty; *proposed*, S147) says why
 the renders directory, or a render file it lists, exists and could not be read
-(for example `permission denied`), like `checks_error` for the checks. A missing
+(for example `permission denied`; a single file reads `NAME (WHY)`, such as
+`b-80x24.txt (permission denied)`, and a link put in a file's place reads
+`replaced while being read`), like `checks_error` for the checks. A missing
 directory is no error: the card then has `ui_round` and no `renders`.
 The record version stays 1; an older ork refuses a `run.json` with
 `renders_error` because `Store.Open` uses strict keys.
