@@ -176,7 +176,7 @@ func (e *Engine) mergeBaseIn(ctx context.Context, rec runrec.Record, base string
 	}
 	if !run.ok {
 		b, _ := os.ReadFile(filepath.Join(e.run.Dir(), run.log))
-		detail := fmt.Sprintf("The checks are red after `git merge %s` and `slicer render`:\n\n```\n%s\n```", base, tail(string(b), 30000))
+		detail := fmt.Sprintf("The checks are red after `git merge %s` and `slicer render`:\n\n%s", base, checkFailureBody(string(b), e.proj.CheckCommand, run.attempts))
 		return false, e.landBlocked(ctx, "checks red after merging "+base, detail)
 	}
 	if err := e.run.Update(func(r *runrec.Record) { r.LandRecheck = false }); err != nil {

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-307 items · — 81 · done 193 · retired 33
+307 items · — 80 · done 193 · retired 33 · started 1
 
 v1.2
 
@@ -140,7 +140,7 @@ v1.2
 | 83 | [S236](slices/S236.md) | Reap the process tree of a kill | M | 2 |  |  | — |
 | 84 | [S237](slices/S237.md) | answer and retry return at once | M | 2 |  |  | done |
 | 85 | [S238](slices/S238.md) | Landing merge-in without a role | M | 2 |  |  | done |
-| 86 | [S239](slices/S239.md) | Check failures: excerpt and one rerun | M | 2 |  |  | — |
+| 86 | [S239](slices/S239.md) | Check failures: excerpt and one rerun | M | 2 |  |  | started |
 | 87 | [S243](slices/S243.md) | Claude fallback implementer | M | 2 |  |  | — |
 | 88 | [S244](slices/S244.md) | Resolve latest within a family | M | 2 |  |  | — |
 | 89 | [S245](slices/S245.md) | Show resolved latest models | S | 1 |  |  | — |

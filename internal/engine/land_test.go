@@ -436,10 +436,11 @@ func TestLandStopsOnRedRecheck(t *testing.T) {
 		}
 		return Result{}, nil
 	}
-	// call 0: the re-check after the merge is red; call 1: the checks after
-	// the fix round are green; call 2: the second landing's re-check is red.
+	// calls 0 and 1: the re-check after the merge is red, and so is its rerun;
+	// call 2: the checks after the fix round are green; calls 3 and 4: the
+	// second landing's re-check and its rerun are red.
 	red := CheckOutput{Output: "FAIL TestGolden sidebar\n"}
-	env.setCheckOutputs(red, CheckOutput{OK: true, Output: "ok\n"}, red)
+	env.setCheckOutputs(red, red, CheckOutput{OK: true, Output: "ok\n"}, red, red)
 
 	env.approve()
 	// A red re-check gets one implementer fix round, the check, the gate, and
@@ -632,9 +633,9 @@ func TestLandKeepsTheRunCommittedWhenTheCleanupFails(t *testing.T) {
 func TestLandConflictRunsOneFixRoundThenReturnsToApproval(t *testing.T) {
 	env := newLandEnv(t)
 	env.moveBase("base.txt", "from main\n")
-	// call 0: the re-check after the merge is red; call 1: the checks after
-	// the fix round are green.
-	env.setCheckOutputs(CheckOutput{Output: "FAIL TestGolden sidebar\n"}, CheckOutput{OK: true, Output: "ok\n"})
+	// calls 0 and 1: the re-check after the merge is red, and so is its rerun;
+	// call 2: the checks after the fix round are green.
+	env.setCheckOutputs(CheckOutput{Output: "FAIL TestGolden sidebar\n"}, CheckOutput{Output: "FAIL TestGolden sidebar\n"}, CheckOutput{OK: true, Output: "ok\n"})
 	var brief string
 	env.runner.script = func(req Request, n int) (Result, error) {
 		if req.Role == RoleImplementer && strings.Contains(req.Brief, "## Landing blocked") {
@@ -690,7 +691,7 @@ func TestLandConflictRunsOneFixRoundThenReturnsToApproval(t *testing.T) {
 func TestLandFixRoundRecordsNoLedgerStepsAfterTheRunEnded(t *testing.T) {
 	env := newLandEnv(t)
 	env.moveBase("base.txt", "from main\n")
-	env.setCheckOutputs(CheckOutput{Output: "FAIL TestGolden sidebar\n"}, CheckOutput{OK: true, Output: "ok\n"})
+	env.setCheckOutputs(CheckOutput{Output: "FAIL TestGolden sidebar\n"}, CheckOutput{Output: "FAIL TestGolden sidebar\n"}, CheckOutput{OK: true, Output: "ok\n"})
 	env.runner.script = func(req Request, n int) (Result, error) {
 		if req.Role == RoleImplementer && strings.Contains(req.Brief, "## Landing blocked") {
 			writeFile(t, filepath.Join(req.Worktree, "shared.txt"), "resolved\n")
@@ -737,8 +738,8 @@ func TestLandConflictTwiceStopsAndKeepsTheWorktree(t *testing.T) {
 	env := newLandEnv(t)
 	env.moveBase("base.txt", "from main\n")
 	red := CheckOutput{Output: "FAIL TestGolden sidebar\n"}
-	// red after the merge; green after the fix round; red again at the second landing
-	env.setCheckOutputs(red, CheckOutput{OK: true, Output: "ok\n"}, red)
+	// red twice after the merge (the rerun too); green after the fix round; red twice again at the second landing
+	env.setCheckOutputs(red, red, CheckOutput{OK: true, Output: "ok\n"}, red, red)
 	env.runner.script = func(req Request, n int) (Result, error) {
 		if req.Role == RoleImplementer && strings.Contains(req.Brief, "## Landing blocked") {
 			writeFile(t, filepath.Join(req.Worktree, "shared.txt"), "resolved\n")
@@ -1004,7 +1005,7 @@ func TestAStoppedLandingIsNotLanded(t *testing.T) {
 	env.moveBase("base.txt", "from main\n")
 	env.setCheckOutputs(CheckOutput{Output: "FAIL\n"})
 	env.runner.script = func(req Request, n int) (Result, error) { return Result{}, nil }
-	env.setCheckOutputs(CheckOutput{Output: "FAIL\n"}, CheckOutput{OK: true}, CheckOutput{Output: "FAIL\n"})
+	env.setCheckOutputs(CheckOutput{Output: "FAIL\n"}, CheckOutput{Output: "FAIL\n"}, CheckOutput{OK: true}, CheckOutput{Output: "FAIL\n"}, CheckOutput{Output: "FAIL\n"})
 	env.approve()
 	rec := env.e.Snapshot()
 	if !rec.LandedAt.IsZero() {
@@ -1072,9 +1073,9 @@ func TestSecondApprovalAfterALandingFixRoundRecordsTheChecksOnce(t *testing.T) {
 		t.Fatal(err)
 	}
 	env.moveBase("base.txt", "from main\n")
-	// call 0: the re-check after the merge is red; call 1: the checks after the
-	// fix round are green.
-	env.setCheckOutputs(CheckOutput{Output: "FAIL TestGolden sidebar\n"}, CheckOutput{OK: true, Output: "ok\n"})
+	// calls 0 and 1: the re-check after the merge is red, and so is its rerun;
+	// call 2: the checks after the fix round are green.
+	env.setCheckOutputs(CheckOutput{Output: "FAIL TestGolden sidebar\n"}, CheckOutput{Output: "FAIL TestGolden sidebar\n"}, CheckOutput{OK: true, Output: "ok\n"})
 
 	env.approve()
 	rec := requireState(t, env.e, runrec.StateAwaitingApproval)
@@ -1095,5 +1096,62 @@ func TestSecondApprovalAfterALandingFixRoundRecordsTheChecksOnce(t *testing.T) {
 	}
 	if notes != 1 {
 		t.Errorf("%d human-checks notes after two approvals, want 1:\n%s", notes, strings.Join(env.log("slicer.log"), "\n"))
+	}
+}
+
+// S239: the landing re-check is run again once, and a red one's brief shows
+// the failing tests.
+
+func TestLandRecheckIsRunAgainOnceToo(t *testing.T) {
+	env := newLandEnv(t)
+	env.moveBase("base.txt", "from main\n")
+	env.setCheckOutputs(CheckOutput{Output: "first re-check failed\n"}, CheckOutput{OK: true, Output: "second re-check passed\n"})
+	env.approve()
+	rec := requireState(t, env.e, runrec.StateCommitted)
+	if rec.LandFixes != 0 {
+		t.Errorf("land fixes %d: the rerun passed, so the landing is not blocked", rec.LandFixes)
+	}
+	if len(env.checks.calls) != 2 {
+		t.Errorf("the re-check ran %d times, want 2: %v", len(env.checks.calls), env.checks.calls)
+	}
+	b, err := os.ReadFile(filepath.Join(env.store.RunDir(rec.ID), "land-checks-1.log"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	log := string(b)
+	first, second := strings.Index(log, "first re-check failed"), strings.Index(log, "second re-check passed")
+	if first < 0 || second < first || !strings.Contains(log, "(run again once: the first run failed)") {
+		t.Errorf("the log holds both outputs in order with a rerun heading:\n%s", log)
+	}
+	if last := rec.Checks[len(rec.Checks)-1]; !last.OK || last.Attempts != 2 || !last.Flaky {
+		t.Errorf("checks: %+v", rec.Checks)
+	}
+}
+
+func TestLandRedRecheckBriefHasTheFailureExcerpt(t *testing.T) {
+	env := newLandEnv(t)
+	env.moveBase("base.txt", "from main\n")
+	long := "--- FAIL: TestGolden (0.02s)\n    golden_test.go:44: sidebar differs\n" + filler(60000)
+	env.setCheckOutputs(CheckOutput{Output: long}, CheckOutput{Output: long}, CheckOutput{OK: true, Output: "ok\n"})
+	var brief string
+	env.runner.script = func(req Request, n int) (Result, error) {
+		if req.Role == RoleImplementer && strings.Contains(req.Brief, "## Landing blocked") {
+			brief = req.Brief
+		}
+		return Result{}, nil
+	}
+	env.approve()
+	requireState(t, env.e, runrec.StateAwaitingApproval)
+	list, tailAt := strings.Index(brief, "The failing tests and assertion lines"), strings.Index(brief, "The end of the output:")
+	if list < 0 || tailAt < list {
+		t.Fatalf("the landing brief has the excerpt ahead of the tail:\n%.2000s", brief)
+	}
+	for _, want := range []string{"--- FAIL: TestGolden (0.02s)", "golden_test.go:44: sidebar differs"} {
+		if !strings.Contains(brief[list:tailAt], want) {
+			t.Errorf("the excerpt lacks %q", want)
+		}
+	}
+	if !strings.Contains(brief, "failed in both runs") || !strings.Contains(brief, "checks red after merging main") {
+		t.Errorf("brief:\n%.2000s", brief)
 	}
 }

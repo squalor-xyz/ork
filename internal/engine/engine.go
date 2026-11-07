@@ -26,8 +26,9 @@ const DefaultPauseRound = 3
 
 // CheckOutput is the result of the project's check command.
 type CheckOutput struct {
-	OK     bool
-	Output string
+	OK       bool
+	Output   string
+	TimedOut bool // the command ran out of time (S239: a timeout is not run again)
 }
 
 // CheckFunc runs the project's check command in dir.

@@ -108,7 +108,7 @@ func (e *Engine) feedbackSection(fb *runrec.Feedback) BriefSection {
 	}
 	switch fb.Kind {
 	case "checks":
-		return BriefSection{Title: "Checks failed", Body: "The project checks are red. Fix the failures below. No review was spent on this diff.\n\n```\n" + tail(body, 30000) + "\n```"}
+		return BriefSection{Title: "Checks failed", Body: "The project checks are red. Fix the failures below. No review was spent on this diff.\n\n" + checkFailureBody(body, e.proj.CheckCommand, e.checkAttempts(fb.File))}
 	case "findings":
 		if strings.HasPrefix(fb.File, "findings-") {
 			return BriefSection{Title: "Review findings", Body: "The reports below hold findings: the reviewer's, the UI pass's, or both. Apply only the findings in them; owner and later findings go to the owner, not to you. The UI pass gives suggested design edits for the screens this slice changes. If a finding is wrong, say so in your report with your evidence.\n\n" + body}
@@ -242,9 +242,22 @@ func (e *Engine) checks(ctx context.Context) error {
 
 // checkRun is the outcome of one run of the project's checks.
 type checkRun struct {
-	ok      bool
-	log     string // the log's file name in the run directory
-	failure string // last meaningful output line from the first failed check
+	ok       bool
+	attempts int    // 2 when the project command was run again (S239)
+	log      string // the log's file name in the run directory
+	failure  string // last meaningful output line from the first failed check
+}
+
+// checkAttempts is how many times the project command ran for the check log
+// of that name: 2 when it was run again (S239), 0 when the record has no such
+// check or the command ran once.
+func (e *Engine) checkAttempts(log string) int {
+	for _, c := range e.run.Snapshot().Checks {
+		if c.Log == log {
+			return c.Attempts
+		}
+	}
+	return 0
 }
 
 // checkFailureLine skips blank lines and standalone JSON closing punctuation.
@@ -335,17 +348,30 @@ func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix
 	}
 	ok := true
 	failure := ""
+	attempts, flaky := 0, false
 	var log strings.Builder
 	if cmd := e.proj.CheckCommand; cmd != "" {
 		res, err := check(ctx, rec.Worktree, cmd, timeout)
 		if err != nil {
 			return pauseWith("check command: " + err.Error())
 		}
+		fmt.Fprintf(&log, "$ %s\n%s\n", cmd, checkLogOutput(res.Output))
+		// S239: an exit failure is run once more before a round is spent on
+		// it, because load or a flaky test can fail a run that is fine. A
+		// timeout is not run again, and `slicer check` never is.
+		if !res.OK && !res.TimedOut && ctx.Err() == nil {
+			again, err := check(ctx, rec.Worktree, cmd, timeout)
+			if err != nil {
+				return pauseWith("check command: " + err.Error())
+			}
+			attempts, flaky = 2, again.OK
+			fmt.Fprintf(&log, "\n$ %s%s\n%s\n", cmd, rerunMarker, checkLogOutput(again.Output))
+			res = again
+		}
 		ok = res.OK
 		if !res.OK {
 			failure = checkFailureLine(res.Output)
 		}
-		fmt.Fprintf(&log, "$ %s\n%s\n", cmd, tail(res.Output, 30000))
 	}
 	sres, err := e.d.Slicer.Check(ctx, rec.Worktree)
 	if err != nil {
@@ -386,9 +412,9 @@ func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix
 	}
 	err = e.run.Update(func(r *runrec.Record) {
 		r.Pending = nil
-		r.Checks = append(r.Checks, runrec.CheckRecord{Round: rec.Round, Command: command, OK: ok, Seconds: int(e.d.now().Sub(start).Seconds()), Log: logName, LogSHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(log.String()))), Deferred: deferred})
+		r.Checks = append(r.Checks, runrec.CheckRecord{Round: rec.Round, Command: command, OK: ok, Seconds: int(e.d.now().Sub(start).Seconds()), Log: logName, LogSHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(log.String()))), Deferred: deferred, Attempts: attempts, Flaky: flaky})
 	})
-	return checkRun{ok: ok, log: logName, failure: failure}, false, err
+	return checkRun{ok: ok, attempts: attempts, log: logName, failure: failure}, false, err
 }
 
 // latestReport returns the newest report of a role, with its name.

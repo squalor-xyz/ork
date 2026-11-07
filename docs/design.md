@@ -322,6 +322,20 @@ slice.
   implementer, with the failing output in the brief, without spending a
   review. The check command comes from `slicer config` once slicer has the
   key; until then it comes from the registry (`project.check-command`).
+  *Proposed (S239):* when the project command exits non-zero, ork runs it once
+  more, with the same directory and timeout, before it spends a fix round on
+  it. A pass on the rerun is a flaky pass: the project command counts as
+  green (the round is still red when `slicer check` is red) and `checks[]`
+  records `attempts` 2 and `flaky` true, so `flaky` true with `ok` false is
+  possible. A timeout is not run
+  again, `slicer check` never is, and a rerun that cannot run pauses like the
+  first run. If the rerun is red too, the brief for the fix round starts with
+  the failing test names and their assertion lines (at most 8000 bytes, from
+  `go test` text output: `--- FAIL:` lines with the lines under them (with
+  `go test -v`, the lines before them since the test's `=== RUN` line), package
+  `FAIL` lines, a panic, a data race report and build errors), then the end
+  of the log (30 KB) as before. Output that is not Go test output shows only
+  the end of the log, as before. The landing re-check follows the same rule.
   *Proposed (S279, adj #178, `checks.outside-problems`):* a red `slicer check`
   does not make a round check red when the branch is behind its base branch
   (the base is not an ancestor of the worktree's HEAD) and every problem names
@@ -595,7 +609,9 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
 - **Checks.** The project's check command runs with `sh -c` in the
   worktree, then `slicer check --json`. Either red sends the implementer
   back, resumed, with the output (last 30 KB) in the brief, and spends no
-  review. The output is saved as `checks-<round>.log`. *Proposed (S279):*
+  review. The output is saved as `checks-<round>.log`. *Proposed (S239):* an
+  exit failure of the project command is run once more first, and the brief
+  starts with the failing tests (see the checks bullet above). *Proposed (S279):*
   `slicer check` problems on other items defer to the landing merge when the
   branch is behind its base (see the checks bullet above).
 - **Review and gate.** The reviewer runs once, fresh and read-only. Findings

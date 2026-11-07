@@ -104,6 +104,11 @@ type CheckRecord struct {
 	// make this round red: the branch was behind its base, and the landing
 	// merge decides them (S279, adj 178).
 	Deferred []string `json:"deferred,omitempty"`
+	// Attempts is 2 when the project command failed and was run again once
+	// (S239). It is absent for a round whose first run passed.
+	Attempts int `json:"attempts,omitempty"`
+	// Flaky is true when the first run failed and the second passed.
+	Flaky bool `json:"flaky,omitempty"`
 }
 
 // Approval is an owner approval.

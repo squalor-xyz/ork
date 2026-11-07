@@ -211,7 +211,7 @@ func TestFixPastTheCurrentLimitRefuses(t *testing.T) {
 	h = redLoop(t, true, true)
 	e = h.start()
 	requireRoundsPause(t, e, 3)
-	h.checks.outputs = append(h.checks.outputs[:3], CheckOutput{OK: true, Output: "green\n"})
+	h.checks.outputs = append(h.checks.outputs[:6], CheckOutput{OK: true, Output: "green\n"})
 	if err := e.RetryNote(context.Background(), "", 2); err != nil {
 		t.Fatal(err)
 	}
@@ -552,7 +552,7 @@ func TestFixNoteCarriedIntoLaterGateBriefs(t *testing.T) {
 		roles []string
 	}{
 		{"red check", func(h *harness) {
-			h.checks.outputs = []CheckOutput{{OK: true}, {OK: false, Output: "--- FAIL: TestFlag\nFAIL\n"}, {OK: true}}
+			h.checks.outputs = []CheckOutput{{OK: true}, {OK: false, Output: "--- FAIL: TestFlag\nFAIL\n"}, {OK: false, Output: "--- FAIL: TestFlag\nFAIL\n"}, {OK: true}}
 		}, []string{"implementer-1", "reviewer-1", "gate-1", "implementer-2", "implementer-3", "gate-3"}},
 		{"gate FAIL", func(h *harness) {
 			h.runner.script = func(req Request, n int) (Result, error) {

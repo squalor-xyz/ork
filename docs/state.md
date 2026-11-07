@@ -279,7 +279,8 @@ owner's questions again.
      "session": "...", "pgid": 12345, "step": "2", "started_at": "...", "ended_at": "...",
      "exit": "ok", "tokens": 41000, "cost_usd": 0.62, "report": "implementer-1.md"}
   ],
-  "checks": [{"round": 1, "command": "go test ./...", "ok": true, "seconds": 58, "log": "checks-1.log"}],
+  "checks": [{"round": 1, "command": "go test ./...", "ok": true, "seconds": 58, "log": "checks-1.log",
+              "attempts": 2, "flaky": true}],
   "budgets": {"minutes": 120, "tokens": 2000000},
   "approvals": [{"what": "slice", "at": "..."}],
   "questions": [{"role": "implementer", "round": 1, "key": "area.topic", "text": "...", "at": "...", "answer": "...", "answered_at": "..."}],
@@ -323,8 +324,17 @@ preserved. Retry advances `round` and sets the durable `round_limit` to the
 ended round plus the granted count (default 2). `roles[].tree_sha256` hashes
 the implementer's tracked diff against HEAD, including staged and binary
 changes, followed by untracked names. `checks[].log_sha256` hashes the bytes
-of the saved check log. Both adjacent hashes must be present and equal for
+of the saved check log, which holds both runs of the project command when it
+was run again (S239). Both adjacent hashes must be present and equal for
 the immediate no-progress pause. Older records without hashes remain readable.
+*Proposed (S239):* `checks[].attempts` is 2 when the project command failed
+and ork ran it once more, and `checks[].flaky` is true when that second run
+passed; both are omitted otherwise, and an older reader ignores them. The check
+log then holds the first run, a line `$ COMMAND (run again once: the first run
+failed)`, the second run, and the `slicer check --json` output. A run's output
+longer than 30 KB keeps its last 30 KB, with the failing tests of the cut part
+ahead of them. A log of two runs can be longer than the 64 KiB that `ork show
+RUN NAME` prints, which then cuts it at a line end; read the file for the rest.
 *Proposed (S279):* `checks[].deferred` (omitted when empty) lists the
 `slicer check` problems on other items that did not make a round check red
 because the branch was behind its base. ork's landing merge and re-check

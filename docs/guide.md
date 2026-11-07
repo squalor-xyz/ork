@@ -279,7 +279,12 @@ The roles run in this order (`docs/design.md:223-307`):
 1. **setup**: git worktree and branch, and a slicer ledger run.
 2. **implement**: one implementer role.
 3. **checks**: your check command and `slicer check`. A red result goes back
-   to the implementer without spending a review. *Proposed:* when your branch
+   to the implementer without spending a review. *Proposed (S239):* when your
+   check command exits non-zero, ork runs it once more before it sends the
+   round back; if the rerun passes, the round goes on and `run.json` marks the
+   check `flaky`. If it fails again, the implementer's brief starts with the
+   failing Go tests and their assertion lines. A timeout is not run again.
+   *Proposed:* when your branch
    is behind main and `slicer check` is red only on other items, the round
    goes on to review; ork names those problems to the reviewer, the gate and
    the finish step, and the landing merge and re-check decide them. On a run

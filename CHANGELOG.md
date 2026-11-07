@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- S239 (*proposed*): when the project check command exits non-zero, ork runs it
+  once more before it starts a fix round. A pass on the rerun does not spend the
+  round and is recorded as flaky (`checks[].attempts` 2, `checks[].flaky` true in
+  `run.json`, and both runs in the check log). If it fails again, the fix-round
+  brief starts with the failing Go test names and their assertion lines (at most
+  8000 bytes), then the end of the log as before; the landing re-check does the
+  same. A timeout and `slicer check` are not run again (owner decisions
+  2026-11-02). Docs: `docs/design.md`, `docs/guide.md`, `docs/state.md`.
 - S297 (*proposed*): `ork show RUN [NAME] [--json]` prints a run's state, the
   whole pause reason, its role reports, check results and findings, and with
   NAME one role report or check log, so a paused run can be read without

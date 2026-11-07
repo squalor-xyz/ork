@@ -27,7 +27,7 @@ func RunCheck(ctx context.Context, dir, command string, timeout time.Duration) (
 	case errors.As(err, &exitErr):
 		return CheckOutput{Output: out + fmt.Sprintf("\nexit %d\n", res.ExitCode)}, nil
 	case errors.As(err, &timeoutErr):
-		return CheckOutput{Output: out + fmt.Sprintf("\ntimed out after %v\n", timeout)}, nil
+		return CheckOutput{Output: out + fmt.Sprintf("\ntimed out after %v\n", timeout), TimedOut: true}, nil
 	}
 	return CheckOutput{}, err
 }

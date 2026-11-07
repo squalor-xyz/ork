@@ -149,6 +149,7 @@ type fakeChecks struct {
 	calls   []string // "dir|command"
 	outputs []CheckOutput
 	err     error
+	errAt   map[int]error // the call number (from 0) that returns this error and runs nothing
 }
 
 func (f *fakeChecks) Run(ctx context.Context, dir, command string, timeout time.Duration) (CheckOutput, error) {
@@ -158,6 +159,9 @@ func (f *fakeChecks) Run(ctx context.Context, dir, command string, timeout time.
 	f.calls = append(f.calls, dir+"|"+command)
 	if f.err != nil {
 		return CheckOutput{}, f.err
+	}
+	if err := f.errAt[n]; err != nil {
+		return CheckOutput{}, err
 	}
 	if len(f.outputs) == 0 {
 		return CheckOutput{OK: true, Output: "ok  \tall packages\n"}, nil
