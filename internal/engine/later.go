@@ -65,7 +65,11 @@ func (e *Engine) recordFindings(r round, t *Triaged) error {
 // blocker, as a question with the finding's structured shape. After the
 // answer the role runs again with it.
 func (e *Engine) askBlocker(r round, f Finding) error {
-	text := fmt.Sprintf("The %s's report marks this owner finding as a blocker.\n%s", r.role, questionText(f.Ask))
+	text := fmt.Sprintf("The %s's report marks this owner finding as a blocker.\n", r.role)
+	if f.Context != "" {
+		text += f.Context + "\n"
+	}
+	text += questionText(f.Ask)
 	err := e.run.Update(func(rr *runrec.Record) {
 		rr.Questions = append(rr.Questions, runrec.Question{Ask: f.Ask, Role: r.role, Round: r.n, Text: text, Key: f.Key, At: e.d.now()})
 	})

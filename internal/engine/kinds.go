@@ -28,6 +28,7 @@ type Finding struct {
 	Text    string         // the title and the lines under it, without the tag
 	Ask     *OwnerQuestion // owner findings only
 	Key     string         // the owner finding's optional adj decision key
+	Context string         // owner findings: the body lines that are not the block
 }
 
 // Triaged is a report's findings sorted by kind.
@@ -177,13 +178,92 @@ func (g segment) finding() (Finding, string) {
 		}
 	}
 	// The Question: line makes the block structured, so a shape that is not
-	// right is always an error.
-	ask, err := parseOwnerQuestion("Question: " + f.Title + "\n" + strings.Join(body, "\n"))
-	if err != nil {
-		return f, fmt.Sprintf("owner finding %q needs Options: with 2 to 4 numbered unique labels and summaries, and Recommend: N - reason, directly under its tag line", f.Title)
+	// right is always an error. Lines that are not the block stay in f.Text
+	// as context (S288, *proposed*).
+	lines, context, ok := ownerBlockLines(f.Title, body)
+	var ask *OwnerQuestion
+	var err error
+	if ok {
+		ask, err = parseOwnerQuestion(strings.Join(lines, "\n"))
+	}
+	if !ok || err != nil {
+		return f, fmt.Sprintf("owner finding %q needs Options: with 2 to 4 numbered unique labels and summaries, and Recommend: N - reason, %s", f.Title, ownerShapeTail)
 	}
 	f.Ask = ask
+	f.Context = strings.Join(context, "\n")
 	return f, ""
+}
+
+// ownerBlockLines picks the structured lines out of an owner finding's body:
+// Options:, the numbered options and Recommend:, each after one leading list
+// marker is stripped. Every other line is context and is returned apart. It
+// reports false, because the meaning is not clear, for: a line between two
+// numbered options, a numbered line that is not an option, a repeated Options:
+// or Recommend:, a Recommend: before Options:, a Decision key: line behind a
+// list marker, and an option or numbered line after Recommend:. A missing
+// Options: or Recommend: is left to parseOwnerQuestion.
+func ownerBlockLines(title string, body []string) (lines, context []string, ok bool) {
+	lines = []string{"Question: " + title}
+	const (
+		before = iota
+		inOptions
+		after
+	)
+	state, options, gap := before, 0, false
+	for _, raw := range body {
+		line := stripListMarker(raw)
+		if strings.HasPrefix(line, "Decision key:") {
+			return nil, nil, false // a marked key line would be dropped silently
+		}
+		switch state {
+		case before:
+			if line == "Options:" {
+				lines = append(lines, line)
+				state = inOptions
+			} else if strings.HasPrefix(line, "Recommend:") {
+				return nil, nil, false
+			} else {
+				context = append(context, raw)
+			}
+		case inOptions:
+			switch {
+			case strings.HasPrefix(line, "Recommend:"):
+				lines = append(lines, line)
+				state = after
+			case line == "Options:":
+				return nil, nil, false
+			case optionLine.MatchString(line):
+				if gap {
+					return nil, nil, false
+				}
+				lines = append(lines, line)
+				options++
+			case numberedLine.MatchString(line):
+				return nil, nil, false
+			default:
+				gap = gap || options > 0
+				context = append(context, raw)
+			}
+		case after:
+			if line == "Options:" || strings.HasPrefix(line, "Recommend:") || optionLine.MatchString(line) || numberedLine.MatchString(line) {
+				return nil, nil, false
+			}
+			context = append(context, raw)
+		}
+	}
+	return lines, context, true
+}
+
+// numberedLine is a line that opens like a numbered option, "3. ", "3.c" or
+// "3) ", but not a decimal such as "3.5".
+var numberedLine = regexp.MustCompile(`^\d+[.)]([^\d]|$)`)
+
+// stripListMarker removes one leading "- ", "* " or "+ " from a line.
+func stripListMarker(line string) string {
+	if len(line) > 1 && strings.ContainsRune("-*+", rune(line[0])) && line[1] == ' ' {
+		return strings.TrimSpace(line[2:])
+	}
+	return line
 }
 
 // dedent removes the indentation that all non-blank lines share.

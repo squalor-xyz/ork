@@ -868,9 +868,11 @@ final state. A run of another project never takes the pane.
 
 The actions follow the state (`ui.answer-pane-scope`):
 
-- Paused with `pending: question`: free context lines before `Question:` stay
-  in the raw question and appear above the options in the pane's scrollable
-  reason area; the raw `Question:` and `Options:` block is not repeated
+- Paused with `pending: question`: context lines in the raw question (before
+  `Question:`, and since S288 also inside or after the block, *proposed*)
+  appear above the options in the pane's scrollable reason area; ork moves
+  the lines inside or after the block above the `Question:` line; the raw
+  `Question:` and `Options:` block is not repeated
   there. Structured questions show a bold title,
   2 to 4 numbered options, the inline `(recommended)` marker and a
   `Why N: reason` line (`ui.structured-questions`, adj #168). A digit opens a confirmation with the

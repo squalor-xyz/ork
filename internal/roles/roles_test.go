@@ -697,3 +697,53 @@ func TestPromptsPointAtDoneWhen(t *testing.T) {
 		}
 	}
 }
+
+// S288: the three prompts that tag findings say what an [owner] body holds,
+// and show one refused example and the same finding accepted.
+func TestOwnerFindingRuleIsInEveryFindingPrompt(t *testing.T) {
+	all := prompts(t)
+	for _, name := range []string{"reviewer", "gate", "ui"} {
+		p := all[name]
+		for _, want := range []string{
+			"holds only `Options:`, the numbered options, `Recommend:` and an optional `Decision key:` line",
+			"no list marker before `Options:`, `Recommend:` or `Decision key:`",
+			"shows it with the question only for `[owner blocker]`",
+			"Refused (",
+			"Accepted (",
+		} {
+			if !has(p, want) {
+				t.Errorf("%s lacks %q", name, want)
+			}
+		}
+	}
+}
+
+// S288 (owner decision 2026-11-07): the Owner needed block is read as leniently
+// as an owner finding, so no prompt says the block refuses extra context.
+func TestOwnerNeededBlockWordingMatchesTheParser(t *testing.T) {
+	n := 0
+	for name, p := range prompts(t) {
+		if !has(p, "From `Question:` onward") {
+			continue
+		}
+		n++
+		if has(p, "strict shape") || has(p, "no extra context lines inside or after it") {
+			t.Errorf("%s still says the Owner needed block refuses extra context", name)
+		}
+		if !has(p, "no list marker before `Options:`, `Recommend:` or `Decision key:`, and no line between the options") {
+			t.Errorf("%s lacks the Owner needed block rule", name)
+		}
+		// The spec check's context is kept and filed in adj, not shown; every
+		// other block shows it with the question.
+		want := "ork keeps any other line as context and shows it with the question"
+		if name == "spec-check" {
+			want = "ork keeps any other line in the block's text and files it with the adj record when the block has a Decision key, but does not show it"
+		}
+		if !has(p, want) {
+			t.Errorf("%s lacks %q", name, want)
+		}
+	}
+	if n != 6 {
+		t.Errorf("%d prompts carry the Owner needed block rule, want 6", n)
+	}
+}

@@ -148,11 +148,17 @@ func CheckReport(role string, finish bool, text string) (*Report, error) {
 		problems = append(problems, fmt.Sprintf("no %q section", ownerHeading))
 	} else if !isNone(body) {
 		rep.Question = strings.TrimSpace(body)
-		ask, err := parseOwnerQuestion(body)
+		ask, leading, context, err := parseOwnerBlock(body)
 		if err != nil {
 			problems = append(problems, err.Error())
 		} else {
 			rep.Ask = ask
+			if ask != nil && len(context) > 0 {
+				// The pane shows the text above the Question: line, so
+				// context inside or after the block goes there (as askBlocker
+				// does for a blocker finding).
+				rep.Question = strings.Join(append(append(leading, context...), questionText(ask)), "\n")
+			}
 		}
 
 		for _, line := range strings.Split(body, "\n") {
@@ -179,7 +185,19 @@ var recommendLine = regexp.MustCompile(`^Recommend: ([1-4]) - (.+)$`)
 // fenceLine is a code fence line: three or more backticks, then at most one word.
 var fenceLine = regexp.MustCompile("^`{3,}[A-Za-z]*$")
 
+// ownerShapeTail ends the shape error of an owner block (an Owner needed block
+// or an owner finding), so every refusal names the rules that apply.
+const ownerShapeTail = "with no line between the options, no numbered line after Recommend:, and no list marker before Decision key:"
+
 func parseOwnerQuestion(body string) (*OwnerQuestion, error) {
+	q, _, _, err := parseOwnerBlock(body)
+	return q, err
+}
+
+// parseOwnerBlock is parseOwnerQuestion that also returns the context lines:
+// the lines before Question: (leading) and the other lines inside or after
+// the block (context).
+func parseOwnerBlock(body string) (q *OwnerQuestion, leading, context []string, err error) {
 	var lines []string
 	structured := false
 	for _, line := range strings.Split(body, "\n") {
@@ -195,22 +213,30 @@ func parseOwnerQuestion(body string) (*OwnerQuestion, error) {
 		}
 	}
 	if !structured {
-		return nil, nil
+		return nil, nil, nil, nil
 	}
-	// Context before Question stays in the raw section, outside the strict block.
-	for i, line := range lines {
-		if strings.HasPrefix(line, "Question:") {
-			lines = lines[i:]
-			break
-		}
+	bad := func() (*OwnerQuestion, []string, []string, error) {
+		return nil, nil, nil, errors.New("Owner needed requires Question: title, Options: with 2 to 4 numbered unique labels and summaries, and Recommend: N - reason, " + ownerShapeTail)
 	}
-	bad := func() (*OwnerQuestion, error) {
-		return nil, fmt.Errorf("Owner needed requires Question: title, Options: with 2 to 4 numbered unique labels and summaries, and Recommend: N - reason")
+	// Lines before Question are leading context, outside the block. From
+	// Question onward the block is read as an owner finding's body is (S288,
+	// *proposed*): one list marker is stripped from Options, the option lines
+	// and Recommend, and other lines are context. A line between two options
+	// is still a shape error.
+	for len(lines) > 0 && !strings.HasPrefix(lines[0], "Question:") {
+		leading = append(leading, lines[0])
+		lines = lines[1:]
 	}
-	if len(lines) < 5 || len(lines) > 7 || !strings.HasPrefix(lines[0], "Question:") || lines[1] != "Options:" {
+	if len(lines) == 0 {
 		return bad()
 	}
-	q := &OwnerQuestion{Title: strings.TrimSpace(strings.TrimPrefix(lines[0], "Question:"))}
+	title := strings.TrimSpace(strings.TrimPrefix(lines[0], "Question:"))
+	// A refused block comes back empty and fails the length check below.
+	lines, context, _ = ownerBlockLines(title, lines[1:])
+	if len(lines) < 5 || len(lines) > 7 || lines[1] != "Options:" {
+		return bad()
+	}
+	q = &OwnerQuestion{Title: title}
 	if q.Title == "" {
 		return bad()
 	}
@@ -236,14 +262,14 @@ func parseOwnerQuestion(body string) (*OwnerQuestion, error) {
 	if q.Recommend > len(q.Options) || q.Reason == "" {
 		return bad()
 	}
-	return q, nil
+	return q, leading, context, nil
 }
 
 // ParseOwnerQuestions reads every question block of a body: each block starts
 // at a line that begins with "Question:" and runs to the next such line. The
-// strict shape of parseOwnerQuestion holds for each block, which may carry one
-// Decision key line. Lines before the first block are context and are
-// dropped. A body without a block, or with a malformed one, is an error that
+// shape of parseOwnerQuestion holds for each block (context lines and list
+// markers allowed, S288), which may carry one Decision key line. Lines before
+// the first block are context and are dropped. A body without a block, or with a malformed one, is an error that
 // names the block.
 func ParseOwnerQuestions(body string) ([]SpecQuestion, error) {
 	var blocks [][]string

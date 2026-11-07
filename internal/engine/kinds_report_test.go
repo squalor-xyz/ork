@@ -139,12 +139,11 @@ func TestTriageTagVariants(t *testing.T) {
 
 func TestTriageRefusesMalformedNonFixFindings(t *testing.T) {
 	for name, finding := range map[string]string{
-		"owner without options":    "- [owner] Which one?",
-		"owner with one option":    "- [owner] Which one?\n  Options:\n  1. only: one\n  Recommend: 1 - only one",
-		"owner without recommend":  "- [owner] Which one?\n  Options:\n  1. a: one\n  2. b: two",
-		"owner with extra context": "- [owner] Which one?\n  Because of reasons.\n  Options:\n  1. a: one\n  2. b: two\n  Recommend: 1 - a",
-		"later without title":      "- [later]",
-		"owner without title":      "- [owner]\n  Options:\n  1. a: one\n  2. b: two\n  Recommend: 1 - a",
+		"owner without options":   "- [owner] Which one?",
+		"owner with one option":   "- [owner] Which one?\n  Options:\n  1. only: one\n  Recommend: 1 - only one",
+		"owner without recommend": "- [owner] Which one?\n  Options:\n  1. a: one\n  2. b: two",
+		"later without title":     "- [later]",
+		"owner without title":     "- [owner]\n  Options:\n  1. a: one\n  2. b: two\n  Recommend: 1 - a",
 	} {
 		_, err := Triage(review(finding, "nothing", "nothing", "nothing"))
 		var se *ShapeError
@@ -247,5 +246,179 @@ func TestTriageGateAColumnZeroLineEndsABulletedFinding(t *testing.T) {
 	}
 	if !strings.Contains(got.Fix, "Tests: 12 passed, 0 failed") || strings.Contains(got.Fix, "scripts parse") {
 		t.Errorf("fix text: %q", got.Fix)
+	}
+}
+
+// S288: a body line that is not the block is context, not a shape error.
+
+const ownerBlock = "  Options:\n  1. a: one\n  2. b: two\n  Recommend: 1 - a"
+
+func TestOwnerFindingKeepsProseAsContext(t *testing.T) {
+	text := "- [owner] Which one?\n  Because of reasons.\n  The second reason.\n" + ownerBlock
+	got, err := Triage(review(text, "nothing", "nothing", "nothing"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Owner) != 1 || got.Owner[0].Ask == nil || len(got.Owner[0].Ask.Options) != 2 || got.Owner[0].Ask.Recommend != 1 {
+		t.Fatalf("owner findings: %+v", got.Owner)
+	}
+	for _, want := range []string{"Because of reasons.", "The second reason."} {
+		if !strings.Contains(got.Owner[0].Text, want) {
+			t.Errorf("Text %q lacks context %q", got.Owner[0].Text, want)
+		}
+	}
+	if got.Owner[0].Context != "Because of reasons.\nThe second reason." {
+		t.Errorf("Context %q", got.Owner[0].Context)
+	}
+	if strings.Contains(got.Fix, "Because of reasons.") {
+		t.Errorf("context went to the fix round: %q", got.Fix)
+	}
+}
+
+func TestOwnerFindingAcceptsListMarkers(t *testing.T) {
+	for name, text := range map[string]string{
+		"dash bullets":  "- [owner] Which one?\n  - Options:\n    1. a: one\n    2. b: two\n  - Recommend: 1 - a",
+		"star bullets":  "- [owner] Which one?\n  * Options:\n  * 1. a: one\n  * 2. b: two\n  * Recommend: 1 - a",
+		"plus bullets":  "- [owner] Which one?\n  + Options:\n  + 1. a: one\n  + 2. b: two\n  + Recommend: 1 - a",
+		"nested bullet": "- [owner] Which one?\n  - Options:\n    - 1. a: one\n    - 2. b: two\n  - Recommend: 1 - a",
+	} {
+		got, err := Triage(review(text, "nothing", "nothing", "nothing"))
+		if err != nil || len(got.Owner) != 1 || got.Owner[0].Ask == nil {
+			t.Errorf("%s: %+v, %v", name, got, err)
+			continue
+		}
+		ask := got.Owner[0].Ask
+		if len(ask.Options) != 2 || ask.Options[0].Label != "a" || ask.Options[1].Summary != "two" || ask.Recommend != 1 || ask.Reason != "a" {
+			t.Errorf("%s: ask %+v", name, ask)
+		}
+	}
+}
+
+func TestOwnerFindingKeepsTrailingProse(t *testing.T) {
+	text := "- [owner blocker] Which one?\n" + ownerBlock + "\n  Decision key: cache.scope\n  - The first trailing point.\n  - The second trailing point."
+	got, err := TriageGate("VERDICT: FAIL\n\n" + text + "\n" + gateTail)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Owner) != 1 || got.Blocker() == nil {
+		t.Fatalf("owner findings: %+v", got.Owner)
+	}
+	f := got.Owner[0]
+	if f.Key != "cache.scope" || f.Ask == nil || len(f.Ask.Options) != 2 || f.Ask.Reason != "a" {
+		t.Errorf("finding: %+v", f)
+	}
+	if f.Context != "- The first trailing point.\n- The second trailing point." {
+		t.Errorf("Context %q", f.Context)
+	}
+	for _, want := range []string{"The first trailing point.", "The second trailing point.", "Recommend: 1 - a"} {
+		if !strings.Contains(f.Text, want) {
+			t.Errorf("Text %q lacks %q", f.Text, want)
+		}
+	}
+}
+
+func TestOwnerFindingStillNeedsOptionsAndRecommend(t *testing.T) {
+	for name, finding := range map[string]string{
+		"no options":                    "- [owner] Which one?\n  Only prose here.",
+		"one option":                    "- [owner] Which one?\n  Options:\n  1. only: one\n  Recommend: 1 - only one",
+		"no recommend":                  "- [owner] Which one?\n  Prose.\n  Options:\n  1. a: one\n  2. b: two\n  More prose.",
+		"no title":                      "- [owner]\n  Prose.\n  Options:\n  1. a: one\n  2. b: two\n  Recommend: 1 - a",
+		"prose between options":         "- [owner] Which one?\n  Options:\n  1. a: one\n  Because.\n  2. b: two\n  Recommend: 1 - a",
+		"malformed option":              "- [owner] Which one?\n  Options:\n  1. a: one\n  2. b: two\n  3. c\n  Recommend: 1 - a",
+		"recommend before options":      "- [owner] Which one?\n  Recommend: 1 - a\n  Options:\n  1. a: one\n  2. b: two",
+		"marked Decision key":           "- [owner] Which one?\n" + ownerBlock + "\n  - Decision key: cache.scope",
+		"option after recommend":        "- [owner] Which one?\n" + ownerBlock + "\n  3. c: three",
+		"numbered line after recommend": "- [owner] Which one?\n" + ownerBlock + "\n  3) c: three",
+		"final option without space":    "- [owner] Which one?\n  Options:\n  1. a: one\n  2. b: two\n  3.c: three\n  Recommend: 1 - a",
+		"final option with paren":       "- [owner] Which one?\n  Options:\n  1. a: one\n  2. b: two\n  3) c: three\n  Recommend: 1 - a",
+		"two Recommend lines":           "- [owner] Which one?\n" + ownerBlock + "\n  Recommend: 2 - b",
+		"recommend on both sides":       "- [owner] Which one?\n  Recommend: 2 - b\n" + ownerBlock,
+		"options after recommend":       "- [owner] Which one?\n" + ownerBlock + "\n  Options:",
+		"two Options lines":             "- [owner] Which one?\n  Options:\n  Options:\n  1. a: one\n  2. b: two\n  Recommend: 1 - a",
+		"recommend without a reason":    "- [owner] Which one?\n  Options:\n  1. a: one\n  2. b: two\n  Recommend: 1",
+		"recommend beyond the options":  "- [owner] Which one?\n  Options:\n  1. a: one\n  2. b: two\n  Recommend: 3 - c",
+	} {
+		_, err := Triage(review(finding, "nothing", "nothing", "nothing"))
+		var se *ShapeError
+		if !errors.As(err, &se) {
+			t.Errorf("%s: err %v, want a *ShapeError", name, err)
+		}
+	}
+}
+
+// promptOwnerExamples returns the fenced blocks a prompt introduces with a
+// line that starts with "Refused" or "Accepted", keyed by that word.
+func promptOwnerExamples(prompt string) map[string][]string {
+	out := map[string][]string{}
+	var kind string
+	var block []string
+	inFence := false
+	for _, line := range strings.Split(prompt, "\n") {
+		switch {
+		case inFence && strings.HasPrefix(line, "```"):
+			if kind != "" {
+				out[kind] = append(out[kind], strings.Join(block, "\n"))
+			}
+			inFence, kind, block = false, "", nil
+		case inFence:
+			block = append(block, line)
+		case strings.HasPrefix(line, "```"):
+			inFence = true
+		case strings.HasPrefix(line, "Refused"):
+			kind = "Refused"
+		case strings.HasPrefix(line, "Accepted"):
+			kind = "Accepted"
+		}
+	}
+	return out
+}
+
+func TestOwnerFindingExamplesParse(t *testing.T) {
+	for _, role := range []string{"reviewer", "gate", "ui"} {
+		p, err := roles.Prompt(role)
+		if err != nil {
+			t.Fatal(err)
+		}
+		ex := promptOwnerExamples(p)
+		if len(ex["Refused"]) != 1 || len(ex["Accepted"]) != 1 {
+			t.Errorf("%s: %d refused and %d accepted owner examples, want one of each", role, len(ex["Refused"]), len(ex["Accepted"]))
+			continue
+		}
+		got, err := Triage(review(ex["Accepted"][0], "nothing", "nothing", "nothing"))
+		if err != nil || len(got.Owner) != 1 || got.Owner[0].Ask == nil {
+			t.Errorf("%s: accepted example: %+v, %v", role, got, err)
+		} else {
+			// The parser keeps extra lines as context, so check that the
+			// example itself holds the block and nothing else.
+			_, body, _ := strings.Cut(got.Owner[0].Text, "\n")
+			for _, line := range strings.Split(body, "\n") {
+				line = strings.TrimSpace(line)
+				if line != "Options:" && !optionLine.MatchString(line) && !recommendLine.MatchString(line) && !strings.HasPrefix(line, "Decision key:") {
+					t.Errorf("%s: accepted example has a line outside the block: %q", role, line)
+				}
+			}
+		}
+		_, err = Triage(review(ex["Refused"][0], "nothing", "nothing", "nothing"))
+		var se *ShapeError
+		if !errors.As(err, &se) {
+			t.Errorf("%s: refused example gave %v, want a *ShapeError", role, err)
+		}
+	}
+}
+
+// S288: one tail names every rule a refused owner block broke.
+const shapeTail = "with no line between the options, no numbered line after Recommend:, and no list marker before Decision key:"
+
+func TestOwnerFindingRefusalMessageNamesTheRules(t *testing.T) {
+	for name, finding := range map[string]string{
+		"marked Decision key":    "- [owner] Which one?\n" + ownerBlock + "\n  - Decision key: cache.scope",
+		"option after recommend": "- [owner] Which one?\n" + ownerBlock + "\n  3. c: three",
+		"prose between options":  "- [owner] Which one?\n  Options:\n  1. a: one\n  Because.\n  2. b: two\n  Recommend: 1 - a",
+	} {
+		_, err := Triage(review(finding, "nothing", "nothing", "nothing"))
+		var se *ShapeError
+		if !errors.As(err, &se) || !strings.Contains(strings.Join(se.Problems, "\n"), shapeTail) {
+			t.Errorf("%s: %v lacks %q", name, err, shapeTail)
+		}
 	}
 }

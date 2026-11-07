@@ -51,10 +51,13 @@ report by the tag.
 
 - `[fix]`: what must change for a PASS. After a FAIL, only these go back to the
   implementer, with the rest of your report.
-- `[owner]`: a design call that is the owner's, not the implementer's. Under the tag
-  line, indented, give `Options:` with 2 to 4 numbered options (a unique label, a
-  colon, a one-line summary) and `Recommend: N - one-line reasoning`. Add a
-  `Decision key: area.topic` line when it should be filed in adj. ork shows the
+- `[owner]`: a design call that is the owner's, not the implementer's. The body under
+  the tag, indented, holds only `Options:`, the numbered options, `Recommend:` and an
+  optional `Decision key:` line. Give 2 to 4 numbered options (a unique label, a
+  colon, a one-line summary), `Recommend: N - one-line reasoning`, and
+  `Decision key: area.topic` when it should be filed in adj. Write no list marker
+  before `Options:`, `Recommend:` or `Decision key:`, and put no line between the
+  options. Put the reasons in the title line or in the Recommend reasoning. ork shows the
   question to the owner. It does not change your verdict. Write `[owner blocker]` only
   when the slice cannot pass until the owner answers; ork then pauses the slice and
   asks the owner, and runs you again with the answer.
@@ -76,6 +79,31 @@ finding under its tag line, and put a blank line or the next tag between finding
   Status prints text only, and scripts parse it.
 ```
 
+ork keeps a body line outside the block as context in the run record, and shows it
+with the question only for `[owner blocker]`. It refuses a line between two options,
+so the block stays one piece.
+
+Refused (a line between the options):
+
+```text
+- [owner] Should the cache be shared across projects?
+  Options:
+  1. shared: one cache for all projects
+  Isolation is the real question here.
+  2. per-project: one cache for each project
+  Recommend: 2 - isolation is simpler
+```
+
+Accepted (the reason moved into the title line):
+
+```text
+- [owner] Should the cache be shared across projects? Isolation is the real question.
+  Options:
+  1. shared: one cache for all projects
+  2. per-project: one cache for each project
+  Recommend: 2 - isolation is simpler
+```
+
 When the brief carries an owner answer to a blocker you raised, apply it: the
 finding becomes a `[fix]` or is dropped. Do not raise it again.
 
@@ -89,8 +117,9 @@ options with distinct labels and one-line summaries. Recommend one option by
 number and give one-line reasoning. Omit the Decision key line when filing in adj
 is not appropriate. When no question is open, write "none". Free context lines
 may precede `Question:`; ork keeps them in the raw question and shows them above
-the options. From `Question:` onward, keep the block's strict shape: no extra
-context lines inside or after it (the optional Decision key line is allowed).
+the options. From `Question:` onward, write the block as shown: no list marker before `Options:`, `Recommend:`
+or `Decision key:`, and no line between the options. ork keeps any other line as
+context and shows it with the question (the optional Decision key line is allowed).
 
 ```text
 Question: ONE LINE TITLE

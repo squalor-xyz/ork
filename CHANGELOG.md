@@ -2,6 +2,27 @@
 
 ## Unreleased
 
+- S288 (*proposed*): an `[owner]` or `[owner blocker]` finding in a reviewer,
+  UI pass or gate report no longer pauses the run because its body holds more
+  than the block (owner decision 2026-11-04, `slicer show S288`). The parser
+  strips one leading `- `, `* ` or `+ ` list marker from `Options:`, the option
+  lines and `Recommend:`, and keeps every other body line, before `Options:` or
+  after `Recommend:`, as context in the finding's text (a blocker's question
+  shows them above its block). A line between two options, a malformed numbered
+  option, a repeated or misplaced `Options:` or `Recommend:`, and a body
+  without both still refuse. The reviewer, UI and gate
+  prompts now state the body rule and show a refused and an accepted example.
+  The `## Owner needed` block and the spec check's question blocks get the same
+  leniency (owner decision 2026-11-07): list markers are stripped and other
+  lines inside or after the block stay as context. In an `## Owner needed`
+  block the pause shows the context above the block, as for a finding; in a
+  spec-check block it stays in the block's text and is filed with the adj
+  record when the block has a decision key, and the TUI and CLI do not show it.
+  A line between two options, an option line after `Recommend:`, a
+  `Decision key:` line behind a list marker, and a missing or malformed
+  `Options:` or `Recommend:` still refuse. The `VERDICT:` line is never lenient. The
+  `## Owner needed` wording in all six prompts that carry the block changed to
+  match. Docs: `docs/design.md`, `docs/dashboard.md`.
 - S279 (*proposed*): a round check no longer goes red on `slicer check`
   problems that belong to other items when the branch is behind its base
   branch (adj 178, `checks.outside-problems`, owner decision 2026-11-05). It

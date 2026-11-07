@@ -360,6 +360,45 @@ func TestSpecCheckCriteriaExampleBlockParses(t *testing.T) {
 	}
 }
 
+// S288 (owner decision 2026-11-07): spec-check question blocks get the same
+// leniency as an owner finding.
+func TestParseOwnerQuestionsKeepsContextAndMarkers(t *testing.T) {
+	body := `Question: One?
+The first reason.
+- Options:
+  - 1. a: A
+  - 2. b: B
+- Recommend: 1 - because
+A closing remark.
+Decision key: area.one
+
+Question: Two?
+Options:
+1. c: C
+2. d: D
+Recommend: 2 - since
+`
+	blocks, err := ParseOwnerQuestions(body)
+	if err != nil || len(blocks) != 2 {
+		t.Fatalf("blocks: %+v, %v", blocks, err)
+	}
+	q := blocks[0]
+	if q.Key != "area.one" || q.Ask.Title != "One?" || len(q.Ask.Options) != 2 || q.Ask.Options[1].Label != "b" || q.Ask.Reason != "because" {
+		t.Errorf("block 0: %+v", q)
+	}
+	for _, want := range []string{"The first reason.", "A closing remark."} {
+		if !strings.Contains(q.Text, want) {
+			t.Errorf("block 0 text lacks %q: %q", want, q.Text)
+		}
+	}
+	if strings.Contains(q.Text, "Two?") || blocks[1].Ask.Recommend != 2 {
+		t.Errorf("blocks bled into each other: %+v", blocks)
+	}
+	if _, err := ParseOwnerQuestions("Question: One?\nOptions:\n1. a: A\nIn between.\n2. b: B\nRecommend: 1 - x\n"); err == nil {
+		t.Error("context between options accepted")
+	}
+}
+
 func TestParseOwnerQuestionsRefusals(t *testing.T) {
 	good := "Question: One?\nOptions:\n1. a: A\n2. b: B\nRecommend: 1 - x\n"
 	for name, body := range map[string]string{

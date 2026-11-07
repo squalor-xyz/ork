@@ -401,9 +401,22 @@ slice.
     whole.
   - *owner*: the finding is an owner question in the shape of S111: a title,
     `Options:` with 2 to 4 numbered labels, `Recommend: N - reason`, and an
-    optional `Decision key:`. ork keeps it in `findings[]` of the run record
-    and shows it in the pane. It does not block. `[owner blocker]` makes ork
-    pause the round with a `question` pending, as an `## Owner needed`
+    optional `Decision key:`. The prompts say the body holds only those lines,
+    with no list marker before `Options:`, `Recommend:` or `Decision key:`.
+    The parser is lenient (S288, *proposed*): it strips one leading `- `, `* `
+    or `+ ` marker from `Options:`, the option lines and `Recommend:`, and
+    every other body line stays in the finding's `text` as context. A
+    non-blocking finding keeps that context in the run record only; a
+    blocker's question carries the context lines above its block. A body
+    line between two numbered options, a numbered line that is not a valid
+    option, an option or numbered line after `Recommend:`, a repeated
+    `Options:` or `Recommend:`, a `Recommend:` before `Options:`, a
+    `Decision key:` line behind a list marker, and a body without `Options:`
+    or `Recommend:` are still refused. The `## Owner needed` block and the
+    spec check's question blocks are read the same way (owner decision
+    2026-11-07). ork keeps the finding in `findings[]` of the run record and
+    shows it in the pane. It does not block. `[owner blocker]`
+    makes ork pause the round with a `question` pending, as an `## Owner needed`
     section does (`questions[]`, the answer reaches the same role, and
     `reviewDone` runs that role again). A malformed owner or later finding is
     a report shape error. Proposed (S137): every blocker is asked, with
@@ -677,9 +690,18 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
 
   Free context lines may precede `Question:`. They stay in the raw question
   text and the pane shows them above the options. From `Question:` onward,
-  the block keeps its strict shape: extra context lines inside or after it
-  are a shape error. The optional decision key line remains allowed anywhere
-  in the section.
+  the block is read as an owner finding's body is (S288, owner decision
+  2026-11-07, *proposed*): one leading `- `, `* ` or `+ ` marker is stripped
+  from `Options:`, the option lines and `Recommend:`, and any other line
+  inside or after the block is context. The question text of the pause (and
+  of `questions[]`) then holds the leading context, that context, and the
+  block, in that order, so the pane shows the context above the options.
+  A `Decision key:` line behind a list marker and an option line after
+  `Recommend:` are also shape errors. A line between two numbered options, a numbered line that is not a valid
+  option, a repeated or misplaced `Options:` or `Recommend:`, and a missing
+  or malformed `Options:` or `Recommend:` are a shape error. This leniency
+  never applies to the `VERDICT:` first line. The optional decision key line
+  remains allowed anywhere in the section.
 
   The decision key is optional. Title, labels, summaries and reasoning must
   be non-empty and each fits on one line. A malformed structured block is a
@@ -901,7 +923,11 @@ question. Answer, approve, fix and retry record `--phase start` to continue.
   (owner decisions, S143, 2026-10-28). Its report has one `## Slice
   ID` section per slice, holding `Ready` or one or more question blocks; the
   multi-block parse (`ParseOwnerQuestions`) reads every `Question:` block of a
-  section with the strict shape of an owner question. Its lineup row is the
+  section, each block read as an `## Owner needed` block is (list markers
+  and context lines allowed, S288, *proposed*; the block's structure is still
+  strict). The extra lines stay in the block's raw text (`SpecQuestion.Text`)
+  and are filed with the adj record when the block has a decision key; the
+  TUI and CLI show only the title, options and reasoning. Its lineup row is the
   matrix rows that the project's `spec_check_rows` list gives, in order (S258,
   *proposed*; the first row with an adapter runs and the next is its
   fallback), else every row that a rule naming "Spec check row (rNN)" gives,

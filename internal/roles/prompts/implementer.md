@@ -95,8 +95,9 @@ options with distinct labels and one-line summaries. Recommend one option by
 number and give one-line reasoning. Omit the Decision key line when filing in adj
 is not appropriate. When no question is open, write "none". Free context lines
 may precede `Question:`; ork keeps them in the raw question and shows them above
-the options. From `Question:` onward, keep the block's strict shape: no extra
-context lines inside or after it (the optional Decision key line is allowed).
+the options. From `Question:` onward, write the block as shown: no list marker before `Options:`, `Recommend:`
+or `Decision key:`, and no line between the options. ork keeps any other line as
+context and shows it with the question (the optional Decision key line is allowed).
 
 ```text
 Question: ONE LINE TITLE

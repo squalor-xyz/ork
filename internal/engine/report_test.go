@@ -369,17 +369,94 @@ func TestStructuredQuestionAcceptsLeadingContext(t *testing.T) {
 	}
 }
 
-func TestStructuredQuestionRejectsContextInsideBlock(t *testing.T) {
-	for _, after := range []string{"Question: Which storage?", "1. local: use local storage", "Recommend: 1 - keeps data nearby"} {
+// S288 (owner decision 2026-11-07): the Owner needed block gets the same
+// leniency as an owner finding. Lines that are not the block are context and
+// stay in the raw question, which replaces the S256 rule that refused them.
+func TestStructuredQuestionKeepsContextInsideBlock(t *testing.T) {
+	for _, after := range []string{"Question: Which storage?", "Recommend: 1 - keeps data nearby"} {
 		t.Run(after, func(t *testing.T) {
 			body := "Leading context is allowed.\n" + strings.Replace(structuredQuestion, after, after+"\nExtra context inside the block.", 1)
-			_, err := CheckReport(RoleReviewer, false, "## Owner needed\n"+body)
-			if err == nil {
-				t.Fatal("extra context inside the block was accepted")
+			rep, err := CheckReport(RoleReviewer, false, "## Owner needed\n"+body)
+			if err != nil {
+				t.Fatal(err)
 			}
-			shapeProblems(t, err)
+			if rep.Ask == nil || rep.Ask.Title != "Which storage?" || len(rep.Ask.Options) != 2 || rep.Ask.Recommend != 1 {
+				t.Errorf("question lost: %+v", rep.Ask)
+			}
+			if !strings.Contains(rep.Question, "Extra context inside the block.") || !strings.Contains(rep.Question, "Leading context is allowed.") {
+				t.Errorf("context not kept with the question: %q", rep.Question)
+			}
 		})
 	}
+}
+
+// S288: context inside or after the block is shown with the question, above
+// its block, as a blocker finding's question is (askBlocker).
+func TestOwnerNeededShowsTrailingContextBeforeTheBlock(t *testing.T) {
+	body := "Leading context.\n" + strings.Replace(structuredQuestion, "Question: Which storage?", "Question: Which storage?\nInside context.", 1) + "\nTrailing context.\n"
+	rep, err := CheckReport(RoleReviewer, false, "## Owner needed\n"+body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lead, inside, trail, block := strings.Index(rep.Question, "Leading context."), strings.Index(rep.Question, "Inside context."), strings.Index(rep.Question, "Trailing context."), strings.Index(rep.Question, "Question: Which storage?")
+	if lead < 0 || inside < 0 || trail < 0 || block < 0 || !(lead < inside && inside < trail && trail < block) {
+		t.Errorf("order wrong (lead %d, inside %d, trail %d, block %d): %q", lead, inside, trail, block, rep.Question)
+	}
+	if rep.Ask == nil || rep.Key != "storage.engine" {
+		t.Errorf("ask %+v, key %q", rep.Ask, rep.Key)
+	}
+}
+
+func TestStructuredQuestionRefusesMisplacedOrMarkedLines(t *testing.T) {
+	base := strings.Replace(structuredQuestion, "\nDecision key: storage.engine", "", 1)
+	for name, body := range map[string]string{
+		"marked decision key":    base + "\n- Decision key: a.b\n",
+		"option after recommend": base + "\n3. other: third\n",
+		"paren option":           strings.Replace(base, "Recommend:", "3) other: third\nRecommend:", 1),
+		"no space option":        strings.Replace(base, "Recommend:", "3.other: third\nRecommend:", 1),
+	} {
+		t.Run(name, func(t *testing.T) {
+			_, err := CheckReport(RoleReviewer, false, "## Owner needed\n"+body)
+			if err == nil {
+				t.Fatal("accepted")
+			}
+			mustMention(t, shapeProblems(t, err), shapeTail)
+		})
+	}
+}
+
+func TestOwnerNeededFreeTextWithRecommendBulletsIsNotAQuestion(t *testing.T) {
+	body := "Two ways to go.\n- Recommend: wait for the owner\n- Reason: the API is not final\n"
+	rep, err := CheckReport(RoleReviewer, false, "## Owner needed\n"+body)
+	if err != nil || rep.Ask != nil || rep.Question != strings.TrimSpace(body) {
+		t.Errorf("free text: %+v, %v", rep, err)
+	}
+}
+
+func TestStructuredQuestionRefusesContextBetweenOptions(t *testing.T) {
+	body := strings.Replace(structuredQuestion, "1. local: use local storage", "1. local: use local storage\nExtra context between the options.", 1)
+	_, err := CheckReport(RoleReviewer, false, "## Owner needed\n"+body)
+	if err == nil {
+		t.Fatal("context between the options was accepted")
+	}
+	shapeProblems(t, err)
+}
+
+func TestStructuredQuestionAcceptsListMarkers(t *testing.T) {
+	body := "Question: Which storage?\n- Options:\n  - 1. local: use local storage\n  - 2. remote: use remote storage\n* Recommend: 1 - keeps data nearby\n"
+	rep, err := CheckReport(RoleReviewer, false, "## Owner needed\n"+body)
+	if err != nil || rep.Ask == nil || len(rep.Ask.Options) != 2 || rep.Ask.Options[1].Label != "remote" || rep.Ask.Recommend != 1 || rep.Ask.Reason != "keeps data nearby" {
+		t.Fatalf("marked block: %+v, %v", rep, err)
+	}
+}
+
+func TestVerdictLineIsNeverLenient(t *testing.T) {
+	text := "- VERDICT: PASS\n\nTests: 1 passed, 0 failed\n\n## Owner needed\nnone\n"
+	_, err := CheckReport(RoleGate, false, text)
+	if err == nil {
+		t.Fatal("a verdict line behind a list marker was accepted")
+	}
+	mustMention(t, shapeProblems(t, err), "VERDICT")
 }
 
 const fencedQuestionBlock = "Question: ONE LINE TITLE\nOptions:\n1. LABEL: summary\n2. OTHER: another summary\nRecommend: 1 - reason"
@@ -398,9 +475,15 @@ func TestStructuredQuestionInsideAFenceIsAccepted(t *testing.T) {
 	}
 }
 
+// S288: context after the block, even inside a copied fence, is kept as
+// context; it no longer refuses the block (it did under S256).
 func TestFenceDoesNotHideContextInsideTheBlock(t *testing.T) {
-	_, err := parseOwnerQuestion("```text\n" + fencedQuestionBlock + "\nSome context after the block.\n```\n")
+	q, err := parseOwnerQuestion("```text\n" + fencedQuestionBlock + "\nSome context after the block.\n```\n")
+	if err != nil || q == nil || q.Title != "ONE LINE TITLE" || len(q.Options) != 2 || q.Recommend != 1 {
+		t.Errorf("fenced block with trailing context: %+v, %v", q, err)
+	}
+	_, err = parseOwnerQuestion("```text\n" + strings.Replace(fencedQuestionBlock, "1. LABEL: summary", "1. LABEL: summary\nSome context between the options.", 1) + "\n```\n")
 	if err == nil || !strings.Contains(err.Error(), "Owner needed requires") {
-		t.Errorf("context inside a fenced block was accepted: %v", err)
+		t.Errorf("context between options inside a fence was accepted: %v", err)
 	}
 }
