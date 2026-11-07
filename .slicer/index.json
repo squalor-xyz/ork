@@ -14542,7 +14542,7 @@
       "id": "S279",
       "title": "Round checks: a worktree behind main must not fail on tracking that needs main's code",
       "short_title": "Round checks: a worktree behind main must not fail on tracking that needs main's code",
-      "status": "started",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -14561,10 +14561,7 @@
           "retracted_reason": ""
         }
       ],
-      "claim": {
-        "owner": "Jon Robbins",
-        "at": "2026-11-07T20:06:54Z"
-      },
+      "claim": null,
       "fields": {
         "size": "M",
         "flags": [],
