@@ -12449,7 +12449,7 @@
       "id": "S229",
       "title": "Daemon and engine wording leftovers from the TUI notes",
       "short_title": "Daemon wording leftovers",
-      "status": "started",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -12482,10 +12482,7 @@
           "retracted_reason": ""
         }
       ],
-      "claim": {
-        "owner": "Jon Robbins",
-        "at": "2026-11-07T20:44:47Z"
-      },
+      "claim": null,
       "fields": {
         "size": "S",
         "flags": [],

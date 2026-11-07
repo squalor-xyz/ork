@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-307 items · — 83 · done 190 · retired 33 · started 1
+307 items · — 83 · done 191 · retired 33
 
 v1.2
 
@@ -135,7 +135,7 @@ v1.2
 | 78 | [S224](slices/S224.md) | ork projects set --bell on\|off | S | 1 |  |  | — |
 | 79 | [S225](slices/S225.md) | getsid helper on BSDs, freebsd vet | S | 1 |  |  | — |
 | 80 | [S226](slices/S226.md) | Matrix editor in the TUI | M | 2 |  |  | — |
-| 81 | [S229](slices/S229.md) | Daemon wording leftovers | S | 1 |  |  | started |
+| 81 | [S229](slices/S229.md) | Daemon wording leftovers | S | 1 |  |  | done |
 | 82 | [S235](slices/S235.md) | Sleep and wake awareness | M | 2 |  |  | done |
 | 83 | [S236](slices/S236.md) | Reap the process tree of a kill | M | 2 |  |  | — |
 | 84 | [S237](slices/S237.md) | answer and retry return at once | M | 2 |  |  | done |
