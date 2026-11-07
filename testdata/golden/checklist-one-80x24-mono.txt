@@ -1,0 +1,24 @@
+[1mork[m                │ [2mOverview │ Questions │ Waves │ Roadmap │ Decisions[m
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │  [1mAdd projects[m
+                   │
+                   │  Found 1 project under /work/code:
+                   │
+                   │  [1;7m> [x] app  slicer  only/app                               [m
+                   │
+                   │  [2m1 of 1 ticked[m
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ j/k [2mrow[m; space [2mtick[m; a [2mall[m; n [2mnone[m; y [2madd ticked[m; esc [2mback[m
+                   │ 0 projects

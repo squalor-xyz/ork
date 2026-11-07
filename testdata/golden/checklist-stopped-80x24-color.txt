@@ -1,0 +1,24 @@
+[1mork[m                │ [90mOverview │ Questions │ Waves │ Roadmap │ Decisions[m
+                   │[90m────────────────────────────────────────────────────────────[m
+                   │  [1;36mAdd projects[m
+                   │
+                   │  Found 3 projects under /work/code:
+                   │  [90mStopped after 500 folders and 3 projects; scan a narrower[m
+                   │  [90mfolder to see more.[m
+                   │
+                   │  [1;7;97;44m> [x] alpha  slicer+adj  alpha                            [m
+                   │    [x] beta   adj         tools/beta
+                   │    [ ] gamma  git         gamma
+                   │
+                   │  [90m2 of 3 ticked[m
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │[90m────────────────────────────────────────────────────────────[m
+                   │ j/k [2mrow[m; space [2mtick[m; a [2mall[m; n [2mnone[m; y [2madd ticked[m; esc [2mback[m
+                   │ 0 projects

@@ -94,6 +94,19 @@ Add it in either way:
   mode it offers the current directory (`internal/cli/cli.go:58-59`,
   `docs/design.md:1261-1270`).
 
+To add every project in a folder such as `~/code`, press `+` in the TUI, type
+the folder and press Enter: when it holds projects below it, ork shows a
+checklist (space ticks, `a` all, `n` none, `y` adds; Enter does nothing there).
+Tracked projects (a
+`.slicer` directory or `.adjudicate.json`) start ticked and plain git repos
+do not. On the command line,
+`ork projects add --scan /abs/folder [--yes]` lists them and adds the tracked
+ones after a yes (`docs/dashboard.md`, `docs/design.md`). Each is named after
+its folder. A row is skipped when its path or its name is registered, or when
+another row has the same name (a tracked project keeps it ahead of a plain git
+repo; add the other with `--name`). The scan looks at 500
+folders at most, and says when it stopped.
+
 Other commands: `ork projects list` and `ork projects rm NAME`. Removal is
 refused while the project has unfinished runs (`docs/design.md:1273-1277`).
 

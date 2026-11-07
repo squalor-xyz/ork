@@ -1,0 +1,40 @@
+[1mork[m                        │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────────────────────────────────────────────[m
+[1;7;97;44m0>Needs you              2 [m│  [1;36mAdd projects[m
+[90m1[m delta                    │
+[90m2[m epsilon                  │  Added 1 of 2 projects
+[90m3[m alpha                    │
+                           │  added   alpha  /work/code/alpha
+                           │  [1;31mfailed[m  beta: duplicate_name: a project named "beta" is already registered
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────────────────────────────────────────────[m
+                           │ enter [2mclose[m
+                           │ 3 projects | refreshed 16:42:00

@@ -30,6 +30,9 @@ commands.
 A missing registry is empty and valid. ork never seeds projects or writes
 this file on startup (`registry.no-seed`, adj 157). The first successful
 `ork projects add` or TUI add creates the config directory and this file.
+`projects add --scan` and the TUI checklist (S302, *proposed*) add one entry
+per ticked project through the same call, named after its folder. A path or
+name that is already registered is never sent.
 
 
 ```json

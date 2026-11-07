@@ -81,7 +81,11 @@ func (m *Model) screen() string {
 	} else if m.removing.name != "" {
 		body = m.projectRemovalBody(mainW)
 	} else if m.welcome.editing || m.welcome.pending || m.welcome.confirm != "" || (m.registeredProjectCount() == 0 && m.pane == nil && m.active < 0) {
-		body = m.welcomeBody(mainW)
+		if m.welcome.scan != nil {
+			body = m.scanBody(mainW, bodyH)
+		} else {
+			body = m.welcomeBody(mainW)
+		}
 	} else if m.view == roadmapView || m.view == wavesView || m.view == decisionsView || m.view == questionsView {
 		rv := overviewView{}
 		if m.view == questionsView {

@@ -6,8 +6,8 @@
                            │
                            │  Project path: [1m/work/mine[m
                            │  ork projects add '/work/mine'? [y/N] (Enter is No)
-                           │  [2mType an absolute path, or leave it empty and press Enter to use the[m
-                           │  [2mcurrent directory (needs .slicer or .adjudicate.json).[m
+                           │  [2mType an absolute path to a project, or to a folder to pick projects[m
+                           │  [2mfrom it. Leave it empty and press Enter to use the current directory.[m
                            │
                            │
                            │

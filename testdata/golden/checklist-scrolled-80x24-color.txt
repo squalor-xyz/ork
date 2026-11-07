@@ -1,0 +1,24 @@
+[1mork[m                │ [90mOverview │ Questions │ Waves │ Roadmap │ Decisions[m
+                   │[90m────────────────────────────────────────────────────────────[m
+                   │  [1;36mAdd projects[m
+                   │
+                   │  Found 30 projects under /work/code:
+                   │
+                   │    [x] p09  slicer  p09
+                   │    [x] p10  slicer  p10
+                   │    [x] p11  slicer  p11
+                   │    [x] p12  slicer  p12
+                   │    [x] p13  slicer  p13
+                   │    [x] p14  slicer  p14
+                   │    [x] p15  slicer  p15
+                   │    [x] p16  slicer  p16
+                   │    [x] p17  slicer  p17
+                   │    [x] p18  slicer  p18
+                   │    [x] p19  slicer  p19
+                   │  [1;7;97;44m> [x] p20  slicer  p20                                    [m
+                   │
+                   │  [90m30 of 30 ticked[m[90m  (rows 10-21 of 30)[m
+                   │
+                   │[90m────────────────────────────────────────────────────────────[m
+                   │ j/k [2mrow[m; space [2mtick[m; a [2mall[m; n [2mnone[m; y [2madd ticked[m; esc [2mback[m
+                   │ 0 projects

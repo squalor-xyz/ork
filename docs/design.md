@@ -1917,6 +1917,37 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `Add DIR as project NAME? [y/N]: `. Only y or yes accepts, without regard
   to case. Enter, EOF and other answers cancel with exit 1. JSON mode
   requires PATH and never prompts. No marker is required for the CLI offer.
+- `projects add --scan DIR [--yes]` (S302, *proposed*): scans DIR with the same
+  walk as the TUI checklist (`internal/projscan`; the folder itself, or two
+  levels below it; stops at a project; skips hidden folders, `.worktrees`
+  and `node_modules`; no symbolic links). DIR must be absolute and an existing
+  directory; none found is `not_found`, exit 1. Text mode prints `found N
+  projects under DIR:` and a row per candidate: `[x]` tracked and free, `[ ]` a
+  plain git repo, `[-]` blocked (the path is registered, or another project
+  holds the folder name, or another free row does) with the reason. Only the `[x]` rows are added: it asks
+  `Add the N marked projects? [y/N]: ` on standard input (as for the offer
+  above), or does not ask with `--yes`. With none to add it prints `nothing to
+  add` and exits 0. Each row goes through `projects.add` one by one, named after
+  its folder. Text: `added NAME PATH [(adj)]` or `failed NAME: MESSAGE` per row;
+  any failure makes exit 1 with `N of M projects were not added`, and the others
+  stay added. `--json` needs `--yes` and prints
+  `{"root":DIR,"folders":N,"stopped":BOOL,"results":[{"name","path","added",
+  "project"|"error"}],"skipped":[{"name","path","reason"}]}`; exit 1 when any row failed. `--scan` takes no
+  PATH and no `--name`, and `--yes` is valid only with `--scan` (usage, exit 2).
+  A plain git repo is listed and skipped; add it with `projects add PATH`, and
+  a line `[ ] plain git repos are not added; use ork projects add PATH` follows
+  the rows when one is listed (owner 2026-11-07: `--yes` stays tracked-only).
+  Of free rows with one folder name one holds it and the rest are blocked
+  (`name "N" is also found at PATH; add it with ork projects add PATH --name N`,
+  PATH being the holder). A tracked row holds the name before a plain git repo,
+  and rows of one kind go by path. A registered
+  path matches after symbolic links are resolved. Names, paths and errors print
+  as one plain line each. The scan quits after 500 folders or 200 projects: text
+  mode then prints `stopped after N folders and M projects; scan a narrower
+  folder to see more` (a limit hit in a nested folder ends the whole walk), the JSON has `"stopped":true` and `"folders":N` (both always present),
+  and the none-found error adds the same words. The scan runs before the
+  daemon is asked and is not asynchronous. No wire change: it uses
+  `projects.add` and `projects.list`.
   An empty registry is valid; startup writes nothing and never seeds
   (`registry.no-seed`, adj 157). The first add writes projects.json.
   The TUI Welcome add guides registration through this same daemon method;

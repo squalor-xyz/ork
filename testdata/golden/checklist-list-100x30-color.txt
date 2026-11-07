@@ -1,0 +1,30 @@
+[1mork[m                        │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+[90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────[m
+[1;7;97;44m0>Needs you              2 [m│  [1;36mAdd projects[m
+[90m1[m delta                    │
+[90m2[m epsilon                  │  Found 5 projects under /work/code:
+                           │
+                           │  [1;7;97;44m> [x] alpha    slicer+adj  alpha                                      [m
+                           │    [x] beta     adj         tools/beta
+                           │    [ ] gamma    git         gamma
+                           │  [90m  [-] delta    slicer      delta[m
+                           │  [90m      already registered as delta[m
+                           │  [90m  [-] epsilon  slicer      other/epsilon[m
+                           │  [90m      name "epsilon" is registered for /elsewhere/epsilon[m
+                           │
+                           │  [90m2 of 3 ticked[m
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ j/k [2mrow[m; space [2mtick[m; a [2mall[m; n [2mnone[m; y [2madd ticked[m; esc [2mback[m
+                           │ 2 projects | refreshed never

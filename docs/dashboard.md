@@ -35,7 +35,9 @@ line shows `+ add project; q quit`. `+` opens a project path field. Enter with
 an empty field offers the current
 directory only when it holds a `.slicer` directory or `.adjudicate.json`
 file. Otherwise the status names the directory: "DIR holds neither .slicer
-nor .adjudicate.json; type a path". The path guidance asks for an absolute path.
+nor .adjudicate.json; type a path" (unless the directory holds projects below
+it, which opens the checklist under "Add several projects"). The path guidance
+asks for an absolute path.
 Esc cancels path entry and returns to "No projects yet." with
 `+ add project; q quit` on the hint line. Typed paths are trimmed. A leading
 `~` or `~/` expands to the home directory before confirmation and submission.
@@ -52,6 +54,79 @@ also appear next to the field. The field keeps its text.
 Without a daemon, the status says "No daemon connection; action unavailable".
 On success the Overview appears with "Needs you" selected and status
 `Added NAME PATH`. The new project is fetched at once and polled.
+
+### Add several projects (S302, *proposed*)
+
+The path guidance reads "Type an absolute path to a project, or to a folder to
+pick projects from it. Leave it empty and press Enter to use the current
+directory." (two lines at 100 columns).
+
+Enter on a typed path, or on an empty field when the current directory holds
+no `.slicer` or `.adjudicate.json`, scans the folder (`internal/projscan`).
+When the folder holds projects below it, Enter opens a checklist instead of the
+confirmation. A folder that is itself a project (a `.slicer` directory, an
+`.adjudicate.json` file or a `.git`), a folder that holds none, and a path that
+cannot be scanned keep the single-add confirmation above. The scan runs inside
+the key press (an async scan is a later item), so it is bounded.
+
+The scan lists a folder that holds `.slicer`, `.adjudicate.json` or `.git`.
+It looks at the folder's children and their children (two levels), stops at the
+first project on each branch, skips hidden folders (so `.worktrees`) and
+`node_modules`, and does not follow symbolic links. It quits after it has looked
+at 500 folders or found 200 projects, and stops for good there: a limit hit
+inside a nested folder ends the whole walk. The checklist then adds a dim line
+`Stopped after N folders and M projects; scan a narrower folder to see more.`
+under the `Found` line (N and M are what it had looked at and found).
+
+The checklist body is the heading `Add projects`, `Found N projects under
+DIR:`, then one row each, then `X of Y ticked` (Y counts the rows that can be
+ticked):
+
+```
+> [x] alpha    slicer+adj  alpha
+  [x] beta     adj         tools/beta
+  [ ] gamma    git         gamma
+  [-] delta    slicer      delta
+      already registered as delta
+```
+
+A row shows the box, the folder name, the tag and the path below the scanned
+folder. The cursor row is a full-width reverse bar, as on Waves, and also
+starts with `>`. Names, paths and errors show as one plain line each
+(`runrec.PlainText`): an escape sequence or a line break in a folder name cannot
+move the screen. The tag names the tracked markers (`slicer`, `adj` or
+`slicer+adj`), or `git` for a plain git repo. Tracked rows start ticked and
+plain git rows start unticked. A blocked row shows `[-]`, is drawn dim with its
+reason on the next line, and cannot be ticked. A row is blocked when its path is
+already registered (`already registered as NAME`; the two paths match after
+symbolic links are resolved), when another registered project holds the folder
+name (`name "NAME" is registered for PATH`), or when another row that can be
+added holds the same folder name (`name "NAME" is also found at PATH; add it with
+ork projects add PATH --name N`, PATH being the row that holds it). Of such
+rows a tracked one (slicer or adj) holds the name before a plain git repo, and
+rows of one kind go by path, so a plain repo never blocks a tracked project. When the
+list is longer than the body, the rows scroll with the cursor and the count line
+adds `(rows A-B of N)`.
+
+Keys (settled by the owner, 2026-11-07): `j`/`k` or the arrow keys move the
+cursor, `space` ticks or unticks the row, `a` ticks every row that is not
+blocked, `n` unticks every row, `y` adds the ticked rows, and `Esc` returns to
+the path field. Enter does nothing in the checklist (it closes the results
+screen). The hint is `j/k row; space tick; a all; n none; y add ticked; esc
+back` (`j/k row` drops first when the line is narrow, then `a all` and `n
+none`). `y add ticked` is left out when nothing is ticked or there is no daemon.
+y with nothing ticked says `Nothing ticked`; without a daemon it says `No daemon
+connection; action unavailable`. Other keys, and a paste, do nothing in the
+checklist.
+
+y calls the daemon's `projects.add` once per ticked row, in list order, with the
+folder name as the project name (the daemon's default for a path). While it runs
+the hint is `ctrl+c quit` and the rows show `Adding projects...`. One refused
+row does not stop the rest. The results then replace the list: `Added N of M
+projects` (`Added N projects` when all went in), then `added   NAME  PATH` or
+`failed  NAME: ERROR` for each row, a long line wrapping under the name column,
+with the hint `enter close`. Enter or Esc closes them. Each added project is
+fetched at once and polled, and the status reads as the summary.
 
 The proposed TUI checks the daemon project list on each schedule tick, with
 one list request in flight at a time. Projects added elsewhere are fetched

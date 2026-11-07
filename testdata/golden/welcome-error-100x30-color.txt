@@ -6,8 +6,8 @@
                            │
                            │  Project path: [1m/work/mine[m[1;7;97;44m [m[1m[m
                            │  path refused verbatim
-                           │  [90mType an absolute path, or leave it empty and press Enter to use the[m
-                           │  [90mcurrent directory (needs .slicer or .adjudicate.json).[m
+                           │  [90mType an absolute path to a project, or to a folder to pick projects[m
+                           │  [90mfrom it. Leave it empty and press Enter to use the current directory.[m
                            │
                            │
                            │

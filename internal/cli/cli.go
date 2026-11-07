@@ -95,6 +95,9 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
   ork projects list           list the registered projects
   ork projects add [PATH] [--name N]
                               register a project
+  ork projects add --scan DIR [--yes]
+                              list the projects below DIR; add the tracked
+                              ones after a yes, or at once with --yes
   ork projects rm NAME        unregister a project
   ork projects pin NAME --relay N
                               pin the project's slicer relay contract at N

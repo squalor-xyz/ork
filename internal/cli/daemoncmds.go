@@ -187,9 +187,17 @@ func (a *App) projects(ctx context.Context, o *output, args []string) int {
 		})
 	case "add":
 		name := fs.String("name", "", "the project's name; default is the path's base name")
+		scan := fs.String("scan", "", "list the projects below this folder and add them")
+		yes := fs.Bool("yes", false, "with --scan, add the tracked projects without asking")
 		pos, err := parse(fs, rest)
 		if err != nil {
 			return o.usage("projects add: %v", err)
+		}
+		if *scan != "" {
+			return a.projectsScan(ctx, o, *scan, *yes, *name != "", pos)
+		}
+		if *yes {
+			return o.usage("projects add: --yes needs --scan")
 		}
 		if len(pos) > 1 || (len(pos) == 0 && o.json) {
 			return o.usage("projects add takes one PATH, got %d arguments", len(pos))

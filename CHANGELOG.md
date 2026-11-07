@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- S302 (*proposed*): add several projects at once. In the TUI, `+` with a
+  folder that holds projects below it opens a checklist (space ticks, `a` all,
+  `n` none, `y` adds, Esc goes back; Enter does nothing); tracked projects
+  (`.slicer` or `.adjudicate.json`) start ticked, plain git repos do not, a
+  registered path (matched after symbolic links are resolved), a clashing name
+  and all but one of several same-named folders (a tracked one is kept before a
+  plain git repo, then the earlier path) are blocked with their reason, and
+  the results name each row. The scan quits after 500 folders or 200 projects
+  and says so (`stopped after N folders and M projects`); names and paths show
+  as plain text.
+  A folder that is itself a project keeps the single-add confirmation. On the
+  command line, `ork projects add --scan DIR [--yes]` lists the projects and
+  adds the tracked ones only, asking on standard input without `--yes`; `--json`
+  needs `--yes` and reports `stopped` and `folders`. The walk is two levels deep, stops at a project and skips
+  hidden folders, `node_modules` and symbolic links; each project is named after
+  its folder (owner decisions 2026-11-07). No wire change. Docs:
+  `docs/dashboard.md`, `docs/design.md`, `docs/guide.md`, `docs/state.md`.
 - S239 (*proposed*): when the project check command exits non-zero, ork runs it
   once more before it starts a fix round. A pass on the rerun does not spend the
   round and is recorded as flaky (`checks[].attempts` 2, `checks[].flaky` true in

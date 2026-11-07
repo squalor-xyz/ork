@@ -3585,3 +3585,5 @@
 {"when": "2026-11-07T22:49:14Z", "item": "S239", "action": "note", "from": "", "to": "", "note": "Later (S307): (1) a two-run check log can exceed 64 KiB, and", "by": "Jon Robbins"}
 {"when": "2026-11-07T22:49:48Z", "item": "S239", "action": "status", "from": "started", "to": "done", "note": "Landed: a failed project check is run once more before a fix round (flaky pass spends no round); failing tests and assertion lines lead the fix-round and landing briefs; attempts and flaky in run.json.", "by": "Jon Robbins"}
 {"when": "2026-11-07T22:53:13Z", "item": "S296", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-07 (interactive answer in the relay s", "by": "Jon Robbins"}
+{"when": "2026-11-07T22:53:36Z", "item": "S302", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-07T23:54:06Z", "item": "S302", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-11-07 (interactive, relay session): in ", "by": "Jon Robbins"}
