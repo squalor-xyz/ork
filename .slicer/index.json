@@ -15417,7 +15417,7 @@
       "id": "S297",
       "title": "ork show RUN [NAME]: print the pause reason, a role report and the check logs, with --json",
       "short_title": "ork show RUN [NAME]: print the pause reason, a role report and the check logs, with --json",
-      "status": "started",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -15450,10 +15450,7 @@
           "retracted_reason": ""
         }
       ],
-      "claim": {
-        "owner": "Jon Robbins",
-        "at": "2026-11-07T21:27:24Z"
-      },
+      "claim": null,
       "fields": {
         "size": "M",
         "flags": [],
