@@ -15634,7 +15634,7 @@
       "id": "S306",
       "title": "Approval card: keep `x stop` on the hint line when `p report` shows",
       "short_title": "Approval card keeps x stop beside p report",
-      "status": "started",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -15653,10 +15653,7 @@
           "retracted_reason": ""
         }
       ],
-      "claim": {
-        "owner": "Jon Robbins",
-        "at": "2026-11-07T18:34:13Z"
-      },
+      "claim": null,
       "fields": {
         "size": "S",
         "flags": [],
