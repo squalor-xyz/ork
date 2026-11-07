@@ -15,11 +15,10 @@ import (
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
-// This fake captures the outline while promote can still read it.
-func newSliceCapture(t *testing.T) (Deps, NewSliceConfig, string) {
-	t.Helper()
-	dir := t.TempDir()
-	script := `#!/bin/sh
+// newSliceFakeScript captures the outline while promote can still read it.
+// It is written once per test binary (see sharedFakes) and finds its files
+// from $CAPTURE, so every test can share it.
+const newSliceFakeScript = `#!/bin/sh
 printf '%s\n' "$*" >> "$CAPTURE.calls"
 case "$1" in
 add) printf '%s' '{"id":"S184"}' ;;
@@ -27,8 +26,13 @@ show) printf '%s' '{"id":"S12","notes":["first","second\nnext"]}' ;;
 promote) cp -p "$4" "$CAPTURE"; printf '%s' "$4" > "$CAPTURE.path"; printf '%s' '{}' ;;
 esac
 `
+
+// newSliceCapture links that fake into a temp directory and sets CAPTURE.
+func newSliceCapture(t *testing.T) (Deps, NewSliceConfig, string) {
+	t.Helper()
+	dir := t.TempDir()
 	bin := filepath.Join(dir, "slicer-fake")
-	if err := os.WriteFile(bin, []byte(script), 0700); err != nil {
+	if err := os.Symlink(sharedFakes["newslice"], bin); err != nil {
 		t.Fatal(err)
 	}
 	capture := filepath.Join(dir, "capture")

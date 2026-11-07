@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"regexp"
@@ -28,9 +29,35 @@ import (
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
+// fakeVendorScript is the one script every fakeVendor link points at. It logs
+// to $0.log and answers --version from $0.version, so each link keeps its own
+// log and version beside it.
+const fakeVendorScript = `#!/bin/sh
+echo "$@" >> "$0.log"
+if [ "$1" = "--version" ]; then cat "$0.version"; exit 0; fi
+echo "unexpected call" >&2
+exit 97
+`
+
+// fakeVendorShared is the path of fakeVendorScript, written once per test
+// binary, because the first run of a newly written script is slow on some hosts.
+var fakeVendorShared string
+
 func TestMain(m *testing.M) {
 	clitest.Main()
-	os.Exit(m.Run())
+	dir, err := os.MkdirTemp("", "ork-fakes")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	fakeVendorShared = filepath.Join(dir, "vendor")
+	if err := os.WriteFile(fakeVendorShared, []byte(fakeVendorScript), 0o755); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	code := m.Run()
+	os.RemoveAll(dir)
+	os.Exit(code)
 }
 
 // shortDir returns a directory whose socket path fits macOS's 104 byte limit.
@@ -549,14 +576,17 @@ func TestHelp(t *testing.T) {
 
 // ---- doctor ----
 
-// fakeVendor writes an executable that logs its arguments and answers
-// --version, and returns its path and the log.
+// fakeVendor links the shared fake vendor script as DIR/NAME and writes
+// DIR/NAME.version, so the executable logs its arguments to DIR/NAME.log and
+// answers --version. It returns its path and the log.
 func fakeVendor(t *testing.T, dir, name, version string) (bin, log string) {
 	t.Helper()
 	bin = filepath.Join(dir, name)
 	log = filepath.Join(dir, name+".log")
-	script := fmt.Sprintf("#!/bin/sh\necho \"$@\" >> %q\nif [ \"$1\" = \"--version\" ]; then echo %q; exit 0; fi\necho \"unexpected call\" >&2\nexit 97\n", log, version)
-	if err := os.WriteFile(bin, []byte(script), 0o755); err != nil {
+	if err := os.Symlink(fakeVendorShared, bin); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, name+".version"), []byte(version+"\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	return bin, log
@@ -569,6 +599,36 @@ func readLog(t *testing.T, path string) []string {
 		t.Fatalf("the fake was never called: %v", err)
 	}
 	return strings.Split(strings.TrimSpace(string(b)), "\n")
+}
+
+// Two fakeVendor calls share one script file but keep their own version and
+// log, so no test depends on another test's files.
+func TestFakeVendorLinksKeepTheirOwnLogs(t *testing.T) {
+	dirA, dirB := t.TempDir(), t.TempDir()
+	binA, logA := fakeVendor(t, dirA, "claude", "1.1.1 (A)")
+	binB, logB := fakeVendor(t, dirB, "claude", "2.2.2 (B)")
+	for _, c := range []struct{ bin, version string }{{binA, "1.1.1 (A)"}, {binB, "2.2.2 (B)"}} {
+		out, err := exec.Command(c.bin, "--version").Output()
+		if err != nil || strings.TrimSpace(string(out)) != c.version {
+			t.Errorf("%s --version = %q, %v; want %q", c.bin, out, err, c.version)
+		}
+	}
+	if err := exec.Command(binA, "other", "call").Run(); err == nil {
+		t.Error("an unexpected call must exit non-zero")
+	} else if ee, ok := err.(*exec.ExitError); !ok || ee.ExitCode() != 97 {
+		t.Errorf("unexpected call: %v; want exit 97", err)
+	}
+	if got := readLog(t, logA); !reflect.DeepEqual(got, []string{"--version", "other call"}) {
+		t.Errorf("log A = %q", got)
+	}
+	if got := readLog(t, logB); !reflect.DeepEqual(got, []string{"--version"}) {
+		t.Errorf("log B = %q", got)
+	}
+	a, errA := filepath.EvalSymlinks(binA)
+	b, errB := filepath.EvalSymlinks(binB)
+	if errA != nil || errB != nil || a != b {
+		t.Errorf("the two fakes are not one shared script: %q (%v) and %q (%v)", a, errA, b, errB)
+	}
 }
 
 type doctorOut struct {

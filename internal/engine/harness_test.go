@@ -18,9 +18,29 @@ import (
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
+// sharedFakes holds the fake scripts of the landing tests (name to path),
+// written once per test binary, because the first run of a newly written
+// script is slow on some hosts. A landing test links them into its own
+// directory.
+var sharedFakes = map[string]string{}
+
 func TestMain(m *testing.M) {
 	clitest.Main()
-	os.Exit(m.Run())
+	dir, err := os.MkdirTemp("", "ork-fakes")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	for name, body := range map[string]string{"slicer": fakeSlicerScript, "gitw": fakeGitScript, "newslice": newSliceFakeScript} {
+		sharedFakes[name] = filepath.Join(dir, name)
+		if err := os.WriteFile(sharedFakes[name], []byte(body), 0o755); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	}
+	code := m.Run()
+	os.RemoveAll(dir)
+	os.Exit(code)
 }
 
 const (
