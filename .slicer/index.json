@@ -12894,7 +12894,7 @@
       "id": "S239",
       "title": "Check failures: show the failing tests to the fix round and run a failed check once more before sending it",
       "short_title": "Check failures: excerpt and one rerun",
-      "status": "started",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -12913,10 +12913,7 @@
           "retracted_reason": ""
         }
       ],
-      "claim": {
-        "owner": "Jon Robbins",
-        "at": "2026-11-07T21:52:12Z"
-      },
+      "claim": null,
       "fields": {
         "size": "M",
         "flags": [],
