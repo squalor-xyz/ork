@@ -15714,7 +15714,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "c00d9d68-7cf0-4ce8-b1cf-d8833a291d43",
+          "kind": "",
+          "text": "**2026-11-07** — From S265 and S306 (2026-11-07): (1) TUI Waves confirm should show check: none and the adj 191 refusal before y, as the launch confirm does; today the daemon error shows afterwards and suggests --allow-no-check, which the TUI cannot pass. (2) An old TUI or CLI binary against a restarted daemon gets 'plan changed' on any plan with warnings (note S135 has the same property); mention in an upgrade note. (3) The launch confirm clips warnings and the note below the roles at 80x24 with '+N more lines' and the confirm takes every key, so they cannot be scrolled to. (4) ork projects set summary does not say how many patterns --allow added or skipped.",
+          "created_at": "2026-11-07T19:46:26Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
