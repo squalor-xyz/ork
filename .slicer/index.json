@@ -15649,7 +15649,7 @@
       "id": "S302",
       "title": "Add several projects at once: scan a folder, tick the repos to add",
       "short_title": "Multi-add projects from a folder scan",
-      "status": "started",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -15668,10 +15668,7 @@
           "retracted_reason": ""
         }
       ],
-      "claim": {
-        "owner": "Jon Robbins",
-        "at": "2026-11-07T22:53:36Z"
-      },
+      "claim": null,
       "fields": {
         "size": "M",
         "flags": [],
