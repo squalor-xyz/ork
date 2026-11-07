@@ -14931,7 +14931,7 @@
       "id": "S288",
       "title": "Owner findings: state the exact body shape to reviewers and gates, or keep extra prose as context",
       "short_title": "Owner findings: state the exact body shape to reviewers and gates, or keep extra prose as context",
-      "status": "started",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -14992,10 +14992,7 @@
           "retracted_reason": ""
         }
       ],
-      "claim": {
-        "owner": "Jon Robbins",
-        "at": "2026-11-07T20:44:45Z"
-      },
+      "claim": null,
       "fields": {
         "size": "S",
         "flags": [],
