@@ -13877,7 +13877,7 @@
       "id": "S265",
       "title": "Non-Go projects: ork projects setup for the check command and shell allowlist, and a warning when they are missing",
       "short_title": "Non-Go projects: ork projects setup for the check command and shell allowlist, and a warning when they are missing",
-      "status": "started",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -13952,10 +13952,7 @@
           "retracted_reason": ""
         }
       ],
-      "claim": {
-        "owner": "Jon Robbins",
-        "at": "2026-11-07T19:09:20Z"
-      },
+      "claim": null,
       "fields": {
         "size": "M",
         "flags": [],
