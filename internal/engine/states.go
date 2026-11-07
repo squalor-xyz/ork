@@ -261,6 +261,60 @@ func checkFailureLine(output string) string {
 	return "no failure output"
 }
 
+// itemID is the shape slicer allows for an item ID (slicer/src/slicer/ids.py ID_RE).
+var itemID = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._-]*$`)
+
+// problemItem is the item a `slicer check` problem names: the text before the
+// first ": ", cut at " / " when a section follows ("ITEM: message" or
+// "ITEM / SECTION: message"). It is "" for a problem with no item and for text
+// that is not shaped like an item ID.
+func problemItem(problem string) string {
+	head, _, ok := strings.Cut(problem, ": ")
+	if !ok {
+		return ""
+	}
+	head, _, _ = strings.Cut(head, " / ")
+	head = strings.TrimSpace(head)
+	if !itemID.MatchString(head) {
+		return ""
+	}
+	return head
+}
+
+// outsideProblems returns the slicer check problems a round check defers to
+// the landing (adj 178, checks.outside-problems; S279), and the base branch.
+// It defers only when every problem names an item other than the run's own,
+// nothing else is red in the report, and the branch is behind its base branch,
+// so that the landing merges the base in and re-checks. A problem that is not
+// a string, a problem with no item, and any git error mean no deferral: the
+// round is red. Git is read only when the report could defer. ork writes no
+// git here.
+func (e *Engine) outsideProblems(ctx context.Context, rec runrec.Record, sres *slicercli.CheckResult) (base string, problems []string) {
+	if len(sres.Problems) == 0 || len(sres.StaleRender) > 0 || len(sres.StaleSync) > 0 || len(sres.OrphanRender) > 0 {
+		return "", nil
+	}
+	for _, raw := range sres.Problems {
+		// A problem that is not a string stays empty here and has no item.
+		var p string
+		_ = json.Unmarshal(raw, &p)
+		item := problemItem(p)
+		if item == "" || strings.EqualFold(item, rec.Item) {
+			return "", nil
+		}
+		problems = append(problems, p)
+	}
+	out, err := e.gitRead(ctx, e.proj.Path, "symbolic-ref", "--short", "HEAD")
+	base = strings.TrimSpace(out)
+	if err != nil || base == "" {
+		return "", nil
+	}
+	has, err := e.isAncestor(ctx, rec.Worktree, base, "HEAD")
+	if err != nil || has {
+		return "", nil
+	}
+	return base, problems
+}
+
 // runChecks runs the project check command and `slicer check` in the worktree,
 // writes their output to PREFIX-ROUND.log in the run directory and records the
 // result in checks[]. A tool that cannot run pauses the slice at state, and
@@ -297,13 +351,25 @@ func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix
 	if err != nil {
 		return pauseWith("slicer check: " + err.Error())
 	}
+	var base string
+	var deferred []string
 	if !sres.OK {
-		if ok {
-			failure = checkFailureLine(sres.Output)
+		// Only a round check defers: the landing re-check, which runs after
+		// the merge, decides these problems.
+		if state == runrec.StateChecks {
+			base, deferred = e.outsideProblems(ctx, rec, sres)
 		}
-		ok = false
+		if len(deferred) == 0 {
+			if ok {
+				failure = checkFailureLine(sres.Output)
+			}
+			ok = false
+		}
 	}
 	fmt.Fprintf(&log, "\n$ slicer check --json\n%s\n", tail(sres.Output, 30000))
+	for _, p := range deferred {
+		fmt.Fprintf(&log, "deferred to land (branch behind %s): %s\n", base, p)
+	}
 
 	logName := fmt.Sprintf("%s-%d.log", prefix, rec.Round)
 	logPath := filepath.Join(e.run.Dir(), logName)
@@ -320,7 +386,7 @@ func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix
 	}
 	err = e.run.Update(func(r *runrec.Record) {
 		r.Pending = nil
-		r.Checks = append(r.Checks, runrec.CheckRecord{Round: rec.Round, Command: command, OK: ok, Seconds: int(e.d.now().Sub(start).Seconds()), Log: logName, LogSHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(log.String())))})
+		r.Checks = append(r.Checks, runrec.CheckRecord{Round: rec.Round, Command: command, OK: ok, Seconds: int(e.d.now().Sub(start).Seconds()), Log: logName, LogSHA256: fmt.Sprintf("%x", sha256.Sum256([]byte(log.String()))), Deferred: deferred})
 	})
 	return checkRun{ok: ok, log: logName, failure: failure}, false, err
 }
@@ -342,6 +408,9 @@ func (e *Engine) review(ctx context.Context) error {
 	rec := e.run.Snapshot()
 	rounds := []round{{role: RoleReviewer, n: rec.Round, state: runrec.StateReview, task: rec.Item + " reviewer",
 		sections: []BriefSection{{Title: "Review", Body: "Review the slice's diff in the worktree. Use `git status` and `git diff`; you may not change the tree. The implementer's report is under Earlier reports."}}}}
+	if section := deferredSection(rec.Checks, false); section != nil {
+		rounds[0].sections = append(rounds[0].sections, *section)
+	}
 	if _, ok := lineup(rec.Lineup, RoleUI); ok {
 		ui, err := e.touchesUI(ctx, rec)
 		if err != nil {
@@ -633,6 +702,9 @@ func (e *Engine) gate(ctx context.Context) error {
 			r.sections = append(r.sections, BriefSection{Title: "Owner fix request", Body: "The owner asked for this change after the last pass. Check that the new diff makes it, and nothing else.\n\n" + fix.Note})
 		}
 	}
+	if section := deferredSection(rec.Checks, false); section != nil {
+		r.sections = append(r.sections, *section)
+	}
 	if section := e.scopeSection(ctx, rec); section != nil {
 		r.sections = append(r.sections, *section)
 	}
@@ -771,6 +843,9 @@ func (e *Engine) finish(ctx context.Context) error {
 		"Your report needs no Tests line; end it with `## Owner needed`.", rec.Item, step)
 	r := round{role: RoleImplementer, n: rec.Round + 1, state: runrec.StateFinish, task: rec.Item + " implementer finish step", finish: true,
 		resumeFrom: []string{RoleImplementer}, sections: []BriefSection{{Title: "Finish step", Body: body}}}
+	if section := deferredSection(rec.Checks, true); section != nil {
+		r.sections = append(r.sections, *section)
+	}
 	out, err := e.runRound(ctx, r, pend)
 	if err != nil || !out.ok {
 		return err

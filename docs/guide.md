@@ -279,7 +279,12 @@ The roles run in this order (`docs/design.md:223-307`):
 1. **setup**: git worktree and branch, and a slicer ledger run.
 2. **implement**: one implementer role.
 3. **checks**: your check command and `slicer check`. A red result goes back
-   to the implementer without spending a review.
+   to the implementer without spending a review. *Proposed:* when your branch
+   is behind main and `slicer check` is red only on other items, the round
+   goes on to review; ork names those problems to the reviewer, the gate and
+   the finish step, and the landing merge and re-check decide them. On a run
+   that stops after the commit, ork does not land, so your own landing decides
+   them.
 4. **review**: a reviewer, and the UI pass beside it on a slice that touches
    the UI. Findings go to one fix round.
 5. **architect**: only when the lineup has an architect entry; the matrix gives one on size L (`docs/design.md:272-275`).

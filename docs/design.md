@@ -322,6 +322,28 @@ slice.
   implementer, with the failing output in the brief, without spending a
   review. The check command comes from `slicer config` once slicer has the
   key; until then it comes from the registry (`project.check-command`).
+  *Proposed (S279, adj #178, `checks.outside-problems`):* a red `slicer check`
+  does not make a round check red when the branch is behind its base branch
+  (the base is not an ancestor of the worktree's HEAD) and every problem names
+  a tracked item other than the run's own. A problem names an item when it
+  reads `ITEM: message` or `ITEM / SECTION: message`; the item compares
+  without regard to case. A problem with no item, a problem that is not a
+  string, a non-empty `stale_render`, `orphan_render` or `stale_sync`, a git
+  error and a branch that is up to date each keep the round red. The project
+  check command is judged as before. When ork defers, it writes one
+  `deferred to land (branch behind BASE): PROBLEM` line per problem to the
+  check log after the slicer output, records the problems in
+  `checks[].deferred`, and adds a "Deferred tracking problems" section to the
+  reviewer and gate briefs that says the landing merge and its re-check decide
+  them and asks the role to name them as deferred, not as findings. The finish
+  step's brief carries the same list and says its `--check` may be red on
+  exactly those problems, which is expected. Only the round checks defer. The
+  landing re-check, which runs after the base is merged in, never does, so a
+  problem that stays red there gets the landing's one implementer fix round.
+  A run that stops after the commit (`StopAfterCommit`, state `committed`) has
+  no landing in ork: the owner's own landing, with its merge and `slicer
+  check`, decides the deferred problems then. ork writes no git during the
+  rounds.
 - **review:** the reviewer runs read-only, with the fingerprint applied
   (`role.readonly-fingerprint`). The architect runs after accepted findings
   have been addressed and before the gate (`slice.architect-order`, adj #123),
@@ -560,7 +582,9 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
 - **Checks.** The project's check command runs with `sh -c` in the
   worktree, then `slicer check --json`. Either red sends the implementer
   back, resumed, with the output (last 30 KB) in the brief, and spends no
-  review. The output is saved as `checks-<round>.log`.
+  review. The output is saved as `checks-<round>.log`. *Proposed (S279):*
+  `slicer check` problems on other items defer to the landing merge when the
+  branch is behind its base (see the checks bullet above).
 - **Review and gate.** The reviewer runs once, fresh and read-only. Findings
   start a fix round. After green checks, or a clean review, the optional
   architect runs before the gate. Its whole report starts another fix round,

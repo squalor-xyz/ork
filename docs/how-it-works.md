@@ -63,6 +63,9 @@ Setup creates the worktree and the branch, and begins the ledger run
 (`docs/design.md:285-291`). The implementer writes the slice. ork runs the
 project check command and `slicer check` itself. A red result goes back to
 the implementer and does not spend a review (`docs/design.md:294-298`).
+*Proposed (S279):* when the branch is behind main and `slicer check` is red
+only on other items, the round is not red: ork logs those problems, tells the
+reviewer and the gate, and leaves them to the landing merge and re-check.
 
 The reviewer did not write the code (`docs/design.md:848-849`). On a slice
 whose files touch the UI, a UI pass runs beside the reviewer, not instead

@@ -3566,3 +3566,5 @@
 {"when": "2026-11-07T20:05:45Z", "item": "S260", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-07 (adj 189, replace): well specified", "by": "Jon Robbins"}
 {"when": "2026-11-07T19:46:26Z", "item": "S307", "action": "note", "from": "", "to": "", "note": "From S265 and S306 (2026-11-07): (1) TUI Waves confirm shoul", "by": "Jon Robbins"}
 {"when": "2026-11-07T20:06:19Z", "item": "S260", "action": "status", "from": "started", "to": "done", "note": "Landed: launch no longer asks well specified and split; defaults yes and no, CLI flags override, TUI plans on tick (adj 189).", "by": "Jon Robbins"}
+{"when": "2026-11-07T20:06:54Z", "item": "S279", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-07T20:43:08Z", "item": "S279", "action": "note", "from": "", "to": "", "note": "Later (S307): a stop-after-commit run with checks[].deferred", "by": "Jon Robbins"}

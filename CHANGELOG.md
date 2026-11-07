@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- S279 (*proposed*): a round check no longer goes red on `slicer check`
+  problems that belong to other items when the branch is behind its base
+  branch (adj 178, `checks.outside-problems`, owner decision 2026-11-05). It
+  defers when every problem reads `ITEM: ...` or `ITEM / SECTION: ...` for an
+  item other than the run's own, `stale_render`, `orphan_render` and
+  `stale_sync` are empty, and `git merge-base --is-ancestor BASE HEAD` says the
+  base is not in the branch. A git error, a problem with no item and an
+  up-to-date branch keep the round red; the landing re-check never defers. ork
+  writes `deferred to land (branch behind BASE): PROBLEM` lines to the check
+  log, records them in `checks[].deferred`, and names them in the reviewer, gate
+  and finish-step briefs (the reviewer and gate name them in their reports as
+  deferred, not as findings; the finish step's `--check` may be red on exactly
+  them, which is expected). The landing merge and re-check decide them; on a
+  run that stops after the commit ork does not land, and the owner's own
+  landing decides. No git write happens during the rounds. `slicer check`'s `orphan_render` is now read from its
+  JSON. Docs: `docs/design.md`, `docs/how-it-works.md`, `docs/state.md`,
+  `docs/guide.md`.
 - S260 (*proposed*): launch no longer asks well specified or split (adj 189,
   `launch.well-specified-default`, owner decision 2026-11-07, replacing adj 86,
   87 and 135 once the owner supersedes them). `ork run`, `ork wave start`, a

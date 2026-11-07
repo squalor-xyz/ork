@@ -119,6 +119,18 @@ func TestCheckGreenAndRed(t *testing.T) {
 	}
 }
 
+func TestCheckReadsOrphanRenderAndProblems(t *testing.T) {
+	c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"check", "--json", "--root", root}, Exit: 1,
+		Stdout: `{"ok":false,"stale_render":[],"orphan_render":["S99.md"],"stale_sync":[],"problems":["s443 / Why: unknown flag --stdin in x"],"warnings":[]}`})
+	res, err := c.Check(context.Background(), root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.OK || !reflect.DeepEqual(res.OrphanRender, []string{"S99.md"}) || len(res.Problems) != 1 || string(res.Problems[0]) != `"s443 / Why: unknown flag --stdin in x"` {
+		t.Fatalf("red: %+v", res)
+	}
+}
+
 func TestCheckToolErrorIsAnError(t *testing.T) {
 	c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"check", "--json", "--root", root}, Stdout: `{"error":{"code":"state","message":"no .slicer/","command":"check"}}`, Exit: 3})
 	res, err := c.Check(context.Background(), root)

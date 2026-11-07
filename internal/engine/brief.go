@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/roles"
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
 // BriefSection is one headed part of a brief that is specific to the round.
@@ -147,6 +148,26 @@ func BuildBrief(in BriefInput) (string, error) {
 		}
 	}
 	return strings.TrimRight(b.String(), "\n") + "\n", nil
+}
+
+// deferredSection tells a role about the slicer check problems the newest
+// round check deferred (adj 178, S279). It is nil when that check deferred
+// nothing. The reviewer and the gate name the problems in their reports as
+// deferred, not as findings. The finish step's `--check` runs in the same
+// behind worktree, so the implementer is told it may be red on exactly these.
+func deferredSection(checks []runrec.CheckRecord, finish bool) *BriefSection {
+	if len(checks) == 0 || len(checks[len(checks)-1].Deferred) == 0 {
+		return nil
+	}
+	last := checks[len(checks)-1]
+	body := "`slicer check` is red on the problems below. They name tracked items other than this slice, and the branch is behind its base branch, so main's code may be what fixes them. ork did not count them against this round. They are not findings against this diff: the landing merge and its re-check decide them.\n\n- " +
+		strings.Join(last.Deferred, "\n- ") + "\n\n"
+	if finish {
+		body += "The `--check` in the finish step runs in the same worktree and may be red on exactly these problems and nothing else. That is expected: it is not an Owner needed item. If it is red on anything else, report that."
+	} else {
+		body += "If you mention them, name them in your report as deferred problems, not as findings. Do not fail the slice for them."
+	}
+	return &BriefSection{Title: "Deferred tracking problems", Body: body}
 }
 
 // doneWhen adds acceptance criteria without replacing any role's report format.

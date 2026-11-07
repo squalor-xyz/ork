@@ -323,6 +323,11 @@ the implementer's tracked diff against HEAD, including staged and binary
 changes, followed by untracked names. `checks[].log_sha256` hashes the bytes
 of the saved check log. Both adjacent hashes must be present and equal for
 the immediate no-progress pause. Older records without hashes remain readable.
+*Proposed (S279):* `checks[].deferred` (omitted when empty) lists the
+`slicer check` problems on other items that did not make a round check red
+because the branch was behind its base. ork's landing merge and re-check
+decide them; on a run that stops after the commit (`committed`, no landing in
+ork) the owner's own landing decides them.
 *Proposed (S275):* `pending.automatic_shape_retry: true` also allows a shape
 context while the run stays in its active state. It schedules one automatic
 retry of the same role and round, without an owner note. A successful retry

@@ -100,6 +100,10 @@ type CheckRecord struct {
 	OK        bool   `json:"ok"`
 	Seconds   int    `json:"seconds"`
 	Log       string `json:"log,omitempty"`
+	// Deferred holds the slicer check problems on other items that did not
+	// make this round red: the branch was behind its base, and the landing
+	// merge decides them (S279, adj 178).
+	Deferred []string `json:"deferred,omitempty"`
 }
 
 // Approval is an owner approval.

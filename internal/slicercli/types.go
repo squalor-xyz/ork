@@ -202,12 +202,13 @@ type StepSpec struct {
 // CheckResult is `slicer check --json`. Problems and Warnings are kept as
 // printed. Output is the whole stdout.
 type CheckResult struct {
-	OK          bool              `json:"ok"`
-	StaleRender []string          `json:"stale_render"`
-	StaleSync   []string          `json:"stale_sync"`
-	Problems    []json.RawMessage `json:"problems"`
-	Warnings    []json.RawMessage `json:"warnings"`
-	Output      string            `json:"-"`
+	OK           bool              `json:"ok"`
+	StaleRender  []string          `json:"stale_render"`
+	OrphanRender []string          `json:"orphan_render"`
+	StaleSync    []string          `json:"stale_sync"`
+	Problems     []json.RawMessage `json:"problems"`
+	Warnings     []json.RawMessage `json:"warnings"`
+	Output       string            `json:"-"`
 }
 
 // Row is one row of the relay roles matrix.

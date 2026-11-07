@@ -14542,11 +14542,29 @@
       "id": "S279",
       "title": "Round checks: a worktree behind main must not fail on tracking that needs main's code",
       "short_title": "Round checks: a worktree behind main must not fail on tracking that needs main's code",
-      "status": "open",
+      "status": "started",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
-      "claim": null,
+      "note_records": [
+        {
+          "id": "031408d2-1641-4105-993d-d2645ef03905",
+          "kind": "",
+          "text": "**2026-11-07** — Later (S307): a stop-after-commit run with checks[].deferred should name the deferred problems on the card or in the stop reason (ork never lands that run). The reviewer/gate section says 'If you mention them'; consider 'name them in your report as deferred problems' so the AFTER LAND human check is reliable. TestTheFinishBriefNamesTheDeferredProblems: the --check assertion passes without the new section (the finish command line already contains it).",
+          "created_at": "2026-11-07T20:43:08Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": {
+        "owner": "Jon Robbins",
+        "at": "2026-11-07T20:06:54Z"
+      },
       "fields": {
         "size": "M",
         "flags": [],
@@ -14563,7 +14581,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

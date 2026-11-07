@@ -4,6 +4,7 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -344,6 +345,322 @@ func TestRedSlicerCheckAlsoSendsTheImplementerBack(t *testing.T) {
 	}
 	if rec := e.Snapshot(); rec.Checks[0].OK {
 		t.Errorf("checks[0] must be red: %+v", rec.Checks[0])
+	}
+}
+
+// outsideProblem is the finding of the 2026-11-04 wave: the tracking text of
+// an item that landed on main, checked against code that lacks its flag.
+const outsideProblem = "s443 / Why: unknown flag --stdin in `slicer relay-roles apply --stdin`"
+
+// slicerCheckJSON is `slicer check --json` output with the given problems and
+// stale-render, stale-sync and orphan-render lists.
+func slicerCheckJSON(t *testing.T, problems []any, stale, sync, orphan []string) string {
+	t.Helper()
+	if stale == nil {
+		stale = []string{}
+	}
+	if sync == nil {
+		sync = []string{}
+	}
+	if orphan == nil {
+		orphan = []string{}
+	}
+	b, err := json.Marshal(map[string]any{"ok": false, "stale_render": stale, "orphan_render": orphan,
+		"stale_sync": sync, "problems": problems, "warnings": []string{}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
+}
+
+// redThenGreenSlicerCheck answers the first `slicer check` with red and the
+// rest with green.
+func redThenGreenSlicerCheck(W, red string) clitest.Route {
+	return clitest.Route{Tool: "slicer", Args: []string{"check", "--json", "--root", W}, Seq: []clitest.Reply{
+		{Stdout: red, Exit: 1},
+		{Stdout: `{"ok":true,"stale_render":[],"orphan_render":[],"stale_sync":[],"problems":[],"warnings":[]}`},
+	}}
+}
+
+// branchIs answers the worktree's "is main in my branch" question: behind is
+// the branch lacking main, which git says with exit 1.
+func branchIs(W string, behind bool) clitest.Route {
+	r := clitest.Route{Tool: "git", Args: []string{"-C", W, "merge-base", "--is-ancestor", "main", "HEAD"}}
+	if behind {
+		r.Exit = 1
+	}
+	return r
+}
+
+func TestOutsideProblemsOnABehindBranchDoNotMakeTheRoundRed(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, w string) []clitest.Route {
+			return []clitest.Route{branchIs(w, true), {Tool: "slicer", Args: []string{"check", "--json", "--root", w},
+				Stdout: slicerCheckJSON(t, []any{outsideProblem}, nil, nil, nil), Exit: 1}}
+		}
+	})
+	e := h.start()
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if got, want := h.runner.roles(), []string{"implementer-1", "reviewer-1", "gate-1"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("role rounds %v, want %v (no second implementer round)", got, want)
+	}
+	if len(rec.Checks) != 1 || !rec.Checks[0].OK || !reflect.DeepEqual(rec.Checks[0].Deferred, []string{outsideProblem}) {
+		t.Fatalf("checks: %+v", rec.Checks)
+	}
+	log := h.readReport(rec, "checks-1.log")
+	if want := "deferred to land (branch behind main): " + outsideProblem + "\n"; !strings.Contains(log, want) {
+		t.Errorf("the check log lacks the line %q:\n%s", want, log)
+	}
+	if strings.Index(log, "deferred to land") < strings.Index(log, "$ slicer check --json") {
+		t.Errorf("the deferred lines follow the slicer output:\n%s", log)
+	}
+	if rec.Round != 1 {
+		t.Errorf("round %d", rec.Round)
+	}
+}
+
+func TestADeferralNeverTouchesTheProjectCheck(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, w string) []clitest.Route {
+			return []clitest.Route{branchIs(w, true), redThenGreenSlicerCheck(w, slicerCheckJSON(t, []any{outsideProblem}, nil, nil, nil))}
+		}
+	})
+	h.checks.outputs = []CheckOutput{{OK: false, Output: "--- FAIL: TestGate\nFAIL\n"}, {OK: true, Output: "ok\n"}}
+	e := h.start()
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if got, want := h.runner.roles(), []string{"implementer-1", "implementer-2", "reviewer-2", "gate-2"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("a red project check still sends the implementer back: %v, want %v", got, want)
+	}
+	if rec.Checks[0].OK || !reflect.DeepEqual(rec.Checks[0].Deferred, []string{outsideProblem}) {
+		t.Errorf("checks[0]: %+v", rec.Checks[0])
+	}
+}
+
+func TestAProblemOnTheSlicesOwnItemStaysRed(t *testing.T) {
+	for name, own := range map[string]string{
+		"same-case":  item + ": slice file has no index row",
+		"other-case": strings.ToLower(item) + " / Why: unknown flag --x in `slicer y --x`",
+	} {
+		t.Run(name, func(t *testing.T) {
+			h := newHarness(t, func(o *harnessOpts) {
+				o.routesFor = func(P, w string) []clitest.Route {
+					return []clitest.Route{branchIs(w, true), redThenGreenSlicerCheck(w, slicerCheckJSON(t, []any{own, outsideProblem}, nil, nil, nil))}
+				}
+			})
+			e := h.start()
+			rec := requireState(t, e, runrec.StateAwaitingApproval)
+			if got, want := h.runner.roles(), []string{"implementer-1", "implementer-2", "reviewer-2", "gate-2"}; !reflect.DeepEqual(got, want) {
+				t.Fatalf("role rounds %v, want %v", got, want)
+			}
+			if rec.Checks[0].OK || len(rec.Checks[0].Deferred) != 0 {
+				t.Errorf("checks[0] must be red with nothing deferred: %+v", rec.Checks[0])
+			}
+			if strings.Contains(h.readReport(rec, "checks-1.log"), "deferred to land") {
+				t.Errorf("a red round defers nothing")
+			}
+		})
+	}
+}
+
+func TestOutsideProblemsOnAnUpToDateBranchStayRed(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, w string) []clitest.Route {
+			return []clitest.Route{branchIs(w, false), redThenGreenSlicerCheck(w, slicerCheckJSON(t, []any{outsideProblem}, nil, nil, nil))}
+		}
+	})
+	e := h.start()
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if got, want := h.runner.roles(), []string{"implementer-1", "implementer-2", "reviewer-2", "gate-2"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("role rounds %v, want %v", got, want)
+	}
+	if rec.Checks[0].OK || len(rec.Checks[0].Deferred) != 0 {
+		t.Errorf("checks[0]: %+v", rec.Checks[0])
+	}
+}
+
+func TestAGitErrorOnTheBaseCheckKeepsTheRoundRed(t *testing.T) {
+	for name, route := range map[string]func(P, W string) clitest.Route{
+		"merge-base": func(P, W string) clitest.Route {
+			return clitest.Route{Tool: "git", Args: []string{"-C", W, "merge-base", "--is-ancestor", "main", "HEAD"}, Exit: 128, Stderr: "fatal: Not a valid object name main"}
+		},
+		"base-branch": func(P, W string) clitest.Route {
+			// Stdout is set on purpose: the error alone must keep the round red.
+			return clitest.Route{Tool: "git", Args: []string{"-C", P, "symbolic-ref", "--short", "HEAD"}, Stdout: "main\n", Exit: 128, Stderr: "fatal: ref HEAD is not a symbolic ref"}
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h := newHarness(t, func(o *harnessOpts) {
+				o.routesFor = func(P, w string) []clitest.Route {
+					return []clitest.Route{route(P, w), branchIs(w, true), redThenGreenSlicerCheck(w, slicerCheckJSON(t, []any{outsideProblem}, nil, nil, nil))}
+				}
+			})
+			e := h.start()
+			rec := requireState(t, e, runrec.StateAwaitingApproval)
+			if got, want := h.runner.roles(), []string{"implementer-1", "implementer-2", "reviewer-2", "gate-2"}; !reflect.DeepEqual(got, want) {
+				t.Fatalf("role rounds %v, want %v", got, want)
+			}
+			if rec.Checks[0].OK || len(rec.Checks[0].Deferred) != 0 {
+				t.Errorf("checks[0]: %+v", rec.Checks[0])
+			}
+		})
+	}
+}
+
+func TestAProblemWithNoItemOrAStaleRenderStaysRed(t *testing.T) {
+	cases := map[string]string{
+		"no-item":      slicerCheckJSON(t, []any{outsideProblem, "dependency data is unreadable"}, nil, nil, nil),
+		"only-no-item": slicerCheckJSON(t, []any{"dependency data is unreadable"}, nil, nil, nil),
+		"stale-render": slicerCheckJSON(t, []any{outsideProblem}, []string{"ROADMAP.md"}, nil, nil),
+		"stale-sync":   slicerCheckJSON(t, []any{outsideProblem}, nil, []string{"AGENTS.md: out of date"}, nil),
+		"orphan":       slicerCheckJSON(t, []any{outsideProblem}, nil, nil, []string{"S99.md"}),
+		"not-a-string": slicerCheckJSON(t, []any{outsideProblem, map[string]string{"item": "s443"}}, nil, nil, nil),
+		"no-problems":  slicerCheckJSON(t, []any{}, nil, nil, nil),
+	}
+	for name, red := range cases {
+		t.Run(name, func(t *testing.T) {
+			h := newHarness(t, func(o *harnessOpts) {
+				o.routesFor = func(P, w string) []clitest.Route {
+					return []clitest.Route{branchIs(w, true), redThenGreenSlicerCheck(w, red)}
+				}
+			})
+			e := h.start()
+			rec := requireState(t, e, runrec.StateAwaitingApproval)
+			if got, want := h.runner.roles(), []string{"implementer-1", "implementer-2", "reviewer-2", "gate-2"}; !reflect.DeepEqual(got, want) {
+				t.Fatalf("role rounds %v, want %v", got, want)
+			}
+			if rec.Checks[0].OK || len(rec.Checks[0].Deferred) != 0 {
+				t.Errorf("checks[0]: %+v", rec.Checks[0])
+			}
+			if reads := h.calls("git", "-C", h.P, "symbolic-ref"); len(reads) != 0 {
+				t.Errorf("git is read only when the report could defer: %v", reads)
+			}
+		})
+	}
+}
+
+func TestTheLandingRecheckDoesNotDefer(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, w string) []clitest.Route {
+			return []clitest.Route{branchIs(w, true), {Tool: "slicer", Args: []string{"check", "--json", "--root", w},
+				Stdout: slicerCheckJSON(t, []any{outsideProblem}, nil, nil, nil), Exit: 1}}
+		}
+	})
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec := e.Snapshot()
+	rec.Worktree, rec.Item = h.W, item
+	run, paused, err := e.runChecks(context.Background(), rec, runrec.StateLand, "land-checks")
+	if err != nil || paused {
+		t.Fatalf("paused %v, err %v", paused, err)
+	}
+	if run.ok {
+		t.Errorf("the landing re-check decides the problem and never defers it")
+	}
+	if got := e.Snapshot().Checks; len(got) != 1 || got[0].OK || len(got[0].Deferred) != 0 {
+		t.Errorf("checks: %+v", got)
+	}
+	// The same call as a round check defers: the state is the only difference.
+	run, _, err = e.runChecks(context.Background(), rec, runrec.StateChecks, "checks")
+	if err != nil || !run.ok {
+		t.Errorf("as a round check it defers: ok %v, err %v", run.ok, err)
+	}
+}
+
+func TestReviewerAndGateBriefsNameTheDeferredProblems(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, w string) []clitest.Route {
+			return []clitest.Route{branchIs(w, true), {Tool: "slicer", Args: []string{"check", "--json", "--root", w},
+				Stdout: slicerCheckJSON(t, []any{outsideProblem}, nil, nil, nil), Exit: 1}}
+		}
+	})
+	e := h.start()
+	requireState(t, e, runrec.StateAwaitingApproval)
+	for _, req := range h.runner.requests() {
+		if req.Role != RoleReviewer && req.Role != RoleGate {
+			if strings.Contains(req.Brief, outsideProblem) {
+				t.Errorf("the %s brief does not carry the deferred problems", req.Role)
+			}
+			continue
+		}
+		if !strings.Contains(req.Brief, outsideProblem) || !strings.Contains(req.Brief, "the landing merge") {
+			t.Errorf("the %s brief must name the deferred problem and say the landing merge decides it:\n%s", req.Role, req.Brief)
+		}
+		if !strings.Contains(req.Brief, "name them in your report as deferred problems, not as findings") {
+			t.Errorf("the %s brief must ask for the problems to be named as deferred, not as findings:\n%s", req.Role, req.Brief)
+		}
+	}
+}
+
+func TestTheFinishBriefNamesTheDeferredProblems(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, w string) []clitest.Route {
+			return []clitest.Route{branchIs(w, true), {Tool: "slicer", Args: []string{"check", "--json", "--root", w},
+				Stdout: slicerCheckJSON(t, []any{outsideProblem}, nil, nil, nil), Exit: 1}}
+		}
+	})
+	e := h.start()
+	requireState(t, e, runrec.StateAwaitingApproval)
+	_ = e.Approve(context.Background()) // the landing after the finish step is not under test
+	var finish *Request
+	for _, req := range h.runner.requests() {
+		if strings.Contains(req.Brief, "## Finish step") {
+			finish = &req
+		}
+	}
+	if finish == nil {
+		t.Fatal("no finish round ran")
+	}
+	for _, want := range []string{outsideProblem, "--check", "expected", "not an Owner needed item"} {
+		if !strings.Contains(finish.Brief, want) {
+			t.Errorf("the finish brief lacks %q:\n%s", want, finishSection(t, finish.Brief))
+		}
+	}
+}
+
+func TestTheFinishBriefHasNoDeferredSectionWhenNothingIsDeferred(t *testing.T) {
+	h := newHarness(t)
+	e := h.start()
+	requireState(t, e, runrec.StateAwaitingApproval)
+	_ = e.Approve(context.Background())
+	var finish string
+	for _, req := range h.runner.requests() {
+		if strings.Contains(req.Brief, "## Finish step") {
+			finish = req.Brief
+		}
+	}
+	if finish == "" || strings.Contains(finish, "Deferred tracking problems") {
+		t.Errorf("finish brief: %q", finish)
+	}
+}
+
+func TestABriefWithNoDeferredProblemsHasNoSection(t *testing.T) {
+	h := newHarness(t)
+	e := h.start()
+	requireState(t, e, runrec.StateAwaitingApproval)
+	for _, req := range h.runner.requests() {
+		if strings.Contains(req.Brief, "the landing merge") {
+			t.Errorf("the %s brief has a deferred section with nothing deferred", req.Role)
+		}
+	}
+}
+
+func TestProblemItemReadsTheLeadingID(t *testing.T) {
+	for problem, want := range map[string]string{
+		"s443 / Why: unknown flag --stdin": "s443",
+		"S12: missing the Files section":   "S12",
+		"S12 / Files: bad path: x":         "S12",
+		"x1.2-b_c: odd id":                 "x1.2-b_c",
+		"render is stale":                  "",
+		"stale render: ROADMAP.md":         "",
+		"":                                 "",
+		": no id":                          "",
+		"/ Why: x":                         "",
+	} {
+		if got := problemItem(problem); got != want {
+			t.Errorf("problemItem(%q) = %q, want %q", problem, got, want)
+		}
 	}
 }
 

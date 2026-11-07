@@ -964,3 +964,18 @@ func TestCreateClearsWaitStartedAtOutsideWait(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckRecordWritesDeferredOnlyWhenSet(t *testing.T) {
+	plain, err := json.Marshal(CheckRecord{Round: 1, Command: "go test ./...", OK: true})
+	if err != nil || strings.Contains(string(plain), "deferred") {
+		t.Fatalf("a check that deferred nothing has no deferred key: %s, %v", plain, err)
+	}
+	b, err := json.Marshal(CheckRecord{Round: 1, OK: true, Deferred: []string{"s443 / Why: unknown flag --stdin"}})
+	if err != nil || !strings.Contains(string(b), `"deferred":["s443 / Why: unknown flag --stdin"]`) {
+		t.Fatalf("deferred key: %s, %v", b, err)
+	}
+	var back CheckRecord
+	if err := json.Unmarshal(b, &back); err != nil || !reflect.DeepEqual(back.Deferred, []string{"s443 / Why: unknown flag --stdin"}) {
+		t.Fatalf("round trip: %+v, %v", back, err)
+	}
+}
