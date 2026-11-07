@@ -15404,7 +15404,7 @@
       "id": "S296",
       "title": "Resume a stopped run from its worktree, and continue at the stage it stopped",
       "short_title": "Resume a stopped run from its worktree, and continue at the stage it stopped",
-      "status": "started",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -15437,10 +15437,7 @@
           "retracted_reason": ""
         }
       ],
-      "claim": {
-        "owner": "Jon Robbins",
-        "at": "2026-11-07T22:53:34Z"
-      },
+      "claim": null,
       "fields": {
         "size": "M",
         "flags": [],
