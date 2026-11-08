@@ -17,6 +17,7 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+	"unicode/utf8"
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clitest"
@@ -1385,8 +1386,57 @@ func TestStatusBoundsDenials(t *testing.T) {
 		return json.Unmarshal([]byte(`{"projects":[{"name":"p","engine_runs":[{"id":"r1","item":"S43","state":"implement","denials":["A","B","C","D","E"]}]}]}`), result)
 	}}
 	code, stdout, stderr := run(t, app, "status")
-	if code != 0 || !strings.Contains(stdout, "(denied: A, B, C and 2 more)\n") {
+	if code != 0 || !strings.Contains(stdout, "(denied: 5 commands, first: A)\n") {
 		t.Fatalf("bounded denials missing: code %d stdout=%s stderr=%s", code, stdout, stderr)
+	}
+}
+
+func statusDenialsApp(t *testing.T, denials []string) *App {
+	t.Helper()
+	raw, err := json.Marshal(denials)
+	if err != nil {
+		t.Fatal(err)
+	}
+	reply := `{"projects":[{"name":"p","engine_runs":[{"id":"r1","item":"S243","state":"implement","denials":` + string(raw) + `}]}]}`
+	return &App{Call: func(_ context.Context, _ string, _, result any) error { return json.Unmarshal([]byte(reply), result) }}
+}
+
+func TestStatusCountsDeniedCommands(t *testing.T) {
+	denials := []string{"Bash: " + strings.Repeat("x", 114), "second", "third", "fourth", "fifth"}
+	code, out, errout := run(t, statusDenialsApp(t, denials), "status")
+	want := "p: needs you 0, active relays 0\n  r1 S243 implement (denied: 5 commands, first: Bash: " + strings.Repeat("x", 31) + "...)\n"
+	if code != 0 || out != want {
+		t.Fatalf("status %d: got %q, want %q; %s", code, out, want, errout)
+	}
+}
+
+func TestStatusDeniedOneCommandIsSingular(t *testing.T) {
+	code, out, errout := run(t, statusDenialsApp(t, []string{"Write: /x.txt"}), "status")
+	want := "p: needs you 0, active relays 0\n  r1 S243 implement (denied: 1 command, first: Write: /x.txt)\n"
+	if code != 0 || out != want {
+		t.Fatalf("status %d: got %q, want %q; %s", code, out, want, errout)
+	}
+}
+
+func TestStatusDeniedCutsOnRunesNotBytes(t *testing.T) {
+	code, out, errout := run(t, statusDenialsApp(t, []string{"Bash: " + strings.Repeat("界", 50)}), "status")
+	want := "p: needs you 0, active relays 0\n  r1 S243 implement (denied: 1 command, first: Bash: " + strings.Repeat("界", 31) + "...)\n"
+	if code != 0 || out != want || !utf8.ValidString(out) {
+		t.Fatalf("status %d: got %q, want %q; %s", code, out, want, errout)
+	}
+}
+
+func TestStatusJSONKeepsEveryDenial(t *testing.T) {
+	denials := []string{strings.Repeat("first", 30), strings.Repeat("second", 30), strings.Repeat("third", 30), strings.Repeat("fourth", 30), strings.Repeat("fifth", 30)}
+	code, out, errout := run(t, statusDenialsApp(t, denials), "status", "--json")
+	var got struct {
+		Projects []struct {
+			EngineRuns []source.EngineRun `json:"engine_runs"`
+		}
+	}
+	mustJSON(t, out, &got)
+	if code != 0 || len(got.Projects) != 1 || len(got.Projects[0].EngineRuns) != 1 || !reflect.DeepEqual(got.Projects[0].EngineRuns[0].Denials, denials) {
+		t.Fatalf("JSON changed denials: %d %s %s", code, out, errout)
 	}
 }
 

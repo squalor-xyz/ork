@@ -100,7 +100,7 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 					fmt.Fprintf(o.stdout, " (wait: %s%s)", r.Wait, again)
 				}
 				if len(r.Denials) > 0 {
-					fmt.Fprintf(o.stdout, " (denied: %s)", source.DenialsText(r.Denials))
+					fmt.Fprint(o.stdout, " "+statusDenialsText(r.Denials))
 				}
 				fmt.Fprintln(o.stdout)
 				for _, w := range r.Working {
@@ -116,6 +116,20 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 		}
 	}
 	return ExitOK
+}
+
+// statusDenialsText bounds the CLI summary; the snapshot and TUI keep full texts.
+func statusDenialsText(denials []string) string {
+	command := "commands"
+	if len(denials) == 1 {
+		command = "command"
+	}
+	first := []rune(denials[0])
+	text := string(first)
+	if len(first) > 40 {
+		text = string(first[:37]) + "..."
+	}
+	return fmt.Sprintf("(denied: %d %s, first: %s)", len(denials), command, text)
 }
 
 // workingLine says what runs, for how long, how long ago a role last sent

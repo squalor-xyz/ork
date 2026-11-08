@@ -13136,7 +13136,7 @@
       "id": "S243",
       "title": "Claude fallback implementer: shell rules in the brief, a short denied count in status",
       "short_title": "Claude fallback implementer",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -13146,6 +13146,34 @@
           "text": "**2026-11-04** — Owner 2026-11-04 (ork S287 Q2): part (b) dropped because S275 landed the automatic same-session retry; parts (a) and (c) stay.",
           "created_at": "2026-11-04T20:02:39Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "ed0c9eae-b365-4f68-b464-52aa06b68cf5",
+          "kind": "",
+          "text": "**2026-11-08** — Human checks at approval (S243):\n- later: `ork status` in a terminal at 100x30 and 80x24 with a run that has five long denied commands: the denied part is one bounded piece of the run's line (about 70 characters), not several lines of command text.\n- later: [AFTER LAND] After the daemon is restarted on the landed build, watch the next Claude stand-in implementer run (Codex out of credits) once: its Done when checklist holds the Claude-only shell rules (owner a2, no new section), and status shows the short denied count.",
+          "created_at": "2026-11-08T18:01:50Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "8361405a-2e9b-4277-9a8c-f5f274b165f7",
+          "kind": "",
+          "text": "**2026-11-08** — Verified Claude-only Done when shell rules, including finish briefs, and bounded status denial counts with rune-safe truncation. Slice tests passed; JSON, prompts and TUI unchanged. Full race checks encountered sandbox socket restrictions. Gate PASS and owner approval received; human checks deferred at approval.",
+          "created_at": "2026-11-08T18:01:57Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -13172,7 +13200,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

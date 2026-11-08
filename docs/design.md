@@ -1031,6 +1031,12 @@ separately.
     test counts; ork runs its checks outside the sandbox. The checklist stays
     below 40 lines, grouping overflow items without dropping their text. It
     supplements the prompts' report parts and changes no report parser;
+    *proposed (S243):* the `claude` implementer also gets checklist items to
+    change files with Edit and Write only, avoiding `sed -i`, scripts,
+    heredocs and file redirects, and to run one plain shell command per call
+    without pipes, `&&`, `;`, command substitution or `cd`. A denied command
+    calls for an allowed form. These items also appear in finish briefs.
+    The existing resolved allowlist appears once; prompts stay vendor-neutral;
   - earlier reports, when the role is not resumed.
 
   A tracking step denied to the implementer is a Deviation for the orchestrator,
@@ -2064,7 +2070,11 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   array of distinct `Tool` or `Tool: command` texts from role records.
   Texts are deduplicated across roles in first-seen order. Repeats append
   ` xN`, such as `Write: /x.txt x2`
-  (`ui.denials-display`, `engine.denied-command`). `wait`
+  (`ui.denials-display`, `engine.denied-command`). *Proposed (S243):* text
+  `ork status` shows `(denied: N commands, first: TEXT)` (singular `command`
+  for one). It counts distinct texts and cuts the first to 40 runes, using
+  37 runes plus `...` when longer. `--json` retains every full denial;
+  the TUI keeps its existing three-and-more display. `wait`
   contains the approval prompt, owner question, pause or stop reason. The optional
   `pending` string holds the paused run record's pending kind (`question`,
   `shape`, `lost`, `interrupted`, `budget`, `rounds` or `error`); other states omit it

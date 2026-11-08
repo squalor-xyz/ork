@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-309 items · — 71 · done 205 · retired 33
+309 items · — 70 · done 206 · retired 33
 
 v1.2
 
@@ -143,7 +143,7 @@ v1.2
 | 86 | [S237](slices/S237.md) | answer and retry return at once | M | 2 |  |  | done |
 | 87 | [S238](slices/S238.md) | Landing merge-in without a role | M | 2 |  |  | done |
 | 88 | [S239](slices/S239.md) | Check failures: excerpt and one rerun | M | 2 |  |  | done |
-| 89 | [S243](slices/S243.md) | Claude fallback implementer | M | 2 |  |  | — |
+| 89 | [S243](slices/S243.md) | Claude fallback implementer | M | 2 |  |  | done |
 | 90 | [S244](slices/S244.md) | Resolve latest within a family | M | 2 |  |  | — |
 | 91 | [S245](slices/S245.md) | Show resolved latest models | S | 1 |  |  | — |
 | 92 | [S254](slices/S254.md) | Landing: main with uncommitted tracking edits aborts the ff-merge | S | 1 |  | Wave 6, 2026-11-02 (friction F40): S213 landing aborted with 'Your local changes would be overwritten by merge: .slicer/log.jsonl' because the owner-session filing of the S235 spec answer was uncommitted on main. Landing should check main for uncommitted tracking files before the ff-merge and either stop early with a one-line message that names the files, or have ork commit them. Which of the two is the owner's decision; interview before specifying. Related: S238 (merge-in commit by ork). · discovered from S213 | done |

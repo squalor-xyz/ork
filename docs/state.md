@@ -592,6 +592,9 @@ Texts are deduplicated across all roles. Repeats append a count, such as
 `Write: /x.txt x2`. A denial with no command is its tool name alone. A record from before
 S45 has no `denied_commands`, so its `denials` are tool names. Denials are
 omitted when empty and rendered by status and the TUI (`ui.denials-display`).
+*Proposed (S243):* text status counts the distinct denial texts and shows the
+first cut to 40 runes (37 plus `...` when longer). The `denials` array,
+`ork status --json` and the TUI's three-and-more display stay unchanged.
 The *proposed* optional `error` field holds a recovery or background job error.
 It lives in daemon memory only and is absent from `run.json`. It appears when
 the run is not busy. The next job clears it; cancellation is not a failure.

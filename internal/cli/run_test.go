@@ -246,7 +246,7 @@ func TestStatusPrintsEngineStateAndWait(t *testing.T) {
 		return json.Unmarshal([]byte(`{"projects":[{"name":"p","needs_you":1,"engine_runs":[{"id":"r1","item":"S1","state":"paused","wait":"Which library?","denials":["Write","Bash"],"error":"background broke"}]}]}`), result)
 	}}
 	code := app.Run(context.Background(), []string{"status"}, &out, &errs)
-	if code != 0 || !strings.Contains(out.String(), "r1 S1 paused (wait: Which library?) (denied: Write, Bash)\n    error: background broke\n") {
+	if code != 0 || !strings.Contains(out.String(), "r1 S1 paused (wait: Which library?) (denied: 2 commands, first: Write)\n    error: background broke\n") {
 		t.Fatalf("status code %d: %s %s", code, &out, &errs)
 	}
 }
@@ -329,7 +329,7 @@ func TestStatusSectionsAndNeedsRows(t *testing.T) {
 	const reply = `{"projects":[{"name":"p","needs_you":5,"open":[{"id":125,"key":"ui.status-list","title":"Status list"}],"held":[{"id":"S32","title":"Owner answer"}],"active_relays":[{"id":"ledger","items":["S1"],"state":"active"}],"engine_runs":[{"id":"old","item":"S1","state":"stopped","created_at":"2026-10-23T12:00:00Z"},{"id":"current","item":"S1","state":"implement","created_at":"2026-10-23T12:01:00Z"},{"id":"done","item":"S2","state":"committed"},{"id":"approval","item":"S3","state":"awaiting-approval"},{"id":"paused","item":"S4","state":"paused","wait":"Question?","denials":["Write"]},{"id":"stopped","item":"S5","state":"stopped","updated_at":"2026-10-23T12:00:00Z"}]}]}`
 	app := &App{Call: func(_ context.Context, _ string, _, result any) error { return json.Unmarshal([]byte(reply), result) }}
 	code, stdout, stderr := run(t, app, "status")
-	want := "p: needs you 5, active relays 1\n  #125 ui.status-list  Status list\n  S32  Owner answer  (needs-owner)\n  ledger S1 active (0 steps, 0 running)\n  approval S3 awaiting-approval\n  paused S4 paused (wait: Question?) (denied: Write)\n  stopped S5 stopped\n  current S1 implement\n"
+	want := "p: needs you 5, active relays 1\n  #125 ui.status-list  Status list\n  S32  Owner answer  (needs-owner)\n  ledger S1 active (0 steps, 0 running)\n  approval S3 awaiting-approval\n  paused S4 paused (wait: Question?) (denied: 1 command, first: Write)\n  stopped S5 stopped\n  current S1 implement\n"
 	if code != 0 || stdout != want {
 		t.Fatalf("status exit %d: %s\ngot:\n%swant:\n%s", code, stderr, stdout, want)
 	}

@@ -5,6 +5,7 @@ package engine
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -38,6 +39,124 @@ func baseBrief() BriefInput {
 		TempDir: "/state/runs/r1/tmp/implementer-1", ReportPath: "/state/runs/r1/implementer-1.md",
 		SliceJSON: `{"id":"S04","title":"Engine"}`,
 		EnvLines:  []string{"Shell: zsh on darwin. `timeout` is not installed.", "Go 1.27.2, no cd."},
+	}
+}
+
+var claudeShellRules = []string{
+	"Change files with the Edit and Write tools only: no `sed -i`, no scripts (python or others), no heredocs, no redirects into files.",
+	"Run one plain command per shell call: no pipes, no `&&` or `;`, no command substitution, no `cd` (use absolute paths, `go -C DIR` and `git -C DIR`).",
+	"If a command is denied, use an allowed form; do not retry it another way.",
+}
+
+func requireClaudeShellRules(t *testing.T, brief string) {
+	t.Helper()
+	_, done, ok := strings.Cut(brief, "## Done when\n\n")
+	if !ok {
+		t.Fatal("missing Done when")
+	}
+	previous := strings.Index(done, "Allowed forms, verbatim:")
+	if previous < 0 {
+		t.Fatal("missing resolved allowlist")
+	}
+	for _, rule := range claudeShellRules {
+		pos := strings.Index(done, "- [ ] "+rule+"\n")
+		if pos <= previous {
+			t.Errorf("missing or misplaced shell rule: %s", rule)
+		}
+		previous = pos
+	}
+}
+
+func TestClaudeImplementerBriefHasShellRules(t *testing.T) {
+	in := baseBrief()
+	in.Vendor = "claude"
+	in.Allow = DefaultImplementerAllowlist("go test ./...")
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	requireClaudeShellRules(t, got)
+}
+
+func TestShellRulesOnlyForTheClaudeImplementer(t *testing.T) {
+	for _, tc := range []struct {
+		role, vendor string
+		readOnly     bool
+	}{
+		{RoleImplementer, "codex", false}, {RoleImplementer, "", false},
+		{RoleImplementer, "Claude", false}, {RoleImplementer, "claude", true},
+		{RoleReviewer, "claude", false}, {RoleGate, "claude", false},
+		{RoleArchitect, "claude", false}, {RoleUI, "claude", false},
+		{RoleSpecCheck, "claude", false},
+	} {
+		t.Run(tc.role+"/"+tc.vendor+"/"+fmt.Sprint(tc.readOnly), func(t *testing.T) {
+			in := baseBrief()
+			in.Role, in.Vendor, in.ReadOnly = tc.role, tc.vendor, tc.readOnly
+			got, err := BuildBrief(in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, rule := range claudeShellRules {
+				if strings.Contains(got, rule) {
+					t.Errorf("unexpected shell rule: %s", rule)
+				}
+			}
+		})
+	}
+}
+
+func TestShellRulesFollowTheRegistryAllowlist(t *testing.T) {
+	for _, allow := range [][]string{{"Edit", "Bash(dotnet test*)"}, {"Edit"}, {"Edit", "Bash(check ```\nnext*)"}} {
+		in := baseBrief()
+		in.Vendor, in.Allow = "claude", allow
+		want := "- [ ] Allowed forms, verbatim: " + strings.Join(allow, "; ") + "; any other command is denied; no pipes, no cd, no env prefix unless an entry allows it.\n"
+		got, err := BuildBrief(in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		requireClaudeShellRules(t, got)
+		if strings.Count(got, want) != 1 || strings.Count(got, "Allowed forms, verbatim:") != 1 || strings.Contains(got, "slicer *") || strings.Contains(got, "## Shell commands") {
+			t.Error("resolved allowlist changed or duplicated")
+		}
+	}
+}
+
+func TestFinishStepBriefKeepsTheShellRules(t *testing.T) {
+	in := baseBrief()
+	in.Vendor, in.Finish = "claude", true
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	requireClaudeShellRules(t, got)
+}
+
+func TestClaudeFallbackBriefListsTheRealAllowlist(t *testing.T) {
+	h := fallbackHarness(t, RoleImplementer)
+	h.runner.exits = map[string]ExitClass{"codex": ExitOutOfCredits}
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	var vendors []string
+	for _, req := range h.runner.requests() {
+		if req.Role != RoleImplementer {
+			continue
+		}
+		vendors = append(vendors, req.Vendor)
+		if req.Vendor == "claude" {
+			requireClaudeShellRules(t, req.Brief)
+			want := "- [ ] Allowed forms, verbatim: " + strings.Join(req.Allowlist, "; ") + "; any other command is denied; no pipes, no cd, no env prefix unless an entry allows it.\n"
+			if len(req.Allowlist) == 0 || strings.Count(req.Brief, want) != 1 || strings.Count(req.Brief, "Allowed forms, verbatim:") != 1 {
+				t.Error("fallback brief does not list the request's real allowlist exactly once")
+			}
+		} else {
+			for _, rule := range claudeShellRules {
+				if strings.Contains(req.Brief, rule) {
+					t.Errorf("codex brief has shell rule: %s", rule)
+				}
+			}
+		}
+	}
+	if strings.Join(vendors, ",") != "codex,claude" {
+		t.Fatalf("fallback vendors: %v", vendors)
 	}
 }
 

@@ -419,6 +419,12 @@
   heartbeat; treat a successful item note as success even if its refresh fails;
   and attach owner-answer flag values so dash-leading answers reach slicer intact.
 
+- Claude fallback implementer: the Claude implementer's brief keeps its
+  resolved allowed shell commands and adds rules for editing and plain shell
+  calls in `## Done when`, including finish steps (*proposed*, S243).
+  `ork status` shows the distinct denied-command count and the first denial
+  cut to 40 characters (*proposed*); JSON and the TUI stay unchanged.
+
 ## v1.0.0 (2026-10-31)
 
 - S209: a project can name `ui_pass_skills` for its Claude UI pass

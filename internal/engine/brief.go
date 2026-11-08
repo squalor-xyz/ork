@@ -192,6 +192,11 @@ func doneWhen(in BriefInput) string {
 	} else {
 		items = append(items, "Allowed forms, verbatim: "+strings.Join(in.Allow, "; ")+"; any other command is denied; no pipes, no cd, no env prefix unless an entry allows it.")
 	}
+	if in.Role == RoleImplementer && in.Vendor == "claude" && !in.ReadOnly {
+		add("Change files with the Edit and Write tools only: no `sed -i`, no scripts (python or others), no heredocs, no redirects into files.")
+		add("Run one plain command per shell call: no pipes, no `&&` or `;`, no command substitution, no `cd` (use absolute paths, `go -C DIR` and `git -C DIR`).")
+		add("If a command is denied, use an allowed form; do not retry it another way.")
+	}
 	if in.Finish {
 		for _, section := range in.Sections {
 			if section.Title == "Finish step" {
