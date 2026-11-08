@@ -15563,11 +15563,29 @@
       "id": "S299",
       "title": "Vendor out marks: an owner's mark survives a daemon restart and can end at a set time (--until)",
       "short_title": "Vendor out marks: an owner's mark survives a daemon restart and can end at a set time (--until)",
-      "status": "open",
+      "status": "started",
       "has_slice": false,
       "depends_on": [],
-      "note_records": [],
-      "claim": null,
+      "note_records": [
+        {
+          "id": "a73fd4c9-abe8-450b-95d6-364c8e7214bd",
+          "kind": "",
+          "text": "**2026-11-08** — Later (S307): an unreadable or newer vendors-out.json is reported only in the daemon log (the auto-started daemon's stderr goes to a log file): surface it as a status/footer warning or an ork doctor finding. ork vendor and the footer cannot tell an owner mark from an automatic mark that reads the same. No daemon-level test of a symlinked store. The plan note now uses the daemon clock (SentenceAt) so a plan confirmed across midnight is not refused as changed. Owner choices made by the implementer, unconfirmed: file name vendors-out.json, --until formats HH:MM / YYYY-MM-DD HH:MM / RFC 3339, a failed store write refuses the mark with an internal error.",
+          "created_at": "2026-11-08T00:27:26Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": {
+        "owner": "Jon Robbins",
+        "at": "2026-11-07T23:56:20Z"
+      },
       "fields": {
         "size": "S",
         "flags": [],
@@ -15584,7 +15602,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

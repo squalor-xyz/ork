@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -334,5 +335,204 @@ func TestClientCarriesVendorsOutAndTheWaitingRun(t *testing.T) {
 	}
 	if res, err := c.SetVendor(ctx, SetVendorParams{Vendor: "codex", Out: true, Reason: "why"}); err != nil || !reflect.DeepEqual(res.VendorsOut, out) {
 		t.Fatalf("SetVendor: %+v %v", res, err)
+	}
+}
+
+// daemonOn starts another daemon on the state directory of root, like a
+// restart of the one runDaemonIn made.
+func daemonOn(t *testing.T, root string) *Daemon {
+	t.Helper()
+	d := New(Config{Paths: PathsIn(filepath.Join(root, "state")), Source: &stubSource{}, Engine: &engine.Deps{}})
+	t.Cleanup(d.cache.Close)
+	t.Cleanup(d.closeRuns)
+	return d
+}
+
+func listedVendors(t *testing.T, d *Daemon) []VendorOut {
+	t.Helper()
+	var res VendorsResult
+	if err := json.Unmarshal(request(t, d, "vendors.list", ``), &res); err != nil {
+		t.Fatal(err)
+	}
+	return res.VendorsOut
+}
+
+func TestOwnerVendorMarksSurviveADaemonRestart(t *testing.T) {
+	root := t.TempDir()
+	d, _, _ := runDaemonIn(t, root, nil)
+	end := time.Now().Add(3 * time.Hour).Truncate(time.Second)
+	request(t, d, "vendors.set", `{"vendor":"codex","out":true,"reason":"credits tomorrow"}`)
+	request(t, d, "vendors.set", fmt.Sprintf(`{"vendor":"claude","out":true,"until":%q}`, end.Format(time.RFC3339)))
+	request(t, d, "vendors.set", `{"vendor":"grok","out":true}`)
+	d.runs.deps.Vendors.MarkOut("grok", "limit", time.Now()) // an exit mark leaves the owner's alone
+	request(t, d, "vendors.set", `{"vendor":"grok","out":false}`)
+	d.runs.deps.Vendors.MarkOut("grok", "limit", time.Now()) // memory only
+
+	restarted := daemonOn(t, root)
+	got := listedVendors(t, restarted)
+	if len(got) != 2 || got[0].Vendor != "claude" || got[1].Vendor != "codex" {
+		t.Fatalf("the owner marks come back after a restart, and the exit mark does not: %+v", got)
+	}
+	if !got[0].Until.Equal(end) || got[0].Reason != "marked out by the owner" {
+		t.Errorf("claude: %+v, want an end at %v", got[0], end)
+	}
+	if !got[1].Until.IsZero() || got[1].Reason != "credits tomorrow" {
+		t.Errorf("codex: %+v, want no end and the reason", got[1])
+	}
+	if !restarted.runs.deps.Vendors.IsOut("codex") {
+		t.Fatal("the restarted daemon's engines do not see the mark")
+	}
+	// The status and the run plan of the new daemon say so too.
+	var status StatusResult
+	if err := json.Unmarshal(request(t, restarted, "status", `{}`), &status); err != nil || len(status.VendorsOut) != 2 {
+		t.Fatalf("status: %+v %v", status, err)
+	}
+
+	// Back on the new daemon ends it for the next restart too.
+	request(t, restarted, "vendors.set", `{"vendor":"codex","out":false}`)
+	request(t, restarted, "vendors.set", `{"vendor":"claude","out":false}`)
+	if again := listedVendors(t, daemonOn(t, root)); len(again) != 0 {
+		t.Fatalf("a mark that was back came back: %+v", again)
+	}
+}
+
+func TestVendorsSetUntilEndsTheMarkAndIsChecked(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	end := time.Now().Add(2 * time.Hour).Truncate(time.Second)
+	var set VendorsResult
+	if err := json.Unmarshal(request(t, d, "vendors.set", fmt.Sprintf(`{"vendor":"codex","out":true,"reason":"weekly limit","until":%q}`, end.Format(time.RFC3339))), &set); err != nil {
+		t.Fatal(err)
+	}
+	if len(set.VendorsOut) != 1 || !set.VendorsOut[0].Until.Equal(end) || set.VendorsOut[0].Reason != "weekly limit" {
+		t.Fatalf("set with an end: %+v", set)
+	}
+	for _, method := range []string{"status", "snapshot"} {
+		raw := `{}`
+		if method == "snapshot" {
+			raw = `{"project":"p"}`
+		}
+		var res struct {
+			VendorsOut []VendorOut `json:"vendors_out"`
+		}
+		if err := json.Unmarshal(request(t, d, method, raw), &res); err != nil || len(res.VendorsOut) != 1 || !res.VendorsOut[0].Until.Equal(end) {
+			t.Errorf("%s: %+v %v", method, res.VendorsOut, err)
+		}
+	}
+	// An owner mark without an end replaces it.
+	request(t, d, "vendors.set", `{"vendor":"codex","out":true}`)
+	if got := d.runs.deps.Vendors.Out(); len(got) != 1 || !got[0].Until.IsZero() {
+		t.Fatalf("a mark with no end replaces one with an end: %+v", got)
+	}
+	d.runs.deps.Vendors.Back("codex")
+
+	past := time.Now().Add(-time.Minute).Format(time.RFC3339)
+	for _, raw := range []string{
+		`{"vendor":"codex","out":true,"until":"` + past + `"}`,
+		`{"vendor":"codex","out":true,"until":"not a time"}`,
+		`{"vendor":"codex","out":false,"until":"` + end.Format(time.RFC3339) + `"}`,
+	} {
+		_, err := d.handle(context.Background(), "vendors.set", json.RawMessage(raw))
+		if e := ipc.ErrorOf(err); err == nil || e.Code != CodeBadParams {
+			t.Errorf("%s: err %v, want bad_params", raw, err)
+		}
+	}
+	if got := d.runs.deps.Vendors.Out(); len(got) != 0 {
+		t.Fatalf("a refused call marked something: %+v", got)
+	}
+
+	// The end is on the wire only when there is one.
+	b, _ := json.Marshal(SetVendorParams{Vendor: "codex", Out: true})
+	if strings.Contains(string(b), "until") {
+		t.Errorf("a call with no end names one: %s", b)
+	}
+	b, _ = json.Marshal(SetVendorParams{Vendor: "codex", Out: true, Until: end})
+	if !strings.Contains(string(b), `"until":"`+end.Format(time.RFC3339)) {
+		t.Errorf("a call with an end lacks it: %s", b)
+	}
+}
+
+func TestOwnerVendorMarkThatCannotBeStoredIsRefused(t *testing.T) {
+	root := t.TempDir()
+	// The state directory is a file, so nothing can be stored under it.
+	if err := os.WriteFile(filepath.Join(root, "state"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	d, _, _ := runDaemonIn(t, root, nil)
+	_, err := d.handle(context.Background(), "vendors.set", json.RawMessage(`{"vendor":"codex","out":true}`))
+	if err == nil || !strings.Contains(err.Error(), "vendor") {
+		t.Fatalf("a mark that cannot be stored must be refused, naming the vendor marks: %v", err)
+	}
+	if e := ipc.ErrorOf(err); e.Code != ipc.CodeInternal {
+		t.Fatalf("code %q, want internal", e.Code)
+	}
+	if d.runs.deps.Vendors.IsOut("codex") {
+		t.Fatal("the daemon says the vendor is out though the mark was not stored")
+	}
+}
+
+func TestOwnerVendorBackThatCannotBeStoredIsRefusedAndTheMarkStays(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("root writes anywhere")
+	}
+	root := t.TempDir()
+	d, _, _ := runDaemonIn(t, root, nil)
+	request(t, d, "vendors.set", `{"vendor":"codex","out":true}`)
+	state := filepath.Join(root, "state")
+	if err := os.Chmod(state, 0o500); err != nil { // nothing can be created in it
+		t.Fatal(err)
+	}
+	defer os.Chmod(state, 0o700)
+	_, err := d.handle(context.Background(), "vendors.set", json.RawMessage(`{"vendor":"codex","out":false}`))
+	if e := ipc.ErrorOf(err); err == nil || e.Code != ipc.CodeInternal || !strings.Contains(err.Error(), "vendor marks") {
+		t.Fatalf("a back that cannot be stored: %v", err)
+	}
+	if !d.runs.deps.Vendors.IsOut("codex") {
+		t.Fatal("the mark ended in memory though its end was not stored")
+	}
+}
+
+func TestDaemonLoadsNoStoredVendorItCannotRun(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "state"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	body := `{"version":1,"marks":[{"vendor":"gemini","since":"2026-10-29T12:00:00Z"},{"vendor":"grok","since":"2026-10-29T12:00:00Z"}]}`
+	if err := os.WriteFile(filepath.Join(root, "state", "vendors-out.json"), []byte(body), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	got := listedVendors(t, daemonOn(t, root))
+	if len(got) != 1 || got[0].Vendor != "grok" {
+		t.Fatalf("a vendor ork cannot run must not be loaded: %+v", got)
+	}
+}
+
+func TestDaemonStartsWithNoMarksFromACorruptStore(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "state"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "state", "vendors-out.json"), []byte("{broken"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	d := daemonOn(t, root)
+	if got := listedVendors(t, d); len(got) != 0 {
+		t.Fatalf("marks from a corrupt store: %+v", got)
+	}
+	// A new mark is stored over it.
+	request(t, d, "vendors.set", `{"vendor":"codex","out":true}`)
+	if got := listedVendors(t, daemonOn(t, root)); len(got) != 1 {
+		t.Fatalf("the store was not repaired by the next mark: %+v", got)
+	}
+}
+
+func TestDaemonWithNoStateDirectoryStoresNothing(t *testing.T) {
+	cwd := t.TempDir()
+	t.Chdir(cwd)
+	d := New(Config{Source: &stubSource{}, Engine: &engine.Deps{}})
+	t.Cleanup(d.cache.Close)
+	t.Cleanup(d.closeRuns)
+	request(t, d, "vendors.set", `{"vendor":"codex","out":true}`)
+	if entries, _ := os.ReadDir(cwd); len(entries) != 0 {
+		t.Fatalf("a daemon with no state directory wrote into the current directory: %v", entries)
 	}
 }

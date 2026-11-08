@@ -284,11 +284,12 @@ widths, trailing fields are dropped first so the behind notice keeps priority.
 
 A vendor that the daemon remembers as out (S169, *proposed*) adds one warning
 field, `codex out until 17:02` (`codex out until back` for a mark the owner
-set), for each such vendor, in vendor order. The
-fields come after the daemon notice and before the project count, so a narrow
-line drops the other fields first. The TUI only shows them; the owner sets and
-clears the memory with `ork vendor` (see docs/design.md, Vendors). A change
-made outside the TUI shows at the next snapshot.
+set with no end; `codex out until 4 Nov 07:12` when the end is not the day the
+mark began, and the year when that differs, S299), for each such vendor, in
+vendor order. The fields come after the daemon notice and before the project
+count, so a narrow line drops the other fields first. The TUI only shows them;
+the owner sets and clears the memory with `ork vendor` (see docs/design.md,
+Vendors). A change made outside the TUI shows at the next snapshot.
 
 The six-row text mark appears above `?` help only when the pane can fit the
 mark, a blank line and every help line, and is at least twelve columns wide

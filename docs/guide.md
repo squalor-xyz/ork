@@ -324,8 +324,19 @@ new rounds start on the next row of the chain on another vendor, if there is
 one. Only one Codex role runs at a time over all runs (spec-check rounds are
 not counted); a run that waits for the slot says `waits for codex` on its
 Running row. `ork vendor` lists the vendors that are out, `ork vendor out NAME
-[--reason TEXT]` marks one until you say it is back (no expiry) and `ork
-vendor back NAME` clears it. A daemon restart clears the memory too.
+[--reason TEXT] [--until TIME]` marks one until you say it is back, or until
+TIME (S299, *proposed*), and `ork vendor back NAME` clears it. TIME is `HH:MM`
+(the next time the clock shows it), `YYYY-MM-DD HH:MM` in your zone, or a full
+date and time with a zone such as `2026-11-04T07:12:00+01:00`. It must be in
+the future. When the end is not the day the mark began, the footer and the list
+show the day too (`codex out until 4 Nov 07:12`), and the year when that
+differs. The list also shows the day of a start that is not today.
+
+Marks you set are kept in the state directory, so a daemon restart or an idle
+exit does not lose them. A mark whose end passed while the daemon was down is
+not brought back. The 60-minute marks that ork makes on its own are not kept,
+and a restart clears them. ork does not read a reset time out of a vendor's
+message, so give the end yourself.
 
 On the command line, `ork status [--project P]` prints the same counts and
 rows, and a line such as `codex is out until 17:02 (since 16:02; reason)` for
@@ -473,7 +484,7 @@ The `ork projects set NAME --bell on|off` command lands in S224.
 | A run is stopped | Read the reason in the pane. Fix the cause and continue, or clear it with `ork dismiss RUN`. *Proposed (S296):* `ork retry RUN [--rounds N]` resumes a stopped run that has no commit and whose worktree is intact: it grants N more implementer rounds (2 by default), reloads the project's settings, begins a new ledger run and re-enters the checks (a green check goes on to review), or implementer round 1 when no implementer round has run. A dismissed run can be resumed too, which clears the dismissal. `ork status` and `ork show RUN` name the command (`ork retry RUN [--rounds N] or ork dismiss RUN`), and name none for a run that a newer run of the item has superseded. `ork retry` gets past the project and global caps, like every owner action. `ork run` or `ork wave start` on the same item resumes the newest stopped run by itself when its worktree is exactly what the last implementer round left; it joins the new run's wave and keeps the stopped run's lineup, budgets and stop-after (the message says so). Otherwise it starts a new run at implementer round 1 in the same worktree and prints why. A dismissed run is not resumed that way. With no free slot the start is refused, naming the stopped run: resume it with `ork retry RUN`, or `ork dismiss RUN` to start a new run |
 | A run is paused with a reason like `implementer round 1 hung: no output for 30m` | ork killed a role that sent nothing for 30 minutes. Time the machine slept does not count, so a wake alone does not cause this (S235, *proposed*). Read the reason in the pane, then retry with `t` or `ork retry RUN`: the same role runs again and is told that the earlier process was lost. ork does not retry for you |
 | A relay that ork did not start shows `!!` and `stale` | Open its pane and press `x`. It ends the ledger run as stopped (`internal/tui/pane.go:327`, `internal/tui/ledgerend.go:27`), but only when the run is stale and no unfinished ork run owns it (`internal/daemon/runs.go:1418-1429`). `ork stop RUN` does not take such a run: it names ork runs and waves, and the daemon answers `no run` for a ledger id (`internal/daemon/runs.go:919-921`) |
-| Codex is out of credits or at a limit | Nothing is needed: ork marks it out for 60 minutes and starts new rounds on the next row of another vendor. Check with `ork vendor`. To keep it out longer, `ork vendor out codex` holds until you run `back`. `ork vendor back codex` ends the mark early, for example after you add credits. A run that waits for the one Codex slot is not stuck: it starts when the other Codex role ends |
+| Codex is out of credits or at a limit | Nothing is needed: ork marks it out for 60 minutes and starts new rounds on the next row of another vendor. Check with `ork vendor`. To keep it out longer, `ork vendor out codex` holds until you run `back` (it survives a daemon restart), and `ork vendor out codex --until 07:12` holds until then. `ork vendor back codex` ends the mark early, for example after you add credits. A run that waits for the one Codex slot is not stuck: it starts when the other Codex role ends |
 | You want to stop work | `x` on a row or `ork stop RUN`; `ork stop WAVE-ID` for a wave |
 | The daemon died or you stopped it | Start `ork` again. On start the daemon checks every unfinished run against live processes and marks a role with no process and no report as lost, then the slice waits for you (`docs/design.md:154-160`) |
 | Commands warn that the daemon build differs | `ork daemon restart`. It refuses while a role runs unless you add `--force` (`docs/design.md:41-48`) |
@@ -523,7 +534,7 @@ them all (`internal/tui/keys.go:13-124`).
     ork stop RUN|WAVE
     ork dismiss RUN
     ork file RUN N
-    ork vendor [list] | out NAME [--reason TEXT] | back NAME
+    ork vendor [list] | out NAME [--reason TEXT] [--until TIME] | back NAME
     ork roles print [ROLE]
     ork roles matrix PROJECT
     ork daemon run | stop [--force] | restart [--force]

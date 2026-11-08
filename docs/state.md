@@ -19,6 +19,7 @@ The files ork owns. Everything else is read live from slicer, adj and git
 | The UI pass's renders (S121, *proposed*): `VIEW-80x24.txt`, `VIEW-120x40.txt`, `VIEW-ascii.txt` | `~/.local/state/ork/runs/<run>/tmp/ui-<round>/renders/` |
 | A spec check's identity, report and temp directory, plus owner answers tied to the spec fingerprint until run start or a spec change (S143); role verdicts live in daemon memory | `~/.local/state/ork/spec-checks/<project-key>/<item-key>/` |
 | Fixture candidates: raw output of every non-ok vendor round or round with denials, mode 0600 | `~/.local/state/ork/fixtures/<vendor>/` |
+| The owner's vendor marks (S299, *proposed*), mode 0600 | `~/.local/state/ork/vendors-out.json` |
 
 ork honors `XDG_CONFIG_HOME` and `XDG_STATE_HOME`. Nothing is written
 inside a project except what git and slicer write for a slice: the
@@ -696,13 +697,32 @@ admission rules.
 ### Vendor memory (S169, *proposed*)
 
 The vendors that are out, and the rounds that wait for a vendor slot, are
-daemon memory only. Neither is in `run.json` or `projects.json`, and a daemon
-restart clears both: nothing remembers a vendor as out across a restart, and
-a run that resumes starts with no wait. A mark made by a rate-limit or
-out-of-credits exit lasts 60 minutes or until `ork vendor back`; a mark the
-owner sets with `ork vendor out` has no expiry and holds until `back`. The slot cap (`codex` 1, `claude` unlimited) is built in
-and is not a registry field. The proposed snapshot fields `vendors_out[]`
-(`vendor`, `reason`, `since`, and `until`, absent for an owner mark) and `engine_runs[].vendor_wait` carry
+daemon memory, with one exception (S299, *proposed*): the marks the owner sets
+with `ork vendor out`. Nothing is in `run.json` or `projects.json`. A daemon
+restart clears the rounds that wait for a slot (a run that resumes starts with
+no wait) and the marks made by a rate-limit or out-of-credits exit, which last
+60 minutes or until `ork vendor back`. An owner mark holds until `back`, or
+until the time given with `--until`, and is written to `vendors-out.json`:
+
+```json
+{"version": 1, "marks": [
+  {"vendor": "codex", "reason": "weekly limit",
+   "since": "2026-11-03T23:56:00+01:00", "until": "2026-11-04T07:12:00+01:00"}
+]}
+```
+
+`until` is absent for a mark with no end. The daemon rewrites the whole file
+(a temp file in the same directory, then a rename, mode 0600) on every
+`out` and `back` of an owner mark (it also syncs the directory), and a call
+whose write fails changes nothing and returns an error. It reads the file once,
+at start, and drops a mark whose `until` has passed. A file that is not valid,
+or has a version this ork does not know, is reported on the daemon's standard
+error and starts the daemon with no owner marks; the next owner mark replaces
+the file. A stored mark of a vendor ork cannot run is not loaded, and the next
+write drops it. The slot cap (`codex` 1, `claude` unlimited) is built in and
+is not a registry field. The proposed snapshot fields `vendors_out[]`
+(`vendor`, `reason`, `since`, and `until`, absent for an owner mark with no
+end) and `engine_runs[].vendor_wait` carry
 them to the clients.
 
 ### Transient role detail (S99)

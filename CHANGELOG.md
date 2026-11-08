@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- S299 (*proposed*): a vendor you mark out with `ork vendor out` survives a
+  daemon restart and an idle exit, and can end at a set time. The daemon
+  writes your marks to `vendors-out.json` in the state directory (mode 0600)
+  and reads them at start; a mark whose end passed while it was down is
+  dropped. `ork vendor out NAME --until TIME` ends the mark at TIME (`HH:MM`,
+  the next time the clock shows it, `YYYY-MM-DD HH:MM`, or an RFC 3339 time;
+  it must be in the future), and the footer, `ork vendor` and `ork status`
+  name the day too when the end is not the day the mark began (`4 Nov 07:12`),
+  and the year when that differs; a start that is not today names its day.
+  The 60-minute marks ork makes on a rate limit or out of credits stay in
+  memory and a restart still clears them. A mark or a back that cannot be
+  written is refused with an error and changes nothing; a stored vendor ork
+  cannot run is not loaded; a store that cannot be read is
+  reported on the daemon's standard error and starts with no marks. Wire:
+  `vendors.set` takes an optional `until` (RFC 3339). The help text no longer
+  says a restart clears the marks. ork does not read a reset time from a
+  vendor's message. Docs: `docs/design.md`, `docs/guide.md`,
+  `docs/state.md`, `docs/dashboard.md`, `docs/orchestrator-parity.md`.
 - S302 (*proposed*): add several projects at once. In the TUI, `+` with a
   folder that holds projects below it opens a checklist (space ticks, `a` all,
   `n` none, `y` adds, Esc goes back; Enter does nothing); tracked projects

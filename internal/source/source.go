@@ -200,8 +200,8 @@ type EngineFinding struct {
 // VendorOut is a vendor that the daemon remembers as out after a rate limit or
 // out of credits, or because the owner marked it (S169, *proposed*). The
 // memory lasts until Until, `ork vendor back` or a daemon restart. A mark the
-// owner set has no Until (the zero time) and holds until back. Wire fields are
-// proposed.
+// owner set holds until back, and a daemon restart keeps it (S299); it has no
+// Until (the zero time) unless the owner gave an end. Wire fields are proposed.
 type VendorOut struct {
 	Vendor string    `json:"vendor"`
 	Reason string    `json:"reason,omitempty"`
@@ -209,19 +209,40 @@ type VendorOut struct {
 	Until  time.Time `json:"until,omitzero"`
 }
 
-// UntilText is when the mark ends, as HH:MM, or "back" for a mark the owner
-// set, which holds until `ork vendor back`.
+// dayText is t as HH:MM when it falls on the day of ref, as "2 Jan 15:04" on
+// another day of the year of ref, and as "2 Jan 2006 15:04" in another year
+// (S299). ref is read in the zone of t.
+func dayText(t, ref time.Time) string {
+	ry, rm, rd := ref.In(t.Location()).Date()
+	y, m, d := t.Date()
+	switch {
+	case y != ry:
+		return t.Format("2 Jan 2006 15:04")
+	case m != rm || d != rd:
+		return t.Format("2 Jan 15:04")
+	}
+	return t.Format("15:04")
+}
+
+// UntilText is when the mark ends, as HH:MM, with the day ("4 Nov 07:12", and
+// the year when it is not the year the mark began) when that is not the day it
+// began (S299), or "back" for a mark the owner set with no end, which holds until
+// `ork vendor back`.
 func (v VendorOut) UntilText() string {
 	if v.Until.IsZero() {
 		return "back"
 	}
-	return v.Until.Format("15:04")
+	return dayText(v.Until, v.Since)
 }
 
 // Sentence is how ork status, ork vendor and a run plan say a vendor is out:
-// the end first, then when it began and why.
-func (v VendorOut) Sentence() string {
-	detail := "since " + v.Since.Format("15:04")
+// the end first, then when it began and why. A start that is not today names its
+// day.
+func (v VendorOut) Sentence() string { return v.SentenceAt(time.Now()) }
+
+// SentenceAt is Sentence with the time that counts as today.
+func (v VendorOut) SentenceAt(now time.Time) string {
+	detail := "since " + dayText(v.Since, now)
 	if reason := strings.Join(strings.Fields(v.Reason), " "); reason != "" {
 		detail += "; " + reason
 	}

@@ -4,7 +4,13 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/fs"
 	"maps"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"sync"
@@ -18,7 +24,8 @@ import (
 // the classifier cannot tell a 429, a usage window and out of credits apart,
 // so that memory expires on its own. `ork vendor back` ends it earlier, and a
 // daemon restart clears it. A mark the owner sets with `ork vendor out` has no
-// expiry.
+// expiry unless the owner gave an end (`--until`), is stored in the state
+// directory (S299, *proposed*), and so survives a restart.
 const VendorOutFor = 60 * time.Minute
 
 // VendorOut is a vendor that the daemon remembers as out.
@@ -26,15 +33,18 @@ type VendorOut struct {
 	Vendor string
 	Reason string    // the exit text of the round that marked it, or the owner's
 	Since  time.Time // when it was first marked, in this stretch
-	Until  time.Time // when the memory expires; zero for a mark the owner set, which holds until back
+	Until  time.Time // when the memory expires; zero for a mark the owner set without an end, which holds until back
+	Owner  bool      // the owner set it with `ork vendor out`; only these are stored (S299)
 }
 
 // Vendors is the per-vendor slot cap and the vendor-out memory (S169,
 // *proposed*). One value is shared by every engine of a daemon, like
-// Landings. It lives in memory only. A nil *Vendors has no cap and no memory,
-// and every method is safe on it.
+// Landings. The marks live in memory, except the owner's (S299, *proposed*),
+// which WithStore keeps in a file. A nil *Vendors has no cap and no memory, and
+// every method is safe on it.
 type Vendors struct {
 	mu    sync.Mutex
+	store string // the file of the owner's marks; "" keeps them in memory
 	now   func() time.Time
 	caps  map[string]int
 	held  map[string]int
@@ -151,7 +161,8 @@ func (v *Vendors) waiters(vendor string) int {
 // MarkOut remembers the vendor as out for VendorOutFor from at, because a
 // round exited with a rate limit or out of credits. A vendor that is out
 // already keeps its Since; its reason and expiry are renewed. A mark the owner
-// set (MarkOutOwner) is not touched: it holds until back.
+// set (MarkOutOwner) is not touched: it holds until back, or until its end.
+// These marks are memory only.
 func (v *Vendors) MarkOut(vendor, reason string, at time.Time) {
 	if v == nil {
 		return
@@ -161,7 +172,7 @@ func (v *Vendors) MarkOut(vendor, reason string, at time.Time) {
 	v.expireLocked()
 	entry := VendorOut{Vendor: vendor, Reason: reason, Since: at, Until: at.Add(VendorOutFor)}
 	if old, ok := v.out[vendor]; ok {
-		if old.Until.IsZero() {
+		if old.Owner {
 			return
 		}
 		entry.Since = old.Since
@@ -170,28 +181,55 @@ func (v *Vendors) MarkOut(vendor, reason string, at time.Time) {
 }
 
 // MarkOutOwner remembers the vendor as out because the owner said so. The
-// mark has no expiry (Until is zero): it holds until Back or a daemon restart
-// (owner decision 2026-10-29). It replaces any earlier mark.
-func (v *Vendors) MarkOutOwner(vendor, reason string, at time.Time) {
-	if v == nil {
-		return
-	}
-	v.mu.Lock()
-	defer v.mu.Unlock()
-	v.out[vendor] = VendorOut{Vendor: vendor, Reason: reason, Since: at}
+// mark has no expiry (Until is zero): it holds until Back (owner decision
+// 2026-10-29), also across a daemon restart when the value has a store (S299,
+// *proposed*). It replaces any earlier mark. The error says the mark could not
+// be stored; the vendor is then not marked.
+func (v *Vendors) MarkOutOwner(vendor, reason string, at time.Time) error {
+	return v.MarkOutOwnerUntil(vendor, reason, at, time.Time{})
 }
 
-// Back forgets that the vendor is out. It says whether the vendor was out.
-func (v *Vendors) Back(vendor string) bool {
+// MarkOutOwnerUntil is MarkOutOwner with an end: the mark lapses at until and
+// holds until then. A zero until is a mark with no end.
+func (v *Vendors) MarkOutOwnerUntil(vendor, reason string, at, until time.Time) error {
 	if v == nil {
-		return false
+		return nil
 	}
 	v.mu.Lock()
 	defer v.mu.Unlock()
 	v.expireLocked()
-	_, was := v.out[vendor]
+	old, had := v.out[vendor]
+	v.out[vendor] = VendorOut{Vendor: vendor, Reason: reason, Since: at, Until: until, Owner: true}
+	if err := v.saveLocked(); err != nil {
+		if had {
+			v.out[vendor] = old
+		} else {
+			delete(v.out, vendor)
+		}
+		return err
+	}
+	return nil
+}
+
+// Back forgets that the vendor is out. It says whether the vendor was out. The
+// error says the end of an owner mark could not be stored; the vendor is then
+// still out, and was is false.
+func (v *Vendors) Back(vendor string) (was bool, err error) {
+	if v == nil {
+		return false, nil
+	}
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	v.expireLocked()
+	old, was := v.out[vendor]
 	delete(v.out, vendor)
-	return was
+	if was && old.Owner {
+		if err := v.saveLocked(); err != nil {
+			v.out[vendor] = old
+			return false, err
+		}
+	}
+	return was, nil
 }
 
 // IsOut reports whether the vendor is out now.
@@ -220,6 +258,110 @@ func (v *Vendors) Out() []VendorOut {
 	}
 	slices.SortFunc(list, func(a, b VendorOut) int { return strings.Compare(a.Vendor, b.Vendor) })
 	return list
+}
+
+// vendorStoreVersion is the version of the file of the owner's marks.
+const vendorStoreVersion = 1
+
+// vendorStoreFile is the file of the owner's marks (S299, *proposed*).
+type vendorStoreFile struct {
+	Version int               `json:"version"`
+	Marks   []vendorStoreMark `json:"marks"`
+}
+
+type vendorStoreMark struct {
+	Vendor string    `json:"vendor"`
+	Reason string    `json:"reason,omitempty"`
+	Since  time.Time `json:"since"`
+	Until  time.Time `json:"until,omitzero"` // absent for a mark with no end
+}
+
+// WithStore keeps the owner's marks in the file at path, and returns v: it
+// loads the marks the file holds that have not ended, and writes the file again
+// whenever the owner marks a vendor out or back. Exit marks are never stored. A
+// missing file holds no marks. When the file cannot be read, is not valid or
+// has a version this ork does not know, WithStore returns v with no marks
+// loaded and the error, and the next owner mark replaces the file. A mark of a
+// vendor that known rejects is not loaded, so it cannot stay out with no command
+// that ends it (known nil accepts every name). Call it before the value is shared.
+func (v *Vendors) WithStore(path string, known func(vendor string) bool) (*Vendors, error) {
+	if v == nil {
+		return nil, nil
+	}
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	v.store = path
+	b, err := os.ReadFile(path)
+	if errors.Is(err, fs.ErrNotExist) {
+		return v, nil
+	}
+	if err != nil {
+		return v, fmt.Errorf("read the vendor marks: %w", err)
+	}
+	var file vendorStoreFile
+	if err := json.Unmarshal(b, &file); err != nil {
+		return v, fmt.Errorf("read the vendor marks in %s: %w", path, err)
+	}
+	if file.Version != vendorStoreVersion {
+		return v, fmt.Errorf("read the vendor marks in %s: version %d is not one this ork knows", path, file.Version)
+	}
+	// A mark whose end has passed is dropped by the next read of the marks.
+	for _, m := range file.Marks {
+		if m.Vendor == "" || (known != nil && !known(m.Vendor)) {
+			continue
+		}
+		v.out[m.Vendor] = VendorOut{Vendor: m.Vendor, Reason: m.Reason, Since: m.Since, Until: m.Until, Owner: true}
+	}
+	return v, nil
+}
+
+// saveLocked writes the owner's marks to the store, if there is one. The file
+// is replaced whole, at mode 0600, so a reader never sees half of it. The caller
+// holds v.mu.
+func (v *Vendors) saveLocked() error {
+	if v.store == "" {
+		return nil
+	}
+	file := vendorStoreFile{Version: vendorStoreVersion, Marks: []vendorStoreMark{}}
+	for _, entry := range v.out {
+		if entry.Owner {
+			file.Marks = append(file.Marks, vendorStoreMark{Vendor: entry.Vendor, Reason: entry.Reason, Since: entry.Since, Until: entry.Until})
+		}
+	}
+	slices.SortFunc(file.Marks, func(a, b vendorStoreMark) int { return strings.Compare(a.Vendor, b.Vendor) })
+	b, err := json.MarshalIndent(file, "", "  ")
+	if err != nil {
+		return err
+	}
+	dir := filepath.Dir(v.store)
+	if err := os.MkdirAll(dir, 0o700); err != nil {
+		return fmt.Errorf("store the vendor marks: %w", err)
+	}
+	f, err := os.CreateTemp(dir, ".vendors-out-*")
+	if err != nil {
+		return fmt.Errorf("store the vendor marks: %w", err)
+	}
+	defer os.Remove(f.Name()) // a no-op once the rename has moved it
+	if _, err := f.Write(append(b, '\n')); err != nil {
+		f.Close()
+		return fmt.Errorf("store the vendor marks: %w", err)
+	}
+	if err := f.Sync(); err != nil {
+		f.Close()
+		return fmt.Errorf("store the vendor marks: %w", err)
+	}
+	if err := f.Close(); err != nil {
+		return fmt.Errorf("store the vendor marks: %w", err)
+	}
+	if err := os.Rename(f.Name(), v.store); err != nil {
+		return fmt.Errorf("store the vendor marks: %w", err)
+	}
+	// Make the rename itself durable. The mark is stored whether or not this works.
+	if d, err := os.Open(dir); err == nil {
+		_ = d.Sync()
+		d.Close()
+	}
+	return nil
 }
 
 // expireLocked drops the marks whose time is up. The caller holds v.mu.

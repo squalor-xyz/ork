@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/registry"
@@ -92,7 +93,7 @@ func TestVendorOutAndBackAcceptGrok(t *testing.T) {
 		t.Fatalf("refusal: exit %d: %q", code, stderr)
 	}
 	_, help, _ := run(t, w.app, "help")
-	if !strings.Contains(help, "mark claude, codex or grok out until back") {
+	if !strings.Contains(help, "mark claude, codex or grok out until back, or") {
 		t.Fatalf("usage text:\n%s", help)
 	}
 }
@@ -112,6 +113,10 @@ func TestVendorCommandUsageErrors(t *testing.T) {
 		{[]string{"vendor", "back"}, "vendor back needs a vendor name"},
 		{[]string{"vendor", "back", "gemini"}, `unsupported vendor "gemini"`},
 		{[]string{"vendor", "back", "codex", "--reason", "x"}, "flag provided but not defined: -reason"},
+		{[]string{"vendor", "back", "codex", "--until", "07:12"}, "flag provided but not defined: -until"},
+		{[]string{"vendor", "out", "codex", "--until", "tomorrow-ish"}, `--until: cannot read "tomorrow-ish"; use HH:MM (07:12), YYYY-MM-DD HH:MM (2026-11-04 07:12) or a full date and zone (2026-11-04T07:12:00+01:00)`},
+		{[]string{"vendor", "out", "codex", "--until", "2020-01-02 03:04"}, "--until: 2020-01-02 03:04 is not in the future"},
+		{[]string{"vendor", "out", "codex", "--until", ""}, "--until: cannot read"},
 		{[]string{"vendor", "list", "extra"}, "vendor list takes no arguments"},
 	} {
 		code, _, stderr := run(t, w.app, tc.args...)
@@ -128,7 +133,7 @@ func TestHelpGroupsTheVendorMemoryNoteOnTheListLine(t *testing.T) {
 	w := newWorld(t, stubSource{})
 	_, stdout, _ := run(t, w.app, "help")
 	list := regexp.MustCompile(`(?m)^  ork vendor \[list\].*\n( {10,}.*\n)*`).FindString(stdout)
-	if !strings.Contains(list, "marks happen on their own; a restart clears them") || strings.Contains(list, "say the vendor is back") {
+	if !strings.Contains(strings.Join(strings.Fields(list), " "), "marks happen on their own and end after 60 minutes or at a restart; marks set with ork vendor out stay across a restart") || strings.Contains(list, "say the vendor is back") {
 		t.Fatalf("the list entry:\n%s", list)
 	}
 	back := regexp.MustCompile(`(?m)^  ork vendor back NAME.*\n( {10,}.*\n)*`).FindString(stdout)
@@ -138,5 +143,93 @@ func TestHelpGroupsTheVendorMemoryNoteOnTheListLine(t *testing.T) {
 	out := regexp.MustCompile(`(?m)^  ork vendor out NAME.*\n( {10,}.*\n)*`).FindString(stdout)
 	if strings.Contains(out, "60 minutes") || !strings.Contains(out, "until back") {
 		t.Fatalf("an owner mark has no 60-minute expiry:\n%s", out)
+	}
+	if flat := strings.Join(strings.Fields(out), " "); !strings.Contains(flat, "[--until TIME]") || !strings.Contains(flat, "or until TIME (HH:MM, YYYY-MM-DD HH:MM or a full date and zone); a restart keeps it") {
+		t.Fatalf("the out entry names --until and the restart:\n%s", out)
+	}
+}
+
+func TestParseVendorUntil(t *testing.T) {
+	zone := time.FixedZone("test", -5*3600)
+	now := time.Date(2026, 11, 3, 23, 56, 0, 0, zone)
+	for _, tc := range []struct {
+		in   string
+		want time.Time
+	}{
+		{"07:12", time.Date(2026, 11, 4, 7, 12, 0, 0, zone)},             // the clock time has passed today: tomorrow
+		{"23:59", time.Date(2026, 11, 3, 23, 59, 0, 0, zone)},            // still ahead today
+		{"7:12", time.Date(2026, 11, 4, 7, 12, 0, 0, zone)},              // no leading zero
+		{" 07:12 ", time.Date(2026, 11, 4, 7, 12, 0, 0, zone)},           // blanks around it
+		{"2026-11-05 16:30", time.Date(2026, 11, 5, 16, 30, 0, 0, zone)}, // in the owner's zone
+		{"2026-11-05T16:30:00Z", time.Date(2026, 11, 5, 16, 30, 0, 0, time.UTC)},
+		{"2026-11-05T16:30:00+01:00", time.Date(2026, 11, 5, 15, 30, 0, 0, time.UTC)},
+	} {
+		got, err := parseVendorUntil(tc.in, now)
+		if err != nil || !got.Equal(tc.want) {
+			t.Errorf("%q: %v %v, want %v", tc.in, got, err, tc.want)
+		}
+	}
+	for _, tc := range []struct{ in, want string }{
+		{"", "cannot read"},
+		{"noon", "cannot read"},
+		{"25:00", "cannot read"},
+		{"2026-11-03 23:56", "is not in the future"}, // now is not in the future
+		{"2026-11-03 23:55", "is not in the future"},
+		{"2026-11-03T23:00:00-05:00", "is not in the future"},
+	} {
+		if got, err := parseVendorUntil(tc.in, now); err == nil || !strings.Contains(err.Error(), tc.want) {
+			t.Errorf("%q: %v %v, want an error with %q", tc.in, got, err, tc.want)
+		}
+	}
+}
+
+func TestVendorOutUntilSendsTheEndAndListsIt(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
+	end := time.Now().Add(3 * time.Hour).Truncate(time.Minute)
+
+	code, stdout, stderr := run(t, w.app, "vendor", "out", "codex", "--reason", "weekly limit", "--until", end.Format("2006-01-02 15:04"), "--json")
+	var set daemon.VendorsResult
+	mustJSON(t, stdout, &set)
+	if code != 0 || len(set.VendorsOut) != 1 || !set.VendorsOut[0].Until.Equal(end) || set.VendorsOut[0].Reason != "weekly limit" {
+		t.Fatalf("out --until: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+
+	// The text names the end where the other marks name theirs: the day when it
+	// is not the day the mark began (the mark's own start, not the clock).
+	since := set.VendorsOut[0].Since
+	wantEnd := end.Format("15:04")
+	if sy, sm, sd := since.In(end.Location()).Date(); end.Year() != sy || end.Month() != sm || end.Day() != sd {
+		wantEnd = end.Format("2 Jan 15:04")
+	}
+	code, stdout, _ = run(t, w.app, "vendor", "out", "claude", "--until", end.Format(time.RFC3339))
+	if code != 0 || !strings.HasPrefix(stdout, "claude is out until "+wantEnd+" (since ") || strings.Contains(stdout, "until back") {
+		t.Fatalf("out claude --until: exit %d: %q", code, stdout)
+	}
+	code, stdout, _ = run(t, w.app, "vendor", "list")
+	if code != 0 || strings.Count(stdout, " is out until "+wantEnd+" (") != 2 || strings.Contains(stdout, "until back") {
+		t.Fatalf("list: exit %d: %q", code, stdout)
+	}
+	code, stdout, _ = run(t, w.app, "status")
+	if code != 0 || strings.Count(stdout, " is out until "+wantEnd+" (") != 2 {
+		t.Fatalf("status: exit %d: %q", code, stdout)
+	}
+	// Out again without --until makes it an owner mark with no end.
+	if code, stdout, _ = run(t, w.app, "vendor", "out", "claude"); code != 0 || !strings.HasPrefix(stdout, "claude is out until back") {
+		t.Fatalf("out without --until: exit %d: %q", code, stdout)
+	}
+}
+
+func TestVendorOutUntilClockTimeIsTheNextTimeItIsThatOnTheClock(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
+	// A clock time two hours ahead is the next such time, today or tomorrow.
+	start := time.Now()
+	code, stdout, stderr := run(t, w.app, "vendor", "out", "codex", "--until", start.Add(2*time.Hour).Format("15:04"), "--json")
+	var set daemon.VendorsResult
+	mustJSON(t, stdout, &set)
+	if code != 0 || len(set.VendorsOut) != 1 {
+		t.Fatalf("exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	if end := set.VendorsOut[0].Until; !end.After(start.Add(time.Hour)) || end.After(start.Add(3*time.Hour)) || end.Second() != 0 {
+		t.Fatalf("end %v, want the minute two hours after %v", end, start)
 	}
 }
