@@ -474,6 +474,11 @@ func ParseSpecCheck(text string, ids []string) ([]SpecVerdict, error) {
 		if m := sliceHeading.FindStringSubmatch(line); m != nil {
 			cur = nil
 			id := m[1]
+			// The role may change an id's case (S374 for s374); the batch
+			// id is the one that counts.
+			if i := slices.IndexFunc(ids, func(b string) bool { return strings.EqualFold(b, id) }); i >= 0 {
+				id = ids[i]
+			}
 			switch {
 			case !slices.Contains(ids, id):
 				problems = append(problems, fmt.Sprintf("a section for %s, which is not in the batch", id))

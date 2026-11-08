@@ -286,6 +286,21 @@ func TestSpecCheckShapeErrorsAreReported(t *testing.T) {
 	}
 }
 
+func TestParseSpecCheckMatchesAnIdIgnoringCase(t *testing.T) {
+	report := "## Slice S374\nReady\n\n## Slice s375\nReady\n\n## Owner needed\n\nnone\n"
+	verdicts, err := ParseSpecCheck(report, []string{"s374", "S375"})
+	if err != nil {
+		t.Fatalf("error %v", err)
+	}
+	if len(verdicts) != 2 || verdicts[0].Item != "s374" || verdicts[1].Item != "S375" {
+		t.Errorf("verdicts %+v", verdicts)
+	}
+	dup := "## Slice S374\nReady\n\n## Slice s374\nReady\n\n## Owner needed\n\nnone\n"
+	if _, err := ParseSpecCheck(dup, []string{"s374"}); err == nil {
+		t.Error("two sections for one id in different case were accepted")
+	}
+}
+
 func TestParseOwnerQuestionsReadsEveryBlock(t *testing.T) {
 	body := `Some context.
 
