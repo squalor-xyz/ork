@@ -1290,7 +1290,8 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   permitted"; that write has no command event, and `.repo-status` is empty.
   If no worktree is set, the array contains only TEMP. Read-only roles get neither extra writable-root setting.
   When the role has a temp directory, its environment sets `GOCACHE` to
-  `TEMP/gocache`, replacing any inherited value and keeping other entries.
+  `TEMP/gocache` and `TMPDIR` to `TEMP` (S271, *proposed*), replacing any
+  inherited value of either and keeping other entries.
   JSONL thread, item and turn events supply the session, last agent
   message, command lifecycle events and usage. Input plus output tokens
   form the total. Whether cached input and reasoning output are subsets
@@ -1306,7 +1307,13 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   then `--allowedTools a,b --permission-prompts none` for a write role or
   `--permission-mode plan` for a read-only one, then the prompt. `--effort
   <level>` is listed by `claude --help` ("Effort level for the current
-  session", claude 2.1.x). The process runs in its own process group, using
+  session", claude 2.1.x). When the role has a temp directory, the process
+  environment (the daemon's, plus the project's `vendor_env` for `claude`)
+  sets `TMPDIR` to it (S271, *proposed*), replacing any inherited or
+  `vendor_env` value, so the role needs no `env TMPDIR=DIR` prefix and no
+  `mkdir`; the engine makes the directory before the role starts
+  (`internal/engine/round.go`, `internal/engine/speccheck.go`). Whether the
+  Claude CLI's own tool shell keeps `TMPDIR` is *unverified*. The process runs in its own process group, using
   `internal/clirun`'s helpers (`code.process-groups`). `stream_event` text
   deltas reach the output tail as they arrive. Session id, final text,
   tokens and `total_cost_usd` come from the `result` event. Cancelling the

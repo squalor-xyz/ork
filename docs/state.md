@@ -194,6 +194,8 @@ Notes on the fields:
   (`[A-Za-z_][A-Za-z0-9_]*`), a value holds no NUL byte, and a vendor with no
   keys left is removed. A hand-edited file that holds values these checks
   refuse still loads: `Load` does not apply them.
+  A `TMPDIR` key does not reach a Claude or Codex role: ork sets `TMPDIR` to
+  the role's own temp directory (S271, *proposed*).
 - `ork settings set` (*proposed*, S174, owner decision 2026-10-29) writes the
   file-level `global_cap` and `daemon_idle_minutes`; 0 clears one. Unlike
   `projects set` it is not refused while runs are unfinished: the cap is read

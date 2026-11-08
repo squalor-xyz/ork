@@ -747,3 +747,19 @@ func TestOwnerNeededBlockWordingMatchesTheParser(t *testing.T) {
 		t.Errorf("%d prompts carry the Owner needed block rule, want 6", n)
 	}
 }
+
+// S271: ork sets TMPDIR to the role's temp directory for Claude and Codex, so
+// a role needs no "env TMPDIR=DIR" prefix and no mkdir (neither matches an
+// allowlist pattern). Every prompt says so.
+func TestPromptsSayTMPDIRAlreadyPointsAtTheTempDir(t *testing.T) {
+	for name, p := range prompts(t) {
+		for _, want := range []string{
+			"ork sets TMPDIR to {{temp_dir}} for Claude and Codex roles",
+			"Do not prefix commands with `env TMPDIR=` and do not create the directory",
+		} {
+			if !has(p, want) {
+				t.Errorf("%s lacks %q", name, want)
+			}
+		}
+	}
+}

@@ -14175,11 +14175,29 @@
       "id": "S271",
       "title": "Claude roles get TMPDIR set to their temp dir, so they stop prefixing commands with env TMPDIR",
       "short_title": "Set TMPDIR for Claude roles",
-      "status": "open",
+      "status": "started",
       "has_slice": false,
       "depends_on": [],
-      "note_records": [],
-      "claim": null,
+      "note_records": [
+        {
+          "id": "e3427b6b-c448-47fd-aac4-8ed0dcb103ba",
+          "kind": "",
+          "text": "**2026-11-08** — Later (S307): verify with one real Claude round that the tool shell's TMPDIR equals the role temp dir, then drop the unverified note in docs/design.md; run tmp/ directories are never removed and Claude roles now write TMPDIR content there; add a spec-check variant of the temp-dir existence test; the Grok prompt says not to prefix env TMPDIR= although Grok gets no TMPDIR; a deep TMPDIR path may exceed the 104-byte Unix socket limit on macOS for tools that create sockets under it; open question left at the spec default: the S265 python preset still denies python3 -V version probes. A project vendor_env TMPDIR is overridden by the role temp dir (documented).",
+          "created_at": "2026-11-08T00:51:04Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": {
+        "owner": "Jon Robbins",
+        "at": "2026-11-08T00:34:40Z"
+      },
       "fields": {
         "size": "S",
         "flags": [],
@@ -14196,7 +14214,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

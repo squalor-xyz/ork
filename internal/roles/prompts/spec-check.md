@@ -18,6 +18,8 @@ the whole batch in one pass, so the owner answers every question in one sitting.
 - The only files you may write are your report and scratch files in {{temp_dir}}.
   The directory is yours alone. Never use a shared system temp directory such as
   `/tmp`.
+  ork sets TMPDIR to {{temp_dir}} for Claude and Codex roles. Do not prefix commands
+  with `env TMPDIR=` and do not create the directory: it exists.
 - Work only in {{worktree}}. Use absolute paths. Never change directory. Do not read
   outside the worktree, except {{temp_dir}} and the read-only references the brief
   names.

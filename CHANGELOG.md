@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- S271 (*proposed*): ork sets `TMPDIR` to a role's own temp directory in the
+  process environment of every Claude and Codex role, so a role no longer
+  needs `env TMPDIR=DIR cmd` or `mkdir -p DIR`, which no allowlist pattern
+  matches and which were denied. A `TMPDIR` in the project's `vendor_env` does
+  not win over the role's directory. Codex roles keep `GOCACHE` in the same
+  directory. Every role prompt now says so. Grok roles are unchanged. No wire
+  change. Docs: `docs/design.md`, `docs/state.md`.
 - S266 (*proposed*): a spec check whose report has a shape error, or whose
   round ended with denied commands (for example `rg ... | head`), resumes its
   own session once with the shape problems or the denied commands and the
