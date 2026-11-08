@@ -155,7 +155,7 @@ func TestFix1RetryMirrorsQueuedQuestion(t *testing.T) {
 		t.Fatal(err)
 	}
 	requireState(t, e, runrec.StateAwaitingApproval)
-	if !ledgerHas(h, "relay-run answer", "--text stdlib") {
+	if !ledgerHas(h, "relay-run answer", "--text=stdlib") {
 		t.Fatal("queued answer was not mirrored")
 	}
 }

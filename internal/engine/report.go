@@ -51,7 +51,7 @@ func readReport(dir string, ent fs.DirEntry) (string, bool) {
 		return "", false
 	}
 	path := filepath.Join(dir, ent.Name())
-	f, err := os.Open(path)
+	f, err := openNoBlock(path)
 	if err != nil {
 		return "", false
 	}

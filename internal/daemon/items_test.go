@@ -121,6 +121,23 @@ func TestItemNoteWritesTheNoteAndReadsItemsAgain(t *testing.T) {
 		t.Fatalf("snapshot %+v %v", snap, err)
 	}
 }
+func TestItemNoteSucceedsWhenTheItemsRefreshFails(t *testing.T) {
+	d, _, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"note"}, Prefix: true, Stdout: `{"added":true}`})
+	d.cache.Close()
+	v, err := d.handle(context.Background(), "item.note", json.RawMessage(`{"project":"p","item":"S12","text":"recorded"}`))
+	if err != nil {
+		t.Errorf("note returned refresh error: %v", err)
+	}
+	raw, _ := json.Marshal(v)
+	if string(raw) != `{"item":"S12"}` {
+		t.Errorf("result %s", raw)
+	}
+	calls := lastFake.CallsTo("slicer")
+	if len(calls) != 1 || calls[0].Args[0] != "note" {
+		t.Errorf("note calls: %+v", calls)
+	}
+}
+
 func TestItemNoteRefusals(t *testing.T) {
 	d, _, _ := runDaemon(t, nil)
 	for _, tc := range []struct{ raw, code string }{

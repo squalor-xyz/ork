@@ -405,6 +405,12 @@
   says `replaced while being read` for a swapped link. Docs updated:
   `docs/design.md`, `docs/state.md`, `docs/dashboard.md`.
 
+- Correctness sweep (S194): keep a clean role result when the watchdog fires
+  in the same tick; refuse swapped FIFO and symlink report/render opens without
+  blocking; keep vendor-slot waits fresh with a *proposed* orchestrator-step
+  heartbeat; treat a successful item note as success even if its refresh fails;
+  and attach owner-answer flag values so dash-leading answers reach slicer intact.
+
 ## v1.0.0 (2026-10-31)
 
 - S209: a project can name `ui_pass_skills` for its Claude UI pass

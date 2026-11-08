@@ -936,7 +936,7 @@ func TestAHungRoleDoesNotMarkItsVendorOut(t *testing.T) {
 		select {
 		case <-ctx.Done():
 			once.Do(func() { close(ended) })
-			return Result{Exit: ExitRateLimited, Reason: "You've hit your usage limit"}, nil
+			return Result{Exit: ExitRateLimited, Reason: "You've hit your usage limit"}, ctx.Err()
 		case <-time.After(safetyStop):
 			return Result{}, errors.New("test safety stop: the watchdog never ended the context")
 		}

@@ -311,8 +311,12 @@ var errNotThatFile = errors.New("replaced while being read")
 // readRender reads one render file as plain text of bounded size. It returns
 // the error of an open or a read that failed, or errNotThatFile.
 func readRender(dir string, ent fs.DirEntry) (string, error) {
-	f, err := os.Open(filepath.Join(dir, ent.Name()))
+	f, err := openNoBlock(filepath.Join(dir, ent.Name()))
 	if err != nil {
+		// Preserve the replaced-file refusal when O_NOFOLLOW rejects a link.
+		if info, statErr := os.Lstat(filepath.Join(dir, ent.Name())); statErr == nil && info.Mode()&os.ModeSymlink != 0 {
+			return "", errNotThatFile
+		}
 		return "", err
 	}
 	defer f.Close()

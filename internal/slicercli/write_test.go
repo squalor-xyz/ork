@@ -360,12 +360,12 @@ func TestRelayAnswerPassesOptionOrTextAndBy(t *testing.T) {
 	for _, spec := range []RelayAnswerSpec{{Option: "Database", By: "Jon R"}, {Text: "keep files", By: "Jon R"}, {Text: "engine answer"}} {
 		args := []string{"relay-run", "answer", "run-1", "q1"}
 		if spec.Option != "" {
-			args = append(args, "--option", spec.Option)
+			args = append(args, "--option="+spec.Option)
 		} else {
-			args = append(args, "--text", spec.Text)
+			args = append(args, "--text="+spec.Text)
 		}
 		if spec.By != "" {
-			args = append(args, "--by", spec.By)
+			args = append(args, "--by="+spec.By)
 		}
 		args = append(args, "--json", "--root", root)
 		c, f := client(t, clitest.Route{Tool: "slicer", Args: args})
@@ -375,6 +375,28 @@ func TestRelayAnswerPassesOptionOrTextAndBy(t *testing.T) {
 		if calls := f.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, args) {
 			t.Fatalf("calls: %+v", calls)
 		}
+	}
+}
+
+func TestRelayAnswerKeepsADashLeadingValueAttached(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		spec  RelayAnswerSpec
+		flags []string
+	}{
+		{"option", RelayAnswerSpec{Option: "-fast"}, []string{"--option=-fast"}},
+		{"text", RelayAnswerSpec{Text: "-x"}, []string{"--text=-x"}},
+		{"by", RelayAnswerSpec{Text: "ok", By: "-bob"}, []string{"--text=ok", "--by=-bob"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			want := append([]string{"relay-run", "answer", "run-1", "q1"}, tc.flags...)
+			want = append(want, "--json", "--root", root)
+			c, f := client(t, clitest.Route{Tool: "slicer", Args: want})
+			err := c.RelayAnswer(context.Background(), runrec.Writer{}, root, "run-1", "q1", tc.spec)
+			if calls := f.CallsTo("slicer"); err != nil || len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, want) {
+				t.Fatalf("answer: %v; calls %+v, want %v", err, calls, want)
+			}
+		})
 	}
 }
 

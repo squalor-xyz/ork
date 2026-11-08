@@ -76,7 +76,7 @@ func TestOwnerQuestionPauseRecordsOwnerWaitAndAsk(t *testing.T) {
 	if err := e.Answer(context.Background(), "8"); err != nil {
 		t.Fatal(err)
 	}
-	if !ledgerHas(h, "relay-run answer", "--text 8") {
+	if !ledgerHas(h, "relay-run answer", "--text=8") {
 		t.Error("no ledger answer")
 	}
 }

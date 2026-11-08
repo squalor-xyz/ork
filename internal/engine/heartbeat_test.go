@@ -182,6 +182,100 @@ func TestHeartbeatSkipsMissingStep(t *testing.T) {
 	}
 }
 
+func TestVendorSlotWaitSendsHeartbeatsOnTheOrchestratorStep(t *testing.T) {
+	h, e := heartbeatEngine(t)
+	if err := e.run.Update(func(r *runrec.Record) { r.OrchestratorStep = "orch-1" }); err != nil {
+		t.Fatal(err)
+	}
+	e.d.Vendors = NewVendors(map[string]int{"claude": 1})
+	release, _, err := e.d.Vendors.Acquire(context.Background(), "claude")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		out, err := e.runRound(ctx, round{role: RoleImplementer, n: 1, state: runrec.StateImplement, task: "S04 implementer"}, nil)
+		if err == nil && !out.ok {
+			err = context.Canceled
+		}
+		done <- err
+	}()
+	joined := false
+	defer func() {
+		cancel()
+		if !joined {
+			<-done
+		}
+	}()
+	deadline := time.Now().Add(2 * time.Second)
+	for len(h.steps()) == 0 && time.Now().Before(deadline) {
+		time.Sleep(5 * time.Millisecond)
+	}
+	if len(h.steps()) == 0 {
+		t.Fatal("no orchestrator heartbeat while vendor slot held")
+	}
+	for _, s := range h.steps() {
+		if s.Step != "orch-1" || s.Phase != "start" || s.Task != "" {
+			t.Errorf("step during wait: %+v", s)
+		}
+	}
+	release()
+	err = <-done
+	joined = true
+	if err != nil {
+		t.Fatal(err)
+	}
+	before := len(h.steps())
+	time.Sleep(3 * testHeartbeatEvery)
+	if len(h.steps()) != before {
+		t.Error("heartbeat continued after round returned")
+	}
+}
+
+func TestVendorSlotWaitWithoutAnOrchestratorStepSendsNoHeartbeat(t *testing.T) {
+	h, e := heartbeatEngine(t)
+	e.d.Vendors = NewVendors(map[string]int{"claude": 1})
+	release, _, err := e.d.Vendors.Acquire(context.Background(), "claude")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	done := make(chan error, 1)
+	go func() {
+		out, err := e.runRound(context.Background(), round{role: RoleImplementer, n: 1, state: runrec.StateImplement, task: "S04 implementer"}, nil)
+		if err == nil && !out.ok {
+			err = context.Canceled
+		}
+		done <- err
+	}()
+	time.Sleep(3 * testHeartbeatEvery)
+	steps := h.steps()
+	release()
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	if len(steps) != 0 {
+		t.Fatalf("step without orchestrator during wait: %+v", steps)
+	}
+}
+
+func TestImmediateVendorSlotSendsNoOrchestratorHeartbeat(t *testing.T) {
+	h, e := heartbeatEngine(t)
+	if err := e.run.Update(func(r *runrec.Record) { r.OrchestratorStep = "orch-1" }); err != nil {
+		t.Fatal(err)
+	}
+	e.d.Vendors = NewVendors(map[string]int{"claude": 1})
+	e.heartbeatEvery = time.Hour
+	runHeartbeatRound(t, e)
+	for _, s := range h.steps() {
+		if s.Step == "orch-1" {
+			t.Errorf("immediate slot sent orchestrator heartbeat: %+v", s)
+		}
+	}
+}
+
 func TestHeartbeatStopCancelsLockedRetry(t *testing.T) {
 	h, e := heartbeatEngine(t, func(o *harnessOpts) {
 		o.routes = []clitest.Route{{Tool: "slicer", Args: []string{"relay-run", "step", "run-1", "--step", "1", "--phase", "start"}, Prefix: true, Exit: 3, Stderr: `{"error":{"code":"locked","message":"busy"}}`}}

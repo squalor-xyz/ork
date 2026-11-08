@@ -233,6 +233,11 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	first := entryIndex
 	var entry runrec.LineupEntry
 	var release func()
+	waitStep := rec.OrchestratorStep
+	if rec.RelayRun == "" || rec.Commit != nil {
+		waitStep = ""
+	}
+	stopWait := e.heartbeat(ctx, rec, waitStep)
 	for {
 		entryIndex = e.skipVendorsOut(entries, first)
 		entry = entries[entryIndex]
@@ -241,6 +246,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			e.vendorWait.add(entry.Vendor, -1)
 		}
 		if err != nil {
+			stopWait()
 			return outcome{}, err
 		}
 		if waited && e.skipVendorsOut(entries, first) != entryIndex {
@@ -250,6 +256,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		release = rel
 		break
 	}
+	stopWait()
 	defer release()
 	perm, err := ResolvePermission(e.proj, r.role)
 	if err != nil {
@@ -401,7 +408,9 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		}
 		return outcome{}, err // the role stays running in the record; a restart marks it lost
 	}
-	if hung() {
+	// A runner without an error finished by itself; its result is real even
+	// when it returned in the tick the watchdog fired.
+	if hung() && runErr != nil {
 		release()
 		limit, _ := e.d.hungLimit()
 		return e.endHungRound(ctx, rec, r, idx, stepID, res, limit, stop)

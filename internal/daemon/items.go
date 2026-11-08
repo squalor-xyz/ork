@@ -44,9 +44,8 @@ func (d *Daemon) itemNote(ctx context.Context, p ItemNoteParams) (*ItemNoteResul
 	if err := d.runDeps(proj).Slicer.Note(ctx, runrec.Writer{}, proj.Path, p.Item, p.Text); err != nil {
 		return nil, err
 	}
-	if err := d.cache.Refresh(ctx, proj, source.Items); err != nil {
-		return nil, err
-	}
+	// The note is the write; the refresh is only freshness.
+	_ = d.cache.Refresh(ctx, proj, source.Items)
 	return &ItemNoteResult{Item: p.Item}, nil
 }
 

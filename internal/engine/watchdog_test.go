@@ -100,6 +100,30 @@ func hungHarness(t *testing.T, limit time.Duration, hr *hangRunner) *harness {
 	return h
 }
 
+func TestRoleThatFinishesAsTheWatchdogFiresIsNotRecordedHung(t *testing.T) {
+	hr := &hangRunner{silent: onlyRole(RoleImplementer), script: func(ctx context.Context, req Request) (Result, error) {
+		<-ctx.Done()
+		return defaultResult(req), nil
+	}}
+	h := hungHarness(t, 50*time.Millisecond, hr)
+	e := h.start()
+	rec := e.Snapshot()
+	if rec.State != runrec.StateAwaitingApproval {
+		t.Errorf("state %s, want awaiting approval", rec.State)
+	}
+	if rec.Roles[0].Exit != "ok" {
+		t.Errorf("exit %s, want ok", rec.Roles[0].Exit)
+	}
+	if rec.Pending != nil && rec.Pending.Kind == runrec.PendingLost {
+		t.Errorf("unexpected lost pending: %+v", rec.Pending)
+	}
+	for _, s := range h.steps() {
+		if s.Phase == "fail" {
+			t.Errorf("step ended fail: %+v", s)
+		}
+	}
+}
+
 func TestSilentRoleIsKilledAfterTheLimitAndTheRunPausesAsLost(t *testing.T) {
 	ended := make(chan struct{})
 	hr := &hangRunner{silent: onlyRole(RoleImplementer), script: blockUntilKilled(ended)}

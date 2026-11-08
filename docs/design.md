@@ -103,7 +103,7 @@ ork (TUI)  ork status --json (CLI)
   | `item.park` (proposed wire, S67) | `{"project","item"}` | `{"item"}`; slicer park at the registered root, then refresh Items and Deps; an unfinished run on the item is `refused`, naming the run |
   | `item.unpark` (proposed wire, S67) | `{"project","item"}` | `{"item"}`; slicer unpark at the registered root, then refresh Items and Deps; runs do not block unpark |
   | `item.move` (proposed wire, S67) | `{"project","item","other","position"}` | `{"item","changed"}`; position is `before` or `after`; compare the item's index in slicer list before and after the write, then refresh Items and Deps; blank fields or an invalid position are `bad_params`; slicer errors keep code and message |
-  | `item.note` (proposed wire, S171) | `{"project","item","text"}` | `{"item"}`; slicer note at the registered project root, then refresh Items; blank item or text is `bad_params`; slicer errors keep their code |
+  | `item.note` (proposed wire, S171) | `{"project","item","text"}` | `{"item"}`; slicer note at the registered project root, then refresh Items; a failed refresh after the write is not an error; blank item or text is `bad_params`; slicer errors keep their code |
   | `item.show` (proposed wire) | `{"project","id"}` | `{"detail"}`; slicer show for the registered project |
   | `wave.start` (`run.launch-wire`; proposed shape) | `{"items":[RunParams...]}`; each item has `project`, `item`, `well_specified`, `split`, optional `lineup`, `budgets`, `expected` and, from S265 (*proposed*, adj 191), `allow_no_check` as in `run.start` | `{"wave","items":[{"item","run"?,"error"?}]}`; one wave id, one project, admission errors kept per item; a project with no check command refuses the whole wave with `refused`, before any member is admitted, unless every item has `allow_no_check` |
   | `wave.stop` (proposed wire) | `{"wave"}` | the same wave result; stops each unfinished member through `run.stop`, skips final members |
@@ -1119,7 +1119,9 @@ question. Answer, approve, fix and retry record `--phase start` to continue.
   lineup row and marks no vendor out. There is no automatic retry. The owner
   retries (`ork retry RUN`, or `t`), and the same row runs again with the
   "Earlier process lost" section in its brief. An owner stop during the role
-  stays a stop (exit `cancelled`). The wait for a vendor slot is not counted
+  stays a stop (exit `cancelled`). A role that returns a result with no error
+  in the tick the watchdog fires is recorded as it exited (S194).
+  The wait for a vendor slot is not counted
   as silence. Time the machine slept is not counted as silence either
   (S235, *proposed*), so a wake alone never kills a healthy role. One shared
   detector in the daemon samples the wall clock about every 5 seconds; a gap
@@ -1237,7 +1239,9 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
     run time (the budget never counts it) and not silence for the watchdog.
     The run keeps its global-cap slot while it waits, and its Running row says
     `waits for codex`; its heard cell is dim, with no `!` or `!!` cue, while it
-    waits (a ledger heartbeat during the wait is a later slice). `ork stop`
+    waits. *Proposed (S194):* the wait keeps the ledger run fresh with a
+    heartbeat on its orchestrator step every 10 minutes, when that step exists
+    and the ledger run has not ended. `ork stop`
     cancels the wait; it leaves no role record and no ledger step. The
     reviewer and the UI pass of one state can wait for each other's slot, but
     they cannot deadlock: each round holds one vendor slot only, and a slot is

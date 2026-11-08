@@ -367,12 +367,12 @@ type RelayAnswerSpec struct{ Option, Text, By string }
 func (c Client) RelayAnswer(ctx context.Context, w runrec.Writer, root, run, question string, spec RelayAnswerSpec) error {
 	args := []string{"relay-run", "answer", run, question}
 	if spec.Option != "" {
-		args = append(args, "--option", spec.Option)
+		args = append(args, "--option="+spec.Option)
 	} else {
-		args = append(args, "--text", spec.Text)
+		args = append(args, "--text="+spec.Text)
 	}
 	if spec.By != "" {
-		args = append(args, "--by", spec.By)
+		args = append(args, "--by="+spec.By)
 	}
 	args = append(args, "--json")
 	_, err := c.write(ctx, w, root, args...)
