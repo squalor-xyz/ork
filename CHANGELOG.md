@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- S309 (*proposed*): spec-check flags slice Check commands outside the
+  implementer's resolved allowlist, with environment prefixes or with paths
+  outside the worktree. Gate briefs separate runnable and orchestrator-only
+  lines and include ork's round check log and result as tests-green evidence
+  for the read-only gate. The Gate section requires accepting that evidence
+  without running the suite; prose bullets without backticks stay out of both
+  command lists. Docs: `docs/design.md`.
+
 - S129 (*proposed*): finished roles with no recorded tokens or cost show
   `tokens -  $-`; any vendor's non-zero recorded cost is displayed. Run token
   totals keep live usage until final usage is recorded and count live tokens

@@ -5,6 +5,8 @@ package engine
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/roles"
@@ -137,6 +139,9 @@ func BuildBrief(in BriefInput) (string, error) {
 			b.WriteString("`slicer check` after the round, outside your sandbox.\n\n")
 		}
 	}
+	if in.Role == RoleGate || in.Role == RoleSpecCheck {
+		b.WriteString(checkCommandSections(in))
+	}
 	b.WriteString(doneWhen(in))
 	for _, s := range in.Sections {
 		fmt.Fprintf(&b, "## %s\n\n%s\n\n", s.Title, strings.TrimSpace(s.Body))
@@ -262,6 +267,93 @@ func doneWhen(in BriefInput) string {
 		items = append(items[:35], strings.Join(items[35:], " | "))
 	}
 	return "## Done when\n\n- [ ] " + strings.Join(items, "\n- [ ] ") + "\n\n"
+}
+
+// checkCommandSections uses the implementer's resolved allowlist, not the gate's.
+func checkCommandSections(in BriefInput) string {
+	var specs []json.RawMessage
+	if json.Unmarshal([]byte(in.SliceJSON), &specs) != nil {
+		specs = []json.RawMessage{json.RawMessage(in.SliceJSON)}
+	}
+	var b strings.Builder
+	for _, raw := range specs {
+		var spec struct{ ID string }
+		_ = json.Unmarshal(raw, &spec)
+		var runnable, orchestrator []string
+		for _, entry := range checklistEntries(sliceChecklistSections(string(raw))["Check"]) {
+			if strings.Contains(entry, "HUMAN CHECK") {
+				continue
+			}
+			var commands []string
+			parts := strings.Split(entry, "`")
+			for i := 1; i < len(parts); i += 2 {
+				if strings.TrimSpace(parts[i]) != "" {
+					commands = append(commands, strings.TrimSpace(parts[i]))
+				}
+			}
+			for _, command := range commands {
+				if checkCommandRunnable(command, in.Worktree, in.Allow) {
+					runnable = append(runnable, command)
+				} else {
+					orchestrator = append(orchestrator, command)
+				}
+			}
+		}
+		if in.Role == RoleSpecCheck {
+			fmt.Fprintf(&b, "Check command classification for %s:\n\n", spec.ID)
+		}
+		for _, group := range []struct {
+			title    string
+			commands []string
+		}{{"Implementer-runnable Check commands", runnable}, {"Orchestrator-only Check commands", orchestrator}} {
+			fmt.Fprintf(&b, "## %s\n\n", group.title)
+			if len(group.commands) == 0 {
+				b.WriteString("none\n")
+			}
+			for _, command := range group.commands {
+				fmt.Fprintf(&b, "- %s\n", command)
+			}
+			b.WriteString("\n")
+		}
+	}
+	return b.String()
+}
+
+func checkCommandRunnable(command, worktree string, allow []string) bool {
+	if regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`).MatchString(command) {
+		return false
+	}
+	for _, word := range strings.Fields(command) {
+		word = strings.Trim(word, "\"'")
+		if _, value, ok := strings.Cut(word, "="); ok {
+			word = strings.Trim(value, "\"'")
+		}
+		if filepath.IsAbs(word) {
+			rel, err := filepath.Rel(worktree, filepath.Clean(word))
+			if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+				return false
+			}
+		}
+	}
+	for _, form := range allow {
+		pattern, ok := strings.CutPrefix(form, "Bash(")
+		if !ok || !strings.HasSuffix(pattern, ")") {
+			continue
+		}
+		pattern = strings.TrimSuffix(pattern, ")")
+		// A compound command needs an explicit whole-command allowlist form.
+		if strings.ContainsAny(command, ";|&<>\n`$") && !strings.HasPrefix(command, strings.TrimSuffix(pattern, "*")) {
+			continue
+		}
+		if strings.ContainsAny(command, ";|&<>\n`$") && !strings.ContainsAny(pattern, ";|&<>\n`$") {
+			continue
+		}
+		expr := "^" + strings.ReplaceAll(regexp.QuoteMeta(pattern), `\*`, ".*") + "$"
+		if regexp.MustCompile(expr).MatchString(command) {
+			return true
+		}
+	}
+	return false
 }
 
 func sliceChecklistSections(raw string) map[string]string {

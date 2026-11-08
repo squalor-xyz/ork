@@ -313,6 +313,28 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Finish:       r.finish,
 		Sections:     append(pendingSection(pend), r.sections...),
 	}
+	if r.role == RoleGate {
+		implementerPerm, err := ResolvePermission(e.proj, RoleImplementer)
+		if err != nil {
+			return fail("implementer permissions", err)
+		}
+		in.Allow = implementerPerm.Allow
+		body := "No round check result is available. Do not claim tests green without evidence."
+		if len(rec.Checks) > 0 {
+			check := rec.Checks[len(rec.Checks)-1]
+			log, err := ReadReport(e.run.Dir(), check.Log)
+			if err != nil {
+				return fail("gate check evidence", err)
+			}
+			status := "nonzero (failed; see log for exit code or timeout)"
+			if check.OK {
+				status = "0"
+			}
+			fence := fenceFor(log)
+			body = fmt.Sprintf("Round: %d\nCommand: %s\nCheck log: %s\nExit status: %s\n\n%s\n%s\n%s", check.Round, check.Command, check.Log, status, fence, log, fence)
+		}
+		in.Sections = append(in.Sections, BriefSection{Title: "Ork round check result", Body: body})
+	}
 	if entryIndex > 0 {
 		if section := fallbackSection(rec, r.role, entries[:entryIndex]); section.Body != "" {
 			in.Sections = append(in.Sections, section)

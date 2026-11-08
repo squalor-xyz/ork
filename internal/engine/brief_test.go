@@ -41,6 +41,108 @@ func baseBrief() BriefInput {
 	}
 }
 
+func TestSpecCheckFlagsUnrunnableChecks(t *testing.T) {
+	in := baseBrief()
+	in.Role = RoleSpecCheck
+	raw, _ := json.Marshal([]any{map[string]any{"id": "S04", "slice": map[string]any{"sections": []map[string]string{{"heading": "Check", "body": "- `GOOS=linux go vet ./...`\n- `slicer check --root /old/checkout`"}}}}})
+	in.SliceJSON = string(raw)
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"Raise a finding", "environment assignment prefix, an absolute path outside the worktree", "Orchestrator-only Check commands", "- GOOS=linux go vet ./...", "- slicer check --root /old/checkout"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("spec-check brief lacks %q", want)
+		}
+	}
+}
+
+func TestGateBriefSplitsCheckCommands(t *testing.T) {
+	t.Run("prose", func(t *testing.T) {
+		in := baseBrief()
+		in.Role = RoleGate
+		const prose = "No internal/tui change; no UI pass."
+		raw, _ := json.Marshal(map[string]any{"slice": map[string]any{"sections": []map[string]string{{"heading": "Check", "body": "- " + prose}}}})
+		in.SliceJSON = string(raw)
+		got, err := BuildBrief(in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(got, "- "+prose+"\n") {
+			t.Error("prose Check bullet appears in a command list")
+		}
+	})
+	for _, tc := range []struct {
+		name, command string
+		runnable      bool
+	}{
+		{"test", "go test ./...", true},
+		{"env", "GOOS=linux go vet ./...", false},
+		{"outside", "slicer check --root /old/checkout", false},
+		{"sibling-prefix", "go -C /p/.worktrees/S040 test ./...", false},
+		{"inside", "go -C /p/.worktrees/S04 test ./...", true},
+		{"unknown", "make check", false},
+		{"custom", "custom-check ./...", true},
+		{"compound", "go test ./...; make check", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			in := baseBrief()
+			in.Role = RoleGate
+			in.Allow = append(DefaultImplementerAllowlist(""), "Bash(custom-check *)")
+			raw, _ := json.Marshal(map[string]any{"slice": map[string]any{"sections": []map[string]string{{"heading": "Check", "body": "- `" + tc.command + "`"}}}})
+			in.SliceJSON = string(raw)
+			got, err := BuildBrief(in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			heading := "## Orchestrator-only Check commands\n\n"
+			if tc.runnable {
+				heading = "## Implementer-runnable Check commands\n\n"
+			}
+			if !strings.Contains(got, heading+"- "+tc.command+"\n") {
+				t.Errorf("command classified incorrectly: want %q", heading+"- "+tc.command)
+			}
+		})
+	}
+}
+
+func TestGatePromptUsesOrkEvidence(t *testing.T) {
+	in := baseBrief()
+	in.Role = RoleGate
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"must accept ork's round check result", "Never fail tests-green solely for an orchestrator-only", "Name which Check commands you ran", "Do not attempt commands your read-only mode cannot run"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("gate brief lacks %q", want)
+		}
+	}
+	if strings.Contains(got, "tests green: run the project's check and test commands yourself") {
+		t.Error("gate still requires its own test run")
+	}
+}
+
+func TestGateReceivesRoundCheckEvidence(t *testing.T) {
+	h := newHarness(t)
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	for _, req := range h.runner.requests() {
+		if req.Role != RoleGate {
+			continue
+		}
+		for _, want := range []string{"## Ork round check result", "checks-1.log", "Exit status: 0", "all packages", "A successful ork round check result is the tests-green evidence. You must accept it and must not run the suite."} {
+			if !strings.Contains(req.Brief, want) {
+				t.Errorf("gate request lacks %q", want)
+			}
+		}
+		if strings.Contains(req.Brief, "Run the project's check command yourself") {
+			t.Error("gate request still instructs the gate to run the project check itself")
+		}
+		return
+	}
+	t.Fatal("no gate request")
+}
+
 func TestBuildBriefFillsThePromptPlaceholders(t *testing.T) {
 	in := baseBrief()
 	got, err := BuildBrief(in)

@@ -42,9 +42,19 @@ this prompt disagree, the brief wins; say so in your report.
    - earlier blockers are resolved, each with a proving test;
    - no `[fix]` finding (tag a minor item `[later]` instead);
    - no `blocker` owner finding;
-   - tests green: run the project's check and test commands yourself;
+   - tests green: accept ork's round check result as evidence;
    - docs match the code.
 4. Cite `file:line` for every claim. Do not report a check you did not run.
+5. The Check split uses the implementer's resolved allowlist. It does not grant
+   you permission to run commands. Do not attempt commands your read-only mode cannot run.
+   When your mode permits it, run the runnable lines yourself as additional evidence.
+   Name which Check commands you ran and which you left to the orchestrator.
+   Never fail tests-green solely for an orchestrator-only line or because your
+   read-only mode cannot run tests. Cite ork's result separately from your own runs.
+   You must accept ork's round check result in the brief as tests-green evidence.
+   Read its log, exit status and any failing lines. A successful ork result
+   satisfies this criterion without your own test run; a missing or failed result
+   does not establish tests green.
 
 ## Finding kinds
 

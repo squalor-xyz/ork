@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/roles/prompts/spec-check.md`\n- `internal/roles/prompts/gate.md`\n- `internal/engine/brief.go:128`\n- `internal/engine/speccheck.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/roles/prompts/spec-check.md`\n- `internal/roles/prompts/gate.md`\n- `internal/engine/brief.go:65` (BuildBrief)\n- `internal/engine/speccheck.go:204` (runSpecCheckOnce)\n- `internal/engine/round.go:193` (runRound brief wiring)\n- `internal/engine/states.go:710` (gateCriteria)\n- `internal/engine/brief_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",
-      "body": "- A spec-check brief for a slice whose Check section has a line starting with an environment assignment (`GOOS=linux go vet ...`) or an absolute path outside the worktree tells the spec check to raise a finding for that line.\n- A gate brief lists the Check lines a role can run (they match the role allowlist) apart from the ones only the orchestrator can run.\n- The gate prompt says: run the runnable lines yourself, name which you ran, and never fail tests-green for an orchestrator-only line."
+      "body": "- TestSpecCheckFlagsUnrunnableChecks: the spec-check brief identifies env-prefixed and outside-worktree commands as findings, using the resolved implementer allowlist.\n- TestGateBriefSplitsCheckCommands: the gate brief separates implementer-runnable and orchestrator-only commands, including custom allowlist forms; its prose subtest verifies a bullet without backticks is absent from both command lists.\n- TestGatePromptUsesOrkEvidence: a read-only gate accepts ork check evidence, names commands it ran, and never fails tests-green solely for an orchestrator-only line.\n- TestGateReceivesRoundCheckEvidence: the actual gate request carries the latest round check log, success status and output, requires accepting that evidence without running the suite, and contains no instruction to run the project check itself."
     },
     {
       "heading": "Implement",

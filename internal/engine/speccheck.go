@@ -216,6 +216,10 @@ func runSpecCheckOnce(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCh
 		return nil, err
 	}
 	root := cfg.Project.Path
+	implementerPerm, err := ResolvePermission(cfg.Project, RoleImplementer)
+	if err != nil {
+		return nil, err
+	}
 	head, err := specHeadAt(ctx, d, root)
 	if err != nil {
 		return nil, err
@@ -262,7 +266,8 @@ entries:
 			return nil, fmt.Errorf("old report: %w", err)
 		}
 		brief, err := BuildBrief(BriefInput{
-			Role: RoleSpecCheck, Vendor: entry.Vendor, ReadOnly: true, SliceID: strings.Join(cfg.Items, ", "), Worktree: root, TempDir: tempDir, ReportPath: reportPath,
+			Allow: implementerPerm.Allow,
+			Role:  RoleSpecCheck, Vendor: entry.Vendor, ReadOnly: true, SliceID: strings.Join(cfg.Items, ", "), Worktree: root, TempDir: tempDir, ReportPath: reportPath,
 			SliceJSON: "[" + strings.Join(raws, ",") + "]", EnvLines: cfg.Project.EnvironmentLines,
 			Sections: []BriefSection{{Title: "Spec check", Body: "Check these slices in one pass: " + strings.Join(cfg.Items, ", ") + ". Report one `## Slice ID` section for each, in this order. The project checkout is your working directory; you may not change it."}},
 		})

@@ -66,6 +66,11 @@ the whole batch in one pass, so the owner answers every question in one sitting.
    proposed command and expected result in the `tighten` summary and recommend
    `tighten`. Omit the Decision key line: the answer belongs to this slice, not to
    a project-wide decision.
+   Raise a finding for each orchestrator-only Check command: an
+   environment assignment prefix, an absolute path outside the worktree, or a command outside
+   the implementer's resolved allowlist. Use the brief's classification. Ask the
+   owner to replace it with a runnable form or explicitly assign it to the
+   orchestrator; an already recorded assignment settles that line.
 4. Ask the least. One question for each real open decision. Do not ask a question
    about the same decision twice across slices; ask it under the first slice that
    needs it and say in the others' questions that they share it.

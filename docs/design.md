@@ -967,6 +967,25 @@ question. Answer, approve, fix and retry record `--phase start` to continue.
 
 ## Roles
 
+*Proposed (S309):* spec-check and gate briefs split slice Check commands into
+implementer-runnable and orchestrator-only commands, using the implementer's
+resolved allowlist. An environment assignment prefix, an absolute path outside
+the worktree, or an unallowlisted command is orchestrator-only. Spec-check flags
+these lines so the owner can replace them or assign them to the orchestrator.
+Only backtick spans identify commands; prose bullets without backticks are
+absent from both command lists.
+The gate names the commands it ran and those it left to the orchestrator.
+Per the owner answer for `gate.tests-green-evidence` (2026-11-08), the read-only
+gate accepts ork's latest round check result as tests-green evidence and must
+not run the suite itself. The Gate section repeats this rule. The brief
+carries the round, command, log name, success status and captured log, including
+failing lines. The existing report reader sanitizes the log and marks truncation
+above 64 KiB. A missing or failed result does not establish tests green. The
+split grants no command permissions, and inability to run tests or an
+orchestrator-only line alone does not fail tests-green. Test counts in the gate
+report remain counts of tests the gate itself ran; ork's evidence is cited
+separately.
+
 - **Prompts.** Embedded in ork and canonical (`roles.prompts`). They are
   seeded from slicer's v11 contract, with anything else written fresh
   (`roles.prompt-seed`). They carry no Claude Code-only mechanics (Agent

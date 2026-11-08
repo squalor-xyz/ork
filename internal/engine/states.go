@@ -709,7 +709,8 @@ func (e *Engine) architect(ctx context.Context) error {
 
 const gateCriteria = "You are the gate. A small fix round is reviewed and gated in one pass: check the new diff against the earlier findings and decide. " +
 	"The first line of your report is exactly `VERDICT: PASS` or `VERDICT: FAIL`. " +
-	"Run the project's check command yourself and give the counts on a `Tests: N passed, M failed` line."
+	"A successful ork round check result is the tests-green evidence. You must accept it and must not run the suite. " +
+	"Cite ork's result separately and give only the counts of tests you actually ran on a `Tests: N passed, M failed` line."
 
 func (e *Engine) gate(ctx context.Context) error {
 	pend := e.takePending()
