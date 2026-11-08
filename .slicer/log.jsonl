@@ -3683,3 +3683,4 @@
 {"when": "2026-11-08T16:17:35Z", "item": "S309", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-08T16:24:08Z", "item": "S309", "action": "note", "from": "", "to": "", "note": "Verified gate briefs carry ork round check evidence and requ", "by": "Jon Robbins"}
 {"when": "2026-11-08T16:24:08Z", "item": "S309", "action": "status", "from": "started", "to": "done", "note": "Gate PASS and owner approved: ork check evidence satisfies tests-green for the read-only gate; runnable and orchestrator-only commands stay separate, and prose bullets are excluded. Regression assertions were observed red and mutation-checked.", "by": "Jon Robbins"}
+{"when": "2026-11-08T15:59:18Z", "item": "S309", "action": "edit", "from": "", "to": "", "note": "Implement"}
