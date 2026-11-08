@@ -1,0 +1,39 @@
+{
+  "id": "S309",
+  "title": "A slice Check line a role cannot run fails the gate",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S194's gate returned VERDICT: FAIL twice (rounds 2 and 3, ork-20261108-150055-6fa4) with no defect found: 'Tests green: not met' because the slice's Check section listed lines no role can run: 'GOOS=linux GOARCH=amd64 go vet ./internal/engine' (an environment prefix does not match the role allowlist 'Bash(go vet*)', internal/daemon/runner.go) and 'slicer check --root /Users/jon/code/squalor-xyz/ork' (a macOS path left from an older machine). The gate also reported it 'ran no go test' at all. The run burned its rounds and paused. Fix: (1) ork's spec check flags a Check line that no role can run (env-var prefix, absolute path outside the worktree) and asks the owner or says the orchestrator runs it; (2) the gate prompt and brief say: run the allowlisted lines yourself, and treat a line you cannot run as the orchestrator's, not a failure; (3) the gate states which Check lines it ran. Failing tests: a spec whose Check holds an env-prefixed command gets a spec-check finding; a gate brief lists runnable and orchestrator-only Check lines separately; a gate report that ran every runnable line and skipped only orchestrator-only ones is not a tests-green failure."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/roles/prompts/spec-check.md`\n- `internal/roles/prompts/gate.md`\n- `internal/engine/brief.go:128`\n- `internal/engine/speccheck.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A spec-check brief for a slice whose Check section has a line starting with an environment assignment (`GOOS=linux go vet ...`) or an absolute path outside the worktree tells the spec check to raise a finding for that line.\n- A gate brief lists the Check lines a role can run (they match the role allowlist) apart from the ones only the orchestrator can run.\n- The gate prompt says: run the runnable lines yourself, name which you ran, and never fail tests-green for an orchestrator-only line."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Add a helper that splits a slice Check section into role-runnable and orchestrator-only lines (env-var prefix, absolute path outside the worktree, a command not in the role allowlist).\n2. Put the split in the gate brief (internal/engine/brief.go) and the rule in gate.md; ask the gate to report which lines it ran.\n3. Add the rule to spec-check.md so an unrunnable Check line is a finding.\n4. Docs and a CHANGELOG bullet, marked proposed."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`.\n- No internal/tui change; no UI pass."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
