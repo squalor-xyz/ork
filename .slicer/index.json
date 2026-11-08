@@ -14175,7 +14175,7 @@
       "id": "S271",
       "title": "Claude roles get TMPDIR set to their temp dir, so they stop prefixing commands with env TMPDIR",
       "short_title": "Set TMPDIR for Claude roles",
-      "status": "started",
+      "status": "done",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -14194,10 +14194,7 @@
           "retracted_reason": ""
         }
       ],
-      "claim": {
-        "owner": "Jon Robbins",
-        "at": "2026-11-08T00:34:40Z"
-      },
+      "claim": null,
       "fields": {
         "size": "S",
         "flags": [],
