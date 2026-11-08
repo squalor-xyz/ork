@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-308 items · — 73 · done 202 · retired 33
+308 items · — 72 · done 203 · retired 33
 
 v1.2
 
@@ -96,7 +96,7 @@ v1.2
 | 39 | [S50](slices/S50.md) | Files-scope warning and brief fence | M | 2 |  | discovered from S29 | done |
 | 40 | [S100](slices/S100.md) | Bell on run end, per-project setting | S | 1 |  | discovered from S07 | done |
 | 41 | [S128](slices/S128.md) | Brief: fence the check command so a backtick or newline renders | S | 1 |  | Folded into the S50 sweep (owner, 2026-10-31). · discovered from S126 | retired |
-| 42 | [S129](slices/S129.md) | Live usage edge cases | M | 2 |  | discovered from S99 | — |
+| 42 | [S129](slices/S129.md) | Live usage edge cases | M | 2 |  | discovered from S99 | done |
 | 43 | [S130](slices/S130.md) | Run pane and Overview text polish | M | 2 |  | discovered from S99 | done |
 | 44 | [S131](slices/S131.md) | Self-host check base branch | S | 1 |  | discovered from S114 | — |
 | 45 | [S132](slices/S132.md) | Question polish sweep E6 | M | 2 |  | discovered from S111 | — |

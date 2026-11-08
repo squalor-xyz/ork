@@ -1860,6 +1860,19 @@ func (d *Daemon) unfinishedRunsLocked(project string) ([]string, error) {
 	return ids, nil
 }
 
+func runTokens(roles []runrec.RoleRecord, live map[string]engine.Live) int {
+	tokens := 0
+	counted := map[string]bool{}
+	for _, role := range roles {
+		tokens += role.Tokens
+		if role.EndedAt.IsZero() && !counted[role.Role] {
+			tokens += live[role.Role].Tokens
+			counted[role.Role] = true
+		}
+	}
+	return tokens
+}
+
 func (d *Daemon) engineRuns(project string) []EngineRun {
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
@@ -1870,7 +1883,11 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 	runs := []EngineRun{}
 	for _, r := range stored {
 		rec := r.Snapshot()
+		var byRole map[string]engine.Live
 		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
+			// Read live first, record second: a role that ends between the reads
+			// is counted from the record, ignoring its stale live entry.
+			byRole = m.engine.LiveByRole()
 			rec = m.engine.Snapshot()
 		}
 		if rec.Project != project {
@@ -1932,12 +1949,11 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 				denials[i] = fmt.Sprintf("%s x%d", text, count)
 			}
 		}
-		tokens := 0
+		tokens := runTokens(rec.Roles, byRole)
 		usageKnown := false
 		cost := 0.0
 		for _, role := range rec.Roles {
-			tokens += role.Tokens
-			usageKnown = usageKnown || !role.EndedAt.IsZero() || role.Tokens != 0
+			usageKnown = usageKnown || role.Tokens != 0 || role.CostUSD != 0
 			cost += role.CostUSD
 		}
 		var live engine.Live
@@ -1946,7 +1962,6 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
 			activity = m.engine.Activity(d.cfg.Clock.Now())
 			live = m.engine.Live()
-			tokens += live.Tokens
 			for _, w := range m.engine.Working() {
 				working = append(working, source.EngineWork{What: w.What, Since: w.Since, LastOutput: w.LastOutput, SleptSeconds: int(w.Slept.Seconds())})
 			}

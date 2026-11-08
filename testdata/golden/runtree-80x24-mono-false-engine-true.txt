@@ -10,7 +10,7 @@
                    │    [32mimplementer[m > [36m[reviewer][m > [1;31mgate[m                  [90mround 1[m
                    │    [90m+ implementer done  1m  claude sonnet high round 1[m
                    │    [1;36m| reviewer    start 1m  claude opus round 1[m
-                   │    [1;31m! gate        fail  30s  codex sol round 1  tokens 0  $-[m
+                   │    [1;31m! gate        fail  30s  codex sol round 1  tokens -  $-[m
                    │    [1;31m    ✗ gate FAIL -> implementer round 2[m
                    │
                    │

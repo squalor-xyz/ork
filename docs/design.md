@@ -2397,5 +2397,13 @@ available run usage from current-attempt usage, including reported zero.
 The live hook marks a usage event with `Live.UsageKnown`; text alone does
 not mark usage. The proposed `tail_truncated` flag records memory-cap cuts
 so the pane can mark the first wrapped tail row. These flags stay in memory
-and add no persisted record fields. Vendor identity determines whether a
-recorded cost is available: Claude has a cost field; Codex does not.
+and add no persisted record fields. *Proposed* (S129): a finished role has
+recorded usage when its tokens or cost is non-zero, and a known cost when
+`cost_usd` is non-zero, regardless of vendor. Zero tokens with zero cost
+show `tokens -  $-`.
+
+*Proposed* (S129): a round writes final usage before ending its live attempt.
+The daemon reads active live usage by role before reading the run record.
+It adds live tokens only for role names still running in that record, once
+per name. A role that ends between the reads contributes its recorded tokens
+only, so the total neither dips nor counts that role twice.

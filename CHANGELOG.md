@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- S129 (*proposed*): finished roles with no recorded tokens or cost show
+  `tokens -  $-`; any vendor's non-zero recorded cost is displayed. Run token
+  totals keep live usage until final usage is recorded and count live tokens
+  only for roles still running. Docs: `docs/dashboard.md`, `docs/design.md`,
+  `docs/state.md`.
+
 - Landing check (*proposed*, S217): the approval card warns about files in
   main that overlap the slice's changes, including uncommitted worktree
   changes, and about main being detached or on the slice branch. It refreshes

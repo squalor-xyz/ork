@@ -2017,16 +2017,21 @@ below 1000. Larger counts round half up to one decimal place: `1000` becomes
 `1.0k`, `23849` becomes `23.8k`, and `999950` becomes `1.0M`.
 Configured token budgets keep their integer text.
 Finished roles append recorded usage to their node line; that whole suffix
-drops first when narrow. An interrupted role in a stopped run also uses the
+drops first when narrow. *Proposed* (S129): a finished role with zero tokens
+and zero cost has no recorded usage and shows `tokens -  $-`.
+An interrupted role in a stopped run also uses the
 node suffix: missing recorded usage and cost show `tokens -  $-`, with no
 live tail. A failed gate's verdict stays directly under its node, before any
 separate usage or task line. The pane scrolls inside its own lines, which sit under their row with the
 Overview rows around them (S106).
 
-Running roles show `$-` until their round ends. Vendors with no cost field,
-including Codex, show `$-` after completion too; zero stored cost does not
-mean a reported zero price. The Overview's `tokens N` is the run total:
-completed roles plus the current role's live tokens. The cell is omitted
+Running roles show `$-` until their round ends. *Proposed* (S129): a finished
+role shows a cost whenever its record holds a non-zero `cost_usd`, regardless
+of vendor. Zero stored cost shows `$-`; it cannot establish a reported zero
+price. The Overview's `tokens N` is the run total:
+recorded tokens plus live tokens for roles still running in the record.
+*Proposed* (S129): final tokens enter the record before live usage ends, so
+the total does not dip or count a completed role twice. The cell is omitted
 until engine usage is available, and drops before heard when a Running row
 narrows. Claude usage advances at message start and message delta; Codex
 usage arrives only at turn completion. These counters show reported usage

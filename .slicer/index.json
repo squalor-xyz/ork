@@ -6298,7 +6298,7 @@
       "id": "S129",
       "title": "Live usage edge cases: unknown usage, reported cost, total dip at round end",
       "short_title": "Live usage edge cases",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -6309,6 +6309,34 @@
           "created_at": "2026-11-01T00:58:24Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "fc0c99c2-bad3-4b3f-bfb8-9f47b09095d6",
+          "kind": "",
+          "text": "**2026-11-08** — Human checks at approval (S129):\n- later: Open a project that holds a run recorded by an older build (no `tokens` on its roles) at 100x30 and 80x24 and confirm the run pane shows `tokens -  $-` on finished roles and the Overview row shows no `tokens` cell.",
+          "created_at": "2026-11-08T05:45:17Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "c475e85a-cc35-4452-a394-b58a7a250b58",
+          "kind": "",
+          "text": "**2026-11-08** — Finished roles show unknown usage when no tokens or cost were recorded and show non-zero reported cost regardless of vendor. Final usage is recorded before live teardown, and run totals count live usage only for running roles. Focused tests and full engine race tests passed; mutation checks were restored. Full-suite socket tests were sandbox-limited; historical-run human verification is deferred to approval.",
+          "created_at": "2026-11-08T05:45:29Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -6334,7 +6362,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

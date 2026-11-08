@@ -749,3 +749,7 @@ Proposed snapshot flags `usage_known`, `live_usage_known` and
 `tail_truncated` carry usage presence (including reported zero) and whether
 the memory buffer dropped older text. These flags are not written to disk.
 A stored zero cost from a vendor without a cost field is displayed as `$-`.
+*Proposed* (S129): any finished role with zero stored cost shows `$-`; a
+non-zero cost is displayed regardless of vendor. A finished role with zero
+tokens and zero cost has no recorded usage and shows `tokens -  $-`.
+These recorded values cannot distinguish unrecorded usage from a reported zero.

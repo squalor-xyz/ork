@@ -368,6 +368,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 
 	onEvent, endActivity := e.startActivity(r.role)
+	defer endActivity()
 	onLive := e.liveHook(r.role)
 	// The watchdog (S182) ends runCtx when the role has been silent for too
 	// long; the adapters kill the role's process group when their context ends.
@@ -385,7 +386,6 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		OnStart: func(pgid int) { e.run.Update(func(rr *runrec.Record) { rr.Roles[idx].PGID = pgid }) },
 	})
 	stopWatch()
-	endActivity()
 	if err := ctx.Err(); err != nil {
 		release()
 		if e.run.Snapshot().State == runrec.StateStopped {
@@ -467,6 +467,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	if err != nil {
 		return outcome{}, err
 	}
+	endActivity()
 
 	if fallingBack {
 		stop()
