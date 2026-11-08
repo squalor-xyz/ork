@@ -1,0 +1,39 @@
+{
+  "id": "S308",
+  "title": "ork status lists stale manual relays",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A manual relay (slicer relay-run) with no event for 30 minutes drops out of 'slicer relay-run list --active', so ork status printed 'active relays 0' while the S254 run was open. The TUI board already shows stale runs from BoardRuns (internal/source/source.go:365); ork status (internal/daemon/handlers.go:430-437, internal/cli/daemoncmds.go:62) does not. Show stale runs in status, marked stale, from the same BoardRuns data. Failing test: a snapshot with one stale run yields an ActiveRelays entry with state stale; the status line counts it."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/handlers.go:430-437`\n- `internal/cli/daemoncmds.go:62-70`\n- `internal/source/source.go:365`\n- `docs/guide.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A project snapshot whose BoardRuns holds one stale run (and one ended run) gives ProjectStatus.ActiveRelays one entry for the stale run with State \"stale\"; the ended run is not listed.\n- `ork status` prints \"active relays 1\" and a line ending \"stale (N steps, 0 running)\" for it.\n- An active run and a stale run are both listed; an active run keeps its running-step line."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. In the status builder, after the Runs loop, append each BoardRuns run whose state is \"stale\" as a Relay, built the same way (share the loop body).\n2. The CLI line already prints State; keep the count including stale runs.\n3. Note in docs/guide.md that status lists stale manual relays, and add a CHANGELOG bullet."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`.\n- No internal/tui change, so no UI pass; ork status output gains only the stale state word."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

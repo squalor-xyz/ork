@@ -3603,3 +3603,9 @@
 {"when": "2026-11-08T00:51:04Z", "item": "S271", "action": "note", "from": "", "to": "", "note": "Later (S307): verify with one real Claude round that the too", "by": "Jon Robbins"}
 {"when": "2026-11-08T00:51:43Z", "item": "S271", "action": "status", "from": "started", "to": "done", "note": "Landed: Claude and Codex roles get TMPDIR set to the role temp dir (a project vendor_env TMPDIR is overridden); all six role prompts say so.", "by": "Jon Robbins"}
 {"when": "2026-11-08T01:06:18Z", "item": "S254", "action": "status", "from": "started", "to": "done", "note": "Landed: ork commits named tracking files before the landing merge (adj 193).", "by": "Jon Robbins"}
+{"when": "2026-11-08T01:08:11Z", "item": "S308", "action": "add", "from": "", "to": "open", "note": "ork status lists stale manual relays"}
+{"when": "2026-11-08T01:08:11Z", "item": "S308", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-08T01:09:19Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T01:09:20Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T01:09:20Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-08T01:09:20Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Check"}
