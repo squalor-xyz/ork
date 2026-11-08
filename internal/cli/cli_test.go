@@ -807,7 +807,7 @@ func TestDoctorChecksEachProjectCheckCommand(t *testing.T) {
 func TestDoctorCheckCommandSyntaxError(t *testing.T) {
 	app, _ := doctorProjects(t, setUpProject(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "go test ("}))
 	d := projectReport(t, app)
-	if got := strings.Join(d.Projects[0].Findings, " "); !strings.Contains(got, "syntax") {
+	if got := strings.Join(d.Projects[0].Findings, " "); !strings.Contains(strings.ToLower(got), "syntax") {
 		t.Fatalf("want syntax finding: %q", got)
 	}
 }
