@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- S266 (*proposed*): a spec check whose report has a shape error, or whose
+  round ended with denied commands (for example `rg ... | head`), resumes its
+  own session once with the shape problems or the denied commands and the
+  expected forms, instead of failing or starting over. A second shape error or
+  denial fails the check with no start over, and its message names the slices
+  and says that checking again is safe. The check resumes at most once, even if
+  it starts over. A check still starts over once when main moves or the main
+  checkout changes outside the check, and when a shape error has no session to
+  resume. The refused round is a failed `spec-check` ledger step with a short
+  reason, and the resumed round is a second step. No wire change. This
+  replaces the S143 rule that denials are never retried (2026-10-28). Docs:
+  `docs/design.md`, `docs/dashboard.md`, `docs/guide.md`.
 - S302 (*proposed*): add several projects at once. In the TUI, `+` with a
   folder that holds projects below it opens a checklist (space ticks, `a` all,
   `n` none, `y` adds, Esc goes back; Enter does nothing); tracked projects

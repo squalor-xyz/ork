@@ -725,7 +725,8 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   *Proposed (S275):* a shape error without an owner question automatically
   retries the same reporting role once in the same round and session. Its brief
   names the shape problems. Implementer (including finish), reviewer, gate,
-  architect and UI pass all follow this rule; spec check keeps its own retry.
+  architect and UI pass all follow this rule; spec check keeps its own
+  retry (S266, below).
   The retry uses no additional implementer round. The run record preserves
   both attempts and the refused report. Status and role rows say "shape retry";
   the first refusal sends no owner notice. A second malformed report pauses
@@ -989,10 +990,25 @@ question. Answer, approve, fix and retry record `--phase start` to continue.
   reads HEAD and `git status --porcelain` before and after, and fails the check, keeping no verdict, when
   the tree changed during the role's own run with HEAD unchanged
   (`role.readonly-fingerprint`). If HEAD moves, the checkout's working-tree
-  status changes outside the role's own run, or the report has a shape error,
-  it checks once more with fresh specs. A second failure says the retry was
-  used and asks the owner to check again. Permission denials are never retried
-  (owner decisions, S143, 2026-10-28). Its report has one `## Slice
+  status changes outside the role's own run, it checks once more with fresh
+  specs. *Proposed (S266):* a report with a shape error, or a round that ended
+  with denied commands (a piped `rg ... | head` is the case seen), resumes the
+  role's own session once (`Request.Resume`, the same row) with a short prompt
+  that names the shape problems or the denied commands and the expected forms
+  (`Ready`, or `Question:` blocks, then `## Owner needed`; one command per
+  call, no pipe). That resume is the retry: a second shape error or denial
+  fails the check with no start over, and the check resumes at most once,
+  even if it starts over. It is not offered when the role changed the tree or
+  HEAD moved, when the exit was a vendor limit, an auth failure or unclassified
+  (adj 23), or when the vendor gave no session id (a shape error then starts
+  over once, as before; a denial fails at once). The refused round is a
+  failed `spec-check` ledger step (reason `report shape` or `denied: ...`) and
+  the resumed round is a second step (task `resumed with error`). A failure
+  after the retry names the slices and says that checking again is safe
+  because the check changes nothing (code `spec_check_retry`); its text does
+  not say "spec check", because the CLI prefixes `spec check failed: `.
+  This replaces the S143 rule that denials are never retried (2026-10-28).
+  Its report has one `## Slice
   ID` section per slice, holding `Ready` or one or more question blocks; the
   multi-block parse (`ParseOwnerQuestions`) reads every `Question:` block of a
   section, each block read as an `## Owner needed` block is (list markers

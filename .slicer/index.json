@@ -14020,11 +14020,29 @@
       "id": "S266",
       "title": "Spec check: a report-shape failure or a denied read command retries the same session once instead of failing",
       "short_title": "Spec check: a report-shape failure or a denied read command retries the same session once instead of failing",
-      "status": "open",
+      "status": "started",
       "has_slice": false,
       "depends_on": [],
-      "note_records": [],
-      "claim": null,
+      "note_records": [
+        {
+          "id": "5b19d11f-24b8-4b20-9036-8a4a17178998",
+          "kind": "",
+          "text": "**2026-11-08** — Reverses the S143 rule that spec-check denials are never retried: the row asks for it, and no decided adj record forbids it (adj 93, 156, 158, 164 reviewed). A spec-check round that ends with a report-shape error or a denied command now resumes its own session once; an unclassified exit still stops (adj 23); vendor limits are not resumed. Later: re-check whether S277/S280 made spec-check denials rarer and say so here; after a resume the failure text no longer contains the word retry (daemon test covers only the no-session path); a first-round denial with no session no longer starts with spec-check exited CLASS; the spec check missed a deleted Failing tests section on all three local launchers (see .scratch/local-eval/report.md), so it is not reliable alone.",
+          "created_at": "2026-11-08T00:31:10Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": {
+        "owner": "Jon Robbins",
+        "at": "2026-11-07T23:56:19Z"
+      },
       "fields": {
         "size": "S",
         "flags": [],
@@ -14041,7 +14059,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

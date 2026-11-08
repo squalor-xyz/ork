@@ -1429,10 +1429,12 @@ on N spec questions` on its row, the launch status says `ID waits on spec
 questions`, and while a ticked item is held the hint reads `l answer spec
 questions` instead of `l launch`. Pressing `l` again checks the ticked
 items again and reopens the sitting. A check error shows its code and message
-and leaves the ticks alone. A check automatically retries once if HEAD moves,
-the checkout status changes outside the role's own run, or the report has a
-shape error. A second failure says a retry already happened and asks the
-owner to check again. Permission denials are never retried.
+and leaves the ticks alone. A check automatically retries once if HEAD moves
+or the checkout changes outside the check. If the report has a shape error, or
+the role's commands were denied, the check gives the role its error once in the
+same session instead (S266, *proposed*); with no session to resume, a shape
+error starts over once as before. A second failure names the slices and says
+that checking again is safe.
 At 80x24, spec notes share the rows beside the lineup so the overlap warnings
 stay visible. `wave start --json` includes `held` item IDs when ready peers
 start; the CLI files keyed answers in adj only when the registry enables adj

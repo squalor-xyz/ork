@@ -695,7 +695,7 @@ func TestSpecCheckRetriesStatusChangesOutsideTheRole(t *testing.T) {
 			h := specHarnessStatusReads(t, nil, statuses...)
 			res, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
 			if again {
-				if err == nil || !strings.Contains(err.Error(), "retry") || !strings.Contains(err.Error(), "check again") {
+				if err == nil || !strings.Contains(err.Error(), "retry") || !strings.Contains(err.Error(), "Check again") || !strings.Contains(err.Error(), "the main checkout changed outside the check of S10, S11") {
 					t.Fatalf("second change: %v", err)
 				}
 			} else if err != nil || res == nil {
@@ -714,8 +714,327 @@ func TestSpecCheckRetryFailureExplainsRecovery(t *testing.T) {
 				h.runner.script = func(Request, int) (Result, error) { return Result{Exit: ExitOK, Report: "bad shape"}, nil }
 			}
 			_, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
-			if err == nil || !strings.Contains(err.Error(), "retry") || !strings.Contains(err.Error(), "check again") {
+			if err == nil || !strings.Contains(err.Error(), "retry") || !strings.Contains(err.Error(), "Check again") {
 				t.Fatalf("unhelpful retry failure: %v", err)
+			}
+		})
+	}
+}
+
+// S266: a report-shape failure or a denied read command resumes the spec
+// check's own session once, with the error and the expected forms, before the
+// check gives up.
+
+// resumeScript answers the first round with first and every later round with
+// the good report; it records nothing itself (the harness keeps the requests).
+func resumeScript(first Result) func(Request, int) (Result, error) {
+	return func(req Request, n int) (Result, error) {
+		if n == 0 {
+			return first, nil
+		}
+		return Result{Exit: ExitOK, Session: "sess-2", Report: specReport}, nil
+	}
+}
+
+func TestSpecCheckResumesTheSameSessionOnAShapeError(t *testing.T) {
+	h := specHarness(t)
+	h.runner.script = resumeScript(Result{Exit: ExitOK, Session: "sess-1", Report: "## Slice S10\nReady\n\n## Slice S11\nLooks fine to me.\n\n## Owner needed\n\nnone\n"})
+	res, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+	if err != nil || res == nil || len(res.Verdicts) != 2 {
+		t.Fatalf("result %+v, error %v", res, err)
+	}
+	reqs := h.runner.requests()
+	if len(reqs) != 2 {
+		t.Fatalf("%d rounds, want the first and one resume", len(reqs))
+	}
+	first, second := reqs[0], reqs[1]
+	if first.Resume != "" {
+		t.Errorf("the first round resumed %q", first.Resume)
+	}
+	if second.Resume != "sess-1" {
+		t.Errorf("the second round resumed %q, want sess-1", second.Resume)
+	}
+	if second.Role != RoleSpecCheck || !second.ReadOnly || len(second.Allowlist) != 0 || second.Worktree != h.P {
+		t.Errorf("resumed request: %+v", second)
+	}
+	if second.Vendor != first.Vendor || second.Model != first.Model || second.Effort != first.Effort {
+		t.Errorf("the resume changed the row: %+v vs %+v", second, first)
+	}
+	for _, want := range []string{"S11: write Ready, or question blocks that start with Question:", "Ready", "Question:", "## Owner needed", "final message"} {
+		if !strings.Contains(second.Brief, want) {
+			t.Errorf("nudge lacks %q:\n%s", want, second.Brief)
+		}
+	}
+	if second.ReportPath != first.ReportPath {
+		t.Errorf("report paths differ: %q vs %q", second.ReportPath, first.ReportPath)
+	}
+}
+
+func TestSpecCheckShapeErrorAfterTheResumeFailsWithoutAStartOver(t *testing.T) {
+	h := specHarness(t)
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if n >= 6 {
+			return Result{Exit: ExitError}, nil // a runaway resume loop ends here
+		}
+		return Result{Exit: ExitOK, Session: fmt.Sprintf("sess-%d", n), Report: "Malformed report"}, nil
+	}
+	res, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+	var se *ShapeError
+	var retried *SpecCheckRetryError
+	if res != nil || !errors.As(err, &se) || !errors.As(err, &retried) {
+		t.Fatalf("result %+v, error %v", res, err)
+	}
+	if n := len(h.runner.requests()); n != 2 {
+		t.Fatalf("%d rounds, want the first and one resume (no start over)", n)
+	}
+	msg := err.Error()
+	for _, want := range []string{"S10, S11 failed again after ork gave the role its error once: report shape: ", "Check again; the check changes nothing, so a rerun is safe."} {
+		if !strings.Contains(msg, want) {
+			t.Errorf("message lacks %q: %s", want, msg)
+		}
+	}
+	for _, not := range []string{"spec check", "session", "resumed"} {
+		if strings.Contains(msg, not) {
+			t.Errorf("message has %q (the CLI prefix already says spec check): %s", not, msg)
+		}
+	}
+}
+
+func TestSpecCheckResumesTheSameSessionOnADeniedCommand(t *testing.T) {
+	for _, exit := range []ExitClass{ExitOK, ExitError} {
+		t.Run(string(exit), func(t *testing.T) {
+			h := specHarness(t)
+			h.runner.script = resumeScript(Result{Exit: exit, Session: "sess-1", Denials: []runrec.DeniedCommand{{Tool: "Bash", Command: "rg -n spec | head -20"}}})
+			res, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+			if err != nil || res == nil || len(res.Verdicts) != 2 {
+				t.Fatalf("result %+v, error %v", res, err)
+			}
+			reqs := h.runner.requests()
+			if len(reqs) != 2 || reqs[1].Resume != "sess-1" || !reqs[1].ReadOnly {
+				t.Fatalf("rounds: %+v", reqs)
+			}
+			for _, want := range []string{"Bash: rg -n spec | head -20", "denied", "one command", "pipe", "final message"} {
+				if !strings.Contains(reqs[1].Brief, want) {
+					t.Errorf("nudge lacks %q:\n%s", want, reqs[1].Brief)
+				}
+			}
+		})
+	}
+}
+
+func TestSpecCheckDeniedAgainAfterTheResumeFails(t *testing.T) {
+	h := specHarness(t)
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if n >= 6 {
+			return Result{Exit: ExitError}, nil // a runaway resume loop ends here
+		}
+		return Result{Exit: ExitOK, Session: fmt.Sprintf("sess-%d", n), Report: specReport, Denials: []runrec.DeniedCommand{{Tool: "Bash", Command: fmt.Sprintf("denied %d", n)}}}, nil
+	}
+	res, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+	var retried *SpecCheckRetryError
+	if res != nil || !errors.As(err, &retried) {
+		t.Fatalf("result %+v, error %v", res, err)
+	}
+	if n := len(h.runner.requests()); n != 2 {
+		t.Fatalf("%d rounds, want the first and one resume", n)
+	}
+	for _, want := range []string{"S10, S11 failed again after ork gave the role its error once: permission denied: Bash: denied 1", "kept using a denied command, such as a pipe", "Check again; the check changes nothing, so a rerun is safe."} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("message lacks %q: %v", want, err)
+		}
+	}
+	if strings.Contains(err.Error(), "exited") || strings.Contains(err.Error(), "spec check") {
+		t.Errorf("message keeps jargon: %v", err)
+	}
+}
+
+func TestSpecCheckResumesOnlyOncePerCheck(t *testing.T) {
+	// Round 1 is malformed and is resumed. Round 2 is good, but main moved, so
+	// the check starts over. Round 3 is malformed again: the one resume is
+	// spent, so the check fails there with no fourth round.
+	h := specHarnessHead(t, []clitest.Reply{{Stdout: "a"}, {Stdout: "a"}, {Stdout: "b"}, {Stdout: "b"}, {Stdout: "b"}})
+	h.runner.script = func(req Request, n int) (Result, error) {
+		report := "Malformed report"
+		if n == 1 {
+			report = specReport
+		}
+		return Result{Exit: ExitOK, Session: fmt.Sprintf("sess-%d", n), Report: report}, nil
+	}
+	res, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+	var se *ShapeError
+	if res != nil || !errors.As(err, &se) {
+		t.Fatalf("result %+v, error %v", res, err)
+	}
+	reqs := h.runner.requests()
+	if len(reqs) != 3 {
+		t.Fatalf("%d rounds, want 3", len(reqs))
+	}
+	if reqs[0].Resume != "" || reqs[1].Resume != "sess-0" || reqs[2].Resume != "" {
+		t.Errorf("resumes: %q %q %q", reqs[0].Resume, reqs[1].Resume, reqs[2].Resume)
+	}
+}
+
+// Without a session id there is nothing to resume: a shape error starts the
+// check over as before, and a denial fails at once.
+func TestSpecCheckWithoutASessionCannotResume(t *testing.T) {
+	h := specHarness(t)
+	h.runner.script = func(req Request, n int) (Result, error) {
+		return Result{Exit: ExitOK, Report: "Malformed report"}, nil
+	}
+	if _, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t)); err == nil {
+		t.Fatal("no error")
+	}
+	for _, r := range h.runner.requests() {
+		if r.Resume != "" || !strings.Contains(r.Brief, "Role: spec-check") {
+			t.Errorf("round resumed %q with no session, or sent a nudge in place of the brief", r.Resume)
+		}
+	}
+	if n := len(h.runner.requests()); n != 2 {
+		t.Errorf("%d rounds, want the start-over pair", n)
+	}
+}
+
+// A role that changed the tree is not given another turn (guard: the tree
+// check stays ahead of the resume).
+func TestSpecCheckDoesNotResumeARoleThatChangedTheTree(t *testing.T) {
+	for name, report := range map[string]string{"shape": "Malformed report", "denial": specReport} {
+		t.Run(name, func(t *testing.T) {
+			h := specHarness(t, "", " M edited.go\n")
+			h.runner.script = func(req Request, n int) (Result, error) {
+				res := Result{Exit: ExitOK, Session: "sess", Report: report}
+				if name == "denial" {
+					res.Denials = []runrec.DeniedCommand{{Tool: "Bash", Command: "touch x"}}
+				}
+				return res, nil
+			}
+			_, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+			if err == nil {
+				t.Fatal("no error")
+			}
+			if n := len(h.runner.requests()); n != 1 {
+				t.Errorf("%d rounds, want 1: %v", n, err)
+			}
+		})
+	}
+}
+
+func TestSpecCheckResumeRecordsItsOwnLedgerStep(t *testing.T) {
+	h := specHarness(t)
+	h.runner.script = resumeScript(Result{Exit: ExitOK, Session: "sess-1", Report: "Malformed report"})
+	if _, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t)); err != nil {
+		t.Fatal(err)
+	}
+	var tasks []string
+	for _, s := range h.steps() {
+		if s.Role == RoleSpecCheck && s.Phase == "start" {
+			tasks = append(tasks, s.Task)
+		}
+	}
+	want := []string{"S10, S11 spec-check", "S10, S11 spec-check resumed with error"}
+	if !reflect.DeepEqual(tasks, want) {
+		t.Errorf("spec-check steps %q, want %q", tasks, want)
+	}
+}
+
+// A vendor limit, an auth failure or an unclassified exit is not a malformed
+// report or a denied command to talk the role out of: the session is not
+// resumed (adj 23: an unclassified exit stops).
+func TestSpecCheckDoesNotResumeAnExitThatIsNotAnAnswer(t *testing.T) {
+	for _, exit := range []ExitClass{ExitRateLimited, ExitOutOfCredits, ExitAuth, ExitUnclassified} {
+		t.Run(string(exit), func(t *testing.T) {
+			h := specHarness(t)
+			h.runner.script = func(req Request, n int) (Result, error) {
+				if n >= 6 {
+					return Result{Exit: ExitError}, nil
+				}
+				return Result{Exit: exit, Session: "sess", Denials: []runrec.DeniedCommand{{Tool: "Bash", Command: "rg x | head"}}}, nil
+			}
+			if _, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t)); err == nil {
+				t.Fatal("no error")
+			}
+			for _, r := range h.runner.requests() {
+				if r.Resume != "" {
+					t.Errorf("resumed %q after exit %s", r.Resume, exit)
+				}
+			}
+			if n := len(h.runner.requests()); n != 1 {
+				t.Errorf("%d rounds, want 1", n)
+			}
+		})
+	}
+}
+
+// The HEAD guard: a role whose round saw main move is not resumed against the
+// stale specs. A malformed report starts the check over (and main moving again
+// fails it); a denial still stops at once, as TestMovingMainDoesNotRetryAPermissionDenial
+// pins for a role with no session.
+func TestSpecCheckDoesNotResumeWhileMainMoves(t *testing.T) {
+	for name, tc := range map[string]struct {
+		res    Result
+		err    string
+		rounds int
+	}{
+		"shape":  {Result{Exit: ExitOK, Session: "sess", Report: "Malformed report"}, "main moved", 2},
+		"denial": {Result{Exit: ExitOK, Session: "sess", Report: specReport, Denials: []runrec.DeniedCommand{{Tool: "Bash", Command: "rg x | head"}}}, "permission denied", 1},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h := specHarnessHead(t, []clitest.Reply{{Stdout: "a"}, {Stdout: "b"}, {Stdout: "c"}, {Stdout: "d"}})
+			h.runner.script = func(req Request, n int) (Result, error) { return tc.res, nil }
+			_, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+			if err == nil || !strings.Contains(err.Error(), tc.err) {
+				t.Fatalf("error %v, want %q", err, tc.err)
+			}
+			reqs := h.runner.requests()
+			if len(reqs) != tc.rounds {
+				t.Fatalf("%d rounds, want %d", len(reqs), tc.rounds)
+			}
+			for _, r := range reqs {
+				if r.Resume != "" {
+					t.Errorf("resumed %q while main moved", r.Resume)
+				}
+			}
+		})
+	}
+}
+
+// A long list of denied commands is cut in the prompt.
+func TestSpecDenialNudgeCapsTheList(t *testing.T) {
+	var denials []runrec.DeniedCommand
+	for i := 0; i < 13; i++ {
+		denials = append(denials, runrec.DeniedCommand{Tool: "Bash", Command: fmt.Sprintf("cmd%02d | head", i)})
+	}
+	nudge := specDenialNudge(denials, []string{"S10"})
+	if !strings.Contains(nudge, "cmd09 | head") || strings.Contains(nudge, "cmd10 | head") || !strings.Contains(nudge, "and 3 more") {
+		t.Errorf("nudge:\n%s", nudge)
+	}
+}
+
+// The refused first round is a failed ledger step with a short reason, so the
+// run tree explains the second spec-check row.
+func TestSpecCheckRecordsTheRefusedRoundAsAFailedStep(t *testing.T) {
+	for name, tc := range map[string]struct {
+		first Result
+		want  string
+	}{
+		"shape":                     {Result{Exit: ExitOK, Session: "sess-1", Report: "Malformed report"}, "report shape"},
+		"denial":                    {Result{Exit: ExitOK, Session: "sess-1", Report: specReport, Denials: []runrec.DeniedCommand{{Tool: "Bash", Command: "rg x | head"}}}, "denied: Bash: rg x | head"},
+		"denial with an error exit": {Result{Exit: ExitError, Session: "sess-1", Denials: []runrec.DeniedCommand{{Tool: "Bash", Command: "rg x | head"}}}, "denied: Bash: rg x | head"},
+		"long denial":               {Result{Exit: ExitOK, Session: "sess-1", Report: specReport, Denials: []runrec.DeniedCommand{{Tool: "Bash", Command: strings.Repeat("a", 200)}}}, "denied: Bash: " + strings.Repeat("a", 63) + "..."},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h := specHarness(t)
+			h.runner.script = resumeScript(tc.first)
+			if _, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t)); err != nil {
+				t.Fatal(err)
+			}
+			var ends []string
+			for _, a := range h.calls("slicer", "relay-run", "step") {
+				if j := join(a); strings.Contains(j, "--phase fail") || strings.Contains(j, "--phase done") {
+					ends = append(ends, j)
+				}
+			}
+			if len(ends) != 2 || !strings.Contains(ends[0], "--phase fail") || !strings.Contains(ends[0]+" ", "--reason "+tc.want+" ") || !strings.Contains(ends[1], "--phase done") {
+				t.Errorf("step ends: %q", ends)
 			}
 		})
 	}

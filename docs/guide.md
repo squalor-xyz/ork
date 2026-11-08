@@ -269,8 +269,12 @@ with an option number or text. An empty line or end of input holds the
 slice and exits 1. A failed check also blocks launch. Real spec-check failures
 carry the `spec check failed: ` prefix in text mode; refusals do not. Text
 mode prints only `ork: spec check failed: MESSAGE`; the error code shows with
-`--json`. A project with no spec check row fails with `no_spec_check_row`; the
-message gives the fix: `ork projects set NAME --spec-check-rows rNN` or a
+`--json`. A spec check whose report has a shape error, or whose commands were
+denied, resumes its own session once with the error before it fails (*proposed*,
+S266). A failure after that retry names the slices and says that checking
+again is safe: the check changes nothing. A project with no spec check row
+fails with `no_spec_check_row`; the message gives the fix:
+`ork projects set NAME --spec-check-rows rNN` or a
 `Spec check row (rNN)` rule in the matrix.
 For a script, give `--yes`; it needs no other flag and still runs the spec
 check. `--well-specified y/n` and `--split y/n` override the defaults (yes and
