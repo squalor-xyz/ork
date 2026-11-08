@@ -3646,3 +3646,4 @@
 {"when": "2026-11-08T04:44:52Z", "item": "S217", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S217):", "by": "Jon Robbins"}
 {"when": "2026-11-08T04:45:07Z", "item": "S217", "action": "note", "from": "", "to": "", "note": "S217: approval panes read the current landing check on open ", "by": "Jon Robbins"}
 {"when": "2026-11-08T04:45:08Z", "item": "S217", "action": "status", "from": "started", "to": "done", "note": "S217: approval panes read the current landing check on open and refresh, warn for overlapping non-tracking files and branch-state pauses without blocking approval, hide read failures, and keep wrapped warnings whole. Regression and mutation checks verified; gate PASS and owner approval recorded in this session.", "by": "Jon Robbins"}
+{"when": "2026-11-08T03:13:25Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Implement"}
