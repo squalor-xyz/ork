@@ -442,6 +442,15 @@ the slice's human checks (`docs/dashboard.md:836-945`).
   project's `push` setting is on, and removes the worktree and the branch
   (`docs/design.md:351-397`).
 
+*Proposed (S254):* before it merges, ork looks at the main checkout. If you
+have uncommitted changes there to a file the slice also changes, the run
+pauses at once with one line that names the files; commit or stash them and
+press `t` (`ork retry`). If the only such files are the project's tracking
+files (`.slicer/`, except `config.json` and `relay-roles.json`), ork commits
+them on the base branch itself as `Tracking edits on main before landing ID`
+and goes on. Files the slice does not change are left alone (the `ID done`
+commit after `slicer land` still commits any `.slicer` change).
+
 From the shell: `ork check RUN N [ticked|later|open]`, `ork fix RUN TEXT`,
 `ork approve RUN` (`internal/cli/cli.go:47-50`).
 

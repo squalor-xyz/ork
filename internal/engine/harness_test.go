@@ -281,6 +281,7 @@ func newHarness(t *testing.T, opts ...func(*harnessOpts)) *harness {
 		with(g("-C", W, "rev-parse", "HEAD"), "0123abc\n"),
 		// The landing (S119) on a base branch that did not move.
 		with(g("-C", P, "symbolic-ref", "--short", "HEAD"), "main\n"),
+		g("-C", P, "status", "--porcelain=v1", "-z", "--untracked-files=all"),
 		clitest.Route{Tool: "git", Args: []string{"-C", P, "merge-base", "--is-ancestor", branch, "main"}, Exit: 1},
 		g("-C", W, "merge-base", "--is-ancestor", "main", "HEAD"),
 		g("-C", P, "merge", "--ff-only", branch),

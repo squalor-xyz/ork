@@ -13366,7 +13366,7 @@
       "id": "S254",
       "title": "Landing: main with uncommitted tracking edits aborts the ff-merge",
       "short_title": "Landing: main with uncommitted tracking edits aborts the ff-merge",
-      "status": "open",
+      "status": "started",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -13425,9 +13425,26 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "1aaf49f8-b18b-4c59-a9c8-07f0b1516403",
+          "kind": "",
+          "text": "**2026-11-08** — Landed. Later: limit the ID done sweep (land.go:89-102) to handoff mode and the paths slicer land wrote; landing lock is per project path, so sibling projects in one repo can overlap (S217 reuses dirtyOverlap).",
+          "created_at": "2026-11-08T01:05:27Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
-      "claim": null,
+      "claim": {
+        "owner": "Jon Robbins",
+        "at": "2026-11-08T00:34:51Z"
+      },
       "fields": {
         "size": "S",
         "flags": [],
@@ -13444,7 +13461,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

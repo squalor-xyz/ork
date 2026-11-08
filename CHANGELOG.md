@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- S254 (*proposed*): the landing looks at the main checkout before it merges
+  the base branch in, and again right before the fast-forward. If it holds
+  uncommitted changes to files the slice branch also changes, and any of them
+  is not one of the project's tracking files, the run pauses at once, before
+  the merge-in and the re-check, with one line that names up to five files:
+  `landing stopped: uncommitted changes in P to files the slice changes: ...;
+  commit or stash them`. If only tracking files overlap (`.slicer/` except
+  `config.json` and `relay-roles.json`, under the project's folder), ork
+  commits them on the base branch as `Tracking edits on main before landing
+  ID`, by name, so staged files stay staged; the merge-in then takes them in
+  and the re-check runs. A tracking edit made during the re-check is
+  committed and the landing merges again once; a further overlap pauses.
+  Uncommitted files the slice does not change are left alone (the `ID done`
+  commit after `slicer land` still commits any `.slicer` change). A failed
+  fast-forward now pauses with git's message on one line. No wire change.
+  Docs: `docs/design.md`, `docs/boundaries.md`, `docs/state.md`.
 - S266 (*proposed*): a spec check whose report has a shape error, or whose
   round ended with denied commands (for example `rg ... | head`), resumes its
   own session once with the shape problems or the denied commands and the

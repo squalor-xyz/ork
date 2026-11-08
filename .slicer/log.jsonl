@@ -3597,3 +3597,5 @@
 {"when": "2026-11-08T00:27:26Z", "item": "S299", "action": "note", "from": "", "to": "", "note": "Later (S307): an unreadable or newer vendors-out.json is rep", "by": "Jon Robbins"}
 {"when": "2026-11-08T00:28:10Z", "item": "S299", "action": "status", "from": "started", "to": "done", "note": "Landed: owner vendor out marks survive a daemon restart (vendors-out.json, 0600) and ork vendor out NAME --until TIME ends a mark at a set time; absorbs S273.", "by": "Jon Robbins"}
 {"when": "2026-11-08T00:34:14Z", "item": "S266", "action": "status", "from": "started", "to": "done", "note": "Landed: a spec check resumes its own session once after a report-shape failure or a denied command; failures name the slices and say a rerun is safe; absorbs S300.", "by": "Jon Robbins"}
+{"when": "2026-11-08T00:34:51Z", "item": "S254", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-08T01:05:27Z", "item": "S254", "action": "note", "from": "", "to": "", "note": "Landed. Later: limit the ID done sweep (land.go:89-102) to h", "by": "Jon Robbins"}

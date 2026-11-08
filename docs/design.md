@@ -488,6 +488,46 @@ slice.
   base branch the first one moved. The base branch is the branch the main checkout is on. Each step
   reads git first, so a retry after a pause continues where the landing
   stopped.
+  *Proposed (S254):* before step 1, ork looks at the main checkout. It
+  takes the paths that are uncommitted there (tracked or staged changes,
+  untracked files, both sides of a rename) and the paths the slice branch
+  changes since it left the base branch (`git diff --name-only
+  BASE...BRANCH`), and keeps the paths in both: those are the paths the
+  fast-forward would write, and the only ones git refuses on. Uncommitted
+  files the slice does not change are left alone (the `ID done` commit after
+  `slicer land`, step 3, still commits any `.slicer` change). The project's tracking
+  files are the paths under the project's folder in the repository
+  (`git rev-parse --show-prefix`; a project can be a subdirectory) that are
+  in `.slicer/`, except `.slicer/config.json` and `.slicer/relay-roles.json`,
+  because a matrix or config edit can be a deliberate uncommitted owner
+  edit. A sibling project's `.slicer` is not this landing's.
+  - If any overlapping path is not a tracking file, the run pauses
+    (`paused`, pending kind `error`, state `land`) before the merge-in and the
+    re-check, with one line: `landing stopped: uncommitted changes in P to
+    files the slice changes: F1, F2 +N more; commit or stash them` (at most
+    five names). ork commits nothing, and never stashes, checks out or resets
+    in the main checkout. `ork retry` goes on after the owner commits or
+    removes the files.
+  - If every overlapping path is a tracking file, ork commits them on the
+    base branch as `Tracking edits on main before landing ID`, by name
+    (`git add -A -- PATHS`, `git commit -m MSG -- PATHS`, never a pathspec of
+    `.`, so staged files stay staged). The base moved, so step 1 merges it in
+    with slicer's merge drivers and re-checks. The commit is silent: it shows
+    in `git log` and the run's `writes[]`. Pathspecs are literal
+    (`:(literal)PATH`), so a name with a glob character takes no other file
+    along; only paths that still exist are added (a deletion the owner staged
+    is recorded by the commit alone). A failed add or commit pauses with one
+    line that starts `git add: ` or `git commit: `; a failed commit after a
+    good add ends `; ork staged PATHS` (at most five names), because the files
+    stay staged. File names in these reasons have control characters and
+    terminal escape sequences dropped. The diff is read with `--no-relative`,
+    so a `diff.relative` setting cannot switch the check off.
+  The same check runs again right before the fast-forward, for an edit made
+  during the merge-in or the re-check. A tracking-only overlap there is
+  committed and the landing goes back to step 1 once; any other overlap, or a
+  second one, pauses as above. A failed read (`git status: `, `git diff: `,
+  `git rev-parse: `) pauses with one line. When the slice branch is already
+  in the base branch (a retry after the fast-forward), none of this runs.
   1. If the base branch moved (its tip is not in the slice branch), `git -C W
      merge -m "Merge BASE into BRANCH" BASE` in the worktree, then `slicer
      render`, a commit of what render rewrote, and a re-run of the project
@@ -526,9 +566,10 @@ slice.
      skips the merge and goes on to render and re-check; if the owner aborted
      it, ork merges again and pauses again. A failed merge commit pauses with
      git's message.
-  2. `git -C P merge --ff-only BRANCH` in the main checkout. A failure (for
-     example an untracked file in the way) pauses the slice with the git
-     message; `t` retries.
+  2. `git -C P merge --ff-only BRANCH` in the main checkout. A failure (a
+     file written in the main checkout after the second check, say) pauses
+     the slice with the git message folded onto one line (*proposed*,
+     S254); `t` retries.
   3. `slicer land ID --branch BRANCH --note "Landed BRANCH"` in the main
      checkout (it needs the branch merged, so it follows the fast-forward). In
      `handoff` mode it marks the item done there, and ork commits the `.slicer`

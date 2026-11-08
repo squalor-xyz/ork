@@ -46,6 +46,8 @@ const fakeGitScript = `#!/bin/sh
 d=$(dirname "$0")
 echo "$@" >> "$d/git.log"
 if [ "$3" = merge ] && [ "$4" = -m ] && [ -f "$d/merge-fails" ]; then echo "merge broke" >&2; exit 1; fi
+if [ "$3" = merge ] && [ "$4" = --ff-only ] && [ -f "$d/ff-fails" ]; then rm "$d/ff-fails"; printf 'fatal: one\nfatal: two\n' >&2; exit 1; fi
+if [ "$3" = status ] && [ -f "$d/status-fails" ] && [ "$2" = "$(cat "$d/status-fails")" ]; then echo "status broke" >&2; exit 1; fi
 for op in add commit; do
 	if [ "$3" = "$op" ] && [ -f "$d/$op-fails" ]; then rm "$d/$op-fails"; echo "$op broke" >&2; exit 1; fi
 done
@@ -792,12 +794,16 @@ func TestLandRunsSlicerLandAndCommitsTheTrackingOnTheBase(t *testing.T) {
 func TestLandPausesWhenTheFastForwardFails(t *testing.T) {
 	env := newLandEnv(t)
 	// An untracked file in the main checkout that the slice also adds: git
-	// refuses to overwrite it.
+	// would refuse to overwrite it, so the landing stops before the merge
+	// (S254) and names it.
 	writeFile(t, filepath.Join(env.P, "feature.txt"), "mine\n")
 	env.approve()
 	rec := requireState(t, env.e, runrec.StatePaused)
-	if rec.Pending == nil || rec.Pending.State != runrec.StateLand || !strings.Contains(rec.Reason, "git merge --ff-only") {
-		t.Errorf("pending %+v, reason %q", rec.Pending, rec.Reason)
+	if want := dirtyStop(env.P, "feature.txt"); rec.Pending == nil || rec.Pending.State != runrec.StateLand || rec.Reason != want {
+		t.Errorf("pending %+v, reason %q, want %q", rec.Pending, rec.Reason, want)
+	}
+	if i := indexOf(env.gitCalls(), "P: merge --ff-only"); i >= 0 {
+		t.Errorf("the fast-forward ran: %q", env.gitCalls())
 	}
 	if _, err := os.Stat(env.W); err != nil {
 		t.Errorf("worktree removed: %v", err)

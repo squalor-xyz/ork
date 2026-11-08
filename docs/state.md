@@ -24,7 +24,9 @@ The files ork owns. Everything else is read live from slicer, adj and git
 ork honors `XDG_CONFIG_HOME` and `XDG_STATE_HOME`. Nothing is written
 inside a project except what git and slicer write for a slice: the
 worktree, the branch, the commit, and the ledger and notes through slicer
-commands.
+commands. *Proposed (S254):* the one other git write is the landing's commit
+of the project's uncommitted tracking files on the base branch (see
+`docs/boundaries.md`).
 
 ## projects.json
 
