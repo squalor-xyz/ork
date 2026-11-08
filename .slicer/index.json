@@ -14020,7 +14020,7 @@
       "id": "S266",
       "title": "Spec check: a report-shape failure or a denied read command retries the same session once instead of failing",
       "short_title": "Spec check: a report-shape failure or a denied read command retries the same session once instead of failing",
-      "status": "started",
+      "status": "done",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -14039,10 +14039,7 @@
           "retracted_reason": ""
         }
       ],
-      "claim": {
-        "owner": "Jon Robbins",
-        "at": "2026-11-07T23:56:19Z"
-      },
+      "claim": null,
       "fields": {
         "size": "S",
         "flags": [],
