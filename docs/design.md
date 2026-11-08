@@ -1194,9 +1194,15 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
     usage-limit text can appear with quota left). The owner ends it earlier
     with `ork vendor back NAME`. The owner can also mark a vendor out before a
     round fails, with `ork vendor out NAME`: that mark has no expiry and
-    holds until `back` or a daemon restart (owner decision 2026-10-29). A
-    second exit mark renews the exit text and the expiry and keeps the first
-    time; an exit mark does not change an owner mark.
+    holds until `back` (owner decision 2026-10-29), or ends at the time given
+    with `--until TIME` (S299, *proposed*). Owner marks are written to
+    `vendors-out.json` in the state directory (docs/state.md, Vendor memory)
+    and loaded when the daemon starts, so a restart or an idle exit keeps
+    them; exit marks are memory only. ork reads no reset time from a vendor's
+    message: a real captured message with one must exist as a test fixture
+    first. A second exit mark renews the exit text and the expiry and keeps the
+    first time; an exit mark does not change an owner mark, with or without an
+    end.
   - *Effect.* Before a round starts, rows of a vendor that is out are skipped
     to the first later row on a vendor that is not out. With no such row the
     round tries its row anyway, as before. This skips rows before a round;
@@ -1212,13 +1218,19 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
     and out of credits apart.
   - *Plan.* `run.plan` carries a note for each vendor that is out and that a
     chain of the plan uses, as `codex is out until HH:MM (since HH:MM; reason)`
-    (`codex is out until back (...)` for an owner mark) and `ork vendor back
-    NAME`. `ork status` and `ork vendor` say it the same way. A plan the owner
-    confirmed before the note changed is refused as changed.
-  - *Wire.* `vendors.list` and `vendors.set` (params `{vendor, out, reason}`;
-    the vendor must be one ork can run, `claude`, `codex` or `grok`, else
-    `bad_params`). `status` and `snapshot` carry `vendors_out`, and an engine
-    run row carries `vendor_wait`.
+    (`codex is out until back (...)` for an owner mark with no end). The end
+    takes the day before the time, as `4 Nov 07:12`, when it is not the day the
+    mark began, and the year when that differs; a start that is not today
+    takes the day too. The note also gives `ork vendor back NAME`. `ork status`
+    and `ork vendor` say it the same way. A plan the owner confirmed before the
+    note changed is refused as changed.
+  - *Wire.* `vendors.list` and `vendors.set` (params
+    `{vendor, out, reason, until}`). `until` is an RFC 3339 time that only an
+    `out` call may set and that must be after now. The vendor must be one ork
+    can run, `claude`, `codex` or `grok`, else `bad_params`. A mark or a back
+    that cannot be written to the state directory is refused with an
+    `internal` error and changes nothing. `status` and `snapshot` carry
+    `vendors_out`, and an engine run row carries `vendor_wait`.
 - **Detection** (`vendor.ratelimit-detection`): the classifier matches only
   documented signals. Every non-ok round and every round with permission
   denials saves its raw stdout, stderr and JSON at mode 0600 under

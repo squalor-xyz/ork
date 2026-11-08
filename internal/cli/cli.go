@@ -140,9 +140,13 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               change them; 0 clears one; allowed while runs
                               are unfinished
   ork vendor [list]           list the vendors the daemon remembers as out;
-                              marks happen on their own; a restart clears them
-  ork vendor out NAME [--reason TEXT]
-                              mark claude, codex or grok out until back
+                              marks happen on their own and end after 60
+                              minutes or at a restart; marks set with
+                              ork vendor out stay across a restart
+  ork vendor out NAME [--reason TEXT] [--until TIME]
+                              mark claude, codex or grok out until back, or
+                              until TIME (HH:MM, YYYY-MM-DD HH:MM or a full
+                              date and zone); a restart keeps it
   ork vendor back NAME        say the vendor is back; ends the mark early
   ork roles print [ROLE]      print the embedded role prompts
   ork roles matrix P          show the role matrix as slicer prints it, then

@@ -174,6 +174,13 @@ func (d *Daemon) initRunManager() {
 		if d.cfg.Clock != nil {
 			deps.Vendors.WithClock(d.cfg.Clock.Now)
 		}
+		// The owner's marks outlive the daemon (S299, *proposed*). A store that cannot be
+		// read leaves the daemon with no marks, and says so.
+		if d.cfg.Paths.Dir != "" {
+			if _, err := deps.Vendors.WithStore(filepath.Join(d.cfg.Paths.Dir, vendorMarksFile), supportsVendor); err != nil {
+				fmt.Fprintf(os.Stderr, "vendor marks: %v\n", err)
+			}
+		}
 	}
 	if deps.Wake == nil {
 		// One detector for every run of the daemon (S235); recoverRuns starts it.
