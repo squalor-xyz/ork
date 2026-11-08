@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-309 items · — 72 · done 203 · retired 33 · started 1
+309 items · — 72 · done 204 · retired 33
 
 v1.2
 
@@ -110,7 +110,7 @@ v1.2
 | 53 | [S190](slices/S190.md) | TUI notes sweep T2 | M | 2 |  | discovered from S168 | done |
 | 54 | S191 | S177 later notes: stop row highlight, commit-stopped cleanup, Ready row test | S | - |  | Folded into S229 (daemon wording leftovers) and the S190 TUI sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row. · discovered from S177 | retired |
 | 55 | S193 | S184 later notes: guide anchors, lost answer error, retry wording | S | - |  | Folded into the S190 sweep and the docs re-anchor slice (owner, 2026-10-31). · discovered from S184 | retired |
-| 56 | [S194](slices/S194.md) | Correctness sweep | M | 2 |  | discovered from S182 | started |
+| 56 | [S194](slices/S194.md) | Correctness sweep | M | 2 |  | discovered from S182 | done |
 | 57 | S195 | S176 later notes: report open guards, viewer heading and list indent | S | - |  | Folded into the S194 correctness sweep (item 1) and the v1.2 polish row (owner, 2026-10-31). · discovered from S176 | retired |
 | 58 | S196 | S169 later notes: wait heartbeat, vendor push, multi-waiter test, spec-check slots | S | - |  | Folded into the S194 correctness sweep (item 1) and the v1.2 polish row (owner, 2026-10-31). · discovered from S169 | retired |
 | 59 | S197 | S171 later notes: note refresh after write, guide entries, hint tier side effects | S | - |  | Folded into the S194 correctness sweep (item 1) and the v1.2 polish row (owner, 2026-10-31). · discovered from S171 | retired |

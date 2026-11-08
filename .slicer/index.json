@@ -10921,7 +10921,7 @@
       "id": "S194",
       "title": "Correctness sweep: watchdog, report open, vendor wait heartbeat, note retry, dash answers",
       "short_title": "Correctness sweep",
-      "status": "started",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -10982,10 +10982,7 @@
           "retracted_reason": ""
         }
       ],
-      "claim": {
-        "owner": "Jon Robbins",
-        "at": "2026-11-08T15:01:03Z"
-      },
+      "claim": null,
       "fields": {
         "size": "M",
         "flags": [],
