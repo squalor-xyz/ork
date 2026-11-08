@@ -3692,3 +3692,4 @@
 {"when": "2026-11-08T18:01:50Z", "item": "S243", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S243):", "by": "Jon Robbins"}
 {"when": "2026-11-08T18:01:57Z", "item": "S243", "action": "note", "from": "", "to": "", "note": "Verified Claude-only Done when shell rules, including finish", "by": "Jon Robbins"}
 {"when": "2026-11-08T18:02:01Z", "item": "S243", "action": "status", "from": "started", "to": "done", "note": "Verified Claude implementer shell rules in Done when and bounded status denial counts with rune-safe truncation; slice tests passed, JSON and TUI unchanged. Gate PASS and owner approval received; human checks deferred at approval.", "by": "Jon Robbins"}
+{"when": "2026-11-08T17:39:40Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Implement"}
