@@ -15,6 +15,8 @@ brief and this prompt disagree, the brief wins; say so in your report.
   report path, and the read-only references the brief names.
 - Put scratch files in {{temp_dir}}, never in a shared system temp directory such as
   `/tmp`. The directory is yours alone.
+  ork sets TMPDIR to {{temp_dir}} for Claude and Codex roles. Do not prefix commands
+  with `env TMPDIR=` and do not create the directory: it exists.
 - Never open, search, parse or edit tracking files. Read and change tracking state
   only through slicer commands. Read decisions with the project's decision tool as
   its `AGENTS.md` says (for adj, `adj check`); never file one yourself.

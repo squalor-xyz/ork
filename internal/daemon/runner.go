@@ -5,8 +5,10 @@ package daemon
 import (
 	"context"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"unicode/utf8"
@@ -38,7 +40,7 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	total := func(u claude.Usage) int {
 		return int(u.InputTokens + u.OutputTokens + u.CacheReadTokens + u.CacheCreationTokens)
 	}
-	round, err := call(ctx, claude.Spec{Dir: req.Worktree, Env: r.env, Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
+	round, err := call(ctx, claude.Spec{Dir: req.Worktree, Env: claudeEnv(r.env, req.TempDir), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
 		ReadOnly: req.ReadOnly, Allowlist: req.Allowlist, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev claude.Event) {
 			switch ev.Kind {
 			case claude.EventTextDelta:
@@ -178,21 +180,41 @@ func (r grokRunner) Run(ctx context.Context, req engine.Request) (engine.Result,
 	return engine.Result{Exit: class, Reason: round.Reason, Session: round.Session, Report: round.Report, Tokens: round.Tokens}, err
 }
 
-// codexEnv keeps the role's Go build cache inside its writable temp directory.
-func codexEnv(base []string, tempDir string) []string {
+// roleEnv returns base (the process environment when nil) with each named
+// variable set to the given value, replacing every inherited entry of that
+// name. Without a temp directory it returns base unchanged. base is not
+// modified.
+func roleEnv(base []string, tempDir string, set map[string]string) []string {
 	if tempDir == "" {
 		return base
 	}
 	if base == nil {
 		base = os.Environ()
 	}
-	env := make([]string, 0, len(base)+1)
+	env := make([]string, 0, len(base)+len(set))
 	for _, entry := range base {
-		if !strings.HasPrefix(entry, "GOCACHE=") {
+		name, _, _ := strings.Cut(entry, "=")
+		if _, replaced := set[name]; !replaced {
 			env = append(env, entry)
 		}
 	}
-	return append(env, "GOCACHE="+filepath.Join(tempDir, "gocache"))
+	for _, name := range slices.Sorted(maps.Keys(set)) {
+		env = append(env, name+"="+set[name])
+	}
+	return env
+}
+
+// claudeEnv points the role's TMPDIR at its own temp directory (S271,
+// *proposed*), so it needs no "env TMPDIR=DIR" prefix or mkdir. The role's
+// directory wins over a vendor_env TMPDIR.
+func claudeEnv(base []string, tempDir string) []string {
+	return roleEnv(base, tempDir, map[string]string{"TMPDIR": tempDir})
+}
+
+// codexEnv keeps the role's Go build cache inside its writable temp directory
+// (S87) and points TMPDIR there too (S271, *proposed*).
+func codexEnv(base []string, tempDir string) []string {
+	return roleEnv(base, tempDir, map[string]string{"GOCACHE": filepath.Join(tempDir, "gocache"), "TMPDIR": tempDir})
 }
 
 // liveRedactor withholds a possible secret prefix across assistant text events.
