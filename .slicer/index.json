@@ -13366,7 +13366,7 @@
       "id": "S254",
       "title": "Landing: main with uncommitted tracking edits aborts the ff-merge",
       "short_title": "Landing: main with uncommitted tracking edits aborts the ff-merge",
-      "status": "started",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -13441,10 +13441,7 @@
           "retracted_reason": ""
         }
       ],
-      "claim": {
-        "owner": "Jon Robbins",
-        "at": "2026-11-08T00:34:51Z"
-      },
+      "claim": null,
       "fields": {
         "size": "S",
         "flags": [],
