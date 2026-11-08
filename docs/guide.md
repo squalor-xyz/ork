@@ -343,8 +343,11 @@ and a restart clears them. ork does not read a reset time out of a vendor's
 message, so give the end yourself.
 
 On the command line, `ork status [--project P]` prints the same counts and
-rows, and a line such as `codex is out until 17:02 (since 16:02; reason)` for
-each vendor that is out. Under the row of a run whose role or checks step is
+rows. *Proposed (S308):* it also lists stale manual relays, marked `stale`,
+and includes them in the active-relays count. Recently ended manual relays
+are not listed. It prints a line such as
+`codex is out until 17:02 (since 16:02; reason)` for each vendor that is out.
+Under the row of a run whose role or checks step is
 running, it prints `working: implementer round 2, 14m (last output 2m ago,
 slept 1h03m)` (S235, *proposed*): how long the step has run, how long ago the
 role last sent output, and how long the machine slept meanwhile. Add `--json` to any command for scripts (`internal/cli/cli.go:56`,

@@ -20,6 +20,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
@@ -331,6 +332,9 @@ func (d *Daemon) status(ctx context.Context, p StatusParams) (*StatusResult, err
 		go func() {
 			defer wg.Done()
 			snaps[i] = d.snapshotOf(ctx, proj)
+			if reader, ok := d.cfg.Source.(source.BoardReader); ok {
+				snaps[i].BoardRuns = reader.BoardRuns(ctx, proj)
+			}
 		}()
 	}
 	wg.Wait()
@@ -418,7 +422,7 @@ func projectStatus(p registry.Project, s source.Snapshot, now time.Time) Project
 		ps.Parts["open"] = stateOf(s.Open, now)
 		ps.Parts["decided"] = stateOf(s.Decided, now)
 	}
-	for _, r := range s.Runs.Value {
+	appendRelay := func(r slicercli.RelayRun) {
 		relay := Relay{
 			ID: r.ID, Items: nonNil(r.Items), State: r.State, Worktree: r.Worktree,
 			BeganAt: r.BeganAt, UpdatedAt: r.UpdatedAt, Steps: r.Counts.Steps, Running: r.Counts.Running,
@@ -434,6 +438,14 @@ func projectStatus(p registry.Project, s source.Snapshot, now time.Time) Project
 			}
 		}
 		ps.ActiveRelays = append(ps.ActiveRelays, relay)
+	}
+	for _, r := range s.Runs.Value {
+		appendRelay(r)
+	}
+	for _, r := range s.BoardRuns.Value {
+		if r.State == "stale" {
+			appendRelay(r)
+		}
 	}
 	for _, part := range []struct {
 		name string

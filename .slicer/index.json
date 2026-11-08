@@ -15945,10 +15945,25 @@
       "id": "S308",
       "title": "ork status lists stale manual relays",
       "short_title": "ork status lists stale manual relays",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "c9dd28d6-e6c8-4801-b56b-3c66592f979b",
+          "kind": "",
+          "text": "**2026-11-08** — Verified status reads board data and lists stale manual relays alongside active relays, excludes ended relays, preserves active step details, and counts stale relays in the CLI total. Regression tests and matching guide, design and changelog updates passed review and the final gate.",
+          "created_at": "2026-11-08T01:54:25Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -15966,7 +15981,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],

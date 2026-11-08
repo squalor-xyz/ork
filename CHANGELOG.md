@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- S308 (*proposed*): `ork status` lists stale manual relays from the same
+  board data as the TUI, marked `stale`, and includes them in the active-relays
+  count. Recently ended relays stay out of status. Docs: `docs/guide.md`.
 - S254 (*proposed*): the landing looks at the main checkout before it merges
   the base branch in, and again right before the fast-forward. If it holds
   uncommitted changes to files the slice branch also changes, and any of them

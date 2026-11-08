@@ -3609,3 +3609,15 @@
 {"when": "2026-11-08T01:09:20Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-08T01:09:20Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-08T01:09:20Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-08T01:29:23Z", "item": "S308", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-08T01:30:01Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T01:30:01Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T01:33:07Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T01:33:07Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T01:33:37Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T01:37:13Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T01:37:13Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T01:51:06Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T01:51:07Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T01:54:25Z", "item": "S308", "action": "note", "from": "", "to": "", "note": "Verified status reads board data and lists stale manual rela", "by": "Jon Robbins"}
+{"when": "2026-11-08T01:54:25Z", "item": "S308", "action": "status", "from": "started", "to": "done", "note": "Verified status reads board data and lists stale manual relays alongside active relays, excludes ended relays, preserves active step details, and counts stale relays in the CLI total. Regression tests and matching guide, design and changelog updates passed review and the final gate.", "by": "Jon Robbins"}

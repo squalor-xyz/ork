@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">308 items · — 75 · done 200 · retired 33</p>
+<p class="summary">308 items · — 74 · done 201 · retired 33</p>
 <h2>v1.2</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S61</td><td>Split parts: lead and parts in one worktree</td><td>M</td><td>2</td><td></td><td></td><td class="status">—</td></tr>
@@ -79,7 +79,7 @@
 <tr class="open"><td>27</td><td>S253</td><td>S213 later notes: guard that the changelog section and tag message reach release-notes.md; gate stale after fixes</td><td>S</td><td>1</td><td></td><td>S213 gate: no test requires the cat changelog-section.md line that feeds release-notes.md (.github/workflows/release.yml:120), so dropping it would pass every guard. Wave 6 friction: a resumed gate session re-reports a fixed state as open; the gate ran in plan mode and could not write its report; the Sonnet implementer sandbox denies rm and a script run in its own worktree. · discovered from S213</td><td class="status">—</td></tr>
 <tr class="open"><td>28</td><td>S286</td><td>Read release target and wave from slicer: wave start, status and the Waves screen</td><td>M</td><td>2</td><td></td><td>Blocked on slicer s449 (release target and wave). Owner 2026-11-04 wants mini slices to target a version release and each release split into waves to execute. ork should read release_target and wave from slicer (never keep its own copy), fall back to pass when only pass is present, and use them: wave start suggests the next unfinished wave of a release target (wave.selection), status and the Waves screen show release target and wave per item, and the glossary names ork&#x27;s launched wave against slicer&#x27;s planned wave and parallel set. Check slicer first (slicer --root ../slicer find) that slicer does not already provide the suggestion. Spec step must run adj check on wave.selection and ask the owner if the key is decided differently. Acceptance: (1) with only pass in slicer data, behavior is unchanged; (2) with release_target and wave, wave start with no items suggests that wave&#x27;s unfinished items within the cap; (3) status and the Waves screen show release target and wave, with goldens updated and reviewed; (4) docs/glossary.md, docs/design.md and docs/dashboard.md use the new terms; (5) go test ./..., go vet ./... and gofmt -l . are clean.</td><td class="status">—</td></tr>
 <tr class="open"><td>29</td><td>S307</td><td>S258 and S274 later notes</td><td>M</td><td>2</td><td>daemon, tui, cli</td><td>S258 and S274 reviews and gates, 2026-11-07 · discovered from S274</td><td class="status">—</td></tr>
-<tr class="open"><td>30</td><td>S308</td><td>ork status lists stale manual relays</td><td>S</td><td>-</td><td></td><td></td><td class="status">—</td></tr>
+<tr class="done"><td>30</td><td>S308</td><td>ork status lists stale manual relays</td><td>S</td><td>-</td><td></td><td></td><td class="status">done</td></tr>
 </tbody></table>
 <h2>v1.1</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>

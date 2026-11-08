@@ -2029,7 +2029,9 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `shape`, `lost`, `interrupted`, `budget`, `rounds` or `error`); other states omit it
   (`ui.pending-kind`). The optional `question` object carries `title`,
   `options:[{label,summary}]`, one-based `recommend` and `reason` for a paused
-  structured question. Older snapshots without it still load. `active_relays` are slicer's active relay runs.
+  structured question. Older snapshots without it still load. *Proposed (S308):*
+  `active_relays` holds slicer's active relay runs plus stale manual relays from
+  the board read. Both count in the text's `active relays M` line.
   The *proposed* optional `error` is a daemon-memory job or recovery error.
   The *proposed* optional `unavailable` marks a row without an engine.
   Removed-project groups are display-only and have `unavailable: true`.

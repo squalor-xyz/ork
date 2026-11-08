@@ -4,6 +4,7 @@ package daemon
 
 import (
 	"context"
+	"path/filepath"
 	"testing"
 
 	"github.com/squalor-xyz/ork/internal/registry"
@@ -18,28 +19,30 @@ type countedBoardSource struct {
 
 func (s *countedBoardSource) BoardRuns(ctx context.Context, p registry.Project) source.Result[[]slicercli.RelayRun] {
 	s.boardReads++
-	return source.Result[[]slicercli.RelayRun]{Value: []slicercli.RelayRun{{ID: "recent", State: "ended"}}}
+	return source.Result[[]slicercli.RelayRun]{Value: []slicercli.RelayRun{{ID: "stale", State: "stale"}, {ID: "recent", State: "ended"}}}
 }
 
-func TestStatusDoesNotReadBoardButSnapshotDoes(t *testing.T) {
-	e := newEnv(t)
+func TestStatusAndSnapshotReadBoard(t *testing.T) {
+	dir := t.TempDir()
+	e := &env{dir: dir, paths: PathsIn(dir), regPath: filepath.Join(dir, "projects.json"), clock: &fakeClock{}, src: &stubSource{snaps: map[string]source.Snapshot{}}}
 	e.writeRegistry(t, 0, registry.Project{Name: "p", Path: "/p"})
 	reader := &countedBoardSource{stubSource: e.src}
 	cfg := e.config()
 	cfg.Source = reader
 	d := New(cfg)
 	defer d.cache.Close()
-	if _, err := d.status(context.Background(), StatusParams{Project: "p"}); err != nil {
+	status, err := d.status(context.Background(), StatusParams{Project: "p"})
+	if err != nil {
 		t.Fatal(err)
 	}
-	if reader.boardReads != 0 {
-		t.Fatalf("status made %d board reads", reader.boardReads)
+	if got := status.Projects[0].ActiveRelays; len(got) != 1 || got[0].ID != "stale" || got[0].State != "stale" {
+		t.Fatalf("status stale relays: %+v", got)
 	}
 	s, err := d.snapshot(context.Background(), SnapshotParams{Project: "p"})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if reader.boardReads != 1 || len(s.BoardRuns.Value) != 1 || s.BoardRuns.Value[0].ID != "recent" {
+	if reader.boardReads != 2 || len(s.BoardRuns.Value) != 2 || s.BoardRuns.Value[1].ID != "recent" {
 		t.Fatalf("snapshot board reads=%d, payload=%+v", reader.boardReads, s.BoardRuns)
 	}
 }

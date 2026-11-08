@@ -1454,6 +1454,26 @@ func TestWaveReadsUnknownProject(t *testing.T) {
 	}
 }
 
+func TestProjectStatusStaleRelays(t *testing.T) {
+	stale := slicercli.RelayRun{ID: "stale-ledger", Items: []string{"S308"}, State: "stale", Worktree: "/projects/ork/.worktrees/S308", BeganAt: "2026-11-08T00:00:00Z", UpdatedAt: "2026-11-08T00:10:00Z", Counts: slicercli.Counts{Steps: 3}}
+	active := slicercli.RelayRun{ID: "active-ledger", Items: []string{"S30"}, State: "active", Counts: slicercli.Counts{Steps: 1, Running: 1}, Steps: []slicercli.Step{{Role: "implementer", Phase: "start", Task: "Implement S30"}}}
+	wantStale := Relay{ID: stale.ID, Items: stale.Items, State: "stale", Worktree: stale.Worktree, BeganAt: stale.BeganAt, UpdatedAt: stale.UpdatedAt, Steps: 3}
+	for _, mixed := range []bool{false, true} {
+		t.Run(fmt.Sprintf("mixed=%t", mixed), func(t *testing.T) {
+			snap := source.Snapshot{BoardRuns: source.Result[[]slicercli.RelayRun]{Value: []slicercli.RelayRun{stale, {ID: "ended-ledger", State: "ended"}}}}
+			want := []Relay{wantStale}
+			if mixed {
+				snap.Runs.Value = []slicercli.RelayRun{active}
+				want = append([]Relay{{ID: active.ID, Items: active.Items, State: "active", Steps: 1, Running: 1, RunningStep: &RelayStep{Role: "implementer", Phase: "start", Task: "Implement S30"}}}, want...)
+			}
+			got := projectStatus(registry.Project{Name: "ork"}, snap, time.Now()).ActiveRelays
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("active relays: got %+v, want %+v", got, want)
+			}
+		})
+	}
+}
+
 func TestProjectStatusRelaySteps(t *testing.T) {
 	steps := []slicercli.Step{
 		{Role: "orchestrator", Vendor: "claude", Model: "sonnet", Phase: "start", Task: "Run relay"},

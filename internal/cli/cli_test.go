@@ -805,9 +805,8 @@ func TestDoctorChecksEachProjectCheckCommand(t *testing.T) {
 }
 
 func TestDoctorCheckCommandSyntaxError(t *testing.T) {
-	app, _ := doctorProjects(t, setUpProject(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "go test ("}))
-	d := projectReport(t, app)
-	if got := strings.Join(d.Projects[0].Findings, " "); !strings.Contains(got, "syntax") {
+	d := checkProject(context.Background(), registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "go test ("})
+	if got := strings.Join(d.Findings, " "); !strings.Contains(strings.ToLower(got), "syntax") {
 		t.Fatalf("want syntax finding: %q", got)
 	}
 }
@@ -1257,6 +1256,39 @@ func TestDoctorToolThatFailsItsVersionCall(t *testing.T) {
 	}
 	if code != 0 { // optional tool: reported, not fatal
 		t.Fatalf("exit %d", code)
+	}
+}
+
+// statusBoardSource adds the board read used by status to the ordinary stub.
+type statusBoardSource struct{ stubSource }
+
+func (s statusBoardSource) BoardRuns(_ context.Context, p registry.Project) source.Result[[]slicercli.RelayRun] {
+	return s.stubSource[p.Name].BoardRuns
+}
+
+func TestStatusStaleRelays(t *testing.T) {
+	for _, mixed := range []bool{false, true} {
+		name := "stale"
+		if mixed {
+			name = "mixed"
+		}
+		t.Run(name, func(t *testing.T) {
+			snap := source.Snapshot{BoardRuns: source.Result[[]slicercli.RelayRun]{Value: []slicercli.RelayRun{
+				{ID: "stale-ledger", Items: []string{"S308"}, State: "stale", Counts: slicercli.Counts{Steps: 3}},
+				{ID: "ended-ledger", State: "ended"},
+			}}}
+			want := "ork: needs you 0, active relays 1\n"
+			if mixed {
+				snap.Runs.Value = []slicercli.RelayRun{{ID: "active-ledger", Items: []string{"S30"}, State: "active", Counts: slicercli.Counts{Steps: 1, Running: 1}, Steps: []slicercli.Step{{Role: "implementer", Vendor: "codex", Model: "gpt-6.1", Phase: "start", Task: "Implement S30"}}}}
+				want = "ork: needs you 0, active relays 2\n  active-ledger S30 active (1 steps, 1 running)\n    running: implementer codex/gpt-6.1: Implement S30\n"
+			}
+			want += "  stale-ledger S308 stale (3 steps, 0 running)\n"
+			w := newWorld(t, statusBoardSource{stubSource{"ork": snap}}, registry.Project{Name: "ork", Path: "/projects/ork"})
+			code, stdout, stderr := run(t, w.app, "status")
+			if code != 0 || stdout != want {
+				t.Fatalf("stale status exit %d: %s\ngot:\n%swant:\n%s", code, stderr, stdout, want)
+			}
+		})
 	}
 }
 
