@@ -17,8 +17,8 @@ import (
 // git refuses a fast-forward only when an uncommitted path in the main
 // checkout is one the fast-forward writes, so that is the set the landing
 // looks at: the paths that are dirty there and that the slice branch changes.
-// dirtyOverlap computes it and is the one helper for every caller (S217 reuses
-// it); the rest of this file decides what the landing does with it.
+// dirtyOverlap computes it for committed branches. S217's approval-time check
+// reuses the status parser and tracking rules, including uncommitted slice work.
 
 // dirtyOverlap returns the sorted, unique paths that are dirty in the checkout
 // at dir (tracked changes, staged changes, untracked files, both sides of a

@@ -12,6 +12,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
@@ -116,6 +117,198 @@ func cardHarness(t *testing.T, card *runrec.ApprovalCard, fs ...source.EngineFin
 }
 
 func (h *harness) live() *cardLive { return h.m.cfg.Live.(*cardLive) }
+
+func TestCardLandCheckIgnoresOldReplies(t *testing.T) {
+	h := landWarningHarness(t, approvalCard())
+	old := exec(h.m.fetchLandCheck())
+	h.live().landCheck.Blockers = []string{"latest.go"}
+	h.deliver(noticeMsg{project: "ork"})
+	for _, msg := range old {
+		h.deliver(msg)
+	}
+	if !strings.Contains(h.view(), "latest.go") {
+		t.Fatal("old refresh replaced latest warning")
+	}
+	h.deliver(press("esc"))
+	_, command := h.m.Update(press("enter"))
+	closed := exec(command)
+	h.deliver(press("esc"))
+	h.live().landCheck.Blockers = []string{"reopened.go"}
+	h.deliver(press("enter"))
+	for _, msg := range closed {
+		h.deliver(msg)
+	}
+	if !strings.Contains(h.view(), "reopened.go") {
+		t.Fatal("closed pane reply replaced reopened pane warning")
+	}
+}
+
+func landWarningHarness(t *testing.T, card *runrec.ApprovalCard) *harness {
+	t.Helper()
+	h := cardHarness(t, card)
+	h.deliver(press("esc"))
+	h.live().landCheck = engine.LandCheck{Base: "main", Blockers: []string{"a.go", "b.go"}}
+	h.live().landCalls = nil
+	h.deliver(press("enter"))
+	return h
+}
+
+func TestCardShowsLandWarningWithBlockers(t *testing.T) {
+	h := landWarningHarness(t, approvalCard())
+	v := h.view()
+	warning, approve := strings.Index(v, "Landing will stop:"), strings.Index(v, "a approve")
+	// Styled hint text is stripped by view.
+	if warning < 0 || !strings.Contains(v, "a.go, b.go") || approve < warning {
+		t.Fatalf("missing warning before approve: %s", v)
+	}
+	h.deliver(press("a"))
+	if h.live().approves != 1 {
+		t.Fatal("landing warning blocked approval")
+	}
+}
+
+func TestCardLandWarningTruncatesLongLists(t *testing.T) {
+	h := landWarningHarness(t, approvalCard())
+	h.live().landCheck.Blockers = []string{"a.go", "b.go", "c.go", "fourth-file.go", "e.go"}
+	h.deliver(noticeMsg{project: "ork"})
+	v := strings.Join(strings.Fields(strings.ReplaceAll(h.view(), "\u2502", " ")), " ")
+	if !strings.Contains(v, "a.go, b.go, c.go (+2 more)") || strings.Contains(v, "fourth-file.go") {
+		t.Fatalf("warning list not truncated: %s", v)
+	}
+}
+
+func TestCardWithoutBlockersLooksAsBefore(t *testing.T) {
+	h := cardHarness(t, approvalCard())
+	before := h.view()
+	h.live().landCheck.Blockers = []string{"a.go"}
+	h.deliver(noticeMsg{project: "ork"})
+	if !strings.Contains(h.view(), "Landing will stop:") {
+		t.Fatal("refresh never displayed blocker")
+	}
+	h.live().landCheck.Blockers = nil
+	h.deliver(noticeMsg{project: "ork"})
+	if got := h.view(); got != before {
+		t.Fatalf("clean card changed:\n%s", got)
+	}
+}
+
+func TestCardLandWarningOutlastsTheLandNoteAt80x24(t *testing.T) {
+	checks := openChecksThree()
+	// Extra checks leave room for the warning only when the land note drops.
+	checks = append(checks, runrec.HumanCheck{Text: "Check four."}, runrec.HumanCheck{Text: "Check five."}, runrec.HumanCheck{Text: "Check six."})
+	h := landWarningHarness(t, approvalCard(checks...))
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	v := plainView(h.m)
+	if !strings.Contains(v, "Landing will stop:") || strings.Contains(v, "Approve lands it") {
+		t.Fatalf("land note should drop before warning: %s", v)
+	}
+}
+
+func TestCardLandWarningStaysOrDropsWhole(t *testing.T) {
+	for height := 1; height <= 30; height++ {
+		t.Run(fmt.Sprint(height), func(t *testing.T) {
+			checks := openChecksThree()
+			for len(checks) < 9 {
+				checks = append(checks, runrec.HumanCheck{Text: "Another human check."})
+			}
+			h := landWarningHarness(t, approvalCard(checks...))
+			// The 60-column pane is the content area of an 80-column terminal.
+			lines := h.m.paneLines(60, height, "")
+			view := strings.Join(strings.Fields(sgr.ReplaceAllString(strings.Join(lines, "\n"), "")), " ")
+			const warning = "Landing will stop: main has uncommitted changes to a.go, b.go. Commit, stash or remove them first."
+			if height == 20 && !strings.Contains(view, warning) {
+				t.Fatalf("roomy pane should show the whole warning: %s", view)
+			}
+			if strings.Contains(view, "Landing will stop:") && !strings.Contains(view, warning) {
+				t.Fatalf("height %d shows a partial landing warning: %s", height, view)
+			}
+		})
+	}
+}
+
+func TestCardChecksLandingWhenThePaneOpensAndOnEachRefresh(t *testing.T) {
+	h := landWarningHarness(t, approvalCard())
+	if len(h.live().landCalls) != 1 || h.live().landCalls[0] != "engine" || !strings.Contains(h.view(), "Landing will stop:") {
+		t.Fatal("pane open did not fetch the run's landing warning")
+	}
+	h.m.View()
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	if len(h.live().landCalls) != 1 {
+		t.Fatal("redraw fetched landing check")
+	}
+	other := proj("elsewhere", false)
+	h.m.byName[other.Name] = &projectState{reg: other, snap: source.Snapshot{Project: other}}
+	h.deliver(snapshotMsg{name: other.Name, snap: source.Snapshot{Project: other}})
+	if len(h.live().landCalls) != 1 {
+		t.Fatal("unrelated notice fetched landing check")
+	}
+	h.live().landCheck.Blockers = []string{"refreshed.go"}
+	h.deliver(noticeMsg{project: "ork"})
+	if len(h.live().landCalls) != 2 || !strings.Contains(h.view(), "refreshed.go") {
+		t.Fatal("matching notice did not refresh warning")
+	}
+	h.deliver(press("esc"))
+	h.live().landCheck.Blockers = []string{"reopened.go"}
+	h.deliver(press("enter"))
+	if len(h.live().landCalls) != 3 || !strings.Contains(h.view(), "reopened.go") {
+		t.Fatal("reopened pane kept a stale warning")
+	}
+	h.live().action("engine", runrec.StateImplement)
+	h.deliver(noticeMsg{project: "ork"})
+	if len(h.live().landCalls) != 3 || strings.Contains(h.view(), "Landing will stop:") {
+		t.Fatal("run leaving approval kept warning or fetched git")
+	}
+	// Return to approval before the new read finishes: an old card's warning
+	// must not reappear while that command is pending.
+	snap := h.src.Snapshot(context.Background(), proj("ork", false))
+	snap.EngineRuns = append([]source.EngineRun(nil), snap.EngineRuns...)
+	snap.EngineRuns[0].State = runrec.StateAwaitingApproval
+	h.m.Update(snapshotMsg{name: "ork", snap: snap})
+	if strings.Contains(h.view(), "Landing will stop:") {
+		t.Fatal("old warning returned before new approval check finished")
+	}
+}
+
+func TestCardShowsNothingWhenTheCheckErrors(t *testing.T) {
+	for _, callError := range []bool{false, true} {
+		t.Run(fmt.Sprint(callError), func(t *testing.T) {
+			h := landWarningHarness(t, approvalCard())
+			if !strings.Contains(h.view(), "Landing will stop:") {
+				t.Fatal("warning never loaded")
+			}
+			if callError {
+				h.live().landErr = errors.New("git unavailable")
+			} else {
+				h.live().landCheck.Error = "git unavailable"
+			}
+			h.deliver(noticeMsg{project: "ork"})
+			v := h.view()
+			if strings.Contains(v, "Landing will stop:") || strings.Contains(v, "git unavailable") {
+				t.Fatalf("failed check displayed a warning: %s", v)
+			}
+		})
+	}
+}
+
+func TestCardShowsLandingBranchReason(t *testing.T) {
+	h := landWarningHarness(t, approvalCard())
+	h.live().landCheck = engine.LandCheck{Reason: "the main checkout is on the slice branch S217"}
+	h.deliver(noticeMsg{project: "ork"})
+	if v := strings.Join(strings.Fields(h.view()), " "); !strings.Contains(v, "Landing will stop: the main checkout is on the slice branch S217") {
+		t.Fatalf("missing branch warning: %s", v)
+	}
+}
+
+func TestCardLandWarningGoldens(t *testing.T) {
+	for _, size := range []struct{ w, h int }{{80, 24}, {100, 30}} {
+		t.Run(fmt.Sprintf("%dx%d", size.w, size.h), func(t *testing.T) {
+			h := landWarningHarness(t, approvalCard(openChecksThree()...))
+			h.m.cfg.Theme = NewTheme(true)
+			h.m.Update(tea.WindowSizeMsg{Width: size.w, Height: size.h})
+			checkGolden(t, fmt.Sprintf("pane-approval-card-landwarn-%dx%d-mono.txt", size.w, size.h), h.m.View().Content)
+		})
+	}
+}
 
 func TestApprovalCardShowsVerdictTestsDiffstat(t *testing.T) {
 	h := cardHarness(t, approvalCard(openChecksThree()...))

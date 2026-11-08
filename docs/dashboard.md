@@ -1078,8 +1078,9 @@ the action area under the run tree, in this order:
   (*proposed*, S238); the owner resolves them there and retries. When
   the pane is short, lines drop in this order: the blank lines between the
   blocks, the later findings, then this line, then each owner finding whole
-  (the last first), then the status line (its last wrapped line first), and the
-  human checks last (S141: this line goes before an owner finding, so a check
+  (the last first), then the status line (its last wrapped line first), then
+  the landing warning (whole), and the human checks last (S141: this line
+  goes before an owner finding, so a check
   that wraps at 80x24 does not push the owner's recommendation out; with push
   on, the line that says approval pushes ranks above the owner findings, and
   the owner findings drop first). When the project's `push` setting is on, it reads
@@ -1091,6 +1092,19 @@ the action area under the run tree, in this order:
   `x stop`, `1-N tick/later`, `v renders`, `f file slice`, then scroll keys
   and `esc close pane`. Actions drop by the priorities above; the card body
   has no key footer.
+- Landing check (*proposed*, S217): for a run that will land, the pane reads
+  the current main checkout on open and each refresh. If dirty or untracked
+  files overlap the slice's changes, it shows
+  `Landing will stop: main has uncommitted changes to A, B, C (+2 more).
+  Commit, stash or remove them first.` above the hint line. It names up to
+  three files. Both names of a rename count. The project's tracking files
+  under `.slicer/` are excluded, except `config.json` and
+  `relay-roles.json`, because landing handles tracking-only overlap itself.
+  Main being detached or on the slice branch shows the landing's branch
+  reason instead. This is a warning: `a` still works under its usual human
+  check rule. The landing note drops before the warning when space is short.
+  A clean checkout or a failed read shows no line. The check detects exact
+  path overlap; it does not detect directory-versus-file clashes.
 - `Renders: N from the UI pass (round R)` (dim; `, K more not kept` when the
   card dropped files), under the diff line. When the UI pass ran and wrote
   none it reads `Renders: the UI pass (round R) wrote none`. When the renders

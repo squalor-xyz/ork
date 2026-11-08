@@ -3,6 +3,7 @@
 package tui
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -32,6 +34,8 @@ const minBodyRoom = 8
 
 // runPane keeps its run target while snapshots reorder Overview rows.
 type runPane struct {
+	landCheck                 engine.LandCheck
+	landSeq                   uint64
 	reportLayout              *reportLayout          // the shown report layout, before pane indentation
 	reportName                string                 // proposed: role report on show (S176)
 	reports                   map[string]renderFetch // run.report answers, by file name
@@ -62,7 +66,47 @@ func (m *Model) openPane(r ovRow) tea.Cmd {
 		m.pane.run, m.pane.ledger = r.ledgerID, true
 	}
 	m.actionStatus = ""
-	return nil
+	return m.fetchLandCheck()
+}
+
+type landCheckMsg struct {
+	pane   *runPane
+	seq    uint64
+	result engine.LandCheck
+	err    error
+}
+
+// fetchLandCheck runs git through Live in a command, never during Update or
+// View. A pane identity and sequence keep old replies from replacing new ones.
+func (m *Model) fetchLandCheck() tea.Cmd {
+	pane := m.pane
+	if pane == nil {
+		return nil
+	}
+	pane.landSeq++
+	run := m.paneRun()
+	if run == nil || run.Unavailable || run.State != runrec.StateAwaitingApproval || run.StopAfter == runrec.StopAfterCommit || m.cfg.Live == nil {
+		pane.landCheck = engine.LandCheck{}
+		return nil
+	}
+	seq, id, live := pane.landSeq, pane.run, m.cfg.Live
+	return func() tea.Msg {
+		result, err := live.LandCheck(context.Background(), id)
+		return landCheckMsg{pane: pane, seq: seq, result: result, err: err}
+	}
+}
+
+func (m *Model) landCheckArrived(msg landCheckMsg) {
+	if m.pane == nil || m.pane != msg.pane || m.pane.landSeq != msg.seq {
+		return
+	}
+	m.pane.landCheck = engine.LandCheck{}
+	if run := m.paneRun(); run == nil || run.State != runrec.StateAwaitingApproval || run.StopAfter == runrec.StopAfterCommit {
+		return
+	}
+	if msg.err == nil && msg.result.Error == "" {
+		m.pane.landCheck = msg.result
+	}
 }
 
 // dropNextCommand removes the daemon's closing "; next: ork ..." from a wait
@@ -581,6 +625,13 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 			landPriority = 1
 		}
 		addFooter(wrapText(m.cardLandNote(), width), landPriority)
+		if text := m.cardLandWarning(); text != "" {
+			warning := wrapText(text, width)
+			for i := range warning {
+				warning[i] = m.cfg.Theme.Warn.Render(warning[i])
+			}
+			addGroup(warning, 0, true)
+		}
 	}
 	if status != "" {
 		priority := 1

@@ -111,6 +111,7 @@ ork (TUI)  ork status --json (CLI)
   | `roles.matrix` (proposed wire, S168) | `{"project"}` | `{"markdown","rows":[{"id","role","agent","use"}],"rules":[{"id","text"}]}` from `slicer relay-roles show --json`: slicer's own text, and for each row what ork does with it (`use`: `used as claude\|codex\|grok`, `UI pass row, ...`, `Spec check row, ...` (every row that the project's `spec_check_rows` or a rule names), `skipped: no adapter for AGENT`, `not used: the gate runs the reviewer's lineup`, `not run by ork`, `not used: ork has no role ROLE`); read-only, no slicer write; slicer's error keeps its code and message; slicer runs on each call |
   | `wave.overlap` (proposed wire) | `{"project","items":[ID...]}` | `{"overlap":[{"a","b","shared"?}]}` from `slicer deps --overlap`; `shared` is absent when a pair shares no path; fewer than two items is `bad_params`; slicer runs on each call |
   | `subscribe` | `{"focus":[names]}` | none; the connection gets notices (below) and the named projects become visible |
+  | `run.landcheck` (*proposed*, S217) | `{"run"}` | `{"base"?,"blockers"?,"reason"?,"error"?}`; current advisory landing check; absent fields are empty |
   | `refresh` | `{"project"}` | none; reads every part of the project now and returns once they are read |
   | `projects.list` | none | `{"projects":[...]}`; an empty registry is valid |
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
@@ -488,6 +489,23 @@ slice.
   base branch the first one moved. The base branch is the branch the main checkout is on. Each step
   reads git first, so a retry after a pause continues where the landing
   stopped.
+  *Proposed (S217):* before approval, the run pane asks `run.landcheck` on
+  open and each refresh. This separate read opens the stored record without
+  taking a run lock or running git inside a snapshot. Other states and a
+  `stop_after` of `commit` return an empty result without git. Unknown runs
+  are `not_found`. The check uses the landing's main-status parser and
+  tracking-file exclusions below, but the slice changed set includes its
+  uncommitted work: `merge-base BASE HEAD`, then
+  `diff --name-only -z --no-renames --no-relative MERGE_BASE` plus untracked
+  worktree paths from `ls-files --others --exclude-standard -z --full-name`.
+  Blockers are sorted unique exact path overlaps, excluding this project's
+  tracking files (including for a project below the repository root).
+  Both names of a main-checkout rename count; directory-versus-file clashes
+  are not detected. `reason` carries the landing's detached-main or
+  main-on-slice-branch reason. Other git read failures set `error` and no
+  warning; the TUI hides them. Every git call uses the usual 30-second read
+  timeout. Nothing is persisted or written by the check. It is advisory:
+  approval and the landing's own checks remain unchanged.
   *Proposed (S254):* before step 1, ork looks at the main checkout. It
   takes the paths that are uncommitted there (tracked or staged changes,
   untracked files, both sides of a rename) and the paths the slice branch

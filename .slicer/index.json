@@ -11938,7 +11938,7 @@
       "id": "S217",
       "title": "Landing check: warn on the approval card when uncommitted files in the main checkout would block the landing",
       "short_title": "Warn when main is dirty before landing",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -11949,6 +11949,34 @@
           "created_at": "2026-11-01T00:58:26Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "9f68e16f-3dcd-491e-85aa-8e4e507913bd",
+          "kind": "",
+          "text": "**2026-11-08** — Human checks at approval (S217):\n- later: At 100x30 and 80x24 in a live terminal: start a small slice, dirty a file it changes in the main checkout while it awaits approval, open the pane and read the warning; clean the file and see it go away on the next refresh; leave a `.slicer/` file modified and see no warning.\n- later: [AFTER LAND] The next real landing with an unrelated dirty `.slicer/` file shows no warning and lands.",
+          "created_at": "2026-11-08T04:44:52Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "5f32718f-3f53-41a7-8851-93590585a5bb",
+          "kind": "",
+          "text": "**2026-11-08** — S217: approval panes read the current landing check on open and refresh, warn for overlapping non-tracking files and branch-state pauses without blocking approval, hide read failures, and keep wrapped warnings whole. Regression and mutation checks verified; gate PASS and owner approval recorded in this session.",
+          "created_at": "2026-11-08T04:45:07Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -11974,7 +12002,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

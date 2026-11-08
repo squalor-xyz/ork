@@ -378,6 +378,9 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		m.settleRender()
 		m.settleReport()
 		return m, cmd
+	case landCheckMsg:
+		m.landCheckArrived(msg)
+		return m, nil
 	case projectsDiscoveredMsg:
 		return m, m.applyProjectsDiscovered(msg)
 	case projectRemovedMsg:
@@ -1215,6 +1218,9 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 	m.selectJumpRun()
 	m.pruneExpanded()
 	var cmds []tea.Cmd
+	if m.pane != nil && m.pane.project == msg.name {
+		cmds = append(cmds, m.fetchLandCheck())
+	}
 	if ps.dirty {
 		ps.dirty = false
 		cmds = append(cmds, m.fetch(msg.name, false))

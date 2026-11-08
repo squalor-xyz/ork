@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Landing check (*proposed*, S217): the approval card warns about files in
+  main that overlap the slice's changes, including uncommitted worktree
+  changes, and about main being detached or on the slice branch. It refreshes
+  on pane open and project refresh, excludes tracking files landing handles,
+  and leaves approval available. Failed checks show no warning.
+  Docs: `docs/dashboard.md`, `docs/design.md`, `docs/guide.md`.
+
 - S308 (*proposed*): `ork status` lists stale manual relays from the same
   board data as the TUI, marked `stale`, and includes them in the active-relays
   count. Recently ended relays stay out of status. Docs: `docs/guide.md`.

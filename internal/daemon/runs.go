@@ -28,19 +28,20 @@ import (
 )
 
 const (
-	MethodRunDismiss = "run.dismiss"
-	MethodRunPlan    = "run.plan"
-	MethodRunStart   = "run.start"
-	MethodRunApprove = "run.approve"
-	MethodRunStop    = "run.stop"
-	MethodRunAnswer  = "run.answer"
-	MethodRunRetry   = "run.retry"
-	MethodRunFile    = "run.file"   // proposed: file a later finding as a slice (adj 163)
-	MethodRunFix     = "run.fix"    // proposed: send the owner's note to a fix round (S118)
-	MethodRunCheck   = "run.check"  // proposed: tick a human check or mark it later (S118)
-	MethodRunReport  = "run.report" // proposed: role report text (S176)
-	MethodRunRender  = "run.render" // proposed: the text of one UI pass render of a run (S121)
-	MethodRunShow    = "run.show"   // proposed: a run's pause, roles, checks and findings in full (S297)
+	MethodRunLandCheck = "run.landcheck" // read-only landing warning (S217)
+	MethodRunDismiss   = "run.dismiss"
+	MethodRunPlan      = "run.plan"
+	MethodRunStart     = "run.start"
+	MethodRunApprove   = "run.approve"
+	MethodRunStop      = "run.stop"
+	MethodRunAnswer    = "run.answer"
+	MethodRunRetry     = "run.retry"
+	MethodRunFile      = "run.file"   // proposed: file a later finding as a slice (adj 163)
+	MethodRunFix       = "run.fix"    // proposed: send the owner's note to a fix round (S118)
+	MethodRunCheck     = "run.check"  // proposed: tick a human check or mark it later (S118)
+	MethodRunReport    = "run.report" // proposed: role report text (S176)
+	MethodRunRender    = "run.render" // proposed: the text of one UI pass render of a run (S121)
+	MethodRunShow      = "run.show"   // proposed: a run's pause, roles, checks and findings in full (S297)
 
 	MethodRunEndLedger = "run.end-ledger" // proposed: end a stale ledger run (S175)
 )
@@ -1777,10 +1778,31 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 	if method == MethodRunRender {
 		return d.runRender(p)
 	}
+	if method == MethodRunLandCheck {
+		return d.runLandCheck(ctx, p)
+	}
 	if method == MethodRunEndLedger {
 		return d.endLedger(ctx, p)
 	}
 	return d.ownerRun(ctx, method, p)
+}
+
+// runLandCheck reads the stored record without holding a run-manager or
+// per-run lock. The git reads must never delay snapshots or owner actions.
+func (d *Daemon) runLandCheck(ctx context.Context, p RunAction) (engine.LandCheck, error) {
+	run, err := d.openRun(p.Run)
+	if err != nil {
+		return engine.LandCheck{}, err
+	}
+	rec := run.Snapshot()
+	if rec.State != runrec.StateAwaitingApproval || (rec.StopAfter != "" && rec.StopAfter != runrec.StopAfterLand) {
+		return engine.LandCheck{}, nil
+	}
+	project, err := d.registered(rec.Project)
+	if err != nil {
+		return engine.LandCheck{}, err
+	}
+	return engine.CheckLanding(ctx, d.runDeps(project), project, rec), nil
 }
 
 // dismissRun holds the manager lock so dismissal cannot race an owner action.

@@ -434,6 +434,11 @@ When the gate passes, the run waits in **Needs you** as "Approve". Open it.
 The approval card shows the gate result, the diff summary, owner findings and
 the slice's human checks (`docs/dashboard.md:836-945`).
 
+*Proposed (S217):* on open and refresh, the card warns about overlapping
+uncommitted files in main (excluding tracking files landing handles), or
+main being detached or on the slice branch; the warning does not disable
+approval, and directory-versus-file clashes are not detected.
+
 - Press the check's number to mark each human check: ticked, then later, then
   open again. `a` works only when none is open.
 - `F` opens a fix note. Type it and press `enter`. The run goes through a fix
