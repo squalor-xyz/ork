@@ -15563,7 +15563,7 @@
       "id": "S299",
       "title": "Vendor out marks: an owner's mark survives a daemon restart and can end at a set time (--until)",
       "short_title": "Vendor out marks: an owner's mark survives a daemon restart and can end at a set time (--until)",
-      "status": "started",
+      "status": "done",
       "has_slice": false,
       "depends_on": [],
       "note_records": [
@@ -15582,10 +15582,7 @@
           "retracted_reason": ""
         }
       ],
-      "claim": {
-        "owner": "Jon Robbins",
-        "at": "2026-11-07T23:56:20Z"
-      },
+      "claim": null,
       "fields": {
         "size": "S",
         "flags": [],
