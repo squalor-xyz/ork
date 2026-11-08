@@ -11,6 +11,35 @@ import (
 	"testing"
 )
 
+func TestRoleWithoutResultShowsUnknownUsage(t *testing.T) {
+	h := treeHarness(t, nil, liveDetailEngine)
+	v := treePaneView(h.m, 200, 40)
+	if !strings.Contains(v, "round 1  tokens -  $-") {
+		t.Fatalf("finished role must show unknown usage inline:\n%s", v)
+	}
+}
+
+func TestCostShowsWheneverTheRecordHoldsOne(t *testing.T) {
+	for _, tc := range []struct {
+		vendor string
+		tokens int
+		cost   float64
+		want   string
+	}{
+		{"codex", 0, .12, "tokens 0  $0.12"},
+		{"claude", 500, 0, "tokens 500  $-"},
+	} {
+		t.Run(tc.vendor, func(t *testing.T) {
+			h := treeHarness(t, nil, liveDetailEngine)
+			r := &h.m.byName["ork"].snap.EngineRuns[0].Roles[0]
+			r.Vendor, r.Tokens, r.CostUSD = tc.vendor, tc.tokens, tc.cost
+			if v := treePaneView(h.m, 200, 40); !strings.Contains(v, tc.want) {
+				t.Fatalf("want %q in finished role:\n%s", tc.want, v)
+			}
+		})
+	}
+}
+
 func TestPaneShowsTheTailAndTokens(t *testing.T) {
 	for _, mono := range []bool{false, true} {
 		h := treeHarness(t, nil, liveDetailEngine)

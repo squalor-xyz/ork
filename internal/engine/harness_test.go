@@ -149,6 +149,7 @@ type fakeChecks struct {
 	calls   []string // "dir|command"
 	outputs []CheckOutput
 	err     error
+	errAt   map[int]error // the call number (from 0) that returns this error and runs nothing
 }
 
 func (f *fakeChecks) Run(ctx context.Context, dir, command string, timeout time.Duration) (CheckOutput, error) {
@@ -158,6 +159,9 @@ func (f *fakeChecks) Run(ctx context.Context, dir, command string, timeout time.
 	f.calls = append(f.calls, dir+"|"+command)
 	if f.err != nil {
 		return CheckOutput{}, f.err
+	}
+	if err := f.errAt[n]; err != nil {
+		return CheckOutput{}, err
 	}
 	if len(f.outputs) == 0 {
 		return CheckOutput{OK: true, Output: "ok  \tall packages\n"}, nil
@@ -277,6 +281,7 @@ func newHarness(t *testing.T, opts ...func(*harnessOpts)) *harness {
 		with(g("-C", W, "rev-parse", "HEAD"), "0123abc\n"),
 		// The landing (S119) on a base branch that did not move.
 		with(g("-C", P, "symbolic-ref", "--short", "HEAD"), "main\n"),
+		g("-C", P, "status", "--porcelain=v1", "-z", "--untracked-files=all"),
 		clitest.Route{Tool: "git", Args: []string{"-C", P, "merge-base", "--is-ancestor", branch, "main"}, Exit: 1},
 		g("-C", W, "merge-base", "--is-ancestor", "main", "HEAD"),
 		g("-C", P, "merge", "--ff-only", branch),

@@ -13,23 +13,29 @@ The files ork owns. Everything else is read live from slicer, adj and git
 | UI preferences, free-form until v1 | `~/.config/ork/ui.json` |
 | Daemon socket and pidfile (the pidfile is locked while a daemon lives) | `~/.local/state/ork/ork.sock`, `ork.pid` |
 | One record per slice run | `~/.local/state/ork/runs/<run>/run.json` |
-| Role reports; `roles[].report` keeps the name, read on demand by `run.report` (S176, *proposed*) | `~/.local/state/ork/runs/<run>/<role>-<round>.md` or `<role>-<round>-attempt-<attempt>.md` |
-| Check output per round (S04) | `~/.local/state/ork/runs/<run>/checks-<round>.log` |
+| Role reports; `roles[].report` keeps the name, read on demand by `run.report` (S176, *proposed*) and printed by `ork show RUN NAME` (S297, *proposed*) | `~/.local/state/ork/runs/<run>/<role>-<round>.md` or `<role>-<round>-attempt-<attempt>.md` |
+| Check output per round (S04); `checks[].log` keeps the name, read on demand by `run.report` and printed by `ork show RUN NAME` (S297, *proposed*) | `~/.local/state/ork/runs/<run>/checks-<round>.log`, and `land-checks-<round>.log` for the landing re-check |
 | A role's own temp directory (S04) | `~/.local/state/ork/runs/<run>/tmp/<role>-<round>/` |
 | The UI pass's renders (S121, *proposed*): `VIEW-80x24.txt`, `VIEW-120x40.txt`, `VIEW-ascii.txt` | `~/.local/state/ork/runs/<run>/tmp/ui-<round>/renders/` |
 | A spec check's identity, report and temp directory, plus owner answers tied to the spec fingerprint until run start or a spec change (S143); role verdicts live in daemon memory | `~/.local/state/ork/spec-checks/<project-key>/<item-key>/` |
 | Fixture candidates: raw output of every non-ok vendor round or round with denials, mode 0600 | `~/.local/state/ork/fixtures/<vendor>/` |
+| The owner's vendor marks (S299, *proposed*), mode 0600 | `~/.local/state/ork/vendors-out.json` |
 
 ork honors `XDG_CONFIG_HOME` and `XDG_STATE_HOME`. Nothing is written
 inside a project except what git and slicer write for a slice: the
 worktree, the branch, the commit, and the ledger and notes through slicer
-commands.
+commands. *Proposed (S254):* the one other git write is the landing's commit
+of the project's uncommitted tracking files on the base branch (see
+`docs/boundaries.md`).
 
 ## projects.json
 
 A missing registry is empty and valid. ork never seeds projects or writes
 this file on startup (`registry.no-seed`, adj 157). The first successful
 `ork projects add` or TUI add creates the config directory and this file.
+`projects add --scan` and the TUI checklist (S302, *proposed*) add one entry
+per ticked project through the same call, named after its folder. A path or
+name that is already registered is never sent.
 
 
 ```json
@@ -190,6 +196,8 @@ Notes on the fields:
   (`[A-Za-z_][A-Za-z0-9_]*`), a value holds no NUL byte, and a vendor with no
   keys left is removed. A hand-edited file that holds values these checks
   refuse still loads: `Load` does not apply them.
+  A `TMPDIR` key does not reach a Claude or Codex role: ork sets `TMPDIR` to
+  the role's own temp directory (S271, *proposed*).
 - `ork settings set` (*proposed*, S174, owner decision 2026-10-29) writes the
   file-level `global_cap` and `daemon_idle_minutes`; 0 clears one. Unlike
   `projects set` it is not refused while runs are unfinished: the cap is read
@@ -279,7 +287,8 @@ owner's questions again.
      "session": "...", "pgid": 12345, "step": "2", "started_at": "...", "ended_at": "...",
      "exit": "ok", "tokens": 41000, "cost_usd": 0.62, "report": "implementer-1.md"}
   ],
-  "checks": [{"round": 1, "command": "go test ./...", "ok": true, "seconds": 58, "log": "checks-1.log"}],
+  "checks": [{"round": 1, "command": "go test ./...", "ok": true, "seconds": 58, "log": "checks-1.log",
+              "attempts": 2, "flaky": true}],
   "budgets": {"minutes": 120, "tokens": 2000000},
   "approvals": [{"what": "slice", "at": "..."}],
   "questions": [{"role": "implementer", "round": 1, "key": "area.topic", "text": "...", "at": "...", "answer": "...", "answered_at": "..."}],
@@ -323,8 +332,17 @@ preserved. Retry advances `round` and sets the durable `round_limit` to the
 ended round plus the granted count (default 2). `roles[].tree_sha256` hashes
 the implementer's tracked diff against HEAD, including staged and binary
 changes, followed by untracked names. `checks[].log_sha256` hashes the bytes
-of the saved check log. Both adjacent hashes must be present and equal for
+of the saved check log, which holds both runs of the project command when it
+was run again (S239). Both adjacent hashes must be present and equal for
 the immediate no-progress pause. Older records without hashes remain readable.
+*Proposed (S239):* `checks[].attempts` is 2 when the project command failed
+and ork ran it once more, and `checks[].flaky` is true when that second run
+passed; both are omitted otherwise, and an older reader ignores them. The check
+log then holds the first run, a line `$ COMMAND (run again once: the first run
+failed)`, the second run, and the `slicer check --json` output. A run's output
+longer than 30 KB keeps its last 30 KB, with the failing tests of the cut part
+ahead of them. A log of two runs can be longer than the 64 KiB that `ork show
+RUN NAME` prints, which then cuts it at a line end; read the file for the rest.
 *Proposed (S279):* `checks[].deferred` (omitted when empty) lists the
 `slicer check` problems on other items that did not make a round check red
 because the branch was behind its base. ork's landing merge and re-check
@@ -488,6 +506,21 @@ in `run.json` (S235, *proposed*). `commit` is
 role's `model`, `effort` and `denials`, a check's `log`, and a write's
 `error` are *proposed* (S04).
 
+*Proposed (S296):* `stopped_from` is the state a stop left: the state the run
+was in, or for a paused run its `pending.state`. It is omitted until a stop.
+`ork retry RUN` resumes a stopped run that has no `commit`, whose
+`stopped_from` is not `setup` or `queued`, and whose worktree is intact. The
+resume clears `stopped_from`, `reason` and `dismissed_at`, advances `round`
+(to the next round for the checks; unchanged when no implementer round ran
+and the run re-enters `implement`), sets `round_limit` to that round plus the
+grant for the checks (default 2), or to the round plus the grant minus 1 for
+`implement`, whose round 1 is the first granted round (the first-pause floor
+of 3 still applies), sets `wave` when a start resumed it, replaces `relay_run` and `orchestrator_step` with the new
+ledger run's, and sets `state` to `checks`, or `implement` when `roles[]` has
+no implementer row. The older `roles[]`, `checks[]` and reports stay. The
+version stays 1; an older ork refuses a `run.json` with `stopped_from`
+because `Store.Open` uses strict keys.
+
 A stopped run can be dismissed with `ork dismiss RUN` (S34, adj #117).
 This sets `dismissed_at` to the dismissal time. It is omitted until then.
 The snapshot keeps the run marked `dismissed: true`, hidden from lists,
@@ -495,6 +528,8 @@ Needs you and `ork status` text. Its findings are excluded from counts.
 `ork status --json` includes the dismissed run. Dismissal keeps the record
 and its files; finished-run retention is unchanged.
 A dismissed run still hides older stopped runs of the same slice.
+*Proposed (S296):* `ork retry RUN` on a dismissed run resumes it and clears
+`dismissed_at`; `ork run` never resumes a dismissed run.
 Repeating dismissal does not change the record. A run that is not stopped
 returns `run is not stopped` (`ErrNotStopped`). The version stays 1.
 An older ork refuses a `run.json` with `dismissed_at` because `Store.Open`
@@ -666,13 +701,32 @@ admission rules.
 ### Vendor memory (S169, *proposed*)
 
 The vendors that are out, and the rounds that wait for a vendor slot, are
-daemon memory only. Neither is in `run.json` or `projects.json`, and a daemon
-restart clears both: nothing remembers a vendor as out across a restart, and
-a run that resumes starts with no wait. A mark made by a rate-limit or
-out-of-credits exit lasts 60 minutes or until `ork vendor back`; a mark the
-owner sets with `ork vendor out` has no expiry and holds until `back`. The slot cap (`codex` 1, `claude` unlimited) is built in
-and is not a registry field. The proposed snapshot fields `vendors_out[]`
-(`vendor`, `reason`, `since`, and `until`, absent for an owner mark) and `engine_runs[].vendor_wait` carry
+daemon memory, with one exception (S299, *proposed*): the marks the owner sets
+with `ork vendor out`. Nothing is in `run.json` or `projects.json`. A daemon
+restart clears the rounds that wait for a slot (a run that resumes starts with
+no wait) and the marks made by a rate-limit or out-of-credits exit, which last
+60 minutes or until `ork vendor back`. An owner mark holds until `back`, or
+until the time given with `--until`, and is written to `vendors-out.json`:
+
+```json
+{"version": 1, "marks": [
+  {"vendor": "codex", "reason": "weekly limit",
+   "since": "2026-11-03T23:56:00+01:00", "until": "2026-11-04T07:12:00+01:00"}
+]}
+```
+
+`until` is absent for a mark with no end. The daemon rewrites the whole file
+(a temp file in the same directory, then a rename, mode 0600) on every
+`out` and `back` of an owner mark (it also syncs the directory), and a call
+whose write fails changes nothing and returns an error. It reads the file once,
+at start, and drops a mark whose `until` has passed. A file that is not valid,
+or has a version this ork does not know, is reported on the daemon's standard
+error and starts the daemon with no owner marks; the next owner mark replaces
+the file. A stored mark of a vendor ork cannot run is not loaded, and the next
+write drops it. The slot cap (`codex` 1, `claude` unlimited) is built in and
+is not a registry field. The proposed snapshot fields `vendors_out[]`
+(`vendor`, `reason`, `since`, and `until`, absent for an owner mark with no
+end) and `engine_runs[].vendor_wait` carry
 them to the clients.
 
 ### Transient role detail (S99)
@@ -695,3 +749,7 @@ Proposed snapshot flags `usage_known`, `live_usage_known` and
 `tail_truncated` carry usage presence (including reported zero) and whether
 the memory buffer dropped older text. These flags are not written to disk.
 A stored zero cost from a vendor without a cost field is displayed as `$-`.
+*Proposed* (S129): any finished role with zero stored cost shows `$-`; a
+non-zero cost is displayed regardless of vendor. A finished role with zero
+tokens and zero cost has no recorded usage and shows `tokens -  $-`.
+These recorded values cannot distinguish unrecorded usage from a reported zero.

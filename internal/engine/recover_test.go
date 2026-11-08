@@ -192,15 +192,15 @@ func TestRecoverReportsAProjectItCannotFindAndRecoversTheRest(t *testing.T) {
 func TestRunCheck(t *testing.T) {
 	dir := t.TempDir()
 	out, err := RunCheck(context.Background(), dir, "echo hello; pwd", 5*time.Second)
-	if err != nil || !out.OK || !strings.Contains(out.Output, "hello") || !strings.Contains(out.Output, strings.TrimPrefix(dir, "/private")) {
+	if err != nil || !out.OK || out.TimedOut || !strings.Contains(out.Output, "hello") || !strings.Contains(out.Output, strings.TrimPrefix(dir, "/private")) {
 		t.Fatalf("%+v, %v", out, err)
 	}
 	out, err = RunCheck(context.Background(), dir, "echo out; echo err >&2; exit 3", 5*time.Second)
-	if err != nil || out.OK || !strings.Contains(out.Output, "out") || !strings.Contains(out.Output, "err") || !strings.Contains(out.Output, "exit 3") {
+	if err != nil || out.OK || !strings.Contains(out.Output, "out") || !strings.Contains(out.Output, "err") || !strings.Contains(out.Output, "exit 3") || out.TimedOut {
 		t.Fatalf("failing command: %+v, %v", out, err)
 	}
 	out, err = RunCheck(context.Background(), dir, "sleep 5", 100*time.Millisecond)
-	if err != nil || out.OK || !strings.Contains(out.Output, "timed out") {
+	if err != nil || out.OK || !out.TimedOut || !strings.Contains(out.Output, "timed out") {
 		t.Fatalf("timeout: %+v, %v", out, err)
 	}
 }

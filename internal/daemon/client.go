@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -206,11 +207,25 @@ func (c *Client) Render(ctx context.Context, run, name string) (string, error) {
 	return reply.Text, err
 }
 
+// LandCheck reads the current advisory check for a run awaiting approval.
+func (c *Client) LandCheck(ctx context.Context, run string) (engine.LandCheck, error) {
+	var result engine.LandCheck
+	err := c.Call(ctx, MethodRunLandCheck, RunAction{Run: run}, &result)
+	return result, err
+}
+
 // Report reads one role report by its stored name (proposed, S176).
 func (c *Client) Report(ctx context.Context, run, name string) (string, error) {
 	var reply ReportReply
 	err := c.Call(ctx, MethodRunReport, RunAction{Run: run, Name: name}, &reply)
 	return reply.Text, err
+}
+
+// Show reads what the stored record says of a run (run.show, S297, *proposed*).
+func (c *Client) Show(ctx context.Context, run string) (ShowReply, error) {
+	var reply ShowReply
+	err := c.Call(ctx, MethodRunShow, RunAction{Run: run}, &reply)
+	return reply, err
 }
 
 // Stop stops an engine run after the caller has confirmed it.

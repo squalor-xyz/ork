@@ -35,7 +35,9 @@ line shows `+ add project; q quit`. `+` opens a project path field. Enter with
 an empty field offers the current
 directory only when it holds a `.slicer` directory or `.adjudicate.json`
 file. Otherwise the status names the directory: "DIR holds neither .slicer
-nor .adjudicate.json; type a path". The path guidance asks for an absolute path.
+nor .adjudicate.json; type a path" (unless the directory holds projects below
+it, which opens the checklist under "Add several projects"). The path guidance
+asks for an absolute path.
 Esc cancels path entry and returns to "No projects yet." with
 `+ add project; q quit` on the hint line. Typed paths are trimmed. A leading
 `~` or `~/` expands to the home directory before confirmation and submission.
@@ -52,6 +54,79 @@ also appear next to the field. The field keeps its text.
 Without a daemon, the status says "No daemon connection; action unavailable".
 On success the Overview appears with "Needs you" selected and status
 `Added NAME PATH`. The new project is fetched at once and polled.
+
+### Add several projects (S302, *proposed*)
+
+The path guidance reads "Type an absolute path to a project, or to a folder to
+pick projects from it. Leave it empty and press Enter to use the current
+directory." (two lines at 100 columns).
+
+Enter on a typed path, or on an empty field when the current directory holds
+no `.slicer` or `.adjudicate.json`, scans the folder (`internal/projscan`).
+When the folder holds projects below it, Enter opens a checklist instead of the
+confirmation. A folder that is itself a project (a `.slicer` directory, an
+`.adjudicate.json` file or a `.git`), a folder that holds none, and a path that
+cannot be scanned keep the single-add confirmation above. The scan runs inside
+the key press (an async scan is a later item), so it is bounded.
+
+The scan lists a folder that holds `.slicer`, `.adjudicate.json` or `.git`.
+It looks at the folder's children and their children (two levels), stops at the
+first project on each branch, skips hidden folders (so `.worktrees`) and
+`node_modules`, and does not follow symbolic links. It quits after it has looked
+at 500 folders or found 200 projects, and stops for good there: a limit hit
+inside a nested folder ends the whole walk. The checklist then adds a dim line
+`Stopped after N folders and M projects; scan a narrower folder to see more.`
+under the `Found` line (N and M are what it had looked at and found).
+
+The checklist body is the heading `Add projects`, `Found N projects under
+DIR:`, then one row each, then `X of Y ticked` (Y counts the rows that can be
+ticked):
+
+```
+> [x] alpha    slicer+adj  alpha
+  [x] beta     adj         tools/beta
+  [ ] gamma    git         gamma
+  [-] delta    slicer      delta
+      already registered as delta
+```
+
+A row shows the box, the folder name, the tag and the path below the scanned
+folder. The cursor row is a full-width reverse bar, as on Waves, and also
+starts with `>`. Names, paths and errors show as one plain line each
+(`runrec.PlainText`): an escape sequence or a line break in a folder name cannot
+move the screen. The tag names the tracked markers (`slicer`, `adj` or
+`slicer+adj`), or `git` for a plain git repo. Tracked rows start ticked and
+plain git rows start unticked. A blocked row shows `[-]`, is drawn dim with its
+reason on the next line, and cannot be ticked. A row is blocked when its path is
+already registered (`already registered as NAME`; the two paths match after
+symbolic links are resolved), when another registered project holds the folder
+name (`name "NAME" is registered for PATH`), or when another row that can be
+added holds the same folder name (`name "NAME" is also found at PATH; add it with
+ork projects add PATH --name N`, PATH being the row that holds it). Of such
+rows a tracked one (slicer or adj) holds the name before a plain git repo, and
+rows of one kind go by path, so a plain repo never blocks a tracked project. When the
+list is longer than the body, the rows scroll with the cursor and the count line
+adds `(rows A-B of N)`.
+
+Keys (settled by the owner, 2026-11-07): `j`/`k` or the arrow keys move the
+cursor, `space` ticks or unticks the row, `a` ticks every row that is not
+blocked, `n` unticks every row, `y` adds the ticked rows, and `Esc` returns to
+the path field. Enter does nothing in the checklist (it closes the results
+screen). The hint is `j/k row; space tick; a all; n none; y add ticked; esc
+back` (`j/k row` drops first when the line is narrow, then `a all` and `n
+none`). `y add ticked` is left out when nothing is ticked or there is no daemon.
+y with nothing ticked says `Nothing ticked`; without a daemon it says `No daemon
+connection; action unavailable`. Other keys, and a paste, do nothing in the
+checklist.
+
+y calls the daemon's `projects.add` once per ticked row, in list order, with the
+folder name as the project name (the daemon's default for a path). While it runs
+the hint is `ctrl+c quit` and the rows show `Adding projects...`. One refused
+row does not stop the rest. The results then replace the list: `Added N of M
+projects` (`Added N projects` when all went in), then `added   NAME  PATH` or
+`failed  NAME: ERROR` for each row, a long line wrapping under the name column,
+with the hint `enter close`. Enter or Esc closes them. Each added project is
+fetched at once and polled, and the status reads as the summary.
 
 The proposed TUI checks the daemon project list on each schedule tick, with
 one list request in flight at a time. Projects added elsewhere are fetched
@@ -209,11 +284,12 @@ widths, trailing fields are dropped first so the behind notice keeps priority.
 
 A vendor that the daemon remembers as out (S169, *proposed*) adds one warning
 field, `codex out until 17:02` (`codex out until back` for a mark the owner
-set), for each such vendor, in vendor order. The
-fields come after the daemon notice and before the project count, so a narrow
-line drops the other fields first. The TUI only shows them; the owner sets and
-clears the memory with `ork vendor` (see docs/design.md, Vendors). A change
-made outside the TUI shows at the next snapshot.
+set with no end; `codex out until 4 Nov 07:12` when the end is not the day the
+mark began, and the year when that differs, S299), for each such vendor, in
+vendor order. The fields come after the daemon notice and before the project
+count, so a narrow line drops the other fields first. The TUI only shows them;
+the owner sets and clears the memory with `ork vendor` (see docs/design.md,
+Vendors). A change made outside the TUI shows at the next snapshot.
 
 The six-row text mark appears above `?` help only when the pane can fit the
 mark, a blank line and every help line, and is at least twelve columns wide
@@ -868,9 +944,11 @@ final state. A run of another project never takes the pane.
 
 The actions follow the state (`ui.answer-pane-scope`):
 
-- Paused with `pending: question`: free context lines before `Question:` stay
-  in the raw question and appear above the options in the pane's scrollable
-  reason area; the raw `Question:` and `Options:` block is not repeated
+- Paused with `pending: question`: context lines in the raw question (before
+  `Question:`, and since S288 also inside or after the block, *proposed*)
+  appear above the options in the pane's scrollable reason area; ork moves
+  the lines inside or after the block above the `Question:` line; the raw
+  `Question:` and `Options:` block is not repeated
   there. Structured questions show a bold title,
   2 to 4 numbered options, the inline `(recommended)` marker and a
   `Why N: reason` line (`ui.structured-questions`, adj #168). A digit opens a confirmation with the
@@ -1000,8 +1078,9 @@ the action area under the run tree, in this order:
   (*proposed*, S238); the owner resolves them there and retries. When
   the pane is short, lines drop in this order: the blank lines between the
   blocks, the later findings, then this line, then each owner finding whole
-  (the last first), then the status line (its last wrapped line first), and the
-  human checks last (S141: this line goes before an owner finding, so a check
+  (the last first), then the status line (its last wrapped line first), then
+  the landing warning (whole), and the human checks last (S141: this line
+  goes before an owner finding, so a check
   that wraps at 80x24 does not push the owner's recommendation out; with push
   on, the line that says approval pushes ranks above the owner findings, and
   the owner findings drop first). When the project's `push` setting is on, it reads
@@ -1013,6 +1092,19 @@ the action area under the run tree, in this order:
   `x stop`, `1-N tick/later`, `v renders`, `f file slice`, then scroll keys
   and `esc close pane`. Actions drop by the priorities above; the card body
   has no key footer.
+- Landing check (*proposed*, S217): for a run that will land, the pane reads
+  the current main checkout on open and each refresh. If dirty or untracked
+  files overlap the slice's changes, it shows
+  `Landing will stop: main has uncommitted changes to A, B, C (+2 more).
+  Commit, stash or remove them first.` above the hint line. It names up to
+  three files. Both names of a rename count. The project's tracking files
+  under `.slicer/` are excluded, except `config.json` and
+  `relay-roles.json`, because landing handles tracking-only overlap itself.
+  Main being detached or on the slice branch shows the landing's branch
+  reason instead. This is a warning: `a` still works under its usual human
+  check rule. The landing note drops before the warning when space is short.
+  A clean checkout or a failed read shows no line. The check detects exact
+  path overlap; it does not detect directory-versus-file clashes.
 - `Renders: N from the UI pass (round R)` (dim; `, K more not kept` when the
   card dropped files), under the diff line. When the UI pass ran and wrote
   none it reads `Renders: the UI pass (round R) wrote none`. When the renders
@@ -1352,10 +1444,12 @@ on N spec questions` on its row, the launch status says `ID waits on spec
 questions`, and while a ticked item is held the hint reads `l answer spec
 questions` instead of `l launch`. Pressing `l` again checks the ticked
 items again and reopens the sitting. A check error shows its code and message
-and leaves the ticks alone. A check automatically retries once if HEAD moves,
-the checkout status changes outside the role's own run, or the report has a
-shape error. A second failure says a retry already happened and asks the
-owner to check again. Permission denials are never retried.
+and leaves the ticks alone. A check automatically retries once if HEAD moves
+or the checkout changes outside the check. If the report has a shape error, or
+the role's commands were denied, the check gives the role its error once in the
+same session instead (S266, *proposed*); with no session to resume, a shape
+error starts over once as before. A second failure names the slices and says
+that checking again is safe.
 At 80x24, spec notes share the rows beside the lineup so the overlap warnings
 stay visible. `wave start --json` includes `held` item IDs when ready peers
 start; the CLI files keyed answers in adj only when the registry enables adj
@@ -1923,16 +2017,21 @@ below 1000. Larger counts round half up to one decimal place: `1000` becomes
 `1.0k`, `23849` becomes `23.8k`, and `999950` becomes `1.0M`.
 Configured token budgets keep their integer text.
 Finished roles append recorded usage to their node line; that whole suffix
-drops first when narrow. An interrupted role in a stopped run also uses the
+drops first when narrow. *Proposed* (S129): a finished role with zero tokens
+and zero cost has no recorded usage and shows `tokens -  $-`.
+An interrupted role in a stopped run also uses the
 node suffix: missing recorded usage and cost show `tokens -  $-`, with no
 live tail. A failed gate's verdict stays directly under its node, before any
 separate usage or task line. The pane scrolls inside its own lines, which sit under their row with the
 Overview rows around them (S106).
 
-Running roles show `$-` until their round ends. Vendors with no cost field,
-including Codex, show `$-` after completion too; zero stored cost does not
-mean a reported zero price. The Overview's `tokens N` is the run total:
-completed roles plus the current role's live tokens. The cell is omitted
+Running roles show `$-` until their round ends. *Proposed* (S129): a finished
+role shows a cost whenever its record holds a non-zero `cost_usd`, regardless
+of vendor. Zero stored cost shows `$-`; it cannot establish a reported zero
+price. The Overview's `tokens N` is the run total:
+recorded tokens plus live tokens for roles still running in the record.
+*Proposed* (S129): final tokens enter the record before live usage ends, so
+the total does not dip or count a completed role twice. The cell is omitted
 until engine usage is available, and drops before heard when a Running row
 narrows. Claude usage advances at message start and message delta; Codex
 usage arrives only at turn completion. These counters show reported usage

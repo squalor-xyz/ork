@@ -979,3 +979,28 @@ func TestCheckRecordWritesDeferredOnlyWhenSet(t *testing.T) {
 		t.Fatalf("round trip: %+v, %v", back, err)
 	}
 }
+
+// S239: the rerun fields are omitted when absent, so an older record and an
+// older reader are unaffected.
+func TestCheckRecordAttemptsAndFlakyAreOmittedWhenAbsent(t *testing.T) {
+	plain, err := json.Marshal(CheckRecord{Round: 1, Command: "go test", OK: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(plain), "attempts") || strings.Contains(string(plain), "flaky") {
+		t.Errorf("a first-time pass: %s", plain)
+	}
+	again, err := json.Marshal(CheckRecord{Round: 1, Command: "go test", OK: true, Attempts: 2, Flaky: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{`"attempts":2`, `"flaky":true`} {
+		if !strings.Contains(string(again), want) {
+			t.Errorf("a flaky pass lacks %s: %s", want, again)
+		}
+	}
+	var back CheckRecord
+	if err := json.Unmarshal([]byte(`{"round":1,"command":"go test","ok":true}`), &back); err != nil || back.Attempts != 0 || back.Flaky {
+		t.Errorf("an older record: %+v, %v", back, err)
+	}
+}

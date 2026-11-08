@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/clitest"
@@ -301,7 +302,8 @@ func TestLedgerBeginFailureIsAdvisory(t *testing.T) {
 
 func TestRedChecksSendTheImplementerBackWithoutSpendingAReview(t *testing.T) {
 	h := newHarness(t)
-	h.checks.outputs = []CheckOutput{{OK: false, Output: "--- FAIL: TestGate\n    gate_test.go:12: boom\nFAIL\n"}, {OK: true, Output: "ok\n"}}
+	red := CheckOutput{OK: false, Output: "--- FAIL: TestGate\n    gate_test.go:12: boom\nFAIL\n"}
+	h.checks.outputs = []CheckOutput{red, red, {OK: true, Output: "ok\n"}}
 	e := h.start()
 	rec := requireState(t, e, runrec.StateAwaitingApproval)
 	if got, want := h.runner.roles(), []string{"implementer-1", "implementer-2", "reviewer-2", "gate-2"}; !reflect.DeepEqual(got, want) {
@@ -425,7 +427,7 @@ func TestADeferralNeverTouchesTheProjectCheck(t *testing.T) {
 			return []clitest.Route{branchIs(w, true), redThenGreenSlicerCheck(w, slicerCheckJSON(t, []any{outsideProblem}, nil, nil, nil))}
 		}
 	})
-	h.checks.outputs = []CheckOutput{{OK: false, Output: "--- FAIL: TestGate\nFAIL\n"}, {OK: true, Output: "ok\n"}}
+	h.checks.outputs = []CheckOutput{{OK: false, Output: "--- FAIL: TestGate\nFAIL\n"}, {OK: false, Output: "--- FAIL: TestGate\nFAIL\n"}, {OK: true, Output: "ok\n"}}
 	e := h.start()
 	rec := requireState(t, e, runrec.StateAwaitingApproval)
 	if got, want := h.runner.roles(), []string{"implementer-1", "implementer-2", "reviewer-2", "gate-2"}; !reflect.DeepEqual(got, want) {
@@ -808,7 +810,8 @@ func redLoop(t *testing.T, changedTree, changedOutput bool) *harness {
 		if changedOutput {
 			output = fmt.Sprintf("broken %d\n", n)
 		}
-		h.checks.outputs = append(h.checks.outputs, CheckOutput{OK: false, Output: output})
+		// Each red round is run twice: the rerun gets the same output.
+		h.checks.outputs = append(h.checks.outputs, CheckOutput{OK: false, Output: output}, CheckOutput{OK: false, Output: output})
 	}
 	return h
 }
@@ -1311,5 +1314,305 @@ func TestEngineStartKeepsTheContractErrorTexts(t *testing.T) {
 				t.Fatalf("version error: %v", err)
 			}
 		})
+	}
+}
+
+// S239: a red project check is run again once before a fix round.
+
+func goFailOutput(tests ...string) string {
+	var b strings.Builder
+	b.WriteString("ok  \tgithub.com/x/y/clean\t0.1s\n")
+	for _, name := range tests {
+		fmt.Fprintf(&b, "--- FAIL: %s (0.01s)\n    %s_test.go:12: got 1, want 2\n", name, strings.ToLower(name))
+	}
+	b.WriteString("FAIL\nFAIL\tgithub.com/x/y/broken\t0.5s\n")
+	return b.String()
+}
+
+func filler(n int) string {
+	var b strings.Builder
+	for b.Len() < n {
+		b.WriteString("goroutine 17 [select]: unrelated dump line that fills the log\n")
+	}
+	return b.String()
+}
+
+func TestRedCheckIsRunAgainOnceBeforeAFixRound(t *testing.T) {
+	h := newHarness(t)
+	h.checks.outputs = []CheckOutput{{Output: "first run failed: boom\n"}, {OK: true, Output: "second run passed\n"}}
+	rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
+	if got, want := h.runner.roles(), []string{"implementer-1", "reviewer-1", "gate-1"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("role rounds %v, want %v", got, want)
+	}
+	if len(h.checks.calls) != 2 {
+		t.Errorf("the project command ran %d times, want 2: %v", len(h.checks.calls), h.checks.calls)
+	}
+	if len(rec.Checks) != 1 || !rec.Checks[0].OK || rec.Checks[0].Attempts != 2 || !rec.Checks[0].Flaky {
+		t.Fatalf("checks: %+v", rec.Checks)
+	}
+	log := h.readReport(rec, "checks-1.log")
+	first, second := strings.Index(log, "first run failed: boom"), strings.Index(log, "second run passed")
+	if first < 0 || second < first {
+		t.Fatalf("the log holds both outputs in order:\n%s", log)
+	}
+	if head := log[first:second]; !strings.Contains(head, "$ go test ./... (run again once: the first run failed)") {
+		t.Errorf("a heading says the second output is a rerun:\n%s", log)
+	}
+}
+
+func TestCheckThatStaysRedSendsOneFixRoundWithTheFailures(t *testing.T) {
+	h := newHarness(t)
+	h.checks.outputs = []CheckOutput{{Output: goFailOutput("TestSecond")}, {Output: goFailOutput("TestSecond")}, {OK: true, Output: "ok\n"}}
+	rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
+	if got, want := h.runner.roles(), []string{"implementer-1", "implementer-2", "reviewer-2", "gate-2"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("role rounds %v, want %v", got, want)
+	}
+	// Two runs for the red round, one for the round after the fix.
+	if len(h.checks.calls) != 3 {
+		t.Errorf("project command calls: %v", h.checks.calls)
+	}
+	if c := rec.Checks[0]; c.OK || c.Attempts != 2 || c.Flaky {
+		t.Errorf("checks[0]: %+v", c)
+	}
+	if c := rec.Checks[1]; !c.OK || c.Attempts != 0 || c.Flaky {
+		t.Errorf("checks[1] ran once: %+v", c)
+	}
+	brief := h.runner.requests()[1].Brief
+	list, tailAt := strings.Index(brief, "The failing tests and assertion lines"), strings.Index(brief, "The end of the output:")
+	if list < 0 || tailAt < list {
+		t.Fatalf("the failing tests come before the tail:\n%s", brief)
+	}
+	for _, want := range []string{"--- FAIL: TestSecond (0.01s)", "testsecond_test.go:12: got 1, want 2", "FAIL\tgithub.com/x/y/broken"} {
+		if !strings.Contains(brief[list:tailAt], want) {
+			t.Errorf("the excerpt lacks %q:\n%s", want, brief[list:tailAt])
+		}
+	}
+	if !strings.Contains(brief, "failed in both runs") {
+		t.Errorf("the brief does not say the check failed twice:\n%s", brief)
+	}
+	if strings.Contains(brief, "Failed on the first run only") {
+		t.Errorf("both runs failed the same test:\n%s", brief)
+	}
+}
+
+func TestFixBriefKeepsTheAssertionWhenTheOutputIsLong(t *testing.T) {
+	h := newHarness(t)
+	long := "--- FAIL: TestEarly (0.01s)\n    early_test.go:7: got 1, want 2\n" + filler(60000)
+	h.checks.outputs = []CheckOutput{{Output: long}, {Output: long}, {OK: true, Output: "ok\n"}}
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	brief := h.runner.requests()[1].Brief
+	for _, want := range []string{"--- FAIL: TestEarly (0.01s)", "early_test.go:7: got 1, want 2"} {
+		if !strings.Contains(brief, want) {
+			t.Errorf("the brief lost %q:\n%.1500s", want, brief)
+		}
+	}
+	if n := len(brief); n > 30000+8000+8000 {
+		t.Errorf("the brief grew to %d bytes", n)
+	}
+}
+
+func TestFixBriefListsTestsThatFailedOnlyOnTheFirstRun(t *testing.T) {
+	h := newHarness(t)
+	h.checks.outputs = []CheckOutput{{Output: goFailOutput("TestA", "TestB")}, {Output: goFailOutput("TestB")}, {OK: true, Output: "ok\n"}}
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	brief := h.runner.requests()[1].Brief
+	if !strings.Contains(brief, "Failed on the first run only: `TestA`.") {
+		t.Errorf("the brief does not name TestA:\n%s", brief)
+	}
+	if strings.Contains(brief, "TestB.") {
+		t.Errorf("TestB failed in both runs:\n%s", brief)
+	}
+	list, tailAt := strings.Index(brief, "The failing tests and assertion lines"), strings.Index(brief, "The end of the output:")
+	if list < 0 || tailAt < list {
+		t.Fatalf("no excerpt ahead of the tail:\n%s", brief)
+	}
+	if strings.Contains(brief[list:tailAt], "--- FAIL: TestA ") || !strings.Contains(brief[list:tailAt], "--- FAIL: TestB ") {
+		t.Errorf("the excerpt shows the second run's failures:\n%s", brief[list:tailAt])
+	}
+}
+
+func TestTimedOutCheckIsNotRunAgain(t *testing.T) {
+	h := newHarness(t)
+	h.checks.outputs = []CheckOutput{{TimedOut: true, Output: "\ntimed out after 10m0s\n"}, {OK: true, Output: "ok\n"}}
+	rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
+	if got, want := h.runner.roles(), []string{"implementer-1", "implementer-2", "reviewer-2", "gate-2"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("role rounds %v, want %v", got, want)
+	}
+	if len(h.checks.calls) != 2 {
+		t.Errorf("one call for the timed-out round and one after the fix: %v", h.checks.calls)
+	}
+	if c := rec.Checks[0]; c.OK || c.Attempts != 0 || c.Flaky {
+		t.Errorf("checks[0]: %+v", c)
+	}
+	if strings.Contains(h.readReport(rec, "checks-1.log"), "run again once") {
+		t.Errorf("a timeout is not run again")
+	}
+}
+
+func TestGreenCheckRunsOnce(t *testing.T) {
+	h := newHarness(t)
+	rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
+	if len(h.checks.calls) != 1 || len(h.calls("slicer", "check")) != 1 {
+		t.Errorf("project command %d times, slicer check %d times", len(h.checks.calls), len(h.calls("slicer", "check")))
+	}
+	if c := rec.Checks[0]; c.Attempts != 0 || c.Flaky {
+		t.Errorf("a first-time pass records neither field: %+v", c)
+	}
+}
+
+func TestRedSlicerCheckIsNotRunAgain(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			return []clitest.Route{redThenGreenSlicerCheck(W, `{"ok":false,"stale_render":["ROADMAP.md"],"stale_sync":[],"problems":[],"warnings":[]}`)}
+		}
+	})
+	rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
+	// Round 1 is red on slicer check alone and goes to a fix round: each
+	// round runs the project command once and slicer check once.
+	if len(h.checks.calls) != 2 || len(h.calls("slicer", "check")) != 2 {
+		t.Errorf("project command %d times, slicer check %d times, want 2 and 2", len(h.checks.calls), len(h.calls("slicer", "check")))
+	}
+	if c := rec.Checks[0]; c.OK || c.Attempts != 0 || c.Flaky {
+		t.Errorf("checks[0]: %+v", c)
+	}
+}
+
+func TestRerunThatCannotRunPausesLikeTheFirstRun(t *testing.T) {
+	h := newHarness(t)
+	h.checks.outputs = []CheckOutput{{Output: "red\n"}}
+	h.checks.errAt = map[int]error{1: errors.New("sh went away")}
+	rec := requireState(t, h.start(), runrec.StatePaused)
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingError || rec.Pending.State != runrec.StateChecks || rec.Pending.Reason != "check command: sh went away" {
+		t.Fatalf("pending: %+v", rec.Pending)
+	}
+	if len(rec.Checks) != 0 || len(h.checks.calls) != 2 {
+		t.Errorf("checks %+v, calls %v", rec.Checks, h.checks.calls)
+	}
+	if got := h.runner.roles(); len(got) != 1 {
+		t.Errorf("no fix round starts: %v", got)
+	}
+}
+
+func TestStalledRoundWithARerunStillPausesAtOnce(t *testing.T) {
+	h := redLoop(t, false, false)
+	e := h.start()
+	r := requireRoundsPause(t, e, 2)
+	if !strings.Contains(r.Pending.Reason, "no change in the worktree and the same check output as round 1") {
+		t.Fatal(r.Pending.Reason)
+	}
+	if len(h.checks.calls) != 4 {
+		t.Errorf("two rounds with two runs each: %v", h.checks.calls)
+	}
+	if len(r.Checks) != 2 || r.Checks[0].Attempts != 2 || r.Checks[1].Attempts != 2 || r.Checks[0].LogSHA256 == "" || r.Checks[0].LogSHA256 != r.Checks[1].LogSHA256 {
+		t.Errorf("both rounds ran twice and their logs hash the same: %+v", r.Checks)
+	}
+}
+
+func TestCheckRecordOmitsAttemptsAndFlakyWhenAbsent(t *testing.T) {
+	h := newHarness(t)
+	rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
+	raw := h.readReport(rec, "run.json")
+	for _, key := range []string{`"attempts"`, `"flaky"`} {
+		if strings.Contains(raw, key) {
+			t.Errorf("a first-time pass has no %s key:\n%s", key, raw)
+		}
+	}
+	h = newHarness(t)
+	h.checks.outputs = []CheckOutput{{Output: "red\n"}, {OK: true, Output: "ok\n"}}
+	rec = requireState(t, h.start(), runrec.StateAwaitingApproval)
+	raw = h.readReport(rec, "run.json")
+	for _, want := range []string{`"attempts": 2`, `"flaky": true`} {
+		if !strings.Contains(raw, want) {
+			t.Errorf("a flaky pass records %s:\n%s", want, raw)
+		}
+	}
+}
+
+func TestCancelledRunDoesNotRunAFailedCheckAgain(t *testing.T) {
+	h := newHarness(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	calls := 0
+	h.deps.Check = func(context.Context, string, string, time.Duration) (CheckOutput, error) {
+		calls++
+		cancel() // the owner stopped the run while the check ran
+		return CheckOutput{Output: "killed\n"}, nil
+	}
+	e, err := New(ctx, h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = e.Run(ctx)
+	if calls != 1 {
+		t.Errorf("the project command ran %d times after the run was cancelled, want 1", calls)
+	}
+}
+
+const rerunHeading = "\n\n$ go test ./..." + rerunMarker + "\n"
+
+func TestCheckLogWithTheRerunMarkerInOutputIsNotSplitThere(t *testing.T) {
+	first := "--- FAIL: TestA (0.01s)\n    a_test.go:1: note: (run again once: the first run failed)\n    a_test.go:2: real assertion\na.go:2:3: real build error\nFAIL\n"
+	second := "--- FAIL: TestB (0.01s)\n    b_test.go:2: boom\nFAIL\n"
+	log := "$ go test ./...\n" + first + "\n" + rerunHeading[1:] + second + "\n\n$ slicer check --json\n{}\n"
+	body := checkFailureBody(log, "go test ./...", 2)
+	if !strings.Contains(body, "Failed on the first run only: `TestA`.") {
+		t.Errorf("the first run is the text before the real heading:\n%s", body)
+	}
+	list, tailAt := strings.Index(body, "The failing tests and assertion lines"), strings.Index(body, "The end of the output:")
+	if list < 0 || tailAt < list || !strings.Contains(body[list:tailAt], "b_test.go:2: boom") || strings.Contains(body[list:tailAt], "TestA") || strings.Contains(body[list:tailAt], "real build error") {
+		t.Errorf("the excerpt is of the second run:\n%s", body)
+	}
+}
+
+func TestSingleRunRedLogWithTheFullHeadingInItsOutputDoesNotSayBothRuns(t *testing.T) {
+	spoof := "--- FAIL: TestS (0.01s)\n    s_test.go:1: x\n" + rerunHeading + "--- FAIL: TestSpoof (0s)\n    spoof_test.go:2: y\n"
+	// The engine, with a timeout so that there is no rerun.
+	h := newHarness(t)
+	h.checks.outputs = []CheckOutput{{TimedOut: true, Output: spoof}, {OK: true, Output: "ok\n"}}
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	brief := h.runner.requests()[1].Brief
+	if strings.Contains(brief, "failed in both runs") || strings.Contains(brief, "first run only") {
+		t.Errorf("a single run is not described as two:\n%s", brief)
+	}
+	if !strings.Contains(brief, "TestSpoof") || !strings.Contains(brief, "TestS (0.01s)") {
+		t.Errorf("both tests show in the excerpt of the one run:\n%s", brief)
+	}
+	// And the helper alone: one attempt means one run, whatever the text says.
+	body := checkFailureBody("$ go test ./...\n"+spoof+"\n\n$ slicer check --json\n{}\n", "go test ./...", 0)
+	if strings.Contains(body, "both runs") || strings.Contains(body, "first run only") {
+		t.Errorf("attempts 0:\n%s", body)
+	}
+}
+
+func TestFirstRunOnlyLineIsBoundedAndQuoted(t *testing.T) {
+	var firstNames []string
+	for i := 1; i <= 30; i++ {
+		firstNames = append(firstNames, fmt.Sprintf("TestOld%02d", i))
+	}
+	// A backtick in a name and a name far longer than a line.
+	firstNames = append([]string{"Test`evil`", "TestLong" + strings.Repeat("x", 900)}, firstNames...)
+	h := newHarness(t)
+	h.checks.outputs = []CheckOutput{{Output: goFailOutput(firstNames...)}, {Output: goFailOutput("TestNew")}, {OK: true, Output: "ok\n"}}
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	brief := h.runner.requests()[1].Brief
+	var line string
+	for _, l := range strings.Split(brief, "\n") {
+		if strings.HasPrefix(l, "Failed on the first run only: ") {
+			line = l
+		}
+	}
+	if line == "" {
+		t.Fatalf("no first-run-only line:\n%.3000s", brief)
+	}
+	if !strings.Contains(line, "`Test'evil'`, `TestLong") || !strings.Contains(line, "`TestOld01`, `TestOld02`") || !strings.Contains(line, "`TestOld18`") || strings.Contains(line, "TestOld19") || strings.Contains(line, "`evil`") {
+		t.Errorf("20 names are listed, in backticks: %.300s", line)
+	}
+	if !strings.HasSuffix(line, ", and 12 more.") {
+		t.Errorf("the rest are counted: ...%s", line[max(0, len(line)-60):])
+	}
+	if !strings.Contains(line, strings.Repeat("x", 300)+"...`") || strings.Contains(line, strings.Repeat("x", 500)) {
+		t.Errorf("a long name is cut like an excerpt line")
+	}
+	if strings.Count(line, "`")%2 != 0 || len(line) > 1000 {
+		t.Errorf("the line is not bounded or its backticks are unbalanced (%d bytes)", len(line))
 	}
 }

@@ -11,8 +11,58 @@ import (
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
+
+func TestRunUsageIsUnknownWhenFinishedRolesRecordedNone(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		tokens int
+		cost   float64
+		known  bool
+	}{
+		{"unknown", 0, 0, false}, {"tokens", 5, 0, true}, {"cost", 0, .12, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			d, store, p := runDaemon(t, nil)
+			_, err := store.Create(runrec.Record{ID: "usage", Project: p.Name, State: runrec.StateStopped,
+				Roles: []runrec.RoleRecord{{Role: engine.RoleImplementer, EndedAt: time.Now(), Tokens: tc.tokens, CostUSD: tc.cost}}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			rows := d.engineRuns(p.Name)
+			if len(rows) != 1 {
+				t.Fatalf("rows: %+v", rows)
+			}
+			if rows[0].UsageKnown != tc.known {
+				t.Errorf("usage_known = %v, want %v", rows[0].UsageKnown, tc.known)
+			}
+			if rows[0].Tokens != tc.tokens {
+				t.Errorf("tokens = %d, want %d", rows[0].Tokens, tc.tokens)
+			}
+		})
+	}
+}
+
+func TestRunTokensCountLiveOnlyForRunningRoles(t *testing.T) {
+	ended := runrec.RoleRecord{Role: engine.RoleImplementer, EndedAt: time.Now(), Tokens: 100}
+	running := runrec.RoleRecord{Role: engine.RoleReviewer}
+	live := map[string]engine.Live{engine.RoleImplementer: {Tokens: 100}, engine.RoleReviewer: {Tokens: 7}}
+	for _, tc := range []struct {
+		name  string
+		roles []runrec.RoleRecord
+	}{
+		{"stale ended live", []runrec.RoleRecord{ended, running}},
+		{"duplicate running role", []runrec.RoleRecord{ended, running, running}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := runTokens(tc.roles, live); got != 107 {
+				t.Fatalf("total = %d, want 107", got)
+			}
+		})
+	}
+}
 
 func TestSnapshotActivityUsesDaemonClock(t *testing.T) {
 	emitted := make(chan struct{})

@@ -220,7 +220,7 @@ func TestArchitectReportChecksOnlyTheOwnerSection(t *testing.T) {
 func TestArchitectWaitsForGreenChecksAndDoesNotRepeatAfterGateFail(t *testing.T) {
 	h := architectHarness(t)
 	// First review fix fails its checks; the architect fix also fails once.
-	h.checks.outputs = []CheckOutput{{OK: true, Output: "green 1"}, {OK: false, Output: "red 2"}, {OK: true, Output: "green 3"}, {OK: false, Output: "red 4"}, {OK: true, Output: "green 5"}}
+	h.checks.outputs = []CheckOutput{{OK: true, Output: "green 1"}, {OK: false, Output: "red 2"}, {OK: false, Output: "red 2 again"}, {OK: true, Output: "green 3"}, {OK: false, Output: "red 4"}, {OK: false, Output: "red 4 again"}, {OK: true, Output: "green 5"}}
 	arch := h.runner.script
 	failedGate := false
 	h.runner.script = func(req Request, n int) (Result, error) {

@@ -90,22 +90,44 @@ func gitStatusAt(ctx context.Context, d Deps, dir string) (string, error) {
 }
 
 var errSpecMainMoved = errors.New("main moved during the spec check")
-var errSpecStatusChanged = errors.New("main checkout status changed outside the spec-check role")
+var errSpecStatusChanged = errors.New("the main checkout changed outside the check")
 
 // SpecCheckRetryError retains the failure and tells clients that the automatic
 // retry has been used. It unwraps so callers can still inspect a ShapeError.
-type SpecCheckRetryError struct{ First, Cause error }
+// Resumed says that the check's own session was also resumed once with the
+// error before it gave up (S266, *proposed*).
+type SpecCheckRetryError struct {
+	First, Cause error
+	Items        []string
+	Resumed      bool
+}
 
 func (e *SpecCheckRetryError) Unwrap() error { return e.Cause }
 func (e *SpecCheckRetryError) Error() string {
+	items := strings.Join(e.Items, ", ")
+	const safe = "Check again; the check changes nothing, so a rerun is safe."
 	if errors.Is(e.First, errSpecMainMoved) && errors.Is(e.Cause, errSpecMainMoved) {
-		return "main moved during the spec check and again on its retry; check again"
+		return fmt.Sprintf("main moved during the check of %s and again on its retry. %s", items, safe)
 	}
 	if errors.Is(e.First, errSpecStatusChanged) && errors.Is(e.Cause, errSpecStatusChanged) {
-		return "main checkout status changed outside the role during the spec check and again on its retry; check again"
+		return fmt.Sprintf("the main checkout changed outside the check of %s and again on its retry. %s", items, safe)
 	}
-	return fmt.Sprintf("spec check failed on its automatic retry; check again: %v", e.Cause)
+	// No "spec check" here: the CLI prefixes "spec check failed: ".
+	var denied *specDenialError
+	hint := ""
+	if errors.As(e.Cause, &denied) {
+		hint = " (the role kept using a denied command, such as a pipe)"
+	}
+	if e.Resumed {
+		return fmt.Sprintf("%s failed again after ork gave the role its error once: %v%s. %s", items, e.Cause, hint, safe)
+	}
+	return fmt.Sprintf("%s failed again on its automatic retry: %v%s. %s", items, e.Cause, hint, safe)
 }
+
+// specDenialError is a spec check round that ended with denied commands.
+type specDenialError struct{ text string }
+
+func (e *specDenialError) Error() string { return "permission denied: " + e.text }
 
 type specLedger struct {
 	current   int
@@ -113,12 +135,20 @@ type specLedger struct {
 	run       string
 	contract  *slicercli.RelayContract
 	writer    runrec.Writer
+	// resumed is set once the check has resumed its session with an error
+	// (S266, *proposed*). It does so once for the whole check, however many
+	// times the check starts over; first is the error that earned the resume.
+	resumed bool
+	first   error
 }
 
 // RunSpecCheck checks every item read-only and returns its verdict. A change
-// inside the role with HEAD unchanged stops the check. A moving HEAD, a
-// status change outside the role, or a malformed report gets one retry with
-// fresh specs. A second failure says that the retry has already been used.
+// inside the role with HEAD unchanged stops the check. A malformed report or a
+// denied command resumes the role's own session once with the error and the
+// expected forms (S266, *proposed*). A moving HEAD or a status change outside
+// the role gets one retry with fresh specs; so does a malformed report that
+// could not be resumed. A second failure says that the retry has already been
+// used and that checking again is safe.
 func RunSpecCheck(ctx context.Context, d Deps, cfg SpecCheckConfig) (result *SpecCheckResult, finalErr error) {
 	if len(cfg.Items) == 0 {
 		return nil, errors.New("spec check needs items")
@@ -145,12 +175,19 @@ func RunSpecCheck(ctx context.Context, d Deps, cfg SpecCheckConfig) (result *Spe
 	for attempt := 0; ; attempt++ {
 		res, err := runSpecCheckOnce(ctx, d, cfg)
 		var shape *ShapeError
-		if attempt == 0 && ctx.Err() == nil && (errors.Is(err, errSpecMainMoved) || errors.Is(err, errSpecStatusChanged) || errors.As(err, &shape)) {
+		var denied *specDenialError
+		isShape, isDenied := errors.As(err, &shape), errors.As(err, &denied)
+		// A shape error after the session was resumed once is final: the
+		// resume was the retry.
+		if attempt == 0 && ctx.Err() == nil && (errors.Is(err, errSpecMainMoved) || errors.Is(err, errSpecStatusChanged) || isShape && !cfg.ledger.resumed) {
 			first = err
 			continue
 		}
-		if attempt > 0 && err != nil && ctx.Err() == nil {
-			return nil, &SpecCheckRetryError{First: first, Cause: err}
+		if err != nil && ctx.Err() == nil && (attempt > 0 || cfg.ledger.resumed && (isShape || isDenied)) {
+			if first == nil {
+				first = cfg.ledger.first
+			}
+			return nil, &SpecCheckRetryError{First: first, Cause: err, Items: cfg.Items, Resumed: cfg.ledger.resumed}
 		}
 		return res, err
 	}
@@ -215,6 +252,8 @@ func runSpecCheckOnce(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCh
 	}
 	var text string
 	exhausted := cfg.ledger.exhausted
+	taskBase := strings.Join(cfg.Items, ", ") + " spec-check"
+entries:
 	for i, entry := range cfg.Lineup {
 		if i < cfg.ledger.current || exhausted[entry.Vendor] {
 			continue
@@ -230,83 +269,123 @@ func runSpecCheckOnce(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCh
 		if err != nil {
 			return nil, err
 		}
-
-		stepID := ""
-		if cfg.ledger != nil && cfg.ledger.run != "" {
-			step, err := d.Slicer.RelayStep(ctx, cfg.ledger.writer, root, cfg.ledger.run, slicercli.StepSpec{Role: cfg.ledger.contract.LedgerRole(RoleSpecCheck), Agent: entry.Vendor, Vendor: entry.Vendor, Model: entry.Model, Reasoning: entry.Effort, Phase: "start", Task: strings.Join(cfg.Items, ", ") + " spec-check"})
-			if err == nil {
-				stepID = step.ID
-			}
-		}
-		res, runErr := d.Runner.Run(ctx, Request{
+		req := Request{
 			Role: RoleSpecCheck, Round: 1, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
 			Brief: brief, Worktree: root, TempDir: tempDir, ReportPath: reportPath,
 			Allowlist: perm.Allow, ReadOnly: perm.ReadOnly,
-		})
+		}
+		task := taskBase
 
-		if stepID != "" {
-			phase := "done"
-			reason := ""
-			if runErr != nil || res.Exit != ExitOK {
-				phase = "fail"
-				reason = res.Reason
-				if reason == "" {
-					reason = string(res.Exit)
-				}
-				if runErr != nil {
-					reason = runErr.Error()
+		// A round that ends with denied commands or a malformed report is
+		// resumed once in its own session (S266, *proposed*); every other
+		// outcome leaves this loop.
+		for {
+			stepID := ""
+			if cfg.ledger != nil && cfg.ledger.run != "" {
+				step, err := d.Slicer.RelayStep(ctx, cfg.ledger.writer, root, cfg.ledger.run, slicercli.StepSpec{Role: cfg.ledger.contract.LedgerRole(RoleSpecCheck), Agent: entry.Vendor, Vendor: entry.Vendor, Model: entry.Model, Reasoning: entry.Effort, Phase: "start", Task: task})
+				if err == nil {
+					stepID = step.ID
 				}
 			}
-			version, _ := roles.CheckContractLine("Contract: " + cfg.ledger.contract.Contract)
-			if version < 10 {
-				reason = ""
+			res, runErr := d.Runner.Run(ctx, req)
+
+			class := res.Exit
+			if runErr != nil || class == "" {
+				class = ExitError
 			}
-			d.Slicer.RelayStep(context.WithoutCancel(ctx), cfg.ledger.writer, root, cfg.ledger.run, slicercli.StepSpec{Step: stepID, Phase: phase, Reason: strings.Join(strings.Fields(reason), " ")})
+			// The nudge, when this round earned one: the same session, the
+			// same row, the error and the expected forms. Only an untouched
+			// tree and a still HEAD qualify, so the checks below keep their
+			// order of precedence for a role that changed something.
+			var problem error
+			var nudge string
+			switch {
+			case len(res.Denials) > 0:
+				problem = &specDenialError{text: denialTexts(res.Denials)}
+				nudge = specDenialNudge(res.Denials, cfg.Items)
+			case class == ExitOK:
+				if _, perr := ParseSpecCheck(readSpecReport(reportPath, res.Report), cfg.Items); perr != nil {
+					problem = perr
+					nudge = specShapeNudge(perr, cfg.Items)
+				}
+			}
+			if stepID != "" {
+				phase := "done"
+				reason := ""
+				if problem != nil && runErr == nil && res.Exit == ExitOK {
+					// The round ran to its end but its answer is refused: the
+					// run tree should explain the second spec-check row.
+					phase, reason = "fail", specProblemReason(res.Denials)
+				}
+				if runErr != nil || res.Exit != ExitOK {
+					phase = "fail"
+					reason = res.Reason
+					if reason == "" && problem != nil {
+						reason = specProblemReason(res.Denials)
+					}
+					if reason == "" {
+						reason = string(res.Exit)
+					}
+					if runErr != nil {
+						reason = runErr.Error()
+					}
+				}
+				version, _ := roles.CheckContractLine("Contract: " + cfg.ledger.contract.Contract)
+				if version < 10 {
+					reason = ""
+				}
+				d.Slicer.RelayStep(context.WithoutCancel(ctx), cfg.ledger.writer, root, cfg.ledger.run, slicercli.StepSpec{Step: stepID, Phase: phase, Reason: strings.Join(strings.Fields(reason), " ")})
+			}
+			if err := ctx.Err(); err != nil {
+				return nil, err
+			}
+			after, statusErr := gitStatusAt(ctx, d, root)
+			if statusErr != nil {
+				return nil, fmt.Errorf("read-only fingerprint: %w", statusErr)
+			}
+			afterHead, err := specHeadAt(ctx, d, root)
+			if err != nil {
+				return nil, err
+			}
+			resumable := class == ExitOK || class == ExitError
+			if problem != nil && resumable && !cfg.ledger.resumed && res.Session != "" && afterHead == head && after == before {
+				cfg.ledger.resumed, cfg.ledger.first = true, problem
+				if err := os.Remove(reportPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+					return nil, fmt.Errorf("old report: %w", err)
+				}
+				req.Resume, req.Brief, task = res.Session, nudge, taskBase+" resumed with error"
+				continue
+			}
+			if len(res.Denials) > 0 {
+				return nil, problem
+			}
+			if afterHead != head {
+				return nil, errSpecMainMoved
+			}
+			if after != before {
+				return nil, errors.New("spec-check changed the tree, and it is a read-only role")
+			}
+			if class == ExitOK {
+				text = readSpecReport(reportPath, res.Report)
+				break entries
+			}
+			if class == ExitOutOfCredits {
+				exhausted[entry.Vendor] = true
+			}
+			next := i + 1
+			for next < len(cfg.Lineup) && exhausted[cfg.Lineup[next].Vendor] {
+				next++
+			}
+			if fallbackExit(class) && next < len(cfg.Lineup) {
+				cfg.ledger.current = next
+				continue entries
+			}
+			msg := fmt.Sprintf("spec-check (%s %s %s) exited %s", entry.Vendor, entry.Model, entry.Effort, class)
+			if runErr != nil {
+				msg += ": " + runErr.Error()
+			}
+			return nil, errors.New(msg)
 		}
-		if err := ctx.Err(); err != nil {
-			return nil, err
-		}
-		after, statusErr := gitStatusAt(ctx, d, root)
-		if statusErr != nil {
-			return nil, fmt.Errorf("read-only fingerprint: %w", statusErr)
-		}
-		afterHead, err := specHeadAt(ctx, d, root)
-		if err != nil {
-			return nil, err
-		}
-		class := res.Exit
-		if runErr != nil || class == "" {
-			class = ExitError
-		}
-		if len(res.Denials) > 0 {
-			return nil, fmt.Errorf("spec-check exited %s: permission denied: %s", class, denialTexts(res.Denials))
-		}
-		if afterHead != head {
-			return nil, errSpecMainMoved
-		}
-		if after != before {
-			return nil, errors.New("spec-check changed the tree, and it is a read-only role")
-		}
-		if class == ExitOK {
-			text = readSpecReport(reportPath, res.Report)
-			break
-		}
-		if class == ExitOutOfCredits {
-			exhausted[entry.Vendor] = true
-		}
-		next := i + 1
-		for next < len(cfg.Lineup) && exhausted[cfg.Lineup[next].Vendor] {
-			next++
-		}
-		if fallbackExit(class) && next < len(cfg.Lineup) {
-			cfg.ledger.current = next
-			continue
-		}
-		msg := fmt.Sprintf("spec-check (%s %s %s) exited %s", entry.Vendor, entry.Model, entry.Effort, class)
-		if runErr != nil {
-			msg += ": " + runErr.Error()
-		}
-		return nil, errors.New(msg)
 	}
 	verdicts, err := ParseSpecCheck(text, cfg.Items)
 	if err != nil {
@@ -320,6 +399,51 @@ func runSpecCheckOnce(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCh
 		owner = ""
 	}
 	return &SpecCheckResult{Verdicts: verdicts, Specs: specs, OwnerNeeded: strings.TrimSpace(owner)}, nil
+}
+
+// specProblemReason is the short ledger reason of a refused spec check round.
+func specProblemReason(denials []runrec.DeniedCommand) string {
+	if len(denials) == 0 {
+		return "report shape"
+	}
+	reason := "denied: " + denialTexts(denials)
+	if r := []rune(reason); len(r) > 80 {
+		reason = string(r[:77]) + "..."
+	}
+	return reason
+}
+
+// specShapeNudge is the prompt of a spec check session resumed after a
+// malformed report: the shape problems and the forms the report may take.
+func specShapeNudge(err error, ids []string) string {
+	return "ork checked your report and refused it: " + err.Error() + "\n\n" +
+		"Write the whole report again as your final message, as plain text with no code fence. " +
+		"It has one `## Slice ID` section for each of " + strings.Join(ids, ", ") + ", in that order. " +
+		"Under each, write `Ready` alone, or one or more question blocks that each start with `Question:` " +
+		"(then `Options:` with lines `1. label: summary`, `Recommend: N - reason`, and an optional `Decision key:` line). " +
+		"End with the shared `## Owner needed` section (`none` when nothing is open). " +
+		"You may only read the tree. Do not start the check over; fix the report from what you already read.\n"
+}
+
+// specDenialNudge is the prompt of a spec check session resumed after denied
+// commands: what was denied, how to read without it, and the report forms.
+func specDenialNudge(denials []runrec.DeniedCommand, ids []string) string {
+	var b strings.Builder
+	b.WriteString("These commands were denied and did not run:\n\n")
+	const shown = 10
+	for i, d := range denials {
+		if i == shown {
+			fmt.Fprintf(&b, "- and %d more\n", len(denials)-shown)
+			break
+		}
+		b.WriteString("- " + d.Text() + "\n")
+	}
+	b.WriteString("\nYou may only read the tree. Use one command per call: no pipe, no `&&`, no `;`, no redirect, no subshell. " +
+		"Do not repeat a denied command; use the built-in read, search and list tools, or a plainer single command. " +
+		"Read what you still need, then give the whole report as your final message, as plain text with no code fence: " +
+		"one `## Slice ID` section for each of " + strings.Join(ids, ", ") + ", in that order, holding `Ready` alone or question blocks that start with `Question:`, " +
+		"then the shared `## Owner needed` section.\n")
+	return b.String()
 }
 
 // readSpecReport returns the report file's text, else the vendor's final

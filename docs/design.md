@@ -111,6 +111,7 @@ ork (TUI)  ork status --json (CLI)
   | `roles.matrix` (proposed wire, S168) | `{"project"}` | `{"markdown","rows":[{"id","role","agent","use"}],"rules":[{"id","text"}]}` from `slicer relay-roles show --json`: slicer's own text, and for each row what ork does with it (`use`: `used as claude\|codex\|grok`, `UI pass row, ...`, `Spec check row, ...` (every row that the project's `spec_check_rows` or a rule names), `skipped: no adapter for AGENT`, `not used: the gate runs the reviewer's lineup`, `not run by ork`, `not used: ork has no role ROLE`); read-only, no slicer write; slicer's error keeps its code and message; slicer runs on each call |
   | `wave.overlap` (proposed wire) | `{"project","items":[ID...]}` | `{"overlap":[{"a","b","shared"?}]}` from `slicer deps --overlap`; `shared` is absent when a pair shares no path; fewer than two items is `bad_params`; slicer runs on each call |
   | `subscribe` | `{"focus":[names]}` | none; the connection gets notices (below) and the named projects become visible |
+  | `run.landcheck` (*proposed*, S217) | `{"run"}` | `{"base"?,"blockers"?,"reason"?,"error"?}`; current advisory landing check; absent fields are empty |
   | `refresh` | `{"project"}` | none; reads every part of the project now and returns once they are read |
   | `projects.list` | none | `{"projects":[...]}`; an empty registry is valid |
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
@@ -322,6 +323,20 @@ slice.
   implementer, with the failing output in the brief, without spending a
   review. The check command comes from `slicer config` once slicer has the
   key; until then it comes from the registry (`project.check-command`).
+  *Proposed (S239):* when the project command exits non-zero, ork runs it once
+  more, with the same directory and timeout, before it spends a fix round on
+  it. A pass on the rerun is a flaky pass: the project command counts as
+  green (the round is still red when `slicer check` is red) and `checks[]`
+  records `attempts` 2 and `flaky` true, so `flaky` true with `ok` false is
+  possible. A timeout is not run
+  again, `slicer check` never is, and a rerun that cannot run pauses like the
+  first run. If the rerun is red too, the brief for the fix round starts with
+  the failing test names and their assertion lines (at most 8000 bytes, from
+  `go test` text output: `--- FAIL:` lines with the lines under them (with
+  `go test -v`, the lines before them since the test's `=== RUN` line), package
+  `FAIL` lines, a panic, a data race report and build errors), then the end
+  of the log (30 KB) as before. Output that is not Go test output shows only
+  the end of the log, as before. The landing re-check follows the same rule.
   *Proposed (S279, adj #178, `checks.outside-problems`):* a red `slicer check`
   does not make a round check red when the branch is behind its base branch
   (the base is not an ancestor of the worktree's HEAD) and every problem names
@@ -401,9 +416,22 @@ slice.
     whole.
   - *owner*: the finding is an owner question in the shape of S111: a title,
     `Options:` with 2 to 4 numbered labels, `Recommend: N - reason`, and an
-    optional `Decision key:`. ork keeps it in `findings[]` of the run record
-    and shows it in the pane. It does not block. `[owner blocker]` makes ork
-    pause the round with a `question` pending, as an `## Owner needed`
+    optional `Decision key:`. The prompts say the body holds only those lines,
+    with no list marker before `Options:`, `Recommend:` or `Decision key:`.
+    The parser is lenient (S288, *proposed*): it strips one leading `- `, `* `
+    or `+ ` marker from `Options:`, the option lines and `Recommend:`, and
+    every other body line stays in the finding's `text` as context. A
+    non-blocking finding keeps that context in the run record only; a
+    blocker's question carries the context lines above its block. A body
+    line between two numbered options, a numbered line that is not a valid
+    option, an option or numbered line after `Recommend:`, a repeated
+    `Options:` or `Recommend:`, a `Recommend:` before `Options:`, a
+    `Decision key:` line behind a list marker, and a body without `Options:`
+    or `Recommend:` are still refused. The `## Owner needed` block and the
+    spec check's question blocks are read the same way (owner decision
+    2026-11-07). ork keeps the finding in `findings[]` of the run record and
+    shows it in the pane. It does not block. `[owner blocker]`
+    makes ork pause the round with a `question` pending, as an `## Owner needed`
     section does (`questions[]`, the answer reaches the same role, and
     `reviewDone` runs that role again). A malformed owner or later finding is
     a report shape error. Proposed (S137): every blocker is asked, with
@@ -461,6 +489,63 @@ slice.
   base branch the first one moved. The base branch is the branch the main checkout is on. Each step
   reads git first, so a retry after a pause continues where the landing
   stopped.
+  *Proposed (S217):* before approval, the run pane asks `run.landcheck` on
+  open and each refresh. This separate read opens the stored record without
+  taking a run lock or running git inside a snapshot. Other states and a
+  `stop_after` of `commit` return an empty result without git. Unknown runs
+  are `not_found`. The check uses the landing's main-status parser and
+  tracking-file exclusions below, but the slice changed set includes its
+  uncommitted work: `merge-base BASE HEAD`, then
+  `diff --name-only -z --no-renames --no-relative MERGE_BASE` plus untracked
+  worktree paths from `ls-files --others --exclude-standard -z --full-name`.
+  Blockers are sorted unique exact path overlaps, excluding this project's
+  tracking files (including for a project below the repository root).
+  Both names of a main-checkout rename count; directory-versus-file clashes
+  are not detected. `reason` carries the landing's detached-main or
+  main-on-slice-branch reason. Other git read failures set `error` and no
+  warning; the TUI hides them. Every git call uses the usual 30-second read
+  timeout. Nothing is persisted or written by the check. It is advisory:
+  approval and the landing's own checks remain unchanged.
+  *Proposed (S254):* before step 1, ork looks at the main checkout. It
+  takes the paths that are uncommitted there (tracked or staged changes,
+  untracked files, both sides of a rename) and the paths the slice branch
+  changes since it left the base branch (`git diff --name-only
+  BASE...BRANCH`), and keeps the paths in both: those are the paths the
+  fast-forward would write, and the only ones git refuses on. Uncommitted
+  files the slice does not change are left alone (the `ID done` commit after
+  `slicer land`, step 3, still commits any `.slicer` change). The project's tracking
+  files are the paths under the project's folder in the repository
+  (`git rev-parse --show-prefix`; a project can be a subdirectory) that are
+  in `.slicer/`, except `.slicer/config.json` and `.slicer/relay-roles.json`,
+  because a matrix or config edit can be a deliberate uncommitted owner
+  edit. A sibling project's `.slicer` is not this landing's.
+  - If any overlapping path is not a tracking file, the run pauses
+    (`paused`, pending kind `error`, state `land`) before the merge-in and the
+    re-check, with one line: `landing stopped: uncommitted changes in P to
+    files the slice changes: F1, F2 +N more; commit or stash them` (at most
+    five names). ork commits nothing, and never stashes, checks out or resets
+    in the main checkout. `ork retry` goes on after the owner commits or
+    removes the files.
+  - If every overlapping path is a tracking file, ork commits them on the
+    base branch as `Tracking edits on main before landing ID`, by name
+    (`git add -A -- PATHS`, `git commit -m MSG -- PATHS`, never a pathspec of
+    `.`, so staged files stay staged). The base moved, so step 1 merges it in
+    with slicer's merge drivers and re-checks. The commit is silent: it shows
+    in `git log` and the run's `writes[]`. Pathspecs are literal
+    (`:(literal)PATH`), so a name with a glob character takes no other file
+    along; only paths that still exist are added (a deletion the owner staged
+    is recorded by the commit alone). A failed add or commit pauses with one
+    line that starts `git add: ` or `git commit: `; a failed commit after a
+    good add ends `; ork staged PATHS` (at most five names), because the files
+    stay staged. File names in these reasons have control characters and
+    terminal escape sequences dropped. The diff is read with `--no-relative`,
+    so a `diff.relative` setting cannot switch the check off.
+  The same check runs again right before the fast-forward, for an edit made
+  during the merge-in or the re-check. A tracking-only overlap there is
+  committed and the landing goes back to step 1 once; any other overlap, or a
+  second one, pauses as above. A failed read (`git status: `, `git diff: `,
+  `git rev-parse: `) pauses with one line. When the slice branch is already
+  in the base branch (a retry after the fast-forward), none of this runs.
   1. If the base branch moved (its tip is not in the slice branch), `git -C W
      merge -m "Merge BASE into BRANCH" BASE` in the worktree, then `slicer
      render`, a commit of what render rewrote, and a re-run of the project
@@ -499,9 +584,10 @@ slice.
      skips the merge and goes on to render and re-check; if the owner aborted
      it, ork merges again and pauses again. A failed merge commit pauses with
      git's message.
-  2. `git -C P merge --ff-only BRANCH` in the main checkout. A failure (for
-     example an untracked file in the way) pauses the slice with the git
-     message; `t` retries.
+  2. `git -C P merge --ff-only BRANCH` in the main checkout. A failure (a
+     file written in the main checkout after the second check, say) pauses
+     the slice with the git message folded onto one line (*proposed*,
+     S254); `t` retries.
   3. `slicer land ID --branch BRANCH --note "Landed BRANCH"` in the main
      checkout (it needs the branch merged, so it follows the fast-forward). In
      `handoff` mode it marks the item done there, and ork commits the `.slicer`
@@ -582,7 +668,9 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
 - **Checks.** The project's check command runs with `sh -c` in the
   worktree, then `slicer check --json`. Either red sends the implementer
   back, resumed, with the output (last 30 KB) in the brief, and spends no
-  review. The output is saved as `checks-<round>.log`. *Proposed (S279):*
+  review. The output is saved as `checks-<round>.log`. *Proposed (S239):* an
+  exit failure of the project command is run once more first, and the brief
+  starts with the failing tests (see the checks bullet above). *Proposed (S279):*
   `slicer check` problems on other items defer to the landing merge when the
   branch is behind its base (see the checks bullet above).
 - **Review and gate.** The reviewer runs once, fresh and read-only. Findings
@@ -620,8 +708,63 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   limit pauses again. Rounds never silently stop a run; the third gate FAIL
   still stops it. There is no project or run round-limit setting. The test
   hook `Deps.MaxRounds` overrides only the first pause threshold.
-  To change the check, stop the run, set the check and start a new `ork run`;
-  retry of a stopped run is separate work (S296).
+  To change the check, stop the run, set the check (`ork projects set P
+  --check CMD`; a stopped run does not block it), then resume the stopped
+  run with `ork retry RUN` (S296, below).
+- **Resume a stopped run** (S296, *proposed*). `ork retry RUN [--rounds N]`
+  also accepts a stopped run that has no commit, did not stop in setup or
+  while queued (`stopped_from`), and whose worktree path exists and passes
+  the same check as `ensureWorktree` (path, branch and git dir; ork never
+  creates the worktree on a resume). Anything else is refused in one line
+  of the form `run ID <fact>; <action>`: a committed run, a run stopped
+  during setup, a missing or foreign worktree (the line adds `ork dismiss ID
+  to start a new run`), a role still running, another unfinished run of the
+  item, or a newer run of the item that uses the same worktree (the older run
+  is superseded: its status hint and `run.show` name no retry). A retry note
+  is refused for a stopped run. `Engine.CanResume` makes these checks
+  without changing anything. The daemon opens the run from the
+  store when it holds none (after a restart) and builds the engine again
+  from the registry entry as it is at the resume, so a fixed check command
+  takes effect. The
+  resume clears `dismissed_at`, `reason` and `stopped_from`, grants N
+  implementer rounds (2 by default) and begins a new ledger run
+  (`relay-run begin`); the stopped run's ledger run stays ended as stopped.
+  It re-enters `checks` in the next round number (the earlier check log is
+  kept), or `implement` in the same round when no implementer round has run
+  (a run stopped from S295's setup pause): implementer round 1 runs first
+  with the first-round brief. N rounds mean N implementer rounds: entering
+  the checks, `round_limit` is the entered round plus N (the entered round is
+  not an implementer round); entering implement, round 1 is the first of the
+  N, so `round_limit` is N (the first-pause floor of 3 rounds still applies).
+  A red result at the limit pauses with kind `rounds` as above. `stop`
+  records `stopped_from`: the state the run left, and for a paused run its
+  pending step. Resuming bypasses the project and global caps, like every
+  owner action (adj 122), and the resumed run counts as unfinished again,
+  so `ork projects set` refuses the fields a run reads until it rests.
+  *Start on an item with a stopped run (owner decision 2026-11-07, S296
+  Q1, option b):* `ork run` and `ork wave start` look at the newest run of
+  the item. When it is stopped, not dismissed, resumable by the rules above
+  and its worktree is the planned one, ork compares the worktree with the
+  last implementer round: the fingerprint of the tracked diff against HEAD
+  and the untracked names (the one `roles[].tree_sha256` holds) must equal
+  that round's `tree_sha256`. Equal: the start resumes that run with the
+  default grant, in the wave of this start (a run started alone gets a wave
+  of one), and the reply's `message` says so. The resumed run keeps the
+  stopped run's lineup, budgets and stop-after; the confirmed plan's are not
+  applied, and the message says so. Different, a role still running, a
+  worktree that is not the run's, or no fingerprint to compare (no
+  implementer round, or an old record): the start creates a new run at round
+  1 in the same worktree, and the `message` says why. A dismissed run is
+  never resumed by a start; dismissing is the owner's word that the run is
+  done, and `ork retry RUN` still resumes it. With no free slot the start is
+  refused, naming the stopped run (`ork retry RUN` gets past the caps, as
+  every owner action does), so its work is not restarted behind the owner's
+  back. The start fingerprints the tree before it takes the manager lock; under
+  the lock it checks that the run it probed is still the newest and has the
+  same `updated_at`, and that no finding action holds the run's record, or
+  refuses the start with "start again". The reply is not sent until the
+  engine applied the resume; a resume the engine refuses after all is
+  answered as `refused`, never as resumed.
 - **Resume.** A fix round resumes the implementer's latest session and the
   gate resumes the latest gate or reviewer session from the same vendor and
   model. Daemon runs copy the reviewer's lineup into the gate; a copy counts
@@ -641,7 +784,8 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   *Proposed (S275):* a shape error without an owner question automatically
   retries the same reporting role once in the same round and session. Its brief
   names the shape problems. Implementer (including finish), reviewer, gate,
-  architect and UI pass all follow this rule; spec check keeps its own retry.
+  architect and UI pass all follow this rule; spec check keeps its own
+  retry (S266, below).
   The retry uses no additional implementer round. The run record preserves
   both attempts and the refused report. Status and role rows say "shape retry";
   the first refusal sends no owner notice. A second malformed report pauses
@@ -677,9 +821,18 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
 
   Free context lines may precede `Question:`. They stay in the raw question
   text and the pane shows them above the options. From `Question:` onward,
-  the block keeps its strict shape: extra context lines inside or after it
-  are a shape error. The optional decision key line remains allowed anywhere
-  in the section.
+  the block is read as an owner finding's body is (S288, owner decision
+  2026-11-07, *proposed*): one leading `- `, `* ` or `+ ` marker is stripped
+  from `Options:`, the option lines and `Recommend:`, and any other line
+  inside or after the block is context. The question text of the pause (and
+  of `questions[]`) then holds the leading context, that context, and the
+  block, in that order, so the pane shows the context above the options.
+  A `Decision key:` line behind a list marker and an option line after
+  `Recommend:` are also shape errors. A line between two numbered options, a numbered line that is not a valid
+  option, a repeated or misplaced `Options:` or `Recommend:`, and a missing
+  or malformed `Options:` or `Recommend:` are a shape error. This leniency
+  never applies to the `VERDICT:` first line. The optional decision key line
+  remains allowed anywhere in the section.
 
   The decision key is optional. Title, labels, summaries and reasoning must
   be non-empty and each fits on one line. A malformed structured block is a
@@ -896,13 +1049,32 @@ question. Answer, approve, fix and retry record `--phase start` to continue.
   reads HEAD and `git status --porcelain` before and after, and fails the check, keeping no verdict, when
   the tree changed during the role's own run with HEAD unchanged
   (`role.readonly-fingerprint`). If HEAD moves, the checkout's working-tree
-  status changes outside the role's own run, or the report has a shape error,
-  it checks once more with fresh specs. A second failure says the retry was
-  used and asks the owner to check again. Permission denials are never retried
-  (owner decisions, S143, 2026-10-28). Its report has one `## Slice
+  status changes outside the role's own run, it checks once more with fresh
+  specs. *Proposed (S266):* a report with a shape error, or a round that ended
+  with denied commands (a piped `rg ... | head` is the case seen), resumes the
+  role's own session once (`Request.Resume`, the same row) with a short prompt
+  that names the shape problems or the denied commands and the expected forms
+  (`Ready`, or `Question:` blocks, then `## Owner needed`; one command per
+  call, no pipe). That resume is the retry: a second shape error or denial
+  fails the check with no start over, and the check resumes at most once,
+  even if it starts over. It is not offered when the role changed the tree or
+  HEAD moved, when the exit was a vendor limit, an auth failure or unclassified
+  (adj 23), or when the vendor gave no session id (a shape error then starts
+  over once, as before; a denial fails at once). The refused round is a
+  failed `spec-check` ledger step (reason `report shape` or `denied: ...`) and
+  the resumed round is a second step (task `resumed with error`). A failure
+  after the retry names the slices and says that checking again is safe
+  because the check changes nothing (code `spec_check_retry`); its text does
+  not say "spec check", because the CLI prefixes `spec check failed: `.
+  This replaces the S143 rule that denials are never retried (2026-10-28).
+  Its report has one `## Slice
   ID` section per slice, holding `Ready` or one or more question blocks; the
   multi-block parse (`ParseOwnerQuestions`) reads every `Question:` block of a
-  section with the strict shape of an owner question. Its lineup row is the
+  section, each block read as an `## Owner needed` block is (list markers
+  and context lines allowed, S288, *proposed*; the block's structure is still
+  strict). The extra lines stay in the block's raw text (`SpecQuestion.Text`)
+  and are filed with the adj record when the block has a decision key; the
+  TUI and CLI show only the title, options and reasoning. Its lineup row is the
   matrix rows that the project's `spec_check_rows` list gives, in order (S258,
   *proposed*; the first row with an adapter runs and the next is its
   fallback), else every row that a rule naming "Spec check row (rNN)" gives,
@@ -1081,9 +1253,15 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
     usage-limit text can appear with quota left). The owner ends it earlier
     with `ork vendor back NAME`. The owner can also mark a vendor out before a
     round fails, with `ork vendor out NAME`: that mark has no expiry and
-    holds until `back` or a daemon restart (owner decision 2026-10-29). A
-    second exit mark renews the exit text and the expiry and keeps the first
-    time; an exit mark does not change an owner mark.
+    holds until `back` (owner decision 2026-10-29), or ends at the time given
+    with `--until TIME` (S299, *proposed*). Owner marks are written to
+    `vendors-out.json` in the state directory (docs/state.md, Vendor memory)
+    and loaded when the daemon starts, so a restart or an idle exit keeps
+    them; exit marks are memory only. ork reads no reset time from a vendor's
+    message: a real captured message with one must exist as a test fixture
+    first. A second exit mark renews the exit text and the expiry and keeps the
+    first time; an exit mark does not change an owner mark, with or without an
+    end.
   - *Effect.* Before a round starts, rows of a vendor that is out are skipped
     to the first later row on a vendor that is not out. With no such row the
     round tries its row anyway, as before. This skips rows before a round;
@@ -1099,13 +1277,19 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
     and out of credits apart.
   - *Plan.* `run.plan` carries a note for each vendor that is out and that a
     chain of the plan uses, as `codex is out until HH:MM (since HH:MM; reason)`
-    (`codex is out until back (...)` for an owner mark) and `ork vendor back
-    NAME`. `ork status` and `ork vendor` say it the same way. A plan the owner
-    confirmed before the note changed is refused as changed.
-  - *Wire.* `vendors.list` and `vendors.set` (params `{vendor, out, reason}`;
-    the vendor must be one ork can run, `claude`, `codex` or `grok`, else
-    `bad_params`). `status` and `snapshot` carry `vendors_out`, and an engine
-    run row carries `vendor_wait`.
+    (`codex is out until back (...)` for an owner mark with no end). The end
+    takes the day before the time, as `4 Nov 07:12`, when it is not the day the
+    mark began, and the year when that differs; a start that is not today
+    takes the day too. The note also gives `ork vendor back NAME`. `ork status`
+    and `ork vendor` say it the same way. A plan the owner confirmed before the
+    note changed is refused as changed.
+  - *Wire.* `vendors.list` and `vendors.set` (params
+    `{vendor, out, reason, until}`). `until` is an RFC 3339 time that only an
+    `out` call may set and that must be after now. The vendor must be one ork
+    can run, `claude`, `codex` or `grok`, else `bad_params`. A mark or a back
+    that cannot be written to the state directory is refused with an
+    `internal` error and changes nothing. `status` and `snapshot` carry
+    `vendors_out`, and an engine run row carries `vendor_wait`.
 - **Detection** (`vendor.ratelimit-detection`): the classifier matches only
   documented signals. Every non-ok round and every round with permission
   denials saves its raw stdout, stderr and JSON at mode 0600 under
@@ -1165,7 +1349,8 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   permitted"; that write has no command event, and `.repo-status` is empty.
   If no worktree is set, the array contains only TEMP. Read-only roles get neither extra writable-root setting.
   When the role has a temp directory, its environment sets `GOCACHE` to
-  `TEMP/gocache`, replacing any inherited value and keeping other entries.
+  `TEMP/gocache` and `TMPDIR` to `TEMP` (S271, *proposed*), replacing any
+  inherited value of either and keeping other entries.
   JSONL thread, item and turn events supply the session, last agent
   message, command lifecycle events and usage. Input plus output tokens
   form the total. Whether cached input and reasoning output are subsets
@@ -1181,7 +1366,13 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   then `--allowedTools a,b --permission-prompts none` for a write role or
   `--permission-mode plan` for a read-only one, then the prompt. `--effort
   <level>` is listed by `claude --help` ("Effort level for the current
-  session", claude 2.1.x). The process runs in its own process group, using
+  session", claude 2.1.x). When the role has a temp directory, the process
+  environment (the daemon's, plus the project's `vendor_env` for `claude`)
+  sets `TMPDIR` to it (S271, *proposed*), replacing any inherited or
+  `vendor_env` value, so the role needs no `env TMPDIR=DIR` prefix and no
+  `mkdir`; the engine makes the directory before the role starts
+  (`internal/engine/round.go`, `internal/engine/speccheck.go`). Whether the
+  Claude CLI's own tool shell keeps `TMPDIR` is *unverified*. The process runs in its own process group, using
   `internal/clirun`'s helpers (`code.process-groups`). `stream_event` text
   deltas reach the output tail as they arrive. Session id, final text,
   tokens and `total_cost_usd` come from the `result` event. Cancelling the
@@ -1320,7 +1511,9 @@ ork file RUN N              file a later finding through the daemon
 ork new P TITLE [FLAGS]     file a slice from a request or note
 ork dismiss RUN             clear a stopped run from Needs you
 ork retry RUN [TEXT]        retry a paused role or step; TEXT is a note for
-                            the rerun (S256, proposed)
+                            the rerun (S256, proposed); resume a stopped
+                            run from its worktree, --rounds N more rounds
+                            (S296, proposed)
 ork stop RUN|WAVE           stop and record why
 ork daemon run              serve the daemon in the foreground
 ork daemon stop [--force]   stop the daemon; on a daemon that predates
@@ -1579,6 +1772,44 @@ drops terminal controls with `runrec.PlainText`, and bounds the read at
 role rows carry `report` names (omitted when empty), never report text. The
 TUI reads text on demand when `p` opens or moves to a report.
 
+*Proposed (S297):* `run.report` also serves a check log. The name may be one
+listed in the stored record's `checks[].log` (`checks-ROUND.log`, and
+`land-checks-ROUND.log` from the landing re-check), and the file
+may be a regular `.log` file; every other guard above holds (plain name in the
+run directory, no link, the same file as listed, plain text, at most 64 KiB).
+Nothing else is served: no live tail, no `run.json`, no vendor output and no
+fixture directory (owner decision 2026-11-05, Q3 and Q4). The check log is a
+raw tail of each command's output (30000 bytes per command) and
+`slicer check --json`, so it can hold what a command printed.
+
+*Proposed (S297):* `run.show` takes `{run}` and returns what the stored record
+says of a run, as file names and text fields, never file text: `id`, `item`,
+`state`, `reason`, `next`, `pending` (`kind`, `state`, `role`, `round`,
+`reason`, `question`, `ask`, `key`; no owner retry note), `roles[]` (`role`,
+`round`, `attempt`, `exit`, `report`, `denied` as a count and `denied_first`
+as the first three denied commands), `checks[]` (`round`, `command`, `ok`, `seconds`, `log`, `deferred`;
+not the record's log hash), `findings[]` (`n`, `kind`, `title`, `text`, `ask`, `answer`,
+`filed`) and `latest_report`. For a paused run `reason` is the whole stored
+pause reason, without the `; next: ...` suffix that `ork status` adds, and
+`next` is that suffix's command, set for every paused run, also one whose
+record has no pending. `latest_report` is the newest report of the
+pending role and round, else the last role record that has a report.
+Like `run.report` it reads the stored record without waiting for the run and
+writes nothing. An unknown run or a run id that is not a plain name is
+`not_found`, and an unreadable record is the `internal` error above. The CLI
+command `ork show RUN [NAME] [--json]` calls it and `run.report`: with no NAME
+it prints the header (`ID ITEM STATE`), the pause (kind, role and round) with
+its whole reason, the question with its numbered options and `Recommend`
+when the kind is `question`, the next command, each role attempt with its
+report name and, when it had denials, `denied N:` and the first three, the
+checks with their log names, the findings with their text and, for a paused
+run, `latest_report` (the pending role and round's newest report when it has
+one, else the last report of the run) under a `-- NAME --` rule, followed by
+the `next:` line again so a long report does not scroll the command away. With a NAME it
+prints that one report or check log, and an unknown name exits 1 with the
+names the run has. Both forms take `--json` (the `run.show` reply, or
+`{name,text}`). `ork status` is unchanged.
+
 *Proposed (S112):* `relay.answer` takes
 `{project,run,question,option?,text?,by,via,adj?}` and returns `{message}`.
 The daemon re-reads the ledger and refuses unregistered projects, missing,
@@ -1627,6 +1858,13 @@ The wire retains dismissed runs with `dismissed: true`, hidden from lists,
 so an open run pane can still show their findings.
 `run.dismiss` takes `{run}` and returns the run record (adj #117). It refuses
 a run that is not stopped or is busy. An unknown run returns `not_found`.
+`run.retry` of a stopped run (S296, *proposed*) takes `{run, rounds?, no_wait?}`
+and resumes it, from the store when the manager holds none; refusals are
+`refused`. `run.start` answers the run record plus an optional `message`
+(a bare-record reader ignores it), and each `wave.start` item has an optional
+`message`: ork resumed the item's stopped run, or started a new run and why.
+`run.show` and `ork status` name `ork retry RUN [--rounds N] or ork dismiss
+RUN` for a stopped run that can resume.
 
 `ork new PROJECT TITLE [--why TEXT|-] [--from ITEM] [--from-note N]`
 accepts optional `--size S|M|L`, `--importance N`, `--urgency N`, `--effort N`
@@ -1809,7 +2047,9 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `shape`, `lost`, `interrupted`, `budget`, `rounds` or `error`); other states omit it
   (`ui.pending-kind`). The optional `question` object carries `title`,
   `options:[{label,summary}]`, one-based `recommend` and `reason` for a paused
-  structured question. Older snapshots without it still load. `active_relays` are slicer's active relay runs.
+  structured question. Older snapshots without it still load. *Proposed (S308):*
+  `active_relays` holds slicer's active relay runs plus stale manual relays from
+  the board read. Both count in the text's `active relays M` line.
   The *proposed* optional `error` is a daemon-memory job or recovery error.
   The *proposed* optional `unavailable` marks a row without an engine.
   Removed-project groups are display-only and have `unavailable: true`.
@@ -1837,6 +2077,37 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `Add DIR as project NAME? [y/N]: `. Only y or yes accepts, without regard
   to case. Enter, EOF and other answers cancel with exit 1. JSON mode
   requires PATH and never prompts. No marker is required for the CLI offer.
+- `projects add --scan DIR [--yes]` (S302, *proposed*): scans DIR with the same
+  walk as the TUI checklist (`internal/projscan`; the folder itself, or two
+  levels below it; stops at a project; skips hidden folders, `.worktrees`
+  and `node_modules`; no symbolic links). DIR must be absolute and an existing
+  directory; none found is `not_found`, exit 1. Text mode prints `found N
+  projects under DIR:` and a row per candidate: `[x]` tracked and free, `[ ]` a
+  plain git repo, `[-]` blocked (the path is registered, or another project
+  holds the folder name, or another free row does) with the reason. Only the `[x]` rows are added: it asks
+  `Add the N marked projects? [y/N]: ` on standard input (as for the offer
+  above), or does not ask with `--yes`. With none to add it prints `nothing to
+  add` and exits 0. Each row goes through `projects.add` one by one, named after
+  its folder. Text: `added NAME PATH [(adj)]` or `failed NAME: MESSAGE` per row;
+  any failure makes exit 1 with `N of M projects were not added`, and the others
+  stay added. `--json` needs `--yes` and prints
+  `{"root":DIR,"folders":N,"stopped":BOOL,"results":[{"name","path","added",
+  "project"|"error"}],"skipped":[{"name","path","reason"}]}`; exit 1 when any row failed. `--scan` takes no
+  PATH and no `--name`, and `--yes` is valid only with `--scan` (usage, exit 2).
+  A plain git repo is listed and skipped; add it with `projects add PATH`, and
+  a line `[ ] plain git repos are not added; use ork projects add PATH` follows
+  the rows when one is listed (owner 2026-11-07: `--yes` stays tracked-only).
+  Of free rows with one folder name one holds it and the rest are blocked
+  (`name "N" is also found at PATH; add it with ork projects add PATH --name N`,
+  PATH being the holder). A tracked row holds the name before a plain git repo,
+  and rows of one kind go by path. A registered
+  path matches after symbolic links are resolved. Names, paths and errors print
+  as one plain line each. The scan quits after 500 folders or 200 projects: text
+  mode then prints `stopped after N folders and M projects; scan a narrower
+  folder to see more` (a limit hit in a nested folder ends the whole walk), the JSON has `"stopped":true` and `"folders":N` (both always present),
+  and the none-found error adds the same words. The scan runs before the
+  daemon is asked and is not asynchronous. No wire change: it uses
+  `projects.add` and `projects.list`.
   An empty registry is valid; startup writes nothing and never seeds
   (`registry.no-seed`, adj 157). The first add writes projects.json.
   The TUI Welcome add guides registration through this same daemon method;
@@ -2126,5 +2397,13 @@ available run usage from current-attempt usage, including reported zero.
 The live hook marks a usage event with `Live.UsageKnown`; text alone does
 not mark usage. The proposed `tail_truncated` flag records memory-cap cuts
 so the pane can mark the first wrapped tail row. These flags stay in memory
-and add no persisted record fields. Vendor identity determines whether a
-recorded cost is available: Claude has a cost field; Codex does not.
+and add no persisted record fields. *Proposed* (S129): a finished role has
+recorded usage when its tokens or cost is non-zero, and a known cost when
+`cost_usd` is non-zero, regardless of vendor. Zero tokens with zero cost
+show `tokens -  $-`.
+
+*Proposed* (S129): a round writes final usage before ending its live attempt.
+The daemon reads active live usage by role before reading the run record.
+It adds live tokens only for role names still running in that record, once
+per name. A role that ends between the reads contributes its recorded tokens
+only, so the total neither dips nor counts that role twice.

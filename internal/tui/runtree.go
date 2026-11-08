@@ -340,8 +340,8 @@ func (m *Model) roleDetails(steps []runTreeStep, r source.EngineRun) []runTreeSt
 			steps[i].hasUsage = true
 			steps[i].tokens = role.Tokens
 			steps[i].cost = role.CostUSD
-			steps[i].usageKnown = !role.EndedAt.IsZero() || role.Tokens != 0
-			steps[i].costKnown = !role.EndedAt.IsZero() && role.Vendor == "claude"
+			steps[i].usageKnown = role.Tokens != 0 || role.CostUSD != 0
+			steps[i].costKnown = !role.EndedAt.IsZero() && role.CostUSD != 0
 			steps[i].live = role.EndedAt.IsZero() && boardLive(r.State) && m.paneBoardRun().State != "stale"
 			if j == active && boardLive(r.State) && r.Section([]source.EngineRun{r}) == source.SectionRunning && m.paneBoardRun().State != "stale" {
 				steps[i].tokens = max(r.Tokens-recorded, 0)

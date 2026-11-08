@@ -5,12 +5,110 @@ package engine
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
+	"sync/atomic"
 	"testing"
+	"time"
 	"unicode/utf8"
+
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+func TestTotalDoesNotDipWhileTheRoleRecordIsWritten(t *testing.T) {
+	h, e := heartbeatEngine(t)
+	var returned atomic.Bool
+	sample := -1
+	now := e.d.Now
+	e.d.Now = func() time.Time {
+		// On the successful implementer path the first Now after Run returns
+		// is role.EndedAt inside the final record update, before Tokens is set.
+		if returned.CompareAndSwap(true, false) {
+			sample = e.Live(RoleImplementer).Tokens
+		}
+		return now()
+	}
+	h.runner.script = func(req Request, _ int) (Result, error) {
+		req.OnLive(Live{Tokens: 100, UsageKnown: true})
+		returned.Store(true)
+		res := defaultResult(req)
+		res.Tokens = 100
+		return res, nil
+	}
+	runHeartbeatRound(t, e)
+	if sample != 100 {
+		t.Errorf("live tokens during record write = %d, want 100", sample)
+	}
+	if got := e.Snapshot().Roles[0].Tokens; got != 100 {
+		t.Errorf("record tokens = %d, want 100", got)
+	}
+	if got := e.Live(RoleImplementer).Tokens; got != 0 {
+		t.Errorf("live tokens after round = %d, want 0", got)
+	}
+}
+
+func TestLiveByRoleReturnsEachActiveRoleOnly(t *testing.T) {
+	for _, ended := range []bool{false, true} {
+		t.Run(fmt.Sprint(ended), func(t *testing.T) {
+			e := &Engine{}
+			_, endI := e.startActivity(RoleImplementer)
+			defer endI()
+			_, endR := e.startActivity(RoleReviewer)
+			defer endR()
+			e.liveHook(RoleImplementer)(Live{Tokens: 100, Text: "implementer"})
+			e.liveHook(RoleReviewer)(Live{Tokens: 7, Text: "reviewer"})
+			want := map[string]Live{
+				RoleImplementer: {Tokens: 100, Text: "implementer", UsageKnown: true},
+				RoleReviewer:    {Tokens: 7, Text: "reviewer", UsageKnown: true},
+			}
+			if ended {
+				endI()
+				delete(want, RoleImplementer)
+			}
+			if got := e.LiveByRole(); !reflect.DeepEqual(got, want) {
+				t.Fatalf("active snapshots = %+v, want %+v", got, want)
+			}
+		})
+	}
+}
+
+func TestLiveAttemptEndsOnEveryRoundExit(t *testing.T) {
+	for _, ownerStop := range []bool{true, false} {
+		t.Run(fmt.Sprint(ownerStop), func(t *testing.T) {
+			h, e := heartbeatEngine(t)
+			e.d.Now = time.Now
+			e.d.HungAfter = 30 * time.Millisecond
+			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
+			h.runner.script = func(req Request, _ int) (Result, error) {
+				req.OnLive(Live{Tokens: 100, Text: "active"})
+				if ownerStop {
+					if err := e.stop(context.Background(), "owner stop"); err != nil {
+						t.Error(err)
+					}
+					cancel()
+				}
+				return Result{}, context.Canceled
+			}
+			if !ownerStop {
+				e.d.Runner = &hangRunner{silent: onlyRole(RoleImplementer), script: func(ctx context.Context, req Request) (Result, error) {
+					req.OnLive(Live{Tokens: 100, Text: "active"})
+					<-ctx.Done()
+					return Result{}, ctx.Err()
+				}}
+			}
+			if _, err := e.runRound(ctx, round{role: RoleImplementer, n: 1, state: runrec.StateImplement, task: "S04 implementer"}, nil); err != nil {
+				t.Fatal(err)
+			}
+			if got := e.Live(RoleImplementer); got != (Live{}) {
+				t.Fatalf("live attempt retained after exit: %+v", got)
+			}
+		})
+	}
+}
 
 func TestTailKeepsTheLastBytesOfVisibleText(t *testing.T) {
 	e := &Engine{}

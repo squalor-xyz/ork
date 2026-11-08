@@ -81,3 +81,24 @@ func TestReadReportRefusesLinksPathsAndOtherFiles(t *testing.T) {
 		}
 	}
 }
+
+func TestReadReportReadsACheckLogWithTheSameGuards(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "checks-1.log"), []byte("\x1b[31mFAIL\x1b[0m\nlog"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "other.txt"), []byte("other"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(filepath.Join(dir, "other.txt"), filepath.Join(dir, "link.log")); err != nil {
+		t.Fatal(err)
+	}
+	if got, err := ReadReport(dir, "checks-1.log"); err != nil || got != "FAIL\nlog" {
+		t.Fatalf("log: %q, %v", got, err)
+	}
+	for _, name := range []string{"link.log", "../checks-1.log", filepath.Join(dir, "checks-1.log"), "missing.log", "checks-1.txt", "run.json"} {
+		if text, err := ReadReport(dir, name); !errors.Is(err, ErrNoReport) || text != "" {
+			t.Errorf("%q: %q, %v", name, text, err)
+		}
+	}
+}

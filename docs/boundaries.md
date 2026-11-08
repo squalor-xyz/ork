@@ -85,7 +85,16 @@ change the contract by itself.
 - Slice result commits go on slice branches, only after the owner approves
   the slice (`git.commit`).
   In handoff mode, landing also commits the `.slicer` change on the base
-  branch as `ID done` (`internal/engine/land.go:68-80`).
+  branch as `ID done` (`internal/engine/land.go:89-102`).
+  *Proposed (S254):* before the merge-in, landing also commits the project's
+  uncommitted tracking files on the base branch as `Tracking edits on main
+  before landing ID`, only the files the slice branch also changes and only
+  when no other overlapping file is dirty. These are edits ork did not make
+  for this slice (owner filings, ork's own spec answers). The commit is by
+  name, never touches `.slicer/config.json` or `.slicer/relay-roles.json`, and
+  ork still never opens or edits `.slicer/` itself. Owner decision
+  2026-11-07, recorded as adj 193 (`landing.tracking-commit`, option
+  `commit-tracking`, decided 2026-11-08).
   Confirmed cleanup may run `git worktree remove` then
   `git branch -d` for a merged run (`git.cleanup-key`).
   Landing fast-forwards the base branch after merging it into the slice

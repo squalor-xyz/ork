@@ -23,6 +23,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/poll"
+	"github.com/squalor-xyz/ork/internal/projscan"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
@@ -43,6 +44,7 @@ type Config struct {
 	BuildID     string                                      // this TUI build
 	DaemonBuild string                                      // daemon build reported by daemon.info
 	Getwd       func() (string, error)                      // empty Welcome path offer; default os.Getwd
+	Scan        func(root string) (projscan.Result, error)  // folder scan for the add checklist; default projscan.Scan
 	Source      source.Source
 	Projects    []registry.Project
 	Now         func() time.Time              // default time.Now
@@ -201,6 +203,9 @@ func New(cfg Config) *Model {
 	}
 	if cfg.Exec == nil {
 		cfg.Exec = tea.ExecProcess
+	}
+	if cfg.Scan == nil {
+		cfg.Scan = projscan.Scan
 	}
 	if cfg.Getwd == nil {
 		cfg.Getwd = os.Getwd
@@ -373,12 +378,17 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		m.settleRender()
 		m.settleReport()
 		return m, cmd
+	case landCheckMsg:
+		m.landCheckArrived(msg)
+		return m, nil
 	case projectsDiscoveredMsg:
 		return m, m.applyProjectsDiscovered(msg)
 	case projectRemovedMsg:
 		return m, m.applyProjectRemoved(msg)
 	case projectAddedMsg:
 		return m, m.applyProjectAdded(msg)
+	case scanAddedMsg:
+		return m, m.applyScanAdded(msg)
 	case slicerTuiDoneMsg:
 		m.slicerTuiRestore = msg.selection
 		m.actionStatus = ""
@@ -534,7 +544,7 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			return m, nil
 		}
 		if m.welcome.editing || m.registeredProjectCount() == 0 {
-			if m.welcome.editing && m.welcome.confirm == "" && !m.welcome.pending {
+			if m.welcome.editing && m.welcome.confirm == "" && !m.welcome.pending && m.welcome.scan == nil {
 				m.welcome.field.update(msg)
 				m.actionStatus = ""
 			}
@@ -1208,6 +1218,9 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 	m.selectJumpRun()
 	m.pruneExpanded()
 	var cmds []tea.Cmd
+	if m.pane != nil && m.pane.project == msg.name {
+		cmds = append(cmds, m.fetchLandCheck())
+	}
 	if ps.dirty {
 		ps.dirty = false
 		cmds = append(cmds, m.fetch(msg.name, false))

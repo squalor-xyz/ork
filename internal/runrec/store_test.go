@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -97,5 +98,31 @@ func TestOpenNamesABadRunID(t *testing.T) {
 	}
 	if _, err := s.Open("missing"); errors.Is(err, ErrBadRunID) || !errors.Is(err, os.ErrNotExist) {
 		t.Errorf("Open(missing) = %v, want a not-exist error", err)
+	}
+}
+
+// S296 (*proposed*): stopped_from is stored for a stopped run and left out
+// otherwise.
+func TestStoppedFromRoundTripsAndIsOmittedWhenEmpty(t *testing.T) {
+	s := newStore(t)
+	record := rec("a")
+	record.State = StateStopped
+	record.StoppedFrom = StateImplement
+	r, err := s.Create(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	again, err := s.Open("a")
+	if err != nil || again.Snapshot().StoppedFrom != StateImplement {
+		t.Fatalf("stopped_from after reopen: %q, %v", again.Snapshot().StoppedFrom, err)
+	}
+	if !strings.Contains(readFile(t, filepath.Join(r.Dir(), "run.json")), `"stopped_from": "implement"`) {
+		t.Fatal("run.json lacks stopped_from")
+	}
+	if err := r.Update(func(rec *Record) { rec.StoppedFrom = "" }); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(readFile(t, filepath.Join(r.Dir(), "run.json")), "stopped_from") {
+		t.Fatal("an empty stopped_from is written")
 	}
 }

@@ -1,0 +1,39 @@
+{
+  "id": "S308",
+  "title": "ork status lists stale manual relays",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A manual relay (slicer relay-run) with no event for 30 minutes drops out of 'slicer relay-run list --active', so ork status printed 'active relays 0' while the S254 run was open. The TUI board already shows stale runs from BoardRuns (internal/source/source.go:365); ork status (internal/daemon/handlers.go:430-437, internal/cli/daemoncmds.go:62) does not. Show stale runs in status, marked stale, from the same BoardRuns data. Failing test: a snapshot with one stale run yields an ActiveRelays entry with state stale; the status line counts it."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/handlers.go:304` (status board read) and `internal/daemon/handlers.go:392` (projectStatus)\n- `internal/daemon/daemon_test.go:1457` (TestProjectStatusStaleRelays)\n- `internal/daemon/board_review_test.go:25` (TestStatusAndSnapshotReadBoard)\n- `internal/cli/daemoncmds.go:62-85` (status output; reference only)\n- `internal/cli/cli_test.go:1269` (TestStatusStaleRelays) and `internal/cli/cli_test.go:807` (TestDoctorCheckCommandSyntaxError; reported check failure)\n- `internal/source/source.go:365` (Direct.BoardRuns; reference only)\n- `docs/guide.md:345`\n- `docs/design.md:2032` (status active_relays definition)\n- `CHANGELOG.md:3`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestProjectStatusStaleRelays: a snapshot with one stale and one ended BoardRuns entry returns exactly the stale Relay, including its state and fields; adding one active Runs entry retains both and the active running step.\n- TestStatusAndSnapshotReadBoard: status reads board data and returns the stale relay, excluding ended runs; snapshot retains its existing board read.\n- TestStatusStaleRelays/stale: through the daemon, status prints exactly active relays 1 and the stale row ending stale (3 steps, 0 running), excluding the ended run.\n- TestStatusStaleRelays/mixed: changing only the active Runs input lists active and stale rows, keeps the active running-step line, and counts both.\n- Fix-round check failure: TestDoctorCheckCommandSyntaxError checks the real shell diagnostic without depending on its capitalization; run the project check directly so this assertion does not require a daemon socket."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. In the status builder, after the Runs loop, append each BoardRuns run whose state is \"stale\" as a Relay, built the same way (share the loop body).\n2. The CLI line already prints State; keep the count including stale runs.\n3. Note in docs/guide.md that status lists stale manual relays, and add a CHANGELOG bullet."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`.\n- No internal/tui change, so no UI pass; ork status output gains only the stale state word."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

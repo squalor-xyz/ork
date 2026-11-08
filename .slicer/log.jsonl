@@ -3572,6 +3572,85 @@
 {"when": "2026-11-07T20:31:00Z", "item": "S284", "action": "note", "from": "", "to": "", "note": "Measured on Linux (6 cores, 2026-11-07): internal/cli 7.7 s ", "by": "Jon Robbins"}
 {"when": "2026-11-07T20:31:30Z", "item": "S284", "action": "status", "from": "started", "to": "done", "note": "Landed: fake scripts written once per test binary and linked per test; no speedup on Linux (already under limits); Mac gain unverified.", "by": "Jon Robbins"}
 {"when": "2026-11-07T20:44:23Z", "item": "S279", "action": "status", "from": "started", "to": "done", "note": "Landed: round checks defer outside-item tracking problems to the landing when the branch is behind its base; named in reviewer, gate and finish briefs; checks[].deferred recorded.", "by": "Jon Robbins"}
+{"when": "2026-11-07T20:44:45Z", "item": "S288", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-07T21:24:50Z", "item": "S288", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-07 (interactive answer in the relay s", "by": "Jon Robbins"}
 {"when": "2026-11-07T20:44:47Z", "item": "S229", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-07T21:01:38Z", "item": "S229", "action": "note", "from": "", "to": "", "note": "Later (S307): S229 merge cleanup re-fires after a daemon res", "by": "Jon Robbins"}
 {"when": "2026-11-07T21:02:14Z", "item": "S229", "action": "status", "from": "started", "to": "done", "note": "Landed: daemon and engine wording leftovers (blocked-wave refusal, unreadable run record, renders error wording) and merged commit-stopped runs drop their spec-check dir.", "by": "Jon Robbins"}
+{"when": "2026-11-07T21:27:09Z", "item": "S288", "action": "status", "from": "started", "to": "done", "note": "Landed: owner findings, Owner needed and spec-check question blocks keep extra lines as context and accept one list marker; VERDICT lines stay strict; prompts state the exact body rule (owner decision 2026-11-07).", "by": "Jon Robbins"}
+{"when": "2026-11-07T21:27:24Z", "item": "S297", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-07T21:51:21Z", "item": "S297", "action": "note", "from": "", "to": "", "note": "Later (S307): a check log over 64 KiB is cut keeping the hea", "by": "Jon Robbins"}
+{"when": "2026-11-07T21:51:54Z", "item": "S297", "action": "status", "from": "started", "to": "done", "note": "Landed: ork show RUN [NAME] [--json] prints the pause reason, question, role reports, check logs and findings; run.show wire method; run.report serves listed check logs; S281 retired into this slice.", "by": "Jon Robbins"}
+{"when": "2026-11-07T21:52:12Z", "item": "S239", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-07T22:49:14Z", "item": "S239", "action": "note", "from": "", "to": "", "note": "Later (S307): (1) a two-run check log can exceed 64 KiB, and", "by": "Jon Robbins"}
+{"when": "2026-11-07T22:49:48Z", "item": "S239", "action": "status", "from": "started", "to": "done", "note": "Landed: a failed project check is run once more before a fix round (flaky pass spends no round); failing tests and assertion lines lead the fix-round and landing briefs; attempts and flaky in run.json.", "by": "Jon Robbins"}
+{"when": "2026-11-07T22:53:13Z", "item": "S296", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-07 (interactive answer in the relay s", "by": "Jon Robbins"}
+{"when": "2026-11-07T22:53:36Z", "item": "S302", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-07T23:54:06Z", "item": "S302", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-11-07 (interactive, relay session): in ", "by": "Jon Robbins"}
+{"when": "2026-11-07T22:53:34Z", "item": "S296", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-07T23:46:57Z", "item": "S296", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-11-07 (interactive): Q1 option (b) auto", "by": "Jon Robbins"}
+{"when": "2026-11-07T23:47:40Z", "item": "S296", "action": "status", "from": "started", "to": "done", "note": "Landed: ork retry resumes a stopped run from its worktree with N more implementer rounds; ork run and wave start auto-resume the newest stopped run when the worktree tree hash is unchanged (owner Q1 b); run.start carries a message.", "by": "Jon Robbins"}
+{"when": "2026-11-07T23:55:55Z", "item": "S302", "action": "status", "from": "started", "to": "done", "note": "Landed: ork projects add --scan DIR [--yes] and a TUI checklist add several projects at once (tracked preselected, bounded two-level scan, same-name and registered rows blocked); owner keys: y adds, Enter does nothing.", "by": "Jon Robbins"}
+{"when": "2026-11-07T23:56:19Z", "item": "S266", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-08T00:31:10Z", "item": "S266", "action": "note", "from": "", "to": "", "note": "Reverses the S143 rule that spec-check denials are never ret", "by": "Jon Robbins"}
+{"when": "2026-11-07T23:56:20Z", "item": "S299", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-08T00:27:26Z", "item": "S299", "action": "note", "from": "", "to": "", "note": "Later (S307): an unreadable or newer vendors-out.json is rep", "by": "Jon Robbins"}
+{"when": "2026-11-08T00:28:10Z", "item": "S299", "action": "status", "from": "started", "to": "done", "note": "Landed: owner vendor out marks survive a daemon restart (vendors-out.json, 0600) and ork vendor out NAME --until TIME ends a mark at a set time; absorbs S273.", "by": "Jon Robbins"}
+{"when": "2026-11-08T00:34:14Z", "item": "S266", "action": "status", "from": "started", "to": "done", "note": "Landed: a spec check resumes its own session once after a report-shape failure or a denied command; failures name the slices and say a rerun is safe; absorbs S300.", "by": "Jon Robbins"}
+{"when": "2026-11-08T00:34:51Z", "item": "S254", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-08T01:05:27Z", "item": "S254", "action": "note", "from": "", "to": "", "note": "Landed. Later: limit the ID done sweep (land.go:89-102) to h", "by": "Jon Robbins"}
+{"when": "2026-11-08T00:34:40Z", "item": "S271", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-08T00:51:04Z", "item": "S271", "action": "note", "from": "", "to": "", "note": "Later (S307): verify with one real Claude round that the too", "by": "Jon Robbins"}
+{"when": "2026-11-08T00:51:43Z", "item": "S271", "action": "status", "from": "started", "to": "done", "note": "Landed: Claude and Codex roles get TMPDIR set to the role temp dir (a project vendor_env TMPDIR is overridden); all six role prompts say so.", "by": "Jon Robbins"}
+{"when": "2026-11-08T01:06:18Z", "item": "S254", "action": "status", "from": "started", "to": "done", "note": "Landed: ork commits named tracking files before the landing merge (adj 193).", "by": "Jon Robbins"}
+{"when": "2026-11-08T01:08:11Z", "item": "S308", "action": "add", "from": "", "to": "open", "note": "ork status lists stale manual relays"}
+{"when": "2026-11-08T01:08:11Z", "item": "S308", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-08T01:09:19Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T01:09:20Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T01:09:20Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-08T01:09:20Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-08T01:29:23Z", "item": "S308", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-08T01:30:01Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T01:30:01Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T01:33:07Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T01:33:07Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T01:33:37Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T01:37:13Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T01:37:13Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T01:51:06Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T01:51:07Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T01:54:25Z", "item": "S308", "action": "note", "from": "", "to": "", "note": "Verified status reads board data and lists stale manual rela", "by": "Jon Robbins"}
+{"when": "2026-11-08T01:54:25Z", "item": "S308", "action": "status", "from": "started", "to": "done", "note": "Verified status reads board data and lists stale manual relays alongside active relays, excludes ended relays, preserves active step details, and counts stale relays in the CLI total. Regression tests and matching guide, design and changelog updates passed review and the final gate.", "by": "Jon Robbins"}
+{"when": "2026-11-08T03:13:38Z", "item": "S217", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-08T03:15:48Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T03:15:48Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T03:15:48Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-08T03:16:06Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-08T03:18:12Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T03:18:12Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-08T03:18:23Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-08T03:18:23Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T03:18:23Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T03:18:24Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-08T04:05:31Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-08T04:05:31Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T04:05:31Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T04:05:31Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-08T04:17:39Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T04:17:39Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T04:17:39Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-08T04:34:18Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T04:34:19Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T04:36:15Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T04:36:15Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T04:44:52Z", "item": "S217", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S217):", "by": "Jon Robbins"}
+{"when": "2026-11-08T04:45:07Z", "item": "S217", "action": "note", "from": "", "to": "", "note": "S217: approval panes read the current landing check on open ", "by": "Jon Robbins"}
+{"when": "2026-11-08T04:45:08Z", "item": "S217", "action": "status", "from": "started", "to": "done", "note": "S217: approval panes read the current landing check on open and refresh, warn for overlapping non-tracking files and branch-state pauses without blocking approval, hide read failures, and keep wrapped warnings whole. Regression and mutation checks verified; gate PASS and owner approval recorded in this session.", "by": "Jon Robbins"}
+{"when": "2026-11-08T03:13:25Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-08T05:09:44Z", "item": "S129", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-08T05:10:13Z", "item": "S129", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-08T05:10:13Z", "item": "S129", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-08T05:45:17Z", "item": "S129", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S129):", "by": "Jon Robbins"}
+{"when": "2026-11-08T05:45:29Z", "item": "S129", "action": "note", "from": "", "to": "", "note": "Finished roles show unknown usage when no tokens or cost wer", "by": "Jon Robbins"}
+{"when": "2026-11-08T05:45:29Z", "item": "S129", "action": "status", "from": "started", "to": "done", "note": "Show unknown finished-role usage and vendor-independent reported cost; preserve run token totals through round completion. Regression and mutation checks completed; gate PASS and owner approval received.", "by": "Jon Robbins"}
+{"when": "2026-11-08T05:09:17Z", "item": "S129", "action": "edit", "from": "", "to": "", "note": "Implement"}

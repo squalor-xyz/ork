@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 308,
+  "next_id": 309,
   "preamble": "",
   "passes": [
     {
@@ -6298,7 +6298,7 @@
       "id": "S129",
       "title": "Live usage edge cases: unknown usage, reported cost, total dip at round end",
       "short_title": "Live usage edge cases",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -6309,6 +6309,34 @@
           "created_at": "2026-11-01T00:58:24Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "fc0c99c2-bad3-4b3f-bfb8-9f47b09095d6",
+          "kind": "",
+          "text": "**2026-11-08** — Human checks at approval (S129):\n- later: Open a project that holds a run recorded by an older build (no `tokens` on its roles) at 100x30 and 80x24 and confirm the run pane shows `tokens -  $-` on finished roles and the Overview row shows no `tokens` cell.",
+          "created_at": "2026-11-08T05:45:17Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "c475e85a-cc35-4452-a394-b58a7a250b58",
+          "kind": "",
+          "text": "**2026-11-08** — Finished roles show unknown usage when no tokens or cost were recorded and show non-zero reported cost regardless of vendor. Final usage is recorded before live teardown, and run totals count live usage only for running roles. Focused tests and full engine race tests passed; mutation checks were restored. Full-suite socket tests were sandbox-limited; historical-run human verification is deferred to approval.",
+          "created_at": "2026-11-08T05:45:29Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -6334,7 +6362,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -11938,7 +11966,7 @@
       "id": "S217",
       "title": "Landing check: warn on the approval card when uncommitted files in the main checkout would block the landing",
       "short_title": "Warn when main is dirty before landing",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -11949,6 +11977,34 @@
           "created_at": "2026-11-01T00:58:26Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "9f68e16f-3dcd-491e-85aa-8e4e507913bd",
+          "kind": "",
+          "text": "**2026-11-08** — Human checks at approval (S217):\n- later: At 100x30 and 80x24 in a live terminal: start a small slice, dirty a file it changes in the main checkout while it awaits approval, open the pane and read the warning; clean the file and see it go away on the next refresh; leave a `.slicer/` file modified and see no warning.\n- later: [AFTER LAND] The next real landing with an unrelated dirty `.slicer/` file shows no warning and lands.",
+          "created_at": "2026-11-08T04:44:52Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "5f32718f-3f53-41a7-8851-93590585a5bb",
+          "kind": "",
+          "text": "**2026-11-08** — S217: approval panes read the current landing check on open and refresh, warn for overlapping non-tracking files and branch-state pauses without blocking approval, hide read failures, and keep wrapped warnings whole. Regression and mutation checks verified; gate PASS and owner approval recorded in this session.",
+          "created_at": "2026-11-08T04:45:07Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -11974,7 +12030,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -12894,10 +12950,25 @@
       "id": "S239",
       "title": "Check failures: show the failing tests to the fix round and run a failed check once more before sending it",
       "short_title": "Check failures: excerpt and one rerun",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "3b784385-93f3-4b90-af04-6d1342ec889e",
+          "kind": "",
+          "text": "**2026-11-07** — Later (S307): (1) a two-run check log can exceed 64 KiB, and ReadReport keeps only the first 64 KiB, so ork show RUN checks-N.log can lose the end of the second run and the slicer check part: keep head and tail of .log files. (2) ShowCheck and the approval card do not show attempts or flaky, so a flaky pass is invisible to the owner and reviewer (owner decision 2026-11-02: run.json and the log only); a real intermittent defect that passes on rerun is trusted like a green check: consider surfacing it. (3) checkAttempts returns the first record whose log name matches (loop from the end); the split uses the current registry check command, not CheckRecord.Command (use the saved command). (4) Removing the PASS/SKIP buffer delete in FailureExcerpt cannot change the excerpt, so it is not test-covered.",
+          "created_at": "2026-11-07T22:49:14Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -12915,7 +12986,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -13351,7 +13422,7 @@
       "id": "S254",
       "title": "Landing: main with uncommitted tracking edits aborts the ff-merge",
       "short_title": "Landing: main with uncommitted tracking edits aborts the ff-merge",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -13410,6 +13481,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "1aaf49f8-b18b-4c59-a9c8-07f0b1516403",
+          "kind": "",
+          "text": "**2026-11-08** — Landed. Later: limit the ID done sweep (land.go:89-102) to handoff mode and the paths slicer land wrote; landing lock is per project path, so sibling projects in one repo can overlap (S217 reuses dirtyOverlap).",
+          "created_at": "2026-11-08T01:05:27Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -13429,7 +13514,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -14005,10 +14090,25 @@
       "id": "S266",
       "title": "Spec check: a report-shape failure or a denied read command retries the same session once instead of failing",
       "short_title": "Spec check: a report-shape failure or a denied read command retries the same session once instead of failing",
-      "status": "open",
+      "status": "done",
       "has_slice": false,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "5b19d11f-24b8-4b20-9036-8a4a17178998",
+          "kind": "",
+          "text": "**2026-11-08** — Reverses the S143 rule that spec-check denials are never retried: the row asks for it, and no decided adj record forbids it (adj 93, 156, 158, 164 reviewed). A spec-check round that ends with a report-shape error or a denied command now resumes its own session once; an unclassified exit still stops (adj 23); vendor limits are not resumed. Later: re-check whether S277/S280 made spec-check denials rarer and say so here; after a resume the failure text no longer contains the word retry (daemon test covers only the no-session path); a first-round denial with no session no longer starts with spec-check exited CLASS; the spec check missed a deleted Failing tests section on all three local launchers (see .scratch/local-eval/report.md), so it is not reliable alone.",
+          "created_at": "2026-11-08T00:31:10Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -14026,7 +14126,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -14145,10 +14245,25 @@
       "id": "S271",
       "title": "Claude roles get TMPDIR set to their temp dir, so they stop prefixing commands with env TMPDIR",
       "short_title": "Set TMPDIR for Claude roles",
-      "status": "open",
+      "status": "done",
       "has_slice": false,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "e3427b6b-c448-47fd-aac4-8ed0dcb103ba",
+          "kind": "",
+          "text": "**2026-11-08** — Later (S307): verify with one real Claude round that the tool shell's TMPDIR equals the role temp dir, then drop the unverified note in docs/design.md; run tmp/ directories are never removed and Claude roles now write TMPDIR content there; add a spec-check variant of the temp-dir existence test; the Grok prompt says not to prefix env TMPDIR= although Grok gets no TMPDIR; a deep TMPDIR path may exceed the 104-byte Unix socket limit on macOS for tools that create sockets under it; open question left at the spec default: the S265 python preset still denies python3 -V version probes. A project vendor_env TMPDIR is overridden by the role temp dir (documented).",
+          "created_at": "2026-11-08T00:51:04Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -14166,7 +14281,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -14931,7 +15046,7 @@
       "id": "S288",
       "title": "Owner findings: state the exact body shape to reviewers and gates, or keep extra prose as context",
       "short_title": "Owner findings: state the exact body shape to reviewers and gates, or keep extra prose as context",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -14976,6 +15091,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "af5d2b30-830d-435c-8ceb-fe4e63fd0517",
+          "kind": "",
+          "text": "**2026-11-07** — Owner decision 2026-11-07 (interactive answer in the relay session): the leniency (extra lines kept as context, one list marker accepted) applies to [owner] findings, the Owner needed block and the spec check question blocks; never to VERDICT lines. Supersedes the 2026-11-04 Q4 findings-only. Also touched beyond the Files list: internal/engine/report.go, later.go, pause_test.go, report_test.go, speccheck_test.go, kinds_test.go; prompts architect.md, implementer.md, spec-check.md; CHANGELOG.md, docs/dashboard.md. Spec-check blocks keep extra lines in the block text, filed with the adj record, not shown in the TUI or CLI. Later: S298 should write tests against this parser: a list-marked Decision key line and a numbered line after Recommend are refused; a numbered prose line after Recommend still refuses (owner or S298 call: refuse only option-shaped lines, or keep). Optional: Accepted prompt example puts the reason in the title line (pane shows a two-sentence heading); ork status wait text differs between rebuilt and raw cases.",
+          "created_at": "2026-11-07T21:24:50Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -14995,7 +15124,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -15375,10 +15504,39 @@
       "id": "S296",
       "title": "Resume a stopped run from its worktree, and continue at the stage it stopped",
       "short_title": "Resume a stopped run from its worktree, and continue at the stage it stopped",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "907ac27b-2728-4326-97bb-0ca84958c800",
+          "kind": "",
+          "text": "**2026-11-07** — Owner decision 2026-11-07 (interactive answer in the relay session), Q1: option (b). ork run and ork wave start on an item whose newest run is a resumable stopped run auto-resume that run when the worktree's tree hash equals the last implementer round's tree_sha256 (S294); otherwise they start fresh and say so. This replaces the recommended (a). The hash rule, the message wording and the interaction with a dismissed run are for the implementer to settle in the spec's terms and list under Owner needed if unclear.",
+          "created_at": "2026-11-07T22:53:13Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "45ae89cb-58fa-4f79-ba48-dcc784fd8c8d",
+          "kind": "",
+          "text": "**2026-11-07** — Owner decisions 2026-11-07 (interactive): Q1 option (b) auto-resume on matching tree hash; dismissed runs are never auto-resumed (ork retry RUN still resumes one); a start with no free slot is refused naming the run (ork retry bypasses caps); a retry note on a stopped run is refused. Auto-resume uses the stopped run's lineup, budgets and stop-after, not the plan confirmed at the start (said in the message). Later (S307): a run queued-then-stopped counts as superseding in supersededBy (ignore StoppedFrom == queued); spec-check answers are not moved into a resumed run; the TUI shows no start message and t retry is limited to paused runs; implement-path round_limit is stored as N but the first-pause floor of 3 applies; S295 note: a run stopped at setup after S295 pauses resumes with stopped_from=implement.",
+          "created_at": "2026-11-07T23:46:57Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -15396,14 +15554,14 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S297",
       "title": "ork show RUN [NAME]: print the pause reason, a role report and the check logs, with --json",
       "short_title": "ork show RUN [NAME]: print the pause reason, a role report and the check logs, with --json",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -15413,6 +15571,20 @@
           "text": "**2026-11-05** — Owner decisions 2026-11-05 (interactive interview), all recommended options: Q1 retire-s281 (S281 stays a row until S297 lands, then is retired as done by it; its findings are carried here); Q2 paused-report; Q3 extend-run-report (run.report serves check logs listed in checks[].log, same guards; reverses S176's 2026-10-29 note for the CLI); Q4 reports-and-logs-only.",
           "created_at": "2026-11-05T18:11:46Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "5a7c3c70-b439-4c02-b3f2-55b30d062f5b",
+          "kind": "",
+          "text": "**2026-11-07** — Later (S307): a check log over 64 KiB is cut keeping the head, so the slicer check part goes first (spec asked for this cut); docs/orchestrator-parity.md row 7.7 still says only role reports are exposed (check logs are now served by run.report and ork show). ork show prints next: twice for a paused run when no report sits between (documented). S281 is retired into this slice. Human check after landing: a run paused on report shape, read its reason and report with ork show.",
+          "created_at": "2026-11-07T21:51:21Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -15439,7 +15611,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -15491,10 +15663,25 @@
       "id": "S299",
       "title": "Vendor out marks: an owner's mark survives a daemon restart and can end at a set time (--until)",
       "short_title": "Vendor out marks: an owner's mark survives a daemon restart and can end at a set time (--until)",
-      "status": "open",
+      "status": "done",
       "has_slice": false,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "a73fd4c9-abe8-450b-95d6-364c8e7214bd",
+          "kind": "",
+          "text": "**2026-11-08** — Later (S307): an unreadable or newer vendors-out.json is reported only in the daemon log (the auto-started daemon's stderr goes to a log file): surface it as a status/footer warning or an ork doctor finding. ork vendor and the footer cannot tell an owner mark from an automatic mark that reads the same. No daemon-level test of a symlinked store. The plan note now uses the daemon clock (SentenceAt) so a plan confirmed across midnight is not refused as changed. Owner choices made by the implementer, unconfirmed: file name vendors-out.json, --until formats HH:MM / YYYY-MM-DD HH:MM / RFC 3339, a failed store write refuses the mark with an internal error.",
+          "created_at": "2026-11-08T00:27:26Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -15512,7 +15699,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -15577,10 +15764,25 @@
       "id": "S302",
       "title": "Add several projects at once: scan a folder, tick the repos to add",
       "short_title": "Multi-add projects from a folder scan",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d427b08d-f4f7-4dde-85e9-770f1748d998",
+          "kind": "",
+          "text": "**2026-11-07** — Owner decisions 2026-11-07 (interactive, relay session): in the checklist Enter does nothing and only y adds (Enter and Esc close the results screen); keys space tick, a all, n none stay; the later of two same-named candidates is blocked (tracked rows hold a name before plain git repos, ties by path); the CLI --yes adds tracked projects only (no --include-git). Scan is bounded: 500 folders, 200 projects, and says when it stopped. Later (S307): an async scan (the scan runs inside Update); the sidebar prints a registered project's name raw, so a name with an ESC can reach the registry through this feature or projects add (sanitize at display); the CLI cannot tick plain git repos or untick single rows (listing plus one yes/no); a registered project reached through a symlink is matched by canonical path only for display; the %q same-name reason shows escapes literally; folder count includes the over-limit project folder.",
+          "created_at": "2026-11-07T23:54:06Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -15602,7 +15804,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -15793,6 +15995,49 @@
         "urgency": 2,
         "effort": 2,
         "attempts": 0
+      }
+    },
+    {
+      "id": "S308",
+      "title": "ork status lists stale manual relays",
+      "short_title": "ork status lists stale manual relays",
+      "status": "done",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "c9dd28d6-e6c8-4801-b56b-3c66592f979b",
+          "kind": "",
+          "text": "**2026-11-08** — Verified status reads board data and lists stale manual relays alongside active relays, excludes ended relays, preserves active step details, and counts stale relays in the CLI total. Regression tests and matching guide, design and changelog updates passed review and the final gate.",
+          "created_at": "2026-11-08T01:54:25Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-new-abfdff3cf3f6db64",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": null,
+        "attempts": 1
       }
     }
   ],

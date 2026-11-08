@@ -570,3 +570,31 @@ func TestResumedBriefIncludesEachAnswerOnce(t *testing.T) {
 		t.Fatalf("latest answer appears %d times", n)
 	}
 }
+
+// S288: a blocker with list markers and prose around the block is asked as a
+// question, not paused as a shape error, and the question keeps the prose.
+func TestOwnerBlockerWithProseAndMarkersIsAsked(t *testing.T) {
+	h := newHarness(t)
+	finding := "- [owner blocker] Drop the old wire field now?\n" +
+		"  - The field is read by one old client.\n" +
+		"  - Options:\n" +
+		"    1. drop: remove it\n" +
+		"    2. keep: keep one more release\n" +
+		"  - Recommend: 1 - nothing reads it\n" +
+		"  Decision key: wire.old-field\n" +
+		"  A closing remark."
+	reviewerSays(h, review(finding, "nothing", "nothing", "nothing"))
+	e := h.start()
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingQuestion {
+		t.Fatalf("pending %+v, want a question", rec.Pending)
+	}
+	if ask := rec.Pending.Ask; ask == nil || len(ask.Options) != 2 || ask.Recommend != 1 || rec.Pending.Key != "wire.old-field" {
+		t.Errorf("pending ask %+v, key %q", rec.Pending.Ask, rec.Pending.Key)
+	}
+	for _, want := range []string{"The field is read by one old client.", "A closing remark."} {
+		if len(rec.Questions) != 1 || !strings.Contains(rec.Questions[0].Text, want) {
+			t.Errorf("question text lacks %q: %+v", want, rec.Questions)
+		}
+	}
+}

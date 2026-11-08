@@ -7,6 +7,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
@@ -19,6 +20,15 @@ import (
 type Daemon struct {
 	Connect func(context.Context) (*daemon.Client, error)
 	Feed    *daemon.Feed
+}
+
+func (d *Daemon) LandCheck(ctx context.Context, run string) (engine.LandCheck, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return engine.LandCheck{}, err
+	}
+	defer c.Close()
+	return c.LandCheck(ctx, run)
 }
 
 func (d *Daemon) Snapshot(ctx context.Context, p registry.Project) source.Snapshot {

@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"reflect"
@@ -25,6 +26,9 @@ var errNoMoreNotices = errors.New("no more notices in the script")
 // into log when log is set, and answers Next from a script: each project name
 // in turn, then an error. It never touches a socket.
 type fakeLive struct {
+	landCheck engine.LandCheck
+	landErr   error
+	landCalls []string
 	addPaths  []string
 	mu        sync.Mutex
 	log       *[]string     // refresh calls, when set
@@ -33,6 +37,13 @@ type fakeLive struct {
 	notices   []string
 	focused   [][]string
 	nexts     int
+}
+
+func (l *fakeLive) LandCheck(_ context.Context, run string) (engine.LandCheck, error) {
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	l.landCalls = append(l.landCalls, run)
+	return l.landCheck, l.landErr
 }
 
 func (l *fakeLive) Refresh(_ context.Context, project string) error {

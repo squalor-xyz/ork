@@ -5,6 +5,7 @@ package daemon
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -27,12 +28,19 @@ type VendorsResult struct {
 	WasOut     bool        `json:"was_out,omitempty"`
 }
 
+// vendorMarksFile is the file of the owner's vendor marks in the state
+// directory (S299, *proposed*).
+const vendorMarksFile = "vendors-out.json"
+
 // SetVendorParams is a vendors.set call: Out true marks the vendor out until
-// back (an owner mark has no expiry), Out false says it is back.
+// back, or until Until when it is set (S299, *proposed*; an owner mark otherwise
+// has no expiry), and the mark is kept across a daemon restart. Out false says
+// the vendor is back. Until needs Out and a time after now.
 type SetVendorParams struct {
-	Vendor string `json:"vendor"`
-	Out    bool   `json:"out"`
-	Reason string `json:"reason,omitempty"`
+	Vendor string    `json:"vendor"`
+	Out    bool      `json:"out"`
+	Reason string    `json:"reason,omitempty"`
+	Until  time.Time `json:"until,omitzero"`
 }
 
 // ownerVendorReason is the reason of a vendor the owner marked out without one.
@@ -59,16 +67,29 @@ func (d *Daemon) setVendor(p SetVendorParams) (VendorsResult, error) {
 	if !supportsVendor(p.Vendor) {
 		return VendorsResult{}, &ipc.Error{Code: CodeBadParams, Message: fmt.Sprintf("bad params: unsupported vendor %q; use claude, codex or grok", p.Vendor)}
 	}
+	if !p.Out && !p.Until.IsZero() {
+		return VendorsResult{}, &ipc.Error{Code: CodeBadParams, Message: "bad params: until needs out"}
+	}
 	if p.Out {
 		reason := strings.TrimSpace(p.Reason)
 		if reason == "" {
 			reason = ownerVendorReason
 		}
-		// The owner's mark has no expiry: it holds until back (2026-10-29).
-		d.runs.deps.Vendors.MarkOutOwner(p.Vendor, reason, d.cfg.Clock.Now())
+		now := d.cfg.Clock.Now()
+		if !p.Until.IsZero() && !p.Until.After(now) {
+			return VendorsResult{}, &ipc.Error{Code: CodeBadParams, Message: "bad params: until is not in the future"}
+		}
+		// The owner's mark has no expiry unless it has an end: it holds until back
+		// (2026-10-29), and it is stored so that a restart keeps it (S299).
+		if err := d.runs.deps.Vendors.MarkOutOwnerUntil(p.Vendor, reason, now, p.Until); err != nil {
+			return VendorsResult{}, &ipc.Error{Code: ipc.CodeInternal, Message: err.Error()}
+		}
 		return d.listVendors()
 	}
-	was := d.runs.deps.Vendors.Back(p.Vendor)
+	was, err := d.runs.deps.Vendors.Back(p.Vendor)
+	if err != nil {
+		return VendorsResult{}, &ipc.Error{Code: ipc.CodeInternal, Message: err.Error()}
+	}
 	res, err := d.listVendors()
 	res.WasOut = was
 	return res, err
@@ -87,7 +108,7 @@ func (d *Daemon) vendorNote(lineup map[string][]runrec.LineupEntry) string {
 	var notes []string
 	for _, v := range d.vendorsOut() {
 		if used[v.Vendor] {
-			notes = append(notes, fmt.Sprintf("%s; its rows are skipped where another vendor has one; ork vendor back %s ends it", v.Sentence(), v.Vendor))
+			notes = append(notes, fmt.Sprintf("%s; its rows are skipped where another vendor has one; ork vendor back %s ends it", v.SentenceAt(d.cfg.Clock.Now()), v.Vendor))
 		}
 	}
 	return strings.Join(notes, "; ")

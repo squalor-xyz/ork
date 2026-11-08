@@ -271,10 +271,13 @@ func TestOwnerMarkHasNoExpiryAndBackReportsWhetherItWasOut(t *testing.T) {
 	if !v.IsOut("codex") {
 		t.Fatal("the owner mark expired after an exit mark")
 	}
-	if !v.Back("codex") {
+	if was, _ := v.Back("codex"); !was {
 		t.Fatal("Back must say the vendor was out")
 	}
-	if v.Back("codex") || v.Back("claude") {
+	if again, _ := v.Back("codex"); again {
+		t.Fatal("Back must say a vendor that is not out was not out")
+	}
+	if other, _ := v.Back("claude"); other {
 		t.Fatal("Back must say a vendor that is not out was not out")
 	}
 
@@ -291,7 +294,7 @@ func TestOwnerMarkHasNoExpiryAndBackReportsWhetherItWasOut(t *testing.T) {
 	w := NewVendors(nil).WithClock(clock.Now)
 	w.MarkOut("codex", "x", clock.Now())
 	clock.Advance(VendorOutFor)
-	if w.Back("codex") {
+	if was, _ := w.Back("codex"); was {
 		t.Fatal("Back on an expired mark must say the vendor was not out")
 	}
 }

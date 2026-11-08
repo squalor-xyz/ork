@@ -417,3 +417,26 @@ func TestRetryCallsTheAppliedHookBeforeTheRoleRuns(t *testing.T) {
 		t.Errorf("hook called %d times, want 1", got)
 	}
 }
+
+// S288: a structured Owner needed block with trailing context pauses with the
+// context above the block, where the pane shows it.
+func TestOwnerNeededTrailingContextReachesThePendingQuestion(t *testing.T) {
+	h := newHarness(t)
+	block := "Question: Which storage?\nOptions:\n1. local: use local storage\n2. remote: use remote storage\nRecommend: 1 - keeps data nearby\nThe trailing reason.\n"
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if n == 0 {
+			return Result{Exit: ExitOK, Session: "sess-implementer", Report: strings.Replace(implReport, "## Owner needed\n\nnone\n", "## Owner needed\n\n"+block, 1)}, nil
+		}
+		return Result{}, nil
+	}
+	e := h.start()
+	rec := requireState(t, e, runrec.StatePaused)
+	p := rec.Pending
+	if p == nil || p.Ask == nil || p.Ask.Title != "Which storage?" {
+		t.Fatalf("pending: %+v", p)
+	}
+	trail, q := strings.Index(p.Question, "The trailing reason."), strings.Index(p.Question, "Question: Which storage?")
+	if trail < 0 || q < 0 || trail > q {
+		t.Errorf("trailing context must come before the Question: line: %q", p.Question)
+	}
+}

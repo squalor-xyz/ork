@@ -159,6 +159,22 @@ func (e *Engine) Live(role ...string) Live {
 	return out
 }
 
+// LiveByRole copies each active attempt. The daemon reads it before the run
+// record so a completed role's recorded tokens replace its live tokens.
+func (e *Engine) LiveByRole() map[string]Live {
+	out := map[string]Live{}
+	e.activity.Range(func(key, value any) bool {
+		a := value.(*activityRing)
+		a.mu.Lock()
+		if a.active {
+			out[key.(string)] = a.live
+		}
+		a.mu.Unlock()
+		return true
+	})
+	return out
+}
+
 func (a *activityRing) snapshot() Live {
 	a.mu.Lock()
 	defer a.mu.Unlock()

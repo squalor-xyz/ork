@@ -26,8 +26,9 @@ const DefaultPauseRound = 3
 
 // CheckOutput is the result of the project's check command.
 type CheckOutput struct {
-	OK     bool
-	Output string
+	OK       bool
+	Output   string
+	TimedOut bool // the command ran out of time (S239: a timeout is not run again)
 }
 
 // CheckFunc runs the project's check command in dir.
@@ -526,11 +527,19 @@ func (e *Engine) ClearResume() error {
 // asked first, until the round ends. A blank note adds nothing.
 // At a rounds pause the optional count grants that many more implementer
 // rounds; an omitted or zero count grants two. Other pauses reject a count.
+// A stopped run is resumed from its worktree instead (resumeStopped, S296,
+// *proposed*), and the count grants rounds there too.
 func (e *Engine) RetryNote(ctx context.Context, note string, rounds ...int) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	note = strings.TrimSpace(note)
 	rec := e.run.Snapshot()
+	switch rec.State {
+	case runrec.StateStopped:
+		return e.resumeStopped(ctx, rec, note, rounds)
+	case runrec.StateCommitted:
+		return refusef("run %s is committed; there is nothing to resume", rec.ID)
+	}
 	grant, err := retryGrant(rec, rounds)
 	if err != nil {
 		return err
@@ -591,6 +600,22 @@ func (e *Engine) Stop(ctx context.Context, why string) error {
 	return e.stop(ctx, "stopped by the owner: "+why)
 }
 
+// markStopped moves the record to stopped. It keeps the state the run left,
+// for a resume (S296): the state it was in, or for a paused run the step it
+// waits to re-enter. A stop ends any pause, queued question or resume that
+// waits for a slot (S274).
+func markStopped(r *runrec.Record, reason string) {
+	r.StoppedFrom = r.State
+	if r.State == runrec.StatePaused && r.Pending != nil && r.Pending.State != "" {
+		r.StoppedFrom = r.Pending.State
+	}
+	r.State = runrec.StateStopped
+	r.Reason = reason
+	r.Pending = nil
+	r.QueuedQuestions = nil
+	r.Resume = nil
+}
+
 // stop ends the slice: state stopped, the reason, and the ledger run ended
 // with outcome stopped. The caller holds e.mu.
 //
@@ -603,11 +628,7 @@ func (e *Engine) stop(ctx context.Context, reason string) error {
 			return
 		}
 		ended = r.Commit != nil // the finish step closed the ledger run with PASS
-		r.State = runrec.StateStopped
-		r.Reason = reason
-		r.Pending = nil
-		r.QueuedQuestions = nil
-		r.Resume = nil // a stop ends a resume that waits for a slot (S274)
+		markStopped(r, reason)
 	})
 	if err != nil || already {
 		return err

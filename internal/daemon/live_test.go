@@ -136,6 +136,38 @@ func TestLiveRedactionAcrossDeltas(t *testing.T) {
 	}
 }
 
+func TestMultiMessageUsageMatchesResult(t *testing.T) {
+	lines := []string{
+		`{"type":"stream_event","event":{"type":"message_start","message":{"usage":{"input_tokens":10,"output_tokens":2,"cache_read_input_tokens":20,"cache_creation_input_tokens":30}}}}`,
+		`{"type":"stream_event","event":{"type":"message_delta","usage":{"output_tokens":8}}}`,
+		`{"type":"stream_event","event":{"type":"message_start","message":{"usage":{"input_tokens":1,"output_tokens":1,"cache_read_input_tokens":2,"cache_creation_input_tokens":3}}}}`,
+		`{"type":"stream_event","event":{"type":"message_delta","usage":{"output_tokens":4}}}`,
+		`{"type":"stream_event","event":{"type":"message_start","message":{"usage":{"input_tokens":5,"output_tokens":1,"cache_read_input_tokens":6,"cache_creation_input_tokens":7}}}}`,
+		`{"type":"stream_event","event":{"type":"message_delta","usage":{"output_tokens":9}}}`,
+		`{"type":"result","usage":{"input_tokens":16,"output_tokens":21,"cache_read_input_tokens":28,"cache_creation_input_tokens":40}}`,
+	}
+	sum, resultTokens := 0, 0
+	r := claudeRunner{env: []string{}, round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+		for _, line := range lines {
+			ev, err := claude.ParseLine([]byte(line))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if ev.Kind == claude.EventResult {
+				resultTokens = int(ev.Result.Usage.InputTokens + ev.Result.Usage.OutputTokens + ev.Result.Usage.CacheReadTokens + ev.Result.Usage.CacheCreationTokens)
+			}
+			s.OnEvent(ev)
+		}
+		return claude.Round{}, nil
+	}}
+	if _, err := r.Run(context.Background(), engine.Request{Vendor: "claude", OnLive: func(l engine.Live) { sum += l.Tokens }}); err != nil {
+		t.Fatal(err)
+	}
+	if sum != resultTokens {
+		t.Fatalf("live tokens = %d, result tokens = %d", sum, resultTokens)
+	}
+}
+
 func TestClaudeLiveUsageResetsPerMessage(t *testing.T) {
 	lines := []string{
 		`{"type":"stream_event","event":{"type":"message_start","message":{"usage":{"input_tokens":10,"output_tokens":2,"cache_read_input_tokens":20,"cache_creation_input_tokens":30}}}}`,

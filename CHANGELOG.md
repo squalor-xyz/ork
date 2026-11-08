@@ -2,6 +2,144 @@
 
 ## Unreleased
 
+- S129 (*proposed*): finished roles with no recorded tokens or cost show
+  `tokens -  $-`; any vendor's non-zero recorded cost is displayed. Run token
+  totals keep live usage until final usage is recorded and count live tokens
+  only for roles still running. Docs: `docs/dashboard.md`, `docs/design.md`,
+  `docs/state.md`.
+
+- Landing check (*proposed*, S217): the approval card warns about files in
+  main that overlap the slice's changes, including uncommitted worktree
+  changes, and about main being detached or on the slice branch. It refreshes
+  on pane open and project refresh, excludes tracking files landing handles,
+  and leaves approval available. Failed checks show no warning.
+  Docs: `docs/dashboard.md`, `docs/design.md`, `docs/guide.md`.
+
+- S308 (*proposed*): `ork status` lists stale manual relays from the same
+  board data as the TUI, marked `stale`, and includes them in the active-relays
+  count. Recently ended relays stay out of status. Docs: `docs/guide.md`.
+- S254 (*proposed*): the landing looks at the main checkout before it merges
+  the base branch in, and again right before the fast-forward. If it holds
+  uncommitted changes to files the slice branch also changes, and any of them
+  is not one of the project's tracking files, the run pauses at once, before
+  the merge-in and the re-check, with one line that names up to five files:
+  `landing stopped: uncommitted changes in P to files the slice changes: ...;
+  commit or stash them`. If only tracking files overlap (`.slicer/` except
+  `config.json` and `relay-roles.json`, under the project's folder), ork
+  commits them on the base branch as `Tracking edits on main before landing
+  ID`, by name, so staged files stay staged; the merge-in then takes them in
+  and the re-check runs. A tracking edit made during the re-check is
+  committed and the landing merges again once; a further overlap pauses.
+  Uncommitted files the slice does not change are left alone (the `ID done`
+  commit after `slicer land` still commits any `.slicer` change). A failed
+  fast-forward now pauses with git's message on one line. No wire change.
+  Docs: `docs/design.md`, `docs/boundaries.md`, `docs/state.md`.
+- S271 (*proposed*): ork sets `TMPDIR` to a role's own temp directory in the
+  process environment of every Claude and Codex role, so a role no longer
+  needs `env TMPDIR=DIR cmd` or `mkdir -p DIR`, which no allowlist pattern
+  matches and which were denied. A `TMPDIR` in the project's `vendor_env` does
+  not win over the role's directory. Codex roles keep `GOCACHE` in the same
+  directory. Every role prompt now says so. Grok roles are unchanged. No wire
+  change. Docs: `docs/design.md`, `docs/state.md`.
+- S266 (*proposed*): a spec check whose report has a shape error, or whose
+  round ended with denied commands (for example `rg ... | head`), resumes its
+  own session once with the shape problems or the denied commands and the
+  expected forms, instead of failing or starting over. A second shape error or
+  denial fails the check with no start over, and its message names the slices
+  and says that checking again is safe. The check resumes at most once, even if
+  it starts over. A check still starts over once when main moves or the main
+  checkout changes outside the check, and when a shape error has no session to
+  resume. The refused round is a failed `spec-check` ledger step with a short
+  reason, and the resumed round is a second step. No wire change. This
+  replaces the S143 rule that denials are never retried (2026-10-28). Docs:
+  `docs/design.md`, `docs/dashboard.md`, `docs/guide.md`.
+- S299 (*proposed*): a vendor you mark out with `ork vendor out` survives a
+  daemon restart and an idle exit, and can end at a set time. The daemon
+  writes your marks to `vendors-out.json` in the state directory (mode 0600)
+  and reads them at start; a mark whose end passed while it was down is
+  dropped. `ork vendor out NAME --until TIME` ends the mark at TIME (`HH:MM`,
+  the next time the clock shows it, `YYYY-MM-DD HH:MM`, or an RFC 3339 time;
+  it must be in the future), and the footer, `ork vendor` and `ork status`
+  name the day too when the end is not the day the mark began (`4 Nov 07:12`),
+  and the year when that differs; a start that is not today names its day.
+  The 60-minute marks ork makes on a rate limit or out of credits stay in
+  memory and a restart still clears them. A mark or a back that cannot be
+  written is refused with an error and changes nothing; a stored vendor ork
+  cannot run is not loaded; a store that cannot be read is
+  reported on the daemon's standard error and starts with no marks. Wire:
+  `vendors.set` takes an optional `until` (RFC 3339). The help text no longer
+  says a restart clears the marks. ork does not read a reset time from a
+  vendor's message. Docs: `docs/design.md`, `docs/guide.md`,
+  `docs/state.md`, `docs/dashboard.md`, `docs/orchestrator-parity.md`.
+- S302 (*proposed*): add several projects at once. In the TUI, `+` with a
+  folder that holds projects below it opens a checklist (space ticks, `a` all,
+  `n` none, `y` adds, Esc goes back; Enter does nothing); tracked projects
+  (`.slicer` or `.adjudicate.json`) start ticked, plain git repos do not, a
+  registered path (matched after symbolic links are resolved), a clashing name
+  and all but one of several same-named folders (a tracked one is kept before a
+  plain git repo, then the earlier path) are blocked with their reason, and
+  the results name each row. The scan quits after 500 folders or 200 projects
+  and says so (`stopped after N folders and M projects`); names and paths show
+  as plain text.
+  A folder that is itself a project keeps the single-add confirmation. On the
+  command line, `ork projects add --scan DIR [--yes]` lists the projects and
+  adds the tracked ones only, asking on standard input without `--yes`; `--json`
+  needs `--yes` and reports `stopped` and `folders`. The walk is two levels deep, stops at a project and skips
+  hidden folders, `node_modules` and symbolic links; each project is named after
+  its folder (owner decisions 2026-11-07). No wire change. Docs:
+  `docs/dashboard.md`, `docs/design.md`, `docs/guide.md`, `docs/state.md`.
+- S296 (*proposed*): `ork retry RUN [--rounds N]` resumes a stopped run from its
+  worktree, also after a daemon restart and for a dismissed run (which clears
+  the dismissal). It needs no commit and a worktree that is still there, and
+  it refuses a run stopped in setup. It reloads the project from the registry
+  (a fixed check command takes effect), grants N implementer rounds (2 by
+  default), begins a new ledger run and re-enters the checks, or implementer
+  round 1 when no implementer round has run (a run S295 paused at setup). `stop`
+  now records `stopped_from` in `run.json`. `ork status` and `ork show` name the
+  command for a stopped run. `ork run` and `ork wave start` on an item whose
+  newest run is a resumable stopped run resume it when the worktree equals the
+  last implementer round's `tree_sha256` (owner decision 2026-11-07, Q1 option
+  b); otherwise they start a new run and print why (`message` in the
+  `run.start` and `wave.start` replies). A dismissed run is not resumed by a
+  start. When no slot is free for the resume, the start is refused and names the
+  stopped run, instead of queuing a new run that would restart at round 1.
+  Docs: `docs/design.md`, `docs/guide.md`, `docs/state.md`.
+- S239 (*proposed*): when the project check command exits non-zero, ork runs it
+  once more before it starts a fix round. A pass on the rerun does not spend the
+  round and is recorded as flaky (`checks[].attempts` 2, `checks[].flaky` true in
+  `run.json`, and both runs in the check log). If it fails again, the fix-round
+  brief starts with the failing Go test names and their assertion lines (at most
+  8000 bytes), then the end of the log as before; the landing re-check does the
+  same. A timeout and `slicer check` are not run again (owner decisions
+  2026-11-02). Docs: `docs/design.md`, `docs/guide.md`, `docs/state.md`.
+- S297 (*proposed*): `ork show RUN [NAME] [--json]` prints a run's state, the
+  whole pause reason, its role reports, check results and findings, and with
+  NAME one role report or check log, so a paused run can be read without
+  opening the run directory (S297). A paused run also prints its newest report
+  (the pending role's when it has one). New wire method `run.show`;
+  `run.report` now also serves a check log listed in `checks[].log` (owner decisions 2026-11-05, Q1 to Q4).
+  Docs: `docs/design.md`, `docs/state.md`, `docs/guide.md`.
+- S288 (*proposed*): an `[owner]` or `[owner blocker]` finding in a reviewer,
+  UI pass or gate report no longer pauses the run because its body holds more
+  than the block (owner decision 2026-11-04, `slicer show S288`). The parser
+  strips one leading `- `, `* ` or `+ ` list marker from `Options:`, the option
+  lines and `Recommend:`, and keeps every other body line, before `Options:` or
+  after `Recommend:`, as context in the finding's text (a blocker's question
+  shows them above its block). A line between two options, a malformed numbered
+  option, a repeated or misplaced `Options:` or `Recommend:`, and a body
+  without both still refuse. The reviewer, UI and gate
+  prompts now state the body rule and show a refused and an accepted example.
+  The `## Owner needed` block and the spec check's question blocks get the same
+  leniency (owner decision 2026-11-07): list markers are stripped and other
+  lines inside or after the block stay as context. In an `## Owner needed`
+  block the pause shows the context above the block, as for a finding; in a
+  spec-check block it stays in the block's text and is filed with the adj
+  record when the block has a decision key, and the TUI and CLI do not show it.
+  A line between two options, an option line after `Recommend:`, a
+  `Decision key:` line behind a list marker, and a missing or malformed
+  `Options:` or `Recommend:` still refuse. The `VERDICT:` line is never lenient. The
+  `## Owner needed` wording in all six prompts that carry the block changed to
+  match. Docs: `docs/design.md`, `docs/dashboard.md`.
 - S279 (*proposed*): a round check no longer goes red on `slicer check`
   problems that belong to other items when the branch is behind its base
   branch (adj 178, `checks.outside-problems`, owner decision 2026-11-05). It

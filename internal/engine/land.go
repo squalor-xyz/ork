@@ -58,12 +58,29 @@ func (e *Engine) land(ctx context.Context) error {
 		return pauseWith("git merge-base: " + err.Error())
 	}
 	if !merged {
-		proceed, err := e.mergeBaseIn(ctx, rec, base)
-		if !proceed {
-			return err
+		// Before anything is merged or re-checked: a dirty main stops the
+		// landing in one line, or ork commits its tracking edits (S254).
+		if _, reason := e.checkMain(ctx, P, base, B, rec.Item, true); reason != "" {
+			return pauseWith(reason)
+		}
+		// The same check right before the fast-forward, for an edit made during
+		// the merge-in or the re-check. A tracking edit there is committed and the
+		// landing goes back to the merge-in once; a further overlap pauses.
+		for first := true; ; first = false {
+			proceed, err := e.mergeBaseIn(ctx, e.run.Snapshot(), base)
+			if !proceed {
+				return err
+			}
+			committed, reason := e.checkMain(ctx, P, base, B, rec.Item, first)
+			if reason != "" {
+				return pauseWith(reason)
+			}
+			if !committed {
+				break
+			}
 		}
 		if _, err := e.gitWrite(ctx, P, "merge", "--ff-only", B); err != nil {
-			return pauseWith("git merge --ff-only " + B + ": " + errText(err))
+			return pauseWith(oneLine("git merge --ff-only " + B + ": " + errText(err)))
 		}
 	}
 	if err := e.d.Slicer.Land(ctx, e.wr, P, rec.Item, B, "Landed "+B); err != nil {
@@ -176,7 +193,7 @@ func (e *Engine) mergeBaseIn(ctx context.Context, rec runrec.Record, base string
 	}
 	if !run.ok {
 		b, _ := os.ReadFile(filepath.Join(e.run.Dir(), run.log))
-		detail := fmt.Sprintf("The checks are red after `git merge %s` and `slicer render`:\n\n```\n%s\n```", base, tail(string(b), 30000))
+		detail := fmt.Sprintf("The checks are red after `git merge %s` and `slicer render`:\n\n%s", base, checkFailureBody(string(b), e.proj.CheckCommand, run.attempts))
 		return false, e.landBlocked(ctx, "checks red after merging "+base, detail)
 	}
 	if err := e.run.Update(func(r *runrec.Record) { r.LandRecheck = false }); err != nil {

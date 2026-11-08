@@ -321,7 +321,7 @@ func TestRunnersForwardStreamEvents(t *testing.T) {
 	}
 }
 
-func TestCodexRoundEnvSetsGOCACHE(t *testing.T) {
+func TestCodexRoundEnvSetsGOCACHEAndTMPDIR(t *testing.T) {
 	t.Setenv("ORK_S87_ENV", "inherited")
 	for _, tc := range []struct {
 		name string
@@ -329,7 +329,7 @@ func TestCodexRoundEnvSetsGOCACHE(t *testing.T) {
 		temp string
 	}{
 		{"explicit", []string{"KEY=value"}, "/temp"},
-		{"replace", []string{"KEY=value", "GOCACHE=/old", "GOCACHE=/older"}, "/temp"},
+		{"replace", []string{"KEY=value", "GOCACHE=/old", "TMPDIR=/old", "GOCACHE=/older", "TMPDIR=/older"}, "/temp"},
 		{"inherit", nil, "/temp"},
 		{"empty temp explicit", []string{"KEY=value", "GOCACHE=/old"}, ""},
 		{"empty temp inherited", nil, ""},
@@ -345,11 +345,11 @@ func TestCodexRoundEnvSetsGOCACHE(t *testing.T) {
 				want = tc.env
 			} else {
 				for _, entry := range base {
-					if !strings.HasPrefix(entry, "GOCACHE=") {
+					if !strings.HasPrefix(entry, "GOCACHE=") && !strings.HasPrefix(entry, "TMPDIR=") {
 						want = append(want, entry)
 					}
 				}
-				want = append(want, "GOCACHE="+filepath.Join(tc.temp, "gocache"))
+				want = append(want, "GOCACHE="+filepath.Join(tc.temp, "gocache"), "TMPDIR="+tc.temp)
 			}
 			called := false
 			runner := codexRunner{env: tc.env, round: func(_ context.Context, s codex.Spec) (codex.Round, error) {
@@ -358,7 +358,7 @@ func TestCodexRoundEnvSetsGOCACHE(t *testing.T) {
 					t.Errorf("AddDir %q, want %q", s.AddDir, tc.temp)
 				}
 				if !reflect.DeepEqual(s.Env, want) {
-					t.Error("environment lost inherited entries or did not replace GOCACHE")
+					t.Errorf("environment %v, want inherited entries with GOCACHE and TMPDIR replaced: %v", s.Env, want)
 				}
 				if len(s.Env) > 0 {
 					s.Env[0] = "MUTATED=value"
@@ -373,5 +373,95 @@ func TestCodexRoundEnvSetsGOCACHE(t *testing.T) {
 				t.Error("base environment mutated")
 			}
 		})
+	}
+}
+
+// S271: a Claude role's process sees TMPDIR as its own temp directory, so it
+// needs no "env TMPDIR=DIR" prefix (which no allowlist pattern matches) and no
+// mkdir. The owner's vendor_env TMPDIR does not win over the role's directory.
+func TestClaudeRoundEnvSetsTMPDIR(t *testing.T) {
+	t.Setenv("ORK_S271_ENV", "inherited")
+	for _, tc := range []struct {
+		name string
+		env  []string
+		temp string
+	}{
+		{"explicit", []string{"KEY=value"}, "/temp"},
+		{"replace", []string{"KEY=value", "TMPDIR=/old", "TMPDIR=/older"}, "/temp"},
+		{"inherit", nil, "/temp"},
+		{"empty temp explicit", []string{"KEY=value", "TMPDIR=/old"}, ""},
+		{"empty temp inherited", nil, ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			before := append([]string(nil), tc.env...)
+			base := tc.env
+			if base == nil {
+				base = os.Environ()
+			}
+			want := tc.env
+			if tc.temp != "" {
+				want = nil
+				for _, entry := range base {
+					if !strings.HasPrefix(entry, "TMPDIR=") {
+						want = append(want, entry)
+					}
+				}
+				want = append(want, "TMPDIR="+tc.temp)
+			}
+			called := false
+			runner := claudeRunner{env: tc.env, round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+				called = true
+				if !reflect.DeepEqual(s.Env, want) {
+					t.Errorf("environment %v, want %v", s.Env, want)
+				}
+				for _, entry := range s.Env {
+					if strings.HasPrefix(entry, "GOCACHE=") && !slices.Contains(base, entry) {
+						t.Errorf("Claude role got %q: only TMPDIR is set", entry)
+					}
+				}
+				if len(s.Env) > 0 {
+					s.Env[0] = "MUTATED=value"
+				}
+				return claude.Round{Class: claude.ClassOK}, nil
+			}}
+			_, err := runner.Run(context.Background(), engine.Request{Vendor: "claude", TempDir: tc.temp})
+			if err != nil || !called {
+				t.Fatalf("round called %v, err %v", called, err)
+			}
+			if tc.temp != "" && !reflect.DeepEqual(tc.env, before) {
+				t.Error("base environment mutated")
+			}
+		})
+	}
+}
+
+// The dispatcher and runDeps carry the temp directory to the Claude process
+// even when the project sets vendor_env TMPDIR for claude.
+func TestRunDepsClaudeRoleGetsItsTempDirAsTMPDIR(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	d.runs.deps.Runner = nil
+	p.VendorEnv = map[string]map[string]string{"claude": {"TMPDIR": "/owner"}}
+	r, ok := d.runDeps(p).Runner.(vendorRunner)
+	if !ok {
+		t.Fatal("missing dispatcher")
+	}
+	c := r.claude.(claudeRunner)
+	var got []string
+	c.round = func(_ context.Context, s claude.Spec) (claude.Round, error) {
+		got = s.Env
+		return claude.Round{Class: claude.ClassOK}, nil
+	}
+	r.claude = c
+	if _, err := r.Run(context.Background(), engine.Request{Vendor: "claude", TempDir: "/role/tmp"}); err != nil {
+		t.Fatal(err)
+	}
+	var tmpdirs []string
+	for _, entry := range got {
+		if strings.HasPrefix(entry, "TMPDIR=") {
+			tmpdirs = append(tmpdirs, entry)
+		}
+	}
+	if !reflect.DeepEqual(tmpdirs, []string{"TMPDIR=/role/tmp"}) {
+		t.Fatalf("TMPDIR entries %v, want only the role temp directory", tmpdirs)
 	}
 }

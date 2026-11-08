@@ -269,6 +269,15 @@ func (m *Model) contextHints() []hintEntry {
 		switch {
 		case m.welcome.pending:
 			l.add(dropPinned, short(k.Quit, "ctrl+c", "quit"))
+		case m.welcome.scan != nil && m.welcome.scan.done:
+			l.add(dropPinned, short(k.Select, "enter", "close"))
+		case m.welcome.scan != nil:
+			ticked, _ := m.welcome.scan.tickedCount()
+			l.add(dropLine, short(k.RowNext, "j/k", "row"))
+			l.add(dropRow, short(k.Tick, "space", "tick"))
+			l.add(dropPage, short(k.Approve, "a", "all"), short(k.New, "n", "none"))
+			l.add(dropRow, offer(m.cfg.Live != nil && ticked > 0, k.Yes, "y", "add ticked"))
+			l.add(dropPinned, short(k.Close, "esc", "back"))
 		case m.welcome.confirm != "":
 			l.add(dropRow, offer(m.cfg.Live != nil, k.Yes, "y", "add project"))
 			l.add(dropPinned, short(k.No, "n", "cancel"))

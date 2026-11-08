@@ -157,3 +157,13 @@ func TestHeardCellOfAWaitingRunIsDimWithNoCue(t *testing.T) {
 		})
 	}
 }
+
+// An owner mark with an end on another day names that day in the footer (S299).
+func TestStatusLineNamesTheDayOfAnOwnerMarkThatEndsTomorrow(t *testing.T) {
+	late := time.Date(2026, 10, 19, 23, 56, 0, 0, time.UTC)
+	out := []source.VendorOut{{Vendor: "codex", Reason: "weekly limit", Since: late, Until: time.Date(2026, 10, 20, 7, 12, 0, 0, time.UTC)}}
+	m := vendorModel(plainTheme(), 100, 30, out, "")
+	if line := stripANSI(m.statusLine(100)); !strings.Contains(line, "codex out until 20 Oct 07:12") {
+		t.Fatalf("status line lacks the end with its day: %q", line)
+	}
+}

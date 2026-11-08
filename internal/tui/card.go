@@ -447,6 +447,30 @@ func (m *Model) cardLandNote() string {
 	return "Approve lands it, then removes its worktree and branch."
 }
 
+// cardLandWarning is advisory: the existing approval rule alone gates a.
+func (m *Model) cardLandWarning() string {
+	if m.pane == nil {
+		return ""
+	}
+	check := m.pane.landCheck
+	if check.Error != "" {
+		return ""
+	}
+	if check.Reason != "" {
+		return "Landing will stop: " + runrec.PlainText(check.Reason)
+	}
+	if len(check.Blockers) == 0 {
+		return ""
+	}
+	names := check.Blockers
+	more := ""
+	if len(names) > 3 {
+		more = fmt.Sprintf(" (+%d more)", len(names)-3)
+		names = names[:3]
+	}
+	return "Landing will stop: main has uncommitted changes to " + runrec.PlainText(strings.Join(names, ", ")) + more + ". Commit, stash or remove them first."
+}
+
 // cardPushes reports whether approval pushes: the project's registry setting.
 func (m *Model) cardPushes() bool {
 	p := m.byName[m.pane.project]

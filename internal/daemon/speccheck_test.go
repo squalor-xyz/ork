@@ -865,7 +865,7 @@ func TestSpecRetryFailureHasAnActionableWireCode(t *testing.T) {
 	rig.report = "bad shape"
 	_, err := rig.d.specCheck(context.Background(), SpecCheckParams{Project: "p", Items: []string{"S1"}})
 	wire := ipc.ErrorOf(err)
-	if wire == nil || wire.Code == ipc.CodeInternal || !strings.Contains(wire.Message, "retry") || !strings.Contains(wire.Message, "check again") {
+	if wire == nil || wire.Code == ipc.CodeInternal || !strings.Contains(wire.Message, "retry") || !strings.Contains(wire.Message, "Check again") || !strings.Contains(wire.Message, "S1") || !strings.Contains(wire.Message, "safe") {
 		t.Fatalf("retry failure wire: %+v", wire)
 	}
 }

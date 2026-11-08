@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
@@ -26,10 +27,21 @@ type welcomeLive struct {
 	lists     int
 	removed   []string
 	removeErr error
+	byBase    bool             // name an added project after its folder (S302)
+	failPaths map[string]error // a path the daemon refuses (S302)
+	addMu     sync.Mutex
 }
 
 func (l *welcomeLive) ProjectsAdd(_ context.Context, path string) (registry.Project, error) {
+	l.addMu.Lock()
+	defer l.addMu.Unlock()
 	l.paths = append(l.paths, path)
+	if err := l.failPaths[path]; err != nil {
+		return registry.Project{}, err
+	}
+	if l.byBase {
+		return registry.Project{Name: filepath.Base(path), Path: path}, l.err
+	}
 	return registry.Project{Name: "mine", Path: path}, l.err
 }
 func (l *welcomeLive) Projects(context.Context) ([]registry.Project, error) {
@@ -285,7 +297,7 @@ func TestWelcomeHintNamesAbsolutePaths(t *testing.T) {
 	h, _ := welcomeHarness(t)
 	h.deliver(press("+"))
 	got := sgr.ReplaceAllString(strings.Join(h.m.welcomeBody(300), "\n"), "")
-	want := "Type an absolute path, or leave it empty and press Enter to use the current directory (needs .slicer or .adjudicate.json)."
+	want := "Type an absolute path to a project, or to a folder to pick projects from it. Leave it empty and press Enter to use the current directory."
 	if !strings.Contains(got, want) {
 		t.Fatalf("hint=%s", got)
 	}

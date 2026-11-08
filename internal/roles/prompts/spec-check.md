@@ -18,6 +18,8 @@ the whole batch in one pass, so the owner answers every question in one sitting.
 - The only files you may write are your report and scratch files in {{temp_dir}}.
   The directory is yours alone. Never use a shared system temp directory such as
   `/tmp`.
+  ork sets TMPDIR to {{temp_dir}} for Claude and Codex roles. Do not prefix commands
+  with `env TMPDIR=` and do not create the directory: it exists.
 - Work only in {{worktree}}. Use absolute paths. Never change directory. Do not read
   outside the worktree, except {{temp_dir}} and the read-only references the brief
   names.
@@ -82,8 +84,10 @@ exact block for each question. Give 2 to 4 numbered options with distinct labels
 one-line summaries. Recommend one option by number and give one-line reasoning. Omit
 the Decision key line when filing in adj is not appropriate. Use a lowercase dotted
 decision key, for example `Decision key: area.topic`. Put a blank line between the
-blocks of one slice. From `Question:` onward, keep the block's strict shape: no extra
-context lines inside or after it (the optional Decision key line is allowed).
+blocks of one slice. From `Question:` onward, write the block as shown: no list marker before `Options:`, `Recommend:`
+or `Decision key:`, and no line between the options. ork keeps
+any other line in the block's text and files it with the adj record when the block
+has a Decision key, but does not show it (the optional Decision key line is allowed).
 
 ```text
 Question: ONE LINE TITLE
