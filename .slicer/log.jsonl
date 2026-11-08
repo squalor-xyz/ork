@@ -3675,3 +3675,4 @@
 {"when": "2026-11-08T15:42:50Z", "item": "S309", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-08T15:47:53Z", "item": "S309", "action": "note", "from": "", "to": "", "note": "Wider cause found on S194 (ork-20261108-150055-6fa4): the cl", "by": "Jon Robbins"}
 {"when": "2026-11-08T15:53:01Z", "item": "S194", "action": "status", "from": "started", "to": "done", "note": "Landed: watchdog keeps a clean exit, report/render open refuses FIFOs without blocking, vendor wait heartbeats, item.note ignores refresh error, dash answer flags attached. Gate PASS from a reviewer that ran the suite; ork's own gate could not run commands (S309).", "by": "Jon Robbins"}
+{"when": "2026-11-08T15:59:18Z", "item": "S309", "action": "edit", "from": "", "to": "", "note": "Implement"}
