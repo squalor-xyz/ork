@@ -3621,3 +3621,4 @@
 {"when": "2026-11-08T01:51:07Z", "item": "S308", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-08T01:54:25Z", "item": "S308", "action": "note", "from": "", "to": "", "note": "Verified status reads board data and lists stale manual rela", "by": "Jon Robbins"}
 {"when": "2026-11-08T01:54:25Z", "item": "S308", "action": "status", "from": "started", "to": "done", "note": "Verified status reads board data and lists stale manual relays alongside active relays, excludes ended relays, preserves active step details, and counts stale relays in the CLI total. Regression tests and matching guide, design and changelog updates passed review and the final gate.", "by": "Jon Robbins"}
+{"when": "2026-11-08T03:13:25Z", "item": "S217", "action": "edit", "from": "", "to": "", "note": "Implement"}
