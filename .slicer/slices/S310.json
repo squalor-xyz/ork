@@ -1,0 +1,39 @@
+{
+  "id": "S310",
+  "title": "Rewrite stale /Users/jon paths in slice Check lines",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "44 slice files under .slicer/slices still hold '--root /Users/jon/code/squalor-xyz/ork' (a macOS path) in Check lines, so every spec check asks the owner how to run them (S244, S103) and a gate cannot run them. Rewrite them to the runnable form 'slicer check' and 'adj lint' (AGENTS.md), through slicer edit, one pass, and report which slices changed. Owner picked the runnable form on S244 (2026-11-09). Failing test: none in Go; the check is that rg '/Users/jon' .slicer/slices prints nothing and slicer check passes."
+    },
+    {
+      "heading": "Files",
+      "body": "- `.slicer/slices/` (through `slicer edit` only; no direct edits)\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- After the pass, `rg -l \"/Users/jon\" .slicer` prints nothing.\n- `slicer check` passes.\n- Every rewritten Check line keeps its meaning: `slicer check --root /Users/jon/code/squalor-xyz/ork` becomes `slicer check`; `adj lint --root ...` becomes `adj lint`; other absolute paths are listed in the report, not guessed."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. List the slices with `rg -l \"/Users/jon\" .slicer/slices` (read only).\n2. For each, read its Check section with `slicer show ID` and rewrite only the stale lines with `slicer edit ID --section Check --text ...`.\n3. Report the slices changed and any line left because it needs the owner."
+    },
+    {
+      "heading": "Check",
+      "body": "- `rg -l \"/Users/jon\" .slicer` prints nothing, `slicer check`, `adj lint`.\n- No Go change; no UI pass."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

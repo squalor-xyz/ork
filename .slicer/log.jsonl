@@ -3694,3 +3694,10 @@
 {"when": "2026-11-08T18:02:01Z", "item": "S243", "action": "status", "from": "started", "to": "done", "note": "Verified Claude implementer shell rules in Done when and bounded status denial counts with rune-safe truncation; slice tests passed, JSON and TUI unchanged. Gate PASS and owner approval received; human checks deferred at approval.", "by": "Jon Robbins"}
 {"when": "2026-11-08T17:39:40Z", "item": "S243", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-09T06:20:35Z", "item": "S244", "action": "note", "from": "", "to": "", "note": "Owner answers 2026-11-09 (interactive, relay session): (1) l", "by": "Jon Robbins"}
+{"when": "2026-11-09T06:21:07Z", "item": "S103", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:21:13Z", "item": "S310", "action": "add", "from": "", "to": "open", "note": "Rewrite stale /Users/jon paths in slice Check lines"}
+{"when": "2026-11-09T06:21:13Z", "item": "S310", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T06:21:22Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T06:21:22Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T06:21:22Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:21:22Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Check"}

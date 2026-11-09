@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 310,
+  "next_id": 311,
   "preamble": "",
   "passes": [
     {
@@ -16180,6 +16180,34 @@
         "urgency": 3,
         "effort": null,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S310",
+      "title": "Rewrite stale /Users/jon paths in slice Check lines",
+      "short_title": "Rewrite stale /Users/jon paths in slice Check lines",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-new-ab5b036764bedf2a",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 3,
+        "effort": null,
+        "attempts": 0
       }
     }
   ],
