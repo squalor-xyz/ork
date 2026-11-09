@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -83,7 +84,7 @@ func specHarnessStatusReads(t *testing.T, heads []clitest.Reply, status ...strin
 				{Tool: "git", Args: []string{"-C", P, "rev-parse", "HEAD"}, Seq: heads},
 				{Tool: "slicer", Args: []string{"show", "S10", "--json", "--lean", "--root", P}, Stdout: specSliceJSON("S10", "ten")},
 				{Tool: "slicer", Args: []string{"show", "S11", "--json", "--lean", "--root", P}, Stdout: specSliceJSON("S11", "eleven")},
-				{Tool: "git", Args: []string{"-C", P, "status", "--porcelain"}, Seq: seq},
+				{Tool: "git", Args: []string{"-C", P, "status", "--porcelain"}, Prefix: true, Seq: seq},
 			}
 		}
 	})
@@ -101,6 +102,121 @@ func specConfig(h *harness, t *testing.T) SpecCheckConfig {
 		Project: h.proj, Items: []string{"S10", "S11"}, Dir: t.TempDir(),
 		Lineup: []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "medium"}},
 	}
+}
+
+func TestSpecCheckFingerprintIsScopedToTheProject(t *testing.T) {
+	h := specHarness(t)
+	if _, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t)); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"-C", h.P, "status", "--porcelain", "--", "."}
+	for _, args := range h.calls("git", "-C", h.P, "status") {
+		if !reflect.DeepEqual(args, want) {
+			t.Errorf("fingerprint args %q, want %q", args, want)
+		}
+	}
+}
+
+// Use real git for the fingerprint and HEAD, but keep slicer and the role fake.
+// Reports and fake CLI state live outside the repository being fingerprinted.
+func specRepoHarness(t *testing.T, project string) *harness {
+	t.Helper()
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			root := filepath.Join(P, project)
+			return []clitest.Route{
+				{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", root}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v11.json")},
+				{Tool: "slicer", Args: []string{"show", "S10", "--json", "--lean", "--root", root}, Stdout: specSliceJSON("S10", "ten")},
+				{Tool: "slicer", Args: []string{"show", "S11", "--json", "--lean", "--root", root}, Stdout: specSliceJSON("S11", "eleven")},
+			}
+		}
+	})
+	gitRun(t, h.P, "init")
+	for _, p := range []string{"a", "b"} {
+		writeFile(t, filepath.Join(h.P, p, ".slicer", "log.jsonl"), "{}\n")
+	}
+	gitRun(t, h.P, "add", ".")
+	gitRun(t, h.P, "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "-c", "commit.gpgsign=false", "commit", "-m", "fixture")
+	h.proj.Path = filepath.Join(h.P, project)
+	h.deps.GitBin = "git"
+	return h
+}
+
+func TestSpecCheckIgnoresASiblingProjectsWrite(t *testing.T) {
+	for _, path := range []string{"a/.slicer/log.jsonl", "a/.slicer/slices/X.json"} {
+		t.Run(path, func(t *testing.T) {
+			h := specRepoHarness(t, "b")
+			h.runner.script = func(req Request, n int) (Result, error) {
+				writeFile(t, filepath.Join(h.P, path), "{}\n{}\n")
+				return Result{Exit: ExitOK, Report: specReport}, nil
+			}
+			_, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+			if err != nil {
+				t.Fatalf("sibling write failed spec check: %v", err)
+			}
+		})
+	}
+}
+
+func TestSpecCheckStillCatchesAWriteInItsOwnProject(t *testing.T) {
+	for _, path := range []string{"b/notes.txt", "b/.slicer/log.jsonl"} {
+		t.Run(path, func(t *testing.T) {
+			h := specRepoHarness(t, "b")
+			h.runner.script = func(req Request, n int) (Result, error) {
+				writeFile(t, filepath.Join(h.P, path), "{}\n{}\n")
+				return Result{Exit: ExitOK, Report: specReport}, nil
+			}
+			_, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+			if err == nil || !strings.Contains(err.Error(), "changed the tree") || !strings.Contains(err.Error(), "read-only") {
+				t.Fatalf("own write error: %v", err)
+			}
+		})
+	}
+}
+
+func TestSpecCheckAtTheRepoRootIsUnchanged(t *testing.T) {
+	for _, dirty := range []bool{false, true} {
+		t.Run(fmt.Sprint(dirty), func(t *testing.T) {
+			h := specRepoHarness(t, ".")
+			h.runner.script = func(req Request, n int) (Result, error) {
+				if dirty {
+					writeFile(t, filepath.Join(h.P, "notes.txt"), "notes\n")
+				}
+				return Result{Exit: ExitOK, Report: specReport}, nil
+			}
+			_, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+			if dirty {
+				if err == nil || !strings.Contains(err.Error(), "changed the tree") || !strings.Contains(err.Error(), "read-only") {
+					t.Fatalf("root write error: %v", err)
+				}
+			} else if err != nil {
+				t.Fatalf("unchanged root: %v", err)
+			}
+		})
+	}
+}
+
+func TestProjectPrefix(t *testing.T) {
+	h := specRepoHarness(t, "b")
+	for _, tc := range []struct{ dir, want string }{
+		{h.P, ""},
+		{h.proj.Path, "b/"},
+	} {
+		t.Run(tc.want, func(t *testing.T) {
+			got, err := projectPrefix(context.Background(), tc.dir)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got != tc.want {
+				t.Fatalf("project prefix %q, want %q", got, tc.want)
+			}
+		})
+	}
+	t.Run("not a repository", func(t *testing.T) {
+		if _, err := projectPrefix(context.Background(), t.TempDir()); err == nil {
+			t.Fatal("project prefix outside a repository succeeded")
+		}
+	})
 }
 
 func TestSpecCheckMarksReadyAndQuestions(t *testing.T) {

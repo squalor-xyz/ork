@@ -15486,7 +15486,7 @@
       "id": "S292",
       "title": "Spec check: a sibling project's tracking write in the same git repo must not fail the read-only check",
       "short_title": "Spec check: a sibling project's tracking write in the same git repo must not fail the read-only check",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -15496,6 +15496,34 @@
           "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 project-only: fingerprint every path under the project root, its own .slicer included. Q2 no-lock: scope the paths only; the spec check takes no lock.",
           "created_at": "2026-11-04T19:59:54Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "4d85e612-4407-41f6-9233-4bed8171da8b",
+          "kind": "",
+          "text": "**2026-11-09** — Human checks at approval (S292):\n- later: [AFTER LAND] Start `ork wave start` on prism-ui and, within seconds, on prism (same repo). Both spec checks pass.",
+          "created_at": "2026-11-09T13:02:55Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "2e5274d0-1fa3-4b3e-926a-78a136544009",
+          "kind": "",
+          "text": "**2026-11-09** — Verified project-scoped spec-check fingerprint: sibling tracking writes pass; own-project writes remain rejected, including own tracking. Real-repository regressions and mutation checks passed. Gate returned VERDICT: PASS and owner approved; after-land prism/prism-ui human check remains deferred.",
+          "created_at": "2026-11-09T13:03:09Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -15522,7 +15550,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

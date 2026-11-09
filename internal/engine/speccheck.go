@@ -80,9 +80,10 @@ func SpecFingerprint(raw []byte) (string, error) {
 }
 
 // gitStatusAt is the read-only fingerprint of a directory (role.readonly-
-// fingerprint): the output of `git status --porcelain`.
+// fingerprint): `git status --porcelain -- .` includes only paths under dir,
+// including its own tracking files when they are visible to git status.
 func gitStatusAt(ctx context.Context, d Deps, dir string) (string, error) {
-	res, err := clirun.Run(ctx, clirun.Call{Bin: d.gitBin(), Args: []string{"-C", dir, "status", "--porcelain"}, Timeout: 30 * time.Second})
+	res, err := clirun.Run(ctx, clirun.Call{Bin: d.gitBin(), Args: []string{"-C", dir, "status", "--porcelain", "--", "."}, Timeout: 30 * time.Second})
 	if err != nil {
 		return "", fmt.Errorf("git status: %w", err)
 	}

@@ -3845,3 +3845,11 @@
 {"when": "2026-11-09T06:41:11Z", "item": "S224", "action": "note", "from": "", "to": "", "note": "Related: S311 (notify command) adds a second per-project set", "by": "Jon Robbins"}
 {"when": "2026-11-09T12:23:11Z", "item": "S131", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-09T12:38:39Z", "item": "S310", "action": "note", "from": "", "to": "", "note": "Landed with 2 quoted hits left: S103 and S131 Owner decision", "by": "Jon Robbins"}
+{"when": "2026-11-09T12:40:14Z", "item": "S292", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-09T12:40:32Z", "item": "S292", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T12:40:33Z", "item": "S292", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T12:44:12Z", "item": "S292", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T12:44:12Z", "item": "S292", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T13:02:55Z", "item": "S292", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S292):", "by": "Jon Robbins"}
+{"when": "2026-11-09T13:03:09Z", "item": "S292", "action": "note", "from": "", "to": "", "note": "Verified project-scoped spec-check fingerprint: sibling trac", "by": "Jon Robbins"}
+{"when": "2026-11-09T13:03:10Z", "item": "S292", "action": "status", "from": "started", "to": "done", "note": "Spec-check fingerprint uses git status --porcelain -- .; sibling tracking writes are ignored while own-project writes remain read-only violations. Regression tests and mutation checks verified; gate PASS and owner approval received. After-land human check remains deferred.", "by": "Jon Robbins"}

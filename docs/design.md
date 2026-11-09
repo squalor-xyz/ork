@@ -222,6 +222,13 @@ ork (TUI)  ork status --json (CLI)
    first. The check is one read-only pass of the spec-check role over the
    whole batch: for each slice it answers ready, or asks the
    owner structured questions (S111 shape, with an optional decision key).
+   *Proposed* (S292): its read-only fingerprint uses
+   `git -C PROJECT status --porcelain -- .`. It covers paths under the project
+   root, including its own `.slicer/` tracking files visible to git status.
+   A sibling project in the same repository can change its tracking files
+   without failing this check. The spec check takes no lock. A status change
+   inside the project during the role still fails the read-only check; the
+   existing whole-repository HEAD check and retry rules stay in place.
    A ready slice's Failing tests name their assertions and its Check gives a
    sandbox-runnable command and expected result, or a `[HUMAN CHECK]` saying what
    the owner looks at and should see; criteria gaps that reading the slice, Files
