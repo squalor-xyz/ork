@@ -8,7 +8,106 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+func TestReservedLocalRunSerializesItsLocalRoles(t *testing.T) {
+	h := uiHarness(t, tuiFiles)
+	h.deps.Vendors = NewVendors(nil)
+	h.cfg.Lineup[RoleImplementer] = []runrec.LineupEntry{{Vendor: "claude-local", Model: "qwen", Effort: "medium"}}
+	h.cfg.Lineup[RoleReviewer] = []runrec.LineupEntry{{Vendor: "codex-local", Model: "qwen", Effort: "medium"}}
+	h.cfg.Lineup[RoleUI] = []runrec.LineupEntry{{Vendor: "grok-local", Model: "latest", Effort: "medium"}}
+	started := make(chan string, 2)
+	free := make(chan struct{}, 2)
+	h.deps.Runner = contextRunner{run: func(ctx context.Context, req Request) (Result, error) {
+		if req.Role == RoleReviewer || req.Role == RoleUI {
+			started <- req.Role
+			select {
+			case <-ctx.Done():
+				return Result{}, ctx.Err()
+			case <-free:
+			}
+		}
+		return defaultResult(req), nil
+	}}
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	done := make(chan error, 1)
+	go func() { done <- e.Run(ctx) }()
+	joined := false
+	defer func() {
+		cancel()
+		if !joined {
+			<-done
+		}
+		_ = e.Stop(context.Background(), "test cleanup")
+	}()
+	var first string
+	select {
+	case first = <-started:
+	case <-ctx.Done():
+		t.Fatal("no local review role started")
+	}
+	select {
+	case second := <-started:
+		t.Fatalf("reserved local roles overlapped: %s and %s", first, second)
+	case <-time.After(60 * time.Millisecond):
+	}
+	free <- struct{}{}
+	select {
+	case second := <-started:
+		if second == first {
+			t.Fatal("same local role started twice")
+		}
+	case <-ctx.Done():
+		t.Fatal("waiting local role did not use the released reservation")
+	}
+	free <- struct{}{}
+	err = <-done
+	joined = true
+	rec := e.Snapshot()
+	if err != nil || rec.State != runrec.StateAwaitingApproval || h.readReport(rec, "reviewer-1.md") != cleanReview || h.readReport(rec, "ui-1.md") != cleanReview {
+		t.Fatalf("serialized local roles did not save both reports: %s, %v", rec.State, err)
+	}
+}
+
+func TestLocalVendorsShareFourSlots(t *testing.T) {
+	v := NewVendors(map[string]int{"codex": 1})
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	var release []func()
+	defer func() {
+		for _, f := range release {
+			f()
+		}
+	}()
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local", "claude-local"} {
+		f, waited, err := v.Acquire(ctx, vendor)
+		if err != nil || waited {
+			t.Fatalf("first four local slots: %s waited=%v err=%v", vendor, waited, err)
+		}
+		release = append(release, f)
+	}
+	for _, vendor := range []string{"claude", "codex", "grok"} {
+		f, waited, err := v.Acquire(ctx, vendor)
+		if err != nil || waited {
+			t.Fatalf("frontier waits on local pool: %s waited=%v err=%v", vendor, waited, err)
+		}
+		f()
+	}
+	fifth := acquireAsync(ctx, v, "grok-local")
+	mustNotReturn(t, fifth, "fifth mixed local role")
+	release[0]()
+	got := mustReturn(t, fifth, "fifth local role after release")
+	if got.err != nil || !got.waited {
+		t.Fatalf("fifth local slot: waited=%v err=%v", got.waited, got.err)
+	}
+	got.release()
+}
 
 // vendorClock is a clock the test moves by hand.
 type vendorClock struct {

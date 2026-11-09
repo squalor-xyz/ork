@@ -28,6 +28,27 @@ import (
 // directory (S299, *proposed*), and so survives a restart.
 const VendorOutFor = 60 * time.Minute
 
+// IsLocalVendor identifies the three launcher identities decided for S301.
+func IsLocalVendor(vendor string) bool {
+	return vendor == "claude-local" || vendor == "codex-local" || vendor == "grok-local"
+}
+
+const LocalSlotCap = 4
+const localPoolName = "\x00local"
+
+// IsLocalRun uses the admitted primary implementer, never the active fallback.
+func IsLocalRun(lineup map[string][]runrec.LineupEntry) bool {
+	entries := lineup[RoleImplementer]
+	return len(entries) > 0 && IsLocalVendor(entries[0].Vendor)
+}
+
+func vendorPool(vendor string) string {
+	if IsLocalVendor(vendor) {
+		return localPoolName
+	}
+	return vendor
+}
+
 // VendorOut is a vendor that the daemon remembers as out.
 type VendorOut struct {
 	Vendor string
@@ -43,13 +64,14 @@ type VendorOut struct {
 // which WithStore keeps in a file. A nil *Vendors has no cap and no memory, and
 // every method is safe on it.
 type Vendors struct {
-	mu    sync.Mutex
-	store string // the file of the owner's marks; "" keeps them in memory
-	now   func() time.Time
-	caps  map[string]int
-	held  map[string]int
-	queue map[string][]*vendorWaiter // oldest first
-	out   map[string]VendorOut
+	mu      sync.Mutex
+	store   string // the file of the owner's marks; "" keeps them in memory
+	now     func() time.Time
+	caps    map[string]int
+	held    map[string]int
+	queue   map[string][]*vendorWaiter // oldest first
+	out     map[string]VendorOut
+	changed chan struct{} // one daemon admission watcher; notifications coalesce
 }
 
 // vendorWaiter is one round that waits for a vendor slot. granted is closed
@@ -58,14 +80,16 @@ type vendorWaiter struct {
 	granted chan struct{}
 }
 
-// NewVendors returns a Vendors with the given slot caps by vendor. A vendor
-// with a cap of 0, or none, is unlimited.
+// NewVendors returns a Vendors with the given cloud slot caps by vendor. A
+// cloud vendor with no cap is unlimited. The three local launchers always
+// share four slots (adj 187).
 func NewVendors(caps map[string]int) *Vendors {
 	return &Vendors{
-		caps:  maps.Clone(caps),
-		held:  map[string]int{},
-		queue: map[string][]*vendorWaiter{},
-		out:   map[string]VendorOut{},
+		caps:    maps.Clone(caps),
+		held:    map[string]int{},
+		queue:   map[string][]*vendorWaiter{},
+		out:     map[string]VendorOut{},
+		changed: make(chan struct{}, 1),
 	}
 }
 
@@ -92,6 +116,51 @@ func (v *Vendors) Acquire(ctx context.Context, vendor string) (release func(), w
 	return v.AcquireWait(ctx, vendor, nil)
 }
 
+func (v *Vendors) limitLocked(pool string) int {
+	if pool == localPoolName {
+		return LocalSlotCap
+	}
+	return v.caps[pool]
+}
+
+// HasSlot is a read-only admission check. TryAcquire must still claim the slot.
+func (v *Vendors) HasSlot(vendor string) bool {
+	if v == nil {
+		return true
+	}
+	pool := vendorPool(vendor)
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	limit := v.limitLocked(pool)
+	return limit <= 0 || v.held[pool] < limit && len(v.queue[pool]) == 0
+}
+
+// TryAcquire reserves a slot without waiting or overtaking an existing waiter.
+func (v *Vendors) TryAcquire(vendor string) (release func(), ok bool) {
+	if v == nil {
+		return func() {}, true
+	}
+	pool := vendorPool(vendor)
+	v.mu.Lock()
+	limit := v.limitLocked(pool)
+	if limit > 0 && (v.held[pool] >= limit || len(v.queue[pool]) > 0) {
+		v.mu.Unlock()
+		return nil, false
+	}
+	v.held[pool]++
+	v.mu.Unlock()
+	return v.releaser(pool), true
+}
+
+// SlotChanges wakes the daemon when a shared local slot is released. It is
+// memory only, and has one consumer. A nil Vendors supplies no notifications.
+func (v *Vendors) SlotChanges() <-chan struct{} {
+	if v == nil {
+		return nil
+	}
+	return v.changed
+}
+
 // AcquireWait is Acquire with a callback: onWait is called once, from the
 // caller's goroutine, when the caller has taken its place in the queue and is
 // about to block.
@@ -102,8 +171,9 @@ func (v *Vendors) AcquireWait(ctx context.Context, vendor string, onWait func())
 	if err := ctx.Err(); err != nil {
 		return nil, false, err
 	}
+	vendor = vendorPool(vendor)
 	v.mu.Lock()
-	limit := v.caps[vendor]
+	limit := v.limitLocked(vendor)
 	if limit <= 0 || v.held[vendor] < limit {
 		v.held[vendor]++
 		v.mu.Unlock()
@@ -141,6 +211,14 @@ func (v *Vendors) releaser(vendor string) func() {
 		once.Do(func() {
 			v.mu.Lock()
 			defer v.mu.Unlock()
+			defer func() {
+				if vendor == localPoolName {
+					select {
+					case v.changed <- struct{}{}:
+					default:
+					}
+				}
+			}()
 			if q := v.queue[vendor]; len(q) > 0 {
 				v.queue[vendor] = q[1:]
 				close(q[0].granted) // the slot stays held, now by the waiter
@@ -393,7 +471,7 @@ func (w *vendorWaits) add(vendor string, n int) {
 	}
 }
 
-// VendorWait names the vendor a round of this run waits for a slot of, or "".
+// VendorWait names the vendor a role or local run waits for a slot of, or "".
 // It is memory only, like Live: a restarted daemon has no waits. With two
 // rounds waiting on different vendors it names the first by name.
 func (e *Engine) VendorWait() string {

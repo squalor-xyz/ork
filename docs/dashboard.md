@@ -2037,9 +2037,11 @@ separate usage or task line. The pane scrolls inside its own lines, which sit un
 Overview rows around them (S106).
 
 Running roles show `$-` until their round ends. *Proposed* (S129): a finished
-role shows a cost whenever its record holds a non-zero `cost_usd`, regardless
-of vendor. Zero stored cost shows `$-`; it cannot establish a reported zero
-price. The Overview's `tokens N` is the run total:
+role shows a cost whenever its record holds a non-zero `cost_usd`, for a cloud
+vendor. Zero stored cost shows `$-`; it cannot establish a reported zero
+price. A role whose vendor is `claude-local`, `codex-local` or `grok-local`
+shows `local` in place of the cost, with no dollar amount (S301), for example
+`tokens 123  local`. The Overview's `tokens N` is the run total:
 recorded tokens plus live tokens for roles still running in the record.
 *Proposed* (S129): final tokens enter the record before live usage ends, so
 the total does not dip or count a completed role twice. The cell is omitted

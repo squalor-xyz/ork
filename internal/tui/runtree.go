@@ -9,6 +9,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -229,6 +230,9 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 		cost := "$-"
 		if s.costKnown {
 			cost = fmt.Sprintf("$%.2f", s.cost)
+		}
+		if engine.IsLocalVendor(s.Vendor) {
+			cost = "local"
 		}
 		tokens := "-"
 		if s.usageKnown {

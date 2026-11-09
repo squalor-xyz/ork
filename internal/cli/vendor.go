@@ -13,13 +13,12 @@ import (
 	"github.com/squalor-xyz/ork/internal/daemon"
 )
 
-// vendorNames are the vendors ork runs; the daemon accepts the same three.
-var vendorNames = []string{"claude", "codex", "grok"}
+// vendorNames are the cloud CLIs and their local launcher identities.
+var vendorNames = []string{"claude", "codex", "grok", "claude-local", "codex-local", "grok-local"}
 
-// vendorList reads "claude, codex or grok".
+// vendorList lists the supported vendor identities.
 func vendorList() string {
-	n := len(vendorNames) - 1
-	return strings.Join(vendorNames[:n], ", ") + " or " + vendorNames[n]
+	return "claude, codex or grok, or their -local launchers"
 }
 
 // vendor is `ork vendor [list]`, `ork vendor out NAME [--reason TEXT]

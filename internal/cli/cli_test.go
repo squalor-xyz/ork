@@ -657,6 +657,35 @@ type doctorOut struct {
 	Binary string `json:"binary"`
 }
 
+func TestLocalDoctorListsOptionalLaunchers(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	fake := clitest.Install(t, clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json"}, Prefix: true, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v11.json")})
+	app := &App{Call: func(context.Context, string, any, any) error { return fmt.Errorf("no daemon") }, Tools: Tools{Slicer: fake.Bin("slicer"), Adj: fake.Bin("adj"), Git: fake.Bin("git")}}
+	dir := t.TempDir()
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
+		if err := os.WriteFile(filepath.Join(dir, vendor), []byte("#!/bin/sh\nprintf 'local-launcher-test\\n'\n"), 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir)
+	_, out, _ := run(t, app, "doctor", "--json")
+	var rep struct{ Tools []toolCheck }
+	if err := json.Unmarshal([]byte(out), &rep); err != nil {
+		t.Fatal(err)
+	}
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
+		found := false
+		for _, tool := range rep.Tools {
+			if tool.Name == vendor && tool.Present && tool.OK && !tool.Required && tool.Version == "local-launcher-test" {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("doctor missing optional launcher %s: %+v", vendor, rep.Tools)
+		}
+	}
+}
+
 func doctorApp(t *testing.T, relayFirstLine string) (app *App, fake *clitest.Fake, logs map[string]string) {
 	t.Helper()
 	return doctorAppWith(t, relayFirstLine)
@@ -1067,7 +1096,7 @@ func TestDoctorReportsEachToolAndTheAcceptedContracts(t *testing.T) {
 	}
 	var d doctorOut
 	mustJSON(t, stdout, &d)
-	if !d.OK || len(d.Tools) != 5 {
+	if !d.OK || len(d.Tools) != 8 {
 		t.Fatalf("report: %s", stdout)
 	}
 	versions := map[string]string{"slicer": "slicer 1.15.0", "adj": "v0.1.0", "claude": "2.1.303 (Claude Code)", "codex": "codex-cli 0.163.0", "grok": "grok 1.0.62 (fake)"}

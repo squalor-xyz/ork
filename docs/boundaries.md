@@ -67,7 +67,12 @@ change the contract by itself.
 - **adj CLI**, with `--json`, one call per registered project. Nothing ork
   v1 needs is unreleased in adj 0.1.0.
 - **Vendor CLIs:** `claude`, `codex`, `grok`, headless, with their own
-  logins. ork never touches credentials.
+  logins. The local identities `claude-local`, `codex-local` and `grok-local`
+  run executable launchers of the same names on PATH through those adapters.
+  The owner maintains the launchers outside ork. They own local endpoint,
+  credentials and CLI configuration; ork never reads their contents or
+  touches credentials. Matrix Agent values select the launcher. No local
+  endpoint, key or model configuration belongs in `projects.json`.
 - **git**, through `git -C <path>`, never by changing directory.
 
 ## Hard rules

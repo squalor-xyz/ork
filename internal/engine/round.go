@@ -241,7 +241,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	for {
 		entryIndex = e.skipVendorsOut(entries, first)
 		entry = entries[entryIndex]
-		rel, waited, err := e.d.Vendors.AcquireWait(ctx, entry.Vendor, func() { e.vendorWait.add(entry.Vendor, 1) })
+		rel, waited, err := e.acquireRoleSlot(ctx, entry.Vendor, func() { e.vendorWait.add(entry.Vendor, 1) })
 		if waited {
 			e.vendorWait.add(entry.Vendor, -1)
 		}
@@ -403,7 +403,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	// long; the adapters kill the role's process group when their context ends.
 	runCtx, kill := context.WithCancel(ctx)
 	defer kill()
-	watch, stopWatch, hung := e.watchRole(runCtx, kill)
+	watch, stopWatch, hung := e.watchRole(runCtx, kill, entry.Vendor)
 	defer stopWatch()
 	defer e.beginWork(fmt.Sprintf("%s round %d", r.role, r.n), watch)()
 	res, runErr := e.d.Runner.Run(runCtx, Request{
@@ -432,10 +432,14 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 	// A runner without an error finished by itself; its result is real even
 	// when it returned in the tick the watchdog fired.
-	if hung() && runErr != nil {
+	if hung() && runErr != nil && !IsLocalVendor(entry.Vendor) {
 		release()
 		limit, _ := e.d.hungLimit()
 		return e.endHungRound(ctx, rec, r, idx, stepID, res, limit, stop)
+	}
+	if hung() && runErr != nil && IsLocalVendor(entry.Vendor) {
+		res.Reason = "local role exceeded 45m"
+		runErr = fmt.Errorf("%s: %w", res.Reason, runErr)
 	}
 	class := res.Exit
 	switch {

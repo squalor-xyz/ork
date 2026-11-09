@@ -42,6 +42,28 @@ func baseBrief() BriefInput {
 	}
 }
 
+func TestLocalBriefKeepsItsAdapterRules(t *testing.T) {
+	for _, tc := range []struct {
+		vendor, role, want string
+		readonly           bool
+	}{
+		{"claude-local", RoleUI, "Load these skills for the UI pass: tui-design", true},
+		{"claude-local", RoleImplementer, "Change files with the Edit and Write tools only", false},
+		{"grok-local", RoleReviewer, "Grok plan mode:", true},
+	} {
+		t.Run(tc.vendor+"/"+tc.role, func(t *testing.T) {
+			in := baseBrief()
+			in.Role, in.Vendor, in.ReadOnly = tc.role, tc.vendor, tc.readonly
+			in.UIPassSkills = []string{"tui-design"}
+			in.Allow = DefaultImplementerAllowlist("go test ./...")
+			got, err := BuildBrief(in)
+			if err != nil || !strings.Contains(got, tc.want) {
+				t.Fatalf("local brief missing %q: %v", tc.want, err)
+			}
+		})
+	}
+}
+
 var claudeShellRules = []string{
 	"Change files with the Edit and Write tools only: no `sed -i`, no scripts (python or others), no heredocs, no redirects into files.",
 	"Run one plain command per shell call: no pipes, no `&&` or `;`, no command substitution, no `cd` (use absolute paths, `go -C DIR` and `git -C DIR`).",

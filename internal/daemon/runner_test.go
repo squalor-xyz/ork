@@ -20,6 +20,115 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
+// These launchers exercise the real dispatcher and adapters without a server.
+func localLaunchers(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	for vendor, output := range map[string]string{
+		"claude-local": `{"type":"result","subtype":"success","is_error":false,"result":"local report","session_id":"local"}`,
+		"codex-local":  "{\"type\":\"thread.started\",\"thread_id\":\"local\"}\n{\"type\":\"item.completed\",\"item\":{\"type\":\"agent_message\",\"text\":\"local report\"}}\n{\"type\":\"turn.completed\"}",
+		"grok-local":   `{"type":"result","subtype":"success","is_error":false,"result":"local report","session_id":"local"}`,
+	} {
+		script := "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$ORK_CAPTURE\"\nprintf '%s\\n' \"${ORK_CLOUD_ONLY-unset}\" > \"$ORK_ENV_CAPTURE\"\nprintf '%s\\n' '" + output + "'\n"
+		if err := os.WriteFile(filepath.Join(dir, vendor), []byte(script), 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir)
+	return dir
+}
+
+func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			d, _, p := runDaemon(t, nil)
+			d.runs.deps.Runner = nil
+			dir := localLaunchers(t)
+			capture := filepath.Join(dir, "args")
+			t.Setenv("ORK_CAPTURE", capture)
+			t.Setenv("ORK_ENV_CAPTURE", filepath.Join(dir, "env"))
+			model := "qwen3.8-27b"
+			if vendor == "grok-local" {
+				model = "latest"
+			}
+			got, err := d.runDeps(p).Runner.Run(context.Background(), engine.Request{Vendor: vendor, Brief: "brief", Worktree: dir, Model: model, Effort: "medium", Resume: "prior", ReadOnly: true})
+			if err != nil || got.Report != "local report" {
+				t.Fatalf("launcher result: %+v, %v", got, err)
+			}
+			b, err := os.ReadFile(capture)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := map[string][]string{
+				"claude-local": {"-p", "--resume", "prior", "--output-format", "stream-json", "--verbose", "--include-partial-messages", "--model", model, "--effort", "medium", "--permission-mode", "plan", "brief"},
+				"codex-local":  {"exec", "resume", "prior", "-m", model, "--json", "-c", "model_reasoning_effort=medium", "-c", `sandbox_mode="read-only"`, "brief"},
+				"grok-local":   {"-p", "brief", "--output-format", "streaming-messages-json", "--include-partial-messages", "--reasoning-effort", "medium", "--resume", "prior", "--permission-mode", "plan", "--cwd", dir},
+			}[vendor]
+			if string(b) != strings.Join(want, "\n")+"\n" {
+				t.Fatalf("launcher argv: %q; want %q", b, want)
+			}
+		})
+	}
+}
+
+func TestLocalDispatcherDoesNotInheritCloudVendorEnv(t *testing.T) {
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			d, _, p := runDaemon(t, nil)
+			d.runs.deps.Runner = nil
+			dir := localLaunchers(t)
+			t.Setenv("ORK_CAPTURE", filepath.Join(dir, "args"))
+			capture := filepath.Join(dir, "env")
+			t.Setenv("ORK_ENV_CAPTURE", capture)
+			t.Setenv("ORK_CLOUD_ONLY", "daemon")
+			p.VendorEnv = map[string]map[string]string{strings.TrimSuffix(vendor, "-local"): {"ORK_CLOUD_ONLY": "cloud override"}}
+			_, err := d.runDeps(p).Runner.Run(context.Background(), engine.Request{Vendor: vendor, Brief: "brief", Worktree: dir, ReadOnly: true})
+			if err != nil {
+				t.Fatalf("local run: %v", err)
+			}
+			b, err := os.ReadFile(capture)
+			if err != nil || string(b) != "daemon\n" {
+				t.Fatalf("local environment: %q, %v", b, err)
+			}
+		})
+	}
+}
+
+func TestLocalDispatcherSavesFixturesUnderLocalIdentity(t *testing.T) {
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			d, _, p := runDaemon(t, nil)
+			d.runs.deps.Runner = nil
+			dir := localLaunchers(t)
+			if err := os.WriteFile(filepath.Join(dir, vendor), []byte("#!/bin/sh\nprintf 'unclassified local failure\\n'\nexit 1\n"), 0700); err != nil {
+				t.Fatal(err)
+			}
+			_, _ = d.runDeps(p).Runner.Run(context.Background(), engine.Request{Vendor: vendor, Brief: "brief", Worktree: dir, ReadOnly: true})
+			entries, err := os.ReadDir(filepath.Join(d.cfg.Paths.Dir, "fixtures", vendor))
+			if err != nil || len(entries) == 0 {
+				t.Fatalf("local fixture candidates missing: %v", err)
+			}
+		})
+	}
+}
+
+func TestLocalVendorSupportAndOwnerMarks(t *testing.T) {
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
+		t.Run(vendor+"/support", func(t *testing.T) {
+			if !supportsVendor(vendor) {
+				t.Fatalf("unsupported local vendor %s", vendor)
+			}
+		})
+		t.Run(vendor+"/mark", func(t *testing.T) {
+			d, _, _ := runDaemon(t, nil)
+			got, err := d.setVendor(SetVendorParams{Vendor: vendor, Out: true})
+			if err != nil || len(got.VendorsOut) != 1 || got.VendorsOut[0].Vendor != vendor {
+				t.Fatalf("local owner mark: %+v, %v", got, err)
+			}
+		})
+	}
+}
+
 func TestClaudeRunnerForwardsRequestAndResult(t *testing.T) {
 	started := 0
 	req := engine.Request{Vendor: "claude", Model: "sonnet", Effort: "high", Brief: "brief", Worktree: "/work", ReportPath: "/report", Allowlist: []string{"Read", "Write"}, Resume: "old", OnStart: func(p int) { started = p }}

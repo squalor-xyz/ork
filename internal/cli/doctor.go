@@ -387,6 +387,7 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	}{
 		{"slicer", t.Slicer, true}, {"adj", t.Adj, true},
 		{"claude", t.Claude, false}, {"codex", t.Codex, false}, {"grok", t.Grok, false},
+		{"claude-local", "claude-local", false}, {"codex-local", "codex-local", false}, {"grok-local", "grok-local", false},
 	} {
 		tc := checkTool(ctx, c.name, c.bin, c.required)
 		if c.name == "slicer" || c.name == "adj" {

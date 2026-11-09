@@ -297,7 +297,7 @@ entries:
 					stepID = step.ID
 				}
 			}
-			res, runErr := d.Runner.Run(ctx, req)
+			res, runErr := d.runSpecRole(ctx, req)
 
 			class := res.Exit
 			if runErr != nil || class == "" {
@@ -409,6 +409,34 @@ entries:
 		owner = ""
 	}
 	return &SpecCheckResult{Verdicts: verdicts, Specs: specs, OwnerNeeded: strings.TrimSpace(owner)}, nil
+}
+
+// runSpecRole applies the shared pool and elapsed limit to a local spec
+// check, which has no Engine run. Cloud spec checks retain their existing
+// behavior. Cancellation is joined before the slot is released.
+func (d Deps) runSpecRole(ctx context.Context, req Request) (Result, error) {
+	if !IsLocalVendor(req.Vendor) {
+		return d.Runner.Run(ctx, req)
+	}
+	release, _, err := d.Vendors.Acquire(ctx, req.Vendor)
+	if err != nil {
+		return Result{}, err
+	}
+	defer release()
+	runCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	e := Engine{d: d}
+	watch, stop, expired := e.watchRole(runCtx, cancel, req.Vendor)
+	defer stop()
+	req.OnEvent = watch.touch
+	req.OnLive = func(Live) { watch.touch() }
+	res, runErr := d.Runner.Run(runCtx, req)
+	stop()
+	if ctx.Err() == nil && expired() && runErr != nil {
+		res.Reason = "local role exceeded 45m"
+		runErr = fmt.Errorf("%s: %w", res.Reason, runErr)
+	}
+	return res, runErr
 }
 
 // specProblemReason is the short ledger reason of a refused spec check round.

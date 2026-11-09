@@ -16044,7 +16044,7 @@
       "id": "S301",
       "title": "Local model through a vendor CLI",
       "short_title": "Local model via vendor CLI",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -16054,6 +16054,20 @@
           "text": "**2026-11-09** — Owner interview 2026-11-09 (adj 194, 195): local rows are used by explicit lineup only until S304 gives evidence; a local role falls back to the next row after 45 minutes. First trial: the gate of a small slice on claude-local with a cloud fallback. codex-local stays unused until bubblewrap is installed (owner decision: leave it). The three launchers are executable scripts in ~/.local/bin as of 2026-11-09.",
           "created_at": "2026-11-09T12:51:43Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "eae14469-db77-4ddf-a010-087ef917f20c",
+          "kind": "",
+          "text": "**2026-11-09** — Verified: claude-local, codex-local and grok-local map to their adapters with the launcher as binary and vendor, with independent out marks and one shared four-slot local pool (spec checks included). A local-primary run reserves one pool slot for its lifetime (RESERVED-ONE), takes no global or project cap slot, and keeps its cap class across fallback (PRIMARY). A local role stops after 45 minutes of runtime, excluding machine sleep, and falls back; cloud DefaultHungAfter is unchanged. Missing launchers are skipped with a named reason in recommended and explicit chains. grok-local row model is latest (ROW-LATEST). Docs updated (design, boundaries, state, dashboard). Checks: go test ./... 5217 passed 0 failed, go vet, gofmt, slicer check, adj lint clean; adj check roles.local-model is decided. Launcher evidence: command -v claude-local codex-local grok-local printed /home/jon/.local/bin/claude-local, /home/jon/.local/bin/codex-local, /home/jon/.local/bin/grok-local (exit 0). Headless runs: claude-local exit 1 (ECONNREFUSED), grok-local exit 1 (policy lock file under /home/jon/.grok not accessible) after the ROW-LATEST change removed the earlier duplicate -m error (exit 2), codex-local not run (bubblewrap decision). [HUMAN CHECK] successful server replies, effort and resume for each launcher remain unverified.",
+          "created_at": "2026-11-09T16:24:06Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -16082,7 +16096,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 3,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

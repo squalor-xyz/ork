@@ -12,6 +12,17 @@ import (
 	"github.com/squalor-xyz/ork/internal/registry"
 )
 
+func TestLocalVendorCommandsAcceptLauncherNames(t *testing.T) {
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			code, out, err := run(t, &App{}, "vendor", "out", vendor, "--until", "invalid-time")
+			if code != ExitUsage || out != "" || !strings.Contains(err, "--until: cannot read") {
+				t.Fatalf("local name was rejected before time validation: exit=%d out=%q err=%q", code, out, err)
+			}
+		})
+	}
+}
+
 func TestVendorCommandListsMarksAndClears(t *testing.T) {
 	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
 
