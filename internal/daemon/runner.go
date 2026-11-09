@@ -28,7 +28,7 @@ type claudeRunner struct {
 }
 
 func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Result, error) {
-	if req.Vendor != "claude" {
+	if req.Vendor != "claude" && req.Vendor != "claude-local" {
 		return engine.Result{}, fmt.Errorf("unsupported vendor %q", req.Vendor)
 	}
 	call := r.round
@@ -40,7 +40,7 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	total := func(u claude.Usage) int {
 		return int(u.InputTokens + u.OutputTokens + u.CacheReadTokens + u.CacheCreationTokens)
 	}
-	round, err := call(ctx, claude.Spec{Dir: req.Worktree, Env: claudeEnv(r.env, req.TempDir), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
+	round, err := call(ctx, claude.Spec{Bin: req.Vendor, Dir: req.Worktree, Env: claudeEnv(r.env, req.TempDir), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
 		ReadOnly: req.ReadOnly, Allowlist: req.Allowlist, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev claude.Event) {
 			switch ev.Kind {
 			case claude.EventTextDelta:
@@ -86,10 +86,13 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	return result, err
 }
 
-// vendorRunner dispatches only to measured adapters.
-type vendorRunner struct{ claude, codex, grok engine.Runner }
+// vendorRunner dispatches cloud identities and local launchers to the same
+// adapters, with independent environments and fixture directories.
+type vendorRunner struct{ claude, codex, grok, claudeLocal, codexLocal, grokLocal engine.Runner }
 
-func supportsVendor(v string) bool { return v == "claude" || v == "codex" || v == "grok" }
+func supportsVendor(v string) bool {
+	return v == "claude" || v == "codex" || v == "grok" || engine.IsLocalVendor(v)
+}
 func (r vendorRunner) Run(ctx context.Context, req engine.Request) (engine.Result, error) {
 	switch req.Vendor {
 	case "claude":
@@ -98,6 +101,12 @@ func (r vendorRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 		return r.codex.Run(ctx, req)
 	case "grok":
 		return r.grok.Run(ctx, req)
+	case "claude-local":
+		return r.claudeLocal.Run(ctx, req)
+	case "codex-local":
+		return r.codexLocal.Run(ctx, req)
+	case "grok-local":
+		return r.grokLocal.Run(ctx, req)
 	default:
 		return engine.Result{}, fmt.Errorf("unsupported vendor %q", req.Vendor)
 	}
@@ -115,7 +124,7 @@ func (r codexRunner) Run(ctx context.Context, req engine.Request) (engine.Result
 		call = codex.Run
 	}
 	live := newLiveRedactor(r.env, req.OnLive)
-	round, err := call(ctx, codex.Spec{Dir: req.Worktree, AddDir: req.TempDir, Env: codexEnv(r.env, req.TempDir), Prompt: req.Brief, Model: req.Model, Effort: req.Effort, ReadOnly: req.ReadOnly, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev codex.Event) {
+	round, err := call(ctx, codex.Spec{Bin: req.Vendor, Dir: req.Worktree, AddDir: req.TempDir, Env: codexEnv(r.env, req.TempDir), Prompt: req.Brief, Model: req.Model, Effort: req.Effort, ReadOnly: req.ReadOnly, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev codex.Event) {
 		if ev.Type == "item.completed" && ev.Item != nil && ev.Item.Type == "agent_message" {
 			live.send(ev.Item.Text+"\n", 0, false)
 		}
@@ -156,7 +165,7 @@ func (r grokRunner) Run(ctx context.Context, req engine.Request) (engine.Result,
 		call = grok.Run
 	}
 	live := newLiveRedactor(r.env, req.OnLive)
-	round, err := call(ctx, grok.Spec{Dir: req.Worktree, Env: r.env, Prompt: req.Brief, Model: req.Model, Effort: req.Effort, ReadOnly: req.ReadOnly, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev grok.Event) {
+	round, err := call(ctx, grok.Spec{Bin: req.Vendor, Dir: req.Worktree, Env: r.env, Prompt: req.Brief, Model: req.Model, Effort: req.Effort, ReadOnly: req.ReadOnly, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev grok.Event) {
 		if text, ok := ev.TextDelta(); ok {
 			live.send(text, 0, false)
 		}

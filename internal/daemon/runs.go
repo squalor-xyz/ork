@@ -10,7 +10,9 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"slices"
@@ -141,24 +143,25 @@ func (c *stopCall) abandon(err error) {
 // runManager serializes admission and owner actions; the engine serializes
 // each run's state transitions. Background jobs use the daemon's lifetime.
 type runManager struct {
-	recordLocks  map[string]*sync.Mutex // per-run record writes; guarded by mu
-	cleaning     map[string]bool        // cleanup calls in flight; guarded by mu
-	heads        map[string]string
-	merged       map[string]*bool
-	lastRegistry *registry.File             // last successful run-manager read; guarded by mu
-	waveStops    map[string]int             // suppress queued members while a wave stop is in progress
-	specs        map[string]specEntry       // the spec checks the daemon remembers, by project and item; guarded by mu
-	specJobs     int                        // spec checks in flight; guarded by mu
-	specSeq      int                        // numbers the spec check jobs; guarded by mu
-	specCancels  map[int]context.CancelFunc // cancels each spec check job; guarded by mu
-	specMu       sync.Mutex                 // serializes spec checks and answers
-	specStateMu  sync.Mutex                 // short state operations; lock order: specMu -> specStateMu -> mu
-	closed       bool
-	mu           sync.Mutex
-	ctx          context.Context
-	deps         engine.Deps
-	runs         map[string]*managedRun
-	wg           sync.WaitGroup
+	recordLocks     map[string]*sync.Mutex // per-run record writes; guarded by mu
+	cleaning        map[string]bool        // cleanup calls in flight; guarded by mu
+	heads           map[string]string
+	merged          map[string]*bool
+	lastRegistry    *registry.File             // last successful run-manager read; guarded by mu
+	waveStops       map[string]int             // suppress queued members while a wave stop is in progress
+	specs           map[string]specEntry       // the spec checks the daemon remembers, by project and item; guarded by mu
+	specJobs        int                        // spec checks in flight; guarded by mu
+	specSeq         int                        // numbers the spec check jobs; guarded by mu
+	specCancels     map[int]context.CancelFunc // cancels each spec check job; guarded by mu
+	specMu          sync.Mutex                 // serializes spec checks and answers
+	specStateMu     sync.Mutex                 // short state operations; lock order: specMu -> specStateMu -> mu
+	closed          bool
+	localWakeCancel context.CancelFunc
+	mu              sync.Mutex
+	ctx             context.Context
+	deps            engine.Deps
+	runs            map[string]*managedRun
+	wg              sync.WaitGroup
 }
 
 func (d *Daemon) initRunManager() {
@@ -193,6 +196,36 @@ func (d *Daemon) initRunManager() {
 	}
 	d.runs = runManager{recordLocks: map[string]*sync.Mutex{}, cleaning: map[string]bool{}, heads: map[string]string{}, merged: map[string]*bool{}, ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}, waveStops: map[string]int{}, specs: map[string]specEntry{}, specCancels: map[int]context.CancelFunc{}}
 }
+
+// watchLocalSlots admits queued runs when a local role/spec check frees a
+// slot, even when no managed run job ends. closeRuns cancels and joins it.
+// The caller holds the manager lock. It starts lazily for local runs only.
+func (d *Daemon) watchLocalSlots() {
+	if d.runs.localWakeCancel != nil || d.runs.closed {
+		return
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	d.runs.localWakeCancel = cancel
+	changes := d.runs.deps.Vendors.SlotChanges()
+	d.runs.wg.Add(1)
+	go func() {
+		defer d.runs.wg.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-changes:
+				d.runs.mu.Lock()
+				if !d.runs.closed && len(d.runs.runs) > 0 {
+					if f, err := d.loadRunRegistryLocked(); err == nil {
+						d.startQueuedLocked(f)
+					}
+				}
+				d.runs.mu.Unlock()
+			}
+		}
+	}()
+}
 func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 	deps := d.runs.deps
 	if deps.HungAfter == 0 {
@@ -210,9 +243,12 @@ func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 			return env
 		}
 		deps.Runner = vendorRunner{
-			claude: claudeRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "claude"), env: envFor("claude")},
-			codex:  codexRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "codex"), env: envFor("codex")},
-			grok:   grokRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "grok"), env: envFor("grok")},
+			claude:      claudeRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "claude"), env: envFor("claude")},
+			codex:       codexRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "codex"), env: envFor("codex")},
+			grok:        grokRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "grok"), env: envFor("grok")},
+			claudeLocal: claudeRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "claude-local")},
+			codexLocal:  codexRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "codex-local")},
+			grokLocal:   grokRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "grok-local")},
 		}
 	}
 	return deps
@@ -289,6 +325,9 @@ func (d *Daemon) recoverRuns(ctx context.Context) error {
 			d.runs.mu.Unlock()
 			continue
 		}
+		// Restore local reservations for nonterminal runs, including owner
+		// waits. A run that cannot reserve waits on its next active job.
+		e.TryReserveLocal()
 		d.runs.mu.Lock()
 		d.runs.runs[rec.ID] = &managedRun{engine: e}
 		d.runs.mu.Unlock()
@@ -301,6 +340,9 @@ func (d *Daemon) recoverRuns(ctx context.Context) error {
 func (d *Daemon) closeRuns() {
 	d.runs.mu.Lock()
 	d.runs.closed = true
+	if d.runs.localWakeCancel != nil {
+		d.runs.localWakeCancel()
+	}
 	for _, r := range d.runs.runs {
 		if r.cancel != nil {
 			r.cancel()
@@ -311,6 +353,13 @@ func (d *Daemon) closeRuns() {
 	}
 	d.runs.mu.Unlock()
 	d.runs.wg.Wait()
+	d.runs.mu.Lock()
+	defer d.runs.mu.Unlock()
+	for _, r := range d.runs.runs {
+		if r.engine != nil {
+			r.engine.ReleaseLocal()
+		}
+	}
 }
 func (d *Daemon) activeRuns() bool {
 	d.runs.mu.Lock()
@@ -360,7 +409,18 @@ func (d *Daemon) stopDaemon(p StopParams) (*StopResult, error) {
 }
 
 // matrixAdapters maps matrix agents to the names used by the dispatcher.
-var matrixAdapters = map[string]string{"claude code": "claude", "codex": "codex", "grok": "grok"}
+var matrixAdapters = map[string]string{"claude code": "claude", "codex": "codex", "grok": "grok", "claude-local": "claude-local", "codex-local": "codex-local", "grok-local": "grok-local"}
+
+// launcherMissing checks only local launchers. Cloud binaries retain their
+// existing adapter launch and fallback behavior.
+func launcherMissing(vendor string) string {
+	if engine.IsLocalVendor(vendor) {
+		if _, err := exec.LookPath(vendor); err != nil {
+			return "skipped: launcher " + vendor + " is not on PATH"
+		}
+	}
+	return ""
+}
 
 // appendEntry adds an entry to a fallback chain, unless it is identical to the
 // entry before it: two matrix rows with the same vendor, model and effort give
@@ -500,6 +560,24 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 			}
 			plan.Permissions[role] = perm
 		}
+	}
+	for _, role := range slices.Sorted(maps.Keys(plan.Lineup)) {
+		entries := plan.Lineup[role]
+		var available []runrec.LineupEntry
+		for _, entry := range entries {
+			if reason := launcherMissing(entry.Vendor); reason != "" {
+				if plan.Note != "" {
+					plan.Note += "; "
+				}
+				plan.Note += reason
+				continue
+			}
+			available = append(available, entry)
+		}
+		if len(available) == 0 {
+			return nil, fmt.Errorf("lineup for %s has no available launcher: %s", role, plan.Note)
+		}
+		plan.Lineup[role] = available
 	}
 	plan.Lineup[engine.RoleGate] = append([]runrec.LineupEntry(nil), plan.Lineup[engine.RoleReviewer]...)
 	if note := d.vendorNote(plan.Lineup); note != "" {
@@ -673,7 +751,13 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 	if resumed != nil {
 		return resumed.m.engine.Snapshot(), message, resumed, nil
 	}
-	queued := !d.hasRoomLocked(f, plan.project.Name)
+	local := engine.IsLocalRun(plan.Lineup)
+	if local {
+		d.watchLocalSlots()
+	}
+	// Local admission claims its shared slot after New has saved a queued
+	// record. This avoids a check/claim race with spec checks and role slots.
+	queued := local || !d.hasRoomLocked(f, plan.project.Name)
 	// A spec check that the owner answered gave the item decisions that its
 	// worktree's spec lacks; the run carries them into every brief (S116).
 	cfg := engine.Config{StopAfter: plan.StopAfter, Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: wave, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions}
@@ -687,6 +771,13 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 	}
 	delete(d.runs.specs, specKey(plan.project.Name, p.Item))
 	r := &managedRun{engine: e}
+	if local && e.TryReserveLocal() {
+		if err := e.Dequeue(); err != nil {
+			e.ReleaseLocal()
+			return runrec.Record{}, "", nil, err
+		}
+		queued = false
+	}
 	rec := e.Snapshot()
 	d.runs.runs[rec.ID] = r
 	if !queued {
@@ -815,14 +906,14 @@ func (d *Daemon) autoResumeLocked(ctx context.Context, f *registry.File, proj re
 	if !probe.match {
 		return freshStart(id, fmt.Sprintf("its worktree changed since implementer round %d", probe.round)), nil, nil
 	}
-	if !d.hasRoomLocked(f, proj.Name) {
-		return "", nil, &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("stopped run %s has work in its worktree and no slot is free; resume it now with ork retry %s, or ork dismiss %s to start a new run", id, id, id)}
-	}
 	run, err := d.runs.deps.Store.Open(id)
 	if err != nil {
 		return "", nil, err
 	}
 	e := engine.Load(d.runDeps(proj), proj, run)
+	if d.runBlockedByLocked(f, e) != "" || !e.TryReserveLocal() {
+		return "", nil, &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("stopped run %s has work in its worktree and no slot is free; resume it now with ork retry %s, or ork dismiss %s to start a new run", id, id, id)}
+	}
 	m := &managedRun{engine: e}
 	d.runs.runs[id] = m
 	launch := &resumeLaunch{m: m, applied: make(chan struct{})}
@@ -1167,10 +1258,11 @@ func (d *Daemon) loadRunRegistryLocked() (*registry.File, error) {
 	return f, nil
 }
 
-// hasRoomLocked reports whether one more busy run fits under the global cap
+// hasRoomLocked reports whether one more busy frontier run fits under the global cap
 // and the project's cap. Zero reads as unset: the global cap then defaults
-// and a project has no cap (adj 57, adj 172). Only busy runs hold a slot, so a
-// paused run holds none (adj 122, adj 177). The caller holds the manager lock.
+// and a project has no cap (adj 57, adj 172). Only busy frontier runs hold
+// these slots; local reservations are checked by runBlockedByLocked.
+// A paused frontier run holds none (adj 122, adj 177). The caller holds the manager lock.
 func (d *Daemon) hasRoomLocked(f *registry.File, project string) bool {
 	return d.blockedByLocked(f, project) == ""
 }
@@ -1193,6 +1285,9 @@ func (d *Daemon) blockedByLocked(f *registry.File, project string) string {
 		if !r.busy || r.engine == nil {
 			continue
 		}
+		if r.engine.LocalPrimary() {
+			continue
+		}
 		total++
 		if r.engine.Snapshot().Project == project {
 			inProject++
@@ -1207,6 +1302,22 @@ func (d *Daemon) blockedByLocked(f *registry.File, project string) string {
 	return ""
 }
 
+// runBlockedByLocked applies the admitted primary's cap class. Local runs
+// that already hold their lifetime reservation need no second slot.
+func (d *Daemon) runBlockedByLocked(f *registry.File, e *engine.Engine) string {
+	return d.recordBlockedByLocked(f, e.Snapshot(), e.HasLocalReservation())
+}
+
+func (d *Daemon) recordBlockedByLocked(f *registry.File, rec runrec.Record, held bool) string {
+	if engine.IsLocalRun(rec.Lineup) {
+		if held || d.runs.deps.Vendors.HasSlot("claude-local") {
+			return ""
+		}
+		return fmt.Sprintf("local pool cap %d", engine.LocalSlotCap)
+	}
+	return d.blockedByLocked(f, rec.Project)
+}
+
 // startQueuedLocked first starts the paused runs whose answer or retry waits
 // for a slot, oldest request first, then the oldest queued run whose caps have
 // room, and repeats until none fits (adj 177: a waiting resume goes before any
@@ -1214,6 +1325,12 @@ func (d *Daemon) blockedByLocked(f *registry.File, project string) string {
 func (d *Daemon) startQueuedLocked(f *registry.File) {
 	if d.runs.closed || f == nil {
 		return
+	}
+	for _, r := range d.runs.runs {
+		if r.engine != nil && r.engine.LocalPrimary() {
+			d.watchLocalSlots()
+			break
+		}
 	}
 	d.startResumesLocked(f)
 	type waiting struct {
@@ -1243,10 +1360,11 @@ func (d *Daemon) startQueuedLocked(f *registry.File) {
 			}
 			continue
 		}
-		if !d.hasRoomLocked(f, w.rec.Project) {
+		if d.runBlockedByLocked(f, w.r.engine) != "" || !w.r.engine.TryReserveLocal() {
 			continue
 		}
 		if err := w.r.engine.Dequeue(); err != nil {
+			w.r.engine.ReleaseLocal()
 			fmt.Fprintf(os.Stderr, "start queued run %s: %v\n", w.rec.ID, err)
 			continue
 		}
@@ -1279,12 +1397,19 @@ func (d *Daemon) startResumesLocked(f *registry.File) {
 		return a.ID < b.ID
 	})
 	for _, w := range resumes {
-		if _, ok := find(f, w.rec.Project); !ok || !d.hasRoomLocked(f, w.rec.Project) {
+		if _, ok := find(f, w.rec.Project); !ok || d.runBlockedByLocked(f, w.r.engine) != "" {
+			continue
+		}
+		held := w.r.engine.HasLocalReservation()
+		if !w.r.engine.TryReserveLocal() {
 			continue
 		}
 		// The request leaves the record first: a start the engine refuses is
 		// not tried again at the next free slot.
 		if err := w.r.engine.ClearResume(); err != nil {
+			if !held {
+				w.r.engine.ReleaseLocal()
+			}
 			fmt.Fprintf(os.Stderr, "start waiting resume %s: %v\n", w.rec.ID, err)
 			continue
 		}
@@ -1370,6 +1495,9 @@ func (d *Daemon) launchRun(r *managedRun, fn func(context.Context) error) {
 			r.failure = err
 		}
 		result.record = r.engine.Snapshot()
+		if runrec.IsFinal(result.record.State) {
+			r.engine.ReleaseLocal()
+		}
 		if !result.record.LandedAt.IsZero() {
 			d.removeSpecDirLocked(result.record.Project, result.record.Item)
 		}
@@ -1508,8 +1636,9 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		rec := r.engine.Snapshot()
 		if rec.State == runrec.StateStopped {
 			// A stopped run resumes from its worktree (prepareResume built
-			// this engine from the current project). It holds no slot to
-			// wait for: owner actions bypass the caps (adj 122).
+			// this engine from the current project). Owner actions bypass
+			// frontier caps (adj 122); a local run reacquires its pool slot
+			// when the engine advances.
 			fn = d.resumeJob(r, method, p, nil)
 			break
 		}
@@ -1553,8 +1682,7 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "resume %s: %v\n", p.Run, err)
 		}
-		project := r.engine.Snapshot().Project
-		waits := f != nil && !d.hasRoomLocked(f, project)
+		waits := f != nil && d.runBlockedByLocked(f, r.engine) != ""
 		if waits && resume.Adj && r.engine.Snapshot().Pending.Key != "" {
 			// The answer goes to adj now; only the engine resume waits.
 			notice, err := d.fileWaitingAnswerLocked(ctx, r, p)
@@ -1568,7 +1696,7 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 			if f, err = d.loadRunRegistryLocked(); err != nil {
 				fmt.Fprintf(os.Stderr, "resume %s: %v\n", p.Run, err)
 			}
-			waits = f != nil && !d.hasRoomLocked(f, project)
+			waits = f != nil && d.runBlockedByLocked(f, r.engine) != ""
 		}
 		if waits {
 			resume.At = time.Now()
@@ -1925,7 +2053,11 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 			// The owner has answered or retried; the run waits for a slot (adj 177).
 			wait = "resume waits for a slot"
 			if f, _ := d.loadRunRegistryLocked(); f != nil {
-				if why := d.blockedByLocked(f, rec.Project); why != "" {
+				held := false
+				if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
+					held = m.engine.HasLocalReservation()
+				}
+				if why := d.recordBlockedByLocked(f, rec, held); why != "" {
 					wait += " under " + why
 				}
 			}

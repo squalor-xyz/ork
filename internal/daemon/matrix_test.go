@@ -7,14 +7,73 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
+
+func TestLocalMatrixRowsKeepTheirVendorIdentity(t *testing.T) {
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			d, _, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "recommend"}, Prefix: true, Stdout: `{"roles":[{"role":"implementer","row":{"agent":"Claude Code","model":"sonnet","reasoning":"high"}},{"role":"reviewer","row":{"agent":"` + vendor + `","model":"latest","reasoning":"medium"}}]}`})
+			localLaunchers(t)
+			plan := launchPlan(t, d, `{"project":"p","item":"S1"}`)
+			want := []runrec.LineupEntry{{Vendor: vendor, Model: "latest", Effort: "medium"}}
+			if !reflect.DeepEqual(plan.Lineup[engine.RoleReviewer], want) {
+				t.Fatalf("local lineup: %+v; want %+v", plan.Lineup[engine.RoleReviewer], want)
+			}
+		})
+	}
+}
+
+func TestLocalMatrixUsePrintsTheLauncherName(t *testing.T) {
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			localLaunchers(t)
+			use := matrixUse(slicercli.Row{Role: engine.RoleReviewer, Agent: vendor}, "", nil)
+			lines := FormatMatrix(&RolesMatrixResult{Rows: []MatrixRow{{ID: "r33", Role: engine.RoleReviewer, Use: use}}})
+			if !strings.Contains(strings.Join(lines, "\n"), "used as "+vendor) {
+				t.Fatalf("matrix text: %v", lines)
+			}
+		})
+	}
+}
+
+func TestLocalMatrixSkipsMissingLauncherWithAReason(t *testing.T) {
+	d, _, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "recommend"}, Prefix: true, Stdout: `{"roles":[{"role":"implementer","row":{"agent":"claude-local","model":"qwen3.8-27b","reasoning":"medium"},"alternatives":[{"agent":"Claude Code","model":"sonnet","reasoning":"high"}]},{"role":"reviewer","row":{"agent":"Claude Code","model":"opus","reasoning":"medium"}}]}`})
+	t.Setenv("PATH", t.TempDir())
+	plan := launchPlan(t, d, `{"project":"p","item":"S1"}`)
+	if len(plan.Lineup[engine.RoleImplementer]) != 1 || plan.Lineup[engine.RoleImplementer][0].Vendor != "claude" || !strings.Contains(plan.Note, "claude-local") || !strings.Contains(plan.Note, "PATH") {
+		t.Fatalf("missing launcher plan: %+v", plan)
+	}
+}
+
+func TestLocalOverrideSkipsMissingLauncherWithAReason(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	t.Setenv("PATH", t.TempDir())
+	plan := launchPlan(t, d, `{"project":"p","item":"S1","lineup":{"reviewer":[{"vendor":"claude-local","model":"qwen3.8-27b","effort":"medium"},{"vendor":"claude","model":"opus","effort":"medium"}]}}`)
+	if len(plan.Lineup[engine.RoleReviewer]) != 1 || plan.Lineup[engine.RoleReviewer][0].Vendor != "claude" || !strings.Contains(plan.Note, "claude-local") || !strings.Contains(plan.Note, "PATH") {
+		t.Fatalf("missing explicit launcher plan: %+v", plan)
+	}
+}
+
+func TestLocalMissingLauncherNotesAreStableAcrossPlans(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	t.Setenv("PATH", t.TempDir())
+	const raw = `{"project":"p","item":"S1","lineup":{"implementer":[{"vendor":"claude-local","model":"qwen3.8-27b","effort":"medium"},{"vendor":"claude","model":"sonnet","effort":"high"}],"reviewer":[{"vendor":"grok-local","model":"latest","effort":"medium"},{"vendor":"claude","model":"opus","effort":"medium"}]}}`
+	want := launchPlan(t, d, raw).Note
+	for range 64 {
+		if got := launchPlan(t, d, raw).Note; got != want {
+			t.Fatalf("unchanged missing-launcher plan changed note: %q; want %q", got, want)
+		}
+	}
+}
 
 const matrixText = "# Relay roles\n\n| ID | Role | Agent |\n| --- | --- | --- |\n| r1 | Implementer | Claude Code |\n"
 

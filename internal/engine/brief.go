@@ -100,7 +100,7 @@ func BuildBrief(in BriefInput) (string, error) {
 		b.WriteString("\n")
 	}
 	if in.Role == RoleUI {
-		if in.Vendor == "claude" && len(in.UIPassSkills) > 0 {
+		if (in.Vendor == "claude" || in.Vendor == "claude-local") && len(in.UIPassSkills) > 0 {
 			fmt.Fprintf(&b, "## Skills\n\nLoad these skills for the UI pass: %s. If one is not available, say so in your report and go on.\n\n", strings.Join(in.UIPassSkills, ", "))
 		}
 		b.WriteString("## UI design doc\n\n")
@@ -184,7 +184,7 @@ func doneWhen(in BriefInput) string {
 	}
 	if in.ReadOnly || readOnlyRole(in.Role) {
 		add("You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.")
-		if in.Vendor == "grok" {
+		if in.Vendor == "grok" || in.Vendor == "grok-local" {
 			add("Grok plan mode: the fixtures show git status --short, git diff -- PATH and git diff --check -- PATH running, plus the built-in file tools read_file, grep and list_dir. rg, slicer and test commands remain unverified.")
 			add("Use one command per call. Do not use &&, ;, a pipe, echo, a redirect or python3 -c.")
 			add("A command that needs approval ends the run and loses the report unless a finished report was already produced. Do not issue one. Give the complete report as your final message.")
@@ -192,7 +192,7 @@ func doneWhen(in BriefInput) string {
 	} else {
 		items = append(items, "Allowed forms, verbatim: "+strings.Join(in.Allow, "; ")+"; any other command is denied; no pipes, no cd, no env prefix unless an entry allows it.")
 	}
-	if in.Role == RoleImplementer && in.Vendor == "claude" && !in.ReadOnly {
+	if in.Role == RoleImplementer && (in.Vendor == "claude" || in.Vendor == "claude-local") && !in.ReadOnly {
 		add("Change files with the Edit and Write tools only: no `sed -i`, no scripts (python or others), no heredocs, no redirects into files.")
 		add("Run one plain command per shell call: no pipes, no `&&` or `;`, no command substitution, no `cd` (use absolute paths, `go -C DIR` and `git -C DIR`).")
 		add("If a command is denied, use an allowed form; do not retry it another way.")

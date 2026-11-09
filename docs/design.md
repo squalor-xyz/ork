@@ -255,12 +255,25 @@ ork (TUI)  ork status --json (CLI)
    or when the spec changes (owner decisions, S143, 2026-10-27).
 5. **Approve.** The owner approves the wave. This is checkpoint 1.
 6. **Run.** Items start as slots free up under the global cap (default 2, `engine.default-cap`, adj 172)
-   and the per-project cap (`wave.limits`). Several waves,
+   and the per-project cap (`wave.limits`) for frontier-primary runs. The
+   first implementer row in the admitted plan fixes the cap class for the
+   run's lifetime (S301, owner answer 2026-11-09, PRIMARY). A local-primary
+   run instead reserves one slot in the shared local pool of four, taking
+   no global or project slot (adj 192). This reservation covers cloud
+   fallback, review and gate rounds, pauses and approval waits. Its local
+   roles use that reservation one at a time (RESERVED-ONE); cloud roles
+   still obey their cloud vendor caps. A fifth local run stays queued until
+   a local slot is free. Frontier-primary runs retain their cap class even
+   when they fall back to a local role; that role takes an ordinary shared
+   local slot. A stop or committed result releases the lifetime reservation.
+   Daemon shutdown joins roles before freeing reservations, and recovery
+   restores unfinished local reservations before admitting queued work.
+   Several waves,
    each in one project, may run at once (`wave.scope`). An item over a cap
    waits as a queued run and starts, oldest first, as a slot frees.
-   Only a busy run holds a slot, so a paused run holds none and other runs
-   may start while it waits for the owner (adj 122). The owner's answer or
-   retry of a paused run then needs a slot under the project cap and the global cap
+   Only a busy frontier run holds a frontier slot, so it holds none while
+   paused and other frontier runs may start (adj 122). The owner's answer or
+   retry of a paused frontier run then needs a slot under the project cap and the global cap
    (S274, *proposed*; adj 177). With room it starts at once. With none, ork stores the request in
    the run's record (`resume`), replies at once that the resume waits for a
    slot, and leaves the run `paused`; status says `resume waits for a slot under
@@ -273,14 +286,15 @@ ork (TUI)  ork status --json (CLI)
    under Running, not Needs you or Questions (`docs/dashboard.md`). A freed slot starts the waiting resumes
    first, oldest request first, and then the queued runs. A second answer or
    retry, of either kind, is refused while one waits; `ork stop` ends the run
-   and clears the request. A restart keeps it. Approve and stop still bypass the caps.
+   and clears the request. A restart keeps it. Approve and stop still bypass
+   frontier caps; a local resume or approval reuses its held reservation.
    Beside the run caps there is a vendor cap (S169, *proposed*, owner decision
    2026-10-29): one `codex` role at a time over all runs of the daemon, and
    `claude` unlimited. It is built in; the registry has no field for it. It
    is enforced per role round, not per run (see Vendors, below). A run that
    waits for the Codex slot keeps its global-cap slot, because the wait lasts
-   at most one role round. Spec-check rounds are not counted: they run before
-   a run and take no vendor slot.
+   at most one role round. Cloud spec-check rounds take no vendor slot;
+   local spec checks use the same shared local pool as local reservations.
 7. **Result.** Each item that reaches a passed gate waits for the owner's
    approval. This is checkpoint 2. Once approved, ork runs the finish step, then
    commits (adj #81), then lands the slice (`landing.in-ork`, adj #162; the
@@ -1136,7 +1150,8 @@ separately.
   are also removed (owner decisions, S143, 2026-10-28). Empty or corrupt
   `answers.json` files are discarded and logged with their full path; the
   check asks the owner's questions again.
-- **Hung role** (S182, *proposed*). Every role round has a watchdog. It keeps
+- **Hung role** (S182, *proposed*). Every engine run role round has a watchdog.
+  Cloud roles keep
   the time of the last vendor stream event or assistant text (`Request.OnEvent`
   and `OnLive`). When a role has sent neither for 30 minutes, the watchdog ends
   the context the round runs under, and the vendor adapter kills the role's
@@ -1153,6 +1168,13 @@ separately.
   "Earlier process lost" section in its brief. An owner stop during the role
   stays a stop (exit `cancelled`). A role that returns a result with no error
   in the tick the watchdog fires is recorded as it exited (S194).
+  Local launchers instead have a fixed 45-minute elapsed runtime limit
+  (S301, adj 195). Events and assistant text do not reset it, and time the
+  machine slept is not counted in it (the sleep detector applies, S235). Expiry ends
+  the same process-group context and records an `error` exit, so the existing
+  fallback rules try the next lineup row. It marks no vendor out. A denied
+  command or a read-only tree change still prevents fallback. Cloud roles
+  retain the 30-minute silence limit and the `hung` owner-retry path.
   The wait for a vendor slot is not counted
   as silence. Time the machine slept is not counted as silence either
   (S235, *proposed*), so a wake alone never kills a healthy role. One shared
@@ -1259,17 +1281,37 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   Claude has no measured rate-limit class, so its rows can fall back only
   on an error until a sample exists
   (`vendor.unsampled-classes`).
+- **Local launchers** (S301, adj 183, 188). Matrix Agent values
+  `claude-local`, `codex-local` and `grok-local` select the existing adapters
+  with those exact binary and vendor names. A missing launcher on PATH is
+  skipped in a recommended or an explicit run chain, with its name in the
+  plan's note.
+  The launcher inherits the daemon environment. Cloud `vendor_env` entries
+  do not apply to a local twin; ork sets no local endpoint or credentials.
+  Model, effort and resume arguments follow the existing adapter rules.
+  The owner selected `latest` for a grok-local row: Grok's existing rule
+  omits `-m` for that value, leaving model selection to the launcher.
+  Claude-local and codex-local pass their row model and effort. Grok-local
+  retains Grok's read-only restriction; write roles remain S305. Local rows
+  are opt-in and never become a default primary. Fixture candidates use
+  `fixtures/<local-vendor>/`, and run-tree costs say `local` without dollars.
+  New endpoint-error classification remains S303 and quality measurements
+  remain S304.
 - **Vendor slots and the vendor-out memory** (S169, *proposed*; owner decisions
   2026-10-29). One `engine.Vendors` value in `engine.Deps` is shared by every
   run of the daemon, as `Landings` is. It is in memory only, so a daemon
   restart clears it. A nil value means no cap and no memory, so engine tests
   that set none are unchanged.
   - *Slots.* A round that starts a vendor process first takes that vendor's
-    slot and frees it when the process ends. The built-in caps are `codex` 1
-    and `claude` unlimited. Rounds on a full vendor wait, oldest first. The
+    slot and frees it when the process ends, except a local role in a
+    local-primary run, which uses its run's reservation serially. The
+    built-in caps are `codex` 1
+    and `claude` unlimited. The three local launchers share four slots total
+    (S301, adj 187), independently of cloud vendor slots. Rounds on a full
+    vendor wait, oldest first. The
     wait comes before the ledger step and the role record, so it is not role
     run time (the budget never counts it) and not silence for the watchdog.
-    The run keeps its global-cap slot while it waits, and its Running row says
+    A frontier-primary run keeps its global-cap slot while it waits, and its Running row says
     `waits for codex`; its heard cell is dim, with no `!` or `!!` cue, while it
     waits. *Proposed (S194):* the wait keeps the ledger run fresh with a
     heartbeat on its orchestrator step every 10 minutes, when that step exists
@@ -1277,8 +1319,10 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
     cancels the wait; it leaves no role record and no ledger step. The
     reviewer and the UI pass of one state can wait for each other's slot, but
     they cannot deadlock: each round holds one vendor slot only, and a slot is
-    freed when its process ends. Spec-check rounds (`speccheck.go`) take no
-    slot and are not counted.
+    freed when its process ends. Cloud spec-check rounds (`speccheck.go`)
+    take no slot. Local spec checks take a slot from the same shared local
+    pool and use the same 45-minute elapsed limit; their ledger step can
+    appear before the slot is free. Their output does not extend the limit.
   - *Memory.* A round that exits `rate_limited` or `out_of_credits` marks its
     vendor out, with the time and the exit text. An `error` exit, an auth exit
     and a role the watchdog killed (S182) mark nothing. The mark is made

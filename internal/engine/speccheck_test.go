@@ -7,10 +7,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clitest"
@@ -101,6 +103,87 @@ func specConfig(h *harness, t *testing.T) SpecCheckConfig {
 	return SpecCheckConfig{
 		Project: h.proj, Items: []string{"S10", "S11"}, Dir: t.TempDir(),
 		Lineup: []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "medium"}},
+	}
+}
+
+func TestLocalSpecCheckSharesTheRolePool(t *testing.T) {
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			h := specHarness(t)
+			h.deps.Vendors = NewVendors(nil)
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			defer cancel()
+			var holders []func()
+			for range 4 {
+				release, _, err := h.deps.Vendors.Acquire(ctx, "claude-local")
+				if err != nil {
+					t.Fatal(err)
+				}
+				holders = append(holders, release)
+			}
+			defer func() {
+				for _, release := range holders {
+					release()
+				}
+			}()
+			started := make(chan struct{}, 1)
+			h.runner.script = func(Request, int) (Result, error) {
+				started <- struct{}{}
+				return Result{Exit: ExitOK, Report: specReport}, nil
+			}
+			cfg := specConfig(h, t)
+			cfg.Lineup[0].Vendor = vendor
+			done, result := make(chan struct{}), make(chan error, 1)
+			go func() { defer close(done); _, err := RunSpecCheck(ctx, h.deps, cfg); result <- err }()
+			defer func() { cancel(); <-done }()
+			select {
+			case <-started:
+				t.Fatal("local spec check started over the shared cap")
+			case <-time.After(60 * time.Millisecond):
+			}
+			holders[0]()
+			if err := <-result; err != nil {
+				t.Fatal(err)
+			}
+			b, err := os.ReadFile(filepath.Join(cfg.Dir, "spec-check.md"))
+			if err != nil || string(b) != specReport {
+				t.Fatalf("local spec report: %q, %v", b, err)
+			}
+		})
+	}
+}
+
+func TestLocalSpecCheckTimeoutFallsBackWithAReport(t *testing.T) {
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			h := specHarness(t)
+			clock := newVendorClock()
+			h.deps.Now, h.deps.HungAfter = clock.Now, 4*time.Millisecond
+			h.deps.Runner = contextRunner{run: func(ctx context.Context, req Request) (Result, error) {
+				if req.Vendor != vendor {
+					return Result{Exit: ExitOK, Report: specReport}, nil
+				}
+				clock.Advance(44 * time.Minute)
+				if req.OnEvent != nil {
+					req.OnEvent()
+				}
+				clock.Advance(2 * time.Minute)
+				select {
+				case <-ctx.Done():
+					return Result{}, ctx.Err()
+				case <-time.After(time.Second):
+					t.Error("local spec check was not cancelled after 45 minutes")
+					return Result{}, errors.New("local timeout did not cancel")
+				}
+			}}
+			cfg := specConfig(h, t)
+			cfg.Lineup = append([]runrec.LineupEntry{{Vendor: vendor, Model: "latest", Effort: "medium"}}, cfg.Lineup...)
+			_, err := RunSpecCheck(context.Background(), h.deps, cfg)
+			b, readErr := os.ReadFile(filepath.Join(cfg.Dir, "spec-check.md"))
+			if err != nil || readErr != nil || string(b) != specReport {
+				t.Fatalf("spec fallback report: %q, %v, %v", b, err, readErr)
+			}
+		})
 	}
 }
 

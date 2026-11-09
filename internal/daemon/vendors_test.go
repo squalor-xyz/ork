@@ -18,7 +18,35 @@ import (
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+func TestLocalAndCloudOutMarksSelectIndependentRows(t *testing.T) {
+	for _, marked := range []string{"claude", "claude-local"} {
+		t.Run(marked, func(t *testing.T) {
+			d, store, _ := runDaemon(t, func(context.Context, engine.Request) (engine.Result, error) {
+				return engine.Result{Exit: engine.ExitAuth}, nil
+			})
+			localLaunchers(t)
+			if _, err := d.setVendor(SetVendorParams{Vendor: marked, Out: true}); err != nil {
+				t.Fatal(err)
+			}
+			other := "claude-local"
+			if marked == other {
+				other = "claude"
+			}
+			var rec runrec.Record
+			raw := request(t, d, "run.start", fmt.Sprintf(`{"project":"p","item":"S1","lineup":{"implementer":[{"vendor":%q,"model":"qwen","effort":"medium"},{"vendor":%q,"model":"qwen","effort":"medium"}]}}`, marked, other))
+			if err := json.Unmarshal(raw, &rec); err != nil {
+				t.Fatal(err)
+			}
+			rec = waitState(t, store, rec.ID, runrec.StateStopped)
+			if len(rec.Roles) != 1 || rec.Roles[0].Vendor != other {
+				t.Fatalf("independent mark selected roles: %+v; want %s", rec.Roles, other)
+			}
+		})
+	}
+}
 
 const planRaw = `{"project":"p","item":"S1","well_specified":true,"split":false}`
 

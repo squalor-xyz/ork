@@ -3860,3 +3860,21 @@
 {"when": "2026-11-09T13:03:10Z", "item": "S292", "action": "status", "from": "started", "to": "done", "note": "Spec-check fingerprint uses git status --porcelain -- .; sibling tracking writes are ignored while own-project writes remain read-only violations. Regression tests and mutation checks verified; gate PASS and owner approval received. After-land human check remains deferred.", "by": "Jon Robbins"}
 {"when": "2026-11-09T12:51:43Z", "item": "S301", "action": "note", "from": "", "to": "", "note": "Owner interview 2026-11-09 (adj 194, 195): local rows are us", "by": "Jon Robbins"}
 {"when": "2026-11-09T12:51:43Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Owner interview 2026-11-09: first trial is the gate of a sma", "by": "Jon Robbins"}
+{"when": "2026-11-09T13:08:44Z", "item": "S301", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-09T13:12:04Z", "item": "S301", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T13:12:04Z", "item": "S301", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T13:12:05Z", "item": "S301", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T13:14:24Z", "item": "S301", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T13:59:02Z", "item": "relay-roles.r33", "action": "relay-roles", "from": "", "to": "agent,note,size,well_specified", "note": "set"}
+{"when": "2026-11-09T13:59:02Z", "item": "relay-roles.r34", "action": "relay-roles", "from": "", "to": "reviewer", "note": "add"}
+{"when": "2026-11-09T14:01:42Z", "item": "S301", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T14:03:48Z", "item": "S301", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T14:03:49Z", "item": "S301", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T14:05:51Z", "item": "S301", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T14:24:47Z", "item": "S301", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T14:24:47Z", "item": "S301", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T14:24:48Z", "item": "S301", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T15:09:28Z", "item": "S301", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T15:09:37Z", "item": "S301", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T16:24:06Z", "item": "S301", "action": "note", "from": "", "to": "", "note": "Verified: claude-local, codex-local and grok-local map to th", "by": "Jon Robbins"}
+{"when": "2026-11-09T16:24:08Z", "item": "S301", "action": "status", "from": "started", "to": "done", "note": "Local model rows run through claude-local, codex-local and grok-local launchers with shared four-slot pool, whole-run local reservation with no cap slot, 45-minute sleep-excluded fallback, and matching docs; full suite, vet, gofmt, slicer check and adj lint pass. [HUMAN CHECK] live server replies per launcher remain unverified.", "by": "Jon Robbins"}

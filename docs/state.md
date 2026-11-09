@@ -111,7 +111,8 @@ Notes on the fields:
   `ork projects set NAME --ui-doc PATH` or by editing the file. An older ork
   refuses a registry with `ui_doc` because `Load` uses strict keys.
 - `ui_pass_skills` (*proposed*, S209, adj 171) is an optional JSON array
-  of skill names. Only a UI pass whose vendor is `claude` gets a brief line
+  of skill names. Only a UI pass whose vendor is `claude` or `claude-local`
+  gets a brief line
   advising it to load these skills. A `codex` UI pass never gets the line;
   an absent or empty list adds no line. The base UI prompt stays neutral.
   ork never checks that the skills exist and never reads vendor files.
@@ -497,10 +498,13 @@ time. The note is also the file `owner-fix-N.md` in the run directory, which is
 the `owner` feedback of that round. An older ork refuses a `run.json` with
 `card` or `fixes` because `Store.Open` uses strict keys.
 A role with no `ended_at` is running; a restart marks it `lost`. A role the
-watchdog killed after 30 minutes without output has `exit` `hung` (S182,
+cloud watchdog killed after 30 minutes without output has `exit` `hung` (S182,
 *proposed*) and an `ended_at`; its pause is kind `lost`. Time the machine
 slept is not counted in those 30 minutes, and nothing about sleep is stored
-in `run.json` (S235, *proposed*). `commit` is
+in `run.json` (S235, *proposed*). A local role exceeding 45 minutes of
+elapsed runtime instead has `exit` `error` and an `ended_at`, and follows
+the existing lineup fallback rules (S301, adj 195). Output does not extend
+that limit, and time the machine slept is not counted in it. `commit` is
 `{"sha","title","at"}` once ork has committed. The fields `orchestrator_step`,
 `fails`, `reason`, `pending`, `feedback`, `created_at`, `updated_at`, the
 role's `model`, `effort` and `denials`, a check's `log`, and a write's
@@ -734,8 +738,26 @@ at start, and drops a mark whose `until` has passed. A file that is not valid,
 or has a version this ork does not know, is reported on the daemon's standard
 error and starts the daemon with no owner marks; the next owner mark replaces
 the file. A stored mark of a vendor ork cannot run is not loaded, and the next
-write drops it. The slot cap (`codex` 1, `claude` unlimited) is built in and
-is not a registry field. The proposed snapshot fields `vendors_out[]`
+write drops it. The cloud slot cap (`codex` 1, `claude` unlimited) and the
+shared four slots across `claude-local`, `codex-local` and `grok-local` are
+built in, not registry fields. Each local vendor has its own out mark,
+independent of its cloud twin. A run whose admitted primary implementer is
+local reserves one shared local slot until it stops or commits, including
+cloud review/gate rounds, pauses and approval waits. Its local roles use
+that slot one at a time. It takes no global/project cap slot. A
+frontier-primary run still uses the global/project caps after local fallback;
+each local role in that run takes a shared slot of its own. The cap class is
+derived from the stored implementer lineup's first entry, never from the
+currently executing role. Reservation handles and the serial local-role
+queue are daemon memory. Shutdown cancels and joins roles before releasing
+handles; recovery restores reservations for unfinished local runs before
+starting queued runs. No new stored field or registry setting is needed.
+Local fixture candidates use their launcher
+name as the vendor directory. Local launchers inherit the daemon environment,
+with no local endpoint, key or model setting in `projects.json`; a cloud
+`vendor_env` entry never applies to its local twin. The run tree labels a
+local role's cost `local`, with no dollar amount. No run-record schema
+changes are needed. The proposed snapshot fields `vendors_out[]`
 (`vendor`, `reason`, `since`, and `until`, absent for an owner mark with no
 end) and `engine_runs[].vendor_wait` carry
 them to the clients.

@@ -1333,6 +1333,294 @@ func (w *waveRig) expectNoStart(t *testing.T) {
 	}
 }
 
+func (w *waveRig) startWithLineup(t *testing.T, id string, entries []runrec.LineupEntry) runrec.Record {
+	t.Helper()
+	p := RunParams{Project: "p", Item: id, Lineup: map[string][]runrec.LineupEntry{engine.RoleImplementer: entries}}
+	b, err := json.Marshal(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rec runrec.Record
+	if err := json.Unmarshal(request(t, w.d, MethodRunStart, string(b)), &rec); err != nil {
+		t.Fatal(err)
+	}
+	return rec
+}
+
+func (w *waveRig) startLocal(t *testing.T, id string) runrec.Record {
+	t.Helper()
+	return w.startWithLineup(t, id, []runrec.LineupEntry{{Vendor: "claude-local", Model: "qwen3.8-27b", Effort: "medium"}})
+}
+
+func TestLocalRunBypassesFullFrontierCaps(t *testing.T) {
+	for _, tc := range []struct {
+		name            string
+		global, project int
+	}{{"global", 1, 0}, {"project", 10, 1}} {
+		t.Run(tc.name, func(t *testing.T) {
+			w := newWaveRig(t, tc.global, tc.project)
+			localLaunchers(t)
+			w.start(t, "S1")
+			w.expectStart(t, "S1")
+			rec := w.startLocal(t, "S2")
+			if rec.State == runrec.StateQueued {
+				t.Fatalf("local run queued behind full %s cap", tc.name)
+			}
+			w.expectStart(t, "S2")
+		})
+	}
+}
+
+func TestFrontierRunBypassesFourLocalReservations(t *testing.T) {
+	w := newWaveRig(t, 10, 10)
+	localLaunchers(t)
+	for i := 1; i <= 4; i++ {
+		w.startLocal(t, fmt.Sprintf("S%d", i))
+	}
+	w.expectStarts(t, "S1", "S2", "S3", "S4")
+	p := w.p
+	p.Cap = 1
+	if err := registry.Save(w.d.cfg.RegistryPath, &registry.File{Version: registry.Version, GlobalCap: 1, Projects: []registry.Project{p}}); err != nil {
+		t.Fatal(err)
+	}
+	rec := w.start(t, "S5")
+	if rec.State == runrec.StateQueued {
+		t.Fatal("frontier run queued behind local reservations")
+	}
+	w.expectStart(t, "S5")
+}
+
+func TestFifthLocalRunQueuesUntilReservationReleased(t *testing.T) {
+	w := newWaveRig(t, 10, 10)
+	localLaunchers(t)
+	for i := 1; i <= 4; i++ {
+		w.startLocal(t, fmt.Sprintf("S%d", i))
+	}
+	w.expectStarts(t, "S1", "S2", "S3", "S4")
+	fifth := w.startLocal(t, "S5")
+	if fifth.State != runrec.StateQueued {
+		t.Fatalf("fifth local run state %s, want queued", fifth.State)
+	}
+	w.expectNoStart(t)
+	w.free <- struct{}{}
+	w.expectStart(t, "S5")
+}
+
+func TestLocalReservationWakesQueueWhenRoleSlotFrees(t *testing.T) {
+	w := newWaveRig(t, 10, 10)
+	localLaunchers(t)
+	var holders []func()
+	for range 4 {
+		release, _, err := w.d.runs.deps.Vendors.Acquire(context.Background(), "grok-local")
+		if err != nil {
+			t.Fatal(err)
+		}
+		holders = append(holders, release)
+	}
+	defer func() {
+		for _, release := range holders {
+			release()
+		}
+	}()
+	rec := w.startLocal(t, "S1")
+	if rec.State != runrec.StateQueued {
+		t.Fatalf("local run over role pool state %s, want queued", rec.State)
+	}
+	holders[0]() // no run job ends: the pool release itself must wake admission
+	w.expectStart(t, "S1")
+}
+
+func localCapReport(role string) engine.Result {
+	report := "Tests: 1 passed, 0 failed\n\n## Owner needed\nnone\n"
+	if role == engine.RoleReviewer || role == engine.RoleUI {
+		report = "(A): nothing\n(B): nothing\n(D): nothing\n\n## Owner needed\nnone\n"
+	}
+	if role == engine.RoleGate {
+		report = "VERDICT: PASS\n" + report
+	}
+	return engine.Result{Exit: engine.ExitOK, Report: report}
+}
+
+func TestLocalRunReservationLastsThroughCloudRolesAndOwnerWaits(t *testing.T) {
+	for _, phase := range []string{engine.RoleReviewer, engine.RoleGate, runrec.StateAwaitingApproval, runrec.StatePaused} {
+		t.Run(phase, func(t *testing.T) {
+			w := newWaveRig(t, 10, 10)
+			localLaunchers(t)
+			w.d.runs.deps.Runner = roundRunner(func(ctx context.Context, req engine.Request) (engine.Result, error) {
+				if req.Role == phase {
+					w.started <- filepath.Base(req.Worktree)
+					select {
+					case <-ctx.Done():
+						return engine.Result{}, ctx.Err()
+					case <-w.free:
+					}
+				}
+				res := localCapReport(req.Role)
+				if phase == runrec.StatePaused && req.Role == engine.RoleImplementer {
+					res.Report = "Tests: 1 passed, 0 failed\n\n## Owner needed\nQuestion: Continue?\nOptions:\n1. YES: continue\n2. NO: stop\nRecommend: 1 - test pause\n"
+				}
+				return res, nil
+			})
+			var recs []runrec.Record
+			for i := 1; i <= 4; i++ {
+				recs = append(recs, w.startLocal(t, fmt.Sprintf("S%d", i)))
+			}
+			if phase == engine.RoleReviewer || phase == engine.RoleGate {
+				w.expectStarts(t, "S1", "S2", "S3", "S4")
+			} else {
+				for _, rec := range recs {
+					waitState(t, w.store, rec.ID, phase)
+					waitIdle(t, w.d, rec.ID)
+				}
+			}
+			fifth := w.startLocal(t, "S5")
+			if fifth.State != runrec.StateQueued {
+				t.Fatalf("fifth local run during %s is %s, want queued", phase, fifth.State)
+			}
+			if phase == runrec.StatePaused {
+				answered, err := w.d.ownerRun(context.Background(), MethodRunAnswer, RunAction{Run: recs[0].ID, Text: "YES"})
+				if err != nil || answered.Resume != nil {
+					t.Fatalf("local answer waited on its own reservation: %+v, %v", answered.Resume, err)
+				}
+			}
+			method := MethodRunStop
+			if phase == runrec.StateAwaitingApproval {
+				method = MethodRunApprove
+			}
+			if _, err := w.d.ownerRun(context.Background(), method, RunAction{Run: recs[0].ID}); err != nil {
+				t.Fatal(err)
+			}
+			if phase == engine.RoleReviewer || phase == engine.RoleGate {
+				w.expectStart(t, "S5")
+			} else {
+				waitState(t, w.store, fifth.ID, phase)
+			}
+		})
+	}
+}
+
+func TestPrimaryLocalRunKeepsCapClassAfterCloudFallback(t *testing.T) {
+	w := newWaveRig(t, 1, 1)
+	localLaunchers(t)
+	w.d.runs.deps.Runner = roundRunner(func(ctx context.Context, req engine.Request) (engine.Result, error) {
+		if req.Vendor == "claude-local" {
+			return engine.Result{Exit: engine.ExitError}, nil
+		}
+		w.started <- filepath.Base(req.Worktree)
+		<-ctx.Done()
+		return engine.Result{}, ctx.Err()
+	})
+	w.startWithLineup(t, "S1", []runrec.LineupEntry{{Vendor: "claude-local", Model: "qwen", Effort: "medium"}, {Vendor: "claude", Model: "sonnet", Effort: "medium"}})
+	w.expectStart(t, "S1")
+	frontier := w.start(t, "S2")
+	if frontier.State == runrec.StateQueued {
+		t.Fatal("primary-local run consumed frontier cap after cloud fallback")
+	}
+	w.expectStart(t, "S2")
+}
+
+func TestPrimaryFrontierRunKeepsCapClassAfterLocalFallback(t *testing.T) {
+	w := newWaveRig(t, 1, 1)
+	localLaunchers(t)
+	w.d.runs.deps.Runner = roundRunner(func(ctx context.Context, req engine.Request) (engine.Result, error) {
+		if filepath.Base(req.Worktree) == "S1" && req.Vendor == "claude" {
+			return engine.Result{Exit: engine.ExitError}, nil
+		}
+		w.started <- filepath.Base(req.Worktree)
+		<-ctx.Done()
+		return engine.Result{}, ctx.Err()
+	})
+	w.startWithLineup(t, "S1", []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "medium"}, {Vendor: "claude-local", Model: "qwen", Effort: "medium"}})
+	w.expectStart(t, "S1")
+	frontier := w.start(t, "S2")
+	if frontier.State != runrec.StateQueued {
+		t.Fatalf("second frontier run state %s, want queued", frontier.State)
+	}
+	local := w.startLocal(t, "S3")
+	if local.State == runrec.StateQueued {
+		t.Fatal("local run queued behind primary-frontier fallback")
+	}
+	w.expectStart(t, "S3")
+}
+
+func TestLocalReservationsReleasedAfterDaemonJoinsRoles(t *testing.T) {
+	w := newWaveRig(t, 10, 10)
+	localLaunchers(t)
+	for i := 1; i <= 4; i++ {
+		w.startLocal(t, fmt.Sprintf("S%d", i))
+	}
+	w.expectStarts(t, "S1", "S2", "S3", "S4")
+	closed := make(chan struct{})
+	go func() { w.d.closeRuns(); close(closed) }()
+	defer func() {
+		if w.d.runs.localWakeCancel != nil {
+			w.d.runs.localWakeCancel()
+		}
+		<-closed
+	}()
+	select {
+	case <-closed:
+	case <-time.After(time.Second):
+		t.Fatal("daemon close did not join its local admission watcher")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	defer cancel()
+	var releases []func()
+	defer func() {
+		for _, release := range releases {
+			release()
+		}
+	}()
+	for range 4 {
+		release, waited, err := w.d.runs.deps.Vendors.Acquire(ctx, "codex-local")
+		if err != nil || waited {
+			t.Fatalf("daemon close kept a local reservation: waited=%v err=%v", waited, err)
+		}
+		releases = append(releases, release)
+	}
+}
+
+func TestLocalReservationsRecoveredBeforeQueuedRuns(t *testing.T) {
+	w := newWaveRig(t, 10, 10)
+	localLaunchers(t)
+	w.d.runs.deps.Runner = roundRunner(func(_ context.Context, req engine.Request) (engine.Result, error) {
+		res := localCapReport(req.Role)
+		res.Report = "Tests: 1 passed, 0 failed\n\n## Owner needed\nQuestion: Continue?\nOptions:\n1. YES: continue\n2. NO: stop\nRecommend: 1 - test pause\n"
+		return res, nil
+	})
+	var recs []runrec.Record
+	for i := 1; i <= 4; i++ {
+		recs = append(recs, w.startLocal(t, fmt.Sprintf("S%d", i)))
+	}
+	for _, rec := range recs {
+		waitState(t, w.store, rec.ID, runrec.StatePaused)
+		waitIdle(t, w.d, rec.ID)
+	}
+	fifth := w.startLocal(t, "S5")
+	w.d.closeRuns()
+	deps, cfg := w.d.runs.deps, w.d.cfg
+	cfg.Engine = &deps
+	recovered := New(cfg)
+	t.Cleanup(recovered.cache.Close)
+	t.Cleanup(recovered.closeRuns)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if err := recovered.recoverRuns(ctx); err != nil {
+		t.Fatal(err)
+	}
+	run, err := w.store.Open(fifth.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := run.Snapshot().State; got != runrec.StateQueued {
+		t.Fatalf("recovered fifth local run is %s, want queued", got)
+	}
+	if _, err := recovered.ownerRun(context.Background(), MethodRunStop, RunAction{Run: recs[0].ID}); err != nil {
+		t.Fatal(err)
+	}
+	waitState(t, w.store, fifth.ID, runrec.StatePaused)
+}
+
 func TestDefaultGlobalCapQueuesTheThirdRunUntilASlotFrees(t *testing.T) {
 	w := newWaveRig(t, 0, 0)
 	w.start(t, "S1")

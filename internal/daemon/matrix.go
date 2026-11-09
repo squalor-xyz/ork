@@ -76,6 +76,9 @@ func matrixUse(row slicercli.Row, uiRow string, specRows []string) string {
 	use := "skipped: no adapter for " + row.Agent
 	if adapter := matrixAdapters[strings.ToLower(row.Agent)]; adapter != "" {
 		use = "used as " + adapter
+		if reason := launcherMissing(adapter); reason != "" {
+			use = reason
+		}
 	}
 	switch {
 	case uiRow != "" && row.ID == uiRow:

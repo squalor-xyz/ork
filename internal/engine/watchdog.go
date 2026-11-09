@@ -23,6 +23,10 @@ import (
 // (docs/dashboard.md). The owner fixed it on 2026-10-29: it is not a setting.
 const DefaultHungAfter = 30 * time.Minute
 
+// LocalRoleAfter is the absolute runtime limit for a local launcher (adj 195).
+// Output does not extend it. A timeout falls back through the role's lineup.
+const LocalRoleAfter = 45 * time.Minute
+
 // maxHungCheck is the longest wait between two looks at a silent role.
 const maxHungCheck = 30 * time.Second
 
@@ -48,6 +52,7 @@ type roleWatch struct {
 	sleptAtLast time.Duration // wake.Slept() when last was stored
 	over        bool          // the round ended or the watchdog fired; nothing more is recorded
 	hung        bool
+	absolute    bool // local roles use elapsed time instead of silence
 }
 
 // touch records a sign of life. A nil watch is the watchdog turned off.
@@ -60,18 +65,26 @@ func (w *roleWatch) touch() {
 	if !w.over {
 		// Slept first: a jump between the two reads then leaves the silence
 		// short, never long, so it cannot cause a kill.
-		w.sleptAtLast = w.wake.Slept()
-		w.last = w.now()
-		w.output = w.last
+		if !w.absolute {
+			w.sleptAtLast = w.wake.Slept()
+		}
+		at := w.now()
+		if !w.absolute {
+			w.last = at
+		}
+		w.output = at
 	}
 }
 
-// silence is how long the role has been silent, less the time the machine
-// slept since its last sign of life (S235). Call it with w.mu held. Slept
+// silence is how long the role has been silent (for a local role, how long it
+// has run), less the time the machine slept since its last sign of life, or
+// since its start for a local role (S235). Call it with w.mu held. Slept
 // samples the clock itself, after now is read, so the total never lacks a
 // jump that now has already crossed.
 func (w *roleWatch) silence() time.Duration {
 	now := w.now() // before Slept: its sample is later, so it holds any jump now holds
+	// A local role's elapsed time also leaves out the machine's sleep: neither
+	// last nor sleptAtLast moves on output, so the limit is runtime (S301).
 	return now.Sub(w.last) - (w.wake.Slept() - w.sleptAtLast)
 }
 
@@ -90,16 +103,22 @@ func (w *roleWatch) lastOutput() time.Time {
 // and no-op functions when it is off. kill ends the round's context. Call it
 // just before Runner.Run, so that no wait for a slot counts as silence. stop
 // ends the check and waits for it; after stop, hung is final.
-func (e *Engine) watchRole(ctx context.Context, kill func()) (w *roleWatch, stop func(), hung func() bool) {
+func (e *Engine) watchRole(ctx context.Context, kill func(), vendor string) (w *roleWatch, stop func(), hung func() bool) {
 	limit, on := e.d.hungLimit()
+	every := maxHungCheck
+	if on {
+		every = max(min(limit/4, maxHungCheck), time.Millisecond)
+	}
+	local := IsLocalVendor(vendor)
+	if local {
+		limit, on = LocalRoleAfter, true
+	}
 	if !on {
 		return nil, func() {}, func() bool { return false }
 	}
-	w = &roleWatch{now: e.d.now, wake: e.d.Wake}
+	w = &roleWatch{now: e.d.now, wake: e.d.Wake, absolute: local}
 	w.sleptAtLast = w.wake.Slept()
 	w.last = w.now()
-	every := min(limit/4, maxHungCheck)
-	every = max(every, time.Millisecond)
 	ctx, cancel := context.WithCancel(ctx)
 	done := make(chan struct{})
 	go func() {

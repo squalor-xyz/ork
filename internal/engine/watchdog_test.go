@@ -31,6 +31,85 @@ const (
 	safetyStop = 3 * time.Second
 )
 
+func TestLocalRoleFallsBackAfterFortyFiveMinutesDespiteOutput(t *testing.T) {
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			clock := newVendorClock()
+			h := newHarness(t)
+			h.deps.Now = clock.Now
+			h.deps.HungAfter = 4 * time.Millisecond // fast checks; the local limit remains 45 minutes
+			h.cfg.Lineup[RoleReviewer] = []runrec.LineupEntry{{Vendor: vendor, Model: "latest", Effort: "medium"}, {Vendor: "claude", Model: "opus", Effort: "medium"}}
+			hr := &hangRunner{silent: func(req Request) bool { return req.Vendor == vendor }, script: func(ctx context.Context, req Request) (Result, error) {
+				clock.Advance(44 * time.Minute)
+				select {
+				case <-ctx.Done():
+					t.Error("local role cancelled before 45 minutes")
+					return Result{}, ctx.Err()
+				case <-time.After(20 * time.Millisecond):
+				}
+				req.OnEvent()
+				clock.Advance(2 * time.Minute)
+				select {
+				case <-ctx.Done():
+					return Result{}, ctx.Err()
+				case <-time.After(time.Second):
+					t.Error("local role was not cancelled after 45 minutes despite output")
+					return Result{}, errors.New("local timeout did not cancel")
+				}
+			}}
+			h.deps.Runner = hr
+			e := h.start()
+			rec := e.Snapshot()
+			if rec.State != runrec.StateAwaitingApproval || len(rec.Roles) < 3 || rec.Roles[1].Exit != string(ExitError) || rec.Roles[2].Vendor != "claude" || h.readReport(rec, rec.Roles[2].Report) != cleanReview {
+				t.Fatalf("local timeout did not fall back with a saved cloud report: state=%s roles=%+v", rec.State, rec.Roles)
+			}
+		})
+	}
+}
+
+// A suspend does not use up a local role's 45 minutes (S301). The engine clock
+// and the sleep detector's clock both jump over the sleep; only the engine
+// clock moves during active time, so the detector sees only the sleep.
+func TestLocalRoleTimeoutIgnoresMachineSleep(t *testing.T) {
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			clock, wakeClock := newVendorClock(), newVendorClock()
+			h := newHarness(t)
+			h.deps.Now = clock.Now
+			h.deps.Wake = newWake(wakeClock.Now, testWakeEvery, testWakeGap)
+			h.deps.HungAfter = 4 * time.Millisecond // fast checks; the local limit remains 45 minutes
+			h.cfg.Lineup[RoleReviewer] = []runrec.LineupEntry{{Vendor: vendor, Model: "latest", Effort: "medium"}, {Vendor: "claude", Model: "opus", Effort: "medium"}}
+			hr := &hangRunner{silent: func(req Request) bool { return req.Vendor == vendor }, script: func(ctx context.Context, req Request) (Result, error) {
+				clock.Advance(30 * time.Minute) // 30 minutes of active time
+				req.OnEvent()
+				clock.Advance(20 * time.Minute) // a 20 minute suspend: 50 minutes on the wall clock
+				wakeClock.Advance(20 * time.Minute)
+				select {
+				case <-ctx.Done():
+					t.Error("local role cancelled after 30 minutes of active time and a 20 minute sleep")
+					return Result{}, ctx.Err()
+				case <-time.After(50 * time.Millisecond):
+				}
+				req.OnEvent()
+				clock.Advance(16 * time.Minute) // 46 minutes of active time
+				select {
+				case <-ctx.Done():
+					return Result{}, ctx.Err()
+				case <-time.After(time.Second):
+					t.Error("local role was not cancelled after 46 minutes of active time")
+					return Result{}, errors.New("local timeout did not cancel")
+				}
+			}}
+			h.deps.Runner = hr
+			e := h.start()
+			rec := e.Snapshot()
+			if rec.State != runrec.StateAwaitingApproval || len(rec.Roles) < 3 || rec.Roles[1].Exit != string(ExitError) || rec.Roles[2].Vendor != "claude" {
+				t.Fatalf("local timeout after sleep did not fall back: state=%s roles=%+v", rec.State, rec.Roles)
+			}
+		})
+	}
+}
+
 // hangRunner answers the roles in silent with script, and every other role
 // with the harness's default report. It records a fake process group for each
 // role, as the vendor adapters do through OnStart.

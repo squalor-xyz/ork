@@ -129,10 +129,97 @@ type Engine struct {
 	noted          string      // the checks note written for an approval (guarded by mu)
 	vendorWait     vendorWaits // the vendors whose slot a round waits for (S169); own lock, because Run holds mu
 	work           workings    // the roles and checks that run now (S235); own lock, because Run holds mu
+	localMu        sync.Mutex  // protects the lifetime reservation, independently of e.mu
+	localRelease   func()
+	localRoles     *Vendors // one local role at a time under RESERVED-ONE; nil for frontier-primary runs
 }
 
 func newEngine(d Deps, proj registry.Project, run *runrec.Run) *Engine {
-	return &Engine{d: d, heartbeatEvery: d.HeartbeatEvery, proj: proj, run: run, wr: runrec.Writer{Sink: run, Now: d.now, Sleep: d.Sleep, Backoff: d.Backoff}}
+	e := &Engine{d: d, heartbeatEvery: d.HeartbeatEvery, proj: proj, run: run, wr: runrec.Writer{Sink: run, Now: d.now, Sleep: d.Sleep, Backoff: d.Backoff}}
+	if IsLocalRun(run.Snapshot().Lineup) {
+		e.localRoles = NewVendors(map[string]int{"reserved-role": 1})
+	}
+	return e
+}
+
+// LocalPrimary is fixed by the admitted lineup and survives fallback/reload.
+func (e *Engine) LocalPrimary() bool { return e.localRoles != nil }
+
+func (e *Engine) HasLocalReservation() bool {
+	e.localMu.Lock()
+	defer e.localMu.Unlock()
+	return e.localRelease != nil
+}
+
+// TryReserveLocal is used under the daemon's admission lock. Frontier-primary
+// runs need no reservation. A queued local run changes no state on failure.
+func (e *Engine) TryReserveLocal() bool {
+	if !e.LocalPrimary() {
+		return true
+	}
+	e.localMu.Lock()
+	defer e.localMu.Unlock()
+	if e.localRelease != nil {
+		return true
+	}
+	vendor := e.Snapshot().Lineup[RoleImplementer][0].Vendor
+	release, ok := e.d.Vendors.TryAcquire(vendor)
+	if ok {
+		e.localRelease = release
+	}
+	return ok
+}
+
+func (e *Engine) reserveLocal(ctx context.Context) error {
+	if !e.LocalPrimary() || e.HasLocalReservation() {
+		return nil
+	}
+	vendor := e.Snapshot().Lineup[RoleImplementer][0].Vendor
+	release, waited, err := e.d.Vendors.AcquireWait(ctx, vendor, func() { e.vendorWait.add(vendor, 1) })
+	if waited {
+		e.vendorWait.add(vendor, -1)
+	}
+	if err != nil {
+		return err
+	}
+	e.localMu.Lock()
+	if e.localRelease == nil {
+		e.localRelease = release
+		release = nil
+	}
+	e.localMu.Unlock()
+	if release != nil {
+		release()
+	}
+	return nil
+}
+
+// ReleaseLocal is called after terminal work or daemon shutdown has joined all
+// roles. Pauses, approval waits and cloud fallback rounds keep the reservation.
+func (e *Engine) ReleaseLocal() {
+	e.localMu.Lock()
+	release := e.localRelease
+	e.localRelease = nil
+	e.localMu.Unlock()
+	if release != nil {
+		release()
+	}
+}
+
+func (e *Engine) releaseLocalIfFinal() {
+	if runrec.IsFinal(e.Snapshot().State) {
+		e.ReleaseLocal()
+	}
+}
+
+func (e *Engine) acquireRoleSlot(ctx context.Context, vendor string, onWait func()) (func(), bool, error) {
+	if IsLocalVendor(vendor) && e.LocalPrimary() {
+		if err := e.reserveLocal(ctx); err != nil {
+			return nil, false, err
+		}
+		return e.localRoles.AcquireWait(ctx, "reserved-role", onWait)
+	}
+	return e.d.Vendors.AcquireWait(ctx, vendor, onWait)
 }
 
 // worktreePath is the project's worktree pattern with its item placeholders filled, relative
@@ -327,7 +414,13 @@ func (e *Engine) Run(ctx context.Context) error {
 // error means the engine could not go on at all (the context ended or the run
 // record cannot be written); a stop or a pause is not an error.
 func (e *Engine) advance(ctx context.Context) error {
+	defer e.releaseLocalIfFinal()
 	defer e.ownerWait(context.WithoutCancel(ctx))
+	if !resting(e.Snapshot().State) {
+		if err := e.reserveLocal(ctx); err != nil {
+			return err
+		}
+	}
 	for {
 		if err := ctx.Err(); err != nil {
 			return err
@@ -417,6 +510,7 @@ func (e *Engine) Approve(ctx context.Context) error {
 func (e *Engine) Reject(ctx context.Context, why string) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	defer e.releaseLocalIfFinal()
 	if state := e.run.Snapshot().State; state != runrec.StateAwaitingApproval {
 		return refusef("the slice is %s, not awaiting approval", state)
 	}
@@ -594,6 +688,7 @@ func (e *Engine) RetryNote(ctx context.Context, note string, rounds ...int) erro
 func (e *Engine) Stop(ctx context.Context, why string) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	defer e.releaseLocalIfFinal()
 	if state := e.run.Snapshot().State; runrec.IsFinal(state) {
 		return refusef("the slice is already %s", state)
 	}

@@ -147,6 +147,8 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               mark claude, codex or grok out until back, or
                               until TIME (HH:MM, YYYY-MM-DD HH:MM or a full
                               date and zone); a restart keeps it
+                              also accepts claude-local, codex-local and
+                              grok-local, with independent marks
   ork vendor back NAME        say the vendor is back; ends the mark early
   ork roles print [ROLE]      print the embedded role prompts
   ork roles matrix P          show the role matrix as slicer prints it, then

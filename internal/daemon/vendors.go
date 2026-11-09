@@ -13,8 +13,9 @@ import (
 )
 
 // defaultVendorCaps is the built-in slot cap per vendor (S169, *proposed*): one
-// Codex role at a time, Claude unlimited. The owner fixed it on 2026-10-29; it
-// is not a registry field.
+// Codex role at a time, Claude unlimited. engine.Vendors also enforces one
+// shared pool of four for the local launchers (adj 187). Neither is a
+// registry field.
 var defaultVendorCaps = map[string]int{"codex": 1}
 
 // VendorOut is one vendor the daemon remembers as out (S169, *proposed*).
@@ -65,7 +66,7 @@ func (d *Daemon) listVendors() (VendorsResult, error) {
 // can run is accepted.
 func (d *Daemon) setVendor(p SetVendorParams) (VendorsResult, error) {
 	if !supportsVendor(p.Vendor) {
-		return VendorsResult{}, &ipc.Error{Code: CodeBadParams, Message: fmt.Sprintf("bad params: unsupported vendor %q; use claude, codex or grok", p.Vendor)}
+		return VendorsResult{}, &ipc.Error{Code: CodeBadParams, Message: fmt.Sprintf("bad params: unsupported vendor %q; use claude, codex or grok, or their -local launchers", p.Vendor)}
 	}
 	if !p.Out && !p.Until.IsZero() {
 		return VendorsResult{}, &ipc.Error{Code: CodeBadParams, Message: "bad params: until needs out"}

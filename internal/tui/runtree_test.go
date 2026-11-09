@@ -31,6 +31,20 @@ func treeFixture(t *testing.T, file string) []slicercli.RelayRun {
 	return v.Runs
 }
 
+func TestLocalRunTreeCostHasNoDollarAmount(t *testing.T) {
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			h := newHarness(t, proj("ork", false))
+			h.start()
+			step := runTreeStep{Step: slicercli.Step{ID: "local", Role: "reviewer", Vendor: vendor, Phase: "done"}, hasUsage: true, usageKnown: true, tokens: 123, costKnown: true, cost: 7.25}
+			view := strings.Join(h.m.runTreeLines([]runTreeStep{step}, 160, 0), "\n")
+			if !strings.Contains(view, "tokens 123  local") || strings.Contains(view, "$") {
+				t.Fatalf("local cost display: %s", view)
+			}
+		})
+	}
+}
+
 func treeHarness(t *testing.T, runs []slicercli.RelayRun, engine string) *harness {
 	t.Helper()
 	h := newHarness(t, proj("ork", false))
