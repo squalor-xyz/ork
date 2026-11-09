@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. Add the `owner` and `file-answers` settings (decide the file with Q1; reuse the registry settings if one exists for global values).\n2. Resolve the owner in one function (`environment, then setting`) used by both the engine and the TUI paths.\n3. Turn keyed-question filing on by default when an owner resolves; keep the TUI toggle (ctrl+a) as the way to turn it off for a session.\n4. One notice per run when no owner resolves.\n5. Docs and CHANGELOG, marked *proposed*. Never call `adj reject` or `adj supersede`."
+      "body": "1. Add the `owner` and `file-answers` settings (decide the file with Q1; reuse the registry settings if one exists for global values).\n2. Resolve the owner in one function (`environment, then setting`) used by both the engine and the TUI paths.\n3. Turn keyed-question filing on by default when an owner resolves; keep the TUI toggle (ctrl+a) as the way to turn it off for a session.\n4. One notice per run when no owner resolves.\n5. Docs and CHANGELOG, marked *proposed*. Never call `adj reject` or `adj supersede`.\n\nOwner decisions (2026-11-09, accepted the recommended answers): where the name comes from -> (a) `ork config set owner NAME`, global (recommended) [owner.name-source, adj 228]. default -> (a) filing on when the owner is known (recommended: the decision log is the owner's record) [owner.filing-default, adj 229]. the `--via` text: keep \"interactive question, ork session ID, DATE\" (recommended). -> (a) Q3 the `--via` text: keep \"interactive question, ork session ID, DATE\" (recommended). [owner.via-text, adj 230]."
     },
     {
       "heading": "Check",

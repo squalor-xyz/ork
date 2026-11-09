@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. Add `all` to the check index parser and the `--later-checks` flag to approve; both call the existing mark-later path once per open check.\n2. Print one line per deferred check (number and the first 80 characters of its text).\n3. Update the refusal message and usage text.\n4. Docs and CHANGELOG, marked *proposed*."
+      "body": "1. Add `all` to the check index parser and the `--later-checks` flag to approve; both call the existing mark-later path once per open check.\n2. Print one line per deferred check (number and the first 80 characters of its text).\n3. Update the refusal message and usage text.\n4. Docs and CHANGELOG, marked *proposed*.\n\nOwner decisions (2026-11-09, accepted the recommended answers): shape -> (a) `--later-checks` on approve and `all` on `ork check` (recommended) [approve.later-checks-shape, adj 233]. `all ticked` -> (a) do not add it: ticking says the owner looked, so it stays per check (recommended) [approve.all-ticked, adj 234]."
     },
     {
       "heading": "Check",
