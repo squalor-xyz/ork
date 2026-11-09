@@ -687,10 +687,12 @@ the ledger run is absent from the active snapshot. In `ork status`,
 
 *Proposed wire fields:* each status project carries `self_host` and
 `behind_main`. Snapshots carry both fields and the existing global
-`roles_running` state to the TUI for the idle notice. They are derived from the daemon's VCS revision and local
-`main`, with no registry field. A dev build without a revision or an unknown
-commit never matches. Behind means a different main head that descends from
-the build revision. Failed Git reads do not establish behind state.
+`roles_running` state to the TUI for the idle notice. They are derived from
+the daemon's VCS revision and the branch the main checkout is on, with no
+registry field. A dev build without a revision or an unknown commit never
+matches. Behind means a different branch tip that descends from the build
+revision. Detached HEAD, an unborn branch or failed Git reads do not
+establish behind state. The field remains named `behind_main`.
 
 *Proposed (S103):* registered-project snapshots also carry `daemon_build`,
 the daemon's build ID (omitted when empty). It refreshes the TUI's stale-build
@@ -699,8 +701,8 @@ the startup daemon.info value as the fallback. Unavailable-project snapshots
 remain unchanged.
 
 *Proposed behavior and wording:* `daemon behind main: restart with ork daemon restart`.
-It fires on any landing on main, not only engine landings, while no run is
-active. In the TUI it replaces the stale-build marker while shown. Text
+It fires on any landing on the base branch, not only engine landings, while
+no run is active. In the TUI it replaces the stale-build marker while shown. Text
 doctor prints `[WARN] daemon behind main: restart with ork daemon restart`
 on stdout. Status prints `ork: warning: daemon behind main: restart with ork daemon restart`
 on stderr. The daemon continues using its original binary, never a relay

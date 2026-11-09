@@ -3843,6 +3843,11 @@
 {"when": "2026-11-09T06:41:11Z", "item": "S285", "action": "note", "from": "", "to": "", "note": "Related: S317 runs the slice's own Check lines (race suite, ", "by": "Jon Robbins"}
 {"when": "2026-11-09T06:41:11Z", "item": "S289", "action": "note", "from": "", "to": "", "note": "Evidence 2026-11-08/09 (S217): the landing's merge-in stoppe", "by": "Jon Robbins"}
 {"when": "2026-11-09T06:41:11Z", "item": "S224", "action": "note", "from": "", "to": "", "note": "Related: S311 (notify command) adds a second per-project set", "by": "Jon Robbins"}
+{"when": "2026-11-09T12:23:24Z", "item": "S131", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-09T12:24:01Z", "item": "S131", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T12:24:01Z", "item": "S131", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T12:54:10Z", "item": "S131", "action": "note", "from": "", "to": "", "note": "Verified checkout-branch self-host comparison and bounded ca", "by": "Jon Robbins"}
+{"when": "2026-11-09T12:54:11Z", "item": "S131", "action": "status", "from": "started", "to": "done", "note": "Verified checkout-branch self-host comparison and bounded cache: warm snapshot/status reads use one git call. Required tests and 19 mutation checks passed locally; full-suite socket checks were sandbox-limited. Gate returned PASS and owner approved.", "by": "Jon Robbins"}
 {"when": "2026-11-09T12:23:11Z", "item": "S131", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-09T12:38:39Z", "item": "S310", "action": "note", "from": "", "to": "", "note": "Landed with 2 quoted hits left: S103 and S131 Owner decision", "by": "Jon Robbins"}
 {"when": "2026-11-09T12:40:14Z", "item": "S292", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
@@ -3853,3 +3858,5 @@
 {"when": "2026-11-09T13:02:55Z", "item": "S292", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S292):", "by": "Jon Robbins"}
 {"when": "2026-11-09T13:03:09Z", "item": "S292", "action": "note", "from": "", "to": "", "note": "Verified project-scoped spec-check fingerprint: sibling trac", "by": "Jon Robbins"}
 {"when": "2026-11-09T13:03:10Z", "item": "S292", "action": "status", "from": "started", "to": "done", "note": "Spec-check fingerprint uses git status --porcelain -- .; sibling tracking writes are ignored while own-project writes remain read-only violations. Regression tests and mutation checks verified; gate PASS and owner approval received. After-land human check remains deferred.", "by": "Jon Robbins"}
+{"when": "2026-11-09T12:51:43Z", "item": "S301", "action": "note", "from": "", "to": "", "note": "Owner interview 2026-11-09 (adj 194, 195): local rows are us", "by": "Jon Robbins"}
+{"when": "2026-11-09T12:51:43Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Owner interview 2026-11-09: first trial is the gate of a sma", "by": "Jon Robbins"}

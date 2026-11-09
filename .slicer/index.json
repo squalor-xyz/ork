@@ -6469,7 +6469,7 @@
       "id": "S131",
       "title": "Self-host check: base branch from the main checkout, one git call when nothing moved",
       "short_title": "Self-host check base branch",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -6480,6 +6480,20 @@
           "created_at": "2026-11-01T00:58:24Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "f473189b-1e6b-4f7c-a0f7-b5c6377d7aaf",
+          "kind": "",
+          "text": "**2026-11-09** — Verified checkout-branch self-host comparison and bounded cache: warm snapshot/status reads use one git call. Required tests and 19 mutation checks passed locally; full-suite socket checks were sandbox-limited. Gate returned PASS and owner approved.",
+          "created_at": "2026-11-09T12:54:10Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -6505,7 +6519,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -15949,7 +15963,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "4ba9c3f2-b611-4219-b1ab-c5d3a50e5bad",
+          "kind": "",
+          "text": "**2026-11-09** — Owner interview 2026-11-09 (adj 194, 195): local rows are used by explicit lineup only until S304 gives evidence; a local role falls back to the next row after 45 minutes. First trial: the gate of a small slice on claude-local with a cloud fallback. codex-local stays unused until bubblewrap is installed (owner decision: leave it). The three launchers are executable scripts in ~/.local/bin as of 2026-11-09.",
+          "created_at": "2026-11-09T12:51:43Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -16061,7 +16090,22 @@
       "depends_on": [
         "S301"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6a98a5be-e0c2-4ab2-8372-da1e44a62f39",
+          "kind": "",
+          "text": "**2026-11-09** — Owner interview 2026-11-09: first trial is the gate of a small slice on claude-local, with a cloud gate for comparison; local role timeout 45 minutes (adj 195); explicit lineup only (adj 194). codex-local is out until bubblewrap exists.",
+          "created_at": "2026-11-09T12:51:43Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",

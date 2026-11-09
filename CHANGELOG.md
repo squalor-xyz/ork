@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- S131 (*proposed*): the self-host check compares the daemon build with the
+  branch the main checkout is on. Unchanged tips need one git call per
+  snapshot or status read; changed tips refresh a bounded result cache.
+  The notice and `behind_main` field keep their names. Docs:
+  `docs/design.md`, `docs/state.md`, `docs/dashboard.md`.
+
 - S310: normalized stale macOS paths in 46 tracking items, including
   completed slices. Commands use the current checkout and scratch paths are
   repo-relative. Historical paths outside the old ork checkout use `~` for

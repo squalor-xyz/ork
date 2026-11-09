@@ -16,7 +16,11 @@ import (
 
 const BehindNotice = "daemon behind main: restart with ork daemon restart"
 
-// projectBuild compares the running revision with the project's local main.
+type buildEntry struct {
+	selfHost, behind bool
+}
+
+// projectBuild compares the running revision with the main checkout's branch.
 // A failed read is not evidence that this is ork's repository or is behind.
 func (d *Daemon) projectBuild(ctx context.Context, p registry.Project) (selfHost, behind bool) {
 	revision, _, _ := strings.Cut(d.cfg.BuildID, "+modified=")
@@ -26,19 +30,61 @@ func (d *Daemon) projectBuild(ctx context.Context, p registry.Project) (selfHost
 	if _, err := hex.DecodeString(revision); err != nil {
 		return false, false
 	}
+	d.buildMu.Lock()
+	defer d.buildMu.Unlock()
+	// Keep only registered paths, even after projects are removed or relocated.
+	registered := false
+	f, regErr := registry.Load(d.registryPath())
+	if regErr == nil {
+		paths := make(map[string]bool, len(f.Projects))
+		for _, project := range f.Projects {
+			paths[project.Path] = true
+		}
+		registered = paths[p.Path]
+		for key := range d.builds {
+			path, _, _ := strings.Cut(key, "\x00")
+			if !paths[path] {
+				delete(d.builds, key)
+			}
+		}
+	}
+	head, readErr := d.git(ctx, p, "rev-parse", "HEAD", "--symbolic-full-name", "HEAD")
+	parts := strings.Fields(string(head.Stdout))
+	valid := readErr == nil && len(parts) == 2 && strings.HasPrefix(parts[1], "refs/heads/")
+	key := ""
+	if valid {
+		key = strings.Join([]string{p.Path, d.cfg.BuildID, parts[0], parts[1]}, "\x00")
+		if entry, ok := d.builds[key]; ok {
+			return entry.selfHost, entry.behind
+		}
+	}
+	// A changed key, detached checkout or failed read invalidates the old entry.
+	for old := range d.builds {
+		if strings.HasPrefix(old, p.Path+"\x00") {
+			delete(d.builds, old)
+		}
+	}
 	if _, err := d.git(ctx, p, "cat-file", "-e", revision+"^{commit}"); err != nil {
 		return false, false
 	}
-	head, err := d.git(ctx, p, "rev-parse", "--verify", "refs/heads/main^{commit}")
-	if err != nil {
+	if !valid {
 		return true, false
 	}
-	main := strings.TrimSpace(string(head.Stdout))
-	if main == revision {
-		return true, false
+	behind = false
+	if parts[0] != revision {
+		result, err := d.git(ctx, p, "merge-base", "--is-ancestor", revision, parts[0])
+		if err != nil && result.ExitCode != 1 {
+			return true, false
+		}
+		behind = err == nil
 	}
-	_, err = d.git(ctx, p, "merge-base", "--is-ancestor", revision, main)
-	return true, err == nil
+	if registered {
+		if d.builds == nil {
+			d.builds = make(map[string]buildEntry)
+		}
+		d.builds[key] = buildEntry{selfHost: true, behind: behind}
+	}
+	return true, behind
 }
 
 // EngineSlice reports a Files path under the code that runs a relay.

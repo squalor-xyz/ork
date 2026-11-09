@@ -5,6 +5,7 @@ import (
 	"context"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -123,11 +124,152 @@ func TestDaemonBehindBaseBranch(t *testing.T) {
 		t.Fatal("diverged build reported behind main")
 	}
 	if buildProject(t, root, head)["behind_main"] {
-		t.Fatal("worktree HEAD used instead of main")
+		t.Fatal("diverged build reported behind checkout branch")
 	}
 	git("branch", "-D", "main")
-	if buildProject(t, root, base)["behind_main"] {
-		t.Fatal("missing main reported behind")
+	if !buildProject(t, root, base)["behind_main"] {
+		t.Fatal("checkout branch ancestor not behind after deleting main")
+	}
+}
+
+// countingGit records real git invocations, including their arguments.
+func countingGit(t *testing.T, d *Daemon) func() []string {
+	t.Helper()
+	real, err := exec.LookPath("git")
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	log, script := filepath.Join(dir, "calls"), filepath.Join(dir, "git")
+	quote := func(s string) string { return "'" + strings.ReplaceAll(s, "'", "'\"'\"'") + "'" }
+	if err := os.WriteFile(script, []byte("#!/bin/sh\nprintf '%s\\n' \"$*\" >> "+quote(log)+"\nexec "+quote(real)+" \"$@\"\n"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	setGitBin(d, script)
+	return func() []string {
+		t.Helper()
+		b, err := os.ReadFile(log)
+		if os.IsNotExist(err) {
+			return nil
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		return strings.Split(strings.TrimSpace(string(b)), "\n")
+	}
+}
+
+func selfHostDaemon(t *testing.T, root, build string) (*Daemon, registry.Project) {
+	t.Helper()
+	d, _, p := runDaemon(t, nil)
+	p.Path = root
+	if err := registry.Save(d.cfg.RegistryPath, &registry.File{Version: registry.Version, Projects: []registry.Project{p}}); err != nil {
+		t.Fatal(err)
+	}
+	d.cfg.BuildID = build
+	setGitBin(d, "git")
+	return d, p
+}
+
+func TestProjectBuildCachedUntilHeadMoves(t *testing.T) {
+	root, base, git := selfHostRepo(t)
+	d, p := selfHostDaemon(t, root, base)
+	calls := countingGit(t, d)
+	check := func(wantBehind, hit bool) {
+		t.Helper()
+		before := len(calls())
+		self, behind := d.projectBuild(context.Background(), p)
+		if !self || behind != wantBehind {
+			t.Fatalf("build state = (%v, %v), want (true, %v)", self, behind, wantBehind)
+		}
+		got := calls()[before:]
+		if hit && (len(got) != 1 || got[0] != "-C "+root+" rev-parse HEAD --symbolic-full-name HEAD") {
+			t.Fatalf("cache hit git calls = %v, want only checkout rev-parse", got)
+		}
+		if !hit && len(got) <= 1 {
+			t.Fatalf("cache miss git calls = %v, want full computation", got)
+		}
+	}
+	check(false, false)
+	check(false, true)
+	git("commit", "--allow-empty", "-m", "moved")
+	check(true, false)
+	check(true, true)
+}
+
+func TestBaseBranchIsTheMainCheckoutsCurrentBranch(t *testing.T) {
+	root, base, git := selfHostRepo(t)
+	d, p := selfHostDaemon(t, root, base)
+	git("checkout", "-b", "trunk")
+	git("commit", "--allow-empty", "-m", "trunk ahead")
+	if self, behind := d.projectBuild(context.Background(), p); !self || !behind {
+		t.Fatalf("trunk build state = (%v, %v), want (true, true)", self, behind)
+	}
+	git("checkout", "main")
+	if self, behind := d.projectBuild(context.Background(), p); !self || behind {
+		t.Fatalf("main build state = (%v, %v), want (true, false)", self, behind)
+	}
+}
+
+func TestNoBaseBranchIsNotBehind(t *testing.T) {
+	for _, name := range []string{"detached", "unborn", "deleted-main"} {
+		t.Run(name, func(t *testing.T) {
+			root, base, git := selfHostRepo(t)
+			git("commit", "--allow-empty", "-m", "ahead")
+			wantSelf, wantBehind := true, false
+			switch name {
+			case "detached":
+				git("checkout", "--detach")
+			case "unborn":
+				root = t.TempDir()
+				cmd := exec.Command("git", "-C", root, "init", "-b", "main")
+				if out, err := cmd.CombinedOutput(); err != nil {
+					t.Fatalf("init: %s: %v", out, err)
+				}
+				wantSelf = false
+			case "deleted-main":
+				git("checkout", "-b", "trunk")
+				git("branch", "-D", "main")
+				wantBehind = true
+			}
+			d, p := selfHostDaemon(t, root, base)
+			if self, behind := d.projectBuild(context.Background(), p); self != wantSelf || behind != wantBehind {
+				t.Fatalf("build state = (%v, %v), want (%v, %v)", self, behind, wantSelf, wantBehind)
+			}
+		})
+	}
+}
+
+func TestSnapshotAndStatusAgreeAfterTheCacheHits(t *testing.T) {
+	root, base, git := selfHostRepo(t)
+	git("checkout", "-b", "trunk")
+	git("commit", "--allow-empty", "-m", "ahead")
+	d, p := selfHostDaemon(t, root, base)
+	calls := countingGit(t, d)
+	d.projectBuild(context.Background(), p)
+	for range 2 {
+		before := len(calls())
+		status, err := d.status(context.Background(), StatusParams{})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := status.Projects[0]; !got.SelfHost || !got.BehindMain {
+			t.Fatalf("status build state = (%v, %v), want (true, true)", got.SelfHost, got.BehindMain)
+		}
+		if got := len(calls()) - before; got != 1 {
+			t.Fatalf("warm status git calls = %d, want 1", got)
+		}
+		before = len(calls())
+		snap, err := d.snapshot(context.Background(), SnapshotParams{Project: p.Name})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !snap.SelfHost || !snap.BehindMain {
+			t.Fatalf("snapshot build state = (%v, %v), want (true, true)", snap.SelfHost, snap.BehindMain)
+		}
+		if got := len(calls()) - before; got != 1 {
+			t.Fatalf("warm snapshot git calls = %d, want 1", got)
+		}
 	}
 }
 
