@@ -124,6 +124,7 @@ func (e *Engine) resumeStopped(ctx context.Context, rec runrec.Record, note stri
 		r.Resume = nil
 		r.Round = round
 		r.RoundLimit = limit
+		r.ChainFrom = len(r.Roles) // the new round restarts the vendor chain (S255, *proposed*)
 		if wave != "" {
 			r.Wave = wave
 		}

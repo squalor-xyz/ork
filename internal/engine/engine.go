@@ -263,24 +263,27 @@ func lineup(l map[string][]runrec.LineupEntry, role string) (runrec.LineupEntry,
 // If its first record matches the reviewer seed, walk from that seed so a
 // repeated entry cannot send the gate back through earlier failed rows.
 // Walking forward through records distinguishes identical lineup entries.
+// Records before rec.ChainFrom are not walked: a retry that starts a fresh
+// round sets it, so the chain restarts at the first entry (S255, *proposed*).
 func currentEntry(rec runrec.Record, role string) int {
 	entries := rec.Lineup[role]
 	cur := 0
+	roles := rec.Roles[min(max(rec.ChainFrom, 0), len(rec.Roles)):]
 	if role == RoleGate && (len(entries) == 0 || slices.Equal(entries, rec.Lineup[RoleReviewer])) {
 		entries = rec.Lineup[RoleReviewer]
 		seed := currentEntry(rec, RoleReviewer)
-		firstGate := slices.IndexFunc(rec.Roles, func(record runrec.RoleRecord) bool { return record.Role == RoleGate })
+		firstGate := slices.IndexFunc(roles, func(record runrec.RoleRecord) bool { return record.Role == RoleGate })
 		if firstGate < 0 {
 			cur = seed
 		} else if seed < len(entries) {
-			first, entry := rec.Roles[firstGate], entries[seed]
+			first, entry := roles[firstGate], entries[seed]
 			if first.Vendor == entry.Vendor && first.Model == entry.Model && first.Effort == entry.Effort {
 				cur = seed
 			}
 		}
 	}
 	exhausted := map[string]bool{}
-	for _, record := range rec.Roles {
+	for _, record := range roles {
 		if record.Role != role {
 			continue
 		}
@@ -642,6 +645,9 @@ func (e *Engine) RetryNote(ctx context.Context, note string, rounds ...int) erro
 		if rec.Pending.Kind == runrec.PendingRounds {
 			r.RoundLimit = r.Round + grant
 			r.Round++
+			// A fresh round restarts the vendor chain at the first entry (S255,
+			// *proposed*; adj 244). Vendors still out are skipped as usual.
+			r.ChainFrom = len(r.Roles)
 		}
 	}
 	if rec.Pending.Retry == nil && len(rec.QueuedQuestions) > 0 {

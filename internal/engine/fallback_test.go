@@ -5,6 +5,7 @@ package engine
 import (
 	"context"
 	"errors"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -1070,5 +1071,245 @@ func TestWaiterKeepsItsRowWhenTheVendorIsStillIn(t *testing.T) {
 	requireState(t, e, runrec.StateAwaitingApproval)
 	if reqs := runner.requests(); reqs[0].Vendor != "codex" {
 		t.Fatalf("a waiter whose vendor is still in must run its row: %+v", reqs[0])
+	}
+}
+
+// S255 (*proposed*): a retry that starts a fresh round restarts the chain at
+// the first lineup entry; inside a round the row stays sticky.
+
+// chainResetHarness is a harness on a worktree the fake git accepts, with the
+// role's lineup set to codex then claude and the vendor out marks on a fake
+// clock. The caller sets the script and the check outputs.
+func chainResetHarness(t *testing.T, role string) (*harness, *vendorClock) {
+	t.Helper()
+	h := resumeHarness(t)
+	h.mkWorktree()
+	h.cfg.Lineup[role] = []runrec.LineupEntry{
+		{Vendor: "codex", Model: "sol", Effort: "high"},
+		{Vendor: "claude", Model: "sonnet", Effort: "medium"},
+	}
+	clock := newVendorClock()
+	h.deps.Now = clock.Now
+	h.deps.Vendors = NewVendors(map[string]int{"codex": 1}).WithClock(clock.Now)
+	return h, clock
+}
+
+// codexOutInRoundOne scripts codex to hit its rate limit in implementer round
+// 1; every other round gets the default result.
+func codexOutInRoundOne(req Request, _ int) (Result, error) {
+	if req.Role == RoleImplementer && req.Vendor == "codex" && req.Round == 1 {
+		return Result{Exit: ExitRateLimited}, nil
+	}
+	return Result{}, nil
+}
+
+// chainResetRoundsPause runs the codex/claude implementer lineup to its rounds
+// pause: codex is rate limited in round 1, the run falls back to claude, and
+// the checks stay red until round 3.
+func chainResetRoundsPause(t *testing.T) (*harness, *Engine, *vendorClock) {
+	t.Helper()
+	h, clock := chainResetHarness(t, RoleImplementer)
+	h.runner.script = codexOutInRoundOne
+	h.checks.outputs = redRounds("red", 12)
+	e := h.start()
+	rec := requireRoundsPause(t, e, 3)
+	if got := currentEntry(rec, RoleImplementer); got != 1 {
+		t.Fatalf("row %d before the retry, want 1 (claude)", got)
+	}
+	if !h.deps.Vendors.IsOut("codex") {
+		t.Fatal("the rate limit did not mark codex out")
+	}
+	return h, e, clock
+}
+
+func TestRetryAtARoundsPauseRestartsTheChain(t *testing.T) {
+	h, e, clock := chainResetRoundsPause(t)
+	clock.Advance(VendorOutFor)
+	h.checks.reset(CheckOutput{OK: true, Output: "ok\n"})
+	before := len(h.runner.requests())
+	if err := e.RetryNote(context.Background(), "", 2); err != nil {
+		t.Fatal(err)
+	}
+	next := h.runner.requests()[before]
+	if next.Role != RoleImplementer || next.Round != 4 {
+		t.Fatalf("next request %s round %d, want implementer round 4", next.Role, next.Round)
+	}
+	if next.Vendor != "codex" {
+		t.Fatalf("vendor %q after the retry, want codex (row 0, back since the mark expired)", next.Vendor)
+	}
+	if next.Resume != "" {
+		t.Fatalf("resume %q, want a fresh session", next.Resume)
+	}
+	if _, note, found := strings.Cut(next.Brief, "## Earlier lineup rows\n\n"); found {
+		note, _, _ = strings.Cut(note, "\n## ")
+		t.Fatalf("the brief names rounds before the reset: %q", note)
+	}
+}
+
+func TestRetryAtARoundsPauseSkipsAVendorStillOut(t *testing.T) {
+	h, e, _ := chainResetRoundsPause(t)
+	h.checks.reset(CheckOutput{OK: true, Output: "ok\n"})
+	before := len(h.runner.requests())
+	if err := e.RetryNote(context.Background(), "", 2); err != nil {
+		t.Fatal(err)
+	}
+	next := h.runner.requests()[before]
+	if next.Role != RoleImplementer || next.Round != 4 || next.Vendor != "claude" {
+		t.Fatalf("next request %s round %d on %s, want implementer round 4 on claude (codex is still out)", next.Role, next.Round, next.Vendor)
+	}
+}
+
+func TestRetryOfAStoppedRunRestartsTheChain(t *testing.T) {
+	h, e, clock := chainResetRoundsPause(t)
+	if err := e.Stop(context.Background(), "wait for codex"); err != nil {
+		t.Fatal(err)
+	}
+	stopped := requireState(t, e, runrec.StateStopped)
+	clock.Advance(VendorOutFor)
+	// Round 4's checks are red once, so a fix round runs before they pass.
+	h.checks.reset(append(redRounds("after the resume", 1), CheckOutput{OK: true, Output: "ok\n"})...)
+	before := len(h.runner.requests())
+	resumed, err := h.resume(stopped.ID, h.proj, "", 2)
+	if err != nil {
+		t.Fatalf("resume: %v", err)
+	}
+	requireState(t, resumed, runrec.StateAwaitingApproval)
+	next := h.runner.requests()[before]
+	if next.Role != RoleImplementer || next.Round != 5 {
+		t.Fatalf("next request %s round %d, want implementer round 5", next.Role, next.Round)
+	}
+	if next.Vendor != "codex" || next.Resume != "" {
+		t.Fatalf("vendor %q resume %q after the resume, want codex and a fresh session", next.Vendor, next.Resume)
+	}
+}
+
+func TestRetrySamePauseKeepsTheStickyRow(t *testing.T) {
+	h, clock := chainResetHarness(t, RoleImplementer)
+	var broken atomic.Bool
+	broken.Store(true)
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if req.Role == RoleImplementer && req.Round == 2 && broken.Load() {
+			// A report with no Tests line: refused, retried once, then a pause.
+			res := defaultResult(req)
+			res.Report = "Done.\n" + ownerNone
+			return res, nil
+		}
+		return codexOutInRoundOne(req, n)
+	}
+	h.checks.outputs = redRounds("red", 12)
+	e := h.start()
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingShape || rec.Pending.Round != 2 || currentEntry(rec, RoleImplementer) != 1 {
+		t.Fatalf("pause: %+v row %d, want a shape pause in round 2 on row 1", rec.Pending, currentEntry(rec, RoleImplementer))
+	}
+	// Codex is back, so a reset to row 0 would pick it.
+	clock.Advance(VendorOutFor)
+	broken.Store(false)
+	h.checks.reset(CheckOutput{OK: true, Output: "ok\n"})
+	before := len(h.runner.requests())
+	if err := e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	next := h.runner.requests()[before]
+	if next.Role != RoleImplementer || next.Round != 2 || next.Vendor != "claude" {
+		t.Fatalf("next request %s round %d on %s, want implementer round 2 on claude (inside a round the row is sticky)", next.Role, next.Round, next.Vendor)
+	}
+}
+
+func TestCurrentEntryWalksOnlyTheRecordsFromChainFrom(t *testing.T) {
+	entries := []runrec.LineupEntry{{Vendor: "codex", Model: "sol", Effort: "high"}, {Vendor: "claude", Model: "sonnet", Effort: "medium"}}
+	rec := func(from int) runrec.Record {
+		return runrec.Record{ChainFrom: from, Lineup: map[string][]runrec.LineupEntry{RoleReviewer: entries}, Roles: []runrec.RoleRecord{
+			{Role: RoleGate, Vendor: "codex", Model: "sol", Effort: "high", Exit: "rate_limited"},
+			{Role: RoleReviewer, Vendor: "codex", Model: "sol", Effort: "high", Exit: "rate_limited"},
+			{Role: RoleReviewer, Vendor: "claude", Model: "sonnet", Effort: "medium", Exit: "ok"},
+			{Role: RoleReviewer, Vendor: "codex", Model: "sol", Effort: "high", Exit: "rate_limited"},
+		}}
+	}
+	for _, tc := range []struct {
+		name           string
+		from           int
+		reviewer, gate int
+	}{
+		{"a zero value walks every record", 0, 2, 1},
+		{"the old gate record is before the reset", 3, 1, 1},
+		{"every record is before the reset", 4, 0, 0},
+		{"a value past the records", 9, 0, 0},
+		{"a negative value walks every record", -1, 2, 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := rec(tc.from)
+			if got := currentEntry(r, RoleReviewer); got != tc.reviewer {
+				t.Errorf("reviewer row %d, want %d", got, tc.reviewer)
+			}
+			if got := currentEntry(r, RoleGate); got != tc.gate {
+				t.Errorf("gate row %d, want %d", got, tc.gate)
+			}
+		})
+	}
+}
+
+func TestChainResetSurvivesReopen(t *testing.T) {
+	h, e, clock := chainResetRoundsPause(t)
+	clock.Advance(VendorOutFor)
+	h.checks.reset(CheckOutput{OK: true, Output: "ok\n"})
+	if err := e.RetryNote(context.Background(), "", 2); err != nil {
+		t.Fatal(err)
+	}
+	id := e.Snapshot().ID
+	stored, err := h.store.Open(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := currentEntry(stored.Snapshot(), RoleImplementer); got != 0 {
+		t.Fatalf("persisted row %d after the reset and a codex round, want 0", got)
+	}
+	raw, err := os.ReadFile(filepath.Join(h.store.RunDir(id), "run.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(raw), `"chain_from"`) {
+		t.Fatal("run.json has no chain_from")
+	}
+}
+
+func TestChainResetAppliesToEveryRoleWithAFallback(t *testing.T) {
+	h, clock := chainResetHarness(t, RoleReviewer)
+	h.runner.script = func(req Request, _ int) (Result, error) {
+		switch {
+		case req.Role == RoleReviewer && req.Vendor == "codex" && req.Round == 1:
+			return Result{Exit: ExitRateLimited}, nil
+		case req.Role == RoleReviewer && req.Round == 1:
+			return Result{Exit: ExitOK, Session: "review", Report: findingsReview("engine.go:10 fix it")}, nil
+		}
+		return Result{}, nil
+	}
+	// Round 1 is green so the reviewer runs; its findings start round 2, and the
+	// checks are red from then on.
+	h.checks.outputs = append([]CheckOutput{{OK: true, Output: "ok\n"}}, redRounds("red", 12)...)
+	e := h.start()
+	rec := requireRoundsPause(t, e, 3)
+	if got := currentEntry(rec, RoleReviewer); got != 1 {
+		t.Fatalf("reviewer row %d before the retry, want 1 (claude)", got)
+	}
+	clock.Advance(VendorOutFor)
+	h.checks.reset(CheckOutput{OK: true, Output: "ok\n"})
+	before := len(h.runner.requests())
+	if err := e.RetryNote(context.Background(), "", 2); err != nil {
+		t.Fatal(err)
+	}
+	// The reviewer does not run again after the fix round (its findings were
+	// fixed), so its row is read from the record; the gate follows it.
+	if got := currentEntry(e.Snapshot(), RoleReviewer); got != 0 {
+		t.Fatalf("reviewer row %d after the retry, want 0", got)
+	}
+	var gate []Request
+	for _, req := range h.runner.requests()[before:] {
+		if req.Role == RoleGate {
+			gate = append(gate, req)
+		}
+	}
+	if len(gate) == 0 || gate[0].Vendor != "codex" {
+		t.Fatalf("roles %v after the retry, want a gate on codex (the reviewer's row 0)", h.runner.roles()[before:])
 	}
 }

@@ -1258,9 +1258,19 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   (REASON)`, identifying rows by vendor, model and effort. It has no
   "Deviation:" prefix. The reason reads "out of credits", "rate limited" or
   "error exit".
-  The role stays on the fallback row for the rest of the run
-  (`vendor.fallback-sticky`, decision 115). The ordered role records determine
-  the row from vendor, model, effort and exit; no new run record field is needed.
+  The role stays on the fallback row inside a round and across its fix rounds
+  (`vendor.fallback-sticky`, narrowed by decision 244). The ordered role
+  records determine the row from vendor, model, effort and exit.
+  *Proposed (S255; decisions 214, 215, 216):* a retry that starts a fresh
+  round restarts every role's chain at its first row: a retry at a `rounds`
+  pause and the resume of a stopped run (S296) set the run record's
+  `chain_from` to the number of role records, and the row is then derived from
+  the records from that index on. Other retries (error, lost, shape, budget,
+  interrupted) rerun the same role and round and keep the sticky row. The
+  restarted row still goes through the vendor out marks (S169): a vendor that
+  is still out is skipped, so the chain starts at the first row whose vendor is
+  back. Session resume is unchanged (same vendor and model), and a brief for
+  the first row has no earlier-rows note.
   Daemon runs copy the reviewer's lineup into the gate. An equal copy or an
   empty gate lineup follows the reviewer: with no gate records, it starts on
   the reviewer's current row. Existing gate records determine its own sticky

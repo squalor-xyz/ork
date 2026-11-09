@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- S255 (*proposed*): a retry that starts a fresh round (a `rounds` pause
+  retry, or the resume of a stopped run) restarts each role's vendor chain at
+  its first lineup row; inside a round the fallback row stays sticky. A vendor
+  still marked out is skipped as before. New run record field `chain_from`.
+  Docs: `docs/design.md`, `docs/state.md`.
+
 - S131 (*proposed*): the self-host check compares the daemon build with the
   branch the main checkout is on. Unchanged tips need one git call per
   snapshot or status read; changed tips refresh a bounded result cache.

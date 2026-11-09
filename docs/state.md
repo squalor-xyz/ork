@@ -510,6 +510,15 @@ that limit, and time the machine slept is not counted in it. `commit` is
 role's `model`, `effort` and `denials`, a check's `log`, and a write's
 `error` are *proposed* (S04).
 
+*Proposed (S255):* `chain_from` is an index into `roles[]` (omitted when 0).
+The vendor chain of every role is derived from the role records from that
+index on, so a retry that starts a fresh round restarts each role at its first
+lineup row (decisions 214, 215, 216). A retry at a `rounds` pause and the
+resume of a stopped run set it to the number of role records, in the same
+update that advances `round`. No other retry sets it. The older records stay.
+The version stays 1; an older ork refuses a `run.json` with `chain_from`
+because `Store.Open` uses strict keys.
+
 *Proposed (S296):* `stopped_from` is the state a stop left: the state the run
 was in, or for a paused run its `pending.state`. It is omitted until a stop.
 `ork retry RUN` resumes a stopped run that has no `commit`, whose
