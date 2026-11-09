@@ -3959,3 +3959,7 @@
 {"when": "2026-11-09T16:39:24Z", "item": "S283", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S283):", "by": "Jon Robbins"}
 {"when": "2026-11-09T16:39:30Z", "item": "S283", "action": "note", "from": "", "to": "", "note": "Verified outcome: ork wave start leaves out an item with no ", "by": "Jon Robbins"}
 {"when": "2026-11-09T16:39:32Z", "item": "S283", "action": "status", "from": "started", "to": "done", "note": "ork wave start skips an item with no slice spec (prints the slicer promote hint, starts the rest, exit 0; exit 1 when none is left); --json has a no_spec array beside held; other plan failures still abort. Tests 2827 passed, 0 failed; vet, gofmt, slicer check, adj lint clean.", "by": "Jon Robbins"}
+{"when": "2026-11-09T16:41:13Z", "item": "S321", "action": "add", "from": "", "to": "open", "note": "TUI: a Waves item with no spec says waits on 0 spec questions"}
+{"when": "2026-11-09T16:41:14Z", "item": "S322", "action": "add", "from": "", "to": "open", "note": "Status line: vendor-out fields drop with no cue when several vendors are out"}
+{"when": "2026-11-09T16:41:14Z", "item": "S323", "action": "add", "from": "", "to": "open", "note": "Docs: describe a local run's reservation and the local launchers after S301"}
+{"when": "2026-11-09T16:41:14Z", "item": "S324", "action": "add", "from": "", "to": "open", "note": "Spec check: skip a missing local launcher in the spec-check chain"}
