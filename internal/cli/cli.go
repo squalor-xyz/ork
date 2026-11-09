@@ -2,7 +2,8 @@
 
 // Package cli is ork's command line: argument parsing and output for status,
 // projects, roles and doctor. Every command takes --json (cli.json). The exit
-// code is 0 for success, 1 for a failure and 2 for a usage error.
+// code is 0 for success, 1 for a failure and 2 for a usage error; ork wait
+// also returns 3, 4 and 5 (ExitWaitQuestion and the codes after it).
 package cli
 
 import (
@@ -25,6 +26,15 @@ const (
 	ExitOK      = 0
 	ExitFailure = 1
 	ExitUsage   = 2
+)
+
+// Exit codes of ork wait (S257, *proposed*; adj 201, cli.wait-exit-codes). A
+// wait that ends on a state change exits 0, as any command that did its work.
+const (
+	ExitWaitChanged       = ExitOK // the run changed state, or entered an --until state
+	ExitWaitQuestion      = 3      // the run is paused on an owner question
+	ExitWaitNothingActive = 4      // the run is final or unknown, or the project has no unfinished run
+	ExitWaitTimeout       = 5      // --timeout passed with no stop condition
 )
 
 const (
@@ -95,6 +105,14 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
   ork status [--project P]    projects, needs-you counts and active relays
   ork show RUN [NAME]         print why a run is paused, its reports, checks
                               and findings; NAME prints one report or log
+  ork wait [RUN] [--until STATE,...] [--timeout D] [--project P]
+                              block until the run changes state and print it;
+                              with --until, until it enters one of question,
+                              awaiting-approval, paused, stopped, landed; a
+                              pending question always ends the wait; without
+                              RUN, follows the only unfinished run of P (or of
+                              the only registered project); exit 0 changed,
+                              3 question pending, 4 nothing active, 5 timeout
   ork projects list           list the registered projects
   ork projects add [PATH] [--name N]
                               register a project
@@ -165,7 +183,8 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               (slicer, adj and ork with --upgrade), and run
                               none of them
 
-Every command takes --json. Exit codes: 0 ok, 1 failure, 2 usage.
+Every command takes --json. Exit codes: 0 ok, 1 failure, 2 usage; ork wait
+also returns 3, 4 and 5 (see above).
 `
 
 // Tools names the CLIs that doctor checks, and the git that it reads a
@@ -182,6 +201,8 @@ type App struct {
 	Input   io.Reader                                     // confirmation input; nil uses os.Stdin
 	Call    func(context.Context, string, any, any) error // nil uses the daemon socket
 	Now     func() time.Time                              // the clock for working times in status (S235); nil uses time.Now
+
+	WaitPoll time.Duration // how often ork wait reads the run when no notice comes (S257); zero means 30s
 
 	Socket    string                          // the daemon's socket
 	Pid       string                          // the daemon's pid file; used only for the stop hint
@@ -290,6 +311,8 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		return a.status(ctx, o, rest)
 	case "show":
 		return a.show(ctx, o, rest)
+	case "wait":
+		return a.wait(ctx, o, rest)
 	case "projects":
 		return a.projects(ctx, o, rest)
 	case "settings":

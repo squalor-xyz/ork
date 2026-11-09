@@ -8,6 +8,15 @@
   are gone and whose work is not in HEAD is marked cleaned with a
   `cleaned_reason` instead of failing on every pass. New run record field
   `cleaned_reason`. Docs: `docs/state.md`, `docs/design.md`.
+- S257 (*proposed*): `ork wait [RUN] [--until STATE,...] [--timeout D]
+  [--project P]` blocks until a run changes state and prints it, so scripts
+  stop polling `ork status`. Exit 0 changed or entered an `--until` state, 3
+  question pending, 4 nothing active, 5 timeout. `--until` takes `question`,
+  `awaiting-approval`, `paused`, `stopped` and `landed`; there is no `failed`
+  for now (adj 247). Without RUN it follows the only unfinished run
+  of the project. `run.show` and `ork show --json` gain `landed`. Docs:
+  `docs/guide.md`, `docs/state.md`.
+
 - S259 (*proposed*): the sleep detector counts no sleep until the daemon
   starts it, so a watchdog look that arrives a little late can no longer be
   read as sleep and hide a hung role. A test pins the daemon's start of it

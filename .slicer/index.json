@@ -13861,7 +13861,7 @@
       "id": "S257",
       "title": "ork wait: block until a run changes state",
       "short_title": "ork wait: block until a run changes state",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -13920,6 +13920,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "95ffab43-cb30-4e81-9336-e5bca4403843",
+          "kind": "",
+          "text": "**2026-11-09** — Human checks at approval (S257):\n- later: Start a real small run with `ork wait RUN --until awaiting-approval,paused,stopped,landed` in a second terminal; the person confirms it prints once, at the right state, and the exit code (`echo $?`) matches the table.",
+          "created_at": "2026-11-09T17:20:11Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "1868764a-68df-4f43-a6f7-12545640a366",
+          "kind": "",
+          "text": "**2026-11-09** — Verified: ork wait [RUN] [--until STATE,...] [--timeout D] [--project P] [--json] blocks until a run changes state or enters an --until state (question, awaiting-approval, paused, stopped, landed; no failed, adj 247). Exit codes 0 changed, 3 question pending, 4 nothing active, 5 timeout. Without RUN it follows the only unfinished run of --project or of the only registered project. run.show gains landed. go test ./..., go vet, gofmt -l, slicer check and adj lint pass; the 19 wait tests and TestRunShowSaysWhenARunLanded were mutation-checked. The human check with a real run is still open.",
+          "created_at": "2026-11-09T17:20:16Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -13939,7 +13967,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

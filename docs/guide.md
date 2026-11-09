@@ -354,6 +354,51 @@ slept 1h03m)` (S235, *proposed*): how long the step has run, how long ago the
 role last sent output, and how long the machine slept meanwhile. Add `--json` to any command for scripts (`internal/cli/cli.go:56`,
 `internal/cli/cli.go:77`).
 
+### Wait for a change
+
+*Proposed (S257):* `ork wait [RUN] [--until STATE,...] [--timeout D]
+[--project P]` blocks until the run changes, so a script or an agent does not
+poll `ork status`. It prints `RUN STATE` (for a pause also the pause kind, the
+question title and decision key of a question, and `next:`), exits, and the
+exit code says why:
+
+| Code | Meaning |
+| --- | --- |
+| 0 | the run changed state, or entered a state in `--until` |
+| 3 | the run is paused on an owner question |
+| 4 | nothing is active: the run is final or unknown, or the project has no unfinished run |
+| 5 | `--timeout` passed with no stop condition |
+| 1, 2 | failure, usage error, as every command |
+
+- Without `--until`, any change of the run's state from the first read ends the
+  wait. Output from a running role does not change the state, so it does not
+  end it.
+- With `--until`, the wait ends when the run is in one of the listed states,
+  also at the first read. The states are `question`, `awaiting-approval`,
+  `paused`, `stopped` and `landed` (a committed run that ork landed); the list
+  is in `docs/state.md`. There is no `failed` state for now: a run's record
+  does not say whether a ledger run ended with outcome fail, so `--until
+  failed` is an unknown state (S311 can add it later).
+- A pending question always ends the wait with code 3, whatever `--until` says,
+  because only you can move the run on.
+- A run that is final (`committed`, `stopped`) and matches nothing ends the
+  wait with code 4 and a one-line message.
+- Without RUN, the wait follows the only unfinished run of `--project P`, or of
+  the only registered project. It is a usage error when there are several
+  unfinished runs (the message lists them) or several projects and no
+  `--project`.
+- With `--json` the state it stopped on is one object:
+  `{"run","item","state","reason","next","pending":{"kind"}}` (empty fields
+  left out). A timeout or nothing-active result is the usual `{"error":...}`
+  object with code `timeout` or `nothing_active`.
+- The wait subscribes to the daemon's change notices, and also reads the run
+  every 30 seconds, because a notice does not come for every change of a
+  record. If the daemon connection drops it connects again once (and starts
+  the daemon as other commands do); a second drop before a read is a failure.
+
+For example `ork wait r1 --until awaiting-approval,paused,stopped,landed;
+echo $?`.
+
 ## 9. Run a wave
 
 A wave is several slices of one project that start together
@@ -555,6 +600,7 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork --version
     ork status [--project P]
     ork show RUN [NAME]
+    ork wait [RUN] [--until STATE,...] [--timeout D] [--project P]
     ork projects list | add [PATH] [--name N] | rm NAME | set NAME [flags]
     ork projects pin NAME --relay N | unpin NAME
     ork run P ID
@@ -575,7 +621,8 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork doctor
 
 Every command takes `--json`. Exit codes: 0 ok, 1 failure, 2 usage
-(`internal/cli/cli.go:40-77`).
+(`internal/cli/cli.go:40-77`); `ork wait` also returns 3 question pending, 4
+nothing active and 5 timeout (S257, *proposed*).
 
 ## 15. What ork does not do yet
 

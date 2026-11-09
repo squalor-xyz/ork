@@ -3969,6 +3969,13 @@
 {"when": "2026-11-09T16:41:14Z", "item": "S322", "action": "add", "from": "", "to": "open", "note": "Status line: vendor-out fields drop with no cue when several vendors are out"}
 {"when": "2026-11-09T16:41:14Z", "item": "S323", "action": "add", "from": "", "to": "open", "note": "Docs: describe a local run's reservation and the local launchers after S301"}
 {"when": "2026-11-09T16:41:14Z", "item": "S324", "action": "add", "from": "", "to": "open", "note": "Spec check: skip a missing local launcher in the spec-check chain"}
+{"when": "2026-11-09T16:47:20Z", "item": "S257", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-09T16:49:30Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T17:01:46Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T17:04:12Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T17:20:11Z", "item": "S257", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S257):", "by": "Jon Robbins"}
+{"when": "2026-11-09T17:20:16Z", "item": "S257", "action": "note", "from": "", "to": "", "note": "Verified: ork wait [RUN] [--until STATE,...] [--timeout D] [", "by": "Jon Robbins"}
+{"when": "2026-11-09T17:20:17Z", "item": "S257", "action": "status", "from": "started", "to": "done", "note": "Verified: ork wait blocks until a run changes state or enters an --until state, with exit codes 0, 3, 4 and 5; run.show gains landed. go test ./..., go vet, gofmt -l, slicer check and adj lint pass. The human check with a real run is still open.", "by": "Jon Robbins"}
 {"when": "2026-11-09T16:46:26Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-09T16:47:13Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-09T16:48:03Z", "item": "S259", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
@@ -3981,3 +3988,4 @@
 {"when": "2026-11-09T17:09:47Z", "item": "S263", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-09T17:24:49Z", "item": "S263", "action": "note", "from": "", "to": "", "note": "Verified: the daemon prints a run's merge detection error on", "by": "Jon Robbins"}
 {"when": "2026-11-09T17:24:51Z", "item": "S263", "action": "status", "from": "started", "to": "done", "note": "Merge detection errors are logged once per run and again only on a changed text or after a successful pass; a gone, unmerged run is marked cleaned with cleaned_reason. Checks clean; assertions mutation-checked.", "by": "Jon Robbins"}
+{"when": "2026-11-09T17:23:16Z", "item": "S267", "action": "edit", "from": "", "to": "", "note": "Implement"}

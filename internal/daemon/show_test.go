@@ -85,6 +85,30 @@ func TestRunShowReturnsThePauseInFull(t *testing.T) {
 	}
 }
 
+// ork wait tells a landed run from a committed one by this field (S257).
+func TestRunShowSaysWhenARunLanded(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	at := time.Date(2026, 11, 9, 12, 0, 0, 0, time.UTC)
+	for _, rec := range []runrec.Record{
+		{ID: "landed", State: runrec.StateCommitted, LandedAt: at},
+		{ID: "committed", State: runrec.StateCommitted},
+		{ID: "stopped", State: runrec.StateStopped, LandedAt: at}, // a landing that was undone is not landed
+	} {
+		rec.Project, rec.Item = p.Name, "S1"
+		if _, err := store.Create(rec); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for id, want := range map[string]bool{"landed": true, "committed": false, "stopped": false} {
+		if got := showShow(t, d, id); got.Landed != want {
+			t.Errorf("run %s: landed %v, want %v", id, got.Landed, want)
+		}
+	}
+	if raw := string(request(t, d, MethodRunShow, `{"run":"committed"}`)); strings.Contains(raw, `"landed"`) {
+		t.Errorf("a run that did not land carries a landed field: %s", raw)
+	}
+}
+
 func TestRunShowNamesTheNextCommandOfAQuestionAndOfRounds(t *testing.T) {
 	d, store, p := runDaemon(t, nil)
 	for id, pend := range map[string]runrec.Pending{

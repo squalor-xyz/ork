@@ -600,6 +600,35 @@ of `info/exclude` is a git write with argv `["exclude", ".worktrees/"]`.
 If recording a CLI write fails, the writer returns that error and makes no
 further retry. The CLI may already have changed the project.
 
+## Run event states (S257, *proposed*)
+
+One list of the states of a run that the owner or a script waits for. `ork
+wait --until` takes it (S257), and the notify command (S311) and the batched
+spec questions (S312) share it (adj 202, `cli.run-event-states`). Each name is
+read from the run record, not stored in it:
+
+| Name | Read as |
+| --- | --- |
+| `question` | `state` `paused` and `pending.kind` `question` |
+| `awaiting-approval` | `state` `awaiting-approval` |
+| `paused` | `state` `paused`, any `pending.kind` |
+| `stopped` | `state` `stopped` |
+| `landed` | `state` `committed` and `landed_at` set (`run.show` has `landed: true`) |
+
+A question is also a pause, so a run on a question matches both `question` and
+`paused`; `ork wait` reports it with its own exit code.
+
+There is no `failed` name for now (adj 247, `cli.wait-failed-state`, which
+narrowed adj 202). It would mean a slicer ledger run that ended with outcome
+`fail`; the run record and `run.show` do not say that, and ork itself ends a
+ledger run only with outcome `pass` or `stopped` (`internal/engine/engine.go:740`,
+`internal/engine/states.go:890`). `ork wait --until failed` is an unknown
+state. S311 can add `failed` to this list, with the ledger read it needs.
+
+`ork wait` exit codes (adj 201, `cli.wait-exit-codes`): 0 the run changed
+state or entered an `--until` state, 3 a question is pending, 4 nothing is
+active, 5 timeout. S311 uses the same numbers.
+
 ## Engine display snapshot
 
 The daemon's snapshot has an `engine_runs` list, built by the same code as
