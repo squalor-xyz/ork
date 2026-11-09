@@ -2,7 +2,7 @@
 {
   "id": 87,
   "title": "How do the ork run prompts take answers and defaults?",
-  "status": "decided",
+  "status": "superseded",
   "key": "run.prompt-answers",
   "asked_by": "claude",
   "decided_by": "jon",
@@ -21,6 +21,7 @@
   ],
   "decision": "confirm-no",
   "rationale": "Owner 2026-10-20: accept yes, y, no, n in any case. The confirm prompt defaults to No on Enter. Well-specified and split have no default.",
+  "superseded_by": 189,
   "refs": [
     "S21"
   ],
@@ -32,6 +33,11 @@
     {
       "date": "2026-10-19",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-09",
+      "event": "supersede",
+      "note": "by 189"
     }
   ]
 }

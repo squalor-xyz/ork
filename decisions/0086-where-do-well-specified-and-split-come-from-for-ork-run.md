@@ -2,7 +2,7 @@
 {
   "id": 86,
   "title": "Where do well-specified and split come from for ork run?",
-  "status": "decided",
+  "status": "superseded",
   "key": "run.lineup-inputs",
   "asked_by": "claude",
   "decided_by": "jon",
@@ -25,6 +25,7 @@
   ],
   "decision": "prompt",
   "rationale": "Owner 2026-10-19: ork run prompts for well-specified and split at the confirmation step; with --yes, explicit --well-specified and --split flags are required.",
+  "superseded_by": 189,
   "refs": [
     "S17"
   ],
@@ -36,6 +37,11 @@
     {
       "date": "2026-10-19",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-09",
+      "event": "supersede",
+      "note": "by 189"
     }
   ]
 }

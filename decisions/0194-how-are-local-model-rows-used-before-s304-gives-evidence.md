@@ -2,7 +2,7 @@
 {
   "id": 194,
   "title": "How are local model rows used before S304 gives evidence?",
-  "status": "decided",
+  "status": "superseded",
   "key": "roles.local-use",
   "decided_by": "Jon",
   "via": "interactive question, relay session 8d711f67, 2026-11-09",
@@ -29,6 +29,7 @@
   },
   "decision": "explicit-only",
   "rationale": "Owner chose explicit lineup only in the 2026-11-09 interview; keeps adj 181 until S304 gives evidence.",
+  "superseded_by": 196,
   "refs": [
     "S301",
     "S304"
@@ -41,6 +42,11 @@
     {
       "date": "2026-11-09",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-09",
+      "event": "supersede",
+      "note": "by 196"
     }
   ]
 }
