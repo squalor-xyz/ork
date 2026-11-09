@@ -1,0 +1,39 @@
+{
+  "id": "S313",
+  "title": "Spec check: reuse a decided adj answer for the same decision key instead of asking again",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* The same decision came up as a new question on slice after slice: how to run a Check line that no role can run (S244, S103), which stale paths to rewrite (S310), what a gate may use as test evidence (S309). Each time the owner answered it interactively and the answer lived only in that slice's Owner decisions paragraph, so the next spec check asked it again with a fresh key.\n\nAdj already stores a decided answer under a key, and `adj check KEY` says `decided` with the option (AGENTS.md, Decisions). The spec check can use that:\n\n- When the spec-check role writes a question with a decision key, ork looks the key up with `adj check KEY`. If it is `decided`, ork treats the question as answered by that record, records it in the slice's Owner decisions paragraph with `[KEY, adj ID]`, and does not ask.\n- The spec-check prompt (`internal/roles/prompts/spec-check.md`) tells the role to reuse an existing key for the same topic (`adj find` over decided records) before inventing one.\n- A record that is `open` is not asked again either (AGENTS.md: if open, do not ask again); the item is held with \"waits on adj ID\" naming it.\n\nThis only works if answers are filed in adj. S314 makes filing the default. Until then the lookup finds only records the owner filed by hand.\n\nOpen questions:\n- Q1 scope of reuse. (a) reuse only when the key matches exactly (recommended: predictable). (b) also suggest a near match and ask the owner to confirm.\n- Q2 a decided record that no longer fits (the slice's text changed). (a) the owner can reject it for one slice by answering anyway (recommended: the question is shown with \"decided as X on DATE, press enter to accept\"). (b) never shown again."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/speccheck.go:545` (`RecordSpecAnswers`)\n- `internal/engine/speccheck.go` (where the spec check result is read and questions are listed)\n- `internal/engine/answer_adj.go:18` (`fileDecision`)\n- `internal/adjcli` (an `adj check` call)\n- `internal/roles/prompts/spec-check.md`\n- `docs/design.md`\n- `docs/guide.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A spec-check question whose key has a decided adj record is not shown; the slice's Owner decisions paragraph gains `-> OPTION [KEY, adj N]` and the run starts without a prompt.\n- A key with an open record holds the item with \"waits on adj N\" and asks nothing.\n- A key with no record (`not found`) is asked as today.\n- A decided record with an option that no longer exists in the question's options is shown with the old answer and asks again.\n- A failing `adj check` call asks the question as today and says why in one notice line.\n- The spec-check prompt text tells the role to look for a decided key first (the pinned prompt test names the sentence)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. After the spec-check result is parsed, for each keyed question call `adj check KEY` through the adj client (read only) and drop the questions it answers.\n2. Record each reused answer in the Owner decisions paragraph with the record id; never write a new adj record for a reused answer.\n3. Add the lookup sentence to `spec-check.md` and its pinned test.\n4. Docs and CHANGELOG, marked *proposed*. Do not run `adj decide`, `adj reject` or `adj supersede` from this code."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`.\n- No `internal/tui` change; no UI pass unless the spec-check pane text changes (then add one)."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

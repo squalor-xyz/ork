@@ -66,6 +66,7 @@ func result[T any](v T, err error) Result[T] {
 // one failed call does not blank the others. Open and Decided stay empty, with
 // no error, for a project whose registry entry has adj false.
 type Snapshot struct {
+	DaemonBuild  string      // proposed: daemon build from the latest refresh
 	SelfHost     bool        // proposed: running build revision exists in the project
 	BehindMain   bool        // proposed: local main descends from the running build
 	RolesRunning bool        // global daemon activity, for the idle restart notice

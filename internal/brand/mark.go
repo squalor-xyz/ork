@@ -69,9 +69,11 @@ func ASCIILocale(getenv func(string) string) bool {
 
 // ColourWanted enables colour only on character-device stdout without NO_COLOR.
 func ColourWanted(w io.Writer, getenv func(string) string) bool {
-	if getenv("NO_COLOR") != "" {
-		return false
-	}
+	return getenv("NO_COLOR") == "" && IsTerminal(w)
+}
+
+// IsTerminal reports whether w is a file backed by a character device.
+func IsTerminal(w io.Writer) bool {
 	f, ok := w.(*os.File)
 	if !ok {
 		return false

@@ -139,13 +139,24 @@ func dialUntilUp(t *testing.T, socket string) *daemon.Client {
 	}
 }
 
-func TestVersionPrintsAndStartsNoTUI(t *testing.T) {
+func TestVersionLineIsFirstOnAPipe(t *testing.T) {
 	for _, flag := range []string{"--version", "-version"} {
 		var out, errOut bytes.Buffer
 		code := run(context.Background(), []string{flag}, &out, &errOut, refused(t))
-		if code != 0 || out.String() != strings.Join(brand.Mark(false, asciiLocale(os.Getenv)), "\n")+"\nork "+version+"\n" {
+		if code != 0 || out.String() != "ork "+version+"\n" {
 			t.Errorf("%s: code %d, stdout %q, stderr %q", flag, code, out.String(), errOut.String())
 		}
+	}
+}
+
+func TestVersionPrintsTheMarkOnATerminal(t *testing.T) {
+	var out, errOut bytes.Buffer
+	p := refused(t)
+	p.terminal = func(io.Writer) bool { return true }
+	code := run(context.Background(), []string{"--version"}, &out, &errOut, p)
+	want := strings.Join(brand.Mark(false, asciiLocale(os.Getenv)), "\n") + "\nork " + version + "\n"
+	if code != 0 || out.String() != want {
+		t.Fatalf("terminal version: code %d, stdout %q, stderr %q", code, out.String(), errOut.String())
 	}
 }
 

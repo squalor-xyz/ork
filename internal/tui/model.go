@@ -133,16 +133,17 @@ const (
 
 // Model is the Bubble Tea model of the whole TUI.
 type Model struct {
-	removing projectRemoval
-	welcome  welcomeState
-	cfg      Config
-	keys     keyMap
-	help     help.Model
-	projects []*projectState
-	byName   map[string]*projectState
-	poller   *poll.Poller
-	active   int // runningEntry, needsEntry, or a registry index
-	view     int // the view in the bar: an index into views; 0 is the Overview
+	daemonBuild string
+	removing    projectRemoval
+	welcome     welcomeState
+	cfg         Config
+	keys        keyMap
+	help        help.Model
+	projects    []*projectState
+	byName      map[string]*projectState
+	poller      *poll.Poller
+	active      int // runningEntry, needsEntry, or a registry index
+	view        int // the view in the bar: an index into views; 0 is the Overview
 
 	questionsCursor int
 	allProjects     bool
@@ -1133,6 +1134,9 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 	ps := m.byName[msg.name]
 	if ps == nil || ps.snap.Unavailable {
 		return nil
+	}
+	if msg.snap.DaemonBuild != "" {
+		m.daemonBuild = msg.snap.DaemonBuild
 	}
 	now := m.cfg.Now()
 	m.poller.Finish(msg.name, now)

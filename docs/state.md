@@ -692,6 +692,12 @@ the ledger run is absent from the active snapshot. In `ork status`,
 commit never matches. Behind means a different main head that descends from
 the build revision. Failed Git reads do not establish behind state.
 
+*Proposed (S103):* registered-project snapshots also carry `daemon_build`,
+the daemon's build ID (omitted when empty). It refreshes the TUI's stale-build
+marker after a daemon restart. Empty values keep the last known build, with
+the startup daemon.info value as the fallback. Unavailable-project snapshots
+remain unchanged.
+
 *Proposed behavior and wording:* `daemon behind main: restart with ork daemon restart`.
 It fires on any landing on main, not only engine landings, while no run is
 active. In the TUI it replaces the stale-build marker while shown. Text

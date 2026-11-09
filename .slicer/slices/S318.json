@@ -1,0 +1,39 @@
+{
+  "id": "S318",
+  "title": "ork status --summary: running, waiting on you, blocked, and next, in one view",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* \"What is running, what is left, how is it going\" took four commands and a manual read on 2026-11-09: `ork status` (runs and open questions), `slicer list --pass v1.1`, `slicer status` (next and blocked), and the run records for per-role progress. Each source is right; none shows the whole picture, and a blocked slice is blocked on one of three things that look the same in the list: a slicer dependency, an owner question, or an owner action outside ork (S301 and the local launchers; S244 and the Grok matrix edit).\n\nSlicer already provides the dependency view: `slicer status` prints Next, Progress and \"S245 waits on S244\" (checked 2026-11-09), so this slice does not recompute dependencies. It adds the parts only ork knows:\n- Running: each live run with item, state, current role and vendor, round, and time in state (`engineRuns`, `internal/source/source.go`, and the `working: implementer round 1, 5m` line already in `ork show`).\n- Needs you: open adj questions, open spec-check questions, awaiting-approval runs, paused runs, and human checks marked `later` (counts and the one command for each).\n- Blocked: slicer's blocked list, plus the owner actions recorded as open (an item with the `needs-owner` flag, `ps.Held`, `internal/daemon/handlers.go:403`).\n- Next: slicer's next item and the next unblocked few by score, with a note for any that will raise spec questions.\n\nOpen questions:\n- Q1 where. (a) `ork status --summary` for one project, default for the current project (recommended; plain text plus `--json`). (b) a new command `ork summary`. (c) a TUI view only.\n- Q2 depth. (a) at most 5 lines per section with \"+N more\" (recommended). (b) unlimited.\n- Q3 the \"waiting on an owner action outside ork\" source. (a) the `needs-owner` item flag only (recommended; exists today). (b) a free-text note convention."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/cli/daemoncmds.go:26` (`ork status`)\n- `internal/daemon/handlers.go:403` (`ProjectStatus.Held` and needs-you counts)\n- `internal/daemon/wire.go:112`\n- `internal/source/source.go` (run snapshot)\n- `internal/slicercli` (a call to `slicer status --json`)\n- `docs/guide.md`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- With one running run, one awaiting approval, one open spec question, one open adj question, one human check marked `later`, and a slicer item blocked by another, `ork status --summary` prints a Running section (item, state, role, round, time in state), a Needs you section (each with its command), a Blocked section (slicer dependency and owner-flag reasons, each named) and a Next section.\n- Sections are capped at 5 lines with \"+N more\".\n- An empty section prints `none`, not a blank.\n- `--json` prints the same data with stable keys.\n- Without a running daemon the command prints the error the other status commands print.\n- No dependency edges are computed in ork: the blocked list is slicer's output (a fake slicer returns it)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Add a `status.summary` daemon read (or build it in the CLI from `status` plus a `slicer status --json` call; prefer the CLI to keep the daemon surface small).\n2. Format the four sections; reuse the status line helpers for the Running rows.\n3. Add the flag and the usage line; docs and CHANGELOG, marked *proposed*."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`.\n- UI pass (rule u10): `internal/cli` output changes."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

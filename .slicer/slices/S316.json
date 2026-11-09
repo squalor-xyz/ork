@@ -1,0 +1,39 @@
+{
+  "id": "S316",
+  "title": "ork approve: mark every open human check as later in one step",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* `ork approve RUN` refuses while a human check is open: \"N human checks still open; tick each or mark it later\" (S141). Each check needs its own `ork check RUN N later`. On S217 (2 checks), S129 (1) and S243 (2) the relay session ran one command per check, then approve again, before the landing could start, although every one of those checks needs a live terminal that the orchestrator does not have. The rule is right (a check must be answered or deferred on purpose); the cost is one command per check.\n\nWhat this slice adds:\n- `ork approve RUN --later-checks` marks every open human check `later` (the same state `ork check RUN N later` writes, so the follow-up list and the \"[AFTER LAND]\" handling are unchanged), then approves in one call. It prints each check it deferred, so the owner sees what was pushed out.\n- `ork check RUN all later` (and `all ticked`) does the same without approving.\n- A check marked `later` is never ticked by this flag, and the flag never changes a check already `ticked` or `open`-then-answered.\n- The default `ork approve` is unchanged: it still stops on open checks.\n\nThis is the owner's decision to make, because `later` means the owner has not looked: the flag is the owner's explicit choice, not a default, and the line it prints names what was skipped.\n\nOpen questions:\n- Q1 shape. (a) `--later-checks` on approve and `all` on `ork check` (recommended). (b) only `ork check RUN all later`.\n- Q2 `all ticked`. (a) do not add it: ticking says the owner looked, so it stays per check (recommended). (b) add it."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/cli/run.go:345` (`ork approve` and the open-checks refusal)\n- `internal/cli/cli.go:67` (the `ork check` usage)\n- `internal/daemon/runs.go` (the check-mark and approve handlers)\n- `internal/engine/approval.go` (human checks)\n- `docs/guide.md`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A run awaiting approval with two open checks: `ork approve RUN --later-checks` marks both `later`, approves, and prints \"deferred: 1. ... 2. ...\".\n- A check already `ticked` stays `ticked`; one already `later` stays `later`; only open ones change.\n- `ork approve RUN` without the flag still refuses and names the open checks, and the refusal text mentions `--later-checks`.\n- `ork check RUN all later` marks every open check and does not approve.\n- `--later-checks` on a run with no checks approves as before.\n- The later checks appear in the run's follow-up list exactly as with `ork check RUN N later`."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Add `all` to the check index parser and the `--later-checks` flag to approve; both call the existing mark-later path once per open check.\n2. Print one line per deferred check (number and the first 80 characters of its text).\n3. Update the refusal message and usage text.\n4. Docs and CHANGELOG, marked *proposed*."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`.\n- UI pass (rule u10): `internal/cli` output changes."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

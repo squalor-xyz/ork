@@ -285,6 +285,7 @@ func (d *Daemon) snapshot(ctx context.Context, p SnapshotParams) (*SnapshotResul
 	now := d.cfg.Clock.Now()
 	selfHost, behindMain := d.projectBuild(ctx, proj)
 	return &SnapshotResult{
+		DaemonBuild:  d.cfg.BuildID,
 		SelfHost:     selfHost,
 		BehindMain:   behindMain,
 		RolesRunning: d.cfg.WaveRunning() || d.activeRuns(),
