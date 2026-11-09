@@ -3069,6 +3069,28 @@ func TestDaemonRunsUseTheThirtyMinuteWatchdog(t *testing.T) {
 	}
 }
 
+// The shared sleep detector counts sleep only once it has started, so the
+// daemon must start it when it recovers its runs (S259). Without the start, the
+// watchdog's own 30s look would be the only sample of the clock.
+func TestRecoverRunsStartsTheWake(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	wake := d.runDeps(p).Wake
+	if wake == nil {
+		t.Fatal("the daemon built no Wake")
+	}
+	if wake.Started() {
+		t.Fatal("the Wake started before recoverRuns")
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	if err := d.recoverRuns(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if !wake.Started() {
+		t.Error("recoverRuns did not start the Wake")
+	}
+}
+
 // A running role shows in the status rows as working: what runs, since when
 // and the last output (S235). A run at rest has no working key, and every
 // run of the daemon shares one sleep detector.
