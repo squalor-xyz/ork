@@ -3845,3 +3845,5 @@
 {"when": "2026-11-09T06:41:11Z", "item": "S224", "action": "note", "from": "", "to": "", "note": "Related: S311 (notify command) adds a second per-project set", "by": "Jon Robbins"}
 {"when": "2026-11-09T12:23:11Z", "item": "S131", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-09T12:38:39Z", "item": "S310", "action": "note", "from": "", "to": "", "note": "Landed with 2 quoted hits left: S103 and S131 Owner decision", "by": "Jon Robbins"}
+{"when": "2026-11-09T12:51:43Z", "item": "S301", "action": "note", "from": "", "to": "", "note": "Owner interview 2026-11-09 (adj 194, 195): local rows are us", "by": "Jon Robbins"}
+{"when": "2026-11-09T12:51:43Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Owner interview 2026-11-09: first trial is the gate of a sma", "by": "Jon Robbins"}
