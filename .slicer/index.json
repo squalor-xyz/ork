@@ -13722,6 +13722,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "fd611b1d-5fe2-46fb-9d31-85bb85e9745a",
+          "kind": "decision",
+          "text": "**2026-11-09** — Unblocked 2026-11-09: the owner had adj 115 superseded by adj 244 (vendor.fallback-sticky-narrowed). Ignore the BLOCKED status text; the human check on the supersede is done.",
+          "created_at": "2026-11-09T14:47:49Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -15049,6 +15063,20 @@
           "kind": "decision",
           "text": "**2026-11-07** — Owner 2026-11-07: for a missing spec only, wave start starts the items that have specs and lists the rest with a 'slicer promote' hint; other plan failures still abort. The owner must narrow adj 146 (wave.plan-failure) first.",
           "created_at": "2026-11-07T14:56:59Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "04d6d81e-45e7-41f7-a848-0aac9677217f",
+          "kind": "decision",
+          "text": "**2026-11-09** — Unblocked 2026-11-09: the owner had adj 146 superseded by adj 245 (wave.plan-failure-missing-spec). Ignore the BLOCKED status text; the human check on the supersede is done.",
+          "created_at": "2026-11-09T14:47:49Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
