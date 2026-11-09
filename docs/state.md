@@ -579,7 +579,9 @@ answer. For a `shape`, `error`, `lost` or `interrupted` pause, `ork retry RUN`
 calls `Engine.Retry` to rerun the pending role or step (adj #101,
 `engine.pause-resume`). `lost` also means a hung role that the watchdog killed
 (S182, *proposed*); its `reason` names the role, round, limit and, when ork recorded one, the
-killed process group. `ork stop RUN` stops the run. Retrying a question
+killed process group. The kill also reaches the processes below the role that
+left its group (S236, *proposed*; see `design.md`); the record holds only the
+group id, so nothing new is stored. `ork stop RUN` stops the run. Retrying a question
 names `answer` and `stop`; answering a pause without a question names
 `retry`.
 

@@ -909,8 +909,13 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   succeeds. `Retry` runs the role again
   (resumed if it had a session) and `Stop` ends the slice. Only process
   groups named by the run records of unfinished runs are killed, never group
-  0, 1 or ork's own. *Residual risk:* a recycled process group id is not told
-  from ork's; the record has no start time to compare.
+  0, 1 or ork's own. When the role's leader process is still alive, ork also
+  kills the processes below it that left the group, found from a `ps` snapshot
+  taken before the kill (S236, *proposed*); a process already reparented to
+  pid 1 is not found, and a dead leader leaves only the group kill. The same
+  tree kill runs when a role's or a check's context ends (timeout, owner stop
+  or the hung watchdog). *Residual risk:* a recycled process group id is not
+  told from ork's; the record has no start time to compare.
 - **Approval card (*proposed*, S118).** When the gate passes, the engine
   builds the card in the run record (`state.md`): the verdict, the gate's test
   counts, the diff stat against `HEAD`, and the slice's `[HUMAN CHECK]` items.
@@ -1175,7 +1180,14 @@ separately.
   and `OnLive`). When a role has sent neither for 30 minutes, the watchdog ends
   the context the round runs under, and the vendor adapter kills the role's
   whole process group. ork kills only the group it recorded for that role
-  (`OnStart`); it never kills a process it did not start. The limit is fixed
+  (`OnStart`) and the processes below the role's own process that left that
+  group, for example a `go test` run in a session of its own (S236,
+  *proposed*; owner decision, 2026-11-02). It finds them from a `ps` snapshot
+  of the role's pid taken just before the kill. A process already reparented
+  to pid 1 before the kill is not found. It never kills a process that is
+  neither in the recorded group nor below the recorded role process. The
+  process table is the only thing it reads; if `ps` fails, only the group is
+  killed. The limit is fixed
   at 30 minutes, the stale cutoff of the Running row (owner decision,
   2026-10-29); `Deps.HungAfter` sets it for tests, and a negative value turns
   the watchdog off. The role is recorded with exit `hung`, its ledger step

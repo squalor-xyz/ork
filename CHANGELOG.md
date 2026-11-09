@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- S236 (*proposed*): kill the descendants of a killed role or check that left
+  its process group. A role or check killed on a hung watchdog, an owner stop,
+  a timeout or a restart reconcile no longer leaves `go test` and its test
+  binaries behind when they started in a session of their own. ork finds them
+  from a `ps` snapshot of the role's pid taken before the kill; a process
+  already reparented to pid 1 is not found. Docs: `docs/design.md`,
+  `docs/state.md`.
+
 - S267 (*proposed*): the Running entry and the run pane stop showing a stale
   cue on a run queued behind the cap: its heard cell reads `queued 19m`, dim,
   from the engine run's `created_at`. A queued role row names its planned

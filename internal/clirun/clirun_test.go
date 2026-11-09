@@ -52,6 +52,16 @@ func helperMain(args []string) {
 		}
 		fmt.Fprintf(os.Stdout, "%d\n", child.Process.Pid)
 		time.Sleep(time.Hour)
+	case "spawn-setsid": // start a grandchild in its own session, print its pid, then block
+		child := exec.Command(os.Args[0], "block")
+		child.Env = os.Environ()
+		child.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+		if err := child.Start(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(98)
+		}
+		fmt.Fprintf(os.Stdout, "%d\n", child.Process.Pid)
+		time.Sleep(time.Hour)
 	case "leave": // start a grandchild that holds stdout, print its pid, exit 0
 		child := exec.Command(os.Args[0], "block")
 		child.Env = os.Environ()
@@ -103,6 +113,84 @@ func TestTimeoutKillsTheProcessGroup(t *testing.T) {
 			t.Fatalf("grandchild %d is still running after the timeout", pid)
 		}
 		time.Sleep(20 * time.Millisecond)
+	}
+}
+
+// waitDead fails the test when pid is still running after five seconds.
+func waitDead(t *testing.T, pid int, what string) {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for alive(pid) {
+		if time.Now().After(deadline) {
+			t.Fatalf("%s %d is still running", what, pid)
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+}
+
+func TestTimeoutKillsADescendantThatLeftTheProcessGroup(t *testing.T) {
+	call := helper(t, 1500*time.Millisecond, "spawn-setsid")
+	res, err := Run(context.Background(), call)
+
+	pid, perr := strconv.Atoi(strings.TrimSpace(string(res.Stdout)))
+	if perr == nil {
+		t.Cleanup(func() { syscall.Kill(pid, syscall.SIGKILL) })
+	}
+	var te *TimeoutError
+	if !errors.As(err, &te) {
+		t.Fatalf("want *TimeoutError, got %T: %v", err, err)
+	}
+	if perr != nil {
+		t.Fatalf("grandchild pid not captured: stdout %q, stderr %q", res.Stdout, res.Stderr)
+	}
+	waitDead(t, pid, "setsid grandchild")
+}
+
+func TestParentCancelKillsADescendantThatLeftTheProcessGroup(t *testing.T) {
+	call := helper(t, time.Minute, "spawn-setsid")
+	ctx, cancel := context.WithCancel(context.Background())
+	time.AfterFunc(1500*time.Millisecond, cancel)
+	res, err := Run(ctx, call)
+
+	pid, perr := strconv.Atoi(strings.TrimSpace(string(res.Stdout)))
+	if perr == nil {
+		t.Cleanup(func() { syscall.Kill(pid, syscall.SIGKILL) })
+	}
+	var te *TimeoutError
+	if errors.As(err, &te) || !errors.Is(err, context.Canceled) {
+		t.Fatalf("want context.Canceled and no *TimeoutError, got %T: %v", err, err)
+	}
+	if perr != nil {
+		t.Fatalf("grandchild pid not captured: stdout %q, stderr %q", res.Stdout, res.Stderr)
+	}
+	waitDead(t, pid, "setsid grandchild")
+}
+
+func TestKillTreeIgnoresAFailedProcessTable(t *testing.T) {
+	old := processTable
+	processTable = func() (map[int]int, error) { return nil, errors.New("ps is missing") }
+	t.Cleanup(func() { processTable = old })
+
+	cmd := exec.Command("sleep", "30")
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	if err := cmd.Start(); err != nil {
+		t.Skipf("cannot start sleep: %v", err)
+	}
+	done := make(chan struct{})
+	go func() { cmd.Wait(); close(done) }()
+	t.Cleanup(func() { syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL); <-done })
+
+	if err := KillTree(cmd.Process.Pid); err != nil {
+		t.Fatalf("KillTree with a failed process table: %v", err)
+	}
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the group kill did not happen without a process table")
+	}
+	// A group that is already gone is not an error either.
+	if err := KillTree(cmd.Process.Pid); err != nil {
+		t.Fatalf("KillTree of a gone group: %v", err)
 	}
 }
 
