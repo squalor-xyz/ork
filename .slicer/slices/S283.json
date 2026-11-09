@@ -1,0 +1,41 @@
+{
+  "id": "S283",
+  "title": "wave start: one item without a spec must not fail the whole wave",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-09 at HEAD 4707be4. Size S recommended. Status: BLOCKED on the owner narrowing adj 146 (`wave.plan-failure`, decided 2026-10-23: \"abort: abort before anything starts\"). The owner said on 2026-11-07 to narrow it for a missing spec only; the owner must supersede adj 146 first. Do not run `adj supersede` from a role. This spec is for the narrowed behaviour."
+  ],
+  "depends_note": null,
+  "findings_note": "Wave 7, 2026-11-03: ork wave start ork S256 S271 failed with \"spec check failed: S271: the item has no slice spec\" and launched nothing, although S256 was ready. I had to rerun with S256 alone. Needed: the wave starts the items that have a spec and prints the skipped ones with the reason and the command that fixes it (slicer promote). Open: whether failing the whole wave is deliberate; owner decides. Related: S258, S260, S264.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "- Evidence, wave 7, 2026-11-03 (S283 findings): `ork wave start ork S256 S271` failed with `spec check failed: S271: the item has no slice spec` and launched nothing, although S256 was ready; the orchestrator reran with S256 alone.\n- Owner decision 2026-11-07: for a missing spec only, `wave start` starts the items that have specs and lists the rest with a `slicer promote` hint; other plan failures still abort.\n- Cause at HEAD: `Daemon.specCheck` loops over the items and returns the first `SpecFingerprint` error for the whole call (`internal/daemon/speccheck.go:241-249`, `fmt.Errorf(\"%s: %w\", item, err)`). `SpecFingerprint` returns a plain `errors.New(\"the item has no slice spec\")` (`internal/engine/speccheck.go:72`), so the daemon cannot tell it from other errors. The CLI prefixes `spec check failed: ` and exits (`internal/cli/wave.go:249`).\n- Where the planning happens: `waveStart` plans each item with `MethodRunPlan` (`internal/cli/wave.go:143-160`); the abort rule of adj 146 is that failure returns at once. The spec check for the whole set runs after planning (`wave.go:162`, `specCheck` at `:225`). Held items (open questions) are already dropped and named (`wave.go:238-262`); a missing spec fits the same \"dropped and named\" path.\n- Decided records: adj 146 `wave.plan-failure` (abort) conflicts for this one case. Other failures keep it. `adj check \"wave.plan-failure\"` is the key to narrow.\n- The TUI Waves screen also runs a spec check on a ticked item (`internal/tui/waves.go:275-276`, comment \"The spec check holds an item that is not Ready\"); whether it hits the same all-or-nothing error was not verified. The spec leaves the TUI unchanged (Q2).\n- Overlap: S258, S260, S264 are named as related in the findings; none covers it. `slicer find \"no slice spec\"` finds only S283. Slicer has no wave-start command; `slicer promote` is the fix command (`slicer find promote --root ../slicer` finds S68 and S02, done, unrelated to the hint).\n\n### Open questions\n\n1. JSON shape for skipped items. Options: (a) a `no_spec` string array beside `held` (recommended: `held` means open questions, this means a different fix); (b) reuse `held`. Key: `cli.wave-no-spec-json`.\n2. The TUI Waves screen. Options: (a) leave it (recommended: out of the owner's 2026-11-07 wording, which names `wave start`); (b) show a no-spec item as not ready with the hint. Key: `ui.waves-no-spec`.\n3. Exit code when some items start and some are skipped: (a) 0 (recommended: it did what it can, the skips are printed); (b) a non-zero code. Key: `cli.wave-skip-exit`."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/speccheck.go:64-73` (`SpecFingerprint`: a sentinel `ErrNoSpec`)\n- `internal/daemon/speccheck.go:241-249` (`specCheck`: a missing spec becomes a result row, not an error) and `:42-46` (`SpecItemResult`: `NoSpec bool`, `json:\"no_spec,omitempty\"`, *proposed*)\n- `internal/cli/wave.go:162-175` and `:225-262` (`specCheck` in the CLI: drop a `NoSpec` item, print the hint, keep the rest)\n- `internal/cli/wave_test.go`, `internal/daemon/speccheck_test.go`\n- `docs/guide.md`, `docs/design.md` (wave start failure rule), `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestSpecFingerprintNoSpecIsASentinel` (`internal/engine`): `errors.Is(err, ErrNoSpec)` for `{\"slice\": null}`; a malformed JSON error is not `ErrNoSpec`.\n- `TestSpecCheckReportsAMissingSpecPerItem` (`internal/daemon`): items S1 (spec) and S2 (no spec). Assert no error, two rows, S1 `Ready` per the fake check, S2 `NoSpec == true` and `Ready == false`, no questions. Fails first: the call returns `S2: the item has no slice spec`.\n- `TestSpecCheckStillFailsOnOtherShowErrors`: `slicer show` for S2 fails with another error: the whole call errors as today.\n- `TestWaveStartSkipsAnItemWithNoSpec` (`internal/cli`): `ork wave start P S1 S2`, S2 has no spec. Assert S1 is started (one `wave.start` call with one item), stdout names `S2: no slice spec; run slicer promote S2`, exit 0.\n- `TestWaveStartAllItemsWithoutASpecStartsNothing`: every item lacks a spec; assert no start call, the hints for all, and a non-zero exit (the existing `no item is ready to start` path, `wave.go:173`).\n- `TestWaveStartJSONListsTheSkippedItems`: `--json` has `\"started\": true`, `\"held\"` as today, and a `\"no_spec\": [\"S2\"]` array (field name per Q1).\n- `TestWaveStartOtherPlanFailuresStillAbort`: a `run.plan` error for S2 (not the spec) aborts before anything starts (adj 146 kept for these).\n- `TestWaveStartMissingSpecAfterAnOpenQuestion`: S1 has open questions answered in the sitting, S2 has no spec; both paths work together."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Add `ErrNoSpec` and return it from `SpecFingerprint`.\n2. In the daemon spec check, report a missing spec as a row, and return it in the result; do not run the role for that item.\n3. In the CLI, drop `NoSpec` items before the confirm prompt, print one line each with `slicer promote ID`, add them to `--json`, and keep going when at least one item remains.\n4. Do not touch the plan-failure abort for any other error, the held-item sitting, or the TUI.\n5. Update `docs/guide.md` and `docs/design.md`; CHANGELOG, marked *proposed*.\n\nOwner decisions (2026-11-09, accepted the recommended answers): JSON shape for skipped items -> (a) a `no_spec` string array beside `held` (recommended: `held` means open questions, this means a different fix) [cli.wave-no-spec-json, adj 217]. The TUI Waves screen -> (a) leave it (recommended: out of the owner's 2026-11-07 wording, which names `wave start`) [ui.waves-no-spec, adj 218]. Exit code when some items start and some are skipped -> (a) 0 (recommended: it did what it can, the skips are printed) [cli.wave-skip-exit, adj 219]."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`\n- `go vet ./...`\n- `gofmt -l .`\n- `slicer check`\n- `adj lint`\n- UI pass (rule u10) applies: `internal/cli` output changes.\n- [HUMAN CHECK] `ork wave start PROJECT READY-ITEM UNSPECCED-ITEM` against a real project: the person confirms the ready item starts and the other prints the `slicer promote` hint."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

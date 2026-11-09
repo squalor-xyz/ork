@@ -3860,3 +3860,60 @@
 {"when": "2026-11-09T13:03:10Z", "item": "S292", "action": "status", "from": "started", "to": "done", "note": "Spec-check fingerprint uses git status --porcelain -- .; sibling tracking writes are ignored while own-project writes remain read-only violations. Regression tests and mutation checks verified; gate PASS and owner approval received. After-land human check remains deferred.", "by": "Jon Robbins"}
 {"when": "2026-11-09T12:51:43Z", "item": "S301", "action": "note", "from": "", "to": "", "note": "Owner interview 2026-11-09 (adj 194, 195): local rows are us", "by": "Jon Robbins"}
 {"when": "2026-11-09T12:51:43Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Owner interview 2026-11-09: first trial is the gate of a sma", "by": "Jon Robbins"}
+{"when": "2026-11-09T13:08:27Z", "item": "S301", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T13:43:07Z", "item": "S259", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T13:43:07Z", "item": "S259", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-09T13:43:07Z", "item": "S259", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T13:43:07Z", "item": "S259", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T13:43:07Z", "item": "S259", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T13:43:07Z", "item": "S259", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T13:43:07Z", "item": "S259", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T13:43:11Z", "item": "S255", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T13:43:11Z", "item": "S255", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-09T13:43:12Z", "item": "S255", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T13:43:12Z", "item": "S255", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T13:43:12Z", "item": "S255", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T13:43:12Z", "item": "S255", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T13:43:12Z", "item": "S255", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T13:43:12Z", "item": "S257", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T13:43:12Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-09T13:43:12Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T13:43:13Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T13:43:13Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T13:43:13Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T13:43:13Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T13:43:13Z", "item": "S263", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T13:43:13Z", "item": "S263", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-09T13:43:13Z", "item": "S263", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T13:43:13Z", "item": "S263", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T13:43:14Z", "item": "S263", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T13:43:14Z", "item": "S263", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T13:43:14Z", "item": "S263", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T13:43:14Z", "item": "S267", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T13:43:14Z", "item": "S267", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-09T13:43:14Z", "item": "S267", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T13:43:14Z", "item": "S267", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T13:43:15Z", "item": "S267", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T13:43:15Z", "item": "S267", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T13:43:15Z", "item": "S267", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T13:43:15Z", "item": "S283", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T13:43:15Z", "item": "S283", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-09T13:43:15Z", "item": "S283", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T13:43:15Z", "item": "S283", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T13:43:15Z", "item": "S283", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T13:43:16Z", "item": "S283", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T13:43:16Z", "item": "S283", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T13:43:16Z", "item": "S293", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T13:43:16Z", "item": "S293", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-09T13:43:16Z", "item": "S293", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T13:43:16Z", "item": "S293", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T13:43:16Z", "item": "S293", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T13:43:16Z", "item": "S293", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T13:43:17Z", "item": "S293", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T13:47:55Z", "item": "S259", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T13:48:00Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T13:48:09Z", "item": "S263", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T13:48:09Z", "item": "S267", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T13:48:09Z", "item": "S293", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T13:48:10Z", "item": "S255", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T13:48:10Z", "item": "S283", "action": "edit", "from": "", "to": "", "note": "Implement"}

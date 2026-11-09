@@ -1,0 +1,41 @@
+{
+  "id": "S263",
+  "title": "Daemon log: stop repeating the same merge-detection error on every poll",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-09 at HEAD 4707be4. Size S recommended. Status: READY; owner decided 2026-11-07: a run whose branch is gone and not merged is marked cleaned with a reason recorded, and the error is logged once. One decided record (S153, adj `landing.merge-detect` 128) is extended, not contradicted; two existing tests change (see Why)."
+  ],
+  "depends_note": null,
+  "findings_note": "2026-11-03: ~/.local/state/ork/daemon.log holds 50 lines, all the same: 'merge detection ork-20261025-175709-e8c9: git -C .../ork merge-base --is-ancestor S78 HEAD: exit 128: fatal: Not a valid object name S78'. The run's branch S78 no longer exists, so merge detection fails and logs on every pass, and real daemon messages are buried. Fix: log a given run and error once (or on change), and treat a branch that no longer exists as merged-or-gone for that run, with a one-line reason in the record. Owner decision needed on which state the run takes.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "- Evidence 2026-11-03 (S263 findings): `~/.local/state/ork/daemon.log` held 50 identical lines: `merge detection ork-20261025-175709-e8c9: git -C .../ork merge-base --is-ancestor S78 HEAD: exit 128: fatal: Not a valid object name S78`. The run's branch no longer exists, so every pass fails and logs; real daemon messages are buried. (The log file itself was not read for this spec.)\n- Code at HEAD: `checkMerged` (`internal/daemon/landed.go:102-185`) runs per HEAD change, calls `landed` (`landed.go:48`, `git merge-base --is-ancestor BRANCH HEAD`) for each committed, not-cleaned run, and on any error prints `merge detection ID: err` to stderr (`landed.go:138`) every time. The only recovery is `goneAndMerged` (`landed.go:69-84`), which marks cleaned only when the worktree path is gone, the branch ref is missing and `commit.sha` is in HEAD.\n- Docs: `docs/state.md:630-640` says a missing branch with the worktree still there, no recorded commit, or a commit not in HEAD leaves the merge state unknown. That is the case that repeats forever.\n- Existing tests that pin the old behaviour: `TestStaleRunIsNotCleanedUnlessAllHold` (`internal/daemon/landed_test.go:838`) cases \"the commit is not in HEAD\", \"no commit is recorded\", \"the commit has no sha\", \"the commit looks like an option\" expect not cleaned. The decision changes at least the first (branch gone and not merged). Cases where git itself fails (\"git fails reading the branch/commit\") stay unknown.\n- `captureRunErrors` (`internal/daemon/runs_test.go:1052`) captures stderr for tests. `cleanupFailed` shows `Reason` only for a landed run (`internal/daemon/runs.go:2025`), so a Reason on an unlanded committed run is not shown as a cleanup failure; whether any other view shows it was not verified.\n- Overlap: `slicer find \"merge detection\"` finds S63 and S153 (done). Nothing else.\n\n### Open questions\n\n1. Where is the reason recorded? Options: (a) a new record field `cleaned_reason` (recommended: `Record.Reason` has other meanings, such as the cleanup-failed text of a landed run, `record.go:354`); (b) reuse `Reason`; (c) log only. Key: `state.cleaned-reason`.\n2. Which runs count as \"branch gone and not merged\"? Options: (a) branch ref missing and worktree path gone, whether or not a commit is recorded (recommended: nothing is left to merge or clean, and it stops the repeats); (b) branch ref missing only, even with the worktree still there (the worktree may hold unmerged work, so riskier); (c) only runs with a recorded commit. Key: `landing.gone-branch-rule`.\n3. Memory of logged errors across a daemon restart: (a) in memory only, one line per run after each restart (recommended); (b) persist. Key: `daemon.log-dedup`."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/landed.go:102-185` (`checkMerged`: once-only log, mark-cleaned rule)\n- `internal/daemon/landed.go:69-84` (`goneAndMerged`: split out a `branchGone` check)\n- `internal/daemon/runs.go:146` (`runManager`: a `mergeLogged map[string]string`, run ID to last logged error text)\n- `internal/runrec/record.go:268` and `:354` (`MarkCleaned`; a reason, see Q1)\n- `internal/daemon/landed_test.go:838`\n- `docs/state.md:630-640`\n- `docs/design.md` (landing / merge detection paragraph)\n- `CHANGELOG.md` (*proposed* bullet)"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "In `internal/daemon/landed_test.go`, with `staleRun`, `staleGit`, `removeWorktree`, `refreshHead` and `captureRunErrors`.\n\n- `TestGoneUnmergedBranchIsMarkedCleanedWithAReason`: branch ref missing (`rev-parse` exit 1), commit not in HEAD (`merge-base abc123` exit 1). Assert after one pass `rec.CleanedAt` is set, `rec.Cleaned()` is true, the state is still `committed`, and the recorded reason names the branch and \"not merged\" (exact text per Q1). Assert the wire row has `Cleaned == true` and `Merged == nil`.\n- `TestMergeDetectionErrorIsLoggedOncePerRun`: a branch that exists but `merge-base` exits 128 every time; two HEAD changes (`refreshHead` twice with different HEADs). Assert stderr holds exactly one `merge detection run:` line.\n- `TestMergeDetectionLogsAgainWhenTheErrorChanges`: the error text changes between passes; two lines.\n- `TestMergeDetectionLogsAgainAfterTheRunRecovers`: a pass succeeds, then fails again; the failure logs again (the once-only memory resets on success).\n- `TestStaleRunIsNotCleanedUnlessAllHold` (edit): drop or flip only the \"commit is not in HEAD\" row; keep the git-failure rows (\"git fails reading the branch\", \"git fails reading the commit\") expecting unknown, and keep \"the branch still exists\".\n- `TestGoneUnmergedRunWithTheWorktreeStillThereIsNotCleaned` (only if Q2 option a): the worktree path still exists; not cleaned, logged once.\n- `TestGoneUnmergedMarkWritesNothingToGit`: every git call is `merge-base` or `rev-parse` (as `TestStaleRunWithGoneBranchAndMergedCommitIsCleaned`, `landed_test.go:814`)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Split `goneAndMerged` into `branchGone` (the `rev-parse --verify --quiet refs/heads/BRANCH` exit 1 check) and the commit-in-HEAD check.\n2. In `checkMerged`, on a merge-base error: if the branch is gone and the commit is in HEAD, mark cleaned as today. If the branch is gone and the commit is not in HEAD (or no commit is recorded, per Q2), mark cleaned and record the reason.\n3. Log a merge-detection error only when the text differs from the last logged text for that run ID (in memory, cleared on success and on prune). Do not change the error text.\n4. Do not touch landing, cleanup (`cleanupRun`), `pruneRunsLocked` or the HEAD-change throttle.\n5. Update `docs/state.md:630-640`; CHANGELOG, marked *proposed*.\n\nOwner decisions (2026-11-09, accepted the recommended answers): Where is the reason recorded? -> (a) a new record field `cleaned_reason` (recommended: `Record.Reason` has other meanings, such as the cleanup-failed text of a landed run, `record.go:354`) [state.cleaned-reason, adj 204]. Which runs count as \"branch gone and not merged\"? -> (a) branch ref missing and worktree path gone, whether or not a commit is recorded (recommended: nothing is left to merge or clean, and it stops the repeats) [landing.gone-branch-rule, adj 205]. Memory of logged errors across a daemon restart -> (a) in memory only, one line per run after each restart (recommended) [daemon.log-dedup, adj 206]."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`\n- `go vet ./...`\n- `gofmt -l .`\n- `slicer check`\n- `adj lint`\n- Daemon log and record only; no `internal/tui` or CLI output change, so no UI pass (rule u10) unless Q1 option b adds a row cue."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

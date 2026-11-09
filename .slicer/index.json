@@ -13678,7 +13678,7 @@
       "title": "Retry restarts the vendor chain at the first lineup entry",
       "short_title": "Retry restarts the vendor chain at the first lineup entry",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -13792,7 +13792,7 @@
       "title": "ork wait: block until a run changes state",
       "short_title": "ork wait: block until a run changes state",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -13920,7 +13920,7 @@
       "title": "S235 later notes: guard the watchdog against a sleep detector never started, and test that the daemon starts it",
       "short_title": "S235 later notes: guard the watchdog against a sleep detector never started, and test that the daemon starts it",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
@@ -14062,7 +14062,7 @@
       "title": "Daemon log: stop repeating the same merge-detection error on every poll",
       "short_title": "Daemon log: stop repeating the same merge-detection error on every poll",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -14304,7 +14304,7 @@
       "title": "Run pane cues: queued runs, the orchestrator row, vendor/model/effort on every role row",
       "short_title": "Queued runs: no stale cue",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
@@ -15013,7 +15013,7 @@
       "title": "wave start: one item without a spec must not fail the whole wave",
       "short_title": "wave start: one item without a spec must not fail the whole wave",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -15572,7 +15572,7 @@
       "title": "Check command: run it from the project's own folder when the project lives in a subfolder of its repo (monorepo)",
       "short_title": "Check command: run it from the project's own folder when the project lives in a subfolder of its repo (monorepo)",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
