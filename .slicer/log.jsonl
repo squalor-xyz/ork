@@ -3844,3 +3844,4 @@
 {"when": "2026-11-09T06:41:11Z", "item": "S289", "action": "note", "from": "", "to": "", "note": "Evidence 2026-11-08/09 (S217): the landing's merge-in stoppe", "by": "Jon Robbins"}
 {"when": "2026-11-09T06:41:11Z", "item": "S224", "action": "note", "from": "", "to": "", "note": "Related: S311 (notify command) adds a second per-project set", "by": "Jon Robbins"}
 {"when": "2026-11-09T12:23:11Z", "item": "S131", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T12:38:39Z", "item": "S310", "action": "note", "from": "", "to": "", "note": "Landed with 2 quoted hits left: S103 and S131 Owner decision", "by": "Jon Robbins"}

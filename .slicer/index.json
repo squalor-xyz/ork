@@ -16302,6 +16302,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "65f80b2e-acc1-48b6-b791-c4b42b4ed1a3",
+          "kind": "",
+          "text": "**2026-11-09** — Landed with 2 quoted hits left: S103 and S131 Owner decisions paragraphs (added while S310 ran) quote the stale path in their question text. They are historical quotes; not rewritten because slicer has no command to change one paragraph inside Implement.",
+          "created_at": "2026-11-09T12:38:39Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
