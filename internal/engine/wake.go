@@ -26,7 +26,8 @@ const (
 )
 
 // Wake counts the time the machine slept. One Wake is shared by every run of
-// the daemon. A nil *Wake counts nothing.
+// the daemon. A nil *Wake counts nothing, and neither does a Wake before
+// Start (S259).
 type Wake struct {
 	now   func() time.Time
 	every time.Duration // the sampling step
@@ -35,12 +36,14 @@ type Wake struct {
 	mu    sync.Mutex
 	last  time.Time     // wall time of the last sample
 	slept time.Duration // total over the life of the Wake
+	// started is set by Start. Until then nothing counts as sleep (S259).
+	started bool
 
 	startOnce sync.Once
 }
 
 // NewWake returns a detector that reads the wall clock from now. Call Start
-// to sample in the background.
+// to sample in the background; it counts no sleep until then.
 func NewWake(now func() time.Time) *Wake {
 	return newWake(now, wakeSampleEvery, wakeGap)
 }
@@ -63,6 +66,12 @@ func (w *Wake) Start(ctx context.Context) {
 		return
 	}
 	w.startOnce.Do(func() {
+		// Counting begins here: what the clock did before is not a sleep of
+		// this Wake's.
+		w.mu.Lock()
+		w.started = true
+		w.last = w.wall()
+		w.mu.Unlock()
 		go func() {
 			ticker := time.NewTicker(w.every)
 			defer ticker.Stop()
@@ -78,13 +87,26 @@ func (w *Wake) Start(ctx context.Context) {
 	})
 }
 
+// Started says whether Start has run. It is false for a nil Wake.
+func (w *Wake) Started() bool {
+	if w == nil {
+		return false
+	}
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return w.started
+}
+
 // sample reads the clock and adds the last gap to the time slept when it is
-// over the threshold.
+// over the threshold. A Wake that was never started counts nothing: with no
+// sampler, the callers are the only samples, and a caller that is late (the
+// watchdog's 30s look is as long as the threshold) would read the delay as a
+// sleep.
 func (w *Wake) sample() {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	now := w.wall()
-	if gap := now.Sub(w.last); gap > w.gap {
+	if gap := now.Sub(w.last); w.started && gap > w.gap {
 		w.slept += gap - w.every
 	}
 	w.last = now

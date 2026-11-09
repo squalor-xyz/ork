@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- S259 (*proposed*): the sleep detector counts no sleep until the daemon
+  starts it, so a watchdog look that arrives a little late can no longer be
+  read as sleep and hide a hung role. A test pins the daemon's start of it
+  (`Wake.Started()`). Docs: `docs/design.md`.
 - S255 (*proposed*): a retry that starts a fresh round (a `rounds` pause
   retry, or the resume of a stopped run) restarts each role's vendor chain at
   its first lineup row; inside a round the fallback row stays sticky. A vendor

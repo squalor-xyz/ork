@@ -1180,7 +1180,9 @@ separately.
   (S235, *proposed*), so a wake alone never kills a healthy role. One shared
   detector in the daemon samples the wall clock about every 5 seconds; a gap
   of more than 30 seconds between two samples is a sleep, and the gap less one
-  step is added to the time slept. The watchdog subtracts the time slept since
+  step is added to the time slept. A detector counts nothing until the daemon
+  starts it (S259, *proposed*), so the watchdog's own looks, which come every
+  30 seconds, are never mistaken for a sleep. The watchdog subtracts the time slept since
   the role's last sign of life from its silence; silence before and after the
   sleep still counts, and the limit does not change. The time slept is kept in
   daemon memory and shown by `ork status`, which also prints, under a run row,

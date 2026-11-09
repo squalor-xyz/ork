@@ -38,9 +38,68 @@ func (c *wallClock) advance(d time.Duration) {
 	c.t = c.t.Add(d)
 }
 
-func TestWakeCountsAWallClockJumpAsSleep(t *testing.T) {
+// startedWake returns a Wake whose Start has run. The tests sample by hand; the
+// background sampler's first tick is a real 5s away, after the test is over.
+func startedWake(t *testing.T, clock *wallClock) *Wake {
+	t.Helper()
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	w := NewWake(clock.Now)
+	w.Start(ctx)
+	return w
+}
+
+// A Wake counts a sleep only after Start (S259). A Wake nobody started has no
+// sampler, so a gap it sees may be a late caller, not a sleep.
+func TestWakeCountsASleepOnlyAfterStart(t *testing.T) {
 	clock := newWallClock()
 	w := NewWake(clock.Now)
+	if w.Started() {
+		t.Error("a new Wake reports started")
+	}
+	clock.advance(2 * time.Hour)
+	if got := w.Slept(); got != 0 {
+		t.Errorf("an unstarted Wake counted %s of sleep", got)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	w.Start(ctx)
+	if !w.Started() {
+		t.Error("Start did not make the Wake report started")
+	}
+	if got := w.Slept(); got != 0 {
+		t.Errorf("Start counted the jump from before it: %s", got)
+	}
+	clock.advance(2 * time.Hour)
+	if got, want := w.Slept(), 2*time.Hour-wakeSampleEvery; got != want {
+		t.Errorf("Slept %s after Start, want %s", got, want)
+	}
+}
+
+// The jump comes before Start and nothing samples in between, so only Start
+// itself can keep the Wake from counting it.
+func TestWakeStartIgnoresAJumpFromBeforeIt(t *testing.T) {
+	clock := newWallClock()
+	w := NewWake(clock.Now)
+	clock.advance(2 * time.Hour)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	w.Start(ctx)
+	if got := w.Slept(); got != 0 {
+		t.Errorf("Slept %s for a jump from before Start", got)
+	}
+}
+
+func TestWakeStartedIsNilSafe(t *testing.T) {
+	var w *Wake
+	if w.Started() {
+		t.Error("a nil Wake reports started")
+	}
+}
+
+func TestWakeCountsAWallClockJumpAsSleep(t *testing.T) {
+	clock := newWallClock()
+	w := startedWake(t, clock)
 	clock.advance(wakeSampleEvery)
 	w.sample()
 	clock.advance(2 * time.Hour)
@@ -58,7 +117,7 @@ func TestWakeCountsAWallClockJumpAsSleep(t *testing.T) {
 
 func TestWakeIgnoresASmallStall(t *testing.T) {
 	clock := newWallClock()
-	w := NewWake(clock.Now)
+	w := startedWake(t, clock)
 	clock.advance(10 * time.Second)
 	w.sample()
 	if got := w.Slept(); got != 0 {
@@ -68,7 +127,7 @@ func TestWakeIgnoresASmallStall(t *testing.T) {
 
 func TestWakeSampleIsSynchronous(t *testing.T) {
 	clock := newWallClock()
-	w := NewWake(clock.Now)
+	w := startedWake(t, clock)
 	clock.advance(2 * time.Hour) // no tick has run
 	if got, want := w.Slept(), 2*time.Hour-wakeSampleEvery; got != want {
 		t.Errorf("Slept %s right after a jump, want %s", got, want)
@@ -155,7 +214,10 @@ func TestWorkingNamesARunningRoleWithItsLastOutputAndSleep(t *testing.T) {
 	h := hungHarness(t, time.Hour, hr)
 	clock := &clockWithOffset{}
 	h.deps.Now = clock.Now
+	wctx, wcancel := context.WithCancel(context.Background())
+	defer wcancel()
 	h.deps.Wake = newWake(clock.Now, testWakeEvery, testWakeGap)
+	h.deps.Wake.Start(wctx)
 	e, err := New(context.Background(), h.deps, h.cfg)
 	if err != nil {
 		t.Fatal(err)

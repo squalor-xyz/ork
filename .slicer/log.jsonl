@@ -3971,3 +3971,8 @@
 {"when": "2026-11-09T16:41:14Z", "item": "S324", "action": "add", "from": "", "to": "open", "note": "Spec check: skip a missing local launcher in the spec-check chain"}
 {"when": "2026-11-09T16:46:26Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-09T16:47:13Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T16:48:03Z", "item": "S259", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-09T16:53:43Z", "item": "S259", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T16:53:48Z", "item": "S259", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T17:03:21Z", "item": "S259", "action": "note", "from": "", "to": "", "note": "Verified: a Wake counts no sleep until Start has run (adj 19", "by": "Jon Robbins"}
+{"when": "2026-11-09T17:03:23Z", "item": "S259", "action": "status", "from": "started", "to": "done", "note": "A Wake counts no sleep until Start has run, so a late watchdog look can no longer be read as sleep and hide a hung role (adj 199); Wake.Started() is read-only and nil-safe (adj 200). Tests pin the guard, the Start reset and the daemon's Start call in recoverRuns; all new assertions were mutation-checked. Full suite, race run, vet, gofmt, slicer check and adj lint are green. The human check of a real sleep over 35 minutes is still open.", "by": "Jon Robbins"}

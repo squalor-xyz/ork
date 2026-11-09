@@ -76,7 +76,10 @@ func TestLocalRoleTimeoutIgnoresMachineSleep(t *testing.T) {
 			clock, wakeClock := newVendorClock(), newVendorClock()
 			h := newHarness(t)
 			h.deps.Now = clock.Now
+			wctx, wcancel := context.WithCancel(context.Background())
+			defer wcancel()
 			h.deps.Wake = newWake(wakeClock.Now, testWakeEvery, testWakeGap)
+			h.deps.Wake.Start(wctx)
 			h.deps.HungAfter = 4 * time.Millisecond // fast checks; the local limit remains 45 minutes
 			h.cfg.Lineup[RoleReviewer] = []runrec.LineupEntry{{Vendor: vendor, Model: "latest", Effort: "medium"}, {Vendor: "claude", Model: "opus", Effort: "medium"}}
 			hr := &hangRunner{silent: func(req Request) bool { return req.Vendor == vendor }, script: func(ctx context.Context, req Request) (Result, error) {
@@ -177,6 +180,43 @@ func hungHarness(t *testing.T, limit time.Duration, hr *hangRunner) *harness {
 	h.deps.HungAfter = limit
 	h.deps.Runner = hr
 	return h
+}
+
+// steppingClock moves forward by step on every read, so the gap between two
+// reads is always step. It stands for a wall clock that is late between two
+// looks of the watchdog.
+type steppingClock struct {
+	mu   sync.Mutex
+	t    time.Time
+	step time.Duration
+}
+
+func (c *steppingClock) Now() time.Time {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.t = c.t.Add(c.step)
+	return c.t
+}
+
+// A Wake that was never started must not hide a hang (S259). Its clock is a
+// little over the sleep threshold ahead on every look, as a late watchdog tick
+// would see it. Counted as sleep, 25s of each look would leave the silence
+// negative for ever; an unstarted Wake counts nothing, so the role is killed at
+// the limit.
+func TestUnstartedWakeDoesNotHideAHang(t *testing.T) {
+	ended := make(chan struct{})
+	hr := &hangRunner{silent: onlyRole(RoleImplementer), script: blockUntilKilled(ended)}
+	h := hungHarness(t, testHungAfter, hr)
+	h.deps.Wake = NewWake((&steppingClock{t: time.Date(2026, 11, 9, 12, 0, 0, 0, time.UTC), step: wakeGap + time.Millisecond}).Now)
+	begin := time.Now()
+	e := h.start()
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingLost || !strings.Contains(rec.Pending.Reason, "hung: no output for 250ms") {
+		t.Fatalf("pending: %+v", rec.Pending)
+	}
+	if took := time.Since(begin); took > safetyStop/2 {
+		t.Errorf("the watchdog took %s to kill a role under a %s limit", took, testHungAfter)
+	}
 }
 
 func TestRoleThatFinishesAsTheWatchdogFiresIsNotRecordedHung(t *testing.T) {

@@ -13989,10 +13989,25 @@
       "id": "S259",
       "title": "S235 later notes: guard the watchdog against a sleep detector never started, and test that the daemon starts it",
       "short_title": "S235 later notes: guard the watchdog against a sleep detector never started, and test that the daemon starts it",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "64c647c1-ac0b-4404-a922-c85350970cdf",
+          "kind": "",
+          "text": "**2026-11-09** — Verified: a Wake counts no sleep until Start has run (adj 199), and Start resets the sample time so an earlier jump is not counted. Wake.Started() is a read-only, nil-safe accessor (adj 200). TestUnstartedWakeDoesNotHideAHang failed first (the silent role was never killed) and now passes. TestRecoverRunsStartsTheWake fails when the Start call in recoverRuns is deleted. Every new assertion was mutation-checked. go test ./... (23 packages), go test -race ./internal/engine ./internal/daemon, go vet, gofmt, slicer check and adj lint are green. The human check of a real sleep over 35 minutes is still open.",
+          "created_at": "2026-11-09T17:03:21Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -14010,7 +14025,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
