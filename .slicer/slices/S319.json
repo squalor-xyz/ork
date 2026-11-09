@@ -1,0 +1,39 @@
+{
+  "id": "S319",
+  "title": "Spec check report shape rejects a capitalised item id (S374 for s374)",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "ork run slicer s374 and s375 failed the spec check twice in a row ('report shape: a section for S374, which is not in the batch; no section for s374'); s444 hit the same on 2026-11-07. The spec-check agent writes the id capitalised and the validator compares exactly. Fix: match ids case-insensitively and map back, and/or put the exact id in the report template. Each failure costs two agent calls and blocks the slice's start. Seen on build 1dc159d0; check whether 3d537be3 still does it."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

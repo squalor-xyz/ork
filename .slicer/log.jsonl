@@ -3860,3 +3860,8 @@
 {"when": "2026-11-09T13:03:10Z", "item": "S292", "action": "status", "from": "started", "to": "done", "note": "Spec-check fingerprint uses git status --porcelain -- .; sibling tracking writes are ignored while own-project writes remain read-only violations. Regression tests and mutation checks verified; gate PASS and owner approval received. After-land human check remains deferred.", "by": "Jon Robbins"}
 {"when": "2026-11-09T12:51:43Z", "item": "S301", "action": "note", "from": "", "to": "", "note": "Owner interview 2026-11-09 (adj 194, 195): local rows are us", "by": "Jon Robbins"}
 {"when": "2026-11-09T12:51:43Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Owner interview 2026-11-09: first trial is the gate of a sma", "by": "Jon Robbins"}
+{"when": "2026-11-09T13:14:41Z", "item": "S319", "action": "add", "from": "", "to": "open", "note": "Spec check report shape rejects a capitalised item id (S374 for s374)"}
+{"when": "2026-11-09T13:14:41Z", "item": "S319", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T13:14:41Z", "item": "S320", "action": "add", "from": "", "to": "open", "note": "Bubble up role Tool feedback: auto-file the safe items, queue the rest as owner decisions"}
+{"when": "2026-11-09T13:14:41Z", "item": "S320", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T13:14:41Z", "item": "S319", "action": "note", "from": "", "to": "", "note": "Still failing on build 3d537be3: s377 failed the spec check ", "by": "Jon Robbins"}
