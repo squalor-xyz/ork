@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- S283 (*proposed*): `ork wave start` no longer fails the whole wave for an
+  item with no slice spec. It starts the items that have one and prints
+  `ID: no slice spec; run slicer promote ID` for the others; exit 0 when a
+  wave starts, 1 when no item is left. The JSON result has a `no_spec` array
+  beside `held`. Other plan failures still abort. The daemon spec check
+  reports the missing spec as a `no_spec` row. Docs: `docs/guide.md`,
+  `docs/design.md`.
+
 - S131 (*proposed*): the self-host check compares the daemon build with the
   branch the main checkout is on. Unchanged tips need one git call per
   snapshot or status read; changed tips refresh a bounded result cache.

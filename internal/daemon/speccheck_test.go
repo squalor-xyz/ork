@@ -193,6 +193,64 @@ func TestSpecCheckAsksAgainOnlyForAChangedSpec(t *testing.T) {
 	}
 }
 
+func TestSpecCheckReportsAMissingSpecPerItem(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON(u11))
+	rig.mu.Lock()
+	rig.report = "## Slice S1\nReady\n\n## Owner needed\n\nnone\n"
+	rig.mu.Unlock()
+	if err := os.WriteFile(filepath.Join(rig.root, "S2.json"), []byte(`{"id":"S2","title":"T","slice":null}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	res := rig.check(t, "S1", "S2")
+	if len(res.Items) != 2 || res.Items[0].Item != "S1" || res.Items[1].Item != "S2" {
+		t.Fatalf("want one row for each item, in order: %+v", res)
+	}
+	if s1 := res.Items[0]; !s1.Ready || s1.NoSpec {
+		t.Errorf("S1: %+v", s1)
+	}
+	if s2 := res.Items[1]; !s2.NoSpec || s2.Ready || len(s2.Questions) != 0 {
+		t.Errorf("S2: %+v", s2)
+	}
+	reqs := rig.requests()
+	if len(reqs) != 1 {
+		t.Fatalf("%d role rounds, want one for S1", len(reqs))
+	}
+	if strings.Contains(reqs[0].Brief, `"id":"S2"`) {
+		t.Errorf("the role was asked about the item with no spec: %q", reqs[0].Brief[:min(len(reqs[0].Brief), 200)])
+	}
+	// Every item lacks a spec: no role runs and every row says so.
+	if err := os.WriteFile(filepath.Join(rig.root, "S1.json"), []byte(`{"id":"S1","slice":null}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	res = rig.check(t, "S1", "S2")
+	if len(res.Items) != 2 || !res.Items[0].NoSpec || !res.Items[1].NoSpec || len(rig.requests()) != 1 {
+		t.Errorf("all without a spec: %+v, %d role rounds", res, len(rig.requests()))
+	}
+}
+
+func TestSpecCheckStillFailsOnOtherShowErrors(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON(u11), clitest.Route{Tool: "slicer", Args: []string{"show", "S2"}, Prefix: true, Stderr: "boom", Exit: 2})
+	_, err := rig.d.handle(context.Background(), MethodSpecCheck, json.RawMessage(`{"project":"p","items":["S1","S2"]}`))
+	if err == nil {
+		t.Fatal("a failed slicer show must fail the whole call")
+	}
+	if len(rig.requests()) != 0 {
+		t.Error("a role ran after a failed read")
+	}
+	// A show that is not JSON is not a missing spec either.
+	rig2 := newSpecRig(t, rulesJSON(u11))
+	rig2.mu.Lock()
+	rig2.report = "## Slice S1\nReady\n\n## Owner needed\n\nnone\n"
+	rig2.mu.Unlock()
+	if werr := os.WriteFile(filepath.Join(rig2.root, "S2.json"), []byte(`nope`), 0o644); werr != nil {
+		t.Fatal(werr)
+	}
+	_, err = rig2.d.handle(context.Background(), MethodSpecCheck, json.RawMessage(`{"project":"p","items":["S1","S2"]}`))
+	if err == nil || errors.Is(err, engine.ErrNoSpec) || !strings.Contains(err.Error(), "S2: slicer show") {
+		t.Fatalf("malformed show output: %v", err)
+	}
+}
+
 func TestWaveApproveRefusesUncheckedItem(t *testing.T) {
 	rig := newSpecRig(t, rulesJSON(u11))
 	rig.check(t, "S1", "S2")

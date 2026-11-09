@@ -39,9 +39,14 @@ type SpecCheckParams struct {
 
 // SpecItemResult is the check's answer for one item against its current
 // spec: ready, or the questions that are still open.
+//
+// NoSpec says the item has no slice spec to check (S283, *proposed*): the row
+// is not Ready, has no questions and no role ran for it. The caller keeps the
+// item out of its wave and names the fix, slicer promote.
 type SpecItemResult struct {
 	Item      string                `json:"item"`
 	Ready     bool                  `json:"ready"`
+	NoSpec    bool                  `json:"no_spec,omitempty"`
 	Questions []engine.SpecQuestion `json:"questions,omitempty"`
 }
 
@@ -238,12 +243,19 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 	}
 	deps := d.runDeps(proj)
 	var stale []string
+	noSpec := map[string]bool{}
 	for _, item := range items {
 		raw, err := deps.Slicer.ShowRaw(ctx, proj.Path, item)
 		if err != nil {
 			return nil, err
 		}
 		fp, err := engine.SpecFingerprint(raw)
+		if errors.Is(err, engine.ErrNoSpec) {
+			// A row, not an error (adj 245): the client drops the item and keeps
+			// the rest. No role runs for it and nothing is remembered.
+			noSpec[item] = true
+			continue
+		}
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", item, err)
 		}
@@ -267,6 +279,10 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 	defer d.runs.mu.Unlock()
 	ownerTexts := map[string]bool{}
 	for _, item := range items {
+		if noSpec[item] {
+			out.Items = append(out.Items, SpecItemResult{Item: item, NoSpec: true})
+			continue
+		}
 		e := d.runs.specs[specKey(proj.Name, item)]
 		out.Items = append(out.Items, SpecItemResult{Item: item, Ready: e.ready, Questions: e.questions})
 		if e.ownerNeeded != "" && !ownerTexts[e.ownerNeeded] {

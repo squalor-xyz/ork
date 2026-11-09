@@ -766,6 +766,24 @@ func TestRunJSONKeepsTheSittingOffStdout(t *testing.T) {
 	}
 }
 
+// S283: the shared spec check leaves an item with no spec out of `ork run` too:
+// the hint, no start, exit 1, and the JSON result is the held shape as before.
+func TestRunLeavesOutAnItemWithNoSpec(t *testing.T) {
+	const check = `{"items":[{"item":"S1","ready":false,"no_spec":true}]}`
+	code, out, errs, stub := singleSpecRun(t, "", check, nil, "--yes")
+	if code != ExitFailure || len(stub.started) != 0 || !strings.Contains(out+errs, "S1: no slice spec; run slicer promote S1\n") {
+		t.Fatalf("text: exit %d: %s %s", code, out, errs)
+	}
+	code, out, errs, stub = singleSpecRun(t, "", check, nil, "--yes", "--json")
+	var value map[string]any
+	if json.Unmarshal([]byte(out), &value) != nil || code != ExitFailure || len(stub.started) != 0 || value["started"] != false || !reflect.DeepEqual(value["held"], []any{}) {
+		t.Fatalf("json: exit %d: %s %s", code, out, errs)
+	}
+	if !strings.Contains(errs, "S1: no slice spec; run slicer promote S1") {
+		t.Errorf("the hint goes to stderr with --json: %s", errs)
+	}
+}
+
 func TestRunRefusesBlockedItemBeforeConfirmation(t *testing.T) {
 	message := daemon.BlockedMessage([]string{"S2"}, []slicercli.ItemDeps{{ID: "S2", BlockedBy: []string{"S1"}}}, map[string]string{"S1": "Title"})
 	const wantMessage = `S2 waits on S1 "Title" (not done); land S1 first`

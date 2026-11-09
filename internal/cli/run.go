@@ -124,7 +124,7 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		return o.fail(ExitFailure, daemon.CodeRefused, daemon.NoCheckRefusalMessage(params.Project))
 	}
 	checked := daemon.WaveStartParams{Items: []daemon.RunParams{params}}
-	held, code := a.specCheck(ctx, o, reader, prompts, &checked)
+	held, _, code := a.specCheck(ctx, o, reader, prompts, &checked)
 	if code != ExitOK {
 		return code
 	}

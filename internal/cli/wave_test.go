@@ -206,6 +206,7 @@ type specStub struct {
 	adj     bool
 	started []string
 	check   string
+	planErr map[string]error // the run.plan error of an item, by id
 }
 
 const specCheckTwoQuestions = `{"items":[{"item":"S2","ready":true},{"item":"S1","ready":false,"questions":[` +
@@ -219,6 +220,9 @@ func (s *specStub) call(_ context.Context, method string, params, result any) er
 		return json.Unmarshal([]byte(fmt.Sprintf(`{"projects":[{"name":"p","adj":%t}]}`, s.adj)), result)
 	case "run.plan":
 		p := params.(daemon.RunParams)
+		if err := s.planErr[p.Item]; err != nil {
+			return err
+		}
 		*(result.(*daemon.RunPlan)) = daemon.RunPlan{CheckCommand: "go test ./...", Item: p.Item, Worktree: "/p/" + p.Item}
 	case "spec.check":
 		return json.Unmarshal([]byte(s.check), result)
@@ -244,6 +248,133 @@ func runWaveStart(t *testing.T, stub *specStub, input string, extra ...string) (
 	args := append([]string{"wave", "start", "p", "S2", "S1", "--well-specified", "yes", "--split", "no"}, extra...)
 	code = app.Run(context.Background(), args, &o, &e)
 	return code, o.String(), e.String()
+}
+
+// runWaveItems runs `ork wave start p ITEM...` with the default answers.
+func runWaveItems(t *testing.T, stub *specStub, input string, items []string, extra ...string) (code int, out, errs string) {
+	t.Helper()
+	var o, e bytes.Buffer
+	app := &App{Input: strings.NewReader(input), Call: stub.call}
+	args := append(append([]string{"wave", "start", "p"}, items...), "--well-specified", "yes", "--split", "no")
+	code = app.Run(context.Background(), append(args, extra...), &o, &e)
+	return code, o.String(), e.String()
+}
+
+func (s *specStub) waveStarts() (n int) {
+	for _, c := range s.calls {
+		if c == "wave.start" {
+			n++
+		}
+	}
+	return n
+}
+
+const specCheckS2NoSpec = `{"items":[{"item":"S1","ready":true},{"item":"S2","ready":false,"no_spec":true}]}`
+
+func TestWaveStartSkipsAnItemWithNoSpec(t *testing.T) {
+	stub := &specStub{t: t, check: specCheckS2NoSpec}
+	code, out, errs := runWaveItems(t, stub, "", []string{"S1", "S2"}, "--yes")
+	if code != ExitOK {
+		t.Fatalf("code %d: %s %s", code, out, errs)
+	}
+	if stub.waveStarts() != 1 || !reflect.DeepEqual(stub.started, []string{"S1"}) {
+		t.Errorf("want one wave.start with S1 alone: calls %v started %v", stub.calls, stub.started)
+	}
+	if !strings.Contains(out, "S2: no slice spec; run slicer promote S2\n") {
+		t.Errorf("the skipped item is not named with its fix:\n%s%s", out, errs)
+	}
+	if strings.Contains(out, "S1: no slice spec") || strings.Contains(out, "held:") {
+		t.Errorf("only S2 is skipped, and not as held:\n%s", out)
+	}
+}
+
+func TestWaveStartAllItemsWithoutASpecStartsNothing(t *testing.T) {
+	stub := &specStub{t: t, check: `{"items":[{"item":"S1","ready":false,"no_spec":true},{"item":"S2","ready":false,"no_spec":true}]}`}
+	code, out, errs := runWaveItems(t, stub, "", []string{"S1", "S2"}, "--yes")
+	if code != ExitFailure || stub.waveStarts() != 0 || len(stub.started) != 0 {
+		t.Fatalf("code %d calls %v: %s %s", code, stub.calls, out, errs)
+	}
+	for _, want := range []string{"S1: no slice spec; run slicer promote S1\n", "S2: no slice spec; run slicer promote S2\n", "no item is ready to start"} {
+		if !strings.Contains(out+errs, want) {
+			t.Errorf("missing %q:\n%s%s", want, out, errs)
+		}
+	}
+}
+
+func TestWaveStartJSONListsTheSkippedItems(t *testing.T) {
+	stub := &specStub{t: t, check: specCheckS2NoSpec}
+	code, out, errs := runWaveItems(t, stub, "", []string{"S1", "S2"}, "--json", "--yes")
+	var result map[string]json.RawMessage
+	if code != ExitOK || json.Unmarshal([]byte(out), &result) != nil {
+		t.Fatalf("code %d: %s %s", code, out, errs)
+	}
+	var noSpec, held []string
+	if json.Unmarshal(result["no_spec"], &noSpec) != nil || !reflect.DeepEqual(noSpec, []string{"S2"}) {
+		t.Errorf("no_spec: %s", out)
+	}
+	if json.Unmarshal(result["held"], &held) != nil || held == nil || len(held) != 0 {
+		t.Errorf("held must stay an empty array: %s", out)
+	}
+	if string(result["wave"]) != `"wave-1"` {
+		t.Errorf("the wave result is kept: %s", out)
+	}
+	if strings.Contains(out, "slicer promote") || !strings.Contains(errs, "S2: no slice spec; run slicer promote S2") {
+		t.Errorf("the hint goes to stderr with --json:\nstdout %s\nstderr %s", out, errs)
+	}
+	// Nothing starts: the same array shows beside started false, also when the
+	// start is declined.
+	for name, tc := range map[string]struct {
+		check, input string
+		flags        []string
+		code         int
+	}{
+		"none ready": {`{"items":[{"item":"S1","ready":false,"no_spec":true},{"item":"S2","ready":false,"no_spec":true}]}`, "", []string{"--yes"}, ExitFailure},
+		"declined":   {specCheckS2NoSpec, "n\n", nil, ExitOK},
+	} {
+		stub := &specStub{t: t, check: tc.check}
+		code, out, errs := runWaveItems(t, stub, tc.input, []string{"S1", "S2"}, append([]string{"--json"}, tc.flags...)...)
+		var got struct {
+			Started bool     `json:"started"`
+			Held    []string `json:"held"`
+			NoSpec  []string `json:"no_spec"`
+		}
+		if code != tc.code || json.Unmarshal([]byte(out), &got) != nil || got.Started || got.Held == nil || len(got.NoSpec) == 0 || stub.waveStarts() != 0 {
+			t.Errorf("%s: code %d: %s %s", name, code, out, errs)
+		}
+	}
+}
+
+func TestWaveStartOtherPlanFailuresStillAbort(t *testing.T) {
+	stub := &specStub{t: t, check: specCheckS2NoSpec, planErr: map[string]error{"S2": &ipc.Error{Code: "not_found", Message: "S2 cannot be planned"}}}
+	code, out, errs := runWaveItems(t, stub, "", []string{"S1", "S2"}, "--yes")
+	if code != ExitFailure || !strings.Contains(out+errs, "S2 cannot be planned") {
+		t.Fatalf("code %d: %s %s", code, out, errs)
+	}
+	for _, c := range stub.calls {
+		if c == "spec.check" || c == "wave.start" {
+			t.Errorf("%s ran after a plan failure: %v", c, stub.calls)
+		}
+	}
+	if len(stub.started) != 0 {
+		t.Errorf("started %v", stub.started)
+	}
+}
+
+func TestWaveStartMissingSpecAfterAnOpenQuestion(t *testing.T) {
+	stub := &specStub{t: t, check: strings.Replace(specCheckTwoQuestions, `{"item":"S2","ready":true}`, `{"item":"S2","ready":false,"no_spec":true}`, 1)}
+	code, out, errs := runWaveStart(t, stub, "2\nthe --flag-name\ny\n")
+	if code != ExitOK {
+		t.Fatalf("code %d: %s %s", code, out, errs)
+	}
+	if len(stub.answers) != 1 || stub.answers[0].Item != "S1" || len(stub.answers[0].Answers) != 2 {
+		t.Errorf("answers: %+v", stub.answers)
+	}
+	if !reflect.DeepEqual(stub.started, []string{"S1"}) || stub.waveStarts() != 1 {
+		t.Errorf("started %v, calls %v", stub.started, stub.calls)
+	}
+	if !strings.Contains(out, "S2: no slice spec; run slicer promote S2") || strings.Contains(out, "S2 needs") {
+		t.Errorf("S2 is skipped, never asked about:\n%s", out)
+	}
 }
 
 func TestWaveStartAsksTheSpecQuestionsInOneSittingThenStartsEveryItem(t *testing.T) {

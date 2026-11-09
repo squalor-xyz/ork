@@ -15054,7 +15054,7 @@
       "id": "S283",
       "title": "wave start: one item without a spec must not fail the whole wave",
       "short_title": "wave start: one item without a spec must not fail the whole wave",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -15085,6 +15085,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "92980839-4c5c-4c7c-8560-a75cbdb8b9dc",
+          "kind": "",
+          "text": "**2026-11-09** — Human checks at approval (S283):\n- later: `ork wave start PROJECT READY-ITEM UNSPECCED-ITEM` against a real project: the person confirms the ready item starts and the other prints the `slicer promote` hint.",
+          "created_at": "2026-11-09T16:39:24Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "342a7245-efa8-4cf8-bc2c-e819711d5b52",
+          "kind": "",
+          "text": "**2026-11-09** — Verified outcome: ork wave start leaves out an item with no slice spec instead of failing the whole wave. SpecFingerprint returns engine.ErrNoSpec; the daemon spec check answers such an item with a no_spec row and runs no role for it; wave start prints 'ID: no slice spec; run slicer promote ID', starts the other items (exit 0), and with none left starts nothing and exits 1. --json adds a no_spec array beside held; a started wave has no started key (owner answer 2026-11-09). Other plan failures and spec-check errors still abort. ork run leaves the item out the same way. TUI unchanged (adj 218). go test ./... 2827 passed, 0 failed; go vet, gofmt, slicer check and adj lint clean; every new assertion mutation-checked. Human check against a real project still open.",
+          "created_at": "2026-11-09T16:39:30Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -15104,7 +15132,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
