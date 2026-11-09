@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- S257 (*proposed*): `ork wait [RUN] [--until STATE,...] [--timeout D]
+  [--project P]` blocks until a run changes state and prints it, so scripts
+  stop polling `ork status`. Exit 0 changed or entered an `--until` state, 3
+  question pending, 4 nothing active, 5 timeout. `--until` takes `question`,
+  `awaiting-approval`, `paused`, `stopped` and `landed`; there is no `failed`
+  for now (adj 247). Without RUN it follows the only unfinished run
+  of the project. `run.show` and `ork show --json` gain `landed`. Docs:
+  `docs/guide.md`, `docs/state.md`.
+
 - S255 (*proposed*): a retry that starts a fresh round (a `rounds` pause
   retry, or the resume of a stopped run) restarts each role's vendor chain at
   its first lineup row; inside a round the fallback row stays sticky. A vendor

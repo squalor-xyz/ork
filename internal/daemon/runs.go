@@ -2181,6 +2181,7 @@ type ShowReply struct {
 	Checks       []ShowCheck   `json:"checks"`
 	Findings     []ShowFinding `json:"findings"`
 	LatestReport string        `json:"latest_report,omitempty"` // the pending role and round's newest report, else the newest report
+	Landed       bool          `json:"landed,omitempty"`        // proposed (S257): committed and landed on the base branch by ork
 }
 
 // ShowCheck is one run of the project's checks, with the name of its log. It
@@ -2311,7 +2312,7 @@ func (d *Daemon) runShow(p RunAction) (ShowReply, error) {
 		return ShowReply{}, err
 	}
 	rec := run.Snapshot()
-	reply := ShowReply{ID: rec.ID, Item: rec.Item, State: rec.State, Reason: rec.Reason, Roles: []ShowRole{}, Checks: []ShowCheck{}, Findings: []ShowFinding{}}
+	reply := ShowReply{ID: rec.ID, Item: rec.Item, State: rec.State, Reason: rec.Reason, Landed: !rec.LandedAt.IsZero() && rec.State == runrec.StateCommitted, Roles: []ShowRole{}, Checks: []ShowCheck{}, Findings: []ShowFinding{}}
 	var pendingRole string
 	pendingRound := 0
 	if rec.State == runrec.StatePaused && rec.Pending != nil {
