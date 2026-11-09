@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/states.go:343-379` (`runChecks`: use the check directory)\n- `internal/engine/check.go` (new helper `CheckDir(ctx, projectPath, worktree) (string, error)`)\n- `internal/engine/engine.go:140-150` (beside `worktreePath`, if the helper lives there)\n- `internal/engine/land.go:190` (no code change expected; covered by `runChecks`)\n- `internal/engine/check_test.go`, `internal/engine/engine_test.go` (a monorepo harness test)\n- `docs/design.md` (the Checks paragraph), `docs/state.md` (the check log header, if it names the directory), `CHANGELOG.md`"
+      "body": "- `internal/engine/states.go:343-379` (`runChecks`: use the check directory)\n- `internal/engine/check.go` (new helper `(e *Engine) CheckDir(ctx, projectPath, worktree) (string, error)`; it needs `gitRead`)\n- `internal/engine/engine.go:227` (`worktreePath`; the helper does not live here)\n- `internal/engine/land.go:190` (no code change expected; covered by `runChecks`)\n- `internal/engine/check_test.go`, `internal/engine/harness_test.go` (a route for the project's prefix in the fake-git harness), `internal/engine/engine_test.go` (a monorepo harness test)\n- `docs/design.md` (the Checks paragraph), `docs/state.md` (the check log header, if it names the directory), `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",

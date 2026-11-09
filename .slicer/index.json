@@ -15740,7 +15740,7 @@
       "id": "S293",
       "title": "Check command: run it from the project's own folder when the project lives in a subfolder of its repo (monorepo)",
       "short_title": "Check command: run it from the project's own folder when the project lives in a subfolder of its repo (monorepo)",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -15771,6 +15771,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "b517a8cb-54f0-4082-9404-f999340068ff",
+          "kind": "",
+          "text": "**2026-11-09** — Human checks at approval (S293):\n- later: On a project inside a monorepo subfolder (prism-ui), start a small run: the person confirms the check log shows the command succeeding from the project folder.",
+          "created_at": "2026-11-09T17:48:13Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "e064b885-ce5d-4810-ad88-f15c6c260d9a",
+          "kind": "",
+          "text": "**2026-11-09** — The project check command now runs in the project's own folder of the worktree (CheckDir, git rev-parse --show-prefix) for the round check, the S239 rerun and the landing re-check; the check log names the folder with (in REL) off the repo root; a missing folder or git error pauses with 'check directory:'. Verified: go vet, gofmt and go test ./... green (5297 passed, 0 failed), slicer check and adj lint clean, 9 mutations each went red. The prism-ui human check is not run.",
+          "created_at": "2026-11-09T17:48:19Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -15790,7 +15818,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

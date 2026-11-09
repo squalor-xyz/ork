@@ -334,7 +334,10 @@ ended round plus the granted count (default 2). `roles[].tree_sha256` hashes
 the implementer's tracked diff against HEAD, including staged and binary
 changes, followed by untracked names. `checks[].log_sha256` hashes the bytes
 of the saved check log, which holds both runs of the project command when it
-was run again (S239). Both adjacent hashes must be present and equal for
+was run again (S239). *Proposed (S293):* for a project that lives in a
+subfolder of its repository, each `$ COMMAND` line of the check log is followed
+by a line `(in libraries/p)`, the folder of the worktree the command ran in; a
+project at the repository root has no such line. Both adjacent hashes must be present and equal for
 the immediate no-progress pause. Older records without hashes remain readable.
 *Proposed (S239):* `checks[].attempts` is 2 when the project command failed
 and ork ran it once more, and `checks[].flaky` is true when that second run

@@ -359,21 +359,32 @@ func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix
 	attempts, flaky := 0, false
 	var log strings.Builder
 	if cmd := e.proj.CheckCommand; cmd != "" {
-		res, err := check(ctx, rec.Worktree, cmd, timeout)
+		// S293: the command runs in the project's own folder of the worktree.
+		// A project at the repository root has the worktree root; a project in
+		// a subfolder (a monorepo) says so in the log, once per run.
+		dir, err := e.CheckDir(ctx, e.proj.Path, rec.Worktree)
+		if err != nil {
+			return pauseWith("check directory: " + err.Error())
+		}
+		where := ""
+		if rel, err := filepath.Rel(rec.Worktree, dir); err == nil && rel != "." {
+			where = "(in " + filepath.ToSlash(rel) + ")\n"
+		}
+		res, err := check(ctx, dir, cmd, timeout)
 		if err != nil {
 			return pauseWith("check command: " + err.Error())
 		}
-		fmt.Fprintf(&log, "$ %s\n%s\n", cmd, checkLogOutput(res.Output))
+		fmt.Fprintf(&log, "$ %s\n%s%s\n", cmd, where, checkLogOutput(res.Output))
 		// S239: an exit failure is run once more before a round is spent on
 		// it, because load or a flaky test can fail a run that is fine. A
 		// timeout is not run again, and `slicer check` never is.
 		if !res.OK && !res.TimedOut && ctx.Err() == nil {
-			again, err := check(ctx, rec.Worktree, cmd, timeout)
+			again, err := check(ctx, dir, cmd, timeout)
 			if err != nil {
 				return pauseWith("check command: " + err.Error())
 			}
 			attempts, flaky = 2, again.OK
-			fmt.Fprintf(&log, "\n$ %s%s\n%s\n", cmd, rerunMarker, checkLogOutput(again.Output))
+			fmt.Fprintf(&log, "\n$ %s%s\n%s%s\n", cmd, rerunMarker, where, checkLogOutput(again.Output))
 			res = again
 		}
 		ok = res.OK

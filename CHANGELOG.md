@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- S293 (*proposed*): the project check command runs in the project's own
+  folder of the worktree when the project lives in a subfolder of its repository
+  (a monorepo), not at the worktree root, where a build file such as
+  `PrismUi.slnx` was not found. ork reads the folder with `git rev-parse
+  --show-prefix`. The round check, its rerun and the landing re-check all use
+  it, and the check log gets a line `(in libraries/p)` after `$ COMMAND` for a
+  subfolder project. A folder missing in the worktree, or a git error, pauses
+  the slice with a reason that starts `check directory:`. No new setting.
+  Docs: `docs/design.md`, `docs/state.md`.
 - S263 (*proposed*): the daemon log prints a run's merge detection error once
   instead of on every HEAD change; it prints again when the text changes or
   after a pass for that run works. A committed run whose branch and worktree

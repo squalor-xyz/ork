@@ -273,6 +273,9 @@ func newHarness(t *testing.T, opts ...func(*harnessOpts)) *harness {
 		with(clitest.Route{Tool: "slicer", Args: []string{"note", item}, Prefix: true}, `{"id":"S04","added":true}`),
 		with(g("-C", P, "rev-parse", "--git-path", "info/exclude"), ".git/info/exclude\n"),
 		g("-C", P, "worktree", "add", W, "-b", branch),
+		// The project is the repository root (S293); a test that wants a
+		// subfolder routes its own prefix first.
+		g("-C", P, "rev-parse", "--show-prefix"),
 		g("-C", W, "status", "--porcelain"),
 		g("-C", W, "diff", "HEAD", "--binary", "--no-ext-diff"),
 		g("-C", W, "ls-files", "--others", "--exclude-standard", "-z"),
