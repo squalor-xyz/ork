@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./internal/slicercli ./internal/daemon`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`\n- In a scratch project under `.scratch/` of the main checkout (`slicer init`, `slicer relay-roles init`), run the argv of each verb as the tests build it, with `--root`, and confirm slicer accepts it, including a dash-leading attached value. Do not run them against this repository's matrix."
+      "body": "- `go test -race -count=1 ./internal/slicercli ./internal/daemon`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check`\n- `adj lint`\n- In a scratch project under `.scratch/` of the main checkout (`slicer init`, `slicer relay-roles init`), run the argv of each verb as the tests build it, with `--root`, and confirm slicer accepts it, including a dash-leading attached value. Do not run them against this repository's matrix."
     },
     {
       "heading": "Git",

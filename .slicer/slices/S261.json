@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./internal/slicercli ./internal/daemon ./internal/cli`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`\n- In two scratch projects under `.scratch/` of the main checkout (`slicer init --relay-roles`), registered with a test daemon (not the owner's): give the source a spec-check rule and a rule that names two rows, run `ork roles matrix copy SRC DST --dry-run`, then with `--yes`, and compare `slicer relay-roles show --json --root DST` with the source: same rows in the same order with DST's ids, DST's spec-check row and rule kept, rule text naming DST's ids. Run it again: `unchanged`. Do not run it against any real project."
+      "body": "- `go test -race -count=1 ./internal/slicercli ./internal/daemon ./internal/cli`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check`\n- `adj lint`\n- In two scratch projects under `.scratch/` of the main checkout (`slicer init --relay-roles`), registered with a test daemon (not the owner's): give the source a spec-check rule and a rule that names two rows, run `ork roles matrix copy SRC DST --dry-run`, then with `--yes`, and compare `slicer relay-roles show --json --root DST` with the source: same rows in the same order with DST's ids, DST's spec-check row and rule kept, rule text naming DST's ids. Run it again: `unchanged`. Do not run it against any real project."
     },
     {
       "heading": "Git",

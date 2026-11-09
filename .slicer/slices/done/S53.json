@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- assets/logo.svg: copy .scratch/candidates/6-tree-ring/lockup-b.svg unchanged (the word ork with the teal ring as the o and three lanes to three slices, viewBox 0 0 200 144). assets/logo-square.svg: copy .scratch/candidates/6-tree-ring/mark.svg unchanged (64 grid square mark for a favicon or social image). Read them from the main checkout by absolute path: /Users/jon/code/squalor-xyz/ork/.scratch/candidates/6-tree-ring/. Do not add the other drafts or any assets/candidates directory to the repo.\n- assets/logo_test.go: new test-only Go package (package assets, no non-test Go file, stdlib only, SPDX header). It reads the two SVGs and ../README.md.\n- README.md: the logo at the very top, above the '# ork' heading.\n- No change to docs unless one names the logo. No new dependency, no raster file, no font, no script, no generator."
+      "body": "- assets/logo.svg: copy .scratch/candidates/6-tree-ring/lockup-b.svg unchanged (the word ork with the teal ring as the o and three lanes to three slices, viewBox 0 0 200 144). assets/logo-square.svg: copy .scratch/candidates/6-tree-ring/mark.svg unchanged (64 grid square mark for a favicon or social image). Read them from the checkout at the repo-relative path: .scratch/candidates/6-tree-ring/. Do not add the other drafts or any assets/candidates directory to the repo.\n- assets/logo_test.go: new test-only Go package (package assets, no non-test Go file, stdlib only, SPDX header). It reads the two SVGs and ../README.md.\n- README.md: the logo at the very top, above the '# ork' heading.\n- No change to docs unless one names the logo. No new dependency, no raster file, no font, no script, no generator."
     },
     {
       "heading": "Failing tests",

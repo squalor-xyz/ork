@@ -8,6 +8,13 @@
   The notice and `behind_main` field keep their names. Docs:
   `docs/design.md`, `docs/state.md`, `docs/dashboard.md`.
 
+- S310: normalized stale macOS paths in 46 tracking items, including
+  completed slices. Commands use the current checkout and scratch paths are
+  repo-relative. Historical paths outside the old ork checkout use `~` for
+  the home directory. The tracking search uses `slicer find`.
+  S73 keeps its `--root`-first allowlist probe with `.` as the root.
+  Its old probe note is retracted and replaced with the corrected path;
+  slicer retains the original as audit history.
 - S103 (*proposed*): `ork --version` prints the mark only on a terminal;
   on a pipe or file it prints plain `ork VERSION`. The TUI refreshes the
   daemon build from snapshots so the stale-build marker clears after a

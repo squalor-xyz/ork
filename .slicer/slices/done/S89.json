@@ -24,11 +24,11 @@
     },
     {
       "heading": "Implement",
-      "body": "1. Spend no more than 3 paid codex calls (probes 08, 09, 10), the owner-approved budget; none may be retried. Make the probe repo under /Users/jon/code/squalor-xyz/ork/.scratch/ and run S01_DRY_RUN=1 first.\n2. Append the probes to spike/codex.sh with the S48 helpers (snap, in_wt). Each prompt asks for the exact shell commands and their exit codes, so a command event exists.\n3. Check each JSONL for a command_execution item (fields command, aggregated_output, exit_code, status) before recording a result.\n4. Update the docs/design.md capability cells.\n5. Anything still open: `adj check KEY`, then `adj ask`; never `adj decide`.\nThe implementer is a Claude role (the spike drives the codex CLI, so a Codex implementer would nest codex)."
+      "body": "1. Spend no more than 3 paid codex calls (probes 08, 09, 10), the owner-approved budget; none may be retried. Make the probe repo under .scratch/ and run S01_DRY_RUN=1 first.\n2. Append the probes to spike/codex.sh with the S48 helpers (snap, in_wt). Each prompt asks for the exact shell commands and their exit codes, so a command event exists.\n3. Check each JSONL for a command_execution item (fields command, aggregated_output, exit_code, status) before recording a result.\n4. Update the docs/design.md capability cells.\n5. Anything still open: `adj check KEY`, then `adj ask`; never `adj decide`.\nThe implementer is a Claude role (the spike drives the codex CLI, so a Codex implementer would nest codex)."
     },
     {
       "heading": "Check",
-      "body": "- zsh -n spike/codex.sh spike/common.zsh\n- S01_DRY_RUN=1 zsh spike/codex.sh PROBE_REPO RAW_DIR FIX_DIR: only .cmd files change, no vendor call.\n- rg -n \"REDACTED|sk-|Bearer|/Users/jon|/private/tmp\" testdata/vendors/codex (placeholders only)\n- rg -n command_execution on probes 08 to 10 stdout: each probe shows one.\n- slicer check\n- adj lint"
+      "body": "- zsh -n spike/codex.sh spike/common.zsh\n- S01_DRY_RUN=1 zsh spike/codex.sh PROBE_REPO RAW_DIR FIX_DIR: only .cmd files change, no vendor call.\n- rg -n \"REDACTED|sk-|Bearer|/Users[/]jon|/private/tmp\" testdata/vendors/codex (placeholders only)\n- rg -n command_execution on probes 08 to 10 stdout: each probe shows one.\n- slicer check\n- adj lint"
     },
     {
       "heading": "Git",

@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `jq . .claude/settings.json` exits 0.\n- Probe 1: add only `Bash(slicer --root * show *)`, then run `slicer --root /Users/jon/code/squalor-xyz/ork show S51`; it must run without a prompt.\n- Probe 2: a mutating call with the same prefix (`slicer --root ... note ...` against a scratch copy, or a dry reading of the rule list) must still prompt. Do not run a real write to test this.\n- `rg -n -- '--root' internal/roles/prompts` shows no `--root` before a subcommand.\n- `slicer check` and `adj lint` pass."
+      "body": "- `jq . .claude/settings.json` exits 0.\n- Probe 1: add only `Bash(slicer --root * show *)`, then run `slicer --root . show S51`; it must run without a prompt.\n- Probe 2: a mutating call with the same prefix (`slicer --root ... note ...` against a scratch copy, or a dry reading of the rule list) must still prompt. Do not run a real write to test this.\n- `rg -n -- '--root' internal/roles/prompts` shows no `--root` before a subcommand.\n- `slicer check` and `adj lint` pass."
     },
     {
       "heading": "Git",

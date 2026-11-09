@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./internal/daemon ./internal/cli`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`"
+      "body": "- `go test -race -count=1 ./internal/daemon ./internal/cli`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check`\n- `adj lint`"
     },
     {
       "heading": "Git",

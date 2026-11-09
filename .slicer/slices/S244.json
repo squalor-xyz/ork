@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./internal/models ./internal/daemon ./internal/runrec`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`\n- [HUMAN CHECK] [AFTER LAND] After the owner rebuilds and restarts the daemon and sets one scratch project's Codex row to `gpt-*-sol@latest`, `ork run ITEM --json` shows the resolved model and `requested`."
+      "body": "- `go test -race -count=1 ./internal/models ./internal/daemon ./internal/runrec`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check`\n- `adj lint`\n- [HUMAN CHECK] [AFTER LAND] After the owner rebuilds and restarts the daemon and sets one scratch project's Codex row to `gpt-*-sol@latest`, `ork run ITEM --json` shows the resolved model and `requested`."
     },
     {
       "heading": "Git",
