@@ -657,6 +657,20 @@ func TestSpecFingerprintFollowsTheSpecOnly(t *testing.T) {
 	}
 }
 
+func TestSpecFingerprintNoSpecIsASentinel(t *testing.T) {
+	for _, raw := range []string{`{"id":"S10","slice":null}`, `{"id":"S10"}`} {
+		if _, err := SpecFingerprint([]byte(raw)); !errors.Is(err, ErrNoSpec) {
+			t.Errorf("%s: error %v, want ErrNoSpec", raw, err)
+		}
+	}
+	for _, raw := range []string{`nope`, `{"slice":`} {
+		_, err := SpecFingerprint([]byte(raw))
+		if err == nil || errors.Is(err, ErrNoSpec) {
+			t.Errorf("%s: error %v, want a malformed JSON error that is not ErrNoSpec", raw, err)
+		}
+	}
+}
+
 func TestSpecCheckIsAReadOnlyRole(t *testing.T) {
 	p, err := ResolvePermission(registry.Project{}, RoleSpecCheck)
 	if err != nil || !p.ReadOnly || len(p.Allow) != 0 {

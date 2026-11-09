@@ -1635,6 +1635,19 @@ left out of the wave and named as `held`; a wave with no item left does not star
 `--json` the questions and the shared `Owner needed` text go to stderr.
 The JSON result always includes a `held` array of excluded item IDs, including
 when the wave starts or the owner cancels; it is `[]` when nothing is held.
+*Proposed (S283, adj 245, `wave.plan-failure-missing-spec`):* a missing spec is
+the one plan failure that does not abort the wave. `spec.check` answers an
+item whose `slicer show` has no slice with a row `{"item","ready":false,
+"no_spec":true}` instead of an error (`engine.ErrNoSpec`); no role runs for it
+and the daemon remembers nothing. `wave start` leaves such an item out before
+the sitting and the confirmation, prints `ID: no slice spec; run slicer
+promote ID` on the prompts stream (stderr with `--json`) and starts the rest.
+Exit is 0 when a wave starts; with no item left it does not start and exits 1.
+The JSON result always has a `no_spec` array of skipped IDs beside `held`,
+`[]` when none. Every other failure, including a `run.plan` error, still
+aborts before anything starts. `ork run` leaves the same item out, prints the
+same line and exits 1; its `--json` result has no `no_spec` array. The TUI is
+unchanged (adj 218).
 S167 gives `ork run` the same sitting after the plan and before
 `Start this slice? [y/N]`. A number picks an option; text answers directly.
 An empty line or end of input holds the slice and exits 1, without starting.

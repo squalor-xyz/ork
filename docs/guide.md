@@ -387,6 +387,15 @@ and prints each plan before it asks to start (`docs/design.md:1034-1056`,
 stops every unfinished run in that wave, queued ones included
 (`docs/design.md:1064-1068`).
 
+An item that has no slice spec does not fail the wave (S283, *proposed*, adj
+245). `wave start` leaves it out, prints `ID: no slice spec; run slicer
+promote ID`, and starts the others; the exit code is 0 when a wave starts. If
+no item is left, nothing starts, it prints `no item is ready to start` and
+exits 1. With `--json`, the line goes to stderr and the result has a
+`no_spec` array of the skipped IDs beside `held` (`[]` when none). Any other
+failure while planning an item still stops the whole command before anything
+starts.
+
 Runs start as slots free. The global cap is 2 and a project's cap is its
 `cap` setting. A run over a cap waits as `queued`
 (`docs/design.md:212-214`). One failed run does not stop the others.

@@ -159,16 +159,19 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 		p.Expected = &plan
 		params.Items = append(params.Items, p)
 	}
-	held, code := a.specCheck(ctx, o, reader, prompts, &params)
+	held, noSpec, code := a.specCheck(ctx, o, reader, prompts, &params)
 	if held == nil {
 		held = []string{}
+	}
+	if noSpec == nil {
+		noSpec = []string{}
 	}
 	if code != ExitOK {
 		return code
 	}
 	if len(params.Items) == 0 {
 		if o.json {
-			o.printJSON(map[string]any{"started": false, "held": held})
+			o.printJSON(map[string]any{"started": false, "held": held, "no_spec": noSpec})
 		}
 		fmt.Fprintln(prompts, "no item is ready to start")
 		return ExitFailure
@@ -180,7 +183,7 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 		}
 		if confirm != "yes" {
 			if o.json {
-				return o.printJSON(map[string]any{"started": false, "held": held})
+				return o.printJSON(map[string]any{"started": false, "held": held, "no_spec": noSpec})
 			}
 			fmt.Fprintln(o.stdout, "cancelled")
 			return ExitOK
@@ -199,8 +202,9 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 		}
 		if printed := o.printJSON(struct {
 			daemon.WaveResult
-			Held []string `json:"held"`
-		}{result, held}); printed != ExitOK {
+			Held   []string `json:"held"`
+			NoSpec []string `json:"no_spec"`
+		}{result, held, noSpec}); printed != ExitOK {
 			return printed
 		}
 		return code
@@ -239,29 +243,45 @@ func printWave(o *output, result daemon.WaveResult) int {
 // stays in the wave. For an item with open questions it asks them all in one
 // sitting, records the answers, and keeps the item once they are in. An item
 // whose questions stay open (an empty answer, or no more input) is dropped
-// from the wave and named in held. The sitting goes to the prompts writer.
-func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.Writer, params *daemon.WaveStartParams) (held []string, code int) {
+// from the wave and named in held. An item with no slice spec is dropped too
+// (adj 245, S283 *proposed*): it gets one line with the fix, `slicer promote`,
+// is named in noSpec and is never asked about. The sitting and the lines go to
+// the prompts writer.
+func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.Writer, params *daemon.WaveStartParams) (held, noSpec []string, code int) {
 	var ids []string
 	for _, item := range params.Items {
 		ids = append(ids, item.Item)
 	}
 	var check daemon.SpecCheckResult
 	if code := a.callWith(ctx, o, "spec check failed: ", daemon.MethodSpecCheck, daemon.SpecCheckParams{Project: params.Items[0].Project, Items: ids}, &check); code != ExitOK {
-		return nil, code
+		return nil, nil, code
 	}
 	if check.OwnerNeeded != "" {
 		fmt.Fprintln(w, "Owner needed: "+check.OwnerNeeded)
 	}
 	open := map[string]daemon.SpecItemResult{}
+	missing := map[string]bool{}
 	for _, r := range check.Items {
-		if !r.Ready {
+		switch {
+		case r.NoSpec:
+			missing[r.Item] = true
+		case !r.Ready:
 			open[r.Item] = r
+		}
+	}
+	for _, item := range params.Items {
+		if missing[item.Item] {
+			fmt.Fprintf(w, "%s: no slice spec; run slicer promote %s\n", item.Item, item.Item)
+			noSpec = append(noSpec, item.Item)
 		}
 	}
 	by := os.Getenv("ADJ_DECIDED_BY")
 	var projects *daemon.ProjectsResult
 	var kept []daemon.RunParams
 	for _, item := range params.Items {
+		if missing[item.Item] {
+			continue
+		}
 		r, ok := open[item.Item]
 		if !ok {
 			kept = append(kept, item)
@@ -276,7 +296,7 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 		if projects == nil {
 			projects = &daemon.ProjectsResult{}
 			if code := a.call(ctx, o, daemon.MethodProjectsList, nil, projects); code != ExitOK {
-				return held, code
+				return held, noSpec, code
 			}
 		}
 		adj := false
@@ -289,7 +309,7 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 		var out daemon.SpecAnswerResult
 		p := daemon.SpecAnswerParams{Project: item.Project, Item: r.Item, Answers: answers, Adj: adj, By: by}
 		if code := a.call(ctx, o, daemon.MethodSpecAnswer, p, &out); code != ExitOK {
-			return held, code
+			return held, noSpec, code
 		}
 		for _, n := range out.Notices {
 			fmt.Fprintln(w, n)
@@ -297,7 +317,7 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 		kept = append(kept, item)
 	}
 	params.Items = kept
-	return held, ExitOK
+	return held, noSpec, ExitOK
 }
 
 func plural(n int, noun string) string {

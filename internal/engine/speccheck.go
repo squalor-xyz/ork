@@ -58,6 +58,10 @@ type SpecCheckResult struct {
 	OwnerNeeded string
 }
 
+// ErrNoSpec is the error of SpecFingerprint for an item that has no slice
+// spec, so a caller can tell it from a read failure (S283, *proposed*).
+var ErrNoSpec = errors.New("the item has no slice spec")
+
 // SpecFingerprint identifies the spec in the output of `slicer show ID --json
 // --lean`: its slice object alone, so a change of status or claim does not
 // make a checked spec look new.
@@ -69,7 +73,7 @@ func SpecFingerprint(raw []byte) (string, error) {
 		return "", fmt.Errorf("slicer show: %w", err)
 	}
 	if len(bytes.TrimSpace(out.Slice)) == 0 || string(bytes.TrimSpace(out.Slice)) == "null" {
-		return "", errors.New("the item has no slice spec")
+		return "", ErrNoSpec
 	}
 	var compact bytes.Buffer
 	if err := json.Compact(&compact, out.Slice); err != nil {
