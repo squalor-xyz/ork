@@ -13210,7 +13210,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "928eb5fa-0b6a-441c-949d-786de083ad4d",
+          "kind": "",
+          "text": "**2026-11-09** — Owner answers 2026-11-09 (interactive, relay session): (1) local rows: S244 waits for S301 (depend on S301), then the local-row tests run as written. (2) Grok rows at bare latest (r21-r24, r31): the owner edits the matrix to grok-*@latest before the daemon is rebuilt; until then plans with a Grok row are refused. (3) Check lines: use plain 'slicer check' and 'adj lint' (runnable form). Blocked on S301 and the owner's matrix edit, so skipped in the relay.",
+          "created_at": "2026-11-09T06:20:35Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
