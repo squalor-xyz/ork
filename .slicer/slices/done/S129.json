@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./...`\n- `go test ./internal/tui -update`, then review the diff in `testdata/golden/` (only usage suffixes of finished roles may change; the 16 files above are the ones that hold `tokens 0` today).\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`\n- [HUMAN CHECK] Open a project that holds a run recorded by an older build (no `tokens` on its roles) at 100x30 and 80x24 and confirm the run pane shows `tokens -  $-` on finished roles and the Overview row shows no `tokens` cell."
+      "body": "- `go test -race -count=1 ./...`\n- `go test ./internal/tui -update`, then review the diff in `testdata/golden/` (only usage suffixes of finished roles may change; the 16 files above are the ones that hold `tokens 0` today).\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check`\n- `adj lint`\n- [HUMAN CHECK] Open a project that holds a run recorded by an older build (no `tokens` on its roles) at 100x30 and 80x24 and confirm the run pane shows `tokens -  $-` on finished roles and the Overview row shows no `tokens` cell."
     },
     {
       "heading": "Git",

@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./internal/runrec ./internal/cli ./internal/tui`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`\n- [HUMAN CHECK] At 100x30 and 80x24, the launch lineup of a scratch project's slice whose implementer row is `gpt-*-sol@latest` reads `latest (resolves to ...)` and fits."
+      "body": "- `go test -race -count=1 ./internal/runrec ./internal/cli ./internal/tui`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check`\n- `adj lint`\n- [HUMAN CHECK] At 100x30 and 80x24, the launch lineup of a scratch project's slice whose implementer row is `gpt-*-sol@latest` reads `latest (resolves to ...)` and fits."
     },
     {
       "heading": "Git",

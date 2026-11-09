@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./internal/slicercli ./internal/daemon ./internal/cli`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`\n- In a scratch project under `.scratch/` of the main checkout (`slicer init --relay-roles`), apply an add-then-move `ops` set with `--dry-run`, then for real, then a `replace` built from `slicer relay-roles show --json` with one model changed, and compare with `slicer relay-roles show --root`."
+      "body": "- `go test -race -count=1 ./internal/slicercli ./internal/daemon ./internal/cli`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check`\n- `adj lint`\n- In a scratch project under `.scratch/` of the main checkout (`slicer init --relay-roles`), apply an add-then-move `ops` set with `--dry-run`, then for real, then a `replace` built from `slicer relay-roles show --json` with one model changed, and compare with `slicer relay-roles show --root`."
     },
     {
       "heading": "Git",

@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`\n- A probe re-run log in the report (or the stop report with the 403).\n- `rg -n \"grok\" docs/design.md docs/guide.md` shows no remaining \"no adapter\" statement.\n- [HUMAN CHECK] [AFTER LAND] The owner adds the Grok matrix rows with the reported commands, runs `ork vendor out grok` and `ork vendor back grok`, and runs one low-risk role on a Grok row (for example a reviewer on a small slice, chosen by the owner) to see a live tail, tokens and a clean exit. Not before the daemon is rebuilt and restarted."
+      "body": "- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check`\n- `adj lint`\n- A probe re-run log in the report (or the stop report with the 403).\n- `rg -n \"grok\" docs/design.md docs/guide.md` shows no remaining \"no adapter\" statement.\n- [HUMAN CHECK] [AFTER LAND] The owner adds the Grok matrix rows with the reported commands, runs `ork vendor out grok` and `ork vendor back grok`, and runs one low-risk role on a Grok row (for example a reviewer on a small slice, chosen by the owner) to see a live tail, tokens and a clean exit. Not before the daemon is rebuilt and restarted."
     },
     {
       "heading": "Git",

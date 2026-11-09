@@ -1084,9 +1084,9 @@
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
-          "retracted_by": "",
-          "retracted_at": "",
-          "retracted_reason": ""
+          "retracted_by": "Jon Robbins",
+          "retracted_at": "2026-11-09T12:33:56Z",
+          "retracted_reason": "Owner directed retract and re-add with the historical probe root changed to a relative dot (interactive answer, 2026-11-09)."
         },
         {
           "id": "adc9f8fa-7a55-406a-b1f3-52a42064874d",
@@ -1107,6 +1107,20 @@
           "kind": "",
           "text": "**2026-10-26** — Orchestration trial (run 8): owner questions 3 (1 before start: convention + probe; 2 during: probe result, and the rule choice after the review FAIL); stalls 0; fix rounds 1; merge conflicts 0; context compactions 0; Codex gpt-6.1-sol medium, not blocked.",
           "created_at": "2026-10-26T21:47:39Z",
+          "attempt": 1,
+          "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "f6ef6602-4c7c-4fd5-bccb-b956c562e082",
+          "kind": "",
+          "text": "**2026-11-09** — **2026-10-26** — Probe 2026-10-26: with Bash(slicer --root * show *) added to .claude/settings.json, slicer --root . show S51 ran without a prompt (owner confirmed). The * between tool name and subcommand matches; keep step 2. The probe rule is committed on main.",
+          "created_at": "2026-11-09T12:33:57Z",
           "attempt": 1,
           "by": "Jon R",
           "verified_by": "",
@@ -14001,7 +14015,7 @@
         "flags": [],
         "trees": [],
         "trees_literal": false,
-        "findings": "2026-11-03: /Users/jon/.local/state/ork/daemon.log holds 50 lines, all the same: 'merge detection ork-20261025-175709-e8c9: git -C .../ork merge-base --is-ancestor S78 HEAD: exit 128: fatal: Not a valid object name S78'. The run's branch S78 no longer exists, so merge detection fails and logs on every pass, and real daemon messages are buried. Fix: log a given run and error once (or on change), and treat a branch that no longer exists as merged-or-gone for that run, with a one-line reason in the record. Owner decision needed on which state the run takes.",
+        "findings": "2026-11-03: ~/.local/state/ork/daemon.log holds 50 lines, all the same: 'merge detection ork-20261025-175709-e8c9: git -C .../ork merge-base --is-ancestor S78 HEAD: exit 128: fatal: Not a valid object name S78'. The run's branch S78 no longer exists, so merge detection fails and logs on every pass, and real daemon messages are buried. Fix: log a given run and error once (or on change), and treat a branch that no longer exists as merged-or-gone for that run, with a one-line reason in the record. Owner decision needed on which state the run takes.",
         "discovered_from": "S114",
         "parent": "",
         "cites": [],
@@ -16184,12 +16198,27 @@
     },
     {
       "id": "S310",
-      "title": "Rewrite stale /Users/jon paths in slice Check lines",
-      "short_title": "Rewrite stale /Users/jon paths in slice Check lines",
-      "status": "open",
+      "title": "Rewrite stale macOS paths throughout slice specs",
+      "short_title": "Rewrite stale macOS paths throughout slice specs",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d3028860-747f-4c42-a3e7-ae1609781b7c",
+          "kind": "",
+          "text": "**2026-11-09** — Normalized stale macOS paths across 46 tracking items. Preserved S73 root-first probe with a relative root; retracted and replaced its stale probe note as the owner directed, retaining audit history. Gate returned VERDICT: PASS and owner approved.",
+          "created_at": "2026-11-09T12:37:38Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -16207,7 +16236,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],

@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` prints nothing.\n- `go test ./internal/tui -update`, then review the diff of `testdata/golden/`.\n- `slicer render --root /Users/jon/code/squalor-xyz/ork`, then `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`\n- Not runnable here: a real Codex limit. The engine tests use a fake runner that returns `ExitRateLimited`."
+      "body": "- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` prints nothing.\n- `go test ./internal/tui -update`, then review the diff of `testdata/golden/`.\n- `slicer render`, then `slicer check`\n- `adj lint`\n- Not runnable here: a real Codex limit. The engine tests use a fake runner that returns `ExitRateLimited`."
     },
     {
       "heading": "Git",

@@ -3701,3 +3701,85 @@
 {"when": "2026-11-09T06:21:22Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-09T06:21:22Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-09T06:21:22Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:30:43Z", "item": "S310", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-09T06:31:30Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T06:31:30Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T06:31:30Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:31:30Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:30Z", "item": "S73", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:30Z", "item": "S69", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:31:31Z", "item": "S72", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:31Z", "item": "S103", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:31Z", "item": "S50", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:31:31Z", "item": "S48", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:31:31Z", "item": "S53", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T06:31:31Z", "item": "S89", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:31:32Z", "item": "S123", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:31:32Z", "item": "S129", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:32Z", "item": "S131", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:32Z", "item": "S166", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:32Z", "item": "S167", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:32Z", "item": "S168", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:33Z", "item": "S169", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:33Z", "item": "S170", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:33Z", "item": "S171", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:33Z", "item": "S172", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:33Z", "item": "S173", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:33Z", "item": "S174", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:34Z", "item": "S175", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:34Z", "item": "S176", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:34Z", "item": "S177", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:34Z", "item": "S178", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:34Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:34Z", "item": "S181", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:35Z", "item": "S182", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:35Z", "item": "S184", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:35Z", "item": "S185", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:35Z", "item": "S213", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:35Z", "item": "S220", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:35Z", "item": "S226", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:36Z", "item": "S244", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:36Z", "item": "S245", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:36Z", "item": "S246", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:36Z", "item": "S247", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:36Z", "item": "S248", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:36Z", "item": "S249", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:37Z", "item": "S250", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:37Z", "item": "S251", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:37Z", "item": "S261", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:31:37Z", "item": "S309", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:32:58Z", "item": "S72", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:32:58Z", "item": "S72", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:33:30Z", "item": "S103", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:33:30Z", "item": "S48", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:33:31Z", "item": "S89", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:33:31Z", "item": "S310", "action": "set", "from": "", "to": "", "note": "title Rewrite stale /Users/jon paths in slice Check lines→Rewrite stale macOS paths throughout slice specs; short_title Rewrite stale /Users/jon paths in slice Check lines→Rewrite stale macOS paths throughout slice specs"}
+{"when": "2026-11-09T06:33:31Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:33:31Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T06:33:31Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:33:31Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:34:01Z", "item": "S73", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:34:01Z", "item": "S53", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T06:34:01Z", "item": "S309", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:40:50Z", "item": "S263", "action": "set", "from": "", "to": "", "note": "findings 2026-11-03: /Users/jon/.local/state/ork/daemon.log holds 50 lines, all the same: 'merge detection ork-20261025-175709-e8c9: git -C .../ork merge-base --is-ancestor S78 HEAD: exit 128: fatal: Not a valid object name S78'. The run's branch S78 no longer exists, so merge detection fails and logs on every pass, and real daemon messages are buried. Fix: log a given run and error once (or on change), and treat a branch that no longer exists as merged-or-gone for that run, with a one-line reason in the record. Owner decision needed on which state the run takes.→2026-11-03: ~/.local/state/ork/daemon.log holds 50 lines, all the same: 'merge detection ork-20261025-175709-e8c9: git -C .../ork merge-base --is-ancestor S78 HEAD: exit 128: fatal: Not a valid object name S78'. The run's branch S78 no longer exists, so merge detection fails and logs on every pass, and real daemon messages are buried. Fix: log a given run and error once (or on change), and treat a branch that no longer exists as merged-or-gone for that run, with a one-line reason in the record. Owner decision needed on which state the run takes."}
+{"when": "2026-11-09T06:40:50Z", "item": "S289", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:40:50Z", "item": "S292", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:41:10Z", "item": "S263", "action": "set", "from": "", "to": "", "note": "findings 2026-11-03: ~/.local/state/ork/daemon.log holds 50 lines, all the same: 'merge detection ork-20261025-175709-e8c9: git -C .../ork merge-base --is-ancestor S78 HEAD: exit 128: fatal: Not a valid object name S78'. The run's branch S78 no longer exists, so merge detection fails and logs on every pass, and real daemon messages are buried. Fix: log a given run and error once (or on change), and treat a branch that no longer exists as merged-or-gone for that run, with a one-line reason in the record. Owner decision needed on which state the run takes.→2026-11-03: /Users/jon/.local/state/ork/daemon.log holds 50 lines, all the same: 'merge detection ork-20261025-175709-e8c9: git -C .../ork merge-base --is-ancestor S78 HEAD: exit 128: fatal: Not a valid object name S78'. The run's branch S78 no longer exists, so merge detection fails and logs on every pass, and real daemon messages are buried. Fix: log a given run and error once (or on change), and treat a branch that no longer exists as merged-or-gone for that run, with a one-line reason in the record. Owner decision needed on which state the run takes."}
+{"when": "2026-11-09T06:41:10Z", "item": "S263", "action": "set", "from": "", "to": "", "note": "findings 2026-11-03: /Users/jon/.local/state/ork/daemon.log holds 50 lines, all the same: 'merge detection ork-20261025-175709-e8c9: git -C .../ork merge-base --is-ancestor S78 HEAD: exit 128: fatal: Not a valid object name S78'. The run's branch S78 no longer exists, so merge detection fails and logs on every pass, and real daemon messages are buried. Fix: log a given run and error once (or on change), and treat a branch that no longer exists as merged-or-gone for that run, with a one-line reason in the record. Owner decision needed on which state the run takes.→2026-11-03: ~/.local/state/ork/daemon.log holds 50 lines, all the same: 'merge detection ork-20261025-175709-e8c9: git -C .../ork merge-base --is-ancestor S78 HEAD: exit 128: fatal: Not a valid object name S78'. The run's branch S78 no longer exists, so merge detection fails and logs on every pass, and real daemon messages are buried. Fix: log a given run and error once (or on change), and treat a branch that no longer exists as merged-or-gone for that run, with a one-line reason in the record. Owner decision needed on which state the run takes."}
+{"when": "2026-11-09T06:41:11Z", "item": "S289", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:41:11Z", "item": "S289", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:41:12Z", "item": "S289", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:41:12Z", "item": "S289", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:41:13Z", "item": "S292", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:41:13Z", "item": "S292", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:41:23Z", "item": "S292", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:41:23Z", "item": "S292", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-09T06:51:55Z", "item": "S73", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:52:15Z", "item": "S73", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:52:15Z", "item": "S73", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:52:15Z", "item": "S73", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:52:16Z", "item": "S73", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T12:33:56Z", "item": "S73", "action": "note-retract", "from": "", "to": "", "note": "1f2baa2d-9600-4ca3-a0fc-6a3513b7f9ba", "by": "Jon Robbins"}
+{"when": "2026-11-09T12:33:57Z", "item": "S73", "action": "note", "from": "", "to": "", "note": "**2026-10-26** — Probe 2026-10-26: with Bash(slicer --root *", "by": "Jon R"}
+{"when": "2026-11-09T12:37:38Z", "item": "S310", "action": "note", "from": "", "to": "", "note": "Normalized stale macOS paths across 46 tracking items. Prese", "by": "Jon Robbins"}
+{"when": "2026-11-09T12:37:38Z", "item": "S310", "action": "status", "from": "started", "to": "done", "note": "Normalized stale macOS paths across 46 tracking items; preserved S73 root-first probe and corrected its active note through owner-approved retraction and replacement. Gate PASS and owner approval received.", "by": "Jon Robbins"}

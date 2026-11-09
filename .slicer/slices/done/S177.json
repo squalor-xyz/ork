@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `go test ./internal/tui -update`, then review the diff in `testdata/golden/`\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`"
+      "body": "- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `go test ./internal/tui -update`, then review the diff in `testdata/golden/`\n- `slicer check`\n- `adj lint`"
     },
     {
       "heading": "Git",

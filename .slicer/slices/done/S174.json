@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (prints nothing)\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`\n- No TUI goldens change. If `go test ./internal/tui -update` changes any file in `testdata/golden/`, that is a defect.\n- Manual, on a copy of the registry only (`XDG_CONFIG_HOME` pointing at a scratch directory in `.scratch/`): `ork settings set --global-cap 2`, `ork settings show`, `ork projects set NAME --env-line \"x\" --allow implementer=Read`, then read `projects.json`. Never against the owner's live registry."
+      "body": "- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (prints nothing)\n- `slicer check`\n- `adj lint`\n- No TUI goldens change. If `go test ./internal/tui -update` changes any file in `testdata/golden/`, that is a defect.\n- Manual, on a copy of the registry only (`XDG_CONFIG_HOME` pointing at a scratch directory in `.scratch/`): `ork settings set --global-cap 2`, `ork settings show`, `ork projects set NAME --env-line \"x\" --allow implementer=Read`, then read `projects.json`. Never against the owner's live registry."
     },
     {
       "heading": "Git",

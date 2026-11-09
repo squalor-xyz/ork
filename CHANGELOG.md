@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- S310: normalized stale macOS paths in 46 tracking items, including
+  completed slices. Commands use the current checkout and scratch paths are
+  repo-relative. Historical paths outside the old ork checkout use `~` for
+  the home directory. The tracking search uses `slicer find`.
+  S73 keeps its `--root`-first allowlist probe with `.` as the root.
+  Its old probe note is retracted and replaced with the corrected path;
+  slicer retains the original as audit history.
+
 - S309 (*proposed*): spec-check flags slice Check commands outside the
   implementer's resolved allowlist, with environment prefixes or with paths
   outside the worktree. Gate briefs separate runnable and orchestrator-only

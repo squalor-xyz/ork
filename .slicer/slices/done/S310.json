@@ -1,0 +1,39 @@
+{
+  "id": "S310",
+  "title": "Rewrite stale macOS paths throughout slice specs",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Slice specs contain stale macOS checkout paths that stop checks running in the current worktree. Normalize commands and repo paths through slicer commands, including done items, findings, titles and every section. The owner approved this scope on 2026-11-09. Drop stale root arguments and strip the old ork checkout prefix. List other absolute paths for the owner. The sanctioned search in Check must return an empty array; split its quoted search argument to avoid matching the check's own text."
+    },
+    {
+      "heading": "Files",
+      "body": "- `.slicer/slices/` (through `slicer edit` only; no direct edits)\n- `CHANGELOG.md`\n- `.slicer/index.json`, `.slicer/log.jsonl` and `.slicer/render/` (slicer-managed metadata and render output only)"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- After the pass, `slicer find \"/Users\"\"/jon\" --root DIR --json --lean` prints `[]`; DIR is the worktree.\n- `slicer check` passes.\n- Every rewritten command keeps its meaning: drop stale `--root` arguments and strip the old ork checkout prefix from paths. List other absolute paths for the owner rather than guessing."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. List matching items with `slicer find \"/Users\"\"/jon\" --root DIR --json --lean`; DIR is the worktree.\n2. Read each item with `slicer show ID`. Rewrite every stale occurrence, including done items, titles, findings and all sections, through slicer commands. Drop stale `--root` arguments and strip the old ork checkout prefix from paths.\n3. Report the items changed and any other absolute paths needing the owner."
+    },
+    {
+      "heading": "Check",
+      "body": "- `slicer find \"/Users\"\"/jon\" --root DIR --json --lean` prints `[]`; DIR is the worktree. Run `slicer check` and `adj lint`.\n- No Go change; no UI pass."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

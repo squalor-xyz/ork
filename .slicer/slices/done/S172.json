@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (prints nothing)\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`\n- No live check against the ork project's adj store: a decide is permanent. Daemon and CLI tests use the fake adj; a manual try uses a throwaway project with its own `.adjudicate.json`."
+      "body": "- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (prints nothing)\n- `slicer check`\n- `adj lint`\n- No live check against the ork project's adj store: a decide is permanent. Daemon and CLI tests use the fake adj; a manual try uses a throwaway project with its own `.adjudicate.json`."
     },
     {
       "heading": "Git",

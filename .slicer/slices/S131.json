@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./internal/daemon`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`\n- The handoff reports the measurement from Implement step 1 (processes and time per snapshot and per status call before and after, and the `BoardRuns` rate), or says why it could not."
+      "body": "- `go test -race -count=1 ./internal/daemon`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check`\n- `adj lint`\n- The handoff reports the measurement from Implement step 1 (processes and time per snapshot and per status call before and after, and the `BoardRuns` rate), or says why it could not."
     },
     {
       "heading": "Git",

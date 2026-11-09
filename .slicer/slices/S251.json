@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./internal/tui`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`\n- [HUMAN CHECK] At 100x30 and 80x24, with a scratch project registered (no `.slicer/`, no `.adjudicate.json`), open the pane, run `slicer-init`, `relay-roles-init` and `adj-init` from it, and see each block fill in. Not against this repository."
+      "body": "- `go test -race -count=1 ./internal/tui`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check`\n- `adj lint`\n- [HUMAN CHECK] At 100x30 and 80x24, with a scratch project registered (no `.slicer/`, no `.adjudicate.json`), open the pane, run `slicer-init`, `relay-roles-init` and `adj-init` from it, and see each block fill in. Not against this repository."
     },
     {
       "heading": "Git",

@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./internal/tui`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`\n- [HUMAN CHECK] At 100x30 and 80x24, in a scratch project (`slicer init`, `slicer relay-roles init`, registered with `ork projects add`), open the matrix with `m`, change a model with `e`, confirm that the command shown is the one that ran (`slicer relay-roles show`), that `n` and Enter cancel, and that an unknown agent shows the warning. Do not edit the real project's matrix for this check."
+      "body": "- `go test -race -count=1 ./internal/tui`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check`\n- `adj lint`\n- [HUMAN CHECK] At 100x30 and 80x24, in a scratch project (`slicer init`, `slicer relay-roles init`, registered with `ork projects add`), open the matrix with `m`, change a model with `e`, confirm that the command shown is the one that ran (`slicer relay-roles show`), that `n` and Enter cancel, and that an unknown agent shows the warning. Do not edit the real project's matrix for this check."
     },
     {
       "heading": "Git",

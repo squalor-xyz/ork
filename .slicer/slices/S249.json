@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./internal/slicercli ./internal/adjcli ./internal/daemon ./internal/cli`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check --root /Users/jon/code/squalor-xyz/ork`\n- `adj lint --root /Users/jon/code/squalor-xyz/ork`\n- In a scratch project under `.scratch/` of the main checkout (`git init`), register it with a test daemon (not the owner's), and run the four steps with `--dry-run`, then for real; `slicer check --root` and `adj lint --root` pass there afterwards. Do not run them against this repository."
+      "body": "- `go test -race -count=1 ./internal/slicercli ./internal/adjcli ./internal/daemon ./internal/cli`\n- `go test -race -count=1 ./...`\n- `go vet ./...`\n- `gofmt -l .` (must print nothing)\n- `slicer check`\n- `adj lint`\n- In a scratch project under `.scratch/` of the main checkout (`git init`), register it with a test daemon (not the owner's), and run the four steps with `--dry-run`, then for real; `slicer check --root` and `adj lint --root` pass there afterwards. Do not run them against this repository."
     },
     {
       "heading": "Git",
