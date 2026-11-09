@@ -2,7 +2,7 @@
 {
   "id": 115,
   "title": "Does a role stay on its fallback row after a fallback?",
-  "status": "decided",
+  "status": "superseded",
   "key": "vendor.fallback-sticky",
   "asked_by": "claude",
   "decided_by": "jon",
@@ -21,6 +21,7 @@
   },
   "decision": "sticky",
   "rationale": "Owner 2026-10-20: avoids retrying a limited vendor every round.",
+  "superseded_by": 244,
   "refs": [
     "S49"
   ],
@@ -32,6 +33,11 @@
     {
       "date": "2026-10-20",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-09",
+      "event": "supersede",
+      "note": "by 244"
     }
   ]
 }

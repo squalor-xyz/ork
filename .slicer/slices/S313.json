@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. After the spec-check result is parsed, for each keyed question call `adj check KEY` through the adj client (read only) and drop the questions it answers.\n2. Record each reused answer in the Owner decisions paragraph with the record id; never write a new adj record for a reused answer.\n3. Add the lookup sentence to `spec-check.md` and its pinned test.\n4. Docs and CHANGELOG, marked *proposed*. Do not run `adj decide`, `adj reject` or `adj supersede` from this code."
+      "body": "1. After the spec-check result is parsed, for each keyed question call `adj check KEY` through the adj client (read only) and drop the questions it answers.\n2. Record each reused answer in the Owner decisions paragraph with the record id; never write a new adj record for a reused answer.\n3. Add the lookup sentence to `spec-check.md` and its pinned test.\n4. Docs and CHANGELOG, marked *proposed*. Do not run `adj decide`, `adj reject` or `adj supersede` from this code.\n\nOwner decisions (2026-11-09, accepted the recommended answers): scope of reuse -> (a) reuse only when the key matches exactly (recommended: predictable) [specs.answer-reuse-scope, adj 226]. a decided record that no longer fits (the slice's text changed) -> (a) the owner can reject it for one slice by answering anyway (recommended: the question is shown with \"decided as X on DATE, press enter to accept\") [specs.answer-reuse-stale, adj 227]."
     },
     {
       "heading": "Check",

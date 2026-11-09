@@ -2,7 +2,7 @@
 {
   "id": 135,
   "title": "How does the Waves screen tick items and take the per-item inputs?",
-  "status": "decided",
+  "status": "superseded",
   "key": "ui.wave-composer",
   "asked_by": "claude",
   "decided_by": "Jon R",
@@ -25,6 +25,7 @@
   },
   "decision": "ask-on-tick",
   "rationale": "Owner accepted the recommendation (2026-10-20).",
+  "superseded_by": 189,
   "refs": [
     "S82"
   ],
@@ -36,6 +37,11 @@
     {
       "date": "2026-10-20",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-09",
+      "event": "supersede",
+      "note": "by 189"
     }
   ]
 }

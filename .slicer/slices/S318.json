@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. Add a `status.summary` daemon read (or build it in the CLI from `status` plus a `slicer status --json` call; prefer the CLI to keep the daemon surface small).\n2. Format the four sections; reuse the status line helpers for the Running rows.\n3. Add the flag and the usage line; docs and CHANGELOG, marked *proposed*."
+      "body": "1. Add a `status.summary` daemon read (or build it in the CLI from `status` plus a `slicer status --json` call; prefer the CLI to keep the daemon surface small).\n2. Format the four sections; reuse the status line helpers for the Running rows.\n3. Add the flag and the usage line; docs and CHANGELOG, marked *proposed*.\n\nOwner decisions (2026-11-09, accepted the recommended answers): where -> (a) `ork status --summary` for one project, default for the current project (recommended; plain text plus `--json`) [status.summary-where, adj 239]. depth -> (a) at most 5 lines per section with \"+N more\" (recommended) [status.summary-depth, adj 240]. the \"waiting on an owner action outside ork\" source -> (a) the `needs-owner` item flag only (recommended; exists today) [status.summary-owner-source, adj 241]."
     },
     {
       "heading": "Check",

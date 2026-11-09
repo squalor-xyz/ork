@@ -1,0 +1,41 @@
+{
+  "id": "S255",
+  "title": "Retry restarts the vendor chain at the first lineup entry",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-09 at HEAD 4707be4. Size S/M recommended: M (new record field, two entry points, one decided record to narrow).\nStatus: BLOCKED on the owner superseding adj 115 (`vendor.fallback-sticky`, decided 2026-10-20: \"sticky: the role stays on its fallback row for the rest of the run\"). The owner said on 2026-11-07 to narrow it (S255 note). This spec is for the narrowed behaviour and depends on that owner action. Do not run `adj supersede` from a role."
+  ],
+  "depends_note": null,
+  "findings_note": "Wave 5, 2026-11-02 (friction F35): ork retry resumes the recorded vendor session. After a Codex-out fallback to the Claude stand-in, a retry stayed on Claude after Codex came back; the owner had to stop and rerun to change vendor. A retry that starts a fresh round (no resumable session worth keeping, or after the vendor's out time passed) should start the chain at the first entry again; a retry of a paused round that holds a session may keep it. Owner decision needed on which retries resume and which restart. Related: S243 (Claude stand-in), S182 (vendor out marks).",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "- Evidence, wave 5, 2026-11-02 (friction F35, S255 findings): `ork retry` resumed the recorded vendor session. After a Codex-out fallback to the Claude stand-in, the retry stayed on Claude after Codex came back. The owner had to stop and rerun to change vendor.\n- Owner decision 2026-11-07 (S255 note): a fresh-round retry restarts the vendor chain at the first entry when that vendor is back; inside a round the chain stays sticky.\n- The row is derived from the role records, not stored. `currentEntry` (`internal/engine/engine.go:179`) walks `rec.Roles`, and a failed row advances the chain (`internal/engine/ledger.go:50`, `nextEntry`). Doc: `docs/design.md:1240` (\"no new run record field is needed\").\n- `runRound` takes `entryIndex := currentEntry(rec, r.role)` (`internal/engine/round.go:220`) and then `skipVendorsOut` (`internal/engine/vendors.go:418`) skips a vendor that is out (S169). So \"when that vendor is back\" is already decided by the vendor out marks: a reset to row 0 on a vendor still out skips forward by itself.\n- Retry entry points at HEAD: `RetryNote` (`internal/engine/engine.go:532`), which at a `rounds` pause grants rounds and bumps `r.Round++` (the fresh round), and `resumeStopped` (`internal/engine/resume.go:90`, S296, done), which re-enters checks or implement with a new round number. Other pauses (error, lost, shape, budget, interrupted, question) rerun the same role and round.\n- Conflicting decided record: adj 115. The key to narrow is `vendor.fallback-sticky`. Tests that pin sticky behaviour and must keep passing for in-round and fix-round stickiness: `TestFallbackIsSticky` (`internal/engine/fallback_test.go:134`), `TestFallbackMatchesEffortAndSurvivesReopen` (`:219`).\n- Overlap check: `slicer find` finds S296 (resume of a stopped run; it names S255 as related, not covered) and S243/S182 are referenced in the findings, not in scope. Slicer (`slicer --root ../slicer find \"retry\"`) has nothing on vendor chains.\n\n### Open questions\n\n1. Which retries are \"fresh-round\"? Options: (a) a rounds-pause retry and a stopped-run resume (recommended: both start a new round, the other pauses rerun the same round, which the owner said stays sticky); (b) every `ork retry`; (c) only a rounds-pause retry. Key: `vendor.retry-chain-reset`.\n2. Which roles restart? Options: (a) every role, at its first entry (recommended: one rule, and the reviewer and gate meet the same returned vendor); (b) the implementer only. Key: `vendor.retry-chain-roles`.\n3. Where does the reset live? Options: (a) a new record field `chain_from` (recommended: the chain stays derived from the records, a reopen gives the same row); (b) delete or mark old role records (loses history, rejected). Key: `state.chain-reset`."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/engine.go:179` (`currentEntry`: ignore role records before the reset point)\n- `internal/engine/engine.go:532` (`RetryNote`: set the reset point at a `rounds` pause retry)\n- `internal/engine/resume.go:90` (`resumeStopped`: set the reset point)\n- `internal/runrec/record.go:272` (new field beside `RoundLimit`, *proposed*: `ChainFrom int`, an index into `Roles`, `json:\"chain_from,omitempty\"`)\n- `internal/engine/fallback_test.go`\n- `internal/engine/engine_test.go:947` (beside `TestRetryAtTheRoundPauseGrantsRounds`)\n- `docs/design.md:1240`\n- `docs/state.md` (the record field)\n- `CHANGELOG.md` (one *proposed* bullet)"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "All in `internal/engine`, built on `fallbackHarness` (`fallback_test.go:81`).\n\n- `TestRetryAtARoundsPauseRestartsTheChain`: lineup claude/codex; codex (row 0) exits `rate_limited` in round 1, run falls back to claude (row 1); red checks pause at `rounds`; the vendor out mark has expired (not out). `RetryNote` with rounds 2. Assert the next implementer request has `Vendor == \"codex\"` (row 0), `Resume == \"\"` (a codex session is not resumable from the claude one), and its brief has no `## Earlier lineup rows` note naming rounds before the reset. Fails first: it stays on claude.\n- `TestRetryAtARoundsPauseSkipsAVendorStillOut`: as above but codex is still marked out (`Vendors.MarkOut`). Assert the request vendor is `claude`.\n- `TestRetryOfAStoppedRunRestartsTheChain`: stopped run (S296 path) after a fallback; `resumeStopped` then runs row 0 when its vendor is not out.\n- `TestRetrySamePauseKeepsTheStickyRow`: an error or lost pause inside round 2 (the role record exists for that round), then `Retry`. Assert the request vendor is still `claude` (inside a round it stays sticky).\n- `TestFixRoundStaysOnTheStickyRow`: the existing `TestFallbackIsSticky` must pass unchanged.\n- `TestChainResetSurvivesReopen`: after the reset, `Store.Open` the record and call `currentEntry`; it returns 0. The field is stored in `run.json`.\n- `TestChainResetAppliesToEveryRoleWithAFallback` (only if Q2 is answered \"all roles\"): the reviewer's row also returns to 0."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Add `ChainFrom` to the record. `currentEntry` skips `rec.Roles[:ChainFrom]` when it walks (a zero value keeps today's behaviour, so old records are unchanged). Keep the gate-follows-reviewer logic as it is.\n2. At a `rounds` pause retry (`RetryNote`) and in `resumeStopped`, set `ChainFrom = len(rec.Roles)` in the same `Update` that bumps the round.\n3. Do not set it for any other pause kind and not for fix rounds.\n4. Do not touch `skipVendorsOut`, the vendor out marks, `nextEntry` or the fallback brief text.\n5. Update `docs/design.md:1240` to say the sticky row restarts at a fresh-round retry, and `docs/state.md`. Mark it *proposed*.\n\nOwner decisions (2026-11-09, accepted the recommended answers): Which retries are \"fresh-round\"? -> (a) a rounds-pause retry and a stopped-run resume (recommended: both start a new round, the other pauses rerun the same round, which the owner said stays sticky) [vendor.retry-chain-reset, adj 214]. Which roles restart? -> (a) every role, at its first entry (recommended: one rule, and the reviewer and gate meet the same returned vendor) [vendor.retry-chain-roles, adj 215]. Where does the reset live? -> (a) a new record field `chain_from` (recommended: the chain stays derived from the records, a reopen gives the same row) [state.chain-reset, adj 216]."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`\n- `go vet ./...`\n- `gofmt -l .`\n- `slicer check`\n- `adj lint`\n- No `internal/tui` change; no UI pass.\n- [HUMAN CHECK] The owner has superseded adj 115 with the narrowed text before the relay starts (the owner looks at `adj show 115`)."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

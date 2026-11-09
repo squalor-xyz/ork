@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. Add `BuildCommand` to the registry project and the `projects.set` plumbing, as for `check_command`.\n2. Add `--rebuild` to `ork daemon restart`; reuse the restart's busy check, run the command with a 10 minute timeout through `clirun`, fail closed.\n3. Update the notices in `ork status` and `ork doctor`.\n4. Docs and CHANGELOG, marked *proposed*. The build writes outside the workspace for ork itself; say so in the docs."
+      "body": "1. Add `BuildCommand` to the registry project and the `projects.set` plumbing, as for `check_command`.\n2. Add `--rebuild` to `ork daemon restart`; reuse the restart's busy check, run the command with a 10 minute timeout through `clirun`, fail closed.\n3. Update the notices in `ork status` and `ork doctor`.\n4. Docs and CHANGELOG, marked *proposed*. The build writes outside the workspace for ork itself; say so in the docs.\n\nOwner decisions (2026-11-09, accepted the recommended answers): command key -> (a) per-project `build_command` (recommended) [selfhost.rebuild-command-key, adj 231]. should the rebuild also be offered after each landing in a self-host run -> (a) say it in the run's landed line only (recommended) [selfhost.rebuild-after-landing, adj 232]."
     },
     {
       "heading": "Check",

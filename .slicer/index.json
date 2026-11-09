@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 319,
+  "next_id": 321,
   "preamble": "",
   "passes": [
     {
@@ -12226,6 +12226,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "0eb48564-fe25-4c3f-9b0e-485c2429849d",
+          "kind": "",
+          "text": "**2026-11-09** — Owner answers 2026-11-09 (interactive): RP-Q2 tag summary is one line, 'ork v1.1.0'; RP-Q3 the workflow_dispatch dry run is not done, so the checklist puts it before the tag; the human checks marked later on S217, S129, S243, S103, S292 and S308 are gathered into one checklist session before this slice runs. Cut line: land every unblocked v1.1 slice, S303 and S305 move to v1.2 unless the samples and the adj record arrive first.",
+          "created_at": "2026-11-09T13:48:43Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -13295,6 +13309,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "3616591c-c367-445e-b789-28ca77bb7ed4",
+          "kind": "",
+          "text": "**2026-11-09** — Owner answer 2026-11-09: the orchestrator proposes the exact Grok matrix edits (r21-r24, r31 to grok-*@latest) and the owner approves before anything runs; S244 also waits on S301.",
+          "created_at": "2026-11-09T13:48:43Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -13678,7 +13706,7 @@
       "title": "Retry restarts the vendor chain at the first lineup entry",
       "short_title": "Retry restarts the vendor chain at the first lineup entry",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -13686,6 +13714,20 @@
           "kind": "decision",
           "text": "**2026-11-07** — Owner 2026-11-07: narrow adj 115 (sticky): a fresh-round retry restarts the vendor chain at the first entry when that vendor is back; inside a round it stays sticky. The owner must supersede adj 115; this slice stays blocked until then.",
           "created_at": "2026-11-07T14:56:58Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "fd611b1d-5fe2-46fb-9d31-85bb85e9745a",
+          "kind": "decision",
+          "text": "**2026-11-09** — Unblocked 2026-11-09: the owner had adj 115 superseded by adj 244 (vendor.fallback-sticky-narrowed). Ignore the BLOCKED status text; the human check on the supersede is done.",
+          "created_at": "2026-11-09T14:47:49Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
@@ -13792,7 +13834,7 @@
       "title": "ork wait: block until a run changes state",
       "short_title": "ork wait: block until a run changes state",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -13920,7 +13962,7 @@
       "title": "S235 later notes: guard the watchdog against a sleep detector never started, and test that the daemon starts it",
       "short_title": "S235 later notes: guard the watchdog against a sleep detector never started, and test that the daemon starts it",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
@@ -14062,7 +14104,7 @@
       "title": "Daemon log: stop repeating the same merge-detection error on every poll",
       "short_title": "Daemon log: stop repeating the same merge-detection error on every poll",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -14304,7 +14346,7 @@
       "title": "Run pane cues: queued runs, the orchestrator row, vendor/model/effort on every role row",
       "short_title": "Queued runs: no stale cue",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
@@ -15013,7 +15055,7 @@
       "title": "wave start: one item without a spec must not fail the whole wave",
       "short_title": "wave start: one item without a spec must not fail the whole wave",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -15021,6 +15063,20 @@
           "kind": "decision",
           "text": "**2026-11-07** — Owner 2026-11-07: for a missing spec only, wave start starts the items that have specs and lists the rest with a 'slicer promote' hint; other plan failures still abort. The owner must narrow adj 146 (wave.plan-failure) first.",
           "created_at": "2026-11-07T14:56:59Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "04d6d81e-45e7-41f7-a848-0aac9677217f",
+          "kind": "decision",
+          "text": "**2026-11-09** — Unblocked 2026-11-09: the owner had adj 146 superseded by adj 245 (wave.plan-failure-missing-spec). Ignore the BLOCKED status text; the human check on the supersede is done.",
+          "created_at": "2026-11-09T14:47:49Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
@@ -15572,7 +15628,7 @@
       "title": "Check command: run it from the project's own folder when the project lives in a subfolder of its repo (monorepo)",
       "short_title": "Check command: run it from the project's own folder when the project lives in a subfolder of its repo (monorepo)",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [
         {
@@ -16645,6 +16701,77 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S319",
+      "title": "Spec check report shape rejects a capitalised item id (S374 for s374)",
+      "short_title": "Spec check report shape rejects a capitalised item id (S374 for s374)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "d1067a38-2b22-4554-867e-de765dac5f7e",
+          "kind": "",
+          "text": "**2026-11-09** — Still failing on build 3d537be3: s377 failed the spec check twice (S377 vs s377); s374 and s371/s372 passed. Not fixed by the pull.",
+          "created_at": "2026-11-09T13:14:41Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-new-673e6d624a1c9239",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S320",
+      "title": "Bubble up role Tool feedback: auto-file the safe items, queue the rest as owner decisions",
+      "short_title": "Bubble up role Tool feedback: auto-file the safe items, queue the rest as owner decisions",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-new-73bd6e39c3599b31",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }

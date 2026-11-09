@@ -30,6 +30,11 @@
   },
   "decision": "replace",
   "rationale": "Owner picked 'replace' in the interactive question on 2026-11-07 (relay session).",
+  "supersedes": [
+    86,
+    87,
+    135
+  ],
   "refs": [
     "S260",
     "86",
@@ -44,6 +49,21 @@
     {
       "date": "2026-11-07",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-09",
+      "event": "supersede",
+      "note": "supersedes 86"
+    },
+    {
+      "date": "2026-11-09",
+      "event": "supersede",
+      "note": "supersedes 87"
+    },
+    {
+      "date": "2026-11-09",
+      "event": "supersede",
+      "note": "supersedes 135"
     }
   ]
 }

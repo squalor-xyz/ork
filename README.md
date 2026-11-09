@@ -38,6 +38,9 @@ Go writes `ork` to `$(go env GOBIN)`, or to `$(go env GOPATH)/bin` when
 `GOBIN` is unset. `GOPATH` defaults to `~/go`, so no sudo is needed unless you
 set `GOBIN` or `GOPATH` elsewhere. Put that directory on your `PATH`. `ork doctor` prints the path of the binary
 it runs, which shows which copy you are calling.
+To build from a checkout into `~/.local/bin` and restart the daemon on the new
+build, run `./build-in-home-dir.sh`; `./run-in-home-dir.sh` does the same and
+then opens the TUI. Both need `~/.local/bin` on your `PATH`.
 `ork doctor` also prints the commands to upgrade slicer, adj or ork when one is
 behind or missing, and `ork doctor --upgrade` prints them for all three. It runs
 none of them.
