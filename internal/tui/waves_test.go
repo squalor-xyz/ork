@@ -1012,33 +1012,192 @@ func TestWavesCompactLineupAndContinuation(t *testing.T) {
 	}
 }
 
-func TestWavesLaunchRunNoticeAndJump(t *testing.T) {
+// queuedRuns makes the project's next snapshot hold these runs, queued, in order.
+func queuedRuns(h *harness, runs ...[2]string) {
+	s := h.m.projects[0].snap
+	s.EngineRuns = nil
+	for _, r := range runs {
+		s.EngineRuns = append(s.EngineRuns, source.EngineRun{ID: r[0], Item: r[1], State: "queued"})
+	}
+	h.src.set(s)
+}
+
+// launchedTwoRuns ticks A and B, launches both as ork-new and ork-other, and
+// returns the harness after the reply and the snapshot that shows both runs
+// (S262).
+func launchedTwoRuns(t *testing.T) *harness {
+	t.Helper()
+	h, l := wavesHarness(t)
+	twoWaveItems(t, h)
+	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new", Item: "A"}}, {Item: "B", Run: &runrec.Record{ID: "ork-other", Item: "B"}}}
+	queuedRuns(h, [2]string{"ork-other", "B"}, [2]string{"ork-new", "A"})
+	h.deliver(press("l"))
+	h.deliver(press("y"))
+	return h
+}
+
+// A launch the daemon accepts, with nothing held and no item failed, moves to the
+// Running entry with the first launched run selected (S262, owner 2026-11-03).
+func TestWaveLaunchJumpsToRunningWithTheFirstRunSelected(t *testing.T) {
+	h := launchedTwoRuns(t)
+	if h.m.active != runningEntry || h.m.view != 0 || h.m.waves != nil {
+		t.Fatalf("active %d view %d waves %v, want the Running Overview with no composer", h.m.active, h.m.view, h.m.waves)
+	}
+	r, ok := h.m.selectedRow()
+	if !ok || r.engineID != "ork-new" {
+		t.Fatalf("the jump selected %q, want ork-new", r.engineID)
+	}
+	if want := "launched 2 items; enter on a running row opens its run"; h.m.actionStatus != want {
+		t.Errorf("status %q, want %q", h.m.actionStatus, want)
+	}
+}
+
+func TestWaveLaunchOfOneItemJumps(t *testing.T) {
 	h, l := wavesHarness(t)
 	openWaves(t, h)
 	tickWave(t, h)
 	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new", Item: "A"}}}
-	snap := h.m.projects[0].snap
-	snap.EngineRuns = []source.EngineRun{{ID: "ork-new", Item: "A", State: "queued"}}
-	h.src.set(snap)
+	queuedRuns(h, [2]string{"ork-other", "B"}, [2]string{"ork-new", "A"})
 	h.deliver(press("l"))
 	h.deliver(press("y"))
-	if h.m.actionStatus != "launched A as ork-new; enter opens it" {
-		t.Fatalf("launch notice: %s", h.m.actionStatus)
+	if h.m.active != runningEntry || h.m.view != 0 {
+		t.Fatalf("active %d view %d, want the Running Overview", h.m.active, h.m.view)
 	}
-	if !strings.Contains(plainView(h.m), "running ork-new") {
-		t.Fatal(plainView(h.m))
+	if r, ok := h.m.selectedRow(); !ok || r.engineID != "ork-new" {
+		t.Fatalf("the jump selected %q, want ork-new", r.engineID)
 	}
-	h.deliver(press(" "))
-	if _, ticked := h.m.waves.picked["A"]; ticked {
-		t.Fatal("launched item can be ticked again")
+	if want := "launched A as ork-new; enter opens it"; h.m.actionStatus != want {
+		t.Fatalf("launch notice %q, want %q", h.m.actionStatus, want)
 	}
 	h.deliver(press("enter"))
-	if h.m.view != 0 {
-		t.Fatal("enter did not open Overview")
+	if h.m.pane == nil || h.m.pane.run != "ork-new" {
+		t.Fatalf("enter must open the pane of ork-new: %+v", h.m.pane)
 	}
-	r, ok := h.m.selectedRow()
-	if !ok || r.engineID != "ork-new" {
-		t.Fatalf("jump selected %+v", r)
+}
+
+// The jump selects at once when a snapshot read before the reply already holds
+// the run; it need not wait for the next one.
+func TestWaveLaunchJumpSelectsARunThatIsAlreadyInTheSnapshot(t *testing.T) {
+	h, l := wavesHarness(t)
+	twoWaveItems(t, h)
+	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new", Item: "A"}}, {Item: "B", Run: &runrec.Record{ID: "ork-other", Item: "B"}}}
+	h.m.projects[0].snap.EngineRuns = []source.EngineRun{{ID: "ork-other", Item: "B", State: "queued"}, {ID: "ork-new", Item: "A", State: "queued"}}
+	h.deliver(press("l"))
+	reply := h.sendHeld(press("y"))
+	if len(reply) != 1 {
+		t.Fatalf("the launch made %d messages, want the reply", len(reply))
+	}
+	h.m.Update(reply[0]) // no snapshot is delivered after it
+	if r, ok := h.m.selectedRow(); h.m.active != runningEntry || !ok || r.engineID != "ork-new" {
+		t.Fatalf("active %d selected %q, want ork-new on Running", h.m.active, r.engineID)
+	}
+}
+
+// A held item keeps the owner on the Waves screen: its questions are answered
+// there, and leaving drops the composer with its ticks.
+func TestWaveLaunchWithAHeldItemStaysOnWaves(t *testing.T) {
+	h, l := wavesHarness(t)
+	questionsForB(l)
+	twoWaveItems(t, h)
+	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new", Item: "A"}}}
+	h.deliver(press("l"))
+	h.deliver(press("s"))
+	h.deliver(press("y"))
+	if h.m.active != 0 || h.m.view != wavesView || h.m.waves == nil {
+		t.Fatalf("active %d view %d: a held launch must stay on Waves of ork", h.m.active, h.m.view)
+	}
+	v := h.view()
+	if !strings.Contains(v, "[>] A") || !strings.Contains(v, "running ork-new") || !strings.Contains(v, "[x] B") || !strings.Contains(v, "waits on 2 spec questions") {
+		t.Errorf("rows after a held launch:\n%s", v)
+	}
+	if !strings.HasSuffix(h.m.actionStatus, "B waits on spec questions") {
+		t.Errorf("status %q", h.m.actionStatus)
+	}
+	h.m.waves.cursor = 0
+	h.deliver(press(" "))
+	if _, ticked := h.m.waves.picked["A"]; ticked {
+		t.Fatal("a launched item can be ticked again")
+	}
+	if hint := wideHint(h); !strings.Contains(hint, "enter open run") || strings.Contains(hint, "enter item") {
+		t.Errorf("the launched row's hint: %q", hint)
+	}
+	h.m.waves.cursor = 1
+	if hint := wideHint(h); !strings.Contains(hint, "enter item") {
+		t.Errorf("the held row's hint: %q", hint)
+	}
+}
+
+// An item the daemon refused keeps the owner on Waves, where the error can be
+// read and the item ticked again.
+func TestWaveLaunchWithAnItemErrorStaysOnWaves(t *testing.T) {
+	h, l := wavesHarness(t)
+	twoWaveItems(t, h)
+	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new", Item: "A"}}, {Item: "B", Error: &ipc.Error{Code: "changed_plan", Message: "Exact B failure."}}}
+	queuedRuns(h, [2]string{"ork-new", "A"})
+	h.deliver(press("l"))
+	h.deliver(press("y"))
+	if h.m.active != 0 || h.m.view != wavesView {
+		t.Fatalf("active %d view %d: an item error must stay on Waves", h.m.active, h.m.view)
+	}
+	if want := "launched A as ork-new; enter opens it; B: changed_plan: Exact B failure."; h.m.actionStatus != want {
+		t.Errorf("status %q, want %q", h.m.actionStatus, want)
+	}
+}
+
+// A failed call changes nothing: the view, the ticks and the status stay.
+func TestWaveLaunchErrorStaysOnWaves(t *testing.T) {
+	h, l := wavesHarness(t)
+	twoWaveItems(t, h)
+	l.result = nil
+	l.startErr = &ipc.Error{Code: "changed_plan", Message: "Exact START failure."}
+	h.deliver(press("l"))
+	h.deliver(press("y"))
+	if h.m.active != 0 || h.m.view != wavesView || h.m.waves == nil || len(h.m.waves.picked) != 2 {
+		t.Fatalf("active %d view %d: a failed launch must keep the composer and its ticks", h.m.active, h.m.view)
+	}
+	if want := "ork wave start ork A B: changed_plan: Exact START failure."; h.m.actionStatus != want {
+		t.Errorf("status %q, want %q", h.m.actionStatus, want)
+	}
+}
+
+// The owner left the Waves screen before the reply: the launch text shows, and
+// nothing moves them again.
+func TestWaveLaunchReplyAfterLeavingWavesDoesNotJump(t *testing.T) {
+	h, l := wavesHarness(t)
+	openWaves(t, h)
+	tickWave(t, h)
+	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new", Item: "A"}}}
+	queuedRuns(h, [2]string{"ork-new", "A"})
+	h.deliver(press("l"))
+	reply := h.sendHeld(press("y"))
+	h.deliver(press("tab")) // Roadmap
+	if h.m.view != roadmapView {
+		t.Fatalf("tab reached view %d, want the Roadmap", h.m.view)
+	}
+	for _, msg := range reply {
+		h.deliver(msg)
+	}
+	if h.m.active != 0 || h.m.view != roadmapView {
+		t.Errorf("active %d view %d: the reply moved the owner", h.m.active, h.m.view)
+	}
+	if want := "launched A as ork-new; enter opens it"; h.m.actionStatus != want {
+		t.Errorf("status %q, want %q", h.m.actionStatus, want)
+	}
+}
+
+// Running right after a wave launch: the new run selected, the launch on the
+// status line (S262).
+func TestRunningAfterLaunchGolden(t *testing.T) {
+	for _, size := range [][2]int{{100, 30}, {80, 24}} {
+		name := fmt.Sprintf("running-launched-%dx%d-mono.txt", size[0], size[1])
+		t.Run(name, func(t *testing.T) {
+			h := launchedTwoRuns(t)
+			h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+			if got := len(strings.Split(h.m.View().Content, "\n")); got != size[1] {
+				t.Fatalf("golden height %d, want %d", got, size[1])
+			}
+			checkGolden(t, name, h.m.View().Content)
+		})
 	}
 }
 
@@ -1109,13 +1268,16 @@ func TestWavesJumpWaitsForSnapshot(t *testing.T) {
 	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new", Item: "A"}}}
 	h.deliver(press("l"))
 	h.deliver(press("y"))
-	h.deliver(press("enter"))
+	// The first snapshot after the reply does not hold the run yet.
+	if h.m.active != runningEntry || h.m.jumpRun != "ork-new" || h.m.cursor != 0 {
+		t.Fatalf("active %d jumpRun %q cursor %d: the jump waits for the run", h.m.active, h.m.jumpRun, h.m.cursor)
+	}
 	snap := h.m.projects[0].snap
 	snap.EngineRuns = []source.EngineRun{{ID: "other", Item: "B", State: "queued"}, {ID: "ork-new", Item: "A", State: "queued"}}
 	h.deliver(snapshotMsg{name: "ork", snap: snap})
 	r, ok := h.m.selectedRow()
-	if !ok || r.engineID != "ork-new" {
-		t.Fatalf("delayed jump selected %+v", r)
+	if !ok || r.engineID != "ork-new" || h.m.jumpRun != "" {
+		t.Fatalf("delayed jump selected %q", r.engineID)
 	}
 }
 
@@ -1150,9 +1312,16 @@ func TestWavesComposerGolden(t *testing.T) {
 						p.Expected.Lineup["implementer"] = append(p.Expected.Lineup["implementer"], runrec.LineupEntry{Vendor: "claude", Model: "haiku", Effort: "high"}, runrec.LineupEntry{Vendor: "claude", Model: "sonnet", Effort: "medium"})
 						h.m.waves.picked["A"] = p
 					case "launched":
+						// B has spec questions and is skipped, so only A launches and the
+						// screen stays on Waves (S262).
+						questionsForB(l)
 						tickWave(t, h)
+						h.deliver(press("down"))
+						tickWave(t, h)
+						h.deliver(press("up")) // the cursor on the launched row, as before
 						l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-20261025-123000-abcd", Item: "A"}}}
 						h.deliver(press("l"))
+						h.deliver(press("s"))
 						h.deliver(press("y"))
 					}
 					h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
@@ -1186,7 +1355,6 @@ func TestWavesDelayedJumpYieldsToNavigation(t *testing.T) {
 	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new", Item: "A"}}}
 	h.deliver(press("l"))
 	h.deliver(press("y"))
-	h.deliver(press("enter"))
 	h.deliver(press("down"))
 	snap := h.m.projects[0].snap
 	snap.EngineRuns = []source.EngineRun{{ID: "other", Item: "B", State: "queued"}, {ID: "ork-new", Item: "A", State: "queued"}}
@@ -1329,22 +1497,17 @@ func TestWavesFix1StatusNotInLineupEditor(t *testing.T) {
 func TestWavesFix1NoticesHintsAndHelp(t *testing.T) {
 	h, l := wavesHarness(t)
 	twoWaveItems(t, h)
-	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new"}}, {Item: "B", Run: &runrec.Record{ID: "ork-other"}}}
-	h.deliver(press("l"))
-	h.deliver(press("y"))
-	if h.m.actionStatus != "launched 2 items; enter on a running row opens its run" {
-		t.Fatal(h.m.actionStatus)
-	}
-	if !strings.Contains(wideHint(h), "enter open run") || strings.Contains(wideHint(h), "enter item") {
-		t.Fatal("launched row hint missing")
-	}
-	h.m.waves.cursor = 2
-	if !strings.Contains(wideHint(h), "enter item") {
-		t.Fatal("plain row hint changed")
-	}
+	// The help text of the Waves view names the A key and the shares marker.
 	help := sgr.ReplaceAllString(strings.Join(h.m.helpLines(100, 40), "\n"), "")
 	if !strings.Contains(help, "Waves: A shows all waves. A again shows first 3. <S65: shares files with S65, an earlier item.") {
 		t.Fatal(help)
+	}
+	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new"}}, {Item: "B", Run: &runrec.Record{ID: "ork-other"}}}
+	h.deliver(press("l"))
+	h.deliver(press("y"))
+	// Both launched, so the screen moved to Running; the status stays.
+	if h.m.actionStatus != "launched 2 items; enter on a running row opens its run" {
+		t.Fatal(h.m.actionStatus)
 	}
 }
 

@@ -49,6 +49,7 @@ type launchMsg struct {
 	action   runAction
 	plan     *daemon.RunPlan
 	starting bool
+	run      string // the ID of the run a successful Start returned
 	err      error
 }
 
@@ -196,8 +197,8 @@ func (m *Model) startLaunch(a runAction) tea.Cmd {
 		if ctx.Err() != nil {
 			return launchMsg{request: request, action: a, starting: true, err: ctx.Err()}
 		}
-		_, err := live.Start(context.Background(), params)
-		return launchMsg{request: request, action: a, starting: true, err: err}
+		rec, err := live.Start(context.Background(), params)
+		return launchMsg{request: request, action: a, starting: true, run: rec.ID, err: err}
 	}
 }
 
@@ -208,6 +209,9 @@ func (m *Model) applyLaunch(msg launchMsg) tea.Cmd {
 			return nil
 		}
 		delete(m.launchFlights, msg.action.project)
+		// The owner is still on this Roadmap launch (S262). A reply after they left
+		// shows the plain status and moves nothing.
+		here := m.launch != nil && m.launch.request == msg.request && m.view == roadmapView && m.active >= 0 && m.projects[m.active].reg.Name == msg.action.project
 		if m.launch != nil && m.launch.request == msg.request {
 			m.dropLaunch()
 		}
@@ -218,6 +222,16 @@ func (m *Model) applyLaunch(msg launchMsg) tea.Cmd {
 		m.actionStatus = msg.action.command() + ": done"
 		if m.poller.InFlight(msg.action.project) {
 			m.byName[msg.action.project].dirty = true
+		}
+		if here && msg.run != "" {
+			// Move to Running with the new run selected once a snapshot shows it.
+			status := "launched " + msg.action.run + " as " + msg.run + "; enter opens it"
+			m.view = 0
+			cmd := m.switchTo(runningEntry)
+			m.jumpRun = msg.run
+			m.selectJumpRun()
+			m.actionStatus = status
+			return tea.Batch(cmd, m.fetch(msg.action.project, true))
 		}
 		return m.fetch(msg.action.project, true)
 	}

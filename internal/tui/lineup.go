@@ -36,9 +36,6 @@ func (m *Model) lineupRefusal() (string, bool) {
 	if m.view != wavesView || m.showHelp || w == nil || w.pending || w.starting {
 		return "Wait for the plan before editing", true
 	}
-	if w.aggregate {
-		return "Select a project to edit a lineup", true
-	}
 	rows := w.rows()
 	if len(rows) == 0 {
 		return "Tick the item before editing its lineup", true

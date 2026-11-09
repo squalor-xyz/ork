@@ -451,7 +451,7 @@ func (m *Model) contextHints() []hintEntry {
 	case m.view == wavesView:
 		if w := m.waves; w != nil {
 			rows := w.rows()
-			open := !w.aggregate && !w.pending && w.err == nil && !w.starting && len(rows) > 0
+			open := !w.pending && w.err == nil && !w.starting && len(rows) > 0
 			enter := "item"
 			if len(rows) > 0 && w.launched[rows[clampCursor(w.cursor, len(rows))].ID] != "" {
 				enter = "open run"

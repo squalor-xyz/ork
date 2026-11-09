@@ -3,9 +3,6 @@
 package tui
 
 import (
-	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -542,8 +539,8 @@ func TestOverviewTabIsLabelledRunningWhileTheRunningEntryIsSelected(t *testing.T
 	for _, size := range [][2]int{{160, 30}, {80, 24}} {
 		bar := strings.Split(h.at(size[0], size[1]), "\n")[0]
 		_, main, _ := strings.Cut(bar, "│")
-		if !strings.Contains(main, "Overview (Running)") || !strings.Contains(main, "Decisions") {
-			t.Fatalf("%dx%d: the view bar must read Overview (Running) and keep every tab: %q", size[0], size[1], main)
+		if !strings.Contains(main, "Overview (Running)") || !strings.Contains(main, "Questions") || strings.Contains(main, "Decisions") {
+			t.Fatalf("%dx%d: the view bar must read Overview (Running) and Questions only: %q", size[0], size[1], main)
 		}
 	}
 	h.send(press("]"))
@@ -1668,40 +1665,16 @@ func TestRunningSelectedEmptyGolden(t *testing.T) {
 	}
 }
 
-// byProjectLive answers each project's wave.suggest with its own plan or error.
-type byProjectLive struct {
-	wavesLive
-	plans map[string]*slicercli.ParallelPlan
-	errs  map[string]error
-}
-
-func (l *byProjectLive) WaveSuggest(_ context.Context, p string) (*slicercli.ParallelPlan, error) {
-	l.suggests = append(l.suggests, p)
-	return l.plans[p], l.errs[p]
-}
-
-func parsePlan(t *testing.T, doc string) *slicercli.ParallelPlan {
-	t.Helper()
-	var plan slicercli.ParallelPlan
-	if err := json.Unmarshal([]byte(doc), &plan); err != nil {
-		t.Fatal(err)
-	}
-	return &plan
-}
-
 // combinedHarness has two adj projects with a decision and an item each, on the
-// Running entry, with a wave plan per project.
-func combinedHarness(t *testing.T, live func(plans map[string]*slicercli.ParallelPlan) *byProjectLive) (*harness, *byProjectLive) {
+// Running entry. Its fake daemon records every wave.suggest call in l.suggests.
+func combinedHarness(t *testing.T) (*harness, *wavesLive) {
 	t.Helper()
 	alpha, beta := proj("alpha", true), proj("beta", true)
 	h := newHarness(t, alpha, beta)
 	h.src.set(snap(alpha, []adjcli.Record{openRec(7, "ui.alpha-key", "Alpha question")}, []slicercli.Item{item("S30", "Alpha item")}))
 	h.src.set(snap(beta, []adjcli.Record{openRec(8, "ui.beta-key", "Beta question")}, []slicercli.Item{item("S41", "Beta item")}))
 	h.start()
-	l := live(map[string]*slicercli.ParallelPlan{
-		"alpha": parsePlan(t, `{"waves":[{"wave":1,"items":[{"id":"A","title":"Alpha first"}]},{"wave":2,"items":[{"id":"B","title":"Alpha second"}]}],"unplaced":[{"id":"E","title":"Alpha loose"}]}`),
-		"beta":  parsePlan(t, `{"waves":[{"wave":1,"items":[{"id":"C","title":"Beta first"}]}],"unplaced":[{"id":"D","title":"Beta loose","reason":"no_files"}]}`),
-	})
+	l := &wavesLive{suggest: &slicercli.ParallelPlan{}}
 	h.m.cfg.Live = l
 	h.m.Update(tea.WindowSizeMsg{Width: 120, Height: 40})
 	h.send(press("["))
@@ -1709,10 +1682,6 @@ func combinedHarness(t *testing.T, live func(plans map[string]*slicercli.Paralle
 		t.Fatalf("active %d, want the Running entry", h.m.active)
 	}
 	return h, l
-}
-
-func plainLive(plans map[string]*slicercli.ParallelPlan) *byProjectLive {
-	return &byProjectLive{plans: plans}
 }
 
 func (h *harness) tabTo(view int) {
@@ -1725,130 +1694,138 @@ func (h *harness) tabTo(view int) {
 	}
 }
 
-// Questions, Waves, Roadmap and Decisions show every project together while the
-// Running entry is selected (S140, owner 2026-10-27). Questions, Decisions and
-// Roadmap lead each row with its project; Waves has one block per project.
-func TestRunningEntryTabsShowAllProjects(t *testing.T) {
-	h, l := combinedHarness(t, plainLive)
-	for _, tc := range []struct {
-		view  int
-		name  string
-		lines [][]string // words each expected line holds
-	}{
-		{questionsView, "Questions", [][]string{{"alpha", "#7", "Alpha question"}, {"beta", "#8", "Beta question"}}},
-		{roadmapView, "Roadmap", [][]string{{"alpha", "S30", "Alpha item"}, {"beta", "S41", "Beta item"}}},
-		{decisionsView, "Decisions", [][]string{{"alpha", "#7", "Alpha question"}, {"beta", "#8", "Beta question"}}},
-	} {
-		h.tabTo(tc.view)
-		v := plainView(h.m)
-		for _, words := range tc.lines {
-			if mainRow(v, words...) == "" {
-				t.Errorf("%s: no row holds %q while Running is selected:\n%s", tc.name, words, v)
-			}
+// Questions on the Running entry lists every project's questions, as Needs you
+// does (S262 keeps it; S140's other combined tabs are gone).
+func TestRunningQuestionsTabShowsAllProjects(t *testing.T) {
+	h, _ := combinedHarness(t)
+	h.tabTo(questionsView)
+	v := plainView(h.m)
+	for _, words := range [][]string{{"alpha", "#7", "Alpha question"}, {"beta", "#8", "Beta question"}} {
+		if mainRow(v, words...) == "" {
+			t.Errorf("no Questions row holds %q while Running is selected:\n%s", words, v)
 		}
-	}
-	if !reflect.DeepEqual(l.suggests, []string{"alpha", "beta"}) {
-		t.Errorf("Waves must ask each project once: %v", l.suggests)
-	}
-	// Nothing on the combined Waves or Roadmap opens or launches a project.
-	h.tabTo(wavesView)
-	h.deliver(press(" "))
-	if w := h.m.waves; w == nil || len(w.picked) != 0 || w.planning != "" {
-		t.Fatalf("space must not tick a row of the combined Waves: %+v", w)
-	}
-	h.deliver(press("enter"))
-	if w := h.m.waves; w == nil || w.pane != nil {
-		t.Fatalf("enter must not open an item of the combined Waves: %+v", w)
-	}
-	h.tabTo(roadmapView)
-	h.deliver(press("enter"))
-	if h.m.itemPane != nil {
-		t.Errorf("Enter on the combined Roadmap must not open an item")
 	}
 }
 
-// The combined Waves tab is one block per project: the project's name, then its
-// own waves and unplaced items, in project order. Nothing is ticked there.
-func TestRunningWavesGroupByProject(t *testing.T) {
-	h, _ := combinedHarness(t, plainLive)
-	h.tabTo(wavesView)
-	lines := mainLines(plainView(h.m))
-	at := -1
-	for _, step := range [][]string{{"alpha"}, {"Wave 1"}, {"A", "Alpha first"}, {"Wave 2"}, {"B", "Alpha second"},
-		{"Unplaced"}, {"E", "Alpha loose"}, {"beta"}, {"Wave 1"}, {"C", "Beta first"}, {"Unplaced"}, {"D", "Beta loose"}} {
-		i := lineWith(lines, at+1, step...)
-		if i < 0 {
-			t.Fatalf("no line %q after line %d:\n%s", step, at, strings.Join(lines, "\n"))
+// barNames is the main part of the view bar's line (the first line, past the sidebar).
+func barNames(view string) string {
+	_, main, _ := strings.Cut(strings.Split(view, "\n")[0], "│")
+	return main
+}
+
+// The Running entry shows two tabs, Overview and Questions, at 100x30 and 80x24;
+// the Questions count fits at both sizes (S262).
+func TestRunningViewBarShowsOverviewAndQuestionsOnly(t *testing.T) {
+	for _, size := range [][2]int{{100, 30}, {80, 24}} {
+		m := runningGoldenModel(NewTheme(true), size[0], size[1])
+		bar := barNames(plainView(m))
+		a, q := strings.Index(bar, "Overview (Running)"), strings.Index(bar, "Questions 1")
+		if a < 0 || q < a {
+			t.Errorf("%dx%d: the bar must read Overview (Running), then Questions 1: %q", size[0], size[1], bar)
 		}
-		at = i
-	}
-	for _, line := range lines {
-		if strings.Contains(line, "[ ]") || strings.Contains(line, "[x]") {
-			t.Errorf("the read-only Waves tab must not draw tick boxes: %q", line)
+		for _, gone := range []string{"Waves", "Roadmap", "Decisions"} {
+			if strings.Contains(bar, gone) {
+				t.Errorf("%dx%d: the bar still shows %s: %q", size[0], size[1], gone, bar)
+			}
 		}
-	}
-	if got := len(h.m.waves.rows()); got != 5 {
-		t.Errorf("the cursor walks %d rows, want the 5 items of both projects", got)
-	}
-	// Each wave and each Unplaced list of every project starts a group.
-	if got := h.m.groupStarts(); !reflect.DeepEqual(got, []int{0, 1, 2, 3, 4}) {
-		t.Errorf("group starts = %v, want [0 1 2 3 4]", got)
-	}
-	h.deliver(press("G"))
-	if h.m.waves.cursor != 4 {
-		t.Errorf("G must reach the last item: cursor %d", h.m.waves.cursor)
 	}
 }
 
-// A project whose suggestion fails is named with its error; the others still
-// list. When every project fails each one is named.
-func TestRunningWavesNameFailedProjects(t *testing.T) {
-	for _, tc := range []struct {
-		name   string
-		errs   map[string]error
-		listed []string
-		failed []string
-	}{
-		{"one", map[string]error{"beta": errors.New("slicer plan-parallel exploded")}, []string{"Alpha first"}, []string{"beta"}},
-		{"all", map[string]error{"alpha": errors.New("alpha broke"), "beta": errors.New("beta broke")}, nil, []string{"alpha", "beta"}},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			h, _ := combinedHarness(t, func(plans map[string]*slicercli.ParallelPlan) *byProjectLive {
-				return &byProjectLive{plans: plans, errs: tc.errs}
-			})
-			h.tabTo(wavesView)
-			lines := mainLines(plainView(h.m))
-			for _, title := range tc.listed {
-				if lineWith(lines, 0, title) < 0 {
-					t.Errorf("%q is missing:\n%s", title, strings.Join(lines, "\n"))
-				}
+func TestTabOnRunningCyclesOverviewAndQuestions(t *testing.T) {
+	h := runningHarness(t)
+	for i, step := range []struct {
+		key  string
+		view int
+	}{{"tab", questionsView}, {"tab", 0}, {"shift+tab", questionsView}, {"shift+tab", 0}} {
+		h.send(press(step.key))
+		if h.m.view != step.view {
+			t.Fatalf("step %d: %s gave view %d, want %d", i, step.key, h.m.view, step.view)
+		}
+	}
+}
+
+// The help names the views the selected entry shows (S262).
+func TestHelpNamesOnlyTheViewsTheRunningEntryShows(t *testing.T) {
+	h := runningHarness(t)
+	// The main pane is 60 columns wide at 80x24 and 72 at 100x30; the sentence
+	// must be whole at both.
+	for _, w := range []int{60, 72} {
+		help := sgr.ReplaceAllString(strings.Join(h.m.helpLines(w, 60), "\n"), "")
+		if strings.Contains(help, "Roadmap and Decisions are available") || !strings.Contains(help, "Running has Overview and Questions only.\n") && !strings.HasSuffix(help, "Running has Overview and Questions only.") {
+			t.Errorf("width %d: the Running help lists the wrong views or cuts the sentence:\n%s", w, help)
+		}
+	}
+	h.send(press("]")) // Needs you
+	var help string
+	help = sgr.ReplaceAllString(strings.Join(h.m.helpLines(100, 60), "\n"), "")
+	if !strings.Contains(help, "Overview, Questions, Waves, Roadmap and Decisions are available.") {
+		t.Errorf("the Needs you help lists the wrong views:\n%s", help)
+	}
+}
+
+// Waves, Roadmap and Decisions are not on the Running entry, so arriving there
+// from one of them opens the Overview and asks no project for waves. Questions
+// stays.
+func TestSelectingRunningFromAHiddenViewOpensTheOverview(t *testing.T) {
+	for _, view := range []int{wavesView, roadmapView, decisionsView, questionsView} {
+		t.Run(fmt.Sprint(view), func(t *testing.T) {
+			h, l := combinedHarness(t)
+			h.send(press("]")) // Needs you
+			h.send(press("]")) // alpha
+			h.tabTo(view)
+			l.suggests = nil
+			h.send(press("[")) // Needs you
+			h.send(press("[")) // Running
+			if h.m.active != runningEntry {
+				t.Fatalf("active %d, want the Running entry", h.m.active)
 			}
-			if len(tc.listed) == 0 && lineWith(lines, 0, "No suggested items") >= 0 {
-				t.Errorf("\"No suggested items\" under the error lines:\n%s", strings.Join(lines, "\n"))
+			want := 0
+			if view == questionsView {
+				want = questionsView
 			}
-			for _, project := range tc.failed {
-				if lineWith(lines, 0, project) < 0 || lineWith(lines, 0, "!", tc.errs[project].Error()) < 0 {
-					t.Errorf("failed project %s is not named with its error:\n%s", project, strings.Join(lines, "\n"))
-				}
+			if h.m.view != want {
+				t.Errorf("view %d, want %d", h.m.view, want)
+			}
+			if !strings.Contains(barNames(plainView(h.m)), "Overview (Running)") {
+				t.Errorf("the bar does not name the Running Overview: %q", barNames(plainView(h.m)))
+			}
+			if len(l.suggests) != 0 {
+				t.Errorf("Running asked for waves: %v", l.suggests)
 			}
 		})
 	}
 }
 
-// Enter opens nothing on the combined Roadmap and Waves, so the hint line does
-// not offer it; `e` explains that it needs a project.
-func TestCombinedTabsDoNotOfferWhatTheyCannotDo(t *testing.T) {
-	h, _ := combinedHarness(t, plainLive)
-	for _, view := range []int{roadmapView, wavesView} {
-		h.tabTo(view)
-		hint := sgr.ReplaceAllString(h.m.hintLine(200), "")
-		if strings.Contains(hint, "enter") {
-			t.Errorf("view %d: the hint offers enter: %q", view, hint)
-		}
+func TestRunningNeverAsksEveryProjectForWaves(t *testing.T) {
+	h, l := combinedHarness(t)
+	for range 2 * len(views) {
+		h.send(press("tab"))
 	}
-	h.deliver(press("e"))
-	if got := h.m.actionStatus; !strings.Contains(got, "Select a project") {
-		t.Errorf("e on the combined Waves must explain, got %q", got)
+	if len(l.suggests) != 0 {
+		t.Errorf("Running asked for waves: %v", l.suggests)
+	}
+}
+
+// Needs you and a project keep all five tabs, and tab walks them all.
+func TestOtherEntriesKeepAllFiveTabs(t *testing.T) {
+	h, _ := combinedHarness(t)
+	for _, entry := range []string{"Needs you", "alpha"} {
+		h.send(press("]"))
+		h.tabTo(0)
+		bar := barNames(plainView(h.m))
+		for _, name := range []string{"Overview", "Questions", "Waves", "Roadmap", "Decisions"} {
+			if !strings.Contains(bar, name) {
+				t.Errorf("%s: the bar lacks %s: %q", entry, name, bar)
+			}
+		}
+		var seen []int
+		for range 6 {
+			seen = append(seen, h.m.view)
+			h.send(press("tab"))
+		}
+		if want := []int{0, 1, 2, 3, 4, 0}; !reflect.DeepEqual(seen, want) {
+			t.Errorf("%s: tab steps %v, want %v", entry, seen, want)
+		}
 	}
 }
 
@@ -2025,25 +2002,6 @@ func TestOverviewRunningCountZeroOverAStaleRow(t *testing.T) {
 	v := h.wide()
 	if !strings.Contains(v, "Running 0") || mainRow(v, "alpha", "S41") == "" || strings.Contains(v, "Running 1") {
 		t.Errorf("the stale relay is listed under Running 0:\n%s", v)
-	}
-}
-
-// The combined Roadmap's failed-project line starts its name where the item
-// rows do, past the two-column ready slot.
-func TestCombinedRoadmapErrorLineLinesUpWithItemRows(t *testing.T) {
-	h, _ := combinedHarness(t, plainLive)
-	bad := snap(proj("beta", true), nil, nil)
-	bad.Items.Err = errors.New("items broke")
-	h.src.set(bad)
-	h.send(press("r"))
-	h.tabTo(roadmapView)
-	lines := mainLines(plainView(h.m))
-	item, fail := lineWith(lines, 0, "S30"), lineWith(lines, 0, "beta", "items broke")
-	if item < 0 || fail < 0 {
-		t.Fatalf("rows missing:\n%s", strings.Join(lines, "\n"))
-	}
-	if a, b := strings.Index(lines[item], "alpha"), strings.Index(lines[fail], "beta"); a != b {
-		t.Errorf("the failed project's name starts at column %d, item rows at %d:\n%s", b, a, strings.Join(lines, "\n"))
 	}
 }
 

@@ -36,13 +36,19 @@ func TestBracketsSwitchProjectsAndWrapThroughNeedsYou(t *testing.T) {
 			h := newHarness(t, four...)
 			h.start()
 			h.m.view = view
+			// The Running entry has only the Overview and Questions, so arriving
+			// there from Waves, Roadmap or Decisions opens the Overview (S262).
+			want := view
 			for _, s := range steps {
 				h.send(press(s.k))
 				if got := activeTab(t, h.view()); got != s.want {
 					t.Fatalf("after %q the tab is %s, want %s", s.k, got, s.want)
 				}
-				if h.m.view != view {
-					t.Fatalf("after %q the view changed to %d", s.k, h.m.view)
+				if s.want == "Running" && want > questionsView {
+					want = 0
+				}
+				if h.m.view != want {
+					t.Fatalf("after %q the view is %d, want %d", s.k, h.m.view, want)
 				}
 			}
 		})
@@ -89,8 +95,12 @@ func TestLeftRightDoNotSwitchProjects(t *testing.T) {
 				if h.m.active != start {
 					t.Errorf("%s: %s moved the project from %d to %d", viewNames[view], k, start, h.m.active)
 				}
-				if h.m.view != view {
-					t.Errorf("%s: %s changed the view to %d", viewNames[view], k, h.m.view)
+				want := view
+				if start == runningEntry && view > questionsView {
+					want = 0 // the Running entry has no such view (S262)
+				}
+				if h.m.view != want {
+					t.Errorf("%s: %s changed the view to %d, want %d", viewNames[view], k, h.m.view, want)
 				}
 			}
 		}

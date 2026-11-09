@@ -1,12 +1,14 @@
 [1mork[m                        │ Overview[2m │ [mQuestions[2m │ [m[1mWaves[m[2m │ [mRoadmap[2m │ [mDecisions
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────────────────────────[m
 [2m0[m Needs you              0 │[1mSuggested (slicer plan-parallel)[m
-[1;7m1>ork                      [m│[1m         Items                                                                        Shares[m
+[1;7m1>ork                      [m│[1m         Items                                             Shares  Lineup (* edited)        [m
 [2m2[m other                    │[1m── Wave 2 ────────────────────────────────────────────────────────────────────────── 2 items[m
-                           │[1;7m[2m  [>] A[m[m[1;7m  [m[1;7m[2mAlpha  running ork-20261025-123000-abcd[m[m[1;7m                                    [m[1;7m  [m[1;7m      [m
-                           │  [ ] B  Beta                                                                               
+                           │[1;7m[2m  [>] A[m[m[1;7m  [m[1;7m[2mAlpha  running ork-20261025-123000-abcd[m[m[1;7m         [m[1;7m  [m[1;7m      [m[1;7m  [m[1;7m                         [m
+                           │  [x] B  Beta  waits on 2 spec questions                           impl:  claude sonnet high
+                           │                                                                   rev:   claude opus medium
+                           │                                                                   gate:  claude opus medium
                            │[1m── Wave 4 ─────────────────────────────────────────────────────────────────────────── 1 item[m
-                           │  [ ] C  Gamma                                                                        [2m<A[m    
+                           │  [ ] C  Gamma                                             [2m<A[m                               
                            │[1m── Unplaced ───────────────────────────────────────────────────────────────────────── 1 item[m
                            │  [ ] D  Delta (no files listed)                                                            
                            │
@@ -31,10 +33,8 @@
                            │
                            │
                            │
-                           │
-                           │
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────[m
-                           │  launched A as ork-20261025-123000-abcd; enter opens it
+                           │  launched A as ork-20261025-123000-abcd; enter opens it; B waits on spec questions
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────[m
-                           │ enter [2mopen run[m; tab [2mviews[m; + [2madd project[m; - [2mremove project[m; q [2mquit[m; ? [2mhelp[m
+                           │ enter [2mopen run[m; l [2manswer spec questions[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
                            │ 2 projects | refreshed 16:42:00
