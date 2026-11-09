@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- S131 (*proposed*): the self-host check compares the daemon build with the
+  branch the main checkout is on. Unchanged tips need one git call per
+  snapshot or status read; changed tips refresh a bounded result cache.
+  The notice and `behind_main` field keep their names. Docs:
+  `docs/design.md`, `docs/state.md`, `docs/dashboard.md`.
+
 - S103 (*proposed*): `ork --version` prints the mark only on a terminal;
   on a pipe or file it prints plain `ork VERSION`. The TUI refreshes the
   daemon build from snapshots so the stale-build marker clears after a

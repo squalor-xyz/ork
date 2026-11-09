@@ -2385,12 +2385,18 @@ launch. One such slice may run with other slices.
 
 *Proposed wire fields:* each status project carries `self_host` and
 `behind_main`. A self-hosted daemon is behind when its build revision differs
-from local `main` and is an ancestor of that branch. A missing branch or a
-failed Git read does not establish that it is behind.
+from the tip of the branch the main checkout is on and is an ancestor of
+that tip. Detached HEAD, an unborn branch or a failed Git read does not
+establish that it is behind. The notice and wire field still say `main`.
+
+*Proposed (S131):* each snapshot or status read checks the checkout with one
+`git rev-parse HEAD --symbolic-full-name HEAD`. The daemon caches the result
+by project path, build ID, tip and ref, with at most one entry per registered
+path. A changed key replaces the entry; failed reads are not cached.
 
 *Proposed behavior and wording:* `daemon behind main: restart with ork daemon restart`.
-It fires on any landing on main, not only engine landings, while no run is
-active. In the status line it replaces the stale-build marker while shown;
+It fires on any landing on the base branch, not only engine landings, while
+no run is active. In the status line it replaces the stale-build marker while shown;
 otherwise the stale marker still shows for a differing build. Text doctor
 prints `[WARN] daemon behind main: restart with ork daemon restart` on stdout.
 Status prints `ork: warning: daemon behind main: restart with ork daemon restart`

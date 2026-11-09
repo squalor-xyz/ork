@@ -1980,9 +1980,10 @@ has no 4 fps timer. The existing one-second schedule tick stays unchanged.
 
 *Proposed behavior and wording:* `daemon behind main: restart with ork daemon restart`.
 While no run is active, the status line shows it when a self-hosted daemon's
-revision is behind local `main`. It fires on any landing on main, not only
-engine landings. It replaces the stale-build marker while shown; otherwise
-the stale marker still shows for a differing build. At narrow widths the
+revision is behind the branch the main checkout is on. It fires on any
+landing on that branch, not only engine landings. It replaces the stale-build
+marker while shown; otherwise the stale marker still shows for a differing
+build. At narrow widths the
 behind notice takes priority over other status fields. The full notice plus
 its leading space measures 52 columns. Below 52 columns, the status line uses
 `behind main: ork daemon restart`, then clips if that text still does not fit.
