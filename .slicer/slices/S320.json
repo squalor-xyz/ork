@@ -1,0 +1,39 @@
+{
+  "id": "S320",
+  "title": "Bubble up role Tool feedback: auto-file the safe items, queue the rest as owner decisions",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Roles report Tool feedback (see slicer s453, the relay report-shape slice). ork should parse it, drop duplicates, file clear low-risk items itself (a note or slice on the tool's project) and bubble design-level or costly ones into Needs you as an adj question with options and a recommendation, so the owner or the delegated orchestrator decides in one place. Prefer deterministic code over AI calls; human use stays first."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

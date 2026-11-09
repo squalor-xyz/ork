@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 319,
+  "next_id": 321,
   "preamble": "",
   "passes": [
     {
@@ -16631,6 +16631,77 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S319",
+      "title": "Spec check report shape rejects a capitalised item id (S374 for s374)",
+      "short_title": "Spec check report shape rejects a capitalised item id (S374 for s374)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "d1067a38-2b22-4554-867e-de765dac5f7e",
+          "kind": "",
+          "text": "**2026-11-09** — Still failing on build 3d537be3: s377 failed the spec check twice (S377 vs s377); s374 and s371/s372 passed. Not fixed by the pull.",
+          "created_at": "2026-11-09T13:14:41Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-new-673e6d624a1c9239",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S320",
+      "title": "Bubble up role Tool feedback: auto-file the safe items, queue the rest as owner decisions",
+      "short_title": "Bubble up role Tool feedback: auto-file the safe items, queue the rest as owner decisions",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-new-73bd6e39c3599b31",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }
