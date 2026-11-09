@@ -2285,6 +2285,26 @@ func wireRunError(t *testing.T, row EngineRun) string {
 	return wire.Error
 }
 
+// The wire row of a queued run carries the record's planned lineup, so the TUI
+// can show what will run before it starts (S267, ui.queued-plan-source).
+func TestEngineRunCarriesThePlannedLineup(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	lineup := map[string][]runrec.LineupEntry{
+		engine.RoleImplementer: {{Vendor: "claude", Model: "sonnet", Effort: "high"}},
+		engine.RoleReviewer:    {{Vendor: "codex", Model: "sol", Effort: "medium"}, {Vendor: "claude", Model: "opus", Effort: "high"}},
+	}
+	if _, err := store.Create(runrec.Record{ID: "queued", Project: p.Name, Item: "S1", State: runrec.StateQueued, Lineup: lineup}); err != nil {
+		t.Fatal(err)
+	}
+	rows := d.engineRuns(p.Name)
+	if len(rows) != 1 {
+		t.Fatalf("rows = %d, want 1", len(rows))
+	}
+	if !reflect.DeepEqual(rows[0].Lineup, lineup) {
+		t.Errorf("wire lineup = %v, want the record's %v", rows[0].Lineup, lineup)
+	}
+}
+
 func TestBackgroundErrorStaysOnTheWireRow(t *testing.T) {
 	d, store, p := runDaemon(t, nil)
 	run, err := store.Create(runrec.Record{ID: "failed", Project: p.Name, State: runrec.StateImplement})

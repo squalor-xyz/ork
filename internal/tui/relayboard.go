@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"charm.land/lipgloss/v2"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -164,6 +165,16 @@ func (m *Model) heardCell(r slicercli.RelayRun) (string, lipgloss.Style) {
 // has a step in phase wait, has not gone quiet: it says when the wait began
 // instead, in the clock's zone and dim (S154).
 func (m *Model) lastHeard(r slicercli.RelayRun) (string, lipgloss.Style) {
+	if r.State == "queued" {
+		// A run queued behind the cap has not started, so it has not gone quiet. It
+		// says how long it has waited, dim and with no cue (S267). engineLedger puts
+		// the engine run's CreatedAt in UpdatedAt.
+		at, err := time.Parse(time.RFC3339Nano, r.UpdatedAt)
+		if err != nil {
+			return "queued", m.cfg.Theme.Dim
+		}
+		return "queued " + elapsed(m.cfg.Now().Sub(at)), m.cfg.Theme.Dim
+	}
 	if since, ok := waitingSince(r); ok {
 		return "waiting since " + clockOrDay(since, m.cfg.Now()), m.cfg.Theme.Dim
 	}
@@ -228,10 +239,18 @@ func waitStart(r source.EngineRun) time.Time {
 // engineLedger is the ledger the board shows for an engine run. The engine owns
 // the state; a linked ledger supplies only its steps. A run that waits on the
 // owner has no quiet time to report, so UpdatedAt carries the start of the wait.
+// A run queued behind the cap has none either: UpdatedAt carries when it was
+// queued, its CreatedAt, or nothing when the record has none (S267).
 func engineLedger(ledger slicercli.RelayRun, r source.EngineRun) slicercli.RelayRun {
 	ledger.State = r.State
 	if at := waitStart(r); ownerWaitState(r.State) && !at.IsZero() {
 		ledger.UpdatedAt = at.Format(time.RFC3339Nano)
+	}
+	if r.State == "queued" {
+		ledger.UpdatedAt = ""
+		if !r.CreatedAt.IsZero() {
+			ledger.UpdatedAt = r.CreatedAt.Format(time.RFC3339Nano)
+		}
 	}
 	return ledger
 }
@@ -276,7 +295,7 @@ func (m *Model) boardLines(steps []runTreeStep, width int) []string {
 	// Last heard sits on the bar's line, after its round word. A
 	// pane too narrow for both keeps it on a line of its own.
 	if heard, style := m.lastHeard(r); heard != "" {
-		if !strings.HasPrefix(heard, "waiting since ") {
+		if strings.HasPrefix(heard, "heard ") || strings.Contains(heard, " heard ") {
 			heard = strings.Replace(heard, "heard ", "last heard ", 1) + " ago"
 		}
 		if lipgloss.Width(bar)+2+lipgloss.Width(heard) <= width {
@@ -298,6 +317,7 @@ func (m *Model) boardTail(steps []runTreeStep, width, roleWidth int) []string {
 		return nil
 	}
 	var lines []string
+	run, _ := m.paneEngineRun()
 	for _, role := range pipelineRoles(steps) {
 		begun := false
 		for _, step := range laneSteps(steps) {
@@ -306,10 +326,54 @@ func (m *Model) boardTail(steps []runTreeStep, width, roleWidth int) []string {
 			}
 		}
 		if !begun {
-			lines = append(lines, m.cfg.Theme.Dim.Render(treeClip(fmt.Sprintf(". %-*s queued", roleWidth, role), width)))
+			text := fmt.Sprintf(". %-*s queued", roleWidth, role)
+			if plan := plannedEntry(run.Lineup, role); plan != "" {
+				text += "  " + plan
+			}
+			lines = append(lines, m.cfg.Theme.Dim.Render(treeClip(text, width)))
 		}
 	}
 	return lines
+}
+
+// paneEngineRun is the engine run the open pane shows, when it shows one.
+func (m *Model) paneEngineRun() (source.EngineRun, bool) {
+	p := m.byName[m.pane.project]
+	if p == nil || m.pane.ledger {
+		return source.EngineRun{}, false
+	}
+	for _, r := range p.snap.EngineRuns {
+		if r.ID == m.pane.run {
+			return r, true
+		}
+	}
+	return source.EngineRun{}, false
+}
+
+// plannedEntry is the vendor, model and effort a role has planned: the first
+// entry of its chain. The gate is the resumed reviewer, so it follows the
+// reviewer's chain when it has none (the engine's rule). It is "" when the run
+// has no plan for the role.
+func plannedEntry(lineup map[string][]runrec.LineupEntry, role string) string {
+	chain := lineup[role]
+	if len(chain) == 0 && role == "gate" {
+		chain = lineup["reviewer"]
+	}
+	if len(chain) == 0 {
+		return ""
+	}
+	return entryText(chain[0])
+}
+
+// entryText is "vendor model effort", leaving out what the entry has not set.
+func entryText(e runrec.LineupEntry) string {
+	var parts []string
+	for _, field := range []string{e.Vendor, e.Model, e.Effort} {
+		if field != "" {
+			parts = append(parts, treeText(field))
+		}
+	}
+	return strings.Join(parts, " ")
 }
 
 // recentActiveTime counts the union of completed worker intervals. A step's

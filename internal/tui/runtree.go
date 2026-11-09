@@ -10,6 +10,7 @@ import (
 	"charm.land/lipgloss/v2"
 
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -27,12 +28,24 @@ type runTreeStep struct {
 	cost          float64
 	live          bool
 	tail          string
+	// fellBackFrom is the entry (vendor, model, effort) the role skipped when it
+	// fell back to this step's: the last one only (S267, adj 209).
+	fellBackFrom string
 	// engineState is the state of the engine run these steps belong to, set on
 	// every step of an engine run's steps (S145); "" for a ledger-only run.
 	engineState string
 }
 
 // withEngineState marks the steps as an engine run's, in the engine's state.
+// engineLabel names ork's own orchestrator step on a row: ork runs it, so it has
+// no vendor or model (S267, docs/design.md).
+const engineLabel = "ork engine"
+
+// isEngineStep reports ork's own orchestrator step, the one the engine opens in
+// the ledger with agent "ork" (internal/engine/states.go). Any other
+// orchestrator step is a vendor's work and is shown as such.
+func isEngineStep(s slicercli.Step) bool { return s.Role == "orchestrator" && s.Agent == "ork" }
+
 func withEngineState(steps []runTreeStep, state string) []runTreeStep {
 	out := append([]runTreeStep(nil), steps...)
 	for i := range out {
@@ -227,6 +240,25 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 		if len(details) > 0 {
 			text += "  " + strings.Join(details, " ")
 		}
+		if isEngineStep(s.Step) {
+			// ork's own step is not a role's work: no vendor, model or clock, which
+			// would be the relay's age. It is dim unless it waits or failed (S267).
+			mark := glyph
+			if s.Phase == "start" {
+				mark = "."
+			}
+			text = mark + " " + engineLabel
+			if s.Phase == "wait" || s.Phase == "fail" {
+				text += " " + treeText(stepPhaseLabel(s.Step))
+			} else {
+				style = m.cfg.Theme.Dim
+			}
+		}
+		// The entry the role skipped, dim, when it fell back to this one (S267).
+		suffix := ""
+		if s.fellBackFrom != "" {
+			suffix = "  fell back from " + s.fellBackFrom
+		}
 		cost := "$-"
 		if s.costKnown {
 			cost = fmt.Sprintf("$%.2f", s.cost)
@@ -244,7 +276,22 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 		if s.hasUsage && !running && lipgloss.Width(text)+2+len(usage) <= available {
 			text += "  " + usage
 		}
-		lines = append(lines, prefix+style.Render(treeClip(text, available)))
+		line := style.Render(treeClip(text, available))
+		own := ""
+		if suffix != "" {
+			if lipgloss.Width(text)+lipgloss.Width(suffix) <= available {
+				line += m.cfg.Theme.Dim.Render(suffix)
+			} else {
+				// Too narrow to sit beside the text: the cue takes its own dim line,
+				// indented like the task line, so a narrow pane still names the
+				// skipped entry (S267).
+				own = prefix + m.cfg.Theme.Dim.Render(treeClip("    "+strings.TrimSpace(suffix), available))
+			}
+		}
+		lines = append(lines, prefix+line)
+		if own != "" {
+			lines = append(lines, own)
+		}
 		if s.Role == "gate" && s.Phase == "fail" {
 			round := 0
 			for _, before := range laneSteps(steps[:i+1]) {
@@ -263,7 +310,8 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 		if s.hasUsage && running && (s.usageKnown || s.costKnown) {
 			lines = append(lines, prefix+m.cfg.Theme.Dim.Render(treeClip("    "+usage, available)))
 		}
-		if s.Task != "" && s.Phase != "done" {
+		// The label says what the step is: ork's own step has no task line (S267).
+		if s.Task != "" && s.Phase != "done" && !isEngineStep(s.Step) {
 			lines = append(lines, prefix+m.cfg.Theme.Dim.Render(treeClip("    "+treeText(s.Task), available)))
 		}
 		if running && !stale && s.tail != "" {
@@ -340,6 +388,7 @@ func (m *Model) roleDetails(steps []runTreeStep, r source.EngineRun) []runTreeSt
 			if role.Role == "ui" && steps[i].round == 0 {
 				steps[i].round = role.Round
 			}
+			steps[i].fellBackFrom = fellBackFrom(r.Roles, j)
 			steps[i].shapeRetry = role.ShapeRetry
 			steps[i].hasUsage = true
 			steps[i].tokens = role.Tokens
@@ -357,6 +406,26 @@ func (m *Model) roleDetails(steps []runTreeStep, r source.EngineRun) []runTreeSt
 		}
 	}
 	return steps
+}
+
+// fellBackFrom is the entry role j skipped when it fell back, or "". The role
+// fell back when the record before it for the same role failed on another entry:
+// a retry on the same entry is not a fallback. With several earlier entries only
+// the last one is named (adj 209).
+func fellBackFrom(roles []source.EngineRole, j int) string {
+	role := roles[j]
+	for k := j - 1; k >= 0; k-- {
+		before := roles[k]
+		if before.Role != role.Role {
+			continue
+		}
+		same := before.Vendor == role.Vendor && before.Model == role.Model && before.Effort == role.Effort
+		if before.EndedAt.IsZero() || before.Exit == "ok" || same {
+			return ""
+		}
+		return entryText(runrec.LineupEntry{Vendor: before.Vendor, Model: before.Model, Effort: before.Effort})
+	}
+	return ""
 }
 
 // tailRows wraps nonblank assistant text and keeps the newest three physical

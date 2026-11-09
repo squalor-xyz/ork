@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- S267 (*proposed*): the Running entry and the run pane stop showing a stale
+  cue on a run queued behind the cap: its heard cell reads `queued 19m`, dim,
+  from the engine run's `created_at`. A queued role row names its planned
+  vendor, model and effort (`. reviewer    queued  codex sol medium`), and
+  Running line 2 reads `plan: implementer claude sonnet high`. ork's own
+  orchestrator step (agent `ork`) reads `ork engine`, dim, with no clock. A
+  role that fell back shows a dim `fell back from codex sol high`. The wire
+  row `EngineRun` gains `lineup` (additive, `omitempty`). Docs:
+  `docs/dashboard.md`.
+
 - S257 (*proposed*): `ork wait [RUN] [--until STATE,...] [--timeout D]
   [--project P]` blocks until a run changes state and prints it, so scripts
   stop polling `ork status`. Exit 0 changed or entered an `--until` state, 3

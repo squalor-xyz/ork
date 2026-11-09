@@ -1003,10 +1003,26 @@ func (m *Model) engineRunRow(s source.Snapshot, r source.EngineRun, ledger slice
 		// 2 leaves the closing "; next: ork stop RUN" to the detail line, so a cut
 		// line keeps the cap.
 		rr.second = dropNextCommand(r.Wait)
+	case r.State == "queued" && plannedFirst(r.Lineup) != "":
+		// Nothing has started: line 2 says what will run first (S267).
+		rr.second = "plan: " + plannedFirst(r.Lineup)
 	default:
 		rr.second = lastTailLine(r.Tail)
 	}
 	return rr
+}
+
+// plannedFirst is the first role to run, with its planned entry: the architect
+// when the run has one, else the implementer. It is "" without a plan.
+func plannedFirst(lineup map[string][]runrec.LineupEntry) string {
+	role := "implementer"
+	if len(lineup["architect"]) > 0 {
+		role = "architect"
+	}
+	if plan := plannedEntry(lineup, role); plan != "" {
+		return role + " " + plan
+	}
+	return ""
 }
 
 // ledgerRunRow is the two-line form of a relay started elsewhere. The ledger
@@ -1023,6 +1039,10 @@ func (m *Model) ledgerRunRow(s source.Snapshot, r slicercli.RelayRun) *runRow {
 	for _, step := range r.Steps {
 		if step.Phase == "wait" {
 			rr.role, rr.model, rr.second, rr.stateOnly = step.Role+" waiting", step.Model, treeText(step.Task), false
+		} else if isEngineStep(step) && step.Phase == "start" {
+			// ork's own step is not work a role does: the row says so, dim, with no
+			// model and no task (S267).
+			rr.role, rr.model, rr.second, rr.stateOnly = engineLabel, "", "", true
 		} else if step.Phase == "start" {
 			rr.role, rr.model, rr.second, rr.stateOnly = step.Role, step.Model, treeText(step.Task), false
 		}

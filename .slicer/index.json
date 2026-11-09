@@ -14416,10 +14416,39 @@
       "id": "S267",
       "title": "Run pane cues: queued runs, the orchestrator row, vendor/model/effort on every role row",
       "short_title": "Queued runs: no stale cue",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "905856f4-5707-4408-8a41-2087ca11bdd9",
+          "kind": "",
+          "text": "**2026-11-09** — Human checks at approval (S267):\n- later: Open the Running pane with one run queued behind the cap, one running, and one that fell back: the person confirms the queued row is dim with no `!`, the orchestrator reads `ork engine` with no clock, and the fell-back row names the skipped entry.",
+          "created_at": "2026-11-09T17:49:31Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "c07b426e-aad8-4214-a430-c6c398bd76e8",
+          "kind": "",
+          "text": "**2026-11-09** — Verified: a queued engine run shows a dim 'queued AGE' (from the engine run's created_at) with no ! or !! cue, on the Running row and the pane; queued role rows and Running line 2 show the planned vendor, model and effort (new additive EngineRun.Lineup, copied from the record by the daemon); ork's own orchestrator step (agent ork) reads 'ork engine', dim, with no clock, on the tree node and the Running role cell, while other agents' orchestrator steps are unchanged; a role that fell back shows a dim 'fell back from X' beside its node, or on its own line when the pane is too narrow. Docs in docs/dashboard.md and CHANGELOG.md. Tests, mutation checks and five new goldens in place; go test ./..., go vet, gofmt and slicer check clean; gate PASS.",
+          "created_at": "2026-11-09T17:49:37Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -14437,7 +14466,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

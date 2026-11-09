@@ -1,0 +1,8 @@
+  [1mRun s443  S443  active  started elsewhere[m
+  [~~....]  [1m!! last heard 32m ago[m
+  [implementer] > [2mreviewer[m > [2mgate[m                                                            [2mround 1[m
+  [2m. ork engine[m
+    [1m| implementer  start 3m  claude sonnet[m
+  [2m. reviewer     queued[m
+  [2m. gate         queued[m
+

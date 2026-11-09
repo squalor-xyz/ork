@@ -1,0 +1,7 @@
+  [1mRun engine  S55  queued[m
+  [......]  [2mqueued 12m[m
+  [2mimplementer[m > [2mreviewer[m > [2mgate[m
+  [2m. implementer queued  claude sonnet high[m
+  [2m. reviewer    queued  codex sol medium[m
+  [2m. gate        queued  codex sol medium[m
+

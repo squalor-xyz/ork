@@ -612,7 +612,20 @@ the text column, falling back to a shorter indent when needed to fit.
    - **The role** is the engine's own running role for an engine run (its state
      word, such as `checks`, between roles, drawn dim) and the running step for
      a relay started elsewhere. A stale run shows `stale` before its role,
-     dimmed.
+     dimmed. When the only running step of a relay is ork's own orchestrator
+     step (the step with agent `ork`), the role cell reads `ork engine`, dim,
+     with no model and no line 2: the step's age is the relay's, not a
+     role's work (S267, *proposed*). An orchestrator step with another agent
+     keeps its role, model and task.
+   - **A queued engine run** (S267, *proposed*) has not started, so it has not
+     gone quiet: its heard cell reads `queued 19m`, the time since the engine
+     run's `created_at`, dim, with no `!` or `!!` cue (`queued` alone when the
+     record has no creation time). The pane's progress line says the same
+     (`queued 19m`, not `last heard`). Line 2 reads `plan: implementer claude
+     sonnet high`, the first planned role with its planned vendor, model and
+     effort (the architect first when the run has one), in place of an output
+     tail the run does not have. The plan is the run's lineup, which the daemon
+     copies from the record onto the engine run (`lineup`, additive).
    - **One fit for the section.** The cells of line 1 are chosen once for all
      Running rows, from the widest content of each column: the tightest row
      decides which cells every row keeps, and the title and the role with its
@@ -636,7 +649,8 @@ the text column, falling back to a shorter indent when needed to fit.
      there.
    `! heard` is amber after 10 minutes with no event; `!! heard` is red after
    30 minutes, the stale cutoff, and marks stale runs. The cue reads the ledger
-   run's `updated_at`. For an engine run that has a ledger run, ork's heartbeat
+   run's `updated_at`. A queued engine run has no cue (see above, S267).
+   For an engine run that has a ledger run, ork's heartbeat
    (`relay-run step --phase start`, every 10 minutes while a role runs) refreshes
    it, so a hung role's row does not reach `!!`; it can show an amber `!`
    between two ticks. For an engine run with no ledger run, `!!` shows 30
@@ -1566,7 +1580,18 @@ style (bold cyan in colour, bold in mono). A `done` step has `+` and is dim
 `?` and the warning style, with `waiting on owner` or `waiting on approval`.
 It is static and shows no elapsed time; the earlier time before the wait is
 not a waiting duration. Other phases use a neutral `.` and retain
-their raw text in plain style. An unfinished engine role in a stopped, paused
+their raw text in plain style. ork's own orchestrator step, the one with agent
+`ork`, reads `. ork engine` (`start`) or `+ ork engine` (`done`), dim, with no
+vendor, model, effort, phase word or elapsed time, and no task line: ork runs
+that step, and its age is the relay's, not a role's. A `wait` or `fail` step
+keeps its glyph and style and adds the phase word. An orchestrator step with
+another agent keeps its text (S267, *proposed*). An engine role that fell back
+to another entry shows, dim after its text, `fell back from codex sol high`:
+the entry the role skipped, the last one only. It shows when the record before
+it for the same role failed on a different entry, and not for a retry on the
+same entry. It follows the text on the same line when it fits there; in a
+narrower pane it takes its own dim line under the node, indented like the task
+line, so the skipped entry is always named (S267, *proposed*). An unfinished engine role in a stopped, paused
 or committed run uses that state word and the neutral glyph.
 Elapsed time advances from the injected clock for running steps and stops at
 `updated_at` for finished steps. A `done` step shows no task line. For every
@@ -1936,7 +1961,12 @@ run that is not live and not waiting on the owner (stopped, committed or ended)
 never reads as waiting, even if its ledger kept a step in phase `wait`. A
 live run adds `queued` tail rows only for pipeline roles with no lane step;
 queued steps keep their existing tree row. Queued rows share the tree's
-phase column. Repeated roles carry `xN` on their latest lane node. Their lane
+phase column. A queued row of an engine run adds the role's planned vendor,
+model and effort after the word, dim: `. reviewer    queued  codex sol medium`
+(the first entry of its lineup; the gate, the resumed reviewer, follows the
+reviewer's when it has none). A run with no recorded plan shows `queued` alone.
+The plan names the first entry: a gate queued after a reviewer fell back still
+shows the reviewer chain's first entry (limit, S267, *proposed*). Repeated roles carry `xN` on their latest lane node. Their lane
 steps also show a per-role ordinal, `#1`, `#2`, and so on, before `xN`, unless
 the node already shows `round N`. Nested subagents do not count toward the
 ordinal or `xN`. A failed gate has a `✗ gate FAIL -> implementer round N`

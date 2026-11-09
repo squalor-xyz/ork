@@ -1,0 +1,30 @@
+[1mork[m                        │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+  Running                2 │[90m────────────────────────────────────────────────────────────────────────[m
+[1;7;97;44m0>Needs you              0 [m│[1;36mNeeds you 0[m
+[90m1[m ork                     *│  [90mnothing needs you[m
+                           │
+                           │[1;36mRunning 2[m
+                           │[1;7;97;44m   ork  S55   queued      [......]  queued 12m                          [m
+                           │[7;97;44m          plan: implementer claude sonnet high                          [m
+                           │   ork  [1mS443[m  [90mork engine[m  [......]  [1;31m!! heard 32m[m
+                           │
+                           │[1;36mRecent[m
+                           │  [90mnone[m
+                           │
+                           │[1;36mReady to land[m
+                           │  [90mnone[m
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │  engine  S55  queued  12m  [......]  queued 12m
+                           │  implementer>reviewer>gate
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ enter [2mopen[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
+                           │ 1 project | refreshed 16:42:00

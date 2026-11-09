@@ -299,6 +299,11 @@ type EngineRun struct {
 	CreatedAt      time.Time             `json:"created_at"`
 	WaitStartedAt  time.Time             `json:"wait_started_at,omitzero"` // entry into awaiting-approval or paused (S138)
 	UpdatedAt      time.Time             `json:"updated_at,omitzero"`
+
+	// Lineup is the run's planned rows by role, copied from the record: the first
+	// entry of a role is the primary, the rest its fallbacks. The TUI shows the
+	// plan on a queued role's row (S267, proposed, ui.queued-plan-source).
+	Lineup map[string][]runrec.LineupEntry `json:"lineup,omitempty"`
 }
 
 // DenialsText formats at most three denials and counts any remaining entries.

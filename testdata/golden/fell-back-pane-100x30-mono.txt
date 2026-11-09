@@ -1,0 +1,8 @@
+  [1mRun engine  S55  review[m
+  [##~~..]  [2mlast heard 4m ago[m
+  implementer > [reviewer] > [2mgate[m                                                            [2mround 1[m
+  [1m! implementer fail  4m  codex sol high round 1  tokens -  $-[m
+  [2m+ implementer done  3m  claude sonnet round 1 x2  tokens -  $-[m[2m  fell back from codex sol high[m
+  [1m| reviewer    start 4m  claude opus round 1[m
+  [2m. gate        queued[m
+
