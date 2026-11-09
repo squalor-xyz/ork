@@ -62,21 +62,66 @@ func (d *Daemon) landed(ctx context.Context, p registry.Project, rec runrec.Reco
 	return nil, err
 }
 
-// goneAndMerged reports whether the run's worktree and branch no longer exist
-// and the commit ork made on it is in HEAD. Anything else, including a git
-// error or a worktree that is still there, is false: the run keeps its state
-// (S153).
-func (d *Daemon) goneAndMerged(ctx context.Context, p registry.Project, rec runrec.Record) bool {
-	if !worktreeGone(rec) || rec.Commit == nil || rec.Commit.SHA == "" || strings.HasPrefix(rec.Commit.SHA, "-") || rec.Branch == "" || strings.HasPrefix(rec.Branch, "-") {
+// branchGone reports whether the run's worktree path and its branch ref no
+// longer exist. A git error, a branch that exists or a worktree that is still
+// there is false: the run keeps its state (S153, S263).
+func (d *Daemon) branchGone(ctx context.Context, p registry.Project, rec runrec.Record) bool {
+	if !worktreeGone(rec) || rec.Branch == "" || strings.HasPrefix(rec.Branch, "-") {
 		return false
 	}
 	result, err := d.git(ctx, p, "rev-parse", "--verify", "--quiet", "refs/heads/"+rec.Branch)
 	var exit *clirun.ExitError
-	if !errors.As(err, &exit) || result.ExitCode != 1 {
-		return false // the branch exists, or git could not say
+	return errors.As(err, &exit) && result.ExitCode == 1
+}
+
+// commitInHead says whether the commit ork made on the run's branch is in
+// HEAD. A run with no usable commit has no merged work to find: false and
+// known. Only a git error leaves it unknown (S263).
+func (d *Daemon) commitInHead(ctx context.Context, p registry.Project, rec runrec.Record) (inHead, known bool) {
+	if rec.Commit == nil || rec.Commit.SHA == "" || strings.HasPrefix(rec.Commit.SHA, "-") {
+		return false, true
 	}
-	_, err = d.git(ctx, p, "merge-base", "--is-ancestor", rec.Commit.SHA, "HEAD")
-	return err == nil
+	result, err := d.git(ctx, p, "merge-base", "--is-ancestor", rec.Commit.SHA, "HEAD")
+	if err == nil {
+		return true, true
+	}
+	var exit *clirun.ExitError
+	return false, errors.As(err, &exit) && result.ExitCode == 1
+}
+
+// markGone marks a run cleaned when its branch and worktree are gone and git
+// can say whether its commit is in HEAD: a run from before S95 whose commit is
+// in HEAD was merged and cleaned up (S153); one whose work is not in HEAD has
+// nothing left to merge or clean, and keeps a reason (S263, adj 204 and 205).
+// Anything else, including a git error, leaves the run as it was.
+func (d *Daemon) markGone(ctx context.Context, p registry.Project, rec runrec.Record) {
+	if !d.branchGone(ctx, p, rec) {
+		return
+	}
+	inHead, known := d.commitInHead(ctx, p, rec)
+	if !known {
+		return
+	}
+	reason := ""
+	if !inHead {
+		reason = fmt.Sprintf("branch %s is gone and not merged into HEAD", rec.Branch)
+	}
+	if err := d.markCleanedWith(rec.ID, reason); err != nil {
+		fmt.Fprintf(os.Stderr, "merge detection %s: mark cleaned: %v\n", rec.ID, err)
+	}
+}
+
+// logMergeError prints a merge detection error unless it is the one last
+// printed for the run. The memory is in this process only (adj 206).
+func (d *Daemon) logMergeError(id string, err error) {
+	text := err.Error()
+	d.runs.mu.Lock()
+	last, seen := d.runs.mergeLogged[id]
+	d.runs.mergeLogged[id] = text
+	d.runs.mu.Unlock()
+	if !seen || last != text {
+		fmt.Fprintf(os.Stderr, "merge detection %s: %s\n", id, text)
+	}
 }
 
 // cleanedLocked reads the run's record and reports whether it is cleaned.
@@ -135,15 +180,14 @@ func (d *Daemon) checkMerged(ctx context.Context, p registry.Project, head strin
 		merged, err := d.landed(ctx, p, rec)
 		results[rec.ID] = merged
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "merge detection %s: %v\n", rec.ID, err)
-			// A run from before S95 can have no worktree or branch left: its
-			// commit in HEAD says it was merged and cleaned up (S153).
-			if d.goneAndMerged(ctx, p, rec) {
-				if err := d.markCleaned(rec.ID); err != nil {
-					fmt.Fprintf(os.Stderr, "merge detection %s: mark cleaned: %v\n", rec.ID, err)
-				}
-			}
+			d.logMergeError(rec.ID, err)
+			// A run from before S95 can have no worktree or branch left (S153, S263).
+			d.markGone(ctx, p, rec)
+			continue
 		}
+		d.runs.mu.Lock()
+		delete(d.runs.mergeLogged, rec.ID)
+		d.runs.mu.Unlock()
 	}
 	// The runs whose merge this pass found, with their items (S229, *proposed*).
 	var found []runrec.Record
@@ -201,6 +245,7 @@ func (d *Daemon) pruneRunsLocked() {
 	})
 	for _, id := range removed {
 		delete(d.runs.merged, id)
+		delete(d.runs.mergeLogged, id)
 		delete(d.runs.runs, id)
 	}
 	if err != nil {
@@ -258,7 +303,11 @@ func (d *Daemon) cleanupRun(ctx context.Context, a RunAction) error {
 
 // markCleaned records a finished cleanup, and drops the "cleanup failed" reason
 // of a landed run, so the row leaves Ready to land (S119, S95).
-func (d *Daemon) markCleaned(id string) error {
+func (d *Daemon) markCleaned(id string) error { return d.markCleanedWith(id, "") }
+
+// markCleanedWith is markCleaned that also records why the run counts as
+// cleaned when ork did not clean it up (S263). An empty reason records none.
+func (d *Daemon) markCleanedWith(id, reason string) error {
 	lock := d.runRecordLock(id)
 	lock.Lock()
 	defer lock.Unlock()
@@ -267,11 +316,11 @@ func (d *Daemon) markCleaned(id string) error {
 	managed := d.runs.runs[id]
 	d.runs.mu.Unlock()
 	if managed != nil && managed.engine != nil {
-		return managed.engine.MarkCleaned(at)
+		return managed.engine.MarkCleanedWith(at, reason)
 	}
 	r, err := d.runs.deps.Store.Open(id)
 	if err != nil {
 		return err
 	}
-	return r.Update(func(rec *runrec.Record) { runrec.MarkCleaned(rec, at) })
+	return r.Update(func(rec *runrec.Record) { runrec.MarkCleanedWith(rec, at, reason) })
 }

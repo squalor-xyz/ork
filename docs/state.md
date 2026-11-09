@@ -334,7 +334,10 @@ ended round plus the granted count (default 2). `roles[].tree_sha256` hashes
 the implementer's tracked diff against HEAD, including staged and binary
 changes, followed by untracked names. `checks[].log_sha256` hashes the bytes
 of the saved check log, which holds both runs of the project command when it
-was run again (S239). Both adjacent hashes must be present and equal for
+was run again (S239). *Proposed (S293):* for a project that lives in a
+subfolder of its repository, each `$ COMMAND` line of the check log is followed
+by a line `(in libraries/p)`, the folder of the worktree the command ran in; a
+project at the repository root has no such line. Both adjacent hashes must be present and equal for
 the immediate no-progress pause. Older records without hashes remain readable.
 *Proposed (S239):* `checks[].attempts` is 2 when the project command failed
 and ork ran it once more, and `checks[].flaky` is true when that second run
@@ -405,6 +408,11 @@ cleaned, including one landed with `slicer land` (which leaves `landed_at`
 empty), and the same update clears the landing's `reason`. A run is *cleaned*
 when `cleaned_at` is set, or when ork landed it and left no `reason`; the
 daemon sends that as `cleaned: true` on the run's snapshot row (*proposed*).
+`cleaned_reason` (omitted until then; *proposed*, S263, adj 204) is one line
+the daemon records when it sets `cleaned_at` for a run whose branch is gone and
+not merged, for example `branch s63 is gone and not merged into HEAD`. It is
+separate from `reason`, which keeps the landing's text; the daemon does not
+send it on the row.
 A committed, uncleaned run whose `worktree` path no longer exists also carries
 `worktree_gone: true` on its row (*proposed*, S153): the cleanup key then skips
 `git worktree remove` and the confirm omits it.
@@ -675,10 +683,17 @@ read and each changed HEAD check every committed branch with
 `git -C PATH merge-base --is-ancestor BRANCH HEAD`. Exit 0 means merged,
 exit 1 means unmerged, and another error leaves the state unknown. When that
 error is a missing branch (`git rev-parse --verify --quiet refs/heads/BRANCH`
-exits 1), the run's worktree path no longer exists and its `commit.sha` is in
-HEAD, the run is from before S95: the daemon sets its `cleaned_at` (S153). A
-missing branch with a worktree still there, with no recorded commit, or with a
-commit not in HEAD, leaves the state unknown. A pass does not write a merge
+exits 1) and the run's worktree path no longer exists, nothing is left to merge
+or clean, and the daemon sets the run's `cleaned_at` (S153, S263; adj 205). If
+its `commit.sha` is in HEAD the run is from before S95 and nothing more is
+recorded. If the commit is not in HEAD, or no usable commit is recorded, the
+daemon also records `cleaned_reason`. The state stays `committed` and the row
+shows no merge state. A missing branch with a worktree still there, or a git
+error reading the branch or the commit (anything but exit 0 or 1), leaves the
+state unknown. The daemon logs a merge detection error for a run once, and
+again only when its text changes or after a pass for that run succeeded (S263;
+adj 206); the memory is kept in the daemon process only, so a restart logs each
+run's error once more. A pass does not write a merge
 state for a run that was cleaned while git ran. An
 unchanged HEAD adds no merge reads. While a pass runs, each run keeps the
 value of the last pass, so a snapshot and the cleanup key never see "unknown"

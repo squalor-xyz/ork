@@ -825,6 +825,43 @@ func TestCleanedAtRoundTripsAndKeepsVersion(t *testing.T) {
 	}
 }
 
+// A run the daemon marks cleaned although ork never cleaned it keeps the why in
+// its own field, and the reason of a landed run is not touched (S263). The
+// field is additive, so the version stays 1.
+func TestCleanedReasonRoundTripsApartFromReason(t *testing.T) {
+	s := newStore(t)
+	r, err := s.Create(rec("a"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if raw := readFile(t, filepath.Join(r.Dir(), "run.json")); strings.Contains(raw, "cleaned_reason") {
+		t.Fatalf("cleaned_reason written before a mark:\n%s", raw)
+	}
+	if err := r.Update(func(rec *Record) {
+		rec.State = StateCommitted
+		MarkCleanedWith(rec, t0, "branch s63 is gone and not merged into HEAD")
+	}); err != nil {
+		t.Fatal(err)
+	}
+	again, err := s.Open("a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := again.Snapshot()
+	if got.CleanedReason != "branch s63 is gone and not merged into HEAD" || got.Reason != "" || !got.Cleaned() || got.Version != 1 {
+		t.Fatalf("cleaned reason %q, reason %q, cleaned %v, version %d", got.CleanedReason, got.Reason, got.Cleaned(), got.Version)
+	}
+	if raw := readFile(t, filepath.Join(r.Dir(), "run.json")); !strings.Contains(raw, `"cleaned_reason": "branch s63 is gone and not merged into HEAD"`) {
+		t.Fatalf("cleaned_reason missing:\n%s", raw)
+	}
+	// An empty reason keeps the one recorded.
+	again2 := again.Snapshot()
+	MarkCleaned(&again2, t0)
+	if again2.CleanedReason == "" {
+		t.Error("MarkCleaned dropped the recorded cleaned reason")
+	}
+}
+
 func TestCleanedReadsLandedRunsWithoutAFailedCleanup(t *testing.T) {
 	landed := Record{State: StateCommitted, LandedAt: t0}
 	failed := Record{State: StateCommitted, LandedAt: t0, Reason: "landed; cleanup failed at git branch -d s63: X"}

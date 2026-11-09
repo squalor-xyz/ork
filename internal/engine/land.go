@@ -246,6 +246,10 @@ func errText(err error) string {
 // MarkCleaned records that the owner's cleanup removed the worktree and the
 // branch (S95), and drops the reason a landed run kept for a failed cleanup
 // (S119).
-func (e *Engine) MarkCleaned(at time.Time) error {
-	return e.run.Update(func(r *runrec.Record) { runrec.MarkCleaned(r, at) })
+func (e *Engine) MarkCleaned(at time.Time) error { return e.MarkCleanedWith(at, "") }
+
+// MarkCleanedWith is MarkCleaned that also records why a run whose branch is
+// gone and not merged counts as cleaned (S263).
+func (e *Engine) MarkCleanedWith(at time.Time, reason string) error {
+	return e.run.Update(func(r *runrec.Record) { runrec.MarkCleanedWith(r, at, reason) })
 }

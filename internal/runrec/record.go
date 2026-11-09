@@ -317,10 +317,11 @@ type Record struct {
 	State            string                   `json:"state"`
 	Round            int                      `json:"round"`
 	Fails            int                      `json:"fails,omitempty"`
-	LandFixes        int                      `json:"land_fixes,omitempty"`   // fix rounds that a blocked landing has had (S119)
-	LandedAt         time.Time                `json:"landed_at,omitzero"`     // when ork landed the slice on the base branch (S119)
-	LandRecheck      bool                     `json:"land_recheck,omitempty"` // the base branch is merged into the slice branch and no green re-check has followed (S119)
-	CleanedAt        time.Time                `json:"cleaned_at,omitzero"`    // when the worktree and branch were removed (S95)
+	LandFixes        int                      `json:"land_fixes,omitempty"`     // fix rounds that a blocked landing has had (S119)
+	LandedAt         time.Time                `json:"landed_at,omitzero"`       // when ork landed the slice on the base branch (S119)
+	LandRecheck      bool                     `json:"land_recheck,omitempty"`   // the base branch is merged into the slice branch and no green re-check has followed (S119)
+	CleanedAt        time.Time                `json:"cleaned_at,omitzero"`      // when the worktree and branch were removed (S95)
+	CleanedReason    string                   `json:"cleaned_reason,omitempty"` // why the daemon marked a run cleaned that ork did not clean up: its branch is gone and not merged (S263)
 	Reason           string                   `json:"reason,omitempty"`
 	Pending          *Pending                 `json:"pending,omitempty"`
 	Resume           *ResumeRequest           `json:"resume,omitempty"`           // an answer or retry that waits for a slot (S274, proposed)
@@ -354,8 +355,16 @@ func (r Record) Cleaned() bool {
 
 // MarkCleaned sets the cleanup time and drops the reason a landed run kept for
 // a failed cleanup.
-func MarkCleaned(r *Record, at time.Time) {
+func MarkCleaned(r *Record, at time.Time) { MarkCleanedWith(r, at, "") }
+
+// MarkCleanedWith is MarkCleaned that also records why the run counts as
+// cleaned although ork did not clean it up (S263). An empty reason keeps the
+// one already recorded.
+func MarkCleanedWith(r *Record, at time.Time, reason string) {
 	r.CleanedAt = at
+	if reason != "" {
+		r.CleanedReason = reason
+	}
 	if !r.LandedAt.IsZero() && r.State == StateCommitted {
 		r.Reason = ""
 	}

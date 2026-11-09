@@ -6,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -30,6 +32,36 @@ func RunCheck(ctx context.Context, dir, command string, timeout time.Duration) (
 		return CheckOutput{Output: out + fmt.Sprintf("\ntimed out after %v\n", timeout), TimedOut: true}, nil
 	}
 	return CheckOutput{}, err
+}
+
+// CheckDir is the directory the project check command runs in (*proposed*,
+// S293): the project's own folder in the worktree. The worktree is a checkout
+// of the whole repository, so a project that lives in a subfolder of it (a
+// monorepo) has its folder below the worktree root. git names that folder
+// (`git rev-parse --show-prefix` in the project path: empty at the repository
+// root, otherwise "libraries/p/"). A folder that is not in the worktree is an
+// error, not a fall back to the root, where the command would run in the wrong
+// place.
+func (e *Engine) CheckDir(ctx context.Context, projectPath, worktree string) (string, error) {
+	out, err := e.gitRead(ctx, projectPath, "rev-parse", "--show-prefix")
+	if err != nil {
+		return "", err
+	}
+	prefix := strings.TrimSuffix(out, "\n")
+	if prefix == "" {
+		return worktree, nil
+	}
+	dir := filepath.Join(worktree, filepath.FromSlash(prefix))
+	info, err := os.Stat(dir)
+	switch {
+	case errors.Is(err, os.ErrNotExist):
+		return "", fmt.Errorf("the project folder %s does not exist in the worktree", dir)
+	case err != nil:
+		return "", err
+	case !info.IsDir():
+		return "", fmt.Errorf("the project folder %s is not a directory in the worktree", dir)
+	}
+	return dir, nil
 }
 
 // tail keeps the last n bytes of s, so a huge test log does not fill a brief.

@@ -637,6 +637,11 @@ slice.
   with `land blocked: checks red after merging BASE`, in Needs you, with the
   worktree and the branch kept.
 
+*Proposed (S263):* merge detection (`docs/state.md`) prints a given run's
+error once, not on every HEAD change. A committed run whose worktree path and
+branch are gone and whose work is not in HEAD is marked cleaned with a
+`cleaned_reason`, and is then no longer checked; git is only read for it.
+
 ### Engine (S04)
 
 `internal/engine` runs one slice through these states against a `Runner`
@@ -693,7 +698,21 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   exit failure of the project command is run once more first, and the brief
   starts with the failing tests (see the checks bullet above). *Proposed (S279):*
   `slicer check` problems on other items defer to the landing merge when the
-  branch is behind its base (see the checks bullet above).
+  branch is behind its base (see the checks bullet above). *Proposed (S293,
+  adj 211, 212, 213):* the project command runs in the project's own folder
+  of the worktree, not at its root. The worktree is a checkout of the whole
+  repository, so a project that lives in a subfolder of it (a monorepo, for
+  example `libraries/prism-ui`) would otherwise run its command one level too
+  high. ork asks git for the folder (`git rev-parse --show-prefix` in the
+  project path; empty at the repository root) and joins it to the worktree. This
+  holds for the round check, the S239 rerun and the landing re-check
+  (`land-checks-<round>.log`). A project at the repository root is unchanged.
+  When the folder is not at the root, the check log names it on a line
+  `(in libraries/p)` after each `$ COMMAND` line. A folder that is missing in
+  the worktree, or a git error, pauses the slice with kind `error` and a
+  reason that starts `check directory:`; ork does not fall back to the root.
+  `slicer check` still runs at the worktree root. S295 reuses the helper
+  (`Engine.CheckDir`).
 - **Review and gate.** The reviewer runs once, fresh and read-only. Findings
   start a fix round. After green checks, or a clean review, the optional
   architect runs before the gate. Its whole report starts another fix round,

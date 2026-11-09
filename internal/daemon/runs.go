@@ -147,6 +147,7 @@ type runManager struct {
 	cleaning        map[string]bool        // cleanup calls in flight; guarded by mu
 	heads           map[string]string
 	merged          map[string]*bool
+	mergeLogged     map[string]string          // run ID to the last merge detection error logged for it; guarded by mu (S263)
 	lastRegistry    *registry.File             // last successful run-manager read; guarded by mu
 	waveStops       map[string]int             // suppress queued members while a wave stop is in progress
 	specs           map[string]specEntry       // the spec checks the daemon remembers, by project and item; guarded by mu
@@ -194,7 +195,7 @@ func (d *Daemon) initRunManager() {
 		}
 		deps.Wake = engine.NewWake(now)
 	}
-	d.runs = runManager{recordLocks: map[string]*sync.Mutex{}, cleaning: map[string]bool{}, heads: map[string]string{}, merged: map[string]*bool{}, ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}, waveStops: map[string]int{}, specs: map[string]specEntry{}, specCancels: map[int]context.CancelFunc{}}
+	d.runs = runManager{recordLocks: map[string]*sync.Mutex{}, cleaning: map[string]bool{}, heads: map[string]string{}, merged: map[string]*bool{}, mergeLogged: map[string]string{}, ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}, waveStops: map[string]int{}, specs: map[string]specEntry{}, specCancels: map[int]context.CancelFunc{}}
 }
 
 // watchLocalSlots admits queued runs when a local role/spec check frees a

@@ -789,7 +789,7 @@ func staleGit(t *testing.T, d *Daemon, p registry.Project, branchExit, shaExit i
 	t.Helper()
 	// The fake routes are process-wide: the HEAD read of the cache needs its own.
 	f := clitest.Install(t,
-		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "rev-parse", "HEAD"}, Stdout: "h1"},
+		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "rev-parse", "HEAD"}, Seq: []clitest.Reply{{Stdout: "h1"}, {Stdout: "h2"}, {Stdout: "h3"}}},
 		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "merge-base", "--is-ancestor", "s63", "HEAD"}, Exit: 128},
 		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "rev-parse", "--verify", "--quiet", "refs/heads/s63"}, Exit: branchExit},
 		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "merge-base", "--is-ancestor", "abc123", "HEAD"}, Exit: shaExit},
@@ -833,8 +833,9 @@ func TestStaleRunWithGoneBranchAndMergedCommitIsCleaned(t *testing.T) {
 	}
 }
 
-// Anything short of "the branch and worktree are gone and the commit is in
-// HEAD" leaves the run as it was: one variable at a time.
+// A run is left as it was unless its branch and worktree are gone and git can
+// say whether the commit is in HEAD: one variable at a time. A gone branch
+// whose commit is not in HEAD is the other outcome (S263, adj 205).
 func TestStaleRunIsNotCleanedUnlessAllHold(t *testing.T) {
 	for _, tc := range []struct {
 		name                string
@@ -844,12 +845,8 @@ func TestStaleRunIsNotCleanedUnlessAllHold(t *testing.T) {
 	}{
 		{"the branch still exists", "abc123", 0, 0, false},
 		{"the worktree is still there", "abc123", 1, 0, true},
-		{"the commit is not in HEAD", "abc123", 1, 1, false},
 		{"git fails reading the commit", "abc123", 1, 2, false},
 		{"git fails reading the branch", "abc123", 2, 0, false},
-		{"no commit is recorded", "none", 1, 0, false},
-		{"the commit has no sha", "", 1, 0, false},
-		{"the commit looks like an option", "--x", 1, 0, false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			d, s, p, _ := landingDaemon(t, 128, "")
@@ -869,6 +866,177 @@ func TestStaleRunIsNotCleanedUnlessAllHold(t *testing.T) {
 				t.Errorf("row %+v, want not cleaned and merge state unknown", row)
 			}
 		})
+	}
+}
+
+// A run whose branch and worktree are gone and whose work is not in HEAD has
+// nothing left to merge or clean: it is marked cleaned with a reason, whatever
+// commit is recorded. The state stays committed and no merge state is shown
+// (S263, adj 204 and 205).
+func TestGoneUnmergedBranchIsMarkedCleanedWithAReason(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 128, "")
+	staleRun(t, s, p, "abc123")
+	removeWorktree(t, p)
+	staleGit(t, d, p, 1, 1)
+	refreshHead(t, d, p)
+	rec := runRecord(t, s, "run")
+	if rec.CleanedAt.IsZero() || !rec.Cleaned() || rec.State != runrec.StateCommitted {
+		t.Errorf("the gone unmerged run is not marked cleaned: %+v", rec)
+	}
+	if !strings.Contains(rec.CleanedReason, "s63") || !strings.Contains(rec.CleanedReason, "not merged") {
+		t.Errorf("cleaned reason %q does not name the branch and say not merged", rec.CleanedReason)
+	}
+	if rec.Reason != "" {
+		t.Errorf("the reason of a landed run was used: %q", rec.Reason)
+	}
+	if row := d.engineRuns(p.Name)[0]; !row.Cleaned || row.Merged != nil {
+		t.Errorf("row %+v, want cleaned and merge state unknown", row)
+	}
+}
+
+// The recorded commit does not matter once the branch and worktree are gone
+// (adj 205): a missing, empty or option-like commit is not asked about in git.
+func TestGoneUnmergedRunIsCleanedWhateverTheCommit(t *testing.T) {
+	for _, tc := range []struct{ name, sha string }{
+		{"the commit is not in HEAD", "abc123"},
+		{"no commit is recorded", "none"},
+		{"the commit has no sha", ""},
+		{"the commit looks like an option", "--x"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			d, s, p, _ := landingDaemon(t, 128, "")
+			staleRun(t, s, p, tc.sha)
+			removeWorktree(t, p)
+			f := staleGit(t, d, p, 1, 1)
+			refreshHead(t, d, p)
+			if rec := runRecord(t, s, "run"); rec.CleanedAt.IsZero() || !strings.Contains(rec.CleanedReason, "not merged") {
+				t.Errorf("not marked cleaned with a reason: %+v", rec)
+			}
+			for _, c := range f.CallsTo("git") {
+				if len(c.Args) > 4 && c.Args[2] == "merge-base" && (c.Args[4] == "" || strings.HasPrefix(c.Args[4], "-")) {
+					t.Errorf("git was asked about an unusable commit: %v", c)
+				}
+			}
+		})
+	}
+}
+
+// With the worktree still there the work may be unmerged and still wanted: the
+// run is left as it was, and the error is logged once (S263, adj 205).
+func TestGoneUnmergedRunWithTheWorktreeStillThereIsNotCleaned(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 128, "")
+	staleRun(t, s, p, "abc123")
+	staleGit(t, d, p, 1, 1)
+	out := captureRunErrors(t, func() { refreshHead(t, d, p); refreshHead(t, d, p) })
+	if rec := runRecord(t, s, "run"); rec.Cleaned() || rec.CleanedReason != "" {
+		t.Errorf("marked cleaned: %+v", rec)
+	}
+	if n := strings.Count(out, "merge detection run:"); n != 1 {
+		t.Errorf("logged %d times, want once: %q", n, out)
+	}
+}
+
+// The mark is a record write: git only reads (S153).
+func TestGoneUnmergedMarkWritesNothingToGit(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 128, "")
+	staleRun(t, s, p, "abc123")
+	removeWorktree(t, p)
+	f := staleGit(t, d, p, 1, 1)
+	refreshHead(t, d, p)
+	if rec := runRecord(t, s, "run"); rec.CleanedAt.IsZero() {
+		t.Fatalf("not marked cleaned: %+v", rec)
+	}
+	for _, c := range f.CallsTo("git") {
+		if c.Args[2] != "merge-base" && c.Args[2] != "rev-parse" {
+			t.Errorf("git wrote: %v", c)
+		}
+	}
+}
+
+// mergeErrorGit fakes git for a run whose branch exists and whose merge check
+// answers with replies, one per pass; each pass sees a new HEAD.
+func mergeErrorGit(t *testing.T, d *Daemon, p registry.Project, replies ...clitest.Reply) {
+	t.Helper()
+	f := clitest.Install(t,
+		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "rev-parse", "HEAD"}, Seq: []clitest.Reply{{Stdout: "h1"}, {Stdout: "h2"}, {Stdout: "h3"}, {Stdout: "h4"}}},
+		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "merge-base", "--is-ancestor", "s63", "HEAD"}, Seq: replies},
+		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "rev-parse", "--verify", "--quiet", "refs/heads/s63"}})
+	setGitBin(d, f.Bin("git"))
+}
+
+func mergeErrorLines(out string) int { return strings.Count(out, "merge detection run:") }
+
+// The same error for the same run is not printed on every HEAD change.
+func TestMergeDetectionErrorIsLoggedOncePerRun(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 128, "")
+	committedRun(t, s, p, "run", "committed")
+	mergeErrorGit(t, d, p, clitest.Reply{Exit: 128, Stderr: "fatal: bad object"})
+	out := captureRunErrors(t, func() { refreshHead(t, d, p); refreshHead(t, d, p); refreshHead(t, d, p) })
+	if n := mergeErrorLines(out); n != 1 {
+		t.Errorf("logged %d lines, want 1: %q", n, out)
+	}
+	if !strings.Contains(out, "exit 128: fatal: bad object") {
+		t.Errorf("the error text changed: %q", out)
+	}
+}
+
+func TestMergeDetectionLogsAgainWhenTheErrorChanges(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 128, "")
+	committedRun(t, s, p, "run", "committed")
+	mergeErrorGit(t, d, p, clitest.Reply{Exit: 128, Stderr: "fatal: first"}, clitest.Reply{Exit: 128, Stderr: "fatal: second"})
+	out := captureRunErrors(t, func() { refreshHead(t, d, p); refreshHead(t, d, p) })
+	if n := mergeErrorLines(out); n != 2 {
+		t.Errorf("logged %d lines, want 2: %q", n, out)
+	}
+}
+
+// A pass that works forgets the error, so the same failure later is news again.
+func TestMergeDetectionLogsAgainAfterTheRunRecovers(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 128, "")
+	committedRun(t, s, p, "run", "committed")
+	mergeErrorGit(t, d, p, clitest.Reply{Exit: 128, Stderr: "fatal: bad"}, clitest.Reply{Exit: 1}, clitest.Reply{Exit: 128, Stderr: "fatal: bad"})
+	out := captureRunErrors(t, func() { refreshHead(t, d, p); refreshHead(t, d, p); refreshHead(t, d, p) })
+	if n := mergeErrorLines(out); n != 2 {
+		t.Errorf("logged %d lines, want 2: %q", n, out)
+	}
+}
+
+// Two runs with the same error each log once: the memory is per run.
+func TestMergeDetectionOnceIsPerRun(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 128, "")
+	committedRun(t, s, p, "run", "committed")
+	committedRun(t, s, p, "run2", "committed")
+	mergeErrorGit(t, d, p, clitest.Reply{Exit: 128, Stderr: "fatal: bad"})
+	out := captureRunErrors(t, func() { refreshHead(t, d, p); refreshHead(t, d, p) })
+	if n := strings.Count(out, "merge detection run:") + strings.Count(out, "merge detection run2:"); n != 2 {
+		t.Errorf("logged %d lines, want 2: %q", n, out)
+	}
+}
+
+// A pruned run drops its memory of the logged error.
+func TestPruneDropsTheLoggedMergeError(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 1, "")
+	for i := 0; i < 101; i++ {
+		committedRun(t, s, p, fmt.Sprintf("run%03d", i), "committed")
+	}
+	r, err := s.Open("run000")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := r.Update(func(rec *runrec.Record) { rec.CleanedAt = time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC) }); err != nil {
+		t.Fatal(err)
+	}
+	d.runs.mu.Lock()
+	d.runs.mergeLogged["run000"] = "old error"
+	d.runs.mu.Unlock()
+	refreshHead(t, d, p)
+	if _, err := s.Open("run000"); err == nil {
+		t.Fatal("the cleaned run was not pruned")
+	}
+	d.runs.mu.Lock()
+	defer d.runs.mu.Unlock()
+	if _, ok := d.runs.mergeLogged["run000"]; ok {
+		t.Error("the pruned run still has a logged error")
 	}
 }
 

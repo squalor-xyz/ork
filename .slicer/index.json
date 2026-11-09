@@ -14174,7 +14174,7 @@
       "id": "S263",
       "title": "Daemon log: stop repeating the same merge-detection error on every poll",
       "short_title": "Daemon log: stop repeating the same merge-detection error on every poll",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -14184,6 +14184,20 @@
           "text": "**2026-11-07** — Owner 2026-11-07: a run whose branch is gone and not merged is marked cleaned with a reason recorded, and the error is logged once.",
           "created_at": "2026-11-07T14:56:58Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "0be36115-fc2f-49da-b80e-1047be29ee93",
+          "kind": "",
+          "text": "**2026-11-09** — Verified: the daemon prints a run's merge detection error once and again only when its text changes or after a pass for that run works (in memory only, dropped on prune). A committed run whose branch ref and worktree path are gone and whose work is not in HEAD, or that has no usable commit, is marked cleaned with the new cleaned_reason field and stays committed; a git error still leaves the state unknown. go test ./..., go vet ./..., gofmt -l ., slicer check and adj lint were clean; every new assertion was mutation-checked.",
+          "created_at": "2026-11-09T17:24:49Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -14210,7 +14224,7 @@
         "importance": 1,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -15755,7 +15769,7 @@
       "id": "S293",
       "title": "Check command: run it from the project's own folder when the project lives in a subfolder of its repo (monorepo)",
       "short_title": "Check command: run it from the project's own folder when the project lives in a subfolder of its repo (monorepo)",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -15786,6 +15800,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "b517a8cb-54f0-4082-9404-f999340068ff",
+          "kind": "",
+          "text": "**2026-11-09** — Human checks at approval (S293):\n- later: On a project inside a monorepo subfolder (prism-ui), start a small run: the person confirms the check log shows the command succeeding from the project folder.",
+          "created_at": "2026-11-09T17:48:13Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "e064b885-ce5d-4810-ad88-f15c6c260d9a",
+          "kind": "",
+          "text": "**2026-11-09** — The project check command now runs in the project's own folder of the worktree (CheckDir, git rev-parse --show-prefix) for the round check, the S239 rerun and the landing re-check; the check log names the folder with (in REL) off the repo root; a missing folder or git error pauses with 'check directory:'. Verified: go vet, gofmt and go test ./... green (5297 passed, 0 failed), slicer check and adj lint clean, 9 mutations each went red. The prism-ui human check is not run.",
+          "created_at": "2026-11-09T17:48:19Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -15805,7 +15847,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
