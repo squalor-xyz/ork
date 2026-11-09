@@ -57,9 +57,10 @@ func currentBuildID() string {
 // program is what run does outside itself. main supplies the real functions;
 // tests supply fakes.
 type program struct {
-	start  func(ctx context.Context) error // starts a daemon detached; nil means none can be started
-	tui    func(tui.Config) error          // shows the TUI until the owner quits
-	daemon func(ctx context.Context) error // serves the socket until ctx ends
+	terminal func(io.Writer) bool            // nil means brand.IsTerminal
+	start    func(ctx context.Context) error // starts a daemon detached; nil means none can be started
+	tui      func(tui.Config) error          // shows the TUI until the owner quits
+	daemon   func(ctx context.Context) error // serves the socket until ctx ends
 }
 
 func main() {
@@ -100,8 +101,14 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer, p program
 		return 2
 	}
 	if *showVersion {
-		for _, row := range brand.Mark(brand.ColourWanted(stdout, os.Getenv), brand.ASCIILocale(os.Getenv)) {
-			fmt.Fprintln(stdout, row)
+		terminal := p.terminal
+		if terminal == nil {
+			terminal = brand.IsTerminal
+		}
+		if terminal(stdout) {
+			for _, row := range brand.Mark(brand.ColourWanted(stdout, os.Getenv), brand.ASCIILocale(os.Getenv)) {
+				fmt.Fprintln(stdout, row)
+			}
 		}
 		fmt.Fprintf(stdout, "ork %s\n", version)
 		return 0

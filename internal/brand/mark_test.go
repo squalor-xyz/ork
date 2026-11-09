@@ -92,3 +92,42 @@ func TestColourWanted(t *testing.T) {
 		t.Fatal("NO_COLOR ignored")
 	}
 }
+
+func TestIsTerminalMeansACharacterDevice(t *testing.T) {
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Close()
+	defer w.Close()
+	device, err := os.Open(os.DevNull)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer device.Close()
+	t.Run("buffer", func(t *testing.T) {
+		if IsTerminal(&bytes.Buffer{}) {
+			t.Fatal("buffer is a terminal")
+		}
+	})
+	t.Run("pipe", func(t *testing.T) {
+		if IsTerminal(w) {
+			t.Fatal("pipe is a terminal")
+		}
+	})
+	t.Run("device", func(t *testing.T) {
+		if !IsTerminal(device) {
+			t.Fatal("character device is not a terminal")
+		}
+	})
+	t.Run("no-colour", func(t *testing.T) {
+		if ColourWanted(device, func(string) string { return "1" }) {
+			t.Fatal("NO_COLOR ignored on device")
+		}
+	})
+	t.Run("colour", func(t *testing.T) {
+		if !ColourWanted(device, func(string) string { return "" }) {
+			t.Fatal("device colour disabled")
+		}
+	})
+}

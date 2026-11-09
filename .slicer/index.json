@@ -2059,10 +2059,39 @@
       "id": "S103",
       "title": "Version and logo polish: mark only on a terminal, stale marker clears after a restart",
       "short_title": "Version line and stale marker",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7897610c-b278-41ee-bb90-bd666a187812",
+          "kind": "",
+          "text": "**2026-11-09** — Human checks at approval (S103):\n- later: [AFTER LAND] With a stale daemon, open the TUI at 100x30 and 80x24; restart the rebuilt daemon while no role runs and confirm the marker clears without reopening. Owner runs the new build from ~/bin/ork.",
+          "created_at": "2026-11-09T06:41:53Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "77b7886e-1c68-4d7d-9489-947e81de52dc",
+          "kind": "",
+          "text": "**2026-11-09** — Version output is plain on pipes and files and retains the mark on terminals. Snapshots refresh the TUI daemon build so a matching restart clears the stale marker; empty builds retain the fallback. Focused tests, vet, formatting and tracking checks passed; socket verification was sandbox-limited. Gate PASS and owner approval received; after-land human restart check deferred by owner.",
+          "created_at": "2026-11-09T06:43:09Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -2080,7 +2109,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

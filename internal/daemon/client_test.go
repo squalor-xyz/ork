@@ -87,6 +87,40 @@ func TestClientPlanAndStart(t *testing.T) {
 	}
 }
 
+func TestClientSnapshotCarriesTheDaemonBuild(t *testing.T) {
+	socket := filepath.Join(shortDir(t), "s")
+	listener, err := ipc.Listen(socket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	server := &ipc.Server{Handler: func(_ context.Context, method string, _ json.RawMessage) (any, error) {
+		if method != MethodSnapshot {
+			return nil, fmt.Errorf("unexpected method: %s", method)
+		}
+		return SnapshotResult{DaemonBuild: "daemon-build"}, nil
+	}}
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() { done <- server.Serve(ctx, listener) }()
+	t.Cleanup(func() {
+		cancel()
+		select {
+		case <-done:
+		case <-time.After(2 * time.Second):
+			t.Error("server did not stop")
+		}
+	})
+	c, err := Dial(ctx, socket)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Close()
+	snap := c.Snapshot(context.Background(), registry.Project{Name: "alpha"})
+	if snap.DaemonBuild != "daemon-build" {
+		t.Fatalf("client snapshot daemon build = %q, want daemon-build", snap.DaemonBuild)
+	}
+}
+
 func TestClientSpecCheckAndAnswer(t *testing.T) {
 	socket := filepath.Join(shortDir(t), "s")
 	listener, err := ipc.Listen(socket)

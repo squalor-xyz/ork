@@ -122,6 +122,7 @@ func (c *Client) Snapshot(ctx context.Context, p registry.Project) source.Snapsh
 		}
 	}
 	return source.Snapshot{
+		DaemonBuild:  out.DaemonBuild,
 		SelfHost:     out.SelfHost,
 		BehindMain:   out.BehindMain,
 		RolesRunning: out.RolesRunning,

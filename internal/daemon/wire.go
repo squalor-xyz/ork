@@ -234,12 +234,13 @@ func (p Part[T]) result() source.Result[T] {
 
 // SnapshotResult is source.Snapshot over the wire.
 type SnapshotResult struct {
-	SelfHost     bool                       `json:"self_host"`             // proposed
-	BehindMain   bool                       `json:"behind_main"`           // proposed
-	RolesRunning bool                       `json:"roles_running"`         // global activity, as in status
-	VendorsOut   []VendorOut                `json:"vendors_out,omitempty"` // proposed (S169): as in status
-	Unavailable  bool                       `json:"unavailable,omitempty"` // proposed: stored runs only
-	BoardRuns    Part[[]slicercli.RelayRun] `json:"board_runs"`            // proposed: stale and recently ended runs
+	DaemonBuild  string                     `json:"daemon_build,omitempty"` // proposed
+	SelfHost     bool                       `json:"self_host"`              // proposed
+	BehindMain   bool                       `json:"behind_main"`            // proposed
+	RolesRunning bool                       `json:"roles_running"`          // global activity, as in status
+	VendorsOut   []VendorOut                `json:"vendors_out,omitempty"`  // proposed (S169): as in status
+	Unavailable  bool                       `json:"unavailable,omitempty"`  // proposed: stored runs only
+	BoardRuns    Part[[]slicercli.RelayRun] `json:"board_runs"`             // proposed: stale and recently ended runs
 	EngineRuns   []EngineRun                `json:"engine_runs"`
 	Project      registry.Project           `json:"project"`
 	Items        Part[[]slicercli.Item]     `json:"items"`

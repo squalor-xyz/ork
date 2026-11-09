@@ -574,13 +574,17 @@ func (m *Model) statusLine(w int) string {
 		})
 	}
 	notices := 0 // the daemon notice, which stays first
+	daemonBuild := m.daemonBuild
+	if daemonBuild == "" {
+		daemonBuild = m.cfg.DaemonBuild
+	}
 	if notice := daemon.BehindWarning(status); notice != "" {
 		if lipgloss.Width(" "+notice) > w {
 			notice = "behind main: ork daemon restart"
 		}
 		fields = append([]string{m.cfg.Theme.Warn.Render(notice)}, fields...)
 		notices = 1
-	} else if (m.cfg.BuildID != "" || m.cfg.DaemonBuild != "") && daemon.StaleBuild(m.cfg.BuildID, m.cfg.DaemonBuild) {
+	} else if (m.cfg.BuildID != "" || m.cfg.DaemonBuild != "") && daemon.StaleBuild(m.cfg.BuildID, daemonBuild) {
 		// Empty builds are the seam for runs with no daemon info (tests).
 		// The behind notice replaces the stale marker while it is shown.
 		fields = append([]string{m.cfg.Theme.Warn.Render("daemon build differs: ork daemon restart")}, fields...)

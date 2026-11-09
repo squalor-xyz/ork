@@ -47,6 +47,34 @@ func TestStaleDaemonWarningInStatusLine(t *testing.T) {
 		}
 	}
 }
+
+func TestStaleMarkerClearsAfterTheDaemonRestarts(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		builds []string
+		warn   bool
+	}{
+		{"startup", nil, true},
+		{"restarted", []string{"new"}, false},
+		{"changed-again", []string{"new", "newer"}, true},
+		{"empty-keeps-current", []string{"new", ""}, false},
+		{"empty-keeps-stale", []string{"new", "newer", ""}, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			m := goldenModel(NewTheme(true), 100, 30)
+			m.cfg.BuildID, m.cfg.DaemonBuild = "new", "old"
+			for _, build := range tc.builds {
+				s := m.projects[0].snap
+				s.DaemonBuild = build
+				m.apply(snapshotMsg{name: s.Project.Name, snap: s})
+			}
+			line := stripANSI(m.statusLine(100))
+			if strings.Contains(line, "daemon build differs: ork daemon restart") != tc.warn {
+				t.Fatalf("stale marker: %q, want warning %v", line, tc.warn)
+			}
+		})
+	}
+}
 func TestHeaderVersionMovesToStatusWhenSidebarHidden(t *testing.T) {
 	m := goldenModel(NewTheme(true), 100, 30)
 	m.cfg.Version = "v1"

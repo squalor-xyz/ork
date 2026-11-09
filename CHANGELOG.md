@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- S103 (*proposed*): `ork --version` prints the mark only on a terminal;
+  on a pipe or file it prints plain `ork VERSION`. The TUI refreshes the
+  daemon build from snapshots so the stale-build marker clears after a
+  matching daemon restart without reopening the TUI.
+
 - S309 (*proposed*): spec-check flags slice Check commands outside the
   implementer's resolved allowlist, with environment prefixes or with paths
   outside the worktree. Gate briefs separate runnable and orchestrator-only

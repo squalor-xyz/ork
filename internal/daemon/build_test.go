@@ -25,6 +25,18 @@ func TestStaleBuild(t *testing.T) {
 	}
 }
 
+func TestSnapshotCarriesTheDaemonBuild(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	d.cfg.BuildID = "daemon-build"
+	snap, err := d.snapshot(context.Background(), SnapshotParams{Project: p.Name})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if snap.DaemonBuild != "daemon-build" {
+		t.Fatalf("snapshot daemon build = %q, want daemon-build", snap.DaemonBuild)
+	}
+}
+
 // selfHostRepo creates commits only in the test's disposable repository.
 func selfHostRepo(t *testing.T) (string, string, func(...string) string) {
 	t.Helper()

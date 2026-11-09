@@ -8,14 +8,12 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/squalor-xyz/ork/internal/brand"
 )
 
 // The install command in the README puts ork in GOBIN, a user directory, with
 // no sudo. The test runs that command with GOBIN set to a temporary directory
 // and runs the binary it writes.
-func TestTheDocumentedInstallPutsOrkInGOBIN(t *testing.T) {
+func TestInstalledVersionIsPlainOnAPipe(t *testing.T) {
 	const install = "go install ./cmd/ork"
 	readme, err := os.ReadFile(filepath.Join("..", "..", "README.md"))
 	if err != nil {
@@ -34,7 +32,7 @@ func TestTheDocumentedInstallPutsOrkInGOBIN(t *testing.T) {
 		t.Fatalf("%s: %v\n%s", install, err, out)
 	}
 	out, err := exec.Command(filepath.Join(bin, "ork"), "--version").Output()
-	if err != nil || string(out) != strings.Join(brand.Mark(false, asciiLocale(os.Getenv)), "\n")+"\nork dev\n" {
+	if err != nil || string(out) != "ork dev\n" {
 		t.Fatalf("installed ork --version: %v, stdout %q", err, out)
 	}
 }

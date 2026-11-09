@@ -281,6 +281,10 @@ A stale or unknown daemon build puts
 the project and refresh fields, unless the behind notice is shown (see
 Self-hosting). The behind notice replaces the stale-build marker. At narrow
 widths, trailing fields are dropped first so the behind notice keeps priority.
+*Proposed (S103):* each non-empty snapshot `daemon_build` refreshes the build
+used for this marker. After `ork daemon restart` the marker clears on the next
+snapshot when the builds match, without reopening the TUI. An empty field
+keeps the last known build; before the first refresh, daemon.info is the fallback.
 
 A vendor that the daemon remembers as out (S169, *proposed*) adds one warning
 field, `codex out until 17:02` (`codex out until back` for a mark the owner
@@ -294,7 +298,9 @@ Vendors). A change made outside the TUI shows at the next snapshot.
 The six-row text mark appears above `?` help only when the pane can fit the
 mark, a blank line and every help line, and is at least twelve columns wide
 (ui.version-mark, adj #131). At 100x30 it is omitted so quit stays visible.
-`ork --version` and text `ork doctor` also print the mark. Non-UTF-8 locales
+*Proposed (S103):* `ork --version` prints the mark only when stdout is a
+character device. On a pipe or file its first line is plain `ork VERSION`.
+Text `ork doctor` also prints the mark. Non-UTF-8 locales
 use ASCII; `NO_COLOR` and redirected output use no colour. Doctor JSON stays
 unchanged.
 

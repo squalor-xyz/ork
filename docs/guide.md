@@ -41,8 +41,9 @@ From the repository root, with Go installed (`README.md:24-33`):
     go install ./cmd/ork
 
 Go writes `ork` to `$(go env GOBIN)`, or to `$(go env GOPATH)/bin`. Put that
-directory on your `PATH`. `ork --version` prints the version
-(`cmd/ork/main.go:94-108`).
+directory on your `PATH`. *Proposed (S103):* `ork --version` prints the mark
+only on a terminal (a character-device stdout). Otherwise its first line is
+plain `ork VERSION` (`cmd/ork/main.go`, `run`).
 
 Keep the binary and the daemon in step. After you rebuild, run `ork daemon
 restart`. A daemon from an older build makes every command print a warning
@@ -537,6 +538,9 @@ them all (`internal/tui/keys.go:13-124`).
 | Confirmations | `y` / `n` | yes / no (Enter is No) |
 
 ## 14. Commands at a glance
+
+*Proposed (S103):* `ork --version` prints the mark only on a terminal;
+on a pipe or file line 1 is plain `ork VERSION`.
 
     ork                          open the TUI
     ork --version

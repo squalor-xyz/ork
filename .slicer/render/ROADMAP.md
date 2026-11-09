@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-309 items · — 70 · done 206 · retired 33
+309 items · — 69 · done 207 · retired 33
 
 v1.2
 
@@ -91,7 +91,7 @@ v1.2
 | 34 | [S69](slices/S69.md) | Open slicer tui from the Roadmap | S | 1 |  | Owner 2026-10-23: the Roadmap replaces leaving for slicer tui; adj 11 stays the owner's to close | done |
 | 35 | [S72](slices/S72.md) | Grok adapter | M | 2 |  |  | done |
 | 36 | [S101](slices/S101.md) | Overview engine rows at 80x24: pad the kind column only when needed; no repeated state word; stopped age placement | S | 1 |  | Folded into the S130 sweep (owner, 2026-10-31): items a-c are stale; item d (stopped row wording) is in S130. · discovered from S33 | retired |
-| 37 | [S103](slices/S103.md) | Version line and stale marker | S | 1 |  | discovered from S54 | — |
+| 37 | [S103](slices/S103.md) | Version line and stale marker | S | 1 |  | discovered from S54 | done |
 | 38 | [S108](slices/S108.md) | Fold finished steps in the run tree to one line each | S | 1 |  |  | done |
 | 39 | [S104](slices/S104.md) | Answer an open adj record from the Questions tab: pick an option, type the reason, confirm | M | 2 |  | Met by S185 (owner 2026-10-30) · discovered from S27 | retired |
 | 40 | [S50](slices/S50.md) | Files-scope warning and brief fence | M | 2 |  | discovered from S29 | done |
