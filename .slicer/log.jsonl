@@ -3969,3 +3969,5 @@
 {"when": "2026-11-09T16:41:14Z", "item": "S322", "action": "add", "from": "", "to": "open", "note": "Status line: vendor-out fields drop with no cue when several vendors are out"}
 {"when": "2026-11-09T16:41:14Z", "item": "S323", "action": "add", "from": "", "to": "open", "note": "Docs: describe a local run's reservation and the local launchers after S301"}
 {"when": "2026-11-09T16:41:14Z", "item": "S324", "action": "add", "from": "", "to": "open", "note": "Spec check: skip a missing local launcher in the spec-check chain"}
+{"when": "2026-11-09T16:46:26Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T16:47:13Z", "item": "S257", "action": "edit", "from": "", "to": "", "note": "Implement"}
