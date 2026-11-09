@@ -1,0 +1,39 @@
+{
+  "id": "S311",
+  "title": "Notify command: run a configured command when a run needs the owner or ends",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* An orchestrator that is not looking at the TUI cannot tell that a run needs it. On 2026-11-07 to 11-09 the relay session polled `ork show RUN` in a shell loop and a separate watcher per run. `ork wait` (S257) is a blocking call; this slice is the push side: ork runs a command the owner configures when a run changes to a state that needs a person, so a chat tool, a desktop notification or an agent session can react.\n\n- Today the only signal is the terminal bell (`Project.Bell`, `internal/registry/registry.go:258-263`; the TUI rings it from `internal/tui/model.go:1230`). It needs the TUI to be open and a terminal to be watching.\n- The daemon already knows every transition: `internal/daemon/subscribe.go` publishes change notices, and the run states that need a person are `question pause`, `awaiting-approval`, `paused` (error or rounds pause) and `stopped`.\n- Slicer has no notification hook (`slicer --root ../slicer find notify` finds only unrelated TUI messages), so this is ork's to add.\n\nOpen questions (the owner answers before the relay starts; the spec is written for the recommended answers):\n- Q1 where the setting lives. (a) a per-project registry field `notify_command`, set with `ork projects set NAME --notify CMD`, beside `check_command` and `bell` (recommended: same home as every other per-project command). (b) one global setting. (c) both, the project one winning.\n- Q2 which events. (a) the four needs-a-person states plus `landed` and `failed` (recommended). (b) every state change (too noisy). (c) only needs-a-person.\n- Q3 how the command gets the event. (a) environment variables (`ORK_EVENT`, `ORK_PROJECT`, `ORK_RUN`, `ORK_ITEM`, `ORK_STATE`, `ORK_REASON`, `ORK_NEXT`) and no arguments (recommended: no shell quoting of run text). (b) a JSON line on standard input. (c) both.\n- Q4 failure handling. (a) run it with a 10 second timeout, no shell besides the one the command names, log a failure once per run and never block or fail a run (recommended). (b) retry."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/registry/registry.go:258` (`Project.NotifyCommand`, beside `Bell`)\n- `internal/daemon/handlers.go:571` (`projects.set` field, refused while runs are unfinished like the rest, or allowed alone: decide in Q-open of S224)\n- `internal/daemon/wire.go:279`\n- `internal/daemon/subscribe.go` (the change notice the daemon already publishes)\n- `internal/daemon/runs.go` (where a run enters a state)\n- `internal/cli/daemoncmds.go:278` (`ork projects set --notify`)\n- `docs/state.md`\n- `docs/design.md`\n- `docs/guide.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A project with `notify_command` set runs it once when a run enters `question pause`, `awaiting-approval`, `paused` or `stopped`, and once on `landed`; the fake command records `ORK_EVENT`, `ORK_PROJECT`, `ORK_RUN`, `ORK_ITEM`, `ORK_STATE`, `ORK_REASON` and `ORK_NEXT` (the next command, such as `ork retry RUN`).\n- A run that stays in the same state across daemon polls notifies once, not on every poll (no repeat after a daemon restart for a state the run was already in).\n- A project with no `notify_command` runs nothing and writes nothing.\n- A command that exits non-zero, does not exist, or runs past 10 seconds is killed and logged once for that run and event; the run is unaffected.\n- A `reason` holding control bytes or a newline reaches the environment cleaned (one line, no escape sequences).\n- `ork projects set NAME --notify CMD` stores it and `--notify ''` clears it; `ork projects` and `ork doctor` show it; `doctor` warns when the command does not resolve to an executable.\n- The command never runs in a test unless the test sets it (a fake under the test temp dir)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Add `NotifyCommand string` to `registry.Project` with the usual JSON tag and the `projects.set` and `ork projects set --notify` plumbing, mirroring `check_command`.\n2. In the daemon, where a run's state changes (the same place that publishes the change notice), call a small `notifier` that decides if the new state is one of the notify events and has not already been notified for this run, and runs the command with the environment in Q3. Record \"notified: STATE\" on the run record so a restart does not notify again.\n3. Run the command through `clirun` with a 10 second timeout, never under `runs.mu`, and log one line on failure.\n4. `ork doctor` finding when the command is set and not found.\n5. Docs and a CHANGELOG bullet, marked *proposed*.\n6. Do not add a built-in integration (no chat or desktop tool names). The command is the integration."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`.\n- The notify command never runs for real in a test.\n- HUMAN CHECK [AFTER LAND]: set a command that appends to a file, start a small slice, and see one line for each time it needs you and one on landing."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

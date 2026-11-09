@@ -1,0 +1,39 @@
+{
+  "id": "S314",
+  "title": "Name the owner once so answers to spec questions are filed in adj",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* Answers to spec-check questions are filed in adj only when `ADJ_DECIDED_BY` is set in the environment of the process that records them (`internal/engine/speccheck.go:586-590`, `internal/tui/speccheck.go:224`, `docs/guide.md:414`). In the 2026-11-08 and 11-09 relay it was not set, so every answer printed \"ADJ_DECIDED_BY is unset; not filed in adj: KEY\" (S217, S129 and others: 3 keys, then 1, then 3) and the decisions stayed only in each slice's Owner decisions paragraph. Those are real owner decisions and they are not in the decision log.\n\nThe daemon, not the CLI, records the answers, so the CLI's environment does not even reach the place that needs it. Setting a variable in every shell is the wrong shape for a name that does not change.\n\nWhat this slice adds:\n- One place for the owner's name that ork reads: a global ork setting `owner` (written with `ork config set owner NAME`; shown by `ork doctor`), with `ADJ_DECIDED_BY` still winning when set. Adj's own rule stays: ork files an answer only for an option the owner picked in an interactive question, so an answer given with `--answer` or in the prompt counts, a default or recommended option never does.\n- Filing becomes the default for keyed spec questions when an owner is known (today the owner must turn it on with ctrl+a in the TUI, `internal/engine/answer_adj.go:18-30`, `internal/tui/keys.go:113`). Opt out with `ork config set file-answers off`.\n- Without an owner, the notice says how to set it, once per run and not once per key.\n\nOpen questions:\n- Q1 where the name comes from. (a) `ork config set owner NAME`, global (recommended). (b) read `git config user.name` as the fallback. (c) only the environment, unchanged.\n- Q2 default. (a) filing on when the owner is known (recommended: the decision log is the owner's record). (b) filing stays off until asked.\n- Q3 the `--via` text: keep \"interactive question, ork session ID, DATE\" (recommended)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/speccheck.go:586`\n- `internal/engine/answer_adj.go:18`\n- `internal/tui/speccheck.go:224`\n- `internal/tui/keys.go:113`\n- `internal/tui/relayanswer.go:73`\n- `internal/registry/registry.go` (the global settings, if there is one; otherwise a new small file under the ork state dir)\n- `internal/cli/doctor.go`\n- `docs/guide.md:414`\n- `docs/state.md`\n- `docs/design.md:1720`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- With the owner set in ork's settings and `ADJ_DECIDED_BY` unset, answering a keyed spec question files a decided adj record with `--by OWNER` and a `--why` that names the run and the date; the notice says \"filed in adj: KEY (adj N)\".\n- `ADJ_DECIDED_BY` set wins over the setting.\n- With neither set, nothing is filed, one notice (not one per key) says \"no owner set; run ork config set owner NAME\", and the answer is still recorded in the slice.\n- An answer the owner did not pick (a free-text answer, or an empty answer) is not filed as an option decision.\n- `file-answers off` files nothing.\n- `ork doctor` shows the owner and whether answers are filed.\n- No test writes to a real adj store: the adj client is faked."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Add the `owner` and `file-answers` settings (decide the file with Q1; reuse the registry settings if one exists for global values).\n2. Resolve the owner in one function (`environment, then setting`) used by both the engine and the TUI paths.\n3. Turn keyed-question filing on by default when an owner resolves; keep the TUI toggle (ctrl+a) as the way to turn it off for a session.\n4. One notice per run when no owner resolves.\n5. Docs and CHANGELOG, marked *proposed*. Never call `adj reject` or `adj supersede`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`.\n- UI pass (rule u10): `internal/tui` and `ork doctor` output change."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

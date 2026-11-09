@@ -3701,3 +3701,56 @@
 {"when": "2026-11-09T06:21:22Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-09T06:21:22Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-09T06:21:22Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:30:16Z", "item": "S310", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:40:54Z", "item": "S311", "action": "add", "from": "", "to": "open", "note": "Notify command: run a configured command when a run needs the owner or ends"}
+{"when": "2026-11-09T06:40:54Z", "item": "S311", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T06:40:55Z", "item": "S311", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T06:40:55Z", "item": "S311", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T06:40:55Z", "item": "S311", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:40:55Z", "item": "S311", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:40:55Z", "item": "S312", "action": "add", "from": "", "to": "open", "note": "Spec questions: print every open question at once and take all answers in one call"}
+{"when": "2026-11-09T06:40:55Z", "item": "S312", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T06:40:56Z", "item": "S312", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T06:40:56Z", "item": "S312", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T06:40:56Z", "item": "S312", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:40:56Z", "item": "S312", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:40:56Z", "item": "S313", "action": "add", "from": "", "to": "open", "note": "Spec check: reuse a decided adj answer for the same decision key instead of asking again"}
+{"when": "2026-11-09T06:40:56Z", "item": "S313", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T06:40:57Z", "item": "S313", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T06:40:57Z", "item": "S313", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T06:40:57Z", "item": "S313", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:40:57Z", "item": "S313", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:40:57Z", "item": "S314", "action": "add", "from": "", "to": "open", "note": "Name the owner once so answers to spec questions are filed in adj"}
+{"when": "2026-11-09T06:40:58Z", "item": "S314", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T06:40:58Z", "item": "S314", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T06:40:58Z", "item": "S314", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T06:40:58Z", "item": "S314", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:40:58Z", "item": "S314", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:40:58Z", "item": "S315", "action": "add", "from": "", "to": "open", "note": "Self-host: restart the daemon on the current build after main moves"}
+{"when": "2026-11-09T06:40:59Z", "item": "S315", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T06:40:59Z", "item": "S315", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T06:40:59Z", "item": "S315", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T06:40:59Z", "item": "S315", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:40:59Z", "item": "S315", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:40:59Z", "item": "S316", "action": "add", "from": "", "to": "open", "note": "ork approve: mark every open human check as later in one step"}
+{"when": "2026-11-09T06:41:00Z", "item": "S316", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T06:41:00Z", "item": "S316", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T06:41:00Z", "item": "S316", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T06:41:00Z", "item": "S316", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:41:00Z", "item": "S316", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:41:00Z", "item": "S317", "action": "add", "from": "", "to": "open", "note": "Run the slice's own Check lines after each round, not only the project check command"}
+{"when": "2026-11-09T06:41:01Z", "item": "S317", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T06:41:01Z", "item": "S317", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T06:41:01Z", "item": "S317", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T06:41:01Z", "item": "S317", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:41:01Z", "item": "S317", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:41:01Z", "item": "S318", "action": "add", "from": "", "to": "open", "note": "ork status --summary: running, waiting on you, blocked, and next, in one view"}
+{"when": "2026-11-09T06:41:02Z", "item": "S318", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-09T06:41:02Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T06:41:02Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T06:41:02Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T06:41:02Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-09T06:41:11Z", "item": "S257", "action": "note", "from": "", "to": "", "note": "Related: S311 adds the push side (a notify command on run ev", "by": "Jon Robbins"}
+{"when": "2026-11-09T06:41:11Z", "item": "S285", "action": "note", "from": "", "to": "", "note": "Related: S317 runs the slice's own Check lines (race suite, ", "by": "Jon Robbins"}
+{"when": "2026-11-09T06:41:11Z", "item": "S289", "action": "note", "from": "", "to": "", "note": "Evidence 2026-11-08/09 (S217): the landing's merge-in stoppe", "by": "Jon Robbins"}
+{"when": "2026-11-09T06:41:11Z", "item": "S224", "action": "note", "from": "", "to": "", "note": "Related: S311 (notify command) adds a second per-project set", "by": "Jon Robbins"}
