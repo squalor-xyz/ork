@@ -14146,7 +14146,7 @@
       "id": "S263",
       "title": "Daemon log: stop repeating the same merge-detection error on every poll",
       "short_title": "Daemon log: stop repeating the same merge-detection error on every poll",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -14156,6 +14156,20 @@
           "text": "**2026-11-07** — Owner 2026-11-07: a run whose branch is gone and not merged is marked cleaned with a reason recorded, and the error is logged once.",
           "created_at": "2026-11-07T14:56:58Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "0be36115-fc2f-49da-b80e-1047be29ee93",
+          "kind": "",
+          "text": "**2026-11-09** — Verified: the daemon prints a run's merge detection error once and again only when its text changes or after a pass for that run works (in memory only, dropped on prune). A committed run whose branch ref and worktree path are gone and whose work is not in HEAD, or that has no usable commit, is marked cleaned with the new cleaned_reason field and stays committed; a git error still leaves the state unknown. go test ./..., go vet ./..., gofmt -l ., slicer check and adj lint were clean; every new assertion was mutation-checked.",
+          "created_at": "2026-11-09T17:24:49Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -14182,7 +14196,7 @@
         "importance": 1,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

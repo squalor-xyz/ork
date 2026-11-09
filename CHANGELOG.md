@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- S263 (*proposed*): the daemon log prints a run's merge detection error once
+  instead of on every HEAD change; it prints again when the text changes or
+  after a pass for that run works. A committed run whose branch and worktree
+  are gone and whose work is not in HEAD is marked cleaned with a
+  `cleaned_reason` instead of failing on every pass. New run record field
+  `cleaned_reason`. Docs: `docs/state.md`, `docs/design.md`.
 - S259 (*proposed*): the sleep detector counts no sleep until the daemon
   starts it, so a watchdog look that arrives a little late can no longer be
   read as sleep and hide a hung role. A test pins the daemon's start of it

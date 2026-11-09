@@ -637,6 +637,11 @@ slice.
   with `land blocked: checks red after merging BASE`, in Needs you, with the
   worktree and the branch kept.
 
+*Proposed (S263):* merge detection (`docs/state.md`) prints a given run's
+error once, not on every HEAD change. A committed run whose worktree path and
+branch are gone and whose work is not in HEAD is marked cleaned with a
+`cleaned_reason`, and is then no longer checked; git is only read for it.
+
 ### Engine (S04)
 
 `internal/engine` runs one slice through these states against a `Runner`
