@@ -502,6 +502,11 @@
   `ork status` shows the distinct denied-command count and the first denial
   cut to 40 characters (*proposed*); JSON and the TUI stay unchanged.
 
+- Running shows only its Overview and Questions tabs; a wave launch (and a
+  single-item Roadmap launch) moves to Running with the new run selected, unless
+  an item waits on spec questions or failed (*proposed*, S262). S140's combined
+  Waves, Roadmap and Decisions tabs are removed.
+
 ## v1.0.0 (2026-10-31)
 
 - S209: a project can name `ui_pass_skills` for its Claude UI pass

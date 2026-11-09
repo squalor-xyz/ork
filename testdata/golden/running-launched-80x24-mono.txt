@@ -1,0 +1,24 @@
+[1mork[m                │ [1mOverview (Running)[m[2m │ [mQuestions
+[1;7m> Running        2 [m│[2m────────────────────────────────────────────────────────────[m
+[2m0[m Needs you      0 │[1mRunning 2[m
+[2m1[m ork             *│   ork  [1mB[m  [......]  [2mqueued[m  implementer>reviewer>gate
+[2m2[m other            │[1;7m   ork  A  [......]  queued  implementer>reviewer>gate      [m
+                   │
+                   │[1mRecent[m
+                   │  [2mnone[m
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │  launched 2 items; enter on a running row opens its run
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ enter [2mopen[m; space [2mexpand[m; E [2mexpand all[m; q [2mquit[m; ? [2mhelp[m
+                   │ 2 projects | refreshed 16:42:00

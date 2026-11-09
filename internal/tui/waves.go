@@ -17,10 +17,6 @@ import (
 const wavesView = 2
 
 type wavesState struct {
-	// aggregate is the Waves tab of the Running entry: the suggestions of every
-	// project in one list, read-only (S140). It has no project.
-	aggregate      bool
-	groups         []waveBlock // aggregate: each project's suggestion, in project order
 	pane           *itemPane
 	paneItem       slicercli.ParallelItem
 	paneOffset     int
@@ -55,7 +51,6 @@ type wavesMsg struct {
 	kind       string
 	sequence   uint64
 	item       string
-	groups     []waveBlock
 	suggest    *slicercli.ParallelPlan
 	plan       *daemon.RunPlan
 	params     *daemon.RunParams
@@ -76,9 +71,6 @@ func (m *Model) dropWaves() {
 
 func (m *Model) openWaves() tea.Cmd {
 	m.dropWaves()
-	if m.view == wavesView && m.active == runningEntry {
-		return m.openAllWaves()
-	}
 	if m.view != wavesView || m.active < 0 || m.projects[m.active].snap.Unavailable {
 		return nil
 	}
@@ -100,59 +92,20 @@ func (m *Model) openWaves() tea.Cmd {
 	}
 }
 
-// openAllWaves asks the daemon for each project's suggestion, one after the
-// other, and shows them as one list (S140). The tab is read-only: nothing on it
-// ticks, opens or launches, since each row belongs to a different project.
-func (m *Model) openAllWaves() tea.Cmd {
-	m.wavesRequest++
-	ctx, cancel := context.WithCancel(context.Background())
-	w := &wavesState{aggregate: true, request: m.wavesRequest, ctx: ctx, cancel: cancel, pending: true, picked: map[string]daemon.RunParams{}}
-	m.waves = w
-	if m.cfg.Live == nil {
-		w.pending = false
-		return nil
-	}
-	var names []string
-	for _, p := range m.projects {
-		if p.loaded && !p.snap.Unavailable && !p.setup() {
-			names = append(names, p.reg.Name)
-		}
-	}
-	live := m.cfg.Live
-	return func() tea.Msg {
-		groups := make([]waveBlock, len(names))
-		for i, name := range names {
-			if ctx.Err() != nil {
-				return nil
-			}
-			groups[i].project = name
-			groups[i].plan, groups[i].err = live.WaveSuggest(ctx, name)
-		}
-		return wavesMsg{request: w.request, kind: "suggest", groups: groups}
-	}
-}
-
-// waveBlock is one project's suggestion on the Waves tab: the only block of a
-// project's own tab, or one of the blocks of the combined tab (S140).
+// waveBlock is a project's suggestion on its Waves tab, the tab's only block.
 type waveBlock struct {
-	project string // set on the combined tab only
-	plan    *slicercli.ParallelPlan
-	err     error
+	plan *slicercli.ParallelPlan
 }
 
 // blocks lists what the Waves tab draws, in order.
 func (w *wavesState) blocks() []waveBlock {
-	switch {
-	case w.aggregate:
-		return w.groups
-	case w.suggest != nil:
+	if w.suggest != nil {
 		return []waveBlock{{plan: w.suggest}}
 	}
 	return nil
 }
 
 // rows keeps slicer's wave and item order. Unplaced items can also be chosen.
-// On the combined tab it walks the projects in order.
 func (w *wavesState) rows() []slicercli.ParallelItem {
 	var rows []slicercli.ParallelItem
 	for _, b := range w.blocks() {
@@ -353,7 +306,7 @@ func (m *Model) confirmWave() tea.Cmd {
 // the plan has loaded and nothing is starting or being checked.
 func (m *Model) wavesTickable() bool {
 	w := m.waves
-	return m.view == wavesView && !m.showHelp && w != nil && !w.aggregate && !w.pending && w.err == nil && !w.starting && !w.checking
+	return m.view == wavesView && !m.showHelp && w != nil && !w.pending && w.err == nil && !w.starting && !w.checking
 }
 
 func (m *Model) startWave(a runAction) tea.Cmd {
@@ -420,6 +373,7 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 		for _, itemError := range itemErrors {
 			status += "; " + itemError
 		}
+		jump := false
 		if w != nil && w.request == msg.request {
 			w.starting = false
 			if msg.err == nil {
@@ -445,12 +399,26 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 				w.overlap = nil
 				w.overlapErr = nil
 				w.overlapRequest++
+				// The jump to Running (S262): the daemon accepted the call, an item
+				// launched, none failed or waits on spec questions, and the owner is
+				// still on this launch's composer. A held item keeps the owner here,
+				// since its questions are answered on this screen and leaving drops
+				// the composer with its ticks.
+				jump = len(launchedItems) > 0 && len(itemErrors) == 0 && len(waiting) == 0 && m.view == wavesView
 			}
 		}
-		m.actionStatus = status
 		if m.poller.InFlight(msg.action.project) {
 			m.byName[msg.action.project].dirty = true
 		}
+		if jump {
+			m.view = 0
+			cmd := m.switchTo(runningEntry) // drops the composer and clears the status
+			m.jumpRun = launchedRuns[0]
+			m.selectJumpRun()
+			m.actionStatus = status
+			return tea.Batch(cmd, m.fetch(msg.action.project, true))
+		}
+		m.actionStatus = status
 		return m.fetch(msg.action.project, true)
 	}
 	if w == nil || w.request != msg.request || m.view != wavesView {
@@ -467,7 +435,6 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 	case "suggest":
 		w.pending = false
 		w.suggest, w.err = msg.suggest, msg.err
-		w.groups = msg.groups
 	case "overlap":
 		if w.overlapRequest == msg.sequence {
 			w.overlap, w.overlapErr = msg.overlap, msg.err
@@ -528,7 +495,7 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 		}
 	}
 	out.body = append(out.body, th.Heading.Render("Suggested (slicer plan-parallel)"))
-	if m.active < 0 && m.active != runningEntry {
+	if m.active < 0 {
 		add("Select a project for Waves")
 		return out, nil
 	}
@@ -622,9 +589,6 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 	row := 0
 	draw := func(it slicercli.ParallelItem) {
 		tick := "[ ]"
-		if w.aggregate {
-			tick = "   " // read-only: nothing to tick
-		}
 		p, ok := w.picked[it.ID]
 		if ok {
 			tick = "[x]"
@@ -701,13 +665,6 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 		row++
 	}
 	for _, b := range w.blocks() {
-		if w.aggregate {
-			out.body = append(out.body, th.Heading.Render(b.project))
-			if b.err != nil {
-				add("! " + actionError(b.err))
-				continue
-			}
-		}
 		plan := b.plan
 		if plan == nil {
 			continue
@@ -735,11 +692,7 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 			}
 		}
 	}
-	failedAll := len(w.blocks()) > 0
-	for _, b := range w.blocks() {
-		failedAll = failedAll && b.err != nil
-	}
-	if row == 0 && !failedAll {
+	if row == 0 {
 		add("No suggested items")
 	}
 	if conflict := w.engineConflict(); conflict != "" {
@@ -852,7 +805,7 @@ func waveShares(reason string) (marker, paths string) {
 
 func (m *Model) openWaveItem() tea.Cmd {
 	w := m.waves
-	if m.showHelp || w == nil || w.aggregate || w.pending || w.err != nil || w.starting || w.pane != nil {
+	if m.showHelp || w == nil || w.pending || w.err != nil || w.starting || w.pane != nil {
 		return nil
 	}
 	rows := w.rows()

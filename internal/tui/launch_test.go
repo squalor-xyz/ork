@@ -21,11 +21,13 @@ import (
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
+	"github.com/squalor-xyz/ork/internal/source"
 )
 
 type launchLive struct {
 	fakeLive
 	plans, starts     []daemon.RunParams
+	runID             string // the ID Start returns; new-run when empty
 	plan              daemon.RunPlan
 	planErr, startErr error
 	checks            [][]string
@@ -41,6 +43,9 @@ func (l *launchLive) Plan(_ context.Context, p daemon.RunParams) (*daemon.RunPla
 }
 func (l *launchLive) Start(_ context.Context, p daemon.RunParams) (runrec.Record, error) {
 	l.starts = append(l.starts, p)
+	if l.runID != "" {
+		return runrec.Record{ID: l.runID}, l.startErr
+	}
 	return runrec.Record{ID: "new-run"}, l.startErr
 }
 func (l *launchLive) SpecCheck(_ context.Context, project string, items []string) (*daemon.SpecCheckResult, error) {
@@ -187,10 +192,76 @@ func TestLaunchYesStartsWithExpectedPlan(t *testing.T) {
 			if len(l.starts) != 1 || !reflect.DeepEqual(l.starts[0].Expected, &l.plan) || !l.starts[0].WellSpecified || l.starts[0].Split || l.starts[0].Project != "ork" || l.starts[0].Item != "S90" || l.starts[0].Lineup != nil || l.starts[0].Budgets != nil {
 				t.Fatalf("start: %+v", l.starts)
 			}
-			if refresh == nil || !strings.Contains(h.view(), "ork run ork S90: done") {
-				t.Fatal("success must show and refresh")
+			if refresh == nil || !strings.Contains(h.view(), "launched S90 as new-run; enter opens it") {
+				t.Fatal("success must show the launch and refresh")
 			}
 		})
+	}
+}
+
+// A single-item launch from the Roadmap moves to the Running entry with the new
+// run selected once a snapshot shows it (S262, owner 2026-11-07).
+func TestRoadmapLaunchJumpsToRunning(t *testing.T) {
+	h, l := launchHarness(t)
+	l.runID = "ork-one"
+	launchConfirmed(t, h)
+	h.deliver(press("y"))
+	if h.m.active != runningEntry || h.m.view != 0 || h.m.launch != nil {
+		t.Fatalf("active %d view %d launch %v, want the Running Overview", h.m.active, h.m.view, h.m.launch)
+	}
+	if want := "launched S90 as ork-one; enter opens it"; h.m.actionStatus != want {
+		t.Errorf("status %q, want %q", h.m.actionStatus, want)
+	}
+	s := h.m.projects[0].snap
+	s.EngineRuns = []source.EngineRun{{ID: "other", Item: "S01", State: "queued"}, {ID: "ork-one", Item: "S90", State: "queued"}}
+	h.deliver(snapshotMsg{name: "ork", snap: s})
+	if r, ok := h.m.selectedRow(); !ok || r.engineID != "ork-one" {
+		t.Fatalf("the jump selected %q, want ork-one", r.engineID)
+	}
+}
+
+// Retry and answer act on a run that is already on the screen, so they never
+// move the owner (S262).
+func TestRetryAndAnswerDoNotJump(t *testing.T) {
+	t.Run("retry", func(t *testing.T) {
+		h := actionHarness(t, "paused", "shape")
+		h.deliver(tea.WindowSizeMsg{Width: 100, Height: 30})
+		h.m.switchTo(needsEntry)
+		h.deliver(press("t"))
+		h.deliver(press("y"))
+		if !strings.Contains(h.view(), "S22  implement") {
+			t.Fatalf("the retry did not run:\n%s", h.view())
+		}
+		if h.m.active != needsEntry {
+			t.Errorf("retry moved the owner to entry %d", h.m.active)
+		}
+	})
+	t.Run("answer", func(t *testing.T) {
+		h := actionHarness(t, "paused", "question")
+		h.m.switchTo(needsEntry)
+		h.deliver(press("enter"))
+		if h.m.pane == nil {
+			t.Fatal("enter did not open the answer pane")
+		}
+		typeAnswer(h, "use local storage")
+		h.deliver(press("enter"))
+		if !strings.Contains(h.view(), "answered") {
+			t.Fatalf("the answer did not go:\n%s", h.view())
+		}
+		if h.m.active != needsEntry {
+			t.Errorf("answer moved the owner to entry %d", h.m.active)
+		}
+	})
+}
+
+// A failed Start stays on the Roadmap with its error.
+func TestRoadmapLaunchErrorDoesNotJump(t *testing.T) {
+	h, l := launchHarness(t)
+	l.startErr = &ipc.Error{Code: "start_failed", Message: "Exact ERROR."}
+	launchConfirmed(t, h)
+	h.deliver(press("y"))
+	if h.m.active != 0 || h.m.view != roadmapView {
+		t.Errorf("active %d view %d: a failed Start must stay on the Roadmap", h.m.active, h.m.view)
 	}
 }
 func TestLaunchErrorVerbatim(t *testing.T) {
@@ -487,6 +558,9 @@ func TestLaunchStartReplyMatchesFlightRequest(t *testing.T) {
 	_, first := h.m.Update(press("y"))
 	oldReply := first()
 	h.send(oldReply)
+	// The reply moved to Running (S262); go back to the Roadmap to launch again.
+	h.m.switchTo(0)
+	h.m.view = roadmapView
 	launchConfirmed(t, h)
 	_, second := h.m.Update(press("y"))
 	current := h.m.launch
@@ -495,7 +569,7 @@ func TestLaunchStartReplyMatchesFlightRequest(t *testing.T) {
 		t.Error("stale reply changed the current Start flight")
 	}
 	h.m.Update(second())
-	if len(h.m.launchFlights) != 0 || h.m.actionStatus != "ork run ork S90: done" {
+	if len(h.m.launchFlights) != 0 || h.m.actionStatus != "launched S90 as new-run; enter opens it" {
 		t.Error("current Start reply was dropped")
 	}
 }

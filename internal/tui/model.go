@@ -1109,6 +1109,9 @@ func (m *Model) switchTo(i int) tea.Cmd {
 	m.compose = nil
 	m.pane = nil
 	m.active = i
+	if !m.viewShown(m.view) {
+		m.view = 0 // the Running entry has no Waves, Roadmap or Decisions (S262)
+	}
 	m.roadmapCursor = 0
 	m.decisionsCursor = 0
 	m.questionsCursor = 0
@@ -1312,13 +1315,13 @@ func (m *Model) move(delta int) tea.Cmd {
 	return m.switchTo(nav[(pos+delta+len(nav))%len(nav)])
 }
 
-// moveView steps to the next built view in direction delta and wraps around.
-// With no other view built it does nothing (ui.view-list).
+// moveView steps to the next view the entry shows in direction delta and wraps
+// around. With no other view shown it does nothing (ui.view-list).
 func (m *Model) moveView(delta int) tea.Cmd {
 	n := len(views)
 	for step := 1; step < n; step++ {
 		i := ((m.view+delta*step)%n + n) % n
-		if views[i].built {
+		if m.viewShown(i) {
 			if m.launch != nil && m.launch.stage != launchStarting {
 				m.actionStatus = ""
 			}

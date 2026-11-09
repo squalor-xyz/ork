@@ -494,9 +494,19 @@ var views = []struct {
 	{"Decisions", true},
 }
 
+// viewHidden reports whether the selected sidebar entry leaves view i off the
+// bar. *Proposed* (S262): the Running entry shows only the Overview and
+// Questions; every other entry shows every view.
+func (m *Model) viewHidden(i int) bool {
+	return m.active == runningEntry && i != 0 && i != questionsView
+}
+
+// viewShown reports whether tab and shift+tab stop at view i and the bar draws it.
+func (m *Model) viewShown(i int) bool { return views[i].built && !m.viewHidden(i) }
+
 // viewBar lists the views. The active view uses ViewActive. A view that is not
 // built yet is drawn dim with the separators before it; a built view that is not
-// active is plain.
+// active is plain. A view the entry hides is not drawn at all.
 func (m *Model) viewBar() string { return m.viewBarCount(true) }
 
 // viewBarCount is viewBar with or without the Questions count (S149).
@@ -511,7 +521,11 @@ func (m *Model) viewBarCount(count bool) string {
 		}
 	}
 	b.WriteString(" ")
+	drawn := 0
 	for i, v := range views {
+		if m.viewHidden(i) {
+			continue
+		}
 		if i == 0 && m.active == runningEntry {
 			v.name = "Overview (Running)" // the Running entry is the Overview, narrowed
 		}
@@ -522,10 +536,11 @@ func (m *Model) viewBarCount(count bool) string {
 				tail = " " + th.Badge.Render(strconv.Itoa(n))
 			}
 		}
-		if i > 0 {
+		if drawn > 0 {
 			vertical, _ := th.rules(m.cfg.ASCII)
 			idle += " " + vertical + " "
 		}
+		drawn++
 		switch {
 		case len(m.projects) == 0:
 			idle += v.name + tail
@@ -893,7 +908,11 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			lines = append(lines, clip(h.Key+" "+h.Desc, w))
 		}
 	}
-	lines = append(lines, "", clip("Overview, Questions, Waves, Roadmap and Decisions are available.", w))
+	available := "Overview, Questions, Waves, Roadmap and Decisions are available."
+	if m.active == runningEntry {
+		available = "Running has Overview and Questions only."
+	}
+	lines = append(lines, "", clip(available, w))
 	mark := brand.Mark(!th.Mono, m.cfg.ASCII)
 	if w >= 12 && bodyH >= len(lines)+len(mark)+1 {
 		lines = append(append(mark, ""), lines...)

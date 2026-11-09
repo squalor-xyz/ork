@@ -14160,7 +14160,7 @@
       "id": "S262",
       "title": "Running view: only the tabs that fit it, and jump to it after a wave launch",
       "short_title": "Running view: only the tabs that fit it, and jump to it after a wave launch",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -14171,6 +14171,34 @@
           "created_at": "2026-11-03T13:28:28Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "3c03c481-03a4-4ac6-aae0-7413f544be2b",
+          "kind": "",
+          "text": "**2026-11-09** — Human checks at approval (S262):\n- later: At 100x30 and 80x24: select Running; the bar shows `Overview (Running)` and `Questions` (with its count at both sizes); `tab` and `shift+tab` move between the two; from a project's Waves, `[` to Running opens its Overview.\n- later: [AFTER LAND] After rebuilding `~/bin/ork` and restarting the daemon on it: launch a two-item wave with no spec questions; the screen moves to Running with the first new run selected and the launch text on the status line. Launch a wave where one item has spec questions and skip them; the screen stays on Waves with the held item ticked.",
+          "created_at": "2026-11-09T21:21:18Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "e96d8827-f32b-4c00-9243-2c9402d27c59",
+          "kind": "",
+          "text": "**2026-11-09** — Verified: Running shows only Overview (Running) and Questions (tab cycles the two; arriving from Waves, Roadmap or Decisions opens the Overview; the Questions count fits at 80x24). The combined Waves and Roadmap code is removed. A wave launch with no item error and nothing held for spec questions, and a single-item Roadmap launch, jump to Running with the first new run selected; held, failed and after-leaving launches stay put. Help line names only the two views on Running. go test -race ./..., -count=3 of the slice tests, go vet, gofmt, slicer check and adj lint pass; engine, daemon and cmd untouched.",
+          "created_at": "2026-11-09T21:21:23Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -14196,7 +14224,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

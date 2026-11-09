@@ -575,16 +575,16 @@ func TestViewBarDropsTheCountWhenItDoesNotFit(t *testing.T) {
 	}
 	checkGolden(t, "hint-questions-12-80x24.txt", h.m.View().Content)
 
-	// "Overview (Running)" leaves no room for the count: the count goes.
+	// The Running entry shows two tabs (S262), so the count fits beside
+	// "Overview (Running)" at 80x24 and wider.
 	h.m.active = runningEntry
 	bar = strings.Split(plainView(h.m), "\n")[0]
-	if !strings.HasSuffix(strings.TrimRight(bar, " "), "Decisions") || strings.Contains(bar, "Questions 12") {
+	if !strings.HasSuffix(strings.TrimRight(bar, " "), "Overview (Running) │ Questions 12") {
 		t.Errorf("the Running bar at 80x24: %q", bar)
 	}
-	// Wider, the count stays with it.
 	h.send(tea.WindowSizeMsg{Width: 120, Height: 24})
 	bar = strings.Split(plainView(h.m), "\n")[0]
-	if !strings.Contains(bar, "Overview (Running) │ Questions 12 │") {
+	if !strings.HasSuffix(strings.TrimRight(bar, " "), "Overview (Running) │ Questions 12") {
 		t.Errorf("the Running bar at 120 wide: %q", bar)
 	}
 }

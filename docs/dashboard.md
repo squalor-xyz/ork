@@ -308,7 +308,8 @@ The project sidebar comes from the registry (`registry.initial`,
 `ui.project-nav`). "Needs you" starts selected and shows the existing
 all-projects Overview. A project selection limits its rows to that project.
 The view bar stays at the top of the main pane. Overview, Questions, Waves,
-Roadmap and Decisions are selectable.
+Roadmap and Decisions are selectable, except on the Running entry, which shows
+only the first two (below).
 
 **Running (*proposed*, S110, adj 169 `ui.sidebar-running`).** The first sidebar
 entry, above "Needs you", opens a live summary of every project that has a live
@@ -317,7 +318,8 @@ count of live runs, and with none it is dim and its view says `nothing running`.
 It is reached with the sidebar keys `]`/`[` like any other entry, not
 with a digit key (`1`-`9` stay the projects, `Jump` is unchanged). "Needs you"
 still starts selected. While the entry is selected the first tab of the view bar
-reads `Overview (Running)`; the view is the Overview's Running section full
+reads `Overview (Running)` and the bar shows one more tab, Questions (*proposed*,
+S262; below); the view is the Overview's Running section full
 screen, then Recent, with no Needs you or Ready section. Each live run is one
 row in project order: the project, then the item, the stage bar (with its round
 word, as everywhere), last heard beside the bar (with the `!`
@@ -384,17 +386,17 @@ Owner decision 2026-10-28: the two hints may push `+ add project` (at 100
 columns) and `tab views` (at 80 columns) off the Running entry's hint line;
 they keep their place elsewhere and in the help.
 
-While the Running entry is selected the other tabs show every project together
-(S140), each row led by its project name as on Needs you. Questions and
-Decisions list all projects (Decisions all that use adj); Roadmap lists every
-project's items under `All projects`, with one cursor over them; Waves asks the
-daemon for each project's suggestion once and lists one block per project, in
-project order: the project's name, then its own waves and Unplaced items, with
-no tick boxes. A project whose suggestion fails keeps its block, with a `!`
-line, so every failing project is named. The combined Roadmap and Waves
-only list: opening an item, ticking, launching and editing a lineup need one
-project selected in the sidebar, and the hint line does not offer `enter`. With "Needs you" selected the Roadmap and Waves still ask to
-select a project.
+*Proposed (S262, owner 2026-11-03; it reverses `ui.view-list` for this entry
+and S140's combined tabs).* While the Running entry is selected the view bar
+shows only `Overview (Running)` and Questions. Questions lists every project, as
+on Needs you; a paused run that asks the owner is answered there. Waves,
+Roadmap and Decisions are not on the bar, and no key reaches them: select Needs
+you or a project. `tab` and `shift+tab` cycle the two tabs. Moving to Running
+from Waves, Roadmap or Decisions opens the Overview, and asks the daemon for
+no suggestion. From Questions the view stays Questions. With only two tabs the
+Questions count fits beside `Overview (Running)` at 80 columns. S140's combined
+Waves, Roadmap and Decisions are gone. With "Needs you" selected the Roadmap and
+Waves still ask to select a project.
 
 "Needs you" shows the aggregate Needs you row count, including error and
 pending rows, matching the main heading (`ui.overview-layout`, adj 149).
@@ -436,8 +438,10 @@ entry", since they also land on Running and Needs you.
 and the sidebar shows those numbers dimmed. `0` selects "Needs you"; the
 Running entry has no number. A number with no project does nothing. `tab` and
 `shift+tab` switch views in the order of the view bar (`ui.views`,
-`ui.view-list`). All five views are available: Overview, Questions, Waves,
-Roadmap and Decisions. `/` filters project names without regard to
+`ui.view-list`). Needs you and a project have all five views: Overview,
+Questions, Waves, Roadmap and Decisions. `tab` cycles the views the selected
+entry shows, which on the Running entry are Overview and Questions only (S262,
+*proposed*). `/` filters project names without regard to
 case; `enter`
 keeps the filter and leaves text entry, and `esc` clears it. `r` refreshes the
 selected project, or all projects on "Needs you". `?` shows keys and `q` quits.
@@ -1298,8 +1302,8 @@ Its tab in the view bar shows the number of questions the list holds ("Questions
 3"; just "Questions" when there are none) on every view (S149, *proposed*). The
 count is drawn in the Badge style (bold, amber in colour), the name keeps the
 view bar's styles (S152). When
-the bar would not fit the main pane, as with `Overview (Running)` at 80 columns,
-the count goes so that every tab name stays whole.
+the bar would not fit the main pane, the count goes so that every tab name stays
+whole. The Running entry's two tabs keep the count at 80 columns (S262).
 It lists engine runs paused with `pending: question` and open adj records
 from every project. Enter on an engine question opens the run detail pane
 and its Answer field and optional adj filing toggle. Enter on an adj question
@@ -1487,6 +1491,16 @@ box and `running RUN` after the title (on its own dim line when it does not
 fit), and cannot be ticked again. Its hint reads `enter open run`, and
 `enter` selects the run in Overview, including when the run first appears
 in the next refresh.
+
+*Proposed (S262).* When the daemon accepts the launch, at least one item
+launched, no item failed and none waits on spec questions, ork moves to the
+Running entry with the first launched run (in the reply's order) selected, once
+a snapshot shows it; the launch text stays on the status line. A launch with an
+item error, one that holds an item for spec questions (its questions are
+answered on this screen, and leaving drops the composer with its ticks), a
+failed call, and a reply that arrives after the owner left the screen stay
+where they are. The way back is the project's digit or `]`, then `tab` to Waves;
+the composer reloads from the daemon.
 Every ticked item must have a successful plan before launch. One failed
 plan prevents launching the chosen set; the owner can untick it. The
 wave.plan-failure decision remains open (adj 146).
@@ -1716,9 +1730,13 @@ Changing project or view drops the launch, and late plan or spec-check replies
 do not restore it. Once Start is sent, Esc and navigation close the launch
 without cancelling Start. The status stays `ork run PROJECT ITEM: pending`.
 Pressing `l` for that project says `ork run PROJECT ITEM is pending` until
-the reply. Success shows `ork run PROJECT ITEM: done` and refreshes the
-project, even after leaving the Roadmap or project. Plan and Start errors
-show their code and message verbatim. A failed Start is not retried.
+the reply. Success refreshes the project, even after leaving the Roadmap or
+project. *Proposed (S262):* when the owner is still on that project's Roadmap,
+success moves to the Running entry with the new run selected, once a snapshot
+shows it, and the status reads `launched ITEM as RUN; enter opens it`. After
+the owner left, success shows `ork run PROJECT ITEM: done` and moves nothing.
+Plan and Start errors show their code and message verbatim, and stay on the
+Roadmap. A failed Start is not retried.
 
 `m` opens the project's role matrix in a read-only pane (S168, owner decision
 2026-10-29), in place of the list, with the heading `Role matrix  (esc returns)`

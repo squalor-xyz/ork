@@ -1,4 +1,4 @@
-[1mork[m [2mdev[m                    │ [1mOverview (Running)[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+[1mork[m [2mdev[m                    │ [1mOverview (Running)[m[2m │ [mQuestions
 [1;7m> Running                2 [m│[2m────────────────────────────────────────────────────────────────────────[m
 [2m0[m Needs you              3 │[1mRunning 2[m
 [2m1[m slicer                  *│   slicer      [1mS110[m  [..~~..]  [2mheard 4m[m  implementer>[reviewer]>gate
