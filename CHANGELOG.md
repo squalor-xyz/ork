@@ -2,6 +2,18 @@
 
 ## Unreleased
 
+- S218 (*proposed*): wave suggest and the engine rule. `wave.suggest` and
+  `ork wave suggest` keep the first slice of a wave whose Files touch
+  `internal/engine`, `internal/daemon` or `cmd` and move every further one,
+  alone, into a wave right after it, with the reason `engine: ID`; the
+  Waves screen reads it as `one engine slice per wave; ID goes first`. The
+  waves are renumbered, so a suggested wave can be launched as shown. ork
+  reads each placed item with `slicer show` (eight at a time); a failed read
+  leaves that item alone, and the refusal at `wave.start` stays. This is an
+  exception to showing slicer's suggestion as is (owner decision 2026-11-07).
+  Docs: `docs/design.md`, `docs/dashboard.md`, `docs/boundaries.md`,
+  `docs/guide.md`.
+
 - S236 (*proposed*): kill the descendants of a killed role or check that left
   its process group. A role or check killed on a hung watchdog, an owner stop,
   a timeout or a restart reconcile no longer leaves `go test` and its test

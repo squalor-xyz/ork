@@ -49,8 +49,83 @@ func TestWaveSuggestPrintsPlanParallelWaves(t *testing.T) {
 		}
 		last = idx
 	}
-	if calls := fake.CallsTo("slicer"); len(calls) != 1 {
-		t.Fatalf("calls: %+v", calls)
+	// Wave suggest also reads each placed item with show for the engine rule
+	// (S218); this fake answers no show, so those reads fail open.
+	if n := planParallelCalls(fake); n != 1 {
+		t.Fatalf("plan-parallel calls: %d in %+v", n, fake.CallsTo("slicer"))
+	}
+}
+
+// planParallelCalls counts the calls that read slicer's plan.
+func planParallelCalls(fake *clitest.Fake) int {
+	n := 0
+	for _, c := range fake.CallsTo("slicer") {
+		if len(c.Args) > 0 && c.Args[0] == "plan-parallel" {
+			n++
+		}
+	}
+	return n
+}
+
+// engineWaveApp is waveApp with a plan whose first wave holds three engine
+// slices and one plain slice; show answers each item's Files section.
+func engineWaveApp(t *testing.T, withShow bool) (*App, *clitest.Fake) {
+	t.Helper()
+	plan := `{"width":4,"waves":[{"wave":1,"items":[{"id":"E1","title":"first engine"},{"id":"E2","title":"second engine","reason":"shares: E1 internal/engine/a.go"},{"id":"N1","title":"plain"},{"id":"E3","title":"third engine"}]},{"wave":2,"items":[{"id":"N2","title":"after the engine","reason":"after: E2"}]}],"in_flight":[],"unplaced":[],"blocked":[],"held":[],"unspecified":[]}`
+	routes := []clitest.Route{{Tool: "slicer", Args: []string{"plan-parallel", "--json", "--lean", "--root", "/project/p"}, Stdout: plan}}
+	if withShow {
+		for id, path := range map[string]string{"E1": "internal/engine/a.go", "E2": "internal/daemon/b.go", "E3": "cmd/ork/main.go", "N1": "docs/c.md", "N2": "docs/d.md"} {
+			body := fmt.Sprintf(`{"id":%q,"title":"t","slice":{"id":%q,"title":"t","sections":[{"heading":"Files","body":"- `+"`%s`"+`"}]}}`, id, id, path)
+			routes = append(routes, clitest.Route{Tool: "slicer", Args: []string{"show", id, "--json", "--lean", "--root", "/project/p"}, Stdout: body})
+		}
+	}
+	fake := clitest.Install(t, routes...)
+	app := &App{Tools: Tools{Slicer: fake.Bin("slicer")}, Call: func(_ context.Context, method string, params, result any) error {
+		return json.Unmarshal([]byte(`{"projects":[{"name":"p","path":"/project/p"}]}`), result)
+	}}
+	return app, fake
+}
+
+func TestWaveSuggestDefersASecondEngineSlice(t *testing.T) {
+	app, _ := engineWaveApp(t, true)
+	var out, errs bytes.Buffer
+	if code := app.Run(context.Background(), []string{"wave", "suggest", "p"}, &out, &errs); code != ExitOK {
+		t.Fatalf("code %d: %s %s", code, &out, &errs)
+	}
+	want := "Width: 4\nWave 1\n  E1 first engine\n  N1 plain\nWave 2\n  E2 second engine (engine: E1)\nWave 3\n  E3 third engine (engine: E1)\nWave 4\n  N2 after the engine (after: E2)\n"
+	if out.String() != want {
+		t.Fatalf("text:\n%s\nwant:\n%s", &out, want)
+	}
+	out.Reset()
+	if code := app.Run(context.Background(), []string{"wave", "suggest", "p", "--json"}, &out, &errs); code != ExitOK {
+		t.Fatalf("json code %d: %s %s", code, &out, &errs)
+	}
+	var plan struct {
+		Waves []struct {
+			Wave  int
+			Items []struct{ ID, Reason string }
+		}
+	}
+	if err := json.Unmarshal(out.Bytes(), &plan); err != nil {
+		t.Fatal(err)
+	}
+	if len(plan.Waves) != 4 || plan.Waves[1].Wave != 2 || plan.Waves[1].Items[0].ID != "E2" || plan.Waves[1].Items[0].Reason != "engine: E1" || plan.Waves[2].Items[0].Reason != "engine: E1" {
+		t.Fatalf("JSON: %s", &out)
+	}
+}
+
+func TestWaveSuggestStillWorksWithoutAShowRoute(t *testing.T) {
+	app, fake := engineWaveApp(t, false)
+	var out, errs bytes.Buffer
+	if code := app.Run(context.Background(), []string{"wave", "suggest", "p"}, &out, &errs); code != ExitOK {
+		t.Fatalf("code %d: %s %s", code, &out, &errs)
+	}
+	want := "Width: 4\nWave 1\n  E1 first engine\n  E2 second engine (shares: E1 internal/engine/a.go)\n  N1 plain\n  E3 third engine\nWave 2\n  N2 after the engine (after: E2)\n"
+	if out.String() != want {
+		t.Fatalf("text:\n%s\nwant:\n%s", &out, want)
+	}
+	if n := planParallelCalls(fake); n != 1 || len(fake.CallsTo("slicer")) != 6 {
+		t.Fatalf("calls: %+v", fake.CallsTo("slicer"))
 	}
 }
 

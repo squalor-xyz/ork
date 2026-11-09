@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-324 items · — 72 · done 219 · retired 33
+324 items · — 71 · done 220 · retired 33
 
 v1.2
 
@@ -145,7 +145,7 @@ v1.2
 | 88 | [S215](slices/S215.md) | Named wave: state, daemon, CLI | M | 2 |  |  | — |
 | 89 | [S216](slices/S216.md) | Waves screen: save and load named wave | M | 2 |  |  | — |
 | 90 | [S217](slices/S217.md) | Warn when main is dirty before landing | S | 1 |  |  | done |
-| 91 | [S218](slices/S218.md) | Wave suggest: one engine slice per wave | S | 1 |  |  | — |
+| 91 | [S218](slices/S218.md) | Wave suggest: one engine slice per wave | S | 1 |  |  | done |
 | 92 | [S219](slices/S219.md) | Re-anchor guide and design citations | S | 1 |  |  | — |
 | 93 | [S220](slices/S220.md) | v1.1 release prep | S | 1 |  |  | — |
 | 94 | [S223](slices/S223.md) | Ledger non-blocker owner questions | M | 2 |  |  | — |

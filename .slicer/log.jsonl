@@ -4008,3 +4008,9 @@
 {"when": "2026-11-09T20:30:09Z", "item": "S236", "action": "status", "from": "started", "to": "done", "note": "Verified: killing a role or check (clirun Cancel, osProc.Kill on reconcile) now also SIGKILLs the processes below the role's pid that left its process group, found from a ps snapshot taken before the group kill. A ps failure leaves the group kill; a process already reparented to pid 1 is not found. Full suite go test -race ./...: 2926 passed, 0 failed; vet, gofmt, slicer check, adj lint clean; linux/darwin vet clean. Every new assertion mutation-checked.", "by": "Jon Robbins"}
 {"when": "2026-11-09T20:04:44Z", "item": "S236", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-09T20:04:45Z", "item": "S262", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T20:34:28Z", "item": "S218", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-09T20:48:09Z", "item": "S218", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T20:48:16Z", "item": "S218", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-09T21:26:17Z", "item": "S218", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S218):", "by": "Jon Robbins"}
+{"when": "2026-11-09T21:26:21Z", "item": "S218", "action": "note", "from": "", "to": "", "note": "Verified outcome: wave.suggest and ork wave suggest keep the", "by": "Jon Robbins"}
+{"when": "2026-11-09T21:26:23Z", "item": "S218", "action": "status", "from": "started", "to": "done", "note": "Verified outcome: wave suggest keeps at most one engine, daemon or cmd slice per suggested wave (wave.suggest and ork wave suggest defer each further one into a wave of its own); tests, vet, race runs on the touched packages, gofmt, slicer check and adj lint pass; gate VERDICT: PASS.", "by": "Jon Robbins"}

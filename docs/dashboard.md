@@ -1347,6 +1347,10 @@ Shares form aligned columns. The dim Shares column contains only the
 predecessor id, for example `<A` means shares files with predecessor A;
 shared paths stay out of the table. `?` explains the `<` marker.
 Unplaced reasons use plain words: `no_files` becomes `no files listed`.
+The reason `engine: A` (*proposed*, S218) is ork's own: it marks a slice the
+daemon moved out of a wave into a wave of its own, because a wave may hold only
+one slice that touches `internal/engine`, `internal/daemon` or `cmd`. It reads
+`one engine slice per wave; A goes first`.
 Reasons that do not fit beside the title appear on the following lines, dim
 and indented to the title column.
 Long titles shorten to keep the tick, id and Shares columns visible.
@@ -1355,7 +1359,9 @@ lines. The single hint line stays above the status line while the body
 scrolls; no body footer repeats the keys. A dim cell stays dim across all its columns.
 
 S60 provides the CLI: `ork wave suggest PROJECT` prints the ordered waves
-from `slicer plan-parallel`, including reasons. `ork wave start PROJECT
+from `slicer plan-parallel`, including reasons, with a second engine slice of
+a wave moved into a wave of its own as `(engine: A)` (*proposed*, S218; the
+JSON carries the same reason). `ork wave start PROJECT
 ITEM...` takes the chosen item ids (`wave.start-input`), plans each item,
 runs the spec check and asks its open questions (S116; see design.md, Wave
 lifecycle), then asks for confirmation. Every item plans as well specified =

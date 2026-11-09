@@ -47,10 +47,13 @@ func (a *App) waveSuggest(ctx context.Context, o *output, args []string) int {
 		if project.Name != pos[0] {
 			continue
 		}
-		plan, err := (slicercli.Client{Bin: a.Tools.Slicer}).PlanParallel(ctx, project.Path)
+		client := slicercli.Client{Bin: a.Tools.Slicer}
+		plan, err := client.PlanParallel(ctx, project.Path)
 		if err != nil {
 			return o.failErr(err)
 		}
+		// At most one engine, daemon or cmd slice per wave (S218, *proposed*).
+		plan = daemon.SuggestWithEngineRule(ctx, client, project.Path, plan)
 		if o.json {
 			return o.printJSON(plan)
 		}

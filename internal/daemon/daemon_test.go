@@ -1333,8 +1333,16 @@ func TestWaveSuggestReturnsPlanParallel(t *testing.T) {
 	if !reflect.DeepEqual(got, want) || got.Width != 4 || len(got.Waves) != 14 {
 		t.Fatalf("suggest: %+v, want %+v", got, want)
 	}
-	if calls := lastFake.CallsTo("slicer"); len(calls) != 1 {
-		t.Fatalf("calls: %+v", calls)
+	// The engine rule reads each placed item with show (S218); the plan itself
+	// is read once. This fake answers no show, so those reads fail open.
+	plans := 0
+	for _, c := range lastFake.CallsTo("slicer") {
+		if len(c.Args) > 0 && c.Args[0] == "plan-parallel" {
+			plans++
+		}
+	}
+	if plans != 1 {
+		t.Fatalf("plan-parallel calls: %d in %+v", plans, lastFake.CallsTo("slicer"))
 	}
 }
 
@@ -1416,8 +1424,17 @@ func TestWaveReadsOverTheSocket(t *testing.T) {
 	if _, err := c.WaveSuggest(ctx, "p"); err != nil {
 		t.Fatal(err)
 	}
-	if calls := fake.CallsTo("slicer"); len(calls) != 2 {
-		t.Fatalf("two suggest requests made %d slicer calls, want 2: %+v", len(calls), calls)
+	// The engine rule also reads each placed item with show (S218); those reads
+	// fail open here, since the fake has no show route. The plan itself is read
+	// once per request, never cached.
+	plans := 0
+	for _, call := range fake.CallsTo("slicer") {
+		if len(call.Args) > 0 && call.Args[0] == "plan-parallel" {
+			plans++
+		}
+	}
+	if plans != 2 {
+		t.Fatalf("two suggest requests made %d plan-parallel calls, want 2: %+v", plans, fake.CallsTo("slicer"))
 	}
 	ov, err := c.WaveOverlap(ctx, "p", []string{"S60", "S52"})
 	if err != nil || len(ov.Overlap) != 1 || !reflect.DeepEqual(ov.Overlap[0].Shared, []string{"internal/cli/run.go", "docs/dashboard.md"}) {

@@ -426,6 +426,13 @@ suggested waves. For each item you want:
     ork wave start PROJECT ITEM... [--yes] [--well-specified y/n] [--split y/n]
     ork stop WAVE-ID
 
+A wave may hold only one slice that touches `internal/engine`,
+`internal/daemon` or `cmd` (`docs/design.md`, Self-hosting). The suggestion,
+in the TUI and in `ork wave suggest`, keeps the first such slice of a wave and
+puts each further one alone in the next wave, with the reason `engine: ID`
+(S218, *proposed*). Such a slice runs alone unless you tick another slice
+with it.
+
 Like `ork run`, `wave start` asks the spec-check questions on standard input
 and prints each plan before it asks to start (`docs/design.md:1034-1056`,
 `internal/cli/wave.go:90-92`). `ork stop` takes the `wave-` id it prints and

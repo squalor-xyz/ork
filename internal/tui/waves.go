@@ -771,6 +771,11 @@ func waveReason(reason string) string {
 	if reason == "no_files" {
 		return "no files listed"
 	}
+	// ork's own reason (S218, *proposed*): the daemon defers a second engine,
+	// daemon or cmd slice into a wave of its own and names the one kept.
+	if id, ok := strings.CutPrefix(reason, "engine: "); ok && id != "" {
+		return "one engine slice per wave; " + id + " goes first"
+	}
 	return reason
 }
 

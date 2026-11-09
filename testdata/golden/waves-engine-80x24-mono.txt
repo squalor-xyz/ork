@@ -1,0 +1,24 @@
+[1mork[m                │ Overview[2m │ [mQuestions[2m │ [m[1mWaves[m[2m │ [mRoadmap[2m │ [mDecisions
+[2m  Running        0 [m│[2m────────────────────────────────────────────────────────────[m
+[2m0[m Needs you      0 │[1mSuggested (slicer plan-parallel)[m
+[1;7m1>ork              [m│[1m         Items                                        Shares[m
+[2m2[m other            │[1m── Wave 1 ────────────────────────────────────────── 2 items[m
+                   │[1;7m  [ ] A  [m[1;7mAlpha                                      [m[1;7m  [m[1;7m      [m
+                   │  [ ] B  Beta                                               
+                   │[1m── Wave 2 ─────────────────────────────────────────── 1 item[m
+                   │  [ ] C  Gamma                                              
+                   │         [2mone engine slice per wave; A goes first[m
+                   │[1m── Wave 3 ─────────────────────────────────────────── 1 item[m
+                   │  [ ] D  Delta (after: C)                                   
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ enter [2mitem[m; space [2mtick item[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
+                   │ 2 projects | refreshed 16:42:00

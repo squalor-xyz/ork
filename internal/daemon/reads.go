@@ -50,14 +50,20 @@ func readAs[T any](ctx context.Context, d *Daemon, p registry.Project, part sour
 	return source.Result[T]{Value: t, ReadAt: v.ReadAt, Err: v.Err}
 }
 
-// waveSuggest reads slicer's plan-parallel waves for a registered project.
-// It calls slicer on each request; the plan is not cached.
+// waveSuggest reads slicer's plan-parallel waves for a registered project and
+// defers every second engine, daemon or cmd slice of a wave into a wave of its
+// own (SuggestWithEngineRule, *proposed* S218). It calls slicer on each
+// request; the plan is not cached.
 func (d *Daemon) waveSuggest(ctx context.Context, p WaveSuggestParams) (*slicercli.ParallelPlan, error) {
 	project, err := d.registered(p.Project)
 	if err != nil {
 		return nil, err
 	}
-	return d.runs.deps.Slicer.PlanParallel(ctx, project.Path)
+	plan, err := d.runs.deps.Slicer.PlanParallel(ctx, project.Path)
+	if err != nil {
+		return nil, err
+	}
+	return SuggestWithEngineRule(ctx, d.runs.deps.Slicer, project.Path, plan), nil
 }
 
 // waveOverlap reads the paths that the given items share. Slicer computes the

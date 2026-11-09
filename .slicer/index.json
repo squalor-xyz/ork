@@ -12136,7 +12136,7 @@
       "id": "S218",
       "title": "Wave suggest keeps engine slices apart: at most one engine, daemon or cmd slice per suggested wave",
       "short_title": "Wave suggest: one engine slice per wave",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -12147,6 +12147,34 @@
           "created_at": "2026-11-01T00:58:27Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "19bac41a-c6cc-446c-acc2-b4f52ebf7d89",
+          "kind": "",
+          "text": "**2026-11-09** — Human checks at approval (S218):\n- later: At 100x30 and 80x24 in a live terminal: open Waves on a project with several engine slices and read the deferred items' reason lines; confirm opening the screen is not noticeably slower (it adds the parallel `show` reads).",
+          "created_at": "2026-11-09T21:26:17Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "6e22cecc-1e9a-411a-b516-5cb677febc4b",
+          "kind": "",
+          "text": "**2026-11-09** — Verified outcome: wave.suggest and ork wave suggest keep the first engine, daemon or cmd slice of each suggested wave and move every further one, alone, into a new wave right after it with the reason engine: ID; waves are renumbered, show reads run at most eight at a time and fail open, and the wave.start refusal stays the guard. The Waves screen reads the reason as one engine slice per wave; ID goes first. go vet, go test ./..., go test -race on internal/daemon, internal/cli and internal/tui, gofmt, slicer check and adj lint all pass; gate VERDICT: PASS. Not run: ork wave suggest ork on a built binary and the live-terminal human check (recorded as later).",
+          "created_at": "2026-11-09T21:26:21Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -12172,7 +12200,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

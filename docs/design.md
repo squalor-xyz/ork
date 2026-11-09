@@ -107,7 +107,7 @@ ork (TUI)  ork status --json (CLI)
   | `item.show` (proposed wire) | `{"project","id"}` | `{"detail"}`; slicer show for the registered project |
   | `wave.start` (`run.launch-wire`; proposed shape) | `{"items":[RunParams...]}`; each item has `project`, `item`, `well_specified`, `split`, optional `lineup`, `budgets`, `expected` and, from S265 (*proposed*, adj 191), `allow_no_check` as in `run.start` | `{"wave","items":[{"item","run"?,"error"?}]}`; one wave id, one project, admission errors kept per item; a project with no check command refuses the whole wave with `refused`, before any member is admitted, unless every item has `allow_no_check` |
   | `wave.stop` (proposed wire) | `{"wave"}` | the same wave result; stops each unfinished member through `run.stop`, skips final members |
-  | `wave.suggest` (proposed wire) | `{"project"}` | slicer's `plan-parallel` result for the registered project, limited to the fields `ParallelPlan` reads; slicer runs on each call, not from the cache |
+  | `wave.suggest` (proposed wire) | `{"project"}` | slicer's `plan-parallel` result for the registered project, limited to the fields `ParallelPlan` reads, with a second engine, daemon or cmd slice of a wave moved into a wave of its own after it (S218, *proposed*; see Self-hosting); slicer runs on each call, not from the cache |
   | `roles.matrix` (proposed wire, S168) | `{"project"}` | `{"markdown","rows":[{"id","role","agent","use"}],"rules":[{"id","text"}]}` from `slicer relay-roles show --json`: slicer's own text, and for each row what ork does with it (`use`: `used as claude\|codex\|grok`, `UI pass row, ...`, `Spec check row, ...` (every row that the project's `spec_check_rows` or a rule names), `skipped: no adapter for AGENT`, `not used: the gate runs the reviewer's lineup`, `not run by ork`, `not used: ork has no role ROLE`); read-only, no slicer write; slicer's error keeps its code and message; slicer runs on each call |
   | `wave.overlap` (proposed wire) | `{"project","items":[ID...]}` | `{"overlap":[{"a","b","shared"?}]}` from `slicer deps --overlap`; `shared` is absent when a pair shares no path; fewer than two items is `bad_params`; slicer runs on each call |
   | `subscribe` | `{"focus":[names]}` | none; the connection gets notices (below) and the named projects become visible |
@@ -2489,6 +2489,20 @@ A wave may contain at most one slice whose Files touch `internal/engine`,
 `internal/daemon` or `cmd`. The daemon refuses a conflicting wave before
 starting any member and names both slices. Waves marks the conflict before
 launch. One such slice may run with other slices.
+
+*Proposed (S218):* `wave.suggest` and `ork wave suggest` put a second such
+slice in a wave of its own after the first, so every suggested wave can be
+launched as shown. In each of slicer's waves the first slice whose Files
+`EngineSlice` flags stays; every further one moves, alone, into a new wave
+right after that wave, with the reason `engine: ID` naming the slice kept.
+The waves are renumbered 1 to n, so a slice that waited on a deferred one
+still comes after it. ork reads each placed item's Files with `slicer show`,
+at most eight at a time, and skips the reads when no wave holds two items.
+A read that fails leaves that item as a plain slice and the suggestion still
+succeeds; the refusal at `wave.start` stays the guard. A deferred slice runs
+alone unless the owner adds another slice by hand. This is an exception to
+showing slicer's suggestion as is (`wave.selection`; owner decision
+2026-11-07).
 
 *Proposed wire fields:* each status project carries `self_host` and
 `behind_main`. A self-hosted daemon is behind when its build revision differs

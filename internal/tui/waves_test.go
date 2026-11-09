@@ -331,6 +331,44 @@ func TestTabReachesTheWavesView(t *testing.T) {
 		t.Fatal("reverse navigation skipped Waves")
 	}
 }
+func TestWaveReasonExplainsTheEngineRule(t *testing.T) {
+	if got, want := waveReason("engine: S129"), "one engine slice per wave; S129 goes first"; got != want {
+		t.Fatalf("waveReason: %q, want %q", got, want)
+	}
+	// Other reasons keep their words.
+	for reason, want := range map[string]string{"no_files": "no files listed", "after: S2": "after: S2", "engine:": "engine:", "engine: ": "engine: "} {
+		if got := waveReason(reason); got != want {
+			t.Errorf("waveReason(%q) = %q, want %q", reason, got, want)
+		}
+	}
+}
+
+func TestWavesShowsADeferredEngineSliceInItsOwnWave(t *testing.T) {
+	for _, size := range [][2]int{{100, 30}, {80, 24}} {
+		name := fmt.Sprintf("waves-engine-%dx%d-mono.txt", size[0], size[1])
+		t.Run(name, func(t *testing.T) {
+			h, l := wavesHarness(t)
+			h.m.cfg.Theme = NewTheme(true)
+			var plan slicercli.ParallelPlan
+			if err := json.Unmarshal([]byte(`{"waves":[{"wave":1,"items":[{"id":"A","title":"Alpha"},{"id":"B","title":"Beta"}]},{"wave":2,"items":[{"id":"C","title":"Gamma","reason":"engine: A"}]},{"wave":3,"items":[{"id":"D","title":"Delta","reason":"after: C"}]}]}`), &plan); err != nil {
+				t.Fatal(err)
+			}
+			l.suggest = &plan
+			h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+			openWaves(t, h)
+			h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+			view := h.m.View().Content
+			if !strings.Contains(view, "one engine slice per wave; A goes first") {
+				t.Fatalf("the engine reason is not in plain words:\n%s", view)
+			}
+			if strings.Contains(view, "engine: A") {
+				t.Fatalf("the raw reason shows:\n%s", view)
+			}
+			checkGolden(t, name, view)
+		})
+	}
+}
+
 func TestWavesGolden(t *testing.T) {
 	for _, size := range [][2]int{{100, 30}, {80, 24}, {120, 40}} {
 		for _, mono := range []bool{false, true} {
