@@ -197,7 +197,8 @@ ork does not edit it. Read it in ork: press `m` on the Roadmap, or run
 Both show slicer's matrix text and a short `ork` section that says, row by
 row, what ork does with it (the pane puts the `ork` section first, the command
 puts slicer's text first): `used as claude`, `used as codex` or `used as grok`, `skipped: no
-adapter for AGENT`, `UI pass row` for the reviewer row that a rule names and
+adapter for AGENT`, `skipped: grok has no write mode` for a Grok Implementer row
+(*proposed*, S268), `UI pass row` for the reviewer row that a rule names and
 `Spec check row` for every row that a rule or the project's `spec_check_rows`
 names, `not used: the gate runs the reviewer's lineup` for Gate rows
 (ork's gate follows the reviewer), `not run by ork` for the Orchestrator
@@ -215,8 +216,10 @@ reviewer, gate, and an architect when the lineup has one (the matrix gives one o
 `internal/slicercli/write.go:96`). A matrix row for a vendor ork has no adapter
 for is skipped; ork runs `claude`, `codex` and `grok` (`docs/design.md:184-198`). Grok
 runs read-only roles (reviewer, gate, architect, spec check) in plan mode and
-refuses a write role, so a Grok implementer row fails when it runs (*proposed*,
-S72). A matrix model written `FAMILY@latest`, such as `gpt-*-sol@latest` or
+refuses a write role, so a plan skips a Grok implementer row and says why in
+the plan's note, and a launch override that names Grok as the implementer is
+refused with `bad_params` (*proposed*, S72, S268). A project whose implementer
+is the `read-only` preset keeps its Grok row. A matrix model written `FAMILY@latest`, such as `gpt-*-sol@latest` or
 `grok-*@latest`, runs the newest model of that family: ork reads the vendor's
 model list when it builds the plan and shows the result in the lineup (*proposed*,
 S244). A bare `latest` is refused. A model without `@latest` is passed as written.

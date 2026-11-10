@@ -211,6 +211,15 @@ ork (TUI)  ork status --json (CLI)
    case (`engine.adapter-key`, decision 155; the `Grok` key is S72, *proposed*).
    A Grok row is an alternate: nothing makes it a first choice, so it comes
    first only where the matrix recommends it.
+   *Proposed (S268; owner 2026-11-03):* Grok has no write mode (probes 10 to 12
+   in `testdata/vendors/grok`), so a plan skips a `grok` or `grok-local` row of
+   the implementer, unless the project's implementer permission is the
+   `read-only` preset, and adds `skipped: row ID (AGENT) as implementer: grok
+   has no write mode` to the plan's note. When no other row is left, the plan
+   is refused with the same reasons. A launch override that names `grok` or
+   `grok-local` as the implementer is refused with `bad_params`. The matrix view
+   shows such a row as `skipped: grok has no write mode`. Reviewer, gate,
+   architect, UI pass and spec check rows are read-only and are kept.
    *Proposed (S244; owner 2026-11-02):* a matrix model `FAMILY@latest` asks for
    the newest model of a family. FAMILY is a model name with one `*` for the
    version (digits and dots), for example `gpt-*-sol@latest` or

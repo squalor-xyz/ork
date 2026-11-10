@@ -37,7 +37,7 @@ func TestLocalMatrixUsePrintsTheLauncherName(t *testing.T) {
 	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
 		t.Run(vendor, func(t *testing.T) {
 			localLaunchers(t)
-			use := matrixUse(slicercli.Row{Role: engine.RoleReviewer, Agent: vendor}, "", nil)
+			use := matrixUse(slicercli.Row{Role: engine.RoleReviewer, Agent: vendor}, "", nil, false)
 			lines := FormatMatrix(&RolesMatrixResult{Rows: []MatrixRow{{ID: "r33", Role: engine.RoleReviewer, Use: use}}})
 			if !strings.Contains(strings.Join(lines, "\n"), "used as "+vendor) {
 				t.Fatalf("matrix text: %v", lines)
