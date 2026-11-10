@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-326 items · — 63 · done 230 · retired 33
+326 items · — 62 · done 231 · retired 33
 
 v1.2
 
