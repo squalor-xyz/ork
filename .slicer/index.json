@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 326,
+  "next_id": 327,
   "preamble": "",
   "passes": [
     {
@@ -17372,6 +17372,34 @@
         "trees_literal": false,
         "findings": "Found by the S285 UI pass 2026-11-09: the TUI run detail has no line for the last check command that ran (round command, full command or landing re-check); CLI ork status and ork show name it after S285. Owner chose CLI only for S285 (adj 257). Needed: a last-check line in the TUI run detail with a golden view, using the same source as ork show.",
         "discovered_from": "S285",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S326",
+      "title": "ork status --json: show the wave name on engine runs",
+      "short_title": "ork status --json: show the wave name on engine runs",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Found by the S215 implementer 2026-11-10: NW-Q9 (a) assumed the wave name is in ork status --json, but source.EngineRun (internal/source/source.go:273) has neither wave nor wave_name, so only run.json carries them. Owner chose a follow-up slice (adj wave.name-in-status). Needed: add wave and wave_name to source.EngineRun and engineRuns so ork status --json shows them, with tests; update docs/state.md, which S215 words as 'run.json only'.",
+        "discovered_from": "S215",
         "parent": "",
         "cites": [],
         "key": "",
