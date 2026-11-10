@@ -405,10 +405,27 @@ entries:
 		return nil, fmt.Errorf("save spec report: %w", err)
 	}
 	owner, _ := section(text, ownerHeading)
-	if isNone(owner) {
-		owner = ""
+	return &SpecCheckResult{Verdicts: verdicts, Specs: specs, OwnerNeeded: SpecOwnerText(owner)}, nil
+}
+
+// SpecOwnerText is the Owner needed text of a spec check that ork shows (S264,
+// *proposed*): the body of the section without its code fence lines, trimmed.
+// It is empty when the first non-blank line says none, so prose the role
+// writes after a none does not reach the screen. The saved report keeps it all.
+func SpecOwnerText(body string) string {
+	var kept []string
+	for _, line := range strings.Split(body, "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "```") {
+			continue
+		}
+		kept = append(kept, line)
 	}
-	return &SpecCheckResult{Verdicts: verdicts, Specs: specs, OwnerNeeded: strings.TrimSpace(owner)}, nil
+	text := strings.TrimSpace(strings.Join(kept, "\n"))
+	first, _, _ := strings.Cut(text, "\n")
+	if isNone(first) {
+		return ""
+	}
+	return text
 }
 
 // runSpecRole applies the shared pool and elapsed limit to a local spec

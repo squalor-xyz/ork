@@ -1,0 +1,30 @@
+[1mork[m                        │ Overview[2m │ [mQuestions[2m │ [mWaves[2m │ [m[1mRoadmap[m[2m │ [mDecisions
+[2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
+[2m0[m Needs you              0 │[1mReady slices[m
+[1;7m1>ork                      [m│  spec check: S90, 1m12s; wait for the confirmation
+[2m2[m other                    │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[2m────────────────────────────────────────────────────────────────────────[m
+                           │ esc [2mcancel[m
+                           │ 2 projects | refreshed 16:42:00

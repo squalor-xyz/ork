@@ -715,7 +715,14 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 		}
 	}
 	if w.ownerNeeded != "" {
-		add("Owner needed: " + w.ownerNeeded)
+		// One line: the sitting shows the whole text (S264, *proposed*).
+		first, rest, more := strings.Cut(w.ownerNeeded, "\n")
+		marker := ""
+		if more {
+			marker = fmt.Sprintf(" (+%d more lines)", strings.Count(rest, "\n")+1)
+		}
+		line := clip("Owner needed: "+strings.TrimSuffix(first, "\r"), max(width-2-lipgloss.Width(marker), 1)) + marker
+		out.body = append(out.body, indent+line)
 	}
 	return out, nil
 }

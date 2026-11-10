@@ -683,6 +683,9 @@ func singleSpecRun(t *testing.T, input, check string, checkErr error, extra ...s
 			if !strings.Contains(out.String()+errs.String(), "/p/S1") || strings.Contains(out.String()+errs.String(), "Start this slice?") {
 				t.Fatal("spec check must follow plan and precede confirmation")
 			}
+			if !strings.Contains(out.String()+errs.String(), "spec check: S1; wait for it to finish\n") {
+				t.Error("the wait line must come before the spec.check call")
+			}
 			p := params.(daemon.SpecCheckParams)
 			if p.Project != "p" || !reflect.DeepEqual(p.Items, []string{"S1"}) {
 				t.Fatalf("check params: %+v", p)
@@ -726,6 +729,22 @@ func TestRunCallsTheSpecCheckAfterThePlanAndBeforeConfirmation(t *testing.T) {
 		if code != ExitOK || !reflect.DeepEqual(stub.calls, []string{"run.plan", "spec.check", "run.start"}) {
 			t.Fatalf("exit %d calls %v: %s %s", code, stub.calls, out, errs)
 		}
+	}
+}
+
+func TestRunSaysToWaitForTheSpecCheck(t *testing.T) {
+	const line = "spec check: S1; wait for it to finish"
+	code, out, errs, _ := singleSpecRun(t, "y\n", `{"items":[{"item":"S1","ready":true}]}`, nil)
+	if code != ExitOK || strings.Count(out, line+"\n") != 1 || strings.Index(out, line) > strings.Index(out, "Start this slice?") {
+		t.Fatalf("exit %d, wait line missing or after the confirmation: %s %s", code, out, errs)
+	}
+	code, out, errs, _ = singleSpecRun(t, "", `{"items":[{"item":"S1","ready":true}]}`, nil, "--json", "--yes")
+	var value map[string]any
+	if err := json.Unmarshal([]byte(out), &value); err != nil || code != ExitOK {
+		t.Fatalf("exit %d, stdout is not one JSON value: %s %s %v", code, out, errs, err)
+	}
+	if !strings.Contains(errs, line+"\n") || strings.Contains(out, "spec check:") {
+		t.Fatalf("wait line must be on stderr with --json: %s %s", out, errs)
 	}
 }
 

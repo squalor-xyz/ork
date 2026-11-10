@@ -51,6 +51,36 @@ func TestLocalAndCloudOutMarksSelectIndependentRows(t *testing.T) {
 
 const planRaw = `{"project":"p","item":"S1","well_specified":true,"split":false}`
 
+// vendorUntilText is the end of a mark as a plan note says it (S299): HH:MM on
+// the day the mark began, with the day on another day of that year, and with
+// the year in another year. A run just before midnight or New Year crosses
+// both, so the test must not assume a bare HH:MM.
+func vendorUntilText(since, until time.Time) string {
+	switch {
+	case until.Year() != since.Year():
+		return until.Format("2 Jan 2006 15:04")
+	case until.YearDay() != since.YearDay():
+		return until.Format("2 Jan 15:04")
+	}
+	return until.Format("15:04")
+}
+
+func TestVendorUntilTextNamesTheDayAndTheYear(t *testing.T) {
+	at := func(y int, m time.Month, d, h, min int) time.Time { return time.Date(y, m, d, h, min, 0, 0, time.UTC) }
+	for _, tc := range []struct {
+		since, until time.Time
+		want         string
+	}{
+		{at(2026, 11, 9, 20, 0), at(2026, 11, 9, 21, 0), "21:00"},
+		{at(2026, 11, 9, 23, 33), at(2026, 11, 10, 0, 33), "10 Nov 00:33"},
+		{at(2026, 12, 31, 23, 30), at(2027, 1, 1, 0, 30), "1 Jan 2027 00:30"},
+	} {
+		if got := vendorUntilText(tc.since, tc.until); got != tc.want {
+			t.Errorf("vendorUntilText(%v, %v) = %q, want %q", tc.since, tc.until, got, tc.want)
+		}
+	}
+}
+
 func TestPlanNotesAVendorThatIsOut(t *testing.T) {
 	d, _, _ := runDaemon(t, nil)
 	var before RunPlan

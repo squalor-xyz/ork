@@ -1449,8 +1449,14 @@ Two or more ticked items trigger an overlap read. Each shared path gets a
 warning; warnings permit launch (`wave.selection`). `l` launches the ticked
 items with one y/n confirmation showing `ork wave start PROJECT ID...`.
 Enter, n and esc cancel; y submits each item's answers and confirmed plan.
-`l` first runs the spec check (S116, adj 164) for every ticked item and shows
-`pending: spec.check`. The daemon asks the role only about specs with no check
+`l` first runs the spec check (S116, adj 164) for every ticked item. *Proposed
+(S264):* while it runs, the status line reads `spec check: N items, 1m12s; wait
+for the confirmation` (one item names its id instead of `N items`). The clock
+counts from `l` and moves with the poll tick: `59s`, then `1m00s`, then `1h02m`.
+It is elapsed time, not a count of items done, since the daemon runs one role
+pass for the whole batch (adj 164). `l` stays refused while the check runs, and
+the line goes when the reply comes: the confirmation or the sitting takes its
+place. The daemon asks the role only about specs with no check
 yet or changed since it, so a ready item is asked again at no cost, and one
 whose spec changed is not trusted. A ready item's row says `spec ready` after
 its title; an item with open questions says `waits on N spec questions`. Items
@@ -1467,7 +1473,11 @@ and the item counts as ready. The saved answers survive a daemon restart
 until run start or a spec change. Spec checks and answer writes use separate
 connections so their waits do not block other sitting requests. Any shared
 `Owner needed` text from the report is kept in the sitting and the Waves
-list. The Roadmap launch uses the same sitting for its selected slice (S184).
+list. *Proposed (S264):* the text has no code fence lines and is empty when
+its first non-blank line says `none`, so a role's prose after a `none` is not
+shown (the saved report keeps it). The Waves list shows only its first line,
+clipped to the pane, followed by ` (+N more lines)` when there are more; the
+sitting shows the whole text. The Roadmap launch uses the same sitting for its selected slice (S184).
 A question with a decision key is also filed in adj when the project has adj
 and `ADJ_DECIDED_BY` is set (the status line says why not otherwise). When the
 sitting ends, the confirmation below covers the ready items only, and says
@@ -1666,8 +1676,9 @@ Launch asks nothing before the plan (*proposed*, adj 189,
 specified = yes and split = no. The TUI calls `run.plan` and shows
 "pending: run.plan".
 After the plan, it calls `spec.check` for the selected slice and shows
-`pending: spec.check` in the launch body only, with an empty status line,
-before confirmation (S184). A ready slice proceeds to confirmation. Questions
+`spec check: ID, 1m12s; wait for the confirmation` (*proposed*, S264; the clock
+counts from the plan reply and moves with the poll tick) in the launch body
+only, with an empty status line, before confirmation (S184). A ready slice proceeds to confirmation. Questions
 open the same sitting as Waves: `1`-`N` picks an option, `t` types an answer
 and `enter` submits it. The last answer is
 recorded with `spec.answer` before confirmation. `s` or `esc` skips the rest

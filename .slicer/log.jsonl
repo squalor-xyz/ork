@@ -4027,3 +4027,12 @@
 {"when": "2026-11-10T00:20:18Z", "item": "S285", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S285):", "by": "Jon Robbins"}
 {"when": "2026-11-10T00:20:22Z", "item": "S285", "action": "note", "from": "", "to": "", "note": "Verified: round_check_command (registry, ork projects set --", "by": "Jon Robbins"}
 {"when": "2026-11-10T00:20:23Z", "item": "S285", "action": "status", "from": "started", "to": "done", "note": "Round check command separated from the check command: round_check_command in the registry, runs after implementer rounds; check_command runs after a green round check when it differs, before review or the gate, and at the landing re-check. Status, plan, docs and CHANGELOG updated; vet, gofmt, slicer check clean; tests green and mutation-checked.", "by": "Jon Robbins"}
+{"when": "2026-11-09T23:16:57Z", "item": "S264", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-09T23:29:36Z", "item": "S264", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-09T23:29:49Z", "item": "S264", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-10T00:17:27Z", "item": "S264", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S264):", "by": "Jon Robbins"}
+{"when": "2026-11-10T00:17:33Z", "item": "S264", "action": "note", "from": "", "to": "", "note": "Verified: while the spec check runs, the Waves status line a", "by": "Jon Robbins"}
+{"when": "2026-11-10T00:17:35Z", "item": "S264", "action": "status", "from": "started", "to": "done", "note": "Verified: Waves status line and Roadmap launch body show the spec check wait text with an elapsed clock, l stays refused until the reply, ork run and ork wave start print the wait line before the call, and the Owner needed text drops fences and none-prefixed prose (engine, stored answers, one-line Waves list). Full go test -race passed in all 23 packages; vet, gofmt, slicer check and adj lint clean.", "by": "Jon Robbins"}
+{"when": "2026-11-09T23:16:25Z", "item": "S285", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T23:16:25Z", "item": "S264", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-09T23:18:57Z", "item": "S285", "action": "edit", "from": "", "to": "", "note": "Implement"}

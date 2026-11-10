@@ -1181,7 +1181,11 @@ separately.
   `spec-check`. Its report and temp directory are under
   `~/.local/state/ork/spec-checks/<project-key>/<item-key>/` (hashed identities).
   Each item has `check.json` identifying the project and item, `spec-check.md`,
-  and, after an answer, `answers.json`. The batch's first item also holds the
+  and, after an answer, `answers.json`. *Proposed (S264):* the `Owner needed`
+  text ork keeps from the report (`engine.SpecOwnerText`) drops code fence lines
+  and is empty when its first non-blank line is `none`; `spec-check.md` keeps
+  the whole report, and a loaded `answers.json` is cleaned the same way without
+  being rewritten. The batch's first item also holds the
   role's temp directory. A landed run or removed project loses its check
   directories, and so does the item of a run stopped after commit when its
   branch is found merged (*proposed*, S229). At daemon start, directories older than 14 days are swept
@@ -1683,6 +1687,10 @@ other text is the answer, an empty line holds the item back). Each question
 is labeled with its item, as `[S1 1/2]`. An item whose questions stay open is
 left out of the wave and named as `held`; a wave with no item left does not start and exits 1. With
 `--json` the questions and the shared `Owner needed` text go to stderr.
+*Proposed (S264):* before it calls `spec.check`, `wave start` prints one line
+on the same stream, `spec check: S1, S2; wait for it to finish`, because the
+call returns only when the role has finished; `ork run` prints it the same way
+with its one item (`spec check: S1; wait for it to finish`).
 The JSON result always includes a `held` array of excluded item IDs, including
 when the wave starts or the owner cancels; it is `[]` when nothing is held.
 *Proposed (S283, adj 245, `wave.plan-failure-missing-spec`):* a missing spec is

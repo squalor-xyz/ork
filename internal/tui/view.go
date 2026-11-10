@@ -104,6 +104,18 @@ func (m *Model) screen() string {
 			rv = m.roadmap(mainW)
 		}
 		status := m.actionStatus
+		if m.view == wavesView && m.waves != nil && m.waves.checking {
+			// The wait line stays while the check runs; a refusal shows below it.
+			var ids []string
+			for _, p := range m.waves.items() {
+				ids = append(ids, p.Item)
+			}
+			wait := specWaitText(ids, m.cfg.Now().Sub(m.waves.checkStarted))
+			if status != "" {
+				wait += "\n" + status
+			}
+			status = wait
+		}
 		if status == "" && m.view == wavesView && m.waves != nil && m.waves.lineup == nil && m.waves.sitting == nil && len(m.waves.picked) > 0 {
 			status = fmt.Sprintf("%d ticked, not launched", len(m.waves.picked))
 		}

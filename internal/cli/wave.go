@@ -255,6 +255,8 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 	for _, item := range params.Items {
 		ids = append(ids, item.Item)
 	}
+	// The call returns when the role has finished: say so first (S264, *proposed*).
+	fmt.Fprintf(w, "spec check: %s; wait for it to finish\n", strings.Join(ids, ", "))
 	var check daemon.SpecCheckResult
 	if code := a.callWith(ctx, o, "spec check failed: ", daemon.MethodSpecCheck, daemon.SpecCheckParams{Project: params.Items[0].Project, Items: ids}, &check); code != ExitOK {
 		return nil, nil, code

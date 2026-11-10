@@ -242,8 +242,9 @@ nothing about well specified or split (it plans as well specified, not split,
 *proposed*, adj 189); read the plan (worktree, branch, check command and lineup, plus budgets when overridden;
 setup warnings follow the roles, and a project with no check command shows
 `check: none` and cannot start, *proposed*, S265).
-Before confirmation, ork runs the spec check. `pending: spec.check` appears
-in the launch body only; the status line stays empty. Questions use the same
+Before confirmation, ork runs the spec check. While it runs, the launch body
+reads `spec check: ID, 1m12s; wait for the confirmation` (*proposed*, S264);
+the clock counts from the plan reply, and the status line stays empty. Questions use the same
 sitting as Waves: pick with `1`-`N`, or press `t`, type an answer and press
 `enter`.
 The last answer is recorded before confirmation. `s` or `esc` skips the rest
@@ -266,7 +267,8 @@ Press `y` at the confirmation to start (`docs/dashboard.md:1374-1402`,
 
 It plans the slice as well specified and not split, prints the plan, and runs
 the spec check before asking `Start this slice? [y/N]` (*proposed*, adj 189).
-Answer each spec question
+Before the check it prints `spec check: ID; wait for it to finish` (*proposed*,
+S264), because the call returns only when the check has finished. Answer each spec question
 with an option number or text. An empty line or end of input holds the
 slice and exits 1. A failed check also blocks launch. Real spec-check failures
 carry the `spec check failed: ` prefix in text mode; refusals do not. Text

@@ -280,6 +280,7 @@ func (m *Model) applyLaunch(msg launchMsg) tea.Cmd {
 	}
 	l.stage = launchSpecPending
 	l.checking = true
+	l.checkStarted = m.cfg.Now()
 	live, ctx, request, project, item := m.cfg.Live, l.ctx, l.request, l.params.Project, l.params.Item
 	return func() tea.Msg {
 		if ctx.Err() != nil {
@@ -467,7 +468,7 @@ func (m *Model) launchView(w int) overviewView {
 	case launchPlanPending:
 		add("pending: run.plan")
 	case launchSpecPending:
-		add("pending: spec.check")
+		add(specWaitText([]string{l.params.Item}, m.cfg.Now().Sub(l.checkStarted)))
 	case launchConfirm, launchStarting:
 		p := l.plan
 		add(p.Project.Name + " " + p.Item)

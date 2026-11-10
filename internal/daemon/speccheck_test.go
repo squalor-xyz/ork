@@ -607,6 +607,30 @@ func TestOwnerAnswersSurviveARestart(t *testing.T) {
 	}
 }
 
+// An answers.json written before the engine cleaned the Owner needed text still
+// holds a none followed by a fence and prose; loading it shows no owner text.
+func TestStoredOwnerTextIsCleanedOnLoad(t *testing.T) {
+	rig := answeredSpecRig(t)
+	path := filepath.Join(rig.d.specDir("p", "S2"), "answers.json")
+	b, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stored storedSpecAnswers
+	if err := json.Unmarshal(b, &stored); err != nil {
+		t.Fatal(err)
+	}
+	stored.OwnerNeeded = strings.Join([]string{"none", "```", "prose"}, "\n")
+	if err := writeSpecJSON(path, stored); err != nil {
+		t.Fatal(err)
+	}
+	restartSpecRig(t, rig)
+	res := rig.check(t, "S2")
+	if !rig.item(res, "S2").Ready || res.OwnerNeeded != "" || len(rig.requests()) != 1 {
+		t.Fatalf("reply %+v after %d checks, want S2 ready with no owner text", res, len(rig.requests()))
+	}
+}
+
 func TestSpecChangeDropsStoredAnswers(t *testing.T) {
 	rig := answeredSpecRig(t)
 	paths, err := filepath.Glob(filepath.Join(rig.d.cfg.Paths.Dir, "spec-checks", "*", "*", "answers.json"))
