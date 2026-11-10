@@ -441,6 +441,39 @@ suggested waves. For each item you want:
     ork wave start PROJECT ITEM... [--yes] [--well-specified y/n] [--split y/n]
     ork stop WAVE-ID
 
+**Save a wave and start it by name** (S215, *proposed*). A wave you start
+often can be saved under a name. ork keeps the name and the item ids of one
+project in `waves.json`, beside `projects.json`, and nothing in the project's
+repository:
+
+    ork wave define --project PROJECT NAME ITEM... [--replace]
+    ork wave list [--project PROJECT]
+    ork wave start [--project PROJECT] NAME [--yes] [--well-specified y/n]
+                   [--split y/n]
+    ork wave rm [--project PROJECT] NAME
+
+- A name is 1 to 32 characters of `a-z`, `0-9`, `.`, `_` and `-`, starts with a
+  letter or digit, and does not start with `wave-`. A wave holds 1 to 20 items
+  that slicer knows, each once. A name the project already has is refused
+  unless you add `--replace`.
+- `--project` is required on `define`. On `list` it limits the output. On `rm`
+  and `start` you can leave it out when the name is saved for one project only;
+  if two projects each have a wave of that name, ork says so and asks for
+  `--project`.
+- `ork wave list` prints each wave as `NAME  PROJECT` and then one line for each
+  member with its status and title, read from slicer each time. A member that
+  has finished shows as `done`; one that slicer no longer lists shows as
+  `missing`.
+- `ork wave start NAME` leaves out the members that are done, retired or
+  missing, and prints `skipped ID: STATUS` for each. It then plans, checks the
+  specs, confirms and starts the others exactly as `ork wave start PROJECT
+  ITEM...` does, with the same flags for every member. If nothing is left, it
+  starts nothing, prints `no item is ready to start` and exits 1. Each run's
+  record carries the name as `wave_name`; each start is still a new wave id,
+  and `ork stop` takes that id, not the name.
+- `ork projects rm PROJECT` drops the project's saved waves.
+- The Waves view in the TUI does not save or start by name yet.
+
 A wave may hold only one slice that touches `internal/engine`,
 `internal/daemon` or `cmd` (`docs/design.md`, Self-hosting). The suggestion,
 in the TUI and in `ork wave suggest`, keeps the first such slice of a wave and
@@ -450,7 +483,7 @@ with it.
 
 Like `ork run`, `wave start` asks the spec-check questions on standard input
 and prints each plan before it asks to start (`docs/design.md:1034-1056`,
-`internal/cli/wave.go:90-92`). `ork stop` takes the `wave-` id it prints and
+`internal/cli/wave.go:341`). `ork stop` takes the `wave-` id it prints and
 stops every unfinished run in that wave, queued ones included
 (`docs/design.md:1064-1068`).
 
@@ -628,6 +661,10 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork run P ID
     ork wave suggest P
     ork wave start P ITEM...
+    ork wave define --project P NAME ITEM... [--replace]
+    ork wave list [--project P]
+    ork wave start [--project P] NAME
+    ork wave rm [--project P] NAME
     ork answer RUN TEXT [--wait]
     ork check RUN N [ticked|later|open]
     ork fix RUN TEXT

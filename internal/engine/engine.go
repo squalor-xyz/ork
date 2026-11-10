@@ -111,7 +111,8 @@ type Config struct {
 	Lineup    map[string][]runrec.LineupEntry // by role; the gate defaults to the reviewer's
 	Budgets   registry.Budgets
 	Wave      string
-	Queued    bool // create the run in state queued; Dequeue moves it to setup
+	WaveName  string // proposed (S215): the saved wave's name; a label, not an id
+	Queued    bool   // create the run in state queued; Dequeue moves it to setup
 	// Decisions is the "Owner decisions" paragraph that a spec check recorded
 	// in the main checkout's spec of the item (S116). The run keeps it and
 	// gives it to every role, because its worktree lacks the edit.
@@ -376,7 +377,7 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 		budgets.Tokens = cfg.Budgets.Tokens
 	}
 	run, err := d.Store.Create(runrec.Record{
-		ID: id, StopAfter: cfg.StopAfter, Wave: cfg.Wave, Project: cfg.Project.Name, Item: cfg.Item,
+		ID: id, StopAfter: cfg.StopAfter, Wave: cfg.Wave, WaveName: cfg.WaveName, Project: cfg.Project.Name, Item: cfg.Item,
 		Worktree: worktreePath(cfg.Project, cfg.Item), Branch: branchName(cfg.Project, cfg.Item),
 		Contract: version, GateCriteria: contract.Gate.Criteria, LedgerRoles: ledgerRoles, State: state, Round: 1, Lineup: copied, Budgets: budgets, Decisions: cfg.Decisions,
 	})

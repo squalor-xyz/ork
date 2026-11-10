@@ -22,6 +22,13 @@ the launch. `ork stop WAVE` stops the unfinished runs in the returned
 `wave-` id, including queued runs.
 The Waves screen also composes and launches waves.
 
+*Proposed (S215):* a wave you start often can be saved under a name:
+`ork wave define --project PROJECT NAME ITEM...` keeps the item ids in
+`waves.json` beside the registry, `ork wave list` shows each member's status,
+`ork wave start NAME` starts the members that are not done, retired or gone
+from slicer (it names the others as skipped), and
+`ork wave rm NAME` removes it.
+
 ## Install
 
 *Proposed:* download the archive for darwin/arm64, darwin/amd64 or linux/amd64

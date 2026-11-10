@@ -52,6 +52,17 @@ func WithWave(ctx context.Context, wave string) context.Context {
 	return context.WithValue(ctx, waveKey{}, wave)
 }
 
+// waveNameKey carries the saved wave's name a resume joins (WithWaveName).
+type waveNameKey struct{}
+
+// WithWaveName returns a context that names the wave a resume joins (S215,
+// *proposed*). It matters only together with WithWave: the resume then sets
+// the record's wave_name beside its wave, so a run that joins an unnamed wave
+// does not keep the name of the wave it left.
+func WithWaveName(ctx context.Context, name string) context.Context {
+	return context.WithValue(ctx, waveNameKey{}, name)
+}
+
 // CanResume reports, as a refusal, why the stopped run cannot be resumed now,
 // or nil. It makes the checks a resume makes before it changes anything: the
 // run is stopped with no commit and did not stop in setup or while queued, no
@@ -115,6 +126,7 @@ func (e *Engine) resumeStopped(ctx context.Context, rec runrec.Record, note stri
 		limit = round + grant
 	}
 	wave, _ := ctx.Value(waveKey{}).(string)
+	waveName, _ := ctx.Value(waveNameKey{}).(string)
 	err := e.run.Update(func(r *runrec.Record) {
 		r.DismissedAt = time.Time{}
 		r.StoppedFrom = ""
@@ -127,6 +139,7 @@ func (e *Engine) resumeStopped(ctx context.Context, rec runrec.Record, note stri
 		r.ChainFrom = len(r.Roles) // the new round restarts the vendor chain (S255, *proposed*)
 		if wave != "" {
 			r.Wave = wave
+			r.WaveName = waveName
 		}
 		if state == runrec.StateChecks {
 			r.Feedback = nil

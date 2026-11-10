@@ -20,6 +20,27 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
+func TestEngineRecordsWaveName(t *testing.T) {
+	h := newHarness(t)
+	h.cfg.Wave = "wave-20261101-120000-abcd"
+	h.cfg.WaveName = "pair-a"
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rec := e.Snapshot(); rec.WaveName != "pair-a" || rec.Wave != "wave-20261101-120000-abcd" {
+		t.Fatalf("wave lost: %+v", rec)
+	}
+	h2 := newHarness(t)
+	e2, err := New(context.Background(), h2.deps, h2.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e2.Snapshot().WaveName != "" {
+		t.Fatal("a run with no wave name got one")
+	}
+}
+
 func TestGateWalkStartsAtTheReviewersSeedRow(t *testing.T) {
 	a := runrec.LineupEntry{Vendor: "claude", Model: "opus", Effort: "high"}
 	b := runrec.LineupEntry{Vendor: "codex", Model: "sol", Effort: "medium"}

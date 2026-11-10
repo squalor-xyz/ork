@@ -340,6 +340,34 @@ func (c *Client) WaveStart(ctx context.Context, params WaveStartParams) (*WaveRe
 	return &out, nil
 }
 
+// WaveDefine saves a wave under a name (S215, *proposed*).
+func (c *Client) WaveDefine(ctx context.Context, params WaveDefineParams) (*SavedWave, error) {
+	var out SavedWave
+	if err := c.Call(ctx, MethodWaveDefine, params, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// WaveList lists the saved waves of the project, or of every project when
+// project is empty, with each member's status from slicer (S215, *proposed*).
+func (c *Client) WaveList(ctx context.Context, project string) (*WaveListResult, error) {
+	var out WaveListResult
+	if err := c.Call(ctx, MethodWaveList, WaveListParams{Project: project}, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// WaveRm removes a saved wave and returns it (S215, *proposed*).
+func (c *Client) WaveRm(ctx context.Context, project, name string) (*SavedWave, error) {
+	var out SavedWave
+	if err := c.Call(ctx, MethodWaveRm, WaveRmParams{Project: project, Name: name}, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // SpecCheck runs the spec check for the items, or returns the answers the
 // daemon remembers for their current specs.
 func (c *Client) SpecCheck(ctx context.Context, project string, items []string) (*SpecCheckResult, error) {

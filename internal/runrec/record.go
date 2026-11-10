@@ -308,6 +308,7 @@ type Record struct {
 	Version          int                      `json:"version"`
 	ID               string                   `json:"id"`
 	Wave             string                   `json:"wave,omitempty"`
+	WaveName         string                   `json:"wave_name,omitempty"` // proposed (S215): the saved wave's name, a label and not an id
 	Decisions        string                   `json:"decisions,omitempty"` // the owner's spec check answers, for every brief (S116)
 	Project          string                   `json:"project"`
 	Item             string                   `json:"item"`

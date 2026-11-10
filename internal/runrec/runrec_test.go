@@ -702,6 +702,52 @@ func TestDismissedAtRoundTrips(t *testing.T) {
 	}
 }
 
+func TestRecordWaveNameRoundTrips(t *testing.T) {
+	s := newStore(t)
+	record := rec("named")
+	record.Wave = "wave-20261101-120000-abcd"
+	record.WaveName = "pair-a"
+	r, err := s.Create(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(readFile(t, filepath.Join(r.Dir(), "run.json")), `"wave_name": "pair-a"`) {
+		t.Fatal("wave_name was not written")
+	}
+	opened, err := s.Open("named")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := opened.Snapshot(); got.WaveName != "pair-a" || got.Wave != record.Wave || got.Version != 1 {
+		t.Fatalf("reopened: %+v", got)
+	}
+}
+
+func TestRecordWithoutWaveNameStillLoads(t *testing.T) {
+	s := newStore(t)
+	r, err := s.Create(rec("plain"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(readFile(t, filepath.Join(r.Dir(), "run.json")), "wave_name") {
+		t.Fatal("empty wave name was written")
+	}
+	const raw = `{"version":1,"id":"old","wave":"wave-20261101-120000-abcd","state":"stopped"}`
+	if err := os.MkdirAll(s.RunDir("old"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(s.RunDir("old"), "run.json"), []byte(raw), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	opened, err := s.Open("old")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := opened.Snapshot(); got.WaveName != "" || got.Wave != "wave-20261101-120000-abcd" {
+		t.Fatalf("old record: %+v", got)
+	}
+}
+
 func TestDismissRefusesUnstoppedRuns(t *testing.T) {
 	for _, state := range []string{StatePaused, StateImplement, StateCommitted, StateAwaitingApproval, StateQueued} {
 		t.Run(state, func(t *testing.T) {

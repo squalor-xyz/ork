@@ -1589,6 +1589,13 @@ type waveRig struct {
 
 func newWaveRig(t *testing.T, global, projectCap int) *waveRig {
 	t.Helper()
+	return newWaveRigRoutes(t, global, projectCap)
+}
+
+// newWaveRigRoutes is newWaveRig with fake routes of its own, which go before
+// runDaemon's.
+func newWaveRigRoutes(t *testing.T, global, projectCap int, routes ...clitest.Route) *waveRig {
+	t.Helper()
 	rig := &waveRig{started: make(chan string, 32), free: make(chan struct{}, 32)}
 	d, store, p := runDaemon(t, func(ctx context.Context, r engine.Request) (engine.Result, error) {
 		rig.briefs.Store(filepath.Base(r.Worktree), r.Brief)
@@ -1600,7 +1607,7 @@ func newWaveRig(t *testing.T, global, projectCap int) *waveRig {
 		case <-ctx.Done():
 			return engine.Result{}, ctx.Err()
 		}
-	})
+	}, routes...)
 	p.Cap = projectCap
 	if err := registry.Save(d.cfg.RegistryPath, &registry.File{Version: registry.Version, GlobalCap: global, Projects: []registry.Project{p}}); err != nil {
 		t.Fatal(err)

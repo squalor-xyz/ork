@@ -105,7 +105,10 @@ ork (TUI)  ork status --json (CLI)
   | `item.move` (proposed wire, S67) | `{"project","item","other","position"}` | `{"item","changed"}`; position is `before` or `after`; compare the item's index in slicer list before and after the write, then refresh Items and Deps; blank fields or an invalid position are `bad_params`; slicer errors keep code and message |
   | `item.note` (proposed wire, S171) | `{"project","item","text"}` | `{"item"}`; slicer note at the registered project root, then refresh Items; a failed refresh after the write is not an error; blank item or text is `bad_params`; slicer errors keep their code |
   | `item.show` (proposed wire) | `{"project","id"}` | `{"detail"}`; slicer show for the registered project |
-  | `wave.start` (`run.launch-wire`; proposed shape) | `{"items":[RunParams...]}`; each item has `project`, `item`, `well_specified`, `split`, optional `lineup`, `budgets`, `expected` and, from S265 (*proposed*, adj 191), `allow_no_check` as in `run.start` | `{"wave","items":[{"item","run"?,"error"?}]}`; one wave id, one project, admission errors kept per item; a project with no check command refuses the whole wave with `refused`, before any member is admitted, unless every item has `allow_no_check` |
+  | `wave.start` (`run.launch-wire`; proposed shape) | `{"items":[RunParams...]}`; each item has `project`, `item`, `well_specified`, `split`, optional `lineup`, `budgets`, `expected` and, from S265 (*proposed*, adj 191), `allow_no_check` as in `run.start` | `{"wave","items":[{"item","run"?,"error"?}]}`; one wave id, one project, admission errors kept per item; a project with no check command refuses the whole wave with `refused`, before any member is admitted, unless every item has `allow_no_check`; *proposed (S215):* an optional `"name"` starts a saved wave: the project must have a wave of that name (else `not_found`) and every item must be one of its members (else `bad_params`), both checked before any read of slicer or admission; the name is stamped on each run record as `wave_name` and returned as `"name"`, and the wave id is still a fresh one |
+  | `wave.define` (proposed wire, S215) | `{"project","name","items":[ID...],"replace"?}` | the saved wave `{"project","name","items","created_at","updated_at"}`; the project must be registered (`not_found`, with the registry guide text); the name and items follow the rules in docs/state.md (`bad_params`) and every item must be listed by `slicer list --all` (`bad_params` names the unknown one); a name the project already has is `duplicate_name` unless `replace` is true; written to `waves.json` under a lock of its own |
+  | `wave.list` (proposed wire, S215) | `{"project"?}` | `{"waves":[{"project","name","items":[{"item","status","title"}],"created_at","updated_at","error"?}]}` in the order saved; `status` and `title` come from one `slicer list --all` for each project that has a wave to show, and a member that list lacks has status `missing`; a project whose slicer read fails (or that is no longer registered) puts `error` on its waves and the members carry no status, and the other projects still list; an unknown `project` filter is `not_found`; slicer runs on each call; nothing is written |
+  | `wave.rm` (proposed wire, S215) | `{"project","name"}` | the saved wave that was removed; `not_found` when the project has no wave of that name |
   | `wave.stop` (proposed wire) | `{"wave"}` | the same wave result; stops each unfinished member through `run.stop`, skips final members |
   | `wave.suggest` (proposed wire) | `{"project"}` | slicer's `plan-parallel` result for the registered project, limited to the fields `ParallelPlan` reads, with a second engine, daemon or cmd slice of a wave moved into a wave of its own after it (S218, *proposed*; see Self-hosting); slicer runs on each call, not from the cache |
   | `roles.matrix` (proposed wire, S168) | `{"project"}` | `{"markdown","rows":[{"id","role","agent","vendor","model","reasoning","note","use"}],"rules":[{"id","text"}]}` from `slicer relay-roles show --json`: slicer's own text (*proposed*, S173: `vendor`, `model`, `reasoning` and `note` are omitted when empty), and for each row what ork does with it (`use`: `used as claude\|codex\|grok`, `UI pass row, ...`, `Spec check row, ...` (every row that the project's `spec_check_rows` or a rule names), `skipped: no adapter for AGENT`, `not used: the gate runs the reviewer's lineup`, `not run by ork`, `not used: ork has no role ROLE`); read-only, no slicer write; slicer's error keeps its code and message; slicer runs on each call |
@@ -174,6 +177,15 @@ ork (TUI)  ork status --json (CLI)
 1. **Suggest.** For one project, ork shows `slicer plan-parallel` (or
    `slicer next --batch`) as a proposed wave (`wave.selection`). The owner
    adds or removes items, and ork warns when two items' `Files` overlap.
+   *Proposed (S215):* a wave may be named. The owner saves a set of items of
+   one project under a name (`ork wave define`, `wave.define`; kept in
+   `waves.json`, see docs/state.md) and starts it by name later (`ork wave
+   start NAME`). A saved wave holds only the name and the item ids; status is
+   read from slicer on each use, and a start leaves out the members that are
+   done, retired or gone from slicer (`SavedWaveView.Startable`). Starting it is
+   the ordinary start of the remaining items, with the name stamped on each run
+   record (`wave_name`); each start still gets a fresh wave id, which `ork stop`
+   takes. The name is a label, and a saved wave is not a claim on its items.
 2. **Lineup.** For each item, ork runs `slicer relay-roles recommend ID
    --well-specified ... --split ...`; ork passes well specified = yes and
    split = no unless the owner overrides them with `--well-specified` or
@@ -1726,6 +1738,14 @@ ork                         open the TUI (start the daemon if needed)
 ork status [--project P]    waves, slices, roles, needs-you
 ork wave suggest P          slicer's suggested waves, in order, with reasons
 ork wave start P ITEM...    check the specs, then launch (asks unless --yes)
+ork wave define --project P NAME ITEM... [--replace]
+                            save the items as waves.json's wave NAME (S215,
+                            proposed)
+ork wave list [--project P] list saved waves with item status (S215, proposed)
+ork wave rm [--project P] NAME
+                            remove a saved wave (S215, proposed)
+ork wave start [--project P] NAME
+                            start a saved wave (S215, proposed)
 ork run P ID                show a plan, check the spec, then launch one slice
 ork approve RUN             finish a passed slice, commit and land it
 ork check RUN N [STATE]     mark human check N: ticked (the default),
@@ -1761,6 +1781,24 @@ come with the engine. S17 adds `run`, `approve`, `stop` and `answer`
 (`engine.owner-surface`, adj #73).
 S44 adds `retry` for pauses without a question (`engine.pause-resume`, adj #101).
 S60 adds `wave suggest P`, `wave start P ITEM...` and `stop WAVE`.
+*Proposed (S215; owner decisions 2026-11-07):* `wave define`, `wave list` and
+`wave rm` manage saved waves, and `wave start NAME` starts one. `--project P` is
+required on `define`, optional on `list`, and optional on `rm` and `start` when
+the name is saved for one project only (the saved wave then supplies the
+project; a name saved for several projects is a usage error that names them).
+`wave start` with one argument is a name; two or more stay `PROJECT ITEM...`, and
+`--project` with the typed form is a usage error. `define` refuses a name the
+project already has unless `--replace`. `list` prints a block for each wave,
+`NAME  PROJECT` and then `  ITEM  STATUS  TITLE` lines (`--json` prints the
+`wave.list` result). `start NAME` reads the wave with `wave.list`, prints a line
+`skipped ID: STATUS` for each member it leaves out (on the prompts stream:
+stdout, or stderr with `--json`), and then plans, checks the specs, confirms and
+starts the others as `wave start` does, with the same flags for every member and
+`name` set on `wave.start`. A wave with no member left to start prints
+`no item is ready to start`, makes no `wave.start` call and exits 1; with
+`--json` the result is `{"started":false,"held":[],"no_spec":[],"skipped":[...]}`.
+The JSON result of a started saved wave adds `name` and `skipped` (an empty
+array when none). `ork stop` still takes only a run id or a `wave-` id.
 S116 makes `wave start` run the spec check after it shows the plans: each
 open question is printed with its options and read from standard input (a
 number picks an option and a number outside the options is asked again,

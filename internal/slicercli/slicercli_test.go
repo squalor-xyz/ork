@@ -166,6 +166,22 @@ func TestListReadsFlags(t *testing.T) {
 	}
 }
 
+func TestListAllPassesAllFlag(t *testing.T) {
+	c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"list", "--all", "--json", "--lean", "--root", root},
+		Stdout: `[{"id":"X1","title":"open one","status":"open","has_slice":false},` +
+			`{"id":"X2","title":"finished","status":"done","has_slice":true}]`})
+	items, err := c.ListAll(context.Background(), root)
+	if err != nil || len(items) != 2 {
+		t.Fatalf("ListAll: %+v, %v", items, err)
+	}
+	if items[1].ID != "X2" || items[1].Status != "done" {
+		t.Fatalf("done item: %+v", items[1])
+	}
+	if calls := fake.CallsTo("slicer"); len(calls) != 1 {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
 func TestUnknownFieldsAreIgnored(t *testing.T) {
 	c, _ := client(t,
 		clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", root},

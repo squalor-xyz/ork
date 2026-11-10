@@ -17,16 +17,163 @@ import (
 )
 
 func (a *App) wave(ctx context.Context, o *output, args []string) int {
+	const needs = "wave needs define, list, rm, suggest or start"
 	if len(args) == 0 {
-		return o.usage("wave needs suggest or start")
+		return o.usage(needs)
 	}
 	switch args[0] {
 	case "suggest":
 		return a.waveSuggest(ctx, o, args[1:])
 	case "start":
 		return a.waveStart(ctx, o, args[1:])
+	case "define":
+		return a.waveDefine(ctx, o, args[1:])
+	case "list":
+		return a.waveList(ctx, o, args[1:])
+	case "rm":
+		return a.waveRm(ctx, o, args[1:])
 	}
-	return o.usage("wave needs suggest or start")
+	return o.usage(needs)
+}
+
+// Saved waves (S215, *proposed*): ork wave define, list and rm manage them, and
+// ork wave start NAME starts one.
+
+func (a *App) waveDefine(ctx context.Context, o *output, args []string) int {
+	fs := flag.NewFlagSet("wave define", flag.ContinueOnError)
+	project := fs.String("project", "", "the project of the wave")
+	replace := fs.Bool("replace", false, "replace a saved wave of that name")
+	fs.BoolVar(&o.json, "json", o.json, "print JSON")
+	pos, err := parse(fs, args)
+	if err != nil {
+		return o.usage("wave define: %v", err)
+	}
+	if *project == "" {
+		return o.usage("wave define needs --project P")
+	}
+	if len(pos) < 2 {
+		return o.usage("wave define takes NAME ITEM...")
+	}
+	var saved daemon.SavedWave
+	params := daemon.WaveDefineParams{Project: *project, Name: pos[0], Items: pos[1:], Replace: *replace}
+	if code := a.call(ctx, o, daemon.MethodWaveDefine, params, &saved); code != ExitOK {
+		return code
+	}
+	if o.json {
+		return o.printJSON(saved)
+	}
+	fmt.Fprintf(o.stdout, "%s  %s\n", saved.Name, saved.Project)
+	for _, item := range saved.Items {
+		fmt.Fprintf(o.stdout, "  %s\n", item)
+	}
+	return ExitOK
+}
+
+func (a *App) waveList(ctx context.Context, o *output, args []string) int {
+	fs := flag.NewFlagSet("wave list", flag.ContinueOnError)
+	project := fs.String("project", "", "list only this project's saved waves")
+	fs.BoolVar(&o.json, "json", o.json, "print JSON")
+	pos, err := parse(fs, args)
+	if err != nil {
+		return o.usage("wave list: %v", err)
+	}
+	if len(pos) != 0 {
+		return o.usage("wave list takes no argument besides --project P")
+	}
+	var list daemon.WaveListResult
+	if code := a.call(ctx, o, daemon.MethodWaveList, daemon.WaveListParams{Project: *project}, &list); code != ExitOK {
+		return code
+	}
+	if list.Waves == nil {
+		list.Waves = []daemon.SavedWaveView{}
+	}
+	if o.json {
+		return o.printJSON(list)
+	}
+	if len(list.Waves) == 0 {
+		fmt.Fprintln(o.stdout, "no saved waves")
+		return ExitOK
+	}
+	for i, w := range list.Waves {
+		if i > 0 {
+			fmt.Fprintln(o.stdout)
+		}
+		fmt.Fprintf(o.stdout, "%s  %s\n", w.Name, w.Project)
+		if w.Error != nil {
+			fmt.Fprintf(o.stdout, "  error: %s (%s)\n", w.Error.Message, w.Error.Code)
+		}
+		itemWidth, statusWidth := 0, 0
+		for _, m := range w.Items {
+			itemWidth, statusWidth = max(itemWidth, len(m.Item)), max(statusWidth, len(m.Status))
+		}
+		for _, m := range w.Items {
+			line := "  " + m.Item
+			if m.Status != "" {
+				line = fmt.Sprintf("  %-*s  %-*s  %s", itemWidth, m.Item, statusWidth, m.Status, m.Title)
+			}
+			fmt.Fprintln(o.stdout, strings.TrimRight(line, " "))
+		}
+	}
+	return ExitOK
+}
+
+func (a *App) waveRm(ctx context.Context, o *output, args []string) int {
+	fs := flag.NewFlagSet("wave rm", flag.ContinueOnError)
+	project := fs.String("project", "", "the project of the wave")
+	fs.BoolVar(&o.json, "json", o.json, "print JSON")
+	pos, err := parse(fs, args)
+	if err != nil {
+		return o.usage("wave rm: %v", err)
+	}
+	if len(pos) != 1 {
+		return o.usage("wave rm takes NAME")
+	}
+	name, from := pos[0], *project
+	if from == "" {
+		view, code := a.findSavedWave(ctx, o, "", name)
+		if code != ExitOK {
+			return code
+		}
+		from = view.Project
+	}
+	var removed daemon.SavedWave
+	if code := a.call(ctx, o, daemon.MethodWaveRm, daemon.WaveRmParams{Project: from, Name: name}, &removed); code != ExitOK {
+		return code
+	}
+	if o.json {
+		return o.printJSON(removed)
+	}
+	fmt.Fprintf(o.stdout, "removed %s (%s)\n", removed.Name, removed.Project)
+	return ExitOK
+}
+
+// findSavedWave reads the saved wave NAME. Without a project the name must be
+// saved for one project only (NW-Q1): the saved wave then supplies the project.
+// A nonzero code means the failure is printed.
+func (a *App) findSavedWave(ctx context.Context, o *output, project, name string) (*daemon.SavedWaveView, int) {
+	var list daemon.WaveListResult
+	if code := a.call(ctx, o, daemon.MethodWaveList, daemon.WaveListParams{Project: project}, &list); code != ExitOK {
+		return nil, code
+	}
+	var found []daemon.SavedWaveView
+	var projects []string
+	for _, w := range list.Waves {
+		if w.Name == name {
+			found = append(found, w)
+			projects = append(projects, w.Project)
+		}
+	}
+	switch len(found) {
+	case 0:
+		msg := fmt.Sprintf("no saved wave %q", name)
+		if project != "" {
+			msg += " for project " + project
+		}
+		return nil, o.fail(ExitFailure, daemon.CodeNotFound, msg)
+	case 1:
+		return &found[0], ExitOK
+	}
+	return nil, o.usage("wave %q is saved for several projects (%s); pass --project P", name, strings.Join(projects, ", "))
 }
 
 func (a *App) waveSuggest(ctx context.Context, o *output, args []string) int {
@@ -88,12 +235,22 @@ func (a *App) waveSuggest(ctx context.Context, o *output, args []string) int {
 	return o.fail(ExitFailure, daemon.CodeNotFound, fmt.Sprintf("no project named %q", pos[0]))
 }
 
+// waveOptions are the flags of ork wave start that apply to every item.
+type waveOptions struct {
+	yes           bool
+	wellSpecified bool
+	split         bool
+	allowNoCheck  bool
+	overrides     daemon.RunParams // the lineup, budget and stop-after flags
+}
+
 func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	fs := flag.NewFlagSet("wave start", flag.ContinueOnError)
 	yes := fs.Bool("yes", false, "confirm all plans")
 	well := fs.String("well-specified", "", "y/n for every item")
 	split := fs.String("split", "", "y/n for every item")
 	allowNoCheck := fs.Bool("allow-no-check", false, "start although the project has no check command")
+	project := fs.String("project", "", "the project of the saved wave NAME")
 	var lineup lineupFlags
 	lineup.register(fs)
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
@@ -101,8 +258,13 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	if err != nil {
 		return o.usage("wave start: %v", err)
 	}
-	if len(pos) < 2 {
-		return o.usage("wave start takes PROJECT ITEM...")
+	// One argument is the name of a saved wave; two or more are PROJECT ITEM...
+	// as before (NW-Q1).
+	if len(pos) == 0 {
+		return o.usage("wave start takes NAME or PROJECT ITEM...")
+	}
+	if len(pos) > 1 && *project != "" {
+		return o.usage("wave start: --project goes with a saved wave NAME; the typed form takes PROJECT ITEM...")
 	}
 	// Adj 189: the defaults are well specified = yes and split = no; the flags
 	// override them for every item.
@@ -110,8 +272,8 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	if !ok {
 		return o.usage("wave start: --well-specified y/n and --split y/n each take y or n")
 	}
-	var overrides daemon.RunParams
-	if err := lineup.apply(&overrides); err != nil {
+	opts := waveOptions{yes: *yes, wellSpecified: wellSpecified, split: splitItem, allowNoCheck: *allowNoCheck}
+	if err := lineup.apply(&opts.overrides); err != nil {
 		return o.usage("wave start: %v", err)
 	}
 	input := a.Input
@@ -123,6 +285,29 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	if o.json {
 		prompts = o.stderr
 	}
+	if len(pos) > 1 {
+		return a.startWave(ctx, o, reader, prompts, opts, pos[0], pos[1:], "", nil)
+	}
+	// A saved wave: read it, and start the members that are neither done,
+	// retired nor missing, with the name stamped on the wave.
+	view, code := a.findSavedWave(ctx, o, *project, pos[0])
+	if code != ExitOK {
+		return code
+	}
+	if view.Error != nil {
+		return o.fail(ExitFailure, view.Error.Code, fmt.Sprintf("saved wave %q: %s", view.Name, view.Error.Message))
+	}
+	ids, skipped := view.Startable()
+	for _, s := range skipped {
+		fmt.Fprintf(prompts, "skipped %s: %s\n", s.Item, s.Status)
+	}
+	return a.startWave(ctx, o, reader, prompts, opts, view.Project, ids, view.Name, &skipped)
+}
+
+// startWave plans, spec-checks, confirms and starts the items of one project:
+// the part of ork wave start that a typed list and a saved wave share. A saved
+// wave's name goes to wave.start, and its skipped members to the output.
+func (a *App) startWave(ctx context.Context, o *output, reader *bufio.Reader, prompts io.Writer, opts waveOptions, project string, items []string, name string, skipped *[]daemon.SkippedItem) int {
 	ask := func(label, hint, def string) (string, error) {
 		fmt.Fprintf(prompts, "%s [%s]: ", label, hint)
 		line, err := readLine(reader, prompts)
@@ -139,11 +324,11 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 		}
 		return answer, nil
 	}
-	params := daemon.WaveStartParams{Items: []daemon.RunParams{}}
-	for _, item := range pos[1:] {
-		p := daemon.RunParams{Project: pos[0], Item: item, WellSpecified: wellSpecified, Split: splitItem}
-		p.Lineup, p.Budgets, p.StopAfter = overrides.Lineup, overrides.Budgets, overrides.StopAfter
-		p.AllowNoCheck = *allowNoCheck
+	params := daemon.WaveStartParams{Items: []daemon.RunParams{}, Name: name}
+	for _, item := range items {
+		p := daemon.RunParams{Project: project, Item: item, WellSpecified: opts.wellSpecified, Split: opts.split}
+		p.Lineup, p.Budgets, p.StopAfter = opts.overrides.Lineup, opts.overrides.Budgets, opts.overrides.StopAfter
+		p.AllowNoCheck = opts.allowNoCheck
 		var plan daemon.RunPlan
 		if code := a.call(ctx, o, daemon.MethodRunPlan, p, &plan); code != ExitOK {
 			return code
@@ -162,7 +347,11 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 		p.Expected = &plan
 		params.Items = append(params.Items, p)
 	}
-	held, noSpec, code := a.specCheck(ctx, o, reader, prompts, &params)
+	// A saved wave with nothing startable has no item to check.
+	held, noSpec, code := []string{}, []string{}, ExitOK
+	if len(params.Items) > 0 {
+		held, noSpec, code = a.specCheck(ctx, o, reader, prompts, &params)
+	}
 	if held == nil {
 		held = []string{}
 	}
@@ -172,21 +361,28 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	if code != ExitOK {
 		return code
 	}
+	notStarted := func() map[string]any {
+		out := map[string]any{"started": false, "held": held, "no_spec": noSpec}
+		if skipped != nil {
+			out["skipped"] = *skipped
+		}
+		return out
+	}
 	if len(params.Items) == 0 {
 		if o.json {
-			o.printJSON(map[string]any{"started": false, "held": held, "no_spec": noSpec})
+			o.printJSON(notStarted())
 		}
 		fmt.Fprintln(prompts, "no item is ready to start")
 		return ExitFailure
 	}
-	if !*yes {
+	if !opts.yes {
 		confirm, err := ask("Start this wave?", "y/N", "no")
 		if err != nil {
 			return o.usage("%v", err)
 		}
 		if confirm != "yes" {
 			if o.json {
-				return o.printJSON(map[string]any{"started": false, "held": held, "no_spec": noSpec})
+				return o.printJSON(notStarted())
 			}
 			fmt.Fprintln(o.stdout, "cancelled")
 			return ExitOK
@@ -205,9 +401,10 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 		}
 		if printed := o.printJSON(struct {
 			daemon.WaveResult
-			Held   []string `json:"held"`
-			NoSpec []string `json:"no_spec"`
-		}{result, held, noSpec}); printed != ExitOK {
+			Held    []string              `json:"held"`
+			NoSpec  []string              `json:"no_spec"`
+			Skipped *[]daemon.SkippedItem `json:"skipped,omitempty"`
+		}{result, held, noSpec, skipped}); printed != ExitOK {
 			return printed
 		}
 		return code

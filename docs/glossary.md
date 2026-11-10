@@ -225,6 +225,11 @@ entry), gate, awaiting approval, commit. See
 **Wave.** In ork, a set of items from one project that the owner launched
 together (`wave.scope`). It is suggested from slicer's wave
 (`wave.selection`), and its items run under the caps (`wave.limits`).
+*Proposed (S215):* a **named wave** is a set of items of one project that the
+owner saved under a name (`ork wave define`) in `waves.json`, and starts by name
+(`ork wave start NAME`). It holds only the name and the item ids; status is
+read from slicer on each use. Each start of it is a new wave with a new
+`wave-` id, and its runs carry the name as `wave_name`.
 
 **Checkpoint.** A point where the engine waits for the owner. There are two:
 the wave launch, and a slice's result after the gate. A slice can also pause

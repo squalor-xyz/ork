@@ -4082,3 +4082,14 @@
 {"when": "2026-11-10T12:01:28Z", "item": "S173", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-10T12:21:42Z", "item": "S173", "action": "note", "from": "", "to": "", "note": "Wire half of the role matrix editor, verified: slicer client", "by": "Jon Robbins"}
 {"when": "2026-11-10T12:21:44Z", "item": "S173", "action": "status", "from": "started", "to": "done", "note": "Wire half of the role matrix editor, verified: relay-roles write verbs in the slicer client, daemon matrix.edit with preview, no run record, uncommitted edit, slicer errors passed through and a no-adapter warning, and extra roles.matrix row fields. Full go test -race ./..., go vet, gofmt and slicer check pass; new assertions mutation-checked. The scratch-project verb run is left to the orchestrator.", "by": "Jon Robbins"}
+{"when": "2026-11-10T03:37:47Z", "item": "S215", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-10T03:54:39Z", "item": "S215", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-10T03:54:39Z", "item": "S215", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-10T12:18:54Z", "item": "S215", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S215):", "by": "Jon Robbins"}
+{"when": "2026-11-10T12:18:59Z", "item": "S215", "action": "note", "from": "", "to": "", "note": "Named wave verified: saved waves live in waves.json beside p", "by": "Jon Robbins"}
+{"when": "2026-11-10T12:19:01Z", "item": "S215", "action": "status", "from": "started", "to": "done", "note": "Named wave verified: saved waves in waves.json beside projects.json (mode 0600), wave.define, wave.list, wave.rm, wave.start name and wave_name on run records, CLI define, list, rm and start NAME. Tests, vet, gofmt and slicer check green; gate PASS.", "by": "Jon Robbins"}
+{"when": "2026-11-10T03:37:18Z", "item": "S215", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-10T11:56:59Z", "item": "S173", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-10T11:57:28Z", "item": "S173", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-10T11:58:44Z", "item": "S173", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-10T12:04:32Z", "item": "S326", "action": "add", "from": "", "to": "open", "note": "ork status --json: show the wave name on engine runs"}

@@ -81,11 +81,12 @@ type Config struct {
 
 // Daemon is one daemon process.
 type Daemon struct {
-	runs  runManager
-	cfg   Config
-	ready chan struct{}
-	regMu sync.Mutex   // serializes registry writes
-	cache *cache.Cache // the project snapshots, shared by every client
+	runs   runManager
+	cfg    Config
+	ready  chan struct{}
+	regMu  sync.Mutex   // serializes registry writes
+	waveMu sync.Mutex   // serializes reads and writes of waves.json (S215, *proposed*); a leaf lock, never held while another is taken
+	cache  *cache.Cache // the project snapshots, shared by every client
 
 	models modelCache // the vendors' model lists, read once (S244)
 
