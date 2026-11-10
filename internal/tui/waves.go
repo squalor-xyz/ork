@@ -41,6 +41,11 @@ type wavesState struct {
 	launched       map[string]string
 	starting       bool
 	checkRequest   uint64 // the check whose reply counts
+	naming         *nameInput
+	list           *savedList
+	listRequest    uint64
+	loaded         *loadedWave
+	planQueue      []string // loaded items still to plan, one after another
 	specState
 }
 
@@ -59,6 +64,9 @@ type wavesMsg struct {
 	check      *daemon.SpecCheckResult
 	answer     *daemon.SpecAnswerResult
 	action     runAction
+	name       string                 // define: the name that was sent
+	saved      *daemon.SavedWave      // define: the saved wave
+	waves      []daemon.SavedWaveView // saved: the project's saved waves
 	err        error
 }
 
@@ -220,22 +228,24 @@ func (m *Model) tickWave() tea.Cmd {
 	id := rows[w.cursor].ID
 	if _, ok := w.picked[id]; ok {
 		delete(w.picked, id)
+		w.planQueue = slices.DeleteFunc(w.planQueue, func(queued string) bool { return queued == id })
+		var next tea.Cmd
 		if w.planning == id {
 			w.planRequest++
 			w.planning = ""
+			next = m.planNext() // a loaded wave's next item
 		}
-	} else {
-		// Adj 189: plan at once as well specified = yes and split = no. The
-		// spec check holds an item that is not Ready.
-		p := daemon.RunParams{Project: w.project, Item: id, WellSpecified: true}
-		w.picked[id] = p
-		w.planning = id
-		w.planRequest++
 		m.actionStatus = ""
-		return tea.Batch(m.waveOverlap(), m.planTicked(p))
+		return tea.Batch(m.waveOverlap(), next)
 	}
+	// Adj 189: plan at once as well specified = yes and split = no. The
+	// spec check holds an item that is not Ready.
+	p := daemon.RunParams{Project: w.project, Item: id, WellSpecified: true}
+	w.picked[id] = p
+	w.planning = id
+	w.planRequest++
 	m.actionStatus = ""
-	return m.waveOverlap()
+	return tea.Batch(m.waveOverlap(), m.planTicked(p))
 }
 
 // planTicked plans the ticked item p and reads its slice, so that the screen
@@ -324,9 +334,10 @@ func (m *Model) startWave(a runAction) tea.Cmd {
 	w.starting = true
 	m.actionStatus = a.command() + ": pending"
 	live, request := m.cfg.Live, w.request
+	name := w.waveName(a.items) // a loaded wave's name, when its startable members are the items
 	// Confirmation authorizes this call even when the owner leaves the view.
 	return func() tea.Msg {
-		result, err := live.WaveStart(context.Background(), daemon.WaveStartParams{Items: a.items})
+		result, err := live.WaveStart(context.Background(), daemon.WaveStartParams{Items: a.items, Name: name})
 		return wavesMsg{request: request, kind: "start", action: a, result: result, err: err}
 	}
 }
@@ -435,6 +446,10 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 	case "suggest":
 		w.pending = false
 		w.suggest, w.err = msg.suggest, msg.err
+	case "define":
+		return m.applyDefine(msg)
+	case "saved":
+		m.applySavedList(msg)
 	case "overlap":
 		if w.overlapRequest == msg.sequence {
 			w.overlap, w.overlapErr = msg.overlap, msg.err
@@ -444,17 +459,18 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 			return nil
 		}
 		w.planning = ""
+		// A loaded wave's next item plans once this one is back, planned or not.
 		if msg.err != nil {
 			m.actionStatus = actionError(msg.err)
-			return nil
+			return m.planNext()
 		}
 		if msg.plan == nil {
 			m.actionStatus = "No run plan returned"
-			return nil
+			return m.planNext()
 		}
 		p, ok := w.picked[msg.item]
 		if !ok {
-			return nil
+			return m.planNext()
 		}
 		if msg.params != nil {
 			p = *msg.params
@@ -467,6 +483,7 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 		}
 		p.Expected = msg.plan
 		w.picked[msg.item] = p
+		return m.planNext()
 	}
 	return nil
 }
@@ -485,6 +502,9 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 	w := m.waves
 	if w != nil && w.pane != nil {
 		return m.waveItemBody(width), nil
+	}
+	if w != nil && w.list != nil {
+		return m.savedListBody(width), nil
 	}
 	if w != nil && w.sitting != nil {
 		return m.sittingParts(&w.specState, width)

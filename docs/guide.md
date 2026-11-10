@@ -472,7 +472,20 @@ repository:
   record carries the name as `wave_name`; each start is still a new wave id,
   and `ork stop` takes that id, not the name.
 - `ork projects rm PROJECT` drops the project's saved waves.
-- The Waves view in the TUI does not save or start by name yet.
+
+In the Waves view (S216, *proposed*), tick the items you want and press `w` to
+save them under a name: type the name and press `enter` (`esc` cancels). A name
+the project already has asks `Replace NAME? [y/N]`. Press `L` for the project's
+saved waves, each with its members, their status and titles; `up` and `down`
+pick one and `enter` loads it. A load ticks the members that are still to do and
+that the table lists, plans them, and names what it left out (done members, and
+members slicer's suggestion does not offer, with the reason). It never starts
+anything: press `l` as for any ticked set. The start carries the saved name only
+when the items you launch are exactly the saved wave's members that are still to
+do. It starts as a plain wave, with no name, if you untick or add an item, if a
+member is still to do but the table does not list it (blocked, held or
+unspecified), or if an item is held for spec questions. The screen does not show
+the name, and removing a saved wave stays `ork wave rm`.
 
 A wave may hold only one slice that touches `internal/engine`,
 `internal/daemon` or `cmd` (`docs/design.md`, Self-hosting). The suggestion,
@@ -643,6 +656,7 @@ them all (`internal/tui/keys.go:13-124`).
 | Running entry | `space`, `E` | expand a run, expand all |
 | Roadmap | `l`, `m` | launch a ready slice, show the role matrix (read-only; `esc` closes) |
 | Waves | `space`, `e`, `l`, `A` | tick, edit lineup, launch, show all waves |
+| Waves (*proposed*, S216) | `w`, `L` | save the ticked items under a name, list and load saved waves |
 | Decisions | `A` | all projects / one project |
 | Confirmations | `y` / `n` | yes / no (Enter is No) |
 

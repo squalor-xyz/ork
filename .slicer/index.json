@@ -12119,7 +12119,7 @@
       "id": "S216",
       "title": "Named wave in the Waves screen: save the ticked set under a name and launch a saved wave by name",
       "short_title": "Waves screen: save and load named wave",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S215"
@@ -12132,6 +12132,48 @@
           "created_at": "2026-11-01T00:58:26Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "9b8897ab-ce7d-45bb-9c4d-335ab74e1597",
+          "kind": "",
+          "text": "**2026-11-10** — Review FAIL: Earlier blockers: the help-line, name-rule, replace-key, and list-scroll findings are resolved, each with a proving test. The hint-paragraph finding is not. The 80x24 claim is still false. No fix finding: no. One doc mismatch remains, tagged below. No blocker owner finding: none. Adj 270 is applied in `internal/tui/keys.go:485-493` and locked by `TestWavesHintLinesShowSaveAndSavedAt100And80Columns` (`internal/tui/waves_test.go:2235-2245`). Tests green: ork round 3, `go vet ./... && go test ./...`, exit 0, every package `ok` (log `checks-3.log`). This gate did not run the suite. The live-termin...",
+          "created_at": "2026-11-10T14:14:12Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "04fbb761-e72b-478d-8285-4bdca87f89e9",
+          "kind": "",
+          "text": "**2026-11-10** — Human checks at approval (S216):\n- later: At 100x30 and 80x24 in a live terminal: tick two items, save under a name, close and reopen Waves, open the saved list, load the wave, and confirm the ticks, the done member, and the status text read clearly and nothing wraps badly.\n- later: deferred to land: Launch a saved wave from the screen once with a real pair of small slices, then check the run record carries `wave_name` (`ork status --json`).",
+          "created_at": "2026-11-10T14:20:06Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "5abe8b16-fc8c-4394-beff-fea243ad0a96",
+          "kind": "",
+          "text": "**2026-11-10** — Waves screen saves and loads named waves: w saves the ticked items (name input, daemon refusal shown verbatim, replace asked on duplicate_name), L lists the project's saved waves with member status, enter loads one (ticks the startable members that are table rows and plans them in turn, names done members and members the suggestion does not offer, never launches). l sends WaveStartParams.Name only when the launched items are exactly the loaded wave's startable members. Per adj 270 the tick hint is space tick and enter item drops first, so e edit lineup, w save and L saved fit at 100x30 with items ticked. The wave name is not shown in the TUI. docs/dashboard.md, docs/guide.md and CHANGELOG.md updated. go test -race, go vet, gofmt, slicer check and adj lint were green; reviewer and UI findings applied; gate PASS.",
+          "created_at": "2026-11-10T14:20:11Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -12157,7 +12199,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

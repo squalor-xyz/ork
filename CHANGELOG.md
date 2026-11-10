@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- Named wave in the Waves screen (*proposed*): S216. On a project's Waves tab,
+  `w` saves the ticked items under a name (a one-line input; `enter` saves,
+  `esc` cancels, and a name already saved asks `Replace NAME? [y/N]`), and `L`
+  lists the project's saved waves with each member's status. `enter` on a saved
+  wave ticks the members that are still to do and are rows of the table, plans
+  them one after another, and names the done members and the members slicer's
+  suggestion does not offer; it never launches. `l` then sends the saved name on
+  `wave.start` only when the launched items are exactly the saved wave's members
+  that are still to do; a member the table lacks, an untick, an added tick or a
+  held item sends no name. The screen does not show the name, and `ork wave rm`
+  still removes a saved wave. The Waves hint adds `w save; L saved`: the tick
+  hint is now `space tick` (was `space tick item`) and `enter item` is the first
+  row hint to go, so `e edit lineup; w save; L saved` fit at 100x30 with items
+  ticked (at 80x24 `L saved` goes). With nothing ticked `L saved` fits beside
+  `tab views` at 80x24 and takes the place of `+ add project` at 100x30. Docs updated:
+  `docs/dashboard.md` and `docs/guide.md`.
 - S173 (*proposed*): the wire half of the role matrix editor. The slicer client
   runs `slicer relay-roles add|set|remove|move|rule-edit` (values attached as
   `--name=VALUE`, so a dash-leading value reaches slicer), and the daemon

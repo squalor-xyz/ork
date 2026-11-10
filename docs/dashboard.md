@@ -237,7 +237,7 @@ free text first returns to the options. The option digits and `enter submit`
 of a question pane show only while
 the answer would go out (a daemon, and no call in flight for the run). The check
 digits and `F fix round` show only for a daemon that can mark checks and send
-fixes; `space tick item` not while a plan is pending for another item, and `l`
+fixes; `space tick` not while a plan is pending for another item, and `l`
 on the Roadmap and Waves only when it would act. Examples: a decision row shows
 `enter go to project`; a run row shows `enter open`; an open run pane shows its
 own keys, then `pgup/pgdown line; ctrl+d/u half page`;
@@ -257,6 +257,19 @@ The note has no key and is drawn in the Dim style of the theme (S152). Waves als
 `e edit lineup` only when the selected ticked item has a plan and editing acts.
 The Waves hint reads `l launch` (not `l launch wave`) so that `e edit lineup`
 fits beside `q quit; ? help` at 100x30 (S152, owner decision 2026-10-29).
+*Proposed (S216; owner, adj 270, `ui.waves-hint-priority`):* after `e edit
+lineup` the Waves hint adds `w save` (with a ticked item that has a plan) and `L
+saved` (once the plan has loaded), each only when it would act. So that `e edit
+lineup`, `w save` and `L saved` all fit at 100x30, the tick hint reads `space
+tick` (it was `space tick item`), and where the line is still too long `enter
+item` is the first row hint to go (`enter open run` keeps its place). With items
+ticked the line reads `space tick; l launch; e edit lineup; w save; L saved; q
+quit; ? help` at 100x30, and at 80x24 `space tick; l launch; e edit lineup; w
+save; q quit; ? help` (`L saved` goes next; the help lists both keys). At 120x40
+`enter item` and `tab views` fit as well. The global hints still go before the
+row keys. With nothing ticked, `L saved` fits beside `tab views` at 80x24 (`enter
+item; space tick; L saved; tab views; q quit; ? help`) and at 100x30, where it
+takes the place of `+ add project`.
 Welcome shows `+ add project; q quit`; its path field shows
 `enter review path; esc cancel`. The lineup hint offers `left/right cycle`
 only when the focused role has more than one entry. Launch lists
@@ -1441,9 +1454,9 @@ editing actions.
 item at once as well specified = yes and split = no (*proposed*, adj 189,
 `launch.well-specified-default`, replacing the ask-on-tick of adj 135), and the
 spec check at launch holds an item that is not Ready. Ticking again unticks the
-item and drops a plan still pending. The hint stays `enter item; space tick
-item; l launch`, plus `e edit lineup` once the item has a plan and when it
-fits, and the status line counts the ticked items. The Lineup column appears
+item and drops a plan still pending. The hint stays `enter item; space tick;
+l launch` (`space tick item` before S216; see the hint paragraph above), plus `e edit lineup` once the item has a plan and when it
+fits (and `w save; L saved`, see Saved waves below), and the status line counts the ticked items. The Lineup column appears
 only while at least one item is ticked and fills from the plan (`ui.wave-composer`). It uses
 short role labels: impl, rev, ui, gate and arch, padded so the values share one
 column. The `ui` row shows only when the plan has a UI pass row (S136); it is
@@ -1529,6 +1542,74 @@ the composer reloads from the daemon.
 Every ticked item must have a successful plan before launch. One failed
 plan prevents launching the chosen set; the owner can untick it. The
 wave.plan-failure decision remains open (adj 146).
+
+### Saved waves (S216, *proposed*)
+
+A saved wave is a name and the item ids of one project, kept by the daemon
+(`wave.define`, `wave.list`; see design.md and state.md, `waves.json`). The
+screen saves the ticked set under a name and loads a saved wave back into the
+table. It adds no launch path: a loaded set launches with `l` like a hand-ticked
+one, so the spec check, the overlap warnings, the engine-conflict mark and the
+confirmation all run. The wave name is not shown on the screen (owner,
+2026-11-10, NW-Q9); the run records carry it as `wave_name` (`ork status --json`).
+
+`w` saves and `L` lists (owner, 2026-11-10, NW-Q7). Both are for one project's
+Waves tab only: the combined Running entry has no Waves tab, so neither key acts
+there. They need a daemon connection and a loaded plan; `w` also needs at least
+one ticked item, and every ticked item must have its plan. Both are refused while
+a plan, a spec check or a start is in flight. With no daemon the status line says
+`No daemon connection; action unavailable` and the hint omits them.
+
+**Save.** `w` opens a one-line name input in the status area, under `Save wave
+A, B as:`, which lists the ticked ids in table order. `enter` sends `wave.define`
+with the project, the name and those ids; `esc` cancels and sends nothing. On
+success the status line reads `saved NAME: A, B`, the input closes and the ticks
+stay. The daemon's refusal (a bad name, an unknown item) shows verbatim on the
+status line and the input stays open with the name for another try. A name that is
+already saved is refused by the daemon unless it is replaced (NW-Q3), so the
+screen asks `Replace NAME? [y/N] (Enter is No)`: `y` sends the call again with
+replace, and `n`, `enter` or `esc` returns to the name input (other keys do
+nothing). The hint is `enter save; esc
+cancel` (`enter` once the name is not blank), then `y replace; n cancel` for the
+question.
+
+**Saved list.** `L` calls `wave.list` for the project and replaces the table
+body, as the item pane does. Each saved wave is one block: a rule with its name
+and item count, then a row for each member with its id, its status and its title.
+Statuses come from slicer on every call. A member that a start leaves out (`done`,
+`retired`, `missing`, or `unknown` when slicer could not be read) is dim. A project
+with no saved wave reads `No saved waves for PROJECT; w saves the ticked items`.
+`up`/`down` and `j`/`k` move between waves, `enter` loads the wave under the
+cursor, `esc` returns to the table. The hint is `enter load; up/down wave; esc
+close list`. Removing a saved wave is not on the screen: use `ork wave rm`.
+
+```
+Saved waves of ork  (esc returns)
+-- pair-a ------------------------------------------ 3 items
+  A  open     Alpha
+  B  done     Beta
+  X  missing
+-- solo --------------------------------------------- 1 item
+  C  open     Gamma
+```
+
+**Load** (owner, 2026-11-10, NW-Q8 option a). `enter` ticks the saved wave's
+startable members (those `wave.list` does not report as done, retired, missing or
+unknown, the same rule as `ork wave start NAME`) that are rows of the table,
+including Unplaced rows and rows in waves past the third (the table then shows
+all waves). They are ticked in table order and planned one after another, as
+`space` plans a ticked item; an item already ticked keeps its plan, and a load
+never unticks anything. The status line names what was left out, for example
+`loaded pair-a: ticked A, C, D; skipped B (done)`. A startable member that is not
+a row of the table is named with the reason slicer's suggestion gives and is not
+ticked: `E (blocked, waiting on C)`, `F (held: needs-owner)`, `G (unspecified:
+missing files)`, or `H (not in slicer's suggestion)`. The CLI starts such members
+anyway, so the screen and the CLI differ here. A load never launches.
+
+**Launch by name.** `l` sends the wave name on `wave.start` only when the
+launched items are exactly the loaded wave's startable members. Unticking a
+member, ticking another, a member the table lacks, or an item held for spec
+questions all send the items with no name, as a hand-ticked set does.
 
 `e` edits the selected ticked item after its plan is ready (S83).
 The Roadmap launch confirmation uses the same editor with `e` (S166).

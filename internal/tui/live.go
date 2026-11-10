@@ -28,6 +28,8 @@ type Live interface {
 	WaveSuggest(context.Context, string) (*slicercli.ParallelPlan, error)
 	WaveOverlap(context.Context, string, []string) (*slicercli.Overlap, error)
 	WaveStart(context.Context, daemon.WaveStartParams) (*daemon.WaveResult, error)
+	WaveDefine(context.Context, daemon.WaveDefineParams) (*daemon.SavedWave, error)
+	WaveList(ctx context.Context, project string) ([]daemon.SavedWaveView, error)
 	SpecCheck(ctx context.Context, project string, items []string) (*daemon.SpecCheckResult, error)
 	SpecAnswer(context.Context, daemon.SpecAnswerParams) (*daemon.SpecAnswerResult, error)
 	Plan(context.Context, daemon.RunParams) (*daemon.RunPlan, error)

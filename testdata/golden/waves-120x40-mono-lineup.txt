@@ -36,5 +36,5 @@
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────[m
                            │  2 ticked, not launched
                            │[2m────────────────────────────────────────────────────────────────────────────────────────────[m
-                           │ enter [2mitem[m; space [2mtick item[m; l [2mlaunch[m; e [2medit lineup[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
+                           │ enter [2mitem[m; space [2mtick[m; l [2mlaunch[m; e [2medit lineup[m; w [2msave[m; L [2msaved[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
                            │ 2 projects | refreshed 16:42:00

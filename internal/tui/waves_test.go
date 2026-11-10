@@ -35,6 +35,24 @@ type wavesLive struct {
 	check                                     func(items []string) (*daemon.SpecCheckResult, error)
 	answers                                   []daemon.SpecAnswerParams
 	answerErr                                 error
+	defines                                   []daemon.WaveDefineParams // the saved-wave calls (S216)
+	define                                    func(daemon.WaveDefineParams) (*daemon.SavedWave, error)
+	lists                                     []string
+	saved                                     []daemon.SavedWaveView
+	listErr                                   error
+}
+
+func (l *wavesLive) WaveDefine(_ context.Context, p daemon.WaveDefineParams) (*daemon.SavedWave, error) {
+	l.writes++
+	l.defines = append(l.defines, p)
+	if l.define != nil {
+		return l.define(p)
+	}
+	return &daemon.SavedWave{Project: p.Project, Name: p.Name, Items: p.Items}, nil
+}
+func (l *wavesLive) WaveList(_ context.Context, project string) ([]daemon.SavedWaveView, error) {
+	l.lists = append(l.lists, project)
+	return l.saved, l.listErr
 }
 
 // SpecCheck answers that every item is ready unless the test sets check.
@@ -849,7 +867,7 @@ func TestWavesHasOneHintBar(t *testing.T) {
 	if len(footer) != 0 || strings.Contains(strings.Join(body.body, "\n"), "[enter]") {
 		t.Fatal("duplicate Waves footer")
 	}
-	if got := wideHint(h); !strings.Contains(got, "enter item") || !strings.Contains(got, "space tick item") {
+	if got := wideHint(h); !strings.Contains(got, "enter item") || !strings.Contains(got, "space tick;") {
 		t.Fatalf("hint: %q", got)
 	}
 }
@@ -1543,10 +1561,11 @@ func TestWavesHintsStayPinnedBelowBody(t *testing.T) {
 		}
 		return -1
 	}
-	if at("enter item") != len(lines)-2 || at("[x] ") < 0 || at("[x] ") > at("enter item") || at("next field") >= 0 {
+	// With an item ticked at 80x24 `enter item` has gone from the line (adj 270).
+	if at("space tick;") != len(lines)-2 || at("[x] ") < 0 || at("[x] ") > at("space tick;") || at("next field") >= 0 {
 		t.Fatalf("composer hints not pinned under the body:\n%s", strings.Join(lines, "\n"))
 	}
-	if got := plainView(h.m); !strings.Contains(hintLine(got), "enter item") || !strings.Contains(hintLine(got), "l launch") {
+	if got := plainView(h.m); !strings.Contains(hintLine(got), "space tick;") || !strings.Contains(hintLine(got), "l launch") {
 		t.Fatalf("composer hints scrolled away:\n%s", got)
 	}
 }
@@ -1757,5 +1776,604 @@ func TestWavesAKeyTogglesBackToThreeWaves(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+// Saved waves on the Waves screen (S216, *proposed*).
+
+func typeText(h *harness, s string) {
+	for _, r := range s {
+		h.deliver(press(string(r)))
+	}
+}
+
+// tickBThenA ticks B and then A, so that table order and tick order differ.
+func tickBThenA(t *testing.T, h *harness) {
+	t.Helper()
+	openWaves(t, h)
+	h.deliver(press("down"))
+	tickWave(t, h)
+	h.deliver(press("up"))
+	tickWave(t, h)
+}
+
+func wm(id, status, title string) daemon.WaveMember {
+	return daemon.WaveMember{Item: id, Status: status, Title: title}
+}
+
+func savedWave(name string, members ...daemon.WaveMember) daemon.SavedWaveView {
+	return daemon.SavedWaveView{Project: "ork", Name: name, Items: members}
+}
+
+// planWith replaces the suggestion with the harness plan plus the given JSON
+// members of blocked, held and unspecified.
+func planWith(t *testing.T, l *wavesLive, extra string) {
+	t.Helper()
+	var plan slicercli.ParallelPlan
+	body := `{"waves":[{"wave":2,"items":[{"id":"A","title":"Alpha"},{"id":"B","title":"Beta"}]},{"wave":4,"items":[{"id":"C","title":"Gamma"}]}],"unplaced":[{"id":"D","title":"Delta","reason":"no_files"}]` + extra + `}`
+	if err := json.Unmarshal([]byte(body), &plan); err != nil {
+		t.Fatal(err)
+	}
+	l.suggest = &plan
+}
+
+// hintOf is the hint line at the given width; 80 columns is the 80x24 terminal.
+func hintOf(h *harness, width int) string {
+	height := 30
+	if width == 80 {
+		height = 24
+	}
+	return hintLine(h.at(width, height))
+}
+
+func TestWavesSaveNeedsATickedItem(t *testing.T) {
+	h, l := wavesHarness(t)
+	openWaves(t, h)
+	h.deliver(press("w"))
+	if want := "Tick at least one item to save a wave"; h.m.actionStatus != want {
+		t.Fatalf("status %q, want %q", h.m.actionStatus, want)
+	}
+	if h.m.waves.naming != nil || len(l.defines) != 0 {
+		t.Fatalf("the save key opened an input or called the daemon: %+v %v", h.m.waves.naming, l.defines)
+	}
+}
+
+func TestWavesSaveAsksForAName(t *testing.T) {
+	h, l := wavesHarness(t)
+	tickBThenA(t, h)
+	h.deliver(press("w"))
+	if v := h.view(); !strings.Contains(v, "Save wave A, B as:") {
+		t.Fatalf("no name input:\n%s", v)
+	}
+	typeText(h, "pair-a")
+	h.deliver(press("esc"))
+	if h.m.waves.naming != nil || len(l.defines) != 0 || strings.Contains(h.view(), "Save wave") {
+		t.Fatalf("esc did not cancel without a call: %v", l.defines)
+	}
+	if len(h.m.waves.picked) != 2 {
+		t.Fatal("esc dropped the ticks")
+	}
+	h.deliver(press("w"))
+	typeText(h, "pair-a")
+	h.deliver(press("enter"))
+	want := []daemon.WaveDefineParams{{Project: "ork", Name: "pair-a", Items: []string{"A", "B"}}}
+	if !reflect.DeepEqual(l.defines, want) {
+		t.Fatalf("define calls %+v, want %+v", l.defines, want)
+	}
+	if h.m.waves.naming != nil {
+		t.Fatal("the input stayed open after the save")
+	}
+	if got, want := h.m.actionStatus, "saved pair-a: A, B"; got != want {
+		t.Fatalf("status %q, want %q", got, want)
+	}
+	if len(h.m.waves.picked) != 2 {
+		t.Fatal("the save dropped the ticks")
+	}
+}
+
+func TestWavesSaveShowsTheDaemonsRefusal(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.define = func(daemon.WaveDefineParams) (*daemon.SavedWave, error) {
+		return nil, &ipc.Error{Code: "bad_params", Message: "wave name must be 1 to 32 characters"}
+	}
+	tickBThenA(t, h)
+	h.deliver(press("w"))
+	typeText(h, "Bad Name")
+	h.deliver(press("enter"))
+	if want := "bad_params: wave name must be 1 to 32 characters"; h.m.actionStatus != want {
+		t.Fatalf("status %q, want %q", h.m.actionStatus, want)
+	}
+	n := h.m.waves.naming
+	if n == nil || n.pending || n.field.Value() != "Bad Name" {
+		t.Fatalf("the input did not stay open with the name: %+v", n)
+	}
+	if v := h.view(); !strings.Contains(v, "bad_params: wave name must be 1 to 32 characters") || !strings.Contains(v, "Save wave A, B as:") {
+		t.Fatalf("refusal or input not on screen:\n%s", v)
+	}
+	h.deliver(press("enter"))
+	if len(l.defines) != 2 {
+		t.Fatalf("the input did not take a second try: %d calls", len(l.defines))
+	}
+}
+
+// NW-Q3 (owner 2026-11-07): the daemon refuses a duplicate name unless replace
+// is set, and the screen asks before it sets it.
+func TestWavesSaveAsksBeforeReplacingWhenNWQ3AllowsReplace(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.define = func(p daemon.WaveDefineParams) (*daemon.SavedWave, error) {
+		if !p.Replace {
+			return nil, &ipc.Error{Code: daemon.CodeDuplicateName, Message: "a saved wave \"pair-a\" already exists"}
+		}
+		return &daemon.SavedWave{Project: p.Project, Name: p.Name, Items: p.Items}, nil
+	}
+	tickBThenA(t, h)
+	h.deliver(press("w"))
+	typeText(h, "pair-a")
+	h.deliver(press("enter"))
+	if v := h.view(); !strings.Contains(v, "Replace pair-a? [y/N] (Enter is No)") {
+		t.Fatalf("no replace question:\n%s", v)
+	}
+	if len(l.defines) != 1 || l.defines[0].Replace {
+		t.Fatalf("calls %+v, want one without replace", l.defines)
+	}
+	h.deliver(press("enter")) // Enter is No: back to the name, nothing sent
+	if len(l.defines) != 1 || h.m.waves.naming == nil || h.m.waves.naming.field.Value() != "pair-a" || h.m.waves.naming.replace {
+		t.Fatalf("No did not return to the name input: %+v %v", h.m.waves.naming, l.defines)
+	}
+	h.deliver(press("enter"))
+	h.deliver(press("y"))
+	if len(l.defines) != 3 || !l.defines[2].Replace || l.defines[2].Name != "pair-a" {
+		t.Fatalf("y did not replace: %+v", l.defines)
+	}
+	if got, want := h.m.actionStatus, "saved pair-a: A, B"; got != want || h.m.waves.naming != nil {
+		t.Fatalf("status %q, want %q", got, want)
+	}
+}
+
+func TestWavesSavedListShowsNamesMembersAndStatus(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.saved = []daemon.SavedWaveView{
+		savedWave("pair-a", wm("A", "open", "Alpha"), wm("B", "done", "Beta"), wm("X", "missing", "")),
+		savedWave("solo", wm("C", "open", "Gamma")),
+	}
+	openWaves(t, h)
+	h.deliver(press("L"))
+	if !reflect.DeepEqual(l.lists, []string{"ork"}) {
+		t.Fatalf("list calls %v, want [ork]", l.lists)
+	}
+	v := h.view()
+	for _, words := range [][]string{{"pair-a", "3 items"}, {"A", "open", "Alpha"}, {"B", "done", "Beta"}, {"X", "missing"}, {"solo", "1 item"}, {"C", "open", "Gamma"}} {
+		if rowsWith(v, words...) != 1 {
+			t.Errorf("want one line with %v:\n%s", words, v)
+		}
+	}
+	if strings.Contains(v, "Wave 2") {
+		t.Fatalf("the table still shows:\n%s", v)
+	}
+	h.deliver(press("esc"))
+	if v := h.view(); !strings.Contains(v, "Wave 2") || strings.Contains(v, "pair-a") {
+		t.Fatalf("esc did not return to the table:\n%s", v)
+	}
+}
+
+func TestWavesSavedListShowsEmptyAndErrors(t *testing.T) {
+	h, l := wavesHarness(t)
+	openWaves(t, h)
+	h.deliver(press("L"))
+	if v := h.view(); !strings.Contains(v, "No saved waves for ork") {
+		t.Fatalf("no empty text:\n%s", v)
+	}
+	h.deliver(press("esc"))
+	l.listErr = &ipc.Error{Code: "locked", Message: "Exact LIST failure."}
+	h.deliver(press("L"))
+	if v := h.view(); !strings.Contains(v, "locked: Exact LIST failure.") {
+		t.Fatalf("no list error:\n%s", v)
+	}
+	h.deliver(press("enter"))
+	if len(h.m.waves.picked) != 0 {
+		t.Fatal("enter on a failed list loaded something")
+	}
+}
+
+func TestWavesLoadTicksTheStartableMembersPresentInTheTable(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.saved = []daemon.SavedWaveView{savedWave("pair-a", wm("D", "open", "Delta"), wm("C", "open", "Gamma"), wm("B", "done", "Beta"), wm("A", "open", "Alpha"))}
+	openWaves(t, h)
+	h.deliver(press("L"))
+	h.deliver(press("enter"))
+	if h.m.waves.list != nil {
+		t.Fatal("the list stayed open after the load")
+	}
+	var planned []string
+	for _, p := range l.plans {
+		planned = append(planned, p.Item)
+	}
+	if !reflect.DeepEqual(planned, []string{"A", "C", "D"}) {
+		t.Fatalf("plans %v, want A, C, D in table order", planned)
+	}
+	for _, id := range []string{"A", "C", "D"} {
+		if p, ok := h.m.waves.picked[id]; !ok || p.Expected == nil || !p.WellSpecified {
+			t.Errorf("%s: %+v", id, p)
+		}
+	}
+	if _, ok := h.m.waves.picked["B"]; ok {
+		t.Fatal("the done member was ticked")
+	}
+	if !reflect.DeepEqual(l.overlaps, [][]string{{"ork", "A", "C", "D"}}) {
+		t.Fatalf("overlap calls %v", l.overlaps)
+	}
+	if got, want := h.m.actionStatus, "loaded pair-a: ticked A, C, D; skipped B (done)"; got != want {
+		t.Fatalf("status %q, want %q", got, want)
+	}
+	v := h.view()
+	for _, s := range []string{"[x] A", "[x] C", "[x] D", "[ ] B"} {
+		if !strings.Contains(v, s) {
+			t.Errorf("missing %q:\n%s", s, v)
+		}
+	}
+	if strings.Contains(v, "Well specified?") || strings.Contains(v, "Split?") {
+		t.Fatalf("a load must not ask inputs:\n%s", v)
+	}
+	if l.writes != 0 {
+		t.Fatal("a load wrote")
+	}
+}
+
+func TestWavesSavedListEnterLoadsTheWaveUnderTheCursor(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.saved = []daemon.SavedWaveView{savedWave("pair-a", wm("A", "open", "Alpha")), savedWave("solo", wm("C", "open", "Gamma")), savedWave("last", wm("D", "open", "Delta"))}
+	openWaves(t, h)
+	h.deliver(press("L"))
+	h.deliver(press("down"))
+	h.deliver(press("down"))
+	h.deliver(press("up"))
+	h.deliver(press("enter"))
+	if got, want := h.m.actionStatus, "loaded solo: ticked C"; got != want {
+		t.Fatalf("status %q, want %q", got, want)
+	}
+	if _, ok := h.m.waves.picked["C"]; !ok || len(h.m.waves.picked) != 1 {
+		t.Fatalf("picked %v, want only C", h.m.waves.picked)
+	}
+}
+
+func TestWavesLoadNamesMembersNotInTheSuggestion(t *testing.T) {
+	h, l := wavesHarness(t)
+	planWith(t, l, `,"blocked":[{"id":"E","waiting_on":["C"]}],"held":[{"id":"F","title":"Phi","flags":["needs-owner"]}],"unspecified":[{"id":"G","missing":["files"]}]`)
+	l.saved = []daemon.SavedWaveView{savedWave("mixed", wm("A", "open", "Alpha"), wm("E", "open", "Epsilon"), wm("F", "open", "Phi"), wm("G", "open", "Gee"), wm("H", "open", "Aitch"))}
+	openWaves(t, h)
+	h.deliver(press("L"))
+	h.deliver(press("enter"))
+	if len(h.m.waves.picked) != 1 || h.m.waves.picked["A"].Item != "A" {
+		t.Fatalf("picked %v, want only A", h.m.waves.picked)
+	}
+	want := "loaded mixed: ticked A; not ticked: E (blocked, waiting on C), F (held: needs-owner), G (unspecified: missing files), H (not in slicer's suggestion)"
+	if h.m.actionStatus != want {
+		t.Fatalf("status\n got %q\nwant %q", h.m.actionStatus, want)
+	}
+}
+
+func TestWavesLoadShowsAMemberInAHiddenWave(t *testing.T) {
+	h, l := wavesHarness(t)
+	for i := 0; i < 5; i++ {
+		l.suggest.Waves = append(l.suggest.Waves, l.suggest.Waves[0])
+		l.suggest.Waves[len(l.suggest.Waves)-1].Items = []slicercli.ParallelItem{{ID: fmt.Sprintf("W%d", i), Title: "Late"}}
+	}
+	l.saved = []daemon.SavedWaveView{savedWave("late", wm("W4", "open", "Late"))}
+	openWaves(t, h)
+	if h.m.waves.showAll {
+		t.Fatal("fixture shows all waves already")
+	}
+	h.deliver(press("L"))
+	h.deliver(press("enter"))
+	if _, ok := h.m.waves.picked["W4"]; !ok || !h.m.waves.showAll {
+		t.Fatalf("W4 in a hidden wave was not ticked: %v showAll %v", h.m.waves.picked, h.m.waves.showAll)
+	}
+}
+
+func TestWavesLaunchAfterLoadSendsTheWaveName(t *testing.T) {
+	load := func(t *testing.T, saved daemon.SavedWaveView) (*harness, *wavesLive) {
+		h, l := wavesHarness(t)
+		planWith(t, l, `,"blocked":[{"id":"E","waiting_on":["C"]}]`)
+		l.saved = []daemon.SavedWaveView{saved}
+		openWaves(t, h)
+		h.deliver(press("L"))
+		h.deliver(press("enter"))
+		return h, l
+	}
+	t.Run("the startable set", func(t *testing.T) {
+		h, l := load(t, savedWave("pair-a", wm("A", "open", "Alpha"), wm("B", "open", "Beta"), wm("C", "done", "Gamma")))
+		h.deliver(press("l"))
+		if !strings.Contains(h.view(), "ork wave start ork A B? [y/N] (Enter is No)") {
+			t.Fatal(h.view())
+		}
+		h.deliver(press("y"))
+		if len(l.starts) != 1 || l.starts[0].Name != "pair-a" || len(l.starts[0].Items) != 2 {
+			t.Fatalf("starts %+v, want one named pair-a", l.starts)
+		}
+	})
+	t.Run("one unticked", func(t *testing.T) {
+		h, l := load(t, savedWave("pair-a", wm("A", "open", "Alpha"), wm("B", "open", "Beta")))
+		h.m.waves.cursor = 0
+		h.deliver(press(" ")) // untick A
+		h.deliver(press("l"))
+		h.deliver(press("y"))
+		if len(l.starts) != 1 || l.starts[0].Name != "" || len(l.starts[0].Items) != 1 {
+			t.Fatalf("starts %+v, want B alone with no name", l.starts)
+		}
+	})
+	t.Run("a member the table lacks", func(t *testing.T) {
+		h, l := load(t, savedWave("pair-a", wm("A", "open", "Alpha"), wm("E", "open", "Epsilon")))
+		h.deliver(press("l"))
+		h.deliver(press("y"))
+		if len(l.starts) != 1 || l.starts[0].Name != "" || len(l.starts[0].Items) != 1 {
+			t.Fatalf("starts %+v, want A alone with no name", l.starts)
+		}
+	})
+	t.Run("an item added after the load", func(t *testing.T) {
+		h, l := load(t, savedWave("pair-a", wm("A", "open", "Alpha")))
+		h.deliver(press("down"))
+		tickWave(t, h)
+		h.deliver(press("l"))
+		h.deliver(press("y"))
+		if len(l.starts) != 1 || l.starts[0].Name != "" || len(l.starts[0].Items) != 2 {
+			t.Fatalf("starts %+v, want A and B with no name", l.starts)
+		}
+	})
+	t.Run("a hand-ticked set", func(t *testing.T) {
+		h, l := wavesHarness(t)
+		twoWaveItems(t, h)
+		h.deliver(press("l"))
+		h.deliver(press("y"))
+		if len(l.starts) != 1 || l.starts[0].Name != "" {
+			t.Fatalf("starts %+v, want no name", l.starts)
+		}
+	})
+}
+
+func TestWavesLoadNeverLaunches(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.saved = []daemon.SavedWaveView{savedWave("pair-a", wm("A", "open", "Alpha"), wm("B", "open", "Beta"))}
+	openWaves(t, h)
+	h.deliver(press("L"))
+	h.deliver(press("enter"))
+	if len(l.starts) != 0 || len(l.checks) != 0 || h.m.confirm != nil {
+		t.Fatalf("a load launched or checked: starts %v checks %v", l.starts, l.checks)
+	}
+}
+
+func TestWavesSavedKeysDoNothingOnTheAggregateTab(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.saved = []daemon.SavedWaveView{savedWave("pair-a", wm("A", "open", "Alpha"))}
+	// The keys work on a project's Waves tab ...
+	openWaves(t, h)
+	h.deliver(press("L"))
+	if h.m.waves.list == nil || len(l.lists) != 1 {
+		t.Fatal("L does not open the saved list on a project's Waves tab")
+	}
+	h.deliver(press("esc"))
+	// ... and do nothing on the combined Running entry, in any view.
+	h.m.switchTo(runningEntry)
+	for _, view := range []int{0, wavesView} {
+		h.m.view = view
+		for _, k := range []string{"w", "L", "w", "enter"} {
+			h.deliver(press(k))
+		}
+	}
+	if h.m.waves != nil || len(l.defines) != 0 || len(l.lists) != 1 || len(l.starts) != 0 {
+		t.Fatalf("the aggregate tab acted: waves %v defines %v lists %v", h.m.waves, l.defines, l.lists)
+	}
+}
+
+func TestWavesSavedKeysAreHiddenWithoutADaemon(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	h.m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
+	h.m.switchTo(0)
+	openWaves(t, h)
+	for _, k := range []string{"w", "L"} {
+		h.deliver(press(k))
+		if want := "No daemon connection; action unavailable"; h.m.actionStatus != want {
+			t.Fatalf("%s: status %q, want %q", k, h.m.actionStatus, want)
+		}
+		if h.m.waves.naming != nil || h.m.waves.list != nil {
+			t.Fatalf("%s opened something without a daemon", k)
+		}
+	}
+	if hint := hintOf(h, 100); strings.Contains(hint, "save") || strings.Contains(hint, "saved") {
+		t.Fatalf("the hint offers the keys without a daemon: %q", hint)
+	}
+}
+
+func TestWavesSavedKeysAreRefusedWhileAPlanOrStartIsInFlight(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.saved = []daemon.SavedWaveView{savedWave("pair-a", wm("A", "open", "Alpha"))}
+	openWaves(t, h)
+	_, plan := h.m.Update(press(" ")) // the plan call is held
+	h.deliver(press("w"))
+	h.deliver(press("L"))
+	if h.m.waves.naming != nil || h.m.waves.list != nil || len(l.lists) != 0 {
+		t.Fatal("a key worked while a plan was pending")
+	}
+	if hint := hintOf(h, 100); strings.Contains(hint, "save") {
+		t.Fatalf("the hint offers save while a plan is pending: %q", hint)
+	}
+	h.deliver(plan())
+	h.m.waves.starting = true
+	h.deliver(press("w"))
+	h.deliver(press("L"))
+	if h.m.waves.naming != nil || h.m.waves.list != nil {
+		t.Fatal("a key worked while a start was pending")
+	}
+	h.m.waves.starting = false
+	h.deliver(press("w"))
+	if h.m.waves.naming == nil {
+		t.Fatal("w does not open the input once the plan is back")
+	}
+	h.deliver(press("esc"))
+	h.deliver(press("L"))
+	if h.m.waves.list == nil {
+		t.Fatal("L does not open the list once the plan is back")
+	}
+}
+
+func TestWavesHintLinesShowSaveAndSavedAt100And80Columns(t *testing.T) {
+	h, _ := wavesHarness(t)
+	openWaves(t, h)
+	// Nothing ticked: the list is offered, save is not.
+	for _, width := range []int{100, 80} {
+		hint := hintOf(h, width)
+		if !strings.Contains(hint, "L saved") || strings.Contains(hint, "w save") {
+			t.Errorf("%d columns, nothing ticked: %q", width, hint)
+		}
+		if !strings.Contains(hint, "q quit; ? help") {
+			t.Errorf("%d columns lost the way out: %q", width, hint)
+		}
+	}
+	tickWave(t, h)
+	h.deliver(press("down"))
+	tickWave(t, h)
+	// Two ticked (owner, adj 270, ui.waves-hint-priority): the tick hint is the
+	// short `space tick`, and `enter item` goes first where the line is short, so
+	// e edit lineup, w save and L saved all fit at 100x30. At 80 columns L saved
+	// goes too; the way out stays.
+	for _, tc := range []struct {
+		width      int
+		want, lack []string
+	}{
+		{120, []string{"enter item; space tick; l launch; e edit lineup; w save; L saved"}, nil},
+		{100, []string{"space tick; l launch; e edit lineup; w save; L saved; q quit; ? help"}, []string{"enter item", "space tick item"}},
+		{80, []string{"space tick; l launch; e edit lineup; w save; q quit; ? help"}, []string{"L saved", "space tick item"}},
+	} {
+		hint := hintOf(h, tc.width)
+		for _, s := range tc.want {
+			if !strings.Contains(hint, s) {
+				t.Errorf("%d columns, two ticked: %q lacks %q", tc.width, hint, s)
+			}
+		}
+		for _, s := range tc.lack {
+			if strings.Contains(hint, s) {
+				t.Errorf("%d columns, two ticked: %q holds %q", tc.width, hint, s)
+			}
+		}
+	}
+	h.deliver(press("w"))
+	typeText(h, "pair-a")
+	hint := hintOf(h, 100)
+	if !strings.Contains(hint, "enter save") || !strings.Contains(hint, "esc cancel") || strings.Contains(hint, "space") {
+		t.Errorf("name input hint: %q", hint)
+	}
+}
+
+// The help names the saved-wave keys on the end of the Waves sentence, which
+// costs the help no line: at 100x30 the Waves help already hid its last three
+// lines before S216 (the marker read +3), and still hides exactly those.
+func TestWavesHelpListsTheSavedWaveKeys(t *testing.T) {
+	h, _ := wavesHarness(t)
+	openWaves(t, h)
+	h.deliver(press("?"))
+	v := h.at(100, 30)
+	if !strings.Contains(v, "S65, an earlier item. w saves the ticked items; L lists saved waves.") {
+		t.Errorf("the help lacks the saved-wave keys:\n%s", v)
+	}
+	if !strings.Contains(v, "+3 more lines") || !strings.Contains(v, "r refresh now; q quit; ? show or hide this help") {
+		t.Errorf("the saved-wave keys cost the Waves help a line at 100x30:\n%s", v)
+	}
+}
+
+// The saved list keeps the member rows of the wave under the cursor in view
+// when there are more saved waves than the body holds, so enter loads what the
+// owner sees.
+func TestWavesSavedListShowsTheMembersOfTheWaveUnderTheCursor(t *testing.T) {
+	h, l := wavesHarness(t)
+	for i := 1; i <= 6; i++ {
+		l.saved = append(l.saved, savedWave(fmt.Sprintf("wave-set-%d", i), wm(fmt.Sprintf("M%d1", i), "open", "First"), wm(fmt.Sprintf("M%d2", i), "open", "Second"), wm(fmt.Sprintf("M%d3", i), "done", "Third")))
+	}
+	openWaves(t, h)
+	h.deliver(press("L"))
+	for i := 0; i < 4; i++ {
+		h.deliver(press("down"))
+	}
+	v := h.at(80, 24)
+	for _, id := range []string{"wave-set-5", "M51", "M52", "M53"} {
+		if !strings.Contains(v, id) {
+			t.Errorf("a member of the wave under the cursor is hidden: no %s\n%s", id, v)
+		}
+	}
+}
+
+func TestDaemonAdapterSavesAndListsWaves(t *testing.T) {
+	d, _, _, _ := requestServer(t, func(_ context.Context, method string, params json.RawMessage) (any, error) {
+		switch method {
+		case daemon.MethodWaveDefine:
+			var p daemon.WaveDefineParams
+			if err := json.Unmarshal(params, &p); err != nil || p.Project != "ork" || p.Name != "pair-a" || !reflect.DeepEqual(p.Items, []string{"A", "B"}) || !p.Replace {
+				return nil, fmt.Errorf("wrong define params: %s", params)
+			}
+			return daemon.SavedWave{Project: p.Project, Name: p.Name, Items: p.Items}, nil
+		case daemon.MethodWaveList:
+			var p daemon.WaveListParams
+			if err := json.Unmarshal(params, &p); err != nil || p.Project != "ork" {
+				return nil, fmt.Errorf("wrong list params: %s", params)
+			}
+			return daemon.WaveListResult{Waves: []daemon.SavedWaveView{savedWave("pair-a", wm("A", "open", "Alpha"))}}, nil
+		}
+		return nil, fmt.Errorf("unexpected %s", method)
+	})
+	var live Live = d
+	saved, err := live.WaveDefine(context.Background(), daemon.WaveDefineParams{Project: "ork", Name: "pair-a", Items: []string{"A", "B"}, Replace: true})
+	if err != nil || saved.Name != "pair-a" {
+		t.Fatalf("define: %v %+v", err, saved)
+	}
+	waves, err := live.WaveList(context.Background(), "ork")
+	if err != nil || len(waves) != 1 || waves[0].Name != "pair-a" || waves[0].Items[0].Title != "Alpha" {
+		t.Fatalf("list: %v %+v", err, waves)
+	}
+}
+
+func TestWavesSavedGolden(t *testing.T) {
+	for _, size := range [][2]int{{100, 30}, {80, 24}} {
+		for _, mono := range []bool{false, true} {
+			for _, ascii := range []bool{false, true} {
+				theme, suffix := "color", ""
+				if mono {
+					theme = "mono"
+				}
+				if ascii {
+					suffix = "-ascii"
+				}
+				name := fmt.Sprintf("waves-saved-list-%dx%d-%s%s.txt", size[0], size[1], theme, suffix)
+				t.Run(name, func(t *testing.T) {
+					h, l := wavesHarness(t)
+					h.m.cfg.Theme = NewTheme(mono)
+					h.m.cfg.ASCII = ascii
+					l.saved = []daemon.SavedWaveView{
+						savedWave("pair-a", wm("A", "open", "Alpha"), wm("B", "done", "Beta"), wm("X", "missing", "")),
+						savedWave("solo", wm("C", "open", "Gamma, a title long enough that it has to be cut when the terminal is narrow")),
+					}
+					h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+					openWaves(t, h)
+					h.deliver(press("L"))
+					h.deliver(press("down"))
+					h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+					checkGolden(t, name, h.m.View().Content)
+				})
+			}
+		}
+	}
+}
+
+func TestWavesNameInputGolden(t *testing.T) {
+	for _, size := range [][2]int{{100, 30}, {80, 24}} {
+		name := fmt.Sprintf("waves-name-input-%dx%d-mono.txt", size[0], size[1])
+		t.Run(name, func(t *testing.T) {
+			h, _ := wavesHarness(t)
+			h.m.cfg.Theme = NewTheme(true)
+			h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+			tickBThenA(t, h)
+			h.deliver(press("w"))
+			typeText(h, "pair-a")
+			h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+			checkGolden(t, name, h.m.View().Content)
+		})
 	}
 }

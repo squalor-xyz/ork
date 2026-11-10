@@ -242,6 +242,13 @@ func (*fakeLive) WaveStart(context.Context, daemon.WaveStartParams) (*daemon.Wav
 	return nil, errors.New("unexpected wave start")
 }
 
+func (*fakeLive) WaveDefine(context.Context, daemon.WaveDefineParams) (*daemon.SavedWave, error) {
+	return nil, errors.New("unexpected wave define")
+}
+func (*fakeLive) WaveList(context.Context, string) ([]daemon.SavedWaveView, error) {
+	return nil, errors.New("unexpected wave list")
+}
+
 func (*fakeLive) SpecCheck(_ context.Context, _ string, items []string) (*daemon.SpecCheckResult, error) {
 	out := &daemon.SpecCheckResult{}
 	for _, id := range items {

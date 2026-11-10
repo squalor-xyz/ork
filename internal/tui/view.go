@@ -119,6 +119,9 @@ func (m *Model) screen() string {
 		if status == "" && m.view == wavesView && m.waves != nil && m.waves.lineup == nil && m.waves.sitting == nil && len(m.waves.picked) > 0 {
 			status = fmt.Sprintf("%d ticked, not launched", len(m.waves.picked))
 		}
+		if n := m.waves; m.view == wavesView && n != nil && n.naming != nil {
+			status = n.naming.prompt(max(mainW-len(indent)-2, 1), th, m.actionStatus)
+		}
 		if m.confirm != nil {
 			status = m.confirm.promptWidth(max(mainW-len(indent), 1))
 			if m.confirm.verb == "launch" {
@@ -746,7 +749,9 @@ func (m *Model) helpLines(w, bodyH int) []string {
 	th := m.cfg.Theme
 	lines := []string{th.Heading.Render("Keys")}
 	if m.view == wavesView {
-		lines = append(lines, wrapText("Waves: A shows all waves. A again shows first 3. <S65: shares files with S65, an earlier item.", max(w, 1))...)
+		// The saved-wave keys ride on the end of this sentence: at 72 columns they
+		// fill its second line, so the help keeps the line count it had (S216).
+		lines = append(lines, wrapText("Waves: A shows all waves. A again shows first 3. <S65: shares files with S65, an earlier item. w saves the ticked items; L lists saved waves.", max(w, 1))...)
 	}
 	if m.view == decisionsView {
 		lines = append(lines, wrapText("Decisions: left/right switch tabs; [ and ] switch projects or entries.", max(w, 1))...)

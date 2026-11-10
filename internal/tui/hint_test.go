@@ -384,7 +384,7 @@ func TestHintBarOnTheOtherViews(t *testing.T) {
 		h, _ := wavesHarness(t)
 		openWaves(t, h)
 		hint := hintLine(h.view())
-		if !strings.Contains(hint, "enter item") || !strings.Contains(hint, "space tick item") || strings.Contains(hint, "l launch") {
+		if !strings.Contains(hint, "enter item") || !strings.Contains(hint, "space tick;") || strings.Contains(hint, "space tick item") || strings.Contains(hint, "l launch") {
 			t.Errorf("waves hint before a tick: %q", hint)
 		}
 		h.deliver(press("l"))
@@ -664,7 +664,8 @@ func TestHintBarUsesTheScreensOwnWords(t *testing.T) {
 		twoWaveItems(t, h)
 		hint := hintLine(h.view())
 		v := h.view()
-		for _, want := range []string{"enter item", "space tick item", "l launch"} {
+		// With two ticked at 100x30 `enter item` is the first hint to go (adj 270).
+		for _, want := range []string{"space tick;", "l launch"} {
 			if !strings.Contains(hint, want) {
 				t.Errorf("waves hint lacks %q: %q", want, hint)
 			}
@@ -1231,14 +1232,15 @@ func TestHelpMentionsCtrlUClearsAField(t *testing.T) {
 	}
 }
 
-// The Waves hint at the standard size holds the edit key beside the way out
-// (owner decision 2026-10-29: l launch, not l launch wave).
+// The Waves hint at the standard size holds the edit key, the save keys and the
+// way out (owner decision 2026-10-29: l launch, not l launch wave; adj 270: the
+// tick hint is short and `enter item` goes first so that w save and L saved fit).
 func TestWavesHintHoldsEditLineupAt100x30(t *testing.T) {
 	h, _ := wavesHarness(t)
 	twoWaveItems(t, h)
 	h.send(tea.WindowSizeMsg{Width: 100, Height: 30})
 	hint := hintLine(plainView(h.m))
-	for _, want := range []string{"enter item", "l launch", "e edit lineup", "q quit", "? help"} {
+	for _, want := range []string{"space tick;", "l launch", "e edit lineup", "w save", "L saved", "q quit", "? help"} {
 		if !strings.Contains(hint, want) {
 			t.Errorf("the Waves hint lacks %q: %q", want, hint)
 		}

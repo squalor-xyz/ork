@@ -196,6 +196,31 @@ func (d *Daemon) WaveStart(ctx context.Context, params daemon.WaveStartParams) (
 	return c.WaveStart(ctx, params)
 }
 
+// WaveDefine saves the items of a project under a name (S216, *proposed*).
+func (d *Daemon) WaveDefine(ctx context.Context, params daemon.WaveDefineParams) (*daemon.SavedWave, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.WaveDefine(ctx, params)
+}
+
+// WaveList lists the project's saved waves with each member's status (S216,
+// *proposed*).
+func (d *Daemon) WaveList(ctx context.Context, project string) ([]daemon.SavedWaveView, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	out, err := c.WaveList(ctx, project)
+	if err != nil {
+		return nil, err
+	}
+	return out.Waves, nil
+}
+
 func (d *Daemon) SpecCheck(ctx context.Context, project string, items []string) (*daemon.SpecCheckResult, error) {
 	c, err := d.Connect(ctx)
 	if err != nil {

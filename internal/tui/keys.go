@@ -28,6 +28,8 @@ type keyMap struct {
 	MoveUp     key.Binding
 	Note       key.Binding
 	Launch     key.Binding
+	SaveWave   key.Binding
+	SavedWaves key.Binding
 	Matrix     key.Binding
 	Approve    key.Binding
 	Stop       key.Binding
@@ -88,6 +90,8 @@ func newKeyMap() keyMap {
 		MoveUp:     key.NewBinding(key.WithKeys("K", "shift+k"), key.WithHelp("K", "move Roadmap item up")),
 		Note:       key.NewBinding(key.WithKeys("N", "shift+n"), key.WithHelp("N", "note on the Roadmap item")),
 		Launch:     key.NewBinding(key.WithKeys("l"), key.WithHelp("l", "launch a ready slice (Roadmap) or wave (Waves)")),
+		SaveWave:   key.NewBinding(key.WithKeys("w"), key.WithHelp("w", "save the ticked items as a named wave (Waves)")),
+		SavedWaves: key.NewBinding(key.WithKeys("L", "shift+l"), key.WithHelp("L", "list saved waves; enter loads one (Waves)")),
 		Matrix:     key.NewBinding(key.WithKeys("m"), key.WithHelp("m", "matrix")),
 		Approve:    key.NewBinding(key.WithKeys("a"), key.WithHelp("a", "approve")),
 		Stop:       key.NewBinding(key.WithKeys("x"), key.WithHelp("x", "stop")),
@@ -187,6 +191,7 @@ const (
 	dropAppr       = 9
 	dropClean      = 8
 	dropResume     = 6 // the pane's retry on a paused run: it outlasts the scroll keys (S134)
+	dropWavesEnter = 6 // the Waves enter hint goes before the row keys and the saved-wave keys (adj 270)
 	dropRow        = 5
 	dropPinned     = 0
 )
@@ -372,6 +377,21 @@ func (m *Model) contextHints() []hintEntry {
 			desc = "close"
 		}
 		l.add(dropPinned, short(k.Close, "esc", desc))
+	case m.view == wavesView && m.waves != nil && m.waves.naming != nil:
+		switch n := m.waves.naming; {
+		case n.pending:
+			l.add(dropPinned, short(k.Quit, "ctrl+c", "quit"))
+		case n.replace:
+			l.add(dropRow, short(k.Yes, "y", "replace"))
+			l.add(dropPinned, short(k.No, "n", "cancel"))
+		default:
+			l.add(dropRow, offer(strings.TrimSpace(n.field.Value()) != "", k.Select, "enter", "save"))
+			l.add(dropPinned, short(k.Close, "esc", "cancel"))
+		}
+	case m.view == wavesView && m.waves != nil && m.waves.list != nil:
+		list := m.waves.list
+		l.add(dropRow, offer(!list.pending && len(list.waves) > 0, k.Select, "enter", "load"), short(k.RowNext, "up/down", "wave"))
+		l.add(dropPinned, short(k.Close, "esc", "close list"))
 	case m.view == wavesView && m.waves != nil && m.waves.pane != nil:
 		l.add(dropPage, short(k.PageDown, "pgup/pgdown", "page"))
 		l.add(dropLine, short(k.RowNext, "j/k", "line"))
@@ -462,9 +482,23 @@ func (m *Model) contextHints() []hintEntry {
 			if w.heldWithQuestions() {
 				launch = "answer spec questions"
 			}
-			l.add(dropRow, offer(open, k.Select, "enter", enter), offer(!tickRefused, k.Tick, "space", "tick item"), offer(!launchRefused, k.Launch, "l", launch))
+			// Owner (adj 270, ui.waves-hint-priority): e edit lineup, w save and L saved
+			// all fit at 100x30. The tick hint is the short `space tick`, and where the
+			// line is still too long `enter item` goes first (the help lists it).
+			enterDrop := dropRow
+			if enter == "item" {
+				enterDrop = dropWavesEnter // `enter open run` keeps its place
+			}
+			l.add(enterDrop, offer(open, k.Select, "enter", enter))
+			l.add(dropRow, offer(!tickRefused, k.Tick, "space", "tick"), offer(!launchRefused, k.Launch, "l", launch))
 			_, editRefused := m.lineupRefusal()
 			l.add(dropRow, offer(!editRefused, k.EditLineup, "e", "edit lineup"))
+			// Saved waves (S216, *proposed*): where the line is short these drop
+			// first, so the edit key keeps its place at 100x30 (owner 2026-10-29);
+			// the help lists both.
+			_, saveRefused := m.saveWaveRefusal()
+			_, listRefused := m.savedListRefusal()
+			l.add(dropRow, offer(!saveRefused, k.SaveWave, "w", "save"), offer(!listRefused, k.SavedWaves, "L", "saved"))
 		}
 		global()
 	default:

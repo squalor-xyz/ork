@@ -566,6 +566,10 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			m.actionStatus = ""
 			return m, nil
 		}
+		if n := m.waves; n != nil && m.view == wavesView && n.naming != nil && !n.naming.pending && !n.naming.replace && m.confirm == nil {
+			n.naming.field.update(msg)
+			return m, nil
+		}
 		if m.relayInput != nil && m.confirm == nil {
 			m.relayInput.update(msg)
 			return m, nil
@@ -656,6 +660,12 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	}
 	if m.view == wavesView && m.waves != nil && m.waves.pane != nil {
 		return m.waveItemKey(msg)
+	}
+	if m.view == wavesView && m.waves != nil && m.waves.naming != nil {
+		return m.nameKey(msg)
+	}
+	if m.view == wavesView && m.waves != nil && m.waves.list != nil {
+		return m.savedListKey(msg)
 	}
 	if m.relayInput != nil {
 		return m.relayKey(msg)
@@ -796,6 +806,10 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		m.toggleExpanded()
 	case m.view == 0 && m.active == runningEntry && !m.showHelp && key.Matches(msg, m.keys.ExpandAll):
 		m.toggleAllExpanded()
+	case m.view == wavesView && key.Matches(msg, m.keys.SaveWave):
+		return m.openSaveWave()
+	case m.view == wavesView && key.Matches(msg, m.keys.SavedWaves):
+		return m.openSavedWaves()
 	case key.Matches(msg, m.keys.EditLineup):
 		return m.openLineup()
 	case key.Matches(msg, m.keys.Tick):
