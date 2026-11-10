@@ -14744,7 +14744,7 @@
       "id": "S268",
       "title": "Planning skips a Grok write row instead of failing at the round",
       "short_title": "Skip Grok write rows",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
