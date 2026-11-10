@@ -515,7 +515,11 @@ slice.
 - **gate:** the first line of the report must be exactly `VERDICT: PASS` or
   `VERDICT: FAIL`. On S and M items the gate is the resumed reviewer
   ("lite"). A FAIL is recorded with `slicer note ID --text "Review FAIL:
-  ..."` (contract v6).
+  ..."` (contract v6). *Proposed* (S204): on v11 the gate's ledger step closes
+  with the report's verdict only when the engine accepts the round (owner
+  decision 2026-11-07). A round that pauses (a shape problem, an owner
+  question, a blocker finding) closes without a verdict, and its rerun is a
+  new ledger step that carries the verdict.
   *Proposed* (S50): the gate brief warns about changed paths from `git status`
   in the worktree that fall outside the item's Files paths from
   `slicer show --json` `paths` (slicer s395). An entry covers itself and
@@ -759,7 +763,9 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   start a fix round. After green checks, or a clean review, the optional
   architect runs before the gate. Its whole report starts another fix round,
   followed by checks. The gate is the resumed reviewer (role `gate`), which
-  reviews and gates the fix in one pass. Without an architect entry, a clean
+  reviews and gates the fix in one pass (*proposed*, S204: this is relay v11's
+  small-fix rule, met; see `slicer ai relay-orchestrator`, Gate, and the table
+  in `orchestrator-parity.md`). Without an architect entry, a clean
   review goes straight to the gate. The gate brief includes the latest
   architect report and the latest UI pass report even when the gate resumes a
   session. A gate FAIL is recorded
@@ -961,6 +967,14 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
 - **Approval card (*proposed*, S118).** When the gate passes, the engine
   builds the card in the run record (`state.md`): the verdict, the gate's test
   counts, the diff stat against `HEAD`, and the slice's `[HUMAN CHECK]` items.
+  *Proposed* (S204): each bullet or numbered line of the slice's Check section
+  marked `[AFTER LAND]` (with or without `[HUMAN CHECK]`) is also a card item.
+  Both markers are removed and the text starts `deferred to land: `. The item
+  starts in state `later`, because the owner runs the line after landing
+  (`slicer ai relay-orchestrator`, Every brief); ork never runs a slice's Check
+  line (owner decision 2026-11-10, `relay.after-land-check`). An `[AFTER LAND]`
+  line outside the Check section adds nothing. A mark the owner made, or took
+  back, is kept as for any check.
   `MarkCheck(n, state)` ticks a check, marks it `later`, or reopens it.
   `Approve` refuses while any check is open, then records the marks as one
   `slicer note` on the slice (`Human checks at approval (ID):` and one
@@ -2168,7 +2182,10 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   verdicts, and outcomes. The run records its version, roles and gate criteria
   for resumed runs. On v11 a gate round closes its ledger step with
   `--phase done --verdict pass|fail`; v10 closes it without the flag. A gate
-  report with no valid verdict line closes without one. Embedded role prompts
+  report with no valid verdict line closes without one. *Proposed* (S204): a
+  v11 gate round closes with its verdict only when the engine accepts the
+  round; otherwise it closes without one, and the retried round is a new
+  ledger step. Embedded role prompts
   are written against v11;
 - each project's path exists and is a directory; a configured check command
   passes `sh -n -c` and its first word after leading `VAR=value` assignments

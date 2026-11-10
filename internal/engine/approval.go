@@ -23,13 +23,43 @@ import (
 // any section of the slice, as the slices' Check sections write them.
 var humanCheckLine = regexp.MustCompile(`(?i)^\s*(?:[-*+]\s+|\d+[.)]\s+)?\[HUMAN CHECK\]\s*(\S.*?)\s*$`)
 
-// humanCheckTexts lists the [HUMAN CHECK] items of a slice, in order.
-func humanCheckTexts(sections []slicercli.Section) []string {
-	var out []string
+// afterLandLine matches a bullet or numbered line that holds an [AFTER LAND]
+// marker, with or without [HUMAN CHECK] (relay v11: such a Check line needs
+// something main does not have yet, so it is deferred to land; S204,
+// *proposed*). The line is read only in the slice's Check section.
+var afterLandLine = regexp.MustCompile(`(?i)^\s*(?:[-*+]\s+|\d+[.)]\s+)(.*\[AFTER LAND\].*?)\s*$`)
+
+// checkMarkers are the markers removed from a deferred line's text.
+var checkMarkers = regexp.MustCompile(`(?i)\[(?:AFTER LAND|HUMAN CHECK)\]`)
+
+// deferredPrefix starts the text of a check deferred to land.
+const deferredPrefix = "deferred to land: "
+
+// humanCheckItem is one check of the approval card: its text and whether it is
+// deferred to land.
+type humanCheckItem struct {
+	Text     string
+	Deferred bool
+}
+
+// humanCheckTexts lists the checks of a slice, in order: each [HUMAN CHECK]
+// item of any section, and each [AFTER LAND] line of the Check section as one
+// deferred check, once, with both markers removed from its text.
+func humanCheckTexts(sections []slicercli.Section) []humanCheckItem {
+	var out []humanCheckItem
 	for _, s := range sections {
+		inCheck := strings.EqualFold(strings.TrimSpace(s.Heading), "Check")
 		for _, line := range strings.Split(s.Body, "\n") {
+			if inCheck {
+				if m := afterLandLine.FindStringSubmatch(line); m != nil {
+					if rest := strings.Join(strings.Fields(checkMarkers.ReplaceAllString(m[1], "")), " "); rest != "" {
+						out = append(out, humanCheckItem{Text: deferredPrefix + rest, Deferred: true})
+					}
+					continue
+				}
+			}
 			if m := humanCheckLine.FindStringSubmatch(line); m != nil {
-				out = append(out, m[1])
+				out = append(out, humanCheckItem{Text: m[1]})
 			}
 		}
 	}
@@ -70,8 +100,14 @@ func (e *Engine) buildCard(ctx context.Context, rec runrec.Record, rep *Report) 
 		return card
 	}
 	if detail.Slice != nil {
-		for _, text := range humanCheckTexts(detail.Slice.Sections) {
-			card.HumanChecks = append(card.HumanChecks, runrec.HumanCheck{Text: text, State: marks[text]})
+		for _, item := range humanCheckTexts(detail.Slice.Sections) {
+			state, marked := marks[item.Text]
+			if item.Deferred && !marked {
+				// The owner runs a deferred line after landing, so it starts
+				// as later; a mark the owner made, or took back, is kept.
+				state = runrec.CheckLater
+			}
+			card.HumanChecks = append(card.HumanChecks, runrec.HumanCheck{Text: item.Text, State: state})
 		}
 	}
 	return card

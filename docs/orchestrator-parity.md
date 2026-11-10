@@ -118,6 +118,23 @@ These are owner acts, not orchestrator jobs, and stay with the owner:
 deciding in adj (`AGENTS.md`, Decisions), approving a wave and each landing,
 and choosing what to build.
 
+## Relay v11 process rules
+
+*Proposed* (S204). Each row is a rule of `slicer ai relay` or `slicer ai relay-orchestrator`
+(relay v11), by name; the text is slicer's and is not copied here. Owner
+decisions of 2026-11-07: the gate close (Q1 option b) and the two merge and
+fix-round rows (Q2 option a); and of 2026-11-10 (`relay.after-land-check`):
+`[AFTER LAND]` lines are listed, not run (Q3 option a). Rows 3.3 and 5.1 above stay as they are.
+
+| # | Rule | ork | Evidence |
+|---|------|-----|----------|
+| v11.1 | A small fix round is checked and gated in one pass by the read-only role that raised its findings | met | A fix round goes to the checks and then the gate, which resumes the reviewer's session; no second review round runs (`beforeGate` and the gate round's `resumeFrom`, `internal/engine/states.go`; `TestReviewFindingsStartAFixRoundAndTheResumedReviewerGatesIt`, `internal/engine/engine_test.go`) |
+| v11.2 | A clean merge of main is regated by the one-pass small-fix check on the merge diff | deviation | ork merges main in, renders, re-runs the project check command and `slicer check`, then fast-forwards, with no role round (`mergeBaseIn`, `internal/engine/land.go`). The ledger run has ended at the finish step, and relay-run refuses steps after that (S153), so a regate round could not be recorded |
+| v11.3 | A Check line marked `[AFTER LAND]` is deferred to Land | listed on the card | The approval card lists the line as `deferred to land: ...`, already in state `later`. The owner runs it after landing; ork never runs a slice's Check line (`humanCheckTexts`, `internal/engine/approval.go`). The implementer and gate prompts say not to run it. The owner decided that ork lists the line and does not run it (owner decision 2026-11-10, `relay.after-land-check`); running a single-command line at landing is not built |
+| v11.4 | A non-blocker owner question is recorded in the ledger | not in S204 | Its own slice, S223 |
+| v11.5 | `relay-run list` `counts.roles` counts lane steps only | not read | ork decodes `Counts.Roles` (`internal/slicercli/types.go`) and never reads it |
+| v11.6 | A gate round closes with its verdict | met when the engine accepts the round | `--phase done --verdict pass\|fail` only for a round the engine accepts (`closeStep`, `internal/engine/round.go`). A round paused for a shape problem, an owner question or a blocker finding closes without a verdict, and the rerun is a new ledger step that carries it |
+
 ## Prioritized gaps
 
 The original order is kept so the owner decisions below retain their gap

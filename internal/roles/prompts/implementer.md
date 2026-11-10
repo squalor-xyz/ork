@@ -120,6 +120,9 @@ ork runs the project check command and `slicer check` after the round, outside y
 sandbox. A check you could not run because of your sandbox belongs under deviations
 (item 6), not `## Owner needed`.
 
+A Check line marked `[AFTER LAND]` needs something main does not have yet. Do not run
+it; ork lists it for the owner.
+
 ## Self-check
 
 Before each review, fix rounds included, check your own diff and report each check

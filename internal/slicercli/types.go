@@ -164,7 +164,7 @@ type Counts struct {
 	Steps     int            `json:"steps"`
 	Running   int            `json:"running"`
 	Subagents int            `json:"subagents"`
-	Roles     map[string]int `json:"roles"`
+	Roles     map[string]int `json:"roles"` // counts lane steps only (relay v11); ork does not read it
 }
 
 // RelayRun is one run of `slicer relay-run list --json --lean`. Times are

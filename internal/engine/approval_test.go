@@ -38,6 +38,116 @@ func withHumanChecks(checks ...string) func(*harnessOpts) {
 	}
 }
 
+// sliceWith is the slice JSON with the given Why and Check section bodies and
+// Check heading. The bodies are already escaped for a JSON string.
+func sliceWith(checkHeading, why, check string) func(*harnessOpts) {
+	return func(o *harnessOpts) {
+		o.routes = append(o.routes, clitest.Route{Tool: "slicer", Args: []string{"show", item}, Prefix: true, Stdout: `{"id":"S04","title":"Engine","status":"started","slice":{"id":"S04","title":"Engine","size":"M","sections":[` +
+			`{"heading":"Why","body":"` + why + `"},{"heading":"` + checkHeading + `","body":"` + check + `"},` +
+			`{"heading":"Git","body":"One commit: \"` + gitTitle + `\"."}]}}`})
+	}
+}
+
+const (
+	deferredOne = "deferred to land: Run the workflow once."
+	deferredTwo = "deferred to land: slicer check --root ../slicer"
+)
+
+// afterLandCheck holds an ordinary line, a [HUMAN CHECK] line that is also
+// marked [AFTER LAND], and a plain [AFTER LAND] line (S204, *proposed*).
+const afterLandCheck = "- go test ./...\\n- [HUMAN CHECK] [AFTER LAND] Run the workflow once.\\n- [AFTER LAND] slicer check --root ../slicer"
+
+func TestCardListsAfterLandCheckLinesAsDeferred(t *testing.T) {
+	h := newHarness(t, sliceWith("Check", "Because.", afterLandCheck))
+	e := h.start()
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	want := []runrec.HumanCheck{{Text: deferredOne, State: runrec.CheckLater}, {Text: deferredTwo, State: runrec.CheckLater}}
+	if rec.Card == nil || !reflect.DeepEqual(rec.Card.HumanChecks, want) {
+		t.Fatalf("human checks %+v, want %+v", rec.Card, want)
+	}
+	if err := e.Approve(context.Background()); err != nil {
+		t.Fatalf("Approve with no marks made: %v", err)
+	}
+	requireState(t, e, runrec.StateCommitted)
+}
+
+// The card keeps the order of the lines, and reads a numbered line and a
+// lower-case heading and marker too.
+func TestCardKeepsTheOrderOfDeferredAndHumanChecks(t *testing.T) {
+	check := "- [HUMAN CHECK] " + checkOne + "\\n1. [after land] Run it on the scratch project.\\n- [HUMAN CHECK] " + checkTwo
+	h := newHarness(t, sliceWith("check", "Because.", check))
+	rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
+	want := []runrec.HumanCheck{
+		{Text: checkOne},
+		{Text: "deferred to land: Run it on the scratch project.", State: runrec.CheckLater},
+		{Text: checkTwo},
+	}
+	if rec.Card == nil || !reflect.DeepEqual(rec.Card.HumanChecks, want) {
+		t.Fatalf("human checks %+v, want %+v", rec.Card, want)
+	}
+}
+
+func TestAfterLandLineOutsideTheCheckSectionIsIgnored(t *testing.T) {
+	h := newHarness(t, sliceWith("Check", "- [AFTER LAND] slicer check --root ../slicer", "- go test ./..."))
+	rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
+	if rec.Card == nil || len(rec.Card.HumanChecks) != 0 {
+		t.Fatalf("a Why bullet added checks: %+v", rec.Card)
+	}
+}
+
+func TestAfterLandCheckKeepsTheOwnersMark(t *testing.T) {
+	h := newHarness(t, sliceWith("Check", "Because.", "- [AFTER LAND] slicer check --root ../slicer"))
+	e := h.start()
+	ctx := context.Background()
+	state := func() string {
+		t.Helper()
+		rec := requireState(t, e, runrec.StateAwaitingApproval)
+		if rec.Card == nil || len(rec.Card.HumanChecks) != 1 || rec.Card.HumanChecks[0].Text != deferredTwo {
+			t.Fatalf("card %+v", rec.Card)
+		}
+		return rec.Card.HumanChecks[0].State
+	}
+	if got := state(); got != runrec.CheckLater {
+		t.Fatalf("first state %q, want later", got)
+	}
+	if err := e.MarkCheck(1, runrec.CheckTicked); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.Fix(ctx, "tidy"); err != nil {
+		t.Fatal(err)
+	}
+	if got := state(); got != runrec.CheckTicked {
+		t.Errorf("after a fix round the owner's tick is %q, want ticked", got)
+	}
+	// A check the owner reopened is open, not preset to later again.
+	if err := e.MarkCheck(1, ""); err != nil {
+		t.Fatal(err)
+	}
+	if err := e.Fix(ctx, "tidy again"); err != nil {
+		t.Fatal(err)
+	}
+	if got := state(); got != "" {
+		t.Errorf("after a fix round a reopened check is %q, want open", got)
+	}
+}
+
+func TestApprovalNoteNamesDeferredLines(t *testing.T) {
+	h := newHarness(t, sliceWith("Check", "Because.", afterLandCheck))
+	e := h.start()
+	if err := e.Approve(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	notes := h.calls("slicer", "note")
+	if len(notes) != 1 {
+		t.Fatalf("%d notes: %v", len(notes), notes)
+	}
+	for _, want := range []string{"- later: " + deferredOne, "- later: " + deferredTwo} {
+		if !strings.Contains(notes[0][3], want) {
+			t.Errorf("note text lacks %q:\n%s", want, notes[0][3])
+		}
+	}
+}
+
 const stat = " internal/engine/engine.go | 12 ++++++++----\n internal/tui/pane.go       | 40 ++++++++++++++++++++++++++++++++++++++++\n 2 files changed, 48 insertions(+), 4 deletions(-)\n"
 
 // withDiff answers the git calls that build the card's diff stat.

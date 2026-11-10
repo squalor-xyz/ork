@@ -501,7 +501,12 @@ diff --stat HEAD` in the worktree, which ork has not committed yet) and
 `[HUMAN CHECK]` bullets of the slice read with `slicer show`. Each check's
 `state` is empty (open), `ticked` or `later`; the owner sets it with
 `run.check`. A check with the same text keeps its mark when the card is built
-again after a fix round. `checks_error` says why the checks could not be read.
+again after a fix round. *Proposed* (S204): a bullet or numbered line of the
+slice's Check section marked `[AFTER LAND]` (with or without `[HUMAN CHECK]`)
+is also a check. Its `text` is `deferred to land: ` and the line without the
+markers, and it starts in state `later` when the owner has made no mark on that
+text, so a check the owner reopened stays open. The text prefix is the whole
+mark: `human_checks` has no extra field. `checks_error` says why the checks could not be read.
 `ui_round`, `renders` and `renders_dropped` (omitted when empty; *proposed*,
 S121, adj #165) list the views the UI pass wrote: `ui_round` is the round of
 the latest UI pass that ended well (omitted when none ran), `renders` the

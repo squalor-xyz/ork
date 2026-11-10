@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- S204 (*proposed*): the engine follows two relay v11 process rules. A v11
+  gate round closes its ledger step with the report's verdict only when the
+  engine accepts the round; a round paused for a shape problem, an owner
+  question or a blocker finding closes without one, and the rerun is a new
+  step. A Check line marked `[AFTER LAND]` (with or without `[HUMAN CHECK]`)
+  shows on the approval card as `deferred to land: ...`, already in state
+  `later`, and the implementer and gate prompts say not to run it. Docs
+  updated: `docs/design.md`, `docs/state.md` and `docs/orchestrator-parity.md`
+  (a table of the v11 process rules).
 - S295 (*proposed*): verify the check command where it will run, once, before a
   role is spent on it. The check is static and runs nothing but `sh -n`: the
   shell must parse the command, the first word of each simple command must

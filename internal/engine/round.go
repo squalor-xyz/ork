@@ -533,28 +533,36 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 	stop()
 	// From relay v11 a gate round closes with its verdict, which is known only
-	// once the report is read (slicer s408). Every other round, and every v10
-	// round, closes here.
-	closeWithVerdict := r.role == RoleGate && rec.Contract >= 11
-	if !closeWithVerdict {
-		e.stepEnd(ctx, rec, stepID, "done", "")
+	// once the report is read (slicer s408), and only when the engine accepts
+	// the round: a round that pauses (a shape problem, an owner question, a
+	// blocker finding, an error) closes without one, and its rerun is a new
+	// step that carries the verdict (S204, *proposed*). Every other round, and
+	// every v10 round, closes here. closeStep closes the step once: the
+	// deferred call closes a held gate step on every exit that did not close
+	// it with the verdict.
+	closed := false
+	closeStep := func(verdict string) {
+		if closed {
+			return
+		}
+		closed = true
+		e.stepEnd(ctx, rec, stepID, "done", verdict)
+	}
+	if r.role == RoleGate && rec.Contract >= 11 {
+		defer closeStep("")
+	} else {
+		closeStep("")
 	}
 	if statusErr != nil {
-		if closeWithVerdict {
-			e.stepEnd(ctx, rec, stepID, "done", "")
-		}
 		return fail("read-only fingerprint", statusErr)
 	}
 
 	// The report.
 	rep, err := CheckReport(r.role, r.finish, text)
-	if closeWithVerdict {
-		// A report with a shape error has no verdict to record.
-		verdict := ""
-		if rep != nil {
-			verdict = strings.ToLower(rep.Verdict)
-		}
-		e.stepEnd(ctx, rec, stepID, "done", verdict)
+	// A report with a shape error has no verdict to record.
+	verdict := ""
+	if rep != nil {
+		verdict = strings.ToLower(rep.Verdict)
 	}
 	var problems []string
 	var se *ShapeError
@@ -640,6 +648,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			return outcome{}, nil
 		}
 	}
+	closeStep(verdict) // a no-op for a round that closed above
 	return outcome{ok: true, text: text, report: rep, findings: findings, triage: tri, file: file}, nil
 }
 

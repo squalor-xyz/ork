@@ -514,6 +514,24 @@ func TestImplementerPromptSaysEngineRunsChecks(t *testing.T) {
 	}
 }
 
+// Relay v11: a Check line marked [AFTER LAND] needs something main does not
+// have yet. The implementer and the gate do not run it; ork lists it for the
+// owner on the approval card (S204, *proposed*).
+func TestImplementerAndGatePromptsSkipAfterLandLines(t *testing.T) {
+	p := prompts(t)
+	for _, want := range []string{
+		"A Check line marked `[AFTER LAND]` needs something main does not have yet.",
+		"Do not run it; ork lists it for the owner.",
+	} {
+		if !has(p["implementer"], want) {
+			t.Errorf("implementer prompt lacks %q", want)
+		}
+	}
+	if want := "an `[AFTER LAND]` Check line is not run and is not a failure;"; !has(p["gate"], want) {
+		t.Errorf("gate prompt lacks %q", want)
+	}
+}
+
 func TestStructuredOwnerQuestionPrompt(t *testing.T) {
 	for name, p := range prompts(t) {
 		for _, want := range []string{"Question: ONE LINE TITLE", "Options:", "1. LABEL: summary", "2. LABEL: summary", "Recommend: 1 - one-line reasoning", "2 to 4"} {

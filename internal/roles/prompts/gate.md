@@ -43,6 +43,7 @@ this prompt disagree, the brief wins; say so in your report.
    - no `[fix]` finding (tag a minor item `[later]` instead);
    - no `blocker` owner finding;
    - tests green: accept ork's round check result as evidence;
+   - an `[AFTER LAND]` Check line is not run and is not a failure;
    - docs match the code.
 4. Cite `file:line` for every claim. Do not report a check you did not run.
 5. The Check split uses the implementer's resolved allowlist. It does not grant

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-325 items · — 68 · done 224 · retired 33
+325 items · — 67 · done 225 · retired 33
 
 v1.2
 
@@ -136,7 +136,7 @@ v1.2
 | 79 | S201 | S147 later notes: report viewer order, loadFinishedEngine, viewer error wording | S | - |  | Folded into S229 (daemon wording leftovers) and the S190 TUI sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row. · discovered from S147 | retired |
 | 80 | S202 | S185 later notes: decide refusal codes, option wrap, help with no options | S | - |  | Folded into the S132 sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row. · discovered from S185 | retired |
 | 81 | S203 | S112 later notes: dash-leading answers, Via passthrough, ledger option rendering | S | - |  | Folded into the S132 sweep (items 2-5) and the S194 correctness sweep (item 1) (owner, 2026-10-31). · discovered from S112 | retired |
-| 82 | [S204](slices/S204.md) | Engine v11 process rules | M | 2 |  | S198 preflight 2026-10-30: owner split the engine rules out of S198 · discovered from S198 | — |
+| 82 | [S204](slices/S204.md) | Engine v11 process rules | M | 2 |  | S198 preflight 2026-10-30: owner split the engine rules out of S198 · discovered from S198 | done |
 | 83 | [S205](slices/S205.md) | S198 later notes | S | - |  | S198 review, gate and UI pass 2026-10-30 (later findings) · Folded into the S207 sweep (owner, 2026-10-31). · discovered from S198 | retired |
 | 84 | [S207](slices/S207.md) | Contract and doctor cleanup | M | 2 |  | S24 review and UI pass later items, 2026-10-31 · discovered from S24 | done |
 | 85 | S210 | S208 later note: cite engine.default-cap beside the default in docs/design.md:231-232 | S | 1 |  | Folded into the S50 sweep (owner, 2026-10-31). · discovered from S208 | retired |
