@@ -110,6 +110,12 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return d.rolesMatrix(ctx, p)
+	case MethodMatrixEdit:
+		var p MatrixEditParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.matrixEdit(ctx, p)
 	case MethodSpecCheck:
 		var p SpecCheckParams
 		if err := decode(params, &p); err != nil {

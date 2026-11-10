@@ -9861,7 +9861,7 @@
       "id": "S173",
       "title": "Role matrix editor, wire half: relay-roles write verbs and matrix.edit",
       "short_title": "Matrix editor wire",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -9892,6 +9892,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "190a880e-045b-493b-9244-076f03f6f58f",
+          "kind": "",
+          "text": "**2026-11-10** — Wire half of the role matrix editor, verified: slicer client RowArgs, RelayRowAdd/Set/Remove/Move and RelayRuleEdit (values attached as --name=VALUE, refusals before any call); daemon method matrix.edit (preview or run in the registered project, no run record, edit left uncommitted, slicer errors passed through, no-adapter warning, shell-quoted command, new row id after add); roles.matrix rows carry vendor, model, reasoning and note; docs and changelog updated. Full go test -race ./..., go vet, gofmt and slicer check pass; every new assertion mutation-checked. The socket test skips in the sandbox (long TMPDIR) and passed with a temporary short temp dir. The scratch-project verb run is the orchestrator's.",
+          "created_at": "2026-11-10T12:21:41Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -9911,7 +9925,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

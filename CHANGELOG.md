@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- S173 (*proposed*): the wire half of the role matrix editor. The slicer client
+  runs `slicer relay-roles add|set|remove|move|rule-edit` (values attached as
+  `--name=VALUE`, so a dash-leading value reaches slicer), and the daemon
+  method `matrix.edit` previews or runs one of them in the registered project,
+  with `--render`, no run record and the change left uncommitted. The result
+  has the command to confirm, a warning when ork has no adapter for the agent,
+  and the new row's id after an add. `roles.matrix` rows also carry `vendor`,
+  `model`, `reasoning` and `note`. No TUI and no CLI command yet. Docs updated:
+  `docs/design.md` and `docs/boundaries.md`.
 - S204 (*proposed*): the engine follows two relay v11 process rules. A v11
   gate round closes its ledger step with the report's verdict only when the
   engine accepts the round; a round paused for a shape problem, an owner

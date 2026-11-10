@@ -289,6 +289,17 @@ func (c *Client) RolesMatrix(ctx context.Context, project string) (*RolesMatrixR
 	return &out, nil
 }
 
+// MatrixEdit previews (p.Preview) or runs one relay-roles write in the
+// registered project (S173, *proposed*). Slicer's refusal comes back as the
+// error it sent.
+func (c *Client) MatrixEdit(ctx context.Context, p MatrixEditParams) (*MatrixEditResult, error) {
+	var out MatrixEditResult
+	if err := c.Call(ctx, MethodMatrixEdit, p, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // ItemShow reads the registered project's item detail.
 func (c *Client) ItemShow(ctx context.Context, project, id string) (*slicercli.Detail, error) {
 	var out ItemShowResult

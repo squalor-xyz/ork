@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -77,12 +78,25 @@ func TestLocalMissingLauncherNotesAreStableAcrossPlans(t *testing.T) {
 
 const matrixText = "# Relay roles\n\n| ID | Role | Agent |\n| --- | --- | --- |\n| r1 | Implementer | Claude Code |\n"
 
+// matrixNote is the note of row r2 in matrixShow; the other rows have none.
+const matrixNote = "second opinion"
+
+// shownRow is the MatrixRow that a matrixShow row becomes: its vendor, model
+// and reasoning are the same for every row.
+func shownRow(id, role, agent, use string) MatrixRow {
+	return MatrixRow{ID: id, Role: role, Agent: agent, Vendor: "V", Model: "m", Reasoning: "high", Use: use}
+}
+
 // matrixShow is the output of `slicer relay-roles show --json` for a matrix
 // with one row of each kind ork reads differently.
 func matrixShow(t *testing.T) string {
 	t.Helper()
 	row := func(id, role, agent string) map[string]any {
-		return map[string]any{"id": id, "role": role, "agent": agent, "vendor": "V", "model": "m", "reasoning": "high", "note": ""}
+		note := ""
+		if id == "r2" {
+			note = matrixNote
+		}
+		return map[string]any{"id": id, "role": role, "agent": agent, "vendor": "V", "model": "m", "reasoning": "high", "note": note}
 	}
 	b, err := json.Marshal(map[string]any{
 		"relay_roles": matrixText,
@@ -121,16 +135,18 @@ func TestRolesMatrixMarksEachRow(t *testing.T) {
 	if got.Markdown != matrixText {
 		t.Errorf("markdown %q, want slicer's text %q", got.Markdown, matrixText)
 	}
+	r2 := shownRow("r2", "implementer", "Codex", "used as codex")
+	r2.Note = matrixNote
 	want := []MatrixRow{
-		{"r1", "implementer", "Claude Code", "used as claude"},
-		{"r2", "implementer", "Codex", "used as codex"},
-		{"r3", "implementer", "Acme Agent", "skipped: no adapter for Acme Agent"},
-		{"r5", "reviewer", "Claude Code", "used as claude"},
-		{"r14", "reviewer", "Claude Code", "UI pass row, used as claude"},
-		{"r16", "reviewer", "codex", "Spec check row, used as codex"},
-		{"r6", "gate", "Claude Code", "not used: the gate runs the reviewer's lineup"},
-		{"r7", "architect", "Codex", "used as codex"},
-		{"r10", "orchestrator", "Claude Code", "not run by ork"},
+		shownRow("r1", "implementer", "Claude Code", "used as claude"),
+		r2,
+		shownRow("r3", "implementer", "Acme Agent", "skipped: no adapter for Acme Agent"),
+		shownRow("r5", "reviewer", "Claude Code", "used as claude"),
+		shownRow("r14", "reviewer", "Claude Code", "UI pass row, used as claude"),
+		shownRow("r16", "reviewer", "codex", "Spec check row, used as codex"),
+		shownRow("r6", "gate", "Claude Code", "not used: the gate runs the reviewer's lineup"),
+		shownRow("r7", "architect", "Codex", "used as codex"),
+		shownRow("r10", "orchestrator", "Claude Code", "not run by ork"),
 	}
 	if !reflect.DeepEqual(got.Rows, want) {
 		t.Errorf("rows\n got %+v\nwant %+v", got.Rows, want)
@@ -185,10 +201,10 @@ func TestMatrixAdaptersMapTheGrokAgent(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []MatrixRow{
-		{"r21", "orchestrator", "Grok", "not run by ork"},
-		{"r22", "reviewer", "Grok", "used as grok"},
-		{"r23", "reviewer", "grok", "used as grok"},
-		{"r24", "architect", "GROK", "used as grok"},
+		{ID: "r21", Role: "orchestrator", Agent: "Grok", Vendor: "xAI", Model: "latest", Reasoning: "high", Use: "not run by ork"},
+		{ID: "r22", Role: "reviewer", Agent: "Grok", Vendor: "xAI", Model: "latest", Reasoning: "high", Use: "used as grok"},
+		{ID: "r23", Role: "reviewer", Agent: "grok", Vendor: "xAI", Model: "latest", Reasoning: "high", Use: "used as grok"},
+		{ID: "r24", Role: "architect", Agent: "GROK", Vendor: "xAI", Model: "latest", Reasoning: "high", Use: "used as grok"},
 	}
 	if !reflect.DeepEqual(got.Rows, want) {
 		t.Errorf("rows\n got %+v\nwant %+v", got.Rows, want)
@@ -265,8 +281,8 @@ func TestFormatMatrixPrintsSlicersTextThenTheOrkSection(t *testing.T) {
 	got := FormatMatrix(&RolesMatrixResult{
 		Markdown: "# Relay roles\n\nrow text\n",
 		Rows: []MatrixRow{
-			{"r1", "implementer", "Claude Code", "used as claude"},
-			{"r6", "gate", "Claude Code", "not used: the gate runs the reviewer's lineup"},
+			{ID: "r1", Role: "implementer", Agent: "Claude Code", Use: "used as claude"},
+			{ID: "r6", Role: "gate", Agent: "Claude Code", Use: "not used: the gate runs the reviewer's lineup"},
 		},
 	})
 	want := []string{
@@ -288,7 +304,7 @@ func TestFormatMatrixPrintsSlicersTextThenTheOrkSection(t *testing.T) {
 func TestFormatMatrixOrkFirstPutsTheOrkSectionAboveSlicersText(t *testing.T) {
 	r := &RolesMatrixResult{
 		Markdown: "# Relay roles\n\nrow text\n",
-		Rows:     []MatrixRow{{"r1", "implementer", "Claude Code", "used as claude"}},
+		Rows:     []MatrixRow{{ID: "r1", Role: "implementer", Agent: "Claude Code", Use: "used as claude"}},
 	}
 	want := []string{
 		"## ork",
@@ -334,11 +350,224 @@ func TestMatrixLabelsEverySpecCheckRow(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := []MatrixRow{
-		{"r5", "reviewer", "Claude Code", "used as claude"},
-		{"r16", "reviewer", "Claude Code", "Spec check row, used as claude"},
-		{"r24", "reviewer", "Grok", "Spec check row, used as grok"},
+		shownRow("r5", "reviewer", "Claude Code", "used as claude"),
+		shownRow("r16", "reviewer", "Claude Code", "Spec check row, used as claude"),
+		shownRow("r24", "reviewer", "Grok", "Spec check row, used as grok"),
 	}
 	if !reflect.DeepEqual(got.Rows, want) {
 		t.Errorf("rows\n got %+v\nwant %+v", got.Rows, want)
+	}
+}
+
+// roles.matrix rows carry the fields the editor prefills; a note shows only
+// when the row has one.
+func TestRolesMatrixRowsCarryVendorModelReasoningAndNote(t *testing.T) {
+	d := readDaemon(t, matrixRoute(matrixShow(t)))
+	var raw struct {
+		Rows []map[string]any `json:"rows"`
+	}
+	if err := json.Unmarshal(request(t, d, "roles.matrix", `{"project":"p"}`), &raw); err != nil {
+		t.Fatal(err)
+	}
+	if len(raw.Rows) != 9 {
+		t.Fatalf("rows %+v", raw.Rows)
+	}
+	for _, row := range raw.Rows {
+		for key, want := range map[string]string{"vendor": "V", "model": "m", "reasoning": "high"} {
+			if row[key] != want {
+				t.Errorf("row %v: %s is %v, want %q", row["id"], key, row[key], want)
+			}
+		}
+		note, has := row["note"]
+		if row["id"] == "r2" && note != matrixNote {
+			t.Errorf("row r2 note %v", note)
+		}
+		if row["id"] != "r2" && has {
+			t.Errorf("row %v has a note key %v; an empty note is omitted", row["id"], note)
+		}
+	}
+}
+
+// editRoute answers any relay-roles call with stdout.
+func editRoute(stdout string) clitest.Route {
+	return clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: stdout}
+}
+
+func editResult(t *testing.T, d *Daemon, raw string) MatrixEditResult {
+	t.Helper()
+	var got MatrixEditResult
+	if err := json.Unmarshal(request(t, d, "matrix.edit", raw), &got); err != nil {
+		t.Fatal(err)
+	}
+	return got
+}
+
+func TestMatrixEditRunsTheSlicerCommand(t *testing.T) {
+	d, store, p := runDaemon(t, nil, editRoute(`{"id":"r5"}`))
+	got := editResult(t, d, `{"project":"p","op":"set","id":"r5","fields":{"model":"opus"}}`)
+	want := MatrixEditResult{Command: "slicer relay-roles set r5 --model=opus --render", Done: true}
+	if got != want {
+		t.Fatalf("result %+v, want %+v", got, want)
+	}
+	calls := lastFake.CallsTo("slicer")
+	argv := []string{"relay-roles", "set", "r5", "--model=opus", "--render", "--json", "--root", p.Path}
+	if len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, argv) {
+		t.Fatalf("calls %+v, want one %v", calls, argv)
+	}
+	if runs, err := store.List(); err != nil || len(runs) != 0 {
+		t.Fatalf("run records %v, %v", runs, err)
+	}
+}
+
+func TestMatrixEditPreviewRunsNothing(t *testing.T) {
+	d := readDaemon(t, editRoute(`{"id":"r5"}`))
+	got := editResult(t, d, `{"project":"p","op":"set","id":"r5","fields":{"model":"opus"},"preview":true}`)
+	want := MatrixEditResult{Command: "slicer relay-roles set r5 --model=opus --render"}
+	if got != want {
+		t.Fatalf("result %+v, want %+v", got, want)
+	}
+	if calls := lastFake.CallsTo("slicer"); len(calls) != 0 {
+		t.Fatalf("a preview called slicer: %+v", calls)
+	}
+}
+
+func TestMatrixEditPassesSlicersRefusalThrough(t *testing.T) {
+	d := readDaemon(t, clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "set"}, Prefix: true, Exit: 2,
+		Stdout: `{"error":{"code":"unknown_role_row","message":"no such relay role row: r99"}}`})
+	got, err := d.handle(context.Background(), "matrix.edit", json.RawMessage(`{"project":"p","op":"set","id":"r99","fields":{"model":"opus"}}`))
+	e := ipc.ErrorOf(err)
+	if e == nil || e.Code != "unknown_role_row" || e.Message != "no such relay role row: r99" {
+		t.Fatalf("error %+v, want slicer's code and message", e)
+	}
+	if res, _ := got.(*MatrixEditResult); res != nil {
+		t.Fatalf("partial result %+v", res)
+	}
+}
+
+func TestMatrixEditRefusesAnUnregisteredProject(t *testing.T) {
+	d := readDaemon(t, editRoute(`{"id":"r5"}`))
+	_, err := d.handle(context.Background(), "matrix.edit", json.RawMessage(`{"project":"nope","op":"remove","id":"r5"}`))
+	if e := ipc.ErrorOf(err); e == nil || e.Code != CodeNotFound {
+		t.Fatalf("error %v, want not_found", err)
+	}
+	if calls := lastFake.CallsTo("slicer"); len(calls) != 0 {
+		t.Fatalf("slicer was called for an unregistered project: %+v", calls)
+	}
+}
+
+func TestMatrixEditRefusesBadRequests(t *testing.T) {
+	for name, raw := range map[string]string{
+		"missing project":       `{"op":"remove","id":"r5"}`,
+		"unknown op":            `{"project":"p","op":"rule-add","id":"u1","text":"x"}`,
+		"no op":                 `{"project":"p","id":"r5"}`,
+		"set without id":        `{"project":"p","op":"set","fields":{"model":"x"}}`,
+		"remove without id":     `{"project":"p","op":"remove"}`,
+		"move without id":       `{"project":"p","op":"move","last":true}`,
+		"rule-edit without id":  `{"project":"p","op":"rule-edit","text":"x"}`,
+		"add without role":      `{"project":"p","op":"add","fields":{"agent":"Codex"}}`,
+		"add without fields":    `{"project":"p","op":"add"}`,
+		"set without fields":    `{"project":"p","op":"set","id":"r5"}`,
+		"move with both":        `{"project":"p","op":"move","id":"r5","before":"r2","last":true}`,
+		"move with neither":     `{"project":"p","op":"move","id":"r5"}`,
+		"field outside list":    `{"project":"p","op":"set","id":"r5","fields":{"colour":"red"}}`,
+		"fields on remove":      `{"project":"p","op":"remove","id":"r5","fields":{"model":"x"}}`,
+		"blank text":            `{"project":"p","op":"rule-edit","id":"u3","text":"  "}`,
+		"dash text without gap": `{"project":"p","op":"rule-edit","id":"u3","text":"-x"}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			d := readDaemon(t, editRoute(`{}`))
+			_, err := d.handle(context.Background(), "matrix.edit", json.RawMessage(raw))
+			if e := ipc.ErrorOf(err); e == nil || e.Code != CodeBadParams {
+				t.Fatalf("error %v, want bad_params", err)
+			}
+			if calls := lastFake.CallsTo("slicer"); len(calls) != 0 {
+				t.Fatalf("a bad request called slicer: %+v", calls)
+			}
+		})
+	}
+}
+
+func TestMatrixEditWarnsOnAnAgentWithoutAnAdapter(t *testing.T) {
+	for _, tc := range []struct {
+		raw  string
+		warn string
+	}{
+		{`{"project":"p","op":"set","id":"r5","fields":{"agent":"Acme Agent"}}`, `agent "Acme Agent" has no ork adapter: a plan skips this row`},
+		{`{"project":"p","op":"add","fields":{"role":"reviewer","agent":"Acme Agent"}}`, `agent "Acme Agent" has no ork adapter: a plan skips this row`},
+		{`{"project":"p","op":"set","id":"r5","fields":{"agent":"Claude Code"}}`, ""},
+		{`{"project":"p","op":"set","id":"r5","fields":{"agent":"codex"}}`, ""},
+		{`{"project":"p","op":"set","id":"r5","fields":{"agent":"Codex"}}`, ""},
+		{`{"project":"p","op":"set","id":"r5","fields":{"model":"opus"}}`, ""},
+		{`{"project":"p","op":"remove","id":"r5"}`, ""},
+	} {
+		d := readDaemon(t, editRoute(`{"id":"r5"}`))
+		got := editResult(t, d, tc.raw)
+		if got.Warning != tc.warn || !got.Done {
+			t.Errorf("%s: warning %q done %v, want warning %q and done", tc.raw, got.Warning, got.Done, tc.warn)
+		}
+		if calls := lastFake.CallsTo("slicer"); len(calls) != 1 {
+			t.Errorf("%s: the edit did not run once: %+v", tc.raw, calls)
+		}
+	}
+}
+
+func TestMatrixEditAddReturnsTheNewRowID(t *testing.T) {
+	d := readDaemon(t, editRoute(`{"id":"r17"}`))
+	got := editResult(t, d, `{"project":"p","op":"add","fields":{"role":"reviewer","agent":"Codex"}}`)
+	want := MatrixEditResult{Command: "slicer relay-roles add --role=reviewer --agent=Codex --render", ID: "r17", Done: true}
+	if got != want {
+		t.Fatalf("result %+v, want %+v", got, want)
+	}
+	// A preview has no row yet.
+	if got := editResult(t, d, `{"project":"p","op":"add","fields":{"role":"reviewer"},"preview":true}`); got.ID != "" || got.Done {
+		t.Fatalf("preview result %+v", got)
+	}
+}
+
+func TestMatrixEditQuotesValuesInTheCommand(t *testing.T) {
+	for _, tc := range []struct{ raw, command, arg string }{
+		{`{"project":"p","op":"set","id":"r5","fields":{"note":"two words"}}`, "slicer relay-roles set r5 --note='two words' --render", "--note=two words"},
+		{`{"project":"p","op":"set","id":"r5","fields":{"note":"it's"}}`, `slicer relay-roles set r5 --note='it'\''s' --render`, "--note=it's"},
+		{`{"project":"p","op":"set","id":"r5","fields":{"note":"-x","model":""}}`, "slicer relay-roles set r5 --model= --note=-x --render", "--note=-x"},
+		{`{"project":"p","op":"rule-edit","id":"u3","text":"- two words"}`, "slicer relay-roles rule-edit u3 '- two words' --render", "- two words"},
+	} {
+		d := readDaemon(t, editRoute(`{}`))
+		got := editResult(t, d, tc.raw)
+		if got.Command != tc.command {
+			t.Errorf("%s: command %q, want %q", tc.raw, got.Command, tc.command)
+		}
+		calls := lastFake.CallsTo("slicer")
+		if len(calls) != 1 || !slices.Contains(calls[0].Args, tc.arg) {
+			t.Errorf("%s: argv %+v lacks the raw %q", tc.raw, calls, tc.arg)
+		}
+	}
+}
+
+// The client call over the socket: the result and slicer's error come back as
+// the wire carries them.
+func TestMatrixEditOverTheSocket(t *testing.T) {
+	e := newEnv(t)
+	e.writeRegistry(t, 0, registry.Project{Name: "p", Path: waveRoot}, registry.Project{Name: "q", Path: "/p/q"})
+	fake := clitest.Install(t,
+		clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "set", "r5", "--model=opus", "--render", "--json", "--root", waveRoot}, Stdout: `{"id":"r5"}`},
+		clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "set", "r99", "--model=opus", "--render", "--json", "--root", "/p/q"}, Exit: 2,
+			Stdout: `{"error":{"code":"unknown_role_row","message":"no such relay role row: r99"}}`},
+	)
+	e.deps = &engine.Deps{Slicer: slicercli.Client{Bin: fake.Bin("slicer")}}
+	e.start(t)
+	c := e.dial(t)
+	got, err := c.MatrixEdit(context.Background(), MatrixEditParams{Project: "p", Op: "set", ID: "r5", Fields: slicercli.RowFields{"model": "opus"}})
+	if err != nil || got.Command != "slicer relay-roles set r5 --model=opus --render" || !got.Done {
+		t.Fatalf("edit %+v, %v", got, err)
+	}
+	var re *ipc.Error
+	if _, err := c.MatrixEdit(context.Background(), MatrixEditParams{Project: "q", Op: "set", ID: "r99", Fields: slicercli.RowFields{"model": "opus"}}); !errors.As(err, &re) || re.Code != "unknown_role_row" || re.Message != "no such relay role row: r99" {
+		t.Fatalf("slicer error over the socket: %v", err)
+	}
+	if _, err := c.MatrixEdit(context.Background(), MatrixEditParams{Project: "nope", Op: "remove", ID: "r5"}); !errors.As(err, &re) || re.Code != CodeNotFound {
+		t.Fatalf("unknown project: %v", err)
+	}
+	if _, err := c.MatrixEdit(context.Background(), MatrixEditParams{Project: "p", Op: "remove"}); !errors.As(err, &re) || re.Code != CodeBadParams {
+		t.Fatalf("bad request: %v", err)
 	}
 }

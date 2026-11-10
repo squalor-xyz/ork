@@ -238,6 +238,139 @@ func (c Client) RelayRules(ctx context.Context, root string) ([]Rule, error) {
 	return m.Rules, nil
 }
 
+// RowFields maps a `slicer relay-roles add|set` flag name (without the dashes)
+// to its text value (S173, *proposed*). A name that is absent is not passed; a
+// name with an empty value clears that field.
+type RowFields map[string]string
+
+// rowFieldNames are the flags that `relay-roles add` and `set` take.
+var rowFieldNames = []string{"role", "size", "effort", "importance", "urgency", "well-specified", "split", "sliver", "agent", "vendor", "model", "reasoning", "note"}
+
+// RowArgs checks one relay-roles write and returns its arguments, from
+// "relay-roles" up to the last value, without --render, --json or --root. op is
+// add, set, remove, move or rule-edit. The client calls below and the daemon's
+// preview line both come from here, so they cannot drift.
+//
+// Every field value is attached (--name=VALUE): slicer's parser reads a
+// separate value that starts with a dash and has no space as an option. The
+// rule text of rule-edit is a positional and Client.write puts --root after
+// it, so a text that starts with a dash and has no space is refused. Fields go
+// in name order, with role first.
+func RowArgs(op, id string, f RowFields, before string, last bool, text string) ([]string, error) {
+	switch op {
+	case "add", "set", "remove", "move", "rule-edit":
+	default:
+		return nil, fmt.Errorf("relay-roles: unknown op %q", op)
+	}
+	if op != "add" && strings.TrimSpace(id) == "" {
+		return nil, errors.New("row id must not be empty")
+	}
+	if op != "add" && op != "set" && len(f) > 0 {
+		return nil, fmt.Errorf("relay-roles %s takes no fields", op)
+	}
+	args := []string{"relay-roles", op}
+	if op != "add" {
+		args = append(args, id)
+	}
+	switch op {
+	case "add", "set":
+		for name := range f {
+			if !slices.Contains(rowFieldNames, name) {
+				return nil, fmt.Errorf("relay-roles %s: unknown field %q", op, name)
+			}
+		}
+		if op == "add" && strings.TrimSpace(f["role"]) == "" {
+			return nil, errors.New("relay-roles add needs a role")
+		}
+		if op == "set" && len(f) == 0 {
+			return nil, errors.New("relay-roles set needs at least one field")
+		}
+		names := make([]string, 0, len(f))
+		for name := range f {
+			names = append(names, name)
+		}
+		slices.Sort(names)
+		if i := slices.Index(names, "role"); i > 0 {
+			names = slices.Insert(slices.Delete(names, i, i+1), 0, "role")
+		}
+		for _, name := range names {
+			args = append(args, "--"+name+"="+f[name])
+		}
+	case "move":
+		given := strings.TrimSpace(before) != ""
+		if given == last {
+			return nil, errors.New("relay-roles move needs exactly one of before and last")
+		}
+		if last {
+			args = append(args, "--last")
+		} else {
+			args = append(args, "--before="+before)
+		}
+	case "rule-edit":
+		if strings.TrimSpace(text) == "" {
+			return nil, errors.New("rule text must not be empty")
+		}
+		if strings.HasPrefix(text, "-") && !strings.Contains(text, " ") {
+			return nil, errors.New("rule text must not start with a dash unless it holds a space: slicer would read it as a flag")
+		}
+		args = append(args, text)
+	}
+	return args, nil
+}
+
+// relayRowWrite runs the arguments of RowArgs as one write, with --render and
+// --json. The change is left uncommitted in root.
+func (c Client) relayRowWrite(ctx context.Context, w runrec.Writer, root, op, id string, f RowFields, before string, last bool, text string) (clirun.Result, error) {
+	args, err := RowArgs(op, id, f, before, last, text)
+	if err != nil {
+		return clirun.Result{}, err
+	}
+	return c.write(ctx, w, root, append(args, "--render", "--json")...)
+}
+
+// RelayRowAdd runs `slicer relay-roles add --role=ROLE [--NAME=VALUE ...]
+// --render --json --root ROOT` and returns the new row's id. f must hold a role.
+func (c Client) RelayRowAdd(ctx context.Context, w runrec.Writer, root string, f RowFields) (string, error) {
+	res, err := c.relayRowWrite(ctx, w, root, "add", "", f, "", false, "")
+	if err != nil {
+		return "", err
+	}
+	var out struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(bytes.TrimSpace(res.Stdout), &out); err != nil || out.ID == "" {
+		return "", errors.New("slicer relay-roles add: no row id in the output")
+	}
+	return out.ID, nil
+}
+
+// RelayRowSet runs `slicer relay-roles set ID --NAME=VALUE ... --render --json
+// --root ROOT`. It passes only the fields in f.
+func (c Client) RelayRowSet(ctx context.Context, w runrec.Writer, root, id string, f RowFields) error {
+	_, err := c.relayRowWrite(ctx, w, root, "set", id, f, "", false, "")
+	return err
+}
+
+// RelayRowRemove runs `slicer relay-roles remove ID --render --json --root ROOT`.
+func (c Client) RelayRowRemove(ctx context.Context, w runrec.Writer, root, id string) error {
+	_, err := c.relayRowWrite(ctx, w, root, "remove", id, nil, "", false, "")
+	return err
+}
+
+// RelayRowMove runs `slicer relay-roles move ID --before=BEFORE|--last
+// --render --json --root ROOT`. Exactly one of before and last is given.
+func (c Client) RelayRowMove(ctx context.Context, w runrec.Writer, root, id, before string, last bool) error {
+	_, err := c.relayRowWrite(ctx, w, root, "move", id, nil, before, last, "")
+	return err
+}
+
+// RelayRuleEdit runs `slicer relay-roles rule-edit ID TEXT --render --json
+// --root ROOT`.
+func (c Client) RelayRuleEdit(ctx context.Context, w runrec.Writer, root, id, text string) error {
+	_, err := c.relayRowWrite(ctx, w, root, "rule-edit", id, nil, "", false, text)
+	return err
+}
+
 var uiPassRow = regexp.MustCompile(`UI pass row \((r\d+)\)`)
 
 // UIPassRowID finds the matrix row of the UI pass: the id that a rule names as

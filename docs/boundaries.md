@@ -11,7 +11,7 @@ defined in [glossary.md](glossary.md).
 | Queue, items, slice specs, readiness, claims | slicer | `slicer/docs/how-it-works.md` |
 | Relay contract rules: roles, gate, briefs, stop, report shape | slicer | `slicer ai relay`, `slicer ai relay-orchestrator` (`slicer/src/slicer/ai.py`) |
 | Contract version | slicer | `RELAY_CONTRACT` in `ai.py` |
-| Role matrix and lineup recommendation | slicer | `slicer relay-roles` (`lineup.source`) |
+| Role matrix and lineup recommendation | slicer | `slicer relay-roles` (`lineup.source`). *Proposed* (S173): ork runs the edit verbs `add`, `set`, `remove`, `move` and `rule-edit` on the owner's confirmation; slicer still owns the file and the edit is left uncommitted |
 | Relay-run ledger | slicer (ork writes it through the CLI) | `slicer relay-run` (`ledger.write`) |
 | Wave suggestion | slicer. *Proposed* exception (S218, owner decision 2026-11-07): ork defers a second engine, daemon or cmd slice of a suggested wave into a wave of its own after it, by its self-hosting rule (`engine.self-host`); it changes nothing else in slicer's plan | `slicer plan-parallel`, `next --batch` (`wave.selection`) |
 | Landing | after the owner approves, ork sequences the landing: merge the base branch in, re-check, ff-merge, `slicer land`, optional push, confirmed cleanup (S119); until then it lists ready runs and detects merged branches | `slicer land` stays the tracking step, run by ork through the CLI (`landing.in-ork` #162, which supersedes `landing.v1`; `landing.merge-detect`, `git.cleanup-key`) |

@@ -400,6 +400,150 @@ func TestRelayAnswerKeepsADashLeadingValueAttached(t *testing.T) {
 	}
 }
 
+// rowCall runs fn against a fake whose only route is want and returns the calls
+// it made. The route matches exact argv, so a different argv is a failure of
+// the call itself.
+func rowCall(t *testing.T, want []string, stdout string, fn func(c Client) error) []clitest.Call {
+	t.Helper()
+	c, fake := client(t, clitest.Route{Tool: "slicer", Args: want, Stdout: stdout})
+	if err := fn(c); err != nil {
+		t.Fatalf("call for %v: %v", want, err)
+	}
+	return fake.CallsTo("slicer")
+}
+
+func TestRelayRowSetPassesOnlyTheGivenFields(t *testing.T) {
+	want := []string{"relay-roles", "set", "r5", "--model=opus", "--render", "--json", "--root", root}
+	calls := rowCall(t, want, `{"id":"r5"}`, func(c Client) error {
+		return c.RelayRowSet(context.Background(), runrec.Writer{}, root, "r5", RowFields{"model": "opus"})
+	})
+	if len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, want) {
+		t.Fatalf("calls %+v, want one %v", calls, want)
+	}
+}
+
+func TestRelayRowFieldsAreAttachedAndSorted(t *testing.T) {
+	want := []string{"relay-roles", "set", "r5", "--agent=Codex", "--model=", "--note=-x", "--render", "--json", "--root", root}
+	calls := rowCall(t, want, `{"id":"r5"}`, func(c Client) error {
+		return c.RelayRowSet(context.Background(), runrec.Writer{}, root, "r5", RowFields{"note": "-x", "model": "", "agent": "Codex"})
+	})
+	if len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, want) {
+		t.Fatalf("calls %+v, want one %v", calls, want)
+	}
+}
+
+func TestRelayRowAddRemoveMoveRuleEditArgv(t *testing.T) {
+	ctx := context.Background()
+	for _, tc := range []struct {
+		name string
+		args []string
+		run  func(c Client) error
+	}{
+		{"add", []string{"relay-roles", "add", "--role=reviewer", "--agent=Codex", "--render", "--json", "--root", root},
+			func(c Client) error {
+				_, err := c.RelayRowAdd(ctx, runrec.Writer{}, root, RowFields{"agent": "Codex", "role": "reviewer"})
+				return err
+			}},
+		{"remove", []string{"relay-roles", "remove", "r5", "--render", "--json", "--root", root},
+			func(c Client) error { return c.RelayRowRemove(ctx, runrec.Writer{}, root, "r5") }},
+		{"move before", []string{"relay-roles", "move", "r5", "--before=r2", "--render", "--json", "--root", root},
+			func(c Client) error { return c.RelayRowMove(ctx, runrec.Writer{}, root, "r5", "r2", false) }},
+		{"move last", []string{"relay-roles", "move", "r5", "--last", "--render", "--json", "--root", root},
+			func(c Client) error { return c.RelayRowMove(ctx, runrec.Writer{}, root, "r5", "", true) }},
+		{"rule-edit", []string{"relay-roles", "rule-edit", "u3", "- keep two words", "--render", "--json", "--root", root},
+			func(c Client) error { return c.RelayRuleEdit(ctx, runrec.Writer{}, root, "u3", "- keep two words") }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			calls := rowCall(t, tc.args, `{"id":"r17"}`, tc.run)
+			if len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, tc.args) {
+				t.Fatalf("calls %+v, want one %v", calls, tc.args)
+			}
+		})
+	}
+}
+
+func TestRelayRowAddReturnsTheNewID(t *testing.T) {
+	args := []string{"relay-roles", "add", "--role=reviewer", "--render", "--json", "--root", root}
+	c, _ := client(t, clitest.Route{Tool: "slicer", Args: args, Stdout: `{"id":"r17","role":"reviewer"}`})
+	id, err := c.RelayRowAdd(context.Background(), runrec.Writer{}, root, RowFields{"role": "reviewer"})
+	if err != nil || id != "r17" {
+		t.Fatalf("id %q, %v", id, err)
+	}
+	c, _ = client(t, clitest.Route{Tool: "slicer", Args: args, Stdout: `{"role":"reviewer"}`})
+	if id, err := c.RelayRowAdd(context.Background(), runrec.Writer{}, root, RowFields{"role": "reviewer"}); err == nil {
+		t.Fatalf("output without an id gave %q", id)
+	}
+}
+
+func TestRelayRowRefusalsMakeNoCall(t *testing.T) {
+	ctx := context.Background()
+	w := runrec.Writer{}
+	for _, tc := range []struct {
+		name string
+		run  func(c Client) error
+	}{
+		{"set empty id", func(c Client) error { return c.RelayRowSet(ctx, w, root, "", RowFields{"model": "x"}) }},
+		{"set blank id", func(c Client) error { return c.RelayRowSet(ctx, w, root, " \t", RowFields{"model": "x"}) }},
+		{"remove blank id", func(c Client) error { return c.RelayRowRemove(ctx, w, root, " ") }},
+		{"move blank id", func(c Client) error { return c.RelayRowMove(ctx, w, root, "", "r2", false) }},
+		{"rule-edit blank id", func(c Client) error { return c.RelayRuleEdit(ctx, w, root, " ", "text") }},
+		{"add without role", func(c Client) error {
+			_, err := c.RelayRowAdd(ctx, w, root, RowFields{"agent": "Codex"})
+			return err
+		}},
+		{"add with blank role", func(c Client) error {
+			_, err := c.RelayRowAdd(ctx, w, root, RowFields{"role": " "})
+			return err
+		}},
+		{"set without fields", func(c Client) error { return c.RelayRowSet(ctx, w, root, "r5", RowFields{}) }},
+		{"set with nil fields", func(c Client) error { return c.RelayRowSet(ctx, w, root, "r5", nil) }},
+		{"move with both", func(c Client) error { return c.RelayRowMove(ctx, w, root, "r5", "r2", true) }},
+		{"move with neither", func(c Client) error { return c.RelayRowMove(ctx, w, root, "r5", "", false) }},
+		{"set unknown field", func(c Client) error { return c.RelayRowSet(ctx, w, root, "r5", RowFields{"colour": "red"}) }},
+		{"add unknown field", func(c Client) error {
+			_, err := c.RelayRowAdd(ctx, w, root, RowFields{"role": "reviewer", "id": "r9"})
+			return err
+		}},
+		{"rule-edit blank text", func(c Client) error { return c.RelayRuleEdit(ctx, w, root, "u3", " \n") }},
+		{"rule-edit dash text", func(c Client) error { return c.RelayRuleEdit(ctx, w, root, "u3", "-x") }},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c, fake := client(t)
+			if err := tc.run(c); err == nil {
+				t.Error("refusal expected")
+			}
+			if calls := fake.CallsTo("slicer"); len(calls) != 0 {
+				t.Fatalf("a refusal called slicer: %+v", calls)
+			}
+		})
+	}
+	// A dash then a space is a positional to slicer's parser, so it goes through.
+	args := []string{"relay-roles", "rule-edit", "u3", "- x", "--render", "--json", "--root", root}
+	if calls := rowCall(t, args, `{}`, func(c Client) error { return c.RelayRuleEdit(ctx, w, root, "u3", "- x") }); len(calls) != 1 {
+		t.Fatalf("calls %+v", calls)
+	}
+}
+
+// RowArgs is the argv builder under the client calls and the daemon's command
+// line: it refuses an unknown op, and fields on a verb that takes none.
+func TestRowArgsRefusesAnUnknownOpAndFieldsOnOtherVerbs(t *testing.T) {
+	f := RowFields{"model": "x"}
+	for name, run := range map[string]func() ([]string, error){
+		"unknown op":       func() ([]string, error) { return RowArgs("rule-add", "u1", nil, "", false, "x") },
+		"fields on remove": func() ([]string, error) { return RowArgs("remove", "r5", f, "", false, "") },
+		"fields on move":   func() ([]string, error) { return RowArgs("move", "r5", f, "", true, "") },
+		"fields on rule":   func() ([]string, error) { return RowArgs("rule-edit", "u3", f, "", false, "x") },
+	} {
+		if args, err := run(); err == nil {
+			t.Errorf("%s: got %v", name, args)
+		}
+	}
+	got, err := RowArgs("set", "r5", f, "", false, "")
+	if want := []string{"relay-roles", "set", "r5", "--model=x"}; err != nil || !reflect.DeepEqual(got, want) {
+		t.Fatalf("set argv %v, %v; want %v", got, err, want)
+	}
+}
+
 func TestParkAndUnparkRunTheSlicerCommand(t *testing.T) {
 	for _, verb := range []string{"park", "unpark"} {
 		t.Run(verb, func(t *testing.T) {
