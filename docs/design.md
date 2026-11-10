@@ -335,6 +335,27 @@ slice.
     (`git.worktrees`);
   - `.worktrees/` is added to `info/exclude` if it is missing;
   - `slicer relay-run begin ID --worktree W` (`ledger.write`);
+  - *proposed (S295):* once the worktree and the ledger run exist, ork verifies
+    the check command (and the round check command) in the directory the round
+    check will use (the project's folder of the worktree, S293), before any
+    role starts. The verification is static and runs nothing but `sh -n`: the
+    first word of each simple command resolves, and each later word that is a
+    plain path (see `projects set`) exists in that directory. A command that
+    cannot run pauses the run with `check command cannot run in DIR: PROBLEM
+    (command: CMD); to fix the check: ork stop ID, ork projects set PROJECT
+    --check CMD, then ork retry ID` (`--round-check` in place of `--check` when
+    the round command is the one that fails; error pause, `pending.state`
+    `implement`, so a retry does not begin the ledger run again). DIR is named
+    once: the problem calls it "the check directory". The wait line's `next:`
+    is `ork stop ID`, not `ork retry ID`, because a plain retry verifies the
+    same command again. A plain `ork retry ID`
+    verifies again with the engine's own command, which helps only when the fix
+    is a file added in the worktree; `ork projects set` is refused while the run
+    is paused, so the owner stops the run first and `ork retry ID` resumes the
+    stopped run (S296) with the fixed command. A wave's other runs go on. The
+    full check is not run at setup (owner decision 2026-11-05). A project whose
+    check was stored with `projects set --no-verify` (`no_verify_check`) is not
+    verified at setup or in the implement step;
   - the implementer runs `slicer start` (the contract says the implementer
     starts the item).
 - **implement:** one implementer, or a lead and parts in a split
@@ -698,7 +719,11 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   when its checkout root, branch and common Git repository match the run.
   All slicer calls use the worktree as
   `--root`. The ledger is advisory: a failed `relay-run` call is in
-  `writes[]` and the relay goes on.
+  `writes[]` and the relay goes on. *Proposed (S295):* the check command is
+  verified after the orchestrator step (see **setup** above); `implement`
+  verifies it again before round 1 when no implementer round has run and setup
+  did not just do it, that is, when it is entered from a retry of the setup
+  pause or from a resume of a stopped run.
 - **Ledger.** The orchestrator step is ork's own (agent `ork`, no vendor or
   model). Each role round is a step with `--parent` on it, labelled `ID
   role`, `ID implementer fix round N` or `ID implementer finish step`, and
@@ -1818,7 +1843,14 @@ The proposed optional `warnings` (S265) lists setup problems
 (`engine.SetupWarnings`), in this order: no check command; the built-in Go
 allowlist on a project with no `go.mod`; an implementer allowlist without
 `Read`, `Edit` or `Write`; an implementer allowlist with no pattern for the
-check command. The daemon checks the project path for `go.mod` and
+check command. *Proposed (S295):* a last warning, `check command cannot run in
+DIR: PROBLEM (command: CMD) (fix: ork projects set NAME --check CMD)`
+(`--round-check` when the round command fails; the TUI launch confirm shows it
+by the check line instead of after the roles, where a long plan can clip it), when
+the static check (`engine.VerifyCheck`) of the check command, or of the round
+check command, fails in the project path; the worktree does not exist yet, so
+the project's folder of the main checkout stands in for the folder the check
+runs in, and setup verifies again in the worktree. The daemon checks the project path for `go.mod` and
 `pyproject.toml` when it plans. `ork run` prints each as `warning: LINE` after
 the role rows and before the note, and the TUI launch confirm shows each in
 the Warn style, wrapped. Both show an empty check command as `check: none`.
@@ -2145,6 +2177,12 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   and `command`, plus `time`, and words containing `$` or a backtick or
   starting with `~`. A syntax finding drops the shell prefix up to its first
   marker: `sh: -c: line N: ` or `sh: N: `, and any text before that `sh: `.
+  *Proposed (S295):* doctor uses the shared static check (`engine.CheckFaults`,
+  the one `projects set` and run setup use): it also resolves the first word of
+  each later simple command (a relative path after an earlier step is not
+  looked for), skips the builtins of `sh` such as `echo`, `test` and `true`,
+  and names a plain file the command lists that does not exist in the project
+  directory (`check_command: "App.slnx" does not exist in project directory`).
   Doctor never executes the check command. Nonempty worktree and branch
   patterns must contain `{id}` or `{id_lower}` (*proposed*, S124); empty
   patterns use the defaults. A finding names the fix, `ork projects set NAME
@@ -2284,7 +2322,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   A planned start that loses the race to removal is refused with `not_found`.
 - `projects set NAME [--push on|off] [--ui-doc PATH]
   [--ui-pass-skills A,B] [--spec-check-rows rNN,rNN] [--worktree-pattern P]
-  [--branch-pattern P] [--check CMD] [--round-check CMD] [--check-minutes N] [--cap N]
+  [--branch-pattern P] [--check CMD] [--round-check CMD] [--no-verify] [--check-minutes N] [--cap N]
   [--budget-minutes N] [--budget-tokens N] [--env-line LINE]...
   [--preset go|python] [--permission ROLE=read-only|ROLE=]...
   [--allow ROLE=PATTERN]... [--replace-allow]
@@ -2307,6 +2345,34 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   shared validator refuses an id that is not `r` and digits, and a duplicate
   (`bad_params`). Text uses `spec_check_rows="r16,r24"` or
   `spec_check_rows=unset`.
+  `--check` and `--round-check` (*proposed*, S295) are verified before they
+  are stored, in the project's folder of the main checkout, which is the
+  registry path and the same folder the round check uses in the worktree
+  (S293), not the top of the repository. The verification is static
+  (`engine.VerifyCheck`) and runs nothing but `sh -n`: the shell must parse the
+  command; the first word of each simple command must resolve (`PATH`, or
+  relative to the folder; a path built by an earlier step is not looked for);
+  and each later word that is a plain path (an extension of letters, or a
+  leading `./`, `../` or `/`, or a trailing `/`; no glob, `$` or `~`; not a
+  flag, a redirect target, the value of an output flag such as `-o`, a word
+  after `-m`, or `./...`) must exist there. The words of `echo`, `rm`, `mkdir`,
+  `touch`, `cp`, `mv`, `ln`, `tar`, `make`, `npm`, `git` and a few like them
+  are not looked at, because they name files the command makes, and a `cd`
+  ends the check. A `$(...)` is one skipped word and the check goes on after it;
+  a subshell, a function definition or a here-document ends it (the words
+  before a here-document are kept). A command that fails is refused with `bad_params`, in one
+  line: `check command cannot run in DIR: PROBLEM (command: CMD); fix it, or
+  store it anyway with --no-verify`. `--no-verify` (`no_verify` on the wire; not
+  a field, so it alone sets nothing) stores it anyway. A project path that is
+  not a directory is not verified (`ork doctor` reports it). `--no-verify` is
+  remembered per project (owner decision 2026-11-10, adj
+  `check.no-verify-at-setup`): the registry entry gets `no_verify_check: true`,
+  and run setup, the implement-step verification and the plan warning skip the
+  project's check commands. A call that sets `--check` or `--round-check`
+  without `--no-verify` clears the key; a call that sets neither leaves it.
+  `ork doctor` runs the same
+  check on the stored command, in the project path, and adds the findings for a
+  later command's first word and a named file that does not exist.
   S174 flags: `--env-line` repeats and the lines given replace the list (one
   empty `--env-line ""` clears it). `--permission ROLE=read-only` sets the
   role's preset and `--permission ROLE=` removes its entry, so the default

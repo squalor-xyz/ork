@@ -204,12 +204,12 @@ func TestRunRetryOfAStoppedRunUsesTheCurrentProject(t *testing.T) {
 		t.Run(fmt.Sprintf("managed=%v", managed), func(t *testing.T) {
 			rig := stoppedDaemon(t, retryRunner, managed, stoppedDiff, nil)
 			// Fixing the check of a project whose only run is stopped is allowed.
-			rig.setCheck(t, "make verify")
+			rig.setCheck(t, "go vet ./...")
 			request(t, rig.d, "run.retry", `{"run":"r1"}`)
-			if checks := rig.ranChecks(); len(checks) != 1 || checks[0] != "make verify" {
+			if checks := rig.ranChecks(); len(checks) != 1 || checks[0] != "go vet ./..." {
 				t.Fatalf("the resumed checks ran %v, want the fixed command", checks)
 			}
-			if rec, _ := rig.store.Open("r1"); rec.Snapshot().Checks[0].Command != "make verify" {
+			if rec, _ := rig.store.Open("r1"); rec.Snapshot().Checks[0].Command != "go vet ./..." {
 				t.Fatalf("checks[] row: %+v", rec.Snapshot().Checks)
 			}
 		})
@@ -219,8 +219,8 @@ func TestRunRetryOfAStoppedRunUsesTheCurrentProject(t *testing.T) {
 func TestProjectsSetIsNotBlockedByAStoppedRun(t *testing.T) {
 	for _, managed := range []bool{true, false} {
 		rig := stoppedDaemon(t, nil, managed, stoppedDiff, nil)
-		rig.setCheck(t, "make verify")
-		rig.setCheck(t, "make again")
+		rig.setCheck(t, "go vet ./...")
+		rig.setCheck(t, "go build ./...")
 	}
 }
 

@@ -334,9 +334,24 @@ func TestRedChecksSendTheImplementerBackWithoutSpendingAReview(t *testing.T) {
 // "fast" beside the check command "full" (S285, *proposed*).
 func roundCheckHarness(t *testing.T) *harness {
 	t.Helper()
+	toolsOnPath(t, "full", "fast")
 	return newHarness(t, func(o *harnessOpts) {
 		o.project = func(p *registry.Project) { p.CheckCommand, p.RoundCheckCommand = "full", "fast" }
 	})
+}
+
+// toolsOnPath puts an executable of each name on PATH, so a check command that
+// is only a name passes the setup verification (S295, *proposed*). The fake
+// check function runs in its place, so the tools never run.
+func toolsOnPath(t *testing.T, names ...string) {
+	t.Helper()
+	dir := t.TempDir()
+	for _, name := range names {
+		if err := os.WriteFile(filepath.Join(dir, name), []byte("#!/bin/sh\n"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
 }
 
 // ranCommands is the command of each project check call, in order.
@@ -459,6 +474,7 @@ func TestFailingRoundCommandThenPassingFullCheck(t *testing.T) {
 }
 
 func TestRoundCommandWithoutAFullCommandRunsNoFullCheck(t *testing.T) {
+	toolsOnPath(t, "fast")
 	h := newHarness(t, func(o *harnessOpts) {
 		o.project = func(p *registry.Project) { p.CheckCommand, p.RoundCheckCommand = "", "fast" }
 	})
@@ -1686,6 +1702,163 @@ func TestCancelledRunDoesNotRunAFailedCheckAgain(t *testing.T) {
 	_ = e.Run(ctx)
 	if calls != 1 {
 		t.Errorf("the project command ran %d times after the run was cancelled, want 1", calls)
+	}
+}
+
+// S295 (*proposed*): setup verifies the check command where the round check
+// will run, before the implementer starts.
+
+func missingFileCheck(p *registry.Project) { p.CheckCommand = "go build App.slnx" }
+
+func relayBegins(h *harness) int { return len(h.calls("slicer", "relay-run", "begin")) }
+
+func TestSetupPausesWhenTheCheckCannotRun(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) { o.project = missingFileCheck })
+	e := h.start()
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingError || rec.Pending.State != runrec.StateImplement {
+		t.Fatalf("pending %+v, want an error pause that a retry takes back to implement", rec.Pending)
+	}
+	for _, part := range []string{
+		"check command cannot run in " + h.W, "App.slnx", "(command: go build App.slnx)",
+		"ork stop " + rec.ID, "ork projects set ork --check CMD", "ork retry " + rec.ID,
+	} {
+		if !strings.Contains(rec.Reason, part) {
+			t.Errorf("reason %q lacks %q", rec.Reason, part)
+		}
+	}
+	if strings.Contains(rec.Reason, "\n") {
+		t.Errorf("reason %q is not one line", rec.Reason)
+	}
+	if n := strings.Count(rec.Reason, h.W); n != 1 {
+		t.Errorf("reason %q names the directory %d times, want once", rec.Reason, n)
+	}
+	if got := h.runner.roles(); len(got) != 0 {
+		t.Errorf("roles ran before round 1: %v", got)
+	}
+	if len(h.checks.calls) != 0 {
+		t.Errorf("the check command ran: %q", h.checks.calls)
+	}
+	if n := relayBegins(h); n != 1 {
+		t.Errorf("RelayBegin called %d times, want 1", n)
+	}
+
+	// A retry with the file still missing pauses again, with no new ledger run.
+	if err := e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	again := requireState(t, e, runrec.StatePaused)
+	if again.Pending == nil || again.Pending.State != runrec.StateImplement || !strings.Contains(again.Reason, "App.slnx") {
+		t.Errorf("after a retry: pending %+v reason %q, want the same pause", again.Pending, again.Reason)
+	}
+	if got := h.runner.roles(); len(got) != 0 || relayBegins(h) != 1 {
+		t.Errorf("after a retry: roles %v, RelayBegin %d times, want none and 1", got, relayBegins(h))
+	}
+
+	// With the file there, the retry runs round 1.
+	h.mkWorktree()
+	writeFile(t, filepath.Join(h.W, "App.slnx"), "<Solution/>\n")
+	if err := e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateAwaitingApproval)
+	if got := h.runner.roles(); len(got) == 0 || got[0] != "implementer-1" {
+		t.Errorf("roles %v, want implementer round 1 first", got)
+	}
+	if n := relayBegins(h); n != 1 {
+		t.Errorf("RelayBegin called %d times, want 1", n)
+	}
+}
+
+func TestSetupPauseFixedByStopSetAndRetry(t *testing.T) {
+	h := resumeHarness(t, func(o *harnessOpts) { o.project = missingFileCheck })
+	h.mkWorktree()
+	e := h.start()
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending == nil || rec.Pending.State != runrec.StateImplement {
+		t.Fatalf("pending %+v, want a pause at implement", rec.Pending)
+	}
+	if err := e.Stop(context.Background(), "fix the check"); err != nil {
+		t.Fatal(err)
+	}
+	if got := requireState(t, e, runrec.StateStopped).StoppedFrom; got != runrec.StateImplement {
+		t.Fatalf("stopped_from %q, want implement", got)
+	}
+
+	fixed := h.proj
+	fixed.CheckCommand = "go test ./..."
+	e3, err := h.resume(rec.ID, fixed, "")
+	if err != nil {
+		t.Fatalf("resume: %v", err)
+	}
+	requireState(t, e3, runrec.StateAwaitingApproval)
+	if got := h.runner.roles(); len(got) == 0 || got[0] != "implementer-1" {
+		t.Errorf("roles %v, want implementer round 1 first (not the checks)", got)
+	}
+	if len(h.checks.calls) == 0 || !strings.HasSuffix(h.checks.calls[0], "|go test ./...") {
+		t.Errorf("check calls %v, want the fixed command", h.checks.calls)
+	}
+	if n := relayBegins(h); n != 2 {
+		t.Errorf("RelayBegin called %d times, want 2 (the resume begins a new ledger run)", n)
+	}
+}
+
+// A project whose check was stored with --no-verify (owner decision
+// 2026-11-10, no_verify_check) is not verified: not at setup, and not in the
+// implement step of a retry or a resume.
+func TestNoVerifyCheckSkipsTheSetupVerification(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.project = func(p *registry.Project) { missingFileCheck(p); p.NoVerifyCheck = true }
+	})
+	e := h.start()
+	requireState(t, e, runrec.StateAwaitingApproval)
+	if got := h.runner.roles(); len(got) == 0 || got[0] != "implementer-1" {
+		t.Errorf("roles %v, want implementer round 1 first", got)
+	}
+}
+
+func TestNoVerifyCheckSkipsTheVerificationOfAResume(t *testing.T) {
+	h := resumeHarness(t, func(o *harnessOpts) { o.project = missingFileCheck })
+	h.mkWorktree()
+	e := h.start()
+	rec := requireState(t, e, runrec.StatePaused)
+	if err := e.Stop(context.Background(), "store the check with --no-verify"); err != nil {
+		t.Fatal(err)
+	}
+	stored := h.proj
+	stored.NoVerifyCheck = true
+	e2, err := h.resume(rec.ID, stored, "")
+	if err != nil {
+		t.Fatalf("resume: %v", err)
+	}
+	requireState(t, e2, runrec.StateAwaitingApproval)
+	if got := h.runner.roles(); len(got) == 0 || got[0] != "implementer-1" {
+		t.Errorf("roles %v, want implementer round 1 first", got)
+	}
+}
+
+// The resume verifies the command it was loaded with: a check that still
+// cannot run pauses the resumed run again, before round 1.
+func TestSetupPauseResumeWithABadCheckPausesAgain(t *testing.T) {
+	h := resumeHarness(t, func(o *harnessOpts) { o.project = missingFileCheck })
+	h.mkWorktree()
+	e := h.start()
+	rec := requireState(t, e, runrec.StatePaused)
+	if err := e.Stop(context.Background(), "fix the check"); err != nil {
+		t.Fatal(err)
+	}
+	still := h.proj
+	still.CheckCommand = "go build Other.slnx"
+	e2, err := h.resume(rec.ID, still, "")
+	if err != nil {
+		t.Fatalf("resume: %v", err)
+	}
+	again := requireState(t, e2, runrec.StatePaused)
+	if again.Pending == nil || again.Pending.State != runrec.StateImplement || !strings.Contains(again.Reason, "Other.slnx") {
+		t.Errorf("pending %+v reason %q, want a pause at implement that names Other.slnx", again.Pending, again.Reason)
+	}
+	if got := h.runner.roles(); len(got) != 0 {
+		t.Errorf("roles ran: %v", got)
 	}
 }
 

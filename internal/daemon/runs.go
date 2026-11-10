@@ -592,6 +592,16 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		_, err := os.Stat(filepath.Join(proj.Path, name))
 		return err == nil
 	})
+	// S295 (*proposed*): a check command that cannot run in the project's
+	// folder shows in the plan, before the start. The worktree does not exist
+	// yet, so the main checkout's folder stands in for the folder the check
+	// runs in (the same folder, S293); setup verifies again in the worktree.
+	if info, err := os.Stat(proj.Path); err == nil && info.IsDir() && !proj.NoVerifyCheck {
+		if problems, flag := engine.CheckCommandProblems(ctx, proj, proj.Path, nil); len(problems) > 0 {
+			plan.Warnings = append(plan.Warnings, fmt.Sprintf(engine.CheckCannotRunPrefix+"%s: %s (fix: ork projects set %s %s CMD)",
+				proj.Path, strings.Join(problems, "; "), engine.ShellWord(proj.Name), flag))
+		}
+	}
 	plan.Budgets = proj.Budgets
 	if p.Budgets != nil {
 		if p.Budgets.Minutes < 0 || p.Budgets.Tokens < 0 {
@@ -2139,6 +2149,11 @@ func pausedNext(rec runrec.Record) string {
 	next := "ork retry " + rec.ID
 	if rec.Pending != nil && rec.Pending.Kind == runrec.PendingRounds {
 		next += " [--rounds N] or ork stop " + rec.ID
+	}
+	if rec.Pending != nil && rec.Pending.Kind == runrec.PendingError && strings.HasPrefix(rec.Pending.Reason, engine.CheckCannotRunPrefix) {
+		// S295 (*proposed*): a plain retry verifies the same command again; the
+		// reason names the fix, which starts with a stop.
+		next = "ork stop " + rec.ID
 	}
 	if rec.Pending != nil && rec.Pending.Kind == runrec.PendingQuestion {
 		next = "ork answer " + rec.ID + " TEXT"
