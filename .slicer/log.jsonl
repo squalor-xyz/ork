@@ -4037,3 +4037,6 @@
 {"when": "2026-11-09T23:16:25Z", "item": "S264", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-09T23:18:57Z", "item": "S285", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-10T00:23:13Z", "item": "S325", "action": "add", "from": "", "to": "open", "note": "TUI run detail: name the last check command that ran"}
+{"when": "2026-11-10T00:51:31Z", "item": "S261", "action": "set", "from": "", "to": "", "note": "depends_on -→S250; pass_key v1.1→v1.2"}
+{"when": "2026-11-10T00:51:31Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-10T00:51:31Z", "item": "S261", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-10: moved to v1.2 and depends on S250 (slicer ", "by": "Jon Robbins"}
