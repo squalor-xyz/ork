@@ -852,6 +852,123 @@ func TestQuestionPaneListsOptionsAndMarksTheRecommendation(t *testing.T) {
 	}
 }
 
+// questionHarness is optionsHarness with its own question JSON.
+func questionHarness(t *testing.T, question string) *harness {
+	t.Helper()
+	h := paneHarness(t, "paused", "question")
+	var r source.EngineRun
+	if err := json.Unmarshal([]byte(`{"id":"engine","item":"S22","state":"paused","pending":"question","key":"storage.engine","question":`+question+`}`), &r); err != nil {
+		t.Fatal(err)
+	}
+	h.m.byName["ork"].snap.EngineRuns[0] = r
+	return h
+}
+
+func plainPaneLines(lines []string) []string {
+	out := make([]string, len(lines))
+	for i, l := range lines {
+		out[i] = sgr.ReplaceAllString(l, "")
+	}
+	return out
+}
+
+func TestWrappedOptionIndents(t *testing.T) {
+	summary := strings.TrimSpace(strings.Repeat("abcdefgh ", 12)[:100])
+	h := questionHarness(t, `{"title":"Which storage?","options":[{"label":"use","summary":"`+summary+`"},{"label":"remote","summary":"short"}],"recommend":2,"reason":"why"}`)
+	lines := plainPaneLines(h.m.paneLines(50, 25, ""))
+	start, end := -1, -1
+	for i, l := range lines {
+		if strings.HasPrefix(strings.TrimSpace(l), "1. use: ") {
+			start = i
+		}
+		if strings.HasPrefix(strings.TrimSpace(l), "2. remote: ") {
+			end = i
+		}
+	}
+	if start < 0 || end <= start+1 {
+		t.Fatalf("option 1 did not wrap:\n%s", strings.Join(lines, "\n"))
+	}
+	for _, l := range lines[start+1 : end] {
+		if !strings.HasPrefix(l, indent+"   ") || strings.HasPrefix(l, indent+"    ") {
+			t.Errorf("continuation does not start at the text column: %q", l)
+		}
+	}
+}
+
+func TestFourOptionsInShortPaneNeverDropSilently(t *testing.T) {
+	long := "this second option is long enough that it wraps onto a second line, ending tailword"
+	h := questionHarness(t, `{"title":"Which storage?","options":[{"label":"one","summary":"first"},{"label":"two","summary":"`+long+`"},{"label":"three","summary":"third"},{"label":"four","summary":"fourth"}],"recommend":1,"reason":"why"}`)
+	for height := 3; height <= 6; height++ {
+		t.Run(fmt.Sprint(height), func(t *testing.T) {
+			lines := plainPaneLines(h.m.paneLines(40, height, ""))
+			joined := strings.Join(lines, "\n")
+			shown := 0
+			for _, name := range []string{"1. one", "2. two", "3. three", "4. four"} {
+				if strings.Contains(joined, name) {
+					shown++
+				}
+			}
+			// An option shows whole or not at all: its second line goes with its first.
+			if strings.Contains(joined, "2. two") != strings.Contains(joined, "tailword") {
+				t.Errorf("option 2 is half shown:\n%s", joined)
+			}
+			last := strings.TrimSpace(lines[len(lines)-1])
+			if shown == 4 {
+				if strings.Contains(joined, "more option") {
+					t.Errorf("marker with every option shown:\n%s", joined)
+				}
+				return
+			}
+			if want := fmt.Sprintf("+%d more options", 4-shown); last != want {
+				t.Errorf("last line %q, want %q:\n%s", last, want, joined)
+			}
+		})
+	}
+}
+
+func TestOutOfRangeDigitDoesNothing(t *testing.T) {
+	h := optionsHarness(t)
+	before := h.view()
+	for _, k := range []string{"4", "3", "0"} {
+		h.deliver(press(k))
+		if h.m.confirm != nil || h.m.actionStatus != "" || h.m.pane == nil || h.m.pane.freeText || h.m.pane.input.Value() != "" {
+			t.Fatalf("%s changed the pane: confirm %v, status %q, free text %v, input %q", k, h.m.confirm, h.m.actionStatus, h.m.pane != nil && h.m.pane.freeText, h.m.pane.input.Value())
+		}
+	}
+	if after := h.view(); after != before {
+		t.Errorf("view changed:\n%s\n--- before\n%s", after, before)
+	}
+}
+
+func TestDigitsAfterTReachTheField(t *testing.T) {
+	h := optionsHarness(t)
+	h.deliver(press("t"))
+	h.deliver(press("1"))
+	h.deliver(press("2"))
+	if h.m.confirm != nil || !h.m.pane.freeText || h.m.pane.input.Value() != "12" {
+		t.Fatalf("confirm %v, free text %v, input %q", h.m.confirm, h.m.pane.freeText, h.m.pane.input.Value())
+	}
+}
+
+func TestLedgerOptionWithAnEmptySummaryHasNoColon(t *testing.T) {
+	r := fix1LedgerQuestion()
+	r.Steps[0].Question.Options[0].Summary = ""
+	h := newHarness(t, proj("ork", false))
+	h.src.set(snap(proj("ork", false), nil, nil, r))
+	h.start()
+	h.m.Update(tea.WindowSizeMsg{Width: 100, Height: 30})
+	h.deliver(press("enter"))
+	var got string
+	for _, l := range plainPaneLines(h.m.paneLines(100, 25, "")) {
+		if strings.Contains(l, "1. file") {
+			got = strings.TrimRight(l, " ")
+		}
+	}
+	if strings.TrimSpace(got) != "1. file (recommended)" {
+		t.Fatalf("option line %q", got)
+	}
+}
+
 func TestPickingAnOptionShowsTheExactCommandThenAnswers(t *testing.T) {
 	for _, cancel := range []string{"enter", "n", "esc"} {
 		t.Run(cancel, func(t *testing.T) {

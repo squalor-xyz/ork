@@ -552,7 +552,7 @@ Use this loop each day:
    `0` jumps to Needs you, `1`-`9` to a project, `[` and `]` move between them
    (`internal/tui/keys.go:87-93`).
 2. Clear **Needs you** from the top. Group order is Decisions, Held, Stopped,
-   Paused, Approve, Findings, Errors (`docs/dashboard.md:404-407`).
+   Questions, Paused, Approve, Findings, Errors (`docs/dashboard.md:463-464`).
 3. Open **Questions** for every open question in one list.
 4. Open **Decisions** for adj records and **Roadmap** for what is next.
 5. Press `r` to refresh now. `/` filters projects. `?` shows every key.

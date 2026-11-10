@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- S132 (*proposed*): question and answer polish. Needs you gets a `Questions`
+  group (before `Paused`) for runs that wait on an owner question; `Paused`
+  keeps the runs paused for another reason. Question options wrap with a hang
+  under their text, drop whole on a short pane with `+N more options` as the
+  last line, and show an empty summary as the label alone. `Recommend: N - reason`
+  accepts an en or em dash. A cancelled adj answer confirmation puts the typed
+  free answer back in the field, and the help line offers no `1-N pick` for a
+  record with no options. A ledger answer filed in adj keeps its channel (`cli`
+  or `tui`) in the rationale. Owner decision 2026-10-31. Docs:
+  `docs/dashboard.md`, `docs/design.md`, `docs/guide.md`.
 - S285 (*proposed*): a faster check command for the checks after implementer
   rounds. `ork projects set NAME --round-check CMD` stores `round_check_command`
   (refused only while the project would have no `check_command`; empty

@@ -181,7 +181,7 @@ func CheckReport(role string, finish bool, text string) (*Report, error) {
 }
 
 var optionLine = regexp.MustCompile(`^([1-4])\. ([^:]+): (.+)$`)
-var recommendLine = regexp.MustCompile(`^Recommend: ([1-4]) - (.+)$`)
+var recommendLine = regexp.MustCompile(`^Recommend: ([1-4]) [-–—] (.+)$`)
 
 // fenceLine is a code fence line: three or more backticks, then at most one word.
 var fenceLine = regexp.MustCompile("^`{3,}[A-Za-z]*$")

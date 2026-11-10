@@ -15,8 +15,8 @@
                            │    [2m. gate        queued[m
                            │
                            │    [1mStorage[m
-                           │    1. Files: 
-                           │    2. Database:  (recommended)
+                           │    1. Files
+                           │    2. Database (recommended)
                            │    Answer #q1 (Storage) on x1 as "Database" (recommended) in the ledger
                            │    and adj #12 as Jon R?
                            │    [y/N] (Enter is No)

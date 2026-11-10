@@ -449,7 +449,8 @@ slice.
     fix round as its fix findings, without the others; an untagged one goes
     whole.
   - *owner*: the finding is an owner question in the shape of S111: a title,
-    `Options:` with 2 to 4 numbered labels, `Recommend: N - reason`, and an
+    `Options:` with 2 to 4 numbered labels, `Recommend: N - reason` (the dash
+    may be a hyphen, an en dash or an em dash; S132, *proposed*), and an
     optional `Decision key:`. The prompts say the body holds only those lines,
     with no list marker before `Options:`, `Recommend:` or `Decision key:`.
     The parser is lenient (S288, *proposed*): it strips one leading `- `, `* `
@@ -875,6 +876,11 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   Recommend: 1 - one-line reasoning
   Decision key: area.topic
   ```
+
+  The dash in `Recommend: N - reason` may be an ASCII hyphen, an en dash or an
+  em dash (S132, *proposed*); a role that writes `Recommend: 2 – reason` is not
+  a shape error. The prompts keep teaching the hyphen, and `Recommend: 1 -- r`
+  and `Recommend: 1 r` stay shape errors.
 
   Free context lines may precede `Question:`. They stay in the raw question
   text and the pane shows them above the options. From `Question:` onward,

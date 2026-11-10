@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-325 items · — 69 · done 223 · retired 33
+325 items · — 68 · done 224 · retired 33
 
 v1.2
 
@@ -117,7 +117,7 @@ v1.2
 | 60 | [S129](slices/S129.md) | Live usage edge cases | M | 2 |  | discovered from S99 | done |
 | 61 | [S130](slices/S130.md) | Run pane and Overview text polish | M | 2 |  | discovered from S99 | done |
 | 62 | [S131](slices/S131.md) | Self-host check base branch | S | 1 |  | discovered from S114 | done |
-| 63 | [S132](slices/S132.md) | Question polish sweep E6 | M | 2 |  | discovered from S111 | — |
+| 63 | [S132](slices/S132.md) | Question polish sweep E6 | M | 2 |  | discovered from S111 | done |
 | 64 | [S173](slices/S173.md) | Matrix editor wire | M | 2 |  | discovered from S165 | — |
 | 65 | [S180](slices/S180.md) | Changelog conflict resolver | M | 2 |  | discovered from S165 | done |
 | 66 | S186 | S181 later notes: blocked refusal wording and an 80-column guard | S | - |  | Folded into S229 (daemon wording leftovers) and the S190 TUI sweep (owner, 2026-10-31); dropped items are in the v1.2 dropped-items row. · discovered from S181 | retired |

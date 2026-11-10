@@ -108,6 +108,20 @@ func (m *Model) requestDecision(option, text string) {
 	m.actionStatus = ""
 }
 
+// restoreDecisionDraft puts a cancelled free answer back in the field, so n or
+// esc on the confirmation does not throw the owner's text away (S132,
+// *proposed*). The confirmation carries the text; nothing else keeps a draft,
+// so it is gone once the answer is sent, the field closes with esc or the pane
+// closes.
+func (m *Model) restoreDecisionDraft(a runAction) {
+	pane := m.decisionPane
+	if a.verb != "decide" || a.text == "" || pane == nil || pane.record == nil || pane.record.ID != a.adjID || pane.project != a.project {
+		return
+	}
+	m.decisionInput = &textField{}
+	m.decisionInput.insert(a.text)
+}
+
 func (a runAction) flightKey() string {
 	if a.verb == "relay-answer" {
 		return relayFlightKey(a)

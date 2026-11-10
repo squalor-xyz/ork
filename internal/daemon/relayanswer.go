@@ -104,7 +104,7 @@ func (d *Daemon) relayAnswer(ctx context.Context, p RelayAnswerParams) (*RelayAn
 		case p.Adj != id:
 			message += fmt.Sprintf("; adj skipped: confirm did not name #%d", id)
 		default:
-			notice, answerErr := engine.AnswerRecord(ctx, d.runDeps(proj), engine.AnswerRecordConfig{Project: proj, ID: id, Option: p.Option, Text: p.Text, By: p.By, Via: "tui"})
+			notice, answerErr := engine.AnswerRecord(ctx, d.runDeps(proj), engine.AnswerRecordConfig{Project: proj, ID: id, Option: p.Option, Text: p.Text, By: p.By, Via: p.Via})
 			if answerErr != nil {
 				message += fmt.Sprintf("; adj #%d failed: %s", id, answerErr)
 			} else {

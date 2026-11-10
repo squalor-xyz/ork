@@ -4040,3 +4040,9 @@
 {"when": "2026-11-10T00:51:31Z", "item": "S261", "action": "set", "from": "", "to": "", "note": "depends_on -→S250; pass_key v1.1→v1.2"}
 {"when": "2026-11-10T00:51:31Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-10T00:51:31Z", "item": "S261", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-10: moved to v1.2 and depends on S250 (slicer ", "by": "Jon Robbins"}
+{"when": "2026-11-10T02:28:50Z", "item": "S132", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-10T02:40:36Z", "item": "S132", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-10T02:40:47Z", "item": "S132", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-10T02:58:38Z", "item": "S132", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S132):", "by": "Jon Robbins"}
+{"when": "2026-11-10T02:58:43Z", "item": "S132", "action": "note", "from": "", "to": "", "note": "Question polish sweep E6 verified: Needs you has a Questions", "by": "Jon Robbins"}
+{"when": "2026-11-10T02:58:45Z", "item": "S132", "action": "status", "from": "started", "to": "done", "note": "Question polish sweep E6 verified: Questions group before Paused; option hang, whole-option drop and +N more options marker; Recommend accepts en and em dash; cancelled adj confirmation keeps the typed answer; no pick help line for an optionless record; no colon for empty summaries; relay answer keeps its channel in adj. Full suite, vet, gofmt, slicer check and adj lint clean.", "by": "Jon Robbins"}

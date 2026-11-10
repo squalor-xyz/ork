@@ -460,8 +460,8 @@ every row is already on screen, `pgdown` goes to the last row. On the last row
 the lines after it come into view while they fit, so the empty Recent and Ready
 to land sections can be seen (S151). `}` and `{` move it to
 the first row of the next group and of the current or previous group. The
-groups are the Needs you groups (Decisions, Held, Stopped, Paused, Approve, Findings and
-Errors), then Running, Recent and Ready to land. On the Roadmap a group is a run
+groups are the Needs you groups (Decisions, Held, Stopped, Questions, Paused, Approve,
+Findings and Errors), then Running, Recent and Ready to land. On the Roadmap a group is a run
 of items with the same pass, with the cursor on its first item under the
 pass heading (S162), and on Waves a wave, then Unplaced (S151, *proposed*). The Roadmap, Questions, Decisions and Waves cursors take the first,
 last and page keys; the Overview, Roadmap and Waves have the group keys. With
@@ -532,9 +532,12 @@ and decided records refresh every 5 min or on HEAD changes and manual refresh. `
 ## Overview (all projects)
 
 Needs you and Running headings carry row counts. Needs you groups rows as
-Decisions, Held, Stopped, Paused, Approve, Findings and Errors, omitting empty
-groups
-(`ui.overview-layout`, adj 149). Findings contains unfiled later and unanswered
+Decisions, Held, Stopped, Questions, Paused, Approve, Findings and Errors, omitting
+empty groups (`ui.overview-layout`, adj 149). Questions holds the runs that wait
+on an owner question (`? question` rows, engine and external); Paused holds the
+runs paused for another reason (`= paused` rows). The Questions group and its
+place before Paused are *proposed* (S132; the owner chose the name on
+2026-10-31). Findings contains unfiled later and unanswered
 owner findings from runs that are not landed, dismissed or superseded.
 Findings rows open the run pane;
 they are not additional pending owner questions. Errors includes failed calls,
@@ -824,7 +827,7 @@ so monochrome still reads it.
 An engine-linked row and its pane use the engine state even when the ledger
 run is stale. Awaiting approval reads `awaiting approval`; the row stays
 undimmed and Enter opens its engine pane with the linked ledger steps.
-On Approve and Paused rows, the wait age goes immediately after the state
+On Approve, Questions and Paused rows, the wait age goes immediately after the state
 word, before the reason and other details: `paused  19h00m  Which store?`.
 Narrow rows clip the tail after the age. Wait text that only says the state
 again is left out of the row and the pane: an awaiting-approval run reads
@@ -979,7 +982,13 @@ The actions follow the state (`ui.answer-pane-scope`):
   `Question:` and `Options:` block is not repeated
   there. Structured questions show a bold title,
   2 to 4 numbered options, the inline `(recommended)` marker and a
-  `Why N: reason` line (`ui.structured-questions`, adj #168). A digit opens a confirmation with the
+  `Why N: reason` line (`ui.structured-questions`, adj #168). A long option
+  wraps with a hang: its later lines start under the option's text, after the
+  number, so they do not look like a new option, and an option with an empty
+  summary shows its label with no colon (S132, *proposed*). Each option drops
+  whole on a short pane, and when options are left out the last footer line
+  reads `+N more options` (S132, *proposed*). A digit with no option, such as `4`
+  on a two-option question, does nothing; after `t`, digits go into the field. A digit opens a confirmation with the
   exact, pasteable `ork answer RUN 'LABEL: summary'` command. Answer text is
   shell-quoted, including embedded apostrophes; the confirmation suffix stays
   outside the quotes. The hint reads `y send; n cancel`; Enter or Esc also cancels.
