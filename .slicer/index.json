@@ -6526,10 +6526,39 @@
       "id": "S132",
       "title": "Question and answer polish sweep E6: Questions group, option wrap, dash in Recommend, answer-pane gaps",
       "short_title": "Question polish sweep E6",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "ca187f16-8734-40c0-96ca-e3617547ac0b",
+          "kind": "",
+          "text": "**2026-11-10** — Human checks at approval (S132):\n- later: At 100x30 and 80x24, with a run paused on a structured question and another paused on an error: the Overview shows `Questions 1` and `Paused 1` in that order; open the question pane, shrink the terminal to a short height and see `+N more options` instead of silently missing options; wrapped options hang under their text.\n- later: In the Decisions pane of an open record, press `t`, type, Enter, `n`: the typed answer is still in the field.",
+          "created_at": "2026-11-10T02:58:38Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "2e2e1fdd-8496-45ab-b199-0172d03b09bf",
+          "kind": "",
+          "text": "**2026-11-10** — Question polish sweep E6 verified: Needs you has a Questions group before Paused; question options wrap with a hang, drop whole in a short pane and end with +N more options; Recommend accepts an en or em dash; a cancelled adj confirmation restores the typed free answer; help drops the pick line for an optionless record; empty-summary options show no colon; the relay answer files adj with its own channel. go test -race ./..., go vet, gofmt, slicer check and adj lint were clean; goldens reviewed.",
+          "created_at": "2026-11-10T02:58:43Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -6547,7 +6576,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -16097,7 +16126,7 @@
       "id": "S295",
       "title": "Check command: verify it once where it will run, at projects set and at run setup",
       "short_title": "Check command: verify it once where it will run, at projects set and at run setup",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S296"
@@ -16109,6 +16138,34 @@
           "text": "**2026-11-05** — Owner decision 2026-11-05 (interactive interview), Q1 option (a): to fix a check command that failed verification at setup, stop the run, run ork projects set --check, then ork retry ID, which resumes the stopped run through S296. S295 depends on S296; S296's resume enters implement when no implementer round has run.",
           "created_at": "2026-11-05T18:05:18Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "00dd7c86-e38f-4215-80be-9bd76fa3d6c9",
+          "kind": "",
+          "text": "**2026-11-10** — Human checks at approval (S295):\n- later: [AFTER LAND] `ork projects set prism-ui --check 'dotnet build Missing.slnx'` refuses with the file and the directory; the real prism-ui check is accepted.\n- later: [AFTER LAND] A run paused at setup on a bad check is fixed with `ork stop ID`, `ork projects set PROJECT --check CMD` and `ork retry ID`; implementer round 1 runs with the new check, without a new `ork run`.",
+          "created_at": "2026-11-10T02:29:44Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "69ce3b6c-38d5-404a-8916-4feae5c3e242",
+          "kind": "",
+          "text": "**2026-11-10** — Verified: ork verifies the check command once, where it runs, with a static sh -n check (first word resolves, named files exist) at projects set (refused, --no-verify remembered per project as no_verify_check), at run setup and in the implement step (pause with the stop, set, retry fix path), in the plan warning and in doctor. Full suite green with -race (2970 passed, 0 failed), go vet, gofmt, slicer check and adj lint clean; review findings applied with mutation checks.",
+          "created_at": "2026-11-10T02:29:49Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -16135,7 +16192,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

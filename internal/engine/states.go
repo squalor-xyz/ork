@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
@@ -24,7 +25,10 @@ import (
 const excludeLine = ".worktrees/"
 
 // setup creates the worktree and the ledger run. A failure here stops the
-// slice: nothing was started that a retry could take over.
+// slice: nothing was started that a retry could take over. Once both exist, it
+// verifies the check command where the round check will run (S295,
+// *proposed*); a command that cannot run pauses the run before round 1, at
+// implement, so that a retry does not begin the ledger run again.
 func (e *Engine) setup(ctx context.Context) error {
 	rec := e.run.Snapshot()
 	if err := e.ensureExclude(ctx); err != nil {
@@ -34,7 +38,31 @@ func (e *Engine) setup(ctx context.Context) error {
 		return e.stop(ctx, "setup: git worktree add: "+err.Error())
 	}
 	e.beginRelay(ctx, rec)
+	if reason := e.checkCannotRun(ctx, rec); reason != "" {
+		return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateImplement, Reason: reason})
+	}
+	e.checkVerified = true
 	return e.run.Update(func(r *runrec.Record) { r.State = runrec.StateImplement })
+}
+
+// checkCannotRun is the static check (VerifyCheck) of the commands the run
+// will run, in the directory the round check uses (CheckDir). It returns the
+// reason of a pause, or "" when they can run. It runs nothing. A directory it
+// cannot name is left to the checks, which pause with that reason.
+func (e *Engine) checkCannotRun(ctx context.Context, rec runrec.Record) string {
+	if e.proj.NoVerifyCheck {
+		return "" // the owner stored the check with --no-verify
+	}
+	dir, err := e.CheckDir(ctx, e.proj.Path, rec.Worktree)
+	if err != nil {
+		return ""
+	}
+	problems, flag := CheckCommandProblems(ctx, e.proj, dir, e.d.Verify)
+	if len(problems) == 0 {
+		return ""
+	}
+	return oneLine(fmt.Sprintf(CheckCannotRunPrefix+"%s: %s; to fix the check: ork stop %s, ork projects set %s %s CMD, then ork retry %s",
+		dir, strings.Join(problems, "; "), rec.ID, ShellWord(e.proj.Name), flag, rec.ID))
 }
 
 // beginRelay begins the slicer ledger run of the engine's run and its
@@ -199,6 +227,14 @@ func (e *Engine) bumpRound(ctx context.Context, fb runrec.Feedback, failure ...s
 func (e *Engine) implement(ctx context.Context) error {
 	pend := e.takePending()
 	rec := e.run.Snapshot()
+	// S295 (*proposed*): before round 1 the check command is verified, unless
+	// setup just did. A retry of the setup pause, or a resume of the stopped run
+	// (S296) with the project's fixed check, comes here and not through setup.
+	if !e.checkVerified && rec.Feedback == nil && !hasImplementerRound(rec) {
+		if reason := e.checkCannotRun(ctx, rec); reason != "" {
+			return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateImplement, Reason: reason})
+		}
+	}
 	r := round{role: RoleImplementer, n: rec.Round, state: runrec.StateImplement, task: rec.Item + " implementer", resumeFrom: []string{RoleImplementer}}
 	if rec.Feedback == nil {
 		r.sections = []BriefSection{{Title: "Round", Body: "This is the first round. The slice is not started: run `slicer start " + rec.Item + " --render --strict` first."}}
@@ -352,11 +388,13 @@ func (e *Engine) outsideProblems(ctx context.Context, rec runrec.Record, sres *s
 // project's round check command when it names one, else its check command
 // (S285, *proposed*). The check before review or the gate and the landing
 // re-check run the check command.
-func (e *Engine) roundCommand() string {
-	if e.proj.RoundCheckCommand != "" {
-		return e.proj.RoundCheckCommand
+func (e *Engine) roundCommand() string { return roundCommandOf(e.proj) }
+
+func roundCommandOf(p registry.Project) string {
+	if p.RoundCheckCommand != "" {
+		return p.RoundCheckCommand
 	}
-	return e.proj.CheckCommand
+	return p.CheckCommand
 }
 
 // needsFullCheck says a green round check is followed by a check with the

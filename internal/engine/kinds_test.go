@@ -212,6 +212,17 @@ func TestMalformedOwnerFindingPausesOnAShapeError(t *testing.T) {
 	}
 }
 
+func TestOwnerFindingWithAnEnDashKeepsItsAsk(t *testing.T) {
+	finding := strings.Replace(ownerFinding, "Recommend: 2 - isolation", "Recommend: 2 – isolation", 1)
+	got, err := Triage(review(finding, "nothing", "nothing", "nothing"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Owner) != 1 || got.Owner[0].Ask == nil || got.Owner[0].Ask.Recommend != 2 || got.Owner[0].Ask.Reason != "isolation is simpler" {
+		t.Fatalf("owner findings: %+v", got.Owner)
+	}
+}
+
 // fileRoutes answer the two calls that file a later finding.
 func fileRoutes(id string) func(*harnessOpts) {
 	return func(o *harnessOpts) {

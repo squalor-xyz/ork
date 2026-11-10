@@ -328,6 +328,31 @@ func TestReportFallbackIsWrittenAt0600EvenOverAnExistingFile(t *testing.T) {
 
 const structuredQuestion = "Question: Which storage?\nOptions:\n1. local: use local storage\n2. remote: use remote storage\nRecommend: 1 - keeps data nearby\nDecision key: storage.engine"
 
+func TestRecommendAcceptsDashes(t *testing.T) {
+	for name, dash := range map[string]string{"hyphen": "-", "en dash": "–", "em dash": "—"} {
+		t.Run(name, func(t *testing.T) {
+			body := strings.Replace(structuredQuestion, "Recommend: 1 - keeps data nearby", "Recommend: 1 "+dash+" r", 1)
+			rep, err := CheckReport(RoleReviewer, false, "## Owner needed\n"+body)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if rep.Ask == nil || rep.Ask.Recommend != 1 || rep.Ask.Reason != "r" {
+				t.Fatalf("ask %+v", rep.Ask)
+			}
+		})
+	}
+	for name, line := range map[string]string{"no separator": "Recommend: 1 r", "double hyphen": "Recommend: 1 -- r"} {
+		t.Run(name, func(t *testing.T) {
+			body := strings.Replace(structuredQuestion, "Recommend: 1 - keeps data nearby", line, 1)
+			_, err := CheckReport(RoleReviewer, false, "## Owner needed\n"+body)
+			if err == nil {
+				t.Fatal("accepted")
+			}
+			shapeProblems(t, err)
+		})
+	}
+}
+
 func TestCheckReportParsesAStructuredQuestion(t *testing.T) {
 	rep, err := CheckReport(RoleReviewer, false, "## Owner needed\n"+structuredQuestion)
 	if err != nil {

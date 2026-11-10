@@ -103,6 +103,15 @@ Notes on the fields:
   it. A started run reads it, so the call is refused while the project has
   unfinished runs. An older ork refuses a registry with this key because
   `Load` uses strict keys.
+- `no_verify_check` (*proposed*, S295; owner decision 2026-11-10) is `true`
+  when the check commands were stored with `ork projects set NAME --check CMD
+  --no-verify`. ork then skips the static check of the commands (the first
+  word resolves, the named files exist) at run setup, in the implement step
+  and in the plan. Absent means `false`. Setting `check_command` or
+  `round_check_command` without `--no-verify` clears it; `projects set` calls
+  that set neither leave it. A started run reads it, so it changes only with
+  the check commands. An older ork refuses a registry with this key because
+  `Load` uses strict keys.
 - `permissions` is the per-role allowlist (`launch.permissions`). Its exact
   syntax per vendor waits on the vendor spike (design.md). *Proposed* (S265):
   `ork projects set NAME --preset go|python` writes the language's full
@@ -164,7 +173,7 @@ Notes on the fields:
   lands with the separate setter slice S224.
 - `ork projects set` (*proposed*, S161, owner decision 2026-10-27) is the only
   way ork writes the optional per-project fields. It changes `push`, `ui_doc`,
-  `ui_pass_skills`, `spec_check_rows` (S258), `worktree_pattern`, `branch_pattern`, `check_command`, `round_check_command` (S285), `check_minutes`,
+  `ui_pass_skills`, `spec_check_rows` (S258), `worktree_pattern`, `branch_pattern`, `check_command`, `round_check_command` (S285), `no_verify_check` (S295, with `--no-verify`), `check_minutes`,
   `cap`, `budgets.minutes`, `budgets.tokens` and, since S174 (*proposed*,
   owner decision 2026-10-29), `environment_lines`, `permissions` and
   `vendor_env`, and leaves every other key as it was (`name`, `path` and

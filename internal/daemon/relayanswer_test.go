@@ -157,6 +157,41 @@ func TestDaemonRelayAnswerAlsoAnswersAKeyedOpenAdjRecord(t *testing.T) {
 	}
 }
 
+func TestDaemonRelayAnswerPassesViaToAdj(t *testing.T) {
+	for _, via := range []string{"cli", "tui"} {
+		t.Run(via, func(t *testing.T) {
+			d, _, proj := runDaemon(t, nil,
+				clitest.Route{Tool: "slicer", Args: []string{"relay-run", "list"}, Prefix: true, Stdout: `{"runs":[{"id":"r1","state":"active","steps":[{"question":{"id":"q1","key":"storage.engine","options":[{"label":"Files"}]}}]}]}`},
+				clitest.Route{Tool: "slicer", Args: []string{"relay-run", "answer"}, Prefix: true},
+				clitest.Route{Tool: "adj", Args: []string{"check"}, Prefix: true, Stdout: `{"open":[{"id":12,"key":"storage.engine"}]}`},
+				clitest.Route{Tool: "adj", Args: []string{"decide"}, Prefix: true},
+				clitest.Route{Tool: "adj", Args: []string{"show"}, Prefix: true, Stdout: `{"id":12,"status":"open","title":"Storage","options":[{"label":"Files"}]}`})
+			proj.Adj = true
+			if err := registry.Save(d.registryPath(), &registry.File{Version: registry.Version, Projects: []registry.Project{proj}}); err != nil {
+				t.Fatal(err)
+			}
+			d.runs.deps.Adj = adjcli.Client{Bin: lastFake.Bin("adj")}
+			raw, _ := json.Marshal(RelayAnswerParams{Adj: 12, Project: "p", Run: "r1", Question: "q1", Option: "Files", By: "Jon", Via: via})
+			if _, err := d.handle(context.Background(), "relay.answer", raw); err != nil {
+				t.Fatal(err)
+			}
+			writes := 0
+			for _, c := range lastFake.CallsTo("adj") {
+				if c.Args[0] != "decide" {
+					continue
+				}
+				writes++
+				if joined := strings.Join(c.Args, " "); !strings.Contains(joined, "Answered in ork ("+via+")") {
+					t.Errorf("adj decide for via %s: %v", via, c.Args)
+				}
+			}
+			if writes != 1 {
+				t.Fatalf("adj decide calls: %d", writes)
+			}
+		})
+	}
+}
+
 func TestDaemonRelayAnswerLedgerFailureDoesNotAnswerAdj(t *testing.T) {
 	d, _, _ := runDaemon(t, nil,
 		clitest.Route{Tool: "slicer", Args: []string{"relay-run", "list"}, Prefix: true, Stdout: `{"runs":[{"id":"r1","state":"active","steps":[{"question":{"id":"q1","key":"storage.engine"}}]}]}`},

@@ -11,7 +11,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -91,71 +90,10 @@ type DoctorReport struct {
 	Upgrade       []upgradeHint  `json:"upgrade"`
 }
 
-// assignmentPrefix recognizes only literal shell assignment names. Values are
-// skipped without expanding them or executing any part of the command.
-var assignmentPrefix = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*=`)
-
-// checkCommandWord reads the first literal shell word after assignments.
-// Quotes and escapes are removed, but no shell expansion is performed.
-func checkCommandWord(command string) string {
-	for command = strings.TrimLeft(command, " \t\r\n"); command != ""; command = strings.TrimLeft(command, " \t\r\n") {
-		if strings.ContainsRune("#;&|()<>", rune(command[0])) {
-			return ""
-		}
-		assignment := assignmentPrefix.MatchString(command)
-		var word strings.Builder
-		var quote byte
-		i := 0
-		for ; i < len(command); i++ {
-			c := command[i]
-			if quote == 0 && strings.ContainsRune(" \t\r\n;&|()<>", rune(c)) {
-				break
-			}
-			if c == '\\' && quote != '\'' && i+1 < len(command) {
-				next := command[i+1]
-				if quote == 0 || strings.ContainsRune("$`\\\"\n", rune(next)) {
-					if next != '\n' {
-						word.WriteByte(next)
-					}
-					i++
-					continue
-				}
-			}
-			if c == '\'' || c == '"' {
-				if quote == 0 {
-					quote = c
-					continue
-				}
-				if quote == c {
-					quote = 0
-					continue
-				}
-			}
-			word.WriteByte(c)
-		}
-		if !assignment {
-			value := word.String()
-			switch value {
-			case "!", "{", "}", "case", "do", "done", "elif", "else", "esac", "fi", "for", "if", "in", "then", "until", "while",
-				".", ":", "break", "continue", "eval", "exec", "exit", "export", "readonly", "return", "set", "shift", "times", "trap", "unset", "cd", "command", "time":
-				return ""
-			}
-			if strings.ContainsAny(value, "$`") || strings.HasPrefix(value, "~") {
-				return ""
-			}
-			return value
-		}
-		command = command[i:]
-	}
-	return ""
-}
-
 // addFinding keeps every stored finding on a single text line.
 func (p *projectCheck) addFinding(format string, args ...any) {
 	p.Findings = append(p.Findings, strings.Join(strings.Fields(fmt.Sprintf(format, args...)), " "))
 }
-
-var shellErrorPrefix = regexp.MustCompile(`^.*?sh: (?:-c: line [0-9]+: |[0-9]+: )`)
 
 func checkProject(ctx context.Context, p registry.Project) projectCheck {
 	check := projectCheck{Name: p.Name, Path: p.Path, Findings: []string{}}
@@ -168,32 +106,11 @@ func checkProject(ctx context.Context, p registry.Project) projectCheck {
 		check.addFinding("path: not a directory")
 	}
 	if p.CheckCommand != "" {
-		// -n parses only: even substitutions and redirects must never execute.
-		res, err := clirun.Run(ctx, clirun.Call{Bin: "sh", Args: []string{"-n", "-c", p.CheckCommand}, Timeout: versionTimeout})
-		if err != nil {
-			message := shellErrorPrefix.ReplaceAllString(firstLine(res.Stderr), "")
-			if message == "" {
-				message = "could not check shell syntax"
-			}
-			check.addFinding("check_command: %s", message)
-		} else if word := checkCommandWord(p.CheckCommand); word != "" {
-			bin := word
-			if strings.ContainsRune(bin, '/') && !filepath.IsAbs(bin) {
-				bin = filepath.Join(p.Path, bin)
-			}
-			if _, err := exec.LookPath(bin); err != nil {
-				detail := "not found on PATH"
-				if strings.ContainsRune(word, '/') {
-					detail = "not executable"
-					if _, statErr := os.Stat(bin); os.IsNotExist(statErr) {
-						detail = "not found"
-						if !filepath.IsAbs(word) {
-							detail = "not found in project directory"
-						}
-					}
-				}
-				check.addFinding("check_command: %q %s", word, detail)
-			}
+		// The shared static check (S295): `sh -n` parses only, even substitutions
+		// and redirects must never execute; the first word of each command
+		// resolves; the files the command names exist in the project directory.
+		for _, fault := range engine.CheckFaults(ctx, p.Path, p.CheckCommand, "project directory") {
+			check.addFinding("check_command: %s", fault.Text())
 		}
 	}
 	for _, pattern := range []struct{ name, value string }{

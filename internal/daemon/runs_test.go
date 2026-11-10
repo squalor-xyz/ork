@@ -77,7 +77,10 @@ func runDaemonIn(t *testing.T, root string, runner roundRunner, routes ...clites
 	deps := engine.Deps{Store: store, Slicer: slicercli.Client{Bin: fake.Bin("slicer")}, GitBin: fake.Bin("git"), Runner: runner,
 		Check: func(context.Context, string, string, time.Duration) (engine.CheckOutput, error) {
 			return engine.CheckOutput{OK: true}, nil
-		}}
+		},
+		// The setup verification looks at PATH, which a test may replace with a
+		// directory of fake launchers (S295).
+		Verify: func(context.Context, string, string) []string { return nil }}
 	d := New(Config{Paths: PathsIn(filepath.Join(root, "state")), RegistryPath: reg, Source: &stubSource{}, Engine: &deps})
 	t.Cleanup(d.cache.Close)
 	t.Cleanup(d.closeRuns)
@@ -3567,6 +3570,60 @@ func TestRunPlanCarriesSetupWarnings(t *testing.T) {
 	b := request(t, d, MethodRunPlan, `{"project":"p","item":"S1"}`)
 	if strings.Contains(string(b), `"warnings"`) {
 		t.Fatalf("a plan with no warnings has the key: %s", b)
+	}
+}
+
+// S295 (*proposed*): the plan says when the check command cannot run in the
+// project's folder, so the launch shows it before the start.
+func TestRunPlanWarnsWhenTheCheckCannotRun(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	if err := os.MkdirAll(p.Path, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(p.Path, "go.mod"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	editProject(t, d, func(p *registry.Project) { p.CheckCommand = "go build App.slnx" })
+	plan := launchPlan(t, d, `{"project":"p","item":"S1"}`)
+	if len(plan.Warnings) != 1 {
+		t.Fatalf("warnings %q, want one", plan.Warnings)
+	}
+	for _, part := range []string{"check command cannot run in " + p.Path, "App.slnx", "(command: go build App.slnx)"} {
+		if !strings.Contains(plan.Warnings[0], part) {
+			t.Errorf("warning %q lacks %q", plan.Warnings[0], part)
+		}
+	}
+	if n := strings.Count(plan.Warnings[0], p.Path); n != 1 {
+		t.Errorf("warning %q names the directory %d times, want once", plan.Warnings[0], n)
+	}
+	// A check stored with --no-verify (no_verify_check) is not warned about.
+	editProject(t, d, func(p *registry.Project) { p.NoVerifyCheck = true })
+	if plan := launchPlan(t, d, `{"project":"p","item":"S1"}`); len(plan.Warnings) != 0 {
+		t.Errorf("warnings %q, want none for a check stored with --no-verify", plan.Warnings)
+	}
+	editProject(t, d, func(p *registry.Project) { p.NoVerifyCheck = false })
+	// The file is there: no warning.
+	if err := os.WriteFile(filepath.Join(p.Path, "App.slnx"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if plan := launchPlan(t, d, `{"project":"p","item":"S1"}`); len(plan.Warnings) != 0 {
+		t.Errorf("warnings %q, want none", plan.Warnings)
+	}
+}
+
+// The setup pause for a check that cannot run says to stop first: a plain
+// retry verifies the same command again (S295, review finding).
+func TestPausedNextOfTheSetupPauseIsAStop(t *testing.T) {
+	rec := runrec.Record{ID: "r1", State: runrec.StatePaused, Pending: &runrec.Pending{
+		Kind: runrec.PendingError, State: runrec.StateImplement,
+		Reason: engine.CheckCannotRunPrefix + "/w: \"App.slnx\" does not exist (command: go build App.slnx); to fix the check: ork stop r1, ork projects set p --check CMD, then ork retry r1"}}
+	if got := pausedNext(rec); got != "ork stop r1" {
+		t.Errorf("next %q, want ork stop r1", got)
+	}
+	// Another error pause keeps the retry.
+	rec.Pending.Reason = "check command: sh went away"
+	if got := pausedNext(rec); got != "ork retry r1" {
+		t.Errorf("next %q, want ork retry r1", got)
 	}
 }
 

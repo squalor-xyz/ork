@@ -134,6 +134,7 @@ The registry holds optional per-project settings. Change them with
 | Flag | What it sets |
 |---|---|
 | `--check CMD` | the check command ork runs after each implementer round. With none set, `ork run` and `ork wave start` refuse to start unless you add `--allow-no-check`, and `ork doctor` reports it (*proposed*, S265, adj 191) |
+| `--no-verify` | with `--check` or `--round-check`: store the command even when ork finds it cannot run in the project's folder. ork remembers it for the project (`no_verify_check`), so runs do not pause at setup on that command; a later `--check` or `--round-check` without `--no-verify` verifies again and clears it. Without it ork checks, without running anything but `sh -n`, that the shell parses the command, the first word of each command is found, and the plain file names the command lists (`App.slnx`, `scripts/test.sh`, not flags, globs or `./...`) exist in the folder the check runs in, and refuses a command that fails, naming the file and the folder (*proposed*, S295). A run whose check cannot run pauses before round 1 with the same line; to fix it, `ork stop ID`, `ork projects set NAME --check CMD`, then `ork retry ID` |
 | `--round-check CMD` | a faster command for the checks after implementer rounds (*proposed*, S285). Your `--check` command still runs in the landing re-check and, when it differs from the round command, after a green round check, before the review or the gate. Refused only while the project would have no `--check` command (a saved one is enough); empty clears it; refused while the project has unfinished runs |
 | `--check-minutes N` | minutes the check command may run (default 10; `internal/engine/states.go:197-202`). `docs/state.md:76-78` also calls it the stale flag, which the code does not do |
 | `--worktree-pattern P` | worktree path; must contain `{id}` or `{id_lower}` (default `.worktrees/{id}`) |
@@ -555,7 +556,7 @@ Use this loop each day:
    `0` jumps to Needs you, `1`-`9` to a project, `[` and `]` move between them
    (`internal/tui/keys.go:87-93`).
 2. Clear **Needs you** from the top. Group order is Decisions, Held, Stopped,
-   Paused, Approve, Findings, Errors (`docs/dashboard.md:404-407`).
+   Questions, Paused, Approve, Findings, Errors (`docs/dashboard.md:463-464`).
 3. Open **Questions** for every open question in one list.
 4. Open **Decisions** for adj records and **Roadmap** for what is next.
 5. Press `r` to refresh now. `/` filters projects. `?` shows every key.

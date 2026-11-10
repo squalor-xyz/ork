@@ -788,7 +788,8 @@ func TestDoctorChecksEachProjectCheckCommand(t *testing.T) {
 		{"quoted", "'./check tool'", ""},
 		{"double-quoted", `"./check tool"`, ""},
 		{"escaped", `./check\ tool`, ""},
-		{"operator", "check-tool&& missing-second-command", ""},
+		{"operator", "check-tool&& missing-second-command", `check_command: "missing-second-command" not found on PATH`},
+		{"named-file", "check-tool App.slnx", `check_command: "App.slnx" does not exist in project directory`},
 		{"absolute", "ABSOLUTE", ""},
 		{"missing-relative", "./missing-check-tool", `check_command: "./missing-check-tool" not found in project directory`},
 		{"not-executable", "./plain-file", `check_command: "./plain-file" not executable`},
@@ -829,6 +830,25 @@ func TestDoctorChecksEachProjectCheckCommand(t *testing.T) {
 			}
 			if _, err := os.Stat(marker); !os.IsNotExist(err) {
 				t.Fatalf("check command was executed: %v", err)
+			}
+		})
+	}
+}
+
+// The findings of the shared static check (S295, *proposed*), read from
+// checkProject without a daemon: a later command's first word, and a named file
+// in the project directory.
+func TestDoctorFindsWhatTheStaticCheckFinds(t *testing.T) {
+	for _, tc := range []struct{ command, finding string }{
+		{"go vet ./... && missing-second-command", `check_command: "missing-second-command" not found on PATH`},
+		{"go build App.slnx", `check_command: "App.slnx" does not exist in project directory`},
+		{"./missing-check-tool", `check_command: "./missing-check-tool" not found in project directory`},
+		{"go build ./...", ""},
+	} {
+		t.Run(tc.command, func(t *testing.T) {
+			d := checkProject(context.Background(), setUpProject(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: tc.command}))
+			if got := strings.Join(d.Findings, "\n"); !strings.Contains(got, tc.finding) || tc.finding == "" && got != "" {
+				t.Fatalf("findings %q, want %q", got, tc.finding)
 			}
 		})
 	}
@@ -1064,17 +1084,8 @@ exit 2
 	}
 }
 
-func TestDoctorSkipsShellWords(t *testing.T) {
-	words := strings.Fields("! { } case do done elif else esac fi for if in then until while . : break continue eval exec exit export readonly return set shift times trap unset cd command time")
-	words = append(words, "$TOOL", "${TOOL}", "$(printf tool)", "`printf tool`", "~/bin/check", "~someone/bin/check")
-	for _, word := range words {
-		t.Run(word, func(t *testing.T) {
-			if got := checkCommandWord("MODE=test " + word); got != "" {
-				t.Fatalf("shell word %q must skip lookup, got %q", word, got)
-			}
-		})
-	}
-}
+// The parser's own test of shell words moved to the engine with the parser
+// (TestVerifyCheckSkipsShellWords, S295).
 
 func TestDoctorShellCommandsHaveNoLookupFinding(t *testing.T) {
 	for _, command := range []string{"if :; then :; fi", "{ :; }", ". ./missing-script", "cd /missing-dir", "command missing-check-tool", `"$TOOL"`, "`printf tool`", "~/bin/check"} {
@@ -1533,6 +1544,29 @@ func TestProjectsSetRoundCheck(t *testing.T) {
 	code, stdout, _ = run(t, w.app, "projects", "set", "full", "--round-check", "")
 	if code != 0 || stdout != "updated full: round_check_command=unset\n" {
 		t.Fatalf("clear: exit %d: %q", code, stdout)
+	}
+}
+
+// --check is verified in the project's folder; --no-verify stores it anyway
+// (S295, *proposed*).
+func TestProjectsSetCheckVerifiesAndNoVerifyStoresIt(t *testing.T) {
+	dir := t.TempDir()
+	w := newWorld(t, stubSource{}, registry.Project{Name: "demo", Path: dir})
+	code, _, stderr := run(t, w.app, "projects", "set", "demo", "--check", "go build App.slnx")
+	if code == 0 || !strings.Contains(stderr, "App.slnx") || !strings.Contains(stderr, dir) || !strings.Contains(stderr, "--no-verify") {
+		t.Fatalf("a missing file: exit %d, stderr %q", code, stderr)
+	}
+	if saved, _ := registry.Load(w.regPath); saved.Projects[0].CheckCommand != "" {
+		t.Fatalf("a refusal stored %q", saved.Projects[0].CheckCommand)
+	}
+	code, stdout, stderr := run(t, w.app, "projects", "set", "demo", "--check", "go build App.slnx", "--no-verify")
+	if code != 0 || stdout != "updated demo: check_command=\"go build App.slnx\"\n" {
+		t.Fatalf("--no-verify: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	// --no-verify alone is not a field.
+	code, _, stderr = run(t, w.app, "projects", "set", "demo", "--no-verify")
+	if code == 0 || !strings.Contains(stderr, "at least one field flag") {
+		t.Fatalf("--no-verify alone: exit %d, stderr %q", code, stderr)
 	}
 }
 

@@ -237,12 +237,17 @@ type Project struct {
 	// implementer rounds (S285, *proposed*). Empty means CheckCommand runs
 	// everywhere. CheckCommand still runs after a green round check, before
 	// review or the gate, and at the landing re-check.
-	RoundCheckCommand string                       `json:"round_check_command,omitempty"`
-	CheckMinutes      int                          `json:"check_minutes,omitempty"`
-	EnvironmentLines  []string                     `json:"environment_lines,omitempty"`
-	Budgets           Budgets                      `json:"budgets,omitzero"`
-	Permissions       map[string]Permission        `json:"permissions,omitempty"`
-	VendorEnv         map[string]map[string]string `json:"vendor_env,omitempty"`
+	RoundCheckCommand string `json:"round_check_command,omitempty"`
+	// NoVerifyCheck says the check commands were stored with `projects set
+	// --no-verify` (S295, *proposed*; owner decision 2026-11-10): the static
+	// check of the command is skipped at run setup and in the implement step.
+	// A change of either check command without --no-verify clears it.
+	NoVerifyCheck    bool                         `json:"no_verify_check,omitempty"`
+	CheckMinutes     int                          `json:"check_minutes,omitempty"`
+	EnvironmentLines []string                     `json:"environment_lines,omitempty"`
+	Budgets          Budgets                      `json:"budgets,omitzero"`
+	Permissions      map[string]Permission        `json:"permissions,omitempty"`
+	VendorEnv        map[string]map[string]string `json:"vendor_env,omitempty"`
 	// Push says ork pushes the base branch after it lands a slice (S119,
 	// *proposed*; adj 162). Off by default; the owner turns it on per project.
 	Push bool `json:"push,omitempty"`

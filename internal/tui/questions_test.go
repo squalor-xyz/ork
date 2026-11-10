@@ -140,6 +140,36 @@ func TestQuestionsAdjReadOnlyDetail(t *testing.T) {
 	}
 }
 
+// The record opens the way the owner opens it: Enter on its row in the
+// Questions view, which goes through openQuestion, not by setting the pane.
+func TestQuestionsViewAnswerOpensThroughOpenQuestion(t *testing.T) {
+	t.Setenv("ADJ_DECIDED_BY", "Jon R")
+	h := questionsHarness(t)
+	l := &decisionLive{}
+	h.m.cfg.Live = l
+	h.m.projects[0].snap.Open.Value[0].Options = []adjcli.Option{{Label: "Files"}, {Label: "Database"}}
+	if h.m.decisionPane != nil || h.m.view != questionsView {
+		t.Fatal("the harness must start on the list")
+	}
+	h.deliver(press("down")) // the first row is the engine question
+	h.deliver(press("enter"))
+	if h.m.pane != nil || h.m.decisionPane == nil || h.m.decisionPane.record.ID != 9 || h.m.decisionPane.project != "zeta" {
+		t.Fatalf("enter did not open the record: pane %v, record %v", h.m.pane, h.m.decisionPane)
+	}
+	h.deliver(press("2"))
+	if h.m.confirm == nil || h.m.confirm.option != "Database" || h.m.confirm.adjID != 9 {
+		t.Fatalf("confirmation: %+v", h.m.confirm)
+	}
+	cmd := h.m.key(press("y"))
+	if cmd == nil {
+		t.Fatal("no answer command")
+	}
+	h.deliver(cmd())
+	if len(l.answers) != 1 || l.answers[0].ID != 9 || l.answers[0].Project != "zeta" || l.answers[0].Option != "Database" {
+		t.Fatalf("answers: %+v", l.answers)
+	}
+}
+
 func TestQuestionsEmptyAndDisplayOnly(t *testing.T) {
 	h := newHarness(t, proj("pending", true), proj("failed", true), proj("ready", true))
 	h.m.projects[1].loaded = true

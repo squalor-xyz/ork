@@ -29,6 +29,37 @@ func decisionsHarness(t *testing.T) *harness {
 	return h
 }
 
+func TestRecordOptionsHangUnderTheirLabel(t *testing.T) {
+	r := adjcli.Record{Options: []adjcli.Option{{Label: "Files", Summary: strings.Repeat("abcdefgh ", 8)}, {Label: "Database", Summary: "short"}}}
+	lines := plainPaneLines(recordOptions(r, 40, NewTheme(true), indent, true))
+	if len(lines) < 3 || !strings.HasPrefix(lines[0], indent+"1. Files: abcdefgh") {
+		t.Fatalf("lines: %q", lines)
+	}
+	last := len(lines) - 1
+	if !strings.HasPrefix(lines[last], indent+"2. Database") {
+		t.Fatalf("lines: %q", lines)
+	}
+	for _, l := range lines[1:last] {
+		if !strings.HasPrefix(l, indent+"   abcdefgh") {
+			t.Errorf("continuation is not under the label text: %q", l)
+		}
+	}
+}
+
+func TestRecordOptionWithAnEmptySummaryHasNoColon(t *testing.T) {
+	r := adjcli.Record{Options: []adjcli.Option{{Label: "Files"}}}
+	for _, numbered := range []bool{true, false} {
+		lines := plainPaneLines(recordOptions(r, 40, NewTheme(true), indent, numbered))
+		want := indent + "Files"
+		if numbered {
+			want = indent + "1. Files"
+		}
+		if len(lines) != 1 || lines[0] != want {
+			t.Errorf("numbered %v: lines %q, want %q", numbered, lines, want)
+		}
+	}
+}
+
 func TestDecisionsListsOpenFirstWithOptionsAndRecommendation(t *testing.T) {
 	h := decisionsHarness(t)
 	v := h.view()

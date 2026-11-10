@@ -17,6 +17,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -217,7 +218,7 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 		if err := decode(params, &p); err != nil {
 			return nil, err
 		}
-		return d.setProject(p)
+		return d.setProject(ctx, p)
 	case MethodVendorsList:
 		return d.listVendors()
 	case MethodVendorsSet:
@@ -540,7 +541,7 @@ func (d *Daemon) removeProject(name string) error {
 // While the project has unfinished runs it refuses a call that sets a field a
 // running slice reads, and allows the cap, the budgets and the patterns (S265,
 // *proposed*).
-func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
+func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.Project, error) {
 	bad := func(format string, args ...any) error {
 		return &ipc.Error{Code: CodeBadParams, Message: fmt.Sprintf(format, args...)}
 	}
@@ -626,6 +627,11 @@ func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
 	if base.RoundCheckCommand != "" && base.CheckCommand == "" {
 		return registry.Project{}, bad("round_check_command needs a check_command: the check before the gate and the landing re-check run it; set --check with --round-check, or clear --round-check")
 	}
+	if !p.NoVerify {
+		if refusal := verifyNewCheck(ctx, *proj, p); refusal != "" {
+			return registry.Project{}, bad("%s", refusal)
+		}
+	}
 	withExtras, err := withProjectExtras(base, p)
 	if err != nil {
 		return registry.Project{}, err
@@ -658,6 +664,12 @@ func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
 	if p.RoundCheckCommand != nil {
 		proj.RoundCheckCommand = *p.RoundCheckCommand
 	}
+	if p.CheckCommand != nil || p.RoundCheckCommand != nil {
+		// S295 (*proposed*; owner decision 2026-11-10): --no-verify is
+		// remembered with the commands it stored, and a change of either
+		// command without it clears it.
+		proj.NoVerifyCheck = p.NoVerify
+	}
 	if p.CheckMinutes != nil {
 		proj.CheckMinutes = *p.CheckMinutes
 	}
@@ -680,6 +692,28 @@ func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
 		d.startQueuedLocked(f)
 	}
 	return *proj, nil
+}
+
+// verifyNewCheck is the static check (S295, *proposed*) of the check command
+// and the round check command that p sets and that are not empty. It returns the
+// refusal, or "" when they can run. The round check runs in the project's own
+// folder of the worktree (S293), and the main checkout's equivalent of that
+// folder is the project's path, not the top of its repository. A project path
+// that is not a directory is left to ork doctor.
+func verifyNewCheck(ctx context.Context, proj registry.Project, p SetProjectParams) string {
+	if info, err := os.Stat(proj.Path); err != nil || !info.IsDir() {
+		return ""
+	}
+	var problems []string
+	for _, command := range []*string{p.CheckCommand, p.RoundCheckCommand} {
+		if command != nil && *command != "" {
+			problems = append(problems, engine.VerifyCheckIn(ctx, proj.Path, *command, engine.CheckDirLabel)...)
+		}
+	}
+	if len(problems) == 0 {
+		return ""
+	}
+	return fmt.Sprintf(engine.CheckCannotRunPrefix+"%s: %s; fix it, or store it anyway with --no-verify", proj.Path, strings.Join(problems, "; "))
 }
 
 // stateOf is one part's age and state, for a status.

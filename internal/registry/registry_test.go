@@ -147,6 +147,27 @@ func TestPushIsOffByDefaultAndOnlyWrittenWhenOn(t *testing.T) {
 	}
 }
 
+// no_verify_check is written only for a project that has it on, and read back
+// (S295, *proposed*).
+func TestNoVerifyCheckIsOnlyWrittenWhenOn(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "projects.json")
+	f := &File{Version: Version, Projects: []Project{{Name: "a", Path: "/p/a", CheckCommand: "go test"}, {Name: "b", Path: "/p/b", CheckCommand: "go test", NoVerifyCheck: true}}}
+	if err := Save(path, f); err != nil {
+		t.Fatal(err)
+	}
+	saved, _ := os.ReadFile(path)
+	if strings.Count(string(saved), `"no_verify_check"`) != 1 || !strings.Contains(string(saved), `"no_verify_check": true`) {
+		t.Fatalf("no_verify_check is written for a project that has it off, or not for one that has it on:\n%s", saved)
+	}
+	back, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if back.Projects[0].NoVerifyCheck || !back.Projects[1].NoVerifyCheck {
+		t.Fatalf("loaded: %v %v", back.Projects[0].NoVerifyCheck, back.Projects[1].NoVerifyCheck)
+	}
+}
+
 func TestSaveKeepsAdjFalse(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "projects.json")
 	f := &File{Version: Version, Projects: []Project{{Name: "a", Path: "/p/a", Adj: false}}}

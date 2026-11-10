@@ -637,11 +637,13 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			m.confirm = nil
 			return m.callAction(a)
 		case "n", "N", "enter", "esc":
+			cancelled := *m.confirm
 			if m.confirm.verb == "launch" {
 				m.dropLaunch()
 			}
 			m.confirm = nil
 			m.actionStatus = "Cancelled"
+			m.restoreDecisionDraft(cancelled)
 		}
 		return nil
 	}
