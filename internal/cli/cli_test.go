@@ -1512,6 +1512,30 @@ func TestProjectsSetUpdatesOneField(t *testing.T) {
 	}
 }
 
+// --round-check sets the round check command beside --check (S285, *proposed*).
+// The daemon refuses it while the project has no check command.
+func TestProjectsSetRoundCheck(t *testing.T) {
+	w := newWorld(t, stubSource{},
+		registry.Project{Name: "plain", Path: "/p/plain"},
+		registry.Project{Name: "full", Path: "/p/full", CheckCommand: "make test"})
+	code, _, stderr := run(t, w.app, "projects", "set", "plain", "--round-check", "make fast")
+	if code == 0 || !strings.Contains(stderr, "round_check_command needs a check_command") {
+		t.Fatalf("no check command: exit %d, stderr %q", code, stderr)
+	}
+	code, stdout, stderr := run(t, w.app, "projects", "set", "full", "--round-check", "make fast")
+	if code != 0 || stdout != "updated full: round_check_command=\"make fast\"\n" {
+		t.Fatalf("exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	saved, _ := registry.Load(w.regPath)
+	if got := saved.Projects[1]; got.RoundCheckCommand != "make fast" || got.CheckCommand != "make test" {
+		t.Fatalf("saved: %+v", got)
+	}
+	code, stdout, _ = run(t, w.app, "projects", "set", "full", "--round-check", "")
+	if code != 0 || stdout != "updated full: round_check_command=unset\n" {
+		t.Fatalf("clear: exit %d: %q", code, stdout)
+	}
+}
+
 // The text says what the registry now holds, not what was typed (S161).
 func TestProjectsSetPrintsTheStoredValues(t *testing.T) {
 	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})

@@ -259,8 +259,19 @@ type EngineWork struct {
 	SleptSeconds int       `json:"slept_seconds,omitempty"` // seconds the machine slept since Since
 }
 
+// EngineCheck is the newest check row of an engine run (S285, proposed): the
+// command that ran, so a status says whether the round command or the full
+// command ran last.
+type EngineCheck struct {
+	Round   int    `json:"round"`
+	Command string `json:"command"`
+	OK      bool   `json:"ok"`
+	Log     string `json:"log,omitempty"`
+}
+
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
+	LastCheck      *EngineCheck          `json:"last_check,omitempty"`     // proposed (S285): the newest check row, so a status names the command that ran
 	ShapeRetry     bool                  `json:"shape_retry,omitempty"`    // proposed (S275): automatic retry active
 	ResumeWaiting  bool                  `json:"resume_waiting,omitempty"` // proposed (S274, adj 177): a paused run whose answer or retry waits for a slot
 	StopAfter      string                `json:"stop_after,omitempty"`     // proposed: per-run stop point (S177)

@@ -20,6 +20,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
@@ -103,6 +104,9 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 					fmt.Fprint(o.stdout, " "+statusDenialsText(r.Denials))
 				}
 				fmt.Fprintln(o.stdout)
+				if c := r.LastCheck; c != nil {
+					fmt.Fprintf(o.stdout, "    %s\n", lastCheckLine(*c))
+				}
 				for _, w := range r.Working {
 					fmt.Fprintf(o.stdout, "    %s\n", workingLine(w, now))
 				}
@@ -130,6 +134,17 @@ func statusDenialsText(denials []string) string {
 		text = string(first[:37]) + "..."
 	}
 	return fmt.Sprintf("(denied: %d %s, first: %s)", len(denials), command, text)
+}
+
+// lastCheckLine names the command of the run's newest check row and its result,
+// so the round command and the full command can be told apart (S285, proposed).
+// Terminal controls in the command are taken out.
+func lastCheckLine(c source.EngineCheck) string {
+	result := "red"
+	if c.OK {
+		result = "ok"
+	}
+	return fmt.Sprintf("last check: %s (%s, round %d)", runrec.PlainText(c.Command), result, c.Round)
 }
 
 // workingLine says what runs, for how long, how long ago a role last sent
@@ -300,6 +315,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	worktree := fs.String("worktree-pattern", "", "the worktree path, with {id} or {id_lower}")
 	branch := fs.String("branch-pattern", "", "the branch name, with {id} or {id_lower}")
 	check := fs.String("check", "", "the check command")
+	roundCheck := fs.String("round-check", "", "a faster check command for the checks after implementer rounds; needs --check; empty clears it")
 	checkMinutes := fs.Int("check-minutes", 0, "minutes the check may run")
 	capN := fs.Int("cap", 0, "the project's concurrent run cap")
 	budgetMinutes := fs.Int("budget-minutes", 0, "the run time budget in minutes")
@@ -366,6 +382,9 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	if given["check"] {
 		p.CheckCommand = check
 	}
+	if given["round-check"] {
+		p.RoundCheckCommand = roundCheck
+	}
 	if given["check-minutes"] {
 		p.CheckMinutes = checkMinutes
 	}
@@ -402,7 +421,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		p.Preset = preset
 	}
 	if p.SetsNothing() {
-		return o.usage("projects set needs at least one field flag (--push, --ui-doc, --ui-pass-skills, --spec-check-rows, --worktree-pattern, --branch-pattern, --check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
+		return o.usage("projects set needs at least one field flag (--push, --ui-doc, --ui-pass-skills, --spec-check-rows, --worktree-pattern, --branch-pattern, --check, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
 	}
 	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
 		proj, err := c.SetProject(ctx, p)
@@ -446,6 +465,9 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		}
 		if p.CheckCommand != nil {
 			changed = append(changed, text("check_command", proj.CheckCommand))
+		}
+		if p.RoundCheckCommand != nil {
+			changed = append(changed, text("round_check_command", proj.RoundCheckCommand))
 		}
 		if p.CheckMinutes != nil {
 			changed = append(changed, number("check_minutes", proj.CheckMinutes))

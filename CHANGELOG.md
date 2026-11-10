@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- S285 (*proposed*): a faster check command for the checks after implementer
+  rounds. `ork projects set NAME --round-check CMD` stores `round_check_command`
+  (refused only while the project would have no `check_command`; empty
+  clears it). With it set, the check after each implementer round runs it; when
+  it differs from `check_command`, a green result is followed by one run of
+  `check_command` (log `checks-full-N.log`) before the review or the gate. The
+  landing re-check runs `check_command` only. With it unset nothing changes. `ork status` adds `last check: COMMAND
+  (ok|red, round N)` to a run with a check row, and the plan shows `round
+  check:` when the key is set. Owner decisions 2026-11-09 (adj 252 to 254):
+  the key lives in the ork registry, it needs a `check_command`, and the full
+  command runs after a green round check and at the landing. Docs:
+  `docs/state.md`, `docs/design.md`, `docs/guide.md`, `docs/dashboard.md`.
+
 - S218 (*proposed*): wave suggest and the engine rule. `wave.suggest` and
   `ork wave suggest` keep the first slice of a wave whose Files touch
   `internal/engine`, `internal/daemon` or `cmd` and move every further one,

@@ -187,7 +187,7 @@ func (e *Engine) mergeBaseIn(ctx context.Context, rec runrec.Record, base string
 			return pauseWith("git commit: " + err.Error())
 		}
 	}
-	run, paused, err := e.runChecks(ctx, e.run.Snapshot(), runrec.StateLand, "land-checks")
+	run, paused, err := e.runChecks(ctx, e.run.Snapshot(), runrec.StateLand, "land-checks", e.proj.CheckCommand)
 	if paused || err != nil {
 		return false, err
 	}

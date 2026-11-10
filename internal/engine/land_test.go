@@ -1108,6 +1108,26 @@ func TestSecondApprovalAfterALandingFixRoundRecordsTheChecksOnce(t *testing.T) {
 // S239: the landing re-check is run again once, and a red one's brief shows
 // the failing tests.
 
+func TestLandRecheckRunsTheFullCommand(t *testing.T) {
+	env := newLandEnv(t, func(p *registry.Project) { p.CheckCommand, p.RoundCheckCommand = "full", "fast" })
+	env.moveBase("base.txt", "from main\n")
+	env.approve()
+	rec := requireState(t, env.e, runrec.StateCommitted)
+	if len(env.checks.calls) != 1 || !strings.HasSuffix(env.checks.calls[0], "|full") {
+		t.Errorf("the re-check ran %v, want the full command once and never fast", env.checks.calls)
+	}
+	if last := rec.Checks[len(rec.Checks)-1]; last.Command != "full" || last.Log != "land-checks-1.log" {
+		t.Errorf("the re-check row: %+v", last)
+	}
+	b, err := os.ReadFile(filepath.Join(env.store.RunDir(rec.ID), "land-checks-1.log"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(string(b), "$ full\n") {
+		t.Errorf("the re-check log starts %.40q", b)
+	}
+}
+
 func TestLandRecheckIsRunAgainOnceToo(t *testing.T) {
 	env := newLandEnv(t)
 	env.moveBase("base.txt", "from main\n")

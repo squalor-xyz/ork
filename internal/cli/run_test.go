@@ -288,6 +288,32 @@ func TestStatusPrintsChecksWorkingWithoutLastOutput(t *testing.T) {
 	}
 }
 
+// A status names the command of the run's newest check row, so the round
+// command and the full command can be told apart (S285).
+func TestStatusNamesTheCheckCommandThatRan(t *testing.T) {
+	now := time.Date(2026, 11, 2, 22, 0, 0, 0, time.UTC)
+	for _, tc := range []struct{ name, check, want string }{
+		{"round", `{"round":2,"ok":true,"command":"fast","log":"checks-2.log"}`, "  r1 S1 review\n    last check: fast (ok, round 2)\n"},
+		{"full", `{"round":2,"ok":false,"command":"full\u001b[31m","log":"checks-full-2.log"}`, "  r1 S1 review\n    last check: full (red, round 2)\n"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			app := workingApp(`{"projects":[{"name":"p","engine_runs":[{"id":"r1","item":"S1","state":"review","last_check":`+tc.check+`}]}]}`, now)
+			code, stdout, stderr := run(t, app, "status")
+			if code != 0 || !strings.Contains(stdout, tc.want) {
+				t.Fatalf("status exit %d: %s\ngot:\n%swant:\n%s", code, stderr, stdout, tc.want)
+			}
+			if strings.Contains(stdout, "\x1b") {
+				t.Errorf("a terminal control reached the status: %q", stdout)
+			}
+		})
+	}
+	// A run with no check row has no such line.
+	app := workingApp(`{"projects":[{"name":"p","engine_runs":[{"id":"r1","item":"S1","state":"implement"}]}]}`, now)
+	if _, stdout, _ := run(t, app, "status"); strings.Contains(stdout, "last check") {
+		t.Errorf("status names a check that did not run:\n%s", stdout)
+	}
+}
+
 func TestStatusWorkingJSONKeepsTheTimes(t *testing.T) {
 	now := time.Date(2026, 11, 2, 22, 0, 0, 0, time.UTC)
 	app := workingApp(`{"projects":[{"name":"p","engine_runs":[{"id":"r1","item":"S1","state":"implement","working":[{"what":"implementer round 2","since":"2026-11-02T21:46:00Z","last_output":"2026-11-02T21:58:00Z","slept_seconds":3780}]}]}]}`, now)
@@ -933,6 +959,21 @@ func noCheckRun(t *testing.T, args ...string) (code int, out, errs string, metho
 	}}
 	code = app.Run(context.Background(), args, &stdout, &stderr)
 	return code, stdout.String(), stderr.String(), methods, starts
+}
+
+// The plan names the round check command under the check command when the
+// project has one (S285), and shows no line when it does not.
+func TestPlanShowsTheRoundCheckCommand(t *testing.T) {
+	for _, tc := range []struct {
+		round string
+		want  string
+	}{{"make fast", "check: make test\nround check: make fast\nstop:"}, {"", "check: make test\nstop:"}} {
+		var b bytes.Buffer
+		printRunPlan(&b, daemon.RunPlan{Project: registry.Project{Name: "p"}, Item: "S1", CheckCommand: "make test", RoundCheckCommand: tc.round}, false)
+		if !strings.Contains(b.String(), tc.want) {
+			t.Errorf("round %q: plan\n%s\nwant it to contain %q", tc.round, b.String(), tc.want)
+		}
+	}
 }
 
 func TestRunRefusesAPlanWithNoCheckCommand(t *testing.T) {

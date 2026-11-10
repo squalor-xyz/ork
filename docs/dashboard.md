@@ -1686,6 +1686,8 @@ other errors keep their code, for example `internal: Exact CHECK failure.`
 There is no key to skip a failed check. An unchanged spec uses the daemon's
 cache; a changed spec runs the check again.
 The plan summary shows project, item, worktree, branch and check command.
+*Proposed (S285):* a project with a round check command adds `round check: CMD`
+under the `check:` line.
 When budgets are overridden, it adds `budgets: N min, N tokens` with the
 effective values; zero uses the project default. The lineup rows show
 implementer, reviewer, ui (when the plan has a UI pass row, S136), architect

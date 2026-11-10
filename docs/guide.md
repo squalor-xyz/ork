@@ -134,6 +134,7 @@ The registry holds optional per-project settings. Change them with
 | Flag | What it sets |
 |---|---|
 | `--check CMD` | the check command ork runs after each implementer round. With none set, `ork run` and `ork wave start` refuse to start unless you add `--allow-no-check`, and `ork doctor` reports it (*proposed*, S265, adj 191) |
+| `--round-check CMD` | a faster command for the checks after implementer rounds (*proposed*, S285). Your `--check` command still runs in the landing re-check and, when it differs from the round command, after a green round check, before the review or the gate. Refused only while the project would have no `--check` command (a saved one is enough); empty clears it; refused while the project has unfinished runs |
 | `--check-minutes N` | minutes the check command may run (default 10; `internal/engine/states.go:197-202`). `docs/state.md:76-78` also calls it the stale flag, which the code does not do |
 | `--worktree-pattern P` | worktree path; must contain `{id}` or `{id_lower}` (default `.worktrees/{id}`) |
 | `--branch-pattern P` | branch name; same rule (default `{id}`) |
@@ -302,6 +303,11 @@ The roles run in this order (`docs/design.md:223-307`):
    round back; if the rerun passes, the round goes on and `run.json` marks the
    check `flaky`. If it fails again, the implementer's brief starts with the
    failing Go tests and their assertion lines. A timeout is not run again.
+   *Proposed (S285):* with a round check command set (`--round-check`), this
+   step runs it instead of your check command, and when it differs from your
+   check command a green result is followed by one run of your check command
+   before the review or the gate. The landing re-check always runs your check
+   command.
    *Proposed:* when your branch
    is behind main and `slicer check` is red only on other items, the round
    goes on to review; ork names those problems to the reviewer, the gate and
@@ -351,7 +357,10 @@ are not listed. It prints a line such as
 Under the row of a run whose role or checks step is
 running, it prints `working: implementer round 2, 14m (last output 2m ago,
 slept 1h03m)` (S235, *proposed*): how long the step has run, how long ago the
-role last sent output, and how long the machine slept meanwhile. Add `--json` to any command for scripts (`internal/cli/cli.go:56`,
+role last sent output, and how long the machine slept meanwhile.
+*Proposed (S285):* under a run with a check row, it first prints `last check:
+CMD (ok|red, round N)`, the command of the newest check, so you can tell the
+round command from the full one. Add `--json` to any command for scripts (`internal/cli/cli.go:56`,
 `internal/cli/cli.go:77`).
 
 ### Wait for a change

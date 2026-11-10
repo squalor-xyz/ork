@@ -53,6 +53,7 @@ name that is already registered is never sent.
       "worktree_pattern": ".worktrees/{id}",
       "branch_pattern": "{id}",
       "check_command": "dotnet test",
+      "round_check_command": "dotnet test --filter Category=Fast",
       "check_minutes": 10,
       "environment_lines": ["zsh on darwin; no timeout command", "..."],
       "budgets": {"minutes": 120, "tokens": 2000000},
@@ -89,6 +90,19 @@ Notes on the fields:
   `wave.start` refuse the start unless the call carries `allow_no_check`
   (`ork run` and `ork wave start --allow-no-check`), and `ork doctor` reports
   the missing command. Without it only `slicer check` runs after a landing.
+- `round_check_command` (*proposed*, S285; owner decisions 2026-11-09, adj 252
+  to 254) is an optional faster command for the
+  checks after implementer rounds. `check_command` stays the full command: it
+  runs in the landing re-check, and, when this key is set and differs from it,
+  after a green round check, before review or the gate. Unset (or equal) means
+  `check_command` runs everywhere, and nothing changes. `ork projects set NAME
+  --round-check CMD` sets it and is refused with `bad_params` only while the
+  project would have no `check_command` after the call, so it needs no
+  `--check` in the same call once `check_command` is saved (and clearing
+  `check_command` is refused while this key is set); an empty value clears
+  it. A started run reads it, so the call is refused while the project has
+  unfinished runs. An older ork refuses a registry with this key because
+  `Load` uses strict keys.
 - `permissions` is the per-role allowlist (`launch.permissions`). Its exact
   syntax per vendor waits on the vendor spike (design.md). *Proposed* (S265):
   `ork projects set NAME --preset go|python` writes the language's full
@@ -150,7 +164,7 @@ Notes on the fields:
   lands with the separate setter slice S224.
 - `ork projects set` (*proposed*, S161, owner decision 2026-10-27) is the only
   way ork writes the optional per-project fields. It changes `push`, `ui_doc`,
-  `ui_pass_skills`, `spec_check_rows` (S258), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`,
+  `ui_pass_skills`, `spec_check_rows` (S258), `worktree_pattern`, `branch_pattern`, `check_command`, `round_check_command` (S285), `check_minutes`,
   `cap`, `budgets.minutes`, `budgets.tokens` and, since S174 (*proposed*,
   owner decision 2026-10-29), `environment_lines`, `permissions` and
   `vendor_env`, and leaves every other key as it was (`name`, `path` and

@@ -282,30 +282,31 @@ type RemoveProjectParams struct {
 // command as saved by the same call; AllowAdd then follows it. Neither may
 // name a role that Permissions also names.
 type SetProjectParams struct {
-	Name             string                          `json:"name"`
-	Push             *bool                           `json:"push,omitempty"`
-	UIDoc            *string                         `json:"ui_doc,omitempty"`
-	UIPassSkills     *[]string                       `json:"ui_pass_skills,omitempty"`
-	SpecCheckRows    *[]string                       `json:"spec_check_rows,omitempty"` // S258, *proposed*: the whole ordered list; [] clears it
-	WorktreePattern  *string                         `json:"worktree_pattern,omitempty"`
-	BranchPattern    *string                         `json:"branch_pattern,omitempty"`
-	CheckCommand     *string                         `json:"check_command,omitempty"`
-	CheckMinutes     *int                            `json:"check_minutes,omitempty"`
-	Cap              *int                            `json:"cap,omitempty"`
-	BudgetMinutes    *int                            `json:"budget_minutes,omitempty"`
-	BudgetTokens     *int                            `json:"budget_tokens,omitempty"`
-	EnvironmentLines *[]string                       `json:"environment_lines,omitempty"`
-	Permissions      map[string]*registry.Permission `json:"permissions,omitempty"`
-	Preset           *string                         `json:"implementer_preset,omitempty"` // S265, *proposed*: go or python
-	AllowAdd         map[string][]string             `json:"allow_add,omitempty"`          // S265, *proposed*
-	VendorEnv        map[string]map[string]*string   `json:"vendor_env,omitempty"`
+	Name              string                          `json:"name"`
+	Push              *bool                           `json:"push,omitempty"`
+	UIDoc             *string                         `json:"ui_doc,omitempty"`
+	UIPassSkills      *[]string                       `json:"ui_pass_skills,omitempty"`
+	SpecCheckRows     *[]string                       `json:"spec_check_rows,omitempty"` // S258, *proposed*: the whole ordered list; [] clears it
+	WorktreePattern   *string                         `json:"worktree_pattern,omitempty"`
+	BranchPattern     *string                         `json:"branch_pattern,omitempty"`
+	CheckCommand      *string                         `json:"check_command,omitempty"`
+	RoundCheckCommand *string                         `json:"round_check_command,omitempty"` // S285, *proposed*: needs a check command; "" clears it
+	CheckMinutes      *int                            `json:"check_minutes,omitempty"`
+	Cap               *int                            `json:"cap,omitempty"`
+	BudgetMinutes     *int                            `json:"budget_minutes,omitempty"`
+	BudgetTokens      *int                            `json:"budget_tokens,omitempty"`
+	EnvironmentLines  *[]string                       `json:"environment_lines,omitempty"`
+	Permissions       map[string]*registry.Permission `json:"permissions,omitempty"`
+	Preset            *string                         `json:"implementer_preset,omitempty"` // S265, *proposed*: go or python
+	AllowAdd          map[string][]string             `json:"allow_add,omitempty"`          // S265, *proposed*
+	VendorEnv         map[string]map[string]*string   `json:"vendor_env,omitempty"`
 }
 
 // SetsNothing reports whether the call sets no field. The struct holds maps,
 // so it cannot be compared with ==. The daemon and the command line both use it.
 func (p SetProjectParams) SetsNothing() bool {
 	return p.Push == nil && p.UIDoc == nil && p.UIPassSkills == nil && p.SpecCheckRows == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
-		p.CheckCommand == nil && p.CheckMinutes == nil && p.Cap == nil && p.BudgetMinutes == nil &&
+		p.CheckCommand == nil && p.RoundCheckCommand == nil && p.CheckMinutes == nil && p.Cap == nil && p.BudgetMinutes == nil &&
 		p.BudgetTokens == nil && p.EnvironmentLines == nil && len(p.Permissions) == 0 && p.Preset == nil && len(p.AllowAdd) == 0 && len(p.VendorEnv) == 0
 }
 
@@ -322,7 +323,7 @@ func (p SetProjectParams) fieldsReadByARun() []string {
 	}{
 		{"--push", p.Push != nil}, {"--ui-doc", p.UIDoc != nil}, {"--ui-pass-skills", p.UIPassSkills != nil},
 		{"--spec-check-rows", p.SpecCheckRows != nil}, {"--check", p.CheckCommand != nil},
-		{"--check-minutes", p.CheckMinutes != nil}, {"--env-line", p.EnvironmentLines != nil},
+		{"--round-check", p.RoundCheckCommand != nil}, {"--check-minutes", p.CheckMinutes != nil}, {"--env-line", p.EnvironmentLines != nil},
 		{"--permission", len(p.Permissions) != 0}, {"--preset", p.Preset != nil},
 		{"--allow", len(p.AllowAdd) != 0}, {"--vendor-env", len(p.VendorEnv) != 0},
 	} {

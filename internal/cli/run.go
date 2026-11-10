@@ -221,6 +221,9 @@ func printRunPlan(w io.Writer, p daemon.RunPlan, budgetsOverridden bool) {
 		check = "none"
 	}
 	fmt.Fprintf(w, "%s %s\nworktree: %s\nbranch: %s\ncheck: %s\n", p.Project.Name, p.Item, p.Worktree, p.Branch, check)
+	if p.RoundCheckCommand != "" {
+		fmt.Fprintf(w, "round check: %s\n", p.RoundCheckCommand)
+	}
 	stop := "after landing"
 	if p.StopAfter == runrec.StopAfterCommit {
 		stop = "after commit (you land it)"

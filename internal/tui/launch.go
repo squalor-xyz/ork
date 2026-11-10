@@ -483,6 +483,9 @@ func (m *Model) launchView(w int) overviewView {
 			check = "none"
 		}
 		add("check: " + check)
+		if p.RoundCheckCommand != "" {
+			add("round check: " + p.RoundCheckCommand)
+		}
 		if p.CheckCommand == "" {
 			// The daemon refuses the start (adj 191). Say so once, with both
 			// fixes, by the check line: a long plan can clip the lines below.

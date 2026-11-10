@@ -141,6 +141,20 @@ func TestLaunchPlanBeforeConfirm(t *testing.T) {
 	}
 }
 
+// The launch confirm names the round check command under the check command
+// when the plan has one (S285), and shows no such line when it has none.
+func TestLaunchPlanShowsTheRoundCheckCommand(t *testing.T) {
+	for _, round := range []string{"go test -short ./...", ""} {
+		h, l := launchHarness(t)
+		l.plan.RoundCheckCommand = round
+		c := launchPlanning(t, h)
+		h.deliver(c())
+		if got := strings.Contains(h.view(), "round check: go test -short ./..."); got != (round != "") {
+			t.Errorf("round %q: round check line shown = %v:\n%s", round, got, h.view())
+		}
+	}
+}
+
 // A plan made without the UI or spec-check rules shows its note under the
 // plan lines in the confirm, before the question (S159). The note is a
 // warning: drawn in the Warn style (owner decision 2026-10-27).

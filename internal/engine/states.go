@@ -116,7 +116,7 @@ func (e *Engine) feedbackSection(fb *runrec.Feedback) BriefSection {
 	}
 	switch fb.Kind {
 	case "checks":
-		return BriefSection{Title: "Checks failed", Body: "The project checks are red. Fix the failures below. No review was spent on this diff.\n\n" + checkFailureBody(body, e.proj.CheckCommand, e.checkAttempts(fb.File))}
+		return BriefSection{Title: "Checks failed", Body: "The project checks are red. Fix the failures below. No review was spent on this diff.\n\n" + checkFailureBody(body, e.checkCommandFor(fb.File), e.checkAttempts(fb.File))}
 	case "findings":
 		if strings.HasPrefix(fb.File, "findings-") {
 			return BriefSection{Title: "Review findings", Body: "The reports below hold findings: the reviewer's, the UI pass's, or both. Apply only the findings in them; owner and later findings go to the owner, not to you. The UI pass gives suggested design edits for the screens this slice changes. If a finding is wrong, say so in your report with your evidence.\n\n" + body}
@@ -232,12 +232,24 @@ func (e *Engine) implement(ctx context.Context) error {
 
 func (e *Engine) checks(ctx context.Context) error {
 	rec := e.run.Snapshot()
-	run, paused, err := e.runChecks(ctx, rec, runrec.StateChecks, "checks")
+	run, paused, err := e.runChecks(ctx, rec, runrec.StateChecks, "checks", e.roundCommand())
 	if paused || err != nil {
 		return err
 	}
 	if !run.ok {
 		return e.bumpRound(ctx, runrec.Feedback{Kind: "checks", File: run.log}, run.failure)
+	}
+	if e.needsFullCheck() {
+		// S285 (*proposed*): a green round check is not enough for review or the
+		// gate. The full command runs once, under its own log name, so noProgress
+		// still reads only the round checks' logs.
+		run, paused, err = e.runChecks(ctx, rec, runrec.StateChecks, "checks-full", e.proj.CheckCommand)
+		if paused || err != nil {
+			return err
+		}
+		if !run.ok {
+			return e.bumpRound(ctx, runrec.Feedback{Kind: "checks", File: run.log}, run.failure)
+		}
 	}
 	next := runrec.StateReview
 	for _, r := range rec.Roles {
@@ -336,11 +348,42 @@ func (e *Engine) outsideProblems(ctx context.Context, rec runrec.Record, sres *s
 	return base, problems
 }
 
-// runChecks runs the project check command and `slicer check` in the worktree,
-// writes their output to PREFIX-ROUND.log in the run directory and records the
-// result in checks[]. A tool that cannot run pauses the slice at state, and
-// paused is true; the caller returns err then.
-func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix string) (run checkRun, paused bool, err error) {
+// roundCommand is the command of the checks after implementer rounds: the
+// project's round check command when it names one, else its check command
+// (S285, *proposed*). The check before review or the gate and the landing
+// re-check run the check command.
+func (e *Engine) roundCommand() string {
+	if e.proj.RoundCheckCommand != "" {
+		return e.proj.RoundCheckCommand
+	}
+	return e.proj.CheckCommand
+}
+
+// needsFullCheck says a green round check is followed by a check with the
+// check command: the project has both commands and they differ.
+func (e *Engine) needsFullCheck() bool {
+	return e.proj.CheckCommand != "" && e.roundCommand() != e.proj.CheckCommand
+}
+
+// checkCommandFor is the command the check that wrote the log ran, as
+// recorded; the project's check command when the record has no such check.
+func (e *Engine) checkCommandFor(log string) string {
+	for _, c := range e.run.Snapshot().Checks {
+		if c.Log == log && c.Command != "" && c.Command != slicerCheckCommand {
+			return c.Command
+		}
+	}
+	return e.proj.CheckCommand
+}
+
+// slicerCheckCommand is what a check row names when the project has no command.
+const slicerCheckCommand = "slicer check --json"
+
+// runChecks runs the command cmd (when it is not empty) and `slicer check` in
+// the worktree, writes their output to PREFIX-ROUND.log in the run directory
+// and records the result in checks[]. A tool that cannot run pauses the slice
+// at state, and paused is true; the caller returns err then.
+func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix, cmd string) (run checkRun, paused bool, err error) {
 	start := e.d.now()
 	defer e.beginWork(prefix, nil)()
 	check := e.d.Check
@@ -358,7 +401,7 @@ func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix
 	failure := ""
 	attempts, flaky := 0, false
 	var log strings.Builder
-	if cmd := e.proj.CheckCommand; cmd != "" {
+	if cmd != "" {
 		// S293: the command runs in the project's own folder of the worktree.
 		// A project at the repository root has the worktree root; a project in
 		// a subfolder (a monorepo) says so in the log, once per run.
@@ -425,9 +468,9 @@ func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix
 	if err != nil {
 		return pauseWith("check log: " + err.Error())
 	}
-	command := e.proj.CheckCommand
+	command := cmd
 	if command == "" {
-		command = "slicer check --json"
+		command = slicerCheckCommand
 	}
 	err = e.run.Update(func(r *runrec.Record) {
 		r.Pending = nil

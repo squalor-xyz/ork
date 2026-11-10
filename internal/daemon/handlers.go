@@ -617,6 +617,15 @@ func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
 	if p.CheckCommand != nil {
 		base.CheckCommand = *p.CheckCommand
 	}
+	// S285 (*proposed*): a round check command needs a check command, so the
+	// check before the gate and the landing re-check always run a real one. The
+	// rule holds for what the registry would hold after this call.
+	if p.RoundCheckCommand != nil {
+		base.RoundCheckCommand = *p.RoundCheckCommand
+	}
+	if base.RoundCheckCommand != "" && base.CheckCommand == "" {
+		return registry.Project{}, bad("round_check_command needs a check_command: the check before the gate and the landing re-check run it; set --check with --round-check, or clear --round-check")
+	}
 	withExtras, err := withProjectExtras(base, p)
 	if err != nil {
 		return registry.Project{}, err
@@ -645,6 +654,9 @@ func (d *Daemon) setProject(p SetProjectParams) (registry.Project, error) {
 	}
 	if p.CheckCommand != nil {
 		proj.CheckCommand = *p.CheckCommand
+	}
+	if p.RoundCheckCommand != nil {
+		proj.RoundCheckCommand = *p.RoundCheckCommand
 	}
 	if p.CheckMinutes != nil {
 		proj.CheckMinutes = *p.CheckMinutes

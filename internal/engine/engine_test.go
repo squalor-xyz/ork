@@ -330,6 +330,148 @@ func TestRedChecksSendTheImplementerBackWithoutSpendingAReview(t *testing.T) {
 	}
 }
 
+// roundCheckHarness is a harness whose project names a round check command
+// "fast" beside the check command "full" (S285, *proposed*).
+func roundCheckHarness(t *testing.T) *harness {
+	t.Helper()
+	return newHarness(t, func(o *harnessOpts) {
+		o.project = func(p *registry.Project) { p.CheckCommand, p.RoundCheckCommand = "full", "fast" }
+	})
+}
+
+// ranCommands is the command of each project check call, in order.
+func (h *harness) ranCommands() []string {
+	var out []string
+	for _, c := range h.checks.calls {
+		_, command, _ := strings.Cut(c, "|")
+		out = append(out, command)
+	}
+	return out
+}
+
+func TestRoundCheckCommandUnsetChangesNothing(t *testing.T) {
+	h := newHarness(t)
+	red := CheckOutput{OK: false, Output: "--- FAIL: TestGate\nFAIL\n"}
+	h.checks.outputs = []CheckOutput{red, red, {OK: true, Output: "ok\n"}}
+	e := h.start()
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	// Red twice (the S239 rerun), then green after the fix round: the one
+	// command, and no check row or log besides checks-N.log.
+	if got, want := h.ranCommands(), []string{"go test ./...", "go test ./...", "go test ./..."}; !reflect.DeepEqual(got, want) {
+		t.Errorf("commands %v, want %v", got, want)
+	}
+	if len(rec.Checks) != 2 {
+		t.Fatalf("checks: %+v", rec.Checks)
+	}
+	for i, c := range rec.Checks {
+		if c.Command != "go test ./..." || c.Log != fmt.Sprintf("checks-%d.log", i+1) {
+			t.Errorf("check %d: %+v", i, c)
+		}
+		if log := h.readReport(rec, c.Log); !strings.HasPrefix(log, "$ go test ./...\n") {
+			t.Errorf("log %s starts %.40q", c.Log, log)
+		}
+	}
+	if got, want := h.runner.roles(), []string{"implementer-1", "implementer-2", "reviewer-2", "gate-2"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("role rounds %v, want %v", got, want)
+	}
+}
+
+func TestRoundChecksRunTheRoundCommand(t *testing.T) {
+	h := roundCheckHarness(t)
+	e := h.start()
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if len(rec.Checks) < 1 {
+		t.Fatalf("no checks: %+v", rec.Checks)
+	}
+	first := rec.Checks[0]
+	if first.Command != "fast" || first.Log != "checks-1.log" || first.Round != 1 {
+		t.Errorf("the round check row: %+v", first)
+	}
+	if log := h.readReport(rec, first.Log); !strings.HasPrefix(log, "$ fast\n") {
+		t.Errorf("the round check log starts %.40q, want it to start \"$ fast\"", log)
+	}
+	if got := h.ranCommands(); len(got) == 0 || got[0] != "fast" {
+		t.Errorf("the first check ran %v, want fast", got)
+	}
+}
+
+func TestAFullCheckRunsBeforeTheGate(t *testing.T) {
+	h := roundCheckHarness(t)
+	red := CheckOutput{OK: false, Output: "--- FAIL: TestFullOnly\n    full_test.go:9: boom\nFAIL\n"}
+	ok := CheckOutput{OK: true, Output: "ok\n"}
+	// Round 1: fast green, full red twice (the S239 rerun). Round 2: both green.
+	h.checks.outputs = []CheckOutput{ok, red, red, ok, ok}
+	e := h.start()
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if got, want := h.ranCommands(), []string{"fast", "full", "full", "fast", "full"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("commands %v, want %v", got, want)
+	}
+	// A red full check sends a fix round, as a red round check does: no review
+	// was spent on round 1.
+	if got, want := h.runner.roles(), []string{"implementer-1", "implementer-2", "reviewer-2", "gate-2"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("role rounds %v, want %v", got, want)
+	}
+	if fix := h.runner.requests()[1].Brief; !strings.Contains(fix, "full_test.go:9: boom") || !strings.Contains(fix, "failed in both runs") {
+		t.Errorf("the full check's failure is not in the fix brief:\n%s", fix)
+	}
+	wantRows := []struct {
+		command, log string
+		ok           bool
+	}{{"fast", "checks-1.log", true}, {"full", "checks-full-1.log", false}, {"fast", "checks-2.log", true}, {"full", "checks-full-2.log", true}}
+	if len(rec.Checks) != len(wantRows) {
+		t.Fatalf("checks: %+v", rec.Checks)
+	}
+	for i, w := range wantRows {
+		if c := rec.Checks[i]; c.Command != w.command || c.Log != w.log || c.OK != w.ok {
+			t.Errorf("check %d: %+v, want %+v", i, c, w)
+		}
+	}
+	if log := h.readReport(rec, "checks-full-1.log"); !strings.HasPrefix(log, "$ full\n") {
+		t.Errorf("the full check log starts %.40q", log)
+	}
+}
+
+func TestFailingRoundCommandThenPassingFullCheck(t *testing.T) {
+	h := roundCheckHarness(t)
+	red := CheckOutput{OK: false, Output: "--- FAIL: TestFast\nFAIL\n"}
+	ok := CheckOutput{OK: true, Output: "ok\n"}
+	// fast red (and its rerun), a fix round, fast green, full green.
+	h.checks.outputs = []CheckOutput{red, red, ok, ok}
+	e := h.start()
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if got, want := h.ranCommands(), []string{"fast", "fast", "fast", "full"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("commands %v, want %v", got, want)
+	}
+	if got, want := h.runner.roles(), []string{"implementer-1", "implementer-2", "reviewer-2", "gate-2"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("role rounds %v, want %v: one fix round, then the gate", got, want)
+	}
+	if rec.Round != 2 || rec.Card == nil || rec.Card.Verdict != "PASS" {
+		t.Errorf("round %d, card %+v", rec.Round, rec.Card)
+	}
+	if len(rec.Checks) != 3 || rec.Checks[0].OK || !rec.Checks[1].OK || rec.Checks[2].Command != "full" || !rec.Checks[2].OK {
+		t.Errorf("checks: %+v", rec.Checks)
+	}
+	// The brief splits the two runs of the round command (S239), so it must
+	// know that the row ran fast, not the check command.
+	if fix := h.runner.requests()[1].Brief; !strings.Contains(fix, "--- FAIL: TestFast") || !strings.Contains(fix, "failed in both runs") {
+		t.Errorf("the round check's failure is not in the fix brief:\n%s", fix)
+	}
+}
+
+func TestRoundCommandWithoutAFullCommandRunsNoFullCheck(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.project = func(p *registry.Project) { p.CheckCommand, p.RoundCheckCommand = "", "fast" }
+	})
+	e := h.start()
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if got, want := h.ranCommands(), []string{"fast"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("commands %v, want %v", got, want)
+	}
+	if len(rec.Checks) != 1 {
+		t.Errorf("checks: %+v", rec.Checks)
+	}
+}
+
 func TestRedSlicerCheckAlsoSendsTheImplementerBack(t *testing.T) {
 	red := clitest.Route{Tool: "slicer", Args: []string{"check", "--json"}, Prefix: true,
 		Stdout: `{"ok":false,"stale_render":["ROADMAP.md"],"stale_sync":[],"problems":[],"warnings":[]}`, Exit: 1}
@@ -553,7 +695,7 @@ func TestTheLandingRecheckDoesNotDefer(t *testing.T) {
 	}
 	rec := e.Snapshot()
 	rec.Worktree, rec.Item = h.W, item
-	run, paused, err := e.runChecks(context.Background(), rec, runrec.StateLand, "land-checks")
+	run, paused, err := e.runChecks(context.Background(), rec, runrec.StateLand, "land-checks", h.proj.CheckCommand)
 	if err != nil || paused {
 		t.Fatalf("paused %v, err %v", paused, err)
 	}
@@ -564,7 +706,7 @@ func TestTheLandingRecheckDoesNotDefer(t *testing.T) {
 		t.Errorf("checks: %+v", got)
 	}
 	// The same call as a round check defers: the state is the only difference.
-	run, _, err = e.runChecks(context.Background(), rec, runrec.StateChecks, "checks")
+	run, _, err = e.runChecks(context.Background(), rec, runrec.StateChecks, "checks", h.proj.CheckCommand)
 	if err != nil || !run.ok {
 		t.Errorf("as a round check it defers: ok %v, err %v", run.ok, err)
 	}

@@ -1592,6 +1592,83 @@ func TestProjectsSetSetsAndClearsEveryField(t *testing.T) {
 	}
 }
 
+// S285 (*proposed*): a round check command needs a check command, so the gate
+// and the landing always have a real command to run.
+func TestProjectsSetRoundCheckNeedsACheckCommand(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	set := func(raw string) (registry.Project, error) {
+		got, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
+		if err != nil {
+			return registry.Project{}, err
+		}
+		return got.(registry.Project), nil
+	}
+	badParams := func(raw string) {
+		t.Helper()
+		before, _ := os.ReadFile(d.registryPath())
+		_, err := set(raw)
+		var re *ipc.Error
+		if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "round_check_command needs a check_command") {
+			t.Errorf("%s: %v", raw, err)
+		}
+		if after, _ := os.ReadFile(d.registryPath()); string(after) != string(before) {
+			t.Errorf("%s: a refusal changed the registry:\n%s", raw, after)
+		}
+	}
+	stored := func() registry.Project {
+		t.Helper()
+		f, err := registry.Load(d.registryPath())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return f.Projects[0]
+	}
+
+	// No check command (the test project starts with one): refused.
+	if _, err := set(`{"name":"p","check_command":""}`); err != nil {
+		t.Fatal(err)
+	}
+	badParams(`{"name":"p","round_check_command":"fast"}`)
+	// With one, in the same call or already saved: stored and read back.
+	got, err := set(`{"name":"p","check_command":"full","round_check_command":"fast"}`)
+	if err != nil || got.RoundCheckCommand != "fast" || got.CheckCommand != "full" {
+		t.Fatalf("set both: %+v, %v", got, err)
+	}
+	if s := stored(); s.RoundCheckCommand != "fast" || s.CheckCommand != "full" {
+		t.Fatalf("stored: %+v", s)
+	}
+	// The key is on the wire as round_check_command.
+	if b, _ := json.Marshal(stored()); !strings.Contains(string(b), `"round_check_command":"fast"`) {
+		t.Errorf("wire form: %s", b)
+	}
+	// Clearing the check command would leave the round command alone: refused.
+	badParams(`{"name":"p","check_command":""}`)
+	if s := stored(); s.CheckCommand != "full" || s.RoundCheckCommand != "fast" {
+		t.Fatalf("a refusal changed the project: %+v", s)
+	}
+	// An empty value clears the round command and keeps the check command.
+	if got, err := set(`{"name":"p","round_check_command":""}`); err != nil || got.RoundCheckCommand != "" {
+		t.Fatalf("clear: %+v, %v", got, err)
+	}
+	if s := stored(); s.RoundCheckCommand != "" || s.CheckCommand != "full" {
+		t.Fatalf("after clear: %+v", s)
+	}
+	// With the round command gone, the check command may be cleared.
+	if _, err := set(`{"name":"p","check_command":""}`); err != nil {
+		t.Fatalf("clear check: %v", err)
+	}
+	// Clearing both in one call is fine.
+	if _, err := set(`{"name":"p","check_command":"full","round_check_command":"fast"}`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := set(`{"name":"p","check_command":"","round_check_command":""}`); err != nil {
+		t.Fatalf("clear both: %v", err)
+	}
+	if s := stored(); s.CheckCommand != "" || s.RoundCheckCommand != "" {
+		t.Fatalf("after clear both: %+v", s)
+	}
+}
+
 func TestProjectsSetRefusesUnknownField(t *testing.T) {
 	d, _, _ := runDaemon(t, nil)
 	before, _ := os.ReadFile(d.registryPath())
@@ -2294,6 +2371,7 @@ func TestProjectsSetRefusesEachFieldAStartedRunReads(t *testing.T) {
 		`{"name":"p","ui_pass_skills":["a"]}`:               "--ui-pass-skills",
 		`{"name":"p","spec_check_rows":["r1"]}`:             "--spec-check-rows",
 		`{"name":"p","check_command":"make"}`:               "--check",
+		`{"name":"p","round_check_command":"f"}`:            "--round-check",
 		`{"name":"p","check_minutes":3}`:                    "--check-minutes",
 		`{"name":"p","environment_lines":["x"]}`:            "--env-line",
 		`{"name":"p","permissions":{"implementer":null}}`:   "--permission",

@@ -226,18 +226,23 @@ func ValidatePermissionEntry(role string, p Permission) error {
 // optional; a zero value means unset and is not written. WorktreePattern and
 // BranchPattern accept {id} and {id_lower} (S124, *proposed*).
 type Project struct {
-	Name             string                       `json:"name"`
-	Path             string                       `json:"path"`
-	Adj              bool                         `json:"adj"`
-	Cap              int                          `json:"cap,omitempty"`
-	WorktreePattern  string                       `json:"worktree_pattern,omitempty"`
-	BranchPattern    string                       `json:"branch_pattern,omitempty"`
-	CheckCommand     string                       `json:"check_command,omitempty"`
-	CheckMinutes     int                          `json:"check_minutes,omitempty"`
-	EnvironmentLines []string                     `json:"environment_lines,omitempty"`
-	Budgets          Budgets                      `json:"budgets,omitzero"`
-	Permissions      map[string]Permission        `json:"permissions,omitempty"`
-	VendorEnv        map[string]map[string]string `json:"vendor_env,omitempty"`
+	Name            string `json:"name"`
+	Path            string `json:"path"`
+	Adj             bool   `json:"adj"`
+	Cap             int    `json:"cap,omitempty"`
+	WorktreePattern string `json:"worktree_pattern,omitempty"`
+	BranchPattern   string `json:"branch_pattern,omitempty"`
+	CheckCommand    string `json:"check_command,omitempty"`
+	// RoundCheckCommand is a faster check command for the checks after
+	// implementer rounds (S285, *proposed*). Empty means CheckCommand runs
+	// everywhere. CheckCommand still runs after a green round check, before
+	// review or the gate, and at the landing re-check.
+	RoundCheckCommand string                       `json:"round_check_command,omitempty"`
+	CheckMinutes      int                          `json:"check_minutes,omitempty"`
+	EnvironmentLines  []string                     `json:"environment_lines,omitempty"`
+	Budgets           Budgets                      `json:"budgets,omitzero"`
+	Permissions       map[string]Permission        `json:"permissions,omitempty"`
+	VendorEnv         map[string]map[string]string `json:"vendor_env,omitempty"`
 	// Push says ork pushes the base branch after it lands a slice (S119,
 	// *proposed*; adj 162). Off by default; the owner turns it on per project.
 	Push bool `json:"push,omitempty"`

@@ -344,6 +344,19 @@ slice.
   implementer, with the failing output in the brief, without spending a
   review. The check command comes from `slicer config` once slicer has the
   key; until then it comes from the registry (`project.check-command`).
+  *Proposed (S285):* a project may also set `round_check_command`, a faster
+  command. The checks after implementer rounds run it in place of the check
+  command. When the round command is set and differs from the check command,
+  the check command runs after a green round check, once, before review or
+  the gate (a red result there sends a fix round, as a red round check does).
+  The landing re-check always runs the check command. With the key unset, or
+  equal to the check command, the check command runs everywhere and no second
+  run follows a round check. `projects set` refuses the key only while the
+  project would have no check command, so `--round-check` alone is valid once
+  `check_command` is saved. Each run is its own check row with its own
+  command, and the full run's log is `checks-full-<round>.log`, so the
+  no-progress test, which reads `checks-<round>.log`, sees round checks only.
+  `ork status` names the command of the newest check row (`last check:`).
   *Proposed (S239):* when the project command exits non-zero, ork runs it once
   more, with the same directory and timeout, before it spends a fix round on
   it. A pass on the rerun is a flaky pass: the project command counts as
@@ -570,7 +583,8 @@ slice.
   1. If the base branch moved (its tip is not in the slice branch), `git -C W
      merge -m "Merge BASE into BRANCH" BASE` in the worktree, then `slicer
      render`, a commit of what render rewrote, and a re-run of the project
-     check command and `slicer check`. With no move, none of this runs. The
+     check command (never `round_check_command`, S285) and `slicer check`.
+     With no move, none of this runs. The
      run record's `land_recheck` is set before the merge and cleared by a
      green re-check (or by the hand-off to the fix round). A retry with it set
      merges the base if it is not in yet (a crash between marker and merge),
@@ -694,7 +708,10 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
 - **Checks.** The project's check command runs with `sh -c` in the
   worktree, then `slicer check --json`. Either red sends the implementer
   back, resumed, with the output (last 30 KB) in the brief, and spends no
-  review. The output is saved as `checks-<round>.log`. *Proposed (S239):* an
+  review. The output is saved as `checks-<round>.log`. *Proposed (S285):* with
+  `round_check_command` set, the round check runs it, and when it differs from
+  the check command a green result is followed by the check command, saved as
+  `checks-full-<round>.log`; the landing re-check runs the check command only. *Proposed (S239):* an
   exit failure of the project command is run once more first, and the brief
   starts with the failing tests (see the checks bullet above). *Proposed (S279):*
   `slicer check` problems on other items defer to the landing merge when the
@@ -1783,7 +1800,7 @@ left its pause, and the job goes on under the daemon; a failure of the job
 shows in `ork status` as the run's error. A refusal or a failure that comes
 first is the reply. Without it (the TUI), the reply waits until the run rests.
 A second owner action is refused as busy until the job ends.
-Plan returns `{project,item,worktree,branch,check_command,
+Plan returns `{project,item,worktree,branch,check_command,round_check_command?,
 lineup,budgets,permissions,note?,warnings?}`; the project contains only its name and path.
 The proposed optional `note` (S135) explains a failed `relay-roles show` read.
 The plan then treats UI and spec-check rules as absent; a failed recommendation
@@ -2259,7 +2276,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   A planned start that loses the race to removal is refused with `not_found`.
 - `projects set NAME [--push on|off] [--ui-doc PATH]
   [--ui-pass-skills A,B] [--spec-check-rows rNN,rNN] [--worktree-pattern P]
-  [--branch-pattern P] [--check CMD] [--check-minutes N] [--cap N]
+  [--branch-pattern P] [--check CMD] [--round-check CMD] [--check-minutes N] [--cap N]
   [--budget-minutes N] [--budget-tokens N] [--env-line LINE]...
   [--preset go|python] [--permission ROLE=read-only|ROLE=]...
   [--allow ROLE=PATTERN]... [--replace-allow]

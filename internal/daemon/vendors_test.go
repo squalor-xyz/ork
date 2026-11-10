@@ -19,6 +19,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/source"
 )
 
 func TestLocalAndCloudOutMarksSelectIndependentRows(t *testing.T) {
@@ -67,8 +68,11 @@ func TestPlanNotesAVendorThatIsOut(t *testing.T) {
 	if err := json.Unmarshal(request(t, d, "run.plan", planRaw), &plan); err != nil {
 		t.Fatal(err)
 	}
+	// The end names its day when it falls on another day than the start, as
+	// it does when the test runs within VendorOutFor of midnight.
+	until := source.VendorOut{Since: since, Until: since.Add(engine.VendorOutFor)}.UntilText()
 	for _, want := range []string{
-		"codex is out until " + since.Add(engine.VendorOutFor).Format("15:04") + " (since " + since.Format("15:04") + "; You've hit your usage limit)",
+		"codex is out until " + until + " (since " + since.Format("15:04") + "; You've hit your usage limit)",
 		"ork vendor back codex",
 	} {
 		if !strings.Contains(plan.Note, want) {

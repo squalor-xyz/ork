@@ -861,6 +861,49 @@ func TestEngineRunRowCarriesLandFixes(t *testing.T) {
 	}
 }
 
+// The row names the command of the newest check row, so a status says whether
+// the round command or the full command ran last (S285, *proposed*).
+func TestEngineRunRowCarriesTheNewestCheck(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	checks := []runrec.CheckRecord{
+		{Round: 1, Command: "fast", OK: true, Log: "checks-1.log"},
+		{Round: 1, Command: "full", OK: false, Log: "checks-full-1.log"},
+	}
+	if _, err := store.Create(runrec.Record{ID: "with", Item: "S1", Project: p.Name, State: runrec.StateImplement, Round: 2, Checks: checks}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Create(runrec.Record{ID: "without", Item: "S2", Project: p.Name, State: runrec.StateImplement}); err != nil {
+		t.Fatal(err)
+	}
+	b := request(t, d, "status", `{"project":"p"}`)
+	var reply struct {
+		Projects []struct {
+			EngineRuns []source.EngineRun `json:"engine_runs"`
+		} `json:"projects"`
+	}
+	if err := json.Unmarshal(b, &reply); err != nil || len(reply.Projects) != 1 {
+		t.Fatalf("status: %s (%v)", b, err)
+	}
+	seen := 0
+	for _, row := range reply.Projects[0].EngineRuns {
+		switch row.ID {
+		case "with":
+			want := &source.EngineCheck{Round: 1, Command: "full", OK: false, Log: "checks-full-1.log"}
+			if !reflect.DeepEqual(row.LastCheck, want) {
+				t.Errorf("last check %+v, want %+v", row.LastCheck, want)
+			}
+		case "without":
+			if row.LastCheck != nil {
+				t.Errorf("a run with no check has last check %+v", row.LastCheck)
+			}
+		}
+		seen++
+	}
+	if seen != 2 {
+		t.Fatalf("%d rows, want 2: %s", seen, b)
+	}
+}
+
 func TestActiveRunInhibitsDaemonIdleExit(t *testing.T) {
 	d, store, p := runDaemon(t, nil)
 	_, err := store.Create(runrec.Record{ID: "active", Project: p.Name, State: runrec.StateImplement})

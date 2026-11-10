@@ -82,18 +82,19 @@ type RunAction struct {
 
 // RunPlan is checkpoint 1 (run.launch-wire).
 type RunPlan struct {
-	StopAfter    string                          `json:"stop_after,omitempty"`
-	project      registry.Project                // registry settings are private to the daemon
-	Project      registry.Project                `json:"project"`
-	Item         string                          `json:"item"`
-	Worktree     string                          `json:"worktree"`
-	Branch       string                          `json:"branch"`
-	CheckCommand string                          `json:"check_command"`
-	Lineup       map[string][]runrec.LineupEntry `json:"lineup"`
-	Budgets      registry.Budgets                `json:"budgets"`
-	Permissions  map[string]engine.Permission    `json:"permissions"`
-	Note         string                          `json:"note,omitempty"`     // why rule-based roles could not be identified
-	Warnings     []string                        `json:"warnings,omitempty"` // proposed (S265): setup problems, see engine.SetupWarnings
+	StopAfter         string                          `json:"stop_after,omitempty"`
+	project           registry.Project                // registry settings are private to the daemon
+	Project           registry.Project                `json:"project"`
+	Item              string                          `json:"item"`
+	Worktree          string                          `json:"worktree"`
+	Branch            string                          `json:"branch"`
+	CheckCommand      string                          `json:"check_command"`
+	RoundCheckCommand string                          `json:"round_check_command,omitempty"` // S285, *proposed*: the faster check after implementer rounds
+	Lineup            map[string][]runrec.LineupEntry `json:"lineup"`
+	Budgets           registry.Budgets                `json:"budgets"`
+	Permissions       map[string]engine.Permission    `json:"permissions"`
+	Note              string                          `json:"note,omitempty"`     // why rule-based roles could not be identified
+	Warnings          []string                        `json:"warnings,omitempty"` // proposed (S265): setup problems, see engine.SetupWarnings
 }
 
 // EngineRun is the owner's status of one engine run. Wire fields are proposed.
@@ -470,7 +471,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	// spec_check_rows are spec check rows too (S258).
 	specRows := specCheckRowSet(proj, rules)
 	var uiRows []slicercli.Row
-	plan := &RunPlan{StopAfter: p.StopAfter, project: proj, Project: registry.Project{Name: proj.Name, Path: proj.Path}, Item: p.Item, CheckCommand: proj.CheckCommand, Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
+	plan := &RunPlan{StopAfter: p.StopAfter, project: proj, Project: registry.Project{Name: proj.Name, Path: proj.Path}, Item: p.Item, CheckCommand: proj.CheckCommand, RoundCheckCommand: proj.RoundCheckCommand, Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
 	if rulesErr != nil {
 		plan.Note = "slicer relay-roles show failed; planning without UI or spec-check rules: " + rulesErr.Error()
 	}
@@ -2122,7 +2123,12 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
 			vendorWait = m.engine.VendorWait()
 		}
-		runs = append(runs, EngineRun{Lineup: rec.Lineup, VendorWait: vendorWait, StopAfter: rec.StopAfter, Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Working: working, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), LandFixes: rec.LandFixes, Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), WorktreeGone: rec.State == runrec.StateCommitted && !rec.Cleaned() && worktreeGone(rec), State: rec.State, ShapeRetry: shapeRetry, Wait: wait, ResumeWaiting: rec.State == runrec.StatePaused && rec.Resume != nil, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
+		var lastCheck *source.EngineCheck
+		if n := len(rec.Checks); n > 0 {
+			c := rec.Checks[n-1]
+			lastCheck = &source.EngineCheck{Round: c.Round, Command: c.Command, OK: c.OK, Log: c.Log}
+		}
+		runs = append(runs, EngineRun{LastCheck: lastCheck, Lineup: rec.Lineup, VendorWait: vendorWait, StopAfter: rec.StopAfter, Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Working: working, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), LandFixes: rec.LandFixes, Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), WorktreeGone: rec.State == runrec.StateCommitted && !rec.Cleaned() && worktreeGone(rec), State: rec.State, ShapeRetry: shapeRetry, Wait: wait, ResumeWaiting: rec.State == runrec.StatePaused && rec.Resume != nil, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
 	}
 	return runs
 }

@@ -15381,7 +15381,7 @@
       "id": "S285",
       "title": "Separate round check command from the gate and landing check command",
       "short_title": "Separate round check command from the gate and landing check command",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S284"
@@ -15414,6 +15414,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "2cf81b68-4ebf-44d6-8046-23c1a48d33c7",
+          "kind": "",
+          "text": "**2026-11-10** — Human checks at approval (S285):\n- later: [AFTER LAND] On the slicer project with a round command set: the round checks' logs start with the round command, the check before the gate and the landing re-check run the full one, and the status line names which ran.",
+          "created_at": "2026-11-10T00:20:18Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "58102946-92ce-45f3-a19d-0a94f4213247",
+          "kind": "",
+          "text": "**2026-11-10** — Verified: round_check_command (registry, ork projects set --round-check, refused while check_command would be empty) runs after implementer rounds; when it differs from check_command, one full check_command run follows each green round check as checks-full-N.log, before review or the gate; the landing re-check runs check_command. ork status shows last check: CMD (ok|red, round N); the plan shows round check:. Docs and CHANGELOG updated. go vet, gofmt and slicer check clean; engine, daemon, cli and tui tests green, mutation-checked. Owner decisions adj 252 to 254.",
+          "created_at": "2026-11-10T00:20:22Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -15433,7 +15461,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
