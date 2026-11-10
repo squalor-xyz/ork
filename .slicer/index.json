@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 325,
+  "next_id": 326,
   "preamble": "",
   "passes": [
     {
@@ -17193,6 +17193,34 @@
         "group": "",
         "reason": "",
         "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S325",
+      "title": "TUI run detail: name the last check command that ran",
+      "short_title": "TUI run detail: name the last check command that ran",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Found by the S285 UI pass 2026-11-09: the TUI run detail has no line for the last check command that ran (round command, full command or landing re-check); CLI ork status and ork show name it after S285. Owner chose CLI only for S285 (adj 257). Needed: a last-check line in the TUI run detail with a golden view, using the same source as ork show.",
+        "discovered_from": "S285",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
         "urgency": 1,
         "effort": 1,
         "attempts": 0

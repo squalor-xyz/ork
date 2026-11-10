@@ -4036,3 +4036,4 @@
 {"when": "2026-11-09T23:16:25Z", "item": "S285", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-09T23:16:25Z", "item": "S264", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-09T23:18:57Z", "item": "S285", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-10T00:23:13Z", "item": "S325", "action": "add", "from": "", "to": "open", "note": "TUI run detail: name the last check command that ran"}
