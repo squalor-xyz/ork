@@ -246,6 +246,15 @@ merge each nonzero launch field over the registry default. These values
 apply to this run only and do not change the matrix or registry
 (`lineup.override-scope`).
 
+A lineup entry is `{vendor, model, effort, requested?}`. *Proposed (S244):*
+when the matrix row (or a launch override) named a family as `FAMILY@latest`,
+`model` holds the model ork resolved when it built the plan and `requested`
+holds the text the row gave. A pinned model has no `requested` key. The engine,
+the adapters, the run record and the slicer ledger all use `model`, and a
+resumed or retried round reads it from the record, so a run never changes model
+halfway. An ork from before S244 refuses a `run.json` that holds `requested`,
+because `Store.Open` uses strict keys.
+
 *Proposed (S277):* each generated role brief has a `## Done when` checklist,
 including resumed rounds. It is generated from the resolved permission mode and
 allowlist, the slice's sections, and round sections; it adds no run-record field.
@@ -294,7 +303,8 @@ owner's questions again.
   "feedback": null,
   "lineup": {
     "implementer": [{"vendor": "claude", "model": "sonnet", "effort": "high"},
-                    {"vendor": "codex", "model": "gpt-6.1-sol", "effort": "medium"}],
+                    {"vendor": "codex", "model": "gpt-6.1-sol", "effort": "medium",
+                     "requested": "gpt-*-sol@latest"}],
     "reviewer": [{"vendor": "claude", "model": "opus", "effort": "medium"}]
   },
   "roles": [

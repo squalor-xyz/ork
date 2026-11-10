@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-325 items · — 69 · done 223 · retired 33
+325 items · — 68 · done 224 · retired 33
 
 v1.2
 
@@ -161,7 +161,7 @@ v1.2
 | 104 | [S238](slices/S238.md) | Landing merge-in without a role | M | 2 |  |  | done |
 | 105 | [S239](slices/S239.md) | Check failures: excerpt and one rerun | M | 2 |  |  | done |
 | 106 | [S243](slices/S243.md) | Claude fallback implementer | M | 2 |  |  | done |
-| 107 | [S244](slices/S244.md) | Resolve latest within a family | M | 2 |  |  | — |
+| 107 | [S244](slices/S244.md) | Resolve latest within a family | M | 2 |  |  | done |
 | 108 | [S245](slices/S245.md) | Show resolved latest models | S | 1 |  |  | — |
 | 109 | [S254](slices/S254.md) | Landing: main with uncommitted tracking edits aborts the ff-merge | S | 1 |  | Wave 6, 2026-11-02 (friction F40): S213 landing aborted with 'Your local changes would be overwritten by merge: .slicer/log.jsonl' because the owner-session filing of the S235 spec answer was uncommitted on main. Landing should check main for uncommitted tracking files before the ff-merge and either stop early with a one-line message that names the files, or have ork commit them. Which of the two is the owner's decision; interview before specifying. Related: S238 (merge-in commit by ork). · discovered from S213 | done |
 | 110 | [S255](slices/S255.md) | Retry restarts the vendor chain at the first lineup entry | M | 2 |  | Wave 5, 2026-11-02 (friction F35): ork retry resumes the recorded vendor session. After a Codex-out fallback to the Claude stand-in, a retry stayed on Claude after Codex came back; the owner had to stop and rerun to change vendor. A retry that starts a fresh round (no resumable session worth keeping, or after the vendor's out time passed) should start the chain at the first entry again; a retry of a paused round that holds a session may keep it. Owner decision needed on which retries resume and which restart. Related: S243 (Claude stand-in), S182 (vendor out marks). · discovered from S238 | done |

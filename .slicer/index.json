@@ -13349,7 +13349,7 @@
       "id": "S244",
       "title": "Resolve a matrix model of \"latest\" to the newest model of the row's family",
       "short_title": "Resolve latest within a family",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -13380,6 +13380,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "f1de7ae4-f1bc-44ed-89fb-5b72e31b326e",
+          "kind": "",
+          "text": "**2026-11-10** — Human checks at approval (S244):\n- later: [AFTER LAND] After the owner rebuilds and restarts the daemon and sets one scratch project's Codex row to `gpt-*-sol@latest`, `ork run ITEM --json` shows the resolved model and `requested`.",
+          "created_at": "2026-11-10T03:07:02Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "4b25b1a7-149a-4007-95c1-68c10bcdd578",
+          "kind": "",
+          "text": "**2026-11-10** — Verified: a matrix or launch-override model FAMILY@latest resolves at plan time to the newest model of the family (codex debug models --bundled, grok models, claude aliases without a list call); lineup entries keep requested and the resolved model; bare latest, a failed list and an unmatched family refuse the plan; local rows are never resolved and refuse @latest; spec-check chain resolved too; a resumed run keeps its recorded model. go test -race ./..., go vet, gofmt, slicer check and adj lint are clean.",
+          "created_at": "2026-11-10T03:07:07Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -13399,7 +13427,7 @@
         "importance": 2,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

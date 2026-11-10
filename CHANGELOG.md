@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- S244 (*proposed*): resolve a matrix model of `FAMILY@latest` to the newest
+  model of the family. A row's model `gpt-*-sol@latest` or `grok-*@latest` (one
+  `*` for the version) is resolved when the plan is built, from `codex debug
+  models --bundled` or `grok models`, read once per daemon; the highest version
+  wins, compared number by number. `opus@latest`, `sonnet@latest` and
+  `haiku@latest` resolve to the alias, with no list call. The lineup entry
+  keeps the matrix text in `requested` and the resolved name in `model`; the
+  engine, the adapters, the run record and the ledger get `model`, and a resumed
+  round keeps the recorded one. A bare `latest` is refused at plan, as is a list
+  that cannot be read (the plan names the command, its exit and the family; a
+  failed read is not kept) or has no match (the plan names the family); a launch
+  override of the role gets past either. Local rows (`claude-local`,
+  `codex-local`, `grok-local`, vendor `Local`) are never resolved, and `@latest` on
+  one is refused. A launch override of `FAMILY@latest` is resolved too. An older
+  ork refuses a `run.json` that holds `requested`. The fixture
+  `testdata/vendors/codex/models-bundled.json` omits the `model_messages` and
+  `base_instructions` prompt fields of each model. Docs: `docs/design.md`,
+  `docs/state.md`, `docs/guide.md`, `docs/how-it-works.md`.
 - S285 (*proposed*): a faster check command for the checks after implementer
   rounds. `ork projects set NAME --round-check CMD` stores `round_check_command`
   (refused only while the project would have no `check_command`; empty
