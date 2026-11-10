@@ -11,6 +11,34 @@
   `later`, and the implementer and gate prompts say not to run it. Docs
   updated: `docs/design.md`, `docs/state.md` and `docs/orchestrator-parity.md`
   (a table of the v11 process rules).
+- S244 (*proposed*): resolve a matrix model of `FAMILY@latest` to the newest
+  model of the family. A row's model `gpt-*-sol@latest` or `grok-*@latest` (one
+  `*` for the version) is resolved when the plan is built, from `codex debug
+  models --bundled` or `grok models`, read once per daemon; the highest version
+  wins, compared number by number. `opus@latest`, `sonnet@latest` and
+  `haiku@latest` resolve to the alias, with no list call. The lineup entry
+  keeps the matrix text in `requested` and the resolved name in `model`; the
+  engine, the adapters, the run record and the ledger get `model`, and a resumed
+  round keeps the recorded one. A bare `latest` is refused at plan, as is a list
+  that cannot be read (the plan names the command, its exit and the family; a
+  failed read is not kept) or has no match (the plan names the family); a launch
+  override of the role gets past either. Local rows (`claude-local`,
+  `codex-local`, `grok-local`, vendor `Local`) are never resolved, and `@latest` on
+  one is refused. A launch override of `FAMILY@latest` is resolved too. An older
+  ork refuses a `run.json` that holds `requested`. The fixture
+  `testdata/vendors/codex/models-bundled.json` omits the `model_messages` and
+  `base_instructions` prompt fields of each model. Docs: `docs/design.md`,
+  `docs/state.md`, `docs/guide.md`, `docs/how-it-works.md`.
+- S132 (*proposed*): question and answer polish. Needs you gets a `Questions`
+  group (before `Paused`) for runs that wait on an owner question; `Paused`
+  keeps the runs paused for another reason. Question options wrap with a hang
+  under their text, drop whole on a short pane with `+N more options` as the
+  last line, and show an empty summary as the label alone. `Recommend: N - reason`
+  accepts an en or em dash. A cancelled adj answer confirmation puts the typed
+  free answer back in the field, and the help line offers no `1-N pick` for a
+  record with no options. A ledger answer filed in adj keeps its channel (`cli`
+  or `tui`) in the rationale. Owner decision 2026-10-31. Docs:
+  `docs/dashboard.md`, `docs/design.md`, `docs/guide.md`.
 - S295 (*proposed*): verify the check command where it will run, once, before a
   role is spent on it. The check is static and runs nothing but `sh -n`: the
   shell must parse the command, the first word of each simple command must

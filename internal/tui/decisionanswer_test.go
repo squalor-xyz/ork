@@ -4,6 +4,7 @@ package tui
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -155,6 +156,95 @@ func TestDecisionAnswerRefusalAndPending(t *testing.T) {
 	h.deliver(cmd())
 	if h.m.actionStatus != "ADJ_DECIDED_BY is unset; set it before answering in adj" || h.m.decisionPane == nil {
 		t.Fatalf("refusal: %q", h.m.actionStatus)
+	}
+}
+
+// The daemon sends bad_params for an unset By (engine.ValidateRecordAnswer
+// through badParams), refused for a refused owner action and a plain error for
+// an adj failure. actionError shows a refusal as its message alone, any other
+// coded error as "code: message" with the leading "bad params: " said once, and
+// a plain error as it is. All three show the daemon's text and keep the pane.
+func TestDecisionAnswerErrorCodes(t *testing.T) {
+	t.Setenv("ADJ_DECIDED_BY", "Jon R")
+	for name, tc := range map[string]struct {
+		err  error
+		want string
+	}{
+		"bad_params": {&ipc.Error{Code: daemon.CodeBadParams, Message: "bad params: ADJ_DECIDED_BY is unset; set it in the caller before answering in adj"}, "bad_params: ADJ_DECIDED_BY is unset; set it in the caller before answering in adj"},
+		"plain":      {errors.New("adj decide: disk full"), "adj decide: disk full"},
+		"refused":    {&ipc.Error{Code: daemon.CodeRefused, Message: "record #12 is already decided"}, "record #12 is already decided"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h, l := decisionAnswerHarness(t)
+			l.err = tc.err
+			want := tc.want
+			h.send(press("1"))
+			cmd := h.m.key(press("y"))
+			if cmd == nil {
+				t.Fatal("no answer command")
+			}
+			h.deliver(cmd())
+			if h.m.actionStatus != want || h.m.decisionPane == nil {
+				t.Fatalf("status %q, pane open %v; want %q and the pane kept", h.m.actionStatus, h.m.decisionPane != nil, want)
+			}
+		})
+	}
+}
+
+func TestCancelledDecisionConfirmationKeepsTheFreeAnswer(t *testing.T) {
+	t.Setenv("ADJ_DECIDED_BY", "Jon R")
+	h, l := decisionAnswerHarness(t)
+	h.send(press("t"))
+	for _, r := range "keep files" {
+		h.deliver(press(string(r)))
+	}
+	h.send(press("enter"))
+	if h.m.confirm == nil {
+		t.Fatal("enter did not open the confirmation")
+	}
+	h.send(press("n"))
+	if h.m.confirm != nil || h.m.decisionInput == nil || h.m.decisionInput.Value() != "keep files" {
+		t.Fatalf("cancel lost the answer: confirm %v, field %v", h.m.confirm, h.m.decisionInput)
+	}
+	if !strings.Contains(h.view(), "keep files") {
+		t.Errorf("the field does not show the text:\n%s", h.view())
+	}
+	h.send(press("esc"))
+	if h.m.decisionInput != nil || len(l.answers) != 0 {
+		t.Fatal("esc did not close the field")
+	}
+	// A fresh field starts empty: the kept draft is gone after esc.
+	h.send(press("t"))
+	if h.m.decisionInput == nil || h.m.decisionInput.Value() != "" {
+		t.Fatalf("a new field starts with %v", h.m.decisionInput)
+	}
+	// Sending the text drops the draft: a failed send leaves the pane open and
+	// the next field starts empty.
+	l.err = errors.New("adj decide: disk full")
+	for _, r := range "sent" {
+		h.deliver(press(string(r)))
+	}
+	h.send(press("enter"))
+	cmd := h.m.key(press("y"))
+	if cmd == nil {
+		t.Fatal("no answer command")
+	}
+	h.deliver(cmd())
+	h.send(press("t"))
+	if len(l.answers) != 1 || l.answers[0].Text != "sent" || h.m.decisionInput == nil || h.m.decisionInput.Value() != "" {
+		t.Fatalf("answers %+v, field %v", l.answers, h.m.decisionInput)
+	}
+}
+
+func TestHelpOnAnOptionlessRecordOffersNoPick(t *testing.T) {
+	h, _ := decisionAnswerHarness(t)
+	h.m.decisionPane.record.Options = nil
+	help := strings.Join(h.m.helpLines(120, 60), "\n")
+	if strings.Contains(help, "1-0") || strings.Contains(help, "pick an adj option") {
+		t.Errorf("help offers a pick with no options:\n%s", help)
+	}
+	if !strings.Contains(help, "t type a free adj answer") {
+		t.Errorf("help drops the free answer:\n%s", help)
 	}
 }
 

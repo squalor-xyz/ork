@@ -471,6 +471,10 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	// spec_check_rows are spec check rows too (S258).
 	specRows := specCheckRowSet(proj, rules)
 	var uiRows []slicercli.Row
+	// The chains are built here, each entry with whether its row is local
+	// (vendor column Local), and become plan.Lineup once their models are
+	// resolved (S244).
+	chains := map[string][]chainEntry{}
 	plan := &RunPlan{StopAfter: p.StopAfter, project: proj, Project: registry.Project{Name: proj.Name, Path: proj.Path}, Item: p.Item, CheckCommand: proj.CheckCommand, RoundCheckCommand: proj.RoundCheckCommand, Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
 	if rulesErr != nil {
 		plan.Note = "slicer relay-roles show failed; planning without UI or spec-check rules: " + rulesErr.Error()
@@ -504,14 +508,15 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 					continue
 				}
 				if vendor := matrixAdapters[strings.ToLower(row.Agent)]; vendor != "" {
-					plan.Lineup[role] = appendEntry(plan.Lineup[role], runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning})
+					entry := runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning}
+					chains[role] = appendChain(chains[role], chainEntry{entry, isLocalRow(row)})
 				}
 			}
 		}
 		if role == engine.RoleArchitect && !recommended {
 			continue
 		}
-		if len(plan.Lineup[role]) == 0 {
+		if len(chains[role]) == 0 {
 			return nil, fmt.Errorf("lineup has no row with an adapter for %s", sourceRole)
 		}
 		perm, err := engine.ResolvePermission(proj, role)
@@ -520,10 +525,11 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		}
 		plan.Permissions[role] = perm
 	}
-	var uiChain []runrec.LineupEntry
+	var uiChain []chainEntry
 	for _, row := range uiRows {
 		if vendor := matrixAdapters[strings.ToLower(row.Agent)]; vendor != "" {
-			uiChain = appendEntry(uiChain, runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning})
+			entry := runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning}
+			uiChain = appendChain(uiChain, chainEntry{entry, isLocalRow(row)})
 		}
 	}
 	if len(uiChain) > 0 {
@@ -531,7 +537,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		if err != nil {
 			return nil, err
 		}
-		plan.Lineup[engine.RoleUI] = uiChain
+		chains[engine.RoleUI] = uiChain
 		plan.Permissions[engine.RoleUI] = perm
 	}
 	for role, entries := range p.Lineup {
@@ -539,7 +545,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 			return nil, badParams(fmt.Errorf("cannot override lineup role %q", role))
 		}
 		if role == engine.RoleArchitect && len(entries) == 0 {
-			delete(plan.Lineup, role)
+			delete(chains, role)
 			delete(plan.Permissions, role)
 			continue
 		}
@@ -554,7 +560,12 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 				return nil, badParams(fmt.Errorf("lineup for %s needs a model and effort", role))
 			}
 		}
-		plan.Lineup[role] = append([]runrec.LineupEntry(nil), entries...)
+		// An override replaces the role's chain, and with it every local mark.
+		replaced := make([]chainEntry, len(entries))
+		for i, entry := range entries {
+			replaced[i] = chainEntry{LineupEntry: entry}
+		}
+		chains[role] = replaced
 		if role == engine.RoleArchitect {
 			perm, err := engine.ResolvePermission(proj, role)
 			if err != nil {
@@ -563,10 +574,9 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 			plan.Permissions[role] = perm
 		}
 	}
-	for _, role := range slices.Sorted(maps.Keys(plan.Lineup)) {
-		entries := plan.Lineup[role]
-		var available []runrec.LineupEntry
-		for _, entry := range entries {
+	for _, role := range slices.Sorted(maps.Keys(chains)) {
+		var available []chainEntry
+		for _, entry := range chains[role] {
 			if reason := launcherMissing(entry.Vendor); reason != "" {
 				if plan.Note != "" {
 					plan.Note += "; "
@@ -579,7 +589,21 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		if len(available) == 0 {
 			return nil, fmt.Errorf("lineup for %s has no available launcher: %s", role, plan.Note)
 		}
-		plan.Lineup[role] = available
+		chains[role] = available
+	}
+	// Models are resolved last, after the overrides replaced their roles' rows
+	// and the missing launchers dropped theirs, so a family that cannot be
+	// resolved in a row the owner overrides does not refuse the plan. The gate
+	// is the reviewer's chain, copied below.
+	for _, role := range slices.Sorted(maps.Keys(chains)) {
+		if role == engine.RoleGate {
+			continue
+		}
+		resolved, err := d.resolveEntries(ctx, chains[role])
+		if err != nil {
+			return nil, fmt.Errorf("lineup for %s: %w", role, err)
+		}
+		plan.Lineup[role] = resolved
 	}
 	plan.Lineup[engine.RoleGate] = append([]runrec.LineupEntry(nil), plan.Lineup[engine.RoleReviewer]...)
 	if note := d.vendorNote(plan.Lineup); note != "" {

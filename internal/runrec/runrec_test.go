@@ -106,6 +106,32 @@ func TestCreateWritesRunJSONAndOpenReadsItBack(t *testing.T) {
 	}
 }
 
+// A lineup entry keeps the text the matrix gave beside the model ork resolved
+// (S244, *proposed*), and writes no requested key for a pinned model.
+func TestLineupEntryKeepsRequestedBesideTheResolvedModel(t *testing.T) {
+	s := newStore(t)
+	r := rec("a")
+	r.Lineup = map[string][]LineupEntry{"implementer": {
+		{Vendor: "codex", Model: "gpt-6.2-sol", Effort: "high", Requested: "gpt-*-sol@latest"},
+		{Vendor: "claude", Model: "sonnet", Effort: "high"},
+	}}
+	run, err := s.Create(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := readFile(t, filepath.Join(run.Dir(), "run.json"))
+	if n := strings.Count(text, `"requested"`); n != 1 || !strings.Contains(text, `"requested": "gpt-*-sol@latest"`) {
+		t.Errorf("run.json must hold requested once, for the resolved entry:\n%s", text)
+	}
+	got, err := s.Open("a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(got.Snapshot().Lineup, r.Lineup) {
+		t.Errorf("lineup after a reopen: %+v", got.Snapshot().Lineup)
+	}
+}
+
 func TestCreateRefusesAnExistingRunAndAnEmptyID(t *testing.T) {
 	s := newStore(t)
 	if _, err := s.Create(rec("a")); err != nil {

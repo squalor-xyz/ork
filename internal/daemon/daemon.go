@@ -87,6 +87,8 @@ type Daemon struct {
 	regMu sync.Mutex   // serializes registry writes
 	cache *cache.Cache // the project snapshots, shared by every client
 
+	models modelCache // the vendors' model lists, read once (S244)
+
 	buildMu sync.Mutex
 	builds  map[string]buildEntry // at most one tip/ref/build per registered path
 

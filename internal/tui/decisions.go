@@ -195,11 +195,13 @@ func recordOptions(r adjcli.Record, w int, th Theme, prefix string, numbered boo
 		}
 	}
 	for i, o := range r.Options {
-		label := o.Label
+		// A long option hangs under its label, past the number, and an empty
+		// summary leaves no colon (S132, *proposed*).
+		number := ""
 		if numbered && i < 4 {
-			label = fmt.Sprintf("%d. %s", i+1, label)
+			number = fmt.Sprintf("%d. ", i+1)
 		}
-		add(label+": "+o.Summary, false)
+		lines = append(lines, hangLines(prefix+number, prefix+strings.Repeat(" ", len(number)), optionText(o.Label, o.Summary), w)...)
 		if o.Tradeoffs != "" {
 			add(o.Tradeoffs, true)
 		}

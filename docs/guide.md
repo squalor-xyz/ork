@@ -216,7 +216,10 @@ reviewer, gate, and an architect when the lineup has one (the matrix gives one o
 for is skipped; ork runs `claude`, `codex` and `grok` (`docs/design.md:184-198`). Grok
 runs read-only roles (reviewer, gate, architect, spec check) in plan mode and
 refuses a write role, so a Grok implementer row fails when it runs (*proposed*,
-S72). A matrix model of `latest` on a Grok row passes no model flag.
+S72). A matrix model written `FAMILY@latest`, such as `gpt-*-sol@latest` or
+`grok-*@latest`, runs the newest model of that family: ork reads the vendor's
+model list when it builds the plan and shows the result in the lineup (*proposed*,
+S244). A bare `latest` is refused. A model without `@latest` is passed as written.
 
 At launch you can change the lineup and the budgets for that one run. The
 matrix stays as it was (`docs/design.md:170-175`). In the TUI the key is `e`
@@ -553,7 +556,7 @@ Use this loop each day:
    `0` jumps to Needs you, `1`-`9` to a project, `[` and `]` move between them
    (`internal/tui/keys.go:87-93`).
 2. Clear **Needs you** from the top. Group order is Decisions, Held, Stopped,
-   Paused, Approve, Findings, Errors (`docs/dashboard.md:404-407`).
+   Questions, Paused, Approve, Findings, Errors (`docs/dashboard.md:463-464`).
 3. Open **Questions** for every open question in one list.
 4. Open **Decisions** for adj records and **Roadmap** for what is next.
 5. Press `r` to refresh now. `/` filters projects. `?` shows every key.

@@ -909,7 +909,9 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			}
 			if m.decisionPane != nil && m.decisionAnswerable() {
 				if h == m.keys.PickOption.Help() {
-					lines = append(lines, clip(fmt.Sprintf("1-%d pick an adj option; y decides after confirmation", min(len(m.decisionPane.record.Options), 4)), w))
+					if n := min(len(m.decisionPane.record.Options), 4); n > 0 {
+						lines = append(lines, clip(fmt.Sprintf("1-%d pick an adj option; y decides after confirmation", n), w))
+					}
 					continue
 				}
 				if h == m.keys.FreeAnswer.Help() {

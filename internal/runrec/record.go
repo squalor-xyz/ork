@@ -39,11 +39,15 @@ const (
 func IsFinal(state string) bool { return state == StateCommitted || state == StateStopped }
 
 // LineupEntry is one vendor, model and effort for a role. The first entry of
-// a role's list is the primary; the rest are its fallback chain (S06).
+// a role's list is the primary; the rest are its fallback chain (S06). Model is
+// the model to run. When the matrix row asked for the newest model of a family
+// (FAMILY@latest, S244, *proposed*), Requested holds that text and Model the
+// model ork resolved; Requested is empty for a pinned model.
 type LineupEntry struct {
-	Vendor string `json:"vendor"`
-	Model  string `json:"model"`
-	Effort string `json:"effort"`
+	Vendor    string `json:"vendor"`
+	Model     string `json:"model"`
+	Effort    string `json:"effort"`
+	Requested string `json:"requested,omitempty"`
 }
 
 // RoleRecord is ork's record of one role process it started.

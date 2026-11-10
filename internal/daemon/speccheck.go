@@ -194,21 +194,26 @@ func (d *Daemon) specChain(ctx context.Context, deps engine.Deps, proj registry.
 	if len(wanted) == 0 {
 		return nil, noSpecCheckRow(proj, noRowProblem, false, usableIDs)
 	}
-	var chain []runrec.LineupEntry
+	var marked []chainEntry
 	for _, id := range wanted {
 		for _, r := range usable {
 			if r.ID == id {
-				chain = appendEntry(chain, runrec.LineupEntry{Vendor: matrixAdapters[strings.ToLower(r.Agent)], Model: r.Model, Effort: r.Reasoning})
+				entry := runrec.LineupEntry{Vendor: matrixAdapters[strings.ToLower(r.Agent)], Model: r.Model, Effort: r.Reasoning}
+				marked = appendChain(marked, chainEntry{entry, isLocalRow(r)})
 			}
 		}
 	}
-	if len(chain) == 0 {
+	if len(marked) == 0 {
 		noun, verb := "row (%s) is", "rows (%s) are"
 		if len(wanted) > 1 {
 			noun = verb
 		}
 		problem := fmt.Sprintf("the spec check "+noun+" not among the reviewer rows with an adapter that slicer recommends for %s.", strings.Join(wanted, ", "), item)
 		return nil, noSpecCheckRow(proj, problem, len(slicercli.SpecCheckRowIDs(rules)) > 0, usableIDs)
+	}
+	chain, err := d.resolveEntries(ctx, marked)
+	if err != nil {
+		return nil, fmt.Errorf("spec check lineup: %w", err)
 	}
 	return chain, nil
 }

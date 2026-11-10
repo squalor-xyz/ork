@@ -197,8 +197,40 @@ ork (TUI)  ork status --json (CLI)
    `Codex` maps to `codex` and `Grok` maps to `grok`, matched without regard to
    case (`engine.adapter-key`, decision 155; the `Grok` key is S72, *proposed*).
    A Grok row is an alternate: nothing makes it a first choice, so it comes
-   first only where the matrix recommends it. A matrix model of `latest` on a
-   Grok row passes no model flag, so the CLI default applies (owner 2026-11-02).
+   first only where the matrix recommends it.
+   *Proposed (S244; owner 2026-11-02):* a matrix model `FAMILY@latest` asks for
+   the newest model of a family. FAMILY is a model name with one `*` for the
+   version (digits and dots), for example `gpt-*-sol@latest` or
+   `grok-*@latest`. When it builds the plan, the daemon resolves the text to the
+   matching name with the highest version, compared number by number (`4.10` is
+   newer than `4.9`). Names that do not match the whole family
+   (`grok-4.7-build-fast` against `grok-*`) are ignored. The names come from the
+   vendor's list: `codex debug models --bundled` for codex (the `slug` of each
+   model) and `grok models` for grok (the first word after each bullet). The
+   daemon keeps each list it read until it restarts (a read that failed is not
+   kept, so the next plan tries again). For claude, the
+   aliases `opus@latest`, `sonnet@latest` and `haiku@latest` resolve to the
+   alias with no list call, because the claude CLI resolves the alias. A model
+   without `@latest` is a pinned name and is passed unchanged. The lineup entry
+   holds both texts: `model` is the resolved name, which the engine, the
+   adapters, the run record and the slicer ledger get, and `requested` is the
+   text the row gave (left out for a pinned model). The bare model `latest` is
+   refused: `model "latest" names no family; write FAMILY@latest, for example
+   grok-*@latest`. A list that cannot be read refuses the plan with the
+   command, its exit and the family; a list that has no match refuses it with the
+   family. A launch override is resolved the
+   same way, after it replaces the role's rows, so overriding the role gets the
+   owner past a refused family. A resumed or retried round uses the recorded
+   `model`, so a run never changes model halfway. A local row (agent
+   `claude-local`, `codex-local` or `grok-local`, or a vendor column of `Local`)
+   is never resolved: its model is passed as written, `@latest` on it is
+   refused because local models are pinned, and no list command runs for it.
+   The same resolution gives the spec check chain its model. The test fixtures
+   are `testdata/vendors/codex/models-bundled.json` (the output of `codex debug
+   models --bundled`, without the `model_messages` and `base_instructions` prompt
+   fields of each model, which the owner removed) and
+   `testdata/vendors/grok/models.txt`. How plans and lineups show `requested` is
+   a later slice.
    Grok runs read-only roles only; see the Grok column below.
 3. **Plan.** For each item, ork shows the worktree path, the branch, the
    check command, the budgets, and whether it runs an architect, a split or
@@ -470,7 +502,8 @@ slice.
     fix round as its fix findings, without the others; an untagged one goes
     whole.
   - *owner*: the finding is an owner question in the shape of S111: a title,
-    `Options:` with 2 to 4 numbered labels, `Recommend: N - reason`, and an
+    `Options:` with 2 to 4 numbered labels, `Recommend: N - reason` (the dash
+    may be a hyphen, an en dash or an em dash; S132, *proposed*), and an
     optional `Decision key:`. The prompts say the body holds only those lines,
     with no list marker before `Options:`, `Recommend:` or `Decision key:`.
     The parser is lenient (S288, *proposed*): it strips one leading `- `, `* `
@@ -906,6 +939,11 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   Recommend: 1 - one-line reasoning
   Decision key: area.topic
   ```
+
+  The dash in `Recommend: N - reason` may be an ASCII hyphen, an en dash or an
+  em dash (S132, *proposed*); a role that writes `Recommend: 2 – reason` is not
+  a shape error. The prompts keep teaching the hyphen, and `Recommend: 1 -- r`
+  and `Recommend: 1 r` stay shape errors.
 
   Free context lines may precede `Question:`. They stay in the raw question
   text and the pane shows them above the options. From `Question:` onward,
@@ -1517,7 +1555,8 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
 
 - **Codex adapter** (`internal/agent/codex`, S47). A fresh round runs
   `codex exec --json -m MODEL -c model_reasoning_effort=LEVEL -s MODE
-  -C WORKTREE PROMPT`. MODE is `workspace-write` for write roles and
+  -C WORKTREE PROMPT`. MODEL is the lineup entry's `model`, which is the
+  resolved name for a `FAMILY@latest` row (S244, *proposed*). MODE is `workspace-write` for write roles and
   `read-only` for read-only roles. Resume runs from the worktree as
   `codex exec resume ID -m MODEL --json -c model_reasoning_effort=LEVEL
   -c 'sandbox_mode="MODE"' PROMPT`, with no `-s` or `-C` (S89 probe 08).
@@ -1545,7 +1584,9 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
 
 - **Claude adapter** (`internal/agent/claude`, S16, `plan.s04-cut`). One
   call runs one role round: `claude -p [--resume SESSION] --output-format
-  stream-json --verbose --include-partial-messages [--model M] [--effort E]`,
+  stream-json --verbose --include-partial-messages [--model M] [--effort E]`
+  (M is the lineup entry's `model`, the alias itself for `opus@latest`;
+  S244, *proposed*),
   then `--allowedTools a,b --permission-prompts none` for a write role or
   `--permission-mode plan` for a read-only one, then the prompt. `--effort
   <level>` is listed by `claude --help` ("Effort level for the current
@@ -1837,7 +1878,8 @@ are added in S17.
 owner overrides them with `--well-specified` or `--split`; the TUI always
 sends `well_specified: true` and `split: false`. `lineup` maps each
 overridden role to its full chain of `{vendor,model,effort}` entries
-(`lineup.launch-edit`). Start also accepts `expected`, the plan the owner
+(`lineup.launch-edit`); a `model` of `FAMILY@latest` is resolved as a matrix
+row's is (S244, *proposed*). Start also accepts `expected`, the plan the owner
 confirmed, including lineup and merged budgets. `run.approve`, `run.stop`
 and `run.answer` take
 `{run,text?}`. *Proposed (S237):* `run.answer` and `run.retry` also take an
@@ -1849,6 +1891,9 @@ first is the reply. Without it (the TUI), the reply waits until the run rests.
 A second owner action is refused as busy until the job ends.
 Plan returns `{project,item,worktree,branch,check_command,round_check_command?,
 lineup,budgets,permissions,note?,warnings?}`; the project contains only its name and path.
+Each lineup entry is `{vendor,model,effort,requested?}`: `requested` (S244,
+*proposed*) is the matrix text that `model` was resolved from, and is absent for
+a pinned model.
 The proposed optional `note` (S135) explains a failed `relay-roles show` read.
 The plan then treats UI and spec-check rules as absent; a failed recommendation
 still prevents planning. `ork run` and the TUI launch confirm show the note

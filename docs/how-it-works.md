@@ -100,8 +100,10 @@ slice and can change that one run (`docs/design.md:174-183`,
 | Judge | UI pass | Reads the screen on a slice that touches the UI, beside the reviewer. |
 | Read and ask | Spec check | Reads the specs of the ticked slices before the wave starts, so you can answer in one sitting. |
 
-A model of `latest` on a Grok row passes no model flag. The grok CLI's own
-default applies (`docs/design.md:195-196`).
+A model written `FAMILY@latest` (for example `grok-*@latest`) runs the newest
+model of that family, which ork resolves from the vendor's model list when it
+builds the plan (*proposed*, S244; `docs/design.md`, lineup section). A bare
+`latest` is refused.
 
 Grok runs read-only roles today, in `--permission-mode plan`, and ork
 refuses a Grok write role (*proposed*, S72, no adj record yet). Probes of

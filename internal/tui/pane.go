@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -23,6 +24,30 @@ import (
 // that arrives this long after the switch (proposed). The ledger refresh sends
 // a snapshot every second, so the next one would be too soon to read it.
 const noticeFor = 5 * time.Second
+
+// optionText is an option's label and summary, joined by a colon; an empty
+// summary leaves the label alone, with no trailing colon (S132, *proposed*).
+func optionText(label, summary string) string {
+	if strings.TrimSpace(summary) == "" {
+		return label
+	}
+	return label + ": " + summary
+}
+
+// hangLines wraps text to width columns. The first line starts with first and
+// the rest start with rest, so a long option hangs under its text instead of
+// looking like a new option (S132, *proposed*).
+func hangLines(first, rest, text string, width int) []string {
+	lines := wrapText(text, max(width-lipgloss.Width(first), 1))
+	for i := range lines {
+		if i == 0 {
+			lines[i] = first + lines[i]
+		} else {
+			lines[i] = rest + lines[i]
+		}
+	}
+	return lines
+}
 
 // gapPriority is the drop priority of the blank lines between the card's
 // blocks: above every other footer line, so they go first (S141).
@@ -467,6 +492,13 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		}
 	}
 	addFooter := func(lines []string, priority int) { addGroup(lines, priority, false) }
+	// An option is one group that drops whole; optionGroups remembers them so the
+	// marker can count the ones that went (S132, *proposed*).
+	var optionGroups []int
+	addOption := func(lines []string) {
+		addGroup(lines, 0, true)
+		optionGroups = append(optionGroups, nextGroup)
+	}
 	card := m.paneCard()
 	if card == nil {
 		m.pane.number = "" // a number waits only on a card (S141)
@@ -524,11 +556,11 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 			}
 			addFooter(title, 0)
 			for i, o := range q.Options {
-				text := fmt.Sprintf("%d. %s: %s", i+1, o.Label, o.Summary)
+				text := optionText(o.Label, o.Summary)
 				if o.Label == q.Recommend {
 					text += " (recommended)"
 				}
-				addFooter(wrapText(text, width), 0)
+				addOption(hangLines(fmt.Sprintf("%d. ", i+1), "   ", text, width))
 			}
 		}
 		// The external-run note and available keys are on the hint line.
@@ -540,11 +572,11 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 			}
 			addFooter(title, 0)
 			for i, option := range ask.Options {
-				text := fmt.Sprintf("%d. %s: %s", i+1, option.Label, option.Summary)
+				text := optionText(option.Label, option.Summary)
 				if i+1 == ask.Recommend {
 					text += " (recommended)"
 				}
-				addFooter(wrapText(text, width), 0)
+				addOption(hangLines(fmt.Sprintf("%d. ", i+1), "   ", text, width))
 			}
 			addFooter(wrapText("Why "+strconv.Itoa(ask.Recommend)+": "+ask.Reason, width), 2)
 		} else {
@@ -649,7 +681,7 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 	if card != nil {
 		limit = max(h-1, 0)
 	}
-	for len(footer) > limit && len(footer) > 0 {
+	dropOne := func() {
 		drop := 0
 		for i, priority := range priorities {
 			if priority >= priorities[drop] {
@@ -664,6 +696,31 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 				groups = append(groups[:i], groups[i+1:]...)
 			}
 		}
+	}
+	for len(footer) > limit && len(footer) > 0 {
+		dropOne()
+	}
+	// Options never drop silently: the last footer line says how many are left
+	// out. It needs a line of its own, so one more group may go to make room.
+	hiddenOptions := func() int {
+		n := 0
+		for _, g := range optionGroups {
+			if !slices.Contains(groups, g) {
+				n++
+			}
+		}
+		return n
+	}
+	if hiddenOptions() > 0 && limit > 0 {
+		for len(footer) >= limit {
+			dropOne()
+		}
+		word := "options"
+		if n := hiddenOptions(); n == 1 {
+			word = "option"
+		}
+		marker := m.cfg.Theme.Dim.Render(fmt.Sprintf("+%d more %s", hiddenOptions(), word))
+		footer, priorities, groups = append(footer, marker), append(priorities, 0), append(groups, 0)
 	}
 	// The action area takes priority if the header no longer fits.
 	fullHeader := header

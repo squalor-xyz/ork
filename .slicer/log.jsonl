@@ -4051,9 +4051,29 @@
 {"when": "2026-11-10T00:51:31Z", "item": "S261", "action": "set", "from": "", "to": "", "note": "depends_on -→S250; pass_key v1.1→v1.2"}
 {"when": "2026-11-10T00:51:31Z", "item": "S295", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-10T00:51:31Z", "item": "S261", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-10: moved to v1.2 and depends on S250 (slicer ", "by": "Jon Robbins"}
+{"when": "2026-11-10T01:53:57Z", "item": "S244", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-10T02:45:41Z", "item": "S244", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-10T02:45:49Z", "item": "S244", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-10T03:04:40Z", "item": "S244", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-10T03:07:02Z", "item": "S244", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S244):", "by": "Jon Robbins"}
+{"when": "2026-11-10T03:07:07Z", "item": "S244", "action": "note", "from": "", "to": "", "note": "Verified: a matrix or launch-override model FAMILY@latest re", "by": "Jon Robbins"}
+{"when": "2026-11-10T03:07:09Z", "item": "S244", "action": "status", "from": "started", "to": "done", "note": "Verified: FAMILY@latest in a matrix row or launch override resolves at plan time to the newest model of the family; lineup entries keep requested and the resolved model; bare latest, a failed list and an unmatched family refuse the plan; local rows are never resolved; a resumed run keeps its recorded model. Full suite, vet, gofmt, slicer check and adj lint are clean.", "by": "Jon Robbins"}
+{"when": "2026-11-10T02:28:50Z", "item": "S132", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-10T02:40:36Z", "item": "S132", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-10T02:40:47Z", "item": "S132", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-10T02:58:38Z", "item": "S132", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S132):", "by": "Jon Robbins"}
+{"when": "2026-11-10T02:58:43Z", "item": "S132", "action": "note", "from": "", "to": "", "note": "Question polish sweep E6 verified: Needs you has a Questions", "by": "Jon Robbins"}
+{"when": "2026-11-10T02:58:45Z", "item": "S132", "action": "status", "from": "started", "to": "done", "note": "Question polish sweep E6 verified: Questions group before Paused; option hang, whole-option drop and +N more options marker; Recommend accepts en and em dash; cancelled adj confirmation keeps the typed answer; no pick help line for an optionless record; no colon for empty summaries; relay answer keeps its channel in adj. Full suite, vet, gofmt, slicer check and adj lint clean.", "by": "Jon Robbins"}
 {"when": "2026-11-10T02:28:24Z", "item": "S132", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-10T02:58:35Z", "item": "S204", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-10T03:06:05Z", "item": "S204", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-10T03:33:09Z", "item": "S204", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S204):", "by": "Jon Robbins"}
 {"when": "2026-11-10T03:33:14Z", "item": "S204", "action": "note", "from": "", "to": "", "note": "Verified: a v11 gate round closes its ledger step with the v", "by": "Jon Robbins"}
 {"when": "2026-11-10T03:33:16Z", "item": "S204", "action": "status", "from": "started", "to": "done", "note": "Verified: v11 gate round closes with its verdict only when the engine accepts it (paused rounds close without one, the rerun is a new step); [AFTER LAND] Check lines show on the approval card as 'deferred to land: ...' in state later, and the implementer and gate prompts skip them. Full suite with -race, go vet, gofmt, slicer check and adj lint passed.", "by": "Jon Robbins"}
+{"when": "2026-11-10T02:33:31Z", "item": "S204", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-10T02:37:11Z", "item": "S204", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-10T03:30:13Z", "item": "relay-roles.r21", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
+{"when": "2026-11-10T03:30:13Z", "item": "relay-roles.r22", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
+{"when": "2026-11-10T03:30:13Z", "item": "relay-roles.r23", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
+{"when": "2026-11-10T03:30:13Z", "item": "relay-roles.r24", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
+{"when": "2026-11-10T03:30:13Z", "item": "relay-roles.r31", "action": "relay-roles", "from": "", "to": "model", "note": "set"}

@@ -547,7 +547,9 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 			needs[i].group = "Held"
 		case "x stopped":
 			needs[i].group = "Stopped"
-		case "= paused", "? question":
+		case "? question":
+			needs[i].group = "Questions"
+		case "= paused":
 			needs[i].group = "Paused"
 		case "+ approve":
 			needs[i].group = "Approve"
@@ -561,7 +563,7 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 	return needs, running
 }
 
-var needsGroups = []string{"Decisions", "Held", "Stopped", "Paused", "Approve", "Findings", "Errors"}
+var needsGroups = []string{"Decisions", "Held", "Stopped", "Questions", "Paused", "Approve", "Findings", "Errors"}
 
 // clampCursor keeps a cursor index on one of n rows. It returns -1 when there
 // are no rows.

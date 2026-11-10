@@ -254,8 +254,9 @@ func TestSupportsVendorNamesTheThreeAdapters(t *testing.T) {
 }
 func TestRunPlanAcceptsGrokOverride(t *testing.T) {
 	d, _, _ := runDaemon(t, nil)
-	plan := launchPlan(t, d, `{"project":"p","item":"S1","lineup":{"reviewer":[{"vendor":"grok","model":"latest","effort":"high"}]}}`)
-	if got := plan.Lineup[engine.RoleReviewer]; len(got) != 1 || got[0].Vendor != "grok" {
+	useModelLists(d, map[string][]string{"grok": {"grok-4.7"}})
+	plan := launchPlan(t, d, `{"project":"p","item":"S1","lineup":{"reviewer":[{"vendor":"grok","model":"grok-*@latest","effort":"high"}]}}`)
+	if got := plan.Lineup[engine.RoleReviewer]; len(got) != 1 || got[0].Vendor != "grok" || got[0].Model != "grok-4.7" {
 		t.Fatalf("%+v", plan.Lineup)
 	}
 }

@@ -1579,6 +1579,46 @@ func TestNeedsYouGroupsByKind(t *testing.T) {
 	}
 }
 
+func TestNeedsYouQuestionRowsFormTheQuestionsGroup(t *testing.T) {
+	m := layoutModel(t)
+	m.projects[0].snap.EngineRuns = append(m.projects[0].snap.EngineRuns, source.EngineRun{ID: "question-id", State: "paused", Pending: "question"})
+	lines := m.overview(100).body
+	plain := make([]string, len(lines))
+	for i, l := range lines {
+		plain[i] = sgr.ReplaceAllString(l, "")
+	}
+	body := strings.Join(plain, "\n")
+	last := -1
+	for _, heading := range []string{"Stopped 1", "Questions 1", "Paused 1", "Approve 1"} {
+		at := strings.Index(body, heading)
+		if at < 0 || at <= last {
+			t.Errorf("missing or unordered group %q:\n%s", heading, body)
+		}
+		last = at
+	}
+	// Each group holds its own row.
+	group := ""
+	for _, l := range plain {
+		switch {
+		case strings.Contains(l, "Questions 1"):
+			group = "Questions"
+		case strings.Contains(l, "Paused 1"):
+			group = "Paused"
+		case strings.Contains(l, "Approve 1"):
+			group = "Approve"
+		}
+		if strings.Contains(l, "question-id") && group != "Questions" {
+			t.Errorf("question row under %q: %q", group, l)
+		}
+		if strings.Contains(l, "pause-id") && group != "Paused" {
+			t.Errorf("paused row under %q: %q", group, l)
+		}
+	}
+	if !strings.Contains(body, "question-id") || !strings.Contains(body, "pause-id") {
+		t.Errorf("a row is missing:\n%s", body)
+	}
+}
+
 func TestSectionHeadingsCarryCounts(t *testing.T) {
 	m := layoutModel(t)
 	for i := 0; i < 5; i++ {
