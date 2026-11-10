@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
@@ -90,11 +91,168 @@ func TestWavesAReadyItemWhoseSpecChangedIsAskedAgain(t *testing.T) {
 	}
 }
 
+func TestSpecWaitText(t *testing.T) {
+	for _, tc := range []struct {
+		items []string
+		d     time.Duration
+		want  string
+	}{
+		{[]string{"S90"}, 12 * time.Second, "spec check: S90, 12s; wait for the confirmation"},
+		{[]string{"A", "B"}, 72 * time.Second, "spec check: 2 items, 1m12s; wait for the confirmation"},
+		{[]string{"A", "B", "C"}, 3725 * time.Second, "spec check: 3 items, 1h02m; wait for the confirmation"},
+	} {
+		if got := specWaitText(tc.items, tc.d); got != tc.want {
+			t.Errorf("specWaitText(%v, %v) = %q, want %q", tc.items, tc.d, got, tc.want)
+		}
+	}
+	for _, tc := range []struct {
+		d    time.Duration
+		want string
+	}{
+		{59 * time.Second, "59s"},
+		{60 * time.Second, "1m00s"},
+		{-time.Second, "0s"},
+	} {
+		if got := checkClock(tc.d); got != tc.want {
+			t.Errorf("checkClock(%v) = %q, want %q", tc.d, got, tc.want)
+		}
+	}
+}
+
+func TestWavesSpecCheckSaysToWaitWithItsElapsedTime(t *testing.T) {
+	h, l := wavesHarness(t)
+	twoWaveItems(t, h)
+	_, cmd := h.m.Update(press("l"))
+	if cmd == nil {
+		t.Fatal("no check command")
+	}
+	if v := h.view(); !strings.Contains(v, "spec check: 2 items, 0s; wait for the confirmation") || strings.Contains(v, "pending: spec."+"check") { // the old status text
+		t.Fatalf("no wait text:\n%s", v)
+	}
+	h.now = h.now.Add(72 * time.Second)
+	const want = "spec check: 2 items, 1m12s; wait for the confirmation"
+	if v := h.view(); !strings.Contains(v, want) {
+		t.Fatalf("clock did not move:\n%s", v)
+	}
+	h.deliver(press("l"))
+	if len(l.checks) != 0 || h.m.confirm != nil || !strings.Contains(h.view(), want) {
+		t.Fatalf("second l: checks %v confirm %v:\n%s", l.checks, h.m.confirm, h.view())
+	}
+	h.deliver(cmd())
+	if v := h.view(); !strings.Contains(v, "ork wave start ork A B? [y/N] (Enter is No)") || strings.Contains(v, "wait for the confirmation") {
+		t.Fatalf("no confirmation after the check:\n%s", v)
+	}
+}
+
+// A refusal while the check runs shows below the wait line and does not
+// replace it (S264 review): e on an unticked row is still offered meanwhile.
+func TestWavesSpecCheckKeepsItsWaitLineUnderARefusal(t *testing.T) {
+	h, _ := wavesHarness(t)
+	twoWaveItems(t, h)
+	_, cmd := h.m.Update(press("l"))
+	if cmd == nil {
+		t.Fatal("no check command")
+	}
+	h.m.Update(press("down")) // C is not ticked
+	h.m.Update(press("e"))
+	h.now = h.now.Add(72 * time.Second)
+	v := h.view()
+	wait, refusal := "spec check: 2 items, 1m12s; wait for the confirmation", "Tick the item before editing its lineup"
+	i, j := strings.Index(v, wait), strings.Index(v, refusal)
+	if i < 0 || j < 0 || i > j {
+		t.Fatalf("want the wait line, then the refusal below it:\n%s", v)
+	}
+	h.deliver(cmd())
+	if v := h.view(); strings.Contains(v, refusal) || !strings.Contains(v, "ork wave start ork A B? [y/N]") {
+		t.Fatalf("the refusal outlived the check:\n%s", v)
+	}
+}
+
+func TestWavesListShowsOneLineOfOwnerNeeded(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.check = func(items []string) (*daemon.SpecCheckResult, error) {
+		out := &daemon.SpecCheckResult{OwnerNeeded: "Slice S2 could not be read.\nSecond line.\nThird line."}
+		for _, id := range items {
+			out.Items = append(out.Items, daemon.SpecItemResult{Item: id, Ready: true})
+		}
+		return out, nil
+	}
+	twoWaveItems(t, h)
+	h.deliver(press("l"))
+	h.deliver(press("n"))
+	v := h.view()
+	if !strings.Contains(v, "Owner needed: Slice S2 could not be read. (+2 more lines)") || strings.Contains(v, "Second line.") {
+		t.Fatalf("owner text:\n%s", v)
+	}
+	// A long first line is clipped to the body width and never wraps.
+	l.check = func(items []string) (*daemon.SpecCheckResult, error) {
+		out := &daemon.SpecCheckResult{OwnerNeeded: strings.Repeat("Confirm the rollout window with the owner. ", 6) + "\nSecond line."}
+		for _, id := range items {
+			out.Items = append(out.Items, daemon.SpecItemResult{Item: id, Ready: true})
+		}
+		return out, nil
+	}
+	h.deliver(press("l"))
+	h.deliver(press("n"))
+	narrow := h.at(80, 24)
+	n := 0
+	for _, line := range strings.Split(narrow, "\n") {
+		if strings.Contains(line, "Owner needed") {
+			n++
+			if lipgloss.Width(line) > 80 || !strings.HasSuffix(strings.TrimRight(line, " "), "(+1 more lines)") {
+				t.Errorf("owner line not clipped to one line: %q", line)
+			}
+		}
+		if strings.Contains(line, "Second line.") {
+			t.Errorf("second line shown: %q", line)
+		}
+	}
+	if n != 1 {
+		t.Fatalf("owner lines %d:\n%s", n, narrow)
+	}
+	// One line shows with no marker.
+	l.check = func(items []string) (*daemon.SpecCheckResult, error) {
+		out := &daemon.SpecCheckResult{OwnerNeeded: "Slice S2 could not be read."}
+		for _, id := range items {
+			out.Items = append(out.Items, daemon.SpecItemResult{Item: id, Ready: true})
+		}
+		return out, nil
+	}
+	h.deliver(press("l"))
+	h.deliver(press("n"))
+	if v := h.view(); !strings.Contains(v, "Owner needed: Slice S2 could not be read.") || strings.Contains(v, "more lines") {
+		t.Fatalf("one-line text:\n%s", v)
+	}
+}
+
+func TestWavesCheckingGolden(t *testing.T) {
+	for _, size := range [][2]int{{80, 24}, {100, 30}} {
+		for _, mono := range []bool{false, true} {
+			theme := "color"
+			if mono {
+				theme = "mono"
+			}
+			name := fmt.Sprintf("waves-checking-%dx%d-%s.txt", size[0], size[1], theme)
+			t.Run(name, func(t *testing.T) {
+				h, _ := wavesHarness(t)
+				h.m.cfg.Theme = NewTheme(mono)
+				twoWaveItems(t, h)
+				h.m.Update(press("l"))
+				h.now = h.now.Add(72 * time.Second)
+				if v := h.at(size[0], size[1]); !strings.Contains(v, "spec check: 2 items, 1m12s; wait for the confirmation") {
+					t.Fatalf("no wait text:\n%s", v)
+				}
+				checkGolden(t, name, h.m.View().Content)
+			})
+		}
+	}
+}
+
 func TestWavesSpecCheckShowsPendingAndBlocksTickAndLaunch(t *testing.T) {
 	h, l := wavesHarness(t)
 	twoWaveItems(t, h)
 	_, cmd := h.m.Update(press("l"))
-	if cmd == nil || !strings.Contains(h.view(), "pending: spec.check") {
+	if cmd == nil || !strings.Contains(h.view(), "spec check: 2 items, 0s; wait for the confirmation") {
 		t.Fatalf("no pending check:\n%s", h.view())
 	}
 	h.deliver(press("l"))

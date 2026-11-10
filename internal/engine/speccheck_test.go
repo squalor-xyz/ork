@@ -902,6 +902,46 @@ func TestOwnerNeededTextIsKept(t *testing.T) {
 	}
 }
 
+func TestSpecOwnerText(t *testing.T) {
+	const fence = "```"
+	for _, tc := range []struct {
+		name string
+		body []string
+		want string
+	}{
+		{"none then fence and prose", []string{"none", fence, "", "Reading the code closed these gaps."}, ""},
+		{"fenced None.", []string{fence + "text", "None.", fence}, ""},
+		{"text then fence", []string{"Slice S2 could not be read.", fence}, "Slice S2 could not be read."},
+		{"plain text", []string{"Confirm the rollout window with the owner."}, "Confirm the rollout window with the owner."},
+		{"empty", nil, ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := SpecOwnerText(strings.Join(tc.body, "\n")); got != tc.want {
+				t.Errorf("SpecOwnerText(%q) = %q, want %q", tc.body, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSpecOwnerNeededNoneWithTrailingTextIsNone(t *testing.T) {
+	h := specHarness(t)
+	h.runner.script = func(req Request, n int) (Result, error) {
+		return Result{Exit: ExitOK, Report: strings.Replace(specReport, "\nnone\n", "\nnone\n```\n\nReading the code closed these gaps. None needs an owner decision.\n", 1)}, nil
+	}
+	cfg := specConfig(h, t)
+	res, err := RunSpecCheck(context.Background(), h.deps, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.OwnerNeeded != "" {
+		t.Fatalf("owner text %q, want none", res.OwnerNeeded)
+	}
+	saved, err := os.ReadFile(filepath.Join(cfg.Dir, "spec-check.md"))
+	if err != nil || !strings.Contains(string(saved), "Reading the code closed these gaps.") {
+		t.Fatalf("saved report lost the prose: %q %v", saved, err)
+	}
+}
+
 func TestMovingMainDoesNotRetryAPermissionDenial(t *testing.T) {
 	h := specHarnessHead(t, []clitest.Reply{{Stdout: "a"}, {Stdout: "b"}})
 	h.runner.script = func(req Request, n int) (Result, error) {

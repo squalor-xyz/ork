@@ -346,6 +346,38 @@ func (s *specStub) waveStarts() (n int) {
 
 const specCheckS2NoSpec = `{"items":[{"item":"S1","ready":true},{"item":"S2","ready":false,"no_spec":true}]}`
 
+func TestWaveStartSaysToWaitForTheSpecCheck(t *testing.T) {
+	stub := &specStub{t: t, check: specCheckTwoQuestions}
+	var o, e bytes.Buffer
+	var atCall string // what stdout held when the spec check was called
+	app := &App{Input: strings.NewReader("2\ncustom flag\ny\n"), Call: func(ctx context.Context, method string, params, result any) error {
+		if method == "spec.check" {
+			atCall = o.String()
+		}
+		return stub.call(ctx, method, params, result)
+	}}
+	code := app.Run(context.Background(), []string{"wave", "start", "p", "S2", "S1", "--well-specified", "yes", "--split", "no"}, &o, &e)
+	out, errs := o.String(), e.String()
+	if !strings.HasSuffix(atCall, "; wait for it to finish\n") {
+		t.Errorf("the wait line must come before the spec.check call; stdout then:\n%s", atCall)
+	}
+	if code != ExitOK {
+		t.Fatalf("code %d: %s %s", code, out, errs)
+	}
+	var lines []string
+	for _, line := range strings.Split(out, "\n") {
+		if strings.HasPrefix(line, "spec check: ") {
+			lines = append(lines, line)
+		}
+	}
+	if len(lines) != 1 || !strings.Contains(lines[0], "S1") || !strings.Contains(lines[0], "S2") || !strings.HasSuffix(lines[0], "; wait for it to finish") {
+		t.Fatalf("wait lines %q in:\n%s", lines, out)
+	}
+	if i, j := strings.Index(out, lines[0]), strings.Index(out, "[S1 1/2]"); i < 0 || j < 0 || i > j {
+		t.Errorf("the wait line must come before the questions:\n%s", out)
+	}
+}
+
 func TestWaveStartSkipsAnItemWithNoSpec(t *testing.T) {
 	stub := &specStub{t: t, check: specCheckS2NoSpec}
 	code, out, errs := runWaveItems(t, stub, "", []string{"S1", "S2"}, "--yes")

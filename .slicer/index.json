@@ -14316,7 +14316,7 @@
       "id": "S264",
       "title": "Launch: show the spec check's progress, say to wait for it, and keep raw report text out of the sitting",
       "short_title": "Launch: show the spec check's progress, say to wait for it, and keep raw report text out of the sitting",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -14347,6 +14347,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "93d40aae-f238-4949-acc9-7f3781e92fc6",
+          "kind": "",
+          "text": "**2026-11-10** — Human checks at approval (S264):\n- later: In the TUI, tick two items on Waves and press `l`: the status line reads `spec check: 2 items, Ns; wait for the confirmation` and the clock moves each second until the confirmation opens. On a check whose report ends with `none` and prose, the Waves list shows no `Owner needed` line.",
+          "created_at": "2026-11-10T00:17:27Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "1d31103b-72bf-4d98-9b94-bf9eb0ead623",
+          "kind": "",
+          "text": "**2026-11-10** — Verified: while the spec check runs, the Waves status line and the Roadmap launch body read \"spec check: N items, 1m12s; wait for the confirmation\" (the Waves line stays above any refusal); l stays refused until the reply. ork run and ork wave start print \"spec check: ID, ID; wait for it to finish\" before the call (stderr with --json). SpecOwnerText drops fence lines and treats a first line of none as none, also for a stored answers.json; the Waves list shows one Owner needed line plus (+N more lines). Full go test -race ./... passed in all 23 packages, with vet, gofmt, slicer check and adj lint clean; mutation checks recorded in the implementer reports. Also touched outside the Files list: docs/guide.md and internal/daemon/vendors_test.go (clock-dependent expected text).",
+          "created_at": "2026-11-10T00:17:33Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -14366,7 +14394,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

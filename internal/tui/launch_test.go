@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
@@ -1041,10 +1042,11 @@ func launchQuestions(l *launchLive) {
 func TestLaunchRunsTheSpecCheckBeforeTheConfirmation(t *testing.T) {
 	h, l := launchHarness(t)
 	_, check := h.m.Update(launchPlanning(t, h)())
-	if check == nil || h.m.confirm != nil || !strings.Contains(h.view(), "pending: spec.check") {
+	const wait = "spec check: S90, 0s; wait for the confirmation"
+	if check == nil || h.m.confirm != nil || !strings.Contains(h.view(), wait) {
 		t.Fatalf("no pending check before confirmation:\n%s", h.view())
 	}
-	if m := h.m; m.actionStatus != "" || strings.Count(h.view(), "pending: spec.check") != 1 {
+	if m := h.m; m.actionStatus != "" || strings.Count(h.view(), wait) != 1 {
 		t.Fatalf("pending check must appear in the launch body only; status %q:\n%s", m.actionStatus, h.view())
 	}
 	h.deliver(press("y"))
@@ -1058,6 +1060,45 @@ func TestLaunchRunsTheSpecCheckBeforeTheConfirmation(t *testing.T) {
 		t.Fatalf("checks %v confirm %v", l.checks, h.m.confirm)
 	}
 }
+func TestLaunchSpecCheckSaysToWaitWithItsElapsedTime(t *testing.T) {
+	h, _ := launchHarness(t)
+	_, check := h.m.Update(launchPlanning(t, h)())
+	const wait = "spec check: S90, 0s; wait for the confirmation"
+	if v := h.view(); strings.Count(v, wait) != 1 || h.m.actionStatus != "" {
+		t.Fatalf("wait text %d times, status %q:\n%s", strings.Count(v, wait), h.m.actionStatus, v)
+	}
+	h.now = h.now.Add(12 * time.Second)
+	if v := h.view(); strings.Count(v, "spec check: S90, 12s; wait for the confirmation") != 1 {
+		t.Fatalf("clock did not move:\n%s", v)
+	}
+	h.deliver(check())
+	if h.m.confirm == nil || strings.Contains(h.view(), "wait for the confirmation") {
+		t.Fatalf("no confirmation:\n%s", h.view())
+	}
+}
+
+func TestLaunchCheckingGolden(t *testing.T) {
+	for _, size := range [][2]int{{80, 24}, {100, 30}} {
+		for _, mono := range []bool{false, true} {
+			theme := "color"
+			if mono {
+				theme = "mono"
+			}
+			name := fmt.Sprintf("launch-checking-%dx%d-%s.txt", size[0], size[1], theme)
+			t.Run(name, func(t *testing.T) {
+				h, _ := launchHarness(t)
+				h.m.cfg.Theme = NewTheme(mono)
+				h.m.Update(launchPlanning(t, h)())
+				h.now = h.now.Add(72 * time.Second)
+				if v := h.at(size[0], size[1]); !strings.Contains(v, "spec check: S90, 1m12s; wait for the confirmation") {
+					t.Fatalf("no wait text:\n%s", v)
+				}
+				checkGolden(t, name, h.m.View().Content)
+			})
+		}
+	}
+}
+
 func TestLaunchSittingAnswersRecordThenConfirm(t *testing.T) {
 	h, l := launchHarness(t)
 	launchQuestions(l)
@@ -1249,7 +1290,7 @@ func TestLaunchStaleSpecCheckAfterNavigation(t *testing.T) {
 	h.deliver(press("esc"))
 	_, next := h.m.Update(launchPlanning(t, h)())
 	h.deliver(late)
-	if h.m.confirm != nil || !strings.Contains(h.view(), "pending: spec.check") {
+	if h.m.confirm != nil || !strings.Contains(h.view(), "spec check: S90, 0s; wait for the confirmation") {
 		t.Fatal("old request confirmed new launch")
 	}
 	h.deliver(next())

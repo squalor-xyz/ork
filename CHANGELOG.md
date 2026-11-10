@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- S264 (*proposed*): say to wait for the spec check, with its elapsed time, and
+  keep the role's prose out of the Owner needed text. While the check runs
+  after `l`, the Waves status line (and the Roadmap launch body) reads
+  `spec check: 2 items, 1m12s; wait for the confirmation`; `l` stays refused
+  until the reply. `ork run` and `ork wave start` print `spec check: S1, S2;
+  wait for it to finish` before the call. The shared `Owner needed` text drops
+  code fence lines and is empty when it starts with `none` (also for a stored
+  `answers.json`); the Waves list shows its first line and `(+N more lines)`.
+  Owner decision 2026-11-03. Docs: `docs/dashboard.md`, `docs/design.md`,
+  `docs/guide.md`.
+
 - S218 (*proposed*): wave suggest and the engine rule. `wave.suggest` and
   `ork wave suggest` keep the first slice of a wave whose Files touch
   `internal/engine`, `internal/daemon` or `cmd` and move every further one,

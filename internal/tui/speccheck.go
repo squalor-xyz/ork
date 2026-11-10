@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/squalor-xyz/ork/internal/daemon"
@@ -21,6 +22,7 @@ import (
 // specState is the check and owner sitting shared by Waves and Roadmap launch.
 type specState struct {
 	checking      bool
+	checkStarted  time.Time // when the running check began (S264)
 	ownerNeeded   string
 	specs         map[string]daemon.SpecItemResult
 	sitting       *specSitting
@@ -79,6 +81,31 @@ func (w *specState) specReady(id string) bool {
 	return ok && r.Ready
 }
 
+// checkClock is the time a spec check has run: seconds, then minutes and
+// seconds, then hours and minutes. The owner sees it move each poll tick.
+func checkClock(d time.Duration) string {
+	if d < 0 {
+		d = 0
+	}
+	switch {
+	case d < time.Minute:
+		return fmt.Sprintf("%ds", int(d.Seconds()))
+	case d < time.Hour:
+		return fmt.Sprintf("%dm%02ds", int(d.Minutes()), int(d.Seconds())%60)
+	}
+	return fmt.Sprintf("%dh%02dm", int(d.Hours()), int(d.Minutes())%60)
+}
+
+// specWaitText is the line shown while the spec check runs (S264, *proposed*):
+// what is checked, how long it has run, and that the confirmation comes next.
+func specWaitText(items []string, d time.Duration) string {
+	what := fmt.Sprintf("%d items", len(items))
+	if len(items) == 1 {
+		what = items[0]
+	}
+	return "spec check: " + what + ", " + checkClock(d) + "; wait for the confirmation"
+}
+
 // startSpecCheck asks the daemon about every ticked item. The daemon runs the
 // role only for the specs that have no check yet or changed since it, so a
 // ready item here is asked again for free, and one whose spec changed is not
@@ -90,7 +117,7 @@ func (m *Model) startSpecCheck(items []daemon.RunParams) tea.Cmd {
 		need = append(need, p.Item)
 	}
 	w.checking = true
-	m.actionStatus = "pending: spec.check"
+	w.checkStarted = m.cfg.Now()
 	live, ctx, request, project := m.cfg.Live, w.ctx, w.request, w.project
 	return func() tea.Msg {
 		if ctx.Err() != nil {

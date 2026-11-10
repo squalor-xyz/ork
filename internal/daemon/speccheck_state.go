@@ -102,7 +102,7 @@ func (d *Daemon) loadSpecAnswersLocked(project, item, fp string) error {
 		return nil
 	}
 	d.runs.mu.Lock()
-	d.runs.specs[specKey(project, item)] = specEntry{fingerprint: fp, ready: true, decisions: a.Decisions, ownerNeeded: a.OwnerNeeded}
+	d.runs.specs[specKey(project, item)] = specEntry{fingerprint: fp, ready: true, decisions: a.Decisions, ownerNeeded: engine.SpecOwnerText(a.OwnerNeeded)}
 	d.runs.mu.Unlock()
 	return nil
 }
