@@ -245,7 +245,7 @@
       },
       "agent": "Grok",
       "vendor": "xAI",
-      "model": "latest",
+      "model": "grok-*@latest",
       "reasoning": "medium",
       "note": "Grok reviewer, first choice (owner 2026-11-03); Claude opus (r5) is the fallback. cross-vendor review is allowed by review.cross-vendor (#25). Model 'latest' = the grok CLI default. Grok runs in plan mode, which can run read-only shell commands (probe 13, 2026-11-03)."
     },
@@ -339,7 +339,7 @@
       },
       "agent": "Grok",
       "vendor": "xAI",
-      "model": "latest",
+      "model": "grok-*@latest",
       "reasoning": "medium",
       "note": "Grok gate, first choice (owner 2026-11-03); Claude opus (r6) is the fallback. cross-vendor gate is allowed by review.cross-vendor (#25). Model 'latest' = the grok CLI default. Grok runs in plan mode, which can run read-only shell commands (probe 13, 2026-11-03)."
     },
@@ -417,7 +417,7 @@
       },
       "agent": "Grok",
       "vendor": "xAI",
-      "model": "latest",
+      "model": "grok-*@latest",
       "reasoning": "high",
       "note": "Grok architect, size L (owner 2026-11-03): first choice, Claude opus (r7) is the fallback; model 'latest' = the grok CLI default; grok runs read-only in plan mode, which can run read-only shell commands (probe 13, 2026-11-03)"
     },
@@ -491,7 +491,7 @@
       },
       "agent": "Grok",
       "vendor": "xAI",
-      "model": "latest",
+      "model": "grok-*@latest",
       "reasoning": "medium",
       "note": "Grok orchestrator alternative (owner 2026-11-02). Model 'latest' = do not pin a version: use the grok CLI default (grok-4.7 on 2026-11-02); owner 2026-11-02: default to the latest unless asked. ork cannot run Grok until S72 lands, so it is used by hand until then"
     },
@@ -509,7 +509,7 @@
       },
       "agent": "Grok",
       "vendor": "xAI",
-      "model": "latest",
+      "model": "grok-*@latest",
       "reasoning": "medium",
       "note": "Spec check row on Grok (owner 2026-11-02): one read-only pass over every ticked slice before a wave (rule u11); an alternative to r16"
     },
