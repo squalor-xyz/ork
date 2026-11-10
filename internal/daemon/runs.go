@@ -414,6 +414,14 @@ func (d *Daemon) stopDaemon(p StopParams) (*StopResult, error) {
 // matrixAdapters maps matrix agents to the names used by the dispatcher.
 var matrixAdapters = map[string]string{"claude code": "claude", "codex": "codex", "grok": "grok", "claude-local": "claude-local", "codex-local": "codex-local", "grok-local": "grok-local"}
 
+// grokNoWrite is why a plan skips a grok row of a write role (S268,
+// *proposed*): probes 10 to 12 in testdata/vendors/grok show dontAsk and
+// acceptEdits refusing every headless write, and the owner rules out
+// bypassPermissions (the grok adapter refuses the same round).
+const grokNoWrite = "grok has no write mode"
+
+func isGrokVendor(vendor string) bool { return vendor == "grok" || vendor == "grok-local" }
+
 // launcherMissing checks only local launchers. Cloud binaries retain their
 // existing adapter launch and fallback behavior.
 func launcherMissing(vendor string) string {
@@ -486,6 +494,11 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 			sourceRole = engine.RoleReviewer
 		}
 		recommended := false
+		// A role that writes cannot run on grok (S268, *proposed*): such a row
+		// is skipped here, with its reason, instead of failing when the round
+		// runs. An error from the permission waits for the check below.
+		perm, permErr := engine.ResolvePermission(proj, role)
+		var skipped []string
 		for _, choice := range rec.Roles {
 			if choice.Role != sourceRole {
 				continue
@@ -509,6 +522,10 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 					continue
 				}
 				if vendor := matrixAdapters[strings.ToLower(row.Agent)]; vendor != "" {
+					if permErr == nil && !perm.ReadOnly && isGrokVendor(vendor) {
+						skipped = append(skipped, fmt.Sprintf("skipped: row %s (%s) as %s: %s", row.ID, row.Agent, role, grokNoWrite))
+						continue
+					}
 					entry := runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning}
 					chains[role] = appendChain(chains[role], chainEntry{entry, isLocalRow(row)})
 				}
@@ -518,11 +535,19 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 			continue
 		}
 		if len(chains[role]) == 0 {
+			if len(skipped) > 0 {
+				return nil, fmt.Errorf("lineup has no row that can run as %s: %s", sourceRole, strings.Join(skipped, "; "))
+			}
 			return nil, fmt.Errorf("lineup has no row with an adapter for %s", sourceRole)
 		}
-		perm, err := engine.ResolvePermission(proj, role)
-		if err != nil {
-			return nil, err
+		if permErr != nil {
+			return nil, permErr
+		}
+		if len(skipped) > 0 {
+			if plan.Note != "" {
+				plan.Note += "; "
+			}
+			plan.Note += strings.Join(skipped, "; ")
 		}
 		plan.Permissions[role] = perm
 	}
@@ -556,6 +581,9 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		for _, entry := range entries {
 			if !supportsVendor(entry.Vendor) {
 				return nil, badParams(fmt.Errorf("unsupported vendor %q for %s", entry.Vendor, role))
+			}
+			if isGrokVendor(entry.Vendor) && role == engine.RoleImplementer && !plan.Permissions[role].ReadOnly {
+				return nil, badParams(fmt.Errorf("vendor %q cannot run as %s: %s", entry.Vendor, role, grokNoWrite))
 			}
 			if strings.TrimSpace(entry.Model) == "" || strings.TrimSpace(entry.Effort) == "" {
 				return nil, badParams(fmt.Errorf("lineup for %s needs a model and effort", role))

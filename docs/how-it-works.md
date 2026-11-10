@@ -106,7 +106,9 @@ builds the plan (*proposed*, S244; `docs/design.md`, lineup section). A bare
 `latest` is refused.
 
 Grok runs read-only roles today, in `--permission-mode plan`, and ork
-refuses a Grok write role (*proposed*, S72, no adj record yet). Probes of
+refuses a Grok write role (*proposed*, S72, no adj record yet). A plan skips
+a Grok implementer row with a reason, and a launch override that names Grok
+as the implementer gets `bad_params` (*proposed*, S268). Probes of
 `dontAsk` and `acceptEdits` refused a headless edit because the run cannot
 ask for approval. Plan mode wrote nothing in the one edit probe. The owner
 ruled out `bypassPermissions` and `--always-approve` on 3 November 2026.

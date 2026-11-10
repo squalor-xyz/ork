@@ -262,15 +262,15 @@ func TestRunPlanRefusesWhenTheListFails(t *testing.T) {
 }
 
 func TestModelListIsReadOncePerDaemon(t *testing.T) {
-	roles := `{"roles":[{"role":"implementer","row":` + latestRow("Codex", "OpenAI", "gpt-*-sol@latest", "high") + `,"alternatives":[` + latestRow("Grok", "xAI", "grok-*@latest", "high") + `]},{"role":"reviewer","row":` + latestRow("Codex", "OpenAI", "gpt-*-terra@latest", "medium") + `}]}`
+	roles := `{"roles":[{"role":"implementer","row":` + latestRow("Codex", "OpenAI", "gpt-*-sol@latest", "high") + `},{"role":"reviewer","row":` + latestRow("Codex", "OpenAI", "gpt-*-terra@latest", "medium") + `,"alternatives":[` + latestRow("Grok", "xAI", "grok-*@latest", "high") + `]}]}`
 	d, _, _ := runDaemon(t, nil, rolesRoute(roles))
 	lists := useModelLists(d, map[string][]string{"codex": codexModelNames, "grok": {"grok-4.7", "grok-4.10"}})
 	for range 2 {
 		plan := launchPlan(t, d, `{"project":"p","item":"S1"}`)
-		if got := plan.Lineup[engine.RoleImplementer]; len(got) != 2 || got[0].Model != "gpt-6.2-sol" || got[1].Model != "grok-4.10" {
+		if got := plan.Lineup[engine.RoleImplementer]; len(got) != 1 || got[0].Model != "gpt-6.2-sol" {
 			t.Fatalf("implementer %+v", got)
 		}
-		if got := plan.Lineup[engine.RoleReviewer]; len(got) != 1 || got[0].Model != "gpt-6.3-terra" {
+		if got := plan.Lineup[engine.RoleReviewer]; len(got) != 2 || got[0].Model != "gpt-6.3-terra" || got[1].Model != "grok-4.10" {
 			t.Fatalf("reviewer %+v", got)
 		}
 	}
@@ -435,13 +435,14 @@ func TestLocalMarkStaysWithItsRow(t *testing.T) {
 	}
 }
 
-// A Grok alternate comes after the recommended row, never before it (S72).
+// A Grok alternate comes after the recommended row, never before it (S72). The
+// implementer's Grok alternate is skipped: Grok cannot write (S268).
 func TestPlanKeepsAGrokAlternateAfterTheRecommendedRow(t *testing.T) {
 	roles := `{"roles":[{"role":"implementer","row":{"agent":"Claude Code","vendor":"Anthropic","model":"sonnet","reasoning":"high"},"alternatives":[{"agent":"Grok","vendor":"xAI","model":"grok-*@latest","reasoning":"high"},{"agent":"Codex","vendor":"OpenAI","model":"gpt","reasoning":"high"}]},{"role":"reviewer","row":{"agent":"Claude Code","vendor":"Anthropic","model":"opus","reasoning":"medium"},"alternatives":[{"agent":"Grok","vendor":"xAI","model":"grok-*@latest","reasoning":"high"}]}]}`
 	d, _, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: roles})
 	useModelLists(d, map[string][]string{"grok": {"grok-4.7", "grok-4.7-build-fast", "grok-4.6"}})
 	plan := launchPlan(t, d, `{"project":"p","item":"S1"}`)
-	wantImpl := []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "high"}, {Vendor: "grok", Model: "grok-4.7", Effort: "high", Requested: "grok-*@latest"}, {Vendor: "codex", Model: "gpt", Effort: "high"}}
+	wantImpl := []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "high"}, {Vendor: "codex", Model: "gpt", Effort: "high"}}
 	wantReview := []runrec.LineupEntry{{Vendor: "claude", Model: "opus", Effort: "medium"}, {Vendor: "grok", Model: "grok-4.7", Effort: "high", Requested: "grok-*@latest"}}
 	if !reflect.DeepEqual(plan.Lineup[engine.RoleImplementer], wantImpl) || !reflect.DeepEqual(plan.Lineup[engine.RoleReviewer], wantReview) || !reflect.DeepEqual(plan.Lineup[engine.RoleGate], wantReview) {
 		t.Fatalf("lineup %+v", plan.Lineup)
