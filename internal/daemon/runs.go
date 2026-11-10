@@ -55,6 +55,7 @@ const defaultGlobalCap = 2
 type RunParams struct {
 	StopAfter     string                          `json:"stop_after,omitempty"`
 	wave          string                          // daemon-assigned; never accepted from a run.start client
+	waveName      string                          // daemon-assigned from WaveStartParams.Name (S215, *proposed*)
 	Project       string                          `json:"project"`
 	Item          string                          `json:"item"`
 	WellSpecified bool                            `json:"well_specified"`
@@ -780,7 +781,7 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 	if wave == "" {
 		wave = newWaveID(time.Now())
 	}
-	message, resumed, err := d.autoResumeLocked(ctx, f, current, p.Item, plan.Worktree, wave, stored, probe)
+	message, resumed, err := d.autoResumeLocked(ctx, f, current, p.Item, plan.Worktree, wave, p.waveName, stored, probe)
 	if err != nil {
 		return runrec.Record{}, "", nil, err
 	}
@@ -796,7 +797,7 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 	queued := local || !d.hasRoomLocked(f, plan.project.Name)
 	// A spec check that the owner answered gave the item decisions that its
 	// worktree's spec lacks; the run carries them into every brief (S116).
-	cfg := engine.Config{StopAfter: plan.StopAfter, Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: wave, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions}
+	cfg := engine.Config{StopAfter: plan.StopAfter, Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: wave, WaveName: p.waveName, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions}
 	e, err := engine.New(ctx, d.runDeps(plan.project), cfg)
 	if err != nil {
 		return runrec.Record{}, "", nil, err
@@ -911,7 +912,7 @@ func freshStart(id, why string) string {
 // the run changed since the probe. The resume uses the stopped run's lineup,
 // budgets and stop-after, not the confirmed plan's. The caller holds the
 // manager lock.
-func (d *Daemon) autoResumeLocked(ctx context.Context, f *registry.File, proj registry.Project, item, worktree, wave string, stored []*runrec.Run, probe *resumeProbe) (string, *resumeLaunch, error) {
+func (d *Daemon) autoResumeLocked(ctx context.Context, f *registry.File, proj registry.Project, item, worktree, wave, waveName string, stored []*runrec.Run, probe *resumeProbe) (string, *resumeLaunch, error) {
 	cand := d.resumeCandidateLocked(proj, item, worktree, stored)
 	if cand == nil && probe == nil {
 		return "", nil, nil
@@ -955,7 +956,7 @@ func (d *Daemon) autoResumeLocked(ctx context.Context, f *registry.File, proj re
 	launch := &resumeLaunch{m: m, applied: make(chan struct{})}
 	var once sync.Once
 	d.launchRun(m, func(ctx context.Context) error {
-		ctx = engine.WithApplied(engine.WithWave(ctx, wave), func() { once.Do(func() { close(launch.applied) }) })
+		ctx = engine.WithApplied(engine.WithWaveName(engine.WithWave(ctx, wave), waveName), func() { once.Do(func() { close(launch.applied) }) })
 		return e.RetryNote(ctx, "")
 	})
 	launch.done, launch.result = m.done, m.result
@@ -1087,6 +1088,10 @@ func newWaveID(now time.Time) string {
 // launch overrides and optional confirmed plan (run.launch-wire).
 type WaveStartParams struct {
 	Items []RunParams `json:"items"`
+	// Name starts a saved wave (S215, *proposed*): the project must have a saved
+	// wave of that name and every item must be one of its members. The name is
+	// stamped on each run record; the wave id is still a fresh one.
+	Name string `json:"name,omitempty"`
 }
 
 // WaveAction identifies a wave using the wave- prefix (wave.stop-target).
@@ -1107,6 +1112,7 @@ type WaveItemResult struct {
 // WaveResult is the proposed result shape of wave.start and wave.stop.
 type WaveResult struct {
 	Wave  string           `json:"wave"`
+	Name  string           `json:"name,omitempty"` // proposed (S215): the saved wave's name, when wave.start named one
 	Items []WaveItemResult `json:"items"`
 }
 
@@ -1174,6 +1180,17 @@ func (d *Daemon) startWave(ctx context.Context, p WaveStartParams) (*WaveResult,
 	if err != nil {
 		return nil, err
 	}
+	// A named wave must be saved, and the items its members, before anything
+	// is read from slicer or admitted (S215, *proposed*).
+	ids := make([]string, 0, len(p.Items))
+	for _, item := range p.Items {
+		ids = append(ids, item.Item)
+	}
+	if p.Name != "" {
+		if err := d.checkSavedWave(project, p.Name, ids); err != nil {
+			return nil, err
+		}
+	}
 	// A project with no check command refuses the whole wave, before any
 	// member is admitted, unless every item carries allow_no_check.
 	if proj.CheckCommand == "" {
@@ -1182,10 +1199,6 @@ func (d *Daemon) startWave(ctx context.Context, p WaveStartParams) (*WaveResult,
 				return nil, noCheckRefusal(project)
 			}
 		}
-	}
-	ids := make([]string, 0, len(p.Items))
-	for _, item := range p.Items {
-		ids = append(ids, item.Item)
 	}
 	if err := d.blockedItems(ctx, proj, ids); err != nil {
 		return nil, err
@@ -1206,9 +1219,10 @@ func (d *Daemon) startWave(ctx context.Context, p WaveStartParams) (*WaveResult,
 			}
 		}
 	}
-	result := &WaveResult{Wave: newWaveID(time.Now()), Items: []WaveItemResult{}}
+	result := &WaveResult{Wave: newWaveID(time.Now()), Name: p.Name, Items: []WaveItemResult{}}
 	for _, item := range p.Items {
 		item.wave = result.Wave
+		item.waveName = p.Name
 		if err := d.specGate(ctx, item.Project, item.Item); err != nil {
 			result.Items = append(result.Items, waveItem(item.Item, runrec.Record{}, err))
 			continue

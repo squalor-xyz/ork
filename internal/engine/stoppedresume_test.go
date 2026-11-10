@@ -646,6 +646,52 @@ func TestResumeJoinsTheWaveOfTheCaller(t *testing.T) {
 	}
 }
 
+func TestResumeJoinsTheWaveNameOfTheCaller(t *testing.T) {
+	setName := func(h *harness, id, name string) {
+		run, err := h.store.Open(id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := run.Update(func(r *runrec.Record) { r.WaveName = name }); err != nil {
+			t.Fatal(err)
+		}
+	}
+	resume := func(h *harness, id string, ctx context.Context) runrec.Record {
+		saved, err := h.store.Open(id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		e := Load(h.deps, h.proj, saved)
+		if err := e.RetryNote(ctx, ""); err != nil {
+			t.Fatal(err)
+		}
+		return e.Snapshot()
+	}
+	// A start of a named wave puts the resumed run in that wave under its name.
+	h, stopped := stoppedAtTheRoundsPause(t)
+	h.checks.reset(CheckOutput{OK: true, Output: "ok\n"})
+	setName(h, stopped.ID, "older")
+	ctx := WithWaveName(WithWave(context.Background(), "wave-new"), "pair-b")
+	if got := resume(h, stopped.ID, ctx); got.Wave != "wave-new" || got.WaveName != "pair-b" {
+		t.Fatalf("named join: wave %q name %q", got.Wave, got.WaveName)
+	}
+	// A start of an unnamed wave must not leave the older wave's name behind.
+	h, stopped = stoppedAtTheRoundsPause(t)
+	h.checks.reset(CheckOutput{OK: true, Output: "ok\n"})
+	setName(h, stopped.ID, "older")
+	if got := resume(h, stopped.ID, WithWave(context.Background(), "wave-new")); got.Wave != "wave-new" || got.WaveName != "" {
+		t.Fatalf("unnamed join: wave %q name %q", got.Wave, got.WaveName)
+	}
+	// Without a wave in the context the run keeps both.
+	h, stopped = stoppedAtTheRoundsPause(t)
+	h.checks.reset(CheckOutput{OK: true, Output: "ok\n"})
+	setName(h, stopped.ID, "older")
+	was := stopped.Wave
+	if got := resume(h, stopped.ID, context.Background()); got.Wave != was || got.WaveName != "older" {
+		t.Fatalf("no join: wave %q name %q", got.Wave, got.WaveName)
+	}
+}
+
 func TestAFailedCommitStopsFromTheCommitState(t *testing.T) {
 	h := resumeHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {

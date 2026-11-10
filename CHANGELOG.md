@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Named wave (*proposed*): S215. A set of items of one project can be saved
+  under a name and started by name. `ork wave define --project P NAME ITEM...
+  [--replace]`, `ork wave list [--project P]` and `ork wave rm [--project P]
+  NAME` manage the saved waves, and `ork wave start [--project P] NAME` starts
+  one: it leaves out the members that are done, retired or gone from slicer,
+  names them, and plans and starts the rest as `ork wave start P ITEM...` does.
+  The waves are kept in the new file `waves.json` beside `projects.json` (mode
+  0600, only names and item ids; status is read from slicer on each use) and
+  are dropped with `ork projects rm`. The daemon has the new methods
+  `wave.define`, `wave.list` and `wave.rm`, and `wave.start` takes an optional
+  `name`; each run record of a started saved wave carries `wave_name`, which an
+  older ork refuses as an unknown key. The Waves screen does not use saved waves
+  yet. Docs updated: `docs/state.md`, `docs/design.md`, `docs/guide.md`,
+  `docs/boundaries.md`, `docs/glossary.md` and `README.md`.
 - S204 (*proposed*): the engine follows two relay v11 process rules. A v11
   gate round closes its ledger step with the report's verdict only when the
   engine accepts the round; a round paused for a shape problem, an owner

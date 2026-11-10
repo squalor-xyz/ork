@@ -86,6 +86,24 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return d.startWave(ctx, p)
+	case MethodWaveDefine:
+		var p WaveDefineParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.waveDefine(ctx, p)
+	case MethodWaveList:
+		var p WaveListParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.waveList(ctx, p)
+	case MethodWaveRm:
+		var p WaveRmParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.waveRm(p)
 	case MethodWaveStop:
 		var p WaveAction
 		if err := decode(params, &p); err != nil {
@@ -533,7 +551,14 @@ func (d *Daemon) removeProject(name string) error {
 		return &ipc.Error{Code: CodeRegistry, Message: err.Error()}
 	}
 	d.cache.Forget(name)
-	return d.removeProjectSpecsLocked(name)
+	// The project is gone: so are its saved waves (S215, NW-Q6, owner
+	// 2026-11-07), as are its spec check records. Both run; the first error is
+	// returned.
+	wavesErr := d.dropSavedWaves(name)
+	if err := d.removeProjectSpecsLocked(name); err != nil {
+		return err
+	}
+	return wavesErr
 }
 
 // setProject changes the optional registry fields p sets (S161, *proposed*).

@@ -23,6 +23,7 @@ defined in [glossary.md](glossary.md).
 | Unattended sandbox (agentbox) | agents repo | `agents/containers/` (not used by ork v1, `launch.sandbox`) |
 | Dashboard across projects | ork | [dashboard.md](dashboard.md) |
 | Registry, run records, fixtures, UI preferences | ork | [state.md](state.md) |
+| Saved waves (*proposed*, S215): a name and item ids for each project, in `waves.json`; never an item's status, title or spec, which are slicer's and read on every use | ork | [state.md](state.md) |
 | Relay state machine: Setup, Order, checks, rounds, gate, commit | ork | [design.md](design.md) (`launch.mode`) |
 | Vendor launch, fallback, read-only fingerprint | ork, replacing `relay-call.sh` and `orchestrate.sh` | [design.md](design.md) (`boundary.agents-scripts`) |
 | Role prompts | ork, canonical; the agents repo generates from `ork roles print` | [design.md](design.md) (`roles.prompts`) |

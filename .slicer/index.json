@@ -12034,7 +12034,7 @@
       "id": "S215",
       "title": "Named wave: save a set of items under a name and start it by name (state, daemon, CLI)",
       "short_title": "Named wave: state, daemon, CLI",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -12045,6 +12045,34 @@
           "created_at": "2026-11-01T00:58:26Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "e6c10341-8446-416b-885f-5e6c461eb339",
+          "kind": "",
+          "text": "**2026-11-10** — Human checks at approval (S215):\n- later: deferred to land: After the owner rebuilds and restarts the daemon (`ork daemon restart`, which refuses while a role runs), run `ork wave define --help`-style usage, define a wave of two open items, `ork wave list` (members show their status; a done item shows done), and `ork wave rm` it. Do not start a real wave for this check. Confirm the file exists beside `projects.json` with the agreed mode.",
+          "created_at": "2026-11-10T12:18:54Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "e9bfaabc-e6ac-4dc3-880a-25e79cc9e51a",
+          "kind": "",
+          "text": "**2026-11-10** — Named wave verified: saved waves live in waves.json beside projects.json (mode 0600, names and item ids only). wave.define, wave.list and wave.rm in the daemon; wave.start takes an optional name and stamps wave_name on each run record (also on a resumed run); projects rm drops a project's saved waves. CLI: ork wave define, list, rm and start NAME (--project P; done, retired and missing members skipped and named). Docs and CHANGELOG updated. go vet, gofmt, go test -race and slicer check were green; reviewer and UI pass findings (four doc fixes) applied; gate PASS.",
+          "created_at": "2026-11-10T12:18:59Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -12070,7 +12098,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

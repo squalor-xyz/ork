@@ -66,6 +66,17 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               plans well specified y and split n unless the
                               flags say otherwise
   ork wave suggest P          show slicer's suggested waves
+  ork wave define --project P NAME ITEM... [--replace]
+                              save the items under NAME (proposed: saved waves,
+                              kept in waves.json beside the registry); a name
+                              already saved is refused unless --replace
+  ork wave list [--project P] list saved waves with each item's status
+  ork wave rm [--project P] NAME
+                              remove a saved wave; --project is needed only when
+                              NAME is saved for more than one project
+  ork wave start [--project P] NAME [the flags below]
+                              start the saved wave NAME; a member that is done,
+                              retired or gone from slicer is skipped and named
   ork wave start P ITEM... [--yes] [--well-specified y/n] [--split y/n]
                               [--stop-after land|commit] [--allow-no-check]
                               the run lineup and budget flags, for every item;

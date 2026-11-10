@@ -591,6 +591,35 @@ func TestWaveStartResumedRunJoinsTheNewWave(t *testing.T) {
 	}
 }
 
+func TestWaveStartResumedRunJoinsTheNewWaveName(t *testing.T) {
+	for _, named := range []bool{true, false} {
+		g := &roleGate{started: make(chan struct{}, 8), release: make(chan struct{})}
+		rig := stoppedDaemon(t, g.run, false, stoppedDiff, func(r *runrec.Record) { r.Wave, r.WaveName = "wave-old", "older" })
+		t.Cleanup(g.open)
+		saveWaves(t, rig.d, savedWave("p", "pair-a", "S1"))
+		raw, want := `{"items":[{"project":"p","item":"S1"}]}`, ""
+		if named {
+			raw, want = `{"name":"pair-a","items":[{"project":"p","item":"S1"}]}`, "pair-a"
+		}
+		var result WaveResult
+		if err := json.Unmarshal(request(t, rig.d, "wave.start", raw), &result); err != nil {
+			t.Fatal(err)
+		}
+		if len(result.Items) != 1 || result.Items[0].Run == nil || result.Items[0].Run.ID != "r1" {
+			t.Fatalf("wave result: %+v", result)
+		}
+		<-g.started
+		// The resumed run takes the name of the wave it joins, and an unnamed wave
+		// does not leave it with the name of the wave it left.
+		if got := rig.d.runs.runs["r1"].engine.Snapshot().WaveName; got != want {
+			t.Errorf("named=%v: the resumed run's wave name is %q, want %q", named, got, want)
+		}
+		if got := result.Items[0].Run.WaveName; got != want {
+			t.Errorf("named=%v: the reply's run has wave name %q, want %q", named, got, want)
+		}
+	}
+}
+
 func TestRunStartResumedRunGetsAWaveOfItsOwn(t *testing.T) {
 	rig := stoppedDaemon(t, retryRunner, false, stoppedDiff, func(r *runrec.Record) { r.Wave = "wave-old" })
 	b := request(t, rig.d, "run.start", `{"project":"p","item":"S1"}`)
@@ -648,7 +677,7 @@ func TestAutoResumeRefusesWhenTheRunChangedSinceTheProbe(t *testing.T) {
 		rig.d.runs.mu.Lock()
 		defer rig.d.runs.mu.Unlock()
 		stored, _ := rig.d.runs.deps.Store.List()
-		return rig.d.autoResumeLocked(ctx, f, rig.p, "S1", rig.W, "wave-x", stored, probe)
+		return rig.d.autoResumeLocked(ctx, f, rig.p, "S1", rig.W, "wave-x", "", stored, probe)
 	}
 	run, _ := rig.store.Open("r1")
 	if err := run.Update(func(r *runrec.Record) { r.Reason = "changed by another action" }); err != nil {

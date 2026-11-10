@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/daemon"
@@ -263,11 +264,39 @@ func TestStopWavePrefixAndPartialFailure(t *testing.T) {
 	}
 }
 
-func TestWaveUsage(t *testing.T) {
-	for _, args := range [][]string{{"wave"}, {"wave", "stop"}, {"wave", "suggest"}, {"wave", "start", "p"}, {"wave", "start", "p", "S1", "--well-specified", "maybe"}, {"stop"}} {
+func TestWaveUsageListsDefineListRmStart(t *testing.T) {
+	// One positional after "wave start" is now a saved wave's name, so it is no
+	// longer a usage error; the forms below still are.
+	for _, args := range [][]string{
+		{"wave"}, {"wave", "stop"}, {"wave", "suggest"}, {"wave", "start"},
+		{"wave", "start", "p", "S1", "--well-specified", "maybe"}, {"stop"},
+		{"wave", "define"}, {"wave", "define", "--project", "p"}, {"wave", "define", "--project", "p", "pair-a"},
+		{"wave", "define", "pair-a", "S1"}, {"wave", "rm"}, {"wave", "rm", "a", "b"}, {"wave", "list", "extra"},
+		{"wave", "bogus"},
+	} {
 		var out, errs bytes.Buffer
 		if code := (&App{}).Run(context.Background(), args, &out, &errs); code != ExitUsage {
 			t.Fatalf("%v: %d %s %s", args, code, &out, &errs)
+		}
+	}
+	// The command's own usage line and the help text name all four.
+	var out, errs bytes.Buffer
+	if code := (&App{}).Run(context.Background(), []string{"wave"}, &out, &errs); code != ExitUsage ||
+		!strings.Contains(errs.String(), "define") || !strings.Contains(errs.String(), "list") ||
+		!strings.Contains(errs.String(), "rm") || !strings.Contains(errs.String(), "start") {
+		t.Fatalf("wave usage: %d %s", code, &errs)
+	}
+	out.Reset()
+	errs.Reset()
+	if code := (&App{}).Run(context.Background(), []string{"help"}, &out, &errs); code != ExitOK {
+		t.Fatalf("help: %d", code)
+	}
+	for _, want := range []string{
+		"ork wave define --project P NAME ITEM...", "ork wave list [--project P]", "ork wave rm [--project P] NAME",
+		"ork wave start [--project P] NAME", "ork wave start P ITEM...",
+	} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("help does not show %q:\n%s", want, &out)
 		}
 	}
 }
@@ -834,6 +863,440 @@ func TestSpecQuestionsWrapAtEightyColumns(t *testing.T) {
 			t.Errorf("missing hanging lines: %s", out)
 		}
 	}
+}
+
+// savedList is what wave.list answers in the saved wave tests: pair-a in two
+// projects, and solo, whose members cannot start.
+const savedList = `{"waves":[` +
+	`{"project":"p","name":"pair-a","items":[{"item":"S1","status":"open","title":"One"},{"item":"S2","status":"done","title":"Two"},{"item":"S4","status":"started","title":"Four"}],"created_at":"2026-11-01T12:00:00Z","updated_at":"2026-11-01T12:00:00Z"},` +
+	`{"project":"q","name":"pair-a","items":[{"item":"Q1","status":"open","title":"Quick"}],"created_at":"2026-11-01T12:00:00Z","updated_at":"2026-11-01T12:00:00Z"},` +
+	`{"project":"p","name":"solo","items":[{"item":"S3","status":"retired","title":"Three"},{"item":"S9","status":"missing","title":""}],"created_at":"2026-11-01T12:00:00Z","updated_at":"2026-11-01T12:00:00Z"}]}`
+
+// savedStub answers the saved wave methods and the calls of a wave start, and
+// records every call.
+type savedStub struct {
+	t       *testing.T
+	list    string // the wave.list result before the project filter
+	calls   []string
+	listed  []daemon.WaveListParams
+	defined []daemon.WaveDefineParams
+	removed []daemon.WaveRmParams
+	planned []daemon.RunParams
+	checked []daemon.SpecCheckParams
+	started []daemon.WaveStartParams
+}
+
+func (s *savedStub) call(_ context.Context, method string, params, result any) error {
+	s.calls = append(s.calls, method)
+	switch method {
+	case daemon.MethodWaveList:
+		p := params.(daemon.WaveListParams)
+		s.listed = append(s.listed, p)
+		var all daemon.WaveListResult
+		if err := json.Unmarshal([]byte(s.list), &all); err != nil {
+			s.t.Fatal(err)
+		}
+		out := daemon.WaveListResult{Waves: []daemon.SavedWaveView{}}
+		for _, w := range all.Waves {
+			if p.Project == "" || w.Project == p.Project {
+				out.Waves = append(out.Waves, w)
+			}
+		}
+		*(result.(*daemon.WaveListResult)) = out
+	case daemon.MethodWaveDefine:
+		p := params.(daemon.WaveDefineParams)
+		s.defined = append(s.defined, p)
+		at := time.Date(2026, 11, 1, 12, 0, 0, 0, time.UTC)
+		*(result.(*daemon.SavedWave)) = daemon.SavedWave{Project: p.Project, Name: p.Name, Items: p.Items, CreatedAt: at, UpdatedAt: at}
+	case daemon.MethodWaveRm:
+		p := params.(daemon.WaveRmParams)
+		s.removed = append(s.removed, p)
+		*(result.(*daemon.SavedWave)) = daemon.SavedWave{Project: p.Project, Name: p.Name, Items: []string{"S1"}}
+	case daemon.MethodRunPlan:
+		p := params.(daemon.RunParams)
+		s.planned = append(s.planned, p)
+		*(result.(*daemon.RunPlan)) = daemon.RunPlan{CheckCommand: "go test ./...", Item: p.Item, Worktree: "/p/" + p.Item, Lineup: p.Lineup}
+	case daemon.MethodSpecCheck:
+		p := params.(daemon.SpecCheckParams)
+		s.checked = append(s.checked, p)
+		ready := make([]string, 0, len(p.Items))
+		for _, id := range p.Items {
+			ready = append(ready, fmt.Sprintf(`{"item":%q,"ready":true}`, id))
+		}
+		return json.Unmarshal([]byte(`{"items":[`+strings.Join(ready, ",")+`]}`), result)
+	case daemon.MethodWaveStart:
+		p := params.(daemon.WaveStartParams)
+		s.started = append(s.started, p)
+		items := make([]string, 0, len(p.Items))
+		for _, item := range p.Items {
+			items = append(items, fmt.Sprintf(`{"item":%q,"run":{"id":"run-%s","state":"setup"}}`, item.Item, item.Item))
+		}
+		name := ""
+		if p.Name != "" {
+			name = fmt.Sprintf(`"name":%q,`, p.Name)
+		}
+		return json.Unmarshal([]byte(`{"wave":"wave-9",`+name+`"items":[`+strings.Join(items, ",")+`]}`), result)
+	default:
+		s.t.Fatalf("unexpected method %s", method)
+	}
+	return nil
+}
+
+func (s *savedStub) run(args ...string) (code int, out, errs string) {
+	s.t.Helper()
+	var o, e bytes.Buffer
+	app := &App{Input: strings.NewReader(""), Call: s.call}
+	code = app.Run(context.Background(), args, &o, &e)
+	return code, o.String(), e.String()
+}
+
+func (s *savedStub) has(method string) bool {
+	for _, c := range s.calls {
+		if c == method {
+			return true
+		}
+	}
+	return false
+}
+
+func TestWaveDefineListRm(t *testing.T) {
+	// define prints the saved wave.
+	stub := &savedStub{t: t, list: savedList}
+	code, out, errs := stub.run("wave", "define", "--project", "p", "pair-a", "S4", "S1")
+	if code != ExitOK || out != "pair-a  p\n  S4\n  S1\n" || errs != "" {
+		t.Fatalf("define: %d %q %q", code, out, errs)
+	}
+	if want := []daemon.WaveDefineParams{{Project: "p", Name: "pair-a", Items: []string{"S4", "S1"}}}; !reflect.DeepEqual(stub.defined, want) {
+		t.Fatalf("define params: %+v", stub.defined)
+	}
+	code, out, _ = stub.run("wave", "define", "--project", "p", "pair-a", "S2", "--replace", "--json")
+	var saved daemon.SavedWave
+	if code != ExitOK || json.Unmarshal([]byte(out), &saved) != nil || saved.Name != "pair-a" || !reflect.DeepEqual(saved.Items, []string{"S2"}) || !strings.Contains(out, `"created_at"`) {
+		t.Fatalf("define --json: %d %s", code, out)
+	}
+	if got := stub.defined[1]; !got.Replace || got.Name != "pair-a" || !reflect.DeepEqual(got.Items, []string{"S2"}) {
+		t.Fatalf("--replace: %+v", got)
+	}
+
+	// list prints a block per wave: name and project, then each member with its
+	// status and title.
+	code, out, errs = stub.run("wave", "list")
+	want := "pair-a  p\n  S1  open     One\n  S2  done     Two\n  S4  started  Four\n\n" +
+		"pair-a  q\n  Q1  open  Quick\n\n" +
+		"solo  p\n  S3  retired  Three\n  S9  missing\n"
+	if code != ExitOK || out != want || errs != "" {
+		t.Fatalf("list: %d\n%q\nwant\n%q\n%q", code, out, want, errs)
+	}
+	code, out, _ = stub.run("wave", "list", "--json")
+	var listed daemon.WaveListResult
+	if code != ExitOK || json.Unmarshal([]byte(out), &listed) != nil || len(listed.Waves) != 3 || listed.Waves[1].Items[0].Item != "Q1" || listed.Waves[0].Items[1].Status != "done" {
+		t.Fatalf("list --json: %d %s", code, out)
+	}
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(out), &raw); err != nil || len(raw) != 1 || raw["waves"] == nil {
+		t.Fatalf("list --json prints the daemon result: %s", out)
+	}
+	// A project that slicer could not be read for shows its error, and its
+	// members without a status.
+	broken := &savedStub{t: t, list: `{"waves":[{"project":"q","name":"b","items":[{"item":"Q1","status":"","title":""}],"error":{"code":"no_root","message":"no slicer root here"}}]}`}
+	code, out, _ = broken.run("wave", "list")
+	if code != ExitOK || out != "b  q\n  error: no slicer root here (no_root)\n  Q1\n" {
+		t.Fatalf("list with an error: %d %q", code, out)
+	}
+	// No saved wave at all.
+	empty := &savedStub{t: t, list: `{"waves":[]}`}
+	code, out, _ = empty.run("wave", "list")
+	if code != ExitOK || out != "no saved waves\n" {
+		t.Fatalf("empty list: %d %q", code, out)
+	}
+	code, out, _ = empty.run("wave", "list", "--json")
+	if code != ExitOK || strings.Contains(out, "null") || !strings.Contains(out, `"waves": []`) {
+		t.Fatalf("empty list --json: %d %s", code, out)
+	}
+
+	// rm removes it.
+	code, out, errs = stub.run("wave", "rm", "--project", "p", "pair-a")
+	if code != ExitOK || out != "removed pair-a (p)\n" || errs != "" || !reflect.DeepEqual(stub.removed, []daemon.WaveRmParams{{Project: "p", Name: "pair-a"}}) {
+		t.Fatalf("rm: %d %q %q %+v", code, out, errs, stub.removed)
+	}
+	code, out, _ = stub.run("wave", "rm", "--project", "p", "pair-a", "--json")
+	saved = daemon.SavedWave{}
+	if code != ExitOK || json.Unmarshal([]byte(out), &saved) != nil || saved.Name != "pair-a" {
+		t.Fatalf("rm --json: %d %s", code, out)
+	}
+	// A daemon refusal is the command's failure, shown as for other commands.
+	refuse := func(_ context.Context, method string, _, _ any) error {
+		return &ipc.Error{Code: daemon.CodeDuplicateName, Message: `a saved wave "pair-a" already exists for project p`}
+	}
+	var o, e bytes.Buffer
+	if code := (&App{Call: refuse}).Run(context.Background(), []string{"wave", "define", "--project", "p", "pair-a", "S1"}, &o, &e); code != ExitFailure || !strings.Contains(e.String(), "already exists") {
+		t.Fatalf("refused define: %d %s %s", code, &o, &e)
+	}
+}
+
+func TestWaveStartByNameSkipsDoneMembers(t *testing.T) {
+	stub := &savedStub{t: t, list: savedList}
+	code, out, errs := stub.run("wave", "start", "--project", "p", "pair-a", "--yes", "--well-specified", "y", "--split", "n")
+	if code != ExitOK {
+		t.Fatalf("code %d: %s %s", code, out, errs)
+	}
+	ids := func(items []daemon.RunParams) (got []string) {
+		for _, p := range items {
+			got = append(got, p.Item)
+		}
+		return got
+	}
+	if got := ids(stub.planned); !reflect.DeepEqual(got, []string{"S1", "S4"}) {
+		t.Fatalf("planned %v", got)
+	}
+	if len(stub.checked) != 1 || stub.checked[0].Project != "p" || !reflect.DeepEqual(stub.checked[0].Items, []string{"S1", "S4"}) {
+		t.Fatalf("spec check: %+v", stub.checked)
+	}
+	if len(stub.started) != 1 || stub.started[0].Name != "pair-a" || !reflect.DeepEqual(ids(stub.started[0].Items), []string{"S1", "S4"}) {
+		t.Fatalf("wave.start: %+v", stub.started)
+	}
+	for _, item := range stub.started[0].Items {
+		if item.Project != "p" || item.Expected == nil {
+			t.Fatalf("item: %+v", item)
+		}
+	}
+	if !strings.Contains(out, "skipped S2: done\n") || strings.Contains(out, "skipped S1") || !strings.Contains(out, "wave-9") {
+		t.Fatalf("output:\n%s", out)
+	}
+
+	// With --json the skipped line goes to stderr, and stdout is JSON that keeps
+	// the name and names the skipped member.
+	stub = &savedStub{t: t, list: savedList}
+	code, out, errs = stub.run("wave", "start", "--project", "p", "pair-a", "--yes", "--well-specified", "y", "--split", "n", "--json")
+	var result struct {
+		Wave    string                  `json:"wave"`
+		Name    string                  `json:"name"`
+		Skipped []daemon.SkippedItem    `json:"skipped"`
+		Held    []string                `json:"held"`
+		Items   []daemon.WaveItemResult `json:"items"`
+	}
+	if code != ExitOK || json.Unmarshal([]byte(out), &result) != nil {
+		t.Fatalf("json: %d %s %s", code, out, errs)
+	}
+	if result.Name != "pair-a" || result.Wave != "wave-9" || len(result.Items) != 2 || result.Held == nil ||
+		!reflect.DeepEqual(result.Skipped, []daemon.SkippedItem{{Item: "S2", Status: "done"}}) {
+		t.Fatalf("json result: %s", out)
+	}
+	if !strings.Contains(errs, "skipped S2: done") || strings.Contains(out, "skipped S2: done") {
+		t.Fatalf("the skipped line goes to stderr: %q %q", out, errs)
+	}
+	// A wave with nothing skipped still prints the key, as an empty array.
+	stub = &savedStub{t: t, list: `{"waves":[{"project":"p","name":"all","items":[{"item":"S1","status":"open","title":"One"}]}]}`}
+	_, out, _ = stub.run("wave", "start", "all", "--yes", "--well-specified", "y", "--split", "n", "--json")
+	if !strings.Contains(out, `"skipped": []`) {
+		t.Fatalf("skipped is not an empty array: %s", out)
+	}
+	// The typed form prints no such key.
+	stub = &savedStub{t: t}
+	_, out, _ = stub.run("wave", "start", "p", "S1", "--yes", "--well-specified", "y", "--split", "n", "--json")
+	if strings.Contains(out, "skipped") || strings.Contains(out, `"name"`) {
+		t.Fatalf("typed start output changed: %s", out)
+	}
+}
+
+func TestWaveStartByNameWithNoStartableMemberDoesNotStart(t *testing.T) {
+	stub := &savedStub{t: t, list: savedList}
+	code, out, errs := stub.run("wave", "start", "solo", "--yes", "--well-specified", "y", "--split", "n")
+	if code != ExitFailure {
+		t.Fatalf("code %d: %s %s", code, out, errs)
+	}
+	for _, want := range []string{"skipped S3: retired", "skipped S9: missing", "no item is ready to start"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("stdout does not say %q:\n%s%s", want, out, errs)
+		}
+	}
+	for _, method := range []string{daemon.MethodRunPlan, daemon.MethodSpecCheck, daemon.MethodWaveStart} {
+		if stub.has(method) {
+			t.Errorf("%s was called for a wave with nothing to start", method)
+		}
+	}
+
+	stub = &savedStub{t: t, list: savedList}
+	code, out, errs = stub.run("wave", "start", "solo", "--yes", "--well-specified", "y", "--split", "n", "--json")
+	var got struct {
+		Started bool                 `json:"started"`
+		Held    []string             `json:"held"`
+		Skipped []daemon.SkippedItem `json:"skipped"`
+	}
+	if code != ExitFailure || json.Unmarshal([]byte(out), &got) != nil || got.Started || got.Held == nil || len(got.Held) != 0 ||
+		!reflect.DeepEqual(got.Skipped, []daemon.SkippedItem{{Item: "S3", Status: "retired"}, {Item: "S9", Status: "missing"}}) {
+		t.Fatalf("json: %d %s %s", code, out, errs)
+	}
+	if !strings.Contains(errs, "no item is ready to start") || stub.has(daemon.MethodWaveStart) || stub.has(daemon.MethodRunPlan) {
+		t.Fatalf("json mode: %s calls %v", errs, stub.calls)
+	}
+
+	// A wave whose project slicer could not be read starts nothing either, and
+	// says why.
+	stub = &savedStub{t: t, list: `{"waves":[{"project":"q","name":"b","items":[{"item":"Q1","status":"","title":""}],"error":{"code":"no_root","message":"no slicer root here"}}]}`}
+	code, out, errs = stub.run("wave", "start", "b", "--yes")
+	if code != ExitFailure || !strings.Contains(out+errs, "no slicer root here") || stub.has(daemon.MethodWaveStart) || stub.has(daemon.MethodRunPlan) {
+		t.Fatalf("unreadable project: %d %s %s calls %v", code, out, errs, stub.calls)
+	}
+}
+
+func TestWaveStartByNameUnknownNameIsNotFound(t *testing.T) {
+	stub := &savedStub{t: t, list: savedList}
+	code, out, errs := stub.run("wave", "start", "nope", "--yes")
+	if code != ExitFailure || !strings.Contains(errs, `no saved wave "nope"`) || out != "" {
+		t.Fatalf("code %d: %q %q", code, out, errs)
+	}
+	code, out, errs = stub.run("wave", "start", "--project", "p", "nope", "--yes", "--json")
+	var got struct {
+		Error ipc.Error `json:"error"`
+	}
+	if code != ExitFailure || json.Unmarshal([]byte(out), &got) != nil || got.Error.Code != daemon.CodeNotFound || !strings.Contains(got.Error.Message, `"nope"`) || !strings.Contains(got.Error.Message, "p") {
+		t.Fatalf("json: %d %s %s", code, out, errs)
+	}
+	// The name exists, but not in the project asked for.
+	code, _, errs = stub.run("wave", "start", "--project", "q", "solo", "--yes")
+	if code != ExitFailure || !strings.Contains(errs, `no saved wave "solo"`) {
+		t.Fatalf("other project: %d %s", code, errs)
+	}
+	for _, method := range []string{daemon.MethodRunPlan, daemon.MethodSpecCheck, daemon.MethodWaveStart} {
+		if stub.has(method) {
+			t.Errorf("%s was called for an unknown wave", method)
+		}
+	}
+}
+
+func TestWaveStartByNameKeepsTheTypedFormWorking(t *testing.T) {
+	stub := &savedStub{t: t, list: savedList}
+	code, out, errs := stub.run("wave", "start", "p", "S2", "S1", "--yes", "--well-specified", "y", "--split", "n")
+	if code != ExitOK || len(stub.started) != 1 {
+		t.Fatalf("code %d: %s %s", code, out, errs)
+	}
+	if stub.has(daemon.MethodWaveList) {
+		t.Fatal("the typed form read the saved waves")
+	}
+	start := stub.started[0]
+	if start.Name != "" || len(start.Items) != 2 || start.Items[0].Item != "S2" || start.Items[1].Item != "S1" || start.Items[0].Project != "p" {
+		t.Fatalf("wave.start: %+v", start)
+	}
+	if strings.Contains(out, "skipped") {
+		t.Fatalf("typed start mentions skipped members: %s", out)
+	}
+	// A typed item that happens to be done is still planned, as before.
+	stub = &savedStub{t: t, list: savedList}
+	stub.run("wave", "start", "p", "S3", "S9", "--yes", "--well-specified", "y", "--split", "n")
+	if len(stub.planned) != 2 {
+		t.Fatalf("typed items planned: %+v", stub.planned)
+	}
+}
+
+func TestWaveStartByNameAppliesFlagsToEveryMember(t *testing.T) {
+	stub := &savedStub{t: t, list: savedList}
+	code, out, errs := stub.run("wave", "start", "--project", "p", "pair-a", "--yes", "--well-specified", "n", "--split", "y", "--stop-after", "commit", "--allow-no-check",
+		"--implementer", "codex:sol:medium", "--implementer", "claude:sonnet:high", "--architect", "off", "--budget-minutes", "20", "--budget-tokens", "0")
+	if code != ExitOK || len(stub.planned) != 2 || len(stub.started) != 1 || len(stub.started[0].Items) != 2 {
+		t.Fatalf("code %d planned %d: %s %s", code, len(stub.planned), out, errs)
+	}
+	for i, p := range stub.started[0].Items {
+		if p.Expected == nil || p.Expected.Item != stub.planned[i].Item {
+			t.Fatalf("item %d: Expected lost: %+v", i, p)
+		}
+		p.Expected = nil
+		if !reflect.DeepEqual(p, stub.planned[i]) {
+			t.Fatalf("item %d: started %+v, planned %+v", i, p, stub.planned[i])
+		}
+		if p.WellSpecified || !p.Split || p.StopAfter != "commit" || !p.AllowNoCheck || len(p.Lineup["implementer"]) != 2 ||
+			p.Lineup["architect"] == nil || p.Budgets == nil || p.Budgets.Minutes != 20 || p.Budgets.Tokens != 0 {
+			t.Fatalf("item %d: %+v", i, p)
+		}
+	}
+	if stub.started[0].Name != "pair-a" {
+		t.Fatalf("name %q", stub.started[0].Name)
+	}
+	// Without --yes, the saved wave asks to confirm like a typed list does.
+	stub = &savedStub{t: t, list: savedList}
+	var o, e bytes.Buffer
+	app := &App{Input: strings.NewReader("n\n"), Call: stub.call}
+	code = app.Run(context.Background(), []string{"wave", "start", "--project", "p", "pair-a", "--well-specified", "y", "--split", "n"}, &o, &e)
+	if code != ExitOK || stub.has(daemon.MethodWaveStart) || !strings.Contains(o.String(), "Start this wave? [y/N]: ") || !strings.Contains(o.String(), "cancelled") {
+		t.Fatalf("declined: %d %s %s", code, &o, &e)
+	}
+	// A bad flag value is a usage error before anything is asked of the daemon.
+	stub = &savedStub{t: t, list: savedList}
+	if code, _, _ := stub.run("wave", "start", "--project", "p", "pair-a", "--split", "maybe"); code != ExitUsage || len(stub.calls) != 0 {
+		t.Fatalf("bad flag: %d calls %v", code, stub.calls)
+	}
+}
+
+func TestWaveProjectArgumentFollowsNWQ1(t *testing.T) {
+	// NW-Q1, owner 2026-11-07: --project P is required on define, optional on
+	// list, and optional on rm and start when the name is saved for one project.
+	t.Run("define needs --project", func(t *testing.T) {
+		stub := &savedStub{t: t, list: savedList}
+		code, _, errs := stub.run("wave", "define", "pair-a", "S1")
+		if code != ExitUsage || !strings.Contains(errs, "--project") || len(stub.calls) != 0 {
+			t.Fatalf("%d %s calls %v", code, errs, stub.calls)
+		}
+	})
+	t.Run("list takes it or not", func(t *testing.T) {
+		stub := &savedStub{t: t, list: savedList}
+		if code, _, errs := stub.run("wave", "list"); code != ExitOK || !reflect.DeepEqual(stub.listed, []daemon.WaveListParams{{}}) {
+			t.Fatalf("%d %s %+v", code, errs, stub.listed)
+		}
+		code, out, errs := stub.run("wave", "list", "--project", "q")
+		if code != ExitOK || stub.listed[1] != (daemon.WaveListParams{Project: "q"}) || strings.Contains(out, "solo") || !strings.Contains(out, "Q1") {
+			t.Fatalf("%d %s %s %+v", code, out, errs, stub.listed)
+		}
+	})
+	t.Run("rm and start take the project from a unique name", func(t *testing.T) {
+		stub := &savedStub{t: t, list: savedList}
+		if code, _, errs := stub.run("wave", "rm", "solo"); code != ExitOK || !reflect.DeepEqual(stub.removed, []daemon.WaveRmParams{{Project: "p", Name: "solo"}}) || !reflect.DeepEqual(stub.listed, []daemon.WaveListParams{{}}) {
+			t.Fatalf("rm: %d %s removed %+v listed %+v", code, errs, stub.removed, stub.listed)
+		}
+		stub = &savedStub{t: t, list: savedList}
+		if code, out, errs := stub.run("wave", "start", "solo", "--yes"); code != ExitFailure || !reflect.DeepEqual(stub.listed, []daemon.WaveListParams{{}}) || !strings.Contains(out, "skipped S3: retired") {
+			t.Fatalf("start: %d %s %s listed %+v", code, out, errs, stub.listed)
+		}
+		// The saved wave supplies the project of the started items.
+		stub = &savedStub{t: t, list: `{"waves":[{"project":"q","name":"only-q","items":[{"item":"Q1","status":"open","title":"Quick"}]}]}`}
+		if code, out, errs := stub.run("wave", "start", "only-q", "--yes", "--well-specified", "y", "--split", "n"); code != ExitOK || len(stub.started) != 1 || stub.started[0].Items[0].Project != "q" || stub.started[0].Name != "only-q" {
+			t.Fatalf("start: %d %s %s %+v", code, out, errs, stub.started)
+		}
+	})
+	t.Run("an ambiguous name needs --project", func(t *testing.T) {
+		for _, args := range [][]string{{"wave", "rm", "pair-a"}, {"wave", "start", "pair-a", "--yes"}} {
+			stub := &savedStub{t: t, list: savedList}
+			code, _, errs := stub.run(args...)
+			if code != ExitUsage || !strings.Contains(errs, "pair-a") || !strings.Contains(errs, "p, q") || !strings.Contains(errs, "--project") {
+				t.Fatalf("%v: %d %s", args, code, errs)
+			}
+			if len(stub.removed) != 0 || stub.has(daemon.MethodWaveStart) || stub.has(daemon.MethodRunPlan) {
+				t.Fatalf("%v: acted on an ambiguous name: %v", args, stub.calls)
+			}
+		}
+		// With --project it is not ambiguous.
+		stub := &savedStub{t: t, list: savedList}
+		if code, _, errs := stub.run("wave", "rm", "--project", "q", "pair-a"); code != ExitOK || !reflect.DeepEqual(stub.removed, []daemon.WaveRmParams{{Project: "q", Name: "pair-a"}}) {
+			t.Fatalf("rm --project: %d %s %+v", code, errs, stub.removed)
+		}
+		stub = &savedStub{t: t, list: savedList}
+		if code, _, errs := stub.run("wave", "start", "--project", "q", "pair-a", "--yes", "--well-specified", "y", "--split", "n"); code != ExitOK || len(stub.started) != 1 || stub.started[0].Items[0].Item != "Q1" {
+			t.Fatalf("start --project: %d %s %+v", code, errs, stub.started)
+		}
+	})
+	t.Run("an unknown name is not found", func(t *testing.T) {
+		stub := &savedStub{t: t, list: savedList}
+		code, _, errs := stub.run("wave", "rm", "nope")
+		if code != ExitFailure || !strings.Contains(errs, `no saved wave "nope"`) || len(stub.removed) != 0 {
+			t.Fatalf("%d %s", code, errs)
+		}
+	})
+	t.Run("the typed form takes no --project", func(t *testing.T) {
+		stub := &savedStub{t: t, list: savedList}
+		code, _, errs := stub.run("wave", "start", "--project", "p", "p", "S1", "--yes")
+		if code != ExitUsage || !strings.Contains(errs, "--project") || len(stub.calls) != 0 {
+			t.Fatalf("%d %s calls %v", code, errs, stub.calls)
+		}
+	})
 }
 
 func TestConfirmCancelledStartsOnANewLineWhenInputEndsWithoutNewline(t *testing.T) {

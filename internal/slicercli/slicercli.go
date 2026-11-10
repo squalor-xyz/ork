@@ -55,6 +55,16 @@ func (c Client) List(ctx context.Context, root string) ([]Item, error) {
 	return items, nil
 }
 
+// ListAll runs `slicer list --all --json --lean --root ROOT`. Unlike List it
+// keeps done and retired items (S215, *proposed*).
+func (c Client) ListAll(ctx context.Context, root string) ([]Item, error) {
+	var items []Item
+	if err := clirun.RunJSON(ctx, c.call("list", "--all", "--json", "--lean", "--root", root), &items); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 // Deps runs `slicer deps --json --lean --root ROOT` for unblocked items.
 func (c Client) Deps(ctx context.Context, root string) ([]Item, error) {
 	var items []Item

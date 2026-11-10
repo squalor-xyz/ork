@@ -10,6 +10,7 @@ The files ork owns. Everything else is read live from slicer, adj and git
 | Data | File |
 |---|---|
 | Project registry and per-project settings, created on the first add | `~/.config/ork/projects.json` |
+| Saved waves (S215, *proposed*): a name and item ids for each project, mode 0600 | `~/.config/ork/waves.json` |
 | UI preferences, free-form until v1 | `~/.config/ork/ui.json` |
 | Daemon socket and pidfile (the pidfile is locked while a daemon lives) | `~/.local/state/ork/ork.sock`, `ork.pid` |
 | One record per slice run | `~/.local/state/ork/runs/<run>/run.json` |
@@ -239,6 +240,54 @@ Notes on the fields:
   agents repo's note that Codex needs network access for `dotnet test`
   (`agents/setup/lib/workflow-vendor.sh`).
 
+## waves.json
+
+*Proposed (S215; owner decisions 2026-11-07).* A saved wave is a name and the
+item ids of one project, so the owner can start the same set again by name
+(`ork wave define`, `ork wave start NAME`). The file lives in the directory of
+`projects.json`, so it follows `XDG_CONFIG_HOME` with the registry, and it is a
+separate file: the registry keeps its version and strict keys.
+
+```json
+{
+  "version": 1,
+  "waves": [
+    {
+      "project": "ork",
+      "name": "pair-a",
+      "items": ["S50", "S69"],
+      "created_at": "2026-11-01T12:00:00Z",
+      "updated_at": "2026-11-01T12:00:00Z"
+    }
+  ]
+}
+```
+
+- The key is `project` plus `name`: two projects may each save a wave named
+  `pair-a`. Waves keep the order they were saved in.
+- A saved wave holds no item status, title or spec. `wave.list` reads those from
+  slicer on every call (one `slicer list --all` for each project that has a
+  wave), so a member that finishes elsewhere shows as `done` without any write
+  to this file. A member that slicer no longer lists shows as `missing`.
+- A name is 1 to 32 characters of `a-z`, `0-9`, `.`, `_` and `-`, starts with a
+  letter or digit, and never starts with `wave-`, which `ork stop` reads as a
+  wave id (adj 138). Names are case-sensitive. A wave has 1 to 20 items, none
+  repeated, and each must be an item slicer lists (with `--all`, so a done item
+  can be saved) when the wave is defined.
+- Defining a name that the project already has is refused with
+  `duplicate_name` unless the call sets `replace`; a replace keeps the wave's
+  place in the file and its `created_at`, and sets `updated_at`.
+- A start of a saved wave leaves out the members that are `done`, `retired` or
+  `missing`, and names them with their status. It never rewrites this file.
+- `ork projects rm` drops the project's saved waves in the same step; adding
+  the project again does not bring them back.
+- The daemon writes the file at mode 0600 (it holds only names and item ids, so
+  it takes the least exposure), under one lock of its own, as a temporary file in
+  the same directory that is synced and renamed over the old one. A failed write
+  leaves the old file. A missing file is an empty list; reading it creates no
+  file and no directory. `Load` uses strict keys and refuses a newer version, as
+  for `projects.json`. An older ork does not know the file and ignores it.
+
 ## run.json
 
 ork writes `run.json` at mode 0600 (adj #106). It creates the runs root,
@@ -296,6 +345,7 @@ owner's questions again.
   "version": 1,
   "id": "ork-20261018-161200-a1b2",
   "wave": "wave-20261018-161150-77aa",
+  "wave_name": "pair-a",
   "decisions": "Owner decisions (2026-10-18): ...",
   "project": "adjudicate",
   "item": "S18",
@@ -352,6 +402,15 @@ owner's questions again.
 `state` and the role fields are ork's own record of the processes it
 started. They are not a copy of slicer state. The ledger link is
 `relay_run`, and `orchestrator_step` is ork's own step in it.
+
+*Proposed (S215):* `wave_name` is the name of the saved wave (`waves.json`) that
+`wave.start` started the run for. It is a label, not an id: each start of a
+saved wave gets a fresh `wave` id, and `ork stop` still takes that id. It is
+omitted for a run that was not started from a saved wave. The version stays 1;
+an older ork refuses a `run.json` with `wave_name` because `Store.Open` uses
+strict keys, as for `dismissed_at`. Only `run.json` carries it so far: the
+engine rows of `ork status --json` and the TUI show neither `wave` nor
+`wave_name`.
 
 `state` is one of `queued`, `setup`, `implement`, `checks`, `review`, `architect`, `gate`,
 `awaiting-approval`, `finish`, `commit`, `land`, `committed`, `paused` and `stopped`;
@@ -574,7 +633,7 @@ resume clears `stopped_from`, `reason` and `dismissed_at`, advances `round`
 and the run re-enters `implement`), sets `round_limit` to that round plus the
 grant for the checks (default 2), or to the round plus the grant minus 1 for
 `implement`, whose round 1 is the first granted round (the first-pause floor
-of 3 still applies), sets `wave` when a start resumed it, replaces `relay_run` and `orchestrator_step` with the new
+of 3 still applies), sets `wave` and `wave_name` (empty for an unnamed wave) when a start resumed it, replaces `relay_run` and `orchestrator_step` with the new
 ledger run's, and sets `state` to `checks`, or `implement` when `roles[]` has
 no implementer row. The older `roles[]`, `checks[]` and reports stay. The
 version stays 1; an older ork refuses a `run.json` with `stopped_from`

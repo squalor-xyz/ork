@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-325 items · — 65 · done 227 · retired 33
+325 items · — 64 · done 228 · retired 33
 
 v1.2
 
@@ -144,7 +144,7 @@ v1.2
 | 87 | [S212](slices/S212.md) | Release workflow | M | 2 |  |  | done |
 | 88 | [S213](slices/S213.md) | Release workflow hardening | M | 2 |  | discovered from S212 | done |
 | 89 | S214 | S108 later notes: per-role ordinal on repeated done steps, overflow marker under Recent, golden for a failed step and a fix round, task-line column vs deeper child glyph | S | 1 |  | Folded into the S130 sweep (owner, 2026-10-31): item 1 (per-role ordinal) is in S130; items 2 and 4 dropped, kept in the v1.2 dropped-items row. · discovered from S108 | retired |
-| 90 | [S215](slices/S215.md) | Named wave: state, daemon, CLI | M | 2 |  |  | — |
+| 90 | [S215](slices/S215.md) | Named wave: state, daemon, CLI | M | 2 |  |  | done |
 | 91 | [S216](slices/S216.md) | Waves screen: save and load named wave | M | 2 |  |  | — |
 | 92 | [S217](slices/S217.md) | Warn when main is dirty before landing | S | 1 |  |  | done |
 | 93 | [S218](slices/S218.md) | Wave suggest: one engine slice per wave | S | 1 |  |  | done |
