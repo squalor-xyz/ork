@@ -200,6 +200,182 @@ func TestCheckDirReadErrorPausesWithAReason(t *testing.T) {
 	requireChecksPause(t, h, e, "fatal: not a git repository")
 }
 
+// S295 (*proposed*): the static check of a check command. It runs `sh -n`
+// only, so nothing executes.
+
+func TestVerifyCheckMissingNamedFile(t *testing.T) {
+	const cmd = "dotnet build App.slnx -c Release"
+	dir := t.TempDir()
+	// dotnet itself need not be installed: the first word is looked up on PATH,
+	// so a fake one stands in for it.
+	bin := t.TempDir()
+	writeFile(t, filepath.Join(bin, "dotnet"), "#!/bin/sh\n")
+	if err := os.Chmod(filepath.Join(bin, "dotnet"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
+
+	problems := VerifyCheck(context.Background(), dir, cmd)
+	if len(problems) != 1 {
+		t.Fatalf("problems %q, want one", problems)
+	}
+	for _, part := range []string{"App.slnx", dir, cmd} {
+		if !strings.Contains(problems[0], part) {
+			t.Errorf("problem %q lacks %q", problems[0], part)
+		}
+	}
+	if strings.Contains(problems[0], "\n") {
+		t.Errorf("problem %q is not one line", problems[0])
+	}
+
+	sub := filepath.Join(dir, "sub")
+	writeFile(t, filepath.Join(sub, "App.slnx"), "<Solution/>\n")
+	if got := VerifyCheck(context.Background(), sub, cmd); len(got) != 0 {
+		t.Errorf("with sub/App.slnx and dir sub: problems %q, want none", got)
+	}
+	if got := VerifyCheck(context.Background(), dir, cmd); len(got) != 1 {
+		t.Errorf("the file in sub does not satisfy the parent directory: problems %q, want one", got)
+	}
+}
+
+// A named file before an unquoted command substitution or a here-document is
+// still checked, and a substitution does not end the parse (review finding).
+func TestVerifyCheckKeepsWordsBeforeSubstitutionsAndHeredocs(t *testing.T) {
+	dir := t.TempDir()
+	for _, cmd := range []string{
+		"go build App.slnx $(true)",
+		"go build App.slnx $(echo \"a b\") -c Release",
+		"go build App.slnx <<'EOF'\nbody\nEOF",
+		"go build App.slnx <<EOF\nbody\nEOF",
+	} {
+		t.Run(cmd, func(t *testing.T) {
+			got := VerifyCheck(context.Background(), dir, cmd)
+			if len(got) != 1 || !strings.Contains(got[0], `"App.slnx"`) {
+				t.Errorf("problems %q, want one naming App.slnx", got)
+			}
+		})
+	}
+	got := VerifyCheck(context.Background(), dir, "go build ./... && nosuchtool $(true)")
+	if len(got) != 1 || !strings.Contains(got[0], `"nosuchtool" not found on PATH`) {
+		t.Errorf("a later command after a substitution: problems %q", got)
+	}
+	got = VerifyCheck(context.Background(), dir, "go build ./... && nosuchtool $(true) && nosuchtool2 test")
+	if len(got) != 2 {
+		t.Errorf("commands after a substitution: problems %q, want both tools", got)
+	}
+	// A real subshell still ends the parse.
+	if got := VerifyCheck(context.Background(), dir, "go build ./... && (nosuchtool test)"); len(got) != 0 {
+		t.Errorf("a subshell: problems %q, want none", got)
+	}
+}
+
+func TestVerifyCheckFirstWordNotFound(t *testing.T) {
+	dir := t.TempDir()
+	got := VerifyCheck(context.Background(), dir, "nosuchtool test")
+	if len(got) != 1 || !strings.Contains(got[0], `"nosuchtool" not found on PATH`) {
+		t.Errorf("problems %q, want %q not found on PATH", got, "nosuchtool")
+	}
+	got = VerifyCheck(context.Background(), dir, "./run-tests.sh")
+	if len(got) != 1 || !strings.Contains(got[0], `"./run-tests.sh" not found in `+dir) {
+		t.Errorf("problems %q, want ./run-tests.sh not found in %s", got, dir)
+	}
+	writeFile(t, filepath.Join(dir, "run-tests.sh"), "#!/bin/sh\n")
+	got = VerifyCheck(context.Background(), dir, "./run-tests.sh")
+	if len(got) != 1 || !strings.Contains(got[0], `"./run-tests.sh" not executable`) {
+		t.Errorf("a file that is not executable: problems %q", got)
+	}
+	if err := os.Chmod(filepath.Join(dir, "run-tests.sh"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if got := VerifyCheck(context.Background(), dir, "./run-tests.sh"); len(got) != 0 {
+		t.Errorf("an executable script: problems %q, want none", got)
+	}
+}
+
+func TestVerifyCheckLaterCommands(t *testing.T) {
+	dir := t.TempDir()
+	// A later command's word is looked up on PATH...
+	got := VerifyCheck(context.Background(), dir, "go vet ./... && nosuchtool test")
+	if len(got) != 1 || !strings.Contains(got[0], `"nosuchtool" not found on PATH`) {
+		t.Errorf("a later command: problems %q", got)
+	}
+	// ...but a path may be built by an earlier step, so it is not looked for.
+	if got := VerifyCheck(context.Background(), dir, "go build ./... && ./bin/app"); len(got) != 0 {
+		t.Errorf("a path after an earlier command: problems %q, want none", got)
+	}
+}
+
+func TestVerifyCheckIgnoresFlagsGlobsAndModules(t *testing.T) {
+	dir := t.TempDir()
+	for _, cmd := range []string{
+		"python3 -m unittest discover -s tests -p 'test*.py'",
+		"go test ./...",
+		"go test ./internal/... -run TestA/sub",
+		"python3 -m unittest tests.test_x",
+		"python3 -m unittest tests.unit.deep",
+		"git diff origin/main",
+		"go test --filter FullyQualifiedName~A.B.C -p:Configuration=Release",
+		"go build -o bin/app ./...",
+		"go test -coverprofile cover.out ./...",
+		"echo done > out.log 2>&1",
+		"go test ./... 2>&1",
+		"go test ./... &> out.log",
+		"go test ./...  # see notes.md",
+		"MODE=test.cfg go test ./...",
+		"PATH=./bin:$PATH nosuchtool test",
+		"go test $PKGS",
+		`go test "$(pwd)/x.go"`,
+		"mkdir -p build.d && touch build.d/x.log",
+	} {
+		t.Run(cmd, func(t *testing.T) {
+			if got := VerifyCheck(context.Background(), dir, cmd); len(got) != 0 {
+				t.Errorf("problems %q, want none", got)
+			}
+		})
+	}
+}
+
+// The shell words that start a command that is not a program (moved from the
+// doctor's test of its first-word parser): they are never looked up.
+func TestVerifyCheckSkipsShellWords(t *testing.T) {
+	words := strings.Fields("! { } case do done elif else esac fi for if in then until while . : break continue eval exec exit export readonly return set shift times trap unset cd command time")
+	words = append(words, "$TOOL", "${TOOL}", "$(printf tool)", "`printf tool`", "~/bin/check", "~someone/bin/check")
+	for _, word := range words {
+		t.Run(word, func(t *testing.T) {
+			if got := VerifyCheck(context.Background(), t.TempDir(), "MODE=test "+word); len(got) != 0 {
+				t.Fatalf("shell word %q must skip lookup, got %q", word, got)
+			}
+		})
+	}
+	for _, command := range []string{"if :; then :; fi", "{ :; }", ". ./missing-script", "cd /missing-dir", "command missing-check-tool", `"$TOOL"`, "`printf tool`", "~/bin/check", "cd sub && ./missing", "(cd sub && ./missing)", "cat <<EOF\nEOF"} {
+		t.Run(command, func(t *testing.T) {
+			if got := VerifyCheck(context.Background(), t.TempDir(), command); len(got) != 0 {
+				t.Fatalf("problems %q, want none", got)
+			}
+		})
+	}
+}
+
+func TestVerifyCheckShellSyntax(t *testing.T) {
+	got := VerifyCheck(context.Background(), t.TempDir(), "go test (")
+	if len(got) != 1 || !strings.Contains(strings.ToLower(got[0]), "syntax") || !strings.Contains(got[0], "(command: go test ()") {
+		t.Errorf("problems %q, want one syntax problem naming the command", got)
+	}
+}
+
+func TestVerifyCheckRunsNothing(t *testing.T) {
+	dir := t.TempDir()
+	// The check runs in dir, and so would a command that ran by mistake.
+	t.Chdir(dir)
+	VerifyCheck(context.Background(), dir, "touch MARK && false")
+	VerifyCheck(context.Background(), dir, "touch MARK2 $(touch MARK3) `touch MARK4`")
+	for _, name := range []string{"MARK", "MARK2", "MARK3", "MARK4"} {
+		if _, err := os.Stat(filepath.Join(dir, name)); err == nil {
+			t.Errorf("%s exists: the command ran", name)
+		}
+	}
+}
+
 func TestCheckLogNamesTheDirectory(t *testing.T) {
 	const cmd = "go test ./..."
 	t.Run("in a subfolder", func(t *testing.T) {

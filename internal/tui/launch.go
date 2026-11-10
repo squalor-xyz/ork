@@ -495,6 +495,13 @@ func (m *Model) launchView(w int) overviewView {
 			warn("fix: ork projects set " + engine.ShellWord(name) + " --check CMD")
 			warn("start anyway: ork run " + engine.ShellWord(name) + " " + p.Item + " --allow-no-check")
 		}
+		// S295 (*proposed*): a check that cannot run is said by the check line
+		// too, and not again after the roles.
+		for _, warning := range p.Warnings {
+			if strings.HasPrefix(warning, engine.CheckCannotRunPrefix) {
+				warn("warning: " + warning)
+			}
+		}
 		stop := "after landing"
 		if p.StopAfter == runrec.StopAfterCommit {
 			stop = "after commit (you land it)"
@@ -518,7 +525,7 @@ func (m *Model) launchView(w int) overviewView {
 			}
 		}
 		for _, warning := range p.Warnings {
-			if warning != engine.NoCheckMessage(p.Project.Name) {
+			if warning != engine.NoCheckMessage(p.Project.Name) && !strings.HasPrefix(warning, engine.CheckCannotRunPrefix) {
 				warn("warning: " + warning)
 			}
 		}

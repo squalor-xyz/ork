@@ -127,8 +127,9 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
   ork projects set NAME [--push on|off] [--ui-doc PATH] [--ui-pass-skills A,B]
                               [--spec-check-rows rNN,rNN]
                               [--worktree-pattern P] [--branch-pattern P]
-                              [--check CMD] [--check-minutes N] [--cap N]
-                              [--budget-minutes N] [--budget-tokens N]
+                              [--check CMD] [--round-check CMD] [--no-verify]
+                              [--check-minutes N]
+                              [--cap N] [--budget-minutes N] [--budget-tokens N]
                               [--env-line LINE]... [--preset go|python]
                               [--permission ROLE=read-only|ROLE=]...
                               [--allow ROLE=PATTERN]... [--replace-allow]
@@ -149,8 +150,12 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               call's patterns the whole list; a role or a
                               vendor key changes alone; --unset-vendor-env
                               removes a key and an empty --vendor-env value
-                              is kept; while runs are unfinished only --cap,
-                              the budgets and the worktree and branch
+                              is kept; --check and --round-check are refused
+                              when the command cannot run in the project's
+                              folder (first word not found, a named file
+                              missing) unless --no-verify, which ork remembers
+                              for the project; while runs are unfinished only
+                              --cap, the budgets and the worktree and branch
                               patterns may change
   ork settings show           show global_cap and daemon_idle_minutes, stored
                               and effective

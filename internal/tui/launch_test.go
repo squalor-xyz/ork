@@ -1398,6 +1398,25 @@ func TestLaunchConfirmShowsSetupWarnings(t *testing.T) {
 	}
 }
 
+// The warning that the check command cannot run shows by the check line, not
+// after the role rows, where a long plan can clip it (S295, *proposed*; UI pass
+// finding). It is said once.
+func TestLaunchConfirmShowsACheckThatCannotRunByTheCheckLine(t *testing.T) {
+	h, l := launchHarness(t)
+	h.m.cfg.Theme = NewTheme(true)
+	l.plan.Warnings = []string{"other warning", engine.CheckCannotRunPrefix + `/w: "App.slnx" does not exist in the check directory (command: go test ./...) (fix: ork projects set ork --check CMD)`}
+	launchConfirmed(t, h)
+	view := h.view()
+	at := func(s string) int { return strings.Index(view, s) }
+	if n := strings.Count(view, "check command cannot run in"); n != 1 {
+		t.Fatalf("the warning shows %d times, want once:\n%s", n, view)
+	}
+	check, warn, stop, other := at("check: "), at("check command cannot run in"), at("stop: "), at("warning: other warning")
+	if check < 0 || warn < check || warn > stop || other < stop {
+		t.Errorf("order: check %d, cannot-run warning %d, stop %d, other warning %d; want check < warning < stop < other:\n%s", check, warn, stop, other, view)
+	}
+}
+
 // A plan with no check command cannot start (adj 191): the confirm says why
 // and how to fix it, once, and y starts nothing.
 func TestLaunchConfirmRefusesAPlanWithNoCheckCommand(t *testing.T) {

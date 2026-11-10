@@ -34,6 +34,9 @@ type CheckOutput struct {
 // CheckFunc runs the project's check command in dir.
 type CheckFunc func(ctx context.Context, dir, command string, timeout time.Duration) (CheckOutput, error)
 
+// VerifyFunc is the static check of a check command in dir (VerifyCheck).
+type VerifyFunc func(ctx context.Context, dir, command string) []string
+
 // Proc looks at and kills process groups. The engine uses it only on the
 // process groups its own run records name (engine.restart).
 type Proc interface {
@@ -48,8 +51,9 @@ type Deps struct {
 	Slicer         slicercli.Client
 	GitBin         string // empty means "git"
 	Store          *runrec.Store
-	Check          CheckFunc // nil means RunCheck
-	Proc           Proc      // nil means the operating system's
+	Check          CheckFunc  // nil means RunCheck
+	Verify         VerifyFunc // nil means VerifyCheck (S295, *proposed*)
+	Proc           Proc       // nil means the operating system's
 	Now            func() time.Time
 	Sleep          func(ctx context.Context, d time.Duration) error // nil sleeps for real
 	Backoff        []time.Duration                                  // locked-retry delays; nil means runrec.DefaultBackoff
@@ -127,6 +131,7 @@ type Engine struct {
 	run            *runrec.Run
 	wr             runrec.Writer
 	noted          string      // the checks note written for an approval (guarded by mu)
+	checkVerified  bool        // setup verified the check command of this engine, so implement need not (S295; guarded by mu)
 	vendorWait     vendorWaits // the vendors whose slot a round waits for (S169); own lock, because Run holds mu
 	work           workings    // the roles and checks that run now (S235); own lock, because Run holds mu
 	localMu        sync.Mutex  // protects the lifetime reservation, independently of e.mu

@@ -1779,6 +1779,149 @@ func TestProjectsSetRefusesAnUnfinishedRun(t *testing.T) {
 	}
 }
 
+// S295 (*proposed*): projects.set verifies a new check command where the round
+// check will run, and refuses one that cannot; no_verify stores it anyway.
+func TestProjectsSetCheckRefusesAMissingFile(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	if err := os.MkdirAll(p.Path, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	const cmd = "go build App.slnx"
+	before, _ := os.ReadFile(d.registryPath())
+	_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","check_command":"`+cmd+`"}`))
+	var re *ipc.Error
+	if !errors.As(err, &re) || re.Code != CodeBadParams {
+		t.Fatalf("a check that names a missing file: %v, want a bad-params refusal", err)
+	}
+	for _, part := range []string{"App.slnx", p.Path, cmd, "--no-verify"} {
+		if !strings.Contains(re.Message, part) {
+			t.Errorf("refusal %q lacks %q", re.Message, part)
+		}
+	}
+	if n := strings.Count(re.Message, p.Path); n != 1 {
+		t.Errorf("refusal %q names the directory %d times, want once", re.Message, n)
+	}
+	if after, _ := os.ReadFile(d.registryPath()); string(after) != string(before) {
+		t.Fatalf("a refusal changed the registry:\n%s", after)
+	}
+
+	// The same command with no_verify is stored.
+	got, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","check_command":"`+cmd+`","no_verify":true}`))
+	if err != nil || got.(registry.Project).CheckCommand != cmd {
+		t.Fatalf("no_verify: %+v, %v", got, err)
+	}
+	if f, _ := registry.Load(d.registryPath()); f.Projects[0].CheckCommand != cmd {
+		t.Errorf("stored %q", f.Projects[0].CheckCommand)
+	}
+	// no_verify is not a field: it alone sets nothing.
+	_, err = d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","no_verify":true}`))
+	if !errors.As(err, &re) || !strings.Contains(re.Message, "sets no field") {
+		t.Errorf("no_verify alone: %v", err)
+	}
+
+	// A check that can run is stored; a field other than the check command is
+	// not verified (the stored command is not looked at again).
+	if _, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","check_command":"go test ./..."}`)); err != nil {
+		t.Fatalf("a check that can run: %v", err)
+	}
+	if _, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","check_command":"go test ./...","round_check_command":"go vet Fast.slnx"}`)); err == nil || !strings.Contains(err.Error(), "Fast.slnx") {
+		t.Errorf("a round check that names a missing file: %v", err)
+	}
+}
+
+// --no-verify is remembered per project (owner decision 2026-11-10,
+// no_verify_check): setup skips the verification until a check is changed
+// again without it.
+func TestProjectsSetRemembersNoVerify(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	if err := os.MkdirAll(p.Path, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	set := func(raw string) error {
+		_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, raw))
+		return err
+	}
+	stored := func() registry.Project {
+		t.Helper()
+		f, err := registry.Load(d.registryPath())
+		if err != nil {
+			t.Fatal(err)
+		}
+		return f.Projects[0]
+	}
+	if err := set(`{"name":"p","check_command":"go build App.slnx","no_verify":true}`); err != nil {
+		t.Fatal(err)
+	}
+	if s := stored(); !s.NoVerifyCheck || s.CheckCommand != "go build App.slnx" {
+		t.Fatalf("stored %+v, want the check and no_verify_check", s)
+	}
+	if b, _ := os.ReadFile(d.registryPath()); !strings.Contains(string(b), `"no_verify_check": true`) {
+		t.Errorf("the registry lacks no_verify_check:\n%s", b)
+	}
+	// A field that is not a check leaves it.
+	if err := set(`{"name":"p","push":true}`); err != nil || !stored().NoVerifyCheck {
+		t.Fatalf("push: %v, stored %+v", err, stored())
+	}
+	// A refused call changes nothing.
+	if err := set(`{"name":"p","check_command":"go build Other.slnx"}`); err == nil || !stored().NoVerifyCheck {
+		t.Fatalf("a refused check: %v, stored %+v", err, stored())
+	}
+	// A changed check without --no-verify clears it.
+	if err := set(`{"name":"p","check_command":"go test ./..."}`); err != nil {
+		t.Fatal(err)
+	}
+	if s := stored(); s.NoVerifyCheck || s.CheckCommand != "go test ./..." {
+		t.Fatalf("stored %+v, want the flag cleared", s)
+	}
+	// So does a changed round check.
+	if err := set(`{"name":"p","check_command":"go test ./...","round_check_command":"go vet Fast.slnx","no_verify":true}`); err != nil || !stored().NoVerifyCheck {
+		t.Fatalf("round check with no_verify: %v, stored %+v", err, stored())
+	}
+	if err := set(`{"name":"p","round_check_command":"go vet ./..."}`); err != nil || stored().NoVerifyCheck {
+		t.Fatalf("round check without no_verify: %v, stored %+v", err, stored())
+	}
+}
+
+// The round check runs in the project's own folder of the worktree (S293), so
+// a new check is verified in the project's folder of the main checkout, which
+// is the registry path, and not at the repository's top level.
+func TestProjectsSetCheckVerifiesWhereTheRoundCheckRuns(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	repo := filepath.Dir(p.Path)
+	sub := filepath.Join(repo, "sub")
+	if err := os.MkdirAll(sub, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	f, err := registry.Load(d.registryPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Projects[0].Path = sub
+	if err := registry.Save(d.registryPath(), f); err != nil {
+		t.Fatal(err)
+	}
+	set := func(cmd string) error {
+		_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","check_command":"`+cmd+`"}`))
+		return err
+	}
+
+	// The file is at the repository's top level only: the round check, in sub,
+	// would not find it.
+	if err := os.WriteFile(filepath.Join(repo, "Top.slnx"), []byte("<Solution/>\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := set("go build Top.slnx"); err == nil || !strings.Contains(err.Error(), sub) {
+		t.Errorf("a file at the repository top: %v, want a refusal that names %s", err, sub)
+	}
+	// The file is in the project's folder: accepted.
+	if err := os.WriteFile(filepath.Join(sub, "App.slnx"), []byte("<Solution/>\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := set("go build App.slnx"); err != nil {
+		t.Errorf("a file in the project's folder: %v", err)
+	}
+}
+
 func TestProjectsSetConcurrentCallsKeepEveryChange(t *testing.T) {
 	d, _, _ := runDaemon(t, nil)
 	calls := []string{

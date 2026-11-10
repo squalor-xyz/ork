@@ -316,6 +316,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	branch := fs.String("branch-pattern", "", "the branch name, with {id} or {id_lower}")
 	check := fs.String("check", "", "the check command")
 	roundCheck := fs.String("round-check", "", "a faster check command for the checks after implementer rounds; needs --check; empty clears it")
+	noVerify := fs.Bool("no-verify", false, "store --check or --round-check even when the static check says it cannot run in the project's folder")
 	checkMinutes := fs.Int("check-minutes", 0, "minutes the check may run")
 	capN := fs.Int("cap", 0, "the project's concurrent run cap")
 	budgetMinutes := fs.Int("budget-minutes", 0, "the run time budget in minutes")
@@ -335,7 +336,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	if len(pos) != 1 {
 		return o.usage("projects set takes one NAME, got %d arguments", len(pos))
 	}
-	p := daemon.SetProjectParams{Name: pos[0]}
+	p := daemon.SetProjectParams{Name: pos[0], NoVerify: *noVerify}
 	given := map[string]bool{}
 	fs.Visit(func(f *flag.Flag) { given[f.Name] = true })
 	if given["push"] {

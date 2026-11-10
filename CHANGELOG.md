@@ -12,6 +12,24 @@
   record with no options. A ledger answer filed in adj keeps its channel (`cli`
   or `tui`) in the rationale. Owner decision 2026-10-31. Docs:
   `docs/dashboard.md`, `docs/design.md`, `docs/guide.md`.
+- S295 (*proposed*): verify the check command where it will run, once, before a
+  role is spent on it. The check is static and runs nothing but `sh -n`: the
+  shell must parse the command, the first word of each simple command must
+  resolve, and the plain file names the command lists (not flags, globs,
+  `./...`, redirect targets, output flags, the words after `-m`, or the words
+  of commands that make files, such as `mkdir` or `git`) must exist in the
+  directory the round check uses. `ork projects set --check` (and `--round-check`) refuses a command
+  that fails, naming the file, the folder and the command; `--no-verify`
+  stores it anyway and remembers it (`no_verify_check` in the registry entry;
+  owner decision 2026-11-10), so setup and the plan skip the verification until
+  a check is set again without it. A run whose check cannot run pauses at setup, before round
+  1, with `check command cannot run in DIR: ...`; the fix is `ork stop ID`,
+  `ork projects set PROJECT --check CMD` (`--round-check CMD` when the round
+  command is the one that fails), then `ork retry ID` (S296), and the wait
+  line's `next:` is `ork stop ID`. The run plan shows a warning (in the launch
+  confirm, by the check line), and `ork doctor` names a later command's first word and
+  a missing named file. Owner decisions 2026-11-05. Docs: `docs/design.md`,
+  `docs/guide.md`.
 - S285 (*proposed*): a faster check command for the checks after implementer
   rounds. `ork projects set NAME --round-check CMD` stores `round_check_command`
   (refused only while the project would have no `check_command`; empty
