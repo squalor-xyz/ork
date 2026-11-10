@@ -4077,3 +4077,8 @@
 {"when": "2026-11-10T03:30:13Z", "item": "relay-roles.r23", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
 {"when": "2026-11-10T03:30:13Z", "item": "relay-roles.r24", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
 {"when": "2026-11-10T03:30:13Z", "item": "relay-roles.r31", "action": "relay-roles", "from": "", "to": "model", "note": "set"}
+{"when": "2026-11-10T03:37:18Z", "item": "S215", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-10T11:56:59Z", "item": "S173", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-10T11:57:28Z", "item": "S173", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-10T11:58:44Z", "item": "S173", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-10T12:04:32Z", "item": "S326", "action": "add", "from": "", "to": "open", "note": "ork status --json: show the wave name on engine runs"}
