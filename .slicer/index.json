@@ -17094,6 +17094,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "6ecf4b78-976e-46b6-89af-3fafc8b5bbd3",
+          "kind": "",
+          "text": "**2026-11-11** — Trial 1, 2026-11-11, slice S316 (owner pick), run ork-20261111-172200-10f4 started with: ork run ork S316 --stop-after commit --implementer claude-local:qwen3.8-27b:medium --implementer claude:sonnet:high --reviewer claude-local:qwen3.8-27b:medium --yes. Lineup gap: ork has no flag or matrix row for a local spec check or UI pass (the gate copies the reviewer chain), so spec check ran on cloud (r16) and UI pass on claude opus (r14). Results, one row per launcher and role: | launcher | role | result | rounds | time | findings missed | — | claude-local qwen3.8-27b | implementer | fail: exceeded the 45 min local timeout, no report | 1 | 45 min | n/a | — | claude sonnet (fallback) | implementer | ok | 1 | 8 min | n/a | — | claude-local qwen3.8-27b | reviewer | fail: exceeded the 45 min local timeout (claude: context canceled), no report | 1 | 45 min | not comparable, no report | — | claude-local | gate, spec check, UI pass | not run | - | - | - |. The run stopped; it was dismissed and S316 relaunched on cloud rows (ork-20261111-200706-2c86, implementer claude sonnet, reviewer and gate grok-4.7 then claude opus). Same outcome as the S291 implementer trial (45 min, no output). No default role changed.",
+          "created_at": "2026-11-11T20:07:15Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -18271,10 +18285,39 @@
       "id": "S334",
       "title": "Landing: the slice's own JSON deleted by the branch (moved to done/) but edited on main",
       "short_title": "Deleted-by-us slice JSON at landing",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "cb839506-ee83-4e1c-8603-03b6fac361c3",
+          "kind": "",
+          "text": "**2026-11-11** — Review FAIL: Earlier blockers: the absent-path stage check is resolved at internal/engine/landmerge.go:139-144 (`os.IsNotExist` and `deletedBySide`, defined at internal/engine/landmerge.go:220-222) and proved by `TestLandRetryKeepsAnAbsentSliceJSONBothSidesModified` (internal/engine/landmerge_test.go:406). The scratch-file blocker is not resolved: `internal/engine/zz_debug_test.go` is still untracked. No fix finding: no. The scratch file is still a fix. No blocker owner finding: none. Tests green: ork round 2 `go vet ./... && go test ./...` exit 0, including `ok github.com/squalor-xyz/ork/internal/engine`....",
+          "created_at": "2026-11-11T17:50:15Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "05b30b9b-da39-4478-b8b1-cb4b6eb58095",
+          "kind": "",
+          "text": "**2026-11-11** — Verified: when the branch moved the item's slice JSON to done/ and main edited the old path, the landing now merges main's change into the done/ copy (git merge-file) and removes the old path; a conflict pauses naming the done/ file; ork retry stages an absent deleted-by-us or deleted-by-them old path once the done/ copy has no markers, and leaves a both-modified path unmerged. 7 new engine tests, each mutation-checked; go vet and go test ./... pass, gofmt clean, slicer check and adj lint exit 0.",
+          "created_at": "2026-11-11T17:54:39Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -18292,7 +18335,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -18306,7 +18349,9 @@
       "claim": null,
       "fields": {
         "size": "M",
-        "flags": [],
+        "flags": [
+          "needs-owner"
+        ],
         "trees": [],
         "trees_literal": false,
         "findings": "Owner 2026-11-11 (feedback from another agent): slicer polling is too frequent and slow. Measured 2026-11-11: each slicer call costs about 100 ms, almost all in slicer's imports (python3 -c pass: 4 ms; import slicer.cli: 77 ms). ork runs slicer list, deps and relay-run list per project, every 5 s when visible, every 1 s for live runs and every 30 s for the other 11 projects.",
@@ -18327,10 +18372,39 @@
       "id": "S336",
       "title": "Polling: back off when no TUI is attached, and refresh live runs every 2 s",
       "short_title": "Idle polling backoff",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "c01357d0-8a95-47fe-996b-6f64f05ba4cd",
+          "kind": "",
+          "text": "**2026-11-11** — Verified: the daemon cache starts idle (Options.Idle) and SetIdle is driven by the subscriber count, so with no TUI attached nothing is read on a timer, the git HEAD read included; a TUI that attaches reads the due parts of the projects it shows, and goals and decided for a newly shown project. LiveInterval is 2 s. Merge detection (checkMerged) rides on the HEAD read and waits until a TUI attaches (owner decision 2026-11-11); explicit reads (snapshot, refresh, write refreshes) still run once while idle. Docs: design.md, dashboard.md, CHANGELOG.md. go vet, gofmt and go test ./... green; eight mutations each went red.",
+          "created_at": "2026-11-11T17:40:07Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "676ca7fb-8c0d-4cb9-8921-8f909ac31bed",
+          "kind": "",
+          "text": "**2026-11-11** — Verified after the landing merge: the daemon cache starts idle and SetIdle follows the subscriber count, so with no TUI attached nothing is read on a timer, the git HEAD read included; a TUI that attaches reads the due parts of the projects it shows; a live visible run is read every 2 s. Merge detection waits until a TUI attaches (owner decision 2026-11-11). Docs: design.md, dashboard.md, CHANGELOG.md. go vet, gofmt and go test ./... green.",
+          "created_at": "2026-11-11T17:49:10Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -18348,7 +18422,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

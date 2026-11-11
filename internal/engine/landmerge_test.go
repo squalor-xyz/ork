@@ -4,7 +4,9 @@ package engine
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -234,6 +236,218 @@ func TestLandTrackingOnlyConflictKeepsBothTextsAfterRetry(t *testing.T) {
 	}
 	if len(env.seen) != 1 || !env.seen[0].treeClean || !env.seen[0].hasBase {
 		t.Errorf("re-check: %+v", env.seen)
+	}
+}
+
+const (
+	movedOldPath  = ".slicer/slices/S04.json"
+	movedDonePath = ".slicer/slices/done/S04.json"
+)
+
+// sliceDoc is a slice JSON with eight long fields, a line no test changes and
+// a note. Rewriting the fields (letter) leaves too little of the file for git
+// to see a rename, so the branch's move to done/ shows as a delete and an add.
+func sliceDoc(letter byte, note string) string {
+	var b strings.Builder
+	b.WriteString("{\n")
+	for i := 0; i < 8; i++ {
+		fmt.Fprintf(&b, "  \"f%d\": \"%s\",\n", i, strings.Repeat(string(rune(int(letter)+i)), 40))
+	}
+	b.WriteString("  \"keep\": \"same\",\n  \"note\": \"" + note + "\"\n}\n")
+	return b.String()
+}
+
+// movedSliceJSON is a landing where the branch ran `slicer done` (the file
+// moved to done/ and rewritten, with branchNote) while the base edited the old
+// path (mainNote). Git reports the old path as deleted by us.
+func movedSliceJSON(t *testing.T, branchNote, mainNote string) *landEnv {
+	t.Helper()
+	env := newLandEnv(t)
+	env.moveBase(movedOldPath, sliceDoc('a', "old"))
+	gitRun(t, env.W, "merge", "--no-edit", "main")
+	if err := os.Remove(filepath.Join(env.W, movedOldPath)); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(env.W, movedDonePath), sliceDoc('A', branchNote))
+	env.moveBase(movedOldPath, sliceDoc('a', mainNote))
+	return env
+}
+
+func wantMovedPause(rec runrec.Record) string {
+	return "merging main into " + rec.Branch + " stopped on conflicts in " + movedDonePath +
+		"; slicer tracking files: both sides changed them; inspect branch with git -C " + ShellWord(rec.Worktree) +
+		" show " + ShellWord("HEAD:"+movedDonePath) + "; inspect base with git -C " + ShellWord(rec.Worktree) +
+		" show " + ShellWord(":3:"+movedOldPath) + "; keep both changes and remove the markers in " + rec.Worktree +
+		" (no need to git add), then ork retry " + rec.ID + "; ork commits the merge"
+}
+
+func pathOnMain(env *landEnv, path string) bool {
+	return exec.Command("git", "-C", env.P, "cat-file", "-e", "main:"+path).Run() == nil
+}
+
+func TestLandMergesMainsEditIntoTheMovedSliceJSON(t *testing.T) {
+	env := movedSliceJSON(t, "old", "main note")
+	env.approve()
+	rec := requireState(t, env.e, runrec.StateCommitted)
+	if rec.LandFixes != 0 {
+		t.Errorf("LandFixes = %d, want 0", rec.LandFixes)
+	}
+	if want := sliceDoc('A', "main note"); gitRun(t, env.P, "show", "main:"+movedDonePath) != strings.TrimSpace(want) {
+		t.Errorf("done copy on main:\n%s\nwant:\n%s", gitRun(t, env.P, "show", "main:"+movedDonePath), want)
+	}
+	if pathOnMain(env, movedOldPath) {
+		t.Error("the old path is back on main")
+	}
+	if got := gitRun(t, env.P, "show", "main:rendered.txt"); got != "render" {
+		t.Errorf("render did not run after the merge: %q", got)
+	}
+	if got := gitRun(t, env.P, "log", "--merges", "-1", "--format=%s", "main"); got != "Merge main into "+item {
+		t.Errorf("merge commit message %q", got)
+	}
+}
+
+func TestLandPausesWhenBothSidesEditedTheMovedSliceJSON(t *testing.T) {
+	env := movedSliceJSON(t, "branch note", "main note")
+	env.approve()
+	rec := requireConflictPause(t, env)
+	if want := wantMovedPause(rec); rec.Reason != want {
+		t.Errorf("pause = %q; want %q", rec.Reason, want)
+	}
+	if got := unmerged(t, env); got != movedOldPath {
+		t.Errorf("unmerged = %q, want the old path", got)
+	}
+	b, err := os.ReadFile(filepath.Join(env.W, movedDonePath))
+	if err != nil || !hasConflictMarkers(filepath.Join(env.W, movedDonePath)) {
+		t.Errorf("the done copy holds no markers: %q %v", b, err)
+	}
+	for _, want := range []string{"branch note", "main note"} {
+		if !strings.Contains(string(b), want) {
+			t.Errorf("the done copy lost %q:\n%s", want, b)
+		}
+	}
+}
+
+func TestLandRetryAfterAHandMergeOfTheMovedSliceJSON(t *testing.T) {
+	env := movedSliceJSON(t, "branch note", "main note")
+	env.approve()
+	requireConflictPause(t, env)
+	// The owner merges by hand into the done copy and leaves the old path
+	// absent; no git rm.
+	const resolved = "{\"merged\":\"by hand\"}"
+	writeFile(t, filepath.Join(env.W, movedDonePath), resolved+"\n")
+	if err := os.Remove(filepath.Join(env.W, movedOldPath)); err != nil && !os.IsNotExist(err) {
+		t.Fatal(err)
+	}
+	if err := env.e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, env.e, runrec.StateCommitted)
+	if got := gitRun(t, env.P, "show", "main:"+movedDonePath); got != resolved {
+		t.Errorf("done copy on main = %q; want %q", got, resolved)
+	}
+	if pathOnMain(env, movedOldPath) {
+		t.Error("the old path is back on main")
+	}
+}
+
+func TestLandRetryPausesAgainWhileTheMovedSliceJSONHoldsMarkers(t *testing.T) {
+	env := movedSliceJSON(t, "branch note", "main note")
+	env.approve()
+	first := requireConflictPause(t, env)
+	commits := countCalls(env, "W: commit")
+	if err := env.e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	rec := requireConflictPause(t, env)
+	if rec.Reason != first.Reason {
+		t.Errorf("reason changed:\n%q\n%q", first.Reason, rec.Reason)
+	}
+	if got := unmerged(t, env); got != movedOldPath {
+		t.Errorf("unmerged = %q, want the old path", got)
+	}
+	if countCalls(env, "W: commit") != commits {
+		t.Errorf("committed with markers left: %q", env.gitCalls())
+	}
+}
+
+// Deleted by them: the base removed the old path, the branch edited it and
+// also holds the done copy. Retry stages the absent path as deleted.
+func TestLandRetryStagesAnAbsentSliceJSONDeletedByThem(t *testing.T) {
+	env := newLandEnv(t)
+	env.moveBase(movedOldPath, sliceDoc('a', "old"))
+	gitRun(t, env.W, "merge", "--no-edit", "main")
+	writeFile(t, filepath.Join(env.W, movedOldPath), sliceDoc('a', "branch note"))
+	writeFile(t, filepath.Join(env.W, movedDonePath), sliceDoc('A', "branch note"))
+	gitRun(t, env.P, "rm", "-q", movedOldPath)
+	gitRun(t, env.P, "commit", "-q", "-m", "base removes the old path")
+	env.approve()
+	rec := requireConflictPause(t, env)
+	if want := wantTrackingPause(rec, movedOldPath); rec.Reason != want {
+		t.Errorf("pause = %q; want %q", rec.Reason, want)
+	}
+	if err := os.Remove(filepath.Join(env.W, movedOldPath)); err != nil {
+		t.Fatal(err)
+	}
+	if err := env.e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, env.e, runrec.StateCommitted)
+	if pathOnMain(env, movedOldPath) {
+		t.Error("the old path is back on main")
+	}
+	if !pathOnMain(env, movedDonePath) {
+		t.Error("the done copy is missing on main")
+	}
+}
+
+// Both sides modified the old path (stages 1, 2 and 3) and the branch also holds
+// a done copy. An absent old path is no deletion then: retry must not drop the
+// branch's and the base's edits, and pauses again.
+func TestLandRetryKeepsAnAbsentSliceJSONBothSidesModified(t *testing.T) {
+	env := newLandEnv(t)
+	env.moveBase(movedOldPath, sliceDoc('a', "old"))
+	gitRun(t, env.W, "merge", "--no-edit", "main")
+	writeFile(t, filepath.Join(env.W, movedOldPath), sliceDoc('a', "branch note"))
+	writeFile(t, filepath.Join(env.W, movedDonePath), sliceDoc('A', "branch note"))
+	env.moveBase(movedOldPath, sliceDoc('a', "main note"))
+	env.approve()
+	requireConflictPause(t, env)
+	if err := os.Remove(filepath.Join(env.W, movedOldPath)); err != nil {
+		t.Fatal(err)
+	}
+	commits := countCalls(env, "W: commit")
+	if err := env.e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	rec := requireConflictPause(t, env)
+	if want := wantTrackingPause(rec, movedOldPath); rec.Reason != want {
+		t.Errorf("pause = %q; want %q", rec.Reason, want)
+	}
+	if got := unmerged(t, env); got != movedOldPath {
+		t.Errorf("unmerged = %q, want the old path", got)
+	}
+	if countCalls(env, "W: commit") != commits {
+		t.Errorf("committed with the old path still unmerged: %q", env.gitCalls())
+	}
+}
+
+// Without a done copy the absent path stays unmerged, as before.
+func TestLandRetryKeepsAnAbsentSliceJSONWithoutADoneCopy(t *testing.T) {
+	env := trackingConflict(t)
+	env.approve()
+	requireConflictPause(t, env)
+	if err := os.Remove(filepath.Join(env.W, trackingConflictPath)); err != nil {
+		t.Fatal(err)
+	}
+	if err := env.e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	rec := requireConflictPause(t, env)
+	if want := wantTrackingPause(rec, trackingConflictPath); rec.Reason != want {
+		t.Errorf("pause = %q; want %q", rec.Reason, want)
+	}
+	if got := unmerged(t, env); got != trackingConflictPath {
+		t.Errorf("unmerged = %q", got)
 	}
 }
 

@@ -79,6 +79,14 @@ func (e *Engine) unmergedFiles(ctx context.Context, dir string) ([]string, error
 // ran this after the owner worked on the tree (a retry). Right after
 // `git merge` stops, such a file is a conflict without markers (a binary
 // file, a modify/delete) that no one has looked at, so it stays unmerged.
+//
+// The one exception is the item's own slice JSON (S334, adj 303 and 304).
+// When the branch moved it to done/ (`slicer done`) and the base edited the
+// old path, right after `git merge` stops ork merges the base's edit into the
+// done/ copy; a clean merge stages the copy and removes the old path, a
+// conflict leaves markers in the copy and the pause names it. On a retry an
+// old path that is absent, with the done/ copy in place and free of markers,
+// is staged as deleted.
 func (e *Engine) settleMerge(ctx context.Context, rec runrec.Record, base string, afterOwner bool) (done bool, err error) {
 	W := rec.Worktree
 	pauseWith := func(reason string) (bool, error) {
@@ -100,9 +108,46 @@ func (e *Engine) settleMerge(ctx context.Context, rec runrec.Record, base string
 	if err != nil {
 		return pauseWith("git diff: " + err.Error())
 	}
+	// The item's own slice JSON, moved to done/ by the branch while the base
+	// edited the old path (S334, adj 303): ork merges the base's change into the
+	// done/ copy. A clean merge needs no owner; a conflict leaves markers there.
+	prefix, perr := projectPrefix(ctx, e.proj.Path)
+	oldJSON := prefix + ".slicer/slices/" + rec.Item + ".json"
+	doneJSON := prefix + ".slicer/slices/done/" + rec.Item + ".json"
+	if perr == nil && !afterOwner && len(files) == 1 && files[0] == oldJSON && e.deletedByUs(ctx, W, oldJSON) {
+		if _, herr := e.gitRead(ctx, W, "cat-file", "-e", "HEAD:"+doneJSON); herr == nil {
+			clean, merr := e.mergeMovedSliceJSON(ctx, rec, base, oldJSON, doneJSON)
+			switch {
+			case clean:
+				files, err = e.unmergedFiles(ctx, W)
+				if err != nil {
+					return pauseWith("git diff: " + err.Error())
+				}
+			case merr != nil:
+				note = "; ork could not merge " + doneJSON + ": " + merr.Error()
+			default:
+				// The old path stays unmerged and absent: a retry stages its deletion.
+				if rerr := os.Remove(filepath.Join(W, oldJSON)); rerr != nil && !os.IsNotExist(rerr) {
+					return pauseWith("remove " + oldJSON + ": " + rerr.Error())
+				}
+			}
+		}
+	}
 	if afterOwner {
 		for _, f := range files {
 			path := filepath.Join(W, f)
+			if _, serr := os.Lstat(path); os.IsNotExist(serr) && perr == nil && f == oldJSON {
+				// An absent old slice JSON that git marks deleted on one side (DU or
+				// UD), with the item's done/ copy in place, is a deletion, not a
+				// conflict (S334, adj 304), once the copy has no markers.
+				done := filepath.Join(W, doneJSON)
+				if _, derr := os.Lstat(done); derr == nil && !hasConflictMarkers(done) && e.deletedBySide(ctx, W, f) {
+					if _, rerr := e.gitWrite(ctx, W, "rm", "-q", "--cached", "--", f); rerr != nil {
+						return pauseWith("git rm " + f + ": " + rerr.Error())
+					}
+				}
+				continue
+			}
 			if _, serr := os.Lstat(path); serr != nil || hasConflictMarkers(path) {
 				continue
 			}
@@ -117,7 +162,7 @@ func (e *Engine) settleMerge(ctx context.Context, rec runrec.Record, base string
 	}
 	if len(files) > 0 {
 		reason := conflictReason(base, rec.Branch, W, rec.ID, files)
-		if prefix, err := projectPrefix(ctx, e.proj.Path); err == nil {
+		if perr == nil {
 			trackingOnly := true
 			for _, f := range files {
 				if !strings.HasPrefix(f, prefix+".slicer/slices/") {
@@ -127,6 +172,9 @@ func (e *Engine) settleMerge(ctx context.Context, rec runrec.Record, base string
 			}
 			if trackingOnly {
 				reason = trackingConflictReason(base, rec.Branch, W, rec.ID, files)
+				if _, derr := os.Lstat(filepath.Join(W, doneJSON)); derr == nil && len(files) == 1 && files[0] == oldJSON && e.deletedByUs(ctx, W, oldJSON) {
+					reason = movedConflictReason(base, rec.Branch, W, rec.ID, oldJSON, doneJSON)
+				}
 			}
 		}
 		for _, f := range files {
@@ -156,6 +204,89 @@ func trackingConflictReason(base, branch, worktree, runID string, files []string
 	}
 	return fmt.Sprintf("merging %s into %s stopped on conflicts in %s%s; slicer tracking files: both sides changed them; %s; keep both changes and remove the markers in %s (no need to git add), then ork retry %s; ork commits the merge",
 		base, branch, strings.Join(names, ", "), more, strings.Join(commands, "; "), worktree, runID)
+}
+
+// deletedByUs reports whether git marks path unmerged as deleted by the slice
+// branch: the merge base (stage 1) and the base branch (stage 3) have it and
+// the branch (stage 2) does not.
+func (e *Engine) deletedByUs(ctx context.Context, dir, path string) bool {
+	stages := e.unmergedStages(ctx, dir, path)
+	return stages["1"] && !stages["2"] && stages["3"]
+}
+
+// deletedBySide reports whether git marks path unmerged as deleted on one
+// side only: deleted by us (stages 1 and 3) or by them (stages 1 and 2). A
+// path both sides modified (stages 1, 2 and 3) is not.
+func (e *Engine) deletedBySide(ctx context.Context, dir, path string) bool {
+	stages := e.unmergedStages(ctx, dir, path)
+	return stages["1"] && stages["2"] != stages["3"]
+}
+
+// unmergedStages lists the index stages ("1", "2", "3") git holds for path.
+func (e *Engine) unmergedStages(ctx context.Context, dir, path string) map[string]bool {
+	stages := map[string]bool{}
+	out, err := e.gitRead(ctx, dir, "ls-files", "-u", "-z", "--", path)
+	if err != nil {
+		return stages
+	}
+	for _, entry := range strings.Split(out, "\x00") {
+		meta, _, _ := strings.Cut(entry, "\t")
+		if fields := strings.Fields(meta); len(fields) == 3 {
+			stages[fields[2]] = true
+		}
+	}
+	return stages
+}
+
+// mergeMovedSliceJSON three-way merges the base branch's edit of the old slice
+// JSON into the branch's done/ copy (`git merge-file`, with the merge base as
+// the ancestor). clean is true when it merged without markers: the copy is
+// staged and the old path removed. With conflicts, clean is false and err nil:
+// the markers are in the done/ copy. err is set when the merge could not run.
+func (e *Engine) mergeMovedSliceJSON(ctx context.Context, rec runrec.Record, base, oldJSON, doneJSON string) (clean bool, err error) {
+	W := rec.Worktree
+	ancestor, err := e.gitRead(ctx, W, "show", ":1:"+oldJSON)
+	if err != nil {
+		return false, err
+	}
+	theirs, err := e.gitRead(ctx, W, "show", ":3:"+oldJSON)
+	if err != nil {
+		return false, err
+	}
+	dir, err := os.MkdirTemp(e.run.Dir(), "merge-")
+	if err != nil {
+		return false, err
+	}
+	defer os.RemoveAll(dir)
+	ancestorFile, theirsFile := filepath.Join(dir, "ancestor"), filepath.Join(dir, "theirs")
+	if err := os.WriteFile(ancestorFile, []byte(ancestor), 0o600); err != nil {
+		return false, err
+	}
+	if err := os.WriteFile(theirsFile, []byte(theirs), 0o600); err != nil {
+		return false, err
+	}
+	donePath := filepath.Join(W, doneJSON)
+	if _, merr := e.gitWrite(ctx, W, "merge-file", "-L", rec.Branch, "-L", "merge base", "-L", base, donePath, ancestorFile, theirsFile); merr != nil {
+		if hasConflictMarkers(donePath) {
+			return false, nil
+		}
+		return false, merr
+	}
+	if _, err := e.gitWrite(ctx, W, "add", "--", doneJSON); err != nil {
+		return false, err
+	}
+	if _, err := e.gitWrite(ctx, W, "rm", "-q", "-f", "--", oldJSON); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// movedConflictReason is trackingConflictReason for the branch's done/ copy of
+// the item's slice JSON: the branch's text is in HEAD, the base's edit of the
+// old path is git's stage 3.
+func movedConflictReason(base, branch, worktree, runID, oldJSON, doneJSON string) string {
+	return fmt.Sprintf("merging %s into %s stopped on conflicts in %s; slicer tracking files: both sides changed them; inspect branch with git -C %s show %s; inspect base with git -C %s show %s; keep both changes and remove the markers in %s (no need to git add), then ork retry %s; ork commits the merge",
+		base, branch, doneJSON, ShellWord(worktree), ShellWord("HEAD:"+doneJSON), ShellWord(worktree), ShellWord(":3:"+oldJSON), worktree, runID)
 }
 
 // conflictReason is the one line a paused landing shows: the files (at most

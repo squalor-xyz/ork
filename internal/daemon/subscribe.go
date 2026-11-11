@@ -36,6 +36,7 @@ func (d *Daemon) setFocus(conn *ipc.Conn, names []string) {
 	defer d.subsMu.Unlock()
 	_, known := d.focus[conn]
 	d.focus[conn] = names
+	d.cache.SetIdle(false) // a TUI is attached: timed reads run (S336)
 	d.cache.SetVisible(d.visibleLocked())
 	if !known {
 		go func() {
@@ -52,6 +53,7 @@ func (d *Daemon) drop(conn *ipc.Conn) {
 	defer d.subsMu.Unlock()
 	delete(d.focus, conn)
 	d.cache.SetVisible(d.visibleLocked())
+	d.cache.SetIdle(len(d.focus) == 0) // the last TUI left: no timed reads (S336)
 }
 
 // visibleLocked lists the projects any subscribed connection shows. The
