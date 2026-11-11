@@ -1341,8 +1341,10 @@ func TestDoctorContractMismatchFails(t *testing.T) {
 	if code != 1 || d.OK || d.Contract.OK || d.Contract.Found != "Contract: relay v8" || d.Contract.Error == "" {
 		t.Fatalf("exit %d\n%s", code, stdout)
 	}
+	// A contract mismatch must not mark a present tool as failing. The
+	// optional local launchers are looked up on PATH and are absent on CI.
 	for _, tool := range d.Tools {
-		if !tool.OK {
+		if tool.Present && !tool.OK {
 			t.Errorf("%s should still be ok: %+v", tool.Name, tool)
 		}
 	}
