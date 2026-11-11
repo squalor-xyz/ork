@@ -47,6 +47,41 @@ func TestRetrySendsRoundGrant(t *testing.T) {
 	}
 }
 
+func TestRetryAcceptShapeFlag(t *testing.T) {
+	for _, tc := range []struct {
+		args []string
+		want string
+	}{
+		{[]string{"retry", "r1", "--accept-shape"}, `run.retry {"run":"r1","accept_shape":true,"no_wait":true}`},
+		{[]string{"retry", "--accept-shape", "r1"}, `run.retry {"run":"r1","accept_shape":true,"no_wait":true}`},
+		{[]string{"retry", "r1", "keep it", "--accept-shape"}, `run.retry {"run":"r1","text":"keep it","accept_shape":true,"no_wait":true}`},
+		{[]string{"retry", "r1", "--accept-shape", "--wait"}, `run.retry {"run":"r1","accept_shape":true}`},
+	} {
+		calls, code, _, stderr := ownerCalls(t, tc.args...)
+		if code != ExitOK || len(calls) != 1 || calls[0] != tc.want {
+			t.Errorf("%v: code %d, stderr %q, calls %q, want %q", tc.args, code, stderr, calls, tc.want)
+		}
+	}
+	// Only retry takes it.
+	if calls, code, _, _ := ownerCalls(t, "answer", "r1", "text", "--accept-shape"); code != ExitUsage || len(calls) != 0 {
+		t.Errorf("answer --accept-shape: code %d, calls %q, want a usage error", code, calls)
+	}
+}
+
+func TestRetryAgainFlag(t *testing.T) {
+	calls, code, _, stderr := ownerCalls(t, "retry", "r1", "--again")
+	if want := `run.retry {"run":"r1","again":true,"no_wait":true}`; code != ExitOK || len(calls) != 1 || calls[0] != want {
+		t.Errorf("retry --again: code %d, stderr %q, calls %q, want %q", code, stderr, calls, want)
+	}
+	calls, code, _, stderr = ownerCalls(t, "retry", "r1", "--again", "--accept-shape")
+	if code != ExitUsage || len(calls) != 0 || !strings.Contains(stderr, "--again") || !strings.Contains(stderr, "--accept-shape") {
+		t.Errorf("both flags: code %d, stderr %q, calls %q, want a usage error naming both", code, stderr, calls)
+	}
+	if calls, code, _, _ := ownerCalls(t, "stop", "r1", "--again"); code != ExitUsage || len(calls) != 0 {
+		t.Errorf("stop --again: code %d, calls %q, want a usage error", code, calls)
+	}
+}
+
 // ownerCalls runs the command against a fake daemon that answers every call
 // with a run in state implement, and returns the calls it saw as
 // "method params" and the CLI result.

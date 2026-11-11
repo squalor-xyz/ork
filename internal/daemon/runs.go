@@ -77,8 +77,12 @@ type RunAction struct {
 	By      string `json:"by,omitempty"`
 	Run     string `json:"run"`
 	Text    string `json:"text,omitempty"`
-	Rounds  int    `json:"rounds,omitempty"`  // run.retry: additional implementer rounds; 0 means 2
-	NoWait  bool   `json:"no_wait,omitempty"` // proposed, run.answer and run.retry: return once the action is applied and the run has left its pause (S237)
+	Rounds  int    `json:"rounds,omitempty"` // run.retry: additional implementer rounds; 0 means 2
+	// run.retry at a capped shape pause (S298, *proposed*): keep the refused
+	// report's owner findings that have no options, or run the role once more.
+	AcceptShape bool `json:"accept_shape,omitempty"`
+	Again       bool `json:"again,omitempty"`
+	NoWait      bool `json:"no_wait,omitempty"` // proposed, run.answer and run.retry: return once the action is applied and the run has left its pause (S237)
 }
 
 // RunPlan is checkpoint 1 (run.launch-wire).
@@ -1497,7 +1501,7 @@ func (d *Daemon) startResumesLocked(f *registry.File) {
 			continue
 		}
 		req := w.rec.Resume
-		d.launchRun(w.r, d.resumeJob(w.r, req.Method, RunAction{Run: w.rec.ID, Text: req.Text, Rounds: req.Rounds, Adj: req.Adj, By: req.By}, nil))
+		d.launchRun(w.r, d.resumeJob(w.r, req.Method, RunAction{Run: w.rec.ID, Text: req.Text, Rounds: req.Rounds, AcceptShape: req.AcceptShape, Again: req.Again, Adj: req.Adj, By: req.By}, nil))
 	}
 }
 
@@ -1546,7 +1550,9 @@ func (d *Daemon) resumeJob(r *managedRun, method string, p RunAction, message *s
 			return r.engine.Answer(ctx, p.Text)
 		}
 	}
-	return func(ctx context.Context) error { return r.engine.RetryNote(ctx, p.Text, p.Rounds) }
+	return func(ctx context.Context) error {
+		return r.engine.RetryWith(ctx, engine.RetryOptions{Note: p.Text, Rounds: p.Rounds, AcceptShape: p.AcceptShape, Again: p.Again})
+	}
 }
 
 // launchRun starts a job with the manager lock held. When the job ends it
@@ -1734,7 +1740,7 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 			return RunReply{}, fmt.Errorf("run %s waits for an answer; use ork answer %s TEXT or ork stop %s", p.Run, p.Run, p.Run)
 		}
 		fn = d.resumeJob(r, method, p, nil)
-		resume = &runrec.ResumeRequest{Method: runrec.ResumeRetry, Text: p.Text, Rounds: p.Rounds}
+		resume = &runrec.ResumeRequest{Method: runrec.ResumeRetry, Text: p.Text, Rounds: p.Rounds, AcceptShape: p.AcceptShape, Again: p.Again}
 	case MethodRunApprove:
 		fn = r.engine.Approve
 	case MethodRunFix:
@@ -2151,7 +2157,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		shapeRetry := rec.AutomaticShapeRetry() != nil
 		var roles []source.EngineRole
 		for _, role := range rec.Roles {
-			roles = append(roles, source.EngineRole{ShapeRetry: role.ShapeRetry != nil, Report: role.Report, Role: role.Role, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit, Tokens: role.Tokens, CostUSD: role.CostUSD})
+			roles = append(roles, source.EngineRole{ShapeRetry: role.ShapeRetry != nil && role.ShapeRetry.ShapePauses == 0, Report: role.Report, Role: role.Role, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit, Tokens: role.Tokens, CostUSD: role.CostUSD})
 			for _, text := range roleDenials(role) {
 				if denialCounts[text] == 0 {
 					denials = append(denials, text)
@@ -2228,6 +2234,11 @@ func pausedNext(rec runrec.Record) string {
 	}
 	if rec.Pending != nil && rec.Pending.Kind == runrec.PendingQuestion {
 		next = "ork answer " + rec.ID + " TEXT"
+	}
+	if rec.Pending != nil && rec.Pending.Kind == runrec.PendingShape && rec.Pending.ShapePauses >= runrec.ShapePauseCap {
+		// S298 (*proposed*): a plain retry is refused here; the reason names the
+		// report, and ork show prints it.
+		next = fmt.Sprintf("ork retry %s --accept-shape, ork retry %s --again or ork stop %s", rec.ID, rec.ID, rec.ID)
 	}
 	return next
 }

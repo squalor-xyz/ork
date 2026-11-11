@@ -633,6 +633,7 @@ Set it with `ork projects set NAME --bell on|off` (*proposed*, S224).
 | Situation | What to do |
 |---|---|
 | A run is paused with no question (shape, error, lost, interrupted) | `t` on the row, or `ork retry RUN` (`docs/design.md:1088-1091`). *Proposed (S256):* `ork retry RUN "TEXT"` also sends a note, for example after you fixed the tree: the rerun brief shows it as an owner note. A resumed role is told to read `git status` and the diff again; the `t` key sends no note. `ork answer` and `ork fix` do not work on such a pause |
+| A run is paused on report shape twice in a row for one role and round (*proposed*, S298) | The reason names what is wrong (for an owner finding: the missing or misnumbered part, with the offending line), the refused report file and `ork show RUN`. A plain `ork retry RUN` (and `t`) is refused. Read the report with `ork show RUN`, then choose: `ork retry RUN --accept-shape` keeps each owner finding that has no options as an open owner finding (an `[owner blocker]` becomes a question you answer in words) and runs no role; it refuses any other shape problem. `ork retry RUN --again` runs the role once more; if that fails too the pause is capped again. Or `ork stop RUN`. The first shape pause is not capped: `ork retry RUN` works as before, and its brief now carries the exact error and the finding's lines |
 | You need to know why a run is paused, or read the report that was refused | `ork show RUN` (*proposed*, S297) prints the whole pause reason (and the question with its options), the roles with their report names, the check results with their log names, the owner and later findings, and the paused role's newest report (or the run's last report when that role has none). `ork show RUN NAME` prints one report (`reviewer-1-attempt-3.md`) or one check log (`checks-2.log`). Both take `--json`. It reads only reports and check logs, so you need not open `~/.local/state/ork` |
 | A run is paused at a budget limit | `t` or `ork retry RUN` grants one more role round (`docs/design.md:986-997`) |
 | A run is paused after red rounds or no progress (*proposed*, S294) | Read the named failure in Needs you or `ork status`. `t` or `ork retry RUN` grants two more implementer rounds; `ork retry RUN --rounds N` grants a positive count. If still red at the granted limit, it pauses again. To change the check, `ork stop RUN`, set the check (`ork projects set P --check CMD`), then `ork retry RUN` resumes the stopped run at the checks with the new command (*proposed*, S296). Or stop the run. The pane shows the choices in words; status adds retry and stop commands in its trailing next-step hint |
@@ -694,7 +695,7 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork check RUN N [ticked|later|open]
     ork fix RUN TEXT
     ork approve RUN
-    ork retry RUN [TEXT] [--wait] [--rounds N]
+    ork retry RUN [TEXT] [--wait] [--rounds N] [--accept-shape | --again]
     ork stop RUN|WAVE
     ork dismiss RUN
     ork file RUN N

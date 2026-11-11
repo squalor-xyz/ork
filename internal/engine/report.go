@@ -94,7 +94,12 @@ type Report struct {
 
 // ShapeError lists every way a report breaks the shape the prompts ask for
 // (role.report-shape). The owner sees it.
-type ShapeError struct{ Problems []string }
+type ShapeError struct {
+	Problems []string
+	// Findings holds the lines of each owner or later finding that failed its
+	// check, tag line included, as the report wrote them (S298, *proposed*).
+	Findings []string
+}
 
 func (e *ShapeError) Error() string {
 	return "report shape: " + strings.Join(e.Problems, "; ")
@@ -216,8 +221,8 @@ func parseOwnerBlock(body string) (q *OwnerQuestion, leading, context []string, 
 	if !structured {
 		return nil, nil, nil, nil
 	}
-	bad := func() (*OwnerQuestion, []string, []string, error) {
-		return nil, nil, nil, errors.New("Owner needed requires Question: title, Options: with 2 to 4 numbered unique labels and summaries, and Recommend: N - reason, " + ownerShapeTail)
+	bad := func(cause string) (*OwnerQuestion, []string, []string, error) {
+		return nil, nil, nil, &ownerShapeError{Cause: cause}
 	}
 	// Lines before Question are leading context, outside the block. From
 	// Question onward the block is read as an owner finding's body is (S288,
@@ -229,42 +234,82 @@ func parseOwnerBlock(body string) (q *OwnerQuestion, leading, context []string, 
 		lines = lines[1:]
 	}
 	if len(lines) == 0 {
-		return bad()
+		return bad("has no Question: line")
 	}
 	title := strings.TrimSpace(strings.TrimPrefix(lines[0], "Question:"))
-	// A refused block comes back empty and fails the length check below.
-	lines, context, _ = ownerBlockLines(title, lines[1:])
-	if len(lines) < 5 || len(lines) > 7 || lines[1] != "Options:" {
-		return bad()
+	if title == "" {
+		return bad("has no title after Question:")
+	}
+	lines, context, why := ownerBlockLines(title, lines[1:])
+	if why != "" {
+		return bad(why)
+	}
+	if len(lines) < 2 || lines[1] != "Options:" {
+		return bad("has no Options: line")
+	}
+	last := lines[len(lines)-1]
+	if !strings.HasPrefix(last, "Recommend:") {
+		return bad("has no Recommend: line after its options")
+	}
+	if n := len(lines) - 3; n < 2 || n > 4 {
+		return bad(fmt.Sprintf("needs 2 to 4 options, has %d", n))
 	}
 	q = &OwnerQuestion{Title: title}
-	if q.Title == "" {
-		return bad()
-	}
 	labels := map[string]bool{}
 	for i, line := range lines[2 : len(lines)-1] {
 		m := optionLine.FindStringSubmatch(line)
-		if m == nil || m[1] != strconv.Itoa(i+1) {
-			return bad()
+		if m == nil {
+			return bad(fmt.Sprintf("option %d, %s, is not N. label: summary", i+1, quoteLine(line)))
+		}
+		if m[1] != strconv.Itoa(i+1) {
+			return bad(fmt.Sprintf("option %d is numbered %s, and %d was expected: %s", i+1, m[1], i+1, quoteLine(line)))
 		}
 		label, summary := strings.TrimSpace(m[2]), strings.TrimSpace(m[3])
-		if label == "" || summary == "" || labels[label] {
-			return bad()
+		if label == "" || summary == "" {
+			return bad(fmt.Sprintf("option %d, %s, has an empty label or summary", i+1, quoteLine(line)))
+		}
+		if labels[label] {
+			return bad(fmt.Sprintf("option %d repeats the label %q", i+1, label))
 		}
 		labels[label] = true
 		q.Options = append(q.Options, Option{Label: label, Summary: summary})
 	}
-	m := recommendLine.FindStringSubmatch(lines[len(lines)-1])
+	m := recommendAnyLine.FindStringSubmatch(last)
 	if m == nil {
-		return bad()
+		return bad(fmt.Sprintf("line %s is not \"Recommend: N - reason\"", quoteLine(last)))
 	}
 	q.Recommend, _ = strconv.Atoi(m[1])
 	q.Reason = strings.TrimSpace(m[2])
-	if q.Recommend > len(q.Options) || q.Reason == "" {
-		return bad()
+	if q.Recommend < 1 || q.Recommend > len(q.Options) {
+		return bad(fmt.Sprintf("Recommend: %s names no option; with %d options use 1 to %d", m[1], len(q.Options), len(q.Options)))
+	}
+	if q.Reason == "" {
+		return bad("has an empty reason after Recommend: N -")
 	}
 	return q, leading, context, nil
 }
+
+// ownerShapeError is the refusal of an owner block. Error is the text of the
+// Owner needed section; Cause names the rule that failed, for the finding's own
+// message (S298, *proposed*).
+type ownerShapeError struct{ Cause string }
+
+func (e *ownerShapeError) Error() string {
+	return "Owner needed requires Question: title, Options: with 2 to 4 numbered unique labels and summaries, and Recommend: N - reason, " + ownerShapeTail
+}
+
+// shapeCause is the cause that parseOwnerQuestion gave, or the error's text.
+func shapeCause(err error) string {
+	var se *ownerShapeError
+	if errors.As(err, &se) {
+		return se.Cause
+	}
+	return err.Error()
+}
+
+// recommendAnyLine reads a Recommend: line whatever number it names, so that a
+// number out of range is told apart from a line that has no number.
+var recommendAnyLine = regexp.MustCompile(`^Recommend: (\d+) [-–—] (.+)$`)
 
 // ParseOwnerQuestions reads every question block of a body: each block starts
 // at a line that begins with "Question:" and runs to the next such line. The
@@ -394,10 +439,14 @@ func Findings(text string) (string, error) {
 // a tag is a fix finding, so a report without tags is all fix. In section (C)
 // only tagged findings count. A malformed owner or later finding is a shape
 // error, with every other problem of the report.
-func Triage(text string) (*Triaged, error) {
+func Triage(text string) (*Triaged, error) { return triage(text, false) }
+
+// triage is Triage; lenient keeps an owner finding whose options are not right
+// as a plain finding (S298, *proposed*).
+func triage(text string, lenient bool) (*Triaged, error) {
 	sections := parseSections(text)
 	t := &Triaged{}
-	var problems []string
+	var problems, shown []string
 	var found []string
 	for _, letter := range []string{"A", "B", "C", "D"} {
 		s, ok := sections[letter]
@@ -434,9 +483,10 @@ func Triage(text string) (*Triaged, error) {
 			case KindFix:
 				keep = append(keep, text)
 			default:
-				f, perr := g.finding()
+				f, perr := g.finding(lenient)
 				if perr != "" {
 					problems = append(problems, perr)
+					shown = append(shown, g.text())
 				} else if f.Kind == KindOwner {
 					t.Owner = append(t.Owner, f)
 				} else {
@@ -449,7 +499,7 @@ func Triage(text string) (*Triaged, error) {
 		}
 	}
 	if len(problems) > 0 {
-		return nil, &ShapeError{Problems: problems}
+		return nil, &ShapeError{Problems: problems, Findings: shown}
 	}
 	t.Fix = strings.TrimSpace(strings.Join(found, "\n\n"))
 	return t, nil
@@ -460,9 +510,12 @@ func Triage(text string) (*Triaged, error) {
 // gate's own. Fix is the report without its owner and later findings, so a
 // fix round after a FAIL reads only what must change. A report without tags
 // comes back unchanged. The Owner needed section is not scanned.
-func TriageGate(text string) (*Triaged, error) {
+func TriageGate(text string) (*Triaged, error) { return triageGate(text, false) }
+
+// triageGate is TriageGate; lenient is as for triage.
+func triageGate(text string, lenient bool) (*Triaged, error) {
 	t := &Triaged{Fix: text}
-	var problems []string
+	var problems, shown []string
 	var kept []string
 	var segs []segment
 	skip := false
@@ -495,10 +548,11 @@ func TriageGate(text string) (*Triaged, error) {
 			t.Tagged = t.Tagged || g.kind != ""
 		default:
 			t.Tagged = true
-			f, perr := g.finding()
+			f, perr := g.finding(lenient)
 			switch {
 			case perr != "":
 				problems = append(problems, perr)
+				shown = append(shown, g.text())
 			case f.Kind == KindOwner:
 				t.Owner = append(t.Owner, f)
 			default:
@@ -507,7 +561,7 @@ func TriageGate(text string) (*Triaged, error) {
 		}
 	}
 	if len(problems) > 0 {
-		return nil, &ShapeError{Problems: problems}
+		return nil, &ShapeError{Problems: problems, Findings: shown}
 	}
 	if t.Tagged {
 		t.Fix = strings.Join(kept, "\n")

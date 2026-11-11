@@ -269,10 +269,12 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
 	// answer and retry return once the run has resumed; --wait waits until it
 	// rests again, as the TUI's calls do (S237, *proposed*).
-	var wait bool
+	var wait, acceptShape, again bool
 	var rounds int
 	if command == "retry" {
 		fs.IntVar(&rounds, "rounds", 0, "grant additional implementer rounds (default 2 at a rounds pause or a resume)")
+		fs.BoolVar(&acceptShape, "accept-shape", false, "keep a refused report's owner findings that have no options (S298, proposed)")
+		fs.BoolVar(&again, "again", false, "run the role once more after a repeated shape pause (S298, proposed)")
 	}
 	if command == "answer" || command == "retry" {
 		fs.BoolVar(&wait, "wait", false, "wait until the run rests")
@@ -289,6 +291,9 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 	})
 	if invalidRounds {
 		return o.usage("rounds must be a positive integer")
+	}
+	if acceptShape && again {
+		return o.usage("retry: --accept-shape and --again cannot be used together")
 	}
 	want := 1
 	if command == "answer" || command == "file" {
@@ -314,7 +319,7 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 		}
 		return printWave(o, result)
 	}
-	p := daemon.RunAction{Run: pos[0], Rounds: rounds, NoWait: (command == "answer" || command == "retry") && !wait}
+	p := daemon.RunAction{Run: pos[0], Rounds: rounds, AcceptShape: acceptShape, Again: again, NoWait: (command == "answer" || command == "retry") && !wait}
 	if command == "file" {
 		n, err := strconv.Atoi(pos[1])
 		if err != nil || n < 1 {

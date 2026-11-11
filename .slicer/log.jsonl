@@ -4186,3 +4186,11 @@
 {"when": "2026-11-11T12:38:27Z", "item": "S224", "action": "note", "from": "", "to": "", "note": "Verified: ork projects set NAME --bell on|off writes the reg", "by": "Jon Robbins"}
 {"when": "2026-11-11T12:38:29Z", "item": "S224", "action": "status", "from": "started", "to": "done", "note": "ork projects set NAME --bell on|off sets the per-project bell through projects.set, allowed while runs are unfinished (owner decision 2026-11-11); tests, vet, gofmt, adj lint and slicer check passed; after-land human check deferred.", "by": "Jon Robbins"}
 {"when": "2026-11-11T12:15:08Z", "item": "S224", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-11T12:43:32Z", "item": "S298", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-11T12:56:57Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-11T12:57:11Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-11T13:17:56Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-11T13:18:09Z", "item": "S298", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-11T13:25:59Z", "item": "S298", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S298):", "by": "Jon Robbins"}
+{"when": "2026-11-11T13:26:03Z", "item": "S298", "action": "note", "from": "", "to": "", "note": "Verified: owner-finding shape errors name the real defect an", "by": "Jon Robbins"}
+{"when": "2026-11-11T13:26:05Z", "item": "S298", "action": "status", "from": "started", "to": "done", "note": "Verified: owner-finding shape errors name the real defect and quote the line; the shape retry brief carries the plain error and the finding lines; consecutive shape pauses of one role and round are counted per role; a plain ork retry is refused at the second pause, --again reruns once, --accept-shape keeps owner findings without options and runs no role, and a v11 gate accept records its verdict on its own ledger step. go test -race -count=1 ./... all packages ok; go vet, gofmt, slicer check and adj lint clean.", "by": "Jon Robbins"}

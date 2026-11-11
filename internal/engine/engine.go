@@ -570,7 +570,7 @@ func (e *Engine) Retry(ctx context.Context) error { return e.RetryNote(ctx, "") 
 // rounds it grants at a rounds pause. RetryNote and SetResume share it, so a
 // retry that waits for a slot is refused now for what the engine would refuse
 // when it starts (S274, *proposed*).
-func retryGrant(rec runrec.Record, rounds []int) (int, error) {
+func retryGrant(rec runrec.Record, rounds []int, o RetryOptions) (int, error) {
 	if rec.State != runrec.StatePaused || rec.Pending == nil {
 		return 0, refusef("the slice is not paused")
 	}
@@ -581,6 +581,19 @@ func retryGrant(rec runrec.Record, rounds []int) (int, error) {
 	}
 	if rec.Pending.Kind == runrec.PendingQuestion {
 		return 0, refusef("the slice waits for an answer; answer it or stop the slice")
+	}
+	// A shape pause that repeated (S298, *proposed*; owner decision 2026-11-05):
+	// a plain retry is refused, the owner picks a way past.
+	capped := shapeCapped(rec.Pending)
+	switch {
+	case o.AcceptShape && o.Again:
+		return 0, refusef("--accept-shape and --again cannot be used together")
+	case o.AcceptShape && rec.Pending.Kind != runrec.PendingShape:
+		return 0, refusef("--accept-shape applies only to a report-shape pause")
+	case o.AcceptShape && !capped:
+		return 0, refusef("--accept-shape is for a shape pause that repeated; this is the first, so ork retry %s", rec.ID)
+	case capped && !o.AcceptShape && !o.Again:
+		return 0, refusef("%s", cappedRetryRefusal(rec.ID, rec.Pending.ShapePauses))
 	}
 	grant := 2
 	if len(rounds) > 0 && rounds[0] != 0 {
@@ -604,8 +617,14 @@ func (e *Engine) SetResume(req runrec.ResumeRequest) error {
 	defer e.mu.Unlock()
 	rec := e.run.Snapshot()
 	if req.Method == runrec.ResumeRetry {
-		if _, err := retryGrant(rec, []int{req.Rounds}); err != nil {
+		o := RetryOptions{Rounds: req.Rounds, AcceptShape: req.AcceptShape, Again: req.Again}
+		if _, err := retryGrant(rec, []int{req.Rounds}, o); err != nil {
 			return err
+		}
+		if req.AcceptShape {
+			if err := e.acceptShapeCheck(rec); err != nil {
+				return err
+			}
 		}
 	} else if rec.State != runrec.StatePaused || rec.Pending == nil || rec.Pending.Kind != runrec.PendingQuestion {
 		return refusef("the slice has no owner question to answer")
@@ -633,19 +652,51 @@ func (e *Engine) ClearResume() error {
 // A stopped run is resumed from its worktree instead (resumeStopped, S296,
 // *proposed*), and the count grants rounds there too.
 func (e *Engine) RetryNote(ctx context.Context, note string, rounds ...int) error {
+	o := RetryOptions{Note: note}
+	if len(rounds) > 0 {
+		o.Rounds = rounds[0]
+	}
+	return e.RetryWith(ctx, o)
+}
+
+// RetryOptions is what an owner's retry carries (S298, *proposed*).
+type RetryOptions struct {
+	Note   string
+	Rounds int
+	// AcceptShape keeps a refused report's owner findings that have no
+	// options, at a capped shape pause, and runs no role.
+	AcceptShape bool
+	// Again reruns the role once more at a capped shape pause.
+	Again bool
+}
+
+// RetryWith is RetryNote with the options of ork retry.
+func (e *Engine) RetryWith(ctx context.Context, o RetryOptions) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	note = strings.TrimSpace(note)
+	note := strings.TrimSpace(o.Note)
+	rounds := []int{}
+	if o.Rounds != 0 {
+		rounds = []int{o.Rounds}
+	}
 	rec := e.run.Snapshot()
 	switch rec.State {
 	case runrec.StateStopped:
+		if o.AcceptShape {
+			return refusef("run %s is stopped; --accept-shape applies only to a report-shape pause", rec.ID)
+		}
 		return e.resumeStopped(ctx, rec, note, rounds)
 	case runrec.StateCommitted:
 		return refusef("run %s is committed; there is nothing to resume", rec.ID)
 	}
-	grant, err := retryGrant(rec, rounds)
+	grant, err := retryGrant(rec, rounds, o)
 	if err != nil {
 		return err
+	}
+	if o.AcceptShape {
+		if err := e.acceptShapeCheck(rec); err != nil {
+			return err
+		}
 	}
 	grantRounds := func(r *runrec.Record) {
 		if rec.Pending.Kind == runrec.PendingRounds {
@@ -670,6 +721,7 @@ func (e *Engine) RetryNote(ctx context.Context, note string, rounds ...int) erro
 			if note != "" {
 				retry.Note = note
 			}
+			retry.AcceptShape = o.AcceptShape
 			q.Retry = &retry
 			r.Pending = &q
 			r.Reason = q.Reason
@@ -686,6 +738,7 @@ func (e *Engine) RetryNote(ctx context.Context, note string, rounds ...int) erro
 		if note != "" {
 			r.Pending.Note = note
 		}
+		r.Pending.AcceptShape = o.AcceptShape
 	}); err != nil {
 		return err
 	}
@@ -767,6 +820,40 @@ func (e *Engine) pause(p runrec.Pending) error {
 		r.State = runrec.StatePaused
 		r.Reason = p.Reason
 		r.Pending = &p
+	})
+}
+
+// pauseShape pauses on a shape problem (S298, *proposed*). The pending slot is
+// single, so a role that does not take it keeps its counted context on its own
+// newest role record of the round, where the next round of that role
+// reads it: otherwise a second role's count would be lost and that role could
+// never reach the cap. A shape pause with a higher count takes the slot from one
+// with a lower count, so that a capped role always holds it and a plain retry is
+// refused; the role it displaces keeps its context on its record. A stopped
+// slice keeps its stop. A question or another kind of pause keeps the slot.
+func (e *Engine) pauseShape(p runrec.Pending) error {
+	return e.run.Update(func(r *runrec.Record) {
+		if r.State == runrec.StateStopped {
+			return
+		}
+		keep := func(role string, round int, ctx runrec.Pending) {
+			ctx.AutomaticShapeRetry = false
+			for i := len(r.Roles) - 1; i >= 0; i-- {
+				if r.Roles[i].Role == role && r.Roles[i].Round == round {
+					r.Roles[i].ShapeRetry = &ctx
+					return
+				}
+			}
+		}
+		switch cur := r.Pending; {
+		case r.State != runrec.StatePaused:
+			r.State, r.Reason, r.Pending = runrec.StatePaused, p.Reason, &p
+		case cur != nil && cur.Kind == runrec.PendingShape && cur.Role != p.Role && p.ShapePauses > cur.ShapePauses:
+			keep(cur.Role, cur.Round, *cur)
+			r.Reason, r.Pending = p.Reason, &p
+		default:
+			keep(p.Role, p.Round, p)
+		}
 	})
 }
 

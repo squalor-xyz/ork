@@ -153,6 +153,115 @@ func TestTriageRefusesMalformedNonFixFindings(t *testing.T) {
 	}
 }
 
+// ownerProblem is the shape problem Triage gives for one owner finding body.
+func ownerProblem(t *testing.T, body string) string {
+	t.Helper()
+	_, err := Triage(review("- [owner] Which one?\n"+body, "nothing", "nothing", "nothing"))
+	var se *ShapeError
+	if !errors.As(err, &se) || len(se.Problems) != 1 {
+		t.Fatalf("err %v, want a *ShapeError with one problem", err)
+	}
+	return se.Problems[0]
+}
+
+func TestOwnerFindingErrorNamesTheRealDefect(t *testing.T) {
+	for _, tc := range []struct{ name, body, want string }{
+		{"no Options line", "  Needs a decision.", "has no Options: line"},
+		{"Recommend without Options", "  1. a: one\n  Recommend: 1 - a", "has no Options: line"},
+		{"one option", "  Options:\n  1. only: one\n  Recommend: 1 - only one", "needs 2 to 4 options, has 1"},
+		{"five options", "  Options:\n  1. a: x\n  2. b: x\n  3. c: x\n  4. d: x\n  5. e: x\n  Recommend: 1 - a", `numbered line "5. e: x"`},
+		{"misnumbered option", "  Options:\n  1. a: one\n  3. b: two\n  Recommend: 1 - a", "option 2 is numbered 3"},
+		{"option without summary", "  Options:\n  1. a: one\n  2. beta\n  Recommend: 1 - a", `"2. beta" is not an option`},
+		{"repeated label", "  Options:\n  1. a: one\n  2. a: two\n  Recommend: 1 - a", `option 2 repeats the label "a"`},
+		{"no Recommend", "  Options:\n  1. a: one\n  2. b: two", "has no Recommend: line"},
+		{"Recommend without a reason", "  Options:\n  1. a: one\n  2. b: two\n  Recommend: 1", `"Recommend: 1" is not "Recommend: N - reason"`},
+		{"Recommend out of range", "  Options:\n  1. a: one\n  2. b: two\n  Recommend: 5 - x", "Recommend: 5 names no option; with 2 options use 1 to 2"},
+		{"line between options", "  Options:\n  1. a: one\n  note\n  2. b: two\n  Recommend: 1 - a", `"2. b: two" comes after a line that is not an option`},
+		{"numbered line after Recommend", "  Options:\n  1. a: one\n  2. b: two\n  Recommend: 1 - a\n  3. c: three", `"3. c: three" comes after Recommend:`},
+		{"Options twice", "  Options:\n  1. a: one\n  Options:\n  2. b: two\n  Recommend: 1 - a", "Options: appears twice"},
+		{"marked Decision key", "  Options:\n  1. a: one\n  2. b: two\n  Recommend: 1 - a\n  - Decision key: x.y", "Decision key: line must not have a list marker"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := ownerProblem(t, tc.body)
+			for _, want := range []string{`"Which one?"`, tc.want} {
+				if !strings.Contains(got, want) {
+					t.Errorf("problem %q lacks %q", got, want)
+				}
+			}
+		})
+	}
+}
+
+func TestOwnerFindingErrorQuotesAtMost120Characters(t *testing.T) {
+	long := strings.Repeat("x", 300)
+	got := ownerProblem(t, "  Options:\n  1. a: one\n  2. "+long+"\n  Recommend: 1 - a")
+	if !strings.Contains(got, strings.Repeat("x", 100)) || strings.Contains(got, strings.Repeat("x", 121)) {
+		t.Errorf("problem %q does not cut the quoted line to 120 characters", got)
+	}
+}
+
+func TestOwnerFindingErrorIsNotFalse(t *testing.T) {
+	// Each finding has Options: and Recommend:, so the message must not say that
+	// they are missing.
+	for name, body := range map[string]string{
+		"misnumbered":                   "  Options:\n  1. a: one\n  3. b: two\n  Recommend: 1 - a",
+		"one option":                    "  Options:\n  1. only: one\n  Recommend: 1 - a",
+		"out of range":                  "  Options:\n  1. a: one\n  2. b: two\n  Recommend: 9 - a",
+		"numbered line after Recommend": "  Options:\n  1. a: one\n  2. b: two\n  Recommend: 1 - a\n  3. c: three",
+		"option without summary":        "  Options:\n  1. a: one\n  2. beta\n  Recommend: 1 - a",
+	} {
+		if got := ownerProblem(t, body); strings.Contains(got, "needs Options") || strings.Contains(got, "no Options") || strings.Contains(got, "no Recommend") {
+			t.Errorf("%s: %q says Options or Recommend is missing", name, got)
+		}
+	}
+}
+
+func TestOwnerFindingWithADetailLineAfterRecommendIsAccepted(t *testing.T) {
+	got, err := Triage(review(ownerFinding+"\n  This stays context.", "nothing", "nothing", "nothing"))
+	if err != nil || len(got.Owner) != 1 || got.Owner[0].Ask == nil {
+		t.Fatalf("owner %+v, err %v", got, err)
+	}
+}
+
+func TestShapeErrorKeepsTheOffendingFindingLines(t *testing.T) {
+	bad := "- [owner] Which one?\n  Options:\n  1. a: one\n  3. b: two\n  Recommend: 1 - a"
+	_, err := Triage(review(bad, "nothing", "nothing", "nothing"))
+	var se *ShapeError
+	if !errors.As(err, &se) || len(se.Findings) != 1 {
+		t.Fatalf("err %v, want one offending finding", err)
+	}
+	for _, want := range []string{"[owner] Which one?", "3. b: two", "Recommend: 1 - a"} {
+		if !strings.Contains(se.Findings[0], want) {
+			t.Errorf("finding text %q lacks %q", se.Findings[0], want)
+		}
+	}
+	_, err = TriageGate("VERDICT: PASS\n\n" + bad + "\nTests: 1 passed, 0 failed\n\n## Owner needed\n\nnone\n")
+	if !errors.As(err, &se) || len(se.Findings) != 1 || !strings.Contains(se.Findings[0], "3. b: two") {
+		t.Fatalf("gate: err %v findings %v", err, se)
+	}
+}
+
+func TestLenientTriageKeepsAnOwnerFindingWithoutOptions(t *testing.T) {
+	text := review("- [owner] Which one?\n  Some detail.\n- [owner blocker] Drop it?", "nothing", "nothing", "nothing")
+	got, err := triage(text, true)
+	if err != nil || len(got.Owner) != 2 {
+		t.Fatalf("lenient triage: %+v, %v", got, err)
+	}
+	if got.Owner[0].Ask != nil || !strings.Contains(got.Owner[0].Text, "Some detail.") || !got.Owner[1].Blocker || got.Owner[1].Ask != nil {
+		t.Errorf("findings %+v", got.Owner)
+	}
+	// Other defects of a finding stay errors.
+	if _, err := triage(review("- [owner]\n  Options:", "nothing", "nothing", "nothing"), true); err == nil {
+		t.Error("lenient triage accepted an owner finding with no title")
+	}
+	if _, err := triage(review("- [owner] Q?\n  Decision key: Bad Key", "nothing", "nothing", "nothing"), true); err == nil {
+		t.Error("lenient triage accepted a bad Decision key")
+	}
+	if _, err := Triage(text); err == nil {
+		t.Error("strict triage accepted an owner finding without options")
+	}
+}
+
 func TestTriageSectionCHoldsTaggedFindingsOnly(t *testing.T) {
 	got, err := Triage(review("nothing", "nothing", "Note for later: S06 must undo this.\n- [later] Retire the old cache\n- [fix] undo the lock in main.go", "nothing"))
 	if err != nil {

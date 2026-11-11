@@ -111,6 +111,105 @@ func TestRunRetryCarriesTheText(t *testing.T) {
 	}
 }
 
+// ownerWithoutOptions is a reviewer report whose one owner finding has no
+// options: a shape problem that ork retry --accept-shape can keep.
+const ownerWithoutOptions = "(A): nothing\n(B): nothing\n(D):\n- [owner] Which format?\n  Needs a call from the owner.\n\n## Owner needed\nnone\n"
+
+// cappedShapeDaemon is a run paused at its second shape pause: the reviewer's
+// refused report is in the run directory. calls counts the reviewer's reruns.
+func cappedShapeDaemon(t *testing.T, report string, calls *int) *Daemon {
+	t.Helper()
+	var mu sync.Mutex
+	runner := func(ctx context.Context, r engine.Request) (engine.Result, error) {
+		if r.Role == engine.RoleReviewer {
+			mu.Lock()
+			*calls++
+			mu.Unlock()
+			return engine.Result{Exit: engine.ExitOK, Report: report}, nil
+		}
+		return retryRunner(ctx, r)
+	}
+	pending := &runrec.Pending{Kind: runrec.PendingShape, State: runrec.StateReview, Role: engine.RoleReviewer, Round: 1, Reason: "report shape: x", ShapePauses: runrec.ShapePauseCap}
+	at := time.Date(2026, 11, 11, 12, 0, 0, 0, time.UTC)
+	d, store, _ := retryDaemonWith(t, runrec.StatePaused, pending, runner, func(r *runrec.Record) {
+		r.Roles = []runrec.RoleRecord{{Role: engine.RoleReviewer, Round: 1, Vendor: "claude", Model: "sonnet", Exit: string(engine.ExitOK), Report: "reviewer-1.md", StartedAt: at, EndedAt: at.Add(time.Minute)}}
+	})
+	if err := os.WriteFile(filepath.Join(store.RunDir("r1"), "reviewer-1.md"), []byte(report), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return d
+}
+
+func TestRunRetryCarriesAcceptShape(t *testing.T) {
+	calls := 0
+	d := cappedShapeDaemon(t, ownerWithoutOptions, &calls)
+	b := request(t, d, "run.retry", `{"run":"r1","accept_shape":true}`)
+	var rec runrec.Record
+	if err := json.Unmarshal(b, &rec); err != nil {
+		t.Fatal(err)
+	}
+	if calls != 0 {
+		t.Errorf("accepting ran the reviewer %d times", calls)
+	}
+	if len(rec.Findings) != 1 || rec.Findings[0].Kind != runrec.FindingOwner || rec.Findings[0].Ask != nil {
+		t.Fatalf("findings %+v, want the owner finding kept without an ask: %s", rec.Findings, b)
+	}
+	if rec.State != runrec.StateAwaitingApproval {
+		t.Errorf("state %s, want the run to go on to approval", rec.State)
+	}
+}
+
+func TestPlainRetryAtTheShapeCapIsRefused(t *testing.T) {
+	calls := 0
+	d := cappedShapeDaemon(t, ownerWithoutOptions, &calls)
+	_, err := d.handle(context.Background(), "run.retry", json.RawMessage(`{"run":"r1"}`))
+	var wire *ipc.Error
+	if !errors.As(err, &wire) || wire.Code != CodeRefused {
+		t.Fatalf("err %v, want a refusal", err)
+	}
+	for _, want := range []string{"ork show r1", "ork retry r1 --accept-shape", "ork retry r1 --again", "ork stop r1"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("refusal %q lacks %q", err, want)
+		}
+	}
+	if calls != 0 {
+		t.Errorf("a refused retry ran the reviewer %d times", calls)
+	}
+	if rec := d.runs.runs["r1"].engine.Snapshot(); rec.State != runrec.StatePaused {
+		t.Errorf("state %s, want paused", rec.State)
+	}
+}
+
+func TestRetryAgainAtTheShapeCapRerunsTheRole(t *testing.T) {
+	calls := 0
+	// The rerun fails the check again: it pauses at the cap again.
+	d := cappedShapeDaemon(t, "(A): nothing\n", &calls)
+	b := request(t, d, "run.retry", `{"run":"r1","again":true}`)
+	var rec runrec.Record
+	if err := json.Unmarshal(b, &rec); err != nil {
+		t.Fatal(err)
+	}
+	if calls != 1 {
+		t.Fatalf("reviewer reruns = %d, want 1", calls)
+	}
+	if rec.State != runrec.StatePaused || rec.Pending == nil || rec.Pending.Kind != runrec.PendingShape || rec.Pending.ShapePauses != runrec.ShapePauseCap+1 {
+		t.Fatalf("pending %+v in state %s, want a capped shape pause again", rec.Pending, rec.State)
+	}
+	if _, err := d.handle(context.Background(), "run.retry", json.RawMessage(`{"run":"r1"}`)); err == nil || !strings.Contains(err.Error(), "--again") {
+		t.Errorf("a plain retry after --again: %v, want the refusal", err)
+	}
+}
+
+func TestStatusShowsTheCappedShapePauseAndItsNextStep(t *testing.T) {
+	calls := 0
+	d := cappedShapeDaemon(t, ownerWithoutOptions, &calls)
+	b := request(t, d, "status", `{"project":"p"}`)
+	want := "next: ork retry r1 --accept-shape, ork retry r1 --again or ork stop r1"
+	if !strings.Contains(string(b), want) {
+		t.Fatalf("status lacks %q: %s", want, b)
+	}
+}
+
 func TestRunRetryResumesPausedStep(t *testing.T) {
 	for _, kind := range []string{runrec.PendingError, runrec.PendingInterrupted} {
 		t.Run(kind, func(t *testing.T) {

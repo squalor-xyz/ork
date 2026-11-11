@@ -3566,6 +3566,24 @@ func TestShapeRetryStatusFromRecord(t *testing.T) {
 	}
 }
 
+// A role that does not hold the single pending slot keeps its counted shape
+// pause on its role record (S298); that row was not an automatic retry and is
+// not labelled one.
+func TestCountedShapeContextOnARoleIsNotShownAsAShapeRetry(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	counted := &runrec.Pending{Kind: runrec.PendingShape, State: runrec.StateReview, Role: engine.RoleReviewer, Round: 1, Reason: "x", ShapePauses: 1}
+	if _, err := store.Create(runrec.Record{ID: "counted", Item: "S298", Project: p.Name, State: runrec.StatePaused, Pending: counted, Roles: []runrec.RoleRecord{{Role: engine.RoleReviewer, Round: 1, EndedAt: time.Now(), ShapeRetry: counted}}}); err != nil {
+		t.Fatal(err)
+	}
+	b, err := json.Marshal(d.engineRuns(p.Name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(b), `"shape_retry":true`) {
+		t.Fatalf("a counted shape context is shown as a shape retry: %s", b)
+	}
+}
+
 // editProject changes the registry's first project.
 func editProject(t *testing.T, d *Daemon, change func(*registry.Project)) {
 	t.Helper()

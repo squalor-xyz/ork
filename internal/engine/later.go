@@ -78,14 +78,21 @@ func (e *Engine) recordFindings(r round, t *Triaged) error {
 }
 
 // askBlocker pauses the slice on an owner finding that its report marks as a
-// blocker, as a question with the finding's structured shape. After the
-// answer the role runs again with it.
+// blocker, as a question with the finding's structured shape, or as a free-text
+// question when the owner accepted it without options. After the answer the
+// role runs again with it.
 func (e *Engine) askBlocker(r round, f Finding) error {
 	text := fmt.Sprintf("The %s's report marks this owner finding as a blocker.\n", r.role)
 	if f.Context != "" {
 		text += f.Context + "\n"
 	}
-	text += questionText(f.Ask)
+	if f.Ask != nil {
+		text += questionText(f.Ask)
+	} else {
+		// The owner kept a blocker that has no options (S298, *proposed*): a
+		// free-text question with the finding's own text.
+		text += f.Text
+	}
 	err := e.run.Update(func(rr *runrec.Record) {
 		rr.Questions = append(rr.Questions, runrec.Question{Ask: f.Ask, Role: r.role, Round: r.n, Text: text, Key: f.Key, At: e.d.now()})
 	})

@@ -107,12 +107,15 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               answer and resume a paused role; returns once
                               it runs, --wait waits until it rests
   ork dismiss RUN             clear a stopped run from Needs you
-  ork retry RUN [TEXT] [--wait] [--rounds N]
+  ork retry RUN [TEXT] [--wait] [--rounds N] [--accept-shape | --again]
                               retry a paused role or step, with an optional
                               note for the rerun; returns like answer;
                               a stopped run resumes from its worktree with
                               N more implementer rounds (default 2) and
-                              takes no TEXT
+                              takes no TEXT; after two shape pauses in a
+                              row a plain retry is refused: --accept-shape
+                              keeps owner findings that have no options,
+                              --again runs the role once more
   ork status [--project P]    projects, needs-you counts and active relays
   ork show RUN [NAME]         print why a run is paused, its reports, checks
                               and findings; NAME prints one report or log

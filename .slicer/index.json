@@ -16679,7 +16679,7 @@
       "id": "S298",
       "title": "Report-shape pauses: name the real defect, feed it back to the role, and cap the retry loop",
       "short_title": "Report-shape pauses: name the real defect, feed it back to the role, and cap the retry loop",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S288"
@@ -16691,6 +16691,34 @@
           "text": "**2026-11-05** — Owner decisions 2026-11-05 (interactive interview), all recommended options: Q1 refuse-plain-retry (plain ork retry refused at the cap, naming ork show RUN, --accept-shape, --again, ork stop RUN); Q2 never-by-default (accept without options only with --accept-shape after the cap); Q3 s288-first (S288 builds first and owns the parser and prompt change; S298 depends on S288); Q4 two (the second consecutive shape pause is capped).",
           "created_at": "2026-11-05T18:11:47Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "f8587590-1970-4da6-8d2a-2faf69430899",
+          "kind": "",
+          "text": "**2026-11-11** — Human checks at approval (S298):\n- later: deferred to land: A reviewer report with a misnumbered option under an owner finding pauses with a message that names that line, a detail line after `Recommend:` no longer pauses (S288), and a second shape pause on the same role shows the report file name and the accept command.",
+          "created_at": "2026-11-11T13:25:59Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "edd83d66-3f98-4d61-94f9-66f2c041afe7",
+          "kind": "",
+          "text": "**2026-11-11** — Verified: owner-finding shape errors name the real defect and quote the line (cut to 120 chars); the shape retry brief carries the plain error and the finding lines; consecutive shape pauses of one role and round are counted (reviewer and UI pass each keep their own count); the second pause names the refused report, ork show RUN and the ways past; a plain ork retry is refused there, --again reruns once, --accept-shape keeps owner findings without options (blocker as a free-text question), runs no role, and a v11 gate accept records its verdict on its own ledger step. go test -race -count=1 ./... all packages ok; go vet, gofmt, slicer check and adj lint clean. Human check (real run after land) left for the owner.",
+          "created_at": "2026-11-11T13:26:03Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -16717,7 +16745,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
