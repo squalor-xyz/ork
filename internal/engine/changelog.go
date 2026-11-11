@@ -57,13 +57,19 @@ func (e *Engine) writeChangelog(ctx context.Context, rec runrec.Record, merged s
 	return nil
 }
 
+// changelogParts is an Unreleased body cut into complete entries. The text is
+// prefix, then the entries with seps[i] between entries[i] and entries[i+1],
+// then tail (what ends the body), then suffix. A separator is the entry's line
+// break plus any blank lines after it, so "\n" is a compact boundary and
+// "\n\n" a blank-line one.
 type changelogParts struct {
-	prefix, suffix string
-	entries        []string
+	prefix, tail, suffix string
+	entries, seps        []string
 }
 
 // splitChangelog accepts only entries and indented continuation lines in the
-// Unreleased body. It keeps the surrounding text byte for byte.
+// Unreleased body. A `- ` line always starts a new entry, whatever precedes
+// it. It keeps the surrounding text and every separator byte for byte.
 func splitChangelog(text string) (changelogParts, bool) {
 	lines := strings.Split(text, "\n")
 	heading := -1
@@ -83,39 +89,59 @@ func splitChangelog(text string) (changelogParts, bool) {
 			break
 		}
 	}
-	parts := changelogParts{prefix: strings.Join(lines[:heading+2], "\n") + "\n"}
-	if end < len(lines) {
-		parts.suffix = strings.Join(lines[end:], "\n")
-	}
-	var entry []string
-	flush := func() {
-		for len(entry) > 0 && entry[len(entry)-1] == "" {
-			entry = entry[:len(entry)-1]
-		}
-		if len(entry) > 0 {
-			parts.entries = append(parts.entries, strings.Join(entry, "\n"))
-		}
-		entry = nil
-	}
-	for _, line := range lines[heading+2 : end] {
-		if strings.HasPrefix(line, "- ") {
-			if len(entry) > 0 && entry[len(entry)-1] != "" {
-				return changelogParts{}, false
-			}
-			flush()
-			entry = append(entry, line)
-		} else if line == "" {
-			if len(entry) > 0 {
-				entry = append(entry, line)
-			}
-		} else if len(entry) > 0 && (strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t")) {
-			entry = append(entry, line)
-		} else {
+	// Each entry covers lines [start, stop): stop follows its last non-blank line.
+	type span struct{ start, stop int }
+	var spans []span
+	for i := heading + 2; i < end; i++ {
+		line := lines[i]
+		switch {
+		case strings.HasPrefix(line, "- "):
+			spans = append(spans, span{i, i + 1})
+		case line == "":
+		case len(spans) > 0 && (strings.HasPrefix(line, " ") || strings.HasPrefix(line, "\t")):
+			spans[len(spans)-1].stop = i + 1
+		default:
 			return changelogParts{}, false
 		}
 	}
-	flush()
+	var parts changelogParts
+	if end < len(lines) {
+		parts.suffix = strings.Join(lines[end:], "\n")
+	}
+	if len(spans) == 0 {
+		parts.prefix = strings.Join(lines[:heading+2], "\n") + "\n"
+		parts.tail = strings.Join(lines[heading+2:end], "\n")
+		if end < len(lines) && end > heading+2 {
+			parts.tail += "\n"
+		}
+		return parts, true
+	}
+	// Blank lines before the first entry stay in the prefix.
+	parts.prefix = strings.Join(lines[:spans[0].start], "\n") + "\n"
+	for i, s := range spans {
+		parts.entries = append(parts.entries, strings.Join(lines[s.start:s.stop], "\n"))
+		if i+1 < len(spans) {
+			parts.seps = append(parts.seps, strings.Repeat("\n", spans[i+1].start-s.stop+1))
+		}
+	}
+	// The last line of the file has no line break of its own.
+	breaks := end - spans[len(spans)-1].stop
+	if end < len(lines) {
+		breaks++
+	}
+	parts.tail = strings.Repeat("\n", breaks)
 	return parts, true
+}
+
+// firstSeparator is the first entry boundary of the first body that has one.
+// A blank line is the default for bodies with no boundary at all.
+func firstSeparator(bodies ...changelogParts) string {
+	for _, b := range bodies {
+		if len(b.seps) > 0 {
+			return b.seps[0]
+		}
+	}
+	return "\n\n"
 }
 
 // changelogAdditions requires the original entries unchanged and in order.
@@ -187,9 +213,48 @@ func mergeChangelogEntries(base, ours, theirs string) (string, bool) {
 			}
 		}
 	}
-	body := ""
-	if len(entries) > 0 {
-		body = strings.Join(entries, "\n\n") + "\n\n"
+	// The base's entries keep their own separators. New entries go before
+	// them, joined by the first separator found (the base's, which is the
+	// top of Unreleased), and so does the boundary to the first old entry.
+	tail, ok := changelogTail(b, o, t)
+	if !ok {
+		return "", false
 	}
-	return b.prefix + body + b.suffix, true
+	sep := firstSeparator(b, o, t)
+	added := entries[:len(entries)-len(b.entries)]
+	body := strings.Join(added, sep)
+	for i, entry := range b.entries {
+		if i == 0 && len(added) > 0 {
+			body += sep
+		}
+		body += entry
+		if i < len(b.seps) {
+			body += b.seps[i]
+		}
+	}
+	return b.prefix + body + tail + b.suffix, true
+}
+
+// changelogTail returns how the merged body ends. A base with entries sets
+// it and both sides must agree. A base without entries leaves it to the sides
+// that have entries, which must agree with each other.
+func changelogTail(base, ours, theirs changelogParts) (string, bool) {
+	tail := base.tail
+	if len(base.entries) > 0 {
+		return tail, ours.tail == tail && theirs.tail == tail
+	}
+	set := false
+	for _, side := range []changelogParts{ours, theirs} {
+		switch {
+		case len(side.entries) == 0:
+			if side.tail != base.tail {
+				return "", false
+			}
+		case !set:
+			tail, set = side.tail, true
+		case side.tail != tail:
+			return "", false
+		}
+	}
+	return tail, true
 }

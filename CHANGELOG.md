@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- CHANGELOG resolver accepts compact entries (*proposed*): S327. Landing's
+  merge of the root `CHANGELOG.md` (S180) treats every `- ` line as a new entry,
+  so entries with no blank line between them, and a body that mixes both
+  layouts as `CHANGELOG.md` does, merge instead of pausing. New entries join
+  with the separator at the top of the base's Unreleased; the original entries
+  keep their separators. Docs updated: `docs/design.md`.
 - Role matrix editor in the TUI (*proposed*): S226, the TUI half of S173. In
   the Roadmap's matrix pane, `e` changes a row, `n` adds one, `d` removes one,
   `m` moves one and `r` edits a rule's text (`r` no longer refreshes there).

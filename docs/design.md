@@ -678,8 +678,16 @@ slice.
      complete Unreleased entries in Go. The prefix and release suffix must
      stay unchanged; both sides must retain the original entries unchanged and
      in order. The result puts branch additions first, then base-branch
-     additions, then the original entries, with one blank line between
-     entries. Identical additions appear once; every entry must survive
+     additions, then the original entries. *Proposed (S327):* a `- ` line
+     always starts an entry, with or without a blank line before it, so a
+     compact body (no blank lines between entries, as at the top of ork's own
+     `CHANGELOG.md`) is accepted as well as a blank-separated one or a mix. The
+     original entries keep their separators and the text after the last entry
+     byte for byte, and the body must end the same way on every side. The new
+     entries are joined to each other and to the first original entry with the
+     first separator at the top of the base's Unreleased (a blank line when no
+     body has two entries; a side's separator is used only when the base has
+     none). Identical additions appear once; every entry must survive
      exactly once. ork stages the result (`git add -- CHANGELOG.md`); the
      merge commit follows below. This resolution is silent.
      *Proposed (S238):* ork, not a role, settles a conflicted merge. After the

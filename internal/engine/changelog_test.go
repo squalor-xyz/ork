@@ -176,9 +176,140 @@ func TestMergeChangelogEntries(t *testing.T) {
 		{"base no heading", "- old\n", text(branch), text(main), "", false},
 		{"stray paragraph", text(), text("paragraph"), text(main), "", false},
 		{"stray after entry", text(), text(branch, "paragraph"), text(main), "", false},
-		{"unseparated entries", text(), text("- one\n- two"), text(main), "", false},
 		{"duplicate added", text(), text(branch, branch), text(main), "", false},
 		{"duplicate base", text("- old", "- old"), text("- old", "- old"), text("- old", "- old"), "", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := mergeChangelogEntries(tt.base, tt.ours, tt.theirs)
+			if ok != tt.ok || got != tt.want {
+				t.Fatalf("got (%q, %v), want (%q, %v)", got, ok, tt.want, tt.ok)
+			}
+		})
+	}
+}
+
+// TestMergeChangelogEntriesLayouts covers bodies whose entries are not all
+// separated by one blank line, as in CHANGELOG.md: compact at the top, blank
+// separated below.
+func TestMergeChangelogEntriesLayouts(t *testing.T) {
+	const prefix = "# Changelog\n\n## Unreleased\n\n"
+	const suffix = "## v1.0.0\n\n- released\n"
+	const branch = "- S1: branch thing.\n  Docs updated: `docs/design.md`."
+	const main = "- S2: base thing.\n  Docs updated: `docs/design.md`."
+	const old1 = "- old one\n  second line."
+	const old2 = "- old two."
+	const old3 = "- old three."
+	body := func(b string) string { return prefix + b + suffix }
+	tests := []struct {
+		name, base, ours, theirs, want string
+		ok                             bool
+	}{
+		{
+			"compact",
+			body(old1 + "\n" + old2 + "\n\n"),
+			body(branch + "\n" + old1 + "\n" + old2 + "\n\n"),
+			body(main + "\n" + old1 + "\n" + old2 + "\n\n"),
+			body(branch + "\n" + main + "\n" + old1 + "\n" + old2 + "\n\n"),
+			true,
+		},
+		{
+			"compact, top and bottom additions",
+			body(old1 + "\n" + old2 + "\n\n"),
+			body(branch + "\n" + old1 + "\n" + old2 + "\n\n"),
+			body(old1 + "\n" + old2 + "\n" + main + "\n\n"),
+			body(branch + "\n" + main + "\n" + old1 + "\n" + old2 + "\n\n"),
+			true,
+		},
+		{
+			"mixed base with a compact top takes the top separator",
+			body(old1 + "\n" + old2 + "\n\n" + old3 + "\n\n"),
+			body(branch + "\n" + old1 + "\n" + old2 + "\n\n" + old3 + "\n\n"),
+			body(main + "\n" + old1 + "\n" + old2 + "\n\n" + old3 + "\n\n"),
+			body(branch + "\n" + main + "\n" + old1 + "\n" + old2 + "\n\n" + old3 + "\n\n"),
+			true,
+		},
+		{
+			"mixed base with a blank top takes the top separator",
+			body(old1 + "\n\n" + old2 + "\n" + old3 + "\n\n"),
+			body(branch + "\n\n" + old1 + "\n\n" + old2 + "\n" + old3 + "\n\n"),
+			body(main + "\n\n" + old1 + "\n\n" + old2 + "\n" + old3 + "\n\n"),
+			body(branch + "\n\n" + main + "\n\n" + old1 + "\n\n" + old2 + "\n" + old3 + "\n\n"),
+			true,
+		},
+		{
+			"a side that restyles the separators does not change the base's",
+			body(old1 + "\n\n" + old2 + "\n\n"),
+			body(branch + "\n" + old1 + "\n" + old2 + "\n\n"),
+			body(main + "\n\n" + old1 + "\n\n" + old2 + "\n\n"),
+			body(branch + "\n\n" + main + "\n\n" + old1 + "\n\n" + old2 + "\n\n"),
+			true,
+		},
+		{
+			"compact additions into an empty base keep their style",
+			body(""),
+			body(branch + "\n" + main + "\n\n"),
+			body(old3 + "\n\n"),
+			body(branch + "\n" + main + "\n" + old3 + "\n\n"),
+			true,
+		},
+		{
+			"blank lines before the first entry stay put",
+			body("\n" + old1 + "\n" + old2 + "\n\n"),
+			body("\n" + branch + "\n" + old1 + "\n" + old2 + "\n\n"),
+			body("\n" + main + "\n" + old1 + "\n" + old2 + "\n\n"),
+			body("\n" + branch + "\n" + main + "\n" + old1 + "\n" + old2 + "\n\n"),
+			true,
+		},
+		{
+			"empty base, sides end differently",
+			body(""),
+			body(branch + "\n\n"),
+			body(main + "\n"),
+			"", false,
+		},
+		{
+			"empty base, a side with a stray blank line",
+			body(""),
+			body(branch + "\n\n"),
+			body("\n"),
+			"", false,
+		},
+		{
+			"compact edited base",
+			body(old1 + "\n" + old2 + "\n\n"),
+			body(old1 + "\n- edited\n\n"),
+			body(old1 + "\n" + old2 + "\n\n"),
+			"", false,
+		},
+		{
+			"compact reordered base",
+			body(old1 + "\n" + old2 + "\n\n"),
+			body(old2 + "\n" + old1 + "\n\n"),
+			body(old1 + "\n" + old2 + "\n\n"),
+			"", false,
+		},
+		{
+			"compact duplicate added",
+			body(old1 + "\n\n"),
+			body(branch + "\n" + branch + "\n" + old1 + "\n\n"),
+			body(old1 + "\n\n"),
+			"", false,
+		},
+		{
+			"compact stray paragraph",
+			body(old1 + "\n\n"),
+			body(old1 + "\nparagraph\n\n"),
+			body(old1 + "\n\n"),
+			"", false,
+		},
+		{
+			"ending changed",
+			body(old1 + "\n\n"),
+			body(branch + "\n" + old1 + "\n"),
+			body(old1 + "\n\n"),
+			"", false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

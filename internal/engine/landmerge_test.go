@@ -84,6 +84,53 @@ func TestLandMixedConflictResolvesTheChangelogAndPausesOnTheRest(t *testing.T) {
 	}
 }
 
+// compactChangelogConflict is a CHANGELOG.md-only conflict where old holds the
+// Unreleased entries of the merge base, in CHANGELOG.md's layout: compact
+// entries with two-space continuation lines.
+func compactChangelogConflict(t *testing.T, old string) *landEnv {
+	t.Helper()
+	env := newLandEnv(t)
+	const head = "# Changelog\n\n## Unreleased\n\n"
+	const tail = "\n## v1.0.0\n\n- released\n"
+	env.moveBase("CHANGELOG.md", head+old+tail)
+	gitRun(t, env.W, "merge", "--no-edit", "main")
+	writeFile(t, filepath.Join(env.W, "CHANGELOG.md"), head+"- S1: branch thing.\n  Docs updated: `docs/design.md`.\n"+old+tail)
+	env.moveBase("CHANGELOG.md", head+"- S2: base thing.\n  Docs updated: `docs/design.md`.\n"+old+tail)
+	return env
+}
+
+func TestLandResolvesACompactChangelogConflict(t *testing.T) {
+	const old = "- old one\n  second line.\n- old two.\n"
+	env := compactChangelogConflict(t, old)
+	env.approve()
+	rec := env.run.Snapshot()
+	if rec.LandFixes != 0 {
+		t.Fatalf("LandFixes = %d, want 0", rec.LandFixes)
+	}
+	requireState(t, env.e, runrec.StateCommitted)
+	want := "# Changelog\n\n## Unreleased\n\n- S1: branch thing.\n  Docs updated: `docs/design.md`.\n- S2: base thing.\n  Docs updated: `docs/design.md`.\n" + old + "\n## v1.0.0\n\n- released"
+	if got := gitRun(t, env.P, "show", "main:CHANGELOG.md"); got != want {
+		t.Errorf("merged content: %q, want %q", got, want)
+	}
+	if got := strings.Fields(gitRun(t, env.P, "show", "-s", "--format=%P", gitRun(t, env.P, "log", "--merges", "-1", "--format=%H", "main"))); len(got) != 2 {
+		t.Errorf("merge parents: %v", got)
+	}
+	if indexOf(env.gitCalls(), "P: merge --ff-only") < 0 {
+		t.Error("landing did not finish")
+	}
+}
+
+func TestLandResolvesAMixedLayoutChangelogConflict(t *testing.T) {
+	const old = "- old one\n  second line.\n- old two.\n\n- old three.\n"
+	env := compactChangelogConflict(t, old)
+	env.approve()
+	requireState(t, env.e, runrec.StateCommitted)
+	want := "# Changelog\n\n## Unreleased\n\n- S1: branch thing.\n  Docs updated: `docs/design.md`.\n- S2: base thing.\n  Docs updated: `docs/design.md`.\n" + old + "\n## v1.0.0\n\n- released"
+	if got := gitRun(t, env.P, "show", "main:CHANGELOG.md"); got != want {
+		t.Errorf("merged content: %q, want %q", got, want)
+	}
+}
+
 func TestLandLeavesOtherConflictsToThePause(t *testing.T) {
 	env := mixedConflict(t)
 	env.approve()

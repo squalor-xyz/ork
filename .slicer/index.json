@@ -17559,10 +17559,25 @@
       "id": "S327",
       "title": "CHANGELOG resolver: accept entries with no blank line between them",
       "short_title": "CHANGELOG resolver compact entries",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "edb3b418-4e84-4b77-a73c-c7367c85831a",
+          "kind": "",
+          "text": "**2026-11-11** — CHANGELOG resolver accepts compact and mixed-layout Unreleased bodies: a '- ' line always starts an entry, old entries keep their separators and the body's ending, new entries join with the base's top separator. Verified: go vet and go test ./... green (25 packages), gofmt clean, slicer check passed, new unit and landing tests red before the code and mutation-checked.",
+          "created_at": "2026-11-11T03:36:00Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -17580,7 +17595,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
