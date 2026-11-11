@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-333 items · — 60 · done 240 · retired 33
+333 items · — 59 · done 241 · retired 33
 
 v1.2
 
@@ -221,7 +221,7 @@ v1.2
 | 164 | [S329](slices/S329.md) | Connection errors resume the role | M `[needs-owner]` | 2 |  | S268 Grok reviewer lost 46 min to a reqwest send error; S216 Claude implementer lost $5.50 to api_error connection_failed; both unclassified, both needed ork retry. | — |
 | 165 | [S330](slices/S330.md) | Launch with uncommitted tracking edits | S `[needs-owner]` | 1 |  | S268 was promoted on main but not committed; its worktree lacked the spec and the landing stopped. · discovered from S254 | — |
 | 166 | [S331](slices/S331.md) | Auto-land a passing run | M | 2 |  | Every v1.1 landing was a hand approve after VERDICT: PASS under the owner's standing rule. | — |
-| 167 | [S333](slices/S333.md) | Running view declutter | M | 2 |  | Owner screenshots 2026-11-11 (Running collapsed, E expand all, an open run): start on Running; the view is crowded and expand all repeats each row. Decisions adj 282, 283, 284. | — |
+| 167 | [S333](slices/S333.md) | Running view declutter | M | 2 |  | Owner screenshots 2026-11-11 (Running collapsed, E expand all, an open run): start on Running; the view is crowded and expand all repeats each row. Decisions adj 282, 283, 284. | done |
 
 ---
 

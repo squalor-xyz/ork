@@ -414,6 +414,16 @@ func recentActiveTime(steps []slicercli.Step) (time.Duration, bool) {
 	return active + current.end.Sub(current.begin), true
 }
 
+// isSpecCheckRun reports a ledger run that holds only spec-check steps: the
+// batch readiness check before a wave (adj 164) writes one, and it is not a
+// relay run, so Recent leaves it out (S333, adj 284). A run with no step, or with
+// any other role, is a run.
+func isSpecCheckRun(r slicercli.RelayRun) bool {
+	return len(r.Steps) > 0 && !slices.ContainsFunc(r.Steps, func(s slicercli.Step) bool { return s.Role != "spec-check" })
+}
+
+// recentRows lists the runs that ended in the last hour, newest first: landed,
+// stopped and failed runs, not spec-check results.
 func (m *Model) recentRows() []ovRow {
 	var rows []ovRow
 	for i, p := range m.projects {
@@ -431,7 +441,7 @@ func (m *Model) recentRows() []ovRow {
 		}
 		for _, r := range p.snap.BoardRuns.Value {
 			at, err := time.Parse(time.RFC3339Nano, r.UpdatedAt)
-			if r.State != "ended" || err != nil || m.cfg.Now().Sub(at) > time.Hour {
+			if r.State != "ended" || err != nil || m.cfg.Now().Sub(at) > time.Hour || isSpecCheckRun(r) {
 				continue
 			}
 			glyph := "~ stopped"

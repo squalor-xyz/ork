@@ -166,6 +166,7 @@ type Model struct {
 	showHelp         bool
 	pageTop          pagerTop
 	expanded         map[string]bool // the Running runs the owner opened, by project and run id (S164)
+	staleOpen        bool            // the Running list shows the stale relay ledgers behind its `stale: N` line (S333)
 	width            int
 	height           int
 	treeFrame        int
@@ -235,7 +236,9 @@ func New(cfg Config) *Model {
 	if cfg.Bell == nil {
 		cfg.Bell = func() { fmt.Fprint(os.Stderr, "\a") }
 	}
-	m := &Model{active: needsEntry, cfg: cfg, keys: newKeyMap(), byName: map[string]*projectState{}}
+	// The TUI opens on Running (S333, adj 282, ui.start-screen). The sidebar order
+	// stays: Running, Needs you, then the projects.
+	m := &Model{active: runningEntry, cfg: cfg, keys: newKeyMap(), byName: map[string]*projectState{}}
 	m.help = help.Model{
 		ShortSeparator: "  ",
 		FullSeparator:  "    ",
@@ -919,6 +922,10 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			return m.openItem()
 		}
 		if r, ok := m.selectedRow(); ok {
+			if r.staleN > 0 && !m.showHelp {
+				m.staleOpen = !m.staleOpen // the `stale: N` line of the Running entry (S333)
+				return nil
+			}
 			if (r.engineID != "" || r.ledgerID != "") && !m.showHelp {
 				return m.openPane(r)
 			}

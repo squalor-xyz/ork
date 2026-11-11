@@ -318,8 +318,11 @@ use ASCII; `NO_COLOR` and redirected output use no colour. Doctor JSON stays
 unchanged.
 
 The project sidebar comes from the registry (`registry.initial`,
-`ui.project-nav`). "Needs you" starts selected and shows the existing
-all-projects Overview. A project selection limits its rows to that project.
+`ui.project-nav`). The TUI opens on the Running entry (S333, adj 282
+`ui.start-screen`, always; it replaces adj 149's start on Needs you and nothing
+else of it: the sidebar order and the Needs you layout stay). "Needs you" shows
+the existing all-projects Overview. A project selection limits its rows to that
+project.
 The view bar stays at the top of the main pane. Overview, Questions, Waves,
 Roadmap and Decisions are selectable, except on the Running entry, which shows
 only the first two (below).
@@ -329,8 +332,8 @@ entry, above "Needs you", opens a live summary of every project that has a live
 run. It is always shown, so no row moves when a run starts: it carries the
 count of live runs, and with none it is dim and its view says `nothing running`.
 It is reached with the sidebar keys `]`/`[` like any other entry, not
-with a digit key (`1`-`9` stay the projects, `Jump` is unchanged). "Needs you"
-still starts selected. While the entry is selected the first tab of the view bar
+with a digit key (`1`-`9` stay the projects, `Jump` is unchanged). It is the
+entry the TUI opens on (S333). While the entry is selected the first tab of the view bar
 reads `Overview (Running)` and the bar shows one more tab, Questions (*proposed*,
 S262; below); the view is the Overview's Running section full
 screen, then Recent, with no Needs you or Ready section. Each live run is one
@@ -345,14 +348,28 @@ glyph is amber and bold (bold alone under `NO_COLOR`) and a space follows it,
 so it never sits against the name. The space comes out of the row indent, so no
 row moves or widens. A run with an error shows a red `!` in the same slot. A stopped run
 names the role it stopped on, in brackets where a running role would stand
-(its last role has ended); its detail line brackets the same role. The heading
+(its last role has ended). The heading
 counts the runs and adds `? owner questions N` and `x stopped N`, both amber
 and bold like the glyphs, and the detail line of the selected row keeps the
-words. With no run row at all the view says `nothing running`; a stale relay is
-a row, so it is listed without that line. Only live runs are counted, in the heading and
-the sidebar badge: a relay started elsewhere that has gone stale is listed, dim,
-but not counted, while an engine run follows its engine state whatever its
-linked ledger reads. The Overview's `Running N` counts the
+words. With no run row at all the view says `nothing running`; the stale line
+(below) is a row, so it is listed without that line. Only live runs are counted,
+in the heading and the sidebar badge: a relay started elsewhere that has gone
+stale is not counted, while an engine run follows its engine state whatever its
+linked ledger reads.
+
+**Stale ledgers (S333, adj 284 `ui.running-declutter`, owner 2026-11-11
+`ui.stale-ledger-access`).** A relay ledger started elsewhere that has gone
+stale (slicer: no event for 30 minutes) is not a row of the list. The list ends
+with one dim line, `stale: N` (ASCII), while N is more than 0. The line is a
+cursor row: `enter` or `space` on it shows the N stale rows below it, and again
+hides them. Each stale row opens its pane as before, so `x end run` (S175) stays
+reachable; the hint on the line reads `enter show stale` or `enter hide stale`,
+and the help names `space` for it (`space expand or collapse a run, or show the
+stale rows (Running)`).
+The count of the heading and the badge is unchanged. The Overview of a project
+still lists its stale relays as it did.
+
+The Overview's `Running N` counts the
 live, non-stale runs its own Running section lists; a run that waits on the
 owner is under Needs you there, so that number leaves it out. A run that waits
 on the owner
@@ -370,23 +387,37 @@ the bar but not beside the role too, the role goes (S146). The view is complete
 at 80x24. The row cursor,
 `enter` (which opens that run's pane, as on the Overview), the action keys and
 the pane work as on the Overview; the pane follows the newest running run
-(S109). The selected row's whole text, with the run ID, state and elapsed time,
-is on the detail line, which wraps between cells and never inside one. A run
+(S109). The detail line under the rows holds only what the selected run's row
+lacks (S333, adj 283 `ui.running-expand`): its state, what it waits on or failed
+with, its step count and age, and its tokens. It wraps between cells and never
+inside one. The run ID, the item, the stage bar, last heard, the pipeline and the
+activity are in the row or the pane, so the line does not say them again. A row
+that is not a live run (Recent, an error, the stale line) keeps its whole text on
+the line. A run
 that ends leaves Running and shows under Recent on the next snapshot, with no
 keypress.
 
-**Several runs open (S164).** The selected run shows its detail below the rows,
-on the detail line. `space` opens the run under the cursor in place: its detail
-(the run ID, state and elapsed time, the stage bar and last heard, the pipeline
-and the activity, wrapped between cells) sits indented under its row, drawn
+**Several runs open (S164, S333).** `space` opens the run under the cursor in
+place. What it adds is only what its row lacks (adj 283 `ui.running-expand`):
+one dim line per role that is working now, under the row, with the role, its
+vendor, model and effort, its elapsed time, its tokens and its cost
+(`reviewer  claude opus high  3m  tokens 12.4k  $-`), and under it the role's last
+output line (`> checking the golden views`) when it has said something. No line
+repeats the run ID, the item, the stage bar, last heard, the pipeline or the
+activity. A run with no role working (a question, a pause, a stop) adds one line
+of the facts its row lacks, the ones the detail line holds: its state, what it
+waits on or stopped with, its step count and age (`paused  20m  Which store?`),
+so its question or stop reason shows without selecting the row (owner
+2026-11-11, `ui.running-expand-idle`). A relay started elsewhere has no usage
+and no output: a step with no vendor, model or start time has no role line,
+since the row names the role, and that run gets the facts line instead. The lines are drawn
 faint (dim, and SGR 2 under `NO_COLOR`, as last heard is), and the run stays
 open when the cursor moves away. `space` on an open run closes it. `E` opens
 every run, or closes every run when all are open; it needs no run under the
 cursor and works from any row of the Running entry, a Recent or an error row
 included. Only `space` ignores a row that is not a live run. Neither key works
-under the help overlay or outside the Running entry. The selected run shows its
-detail once: under its row while it is open, on the detail line otherwise. The
-open runs are kept by project and run ID, in the model only: they survive a
+under the help overlay or outside the Running entry. The detail line is empty
+while the selected run shows role lines under its row. The open runs are kept by project and run ID, in the model only: they survive a
 refresh (on any entry) and a switch of view or entry, and a run that leaves the
 list is forgotten, so it is closed if it comes back. While a run pane is open
 the rows are drawn closed; they open again when the pane closes. The pane
@@ -702,7 +733,9 @@ the text column, falling back to a shorter indent when needed to fit.
    phase `fail`. They are on the selected row's detail line in full and no
    longer on the row, which shows the role, the model and the task line instead.
 3. **Recent (proposed):** ended ledger runs within the last hour, newest
-   first. Rows show `✓ pass` for pass, `✗ fail` for fail, and `~ stopped` for
+   first. A spec-check result (an ended ledger run whose steps are all
+   `spec-check`) is not a run and not a row (S333, adj 284); landed, stopped and
+   failed runs are. Rows show `✓ pass` for pass, `✗ fail` for fail, and `~ stopped` for
    any other outcome (`✓ landed` for a pass that ork landed, `✓ landed, cleanup
    failed` when its cleanup failed; S148), then items, wall time,
    `ended N ago`, and counts such as `impl 1  review 1  gate -`. The first
@@ -1711,12 +1744,22 @@ the entry the role skipped, the last one only. It shows when the record before
 it for the same role failed on a different entry, and not for a retry on the
 same entry. It follows the text on the same line when it fits there; in a
 narrower pane it takes its own dim line under the node, indented like the task
-line, so the skipped entry is always named (S267, *proposed*). An unfinished engine role in a stopped, paused
+line, so the skipped entry is always named (S267, *proposed*). An attempt that
+ended `out_of_credits`, with a later attempt of the same role in the same round
+on another entry, is an expected fallback, not a failure (S333, adj 284): it is
+one dim note in place of the `fail` line, `* codex out of credits, fell back to
+claude sonnet high`, clipped to the pane width (the mark is `*`, which no step
+state uses; `.` is a queued step), and the attempt that follows it
+has no `fell back from` cue, since the note names it. An attempt that failed any
+other way (error, unclassified), or an `out_of_credits` attempt that nothing
+followed, stays a red `fail` line. An unfinished engine role in a stopped, paused
 or committed run uses that state word and the neutral glyph.
 Elapsed time advances from the injected clock for running steps and stops at
 `updated_at` for finished steps. A `done` step shows no task line. For every
 other phase, task text is dim, clipped to the pane width, and starts four
-columns past its node's glyph. The run header uses the
+columns past its node's glyph. A task that is only the engine's `ID role` label
+(`S298 implementer`) has no task line: the node names the role already (S333).
+The run header uses the
 row title style (bold), not the section heading's colour (S106).
 
 S07 adds a stage bar, a pulsing running cell and an activity sparkline.

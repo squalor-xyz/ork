@@ -89,7 +89,7 @@ func newKeyMap() keyMap {
 		Cleanup:    key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "remove merged worktree and branch (Ready)")),
 		EditLineup: key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit lineup (Waves, launch)")),
 		Tick:       key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "tick item and plan it (Waves)")),
-		Expand:     key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "expand or collapse a run (Running)")),
+		Expand:     key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "expand or collapse a run, or show the stale rows (Running)")),
 		ExpandAll:  key.NewBinding(key.WithKeys("E", "shift+e"), key.WithHelp("E", "expand or collapse all")),
 		New:        key.NewBinding(key.WithKeys("n"), key.WithHelp("n", "new slice")),
 		Park:       key.NewBinding(key.WithKeys("P", "shift+p"), key.WithHelp("P", "park/unpark Roadmap item")),
@@ -547,6 +547,13 @@ func (m *Model) contextHints() []hintEntry {
 				l.add(dropRow, short(k.Select, "enter", "open"))
 			case r.engineID != "" || r.ledgerID != "":
 				l.add(dropRow, short(k.Select, "enter", "open"))
+			case r.staleN > 0:
+				// The Running entry's `stale: N` line (S333).
+				show := "show stale"
+				if m.staleOpen {
+					show = "hide stale"
+				}
+				l.add(dropRow, short(k.Select, "enter", show))
 			default:
 				l.add(dropRow, short(k.Select, "enter", "go to project"))
 			}

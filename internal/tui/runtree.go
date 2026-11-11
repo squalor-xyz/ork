@@ -9,7 +9,6 @@ import (
 
 	"charm.land/lipgloss/v2"
 
-	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
@@ -31,6 +30,10 @@ type runTreeStep struct {
 	// fellBackFrom is the entry (vendor, model, effort) the role skipped when it
 	// fell back to this step's: the last one only (S267, adj 209).
 	fellBackFrom string
+	// fellBackTo is the entry (vendor, model, effort) a role that ran out of
+	// credits went on to in the same round, or "". Such an attempt is a dim note,
+	// not a failure (S333, adj 284).
+	fellBackTo string
 	// engineState is the state of the engine run these steps belong to, set on
 	// every step of an engine run's steps (S145); "" for a ledger-only run.
 	engineState string
@@ -200,6 +203,20 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 			style = m.cfg.Theme.Dim
 		}
 		available := max(width-len(prefix), 1)
+		if s.fellBackTo != "" {
+			// An expected fallback is one dim note, not a red failure (S333, adj 284).
+			who := treeText(s.Vendor)
+			if who == "" {
+				who = treeText(s.Role)
+			}
+			// `*`, a mark no step state uses: `.` would read as a queued step in mono.
+			note := "* " + who + " out of credits, fell back to " + s.fellBackTo
+			lines = append(lines, prefix+m.cfg.Theme.Dim.Render(treeClip(note, available)))
+			for _, child := range children[i] {
+				visit(child, depth+1)
+			}
+			return
+		}
 		roleColumns := min(roleWidth, max(available-8, 1))
 		role := treeClip(treeText(s.Role), roleColumns)
 		role += strings.Repeat(" ", max(roleColumns-lipgloss.Width(role), 0))
@@ -259,18 +276,7 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 		if s.fellBackFrom != "" {
 			suffix = "  fell back from " + s.fellBackFrom
 		}
-		cost := "$-"
-		if s.costKnown {
-			cost = fmt.Sprintf("$%.2f", s.cost)
-		}
-		if engine.IsLocalVendor(s.Vendor) {
-			cost = "local"
-		}
-		tokens := "-"
-		if s.usageKnown {
-			tokens = compactTokens(s.tokens)
-		}
-		usage := fmt.Sprintf("tokens %s  %s", tokens, cost)
+		usage := usageText(s.tokens, s.usageKnown, s.cost, s.costKnown, s.Vendor)
 		running := s.live && s.Phase == "start"
 		// Finished and interrupted usage is the first whole field to drop.
 		if s.hasUsage && !running && lipgloss.Width(text)+2+len(usage) <= available {
@@ -311,7 +317,8 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 			lines = append(lines, prefix+m.cfg.Theme.Dim.Render(treeClip("    "+usage, available)))
 		}
 		// The label says what the step is: ork's own step has no task line (S267).
-		if s.Task != "" && s.Phase != "done" && !isEngineStep(s.Step) {
+		// A task that is only the "<id> <role>" label says nothing the node lacks (S333).
+		if s.Task != "" && s.Phase != "done" && !isEngineStep(s.Step) && !restatesLabel(s.Task) {
 			lines = append(lines, prefix+m.cfg.Theme.Dim.Render(treeClip("    "+treeText(s.Task), available)))
 		}
 		if running && !stale && s.tail != "" {
@@ -389,6 +396,7 @@ func (m *Model) roleDetails(steps []runTreeStep, r source.EngineRun) []runTreeSt
 				steps[i].round = role.Round
 			}
 			steps[i].fellBackFrom = fellBackFrom(r.Roles, j)
+			steps[i].fellBackTo = fellBackTo(r.Roles, j)
 			steps[i].shapeRetry = role.ShapeRetry
 			steps[i].hasUsage = true
 			steps[i].tokens = role.Tokens
@@ -423,9 +431,43 @@ func fellBackFrom(roles []source.EngineRole, j int) string {
 		if before.EndedAt.IsZero() || before.Exit == "ok" || same {
 			return ""
 		}
+		if fellBackTo(roles, k) != "" {
+			return "" // the earlier attempt's own note names this entry (S333)
+		}
 		return entryText(runrec.LineupEntry{Vendor: before.Vendor, Model: before.Model, Effort: before.Effort})
 	}
 	return ""
+}
+
+// fellBackTo is the entry role j went on to when it ran out of credits, or "":
+// the next attempt of the same role in the same round, on another entry. An
+// attempt that failed any other way, or that nothing followed, is a failure
+// (S333, adj 284).
+func fellBackTo(roles []source.EngineRole, j int) string {
+	role := roles[j]
+	if role.Exit != "out_of_credits" || role.EndedAt.IsZero() {
+		return ""
+	}
+	for _, next := range roles[j+1:] {
+		if next.Role != role.Role || next.Round != role.Round {
+			continue
+		}
+		if next.Vendor == role.Vendor && next.Model == role.Model && next.Effort == role.Effort {
+			continue
+		}
+		return entryText(runrec.LineupEntry{Vendor: next.Vendor, Model: next.Model, Effort: next.Effort})
+	}
+	return ""
+}
+
+// roleWords are the role names a step task may end in: the engine labels each
+// step "<id> <role>", which the tree already says (S333).
+var roleWords = map[string]bool{"implementer": true, "reviewer": true, "gate": true, "architect": true, "ui": true, "orchestrator": true, "spec-check": true}
+
+// restatesLabel reports a task that is only the "<id> <role>" label.
+func restatesLabel(task string) bool {
+	f := strings.Fields(task)
+	return len(f) == 2 && roleWords[strings.ToLower(f[1])]
 }
 
 // tailRows wraps nonblank assistant text and keeps the newest three physical

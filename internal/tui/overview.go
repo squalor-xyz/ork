@@ -76,6 +76,7 @@ type ovRow struct {
 	detailCells       []string   // a live run's detail line, wrapped between cells
 	run               *runRow    // a Running run's two-line form (S145)
 	layout            *runLayout // the Running section's shared line-1 layout (S145)
+	staleN            int        // the Running list's trailing `stale: N` line: the number of stale relay ledgers behind it (S333)
 }
 
 // runRow is a Running run drawn on two lines (S145). Line 1 holds the slice id,
@@ -310,6 +311,10 @@ type liveRun struct {
 	// vendorWait is the vendor an engine run waits for a slot of (S169); its
 	// heard cell is dim and carries no cue.
 	vendorWait string
+	// roles are the roles working now, for an open row (S333).
+	roles []roleFact
+	// tokens is an engine run's "tokens N" cell, "" when it reported none.
+	tokens string
 }
 
 // relayRowPart keeps a role's label and identity whole when its task is cut.
@@ -443,7 +448,10 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 			// The engine's state tells a fix round from the finish step (S145).
 			steps = withEngineState(steps, r.State)
 			if !r.Unavailable {
-				row.live = &liveRun{item: r.Item, ledger: ledger, steps: steps, activity: r.Activity, vendorWait: r.VendorWait}
+				row.live = &liveRun{item: r.Item, ledger: ledger, steps: steps, activity: r.Activity, vendorWait: r.VendorWait, roles: engineRoleFacts(r)}
+				if r.UsageKnown || r.Tokens != 0 {
+					row.live.tokens = "tokens " + compactTokens(r.Tokens)
+				}
 			}
 			if r.Section(s.EngineRuns) == source.SectionRunning {
 				row.noLabel = r.Error == ""
@@ -514,7 +522,7 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 			row := ovRow{ledgerID: r.ID, state: r.State, style: style, noLabel: true, project: i, name: name,
 				text: text, id: id, rest: rest, stepParts: steps, dim: r.State == "stale", runID: true,
 				run:  m.ledgerRunRow(s, r),
-				live: &liveRun{item: strings.Join(r.Items, ","), ledger: r, steps: ledgerTreeSteps(r.Steps)}}
+				live: &liveRun{item: strings.Join(r.Items, ","), ledger: r, steps: ledgerTreeSteps(r.Steps), roles: ledgerRoleFacts(r)}}
 			if ledgerOwnerQuestion(r) != nil {
 				row.kind, row.pending, row.kindW, row.noLabel, row.style = "? question", "question", kindWidth, false, th.Warn.Bold(th.Mono)
 				row.live.alert = "? question"
@@ -1599,11 +1607,41 @@ func (m *Model) runningRowsIn(active int) []ovRow {
 	slices.SortStableFunc(rows, func(a, b ovRow) int { return a.project - b.project })
 	for i := range rows {
 		if rows[i].live != nil {
-			rows[i].detailCells = m.liveDetail(rows[i])
-			rows[i].text = strings.Join(rows[i].detailCells, "  ")
+			rows[i].text = strings.Join(m.liveDetail(rows[i]), "  ")
+			rows[i].detailCells = liveFacts(rows[i])
 		}
 	}
+	if active == runningEntry {
+		rows = m.foldStale(rows)
+	}
 	return rows
+}
+
+// isStaleLedger reports a relay ledger started elsewhere that has gone stale.
+func isStaleLedger(r ovRow) bool { return r.live != nil && r.ledgerID != "" && r.state == "stale" }
+
+// foldStale moves the stale relay ledgers out of the Running entry's rows (S333,
+// adj 284). One trailing line, `stale: N`, is a cursor row in their place;
+// Enter or space on it shows the N rows below it, each of which opens its pane
+// as any ledger row does, so `x end run` stays reachable (owner 2026-11-11,
+// ui.stale-ledger-access). The count of live runs ignores them either way.
+func (m *Model) foldStale(rows []ovRow) []ovRow {
+	var kept, stale []ovRow
+	for _, r := range rows {
+		if isStaleLedger(r) {
+			stale = append(stale, r)
+		} else {
+			kept = append(kept, r)
+		}
+	}
+	if len(stale) == 0 {
+		return rows
+	}
+	kept = append(kept, ovRow{staleN: len(stale), project: stale[0].project, dim: true, text: fmt.Sprintf("stale: %d", len(stale))})
+	if m.staleOpen {
+		kept = append(kept, stale...)
+	}
+	return kept
 }
 
 // expandKey names a Running run for the set of runs the owner opened: the
@@ -1645,6 +1683,10 @@ func (m *Model) allExpanded() bool {
 func (m *Model) toggleExpanded() {
 	r, ok := m.selectedRow()
 	if !ok {
+		return
+	}
+	if r.staleN > 0 {
+		m.staleOpen = !m.staleOpen // space on the `stale: N` line shows or hides the stale rows (S333)
 		return
 	}
 	k := expandKey(r)
@@ -1693,16 +1735,6 @@ func (m *Model) pruneExpanded() {
 	m.expanded = kept
 }
 
-// expandedLines is the detail of an open run, set in under its row.
-func (m *Model) expandedLines(r ovRow, w int) []string {
-	vertical, _ := m.cfg.Theme.rules(m.cfg.ASCII)
-	lines := detailLines(r, max(w-len(indent), 1), vertical)
-	for i := range lines {
-		lines[i] = m.cfg.Theme.Dim.Render(indent + lines[i])
-	}
-	return lines
-}
-
 // liveRunCount is the number of runs the Running entry counts. An error or a
 // pending project is a row there too, but it is not a run, and neither is a
 // stale relay (S140).
@@ -1721,12 +1753,28 @@ func (m *Model) liveRunCount() int {
 // engine run is live while its engine says so, whatever its linked ledger
 // reads (S138).
 func countsAsLive(r ovRow) bool {
-	return r.live != nil && !(r.ledgerID != "" && r.state == "stale")
+	return r.live != nil && !isStaleLedger(r)
 }
 
-// liveDetail is the whole text of a Running row, for the detail line, as the
-// cells it is wrapped between: the Overview text, the board cells the row
-// lacks and the activity.
+// liveFacts are the cells of the detail strip under the Running rows: what the
+// selected run's row lacks, which is its state, what it waits on or failed with,
+// its step count and age, and its tokens. The run id, the item, the stage bar,
+// last heard, the pipeline and the activity are in the row already (S333, adj 283).
+func liveFacts(r ovRow) []string {
+	var cells []string
+	for _, c := range strings.Split(strings.TrimPrefix(r.rest, r.live.item+"  "), "  ") {
+		if c != "" && c != r.live.item {
+			cells = append(cells, c)
+		}
+	}
+	if r.live.tokens != "" {
+		cells = append(cells, r.live.tokens)
+	}
+	return cells
+}
+
+// liveDetail is the whole text of a Running row: the Overview text, the board
+// cells the row lacks and the activity.
 func (m *Model) liveDetail(r ovRow) []string {
 	cells := strings.Split(r.text, "  ")
 	if r.live.alert != "" {
@@ -1848,9 +1896,12 @@ func (m *Model) runningOverview(w int) overviewView {
 		if i == cursor {
 			sel = len(lines)
 		}
-		if r.live != nil {
+		switch {
+		case r.staleN > 0:
+			lines = append(lines, m.staleLine(r, i == cursor, w))
+		case r.live != nil:
 			lines = append(lines, m.runningLine(r, i == cursor, nameW, w, layout))
-		} else {
+		default:
 			lines = append(lines, m.rowLine(r, i == cursor, nameW, w))
 		}
 		if m.isPaneRow(r) {
@@ -1887,8 +1938,11 @@ func (m *Model) runningOverview(w int) overviewView {
 		}
 	}
 	ov := overviewView{body: lines, sel: sel, selEnd: selEnd, paneAt: paneAt, selExtra: selExtra, rows: rowAt}
-	// The selected run's detail is below the rows, unless it is open under its row.
-	if cursor >= 0 && selExtra == 0 {
+	// The selected row's full text is below the rows, unless it is open under its
+	// row. A live run's strip holds only the facts its row lacks, so no cell says
+	// the row again, and none when there are none (S333, adj 283). The `stale: N`
+	// line is whole in its row.
+	if cursor >= 0 && selExtra == 0 && all[cursor].staleN == 0 && (all[cursor].live == nil || len(all[cursor].detailCells) > 0) {
 		vertical, _ := th.rules(m.cfg.ASCII)
 		ov.detail = detailLines(all[cursor], w, vertical)
 	}

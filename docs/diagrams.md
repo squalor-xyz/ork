@@ -180,11 +180,12 @@ Notes:
 
 ## 6. Daily monitoring and answering
 
-What to do each time you open ork. Needs you is the first screen.
+What to do each time you open ork. ork opens on Running (S333, adj 282); Needs
+you is the next entry in the sidebar (`]`).
 
 ```mermaid
 flowchart TD
-    a["Open ork"] --> b["Overview: Needs you"]
+    a["Open ork: Running"] -->|"]"| b["Overview: Needs you"]
     b --> c{"What kind of row?"}
     c -->|"owner question"| d["Open it, pick an option or type"]
     c -->|"awaiting approval"| e["Open it, tick checks, approve"]

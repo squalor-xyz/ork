@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Quieter Running view (*proposed*): S333, adj 282, 283, 284. The TUI opens on
+  Running. An open Running row adds one dim line per working role (role, vendor,
+  model, effort, elapsed, tokens, cost) and that role's last output line, and
+  nothing its row shows (a question, paused or stopped run, with no role
+  working, adds one line with its question or stop reason); the detail line
+  under the rows holds only what the row lacks. Recent lists real runs, not spec-check results. A stale relay ledger
+  leaves the Running list for one dim `stale: N` line that `enter` or `space`
+  opens, so `x end run` stays reachable. In the run detail an out-of-credits
+  attempt followed by a fallback is one dim `*` note, not a red `fail` line, and the
+  `S298 implementer` sub-lines are gone. Docs updated: `docs/dashboard.md`.
 - Set the per-project bell with `ork projects set NAME --bell on|off`
   (*proposed*): S224. `on` stores `true` and `off` stores `false` in the
   registry field `bell` (S100) through `projects.set`, and the text line says

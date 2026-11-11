@@ -18,7 +18,7 @@
                            │enter open run, question, item or decision; other rows select project
                            │/ filter projects; esc clears; s hide/show sidebar
                            │+ add project; - remove active project
-                           │space expand or collapse a run (Running); E expand or collapse all
+                           │space expand or collapse a run, or show the stale rows (Running); E e...
                            │space tick item and plan it (Waves); e edit lineup (Waves, launch)
                            │l launch a ready slice (Roadmap) or wave (Waves)
                            │a approve; F fix round; x stop; t retry; v view renders; f file slice

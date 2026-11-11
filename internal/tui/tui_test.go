@@ -120,6 +120,10 @@ func newHarness(t *testing.T, projects ...registry.Project) *harness {
 		Bell:       func() { h.bells++ },
 		Theme:      plainTheme(),
 	})
+	// The TUI starts on Running (S333, adj 282). The tests written before it set
+	// up their runs from Needs you, so the harness starts there; the start screen
+	// itself is tested on a model from New (TestStartsOnRunning).
+	h.m.active = needsEntry
 	return h
 }
 

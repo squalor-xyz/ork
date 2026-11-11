@@ -54,6 +54,7 @@ func newGoldenModel(theme Theme) *Model {
 		Bell:       func() {},
 		Theme:      theme,
 	})
+	m.active = needsEntry // the goldens start from Needs you; the start screen has its own test (S333)
 	m.Init()
 	return m
 }

@@ -21,10 +21,10 @@
                            │
                            │
                            │
+                           │
                            │[2m────────────────────────────────────────────────────────────────────────[m
-                           │  run-2  S42  paused  20m
+                           │  paused  20m
                            │  resume waits for a slot under project cap 1; next: ork stop run-2
-                           │  [......]  waiting since 16:22  implementer>reviewer>gate
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │ enter [2mopen[m; space [2mexpand[m; E [2mexpand all[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
                            │ 4 projects | refreshed 16:42:07 | pending 3

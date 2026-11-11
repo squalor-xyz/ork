@@ -1,0 +1,9 @@
+  [1mRun engine  S298  review[m
+  [##~~..]
+  implementer > [reviewer] > [2mgate[m                                        [2mround 1[m
+  [2m. ork engine[m
+    [2m* codex out of credits, fell back to claude sonnet high[m
+    [2m+ implementer  done  6m  claude sonnet high #2 x2  tokens -  $-[m
+    [1m| reviewer     start 3m  claude opus[m
+  [2m. gate         queued[m
+

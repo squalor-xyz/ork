@@ -1,0 +1,24 @@
+[1mork[m                │ [1mOverview (Running)[m[2m │ [mQuestions
+[1;7m> Running        1 [m│[2m────────────────────────────────────────────────────────────[m
+[2m0[m Needs you      0 │[1mRunning 1[m
+[2m1[m p1              *│[1;7m   p1  S11  [##~~..]  heard 3m  implementer>[reviewer]>gate [m
+[2m2[m p2              *│[2m    reviewer  claude opus high  3m  tokens 12.4k  $-[m
+[2m3[m p3              *│[2m    > checking the golden views[m
+                   │   [2mstale: 2[m
+                   │
+                   │[1mRecent[m
+                   │  [2mnone[m
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ enter [2mopen[m; space [2mcollapse[m; E [2mcollapse all[m; q [2mquit[m; ? [2mhelp[m
+                   │ 3 projects | refreshed 16:42:00

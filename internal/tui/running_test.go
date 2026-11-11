@@ -380,13 +380,20 @@ func TestSummaryAtEightyByTwentyFour(t *testing.T) {
 	}
 }
 
-func TestSummarySelectedRowShowsEverythingOnTheDetailLine(t *testing.T) {
+// The detail line under the rows holds only what the selected row lacks (S333,
+// adj 283): its state and age here, none of the row's own cells.
+func TestSummarySelectedRowShowsOnlyWhatTheRowLacksOnTheDetailLine(t *testing.T) {
 	h := runningHarness(t)
 	h.wide()
 	got := detailText(h.m, 150)
-	for _, want := range []string{"run-a", "S30", "review", "[##~~..]", "implementer>[reviewer]>gate", "heard 3m", sparkline(testActivity, false)} {
+	for _, want := range []string{"review", "10m"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("the detail line lacks %q: %q", want, got)
+		}
+	}
+	for _, repeated := range []string{"run-a", "S30", "[##~~..]", "implementer>", "heard", "activity", sparkline(testActivity, false)} {
+		if strings.Contains(got, repeated) {
+			t.Errorf("the detail line repeats %q from the row: %q", repeated, got)
 		}
 	}
 }
@@ -551,15 +558,15 @@ func TestOverviewTabIsLabelledRunningWhileTheRunningEntryIsSelected(t *testing.T
 
 func TestSummaryDetailWrapsBetweenCellsOnly(t *testing.T) {
 	h := runningHarness(t)
-	for _, w := range []int{40, 50, 58, 72, 100} {
+	for _, w := range []int{12, 20, 40, 100} {
 		h.at(80, 24)
 		lines := h.m.overview(w).detail
 		if len(lines) == 0 {
 			t.Fatal("no detail line")
 		}
 		joined := strings.Join(lines, "\n")
-		for _, whole := range []string{"heard 3m", "activity " + sparkline(testActivity, false), "implementer>[reviewer]>gate", "[##~~..]"} {
-			if w >= 40 && !strings.Contains(joined, whole) {
+		for _, whole := range []string{"review", "10m"} {
+			if !strings.Contains(joined, whole) {
 				t.Errorf("width %d: %q is split across lines:\n%s", w, whole, joined)
 			}
 		}
@@ -1568,8 +1575,8 @@ func TestLiveRunCountIgnoresStaleRelayRuns(t *testing.T) {
 	if row := sidebarRow(h.m, "> Running"); !strings.Contains(compactSpaces(sgr.ReplaceAllString(row, "")), "> Running 1") {
 		t.Errorf("the sidebar badge must count one live run: %q", row)
 	}
-	if mainRow(v, "beta", "S41") == "" {
-		t.Errorf("the stale relay stays listed:\n%s", v)
+	if mainRow(v, "stale:", "1") == "" || mainRow(v, "beta", "S41") != "" {
+		t.Errorf("the stale relay must be behind the stale line, not listed (S333):\n%s", v)
 	}
 	if got := h.m.liveRunCount(); got != 1 {
 		t.Errorf("liveRunCount = %d, want 1", got)
@@ -1590,9 +1597,9 @@ func TestRunningDetailOrdersRoundBeforeHeard(t *testing.T) {
 	if r, hd := strings.Index(row, "fix 1"), strings.Index(row, "heard"); r < 0 || hd < 0 || r > hd {
 		t.Errorf("the row must show the round before last heard: %q", row)
 	}
-	got := detailText(h.m, 150)
-	if r, hd := strings.Index(got, "fix 1"), strings.Index(got, "heard"); r < 0 || hd < 0 || r > hd {
-		t.Errorf("the detail line must show the round before last heard: %q", got)
+	// The detail strip holds no cell of the row (S333), so the order is the row's only.
+	if got := detailText(h.m, 150); strings.Contains(got, "heard") || strings.Contains(got, "fix 1") {
+		t.Errorf("the detail line repeats the row: %q", got)
 	}
 }
 
@@ -1891,8 +1898,9 @@ func TestNothingRunningOnlyWhenNoRowIsListed(t *testing.T) {
 	h.start()
 	h.send(press("["))
 	v := h.wide()
-	if !strings.Contains(v, "Running 0") || mainRow(v, "alpha", "S41") == "" {
-		t.Fatalf("the stale relay is listed under Running 0:\n%s", v)
+	// The stale relay is behind the one `stale: N` line (S333, adj 284).
+	if !strings.Contains(v, "Running 0") || mainRow(v, "stale:", "1") == "" || mainRow(v, "alpha", "S41") != "" {
+		t.Fatalf("the stale relay is not folded into the stale line under Running 0:\n%s", v)
 	}
 	if strings.Contains(v, "nothing running") {
 		t.Errorf("\"nothing running\" above a listed row:\n%s", v)
@@ -1909,9 +1917,8 @@ func TestStoppedDetailBracketsItsRole(t *testing.T) {
 	h.src.set(engineSnap(runningProjects[0], stopped))
 	h.start()
 	h.send(press("["))
-	h.wide()
-	if got := detailText(h.m, 150); !strings.Contains(got, "implementer>[reviewer]>gate") {
-		t.Errorf("the detail line must bracket the stopped role: %q", got)
+	if row := mainRow(h.wide(), "alpha", "S07"); !strings.Contains(row, "implementer>[reviewer]>gate") {
+		t.Errorf("the row must bracket the stopped role: %q", row)
 	}
 
 	h = newHarness(t, runningProjects[0])

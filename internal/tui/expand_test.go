@@ -79,18 +79,27 @@ next:
 	return -1
 }
 
-// opened lists the run ids the view shows, in order of appearance.
+// opened lists the ids of the runs the view shows open, in order of appearance.
+// An open run adds a role line under its row (S333): the row names the item
+// S1N, and the role line, which holds no id, belongs to the row above it.
 func opened(v string, n int) []string {
 	var out []string
+	cur := ""
 	for _, line := range mainCols(v) {
 		for i := 1; i <= n; i++ {
-			if id := fmt.Sprintf("run-%d", i); strings.Contains(line, id) {
-				out = append(out, id)
+			if strings.Contains(line, fmt.Sprintf("S1%d", i)) {
+				cur = fmt.Sprintf("run-%d", i)
 			}
+		}
+		if isRoleLine(line) {
+			out = append(out, cur)
 		}
 	}
 	return out
 }
+
+// isRoleLine is the line an open run adds for its running reviewer.
+func isRoleLine(line string) bool { return strings.HasPrefix(line, "    reviewer  claude") }
 
 func sameIDs(got []string, want ...string) bool {
 	return strings.Join(got, ",") == strings.Join(want, ",")
@@ -98,30 +107,29 @@ func sameIDs(got []string, want ...string) bool {
 
 func TestRunningExpandsSeveralRuns(t *testing.T) {
 	h := expandHarness(t, 3, 100, 40)
-	// Only the selected run is open, in the detail area, as before.
-	if got := opened(plainView(h.m), 3); !sameIDs(got, "run-1") {
-		t.Fatalf("before any key the view opens %v, want only run-1", got)
+	// No run is open before a key: the strip under the rows is not an open run.
+	if got := opened(plainView(h.m), 3); len(got) != 0 {
+		t.Fatalf("before any key the view opens %v, want none", got)
 	}
 	// Space opens the row under the cursor and keeps it open when the cursor moves.
 	h.send(space())
 	h.send(press("j"))
 	h.send(space())
 	h.send(press("j"))
+	h.send(space())
 	v := plainView(h.m)
 	if got := opened(v, 3); !sameIDs(got, "run-1", "run-2", "run-3") {
-		t.Fatalf("after two spaces the view opens %v, want all three:\n%s", got, v)
+		t.Fatalf("after three spaces the view opens %v, want all three:\n%s", got, v)
 	}
 	// Each open run sits right under its own row, above the next row.
 	lines := mainCols(v)
 	r1, r2, r3 := colLine(lines, "p1", "S11"), colLine(lines, "p2", "S12"), colLine(lines, "p3", "S13")
-	d1, d2 := colLine(lines, "run-1"), colLine(lines, "run-2")
-	if !(r1 < d1 && d1 < r2 && r2 < d2 && d2 < r3) {
-		t.Errorf("a run's detail is not under its row (rows %d %d %d, details %d %d):\n%s", r1, r2, r3, d1, d2, v)
+	if !(isRoleLine(lines[r1+1]) && isRoleLine(lines[r2+1]) && isRoleLine(lines[r3+1])) {
+		t.Errorf("a run's role line is not right under its row (rows %d %d %d):\n%s", r1, r2, r3, v)
 	}
-	// The detail holds what the bottom area holds: the pipeline and activity.
-	if !strings.Contains(strings.Join(lines[d1:r2], "\n"), "implementer>[reviewer]>gate") ||
-		!strings.Contains(strings.Join(lines[d1:r2], "\n"), "activity") {
-		t.Errorf("run-1's detail lacks its pipeline or activity:\n%s", v)
+	// The detail holds the role and its facts, not the row's cells (S333).
+	if !strings.Contains(lines[r1+1], "tokens") || strings.Contains(strings.Join(lines[r1+1:r2], "\n"), "implementer>") {
+		t.Errorf("run-1's detail is not the role's facts alone:\n%s", v)
 	}
 	// Space again closes it.
 	h.send(press("g"))
@@ -141,14 +149,14 @@ func TestSelectedExpandedRunShowsOnceUnderItsRow(t *testing.T) {
 		t.Fatalf("the selected open run shows %v, want run-1 once:\n%s", got, v)
 	}
 	lines := mainCols(v)
-	if d, r := colLine(lines, "run-1"), colLine(lines, "p1", "S11"); d != r+1 {
-		t.Errorf("the selected run's detail is on line %d, its row on %d:\n%s", d, r, v)
+	if r := colLine(lines, "p1", "S11"); !isRoleLine(lines[r+1]) {
+		t.Errorf("the selected run's role line is not under its row %d:\n%s", r, v)
 	}
-	// With the run closed the detail goes back to the bottom area, below Recent.
+	// With the run closed no role line shows: the strip below Recent holds the
+	// run's state and age, not its role.
 	h.send(space())
-	lines = mainCols(plainView(h.m))
-	if d, recent := colLine(lines, "run-1"), colLine(lines, "Recent"); d < recent {
-		t.Errorf("a closed selected run shows its detail above Recent (line %d, Recent %d)", d, recent)
+	if got := opened(plainView(h.m), 2); len(got) != 0 {
+		t.Errorf("a closed run shows %v", got)
 	}
 }
 
@@ -159,8 +167,8 @@ func TestEExpandsAndCollapsesEveryRun(t *testing.T) {
 		t.Fatalf("E opens %v, want all three", got)
 	}
 	h.send(press("E"))
-	if got := opened(plainView(h.m), 3); !sameIDs(got, "run-1") {
-		t.Fatalf("E again leaves %v open, want only the selected run-1", got)
+	if got := opened(plainView(h.m), 3); len(got) != 0 {
+		t.Fatalf("E again leaves %v open, want none", got)
 	}
 	if n := len(h.m.expanded); n != 0 {
 		t.Fatalf("%d runs stay in the open set after E E: %v", n, h.m.expanded)
@@ -184,7 +192,7 @@ func TestExpandedRunsSurviveARefresh(t *testing.T) {
 	h.send(press("j"))
 	h.send(space())
 	h.send(press("j")) // the cursor on run-3, not open
-	if got := opened(plainView(h.m), 3); !sameIDs(got, "run-1", "run-2", "run-3") {
+	if got := opened(plainView(h.m), 3); !sameIDs(got, "run-1", "run-2") {
 		t.Fatalf("setup opens %v", got)
 	}
 	// A refresh with the same runs.
@@ -193,21 +201,21 @@ func TestExpandedRunsSurviveARefresh(t *testing.T) {
 		h.src.set(expandSnap(p, i+1))
 	}
 	h.send(press("r"))
-	if got := opened(plainView(h.m), 3); !sameIDs(got, "run-1", "run-2", "run-3") {
-		t.Errorf("after a refresh the view opens %v, want all three", got)
+	if got := opened(plainView(h.m), 3); !sameIDs(got, "run-1", "run-2") {
+		t.Errorf("after a refresh the view opens %v, want run-1 and run-2", got)
 	}
 	// A view switch and back.
 	h.send(press("tab"))
 	h.send(press("shift+tab"))
-	if got := opened(plainView(h.m), 3); !sameIDs(got, "run-1", "run-2", "run-3") {
-		t.Errorf("after a view switch the view opens %v, want all three", got)
+	if got := opened(plainView(h.m), 3); !sameIDs(got, "run-1", "run-2") {
+		t.Errorf("after a view switch the view opens %v, want run-1 and run-2", got)
 	}
 	// Another entry and back: the cursor starts over, the open runs do not.
 	h.send(press("]"))
 	h.send(press("["))
 	h.send(press("G"))
-	if got := opened(plainView(h.m), 3); !sameIDs(got, "run-1", "run-2", "run-3") {
-		t.Errorf("after another entry the view opens %v, want all three", got)
+	if got := opened(plainView(h.m), 3); !sameIDs(got, "run-1", "run-2") {
+		t.Errorf("after another entry the view opens %v, want run-1 and run-2", got)
 	}
 }
 
@@ -215,18 +223,19 @@ func TestAnExpandedRunThatLeavesTheListIsForgotten(t *testing.T) {
 	h := expandHarness(t, 3, 100, 40)
 	h.send(space()) // run-1
 	h.send(press("G"))
+	h.send(space()) // run-3
 	if got := opened(plainView(h.m), 3); !sameIDs(got, "run-1", "run-3") {
-		t.Fatalf("setup opens %v, want run-1 and the selected run-3", got)
+		t.Fatalf("setup opens %v, want run-1 and run-3", got)
 	}
 	projects := expandProjects(3)
 	// run-1 ends: p1 has no run.
 	h.src.set(snap(projects[0], nil, nil))
 	h.send(press("r"))
 	if got := opened(plainView(h.m), 3); !sameIDs(got, "run-3") {
-		t.Fatalf("with run-1 gone the view opens %v, want only the selected run-3", got)
+		t.Fatalf("with run-1 gone the view opens %v, want only run-3", got)
 	}
-	if len(h.m.expanded) != 0 {
-		t.Errorf("the open set keeps %v for a run that left", h.m.expanded)
+	if len(h.m.expanded) != 1 {
+		t.Errorf("the open set keeps %v, want only run-3", h.m.expanded)
 	}
 	// The same run id comes back: it is closed.
 	h.src.set(expandSnap(projects[0], 1))
@@ -244,7 +253,7 @@ func TestOpenPaneDrawsTheRowsClosed(t *testing.T) {
 	if h.m.pane == nil {
 		t.Fatal("enter did not open the pane")
 	}
-	if v := plainView(h.m); strings.Contains(v, "run-3") {
+	if v := plainView(h.m); len(opened(v, 3)) != 0 {
 		t.Errorf("a row stays open under a pane:\n%s", v)
 	}
 	h.send(press("esc"))
@@ -274,8 +283,8 @@ func TestExpandedRunsSurviveARefreshOnAProjectEntry(t *testing.T) {
 		t.Fatalf("selected %d, want the Running entry", h.m.active)
 	}
 	h.send(press("G"))
-	if got := opened(plainView(h.m), 3); !sameIDs(got, "run-1", "run-2", "run-3") {
-		t.Errorf("after a refresh on a project entry the view opens %v, want all three", got)
+	if got := opened(plainView(h.m), 3); !sameIDs(got, "run-1", "run-2") {
+		t.Errorf("after a refresh on a project entry the view opens %v, want run-1 and run-2", got)
 	}
 	if len(h.m.expanded) != 2 {
 		t.Errorf("the open set holds %v, want run-1 and run-2", h.m.expanded)
@@ -350,8 +359,8 @@ func TestExpandedDetailIsFaint(t *testing.T) {
 		for _, line := range strings.Split(h.m.View().Content, "\n") {
 			_, main, _ := strings.Cut(line, "│")
 			plain := sgr.ReplaceAllString(main, "")
-			if strings.Contains(plain, "run-1") {
-				detail = main
+			if isRoleLine(plain) && detail == "" {
+				detail = main // the first run's role line
 			}
 			if strings.Contains(plain, "p2") && strings.Contains(plain, "S12") {
 				row = main
@@ -414,7 +423,7 @@ func TestExpandKeyIsInTheHint(t *testing.T) {
 func TestExpandKeysAreInTheHelp(t *testing.T) {
 	h := expandHarness(t, 2, 100, 40)
 	help := strings.Join(h.m.helpLines(120, 60), "\n")
-	if !strings.Contains(help, "space expand or collapse a run (Running); E expand or collapse all") {
+	if !strings.Contains(help, "space expand or collapse a run, or show the stale rows (Running); E expand or collapse all") {
 		t.Errorf("help does not describe the expand keys:\n%s", help)
 	}
 }
@@ -425,20 +434,8 @@ func fullyVisible(t *testing.T, v string, i int) {
 	t.Helper()
 	lines := mainCols(v)
 	row := colLine(lines, fmt.Sprintf("p%d", i+1), fmt.Sprintf("S1%d", i+1))
-	id := colLine(lines, fmt.Sprintf("run-%d", i+1))
-	if row < 0 || id < 0 {
-		t.Fatalf("cursor row %d: row line %d, detail line %d:\n%s", i, row, id, v)
-	}
-	// The detail's last line is the pipeline with the activity.
-	end := id
-	for end+1 < len(lines) && !isRule(lines[end+1]) && strings.HasPrefix(lines[end+1], "    ") {
-		end++
-	}
-	if !strings.Contains(lines[end], "activity") {
-		t.Fatalf("cursor row %d: detail ends at %q, not on its activity cell:\n%s", i, lines[end], v)
-	}
-	if id != row+1 {
-		t.Errorf("cursor row %d: detail starts %d lines under the row", i, id-row)
+	if row < 0 || row+1 >= len(lines) || !isRoleLine(lines[row+1]) {
+		t.Fatalf("cursor row %d: row line %d has no role line under it:\n%s", i, row, v)
 	}
 }
 
