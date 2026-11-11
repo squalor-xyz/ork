@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 346,
+  "next_id": 347,
   "preamble": "",
   "passes": [
     {
@@ -18699,6 +18699,34 @@
         "parent": "",
         "cites": [],
         "key": "ork-new-0418ab16b1b8cb18",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S346",
+      "title": "A paused run cannot get the permission it was denied without stopping every run in the project",
+      "short_title": "A paused run cannot get the permission it was denied without stopping every run in the project",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-new-5cf8bf2f88d753fe",
         "pass": "v1.2",
         "group": "",
         "reason": "",
