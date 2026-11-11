@@ -184,6 +184,89 @@ func TestLandLeavesOtherConflictsToThePause(t *testing.T) {
 	}
 }
 
+const trackingConflictPath = ".slicer/slices/S04.json"
+
+func trackingConflict(t *testing.T) *landEnv {
+	t.Helper()
+	env := newLandEnv(t)
+	env.moveBase(trackingConflictPath, "{\"Files\":\"old\",\"note\":\"old\"}\n")
+	gitRun(t, env.W, "merge", "--no-edit", "main")
+	writeFile(t, filepath.Join(env.W, trackingConflictPath), "{\"Files\":\"branch edit\",\"note\":\"old\"}\n")
+	env.moveBase(trackingConflictPath, "{\"Files\":\"old\",\"note\":\"base note\"}\n")
+	return env
+}
+
+func wantTrackingPause(rec runrec.Record, path string) string {
+	return "merging main into " + rec.Branch + " stopped on conflicts in " + path +
+		"; slicer tracking files: both sides changed them; inspect branch with git -C " + ShellWord(rec.Worktree) +
+		" show " + ShellWord(":2:"+path) + "; inspect base with git -C " + ShellWord(rec.Worktree) +
+		" show " + ShellWord(":3:"+path) + "; keep both changes and remove the markers in " + rec.Worktree +
+		" (no need to git add), then ork retry " + rec.ID + "; ork commits the merge"
+}
+
+func TestLandTrackingOnlyConflictPauseNamesTheFix(t *testing.T) {
+	env := trackingConflict(t)
+	env.approve()
+	rec := requireConflictPause(t, env)
+	if want := wantTrackingPause(rec, trackingConflictPath); rec.Reason != want {
+		t.Errorf("tracking pause = %q; want %q", rec.Reason, want)
+	}
+}
+
+func TestLandTrackingOnlyConflictKeepsBothTextsAfterRetry(t *testing.T) {
+	env := trackingConflict(t)
+	env.approve()
+	rec := requireConflictPause(t, env)
+	if want := wantTrackingPause(rec, trackingConflictPath); rec.Reason != want {
+		t.Errorf("tracking pause = %q; want %q", rec.Reason, want)
+	}
+	const resolved = "{\"Files\":\"branch edit\",\"note\":\"base note\"}"
+	writeFile(t, filepath.Join(env.W, trackingConflictPath), resolved+"\n")
+	if err := env.e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, env.e, runrec.StateCommitted)
+	if got := gitRun(t, env.P, "show", "main:"+trackingConflictPath); got != resolved {
+		t.Errorf("landed tracking text = %q; want %q", got, resolved)
+	}
+	if got := gitRun(t, env.P, "show", "main:rendered.txt"); got != "render" {
+		t.Errorf("landed render = %q; want render", got)
+	}
+	if len(env.seen) != 1 || !env.seen[0].treeClean || !env.seen[0].hasBase {
+		t.Errorf("re-check: %+v", env.seen)
+	}
+}
+
+func TestLandMixedTrackingAndCodeConflictPausesAsToday(t *testing.T) {
+	env := trackingConflict(t)
+	writeFile(t, filepath.Join(env.W, "main.go"), "branch\n")
+	env.moveBase("main.go", "base\n")
+	env.approve()
+	rec := requireConflictPause(t, env)
+	if want := conflictReason("main", rec.Branch, env.W, rec.ID, []string{trackingConflictPath, "main.go"}); rec.Reason != want {
+		t.Errorf("mixed pause = %q; want generic %q", rec.Reason, want)
+	}
+}
+
+func TestLandTrackingPathsAreUnderTheProjectRoot(t *testing.T) {
+	for _, path := range []string{"sub/" + trackingConflictPath, "other/.slicer/slices/X.json", "sub/.slicer/index.json", "sub/.slicer/log.jsonl", "sub/.slicer/relay-roles.json", "sub/.slicer/render/ROADMAP.md"} {
+		t.Run(path, func(t *testing.T) {
+			env := changelogConflict(t, path, true)
+			writeFile(t, filepath.Join(env.P, "sub", "placeholder"), "project\n")
+			env.e.proj.Path = filepath.Join(env.P, "sub")
+			env.approve()
+			rec := requireConflictPause(t, env)
+			want := conflictReason("main", rec.Branch, env.W, rec.ID, []string{path})
+			if path == "sub/"+trackingConflictPath {
+				want = wantTrackingPause(rec, path)
+			}
+			if rec.Reason != want {
+				t.Errorf("project tracking pause = %q; want %q", rec.Reason, want)
+			}
+		})
+	}
+}
+
 func TestLandConflictPauseIsOneLineAndNamesFilesWorktreeAndRetry(t *testing.T) {
 	env := newLandEnv(t)
 	names := []string{"a.txt", "b.txt", "c.txt", "d.txt", "e.txt", "f.txt", "g.txt"}
