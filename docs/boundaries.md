@@ -6,6 +6,8 @@ defined in [glossary.md](glossary.md).
 
 ## Ownership
 
+Relay-run statistics belong to slicer; ork only displays them through `slicer relay-run stats --json` (S123).
+
 | Concern | Owner | Source |
 |---|---|---|
 | Queue, items, slice specs, readiness, claims | slicer | `slicer/docs/how-it-works.md` |

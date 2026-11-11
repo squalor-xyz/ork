@@ -723,6 +723,21 @@ them all (`internal/tui/keys.go:82-157`).
 
 ## 14. Commands at a glance
 
+### Relay statistics (S123, proposed)
+
+`ork stats [PROJECT] [--since DATE] [--json]` reads slicer's relay-run
+statistics on every call, without the daemon. PROJECT is a registered project
+name; omit it to use the current directory. The default is all-time. `--since`
+passes your date to slicer, which validates it and chooses the range.
+
+The text shows runs and outcomes, measured wall time, fix rounds, gates
+(including those counted by proxy), owner wait and role times. Durations use
+slicer's units; `-` means no measurement. `--json` returns slicer's aggregate
+keys with their null values and omits `per_run`. Ork computes no statistics,
+caches nothing and preserves slicer's error code and message when it fails.
+
+### Command list
+
 *Proposed (S103):* `ork --version` prints the mark only on a terminal;
 on a pipe or file line 1 is plain `ork VERSION`.
 

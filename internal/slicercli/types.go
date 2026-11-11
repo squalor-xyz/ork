@@ -181,6 +181,59 @@ type RelayRun struct {
 	Steps     []Step   `json:"steps"`
 }
 
+// RelayStats is slicer's aggregate output. per_run is deliberately omitted.
+// Nullable seconds remain pointers so an absent measurement differs from zero.
+type RelayStats struct {
+	Since       *string             `json:"since"`
+	Runs        RunOutcomes         `json:"runs"`
+	Measured    int                 `json:"measured"`
+	WallSeconds MedianMax           `json:"wall_seconds"`
+	FixRounds   FixRounds           `json:"fix_rounds"`
+	Gates       GateStats           `json:"gates"`
+	Roles       map[string]RoleTime `json:"roles"`
+	OwnerWait   OwnerWait           `json:"owner_wait"`
+}
+
+type RunOutcomes struct {
+	Total   int `json:"total"`
+	Pass    int `json:"pass"`
+	Fail    int `json:"fail"`
+	Stopped int `json:"stopped"`
+	Unended int `json:"unended"`
+}
+
+type MedianMax struct {
+	Median *int `json:"median"`
+	Max    *int `json:"max"`
+}
+
+type FixRounds struct {
+	Total             int `json:"total"`
+	RunsWithAny       int `json:"runs_with_any"`
+	RunsWithTwoOrMore int `json:"runs_with_two_or_more"`
+}
+
+type GateStats struct {
+	Rounds      int `json:"rounds"`
+	Fails       int `json:"fails"`
+	WithVerdict int `json:"with_verdict"`
+	ByProxy     int `json:"by_proxy"`
+}
+
+type RoleTime struct {
+	Steps         int  `json:"steps"`
+	TotalSeconds  int  `json:"total_seconds"`
+	MedianSeconds *int `json:"median_seconds"`
+}
+
+type OwnerWait struct {
+	RunsWithWait  int            `json:"runs_with_wait"`
+	TotalSeconds  int            `json:"total_seconds"`
+	MedianSeconds *int           `json:"median_seconds"`
+	MaxSeconds    *int           `json:"max_seconds"`
+	ByWaitingOn   map[string]int `json:"by_waiting_on"`
+}
+
 // StepSpec is one `slicer relay-run step` call. Step set updates that step
 // of the run; empty it adds a new one. A field left empty is not passed.
 type StepSpec struct {

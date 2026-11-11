@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Relay stats (*proposed*): `ork stats [PROJECT] [--since DATE] [--json]`
+  displays slicer's relay-run aggregates on every call, without a daemon or
+  local calculations. JSON preserves the aggregate keys and omits `per_run`.
+
 - *Proposed (S316; adj 233, 234):* `ork approve RUN --later-checks` marks every
   open human check `later`, approves, and prints a `deferred: N. TEXT` line for
   each check it deferred. `ork check RUN all later` marks them without

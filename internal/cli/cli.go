@@ -120,6 +120,9 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               row a plain retry is refused: --accept-shape
                               keeps owner findings that have no options,
                               --again runs the role once more
+  ork stats [PROJECT] [--since DATE]
+                              show slicer's relay-run statistics; all-time
+                              by default, current directory without PROJECT
   ork status [--project P]    projects, needs-you counts and active relays
   ork show RUN [NAME]         print why a run is paused, its reports, checks
                               and findings; NAME prints one report or log
@@ -361,6 +364,8 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		return a.ownerCommand(ctx, o, cmd, rest)
 	case "status":
 		return a.status(ctx, o, rest)
+	case "stats":
+		return a.stats(ctx, o, rest)
 	case "show":
 		return a.show(ctx, o, rest)
 	case "wait":

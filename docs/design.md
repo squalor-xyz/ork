@@ -1921,6 +1921,8 @@ own line, `usage: ork daemon run`.
 ```
 ork                         open the TUI (start the daemon if needed)
 ork status [--project P]    waves, slices, roles, needs-you
+ork stats [PROJECT] [--since DATE] [--json]
+                            slicer's relay-run statistics (S123, proposed)
 ork wave suggest P          slicer's suggested waves, in order, with reasons
 ork wave start P ITEM...    check the specs, then launch (asks unless --yes)
 ork wave define --project P NAME ITEM... [--replace]

@@ -37,6 +37,88 @@ func route(file string, args ...string) clitest.Route {
 	return clitest.Route{Tool: "slicer", Args: args, File: recorded(file)}
 }
 
+func TestRelayStatsDecodesTheRecordedOutput(t *testing.T) {
+	raw, err := os.ReadFile(recorded("relay-run-stats.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	// An unknown per-run shape must not affect aggregate decoding.
+	body := strings.TrimSuffix(strings.TrimSpace(string(raw)), "}") + `,"per_run":{"unknown":"ignored"}}`
+	c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"relay-run", "stats", "--json", "--root", root}, Stdout: body})
+	got, err := c.RelayStats(context.Background(), root, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	encoded, err := json.Marshal(got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var want, actual any
+	if err := json.Unmarshal(raw, &want); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(encoded, &actual); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(actual, want) {
+		t.Fatalf("stats JSON = %s; want %s", encoded, raw)
+	}
+}
+
+func TestRelayStatsNullMediansDecodeAsAbsent(t *testing.T) {
+	c, _ := client(t, route("relay-run-stats-empty.json", "relay-run", "stats", "--json", "--since", "2099-01-01", "--root", root))
+	got, err := c.RelayStats(context.Background(), root, "2099-01-01")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.WallSeconds.Median != nil || got.WallSeconds.Max != nil || got.OwnerWait.MedianSeconds != nil || got.OwnerWait.MaxSeconds != nil || len(got.Roles) != 0 || got.Since == nil || *got.Since != "2099-01-01T00:00:00Z" {
+		t.Fatalf("null stats: %+v", got)
+	}
+	var zero RelayStats
+	if err := json.Unmarshal([]byte(`{"wall_seconds":{"median":0,"max":0},"owner_wait":{"median_seconds":0,"max_seconds":0}}`), &zero); err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range []*int{zero.WallSeconds.Median, zero.WallSeconds.Max, zero.OwnerWait.MedianSeconds, zero.OwnerWait.MaxSeconds} {
+		if p == nil || *p != 0 {
+			t.Fatalf("zero was lost: %v", p)
+		}
+	}
+}
+
+func TestRelayStatsPassesSinceAndRoot(t *testing.T) {
+	for _, since := range []string{"", "2026-10-23"} {
+		t.Run(since, func(t *testing.T) {
+			args := []string{"relay-run", "stats", "--json"}
+			if since != "" {
+				args = append(args, "--since", since)
+			}
+			args = append(args, "--root", root)
+			c, _ := client(t, route("relay-run-stats.json", args...))
+			got, err := c.RelayStats(context.Background(), root, since)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.Runs.Total != 174 {
+				t.Fatalf("runs = %d", got.Runs.Total)
+			}
+		})
+	}
+}
+
+func TestRelayStatsKeepsSlicersErrorCode(t *testing.T) {
+	for _, code := range []string{"usage", "not_found"} {
+		t.Run(code, func(t *testing.T) {
+			body := `{"error":{"code":"` + code + `","message":"slicer diagnostic"}}`
+			c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"relay-run", "stats", "--json", "--root", root}, Stdout: body, Exit: 2})
+			_, err := c.RelayStats(context.Background(), root, "")
+			var tool *clirun.ToolError
+			if !errors.As(err, &tool) || tool.Code != code || tool.Message != "slicer diagnostic" {
+				t.Fatalf("error = %v", err)
+			}
+		})
+	}
+}
+
 func TestList(t *testing.T) {
 	c, fake := client(t, route("list.json", "list", "--json", "--lean", "--root", root))
 	items, err := c.List(context.Background(), root)

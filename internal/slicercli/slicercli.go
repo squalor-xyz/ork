@@ -118,3 +118,17 @@ func (c Client) RelayRuns(ctx context.Context, root string, activeOnly bool) ([]
 	}
 	return out.Runs, nil
 }
+
+// RelayStats reads slicer's aggregate statistics, without caching or computing.
+func (c Client) RelayStats(ctx context.Context, root, since string) (*RelayStats, error) {
+	args := []string{"relay-run", "stats", "--json"}
+	if since != "" {
+		args = append(args, "--since", since)
+	}
+	args = append(args, "--root", root)
+	var out RelayStats
+	if err := clirun.RunJSON(ctx, c.call(args...), &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}

@@ -1,0 +1,38 @@
+{
+  "since": "2099-01-01T00:00:00Z",
+  "runs": {
+    "total": 0,
+    "pass": 0,
+    "fail": 0,
+    "stopped": 0,
+    "unended": 0
+  },
+  "measured": 0,
+  "wall_seconds": {
+    "median": null,
+    "max": null
+  },
+  "fix_rounds": {
+    "total": 0,
+    "runs_with_any": 0,
+    "runs_with_two_or_more": 0
+  },
+  "gates": {
+    "rounds": 0,
+    "fails": 0,
+    "with_verdict": 0,
+    "by_proxy": 0
+  },
+  "roles": {},
+  "owner_wait": {
+    "runs_with_wait": 0,
+    "total_seconds": 0,
+    "median_seconds": null,
+    "max_seconds": null,
+    "by_waiting_on": {
+      "approval": 0,
+      "owner": 0
+    }
+  },
+  "per_run": []
+}
