@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 332,
+  "next_id": 333,
   "preamble": "",
   "passes": [
     {
@@ -17722,6 +17722,36 @@
         "parent": "",
         "cites": [],
         "key": "ork-gap-auto-land",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S332",
+      "title": "Adopt landed-changed/ entries: roles stop editing CHANGELOG.md",
+      "short_title": "Adopt landed-changed entries",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-11: per-slice changelog files in landed-changed/, owned and assembled by slicer (slicer s453); convert the existing Unreleased entries. Depends on slicer s453 landing.",
+        "discovered_from": "S327",
+        "parent": "",
+        "cites": [],
+        "key": "ork-landed-changed",
         "pass": "v1.2",
         "group": "",
         "reason": "",

@@ -4144,3 +4144,5 @@
 {"when": "2026-11-11T03:11:23Z", "item": "S328", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
 {"when": "2026-11-11T03:11:31Z", "item": "S312", "action": "note", "from": "", "to": "", "note": "Evidence 2026-11-11 (S223, run ork-20261111-024142-12c2): th", "by": "Jon Robbins"}
 {"when": "2026-11-11T03:14:08Z", "item": "S327", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-11T03:35:35Z", "item": "S332", "action": "add", "from": "", "to": "open", "note": "Adopt landed-changed/ entries: roles stop editing CHANGELOG.md"}
+{"when": "2026-11-11T03:35:35Z", "item": "S332", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
