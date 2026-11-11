@@ -5,6 +5,7 @@ package cli
 import (
 	"bufio"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
@@ -237,6 +239,7 @@ func (a *App) waveSuggest(ctx context.Context, o *output, args []string) int {
 
 // waveOptions are the flags of ork wave start that apply to every item.
 type waveOptions struct {
+	spec          specFlags
 	yes           bool
 	wellSpecified bool
 	split         bool
@@ -247,6 +250,9 @@ type waveOptions struct {
 func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	fs := flag.NewFlagSet("wave start", flag.ContinueOnError)
 	yes := fs.Bool("yes", false, "confirm all plans")
+	var spec specFlags
+	spec.wave = true
+	spec.register(fs)
 	well := fs.String("well-specified", "", "y/n for every item")
 	split := fs.String("split", "", "y/n for every item")
 	allowNoCheck := fs.Bool("allow-no-check", false, "start although the project has no check command")
@@ -256,6 +262,9 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
 	pos, err := parse(fs, args)
 	if err != nil {
+		return o.usage("wave start: %v", err)
+	}
+	if err := spec.validate(*yes); err != nil {
 		return o.usage("wave start: %v", err)
 	}
 	// One argument is the name of a saved wave; two or more are PROJECT ITEM...
@@ -272,7 +281,7 @@ func (a *App) waveStart(ctx context.Context, o *output, args []string) int {
 	if !ok {
 		return o.usage("wave start: --well-specified y/n and --split y/n each take y or n")
 	}
-	opts := waveOptions{yes: *yes, wellSpecified: wellSpecified, split: splitItem, allowNoCheck: *allowNoCheck}
+	opts := waveOptions{spec: spec, yes: *yes, wellSpecified: wellSpecified, split: splitItem, allowNoCheck: *allowNoCheck}
 	if err := lineup.apply(&opts.overrides); err != nil {
 		return o.usage("wave start: %v", err)
 	}
@@ -329,6 +338,10 @@ func (a *App) startWave(ctx context.Context, o *output, reader *bufio.Reader, pr
 		p := daemon.RunParams{Project: project, Item: item, WellSpecified: opts.wellSpecified, Split: opts.split}
 		p.Lineup, p.Budgets, p.StopAfter = opts.overrides.Lineup, opts.overrides.Budgets, opts.overrides.StopAfter
 		p.AllowNoCheck = opts.allowNoCheck
+		if opts.spec.questions {
+			params.Items = append(params.Items, p)
+			continue
+		}
 		var plan daemon.RunPlan
 		if code := a.call(ctx, o, daemon.MethodRunPlan, p, &plan); code != ExitOK {
 			return code
@@ -350,7 +363,16 @@ func (a *App) startWave(ctx context.Context, o *output, reader *bufio.Reader, pr
 	// A saved wave with nothing startable has no item to check.
 	held, noSpec, code := []string{}, []string{}, ExitOK
 	if len(params.Items) > 0 {
-		held, noSpec, code = a.specCheck(ctx, o, reader, prompts, &params)
+		held, noSpec, code = a.specCheck(ctx, o, reader, prompts, &params, &opts.spec)
+	} else if opts.spec.questions {
+		if o.json {
+			return o.printJSON(newSpecData())
+		}
+		fmt.Fprintf(prompts, "no open spec questions: %s\n", name)
+		return ExitOK
+	} else if len(opts.spec.answers) > 0 {
+		key, _, _ := strings.Cut(opts.spec.answers[0], "=")
+		return o.usage("%v", opts.spec.unknownAnswer(key))
 	}
 	if held == nil {
 		held = []string{}
@@ -358,7 +380,7 @@ func (a *App) startWave(ctx context.Context, o *output, reader *bufio.Reader, pr
 	if noSpec == nil {
 		noSpec = []string{}
 	}
-	if code != ExitOK {
+	if code != ExitOK || opts.spec.questions {
 		return code
 	}
 	notStarted := func() map[string]any {
@@ -382,6 +404,11 @@ func (a *App) startWave(ctx context.Context, o *output, reader *bufio.Reader, pr
 		}
 		if confirm != "yes" {
 			if o.json {
+				if opts.spec.active() {
+					out := notStarted()
+					out["questions"], out["answered"] = opts.spec.data.Questions, opts.spec.data.Answered
+					return o.printJSON(out)
+				}
 				return o.printJSON(notStarted())
 			}
 			fmt.Fprintln(o.stdout, "cancelled")
@@ -401,10 +428,11 @@ func (a *App) startWave(ctx context.Context, o *output, reader *bufio.Reader, pr
 		}
 		if printed := o.printJSON(struct {
 			daemon.WaveResult
+			*specData
 			Held    []string              `json:"held"`
 			NoSpec  []string              `json:"no_spec"`
 			Skipped *[]daemon.SkippedItem `json:"skipped,omitempty"`
-		}{result, held, noSpec, skipped}); printed != ExitOK {
+		}{result, opts.spec.result(), held, noSpec, skipped}); printed != ExitOK {
 			return printed
 		}
 		return code
@@ -447,7 +475,7 @@ func printWave(o *output, result daemon.WaveResult) int {
 // (adj 245, S283 *proposed*): it gets one line with the fix, `slicer promote`,
 // is named in noSpec and is never asked about. The sitting and the lines go to
 // the prompts writer.
-func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.Writer, params *daemon.WaveStartParams) (held, noSpec []string, code int) {
+func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.Writer, params *daemon.WaveStartParams, flags *specFlags) (held, noSpec []string, code int) {
 	var ids []string
 	for _, item := range params.Items {
 		ids = append(ids, item.Item)
@@ -477,6 +505,54 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 			noSpec = append(noSpec, item.Item)
 		}
 	}
+	flags.data = newSpecData()
+	for _, item := range params.Items {
+		if r, ok := open[item.Item]; ok {
+			for i, q := range r.Questions {
+				flags.data.Questions = append(flags.data.Questions, specListedQuestion{Item: r.Item, Address: flags.address(r.Item, q, i), SpecQuestion: q})
+			}
+		}
+	}
+	if flags.questions {
+		for _, item := range params.Items {
+			if r, ok := open[item.Item]; ok {
+				for i, q := range r.Questions {
+					printSpecQuestion(w, r, i, q, false, flags.address(r.Item, q, i))
+				}
+			}
+		}
+		if o.json {
+			if code := o.printJSON(flags.data); code != ExitOK {
+				return nil, nil, code
+			}
+		}
+		if len(open) > 0 {
+			return nil, nil, ExitWaitQuestion
+		}
+		if !o.json {
+			fmt.Fprintf(w, "no open spec questions: %s\n", strings.Join(ids, ", "))
+		}
+		// Stop after a successful listing too; there is no launch to confirm.
+		return nil, nil, ExitOK
+	}
+	var supplied map[string][]string
+	if len(flags.answers) > 0 {
+		var missing []string
+		var err error
+		supplied, missing, err = flags.mapAnswers(params.Items, open)
+		if err != nil {
+			return nil, nil, o.usage("%v", err)
+		}
+		if len(missing) > 0 {
+			fmt.Fprintf(w, "held: unanswered spec questions: %s\n", strings.Join(missing, ", "))
+			if o.json {
+				if code := o.printJSON(flags.data); code != ExitOK {
+					return nil, nil, code
+				}
+			}
+			return nil, nil, ExitWaitQuestion
+		}
+	}
 	by := os.Getenv("ADJ_DECIDED_BY")
 	var projects *daemon.ProjectsResult
 	var kept []daemon.RunParams
@@ -489,7 +565,12 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 			kept = append(kept, item)
 			continue
 		}
-		answers := askSpecQuestions(in, w, r)
+		var answers []string
+		if supplied != nil {
+			answers = supplied[item.Item]
+		} else {
+			answers = askSpecQuestions(in, w, r)
+		}
 		if answers == nil {
 			fmt.Fprintf(w, "held: %s has %d open spec %s\n", r.Item, len(r.Questions), plural(len(r.Questions), "question"))
 			held = append(held, r.Item)
@@ -516,6 +597,9 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 		for _, n := range out.Notices {
 			fmt.Fprintln(w, n)
 		}
+		for i, answer := range answers {
+			flags.data.Answered = append(flags.data.Answered, specAccepted{Item: r.Item, Key: questionKey(r.Questions[i], i), Answer: answer})
+		}
 		kept = append(kept, item)
 	}
 	params.Items = kept
@@ -529,36 +613,193 @@ func plural(n int, noun string) string {
 	return noun + "s"
 }
 
+// S312 (*proposed*): batch flags are handled entirely before the existing
+// spec.answer path. A wave uses item-qualified addresses.
+type specFlags struct {
+	questions bool
+	answers   []string
+	wave      bool
+	data      *specData
+}
+
+type specAccepted struct {
+	Item   string `json:"item"`
+	Key    string `json:"key"`
+	Answer string `json:"answer"`
+}
+
+type specData struct {
+	Questions []specListedQuestion `json:"questions"`
+	Answered  []specAccepted       `json:"answered"`
+}
+
+type specListedQuestion struct {
+	Item    string `json:"item"`
+	Address string `json:"address"`
+	engine.SpecQuestion
+}
+
+func newSpecData() *specData {
+	return &specData{Questions: []specListedQuestion{}, Answered: []specAccepted{}}
+}
+
+func (f *specFlags) active() bool { return f.questions || len(f.answers) > 0 }
+func (f *specFlags) result() *specData {
+	if f.active() {
+		return f.data
+	}
+	return nil
+}
+
+func (f *specFlags) register(fs *flag.FlagSet) {
+	fs.BoolVar(&f.questions, "questions", false, "print all open spec questions and start nothing")
+	fs.Func("answer", "answer KEY=N or KEY=text (wave: ITEM:KEY=value); repeat for each question", func(s string) error {
+		f.answers = append(f.answers, s)
+		return nil
+	})
+}
+
+func (f *specFlags) validate(yes bool) error {
+	if f.questions && yes {
+		return fmt.Errorf("--questions cannot be used with --yes")
+	}
+	if f.questions && len(f.answers) > 0 {
+		return fmt.Errorf("--questions cannot be used with --answer")
+	}
+	return nil
+}
+
+func questionKey(q engine.SpecQuestion, i int) string {
+	if q.Key != "" {
+		return q.Key
+	}
+	return fmt.Sprintf("#%d", i+1)
+}
+
+func (f *specFlags) address(item string, q engine.SpecQuestion, i int) string {
+	key := questionKey(q, i)
+	if f.wave {
+		return item + ":" + key
+	}
+	return key
+}
+
+func (f *specFlags) unknownAnswer(key string) error {
+	hint := ""
+	if f.wave {
+		hint = " (wave answers use ITEM:KEY)"
+	}
+	return fmt.Errorf("no open question matches %s%s", key, hint)
+}
+
+func (f *specFlags) mapAnswers(items []daemon.RunParams, open map[string]daemon.SpecItemResult) (map[string][]string, []string, error) {
+	type target struct {
+		item     string
+		index    int
+		question engine.SpecQuestion
+	}
+	targets := map[string]target{}
+	answers := map[string][]string{}
+	var order []string
+	for _, item := range items {
+		r, ok := open[item.Item]
+		if !ok {
+			continue
+		}
+		answers[r.Item] = make([]string, len(r.Questions))
+		for i, q := range r.Questions {
+			key := f.address(r.Item, q, i)
+			if _, exists := targets[key]; exists {
+				return nil, nil, fmt.Errorf("ambiguous question key %s", key)
+			}
+			targets[key] = target{r.Item, i, q}
+			order = append(order, key)
+		}
+	}
+	seen := map[string]bool{}
+	for _, raw := range f.answers {
+		key, value, ok := strings.Cut(raw, "=")
+		if !ok {
+			return nil, nil, fmt.Errorf("answer %s needs KEY=value", key)
+		}
+		t, ok := targets[key]
+		if !ok {
+			return nil, nil, f.unknownAnswer(key)
+		}
+		if seen[key] {
+			return nil, nil, fmt.Errorf("duplicate answer for %s", key)
+		}
+		seen[key] = true
+		value = strings.Join(strings.Fields(value), " ")
+		if value == "" {
+			return nil, nil, fmt.Errorf("empty answer for %s", key)
+		}
+		if t.question.Ask != nil {
+			if n, err := strconv.Atoi(value); err == nil || errors.Is(err, strconv.ErrRange) {
+				if err != nil || n < 1 || n > len(t.question.Ask.Options) {
+					return nil, nil, fmt.Errorf("answer for %s must be 1-%d or text", key, len(t.question.Ask.Options))
+				}
+				o := t.question.Ask.Options[n-1]
+				value = o.Label + ": " + o.Summary
+			}
+		}
+		// Match RecordSpecAnswers so JSON reports the text that is recorded.
+		answers[t.item][t.index] = strings.Join(strings.Fields(value), " ")
+	}
+	var missing []string
+	for _, key := range order {
+		if !seen[key] {
+			missing = append(missing, key)
+		}
+	}
+	return answers, missing, nil
+}
+
+func printSpecQuestion(w io.Writer, r daemon.SpecItemResult, i int, q engine.SpecQuestion, interactive bool, address string) {
+	printLine := func(format string, args ...any) {
+		for _, line := range wrapLines(fmt.Sprintf(format, args...), 80, "  ") {
+			fmt.Fprintln(w, line)
+		}
+	}
+	prefix := fmt.Sprintf("[%s %d/%d] ", r.Item, i+1, len(r.Questions))
+	if q.Ask == nil {
+		printLine("%s%s", prefix, q.Text)
+	} else {
+		printLine("%s%s", prefix, q.Ask.Title)
+		for n, o := range q.Ask.Options {
+			mark := ""
+			if n+1 == q.Ask.Recommend {
+				mark = " (recommended)"
+			}
+			printLine("  %d. %s: %s%s", n+1, o.Label, o.Summary, mark)
+		}
+		printLine("  Why %d: %s", q.Ask.Recommend, q.Ask.Reason)
+	}
+	if interactive {
+		if q.Ask != nil && q.Key != "" {
+			printLine("  Decision key: %s", q.Key)
+		}
+	} else if q.Key == "" {
+		printLine("  Answer as: %s", address)
+	} else if address != q.Key {
+		printLine("  Decision key: %s (answer as %s)", q.Key, address)
+	} else {
+		printLine("  Decision key: %s", q.Key)
+	}
+}
+
 // askSpecQuestions shows every question of an item and reads one answer for
 // each: a number picks an option, other text is the answer. A number outside
 // the options is asked again. An empty line, or the end of the input, holds
 // the item back and returns nil.
 func askSpecQuestions(in *bufio.Reader, w io.Writer, r daemon.SpecItemResult) []string {
 	fmt.Fprintf(w, "%s needs %d %s before it can start.\n", r.Item, len(r.Questions), plural(len(r.Questions), "answer"))
-	printLine := func(format string, args ...any) {
-		for _, line := range wrapLines(fmt.Sprintf(format, args...), 80, "  ") {
-			fmt.Fprintln(w, line)
-		}
-	}
 	var answers []string
 	for i, q := range r.Questions {
-		prefix := fmt.Sprintf("[%s %d/%d] ", r.Item, i+1, len(r.Questions))
+		printSpecQuestion(w, r, i, q, true, "")
 		if q.Ask == nil {
-			printLine("%s%s", prefix, q.Text)
 			fmt.Fprintf(w, "Answer in text (empty holds %s back): ", r.Item)
 		} else {
-			printLine("%s%s", prefix, q.Ask.Title)
-			for n, o := range q.Ask.Options {
-				mark := ""
-				if n+1 == q.Ask.Recommend {
-					mark = " (recommended)"
-				}
-				printLine("  %d. %s: %s%s", n+1, o.Label, o.Summary, mark)
-			}
-			printLine("  Why %d: %s", q.Ask.Recommend, q.Ask.Reason)
-			if q.Key != "" {
-				printLine("  Decision key: %s", q.Key)
-			}
 			fmt.Fprintf(w, "Answer 1-%d, or type text (empty holds %s back): ", len(q.Ask.Options), r.Item)
 		}
 		answer := ""

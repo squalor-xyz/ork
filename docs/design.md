@@ -1310,7 +1310,8 @@ separately.
     final message there and the role cannot write it, and another line asks
     for the whole report as the final message in plain text, with no code
     fence. The role's permission mode is not a write mode on any vendor
-    (`--permission-mode plan` for Claude and Grok, `-s read-only` for Codex),
+    (`--permission-mode plan` for cloud Claude and Grok, the fixed read-only
+    allowlist for claude-local, `-s read-only` for Codex),
     so the final message is the only route (`role.report-io`);
   - *proposed (S256):* for a resumed round, a `## Resumed session` section
     right after `## Your files`. It says that ork resumed the earlier
@@ -1465,9 +1466,10 @@ separately.
   "Earlier process lost" section in its brief. An owner stop during the role
   stays a stop (exit `cancelled`). A role that returns a result with no error
   in the tick the watchdog fires is recorded as it exited (S194).
-  Local launchers instead have a fixed 45-minute elapsed runtime limit
-  (S301, adj 195). Events and assistant text do not reset it, and time the
-  machine slept is not counted in it (the sleep detector applies, S235). Expiry ends
+  Local launchers instead have a fixed 90-minute elapsed runtime limit
+  (S343, adj 315, superseding 195). Events and assistant text do not reset it,
+  and time the machine slept is not counted in it (the sleep detector applies,
+  S235). Expiry ends
   the same process-group context and records an `error` exit, so the existing
   fallback rules try the next lineup row. It marks no vendor out. A denied
   command or a read-only tree change still prevents fallback. Cloud roles
@@ -1621,6 +1623,9 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   `fixtures/<local-vendor>/`, and run-tree costs say `local` without dollars.
   New endpoint-error classification remains S303 and quality measurements
   remain S304.
+  Local briefs add targeted-read guidance (adj 308): use offset and limit or
+  grep first, never read a whole file over about 500 lines, and keep reasoning
+  brief. Cloud briefs omit that paragraph.
 - **Vendor slots and the vendor-out memory** (S169, *proposed*; owner decisions
   2026-10-29). One `engine.Vendors` value in `engine.Deps` is shared by every
   run of the daemon, as `Landings` is. It is in memory only, so a daemon
@@ -1645,7 +1650,7 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
     they cannot deadlock: each round holds one vendor slot only, and a slot is
     freed when its process ends. Cloud spec-check rounds (`speccheck.go`)
     take no slot. Local spec checks take a slot from the same shared local
-    pool and use the same 45-minute elapsed limit; their ledger step can
+    pool and use the same 90-minute elapsed limit (adj 315); their ledger step can
     appear before the slot is free. Their output does not extend the limit.
   - *Memory.* A round that exits `rate_limited` or `out_of_credits` marks its
     vendor out, with the time and the exit text. An `error` exit, an auth exit
@@ -1706,7 +1711,14 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   the slice for the owner.
 - **Permissions** (`launch.permissions`): there is a per-project, per-role
   allowlist in the registry. Read-only roles run in their vendor's read-only
-  mode. An implementer with no entry (or an empty list) gets the built-in
+  mode, except claude-local (adj 307): its fixed read-only allowlist replaces
+  plan mode to avoid the model-backed classifier. It allows `Read`, `Grep`,
+  `Glob`, `git diff`, `git log`, `git status`, `git show` (also with `git -C`),
+  `slicer show`, `slicer goals`, `slicer list`, `slicer deps`, `slicer find`,
+  `adj show`, `adj check`, `go test`, `go vet` (also with `go -C`)
+  and `gofmt -l`, with trailing argument wildcards. It allows no Edit, Write,
+  broad Bash or tracking-write commands. Cloud permissions stay the same.
+  An implementer with no entry (or an empty list) gets the built-in
   default, which the registry replaces as a whole: `Read`, `Grep`, `Glob`,
   `Edit`, `Write`, `Bash(slicer *)`, `Bash(git status*)`, `Bash(git
   diff*)`, `Bash(git log*)` and `Bash(<check command>*)`
@@ -1770,8 +1782,9 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   stream-json --verbose --include-partial-messages [--model M] [--effort E]`
   (M is the lineup entry's `model`, the alias itself for `opus@latest`;
   S244, *proposed*),
-  then `--allowedTools a,b --permission-prompts none` for a write role or
-  `--permission-mode plan` for a read-only one, then the prompt. `--effort
+  then `--allowedTools a,b --permission-prompts none` for a write role or a
+  read-only claude-local role (using its fixed read-only list), and
+  `--permission-mode plan` for a cloud read-only role, then the prompt. `--effort
   <level>` is listed by `claude --help` ("Effort level for the current
   session", claude 2.1.x). When the role has a temp directory, the process
   environment (the daemon's, plus the project's `vendor_env` for `claude`)
@@ -2005,8 +2018,10 @@ left out of the wave and named as `held`; a wave with no item left does not star
 on the same stream, `spec check: S1, S2; wait for it to finish`, because the
 call returns only when the role has finished; `ork run` prints it the same way
 with its one item (`spec check: S1; wait for it to finish`).
-The JSON result always includes a `held` array of excluded item IDs, including
-when the wave starts or the owner cancels; it is `[]` when nothing is held.
+The wave start or cancellation JSON result includes a `held` array of excluded
+item IDs; it is `[]` when nothing is held. The `--questions` result and an
+incomplete `--answer` batch instead return the spec-question object
+`{questions,answered}` without `held` (*proposed*, S312).
 *Proposed (S283, adj 245, `wave.plan-failure-missing-spec`):* a missing spec is
 the one plan failure that does not abort the wave. `spec.check` answers an
 item whose `slicer show` has no slice with a row `{"item","ready":false,
@@ -2015,9 +2030,9 @@ and the daemon remembers nothing. `wave start` leaves such an item out before
 the sitting and the confirmation, prints `ID: no slice spec; run slicer
 promote ID` on the prompts stream (stderr with `--json`) and starts the rest.
 Exit is 0 when a wave starts; with no item left it does not start and exits 1.
-The JSON result always has a `no_spec` array of skipped IDs beside `held`,
-`[]` when none. Every other failure, including a `run.plan` error, still
-aborts before anything starts. `ork run` leaves the same item out, prints the
+The wave start or cancellation JSON result has a `no_spec` array of skipped
+IDs beside `held`, `[]` when none. Every other failure, including a `run.plan`
+error, still aborts before anything starts. `ork run` leaves the same item out, prints the
 same line and exits 1; its `--json` result has no `no_spec` array. The TUI is
 unchanged (adj 218).
 S167 gives `ork run` the same sitting after the plan and before
@@ -2026,6 +2041,31 @@ An empty line or end of input holds the slice and exits 1, without starting.
 `--yes` skips only confirmation and still runs the spec check. A failed
 check blocks launch. With `--json`, the sitting goes to stderr and stdout
 holds one result; a held slice returns `{"started":false,"held":["ID"]}`.
+*Proposed (S312):* `run` and both forms of `wave start` accept `--questions`
+and repeatable `--answer`. Listing runs only `spec.check`, prints every
+question with its number, decision key when present and answer address, and
+returns without planning or starting a run or recording an answer. It exits
+3 (`ExitWaitQuestion`, S257) with questions pending, otherwise 0. The spec
+check's existing cache is retained. Text listings with no open questions
+print `no open spec questions: S1, S2`; a saved wave with no startable items
+names the wave instead. Keyed wave questions show
+`Decision key: k1 (answer as S1:k1)`; keyless questions show `Answer as: #N`
+for run or `Answer as: ITEM:#N` for wave. `--questions` refuses `--yes` and
+`--answer`. Run answers use `KEY=value`; wave answers use `ITEM:KEY=value`.
+For a question with options, an in-range integer selects its option. An
+integer outside that range, including one that overflows, is a usage error;
+any other nonempty value is free text. The CLI
+validates the whole batch before the first `spec.answer`: unknown, duplicate,
+empty or out-of-range answers are usage errors naming the address. Missing
+answers list their addresses and hold the whole batch with exit 3 and no
+recording. Complete batches use the existing `RecordSpecAnswers` path, so
+the Owner decisions paragraph retains each decision key. Answers with no
+pending question are refused. With `--json`, batch results include
+`questions` (entries with `item`, `address` and the embedded
+`engine.SpecQuestion` fields: `ask`, optional `key`, `text`) and `answered`
+(`{item,key,answer}`, where keyless questions use `#N`
+and answer is the recorded `Label: summary` or free text). No interactive
+prompt text changes.
 The Roadmap launch uses the same sitting after its plan and before its
 confirmation (S184). Skipping leaves the slice held and closes the launch;
 a failed check blocks launch with no skip key. Editing the confirmed lineup

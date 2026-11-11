@@ -42,6 +42,26 @@ func baseBrief() BriefInput {
 	}
 }
 
+func TestLocalBriefHasTargetedReads(t *testing.T) {
+	for _, vendor := range []string{"claude-local", "codex-local", "grok-local", "claude", "codex", "grok"} {
+		for _, role := range []string{RoleImplementer, RoleReviewer, RoleGate, RoleArchitect, RoleSpecCheck, RoleUI} {
+			for _, phrase := range []string{"Read files in targeted ranges (offset and limit), or grep first.", "Never read a whole file over about 500 lines.", "Keep reasoning brief."} {
+				t.Run(vendor+"/"+role+"/"+phrase, func(t *testing.T) {
+					in := baseBrief()
+					in.Vendor, in.Role = vendor, role
+					got, err := BuildBrief(in)
+					if err != nil {
+						t.Fatal(err)
+					}
+					if strings.Contains(got, phrase) != strings.HasSuffix(vendor, "-local") {
+						t.Fatalf("brief targeted-read guidance %q: vendor %s", phrase, vendor)
+					}
+				})
+			}
+		}
+	}
+}
+
 func TestLocalBriefKeepsItsAdapterRules(t *testing.T) {
 	for _, tc := range []struct {
 		vendor, role, want string

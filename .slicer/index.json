@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 347,
+  "next_id": 348,
   "preamble": "",
   "passes": [
     {
@@ -17490,7 +17490,7 @@
       "id": "S312",
       "title": "Spec questions: print every open question at once and take all answers in one call",
       "short_title": "Spec questions: print every open question at once and take all answers in one call",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -17500,6 +17500,20 @@
           "text": "**2026-11-11** — Evidence 2026-11-11 (S223, run ork-20261111-024142-12c2): the orchestrator piped an answer into the one-at-a-time stdin prompt without reading the question. A Check-line question was answered 'runnable' where the standing rule (adj 263) says 'orchestrator', and the spec's Check lines were rewritten. Answering by decision key (--answer KEY=N) would have refused or shown the mismatch. Suggest moving this slice to v1.1.",
           "created_at": "2026-11-11T03:11:31Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "d7344899-9ff2-4b0e-b8ff-bf15a078aceb",
+          "kind": "",
+          "text": "**2026-11-11** — Implemented complete spec-question listing and keyed batch answers for run and wave, including item/address JSON, validation before recording, explicit empty-listing feedback, documentation and regression tests. Gate VERDICT: PASS and owner approval confirmed by the finish brief.",
+          "created_at": "2026-11-11T23:19:07Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -17526,7 +17540,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -18654,10 +18668,39 @@
       "id": "S343",
       "title": "Local roles: no plan mode, targeted reads in the brief, and a 90 minute limit",
       "short_title": "Local roles fit the local server",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "5e871023-b997-4d78-b9c6-dc3d7aaaa56c",
+          "kind": "",
+          "text": "**2026-11-11** — Verified: claude-local read-only roles run with a fixed read-only allowlist and --permission-prompts none instead of plan mode (cloud keeps plan mode); local briefs carry targeted-read and brief-reasoning guidance; LocalRoleAfter is 90 minutes and the failed ledger step records 'local role exceeded 90m'. Allowlist: Read; Grep; Glob; Bash(git diff*), (git log*), (git status*), (git show*), (git -C * diff|log|status|show*); Bash(slicer show*), (slicer goals*), (slicer list*), (slicer deps*), (slicer find*); Bash(adj show*), (adj check*); Bash(go test*), (go vet*), (go -C * test*), (go -C * vet*); Bash(gofmt -l*). Gate VERDICT: PASS; docs/design.md, docs/state.md and CHANGELOG.md updated.",
+          "created_at": "2026-11-11T23:22:53Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "a89662df-a3c3-492f-b695-5c7594f71212",
+          "kind": "",
+          "text": "**2026-11-11** — Verified (finish step rerun after landing merge): claude-local read-only roles use the fixed read-only allowlist with --permission-prompts none, cloud keeps plan mode; local briefs carry targeted-read guidance; the local role limit is 90 minutes and the failed ledger step records 'local role exceeded 90m'. Go vet and gofmt clean; slicer check red only on deferred S345 and S346.",
+          "created_at": "2026-11-11T23:24:19Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -18675,7 +18718,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -18761,6 +18804,36 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S347",
+      "title": "Launch tracking commit lists items whose slice files stay uncommitted",
+      "short_title": "Launch commit leaves orphan index entries",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-11: S312, S315 and S123 passed their gates but every landing went red after merging main: slicer check reported \"S345: marked as having a slice, but no file exists\" and the same for S346. ork's launch commits a56c3f8 (S123) and d5880ab (S343) took main's whole `.slicer/index.json`, which held S345 and S346 from another session, but not those items' slice files.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-launch-index-orphans",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
         "attempts": 0
       }
     }

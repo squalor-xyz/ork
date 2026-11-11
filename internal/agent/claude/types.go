@@ -162,7 +162,7 @@ type Spec struct {
 	Prompt     string
 	Model      string // omitted when empty
 	Effort     string // omitted when empty
-	ReadOnly   bool   // --permission-mode plan, no allowlist
+	ReadOnly   bool   // cloud: plan mode; claude-local: read-only allowlist
 	Allowlist  []string
 	Resume     string // session id to resume
 	ReportFile string // read first when non-empty

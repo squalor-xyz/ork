@@ -17,6 +17,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/agent/codex"
 	"github.com/squalor-xyz/ork/internal/agent/grok"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -60,7 +61,7 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 				t.Fatal(err)
 			}
 			want := map[string][]string{
-				"claude-local": {"-p", "--resume", "prior", "--output-format", "stream-json", "--verbose", "--include-partial-messages", "--model", model, "--effort", "medium", "--permission-mode", "plan", "brief"},
+				"claude-local": {"-p", "--resume", "prior", "--output-format", "stream-json", "--verbose", "--include-partial-messages", "--model", model, "--effort", "medium", "--allowedTools", localReadOnlyTools, "--permission-prompts", "none", "brief"},
 				"codex-local":  {"exec", "resume", "prior", "-m", model, "--json", "-c", "model_reasoning_effort=medium", "-c", `sandbox_mode="read-only"`, "brief"},
 				"grok-local":   {"-p", "brief", "--output-format", "streaming-messages-json", "--include-partial-messages", "--reasoning-effort", "medium", "--resume", "prior", "--permission-mode", "plan", "--cwd", dir},
 			}[vendor]
@@ -68,6 +69,42 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 				t.Fatalf("launcher argv: %q; want %q", b, want)
 			}
 		})
+	}
+}
+
+const localReadOnlyTools = "Read,Grep,Glob,Bash(git diff*),Bash(git log*),Bash(git status*),Bash(git show*),Bash(git -C * diff*),Bash(git -C * log*),Bash(git -C * status*),Bash(git -C * show*),Bash(slicer show*),Bash(slicer goals*),Bash(slicer list*),Bash(slicer deps*),Bash(slicer find*),Bash(adj show*),Bash(adj check*),Bash(go test*),Bash(go vet*),Bash(go -C * test*),Bash(go -C * vet*),Bash(gofmt -l*)"
+
+func TestClaudeReadOnlyRoleArguments(t *testing.T) {
+	for _, role := range []string{engine.RoleReviewer, engine.RoleGate, engine.RoleArchitect, engine.RoleSpecCheck, engine.RoleUI} {
+		for _, vendor := range []string{"claude-local", "claude"} {
+			t.Run(role+"/"+vendor, func(t *testing.T) {
+				perm, err := engine.ResolvePermission(registry.Project{}, role)
+				if err != nil {
+					t.Fatal(err)
+				}
+				r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+					got, err := s.Args()
+					if err != nil {
+						t.Fatal(err)
+					}
+					want := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages"}
+					if vendor == "claude-local" {
+						want = append(want, "--allowedTools", localReadOnlyTools, "--permission-prompts", "none")
+					} else {
+						want = append(want, "--permission-mode", "plan")
+					}
+					want = append(want, "review")
+					if !reflect.DeepEqual(got, want) {
+						t.Fatalf("role %s argv: got %q; want %q", role, got, want)
+					}
+					return claude.Round{Class: claude.ClassOK}, nil
+				}}
+				_, err = r.Run(context.Background(), engine.Request{Role: role, Vendor: vendor, Brief: "review", ReadOnly: perm.ReadOnly, Allowlist: []string{"Edit", "Write", "Bash(git *)"}})
+				if err != nil {
+					t.Fatal(err)
+				}
+			})
+		}
 	}
 }
 

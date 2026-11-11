@@ -450,7 +450,7 @@ func (d Deps) runSpecRole(ctx context.Context, req Request) (Result, error) {
 	res, runErr := d.Runner.Run(runCtx, req)
 	stop()
 	if ctx.Err() == nil && expired() && runErr != nil {
-		res.Reason = "local role exceeded 45m"
+		res.Reason = "local role exceeded " + formatLimit(LocalRoleAfter)
 		runErr = fmt.Errorf("%s: %w", res.Reason, runErr)
 	}
 	return res, runErr

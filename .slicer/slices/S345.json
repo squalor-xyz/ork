@@ -1,0 +1,39 @@
+{
+  "id": "S345",
+  "title": "python preset: implementer cannot rename a tracked file or list the index",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Observed 2026-11-11 (slicer s453, ork-20261111-213809-376f): the implementer under `ork projects set slicer --preset python` was denied `git -C <worktree> ls-files -s tests/fixtures/relay-contract-v11.json` and `git mv tests/fixtures/relay-contract-v11.json tests/fixtures/relay-contract-v12.json` while doing the slice's own fixture rename; the run went on. Wanted: decide whether the presets allow `git ls-files` (read-only) and `git mv` (index-only, no commit), or say in the brief that a rename is a plain move the landing picks up."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
