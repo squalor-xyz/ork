@@ -4346,3 +4346,7 @@
 {"when": "2026-11-11T21:55:03Z", "item": "S343", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}
 {"when": "2026-11-11T22:01:32Z", "item": "S344", "action": "add", "from": "", "to": "open", "note": "Local spec check and UI pass rows in the matrix"}
 {"when": "2026-11-11T22:01:32Z", "item": "S344", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-11T22:08:02Z", "item": "S345", "action": "add", "from": "", "to": "open", "note": "python preset: implementer cannot rename a tracked file or list the index"}
+{"when": "2026-11-11T22:08:02Z", "item": "S345", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-11T22:12:41Z", "item": "S346", "action": "add", "from": "", "to": "open", "note": "A paused run cannot get the permission it was denied without stopping every run in the project"}
+{"when": "2026-11-11T22:12:41Z", "item": "S346", "action": "promote", "from": "", "to": "", "note": ""}
