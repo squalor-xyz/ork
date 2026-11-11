@@ -15013,7 +15013,7 @@
         "parent": "",
         "cites": [],
         "key": "decisions-no-adj-hint",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 1,
@@ -16995,12 +16995,28 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "1d9002b0-e77c-48cc-a752-704e7ac2094f",
+          "kind": "decision",
+          "text": "**2026-11-11** — Owner decision 2026-11-11 (adj 296, roles.local-eval-set = claude-local-only): trial claude-local in implementer, reviewer, gate, spec check and UI pass, each against a cloud run of the same small slice, to compare. Outside this trial, local stays implementer-only and reviewer/gate/spec check stay on cloud Claude; claude-local is slow (S291 trial: 45 min, no output). At most 2 local roles at one time across ork (global). Check (adj 280): the handoff holds one table row per launcher and role run (pass or fail, rounds, time, findings missed against the cloud review of the same diff) with the ork command that produced it; no default role changes (slicer relay-roles show unchanged); slicer check and adj lint exit 0. Do not start until the owner says the local model is free.",
+          "created_at": "2026-11-11T14:42:26Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
       "fields": {
         "size": "M",
-        "flags": [],
+        "flags": [
+          "needs-owner"
+        ],
         "trees": [
           "daemon"
         ],
