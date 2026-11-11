@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 335,
+  "next_id": 337,
   "preamble": "",
   "passes": [
     {
@@ -18278,6 +18278,66 @@
         "reason": "",
         "importance": 2,
         "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S335",
+      "title": "Polling: one slicer snapshot call for all due projects, skipping parts whose revision did not change",
+      "short_title": "Batched snapshot polling",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-11 (feedback from another agent): slicer polling is too frequent and slow. Measured 2026-11-11: each slicer call costs about 100 ms, almost all in slicer's imports (python3 -c pass: 4 ms; import slicer.cli: 77 ms). ork runs slicer list, deps and relay-run list per project, every 5 s when visible, every 1 s for live runs and every 30 s for the other 11 projects.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-poll-batched-snapshot",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S336",
+      "title": "Polling: back off when no TUI is attached, and refresh live runs every 2 s",
+      "short_title": "Idle polling backoff",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner 2026-11-11 (polling too frequent). The daemon's cache keeps reading every registered project every 30 s with no TUI attached; a visible live run is read every 1 s.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-poll-idle-backoff",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
         "effort": 1,
         "attempts": 0
       }

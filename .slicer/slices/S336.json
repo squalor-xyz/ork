@@ -1,0 +1,43 @@
+{
+  "id": "S336",
+  "title": "Polling: back off when no TUI is attached, and refresh live runs every 2 s",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-11. With no TUI subscribed, the daemon reads only what its own engine needs. With a TUI attached, a live run refreshes every 2 s instead of every 1 s. The interval values are open (Q1, Q2)."
+  ],
+  "depends_note": null,
+  "findings_note": "Owner 2026-11-11 (polling too frequent). The daemon's cache keeps reading every registered project every 30 s with no TUI attached; a visible live run is read every 1 s.",
+  "size": "S",
+  "flags": [
+    "needs-owner"
+  ],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* Evidence read on 2026-11-11:\n\n- `intervalLocked` (`internal/cache/cache.go:162-175`) gives every project that is not visible `SlowInterval` (30 s), whether or not any TUI is attached. `SetVisible` (`:423`) is driven by TUI subscribers (`internal/daemon/daemon_test.go:1084`: \"The subscriber leaves: alpha is no longer visible, so it goes to 30 s\"). With none attached, all 12 projects keep being read every 30 s.\n- `LiveInterval` is 1 s (`cache.go:40`). A slicer call costs about 100 ms, so a live visible run alone keeps about 10% of a core busy.\n- The engine's own reads (its runs, landings) do not depend on the dashboard cache. The implementer confirms this first and records it.\n\nOpen owner questions:\n- Q1 with no TUI attached, what does the cache read. (a) nothing on a timer; a TUI that attaches triggers a full refresh of the projects it shows, as opening a tab does today (recommended). (b) projects with a live run, every 30 s. (c) as today.\n- Q2 the live-run interval with a TUI attached. (a) 2 s (recommended). (b) keep 1 s. (c) 3 s."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/cache/cache.go:35-40` and `:162-175` (`LiveInterval`, `intervalLocked`)\n- `internal/cache/cache.go:423` (`SetVisible`; know when no subscriber is attached)\n- `internal/daemon/daemon.go:116` (the cache's wiring, and the subscriber count)\n- `internal/cache/cache_test.go` (`TestLedgerRefreshIsOneSecondForTheVisibleProjectWhileARunIsLive` and `TestLedgerRefreshIsOneSecondForEveryVisibleProjectWithALiveRun` change with Q2)\n- `internal/daemon/daemon_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Written for Q1 and Q2. At least: with no subscriber, a fake clock advanced 10 minutes causes no read under Q1 (a); a subscriber that attaches causes one read of each part for the projects it shows; a live visible run is read once per Q2 interval."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Wait for Q1 and Q2.\n2. Confirm that the engine and the landing paths do not read the dashboard cache, and record this in the notes.\n3. Change `intervalLocked` and the timer start for the no-subscriber case, and set `LiveInterval`.\n4. Docs (*proposed*), and CHANGELOG.md."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./... && go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

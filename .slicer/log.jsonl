@@ -4288,3 +4288,7 @@
 {"when": "2026-11-11T16:02:40Z", "item": "S220", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-11T16:19:28Z", "item": "S334", "action": "add", "from": "", "to": "open", "note": "Landing: the slice's own JSON deleted by the branch (moved to done/) but edited on main"}
 {"when": "2026-11-11T16:19:28Z", "item": "S334", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-11T16:41:26Z", "item": "S335", "action": "add", "from": "", "to": "open", "note": "Polling: one slicer snapshot call for all due projects, skipping parts whose revision did not change"}
+{"when": "2026-11-11T16:41:26Z", "item": "S336", "action": "add", "from": "", "to": "open", "note": "Polling: back off when no TUI is attached, and refresh live runs every 2 s"}
+{"when": "2026-11-11T16:41:27Z", "item": "S335", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-11T16:41:27Z", "item": "S336", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
