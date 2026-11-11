@@ -740,7 +740,15 @@ slice.
      kind `error`, state `land`) with a one-line reason that names up to five
      files and `+N more`, the worktree and `ork retry RUN`; `ork retry`
      and `t` work. The files are the owner's, as the relay contract says
-     (`slicer ai relay`, Land). No role resolves them: roles do not commit
+     (`slicer ai relay`, Land). When a conflicted path is under `.slicer/`
+     and a slicer driver named in `.slicer/.gitattributes` is missing from git
+     config,
+     the reason adds: "slicer merge drivers are not configured in this clone;
+     run slicer setup-git and the lines it prints, then git -C WORKTREE merge
+     --abort and ork retry RUN" (S328, adj 288). WORKTREE is the shell-quoted
+     worktree path and RUN is the run ID.
+     The check is advisory and does not block starting runs.
+     No role resolves them: roles do not commit
      (`git.commit`) and the default implementer allowlist has no `git add` or
      `git commit`. The conflict is left in the worktree; ork never runs `git
      merge --abort` or `git reset`. On `ork retry` with the merge still open
@@ -822,7 +830,7 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   The optional vendor-neutral `OnEvent func()` callback counts each stream
   event. Claude and Codex adapters forward their event callbacks to it.
   The result carries the exit
-  class (`ok`, `rate_limited`, `auth`, `error`, `unclassified`), the session, the final
+  class (`ok`, `rate_limited`, `auth`, `error`, `connection`, `unclassified`), the session, the final
   text, tokens, cost and the permission denials. A runner error counts as an
   exit of class `error`. Auth and unclassified exits stop the slice with
   the reason even when a next lineup entry exists.
@@ -1480,7 +1488,7 @@ answer in the project's adj store (`adj ask` then `adj decide --by
 There is one Go adapter per vendor. Each implements: build a command
 (model, effort, permission mode, allowlist, output format), start it in its
 own process group, stream events, parse the final result and usage, and
-classify the exit as ok, denied, rate-limited, auth, error or unclassified. A class
+classify the exit as ok, denied, rate-limited, auth, error, connection or unclassified. A class
 needs a documented signal or a real sample (`vendor.ratelimit-detection`,
 `vendor.unsampled-classes`).
 
@@ -1505,14 +1513,29 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
 | Usage (tokens, cost) in the result | `result.usage` (input, output, cache tokens), `result.total_cost_usd`, and `modelUsage.<model>.costUSD` (`modelUsage` is an object keyed by model name, with `costBasis` `list`; `testdata/vendors/claude/01-plain-json.stdout`). | `turn.completed.usage` has input, cached input, cache write, output and reasoning tokens (`testdata/vendors/codex/01-plain-stream-jsonl.stdout`). No cost field appears, so cost is *unverified*. | `result.usage` has `input_tokens`, `output_tokens`, `cache_read_input_tokens` and `cache_creation_input_tokens`, and `result.total_cost_usd` is set (`testdata/vendors/grok/02-stream-messages-json.stdout`). The plain JSON form adds `reasoning_tokens` and `total_tokens`: 19190 = 18014 input + 1152 cache read + 24 output, so reasoning tokens are inside the output count (`testdata/vendors/grok/01-plain-json.stdout`). ork counts input, output, cache read and cache creation. `grok usage SESSION_ID` (`testdata/vendors/grok/usage-excerpt.txt`) was not run. |
 | Resume a session by id | `claude -p --resume <session_id>` answered "OK", the word asked for in the first run, with the same session id and cache reads (`testdata/vendors/claude/03-resume.stdout`). | `codex exec resume <thread_id> -m gpt-6-luna --json` returned the same thread id and cached input tokens (`testdata/vendors/codex/02-resume-by-id.stdout`). The `resume` help lists no `-s` or `-C` (`testdata/vendors/codex/resume-help.txt`). S48 probe 06 (codex-cli 0.164.0) ran from the worktree through the `in_wt` helper, since resume has no `-C`, and passed `-s workspace-write` to `resume` and got exit 2, "error: unexpected argument '-s' found", before any API call (`testdata/vendors/codex/06-resume-workspace-write.stderr`). So resume cannot take `-s`. S89 probe 08 resumed probe 05's session with `-c 'sandbox_mode="workspace-write"'` from the worktree: `resume` accepted `-c` (exit 0) and a `command_execution` item shows the worktree write with exit 0 (`testdata/vendors/codex/08-resume-sandbox-config.stdout`). *Verified*: `resume` takes `-c sandbox_mode=...`. *Unverified*: whether the setting took effect, since the resumed session was already `workspace-write`, so a kept sandbox gives the same result (adj question `vendor.codex-resume-sandbox`). The write to the main checkout has no command event (see the allowlist row). | `grok -p ... --resume <sessionId> --output-format json` returned the same session id as the first run (`testdata/vendors/grok/03-resume-by-id.stdout` and `01-plain-json.stdout`, `sessionId`). The plain JSON names it `sessionId`, the streamed form `session_id`. The id in the `.cmd` file is redacted. Whether the resumed round keeps the plan mode of the first is *unverified*. |
 | Per-tool allowlist | `--allowedTools Read` with `--permission-prompts none` refused a Write. The denial is listed in `permission_denials` and the exit code is 0 (`testdata/vendors/claude/04-allowlist-denies-write.stdout`; `.repo-status` is empty). A positive control, an allowlisted tool that runs, was not measured. | No per-tool allowlist. `-s` takes `read-only`, `workspace-write` or `danger-full-access` only (`testdata/vendors/codex/help-excerpt.txt`). The one read-only run (`testdata/vendors/codex/03-readonly-sandbox-write.stdout`) ran no command: it has only agent messages. The model said the filesystem was read-only, and `.repo-status` is empty. That run did not exercise the sandbox. S48 probe 05 did, with `-s workspace-write -C <worktree>` where the worktree is linked to a main checkout. Its JSONL has a `command_execution` item (`testdata/vendors/codex/05-workspace-write-paths.stdout`). The write inside the worktree ran with exit 0 (`.worktree-status` shows `inside.txt`). The model reported that the writes to the main checkout and to the main checkout's `.git/slicer` failed with "operation not permitted", and neither file exists (`.repo-status` and `.slicer-dir` are empty). But the JSONL has a command event only for the first write; the other two results are the model's words with no event, so the block is *unverified*: the files may be absent because the commands never ran. Probe 07 (a socket bind) has no command event, so the model's reported `PermissionError: [Errno 1]` at the Unix bind is *unverified*, and a loopback TCP bind was not reached. Whether `.git` of a linked worktree is writable was not measured. S89 probes 08 to 10 (codex-cli 0.164.0, one call each, no retries) aimed to close the gaps, and none produced a command event for the asked cell, so each stays *unverified*: the main checkout write (probe 08 resumed, probe 10 fresh: the model reported `operation not permitted` in 08 (words only) and refused to run the commands in 10, `testdata/vendors/codex/08-resume-sandbox-config.stdout`, `testdata/vendors/codex/10-main-checkout-blocks.stdout`), the main checkout `.git/slicer` write (probe 10, refused, no command), the Unix socket bind, the loopback TCP bind and `git add` plus `git commit` in the linked worktree (probe 09: agent messages only, the model reported `PermissionError: [Errno 1]` at the Unix bind, `testdata/vendors/codex/09-socket-and-git.stdout`). In all three, `.repo-status` and `.slicer-dir` are empty, and in 08 the only command event is the worktree write (exit 0, `.worktree-status` shows `resume-inside.txt`). Only the worktree write is *verified*, twice. The model sometimes declines or skips the command tool, so containment of the main checkout cannot yet be taken from the sandbox alone; the gaps are adj question `vendor.codex-sandbox-gaps` and stay open. Decided: codex may run write roles with `workspace-write` (`vendor.codex-write`, decision 100). The owner relies on the tree fingerprint, the project check, review and the gate as limits; the unmeasured sandbox cells remain *unverified*. | No claude-style allowlist: `--tools` takes a comma list of tool names (`testdata/vendors/grok/help-excerpt.txt`), and the init event names `read_file`, `write`, `search_replace` and `run_terminal_command` (`testdata/vendors/grok/02-stream-messages-json.stdout`), not patterns. Probe 04 (`--tools Read --permission-mode dontAsk`) wrote nothing (`.repo-status` is empty), but the run ended with `stopReason` `cancelled` and no text, and the model said it had no write tool (`testdata/vendors/grok/04-allowlist-denies-write.stdout`). It does not show that `Read` is a tool name, so ork passes no `--tools`. Probe 05 (`--permission-mode plan`) asked to edit `notes.txt`: the model read the file and replied with a plan, and `.repo-status` is empty (`testdata/vendors/grok/05-plan-mode-edit.stdout`). *Verified*: plan mode wrote nothing in that one run. *Verified* in the wave 7 and 8 fixtures (2026-11-04 and 2026-11-05): single `git status --short`, `git diff -- PATH` and `git diff --check -- PATH` commands and the built-in `read_file`, `grep` and `list_dir` tools ran. `rg`, `slicer` and test commands remain *unverified*. Grok read-only briefs name only those verified forms and require one command per call, with no compound commands, echo, redirects or `python3 -c`. Write modes were probed in S72 (grok-4.5, `--tools read_file,write,search_replace`, one call each): with `--permission-mode dontAsk` (`testdata/vendors/grok/10-write-dontask.*`) and with `acceptEdits` (`11-write-acceptedits.*`) a headless run refused the edit of `notes.txt`, with stderr "permission required: Edit ... was not run, as a headless run cannot ask for approval"; each ended exit 0 with `stopReason` `cancelled`, and `.repo-status` and `.repo-diff` are empty. An `acceptEdits` request to write a file outside the repo was refused the same way and the file is absent (`12-write-outside.stderr`, `.outside-status`). So no tested mode lets a headless write role write, and no write was seen inside a worktree. Owner 2026-11-03 (interactive): ork gets no write mode on grok and never uses `bypassPermissions` or `--always-approve`. ork therefore runs only read-only roles on grok (`--permission-mode plan`) and refuses a write role (*proposed*, no adj record yet). The sanitized `08-permission-cancelled` fixture supplies that stream sample: exit 0 with `stop_reason: cancelled` and stderr `permission required`. *Proposed* (S280): ork classifies that combination as an error exit, with the refused command truncated to 60 characters in the reason. A non-empty report file wins; otherwise the last complete assistant text is retained only if it contains the exact line `## Owner needed`. With a retained report the exit is OK and the normal shape check judges it. Without one, the next role row takes the same round and Grok is not marked out. Partial deltas and tool-only messages do not replace the last complete text. Spec-check briefs carry each row's vendor limits. |
-| Rate-limit signal | Not forced. Stream output carried `rate_limit_event` with `rate_limit_info.status` `allowed`, `rateLimitType` `five_hour` and `resetsAt`. Utilization is at `rate_limit_info.unifiedWindows.{five_hour,seven_day}.utilization` (`testdata/vendors/claude/02-stream-json.stdout`). A `rejected` status and the exit code when limited are *unverified*. The help documents only `--fallback-model`, for "overloaded or not available" (`testdata/vendors/claude/rate-limit-help-grep.txt`). | *unverified*: no rate-limit or quota term appears in `codex --help` or `codex exec --help` (`testdata/vendors/codex/rate-limit-help-grep.txt`). No JSON limit signal was observed. Decided: ork matches the reported strings, "You've hit your usage limit" and HTTP 429 `rate_limit_exceeded`, in `turn.failed` or `error` events and falls back automatically (`vendor.codex-ratelimit`). The owner added "out of credits" on 2026-10-27 (S133), classified as a limit under decision 156 (`vendor.fallback-trigger-v2`). The text matches are case-sensitive substrings. The out-of-credits message was observed in text mode on 2026-10-26; its JSON event shape is *unverified*. `testdata/vendors/codex/out-of-credits-unverified.stdout` is synthetic, based on the existing `turn.failed` shape. Real JSON samples are still to be captured. | Out of credits is sampled: the first run got exit 1 and HTTP 403, "used all available credits or reached its monthly spending limit", in an `error` line (`testdata/vendors/grok/07-out-of-credits-403.stdout`). ork classifies an `error` line, or a `result` with `is_error`, that holds "used all available credits" as out of credits. That sample came from `--output-format json`; the streamed form of the error is *unverified*. A rate limit is *unverified*: no sample, and no rate-limit term appears in `grok --help` (`testdata/vendors/grok/rate-limit-help-grep.txt`), so ork maps none. Apart from the permission cancellation above, every other failed run (the bad model of probe 06, an unauthenticated message) is `unclassified` and stops the slice (`vendor.unsampled-classes`). |
+| Rate-limit signal | Not forced. Stream output carried `rate_limit_event` with `rate_limit_info.status` `allowed`, `rateLimitType` `five_hour` and `resetsAt`. Utilization is at `rate_limit_info.unifiedWindows.{five_hour,seven_day}.utilization` (`testdata/vendors/claude/02-stream-json.stdout`). A `rejected` status and the exit code when limited are *unverified*. The help documents only `--fallback-model`, for "overloaded or not available" (`testdata/vendors/claude/rate-limit-help-grep.txt`). | *unverified*: no rate-limit or quota term appears in `codex --help` or `codex exec --help` (`testdata/vendors/codex/rate-limit-help-grep.txt`). No JSON limit signal was observed. Decided: ork matches the reported strings, "You've hit your usage limit" and HTTP 429 `rate_limit_exceeded`, in `turn.failed` or `error` events and falls back automatically (`vendor.codex-ratelimit`). The owner added "out of credits" on 2026-10-27 (S133), classified as a limit under decision 156 (`vendor.fallback-trigger-v2`). The text matches are case-sensitive substrings. The out-of-credits message was observed in text mode on 2026-10-26; its JSON event shape is *unverified*. `testdata/vendors/codex/out-of-credits-unverified.stdout` is synthetic, based on the existing `turn.failed` shape. Real JSON samples are still to be captured. | Out of credits is sampled: the first run got exit 1 and HTTP 403, "used all available credits or reached its monthly spending limit", in an `error` line (`testdata/vendors/grok/07-out-of-credits-403.stdout`). ork classifies an `error` line, or a `result` with `is_error`, that holds "used all available credits" as out of credits. That sample came from `--output-format json`; the streamed form of the error is *unverified*. A rate limit is *unverified*: no sample, and no rate-limit term appears in `grok --help` (`testdata/vendors/grok/rate-limit-help-grep.txt`), so ork maps none. Apart from the permission cancellation above and the sampled connection failure below, every other failed run (the bad model of probe 06, an unauthenticated message) is `unclassified` and stops the slice (`vendor.unsampled-classes`). |
 
 - **Fallback** (`vendor.fallback-trigger-v2`, decision 156): an exit
   classified as rate-limited, out of credits or error moves the role to the next eligible entry in
   its chain, in the same state and round. Auth and unclassified exits, an
   unsuccessful round with permission denials, and a changed tree in a
   read-only role still stop.
-  If no row remains, the stop reason names each failed row and its exit.
+  A `connection` exit (S329, adj 291, `vendor.connection-error`) first waits
+  30 seconds, then resumes the same session once on the same row and round.
+  The vendor slot is released during the wait. A second connection failure
+  uses the `error` fallback path. With no next row, it pauses with one line
+  naming the vendor and the connection error. Without a session id it uses
+  that fallback path directly. With no next row, the saved exit remains
+  `connection`: an owner retry runs that row again, resuming its session when
+  present, without another automatic wait. Denials and read-only tree changes
+  still stop.
+  The only connection signals are Grok's non-zero exit with both `reqwest
+  error` and `error sending request` in stderr, and Claude's result event
+  with `api_error` equal to `connection_failed`. The sanitized S268 and S216
+  samples are `testdata/vendors/grok/connection.stderr` and
+  `testdata/vendors/claude/connection.stdout`. Codex has no sampled signal.
+  For other fallback exits, if no row remains, the stop reason names each
+  failed row and its exit.
   Out of credits skips all later rows on that vendor; a rate limit takes
   the plain next row. On v10 and v11 the failed ledger step includes the classified
   vendor message as `--reason`. Falling back on a plain error exit was an
@@ -1738,6 +1761,7 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   result text (`role.report-io`). The exit class is:
   - ok: exit 0, `subtype` `success`, `is_error` false, including denials.
   - denied: not ok and `permission_denials` is non-empty.
+  - connection: `api_error` is `connection_failed` (S329, adj 291).
   - unclassified: everything else. That includes the bad-model run (exit 1,
     status 404; `testdata/vendors/claude/06-bad-model.stdout`), any 401, 429
     or 503, and a `rejected` `rate_limit_event`. No auth failure, bad model
@@ -2436,9 +2460,25 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   `engine.SetupWarnings` lines as findings: no check command (worded as the
   refusal, adj 191), the Go allowlist on a project with no `go.mod`, an
   implementer allowlist without `Read`, `Edit` or `Write`, and one with no
-  pattern for the check command. Each names its fix. Project findings print `[WARN]` and keep
-  exit 0, the no-check finding included (owner-side decision of the S265 UI
-  pass).
+  pattern for the check command. Each names its fix. Advisory project findings
+  print `[WARN]` and keep exit 0, the no-check finding included (owner-side
+  decision of the S265 UI pass).
+  Doctor also reads the distinct `merge=NAME` attributes in each project's
+  `.slicer/.gitattributes` and checks `git config --get merge.NAME.driver`.
+  Git's built-in `text`, `binary` and `union` need no configuration and are
+  excluded. Missing slicer drivers produce `merge drivers missing: NAME, NAME
+  (fix: run the lines slicer setup-git prints)` and the commands printed by
+  `slicer setup-git --root PROJECT` (S328, adj 288 and 289). Without `--fix`,
+  doctor only prints the commands. With `--fix`, its project header names the
+  missing drivers, then it shows the commands and asks
+  `Configure slicer merge drivers? [y/N]` per project, with Enter meaning No.
+  Yes executes the printed lines in that project, configuring the clone's
+  git merge drivers. Success replaces the missing finding with
+  `merge drivers configured: NAME, NAME`; the project shows `[ok]` when no
+  other warning remains. Failed setup or execution is reported; a failed fix
+  exits 1. JSON project entries include `merge_driver_commands` when available;
+  prompts and command previews go to stderr with `--json`. The registry stays
+  read only. The explicit confirmation authorizes the git config change.
   The registry is read only; a missing registry is empty and is not created.
   A registry read error is advisory: JSON has `registry_error` (omitted when
   there is no error), separate from the daemon's `warning`. Text prints
@@ -2449,8 +2489,9 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   `[--] projects  none registered: run ork projects add PATH` in the same
   place. Neither line changes `ok` or the exit code.
 
-Doctor exits 1 when slicer, adj or the contract check fails. Project findings
-do not change `ok` or the exit code. `roles print`
+Doctor exits 1 when slicer, adj or the contract check fails. Advisory project
+findings do not change `ok` or the exit code. A failed `--fix` sets `ok` to false
+and exits 1. `roles print`
 and `doctor` run in the CLI process. `status` and `projects` go through the
 daemon, which the CLI starts on demand; with `--json` an error is
 `{"error":{"code","message"}}` on stdout, and the text form is `ork: MESSAGE`

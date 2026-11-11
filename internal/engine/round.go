@@ -340,6 +340,21 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 	stopWait()
 	defer release()
+	// A connection attempt stays on its row. Its history bounds the resume
+	// to one per row and round, including when a report later needs a retry.
+	connectionRetried := false
+	for i := len(rec.Roles) - 1; i >= max(rec.ChainFrom, 0); i-- {
+		old := rec.Roles[i]
+		if old.Role != r.role {
+			continue
+		}
+		if old.Round != r.n || fallbackExit(ExitClass(old.Exit)) || old.Vendor != entry.Vendor || old.Model != entry.Model || old.Effort != entry.Effort {
+			break
+		}
+		if old.Exit == string(ExitConnection) {
+			connectionRetried = true
+		}
+	}
 	perm, err := ResolvePermission(e.proj, r.role)
 	if err != nil {
 		return outcome{}, e.pauseError(r, "permissions: "+err.Error())
@@ -375,6 +390,9 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 
 	allowed := r.resumeFrom
+	if connectionRetried {
+		allowed = append([]string{r.role}, allowed...)
+	}
 	if pend != nil && (pend.Kind == runrec.PendingQuestion || pend.Kind == runrec.PendingShape) {
 		allowed = append([]string{r.role}, allowed...)
 	}
@@ -487,7 +505,8 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	defer kill()
 	watch, stopWatch, hung := e.watchRole(runCtx, kill, entry.Vendor)
 	defer stopWatch()
-	defer e.beginWork(fmt.Sprintf("%s round %d", r.role, r.n), watch)()
+	endWork := e.beginWork(fmt.Sprintf("%s round %d", r.role, r.n), watch)
+	defer endWork()
 	res, runErr := e.d.Runner.Run(runCtx, Request{
 		Role: r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
 		Brief: brief, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
@@ -556,6 +575,14 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		}
 	}
 
+	connectionFailure := class == ExitConnection
+	// Once the resume is spent, use error only when another row exists.
+	// A last-row connection stays retryable after the owner resumes it.
+	if connectionFailure && (connectionRetried || res.Session == "") && nextEntry(entries, entryIndex, ExitError) < len(entries) {
+		class = ExitError
+	}
+	resumeConnection := connectionFailure && !connectionRetried && res.Session != "" && len(res.Denials) == 0 && !changed && statusErr == nil
+
 	text, file := "", ""
 	if class == ExitOK {
 		text, file = e.readReport(reportPath, reportName, res.Report)
@@ -586,6 +613,27 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 	endActivity()
 
+	if resumeConnection {
+		stop()
+		kill()
+		endWork()
+		e.stepFail(ctx, rec, stepID, class, res.Reason, runErr)
+		if e.d.Sleep != nil {
+			if err := e.d.Sleep(ctx, 30*time.Second); err != nil {
+				return outcome{}, err
+			}
+		} else {
+			timer := time.NewTimer(30 * time.Second)
+			defer timer.Stop()
+			select {
+			case <-ctx.Done():
+				return outcome{}, ctx.Err()
+			case <-timer.C:
+			}
+		}
+		return e.runRound(ctx, r, pend)
+	}
+
 	if fallingBack {
 		stop()
 		e.stepFail(ctx, rec, stepID, class, res.Reason, runErr)
@@ -611,6 +659,10 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	if stopReason != "" {
 		stop()
 		e.stepFail(ctx, rec, stepID, class, res.Reason, runErr)
+		if connectionFailure && len(res.Denials) == 0 && !changed && statusErr == nil {
+			reason := strings.Join(strings.Fields(fmt.Sprintf("%s round %d (%s): connection error: %s", r.role, r.n, entry.Vendor, res.Reason)), " ")
+			return outcome{}, e.pauseError(r, reason)
+		}
 		return outcome{}, e.stop(ctx, stopReason)
 	}
 	stop()

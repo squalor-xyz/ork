@@ -3,11 +3,13 @@
 package cli
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -67,14 +69,17 @@ type projectContract struct {
 }
 
 type projectCheck struct {
-	Name     string   `json:"name"`
-	Path     string   `json:"path"`
-	Findings []string `json:"findings"`
+	Name                string   `json:"name"`
+	Path                string   `json:"path"`
+	Findings            []string `json:"findings"`
+	MergeDriverCommands []string `json:"merge_driver_commands,omitempty"`
+	missingDrivers      []string
 }
 
 // DoctorReport is what `ork doctor --json` prints. OK is false when slicer,
 // adj or the contract check (global or any registered project) fails; a vendor CLI that is missing or broken is
-// reported but does not fail the check. Project findings are also advisory.
+// reported but does not fail the check. Project findings are advisory except
+// failures while applying an explicitly requested --fix.
 // Binary is the resolved path of the running ork binary, empty when that
 // path cannot be read.
 type DoctorReport struct {
@@ -124,6 +129,13 @@ func checkProject(ctx context.Context, p registry.Project) projectCheck {
 	// A path that is not a directory has no go.mod to look for; its own
 	// finding says what is wrong.
 	if info, err := os.Stat(p.Path); err == nil && info.IsDir() {
+		missing, err := engine.MissingMergeDrivers(ctx, p.Path, "git")
+		if err != nil {
+			check.addFinding("merge drivers: %v", err)
+		} else if len(missing) > 0 {
+			check.missingDrivers = missing
+			check.addFinding("merge drivers missing: %s (fix: run the lines slicer setup-git prints)", strings.Join(missing, ", "))
+		}
 		for _, warning := range engine.SetupWarnings(p, func(name string) bool {
 			_, err := os.Stat(filepath.Join(p.Path, name))
 			return err == nil
@@ -243,6 +255,7 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	fs := flag.NewFlagSet("doctor", flag.ContinueOnError)
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
 	all := fs.Bool("upgrade", false, "print upgrade commands for slicer, adj and ork even when none is behind")
+	fix := fs.Bool("fix", false, "offer to configure missing slicer merge drivers")
 	pos, err := parse(fs, args)
 	if err != nil {
 		return o.usage("doctor: %v", err)
@@ -349,6 +362,61 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	if !rep.OK {
 		code = ExitFailure
 	}
+	input := a.Input
+	if input == nil {
+		input = os.Stdin
+	}
+	reader := bufio.NewReader(input)
+	for i := range rep.Projects {
+		p := &rep.Projects[i]
+		if len(p.missingDrivers) == 0 {
+			continue
+		}
+		bin := t.Slicer
+		if bin == "" {
+			bin = "slicer"
+		}
+		res, err := clirun.Run(ctx, clirun.Call{Bin: bin, Args: []string{"setup-git", "--root", p.Path}, Timeout: versionTimeout})
+		if err != nil {
+			p.addFinding("slicer setup-git: %v", err)
+			if *fix {
+				code = ExitFailure
+				rep.OK = false
+			}
+			continue
+		}
+		commands := strings.TrimSpace(string(res.Stdout))
+		p.MergeDriverCommands = strings.Split(commands, "\n")
+		if !*fix {
+			continue
+		}
+		prompts := o.stdout
+		if o.json {
+			prompts = o.stderr
+		}
+		fmt.Fprintf(prompts, "project %s (%s): merge drivers missing: %s\n%s\nConfigure slicer merge drivers? [y/N]: ", p.Name, p.Path, strings.Join(p.missingDrivers, ", "), commands)
+		answer, err := reader.ReadString('\n')
+		if err != nil && err != io.EOF {
+			p.addFinding("merge drivers: reading confirmation: %v", err)
+			code = ExitFailure
+			rep.OK = false
+			continue
+		}
+		if yesNo(strings.TrimSpace(answer)) != "yes" {
+			continue
+		}
+		if _, err := clirun.Run(ctx, clirun.Call{Bin: "sh", Args: []string{"-e", "-c", commands}, Dir: p.Path, Timeout: versionTimeout}); err != nil {
+			p.addFinding("configure merge drivers: %v", err)
+			code = ExitFailure
+			rep.OK = false
+		} else {
+			for j, finding := range p.Findings {
+				if strings.HasPrefix(finding, "merge drivers missing: ") {
+					p.Findings[j] = "merge drivers configured: " + strings.Join(p.missingDrivers, ", ")
+				}
+			}
+		}
+	}
 	if o.json {
 		o.printJSON(rep)
 		return code
@@ -430,12 +498,20 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	}
 	for _, p := range rep.Projects {
 		status := "ok"
-		if len(p.Findings) > 0 {
-			status = "WARN"
+		for _, finding := range p.Findings {
+			if !strings.HasPrefix(finding, "merge drivers configured: ") {
+				status = "WARN"
+				break
+			}
 		}
 		fmt.Fprintf(o.stdout, "[%s] project %s  %s\n", status, p.Name, p.Path)
 		for _, finding := range p.Findings {
 			fmt.Fprintf(o.stdout, "  %s\n", finding)
+		}
+		if !*fix {
+			for _, command := range p.MergeDriverCommands {
+				fmt.Fprintf(o.stdout, "  %s\n", command)
+			}
 		}
 	}
 	return code

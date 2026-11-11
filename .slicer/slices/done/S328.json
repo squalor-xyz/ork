@@ -1,0 +1,41 @@
+{
+  "id": "S328",
+  "title": "Missing slicer merge drivers: say so in ork doctor and in the landing pause",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-11. Size S. The ork clone has none of the git merge drivers that `.slicer/.gitattributes` names. Every parallel landing therefore conflicts in `.slicer/render/*`, `.slicer/index.json` or `.slicer/relay-roles.json`, and the owner fixes it by hand. This slice makes ork notice the missing drivers and print the fix. S289 left this check unspecified (\"a check that the driver is configured ... is the only ork-side work left, not specified here\")."
+  ],
+  "depends_note": null,
+  "findings_note": "git config --get-regexp '^merge\\.' is empty in the ork clone (2026-11-11); render, index.json and relay-roles conflicts at landing on S173, S204, S244, S255, S267, S268, S301, S310.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The clone lacks the merge drivers named by slicer attributes, so parallel landings can fall back to text conflicts in generated files and the index. S289 left the ork-side check unspecified.\n\nQ1 decided (adj 288, doctor.merge-driver-report): doctor-and-pause. Report missing drivers per project and add the setup/retry clause to a landing conflict pause under .slicer/.\nQ2 decided (adj 289, doctor.merge-driver-fix): doctor-fix. Without --fix print the setup-git lines; with --fix ask [y/N] (Enter is No) before running them in the project.\n\nOwner clarification in this relay: include --fix in Files, Failing tests, Implement and Check; use the focused test command without -count=1 or -v."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/setup.go:21` (`MissingMergeDrivers`) beside `internal/engine/setup.go:95` (`SetupWarnings`)\n- `internal/cli/doctor.go:103` (`checkProject`) and `internal/cli/doctor.go:254` (`doctor`, including --fix)\n- `internal/engine/landmerge.go:82` (`settleMerge`) and `internal/engine/landmerge.go:137` (`conflictReason`)\n- `internal/engine/setup_test.go:14` (`TestMergeDrivers`)\n- `internal/engine/landmerge_test.go:16` (`TestLandMergeDriverPause`)\n- `internal/cli/cli_test.go:580` (`TestDoctorMergeDriver`)\n- `docs/guide.md`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestMergeDrivers` in `internal/engine/setup_test.go:14`: distinct sorted missing slicer names, ignoring comments and Git built-ins text, binary and union; configured and absent-attributes controls.\n- `TestDoctorMergeDriver` in `internal/cli/cli_test.go:580`: include union in attributes; configured drivers produce no warning. Successful --fix replaces the stale missing finding with configured names and [ok] when no other finding remains; preserve unrelated warnings. Before confirmation name missing drivers in the project header. Default mode prints commands without changing config; Enter and No decline; Yes configures; setup/execution failures under --fix exit 1; JSON stays valid.\n- `TestLandMergeDriverPause` in `internal/engine/landmerge_test.go:16`: include union in attributes. Missing slicer drivers add the owner-selected abort hint: run setup-git and its lines, then git -C WORKTREE merge --abort and ork retry RUN, with shell-quoted worktree path. Source-only and configured slicer drivers produce no clause."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Q1 decided: doctor-and-pause (adj 288). Q2 decided: doctor-fix (adj 289).\n2. Parse distinct merge=NAME attributes beside SetupWarnings, ignoring comments and Git built-ins text, binary and union, and check git config --get merge.NAME.driver.\n3. Add the project finding: merge drivers missing: NAME, NAME (fix: run the lines slicer setup-git prints).\n4. Print slicer setup-git lines for projects with missing drivers. With doctor --fix, name missing drivers in the project header and prompt [y/N] (Enter is No) before running those lines in the project; report failures. On success replace the stale missing finding with configured names and show [ok] if no other warning remains. Keep JSON machine-readable.\n5. In settleMerge, append the clause when a conflicted .slicer path has missing slicer drivers; retain oneLine and the existing reason. Apply the owner-selected abort-hint: run slicer setup-git and its printed lines, then git -C WORKTREE merge --abort and ork retry RUN; shell-quote the actual worktree path and name the actual run ID.\n6. Update guide setup and doctor instructions, design landing and doctor sections, and the proposed Unreleased changelog bullet. Document failed --fix exit 1 explicitly."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./... && go test ./...` exits 0.\n- `go test ./internal/engine ./internal/cli -run 'MergeDriver|Doctor|Land'` exits 0, including doctor --fix tests.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

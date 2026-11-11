@@ -15013,7 +15013,7 @@
         "parent": "",
         "cites": [],
         "key": "decisions-no-adj-hint",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 1,
@@ -16995,12 +16995,28 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "1d9002b0-e77c-48cc-a752-704e7ac2094f",
+          "kind": "decision",
+          "text": "**2026-11-11** — Owner decision 2026-11-11 (adj 296, roles.local-eval-set = claude-local-only): trial claude-local in implementer, reviewer, gate, spec check and UI pass, each against a cloud run of the same small slice, to compare. Outside this trial, local stays implementer-only and reviewer/gate/spec check stay on cloud Claude; claude-local is slow (S291 trial: 45 min, no output). At most 2 local roles at one time across ork (global). Check (adj 280): the handoff holds one table row per launcher and role run (pass or fail, rounds, time, findings missed against the cloud review of the same diff) with the ork command that produced it; no default role changes (slicer relay-roles show unchanged); slicer check and adj lint exit 0. Do not start until the owner says the local model is free.",
+          "created_at": "2026-11-11T14:42:26Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
       "fields": {
         "size": "M",
-        "flags": [],
+        "flags": [
+          "needs-owner"
+        ],
         "trees": [
           "daemon"
         ],
@@ -17826,7 +17842,7 @@
       "id": "S328",
       "title": "Missing slicer merge drivers: say so in ork doctor and in the landing pause",
       "short_title": "Missing slicer merge drivers",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -17836,6 +17852,20 @@
           "text": "**2026-11-11** — Owner decisions 2026-11-11: Q1 (adj 288, doctor.merge-driver-report = doctor-and-pause): ork doctor finding per project plus one clause on a landing conflict pause in a .slicer file. Q2 (adj 289, doctor.merge-driver-fix = doctor-fix, not the recommendation): ork doctor --fix runs the slicer setup-git lines after a [y/N] prompt (Enter is No), and prints them as today without --fix.",
           "created_at": "2026-11-11T13:52:54Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "cd4a11c5-7fe4-44a1-b09b-7f3fe60cef37",
+          "kind": "",
+          "text": "**2026-11-11** — Verified missing slicer merge-driver detection excludes Git built-ins; doctor reports and confirms fixes with accurate success status, and landing pauses give the quoted abort-and-retry hint. Focused tests and mutation checks passed; gate returned PASS and owner approved.",
+          "created_at": "2026-11-11T15:01:20Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -17862,14 +17892,14 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S329",
       "title": "Connection errors: resume the role instead of stopping as unclassified",
       "short_title": "Connection errors resume the role",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -17900,6 +17930,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "d2d0e862-5482-4c62-9bab-d6f9506f3c5e",
+          "kind": "",
+          "text": "**2026-11-11** — Classified the sampled Grok and Claude connection failures, resumed the same session once after 30 seconds, preserved error fallback to later rows, and verified owner Retry on the last row with and without a session. Focused tests and mutation checks passed; the gate returned VERDICT: PASS and the owner approved.",
+          "created_at": "2026-11-11T14:57:03Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -17919,7 +17963,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

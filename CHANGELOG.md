@@ -5,7 +5,16 @@
 - S330: before creating a worktree, commit the item's edited slicer spec,
   render and index on main by path so the worktree receives them. Leave other
   tracking and non-tracking edits uncommitted. A failed commit pauses setup.
-
+- Missing slicer merge drivers (*proposed*, S328, adj 288 and 289): doctor
+  warns per project and prints the `slicer setup-git` commands. `doctor --fix`
+  runs them after a `[y/N]` confirmation (Enter means No). A landing conflict
+  under `.slicer/` also names missing drivers and the setup/retry steps.
+  Docs updated: `docs/guide.md` and `docs/design.md`.
+- Resume sampled vendor connection failures (S329, adj 291): wait 30 seconds
+  and resume the same session once in the same round. Another connection
+  failure falls back like an error; without a next row, pause with the vendor
+  and error on one line. Matches only the sampled Grok reqwest send error and
+  Claude `connection_failed` result. Docs updated: `docs/design.md`.
 - Quieter Running view (*proposed*): S333, adj 282, 283, 284. The TUI opens on
   Running. An open Running row adds one dim line per working role (role, vendor,
   model, effort, elapsed, tokens, cost) and that role's last output line, and

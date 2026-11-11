@@ -13,6 +13,44 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
+func TestLandMergeDriverPause(t *testing.T) {
+	// Each subtest's fixture starts beneath a path containing spaces.
+	temp := filepath.Join(t.TempDir(), "space dir")
+	if err := os.MkdirAll(temp, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("TMPDIR", temp)
+	for _, tc := range []struct {
+		name       string
+		path       string
+		configured bool
+		clause     bool
+	}{
+		{"slicer missing", ".slicer/render/ROADMAP.md", false, true},
+		{"source missing", "internal/x.go", false, false},
+		{"slicer configured", ".slicer/render/ROADMAP.md", true, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			env := changelogConflict(t, tc.path, true)
+			writeFile(t, filepath.Join(env.W, ".slicer", ".gitattributes"), "render/* merge=slicer-generated\nlog.jsonl merge=union\n")
+			if tc.configured {
+				// A real text merge driver still conflicts, isolating configuration
+				// from the conflicted path and file contents.
+				gitRun(t, env.W, "config", "merge.slicer-generated.driver", "git merge-file %A %O %B")
+			}
+			env.approve()
+			rec := requireConflictPause(t, env)
+			want := conflictReason("main", rec.Branch, env.W, rec.ID, []string{tc.path})
+			if tc.clause {
+				want += "; slicer merge drivers are not configured in this clone; run slicer setup-git and the lines it prints, then git -C " + ShellWord(env.W) + " merge --abort and ork retry " + rec.ID
+			}
+			if rec.Reason != want {
+				t.Errorf("pause reason = %q; want %q", rec.Reason, want)
+			}
+		})
+	}
+}
+
 // mixedConflict is a landing where both CHANGELOG.md (an entry on each side)
 // and shared.txt (the same line on each side) conflict.
 func mixedConflict(t *testing.T) *landEnv {

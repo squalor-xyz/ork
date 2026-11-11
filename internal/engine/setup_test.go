@@ -3,11 +3,33 @@
 package engine
 
 import (
+	"context"
+	"path/filepath"
 	"reflect"
 	"testing"
 
 	"github.com/squalor-xyz/ork/internal/registry"
 )
+
+func TestMergeDrivers(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(dir, "global"))
+	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
+	gitRun(t, dir, "init", "-q")
+	check := func(want []string) {
+		t.Helper()
+		got, err := MissingMergeDrivers(context.Background(), dir, "git")
+		if err != nil || !reflect.DeepEqual(got, want) {
+			t.Errorf("missing drivers = %v, %v; want %v", got, err, want)
+		}
+	}
+	check(nil)
+	writeFile(t, filepath.Join(dir, ".slicer", ".gitattributes"), "# ignored merge=comment\nindex.json merge=slicer-index\nrender/* merge=slicer-generated\nother merge=slicer-index # merge=comment\nlog.jsonl merge=union\ntextfile merge=text\nbinaryfile merge=binary\n")
+	check([]string{"slicer-generated", "slicer-index"})
+	gitRun(t, dir, "config", "merge.slicer-index.driver", "true")
+	gitRun(t, dir, "config", "merge.slicer-generated.driver", "true")
+	check(nil)
+}
 
 func TestSetupWarnings(t *testing.T) {
 	const pyCheck = "python3 -m unittest discover -s tests -t tests"

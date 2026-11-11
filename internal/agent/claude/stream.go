@@ -44,6 +44,7 @@ type wireResult struct {
 	Subtype           string    `json:"subtype"`
 	IsError           bool      `json:"is_error"`
 	APIErrorStatus    *int      `json:"api_error_status"`
+	APIError          string    `json:"api_error"`
 	TerminalReason    string    `json:"terminal_reason"`
 	TotalCostUSD      float64   `json:"total_cost_usd"`
 	Usage             wireUsage `json:"usage"`
@@ -91,6 +92,7 @@ func ParseLine(line []byte) (Event, error) {
 			Subtype:        w.Subtype,
 			IsError:        w.IsError,
 			APIErrorStatus: w.APIErrorStatus,
+			APIError:       w.APIError,
 			TerminalReason: w.TerminalReason,
 			Usage: Usage{
 				InputTokens:         w.Usage.InputTokens,
