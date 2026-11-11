@@ -12681,7 +12681,7 @@
       "id": "S225",
       "title": "Build the daemon-session test on the BSDs and vet it in CI",
       "short_title": "getsid helper on BSDs, freebsd vet",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S213"
@@ -12694,6 +12694,34 @@
           "created_at": "2026-11-01T00:58:22Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "fca44341-96cd-48c1-9100-7e3499181597",
+          "kind": "",
+          "text": "**2026-11-11** — Human checks at approval (S225):\n- later: deferred to land: The owner runs the workflow once with `workflow_dispatch` and confirms the new `Vet another unix target` step passes on the Linux test job and does not appear on the macOS one.",
+          "created_at": "2026-11-11T12:33:50Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "672a8632-f3ce-41ae-8cd6-aa2a3796359b",
+          "kind": "",
+          "text": "**2026-11-11** — Added cmd/ork/getsid_bsd_test.go (darwin, dragonfly, freebsd, netbsd, openbsd) in place of getsid_darwin_test.go, a Linux-only 'Vet another unix target' step (GOOS=freebsd GOARCH=amd64 go vet ./...) in the release workflow's test job, a TestWorkflow/cross_vet guard with four failing-edit cases, and a CHANGELOG entry. Verified: go test -race ./... passes in all 25 packages, go vet, gofmt, slicer check and adj lint are clean, and each cross_vet assertion was mutation-checked. The GOOS cross-vet compile checks were assigned to the orchestrator and not run by the implementer; the workflow_dispatch human check is deferred to land.",
+          "created_at": "2026-11-11T12:33:56Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -12719,7 +12747,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -15840,7 +15868,7 @@
       "id": "S287",
       "title": "Shape retry when a malformed report also asks the owner",
       "short_title": "Shape retry when a malformed report also asks the owner",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -15850,6 +15878,48 @@
           "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 retry-first: resume the role once with the shape problems and the note to keep its question, then ask or pause. Q2 drop-part-b: S243 loses its part (b), the automatic report nudge, and its nudge_test.go tests; parts (a) and (c) stay. The S243 edit is done as part of this slice's filing step.",
           "created_at": "2026-11-04T19:59:53Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "0a013c28-8ff8-41a1-8489-7d64929f34a9",
+          "kind": "decision",
+          "text": "**2026-11-11** — Owner decision 2026-11-11 (adj 277, shape.retry-asked-flag = pending-field): add Asked bool (json:\"asked,omitempty\") to runrec.Pending, set it in the shape branch of runRound when the refused report asked the owner, and read it in pendingKindSection next to AutomaticShapeRetry; shapeRetryBrief(reason, asked) takes it. No record migration.",
+          "created_at": "2026-11-11T11:55:39Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "5b2af583-e90f-4b9f-a0c3-27321b5349bb",
+          "kind": "",
+          "text": "**2026-11-11** — Human checks at approval (S287):\n- later: deferred to land: On the next wave with Claude reviewers or gates, a report with a malformed `[owner]` finding and an `## Owner needed` question shows \"shape retry\" once and then asks the owner, with no `ork retry` by hand.",
+          "created_at": "2026-11-11T12:29:23Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "dfc00fb6-d8b7-4722-b4c9-e08a1c64b18f",
+          "kind": "",
+          "text": "**2026-11-11** — Shape retry now also covers a malformed report that asks the owner: the role is resumed once in the same session, with a brief that says to keep its owner question (Pending.Asked, adj 277), then the question is asked or the run pauses on shape. Verified: focused tests, go test -race ./..., go vet, gofmt, slicer check and adj lint passed in this worktree; the review round found only a doc fix, which was applied. Mutation step run by the orchestrator; the post-land human check on a real wave is deferred.",
+          "created_at": "2026-11-11T12:29:27Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -15876,7 +15946,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

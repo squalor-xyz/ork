@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-//go:build darwin
+//go:build darwin || dragonfly || freebsd || netbsd || openbsd
 
 package main
 

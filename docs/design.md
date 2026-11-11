@@ -954,17 +954,22 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   report with no `Tests: N passed, M failed` line (the finish step needs
   none), and any report with no `## Owner needed` section. All problems are
   listed. A gate PASS with a nonzero failed-test count is also refused.
-  *Proposed (S275):* a shape error without an owner question automatically
+  *Proposed (S275, S287):* a shape error automatically
   retries the same reporting role once in the same round and session. Its brief
-  names the shape problems. Implementer (including finish), reviewer, gate,
+  names the shape problems. When the refused report also asks the owner (an
+  `## Owner needed` body that is not blank, `none` or `none.`, or a line that
+  opens an `[owner]` or `[owner blocker]` finding), the brief adds
+  one sentence: keep the owner question as it was and fix only the shape. The
+  owner then sees one well-formed question after the retry, or a shape pause
+  if the retry is also malformed. Implementer (including finish), reviewer, gate,
   architect and UI pass all follow this rule; spec check keeps its own
   retry (S266, below).
   The retry uses no additional implementer round. The run record preserves
   both attempts and the refused report. Status and role rows say "shape retry";
   the first refusal sends no owner notice. A second malformed report pauses
   (kind `shape`) with the automatic marker cleared; `Retry` resumes the role.
-  A malformed report with an owner question pauses immediately. Normal budgets
-  still apply before the automatic attempt. A restart between attempts pauses
+  A refused report's question is not recorded; only the retry's is. Normal
+  budgets still apply before the automatic attempt. A restart between attempts pauses
   the run (kind `shape`, marker cleared) because nothing relaunches it; `Retry`
   resumes the role with the shape brief. A lost running process follows normal
   recovery.

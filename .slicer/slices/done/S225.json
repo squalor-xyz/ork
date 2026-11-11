@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `cmd/ork/getsid_darwin_test.go` (removed: renamed).\n- `cmd/ork/getsid_bsd_test.go` (new; the same body, `//go:build darwin || dragonfly || freebsd || netbsd || openbsd`). E-class: `cmd`.\n- `cmd/ork/getsid_linux_test.go` (unchanged; read only).\n- `.github/workflows/release.yml` (a step in the `test` job after `go vet ./...`).\n- `internal/release/workflow_test.go` (a `cross_vet` guard).\n- `CHANGELOG.md` (entry under `## Unreleased`).\n\nDependency: after `release-hardening` (S213), which also edits `.github/workflows/release.yml` and `internal/release/workflow_test.go` and makes the guards reformat-tolerant."
+      "body": "- `cmd/ork/getsid_darwin_test.go` (removed: renamed; the implementer's sandbox could not delete it, so it is left as a `//go:build ignore` stub to `git rm`).\n- `cmd/ork/getsid_bsd_test.go` (new; the same body, `//go:build darwin || dragonfly || freebsd || netbsd || openbsd`). E-class: `cmd`.\n- `cmd/ork/getsid_linux_test.go` (unchanged; read only).\n- `.github/workflows/release.yml` (a step in the `test` job after `go vet ./...`).\n- `internal/release/workflow_test.go` (a `cross_vet` guard).\n- `internal/release/workflow_normalize_test.go` (four `cross_vet` cases in TestGuardsStillFailOnRealChanges).\n- `CHANGELOG.md` (entry under `## Unreleased`).\n\nDependency: after `release-hardening` (S213), which also edits `.github/workflows/release.yml` and `internal/release/workflow_test.go` and makes the guards reformat-tolerant."
     },
     {
       "heading": "Failing tests",

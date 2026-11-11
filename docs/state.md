@@ -451,6 +451,9 @@ ork) the owner's own landing decides them.
 context while the run stays in its active state. It schedules one automatic
 retry of the same role and round, without an owner note. A successful retry
 clears that pending context; another shape error pauses with the marker cleared.
+*Proposed (S287; adj 277):* `pending.asked: true` on a shape context says the
+refused report also asked the owner; the retry brief then tells the role to keep
+its question. A shape pause carries it too, so `ork retry` sends the same brief.
 The refused attempt's `roles[]` entry keeps `shape_retry`, a pending-shaped
 context, until the retry attempt starts, so concurrent reviewer and UI retries survive a sibling taking the single
 pending slot. The retry attempt clears its own context's automatic marker when
@@ -465,7 +468,7 @@ An active retry marks the run. Only the `roles[]` entry that ran as the
 automatic retry keeps `shape_retry` (the refused attempt's is cleared when the
 retry starts), so only that row is marked, and it stays marked after the retry
 ends. Text status and the TUI display "shape retry". No owner notice accompanies the first
-shape-only refusal.
+refusal, including a refused report that also asks the owner (S287).
 The proposed optional `queued_questions[]` (S135) keeps sibling owner questions
 as pending objects while `pending` stays single. Answering the current question
 shows the next queued question before roles resume. Each role receives its own

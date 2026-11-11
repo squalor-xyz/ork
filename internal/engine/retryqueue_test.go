@@ -17,6 +17,11 @@ import (
 // retryWithQueuedQuestion runs a review where the reviewer breaks the report
 // shape and the UI pass asks the owner a question after that pause. The
 // reviewer's shape pause is first; the question is queued behind it (S159).
+//
+// A malformed report is retried once on its own (S275, S287), so the reviewer
+// pauses on its second malformed attempt. The first attempt is refused while
+// the UI pass asks an earlier question; its answer starts the second attempt,
+// and the UI pass asks again while that attempt pauses.
 func retryWithQueuedQuestion(t *testing.T) (*harness, *Engine, runrec.Record) {
 	t.Helper()
 	h := uiHarness(t, tuiFiles)
@@ -34,20 +39,32 @@ func retryWithQueuedQuestion(t *testing.T) (*harness, *Engine, runrec.Record) {
 		runs[req.Role]++
 		n := runs[req.Role]
 		mu.Unlock()
-		if n > 1 {
-			return Result{Exit: ExitOK, Session: "sess-" + req.Role, Report: cleanReview}, nil
-		}
 		if req.Role == RoleReviewer {
+			if n > 2 {
+				return Result{Exit: ExitOK, Session: "sess-reviewer", Report: cleanReview}, nil
+			}
 			return Result{Exit: ExitOK, Session: "sess-reviewer", Report: strings.Replace(noSections, "none", "Which report format?", 1)}, nil
 		}
-		for deadline := time.Now().Add(2 * time.Second); time.Now().Before(deadline); time.Sleep(time.Millisecond) {
-			if e.Snapshot().State == runrec.StatePaused {
-				break
+		switch n {
+		case 1:
+			return Result{Exit: ExitOK, Session: "sess-ui", Report: strings.Replace(cleanReview, "none", "Which scope?", 1)}, nil
+		case 2:
+			for deadline := time.Now().Add(2 * time.Second); time.Now().Before(deadline); time.Sleep(time.Millisecond) {
+				if e.Snapshot().State == runrec.StatePaused {
+					break
+				}
 			}
+			return Result{Exit: ExitOK, Session: "sess-ui", Report: strings.Replace(cleanReview, "none", "Which library?", 1)}, nil
 		}
-		return Result{Exit: ExitOK, Session: "sess-ui", Report: strings.Replace(cleanReview, "none", "Which library?", 1)}, nil
+		return Result{Exit: ExitOK, Session: "sess-ui", Report: cleanReview}, nil
 	}
 	if err := e.Run(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if rec := requireState(t, e, runrec.StatePaused); rec.Pending == nil || rec.Pending.Kind != runrec.PendingQuestion || rec.Pending.Role != RoleUI || rec.Pending.Question != "Which scope?" {
+		t.Fatalf("pending %+v, want the UI pass's first question", rec.Pending)
+	}
+	if err := e.Answer(context.Background(), "wide"); err != nil {
 		t.Fatal(err)
 	}
 	rec := requireState(t, e, runrec.StatePaused)

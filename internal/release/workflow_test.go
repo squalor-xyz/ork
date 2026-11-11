@@ -64,6 +64,42 @@ var workflowChecks = []workflowCheck{
 		require(t, job(t, s, "publish"), "needs: build")
 		require(t, job(t, s, "test"), "os: [ubuntu-latest, macos-latest]", "go test -race ./...", "go vet ./...", "gofmt -l .")
 	}},
+	{"cross_vet", func(t reporter, s string) {
+		// The test job type-checks one more unix target on Linux only.
+		test := job(t, s, "test")
+		vet := strings.Index(test, "\n      - run: go vet ./...\n")
+		_, tail, ok := strings.Cut(test, "\n      - name: Vet another unix target\n")
+		if !ok {
+			t.Errorf("missing step Vet another unix target")
+			return
+		}
+		if end := strings.Index(tail, "\n      - "); end >= 0 {
+			tail = tail[:end]
+		}
+		if at := strings.Index(test, "\n      - name: Vet another unix target\n"); vet < 0 || at < vet {
+			t.Errorf("the cross vet step must follow the go vet step")
+		}
+		lines := strings.Split(tail, "\n")
+		has := func(line string) bool {
+			for _, l := range lines {
+				if l == line {
+					return true
+				}
+			}
+			return false
+		}
+		for _, line := range []string{
+			"        if: runner.os == 'Linux'",
+			"        env:",
+			"          GOOS: freebsd",
+			"          GOARCH: amd64",
+			"        run: go vet ./...",
+		} {
+			if !has(line) {
+				t.Errorf("cross vet step is missing %q", strings.TrimSpace(line))
+			}
+		}
+	}},
 	{"permissions", func(t reporter, s string) {
 		require(t, s, "\npermissions:\n  contents: read\n")
 		if strings.Count(s, "contents: write") != 1 {

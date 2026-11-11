@@ -217,6 +217,10 @@ func TestGuardsStillFailOnRealChanges(t *testing.T) {
 		}},
 		{"persist_credentials", func(s string) string { return removeLine(s, "persist-credentials: false") }},
 		{"setup_go_cache", func(s string) string { return removeLine(s, "cache: false") }},
+		{"cross_vet", func(s string) string { return removeLine(s, "if: runner.os == 'Linux'") }},
+		{"cross_vet", func(s string) string { return strings.Replace(s, "GOOS: freebsd", "GOOS: linux", 1) }},
+		{"cross_vet", func(s string) string { return removeLine(s, "GOARCH: amd64") }},
+		{"cross_vet", func(s string) string { return removeLine(s, "- name: Vet another unix target") }},
 		{"changelog_section", func(s string) string { return removeLine(s, "END { exit !found }") }},
 		{"tag_signature", func(s string) string { return removeLine(s, "%(contents:signature)") }},
 	}
