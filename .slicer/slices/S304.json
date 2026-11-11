@@ -7,7 +7,9 @@
   "depends_note": null,
   "findings_note": "",
   "size": "M",
-  "flags": [],
+  "flags": [
+    "needs-owner"
+  ],
   "trees_note": "daemon",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",
