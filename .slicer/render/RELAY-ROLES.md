@@ -34,7 +34,6 @@
 | r21 | Orchestrator | every slice | Grok | xAI | grok-*@latest | medium | Grok orchestrator alternative (owner 2026-11-02). Model 'latest' = do not pin a version: use the grok CLI default (grok-4.7 on 2026-11-02); owner 2026-11-02: default to the latest unless asked. ork cannot run Grok until S72 lands, so it is used by hand until then |
 | r24 | Reviewer | every slice | Grok | xAI | grok-*@latest | medium | Spec check row on Grok (owner 2026-11-02): one read-only pass over every ticked slice before a wave (rule u11); an alternative to r16 |
 | r33 | Implementer | well specified, size S | claude-local | Local | qwen3.8-27b | medium | Fallback only, after cloud rows; explicit local use until S304 measures role suitability (owner 2026-11-09). |
-| r34 | Reviewer | well specified, size S | grok-local | Local | latest | medium | Fallback only, after cloud rows. Read-only roles until S305; latest leaves model selection to the launcher (owner 2026-11-09). |
 
 ## Rules
 
