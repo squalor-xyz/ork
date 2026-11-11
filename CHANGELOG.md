@@ -2,6 +2,73 @@
 
 ## Unreleased
 
+- Docs: re-anchor file:line citations in `docs/guide.md` (S219).
+  Audit `docs/design.md`; its three sibling references remain unverified
+  because the sibling checkouts are absent. Add a stdlib citation guard for
+  both documents, including range lists, multiline spans and missing siblings.
+  Leave dashboard citations out of scope. Remove the guide's unsupported
+  stale-flag clause, as approved by the owner on 2026-11-11, and cite the
+  current timeout description.
+  Verified corrections (citation: old -> new):
+  citation: `docs/design.md:162-221` -> `docs/design.md:175-361`.
+  citation: `docs/design.md:162-221` -> `docs/design.md:356-361` (approval).
+  citation: `docs/design.md:358-389` -> `docs/design.md:646-810`.
+  citation: `README.md:46-47` -> `README.md:66-67`.
+  citation: `cmd/ork/main.go:139-153` -> `cmd/ork/main.go:151-166`.
+  citation: `README.md:24-33` -> `README.md:40-46`.
+  citation: `internal/cli/cli.go:73-75` -> `internal/cli/cli.go:204-210`.
+  citation: `docs/design.md:1165-1204` -> `docs/design.md:2368-2495`.
+  citation: `docs/design.md:189` -> `docs/design.md:207-216`.
+  citation: `docs/design.md:1423-1434` -> `docs/design.md:2412-2422`.
+  citation: `docs/design.md:1263-1269` -> `docs/design.md:2561-2568`.
+  citation: `internal/cli/cli.go:58-59` ->
+    `internal/cli/daemoncmds.go:234-247`.
+  citation: `docs/design.md:1261-1270` -> `docs/design.md:2561-2568`.
+  citation: `docs/design.md:1273-1277` -> `docs/design.md:2604-2608`.
+  citation: `docs/state.md:28-33` -> `docs/state.md:34-36`.
+  citation: `internal/cli/cli.go:61-67` -> `internal/cli/cli.go:141-154`.
+  citation: `internal/engine/states.go:197-202` ->
+    `internal/engine/states.go:437-440`.
+  citation: `docs/design.md:1278-1295` -> `docs/design.md:2704-2716`.
+  citation: `docs/state.md:94-103` -> `docs/state.md:188-211`.
+  citation: `docs/design.md:167-186` -> `docs/design.md:189-208`.
+  citation: `docs/design.md:272-275` -> `docs/design.md:485-488`.
+  citation: `internal/slicercli/write.go:96` ->
+    `internal/slicercli/write.go:108`.
+  citation: `docs/design.md:184-198` -> `docs/design.md:207-222`.
+  citation: `docs/design.md:170-175` -> `docs/design.md:196-201`.
+  citation: `internal/tui/keys.go:258-262` -> `internal/tui/keys.go:313-322`.
+  citation: `docs/design.md:223-307` -> `docs/design.md:391-631`.
+  citation: `internal/cli/cli.go:56` -> `internal/cli/cli.go:54`.
+  citation: `internal/cli/cli.go:77` -> `internal/cli/cli.go:212`.
+  citation: `internal/tui/keys.go:258-277` -> `internal/tui/keys.go:313-322`.
+  citation: `docs/design.md:1034-1056` -> `docs/design.md:1958-1973`.
+  citation: `internal/cli/wave.go:341` -> `internal/cli/wave.go:378-385`.
+  citation: `docs/design.md:1064-1068` -> `docs/design.md:2045-2051`.
+  citation: `docs/design.md:212-214` -> `docs/design.md:315-316,330-332`.
+  citation: `internal/tui/keys.go:106-108` -> `internal/tui/keys.go:139`.
+  citation: `internal/tui/pane.go:284-297,498` ->
+    `internal/tui/pane.go:362-368,615-618`.
+  citation: `internal/cli/run.go:247,264-268` ->
+    `internal/cli/run.go:322,339-346`.
+  citation: `internal/tui/keys.go:80` -> `internal/tui/keys.go:113`.
+  citation: `internal/cli/cli.go:52` -> `internal/cli/cli.go:97`.
+  citation: `docs/design.md:351-397` -> `docs/design.md:646-810`.
+  citation: `internal/cli/cli.go:47-50` -> `internal/cli/cli.go:86-89`.
+  citation: `internal/tui/keys.go:87-93` -> `internal/tui/keys.go:121-127`.
+  citation: `docs/design.md:1088-1091` -> `docs/design.md:2070-2077`.
+  citation: `docs/design.md:986-997` -> `docs/design.md:1860-1869`.
+  citation: `internal/tui/pane.go:327` -> `internal/tui/pane.go:413-416`.
+  citation: `internal/daemon/runs.go:1418-1429` ->
+    `internal/daemon/runs.go:2515-2531`.
+  citation: `internal/daemon/runs.go:919-921` ->
+    `internal/daemon/runs.go:1624-1635`.
+  citation: `docs/design.md:154-160` -> `docs/design.md:167-173`.
+  citation: `internal/tui/keys.go:71` -> `internal/tui/keys.go:89`.
+  citation: `internal/tui/keys.go:13-124` -> `internal/tui/keys.go:82-157`.
+  citation: `internal/cli/cli.go:40-77` -> `internal/cli/cli.go:212`.
+  citation: `internal/tui/ledgerend.go:27` -> `internal/tui/ledgerend.go:21`.
+  citation: `docs/state.md:76-78` -> `docs/state.md:87-89`.
 - S330: before creating a worktree, commit the item's edited slicer spec,
   render and index on main by path so the worktree receives them. Leave other
   tracking and non-tracking edits uncommitted. A failed commit pauses setup.

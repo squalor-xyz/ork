@@ -12348,10 +12348,25 @@
       "id": "S219",
       "title": "Docs: re-anchor the file:line citations in docs/guide.md and docs/design.md",
       "short_title": "Re-anchor guide and design citations",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7786c66c-bf95-4822-87df-3374adb03f06",
+          "kind": "",
+          "text": "**2026-11-11** — Re-anchored guide citations to current source and design text, corrected all five reviewer findings, added a stdlib citation parser and bounds guard, and recorded corrections in CHANGELOG. Focused race tests, vet, formatting, slicer check and adj lint passed; full sandbox race failures were existing socket permission errors. Gate passed and owner approved.",
+          "created_at": "2026-11-11T16:00:59Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -12369,7 +12384,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

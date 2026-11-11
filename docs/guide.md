@@ -16,14 +16,14 @@ ork runs slice relays for you across projects. A slice is one tracked unit of
 work in slicer. For each slice ork makes a git worktree, runs an implementer,
 runs the project checks, runs a reviewer, runs fix rounds, runs a gate, and
 then waits for you. You approve; ork finishes, commits and lands the slice on
-the base branch (`docs/design.md:162-221`, `docs/design.md:358-389`). *Proposed
+the base branch (`docs/design.md:356-361`, `docs/design.md:646-810`). *Proposed
 (S331, adj 281):* a run that passes everything lands with no approve step (see
 "Approve and land").
 
 What ork owns: the list of projects, a record per run, role reports, and the
 daemon (`docs/state.md:8-26`). What it does not own: the roadmap and the
 ledger (slicer), decisions (adj) and the code (git). ork reaches those only
-through their command lines (`docs/boundaries.md`, `README.md:46-47`).
+through their command lines (`docs/boundaries.md`, `README.md:66-67`).
 
 Two programs make up ork:
 
@@ -33,12 +33,12 @@ Two programs make up ork:
 
 You never start the daemon by hand. `ork` and every command that needs it
 start it when nothing answers (`docs/design.md:24-40`,
-`cmd/ork/main.go:139-153`). It exits after 10 idle minutes by default
+`cmd/ork/main.go:151-166`). It exits after 10 idle minutes by default
 (`docs/design.md:26-29`).
 
 ## 2. Install and build
 
-From the repository root, with Go installed (`README.md:24-33`):
+From the repository root, with Go installed (`README.md:40-46`):
 
     go install ./cmd/ork
 
@@ -57,17 +57,17 @@ while a role is running unless you add `--force` (`docs/design.md:41-48`).
     ork doctor
 
 It prints the path of the ork binary first, then one line per check
-(`internal/cli/cli.go:73-75`, `docs/design.md:1165-1204`):
+(`internal/cli/cli.go:204-210`, `docs/design.md:2368-2495`):
 
 - the slicer and adj versions;
-- each vendor CLI (claude, codex, grok) and its version. ork runs roles on `claude`, `codex` and `grok` (`docs/design.md:189`); grok runs read-only roles only, as an alternate row (*proposed*). A missing vendor is
+- each vendor CLI (claude, codex, grok) and its version. ork runs roles on `claude`, `codex` and `grok` (`docs/design.md:207-216`); grok runs read-only roles only, as an alternate row (*proposed*). A missing vendor is
   reported and does not fail the check, because ork needs only the vendors
   your lineup uses;
 - the slicer relay contract (`slicer ai relay --json`), for the directory you
   run doctor in and for each registered project with its own pin. ork accepts
   v10 and v11 only; any other version fails, and so does a project whose slicer
   refuses its pin (`contract_mismatch`); an unpinned project is checked against
-  the accepted set alone (`docs/design.md:1423-1434`);
+  the accepted set alone (`docs/design.md:2412-2422`);
 - each registered project: the path exists, the check command parses, and the
   worktree and branch patterns contain `{id}` or `{id_lower}`.
 
@@ -92,7 +92,7 @@ ork never reads vendor credentials. Log in with each vendor CLI's own login
 
 ## 4. Add a project
 
-ork needs an existing absolute directory (`docs/design.md:1263-1269`). The
+ork needs an existing absolute directory (`docs/design.md:2561-2568`). The
 TUI Welcome view offers the current directory only if it holds `.slicer` or
 `.adjudicate.json` (`docs/dashboard.md:31-35`), and the roadmap and ledger
 features need slicer. To set a directory up, run `slicer init` and `adj init`
@@ -110,8 +110,8 @@ Add it in either way:
   selected project (`docs/dashboard.md:65-83`).
 - **On the command line.**
   `ork projects add /abs/path/to/project --name NAME`. With no path in text
-  mode it offers the current directory (`internal/cli/cli.go:58-59`,
-  `docs/design.md:1261-1270`).
+  mode it offers the current directory (`internal/cli/daemoncmds.go:234-247`,
+  `docs/design.md:2561-2568`).
 
 To add every project in a folder such as `~/code`, press `+` in the TUI, type
 the folder and press Enter: when it holds projects below it, ork shows a
@@ -127,10 +127,10 @@ repo; add the other with `--name`). The scan looks at 500
 folders at most, and says when it stopped.
 
 Other commands: `ork projects list` and `ork projects rm NAME`. Removal is
-refused while the project has unfinished runs (`docs/design.md:1273-1277`).
+refused while the project has unfinished runs (`docs/design.md:2604-2608`).
 
 The first add creates `~/.config/ork/projects.json`; ork never seeds it
-(`docs/state.md:28-33`).
+(`docs/state.md:34-36`).
 
 To pin the project's slicer relay contract, run
 `ork projects pin NAME --relay 11` (v10 or v11). ork runs
@@ -147,14 +147,14 @@ command needs the daemon.
 ## 5. Set a project's options
 
 The registry holds optional per-project settings. Change them with
-`ork projects set` (`internal/cli/cli.go:61-67`):
+`ork projects set` (`internal/cli/cli.go:141-154`):
 
 | Flag | What it sets |
 |---|---|
 | `--check CMD` | the check command ork runs after each implementer round. With none set, `ork run` and `ork wave start` refuse to start unless you add `--allow-no-check`, and `ork doctor` reports it (*proposed*, S265, adj 191) |
 | `--no-verify` | with `--check` or `--round-check`: store the command even when ork finds it cannot run in the project's folder. ork remembers it for the project (`no_verify_check`), so runs do not pause at setup on that command; a later `--check` or `--round-check` without `--no-verify` verifies again and clears it. Without it ork checks, without running anything but `sh -n`, that the shell parses the command, the first word of each command is found, and the plain file names the command lists (`App.slnx`, `scripts/test.sh`, not flags, globs or `./...`) exist in the folder the check runs in, and refuses a command that fails, naming the file and the folder (*proposed*, S295). A run whose check cannot run pauses before round 1 with the same line; to fix it, `ork stop ID`, `ork projects set NAME --check CMD`, then `ork retry ID` |
 | `--round-check CMD` | a faster command for the checks after implementer rounds (*proposed*, S285). Your `--check` command still runs in the landing re-check and, when it differs from the round command, after a green round check, before the review or the gate. Refused only while the project would have no `--check` command (a saved one is enough); empty clears it; refused while the project has unfinished runs |
-| `--check-minutes N` | minutes the check command may run (default 10; `internal/engine/states.go:197-202`). `docs/state.md:76-78` also calls it the stale flag, which the code does not do |
+| `--check-minutes N` | minutes the check command may run (default 10; `internal/engine/states.go:437-440`, `docs/state.md:87-89`) |
 | `--worktree-pattern P` | worktree path; must contain `{id}` or `{id_lower}` (default `.worktrees/{id}`) |
 | `--branch-pattern P` | branch name; same rule (default `{id}`) |
 | `--cap N` | how many runs of this project may be busy at once (unset means no project cap) |
@@ -182,7 +182,7 @@ command is refused, except a call that sets only `--cap`, `--budget-minutes`,
 `--budget-tokens`, `--worktree-pattern` or `--branch-pattern`, which no running
 slice reads (*proposed*, S265). The refusal names the fields it will not change
 now; set them after the runs finish or stop. The daemon needs no restart: the
-next run uses the new values (`docs/design.md:1278-1295`, `docs/state.md:94-103`).
+next run uses the new values (`docs/design.md:2704-2716`, `docs/state.md:188-211`).
 
 Three more fields take repeatable flags (*proposed*, S174):
 
@@ -232,9 +232,9 @@ slicer:
 For each slice ork calls `slicer relay-roles recommend ID --well-specified
 y/n --split y/n` (with yes and no unless you override them, *proposed*, adj 189;
 the spec check holds a slice that is not ready) and turns the answer into the lineup for implementer,
-reviewer, gate, and an architect when the lineup has one (the matrix gives one on size L) (`docs/design.md:167-186`, `docs/design.md:272-275`,
-`internal/slicercli/write.go:96`). A matrix row for a vendor ork has no adapter
-for is skipped; ork runs `claude`, `codex` and `grok` (`docs/design.md:184-198`). Grok
+reviewer, gate, and an architect when the lineup has one (the matrix gives one on size L) (`docs/design.md:189-208`, `docs/design.md:485-488`,
+`internal/slicercli/write.go:108`). A matrix row for a vendor ork has no adapter
+for is skipped; ork runs `claude`, `codex` and `grok` (`docs/design.md:207-222`). Grok
 runs read-only roles (reviewer, gate, architect, spec check) in plan mode and
 refuses a write role, so a plan skips a Grok implementer row and says why in
 the plan's note, and a launch override that names Grok as the implementer is
@@ -250,7 +250,7 @@ fields start from the text that was asked for (`gpt-*-sol@latest`), so keeping
 the field asks for the latest again (*proposed*, S245). A bare `latest` is refused. A model without `@latest` is passed as written.
 
 At launch you can change the lineup and the budgets for that one run. The
-matrix stays as it was (`docs/design.md:170-175`). In the TUI the key is `e`
+matrix stays as it was (`docs/design.md:196-201`). In the TUI the key is `e`
 on the Waves view (section 9), or at the Roadmap launch confirmation.
 To plan a split slice or one that is not well specified, use the command line:
 `ork run PROJECT ID --split y` or `ork wave start PROJECT ITEM... --well-specified n`.
@@ -293,7 +293,7 @@ Press `e` at the
 confirmation to edit the lineup and budgets, `enter` to save and replan, or
 `esc` to discard. Replanning an edited lineup does not repeat the spec check.
 Press `y` at the confirmation to start (`docs/dashboard.md:1374-1402`,
-`internal/tui/keys.go:258-262`).
+`internal/tui/keys.go:313-322`).
 
 **On the command line.**
 
@@ -329,7 +329,7 @@ The printed plan includes lineup overrides and, when overridden, budgets.
 It is the plan confirmed at start.
 The run is now in the daemon. Closing the TUI or the shell does not stop it.
 
-The roles run in this order (`docs/design.md:223-307`):
+The roles run in this order (`docs/design.md:391-631`):
 
 1. **setup**: git worktree and branch, and a slicer ledger run.
 2. **implement**: one implementer role.
@@ -352,7 +352,7 @@ The roles run in this order (`docs/design.md:223-307`):
    them.
 4. **review**: a reviewer, and the UI pass beside it on a slice that touches
    the UI. Findings go to one fix round.
-5. **architect**: only when the lineup has an architect entry; the matrix gives one on size L (`docs/design.md:272-275`).
+5. **architect**: only when the lineup has an architect entry; the matrix gives one on size L (`docs/design.md:485-488`).
 6. **gate**: the first line of its report is `VERDICT: PASS` or
    `VERDICT: FAIL`. The third FAIL stops the run.
 7. **awaiting approval**: your turn (section 10).
@@ -396,8 +396,8 @@ slept 1h03m)` (S235, *proposed*): how long the step has run, how long ago the
 role last sent output, and how long the machine slept meanwhile.
 *Proposed (S285):* under a run with a check row, it first prints `last check:
 CMD (ok|red, round N)`, the command of the newest check, so you can tell the
-round command from the full one. Add `--json` to any command for scripts (`internal/cli/cli.go:56`,
-`internal/cli/cli.go:77`).
+round command from the full one. Add `--json` to any command for scripts (`internal/cli/cli.go:54`,
+`internal/cli/cli.go:212`).
 
 ### Wait for a change
 
@@ -447,7 +447,7 @@ echo $?`.
 ## 9. Run a wave
 
 A wave is several slices of one project that start together
-(`docs/design.md:162-221`).
+(`docs/design.md:175-361`).
 
 **In the TUI.** Open the Waves view (`tab` from Questions). It loads slicer's
 suggested waves. For each item you want:
@@ -463,7 +463,7 @@ suggested waves. For each item you want:
    held back. The Roadmap launch uses the same sitting for one slice
    (section 7); skipping closes that launch.
 4. Confirm with `y`. The status line shows `ork wave start PROJECT ID...`
-   (`docs/dashboard.md:1187-1223`, `internal/tui/keys.go:258-277`).
+   (`docs/dashboard.md:1187-1223`, `internal/tui/keys.go:313-322`).
 
 **On the command line.**
 
@@ -525,10 +525,10 @@ puts each further one alone in the next wave, with the reason `engine: ID`
 with it.
 
 Like `ork run`, `wave start` asks the spec-check questions on standard input
-and prints each plan before it asks to start (`docs/design.md:1034-1056`,
-`internal/cli/wave.go:341`). `ork stop` takes the `wave-` id it prints and
+and prints each plan before it asks to start (`docs/design.md:1958-1973`,
+`internal/cli/wave.go:378-385`). `ork stop` takes the `wave-` id it prints and
 stops every unfinished run in that wave, queued ones included
-(`docs/design.md:1064-1068`).
+(`docs/design.md:2045-2051`).
 
 An item that has no slice spec does not fail the wave (S283, *proposed*, adj
 245). `wave start` leaves it out, prints `ID: no slice spec; run slicer
@@ -541,7 +541,7 @@ starts.
 
 Runs start as slots free. The global cap is 2 and a project's cap is its
 `cap` setting. A run over a cap waits as `queued`
-(`docs/design.md:212-214`). One failed run does not stop the others.
+(`docs/design.md:315-316,330-332`). One failed run does not stop the others.
 
 A paused run holds no slot, so other runs start while it waits for you. When
 you then answer or retry it and the project cap or the global cap leaves no
@@ -565,18 +565,18 @@ appear in the **Questions** view and under **Needs you** on the Overview.
 - In the TUI: `enter` opens the run. A digit `1`-`4` loads that option and `y`
   sends it; `t` types a free answer and `enter` sends it. `ctrl+a` toggles filing the answer in adj. Filing
   needs `ADJ_DECIDED_BY` set in the environment of the TUI
-  (`internal/tui/keys.go:106-108`, `internal/tui/pane.go:284-297,498`).
+  (`internal/tui/keys.go:139`, `internal/tui/pane.go:362-368,615-618`).
 - On the command line: `ork answer RUN TEXT`. The CLI sends the text only; it
-  does not file in adj (`internal/cli/run.go:247,264-268`). *Proposed (S237):* the
+  does not file in adj (`internal/cli/run.go:322,339-346`). *Proposed (S237):* the
   command returns as soon as the run has resumed and prints its new state
   (for example `r1 implement`); `ork status` shows the role at work. Add
   `--wait` to wait until the run rests again. `ork retry RUN` works the same
   way, also for a stopped run (S296). RUN is the ork run id; a slicer relay
   run id gets an error that names the ork run.
 - Findings tagged owner but not blocking do not pause the run. Answer one
-  with `o` in the run pane (`internal/tui/keys.go:80`).
+  with `o` in the run pane (`internal/tui/keys.go:113`).
 - A finding tagged later can become a new slice: `f` in the run pane, or
-  `ork file RUN N` (`internal/cli/cli.go:52`).
+  `ork file RUN N` (`internal/cli/cli.go:97`).
 
 Spec-check questions (before a wave) are answered in the sitting that opens
 at launch. See section 9.
@@ -620,7 +620,7 @@ approval, and directory-versus-file clashes are not detected.
   merges the base branch into the worktree if the base moved, re-runs the
   checks, fast-forwards the main checkout, runs `slicer land`, pushes if the
   project's `push` setting is on, and removes the worktree and the branch
-  (`docs/design.md:351-397`).
+  (`docs/design.md:646-810`).
 
 *Proposed (S254):* before it merges, ork looks at the main checkout. If you
 have uncommitted changes there to a file the slice also changes, the run
@@ -632,7 +632,7 @@ and goes on. Files the slice does not change are left alone (the `ID done`
 commit after `slicer land` still commits any `.slicer` change).
 
 From the shell: `ork check RUN N [ticked|later|open]`, `ork fix RUN TEXT`,
-`ork approve RUN` (`internal/cli/cli.go:47-50`).
+`ork approve RUN` (`internal/cli/cli.go:86-89`).
 
 *Proposed (S238):* if the merge has a conflict, ork merges the `CHANGELOG.md`
 entries itself and pauses the run on any other file, with a one-line message
@@ -649,7 +649,7 @@ Use this loop each day:
 
 1. Open `ork`. The sidebar lists **Running**, **Needs you** and each project.
    `0` jumps to Needs you, `1`-`9` to a project, `[` and `]` move between them
-   (`internal/tui/keys.go:87-93`).
+   (`internal/tui/keys.go:121-127`).
 2. Clear **Needs you** from the top. Group order is Decisions, Held, Stopped,
    Questions, Paused, Approve, Findings, Errors (`docs/dashboard.md:463-464`).
 3. Open **Questions** for every open question in one list.
@@ -670,19 +670,19 @@ Set it with `ork projects set NAME --bell on|off` (*proposed*, S224).
 
 | Situation | What to do |
 |---|---|
-| A run is paused with no question (shape, error, lost, interrupted) | `t` on the row, or `ork retry RUN` (`docs/design.md:1088-1091`). *Proposed (S256):* `ork retry RUN "TEXT"` also sends a note, for example after you fixed the tree: the rerun brief shows it as an owner note. A resumed role is told to read `git status` and the diff again; the `t` key sends no note. `ork answer` and `ork fix` do not work on such a pause |
+| A run is paused with no question (shape, error, lost, interrupted) | `t` on the row, or `ork retry RUN` (`docs/design.md:2070-2077`). *Proposed (S256):* `ork retry RUN "TEXT"` also sends a note, for example after you fixed the tree: the rerun brief shows it as an owner note. A resumed role is told to read `git status` and the diff again; the `t` key sends no note. `ork answer` and `ork fix` do not work on such a pause |
 | A run is paused on report shape twice in a row for one role and round (*proposed*, S298) | The reason names what is wrong (for an owner finding: the missing or misnumbered part, with the offending line), the refused report file and `ork show RUN`. A plain `ork retry RUN` (and `t`) is refused. Read the report with `ork show RUN`, then choose: `ork retry RUN --accept-shape` keeps each owner finding that has no options as an open owner finding (an `[owner blocker]` becomes a question you answer in words) and runs no role; it refuses any other shape problem. `ork retry RUN --again` runs the role once more; if that fails too the pause is capped again. Or `ork stop RUN`. The first shape pause is not capped: `ork retry RUN` works as before, and its brief now carries the exact error and the finding's lines |
 | You need to know why a run is paused, or read the report that was refused | `ork show RUN` (*proposed*, S297) prints the whole pause reason (and the question with its options), the roles with their report names, the check results with their log names, the owner and later findings, and the paused role's newest report (or the run's last report when that role has none). `ork show RUN NAME` prints one report (`reviewer-1-attempt-3.md`) or one check log (`checks-2.log`). Both take `--json`. It reads only reports and check logs, so you need not open `~/.local/state/ork` |
-| A run is paused at a budget limit | `t` or `ork retry RUN` grants one more role round (`docs/design.md:986-997`) |
+| A run is paused at a budget limit | `t` or `ork retry RUN` grants one more role round (`docs/design.md:1860-1869`) |
 | A run is paused after red rounds or no progress (*proposed*, S294) | Read the named failure in Needs you or `ork status`. `t` or `ork retry RUN` grants two more implementer rounds; `ork retry RUN --rounds N` grants a positive count. If still red at the granted limit, it pauses again. To change the check, `ork stop RUN`, set the check (`ork projects set P --check CMD`), then `ork retry RUN` resumes the stopped run at the checks with the new command (*proposed*, S296). Or stop the run. The pane shows the choices in words; status adds retry and stop commands in its trailing next-step hint |
 | A run is stopped | Read the reason in the pane. Fix the cause and continue, or clear it with `ork dismiss RUN`. *Proposed (S296):* `ork retry RUN [--rounds N]` resumes a stopped run that has no commit and whose worktree is intact: it grants N more implementer rounds (2 by default), reloads the project's settings, begins a new ledger run and re-enters the checks (a green check goes on to review), or implementer round 1 when no implementer round has run. A dismissed run can be resumed too, which clears the dismissal. `ork status` and `ork show RUN` name the command (`ork retry RUN [--rounds N] or ork dismiss RUN`), and name none for a run that a newer run of the item has superseded. `ork retry` gets past the project and global caps, like every owner action. `ork run` or `ork wave start` on the same item resumes the newest stopped run by itself when its worktree is exactly what the last implementer round left; it joins the new run's wave and keeps the stopped run's lineup, budgets and stop-after (the message says so). Otherwise it starts a new run at implementer round 1 in the same worktree and prints why. A dismissed run is not resumed that way. With no free slot the start is refused, naming the stopped run: resume it with `ork retry RUN`, or `ork dismiss RUN` to start a new run |
 | A run is paused with a reason like `implementer round 1 hung: no output for 30m` | ork killed a role that sent nothing for 30 minutes. Time the machine slept does not count, so a wake alone does not cause this (S235, *proposed*). Read the reason in the pane, then retry with `t` or `ork retry RUN`: the same role runs again and is told that the earlier process was lost. ork does not retry for you |
-| A relay that ork did not start shows `!!` and `stale` | Open its pane and press `x`. It ends the ledger run as stopped (`internal/tui/pane.go:327`, `internal/tui/ledgerend.go:27`), but only when the run is stale and no unfinished ork run owns it (`internal/daemon/runs.go:1418-1429`). `ork stop RUN` does not take such a run: it names ork runs and waves, and the daemon answers `no run` for a ledger id (`internal/daemon/runs.go:919-921`) |
+| A relay that ork did not start shows `!!` and `stale` | Open its pane and press `x`. It ends the ledger run as stopped (`internal/tui/pane.go:413-416`, `internal/tui/ledgerend.go:21`), but only when the run is stale and no unfinished ork run owns it (`internal/daemon/runs.go:2515-2531`). `ork stop RUN` does not take such a run: it names ork runs and waves, and the daemon answers `no run` for a ledger id (`internal/daemon/runs.go:1624-1635`) |
 | Codex is out of credits or at a limit | Nothing is needed: ork marks it out for 60 minutes and starts new rounds on the next row of another vendor. Check with `ork vendor`. To keep it out longer, `ork vendor out codex` holds until you run `back` (it survives a daemon restart), and `ork vendor out codex --until 07:12` holds until then. `ork vendor back codex` ends the mark early, for example after you add credits. A run that waits for the one Codex slot is not stuck: it starts when the other Codex role ends |
 | You want to stop work | `x` on a row or `ork stop RUN`; `ork stop WAVE-ID` for a wave |
-| The daemon died or you stopped it | Start `ork` again. On start the daemon checks every unfinished run against live processes and marks a role with no process and no report as lost, then the slice waits for you (`docs/design.md:154-160`) |
+| The daemon died or you stopped it | Start `ork` again. On start the daemon checks every unfinished run against live processes and marks a role with no process and no report as lost, then the slice waits for you (`docs/design.md:167-173`) |
 | Commands warn that the daemon build differs | `ork daemon restart`. It refuses while a role runs unless you add `--force` (`docs/design.md:41-48`) |
-| A merged slice left its worktree behind | `c` on the Ready row removes the merged worktree and branch (`internal/tui/keys.go:71`) |
+| A merged slice left its worktree behind | `c` on the Ready row removes the merged worktree and branch (`internal/tui/keys.go:89`) |
 
 Run `ork doctor` after you upgrade slicer or adj. The slicer contract must
 still be one ork accepts.
@@ -690,7 +690,7 @@ still be one ork accepts.
 ## 13. Keys at a glance
 
 The TUI draws the keys that work right now on its hint line, and `?` lists
-them all (`internal/tui/keys.go:13-124`).
+them all (`internal/tui/keys.go:82-157`).
 
 | Where | Key | Action |
 |---|---|---|
@@ -744,7 +744,7 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork doctor
 
 Every command takes `--json`. Exit codes: 0 ok, 1 failure, 2 usage
-(`internal/cli/cli.go:40-77`); `ork wait` also returns 3 question pending, 4
+(`internal/cli/cli.go:212`); `ork wait` also returns 3 question pending, 4
 nothing active and 5 timeout (S257, *proposed*).
 
 `ork COMMAND --help` (or `-h`) and `ork help COMMAND` print that command's
