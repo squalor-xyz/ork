@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/landmerge.go:82-140` (`settleMerge`, `conflictReason`)\n- `internal/engine/landmerge_test.go`\n- `docs/design.md` (landing conflicts)\n- `CHANGELOG.md`"
+      "body": "- `internal/engine/landmerge.go:82-146` (`settleMerge`), `internal/engine/landmerge.go:148-159` (`trackingConflictReason`)\n- `internal/engine/landmerge_test.go`\n- `docs/design.md` (landing conflicts)\n- `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",

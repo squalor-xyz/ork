@@ -18256,10 +18256,39 @@
       "id": "S334",
       "title": "Landing: the slice's own JSON deleted by the branch (moved to done/) but edited on main",
       "short_title": "Deleted-by-us slice JSON at landing",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "cb839506-ee83-4e1c-8603-03b6fac361c3",
+          "kind": "",
+          "text": "**2026-11-11** — Review FAIL: Earlier blockers: the absent-path stage check is resolved at internal/engine/landmerge.go:139-144 (`os.IsNotExist` and `deletedBySide`, defined at internal/engine/landmerge.go:220-222) and proved by `TestLandRetryKeepsAnAbsentSliceJSONBothSidesModified` (internal/engine/landmerge_test.go:406). The scratch-file blocker is not resolved: `internal/engine/zz_debug_test.go` is still untracked. No fix finding: no. The scratch file is still a fix. No blocker owner finding: none. Tests green: ork round 2 `go vet ./... && go test ./...` exit 0, including `ok github.com/squalor-xyz/ork/internal/engine`....",
+          "created_at": "2026-11-11T17:50:15Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "05b30b9b-da39-4478-b8b1-cb4b6eb58095",
+          "kind": "",
+          "text": "**2026-11-11** — Verified: when the branch moved the item's slice JSON to done/ and main edited the old path, the landing now merges main's change into the done/ copy (git merge-file) and removes the old path; a conflict pauses naming the done/ file; ork retry stages an absent deleted-by-us or deleted-by-them old path once the done/ copy has no markers, and leaves a both-modified path unmerged. 7 new engine tests, each mutation-checked; go vet and go test ./... pass, gofmt clean, slicer check and adj lint exit 0.",
+          "created_at": "2026-11-11T17:54:39Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -18277,7 +18306,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

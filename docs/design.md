@@ -748,6 +748,24 @@ slice.
      for each named file, says to keep both changes and remove the markers,
      then `ork retry RUN`; no `git add` is needed. Mixed conflicts retain
      the generic reason. ork does not pick a side.
+     *Proposed (S334, adj 303 and 304):* when the only unmerged path is the
+     item's own `.slicer/slices/ID.json`, deleted by the branch (git's stage 2
+     is missing: the branch ran `slicer done`, which moves the file to
+     `.slicer/slices/done/ID.json`) and edited on the base, ork three-way
+     merges the base's change into the branch's `done/` copy
+     (`git merge-file`, the merge base as ancestor). A clean merge stages the
+     copy and removes the old path, and the landing goes on to render with no
+     pause. A conflict leaves markers in the `done/` copy and pauses with the
+     tracking reason above, naming the `done/` file, with `git show
+     HEAD:DONE_FILE` for the branch and `git show :3:OLD_FILE` for the base.
+     On a conflict ork also removes the old path's working file, so a retry
+     sees it absent. On `ork retry`, the item's unmerged old path that is
+     absent from the worktree is staged as deleted (`git rm --cached`) only
+     when git marks it deleted on one side (deleted by us: stages 1 and 3;
+     deleted by them: stages 1 and 2) and the item's `done/` copy exists and
+     holds no markers, so no `git rm` is needed. A path both sides modified
+     (stages 1, 2 and 3) is no deletion; any other absent unmerged path stays
+     unmerged.
      When a conflicted path is under `.slicer/`
      and a slicer driver named in `.slicer/.gitattributes` is missing from git
      config,
