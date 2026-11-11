@@ -237,7 +237,7 @@ func printRunPlan(w io.Writer, p daemon.RunPlan, budgetsOverridden bool) {
 			continue
 		}
 		for _, entry := range p.Lineup[role] {
-			fmt.Fprintf(w, "%s: %s %s %s\n", role, entry.Vendor, entry.Model, entry.Effort)
+			fmt.Fprintf(w, "%s: %s %s %s\n", role, entry.Vendor, runrec.ModelLabel(entry), entry.Effort)
 		}
 		perm := p.Permissions[role]
 		if perm.ReadOnly {

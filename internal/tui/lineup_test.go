@@ -51,6 +51,48 @@ func TestLineupEditorStartsFromPlan(t *testing.T) {
 	}
 }
 
+// A row whose model was resolved from FAMILY@latest says so and names the
+// model; the custom fields start from the text that was asked for, so an edit
+// that keeps the field sends the same request again (S245, *proposed*).
+func TestLineupEditorShowsResolutionButEditsTheRequestedText(t *testing.T) {
+	h, _ := lineupHarness(t)
+	e := h.m.waves.lineup
+	latest := runrec.LineupEntry{Vendor: "codex", Model: "gpt-6.2-sol", Effort: "medium", Requested: "gpt-*-sol@latest"}
+	e.plan.Lineup["implementer"] = []runrec.LineupEntry{latest, {Vendor: "codex", Model: "gpt-6.1-sol", Effort: "low", Requested: "gpt-*-sol@latest"}}
+	e.chains[0] = append([]runrec.LineupEntry(nil), e.plan.Lineup["implementer"]...)
+	body := func() string { return strings.Join(h.m.lineupBody(100).body, "\n") }
+	for _, want := range []string{
+		"> implementer: < codex latest (resolves to gpt-6.2-sol) medium >  1/2",
+		"    fallback: codex latest (resolves to gpt-6.1-sol) low",
+	} {
+		if !strings.Contains(body(), want) {
+			t.Errorf("missing %q:\n%s", want, body())
+		}
+	}
+	e.plan.Lineup["ui"] = []runrec.LineupEntry{latest}
+	if want := "  ui: codex latest (resolves to gpt-6.2-sol) medium (UI slices only; from the matrix)"; !strings.Contains(body(), want) {
+		t.Errorf("missing %q:\n%s", want, body())
+	}
+	h.deliver(press("c"))
+	if got := e.fields[1].Value(); got != "gpt-*-sol@latest" {
+		t.Fatalf("model field %q, want the requested text", got)
+	}
+	if e.fields[0].Value() != "codex" || e.fields[2].Value() != "medium" {
+		t.Errorf("vendor %q effort %q", e.fields[0].Value(), e.fields[2].Value())
+	}
+	h.deliver(press("enter"))
+	want := runrec.LineupEntry{Vendor: "codex", Model: "gpt-*-sol@latest", Effort: "medium"}
+	if got := e.chains[0][0]; got != want {
+		t.Errorf("an edit that keeps the field gives %+v, want %+v", got, want)
+	}
+	// A pinned row opens with its model, as before.
+	h.deliver(press("down"))
+	h.deliver(press("c"))
+	if got := e.fields[1].Value(); got != "opus" {
+		t.Errorf("pinned model field %q", got)
+	}
+}
+
 func TestLineupKeyIgnoredOutsideWaves(t *testing.T) {
 	for _, tc := range []struct {
 		name string

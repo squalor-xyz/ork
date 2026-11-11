@@ -4115,3 +4115,14 @@
 {"when": "2026-11-11T03:01:16Z", "item": "S226", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S226):", "by": "Jon Robbins"}
 {"when": "2026-11-11T03:01:20Z", "item": "S226", "action": "note", "from": "", "to": "", "note": "Verified: role matrix editor in the TUI. In the matrix pane ", "by": "Jon Robbins"}
 {"when": "2026-11-11T03:01:22Z", "item": "S226", "action": "status", "from": "started", "to": "done", "note": "Verified: role matrix editor in the TUI (e/n/d/m/r typed-id form, matrix.edit preview then run, exact command and warning shown, matrix reloaded, change left uncommitted). Full go test -race, vet, gofmt, slicer check and adj lint clean; human check in a scratch project not run.", "by": "Jon Robbins"}
+{"when": "2026-11-10T14:22:00Z", "item": "S245", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-10T14:25:37Z", "item": "S245", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-10T14:25:39Z", "item": "S245", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-11T01:44:41Z", "item": "S245", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-11T01:44:43Z", "item": "S245", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-11T01:52:06Z", "item": "S245", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S245):", "by": "Jon Robbins"}
+{"when": "2026-11-11T01:52:10Z", "item": "S245", "action": "note", "from": "", "to": "", "note": "Verified: ork run plan, launch pane and lineup editor print ", "by": "Jon Robbins"}
+{"when": "2026-11-11T01:52:12Z", "item": "S245", "action": "status", "from": "started", "to": "done", "note": "Verified: ork run plan, launch pane and lineup editor print latest (resolves to MODEL) for an entry with requested, via runrec.ModelLabel; the Waves lineup column prints MODEL (latest); a pinned model prints its name; the editor model field starts from the requested text. Run tree, Overview and daemon unchanged; no golden changed. go test -race ./..., go vet, gofmt, slicer check and adj lint pass.", "by": "Jon Robbins"}
+{"when": "2026-11-11T01:41:36Z", "item": "S226", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-11T02:41:41Z", "item": "S223", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-11T02:51:19Z", "item": "S291", "action": "edit", "from": "", "to": "", "note": "Implement"}

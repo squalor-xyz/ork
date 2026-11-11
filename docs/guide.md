@@ -222,7 +222,12 @@ refused with `bad_params` (*proposed*, S72, S268). A project whose implementer
 is the `read-only` preset keeps its Grok row. A matrix model written `FAMILY@latest`, such as `gpt-*-sol@latest` or
 `grok-*@latest`, runs the newest model of that family: ork reads the vendor's
 model list when it builds the plan and shows the result in the lineup (*proposed*,
-S244). A bare `latest` is refused. A model without `@latest` is passed as written.
+S244). The plan, the launch pane and the lineup editor print such an entry as
+`latest (resolves to MODEL)`, for example `codex latest (resolves to
+gpt-6.2-sol) medium`, in place of the model name; the Waves lineup column shows
+the compact `MODEL (latest)`; the lineup editor's custom
+fields start from the text that was asked for (`gpt-*-sol@latest`), so keeping
+the field asks for the latest again (*proposed*, S245). A bare `latest` is refused. A model without `@latest` is passed as written.
 
 At launch you can change the lineup and the budgets for that one run. The
 matrix stays as it was (`docs/design.md:170-175`). In the TUI the key is `e`

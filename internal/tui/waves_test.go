@@ -1632,6 +1632,65 @@ func TestWavesLineupShowsUIPass(t *testing.T) {
 	}
 }
 
+// The launch pane says a latest model is the latest and what it resolves to;
+// the narrow Waves lineup column shows the compact `MODEL (latest)` (S245,
+// *proposed*, adj 273). Both wrap as they do for any other text: no line is
+// wider than the terminal at 100 or 80 columns.
+func TestLaunchAndWavesLineupShowLatestResolution(t *testing.T) {
+	const label = "latest (resolves to gpt-6.2-sol)"
+	latest := []runrec.LineupEntry{{Vendor: "codex", Model: "gpt-6.2-sol", Effort: "medium", Requested: "gpt-*-sol@latest"}}
+	for _, size := range [][2]int{{100, 30}, {80, 24}} {
+		w, ht := size[0], size[1]
+		t.Run(fmt.Sprint("launch ", w), func(t *testing.T) {
+			h, l := launchHarness(t)
+			l.plan.Lineup["implementer"] = latest
+			launchConfirmed(t, h)
+			v := h.at(w, ht)
+			if !strings.Contains(v, "implementer: codex "+label+" medium") {
+				t.Errorf("launch lineup lacks the label at %d columns:\n%s", w, v)
+			}
+			if strings.Contains(v, "@latest") {
+				t.Errorf("launch pane prints the requested text:\n%s", v)
+			}
+			for _, line := range strings.Split(v, "\n") {
+				if lipgloss.Width(line) > w {
+					t.Errorf("line over %d columns: %q", w, line)
+				}
+			}
+		})
+		t.Run(fmt.Sprint("waves ", w), func(t *testing.T) {
+			h, _ := wavesHarness(t)
+			openWaves(t, h)
+			tickWave(t, h)
+			p := h.m.waves.picked["A"]
+			p.Expected.Lineup["implementer"] = latest
+			if got := waveLineup(p)[0]; got != "impl:  codex gpt-6.2-sol (latest) medium" {
+				t.Fatalf("lineup line %q", got)
+			}
+			if got := waveLineup(p)[1]; got != "rev:   claude opus medium" {
+				t.Fatalf("a pinned entry's line %q", got)
+			}
+			v := h.at(w, ht)
+			// The column is narrow and wraps; these pieces survive the wrap at
+			// 100 and 80 columns.
+			if !strings.Contains(v, "impl:  codex gpt-6.2-sol") || !strings.Contains(v, "(latest)") || !strings.Contains(v, "medium") {
+				t.Errorf("Waves lineup lacks the compact label at %d columns:\n%s", w, v)
+			}
+			if strings.Contains(v, "resolves to") {
+				t.Errorf("Waves lineup prints the full label:\n%s", v)
+			}
+			if strings.Contains(v, "@latest") {
+				t.Errorf("Waves lineup prints the requested text:\n%s", v)
+			}
+			for _, line := range strings.Split(v, "\n") {
+				if lipgloss.Width(line) > w {
+					t.Errorf("line over %d columns: %q", w, line)
+				}
+			}
+		})
+	}
+}
+
 func TestWavesLaunchShowsTheBlockedRefusal(t *testing.T) {
 	h, l := wavesHarness(t)
 	twoWaveItems(t, h)

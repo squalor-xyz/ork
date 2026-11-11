@@ -132,6 +132,24 @@ func TestLineupEntryKeepsRequestedBesideTheResolvedModel(t *testing.T) {
 	}
 }
 
+// ModelLabel is what plans and lineups print for an entry (S245, *proposed*): a
+// resolved latest model says so and names what it resolved to; a pinned model
+// is its own name.
+func TestModelLabelShowsLatestResolution(t *testing.T) {
+	for _, tc := range []struct {
+		entry LineupEntry
+		want  string
+	}{
+		{LineupEntry{Model: "gpt-6.2-sol", Requested: "gpt-*-sol@latest"}, "latest (resolves to gpt-6.2-sol)"},
+		{LineupEntry{Model: "opus"}, "opus"},
+		{LineupEntry{Vendor: "claude", Model: "opus", Effort: "high"}, "opus"},
+	} {
+		if got := ModelLabel(tc.entry); got != tc.want {
+			t.Errorf("ModelLabel(%+v) = %q, want %q", tc.entry, got, tc.want)
+		}
+	}
+}
+
 func TestCreateRefusesAnExistingRunAndAnEmptyID(t *testing.T) {
 	s := newStore(t)
 	if _, err := s.Create(rec("a")); err != nil {

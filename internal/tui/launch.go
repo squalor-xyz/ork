@@ -515,7 +515,7 @@ func (m *Model) launchView(w int) overviewView {
 				continue
 			}
 			for _, e := range p.Lineup[role] {
-				add(fmt.Sprintf("%s: %s %s %s", role, e.Vendor, e.Model, e.Effort))
+				add(fmt.Sprintf("%s: %s %s %s", role, e.Vendor, runrec.ModelLabel(e), e.Effort))
 			}
 			perm := p.Permissions[role]
 			if perm.ReadOnly {

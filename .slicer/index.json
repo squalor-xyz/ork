@@ -13603,12 +13603,41 @@
       "id": "S245",
       "title": "Show \"latest (resolves to X)\" in plans and lineups",
       "short_title": "Show resolved latest models",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S244"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "c2c6de68-0a6e-4f1f-9233-b72b8d9033eb",
+          "kind": "",
+          "text": "**2026-11-11** — Human checks at approval (S245):\n- later: At 100x30 and 80x24, the launch lineup of a scratch project's slice whose implementer row is `gpt-*-sol@latest` reads `latest (resolves to ...)` and fits.",
+          "created_at": "2026-11-11T01:52:06Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "27374be2-65cf-4aef-b3cd-206aeb307f5c",
+          "kind": "",
+          "text": "**2026-11-11** — Verified: ork run plan, launch pane and lineup editor print latest (resolves to MODEL) for an entry with requested, via runrec.ModelLabel; the Waves lineup column prints MODEL (latest); a pinned model prints its name; the editor model field starts from the requested text. Run tree, Overview and daemon unchanged; no golden changed. go test -race ./..., go vet, gofmt, slicer check and adj lint pass.",
+          "created_at": "2026-11-11T01:52:10Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -13626,7 +13655,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

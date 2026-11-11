@@ -192,6 +192,32 @@ func TestRunShowsPlanBeforeConfirmation(t *testing.T) {
 	}
 }
 
+// The plan says a latest model is the latest and what it resolves to (S245,
+// *proposed*); a pinned model prints its name.
+func TestRunPlanTextShowsLatestResolution(t *testing.T) {
+	var out, errs bytes.Buffer
+	app := &App{Input: strings.NewReader("no\n")}
+	app.Call = func(_ context.Context, method string, params, result any) error {
+		switch method {
+		case "run.plan":
+			b := []byte(`{"project":{"name":"p"},"item":"S1","check_command":"go test ./...","lineup":{"implementer":[{"vendor":"codex","model":"gpt-6.2-sol","effort":"medium","requested":"gpt-*-sol@latest"}],"reviewer":[{"vendor":"claude","model":"opus","effort":"high"}]}}`)
+			return json.Unmarshal(b, result)
+		case "spec.check":
+			return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true}]}`), result)
+		}
+		t.Fatalf("method %s", method)
+		return nil
+	}
+	if code := app.Run(context.Background(), []string{"run", "p", "S1"}, &out, &errs); code != 0 {
+		t.Fatalf("code %d: %s", code, &errs)
+	}
+	for _, want := range []string{"implementer: codex latest (resolves to gpt-6.2-sol) medium\n", "reviewer: claude opus high\n"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("plan lacks %q:\n%s", want, &out)
+		}
+	}
+}
+
 func TestRunYesStartsAndOwnerCommands(t *testing.T) {
 	for _, tc := range []struct {
 		args   []string
