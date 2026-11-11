@@ -51,6 +51,8 @@ func (a *App) callWith(ctx context.Context, o *output, prefix, method string, pa
 func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 	fs := flag.NewFlagSet("run", flag.ContinueOnError)
 	yes := fs.Bool("yes", false, "confirm the plan")
+	var spec specFlags
+	spec.register(fs)
 	well := fs.String("well-specified", "", "y/n")
 	split := fs.String("split", "", "y/n")
 	allowNoCheck := fs.Bool("allow-no-check", false, "start although the project has no check command")
@@ -59,6 +61,9 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
 	pos, err := parse(fs, args)
 	if err != nil {
+		return o.usage("run: %v", err)
+	}
+	if err := spec.validate(*yes); err != nil {
 		return o.usage("run: %v", err)
 	}
 	if len(pos) != 2 {
@@ -105,6 +110,11 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 	params := daemon.RunParams{Project: pos[0], Item: pos[1], WellSpecified: wellSpecified, Split: splitItem}
 	params.Lineup, params.Budgets, params.StopAfter = overrides.Lineup, overrides.Budgets, overrides.StopAfter
 	params.AllowNoCheck = *allowNoCheck
+	if spec.questions {
+		checked := daemon.WaveStartParams{Items: []daemon.RunParams{params}}
+		_, _, code := a.specCheck(ctx, o, reader, prompts, &checked, &spec)
+		return code
+	}
 	var plan daemon.RunPlan
 	if code := a.call(ctx, o, daemon.MethodRunPlan, params, &plan); code != 0 {
 		return code
@@ -124,7 +134,7 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		return o.fail(ExitFailure, daemon.CodeRefused, daemon.NoCheckRefusalMessage(params.Project))
 	}
 	checked := daemon.WaveStartParams{Items: []daemon.RunParams{params}}
-	held, _, code := a.specCheck(ctx, o, reader, prompts, &checked)
+	held, _, code := a.specCheck(ctx, o, reader, prompts, &checked, &spec)
 	if code != ExitOK {
 		return code
 	}
@@ -146,6 +156,13 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		}
 		if confirm != "yes" {
 			if o.json {
+				if spec.active() {
+					return o.printJSON(struct {
+						Started bool     `json:"started"`
+						Held    []string `json:"held"`
+						*specData
+					}{false, held, spec.data})
+				}
 				return o.printJSON(map[string]any{"started": false, "held": held})
 			}
 			fmt.Fprintln(o.stdout, "cancelled")
@@ -156,6 +173,12 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 	var reply daemon.RunReply
 	if code := a.call(ctx, o, daemon.MethodRunStart, params, &reply); code != 0 {
 		return code
+	}
+	if o.json && spec.active() {
+		return o.printJSON(struct {
+			daemon.RunReply
+			*specData
+		}{reply, spec.data})
 	}
 	return printRunReply(o, reply)
 }

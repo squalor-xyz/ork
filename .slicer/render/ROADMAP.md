@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-343 items · — 58 · done 252 · retired 33
+343 items · — 57 · done 253 · retired 33
 
 v1.2
 
@@ -86,7 +86,7 @@ v1.2
 | 36 | [S309](slices/S309.md) | A slice Check line a role cannot run fails the gate | S | - |  |  | done |
 | 37 | [S310](slices/S310.md) | Rewrite stale macOS paths throughout slice specs | S | - |  |  | done |
 | 38 | [S311](slices/S311.md) | Notify command: run a configured command when a run needs the owner or ends | M | - |  |  | — |
-| 39 | [S312](slices/S312.md) | Spec questions: print every open question at once and take all answers in one call | M | - |  |  | — |
+| 39 | [S312](slices/S312.md) | Spec questions: print every open question at once and take all answers in one call | M | - |  |  | done |
 | 40 | [S313](slices/S313.md) | Spec check: reuse a decided adj answer for the same decision key instead of asking again | M | - |  |  | — |
 | 41 | [S314](slices/S314.md) | Name the owner once so answers to spec questions are filed in adj | S | - |  |  | — |
 | 42 | [S315](slices/S315.md) | Self-host: restart the daemon on the current build after main moves | M | - |  |  | — |

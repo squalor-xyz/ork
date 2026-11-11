@@ -2003,8 +2003,10 @@ left out of the wave and named as `held`; a wave with no item left does not star
 on the same stream, `spec check: S1, S2; wait for it to finish`, because the
 call returns only when the role has finished; `ork run` prints it the same way
 with its one item (`spec check: S1; wait for it to finish`).
-The JSON result always includes a `held` array of excluded item IDs, including
-when the wave starts or the owner cancels; it is `[]` when nothing is held.
+The wave start or cancellation JSON result includes a `held` array of excluded
+item IDs; it is `[]` when nothing is held. The `--questions` result and an
+incomplete `--answer` batch instead return the spec-question object
+`{questions,answered}` without `held` (*proposed*, S312).
 *Proposed (S283, adj 245, `wave.plan-failure-missing-spec`):* a missing spec is
 the one plan failure that does not abort the wave. `spec.check` answers an
 item whose `slicer show` has no slice with a row `{"item","ready":false,
@@ -2013,9 +2015,9 @@ and the daemon remembers nothing. `wave start` leaves such an item out before
 the sitting and the confirmation, prints `ID: no slice spec; run slicer
 promote ID` on the prompts stream (stderr with `--json`) and starts the rest.
 Exit is 0 when a wave starts; with no item left it does not start and exits 1.
-The JSON result always has a `no_spec` array of skipped IDs beside `held`,
-`[]` when none. Every other failure, including a `run.plan` error, still
-aborts before anything starts. `ork run` leaves the same item out, prints the
+The wave start or cancellation JSON result has a `no_spec` array of skipped
+IDs beside `held`, `[]` when none. Every other failure, including a `run.plan`
+error, still aborts before anything starts. `ork run` leaves the same item out, prints the
 same line and exits 1; its `--json` result has no `no_spec` array. The TUI is
 unchanged (adj 218).
 S167 gives `ork run` the same sitting after the plan and before
@@ -2024,6 +2026,31 @@ An empty line or end of input holds the slice and exits 1, without starting.
 `--yes` skips only confirmation and still runs the spec check. A failed
 check blocks launch. With `--json`, the sitting goes to stderr and stdout
 holds one result; a held slice returns `{"started":false,"held":["ID"]}`.
+*Proposed (S312):* `run` and both forms of `wave start` accept `--questions`
+and repeatable `--answer`. Listing runs only `spec.check`, prints every
+question with its number, decision key when present and answer address, and
+returns without planning or starting a run or recording an answer. It exits
+3 (`ExitWaitQuestion`, S257) with questions pending, otherwise 0. The spec
+check's existing cache is retained. Text listings with no open questions
+print `no open spec questions: S1, S2`; a saved wave with no startable items
+names the wave instead. Keyed wave questions show
+`Decision key: k1 (answer as S1:k1)`; keyless questions show `Answer as: #N`
+for run or `Answer as: ITEM:#N` for wave. `--questions` refuses `--yes` and
+`--answer`. Run answers use `KEY=value`; wave answers use `ITEM:KEY=value`.
+For a question with options, an in-range integer selects its option. An
+integer outside that range, including one that overflows, is a usage error;
+any other nonempty value is free text. The CLI
+validates the whole batch before the first `spec.answer`: unknown, duplicate,
+empty or out-of-range answers are usage errors naming the address. Missing
+answers list their addresses and hold the whole batch with exit 3 and no
+recording. Complete batches use the existing `RecordSpecAnswers` path, so
+the Owner decisions paragraph retains each decision key. Answers with no
+pending question are refused. With `--json`, batch results include
+`questions` (entries with `item`, `address` and the embedded
+`engine.SpecQuestion` fields: `ask`, optional `key`, `text`) and `answered`
+(`{item,key,answer}`, where keyless questions use `#N`
+and answer is the recorded `Label: summary` or free text). No interactive
+prompt text changes.
 The Roadmap launch uses the same sitting after its plan and before its
 confirmation (S184). Skipping leaves the slice held and closes the launch;
 a failed check blocks launch with no skip key. Editing the confirmed lineup
