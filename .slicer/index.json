@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 334,
+  "next_id": 335,
   "preamble": "",
   "passes": [
     {
@@ -18250,6 +18250,36 @@
         "urgency": 3,
         "effort": 2,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S334",
+      "title": "Landing: the slice's own JSON deleted by the branch (moved to done/) but edited on main",
+      "short_title": "Deleted-by-us slice JSON at landing",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-11 S328 landing: merge-in stopped on '.slicer/slices/S328.json' DU (branch moved it to done/ via slicer done; main had spec-answer edits). Fixed by hand: merge main's change into done/S328.json, git rm the old path, ork retry. ork's retry does not stage a deleted path. S217 (2026-11-09) hit the same case.",
+        "discovered_from": "S289",
+        "parent": "",
+        "cites": [],
+        "key": "ork-deleted-slice-json",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
       }
     }
   ],
