@@ -4319,3 +4319,4 @@
 {"when": "2026-11-11T17:11:03Z", "item": "S337", "action": "note", "from": "", "to": "", "note": "Correction 2026-11-11: the slices were NOT launched. The run", "by": "Jon Robbins"}
 {"when": "2026-11-11T17:18:39Z", "item": "S340", "action": "add", "from": "", "to": "open", "note": "wave start: spec-check questions can only be answered on a terminal, one at a time"}
 {"when": "2026-11-11T17:18:39Z", "item": "S340", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-11T17:49:10Z", "item": "S336", "action": "note", "from": "", "to": "", "note": "Verified after the landing merge: the daemon cache starts id", "by": "Jon Robbins"}
