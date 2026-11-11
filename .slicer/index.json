@@ -18293,9 +18293,7 @@
       "claim": null,
       "fields": {
         "size": "M",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "Owner 2026-11-11 (feedback from another agent): slicer polling is too frequent and slow. Measured 2026-11-11: each slicer call costs about 100 ms, almost all in slicer's imports (python3 -c pass: 4 ms; import slicer.cli: 77 ms). ork runs slicer list, deps and relay-run list per project, every 5 s when visible, every 1 s for live runs and every 30 s for the other 11 projects.",
@@ -18323,9 +18321,7 @@
       "claim": null,
       "fields": {
         "size": "S",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "Owner 2026-11-11 (polling too frequent). The daemon's cache keeps reading every registered project every 30 s with no TUI attached; a visible live run is read every 1 s.",
