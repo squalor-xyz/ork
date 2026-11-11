@@ -3,6 +3,7 @@
 package tui
 
 import (
+	"cmp"
 	"fmt"
 	"maps"
 	"reflect"
@@ -172,7 +173,10 @@ func editLineup(e *lineupEditor, msg tea.KeyPressMsg) lineupEditResult {
 				entry = e.chains[e.row][0]
 			}
 			e.fields = [3]textField{}
-			for i, value := range []string{entry.Vendor, entry.Model, entry.Effort} {
+			// The model field holds the text that was asked for, so an edit
+			// that keeps it asks for the latest again (S245, proposed).
+			model := cmp.Or(entry.Requested, entry.Model)
+			for i, value := range []string{entry.Vendor, model, entry.Effort} {
 				e.fields[i].insert(value)
 			}
 			e.custom, e.focus = true, 0
@@ -281,7 +285,7 @@ func (m *Model) editorBody(e *lineupEditor, title string, width int) overviewVie
 		if !reflect.DeepEqual(e.chains[i], e.plan.Lineup[role]) {
 			label += "*"
 		}
-		value := entry.Vendor + " " + entry.Model + " " + entry.Effort
+		value := entry.Vendor + " " + runrec.ModelLabel(entry) + " " + entry.Effort
 		if role == "architect" && len(e.chains[i]) == 0 {
 			value = "off"
 		}
@@ -297,7 +301,7 @@ func (m *Model) editorBody(e *lineupEditor, title string, width int) overviewVie
 		start := len(out.body)
 		add(prefix + label + ": " + value)
 		for _, fallback := range e.chains[i][min(1, len(e.chains[i])):] {
-			add(th.Dim.Render("    fallback: " + fallback.Vendor + " " + fallback.Model + " " + fallback.Effort))
+			add(th.Dim.Render("    fallback: " + fallback.Vendor + " " + runrec.ModelLabel(fallback) + " " + fallback.Effort))
 		}
 		if focused {
 			for j := start; j < len(out.body); j++ {
@@ -308,7 +312,7 @@ func (m *Model) editorBody(e *lineupEditor, title string, width int) overviewVie
 	if chain := e.plan.Lineup["ui"]; len(chain) > 0 {
 		var rows []string
 		for _, entry := range chain {
-			rows = append(rows, entry.Vendor+" "+entry.Model+" "+entry.Effort)
+			rows = append(rows, entry.Vendor+" "+runrec.ModelLabel(entry)+" "+entry.Effort)
 		}
 		add("  ui: " + strings.Join(rows, " -> ") + " (UI slices only; from the matrix)")
 	}

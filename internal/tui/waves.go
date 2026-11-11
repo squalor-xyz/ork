@@ -778,7 +778,13 @@ func waveLineup(p daemon.RunParams) []string {
 			label += "*"
 		}
 		e := chain[0]
-		lines = append(lines, fmt.Sprintf("%-6s %s %s %s", label+":", e.Vendor, e.Model, e.Effort))
+		// The column is narrow, so a latest entry shows MODEL (latest), not the
+		// full runrec.ModelLabel text (S245, proposed; adj 273).
+		model := e.Model
+		if e.Requested != "" {
+			model += " (latest)"
+		}
+		lines = append(lines, fmt.Sprintf("%-6s %s %s %s", label+":", e.Vendor, model, e.Effort))
 		if len(chain) > 1 {
 			// Fallbacks sit under the values, past the label column.
 			lines = append(lines, fmt.Sprintf("%6s +%d fallbacks", "", len(chain)-1))

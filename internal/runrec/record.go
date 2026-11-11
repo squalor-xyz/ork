@@ -50,6 +50,16 @@ type LineupEntry struct {
 	Requested string `json:"requested,omitempty"`
 }
 
+// ModelLabel is the model text plans and lineups print for an entry (S245,
+// *proposed*): "latest (resolves to MODEL)" when the entry asked for the newest
+// model of a family, else the model name.
+func ModelLabel(e LineupEntry) string {
+	if e.Requested != "" {
+		return "latest (resolves to " + e.Model + ")"
+	}
+	return e.Model
+}
+
 // RoleRecord is ork's record of one role process it started.
 type RoleRecord struct {
 	TreeSHA256 string    `json:"tree_sha256,omitempty"` // proposed: tracked content and untracked names

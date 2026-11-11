@@ -251,8 +251,12 @@ ork (TUI)  ork status --json (CLI)
    are `testdata/vendors/codex/models-bundled.json` (the output of `codex debug
    models --bundled`, without the `model_messages` and `base_instructions` prompt
    fields of each model, which the owner removed) and
-   `testdata/vendors/grok/models.txt`. How plans and lineups show `requested` is
-   a later slice.
+   `testdata/vendors/grok/models.txt`. *Proposed (S245):* a lineup entry with
+   `requested` set prints `latest (resolves to MODEL)` in place of the model
+   (`runrec.ModelLabel`) in the plan text, the launch pane and the lineup
+   editor; the narrow Waves lineup column prints `MODEL (latest)` (adj 273); a
+   pinned model prints its name. The editor's model field starts from the
+   requested text, so an edit asks for the latest again.
    Grok runs read-only roles only; see the Grok column below.
 3. **Plan.** For each item, ork shows the worktree path, the branch, the
    check command, the budgets, and whether it runs an architect, a split or

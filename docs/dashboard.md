@@ -1793,7 +1793,14 @@ When budgets are overridden, it adds `budgets: N min, N tokens` with the
 effective values; zero uses the project default. The lineup rows show
 implementer, reviewer, ui (when the plan has a UI pass row, S136), architect
 (when present) and gate lineup entries as vendor, model and effort, with each
-role's permissions. When the plan has a `note` (the rules call failed, S159,
+role's permissions. *Proposed (S245):* an entry whose model was resolved from
+`FAMILY@latest` (its `requested` is set) shows `latest (resolves to MODEL)` in
+place of the model, for example `implementer: codex latest (resolves to
+gpt-6.2-sol) medium`; the lineup editor's rows, fallbacks and UI pass row, and
+`ork run` print the same label, and a pinned model prints its name. The narrow
+Waves lineup column shows the compact `MODEL (latest)` instead, for example
+`impl:  codex gpt-6.2-sol (latest) medium` (adj 273). The run tree and the Overview rows show the role's
+recorded model, the resolved name, and are unchanged. When the plan has a `note` (the rules call failed, S159,
 *proposed*), a `note: TEXT` line in the warning colour (plain in mono) follows the role rows, wrapped to the
 pane; `ork run` prints the same rows in its plan text, in the same order, and
 the same `note: TEXT` line after them. *Proposed* (S265): a plan with an
@@ -1821,6 +1828,11 @@ that choice. Both Waves and the Roadmap launch use this editor. Waves shows
 The Roadmap confirmation shows `stop: after landing` or
 `stop: after commit (you land it)` and Start carries the confirmed choice.
 There is no project default; the choice applies only to that run.
+*Proposed (S245):* the editor's `c` custom fields start from the text that was
+asked for: for a `latest (resolves to MODEL)` row the model field holds the
+requested `FAMILY@latest` text, not the resolved name, so saving the field
+unchanged asks the daemon for the latest again. A pinned row starts from its
+model, as before.
 
 At confirmation, `e` opens the shared lineup editor seeded from the displayed plan. `esc`
 discards edits and returns to the same confirmation without planning.

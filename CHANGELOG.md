@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Resolved latest models in plans and lineups (*proposed*): S245. A lineup
+  entry whose model was resolved from `FAMILY@latest` prints as `latest
+  (resolves to MODEL)` in `ork run`'s plan, the launch confirmation and the
+  lineup editor (rows, fallbacks and the UI pass row), through one helper,
+  `runrec.ModelLabel`; the narrow Waves lineup column shows `MODEL (latest)`.
+  The editor's custom model field
+  starts from the requested `FAMILY@latest` text, so an edit round-trips. The
+  run tree and the Overview rows are unchanged. Docs updated: `docs/dashboard.md`,
+  `docs/design.md` and `docs/guide.md`.
 - Named wave in the Waves screen (*proposed*): S216. On a project's Waves tab,
   `w` saves the ticked items under a name (a one-line input; `enter` saves,
   `esc` cancels, and a name already saved asks `Replace NAME? [y/N]`), and `L`
