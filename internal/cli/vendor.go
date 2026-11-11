@@ -13,12 +13,14 @@ import (
 	"github.com/squalor-xyz/ork/internal/daemon"
 )
 
-// vendorNames are the cloud CLIs and their local launcher identities.
-var vendorNames = []string{"claude", "codex", "grok", "claude-local", "codex-local", "grok-local"}
+// vendorList lists the vendor names ork accepts, from the daemon's one list.
+func vendorList() string { return strings.Join(daemon.Vendors(), ", ") }
 
-// vendorList lists the supported vendor identities.
-func vendorList() string {
-	return "claude, codex or grok, or their -local launchers"
+// vendorName reads a vendor name as typed: any case, blanks around it. It
+// returns the lowercase name, and whether ork accepts it.
+func vendorName(typed string) (string, bool) {
+	name := strings.ToLower(strings.TrimSpace(typed))
+	return name, slices.Contains(daemon.Vendors(), name)
 }
 
 // vendor is `ork vendor [list]`, `ork vendor out NAME [--reason TEXT]
@@ -75,9 +77,9 @@ func (a *App) vendor(ctx context.Context, o *output, args []string) int {
 		if len(pos) > 1 {
 			return o.usage("vendor %s takes one vendor name, got %q", sub, strings.Join(pos, " "))
 		}
-		name := pos[0]
-		if !slices.Contains(vendorNames, name) {
-			return o.usage("vendor %s: unsupported vendor %q; use %s", sub, name, vendorList())
+		name, ok := vendorName(pos[0])
+		if !ok {
+			return o.usage("vendor %s: unsupported vendor %q; use %s", sub, pos[0], vendorList())
 		}
 		p := daemon.SetVendorParams{Vendor: name, Out: sub == "out"}
 		if reason != nil {

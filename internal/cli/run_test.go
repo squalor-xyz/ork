@@ -619,6 +619,76 @@ func TestRunLineupFlagUsageErrors(t *testing.T) {
 	}
 }
 
+func TestLineupVendorIsCaseInsensitive(t *testing.T) {
+	for _, tc := range []struct{ typed, vendor, model, effort string }{
+		{"Claude:sonnet:high", "claude", "sonnet", "high"},
+		{"CLAUDE:sonnet:high", "claude", "sonnet", "high"},
+		{"Codex:gpt-5:high", "codex", "gpt-5", "high"},
+		{"GROK:latest:high", "grok", "latest", "high"},
+	} {
+		for _, role := range []string{"implementer", "reviewer", "architect"} {
+			for _, wave := range []bool{false, true} {
+				name := fmt.Sprint(tc.typed, "/", role, "/wave=", wave)
+				t.Run(name, func(t *testing.T) {
+					var sent []daemon.RunParams
+					app := &App{Call: func(_ context.Context, method string, params, result any) error {
+						switch method {
+						case daemon.MethodSpecCheck:
+							return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true},{"item":"S2","ready":true}]}`), result)
+						case daemon.MethodRunPlan:
+							p := params.(daemon.RunParams)
+							sent = append(sent, p)
+							*result.(*daemon.RunPlan) = daemon.RunPlan{CheckCommand: "go test ./...", Item: p.Item, Lineup: p.Lineup}
+						case daemon.MethodRunStart:
+							sent = append(sent, params.(daemon.RunParams))
+						case daemon.MethodWaveStart:
+							sent = append(sent, params.(daemon.WaveStartParams).Items...)
+						default:
+							t.Fatalf("unexpected %s", method)
+						}
+						return nil
+					}}
+					args := []string{"run", "p", "S1"}
+					want := 2 // run.plan and run.start
+					if wave {
+						args, want = []string{"wave", "start", "p", "S1", "S2"}, 4 // a plan and an item of the start for each
+					}
+					args = append(args, "--yes", "--well-specified", "y", "--split", "n", "--"+role, tc.typed)
+					if code, out, errs := run(t, app, args...); code != 0 || len(sent) != want {
+						t.Fatalf("exit %d, %d calls, want %d: %s %s", code, len(sent), want, out, errs)
+					}
+					entry := runrec.LineupEntry{Vendor: tc.vendor, Model: tc.model, Effort: tc.effort}
+					for _, p := range sent {
+						if got := p.Lineup[role]; !reflect.DeepEqual(got, []runrec.LineupEntry{entry}) {
+							t.Errorf("%s sent %+v, want %+v", role, got, entry)
+						}
+					}
+				})
+			}
+		}
+	}
+}
+
+func TestUnknownLineupVendorListsTheVendors(t *testing.T) {
+	for _, base := range [][]string{{"run", "p", "S1"}, {"wave", "start", "p", "S1", "S2"}} {
+		name := "run"
+		if base[0] == "wave" {
+			name = "wave start"
+		}
+		for _, role := range []string{"implementer", "reviewer", "architect"} {
+			app := &App{Call: func(context.Context, string, any, any) error {
+				t.Fatal("an unknown vendor called the daemon")
+				return nil
+			}}
+			code, _, errs := run(t, app, append(append([]string{}, base...), "--"+role, "acme:m:high")...)
+			want := "ork: " + name + ": --" + role + ": unsupported vendor \"acme\"; use " + strings.Join(daemon.Vendors(), ", ") + "\n"
+			if code != ExitUsage || !strings.HasPrefix(errs, want) {
+				t.Errorf("%v --%s: exit %d errors %q want %q", base, role, code, errs, want)
+			}
+		}
+	}
+}
+
 func TestLaunchUsageFitsEightyColumns(t *testing.T) {
 	for _, line := range strings.Split(usageText, "\n") {
 		if len(line) > 80 {

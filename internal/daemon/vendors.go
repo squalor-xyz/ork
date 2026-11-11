@@ -66,7 +66,7 @@ func (d *Daemon) listVendors() (VendorsResult, error) {
 // can run is accepted.
 func (d *Daemon) setVendor(p SetVendorParams) (VendorsResult, error) {
 	if !supportsVendor(p.Vendor) {
-		return VendorsResult{}, &ipc.Error{Code: CodeBadParams, Message: fmt.Sprintf("bad params: unsupported vendor %q; use claude, codex or grok, or their -local launchers", p.Vendor)}
+		return VendorsResult{}, &ipc.Error{Code: CodeBadParams, Message: fmt.Sprintf("bad params: unsupported vendor %q; use %s", p.Vendor, vendorList())}
 	}
 	if !p.Out && !p.Until.IsZero() {
 		return VendorsResult{}, &ipc.Error{Code: CodeBadParams, Message: "bad params: until needs out"}

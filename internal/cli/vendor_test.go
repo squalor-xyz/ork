@@ -100,12 +100,47 @@ func TestVendorOutAndBackAcceptGrok(t *testing.T) {
 		t.Fatalf("back: exit %d: %q", code, stdout)
 	}
 	code, _, stderr = run(t, w.app, "vendor", "out", "gemini")
-	if code != 2 || !strings.Contains(stderr, "use claude, codex or grok") {
+	if code != 2 || !strings.Contains(stderr, "use "+strings.Join(daemon.Vendors(), ", ")) {
 		t.Fatalf("refusal: exit %d: %q", code, stderr)
 	}
 	_, help, _ := run(t, w.app, "help")
 	if !strings.Contains(help, "mark claude, codex or grok out until back, or") {
 		t.Fatalf("usage text:\n%s", help)
+	}
+}
+
+func TestVendorOutIsCaseInsensitive(t *testing.T) {
+	// Without a daemon: a name in any case gets past the vendor check, to the
+	// time check after it.
+	for _, name := range []string{"Claude", "CODEX", " Grok-Local "} {
+		code, out, err := run(t, &App{}, "vendor", "out", name, "--until", "invalid-time")
+		if code != ExitUsage || out != "" || !strings.Contains(err, "--until: cannot read") {
+			t.Fatalf("%q was rejected before time validation: exit=%d out=%q err=%q", name, code, out, err)
+		}
+	}
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
+	code, stdout, stderr := run(t, w.app, "vendor", "out", "Claude", "--reason", "limit")
+	if code != 0 || !regexp.MustCompile(`^claude is out until back \(since \d\d:\d\d; limit\)\n$`).MatchString(stdout) {
+		t.Fatalf("out Claude: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	code, stdout, _ = run(t, w.app, "vendor", "list", "--json")
+	var listed daemon.VendorsResult
+	mustJSON(t, stdout, &listed)
+	if code != 0 || len(listed.VendorsOut) != 1 || listed.VendorsOut[0].Vendor != "claude" {
+		t.Fatalf("the daemon holds %s", stdout)
+	}
+	if code, stdout, stderr = run(t, w.app, "vendor", "back", " CLAUDE "); code != 0 || stdout != "claude is back\n" {
+		t.Fatalf("back CLAUDE: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+}
+
+func TestUnknownVendorNameListsTheVendors(t *testing.T) {
+	for _, sub := range []string{"out", "back"} {
+		code, _, stderr := run(t, &App{}, "vendor", sub, "acme")
+		want := "vendor " + sub + ": unsupported vendor \"acme\"; use " + strings.Join(daemon.Vendors(), ", ") + "\n"
+		if code != ExitUsage || !strings.Contains(stderr, want) {
+			t.Errorf("%s: exit %d: %q, want suffix %q", sub, code, stderr, want)
+		}
 	}
 }
 

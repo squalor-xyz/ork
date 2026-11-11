@@ -16081,7 +16081,7 @@
       "id": "S290",
       "title": "Subcommand help: every command prints its own usage and exits 0 on --help or -h",
       "short_title": "Subcommand help: every command prints its own usage and exits 0 on --help or -h",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -16091,6 +16091,34 @@
           "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 usage-block: a subcommand's help prints that command's block cut from the one usage text. Q2 sub-only: ork help SUB prints the same block as ork SUB --help, and an unknown SUB is a usage error.",
           "created_at": "2026-11-04T19:59:54Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "c7d43201-9d13-4c16-a598-328e0c899247",
+          "kind": "",
+          "text": "**2026-11-11** — Human checks at approval (S290):\n- later: `ork retry --help`, `ork projects -h` and `ork help wave` in a terminal print the expected blocks and exit 0.",
+          "created_at": "2026-11-11T12:01:57Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "bab1b76d-9ae2-407d-9b28-c3f6b8c4a51a",
+          "kind": "",
+          "text": "**2026-11-11** — Verified: ork SUB --help and -h print that command's blocks cut from the one usage text and exit 0 (groups print all their blocks); ork help SUB prints the same text and an unknown SUB exits 2; ork daemon run --help and ork help daemon run print the one line 'usage: ork daemon run'. go test -race ./..., go vet, gofmt, slicer check and adj lint were clean in fix round 1. The terminal human check stays later.",
+          "created_at": "2026-11-11T12:02:03Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -16117,14 +16145,14 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S291",
       "title": "Vendor names on the command line: Claude is refused, claude works",
       "short_title": "Vendor names on the command line: Claude is refused, claude works",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -16134,6 +16162,34 @@
           "text": "**2026-11-04** — Owner answers 2026-11-04 (interactive): all recommendations accepted as written. Q1 both: accept any case and store lowercase, and for an unknown name list the vendors. Q2 cli-and-daemon: the CLI for an early error and the daemon on the wire. Q3 no: only claude, codex and grok; matrix names such as Claude Code are not accepted on the command line.",
           "created_at": "2026-11-04T19:59:54Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "53bb07cb-55a8-4ef0-8f67-fd7c5b982f63",
+          "kind": "",
+          "text": "**2026-11-11** — Human checks at approval (S291):\n- later: `ork run P ID --implementer Claude:sonnet:high` shows a plan whose implementer row reads `claude`.",
+          "created_at": "2026-11-11T12:01:28Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "7a3a9851-b283-45ce-a92c-07d21431aa45",
+          "kind": "",
+          "text": "**2026-11-11** — Verified: vendor names are read in any case and stored lowercase in the CLI (--implementer, --reviewer, --architect, ork vendor out|back) and on the run.plan and run.start wire (planRun); an unknown name is refused with the vendor list from daemon.Vendors(), the one list behind supportsVendor and every error text. go test -race ./..., go vet, gofmt, slicer check and adj lint were clean; mutation checks on each new assertion went red. The daemon-backed half of TestVendorOutIsCaseInsensitive skips in the sandbox (socket path length).",
+          "created_at": "2026-11-11T12:01:33Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -16160,7 +16216,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
