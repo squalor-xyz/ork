@@ -2,7 +2,7 @@
 {
   "id": 263,
   "title": "Who runs a Check line the implementer sandbox cannot run?",
-  "status": "decided",
+  "status": "superseded",
   "key": "process.orchestrator-check-lines",
   "decided_by": "Jon",
   "via": "interactive question, relay session 8d711f67, 2026-11-10",
@@ -29,6 +29,7 @@
   },
   "decision": "1",
   "rationale": "Owner picked option 1 as a standing rule on 2026-11-10.",
+  "superseded_by": 280,
   "refs": [
     "S204"
   ],
@@ -40,6 +41,11 @@
     {
       "date": "2026-11-10",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-11",
+      "event": "supersede",
+      "note": "by 280"
     }
   ]
 }
