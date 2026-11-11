@@ -4,8 +4,8 @@ The screens of the ork TUI. Owner decisions are cited by adj key. Layouts
 and keys are *proposed* drafts to change after a prototype. v1.0 includes
 filing a slice (S170), adding notes (S171), and answering or asking adj records
 (S172, S185), as decided in `scope.v1-ork-edits` (#173). Roadmap reordering and
-parking (S67, including S68) are in v1.1. The role matrix editor (S173) and
-spec drafting (S179) stay later.
+parking (S67, including S68) are in v1.1. The role matrix editor (S173, S226)
+is in v1.1; spec drafting (S179) stays later.
 
 ## Principles
 
@@ -1847,8 +1847,9 @@ the owner left, success shows `ork run PROJECT ITEM: done` and moves nothing.
 Plan and Start errors show their code and message verbatim, and stay on the
 Roadmap. A failed Start is not retried.
 
-`m` opens the project's role matrix in a read-only pane (S168, owner decision
-2026-10-29), in place of the list, with the heading `Role matrix  (esc returns)`
+`m` opens the project's role matrix in a pane (S168, owner decision
+2026-10-29; the pane shows the matrix, and the keys described below edit it),
+in place of the list, with the heading `Role matrix  (esc returns)`
 and `pending: roles.matrix` until the `roles.matrix` reply arrives. The pane
 shows a short `## ork` section first, with one line per row (`- r3 implementer:
 used as claude`), then a blank line and slicer's matrix text as
@@ -1866,7 +1867,7 @@ rows that a rule names (rules u10 and u11) or that the project's
 ork` for an Orchestrator row (ork is the orchestrator), and `not used: ork has
 no role ROLE` for any other role in the matrix. `j`/`k`, `pgup`/`pgdown`,
 `g`/`G` (`home`/`end`) and `ctrl+d`/`ctrl+u` scroll the pane, `esc` closes it,
-and no other key
+and the five edit keys below act in it once the matrix has loaded; no other key
 acts in it. The key is offered on the hint line and in `?` on the Roadmap only,
 when a project is selected and no pane is open; with no daemon it says "No
 daemon connection; action unavailable". On a narrow hint line `- remove
@@ -1879,9 +1880,69 @@ With the daemon connected and an editable list, the 100x30 line is
 `N note` stays dropped on this line.
 Below 100 columns the edit hints drop first, preserving the 80x24 line:
 `enter open; l launch; m matrix; tab views; q quit; ? help`. The matrix is
-slicer's: ork reads it through `slicer relay-roles show --json`, never edits it
-and never opens `.slicer` files (`docs/boundaries.md`). The same text is
+slicer's: ork reads it through `slicer relay-roles show --json`, changes it
+only through the `slicer relay-roles` command the owner confirms (below), and
+never opens `.slicer` files (`docs/boundaries.md`). The same text is
 `ork roles matrix PROJECT`.
+
+*Proposed* (S226, TUI half of S173; the owner chose a form of typed-id lines on
+2026-11-11, and the five keys are the defaults of the S173 spec): the pane edits the matrix with five keys, once
+the `roles.matrix` reply has loaded and the Live connection offers `matrix.edit`.
+`e` changes a row, `n` adds a row, `d` removes a row, `m` moves a row and `r`
+edits the text of a rule. Each key opens a form in the status area, one line
+for each input. A row or rule is chosen by typing its id, as the pane has no
+row cursor.
+
+- `e` asks the row id, then agent, vendor, model, reasoning and note. When the
+  typed id is a row, its current value shows dim beside each line (`now:
+  gpt-6.1-sol`).
+- `n` asks the role (required), then the same five lines.
+- `d` asks the row id.
+- `m` asks the row id and the row to place it before; an empty answer moves it
+  last.
+- `r` asks the rule id and the new text. Moving to the text line fills it with
+  the rule's current text when the owner has not typed there yet.
+
+`tab` and `shift+tab` move between lines, round the ends. `enter` moves to the
+next line, and on the last line sends the form; `ctrl+s` sends it from any line.
+An empty line means unchanged for `e`; clearing a field, and the row's
+conditions (size, effort, importance, urgency, well-specified, split, sliver),
+stay in `slicer relay-roles`. Paste never sends the form. `esc` cancels the
+form, then closes the pane as before; `ctrl+c` quits. The form is checked against
+the loaded rows and rules before any call: `no row r99`, `no rule u99`, `Role
+must not be empty`, `Rule text must not be empty` and `Nothing to change` show in
+the status, and the cursor goes to the line at fault.
+
+Sending the form calls `matrix.edit` with `preview: true`. The status area then
+shows the confirm in place of the form: `Run: <command>` (the daemon's exact
+`slicer relay-roles ...` line), the daemon's warning in the warning colour
+(bold in mono) when there is one (an agent that ork has no adapter for: a plan
+skips the row; the edit can still be confirmed), and `[y/N] (Enter is No)`. `y`
+calls `matrix.edit` again, without `preview`, and reads `roles.matrix` again;
+the pane keeps its scroll offset. `n`, `enter` and `esc` cancel and make no run
+call. While a call is out only `esc` and `ctrl+c` act. A reply to a closed
+preview changes nothing. `esc` while a run is out closes the form, but slicer
+may still apply the edit (owner, adj 275): the status says `Closed; the matrix
+reloads when the edit ends`, and the run's reply then shows `Edited r5
+(uncommitted)` and reloads the matrix, or shows slicer's refusal. Slicer's
+refusal shows verbatim (code and
+message) in the status and the form stays open for a change. After success the
+status reads `Edited r5 (uncommitted)` (`Added`, `Removed` and `Moved` for the
+other keys): the change is left uncommitted in the project, as the owner
+decided on 2026-10-29. With no daemon the keys say `No daemon connection;
+action unavailable`; a Live connection without `matrix.edit` says `Matrix
+editing unavailable`; before the matrix has loaded they say `Matrix not loaded;
+editing unavailable`; while the matrix reloads after an edit, `Matrix reloading;
+editing unavailable`. In the pane `r` edits a rule and does not refresh the
+project, and `?` leaves `r refresh now` out there.
+
+While the pane is open the hint line offers `e/n/d/m/r edit` between the page
+and line fields; it drops before the line field, and so is absent at 80
+columns, where the line stays `pgup/pgdown page; j/k line; q quit; esc close; ?
+help`. In the form it offers `tab/shift+tab line; enter next; ctrl+s review; esc
+cancel` (`enter review` on the last line, and in the one-line form of `d`, with
+no `tab/shift+tab`), and in the confirm `y run; n cancel`. `?` lists the five keys on a line of its
+own while the pane is open.
 
 `O` opens `slicer tui --root PROJECT_PATH` from the Roadmap (S69;
 `ui.slicer-tui`, key confirmed by the owner on 2026-10-31). Bubble Tea's
@@ -1923,7 +1984,8 @@ Adding an item to the wave composer comes in a later slice.
 v1.0 includes filing a slice (S170), adding notes (S171), and answering or
 asking adj records (S172, S185), as decided in `scope.v1-ork-edits` (#173).
 Roadmap reordering and parking (S67, including S68) are in v1.1. The role
-matrix editor (S173) and spec drafting (S179) stay later.
+matrix editor (S173, S226) is described with the matrix pane above; spec
+drafting (S179) stays later.
 
 `n new slice` opens a form in the status area with Title and Why fields
 (S170). It is available on the Roadmap with a loaded, available project and

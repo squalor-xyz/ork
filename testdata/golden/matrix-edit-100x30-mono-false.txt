@@ -1,0 +1,30 @@
+[1mork[m                        │ Overview[90m │ [mQuestions[90m │ [mWaves[90m │ [m[1;36mRoadmap[m[90m │ [mDecisions
+[90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────[m
+[90m0[m Needs you              0 │[1;36mRole matrix  (esc returns)[m
+[1;7;97;44m1>ork                      [m│  [1;36m## ork[m
+[90m2[m other                    │  - r5 implementer: [90mused as codex[m
+                           │  - r2 reviewer: [90mused as claude[m
+                           │  - r7 gate: [90mnot used: the gate runs the reviewer's lineup[m
+                           │  
+                           │  [1;36m# Relay roles[m
+                           │  
+                           │  marker before
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │  [1;36mEdit row:[m
+                           │    Row id:    r5
+                           │    Agent:                               [90mnow: Codex[m
+                           │    Vendor:                              [90mnow: OpenAI[m
+                           │  > Model:     [1mopus[m[1;7;97;44m [m[1m[m                     [90mnow: gpt-6.1-sol[m
+                           │    Reasoning:                           [90mnow: medium[m
+                           │    Note:                                [90mnow: default implementer[m
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ tab/shift+tab [2mline[m; enter [2mnext[m; ctrl+s [2mreview[m; esc [2mcancel[m
+                           │ 2 projects | refreshed 16:42:00

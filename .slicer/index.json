@@ -12670,7 +12670,7 @@
       "id": "S226",
       "title": "Role matrix editor, TUI half: edit, add, remove and move rows from the matrix pane",
       "short_title": "Matrix editor in the TUI",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S173"
@@ -12683,6 +12683,34 @@
           "created_at": "2026-11-01T00:58:25Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "e7422419-6e8e-4fc5-99d6-06592ac2d7e5",
+          "kind": "",
+          "text": "**2026-11-11** — Human checks at approval (S226):\n- later: At 100x30 and 80x24, in a scratch project (`slicer init`, `slicer relay-roles init`, registered with `ork projects add`), open the matrix with `m`, change a model with `e`, confirm that the command shown is the one that ran (`slicer relay-roles show`), that `n` and Enter cancel, and that an unknown agent shows the warning. Do not edit the real project's matrix for this check.",
+          "created_at": "2026-11-11T03:01:16Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "ec5fd4f1-9b08-489b-87b8-2de838ea4863",
+          "kind": "",
+          "text": "**2026-11-11** — Verified: role matrix editor in the TUI. In the matrix pane e/n/d/m/r open a typed-id form (checked against the loaded rows), matrix.edit is previewed, the exact slicer relay-roles command, warning and [y/N] (Enter is No) are shown, y runs it and reloads the matrix at the same offset, and the change is left uncommitted. Slicer's refusals show verbatim; esc during a run still shows the edit when the reply lands. go test -race ./..., go vet, gofmt, slicer check and adj lint are clean. The human check in a scratch project is not run.",
+          "created_at": "2026-11-11T03:01:20Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -12708,7 +12736,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -187,6 +187,17 @@ func (d *Daemon) RolesMatrix(ctx context.Context, project string) (*daemon.Roles
 	defer c.Close()
 	return c.RolesMatrix(ctx, project)
 }
+
+// MatrixEdit previews or runs one edit of the project's role matrix (S226).
+func (d *Daemon) MatrixEdit(ctx context.Context, p daemon.MatrixEditParams) (*daemon.MatrixEditResult, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.MatrixEdit(ctx, p)
+}
+
 func (d *Daemon) WaveStart(ctx context.Context, params daemon.WaveStartParams) (*daemon.WaveResult, error) {
 	c, err := d.Connect(ctx)
 	if err != nil {

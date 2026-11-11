@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+- Role matrix editor in the TUI (*proposed*): S226, the TUI half of S173. In
+  the Roadmap's matrix pane, `e` changes a row, `n` adds one, `d` removes one,
+  `m` moves one and `r` edits a rule's text (`r` no longer refreshes there).
+  Each key opens a form of typed-id lines in the status area: the row id (or
+  rule id) first, then the lines of the key (`e`: agent, vendor, model,
+  reasoning and note; `n`: role, then the same five; `d`: nothing more; `m`:
+  the row to go before; `r`: the new text). `tab` and `shift+tab` move between
+  lines, `enter` on the last line or `ctrl+s` sends. The form is checked
+  against the loaded rows first. The status then shows `Run: <the exact slicer relay-roles command>`,
+  the daemon's warning when the agent has no ork adapter, and `[y/N] (Enter is
+  No)`; `y` runs it through `matrix.edit` and reads the matrix again, and the
+  change is left uncommitted. Slicer's refusal shows verbatim. The daemon is
+  unchanged.
 - Named wave in the Waves screen (*proposed*): S216. On a project's Waves tab,
   `w` saves the ticked items under a name (a one-line input; `enter` saves,
   `esc` cancels, and a name already saved asks `Replace NAME? [y/N]`), and `L`

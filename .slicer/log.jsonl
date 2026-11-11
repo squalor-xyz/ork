@@ -4109,3 +4109,9 @@
 {"when": "2026-11-10T12:38:26Z", "item": "S268", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-10T12:42:41Z", "item": "S268", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-10T13:58:05Z", "item": "S268", "action": "status", "from": "open", "to": "done", "note": "Landed S268", "by": "Jon Robbins"}
+{"when": "2026-11-11T01:41:46Z", "item": "S226", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-11T01:55:15Z", "item": "S226", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-11T01:55:27Z", "item": "S226", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-11T03:01:16Z", "item": "S226", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S226):", "by": "Jon Robbins"}
+{"when": "2026-11-11T03:01:20Z", "item": "S226", "action": "note", "from": "", "to": "", "note": "Verified: role matrix editor in the TUI. In the matrix pane ", "by": "Jon Robbins"}
+{"when": "2026-11-11T03:01:22Z", "item": "S226", "action": "status", "from": "started", "to": "done", "note": "Verified: role matrix editor in the TUI (e/n/d/m/r typed-id form, matrix.edit preview then run, exact command and warning shown, matrix reloaded, change left uncommitted). Full go test -race, vet, gofmt, slicer check and adj lint clean; human check in a scratch project not run.", "by": "Jon Robbins"}

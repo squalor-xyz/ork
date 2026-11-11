@@ -170,6 +170,9 @@ func (m *Model) screen() string {
 				status += "\n" + m.actionStatus
 			}
 		}
+		if m.matrixEdit != nil {
+			status = m.matrixEditView(max(mainW-len(indent)-2, 1))
+		}
 		if m.view == questionsView && m.pane != nil {
 			detail = m.paneLines(mainW, max(h-6, 1), status)
 		} else if status != "" {
@@ -764,6 +767,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			// Roadmap edits share a compact line. The Running space keys
 			// have no action on the Roadmap and need no row in its help.
 			if h == m.keys.Park.Help() || h == m.keys.MoveDown.Help() || h == m.keys.MoveUp.Help() ||
+				h == m.keys.MatrixEdit.Help() || h == m.keys.MatrixAdd.Help() || h == m.keys.MatrixRemove.Help() || h == m.keys.MatrixMove.Help() || h == m.keys.MatrixRule.Help() ||
 				(m.view == roadmapView && h == m.keys.Expand.Help()) {
 				continue
 			}
@@ -792,7 +796,9 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			// Refresh shares the quit line, and the filter and sidebar keys one
 			// line, so the help keeps its last line with ctrl+d/u added (S149).
 			if h == m.keys.Refresh.Help() {
-				refresh = h.Key + " " + h.Desc + "; "
+				if !m.matrixPaneOpen() { // r edits a rule there
+					refresh = h.Key + " " + h.Desc + "; "
+				}
 				continue
 			}
 			if h == m.keys.Add.Help() {
@@ -870,6 +876,9 @@ func (m *Model) helpLines(w, bodyH int) []string {
 					text = strings.Replace(text, "l launch ready slice", "l launch", 1)
 				}
 				lines = append(lines, clip(text, w))
+				if m.matrixPaneOpen() {
+					lines = append(lines, clip("e/n/d/m/r edit, add, remove, move a matrix row; edit a rule", w))
+				}
 				editHelp := "P park/unpark; J/K move item down/up"
 				if separate {
 					text := "O slicer tui"
