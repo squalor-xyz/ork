@@ -278,17 +278,79 @@ func TestShapeRetryAppliesToEveryReportingRole(t *testing.T) {
 	}
 }
 
-func TestShapeProblemWithAQuestionStillPausesForTheOwner(t *testing.T) {
+// retryQuestion is a well-formed Owner needed block.
+const retryQuestion = "Question: Which format?\nOptions:\n1. json: machine readable\n2. text: human readable\nRecommend: 1 - tools read it\n"
+
+func TestShapeProblemWithAQuestionRetriesOnce(t *testing.T) {
 	h := newHarness(t)
 	h.runner.script = func(req Request, n int) (Result, error) {
-		return Result{Exit: ExitOK, Report: "## Owner needed\nWhich format?\n"}, nil
+		res := defaultResult(req)
+		if req.Role == RoleImplementer {
+			res.Report = "Diff stat.\n\n## Owner needed\n\n" + retryQuestion
+			if n > 0 {
+				res.Report = "Diff stat.\n\nTests: 12 passed, 0 failed\n\n## Owner needed\n\n" + retryQuestion
+			}
+		}
+		return res, nil
 	}
 	rec := requireState(t, h.start(), runrec.StatePaused)
-	if got := len(h.runner.requests()); got != 1 {
-		t.Fatalf("calls = %d, want immediate owner pause", got)
+	reqs := shapeRequests(h, RoleImplementer)
+	if len(reqs) != 2 {
+		t.Fatalf("implementer calls = %d, want 2", len(reqs))
+	}
+	if reqs[0].Round != reqs[1].Round || reqs[1].Resume != "sess-implementer" {
+		t.Fatalf("retry changed round or session: %+v", reqs[1])
+	}
+	for _, want := range []string{"## Report shape", `no "Tests: N passed, M failed" line`, "Keep your owner question"} {
+		if !strings.Contains(reqs[1].Brief, want) {
+			t.Errorf("retry brief missing %q:\n%s", want, reqs[1].Brief)
+		}
+	}
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingQuestion {
+		t.Fatalf("pending = %+v", rec.Pending)
+	}
+	if len(rec.Questions) != 1 || rec.Questions[0].Role != RoleImplementer {
+		t.Fatalf("questions = %+v, want the one question once", rec.Questions)
+	}
+}
+
+func TestShapeProblemWithAQuestionPausesAfterTheRetry(t *testing.T) {
+	h := newHarness(t)
+	h.runner.script = func(req Request, n int) (Result, error) {
+		res := defaultResult(req)
+		if req.Role == RoleImplementer {
+			res.Report = "Diff stat.\n\n## Owner needed\n\n" + retryQuestion
+		}
+		return res, nil
+	}
+	rec := requireState(t, h.start(), runrec.StatePaused)
+	if got := len(shapeRequests(h, RoleImplementer)); got != 2 {
+		t.Fatalf("implementer calls = %d, want 2 before the pause", got)
 	}
 	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingShape {
 		t.Fatalf("pending = %+v", rec.Pending)
+	}
+	if rec.AutomaticShapeRetry() != nil {
+		t.Fatal("automatic retry marker remained on the pause")
+	}
+	if len(rec.Questions) != 0 {
+		t.Fatalf("a refused report's question was recorded: %+v", rec.Questions)
+	}
+	if !rec.Pending.Asked {
+		t.Fatalf("the pause lost the note that the report asked: %+v", rec.Pending)
+	}
+}
+
+func TestShapeRetryBriefSaysKeepTheQuestion(t *testing.T) {
+	const reason = `report shape: no "Tests: N passed, M failed" line`
+	plain := shapeRetryBrief(reason, false)
+	want := "ork checked your last report and refused it: " + reason + "\n\nWrite the report again so that it has the shape the prompt asks for, and exit."
+	if plain != want {
+		t.Fatalf("brief without a question changed:\n got %q\nwant %q", plain, want)
+	}
+	asked := shapeRetryBrief(reason, true)
+	if !strings.HasPrefix(asked, plain) || !strings.Contains(asked, "Keep your owner question") {
+		t.Fatalf("brief with a question = %q", asked)
 	}
 }
 

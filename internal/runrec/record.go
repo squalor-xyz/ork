@@ -199,6 +199,10 @@ type Pending struct {
 	// AutomaticShapeRetry marks the one automatic shape retry in progress
 	// (S275, proposed). An owner pause clears it.
 	AutomaticShapeRetry bool `json:"automatic_shape_retry,omitempty"`
+	// Asked is true on a shape pause or retry whose refused report also asked
+	// the owner: the retry brief then says to keep the question (S287,
+	// *proposed*; adj 277).
+	Asked bool `json:"asked,omitempty"`
 }
 
 // Resume methods: the owner action a waiting resume carries (S274, *proposed*;
