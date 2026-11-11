@@ -1,0 +1,39 @@
+{
+  "id": "S340",
+  "title": "wave start: spec-check questions can only be answered on a terminal, one at a time",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Observed 2026-11-11 (slicer wave): with stdin not a terminal, `ork wave start` read each spec-check question's answer from stdin; an empty read held the item, and a held item's later questions were never printed (s454's changelog.wave-entries question only appeared after its first question was answered). The questions are not in `ork status` (needs you 0) or `ork show`, and unanswered ones are not kept, so each retry re-asked from the start. An agent driving ork had to pipe answers blind by position (`printf '1\\n2\\n' | ork wave start ...`), and running the same items alone changed the question set (s454 asked 1 question instead of 2). Wanted: spec-check questions recorded as needs-you questions (all of them, including later ones), answerable with `ork answer`/`adj answer` by key, and kept across retries."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

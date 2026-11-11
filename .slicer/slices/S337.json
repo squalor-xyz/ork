@@ -1,0 +1,39 @@
+{
+  "id": "S337",
+  "title": "wave start launches without --yes when stdin is not a terminal",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Observed 2026-11-11 (slicer wave): `ork wave start slicer s454 s455 s450 s456 s451 --implementer claude:sonnet:high --reviewer grok:grok-4.7:medium --architect off </dev/null` (no --yes) printed nothing for 60 s and was killed by timeout; `ork status` then showed run-20261111-170605-e94e active with a spec-check running. The same command before the project had a check command printed the plan and refused. Expected: without --yes and with no terminal to confirm on, print the plan and exit without launching (or refuse), never launch silently."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
