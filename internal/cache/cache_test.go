@@ -891,7 +891,7 @@ func TestDepsRefreshesAtTheItemsInterval(t *testing.T) {
 	waitRead(t, c, f, "alpha", source.Part("deps"), 2)
 }
 
-func TestLedgerRefreshIsOneSecondForTheVisibleProjectWhileARunIsLive(t *testing.T) {
+func TestLedgerRefreshIsTwoSecondsForTheVisibleProjectWhileARunIsLive(t *testing.T) {
 	f := newFetcher()
 	var mu sync.Mutex
 	live := true
@@ -915,21 +915,26 @@ func TestLedgerRefreshIsOneSecondForTheVisibleProjectWhileARunIsLive(t *testing.
 	c.SetVisible([]string{"alpha"})
 	waitFor(t, "alpha goals read again on tab open", func() bool { return f.count("alpha", source.Goals) == 2 })
 
-	// A visible project with a live run: the Runs part is read every second.
+	// A visible project with a live run: the Runs part is read every 2 s (S336).
+	clock.Advance(time.Second)
+	settle()
+	if n := f.count("alpha", source.Runs); n != 1 {
+		t.Fatalf("runs read %d times at 1 s with a live run, want 1 (2 s)", n)
+	}
 	clock.Advance(time.Second)
 	waitRead(t, c, f, "alpha", source.Runs, 2)
-	clock.Advance(time.Second)
+	clock.Advance(2 * time.Second)
 	waitRead(t, c, f, "alpha", source.Runs, 3)
 	if n := f.count("alpha", source.Items); n != 1 {
-		t.Fatalf("items read at 2 s: %d reads, want 1 (only the Runs part speeds up)", n)
+		t.Fatalf("items read at 4 s: %d reads, want 1 (only the Runs part speeds up)", n)
 	}
 	if n := f.count("beta", source.Runs); n != 1 {
-		t.Fatalf("hidden project's runs read at 2 s: %d reads, want 1", n)
+		t.Fatalf("hidden project's runs read at 4 s: %d reads, want 1", n)
 	}
 
-	// The run ends: that read still came at 1 s, and the next waits 5 s.
+	// The run ends: that read still came at 2 s, and the next waits 5 s.
 	setLive(false)
-	clock.Advance(time.Second)
+	clock.Advance(2 * time.Second)
 	waitRead(t, c, f, "alpha", source.Runs, 4)
 	clock.Advance(4 * time.Second)
 	settle()
@@ -939,11 +944,11 @@ func TestLedgerRefreshIsOneSecondForTheVisibleProjectWhileARunIsLive(t *testing.
 	clock.Advance(time.Second)
 	waitRead(t, c, f, "alpha", source.Runs, 5)
 
-	// A run begins: the read that sees it moves the next one to 1 s.
+	// A run begins: the read that sees it moves the next one to 2 s.
 	setLive(true)
 	clock.Advance(5 * time.Second)
 	waitRead(t, c, f, "alpha", source.Runs, 6)
-	clock.Advance(time.Second)
+	clock.Advance(2 * time.Second)
 	waitRead(t, c, f, "alpha", source.Runs, 7)
 
 	// The owner leaves the project: back to 30 s.
@@ -955,6 +960,103 @@ func TestLedgerRefreshIsOneSecondForTheVisibleProjectWhileARunIsLive(t *testing.
 	}
 	clock.Advance(10 * time.Second)
 	waitRead(t, c, f, "alpha", source.Runs, 8)
+}
+
+func newIdleCache(t *testing.T, f *fakeFetcher, clock *fakeClock) *Cache {
+	t.Helper()
+	c := New(Options{Clock: clock, Fetcher: f, Idle: true})
+	t.Cleanup(c.Close)
+	return c
+}
+
+// With no client attached nothing is read on a timer, however long it is
+// (S336, adj 301). A read that someone asks for still happens.
+func TestIdleCacheReadsNothingOnATimer(t *testing.T) {
+	f := newFetcher()
+	clock := &fakeClock{}
+	c := newIdleCache(t, f, clock)
+	readAll(t, c, alpha)
+	readAll(t, c, beta)
+	clock.Advance(10 * time.Minute)
+	settle()
+	for _, p := range []registry.Project{alpha, beta} {
+		for _, part := range partsOf(p) {
+			if n := f.count(p.Name, part); n != 1 {
+				t.Errorf("%s/%s read %d times in 10 idle minutes, want 1", p.Name, part, n)
+			}
+		}
+	}
+}
+
+// A client that attaches gets one read of each part of the projects it shows.
+// The projects it does not show wait their own interval from the attach.
+func TestAttachingReadsEachPartOfTheShownProjectsOnce(t *testing.T) {
+	f := newFetcher()
+	clock := &fakeClock{}
+	c := newIdleCache(t, f, clock)
+	readAll(t, c, alpha)
+	readAll(t, c, beta)
+	clock.Advance(10 * time.Minute)
+	settle()
+
+	c.SetIdle(false)
+	c.SetVisible([]string{"alpha"})
+	for _, part := range partsOf(alpha) {
+		waitRead(t, c, f, "alpha", part, 2)
+	}
+	settle()
+	for _, part := range partsOf(alpha) {
+		if n := f.count("alpha", part); n != 2 {
+			t.Errorf("alpha/%s read %d times on attach, want 2 (one cold, one on attach)", part, n)
+		}
+	}
+	for _, part := range partsOf(beta) {
+		if n := f.count("beta", part); n != 1 {
+			t.Errorf("beta/%s read %d times on attach, want 1 (not shown)", part, n)
+		}
+	}
+	clock.Advance(30 * time.Second)
+	waitRead(t, c, f, "beta", source.Items, 2)
+}
+
+// The shown projects are read on attach whichever of SetIdle and SetVisible
+// the caller makes first.
+func TestAttachingReadsTheShownProjectsWhenTheyAreSetBeforeTheAttach(t *testing.T) {
+	f := newFetcher()
+	clock := &fakeClock{}
+	c := newIdleCache(t, f, clock)
+	readAll(t, c, alpha)
+	clock.Advance(10 * time.Minute)
+	c.SetVisible([]string{"alpha"})
+	c.SetIdle(false)
+	for _, part := range []source.Part{source.Items, source.Deps, source.Runs, source.Open, source.Head} {
+		waitRead(t, c, f, "alpha", part, 2)
+	}
+}
+
+// The last client leaving makes the cache idle again.
+func TestDetachingStopsTheTimers(t *testing.T) {
+	f := newFetcher()
+	clock := &fakeClock{}
+	c := newIdleCache(t, f, clock)
+	readAll(t, c, alpha)
+	clock.Advance(time.Minute)
+	c.SetIdle(false)
+	c.SetVisible([]string{"alpha"})
+	waitRead(t, c, f, "alpha", source.Items, 2)
+	waitRead(t, c, f, "alpha", source.Goals, 2)
+	c.SetVisible(nil)
+	c.SetIdle(true)
+	if n := clock.Pending(); n != 0 {
+		t.Errorf("%d timers pending after the last client left, want 0", n)
+	}
+	clock.Advance(10 * time.Minute)
+	settle()
+	for _, part := range partsOf(alpha) {
+		if n := f.count("alpha", part); n != 2 {
+			t.Errorf("alpha/%s read %d times after the client left, want 2", part, n)
+		}
+	}
 }
 
 func TestLedgerRefreshIgnoresStaleRuns(t *testing.T) {
@@ -977,9 +1079,9 @@ func TestLedgerRefreshIgnoresStaleRuns(t *testing.T) {
 }
 
 // The Running entry shows every project at once (S110). Each visible project
-// with a live run is read every second, a visible project without one stays at
+// with a live run is read every 2 s, a visible project without one stays at
 // 5 s, and the Limit still caps the processes however many are visible.
-func TestLedgerRefreshIsOneSecondForEveryVisibleProjectWithALiveRun(t *testing.T) {
+func TestLedgerRefreshIsTwoSecondsForEveryVisibleProjectWithALiveRun(t *testing.T) {
 	f := newFetcher()
 	live := func(p registry.Project) bool { return p.Name[len(p.Name)-1]%2 == 0 }
 	f.setAnswer(func(p registry.Project, part source.Part) (any, error) {
@@ -1003,6 +1105,13 @@ func TestLedgerRefreshIsOneSecondForEveryVisibleProjectWithALiveRun(t *testing.T
 		waitFor(t, p.Name+" goals read on open", func() bool { return f.count(p.Name, source.Goals) == 2 })
 	}
 	clock.Advance(time.Second)
+	settle()
+	for _, p := range projects {
+		if n := f.count(p.Name, source.Runs); n != 1 {
+			t.Errorf("%s: runs read %d times after 1 s, want 1", p.Name, n)
+		}
+	}
+	clock.Advance(time.Second)
 	for _, p := range projects {
 		if live(p) {
 			waitRead(t, c, f, p.Name, source.Runs, 2)
@@ -1015,7 +1124,7 @@ func TestLedgerRefreshIsOneSecondForEveryVisibleProjectWithALiveRun(t *testing.T
 			want = 2
 		}
 		if n := f.count(p.Name, source.Runs); n != want {
-			t.Errorf("%s: runs read %d times after 1 s, want %d (live %v)", p.Name, n, want, live(p))
+			t.Errorf("%s: runs read %d times after 2 s, want %d (live %v)", p.Name, n, want, live(p))
 		}
 	}
 	if _, max := f.now(); max > Limit {

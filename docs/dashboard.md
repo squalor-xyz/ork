@@ -564,8 +564,8 @@ next timer tick, including when a focused project was removed. Notices that
 arrive during a fetch queue a further read. On "Needs you" and "Running" the
 daemon focuses all registered projects; on a project row it focuses that one
 (`dash.refresh`).
-While a visible project has a live run, the daemon reads its runs every 1 s
-(*proposed*, S109) and the TUI refetches on the notice; see `docs/design.md`.
+While a visible project has a live run, the daemon reads its runs every 2 s
+(*proposed*, S109; 2 s since S336) and the TUI refetches on the notice; see `docs/design.md`, which also says that with no TUI attached nothing is read on a timer.
 On "Running" that holds for every project with a live run at once (S110); a
 visible project without one stays at 5 s.
 The local fallback schedule reads the selected project's items every 5 s and

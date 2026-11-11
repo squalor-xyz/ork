@@ -1,0 +1,39 @@
+{
+  "id": "S339",
+  "title": "projects add: a Python project gets the Go allowlist and no check command",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Observed 2026-11-11: the registered slicer project (pyproject.toml, no go.mod) had the built-in Go implementer allowlist and no check command, so the first `ork wave start` warned and refused; fixed by hand with `ork projects set slicer --preset python --check ...`. Wanted: detect the language at `projects add` (or when the first run plans) and suggest the preset and the check command from the project's AGENTS.md."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
