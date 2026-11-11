@@ -169,11 +169,13 @@ Notes on the fields:
 - `bell` (*proposed*, S100) is an optional JSON boolean per project.
   Absent or `true` means on; `false` silences every bell for that project.
   Counts and sidebar badges still update. The TUI reads it at start; restart
-  ork after editing the file. An older ork refuses this key because `Load`
-  uses strict keys. Set it by hand for now; `ork projects set NAME --bell on|off`
-  lands with the separate setter slice S224.
+  ork after changing it. An older ork refuses this key because `Load`
+  uses strict keys. `ork projects set NAME --bell on|off` (*proposed*, S224)
+  writes it: `on` stores `true` and `off` stores `false`. It is allowed while
+  the project has unfinished runs (owner decision 2026-11-11), because a
+  started run does not read it.
 - `ork projects set` (*proposed*, S161, owner decision 2026-10-27) is the only
-  way ork writes the optional per-project fields. It changes `push`, `ui_doc`,
+  way ork writes the optional per-project fields. It changes `push`, `bell` (S224), `ui_doc`,
   `ui_pass_skills`, `spec_check_rows` (S258), `worktree_pattern`, `branch_pattern`, `check_command`, `round_check_command` (S285), `no_verify_check` (S295, with `--no-verify`), `check_minutes`,
   `cap`, `budgets.minutes`, `budgets.tokens` and, since S174 (*proposed*,
   owner decision 2026-10-29), `environment_lines`, `permissions` and
@@ -182,11 +184,12 @@ Notes on the fields:
   file-level and belong to `ork settings set`, below). The daemon validates
   each value, refuses while the project has unfinished runs, and saves under
   its registry lock. *Proposed* (S265, owner answers 2026-11-03 and 2026-11-07):
-  while runs are unfinished the daemon allows a call that sets only `cap`,
+  while runs are unfinished the daemon allows a call that sets only `cap`, `bell`,
   `budgets.minutes`, `budgets.tokens`, `worktree_pattern` and `branch_pattern`,
   fields that no started run reads (the cap is read at each admission, the
   budgets are copied into the run record at start, and the patterns are used
-  only when a run is planned). It refuses any call that sets another field and
+  only when a run is planned). S224 adds `bell` to that list: the TUI reads it
+  at its start. It refuses any call that sets another field and
   names the refused fields as command line flags; a refused call saves nothing.
   A call that sets `cap` also starts the queued runs that now fit.
   A `ui_doc` must be a relative path inside the project (checked by name;

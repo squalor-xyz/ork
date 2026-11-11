@@ -136,7 +136,7 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               ({CONTRACTS}) through slicer; needs no daemon
   ork projects unpin NAME     clear the pin through slicer
   ork projects set NAME [--push on|off] [--ui-doc PATH] [--ui-pass-skills A,B]
-                              [--spec-check-rows rNN,rNN]
+                              [--bell on|off] [--spec-check-rows rNN,rNN]
                               [--worktree-pattern P] [--branch-pattern P]
                               [--check CMD] [--round-check CMD] [--no-verify]
                               [--check-minutes N]
@@ -165,9 +165,11 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               when the command cannot run in the project's
                               folder (first word not found, a named file
                               missing) unless --no-verify, which ork remembers
-                              for the project; while runs are unfinished only
-                              --cap, the budgets and the worktree and branch
-                              patterns may change
+                              for the project; --bell sets the terminal bell
+                              for the project, and the TUI reads it at start;
+                              while runs are unfinished only --cap, --bell, the
+                              budgets and the worktree and branch patterns may
+                              change
   ork settings show           show global_cap and daemon_idle_minutes, stored
                               and effective
   ork settings set [--global-cap N] [--daemon-idle-minutes N]

@@ -309,6 +309,7 @@ func (a *App) projects(ctx context.Context, o *output, args []string) int {
 // registry value. An empty string or 0 clears a field.
 func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args []string) int {
 	push := fs.String("push", "", "on or off: push the base branch after a landing")
+	bell := fs.String("bell", "", "on or off: ring the terminal bell for this project")
 	uiDoc := fs.String("ui-doc", "", "the UI design doc, a path inside the project")
 	uiPassSkills := fs.String("ui-pass-skills", "", "comma-separated skills for a Claude UI pass; empty clears the list")
 	specCheckRows := fs.String("spec-check-rows", "", "comma-separated matrix rows the spec check runs on, in order (r16,r24); empty clears the list")
@@ -346,6 +347,15 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 			p.Push = &on
 		default:
 			return o.usage("projects set: --push takes on or off, got %q", *push)
+		}
+	}
+	if given["bell"] {
+		switch *bell {
+		case "on", "off":
+			on := *bell == "on"
+			p.Bell = &on
+		default:
+			return o.usage("projects set: --bell takes on or off, got %q", *bell)
 		}
 	}
 	if given["ui-pass-skills"] {
@@ -422,7 +432,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		p.Preset = preset
 	}
 	if p.SetsNothing() {
-		return o.usage("projects set needs at least one field flag (--push, --ui-doc, --ui-pass-skills, --spec-check-rows, --worktree-pattern, --branch-pattern, --check, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
+		return o.usage("projects set needs at least one field flag (--push, --bell, --ui-doc, --ui-pass-skills, --spec-check-rows, --worktree-pattern, --branch-pattern, --check, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
 	}
 	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
 		proj, err := c.SetProject(ctx, p)
@@ -448,6 +458,9 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		var changed []string
 		if p.Push != nil {
 			changed = append(changed, map[bool]string{true: "push=on", false: "push=off"}[proj.Push])
+		}
+		if p.Bell != nil {
+			changed = append(changed, map[bool]string{true: "bell=on", false: "bell=off"}[proj.BellOn()])
 		}
 		if p.UIDoc != nil {
 			changed = append(changed, text("ui_doc", proj.UIDoc))

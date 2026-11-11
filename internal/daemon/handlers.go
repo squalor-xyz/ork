@@ -570,8 +570,8 @@ func (d *Daemon) removeProject(name string) error {
 // setProject changes the optional registry fields p sets (S161, *proposed*).
 // It validates every value before it takes regMu, and saves the registry once.
 // While the project has unfinished runs it refuses a call that sets a field a
-// running slice reads, and allows the cap, the budgets and the patterns (S265,
-// *proposed*).
+// running slice reads, and allows the cap, the budgets, the patterns and the
+// bell (S265, S224, *proposed*).
 func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.Project, error) {
 	bad := func(format string, args ...any) error {
 		return &ipc.Error{Code: CodeBadParams, Message: fmt.Sprintf(format, args...)}
@@ -670,6 +670,10 @@ func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.P
 	proj.EnvironmentLines, proj.Permissions, proj.VendorEnv = withExtras.EnvironmentLines, withExtras.Permissions, withExtras.VendorEnv
 	if p.Push != nil {
 		proj.Push = *p.Push
+	}
+	if p.Bell != nil {
+		bell := *p.Bell
+		proj.Bell = &bell
 	}
 	if p.UIPassSkills != nil {
 		proj.UIPassSkills = append([]string(nil), (*p.UIPassSkills)...)
@@ -785,6 +789,6 @@ func busyMessage(project string, runs, flags []string) string {
 	if len(flags) > 1 {
 		pronoun = "them"
 	}
-	return fmt.Sprintf("project %s has unfinished runs: %s; a running slice reads %s, so set %s after they finish or stop (--cap, the budgets and the worktree and branch patterns may change now)",
+	return fmt.Sprintf("project %s has unfinished runs: %s; a running slice reads %s, so set %s after they finish or stop (--cap, --bell, the budgets and the worktree and branch patterns may change now)",
 		project, strings.Join(runs, ", "), list, pronoun)
 }

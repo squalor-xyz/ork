@@ -143,6 +143,7 @@ The registry holds optional per-project settings. Change them with
 | `--budget-minutes N` | run-time budget per slice |
 | `--budget-tokens N` | token budget per slice |
 | `--push on\|off` | push the base branch after landing; off by default |
+| `--bell on\|off` | the terminal bell for the project's runs and counts; on when unset (*proposed*, S224). Allowed while runs are unfinished; the TUI reads it at start, so restart ork to apply it |
 | `--ui-doc PATH` | the project's UI design doc, relative to the project; the UI pass reads it |
 | `--ui-pass-skills A,B` | comma-separated skill names stored in `ui_pass_skills`; only a Claude UI pass is advised to load them (*proposed*, S209) |
 | `--spec-check-rows rNN,rNN` | the matrix rows the spec check runs on, in order: the first with an adapter runs, the next is its fallback; **a row listed here leaves every run's reviewer and gate chains**; `""` clears it, and with none set ork uses every row the matrix's `Spec check row (rNN)` rules name, in rule order (*proposed*, S258) |
@@ -624,8 +625,8 @@ An engine run ends at `committed` or `stopped`; a ledger-only relay ends at
 reading is a baseline and rings nothing. The per-project registry field
 `bell` (*proposed*) is on when absent or `true`; `"bell": false` silences
 every bell for that project. Counts and sidebar badges still update.
-The TUI reads the setting at start, so restart ork after editing it.
-The `ork projects set NAME --bell on|off` command lands in S224.
+The TUI reads the setting at start, so restart ork after changing it.
+Set it with `ork projects set NAME --bell on|off` (*proposed*, S224).
 
 ## 12. Recover
 

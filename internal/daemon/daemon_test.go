@@ -2186,6 +2186,62 @@ func TestProjectsSetOverTheSocket(t *testing.T) {
 	}
 }
 
+// S224 (*proposed*): projects.set takes bell, a pointer to a boolean. The
+// other fields stay as they are.
+func TestProjectsSetBell(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	if _, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","cap":4}`)); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []bool{false, true} {
+		got, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, fmt.Sprintf(`{"name":"p","bell":%v}`, want)))
+		if err != nil {
+			t.Fatalf("bell %v: %v", want, err)
+		}
+		reply, _ := json.Marshal(got)
+		if want := fmt.Sprintf(`"bell":%v`, want); !strings.Contains(string(reply), want) {
+			t.Fatalf("reply lacks %s: %s", want, reply)
+		}
+		f, _ := registry.Load(d.registryPath())
+		if f.Projects[0].Bell == nil || *f.Projects[0].Bell != want || f.Projects[0].Cap != 4 {
+			t.Fatalf("saved after bell %v: %+v", want, f.Projects[0])
+		}
+	}
+}
+
+// The owner decided on 2026-11-11 (projects.set-busy-unread-fields) that bell
+// is not read by a started run: the call succeeds while a run is unfinished.
+func TestProjectsSetBellWhileARunIsUnfinished(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	if _, err := store.Create(runrec.Record{ID: "a-run", Project: p.Name, State: runrec.StatePaused}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","bell":false}`)); err != nil {
+		t.Fatalf("bell with an unfinished run: %v", err)
+	}
+	f, _ := registry.Load(d.registryPath())
+	if f.Projects[0].Bell == nil || *f.Projects[0].Bell {
+		t.Fatalf("bell not saved: %+v", f.Projects[0])
+	}
+	// A busy field in the same call still refuses it and saves nothing.
+	before, _ := os.ReadFile(d.registryPath())
+	_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","bell":true,"push":true}`))
+	var re *ipc.Error
+	if !errors.As(err, &re) || re.Code != CodeProjectBusy || re.Message != wantBusy("--push", "it") {
+		t.Fatalf("bell with push: %v", err)
+	}
+	if after, _ := os.ReadFile(d.registryPath()); string(after) != string(before) {
+		t.Fatalf("a refusal changed the registry:\n%s", after)
+	}
+}
+
+func TestSetsNothingCountsBell(t *testing.T) {
+	v := false
+	if (SetProjectParams{Name: "p", Bell: &v}).SetsNothing() {
+		t.Fatal("bell alone sets nothing")
+	}
+}
+
 func TestProjectsSetUIPassSkills(t *testing.T) {
 	d, _, _ := runDaemon(t, nil)
 	for _, raw := range []string{`{"name":"p","ui_pass_skills":["tui-design","frontend-design"]}`, `{"name":"p","ui_pass_skills":[]}`} {
@@ -2537,5 +2593,5 @@ func TestProjectsSetRefusesEachFieldAStartedRunReads(t *testing.T) {
 // wantBusy is the project_busy message for the unfinished run a-run of project
 // p; reads is the flags a running slice reads, and pronoun is "it" or "them".
 func wantBusy(reads, pronoun string) string {
-	return "project p has unfinished runs: a-run; a running slice reads " + reads + ", so set " + pronoun + " after they finish or stop (--cap, the budgets and the worktree and branch patterns may change now)"
+	return "project p has unfinished runs: a-run; a running slice reads " + reads + ", so set " + pronoun + " after they finish or stop (--cap, --bell, the budgets and the worktree and branch patterns may change now)"
 }

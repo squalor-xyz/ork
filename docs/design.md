@@ -120,7 +120,7 @@ ork (TUI)  ork status --json (CLI)
   | `projects.list` | none | `{"projects":[...]}`; an empty registry is valid |
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
   | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
-  | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `ui_doc`, `ui_pass_skills` (a list, S209), `spec_check_rows` (a list, S258), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`), and, from S265 (*proposed*), `implementer_preset` (`go` or `python`) and `allow_add` (`{ROLE: [patterns]}`) | the project as saved; an omitted field keeps its value, `""` or 0 clears one, `[]` clears `ui_pass_skills` or `spec_check_rows`; `null` removes one role or one vendor key, and the other roles and keys stay; `allow_add` appends the patterns not yet in the role's list (from the built-in default when the role has no entry) and `implementer_preset` sets the implementer's list first, so `allow_add` in the same call follows it; `bad_params` for an unknown field, no field, an invalid value, an unknown preset, or `permissions` naming a role that `allow_add` or `implementer_preset` names; `not_found`; `project_busy` while a run is unfinished and the call sets a field other than `cap`, `budget_minutes`, `budget_tokens`, `worktree_pattern` or `branch_pattern` (S265, *proposed*; the message names the refused fields as command line flags, for example `--push`); a call that sets `cap` also starts the queued runs that now fit, as `settings.set` does |
+  | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `bell` (a boolean, S224, *proposed*), `ui_doc`, `ui_pass_skills` (a list, S209), `spec_check_rows` (a list, S258), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`), and, from S265 (*proposed*), `implementer_preset` (`go` or `python`) and `allow_add` (`{ROLE: [patterns]}`) | the project as saved; an omitted field keeps its value, `""` or 0 clears one, `[]` clears `ui_pass_skills` or `spec_check_rows`; `null` removes one role or one vendor key, and the other roles and keys stay; `allow_add` appends the patterns not yet in the role's list (from the built-in default when the role has no entry) and `implementer_preset` sets the implementer's list first, so `allow_add` in the same call follows it; `bad_params` for an unknown field, no field, an invalid value, an unknown preset, or `permissions` naming a role that `allow_add` or `implementer_preset` names; `not_found`; `project_busy` while a run is unfinished and the call sets a field other than `cap`, `bell`, `budget_minutes`, `budget_tokens`, `worktree_pattern` or `branch_pattern` (S265, S224, *proposed*; the message names the refused fields as command line flags, for example `--push`); a call that sets `cap` also starts the queued runs that now fit, as `settings.set` does |
   | `settings.get` (*proposed*, S174) | none | `{"global_cap","daemon_idle_minutes","effective_global_cap","effective_daemon_idle_minutes"}`; the first two are the stored values (0 is unset) |
   | `settings.set` (*proposed*, S174) | `{"global_cap"?,"daemon_idle_minutes"?}`, at least one | the same shape as `settings.get`; 0 clears one; `bad_params` for no field or a negative number; not refused while runs are unfinished; a raised `global_cap` starts the queued runs that now fit |
 
@@ -2483,7 +2483,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   stopped. This includes queued, paused, awaiting-approval and running states.
   The message names the run ids. The project stays registered.
   A planned start that loses the race to removal is refused with `not_found`.
-- `projects set NAME [--push on|off] [--ui-doc PATH]
+- `projects set NAME [--push on|off] [--bell on|off] [--ui-doc PATH]
   [--ui-pass-skills A,B] [--spec-check-rows rNN,rNN] [--worktree-pattern P]
   [--branch-pattern P] [--check CMD] [--round-check CMD] [--no-verify] [--check-minutes N] [--cap N]
   [--budget-minutes N] [--budget-tokens N] [--env-line LINE]...
@@ -2563,15 +2563,20 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   reviewer:read-only`, `vendor_env=codex:A,B`, with `unset` or `default` for
   a removal) and never prints a `vendor_env` value; `--json` prints the
   project as the registry holds it, as `projects list --json` does, so it
-  includes the `vendor_env` values. `--push` takes `on` or `off`. At least one
-  flag is required, and an unknown flag, a bad `--push` value or a non-number is a usage error
+  includes the `vendor_env` values. `--push` takes `on` or `off`. `--bell`
+  (*proposed*, S224) takes `on` or `off` too and sets the registry field `bell`
+  (`bell` on the wire, a boolean): `on` stores `true`, `off` stores `false`,
+  and the text line says `bell=on` or `bell=off`. The TUI reads the setting at
+  start, so a running TUI needs a restart to apply it. At least one
+  flag is required, and an unknown flag, a bad `--push` or `--bell` value or a non-number is a usage error
   (exit 2) before the daemon starts. The daemon (`projects.set`) validates the
   values and refuses with `bad_params` (a `ui_doc` that is absolute or leaves
   the project, an invalid `ui_pass_skills` name, an invalid `spec_check_rows` id, a pattern without `{id}` or
   `{id_lower}`, a negative number) or
   `project_busy` (while runs are unfinished, only for a call that sets a field
-  other than `--cap`, the budgets and the worktree and branch patterns, S265
-  *proposed*; the message names the refused flags), and then changes nothing. JSON:
+  other than `--cap`, `--bell`, the budgets and the worktree and branch
+  patterns, S265 and S224 *proposed*; owner decision 2026-11-11: a started run
+  does not read `bell`; the message names the refused flags), and then changes nothing. JSON:
   `{"project":{...}}`. Text: `updated NAME: FIELD=VALUE, ...` in flag order,
   with `unset` for a cleared field; the text shows the values as saved (a
   `ui_doc` is cleaned). The daemon reads the registry for each start, so a run

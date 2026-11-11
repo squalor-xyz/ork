@@ -1607,6 +1607,74 @@ func TestProjectsSetRefusesUnknownField(t *testing.T) {
 	}
 }
 
+// --bell on|off sets the per-project bell (S224, *proposed*).
+func TestProjectsSetBellOnOff(t *testing.T) {
+	w := newWorld(t, stubSource{},
+		registry.Project{Name: "p", Path: "/p/p", Cap: 2},
+		registry.Project{Name: "q", Path: "/p/q"})
+	code, stdout, stderr := run(t, w.app, "projects", "set", "p", "--bell", "off")
+	if code != 0 || stdout != "updated p: bell=off\n" {
+		t.Fatalf("off: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	saved, _ := registry.Load(w.regPath)
+	if b := saved.Projects[0].Bell; b == nil || *b || saved.Projects[0].Cap != 2 || saved.Projects[1].Bell != nil {
+		t.Fatalf("saved after off: %+v", saved.Projects)
+	}
+	code, stdout, stderr = run(t, w.app, "projects", "set", "p", "--bell", "on")
+	if code != 0 || stdout != "updated p: bell=on\n" {
+		t.Fatalf("on: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	saved, _ = registry.Load(w.regPath)
+	if b := saved.Projects[0].Bell; b == nil || !*b {
+		t.Fatalf("saved after on: %+v", saved.Projects[0])
+	}
+	// The text lists the fields in a fixed order, not the order typed.
+	code, stdout, _ = run(t, w.app, "projects", "set", "p", "--bell", "off", "--push", "on")
+	if code != 0 || stdout != "updated p: push=on, bell=off\n" {
+		t.Fatalf("with push: exit %d: %q", code, stdout)
+	}
+	code, stdout, stderr = run(t, w.app, "projects", "set", "p", "--bell", "off", "--json")
+	var res struct{ Project map[string]any }
+	mustJSON(t, stdout, &res)
+	if code != 0 || res.Project["bell"] != false {
+		t.Fatalf("--json: exit %d\nstdout: %s\nstderr: %s", code, stdout, stderr)
+	}
+}
+
+func TestProjectsSetBellRefusesABadValue(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "p", Path: "/p/p"})
+	starts := w.starts.Load()
+	code, _, stderr := run(t, w.app, "projects", "set", "p", "--bell", "maybe")
+	if code != 2 || !strings.Contains(stderr, `projects set: --bell takes on or off, got "maybe"`) {
+		t.Fatalf("exit %d: %q", code, stderr)
+	}
+	if w.starts.Load() != starts {
+		t.Fatal("a usage error started the daemon")
+	}
+	if saved, _ := registry.Load(w.regPath); saved.Projects[0].Bell != nil {
+		t.Fatalf("a refusal changed the registry: %+v", saved.Projects)
+	}
+}
+
+func TestProjectsSetNeedsAtLeastOneFlagNamesBell(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "p", Path: "/p/p"})
+	code, _, stderr := run(t, w.app, "projects", "set", "p")
+	if code != 2 || !strings.Contains(stderr, "needs at least one field flag") || !strings.Contains(stderr, "--bell") {
+		t.Fatalf("exit %d: %q", code, stderr)
+	}
+}
+
+func TestUsageTextNamesProjectsSetBell(t *testing.T) {
+	if !strings.Contains(usageText, "[--bell on|off]") {
+		t.Errorf("usage lacks [--bell on|off]:\n%s", usageText)
+	}
+	for _, line := range strings.Split(usageText, "\n") {
+		if len(line) > 80 {
+			t.Errorf("usage line of %d columns: %q", len(line), line)
+		}
+	}
+}
+
 func TestProjectsSetValidatesUIDoc(t *testing.T) {
 	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep", UIDoc: "old.md"})
 	for _, bad := range []string{"/abs/ui.md", "../ui.md", "a/../../ui.md"} {
@@ -1638,7 +1706,7 @@ func TestProjectsSetRefusesAnUnfinishedRun(t *testing.T) {
 		t.Fatal(err)
 	}
 	code, _, stderr := run(t, w.app, "projects", "set", "keep", "--push", "on")
-	if code != 1 || !strings.Contains(stderr, "project keep has unfinished runs: busy-run; a running slice reads --push, so set it after they finish or stop (--cap, the budgets and the worktree and branch patterns may change now)") {
+	if code != 1 || !strings.Contains(stderr, "project keep has unfinished runs: busy-run; a running slice reads --push, so set it after they finish or stop (--cap, --bell, the budgets and the worktree and branch patterns may change now)") {
 		t.Fatalf("exit %d: %q", code, stderr)
 	}
 	if saved, _ := registry.Load(w.regPath); saved.Projects[0].Push {

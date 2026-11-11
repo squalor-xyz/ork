@@ -288,6 +288,7 @@ type RemoveProjectParams struct {
 type SetProjectParams struct {
 	Name              string                          `json:"name"`
 	Push              *bool                           `json:"push,omitempty"`
+	Bell              *bool                           `json:"bell,omitempty"` // S224, *proposed*: true or false; a started run does not read it
 	UIDoc             *string                         `json:"ui_doc,omitempty"`
 	UIPassSkills      *[]string                       `json:"ui_pass_skills,omitempty"`
 	SpecCheckRows     *[]string                       `json:"spec_check_rows,omitempty"` // S258, *proposed*: the whole ordered list; [] clears it
@@ -310,16 +311,17 @@ type SetProjectParams struct {
 // SetsNothing reports whether the call sets no field. The struct holds maps,
 // so it cannot be compared with ==. The daemon and the command line both use it.
 func (p SetProjectParams) SetsNothing() bool {
-	return p.Push == nil && p.UIDoc == nil && p.UIPassSkills == nil && p.SpecCheckRows == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
+	return p.Push == nil && p.Bell == nil && p.UIDoc == nil && p.UIPassSkills == nil && p.SpecCheckRows == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
 		p.CheckCommand == nil && p.RoundCheckCommand == nil && p.CheckMinutes == nil && p.Cap == nil && p.BudgetMinutes == nil &&
 		p.BudgetTokens == nil && p.EnvironmentLines == nil && len(p.Permissions) == 0 && p.Preset == nil && len(p.AllowAdd) == 0 && len(p.VendorEnv) == 0
 }
 
 // fieldsReadByARun names, as command line flags, the fields p sets that a
 // started run reads, in the order of the struct (S265, *proposed*). The cap,
-// the budgets and the worktree and branch patterns are not among them: the cap
-// is read at each admission, the budgets are copied into the run record at
-// start, and the patterns are used only when a run is planned.
+// the budgets, the worktree and branch patterns and the bell are not among
+// them: the cap is read at each admission, the budgets are copied into the run
+// record at start, the patterns are used only when a run is planned, and the
+// TUI reads the bell at its start (S224, owner 2026-11-11).
 func (p SetProjectParams) fieldsReadByARun() []string {
 	var names []string
 	for _, f := range []struct {

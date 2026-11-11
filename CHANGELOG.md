@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Set the per-project bell with `ork projects set NAME --bell on|off`
+  (*proposed*): S224. `on` stores `true` and `off` stores `false` in the
+  registry field `bell` (S100) through `projects.set`, and the text line says
+  `bell=on` or `bell=off`. Any other value is a usage error. The call is allowed
+  while the project has unfinished runs (owner decision 2026-11-11), so the
+  busy refusal lists `--bell` among the fields that may change. The TUI reads
+  the setting at start. Docs updated: `docs/design.md`, `docs/guide.md` and
+  `docs/state.md`.
 - CHANGELOG resolver accepts compact entries (*proposed*): S327. Landing's
   merge of the root `CHANGELOG.md` (S180) treats every `- ` line as a new entry,
   so entries with no blank line between them, and a body that mixes both
