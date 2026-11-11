@@ -578,9 +578,14 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		if len(entries) == 0 {
 			return nil, badParams(fmt.Errorf("lineup for %s needs at least one entry", role))
 		}
-		for _, entry := range entries {
+		// The wire may send a vendor in any case; it is lowercase from here on.
+		entries = slices.Clone(entries)
+		for i := range entries {
+			typed := entries[i].Vendor
+			entries[i].Vendor = strings.ToLower(strings.TrimSpace(typed))
+			entry := entries[i]
 			if !supportsVendor(entry.Vendor) {
-				return nil, badParams(fmt.Errorf("unsupported vendor %q for %s", entry.Vendor, role))
+				return nil, badParams(fmt.Errorf("unsupported vendor %q for %s; use %s", typed, role, vendorList()))
 			}
 			if isGrokVendor(entry.Vendor) && role == engine.RoleImplementer && !plan.Permissions[role].ReadOnly {
 				return nil, badParams(fmt.Errorf("vendor %q cannot run as %s: %s", entry.Vendor, role, grokNoWrite))
