@@ -462,9 +462,14 @@ func (c Client) SetScores(ctx context.Context, w runrec.Writer, root, id string,
 	return err
 }
 
-// RelayAsk mirrors a structured blocker question on the orchestrator step.
-func (c Client) RelayAsk(ctx context.Context, w runrec.Writer, root, run, step, key string, q runrec.OwnerQuestion) (string, error) {
-	argv := []string{"relay-run", "ask", run, "--step", step, "--title", q.Title, "--blocker"}
+// RelayAsk records a structured owner question on the orchestrator step. With
+// blocker the step waits on the owner until it is answered; without, slicer
+// records the question and the step keeps running (S223, proposed).
+func (c Client) RelayAsk(ctx context.Context, w runrec.Writer, root, run, step, key string, q runrec.OwnerQuestion, blocker bool) (string, error) {
+	argv := []string{"relay-run", "ask", run, "--step", step, "--title", q.Title}
+	if blocker {
+		argv = append(argv, "--blocker")
+	}
 	for _, o := range q.Options {
 		argv = append(argv, "--option", o.Label+":"+o.Summary)
 	}
@@ -510,6 +515,23 @@ func (c Client) RelayAnswer(ctx context.Context, w runrec.Writer, root, run, que
 	args = append(args, "--json")
 	_, err := c.write(ctx, w, root, args...)
 	return err
+}
+
+// RelayAnswerGet runs `slicer relay-run answer RUN QUESTION_ID --get --json
+// --root ROOT` and returns the question. It is a read: slicer takes no lock and
+// writes nothing, and --get takes no other flag. Answer is nil while the
+// question is open (S223, proposed).
+func (c Client) RelayAnswerGet(ctx context.Context, root, run, question string) (*LedgerQuestion, error) {
+	var out struct {
+		Question *LedgerQuestion `json:"question"`
+	}
+	if err := clirun.RunJSON(ctx, c.call("relay-run", "answer", run, question, "--get", "--json", "--root", root), &out); err != nil {
+		return nil, err
+	}
+	if out.Question == nil || out.Question.ID == "" {
+		return nil, errors.New("slicer relay-run answer --get: no question in the output")
+	}
+	return out.Question, nil
 }
 
 // AddSpec contains the optional fields of an owner-filed item.

@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
 // questionText is the raw text of a finding's question, in the shape of an
@@ -32,7 +33,10 @@ func findingKey(kind, title string) string {
 // recordFindings keeps the owner findings that do not block and the later
 // findings of a report in the run record, once each: a finding that a later
 // round raises again under the same title is not added twice. A fix finding
-// goes to the fix round, and a blocker is asked by askBlocker.
+// goes to the fix round, and a blocker is asked by askBlocker. Each owner
+// finding that is newly kept is asked in the relay ledger without a wait, once
+// the record holds it (S223, proposed); it has no context of its own to cancel
+// from, and a ledger write is advisory.
 func (e *Engine) recordFindings(r round, t *Triaged) error {
 	var add []runrec.Finding
 	for _, f := range t.Owner {
@@ -46,7 +50,9 @@ func (e *Engine) recordFindings(r round, t *Triaged) error {
 	if len(add) == 0 {
 		return nil
 	}
-	return e.run.Update(func(rr *runrec.Record) {
+	var kept []runrec.Finding
+	err := e.run.Update(func(rr *runrec.Record) {
+		kept = nil
 		seen := map[string]bool{}
 		for _, f := range rr.Findings {
 			seen[findingKey(f.Kind, f.Title)] = true
@@ -56,9 +62,19 @@ func (e *Engine) recordFindings(r round, t *Triaged) error {
 				seen[k] = true
 				f.Role, f.Round, f.At = r.role, r.n, e.d.now()
 				rr.Findings = append(rr.Findings, f)
+				kept = append(kept, f)
 			}
 		}
 	})
+	if err != nil {
+		return err
+	}
+	for _, f := range kept {
+		if f.Kind == runrec.FindingOwner {
+			e.askFinding(context.Background(), f)
+		}
+	}
+	return nil
 }
 
 // askBlocker pauses the slice on an owner finding that its report marks as a
@@ -181,5 +197,15 @@ func (e *Engine) AnswerFinding(ctx context.Context, n int, text, by string) (str
 		r.Findings[n-1].Answer = text
 		r.Findings[n-1].AnsweredAt = e.d.now()
 	})
-	return message, err
+	if err != nil {
+		return message, err
+	}
+	// The answer goes to the ledger question too, unless the run has committed
+	// and no ledger step is recorded any more. The write is advisory. The id is
+	// read after the update: an ask in flight may have stored it since the
+	// snapshot above (askFinding writes the answer itself when it finds one).
+	if now := e.run.Snapshot(); now.RelayRun != "" && now.Commit == nil && now.Findings[n-1].LedgerQuestion != "" {
+		e.d.Slicer.RelayAnswer(ctx, e.wr, now.Worktree, now.RelayRun, now.Findings[n-1].LedgerQuestion, slicercli.RelayAnswerSpec{Text: text, By: by})
+	}
+	return message, nil
 }

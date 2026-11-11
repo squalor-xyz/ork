@@ -766,6 +766,47 @@ func TestRecordWithoutWaveNameStillLoads(t *testing.T) {
 	}
 }
 
+func TestFindingLedgerQuestionRoundTrips(t *testing.T) {
+	s := newStore(t)
+	record := rec("ledger")
+	record.Findings = []Finding{
+		{Kind: FindingOwner, Title: "Which cap?", LedgerQuestion: "q3"},
+		{Kind: FindingOwner, Title: "No id"},
+	}
+	r, err := s.Create(record)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw := readFile(t, filepath.Join(r.Dir(), "run.json"))
+	if !strings.Contains(raw, `"ledger_question": "q3"`) || strings.Count(raw, "ledger_question") != 1 {
+		t.Fatalf("ledger_question is written once, for the finding that has one:\n%s", raw)
+	}
+	opened, err := s.Open("ledger")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := opened.Snapshot()
+	if got.Version != 1 || len(got.Findings) != 2 || got.Findings[0].LedgerQuestion != "q3" || got.Findings[1].LedgerQuestion != "" {
+		t.Fatalf("reopened: %+v", got)
+	}
+
+	// A run.json from before the field still loads.
+	const old = `{"version":1,"id":"old","state":"stopped","findings":[{"kind":"owner","title":"T","text":"x","role":"reviewer","round":1,"at":"2026-10-19T16:12:00Z"}]}`
+	if err := os.MkdirAll(s.RunDir("old"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(s.RunDir("old"), "run.json"), []byte(old), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	opened, err = s.Open("old")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := opened.Snapshot(); len(got.Findings) != 1 || got.Findings[0].Title != "T" || got.Findings[0].LedgerQuestion != "" {
+		t.Fatalf("old record: %+v", got)
+	}
+}
+
 func TestDismissRefusesUnstoppedRuns(t *testing.T) {
 	for _, state := range []string{StatePaused, StateImplement, StateCommitted, StateAwaitingApproval, StateQueued} {
 		t.Run(state, func(t *testing.T) {

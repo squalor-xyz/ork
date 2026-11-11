@@ -77,7 +77,7 @@ the tables below.
 | # | Job | Status | ork surface and evidence | Gap slice (size, UI) |
 |---|---|---|---|---|
 | 4.1 | Ask the owner and route the answer to the right role | exists | A role's `## Owner needed` pauses the run; the answer resumes the same role (`docs/design.md:543-549`). TUI: Questions view, `1`-`4`, `t`, `enter`. CLI: `ork answer RUN TEXT` (`internal/cli/run.go:251-258`) | none |
-| 4.2 | Blocker questions | exists | `[owner blocker]` findings pause the round with a question (`docs/design.md:335-346`). Non-blocking owner findings are answered with `o` (`internal/tui/keys.go:87`) | none |
+| 4.2 | Blocker questions | exists | `[owner blocker]` findings pause the round with a question (`docs/design.md:335-346`). Non-blocking owner findings are answered with `o` (`internal/tui/keys.go:87`). *Proposed (S223):* each is also asked in the ledger without `--blocker` and its answer is written there and read back before the card and the finish step (`internal/engine/ledger.go`, `askFinding` and `syncLedgerAnswers`) | none |
 | 4.3 | Questions from the outer session about design, order or scope | exists | S172 adds `ork adj ask` for a new question and `ork adj answer` for an open record (`internal/cli/adj.go:34,138`). S185 adds answers in the Questions and Decisions panes: `1`-`4` or `t`, then y/N confirmation (`internal/tui/decisionanswer.go:47-108`). The owner supplies the question | none |
 
 ## 5. Landing

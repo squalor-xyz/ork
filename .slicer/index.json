@@ -12521,7 +12521,7 @@
       "id": "S223",
       "title": "Non-blocking owner questions are asked in the relay ledger and read back before the finish step",
       "short_title": "Ledger non-blocker owner questions",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S204"
@@ -12534,6 +12534,34 @@
           "created_at": "2026-11-01T00:58:23Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "12632a51-717f-4c6e-8873-f2db5f4d6950",
+          "kind": "",
+          "text": "**2026-11-11** — Human checks at approval (S223):\n- later: deferred to land: After landing and an `ork daemon restart` (the owner rebuilds `~/bin/ork` first), a relay whose reviewer raises an `[owner]` finding shows the question in `slicer relay-run list RUN` with the orchestrator step still running, and `slicer relay-run answer RUN QID --option LABEL` is visible on the finding in ork before approval.",
+          "created_at": "2026-11-11T03:21:51Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "80d5aa1a-be82-4fb4-8292-6d375cb37063",
+          "kind": "",
+          "text": "**2026-11-11** — Verified: non-blocking owner findings are asked in the relay ledger without --blocker, the owner's ork answer is written through, and ledger answers are read back before the card and the finish step (advisory, skipped after the commit, not filed in adj). An answer given while the ask was in flight is written once the id is stored. go test -race ./..., go vet, gofmt, slicer check and adj lint were green.",
+          "created_at": "2026-11-11T03:21:55Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -12559,7 +12587,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

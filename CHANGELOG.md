@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Non-blocking owner questions in the relay ledger (*proposed*): S223. A
+  non-blocking `[owner]` finding is asked at once with `slicer relay-run ask`
+  and no `--blocker`, so the orchestrator step keeps running, and its id is
+  kept on the finding (`ledger_question`). The owner's answer in ork is written
+  to the ledger question. ork reads the question (`relay-run answer RUN QID
+  --get`) before the approval card and before the finish step, and records an
+  answer given there on the finding; it is not filed in adj. Ledger calls are
+  advisory. `Client.RelayAsk` takes a `blocker` argument and the paused-question
+  mirror still passes it. Docs updated: `docs/design.md`, `docs/state.md` and
+  `docs/orchestrator-parity.md`.
 - Resolved latest models in plans and lineups (*proposed*): S245. A lineup
   entry whose model was resolved from `FAMILY@latest` prints as `latest
   (resolves to MODEL)` in `ork run`'s plan, the launch confirmation and the

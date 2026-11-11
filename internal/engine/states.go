@@ -840,6 +840,9 @@ func (e *Engine) gate(ctx context.Context) error {
 		return err
 	}
 	if out.report.Verdict == "PASS" {
+		// An owner question answered in the ledger shows on the finding before
+		// the card is built (S223, proposed).
+		e.syncLedgerAnswers(ctx)
 		card := e.buildCard(ctx, e.run.Snapshot(), out.report)
 		err := e.run.Update(func(rr *runrec.Record) { rr.Card = card; rr.State = runrec.StateAwaitingApproval; rr.Reason = "" })
 		if err == nil {
@@ -944,6 +947,9 @@ func (e *Engine) commit(ctx context.Context) error {
 // per `slicer config implement_finish`. The run ends when it is done.
 func (e *Engine) finish(ctx context.Context) error {
 	pend := e.takePending()
+	// An owner question answered in the ledger since the card is read before
+	// the closing note and the finish step (S223, proposed).
+	e.syncLedgerAnswers(ctx)
 	rec := e.run.Snapshot()
 	mode, err := e.d.Slicer.Config(ctx, rec.Worktree, "implement_finish")
 	if err != nil {
