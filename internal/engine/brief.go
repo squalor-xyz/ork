@@ -92,6 +92,9 @@ func BuildBrief(in BriefInput) (string, error) {
 	fmt.Fprintf(&b, "## Slice\n\n```json\n%s\n```\n\n", strings.TrimSpace(in.SliceJSON))
 	fmt.Fprintf(&b, "## Tracking rule\n\n%s\n\n", trackingRule)
 	fmt.Fprintf(&b, "## Workspace limit\n\nWork only in %s and stay inside the workspace: do not read or write outside it, except your temp directory and your report path.\n\n", in.Worktree)
+	if IsLocalVendor(in.Vendor) {
+		b.WriteString("## Local role\n\nRead files in targeted ranges (offset and limit), or grep first. Never read a whole file over about 500 lines. Keep reasoning brief.\n\n")
+	}
 	if len(in.EnvLines) > 0 {
 		b.WriteString("## Environment\n\n")
 		for _, l := range in.EnvLines {

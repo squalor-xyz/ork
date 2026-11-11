@@ -657,9 +657,9 @@ A role with no `ended_at` is running; a restart marks it `lost`. A role the
 cloud watchdog killed after 30 minutes without output has `exit` `hung` (S182,
 *proposed*) and an `ended_at`; its pause is kind `lost`. Time the machine
 slept is not counted in those 30 minutes, and nothing about sleep is stored
-in `run.json` (S235, *proposed*). A local role exceeding 45 minutes of
+in `run.json` (S235, *proposed*). A local role exceeding 90 minutes of
 elapsed runtime instead has `exit` `error` and an `ended_at`, and follows
-the existing lineup fallback rules (S301, adj 195). Output does not extend
+the existing lineup fallback rules (S343, adj 315). Output does not extend
 that limit, and time the machine slept is not counted in it. `commit` is
 `{"sha","title","at"}` once ork has committed. The fields `orchestrator_step`,
 `fails`, `reason`, `pending`, `feedback`, `created_at`, `updated_at`, the

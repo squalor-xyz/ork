@@ -10,6 +10,27 @@
   `build-only-in-home-dir.sh` builds into `~/.local/bin/ork` without restarting;
   the existing manual script stays. Rebuilds are always explicit.
 
+- Relay stats (*proposed*): `ork stats [PROJECT] [--since DATE] [--json]`
+  displays slicer's relay-run aggregates on every call, without a daemon or
+  local calculations. JSON preserves the aggregate keys and omits `per_run`.
+
+- *Proposed (S312):* `ork run` and `ork wave start` print every open spec
+  question with `--questions`, without planning, recording answers or
+  starting runs (exit 3 when questions remain, 0 otherwise). Repeat
+  `--answer KEY=N` or `KEY=text` to answer a whole batch in any order;
+  waves require `ITEM:KEY=value`, and keyless questions use `#N`.
+  Invalid or incomplete batches record nothing and start nothing.
+  JSON question entries include `item`, `address`, `ask`, optional `key`
+  and `text`; `answered` entries are `{item,key,answer}`. Text listings show
+  wave answer prefixes, keyless addresses and an explicit empty result.
+  Existing interactive and piped-input prompts are unchanged.
+
+- S343 (adj 307, 308, 315): read-only claude-local roles use a fixed read-only
+  tool allowlist with permission prompts disabled, avoiding plan mode's
+  model-backed classifier. Local briefs request targeted reads and brief
+  reasoning, and local roles get 90 minutes of active runtime. Cloud roles
+  keep their existing permissions, briefs and timeout.
+
 - *Proposed (S316; adj 233, 234):* `ork approve RUN --later-checks` marks every
   open human check `later`, approves, and prints a `deferred: N. TEXT` line for
   each check it deferred. `ork check RUN all later` marks them without

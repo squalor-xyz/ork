@@ -16,6 +16,21 @@ type Permission struct {
 	Allow    []string
 }
 
+// LocalReadOnlyAllowlist is the fixed tool list for a read-only Claude local
+// launcher (adj 307). It avoids plan mode's model-backed classifier. Each
+// call returns its own slice.
+func LocalReadOnlyAllowlist() []string {
+	return []string{
+		"Read", "Grep", "Glob",
+		"Bash(git diff*)", "Bash(git log*)", "Bash(git status*)", "Bash(git show*)",
+		"Bash(git -C * diff*)", "Bash(git -C * log*)", "Bash(git -C * status*)", "Bash(git -C * show*)",
+		"Bash(slicer show*)", "Bash(slicer goals*)", "Bash(slicer list*)", "Bash(slicer deps*)", "Bash(slicer find*)",
+		"Bash(adj show*)", "Bash(adj check*)",
+		"Bash(go test*)", "Bash(go vet*)", "Bash(go -C * test*)", "Bash(go -C * vet*)",
+		"Bash(gofmt -l*)",
+	}
+}
+
 // presetReadOnly is the one registry preset (docs/state.md).
 const presetReadOnly = "read-only"
 

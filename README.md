@@ -22,6 +22,8 @@ the launch. `ork stop WAVE` stops the unfinished runs in the returned
 `wave-` id, including queued runs.
 The Waves screen also composes and launches waves.
 
+*Proposed (S123):* `ork stats [PROJECT] [--since DATE] [--json]` displays slicer's relay-run statistics.
+
 *Proposed (S215):* a wave you start often can be saved under a name:
 `ork wave define --project PROJECT NAME ITEM...` keeps the item ids in
 `waves.json` beside the registry, `ork wave list` shows each member's status,

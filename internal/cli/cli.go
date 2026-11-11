@@ -3,7 +3,8 @@
 // Package cli is ork's command line: argument parsing and output for status,
 // projects, roles and doctor. Every command takes --json (cli.json). The exit
 // code is 0 for success, 1 for a failure and 2 for a usage error; ork wait
-// also returns 3, 4 and 5 (ExitWaitQuestion and the codes after it).
+// also returns 3, 4 and 5 (ExitWaitQuestion and the codes after it). Spec
+// question listings and incomplete answer batches return 3 (S312, proposed).
 package cli
 
 import (
@@ -54,6 +55,7 @@ var usageText = strings.Replace(usageTemplate, "{CONTRACTS}", roles.AcceptedCont
 const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
 
   ork run P ID [--yes] [--well-specified y/n] [--split y/n]
+                              [--questions | --answer KEY=N ...]
                               [--stop-after land|commit] [--allow-no-check]
                               [--implementer VENDOR:MODEL:EFFORT]
                               [--reviewer VENDOR:MODEL:EFFORT]
@@ -65,6 +67,9 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               --allow-no-check
                               plans well specified y and split n unless the
                               flags say otherwise
+                              --questions prints all spec questions and starts
+                              nothing; --answer KEY=N or KEY=text repeats for
+                              every question (#N when there is no key)
   ork wave suggest P          show slicer's suggested waves
   ork wave define --project P NAME ITEM... [--replace]
                               save the items under NAME (proposed: saved waves,
@@ -78,6 +83,7 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               start the saved wave NAME; a member that is done,
                               retired or gone from slicer is skipped and named
   ork wave start P ITEM... [--yes] [--well-specified y/n] [--split y/n]
+                              [--questions | --answer ITEM:KEY=N ...]
                               [--stop-after land|commit] [--allow-no-check]
                               the run lineup and budget flags, for every item;
                               well specified y and split n unless overridden
@@ -120,6 +126,9 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               row a plain retry is refused: --accept-shape
                               keeps owner findings that have no options,
                               --again runs the role once more
+  ork stats [PROJECT] [--since DATE]
+                              show slicer's relay-run statistics; all-time
+                              by default, current directory without PROJECT
   ork status [--project P]    projects, needs-you counts and active relays
   ork show RUN [NAME]         print why a run is paused, its reports, checks
                               and findings; NAME prints one report or log
@@ -365,6 +374,8 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		return a.ownerCommand(ctx, o, cmd, rest)
 	case "status":
 		return a.status(ctx, o, rest)
+	case "stats":
+		return a.stats(ctx, o, rest)
 	case "show":
 		return a.show(ctx, o, rest)
 	case "wait":

@@ -321,6 +321,40 @@ stdout holds one result. A held slice returns
 `{"started":false,"held":["ID"]}`; declining the start returns
 `{"started":false,"held":[]}` (`internal/cli/run.go`).
 
+*Proposed (S312):* `ork run PROJECT ID --questions` runs only the spec check
+and prints every open question, numbered with its options, recommendation
+and decision key. It records no answers, changes nothing in the project and
+starts no run. It exits 3 when questions are pending (the same question code
+as `ork wait`, S257), or 0 when none are pending. The daemon may cache the check.
+`ork wave start PROJECT ITEM... --questions` does the same for all items;
+the saved-wave form accepts the flag too. When no questions are open, text
+mode prints `no open spec questions: S1, S2`; a saved wave with no startable
+items names the wave instead.
+
+Answer all questions in one call with repeatable `--answer KEY=N`, or
+`--answer KEY=text` for free text, plus `--yes` to confirm the launch. A
+question without a key uses `#N`, its one-based position within the item.
+Quote that address in a shell, for example `--answer '#2=custom limit'`.
+Flag order does not matter. A wave requires an item prefix on every answer:
+`--answer ITEM:KEY=N` or `--answer 'ITEM:#N=text'`.
+The wave listing shows `Decision key: k1 (answer as S1:k1)`. Keyless questions
+show `Answer as: #N` for run and `Answer as: ITEM:#N` for wave.
+Unknown keys, duplicate keys, empty answers and option numbers outside the
+range are refused before any answer is recorded. Missing answers hold the
+whole batch, list the missing addresses and exit 3 without recording answers
+or starting anything. Answers with no pending questions are refused.
+`--questions` cannot be combined with `--yes` or `--answer`.
+
+With `--json`, these flags add `questions` and `answered` arrays to the one
+stdout result. Each question has `item` and `address` plus the existing `ask`,
+optional `key` and `text` fields. Use `address` as the left side of `--answer`;
+it includes the item prefix for waves. `answered` entries are
+`{item,key,answer}`, using `#N` for a keyless question and the recorded
+`Label: summary` or free text as `answer`.
+Listings and incomplete batches return only `{questions,answered}`, with an
+empty `answered` array and no `held` field. The
+interactive and piped-input prompts retain their existing behaviour.
+
 For example, to use a Codex primary with a Claude fallback for this run:
 
     ork run PROJECT ID --implementer codex:gpt-6.1-sol:medium --implementer claude:sonnet:high --budget-minutes 20
@@ -723,6 +757,21 @@ them all (`internal/tui/keys.go:82-157`).
 | Confirmations | `y` / `n` | yes / no (Enter is No) |
 
 ## 14. Commands at a glance
+
+### Relay statistics (S123, proposed)
+
+`ork stats [PROJECT] [--since DATE] [--json]` reads slicer's relay-run
+statistics on every call, without the daemon. PROJECT is a registered project
+name; omit it to use the current directory. The default is all-time. `--since`
+passes your date to slicer, which validates it and chooses the range.
+
+The text shows runs and outcomes, measured wall time, fix rounds, gates
+(including those counted by proxy), owner wait and role times. Durations use
+slicer's units; `-` means no measurement. `--json` returns slicer's aggregate
+keys with their null values and omits `per_run`. Ork computes no statistics,
+caches nothing and preserves slicer's error code and message when it fails.
+
+### Command list
 
 *Proposed (S103):* `ork --version` prints the mark only on a terminal;
 on a pipe or file line 1 is plain `ork VERSION`.

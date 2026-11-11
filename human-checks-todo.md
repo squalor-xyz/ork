@@ -141,3 +141,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S220 (run ork-20261111-160241-e417, 2026-11-11)
 
 - [ ] [AFTER LAND] The owner reads the CHANGELOG v1.1.0 section and the tag summary, runs the workflow dry run if needed, creates and pushes the annotated tag, and checks the release page. ork does none of these.
+
+## S123 (run ork-20261111-215047-32d5, 2026-11-11)
+
+- [ ] The owner reads the display against `slicer relay-run stats` and confirms the numbers match; for a TUI panel, at 100x30 and 80x24 in a live terminal.

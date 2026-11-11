@@ -23,9 +23,9 @@ import (
 // (docs/dashboard.md). The owner fixed it on 2026-10-29: it is not a setting.
 const DefaultHungAfter = 30 * time.Minute
 
-// LocalRoleAfter is the absolute runtime limit for a local launcher (adj 195).
+// LocalRoleAfter is the absolute runtime limit for a local launcher (adj 315).
 // Output does not extend it. A timeout falls back through the role's lineup.
-const LocalRoleAfter = 45 * time.Minute
+const LocalRoleAfter = 90 * time.Minute
 
 // maxHungCheck is the longest wait between two looks at a silent role.
 const maxHungCheck = 30 * time.Second

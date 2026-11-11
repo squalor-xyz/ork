@@ -1,0 +1,63 @@
+{
+  "since": null,
+  "runs": {
+    "total": 174,
+    "pass": 160,
+    "fail": 0,
+    "stopped": 10,
+    "unended": 4
+  },
+  "measured": 61,
+  "wall_seconds": {
+    "median": 2252,
+    "max": 41423
+  },
+  "fix_rounds": {
+    "total": 61,
+    "runs_with_any": 53,
+    "runs_with_two_or_more": 5
+  },
+  "gates": {
+    "rounds": 62,
+    "fails": 5,
+    "with_verdict": 59,
+    "by_proxy": 3
+  },
+  "roles": {
+    "implementer": {
+      "steps": 220,
+      "total_seconds": 65411,
+      "median_seconds": 157
+    },
+    "reviewer": {
+      "steps": 60,
+      "total_seconds": 38240,
+      "median_seconds": 593
+    },
+    "gate": {
+      "steps": 62,
+      "total_seconds": 6629,
+      "median_seconds": 80
+    },
+    "orchestrator": {
+      "steps": 60,
+      "total_seconds": 150007,
+      "median_seconds": 1808
+    },
+    "ui": {
+      "steps": 45,
+      "total_seconds": 5088,
+      "median_seconds": 64
+    }
+  },
+  "owner_wait": {
+    "runs_with_wait": 48,
+    "total_seconds": 151305,
+    "median_seconds": 212,
+    "max_seconds": 39925,
+    "by_waiting_on": {
+      "approval": 66952,
+      "owner": 84353
+    }
+  }
+}
