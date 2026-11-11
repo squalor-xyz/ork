@@ -21,6 +21,8 @@ const (
 	ClassOK Class = "ok"
 	// ClassDenied: an unsuccessful round lists permission denials.
 	ClassDenied Class = "denied"
+	// ClassConnection is the sampled connection_failed result (adj 291).
+	ClassConnection Class = "connection"
 	// ClassRateLimited is reserved for fallback (vendor.fallback). No real
 	// sample exists, so nothing returns it yet (vendor.ratelimit-detection,
 	// vendor.unsampled-classes). Auth failures and bad models have no class
@@ -117,6 +119,7 @@ type Result struct {
 	Subtype        string
 	IsError        bool
 	APIErrorStatus *int
+	APIError       string
 	TerminalReason string
 	Usage          Usage
 	Denials        []Denial

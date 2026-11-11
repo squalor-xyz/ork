@@ -29,6 +29,7 @@ const (
 	ExitError        Exit = "error" // launch failure, cancellation or a permission prompt without a report
 	ExitUnclassified Exit = "unclassified"
 	ExitOutOfCredits Exit = "out_of_credits"
+	ExitConnection   Exit = "connection" // sampled reqwest send error (adj 291)
 )
 
 // creditsText is in the 403 error of testdata/vendors/grok/07-out-of-credits-403.
@@ -351,6 +352,9 @@ func Run(ctx context.Context, s Spec) (round Round, err error) {
 		}
 	} else if round.ExitCode == 0 && out.completed && !out.failed {
 		round.Exit = ExitOK
+	} else if round.ExitCode != 0 && strings.Contains(stderr.String(), "reqwest error") && strings.Contains(stderr.String(), "error sending request") {
+		round.Exit = ExitConnection
+		round.Reason = "reqwest error sending request"
 	}
 	if round.Exit != ExitOK {
 		round.Report = ""

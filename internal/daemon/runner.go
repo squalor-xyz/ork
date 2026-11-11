@@ -77,8 +77,10 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 		class = engine.ExitUnclassified
 	case claude.ClassRateLimited:
 		class = engine.ExitRateLimited
+	case claude.ClassConnection:
+		class = engine.ExitConnection
 	}
-	result := engine.Result{Exit: class, Session: round.SessionID, Report: round.Report, CostUSD: round.Usage.CostUSD,
+	result := engine.Result{Exit: class, Reason: round.Reason, Session: round.SessionID, Report: round.Report, CostUSD: round.Usage.CostUSD,
 		Tokens: int(round.Usage.InputTokens + round.Usage.OutputTokens + round.Usage.CacheReadTokens + round.Usage.CacheCreationTokens)}
 	for _, d := range round.Denials {
 		result.Denials = append(result.Denials, runrec.DeniedCommand{Tool: d.ToolName, Command: d.Detail()})
@@ -195,6 +197,8 @@ func (r grokRunner) Run(ctx context.Context, req engine.Request) (engine.Result,
 		class = engine.ExitUnclassified
 	case grok.ExitOutOfCredits:
 		class = engine.ExitOutOfCredits
+	case grok.ExitConnection:
+		class = engine.ExitConnection
 	}
 	return engine.Result{Exit: class, Reason: round.Reason, Session: round.Session, Report: round.Report, Tokens: round.Tokens}, err
 }

@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">333 items · — 57 · done 243 · retired 33</p>
+<p class="summary">333 items · — 56 · done 244 · retired 33</p>
 <h2>v1.2</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S61</td><td>Split parts: lead and parts in one worktree</td><td>M</td><td>2</td><td></td><td></td><td class="status">—</td></tr>
@@ -216,7 +216,7 @@
 <tr class="done"><td>161</td><td>S306</td><td>Approval card keeps x stop beside p report</td><td>S</td><td>1</td><td>tui</td><td>S227 item 6 (from S176 later notes); the owner flagged it as a priority and asked on 2026-11-07 for it to go in v1.1 · discovered from S227</td><td class="status">done</td></tr>
 <tr class="done"><td>162</td><td>S327</td><td>CHANGELOG resolver compact entries</td><td>S</td><td>1</td><td></td><td>Merges 8150d74, 84b77d8, 1a99e93, c258376: splitChangelog refuses entries with no blank line between them, so every CHANGELOG conflict paused (S132, S257, S263, S226). · discovered from S180</td><td class="status">done</td></tr>
 <tr class="open"><td>163</td><td>S328</td><td>Missing slicer merge drivers</td><td>S</td><td>1</td><td></td><td>git config --get-regexp &#x27;^merge\.&#x27; is empty in the ork clone (2026-11-11); render, index.json and relay-roles conflicts at landing on S173, S204, S244, S255, S267, S268, S301, S310. · discovered from S289</td><td class="status">—</td></tr>
-<tr class="open"><td>164</td><td>S329</td><td>Connection errors resume the role</td><td>M</td><td>2</td><td></td><td>S268 Grok reviewer lost 46 min to a reqwest send error; S216 Claude implementer lost $5.50 to api_error connection_failed; both unclassified, both needed ork retry.</td><td class="status">—</td></tr>
+<tr class="done"><td>164</td><td>S329</td><td>Connection errors resume the role</td><td>M</td><td>2</td><td></td><td>S268 Grok reviewer lost 46 min to a reqwest send error; S216 Claude implementer lost $5.50 to api_error connection_failed; both unclassified, both needed ork retry.</td><td class="status">done</td></tr>
 <tr class="open"><td>165</td><td>S330</td><td>Launch with uncommitted tracking edits</td><td>S</td><td>1</td><td></td><td>S268 was promoted on main but not committed; its worktree lacked the spec and the landing stopped. · discovered from S254</td><td class="status">—</td></tr>
 <tr class="done"><td>166</td><td>S331</td><td>Auto-land a passing run</td><td>M</td><td>2</td><td></td><td>Every v1.1 landing was a hand approve after VERDICT: PASS under the owner&#x27;s standing rule.</td><td class="status">done</td></tr>
 <tr class="done"><td>167</td><td>S333</td><td>Running view declutter</td><td>M</td><td>2</td><td></td><td>Owner screenshots 2026-11-11 (Running collapsed, E expand all, an open run): start on Running; the view is crowded and expand all repeats each row. Decisions adj 282, 283, 284.</td><td class="status">done</td></tr>
