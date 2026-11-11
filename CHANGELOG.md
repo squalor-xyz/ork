@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- S330: before creating a worktree, commit the item's edited slicer spec,
+  render and index on main by path so the worktree receives them. Leave other
+  tracking and non-tracking edits uncommitted. A failed commit pauses setup.
+
 - Quieter Running view (*proposed*): S333, adj 282, 283, 284. The TUI opens on
   Running. An open Running row adds one dim line per working role (role, vendor,
   model, effort, elapsed, tokens, cost) and that role's last output line, and

@@ -24,15 +24,21 @@ import (
 // show as untracked files in the main checkout.
 const excludeLine = ".worktrees/"
 
-// setup creates the worktree and the ledger run. A failure here stops the
-// slice: nothing was started that a retry could take over. Once both exist, it
-// verifies the check command where the round check will run (S295,
+// setup creates the worktree and the ledger run. A tracking-commit failure
+// pauses at setup before the worktree exists; a retry runs setup again.
+// Exclude and worktree failures stop the slice. Once worktree and ledger both
+// exist, it verifies the check command where the round check will run (S295,
 // *proposed*); a command that cannot run pauses the run before round 1, at
 // implement, so that a retry does not begin the ledger run again.
 func (e *Engine) setup(ctx context.Context) error {
 	rec := e.run.Snapshot()
 	if err := e.ensureExclude(ctx); err != nil {
 		return e.stop(ctx, "setup: "+err.Error())
+	}
+	if _, err := os.Stat(rec.Worktree); errors.Is(err, os.ErrNotExist) {
+		if reason := e.commitLaunchTracking(ctx, rec.Item); reason != "" {
+			return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateSetup, Reason: reason})
+		}
 	}
 	if err := e.ensureWorktree(ctx, rec); err != nil {
 		return e.stop(ctx, "setup: git worktree add: "+err.Error())

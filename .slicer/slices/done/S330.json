@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/states.go:985-995` (before `worktree add`)\n- `internal/engine/landdirty.go:86-140` (`trackingPath`, `splitTracking` and `checkMain`, reused)\n- `internal/engine/engine_test.go` (launch tests)\n- `docs/design.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/engine/states.go:27-52` (`setup`, tracking-error retry comment and pre-worktree commit); `internal/engine/states.go:1023` (`ensureWorktree`)\n- `internal/engine/landdirty.go:86-197` (`trackingPath`, `splitTracking`, `commitLaunchTracking`, `checkMain`, shared `commitTracking`)\n- `internal/engine/engine_test.go:59-145` (TestLaunchTracking tests, untracked item JSON and hook output assertion; existing setup assertion accepts pre-worktree status)\n- `internal/engine/stop_test.go:120` (read-only-role worktree status assertion)\n- `docs/design.md:391-400` (setup steps, absent-path condition and error handling)\n- `CHANGELOG.md` (Unreleased)"
     },
     {
       "heading": "Failing tests",
-      "body": "- Launch with `.slicer/slices/ID.json` modified and uncommitted on main: under Q1 (a) main gets one commit with only `.slicer` paths, and the worktree has the edited file. Under (b) the run does not start and the reason names the file.\n- Launch with an uncommitted non-tracking file on main (`notes.txt`): it is not committed and does not block.\n- Launch with a clean main: no commit."
+      "body": "- `TestLaunchTrackingItemOnly`: leave the item JSON untracked, with index and render tracked and edited; commit all three by literal path before worktree creation. Assert checkout contents and preserve unrelated staged tracking and notes. Include a subfolder project. Removing launch git add must fail.\n- `TestLaunchTrackingNonTracking`: notes.txt stays uncommitted and launch succeeds without a commit.\n- `TestLaunchTrackingClean`: clean main launches without a commit.\n- `TestLaunchTrackingCommitFailure`: require the failing hook text including second line, a single-line reason, a setup pause and no worktree.\n\nBrief source verified: `internal/engine/round.go:383` calls ShowRaw with rec.Worktree, then uses that JSON in BriefInput."
     },
     {
       "heading": "Implement",
@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/engine -run 'Launch.*Tracking|Tracking.*Launch' -v` exits 0 and lists the new tests.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+      "body": "- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/engine -run LaunchTracking -v` exits 0 and lists each new test as PASS (owner decision: tighten).\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0; main-root check is orchestrator-only."
     },
     {
       "heading": "Git",

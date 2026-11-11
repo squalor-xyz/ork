@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-333 items · — 57 · done 243 · retired 33
+333 items · — 56 · done 244 · retired 33
 
 v1.2
 
@@ -219,7 +219,7 @@ v1.2
 | 162 | [S327](slices/S327.md) | CHANGELOG resolver compact entries | S | 1 |  | Merges 8150d74, 84b77d8, 1a99e93, c258376: splitChangelog refuses entries with no blank line between them, so every CHANGELOG conflict paused (S132, S257, S263, S226). · discovered from S180 | done |
 | 163 | [S328](slices/S328.md) | Missing slicer merge drivers | S | 1 |  | git config --get-regexp '^merge\.' is empty in the ork clone (2026-11-11); render, index.json and relay-roles conflicts at landing on S173, S204, S244, S255, S267, S268, S301, S310. · discovered from S289 | — |
 | 164 | [S329](slices/S329.md) | Connection errors resume the role | M | 2 |  | S268 Grok reviewer lost 46 min to a reqwest send error; S216 Claude implementer lost $5.50 to api_error connection_failed; both unclassified, both needed ork retry. | — |
-| 165 | [S330](slices/S330.md) | Launch with uncommitted tracking edits | S | 1 |  | S268 was promoted on main but not committed; its worktree lacked the spec and the landing stopped. · discovered from S254 | — |
+| 165 | [S330](slices/S330.md) | Launch with uncommitted tracking edits | S | 1 |  | S268 was promoted on main but not committed; its worktree lacked the spec and the landing stopped. · discovered from S254 | done |
 | 166 | [S331](slices/S331.md) | Auto-land a passing run | M | 2 |  | Every v1.1 landing was a hand approve after VERDICT: PASS under the owner's standing rule. | done |
 | 167 | [S333](slices/S333.md) | Running view declutter | M | 2 |  | Owner screenshots 2026-11-11 (Running collapsed, E expand all, an open run): start on Running; the view is crowded and expand all repeats each row. Decisions adj 282, 283, 284. | done |
 

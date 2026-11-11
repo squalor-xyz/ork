@@ -389,6 +389,15 @@ budget limit or an owner question. The owner can resume or stop a paused
 slice.
 
 - **setup:**
+  - Only when the worktree path is absent, commit uncommitted edits to this item's
+    `.slicer/slices/ID.json`, `.slicer/render/slices/ID.md` and
+    `.slicer/index.json` on main by literal path, with the message
+    `Tracking edits on main before starting ID` (S330, `launch.tracking-commit`,
+    owner scope: item-only). Other tracking files and non-tracking edits stay
+    uncommitted, including staged edits. Clean main needs no commit. A status,
+    prefix, add or commit error pauses setup with one line before creating the
+    worktree. An existing worktree directory skips this commit, including on
+    a retry after setup already created it.
   - `git -C P worktree add <worktree_pattern> -b <branch_pattern>`
     (`git.worktrees`);
   - `.worktrees/` is added to `info/exclude` if it is missing;

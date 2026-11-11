@@ -20,6 +20,130 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
+// Launch tests use real git so assertions cover the commit and checkout contents.
+func launchTrackingHarness(t *testing.T, subfolder bool) *harness {
+	t.Helper()
+	h := newHarness(t)
+	t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(t.TempDir(), "gitconfig"))
+	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
+	for _, key := range []string{"GIT_AUTHOR_NAME", "GIT_COMMITTER_NAME"} {
+		t.Setenv(key, "Test")
+	}
+	for _, key := range []string{"GIT_AUTHOR_EMAIL", "GIT_COMMITTER_EMAIL"} {
+		t.Setenv(key, "test@example.invalid")
+	}
+	gitRun(t, h.P, "init", "-q", "-b", "main")
+	if subfolder {
+		h.proj.Path = filepath.Join(h.P, "project")
+	}
+	writeFile(t, filepath.Join(h.proj.Path, "seed.txt"), "seed\n")
+	gitRun(t, h.P, "add", "-A")
+	gitRun(t, h.P, "commit", "-qm", "seed")
+	h.deps.GitBin = "git"
+	return h
+}
+
+func launchTrackingSetup(t *testing.T, h *harness) *Engine {
+	t.Helper()
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	e.proj = h.proj
+	if err := e.setup(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	return e
+}
+
+func TestLaunchTrackingItemOnly(t *testing.T) {
+	for _, subfolder := range []bool{false, true} {
+		t.Run(fmt.Sprint(subfolder), func(t *testing.T) {
+			h := launchTrackingHarness(t, subfolder)
+			paths := []string{".slicer/index.json", ".slicer/render/slices/S04.md", ".slicer/slices/S04.json"}
+			// A promoted spec has never been committed; seed only index and render.
+			for _, p := range paths[:2] {
+				writeFile(t, filepath.Join(h.proj.Path, p), "old\n")
+			}
+			gitRun(t, h.P, "add", "-A")
+			gitRun(t, h.P, "commit", "-qm", "tracking seed")
+			before := gitRun(t, h.P, "rev-parse", "HEAD")
+			for _, p := range paths {
+				writeFile(t, filepath.Join(h.proj.Path, p), "edited\n")
+			}
+			for _, p := range []string{".slicer/slices/S05.json", ".slicer/config.json", "notes.txt"} {
+				writeFile(t, filepath.Join(h.proj.Path, p), "owner\n")
+				gitRun(t, h.proj.Path, "add", "--", p)
+			}
+			e := launchTrackingSetup(t, h)
+			requireState(t, e, runrec.StateImplement)
+			if got := gitRun(t, h.P, "log", "--format=%s", before+"..HEAD"); got != "Tracking edits on main before starting S04" {
+				t.Errorf("launch commit = %q", got)
+			}
+			if got := gitRun(t, h.proj.Path, "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD", "--relative"); got != strings.Join(paths, "\n") {
+				t.Errorf("committed paths = %q", got)
+			}
+			for _, p := range paths {
+				base := e.Snapshot().Worktree
+				if subfolder {
+					base = filepath.Join(base, "project")
+				}
+				if b, err := os.ReadFile(filepath.Join(base, p)); err != nil || string(b) != "edited\n" {
+					t.Errorf("worktree %s = %q, %v", p, b, err)
+				}
+			}
+			if got := gitRun(t, h.proj.Path, "diff", "--cached", "--name-only", "--relative"); got != ".slicer/config.json\n.slicer/slices/S05.json\nnotes.txt" {
+				t.Errorf("owner staged paths = %q", got)
+			}
+		})
+	}
+}
+
+func TestLaunchTrackingNonTracking(t *testing.T) {
+	h := launchTrackingHarness(t, false)
+	before := gitRun(t, h.P, "rev-parse", "HEAD")
+	writeFile(t, filepath.Join(h.P, "notes.txt"), "owner\n")
+	gitRun(t, h.P, "add", "notes.txt")
+	requireState(t, launchTrackingSetup(t, h), runrec.StateImplement)
+	if got := gitRun(t, h.P, "rev-parse", "HEAD"); got != before {
+		t.Errorf("main moved: %s", got)
+	}
+	if got := gitRun(t, h.P, "status", "--porcelain"); got != "A  notes.txt" {
+		t.Errorf("owner status = %q", got)
+	}
+}
+
+func TestLaunchTrackingClean(t *testing.T) {
+	h := launchTrackingHarness(t, false)
+	before := gitRun(t, h.P, "rev-parse", "HEAD")
+	requireState(t, launchTrackingSetup(t, h), runrec.StateImplement)
+	if got := gitRun(t, h.P, "rev-parse", "HEAD"); got != before {
+		t.Errorf("clean main moved: %s", got)
+	}
+}
+
+func TestLaunchTrackingCommitFailure(t *testing.T) {
+	h := launchTrackingHarness(t, false)
+	writeFile(t, filepath.Join(h.P, ".slicer/slices/S04.json"), "edited\n")
+	// A local hook fails the real git commit with multiline output.
+	hook := filepath.Join(h.P, ".git/hooks/pre-commit")
+	writeFile(t, hook, "#!/bin/sh\nprintf 'commit failed\\nsecond line\\n' >&2\nexit 1\n")
+	if err := os.Chmod(hook, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	e := launchTrackingSetup(t, h)
+	rec := requireState(t, e, runrec.StatePaused)
+	if !strings.Contains(rec.Reason, "second line") {
+		t.Errorf("commit hook output missing: %q", rec.Reason)
+	}
+	if rec.Pending == nil || rec.Pending.State != runrec.StateSetup || !strings.Contains(rec.Reason, "git commit:") || strings.Contains(rec.Reason, "\n") {
+		t.Errorf("launch failure: %+v", rec)
+	}
+	if _, err := os.Stat(rec.Worktree); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("worktree exists after failed commit: %v", err)
+	}
+}
+
 func TestEngineRecordsWaveName(t *testing.T) {
 	h := newHarness(t)
 	h.cfg.Wave = "wave-20261101-120000-abcd"
@@ -155,7 +279,8 @@ func TestSetupRunsGitWorktreeAddAndExcludesTheWorktreeDirectory(t *testing.T) {
 	h := newHarness(t)
 	h.start()
 	git := h.fake.CallsTo("git")
-	if len(git) < 2 || join(git[0].Args) != "-C "+h.P+" rev-parse --git-path info/exclude" || join(git[1].Args) != "-C "+h.P+" worktree add "+h.W+" -b S04" {
+	add := h.calls("git", "-C", h.P, "worktree", "add")
+	if len(git) == 0 || join(git[0].Args) != "-C "+h.P+" rev-parse --git-path info/exclude" || len(add) != 1 || join(add[0]) != "-C "+h.P+" worktree add "+h.W+" -b S04" {
 		t.Fatalf("git calls: %+v", git)
 	}
 	b, err := os.ReadFile(filepath.Join(h.P, ".git", "info", "exclude"))

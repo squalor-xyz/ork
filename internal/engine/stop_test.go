@@ -118,7 +118,7 @@ func TestAReadOnlyRoleOnADirtyButUnchangedTreeIsFine(t *testing.T) {
 	requireState(t, e, runrec.StateAwaitingApproval)
 	var status int
 	for _, c := range h.fake.CallsTo("git") {
-		if len(c.Args) > 2 && c.Args[2] == "status" {
+		if len(c.Args) > 2 && c.Args[1] == h.W && c.Args[2] == "status" {
 			status++
 		}
 	}

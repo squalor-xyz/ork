@@ -103,6 +103,34 @@ func splitTracking(prefix string, files []string) (tracking, other []string) {
 	return tracking, other
 }
 
+// commitLaunchTracking carries only this item's tracking edits into a new
+// worktree (launch.tracking-commit and the owner's item-only scope).
+func (e *Engine) commitLaunchTracking(ctx context.Context, item string) string {
+	P := e.proj.Path
+	files, err := e.changedPaths(ctx, P)
+	if err != nil {
+		return oneLine("git status: " + err.Error())
+	}
+	if len(files) == 0 {
+		return ""
+	}
+	out, err := e.gitRead(ctx, P, "rev-parse", "--show-prefix")
+	if err != nil {
+		return oneLine("git rev-parse: " + err.Error())
+	}
+	tracking, _ := splitTracking(strings.TrimSpace(out), files)
+	var own []string
+	for _, rel := range tracking {
+		if rel == ".slicer/index.json" || rel == ".slicer/slices/"+item+".json" || rel == ".slicer/render/slices/"+item+".md" {
+			own = append(own, rel)
+		}
+	}
+	if len(own) == 0 {
+		return ""
+	}
+	return e.commitTracking(ctx, P, own, "Tracking edits on main before starting "+item)
+}
+
 // checkMain looks at the main checkout P before the landing merges the base
 // branch in, and again before the fast-forward (S254). A non-empty reason
 // pauses the landing. Dirty files that the slice does not change are left
@@ -129,6 +157,12 @@ func (e *Engine) checkMain(ctx context.Context, P, base, B, item string, commit 
 	if !commit {
 		return false, dirtyReason(P, files)
 	}
+	reason = e.commitTracking(ctx, P, tracking, "Tracking edits on main before landing "+item)
+	return reason == "", reason
+}
+
+// commitTracking commits literal paths, preserving unrelated staged changes.
+func (e *Engine) commitTracking(ctx context.Context, P string, tracking []string, msg string) string {
 	// By name, never a pathspec of ".", and literal, so a name with a glob
 	// character cannot take another file along: the owner's staged files stay
 	// staged. git add cannot name a path that is in neither the index nor the
@@ -144,7 +178,7 @@ func (e *Engine) checkMain(ctx context.Context, P, base, B, item string, commit 
 	var staged []string
 	if len(present) > 0 {
 		if _, err := e.gitWrite(ctx, P, append([]string{"add", "-A", "--"}, present...)...); err != nil {
-			return false, oneLine("git add: " + err.Error())
+			return oneLine("git add: " + err.Error())
 		}
 		for _, rel := range tracking {
 			if _, err := os.Lstat(filepath.Join(P, rel)); err == nil {
@@ -152,13 +186,12 @@ func (e *Engine) checkMain(ctx context.Context, P, base, B, item string, commit 
 			}
 		}
 	}
-	msg := "Tracking edits on main before landing " + item
 	if _, err := e.gitWrite(ctx, P, append([]string{"commit", "-m", msg, "--"}, specs...)...); err != nil {
 		note := ""
 		if len(staged) > 0 {
 			note = "; ork staged " + nameList(staged)
 		}
-		return false, oneLine(runrec.PlainText("git commit: " + err.Error() + note))
+		return oneLine(runrec.PlainText("git commit: " + err.Error() + note))
 	}
-	return true, ""
+	return ""
 }
