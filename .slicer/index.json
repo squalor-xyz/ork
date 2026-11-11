@@ -12424,6 +12424,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "5175d97f-46e3-4b9e-8769-e0636af1d3cb",
+          "kind": "decision",
+          "text": "**2026-11-11** — Owner 2026-11-11: release v1.1.0 after S289 and S219 land; S303, S304 and S305 move to v1.2. Date (adj 298): the day S220 lands.",
+          "created_at": "2026-11-11T15:09:14Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -16053,7 +16067,7 @@
       "id": "S289",
       "title": "Landing: a merge-in conflict only in tracking files, such as the slice's own JSON",
       "short_title": "Landing: a merge-in conflict only in tracking files, such as the slice's own JSON",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -16140,6 +16154,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "883078c5-474e-4df7-bd2b-835ed85338d6",
+          "kind": "",
+          "text": "**2026-11-11** — Human checks at approval (S289):\n- later: deferred to land: The next tracking-only conflict in a landing shows the new reason, and after the owner follows it, `slicer show ID` still holds the notes and section edits of both sides.",
+          "created_at": "2026-11-11T15:39:50Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "33d7aeab-5bc8-41b9-b7cb-29feaa5bf2fb",
+          "kind": "",
+          "text": "**2026-11-11** — Verified tracking-only landing conflicts name both sides, give branch/base inspection commands, and instruct keeping both changes before retry. Mixed conflicts retain the generic pause. Landing tests and the full engine race suite passed; socket tests elsewhere were sandbox-limited. Documentation and mutation checks cover the wiring.",
+          "created_at": "2026-11-11T15:43:19Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -16159,7 +16201,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -16978,7 +17020,7 @@
         "parent": "",
         "cites": [],
         "key": "local-unreachable-fallback",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 3,
@@ -17041,7 +17083,7 @@
         "parent": "",
         "cites": [],
         "key": "local-role-eval",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 3,
@@ -17074,7 +17116,7 @@
         "parent": "",
         "cites": [],
         "key": "grok-write-roles",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 3,

@@ -740,7 +740,15 @@ slice.
      kind `error`, state `land`) with a one-line reason that names up to five
      files and `+N more`, the worktree and `ork retry RUN`; `ork retry`
      and `t` work. The files are the owner's, as the relay contract says
-     (`slicer ai relay`, Land). When a conflicted path is under `.slicer/`
+     (`slicer ai relay`, Land). When every remaining conflict is under this
+     project's `.slicer/slices/` (including its repository prefix for a
+     project in a subdirectory), the reason names them as slicer tracking
+     files changed on both sides (S289, adj 292). It gives shell-quoted
+     `git -C WORKTREE show :2:FILE` (branch) and `:3:FILE` (base) commands
+     for each named file, says to keep both changes and remove the markers,
+     then `ork retry RUN`; no `git add` is needed. Mixed conflicts retain
+     the generic reason. ork does not pick a side.
+     When a conflicted path is under `.slicer/`
      and a slicer driver named in `.slicer/.gitattributes` is missing from git
      config,
      the reason adds: "slicer merge drivers are not configured in this clone;

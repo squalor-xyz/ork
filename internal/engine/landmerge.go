@@ -116,6 +116,19 @@ func (e *Engine) settleMerge(ctx context.Context, rec runrec.Record, base string
 		}
 	}
 	if len(files) > 0 {
+		reason := conflictReason(base, rec.Branch, W, rec.ID, files)
+		if prefix, err := projectPrefix(ctx, e.proj.Path); err == nil {
+			trackingOnly := true
+			for _, f := range files {
+				if !strings.HasPrefix(f, prefix+".slicer/slices/") {
+					trackingOnly = false
+					break
+				}
+			}
+			if trackingOnly {
+				reason = trackingConflictReason(base, rec.Branch, W, rec.ID, files)
+			}
+		}
 		for _, f := range files {
 			if strings.HasPrefix(f, ".slicer/") {
 				if missing, err := MissingMergeDrivers(ctx, W, e.d.gitBin()); err == nil && len(missing) > 0 {
@@ -124,7 +137,7 @@ func (e *Engine) settleMerge(ctx context.Context, rec runrec.Record, base string
 				break
 			}
 		}
-		return pauseWith(conflictReason(base, rec.Branch, W, rec.ID, files) + note)
+		return pauseWith(reason + note)
 	}
 	if _, cerr := e.gitWrite(ctx, W, "commit", "-m", "Merge "+base+" into "+rec.Branch); cerr != nil {
 		return pauseWith("git commit: " + cerr.Error())
@@ -132,17 +145,35 @@ func (e *Engine) settleMerge(ctx context.Context, rec runrec.Record, base string
 	return true, nil
 }
 
+// trackingConflictReason leaves both sides for the owner to merge. Git's
+// stage 2 is the slice branch and stage 3 is the base being merged into it.
+func trackingConflictReason(base, branch, worktree, runID string, files []string) string {
+	names, more := conflictNames(files)
+	var commands []string
+	for _, f := range names {
+		commands = append(commands, "inspect branch with git -C "+ShellWord(worktree)+" show "+ShellWord(":2:"+f),
+			"inspect base with git -C "+ShellWord(worktree)+" show "+ShellWord(":3:"+f))
+	}
+	return fmt.Sprintf("merging %s into %s stopped on conflicts in %s%s; slicer tracking files: both sides changed them; %s; keep both changes and remove the markers in %s (no need to git add), then ork retry %s; ork commits the merge",
+		base, branch, strings.Join(names, ", "), more, strings.Join(commands, "; "), worktree, runID)
+}
+
 // conflictReason is the one line a paused landing shows: the files (at most
 // five, then "+N more"), the worktree and how to go on.
 func conflictReason(base, branch, worktree, runID string, files []string) string {
+	names, more := conflictNames(files)
+	return fmt.Sprintf("merging %s into %s stopped on conflicts in %s%s; resolve them in %s (no need to git add), then ork retry %s; ork commits the merge",
+		base, branch, strings.Join(names, ", "), more, worktree, runID)
+}
+
+func conflictNames(files []string) ([]string, string) {
 	names := files
 	more := ""
 	if len(names) > maxConflictNames {
 		more = fmt.Sprintf(" +%d more", len(names)-maxConflictNames)
 		names = names[:maxConflictNames]
 	}
-	return fmt.Sprintf("merging %s into %s stopped on conflicts in %s%s; resolve them in %s (no need to git add), then ork retry %s; ork commits the merge",
-		base, branch, strings.Join(names, ", "), more, worktree, runID)
+	return names, more
 }
 
 // oneLine folds a message onto one line.

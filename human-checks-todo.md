@@ -133,3 +133,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S333 (run ork-20261111-132100-a59e, 2026-11-11)
 
 - [ ] Open the TUI at 100x30 and 80x24 with two runs live: it starts on Running; `E` adds only role lines; Recent shows no `pass` rows; an open run shows a Codex out-of-credits fallback as a dim note.
+
+## S289 (run ork-20261111-150602-fa84, 2026-11-11)
+
+- [ ] [AFTER LAND] The next tracking-only conflict in a landing shows the new reason, and after the owner follows it, `slicer show ID` still holds the notes and section edits of both sides.
