@@ -4327,3 +4327,4 @@
 {"when": "2026-11-11T17:49:10Z", "item": "S336", "action": "note", "from": "", "to": "", "note": "Verified after the landing merge: the daemon cache starts id", "by": "Jon Robbins"}
 {"when": "2026-11-11T19:18:56Z", "item": "S335", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-11-11T19:18:57Z", "item": "S335", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-11T20:07:15Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Trial 1, 2026-11-11, slice S316 (owner pick), run ork-202611", "by": "Jon Robbins"}
