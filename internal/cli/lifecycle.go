@@ -66,6 +66,10 @@ func (a *App) warnStale(o *output, build string) {
 // daemonCommand never starts a daemon just to stop it. Restart waits until
 // the old socket is removed, then uses the usual start-and-connect path.
 func (a *App) daemonCommand(ctx context.Context, o *output, args []string) int {
+	if len(args) == 2 && args[0] == "run" && isHelpFlag(args[1]) {
+		// ork daemon run is served by cmd/ork; its usage is still ork's own (S290).
+		return o.printHelp("daemon", "run")
+	}
 	if len(args) == 0 || (args[0] != "stop" && args[0] != "restart") {
 		return o.usage("daemon needs stop or restart [--force]")
 	}

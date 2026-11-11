@@ -705,6 +705,10 @@ Every command takes `--json`. Exit codes: 0 ok, 1 failure, 2 usage
 (`internal/cli/cli.go:40-77`); `ork wait` also returns 3 question pending, 4
 nothing active and 5 timeout (S257, *proposed*).
 
+`ork COMMAND --help` (or `-h`) and `ork help COMMAND` print that command's
+usage and exit 0; `ork projects --help` prints every `ork projects` form
+(S290, *proposed*).
+
 ## 15. What ork does not do yet
 
 The owner still does these outside ork today. The list and a proposed slice

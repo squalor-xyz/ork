@@ -270,8 +270,18 @@ func (o *output) fail(code int, errCode, msg string) int {
 	return code
 }
 
+// usage reports a usage error. A command whose flags asked for help (-h or
+// --help, which parse reports as flag.ErrHelp) prints its own usage on stdout
+// and exits 0 instead (S290).
 func (o *output) usage(format string, a ...any) int {
-	return o.fail(ExitUsage, codeUsage, fmt.Sprintf(format, a...))
+	msg := fmt.Sprintf(format, a...)
+	if words, ok := helpRequested(msg, a); ok {
+		if text, found := commandUsage(words); found {
+			fmt.Fprint(o.stdout, text)
+			return ExitOK
+		}
+	}
+	return o.fail(ExitUsage, codeUsage, msg)
 }
 
 // failErr reports an error from the daemon.
@@ -305,10 +315,22 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		return o.usage("no command given")
 	}
 	cmd, rest := args[0], args[1:]
+	if slices.Contains(groupCommands, cmd) && len(rest) > 0 && isHelpFlag(rest[0]) {
+		return o.printHelp(cmd)
+	}
 	switch cmd {
-	case "-h", "--help", "help":
+	case "-h", "--help":
 		fmt.Fprint(stdout, usageText)
 		return ExitOK
+	case "help":
+		// ork help SUB prints what ork SUB --help prints (S290). --json is
+		// nor is a help flag, so ork help -h and ork help retry --help work.
+		words := slices.DeleteFunc(slices.Clone(rest), func(w string) bool { return w == "--json" || isHelpFlag(w) })
+		if len(words) == 0 {
+			fmt.Fprint(stdout, usageText)
+			return ExitOK
+		}
+		return o.printHelp(words...)
 	case "adj":
 		return a.adj(ctx, o, rest)
 	case "new":

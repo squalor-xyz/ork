@@ -292,6 +292,19 @@ func TestDaemonRunServesTheSocketUntilItsContextEnds(t *testing.T) {
 	}
 }
 
+// ork daemon run --help and -h print the usage line on stdout and exit 0,
+// without serving the socket (S290).
+func TestDaemonRunHelpExitsZero(t *testing.T) {
+	// ork help daemon run reaches internal/cli and prints the same line.
+	for _, args := range [][]string{{"daemon", "run", "--help"}, {"daemon", "run", "-h"}, {"help", "daemon", "run"}} {
+		var out, errOut bytes.Buffer
+		code := run(context.Background(), args, &out, &errOut, refused(t))
+		if code != 0 || out.String() != "usage: ork daemon run\n" || errOut.Len() != 0 {
+			t.Errorf("%v: code %d, stdout %q, stderr %q", args, code, out.String(), errOut.String())
+		}
+	}
+}
+
 // The TUI's Source reads over the socket what source.Direct reads from the
 // same fake CLIs: the same values and the same tool errors, part by part.
 func TestTheTUISourceReadsWhatSourceDirectReads(t *testing.T) {

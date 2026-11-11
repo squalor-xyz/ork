@@ -85,7 +85,7 @@ func runTUI(cfg tui.Config) error {
 // run is main with its inputs passed in. It returns the exit code.
 func run(ctx context.Context, args []string, stdout, stderr io.Writer, p program) int {
 	if len(args) > 1 && args[0] == "daemon" && args[1] == "run" {
-		return daemonCommand(ctx, args[1:], stderr, p)
+		return daemonCommand(ctx, args[1:], stdout, stderr, p)
 	}
 	if len(args) > 0 && (args[0] == "-h" || args[0] == "--help" || !strings.HasPrefix(args[0], "-")) {
 		return command(ctx, args, stdout, stderr, p)
@@ -128,8 +128,13 @@ func command(ctx context.Context, args []string, stdout, stderr io.Writer, p pro
 	return app.Run(ctx, args, stdout, stderr)
 }
 
-// daemonCommand runs `ork daemon run`, the daemon's own entry point.
-func daemonCommand(ctx context.Context, args []string, stderr io.Writer, p program) int {
+// daemonCommand runs `ork daemon run`, the daemon's own entry point. Its --help
+// or -h prints the usage line on stdout and exits 0, without serving (S290).
+func daemonCommand(ctx context.Context, args []string, stdout, stderr io.Writer, p program) int {
+	if len(args) == 2 && args[0] == "run" && (args[1] == "-h" || args[1] == "--help") {
+		fmt.Fprint(stdout, cli.DaemonRunUsage)
+		return 0
+	}
 	if len(args) != 1 || args[0] != "run" {
 		fmt.Fprintln(stderr, "ork: usage: ork daemon run")
 		return 2

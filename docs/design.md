@@ -1775,6 +1775,20 @@ that run only (`lineup.override-scope`).
 usage error (an unknown command, flag or role, a missing or extra argument, a
 relative project path).
 
+*Proposed* (S290): `ork COMMAND --help` and `-h` print that command's blocks of
+`ork help` on stdout and exit 0, without the daemon. A help flag is recognised
+wherever the command's flag parser accepts flags, so it may follow the
+arguments (`ork retry RUN --help`). It is not recognised where the usage text
+makes the argument literal: `ork note`'s TEXT after ITEM and `ork adj ask`'s
+TITLE stay literal (`ork note P ITEM --help` adds a note). A group (`wave`,
+`adj`, `projects`, `settings`, `vendor`, `roles`, `daemon`) prints all its
+blocks. `ork help COMMAND` prints the same text, and an unknown COMMAND is a
+usage error; a help flag among its words changes nothing, so `ork help -h` is
+`ork help`. The blocks are cut from the one usage text (`usageText`), so help and
+`ork help` cannot differ. The one exception is `ork daemon run`, the daemon's
+entry point: both `ork daemon run --help` and `ork help daemon run` print its
+own line, `usage: ork daemon run`.
+
 ```
 ork                         open the TUI (start the daemon if needed)
 ork status [--project P]    waves, slices, roles, needs-you
