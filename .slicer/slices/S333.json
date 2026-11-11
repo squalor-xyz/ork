@@ -1,0 +1,41 @@
+{
+  "id": "S333",
+  "title": "Running view: start on Running, expand shows only new facts, quieter Recent and run detail",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-11 from three owner screenshots of the Running screen. The TUI opens on Running. Expanding a Running row adds only facts the row does not already show. Recent lists real runs only. Other tools' stale relay ledgers leave the Running list. The open run's detail stops showing an expected out-of-credits fallback as a red failure. Owner decisions 2026-11-11 (interactive): adj 282 `ui.start-screen` = always-running, adj 283 `ui.running-expand` = new-facts-only, adj 284 `ui.running-declutter` = picked (the `[##=~..]` progress glyph stays)."
+  ],
+  "depends_note": null,
+  "findings_note": "Owner screenshots 2026-11-11 (Running collapsed, E expand all, an open run): start on Running; the view is crowded and expand all repeats each row. Decisions adj 282, 283, 284.",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* What the screenshots show (ork on 2026-11-11, runs S298 and S331, with sluice's S01 ledger):\n\n- Start screen: `newModel` sets `active: needsEntry` (`internal/tui/model.go:238`), so the TUI opens on Needs you. Adj 149 (\"Needs-you first\") set that. Adj 282 changes only the start screen. The sidebar order and the Needs you layout of adj 149 stay.\n- Expand all (`E`): `expandedLines` (`internal/tui/overview.go:1697-1704`) prints `detailLines` of the row, which is the row's own cells wrapped again: run id, item id, state, step count, elapsed, the progress glyph, \"heard\", the pipeline, then tokens and activity (`liveDetail`, `internal/tui/overview.go:1728-1747`). Each run gains two dim lines that repeat the row. The collapsed view's bottom detail strip repeats the selected row the same way.\n- Recent (`recentRows`, `internal/tui/relayboard.go:417`) lists spec-check results as `√ pass S331 51s ... impl 0 review - gate -` beside landed runs, so S224 and S298 appear twice.\n- sluice's relay ledger S01, stale for 10 hours, is listed under Running with a red `!! heard 10h10m`. `countsAsLive` (`internal/tui/overview.go:1721-1723`) already leaves it out of the count, but the row stays in the list.\n- Run detail (`internal/tui/runtree.go`): Codex's out-of-credits attempt, an expected fallback of 3 s, shows as `! implementer fail 3s codex gpt-6.1-sol medium #1 tokens - $-` in red (`runtree.go:97`, `:195`). Each role is followed by a sub-line repeating `S298 implementer` / `S298 reviewer` / `S298 ui`. The `fell back from codex gpt-6.1-sol medium` suffix (`runtree.go:260`) runs past the right edge at that width."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/model.go:238` (start on `runningEntry`)\n- `internal/tui/overview.go:1612-1750` (`expandKey`, `toggleAllExpanded`, `expandedLines`, `liveDetail`; the Running list's stale rows)\n- `internal/tui/view.go` (the bottom detail strip on Running)\n- `internal/tui/relayboard.go:417-520` (`recentRows`: runs only)\n- `internal/tui/runtree.go:90-300` (the out-of-credits fallback note; drop the `ID role` sub-lines; keep the fallback suffix within the width)\n- `internal/tui/*_test.go` and the golden views they compare against (rewrite with `go test ./internal/tui -update` and review the diff)\n- `docs/dashboard.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Start: a new model with a registry and no input has `active == runningEntry`, and its first view shows the Running heading.\n- Expand: an expanded live Running row adds one line per active role (role, vendor, model, effort, elapsed, tokens, cost) and, when the role has output, its last output line. None of the added lines contains the run id, the item id, the progress glyph, \"heard\" or the pipeline text. `E` on a list of two runs adds no line that repeats a row.\n- Collapsed Running view: the bottom strip does not repeat the selected row's cells. It is absent, or it shows only facts the row lacks (tokens), as the implementer finds clearest; the golden view records the choice.\n- Recent: a spec-check result is not a Recent row. Landed, stopped and failed runs are.\n- Stale ledgers: a ledger row whose state is `stale` is not in the Running list. The list ends with one dim line `stale: N` (ASCII-safe) when N > 0. The Running count is unchanged (`countsAsLive`).\n- Run detail: an `out_of_credits` attempt followed by a fallback renders as one dim note, for example `codex out of credits, fell back to claude sonnet high`, not as a red `fail` line. A real failure (error, unclassified) stays red. No `ID role` sub-line is printed. At 80 columns no detail line passes the width.\n- Golden views at 100x30 and 80x24, and the ASCII variant, updated and reviewed."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Tests first, as listed.\n2. Start screen: `active: runningEntry` in `newModel`. Keep the sidebar order.\n3. Expand: replace `expandedLines` for live Running rows with a per-role builder over the run's active steps (the data `runtree.go` already reads). Keep `space` and `E` and their help text.\n4. Drop or narrow the bottom detail strip on Running, so that no cell repeats the selected row.\n5. `recentRows`: filter out spec-check results.\n6. Running list: move rows that are stale relay ledgers into a trailing dim `stale: N` line.\n7. Run detail: render an `out_of_credits` attempt that has a later attempt in the same round as a dim fallback note, drop the per-role `ID role` line, and wrap or shorten the fallback suffix to the width.\n8. Docs (*proposed*): `docs/dashboard.md` (start screen, expand, Recent, stale line, run detail), citing adj 282-284.\n9. CHANGELOG.md: one bullet under `## Unreleased` (*proposed*)."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/tui` exits 0 with the new tests passing.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0.\n- [HUMAN CHECK] Open the TUI at 100x30 and 80x24 with two runs live: it starts on Running; `E` adds only role lines; Recent shows no `pass` rows; an open run shows a Codex out-of-credits fallback as a dim note."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 333,
+  "next_id": 334,
   "preamble": "",
   "passes": [
     {
@@ -17939,6 +17939,34 @@
         "reason": "",
         "importance": 2,
         "urgency": 1,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S333",
+      "title": "Running view: start on Running, expand shows only new facts, quieter Recent and run detail",
+      "short_title": "Running view declutter",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner screenshots 2026-11-11 (Running collapsed, E expand all, an open run): start on Running; the view is crowded and expand all repeats each row. Decisions adj 282, 283, 284.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-running-view-declutter",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
         "effort": 2,
         "attempts": 0
       }
