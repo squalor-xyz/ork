@@ -73,6 +73,9 @@ func TestOwnerQuestionPauseRecordsOwnerWaitAndAsk(t *testing.T) {
 	if !ledgerHas(h, "relay-run ask", "--step "+e.Snapshot().OrchestratorStep) {
 		t.Error("no ledger question")
 	}
+	if !ledgerHas(h, "relay-run ask", "--title Which cap? --blocker") {
+		t.Error("a paused question is a wait: it is asked with --blocker")
+	}
 	if err := e.Answer(context.Background(), "8"); err != nil {
 		t.Fatal(err)
 	}

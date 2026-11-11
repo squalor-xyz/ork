@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -395,6 +396,89 @@ func TestRelayAnswerKeepsADashLeadingValueAttached(t *testing.T) {
 			err := c.RelayAnswer(context.Background(), runrec.Writer{}, root, "run-1", "q1", tc.spec)
 			if calls := f.CallsTo("slicer"); err != nil || len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, want) {
 				t.Fatalf("answer: %v; calls %+v, want %v", err, calls, want)
+			}
+		})
+	}
+}
+
+var askQuestion = runrec.OwnerQuestion{
+	Title:     "Which cap?",
+	Options:   []runrec.Option{{Label: "four", Summary: "cap at 4"}, {Label: "eight", Summary: "cap at 8"}},
+	Recommend: 1,
+	Reason:    "smaller",
+}
+
+func TestRelayAskWithoutBlockerOmitsTheFlag(t *testing.T) {
+	want := []string{"relay-run", "ask", "run-1", "--step", "3", "--title", "Which cap?",
+		"--option", "four:cap at 4", "--option", "eight:cap at 8", "--recommend", "four", "--key", "a.b", "--reasoning", "smaller", "--json", "--root", root}
+	c, f := client(t, clitest.Route{Tool: "slicer", Args: want, Stdout: `{"question":{"id":"q7"}}`})
+	id, err := c.RelayAsk(context.Background(), runrec.Writer{}, root, "run-1", "3", "a.b", askQuestion, false)
+	if err != nil || id != "q7" {
+		t.Fatalf("%q, %v", id, err)
+	}
+	if calls := f.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, want) {
+		t.Fatalf("calls: %+v", calls)
+	}
+	if slices.Contains(want, "--blocker") {
+		t.Fatal("the test's own argv holds --blocker")
+	}
+}
+
+func TestRelayAskBlockerPassesTheFlag(t *testing.T) {
+	want := []string{"relay-run", "ask", "run-1", "--step", "3", "--title", "Which cap?", "--blocker",
+		"--option", "four:cap at 4", "--option", "eight:cap at 8", "--recommend", "four", "--key", "a.b", "--reasoning", "smaller", "--json", "--root", root}
+	c, f := client(t, clitest.Route{Tool: "slicer", Args: want, Stdout: `{"question":{"id":"q7"}}`})
+	id, err := c.RelayAsk(context.Background(), runrec.Writer{}, root, "run-1", "3", "a.b", askQuestion, true)
+	if err != nil || id != "q7" {
+		t.Fatalf("%q, %v", id, err)
+	}
+	if calls := f.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, want) {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
+func TestRelayAnswerGetReadsTheQuestion(t *testing.T) {
+	want := []string{"relay-run", "answer", "run-1", "q1", "--get", "--json", "--root", root}
+	for _, tc := range []struct {
+		name, stdout string
+		answer       map[string]string
+	}{
+		{"open", `{"run":"run-1","step":"3","question":{"id":"q1","title":"T","blocker":false,"answer":null}}`, nil},
+		{"answered", `{"run":"run-1","step":"3","question":{"id":"q1","title":"T","answered_at":"2026-11-11T01:02:03Z","answer":{"option":"keep"}}}`, map[string]string{"option": "keep"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c, f := client(t, clitest.Route{Tool: "slicer", Args: want, Stdout: tc.stdout})
+			got, err := c.RelayAnswerGet(context.Background(), root, "run-1", "q1")
+			if err != nil || got == nil || got.ID != "q1" {
+				t.Fatalf("%+v, %v", got, err)
+			}
+			if !reflect.DeepEqual(got.Answer, tc.answer) {
+				t.Errorf("answer %v, want %v", got.Answer, tc.answer)
+			}
+			calls := f.CallsTo("slicer")
+			if len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, want) {
+				t.Fatalf("calls: %+v", calls)
+			}
+			for _, a := range calls[0].Args {
+				if strings.HasPrefix(a, "--option") || strings.HasPrefix(a, "--text") || strings.HasPrefix(a, "--why") || strings.HasPrefix(a, "--by") {
+					t.Errorf("--get takes no other flag: %q", a)
+				}
+			}
+		})
+	}
+}
+
+func TestRelayAnswerGetFailsOnABadReply(t *testing.T) {
+	want := []string{"relay-run", "answer", "run-1", "q1", "--get", "--json", "--root", root}
+	for name, route := range map[string]clitest.Route{
+		"exit":    {Tool: "slicer", Args: want, Stderr: "no such question", Exit: 2},
+		"no id":   {Tool: "slicer", Args: want, Stdout: `{"run":"run-1","question":{}}`},
+		"no body": {Tool: "slicer", Args: want, Stdout: `{}`},
+	} {
+		t.Run(name, func(t *testing.T) {
+			c, _ := client(t, route)
+			if got, err := c.RelayAnswerGet(context.Background(), root, "run-1", "q1"); err == nil {
+				t.Fatalf("accepted: %+v", got)
 			}
 		})
 	}

@@ -401,21 +401,24 @@ type FindingScores struct {
 
 // Finding is a review finding that is not a fix. An owner finding holds its
 // structured question in Ask; a later finding waits for the owner to file it
-// as a slice, and Filed holds the new slice's id once ork has.
+// as a slice, and Filed holds the new slice's id once ork has. LedgerQuestion
+// is the id of the finding's question in the relay ledger, asked without
+// --blocker (S223, proposed); it is empty when the ask was not made or failed.
 type Finding struct {
-	Scores     *FindingScores `json:"scores,omitempty"`
-	Answer     string         `json:"answer,omitempty"`
-	AnsweredAt time.Time      `json:"answered_at,omitzero"`
-	Kind       string         `json:"kind"`
-	Role       string         `json:"role"`
-	Round      int            `json:"round"`
-	Title      string         `json:"title"`
-	Text       string         `json:"text"`
-	Ask        *OwnerQuestion `json:"ask,omitempty"`
-	Key        string         `json:"key,omitempty"`
-	At         time.Time      `json:"at"`
-	Filed      string         `json:"filed,omitempty"`
-	FiledAt    time.Time      `json:"filed_at,omitzero"`
+	Scores         *FindingScores `json:"scores,omitempty"`
+	Answer         string         `json:"answer,omitempty"`
+	AnsweredAt     time.Time      `json:"answered_at,omitzero"`
+	Kind           string         `json:"kind"`
+	Role           string         `json:"role"`
+	Round          int            `json:"round"`
+	Title          string         `json:"title"`
+	Text           string         `json:"text"`
+	Ask            *OwnerQuestion `json:"ask,omitempty"`
+	Key            string         `json:"key,omitempty"`
+	LedgerQuestion string         `json:"ledger_question,omitempty"`
+	At             time.Time      `json:"at"`
+	Filed          string         `json:"filed,omitempty"`
+	FiledAt        time.Time      `json:"filed_at,omitzero"`
 }
 
 // AutomaticShapeRetry returns an active automatic retry, including one whose

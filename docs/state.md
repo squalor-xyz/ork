@@ -557,9 +557,15 @@ Proposed (S137): optional `scores` carries a role's proposed `importance`,
 An answered non-blocking owner finding has `answer` and `answered_at`.
 Recording it does not pause or advance the run. A key also files the answer
 in adj when the project has adj.
+`ledger_question` (omitted when empty; *proposed*, S223) is the id of the owner
+finding's question in the relay ledger, asked without `--blocker`. ork writes an
+answer given in ork to that question and reads the question before the card and
+before the finish step; an answer found there is recorded as `answer` and
+`answered_at` and is not filed in adj. It stays empty when the ask failed, the
+run had no ledger run, or the run already had a commit.
 The record version stays 1. Records without these fields still load; an older
-ork that does not know `scores`, `answer` or `answered_at` refuses a
-`run.json` containing them because `Store.Open` uses strict keys.
+ork that does not know `scores`, `answer`, `answered_at` or `ledger_question`
+refuses a `run.json` containing them because `Store.Open` uses strict keys.
 Landed, dismissed and superseded runs retain their findings for the run pane,
 but those findings no longer contribute to Needs you or status counts.
 `card` (omitted until the gate first passes; *proposed*, S118) is the approval

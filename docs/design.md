@@ -555,6 +555,24 @@ slice.
     A non-blocking finding can be answered from the pane without pausing or
     advancing the run; its answer and timestamp stay on the finding, and a
     decision key also records the answer in adj when the project has adj.
+    *Proposed (S223):* a non-blocking owner finding is also asked in the
+    relay ledger at once, with `slicer relay-run ask` and no `--blocker`, so
+    the orchestrator step keeps running; the finding keeps the question's id
+    (`ledger_question`). The owner's answer in ork is written to that question
+    (`relay-run answer RUN QID --text ... --by ...`); an answer given while the
+    ask was still in flight is written as soon as the id is stored. ork reads the question
+    (`relay-run answer RUN QID --get`) before it builds the approval card and
+    again before the finish step; an answer given in the ledger is recorded on
+    the finding (`answer`, `answered_at`), as an answer given in ork is, and
+    `ork show` prints it. The approval card keeps an owner question only while
+    it is open, so an answered finding, whichever way it was answered, leaves
+    the card. It is not filed in adj (`process.owner-answers`, adj 170),
+    and an answer the owner gave in ork is never replaced. An answer that
+    changes the slice reaches the implementer through the owner's fix action on
+    the card; ork starts no fix round for it. A question still open stays an
+    open finding. These ledger calls are advisory: a failed ask, write or read
+    leaves the finding as it was and the run goes on. None is made once the run
+    has a commit.
   - *later*: ork keeps it in `findings[]` as an offer. Nothing is filed until
     the owner confirms in the pane (`run.file`). Then ork itself runs
     `slicer add TITLE --discovered-from ITEM --key RUN-later-N --render` in
@@ -1137,6 +1155,9 @@ never goes stale. Structured blocker questions are mirrored with `relay-run
 ask`, and the owner's answer with `relay-run answer`. Legacy unstructured
 questions retain ork's owner wait but cannot be filed as a structured ledger
 question. Answer, approve, fix and retry record `--phase start` to continue.
+*Proposed (S223):* a non-blocking owner finding is asked with `relay-run ask`
+without `--blocker`, which records the question and leaves the step running;
+it records no wait.
 
 ## Roles
 

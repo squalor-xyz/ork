@@ -1,0 +1,43 @@
+{
+  "id": "S332",
+  "title": "Adopt landed-changed/ entries: roles stop editing CHANGELOG.md",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-11. ork's side of slicer s453. Once slicer can write and assemble per-item entries under `landed-changed/`, ork's role prompts, docs and checks tell the implementer to write its entry with slicer's command and never edit `CHANGELOG.md`. ork's existing `## Unreleased` entries are converted into `landed-changed/` files. The owner decided on 2026-11-11: slicer owns the format and the assembly, the folder is named `landed-changed`, and converting the existing entries is allowed."
+  ],
+  "depends_note": null,
+  "findings_note": "Owner 2026-11-11: per-slice changelog files in landed-changed/, owned and assembled by slicer (slicer s453); convert the existing Unreleased entries. Depends on slicer s453 landing.",
+  "size": "M",
+  "flags": [
+    "needs-owner"
+  ],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* Evidence:\n\n- CHANGELOG.md conflicted at landing on S132, S173, S204, S223, S226, S244, S255, S257, S263 and S267 (2026-11-08 to 11-11), because every slice adds a bullet at the top of `## Unreleased`. S327 makes ork's resolver handle the file's mixed layout (adj 276). That is a patch; separate files remove the conflict.\n- The slice specs end with a \"CHANGELOG.md: one bullet under `## Unreleased`\" step, and the implementer prompt and AGENTS.md carry the same rule. They change once slicer's command exists.\n- The CHANGELOG resolver (`internal/engine/changelog.go`, `internal/engine/landmerge.go:92-98`) becomes a fallback for projects that have not adopted `landed-changed/`. Whether to keep it is Q2.\n\nBlocked on slicer s453 (open in slicer's store, needs-owner). The command names below are placeholders until s453 is decided.\n\nOpen owner questions (the owner answers before the relay starts):\n- Q1 when to convert ork's existing Unreleased entries. (a) in this slice, with slicer's import command, in one commit (recommended). (b) at the v1.2 release step.\n- Q2 the CHANGELOG resolver. (a) keep it for projects without `landed-changed/` (recommended: ork runs other projects). (b) remove it.\n- Q3 does the gate check the entry. (a) yes: the gate fails a slice whose item has no `landed-changed/ID.md` when the project uses the folder (recommended). (b) no, slicer check covers it."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/roles/prompts/implementer.md` (the CHANGELOG rule)\n- `internal/roles/prompts/gate.md`\n- `AGENTS.md`\n- `docs/release.md`\n- `docs/design.md`\n- `CHANGELOG.md` (converted)\n- `landed-changed/` (new)"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Written after s453 and Q1 to Q3. At least: the implementer prompt names slicer's entry command and no longer tells the role to edit `CHANGELOG.md` (prompt golden test), and under Q3 (a) a gate brief names the missing entry."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Wait for slicer s453 to land and for Q1 to Q3. Then write the steps for the chosen options."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./... && go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
