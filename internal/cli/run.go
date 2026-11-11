@@ -269,8 +269,13 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
 	// answer and retry return once the run has resumed; --wait waits until it
 	// rests again, as the TUI's calls do (S237, *proposed*).
-	var wait, acceptShape, again bool
+	var wait, acceptShape, again, laterChecks bool
 	var rounds int
+	// approve --later-checks marks every open human check later, then approves
+	// (S316, *proposed*; adj 233). The owner chooses it; it is never the default.
+	if command == "approve" {
+		fs.BoolVar(&laterChecks, "later-checks", false, "mark every open human check later, then approve")
+	}
 	if command == "retry" {
 		fs.IntVar(&rounds, "rounds", 0, "grant additional implementer rounds (default 2 at a rounds pause or a resume)")
 		fs.BoolVar(&acceptShape, "accept-shape", false, "keep a refused report's owner findings that have no options (S298, proposed)")
@@ -342,6 +347,14 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 			return o.usage("%s TEXT is empty", command)
 		}
 	}
+	if command == "approve" {
+		p.LaterChecks = laterChecks
+		var reply daemon.RunReply
+		if code := a.call(ctx, o, "run."+command, p, &reply); code != ExitOK {
+			return code
+		}
+		return printDeferred(o, reply)
+	}
 	var rec runrec.Record
 	if code := a.call(ctx, o, "run."+command, p, &rec); code != 0 {
 		return code
@@ -349,11 +362,26 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 	return printRun(o, rec)
 }
 
+// printDeferred prints one line for each human check the call marked later, so
+// the owner sees what was pushed out, then the run (S316, *proposed*). In JSON
+// the reply carries them as "deferred".
+func printDeferred(o *output, reply daemon.RunReply) int {
+	if o.json {
+		return o.printJSON(reply)
+	}
+	for _, line := range reply.Deferred {
+		fmt.Fprintf(o.stdout, "deferred: %s\n", line)
+	}
+	return printRun(o, reply.Record)
+}
+
 // cardCommand is ork check and ork fix: the shell's side of the approval card,
 // so that ork approve works on a slice with human checks (S141, *proposed*).
 // ork check RUN N [ticked|later|open] marks the one-based check, ticked unless
-// told; ork fix RUN TEXT sends the note to a fix round and returns when the run
-// rests again. Both print the run record like the other owner commands.
+// told; ork check RUN all later marks every open check later and approves
+// nothing (S316, *proposed*; adj 233); ork fix RUN TEXT sends the note to a fix
+// round and returns when the run rests again. Both print the run record like
+// the other owner commands.
 func (a *App) cardCommand(ctx context.Context, o *output, command string, args []string) int {
 	fs := flag.NewFlagSet(command, flag.ContinueOnError)
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
@@ -368,6 +396,19 @@ func (a *App) cardCommand(ctx context.Context, o *output, command string, args [
 		}
 		p.Run, p.Text = pos[0], pos[1]
 	} else {
+		// all is for later only: ticking says the owner looked, so it stays per
+		// check (adj 234).
+		if len(pos) >= 2 && pos[1] == "all" {
+			if len(pos) != 3 || pos[2] != runrec.CheckLater {
+				return o.usage("check RUN all later is the only form of all: ticking stays per check")
+			}
+			p.Run, p.State, p.All = pos[0], runrec.CheckLater, true
+			var reply daemon.RunReply
+			if code := a.call(ctx, o, "run.check", p, &reply); code != ExitOK {
+				return code
+			}
+			return printDeferred(o, reply)
+		}
 		if len(pos) < 2 || len(pos) > 3 {
 			return o.usage("check takes RUN N [ticked|later|open]")
 		}

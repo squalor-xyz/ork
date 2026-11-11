@@ -290,6 +290,77 @@ func (e *Engine) MarkCheck(n int, state string) error {
 	return e.run.Update(func(r *runrec.Record) { r.Card.HumanChecks[n-1].State = state })
 }
 
+// deferredTextLimit is how many characters of a check's text MarkOpenLater names.
+const deferredTextLimit = 80
+
+// deferOpenChecks marks every open human check later, as MarkCheck does for one
+// (S316, *proposed*; adj 233). A ticked check and a check already marked later
+// are left as they are. It returns the checks it deferred as "N. text", the text
+// cut to its first 80 characters, and the one-based numbers it changed. The
+// caller holds e.mu.
+func (e *Engine) deferOpenChecks() (lines []string, changed []int, err error) {
+	rec := e.run.Snapshot()
+	if rec.State != runrec.StateAwaitingApproval {
+		return nil, nil, refusef("the slice is %s, not awaiting approval", rec.State)
+	}
+	if rec.Card == nil {
+		return nil, nil, nil
+	}
+	for i, c := range rec.Card.HumanChecks {
+		if c.Resolved() {
+			continue
+		}
+		text := c.Text
+		if r := []rune(text); len(r) > deferredTextLimit {
+			text = string(r[:deferredTextLimit]) + "..."
+		}
+		lines = append(lines, fmt.Sprintf("%d. %s", i+1, text))
+		changed = append(changed, i+1)
+	}
+	if len(changed) == 0 {
+		return nil, nil, nil
+	}
+	err = e.run.Update(func(r *runrec.Record) {
+		for _, n := range changed {
+			r.Card.HumanChecks[n-1].State = runrec.CheckLater
+		}
+	})
+	return lines, changed, err
+}
+
+// MarkOpenLater marks every open human check of the approval card later and
+// returns what it deferred as "N. text" (S316, *proposed*). It does not approve.
+func (e *Engine) MarkOpenLater() ([]string, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	lines, _, err := e.deferOpenChecks()
+	return lines, err
+}
+
+// ApproveLater defers every open human check, then approves, in one call
+// (S316, *proposed*). It returns what it deferred. When the approval fails the
+// checks it deferred are open again: the owner has not seen the list.
+func (e *Engine) ApproveLater(ctx context.Context) ([]string, error) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	lines, changed, err := e.deferOpenChecks()
+	if err != nil {
+		return nil, err
+	}
+	if err := e.accept(ctx); err != nil {
+		if len(changed) > 0 {
+			err = errors.Join(err, e.run.Update(func(r *runrec.Record) {
+				for _, n := range changed {
+					r.Card.HumanChecks[n-1].State = ""
+				}
+			}))
+		}
+		return nil, err
+	}
+	e.orchestratorPhase(ctx, "start", "")
+	return lines, e.advance(ctx)
+}
+
 // Fix sends the owner's note from the approval card to a fix round: the
 // implementer, resumed, acts on the note; then the checks and the gate run,
 // and the slice returns to awaiting approval. No review runs in between.

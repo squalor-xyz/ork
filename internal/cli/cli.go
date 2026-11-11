@@ -83,9 +83,13 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               well specified y and split n unless overridden
                               show the plans and launch the chosen items;
                               refused with no check command, as ork run
-  ork approve RUN             finish and commit a passed slice
+  ork approve RUN [--later-checks]
+                              finish and commit a passed slice; it stops on an
+                              open human check, unless --later-checks marks
+                              every open one later first and names each
   ork check RUN N [ticked|later|open]
                               mark human check N of a slice that awaits approval
+  ork check RUN all later     mark every open human check later; approve nothing
   ork fix RUN TEXT            send a fix note to a fix round
   ork stop RUN|WAVE           stop a slice or every unfinished run in a wave
   ork new P TITLE [--why TEXT|-] [--from ITEM] [--from-note N]

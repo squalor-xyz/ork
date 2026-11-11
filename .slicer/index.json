@@ -17561,10 +17561,25 @@
       "id": "S316",
       "title": "ork approve: mark every open human check as later in one step",
       "short_title": "ork approve: mark every open human check as later in one step",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6848d524-670b-4862-b188-ba38c7e48ebb",
+          "kind": "",
+          "text": "**2026-11-11** — Verified: ork approve RUN --later-checks marks every open human check later (the state ork check RUN N later writes), approves in one call and prints one 'deferred: N. TEXT' line per check (text cut at 80 characters); ork check RUN all later marks without approving; all with any other state is refused (adj 233, 234). Plain approve still stops on open checks and its refusal names --later-checks. A failed approval restores the deferred checks. 21 S316 tests green, 13 mutations caught, go test ./... and go vet ./... clean, gofmt and adj lint clean. Docs and CHANGELOG marked proposed.",
+          "created_at": "2026-11-11T20:21:13Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -17582,7 +17597,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

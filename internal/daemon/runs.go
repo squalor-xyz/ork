@@ -83,6 +83,11 @@ type RunAction struct {
 	AcceptShape bool `json:"accept_shape,omitempty"`
 	Again       bool `json:"again,omitempty"`
 	NoWait      bool `json:"no_wait,omitempty"` // proposed, run.answer and run.retry: return once the action is applied and the run has left its pause (S237)
+	// S316 (*proposed*; adj 233, 234): run.check with All marks every open check
+	// later (State must be "later"); run.approve with LaterChecks does the same
+	// and then approves.
+	All         bool `json:"all,omitempty"`
+	LaterChecks bool `json:"later_checks,omitempty"`
 }
 
 // RunPlan is checkpoint 1 (run.launch-wire).
@@ -1608,6 +1613,9 @@ const ResumeWaitNote = "resume waits for a slot; it starts before queued runs"
 type RunReply struct {
 	runrec.Record
 	Message string `json:"message,omitempty"`
+	// Deferred lists the human checks a run.approve with later_checks, or a
+	// run.check with all, marked later, as "N. text" (S316, *proposed*).
+	Deferred []string `json:"deferred,omitempty"`
 }
 
 func (d *Daemon) ownerRun(ctx context.Context, method string, p RunAction) (runrec.Record, error) {
@@ -1703,6 +1711,7 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 	}
 	var fn func(context.Context) error
 	var message string
+	var deferred []string // set by the job; read once the job is done
 	var resume *runrec.ResumeRequest
 	switch method {
 	case MethodRunAnswer:
@@ -1743,10 +1752,27 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		resume = &runrec.ResumeRequest{Method: runrec.ResumeRetry, Text: p.Text, Rounds: p.Rounds, AcceptShape: p.AcceptShape, Again: p.Again}
 	case MethodRunApprove:
 		fn = r.engine.Approve
+		if p.LaterChecks {
+			fn = func(ctx context.Context) (err error) {
+				deferred, err = r.engine.ApproveLater(ctx)
+				return err
+			}
+		}
 	case MethodRunFix:
 		fn = func(ctx context.Context) error { return r.engine.Fix(ctx, p.Text) }
 	case MethodRunCheck:
 		fn = func(context.Context) error { return r.engine.MarkCheck(p.Check, p.State) }
+		if p.All {
+			// Ticking says the owner looked, so all marks later only (adj 234).
+			if p.State != runrec.CheckLater {
+				d.runs.mu.Unlock()
+				return RunReply{}, &ipc.Error{Code: CodeRefused, Message: "all marks checks later only; tick each check on its own"}
+			}
+			fn = func(context.Context) (err error) {
+				deferred, err = r.engine.MarkOpenLater()
+				return err
+			}
+		}
 	case MethodRunStop:
 		fn = func(ctx context.Context) error {
 			// A cancelled round leaves its role live in the record. Reconcile checks
@@ -1843,7 +1869,7 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		// A refusal has its own wire code, so a client shows its text as it is (S141).
 		err = &ipc.Error{Code: CodeRefused, Message: err.Error()}
 	}
-	return RunReply{Record: result.record, Message: message}, err
+	return RunReply{Record: result.record, Message: message, Deferred: deferred}, err
 }
 
 // joinStop waits for the stop in flight and returns its outcome. The caller
@@ -2000,6 +2026,9 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 	}
 	if method == MethodRunEndLedger {
 		return d.endLedger(ctx, p)
+	}
+	if method == MethodRunApprove || method == MethodRunCheck {
+		return d.ownerRunReply(ctx, method, p) // the reply names the checks it deferred (S316)
 	}
 	return d.ownerRun(ctx, method, p)
 }

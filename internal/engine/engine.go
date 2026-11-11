@@ -504,7 +504,7 @@ func (e *Engine) accept(ctx context.Context) error {
 		if len(open) == 1 {
 			noun = "check"
 		}
-		return refusef("%d human %s still open; tick each or mark it later: %s", len(open), noun, strings.Join(open, "; "))
+		return refusef("%d human %s still open; tick each, mark it later, or approve with --later-checks: %s", len(open), noun, strings.Join(open, "; "))
 	}
 	// The owner's marks are recorded before the finish step closes the slice;
 	// when the card could not read the checks, the note says so (S141). A failed

@@ -1914,9 +1914,14 @@ ork wave rm [--project P] NAME
 ork wave start [--project P] NAME
                             start a saved wave (S215, proposed)
 ork run P ID                show a plan, check the spec, then launch one slice
-ork approve RUN             finish a passed slice, commit and land it
+ork approve RUN [--later-checks]
+                            finish a passed slice, commit and land it; with
+                            --later-checks, mark every open human check later
+                            first (S316, proposed)
 ork check RUN N [STATE]     mark human check N: ticked (the default),
                             later or open
+ork check RUN all later     mark every open human check later; no approval
+                            (S316, proposed)
 ork fix RUN TEXT            send a fix note to a fix round
 ork answer RUN TEXT         answer an owner question
 ork file RUN N              file a later finding through the daemon
@@ -2211,6 +2216,20 @@ and exit 1 with the daemon's error when it refuses; a missing or non-numeric N
 or an empty TEXT is a usage error (exit 2). So `ork approve` works from the
 shell on a run with human checks: it fails naming the open checks, `ork check`
 marks them, and the next `ork approve` goes through.
+*Proposed (S316; adj 233, 234):* `run.approve` takes `later_checks` and
+`run.check` takes `all`. With `later_checks`, `Engine.ApproveLater` marks every
+open check `later` (the state `MarkCheck` writes for one), then approves under
+one engine lock; if the approval fails, the checks it deferred are open again.
+`run.check` with `all` and `state` `later` calls `Engine.MarkOpenLater` and
+approves nothing; `all` with any other state is refused (ticking says the owner
+looked, so it stays per check). A check already `ticked` or `later` is never
+changed. Both replies carry `deferred`, the checks the call marked, each as
+`N. TEXT` with TEXT cut to its first 80 characters (`...` marks a cut). The CLI
+prints one `deferred: N. TEXT` line for each, then `RUN STATE`; with `--json`
+it prints the reply. A plain `run.approve` is unchanged, and its refusal now
+names `--later-checks`. The flag is the owner's explicit choice, never a
+default. The follow-up list is built from the card at landing, so the later
+checks reach it as they do after `ork check RUN N later`.
 *Proposed (S121):* `run.render` takes `{run,name}` and returns `{name,text}`:
 the plain text of one render of the run's card, read from
 `tmp/ui-<ui_round>/renders/NAME` in the run directory. It reads the stored

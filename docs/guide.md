@@ -632,7 +632,18 @@ and goes on. Files the slice does not change are left alone (the `ID done`
 commit after `slicer land` still commits any `.slicer` change).
 
 From the shell: `ork check RUN N [ticked|later|open]`, `ork fix RUN TEXT`,
-`ork approve RUN` (`internal/cli/cli.go:86-89`).
+`ork approve RUN` (`internal/cli/cli.go:86-93`).
+
+*Proposed (S316):* `ork approve RUN` stops while a human check is open and
+names the open ones. `ork approve RUN --later-checks` marks every open human
+check `later` first, then approves in the one call, and prints a line
+`deferred: N. TEXT` for each check it deferred (TEXT cut to its first 80
+characters, with `...` after a cut), so you see what was pushed out. `ork check RUN all later` does the
+same marking and approves nothing. A check already `ticked` or `later` is left
+as it is. The marks are the ones `ork check RUN N later` writes, so the
+follow-up list and the `[AFTER LAND]` handling do not change. `later` means you
+have not looked: use the flag when you mean that. There is no `all ticked`;
+ticking stays per check.
 
 *Proposed (S238):* if the merge has a conflict, ork merges the `CHANGELOG.md`
 entries itself and pauses the run on any other file, with a one-line message
@@ -731,8 +742,9 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork wave rm [--project P] NAME
     ork answer RUN TEXT [--wait]
     ork check RUN N [ticked|later|open]
+    ork check RUN all later
     ork fix RUN TEXT
-    ork approve RUN
+    ork approve RUN [--later-checks]
     ork retry RUN [TEXT] [--wait] [--rounds N] [--accept-shape | --again]
     ork stop RUN|WAVE
     ork dismiss RUN
